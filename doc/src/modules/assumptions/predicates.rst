@@ -22,20 +22,25 @@ Infinite
 Order
 =====
 
+Positive
+--------
+
+... autoclass:: sympy.assumptions.predicates.order.PositivePredicate
+
 Negative
 --------
 
-.. autoclass:: sympy.assumptions.predicates.order.NegativeHandler
+.. autoclass:: sympy.assumptions.predicates.order.NegativePredicate
 
 Nonzero
 -------
 
-.. autoclass:: sympy.assumptions.predicates.order.NonZeroHandler
+.. autoclass:: sympy.assumptions.predicates.order.NonZeroPredicate
 
 Nonnegative
 -----------
 
-.. autoclass:: sympy.assumptions.predicates.order.NonNegativeHandler
+.. autoclass:: sympy.assumptions.predicates.order.NonNegativePredicate
 
 Sets
 ====

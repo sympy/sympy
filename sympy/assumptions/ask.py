@@ -88,53 +88,15 @@ class AssumptionKeys:
         from .handlers.calculus import FinitePredicate
         return FinitePredicate()
 
-
     @memoize_property
     def infinite(self):
         from .predicates.calculus import InfinitePredicate
         return InfinitePredicate()
 
-
     @memoize_property
     def positive(self):
-        r"""
-        Positive real number predicate.
-
-        Explanation
-        ===========
-
-        ``Q.positive(x)`` is true iff ``x`` is real and `x > 0`, that is if ``x``
-        is in the interval `(0, \infty)`.  In particular, infinity is not
-        positive.
-
-        A few important facts about positive numbers:
-
-        - Note that ``Q.nonpositive`` and ``~Q.positive`` are *not* the same
-          thing. ``~Q.positive(x)`` simply means that ``x`` is not positive,
-          whereas ``Q.nonpositive(x)`` means that ``x`` is real and not
-          positive, i.e., ``Q.nonpositive(x)`` is logically equivalent to
-          `Q.negative(x) | Q.zero(x)``.  So for example, ``~Q.positive(I)`` is
-          true, whereas ``Q.nonpositive(I)`` is false.
-
-        - See the documentation of ``Q.real`` for more information about
-          related facts.
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask, symbols, I
-        >>> x = symbols('x')
-        >>> ask(Q.positive(x), Q.real(x) & ~Q.negative(x) & ~Q.zero(x))
-        True
-        >>> ask(Q.positive(1))
-        True
-        >>> ask(Q.nonpositive(I))
-        False
-        >>> ask(~Q.positive(I))
-        True
-
-        """
-        return Predicate('positive')
+        from .handlers.order import PositivePredicate
+        return PositivePredicate()
 
     @memoize_property
     def negative(self):
@@ -1175,7 +1137,6 @@ _handlers = [
     ("even",              "ntheory.AskEvenHandler"),
     ("nonpositive",       "order.AskNonPositiveHandler"),
     ("zero",              "order.AskZeroHandler"),
-    ("positive",          "order.AskPositiveHandler"),
     ("prime",             "ntheory.AskPrimeHandler"),
     ("odd",               "ntheory.AskOddHandler"),
     ("is_true",           "common.TautologicalHandler"),

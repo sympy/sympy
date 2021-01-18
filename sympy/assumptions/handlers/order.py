@@ -7,10 +7,12 @@ from sympy.assumptions.handlers import CommonHandler
 from sympy.core import Add, Basic, Expr, Mul, Pow
 from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
 from sympy.core.numbers import ImaginaryUnit, NaN
-from sympy.functions import Abs, exp
+from sympy.functions import Abs, acos, acot, asin, atan, exp, factorial, log
+from sympy.matrices import Determinant, Trace
+from sympy.matrices.expressions.matexpr import MatrixElement
 
 from ..predicates.order import (NegativePredicate, NonNegativePredicate,
-    NonZeroPredicate,)
+    NonZeroPredicate, PositivePredicate)
 
 
 # NegativePredicate
@@ -197,158 +199,156 @@ class AskNonPositiveHandler(CommonHandler):
     @staticmethod
     def Basic(expr, assumptions):
         if expr.is_number:
-            notpositive = fuzzy_not(AskPositiveHandler._number(expr, assumptions))
+            notpositive = fuzzy_not(_PositivePredicate_number(expr, assumptions))
             if notpositive:
                 return ask(Q.real(expr), assumptions)
             else:
                 return notpositive
 
-class AskPositiveHandler(CommonHandler):
-    """
-    Handler for key 'positive'.
-    Test that an expression is greater (strict) than zero.
-    """
 
-    @staticmethod
-    def Expr(expr, assumptions):
-        return expr.is_positive
+# PositivePredicate
 
-    @staticmethod
-    def _number(expr, assumptions):
-        r, i = expr.as_real_imag()
-        # If the imaginary part can symbolically be shown to be zero then
-        # we just evaluate the real part; otherwise we evaluate the imaginary
-        # part to see if it actually evaluates to zero and if it does then
-        # we make the comparison between the real part and zero.
-        if not i:
+def _PositivePredicate_number(expr, assumptions):
+    r, i = expr.as_real_imag()
+    # If the imaginary part can symbolically be shown to be zero then
+    # we just evaluate the real part; otherwise we evaluate the imaginary
+    # part to see if it actually evaluates to zero and if it does then
+    # we make the comparison between the real part and zero.
+    if not i:
+        r = r.evalf(2)
+        if r._prec != 1:
+            return r > 0
+    else:
+        i = i.evalf(2)
+        if i._prec != 1:
+            if i != 0:
+                return False
             r = r.evalf(2)
             if r._prec != 1:
                 return r > 0
+
+@PositivePredicate.register(Expr)
+def _(expr, assumptions):
+    return expr.is_positive
+
+@PositivePredicate.register(Basic)
+def _(expr, assumptions):
+    if expr.is_number:
+        return _PositivePredicate_number(expr, assumptions)
+
+@PositivePredicate.register(Mul)
+def _(expr, assumptions):
+    if expr.is_number:
+        return _PositivePredicate_number(expr, assumptions)
+    result = True
+    for arg in expr.args:
+        if ask(Q.positive(arg), assumptions):
+            continue
+        elif ask(Q.negative(arg), assumptions):
+            result = result ^ True
         else:
-            i = i.evalf(2)
-            if i._prec != 1:
-                if i != 0:
-                    return False
-                r = r.evalf(2)
-                if r._prec != 1:
-                    return r > 0
+            return
+    return result
 
-    @staticmethod
-    def Basic(expr, assumptions):
-        if expr.is_number:
-            return AskPositiveHandler._number(expr, assumptions)
+@PositivePredicate.register(Add)
+def _(expr, assumptions):
+    if expr.is_number:
+        return _PositivePredicate_number(expr, assumptions)
 
-    @staticmethod
-    def Mul(expr, assumptions):
-        if expr.is_number:
-            return AskPositiveHandler._number(expr, assumptions)
-        result = True
-        for arg in expr.args:
-            if ask(Q.positive(arg), assumptions):
-                continue
-            elif ask(Q.negative(arg), assumptions):
-                result = result ^ True
+    r = ask(Q.real(expr), assumptions)
+    if r is not True:
+        return r
+
+    nonneg = 0
+    for arg in expr.args:
+        if ask(Q.positive(arg), assumptions) is not True:
+            if ask(Q.negative(arg), assumptions) is False:
+                nonneg += 1
             else:
-                return
-        return result
-
-    @staticmethod
-    def Add(expr, assumptions):
-        if expr.is_number:
-            return AskPositiveHandler._number(expr, assumptions)
-
-        r = ask(Q.real(expr), assumptions)
-        if r is not True:
-            return r
-
-        nonneg = 0
-        for arg in expr.args:
-            if ask(Q.positive(arg), assumptions) is not True:
-                if ask(Q.negative(arg), assumptions) is False:
-                    nonneg += 1
-                else:
-                    break
-        else:
-            if nonneg < len(expr.args):
-                return True
-
-    @staticmethod
-    def Pow(expr, assumptions):
-        if expr.is_number:
-            return AskPositiveHandler._number(expr, assumptions)
-        if ask(Q.positive(expr.base), assumptions):
-            if ask(Q.real(expr.exp), assumptions):
-                return True
-        if ask(Q.negative(expr.base), assumptions):
-            if ask(Q.even(expr.exp), assumptions):
-                return True
-            if ask(Q.odd(expr.exp), assumptions):
-                return False
-
-    @staticmethod
-    def exp(expr, assumptions):
-        if ask(Q.real(expr.args[0]), assumptions):
+                break
+    else:
+        if nonneg < len(expr.args):
             return True
-        if ask(Q.imaginary(expr.args[0]), assumptions):
-            from sympy import pi, I
-            return ask(Q.even(expr.args[0]/(I*pi)), assumptions)
 
-    @staticmethod
-    def log(expr, assumptions):
-        r = ask(Q.real(expr.args[0]), assumptions)
-        if r is not True:
-            return r
-        if ask(Q.positive(expr.args[0] - 1), assumptions):
+@PositivePredicate.register(Pow)
+def _(expr, assumptions):
+    if expr.is_number:
+        return _PositivePredicate_number(expr, assumptions)
+    if ask(Q.positive(expr.base), assumptions):
+        if ask(Q.real(expr.exp), assumptions):
             return True
-        if ask(Q.negative(expr.args[0] - 1), assumptions):
+    if ask(Q.negative(expr.base), assumptions):
+        if ask(Q.even(expr.exp), assumptions):
+            return True
+        if ask(Q.odd(expr.exp), assumptions):
             return False
 
-    @staticmethod
-    def factorial(expr, assumptions):
-        x = expr.args[0]
-        if ask(Q.integer(x) & Q.positive(x), assumptions):
+@PositivePredicate.register(exp)
+def _(expr, assumptions):
+    if ask(Q.real(expr.args[0]), assumptions):
+        return True
+    if ask(Q.imaginary(expr.args[0]), assumptions):
+        from sympy import pi, I
+        return ask(Q.even(expr.args[0]/(I*pi)), assumptions)
+
+@PositivePredicate.register(log)
+def _(expr, assumptions):
+    r = ask(Q.real(expr.args[0]), assumptions)
+    if r is not True:
+        return r
+    if ask(Q.positive(expr.args[0] - 1), assumptions):
+        return True
+    if ask(Q.negative(expr.args[0] - 1), assumptions):
+        return False
+
+@PositivePredicate.register(factorial)
+def _(expr, assumptions):
+    x = expr.args[0]
+    if ask(Q.integer(x) & Q.positive(x), assumptions):
             return True
 
-    ImaginaryUnit = staticmethod(CommonHandler.AlwaysFalse)
+@PositivePredicate.register(ImaginaryUnit)
+def _(expr, assumptions):
+    return False
 
-    @staticmethod
-    def Abs(expr, assumptions):
-        return ask(Q.nonzero(expr), assumptions)
+@PositivePredicate.register(Abs)
+def _(expr, assumptions):
+    return ask(Q.nonzero(expr), assumptions)
 
-    @staticmethod
-    def Trace(expr, assumptions):
-        if ask(Q.positive_definite(expr.arg), assumptions):
-            return True
+@PositivePredicate.register(Trace)
+def _(expr, assumptions):
+    if ask(Q.positive_definite(expr.arg), assumptions):
+        return True
 
-    @staticmethod
-    def Determinant(expr, assumptions):
-        if ask(Q.positive_definite(expr.arg), assumptions):
-            return True
+@PositivePredicate.register(Determinant)
+def _(expr, assumptions):
+    if ask(Q.positive_definite(expr.arg), assumptions):
+        return True
 
-    @staticmethod
-    def MatrixElement(expr, assumptions):
-        if (expr.i == expr.j
-                and ask(Q.positive_definite(expr.parent), assumptions)):
-            return True
+@PositivePredicate.register(MatrixElement)
+def _(expr, assumptions):
+    if (expr.i == expr.j
+            and ask(Q.positive_definite(expr.parent), assumptions)):
+        return True
 
-    @staticmethod
-    def atan(expr, assumptions):
-        return ask(Q.positive(expr.args[0]), assumptions)
+@PositivePredicate.register(atan)
+def _(expr, assumptions):
+    return ask(Q.positive(expr.args[0]), assumptions)
 
-    @staticmethod
-    def asin(expr, assumptions):
-        x = expr.args[0]
-        if ask(Q.positive(x) & Q.nonpositive(x - 1), assumptions):
-            return True
-        if ask(Q.negative(x) & Q.nonnegative(x + 1), assumptions):
-            return False
+@PositivePredicate.register(asin)
+def _(expr, assumptions):
+    x = expr.args[0]
+    if ask(Q.positive(x) & Q.nonpositive(x - 1), assumptions):
+        return True
+    if ask(Q.negative(x) & Q.nonnegative(x + 1), assumptions):
+        return False
 
-    @staticmethod
-    def acos(expr, assumptions):
-        x = expr.args[0]
-        if ask(Q.nonpositive(x - 1) & Q.nonnegative(x + 1), assumptions):
-            return True
+@PositivePredicate.register(acos)
+def _(expr, assumptions):
+    x = expr.args[0]
+    if ask(Q.nonpositive(x - 1) & Q.nonnegative(x + 1), assumptions):
+        return True
 
-    @staticmethod
-    def acot(expr, assumptions):
-        return ask(Q.real(expr.args[0]), assumptions)
+@PositivePredicate.register(acot)
+def _(expr, assumptions):
+    return ask(Q.real(expr.args[0]), assumptions)
