@@ -42,6 +42,7 @@ submodule_whitelist = [
     'plotting',
     'polys',
     'printing',
+    'relation',
     'release',
     'series',
     'sets',
