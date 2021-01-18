@@ -1,6 +1,7 @@
 from sympy.assumptions import Predicate
 from sympy.multipledispatch import Dispatcher
 
+
 class NegativePredicate(Predicate):
     r"""
     Negative number predicate.
@@ -44,4 +45,92 @@ class NegativePredicate(Predicate):
         "NegativeHandler",
         doc=("Handler for Q.negative. Test that an expression is strictly less"
         " than zero.")
+    )
+
+
+class NonNegativePredicate(Predicate):
+    """
+    Nonnegative real number predicate.
+
+    Explanation
+    ===========
+
+    ``ask(Q.nonnegative(x))`` is true iff ``x`` belongs to the set of
+    positive numbers including zero.
+
+    - Note that ``Q.nonnegative`` and ``~Q.negative`` are *not* the same
+        thing. ``~Q.negative(x)`` simply means that ``x`` is not negative,
+        whereas ``Q.nonnegative(x)`` means that ``x`` is real and not
+        negative, i.e., ``Q.nonnegative(x)`` is logically equivalent to
+        ``Q.zero(x) | Q.positive(x)``.  So for example, ``~Q.negative(I)`` is
+        true, whereas ``Q.nonnegative(I)`` is false.
+
+    Examples
+    ========
+
+    >>> from sympy import Q, ask, I
+    >>> ask(Q.nonnegative(1))
+    True
+    >>> ask(Q.nonnegative(0))
+    True
+    >>> ask(Q.nonnegative(-1))
+    False
+    >>> ask(Q.nonnegative(I))
+    False
+    >>> ask(Q.nonnegative(-I))
+    False
+
+    """
+    name = 'nonnegative'
+    handler = Dispatcher(
+        "NonNegativeHandler",
+        doc=("Handler for Q.nonnegative.")
+    )
+
+
+class NonZeroPredicate(Predicate):
+    """
+    Nonzero real number predicate.
+
+    Explanation
+    ===========
+
+    ``ask(Q.nonzero(x))`` is true iff ``x`` is real and ``x`` is not zero.  Note in
+    particular that ``Q.nonzero(x)`` is false if ``x`` is not real.  Use
+    ``~Q.zero(x)`` if you want the negation of being zero without any real
+    assumptions.
+
+    A few important facts about nonzero numbers:
+
+    - ``Q.nonzero`` is logically equivalent to ``Q.positive | Q.negative``.
+
+    - See the documentation of ``Q.real`` for more information about
+        related facts.
+
+    Examples
+    ========
+
+    >>> from sympy import Q, ask, symbols, I, oo
+    >>> x = symbols('x')
+    >>> print(ask(Q.nonzero(x), ~Q.zero(x)))
+    None
+    >>> ask(Q.nonzero(x), Q.positive(x))
+    True
+    >>> ask(Q.nonzero(x), Q.zero(x))
+    False
+    >>> ask(Q.nonzero(0))
+    False
+    >>> ask(Q.nonzero(I))
+    False
+    >>> ask(~Q.zero(I))
+    True
+    >>> ask(Q.nonzero(oo))
+    False
+
+    """
+    name = 'nonzero'
+    handler = Dispatcher(
+        "NonZeroHandler",
+        doc=("Handler for key 'zero'. Test that an expression is not identically"
+        " zero.")
     )

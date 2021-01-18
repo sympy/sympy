@@ -6,10 +6,11 @@ from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 from sympy.core import Add, Basic, Expr, Mul, Pow
 from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
-from sympy.core.numbers import ImaginaryUnit
+from sympy.core.numbers import ImaginaryUnit, NaN
 from sympy.functions import Abs, exp
 
-from ..predicates.order import (NegativePredicate, )
+from ..predicates.order import (NegativePredicate, NonNegativePredicate,
+    NonZeroPredicate,)
 
 
 # NegativePredicate
@@ -110,70 +111,66 @@ def _(expr, assumptions):
         return False
 
 
-class AskNonNegativeHandler(CommonHandler):
+# NonNegativePredicate
 
-    @staticmethod
-    def Expr(expr, assumptions):
-        return expr.is_nonnegative
+@NonNegativePredicate.register(Basic)
+def _(expr, assumptions):
+    if expr.is_number:
+        notnegative = fuzzy_not(_NegativePredicate_number(expr, assumptions))
+        if notnegative:
+            return ask(Q.real(expr), assumptions)
+        else:
+            return notnegative
 
-    @staticmethod
-    def Basic(expr, assumptions):
-        if expr.is_number:
-            notnegative = fuzzy_not(_NegativePredicate_number(expr, assumptions))
-            if notnegative:
-                return ask(Q.real(expr), assumptions)
-            else:
-                return notnegative
+@NonNegativePredicate.register(Expr)
+def _(expr, assumptions):
+    return expr.is_nonnegative
 
 
-class AskNonZeroHandler(CommonHandler):
-    """
-    Handler for key 'zero'.
-    Test that an expression is not identically zero.
-    """
+# NonZeroPredicate
 
-    @staticmethod
-    def Expr(expr, assumptions):
-        return expr.is_nonzero
+@NonZeroPredicate.register(Expr)
+def _(expr, assumptions):
+    return expr.is_nonzero
 
-    @staticmethod
-    def Basic(expr, assumptions):
-        if ask(Q.real(expr)) is False:
-            return False
-        if expr.is_number:
-            # if there are no symbols just evalf
-            i = expr.evalf(2)
-            def nonz(i):
-                if i._prec != 1:
-                    return i != 0
-            return fuzzy_or(nonz(i) for i in i.as_real_imag())
+@NonZeroPredicate.register(Basic)
+def _(expr, assumptions):
+    if ask(Q.real(expr)) is False:
+        return False
+    if expr.is_number:
+        # if there are no symbols just evalf
+        i = expr.evalf(2)
+        def nonz(i):
+            if i._prec != 1:
+                return i != 0
+        return fuzzy_or(nonz(i) for i in i.as_real_imag())
 
-    @staticmethod
-    def Add(expr, assumptions):
-        if all(ask(Q.positive(x), assumptions) for x in expr.args) \
-                or all(ask(Q.negative(x), assumptions) for x in expr.args):
-            return True
-
-    @staticmethod
-    def Mul(expr, assumptions):
-        for arg in expr.args:
-            result = ask(Q.nonzero(arg), assumptions)
-            if result:
-                continue
-            return result
+@NonZeroPredicate.register(Add)
+def _(expr, assumptions):
+    if all(ask(Q.positive(x), assumptions) for x in expr.args) \
+            or all(ask(Q.negative(x), assumptions) for x in expr.args):
         return True
 
-    @staticmethod
-    def Pow(expr, assumptions):
-        return ask(Q.nonzero(expr.base), assumptions)
+@NonZeroPredicate.register(Mul)
+def _(expr, assumptions):
+    for arg in expr.args:
+        result = ask(Q.nonzero(arg), assumptions)
+        if result:
+            continue
+        return result
+    return True
 
-    @staticmethod
-    def NaN(expr, assumptions):
-        return True
+@NonZeroPredicate.register(Pow)
+def _(expr, assumptions):
+    return ask(Q.nonzero(expr.base), assumptions)
 
-    @staticmethod
-    def Abs(expr, assumptions):
-        return ask(Q.nonzero(expr.args[0]), assumptions)
+@NonZeroPredicate.register(NaN)
+def _(expr, assumptions):
+    return True
+
+@NonZeroPredicate.register(Abs)
+def _(expr, assumptions):
+    return ask(Q.nonzero(expr.args[0]), assumptions)
 
 class AskZeroHandler(CommonHandler):
 

@@ -27,6 +27,16 @@ Negative
 
 .. autoclass:: sympy.assumptions.predicates.order.NegativeHandler
 
+Nonzero
+-------
+
+.. autoclass:: sympy.assumptions.predicates.order.NonZeroHandler
+
+Nonnegative
+-----------
+
+.. autoclass:: sympy.assumptions.predicates.order.NonNegativeHandler
+
 Sets
 ====
 
