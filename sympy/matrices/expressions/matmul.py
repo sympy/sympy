@@ -172,12 +172,12 @@ class MatMul(MatrixExpr, Mul):
             args = [arg.doit(**kwargs) for arg in self.args]
         else:
             args = self.args
-
-        from .matadd import MatAdd
-        if args[0].is_MatAdd:
-            return MatAdd(*[MatMul(args[1], mat).doit(**kwargs) for mat in args[0].args])
-        if args[1].is_MatAdd:
-           return MatAdd(*[MatMul(args[0], mat).doit(**kwargs) for mat in args[1].args])
+        if len(args) == 2:
+            from .matadd import MatAdd
+            if args[0].is_MatAdd:
+                return MatAdd(*[MatMul(args[1], mat).doit(**kwargs) for mat in args[0].args])
+            if args[1].is_MatAdd:
+                return MatAdd(*[MatMul(args[0], mat).doit(**kwargs) for mat in args[1].args])
 
         # treat scalar*MatrixSymbol or scalar*MatPow separately
         expr = canonicalize(MatMul(*args))
