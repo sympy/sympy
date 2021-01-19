@@ -2232,7 +2232,6 @@ def test_solve_lambert():
 
     eq = (x*exp(x) - 3).subs(x, x*exp(x))
     assert solveset_real(eq, x) == FiniteSet(LambertW(3*exp(-LambertW(3))))
-    assert dumeq(solveset(eq, x) , ImageSet(Lambda(n, LambertW(3*exp(-LambertW(3, n)), n)), S.Integers))
 
     assert solveset_real(log(log(x - 3)) + log(x-3), x) == FiniteSet(exp(LambertW(1)) + 3)
 
@@ -2349,6 +2348,8 @@ def test_other_solve_lambert():
     assert solveset_real(eq.expand(), x) == result  # it takes solve and too much time to complete
     assert dumeq(solveset(x**x - 2, x) , ImageSet(Lambda(n, exp(LambertW(log(2),n))), S.Integers ))
     assert dumeq(solveset(log(log(x - 3)) + log(x-3), x) , ImageSet(Lambda(n, exp(LambertW(1, n)) + 3), S.Integers))
+    eq = (x*exp(x) - 3).subs(x, x*exp(x))
+    assert dumeq(solveset(eq, x) , ImageSet(Lambda(n, LambertW(3*exp(-LambertW(3, n)), n)), S.Integers))
 
 # end of transolve's tests
 
