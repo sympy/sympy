@@ -27,6 +27,11 @@ Even
 
 .. autoclass:: sympy.assumptions.predicate.ntheory.EvenPredicate
 
+Odd
+---
+
+.. autoclass:: sympy.assumptions.predicate.ntheory.OddPredicate
+
 Prime
 -----
 

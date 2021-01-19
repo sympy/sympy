@@ -3,7 +3,6 @@ Handlers for keys related to number theory: prime, even, odd, etc.
 """
 
 from sympy.assumptions import Q, ask
-from sympy.assumptions.handlers import CommonHandler
 from sympy.core import Add, Basic, Expr, Float, Mul, Pow, S
 from sympy.core.numbers import (ImaginaryUnit, Infinity, Integer, NegativeInfinity,
     NumberSymbol, Rational)
@@ -11,7 +10,7 @@ from sympy.functions import Abs, im, re
 from sympy.ntheory import isprime
 
 from ..predicates.ntheory import (PrimePredicate, CompositePredicate,
-    EvenPredicate,)
+    EvenPredicate, OddPredicate)
 
 
 # PrimePredicate
@@ -229,22 +228,18 @@ def _(expr, assumptions):
         return True
 
 
-class AskOddHandler(CommonHandler):
-    """
-    Handler for key 'odd'.
-    Test that an expression represents an odd number.
-    """
+# OddPredicate
 
-    @staticmethod
-    def Expr(expr, assumptions):
-        return expr.is_odd
+@OddPredicate.register(Expr)
+def _(expr, assumptions):
+    return expr.is_odd
 
-    @staticmethod
-    def Basic(expr, assumptions):
-        _integer = ask(Q.integer(expr), assumptions)
-        if _integer:
-            _even = ask(Q.even(expr), assumptions)
-            if _even is None:
-                return None
-            return not _even
-        return _integer
+@OddPredicate.register(Basic)
+def _(expr, assumptions):
+    _integer = ask(Q.integer(expr), assumptions)
+    if _integer:
+        _even = ask(Q.even(expr), assumptions)
+        if _even is None:
+            return None
+        return not _even
+    return _integer

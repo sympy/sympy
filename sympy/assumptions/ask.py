@@ -130,29 +130,8 @@ class AssumptionKeys:
 
     @memoize_property
     def odd(self):
-        """
-        Odd number predicate.
-
-        Explanation
-        ===========
-
-        ``ask(Q.odd(x))`` is true iff ``x`` belongs to the set of odd numbers.
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask, pi
-        >>> ask(Q.odd(0))
-        False
-        >>> ask(Q.odd(2))
-        False
-        >>> ask(Q.odd(3))
-        True
-        >>> ask(Q.odd(pi))
-        False
-
-        """
-        return Predicate('odd')
+        from .handlers.ntheory import OddPredicate
+        return OddPredicate()
 
     @memoize_property
     def prime(self):
@@ -1008,7 +987,6 @@ def compute_known_facts(known_facts, known_facts_keys):
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
     ("commutative",       "AskCommutativeHandler"),
-    ("odd",               "ntheory.AskOddHandler"),
     ("is_true",           "common.TautologicalHandler"),
     ("symmetric",         "matrices.AskSymmetricHandler"),
     ("invertible",        "matrices.AskInvertibleHandler"),
