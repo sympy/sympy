@@ -150,7 +150,6 @@ class Sieve:
         ========
 
         >>> from sympy import sieve
-        # Note the endpoint 19 is not included even though it is prime
         >>> print([i for i in sieve.primerange(7, 19)])
         [7, 11, 13, 17]
 
