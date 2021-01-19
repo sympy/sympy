@@ -549,7 +549,7 @@ def solve(f, *symbols, **flags):
             >>> solve(x**2 - y**2, x, y, dict=True)
             [{x: -y}, {x: y}]
             >>> solve(x**2 - y**2/exp(x), x, y, dict=True)
-            [{x: 2*LambertW(-y/2)}, {x: 2*LambertW(y/2)}]
+            [{x: 2*LambertW(-y/2)}, {x: 2*LambertW(y/2)}, {x: 2*LambertW(-y/2, -1)}, {x: 2*LambertW(y/2, -1)}]
             >>> solve(x**2 - y**2/exp(x), y, x)
             [(-x*sqrt(exp(x)), x), (x*sqrt(exp(x)), x)]
 
@@ -2698,7 +2698,12 @@ def _tsolve(eq, sym, **flags):
                 poly = lhs.as_poly()
                 g = _filtered_gens(poly, sym)
                 _eq = lhs - rhs
-                sols = _solve_lambert(_eq, sym, g)
+                if flags.get('dmn', True):
+                    domain = S.Reals
+                else:
+                    domain = S.Complexes
+
+                sols = _solve_lambert(_eq, sym, g, domain)
                 # use a simplified form if it satisfies eq
                 # and has fewer operations
                 for n, s in enumerate(sols):
