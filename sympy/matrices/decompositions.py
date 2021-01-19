@@ -1,7 +1,9 @@
 import copy
 
+from sympy.simplify.simplify import simplify
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.miscellaneous import Min, sqrt
+from sympy.functions.elementary.complexes import sign
 
 from .common import NonSquareMatrixError, NonPositiveDefiniteMatrixError
 from .utilities import _get_intermediate_simp, _iszero
@@ -1343,3 +1345,35 @@ def _QRdecomposition(M):
     QRsolve
     """
     return _QRdecomposition_optional(M, normalize=True)
+
+def _UpperHessenbergdecomposition(A):
+    M = A.as_mutable()
+
+    if not M.is_square:
+        raise NonSquareMatrixError("Matrix must be square.")
+
+    if M.is_upper_hessenberg:
+        return M, M.eye(M.cols)
+
+
+    n = M.cols
+    P = M.eye(n)
+    H = M
+
+
+    for j in range(n - 2):
+        u = H[j + 1:, j]
+        if sign(u[0]) != 0:
+            u[0] = u[0] + sign(u[0]) * u.norm()
+        else:
+            u[0] = u[0] + u.norm()
+
+        v = u / u.norm()
+
+        H[j + 1:, :] = H[j + 1:, :] - 2 * v * (v.T * H[j + 1:, :])
+        H[:, j + 1:] = H[:, j + 1:] - (H[:, j + 1:] * (2 * v)) * v.T
+        P[:, j + 1:] = P[:, j + 1:] - (P[:, j + 1:] * (2 * v)) * v.T
+
+    return H, P
+
+

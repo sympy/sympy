@@ -1,4 +1,4 @@
-from sympy import Rational, I, expand_mul, S, simplify
+from sympy import Rational, I, expand_mul, S, simplify, sqrt
 from sympy.matrices.matrices import NonSquareMatrixError
 from sympy.matrices import Matrix, zeros, eye, SparseMatrix
 from sympy.abc import x, y, z
@@ -357,3 +357,44 @@ def test_rank_decomposition():
     assert f.is_echelon
     assert c.cols == f.rows == a.rank()
     assert c * f == a
+
+
+def test_UpperHessenbergDecomposition():
+
+    A = Matrix([
+        [1, 0, sqrt(3)],
+        [sqrt(2), Rational(1, 2), 2],
+        [1, Rational(1, 4), 3],
+    ])
+    H, P = A.UpperHessenbergdecomposition()
+    assert simplify(P * P.H) == eye(P.cols)
+    assert simplify(P.H * P) == eye(P.cols)
+    assert H.is_upper_hessenberg
+    assert (simplify(P * H * P.H)) == A
+
+
+    B = Matrix([
+        [1, 2, 10],
+        [8, 2, 5],
+        [3, 12, 34],
+    ])
+    H, P = B.UpperHessenbergdecomposition()
+    assert simplify(P * P.H) == eye(P.cols)
+    assert simplify(P.H * P) == eye(P.cols)
+    assert H.is_upper_hessenberg
+    assert simplify(P * H * P.H) == B
+
+    C = Matrix([
+        [1, sqrt(2), 2, 3],
+        [0, 5, 3, 4],
+        [1, 1, 4, sqrt(5)],
+        [0, 2, 2, 3]
+    ])
+
+    H, P = C.UpperHessenbergdecomposition()
+    assert simplify(P * P.H) == eye(P.cols)
+    assert simplify(P.H * P) == eye(P.cols)
+    assert H.is_upper_hessenberg
+    assert simplify(P * H * P.H) == C
+
+
