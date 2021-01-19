@@ -692,3 +692,31 @@ def test_normalize_diagonal_contraction():
     expr = CodegenArrayContraction(td, (2, 1), (0, 4, 6, 5, 3))
     result = CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P, Q), (0, 1, 3, 5, 6, 7), (2, 4))
     assert expr == result
+
+
+def test_array_wrong_permutation_size():
+    cg = CodegenArrayTensorProduct(M, N)
+    raises(ValueError, lambda: CodegenArrayPermuteDims(cg, [1, 0]))
+    raises(ValueError, lambda: CodegenArrayPermuteDims(cg, [1, 0, 2, 3, 5, 4]))
+
+
+def test_nested_array_elementwise_add():
+    cg = CodegenArrayContraction(CodegenArrayElementwiseAdd(
+        CodegenArrayTensorProduct(M, N),
+        CodegenArrayTensorProduct(N, M)
+    ), (1, 2))
+    result = CodegenArrayElementwiseAdd(
+        CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2)),
+        CodegenArrayContraction(CodegenArrayTensorProduct(N, M), (1, 2))
+    )
+    assert cg == result
+
+    cg = CodegenArrayDiagonal(CodegenArrayElementwiseAdd(
+        CodegenArrayTensorProduct(M, N),
+        CodegenArrayTensorProduct(N, M)
+    ), (1, 2))
+    result = CodegenArrayElementwiseAdd(
+        CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N), (1, 2)),
+        CodegenArrayDiagonal(CodegenArrayTensorProduct(N, M), (1, 2))
+    )
+    assert cg == result

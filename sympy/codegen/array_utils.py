@@ -83,6 +83,9 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         if isinstance(expr, CodegenArrayDiagonal):
             return cls._handle_nested_diagonal(expr, *contraction_indices)
 
+        if isinstance(expr, CodegenArrayElementwiseAdd):
+            return CodegenArrayElementwiseAdd(*[CodegenArrayContraction(i, *contraction_indices) for i in expr.args])
+
         obj = Basic.__new__(cls, expr, *contraction_indices)
         obj._subranks = _get_subranks(expr)
         obj._mapping = _get_mapping_from_subranks(obj._subranks)
@@ -648,6 +651,10 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
         from sympy.combinatorics import Permutation
         expr = _sympify(expr)
         permutation = Permutation(permutation)
+        permutation_size = permutation.size
+        expr_rank = get_rank(expr)
+        if permutation_size != expr_rank:
+            raise ValueError("Permutation size must be the length of the shape of expr")
         if isinstance(expr, CodegenArrayPermuteDims):
             subexpr = expr.expr
             subperm = expr.permutation
@@ -900,6 +907,8 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
     def __new__(cls, expr, *diagonal_indices):
         expr = _sympify(expr)
         diagonal_indices = [Tuple(*sorted(i)) for i in diagonal_indices]
+        if isinstance(expr, CodegenArrayElementwiseAdd):
+            return CodegenArrayElementwiseAdd(*[CodegenArrayDiagonal(arg, *diagonal_indices) for arg in expr.args])
         if isinstance(expr, CodegenArrayDiagonal):
             return cls._flatten(expr, *diagonal_indices)
         if isinstance(expr, CodegenArrayPermuteDims):
