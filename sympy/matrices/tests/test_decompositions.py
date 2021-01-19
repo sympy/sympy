@@ -406,4 +406,3 @@ def test_UpperHessenbergDecomposition():
     assert simplify(P.H * P) == eye(P.cols)
     assert H.is_upper_hessenberg
     assert simplify(P * H * P.H) == D
-
