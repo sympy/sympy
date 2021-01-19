@@ -57,7 +57,7 @@ class Parabola(GeometrySet):
     Point2D(0, 0)
     >>> p1.directrix
     Line2D(Point2D(5, 8), Point2D(7, 8))
-
+     "add equation"
     """
 
     def __new__(cls, focus=None, directrix=None, **kwargs):
