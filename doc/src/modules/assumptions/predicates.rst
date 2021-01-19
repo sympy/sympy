@@ -25,22 +25,22 @@ Number Theory
 Even
 ----
 
-.. autoclass:: sympy.assumptions.predicate.ntheory.EvenPredicate
+.. autoclass:: sympy.assumptions.predicates.ntheory.EvenPredicate
 
 Odd
 ---
 
-.. autoclass:: sympy.assumptions.predicate.ntheory.OddPredicate
+.. autoclass:: sympy.assumptions.predicates.ntheory.OddPredicate
 
 Prime
 -----
 
-.. autoclass:: sympy.assumptions.predicate.ntheory.PrimePredicate
+.. autoclass:: sympy.assumptions.predicates.ntheory.PrimePredicate
 
 Composite
 ---------
 
-.. autoclass:: sympy.assumptions.predicate.ntheory.CompositePredicate
+.. autoclass:: sympy.assumptions.predicates.ntheory.CompositePredicate
 
 Order
 =====
