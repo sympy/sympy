@@ -425,8 +425,8 @@ def test_simplify_matrix_expressions():
     # Various simplification functions
     assert type(gcd_terms(C*D + D*C)) == MatAdd
     a = gcd_terms(2*C*D + 4*D*C)
-    assert type(a) == MatMul
-    assert a.args == (2, (C*D + 2*D*C))
+    assert type(a) == MatAdd
+    assert a.args == (2*C*D, 4*D*C)
 
 def test_exp():
     A = MatrixSymbol('A', 2, 2)
@@ -492,3 +492,4 @@ def test_matrixsymbol_solving():
     assert (-(-A + B) - A + B).expand() == Z
     assert (-(-A + B) - A + B - Z).simplify() == Z
     assert (-(-A + B) - A + B - Z).expand() == Z
+    assert (A*(A-B)) == A**2 - A*B
