@@ -2229,7 +2229,7 @@ def test_solve_lambert():
     assert solveset_real(x**x - 2, x) == FiniteSet(exp(LambertW(log(2))))
     assert solveset_real(x**3 - 3**x, x) == FiniteSet(
         -3*LambertW(-log(3)/3)/log(3), -3*LambertW(-log(3)/3, -1)/log(3))
-    
+
     eq = (x*exp(x) - 3).subs(x, x*exp(x))
     assert solveset_real(eq, x) == FiniteSet(LambertW(3*exp(-LambertW(3))))
     assert dumeq(solveset(eq, x) , ImageSet(Lambda(n, LambertW(3*exp(-LambertW(3, n)), n)), S.Integers))
