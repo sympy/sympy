@@ -1,6 +1,5 @@
 import copy
 
-from sympy.simplify.simplify import simplify
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.miscellaneous import Min, sqrt
 from sympy.functions.elementary.complexes import sign
