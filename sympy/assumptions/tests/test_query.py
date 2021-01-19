@@ -2021,23 +2021,6 @@ def test_composite_assumptions():
     assert ask(Q.positive(x), Q.real(x) >> Q.positive(y)) is None
     assert ask(Q.real(x), ~(Q.real(x) >> Q.real(y))) is True
 
-def test_incompatible_resolutors():
-    class Prime2AskHandler(AskHandler):
-        @staticmethod
-        def Number(expr, assumptions):
-            return True
-    register_handler('prime', Prime2AskHandler)
-    raises(ValueError, lambda: ask(Q.prime(4)))
-    remove_handler('prime', Prime2AskHandler)
-
-    class InconclusiveHandler(AskHandler):
-        @staticmethod
-        def Number(expr, assumptions):
-            return None
-    register_handler('prime', InconclusiveHandler)
-    assert ask(Q.prime(3)) is True
-    remove_handler('prime', InconclusiveHandler)
-
 def test_key_extensibility():
     """test that you can add keys to the ask system at runtime"""
     # make sure the key is not defined
@@ -2080,16 +2063,11 @@ def test_type_extensibility():
     class MyType(Basic):
         pass
 
-    # Old handler system
-    class MyAskHandler(AskHandler):
-        @staticmethod
-        def MyType(expr, assumptions):
-            return True
-    a = MyType()
-    register_handler(Q.prime, MyAskHandler)
-    assert ask(Q.prime(a)) is True
+    @Q.prime.register(MyType)
+    def _(expr, assumptions):
+        return True
 
-    #TODO: add test for new handler system after predicates are migrated
+    assert ask(Q.prime(MyType())) is True
 
 
 def test_single_fact_lookup():

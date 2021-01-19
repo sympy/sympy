@@ -19,6 +19,14 @@ Infinite
 
 .. autoclass:: sympy.assumptions.predicates.calculus.InfinitePredicate
 
+Number Theory
+=============
+
+Prime
+-----
+
+.. autoclass:: sympy.assumptions.predicate.ntheory.PrimePredicate
+
 Order
 =====
 

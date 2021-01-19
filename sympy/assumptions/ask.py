@@ -178,33 +178,8 @@ class AssumptionKeys:
 
     @memoize_property
     def prime(self):
-        """
-        Prime number predicate.
-
-        Explanation
-        ===========
-
-        ``ask(Q.prime(x))`` is true iff ``x`` is a natural number greater
-        than 1 that has no positive divisors other than ``1`` and the
-        number itself.
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask
-        >>> ask(Q.prime(0))
-        False
-        >>> ask(Q.prime(1))
-        False
-        >>> ask(Q.prime(2))
-        True
-        >>> ask(Q.prime(20))
-        False
-        >>> ask(Q.prime(-3))
-        False
-
-        """
-        return Predicate('prime')
+        from .handlers.ntheory import PrimePredicate
+        return PrimePredicate()
 
     @memoize_property
     def composite(self):
@@ -1079,7 +1054,6 @@ _handlers = [
     ("commutative",       "AskCommutativeHandler"),
     ("composite",         "ntheory.AskCompositeHandler"),
     ("even",              "ntheory.AskEvenHandler"),
-    ("prime",             "ntheory.AskPrimeHandler"),
     ("odd",               "ntheory.AskOddHandler"),
     ("is_true",           "common.TautologicalHandler"),
     ("symmetric",         "matrices.AskSymmetricHandler"),

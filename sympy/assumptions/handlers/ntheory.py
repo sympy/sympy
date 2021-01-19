@@ -4,81 +4,76 @@ Handlers for keys related to number theory: prime, even, odd, etc.
 
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
+from sympy.core import Basic, Expr, Float, Mul, Pow, S
+from sympy.core.numbers import (ImaginaryUnit, Infinity, Integer, NegativeInfinity,
+    NumberSymbol, Rational)
 from sympy.ntheory import isprime
-from sympy.core import S, Float
+
+from ..predicates.ntheory import PrimePredicate
 
 
-class AskPrimeHandler(CommonHandler):
-    """
-    Handler for key 'prime'.
+# PrimePredicate
 
-    Explanation
-    ===========
+def _PrimePredicate_number(expr, assumptions):
+    # helper method
+    exact = not expr.atoms(Float)
+    try:
+        i = int(expr.round())
+        if (expr - i).equals(0) is False:
+            raise TypeError
+    except TypeError:
+        return False
+    if exact:
+        return isprime(i)
+    # when not exact, we won't give a True or False
+    # since the number represents an approximate value
 
-    Test that an expression represents a prime number. When the
-    expression is an exact number, the result (when True) is subject to
-    the limitations of isprime() which is used to return the result.
-    """
+@PrimePredicate.register(Expr)
+def _(expr, assumptions):
+    return expr.is_prime
 
-    @staticmethod
-    def Expr(expr, assumptions):
-        return expr.is_prime
+@PrimePredicate.register(Basic)
+def _(expr, assumptions):
+    if expr.is_number:
+        return _PrimePredicate_number(expr, assumptions)
 
-    @staticmethod
-    def _number(expr, assumptions):
-        # helper method
-        exact = not expr.atoms(Float)
-        try:
-            i = int(expr.round())
-            if (expr - i).equals(0) is False:
-                raise TypeError
-        except TypeError:
-            return False
-        if exact:
-            return isprime(i)
-        # when not exact, we won't give a True or False
-        # since the number represents an approximate value
-
-    @staticmethod
-    def Basic(expr, assumptions):
-        if expr.is_number:
-            return AskPrimeHandler._number(expr, assumptions)
-
-    @staticmethod
-    def Mul(expr, assumptions):
-        if expr.is_number:
-            return AskPrimeHandler._number(expr, assumptions)
-        for arg in expr.args:
-            if not ask(Q.integer(arg), assumptions):
-                return None
-        for arg in expr.args:
-            if arg.is_number and arg.is_composite:
-                return False
-
-    @staticmethod
-    def Pow(expr, assumptions):
-        """
-        Integer**Integer     -> !Prime
-        """
-        if expr.is_number:
-            return AskPrimeHandler._number(expr, assumptions)
-        if ask(Q.integer(expr.exp), assumptions) and \
-                ask(Q.integer(expr.base), assumptions):
+@PrimePredicate.register(Mul)
+def _(expr, assumptions):
+    if expr.is_number:
+        return _PrimePredicate_number(expr, assumptions)
+    for arg in expr.args:
+        if not ask(Q.integer(arg), assumptions):
+            return None
+    for arg in expr.args:
+        if arg.is_number and arg.is_composite:
             return False
 
-    @staticmethod
-    def Integer(expr, assumptions):
-        return isprime(expr)
+@PrimePredicate.register(Pow)
+def _(expr, assumptions):
+    """
+    Integer**Integer     -> !Prime
+    """
+    if expr.is_number:
+        return _PrimePredicate_number(expr, assumptions)
+    if ask(Q.integer(expr.exp), assumptions) and \
+            ask(Q.integer(expr.base), assumptions):
+        return False
 
-    Rational, Infinity, NegativeInfinity, ImaginaryUnit = [staticmethod(CommonHandler.AlwaysFalse)]*4
+@PrimePredicate.register(Integer)
+def _(expr, assumptions):
+    return isprime(expr)
 
-    @staticmethod
-    def Float(expr, assumptions):
-        return AskPrimeHandler._number(expr, assumptions)
+@PrimePredicate.register_many(Rational, Infinity, NegativeInfinity, ImaginaryUnit)
+def _(expr, assumptions):
+    return False
 
-    @staticmethod
-    def NumberSymbol(expr, assumptions):
-        return AskPrimeHandler._number(expr, assumptions)
+@PrimePredicate.register(Float)
+def _(expr, assumptions):
+    return _PrimePredicate_number(expr, assumptions)
+
+@PrimePredicate.register(NumberSymbol)
+def _(expr, assumptions):
+    return _PrimePredicate_number(expr, assumptions)
 
 
 class AskCompositeHandler(CommonHandler):
