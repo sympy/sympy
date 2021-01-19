@@ -125,30 +125,8 @@ class AssumptionKeys:
 
     @memoize_property
     def even(self):
-        """
-        Even number predicate.
-
-        Explanation
-        ===========
-
-        ``ask(Q.even(x))`` is true iff ``x`` belongs to the set of even
-        integers.
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask, pi
-        >>> ask(Q.even(0))
-        True
-        >>> ask(Q.even(2))
-        True
-        >>> ask(Q.even(3))
-        False
-        >>> ask(Q.even(pi))
-        False
-
-        """
-        return Predicate('even')
+        from .handlers.ntheory import EvenPredicate
+        return EvenPredicate()
 
     @memoize_property
     def odd(self):
@@ -1030,7 +1008,6 @@ def compute_known_facts(known_facts, known_facts_keys):
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
     ("commutative",       "AskCommutativeHandler"),
-    ("even",              "ntheory.AskEvenHandler"),
     ("odd",               "ntheory.AskOddHandler"),
     ("is_true",           "common.TautologicalHandler"),
     ("symmetric",         "matrices.AskSymmetricHandler"),

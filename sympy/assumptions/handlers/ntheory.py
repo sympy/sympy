@@ -4,12 +4,14 @@ Handlers for keys related to number theory: prime, even, odd, etc.
 
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
-from sympy.core import Basic, Expr, Float, Mul, Pow, S
+from sympy.core import Add, Basic, Expr, Float, Mul, Pow, S
 from sympy.core.numbers import (ImaginaryUnit, Infinity, Integer, NegativeInfinity,
     NumberSymbol, Rational)
+from sympy.functions import Abs, im, re
 from sympy.ntheory import isprime
 
-from ..predicates.ntheory import (PrimePredicate, CompositePredicate,)
+from ..predicates.ntheory import (PrimePredicate, CompositePredicate,
+    EvenPredicate,)
 
 
 # PrimePredicate
@@ -102,128 +104,129 @@ def _(expr, assumptions):
         return _positive
 
 
-class AskEvenHandler(CommonHandler):
+# EvenPredicate
 
-    @staticmethod
-    def Expr(expr, assumptions):
-        return expr.is_even
+def _EvenPredicate_number(expr, assumptions):
+    # helper method
+    try:
+        i = int(expr.round())
+        if not (expr - i).equals(0):
+            raise TypeError
+    except TypeError:
+        return False
+    if isinstance(expr, (float, Float)):
+        return False
+    return i % 2 == 0
 
-    @staticmethod
-    def _number(expr, assumptions):
-        # helper method
-        try:
-            i = int(expr.round())
-            if not (expr - i).equals(0):
-                raise TypeError
-        except TypeError:
-            return False
-        if isinstance(expr, (float, Float)):
-            return False
-        return i % 2 == 0
+@EvenPredicate.register(Expr)
+def _(expr, assumptions):
+    return expr.is_even
 
-    @staticmethod
-    def Basic(expr, assumptions):
-        if expr.is_number:
-            return AskEvenHandler._number(expr, assumptions)
+@EvenPredicate.register(Basic)
+def _(expr, assumptions):
+    if expr.is_number:
+        return _EvenPredicate_number(expr, assumptions)
 
-    @staticmethod
-    def Mul(expr, assumptions):
-        """
-        Even * Integer    -> Even
-        Even * Odd        -> Even
-        Integer * Odd     -> ?
-        Odd * Odd         -> Odd
-        Even * Even       -> Even
-        Integer * Integer -> Even if Integer + Integer = Odd
-        otherwise         -> ?
-        """
-        if expr.is_number:
-            return AskEvenHandler._number(expr, assumptions)
-        even, odd, irrational, acc = False, 0, False, 1
-        for arg in expr.args:
-            # check for all integers and at least one even
-            if ask(Q.integer(arg), assumptions):
-                if ask(Q.even(arg), assumptions):
-                    even = True
-                elif ask(Q.odd(arg), assumptions):
-                    odd += 1
-                elif not even and acc != 1:
-                    if ask(Q.odd(acc + arg), assumptions):
-                        even = True
-            elif ask(Q.irrational(arg), assumptions):
-                # one irrational makes the result False
-                # two makes it undefined
-                if irrational:
-                    break
-                irrational = True
-            else:
-                break
-            acc = arg
-        else:
-            if irrational:
-                return False
-            if even:
-                return True
-            if odd == len(expr.args):
-                return False
-
-    @staticmethod
-    def Add(expr, assumptions):
-        """
-        Even + Odd  -> Odd
-        Even + Even -> Even
-        Odd  + Odd  -> Even
-
-        """
-        if expr.is_number:
-            return AskEvenHandler._number(expr, assumptions)
-        _result = True
-        for arg in expr.args:
+@EvenPredicate.register(Mul)
+def _(expr, assumptions):
+    """
+    Even * Integer    -> Even
+    Even * Odd        -> Even
+    Integer * Odd     -> ?
+    Odd * Odd         -> Odd
+    Even * Even       -> Even
+    Integer * Integer -> Even if Integer + Integer = Odd
+    otherwise         -> ?
+    """
+    if expr.is_number:
+        return _EvenPredicate_number(expr, assumptions)
+    even, odd, irrational, acc = False, 0, False, 1
+    for arg in expr.args:
+        # check for all integers and at least one even
+        if ask(Q.integer(arg), assumptions):
             if ask(Q.even(arg), assumptions):
-                pass
+                even = True
             elif ask(Q.odd(arg), assumptions):
-                _result = not _result
-            else:
+                odd += 1
+            elif not even and acc != 1:
+                if ask(Q.odd(acc + arg), assumptions):
+                    even = True
+        elif ask(Q.irrational(arg), assumptions):
+            # one irrational makes the result False
+            # two makes it undefined
+            if irrational:
                 break
+            irrational = True
         else:
-            return _result
-
-    @staticmethod
-    def Pow(expr, assumptions):
-        if expr.is_number:
-            return AskEvenHandler._number(expr, assumptions)
-        if ask(Q.integer(expr.exp), assumptions):
-            if ask(Q.positive(expr.exp), assumptions):
-                return ask(Q.even(expr.base), assumptions)
-            elif ask(~Q.negative(expr.exp) & Q.odd(expr.base), assumptions):
-                return False
-            elif expr.base is S.NegativeOne:
-                return False
-
-    @staticmethod
-    def Integer(expr, assumptions):
-        return not bool(expr.p & 1)
-
-    Rational, Infinity, NegativeInfinity, ImaginaryUnit = [staticmethod(CommonHandler.AlwaysFalse)]*4
-
-    @staticmethod
-    def NumberSymbol(expr, assumptions):
-        return AskEvenHandler._number(expr, assumptions)
-
-    @staticmethod
-    def Abs(expr, assumptions):
-        if ask(Q.real(expr.args[0]), assumptions):
-            return ask(Q.even(expr.args[0]), assumptions)
-
-    @staticmethod
-    def re(expr, assumptions):
-        if ask(Q.real(expr.args[0]), assumptions):
-            return ask(Q.even(expr.args[0]), assumptions)
-
-    @staticmethod
-    def im(expr, assumptions):
-        if ask(Q.real(expr.args[0]), assumptions):
+            break
+        acc = arg
+    else:
+        if irrational:
+            return False
+        if even:
             return True
+        if odd == len(expr.args):
+            return False
+
+@EvenPredicate.register(Add)
+def _(expr, assumptions):
+    """
+    Even + Odd  -> Odd
+    Even + Even -> Even
+    Odd  + Odd  -> Even
+
+    """
+    if expr.is_number:
+        return _EvenPredicate_number(expr, assumptions)
+    _result = True
+    for arg in expr.args:
+        if ask(Q.even(arg), assumptions):
+            pass
+        elif ask(Q.odd(arg), assumptions):
+            _result = not _result
+        else:
+            break
+    else:
+        return _result
+
+@EvenPredicate.register(Pow)
+def _(expr, assumptions):
+    if expr.is_number:
+        return _EvenPredicate_number(expr, assumptions)
+    if ask(Q.integer(expr.exp), assumptions):
+        if ask(Q.positive(expr.exp), assumptions):
+            return ask(Q.even(expr.base), assumptions)
+        elif ask(~Q.negative(expr.exp) & Q.odd(expr.base), assumptions):
+            return False
+        elif expr.base is S.NegativeOne:
+            return False
+
+@EvenPredicate.register(Integer)
+def _(expr, assumptions):
+    return not bool(expr.p & 1)
+
+@EvenPredicate.register_many(Rational, Infinity, NegativeInfinity, ImaginaryUnit)
+def _(expr, assumptions):
+    return False
+
+@EvenPredicate.register(NumberSymbol)
+def _(expr, assumptions):
+    return _EvenPredicate_number(expr, assumptions)
+
+@EvenPredicate.register(Abs)
+def _(expr, assumptions):
+    if ask(Q.real(expr.args[0]), assumptions):
+        return ask(Q.even(expr.args[0]), assumptions)
+
+@EvenPredicate.register(re)
+def _(expr, assumptions):
+    if ask(Q.real(expr.args[0]), assumptions):
+        return ask(Q.even(expr.args[0]), assumptions)
+
+@EvenPredicate.register(im)
+def _(expr, assumptions):
+    if ask(Q.real(expr.args[0]), assumptions):
+        return True
 
 
 class AskOddHandler(CommonHandler):

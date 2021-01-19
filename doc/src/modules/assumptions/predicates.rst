@@ -22,6 +22,11 @@ Infinite
 Number Theory
 =============
 
+Even
+----
+
+.. autoclass:: sympy.assumptions.predicate.ntheory.EvenPredicate
+
 Prime
 -----
 
