@@ -1347,6 +1347,41 @@ def _QRdecomposition(M):
     return _QRdecomposition_optional(M, normalize=True)
 
 def _UpperHessenbergdecomposition(A):
+    """Converts a matrix into Hessenberg matrix H
+
+        Returns 2 matrices H, P s.t.
+        $P H P^{T} = A$, where H is an upper hessenberg matrix
+        and P is an orthogonal matrix
+
+        Examples
+        ========
+        >>> from sympy import Matrix
+        >>> A = Matrix([
+        ...     [1,2,3],
+        ...     [-3,5,6],
+        ...     [4,-8,9],
+        ... ])
+        >>> H, P = A.UpperHessenbergdecomposition()
+        >>> H
+        Matrix([
+        [1,    6/5,    17/5],
+        [5, 213/25, -134/25],
+        [0, 216/25,  137/25]])
+        >>> P
+        Matrix([
+        [1,    0,   0],
+        [0, -3/5, 4/5],
+        [0,  4/5, 3/5]])
+        >>> P * H * P.H == A
+        True
+
+
+        References
+        ==========
+
+        .. https://mathworld.wolfram.com/HessenbergDecomposition.html
+    """
+
     M = A.as_mutable()
 
     if not M.is_square:
@@ -1355,11 +1390,9 @@ def _UpperHessenbergdecomposition(A):
     if M.is_upper_hessenberg:
         return M, M.eye(M.cols)
 
-
     n = M.cols
     P = M.eye(n)
     H = M
-
 
     for j in range(n - 2):
         u = H[j + 1:, j]
@@ -1375,5 +1408,3 @@ def _UpperHessenbergdecomposition(A):
         P[:, j + 1:] = P[:, j + 1:] - (P[:, j + 1:] * (2 * v)) * v.T
 
     return H, P
-
-

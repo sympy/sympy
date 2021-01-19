@@ -360,7 +360,6 @@ def test_rank_decomposition():
 
 
 def test_UpperHessenbergDecomposition():
-
     A = Matrix([
         [1, 0, sqrt(3)],
         [sqrt(2), Rational(1, 2), 2],
@@ -397,4 +396,14 @@ def test_UpperHessenbergDecomposition():
     assert H.is_upper_hessenberg
     assert simplify(P * H * P.H) == C
 
+    D = Matrix([
+        [1, 2, 3],
+        [-3, 5, 6],
+        [4, -8, 9],
+    ])
+    H, P = D.UpperHessenbergdecomposition()
+    assert simplify(P * P.H) == eye(P.cols)
+    assert simplify(P.H * P) == eye(P.cols)
+    assert H.is_upper_hessenberg
+    assert simplify(P * H * P.H) == D
 
