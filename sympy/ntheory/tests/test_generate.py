@@ -128,10 +128,12 @@ def test_generate():
     assert list(sieve.primerange(10, 1)) == []
     assert list(sieve.primerange(5, 9)) == [5, 7]
     sieve._reset(prime=True)
-    assert list(sieve.primerange(2, 12)) == [2, 3, 5, 7, 11]
+    assert list(sieve.primerange(2, 13)) == [2, 3, 5, 7, 11]
+    assert list(sieve.primerange(13)) == [2, 3, 5, 7, 11]
     assert list(sieve.primerange(8)) == [2, 3, 5, 7]
     assert list(sieve.primerange(-2)) == []
-    assert list(sieve.primerange(30)) == [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+    assert list(sieve.primerange(29)) == [2, 3, 5, 7, 11, 13, 17, 19, 23]
+    assert list(sieve.primerange(34)) == [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]
 
     assert list(sieve.totientrange(5, 15)) == [4, 2, 6, 4, 6, 4, 10, 4, 12, 6]
     sieve._reset(totient=True)

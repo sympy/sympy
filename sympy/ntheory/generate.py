@@ -150,10 +150,11 @@ class Sieve:
         ========
 
         >>> from sympy import sieve
-        >>> print([i for i in sieve.primerange(7, 18)])
+        # Note the endpoint 19 is not included even though it is prime
+        >>> print([i for i in sieve.primerange(7, 19)])
         [7, 11, 13, 17]
 
-        >>> print([i for i in sieve.primerange(18)])
+        >>> print([i for i in sieve.primerange(19)])
         [2, 3, 5, 7, 11, 13, 17]
         """
         from sympy.functions.elementary.integers import ceiling
