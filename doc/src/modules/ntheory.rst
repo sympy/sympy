@@ -235,7 +235,7 @@ large factors. Due to this while factoring numbers first `ecm` is used to get
 smaller factors of around ~15digits then `qs` is used to get larger factors.
 
 For factoring `2709077133180915240135586837960864768806330782747` which is a semi-prime number
-with two 25 digit factors. `qs` is able to factorize this in    around 248s.
+with two 25 digit factors. `qs` is able to factorize this in around 248s.
 
 .. autofunction:: qs
 
