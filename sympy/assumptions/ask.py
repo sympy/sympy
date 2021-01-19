@@ -183,30 +183,8 @@ class AssumptionKeys:
 
     @memoize_property
     def composite(self):
-        """
-        Composite number predicate.
-
-        Explanation
-        ===========
-
-        ``ask(Q.composite(x))`` is true iff ``x`` is a positive integer and has
-        at least one positive divisor other than ``1`` and the number itself.
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask
-        >>> ask(Q.composite(0))
-        False
-        >>> ask(Q.composite(1))
-        False
-        >>> ask(Q.composite(2))
-        False
-        >>> ask(Q.composite(20))
-        True
-
-        """
-        return Predicate('composite')
+        from .handlers.ntheory import CompositePredicate
+        return CompositePredicate()
 
     @memoize_property
     def commutative(self):
@@ -1052,7 +1030,6 @@ def compute_known_facts(known_facts, known_facts_keys):
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
     ("commutative",       "AskCommutativeHandler"),
-    ("composite",         "ntheory.AskCompositeHandler"),
     ("even",              "ntheory.AskEvenHandler"),
     ("odd",               "ntheory.AskOddHandler"),
     ("is_true",           "common.TautologicalHandler"),

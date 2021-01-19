@@ -27,6 +27,11 @@ Prime
 
 .. autoclass:: sympy.assumptions.predicate.ntheory.PrimePredicate
 
+Composite
+---------
+
+.. autoclass:: sympy.assumptions.predicate.ntheory.CompositePredicate
+
 Order
 =====
 

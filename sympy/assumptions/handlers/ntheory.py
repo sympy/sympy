@@ -9,7 +9,7 @@ from sympy.core.numbers import (ImaginaryUnit, Infinity, Integer, NegativeInfini
     NumberSymbol, Rational)
 from sympy.ntheory import isprime
 
-from ..predicates.ntheory import PrimePredicate
+from ..predicates.ntheory import (PrimePredicate, CompositePredicate,)
 
 
 # PrimePredicate
@@ -76,30 +76,30 @@ def _(expr, assumptions):
     return _PrimePredicate_number(expr, assumptions)
 
 
-class AskCompositeHandler(CommonHandler):
+# CompositePredicate
 
-    @staticmethod
-    def Expr(expr, assumptions):
-        return expr.is_composite
+@CompositePredicate.register(Expr)
+def _(expr, assumptions):
+    return expr.is_composite
 
-    @staticmethod
-    def Basic(expr, assumptions):
-        _positive = ask(Q.positive(expr), assumptions)
-        if _positive:
-            _integer = ask(Q.integer(expr), assumptions)
-            if _integer:
-                _prime = ask(Q.prime(expr), assumptions)
-                if _prime is None:
-                    return
-                # Positive integer which is not prime is not
-                # necessarily composite
-                if expr.equals(1):
-                    return False
-                return not _prime
-            else:
-                return _integer
+@CompositePredicate.register(Basic)
+def _(expr, assumptions):
+    _positive = ask(Q.positive(expr), assumptions)
+    if _positive:
+        _integer = ask(Q.integer(expr), assumptions)
+        if _integer:
+            _prime = ask(Q.prime(expr), assumptions)
+            if _prime is None:
+                return
+            # Positive integer which is not prime is not
+            # necessarily composite
+            if expr.equals(1):
+                return False
+            return not _prime
         else:
-            return _positive
+            return _integer
+    else:
+        return _positive
 
 
 class AskEvenHandler(CommonHandler):
