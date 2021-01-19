@@ -4843,7 +4843,6 @@ def test_sympy__codegen__array_utils__CodegenArrayElementwiseAdd():
 
 def test_sympy__codegen__array_utils__CodegenArrayPermuteDims():
     from sympy.codegen.array_utils import CodegenArrayPermuteDims
-    from sympy import IndexedBase
     A = MatrixSymbol("A", 4, 4)
     assert _test_args(CodegenArrayPermuteDims(A, (1, 0)))
 
