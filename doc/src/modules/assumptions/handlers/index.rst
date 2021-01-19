@@ -12,4 +12,3 @@ Contents
 
     common.rst
     matrices.rst
-    ntheory.rst

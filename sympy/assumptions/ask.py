@@ -125,113 +125,23 @@ class AssumptionKeys:
 
     @memoize_property
     def even(self):
-        """
-        Even number predicate.
-
-        Explanation
-        ===========
-
-        ``ask(Q.even(x))`` is true iff ``x`` belongs to the set of even
-        integers.
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask, pi
-        >>> ask(Q.even(0))
-        True
-        >>> ask(Q.even(2))
-        True
-        >>> ask(Q.even(3))
-        False
-        >>> ask(Q.even(pi))
-        False
-
-        """
-        return Predicate('even')
+        from .handlers.ntheory import EvenPredicate
+        return EvenPredicate()
 
     @memoize_property
     def odd(self):
-        """
-        Odd number predicate.
-
-        Explanation
-        ===========
-
-        ``ask(Q.odd(x))`` is true iff ``x`` belongs to the set of odd numbers.
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask, pi
-        >>> ask(Q.odd(0))
-        False
-        >>> ask(Q.odd(2))
-        False
-        >>> ask(Q.odd(3))
-        True
-        >>> ask(Q.odd(pi))
-        False
-
-        """
-        return Predicate('odd')
+        from .handlers.ntheory import OddPredicate
+        return OddPredicate()
 
     @memoize_property
     def prime(self):
-        """
-        Prime number predicate.
-
-        Explanation
-        ===========
-
-        ``ask(Q.prime(x))`` is true iff ``x`` is a natural number greater
-        than 1 that has no positive divisors other than ``1`` and the
-        number itself.
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask
-        >>> ask(Q.prime(0))
-        False
-        >>> ask(Q.prime(1))
-        False
-        >>> ask(Q.prime(2))
-        True
-        >>> ask(Q.prime(20))
-        False
-        >>> ask(Q.prime(-3))
-        False
-
-        """
-        return Predicate('prime')
+        from .handlers.ntheory import PrimePredicate
+        return PrimePredicate()
 
     @memoize_property
     def composite(self):
-        """
-        Composite number predicate.
-
-        Explanation
-        ===========
-
-        ``ask(Q.composite(x))`` is true iff ``x`` is a positive integer and has
-        at least one positive divisor other than ``1`` and the number itself.
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask
-        >>> ask(Q.composite(0))
-        False
-        >>> ask(Q.composite(1))
-        False
-        >>> ask(Q.composite(2))
-        False
-        >>> ask(Q.composite(20))
-        True
-
-        """
-        return Predicate('composite')
+        from .handlers.ntheory import CompositePredicate
+        return CompositePredicate()
 
     @memoize_property
     def commutative(self):
@@ -1077,10 +987,6 @@ def compute_known_facts(known_facts, known_facts_keys):
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
     ("commutative",       "AskCommutativeHandler"),
-    ("composite",         "ntheory.AskCompositeHandler"),
-    ("even",              "ntheory.AskEvenHandler"),
-    ("prime",             "ntheory.AskPrimeHandler"),
-    ("odd",               "ntheory.AskOddHandler"),
     ("is_true",           "common.TautologicalHandler"),
     ("symmetric",         "matrices.AskSymmetricHandler"),
     ("invertible",        "matrices.AskInvertibleHandler"),
