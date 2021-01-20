@@ -11,4 +11,3 @@ Contents
     :maxdepth: 3
 
     common.rst
-    matrices.rst

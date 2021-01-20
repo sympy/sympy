@@ -19,6 +19,94 @@ Infinite
 
 .. autoclass:: sympy.assumptions.predicates.calculus.InfinitePredicate
 
+Matrix
+======
+
+Symmetric
+---------
+
+.. autoclass:: sympy.assumptions.predicates.matrices.SymmetricPredicate
+
+Invertible
+----------
+
+.. autoclass:: sympy.assumptions.predicates.matrices.InvertiblePredicate
+
+Orthogonal
+----------
+
+.. autoclass:: sympy.assumptions.predicates.matrices.OrthogonalPredicate
+
+Unitary
+-------
+
+.. autoclass:: sympy.assumptions.predicates.matrices.UnitaryPredicate
+
+Positive Definite
+-----------------
+
+.. autoclass:: sympy.assumptions.predicates.matrices.PositiveDefinitePredicate
+
+Upper triangular
+----------------
+
+.. autoclass:: sympy.assumptions.predicates.matrices.UpperTriangularPredicate
+
+Lower triangular
+----------------
+
+.. autoclass:: sympy.assumptions.predicates.matrices.LowerTriangularPredicate
+
+Diagonal
+--------
+
+.. autoclass:: sympy.assumptions.predicates.matrices.DiagonalPredicate
+
+Full rank
+---------
+
+.. autoclass:: sympy.assumptions.predicates.matrices.FullRankPredicate
+
+Square
+------
+
+.. autoclass:: sympy.assumptions.predicates.matrices.SquarePredicate
+
+Integer elements
+----------------
+
+.. autoclass:: sympy.assumptions.predicates.matrices.IntegerElementsPredicate
+
+Real elements
+-------------
+
+.. autoclass:: sympy.assumptions.predicates.matrices.RealElementsPredicate
+
+Complex elements
+----------------
+
+.. autoclass:: sympy.assumptions.predicates.matrices.ComplexElementsPredicate
+
+Singular
+--------
+
+.. autoclass:: sympy.assumptions.predicates.matrices.SingularPredicate
+
+Normal
+------
+
+.. autoclass:: sympy.assumptions.predicates.matrices.NormalPredicate
+
+Triangular
+----------
+
+.. autoclass:: sympy.assumptions.predicates.matrices.TriangularPredicate
+
+Unit triangular
+---------------
+
+.. autoclass:: sympy.assumptions.predicates.matrices.UnitTriangularPredicate
+
 Number Theory
 =============
 
