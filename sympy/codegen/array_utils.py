@@ -1745,6 +1745,9 @@ def _recognize_matrix_expression(expr):
         return expr
     elif isinstance(expr, MatrixExpr):
         return expr
+    elif isinstance(expr, ZeroArray):
+        if get_rank(expr) == 2:
+            return ZeroMatrix(*expr.shape)
     return expr
 
 

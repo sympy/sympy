@@ -117,6 +117,9 @@ def test_codegen_array_recognize_matrix_mul_lines():
             ), (2, 4)), [0, 1, 3, 2])
     assert recognize_matrix_expression(cg) == expand(a*(b.T*c + c.T*b))
 
+    za = ZeroArray(m, n)
+    assert recognize_matrix_expression(za) == ZeroMatrix(m, n)
+
 
 def test_codegen_array_flatten():
 
