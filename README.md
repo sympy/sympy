@@ -1,4 +1,8 @@
-# SymPy
+<p align="center"  width="100%">
+<a href="https://www.sympy.org/">
+<img  alt = "SymPy" width ="40%"  src = "doc\src\logo\sympy.svg" />
+</a>
+</p>
 
 [![pypi version](https://img.shields.io/pypi/v/sympy.svg)](https://pypi.python.org/pypi/sympy)
 [![Build status](https://secure.travis-ci.org/sympy/sympy.svg?branch=master)](https://travis-ci.org/sympy/sympy)
@@ -6,8 +10,11 @@
 [![Zenodo Badge](https://zenodo.org/badge/18918/sympy/sympy.svg)](https://zenodo.org/badge/latestdoi/18918/sympy/sympy)
 [![codecov Badge](https://codecov.io/gh/sympy/sympy/branch/master/graph/badge.svg)](https://codecov.io/gh/sympy/sympy)
 
-[![SymPy Banner](banner.svg)](https://sympy.org/)
-
+<p align ="center" width = "100%">
+<a href="https://www.sympy.org/">
+<img  alt = "SymPy Banner" width ="100%"  src = "banner.svg" />
+</a> 
+</p>
 
 See the AUTHORS file for the list of authors.
 
