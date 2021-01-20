@@ -1021,7 +1021,7 @@ def nprime(nth, kth=1):
     Examples
     ========
 
-    >>> from sympy import nprime
+    >>> from sympy.ntheory import nprime
     >>> nprime(5)
     [2, 3, 5, 7, 11]
 
