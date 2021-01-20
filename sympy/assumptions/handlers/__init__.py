@@ -5,9 +5,9 @@ order to avoid circular import problem.
 """
 
 from .common import (AskHandler, CommonHandler,
-    TautologicalHandler, test_closed_group)
+    test_closed_group)
 
 __all__ = [
     'AskHandler', 'CommonHandler',
-    'TautologicalHandler', 'test_closed_group'
+    'test_closed_group'
 ]

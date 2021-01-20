@@ -3,13 +3,14 @@ This module defines base class for handlers and some core handlers:
 ``Q.commutative`` and ``Q.is_true``.
 """
 
-from sympy.assumptions import Q, ask
+from sympy.assumptions import Q, ask, AppliedPredicate
 from sympy.core import Basic, Symbol
 from sympy.core.logic import _fuzzy_group
 from sympy.core.numbers import NaN, Number
-from sympy.logic.boolalg import conjuncts
+from sympy.logic.boolalg import (And, BooleanTrue, BooleanFalse, conjuncts,
+    Equivalent, Implies, Not, Or)
 
-from ..predicates.common import CommutativePredicate
+from ..predicates.common import CommutativePredicate, IsTruePredicate
 
 
 class AskHandler:
@@ -65,65 +66,69 @@ def _(expr, assumptions):
     return True
 
 
-class TautologicalHandler(AskHandler):
-    """Wrapper allowing to query the truth value of a boolean expression."""
+# IsTruePredicate
 
-    @staticmethod
-    def bool(expr, assumptions):
-        return expr
+@IsTruePredicate.register(bool)
+def _(expr, assumptions):
+    return expr
 
-    BooleanTrue = staticmethod(CommonHandler.AlwaysTrue)
-    BooleanFalse = staticmethod(CommonHandler.AlwaysFalse)
+@IsTruePredicate.register(BooleanTrue)
+def _(expr, assumptions):
+    return True
 
-    @staticmethod
-    def AppliedPredicate(expr, assumptions):
-        return ask(expr, assumptions)
+@IsTruePredicate.register(BooleanFalse)
+def _(expr, assumptions):
+    return False
 
-    @staticmethod
-    def Not(expr, assumptions):
-        value = ask(expr.args[0], assumptions=assumptions)
-        if value in (True, False):
-            return not value
-        else:
-            return None
+@IsTruePredicate.register(AppliedPredicate)
+def _(expr, assumptions):
+    return ask(expr, assumptions)
 
-    @staticmethod
-    def Or(expr, assumptions):
-        result = False
-        for arg in expr.args:
-            p = ask(arg, assumptions=assumptions)
-            if p is True:
-                return True
-            if p is None:
-                result = None
-        return result
+@IsTruePredicate.register(Not)
+def _(expr, assumptions):
+    value = ask(expr.args[0], assumptions=assumptions)
+    if value in (True, False):
+        return not value
+    else:
+        return None
 
-    @staticmethod
-    def And(expr, assumptions):
-        result = True
-        for arg in expr.args:
-            p = ask(arg, assumptions=assumptions)
-            if p is False:
-                return False
-            if p is None:
-                result = None
-        return result
+@IsTruePredicate.register(Or)
+def _(expr, assumptions):
+    result = False
+    for arg in expr.args:
+        p = ask(arg, assumptions=assumptions)
+        if p is True:
+            return True
+        if p is None:
+            result = None
+    return result
 
-    @staticmethod
-    def Implies(expr, assumptions):
-        p, q = expr.args
-        return ask(~p | q, assumptions=assumptions)
+@IsTruePredicate.register(And)
+def _(expr, assumptions):
+    result = True
+    for arg in expr.args:
+        p = ask(arg, assumptions=assumptions)
+        if p is False:
+            return False
+        if p is None:
+            result = None
+    return result
 
-    @staticmethod
-    def Equivalent(expr, assumptions):
-        p, q = expr.args
-        pt = ask(p, assumptions=assumptions)
-        if pt is None:
-            return None
-        qt = ask(q, assumptions=assumptions)
-        if qt is None:
-            return None
-        return pt == qt
+@IsTruePredicate.register(Implies)
+def _(expr, assumptions):
+    p, q = expr.args
+    return ask(~p | q, assumptions=assumptions)
+
+@IsTruePredicate.register(Equivalent)
+def _(expr, assumptions):
+    p, q = expr.args
+    pt = ask(p, assumptions=assumptions)
+    if pt is None:
+        return None
+    qt = ask(q, assumptions=assumptions)
+    if qt is None:
+        return None
+    return pt == qt
 
 
 #### Helper methods

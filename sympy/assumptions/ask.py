@@ -150,25 +150,8 @@ class AssumptionKeys:
 
     @memoize_property
     def is_true(self):
-        """
-        Generic predicate.
-
-        Explanation
-        ===========
-
-        ``ask(Q.is_true(x))`` is true iff ``x`` is true. This only makes
-        sense if ``x`` is a predicate.
-
-        Examples
-        ========
-
-        >>> from sympy import ask, Q, symbols
-        >>> x = symbols('x')
-        >>> ask(Q.is_true(True))
-        True
-
-        """
-        return Predicate('is_true')
+        from .handlers.common import IsTruePredicate
+        return IsTruePredicate()
 
     @memoize_property
     def symmetric(self):
@@ -569,7 +552,6 @@ def compute_known_facts(known_facts, known_facts_keys):
 # for a particular key
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
-    ("is_true",           "common.TautologicalHandler"),
 ]
 
 for name, value in _handlers:
