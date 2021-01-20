@@ -1,7 +1,7 @@
 from sympy import Sieve, sieve, Symbol, S, limit, I, zoo, nan, Rational
 
 from sympy.ntheory import isprime, totient, mobius, randprime, nextprime, prevprime, \
-    primerange, primepi, prime, primorial, composite, compositepi, reduced_totient
+    primerange, primepi, prime, primorial, composite, compositepi, reduced_totient, nprime
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import mr
 from sympy.testing.pytest import raises
@@ -230,3 +230,12 @@ def test_sieve_iter():
 def test_sieve_repr():
     assert "sieve" in repr(sieve)
     assert "prime" in repr(sieve)
+
+def test_nprime():
+    assert nprime(10) == [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+    assert nprime(15, 13) == [41, 43, 47]
+    raises(ValueError, lambda: nprime(-1))
+    raises(ValueError, lambda: nprime(0))
+    raises(ValueError, lambda: nprime(10, 0))
+    raises(ValueError, lambda: nprime(10,-5))
+    raises(ValueError, lambda: nprime(5, 10))

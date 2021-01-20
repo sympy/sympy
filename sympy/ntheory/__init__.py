@@ -3,7 +3,7 @@ Number theory module (primes, etc)
 """
 
 from .generate import nextprime, prevprime, prime, primepi, primerange, \
-    randprime, Sieve, sieve, primorial, cycle_length, composite, compositepi
+    randprime, Sieve, sieve, primorial, cycle_length, composite, compositepi, nprime
 from .primetest import isprime, is_gaussian_prime
 from .factor_ import divisors, proper_divisors, factorint, multiplicity, \
     multiplicity_in_factorial, perfect_power, pollard_pm1, pollard_rho, \
@@ -30,6 +30,7 @@ from .qs import qs
 __all__ = [
     'nextprime', 'prevprime', 'prime', 'primepi', 'primerange', 'randprime',
     'Sieve', 'sieve', 'primorial', 'cycle_length', 'composite', 'compositepi',
+    'nprime',
 
     'isprime', 'is_gaussian_prime',
 
