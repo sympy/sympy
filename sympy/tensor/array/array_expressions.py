@@ -1,4 +1,4 @@
-from sympy import Expr, ImmutableDenseNDimArray
+from sympy import Expr, ImmutableDenseNDimArray, S
 from sympy.core.sympify import _sympify
 
 
@@ -8,6 +8,8 @@ class ZeroArray(Expr):
     """
 
     def __new__(cls, *shape):
+        if len(shape) == 0:
+            return S.Zero
         shape = map(_sympify, shape)
         obj = Expr.__new__(cls, *shape)
         return obj
