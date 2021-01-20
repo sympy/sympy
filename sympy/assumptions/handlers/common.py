@@ -4,8 +4,12 @@ This module defines base class for handlers and some core handlers:
 """
 
 from sympy.assumptions import Q, ask
+from sympy.core import Basic, Symbol
 from sympy.core.logic import _fuzzy_group
+from sympy.core.numbers import NaN, Number
 from sympy.logic.boolalg import conjuncts
+
+from ..predicates.common import CommutativePredicate
 
 
 class AskHandler:
@@ -31,37 +35,34 @@ class CommonHandler(AskHandler):
     NaN = AlwaysFalse
 
 
-class AskCommutativeHandler(CommonHandler):
-    """
-    Handler for key 'commutative'
-    """
+# CommutativePredicate
 
-    @staticmethod
-    def Symbol(expr, assumptions):
-        """Objects are expected to be commutative unless otherwise stated"""
-        assumps = conjuncts(assumptions)
-        if expr.is_commutative is not None:
-            return expr.is_commutative and not ~Q.commutative(expr) in assumps
-        if Q.commutative(expr) in assumps:
-            return True
-        elif ~Q.commutative(expr) in assumps:
+@CommutativePredicate.register(Symbol)
+def _(expr, assumptions):
+    """Objects are expected to be commutative unless otherwise stated"""
+    assumps = conjuncts(assumptions)
+    if expr.is_commutative is not None:
+        return expr.is_commutative and not ~Q.commutative(expr) in assumps
+    if Q.commutative(expr) in assumps:
+        return True
+    elif ~Q.commutative(expr) in assumps:
+        return False
+    return True
+
+@CommutativePredicate.register(Basic)
+def _(expr, assumptions):
+    for arg in expr.args:
+        if not ask(Q.commutative(arg), assumptions):
             return False
-        return True
+    return True
 
-    @staticmethod
-    def Basic(expr, assumptions):
-        for arg in expr.args:
-            if not ask(Q.commutative(arg), assumptions):
-                return False
-        return True
+@CommutativePredicate.register(Number)
+def _(expr, assumptions):
+    return True
 
-    @staticmethod
-    def Number(expr, assumptions):
-        return True
-
-    @staticmethod
-    def NaN(expr, assumptions):
-        return True
+@CommutativePredicate.register(NaN)
+def _(expr, assumptions):
+    return True
 
 
 class TautologicalHandler(AskHandler):

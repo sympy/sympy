@@ -145,18 +145,8 @@ class AssumptionKeys:
 
     @memoize_property
     def commutative(self):
-        """
-        Commutative predicate.
-
-        Explanation
-        ===========
-
-        ``ask(Q.commutative(x))`` is true iff ``x`` commutes with any other
-        object with respect to multiplication operation.
-
-        """
-        # TODO: Add examples
-        return Predicate('commutative')
+        from .handlers.common import CommutativePredicate
+        return CommutativePredicate()
 
     @memoize_property
     def is_true(self):
@@ -579,7 +569,6 @@ def compute_known_facts(known_facts, known_facts_keys):
 # for a particular key
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
-    ("commutative",       "AskCommutativeHandler"),
     ("is_true",           "common.TautologicalHandler"),
 ]
 

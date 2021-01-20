@@ -6,6 +6,14 @@
 Predicates
 ==========
 
+Common
+======
+
+Commutative
+-----------
+
+.. autoclass:: sympy.assumptions.predicates.common.CommutativePredicate
+
 Calculus
 ========
 
