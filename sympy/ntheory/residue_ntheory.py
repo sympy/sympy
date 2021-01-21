@@ -975,7 +975,7 @@ def jacobi_symbol(m, n):
     ========
 
     >>> from sympy.ntheory import jacobi_symbol, legendre_symbol
-    >>> from sympy import Mul, S
+    >>> from sympy import S
     >>> jacobi_symbol(45, 77)
     -1
     >>> jacobi_symbol(60, 121)
@@ -999,7 +999,7 @@ def jacobi_symbol(m, n):
     if n < 0 or not n % 2:
         raise ValueError("n should be an odd positive integer")
     if m < 0 or m > n:
-        m = m % n
+        m %= n
     if not m:
         return int(n == 1)
     if n == 1 or m == 1:
@@ -1018,7 +1018,7 @@ def jacobi_symbol(m, n):
             if n % 8 in [3, 5]:
                 j = -j
         m, n = n, m
-        if m % 4 == 3 and n % 4 == 3:
+        if m % 4 == n % 4 == 3:
             j = -j
         m %= n
     if n != 1:
@@ -1516,7 +1516,6 @@ def polynomial_congruence(expr, m):
     ========
 
     >>> from sympy.ntheory import polynomial_congruence
-    >>> from sympy import Poly
     >>> from sympy.abc import x
     >>> expr = x**6 - 2*x**5 -35
     >>> polynomial_congruence(expr, 6125)

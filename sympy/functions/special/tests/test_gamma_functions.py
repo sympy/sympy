@@ -140,6 +140,28 @@ def test_lowergamma():
     assert conjugate(lowergamma(x, 0)) == 0
     assert unchanged(conjugate, lowergamma(x, -oo))
 
+    assert lowergamma(0, x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(S(1)/3, x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(1, x, evaluate=False)._eval_is_meromorphic(x, 0) == True
+    assert lowergamma(x, x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(x + 1, x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(1/x, x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(0, x + 1)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(S(1)/3, x + 1)._eval_is_meromorphic(x, 0) == True
+    assert lowergamma(1, x + 1, evaluate=False)._eval_is_meromorphic(x, 0) == True
+    assert lowergamma(x, x + 1)._eval_is_meromorphic(x, 0) == True
+    assert lowergamma(x + 1, x + 1)._eval_is_meromorphic(x, 0) == True
+    assert lowergamma(1/x, x + 1)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(0, 1/x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(S(1)/3, 1/x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(1, 1/x, evaluate=False)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(x, 1/x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(x + 1, 1/x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(1/x, 1/x)._eval_is_meromorphic(x, 0) == False
+
+    assert lowergamma(x, 2).series(x, oo, 3) == \
+        2**x*(1 + 2/(x + 1))*exp(-2)/x + O(exp(x*log(2))/x**3, (x, oo))
+
     assert lowergamma(
         x, y).rewrite(expint) == -y**x*expint(-x + 1, y) + gamma(x)
     k = Symbol('k', integer=True)
@@ -546,10 +568,10 @@ def test_loggamma():
 
     assert loggamma(x).rewrite('intractable') == log(gamma(x))
 
-    s1 = loggamma(x).series(x)
+    s1 = loggamma(x).series(x).cancel()
     assert s1 == -log(x) - EulerGamma*x + pi**2*x**2/12 + x**3*polygamma(2, 1)/6 + \
         pi**4*x**4/360 + x**5*polygamma(4, 1)/120 + O(x**6)
-    assert s1 == loggamma(x).rewrite('intractable').series(x)
+    assert s1 == loggamma(x).rewrite('intractable').series(x).cancel()
 
     assert conjugate(loggamma(x)) == loggamma(conjugate(x))
     assert conjugate(loggamma(0)) is oo

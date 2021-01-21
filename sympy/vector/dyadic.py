@@ -221,11 +221,9 @@ class BaseDyadic(Dyadic, AtomicExpr):
 
         return obj
 
-    def __str__(self, printer=None):
-        return "(" + str(self.args[0]) + "|" + str(self.args[1]) + ")"
-
-    _sympystr = __str__
-    _sympyrepr = _sympystr
+    def _sympystr(self, printer):
+        return "({}|{})".format(
+            printer._print(self.args[0]), printer._print(self.args[1]))
 
 
 class DyadicMul(BasisDependentMul, Dyadic):
@@ -255,17 +253,10 @@ class DyadicAdd(BasisDependentAdd, Dyadic):
         obj = BasisDependentAdd.__new__(cls, *args, **options)
         return obj
 
-    def __str__(self, printer=None):
-        ret_str = ''
+    def _sympystr(self, printer):
         items = list(self.components.items())
         items.sort(key=lambda x: x[0].__str__())
-        for k, v in items:
-            temp_dyad = k * v
-            ret_str += temp_dyad.__str__(printer) + " + "
-        return ret_str[:-3]
-
-    __repr__ = __str__
-    _sympystr = __str__
+        return " + ".join(printer._print(k * v) for k, v in items)
 
 
 class DyadicZero(BasisDependentZero, Dyadic):

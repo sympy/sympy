@@ -1,11 +1,14 @@
 #
 # This is the module for ODE solver classes for single ODEs.
 #
+
 import typing
 
 if typing.TYPE_CHECKING:
     from typing import ClassVar
-from typing import Dict, Iterable, List, Optional, Type
+from typing import Dict, Type
+
+from typing import Iterator, List, Optional
 
 from sympy.core import S
 from sympy.core.exprtools import factor_terms
@@ -14,10 +17,11 @@ from sympy.core.function import AppliedUndef, Derivative, Function, expand
 from sympy.core.numbers import Float
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
+from sympy.core.mul import Mul
 from sympy.functions import exp, sqrt, tan, log
 from sympy.integrals import Integral
-from sympy.polys.polytools import cancel, factor, factor_list
-from sympy.simplify import simplify
+from sympy.polys.polytools import cancel, factor
+from sympy.simplify.simplify import simplify
 from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
 
@@ -55,7 +59,7 @@ class SingleODEProblem:
     This class is used internally by dsolve. To instantiate an instance
     directly first define an ODE problem:
 
-    >>> from sympy import Eq, Function, Symbol
+    >>> from sympy import Function, Symbol
     >>> x = Symbol('x')
     >>> f = Function('f')
     >>> eq = f(x).diff(x, 2)
@@ -120,7 +124,7 @@ class SingleODEProblem:
         Cs = [next(ncs) for i in range(num)]
         return Cs
 
-    def iter_numbered_constants(self, start=1, prefix='C') -> Iterable[Symbol]:
+    def iter_numbered_constants(self, start=1, prefix='C') -> Iterator[Symbol]:
         """
         Returns an iterator of constants that do not occur
         in eq already.
@@ -130,6 +134,13 @@ class SingleODEProblem:
         if func_set:
             atom_set |= {Symbol(str(f.func)) for f in func_set}
         return numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
+
+    @cached_property
+    def is_autonomous(self):
+        u = Dummy('u')
+        x = self.sym
+        syms = self.eq.subs(self.func, u).free_symbols
+        return x not in syms
 
     # TODO: Add methods that can be used by many ODE solvers:
     # order
@@ -152,7 +163,7 @@ class SingleODESolver:
     You can use a subclass of SingleODEProblem to solve a particular type of
     ODE. We first define a particular ODE problem:
 
-    >>> from sympy import Eq, Function, Symbol
+    >>> from sympy import Function, Symbol
     >>> x = Symbol('x')
     >>> f = Function('f')
     >>> eq = f(x).diff(x, 2)
@@ -192,7 +203,7 @@ class SingleODESolver:
 
     # Subclasses should store in this attribute the list of order(s) of ODE
     # that subclass can solve or leave it to None if not specific to any order
-    order = None  # type: None or list
+    order = None  # type: Optional[list]
 
     def __init__(self, ode_problem):
         self.ode_problem = ode_problem
@@ -240,12 +251,12 @@ class SinglePatternODESolver(SingleODESolver):
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
         order = self.ode_problem.order
-        df = f(x).diff(x)
+        df = f(x).diff(x, order)
 
-        if order != 1:
+        if order not in [1, 2]:
             return False
 
-        pattern = self._equation(f(x), x, 1)
+        pattern = self._equation(f(x), x, order)
 
         if not pattern.coeff(df).has(Wild):
             eq = expand(eq / eq.coeff(df))
@@ -440,8 +451,8 @@ class FirstLinear(SinglePatternODESolver):
         fx = self.ode_problem.func
         x = self.ode_problem.sym
         (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(fx, (((C1 + Integral(Q*exp(Integral(P, x)),x))
-            * exp(-Integral(P, x)))))
+        gensol = Eq(fx, ((C1 + Integral(Q*exp(Integral(P, x)),x))
+            * exp(-Integral(P, x))))
         return [gensol]
 
 
@@ -466,8 +477,8 @@ class AlmostLinear(SinglePatternODESolver):
     Examples
     ========
 
-    >>> from sympy import Function, Derivative, pprint, sin, cos
-    >>> from sympy.solvers.ode import dsolve, classify_ode
+    >>> from sympy import Function, pprint, sin, cos
+    >>> from sympy.solvers.ode import dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> d = f(x).diff(x)
@@ -526,8 +537,8 @@ class AlmostLinear(SinglePatternODESolver):
     def _get_general_solution(self, *, simplify: bool = True):
         x = self.ode_problem.sym
         (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(self.ly, (((C1 + Integral((self.cx/self.ax)*exp(Integral(self.bx/self.ax, x)),x))
-                * exp(-Integral(self.bx/self.ax, x)))))
+        gensol = Eq(self.ly, ((C1 + Integral((self.cx/self.ax)*exp(Integral(self.bx/self.ax, x)),x))
+                * exp(-Integral(self.bx/self.ax, x))))
 
         return [gensol]
 
@@ -628,8 +639,8 @@ class Bernoulli(SinglePatternODESolver):
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
         if n==1:
             gensol = Eq(log(fx), (
-            (C1 + Integral((-P + Q),x)
-        )))
+            C1 + Integral((-P + Q),x)
+        ))
         else:
             gensol = Eq(fx**(1-n), (
                 (C1 - (n - 1) * Integral(Q*exp(-n*Integral(P, x))
@@ -650,7 +661,7 @@ class Factorable(SingleODESolver):
         Examples
         ========
 
-        >>> from sympy import Function, dsolve, Eq, pprint, Derivative
+        >>> from sympy import Function, dsolve, pprint
         >>> from sympy.abc import x
         >>> f = Function('f')
         >>> eq = (f(x)**2-4)*(f(x).diff(x)+f(x))
@@ -672,7 +683,8 @@ class Factorable(SingleODESolver):
         self.eqs = []
         eq = eq.collect(f(x), func = cancel)
         eq = fraction(factor(eq))[0]
-        roots = factor_list(eq)[1]
+        factors = Mul.make_args(factor(eq))
+        roots = [fac.as_base_exp() for fac in factors if len(fac.args)!=0]
         if len(roots)>1 or roots[0][1]>1:
             for base,expo in roots:
                 if base.has(f(x)):
@@ -727,7 +739,7 @@ class RiccatiSpecial(SinglePatternODESolver):
     and is valid when neither `a` nor `b` are zero and either `c` or `d` is
     zero.
 
-    >>> from sympy.abc import x, y, a, b, c, d
+    >>> from sympy.abc import x, a, b, c, d
     >>> from sympy.solvers.ode import dsolve, checkodesol
     >>> from sympy import pprint, Function
     >>> f = Function('f')
@@ -777,6 +789,67 @@ class RiccatiSpecial(SinglePatternODESolver):
 
         gensol = Eq(fx, (a - c - mu*tan(mu/(2*a)*log(x) + C1))/(2*b*x))
         return [gensol]
+
+
+class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
+    r"""
+    Gives solution for the autonomous second order nonlinear
+    differential equation of the form
+
+    .. math :: f''(x) = g(f(x))
+
+    The solution for this differential equation can be computed
+    by multiplying by `f'(x)` and integrating on both sides,
+    converting it into a first order differential equation.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, symbols, dsolve
+    >>> f, g = symbols('f g', cls=Function)
+    >>> x = symbols('x')
+
+    >>> eq = f(x).diff(x, 2) - g(f(x))
+    >>> dsolve(eq, simplify=False)
+    [Eq(Integral(1/sqrt(C1 + 2*Integral(g(_u), _u)), (_u, f(x))), C2 + x),
+    Eq(Integral(1/sqrt(C1 + 2*Integral(g(_u), _u)), (_u, f(x))), C2 - x)]
+
+    >>> from sympy import exp, log
+    >>> eq = f(x).diff(x, 2) - exp(f(x)) + log(f(x))
+    >>> dsolve(eq, simplify=False)
+    [Eq(Integral(1/sqrt(-2*_u*log(_u) + 2*_u + C1 + 2*exp(_u)), (_u, f(x))), C2 + x),
+    Eq(Integral(1/sqrt(-2*_u*log(_u) + 2*_u + C1 + 2*exp(_u)), (_u, f(x))), C2 - x)]
+
+    References
+    ==========
+
+    http://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
+    """
+    hint = "2nd_nonlinear_autonomous_conserved"
+    has_integral = True
+    order = [2]
+
+    def _wilds(self, f, x, order):
+        fy = Wild('fy', exclude=[0, f(x).diff(x), f(x).diff(x, 2)])
+        return (fy,)
+
+    def _equation(self, fx, x, order):
+        fy = self.wilds()[0]
+        return fx.diff(x, 2) + fy
+
+    def _verify(self, fx):
+        return self.ode_problem.is_autonomous
+
+    def _get_general_solution(self, *, simplify: bool = True):
+        g = self.wilds_match()[0]
+        fx = self.ode_problem.func
+        x = self.ode_problem.sym
+        u = Dummy('u')
+        g = g.subs(fx, u)
+        C1, C2 = self.ode_problem.get_numbered_constants(num=2)
+        inside = -2*Integral(g, u) + C1
+        lhs = Integral(1/sqrt(inside), (u, fx))
+        return [Eq(lhs, C2 + x), Eq(lhs, C2 - x)]
 
 
 # Avoid circular import:

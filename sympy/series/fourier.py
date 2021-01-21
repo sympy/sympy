@@ -1,7 +1,5 @@
 """Fourier Series"""
 
-from __future__ import print_function, division
-
 from sympy import pi, oo, Wild
 from sympy.core.expr import Expr
 from sympy.core.add import Add
@@ -42,13 +40,15 @@ def _process_limits(func, limits):
     Limits should be of the form (x, start, stop).
     x should be a symbol. Both start and stop should be bounded.
 
+    Explanation
+    ===========
+
     * If x is not given, x is determined from func.
     * If limits is None. Limit of the form (x, -pi, pi) is returned.
 
     Examples
     ========
 
-    >>> from sympy import pi
     >>> from sympy.series.fourier import _process_limits as pari
     >>> from sympy.abc import x
     >>> pari(x**2, (x, -2, 2))
@@ -123,6 +123,9 @@ def finite_check(f, x, L):
 class FourierSeries(SeriesBase):
     r"""Represents Fourier sine/cosine series.
 
+    Explanation
+    ===========
+
     This class only represents a fourier series.
     No computation is performed.
 
@@ -191,16 +194,18 @@ class FourierSeries(SeriesBase):
         """
         Return the first n nonzero terms of the series.
 
-        If n is None return an iterator.
+        If ``n`` is None return an iterator.
 
         Parameters
         ==========
+
         n : int or None
             Amount of non-zero terms in approximation or None.
 
         Returns
         =======
-        Expr or iterator
+
+        Expr or iterator :
             Approximation of function expanded into Fourier series.
 
         Examples
@@ -234,6 +239,9 @@ class FourierSeries(SeriesBase):
         Return :math:`\sigma`-approximation of Fourier series with respect
         to order n.
 
+        Explanation
+        ===========
+
         Sigma approximation adjusts a Fourier summation to eliminate the Gibbs
         phenomenon which would otherwise occur at discontinuities.
         A sigma-approximated summation for a Fourier series of a T-periodical
@@ -253,12 +261,14 @@ class FourierSeries(SeriesBase):
 
         Parameters
         ==========
+
         n : int
             Highest order of the terms taken into account in approximation.
 
         Returns
         =======
-        Expr
+
+        Expr :
             Sigma approximation of function expanded into Fourier series.
 
         Examples
@@ -295,7 +305,11 @@ class FourierSeries(SeriesBase):
         return Add(*terms)
 
     def shift(self, s):
-        """Shift the function by a term independent of x.
+        """
+        Shift the function by a term independent of x.
+
+        Explanation
+        ===========
 
         f(x) -> f(x) + s
 
@@ -322,7 +336,11 @@ class FourierSeries(SeriesBase):
         return self.func(sfunc, self.args[1], (a0, self.an, self.bn))
 
     def shiftx(self, s):
-        """Shift x by a term independent of x.
+        """
+        Shift x by a term independent of x.
+
+        Explanation
+        ===========
 
         f(x) -> f(x + s)
 
@@ -350,7 +368,11 @@ class FourierSeries(SeriesBase):
         return self.func(sfunc, self.args[1], (self.a0, an, bn))
 
     def scale(self, s):
-        """Scale the function by a term independent of x.
+        """
+        Scale the function by a term independent of x.
+
+        Explanation
+        ===========
 
         f(x) -> s * f(x)
 
@@ -379,7 +401,11 @@ class FourierSeries(SeriesBase):
         return self.func(sfunc, self.args[1], (a0, an, bn))
 
     def scalex(self, s):
-        """Scale x by a term independent of x.
+        """
+        Scale x by a term independent of x.
+
+        Explanation
+        ===========
 
         f(x) -> f(s*x)
 
@@ -406,7 +432,7 @@ class FourierSeries(SeriesBase):
 
         return self.func(sfunc, self.args[1], (self.a0, an, bn))
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         for t in self:
             if t is not S.Zero:
                 return t
@@ -450,6 +476,7 @@ class FiniteFourierSeries(FourierSeries):
 
     Parameters
     ==========
+
     f : Expr
         Expression for finding fourier_series
 
@@ -468,6 +495,7 @@ class FiniteFourierSeries(FourierSeries):
 
     Methods
     =======
+
     This class is an extension of FourierSeries class.
     Please refer to sympy.series.fourier.FourierSeries for
     further information.
@@ -645,9 +673,8 @@ def fourier_series(f, limits=None, finite=True):
 
     Computing the Fourier series of $f(x) = x^2$:
 
-    >>> from sympy import fourier_series, pi, cos
+    >>> from sympy import fourier_series, pi
     >>> from sympy.abc import x
-
     >>> f = x**2
     >>> s = fourier_series(f, (x, -pi, pi))
     >>> s1 = s.truncate(n=3)

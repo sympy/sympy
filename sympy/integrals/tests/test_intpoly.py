@@ -63,7 +63,7 @@ def test_polytope_integrate():
     #  Convex 2-Polytopes
     #  Vertex representation
     assert polytope_integrate(Polygon(Point(0, 0), Point(0, 2),
-                                      Point(4, 0)), 1, dims=(x, y)) == 4
+                                      Point(4, 0)), 1) == 4
     assert polytope_integrate(Polygon(Point(0, 0), Point(0, 1),
                                       Point(1, 1), Point(1, 0)), x * y) ==\
                                       Rational(1, 4)
@@ -82,7 +82,7 @@ def test_polytope_integrate():
 
     #  Hyperplane representation
     assert polytope_integrate([((-1, 0), 0), ((1, 2), 4),
-                               ((0, -1), 0)], 1, dims=(x, y)) == 4
+                               ((0, -1), 0)], 1) == 4
     assert polytope_integrate([((-1, 0), 0), ((0, 1), 1),
                                ((1, 0), 1), ((0, -1), 0)], x * y) == Rational(1, 4)
     assert polytope_integrate([((0, 1), 3), ((1, -2), -1),

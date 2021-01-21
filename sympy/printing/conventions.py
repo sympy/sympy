@@ -2,11 +2,9 @@
 A few practical conventions common to all printers.
 """
 
-from __future__ import print_function, division
-
 import re
 
-from sympy.core.compatibility import Iterable
+from collections.abc import Iterable
 from sympy import Derivative
 
 _name_with_digits_p = re.compile(r'^([a-zA-Z]+)([0-9]+)$')

@@ -142,22 +142,30 @@ class Sieve:
         while len(self._list) < i:
             self.extend(int(self._list[-1] * 1.5))
 
-    def primerange(self, a, b):
-        """Generate all prime numbers in the range [a, b).
+    def primerange(self, a, b=None):
+        """Generate all prime numbers in the range [a, b) when both a and b are
+           provided and generates all prime numbers till a when only a is provided.
 
         Examples
         ========
 
         >>> from sympy import sieve
-        >>> print([i for i in sieve.primerange(7, 18)])
+        >>> print([i for i in sieve.primerange(7, 19)])
         [7, 11, 13, 17]
+
+        >>> print([i for i in sieve.primerange(19)])
+        [2, 3, 5, 7, 11, 13, 17]
         """
         from sympy.functions.elementary.integers import ceiling
 
         # wrapping ceiling in as_int will raise an error if there was a problem
         # determining whether the expression was exactly an integer or not
-        a = max(2, as_int(ceiling(a)))
-        b = as_int(ceiling(b))
+        if b is None:
+            b = as_int(ceiling(a))
+            a = 2
+        else:
+            a = max(2, as_int(ceiling(a)))
+            b = as_int(ceiling(b))
         if a >= b:
             return
         self.extend(b)
@@ -766,7 +774,7 @@ def primorial(n, nth=True):
     Examples
     ========
 
-    >>> from sympy.ntheory.generate import primorial, randprime, primerange
+    >>> from sympy.ntheory.generate import primorial, primerange
     >>> from sympy import factorint, Mul, primefactors, sqrt
     >>> primorial(4) # the first 4 primes are 2, 3, 5, 7
     210

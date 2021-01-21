@@ -25,7 +25,8 @@ from .continued_fraction import continued_fraction_periodic, \
     continued_fraction_convergents, continued_fraction
 from .digits import count_digits, digits, is_palindromic
 from .egyptian_fraction import egyptian_fraction
-
+from .ecm import ecm
+from .qs import qs
 __all__ = [
     'nextprime', 'prevprime', 'prime', 'primepi', 'primerange', 'randprime',
     'Sieve', 'sieve', 'primorial', 'cycle_length', 'composite', 'compositepi',
@@ -59,4 +60,8 @@ __all__ = [
     'is_palindromic',
 
     'egyptian_fraction',
+
+    'ecm',
+
+    'qs',
 ]

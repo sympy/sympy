@@ -9,6 +9,9 @@ def singularityintegrate(f, x):
     The ``integrate`` function calls this function internally whenever an
     instance of SingularityFunction is passed as argument.
 
+    Explanation
+    ===========
+
     The idea for integration is the following:
 
     - If we are dealing with a SingularityFunction expression,
@@ -25,6 +28,7 @@ def singularityintegrate(f, x):
 
     Examples
     ========
+
     >>> from sympy.integrals.singularityfunctions import singularityintegrate
     >>> from sympy import SingularityFunction, symbols, Function
     >>> x, a, n, y = symbols('x a n y')

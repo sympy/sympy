@@ -1,11 +1,9 @@
-from __future__ import print_function, division
-
 from pyglet.window import key
 from pyglet.window.mouse import LEFT, RIGHT, MIDDLE
 from sympy.plotting.pygletplot.util import get_direction_vectors, get_basis_vectors
 
 
-class PlotController(object):
+class PlotController:
 
     normal_mouse_sensitivity = 4.0
     modified_mouse_sensitivity = 1.0
@@ -66,8 +64,8 @@ class PlotController(object):
         key.F8: 'save_image'
     }
 
-    def __init__(self, window, **kwargs):
-        self.invert_mouse_zoom = kwargs.pop('invert_mouse_zoom', False)
+    def __init__(self, window, *, invert_mouse_zoom=False, **kwargs):
+        self.invert_mouse_zoom = invert_mouse_zoom
         self.window = window
         self.camera = window.camera
         self.action = {

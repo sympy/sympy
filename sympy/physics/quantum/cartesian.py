@@ -6,8 +6,6 @@ TODO:
 
 """
 
-from __future__ import print_function, division
-
 from sympy import DiracDelta, exp, I, Interval, pi, S, sqrt
 
 from sympy.physics.quantum.constants import hbar
@@ -58,9 +56,7 @@ class XOp(HermitianOperator):
     def _apply_operator_PositionKet3D(self, ket):
         return ket.position_x*ket
 
-    def _represent_PxKet(self, basis, **options):
-        index = options.pop("index", 1)
-
+    def _represent_PxKet(self, basis, *, index=1, **options):
         states = basis._enumerate_state(2, start_index=index)
         coord1 = states[0].momentum
         coord2 = states[1].momentum
@@ -118,9 +114,7 @@ class PxOp(HermitianOperator):
     def _apply_operator_PxKet(self, ket):
         return ket.momentum*ket
 
-    def _represent_XKet(self, basis, **options):
-        index = options.pop("index", 1)
-
+    def _represent_XKet(self, basis, *, index=1, **options):
         states = basis._enumerate_state(2, start_index=index)
         coord1 = states[0].position
         coord2 = states[1].position

@@ -252,7 +252,7 @@ def test_split_symbols_numeric():
 
 
 def test_unicode_names():
-    assert parse_expr(u'α') == Symbol(u'α')
+    assert parse_expr('α') == Symbol('α')
 
 
 def test_python3_features():

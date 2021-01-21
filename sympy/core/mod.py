@@ -1,11 +1,22 @@
 from sympy.core.numbers import nan
 from .function import Function
+from .kind import NumberKind
 
 
 class Mod(Function):
     """Represents a modulo operation on symbolic expressions.
 
-    Receives two arguments, dividend p and divisor q.
+    Parameters
+    ==========
+
+    p : Expr
+        Dividend.
+
+    q : Expr
+        Divisor.
+
+    Notes
+    =====
 
     The convention used is the same as Python's: the remainder always has the
     same sign as the divisor.
@@ -20,6 +31,8 @@ class Mod(Function):
     1
 
     """
+
+    kind = NumberKind
 
     @classmethod
     def eval(cls, p, q):
@@ -57,6 +70,8 @@ class Mod(Function):
 
             # by ratio
             r = p/q
+            if r.is_integer:
+                return S.Zero
             try:
                 d = int(r)
             except TypeError:

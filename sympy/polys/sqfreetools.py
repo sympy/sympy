@@ -1,6 +1,5 @@
 """Square-free decomposition algorithms and related tools. """
 
-from __future__ import print_function, division
 
 from sympy.polys.densearith import (
     dup_neg, dmp_neg,

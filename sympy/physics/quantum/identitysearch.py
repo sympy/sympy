@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from collections import deque
 from random import randint
 
@@ -725,8 +723,7 @@ def is_reducible(circuit, nqubits, begin, end):
 
     Check if the circuit can be reduced:
 
-    >>> from sympy.physics.quantum.identitysearch import (
-    ...     GateIdentity, is_reducible)
+    >>> from sympy.physics.quantum.identitysearch import is_reducible
     >>> from sympy.physics.quantum.gate import X, Y, Z
     >>> x = X(0); y = Y(0); z = Z(0)
     >>> is_reducible((x, y, z), 1, 0, 3)
@@ -780,7 +777,7 @@ def bfs_identity_search(gate_list, nqubits, max_depth=None,
     Find a list of gate identities:
 
     >>> from sympy.physics.quantum.identitysearch import bfs_identity_search
-    >>> from sympy.physics.quantum.gate import X, Y, Z, H
+    >>> from sympy.physics.quantum.gate import X, Y, Z
     >>> x = X(0); y = Y(0); z = Z(0)
     >>> bfs_identity_search([x], 1, max_depth=2)
     {GateIdentity(X(0), X(0))}

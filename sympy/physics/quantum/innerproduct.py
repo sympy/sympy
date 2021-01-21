@@ -1,7 +1,5 @@
 """Symbolic inner product."""
 
-from __future__ import print_function, division
-
 from sympy import Expr, conjugate
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
@@ -35,7 +33,7 @@ class InnerProduct(Expr):
 
     Create an InnerProduct and check its properties:
 
-        >>> from sympy.physics.quantum import Bra, Ket, InnerProduct
+        >>> from sympy.physics.quantum import Bra, Ket
         >>> b = Bra('b')
         >>> k = Ket('k')
         >>> ip = b*k

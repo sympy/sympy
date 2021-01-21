@@ -4,11 +4,12 @@ Some examples have been taken from:
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
 from sympy import (MatrixSymbol, Inverse, symbols, Determinant, Trace,
-                   Derivative, sin, exp, cos, tan, log, S, sqrt,
+                   sin, exp, cos, tan, log, S, sqrt,
                    hadamard_product, DiagMatrix, OneMatrix,
                    HadamardProduct, HadamardPower, KroneckerDelta, Sum,
                    Rational)
 from sympy import MatAdd, Identity, MatMul, ZeroMatrix
+from sympy.tensor.array.array_derivatives import ArrayDerivative
 from sympy.matrices.expressions import hadamard_power
 
 k = symbols("k")
@@ -72,17 +73,17 @@ def test_matrix_derivative_by_scalar():
 
 def test_matrix_derivative_non_matrix_result():
     # This is a 4-dimensional array:
-    assert A.diff(A) == Derivative(A, A)
-    assert A.T.diff(A) == Derivative(A.T, A)
-    assert (2*A).diff(A) == Derivative(2*A, A)
-    assert MatAdd(A, A).diff(A) == Derivative(MatAdd(A, A), A)
-    assert (A + B).diff(A) == Derivative(A + B, A)  # TODO: `B` can be removed.
+    assert A.diff(A) == ArrayDerivative(A, A)
+    assert A.T.diff(A) == ArrayDerivative(A.T, A)
+    assert (2*A).diff(A) == ArrayDerivative(2*A, A)
+    assert MatAdd(A, A).diff(A) == ArrayDerivative(MatAdd(A, A), A)
+    assert (A + B).diff(A) == ArrayDerivative(A + B, A)  # TODO: `B` can be removed.
 
 
 def test_matrix_derivative_trivial_cases():
     # Cookbook example 33:
     # TODO: find a way to represent a four-dimensional zero-array:
-    assert X.diff(A) == Derivative(X, A)
+    assert X.diff(A) == ArrayDerivative(X, A)
 
 
 def test_matrix_derivative_with_inverse():
@@ -159,7 +160,7 @@ def test_matrix_derivative_vectors_and_scalars():
 def test_matrix_derivatives_of_traces():
 
     expr = Trace(A)*A
-    assert expr.diff(A) == Derivative(Trace(A)*A, A)
+    assert expr.diff(A) == ArrayDerivative(Trace(A)*A, A)
     assert expr[i, j].diff(A[m, n]).doit() == (
         KDelta(i, m)*KDelta(j, n)*Trace(A) +
         KDelta(m, n)*A[i, j]
@@ -323,7 +324,7 @@ def test_mixed_deriv_mixed_expressions():
 
     expr = Trace(A)*A
     # TODO: this is not yet supported:
-    assert expr.diff(A) == Derivative(expr, A)
+    assert expr.diff(A) == ArrayDerivative(expr, A)
 
     expr = Trace(Trace(A)*A)
     assert expr.diff(A) == (2*Trace(A))*Identity(k)
@@ -354,7 +355,7 @@ def test_derivatives_matrix_norms():
     assert expr.diff(X) == a/(2*sqrt(a.T*X*b))*b.T
 
     expr = d.T*x*(a.T*X*b)**S.Half*y.T*c
-    assert expr.diff(X) == a*x.T*d/(2*sqrt(a.T*X*b))*y.T*c*b.T
+    assert expr.diff(X) == a*d.T*x/(2*sqrt(a.T*X*b))*y.T*c*b.T
 
 
 def test_derivatives_elementwise_applyfunc():

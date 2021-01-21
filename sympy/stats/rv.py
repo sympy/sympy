@@ -13,17 +13,15 @@ sympy.stats.frv
 sympy.stats.rv_interface
 """
 
-from __future__ import print_function, division
 
 from functools import singledispatch
 from typing import Tuple as tTuple
 
-from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
+from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify, Or,
                    Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-                   DiracDelta, Mul, Indexed, MatrixSymbol, Function, Integral)
+                   DiracDelta, Mul, Indexed, MatrixSymbol, Function)
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
-from sympy.logic.boolalg import Boolean
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.solvers.solveset import solveset
 from sympy.external import import_module
@@ -106,6 +104,24 @@ class SingleDomain(RandomDomain):
         return self.symbol == sym and val in self.set
 
 
+class MatrixDomain(RandomDomain):
+    """
+    A Random Matrix variable and its domain
+
+    """
+    def __new__(cls, symbol, set):
+        symbol, set = _symbol_converter(symbol), _sympify(set)
+        return Basic.__new__(cls, symbol, set)
+
+    @property
+    def symbol(self):
+        return self.args[0]
+
+    @property
+    def symbols(self):
+        return FiniteSet(self.symbol)
+
+
 class ConditionalDomain(RandomDomain):
     """
     A RandomDomain with an attached condition
@@ -117,8 +133,8 @@ class ConditionalDomain(RandomDomain):
     sympy.stats.frv.ConditionalFiniteDomain
     """
     def __new__(cls, fulldomain, condition):
-        condition = condition.xreplace(dict((rs, rs.symbol)
-            for rs in random_symbols(condition)))
+        condition = condition.xreplace({rs: rs.symbol
+            for rs in random_symbols(condition)})
         return Basic.__new__(cls, fulldomain, condition)
 
     @property
@@ -199,10 +215,7 @@ class SinglePSpace(PSpace):
     attributed to a single variable/symbol.
     """
     def __new__(cls, s, distribution):
-        if isinstance(s, str):
-            s = Symbol(s)
-        if not isinstance(s, Symbol):
-            raise TypeError("s should have been string or Symbol")
+        s = _symbol_converter(s)
         return Basic.__new__(cls, s, distribution)
 
     @property
@@ -253,10 +266,7 @@ class RandomSymbol(Expr):
         if pspace is None:
             # Allow single arg, representing pspace == PSpace()
             pspace = PSpace()
-        if isinstance(symbol, str):
-            symbol = Symbol(symbol)
-        if not isinstance(symbol, Symbol):
-            raise TypeError("symbol should be of type Symbol or string")
+        symbol = _symbol_converter(symbol)
         if not isinstance(pspace, PSpace):
             raise TypeError("pspace variable should be of type PSpace")
         if cls == JointRandomSymbol and isinstance(pspace, SinglePSpace):
@@ -310,7 +320,19 @@ class RandomIndexedSymbol(RandomSymbol):
         elif isinstance(self.symbol, Function):
             return self.symbol.args[0]
 
-class RandomMatrixSymbol(MatrixSymbol):
+    @property
+    def free_symbols(self):
+        if self.key.free_symbols:
+            free_syms = self.key.free_symbols
+            free_syms.add(self)
+            return free_syms
+        return {self}
+
+    @property
+    def pspace(self):
+        return self.args[1]
+
+class RandomMatrixSymbol(RandomSymbol, MatrixSymbol): # type: ignore
     def __new__(cls, symbol, n, m, pspace=None):
         n, m = _sympify(n), _sympify(m)
         symbol = _symbol_converter(symbol)
@@ -321,6 +343,7 @@ class RandomMatrixSymbol(MatrixSymbol):
 
     symbol = property(lambda self: self.args[0])
     pspace = property(lambda self: self.args[3])
+
 
 class ProductPSpace(PSpace):
     """
@@ -352,7 +375,8 @@ class IndependentProductPSpace(ProductPSpace):
         symbols = FiniteSet(*[val.symbol for val in rs_space_dict.keys()])
 
         # Overlapping symbols
-        from sympy.stats.joint_rv import MarginalDistribution, CompoundDistribution
+        from sympy.stats.joint_rv import MarginalDistribution
+        from sympy.stats.compound_rv import CompoundDistribution
         if len(symbols) < sum(len(space.symbols) for space in spaces if not
          isinstance(space.distribution, (
             CompoundDistribution, MarginalDistribution))):
@@ -369,7 +393,7 @@ class IndependentProductPSpace(ProductPSpace):
     @property
     def pdf(self):
         p = Mul(*[space.pdf for space in self.spaces])
-        return p.subs(dict((rv, rv.symbol) for rv in self.values))
+        return p.subs({rv: rv.symbol for rv in self.values})
 
     @property
     def rs_space_dict(self):
@@ -408,9 +432,9 @@ class IndependentProductPSpace(ProductPSpace):
     def density(self):
         raise NotImplementedError("Density not available for ProductSpaces")
 
-    def sample(self, size=(1,), library='scipy'):
+    def sample(self, size=(), library='scipy', seed=None):
         return {k: v for space in self.spaces
-            for k, v in space.sample(size=size, library=library).items()}
+            for k, v in space.sample(size=size, library=library, seed=seed).items()}
 
 
     def probability(self, condition, **kwargs):
@@ -418,6 +442,10 @@ class IndependentProductPSpace(ProductPSpace):
         if isinstance(condition, Ne):
             condition = Eq(condition.args[0], condition.args[1])
             cond_inv = True
+        elif isinstance(condition, And): # they are independent
+            return Mul(*[self.probability(arg) for arg in condition.args])
+        elif isinstance(condition, Or): # they are independent
+            return Add(*[self.probability(arg) for arg in condition.args])
         expr = condition.lhs - condition.rhs
         rvs = random_symbols(expr)
         dens = self.compute_density(expr)
@@ -460,7 +488,7 @@ class IndependentProductPSpace(ProductPSpace):
 
     def conditional_space(self, condition, normalize=True, **kwargs):
         rvs = random_symbols(condition)
-        condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
+        condition = condition.xreplace({rv: rv.symbol for rv in self.values})
         if any([pspace(rv).is_Continuous for rv in rvs]):
             from sympy.stats.crv import (ConditionalContinuousDomain,
                 ContinuousPSpace)
@@ -519,8 +547,8 @@ class ProductDomain(RandomDomain):
 
     @property
     def sym_domain_dict(self):
-        return dict((symbol, domain) for domain in self.domains
-                                     for symbol in domain.symbols)
+        return {symbol: domain for domain in self.domains
+                                     for symbol in domain.symbols}
 
     @property
     def symbols(self):
@@ -575,7 +603,6 @@ def pspace(expr):
     ========
 
     >>> from sympy.stats import pspace, Normal
-    >>> from sympy.stats.rv import IndependentProductPSpace
     >>> X = Normal('X', 0, 1)
     >>> pspace(2*X + 1) == X.pspace
     True
@@ -593,6 +620,11 @@ def pspace(expr):
     # If only one space present
     if all(rv.pspace == rvs[0].pspace for rv in rvs):
         return rvs[0].pspace
+    from sympy.stats.compound_rv import CompoundPSpace
+    from sympy.stats.stochastic_process import StochasticPSpace
+    for rv in rvs:
+        if isinstance(rv.pspace, (CompoundPSpace, StochasticPSpace)):
+            return rv.pspace
     # Otherwise make a product space
     return IndependentProductPSpace(*[rv.pspace for rv in rvs])
 
@@ -742,7 +774,7 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     from sympy.stats.symbolic_probability import Expectation
     if evaluate:
         return Expectation(expr, condition).doit(**kwargs)
-    return Expectation(expr, condition).rewrite(Integral) # will return Sum in case of discrete RV
+    return Expectation(expr, condition)
 
 
 def probability(condition, given_condition=None, numsamples=None,
@@ -777,54 +809,16 @@ def probability(condition, given_condition=None, numsamples=None,
     5/12
     """
 
-    condition = sympify(condition)
-    given_condition = sympify(given_condition)
-
-    if condition.has(RandomIndexedSymbol):
-        return pspace(condition).probability(condition, given_condition, evaluate, **kwargs)
-
-    if isinstance(given_condition, RandomSymbol):
-        condrv = random_symbols(condition)
-        if len(condrv) == 1 and condrv[0] == given_condition:
-            from sympy.stats.frv_types import BernoulliDistribution
-            return BernoulliDistribution(probability(condition), 0, 1)
-        if any([dependent(rv, given_condition) for rv in condrv]):
-            from sympy.stats.symbolic_probability import Probability
-            return Probability(condition, given_condition)
-        else:
-            return probability(condition)
-
-    if given_condition is not None and \
-            not isinstance(given_condition, (Relational, Boolean)):
-        raise ValueError("%s is not a relational or combination of relationals"
-                % (given_condition))
-    if given_condition == False:
-        return S.Zero
-    if not isinstance(condition, (Relational, Boolean)):
-        raise ValueError("%s is not a relational or combination of relationals"
-                % (condition))
-    if condition is S.true:
-        return S.One
-    if condition is S.false:
-        return S.Zero
-
-    if numsamples:
-        return sampling_P(condition, given_condition, numsamples=numsamples,
-                **kwargs)
-    if given_condition is not None:  # If there is a condition
-        # Recompute on new conditional expr
-        return probability(given(condition, given_condition, **kwargs), **kwargs)
-
-    # Otherwise pass work off to the ProbabilitySpace
-    if pspace(condition) == PSpace():
-        from sympy.stats.symbolic_probability import Probability
-        return Probability(condition, given_condition)
-
-    result = pspace(condition).probability(condition, **kwargs)
-    if evaluate and hasattr(result, 'doit'):
-        return result.doit()
-    else:
-        return result
+    kwargs['numsamples'] = numsamples
+    from sympy.stats.symbolic_probability import Probability
+    if evaluate:
+        return Probability(condition, given_condition).doit(**kwargs)
+    ### TODO: Remove the user warnings in the future releases
+    message = ("Since version 1.7, using `evaluate=False` returns `Probability` "
+              "object. If you want unevaluated Integral/Sum use "
+              "`P(condition, given_condition, evaluate=False).rewrite(Integral)`")
+    warnings.warn(filldedent(message))
+    return Probability(condition, given_condition)
 
 
 class Density(Basic):
@@ -838,25 +832,28 @@ class Density(Basic):
             return None
 
     def doit(self, evaluate=True, **kwargs):
+        from sympy.stats.random_matrix import RandomMatrixPSpace
         from sympy.stats.joint_rv import JointPSpace
+        from sympy.stats.matrix_distributions import MatrixPSpace
+        from sympy.stats.compound_rv import CompoundPSpace
         from sympy.stats.frv import SingleFiniteDistribution
         expr, condition = self.expr, self.condition
-        if _sympify(expr).has(RandomMatrixSymbol):
-            return pspace(expr).compute_density(expr)
+
         if isinstance(expr, SingleFiniteDistribution):
             return expr.dict
         if condition is not None:
             # Recompute on new conditional expr
             expr = given(expr, condition, **kwargs)
-        if isinstance(expr, RandomSymbol) and \
-            isinstance(expr.pspace, JointPSpace):
-            return expr.pspace.distribution
         if not random_symbols(expr):
             return Lambda(x, DiracDelta(x - expr))
-        if (isinstance(expr, RandomSymbol) and
-            hasattr(expr.pspace, 'distribution') and
-            isinstance(pspace(expr), (SinglePSpace))):
-            return expr.pspace.distribution
+        if isinstance(expr, RandomSymbol):
+            if isinstance(expr.pspace, (SinglePSpace, JointPSpace, MatrixPSpace)) and \
+                hasattr(expr.pspace, 'distribution'):
+                return expr.pspace.distribution
+            elif isinstance(expr.pspace, RandomMatrixPSpace):
+                return expr.pspace.model
+        if isinstance(pspace(expr), CompoundPSpace):
+            kwargs['compound_evaluate'] = evaluate
         result = pspace(expr).compute_density(expr, **kwargs)
 
         if evaluate and hasattr(result, 'doit'):
@@ -1004,7 +1001,7 @@ def where(condition, given_condition=None, **kwargs):
     ========
 
     >>> from sympy.stats import where, Die, Normal
-    >>> from sympy import symbols, And
+    >>> from sympy import And
 
     >>> D1, D2 = Die('a', 6), Die('b', 6)
     >>> a, b = D1.symbol, D2.symbol
@@ -1027,8 +1024,8 @@ def where(condition, given_condition=None, **kwargs):
     return pspace(condition).where(condition, **kwargs)
 
 
-def sample(expr, condition=None, size=(1,), library='scipy', numsamples=1,
-                                                                    **kwargs):
+def sample(expr, condition=None, size=(), library='scipy',
+           numsamples=1, seed=None, **kwargs):
     """
     A realization of the random expression
 
@@ -1050,24 +1047,54 @@ def sample(expr, condition=None, size=(1,), library='scipy', numsamples=1,
         by default is 'scipy'
     numsamples : int
         Number of samples, each with size as ``size``
+    seed :
+        An object to be used as seed by the given external library for sampling `expr`.
+        Following is the list of possible types of object for the supported libraries,
+
+        - 'scipy': int, numpy.random.RandomState, numpy.random.Generator
+        - 'numpy': int, numpy.random.RandomState, numpy.random.Generator
+        - 'pymc3': int
+
+        Optional, by default None, in which case seed settings
+        related to the given library will be used.
+        No modifications to environment's global seed settings
+        are done by this argument.
 
     Examples
     ========
 
-    >>> from sympy.stats import Die, sample, Normal
-    >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
+    >>> from sympy.stats import Die, sample, Normal, Geometric
+    >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6) # Finite Random Variable
 
     >>> die_roll = sample(X + Y + Z) # doctest: +SKIP
-    >>> N = Normal('N', 3, 4)
-    >>> samp = next(sample(N))[0] # doctest: +SKIP
+    >>> next(die_roll) # doctest: +SKIP
+    6
+    >>> N = Normal('N', 3, 4) # Continuous Random Variable
+    >>> samp = next(sample(N)) # doctest: +SKIP
     >>> samp in N.pspace.domain.set # doctest: +SKIP
     True
-    >>> samp = next(sample(N, N>0))[0] # doctest: +SKIP
+    >>> samp = next(sample(N, N>0)) # doctest: +SKIP
     >>> samp > 0 # doctest: +SKIP
     True
     >>> samp_list = next(sample(N, size=4)) # doctest: +SKIP
     >>> [sam in N.pspace.domain.set for sam in samp_list] # doctest: +SKIP
     [True, True, True, True]
+    >>> G = Geometric('G', 0.5) # Discrete Random Variable
+    >>> samp_list = next(sample(G, size=3)) # doctest: +SKIP
+    >>> samp_list # doctest: +SKIP
+    array([10,  4,  1])
+    >>> [sam in G.pspace.domain.set for sam in samp_list] # doctest: +SKIP
+    [True, True, True]
+    >>> MN = Normal("MN", [3, 4], [[2, 1], [1, 2]]) # Joint Random Variable
+    >>> samp_list = next(sample(MN, size=4)) # doctest: +SKIP
+    >>> samp_list # doctest: +SKIP
+    array([[4.22564264, 3.23364418],
+           [3.41002011, 4.60090908],
+           [3.76151866, 4.77617143],
+           [4.71440865, 2.65714157]])
+    >>> [tuple(sam) in MN.pspace.domain.set for sam in samp_list] # doctest: +SKIP
+    [True, True, True, True]
+
 
     Returns
     =======
@@ -1076,12 +1103,13 @@ def sample(expr, condition=None, size=(1,), library='scipy', numsamples=1,
         iterator object containing the sample/samples of given expr
 
     """
+    ### TODO: Remove the user warnings in the future releases
     message = ("The return type of sample has been changed to return an "
                   "iterator object since version 1.7. For more information see "
                   "https://github.com/sympy/sympy/issues/19061")
     warnings.warn(filldedent(message))
     return sample_iter(expr, condition, size=size, library=library,
-                                                        numsamples=numsamples)
+                                                        numsamples=numsamples, seed=seed)
 
 
 def quantile(expr, evaluate=True, **kwargs):
@@ -1130,8 +1158,8 @@ def quantile(expr, evaluate=True, **kwargs):
     else:
         return result
 
-def sample_iter(expr, condition=None, size=(1,), library='scipy',
-                    numsamples=S.Infinity, **kwargs):
+def sample_iter(expr, condition=None, size=(), library='scipy',
+                    numsamples=S.Infinity, seed=None, **kwargs):
 
     """
     Returns an iterator of realizations from the expression given a condition
@@ -1147,6 +1175,18 @@ def sample_iter(expr, condition=None, size=(1,), library='scipy',
         Represents size of each sample in numsamples
     numsamples: integer, optional
         Length of the iterator (defaults to infinity)
+    seed :
+        An object to be used as seed by the given external library for sampling `expr`.
+        Following is the list of possible types of object for the supported libraries,
+
+        - 'scipy': int, numpy.random.RandomState, numpy.random.Generator
+        - 'numpy': int, numpy.random.RandomState, numpy.random.Generator
+        - 'pymc3': int
+
+        Optional, by default None, in which case seed settings
+        related to the given library will be used.
+        No modifications to environment's global seed settings
+        are done by this argument.
 
     Examples
     ========
@@ -1172,6 +1212,7 @@ def sample_iter(expr, condition=None, size=(1,), library='scipy',
     sampling_E
 
     """
+    from sympy.stats.joint_rv import JointRandomSymbol
     if not import_module(library):
         raise ValueError("Failed to import %s" % library)
 
@@ -1181,23 +1222,51 @@ def sample_iter(expr, condition=None, size=(1,), library='scipy',
         ps = pspace(expr)
 
     rvs = list(ps.values)
+    if isinstance(expr, JointRandomSymbol):
+        expr = expr.subs({expr: RandomSymbol(expr.symbol, expr.pspace)})
+    else:
+        sub = {}
+        for arg in expr.args:
+            if isinstance(arg, JointRandomSymbol):
+                sub[arg] = RandomSymbol(arg.symbol, arg.pspace)
+        expr = expr.subs(sub)
+
+    def fn_subs(*args):
+        return expr.subs({rv: arg for rv, arg in zip(rvs, args)})
+
+    def given_fn_subs(*args):
+        if condition is not None:
+            return condition.subs({rv: arg for rv, arg in zip(rvs, args)})
+        return False
+
     if library == 'pymc3':
         # Currently unable to lambdify in pymc3
         # TODO : Remove 'pymc3' when lambdify accepts 'pymc3' as module
         fn = lambdify(rvs, expr, **kwargs)
     else:
         fn = lambdify(rvs, expr, modules=library, **kwargs)
+
     if condition is not None:
         given_fn = lambdify(rvs, condition, **kwargs)
 
-    def return_generator():
+    def return_generator_infinite():
         count = 0
+        np = import_module('numpy')
+        if np:
+            rand_state = np.random.default_rng(seed=seed)
+        else:
+            rand_state = None
         while count < numsamples:
-            d = ps.sample(size=size, library=library)  # a dictionary that maps RVs to values
+            d = ps.sample(size=size, library=library, seed=rand_state)  # a dictionary that maps RVs to values
             args = [d[rv] for rv in rvs]
 
             if condition is not None:  # Check that these values satisfy the condition
-                gd = given_fn(*args)
+                # TODO: Replace the try-except block with only given_fn(*args)
+                # once lambdify works with unevaluated SymPy objects.
+                try:
+                    gd = given_fn(*args)
+                except (NameError, TypeError):
+                    gd = given_fn_subs(*args)
                 if gd != True and gd != False:
                     raise ValueError(
                         "Conditions must not contain free symbols")
@@ -1206,23 +1275,63 @@ def sample_iter(expr, condition=None, size=(1,), library='scipy',
 
             yield fn(*args)
             count += 1
-    return return_generator()
 
-def sample_iter_lambdify(expr, condition=None, size=(1,), numsamples=S.Infinity,
-                                                                    **kwargs):
+    def return_generator_finite():
+        faulty = True
+        while faulty:
+            d = ps.sample(size=(numsamples,) + ((size,) if isinstance(size, int) else size),
+                          library=library, seed=seed) # a dictionary that maps RVs to values
+            faulty = False
+            count = 0
+            while count < numsamples and not faulty:
+                args = [d[rv][count] for rv in rvs]
 
-    return sample_iter(expr, condition=condition, size=size, numsamples=numsamples,
-                                                                        **kwargs)
+                if condition is not None:  # Check that these values satisfy the condition
+                    # TODO: Replace the try-except block with only given_fn(*args)
+                    # once lambdify works with unevaluated SymPy objects.
+                    try:
+                        gd = given_fn(*args)
+                    except (NameError, TypeError):
+                        gd = given_fn_subs(*args)
+                    if gd != True and gd != False:
+                        raise ValueError(
+                            "Conditions must not contain free symbols")
+                    if not gd:  # If the values don't satisfy then try again
+                        faulty = True
 
-def sample_iter_subs(expr, condition=None, size=(1,), numsamples=S.Infinity,
-                                                                    **kwargs):
+                count += 1
 
-    return sample_iter(expr, condition=condition, size=size, numsamples=numsamples,
-                                                                        **kwargs)
+        count = 0
+        while count < numsamples:
+            args = [d[rv][count] for rv in rvs]
+            # TODO: Replace the try-except block with only fn(*args)
+            # once lambdify works with unevaluated SymPy objects.
+            try:
+                yield fn(*args)
+            except (NameError, TypeError):
+                yield fn_subs(*args)
+            count += 1
+
+    if numsamples is S.Infinity:
+        return return_generator_infinite()
+
+    return return_generator_finite()
+
+def sample_iter_lambdify(expr, condition=None, size=(),
+                         numsamples=S.Infinity, seed=None, **kwargs):
+
+    return sample_iter(expr, condition=condition, size=size,
+                       numsamples=numsamples, seed=seed, **kwargs)
+
+def sample_iter_subs(expr, condition=None, size=(),
+                     numsamples=S.Infinity, seed=None, **kwargs):
+
+    return sample_iter(expr, condition=condition, size=size,
+                       numsamples=numsamples, seed=seed, **kwargs)
 
 
 def sampling_P(condition, given_condition=None, library='scipy', numsamples=1,
-                                                    evalf=True, **kwargs):
+               evalf=True, seed=None, **kwargs):
     """
     Sampling version of P
 
@@ -1237,9 +1346,8 @@ def sampling_P(condition, given_condition=None, library='scipy', numsamples=1,
 
     count_true = 0
     count_false = 0
-
     samples = sample_iter(condition, given_condition, library=library,
-                          numsamples=numsamples, **kwargs)
+                          numsamples=numsamples, seed=seed, **kwargs)
 
     for sample in samples:
         if sample:
@@ -1255,7 +1363,7 @@ def sampling_P(condition, given_condition=None, library='scipy', numsamples=1,
 
 
 def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
-               evalf=True, **kwargs):
+               evalf=True, seed=None, **kwargs):
     """
     Sampling version of E
 
@@ -1267,11 +1375,8 @@ def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
     sampling_density
     """
     samples = list(sample_iter(expr, given_condition, library=library,
-                          numsamples=numsamples, **kwargs))
-    try:
-        result = Add(*[samp[0] for samp in samples]) / numsamples
-    except TypeError:
-        result = Add(*[samp for samp in samples]) / numsamples
+                          numsamples=numsamples, seed=seed, **kwargs))
+    result = Add(*[samp for samp in samples]) / numsamples
 
     if evalf:
         return result.evalf()
@@ -1279,7 +1384,7 @@ def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
         return result
 
 def sampling_density(expr, given_condition=None, library='scipy',
-                    numsamples=1, **kwargs):
+                    numsamples=1, seed=None, **kwargs):
     """
     Sampling version of density
 
@@ -1292,11 +1397,8 @@ def sampling_density(expr, given_condition=None, library='scipy',
 
     results = {}
     for result in sample_iter(expr, given_condition, library=library,
-                              numsamples=numsamples, **kwargs):
-        try:
-            results[result[0]] = results.get(result[0], 0) + 1
-        except TypeError:
-            results[result] = results.get(result, 0) + 1
+                              numsamples=numsamples, seed=seed, **kwargs):
+        results[result] = results.get(result, 0) + 1
 
     return results
 
@@ -1404,7 +1506,8 @@ def rv_subs(expr, symbols=None):
     swapdict = {rv: rv.symbol for rv in symbols}
     return expr.subs(swapdict)
 
-class NamedArgsMixin(object):
+
+class NamedArgsMixin:
     _argnames = ()  # type: tTuple[str, ...]
 
     def __getattr__(self, attr):
@@ -1413,6 +1516,54 @@ class NamedArgsMixin(object):
         except ValueError:
             raise AttributeError("'%s' object has no attribute '%s'" % (
                 type(self).__name__, attr))
+
+
+class Distribution(Basic):
+
+    def sample(self, size=(), library='scipy', seed=None):
+        """ A random realization from the distribution """
+
+        module = import_module(library)
+        if library in {'scipy', 'numpy', 'pymc3'} and module is None:
+            raise ValueError("Failed to import %s" % library)
+
+        if library == 'scipy':
+            # scipy does not require map as it can handle using custom distributions.
+            # However, we will still use a map where we can.
+
+            # TODO: do this for drv.py and frv.py if necessary.
+            # TODO: add more distributions here if there are more
+            # See links below referring to sections beginning with "A common parametrization..."
+            # I will remove all these comments if everything is ok.
+
+            from sympy.stats.sampling.sample_scipy import do_sample_scipy
+            samps = do_sample_scipy(self, size, seed)
+        elif library == 'numpy':
+            from sympy.stats.sampling.sample_numpy import do_sample_numpy
+            import numpy
+            if seed is None or isinstance(seed, int):
+                rand_state = numpy.random.default_rng(seed=seed)
+            else:
+                rand_state = seed
+            samps = do_sample_numpy(self, size, rand_state)
+        elif library == 'pymc3':
+            from sympy.stats.sampling.sample_pymc3 import do_sample_pymc3
+            import pymc3
+            with pymc3.Model():
+                if do_sample_pymc3(self):
+                    samps = pymc3.sample(size, chains=1, progressbar=False, random_seed=seed)[:]['X']
+                else:
+                    samps = None
+        else:
+            raise NotImplementedError("Sampling from %s is not supported yet."
+                                      % str(library))
+
+        if samps is not None:
+            return samps
+        raise NotImplementedError(
+            "Sampling for %s is not currently implemented from %s"
+            % (self, library))
+
 
 def _value_check(condition, message):
     """
@@ -1514,7 +1665,44 @@ def _symbol_converter(sym):
     True
     """
     if isinstance(sym, str):
-            sym = Symbol(sym)
+        sym = Symbol(sym)
     if not isinstance(sym, Symbol):
         raise TypeError("%s is neither a Symbol nor a string"%(sym))
     return sym
+
+def sample_stochastic_process(process):
+    """
+    This function is used to sample from stochastic process.
+
+    Parameters
+    ==========
+
+    process: StochasticProcess
+        Process used to extract the samples. It must be an instance of
+        StochasticProcess
+
+    Examples
+    ========
+
+    >>> from sympy.stats import sample_stochastic_process, DiscreteMarkovChain
+    >>> from sympy import Matrix
+    >>> T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
+    >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    >>> next(sample_stochastic_process(Y)) in Y.state_space # doctest: +SKIP
+    True
+    >>> next(sample_stochastic_process(Y))  # doctest: +SKIP
+    0
+    >>> next(sample_stochastic_process(Y)) # doctest: +SKIP
+    2
+
+    Returns
+    =======
+
+    sample: iterator object
+        iterator object containing the sample of given process
+
+    """
+    from sympy.stats.stochastic_process_types import StochasticProcess
+    if not isinstance(process, StochasticProcess):
+        raise ValueError("Process must be an instance of Stochastic Process")
+    return process.sample()

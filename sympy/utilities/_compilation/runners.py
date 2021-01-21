@@ -5,7 +5,6 @@ from distutils.errors import CompileError
 import os
 import re
 import subprocess
-import sys
 
 from .util import (
     find_binary_of_command, unique_list
@@ -176,13 +175,10 @@ class CompilerRunner:
                              stderr=subprocess.STDOUT,
                              env=env)
         comm = p.communicate()
-        if sys.version_info[0] == 2:
-            self.cmd_outerr = comm[0]
-        else:
-            try:
-                self.cmd_outerr = comm[0].decode('utf-8')
-            except UnicodeDecodeError:
-                self.cmd_outerr = comm[0].decode('iso-8859-1')  # win32
+        try:
+            self.cmd_outerr = comm[0].decode('utf-8')
+        except UnicodeDecodeError:
+            self.cmd_outerr = comm[0].decode('iso-8859-1')  # win32
         self.cmd_returncode = p.returncode
 
         # Error handling

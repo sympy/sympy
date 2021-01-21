@@ -4,7 +4,7 @@ from sympy import (
     pi, Rational, re, S, sign, sin, sqrt, Symbol, symbols, transpose,
     zoo, exp_polar, Piecewise, Interval, comp, Integral, Matrix,
     ImmutableMatrix, SparseMatrix, ImmutableSparseMatrix, MatrixSymbol,
-    FunctionMatrix, Lambda, Derivative)
+    FunctionMatrix, Lambda, Derivative, Eq)
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.testing.pytest import XFAIL, raises
@@ -296,11 +296,14 @@ def test_sign():
     assert sign(Symbol('x', real=True, zero=False)).is_nonpositive is None
 
     x, y = Symbol('x', real=True), Symbol('y')
+    f = Function('f')
     assert sign(x).rewrite(Piecewise) == \
         Piecewise((1, x > 0), (-1, x < 0), (0, True))
     assert sign(y).rewrite(Piecewise) == sign(y)
     assert sign(x).rewrite(Heaviside) == 2*Heaviside(x, H0=S(1)/2) - 1
     assert sign(y).rewrite(Heaviside) == sign(y)
+    assert sign(y).rewrite(Abs) == Piecewise((0, Eq(y, 0)), (y/Abs(y), True))
+    assert sign(f(y)).rewrite(Abs) == Piecewise((0, Eq(f(y), 0)), (f(y)/Abs(f(y)), True))
 
     # evaluate what can be evaluated
     assert sign(exp_polar(I*pi)*pi) is S.NegativeOne

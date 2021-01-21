@@ -1,11 +1,7 @@
 from sympy import Integer
 import sympy.polys
 
-import sys
-if sys.version_info < (3,5):
-    from fractions import gcd
-else:
-    from math import gcd
+from math import gcd
 
 
 def egyptian_fraction(r, algorithm="Greedy"):

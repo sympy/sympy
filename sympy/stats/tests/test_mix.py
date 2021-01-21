@@ -1,26 +1,29 @@
 from sympy import (Symbol, Eq, Ne, simplify, sqrt, exp, pi, symbols,
                 Piecewise, factorial, gamma, IndexedBase, Add, Pow, Mul,
-                Indexed, Integer)
+                Indexed, Integer, Integral, DiracDelta, Dummy, Sum, oo)
 from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.stats import (Poisson, Beta, Exponential, P,
                         Multinomial, MultivariateBeta)
 from sympy.stats.crv_types import Normal
 from sympy.stats.drv_types import PoissonDistribution
-from sympy.stats.joint_rv import JointPSpace, CompoundDistribution, MarginalDistribution
+from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
+from sympy.stats.joint_rv import MarginalDistribution
 from sympy.stats.rv import pspace, density
+from sympy.testing.pytest import ignore_warnings
 
 def test_density():
     x = Symbol('x')
     l = Symbol('l', positive=True)
     rate = Beta(l, 2, 3)
     X = Poisson(x, rate)
-    assert isinstance(pspace(X), JointPSpace)
+    assert isinstance(pspace(X), CompoundPSpace)
     assert density(X, Eq(rate, rate.symbol)) == PoissonDistribution(l)
     N1 = Normal('N1', 0, 1)
     N2 = Normal('N2', N1, 2)
     assert density(N2)(0).doit() == sqrt(10)/(10*sqrt(pi))
     assert simplify(density(N2, Eq(N1, 1))(x)) == \
         sqrt(2)*exp(-(x - 1)**2/8)/(4*sqrt(pi))
+    assert simplify(density(N2)(x)) == sqrt(10)*exp(-x**2/10)/(10*sqrt(pi))
 
 def test_MarginalDistribution():
     a1, p1, p2 = symbols('a1 p1 p2', positive=True)
@@ -48,15 +51,19 @@ def test_MarginalDistribution():
 def test_compound_distribution():
     Y = Poisson('Y', 1)
     Z = Poisson('Z', Y)
-    assert isinstance(pspace(Z), JointPSpace)
+    assert isinstance(pspace(Z), CompoundPSpace)
     assert isinstance(pspace(Z).distribution, CompoundDistribution)
     assert Z.pspace.distribution.pdf(1).doit() == exp(-2)*exp(exp(-1))
 
 def test_mix_expression():
     Y, E = Poisson('Y', 1), Exponential('E', 1)
+    k = Dummy('k')
+    expr1 = Integral(Sum(exp(-1)*Integral(exp(-k)*DiracDelta(k - 2), (k, 0, oo)
+    )/factorial(k), (k, 0, oo)), (k, -oo, 0))
+    expr2 = Integral(Sum(exp(-1)*Integral(exp(-k)*DiracDelta(k - 2), (k, 0, oo)
+    )/factorial(k), (k, 0, oo)), (k, 0, oo))
     assert P(Eq(Y + E, 1)) == 0
     assert P(Ne(Y + E, 2)) == 1
-    assert str(P(E + Y < 2, evaluate=False)) == """Integral(Sum(exp(-1)*Integral"""\
-+"""(exp(-E)*DiracDelta(-_z + E + Y - 2), (E, 0, oo))/factorial(Y), (Y, 0, oo)), (_z, -oo, 0))"""
-    assert str(P(E + Y > 2, evaluate=False)) == """Integral(Sum(exp(-1)*Integral"""\
-+"""(exp(-E)*DiracDelta(-_z + E + Y - 2), (E, 0, oo))/factorial(Y), (Y, 0, oo)), (_z, 0, oo))"""
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert P(E + Y < 2, evaluate=False).rewrite(Integral).dummy_eq(expr1)
+        assert P(E + Y > 2, evaluate=False).rewrite(Integral).dummy_eq(expr2)

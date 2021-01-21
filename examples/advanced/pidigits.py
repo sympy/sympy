@@ -23,7 +23,7 @@ def display_fraction(digits, *, skip=0, colwidth=10, columns=5):
             print(line[i*colwidth: (i + 1)*colwidth],)
         print(":", (linecount + 1)*perline)
         if (linecount + 1) % 10 == 0:
-            print
+            print()
         printed += colwidth*columns
     rem = (len(digits) - skip) % (colwidth * columns)
     if rem:

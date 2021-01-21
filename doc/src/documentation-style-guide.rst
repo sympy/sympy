@@ -239,7 +239,7 @@ Install these packages with either pip or conda::
 
 Or::
 
-   conda install -c conda-forge mpmpath matplotlib sphinx sphinx-math-dollar
+   conda install -c conda-forge mpmath matplotlib sphinx sphinx-math-dollar
 
 **Windows 10**
 
@@ -1117,7 +1117,7 @@ Tone.
 Importing Docstrings into the Sphinx Documentation
 ==================================================
 
-Here is a part of the ``doc/src/modules/geometry.txt`` file that imports the
+Here are excerpts from the ``doc/src/modules/geometry`` directory that imports the
 relevant docstrings from geometry module into documentation::
 
     Utils

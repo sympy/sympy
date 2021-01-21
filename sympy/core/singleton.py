@@ -12,6 +12,9 @@ class SingletonRegistry(Registry):
     """
     The registry for the singleton classes (accessible as ``S``).
 
+    Explanation
+    ===========
+
     This class serves as two separate things.
 
     The first thing it is is the ``SingletonRegistry``. Several classes in
@@ -29,7 +32,10 @@ class SingletonRegistry(Registry):
     the same single instance in memory. The fast comparison comes from the
     fact that you can use ``is`` to compare exact instances in Python
     (usually, you need to use ``==`` to compare things). ``is`` compares
-    objects by memory address, and is very fast. For instance
+    objects by memory address, and is very fast.
+
+    Examples
+    ========
 
     >>> from sympy import S, Integer
     >>> a = Integer(0)
@@ -46,7 +52,8 @@ class SingletonRegistry(Registry):
     When using ``is`` comparison, make sure the argument is sympified. For
     instance,
 
-    >>> 0 is S.Zero
+    >>> x = 0
+    >>> x is S.Zero
     False
 
     This problem is not an issue when using ``==``, which is recommended for
@@ -75,7 +82,7 @@ class SingletonRegistry(Registry):
     as ``x + Rational(1, 2)``, but this is a lot more typing. A shorter
     version is ``x + S(1)/2``. Since ``S(1)`` returns ``Integer(1)``, the
     division will return a ``Rational`` type, since it will call
-    ``Integer.__div__``, which knows how to return a ``Rational``.
+    ``Integer.__truediv__``, which knows how to return a ``Rational``.
 
     """
     __slots__ = ()
@@ -104,6 +111,9 @@ class SingletonRegistry(Registry):
         """Python calls __getattr__ if no attribute of that name was installed
         yet.
 
+        Explanation
+        ===========
+
         This __getattr__ checks whether a class with the requested name was
         already registered but not installed; if no, raises an AttributeError.
         Otherwise, retrieves the class, calculates its singleton value, installs
@@ -128,6 +138,9 @@ class Singleton(ManagedProperties):
     """
     Metaclass for singleton classes.
 
+    Explanation
+    ===========
+
     A singleton class has only one instance which is returned every time the
     class is instantiated. Additionally, this instance can be accessed through
     the global registry object ``S`` as ``S.<class_name>``.
@@ -137,7 +150,6 @@ class Singleton(ManagedProperties):
 
         >>> from sympy import S, Basic
         >>> from sympy.core.singleton import Singleton
-        >>> from sympy.core.compatibility import with_metaclass
         >>> class MySingleton(Basic, metaclass=Singleton):
         ...     pass
         >>> Basic() is Basic()

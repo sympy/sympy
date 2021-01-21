@@ -1,8 +1,7 @@
 from sympy.core import Mul, sympify
 from sympy.matrices.common import ShapeError
-from sympy.matrices.expressions.matexpr import (
-    MatrixExpr, OneMatrix, ZeroMatrix
-)
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix
 from sympy.strategies import (
     unpack, flatten, condition, exhaust, rm_id, sort
 )
@@ -59,9 +58,8 @@ class HadamardProduct(MatrixExpr):
     """
     is_HadamardProduct = True
 
-    def __new__(cls, *args, evaluate=False, **kwargs):
+    def __new__(cls, *args, evaluate=False, check=True):
         args = list(map(sympify, args))
-        check = kwargs.get('check', True)
         if check:
             validate(*args)
 

@@ -1,6 +1,5 @@
 """Dense univariate polynomials with coefficients in Galois fields. """
 
-from __future__ import print_function, division
 
 from random import uniform
 from math import ceil as _ceil, sqrt as _sqrt
@@ -29,7 +28,6 @@ def gf_crt(U, M, K=None):
 
        >>> from sympy.polys.domains import ZZ
        >>> from sympy.polys.galoistools import gf_crt
-       >>> from sympy.ntheory.modular import solve_congruence
 
        >>> gf_crt([49, 76, 65], [99, 97, 95], ZZ)
        639985
@@ -315,7 +313,6 @@ def gf_from_int_poly(f, p):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_from_int_poly
 
     >>> gf_from_int_poly([7, -2, 3], 5)

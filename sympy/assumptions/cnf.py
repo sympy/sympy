@@ -12,7 +12,7 @@ from itertools import zip_longest
 
 class Literal:
     """
-    The smallest element of a CNF object
+    The smallest element of a CNF object.
     """
 
     def __new__(cls, lit, is_Not=False):

@@ -1,11 +1,14 @@
-from sympy import log, exp, Symbol, Pow, sin, MatrixSymbol
+from sympy import log, exp, cos, Symbol, Pow, sin, MatrixSymbol, sinc
 from sympy.assumptions import assuming, Q
-from sympy.printing.ccode import ccode
+from sympy.printing import ccode
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.cfunctions import log2, exp2, expm1, log1p
+from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
+from sympy.codegen.scipy_nodes import cosm1
 from sympy.codegen.rewriting import (
-    optimize, log2_opt, exp2_opt, expm1_opt, log1p_opt, optims_c99,
-    create_expand_pow_optimization, matinv_opt
+    optimize, cosm1_opt, log2_opt, exp2_opt, expm1_opt, log1p_opt, optims_c99,
+    create_expand_pow_optimization, matinv_opt, logaddexp_opt, logaddexp2_opt,
+    optims_numpy, sinc_opts
 )
 from sympy.testing.pytest import XFAIL
 
@@ -80,12 +83,55 @@ def test_expm1_opt():
     assert opt5.rewrite(exp) == expr5
 
 
-@XFAIL
+@XFAIL  # ideally this test should pass: need to improve `expm1_opt`
 def test_expm1_two_exp_terms():
     x, y = map(Symbol, 'x y'.split())
     expr1 = exp(x) + exp(y) - 2
     opt1 = optimize(expr1, [expm1_opt])
     assert opt1 == expm1(x) + expm1(y)
+
+
+def test_cosm1_opt():
+    x = Symbol('x')
+
+    expr1 = cos(x) - 1
+    opt1 = optimize(expr1, [cosm1_opt])
+    assert cosm1(x) - opt1 == 0
+    assert opt1.rewrite(cos) == expr1
+
+    expr2 = 3*cos(x) - 3
+    opt2 = optimize(expr2, [cosm1_opt])
+    assert 3*cosm1(x) == opt2
+    assert opt2.rewrite(cos) == expr2
+
+    expr3 = 3*cos(x) - 5
+    assert expr3 == optimize(expr3, [cosm1_opt])
+
+    expr4 = 3*cos(x) + log(x) - 3
+    opt4 = optimize(expr4, [cosm1_opt])
+    assert 3*cosm1(x) + log(x) == opt4
+    assert opt4.rewrite(cos) == expr4
+
+    expr5 = 3*cos(2*x) - 3
+    opt5 = optimize(expr5, [cosm1_opt])
+    assert 3*cosm1(2*x) == opt5
+    assert opt5.rewrite(cos) == expr5
+
+
+@XFAIL  # ideally this test should pass: need to improve `cosm1_opt`
+def test_cosm1_two_cos_terms():
+    x, y = map(Symbol, 'x y'.split())
+    expr1 = cos(x) + cos(y) - 2
+    opt1 = optimize(expr1, [cosm1_opt])
+    assert opt1 == cosm1(x) + cosm1(y)
+
+
+@XFAIL  # ideally this test should pass: need to add a new combined expm1_cosm1_opt?
+def test_expm1_cosm1_mixed():
+    x = Symbol('x')
+    expr1 = exp(x) + cos(x) - 2
+    opt1 = optimize(expr1, [expm1_opt, cosm1_opt])  # need a combined opt pass?
+    assert opt1 == cosm1(x) + expm1(x)
 
 
 def test_log1p_opt():
@@ -182,3 +228,69 @@ def test_matsolve():
     with assuming(Q.fullrank(A)):
         assert optimize(A**(-1) * x, [matinv_opt]) == MatrixSolve(A, x)
         assert optimize(A**(-1) * x + x, [matinv_opt]) == MatrixSolve(A, x) + x
+
+
+def test_logaddexp_opt():
+    x, y = map(Symbol, 'x y'.split())
+    expr1 = log(exp(x) + exp(y))
+    opt1 = optimize(expr1, [logaddexp_opt])
+    assert logaddexp(x, y) - opt1 == 0
+    assert logaddexp(y, x) - opt1 == 0
+    assert opt1.rewrite(log) == expr1
+
+
+def test_logaddexp2_opt():
+    x, y = map(Symbol, 'x y'.split())
+    expr1 = log(2**x + 2**y)/log(2)
+    opt1 = optimize(expr1, [logaddexp2_opt])
+    assert logaddexp2(x, y) - opt1 == 0
+    assert logaddexp2(y, x) - opt1 == 0
+    assert opt1.rewrite(log) == expr1
+
+
+def test_sinc_opts():
+    def check(d):
+        for k, v in d.items():
+            assert optimize(k, sinc_opts) == v
+
+    x = Symbol('x')
+    check({
+        sin(x)/x       : sinc(x),
+        sin(2*x)/(2*x) : sinc(2*x),
+        sin(3*x)/x     : 3*sinc(3*x),
+        x*sin(x)       : x*sin(x)
+    })
+
+    y = Symbol('y')
+    check({
+        sin(x*y)/(x*y)       : sinc(x*y),
+        y*sin(x/y)/x         : sinc(x/y),
+        sin(sin(x))/sin(x)   : sinc(sin(x)),
+        sin(3*sin(x))/sin(x) : 3*sinc(3*sin(x)),
+        sin(x)/y             : sin(x)/y
+    })
+
+
+def test_optims_numpy():
+    def check(d):
+        for k, v in d.items():
+            assert optimize(k, optims_numpy) == v
+
+    x = Symbol('x')
+    check({
+        sin(2*x)/(2*x) + exp(2*x) - 1: sinc(2*x) + expm1(2*x),
+        log(x+3)/log(2) + log(x**2 + 1): log1p(x**2) + log2(x+3)
+    })
+
+
+@XFAIL  # room for improvement, ideally this test case should pass.
+def test_optims_numpy_TODO():
+    def check(d):
+        for k, v in d.items():
+            assert optimize(k, optims_numpy) == v
+
+    x, y = map(Symbol, 'x y'.split())
+    check({
+        log(x*y)*sin(x*y)*log(x*y+1)/(log(2)*x*y): log2(x*y)*sinc(x*y)*log1p(x*y),
+        exp(x*sin(y)/y) - 1: expm1(x*sinc(y))
+    })

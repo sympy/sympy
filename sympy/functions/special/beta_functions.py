@@ -116,5 +116,5 @@ class beta(Function):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate(), self.args[1].conjugate())
 
-    def _eval_rewrite_as_gamma(self, x, y, **kwargs):
+    def _eval_rewrite_as_gamma(self, x, y, piecewise=True, **kwargs):
         return self._eval_expand_func(**kwargs)

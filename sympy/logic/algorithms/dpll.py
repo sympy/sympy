@@ -181,7 +181,6 @@ def unit_propagate(clauses, symbol):
 
     Arguments are expected to be in CNF.
 
-    >>> from sympy import symbols
     >>> from sympy.abc import A, B, D
     >>> from sympy.logic.algorithms.dpll import unit_propagate
     >>> unit_propagate([A | B, D | ~B, B], B)
@@ -223,7 +222,6 @@ def find_pure_symbol(symbols, unknown_clauses):
     Find a symbol and its value if it appears only as a positive literal
     (or only as a negative) in clauses.
 
-    >>> from sympy import symbols
     >>> from sympy.abc import A, B, D
     >>> from sympy.logic.algorithms.dpll import find_pure_symbol
     >>> find_pure_symbol([A, B, D], [A|~B,~B|~D,D|A])
@@ -269,7 +267,6 @@ def find_unit_clause(clauses, model):
     """
     A unit clause has only 1 variable that is not bound in the model.
 
-    >>> from sympy import symbols
     >>> from sympy.abc import A, B, D
     >>> from sympy.logic.algorithms.dpll import find_unit_clause
     >>> find_unit_clause([A | B | D, B | ~D, A | ~B], {A:True})

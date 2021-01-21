@@ -90,6 +90,21 @@ def test_print_builtin_option():
                     '{\N{GREEK SMALL LETTER PI}: 3.14, n\N{LATIN SUBSCRIPT SMALL LETTER I}: 3}')
     assert latex == r'$\displaystyle \left\{ n_{i} : 3, \  \pi : 3.14\right\}$'
 
+    # Objects with an _latex overload should also be handled by our tuple
+    # printer.
+    app.run_cell("""\
+    class WithOverload:
+        def _latex(self, printer):
+            return r"\\LaTeX"
+    """)
+    app.run_cell("a = format((WithOverload(),))")
+    # Deal with API change starting at IPython 1.0
+    if int(ipython.__version__.split(".")[0]) < 1:
+        latex = app.user_ns['a']['text/latex']
+    else:
+        latex = app.user_ns['a'][0]['text/latex']
+    assert latex == r'$\displaystyle \left( \LaTeX,\right)$'
+
     # Objects with an IPython latex overload should also be handled by our tuple
     # printer.
     app.run_cell("""\
@@ -190,3 +205,28 @@ def test_matplotlib_bad_latex():
     # issue 9799
     app.run_cell("from sympy import Piecewise, Symbol, Eq")
     app.run_cell("x = Symbol('x'); pw = format(Piecewise((1, Eq(x, 0)), (0, True)))")
+
+
+def test_override_repr_latex():
+    # Initialize and setup IPython session
+    app = init_ipython_session()
+    app.run_cell("import IPython")
+    app.run_cell("ip = get_ipython()")
+    app.run_cell("inst = ip.instance()")
+    app.run_cell("format = inst.display_formatter.format")
+    app.run_cell("inst.display_formatter.formatters['text/latex'].enabled = True")
+    app.run_cell("from sympy import init_printing")
+    app.run_cell("from sympy import Symbol")
+    app.run_cell("init_printing(use_latex=True)")
+    app.run_cell("""\
+    class SymbolWithOverload(Symbol):
+        def _repr_latex_(self):
+            return r"Hello " + super()._repr_latex_() + " world"
+    """)
+    app.run_cell("a = format(SymbolWithOverload('s'))")
+
+    if int(ipython.__version__.split(".")[0]) < 1:
+        latex = app.user_ns['a']['text/latex']
+    else:
+        latex = app.user_ns['a'][0]['text/latex']
+    assert latex == r'Hello $\displaystyle s$ world'

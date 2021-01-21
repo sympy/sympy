@@ -1,12 +1,15 @@
 """Base class for all the objects in SymPy"""
 from collections import defaultdict
+from collections.abc import Mapping
 from itertools import chain, zip_longest
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
-from .compatibility import iterable, ordered, Mapping
+from .compatibility import iterable, ordered
 from .singleton import S
+from .kind import UndefinedKind
+from ._print_helpers import Printable
 
 from inspect import getmro
 
@@ -24,7 +27,7 @@ def as_Basic(expr):
             expr))
 
 
-class Basic(metaclass=ManagedProperties):
+class Basic(Printable, metaclass=ManagedProperties):
     """
     Base class for all SymPy objects.
 
@@ -104,6 +107,8 @@ class Basic(metaclass=ManagedProperties):
     is_Point = False
     is_MatAdd = False
     is_MatMul = False
+
+    kind = UndefinedKind
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
@@ -411,39 +416,6 @@ class Basic(metaclass=ManagedProperties):
 
         return s.xreplace({dummy: tmp}) == o.xreplace({symbol: tmp})
 
-    # Note, we always use the default ordering (lex) in __str__ and __repr__,
-    # regardless of the global setting.  See issue 5487.
-    def __repr__(self):
-        """Method to return the string representation.
-
-        Return the expression as a string.
-        """
-        from sympy.printing import sstr
-        return sstr(self, order=None)
-
-    def __str__(self):
-        from sympy.printing import sstr
-        return sstr(self, order=None)
-
-    # We don't define _repr_png_ here because it would add a large amount of
-    # data to any notebook containing SymPy expressions, without adding
-    # anything useful to the notebook. It can still enabled manually, e.g.,
-    # for the qtconsole, with init_printing().
-    def _repr_latex_(self):
-        """
-        IPython/Jupyter LaTeX printing
-
-        To change the behavior of this (e.g., pass in some settings to LaTeX),
-        use init_printing(). init_printing() will also enable LaTeX printing
-        for built in numeric types like ints and container types that contain
-        SymPy objects, like lists and dictionaries of expressions.
-        """
-        from sympy.printing.latex import latex
-        s = latex(self, mode='plain')
-        return "$\\displaystyle %s$" % s
-
-    _repr_latex_orig = _repr_latex_
-
     def atoms(self, *types):
         """Returns the atoms that form the current object.
 
@@ -554,7 +526,7 @@ class Basic(metaclass=ManagedProperties):
         ========
 
         >>> from sympy import Integral, Symbol
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x
         >>> r = Symbol('r', real=True)
         >>> Integral(r, (r, x)).as_dummy()
         Integral(_0, (_0, x))
@@ -569,7 +541,6 @@ class Basic(metaclass=ManagedProperties):
         Any object that has structurally bound variables should have
         a property, `bound_symbols` that returns those symbols
         appearing in the object.
-
         """
         from sympy.core.symbol import Dummy, Symbol
         def can(x):
@@ -660,6 +631,9 @@ class Basic(metaclass=ManagedProperties):
 
     def is_hypergeometric(self, k):
         from sympy.simplify import hypersimp
+        from sympy.functions import Piecewise
+        if self.has(Piecewise):
+            return None
         return hypersimp(self, k) is not None
 
     @property
@@ -929,7 +903,7 @@ class Basic(metaclass=ManagedProperties):
                 # when old is a string we prefer Symbol
                 s = Symbol(s[0]), s[1]
             try:
-                s = [sympify(_, strict=not isinstance(_, str))
+                s = [sympify(_, strict=not isinstance(_, (str, type)))
                      for _ in s]
             except SympifyError:
                 # if it can't be sympified, skip it
@@ -1246,10 +1220,11 @@ class Basic(metaclass=ManagedProperties):
             return any(f.func == pattern or f == pattern
             for f in self.atoms(Function, UndefinedFunction))
 
-        pattern = _sympify(pattern)
         if isinstance(pattern, BasicMeta):
-            return any(isinstance(arg, pattern)
-            for arg in preorder_traversal(self))
+            subtrees = preorder_traversal(self)
+            return any(isinstance(arg, pattern) for arg in subtrees)
+
+        pattern = _sympify(pattern)
 
         _has_matcher = getattr(pattern, '_has_matcher', None)
         if _has_matcher is not None:
@@ -1699,6 +1674,11 @@ class Basic(metaclass=ManagedProperties):
         from sympy.simplify import simplify
         return simplify(self, **kwargs)
 
+    def refine(self, assumption=True):
+        """See the refine function in sympy.assumptions"""
+        from sympy.assumptions import refine
+        return refine(self, assumption)
+
     def _eval_rewrite(self, pattern, rule, **hints):
         if self.is_Atom:
             if hasattr(self, rule):
@@ -1720,21 +1700,6 @@ class Basic(metaclass=ManagedProperties):
 
         return self.func(*args) if hints.get('evaluate', True) else self
 
-    def _accept_eval_derivative(self, s):
-        # This method needs to be overridden by array-like objects
-        return s._visit_eval_derivative_scalar(self)
-
-    def _visit_eval_derivative_scalar(self, base):
-        # Base is a scalar
-        # Types are (base: scalar, self: scalar)
-        return base._eval_derivative(self)
-
-    def _visit_eval_derivative_array(self, base):
-        # Types are (base: array/matrix, self: scalar)
-        # Base is some kind of array/matrix,
-        # it should have `.applyfunc(lambda x: x.diff(self)` implemented:
-        return base._eval_derivative_array(self)
-
     def _eval_derivative_n_times(self, s, n):
         # This is the default evaluator for derivatives (as called by `diff`
         # and `Derivative`), it will attempt a loop to derive the expression
@@ -1746,7 +1711,7 @@ class Basic(metaclass=ManagedProperties):
         if isinstance(n, (int, Integer)):
             obj = self
             for i in range(n):
-                obj2 = obj._accept_eval_derivative(s)
+                obj2 = obj._eval_derivative(s)
                 if obj == obj2 or obj2 is None:
                     break
                 obj = obj2
@@ -1852,7 +1817,6 @@ class Basic(metaclass=ManagedProperties):
             obj = f(obj)
 
         return obj
-
 
 class Atom(Basic):
     """

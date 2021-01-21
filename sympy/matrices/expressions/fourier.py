@@ -12,7 +12,7 @@ class DFT(MatrixExpr):
         return obj
 
     n = property(lambda self: self.args[0])  # type: ignore
-    shape = property(lambda self: (self.n, self.n))
+    shape = property(lambda self: (self.n, self.n))  # type: ignore
 
     def _entry(self, i, j, **kwargs):
         w = exp(-2*S.Pi*I/self.n)

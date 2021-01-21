@@ -19,7 +19,7 @@ from .util import (
     sha256_of_string, sha256_of_file
 )
 
-sharedext = get_config_var('EXT_SUFFIX' if sys.version_info >= (3, 3) else 'SO')
+sharedext = get_config_var('EXT_SUFFIX')
 
 if os.name == 'posix':
     objext = '.o'
@@ -505,13 +505,6 @@ def compile_link_import_py_ext(sources, extname=None, build_dir='.', compile_kwa
     =======
 
     The imported module from of the python extension.
-
-    Examples
-    ========
-
-    >>> mod = compile_link_import_py_ext(['fft.f90', 'conv.cpp', '_fft.pyx'])  # doctest: +SKIP
-    >>> Aprim = mod.fft(A)  # doctest: +SKIP
-
     """
     if extname is None:
         extname = os.path.splitext(os.path.basename(sources[-1]))[0]

@@ -99,6 +99,9 @@ class RecurrenceOperator:
     The Recurrence Operators are defined by a list of polynomials
     in the base ring and the parent ring of the Operator.
 
+    Explanation
+    ===========
+
     Takes a list of polynomials for each power of Sn and the
     parent ring which must be an instance of RecurrenceOperatorAlgebra.
 
@@ -109,7 +112,7 @@ class RecurrenceOperator:
     ========
 
     >>> from sympy.holonomic.recurrence import RecurrenceOperator, RecurrenceOperators
-    >>> from sympy.polys.domains import ZZ, QQ
+    >>> from sympy.polys.domains import ZZ
     >>> from sympy import symbols
     >>> n = symbols('n', integer=True)
     >>> R, Sn = RecurrenceOperators(ZZ.old_poly_ring(n),'Sn')

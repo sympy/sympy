@@ -284,6 +284,9 @@ def test_hyperbolic_simp():
     e = 2*cosh(x)**2 - 2*sinh(x)**2
     assert trigsimp(log(e)) == log(2)
 
+    # issue 19535:
+    assert trigsimp(sqrt(cosh(x)**2 - 1)) == sqrt(sinh(x)**2)
+
     assert trigsimp(cosh(x)**2*cosh(y)**2 - cosh(x)**2*sinh(y)**2 - sinh(x)**2,
             recursive=True) == 1
     assert trigsimp(sinh(x)**2*sinh(y)**2 - sinh(x)**2*cosh(y)**2 + cosh(x)**2,

@@ -1,9 +1,11 @@
 # This file contains tests that exercise multiple AST nodes
 
+import tempfile
+
 from sympy.external import import_module
-from sympy.printing.ccode import ccode
+from sympy.printing import ccode
 from sympy.utilities._compilation import compile_link_import_strings, has_c
-from sympy.utilities._compilation.util import TemporaryDirectory, may_xfail
+from sympy.utilities._compilation.util import may_xfail
 from sympy.testing.pytest import skip
 from sympy.codegen.ast import (
     FunctionDefinition, FunctionPrototype, Variable, Pointer, real, Assignment,
@@ -47,7 +49,7 @@ def test_copying_function():
         skip("Cython not found.")
 
     info = None
-    with TemporaryDirectory() as folder:
+    with tempfile.TemporaryDirectory() as folder:
         mod, info = _render_compile_import(_mk_func1(), build_dir=folder)
         inp = np.arange(10.0)
         out = np.empty_like(inp)

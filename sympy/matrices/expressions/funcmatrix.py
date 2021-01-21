@@ -31,7 +31,7 @@ class FunctionMatrix(MatrixExpr):
 
     Creating a ``FunctionMatrix`` from ``Lambda``:
 
-    >>> from sympy import FunctionMatrix, symbols, Lambda, MatPow, Matrix
+    >>> from sympy import FunctionMatrix, symbols, Lambda, MatPow
     >>> i, j, n, m = symbols('i,j,n,m')
     >>> FunctionMatrix(n, m, Lambda((i, j), i + j))
     FunctionMatrix(n, m, Lambda((i, j), i + j))

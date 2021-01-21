@@ -18,6 +18,7 @@ from sympy.polys.numberfields import (
     isolate, IntervalPrinter,
 )
 
+from sympy.polys.partfrac import apart
 from sympy.polys.polyerrors import (
     IsomorphismFailed,
     NotAlgebraic,
@@ -159,6 +160,12 @@ def test_minimal_polynomial():
     assert minimal_polynomial(TribonacciConstant, x, domain=QQ.algebraic_field(cbrt(19 - 3*sqrt(33)))) == \
     48*x - 19*(19 - 3*sqrt(33))**Rational(2, 3) - 3*sqrt(33)*(19 - 3*sqrt(33))**Rational(2, 3) \
     - 16*(19 - 3*sqrt(33))**Rational(1, 3) - 16
+
+    # AlgebraicNumber with an alias.
+    # Wester H24
+    phi = AlgebraicNumber(S.GoldenRatio.expand(func=True), alias='phi')
+    minimal_polynomial(phi, x) == x**2 - x - 1
+
 
 def test_minimal_polynomial_hi_prec():
     p = 1/sqrt(1 - 9*sqrt(2) + 7*sqrt(3) + Rational(1, 10)**30)
@@ -782,3 +789,20 @@ def test_issue_13230():
     + 9*sqrt(5)/29 + sqrt(196*sqrt(35) + 1941)/29), -2*sqrt(7)/29 + 9*sqrt(5)/29
     + sqrt(196*sqrt(35) + 1941)/29), Point2D(-1 + (-sqrt(7) + sqrt(5))*(-sqrt(196*sqrt(35)
     + 1941)/29 - 2*sqrt(7)/29 + 9*sqrt(5)/29), -sqrt(196*sqrt(35) + 1941)/29 - 2*sqrt(7)/29 + 9*sqrt(5)/29)]
+
+def test_issue_19760():
+    e = 1/(sqrt(1 + sqrt(2)) - sqrt(2)*sqrt(1 + sqrt(2))) + 1
+    mp_expected = x**4 - 4*x**3 + 4*x**2 - 2
+
+    for comp in (True, False):
+        mp = Poly(minimal_polynomial(e, compose=comp))
+        assert mp(x) == mp_expected, "minimal_polynomial(e, compose=%s) = %s; %s expected" % (comp, mp(x), mp_expected)
+
+
+def test_issue_20163():
+    assert apart(1/(x**6+1), extension=[sqrt(3), I]) == \
+        (sqrt(3) + I)/(2*x + sqrt(3) + I)/6 + \
+        (sqrt(3) - I)/(2*x + sqrt(3) - I)/6 - \
+        (sqrt(3) - I)/(2*x - sqrt(3) + I)/6 - \
+        (sqrt(3) + I)/(2*x - sqrt(3) - I)/6 + \
+        I/(x + I)/6 - I/(x - I)/6

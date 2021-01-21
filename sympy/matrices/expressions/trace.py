@@ -15,6 +15,13 @@ class Trace(Expr):
     >>> A = MatrixSymbol('A', 3, 3)
     >>> Trace(A)
     Trace(A)
+    >>> Trace(eye(3))
+    Trace(Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]]))
+    >>> Trace(eye(3)).simplify()
+    3
     """
     is_Trace = True
     is_commutative = True
@@ -117,7 +124,7 @@ def trace(expr):
     Examples
     ========
 
-    >>> from sympy import trace, Symbol, MatrixSymbol, pprint, eye
+    >>> from sympy import trace, Symbol, MatrixSymbol, eye
     >>> n = Symbol('n')
     >>> X = MatrixSymbol('X', n, n)  # A square matrix
     >>> trace(2*X)
