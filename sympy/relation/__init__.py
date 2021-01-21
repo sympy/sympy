@@ -10,9 +10,7 @@ References
 """
 
 __all__ = ['BinaryRelation', 'AppliedBinaryRelation',
-    'Equal',
-    'eqnsimp']
+    'Equal']
 
 from .binrel import BinaryRelation, AppliedBinaryRelation
 from .equality import Equal
-from .reltools import eqnsimp

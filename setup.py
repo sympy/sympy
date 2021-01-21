@@ -148,7 +148,6 @@ modules = [
     'sympy.printing.pretty',
     'sympy.relation',
     'sympy.relation.handlers',
-    'sympy.relation.reltools',
     'sympy.sandbox',
     'sympy.series',
     'sympy.series.benchmarks',
