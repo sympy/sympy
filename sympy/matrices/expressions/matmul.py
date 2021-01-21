@@ -175,7 +175,7 @@ class MatMul(MatrixExpr, Mul):
         if len(args) == 2:
             from .matadd import MatAdd
             if args[0].is_MatAdd:
-                return MatAdd(*[MatMul(args[1], mat).doit(**kwargs) for mat in args[0].args])
+                return MatAdd(*[MatMul(mat, args[1]).doit(**kwargs) for mat in args[0].args])
             if args[1].is_MatAdd:
                 return MatAdd(*[MatMul(args[0], mat).doit(**kwargs) for mat in args[1].args])
 
