@@ -588,6 +588,9 @@ class CodegenArrayElementwiseAdd(_CodegenArrayAbstract):
         if len({i for i in shapes if i is not None}) > 1:
             raise ValueError("mismatching shapes in addition")
 
+        # Flatten:
+        args = cls._flatten_args(args)
+
         args = [arg for arg in args if not isinstance(arg, (ZeroArray, ZeroMatrix))]
         if len(args) == 0:
             if any(i for i in shapes if i is None):
@@ -603,6 +606,16 @@ class CodegenArrayElementwiseAdd(_CodegenArrayAbstract):
         else:
             obj._shape = shapes[0]
         return obj
+
+    @classmethod
+    def _flatten_args(cls, args):
+        new_args = []
+        for arg in args:
+            if isinstance(arg, CodegenArrayElementwiseAdd):
+                new_args.extend(arg.args)
+            else:
+                new_args.append(arg)
+        return new_args
 
 
 class CodegenArrayPermuteDims(_CodegenArrayAbstract):

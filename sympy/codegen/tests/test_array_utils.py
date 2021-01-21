@@ -180,6 +180,12 @@ def test_codegen_array_flatten():
     cgnested = CodegenArrayDiagonal(cg4, (1, 2))
     assert cgnested == CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N, P, Q), (1, 5), (3, 7), (2, 4))
 
+    cg = CodegenArrayElementwiseAdd(M, N)
+    cg2 = CodegenArrayElementwiseAdd(cg, P)
+    assert isinstance(cg2, CodegenArrayElementwiseAdd)
+    assert cg2.args == (M, N, P)
+    assert cg2.shape == (k, k)
+
 
 def test_codegen_array_parse():
     expr = M[i, j]
