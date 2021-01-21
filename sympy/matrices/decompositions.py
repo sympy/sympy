@@ -1354,7 +1354,8 @@ def _upper_hessenberg_decomposition(A):
 
         Examples
         ========
-        >>> from sympy import Matrix
+
+    >>> from sympy import Matrix
         >>> A = Matrix([
         ...     [1,2,3],
         ...     [-3,5,6],
@@ -1378,7 +1379,7 @@ def _upper_hessenberg_decomposition(A):
         References
         ==========
 
-        .. https://mathworld.wolfram.com/HessenbergDecomposition.html
+    .. [#] https://mathworld.wolfram.com/HessenbergDecomposition.html
     """
 
     M = A.as_mutable()
