@@ -2685,6 +2685,7 @@ class LatexPrinter(Printer):
 
         return r"\mathtt{\text{%s}}" % latex_escape(s)
 
+
 def translate(s):
     r'''
     Check for a modifier ending the string.  If present, convert the
