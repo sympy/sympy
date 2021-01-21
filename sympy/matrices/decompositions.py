@@ -1360,7 +1360,7 @@ def _upper_hessenberg_decomposition(A):
         ...     [-3,5,6],
         ...     [4,-8,9],
         ... ])
-        >>> H, P = A.UpperHessenbergdecomposition()
+        >>> H, P = A.upper_hessenberg_decomposition()
         >>> H
         Matrix([
         [1,    6/5,    17/5],
