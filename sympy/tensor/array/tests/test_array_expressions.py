@@ -4,6 +4,9 @@ from sympy.testing.pytest import raises
 
 
 def test_zero_array():
+    assert ZeroArray() == 0
+    assert ZeroArray().is_Integer
+
     za = ZeroArray(3, 2, 4)
     assert za.shape == (3, 2, 4)
     za_e = za.as_explicit()
