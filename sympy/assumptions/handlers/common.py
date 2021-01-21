@@ -9,13 +9,21 @@ from sympy.core.logic import _fuzzy_group
 from sympy.core.numbers import NaN, Number
 from sympy.logic.boolalg import (And, BooleanTrue, BooleanFalse, conjuncts,
     Equivalent, Implies, Not, Or)
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from ..predicates.common import CommutativePredicate, IsTruePredicate
 
 
 class AskHandler:
     """Base class that all Ask Handlers must inherit."""
-    pass
+    def __new__(cls, *args, **kwargs):
+        SymPyDeprecationWarning(
+            feature="AskHandler() class",
+            useinstead="multipledispatch handler",
+            issue=20873,
+            deprecated_since_version="1.8"
+        ).warn()
+        return super().__new__(cls, *args, **kwargs)
 
 
 class CommonHandler(AskHandler):

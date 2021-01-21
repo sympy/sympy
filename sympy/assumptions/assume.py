@@ -9,6 +9,7 @@ from sympy.logic.boolalg import Boolean
 from sympy.multipledispatch.dispatcher import (
     Dispatcher, MDNotImplementedError, str_signature
 )
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.source import get_class
 
@@ -417,11 +418,21 @@ class UndefinedPredicate(Predicate):
         return AppliedPredicate(self, expr)
 
     def add_handler(self, handler):
-        # Will be deprecated
+        SymPyDeprecationWarning(
+            feature="Predicate.add_handler() method",
+            useinstead="multipledispatch handler of Predicate",
+            issue=20873,
+            deprecated_since_version="1.8"
+        ).warn()
         self.handlers.append(handler)
 
     def remove_handler(self, handler):
-        # Will be deprecated
+        SymPyDeprecationWarning(
+            feature="Predicate.remove_handler() method",
+            useinstead="multipledispatch handler of Predicate",
+            issue=20873,
+            deprecated_since_version="1.8"
+        ).warn()
         self.handlers.remove(handler)
 
     def eval(self, args, assumptions=True):

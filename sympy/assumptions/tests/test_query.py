@@ -1,7 +1,7 @@
 from sympy.abc import t, w, x, y, z, n, k, m, p, i
 from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
         remove_handler)
-from sympy.assumptions.assume import global_assumptions, Predicate
+from sympy.assumptions.assume import assuming, global_assumptions, Predicate
 from sympy.assumptions.ask import compute_known_facts, single_fact_lookup
 from sympy.assumptions.handlers import AskHandler
 from sympy.core.add import Add
@@ -17,8 +17,7 @@ from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
 from sympy.matrices import Matrix, SparseMatrix
-from sympy.testing.pytest import XFAIL, slow, raises
-from sympy.assumptions.assume import assuming
+from sympy.testing.pytest import XFAIL, slow, raises, warns_deprecated_sympy
 import math
 
 
@@ -2027,18 +2026,19 @@ def test_key_extensibility():
     raises(AttributeError, lambda: ask(Q.my_key(x)))
 
     # Old handler system
-    class MyAskHandler(AskHandler):
-        @staticmethod
-        def Symbol(expr, assumptions):
-            return True
-    try:
-        register_handler('my_key', MyAskHandler)
-        assert ask(Q.my_key(x)) is True
-        assert ask(Q.my_key(x + 1)) is None
-    finally:
-        remove_handler('my_key', MyAskHandler)
-        del Q.my_key
-    raises(AttributeError, lambda: ask(Q.my_key(x)))
+    with warns_deprecated_sympy():
+        class MyAskHandler(AskHandler):
+            @staticmethod
+            def Symbol(expr, assumptions):
+                return True
+        try:
+            register_handler('my_key', MyAskHandler)
+            assert ask(Q.my_key(x)) is True
+            assert ask(Q.my_key(x + 1)) is None
+        finally:
+            remove_handler('my_key', MyAskHandler)
+            del Q.my_key
+        raises(AttributeError, lambda: ask(Q.my_key(x)))
 
     # New handler system
     class MyPredicate(Predicate):
@@ -2252,23 +2252,24 @@ def test_custom_AskHandler():
     from sympy.logic.boolalg import conjuncts
 
     # Old handler system
-    class MersenneHandler(AskHandler):
-        @staticmethod
-        def Integer(expr, assumptions):
-            from sympy import log
-            if ask(Q.integer(log(expr + 1, 2))):
-                return True
-        @staticmethod
-        def Symbol(expr, assumptions):
-            if expr in conjuncts(assumptions):
-                return True
-    try:
-        register_handler('mersenne', MersenneHandler)
-        n = Symbol('n', integer=True)
-        assert ask(Q.mersenne(7))
-        assert ask(Q.mersenne(n), Q.mersenne(n))
-    finally:
-        del Q.mersenne
+    with warns_deprecated_sympy():
+        class MersenneHandler(AskHandler):
+            @staticmethod
+            def Integer(expr, assumptions):
+                from sympy import log
+                if ask(Q.integer(log(expr + 1, 2))):
+                    return True
+            @staticmethod
+            def Symbol(expr, assumptions):
+                if expr in conjuncts(assumptions):
+                    return True
+        try:
+            register_handler('mersenne', MersenneHandler)
+            n = Symbol('n', integer=True)
+            assert ask(Q.mersenne(7))
+            assert ask(Q.mersenne(n), Q.mersenne(n))
+        finally:
+            del Q.mersenne
 
     # New handler system
     class MersennePredicate(Predicate):
