@@ -2,7 +2,7 @@
 Module for mathematical equality.
 """
 from sympy.assumptions import Q
-from sympy.core import Add, Equality, Expr
+from sympy.core import Add, Expr
 from sympy.core.add import _unevaluated_Add
 from sympy.solvers.solveset import linear_coeffs
 from .binrel import BinaryRelation
@@ -27,10 +27,6 @@ class Equal(BinaryRelation):
     @property
     def reversed(self):
         return Q.eq
-
-    @property
-    def as_Relational(self):
-        return Equality
 
     def _eval_relation(self, lhs, rhs):
         # logic for simple numbers

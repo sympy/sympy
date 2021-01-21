@@ -239,9 +239,6 @@ class AppliedBinaryRelation(AppliedPredicate):
     def binary_symbols(self):
         return set()
 
-    def as_Relational(self):
-        return self.function.as_Relational(*self.arguments)
-
     def _eval_ask(self, assumptions):
         # quick exit for structurally same arguments
         ret = self.function._compare_reflexive(self.lhs, self.rhs)
