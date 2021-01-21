@@ -3677,11 +3677,8 @@ def test_wignerd():
 
 def test_wignerD():
     i,j=symbols('i j')
-    k=Symbol('k',nonzero=True)
     assert Rotation.D(1,1,1,0,0,0) == 1
     assert Rotation.D(1,1,2,0,0,0) == 0
-    assert Rotation.D(1,k,0,0,0,0) == 0
-    assert Rotation.D(1,x,x,0,0,0) == 1
     assert Rotation.D(1,i**2 - j**2, i**2 - j**2,0,0,0) == 1
     assert Rotation.D(1,i,i,0,0,0) == 1
     assert Rotation.D(1,i,i + 1,0,0,0) == 0
