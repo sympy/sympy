@@ -1,8 +1,4 @@
-<p align="center"  width="100%">
-<a href="https://www.sympy.org/">
-<img  alt = "SymPy" width ="40%"  src = "doc\src\logo\sympy.svg" />
-</a>
-</p>
+# SymPy
 
 [![pypi version](https://img.shields.io/pypi/v/sympy.svg)](https://pypi.python.org/pypi/sympy)
 [![Build status](https://secure.travis-ci.org/sympy/sympy.svg?branch=master)](https://travis-ci.org/sympy/sympy)
