@@ -1345,7 +1345,7 @@ def _QRdecomposition(M):
     """
     return _QRdecomposition_optional(M, normalize=True)
 
-def _UpperHessenbergdecomposition(A):
+def _upper_hessenberg_decomposition(A):
     """Converts a matrix into Hessenberg matrix H
 
         Returns 2 matrices H, P s.t.

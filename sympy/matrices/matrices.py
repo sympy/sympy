@@ -49,7 +49,7 @@ from .eigen import (
 from .decompositions import (
     _rank_decomposition, _cholesky, _LDLdecomposition,
     _LUdecomposition, _LUdecomposition_Simple, _LUdecompositionFF,
-    _QRdecomposition, _UpperHessenbergdecomposition)
+    _QRdecomposition, _upper_hessenberg_decomposition)
 
 from .graph import _connected_components, _connected_components_decomposition
 
@@ -2162,8 +2162,8 @@ class MatrixBase(MatrixDeprecated,
     def QRdecomposition(self):
         return _QRdecomposition(self)
 
-    def UpperHessenbergdecomposition(self):
-        return _UpperHessenbergdecomposition(self)
+    def upper_hessenberg_decomposition(self):
+        return _upper_hessenberg_decomposition(self)
 
     def diagonal_solve(self, rhs):
         return _diagonal_solve(self, rhs)
@@ -2242,7 +2242,7 @@ class MatrixBase(MatrixDeprecated,
     LUdecomposition_Simple.__doc__ = _LUdecomposition_Simple.__doc__
     LUdecompositionFF.__doc__      = _LUdecompositionFF.__doc__
     QRdecomposition.__doc__        = _QRdecomposition.__doc__
-    UpperHessenbergdecomposition.__doc__ = _UpperHessenbergdecomposition.__doc__
+    upper_hessenberg_decomposition.__doc__ = _upper_hessenberg_decomposition.__doc__
 
     diagonal_solve.__doc__         = _diagonal_solve.__doc__
     lower_triangular_solve.__doc__ = _lower_triangular_solve.__doc__

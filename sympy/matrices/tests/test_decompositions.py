@@ -359,13 +359,13 @@ def test_rank_decomposition():
     assert c * f == a
 
 
-def test_UpperHessenbergDecomposition():
+def test_upper_hessenberg_decomposition():
     A = Matrix([
         [1, 0, sqrt(3)],
         [sqrt(2), Rational(1, 2), 2],
         [1, Rational(1, 4), 3],
     ])
-    H, P = A.UpperHessenbergdecomposition()
+    H, P = A.upper_hessenberg_decomposition()
     assert simplify(P * P.H) == eye(P.cols)
     assert simplify(P.H * P) == eye(P.cols)
     assert H.is_upper_hessenberg
@@ -377,7 +377,7 @@ def test_UpperHessenbergDecomposition():
         [8, 2, 5],
         [3, 12, 34],
     ])
-    H, P = B.UpperHessenbergdecomposition()
+    H, P = B.upper_hessenberg_decomposition()
     assert simplify(P * P.H) == eye(P.cols)
     assert simplify(P.H * P) == eye(P.cols)
     assert H.is_upper_hessenberg
@@ -390,7 +390,7 @@ def test_UpperHessenbergDecomposition():
         [0, 2, 2, 3]
     ])
 
-    H, P = C.UpperHessenbergdecomposition()
+    H, P = C.upper_hessenberg_decomposition()
     assert simplify(P * P.H) == eye(P.cols)
     assert simplify(P.H * P) == eye(P.cols)
     assert H.is_upper_hessenberg
@@ -401,7 +401,7 @@ def test_UpperHessenbergDecomposition():
         [-3, 5, 6],
         [4, -8, 9],
     ])
-    H, P = D.UpperHessenbergdecomposition()
+    H, P = D.upper_hessenberg_decomposition()
     assert simplify(P * P.H) == eye(P.cols)
     assert simplify(P.H * P) == eye(P.cols)
     assert H.is_upper_hessenberg
