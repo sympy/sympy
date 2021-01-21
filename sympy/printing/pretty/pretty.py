@@ -8,6 +8,9 @@ from sympy.core.numbers import Number, Rational
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import SympifyError
+from sympy.core.add import Add
+
+from sympy.printing.printer import Printer, _print_Integer__scientific
 from sympy.printing.conventions import requires_partial
 from sympy.printing.precedence import PRECEDENCE, precedence, precedence_traditional
 from sympy.printing.printer import Printer, print_function
@@ -91,6 +94,14 @@ class PrettyPrinter(Printer):
             full_prec = self._print_level == 1
         return prettyForm(sstr(e, full_prec=full_prec))
 
+    def _print_Integer(self, e):
+        scientific = _print_Integer__scientific(self, e)
+        if scientific is None:
+            return self._print_Atom(e)
+        else:
+            return scientific
+
+    _print_int = _print_long = _print_Integer
     def _print_Cross(self, e):
         vec1 = e._expr1
         vec2 = e._expr2

@@ -6,17 +6,20 @@ from typing import Any, Dict
 
 import itertools
 
-from sympy.core import Add, Float, Mod, Mul, Number, S, Symbol
+from sympy.core import S, Add, Symbol, Mod, Mul, Pow, Float, Number
+from sympy.core.function import _coeff_isneg
+from sympy.core.sympify import SympifyError
 from sympy.core.alphabets import greeks
 from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg, AppliedUndef, Derivative
 from sympy.core.operations import AssocOp
 from sympy.core.sympify import SympifyError
 from sympy.logic.boolalg import true
+from sympy.ntheory import multiplicity
 
 # sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
-from sympy.printing.printer import Printer, print_function
+from sympy.printing.printer import Printer, _print_Integer__scientific, print_function
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -466,6 +469,15 @@ class LatexPrinter(Printer):
             if self._settings['decimal_separator'] == 'comma':
                 str_real = str_real.replace('.','{,}')
             return str_real
+
+    def _print_Integer(self, expr):
+        scientific = _print_Integer__scientific(self, expr)
+        if scientific is None:
+            return str(expr)
+        else:
+            return scientific
+
+    _print_int = _print_long = _print_Integer
 
     def _print_Cross(self, expr):
         vec1 = expr._expr1
@@ -1515,8 +1527,8 @@ class LatexPrinter(Printer):
                 sign = "- "
                 p = -p
             if self._settings['fold_short_frac']:
-                return r"%s%d / %d" % (sign, p, expr.q)
-            return r"%s\frac{%d}{%d}" % (sign, p, expr.q)
+                return r"%s%s / %s" % (sign, self._print(p), self._print(expr.q))
+            return r"%s\frac{%s}{%s}" % (sign, self._print(p), self._print(expr.q))
         else:
             return self._print(expr.p)
 
