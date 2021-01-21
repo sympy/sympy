@@ -125,7 +125,7 @@ class AppliedBinaryRelation(AppliedPredicate):
     into account.
 
     >>> eqn1.simplify()
-    0 = 0
+    1 = 1
     >>> eqn2 = Q.eq(x*y, x*z)
     >>> eqn2.simplify()
     x*y = x*z
