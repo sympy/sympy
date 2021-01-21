@@ -4,7 +4,7 @@
 from typing import Any, Optional, Type
 
 from sympy.core import Basic, sympify
-from sympy.core.compatibility import HAS_GMPY, is_sequence
+from sympy.core.compatibility import HAS_GMPY, is_sequence, ordered
 from sympy.core.decorators import deprecated
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.orderings import lex
@@ -37,6 +37,7 @@ class Domain:
     is_PolynomialRing = is_Poly = False
     is_FractionField = is_Frac = False
     is_SymbolicDomain = is_EX = False
+    is_FiniteExtension = False
 
     is_Exact = True
     is_Numerical = False
@@ -227,6 +228,10 @@ class Domain:
         """Convert a rational function to ``dtype``. """
         return None
 
+    def from_MonogenicFiniteExtension(K1, a, K0):
+        """Convert an ``ExtensionElement`` to ``dtype``. """
+        return K1.convert_from(a.rep, K0.ring)
+
     def from_ExpressionDomain(K1, a, K0):
         """Convert a ``EX`` object to ``dtype``. """
         return K1.from_sympy(a.ex)
@@ -272,6 +277,21 @@ class Domain:
             return K0
         if K1.is_EX:
             return K1
+
+        if K0.is_FiniteExtension or K1.is_FiniteExtension:
+            if K1.is_FiniteExtension:
+                K0, K1 = K1, K0
+            if K1.is_FiniteExtension:
+                # Unifying two extensions.
+                # Try to ensure that K0.unify(K1) == K1.unify(K0)
+                if list(ordered([K0.modulus, K1.modulus]))[1] == K0.modulus:
+                    K0, K1 = K1, K0
+                return K1.set_domain(K0)
+            else:
+                # Drop the generator from other and unify with the base domain
+                K1 = K1.drop(K0.symbol)
+                K1 = K0.domain.unify(K1)
+                return K0.set_domain(K1)
 
         if K0.is_Composite or K1.is_Composite:
             K0_ground = K0.dom if K0.is_Composite else K0
@@ -432,6 +452,12 @@ class Domain:
     def inject(self, *symbols):
         """Inject generators into this domain. """
         raise NotImplementedError
+
+    def drop(self, *symbols):
+        """Drop generators from this domain. """
+        if self.is_Simple:
+            return self
+        raise NotImplementedError  # pragma: no cover
 
     def is_zero(self, a):
         """Returns True if ``a`` is zero. """

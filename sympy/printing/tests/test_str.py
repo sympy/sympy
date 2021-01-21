@@ -726,9 +726,9 @@ def test_wild_matchpy():
     if matchpy is None:
         return
 
-    wd = WildDot('w')
-    wp = WildPlus('w')
-    ws = WildStar('w')
+    wd = WildDot('w_')
+    wp = WildPlus('w__')
+    ws = WildStar('w___')
 
     assert str(wd) == 'w_'
     assert str(wp) == 'w__'

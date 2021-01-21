@@ -24,6 +24,10 @@ jobs:
       - run: pip install mpmath flake8
       - run: bin/test quality
       - run: flake8 sympy
+        # compileall is used to detect invalid escapes like '\e'
+      - run: python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/
+        # test all modules are listed in setup.py
+      - run: bin/test_setup.py
 
   # -------------------- Doctests latest Python -------------------- #
 
@@ -83,6 +87,8 @@ jobs:
         with:
           python-version: 3.8
       - run: release/aptinstall.sh
+      - run: sudo apt-get install libmpfr-dev libmpc-dev
+      - run: release/venv_main/bin/python -m pip install gmpy2
       # Test external imports
       - run: release/venv_main/bin/python bin/test_external_imports.py
       - run: release/venv_main/bin/python bin/test_submodule_imports.py
@@ -128,7 +134,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: ['3.6', '3.7', '3.8', 'pypy-3.6']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -146,7 +152,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: ['3.6', '3.7', '3.8', 'pypy-3.6']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -164,7 +170,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: ['3.6', '3.7', '3.8', 'pypy-3.6']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2

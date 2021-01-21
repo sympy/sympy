@@ -383,7 +383,7 @@ class PolyRing(DefaultPrinting, IPolys):
             elif expr.is_Pow and expr.exp.is_Integer and expr.exp >= 0:
                 return _rebuild(expr.base)**int(expr.exp)
             else:
-                return domain.convert(expr)
+                return self.ground_new(domain.convert(expr))
 
         return _rebuild(sympify(expr))
 
