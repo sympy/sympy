@@ -70,9 +70,9 @@ def test_Wishart():
 def test_MatrixNormal():
     M = MatrixNormal('M', [[5, 6]], [4], [[2, 1], [1, 2]])
     assert M.pspace.distribution.set == MatrixSet(1, 2, S.Reals)
-    X = MatrixSymbol('X', 1, 2)
-    term1 = exp(-Trace(Matrix([[ S(2)/3, -S(1)/3], [-S(1)/3, S(2)/3]])*(
-            Matrix([[-5], [-6]]) + X.T)*Matrix([[1/4]])*(Matrix([[-5, -6]]) + X))/2)
+    #X = MatrixSymbol('X', 1, 2)
+    #term1 = exp(-Trace(Matrix([[ S(2)/3, -S(1)/3], [-S(1)/3, S(2)/3]])*(
+    #        Matrix([[-5], [-6]]) + X.T)*Matrix([[1/4]])*(Matrix([[-5, -6]]) + X))/2)
     #assert density(M)(X).doit() == term1.doit()/(24*pi) Assertion Error due to fraction and rational terms
     assert density(M)([[7, 8]]).doit() == exp(-S(1)/3)/(24*pi)
     d, n = symbols('d n', positive=True, integer=True)
