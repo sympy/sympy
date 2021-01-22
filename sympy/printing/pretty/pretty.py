@@ -1470,7 +1470,7 @@ class PrettyPrinter(Printer):
         return base ** self._print(e.args[0])
 
     def _print_Exp1(self, e):
-        return prettyForm(pretty_atom('Exp1', 'e'))
+        return prettyForm(pretty_atom('Exp1', 'E'))
 
     def _print_Function(self, e, sort=False, func_name=None):
         # optional argument func_name for supplying custom names
