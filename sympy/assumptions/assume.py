@@ -142,16 +142,6 @@ class AppliedPredicate(Boolean):
         raise TypeError("'arg' property is allowed only for unary predicates.")
 
     @property
-    def args(self):
-        # Will be deprecated and return normal Basic.func
-        return self._args[1:]
-
-    @property
-    def func(self):
-        # Will be deprecated and return normal Basic.func
-        return self._args[0]
-
-    @property
     def function(self):
         """
         Return the predicate.
