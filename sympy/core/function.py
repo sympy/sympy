@@ -591,7 +591,11 @@ class Function(Application, Expr):
             return
 
         with mpmath.workprec(prec):
-            v = func(*args)
+            _eval_mpmath = getattr(self, '_eval_mpmath', None)
+            if _eval_mpmath is None:
+                v = func(*args)
+            else:
+                v = self._eval_mpmath(func, args)
             if v == 0:
                 v = mpmath.mpf(v)
 

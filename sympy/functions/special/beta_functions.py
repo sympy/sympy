@@ -214,6 +214,17 @@ class betainc(Function):
     nargs = 4
     unbranched = True
 
+    def fdiff(self, argindex):
+        a, b, x1, x2 = self.args
+        if argindex == 3:
+            # Diff wrt x1
+            return -(1 - x1)**(b - 1)*x1**(a - 1)
+        elif argindex == 4:
+            # Diff wrt x2
+            return (1 - x2)**(b - 1)*x2**(a - 1)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
     def _eval_is_real(self):
         if all(arg.is_real for arg in self.args):
             return True
@@ -304,28 +315,41 @@ class betainc_regularized(Function):
     .. [4] https://functions.wolfram.com/GammaBetaErf/BetaRegularized4/02/
 
     """
-    nargs = 5
+    nargs = 4
     unbranched = True
 
-    def __new__(cls, a, b, x1, x2, reg=1):
-        return Function.__new__(cls, a, b, x1, x2, 1)
+    def __new__(cls, a, b, x1, x2):
+        return Function.__new__(cls, a, b, x1, x2)
+
+    def _eval_mpmath(self, func, args):
+        return func(*args, 1)
+
+    def fdiff(self, argindex):
+        a, b, x1, x2 = self.args
+        if argindex == 3:
+            # Diff wrt x1
+            return -(1 - x1)**(b - 1)*x1**(a - 1) / beta(a, b)
+        elif argindex == 4:
+            # Diff wrt x2
+            return (1 - x2)**(b - 1)*x2**(a - 1) / beta(a, b)
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     def _eval_is_real(self):
         if all(arg.is_real for arg in self.args):
             return True
 
     def _eval_conjugate(self):
-        a, b, x1, x2, reg = [arg.conjugate() for arg in self.args]
-        return self.func(a, b, x1, x2)
+        return self.func(*map(conjugate, self.args))
 
-    def _eval_rewrite_as_Integral(self, a, b, x1, x2, reg, **kwargs):
+    def _eval_rewrite_as_Integral(self, a, b, x1, x2, **kwargs):
         from sympy.integrals.integrals import Integral
         t = Dummy('t')
         integrand = t**(a - 1)*(1 - t)**(b - 1)
         expr = Integral(integrand, (t, x1, x2))
         return expr / Integral(integrand, (t, 0, 1))
 
-    def _eval_rewrite_as_hyper(self, a, b, x1, x2, reg, **kwargs):
+    def _eval_rewrite_as_hyper(self, a, b, x1, x2, **kwargs):
         from sympy.functions.special.hyper import hyper
         expr = (x2**a * hyper((a, 1 - b), (a + 1,), x2) - x1**a * hyper((a, 1 - b), (a + 1,), x1)) / a
         return expr / beta(a, b)
