@@ -825,7 +825,6 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
 
     http://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
     """
-
     hint = "2nd_nonlinear_autonomous_conserved"
     has_integral = True
     order = [2]
@@ -858,7 +857,7 @@ class SecondAutonomousNth(SinglePatternODESolver):
     .. math :: x''(t) + f(x)*x'(t) + g(x) = 0
 
     This solver is added for the special case in this genre:
-    .. math :: f''(x) = g(x) f'(x)^n\text{, }n \ne 1`\text{.}
+    .. math :: f''(x) = g(x) f'(x)^n
 
     This special case can be solved using by writing the second derivative in
     form involving a power of x' and on rewriting the second derivative, rearranging.

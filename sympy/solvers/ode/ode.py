@@ -572,7 +572,6 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> dsolve(eq)
     {Eq(x(t), -exp(C1)/(C2*exp(C1) - cos(t))), Eq(y(t), -1/(C1 - cos(t)))}
     """
-
     if iterable(eq):
         from sympy.solvers.ode.systems import dsolve_system
 
