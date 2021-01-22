@@ -874,11 +874,11 @@ class SecondAutonomousNth(SinglePatternODESolver):
 
     >>> eq = f(x).diff(x, x) + f(x).diff(x)**2
     >>> dsolve(eq, hint='2nd_autonomous_nth')
-    [Eq(C1*Integral(exp(Integral(1, _v)), (_v, f(x))), C2 + x)]
+    [Eq(f(x), log(C1*(C2 + x)))]
 
     >>> eq = f(x).diff(x, x) - f(x).diff(x)**2
     >>> dsolve(eq, hint='2nd_autonomous_nth')
-    [Eq(C1*Integral(exp(Integral(-1, _v)), (_v, f(x))), C2 + x)]
+    [Eq(f(x), log(C1/(C2 + x)))]
 
     References
     ==========
