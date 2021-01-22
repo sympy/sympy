@@ -2,6 +2,7 @@ from sympy.core import S
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.symbol import Dummy
 from sympy.functions.special.gamma_functions import gamma, digamma
+from sympy.functions.elementary.complexes import conjugate
 
 ###############################################################################
 ############################ COMPLETE BETA  FUNCTION ##########################
@@ -214,11 +215,11 @@ class betainc(Function):
     unbranched = True
 
     def _eval_is_real(self):
-        return all(arg.is_real for arg in self.args)
+        if all(arg.is_real for arg in self.args):
+            return True
 
     def _eval_conjugate(self):
-        a, b, x1, x2 = [arg.conjugate() for arg in self.args]
-        return self.func(a, b, x1, x2)
+        return self.func(*map(conjugate, self.args))
 
     def _eval_rewrite_as_Integral(self, a, b, x1, x2, **kwargs):
         from sympy.integrals.integrals import Integral
@@ -310,7 +311,8 @@ class betainc_regularized(Function):
         return Function.__new__(cls, a, b, x1, x2, 1)
 
     def _eval_is_real(self):
-        return all(arg.is_real for arg in self.args)
+        if all(arg.is_real for arg in self.args):
+            return True
 
     def _eval_conjugate(self):
         a, b, x1, x2, reg = [arg.conjugate() for arg in self.args]
@@ -319,8 +321,9 @@ class betainc_regularized(Function):
     def _eval_rewrite_as_Integral(self, a, b, x1, x2, reg, **kwargs):
         from sympy.integrals.integrals import Integral
         t = Dummy('t')
-        expr = Integral(t**(a - 1)*(1 - t)**(b - 1), (t, x1, x2))
-        return expr / Integral(t**(a - 1)*(1 - t)**(b - 1), (t, 0, 1))
+        integrand = t**(a - 1)*(1 - t)**(b - 1)
+        expr = Integral(integrand, (t, x1, x2))
+        return expr / Integral(integrand, (t, 0, 1))
 
     def _eval_rewrite_as_hyper(self, a, b, x1, x2, reg, **kwargs):
         from sympy.functions.special.hyper import hyper

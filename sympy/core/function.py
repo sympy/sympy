@@ -592,6 +592,8 @@ class Function(Application, Expr):
 
         with mpmath.workprec(prec):
             v = func(*args)
+            if v == 0:
+                v = mpmath.mpf(v)
 
         return Expr._from_mpmath(v, prec)
 

@@ -12,6 +12,9 @@ def test_beta():
 
     assert isinstance(beta(x, y), beta)
 
+    assert beta(5, -3).is_real == True
+    assert beta(3, y).is_real is None
+
     assert expand_func(beta(x, y)) == gamma(x)*gamma(y)/gamma(x + y)
     assert expand_func(beta(x, y) - beta(y, x)) == 0  # Symmetric
     assert expand_func(beta(x, y)) == expand_func(beta(x, y + 1) + beta(x + 1, y)).simplify()
@@ -33,7 +36,8 @@ def test_betainc():
     assert isinstance(betainc(a, b, x1, x2), betainc)
     assert isinstance(betainc(a, b, 0, x1), betainc)
 
-    assert betainc(1, 2, 0, 2 + I).is_real == False
+    assert betainc(1, 2, 0, -5).is_real == True
+    assert betainc(1, 2, 0, x2).is_real is None
     assert conjugate(betainc(I, 2, 3 - I, 1 + 4*I)) == betainc(-I, 2, 3 + I, 1 - 4*I)
 
     assert betainc(a, b, 0, 1).rewrite(Integral).dummy_eq(beta(a, b).rewrite(Integral))
@@ -46,6 +50,7 @@ def test_betainc_regularized():
     assert isinstance(betainc_regularized(a, b, 0, x1), betainc_regularized)
 
     assert betainc_regularized(3, 5, 0, -1).is_real == True
+    assert betainc_regularized(3, 5, 0, x2).is_real is None
     assert conjugate(betainc_regularized(3*I, 1, 2 + I, 1 + 2*I)) == betainc_regularized(-3*I, 1, 2 - I, 1 - 2*I)
 
     assert betainc_regularized(a, b, 0, 1).rewrite(Integral) == 1
