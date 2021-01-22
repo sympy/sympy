@@ -270,19 +270,19 @@ class betainc_regularized(Function):
     function is given by:
 
     >>> betainc_regularized(a, b, x1, x2)
-    betainc_regularized(a, b, x1, x2, 1)
+    betainc_regularized(a, b, x1, x2)
 
     The Regularized Incomplete Beta function
     can be obtained as follows:
 
     >>> betainc_regularized(a, b, 0, x)
-    betainc_regularized(a, b, 0, x, 1)
+    betainc_regularized(a, b, 0, x)
 
     The Regularized Incomplete Beta function
     obeys the mirror symmetry:
 
     >>> conjugate(betainc_regularized(a, b, x1, x2))
-    betainc_regularized(conjugate(a), conjugate(b), conjugate(x1), conjugate(x2), 1)
+    betainc_regularized(conjugate(a), conjugate(b), conjugate(x1), conjugate(x2))
 
     We can numerically evaluate the Regularized Incomplete Beta
     function to arbitrary precision on the whole complex plane:
