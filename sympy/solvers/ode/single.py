@@ -893,12 +893,12 @@ class SecondAutonomousNth(SinglePatternODESolver):
 
     def _wilds(self, f, x, order):
         a = Wild('a', exclude=[0, f(x).diff(x), f(x).diff(x, 2)])
-        n = Wild('n', exclude=[x, f(x), f(x).diff(x), f(x).diff(x, 2)]) 
+        n = Wild('n', exclude=[x, f(x), f(x).diff(x), f(x).diff(x, 2)])
         return a, n
 
     def _equation(self, fx, x, order):
         a, n = self.wilds()
-        return fx.diff(x, 2) + a*fx.diff(x)**n   
+        return fx.diff(x, 2) + a*fx.diff(x)**n
 
     def _get_general_solution(self, *, simplify: bool = True):
         a, n = self.wilds_match()
