@@ -2026,19 +2026,21 @@ def test_key_extensibility():
     raises(AttributeError, lambda: ask(Q.my_key(x)))
 
     # Old handler system
-    with warns_deprecated_sympy():
-        class MyAskHandler(AskHandler):
-            @staticmethod
-            def Symbol(expr, assumptions):
-                return True
-        try:
+    class MyAskHandler(AskHandler):
+        @staticmethod
+        def Symbol(expr, assumptions):
+            return True
+    try:
+        with warns_deprecated_sympy():
             register_handler('my_key', MyAskHandler)
+        with warns_deprecated_sympy():
             assert ask(Q.my_key(x)) is True
+        with warns_deprecated_sympy():
             assert ask(Q.my_key(x + 1)) is None
-        finally:
-            remove_handler('my_key', MyAskHandler)
-            del Q.my_key
-        raises(AttributeError, lambda: ask(Q.my_key(x)))
+    finally:
+        remove_handler('my_key', MyAskHandler)
+        del Q.my_key
+    raises(AttributeError, lambda: ask(Q.my_key(x)))
 
     # New handler system
     class MyPredicate(Predicate):
@@ -2252,24 +2254,26 @@ def test_custom_AskHandler():
     from sympy.logic.boolalg import conjuncts
 
     # Old handler system
-    with warns_deprecated_sympy():
-        class MersenneHandler(AskHandler):
-            @staticmethod
-            def Integer(expr, assumptions):
-                from sympy import log
-                if ask(Q.integer(log(expr + 1, 2))):
-                    return True
-            @staticmethod
-            def Symbol(expr, assumptions):
-                if expr in conjuncts(assumptions):
-                    return True
-        try:
+    class MersenneHandler(AskHandler):
+        @staticmethod
+        def Integer(expr, assumptions):
+            from sympy import log
+            if ask(Q.integer(log(expr + 1, 2))):
+                return True
+        @staticmethod
+        def Symbol(expr, assumptions):
+            if expr in conjuncts(assumptions):
+                return True
+    try:
+        with warns_deprecated_sympy():
             register_handler('mersenne', MersenneHandler)
-            n = Symbol('n', integer=True)
+        n = Symbol('n', integer=True)
+        with warns_deprecated_sympy():
             assert ask(Q.mersenne(7))
+        with warns_deprecated_sympy():
             assert ask(Q.mersenne(n), Q.mersenne(n))
-        finally:
-            del Q.mersenne
+    finally:
+        del Q.mersenne
 
     # New handler system
     class MersennePredicate(Predicate):
