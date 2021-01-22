@@ -825,6 +825,7 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
 
     http://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
     """
+
     hint = "2nd_nonlinear_autonomous_conserved"
     has_integral = True
     order = [2]
@@ -851,6 +852,71 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
         lhs = Integral(1/sqrt(inside), (u, fx))
         return [Eq(lhs, C2 + x), Eq(lhs, C2 - x)]
 
+class SecondAutonomousNth(SinglePatternODESolver):
+    r"""
+    The general second order autonomous differential equation of the form:
+    .. math :: x''(t) + f(x)*x'(t) + g(x) = 0
+
+    This solver is added for the special case in this genre:
+    .. math :: f''(x) = g(x) f'(x)^n\text{, }n \ne 1`\text{.}
+
+    This special case can be solved using by writing the second derivative in
+    form involving a power of x' and on rewriting the second derivative, rearranging.
+
+    For proof of the results, kindly refer the below link:
+    https://en.wikipedia.org/wiki/Autonomous_system_(mathematics)
+
+    Examples
+    ========
+
+    >>> from sympy import Function, Symbol, dsolve
+    >>> f = Function('f')
+    >>> x = Symbol('x')
+
+    >>> eq = f(x).diff(x, x) + f(x).diff(x)**2
+    >>> dsolve(eq, hint='2nd_autonomous_nth')
+    [Eq(C1*Integral(exp(Integral(1, _v)), (_v, f(x))), C2 + x)]
+
+    >>> eq = f(x).diff(x, x) - f(x).diff(x)**2
+    >>> dsolve(eq, hint='2nd_autonomous_nth')
+    [Eq(C1*Integral(exp(Integral(-1, _v)), (_v, f(x))), C2 + x)]
+
+    References
+    ==========
+
+    https://en.wikipedia.org/wiki/Autonomous_system_(mathematics)
+    """
+
+    hint = "2nd_autonomous_nth"
+    has_integral = True
+    order = [2]
+
+    def _wilds(self, f, x, order):
+        a = Wild('a', exclude=[0, f(x).diff(x), f(x).diff(x, 2)])
+        n = Wild('n', exclude=[x, f(x), f(x).diff(x), f(x).diff(x, 2)]) 
+        return a, n
+
+    def _equation(self, fx, x, order):
+        a, n = self.wilds()
+        return fx.diff(x, 2) + a*fx.diff(x)**n   
+
+    def _get_general_solution(self, *, simplify: bool = True):
+        a, n = self.wilds_match()
+        fx = self.ode_problem.func
+        x = self.ode_problem.sym
+        (C1, C2, C3) = self.ode_problem.get_numbered_constants(num=3)
+        v = Dummy('v')
+        a = a.subs(fx, v)
+        if n == 2:
+            arg = exp(Integral(a,v))
+            farg = C1*Integral(arg, (v, fx))
+            gensol = Eq(farg, C2 + x)
+        else:
+            C3 = n - 2
+            arg = (C1 + C3*Integral(a,v))**(1/C3)
+            farg = Integral(arg, (v, fx))
+            gensol = Eq(farg, C2 + x)
+        return [gensol]
 
 # Avoid circular import:
 from .ode import dsolve

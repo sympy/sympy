@@ -56,6 +56,7 @@ _u = Dummy('u')
 y = Symbol('y')
 f = Function('f')
 g = Function('g')
+_v = Dummy('v')
 C1, C2, C3, C4, C5, C6, C7, C8, C9, C10  = symbols('C1:11')
 
 
@@ -398,6 +399,8 @@ def test_2nd_nonlinear_autonomous_conserved_integral():
     # checkodesol unable to simplify solutions with f(x) in an integral equation
     assert checkodesol(eq, [s.doit() for s in solved]) == [(True, 0), (True, 0)]
 
+def test_2nd_autonomous_nth():
+    _ode_solver_test(_get_examples_ode_sol_2nd_autonomous_nth)
 
 def test_2nd_linear_bessel_equation():
     _ode_solver_test(_get_examples_ode_sol_2nd_linear_bessel)
@@ -1852,6 +1855,34 @@ def _get_examples_ode_sol_2nd_nonlinear_autonomous_conserved():
     }
     }
 
+@_add_example_keys
+def _get_examples_ode_sol_2nd_autonomous_nth():
+    return {
+            'hint': "2nd_autonomous_nth",
+            'func': f(x),
+            'examples': {
+    '2nd_autonomous_nth_01': {
+        'eq': f(x).diff(x, x) + f(x).diff(x)**2,
+        'sol': [Eq(C1*exp(f(x)), C2 + x)],
+        'simplify_flag': False,
+    },
+    '2nd_autonomous_nth_02': {
+        'eq': f(x).diff(x, x) - f(x).diff(x)**2,
+        'sol': [Eq(-C1*exp(-f(x)), C2 + x)],
+        'simplify_flag': False,
+    },
+    '2nd_autonomous_nth_03': {
+        'eq': f(x).diff(x, x) + f(x).diff(x)**3,
+        'sol': [Eq(C1*f(x) + f(x)**2/2, C2 + x)],
+        'simplify_flag': False,
+    },
+    '2nd_autonomous_nth_04': {
+        'eq': f(x).diff(x, x) - f(x).diff(x)**3,
+        'sol': [Eq(C1*f(x) - f(x)**2/2, C2 + x)],
+        'simplify_flag': False,
+    }
+    }
+    }
 
 @_add_example_keys
 def _get_examples_ode_sol_separable_reduced():
@@ -2404,6 +2435,7 @@ def _get_all_examples():
     _get_examples_ode_sol_separable_reduced + \
     _get_examples_ode_sol_lie_group + \
     _get_examples_ode_sol_2nd_linear_airy + \
-    _get_examples_ode_sol_nth_linear_constant_coeff_homogeneous
+    _get_examples_ode_sol_nth_linear_constant_coeff_homogeneous + \
+    _get_examples_ode_sol_2nd_autonomous_nth
 
     return all_examples
