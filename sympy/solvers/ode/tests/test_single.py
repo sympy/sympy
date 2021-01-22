@@ -1846,8 +1846,8 @@ def _get_examples_ode_sol_2nd_autonomous_nth():
     '2nd_autonomous_nth_08': {
         'eq': f(x).diff(x, 2) + cbrt(f(x)) + 1/f(x),
         'sol': [
-            [Eq(sqrt(2)*Integral(1/sqrt(-3*_v**(S(4)/3) + 2*C1 - 4*log(_v)), (_v, f(x))), C2 + x),
-            Eq(sqrt(2)*Integral(1/sqrt(-3*_v**(S(4)/3) + 2*C1 - 4*log(_v)), (_v, f(x))), C2 - x)]
+            Eq(sqrt(2)*Integral(1/sqrt(-3*_v**(S(4)/3) + 2*C1 - 4*log(_v)), (_v, f(x))), C2 + x),
+            Eq(sqrt(2)*Integral(1/sqrt(-3*_v**(S(4)/3) + 2*C1 - 4*log(_v)), (_v, f(x))), C2 - x)
         ],
         'simplify_flag': False,
     },

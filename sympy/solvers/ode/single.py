@@ -797,7 +797,7 @@ class SecondAutonomousNth(SinglePatternODESolver):
     .. math :: x''(t) + f(x)*x'(t) + g(x) = 0
 
     This solver is added for the special case in this genre:
-    .. math :: f''(x) = g(x) f'(x)^n
+    .. math :: f''(x) = g(f(x)) f'(x)^n
 
     This special case can be solved using by writing the second derivative in
     form involving a power of x' and on rewriting the second derivative, rearranging.
@@ -806,7 +806,7 @@ class SecondAutonomousNth(SinglePatternODESolver):
     https://en.wikipedia.org/wiki/Autonomous_system_(mathematics)
     http://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
 
-    Caution: If n is even except for 2, kindly set simplfy = False in dsolve()
+    Caution: If n is even except for 2, kindly set simplify = False in dsolve()
 
     Examples
     ========
