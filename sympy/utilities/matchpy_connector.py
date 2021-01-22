@@ -11,8 +11,6 @@ from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, ac
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi, Ei
 from sympy import (Basic, Mul, Add, Pow, Integral, exp, Symbol, Expr, srepr, Equality, Unequality)
-from sympy.utilities.decorator import doctest_depends_on
-
 from matchpy import Operation, CommutativeOperation, AssociativeOperation, OneIdentityOperation, Wildcard, \
     CustomConstraint, ReplacementRule, ManyToOneReplacer, Pattern
 from matchpy.expressions.functions import op_iter, create_operation_expression, op_len
@@ -93,7 +91,6 @@ def sympy_op_factory(old_operation, new_operands, variable_name=True):
      return type(old_operation)(*new_operands)
 
 
-@doctest_depends_on(modules=('matchpy',))
 class _WildAbstract(Wildcard, Symbol):
     min_length = None  # abstract field required in subclasses
     fixed_size = None  # abstract field required in subclasses
@@ -133,19 +130,16 @@ class _WildAbstract(Wildcard, Symbol):
         return self.name
 
 
-@doctest_depends_on(modules=('matchpy',))
 class WildDot(_WildAbstract):
     min_length = 1
     fixed_size = True
 
 
-@doctest_depends_on(modules=('matchpy',))
 class WildPlus(_WildAbstract):
     min_length = 1
     fixed_size = False
 
 
-@doctest_depends_on(modules=('matchpy',))
 class WildStar(_WildAbstract):
     min_length = 0
     fixed_size = False
@@ -159,7 +153,6 @@ def _get_srepr(expr):
     return s
 
 
-@doctest_depends_on(modules=('matchpy',))
 class Replacer:
     """
     Replacer object to perform multiple pattern matching and subexpression
