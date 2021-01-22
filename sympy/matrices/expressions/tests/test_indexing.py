@@ -189,8 +189,8 @@ def test_matrix_expression_to_indices():
     assert MatrixExpr.from_index_summation(expr._entry(i, j)) == expr
 
     expr = W*(X + Y)*Z
-    assert replace_dummies(expr._entry(i, j)) == \
-            Sum(W[i, i1]*(X[i1, i2] + Y[i1, i2])*Z[i2, j], (i1, 0, l-1), (i2, 0, m-1))
+    assert str(replace_dummies(expr._entry(i, j))) == \
+            'Sum(W[i, i_1]*X[i_1, i_2]*Z[i_2, j], (i_1, 0, l - 1), (i_2, 0, m - 1)) + Sum(W[i, i_1]*Y[i_1, i_2]*Z[i_2, j], (i_1, 0, l - 1), (i_2, 0, m - 1))'
     assert MatrixExpr.from_index_summation(expr._entry(i, j)) == expr
 
     expr = A*B**2*A
@@ -199,9 +199,8 @@ def test_matrix_expression_to_indices():
 
     # Check that different dummies are used in sub-multiplications:
     expr = (X1*X2 + X2*X1)*X3
-    assert replace_dummies(expr._entry(i, j)) == \
-           Sum((Sum(X1[i, i2] * X2[i2, i1], (i2, 0, m - 1)) + Sum(X1[i3, i1] * X2[i, i3], (i3, 0, m - 1))) * X3[
-               i1, j], (i1, 0, m - 1))
+    assert str(replace_dummies(expr._entry(i, j))) == \
+           'Sum(X1[i, i_1]*X2[i_1, i_2]*X3[i_2, j], (i_1, 0, m - 1), (i_2, 0, m - 1)) + Sum(X1[i_1, i_2]*X2[i, i_1]*X3[i_2, j], (i_1, 0, m - 1), (i_2, 0, m - 1))'
 
 
 def test_matrix_expression_from_index_summation():

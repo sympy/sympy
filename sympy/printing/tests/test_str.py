@@ -880,7 +880,7 @@ def test_MatMul_MatAdd():
     from sympy import MatrixSymbol
 
     X, Y = MatrixSymbol("X", 2, 2), MatrixSymbol("Y", 2, 2)
-    assert str(2*(X + Y)) == "2*(X + Y)"
+    assert str(2*(X + Y)) == "2*X + 2*Y"
 
     assert str(I*X) == "I*X"
     assert str(-I*X) == "-I*X"

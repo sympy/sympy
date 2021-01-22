@@ -255,7 +255,7 @@ def test_codegen_recognize_matrix_expression():
         _RecognizeMatOp(MatMul, [M, _RecognizeMatOp(MatAdd, [P, _RecognizeMatOp(Transpose, [P])]), N]),
         _RecognizeMatOp(MatMul, [N, _RecognizeMatOp(MatAdd, [P, _RecognizeMatOp(Transpose, [P])]), M])
         ])
-    assert _unfold_recognized_expr(rec) == M*(P + P.T)*N + N*(P + P.T)*M
+    assert str(_unfold_recognized_expr(rec)) == 'M*(P + P.T)*N + N*(P + P.T)*M'
 
 
 def test_codegen_array_shape():
@@ -361,7 +361,7 @@ def test_parsing_of_matrix_expressions():
     expr = M*(2*N + 3*M)
     res = parse_matrix_expression(expr)
     rexpr = recognize_matrix_expression(res)
-    assert expr.expand() == rexpr.doit()
+    assert str(expr.expand()) == str(rexpr.doit())
 
     expr = Trace(M)
     result = CodegenArrayContraction(M, (0, 1))

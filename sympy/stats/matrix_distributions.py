@@ -462,9 +462,9 @@ def MatrixNormal(symbol, location_matrix, scale_matrix_1, scale_matrix_2):
     >>> M = MatrixNormal('M', [[1, 2]], [1], [[1, 0], [0, 1]])
     >>> X = MatrixSymbol('X', 1, 2)
     >>> density(M)(X).doit()
-    2*exp(-Trace((Matrix([
+    2*exp(-Trace(Matrix([
     [-1],
-    [-2]]) + X.T)*(Matrix([[-1, -2]]) + X))/2)/pi
+    [-2]])*X)/2 - Trace(X.T*Matrix([[-1, -2]]))/2 - Trace(X.T*X)/2 - 5/2)/pi
     >>> density(M)([[3, 4]]).doit()
     2*exp(-4)/pi
 
@@ -568,9 +568,9 @@ def MatrixStudentT(symbol, nu, location_matrix, scale_matrix_1, scale_matrix_2):
     >>> M = MatrixStudentT('M', v, [[1, 2]], [[1, 0], [0, 1]], [1])
     >>> X = MatrixSymbol('X', 1, 2)
     >>> density(M)(X)
-    pi**(-1.0)*gamma(v/2 + 1)*Determinant((Matrix([[-1, -2]]) + X)*(Matrix([
+    pi**(-1.0)*gamma(v/2 + 1)*Determinant(Matrix([[6]]) + Matrix([[-1, -2]])*X.T + X*Matrix([
     [-1],
-    [-2]]) + X.T) + Matrix([[1]]))**(-v/2 - 1)*Determinant(Matrix([[1]]))**(-1.0)*Determinant(Matrix([
+    [-2]]) + X*X.T)**(-v/2 - 1)*Determinant(Matrix([[1]]))**(-1.0)*Determinant(Matrix([
     [1, 0],
     [0, 1]]))**(-0.5)/gamma(v/2)
 

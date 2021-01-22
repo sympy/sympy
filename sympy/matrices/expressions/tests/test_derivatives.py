@@ -154,7 +154,7 @@ def test_matrix_derivative_vectors_and_scalars():
     expr = (X*b + c).T*D*(X*b + c)
     assert expr.diff(X) == D*(X*b + c)*b.T + D.T*(X*b + c)*b.T
     assert str(expr[0, 0].diff(X[m, n]).doit()) == \
-        'b[n, 0]*Sum((c[_i_1, 0] + Sum(X[_i_1, _i_3]*b[_i_3, 0], (_i_3, 0, k - 1)))*D[_i_1, m], (_i_1, 0, k - 1)) + Sum((c[_i_2, 0] + Sum(X[_i_2, _i_4]*b[_i_4, 0], (_i_4, 0, k - 1)))*D[m, _i_2]*b[n, 0], (_i_2, 0, k - 1))'
+        'b[n, 0]*Sum(D[_i_2, m]*Sum(X[_i_2, _i_1]*b[_i_1, 0], (_i_1, 0, k - 1)), (_i_2, 0, k - 1)) + Sum(D[m, _i_3]*b[n, 0]*c[_i_3, 0], (_i_3, 0, k - 1)) + Sum(b[_i_4, 0]*b[n, 0]*Sum(D[m, _i_3]*X[_i_3, _i_4], (_i_3, 0, k - 1)), (_i_4, 0, k - 1)) + Sum(KroneckerDelta(_i_2, m, (0, k - 1))*KroneckerDelta(_i_3, n, (0, k - 1))*D[_i_1, _i_2]*b[_i_3, 0]*c[_i_1, 0], (_i_1, 0, k - 1), (_i_2, 0, k - 1), (_i_3, 0, k - 1))'
 
 
 def test_matrix_derivatives_of_traces():

@@ -193,7 +193,7 @@ def test_MatrixSymbol():
     assert julia_code(B*A) == "B*A"
     assert julia_code(2*A*B) == "2*A*B"
     assert julia_code(B*2*A) == "2*B*A"
-    assert julia_code(A*(B + 3*Identity(n))) == "A*(3*eye(n) + B)"
+    assert julia_code(A*(B + 3*Identity(n))) == "3*A + A*B"
     assert julia_code(A**(x**2)) == "A^(x.^2)"
     assert julia_code(A**3) == "A^3"
     assert julia_code(A**S.Half) == "A^(1/2)"
