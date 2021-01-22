@@ -68,6 +68,11 @@ except ImportError:
         print("Please install the mpmath package with a version >= %s"
               % min_mpmath_version)
         sys.exit(-1)
+    try:
+        import matchpy
+    except ImportError:
+        print("Please install the matchpy package")
+        sys.exit(-1)
 
 if sys.version_info < (3, 6):
     print("SymPy requires Python 3.6 or newer. Python %d.%d detected"
@@ -471,6 +476,7 @@ if __name__ == '__main__':
             ],
           install_requires=[
             'mpmath>=%s' % min_mpmath_version,
+            'matchpy',
             ],
           **extra_kwargs
           )

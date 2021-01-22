@@ -3,13 +3,13 @@
 Installation
 ------------
 
-The SymPy CAS can be installed on virtually any computer with Python.
-SymPy does require `mpmath`_ Python library to be installed first.  The
-recommended method of installation is through Anaconda, which includes
-mpmath, as well as several other useful libraries.  Alternatively, some Linux
-distributions have SymPy packages available.
+The SymPy CAS can be installed on virtually any computer with Python.  SymPy
+does require `mpmath`_ and `matchpy`_ Python libraries to be installed first.
+The recommended method of installation is through Anaconda, which includes
+mpmath and matchpy, as well as several other useful libraries.  Alternatively,
+some Linux distributions have SymPy packages available.
 
-SymPy officially supports Python 3.5, 3.6, 3.7, and PyPy.
+SymPy officially supports Python 3.6, 3.7, 3.8 and PyPy.
 
 Anaconda
 ========
@@ -102,6 +102,17 @@ cannot easily change, you can work around it by doing::
 
 before the code that imports ``sympy.mpmath``. It is recommended to change
 code that uses ``sympy.mpmath`` to use ``mpmath`` directly wherever possible.
+
+MatchPy
+=======
+
+MatchPy may be installed either through Anaconda or pip:
+
+  conda install matchpy
+
+or
+
+  pip install matchpy
 
 Questions
 =========
