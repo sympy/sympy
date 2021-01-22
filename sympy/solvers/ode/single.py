@@ -791,66 +791,6 @@ class RiccatiSpecial(SinglePatternODESolver):
         return [gensol]
 
 
-class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
-    r"""
-    Gives solution for the autonomous second order nonlinear
-    differential equation of the form
-
-    .. math :: f''(x) = g(f(x))
-
-    The solution for this differential equation can be computed
-    by multiplying by `f'(x)` and integrating on both sides,
-    converting it into a first order differential equation.
-
-    Examples
-    ========
-
-    >>> from sympy import Function, symbols, dsolve
-    >>> f, g = symbols('f g', cls=Function)
-    >>> x = symbols('x')
-
-    >>> eq = f(x).diff(x, 2) - g(f(x))
-    >>> dsolve(eq, simplify=False)
-    [Eq(Integral(1/sqrt(C1 + 2*Integral(g(_u), _u)), (_u, f(x))), C2 + x),
-    Eq(Integral(1/sqrt(C1 + 2*Integral(g(_u), _u)), (_u, f(x))), C2 - x)]
-
-    >>> from sympy import exp, log
-    >>> eq = f(x).diff(x, 2) - exp(f(x)) + log(f(x))
-    >>> dsolve(eq, simplify=False)
-    [Eq(Integral(1/sqrt(-2*_u*log(_u) + 2*_u + C1 + 2*exp(_u)), (_u, f(x))), C2 + x),
-    Eq(Integral(1/sqrt(-2*_u*log(_u) + 2*_u + C1 + 2*exp(_u)), (_u, f(x))), C2 - x)]
-
-    References
-    ==========
-
-    http://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
-    """
-    hint = "2nd_nonlinear_autonomous_conserved"
-    has_integral = True
-    order = [2]
-
-    def _wilds(self, f, x, order):
-        fy = Wild('fy', exclude=[0, f(x).diff(x), f(x).diff(x, 2)])
-        return (fy,)
-
-    def _equation(self, fx, x, order):
-        fy = self.wilds()[0]
-        return fx.diff(x, 2) + fy
-
-    def _verify(self, fx):
-        return self.ode_problem.is_autonomous
-
-    def _get_general_solution(self, *, simplify: bool = True):
-        g = self.wilds_match()[0]
-        fx = self.ode_problem.func
-        x = self.ode_problem.sym
-        u = Dummy('u')
-        g = g.subs(fx, u)
-        C1, C2 = self.ode_problem.get_numbered_constants(num=2)
-        inside = -2*Integral(g, u) + C1
-        lhs = Integral(1/sqrt(inside), (u, fx))
-        return [Eq(lhs, C2 + x), Eq(lhs, C2 - x)]
-
 class SecondAutonomousNth(SinglePatternODESolver):
     r"""
     The general second order autonomous differential equation of the form:
@@ -864,21 +804,39 @@ class SecondAutonomousNth(SinglePatternODESolver):
 
     For proof of the results, kindly refer the below link:
     https://en.wikipedia.org/wiki/Autonomous_system_(mathematics)
+    http://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
+
+    Caution: If n is even except for 2, kindly set simplfy = False in dsolve()
 
     Examples
     ========
 
-    >>> from sympy import Function, Symbol, dsolve
-    >>> f = Function('f')
-    >>> x = Symbol('x')
+    >>> from sympy import Function, symbols, dsolve
+    >>> f, g = symbols('f g', cls=Function)
+    >>> x, eq = symbols('x eq')
 
     >>> eq = f(x).diff(x, x) + f(x).diff(x)**2
     >>> dsolve(eq, hint='2nd_autonomous_nth')
-    [Eq(f(x), log(C1*(C2 + x)))]
+    Eq(f(x), log(C1*(C2 + x)))
 
     >>> eq = f(x).diff(x, x) - f(x).diff(x)**2
     >>> dsolve(eq, hint='2nd_autonomous_nth')
-    [Eq(f(x), log(C1/(C2 + x)))]
+    Eq(f(x), log(C1/(C2 + x)))
+
+    >>> from sympy import exp, log, cbrt
+    >>> eq = f(x).diff(x, 2) - exp(f(x)) + log(f(x))
+    >>> dsolve(eq, hint='2nd_autonomous_nth', simplify=False)
+    [Eq(Integral(1/sqrt(-2*_v*log(_v) + 2*_v + C1 + 2*exp(_v)), (_v, f(x))), C2 + x),
+    Eq(Integral(1/sqrt(-2*_v*log(_v) + 2*_v + C1 + 2*exp(_v)), (_v, f(x))), C2 - x)]
+
+    >>> eq = f(x).diff(x, 2) + cbrt(f(x)) + 1/f(x)
+    >>> dsolve(eq, hint='2nd_autonomous_nth', simplify=False)
+    [Eq(sqrt(2)*Integral(1/sqrt(-3*_v**(4/3) + 2*C1 - 4*log(_v)), (_v, f(x))), C2 + x),
+    Eq(sqrt(2)*Integral(1/sqrt(-3*_v**(4/3) + 2*C1 - 4*log(_v)), (_v, f(x))), C2 - x)]
+
+    >>> eq = f(x).diff(x, x) + f(x).diff(x)**4
+    >>> dsolve(eq, hint='2nd_autonomous_nth', simplify=False)
+    [Eq((C1 + 2*f(x))**(3/2)/3, C2 + x), Eq((C1 + 2*f(x))**(3/2)/3, C2 - x)]
 
     References
     ==========
@@ -907,15 +865,19 @@ class SecondAutonomousNth(SinglePatternODESolver):
         v = Dummy('v')
         a = a.subs(fx, v)
         if n == 2:
-            arg = exp(Integral(a,v))
+            arg = exp(Integral(a, v))
             farg = C1*Integral(arg, (v, fx))
-            gensol = Eq(farg, C2 + x)
+            return [Eq(farg, C2 + x)]
         else:
             C3 = n - 2
-            arg = (C1 + C3*Integral(a,v))**(1/C3)
-            farg = Integral(arg, (v, fx))
-            gensol = Eq(farg, C2 + x)
-        return [gensol]
+            if n%2 != 0:
+                arg = (C1 + C3*Integral(a, v))**(1/C3)
+                farg = Integral(arg, (v, fx))
+                return [Eq(farg, C2 + x)]
+            else:
+                arg = (C1 + C3*Integral(a, v))**(1/C3)
+                farg = Integral(arg, (v, fx))
+                return [Eq(farg, C2 + x), Eq(farg, C2 - x)]
 
 # Avoid circular import:
 from .ode import dsolve

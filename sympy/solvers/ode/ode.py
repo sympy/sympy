@@ -330,8 +330,6 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral",
     "Liouville_Integral",
-    "2nd_nonlinear_autonomous_conserved",
-    "2nd_nonlinear_autonomous_conserved_Integral",
     "2nd_autonomous_nth",
     )
 
@@ -1053,7 +1051,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         Bernoulli: ('Bernoulli',),
         Factorable: ('factorable',),
         RiccatiSpecial: ('Riccati_special_minus2',),
-        SecondNonlinearAutonomousConserved: ('2nd_nonlinear_autonomous_conserved',),
         SecondAutonomousNth: ('2nd_autonomous_nth',),
     }
     for solvercls in solvers:
@@ -7096,5 +7093,4 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 
 #This import is written at the bottom to avoid circular imports.
 from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
-        Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
-        SecondNonlinearAutonomousConserved, SecondAutonomousNth)
+        Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial, SecondAutonomousNth)
