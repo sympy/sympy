@@ -1348,36 +1348,36 @@ def _QRdecomposition(M):
 def _upper_hessenberg_decomposition(A):
     """Converts a matrix into Hessenberg matrix H
 
-        Returns 2 matrices H, P s.t.
-        $P H P^{T} = A$, where H is an upper hessenberg matrix
-        and P is an orthogonal matrix
+    Returns 2 matrices H, P s.t.
+    $P H P^{T} = A$, where H is an upper hessenberg matrix
+    and P is an orthogonal matrix
 
-        Examples
-        ========
+    Examples
+    ========
 
     >>> from sympy import Matrix
-        >>> A = Matrix([
-        ...     [1,2,3],
-        ...     [-3,5,6],
-        ...     [4,-8,9],
-        ... ])
-        >>> H, P = A.upper_hessenberg_decomposition()
-        >>> H
-        Matrix([
-        [1,    6/5,    17/5],
-        [5, 213/25, -134/25],
-        [0, 216/25,  137/25]])
-        >>> P
-        Matrix([
-        [1,    0,   0],
-        [0, -3/5, 4/5],
-        [0,  4/5, 3/5]])
-        >>> P * H * P.H == A
-        True
+    >>> A = Matrix([
+    ...     [1,2,3],
+    ...     [-3,5,6],
+    ...     [4,-8,9],
+    ... ])
+    >>> H, P = A.upper_hessenberg_decomposition()
+    >>> H
+    Matrix([
+    [1,    6/5,    17/5],
+    [5, 213/25, -134/25],
+    [0, 216/25,  137/25]])
+    >>> P
+    Matrix([
+    [1,    0,   0],
+    [0, -3/5, 4/5],
+    [0,  4/5, 3/5]])
+    >>> P * H * P.H == A
+    True
 
 
-        References
-        ==========
+    References
+    ==========
 
     .. [#] https://mathworld.wolfram.com/HessenbergDecomposition.html
     """
