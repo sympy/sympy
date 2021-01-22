@@ -15,6 +15,23 @@ from sympy.matrices.expressions import MatMul
 # APIs here may be subject to change
 
 
+def _find_freepredicate(expr):
+    # Find unapplied predicate from expression tree.
+    # Ignore the predicate in AppliedPredicate.
+    if isinstance(expr, Predicate):
+        return {expr}
+    if not expr.args:
+        return set()
+    if isinstance(expr, AppliedPredicate):
+        args = expr.arguments
+    else:
+        args = expr.args
+    result = set()
+    for arg in args:
+        result.update(_find_freepredicate(arg))
+    return result
+
+
 class UnevaluatedOnFree(BooleanFunction):
     """
     Represents a Boolean function that remains unevaluated on free predicates.
@@ -52,7 +69,7 @@ class UnevaluatedOnFree(BooleanFunction):
     def __new__(cls, arg):
         # Mostly type checking here
         arg = _sympify(arg)
-        predicates = arg.atoms(Predicate)
+        predicates = _find_freepredicate(arg)
         applied_predicates = arg.atoms(AppliedPredicate)
         if predicates and applied_predicates:
             raise ValueError("arg must be either completely free or singly applied")
