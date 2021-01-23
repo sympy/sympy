@@ -1398,7 +1398,7 @@ def _upper_hessenberg_decomposition(A):
 
         u = H[j + 1:, j]
 
-        if u[1:, :] == M.zeros(1, u.rows - 1):
+        if u[1:, :].is_zero_matrix:
             continue
 
         if sign(u[0]) != 0:
