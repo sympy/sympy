@@ -157,9 +157,6 @@ class AppliedBinaryRelation(AppliedPredicate):
 
     """
 
-    # will be deleted after _op_priority is removed from SymPy
-    _op_priority = 1000
-
     @property
     def lhs(self):
         """The left-hand side of the relation."""
