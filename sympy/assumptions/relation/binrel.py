@@ -3,11 +3,6 @@ Module to implement general binary relations.
 """
 
 from sympy.assumptions import AppliedPredicate, Predicate
-from sympy.core import Add, Expr, S
-from sympy.core.compatibility import ordered
-from sympy.logic.boolalg import BooleanAtom
-from sympy.polys import Poly, poly, PolynomialError, gcd
-from sympy.solvers.solveset import linear_coeffs
 
 
 class BinaryRelation(Predicate):
@@ -102,6 +97,10 @@ class BinaryRelation(Predicate):
             return False
         return None
 
+    def _simplify_applied(self, lhs, rhs, **kwargs):
+        lhs, rhs = lhs.simplify(**kwargs), rhs.simplify(**kwargs)
+        return self(lhs, rhs)
+
 
 class AppliedBinaryRelation(AppliedPredicate):
     """
@@ -175,62 +174,10 @@ class AppliedBinaryRelation(AppliedPredicate):
         revfunc = self.function.reversed
         if revfunc is None:
             if self.function.is_symmetric:
-                return self.function(self.lhs, self.rhs)
-            return self
-        return self.function.reversed(self.rhs, self.lhs)
-
-    @property
-    def reversedsign(self):
-        """
-        Return the relationship with signs reversed.
-        """
-        revfunc = self.function.reversed
-        if revfunc is None:
-            return self
-        a, b = self.arguments
-        if not (isinstance(a, BooleanAtom) or isinstance(b, BooleanAtom)):
-            return self.function.reversed(-self.lhs, -self.rhs)
-        else:
-            return self
-
-    @property
-    def canonical(self):
-        """
-        Return a canonical form of the relational by putting a
-        number on the rhs, canonically removing a sign or else
-        ordering the args canonically. No other simplification is
-        attempted.
-        """
-        args = self.arguments
-        r = self
-        if r.rhs.is_number:
-            if r.rhs.is_Number and r.lhs.is_Number and r.lhs > r.rhs:
-                r = r.reversed
-        elif r.lhs.is_number:
-            r = r.reversed
-        elif tuple(ordered(args)) != args:
-            r = r.reversed
-
-        LHS_CEMS = getattr(r.lhs, 'could_extract_minus_sign', None)
-        RHS_CEMS = getattr(r.rhs, 'could_extract_minus_sign', None)
-
-        if isinstance(r.lhs, BooleanAtom) or isinstance(r.rhs, BooleanAtom):
-            return r
-
-        # Check if first value has negative sign
-        if LHS_CEMS and LHS_CEMS():
-            return r.reversedsign
-        elif not r.rhs.is_number and RHS_CEMS and RHS_CEMS():
-            # Right hand side has a minus, but not lhs.
-            # How does the expression with reversed signs behave?
-            # This is so that expressions of the type
-            # Q.eq(x, -y) and Q.eq(-x, y)
-            # have the same canonical representation
-            expr1, _ = ordered([r.lhs, -r.rhs])
-            if expr1 != r.lhs:
-                return r.reversed.reversedsign
-
-        return r
+                revfunc = self.function
+            else:
+                raise TypeError("Reversed relation of %s is not defined." % self.function)
+        return revfunc(self.rhs, self.lhs)
 
     @property
     def binary_symbols(self):
@@ -254,73 +201,4 @@ class AppliedBinaryRelation(AppliedPredicate):
         return r.function.eval(r.arguments, assumptions)
 
     def _eval_simplify(self, **kwargs):
-        rel = self.function
-        lhs, rhs = self.arguments
-
-        r = rel(lhs.simplify(**kwargs), rhs.simplify(**kwargs))
-        if not isinstance(r.lhs, Expr) or not isinstance(r.rhs, Expr):
-            return r
-        dif = r.lhs - r.rhs
-        r = r.canonical
-        # If there is only one symbol in the expression,
-        # try to write it on a simplified form
-        free = list(filter(lambda x: x.is_real is not False, r.free_symbols))
-        if len(free) == 1:
-            try:
-                x = free.pop()
-                dif = r.lhs - r.rhs
-                m, b = linear_coeffs(dif, x)
-                if m.is_zero is False:
-                    if m.is_negative:
-                        # Dividing with a negative number, so change order of arguments
-                        # canonical will put the symbol back on the lhs later
-                        r = r.function(-b / m, x)
-                    else:
-                        r = r.function(x, -b / m)
-                else:
-                    r = r.function(b, S.Zero)
-            except ValueError:
-                # maybe not a linear function, try polynomial
-                try:
-                    p = poly(dif, x)
-                    c = p.all_coeffs()
-                    constant = c[-1]
-                    c[-1] = 0
-                    scale = gcd(c)
-                    c = [ctmp / scale for ctmp in c]
-                    r = r.function(Poly.from_list(c, x).as_expr(), -constant / scale)
-                except PolynomialError:
-                    pass
-        elif len(free) >= 2:
-            try:
-                free = list(ordered(free))
-                dif = r.lhs - r.rhs
-                m = linear_coeffs(dif, *free)
-                constant = m[-1]
-                del m[-1]
-                scale = gcd(m)
-                m = [mtmp / scale for mtmp in m]
-                nzm = list(filter(lambda f: f[0] != 0, list(zip(m, free))))
-                if scale.is_zero is False:
-                    if constant != 0:
-                        # lhs: expression, rhs: constant
-                        newexpr = Add(*[i * j for i, j in nzm])
-                        r = r.function(newexpr, -constant / scale)
-                    else:
-                        # keep first term on lhs
-                        lhsterm = nzm[0][0] * nzm[0][1]
-                        del nzm[0]
-                        newexpr = Add(*[i * j for i, j in nzm])
-                        r = r.function(lhsterm, -newexpr)
-
-                else:
-                    r = r.function(constant, S.Zero)
-            except ValueError:
-                pass
-        # Did we get a simplified result?
-        r = r.canonical
-        measure = kwargs['measure']
-        if measure(r) < kwargs['ratio'] * measure(self):
-            return r
-        else:
-            return self
+        return self.function._simplify_applied(self.lhs, self.rhs, **kwargs)

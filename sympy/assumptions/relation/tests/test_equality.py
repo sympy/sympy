@@ -1,6 +1,5 @@
-from itertools import combinations
 
-from sympy import (ask, cos, FiniteSet, Float, I, log, oo,
+from sympy import (ask, cos, Float, I, log, oo,
     pi, Q, Rational, sin, symbols)
 from sympy.printing import sstr, pretty, latex
 
@@ -55,34 +54,3 @@ def test_issue_10633():
 def test_issue_10927():
     assert ask(Q.eq(x, oo)) is None
     assert ask(Q.eq(x, -oo)) is None
-
-# XXX : Migrate test_binary_symbols from test_relational
-
-def test_reversedsign():
-    assert Q.eq(x,y).reversedsign == Q.eq(-x, -y)
-    assert Q.eq(x,y).reversedsign.reversedsign == Q.eq(x,y)
-    assert Q.eq(-x,y).reversedsign.reversedsign == Q.eq(-x,y)
-    assert Q.eq(x,-y).reversedsign.reversedsign == Q.eq(x,-y)
-    assert Q.eq(-x,-y).reversedsign.reversedsign == Q.eq(-x,-y)
-
-def test_reversed_reversedsign():
-    assert Q.eq(x, y).reversed.reversedsign == Q.eq(x, y).reversedsign.reversed
-    assert Q.eq(-x, y).reversed.reversedsign == Q.eq(-x, y).reversedsign.reversed
-    assert Q.eq(x, -y).reversed.reversedsign == Q.eq(x, -y).reversedsign.reversed
-    assert Q.eq(-x, -y).reversed.reversedsign == Q.eq(-x, -y).reversedsign.reversed
-
-def test_improved_canonical():
-    def test_different_forms(listofforms):
-        for form1, form2 in combinations(listofforms, 2):
-            assert form1.canonical == form2.canonical
-
-    def generate_forms(expr):
-        return [expr, expr.reversed, expr.reversedsign,
-                expr.reversed.reversedsign]
-
-    test_different_forms(generate_forms(Q.eq(x, -y)))
-
-def test_set_equality_canonical():
-    a, b, c = symbols('a b c')
-    A = Q.eq(FiniteSet(a, b, c), FiniteSet(1, 2, 3))
-    assert A.canonical == A.reversed
