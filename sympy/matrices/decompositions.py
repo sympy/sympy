@@ -1395,7 +1395,12 @@ def _upper_hessenberg_decomposition(A):
     H = M
 
     for j in range(n - 2):
+
         u = H[j + 1:, j]
+
+        if u[1:, :] == M.zeros(1, u.rows - 1):
+            continue
+
         if sign(u[0]) != 0:
             u[0] = u[0] + sign(u[0]) * u.norm()
         else:

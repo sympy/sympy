@@ -406,3 +406,16 @@ def test_upper_hessenberg_decomposition():
     assert simplify(P.H * P) == eye(P.cols)
     assert H.is_upper_hessenberg
     assert simplify(P * H * P.H) == D
+
+    E = Matrix([
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [1, 1, 0, 1],
+        [1, 1, 1, 0]
+    ])
+
+    H, P = E.upper_hessenberg_decomposition()
+    assert simplify(P * P.H) == eye(P.cols)
+    assert simplify(P.H * P) == eye(P.cols)
+    assert H.is_upper_hessenberg
+    assert simplify(P * H * P.H) == E
