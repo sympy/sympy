@@ -39,7 +39,7 @@ class BinaryRelation(Predicate):
     $x = y + 1$.
 
     >>> from sympy import ask, Number
-    >>> from sympy.relation import BinaryRelation
+    >>> from sympy.assumptions.relation import BinaryRelation
     >>> class MyRel(BinaryRelation):
     ...     name = "R"
     ...     is_reflexive = False

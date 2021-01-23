@@ -5,46 +5,39 @@ from sympy.core.function import AppliedUndef
 from sympy.core.logic import fuzzy_bool, fuzzy_and, fuzzy_xor, fuzzy_not
 from sympy.functions import arg
 from sympy.logic.boolalg import BooleanAtom
-from sympy.multipledispatch import Dispatcher
 from sympy.simplify.simplify import clear_coefficients
 from sympy.utilities.iterables import sift
 
+from ..relation.equality import Equal
 
-EqualHandler = Dispatcher(
-    "EqualHandler",
-    doc="""
-    Handler for Q.eq.
-    Test that two expressions are equal.
-    """
-)
 
-@EqualHandler.register(Basic, Basic)
+@Equal.register(Basic, Basic)
 def _(lhs, rhs, assumptions):
     return None
 
-@EqualHandler.register(Tuple, Expr)
+@Equal.register(Tuple, Expr)
 def _(lhs, rhs, assumptions):
     return False
 
-@EqualHandler.register(Tuple, AppliedUndef)
+@Equal.register(Tuple, AppliedUndef)
 def _(lhs, rhs, assumptions):
     return None
 
-@EqualHandler.register(Tuple, Symbol)
+@Equal.register(Tuple, Symbol)
 def _(lhs, rhs, assumptions):
     return None
 
-@EqualHandler.register(Tuple, Tuple)
+@Equal.register(Tuple, Tuple)
 def _(lhs, rhs, assumptions):
     if len(lhs) != len(rhs):
         return False
     return fuzzy_and(fuzzy_bool(ask(Q.eq(s, o), assumptions)) for s, o in zip(lhs, rhs))
 
-@EqualHandler.register(BooleanAtom, BooleanAtom)
+@Equal.register(BooleanAtom, BooleanAtom)
 def _(lhs, rhs, assumptions):
     return lhs is rhs
 
-@EqualHandler.register(Expr, Expr)
+@Equal.register(Expr, Expr)
 def _(lhs, rhs, assumptions):
     # 1. final check that lhs - rhs is zero
     try:

@@ -81,6 +81,7 @@ modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
     'sympy.assumptions.predicates',
+    'sympy.assumptions.relation',
     'sympy.benchmarks',
     'sympy.calculus',
     'sympy.categories',
@@ -146,8 +147,6 @@ modules = [
     'sympy.polys.matrices',
     'sympy.printing',
     'sympy.printing.pretty',
-    'sympy.relation',
-    'sympy.relation.handlers',
     'sympy.sandbox',
     'sympy.series',
     'sympy.series.benchmarks',
@@ -348,6 +347,7 @@ class sdist_sympy(sdist):
 # python bin/generate_test_list.py
 tests = [
     'sympy.algebras.tests',
+    'sympy.assumptions.relation.tests',
     'sympy.assumptions.tests',
     'sympy.calculus.tests',
     'sympy.categories.tests',
@@ -395,7 +395,6 @@ tests = [
     'sympy.polys.tests',
     'sympy.printing.pretty.tests',
     'sympy.printing.tests',
-    'sympy.relation.tests',
     'sympy.sandbox.tests',
     'sympy.series.tests',
     'sympy.sets.tests',

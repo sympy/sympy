@@ -4187,15 +4187,15 @@ def test_sympy__polys__rootoftools__RootOf():
 
 
 @SKIP('abstract class')
-def test_sympy__relation__binrel__BinaryRelation():
+def test_sympy__assumptions__relation__binrel__BinaryRelation():
     pass
 
 
-def test_sympy__relation__binrel__AppliedBinaryRelation():
+def test_sympy__assumptions__relation__binrel__AppliedBinaryRelation():
     assert _test_args(Q.eq(1, 2))
 
 
-def test_sympy__relation__equality__Equal():
+def test_sympy__assumptions__relation__equality__Equal():
     assert _test_args(Q.eq)
 
 

@@ -4,7 +4,9 @@ Module for mathematical equality.
 from sympy.assumptions import Q
 from sympy.core import Add, Expr
 from sympy.core.add import _unevaluated_Add
+from sympy.multipledispatch import Dispatcher
 from sympy.solvers.solveset import linear_coeffs
+
 from .binrel import BinaryRelation
 
 
@@ -19,10 +21,10 @@ class Equal(BinaryRelation):
     name = 'eq'
     str_name = latex_name = "="
 
-    @property
-    def handler(self):
-        from .handlers.equality import EqualHandler
-        return EqualHandler
+    handler = Dispatcher(
+        "EqualHandler",
+        doc="Handler for Q.eq. Test that two expressions are equal."
+    )
 
     @property
     def reversed(self):

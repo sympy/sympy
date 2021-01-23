@@ -963,7 +963,7 @@ class AssumptionKeys:
 
     @property
     def eq(self):
-        from sympy.relation import Equal
+        from .handlers.relation import Equal
         return Equal()
 
 
