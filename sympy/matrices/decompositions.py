@@ -1387,9 +1387,6 @@ def _upper_hessenberg_decomposition(A):
     if not M.is_square:
         raise NonSquareMatrixError("Matrix must be square.")
 
-    if M.is_upper_hessenberg:
-        return M, M.eye(M.cols)
-
     n = M.cols
     P = M.eye(n)
     H = M
@@ -1408,8 +1405,8 @@ def _upper_hessenberg_decomposition(A):
 
         v = u / u.norm()
 
-        H[j + 1:, :] = H[j + 1:, :] - 2 * v * (v.T * H[j + 1:, :])
-        H[:, j + 1:] = H[:, j + 1:] - (H[:, j + 1:] * (2 * v)) * v.T
-        P[:, j + 1:] = P[:, j + 1:] - (P[:, j + 1:] * (2 * v)) * v.T
+        H[j + 1:, :] = H[j + 1:, :] - 2 * v * (v.H * H[j + 1:, :])
+        H[:, j + 1:] = H[:, j + 1:] - (H[:, j + 1:] * (2 * v)) * v.H
+        P[:, j + 1:] = P[:, j + 1:] - (P[:, j + 1:] * (2 * v)) * v.H
 
     return H, P
