@@ -1257,6 +1257,7 @@ def test_NormalizeIntegrand():
     assert NormalizeIntegrand(a**2*(a + b*x)**2, x) == a**2*(a + b*x)**2
     assert NormalizeIntegrand(b**2/(a**2*(a + b*x)**2), x) == b**2/(a**2*(a + b*x)**2)
 
+@XFAIL
 def test_NormalizeIntegrandAux():
     v = (6*A*a*c - 2*A*b**2 + B*a*b)/(a*x**2) - (6*A*a**2*c**2 - 10*A*a*b**2*c - 8*A*a*b*c**2*x + 2*A*b**4 + 2*A*b**3*c*x + 5*B*a**2*b*c + 4*B*a**2*c**2*x - B*a*b**3 - B*a*b**2*c*x)/(a**2*(a + b*x + c*x**2)) + (-2*A*b + B*a)*(4*a*c - b**2)/(a**2*x)
     assert NormalizeIntegrandAux(v, x) == (6*A*a*c - 2*A*b**2 + B*a*b)/(a*x**2) - (6*A*a**2*c**2 - 10*A*a*b**2*c + 2*A*b**4 + 5*B*a**2*b*c - B*a*b**3 + x*(-8*A*a*b*c**2 + 2*A*b**3*c + 4*B*a**2*c**2 - B*a*b**2*c))/(a**2*(a + b*x + c*x**2)) + (-2*A*b + B*a)*(4*a*c - b**2)/(a**2*x)
