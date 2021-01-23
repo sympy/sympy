@@ -194,6 +194,7 @@ class Equation(Basic, EvalfMixin):
     Eq(a, b/c)
 
     `.check()` convenience method for `.as_Boolean().simplify()`
+    >>> from sympy import I, pi
     >>> Equation(pi*(I+2), pi*I+2*pi).check()
     True
     >>> Eqn(a,a+1).check()
