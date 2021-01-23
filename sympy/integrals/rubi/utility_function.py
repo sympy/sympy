@@ -1895,7 +1895,7 @@ def PolynomialDivide(u, v, x):
     rem = Together(rem)
     free = FreeFactors(rem, x)
     rem = NonfreeFactors(rem, x)
-    monomial = x**Min(ExponentList(rem, x))
+    monomial = x**Min(*ExponentList(rem, x))
     if NegQ(Coefficient(rem, x, 0)):
         monomial = -monomial
     s = 0
@@ -1906,7 +1906,6 @@ def PolynomialDivide(u, v, x):
         return quo + free*monomial*rem/ExpandToSum(v, x)
     else:
         return quo + free*monomial*rem/v
-
 
 
 def BinomialQ(u, x, n=None):
