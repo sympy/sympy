@@ -20,7 +20,6 @@ from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
                             PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
                             sumsets, rv_subs, NamedArgsMixin, Density, Distribution)
-from sympy.external import import_module
 
 
 class FiniteDensity(dict):
@@ -148,8 +147,6 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
         cond = rv_subs(condition)
         return Basic.__new__(cls, domain, cond)
 
-
-
     def _test(self, elem):
         """
         Test the value. If value is boolean, return it. If value is equality
@@ -180,6 +177,7 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
 
     def as_boolean(self):
         return FiniteDomain.as_boolean(self)
+
 
 class SingleFiniteDistribution(Distribution, NamedArgsMixin):
     def __new__(cls, *args):
@@ -343,103 +341,7 @@ class FinitePSpace(PSpace):
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-
-        libraries = ['scipy', 'numpy', 'pymc3']
-        if library not in libraries:
-            raise NotImplementedError("Sampling from %s is not supported yet."
-                                        % str(library))
-        if not import_module(library):
-            raise ValueError("Failed to import %s" % library)
-
-        samps = _get_sample_class_frv[library](self.distribution, size, seed)
-
-        if samps is not None:
-            return {self.value: samps}
-        raise NotImplementedError(
-                "Sampling for %s is not currently implemented from %s"
-                % (self.__class__.__name__, library)
-                )
-
-
-class SampleFiniteScipy:
-    """Returns the sample from scipy of the given distribution"""
-    def __new__(cls, dist, size, seed=None):
-        return cls._sample_scipy(dist, size, seed)
-
-    @classmethod
-    def _sample_scipy(cls, dist, size, seed):
-        """Sample from SciPy."""
-        # scipy can handle with custom distributions
-
-        from scipy.stats import rv_discrete
-        density_ = dist.dict
-        x, y = [], []
-        for k, v in density_.items():
-            x.append(int(k))
-            y.append(float(v))
-        scipy_rv = rv_discrete(name='scipy_rv', values=(x, y))
-        return scipy_rv.rvs(size=size, random_state=seed)
-
-
-class SampleFiniteNumpy:
-    """Returns the sample from numpy of the given distribution"""
-
-    def __new__(cls, dist, size, seed=None):
-        return cls._sample_numpy(dist, size, seed)
-
-    @classmethod
-    def _sample_numpy(cls, dist, size, seed):
-        """Sample from NumPy."""
-
-        import numpy
-        if seed is None or isinstance(seed, int):
-            rand_state = numpy.random.default_rng(seed=seed)
-        else:
-            rand_state = seed
-        numpy_rv_map = {
-            'BinomialDistribution': lambda dist, size: rand_state.binomial(n=int(dist.n),
-                p=float(dist.p), size=size)
-        }
-
-        dist_list = numpy_rv_map.keys()
-
-        if dist.__class__.__name__ not in dist_list:
-            return None
-
-        return numpy_rv_map[dist.__class__.__name__](dist, size)
-
-
-class SampleFinitePymc:
-    """Returns the sample from pymc3 of the given distribution"""
-
-    def __new__(cls, dist, size, seed=None):
-        return cls._sample_pymc3(dist, size, seed)
-
-    @classmethod
-    def _sample_pymc3(cls, dist, size, seed):
-        """Sample from PyMC3."""
-
-        import pymc3
-        pymc3_rv_map = {
-            'BernoulliDistribution': lambda dist: pymc3.Bernoulli('X', p=float(dist.p)),
-            'BinomialDistribution': lambda dist: pymc3.Binomial('X', n=int(dist.n),
-                p=float(dist.p))
-        }
-
-        dist_list = pymc3_rv_map.keys()
-
-        if dist.__class__.__name__ not in dist_list:
-            return None
-
-        with pymc3.Model():
-            pymc3_rv_map[dist.__class__.__name__](dist)
-            return pymc3.sample(size, chains=1, progressbar=False, random_seed=seed)[:]['X']
-
-_get_sample_class_frv = {
-    'scipy': SampleFiniteScipy,
-    'pymc3': SampleFinitePymc,
-    'numpy': SampleFiniteNumpy
-}
+        return {self.value: self.distribution.sample(size, library, seed)}
 
 
 class SingleFinitePSpace(SinglePSpace, FinitePSpace):

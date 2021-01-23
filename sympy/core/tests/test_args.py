@@ -1156,6 +1156,7 @@ def test_sympy__stats__drv__DiscreteDistribution():
 def test_sympy__stats__drv__DiscreteDomain():
     pass
 
+
 def test_sympy__stats__rv__RandomDomain():
     from sympy.stats.rv import RandomDomain
     from sympy.sets.sets import FiniteSet
@@ -1974,6 +1975,11 @@ def test_sympy__functions__combinatorial__numbers__euler():
 def test_sympy__functions__combinatorial__numbers__carmichael():
     from sympy.functions.combinatorial.numbers import carmichael
     assert _test_args(carmichael(x))
+
+
+def test_sympy__functions__combinatorial__numbers__motzkin():
+    from sympy.functions.combinatorial.numbers import motzkin
+    assert _test_args(motzkin(5))
 
 
 def test_sympy__functions__combinatorial__numbers__fibonacci():
@@ -4373,6 +4379,12 @@ def test_sympy__tensor__array__array_derivatives__ArrayDerivative():
     assert _test_args(arrder)
 
 
+def test_sympy__tensor__array__array_expressions__ZeroArray():
+    from sympy.tensor.array.array_expressions import ZeroArray
+    m, n, k = symbols("m n k")
+    za = ZeroArray(m, n, k, 2)
+    assert _test_args(za)
+
 def test_sympy__tensor__functions__TensorProduct():
     from sympy.tensor.functions import TensorProduct
     A = MatrixSymbol('A', 3, 3)
@@ -4855,8 +4867,7 @@ def test_sympy__codegen__array_utils__CodegenArrayElementwiseAdd():
 
 def test_sympy__codegen__array_utils__CodegenArrayPermuteDims():
     from sympy.codegen.array_utils import CodegenArrayPermuteDims
-    from sympy import IndexedBase
-    A = symbols("A", cls=IndexedBase)
+    A = MatrixSymbol("A", 4, 4)
     assert _test_args(CodegenArrayPermuteDims(A, (1, 0)))
 
 
