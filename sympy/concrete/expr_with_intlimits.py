@@ -350,3 +350,8 @@ class ExprWithIntLimits(ExprWithLimits):
         if ret_None:
             return None
         return False
+
+    def diff(self, *symbols, **assumptions):
+        assumptions.setdefault("evaluate", True)
+        from sympy.core.function import Derivative
+        return Derivative(self, *symbols, **assumptions).doit()
