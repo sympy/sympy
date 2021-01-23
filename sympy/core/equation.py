@@ -57,12 +57,7 @@ class Equation(Basic, EvalfMixin):
     ==========
     lhs: sympy expression, ``class Expr``.
     rhs: sympy expression, ``class Expr``.
-    kwargs: key word arguments from this list
-        - ``check=True/False``. Defaults to ``False`` to minimize
-            computationally expensive calls to ``simplify`` when
-            ``Equation`` is called programmatically. ``check=True``
-            produces a warning if the lhs and rhs evaluate to numbers and
-            are not equal.
+    kwargs:
 
     Examples
     ========
@@ -198,6 +193,12 @@ class Equation(Basic, EvalfMixin):
     >>> t.as_Boolean()
     Eq(a, b/c)
 
+    `.check()` convenience method for `.as_Boolean().simplify()`
+    >>> Equation(pi*(I+2), pi*I+2*pi).check()
+    True
+    >>> Eqn(a,a+1).check()
+    False
+
     Differentiation
     Differentiation is applied to both sides if the wrt variable appears on
     both sides.
@@ -254,16 +255,10 @@ class Equation(Basic, EvalfMixin):
     """
 
     def __new__(cls, lhs, rhs, **kwargs):
-        check = kwargs.pop('check', False)
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         if not isinstance(lhs,Expr) or not isinstance(rhs,Expr):
             raise TypeError('lhs and rhs must be valid sympy expressions.')
-        if check:
-            tst=(lhs-rhs)
-            tst=tst.simplify().evalf()
-            if tst != 0 and tst.is_number:
-                raise ValueError('`lhs-rhs` evaluates to a non-zero number.')
         return super().__new__(cls, lhs, rhs)
 
     @property
@@ -280,19 +275,33 @@ class Equation(Basic, EvalfMixin):
         """
         return self.args[1]
 
-    def as_Boolean(self):
+    def as_Boolean(self, **kwargs):
         """
-        Converts the equation to an Equality.
+        Converts the equation to an `Equality`.
         """
         from .relational import Equality
-        return Equality(self.lhs, self.rhs)
+        return Equality(self.lhs, self.rhs, **kwargs)
+
+    def check(self, **kwargs):
+        """
+        Forces simplification and casts as `Equality` to check validity.
+        Parameters
+        ----------
+        kwargs any appropriate for `Equality`.
+
+        Returns
+        -------
+        True, False or an unevaluated `Equality` if truth cannot be determined.
+        """
+        from .relational import Equality
+        return Equality(self.lhs, self.rhs, **kwargs).simplify()
 
     @property
     def reversed(self):
         """
         Swaps the lhs and the rhs.
         """
-        return Equation(self.rhs, self.lhs, check=False)
+        return Equation(self.rhs, self.lhs)
 
     @property
     def swap(self):
@@ -334,7 +343,7 @@ class Equation(Basic, EvalfMixin):
             lhs = self._applytoexpr(self.lhs, func, *args, **kwargs)
         if side in ('both', 'rhs'):
             rhs = self._applytoexpr(self.rhs, func, *args, **kwargs)
-        return Equation(lhs, rhs, check=False)
+        return Equation(lhs, rhs)
 
     def applylhs(self, func, *args, **kwargs):
         """
@@ -353,6 +362,10 @@ class Equation(Basic, EvalfMixin):
         return self.apply(func, *args, **kwargs, side='rhs')
 
     class _sides:
+        """
+        Helper class for the `.do.`, `.dolhs.`, `.dorhs.` syntax for applying
+        submethods of expressions.
+        """
         def __init__(self,eqn, side='both'):
             self.eqn = eqn
             self.side = side
@@ -384,14 +397,11 @@ class Equation(Basic, EvalfMixin):
     @classmethod
     def _binary_op(cls, a, b, opfunc_ab):
         if isinstance(a, Equation) and not isinstance(b, Equation):
-            return Equation(opfunc_ab(a.lhs, b), opfunc_ab(a.rhs, b),
-                            check=False)
+            return Equation(opfunc_ab(a.lhs, b), opfunc_ab(a.rhs, b))
         elif isinstance(b, Equation) and not isinstance(a, Equation):
-            return Equation(opfunc_ab(a, b.lhs), opfunc_ab(a, b.rhs),
-                            check=False)
+            return Equation(opfunc_ab(a, b.lhs), opfunc_ab(a, b.rhs))
         elif isinstance(a, Equation) and isinstance(b, Equation):
-            return Equation(opfunc_ab(a.lhs, b.lhs), opfunc_ab(a.rhs, b.rhs),
-                            check=False)
+            return Equation(opfunc_ab(a.lhs, b.lhs), opfunc_ab(a.rhs, b.rhs))
         else:
             return NotImplemented
 
@@ -439,19 +449,19 @@ class Equation(Basic, EvalfMixin):
     #####
     def expand(self, *args, **kwargs):
         return Equation(self.lhs.expand(*args, **kwargs), self.rhs.expand(
-            *args, **kwargs), check=False)
+            *args, **kwargs))
 
     def simplify(self, *args, **kwargs):
         return self._eval_simplify(*args, **kwargs)
 
     def _eval_simplify(self, *args, **kwargs):
         return Equation(self.lhs.simplify(*args, **kwargs), self.rhs.simplify(
-            *args, **kwargs), check=False)
+            *args, **kwargs))
 
     def _eval_factor(self, *args, **kwargs):
         # TODO: cancel out factors common to both sides.
         return Equation(self.lhs.factor(*args, **kwargs), self.rhs.factor(
-            *args, **kwargs), check=False)
+            *args, **kwargs))
 
     def factor(self, *args, **kwargs):
         return self._eval_factor(*args, **kwargs)
@@ -459,14 +469,14 @@ class Equation(Basic, EvalfMixin):
     def _eval_collect(self, *args, **kwargs):
         from sympy.simplify.radsimp import collect
         return Equation(collect(self.lhs, *args, **kwargs),
-                        collect(self.rhs, *args, **kwargs), check=False)
+                        collect(self.rhs, *args, **kwargs))
 
     def collect(self, *args, **kwargs):
         return self._eval_collect(*args, **kwargs)
 
     def evalf(self, *args, **kwargs):
         return Equation(self.lhs.evalf(*args, **kwargs),
-                        self.rhs.evalf(*args, **kwargs), check=False)
+                        self.rhs.evalf(*args, **kwargs))
 
     n = evalf
 
@@ -482,7 +492,7 @@ class Equation(Basic, EvalfMixin):
                 _sympify(sym).is_number):
                     eval_lhs = True
         return Equation(self.lhs.diff(*args, **kwargs, evaluate=eval_lhs),
-                        self.rhs.diff(*args, **kwargs), check=False)
+                        self.rhs.diff(*args, **kwargs))
 
     def _eval_Integral(self, *args, **kwargs):
         side = kwargs.pop('side', None)  # Could not seem to pass values for
