@@ -290,7 +290,7 @@ def _extract_all_facts(expr, symbols):
             if isinstance(literal.lit, AppliedPredicate):
                 if literal.lit.arg in symbols:
                     # Add literal if it has 'symbol' in it
-                    args.append(Literal(literal.lit.func, literal.is_Not))
+                    args.append(Literal(literal.lit.function, literal.is_Not))
                 else:
                     # If any of the literals doesn't have 'symbol' don't add the whole clause.
                     break
