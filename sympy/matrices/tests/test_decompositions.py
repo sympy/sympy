@@ -1,4 +1,4 @@
-from sympy import Rational, I, expand_mul, S, simplify
+from sympy import Rational, I, expand_mul, S, simplify, sqrt
 from sympy.matrices.matrices import NonSquareMatrixError
 from sympy.matrices import Matrix, zeros, eye, SparseMatrix
 from sympy.abc import x, y, z
@@ -91,15 +91,15 @@ def test_LUdecomp():
     )
     raises(ValueError, lambda : M.LUdecomposition_Simple(rankcheck=True))
 
-def test_SVD():
+def test_singular_value_decompositionD():
     A = Matrix([[1, 2], [2, 1]])
-    U, S, V = A.SVD()
+    U, S, V = A.singular_value_decomposition()
     assert U * S * V.T == A
     assert U.T * U == eye(U.cols)
     assert V.T * V == eye(V.cols)
 
     B = Matrix([[1, 2]])
-    U, S, V = B.SVD()
+    U, S, V = B.singular_value_decomposition()
 
     assert U * S * V.T == B
     assert U.T * U == eye(U.cols)
@@ -112,11 +112,17 @@ def test_SVD():
         [0, 2, 0, 0, 0],
     ])
 
-    U, S, V = C.SVD()
+    U, S, V = C.singular_value_decomposition()
 
     assert U * S * V.T == C
     assert U.T * U == eye(U.cols)
     assert V.T * V == eye(V.cols)
+
+    D = Matrix([[Rational(1, 3), sqrt(2)], [0, Rational(1, 4)]])
+    U, S, V = D.singular_value_decomposition()
+    assert simplify(U.T * U) == eye(U.cols)
+    assert simplify(V.T * V) == eye(V.cols)
+    assert simplify(U * S * V.T) == D
 
 
 

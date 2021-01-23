@@ -1121,7 +1121,7 @@ def _LUdecompositionFF(M):
 
     return P, L, DD, U
 
-def Singular_Value_Decomposition(A):
+def _singular_value_decomposition(A):
     r"""Returns a Condensed Singular Value decomposition.
 
     Explanation
@@ -1162,7 +1162,7 @@ def Singular_Value_Decomposition(A):
 
     >>> from sympy import Matrix
     >>> A = Matrix([[1, 2],[2,1]])
-    >>> U, S, V = A.SVD()
+    >>> U, S, V = A.singular_value_decomposition()
     >>> U
     Matrix([
     [ sqrt(2)/2, sqrt(2)/2],
@@ -1205,7 +1205,7 @@ def Singular_Value_Decomposition(A):
     ...         [0, 0, 0, 0, 0],
     ...         [0, 2, 0, 0, 0],
     ...     ])
-    >>> U, S, V = C.SVD()
+    >>> U, S, V = C.singular_value_decomposition()
 
     >>> V.H * V
     Matrix([

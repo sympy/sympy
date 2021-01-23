@@ -48,7 +48,7 @@ from .eigen import (
 from .decompositions import (
     _rank_decomposition, _cholesky, _LDLdecomposition,
     _LUdecomposition, _LUdecomposition_Simple, _LUdecompositionFF,
-    Singular_Value_Decomposition, _QRdecomposition)
+    _singular_value_decomposition, _QRdecomposition)
 
 from .graph import _connected_components, _connected_components_decomposition
 
@@ -2139,8 +2139,8 @@ class MatrixBase(MatrixDeprecated,
     def LUdecompositionFF(self):
         return _LUdecompositionFF(self)
 
-    def SVD(self):
-        return Singular_Value_Decomposition(self)
+    def singular_value_decomposition(self):
+        return _singular_value_decomposition(self)
 
     def QRdecomposition(self):
         return _QRdecomposition(self)
@@ -2221,7 +2221,7 @@ class MatrixBase(MatrixDeprecated,
     LUdecomposition.__doc__        = _LUdecomposition.__doc__
     LUdecomposition_Simple.__doc__ = _LUdecomposition_Simple.__doc__
     LUdecompositionFF.__doc__      = _LUdecompositionFF.__doc__
-    Singular_Value_Decomposition.__doc__ = Singular_Value_Decomposition.__doc__
+    singular_value_decomposition.__doc__ = _singular_value_decomposition.__doc__
     QRdecomposition.__doc__        = _QRdecomposition.__doc__
 
     diagonal_solve.__doc__         = _diagonal_solve.__doc__
