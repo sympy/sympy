@@ -761,7 +761,7 @@ class Quaternion(Expr):
         >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 1, 1, 1)
         >>> q.vector()
-        0 + 8*i + 13*j + 12*k
+        0 + 1*i + 1*j + 1*k
 
         >>> q = Quaternion(4, 8, 13, 12)
         >>> q.vector()
