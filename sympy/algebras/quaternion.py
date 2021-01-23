@@ -3,7 +3,7 @@
 # https://en.wikipedia.org/wiki/Quaternion
 from sympy import S, Rational
 from sympy import re, im, conjugate, sign
-from sympy import sqrt, sin, cos, acos, exp, ln
+from sympy import sqrt, sin, cos, acos, exp, ln, atan2
 from sympy import trigsimp
 from sympy import integrate
 from sympy import Matrix
@@ -720,3 +720,188 @@ class Quaternion(Expr):
 
             return Matrix([[m00, m01, m02, m03], [m10, m11, m12, m13],
                           [m20, m21, m22, m23], [m30, m31, m32, m33]])
+
+    def scalar(self):
+        """
+        Returns the scalar part of the quaternion.
+
+        Returns
+        =======
+        S : The scalar part of the quaternion.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(1, 1, 1, 1)
+        >>> q.scalar()
+        1
+
+        >>> q = Quaternion(4, 8, 13, 12)
+        >>> q.scalar()
+        4
+
+        """
+
+        q = self
+        S = q.a
+        return S
+
+    def vector(self):
+        """
+        Returns the vector part of the quaternion.
+
+        Returns
+        =======
+        V : The vector part of the quaternion.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(1, 1, 1, 1)
+        >>> q.vector()
+        0 + 8*i + 13*j + 12*k
+
+        >>> q = Quaternion(4, 8, 13, 12)
+        >>> q.vector()
+        0 + 8*i + 13*j + 12*k
+
+        """
+
+        q = self
+        V = Quaternion(0, q.b, q.c, q.d)
+        return V
+
+    def axis(self):
+        """
+        Returns the axis part of the quaternion.
+
+        Returns
+        =======
+        Ax : The axis of the quaternion.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(1, 1, 1, 1)
+        >>> q.axis()
+        0 + sqrt(3)/3*i + sqrt(3)/3*j + sqrt(3)/3*k
+
+        >>> q = Quaternion(4, 8, 13, 12)
+        >>> q.axis()
+        0 + 8*sqrt(377)/377*i + sqrt(377)/29*j + 12*sqrt(377)/377*k
+
+        """
+
+        q = self
+        AX = Quaternion(0, q.b, q.c, q.d).normalize()
+        return AX
+
+    def is_pure(self):
+        """
+        Returns true if the quaternion is true else returns false.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(1, 1, 1, 1)
+        >>> q.is_pure()
+        False
+
+        >>> q = Quaternion(0, 8, 13, 12)
+        >>> q.is_pure()
+        True
+
+        """
+
+        q = self
+        return q.a == 0
+
+    def angle(self):
+        """
+        Returns the angle of the quaternion.
+
+        Returns
+        =======
+        ang : The angle of the quaternion.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(1, 4, 4, 4)
+        >>> q.angle()
+        atan(4*sqrt(3))
+
+        >>> q = Quaternion(0, 8, 13, 12)
+        >>> q.angle()
+        pi/2
+
+        """
+
+        q = self
+        ang = atan2(Quaternion(0, q.b, q.c, q.d).norm(), q.a)
+        return ang
+
+    def coplanar(self, other):
+        """
+        Returns if the two quaternions are coplanar or not.
+
+        Parameters
+        ==========
+
+        other : a quaternion
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(1, 4, 4, 4)
+        >>> q1 = Quaternion(2, 8, 8, 8)
+        >>> q.coplanar(q1)
+        True
+
+        >>> q1 = Quaternion(2, 8, 13, 12)
+        >>> q.coplanar(q1)
+        False
+
+        """
+
+        aq = self.axis()
+        ar = other.axis()
+        return (aq == ar or aq == -ar)
+
+    def ternary_coplanar(self, q1, q2):
+        """
+        Returns if the pure quaternions self, q1, and q2 are coplanar or not.
+
+        Parameters
+        ==========
+
+        q1 : a pure quaternion.
+        q2 : a pure quaternion.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(0, 4, 4, 4)
+        >>> q1 = Quaternion(0, 8, 8, 8)
+        >>> q2 = Quaternion(0, 24, 24, 24)
+        >>> q.ternary_coplanar(q1, q2)
+        True
+
+        >>> q1 = Quaternion(0, 8, 16, 8)
+        >>> q2 = Quaternion(0, 8, 3, 12)
+        >>> q.ternary_coplanar(q1, q2)
+        False
+
+        """
+
+        if self.a == 0 and q1.a == 0 and q2.a == 0:
+            return self.coplanar(q1) and self.coplanar(q2)
+        else:
+            raise ValueError('The provided quaternions must be pure')

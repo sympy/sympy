@@ -1,6 +1,6 @@
 from sympy import symbols, re, im, sign, I, Abs, Symbol, \
      cos, sin, sqrt, conjugate, log, acos, E, pi, \
-     Matrix, diff, integrate, trigsimp, S, Rational
+     Matrix, diff, integrate, trigsimp, S, Rational, atan, atan2
 from sympy.algebras.quaternion import Quaternion
 from sympy.testing.pytest import raises
 
@@ -103,6 +103,26 @@ def test_quaternion_functions():
     n = Symbol('n', integer=True)
     raises(TypeError, lambda: q1**n)
 
+    assert Quaternion(22, 23, 55, 8).scalar() == 22
+    assert Quaternion(w, x, y, z).scalar() == w
+
+    assert Quaternion(22, 23, 55, 8).vector() == Quaternion(0, 23, 55, 8)
+    assert Quaternion(w, x, y, z).vector() == Quaternion(0, x, y, z)
+
+    assert q1.axis() == Quaternion(0, 2*sqrt(29)/29, 3*sqrt(29)/29, 4*sqrt(29)/29)
+    assert q.axis() == Quaternion(0, x/sqrt(x**2 + y**2 + z**2), y/sqrt(x**2 + y**2 + z**2), z/sqrt(x**2 + y**2 + z**2))
+
+    assert q0.is_pure() == True
+    assert q1.is_pure() == False
+
+    assert q1.angle() == atan(sqrt(29))
+    assert q.angle() == atan2(sqrt(x**2 + y**2 + z**2), w)
+
+    assert q1.coplanar(q0) == False
+    assert q1.coplanar(Quaternion(2, 4, 6, 8)) == True
+
+    assert Quaternion(0, 3, 9, 4).ternary_coplanar(q0, Quaternion(0, 4, 6, 8)) == False
+    assert Quaternion(0, 2, 3, 4).ternary_coplanar(Quaternion(0, 8, 12, 16), Quaternion(0, 4, 6, 8)) == True
 
 def test_quaternion_conversions():
     q1 = Quaternion(1, 2, 3, 4)
