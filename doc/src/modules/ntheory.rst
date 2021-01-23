@@ -232,7 +232,7 @@ The `qs` function is a subexponential factoring algorithm, the fastest
 factoring algorithm for numbers within 100 digits. The time complexity of
 `qs` is dependent on the size of the number so it is used if the number contains
 large factors. Due to this while factoring numbers first `ecm` is used to get
-smaller factors of around ~15digits then `qs` is used to get larger factors.
+smaller factors of around ~15 digits then `qs` is used to get larger factors.
 
 For factoring `2709077133180915240135586837960864768806330782747` which is a semi-prime number
 with two 25 digit factors. `qs` is able to factorize this in around 248s.
