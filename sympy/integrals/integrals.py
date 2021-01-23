@@ -93,6 +93,67 @@ class Integral(AddWithLimits):
     def __getnewargs__(self):
         return (self.function,) + tuple([tuple(xab) for xab in self.limits])
 
+    # fixes issue #20809
+    def has_free(obj, syms):
+        fs=[]
+        bs=[]
+        flag=True
+        from sympy import Function
+        from sympy.core.numbers import Integer
+        for i in range(1,len(obj.args)):
+            arg=obj.args[i]
+            if isinstance(arg,Tuple):
+                larg=list(arg)
+                l=len(larg)
+                if l == 1:
+                    if isinstance(larg[0],Symbol) or isinstance(larg[0],Function):
+                        bs.append(larg[0])
+                elif l == 2:
+                    bs.append(larg[0])
+                    if not isinstance(larg[1],Integer):
+                        if isinstance(larg[1],Function) or isinstance(larg[1],Symbol):
+                            fs.append(larg[1])
+                        else:
+                            arg1=list(larg[1].args)
+                            for z in arg1:
+                                if not isinstance(z,Integer):
+                                    fs.append(z)
+                elif l == 3:
+                    bs.append(larg[0])
+                    if not isinstance(larg[1],Integer):
+                        if isinstance(larg[1],Function) or isinstance(larg[1],Symbol):
+                            fs.append(larg[1])
+                        else:
+                            arg1=list(larg[1].args)
+                            for z in arg1:
+                                if not isinstance(z,Integer):
+                                    fs.append(z)
+                    if not isinstance(larg[2],Integer):
+                        if isinstance(larg[2],Function) or isinstance(larg[2],Symbol):
+                            fs.append(larg[2])
+                        else:
+                            arg1=list(larg[2].args)
+                            for z in arg1:
+                                if not isinstance(z,Integer):
+                                    fs.append(z)
+        if not fs:
+            lbs=len(bs)
+            if bs[lbs-1] == list(syms)[0]:
+                return True
+            return False
+        fsyms = set(fs).intersection(set(bs))
+        if fsyms:
+            if set(syms).intersection(fsyms):
+                fs=list(reversed(fs))
+                bs=list(reversed(bs))
+                if fs.index(list(syms)[0]) <= bs.index(list(syms)[0]):
+                    return True
+                return False
+        if flag:
+            if set(fs).intersection(syms):
+                return True
+        return False
+
     @property
     def free_symbols(self):
         """

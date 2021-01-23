@@ -1704,3 +1704,20 @@ def test_issue_4231():
 def test_issue_17841():
     f = diff(1/(x**2+x+I), x)
     assert integrate(f, x) == 1/(x**2 + x + I)
+
+
+def test_issue_20809():
+    assert Integral(x, (x, 0, x)).has_free({x}) == True
+    assert Integral(f(x),(f(x),0,f(x))).has_free({f(x)}) == True
+    assert Integral(f(x),(f(x),0,f(x))).has_free({x}) == False
+    assert Integral(f(x),f(x)).has_free({x}) == False
+    assert Integral(f(x),f(x)).has_free({f(x)}) == True
+    assert Integral(f(x),(f(x),0,x)).has_free({f(x)}) == False
+    assert Integral(f(x),(f(x),0,x)).has_free({x}) == True
+    assert Integral(x, (x, 0, f(x)+1)).has_free({f(x)})== True
+    assert Integral(x, (x, 0, f(x)+1)).has_free({x})== False
+    assert Integral(x, (x, 0, f(x)), (f(x), 0, y)).has_free({f(x)}) == False
+    assert Integral(x, (x, 0, f(x)), (f(x), 0, y)).has_free({y}) == True
+    assert Integral(x, (x, 0, f(x)), (f(x), 0, y)).has_free({x}) == False
+    assert Integral(x, (x, 0, f(x)), (f(x), 0, y),(y,0,f(x))).has_free({f(x)}) == True
+    assert Integral(x, (x, 0, f(x)), (f(x), 0, y),(y,0,f(x))).has_free({y}) == False
