@@ -448,7 +448,7 @@ class Integral(AddWithLimits):
             (x, a, b) = self.limits[0]
             if any(i.is_infinite for i in (a,b)) and \
                 (function.is_positive or function.is_negative):
-                if function.limit(x,[i for i in (a,b) if i.is_infinite][0]):
+                if function.limit(x,[i for i in (a,b) if i.is_infinite][0]).is_infinite:
                     return S.Infinity
 
         # hacks to handle special cases
