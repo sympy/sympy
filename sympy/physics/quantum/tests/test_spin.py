@@ -3677,12 +3677,12 @@ def test_wignerd():
 
 def test_wignerD():
     i,j=symbols('i j')
-    assert Rotation.D(1,1,1,0,0,0) == WignerD(1,1,1,0,0,0)
-    assert Rotation.D(1,1,2,0,0,0) == WignerD(1,1,2,0,0,0)
-    assert Rotation.D(1,i**2 - j**2, i**2 - j**2,0,0,0) == WignerD(1,i**2 - j**2, i**2 - j**2,0,0,0)
-    assert Rotation.D(1,i,i,0,0,0) == WignerD(1,i,i,0,0,0)
-    assert Rotation.D(1,i,i+1,0,0,0) == WignerD(1,i,i+1,0,0,0)
-    assert Rotation.D(1,0,0,0,0,0) == WignerD(1,0,0,0,0,0)
+    assert Rotation.D(1, 1, 1, 0, 0, 0) == WignerD(1, 1, 1, 0, 0, 0)
+    assert Rotation.D(1, 1, 2, 0, 0, 0) == WignerD(1, 1, 2, 0, 0, 0)
+    assert Rotation.D(1, i**2 - j**2, i**2 - j**2, 0, 0, 0) == WignerD(1, i**2 - j**2, i**2 - j**2, 0, 0, 0)
+    assert Rotation.D(1, i, i, 0, 0, 0) == WignerD(1, i, i, 0, 0, 0)
+    assert Rotation.D(1, i, i+1, 0, 0, 0) == WignerD(1, i, i+1, 0, 0, 0)
+    assert Rotation.D(1, 0, 0, 0, 0, 0) == WignerD(1, 0, 0, 0, 0, 0)
 
 def test_jplus():
     assert Commutator(Jplus, Jminus).doit() == 2*hbar*Jz
