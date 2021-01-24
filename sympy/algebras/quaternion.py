@@ -727,6 +727,7 @@ class Quaternion(Expr):
 
         Returns
         =======
+
         S : The scalar part of the quaternion.
 
         Examples
@@ -753,6 +754,7 @@ class Quaternion(Expr):
 
         Returns
         =======
+
         V : The vector part of the quaternion.
 
         Examples
@@ -779,6 +781,7 @@ class Quaternion(Expr):
 
         Returns
         =======
+
         Ax : The axis of the quaternion.
 
         Examples
@@ -801,7 +804,7 @@ class Quaternion(Expr):
 
     def is_pure(self):
         """
-        Returns true if the quaternion is true else returns false.
+        Returns true if the quaternion is pure else returns false.
 
         Examples
         ========
@@ -826,6 +829,7 @@ class Quaternion(Expr):
 
         Returns
         =======
+
         ang : The angle of the quaternion.
 
         Examples
@@ -848,7 +852,7 @@ class Quaternion(Expr):
 
     def coplanar(self, other):
         """
-        Returns if the two quaternions are coplanar or not.
+        Returns True if the two quaternions are coplanar else returns False.
 
         Parameters
         ==========
@@ -876,7 +880,7 @@ class Quaternion(Expr):
 
     def ternary_coplanar(self, q1, q2):
         """
-        Returns if the pure quaternions self, q1, and q2 are coplanar or not.
+        Returns True if the pure quaternions self, q1, and q2 are coplanar else returns False.
 
         Parameters
         ==========
@@ -905,3 +909,116 @@ class Quaternion(Expr):
             return self.coplanar(q1) and self.coplanar(q2)
         else:
             raise ValueError('The provided quaternions must be pure')
+
+    def parallel(self, other):
+        """
+        Returns True if the two pure quaternions are parallel else returns False.
+
+        Parameters
+        ==========
+
+        other : a quaternion
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(0, 4, 4, 4)
+        >>> q1 = Quaternion(0, 8, 8, 8)
+        >>> q.parallel(q1)
+        True
+
+        >>> q1 = Quaternion(0, 8, 13, 12)
+        >>> q.parallel(q1)
+        False
+
+        """
+
+        if self.a == 0 and other.a == 0:
+            return (Quaternion._generic_mul(self, other) == Quaternion._generic_mul(other, self))
+        else:
+            raise ValueError('The provided quaternions must be pure')
+
+    def orthogonal(self, other):
+        """
+        Returns True if the two pure quaternions are orthogonal else returns False.
+
+        Parameters
+        ==========
+
+        other : a quaternion
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(0, 4, 4, 4)
+        >>> q1 = Quaternion(0, 8, 8, 8)
+        >>> q.orthogonal(q1)
+        False
+
+        >>> q1 = Quaternion(0, 2, 2, 0)
+        >>> q = Quaternion(0, 2, -2, 0)
+        >>> q.orthogonal(q1)
+        True
+
+        """
+
+        if self.a == 0 and other.a == 0:
+            return (Quaternion._generic_mul(self, other) == -Quaternion._generic_mul(other, self))
+        else:
+            raise ValueError('The provided quaternions must be pure')
+
+    def index_vector(self):
+        """
+        Returns the index vector of the quaternion.
+
+        Returns
+        =======
+
+        I : Index vector of the quaternion.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(2, 4, 2, 4)
+        >>> q.index_vector()
+        0 + 4*sqrt(10)/3*i + 2*sqrt(10)/3*j + 4*sqrt(10)/3*k
+
+        >>> q = Quaternion(0, 2, 2, 0)
+        >>> q.index_vector()
+        0 + 2*i + 2*j + 0*k
+
+        """
+
+        q = self
+        I = q.norm() * Quaternion(0, q.b, q.c, q.d).normalize()
+        return I
+
+    def mensor(self):
+        """
+        Returns the mensor of the quaternion.
+
+        Returns
+        =======
+
+        M : Mensor of the quaternion.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(2, 4, 2, 4)
+        >>> q.mensor()
+        log(2*sqrt(10))
+
+        >>> q = Quaternion(0, 2, 2, 0)
+        >>> q.mensor()
+        log(2*sqrt(2))
+
+        """
+
+        q = self
+        M = ln(q.norm())
+        return M

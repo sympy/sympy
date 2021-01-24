@@ -124,6 +124,18 @@ def test_quaternion_functions():
     assert Quaternion(0, 3, 9, 4).ternary_coplanar(q0, Quaternion(0, 4, 6, 8)) == False
     assert Quaternion(0, 2, 3, 4).ternary_coplanar(Quaternion(0, 8, 12, 16), Quaternion(0, 4, 6, 8)) == True
 
+    assert Quaternion(0, 1, 2, 3).parallel(Quaternion(0, 2, 4, 6)) == True
+    assert Quaternion(0, 1, 2, 3).parallel(Quaternion(0, 2, 2, 6)) == False
+
+    assert Quaternion(0, 1, 2, 3).orthogonal(Quaternion(0, -2, 1, 0)) == True
+    assert Quaternion(0, 2, 4, 7).orthogonal(Quaternion(0, 2, 2, 6)) == False
+
+    assert q1.index_vector() == Quaternion(0, 2*sqrt(870)/29, 3*sqrt(870)/29, 4*sqrt(870)/29)
+    assert Quaternion(0, 3, 9, 4).index_vector() == Quaternion(0, 3, 9, 4)
+
+    assert Quaternion(4, 3, 9, 4).mensor() == log(sqrt(122))
+    assert Quaternion(3, 3, 0, 2).mensor() == log(sqrt(22))
+
 def test_quaternion_conversions():
     q1 = Quaternion(1, 2, 3, 4)
 
