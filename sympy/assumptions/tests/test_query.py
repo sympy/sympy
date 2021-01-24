@@ -2038,7 +2038,8 @@ def test_key_extensibility():
         with warns_deprecated_sympy():
             assert ask(Q.my_key(x + 1)) is None
     finally:
-        remove_handler('my_key', MyAskHandler)
+        with warns_deprecated_sympy():
+            remove_handler('my_key', MyAskHandler)
         del Q.my_key
     raises(AttributeError, lambda: ask(Q.my_key(x)))
 
