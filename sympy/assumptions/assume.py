@@ -438,6 +438,12 @@ class UndefinedPredicate(Predicate):
     def eval(self, args, assumptions=True):
         # Support for deprecated design
         # When old design is removed, this will always return None
+        SymPyDeprecationWarning(
+            feature="Evaluating UndefinedPredicate",
+            useinstead="multipledispatch handler of Predicate",
+            issue=20873,
+            deprecated_since_version="1.8"
+        ).warn()
         expr, = args
         res, _res = None, None
         mro = inspect.getmro(type(expr))
