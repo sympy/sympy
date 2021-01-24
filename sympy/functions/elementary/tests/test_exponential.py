@@ -3,11 +3,12 @@ from sympy import (
     LambertW, sqrt, Rational, expand_log, S, sign,
     adjoint, conjugate, transpose, O, refine,
     sin, cos, sinh, cosh, tanh, exp_polar, re, simplify,
-    AccumBounds, MatrixSymbol, Pow, gcd, Sum, Product)
+    AccumBounds, Pow, gcd, Sum, Product)
 from sympy.functions.elementary.exponential import match_real_imag
 from sympy.abc import x, y, z
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
+from sympy.matrices import Matrix, MatrixSymbol
 from sympy.testing.pytest import raises, XFAIL
 
 
@@ -687,3 +688,19 @@ def test_issue_9116():
 
     assert ln(n).is_nonnegative is True
     assert log(n).is_nonnegative is True
+
+
+def test_lambertw_identities():
+    k_list = [-1, 0, 1]
+    x_list = [
+        -S(5)/2, -S(2), -S(3)/2, -S(1), -S(1)/2, S(0),
+        S(1)/2, S(1), S(3)/2, S(2), S(5)/2]
+    y_list = x_list
+
+    for k in k_list:
+        for x in x_list:
+            for y in y_list:
+                z = x + y*I
+                ans = LambertW(z*exp(z), k, evaluate=False)
+                diff = ans - ans._extract_identity()
+                assert abs(diff.evalf()) < 10**-15

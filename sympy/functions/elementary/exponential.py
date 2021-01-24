@@ -1083,6 +1083,12 @@ class LambertW(Function):
         elif k is None:
             k = S.Zero
 
+        if x.is_number and k.is_number:
+            orig = cls(x, k, evaluate=False)
+            ret = orig._extract_identity()
+            if orig != ret:
+                return ret
+
         if k.is_zero:
             if x.is_zero:
                 return S.Zero
@@ -1187,3 +1193,90 @@ class LambertW(Function):
             k = self.args[1]
         if x.is_zero and k.is_zero:
             return True
+
+    def _extract_identity(self):
+        r"""Simplifier using the property
+        `W_{k}\left(z e^{z}\right) = z` for some `k` and `z`.
+
+        Notes
+        =====
+
+        The region where `W_{k}\left(z e^{z}\right)` reduces depends
+        on both the value of `z` and the branch index `k`.
+
+        The boundaries of each regions where
+        `W_{k}\left(z e^{z}\right)` reduces to `z` resembles the
+        quadratrix of Hippias.
+
+        References
+        ==========
+
+        .. [1] https://cs.uwaterloo.ca/research/tr/1993/03/W.pdf
+        """
+        from sympy.functions.elementary.complexes import re, im
+        from sympy.functions.elementary.trigonometric import cot
+
+        args = self.args
+        if len(args) == 1:
+            x, k = args[0], S.Zero
+        else:
+            x, k = args
+
+        z = Wild('z')
+        patt = z * exp(z)
+        match = x.match(patt)
+        if not match:
+            return self
+
+        var = match[z]
+
+        # Skip non-numeric cases
+        if not (var.is_number and k.is_Integer):
+            return self
+
+        re_part = re(var)
+        im_part = im(var)
+
+        if k == 0:
+            if im_part == 0:
+                if (re_part >= -1) == True:
+                    return var
+
+            else:
+                if (im_part > -S.Pi) == True and \
+                    (im_part < S.Pi) == True and \
+                    (re_part > -im_part*cot(im_part)) == True:
+                        return var
+
+        elif k.is_integer:
+            if k.is_positive:
+                cond1 = (im_part > (2*k - 2) * S.Pi) == True and \
+                    (im_part < (2*k - 1) * S.Pi) == True and \
+                    (re_part < -im_part*cot(im_part)) == True
+
+                cond2 = (im_part >= (2*k - 1) * S.Pi) == True and \
+                    (im_part <= 2*k * S.Pi) == True
+
+                cond3 = (im_part > 2*k * S.Pi) == True and \
+                    (im_part < (2*k + 1) * S.Pi) == True and \
+                    (re_part > -im_part*cot(im_part)) == True
+
+                if cond1 or cond2 or cond3:
+                    return var
+
+            elif k.is_negative:
+                cond1 = (im_part < (2*k + 2) * S.Pi) == True and \
+                    (im_part > (2*k + 1) * S.Pi) == True and \
+                    (re_part < -im_part*cot(im_part)) == True
+
+                cond2 = (im_part <= (2*k + 1) * S.Pi) == True and \
+                    (im_part >= 2*k * S.Pi) == True
+
+                cond3 = (im_part < 2*k * S.Pi) == True and \
+                    (im_part > (2*k - 1) * S.Pi) == True and \
+                    (re_part > -im_part*cot(im_part)) == True
+
+                if cond1 or cond2 or cond3:
+                    return var
+
+        return self
