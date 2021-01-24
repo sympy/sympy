@@ -856,42 +856,41 @@ class WignerD(Expr):
         alpha = sympify(self.alpha)
         beta = sympify(self.beta)
         gamma = sympify(self.gamma)
-        if alpha==0 and beta==0 and gamma==0:
-            return KroneckerDelta(m,mp)
+        if alpha == 0 and beta == 0 and gamma == 0:
+            return KroneckerDelta(m, mp)
+        if not j.is_number:
+            raise ValueError(
+                'j parameter must be numerical to evaluate, got %s' % j)
+        r = 0
+        if beta == pi/2:
+            # Varshalovich Equation (5), Section 4.16, page 113, setting
+            # alpha=gamma=0.
+            for k in range(2*j + 1):
+                if k > j + mp or k > j - m or k < mp - m:
+                    continue
+                r += (S.NegativeOne)**k*binomial(j + mp, k)*binomial(j - mp, k + m - mp)
+            r *= (S.NegativeOne)**(m - mp) / 2**j*sqrt(factorial(j + m) *
+                    factorial(j - m) / (factorial(j + mp)*factorial(j - mp)))
         else:
-            if not j.is_number:
-                raise ValueError(
-                    'j parameter must be numerical to evaluate, got %s' % j)
-            r = 0
-            if beta == pi/2:
-                # Varshalovich Equation (5), Section 4.16, page 113, setting
-                # alpha=gamma=0.
-                for k in range(2*j + 1):
-                    if k > j + mp or k > j - m or k < mp - m:
-                        continue
-                    r += (S.NegativeOne)**k*binomial(j + mp, k)*binomial(j - mp, k + m - mp)
-                r *= (S.NegativeOne)**(m - mp) / 2**j*sqrt(factorial(j + m) *
-                        factorial(j - m) / (factorial(j + mp)*factorial(j - mp)))
-            else:
-                # Varshalovich Equation(5), Section 4.7.2, page 87, where we set
-                # beta1=beta2=pi/2, and we get alpha=gamma=pi/2 and beta=phi+pi,
-                # then we use the Eq. (1), Section 4.4. page 79, to simplify:
-                # d(j, m, mp, beta+pi) = (-1)**(j-mp)*d(j, m, -mp, beta)
-                # This happens to be almost the same as in Eq.(10), Section 4.16,
-                # except that we need to substitute -mp for mp.
-                size, mvals = m_values(j)
-                for mpp in mvals:
-                    r += Rotation.d(j, m, mpp, pi/2).doit()*(cos(-mpp*beta) + I*sin(-mpp*beta))*\
-                        Rotation.d(j, mpp, -mp, pi/2).doit()
-                # Empirical normalization factor so results match Varshalovich
-                # Tables 4.3-4.12
-                # Note that this exact normalization does not follow from the
-                # above equations
-                r = r*I**(2*j - m - mp)*(-1)**(2*m)
-                # Finally, simplify the whole expression
-                r = simplify(r)
-            r *= exp(-I*m*alpha)*exp(-I*mp*gamma)
-            return r
+            # Varshalovich Equation(5), Section 4.7.2, page 87, where we set
+            # beta1=beta2=pi/2, and we get alpha=gamma=pi/2 and beta=phi+pi,
+            # then we use the Eq. (1), Section 4.4. page 79, to simplify:
+            # d(j, m, mp, beta+pi) = (-1)**(j-mp)*d(j, m, -mp, beta)
+            # This happens to be almost the same as in Eq.(10), Section 4.16,
+            # except that we need to substitute -mp for mp.
+            size, mvals = m_values(j)
+            for mpp in mvals:
+                r += Rotation.d(j, m, mpp, pi/2).doit()*(cos(-mpp*beta) + I*sin(-mpp*beta))*\
+                    Rotation.d(j, mpp, -mp, pi/2).doit()
+            # Empirical normalization factor so results match Varshalovich
+            # Tables 4.3-4.12
+            # Note that this exact normalization does not follow from the
+            # above equations
+            r = r*I**(2*j - m - mp)*(-1)**(2*m)
+            # Finally, simplify the whole expression
+            r = simplify(r)
+        r *= exp(-I*m*alpha)*exp(-I*mp*gamma)
+        return r
 
 
 Jx = JxOp('J')
@@ -952,7 +951,6 @@ class SpinState(State):
         gamma = sympify(options.get('gamma', 0))
         size, mvals = m_values(j)
         result = zeros(size, 1)
-        # TODO: Use KroneckerDelta if all Euler angles == 0
         # breaks finding angles on L930
         for p, mval in enumerate(mvals):
             if m.is_number:
