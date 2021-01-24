@@ -403,7 +403,7 @@ def periodicity(f, symbol, check=False):
     from sympy.solvers.decompogen import decompogen
     from sympy.polys.polytools import degree
 
-    temp = Dummy('x', real=True)
+    temp = Dummy('x')
     f = f.subs(symbol, temp)
     symbol = temp
 
@@ -463,10 +463,13 @@ def periodicity(f, symbol, check=False):
             # checked below
 
     if isinstance(f, exp):
-        f = f.func(expand_mul(f.args[0]))
-        if im(f) != 0:
-            period_real = periodicity(re(f), symbol)
-            period_imag = periodicity(im(f), symbol)
+        # See issue #20566
+        # Use real substitution exclusively for instances of exp since their expansion depends heavily upon x being real
+        symbol_temp = Dummy('x',real = True)
+        f_temp = (f.func(expand_mul(f.args[0]))).subs(symbol, symbol_temp)
+        if im(f_temp) != 0:
+            period_real = periodicity(re(f_temp), symbol_temp)
+            period_imag = periodicity(im(f_temp), symbol_temp)
             if period_real is not None and period_imag is not None:
                 period = lcim([period_real, period_imag])
 

@@ -1,5 +1,5 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
-                   cot, sec, csc, Abs, symbols, I, re, simplify,
+                   cot, sec, csc, asin, Abs, symbols, I, re, simplify,
                    expint, Rational)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds, is_convex,
@@ -133,7 +133,8 @@ def test_periodicity():
     assert periodicity(tan((3*x-2)%4), x) == Rational(4, 3)
     assert periodicity((sqrt(2)*(x+1)+x) % 3, x) == 3 / (sqrt(2)+1)
     assert periodicity((x**2+1) % x, x) is None
-    assert periodicity(sin(re(x)), x) == 2*pi
+    assert periodicity(sin(re(z)), z) == 2*pi
+    assert periodicity(sin(re(x)), x) == None
     assert periodicity(sin(x)**2 + cos(x)**2, x) is S.Zero
     assert periodicity(tan(x), y) is S.Zero
     assert periodicity(sin(x) + I*cos(x), x) == 2*pi
@@ -152,6 +153,7 @@ def test_periodicity():
     assert periodicity(log(x), x) is None
     assert periodicity(exp(x)**sin(x), x) is None
     assert periodicity(sin(x)**y, y) is None
+    assert periodicity(exp(asin(x)), x) is None
 
     assert periodicity(Abs(sin(Abs(sin(x)))), x) == pi
     assert all(periodicity(Abs(f(x)), x) == pi for f in (
@@ -164,6 +166,7 @@ def test_periodicity():
     assert periodicity(x**3 - x**2 + 1, x) is None
     assert periodicity(Abs(x), x) is None
     assert periodicity(Abs(x**2 - 1), x) is None
+    assert periodicity(Abs(x**2 - 3*x), x) is None
 
     assert periodicity((x**2 + 4)%2, x) is None
     assert periodicity((E**x)%3, x) is None
