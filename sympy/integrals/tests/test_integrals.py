@@ -1704,3 +1704,8 @@ def test_issue_4231():
 def test_issue_17841():
     f = diff(1/(x**2+x+I), x)
     assert integrate(f, x) == 1/(x**2 + x + I)
+
+def test_issue_20831():
+    x = symbols('x',positive=True)
+    f = exp(x)*exp(log(x)**2)
+    assert integrate(f, (x ,1, oo)) == S.Infinity

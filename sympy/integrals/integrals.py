@@ -444,6 +444,12 @@ class Integral(AddWithLimits):
             function = function.doit(**hints)
         if function.is_zero:
             return S.Zero
+        if len(self.limits) == 1 and len(self.limits[0]) == 3:
+            (x, a, b) = self.limits[0]
+            if any(i.is_infinite for i in (a,b)) and \
+                (function.is_positive or function.is_negative):
+                if function.limit(x,[i for i in (a,b) if i.is_infinite][0]):
+                    return S.Infinity
 
         # hacks to handle special cases
         if isinstance(function, MatrixBase):
