@@ -83,7 +83,7 @@ class UnevaluatedOnFree(BooleanFunction):
             raise ValueError("The AppliedPredicates in arg must be applied to a single expression.")
         obj = BooleanFunction.__new__(cls, arg)
         obj.expr = predicate_args.pop()
-        obj.pred = arg.xreplace(Transform(lambda e: e.func, lambda e:
+        obj.pred = arg.xreplace(Transform(lambda e: e.function, lambda e:
             isinstance(e, AppliedPredicate)))
         applied = obj.apply(obj.expr)
         if applied is None:
