@@ -472,6 +472,8 @@ def default_sort_key(item, order=None):
     return (cls_index, 0, item.__class__.__name__
             ), args, S.One.sort_key(), S.One
 
+def _node_count(e):
+    return 1 + sum(map(_node_count, e.args))
 
 def _nodes(e):
     """
@@ -486,7 +488,7 @@ def _nodes(e):
     if isinstance(e, Basic):
         if isinstance(e, Derivative):
             return _nodes(e.expr) + len(e.variables)
-        return e.count(Basic)
+        return _node_count(e)
     elif iterable(e):
         return 1 + sum(_nodes(ei) for ei in e)
     elif isinstance(e, dict):
