@@ -1935,10 +1935,13 @@ def _derivative_dispatch(expr, *variables, **kwargs):
     from sympy.matrices.common import MatrixCommon
     from sympy import MatrixExpr
     from sympy import NDimArray
+    from sympy import Product
     array_types = (MatrixCommon, MatrixExpr, NDimArray, list, tuple, Tuple)
     if isinstance(expr, array_types) or any(isinstance(i[0], array_types) if isinstance(i, (tuple, list, Tuple)) else isinstance(i, array_types) for i in variables):
         from sympy.tensor.array.array_derivatives import ArrayDerivative
         return ArrayDerivative(expr, *variables, **kwargs)
+    if isinstance(expr, Product):
+        return Derivative(expr, *variables, **kwargs).doit()
     return Derivative(expr, *variables, **kwargs)
 
 
