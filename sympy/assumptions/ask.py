@@ -263,7 +263,7 @@ def _extract_facts(expr, symbol, check_reversed_rel=True):
         return
     if isinstance(expr, AppliedPredicate):
         if expr.arg == symbol:
-            return expr.func
+            return expr.function
         else:
             return
     if isinstance(expr, Not) and expr.args[0].func in (And, Or):
