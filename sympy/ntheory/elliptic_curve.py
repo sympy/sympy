@@ -303,7 +303,7 @@ class EllipticCurvePoint:
         self.z = dom(z)
         self._curve = curve
         self._domain = self._curve._domain
-        if not self._curve.__contains__(self):
+        if self not in self._curve:
             raise ValueError("The curve does not contain this point")
 
     def __add__(self, p):
