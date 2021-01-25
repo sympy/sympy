@@ -482,3 +482,14 @@ def test_MatrixSet():
     raises(ValueError, lambda: MatrixSet(2, -2, S.Reals))
     raises(ValueError, lambda: MatrixSet(2.4, -1, S.Reals))
     raises(TypeError, lambda: MatrixSet(2, 2, (1, 2, 3)))
+
+def test_ellipses():
+    from sympy.abc import a, b
+    X = MatrixSymbol('X', a, b)
+
+    assert X[:] == X[...]
+    assert X[2, :] == X[2, ...]
+    assert X[:, 2] == X[..., 2]
+    assert X[a, :] == X[a, ...]
+    assert X[:, b] == X[..., b]
+    assert X[:, :] == X[..., ...]

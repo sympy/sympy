@@ -110,12 +110,16 @@ class DenseMatrix(MatrixBase):
 
                 if isinstance(i, slice):
                     i = range(self.rows)[i]
+                elif (i is Ellipsis):
+                    i = range(self.rows)
                 elif is_sequence(i):
                     pass
                 else:
                     i = [i]
                 if isinstance(j, slice):
                     j = range(self.cols)[j]
+                elif (j is Ellipsis):
+                    j = range(self.cols)
                 elif is_sequence(j):
                     pass
                 else:
@@ -125,6 +129,8 @@ class DenseMatrix(MatrixBase):
             # row-wise decomposition of matrix
             if isinstance(key, slice):
                 return self._mat[key]
+            elif (key is Ellipsis):
+                return self.extract(range(self.rows), range(self.cols))
             return self._mat[a2idx(key)]
 
     def __setitem__(self, key, value):
