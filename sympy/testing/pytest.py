@@ -214,6 +214,19 @@ else:
             raise Failed(msg)
 
 
+def _both_exp_pow(func):
+    from sympy.core.parameters import _exp_is_pow
+
+    def func_wrap():
+        with _exp_is_pow(True):
+            func()
+        with _exp_is_pow(False):
+            func()
+
+    wrapper = functools.update_wrapper(func_wrap, func)
+    return wrapper
+
+
 @contextlib.contextmanager
 def warns_deprecated_sympy():
     '''Shorthand for ``warns(SymPyDeprecationWarning)``

@@ -1,4 +1,3 @@
-from sympy.core.parameters import _exp_is_pow
 from sympy.tensor.toperators import PartialDerivative
 
 from sympy import (
@@ -34,7 +33,7 @@ from sympy.tensor.array import (ImmutableDenseNDimArray,
                                 MutableSparseNDimArray,
                                 MutableDenseNDimArray,
                                 tensorproduct)
-from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
     fibonacci, tribonacci
@@ -340,13 +339,10 @@ def test_latex_symbols_failing():
         r"{\mathrm{mass}}^{3} \cdot {\mathrm{volume}}^{3}"
 
 
+@_both_exp_pow
 def test_latex_functions():
     assert latex(exp(x)) == "e^{x}"
     assert latex(exp(1) + exp(2)) == "e + e^{2}"
-
-    with _exp_is_pow(True):
-        assert latex(exp(x)) == "e^{x}"
-        assert latex(exp(1) + exp(2)) == "e + e^{2}"
 
     f = Function('f')
     assert latex(f(x)) == r'f{\left(x \right)}'

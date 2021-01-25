@@ -14,7 +14,6 @@ from sympy import (
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
 from sympy.core.expr import UnevaluatedExpr
-from sympy.core.parameters import _exp_is_pow
 from sympy.core.trace import Tr
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
@@ -43,7 +42,7 @@ from sympy.tensor.functions import TensorProduct
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices, TensorHead,
                                  TensorElement, tensor_heads)
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross, Laplacian
 
@@ -1299,6 +1298,7 @@ tan (x)\
     assert upretty(expr) == ucode_str
 
 
+@_both_exp_pow
 def test_pretty_functions():
     """Tests for Abs, conjugate, exp, function braces, and factorial."""
     expr = (2*x + exp(x))
@@ -1328,12 +1328,7 @@ e  + 2*x\
 ℯ  + 2⋅x\
 """
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
-    assert upretty(expr) in [ucode_str_1, ucode_str_2]
-
-    with _exp_is_pow(True):
-        expr = (2 * x + exp(x))
-        assert pretty(expr) in [ascii_str_1, ascii_str_2]
-        assert upretty(expr) in [ucode_str_1, ucode_str_3]
+    assert upretty(expr) in [ucode_str_1, ucode_str_2, ucode_str_3]
 
     expr = Abs(x)
     ascii_str = \

@@ -4,15 +4,21 @@ from sympy import (
     adjoint, conjugate, transpose, O, refine,
     sin, cos, sinh, cosh, tanh, exp_polar, re, simplify,
     AccumBounds, MatrixSymbol, Pow, gcd, Sum, Product)
-from sympy.core.parameters import _exp_is_pow
+from sympy.core.parameters import global_parameters
 from sympy.functions.elementary.exponential import match_real_imag
 from sympy.abc import x, y, z
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, _both_exp_pow
 
 
+@_both_exp_pow
 def test_exp_values():
+    if global_parameters.exp_is_pow:
+        assert type(exp(x)) is Pow
+    else:
+        assert type(exp(x)) is exp
+
     k = Symbol('k', integer=True)
 
     assert exp(nan) is nan
@@ -25,20 +31,10 @@ def test_exp_values():
     assert exp(-1 + x).as_base_exp() == (S.Exp1, x - 1)
     assert exp(1 + x).as_base_exp() == (S.Exp1, x + 1)
 
-    with _exp_is_pow(True):
-        assert exp(0) == 1
-        assert exp(1) == E
-
     assert exp(pi*I/2) == I
     assert exp(pi*I) == -1
     assert exp(pi*I*Rational(3, 2)) == -I
     assert exp(2*pi*I) == 1
-
-    with _exp_is_pow(True):
-        assert exp(pi*I/2) == I
-        assert exp(pi*I) == -1
-        assert exp(pi*I*Rational(3, 2)) == -I
-        assert exp(2*pi*I) == 1
 
     assert refine(exp(pi*I*2*k)) == 1
     assert refine(exp(pi*I*2*(k + S.Half))) == -1
@@ -49,15 +45,7 @@ def test_exp_values():
     assert exp(2*log(x)) == x**2
     assert exp(pi*log(x)) == x**pi
 
-    with _exp_is_pow(True):
-        assert exp(log(x)) == x
-        assert exp(2*log(x)) == x**2
-        assert exp(pi*log(x)) == x**pi
-
     assert exp(17*log(x) + E*log(y)) == x**17 * y**E
-
-    with _exp_is_pow(True):
-        assert exp(17*log(x) + E*log(y)) == x**17 * y**E
 
     assert exp(x*log(x)) != x**x
     assert exp(sin(x)*log(x)) != x
@@ -69,6 +57,7 @@ def test_exp_values():
     assert exp(oo, evaluate=False).is_finite is False
 
 
+@_both_exp_pow
 def test_exp_period():
     assert exp(I*pi*Rational(9, 4)) == exp(I*pi/4)
     assert exp(I*pi*Rational(46, 18)) == exp(I*pi*Rational(5, 9))
@@ -77,20 +66,8 @@ def test_exp_period():
     assert exp(I*pi*Rational(37, 8)) - exp(I*pi*Rational(-11, 8)) == 0
     assert exp(I*pi*Rational(-5, 3)) / exp(I*pi*Rational(11, 5)) * exp(I*pi*Rational(148, 15)) == 1
 
-    with _exp_is_pow(True):
-        assert exp(I*pi*Rational(9, 4)) == exp(I*pi/4)
-        assert exp(I*pi*Rational(46, 18)) == exp(I*pi*Rational(5, 9))
-        assert exp(I*pi*Rational(25, 7)) == exp(I*pi*Rational(-3, 7))
-        assert exp(I*pi*Rational(-19, 3)) == exp(-I*pi/3)
-        assert exp(I*pi*Rational(37, 8)) - exp(I*pi*Rational(-11, 8)) == 0
-        assert exp(I*pi*Rational(-5, 3)) / exp(I*pi*Rational(11, 5)) * exp(I*pi*Rational(148, 15)) == 1
-
     assert exp(2 - I*pi*Rational(17, 5)) == exp(2 + I*pi*Rational(3, 5))
     assert exp(log(3) + I*pi*Rational(29, 9)) == 3 * exp(I*pi*Rational(-7, 9))
-
-    with _exp_is_pow(True):
-        assert exp(2 - I*pi*Rational(17, 5)) == Pow(S.Exp1, 2 + I*pi*Rational(3, 5), evaluate=False)
-        assert exp(log(3) + I*pi*Rational(29, 9)) == 3 * Pow(S.Exp1, I*pi*Rational(-7, 9), evaluate=False)
 
     n = Symbol('n', integer=True)
     e = Symbol('e', even=True)
@@ -99,54 +76,36 @@ def test_exp_period():
     assert exp((1 + 4*n)*I*pi/2) == I
     assert exp((-1 + 4*n)*I*pi/2) == -I
 
-    with _exp_is_pow(True):
-        assert exp(e*I*pi) == 1
-        assert exp((e + 1)*I*pi) == -1
-        assert exp((1 + 4*n)*I*pi/2) == I
-        assert exp((-1 + 4*n)*I*pi/2) == -I
 
-
+@_both_exp_pow
 def test_exp_log():
     x = Symbol("x", real=True)
     assert log(exp(x)) == x
     assert exp(log(x)) == x
-    assert log(x).inverse() == exp
-    assert exp(x).inverse() == log
 
-    with _exp_is_pow(True):
-        assert log(exp(x)) == x
-        assert exp(log(x)) == x
+    if not global_parameters.exp_is_pow:
+        assert log(x).inverse() == exp
+        assert exp(x).inverse() == log
 
     y = Symbol("y", polar=True)
     assert log(exp_polar(z)) == z
     assert exp(log(y)) == y
 
-    with _exp_is_pow(True):
-        assert exp(log(y)) == y
 
-
+@_both_exp_pow
 def test_exp_expand():
     e = exp(log(Rational(2))*(1 + x) - log(Rational(2))*x)
     assert e.expand() == 2
     assert exp(x + y) != exp(x)*exp(y)
     assert exp(x + y).expand() == exp(x)*exp(y)
 
-    with _exp_is_pow(True):
-        assert exp(x + y) != exp(x)*exp(y)
-        assert exp(x + y).expand() == exp(x)*exp(y)
 
-
+@_both_exp_pow
 def test_exp__as_base_exp():
     assert exp(x).as_base_exp() == (E, x)
     assert exp(2*x).as_base_exp() == (E, 2*x)
     assert exp(x*y).as_base_exp() == (E, x*y)
     assert exp(-x).as_base_exp() == (E, -x)
-
-    with _exp_is_pow(True):
-        assert exp(x).as_base_exp() == (E, x)
-        assert exp(2*x).as_base_exp() == (E, 2*x)
-        assert exp(x*y).as_base_exp() == (E, x*y)
-        assert exp(-x).as_base_exp() == (E, -x)
 
     # Pow( *expr.as_base_exp() ) == expr    invariant should hold
     assert E**x == exp(x)
@@ -198,6 +157,7 @@ def test_exp_transpose():
     assert transpose(exp(x)) == exp(transpose(x))
 
 
+@_both_exp_pow
 def test_exp_rewrite():
     from sympy.concrete.summations import Sum
     assert exp(x).rewrite(sin) == sinh(x) + cosh(x)
@@ -208,22 +168,10 @@ def test_exp_rewrite():
     assert exp(x).rewrite(tanh) == (1 + tanh(x/2))/(1 - tanh(x/2))
     assert exp(pi*I/4).rewrite(sqrt) == sqrt(2)/2 + sqrt(2)*I/2
     assert exp(pi*I/3).rewrite(sqrt) == S.Half + sqrt(3)*I/2
-    assert exp(x*log(y)).rewrite(Pow) == y**x
-    assert exp(log(x)*log(y)).rewrite(Pow) in [x**log(y), y**log(x)]
-    assert exp(log(log(x))*y).rewrite(Pow) == log(x)**y
-
-    with _exp_is_pow(True):
-        assert exp(x).rewrite(sin) == sinh(x) + cosh(x)
-        assert exp(x*I).rewrite(cos) == cos(x) + I*sin(x)
-        assert exp(1).rewrite(cos) == sinh(1) + cosh(1)
-        assert exp(1).rewrite(sin) == sinh(1) + cosh(1)
-        assert exp(1).rewrite(sin) == sinh(1) + cosh(1)
-        assert exp(x).rewrite(tanh) == (1 + tanh(x/2))/(1 - tanh(x/2))
-        assert exp(pi*I/4).rewrite(sqrt) == sqrt(2)/2 + sqrt(2)*I/2
-        assert exp(pi*I/3).rewrite(sqrt) == S.Half + sqrt(3)*I/2
-        # assert exp(x*log(y)).rewrite(Pow) == y**x
-        # assert exp(log(x)*log(y)).rewrite(Pow) in [x**log(y), y**log(x)]
-        # assert exp(log(log(x))*y).rewrite(Pow) == log(x)**y
+    if not global_parameters.exp_is_pow:
+        assert exp(x*log(y)).rewrite(Pow) == y**x
+        assert exp(log(x)*log(y)).rewrite(Pow) in [x**log(y), y**log(x)]
+        assert exp(log(log(x))*y).rewrite(Pow) == log(x)**y
 
     n = Symbol('n', integer=True)
 
@@ -232,22 +180,12 @@ def test_exp_rewrite():
     assert (Sum((exp(pi*I/3)/2)**n, (n, 0, oo)).rewrite(sqrt).doit().cancel()
             == 4/(3 - sqrt(3)*I))
 
-    with _exp_is_pow(True):
-        assert Sum((exp(pi*I/2)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == Rational(4, 5) + I*Rational(2, 5)
-        assert Sum((exp(pi*I/4)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(1 - sqrt(2)*(1 + I)/4)
-        assert (Sum((exp(pi*I/3)/2)**n, (n, 0, oo)).rewrite(sqrt).doit().cancel()
-                == 4/(3 - sqrt(3)*I))
 
-
+@_both_exp_pow
 def test_exp_leading_term():
     assert exp(x).as_leading_term(x) == 1
     assert exp(2 + x).as_leading_term(x) == exp(2)
     assert exp((2*x + 3) / (x+1)).as_leading_term(x) == exp(3)
-
-    with _exp_is_pow(True):
-        assert exp(x).as_leading_term(x) == 1
-        assert exp(2 + x).as_leading_term(x) == exp(2)
-        assert exp((2*x + 3) / (x+1)).as_leading_term(x) == exp(3)
 
     # The following tests are commented, since now SymPy returns the
     # original function when the leading term in the series expansion does
@@ -257,18 +195,13 @@ def test_exp_leading_term():
     # raises(NotImplementedError, lambda: exp(x + 1/x).as_leading_term(x))
 
 
+@_both_exp_pow
 def test_exp_taylor_term():
     x = symbols('x')
     assert exp(x).taylor_term(1, x) == x
     assert exp(x).taylor_term(3, x) == x**3/6
     assert exp(x).taylor_term(4, x) == x**4/24
     assert exp(x).taylor_term(-1, x) is S.Zero
-
-    with _exp_is_pow(True):
-        assert exp(x).taylor_term(1, x) == x
-        assert exp(x).taylor_term(3, x) == x**3/6
-        assert exp(x).taylor_term(4, x) == x**4/24
-        assert exp(x).taylor_term(-1, x) is S.Zero
 
 
 def test_exp_MatrixSymbol():
@@ -657,6 +590,7 @@ def test_exp_expand_NC():
     assert exp(x + y + z).expand() == exp(x)*exp(y)*exp(z)
 
 
+@_both_exp_pow
 def test_as_numer_denom():
     n = symbols('n', negative=True)
     assert exp(x).as_numer_denom() == (exp(x), 1)
@@ -668,17 +602,6 @@ def test_as_numer_denom():
     assert exp(-I*x).as_numer_denom() == (1, exp(I*x))
     assert exp(-I*n).as_numer_denom() == (1, exp(I*n))
     assert exp(-n).as_numer_denom() == (exp(-n), 1)
-
-    with _exp_is_pow(True):
-        assert exp(x).as_numer_denom() == (exp(x), 1)
-        assert exp(-x).as_numer_denom() == (1, exp(x))
-        assert exp(-2*x).as_numer_denom() == (1, exp(2*x))
-        assert exp(-2).as_numer_denom() == (1, exp(2))
-        assert exp(n).as_numer_denom() == (1, exp(-n))
-        assert exp(-n).as_numer_denom() == (exp(-n), 1)
-        assert exp(-I*x).as_numer_denom() == (1, exp(I*x))
-        assert exp(-I*n).as_numer_denom() == (1, exp(I*n))
-        assert exp(-n).as_numer_denom() == (exp(-n), 1)
 
 
 def test_polar():
