@@ -728,7 +728,7 @@ class Quaternion(Expr):
         Returns
         =======
 
-        S : The scalar part of the quaternion.
+        The scalar part of the quaternion.
 
         Examples
         ========
@@ -744,9 +744,7 @@ class Quaternion(Expr):
 
         """
 
-        q = self
-        S = q.a
-        return S
+        return self.a
 
     def vector(self):
         """
@@ -771,18 +769,16 @@ class Quaternion(Expr):
 
         """
 
-        q = self
-        V = Quaternion(0, q.b, q.c, q.d)
-        return V
+        return Quaternion(0, self.b, self.c, self.d)
 
     def axis(self):
         """
-        Returns the axis part of the quaternion.
+        Returns the axis that is the versor of the vector part of the quaternion.
 
         Returns
         =======
 
-        Ax : The axis of the quaternion.
+        The axis of the quaternion.
 
         Examples
         ========
@@ -798,9 +794,7 @@ class Quaternion(Expr):
 
         """
 
-        q = self
-        AX = Quaternion(0, q.b, q.c, q.d).normalize()
-        return AX
+        return Quaternion(0, self.b, self.c, self.d).normalize()
 
     def is_pure(self):
         """
@@ -820,17 +814,16 @@ class Quaternion(Expr):
 
         """
 
-        q = self
-        return q.a == 0
+        return self.a == 0 and not (self.a == self.b == self.c == self.d)
 
     def angle(self):
         """
-        Returns the angle of the quaternion.
+        Returns the angle of the quaternion measured in the real-axis plane.
 
         Returns
         =======
 
-        ang : The angle of the quaternion.
+        The angle of the quaternion.
 
         Examples
         ========
@@ -846,13 +839,11 @@ class Quaternion(Expr):
 
         """
 
-        q = self
-        ang = atan2(Quaternion(0, q.b, q.c, q.d).norm(), q.a)
-        return ang
+        return atan2(Quaternion(0, self.b, self.c, self.d).norm(), self.a)
 
     def coplanar(self, other):
         """
-        Returns True if the two quaternions are coplanar else returns False.
+        Returns True if the plane of the two quaternions are coplanar else returns False.
 
         Parameters
         ==========
@@ -873,14 +864,18 @@ class Quaternion(Expr):
         False
 
         """
+        if not self.is_pure() and self.a == 0 or not other.is_pure() and other.a == 0:
+            raise ValueError('Any of the provided quaternions must not be 0')
 
         aq = self.axis()
         ar = other.axis()
+
         return (aq == ar or aq == -ar)
 
     def ternary_coplanar(self, q1, q2):
         """
-        Returns True if the pure quaternions self, q1, and q2 are coplanar else returns False.
+        Returns True if the axis of the pure quaternions seen as 3D vectors
+        self, q1, and q2 are coplanar else returns False.
 
         Parameters
         ==========
@@ -905,14 +900,15 @@ class Quaternion(Expr):
 
         """
 
-        if self.a == 0 and q1.a == 0 and q2.a == 0:
-            return self.coplanar(q1) and self.coplanar(q2)
-        else:
+        if not q1.is_pure() or not q1.is_pure() or not self.is_pure():
             raise ValueError('The provided quaternions must be pure')
+
+        M = Matrix([[self.b, self.c, self.d], [q1.b, q1.c, q1.d], [q2.b, q2.c, q2.d]])
+        return M.det() == 0
 
     def parallel(self, other):
         """
-        Returns True if the two pure quaternions are parallel else returns False.
+        Returns True if the two pure quaternions seen as 3D vectors are parallel else returns False.
 
         Parameters
         ==========
@@ -934,14 +930,14 @@ class Quaternion(Expr):
 
         """
 
-        if self.a == 0 and other.a == 0:
-            return (Quaternion._generic_mul(self, other) == Quaternion._generic_mul(other, self))
-        else:
+        if not self.is_pure() or not other.is_pure():
             raise ValueError('The provided quaternions must be pure')
+
+        return (Quaternion._generic_mul(self, other) == Quaternion._generic_mul(other, self))
 
     def orthogonal(self, other):
         """
-        Returns True if the two pure quaternions are orthogonal else returns False.
+        Returns True if the two pure quaternions seen as 3D vectors are orthogonal else returns False.
 
         Parameters
         ==========
@@ -964,10 +960,10 @@ class Quaternion(Expr):
 
         """
 
-        if self.a == 0 and other.a == 0:
-            return (Quaternion._generic_mul(self, other) == -Quaternion._generic_mul(other, self))
-        else:
+        if not self.is_pure() or not other.is_pure():
             raise ValueError('The provided quaternions must be pure')
+
+        return (Quaternion._generic_mul(self, other) == -Quaternion._generic_mul(other, self))
 
     def index_vector(self):
         """
@@ -976,7 +972,7 @@ class Quaternion(Expr):
         Returns
         =======
 
-        I : Index vector of the quaternion.
+            Index vector of the quaternion.
 
         Examples
         ========
@@ -992,9 +988,7 @@ class Quaternion(Expr):
 
         """
 
-        q = self
-        I = q.norm() * Quaternion(0, q.b, q.c, q.d).normalize()
-        return I
+        return self.norm() * Quaternion(0, self.b, self.c, self.d).normalize()
 
     def mensor(self):
         """
@@ -1003,7 +997,7 @@ class Quaternion(Expr):
         Returns
         =======
 
-        M : Mensor of the quaternion.
+        Mensor of the quaternion.
 
         Examples
         ========
@@ -1019,6 +1013,4 @@ class Quaternion(Expr):
 
         """
 
-        q = self
-        M = ln(q.norm())
-        return M
+        return ln(self.norm())

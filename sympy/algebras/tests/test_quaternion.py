@@ -112,23 +112,29 @@ def test_quaternion_functions():
     assert q1.axis() == Quaternion(0, 2*sqrt(29)/29, 3*sqrt(29)/29, 4*sqrt(29)/29)
     assert q.axis() == Quaternion(0, x/sqrt(x**2 + y**2 + z**2), y/sqrt(x**2 + y**2 + z**2), z/sqrt(x**2 + y**2 + z**2))
 
-    assert q0.is_pure() == True
+    assert q0.is_pure() == False
     assert q1.is_pure() == False
+    assert Quaternion(0, 0, 0, 3).is_pure() == True
+    assert Quaternion(0, 2, 10, 3).is_pure() == True
 
     assert q1.angle() == atan(sqrt(29))
     assert q.angle() == atan2(sqrt(x**2 + y**2 + z**2), w)
 
-    assert q1.coplanar(q0) == False
+    assert q1.coplanar(Quaternion(2, 7, 4, 1)) == False
     assert q1.coplanar(Quaternion(2, 4, 6, 8)) == True
+    raises(ValueError, lambda: q0.coplanar(q1))
 
-    assert Quaternion(0, 3, 9, 4).ternary_coplanar(q0, Quaternion(0, 4, 6, 8)) == False
     assert Quaternion(0, 2, 3, 4).ternary_coplanar(Quaternion(0, 8, 12, 16), Quaternion(0, 4, 6, 8)) == True
+    assert Quaternion(0, 0, 3, 4).ternary_coplanar(Quaternion(0, 8, 2, 6), Quaternion(0, 1, 6, 6)) == False
+    raises(ValueError, lambda: q1.ternary_coplanar(q0, Quaternion(0, 4, 6, 8)))
 
     assert Quaternion(0, 1, 2, 3).parallel(Quaternion(0, 2, 4, 6)) == True
     assert Quaternion(0, 1, 2, 3).parallel(Quaternion(0, 2, 2, 6)) == False
+    raises(ValueError, lambda: q0.parallel(q1))
 
     assert Quaternion(0, 1, 2, 3).orthogonal(Quaternion(0, -2, 1, 0)) == True
     assert Quaternion(0, 2, 4, 7).orthogonal(Quaternion(0, 2, 2, 6)) == False
+    raises(ValueError, lambda: q0.orthogonal(q1))
 
     assert q1.index_vector() == Quaternion(0, 2*sqrt(870)/29, 3*sqrt(870)/29, 4*sqrt(870)/29)
     assert Quaternion(0, 3, 9, 4).index_vector() == Quaternion(0, 3, 9, 4)
