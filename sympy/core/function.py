@@ -39,7 +39,7 @@ from .cache import cacheit
 from .compatibility import iterable, is_sequence, as_int, ordered, Iterable
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
-from .numbers import Rational, Float
+from .numbers import Rational, Float, I
 from .operations import LatticeOp
 from .rules import Transform
 from .singleton import S
@@ -555,8 +555,18 @@ class Function(Application, Expr):
             imp = getattr(self, '_imp_', None)
             if imp is None:
                 return None
+            if isinstance(self.is_real, bool):
+                cast_to_complex = not self.is_real
+            else:
+                cast_to_complex = False
+            from mpmath import re, im, workdps
             try:
-                return Float(imp(*[i.evalf(prec) for i in self.args]), prec)
+                num = imp(*[i.evalf(prec) for i in self.args])
+                with workdps(prec):
+                    if cast_to_complex:
+                        return Float(re(num), prec) + Float(im(num), prec) * I
+                    else:
+                        return Float(num, prec)
             except (TypeError, ValueError):
                 return None
 
