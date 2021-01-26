@@ -330,7 +330,9 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral",
     "Liouville_Integral",
-       )
+    "2nd_nonlinear_autonomous_conserved",
+    "2nd_nonlinear_autonomous_conserved_Integral",
+    )
 
 lie_heuristics = (
     "abaco1_simple",
@@ -708,7 +710,8 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
             rv = _handle_Integral(exprs, func, hint)
 
     if isinstance(rv, list):
-        rv = _remove_redundant_solutions(eq, rv, order, func.args[0])
+        if simplify:
+            rv = _remove_redundant_solutions(eq, rv, order, func.args[0])
         if len(rv) == 1:
             rv = rv[0]
     if ics and not 'power_series' in hint:
@@ -1049,6 +1052,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         Bernoulli: ('Bernoulli',),
         Factorable: ('factorable',),
         RiccatiSpecial: ('Riccati_special_minus2',),
+        SecondNonlinearAutonomousConserved: ('2nd_nonlinear_autonomous_conserved',),
     }
     for solvercls in solvers:
         solver = solvercls(ode)
@@ -1365,6 +1369,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
                 if rn and rn[b4] != 0:
                     rn = {'b':rn[a4],'m':rn[b4]}
                     matching_hints["2nd_linear_airy"] = rn
+
+
     if order > 0:
         # Any ODE that can be solved with a substitution and
         # repeated integration e.g.:
@@ -6686,7 +6692,7 @@ def _nonlinear_2eq_order1_type3(x, y, t, eq):
     F = r1[f].subs(x(t), u).subs(y(t), v(u))
     G = r2[g].subs(x(t), u).subs(y(t), v(u))
     sol2r = dsolve(Eq(diff(v(u), u), G/F))
-    if isinstance(sol2r, Expr):
+    if isinstance(sol2r, Equality):
         sol2r = [sol2r]
     for sol2s in sol2r:
         sol1 = solve(Integral(1/F.subs(v(u), sol2s.rhs), u).doit() - t - C2, u)
@@ -7088,4 +7094,5 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 
 #This import is written at the bottom to avoid circular imports.
 from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
-        Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial)
+        Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
+        SecondNonlinearAutonomousConserved)

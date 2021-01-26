@@ -1,9 +1,10 @@
 from collections import defaultdict
+from functools import reduce
 
 from sympy.core import (sympify, Basic, S, Expr, expand_mul, factor_terms,
     Mul, Dummy, igcd, FunctionClass, Add, symbols, Wild, expand)
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import reduce, iterable, SYMPY_INTS
+from sympy.core.compatibility import iterable, SYMPY_INTS
 from sympy.core.function import count_ops, _mexpand
 from sympy.core.numbers import I, Integer
 from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth

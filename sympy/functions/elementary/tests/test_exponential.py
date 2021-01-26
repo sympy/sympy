@@ -382,6 +382,10 @@ def test_exp_assumptions():
     assert exp(pi*r).is_algebraic is None
     assert exp(pi*rn).is_algebraic is False
 
+    assert exp(0, evaluate=False).is_algebraic is True
+    assert exp(I*pi/3, evaluate=False).is_algebraic is True
+    assert exp(I*pi*r, evaluate=False).is_algebraic is True
+
 
 def test_exp_AccumBounds():
     assert exp(AccumBounds(1, 2)) == AccumBounds(E, E**2)

@@ -13,7 +13,6 @@ and so on).
 
 import re
 from sympy import Symbol, NumberSymbol, I, zoo, oo
-from sympy.core.compatibility import exec_
 from sympy.utilities.iterables import numbered_symbols
 
 #  We parse the expression string into a tree that identifies functions. Then
@@ -266,7 +265,7 @@ class Lambdifier:
             print(newexpr)
         eval_str = 'lambda %s : ( %s )' % (argstr, newexpr)
         self.eval_str = eval_str
-        exec_("from __future__ import division; MYNEWLAMBDA = %s" % eval_str, namespace)
+        exec("from __future__ import division; MYNEWLAMBDA = %s" % eval_str, namespace)
         self.lambda_func = namespace['MYNEWLAMBDA']
 
     def __call__(self, *args, **kwargs):

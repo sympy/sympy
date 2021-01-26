@@ -10,7 +10,7 @@ from .dense import (
     randMatrix, rot_axis1, rot_axis2, rot_axis3, symarray, wronskian,
     zeros)
 from .dense import MutableDenseMatrix
-from .matrices import DeferredVector, MatrixBase
+from .matrices import DeferredVector, MatrixBase, MatrixKind
 
 Matrix = MutableMatrix = MutableDenseMatrix
 
@@ -42,7 +42,7 @@ __all__ = [
 
     'MutableDenseMatrix',
 
-    'DeferredVector', 'MatrixBase',
+    'DeferredVector', 'MatrixBase', 'MatrixKind',
 
     'Matrix', 'MutableMatrix',
 

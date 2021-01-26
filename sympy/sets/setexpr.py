@@ -4,7 +4,10 @@ from sympy.sets import ImageSet
 from sympy.sets.sets import set_add, set_sub, set_mul, set_div, set_pow, set_function
 
 class SetExpr(Expr):
-    """An expression that can take on values of a set
+    """An expression that can take on values of a set.
+
+    Examples
+    ========
 
     >>> from sympy import Interval, FiniteSet
     >>> from sympy.sets.setexpr import SetExpr

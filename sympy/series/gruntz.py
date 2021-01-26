@@ -116,9 +116,11 @@ And check manually which line is wrong. Then go to the source code and
 debug this function to figure out the exact problem.
 
 """
+from functools import reduce
+
 from sympy import cacheit
 from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul
-from sympy.core.compatibility import reduce
+
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp, powdenest
@@ -150,6 +152,9 @@ def compare(a, b, x):
 class SubsSet(dict):
     """
     Stores (expr, dummy) pairs, and how to rewrite expr-s.
+
+    Explanation
+    ===========
 
     The gruntz algorithm needs to rewrite certain expressions in term of a new
     variable w. We cannot use subs, because it is just too smart for us. For
@@ -314,7 +319,8 @@ def mrv(e, x):
 
 
 def mrv_max3(f, expsf, g, expsg, union, expsboth, x):
-    """Computes the maximum of two sets of expressions f and g, which
+    """
+    Computes the maximum of two sets of expressions f and g, which
     are in the same comparability class, i.e. max() compares (two elements of)
     f and g and returns either (f, expsf) [if f is larger], (g, expsg)
     [if g is larger] or (union, expsboth) [if f, g are of the same class].
@@ -416,6 +422,9 @@ def sign(e, x):
 def limitinf(e, x, leadsimp=False):
     """Limit e(x) for x-> oo.
 
+    Explanation
+    ===========
+
     If ``leadsimp`` is True, an attempt is made to simplify the leading
     term of the series expansion of ``e``. That may succeed even if
     ``e`` cannot be simplified.
@@ -471,7 +480,7 @@ def moveup(l, x):
 @debug
 @timeit
 def calculate_series(e, x, logx=None):
-    """ Calculates at least one term of the series of "e" in "x".
+    """ Calculates at least one term of the series of ``e`` in ``x``.
 
     This is a place that fails most often, so it is in its own function.
     """
@@ -639,10 +648,13 @@ def gruntz(e, z, z0, dir="+"):
     """
     Compute the limit of e(z) at the point z0 using the Gruntz algorithm.
 
-    z0 can be any expression, including oo and -oo.
+    Explanation
+    ===========
 
-    For dir="+" (default) it calculates the limit from the right
-    (z->z0+) and for dir="-" the limit from the left (z->z0-). For infinite z0
+    ``z0`` can be any expression, including oo and -oo.
+
+    For ``dir="+"`` (default) it calculates the limit from the right
+    (z->z0+) and for ``dir="-"`` the limit from the left (z->z0-). For infinite z0
     (oo or -oo), the dir argument doesn't matter.
 
     This algorithm is fully described in the module docstring in the gruntz.py
