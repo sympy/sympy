@@ -1,4 +1,5 @@
-from sympy import symbols, IndexedBase, Identity, cos, Inverse, tensorcontraction, permutedims, tensorproduct
+from sympy import symbols, IndexedBase, Identity, cos, Inverse, tensorcontraction, permutedims, tensorproduct, expand, \
+    ZeroMatrix
 from sympy.codegen.array_utils import (CodegenArrayContraction,
                                        CodegenArrayTensorProduct, CodegenArrayDiagonal,
                                        CodegenArrayPermuteDims, CodegenArrayElementwiseAdd,
@@ -11,6 +12,7 @@ from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.expressions.diagonal import DiagMatrix
 from sympy.matrices import Trace, MatAdd, MatMul, Transpose
+from sympy.tensor.array.array_expressions import ZeroArray
 from sympy.testing.pytest import raises
 import random
 
@@ -101,6 +103,23 @@ def test_codegen_array_recognize_matrix_mul_lines():
     cg = parse_indexed_expression(elem)
     assert recognize_matrix_expression(cg) == -2*M*N
 
+    a = MatrixSymbol("a", k, 1)
+    b = MatrixSymbol("b", k, 1)
+    c = MatrixSymbol("c", k, 1)
+    cg = CodegenArrayPermuteDims(
+        CodegenArrayContraction(
+            CodegenArrayTensorProduct(
+                a,
+                CodegenArrayElementwiseAdd(
+                    CodegenArrayTensorProduct(b, c),
+                    CodegenArrayTensorProduct(c, b),
+                )
+            ), (2, 4)), [0, 1, 3, 2])
+    assert recognize_matrix_expression(cg) == expand(a*(b.T*c + c.T*b))
+
+    za = ZeroArray(m, n)
+    assert recognize_matrix_expression(za) == ZeroMatrix(m, n)
+
 
 def test_codegen_array_flatten():
 
@@ -160,6 +179,12 @@ def test_codegen_array_flatten():
 
     cgnested = CodegenArrayDiagonal(cg4, (1, 2))
     assert cgnested == CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N, P, Q), (1, 5), (3, 7), (2, 4))
+
+    cg = CodegenArrayElementwiseAdd(M, N)
+    cg2 = CodegenArrayElementwiseAdd(cg, P)
+    assert isinstance(cg2, CodegenArrayElementwiseAdd)
+    assert cg2.args == (M, N, P)
+    assert cg2.shape == (k, k)
 
 
 def test_codegen_array_parse():
@@ -692,3 +717,63 @@ def test_normalize_diagonal_contraction():
     expr = CodegenArrayContraction(td, (2, 1), (0, 4, 6, 5, 3))
     result = CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P, Q), (0, 1, 3, 5, 6, 7), (2, 4))
     assert expr == result
+
+
+def test_array_wrong_permutation_size():
+    cg = CodegenArrayTensorProduct(M, N)
+    raises(ValueError, lambda: CodegenArrayPermuteDims(cg, [1, 0]))
+    raises(ValueError, lambda: CodegenArrayPermuteDims(cg, [1, 0, 2, 3, 5, 4]))
+
+
+def test_nested_array_elementwise_add():
+    cg = CodegenArrayContraction(CodegenArrayElementwiseAdd(
+        CodegenArrayTensorProduct(M, N),
+        CodegenArrayTensorProduct(N, M)
+    ), (1, 2))
+    result = CodegenArrayElementwiseAdd(
+        CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2)),
+        CodegenArrayContraction(CodegenArrayTensorProduct(N, M), (1, 2))
+    )
+    assert cg == result
+
+    cg = CodegenArrayDiagonal(CodegenArrayElementwiseAdd(
+        CodegenArrayTensorProduct(M, N),
+        CodegenArrayTensorProduct(N, M)
+    ), (1, 2))
+    result = CodegenArrayElementwiseAdd(
+        CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N), (1, 2)),
+        CodegenArrayDiagonal(CodegenArrayTensorProduct(N, M), (1, 2))
+    )
+    assert cg == result
+
+
+def test_array_expr_zero_array():
+    za1 = ZeroArray(k, l, m, n)
+    zm1 = ZeroMatrix(m, n)
+
+    za2 = ZeroArray(k, m, m, n)
+    zm2 = ZeroMatrix(m, m)
+    zm3 = ZeroMatrix(k, k)
+
+    assert CodegenArrayTensorProduct(M, N, za1) == ZeroArray(k, k, k, k, k, l, m, n)
+    assert CodegenArrayTensorProduct(M, N, zm1) == ZeroArray(k, k, k, k, m, n)
+
+    assert CodegenArrayContraction(za1, (3,)) == ZeroArray(k, l, m)
+    assert CodegenArrayContraction(zm1, (1,)) == ZeroArray(m)
+    assert CodegenArrayContraction(za2, (1, 2)) == ZeroArray(k, n)
+    assert CodegenArrayContraction(zm2, (0, 1)) == 0
+
+    assert CodegenArrayDiagonal(za2, (1, 2)) == ZeroArray(k, n, m)
+    assert CodegenArrayDiagonal(zm2, (0, 1)) == ZeroArray(m)
+
+    assert CodegenArrayPermuteDims(za1, [2, 1, 3, 0]) == ZeroArray(m, l, n, k)
+    assert CodegenArrayPermuteDims(zm1, [1, 0]) == ZeroArray(n, m)
+
+    assert CodegenArrayElementwiseAdd(za1) == za1
+    assert CodegenArrayElementwiseAdd(zm1) == ZeroArray(m, n)
+    tp1 = CodegenArrayTensorProduct(MatrixSymbol("A", k, l), MatrixSymbol("B", m, n))
+    assert CodegenArrayElementwiseAdd(tp1, za1) == tp1
+    tp2 = CodegenArrayTensorProduct(MatrixSymbol("C", k, l), MatrixSymbol("D", m, n))
+    assert CodegenArrayElementwiseAdd(tp1, za1, tp2) == CodegenArrayElementwiseAdd(tp1, tp2)
+    assert CodegenArrayElementwiseAdd(M, zm3) == M
+    assert CodegenArrayElementwiseAdd(M, N, zm3) == CodegenArrayElementwiseAdd(M, N)

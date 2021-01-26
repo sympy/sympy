@@ -15,6 +15,10 @@ from sympy.testing.pytest import XFAIL, SKIP
 a, b, c, x, y, z = symbols('a,b,c,x,y,z')
 
 
+whitelist = [
+     "sympy.assumptions.predicates",    # tested by test_predicates()
+]
+
 def test_all_classes_are_tested():
     this = os.path.split(__file__)[0]
     path = os.path.join(this, os.pardir, os.pardir)
@@ -27,6 +31,9 @@ def test_all_classes_are_tested():
 
     for root, dirs, files in os.walk(sympy_path):
         module = root.replace(prefix, "").replace(os.sep, ".")
+
+        if module in whitelist:
+            continue
 
         for file in files:
             if file.startswith(("_", "test_", "bench_")):
@@ -91,7 +98,17 @@ def test_sympy__assumptions__assume__AppliedPredicate():
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
     assert _test_args(Q.is_true(True))
 
+@SKIP("abstract class")
 def test_sympy__assumptions__assume__Predicate():
+    pass
+
+def test_predicates():
+    from sympy.assumptions.ask import get_known_facts_keys
+    predicates = get_known_facts_keys()
+    for p in predicates:
+        assert _test_args(p)
+
+def test_sympy__assumptions__assume__UndefinedPredicate():
     from sympy.assumptions.assume import Predicate
     assert _test_args(Predicate("test"))
 
@@ -1054,6 +1071,10 @@ def test_sympy__stats__crv__SingleContinuousPSpace():
     assert _test_args(SingleContinuousPSpace(x, nd))
 
 @SKIP("abstract class")
+def test_sympy__stats__rv__Distribution():
+    pass
+
+@SKIP("abstract class")
 def test_sympy__stats__crv__SingleContinuousDistribution():
     pass
 
@@ -1134,6 +1155,7 @@ def test_sympy__stats__drv__DiscreteDistribution():
 @SKIP("abstract class")
 def test_sympy__stats__drv__DiscreteDomain():
     pass
+
 
 def test_sympy__stats__rv__RandomDomain():
     from sympy.stats.rv import RandomDomain
@@ -1842,6 +1864,14 @@ def test_sympy__stats__matrix_distributions__MatrixNormalDistribution():
     S2 = MatrixSymbol('S2', 2, 2)
     assert _test_args(MatrixNormalDistribution(L, S1, S2))
 
+def test_sympy__stats__matrix_distributions__MatrixStudentTDistribution():
+    from sympy.stats.matrix_distributions import MatrixStudentTDistribution
+    from sympy import MatrixSymbol
+    v = symbols('v', positive=True)
+    Omega = MatrixSymbol('Omega', 3, 3)
+    Sigma = MatrixSymbol('Sigma', 1, 1)
+    Location = MatrixSymbol('Location', 1, 3)
+    assert _test_args(MatrixStudentTDistribution(v, Location, Omega, Sigma))
 
 def test_sympy__utilities__matchpy_connector__WildDot():
     from sympy.utilities.matchpy_connector import WildDot
@@ -1945,6 +1975,11 @@ def test_sympy__functions__combinatorial__numbers__euler():
 def test_sympy__functions__combinatorial__numbers__carmichael():
     from sympy.functions.combinatorial.numbers import carmichael
     assert _test_args(carmichael(x))
+
+
+def test_sympy__functions__combinatorial__numbers__motzkin():
+    from sympy.functions.combinatorial.numbers import motzkin
+    assert _test_args(motzkin(5))
 
 
 def test_sympy__functions__combinatorial__numbers__fibonacci():
@@ -4331,6 +4366,12 @@ def test_sympy__tensor__array__array_derivatives__ArrayDerivative():
     assert _test_args(arrder)
 
 
+def test_sympy__tensor__array__array_expressions__ZeroArray():
+    from sympy.tensor.array.array_expressions import ZeroArray
+    m, n, k = symbols("m n k")
+    za = ZeroArray(m, n, k, 2)
+    assert _test_args(za)
+
 def test_sympy__tensor__functions__TensorProduct():
     from sympy.tensor.functions import TensorProduct
     A = MatrixSymbol('A', 3, 3)
@@ -4813,8 +4854,7 @@ def test_sympy__codegen__array_utils__CodegenArrayElementwiseAdd():
 
 def test_sympy__codegen__array_utils__CodegenArrayPermuteDims():
     from sympy.codegen.array_utils import CodegenArrayPermuteDims
-    from sympy import IndexedBase
-    A = symbols("A", cls=IndexedBase)
+    A = MatrixSymbol("A", 4, 4)
     assert _test_args(CodegenArrayPermuteDims(A, (1, 0)))
 
 

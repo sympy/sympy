@@ -90,7 +90,10 @@ class _IndexStructure(CantSympify):
     @staticmethod
     def from_indices(*indices):
         """
-        Create a new ``_IndexStructure`` object from a list of ``indices``
+        Create a new ``_IndexStructure`` object from a list of ``indices``.
+
+        Explanation
+        ===========
 
         ``indices``     ``TensorIndex`` objects, the indices. Contractions are
                         detected upon construction.
@@ -121,7 +124,10 @@ class _IndexStructure(CantSympify):
     @staticmethod
     def _free_dum_from_indices(*indices):
         """
-        Convert ``indices`` into ``free``, ``dum`` for single component tensor
+        Convert ``indices`` into ``free``, ``dum`` for single component tensor.
+
+        Explanation
+        ===========
 
         ``free``     list of tuples ``(index, pos, 0)``,
                      where ``pos`` is the position of index in
@@ -267,7 +273,10 @@ class _IndexStructure(CantSympify):
 
     def perm2tensor(self, g, is_canon_bp=False):
         """
-        Returns a ``_IndexStructure`` instance corresponding to the permutation ``g``
+        Returns a ``_IndexStructure`` instance corresponding to the permutation ``g``.
+
+        Explanation
+        ===========
 
         ``g``  permutation corresponding to the tensor in the representation
         used in canonicalization
@@ -308,7 +317,7 @@ class _IndexStructure(CantSympify):
         """
         Returns ``(g, dummies, msym, v)``, the entries of ``canonicalize``
 
-        see ``canonicalize`` in ``tensor_can.py`` in combinatorics module
+        See ``canonicalize`` in ``tensor_can.py`` in combinatorics module.
         """
         # to be called after sorted_components
         from sympy.combinatorics.permutations import _af_new
@@ -383,6 +392,9 @@ class _TensorDataLazyEvaluator(CantSympify):
     EXPERIMENTAL: do not rely on this class, it may change without deprecation
     warnings in future versions of SymPy.
 
+    Explanation
+    ===========
+
     This object contains the logic to associate components data to a tensor
     expression. Components data are set via the ``.data`` property of tensor
     expressions, is stored inside this class as a mapping between the tensor
@@ -414,6 +426,9 @@ class _TensorDataLazyEvaluator(CantSympify):
     def _get(self, key):
         """
         Retrieve ``data`` associated with ``key``.
+
+        Explanation
+        ===========
 
         This algorithm looks into ``self._substitutions_dict`` for all
         ``TensorHead`` in the ``TensExpr`` (or just ``TensorHead`` if key is a
@@ -576,6 +591,9 @@ class _TensorDataLazyEvaluator(CantSympify):
         """
         Set the components data of a tensor object/expression.
 
+        Explanation
+        ===========
+
         Components data are transformed to the all-contravariant form and stored
         with the corresponding ``TensorHead`` object. If a ``TensorHead`` object
         cannot be uniquely identified, it will raise an error.
@@ -610,6 +628,9 @@ class _TensorDataLazyEvaluator(CantSympify):
         """
         Assign data to the ``metric`` tensor. The metric tensor behaves in an
         anomalous way when raising and lowering indices.
+
+        Explanation
+        ===========
 
         A fully covariant metric is the inverse transpose of the fully
         contravariant metric (it is meant matrix inverse). If the metric is
@@ -782,9 +803,9 @@ class _TensorManager:
 
     def comm_symbols2i(self, i):
         """
-        get the commutation group number corresponding to ``i``
+        Get the commutation group number corresponding to ``i``.
 
-        ``i`` can be a symbol or a number or a string
+        ``i`` can be a symbol or a number or a string.
 
         If ``i`` is not already defined its commutation group number
         is set.
@@ -807,7 +828,7 @@ class _TensorManager:
 
     def set_comm(self, i, j, c):
         """
-        set the commutation parameter ``c`` for commutation groups ``i, j``
+        Set the commutation parameter ``c`` for commutation groups ``i, j``.
 
         Parameters
         ==========
@@ -879,7 +900,7 @@ class _TensorManager:
 
     def set_comms(self, *args):
         """
-        set the commutation group numbers ``c`` for symbols ``i, j``
+        Set the commutation group numbers ``c`` for symbols ``i, j``.
 
         Parameters
         ==========
@@ -1276,7 +1297,7 @@ class TensorIndex(Basic):
 
 def tensor_indices(s, typ):
     """
-    Returns list of tensor indices given their names and their types
+    Returns list of tensor indices given their names and their types.
 
     Parameters
     ==========
@@ -1442,6 +1463,9 @@ def tensorsymmetry(*args):
     Returns a ``TensorSymmetry`` object. This method is deprecated, use
     ``TensorSymmetry.direct_product()`` or ``.riemann()`` instead.
 
+    Explanation
+    ===========
+
     One can represent a tensor with any monoterm slot symmetry group
     using a BSGS.
 
@@ -1544,9 +1568,13 @@ class TensorType(Basic):
         """
         Return a TensorHead object or a list of TensorHead objects.
 
-        ``s``  name or string of names
+        Parameters
+        ==========
 
-        ``comm``: commutation group number
+        s : name or string of names.
+
+        comm : Commutation group.
+
         see ``_TensorManager.set_comm``
         """
         if isinstance(s, str):
@@ -1586,7 +1614,7 @@ def tensorhead(name, typ, sym=None, comm=0):
 
 class TensorHead(Basic):
     """
-    Tensor head of the tensor
+    Tensor head of the tensor.
 
     Parameters
     ==========
@@ -1749,6 +1777,9 @@ class TensorHead(Basic):
     def __call__(self, *indices, **kw_args):
         """
         Returns a tensor with indices.
+
+        Explanation
+        ===========
 
         There is a special behavior in case of indices denoted by ``True``,
         they are considered auto-matrix indices, their slots are automatically
@@ -1917,6 +1948,9 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
     def __mul__(self, other):
         """
         Multiply two tensors using Einstein summation convention.
+
+        Explanation
+        ===========
 
         If the two tensors have an index in common, one contravariant
         and the other covariant, in their product the indices are summed
@@ -2277,7 +2311,7 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
 
 class TensAdd(TensExpr, AssocOp):
     """
-    Sum of tensors
+    Sum of tensors.
 
     Parameters
     ==========
@@ -2536,7 +2570,7 @@ class TensAdd(TensExpr, AssocOp):
 
     def contract_metric(self, g):
         """
-        Raise or lower indices with the metric ``g``
+        Raise or lower indices with the metric ``g``.
 
         Parameters
         ==========
@@ -2629,6 +2663,9 @@ class Tensor(TensExpr):
     """
     Base tensor class, i.e. this represents a tensor, the single unit to be
     put into an expression.
+
+    Explanation
+    ===========
 
     This object is usually created from a ``TensorHead``, by attaching indices
     to it. Indices preceded by a minus sign are considered contravariant,
@@ -2803,7 +2840,7 @@ class Tensor(TensExpr):
 
     def perm2tensor(self, g, is_canon_bp=False):
         """
-        Returns the tensor corresponding to the permutation ``g``
+        Returns the tensor corresponding to the permutation ``g``.
 
         For further details, see the method in ``TIDS`` with the same name.
         """
@@ -2852,9 +2889,9 @@ class Tensor(TensExpr):
 
     def substitute_indices(self, *index_tuples):
         """
-        Return a tensor with free indices substituted according to ``index_tuples``
+        Return a tensor with free indices substituted according to ``index_tuples``.
 
-        ``index_types`` list of tuples ``(old_index, new_index)``
+        ``index_types`` list of tuples ``(old_index, new_index)``.
 
         Examples
         ========
@@ -3086,7 +3123,7 @@ class Tensor(TensExpr):
 
 class TensMul(TensExpr, AssocOp):
     """
-    Product of tensors
+    Product of tensors.
 
     Parameters
     ==========
@@ -3394,7 +3431,10 @@ class TensMul(TensExpr, AssocOp):
 
     def get_indices(self):
         """
-        Returns the list of indices of the tensor
+        Returns the list of indices of the tensor.
+
+        Explanation
+        ===========
 
         The indices are listed in the order in which they appear in the
         component tensors.
@@ -3420,7 +3460,10 @@ class TensMul(TensExpr, AssocOp):
 
     def get_free_indices(self):  # type: () -> List[TensorIndex]
         """
-        Returns the list of free indices of the tensor
+        Returns the list of free indices of the tensor.
+
+        Explanation
+        ===========
 
         The indices are listed in the order in which they appear in the
         component tensors.
@@ -3447,7 +3490,10 @@ class TensMul(TensExpr, AssocOp):
 
     def split(self):
         """
-        Returns a list of tensors, whose product is ``self``
+        Returns a list of tensors, whose product is ``self``.
+
+        Explanation
+        ===========
 
         Dummy indices contracted among different tensor components
         become free indices with the same name as the one used to
@@ -3511,6 +3557,9 @@ class TensMul(TensExpr, AssocOp):
         """
         Returns the ``args`` sorted according to the components commutation
         properties.
+
+        Explanation
+        ===========
 
         The sorting is done taking into account the commutation group
         of the component tensors.
@@ -3607,7 +3656,7 @@ class TensMul(TensExpr, AssocOp):
 
     def contract_metric(self, g):
         """
-        Raise or lower indices with the metric ``g``
+        Raise or lower indices with the metric ``g``.
 
         Parameters
         ==========
@@ -3617,7 +3666,7 @@ class TensMul(TensExpr, AssocOp):
         Notes
         =====
 
-        see the ``TensorIndexType`` docstring for the contraction conventions
+        See the ``TensorIndexType`` docstring for the contraction conventions.
 
         Examples
         ========
@@ -4005,7 +4054,7 @@ def riemann_cyclic_replace(t_r):
 
 def riemann_cyclic(t2):
     """
-    replace each Riemann tensor with an equivalent expression
+    Replace each Riemann tensor with an equivalent expression
     satisfying the cyclic identity.
 
     This trick is discussed in the reference guide to Cadabra.
@@ -4038,7 +4087,7 @@ def riemann_cyclic(t2):
 
 def get_lines(ex, index_type):
     """
-    returns ``(lines, traces, rest)`` for an index type,
+    Returns ``(lines, traces, rest)`` for an index type,
     where ``lines`` is the list of list of positions of a matrix line,
     ``traces`` is the list of list of traced matrix lines,
     ``rest`` is the rest of the elements ot the tensor.

@@ -234,8 +234,7 @@ Expressions<symbolic-expressions>` below), numeric evaluation (:func:`~.N` is
 equivalent to :ref:`evalf()<evalf-label>` ), the `big O
 <https://en.wikipedia.org/wiki/Big_O_notation>`_ order symbol (as in
 :math:`O(n\log{n})`), and the assumptions object that holds a list of
-supported ask keys (such as :obj:`Q.real
-<sympy.assumptions.ask.AssumptionKeys.real>`), respectively. You can use the
+supported ask keys (such as ``Q.real``), respectively. You can use the
 mnemonic ``OSINEQ`` to remember what Symbols are defined by default in SymPy.
 Or better yet, always use lowercase letters for Symbol names. Python will not
 prevent you from overriding default SymPy names or functions, so be careful.
@@ -269,6 +268,40 @@ trick for getting tab completion in the regular Python console.
 .. note::
     See also `What is the best way to create symbols?
     <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
+
+.. _calling-functions:
+
+Functions
+---------
+
+A function like ``f(x)`` can be created by defining the Function
+and the variable:
+
+    >>> from sympy import Function
+    >>> f = Function('f')
+    >>> x = Symbol('x')
+    >>> f(x)
+    f(x)
+
+If you assign ``f(x)`` to a Python variable `f` you will lose your
+ability to copy and paste that function or to create a function
+with a different argument: ``Function('f')`` is callable, but
+``Function('f')(x)`` is not:
+
+    >>> f1 = Function('f1')
+    >>> f2 = Function('f2')('x')
+    >>> f1
+    f1
+    >>> f2
+    f2(x)
+    >>> f1(1)
+    f1(1)
+    >>> f2(1)
+    Traceback (most recent call last):
+    ...
+    TypeError: 'f2' object is not callable
+    >>> f2.subs(x, 1)
+    f2(1)
 
 .. _symbolic-expressions:
 
