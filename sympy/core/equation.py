@@ -316,10 +316,11 @@ class Equation(Basic, EvalfMixin):
         # is a specialized version associated with the particular type of
         # expression. Errors will be raised if the function cannot be
         # applied to an expression.
-        funcname = getattr(func, '__name__')
-        localfunc = getattr(expr, funcname, None)
-        if localfunc is not None:
-            return localfunc(*args, **kwargs)
+        funcname = getattr(func, '__name__',None)
+        if funcname is not None:
+            localfunc = getattr(expr, funcname, None)
+            if localfunc is not None:
+                return localfunc(*args, **kwargs)
         return func(expr, *args, **kwargs)
 
     def apply(self, func, *args, side='both', **kwargs):
