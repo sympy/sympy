@@ -326,6 +326,7 @@ class Set(Basic, EvalfMixin):
         False
         """
         other = sympify(other, strict=True)
+
         c = self._contains(other)
         if isinstance(c, Contains):
             return c
