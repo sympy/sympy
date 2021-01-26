@@ -3,7 +3,7 @@ from sympy import S
 from sympy.core.expr import Expr
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify
-from sympy.core.kind import Kind, NumberKind
+from sympy.core.kind import Kind, NumberKind, UndefinedKind
 from sympy.core.compatibility import SYMPY_INTS
 from sympy.printing.defaults import Printable
 
@@ -23,20 +23,45 @@ class ArrayKind(Kind):
     ==========
 
     element_kind : Kind
-        Kind of the element. Default is ``NumberKind``, which means that
-        the array contains only numbers.
+        Kind of the element. Default is :obj:NumberKind `<sympy.core.kind.NumberKind>`,
+        which means that the array contains only numbers.
 
     Examples
     ========
+
+    Any instance of array class has ``ArrayKind``.
 
     >>> from sympy import NDimArray
     >>> NDimArray([1,2,3]).kind
     ArrayKind(NumberKind)
 
+    Although expressions representing an array may be not instance of
+    array class, it will have ``ArrayKind`` as well.
+
+    >>> from sympy import Integral
+    >>> from sympy.tensor.array import NDimArray
+    >>> from sympy.abc import x
+    >>> intA = Integral(NDimArray([1,2,3]), x)
+    >>> isinstance(intA, NDimArray)
+    False
+    >>> intA.kind
+    ArrayKind(NumberKind)
+
+    Use ``isinstance()`` to check for ``ArrayKind` without specifying
+    the element kind. Use ``is`` with specifying the element kind.
+
+    >>> from sympy.tensor.array import ArrayKind
+    >>> from sympy.core.kind import NumberKind
+    >>> boolA = NDimArray([True, False])
+    >>> isinstance(boolA.kind, ArrayKind)
+    True
+    >>> boolA.kind is ArrayKind(NumberKind)
+    False
+
     See Also
     ========
 
-    sympy.matrices.MatrixKind : Kind for matrices.
+    shape : Function to return the shape of objects with ``MatrixKind``.
 
     """
     def __new__(cls, element_kind=NumberKind):
@@ -110,7 +135,12 @@ class NDimArray(Printable):
 
     @property
     def kind(self):
-        return ArrayKind()
+        elem_kinds = set(e.kind for e in self._array)
+        if len(elem_kinds) == 1:
+            elemkind, = elem_kinds
+        else:
+            elemkind = UndefinedKind
+        return ArrayKind(elemkind)
 
     def _parse_index(self, index):
         if isinstance(index, (SYMPY_INTS, Integer)):

@@ -6,6 +6,7 @@ from sympy.core.compatibility import (
     Callable, NotIterable, as_int, is_sequence)
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
+from sympy.core.kind import _NumberKind, NumberKind, UndefinedKind
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -19,14 +20,13 @@ from sympy.polys import cancel
 from sympy.printing import sstr
 from sympy.printing.defaults import Printable
 from sympy.simplify import simplify as _simplify
-from sympy.core.kind import Kind, NumberKind, _NumberKind
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
 
 from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
-    ShapeError)
+    ShapeError, MatrixKind)
 
 from .utilities import _iszero, _is_zero_after_expand_mul
 
@@ -744,46 +744,6 @@ class MatrixDeprecated(MatrixCommon):
         return self.permute_rows(perm, direction='forward')
 
 
-class MatrixKind(Kind):
-    """
-    Kind for all matrices in SymPy.
-
-    Basic class for this kind is ``MatrixBase`` and ``MatrixExpr``,
-    but any expression representing the matrix can have this.
-
-    Parameters
-    ==========
-
-    element_kind : Kind
-        Kind of the element. Default is ``NumberKind``, which means that
-        the matrix contains only numbers.
-
-    Examples
-    ========
-
-    >>> from sympy import MatrixSymbol, Integral
-    >>> from sympy.abc import x
-    >>> A = MatrixSymbol('A', 2,2)
-    >>> A.kind
-    MatrixKind(NumberKind)
-    >>> Integral(A,x).kind
-    MatrixKind(NumberKind)
-
-    See Also
-    ========
-
-    sympy.tensor.ArrayKind : Kind for N-dimensional arrays.
-
-    """
-    def __new__(cls, element_kind=NumberKind):
-        obj = super().__new__(cls, element_kind)
-        obj.element_kind = element_kind
-        return obj
-
-    def __repr__(self):
-        return "MatrixKind(%s)" % self.element_kind
-
-
 @Mul._kind_dispatcher.register(_NumberKind, MatrixKind)
 def num_mat_mul(k1, k2):
     """
@@ -818,7 +778,14 @@ class MatrixBase(MatrixDeprecated,
     zero = S.Zero
     one = S.One
 
-    kind = MatrixKind()
+    @property
+    def kind(self):
+        elem_kinds = set(e.kind for e in self._mat)
+        if len(elem_kinds) == 1:
+            elemkind, = elem_kinds
+        else:
+            elemkind = UndefinedKind
+        return MatrixKind(elemkind)
 
     def __array__(self, dtype=object):
         from .dense import matrix2numpy
