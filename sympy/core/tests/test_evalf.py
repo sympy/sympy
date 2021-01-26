@@ -236,6 +236,7 @@ def test_evalf_bugs():
 
 
 def test_evalf_integer_parts():
+    from sympy.functions.elementary.trigonometric import tan
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
     b = floor(log(8)/log(2), evaluate=False)
     assert a.evalf() == 3
@@ -261,6 +262,16 @@ def test_evalf_integer_parts():
 
     assert float((floor(1.5, evaluate=False)+1/9).evalf()) == 1 + 1/9
     assert float((floor(0.5, evaluate=False)+20).evalf()) == 20
+
+    # issue 19991
+    n = 1169809367327212570704813632106852886389036911
+    r = 744723773141314414542111064094745678855643068
+
+    assert floor(n / (pi / 2)) == r
+    assert floor(80782 * sqrt(2)) == 114242
+
+    # issue 20076
+    assert 260515 - floor(260515/pi + 1/2) * pi == atan(tan(260515))
 
 
 def test_evalf_trig_zero_detection():

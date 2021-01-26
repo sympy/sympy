@@ -445,8 +445,6 @@ class frac(Function):
     def _eval_rewrite_as_ceiling(self, arg, **kwargs):
         return arg + ceiling(-arg)
 
-
-
     def _eval_is_finite(self):
         return True
 
@@ -464,6 +462,8 @@ class frac(Function):
 
     def _eval_is_negative(self):
         return False
+
+
 
     def __ge__(self, other):
         if self.is_extended_real:
