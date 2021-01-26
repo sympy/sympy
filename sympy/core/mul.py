@@ -2,15 +2,15 @@ from collections import defaultdict
 from functools import cmp_to_key, reduce
 import operator
 
-from .sympify import sympify
+from .sympify import sympify, _sympify
 from .basic import Basic
 from .singleton import S
-from .operations import AssocOp, AssocOpDispatcher
+from .operations import AssocOp
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
 from .expr import Expr
 from .parameters import global_parameters
-from .kind import KindDispatcher
+from .kind import KindDispatcher, UndefinedKind, NumberKind
 
 
 # internal marker to indicate:
@@ -100,16 +100,16 @@ class Mul(Expr, AssocOp):
     The evaluation logic includes:
 
     1. Flattening
-        ``Mul(x, Mul(y, z))`` -> ``Mul(x, y, z)``
+        ``Mul(x, Mul(y, z)) -> Mul(x, y, z)``
 
     2. Identity removing
-        ``Mul(x, 1, y)`` -> ``Mul(x, y)``
+        ``Mul(x, 1, y) -> Mul(x, y)``
 
     3. Exponent collecting by ``.as_base_exp()``
-        ``Mul(x, x**2)`` -> ``Pow(x, 3)``
+        ``Mul(x, x**2) -> Pow(x, 3)``
 
     4. Term sorting
-        ``Mul(y, x, 2)`` -> ``Mul(2, x, y)``
+        ``Mul(y, x, 2) -> Mul(2, x, y)``
 
     Since multiplication can be vector space operation, arguments may
     have the different :obj:`sympy.core.kind.Kind()`. Kind of the
@@ -154,12 +154,12 @@ class Mul(Expr, AssocOp):
     is_Mul = True
 
     _args_type = Expr
-    _kind_dispatcher = KindDispatcher("Mul_kind_dispatcher", commutative=True)
+    kind_dispatcher = KindDispatcher("Mul_kind_dispatcher", commutative=True)
 
     @property
     def kind(self):
         arg_kinds = (a.kind for a in self.args)
-        return self._kind_dispatcher(*arg_kinds)
+        return self.kind_dispatcher(*arg_kinds)
 
     def __neg__(self):
         c, args = self.as_coeff_mul()
@@ -1994,7 +1994,52 @@ class Mul(Expr, AssocOp):
     def _sorted_args(self):
         return tuple(self.as_ordered_factors())
 
-mul = AssocOpDispatcher('mul')
+
+UndefinedKind.mul = Mul
+NumberKind.mul = Mul
+
+
+def _mul(args, start=1, evaluate=False, **kwargs):
+    # Function for sympy internal use. Intended to replace postprocessors.
+    # Introduced to avoid potential backwards incompatibility in the future.
+    # Note that this may be deleted if subclasses are removed.
+    return mul(args, start=start, evaluate=evaluate, **kwargs)
+
+
+def mul(args, start=1, evaluate=True, **kwargs):
+    """
+    Return the product of an iterable of objects. When the iterable is empty,
+    return the start value.
+
+    It is intended that user use ``*`` to evaluate the multiplication,
+    and this function with ``evaluate=False`` to get non-evaluated result.
+
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol
+    >>> from sympy.core.mul import mul
+    >>> from sympy.abc import x
+    >>> A = MatrixSymbol('A', 2,2)
+    >>> mul([x, x])
+    x**2
+    >>> mul([x, x], evaluate=False)
+    x*x
+    >>> mul([A, A])
+    A**2
+    >>> mul([A, A], evaluate=False)
+    A*A
+    """
+    if not args:
+        return _sympify(start)
+
+    kwargs.update(_sympify=False, evaluate=evaluate)
+
+    args = [_sympify(a) for a in args]
+    kinds = [a.kind for a in args]
+    selected_kind = Mul.kind_dispatcher(*kinds)
+    func = selected_kind.mul
+    return func(*args, **kwargs)
 
 
 def prod(a, start=1):

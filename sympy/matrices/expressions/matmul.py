@@ -1,11 +1,10 @@
 from sympy import Number
 from sympy.core import Mul, Basic, sympify, S
-from sympy.core.mul import mul
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
 from sympy.matrices.common import ShapeError, NonInvertibleMatrixError
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrices import MatrixBase, MatrixKind
 
 from .inverse import Inverse
 from .matexpr import MatrixExpr
@@ -207,7 +206,9 @@ class MatMul(MatrixExpr, Mul):
 
         return lines
 
-mul.register_handlerclass((Mul, MatMul), MatMul)
+
+MatrixKind.mul = MatMul
+
 
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """

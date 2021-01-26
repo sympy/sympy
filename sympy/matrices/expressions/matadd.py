@@ -2,10 +2,9 @@ from functools import reduce
 import operator
 
 from sympy.core import Add, Basic, sympify
-from sympy.core.add import add
 from sympy.functions import adjoint
 from sympy.matrices.common import ShapeError
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrices import MatrixBase, MatrixKind
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
     exhaust, do_one, glom)
@@ -86,7 +85,9 @@ class MatAdd(MatrixExpr, Add):
         add_lines = [arg._eval_derivative_matrix_lines(x) for arg in self.args]
         return [j for i in add_lines for j in i]
 
-add.register_handlerclass((Add, MatAdd), MatAdd)
+
+MatrixKind.add = MatAdd
+
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):

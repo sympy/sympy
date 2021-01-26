@@ -21,8 +21,8 @@ This module defines basic kinds for core objects. Other kinds such as
 ``ArrayKind`` or ``MatrixKind`` can be found in corresponding modules.
 
 .. notes::
-       This approach is experimental, and can be replaced or deleted in the future.
-       See https://github.com/sympy/sympy/pull/20549.
+    This approach is experimental, and can be replaced or deleted in the future.
+    See https://github.com/sympy/sympy/pull/20549.
 """
 
 from collections import defaultdict
@@ -99,6 +99,7 @@ class _UndefinedKind(Kind):
 
     def __repr__(self):
         return "UndefinedKind"
+
 
 UndefinedKind = _UndefinedKind()
 

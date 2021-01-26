@@ -10,14 +10,13 @@ from .function import (_coeff_isneg, expand_complex, expand_multinomial,
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and
 from .compatibility import as_int, HAS_GMPY, gmpy
 from .parameters import global_parameters
+from .kind import KindDispatcher, UndefinedKind, NumberKind
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.multipledispatch import Dispatcher
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
 
 from math import sqrt as _sqrt
-
 
 
 def isqrt(n):
@@ -265,6 +264,13 @@ class Pow(Expr):
     is_Pow = True
 
     __slots__ = ('is_commutative',)
+
+    kind_dispatcher = KindDispatcher("Pow_kind_dispatcher", commutative=False)
+
+    @property
+    def kind(self):
+        arg_kinds = (a.kind for a in self.args)
+        return self.kind_dispatcher(*arg_kinds)
 
     @cacheit
     def __new__(cls, b, e, evaluate=None):
@@ -1735,8 +1741,44 @@ class Pow(Expr):
             new_e = e.subs(n, n + step)
             return (b**(new_e - e) - 1) * self
 
-power = Dispatcher('power')
-power.add((object, object), Pow)
+
+UndefinedKind.pow = Pow
+NumberKind.pow = Pow
+
+
+def _power(b, e, evaluate=False, **kwargs):
+    # Function for sympy internal use. Intended to replace postprocessors.
+    # Introduced to avoid potential backwards incompatibility in the future.
+    # Note that this may be deleted if subclasses are removed.
+    return power(b, e, evaluate=evaluate, **kwargs)
+
+
+def power(b, e, evaluate=True, **kwargs):
+    """
+    Return the power, ``b**e``.
+
+    It is intended that user use ``**`` to evaluate the power,
+    and this function with ``evaluate=False`` to get non-evaluated result.
+
+    Examples
+    ========
+
+    >>> from sympy.core.power import power
+    >>> from sympy.abc import x
+    >>> power(x, 2)
+    x**2
+    >>> power(1, 2)
+    1
+    >>> power(1, 2, evaluate=False)
+    1**2
+    """
+    kwargs.update(evaluate=evaluate)
+
+    b, e = _sympify(b), _sympify(e)
+    selected_kind = Pow.kind_dispatcher(b.kind, e.kind)
+    func = selected_kind.pow
+    return func(b, e, **kwargs)
+
 
 from .add import Add
 from .numbers import Integer

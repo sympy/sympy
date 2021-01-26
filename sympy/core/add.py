@@ -1,16 +1,16 @@
 from collections import defaultdict
 from functools import cmp_to_key, reduce
-from operator import attrgetter
 from .basic import Basic
 from .compatibility import is_sequence
 from .parameters import global_parameters
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
-from .operations import AssocOp, AssocOpDispatcher
+from .sympify import _sympify
+from .operations import AssocOp
 from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
-from .kind import UndefinedKind
+from .kind import KindDispatcher, UndefinedKind, NumberKind
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
@@ -84,16 +84,16 @@ class Add(Expr, AssocOp):
     The evaluation logic includes:
 
     1. Flattening
-        ``Add(x, Add(y, z))`` -> ``Add(x, y, z)``
+        ``Add(x, Add(y, z)) -> Add(x, y, z)``
 
     2. Identity removing
-        ``Add(x, 0, y)`` -> ``Add(x, y)``
+        ``Add(x, 0, y) -> Add(x, y)``
 
     3. Coefficient collecting by ``.as_coeff_Mul()``
-        ``Add(x, 2*x)`` -> ``Mul(3, x)``
+        ``Add(x, 2*x) -> Mul(3, x)``
 
     4. Term sorting
-        ``Add(y, x, 2)`` -> ``Add(2, x, y)``
+        ``Add(y, x, 2) -> Add(2, x, y)``
 
     If no argument is passed, identity element 0 is returned. If single
     element is passed, that element is returned.
@@ -155,6 +155,7 @@ class Add(Expr, AssocOp):
     is_Add = True
 
     _args_type = Expr
+    kind_dispatcher = KindDispatcher("Add_kind_dispatcher", commutative=True)
 
     @classmethod
     def flatten(cls, seq):
@@ -376,16 +377,8 @@ class Add(Expr, AssocOp):
 
     @property
     def kind(self):
-        k = attrgetter('kind')
-        kinds = map(k, self.args)
-        kinds = frozenset(kinds)
-        if len(kinds) != 1:
-            # Since addition is group operator, kind must be same.
-            # We know that this is unexpected signature, so return this.
-            result = UndefinedKind
-        else:
-            result, = kinds
-        return result
+        arg_kinds = (a.kind for a in self.args)
+        return self.kind_dispatcher(*arg_kinds)
 
     def as_coefficients_dict(a):
         """Return a dictionary mapping terms to their Rational coefficient.
@@ -1222,7 +1215,53 @@ class Add(Expr, AssocOp):
             return super().__neg__()
         return Add(*[-i for i in self.args])
 
-add = AssocOpDispatcher('add')
+
+UndefinedKind.add = Add
+NumberKind.add = Add
+
+
+def _add(args, start=0, evaluate=False, **kwargs):
+    # Function for sympy internal use. Intended to replace postprocessors.
+    # Introduced to avoid potential backwards incompatibility in the future.
+    # Note that this may be deleted if subclasses are removed.
+    return add(args, start=start, evaluate=evaluate, **kwargs)
+
+
+def add(args, start=0, evaluate=True, **kwargs):
+    """
+    Return the sum of an iterable of objects. When the iterable is empty,
+    return the start value.
+
+    It is intended that user use ``+`` to evaluate the addition, and this
+    function with ``evaluate=False`` to get non-evaluated result.
+
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol
+    >>> from sympy.core.add import add
+    >>> from sympy.abc import x
+    >>> A = MatrixSymbol('A', 2,2)
+    >>> add([x, x])
+    2*x
+    >>> add([x, x], evaluate=False)
+    x + x
+    >>> add([A, A])
+    2*A
+    >>> add([A, A], evaluate=False)
+    A + A
+    """
+    if not args:
+        return _sympify(start)
+
+    kwargs.update(_sympify=False, evaluate=evaluate)
+
+    args = [_sympify(a) for a in args]
+    kinds = [a.kind for a in args]
+    selected_kind = Add.kind_dispatcher(*kinds)
+    func = selected_kind.add
+    return func(*args, **kwargs)
+
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

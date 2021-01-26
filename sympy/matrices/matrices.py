@@ -784,7 +784,7 @@ class MatrixKind(Kind):
         return "MatrixKind(%s)" % self.element_kind
 
 
-@Mul._kind_dispatcher.register(_NumberKind, MatrixKind)
+@Mul.kind_dispatcher.register(_NumberKind, MatrixKind)
 def num_mat_mul(k1, k2):
     """
     Return MatrixKind. The element kind is selected by recursive dispatching.
@@ -795,13 +795,38 @@ def num_mat_mul(k1, k2):
     elemk = Mul._kind_dispatcher(NumberKind, k2.element_kind)
     return MatrixKind(elemk)
 
-@Mul._kind_dispatcher.register(MatrixKind, MatrixKind)
+@Mul.kind_dispatcher.register(MatrixKind, MatrixKind)
 def mat_mat_mul(k1, k2):
     """
     Return MatrixKind. The element kind is selected by recursive dispatching.
     """
     elemk = Mul._kind_dispatcher(k1.element_kind, k2.element_kind)
     return MatrixKind(elemk)
+
+
+@Pow.kind_dispatcher.register(_NumberKind, MatrixKind)
+def num_mat_pow(k1, k2):
+    """
+    Return MatrixKind. The element kind is selected by recursive dispatching.
+
+    This dispatching supports matrix exponential [1].
+
+    See Also
+    ========
+
+    .. [1] https://en.wikipedia.org/wiki/Matrix_exponential
+    """
+    return k2
+
+@Pow.kind_dispatcher.register(MatrixKind, _NumberKind)
+def mat_num_pow(k1, k2):
+    """
+    Return MatrixKind. The element kind is selected by recursive dispatching.
+
+    This dispatching supports power of matrix.
+    """
+    return k1
+
 
 class MatrixBase(MatrixDeprecated,
                  MatrixCalculus,
