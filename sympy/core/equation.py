@@ -334,10 +334,13 @@ class Equation(Basic, EvalfMixin):
         func: object
             object to apply usually a function
 
+        args: as necessary for the function
+
         side: 'both', 'lhs', 'rhs', optional
             Specifies which side of the equation the operation will be applied
             to. Default is 'both'.
 
+        kwargs: as necessary for the function
          """
         lhs = self.lhs
         rhs = self.rhs
