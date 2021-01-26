@@ -215,6 +215,11 @@ else:
 
 
 def _both_exp_pow(func):
+    """
+    Decorator used to run the test twice: the first time `e^x` is represented
+    as ``Pow(E, x)``, the second time as ``exp(x)`` (exponential object is not
+    a power).
+    """
     from sympy.core.parameters import _exp_is_pow
 
     def func_wrap():
