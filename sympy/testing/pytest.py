@@ -219,6 +219,9 @@ def _both_exp_pow(func):
     Decorator used to run the test twice: the first time `e^x` is represented
     as ``Pow(E, x)``, the second time as ``exp(x)`` (exponential object is not
     a power).
+
+    This is a temporary trick helping to manage the elimination of the class
+    ``exp`` in favor of a replacement by ``Pow(E, ...)``.
     """
     from sympy.core.parameters import _exp_is_pow
 
