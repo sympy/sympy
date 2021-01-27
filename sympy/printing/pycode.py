@@ -995,6 +995,23 @@ class SciPyPrinter(NumPyPrinter):
             self._print(expr.args[0]),
             self._print(expr.args[1]))
 
+    def _print_betainc(self, expr):
+        return "({0}({2}, {3}, {5}) - {0}({2}, {3}, {4})) * {1}({2}, {3})".format(
+            self._module_format('scipy.special.betainc'),
+            self._module_format('scipy.special.beta'),
+            self._print(expr.args[0]),
+            self._print(expr.args[1]),
+            self._print(expr.args[2]),
+            self._print(expr.args[3]))
+
+    def _print_betainc_regularized(self, expr):
+        return "{0}({1}, {2}, {4}) - {0}({1}, {2}, {3})".format(
+            self._module_format('scipy.special.betainc'),
+            self._print(expr.args[0]),
+            self._print(expr.args[1]),
+            self._print(expr.args[2]),
+            self._print(expr.args[3]))
+
     def _print_fresnels(self, expr):
         return "{}({})[0]".format(
                 self._module_format("scipy.special.fresnel"),

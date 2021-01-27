@@ -10,7 +10,7 @@ from sympy import (
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
     DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
     digamma, RisingFactorial, besselj, bessely, besseli, besselk, S, beta,
-    fresnelc, fresnels)
+    betainc, betainc_regularized, fresnelc, fresnels)
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.scipy_nodes import cosm1
@@ -1302,6 +1302,24 @@ def test_beta_math():
     F = lambdify((x, y), f, modules='math')
 
     assert abs(beta(1.3, 2.3) - F(1.3, 2.3)) <= 1e-10
+
+def test_betainc_scipy():
+    if not scipy:
+        skip("scipy not installed")
+
+    f = betainc(w, x, y, z)
+    F = lambdify((w, x, y, z), f, modules='scipy')
+
+    assert abs(betainc(1.4, 3.1, 0.1, 0.5) - F(1.4, 3.1, 0.1, 0.5)) <= 1e-10
+
+def test_betainc_regularized_scipy():
+    if not scipy:
+        skip("scipy not installed")
+
+    f = betainc_regularized(w, x, y, z)
+    F = lambdify((w, x, y, z), f, modules='scipy')
+
+    assert abs(betainc_regularized(0.2, 3.5, 0.1, 1) - F(0.2, 3.5, 0.1, 1)) <= 1e-10
 
 
 def test_numpy_special_math():
