@@ -44,8 +44,7 @@ from sympy.polys.polytools import invert
 from sympy.solvers.bivariate import _solve_lambert, _filtered_gens, bivariate_type
 from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
     PolyNonlinearError)
-from sympy.solvers.solvers import (checksol, denoms, unrad,
-    _simple_dens, recast_to_symbols, solve, _tsolve)
+from sympy.solvers.solvers import _simple_dens, _solve, _tsolve, checksol, denoms, recast_to_symbols, solve, unrad
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
@@ -1132,31 +1131,38 @@ def _solveset(f, symbol, domain, _check=False):
                     if (result.has(exp)) or (f.has(sqrt(x))) or\
                         f.has(Abs):
                         return result
-                    elif not domain.is_subset(S.Integers) and domain.is_subset(S.Reals) and \
+                    elif not domain.is_subset(S.Integers) and \
                         ((result.has(cos) and not result.has(sin)) or \
                             (result.has(sin) and not result.has(cos))) :
-                        f = solve(f, x)
-                        if f is not None and domain.is_subset(S.Reals):
-                            args = []
-                            j = -1
-                            for i in f:
-                                j += 1
-                                if not isinstance(i,int):
-                                    if not i.has(I) and i.is_real and domain.is_subset(S.Reals):
+                        try:
+                            f = _solve(f, x)
+                            if f is not None and domain.is_subset(S.Reals):
+                                args = []
+                                j = -1
+                                for i in f:
+                                    j += 1
+                                    if not isinstance(i,int):
+                                        if not i.has(I) and i.is_real and domain.is_subset(S.Reals):
+                                            args.append(f[j])
+                                    elif isinstance(i,int) and i.is_real and domain.is_subset(S.Reals):
                                         args.append(f[j])
-                                elif isinstance(i,int) and i.is_real and domain.is_subset(S.Reals):
-                                    args.append(f[j])
-                                if i.has(Dummy):
-                                    return EmptySet
-                            f = FiniteSet(*args)
-                            return f
-                        else:
-                            f = FiniteSet(*f)
-                            return f
+                                    if i.has(Dummy):
+                                        return EmptySet
+                                f = FiniteSet(*args)
+                                return f
+                            else:
+                                f = FiniteSet(*f)
+                                return f
+                        except NotImplementedError:
+                            pass
                 elif domain.is_subset(S.Reals):
                     if not any(i for i in f.atoms(Pow) if i.exp is S.Half) and f.count_ops() < 120:
                         if not (f.has(exp) and f.has(Pow)):
-                            indls = _tsolve(f,x)
+                            if not domain.is_subset(S.Reals):
+                                dmn = False
+                            else:
+                                dmn = True
+                            indls = _tsolve(f,x,dmn=dmn)
                             if indls is None or indls == []:
                                 return result
                             elif indls is not None:
@@ -1177,7 +1183,7 @@ def _solveset(f, symbol, domain, _check=False):
                                         if (not i.has(I) and not i.has(integer)) and domain.is_subset(S.Reals):
                                             if f.has(log(x)) and i == S(0):
                                                 continue
-                                            args.append(indls[j])
+                                            ap = args.append(indls[j])
                                     if isinstance(i,int) and i.is_real and domain.is_subset(S.Reals):
                                         args.append(indls[j])
                                     if i.has(Dummy):
@@ -1195,7 +1201,7 @@ def _solveset(f, symbol, domain, _check=False):
                                 if indls[0] == 0:
                                     return result
                         if indls is not None:
-                            f = FiniteSet(*indls)
+                            f = helper_to_solve_as_lambert(indls, f, symbol, domain,flag=None)
                             return f
 
             else:
@@ -1923,8 +1929,7 @@ def _is_lambert(f, symbol):
                     j=0
                     for args in add_args:
                         if len(list(args.atoms(symbol))) == 1:
-                            # to check it has more than 2 variables
-                            if list(args.atoms(symbol))[0].has(symbol):
+                            if list(args.atoms(symbol))[0].has(symbol): # to check it has more than 2 variables
                                 j+=1
                         else:
                             return True
@@ -1933,8 +1938,7 @@ def _is_lambert(f, symbol):
                 return False
 
     if any(isinstance(arg1, (log)) for arg1 in expanded_terms_factors):
-        i, j, k = 0,0,0
-        # to check it has more than 2 variables
+        i, j, k = 0,0,0 # to check it has more than 2 variables
         for arg2 in list(_term_factors(f)):
             if arg2.atoms(log) :
                 j += 1
@@ -2012,6 +2016,8 @@ def helper_to_solve_as_lambert(soln, diff, symbol, domain,flag=None):
                 result = FiniteSet(*soln)
             elif not arg2.is_real and not domain.is_subset(S.Reals):
                 result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
+                if len(soln) == 1 and isinstance(result,FiniteSet):
+                    result = ImageSet(result.args[0],S.Integers)
 
             if flag:
                 if arg.atoms(LambertW) == set():
@@ -2021,12 +2027,12 @@ def helper_to_solve_as_lambert(soln, diff, symbol, domain,flag=None):
 
                 if soln is EmptySet and (_is_lambert(diff,symbol) and (domain.is_subset(S.Reals))):
                     result = S.EmptySet
-                elif (not arg2.is_real and not realLambert) and not domain.is_subset(S.Reals) :
+                elif ((not arg2.is_real and not realLambert) and not domain.is_subset(S.Reals)) or ((arg2.is_real or realLambert) and arg2.has(Lambda)) :
                     result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
+                    if len(soln) == 1 and isinstance(result,FiniteSet):
+                        result = ImageSet(result.args[0],S.Integers)
                 elif (arg2.is_real or realLambert) and not arg.has(Lambda):
                     result = FiniteSet(*soln)
-                elif (arg2.is_real or realLambert) and arg2.has(Lambda):
-                    result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
 
     return result
 

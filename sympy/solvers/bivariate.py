@@ -10,6 +10,7 @@ from sympy.functions.elementary.miscellaneous import root
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import Poly, factor
 from sympy.core.function import _mexpand
+from sympy.sets import ImageSet,EmptySet
 from sympy.simplify.simplify import separatevars
 from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import powsimp
@@ -270,7 +271,7 @@ def _lambert1(eq, x, domain):
                     sol.append(xu.subs(u, rhs))
 
         else:
-            if not domain.is_subset(S.Reals) and (not LambertW(arg).is_real) and (not real):
+            if not domain.is_subset(S.Reals):
                 integer = Symbol('integer',integer=True)
                 rhs = Lambda(integer, -c/b + (a/d)*LambertW(arg,integer))
                 for xu in xusolns:

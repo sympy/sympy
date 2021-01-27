@@ -2226,6 +2226,7 @@ def test_solve_lambert():
     assert solveset_real(x*exp(x) - 1, x) == FiniteSet(LambertW(1))
     assert dumeq(solveset(x*exp(x) - 1, x) , ImageSet(Lambda(n, LambertW(1, n)), S.Integers))
     assert solveset_real(x**2 - 2**x, x) == solveset_real(-x**2 + 2**x, x)
+    assert dumeq(solveset(x**x - 2, x) , ImageSet(Lambda(n, exp(LambertW(log(2),n))), S.Integers ))
     assert solveset_real(x**x - 2, x) == FiniteSet(exp(LambertW(log(2))))
     assert solveset_real(x**3 - 3**x, x) == FiniteSet(
         -3*LambertW(-log(3)/3)/log(3), -3*LambertW(-log(3)/3, -1)/log(3))
@@ -2264,7 +2265,11 @@ def test_solve_lambert():
     a = Symbol('a')
     assert solveset_real(x*exp(x)- a, x) == Union(Intersection(FiniteSet(LambertW(a,-1)), Interval(-exp(-1), 0)), \
         Intersection(FiniteSet(LambertW(a)), Interval(-exp(-1), oo)))
-
+    eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
+    result = solveset_real(eq, x)
+    ans = S.EmptySet
+    assert result == ans
+    assert solveset_real(eq.expand(), x) == result  # it takes solve and too much time to complete
     assert dumeq(solveset(x*exp(x)- a, x), ImageSet(Lambda(n, LambertW(a, n)), S.Integers))
 
     assert solveset_real(a/x + exp(x/2), x) == Union(\
@@ -2284,7 +2289,7 @@ def test_solve_lambert():
 
     p = symbols('p', positive=True)
     eq = 3*log(p**(3*x + 5)) + p**(3*x + 5)
-    assert solveset(eq, x) == FiniteSet(-S(5)/3 - LambertW(S(1)/3)/(3*log(p)))
+    assert dumeq(solveset(eq, x), ImageSet(Lambda(n, Rational(-5, 3) - LambertW(Rational(1, 3), n)/(3*log(p))), S.Integers))
     assert solveset_real(eq, x) == Intersection(FiniteSet(Rational(-5, 3) - LambertW(Rational(1, 3))/(3*log(p))), Interval(0, oo))
 
     assert solveset_real((a/x + exp(x/2)).diff(x), x) == \
@@ -2309,6 +2314,11 @@ def test_solve_lambert():
     Complement(ImageSet(Lambda(n, 4*LambertW(sqrt(2)*sqrt(a)/4, n)), S.Integers), FiniteSet(0))))
 
     assert solveset_real(3*x + 5 + 2**(-5*x + 3), x) is S.EmptySet
+
+
+    assert dumeq(solveset(log(log(x - 3)) + log(x-3), x) , ImageSet(Lambda(n, exp(LambertW(1, n)) + 3), S.Integers))
+    eq = (x*exp(x) - 3).subs(x, x*exp(x))
+    assert dumeq(solveset(eq, x) , ImageSet(Lambda(n, LambertW(3*exp(-LambertW(3, n)), n)), S.Integers))
 
 
 def test_is_lambert():
@@ -2338,18 +2348,9 @@ def test_solve_bivariate():
     assert solveset_real(-a*x + 2*x*log(x), x) == FiniteSet(exp(a/2))
 
 @XFAIL
-def test_other_solve_lambert():
+def test_failed_lambert():
     assert solveset_real(x**a - a**x, x) == \
         FiniteSet(a, -a*LambertW(-log(a)/a)/log(a))
-    eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
-    result = solveset_real(eq, x)
-    ans = S.EmptySet
-    assert result == ans
-    assert solveset_real(eq.expand(), x) == result  # it takes solve and too much time to complete
-    assert dumeq(solveset(x**x - 2, x) , ImageSet(Lambda(n, exp(LambertW(log(2),n))), S.Integers ))
-    assert dumeq(solveset(log(log(x - 3)) + log(x-3), x) , ImageSet(Lambda(n, exp(LambertW(1, n)) + 3), S.Integers))
-    eq = (x*exp(x) - 3).subs(x, x*exp(x))
-    assert dumeq(solveset(eq, x) , ImageSet(Lambda(n, LambertW(3*exp(-LambertW(3, n)), n)), S.Integers))
 
 # end of transolve's tests
 

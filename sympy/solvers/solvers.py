@@ -17,8 +17,7 @@ from sympy.core.assumptions import check_assumptions
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key)
 from sympy.core.sympify import sympify
-from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
-    Pow, Unequality, Wild)
+from sympy.core import Add, Dummy, Equality, Expr, Lambda, Mul, Pow, S, Symbol, Unequality, Wild
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
@@ -486,7 +485,7 @@ def solve(f, *symbols, **flags):
         * To solve for a symbol implicitly, use implicit=True:
 
             >>> solve(x + exp(x), x)
-            [-LambertW(1)]
+            [Lambda(integer, -LambertW(1, integer))]
             >>> solve(x + exp(x), x, implicit=True)
             [-exp(x)]
 
@@ -549,7 +548,7 @@ def solve(f, *symbols, **flags):
             >>> solve(x**2 - y**2, x, y, dict=True)
             [{x: -y}, {x: y}]
             >>> solve(x**2 - y**2/exp(x), x, y, dict=True)
-            [{x: 2*LambertW(-y/2)}, {x: 2*LambertW(y/2)}, {x: 2*LambertW(-y/2, -1)}, {x: 2*LambertW(y/2, -1)}]
+            [{x: 2*LambertW(-y/2, integer)}, {x: 2*LambertW(y/2, integer)}]
             >>> solve(x**2 - y**2/exp(x), y, x)
             [(-x*sqrt(exp(x)), x), (x*sqrt(exp(x)), x)]
 
@@ -1093,6 +1092,13 @@ def solve(f, *symbols, **flags):
     ###########################################################################
     if bare_f:
         solution = _solve(f[0], *symbols, **flags)
+        if solution is not None:
+            for solnArgs in solution:
+                if not isinstance(solnArgs,(dict,tuple,list,set)):
+                    if solnArgs.has(LambertW) and solnArgs.has(Lambda):
+                        return solution
+                        break
+
     else:
         solution = _solve_system(f, symbols, **flags)
 
@@ -1705,7 +1711,15 @@ def _solve(f, *symbols, **flags):
         try:
             soln = _tsolve(f_num, symbol, **flags)
             if soln is not None:
-                result = soln
+                for solnArgs in soln:
+                    if solnArgs.has(LambertW) and solnArgs.has(Lambda):
+                        return soln
+                        break
+                    else:
+                        result = soln
+            if result is False and soln == []:
+                return soln
+
         except PolynomialError:
             pass
     # ----------- end of fallback ----------------------------
@@ -2532,7 +2546,7 @@ def _tsolve(eq, sym, **flags):
     [-5/2 + log(2)/log(3), (-5*log(3)/2 + log(2) + I*pi)/log(3)]
 
     >>> tsolve(log(x) + 2*x, x)
-    [LambertW(2)/2]
+    [LambertW(2, integer)/2]
 
     """
     if 'tsolve_saw' not in flags:
@@ -2698,8 +2712,11 @@ def _tsolve(eq, sym, **flags):
                 poly = lhs.as_poly()
                 g = _filtered_gens(poly, sym)
                 _eq = lhs - rhs
-                if flags.get('dmn', True):
-                    domain = S.Reals
+                if 'dmn' in flags:
+                    if not (flags['dmn'] is True):
+                        domain = S.Complexes
+                    else:
+                        domain = S.Reals
                 else:
                     domain = S.Complexes
 
