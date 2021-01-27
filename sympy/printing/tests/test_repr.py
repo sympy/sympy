@@ -3,7 +3,7 @@ from typing import Any, Dict
 from sympy.testing.pytest import raises
 from sympy import (symbols, sympify, Function, Integer, Matrix, Abs,
     Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false, ones,
-    sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild, MatrixSymbol)
+    sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild, MatrixSymbol, Q)
 from sympy.combinatorics import Cycle, Permutation
 from sympy.core.symbol import Str
 from sympy.geometry import Point, Ellipse
@@ -334,3 +334,9 @@ def test_set():
     assert srepr(s) == "set()"
     s = {x, y}
     assert srepr(s) in ("{Symbol('x'), Symbol('y')}", "{Symbol('y'), Symbol('x')}")
+
+def test_Predicate():
+    sT(Q.even, "Q.even")
+
+def test_AppliedPredicate():
+    sT(Q.even(Symbol('z')), "AppliedPredicate(Q.even, Symbol('z'))")

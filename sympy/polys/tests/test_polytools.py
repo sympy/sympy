@@ -2077,6 +2077,9 @@ def test_gcd_numbers_vs_polys():
     assert gcd(3.0, 9.0) == 1.0
     assert gcd(3.0*x, 9.0) == 1.0
 
+    # partial fix of 20597
+    assert gcd(Mul(2, 3, evaluate=False), 2) == 2
+
 
 def test_terms_gcd():
     assert terms_gcd(1) == 1

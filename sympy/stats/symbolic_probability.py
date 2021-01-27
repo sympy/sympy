@@ -73,7 +73,7 @@ class Probability(Expr):
 
         if condition.has(RandomIndexedSymbol):
             return pspace(condition).probability(condition, given_condition,
-                                evaluate=for_rewrite)
+                                             evaluate=for_rewrite)
 
         if isinstance(given_condition, RandomSymbol):
             condrv = random_symbols(condition)

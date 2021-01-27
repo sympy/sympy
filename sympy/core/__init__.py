@@ -29,6 +29,7 @@ from .evalf import PrecisionExhausted, N
 from .containers import Tuple, Dict
 from .exprtools import gcd_terms, factor_terms, factor_nc
 from .parameters import evaluate
+from .kind import UndefinedKind, NumberKind, BooleanKind
 
 # expose singletons
 Catalan = S.Catalan
@@ -91,4 +92,6 @@ __all__ = [
     'EulerGamma',
     'GoldenRatio',
     'TribonacciConstant',
+
+    'UndefinedKind', 'NumberKind', 'BooleanKind',
 ]

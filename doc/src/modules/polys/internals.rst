@@ -104,6 +104,8 @@ Concrete Domains
 .. autoclass:: ExpressionDomain
    :members:
 
+.. autoclass:: sympy.polys.domains.expressiondomain::ExpressionDomain.Expression
+
 Implementation Domains
 **********************
 

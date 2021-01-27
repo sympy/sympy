@@ -101,6 +101,11 @@ def test_derivative_by_array():
         assert derive_by_array(b, i) == ImmutableSparseNDimArray({0: 1}, (10000, 20000))
         assert derive_by_array(b, (i, j)) == ImmutableSparseNDimArray({0: 1, 200000001: 1}, (2, 10000, 20000))
 
+    #https://github.com/sympy/sympy/issues/20655
+    U = Array([x, y, z])
+    E = 2
+    assert derive_by_array(E, U) ==  ImmutableDenseNDimArray([0, 0, 0])
+
 
 def test_issue_emerged_while_discussing_10972():
     ua = Array([-1,0])
