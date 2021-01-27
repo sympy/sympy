@@ -175,7 +175,6 @@ class Integral(AddWithLimits):
         None
         """
         from sympy.sets import Interval
-        from sympy.sets.sets import EmptySet
         from sympy.solvers.inequalities import solve_univariate_inequality
         from sympy.core.numbers import Rational
 
