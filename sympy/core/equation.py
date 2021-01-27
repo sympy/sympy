@@ -382,10 +382,11 @@ class Equation(Basic, EvalfMixin):
             else:
                 func = getattr(self.eqn.lhs, name, None)
             if func is None:
-                raise AttributeError('Invalid method for expressions in the '
-                                     'Equation. Try `.apply(func,args)` or '
+                raise AttributeError('Expressions in the equation have no '
+                                     'attribute '+str(name)+'. Try `.apply('
+                                     +str(name)+', args)` or '
                                      'pass the equation as a parameter to '
-                                     'the function.')
+                                     +str(name)+'().')
             return functools.partial(self.eqn.apply, func, side=self.side)
 
     @property
