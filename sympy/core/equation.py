@@ -383,10 +383,10 @@ class Equation(Basic, EvalfMixin):
                 func = getattr(self.eqn.lhs, name, None)
             if func is None:
                 raise AttributeError('Expressions in the equation have no '
-                                     'attribute '+str(name)+'. Try `.apply('
-                                     +str(name)+', args)` or '
-                                     'pass the equation as a parameter to '
-                                     +str(name)+'().')
+                                     'attribute `'+str(name)+'`. Try `.apply('
+                                     +str(name)+', *args)` or '
+                                     'pass the equation as a parameter to `'
+                                     +str(name)+'()`.')
             return functools.partial(self.eqn.apply, func, side=self.side)
 
     @property
