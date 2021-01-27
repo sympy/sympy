@@ -473,6 +473,7 @@ def test__combine_inverse():
     assert Mul._combine_inverse(oo*I*y, oo*I) == y
     assert Mul._combine_inverse(oo*y, -oo) == -y
     assert Mul._combine_inverse(-oo*y, oo) == -y
+    assert Mul._combine_inverse((1-exp(x/y)),(exp(x/y)-1)) == -1
     assert Add._combine_inverse(oo, oo) is S.Zero
     assert Add._combine_inverse(oo*I, oo*I) is S.Zero
     assert Add._combine_inverse(x*oo, x*oo) is S.Zero
@@ -714,6 +715,8 @@ def test_match_terms():
     assert (5*y - x).match(5*X - Y) == {X: y, Y: x}
     # 15907
     assert (x + (y - 1)*z).match(x + X*z) == {X: y - 1}
+    # 20747
+    assert (x - log(x/y)*(1-exp(x/y))).match(x - log(X/y)*(1-exp(x/y))) == {X: x}
 
 
 def test_match_bound():

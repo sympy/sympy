@@ -18,8 +18,8 @@ class SievePolynomial:
         than addition, by using modified_coefficient we get
         a faster seiving process.
 
-        Parameters:
-        ===========
+        Parameters
+        ==========
 
         modified_coeff : modified_coefficient of sieve polynomial
         a : parameter of the sieve polynomial
@@ -33,8 +33,8 @@ class SievePolynomial:
         """
         Compute the value of the sieve polynomial at point x.
 
-        Parameters:
-        ===========
+        Parameters
+        ==========
 
         x : Integer parameter for sieve polynomial
         """
@@ -52,8 +52,8 @@ class FactorBaseElem:
         """
         Initialization of factor_base_elem.
 
-        Parameters:
-        ===========
+        Parameters
+        ==========
 
         prime : prime number of the factor_base
         tmem_p : Integer square root of x**2 = n mod prime
@@ -76,8 +76,8 @@ def _generate_factor_base(prime_bound, n):
     It also returns the of primes numbers in the `factor_base` which are
     close to 1000 and 5000.
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
 
     prime_bound : upper prime bound of the factor_base
     n : integer to be factored
@@ -108,8 +108,8 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
     We also ensure that the `factor_base` primes which make `a` are between
     1000 and 5000.
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
 
     N : Number to be factored
     M : sieve interval
@@ -177,8 +177,8 @@ def _initialize_ith_poly(N, factor_base, i, g, B):
     then this function can be used to go to the next polynomial. If
     ``i = 2**(j - 1) - 1`` then go to _initialize_first_polynomial stage.
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
 
     N : number to be factored
     factor_base : factor_base primes
@@ -215,8 +215,8 @@ def _gen_sieve_array(M, factor_base):
     is an integer. When p = 2 then log_p is only added using
     ``-M <= soln1 + i*p <=  M``.
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
 
     M : sieve interval
     factor_base : factor_base primes
@@ -244,8 +244,8 @@ def _check_smoothness(num, factor_base):
     greater than the `factor_base` then it returns `(a, False)` which denotes `a`
     is a partial relation.
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
 
     a : integer whose smootheness is to be checked
     factor_base : factor_base primes
@@ -285,8 +285,8 @@ def _trial_division_stage(N, M, factor_base, sieve_array, sieve_poly, partial_re
     with the same large prime p. Then they can be combined ``(t*r/p)**2 = u*v modN``
     to form a smooth relation.
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
 
     N : Number to be factored
     M : sieve interval
@@ -340,8 +340,8 @@ def _trial_division_stage(N, M, factor_base, sieve_array, sieve_poly, partial_re
 def _build_matrix(smooth_relations):
     """Build a 2D matrix from smooth relations.
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
 
     smooth_relations : Stores smooth relations
     """
@@ -354,12 +354,12 @@ def _build_matrix(smooth_relations):
 def _gauss_mod_2(A):
     """Fast gaussian reduction for modulo 2 matrix.
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
 
     A : Matrix
 
-    Examples:
+    Examples
     ========
 
     >>> from sympy.ntheory.qs import _gauss_mod_2
@@ -368,8 +368,8 @@ def _gauss_mod_2(A):
      [True, True, True, False],
      [[0, 1, 0], [1, 0, 0], [0, 0, 1], [1, 0, 1]])
 
-    References:
-    ===========
+    Reference
+    ==========
 
     .. [1] A fast algorithm for gaussian elimination over GF(2) and
     its implementation on the GAPP. Cetin K.Koc, Sarath N.Arachchige"""
@@ -402,8 +402,8 @@ def _find_factor(dependent_rows, mark, gauss_matrix, index, smooth_relations, N)
     relation of the form ``X**2 = Y**2 modN``. After obtaining the desired relation
     we obtain a proper factor of N by `gcd(X - Y, N)`.
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
 
     dependent_rows : denoted dependent rows in the reduced matrix form
     mark : boolean array to denoted dependent and independent rows
@@ -451,8 +451,9 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     sieving, fast changing between polynomials and using partial relations.
     The use of partial relations can speeds up the factoring by 2 times.
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
+
     N : Number to be Factored
     prime_bound : upper bound for primes in the factor base
     M : Sieve Interval
@@ -460,7 +461,7 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     threshold : Extra smooth relations for factorization
     seed : generate pseudo prime numbers
 
-    Examples:
+    Examples
     ========
 
     >>> from sympy.ntheory import qs
@@ -469,8 +470,8 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     >>> qs(9804659461513846513, 2000, 10000)
     {4641991, 2112166839943}
 
-    References:
-    ===========
+    References
+    ==========
 
     .. [1] https://pdfs.semanticscholar.org/5c52/8a975c1405bd35c65993abf5a4edb667c1db.pdf
     .. [2] https://www.rieselprime.de/ziki/Self-initializing_quadratic_sieve

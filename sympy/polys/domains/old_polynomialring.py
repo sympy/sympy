@@ -91,6 +91,22 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         if K1.dom == K0:
             return K1(a)
 
+    def from_PolynomialRing(K1, a, K0):
+        """Convert a `PolyElement` object to `dtype`. """
+        if K1.gens == K0.symbols:
+            if K1.dom == K0.dom:
+                return K1(dict(a))  # set the correct ring
+            else:
+                convert_dom = lambda c: K1.dom.convert_from(c, K0.dom)
+                return K1({m: convert_dom(c) for m, c in a.items()})
+        else:
+            monoms, coeffs = _dict_reorder(a.to_dict(), K0.symbols, K1.gens)
+
+            if K1.dom != K0.dom:
+                coeffs = [ K1.dom.convert(c, K0.dom) for c in coeffs ]
+
+            return K1(dict(zip(monoms, coeffs)))
+
     def from_GlobalPolynomialRing(K1, a, K0):
         """Convert a `DMP` object to `dtype`. """
         if K1.gens == K0.gens:

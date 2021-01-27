@@ -422,6 +422,15 @@ class sign(Function):
         ):
             return S.One
 
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        arg0 = self.args[0]
+        x0 = arg0.subs(x, 0)
+        if x0 != 0:
+            return self.func(x0)
+        if cdir != 0:
+            cdir = arg0.dir(x, cdir)
+        return -S.One if re(cdir) < 0 else S.One
+
     def _sage_(self):
         import sage.all as sage
         return sage.sgn(self.args[0]._sage_())
