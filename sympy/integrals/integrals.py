@@ -160,7 +160,7 @@ class Integral(AddWithLimits):
         Examples
         ========
 
-        >>> from sympy import Integral
+        >>> from sympy import Integral, oo
         >>> from sympy.abc import x
         >>> f = x**2
         >>> Integral(f,(x, 0, oo)).is_divergent()
