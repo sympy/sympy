@@ -552,7 +552,7 @@ class C89CodePrinter(CodePrinter):
 
     def _print_CodeBlock(self, expr):
         """ Elements of code blocks printed as statements. """
-        return '\n'.join([self._get_statement(self._print(i)) for i in expr.args])
+        return '\n'.join([self._print(i) for i in expr.args])
 
     def _print_While(self, expr):
         return 'while ({condition}) {{\n{body}\n}}'.format(**expr.kwargs(
