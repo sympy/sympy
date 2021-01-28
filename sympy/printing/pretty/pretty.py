@@ -1779,7 +1779,7 @@ class PrettyPrinter(Printer):
             return prettyForm(binding=prettyForm.NEG, *p)
 
         for i, term in enumerate(terms):
-            if term.is_Mul and _coeff_isneg(term):
+            if term.is_Mul and _coeff_isneg(term) and any([True for arg in term.args if not arg.is_Integer]):
                 coeff, other = term.as_coeff_mul(rational=False)
                 if coeff == -1:
                     negterm = Mul(*other, evaluate=False)

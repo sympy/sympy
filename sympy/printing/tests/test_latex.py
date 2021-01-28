@@ -1,7 +1,7 @@
 from sympy.tensor.toperators import PartialDerivative
 
 from sympy import (
-    Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
+    Abs, Add, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
     FiniteSet, Float, FourierTransform, Function, Indexed, IndexedBase, Integral,
     Interval, InverseCosineTransform, InverseFourierTransform, Derivative,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
@@ -2205,6 +2205,9 @@ def test_issue_13651():
     expr = c + Mul(-1, a + b, evaluate=False)
     assert latex(expr) == r"c - \left(a + b\right)"
 
+def test_issue_19889():
+    e = Add(-5, Mul(-1, -1, evaluate=False), evaluate=False)
+    assert latex(e) == r"-5 + \left(-1\right) \left(-1\right)"
 
 def test_latex_UnevaluatedExpr():
     x = symbols("x")

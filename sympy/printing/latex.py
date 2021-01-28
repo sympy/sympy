@@ -375,6 +375,8 @@ class LatexPrinter(Printer):
         for i, term in enumerate(terms):
             if i == 0:
                 pass
+            elif term.is_Mul and not any([True for arg in term.args if not arg.is_Integer]):
+                tex += " + "
             elif _coeff_isneg(term):
                 tex += " - "
                 term = -term

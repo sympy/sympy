@@ -90,6 +90,7 @@ def _coeff_isneg(a):
         a = a.args[0]
     if a.is_Mul:
         a = a.args[0]
+
     return a.is_Number and a.is_extended_negative
 
 

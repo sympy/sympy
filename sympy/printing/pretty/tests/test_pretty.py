@@ -6346,19 +6346,19 @@ def test_issue_8292():
     e = sympify('((x+x**4)/(x-1))-(2*(x-1)**4/(x-1)**4)', evaluate=False)
     ucode_str = \
 """\
-           4    4    \n\
-  2⋅(x - 1)    x  + x\n\
-- ────────── + ──────\n\
-          4    x - 1 \n\
-   (x - 1)           \
+              4     4     \n\
+  2⋅(x + -1⋅1)     x  + x \n\
+- ───────────── + ────────\n\
+             4    x + -1⋅1\n\
+   (x + -1⋅1)             \
 """
     ascii_str = \
 """\
-           4    4    \n\
-  2*(x - 1)    x  + x\n\
-- ---------- + ------\n\
-          4    x - 1 \n\
-   (x - 1)           \
+              4     4     \n\
+  2*(x + -1*1)     x  + x \n\
+- ------------- + --------\n\
+             4    x + -1*1\n\
+   (x + -1*1)             \
 """
     assert pretty(e) == ascii_str
     assert upretty(e) == ucode_str
@@ -6467,6 +6467,9 @@ def test_issue_13651():
     expr2 = c + Mul(-1, a - b + d, evaluate=False)
     assert pretty(expr2) == 'c - (a - b + d)'
 
+def test_issue_19889():
+    e = Add(-5, Mul(-1, -1, evaluate=False), evaluate=False)
+    assert pretty(e) == "-5 + -1*(-1)"
 
 def test_pretty_primenu():
     from sympy.ntheory.factor_ import primenu
