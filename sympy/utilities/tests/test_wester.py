@@ -905,7 +905,7 @@ def test_M9():
 def test_M10():
     # TODO: Replace solve with solveset, as of now test fails for solveset
     integer = Symbol('integer',integer=True)
-    assert solve(exp(x) - x, x) == [-LambertW(-1,integer)]
+    assert solve(exp(x) - x, x) == [Lambda(integer, -LambertW(-1, integer))]
 
 
 @XFAIL
