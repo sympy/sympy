@@ -4,13 +4,14 @@ import operator
 from sympy.core import Add, Basic, sympify
 from sympy.core.add import add
 from sympy.functions import adjoint
-from sympy.matrices.common import ShapeError
+from sympy.matrices.common import ShapeError, MatrixKind
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
     exhaust, do_one, glom)
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix, GenericZeroMatrix
+from sympy.tensor import shape
 from sympy.utilities import default_sort_key, sift
 
 # XXX: MatAdd should perhaps not subclass directly from Add
@@ -94,7 +95,7 @@ def validate(*args):
 
     A = args[0]
     for B in args[1:]:
-        if A.shape != B.shape:
+        if shape(A) != shape(B):
             raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
 factor_of = lambda arg: arg.as_coeff_mmul()[0]
@@ -141,5 +142,25 @@ rules = (rm_id(lambda x: x == 0 or isinstance(x, ZeroMatrix)),
          merge_explicit,
          sort(default_sort_key))
 
-canonicalize = exhaust(condition(lambda x: isinstance(x, MatAdd),
+canonicalize = exhaust(condition(lambda x: isinstance(x, Add) and isinstance(x.kind, MatrixKind),
                                  do_one(*rules)))
+
+
+###
+
+def _add_preprocess(self, args, check=False):
+    identity = GenericZeroMatrix()
+    args = list(filter(lambda i: identity != i, args))
+    if check:
+        validate(*args)
+    return args
+
+MatrixKind._add_preprocess = _add_preprocess
+
+
+def _eval_add(self, addcls, args):
+    obj = addcls._from_args(args, is_commutative=False)
+    obj = canonicalize(obj)
+    return obj
+
+MatrixKind._eval_add = _eval_add

@@ -9,6 +9,7 @@ from .evalf import EvalfMixin, pure_complex
 from .decorators import call_highest_priority, sympify_method_args, sympify_return
 from .cache import cacheit
 from .compatibility import as_int, default_sort_key
+from .kind import Kind
 from sympy.utilities.misc import func_name
 from mpmath.libmp import mpf_log, prec_to_dps
 
@@ -4053,6 +4054,9 @@ class ExprBuilder:
             elif id(arg) == id(elem):
                 return (i,)
         return None
+
+
+Kind._args_type = Expr
 
 
 from .mul import Mul
