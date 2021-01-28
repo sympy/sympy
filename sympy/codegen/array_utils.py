@@ -1934,6 +1934,7 @@ def _suppress_trivial_dims_in_tensor_product(mat_list):
     # That is, add contractions over trivial dimensions:
     mat_11 = []
     mat_k1 = []
+    mat_list = [i for i in mat_list if i != 1 and not i.is_Identity]
     for mat in mat_list:
         if mat.shape == (1, 1):
             mat_11.append(mat)
