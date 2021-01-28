@@ -5,11 +5,10 @@ properties of Pauli matrices are used (we don't use the Matrix class).
 See the documentation to the class Pauli for examples.
 
 References
-~~~~~~~~~~
+==========
+
 .. [1] https://en.wikipedia.org/wiki/Pauli_matrices
 """
-
-from __future__ import print_function, division
 
 from sympy import Symbol, I, Mul, Pow, Add
 from sympy.physics.quantum import TensorProduct
@@ -19,7 +18,7 @@ __all__ = ['evaluate_pauli_product']
 
 def delta(i, j):
     """
-    Returns 1 if i == j, else 0.
+    Returns 1 if ``i == j``, else 0.
 
     This is used in the multiplication of Pauli matrices.
 
@@ -41,7 +40,7 @@ def delta(i, j):
 def epsilon(i, j, k):
     """
     Return 1 if i,j,k is equal to (1,2,3), (2,3,1), or (3,1,2);
-    -1 if i,j,k is equal to (1,3,2), (3,2,1), or (2,1,3);
+    -1 if ``i``,``j``,``k`` is equal to (1,3,2), (3,2,1), or (2,1,3);
     else return 0.
 
     This is used in the multiplication of Pauli matrices.
@@ -66,6 +65,9 @@ def epsilon(i, j, k):
 class Pauli(Symbol):
     """
     The class representing algebraic properties of Pauli matrices.
+
+    Explanation
+    ===========
 
     The symbol used to display the Pauli matrices can be changed with an
     optional parameter ``label="sigma"``. Pauli matrices with different
@@ -145,16 +147,16 @@ class Pauli(Symbol):
                     + I*epsilon(j, k, 1)*Pauli(1,jlab) \
                     + I*epsilon(j, k, 2)*Pauli(2,jlab) \
                     + I*epsilon(j, k, 3)*Pauli(3,jlab)
-        return super(Pauli, self).__mul__(other)
+        return super().__mul__(other)
 
     def _eval_power(b, e):
         if e.is_Integer and e.is_positive:
-            return super(Pauli, b).__pow__(int(e) % 2)
+            return super().__pow__(int(e) % 2)
 
 
 def evaluate_pauli_product(arg):
     '''Help function to evaluate Pauli matrices product
-    with symbolic objects
+    with symbolic objects.
 
     Parameters
     ==========

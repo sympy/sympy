@@ -310,7 +310,7 @@ def test_latex_symbols():
     assert latex(TAU) == r"\tau"
     assert latex(taU) == r"\tau"
     # Check that all capitalized greek letters are handled explicitly
-    capitalized_letters = set(l.capitalize() for l in greek_letters_set)
+    capitalized_letters = {l.capitalize() for l in greek_letters_set}
     assert len(capitalized_letters - set(tex_greek_dictionary.keys())) == 0
     assert latex(Gamma + lmbda) == r"\Gamma + \lambda"
     assert latex(Gamma * lmbda) == r"\Gamma \lambda"
@@ -2702,3 +2702,8 @@ def test_global_settings():
     # check we really did undo it
     assert inspect.signature(latex).parameters['imaginary_unit'].default == 'i'
     assert latex(I) == 'i'
+
+def test_pickleable():
+    # this tests that the _PrintFunction instance is pickleable
+    import pickle
+    assert pickle.loads(pickle.dumps(latex)) is latex

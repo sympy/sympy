@@ -482,9 +482,9 @@ def convert_func(func):
         expr = convert_expr(func.base)
         if func.root:
             r = convert_expr(func.root)
-            return sympy.root(expr, r)
+            return sympy.root(expr, r, evaluate=False)
         else:
-            return sympy.sqrt(expr)
+            return sympy.sqrt(expr, evaluate=False)
     elif func.FUNC_SUM():
         return handle_sum_or_prod(func, "summation")
     elif func.FUNC_PROD():

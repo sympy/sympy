@@ -4024,7 +4024,7 @@ def test_pretty_sets():
     assert pretty(s(*range(1, 6))) == "{1, 2, 3, 4, 5}"
     assert pretty(s(*range(1, 13))) == "{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}"
 
-    assert pretty(set([x*y, x**2])) == \
+    assert pretty({x*y, x**2}) == \
 """\
   2      \n\
 {x , x*y}\
@@ -4708,7 +4708,7 @@ def test_pretty_prec():
 
 def test_pprint():
     import sys
-    from sympy.core.compatibility import StringIO
+    from io import StringIO
     fd = StringIO()
     sso = sys.stdout
     sys.stdout = fd
@@ -4724,7 +4724,7 @@ def test_pretty_class():
     class C:
         pass   # C has no .__class__ and this was causing problems
 
-    class D(object):
+    class D:
         pass
 
     assert pretty( C ) == str( C )
@@ -5942,7 +5942,11 @@ def test_PrettyPoly():
 
 def test_issue_6285():
     assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
-    assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
+    assert pretty(Pow(x, (1/pi))) == \
+    ' 1 \n'\
+    ' --\n'\
+    ' pi\n'\
+    'x  '
 
 
 def test_issue_6359():
@@ -7203,6 +7207,51 @@ def test_is_combining():
     line = "v̇_m"
     assert [is_combining(sym) for sym in line] == \
         [False, True, False, False]
+
+
+def test_issue_17616():
+    assert pretty(pi**(1/exp(1))) == \
+   '  / -1\\\n'\
+   '  \\e  /\n'\
+   'pi     '
+
+    assert upretty(pi**(1/exp(1))) == \
+   ' ⎛ -1⎞\n'\
+   ' ⎝ℯ  ⎠\n'\
+   'π     '
+
+    assert pretty(pi**(1/pi)) == \
+    '  1 \n'\
+    '  --\n'\
+    '  pi\n'\
+    'pi  '
+
+    assert upretty(pi**(1/pi)) == \
+    ' 1\n'\
+    ' ─\n'\
+    ' π\n'\
+    'π '
+
+    assert pretty(pi**(1/EulerGamma)) == \
+    '      1     \n'\
+    '  ----------\n'\
+    '  EulerGamma\n'\
+    'pi          '
+
+    assert upretty(pi**(1/EulerGamma)) == \
+    ' 1\n'\
+    ' ─\n'\
+    ' γ\n'\
+    'π '
+
+    z = Symbol("x_17")
+    assert upretty(7**(1/z)) == \
+    'x₁₇___\n'\
+    ' ╲╱ 7 '
+
+    assert pretty(7**(1/z)) == \
+    'x_17___\n'\
+    '  \\/ 7 '
 
 
 def test_issue_17857():

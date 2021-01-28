@@ -14,6 +14,9 @@ class Body(RigidBody, Particle):  # type: ignore
     passed in and central_inertia is left as None, the Particle object is
     created. Otherwise a RigidBody object will be created.
 
+    Explanation
+    ===========
+
     The attributes that Body possesses will be the same as a Particle instance
     or a Rigid Body instance depending on which was created. Additional
     attributes are listed below.

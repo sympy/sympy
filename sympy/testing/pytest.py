@@ -1,14 +1,11 @@
 """py.test hacks to support XFAIL/XPASS"""
 
-from __future__ import print_function, division
-
 import sys
 import functools
 import os
 import contextlib
 import warnings
 
-from sympy.core.compatibility import get_function_name
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
@@ -116,7 +113,7 @@ else:
             raise TypeError(
                 'raises() expects a callable for the 2nd argument.')
 
-    class RaisesContext(object):
+    class RaisesContext:
         def __init__(self, expectedException):
             self.expectedException = expectedException
 
@@ -147,10 +144,10 @@ else:
             except Exception as e:
                 message = str(e)
                 if message != "Timeout":
-                    raise XFail(get_function_name(func))
+                    raise XFail(func.__name__)
                 else:
                     raise Skipped("Timeout")
-            raise XPass(get_function_name(func))
+            raise XPass(func.__name__)
 
         wrapper = functools.update_wrapper(wrapper, func)
         return wrapper

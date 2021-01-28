@@ -355,7 +355,7 @@ def test_derivatives_matrix_norms():
     assert expr.diff(X) == a/(2*sqrt(a.T*X*b))*b.T
 
     expr = d.T*x*(a.T*X*b)**S.Half*y.T*c
-    assert expr.diff(X) == a*x.T*d/(2*sqrt(a.T*X*b))*y.T*c*b.T
+    assert expr.diff(X) == a*d.T*x/(2*sqrt(a.T*X*b))*y.T*c*b.T
 
 
 def test_derivatives_elementwise_applyfunc():

@@ -458,8 +458,8 @@ def test_solveset_sqrt_2():
     rb = Rational(4, 5)
     assert all(abs(eq.subs(x, i).n()) < 1e-10 for i in (ra, rb)) and \
         len(ans) == 2 and \
-        set([i.n(chop=True) for i in ans]) == \
-        set([i.n(chop=True) for i in (ra, rb)])
+        {i.n(chop=True) for i in ans} == \
+        {i.n(chop=True) for i in (ra, rb)}
 
     assert solveset_real(sqrt(x) + x**Rational(1, 3) +
                                  x**Rational(1, 4), x) == FiniteSet(0)
@@ -701,6 +701,12 @@ def test_piecewise_solveset():
     from sympy.logic.boolalg import BooleanTrue
     f = BooleanTrue()
     assert solveset(f, x, domain=Interval(-3, 10)) == Interval(-3, 10)
+
+    # issue 20552
+    f = Piecewise((0, Eq(x, 0)), (x**2/Abs(x), True))
+    g = Piecewise((0, Eq(x, pi)), ((x - pi)/sin(x), True))
+    assert solveset(f, x, domain=S.Reals) == FiniteSet(0)
+    assert solveset(g) == FiniteSet(pi)
 
 
 def test_solveset_complex_polynomial():
@@ -1798,10 +1804,10 @@ def test_substitution_basic():
     assert substitution(system, [x, y]) == soln
 
     soln = FiniteSet((-1, 1))
-    assert substitution([x + y], [x], [{y: 1}], [y], set([]), [x, y]) == soln
+    assert substitution([x + y], [x], [{y: 1}], [y], set(), [x, y]) == soln
     assert substitution(
         [x + y], [x], [{y: 1}], [y],
-        set([x + 1]), [y, x]) == S.EmptySet
+        {x + 1}, [y, x]) == S.EmptySet
 
 
 def test_issue_5132_substitution():
@@ -2072,8 +2078,8 @@ def test_issue_17882():
 def test_term_factors():
     assert list(_term_factors(3**x - 2)) == [-2, 3**x]
     expr = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
-    assert set(_term_factors(expr)) == set([
-        3**(x + 2), 4**(x + 2), 3**(x + 3), 4**(x - 1), -1, 4**(x + 1)])
+    assert set(_term_factors(expr)) == {
+        3**(x + 2), 4**(x + 2), 3**(x + 3), 4**(x - 1), -1, 4**(x + 1)}
 
 
 #################### tests for transolve and its helpers ###############
@@ -2470,6 +2476,16 @@ def test_solve_modular():
 def test_issue_17276():
     assert nonlinsolve([Eq(x, 5**(S(1)/5)), Eq(x*y, 25*sqrt(5))], x, y) == \
      FiniteSet((5**(S(1)/5), 25*5**(S(3)/10)))
+
+
+def test_issue_10426():
+    x=Dummy('x')
+    a=Symbol('a')
+    n=Dummy('n')
+    assert (solveset(sin(x + a) - sin(x), a)).dummy_eq(Dummy('x')) == (Union(
+        ImageSet(Lambda(n, 2*n*pi), S.Integers),
+        Intersection(S.Complexes, ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*x))) + 2*im(x))),
+        S.Integers)))).dummy_eq(Dummy('x,n'))
 
 
 @XFAIL

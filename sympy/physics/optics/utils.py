@@ -13,8 +13,6 @@
 * transverse_magnification
 """
 
-from __future__ import division
-
 __all__ = ['refraction_angle',
            'deviation',
            'fresnel_coefficients',
@@ -50,18 +48,18 @@ def refractive_index_of_medium(medium):
 def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     """
     This function calculates transmitted vector after refraction at planar
-    surface. `medium1` and `medium2` can be `Medium` or any sympifiable object.
-    If `incident` is a number then treated as angle of incidence (in radians)
+    surface. ``medium1`` and ``medium2`` can be ``Medium`` or any sympifiable object.
+    If ``incident`` is a number then treated as angle of incidence (in radians)
     in which case refraction angle is returned.
 
-    If `incident` is an object of `Ray3D`, `normal` also has to be an instance
+    If ``incident`` is an object of `Ray3D`, `normal` also has to be an instance
     of `Ray3D` in order to get the output as a `Ray3D`. Please note that if
     plane of separation is not provided and normal is an instance of `Ray3D`,
-    normal will be assumed to be intersecting incident ray at the plane of
+    ``normal`` will be assumed to be intersecting incident ray at the plane of
     separation. This will not be the case when `normal` is a `Matrix` or
     any other sequence.
-    If `incident` is an instance of `Ray3D` and `plane` has not been provided
-    and `normal` is not `Ray3D`, output will be a `Matrix`.
+    If ``incident`` is an instance of `Ray3D` and `plane` has not been provided
+    and ``normal`` is not `Ray3D`, output will be a `Matrix`.
 
     Parameters
     ==========
@@ -76,6 +74,9 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
         Normal vector
     plane : Plane
         Plane of separation of the two media.
+
+    Returns
+    =======
 
     Returns an angle of refraction or a refracted ray depending on inputs.
 
@@ -233,6 +234,9 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
     medium2 : Medium or sympifiable
         Medium 2 or its refractive index
 
+    Returns
+    =======
+
     Returns a list with four real Fresnel coefficients:
     [reflection p (TM), reflection s (TE),
     transmission p (TM), transmission s (TE)]
@@ -254,7 +258,7 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
     References
     ==========
 
-    https://en.wikipedia.org/wiki/Fresnel_equations
+    .. [1] https://en.wikipedia.org/wiki/Fresnel_equations
     """
     if not 0 <= 2*angle_of_incidence < pi:
         raise ValueError('Angle of incidence not in range [0:pi/2)')
@@ -421,9 +425,9 @@ def critical_angle(medium1, medium2):
     ==========
 
     medium 1 : Medium or sympifiable
-        Refractive index of Medium 1
+        Refractive index of Medium 1.
     medium 2 : Medium or sympifiable
-        Refractive index of Medium 1
+        Refractive index of Medium 1.
 
     Examples
     ========
@@ -626,17 +630,19 @@ def hyperfocal_distance(f, N, c):
 
     Parameters
     ==========
+
     f: sympifiable
-    Focal length of a given lens
+        Focal length of a given lens.
 
     N: sympifiable
-    F-number of a given lens
+        F-number of a given lens.
 
     c: sympifiable
-    Circle of Confusion (CoC) of a given image format
+        Circle of Confusion (CoC) of a given image format.
 
     Example
     =======
+
     >>> from sympy.physics.optics import hyperfocal_distance
     >>> round(hyperfocal_distance(f = 0.5, N = 8, c = 0.0033), 2)
     9.47
@@ -656,14 +662,16 @@ def transverse_magnification(si, so):
 
     Parameters
     ==========
+
     so: sympifiable
-    Lens-object distance
+        Lens-object distance.
 
     si: sympifiable
-    Lens-image distance
+        Lens-image distance.
 
     Example
     =======
+
     >>> from sympy.physics.optics import transverse_magnification
     >>> transverse_magnification(30, 15)
     -2

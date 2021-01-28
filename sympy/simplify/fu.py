@@ -378,7 +378,7 @@ def TR6(rv, max=4, pow=False):
 
 
 def TR7(rv):
-    """Lowering the degree of cos(x)**2
+    """Lowering the degree of cos(x)**2.
 
     Examples
     ========
@@ -928,7 +928,7 @@ def TR12(rv, first=True):
 
 def TR12i(rv):
     """Combine tan arguments as
-    (tan(y) + tan(x))/(tan(x)*tan(y) - 1) -> -tan(x + y)
+    (tan(y) + tan(x))/(tan(x)*tan(y) - 1) -> -tan(x + y).
 
     Examples
     ========
@@ -1153,7 +1153,7 @@ def TRmorrie(rv):
     References
     ==========
 
-    https://en.wikipedia.org/wiki/Morrie%27s_law
+    .. [1] https://en.wikipedia.org/wiki/Morrie%27s_law
 
     """
 
@@ -1180,7 +1180,6 @@ def TRmorrie(rv):
         for a in args:
             c = args[a]
             c.sort()
-            no = []
             while c:
                 k = 0
                 cc = ci = c[0]
@@ -1206,8 +1205,8 @@ def TRmorrie(rv):
                             c.remove(cc)
                     new.append(newarg**take)
                 else:
-                    no.append(c.pop(0))
-            c[:] = no
+                    b = cos(c.pop(0)*a)
+                    other.append(b**coss[b])
 
         if new:
             rv = Mul(*(new + other + [
@@ -1475,7 +1474,7 @@ def TRpower(rv):
     References
     ==========
 
-    https://en.wikipedia.org/wiki/List_of_trigonometric_identities#Power-reduction_formulae
+    .. [1] https://en.wikipedia.org/wiki/List_of_trigonometric_identities#Power-reduction_formulae
 
     """
 
@@ -1623,8 +1622,8 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
 
     References
     ==========
-    http://rfdz.ph-noe.ac.at/fileadmin/Mathematik_Uploads/ACDCA/
-    DESTIME2006/DES_contribs/Fu/simplification.pdf
+
+    .. [1] https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.657.2478&rep=rep1&type=pdf
     """
     fRL1 = greedy(RL1, measure)
     fRL2 = greedy(RL2, measure)
@@ -1648,7 +1647,7 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
 
 
 def process_common_addends(rv, do, key2=None, key1=True):
-    """Apply ``do`` to addends of ``rv`` that (if key1=True) share at least
+    """Apply ``do`` to addends of ``rv`` that (if ``key1=True``) share at least
     a common absolute value of their coefficient and the value of ``key2`` when
     applied to the argument. If ``key1`` is False ``key2`` must be supplied and
     will be the only key applied.
@@ -1956,7 +1955,7 @@ def _osborne(e, d):
     References
     ==========
 
-    https://en.wikipedia.org/wiki/Hyperbolic_function
+    .. [1] https://en.wikipedia.org/wiki/Hyperbolic_function
     """
 
     def f(rv):
@@ -1995,7 +1994,7 @@ def _osbornei(e, d):
     References
     ==========
 
-    https://en.wikipedia.org/wiki/Hyperbolic_function
+    .. [1] https://en.wikipedia.org/wiki/Hyperbolic_function
     """
 
     def f(rv):
@@ -2045,7 +2044,7 @@ def hyper_as_trig(rv):
     References
     ==========
 
-    https://en.wikipedia.org/wiki/Hyperbolic_function
+    .. [1] https://en.wikipedia.org/wiki/Hyperbolic_function
     """
     from sympy.simplify.simplify import signsimp
     from sympy.simplify.radsimp import collect
@@ -2066,6 +2065,9 @@ def hyper_as_trig(rv):
 
 def sincos_to_sum(expr):
     """Convert products and powers of sin and cos to sums.
+
+    Explanation
+    ===========
 
     Applied power reduction TRpower first, then expands products, and
     converts products to sums with TR8.

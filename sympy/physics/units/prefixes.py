@@ -74,7 +74,7 @@ class Prefix(Expr):
     def __mul__(self, other):
         from sympy.physics.units import Quantity
         if not isinstance(other, (Quantity, Prefix)):
-            return super(Prefix, self).__mul__(other)
+            return super().__mul__(other)
 
         fact = self.scale_factor * other.scale_factor
 
@@ -91,7 +91,7 @@ class Prefix(Expr):
 
     def __truediv__(self, other):
         if not hasattr(other, "scale_factor"):
-            return super(Prefix, self).__truediv__(other)
+            return super().__truediv__(other)
 
         fact = self.scale_factor / other.scale_factor
 

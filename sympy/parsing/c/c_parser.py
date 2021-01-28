@@ -1,4 +1,3 @@
-from __future__ import unicode_literals, print_function
 from sympy.external import import_module
 import os
 
@@ -56,7 +55,7 @@ if cin:
     import sys
     import tempfile
 
-    class BaseParser(object):
+    class BaseParser:
         """Base Class for the C parser"""
 
         def __init__(self):
@@ -89,7 +88,7 @@ if cin:
 
         def __init__(self):
             """Initializes the code converter"""
-            super(CCodeConverter, self).__init__()
+            super().__init__()
             self._py_nodes = []
             self._data_types = {
                 "void": {

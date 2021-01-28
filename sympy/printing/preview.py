@@ -1,6 +1,3 @@
-from __future__ import print_function, division
-
-import io
 import os
 from os.path import join
 import shutil
@@ -239,7 +236,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     latex_main = preamble + '\n' + latex_string + '\n\n' + r"\end{document}"
 
     with tempfile.TemporaryDirectory() as workdir:
-        with io.open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
+        with open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
             fh.write(latex_main)
 
         if outputTexFile is not None:

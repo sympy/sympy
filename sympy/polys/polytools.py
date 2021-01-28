@@ -593,7 +593,7 @@ class Poly(Basic):
 
         return f.per(new, gens=gens)
 
-    def replace(f, x, y=None, *_ignore):
+    def replace(f, x, y=None, **_ignore):
         # XXX this does not match Basic's signature
         """
         Replace ``x`` with ``y`` in generators list.
@@ -2582,10 +2582,10 @@ class Poly(Basic):
         >>> Poly(1 + x, x).revert(1)
         Poly(1, x, domain='ZZ')
 
-        >>> Poly(x**2 - 1, x).revert(1)
+        >>> Poly(x**2 - 2, x).revert(2)
         Traceback (most recent call last):
         ...
-        NotReversible: only unity is reversible in a ring
+        NotReversible: only units are reversible in a ring
 
         >>> Poly(1/x, x).revert(1)
         Traceback (most recent call last):
@@ -4480,8 +4480,8 @@ def degree(f, gen=0):
          expression like func = %s, e.g. degree(func, gen = %s) instead of
          degree(func, gen = %s).
         ''' % (f, next(ordered(f.free_symbols)), gen)))
-
-    return Integer(p.degree(gen))
+    result = p.degree(gen)
+    return Integer(result) if isinstance(result, int) else S.NegativeInfinity
 
 
 @public

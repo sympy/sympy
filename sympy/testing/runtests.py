@@ -37,7 +37,7 @@ import warnings
 from contextlib import contextmanager
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import (exec_, PY3, unwrap)
+from sympy.core.compatibility import (PY3, unwrap)
 from sympy.external import import_module
 
 IS_WINDOWS = (os.name == 'nt')
@@ -675,6 +675,9 @@ def _get_doctest_blacklist():
         "sympy/matrices/densearith.py", # raises deprecation warning
         "sympy/matrices/densesolve.py", # raises deprecation warning
         "sympy/matrices/densetools.py", # raises deprecation warning
+        "sympy/printing/ccode.py", # backwards compatibility shim, importing it breaks the codegen doctests
+        "sympy/printing/fcode.py", # backwards compatibility shim, importing it breaks the codegen doctests
+        "sympy/printing/cxxcode.py", # backwards compatibility shim, importing it breaks the codegen doctests
         "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code
@@ -1108,7 +1111,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
     return SymPyTestResults(runner.failures, runner.tries)
 
 
-class SymPyTests(object):
+class SymPyTests:
 
     def __init__(self, reporter, kw="", post_mortem=False,
                  seed=None, fast_threshold=None, slow_threshold=None):
@@ -1220,7 +1223,7 @@ class SymPyTests(object):
                         pass
 
                 code = compile(source, filename, "exec", flags=0, dont_inherit=True)
-                exec_(code, gl)
+                exec(code, gl)
             except (SystemExit, KeyboardInterrupt):
                 raise
             except ImportError:
@@ -1367,7 +1370,7 @@ class SymPyTests(object):
         return sorted([os.path.normcase(gi) for gi in g])
 
 
-class SymPyDocTests(object):
+class SymPyDocTests:
 
     def __init__(self, reporter, normal):
         self._count = 0
@@ -1395,7 +1398,7 @@ class SymPyDocTests(object):
     def test_file(self, filename):
         clear_cache()
 
-        from sympy.core.compatibility import StringIO
+        from io import StringIO
         import sympy.interactive.printing as interactive_printing
         from sympy import pprint_use_unicode
 
@@ -1572,7 +1575,7 @@ class SymPyDocTests(object):
             # monkey-patch pyglet s.t. it does not open a window during
             # doctesting
             import pyglet
-            class DummyWindow(object):
+            class DummyWindow:
                 def __init__(self, *args, **kwargs):
                     self.has_exit = True
                     self.width = 600
@@ -1963,7 +1966,7 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
         return False
 
 
-class Reporter(object):
+class Reporter:
     """
     Parent class for all reporters.
     """
@@ -2042,7 +2045,7 @@ class PyTestReporter(Reporter):
                 stdout = process.stdout.read()
                 if PY3:
                     stdout = stdout.decode("utf-8")
-            except (OSError, IOError):
+            except OSError:
                 pass
             else:
                 # We support the following output formats from stty:

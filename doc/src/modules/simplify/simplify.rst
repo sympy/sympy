@@ -82,6 +82,10 @@ ratsimp
 ^^^^^^^
 .. autofunction:: ratsimp
 
+ratsimpmodprime
+^^^^^^^^^^^^^^^
+.. autofunction:: ratsimpmodprime
+
 Trigonometric simplification
 ----------------------------
 .. module:: sympy.simplify.trigsimp

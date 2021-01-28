@@ -8,7 +8,11 @@ from sympy.simplify import powsimp
 
 
 class Product(ExprWithIntLimits):
-    r"""Represents unevaluated products.
+    r"""
+    Represents unevaluated products.
+
+    Explanation
+    ===========
 
     ``Product`` represents a finite or infinite product, with the first
     argument being the general form of terms in the series, and the second
@@ -400,6 +404,9 @@ class Product(ExprWithIntLimits):
         See docs of :obj:`.Sum.is_convergent()` for explanation of convergence
         in SymPy.
 
+        Explanation
+        ===========
+
         The infinite product:
 
         .. math::
@@ -458,8 +465,8 @@ class Product(ExprWithIntLimits):
         """
         Reverse the order of a limit in a Product.
 
-        Usage
-        =====
+        Explanation
+        ===========
 
         ``reverse_order(expr, *indices)`` reverses some limits in the expression
         ``expr`` which can be either a ``Sum`` or a ``Product``. The selectors in
@@ -545,6 +552,9 @@ def product(*args, **kwargs):
     r"""
     Compute the product.
 
+    Explanation
+    ===========
+
     The notation for symbols is similar to the notation used in Sum or
     Integral. product(f, (i, a, b)) computes the product of f with
     respect to i from a to b, i.e.,
@@ -559,6 +569,9 @@ def product(*args, **kwargs):
 
     If it cannot compute the product, it returns an unevaluated Product object.
     Repeated products can be computed by introducing additional symbols tuples::
+
+    Examples
+    ========
 
     >>> from sympy import product, symbols
     >>> i, n, m, k = symbols('i n m k', integer=True)

@@ -1,7 +1,5 @@
 """Dirac notation for states."""
 
-from __future__ import print_function, division
-
 from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
                    Tuple)
 from sympy.printing.pretty.stringpict import stringPict
@@ -767,7 +765,7 @@ class Wavefunction(Function):
                 new_args[ct] = arg
             ct += 1
 
-        return super(Wavefunction, cls).__new__(cls, *new_args, **options)
+        return super().__new__(cls, *new_args, **options)
 
     def __call__(self, *args, **options):
         var = self.variables

@@ -1,14 +1,76 @@
-from __future__ import print_function, division
-
 from sympy import Basic
 from sympy import S
 from sympy.core.expr import Expr
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import SYMPY_INTS, Iterable
+from sympy.core.kind import Kind, NumberKind, UndefinedKind
+from sympy.core.compatibility import SYMPY_INTS
 from sympy.printing.defaults import Printable
 
 import itertools
+from collections.abc import Iterable
+
+
+class ArrayKind(Kind):
+    """
+    Kind for N-dimensional array in SymPy.
+
+    This kind represents the multidimensional array that algebraic
+    operations are defined. Basic class for this kind is ``NDimArray``,
+    but any expression representing the array can have this.
+
+    Parameters
+    ==========
+
+    element_kind : Kind
+        Kind of the element. Default is :obj:NumberKind `<sympy.core.kind.NumberKind>`,
+        which means that the array contains only numbers.
+
+    Examples
+    ========
+
+    Any instance of array class has ``ArrayKind``.
+
+    >>> from sympy import NDimArray
+    >>> NDimArray([1,2,3]).kind
+    ArrayKind(NumberKind)
+
+    Although expressions representing an array may be not instance of
+    array class, it will have ``ArrayKind`` as well.
+
+    >>> from sympy import Integral
+    >>> from sympy.tensor.array import NDimArray
+    >>> from sympy.abc import x
+    >>> intA = Integral(NDimArray([1,2,3]), x)
+    >>> isinstance(intA, NDimArray)
+    False
+    >>> intA.kind
+    ArrayKind(NumberKind)
+
+    Use ``isinstance()`` to check for ``ArrayKind` without specifying
+    the element kind. Use ``is`` with specifying the element kind.
+
+    >>> from sympy.tensor.array import ArrayKind
+    >>> from sympy.core.kind import NumberKind
+    >>> boolA = NDimArray([True, False])
+    >>> isinstance(boolA.kind, ArrayKind)
+    True
+    >>> boolA.kind is ArrayKind(NumberKind)
+    False
+
+    See Also
+    ========
+
+    shape : Function to return the shape of objects with ``MatrixKind``.
+
+    """
+    def __new__(cls, element_kind=NumberKind):
+        obj = super().__new__(cls, element_kind)
+        obj.element_kind = element_kind
+        return obj
+
+    def __repr__(self):
+        return "ArrayKind(%s)" % self.element_kind
 
 
 class NDimArray(Printable):
@@ -70,6 +132,15 @@ class NDimArray(Printable):
     def __new__(cls, iterable, shape=None, **kwargs):
         from sympy.tensor.array import ImmutableDenseNDimArray
         return ImmutableDenseNDimArray(iterable, shape, **kwargs)
+
+    @property
+    def kind(self):
+        elem_kinds = set(e.kind for e in self._array)
+        if len(elem_kinds) == 1:
+            elemkind, = elem_kinds
+        else:
+            elemkind = UndefinedKind
+        return ArrayKind(elemkind)
 
     def _parse_index(self, index):
         if isinstance(index, (SYMPY_INTS, Integer)):
@@ -329,7 +400,7 @@ class NDimArray(Printable):
         from sympy.tensor.array.arrayop import Flatten
 
         if not isinstance(other, NDimArray):
-            raise TypeError(str(other))
+            return NotImplemented
 
         if self.shape != other.shape:
             raise ValueError("array shape mismatch")

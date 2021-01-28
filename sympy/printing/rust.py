@@ -31,8 +31,6 @@ complete source code files.
 # .. _Rational64: http://rust-num.github.io/num/num/rational/type.Rational64.html
 # .. _BigRational: http://rust-num.github.io/num/num/rational/type.BigRational.html
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 from sympy.core import S, Rational, Float, Lambda
@@ -342,14 +340,14 @@ class RustCodePrinter(CodePrinter):
         return self._print_Function(expr)
 
     def _print_Float(self, expr, _type=False):
-        ret = super(RustCodePrinter, self)._print_Float(expr)
+        ret = super()._print_Float(expr)
         if _type:
             return ret + '_f64'
         else:
             return ret
 
     def _print_Integer(self, expr, _type=False):
-        ret = super(RustCodePrinter, self)._print_Integer(expr)
+        ret = super()._print_Integer(expr)
         if _type:
             return ret + '_i32'
         else:
@@ -363,7 +361,7 @@ class RustCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array
@@ -453,7 +451,7 @@ class RustCodePrinter(CodePrinter):
 
     def _print_Symbol(self, expr):
 
-        name = super(RustCodePrinter, self)._print_Symbol(expr)
+        name = super()._print_Symbol(expr)
 
         if expr in self._dereference:
             return '(*%s)' % name

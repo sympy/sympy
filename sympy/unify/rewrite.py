@@ -1,17 +1,15 @@
 """ Functions to support rewriting of SymPy expressions """
 
-from __future__ import print_function, division
-
 from sympy import Expr
 from sympy.assumptions import ask
 from sympy.strategies.tools import subs
 from sympy.unify.usympy import rebuild, unify
 
 def rewriterule(source, target, variables=(), condition=None, assume=None):
-    """ Rewrite rule
+    """ Rewrite rule.
 
     Transform expressions that match source into expressions that match target
-    treating all `variables` as wilds.
+    treating all ``variables`` as wilds.
 
     Examples
     ========

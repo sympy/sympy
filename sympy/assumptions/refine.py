@@ -9,20 +9,38 @@ def refine(expr, assumptions=True):
     """
     Simplify an expression using assumptions.
 
-    Gives the form of expr that would be obtained if symbols
-    in it were replaced by explicit numerical expressions satisfying
-    the assumptions.
+    Explanation
+    ===========
+
+    Unlike :func:`~.simplify()` which performs structural simplification
+    without any assumption, this function transforms the expression into
+    the form which is only valid under certain assumptions. Note that
+    ``simplify()`` is generally not done in refining process.
+
+    Refining boolean expression involves reducing it to ``True`` or
+    ``False``. Unlike :func:~.`ask()`, the expression will not be reduced
+    if the truth value cannot be determined.
 
     Examples
     ========
 
-        >>> from sympy import refine, sqrt, Q
-        >>> from sympy.abc import x
-        >>> refine(sqrt(x**2), Q.real(x))
-        Abs(x)
-        >>> refine(sqrt(x**2), Q.positive(x))
-        x
+    >>> from sympy import refine, sqrt, Q
+    >>> from sympy.abc import x
+    >>> refine(sqrt(x**2), Q.real(x))
+    Abs(x)
+    >>> refine(sqrt(x**2), Q.positive(x))
+    x
 
+    >>> refine(Q.real(x), Q.positive(x))
+    True
+    >>> refine(Q.positive(x), Q.real(x))
+    Q.positive(x)
+
+    See Also
+    ========
+
+    sympy.simplify.simplify.simplify : Structural simplification without assumptions.
+    sympy.assumptions.ask.ask : Query for boolean expressions using assumptions.
     """
     if not isinstance(expr, Basic):
         return expr
@@ -88,6 +106,9 @@ def refine_abs(expr, assumptions):
 def refine_Pow(expr, assumptions):
     """
     Handler for instances of Pow.
+
+    Examples
+    ========
 
     >>> from sympy import Q
     >>> from sympy.assumptions.refine import refine_Pow
@@ -185,7 +206,7 @@ def refine_Pow(expr, assumptions):
 
 def refine_atan2(expr, assumptions):
     """
-    Handler for the atan2 function
+    Handler for the atan2 function.
 
     Examples
     ========
@@ -229,22 +250,12 @@ def refine_atan2(expr, assumptions):
         return expr
 
 
-def refine_Relational(expr, assumptions):
-    """
-    Handler for Relational
-
-    >>> from sympy.assumptions.refine import refine_Relational
-    >>> from sympy.assumptions.ask import Q
-    >>> from sympy.abc import x
-    >>> refine_Relational(x<0, ~Q.is_true(x<0))
-    False
-    """
-    return ask(Q.is_true(expr), assumptions)
-
-
 def refine_re(expr, assumptions):
     """
     Handler for real part.
+
+    Examples
+    ========
 
     >>> from sympy.assumptions.refine import refine_re
     >>> from sympy import Q, re
@@ -265,6 +276,9 @@ def refine_re(expr, assumptions):
 def refine_im(expr, assumptions):
     """
     Handler for imaginary part.
+
+    Explanation
+    ===========
 
     >>> from sympy.assumptions.refine import refine_im
     >>> from sympy import Q, im
@@ -295,7 +309,7 @@ def _refine_reim(expr, assumptions):
 
 def refine_sign(expr, assumptions):
     """
-    Handler for sign
+    Handler for sign.
 
     Examples
     ========
@@ -336,7 +350,7 @@ def refine_sign(expr, assumptions):
 
 def refine_matrixelement(expr, assumptions):
     """
-    Handler for symmetric part
+    Handler for symmetric part.
 
     Examples
     ========
@@ -361,12 +375,6 @@ handlers_dict = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
     'atan2': refine_atan2,
-    'Equality': refine_Relational,
-    'Unequality': refine_Relational,
-    'GreaterThan': refine_Relational,
-    'LessThan': refine_Relational,
-    'StrictGreaterThan': refine_Relational,
-    'StrictLessThan': refine_Relational,
     're': refine_re,
     'im': refine_im,
     'sign': refine_sign,

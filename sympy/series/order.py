@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, sympify, Expr, Rational, Dummy
 from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
@@ -10,7 +8,10 @@ from sympy.utilities.iterables import uniq
 
 
 class Order(Expr):
-    r""" Represents the limiting behavior of some function
+    r""" Represents the limiting behavior of some function.
+
+    Explanation
+    ===========
 
     The order of a function characterizes the function based on the limiting
     behavior of the function as it goes to some limit. Only taking the limit
@@ -188,8 +189,8 @@ class Order(Expr):
                 s = {k: -1/Dummy() for k in variables}
                 rs = {-1/v: -1/k for k, v in s.items()}
             elif point[0] is not S.Zero:
-                s = dict((k, Dummy() + point[0]) for k in variables)
-                rs = dict((v - point[0], k - point[0]) for k, v in s.items())
+                s = {k: Dummy() + point[0] for k in variables}
+                rs = {v - point[0]: k - point[0] for k, v in s.items()}
             else:
                 s = ()
                 rs = ()

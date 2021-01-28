@@ -1,6 +1,6 @@
 from sympy.core.symbol import symbols
 from sympy.printing import ccode
-from sympy.codegen.ast import Declaration, Variable, float64, int64, String
+from sympy.codegen.ast import Declaration, Variable, float64, int64, String, CodeBlock
 from sympy.codegen.cnodes import (
     alignof, CommaOperator, goto, Label, PreDecrement, PostDecrement, PreIncrement, PostIncrement,
     sizeof, union, struct
@@ -28,12 +28,24 @@ def test_goto_Label():
     assert g != goto('foobar')
     assert ccode(g) == 'goto early_exit'
 
-    l = Label(s)
-    assert l.is_Atom
-    assert ccode(l) == 'early_exit:'
-    assert g.label == l
-    assert l == Label(s)
-    assert l != Label('foobar')
+    l1 = Label(s)
+    assert ccode(l1) == 'early_exit:'
+    assert l1 == Label('early_exit')
+    assert l1 != Label('foobar')
+
+    body = [PreIncrement(x)]
+    l2 = Label(s, body)
+    assert l2.name == String("early_exit")
+    assert l2.body == CodeBlock(PreIncrement(x))
+    assert ccode(l2) == ("early_exit:\n"
+        "++(x);")
+
+    body = [PreIncrement(x), PreDecrement(y)]
+    l2 = Label(s, body)
+    assert l2.name == String("early_exit")
+    assert l2.body == CodeBlock(PreIncrement(x), PreDecrement(y))
+    assert ccode(l2) == ("early_exit:\n"
+        "{\n   ++(x);\n   --(y);\n}")
 
 
 def test_PreDecrement():

@@ -46,7 +46,7 @@ if np and matplotlib:
 #from matplotlib import rc
 #rc('text',usetex=True)
 
-class CircuitPlot(object):
+class CircuitPlot:
     """A class for managing a circuit plot."""
 
     scale = 1.0
@@ -320,10 +320,11 @@ def labeller(n, symbol='q'):
 
     Parameters
     ==========
+
     n : int
-      number of qubits in the circuit
+        number of qubits in the circuit.
     symbol : string
-      A character string to precede all gate labels. E.g. 'q_0', 'q_1', etc.
+        A character string to precede all gate labels. E.g. 'q_0', 'q_1', etc.
 
     >>> from sympy.physics.quantum.circuitplot import labeller
     >>> labeller(2)

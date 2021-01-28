@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import Mul
 from sympy.core.basic import preorder_traversal
 from sympy.core.function import count_ops
@@ -14,6 +12,9 @@ from sympy.utilities.timeutils import timethis
 def combsimp(expr):
     r"""
     Simplify combinatorial expressions.
+
+    Explanation
+    ===========
 
     This function takes as input an expression containing factorials,
     binomials, Pochhammer symbol and other "combinatorial" functions,

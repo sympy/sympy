@@ -18,14 +18,14 @@ def test_python_basic():
     assert python(oo) == "e = oo"
 
     # Powers
-    assert python((x**2)) == "x = Symbol(\'x\')\ne = x**2"
+    assert python(x**2) == "x = Symbol(\'x\')\ne = x**2"
     assert python(1/x) == "x = Symbol('x')\ne = 1/x"
     assert python(y*x**-2) == "y = Symbol('y')\nx = Symbol('x')\ne = y/x**2"
     assert python(
         x**Rational(-5, 2)) == "x = Symbol('x')\ne = x**Rational(-5, 2)"
 
     # Sums of terms
-    assert python((x**2 + x + 1)) in [
+    assert python(x**2 + x + 1) in [
         "x = Symbol('x')\ne = 1 + x + x**2",
         "x = Symbol('x')\ne = x + x**2 + 1",
         "x = Symbol('x')\ne = x**2 + x + 1", ]
@@ -90,7 +90,7 @@ def test_python_relational():
 
 def test_python_functions():
     # Simple
-    assert python((2*x + exp(x))) in "x = Symbol('x')\ne = 2*x + exp(x)"
+    assert python(2*x + exp(x)) in "x = Symbol('x')\ne = 2*x + exp(x)"
     assert python(sqrt(2)) == 'e = sqrt(2)'
     assert python(2**Rational(1, 3)) == 'e = 2**Rational(1, 3)'
     assert python(sqrt(2 + pi)) == 'e = sqrt(2 + pi)'

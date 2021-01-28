@@ -10,8 +10,6 @@ complete source code files.
 
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 from sympy.core import Mul, Pow, S, Rational
@@ -91,7 +89,7 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def __init__(self, settings={}):
-        super(OctaveCodePrinter, self).__init__(settings)
+        super().__init__(settings)
         self.known_functions = dict(zip(known_fcns_src1, known_fcns_src1))
         self.known_functions.update(dict(known_fcns_src2))
         userfuncs = settings.get('user_functions', {})
@@ -107,11 +105,11 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _get_comment(self, text):
-        return "% {0}".format(text)
+        return "% {}".format(text)
 
 
     def _declare_number_const(self, name, value):
-        return "{0} = {1};".format(name, value)
+        return "{} = {};".format(name, value)
 
 
     def _format_code(self, lines):
@@ -214,7 +212,7 @@ class OctaveCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Pow(self, expr):
         powsymbol = '^' if all([x.is_number for x in expr.args]) else '.^'

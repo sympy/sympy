@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import factorial, sqrt, exp, S, assoc_laguerre, Float
 from sympy.functions.special.spherical_harmonics import Ynm
 
@@ -8,12 +6,19 @@ def R_nl(n, l, r, Z=1):
     """
     Returns the Hydrogen radial wavefunction R_{nl}.
 
-    n, l
-        quantum numbers 'n' and 'l'
-    r
-        radial coordinate
-    Z
-        atomic number (1 for Hydrogen, 2 for Helium, ...)
+    Parameters
+    ==========
+
+    n : integer
+        Principal Quantum Number which is
+        an integer with possible values as 1, 2, 3, 4,...
+    l : integer
+        ``l`` is the Angular Momentum Quantum Number with
+        values ranging from 0 to ``n-1``.
+    r :
+        Radial coordinate.
+    Z :
+        Atomic number (1 for Hydrogen, 2 for Helium, ...)
 
     Everything is in Hartree atomic units.
 
@@ -87,15 +92,25 @@ def Psi_nlm(n, l, m, r, phi, theta, Z=1):
     Returns the Hydrogen wave function psi_{nlm}. It's the product of
     the radial wavefunction R_{nl} and the spherical harmonic Y_{l}^{m}.
 
-    n, l, m
-        quantum numbers 'n', 'l' and 'm'
-    r
+    Parameters
+    ==========
+
+    n : integer
+        Principal Quantum Number which is
+        an integer with possible values as 1, 2, 3, 4,...
+    l : integer
+        ``l`` is the Angular Momentum Quantum Number with
+        values ranging from 0 to ``n-1``.
+    m : integer
+        ``m`` is the Magnetic Quantum Number with values
+        ranging from ``-l`` to ``l``.
+    r :
         radial coordinate
-    phi
+    phi :
         azimuthal angle
-    theta
+    theta :
         polar angle
-    Z
+    Z :
         atomic number (1 for Hydrogen, 2 for Helium, ...)
 
     Everything is in Hartree atomic units.
@@ -146,6 +161,15 @@ def E_nl(n, Z=1):
 
     The energy doesn't depend on "l".
 
+    Parameters
+    ==========
+
+    n : integer
+        Principal Quantum Number which is
+        an integer with possible values as 1, 2, 3, 4,...
+    Z :
+        Atomic number (1 for Hydrogen, 2 for Helium, ...)
+
     Examples
     ========
 
@@ -177,15 +201,22 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     The energy is calculated from the Dirac equation. The rest mass energy is
     *not* included.
 
-    n, l
-        quantum numbers 'n' and 'l'
-    spin_up
+    Parameters
+    ==========
+
+    n : integer
+        Principal Quantum Number which is
+        an integer with possible values as 1, 2, 3, 4,...
+    l : integer
+        ``l`` is the Angular Momentum Quantum Number with
+        values ranging from 0 to ``n-1``.
+    spin_up :
         True if the electron spin is up (default), otherwise down
-    Z
-        atomic number (1 for Hydrogen, 2 for Helium, ...)
-    c
-        speed of light in atomic units. Default value is 137.035999037,
-        taken from: http://arxiv.org/abs/1012.3627
+    Z :
+        Atomic number (1 for Hydrogen, 2 for Helium, ...)
+    c :
+        Speed of light in atomic units. Default value is 137.035999037,
+        taken from http://arxiv.org/abs/1012.3627
 
     Examples
     ========

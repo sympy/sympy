@@ -49,8 +49,8 @@ class CoordinateSym(Symbol):
         # We can't use the cached Symbol.__new__ because this class depends on
         # frame and index, which are not passed to Symbol.__xnew__.
         assumptions = {}
-        super(CoordinateSym, cls)._sanitize(assumptions, cls)
-        obj = super(CoordinateSym, cls).__xnew__(cls, name, **assumptions)
+        super()._sanitize(assumptions, cls)
+        obj = super().__xnew__(cls, name, **assumptions)
         _check_frame(frame)
         if index not in range(0, 3):
             raise ValueError("Invalid index specified")
@@ -76,7 +76,7 @@ class CoordinateSym(Symbol):
         return tuple((self._id[0].__hash__(), self._id[1])).__hash__()
 
 
-class ReferenceFrame(object):
+class ReferenceFrame:
     """A reference frame in classical mechanics.
 
     ReferenceFrame is a class used to represent a reference frame in classical
@@ -439,7 +439,7 @@ class ReferenceFrame(object):
 
         It is import to know what form of the direction cosine matrix is
         returned. If ``B.dcm(A)`` is called, it means the "direction cosine
-        matrix of B relative to A". This is the matrix :math:`{}^A\mathbf{R}^B`
+        matrix of B relative to A". This is the matrix :math:`^{\mathbf{A}} \mathbf{R} ^{\mathbf{B}}`
         shown in the following relationship:
 
         .. math::

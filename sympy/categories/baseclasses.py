@@ -8,6 +8,9 @@ class Class(Set):
     r"""
     The base class for any kind of class in the set-theoretic sense.
 
+    Explanation
+    ===========
+
     In axiomatic set theories, everything is a class.  A class which
     can be a member of another class is a set.  A class which is not a
     member of another class is a proper class.  The class `\{1, 2\}`
@@ -24,6 +27,9 @@ class Object(Symbol):
     """
     The base class for any kind of object in an abstract category.
 
+    Explanation
+    ===========
+
     While technically any instance of :class:`~.Basic` will do, this
     class is the recommended way to create abstract objects in
     abstract categories.
@@ -33,6 +39,9 @@ class Object(Symbol):
 class Morphism(Basic):
     """
     The base class for any morphism in an abstract category.
+
+    Explanation
+    ===========
 
     In abstract categories, a morphism is an arrow between two
     category objects.  The object where the arrow starts is called the
@@ -138,6 +147,9 @@ class IdentityMorphism(Morphism):
     """
     Represents an identity morphism.
 
+    Explanation
+    ===========
+
     An identity morphism is a morphism with equal domain and codomain,
     which acts as an identity with respect to composition.
 
@@ -171,6 +183,9 @@ class IdentityMorphism(Morphism):
 class NamedMorphism(Morphism):
     """
     Represents a morphism which has a name.
+
+    Explanation
+    ===========
 
     Names are used to distinguish between morphisms which have the
     same domain and codomain: two named morphisms are equal if they
@@ -225,6 +240,9 @@ class CompositeMorphism(Morphism):
     r"""
     Represents a morphism which is a composition of other morphisms.
 
+    Explanation
+    ===========
+
     Two composite morphisms are equal if the morphisms they were
     obtained from (components) are the same and were listed in the
     same order.
@@ -254,6 +272,9 @@ class CompositeMorphism(Morphism):
     def _add_morphism(t, morphism):
         """
         Intelligently adds ``morphism`` to tuple ``t``.
+
+        Explanation
+        ===========
 
         If ``morphism`` is a composite morphism, its components are
         added to the tuple.  If ``morphism`` is an identity, nothing
@@ -377,6 +398,9 @@ class CompositeMorphism(Morphism):
         """
         Forgets the composite structure of this morphism.
 
+        Explanation
+        ===========
+
         If ``new_name`` is not empty, returns a :class:`NamedMorphism`
         with the supplied name, otherwise returns a :class:`Morphism`.
         In both cases the domain of the new morphism is the domain of
@@ -402,6 +426,9 @@ class CompositeMorphism(Morphism):
 class Category(Basic):
     r"""
     An (abstract) category.
+
+    Explanation
+    ===========
 
     A category [JoyOfCats] is a quadruple `\mbox{K} = (O, \hom, id,
     \circ)` consisting of
@@ -448,6 +475,7 @@ class Category(Basic):
 
     See Also
     ========
+
     Diagram
     """
     def __new__(cls, name, objects=EmptySet, commutative_diagrams=EmptySet):
@@ -505,6 +533,9 @@ class Category(Basic):
         Returns the :class:`~.FiniteSet` of diagrams which are known to
         be commutative in this category.
 
+        Examples
+        ========
+
         >>> from sympy.categories import Object, NamedMorphism, Diagram, Category
         >>> from sympy import FiniteSet
         >>> A = Object("A")
@@ -532,6 +563,9 @@ class Category(Basic):
 class Diagram(Basic):
     r"""
     Represents a diagram in a certain category.
+
+    Explanation
+    ===========
 
     Informally, a diagram is a collection of objects of a category and
     certain morphisms between them.  A diagram is still a monoid with
@@ -583,6 +617,7 @@ class Diagram(Basic):
 
     References
     ==========
+
     [Pare1970] B. Pareigis: Categories and functors.  Academic Press,
     1970.
     """
@@ -655,6 +690,9 @@ class Diagram(Basic):
     def __new__(cls, *args):
         """
         Construct a new instance of Diagram.
+
+        Explanation
+        ===========
 
         If no arguments are supplied, an empty diagram is created.
 
@@ -828,8 +866,8 @@ class Diagram(Basic):
 
     def hom(self, A, B):
         """
-        Returns a 2-tuple of sets of morphisms between objects A and
-        B: one set of morphisms listed as premises, and the other set
+        Returns a 2-tuple of sets of morphisms between objects ``A`` and
+        ``B``: one set of morphisms listed as premises, and the other set
         of morphisms listed as conclusions.
 
         Examples

@@ -59,6 +59,7 @@ AST Type Tree
 
 Predefined types
 ----------------
+
 A number of ``Type`` instances are provided in the ``sympy.codegen.ast`` module
 for convenience. Perhaps the two most common ones for code-generation (of numeric
 codes) are ``float32`` and ``float64`` (known as single and double precision respectively).
@@ -77,6 +78,7 @@ The other ``Type`` instances defined are:
 
 Using the nodes
 ---------------
+
 It is possible to construct simple algorithms using the AST nodes. Let's construct a loop applying
 Newton's method::
 
@@ -157,6 +159,9 @@ def _mk_Tuple(args):
 
 class Token(Basic):
     """ Base class for the AST types.
+
+    Explanation
+    ===========
 
     Defining fields are set in ``__slots__``. Attributes (defined in __slots__)
     are only allowed to contain instances of Basic (unless atomic, see
@@ -536,6 +541,9 @@ def aug_assign(lhs, op, rhs):
     """
     Create 'lhs op= rhs'.
 
+    Explanation
+    ===========
+
     Represents augmented variable assignment for code generation. This is a
     convenience function. You can also use the AugmentedAssignment classes
     directly, like AddAugmentedAssignment(x, y).
@@ -574,7 +582,10 @@ def aug_assign(lhs, op, rhs):
 
 class CodeBlock(Basic):
     """
-    Represents a block of code
+    Represents a block of code.
+
+    Explanation
+    ===========
 
     For now only assignments are supported. This restriction will be lifted in
     the future.
@@ -646,6 +657,9 @@ class CodeBlock(Basic):
         """
         Return a CodeBlock with topologically sorted assignments so that
         variables are assigned before they are used.
+
+        Examples
+        ========
 
         The existing order of assignments is preserved as much as possible.
 
@@ -726,7 +740,10 @@ class CodeBlock(Basic):
     def cse(self, symbols=None, optimizations=None, postprocess=None,
         order='canonical'):
         """
-        Return a new code block with common subexpressions eliminated
+        Return a new code block with common subexpressions eliminated.
+
+        Explanation
+        ===========
 
         See the docstring of :func:`sympy.simplify.cse_main.cse` for more
         information.
@@ -928,6 +945,9 @@ class Node(Token):
 
 class Type(Token):
     """ Represents a type.
+
+    Explanation
+    ===========
 
     The naming is a super-set of NumPy naming. Type has a classmethod
     ``from_expr`` which offer type deduction. It also has a method
@@ -1237,6 +1257,9 @@ class FloatType(FloatBaseType):
     def decimal_dig(self):
         """ Number of digits needed to store & load without loss.
 
+        Explanation
+        ===========
+
         Number of decimal digits needed to guarantee that two consecutive conversions
         (float -> text -> float) to be idempotent. This is useful when one do not want
         to loose precision due to rounding errors when storing a floating point value
@@ -1318,6 +1341,7 @@ class Attribute(Token):
 
     Parameters
     ==========
+
     name : str
     parameters : Tuple
 
@@ -1354,7 +1378,7 @@ pointer_const = Attribute('pointer_const')
 
 
 class Variable(Node):
-    """ Represents a variable
+    """ Represents a variable.
 
     Parameters
     ==========
@@ -1458,6 +1482,9 @@ class Variable(Node):
 
     def as_Declaration(self, **kwargs):
         """ Convenience method for creating a Declaration instance.
+
+        Explanation
+        ===========
 
         If the variable of the Declaration need to wrap a modified
         variable keyword arguments may be passed (overriding e.g.

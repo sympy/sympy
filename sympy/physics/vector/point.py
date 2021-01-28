@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 from .vector import Vector, _check_vector
 from .frame import _check_frame
 from warnings import warn
@@ -6,7 +5,7 @@ from warnings import warn
 __all__ = ['Point']
 
 
-class Point(object):
+class Point:
     """This object represents a point in a dynamic system.
 
     It stores the: position, velocity, and acceleration of a point.

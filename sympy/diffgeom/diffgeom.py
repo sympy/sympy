@@ -1,5 +1,6 @@
 from typing import Any, Set
 
+from functools import reduce
 from itertools import permutations
 
 from sympy.combinatorics import Permutation
@@ -8,7 +9,7 @@ from sympy.core import (
     Pow, Mul, Add, Atom, Lambda, S, Tuple, Dict
 )
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import reduce
+
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
@@ -2038,7 +2039,7 @@ def metric_to_Ricci_components(expr):
 # Classes for deprecation
 ###############################################################################
 
-class _deprecated_container(object):
+class _deprecated_container:
     # This class gives deprecation warning.
     # When deprecated features are completely deleted, this should be removed as well.
     # See https://github.com/sympy/sympy/pull/19368

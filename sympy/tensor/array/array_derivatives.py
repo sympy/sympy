@@ -14,7 +14,7 @@ class ArrayDerivative(Derivative):
     is_scalar = False
 
     def __new__(cls, expr, *variables, **kwargs):
-        obj = super(ArrayDerivative, cls).__new__(cls, expr, *variables, **kwargs)
+        obj = super().__new__(cls, expr, *variables, **kwargs)
         if isinstance(obj, ArrayDerivative):
             obj._shape = obj._get_shape()
         return obj
@@ -96,7 +96,7 @@ class ArrayDerivative(Derivative):
                 result = cls._call_derive_scalar_by_array(expr, v)
             elif v.is_scalar:
                 # scalar by scalar has a special
-                return super(ArrayDerivative, cls)._dispatch_eval_derivative_n_times(expr, v, count)
+                return super()._dispatch_eval_derivative_n_times(expr, v, count)
             else:
                 return None
         elif v.is_scalar:

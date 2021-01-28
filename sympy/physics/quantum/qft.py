@@ -11,8 +11,6 @@ Todo:
 * Fix the printing of Rk gates in plotting.
 """
 
-from __future__ import print_function, division
-
 from sympy import Expr, Matrix, exp, I, pi, Integer, Symbol
 from sympy.functions import sqrt
 

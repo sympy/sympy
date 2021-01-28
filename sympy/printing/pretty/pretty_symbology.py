@@ -1,32 +1,24 @@
 """Symbolic primitives + unicode/ASCII abstraction for pretty.py"""
 
-from __future__ import print_function, division
-
 import sys
 import warnings
 from string import ascii_lowercase, ascii_uppercase
+import unicodedata
 
 unicode_warnings = ''
 
-# first, setup unicodedate environment
-try:
-    import unicodedata
+def U(name):
+    """
+    Get a unicode character by name or, None if not found.
 
-    def U(name):
-        """unicode character by name or None if not found"""
-        try:
-            u = unicodedata.lookup(name)
-        except KeyError:
-            u = None
-
-            global unicode_warnings
-            unicode_warnings += 'No \'%s\' in unicodedata\n' % name
-
-        return u
-
-except ImportError:
-    unicode_warnings += 'No unicodedata available\n'
-    U = lambda name: None
+    This exists because older versions of python use older unicode databases.
+    """
+    try:
+        return unicodedata.lookup(name)
+    except KeyError:
+        global unicode_warnings
+        unicode_warnings += 'No \'%s\' in unicodedata\n' % name
+        return None
 
 from sympy.printing.conventions import split_super_sub
 from sympy.core.alphabets import greeks
@@ -53,15 +45,6 @@ def pretty_use_unicode(flag=None):
     if flag is None:
         return _use_unicode
 
-    # we know that some letters are not supported in Python 2.X so
-    # ignore those warnings. Remove this when 2.X support is dropped.
-    if unicode_warnings:
-        known = ['LATIN SUBSCRIPT SMALL LETTER %s' % i for i in 'HKLMNPST']
-        unicode_warnings = '\n'.join([
-            l for l in unicode_warnings.splitlines() if not any(
-            i in l for i in known)])
-    # ------------ end of 2.X warning filtering
-
     if flag and unicode_warnings:
         # print warnings (if any) on first unicode usage
         warnings.warn(unicode_warnings)
@@ -75,33 +58,32 @@ def pretty_use_unicode(flag=None):
 def pretty_try_use_unicode():
     """See if unicode output is available and leverage it if possible"""
 
-    try:
-        symbols = []
+    encoding = getattr(sys.stdout, 'encoding', None)
 
-        # see, if we can represent greek alphabet
-        symbols.extend(greek_unicode.values())
+    # this happens when e.g. stdout is redirected through a pipe, or is
+    # e.g. a cStringIO.StringO
+    if encoding is None:
+        return  # sys.stdout has no encoding
 
-        # and atoms
-        symbols += atoms_table.values()
+    symbols = []
 
-        for s in symbols:
-            if s is None:
-                return  # common symbols not present!
+    # see if we can represent greek alphabet
+    symbols += greek_unicode.values()
 
-            encoding = getattr(sys.stdout, 'encoding', None)
+    # and atoms
+    symbols += atoms_table.values()
 
-            # this happens when e.g. stdout is redirected through a pipe, or is
-            # e.g. a cStringIO.StringO
-            if encoding is None:
-                return  # sys.stdout has no encoding
+    for s in symbols:
+        if s is None:
+            return  # common symbols not present!
 
-            # try to encode
+        try:
             s.encode(encoding)
+        except UnicodeEncodeError:
+            return
 
-    except UnicodeEncodeError:
-        pass
-    else:
-        pretty_use_unicode(True)
+    # all the characters were present and encodable
+    pretty_use_unicode(True)
 
 
 def xstr(*args):
@@ -120,7 +102,7 @@ greek_letters = list(greeks) # make a copy
 greek_letters[greek_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
-greek_unicode = dict((L, g(L)) for L in greek_letters)
+greek_unicode = {L: g(L) for L in greek_letters}
 greek_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_letters)
 
 # aliases
@@ -132,7 +114,7 @@ greek_unicode['varsigma'] = '\N{GREEK SMALL LETTER FINAL SIGMA}'
 b = lambda l: U('MATHEMATICAL BOLD SMALL %s' % l.upper())
 B = lambda l: U('MATHEMATICAL BOLD CAPITAL %s' % l.upper())
 
-bold_unicode = dict((l, b(l)) for l in ascii_lowercase)
+bold_unicode = {l: b(l) for l in ascii_lowercase}
 bold_unicode.update((L, B(L)) for L in ascii_uppercase)
 
 # GREEK BOLD
@@ -144,7 +126,7 @@ greek_bold_letters = list(greeks) # make a copy, not strictly required here
 greek_bold_letters[greek_bold_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
-greek_bold_unicode = dict((L, g(L)) for L in greek_bold_letters)
+greek_bold_unicode = {L: g(L) for L in greek_bold_letters}
 greek_bold_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_bold_letters)
 greek_bold_unicode['lambda'] = greek_unicode['lamda']
 greek_bold_unicode['Lambda'] = greek_unicode['Lamda']
@@ -612,16 +594,13 @@ def annotated(letter):
     else:
         return ascii_pics[letter]
 
+_remove_combining = dict.fromkeys(list(range(ord('\N{COMBINING GRAVE ACCENT}'), ord('\N{COMBINING LATIN SMALL LETTER X}')))
+                            + list(range(ord('\N{COMBINING LEFT HARPOON ABOVE}'), ord('\N{COMBINING ASTERISK ABOVE}'))))
+
 def is_combining(sym):
-    """Check whether symbol is a unicode modifier.
+    """Check whether symbol is a unicode modifier. """
 
-    See stringPict.width on usage.
-    """
-    return True if ('\N{COMBINING GRAVE ACCENT}' <= sym <=
-                    '\N{COMBINING LATIN SMALL LETTER X}' or
-
-                    '\N{COMBINING LEFT HARPOON ABOVE}' <= sym <=
-                    '\N{COMBINING ASTERISK ABOVE}') else False
+    return ord(sym) in _remove_combining
 
 
 def center_accent(string, accent):
@@ -651,3 +630,10 @@ def center_accent(string, accent):
     firstpart = string[:midpoint]
     secondpart = string[midpoint:]
     return firstpart + accent + secondpart
+
+
+def line_width(line):
+    """Unicode combining symbols (modifiers) are not ever displayed as
+    separate symbols and thus shouldn't be counted
+    """
+    return len(line.translate(_remove_combining))
