@@ -1,7 +1,7 @@
 import bisect
 import itertools
 import operator
-from functools import reduce
+from functools import reduce, singledispatch
 from itertools import accumulate
 from collections import defaultdict
 
@@ -1128,7 +1128,6 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
             for arg_ind, newmat in args_updates.items():
                 if not expression_is_square and arg_ind == last:
                     continue
-                    #pass
                 args[arg_ind] = newmat
             drop_diagonal_indices.append(indl)
             new_contraction_indices.append(links)
@@ -1525,36 +1524,85 @@ class _RecognizeMatMulLines(list):
         return "_RecognizeMatMulLines(%s)" % super().__repr__()
 
 
+def _a2m_mul(*args):
+    if all(not isinstance(i, _CodegenArrayAbstract) for i in args):
+        return MatMul(*args).doit()
+    else:
+        return CodegenArrayContraction(
+            CodegenArrayTensorProduct(*args),
+            *[(2*i-1, 2*i) for i in range(1, len(args))]
+        )
+
+
+def _a2m_tensor_product(*args):
+    scalars = []
+    arrays = []
+    for arg in args:
+        if isinstance(arg, (MatrixExpr, _CodegenArrayAbstract)):
+            arrays.append(arg)
+        else:
+            scalars.append(arg)
+    scalar = Mul.fromiter(scalars)
+    if len(arrays) == 0:
+        return scalar
+    if scalar != 1:
+        if isinstance(arrays[0], _CodegenArrayAbstract):
+            arrays = [scalar] + arrays
+        else:
+            arrays[0] *= scalar
+    return CodegenArrayTensorProduct(*arrays)
+
+
+def _a2m_add(*args):
+    if all(not isinstance(i, _CodegenArrayAbstract) for i in args):
+        return MatAdd(*args).doit()
+    else:
+        return CodegenArrayElementwiseAdd(*args)
+
+
+def _a2m_trace(arg):
+    if isinstance(arg, _CodegenArrayAbstract):
+        return CodegenArrayContraction(arg, (0, 1))
+    else:
+        return Trace(arg)
+
+
+def _a2m_transpose(arg):
+    if isinstance(arg, _CodegenArrayAbstract):
+        return CodegenArrayPermuteDims(arg, [1, 0])
+    else:
+        return Transpose(arg)
+
+
 def _support_function_tp1_recognize(contraction_indices, args):
     if not isinstance(args, list):
         args = [args]
     subranks = [get_rank(i) for i in args]
     coeff = reduce(lambda x, y: x*y, [arg for arg, srank in zip(args, subranks) if srank == 0], S.One)
     mapping = _get_mapping_from_subranks(subranks)
-    reverse_mapping = {v:k for k, v in mapping.items()}
+    reverse_mapping = {v: k for k, v in mapping.items()}
     args, dlinks = _get_contraction_links(args, subranks, *contraction_indices)
     flatten_contractions = [j for i in contraction_indices for j in i]
     total_rank = sum(subranks)
     # TODO: turn `free_indices` into a list?
     free_indices = {i: i for i in range(total_rank) if i not in flatten_contractions}
     return_list = []
-    while dlinks:
+    while free_indices or dlinks:
         if free_indices:
             first_index, starting_argind = min(free_indices.items(), key=lambda x: x[1])
             free_indices.pop(first_index)
             starting_argind, starting_pos = mapping[starting_argind]
         else:
             # Maybe a Trace
-            first_index = None
             starting_argind = min(dlinks)
             starting_pos = 0
         current_argind, current_pos = starting_argind, starting_pos
         matmul_args = []
         last_index = None
         while True:
-            elem = args[current_argind]
+            elem = array2matrix(args[current_argind])
             if current_pos == 1:
-                elem = _RecognizeMatOp(Transpose, [elem])
+                elem = _a2m_transpose(elem)
             matmul_args.append(elem)
             other_pos = 1 - current_pos
             if current_argind not in dlinks:
@@ -1576,17 +1624,132 @@ def _support_function_tp1_recognize(contraction_indices, args):
             if current_argind == starting_argind:
                 # This is a trace:
                 if len(matmul_args) > 1:
-                    matmul_args = [_RecognizeMatOp(Trace, [_RecognizeMatOp(MatMul, matmul_args)])]
+                    matmul_args = [_a2m_trace(_a2m_mul(*matmul_args))]
                 elif args[current_argind].shape != (1, 1):
-                    matmul_args = [_RecognizeMatOp(Trace, matmul_args)]
+                    matmul_args = [_a2m_trace(*matmul_args)]
                 break
         dlinks.pop(starting_argind, None)
         free_indices.pop(last_index, None)
-        return_list.append(_RecognizeMatOp(MatMul, matmul_args))
+        return_list.append(_a2m_mul(*matmul_args))
     if coeff != 1:
         # Let's inject the coefficient:
-        return_list[0].args.insert(0, coeff)
-    return _RecognizeMatMulLines(return_list)
+        return_list[0] = coeff*return_list[0]
+    return _a2m_tensor_product(*return_list)
+
+
+@singledispatch
+def array2matrix(expr):
+    return expr
+
+
+@array2matrix.register(ZeroArray)
+def _(expr: ZeroArray):
+    if get_rank(expr) == 2:
+        return ZeroMatrix(*expr.shape)
+    else:
+        return expr
+
+
+@array2matrix.register(CodegenArrayTensorProduct)
+def _(expr: CodegenArrayTensorProduct):
+    return _a2m_tensor_product(*expr.args)
+
+
+@array2matrix.register(CodegenArrayContraction)
+def _(expr: CodegenArrayContraction):
+    expr = expr.flatten_contraction_of_diagonal()
+    expr = expr.split_multiple_contractions()
+    subexpr = expr.expr
+    contraction_indices: Tuple[Tuple[int]] = expr.contraction_indices
+    if isinstance(subexpr, CodegenArrayTensorProduct):
+        ua = CodegenArrayElementwiseAdd(*[_a2m_tensor_product(*j) for j in itertools.product(*[i.args if isinstance(i, CodegenArrayElementwiseAdd) else [i] for i in expr.expr.args])])
+        newexpr = CodegenArrayContraction(ua, *contraction_indices)
+        if isinstance(newexpr, CodegenArrayElementwiseAdd):
+            ret = array2matrix(newexpr)
+            return ret
+        assert isinstance(newexpr, CodegenArrayContraction)
+        ret = _support_function_tp1_recognize(contraction_indices, list(newexpr.expr.args))
+        return ret
+    elif not isinstance(subexpr, _CodegenArrayAbstract):
+        ret = array2matrix(subexpr)
+        if isinstance(ret, MatrixExpr):
+            assert expr.contraction_indices == ((0, 1),)
+            return _a2m_trace(ret)
+        else:
+            return CodegenArrayContraction(ret, *expr.contraction_indices)
+
+
+@array2matrix.register(CodegenArrayDiagonal)
+def _(expr: CodegenArrayDiagonal):
+    pexpr = expr.transform_to_product()
+    if expr == pexpr:
+        return expr
+    return array2matrix(pexpr)
+
+
+@array2matrix.register(CodegenArrayPermuteDims)
+def _(expr: CodegenArrayPermuteDims):
+    if expr.permutation.array_form == [1, 0]:
+        return _a2m_transpose(array2matrix(expr.expr))
+    elif isinstance(expr.expr, CodegenArrayTensorProduct):
+        ranks = expr.expr.subranks
+        newrange = [expr.permutation(i) for i in range(sum(ranks))]
+        newpos = []
+        counter = 0
+        for rank in ranks:
+            newpos.append(newrange[counter:counter+rank])
+            counter += rank
+        newargs = []
+        newperm = []
+        for pos, arg in zip(newpos, expr.expr.args):
+            if pos == sorted(pos):
+                newargs.append((array2matrix(arg), pos[0]))
+                newperm.extend(pos)
+            elif len(pos) == 2:
+                newargs.append((_a2m_transpose(array2matrix(arg)), pos[0]))
+                newperm.extend(reversed(pos))
+            else:
+                raise NotImplementedError()
+        newargs = [i[0] for i in newargs]
+        return CodegenArrayPermuteDims(_a2m_tensor_product(*newargs), newperm)
+    elif isinstance(expr.expr, CodegenArrayContraction):
+        mat_mul_lines = array2matrix(expr.expr)
+        if not isinstance(mat_mul_lines, CodegenArrayTensorProduct):
+            flat_cyclic_form = [j for i in expr.permutation.cyclic_form for j in i]
+            expr_shape = get_shape(expr)
+            if all(expr_shape[i] == 1 for i in flat_cyclic_form):
+                return mat_mul_lines
+            raise NotImplementedError()
+        permutation = Permutation(2*len(mat_mul_lines.args)-1)*expr.permutation
+        permuted = [permutation(i) for i in range(2*len(mat_mul_lines.args))]
+        args_array = [None for i in mat_mul_lines.args]
+        for i in range(len(mat_mul_lines.args)):
+            p1 = permuted[2*i]
+            p2 = permuted[2*i+1]
+            if p1 // 2 != p2 // 2:
+                return CodegenArrayPermuteDims(mat_mul_lines, permutation)
+            pos = p1 // 2
+            if p1 > p2:
+                args_array[i] = _a2m_transpose(mat_mul_lines.args[pos])
+            else:
+                args_array[i] = mat_mul_lines.args[pos]
+        return _a2m_tensor_product(*args_array)
+    else:
+        raise NotImplementedError()
+
+
+@array2matrix.register(CodegenArrayElementwiseAdd)
+def _(expr: CodegenArrayElementwiseAdd):
+    addends = [array2matrix(arg) for arg in expr.args]
+    return _a2m_add(*addends)
+
+
+def _squash_trivial_dims_in_tensorproduct(expr):
+    if isinstance(expr, CodegenArrayTensorProduct):
+        return _a2m_tensor_product(*_suppress_trivial_dims_in_tensor_product(expr.args))
+    if isinstance(expr, CodegenArrayElementwiseAdd):
+        return _a2m_add(*[_squash_trivial_dims_in_tensorproduct(a) for a in expr.args])
+    return expr
 
 
 def recognize_matrix_expression(expr):
@@ -1656,17 +1819,17 @@ def recognize_matrix_expression(expr):
     A*B
 
     If more than one line of matrix multiplications is detected, return
-    separate matrix multiplication factors:
+    separate matrix multiplication factors embedded in a tensor product object:
 
     >>> cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, B, C, D), (1, 2), (5, 6))
     >>> recognize_matrix_expression(cg)
-    [A*B, C*D]
+    CodegenArrayTensorProduct(A*B, C*D)
 
     The two lines have free indices at axes 0, 3 and 4, 7, respectively.
     """
-    # TODO: expr has to be a CodegenArray... type
-    rec = _recognize_matrix_expression(expr)
-    return _unfold_recognized_expr(rec)
+    rec = array2matrix(expr)
+    rec = _squash_trivial_dims_in_tensorproduct(rec)
+    return rec
 
 
 def _recognize_matrix_expression(expr):
@@ -1766,7 +1929,8 @@ def _recognize_matrix_expression(expr):
 
 def _suppress_trivial_dims_in_tensor_product(mat_list):
     # Recognize expressions like [x, y] with shape (k, 1, k, 1) as `x*y.T`.
-    # The matrix expression has to be equivalent to the tensor product of the matrices, with trivial dimensions (i.e. dim=1) dropped.
+    # The matrix expression has to be equivalent to the tensor product of the
+    # matrices, with trivial dimensions (i.e. dim=1) dropped.
     # That is, add contractions over trivial dimensions:
     mat_11 = []
     mat_k1 = []
@@ -1785,7 +1949,7 @@ def _suppress_trivial_dims_in_tensor_product(mat_list):
     a = MatMul.fromiter(mat_k1[:1])
     b = MatMul.fromiter(mat_k1[1:])
     x = MatMul.fromiter(mat_11)
-    return a*x*b.T
+    return [a*x*b.T]
 
 
 def _unfold_recognized_expr(expr):
