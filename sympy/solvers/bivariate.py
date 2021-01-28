@@ -10,7 +10,6 @@ from sympy.functions.elementary.miscellaneous import root
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import Poly, factor
 from sympy.core.function import _mexpand
-from sympy.sets import ImageSet,EmptySet
 from sympy.simplify.simplify import separatevars
 from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import powsimp
@@ -184,7 +183,6 @@ def _lambert1(eq, x, domain):
     p, den = den.as_coeff_Mul()
     e = exp(num/den)
     t = Dummy('t')
-    real = None
 
     if p == 1:
         t = e
@@ -198,7 +196,6 @@ def _lambert1(eq, x, domain):
             if not isinstance(i,int):
                 if not i.has(I):
                     args.append(ind_ls[j])
-                    real = True
             elif isinstance(i,int):
                 args.append(ind_ls[j])
     else:
