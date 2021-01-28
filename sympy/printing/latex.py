@@ -2179,15 +2179,15 @@ class LatexPrinter(Printer):
         sig = s.lamda.signature
         xys = ((self._print(x), self._print(y)) for x, y in zip(sig, s.base_sets))
         xinys = r" , ".join(r"%s \in %s" % xy for xy in xys)
-        return r"\left\{%s\; |\; %s\right\}" % (self._print(expr), xinys)
+        return r"\left\{%s\; \middle|\; %s\right\}" % (self._print(expr), xinys)
 
     def _print_ConditionSet(self, s):
         vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
         if s.base_set is S.UniversalSet:
-            return r"\left\{%s \mid %s \right\}" % \
+            return r"\left\{%s\; \middle|\; %s \right\}" % \
                 (vars_print, self._print(s.condition))
 
-        return r"\left\{%s \mid %s \in %s \wedge %s \right\}" % (
+        return r"\left\{%s\; \middle|\; %s \in %s \wedge %s \right\}" % (
             vars_print,
             vars_print,
             self._print(s.base_set),
@@ -2195,7 +2195,7 @@ class LatexPrinter(Printer):
 
     def _print_ComplexRegion(self, s):
         vars_print = ', '.join([self._print(var) for var in s.variables])
-        return r"\left\{%s\; |\; %s \in %s \right\}" % (
+        return r"\left\{%s\; \middle|\; %s \in %s \right\}" % (
             self._print(s.expr),
             vars_print,
             self._print(s.sets))
