@@ -1326,12 +1326,14 @@ class PrettyPrinter(Printer):
 
         return D
 
-    def _hprint_vseparator(self, p1, p2, left=None, right=None, **kwargs):
-        tmp = self._print_seq((p1, p2,), left=left, right=right, delimiter='',
-                              **kwargs)
+    def _hprint_vseparator(self, p1, p2, left=None, right=None, ifascii_nougly=False):
+        if ifascii_nougly and not self._use_unicode:
+            return self._print_seq((p1, '|', p2), left=left, right=right,
+                                   delimiter='', ifascii_nougly=True)
+        tmp = self._print_seq((p1, p2,), left=left, right=right, delimiter='')
         sep = stringPict(vobj('|', tmp.height()), baseline=tmp.baseline)
         return self._print_seq((p1, sep, p2), left=left, right=right,
-                               delimiter='', **kwargs)
+                               delimiter='')
 
     def _print_hyper(self, e):
         # FIXME refactor Matrix, Piecewise, and this into a tabular environment
@@ -1729,7 +1731,7 @@ class PrettyPrinter(Printer):
             pform = self._hprint_vseparator(pforma0, pforma1)
         else:
             pforma2 = self._print(e.args[2])
-            pforma = self._hprint_vseparator(pforma1, pforma2)
+            pforma = self._hprint_vseparator(pforma1, pforma2, ifascii_nougly=False)
             pforma = prettyForm(*pforma.left('; '))
             pform = prettyForm(*pforma.left(pforma0))
         pform = prettyForm(*pform.parens())
@@ -2117,14 +2119,14 @@ class PrettyPrinter(Printer):
             S = self._print_seq(('', signature[0], inn, sets[0]),
                                 delimiter=' ')
             return self._hprint_vseparator(E, S,
-                                           left='{', right='}', ifascii_nougly=False)
+                                           left='{', right='}', ifascii_nougly=True)
         else:
             pargs = tuple(j for var, setv in zip(signature, sets) for j in
                           (var, ' ', inn, ' ', setv, ", "))
             E = self._print_seq((expr, ''), delimiter=' ')
             S = self._print_seq((' ',) + pargs[:-1], delimiter='')
             return self._hprint_vseparator(E, S,
-                                           left='{', right='}', ifascii_nougly=False)
+                                           left='{', right='}', ifascii_nougly=True)
 
     def _print_ConditionSet(self, ts):
         if self._use_unicode:
@@ -2149,13 +2151,13 @@ class PrettyPrinter(Printer):
         if ts.base_set is S.UniversalSet:
             V = self._print_seq((variables, ''), delimiter=' ')
             C = self._print_seq(('', cond), delimiter=' ')
-            return self._hprint_vseparator(V, C, left="{", right="}", ifascii_nougly=False)
+            return self._hprint_vseparator(V, C, left="{", right="}", ifascii_nougly=True)
 
         base = self._print(ts.base_set)
         V = self._print_seq((variables, ''), delimiter=' ')
         C = self._print_seq(('', variables, inn, base, _and, cond),
                             delimiter=' ')
-        return self._hprint_vseparator(V, C, left="{", right="}", ifascii_nougly=False)
+        return self._hprint_vseparator(V, C, left="{", right="}", ifascii_nougly=True)
 
     def _print_ComplexRegion(self, ts):
         if self._use_unicode:
@@ -2169,7 +2171,7 @@ class PrettyPrinter(Printer):
         V = self._print_seq((expr, ''), delimiter=' ')
         C = self._print_seq(('', variables, inn, prodsets),
                             delimiter=' ')
-        return self._hprint_vseparator(V, C, left="{", right="}", ifascii_nougly=False)
+        return self._hprint_vseparator(V, C, left="{", right="}", ifascii_nougly=True)
 
     def _print_Contains(self, e):
         var, set = e.args

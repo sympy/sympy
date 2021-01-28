@@ -4094,9 +4094,8 @@ def test_pretty_ImageSet():
 
     imgset = ImageSet(Lambda(x, x**2), S.Naturals)
     ascii_str = '''\
-/ 2 |              \\
-<x  | x in Naturals>
-\\   |              /'''
+  2                 \n\
+{x  | x in Naturals}'''
     ucode_str = '''\
 ⎧ 2 │      ⎫\n\
 ⎨x  │ x ∊ ℕ⎬\n\
@@ -4108,11 +4107,10 @@ def test_pretty_ImageSet():
     # 1/x**2 fraction
     imgset = ImageSet(Lambda(x, 1/x**2), S.Naturals)
     ascii_str = '''\
-/1  |              \\
-|-- | x in Naturals|
-< 2 |              >
-|x  |              |
-\\   |              /'''
+ 1                  \n\
+{-- | x in Naturals}
+  2                 \n\
+ x                  '''
     ucode_str = '''\
 ⎧1  │      ⎫\n\
 ⎪── │ x ∊ ℕ⎪\n\
@@ -4124,11 +4122,10 @@ def test_pretty_ImageSet():
 
     imgset = ImageSet(Lambda((x, y), 1/(x + y)**2), S.Naturals, S.Naturals)
     ascii_str = '''\
-/   1     |                             \\
-|-------- | x in Naturals, y in Naturals|
-<       2 |                             >
-|(x + y)  |                             |
-\\         |                             /'''
+    1                                    \n\
+{-------- | x in Naturals, y in Naturals}
+        2                                \n\
+ (x + y)                                 '''
     ucode_str = '''\
 ⎧   1     │             ⎫
 ⎪──────── │ x ∊ ℕ, y ∊ ℕ⎪
@@ -4156,11 +4153,10 @@ def test_pretty_ConditionSet():
 
     condset = ConditionSet(x, 1/x**2 > 0)
     ascii_str = '''\
-/  | 1     \\
-|x | -- > 0|
-<  |  2    >
-|  | x     |
-\\  |       /'''
+     1      \n\
+{x | -- > 0}
+      2     \n\
+     x      '''
     ucode_str = '''\
 ⎧  │ ⎛1     ⎞⎫
 ⎪x │ ⎜── > 0⎟⎪
@@ -4172,11 +4168,10 @@ def test_pretty_ConditionSet():
 
     condset = ConditionSet(x, 1/x**2 > 0, S.Reals)
     ascii_str = '''\
-/  |                    1     \\
-|x | x in (-oo, oo) and -- > 0|
-<  |                     2    >
-|  |                    x     |
-\\  |                          /'''
+                        1      \n\
+{x | x in (-oo, oo) and -- > 0}
+                         2     \n\
+                        x      '''
     ucode_str = '''\
 ⎧  │         ⎛1     ⎞⎫
 ⎪x │ x ∊ ℝ ∧ ⎜── > 0⎟⎪
@@ -4202,11 +4197,10 @@ def test_pretty_ComplexRegion():
 
     cregion = ComplexRegion(Interval(3, 1/a**2)*Interval(4, 6))
     ascii_str = '''\
-/        |             1           \\
-|x + y*I | x, y in [3, --] x [4, 6]|
-<        |              2          >
-|        |             a           |
-\\        |                         /'''
+                       1            \n\
+{x + y*I | x, y in [3, --] x [4, 6]}
+                        2           \n\
+                       a            '''
     ucode_str = '''\
 ⎧        │        ⎡   1 ⎤         ⎫
 ⎪x + y⋅ⅈ │ x, y ∊ ⎢3, ──⎥ × [4, 6]⎪
@@ -4218,11 +4212,10 @@ def test_pretty_ComplexRegion():
 
     cregion = ComplexRegion(Interval(0, 1/a**2)*Interval(0, 2*pi), polar=True)
     ascii_str = '''\
-/                              |                 1              \\
-|r*(I*sin(theta) + cos(theta)) | r, theta in [0, --] x [0, 2*pi)|
-<                              |                  2             >
-|                              |                 a              |
-\\                              |                                /'''
+                                                 1               \n\
+{r*(I*sin(theta) + cos(theta)) | r, theta in [0, --] x [0, 2*pi)}
+                                                  2              \n\
+                                                 a               '''
     ucode_str = '''\
 ⎧                      │        ⎡   1 ⎤           ⎫
 ⎪r⋅(ⅈ⋅sin(θ) + cos(θ)) │ r, θ ∊ ⎢0, ──⎥ × [0, 2⋅π)⎪
