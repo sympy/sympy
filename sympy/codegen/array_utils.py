@@ -13,8 +13,7 @@ from sympy.core.compatibility import default_sort_key
 from sympy.core.mul import Mul
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.matrices.expressions import (MatAdd, MatMul, Trace, Transpose,
-        MatrixSymbol)
+from sympy.matrices.expressions import (MatAdd, MatMul, Trace, Transpose)
 from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
 from sympy.tensor.array import NDimArray
 from sympy.tensor.array.array_expressions import ZeroArray
