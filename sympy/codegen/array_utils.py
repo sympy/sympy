@@ -1171,10 +1171,6 @@ def get_rank(expr):
             return -1
         else:
             return len(shape)
-    if isinstance(expr, _RecognizeMatOp):
-        return expr.rank()
-    if isinstance(expr, _RecognizeMatMulLines):
-        return expr.rank()
     if hasattr(expr, "shape"):
         return len(expr.shape)
     return 0
@@ -1451,77 +1447,9 @@ def parse_indexed_expression(expr, first_indices=None):
     for i in first_indices:
         if i not in indices:
             first_indices.remove(i)
-            #raise ValueError("index %s not found or not a free index" % i)
     first_indices.extend([i for i in indices if i not in first_indices])
     permutation = [first_indices.index(i) for i in indices]
     return CodegenArrayPermuteDims(result, permutation)
-
-
-def _has_multiple_lines(expr):
-    if isinstance(expr, _RecognizeMatMulLines):
-        return True
-    if isinstance(expr, _RecognizeMatOp):
-        return expr.multiple_lines
-    return False
-
-
-class _RecognizeMatOp:
-    """
-    Class to help parsing matrix multiplication lines.
-    """
-    def __init__(self, operator, args):
-        self.operator = operator
-        self.args = args
-        if any(_has_multiple_lines(arg) for arg in args):
-            multiple_lines = True
-        else:
-            multiple_lines = False
-        self.multiple_lines = multiple_lines
-
-    def rank(self):
-        if self.operator == Trace:
-            return 0
-        # TODO: check
-        return 2
-
-    def __repr__(self):
-        op = self.operator
-        if op == MatMul:
-            s = "*"
-        elif op == MatAdd:
-            s = "+"
-        else:
-            s = op.__name__
-            return "_RecognizeMatOp(%s, %s)" % (s, repr(self.args))
-        return "_RecognizeMatOp(%s)" % (s.join(repr(i) for i in self.args))
-
-    def __eq__(self, other):
-        if not isinstance(other, type(self)):
-            return False
-        if self.operator != other.operator:
-            return False
-        if self.args != other.args:
-            return False
-        return True
-
-    def __iter__(self):
-        return iter(self.args)
-
-
-class _RecognizeMatMulLines(list):
-    """
-    This class handles multiple parsed multiplication lines.
-    """
-    def __new__(cls, args):
-        if len(args) == 1:
-            return args[0]
-        return list.__new__(cls, args)
-
-    def rank(self):
-        return reduce(lambda x, y: x*y, [get_rank(i) for i in self], S.One)
-
-    def __repr__(self):
-        return "_RecognizeMatMulLines(%s)" % super().__repr__()
 
 
 def _a2m_mul(*args):
@@ -1832,101 +1760,6 @@ def recognize_matrix_expression(expr):
     return rec
 
 
-def _recognize_matrix_expression(expr):
-    if isinstance(expr, CodegenArrayContraction):
-        # Apply some transformations:
-        expr = expr.flatten_contraction_of_diagonal()
-        expr = expr.split_multiple_contractions()
-        args = _recognize_matrix_expression(expr.expr)
-        contraction_indices = expr.contraction_indices
-        if isinstance(args, _RecognizeMatOp) and args.operator == MatAdd:
-            addends = []
-            for arg in args.args:
-                addends.append(_support_function_tp1_recognize(contraction_indices, arg))
-            return _RecognizeMatOp(MatAdd, addends)
-        elif isinstance(args, _RecognizeMatMulLines):
-            return _support_function_tp1_recognize(contraction_indices, args)
-        return _support_function_tp1_recognize(contraction_indices, [args])
-    elif isinstance(expr, CodegenArrayElementwiseAdd):
-        add_args = []
-        for arg in expr.args:
-            add_args.append(_recognize_matrix_expression(arg))
-        return _RecognizeMatOp(MatAdd, add_args)
-    elif isinstance(expr, (MatrixSymbol, IndexedBase)):
-        return expr
-    elif isinstance(expr, CodegenArrayPermuteDims):
-        if expr.permutation.array_form == [1, 0]:
-            return _RecognizeMatOp(Transpose, [_recognize_matrix_expression(expr.expr)])
-        elif isinstance(expr.expr, CodegenArrayTensorProduct):
-            ranks = expr.expr.subranks
-            newrange = [expr.permutation(i) for i in range(sum(ranks))]
-            newpos = []
-            counter = 0
-            for rank in ranks:
-                newpos.append(newrange[counter:counter+rank])
-                counter += rank
-            newargs = []
-            for pos, arg in zip(newpos, expr.expr.args):
-                if pos == sorted(pos):
-                    newargs.append((_recognize_matrix_expression(arg), pos[0]))
-                elif len(pos) == 2:
-                    newargs.append((_RecognizeMatOp(Transpose, [_recognize_matrix_expression(arg)]), pos[0]))
-                else:
-                    raise NotImplementedError
-            newargs.sort(key=lambda x: x[1])
-            newargs = [i[0] for i in newargs]
-            return _RecognizeMatMulLines(newargs)
-        elif isinstance(expr.expr, CodegenArrayContraction):
-            mat_mul_lines = _recognize_matrix_expression(expr.expr)
-            if not isinstance(mat_mul_lines, _RecognizeMatMulLines):
-                flat_cyclic_form = [j for i in expr.permutation.cyclic_form for j in i]
-                expr_shape = get_shape(expr)
-                if all(expr_shape[i] == 1 for i in flat_cyclic_form):
-                    return mat_mul_lines
-                raise NotImplementedError()
-            permutation = Permutation(2*len(mat_mul_lines)-1)*expr.permutation
-            permuted = [permutation(i) for i in range(2*len(mat_mul_lines))]
-            args_array = [None for i in mat_mul_lines]
-            for i in range(len(mat_mul_lines)):
-                p1 = permuted[2*i]
-                p2 = permuted[2*i+1]
-                if p1 // 2 != p2 // 2:
-                    raise NotImplementedError("permutation mixes the axes in a way that cannot be represented by matrices")
-                pos = p1 // 2
-                if p1 > p2:
-                    args_array[i] = _RecognizeMatOp(Transpose, mat_mul_lines[pos])
-                else:
-                    args_array[i] = mat_mul_lines[pos]
-            return _RecognizeMatMulLines(args_array)
-        else:
-            raise NotImplementedError()
-    elif isinstance(expr, CodegenArrayTensorProduct):
-        args = [_recognize_matrix_expression(arg) for arg in expr.args]
-        multiple_lines = [_has_multiple_lines(arg) for arg in args]
-        if any(multiple_lines):
-            if any(a.operator != MatAdd for i, a in enumerate(args) if multiple_lines[i] and isinstance(a, _RecognizeMatOp)):
-                raise NotImplementedError
-            getargs = lambda x: x.args if isinstance(x, _RecognizeMatOp) else list(x)
-            expand_args = [getargs(arg) if multiple_lines[i] else [arg] for i, arg in enumerate(args)]
-            it = itertools.product(*expand_args)
-            ret = _RecognizeMatOp(MatAdd, [_RecognizeMatMulLines([k for j in i for k in (j if isinstance(j, _RecognizeMatMulLines) else [j])]) for i in it])
-            return ret
-        return _RecognizeMatMulLines(args)
-    elif isinstance(expr, CodegenArrayDiagonal):
-        pexpr = expr.transform_to_product()
-        if expr == pexpr:
-            return expr
-        return _recognize_matrix_expression(pexpr)
-    elif isinstance(expr, Transpose):
-        return expr
-    elif isinstance(expr, MatrixExpr):
-        return expr
-    elif isinstance(expr, ZeroArray):
-        if get_rank(expr) == 2:
-            return ZeroMatrix(*expr.shape)
-    return expr
-
-
 def _suppress_trivial_dims_in_tensor_product(mat_list):
     # Recognize expressions like [x, y] with shape (k, 1, k, 1) as `x*y.T`.
     # The matrix expression has to be equivalent to the tensor product of the
@@ -1951,28 +1784,6 @@ def _suppress_trivial_dims_in_tensor_product(mat_list):
     b = MatMul.fromiter(mat_k1[1:])
     x = MatMul.fromiter(mat_11)
     return [a*x*b.T]
-
-
-def _unfold_recognized_expr(expr):
-    if isinstance(expr, _RecognizeMatOp):
-        return expr.operator(*[_unfold_recognized_expr(i) for i in expr.args])
-    elif isinstance(expr, _RecognizeMatMulLines):
-        unfolded = [_unfold_recognized_expr(i) for i in expr]
-        mat_list = [i for i in unfolded if isinstance(i, MatrixExpr)]
-        scalar_list = [i for i in unfolded if i not in mat_list]
-        scalar = Mul.fromiter(scalar_list)
-        mat_list = [i.doit() for i in mat_list]
-        mat_list = [i for i in mat_list if not (i.shape == (1, 1) and i.is_Identity)]
-        if mat_list:
-            mat_list[0] *= scalar
-            if len(mat_list) == 1:
-                return mat_list[0].doit()
-            else:
-                return _suppress_trivial_dims_in_tensor_product(mat_list)
-        else:
-            return scalar
-    else:
-        return expr
 
 
 def _apply_recursively_over_nested_lists(func, arr):

@@ -1,13 +1,11 @@
 from sympy import (
     symbols, IndexedBase, Identity, cos, Inverse, tensorcontraction,
     permutedims, tensorproduct, ZeroMatrix)
-from sympy.codegen.array_utils import (CodegenArrayContraction,
-                                       CodegenArrayTensorProduct, CodegenArrayDiagonal,
-                                       CodegenArrayPermuteDims, CodegenArrayElementwiseAdd,
-                                       _codegen_array_parse, _recognize_matrix_expression, _RecognizeMatOp,
-                                       _RecognizeMatMulLines, _unfold_recognized_expr,
-                                       parse_indexed_expression, recognize_matrix_expression,
-                                       parse_matrix_expression, nest_permutation)
+from sympy.codegen.array_utils import (
+    CodegenArrayContraction, CodegenArrayTensorProduct, CodegenArrayDiagonal,
+    CodegenArrayPermuteDims, CodegenArrayElementwiseAdd, _codegen_array_parse,
+    parse_indexed_expression, recognize_matrix_expression,
+    parse_matrix_expression, nest_permutation)
 from sympy import MatrixSymbol, Sum
 from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -240,27 +238,21 @@ def test_codegen_array_diagonal():
 def test_codegen_recognize_matrix_expression():
 
     expr = CodegenArrayElementwiseAdd(M, CodegenArrayPermuteDims(M, [1, 0]))
-    rec = _recognize_matrix_expression(expr)
-    assert rec == _RecognizeMatOp(MatAdd, [M, _RecognizeMatOp(Transpose, [M])])
     assert recognize_matrix_expression(expr) == M + Transpose(M)
 
     expr = M[i,j] + N[i,j]
     p1, p2 = _codegen_array_parse(expr)
-    rec = _recognize_matrix_expression(p1)
-    assert rec == _RecognizeMatOp(MatAdd, [M, N])
-    assert _unfold_recognized_expr(rec) == M + N
+    assert recognize_matrix_expression(p1) == M + N
 
     expr = M[i,j] + N[j,i]
     p1, p2 = _codegen_array_parse(expr)
-    rec = _recognize_matrix_expression(p1)
-    assert rec == _RecognizeMatOp(MatAdd, [M, _RecognizeMatOp(Transpose, [N])])
-    assert _unfold_recognized_expr(rec) == M + N.T
+    assert recognize_matrix_expression(p1) == M + N.T
 
     expr = M[i,j]*N[k,l] + N[i,j]*M[k,l]
     p1, p2 = _codegen_array_parse(expr)
-    rec = _recognize_matrix_expression(p1)
-    assert rec == _RecognizeMatOp(MatAdd, [_RecognizeMatMulLines([M, N]), _RecognizeMatMulLines([N, M])])
-    #assert _unfold_recognized_expr(rec) == TensorProduct(M, N) + TensorProduct(N, M) maybe?
+    assert recognize_matrix_expression(p1) == CodegenArrayElementwiseAdd(
+        CodegenArrayTensorProduct(M, N),
+        CodegenArrayTensorProduct(N, M))
 
     expr = (M*N*P)[i, j]
     p1, p2 = _codegen_array_parse(expr)
