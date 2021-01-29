@@ -18,7 +18,7 @@ from itertools import chain
 
 from sympy.core import S
 from sympy.codegen.ast import (
-    Assignment, Pointer, Variable, Declaration, Type,
+    Assignment, Pointer, Variable, Declaration, Type, WithBody,
     real, complex_, integer, bool_, float32, float64, float80,
     complex64, complex128, intc, value_const, pointer_const,
     int8, int16, int32, int64, uint8, uint16, uint32, uint64, untyped,
@@ -249,9 +249,9 @@ class C89CodePrinter(CodePrinter):
     def _rate_index_position(self, p):
         return p*5
 
-    def _get_statement(self, codestring):
+    def _get_statement(self, codestring, with_body=False):
         """ Get code string as a statement - i.e. ending with a semicolon. """
-        return codestring if codestring.endswith(';') else codestring + ';'
+        return codestring if (codestring.endswith(';') or with_body) else codestring + ';'
 
     def _get_comment(self, text):
         return "// {}".format(text)
@@ -552,7 +552,7 @@ class C89CodePrinter(CodePrinter):
 
     def _print_CodeBlock(self, expr):
         """ Elements of code blocks printed as statements. """
-        return '\n'.join([self._print(i) for i in expr.args])
+        return '\n'.join([self._get_statement(self._print(i), isinstance(i, WithBody)) for i in expr.args])
 
     def _print_While(self, expr):
         return 'while ({condition}) {{\n{body}\n}}'.format(**expr.kwargs(
