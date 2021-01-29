@@ -9,8 +9,7 @@ from sympy.testing.pytest import raises
 def test_define_equation():
     a, b, c = symbols('a b c')
     raises(TypeError, lambda: Equation(FiniteSet(a), FiniteSet(b, c)))
-    raises(ValueError, lambda: Equation(1, 0, check=True))
-    # No warning with the default `check=False`. Also check `Eqn` synonym.
+    assert(Equation(1, 0).check() == False)
     assert Eqn(1, 0) == Equation(1, 0)
     tsteqn = Equation(a, b/c)
     assert tsteqn.args == (a, b/c)
