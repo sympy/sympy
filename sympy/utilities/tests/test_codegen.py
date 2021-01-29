@@ -1,8 +1,10 @@
 from io import StringIO
 
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
-from sympy import erf, Integral, Symbol
-from sympy import Equality
+from sympy import erf, Integral, Symbol, Idx
+from sympy import Equality, Range, IndexedBase
+from sympy.codegen import For, Assignment, While
+from sympy.codegen.ast import AddAugmentedAssignment
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.utilities.codegen import (
     codegen, make_routine, CCodeGen, C89CodeGen, C99CodeGen, InputArgument,
@@ -467,6 +469,94 @@ def test_partial_loops_c():
         '#endif\n'
     )
 
+def test_nested_for_c():
+    x = MatrixSymbol('x', 5, 5)
+    y = MatrixSymbol('y', 5, 5)
+    i = Idx('i', 5)
+    j = Idx('j', 5)
+    expr = For(i, Range(0, 5),
+              [For(j, Range(0, 5),
+                   [Assignment(y[i, j], 2*x[i, j])])]
+           )
+    name_expr = ("test", [expr])
+
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'void test(double *x, double *y) {\n'
+        '   for (int i = 0; i < 5; i += 1) {\n'
+        '      for (int j = 0; j < 5; j += 1) {\n'
+        '         y[5*i + j] = 2*x[5*i + j];\n'
+        '      }\n'
+        '   }\n'
+        '}\n'
+    )
+
+    result = codegen(name_expr, "c", "test", header=False, empty=False)
+    source = result[0][1]
+    assert source == expected
+
+def test_for_while_c():
+    x = MatrixSymbol('x', 5, 5)
+    y = MatrixSymbol('y', 5, 5)
+    i = Idx('i', 5)
+    j = symbols('j', integer=True)
+    expr = For(i, Range(0, 5),
+               [Assignment(j, 0),
+                While(j<5,
+                     [Assignment(y[i, j], 2*x[i, j]),
+                      AddAugmentedAssignment(j, 1)])]
+           )
+    name_expr = ("test", [expr])
+
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'void test(double *x, double *y) {\n'
+        '   for (int i = 0; i < 5; i += 1) {\n'
+        '      j = 0;\n'
+        '      while (j < 5) {\n'
+        '         y[j + 5*i] = 2*x[j + 5*i];\n'
+        '         j += 1;\n'
+        '      }\n'
+        '   }\n'
+        '}\n'
+    )
+
+    result = codegen(name_expr, "c", "test", header=False, empty=False)
+    source = result[0][1]
+    assert source == expected
+
+def test_settings_contract_c():
+    nx, ny = symbols('nx ny', integer=True)
+    i = Idx('i', nx)
+    j = Idx('j', ny)
+    A = IndexedBase('A')
+    x = IndexedBase('x')
+    y = IndexedBase('y')
+    settings = {"contract": False}
+
+    expr = For(i, Range(nx),
+              [For(j, Range(ny),
+                  [Assignment(y[i], A[i, j]*x[j])])]
+           )
+    name_expr = ("test", [expr])
+
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'void test(double *A, int nx, int ny, double *x, double *y) {\n'
+        '   for (int i = 0; i < nx; i += 1) {\n'
+        '      for (int j = 0; j < ny; j += 1) {\n'
+        '         y[i] = A[ny*i + j]*x[j];\n'
+        '      }\n'
+        '   }\n'
+        '}\n'
+    )
+
+    result = codegen(name_expr, "c", "test", header=False, empty=False, settings=settings)
+    source = result[0][1]
+    assert source == expected
 
 def test_output_arg_c():
     from sympy import sin, cos, Equality
@@ -533,6 +623,55 @@ def test_ccode_results_named_ordered():
     source = result[0][1]
     assert source == expected
 
+def test_ccode_results_named_ordered_1():
+    x, y, z = symbols('x,y,z')
+    B, C = symbols('B,C')
+    A = MatrixSymbol('A', 1, 3)
+    expr1 = Equality(A, Matrix([[1, 2, x]]))
+    expr2 = Equality(B, 2*x)
+    expr3 = Equality(C, B*(x + y)*z)
+    name_expr = ("test", [expr1, expr2, expr3])
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'void test(double x, double *C, double z, double y, double *A, double *B) {\n'
+        '   A[0] = 1;\n'
+        '   A[1] = 2;\n'
+        '   A[2] = x;\n'
+        '   (*B) = 2*x;\n'
+        '   (*C) = (*B)*z*(x + y);\n'
+        '}\n'
+    )
+
+    result = codegen(name_expr, "c", "test", header=False, empty=False,
+                     argument_sequence=(x, C, z, y, A, B))
+    source = result[0][1]
+    assert source == expected
+
+def test_ccode_results_named_ordered_2():
+    x, y, z = symbols('x,y,z')
+    B, C = symbols('B,C')
+    A = MatrixSymbol('A', 1, 3)
+    expr1 = Equality(A, Matrix([[1, 2, x]]))
+    expr2 = Equality(C, A[0]*(x + y)*z)
+    expr3 = Equality(B, 2*x)
+    name_expr = ("test", [expr1, expr2, expr3])
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'void test(double x, double *C, double z, double y, double *A, double *B) {\n'
+        '   A[0] = 1;\n'
+        '   A[1] = 2;\n'
+        '   A[2] = x;\n'
+        '   (*C) = z*(x + y)*A[0];\n'
+        '   (*B) = 2*x;\n'
+        '}\n'
+    )
+
+    result = codegen(name_expr, "c", "test", header=False, empty=False,
+                     argument_sequence=(x, C, z, y, A, B))
+    source = result[0][1]
+    assert source == expected
 
 def test_ccode_matrixsymbol_slice():
     A = MatrixSymbol('A', 5, 3)
