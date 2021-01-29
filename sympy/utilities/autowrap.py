@@ -100,6 +100,11 @@ class CodeWrapper:
     _module_basename = "wrapper_module"
     _module_counter = 0
 
+    default_datatypes = None
+
+    def _get_type(self, stype):
+        return self.default_datatypes[stype]
+
     @property
     def filename(self):
         return "%s_%s" % (self._filename, CodeWrapper._module_counter)
@@ -254,6 +259,8 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         "{body}")
 
     std_compile_flag = '-std=c99'
+
+    default_datatypes = C99CodeGen.default_datatypes
 
     def __init__(self, *args, **kwargs):
         """Instantiates a Cython code wrapper.
@@ -438,7 +445,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         mat_dec = "np.ndarray[{mtype}, ndim={ndim}] {name}"
         np_types = {'double': 'np.double_t',
                     'int': 'np.int_t'}
-        t = arg.get_datatype('c')
+        t = self._get_type(arg.datatype)
         if arg.dimensions:
             self._need_numpy = True
             ndim = len(arg.dimensions)
@@ -457,7 +464,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 
     def _call_arg(self, arg):
         if arg.dimensions:
-            t = arg.get_datatype('c')
+            t = self._get_type(arg.datatype)
             return "<{}*> {}.data".format(t, self._string_var(arg.name))
         elif isinstance(arg, ResultBase):
             return "&{}".format(self._string_var(arg.name))
