@@ -375,6 +375,25 @@ def checksol(f, symbol, sol=None, **flags):
     # returns None if it can't conclude
     # TODO: improve solution testing
 
+def is_eq_bool(eq):
+    """Returns true if Eq or Ne has True or False as an argument"""
+    if isinstance(eq, (Equality, Unequality)):
+        return any(side in (S.false, S.true) for side in eq.args)
+
+def invert_eq_bool(fi):
+    """Returns the expression when one argument is a bool and the other an expression in an Eq or Ne"""
+    if isinstance(fi, (Equality, Unequality)):
+        lhs, rhs = fi.args
+        unequal = S.true if isinstance(fi, Unequality) else S.false
+        if lhs in (S.false, S.true) and rhs.is_Relational:
+            return ~rhs if lhs is unequal else rhs
+        if rhs in (S.false, S.true) and lhs.is_Relational:
+            return ~lhs if rhs is unequal else lhs
+    return fi
+
+def is_relational(fi):
+    return fi.is_Relational and not isinstance(fi, Equality)
+
 
 def solve(f, *symbols, **flags):
     r"""
@@ -879,10 +898,6 @@ def solve(f, *symbols, **flags):
 
     # alternate exits
 
-    def is_eq_bool(eq):
-        if isinstance(eq, (Equality, Unequality)):
-            return any(side in (S.false, S.true) for side in eq.args)
-
     if any(is_eq_bool(fi) for fi in f):
         for i, fi in enumerate(f):
             if not isinstance(fi, (Equality, Unequality)):
@@ -906,20 +921,7 @@ def solve(f, *symbols, **flags):
                         is True or False.
                     '''))
 
-    def invert_eq_bool(fi):
-        if isinstance(fi, (Equality, Unequality)):
-            lhs, rhs = fi.args
-            unequal = S.true if isinstance(fi, Unequality) else S.false
-            if lhs in (S.false, S.true) and rhs.is_Relational:
-                return ~rhs if lhs is unequal else rhs
-            if rhs in (S.false, S.true) and lhs.is_Relational:
-                return ~lhs if rhs is unequal else lhs
-        return fi
-
     f_relational = [invert_eq_bool(fi) for fi in f]
-
-    def is_relational(fi):
-        return fi.is_Relational and not isinstance(fi, Equality)
 
     if any(is_relational(fi) for fi in f_relational):
         f = [invert_eq_bool(fi) for fi in f_relational]
