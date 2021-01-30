@@ -854,7 +854,7 @@ def evalf_log(expr, prec, options):
         # Dear reviewer, I do not know what -inf is;
         # it looks to be (1, 0, -789, -3)
         # but I'm not sure in general,
-        # so we just let mpmath figure 
+        # so we just let mpmath figure
         # it out by taking log of 0 directly.
         # It would be better to return -inf instead.
         xre = fzero
@@ -1330,6 +1330,32 @@ def _create_evalf_table():
 
 
 def evalf(x, prec, options):
+    """
+    Evaluate the ``Basic`` instance, ``x`` to a binary precision of ``prec``.
+
+    Parameters
+    ==========
+
+    x : Basic
+        The formula to evaluate to a float.
+    prec : int
+        The binary precision that the output should have.
+    options : dict
+        A dictionary with the same entries as
+        ``EvalfMixin.evalf`` and in addition,
+        ``maxprec`` which is the maximum working precision.
+
+    Returns
+    =======
+
+    An optional tuple, ``(re, im, re_acc, im_acc)``
+    which are the real, imaginary, real accuracy
+    and imaginary accuracy respectively.
+
+    NB: all these return values can be ``None``.
+    If all values are ``None``, then that represents 0.
+    Note that 0 is also represented as ``fzero = (0, 0, 0, 0)``.
+    """
     from sympy import re as re_, im as im_
     try:
         rf = evalf_table[x.func]
