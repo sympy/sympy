@@ -204,83 +204,53 @@ def _lambert1(eq, x, domain):
         return S.EmptySet
     # calculating solutions from args
 
+    integer = Symbol('integer',integer=True)
     for arg in args:
+        if not domain.is_subset(S.Reals):
+            rhs = -c/b + (a/d)*LambertW(arg,integer)
+
         if not len(list(eq.atoms(Symbol,Dummy))) >1:
-            if not domain.is_subset(S.Reals):
-                integer = Symbol('integer',integer=True)
-                rhs = -c/b + (a/d)*LambertW(arg,integer)
-                for xu in xusolns:
-                    sol.append(xu.subs(u, rhs))
-            else:
+            if domain.is_subset(S.Reals):
                 if -1/E <= re(arg) < 0 and LambertW(arg).is_real:
                     for k in lambert_real_branches:
-                        w = LambertW(arg, k)
-                        rhs = -c/b + (a/d)*w
-                        for xu in xusolns:
-                            sol.append(xu.subs(u, rhs))
+                        rhs = -c/b + (a/d)*LambertW(arg, k)
+                        sol = lambert_helper(xusolns,sol,u,rhs)
                 elif re(arg) >= 0 and LambertW(arg).is_real:
-                    w = LambertW(arg)
-                    rhs = -c/b + (a/d)*w
-                    for xu in xusolns:
-                        sol.append(xu.subs(u, rhs))
+                    rhs = -c/b + (a/d)*LambertW(arg)
                 elif re(arg) < -1/E:
                     return S.EmptySet
 
         elif (arg.has(Symbol)) and not arg.has(Dummy):
             if (list(arg.atoms(Symbol))[0]).is_negative and (list(arg.atoms(Symbol))[0]).is_real and domain.is_subset(S.Reals):
                 for k in lambert_real_branches:
-                    w = LambertW(arg, k)
-                    rhs = -c/b + (a/d)*w
-                    if rhs.has(I) or w.has(I):
+                    rhs = -c/b + (a/d)*LambertW(arg, k)
+                    if rhs.has(I):
                         continue
-                    for xu in xusolns:
-                        sol.append(xu.subs(u, rhs))
-
+                    sol = lambert_helper(xusolns,sol,u,rhs)
             if (list(arg.atoms(Symbol))[0]).is_positive and (list(arg.atoms(Symbol))[0]).is_real and domain.is_subset(S.Reals):
-                w = LambertW(arg)
-                rhs = -c/b + (a/d)*w
-                if rhs.has(I) or w.has(I):
+                rhs = -c/b + (a/d)*LambertW(arg)
+                if rhs.has(I):
                     continue
-
-                for xu in xusolns:
-                    sol.append(xu.subs(u, rhs))
-
-            if (list(arg.atoms(Symbol))[0]).is_negative and (list(arg.atoms(Symbol))[0]).is_real and not domain.is_subset(S.Reals):
-                integer = Symbol('integer',integer=True)
-                rhs = -c/b + (a/d)*LambertW(arg,integer)
-
-                for xu in xusolns:
-                    sol.append(xu.subs(u, rhs))
-
-            elif domain.is_subset(S.Reals):
+            if domain.is_subset(S.Reals):
                 for k in lambert_real_branches:
-                    w = LambertW(arg, k)
-                    rhs = -c/b + (a/d)*w
-                    if rhs.has(I) or w.has(I):
+                    rhs = -c/b + (a/d)*LambertW(arg, k)
+                    if rhs.has(I):
                         continue
-                    for xu in xusolns:
-                        sol.append(xu.subs(u, rhs))
-
-            elif domain.is_subset(S.Complexes):
-                integer = Symbol('integer',integer=True)
-                rhs = -c/b + (a/d)*LambertW(arg,integer)
-                for xu in xusolns:
-                    sol.append(xu.subs(u, rhs))
-
+                    sol = lambert_helper(xusolns,sol,u,rhs)
         else:
             if not domain.is_subset(S.Reals):
-                integer = Symbol('integer',integer=True)
                 rhs = Lambda(integer, -c/b + (a/d)*LambertW(arg,integer))
-                for xu in xusolns:
-                    sol.append(xu.subs(u, rhs))
             else:
-                w = LambertW(arg)
-                rhs = -c/b + (a/d)*w
-                for xu in xusolns:
-                    sol.append(xu.subs(u, rhs))
+                rhs = -c/b + (a/d)*LambertW(arg)
+        sol = lambert_helper(xusolns,sol,u,rhs)
 
     return list(set(sol))
 
+def lambert_helper(xusolns,sol,u,rhs):
+    # to avoid repetitive code
+    for xu in xusolns:
+        sol.append(xu.subs(u, rhs))
+    return sol
 
 def _lambert_real(eq, x):
     return _lambert1(eq, x, domain=S.Reals)

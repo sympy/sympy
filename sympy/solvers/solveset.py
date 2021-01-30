@@ -1135,24 +1135,8 @@ def _solveset(f, symbol, domain, _check=False):
                         ((result.has(cos) and not result.has(sin)) or \
                             (result.has(sin) and not result.has(cos))) :
                         try:
-                            f = _solve(f, x)
-                            if f is not None and domain.is_subset(S.Reals):
-                                args = []
-                                j = -1
-                                for i in f:
-                                    j += 1
-                                    if not isinstance(i,int):
-                                        if not i.has(I) and i.is_real and domain.is_subset(S.Reals):
-                                            args.append(f[j])
-                                    elif isinstance(i,int) and i.is_real and domain.is_subset(S.Reals):
-                                        args.append(f[j])
-                                    if i.has(Dummy):
-                                        return EmptySet
-                                f = FiniteSet(*args)
-                                return f
-                            else:
-                                f = FiniteSet(*f)
-                                return f
+                            fx = _solve(f, x)
+                            return _solveset_reduce(fx, symbol, result, domain)
                         except NotImplementedError:
                             pass
                 elif domain.is_subset(S.Reals):
@@ -1163,47 +1147,14 @@ def _solveset(f, symbol, domain, _check=False):
                             else:
                                 dmn = True
                             indls = _tsolve(f,x,dmn=dmn)
-                            if indls is None or indls == []:
-                                return result
-                            elif indls is not None:
-                                if len(indls) == 1:
-                                    if indls[0] == 0:
-                                        return result
-                                    if not indls[0].has(Symbol):
-                                        if not indls[0].is_real and domain.is_subset(S.Reals):
-                                            return S.EmptySet
-
-                            if indls is not None:
-                                args = []
-                                j = -1
-                                for i in indls:
-                                    j += 1
-                                    if not isinstance(i,int):
-                                        integer = Symbol('integer',integer=True)
-                                        if (not i.has(I) and not i.has(integer)) and domain.is_subset(S.Reals):
-                                            if f.has(log(x)) and i == S(0):
-                                                continue
-                                            args.append(indls[j])
-                                    if isinstance(i,int) and i.is_real and domain.is_subset(S.Reals):
-                                        args.append(indls[j])
-                                    if i.has(Dummy):
-                                        return EmptySet
-                                f = FiniteSet(*args)
-                                return f
-
-                elif domain.is_subset(S.Complexes):
+                            return _solveset_reduce(indls, symbol, result, domain)
+                elif domain.is_subset(S.Complexes) and not result.has(Ne):
                     if not any(i for i in f.atoms(Pow) if i.exp is S.Half) and f.count_ops() < 120:
                         indls = _tsolve(f,x)
-                        if indls is None or indls == []:
-                            return result
-                        elif indls is not None:
-                            if len(indls) == 1:
-                                if indls[0] == 0:
-                                    return result
+                        if indls is None or indls == [] or len(indls) == 1:
+                            result = _solveset_reduce(indls, symbol, result, domain)
                         if indls is not None:
-                            f = helper_to_solve_as_lambert(indls, f, symbol, domain,flag=None)
-                            return f
-
+                            return helper_to_solve_as_lambert(indls, f, symbol, domain,flag=None)
             else:
                 return result
 
@@ -1232,6 +1183,38 @@ def _solveset(f, symbol, domain, _check=False):
                 return result[0]
 
     return result
+
+
+def _solveset_reduce(fx, symbol, result, domain):
+    if fx is None or fx == []:
+        return result
+    elif fx is not None:
+        if len(fx) == 1:
+            if fx[0] == 0:
+                return result
+            if not fx[0].has(Symbol):
+                if not fx[0].is_real and domain.is_subset(S.Reals):
+                    return S.EmptySet
+    if fx is not None and domain.is_subset(S.Reals):
+        args = []
+        j = -1
+        for i in fx:
+            j += 1
+            if not isinstance(i,int):
+                integer = Symbol('integer',integer=True)
+                if not i.has(I) and (i.is_real or not i.has(integer))and domain.is_subset(S.Reals):
+                    if result.has(log(symbol)) and i == S(0):
+                        continue
+                    args.append(fx[j])
+            elif isinstance(i,int) and i.is_real and domain.is_subset(S.Reals):
+                args.append(fx[j])
+            if i.has(Dummy):
+                return EmptySet
+        fx = FiniteSet(*args)
+        return fx
+    elif domain.is_subset(S.Reals):
+        fx = FiniteSet(*fx)
+        return fx
 
 
 def _is_modular(f, symbol):
