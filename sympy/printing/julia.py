@@ -70,7 +70,8 @@ class JuliaCodePrinter(CodePrinter):
     # assignment (if False).  FIXME: this should be looked a more carefully
     # for Julia.
 
-    def __init__(self, settings={}):
+    def __init__(self, settings=None):
+        settings = settings or {}
         super().__init__(settings)
         self.known_functions = dict(zip(known_fcns_src1, known_fcns_src1))
         self.known_functions.update(dict(known_fcns_src2))
