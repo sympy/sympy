@@ -848,6 +848,17 @@ def evalf_log(expr, prec, options):
     workprec = prec + 10
     xre, xim, xacc, _ = evalf(arg, workprec, options)
 
+    # evalf can return NoneTypes if chop=True
+    # issue 18516, 19623
+    if xre is xim is None:
+        # Dear reviewer, I do not know what -inf is;
+        # it looks to be (1, 0, -789, -3)
+        # but I'm not sure in general,
+        # so we just let mpmath figure 
+        # it out by taking log of 0 directly.
+        # It would be better to return -inf instead.
+        xre = fzero
+
     if xim:
         # XXX: use get_abs etc instead
         re = evalf_log(
