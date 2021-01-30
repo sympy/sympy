@@ -900,7 +900,7 @@ class Quaternion(Expr):
 
         """
 
-        if not q1.is_pure() or not q1.is_pure() or not self.is_pure():
+        if not q1.a == 0 or not q2.a == 0 or not self.a == 0:
             raise ValueError('The provided quaternions must be pure')
 
         M = Matrix([[self.b, self.c, self.d], [q1.b, q1.c, q1.d], [q2.b, q2.c, q2.d]])
@@ -930,7 +930,7 @@ class Quaternion(Expr):
 
         """
 
-        if not self.is_pure() or not other.is_pure():
+        if not self.a == 0 or not other.a == 0:
             raise ValueError('The provided quaternions must be pure')
 
         return (Quaternion._generic_mul(self, other) == Quaternion._generic_mul(other, self))
@@ -960,7 +960,7 @@ class Quaternion(Expr):
 
         """
 
-        if not self.is_pure() or not other.is_pure():
+        if not self.a == 0 or not other.a == 0:
             raise ValueError('The provided quaternions must be pure')
 
         return (Quaternion._generic_mul(self, other) == -Quaternion._generic_mul(other, self))
