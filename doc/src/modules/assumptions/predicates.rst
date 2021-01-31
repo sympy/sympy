@@ -6,6 +6,19 @@
 Predicates
 ==========
 
+Common
+======
+
+Tautological
+------------
+
+.. autoclass:: sympy.assumptions.predicates.common.IsTruePredicate
+
+Commutative
+-----------
+
+.. autoclass:: sympy.assumptions.predicates.common.CommutativePredicate
+
 Calculus
 ========
 
