@@ -8,7 +8,7 @@ from sympy.core.compatibility import iterable, ordered, reduce
 from sympy.core.containers import Tuple
 from sympy.core.decorators import (deprecated, sympify_method_args,
     sympify_return)
-from sympy.core.evalf import EvalfMixin, prec_to_dps
+from sympy.core.evalf import EvalfMixin, evalf_options
 from sympy.core.parameters import global_parameters
 from sympy.core.expr import Expr
 from sympy.core.logic import (FuzzyBool, fuzzy_bool, fuzzy_or, fuzzy_and,
@@ -649,8 +649,8 @@ class Set(Basic, EvalfMixin):
     def _measure(self):
         raise NotImplementedError("(%s)._measure" % self)
 
-    def _eval_evalf(self, prec):
-        return self.func(*[arg.evalf(n=prec_to_dps(prec)) for arg in self.args])
+    def _eval_evalf_options(self, prec, options):
+        return self.func(*[evalf_options(arg, prec, options) for arg in self.args])
 
     @sympify_return([('other', 'Set')], NotImplemented)
     def __add__(self, other):
@@ -1106,8 +1106,8 @@ class Interval(Set):
         return mpi(mpf(self.start._eval_evalf(prec)),
             mpf(self.end._eval_evalf(prec)))
 
-    def _eval_evalf(self, prec):
-        return Interval(self.left._evalf(prec), self.right._evalf(prec),
+    def _eval_evalf_options(self, prec, options):
+        return Interval(evalf_options(self.left, prec, options), evalf_options(self.right, prec, options),
             left_open=self.left_open, right_open=self.right_open)
 
     def _is_comparable(self, other):
