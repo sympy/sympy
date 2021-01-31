@@ -1624,7 +1624,6 @@ class EvalfMixin:
             options['subs'] = subs
         if quad is not None:
             options['quad'] = quad
-            
         return evalf_options(self, prec, options)
 
     n = evalf

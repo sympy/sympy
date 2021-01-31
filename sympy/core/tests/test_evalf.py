@@ -581,7 +581,6 @@ def test_issue_13425():
 def test_issue_17421():
     assert N(acos(-I + acosh(cosh(cosh(1) + I)))) == 1.0*I
 
-    
 def test_evalfmixin():
     x = Symbol('x')
     y = Float('3.141592653589793238462643383279502884197', 10)
@@ -626,7 +625,6 @@ def test_evalfmixin():
     #_eval_evalf_options are preferred over _eval_evalf if both are given.
     assert A(a).evalf(40) != B(a).evalf(40) #_eval_evalf is less precise
 
-    
 def test_evalf_options():
     x = Symbol('x')
     class X:
