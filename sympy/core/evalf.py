@@ -1331,7 +1331,9 @@ def _create_evalf_table():
 
 def evalf(x, prec, options):
     """
-    Evaluate the ``Basic`` instance, ``x`` to a binary precision of ``prec``.
+    Evaluate the ``Basic`` instance, ``x``
+    to a binary precision of ``prec``. This
+    function is supposed to be used internally.
 
     Parameters
     ==========
@@ -1350,7 +1352,9 @@ def evalf(x, prec, options):
 
     An optional tuple, ``(re, im, re_acc, im_acc)``
     which are the real, imaginary, real accuracy
-    and imaginary accuracy respectively.
+    and imaginary accuracy respectively. ``re`` is
+    an mpf value tuple and so is ``im``. ``re_acc``
+    and ``im_acc`` are ints.
 
     NB: all these return values can be ``None``.
     If all values are ``None``, then that represents 0.
