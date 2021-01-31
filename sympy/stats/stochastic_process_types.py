@@ -1,3 +1,4 @@
+from __future__ import print_function, division
 import random
 
 import itertools
@@ -19,7 +20,8 @@ from sympy.stats.joint_rv import JointDistribution
 from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter, _value_check, pspace, given,
-                           dependent, is_random, sample_iter)
+                           dependent, is_random, sample_iter, Distribution,
+                           Density)
 from sympy.stats.stochastic_process import StochasticPSpace
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.frv_types import Bernoulli, BernoulliDistribution, FiniteRV
@@ -169,9 +171,21 @@ class StochasticProcess(Basic):
             return FiniteSet(*self.args[1])
         return self.args[1]
 
-    @property
-    def distribution(self):
-        return None
+    def _deprecation_warn_distribution(self):
+        SymPyDeprecationWarning(
+            feature="Calling distribution with RandomIndexedSymbol",
+            useinstead="distribution with just timestamp as argument",
+            issue=20078,
+            deprecated_since_version="1.7.1"
+        ).warn()
+
+    def distribution(self, key=None):
+        if key is None:
+            self._deprecation_warn_distribution()
+        return Distribution()
+
+    def density(self, x):
+        return Density()
 
     def __call__(self, time):
         """
@@ -224,12 +238,11 @@ class StochasticProcess(Basic):
                 raise ValueError("Expected a RandomIndexedSymbol or "
                                 "key not  %s"%(type(arg)))
 
-        if args[0].pspace.distribution == None: # checks if there is any distribution available
+        if args[0].pspace.distribution == Distribution():
             return JointDistribution(*args)
-
-        pdf = Lambda(tuple(args),
-                expr=Mul.fromiter(arg.pspace.process.density(arg) for arg in args))
-        return JointDistributionHandmade(pdf)
+        density = Lambda(tuple(args),
+                         expr=Mul.fromiter(arg.pspace.process.density(arg) for arg in args))
+        return JointDistributionHandmade(density)
 
     def expectation(self, condition, given_condition):
         raise NotImplementedError("Abstract method for expectation queries.")
@@ -254,7 +267,7 @@ class DiscreteTimeStochasticProcess(StochasticProcess):
         if not time.is_symbol and time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         idx_obj = Indexed(self.symbol, time)
-        pspace_obj = StochasticPSpace(self.symbol, self, self.distribution)
+        pspace_obj = StochasticPSpace(self.symbol, self, self.distribution(time))
         return RandomIndexedSymbol(idx_obj, pspace_obj)
 
 class ContinuousTimeStochasticProcess(StochasticProcess):
@@ -274,7 +287,7 @@ class ContinuousTimeStochasticProcess(StochasticProcess):
         if not time.is_symbol and time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         func_obj = Function(self.symbol)(time)
-        pspace_obj = StochasticPSpace(self.symbol, self, self.distribution)
+        pspace_obj = StochasticPSpace(self.symbol, self, self.distribution(time))
         return RandomIndexedSymbol(func_obj, pspace_obj)
 
 class TransitionMatrixOf(Boolean):
@@ -918,48 +931,6 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """
         return self.args[2]
 
-    def _transient2transient(self):
-        """
-        Computes the one step probabilities of transient
-        states to transient states. Used in finding
-        fundamental matrix, absorbing probabilities.
-        """
-        trans_probs = self.transition_probabilities
-        if not isinstance(trans_probs, ImmutableMatrix):
-            return None
-
-        m = trans_probs.shape[0]
-        trans_states = [i for i in range(m) if trans_probs[i, i] != 1]
-        t2t = [[trans_probs[si, sj] for sj in trans_states] for si in trans_states]
-
-        return ImmutableMatrix(t2t)
-
-    def _transient2absorbing(self):
-        """
-        Computes the one step probabilities of transient
-        states to absorbing states. Used in finding
-        fundamental matrix, absorbing probabilities.
-        """
-        trans_probs = self.transition_probabilities
-        if not isinstance(trans_probs, ImmutableMatrix):
-            return None
-
-        m, trans_states, absorb_states = \
-            trans_probs.shape[0], [], []
-        for i in range(m):
-            if trans_probs[i, i] == 1:
-                absorb_states.append(i)
-            else:
-                trans_states.append(i)
-
-        if not absorb_states or not trans_states:
-            return None
-
-        t2a = [[trans_probs[si, sj] for sj in absorb_states]
-                for si in trans_states]
-
-        return ImmutableMatrix(t2a)
-
     def communication_classes(self) -> tList[tTuple[tList[Basic], Boolean, Integer]]:
         """
         Returns the list of communication classes that partition
@@ -1097,13 +1068,32 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return sympify(list(zip(classes, recurrence, periods)))
 
     def fundamental_matrix(self):
-        Q = self._transient2transient()
-        if Q == None:
-            return None
-        I = eye(Q.shape[0])
-        if (I - Q).det() == 0:
-            raise ValueError("Fundamental matrix doesn't exists.")
-        return ImmutableMatrix((I - Q).inv().tolist())
+        """
+        Each entry fundamental matrix can be interpreted as
+        the expected number of times the chains is in state j
+        if it started in state i.
+
+        References
+        ==========
+
+        .. [1] https://lips.cs.princeton.edu/the-fundamental-matrix-of-a-finite-markov-chain/
+
+        """
+        _, _, _, Q = self.decompose()
+
+        if Q.shape[0] > 0:  # if non-ergodic
+            I = eye(Q.shape[0])
+            if (I - Q).det() == 0:
+                raise ValueError("The fundamental matrix doesn't exist.")
+            return (I - Q).inv().as_immutable()
+        else:  # if ergodic
+            P = self.transition_probabilities
+            I = eye(P.shape[0])
+            w = self.fixed_row_vector()
+            W = Matrix([list(w) for i in range(0, P.shape[0])])
+            if (I - P + W).det() == 0:
+                raise ValueError("The fundamental matrix doesn't exist.")
+            return (I - P + W).inv().as_immutable()
 
     def absorbing_probabilities(self):
         """
@@ -1112,9 +1102,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         probability of Markov chain being absorbed
         in state j starting from state i.
         """
-        R = self._transient2absorbing()
+        _, _, R, _ = self.decompose()
         N = self.fundamental_matrix()
-        if R == None or N == None:
+        if R is None or N is None:
             return None
         return N*R
 
@@ -1472,7 +1462,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             densities[state] = {states[i]: Tlist[state][i]
                         for i in range(len(states))}
         while time < S.Infinity:
-            samps.append(next(sample_iter(FiniteRV("_", densities[samps[time - 1]]))))
+            samps.append((next(sample_iter(FiniteRV("_", densities[samps[time - 1]])))))
             yield samps[time]
             time += 1
 
@@ -1688,9 +1678,11 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     def state_space(self):
         return _set_converter([self.success, self.failure])
 
-    @property
-    def distribution(self):
-        return BernoulliDistribution(self.p)
+    def distribution(self, key=None):
+        if key is None:
+            self._deprecation_warn_distribution()
+            return BernoulliDistribution(self.p)
+        return BernoulliDistribution(self.p, self.success, self.failure)
 
     def simple_rv(self, rv):
         return Bernoulli(rv.name, p=self.p,
@@ -2204,8 +2196,11 @@ class PoissonProcess(CountingProcess):
     def state_space(self):
         return S.Naturals0
 
-    def distribution(self, rv):
-        return PoissonDistribution(self.lamda*rv.key)
+    def distribution(self, key):
+        if isinstance(key, RandomIndexedSymbol):
+            self._deprecation_warn_distribution()
+            return PoissonDistribution(self.lamda*key.key)
+        return PoissonDistribution(self.lamda*key)
 
     def density(self, x):
         return (self.lamda*x.key)**x / factorial(x) * exp(-(self.lamda*x.key))
@@ -2269,8 +2264,11 @@ class WienerProcess(CountingProcess):
     def state_space(self):
         return S.Reals
 
-    def distribution(self, rv):
-        return NormalDistribution(0, sqrt(rv.key))
+    def distribution(self, key):
+        if isinstance(key, RandomIndexedSymbol):
+            self._deprecation_warn_distribution()
+            return NormalDistribution(0, sqrt(key.key))
+        return NormalDistribution(0, sqrt(key))
 
     def density(self, x):
         return exp(-x**2/(2*x.key)) / (sqrt(2*pi)*sqrt(x.key))
@@ -2339,8 +2337,11 @@ class GammaProcess(CountingProcess):
     def state_space(self):
         return _set_converter(Interval(0, oo))
 
-    def distribution(self, rv):
-        return GammaDistribution(self.gamma*rv.key, 1/self.lamda)
+    def distribution(self, key):
+        if isinstance(key, RandomIndexedSymbol):
+            self._deprecation_warn_distribution()
+            return GammaDistribution(self.gamma*key.key, 1/self.lamda)
+        return GammaDistribution(self.gamma*key, 1/self.lamda)
 
     def density(self, x):
         k = self.gamma*x.key

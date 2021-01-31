@@ -79,8 +79,6 @@ def test_DiscreteMarkovChain():
     TS = MatrixSymbol('T', 3, 3)
     Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     YS = DiscreteMarkovChain("Y", ['One', 'Two', 3], TS)
-    assert YS._transient2transient() == None
-    assert YS._transient2absorbing() == None
     assert Y.joint_distribution(1, Y[2], 3) == JointDistribution(Y[1], Y[2], Y[3])
     raises(ValueError, lambda: Y.joint_distribution(Y[1].symbol, Y[2].symbol))
     assert P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2) == Float(0.36, 2)
@@ -119,11 +117,10 @@ def test_DiscreteMarkovChain():
 
     # testing properties of Markov chain
     TO2 = Matrix([[S.One, 0, 0],[Rational(1, 3), Rational(1, 3), Rational(1, 3)],[0, Rational(1, 4), Rational(3, 4)]])
-    TO3 = Matrix([[Rational(1, 4), Rational(3, 4), 0],[Rational(1, 3), Rational(1, 3), Rational(1, 3)],[0, Rational(1, 4), Rational(3, 4)]])
+    TO3 = Matrix([[Rational(1, 4), Rational(3, 4), 0],[Rational(1, 3), Rational(1, 3), Rational(1, 3)], [0, Rational(1, 4), Rational(3, 4)]])
     Y2 = DiscreteMarkovChain('Y', trans_probs=TO2)
     Y3 = DiscreteMarkovChain('Y', trans_probs=TO3)
-    assert Y3._transient2absorbing() == None
-    raises (ValueError, lambda: Y3.fundamental_matrix())
+    assert Y3.fundamental_matrix() == ImmutableMatrix([[176, 81, -132], [36, 141, -52], [-44, -39, 208]])/125
     assert Y2.is_absorbing_chain() == True
     assert Y3.is_absorbing_chain() == False
     assert Y2.canonical_form() == ([0, 1, 2], TO2)
@@ -142,10 +139,14 @@ def test_DiscreteMarkovChain():
     assert Y5.stationary_distribution(condition_set=True).subs(TS1, TO4).contains(w).doit() == S.true
     TO6 = Matrix([[S.One, 0, 0, 0, 0],[S.Half, 0, S.Half, 0, 0],[0, S.Half, 0, S.Half, 0], [0, 0, S.Half, 0, S.Half], [0, 0, 0, 0, 1]])
     Y6 = DiscreteMarkovChain('Y', trans_probs=TO6)
-    assert Y6._transient2absorbing() == ImmutableMatrix([[S.Half, 0], [0, 0], [0, S.Half]])
-    assert Y6._transient2transient() == ImmutableMatrix([[0, S.Half, 0], [S.Half, 0, S.Half], [0, S.Half, 0]])
     assert Y6.fundamental_matrix() == ImmutableMatrix([[Rational(3, 2), S.One, S.Half], [S.One, S(2), S.One], [S.Half, S.One, Rational(3, 2)]])
     assert Y6.absorbing_probabilities() == ImmutableMatrix([[Rational(3, 4), Rational(1, 4)], [S.Half, S.Half], [Rational(1, 4), Rational(3, 4)]])
+    TO7 = Matrix([[Rational(1, 2), Rational(1, 4), Rational(1, 4)], [Rational(1, 2), 0, Rational(1, 2)], [Rational(1, 4), Rational(1, 4), Rational(1, 2)]])
+    Y7 = DiscreteMarkovChain('Y', trans_probs=TO7)
+    assert Y7.is_absorbing_chain() == False
+    assert Y7.fundamental_matrix() == ImmutableDenseMatrix([[Rational(86, 75), Rational(1, 25), Rational(-14, 75)],
+                                                            [Rational(2, 25), Rational(21, 25), Rational(2, 25)],
+                                                            [Rational(-14, 75), Rational(1, 25), Rational(86, 75)]])
 
     # test for zero-sized matrix functionality
     X = DiscreteMarkovChain('X', trans_probs=Matrix([[]]))
@@ -337,6 +338,13 @@ def test_DiscreteMarkovChain():
     query_lt = P(Lt(Y[a], b), Eq(Y[c], d))
     assert query_ge.subs({a:4, b:1, c:0, d:2}).evalf() + query_lt.subs({a:4, b:1, c:0, d:2}).evalf() == 1
 
+    #test issue 20078
+    assert (2*Y[1] + 3*Y[1]).simplify() == 5*Y[1]
+    assert (2*Y[1] - 3*Y[1]).simplify() == -Y[1]
+    assert (2*(0.25*Y[1])).simplify() == 0.5*Y[1]
+    assert ((2*Y[1]) * (0.25*Y[1])).simplify() == 0.5*Y[1]**2
+    assert (Y[1]**2 + Y[1]**3).simplify() == (Y[1] + 1)*Y[1]**2
+
 def test_sample_stochastic_process():
     if not import_module('scipy'):
         skip('SciPy Not installed. Skip sampling tests')
@@ -423,6 +431,13 @@ def test_ContinuousMarkovChain():
     query_lt = P(Lt(C(a), b), Eq(C(c), d))
     assert query_ge.subs({a:7.43, b:1, c:1.45, d:0}).evalf() + query_lt.subs({a:7.43, b:1, c:1.45, d:0}).evalf() == 1
 
+    #test issue 20078
+    assert (2*C(1) + 3*C(1)).simplify() == 5*C(1)
+    assert (2*C(1) - 3*C(1)).simplify() == -C(1)
+    assert (2*(0.25*C(1))).simplify() == 0.5*C(1)
+    assert (2*C(1) * 0.25*C(1)).simplify() == 0.5*C(1)**2
+    assert (C(1)**2 + C(1)**3).simplify() == (C(1) + 1)*C(1)**2
+
 def test_BernoulliProcess():
 
     B = BernoulliProcess("B", p=0.6, success=1, failure=0)
@@ -491,6 +506,12 @@ def test_BernoulliProcess():
     assert B[4].free_symbols == {B[4]}
     assert B[x*t].free_symbols == {B[x*t], x, t}
 
+    #test issue 20078
+    assert (2*B[t] + 3*B[t]).simplify() == 5*B[t]
+    assert (2*B[t] - 3*B[t]).simplify() == -B[t]
+    assert (2*(0.25*B[t])).simplify() == 0.5*B[t]
+    assert (2*B[t] * 0.25*B[t]).simplify() == 0.5*B[t]**2
+    assert (B[t]**2 + B[t]**3).simplify() == (B[t] + 1)*B[t]**2
 
 def test_PoissonProcess():
     X = PoissonProcess("X", 3)
@@ -500,7 +521,7 @@ def test_PoissonProcess():
 
     t, d, x, y = symbols('t d x y', positive=True)
     assert isinstance(X(t), RandomIndexedSymbol)
-    assert X.distribution(X(t)) == PoissonDistribution(3*t)
+    assert X.distribution(t) == PoissonDistribution(3*t)
     raises(ValueError, lambda: PoissonProcess("X", -1))
     raises(NotImplementedError, lambda: X[t])
     raises(IndexError, lambda: X(-5))
@@ -600,6 +621,13 @@ def test_PoissonProcess():
     assert P(Eq(X(2), 5) & Eq(X(1), 2)) == P(Eq(X(1), 3))*P(Eq(X(1), 2))
     assert P(Eq(X(3), 4), Eq(X(1), 3)) == P(Eq(X(2), 1))
 
+    #test issue 20078
+    assert (2*X(t) + 3*X(t)).simplify() == 5*X(t)
+    assert (2*X(t) - 3*X(t)).simplify() == -X(t)
+    assert (2*(0.25*X(t))).simplify() == 0.5*X(t)
+    assert (2*X(t) * 0.25*X(t)).simplify() == 0.5*X(t)**2
+    assert (X(t)**2 + X(t)**3).simplify() == (X(t) + 1)*X(t)**2
+
 def test_WienerProcess():
     X = WienerProcess("X")
     assert X.state_space == S.Reals
@@ -607,7 +635,7 @@ def test_WienerProcess():
 
     t, d, x, y = symbols('t d x y', positive=True)
     assert isinstance(X(t), RandomIndexedSymbol)
-    assert X.distribution(X(t)) == NormalDistribution(0, sqrt(t))
+    assert X.distribution(t) == NormalDistribution(0, sqrt(t))
     raises(ValueError, lambda: PoissonProcess("X", -1))
     raises(NotImplementedError, lambda: X[t])
     raises(IndexError, lambda: X(-2))
@@ -642,6 +670,13 @@ def test_WienerProcess():
     Contains(d, Interval.Ropen(1, 2)) & Contains(t, Interval.Lopen(0, 1)))
     assert E(X(t) + x*E(X(3))) == 0
 
+    #test issue 20078
+    assert (2*X(t) + 3*X(t)).simplify() == 5*X(t)
+    assert (2*X(t) - 3*X(t)).simplify() == -X(t)
+    assert (2*(0.25*X(t))).simplify() == 0.5*X(t)
+    assert (2*X(t) * 0.25*X(t)).simplify() == 0.5*X(t)**2
+    assert (X(t)**2 + X(t)**3).simplify() == (X(t) + 1)*X(t)**2
+
 
 def test_GammaProcess_symbolic():
     t, d, x, y, g, l = symbols('t d x y g l', positive=True)
@@ -651,7 +686,7 @@ def test_GammaProcess_symbolic():
     raises(IndexError, lambda: X(-1))
     assert isinstance(X(t), RandomIndexedSymbol)
     assert X.state_space == Interval(0, oo)
-    assert X.distribution(X(t)) == GammaDistribution(g*t, 1/l)
+    assert X.distribution(t) == GammaDistribution(g*t, 1/l)
     assert X.joint_distribution(5, X(3)) == JointDistributionHandmade(Lambda(
         (X(5), X(3)), l**(8*g)*exp(-l*X(3))*exp(-l*X(5))*X(3)**(3*g - 1)*X(5)**(5*g
         - 1)/(gamma(3*g)*gamma(5*g))))
@@ -667,6 +702,13 @@ def test_GammaProcess_symbolic():
     assert P(X(t) > 3, Contains(t, Interval.Lopen(3, 4))).simplify() == \
                                 1 - lowergamma(g, 3*l)/gamma(g) # equivalent to P(X(1)>3)
 
+
+    #test issue 20078
+    assert (2*X(t) + 3*X(t)).simplify() == 5*X(t)
+    assert (2*X(t) - 3*X(t)).simplify() == -X(t)
+    assert (2*(0.25*X(t))).simplify() == 0.5*X(t)
+    assert (2*X(t) * 0.25*X(t)).simplify() == 0.5*X(t)**2
+    assert (X(t)**2 + X(t)**3).simplify() == (X(t) + 1)*X(t)**2
 def test_GammaProcess_numeric():
     t, d, x, y = symbols('t d x y', positive=True)
     X = GammaProcess("X", 1, 2)

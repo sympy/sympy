@@ -177,3 +177,15 @@ def test_vector_evalf():
     assert v.evalf(2) == Float('3.1416', 2) * A.x
     v = pi * A.x + 5 * a * A.y - b * A.z
     assert v.evalf(3) == Float('3.1416', 3) * A.x + Float('5', 3) * a * A.y - b * A.z
+    assert v.evalf(5, subs={a: 1.234, b:5.8973}) == Float('3.1415926536', 5) * A.x + Float('6.17', 5) * A.y - Float('5.8973', 5) * A.z
+
+
+def test_vector_xreplace():
+    x, y, z = symbols('x y z')
+    v = x**2 * A.x + x*y * A.y + x*y*z * A.z
+    assert v.xreplace({x : cos(x)}) == cos(x)**2 * A.x + y*cos(x) * A.y + y*z*cos(x) * A.z
+    assert v.xreplace({x*y : pi}) == x**2 * A.x + pi * A.y + x*y*z * A.z
+    assert v.xreplace({x*y*z : 1}) == x**2*A.x + x*y*A.y + A.z
+    assert v.xreplace({x:1, z:0}) == A.x + y * A.y
+    raises(TypeError, lambda: v.xreplace())
+    raises(TypeError, lambda: v.xreplace([x, y]))

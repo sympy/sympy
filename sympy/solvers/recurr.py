@@ -614,14 +614,18 @@ def rsolve_hyper(coeffs, f, n, **hints):
             if coeff is not S.Zero:
                 poly += coeff * Z**i
 
-        constants = []
-
         for z in roots(poly, Z).keys():
             if z.is_zero:
                 continue
 
-            (C, s) = rsolve_poly([polys[i].as_expr()*z**i for i in range(r + 1)], 0, n, len(constants), symbols=True)
-            constants.extend(s)
+            recurr_coeffs = [polys[i].as_expr()*z**i for i in range(r + 1)]
+            if d == 0 and 0 != Add(*[recurr_coeffs[j]*j for j in range(1, r + 1)]):
+                # faster inline check (than calling rsolve_poly) for a
+                # constant solution to a constant coefficient recurrence.
+                C = Symbol("C" + str(len(symbols)))
+                s = [C]
+            else:
+                C, s = rsolve_poly(recurr_coeffs, 0, n, len(symbols), symbols=True)
 
             if C is not None and C is not S.Zero:
                 symbols |= set(s)

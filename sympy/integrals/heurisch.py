@@ -1,6 +1,7 @@
 from typing import Dict, List
 
 from itertools import permutations
+from functools import reduce
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -35,7 +36,7 @@ from sympy.polys.rings import PolyRing
 from sympy.polys.solvers import solve_lin_sys
 from sympy.polys.constructor import construct_domain
 
-from sympy.core.compatibility import reduce, ordered
+from sympy.core.compatibility import ordered
 from sympy.integrals.integrals import integrate
 
 

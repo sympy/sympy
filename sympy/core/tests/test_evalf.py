@@ -581,6 +581,7 @@ def test_issue_13425():
 def test_issue_17421():
     assert N(acos(-I + acosh(cosh(cosh(1) + I)))) == 1.0*I
 
+    
 def test_evalfmixin():
     x = Symbol('x')
     y = Float('3.141592653589793238462643383279502884197', 10)
@@ -625,6 +626,7 @@ def test_evalfmixin():
     #_eval_evalf_options are preferred over _eval_evalf if both are given.
     assert A(a).evalf(40) != B(a).evalf(40) #_eval_evalf is less precise
 
+    
 def test_evalf_options():
     x = Symbol('x')
     class X:
@@ -694,3 +696,15 @@ def test_eval_evalf():
 
     assert FiniteSet(A()).evalf(2) == FiniteSet(2.0)
     assert FiniteSet(B()).evalf(2) == FiniteSet(2.0)
+
+def test_issue_20291():
+    from sympy import FiniteSet, Complement, Intersection, Reals, EmptySet
+    a = Symbol('a')
+    b = Symbol('b')
+    A = FiniteSet(a, b)
+    assert A.evalf(subs={a: 1, b: 2}) == FiniteSet(1.0, 2.0)
+    B = FiniteSet(a-b, 1)
+    assert B.evalf(subs={a: 1, b: 2}) == FiniteSet(-1.0, 1.0)
+
+    sol = Complement(Intersection(FiniteSet(-b/2 - sqrt(b**2-4*pi)/2), Reals), FiniteSet(0))
+    assert sol.evalf(subs={b: 1}) == EmptySet

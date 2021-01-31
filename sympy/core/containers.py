@@ -7,9 +7,10 @@
 """
 
 from collections import OrderedDict
+from collections.abc import MutableSet
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int, MutableSet
+from sympy.core.compatibility import as_int
 from sympy.core.sympify import _sympify, sympify, converter, SympifyError
 from sympy.utilities.iterables import iterable
 

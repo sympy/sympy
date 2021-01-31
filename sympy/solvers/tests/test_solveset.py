@@ -702,6 +702,12 @@ def test_piecewise_solveset():
     f = BooleanTrue()
     assert solveset(f, x, domain=Interval(-3, 10)) == Interval(-3, 10)
 
+    # issue 20552
+    f = Piecewise((0, Eq(x, 0)), (x**2/Abs(x), True))
+    g = Piecewise((0, Eq(x, pi)), ((x - pi)/sin(x), True))
+    assert solveset(f, x, domain=S.Reals) == FiniteSet(0)
+    assert solveset(g) == FiniteSet(pi)
+
 
 def test_solveset_complex_polynomial():
     assert solveset_complex(a*x**2 + b*x + c, x) == \
@@ -2470,6 +2476,16 @@ def test_solve_modular():
 def test_issue_17276():
     assert nonlinsolve([Eq(x, 5**(S(1)/5)), Eq(x*y, 25*sqrt(5))], x, y) == \
      FiniteSet((5**(S(1)/5), 25*5**(S(3)/10)))
+
+
+def test_issue_10426():
+    x=Dummy('x')
+    a=Symbol('a')
+    n=Dummy('n')
+    assert (solveset(sin(x + a) - sin(x), a)).dummy_eq(Dummy('x')) == (Union(
+        ImageSet(Lambda(n, 2*n*pi), S.Integers),
+        Intersection(S.Complexes, ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*x))) + 2*im(x))),
+        S.Integers)))).dummy_eq(Dummy('x,n'))
 
 
 @XFAIL

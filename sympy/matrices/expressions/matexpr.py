@@ -14,6 +14,7 @@ from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.common import NonSquareMatrixError
 from sympy.simplify import simplify
+from sympy.matrices.matrices import MatrixKind
 from sympy.utilities.misc import filldedent
 from sympy.multipledispatch import dispatch
 
@@ -74,6 +75,8 @@ class MatrixExpr(Expr):
     is_number = False
     is_symbol = False
     is_scalar = False
+
+    kind = MatrixKind()
 
     def __new__(cls, *args, **kwargs):
         args = map(_sympify, args)

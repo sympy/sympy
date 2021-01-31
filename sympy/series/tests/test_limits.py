@@ -796,6 +796,11 @@ def test_issue_17792():
     assert limit(factorial(n)/sqrt(n)*(exp(1)/n)**n, n, oo) == sqrt(2)*sqrt(pi)
 
 
+def test_issue_18118():
+    assert limit(sign(sin(x)), x, 0, "-") == -1
+    assert limit(sign(sin(x)), x, 0, "+") == 1
+
+
 def test_issue_18306():
     assert limit(sin(sqrt(x))/sqrt(sin(x)), x, 0, '+') == 1
 
@@ -895,3 +900,14 @@ def test_issue_19770():
     m = Symbol('m', nonzero=True)
     assert limit(cos(m*x), x, oo) == AccumBounds(-1, 1)
     assert limit(cos(m*x)/x, x, oo) == 0
+
+
+def test_issue_7535():
+    assert limit(tan(x)/sin(tan(x)), x, pi/2) == Limit(tan(x)/sin(tan(x)), x, pi/2, dir='+')
+    assert limit(tan(x)/sin(tan(x)), x, pi/2, dir='-') == Limit(tan(x)/sin(tan(x)), x, pi/2, dir='-')
+    assert limit(tan(x)/sin(tan(x)), x, pi/2, dir='+-') == Limit(tan(x)/sin(tan(x)), x, pi/2, dir='+-')
+    assert limit(sin(tan(x)),x,pi/2) == AccumBounds(-1, 1)
+    assert -oo*(1/sin(-oo)) == AccumBounds(-oo, oo)
+    assert oo*(1/sin(oo)) == AccumBounds(-oo, oo)
+    assert oo*(1/sin(-oo)) == AccumBounds(-oo, oo)
+    assert -oo*(1/sin(oo)) == AccumBounds(-oo, oo)

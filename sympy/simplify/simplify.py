@@ -547,6 +547,20 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     Note that ``simplify()`` automatically calls ``doit()`` on the final
     expression. You can avoid this behavior by passing ``doit=False`` as
     an argument.
+
+    Also, it should be noted that simplifying the boolian expression is not
+    well defined. If the expression prefers automatic evaluation (such as
+    :obj:`~.Eq()` or :obj:`~.Or()`), simplification will return ``True`` or
+    ``False`` if truth value can be determined. If the expression is not
+    evaluated by default (such as :obj:`~.Predicate()`), simplification will
+    not reduce it and you should use :func:`~.refine()` or :func:`~.ask()`
+    function. This inconsistency will be resolved in future version.
+
+    See Also
+    ========
+
+    sympy.assumptions.refine.refine : Simplification using assumptions.
+    sympy.assumptions.ask.ask : Query for boolean expressions using assumptions.
     """
 
     def shorter(*choices):
