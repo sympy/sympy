@@ -200,7 +200,7 @@ ECM function
 
 The `ecm` function is a subexponential factoring algorithm capable of factoring
 numbers of around ~35 digits comfortably within few seconds. The time complexity
-of `ecm` is dependent on the smalled proper factor of the number. So even if the
+of `ecm` is dependent on the smallest proper factor of the number. So even if the
 number is really large but its factors are comparatively smaller then `ecm`
 can easily factor them. For example we take `N` with 15 digit factors
 `15154262241479`, `15423094826093`, `799333555511111`, `809709509409109`,
