@@ -172,12 +172,6 @@ class MatMul(MatrixExpr, Mul):
             args = [arg.doit(**kwargs) for arg in self.args]
         else:
             args = self.args
-        if len(args) == 2:
-            from .matadd import MatAdd
-            if args[0].is_MatAdd:
-                return MatAdd(*[MatMul(mat, args[1]).doit(**kwargs) for mat in args[0].args])
-            if args[1].is_MatAdd:
-                return MatAdd(*[MatMul(args[0], mat).doit(**kwargs) for mat in args[1].args])
 
         # treat scalar*MatrixSymbol or scalar*MatPow separately
         expr = canonicalize(MatMul(*args))
@@ -395,8 +389,23 @@ def combine_one_matrices(mul):
 
     return newmul(factor, *new_args)
 
+def simp_expr(mul):
+    """
+    Simplify MatMul expressions
+
+    e.g. A*(A+B) -> A**2 + A*B
+    """
+    args = mul.args
+    if len(args) == 2:
+        from .matadd import MatAdd
+        if args[0].is_MatAdd:
+            return MatAdd(*[MatMul(mat, args[1]).doit() for mat in args[0].args])
+        if args[1].is_MatAdd:
+            return MatAdd(*[MatMul(args[0], mat).doit() for mat in args[1].args])
+    return mul
+
 rules = (
-    any_zeros, remove_ids, combine_one_matrices, combine_powers, unpack, rm_id(lambda x: x == 1),
+    simp_expr, any_zeros, remove_ids, combine_one_matrices, combine_powers, unpack, rm_id(lambda x: x == 1),
     merge_explicit, factor_in_front, flatten, combine_permutations)
 
 canonicalize = exhaust(typed({MatMul: do_one(*rules)}))
