@@ -256,8 +256,9 @@ class log2(Function):
         elif arg.is_Pow and arg.base == _Two:
             return arg.exp
 
-    def _eval_evalf(self, *args, **kwargs):
-        return self.rewrite(log).evalf(*args, **kwargs)
+    def _eval_evalf_options(self, *args, **kwargs):
+        from sympy.core.evalf import evalf_options
+        return evalf_options(self.rewrite(log), *args, **kwargs)
 
     def _eval_expand_func(self, **hints):
         return _log2(*self.args)
