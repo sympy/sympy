@@ -97,6 +97,12 @@ def test_Cartan():
 def test_orbit():
     """These results are compared to outputs of
     Mathematica's implementation of lie algebras"""
+    # ignoring on large tests without numpy
+    try:
+        import numpy # noqa
+    except ImportError:
+        return
+
     c = CartanType("E6")
     s = c.simple_roots()
     orbit = c.orbit(s[0])
@@ -605,7 +611,11 @@ def test_positive_roots():
     """These results are compared to outputs of
     Mathematica's implementation of lie algebras"""
 
-
+    # ignoring on large tests
+    try:
+        import numpy # noqa
+    except ImportError:
+        return
     c = CartanType("E6")
     p = c.positive_roots()
 

@@ -1,6 +1,8 @@
-import numpy as np
+import warnings
+from sympy.external import import_module
 from sympy.utilities.iterables import multiset_permutations
 from sympy import Rational, Matrix, zeros, ones
+np = import_module('numpy')
 
 def _cast_to_type(ary, outtype, backend):
     if outtype not in ['sympy', 'numpy']:
@@ -90,13 +92,17 @@ def orbit(algebra, weight, stabilizer=None, dtype=int, backend="sympy", outtype=
     `sympy.liealgebra.cartan_base.StandardCartan.orbit`"""
 
     if backend == "sympy":
-        orbit = _orbit_backend_sympy(algebra, weight, stabilizer)
+        orbit_ = _orbit_backend_sympy(algebra, weight, stabilizer)
     elif backend == "numpy":
-        orbit = _orbit_backend_numpy(algebra, weight, stabilizer, dtype)
+        if np is None:
+            warnings.warn("Numpy is not installed, falling back to sympy")
+            return orbit(algebra, weight, stabilizer, dtype=int, backend="sympy", outtype="sympy")
+
+        orbit_ = _orbit_backend_numpy(algebra, weight, stabilizer, dtype)
     else:
         raise ValueError(f"backend must be 'sympy' or 'numpy' (got '{backend}')")
 
-    return _cast_to_type(orbit, outtype, backend)
+    return _cast_to_type(orbit_, outtype, backend)
 
 def _reflect(refl_mats, weights):
     """Returns all unique reflections of weights by
@@ -213,6 +219,9 @@ def root_system(algebra, dtype=int, backend="sympy", outtype="sympy"):
     if backend == "sympy":
         roots = _roots_system_backend_sympy(algebra)
     elif backend == "numpy":
+        if np is None:
+            warnings.warn("Numpy is not installed, falling back to sympy")
+            return root_system(algebra, dtype, "sympy", "sympy")
         roots = _roots_system_backend_numpy(algebra, dtype)
     else:
         raise ValueError(f"backend must be 'sympy' or 'numpy' (got '{backend}')")
