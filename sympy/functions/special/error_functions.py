@@ -4,7 +4,7 @@
 from sympy.core import Add, S, sympify, cacheit, pi, I, Rational
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.symbol import Symbol
-from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.combinatorial.factorials import factorial, factorial2, RisingFactorial
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.exponential import exp, log
@@ -238,6 +238,18 @@ class erf(Function):
         else:
             return self.func(arg)
 
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.series.order import Order
+        point = args0[0]
+
+        if point is S.Infinity:
+            z = self.args[0]
+            s = [(-1)**k * factorial2(2*k - 1) / (z**(2*k + 1) * 2**k)
+                    for k in range(0, n)] + [Order(1/z**n, x)]
+            return S.One - (exp(-z**2)/sqrt(pi)) * Add(*s)
+
+        return super(erf, self)._eval_aseries(n, args0, x, logx)
+
     as_real_imag = real_to_real_as_real_imag
 
 
@@ -426,6 +438,9 @@ class erfc(Function):
 
     as_real_imag = real_to_real_as_real_imag
 
+    def _eval_aseries(self, n, args0, x, logx):
+        return S.One - erf(*self.args)._eval_aseries(n, args0, x, logx)
+
 
 class erfi(Function):
     r"""
@@ -596,6 +611,18 @@ class erfi(Function):
         return self.rewrite(erf)
 
     as_real_imag = real_to_real_as_real_imag
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.series.order import Order
+        point = args0[0]
+
+        if point is S.Infinity:
+            z = self.args[0]
+            s = [factorial2(2*k - 1) / (2**k * z**(2*k + 1))
+                    for k in range(0, n)] + [Order(1/z**n, x)]
+            return -S.ImaginaryUnit + (exp(z**2)/sqrt(pi)) * Add(*s)
+
+        return super(erfi, self)._eval_aseries(n, args0, x, logx)
 
 
 class erf2(Function):
@@ -1164,6 +1191,18 @@ class Ei(Function):
             return f._eval_nseries(x, n, logx)
         return super()._eval_nseries(x, n, logx)
 
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.series.order import Order
+        point = args0[0]
+
+        if point is S.Infinity:
+            z = self.args[0]
+            s = [factorial(k) / (z)**k for k in range(0, n)] + \
+                    [Order(1/z**n, x)]
+            return (exp(z)/z) * Add(*s)
+
+        return super(Ei, self)._eval_aseries(n, args0, x, logx)
+
 
 class expint(Function):
     r"""
@@ -1340,6 +1379,18 @@ class expint(Function):
                 f = self._eval_rewrite_as_Ei(*self.args)
                 return f._eval_nseries(x, n, logx)
         return super()._eval_nseries(x, n, logx)
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.series.order import Order
+        point = args0[1]
+        nu = self.args[0]
+
+        if point is S.Infinity:
+            z = self.args[1]
+            s = [(-1)**k * RisingFactorial(nu, k) / z**k for k in range(0, n)] + [Order(1/z**n, x)]
+            return (exp(-z)/z) * Add(*s)
+
+        return super(expint, self)._eval_aseries(n, args0, x, logx)
 
     def _sage_(self):
         import sage.all as sage
@@ -1538,6 +1589,11 @@ class li(Function):
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return z * _eis(log(z))
 
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        z = self.args[0]
+        s = [(log(z))**k / (factorial(k) * k) for k in range(1, n)]
+        return S.EulerGamma + log(log(z)) + Add(*s)
+
     def _eval_is_zero(self):
         z = self.args[0]
         if z.is_zero:
@@ -1630,6 +1686,10 @@ class Li(Function):
 
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return self.rewrite(li).rewrite("tractable", deep=True)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        f = self._eval_rewrite_as_li(*self.args)
+        return f._eval_nseries(x, n, logx)
 
 ###############################################################################
 #################### TRIGONOMETRIC INTEGRALS ##################################
@@ -1800,6 +1860,20 @@ class Si(TrigonometricIntegral):
         t = Symbol('t', Dummy=True)
         return Integral(sinc(t), (t, 0, z))
 
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.series.order import Order
+        point = args0[0]
+
+        if point is S.Infinity:
+            z = self.args[0]
+            p = [(-1)**k * factorial(2*k) / z**(2*k) for k in range(0, n)] + \
+                    [Order(1/z**n, x)]
+            q = [(-1)**k * factorial(2*k + 1) / z**(2*k+1) for k in range(0, n)] + \
+                    [Order(1/z**n, x)]
+            return pi/2 - (cos(z)/z)*Add(*p) - (sin(z)/z)*Add(*q)
+
+        return super(Si, self)._eval_aseries(n, args0, x, logx)
+
     def _eval_is_zero(self):
         z = self.args[0]
         if z.is_zero:
@@ -1911,6 +1985,20 @@ class Ci(TrigonometricIntegral):
 
     def _eval_rewrite_as_expint(self, z, **kwargs):
         return -(E1(polar_lift(I)*z) + E1(polar_lift(-I)*z))/2
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.series.order import Order
+        point = args0[0]
+
+        if point is S.Infinity:
+            z = self.args[0]
+            p = [(-1)**k * factorial(2*k) / z**(2*k) for k in range(0, n)] + \
+                    [Order(1/z**n, x)]
+            q = [(-1)**k * factorial(2*k + 1) / z**(2*k+1) for k in range(0, n)] + \
+                    [Order(1/z**n, x)]
+            return (sin(z)/z)*Add(*p) - (cos(z)/z)*Add(*q)
+
+        return super(Ci, self)._eval_aseries(n, args0, x, logx)
 
     def _sage_(self):
         import sage.all as sage
