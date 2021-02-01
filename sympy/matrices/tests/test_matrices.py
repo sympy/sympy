@@ -1984,7 +1984,7 @@ def test_hessenberg():
     assert not A.is_upper_hessenberg
 
     A = zeros(5, 2)
-    assert A.is_upper_hessenberg
+    assert not A.is_upper_hessenberg
 
 
 def test_cholesky():

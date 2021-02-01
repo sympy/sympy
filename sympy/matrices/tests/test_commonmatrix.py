@@ -418,6 +418,48 @@ def test_is_hessenberg():
     A = PropertiesOnlyMatrix([[3, 4, 1], [2, 4, 5], [3, 1, 2]])
     assert not A.is_upper_hessenberg
 
+    A = PropertiesOnlyMatrix([[1, 2], [2, 1]])
+    assert A.is_upper_hessenberg and A.is_lower_hessenberg
+
+    A = PropertiesOnlyMatrix([
+        [1, 2, 4, 5, 6],
+        [2, 3, 4, 2, 1],
+        [0, 10, 11, 2, 22],
+        [0, 0, 21, 22, 23]
+    ])
+
+    assert not A.is_upper_hessenberg
+
+    A = PropertiesOnlyMatrix([
+        [1, 2, 0, 0],
+        [2, 3, 10, 0],
+        [4, 4, 11, 21],
+        [5, 2, 2, 22],
+        [6, 1, 22, 23]
+    ])
+
+    assert not A.is_lower_hessenberg
+
+    A = PropertiesOnlyMatrix([
+        [1, 2, 4, 5],
+        [2, 3, 4, 2],
+        [0, 10, 11, 2],
+        [0, 0, 21, 22]
+    ])
+
+    assert A.is_upper_hessenberg
+
+    A = PropertiesOnlyMatrix([
+        [1, 2, 0, 0],
+        [2, 3, 10, 0],
+        [4, 4, 11, 21],
+        [5, 2, 2, 22]
+    ])
+
+    assert A.is_lower_hessenberg
+
+
+
 
 def test_is_zero():
     assert PropertiesOnlyMatrix(0, 0, []).is_zero_matrix

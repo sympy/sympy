@@ -1254,7 +1254,7 @@ class MatrixProperties(MatrixRequired):
                 for j in range(self.cols))
 
     def _eval_is_lower_hessenberg(self):
-        return all(self[i, j].is_zero
+        return self.is_square and all(self[i, j].is_zero
                    for i in range(self.rows)
                    for j in range(i + 2, self.cols))
 
@@ -1278,7 +1278,7 @@ class MatrixProperties(MatrixRequired):
         return True
 
     def _eval_is_upper_hessenberg(self):
-        return all(self[i, j].is_zero
+        return self.is_square and all(self[i, j].is_zero
                    for i in range(2, self.rows)
                    for j in range(min(self.cols, (i - 1))))
 
