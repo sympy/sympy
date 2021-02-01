@@ -1,12 +1,14 @@
 from functools import wraps
 
-from sympy import S, pi, I, Rational, Wild, cacheit, sympify
+from sympy import Add, S, pi, I, Rational, Wild, cacheit, sympify
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_or, fuzzy_not
 from sympy.core.power import Pow
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.combinatorial.numbers import harmonic
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.complexes import re, im
 from sympy.functions.special.gamma_functions import gamma
@@ -20,7 +22,6 @@ from sympy.polys.orthopolys import spherical_bessel_fn as fn
 #   These are possible, e.g. for fixed order, but since the bessel type
 #   functions are oscillatory they are not actually tractable at
 #   infinity, so this is not particularly useful right now.
-# o Series Expansions for functions of the second kind about zero
 # o Nicer series expansions.
 # o More rewriting.
 # o Add solvers to ode.py (or rather add solvers for the hypergeometric equation).
@@ -192,7 +193,7 @@ class besselj(BesselBase):
                 return I**(nu)*besseli(nu, newz)
 
         # branch handling:
-        from sympy import unpolarify, exp
+        from sympy import unpolarify
         if nu.is_integer:
             newz = unpolarify(z)
             if newz != z:
@@ -206,7 +207,7 @@ class besselj(BesselBase):
             return besselj(nnu, z)
 
     def _eval_rewrite_as_besseli(self, nu, z, **kwargs):
-        from sympy import polar_lift, exp
+        from sympy import polar_lift
         return exp(I*pi*nu/2)*besseli(nu, polar_lift(-I)*z)
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
@@ -216,10 +217,29 @@ class besselj(BesselBase):
     def _eval_rewrite_as_jn(self, nu, z, **kwargs):
         return sqrt(2*z/pi)*jn(nu - S.Half, self.argument)
 
+    def _eval_as_leading_term(self, x, cdir=0):
+        nu, z = self.args
+        arg = z.as_leading_term(x)
+        if x in arg.free_symbols:
+            return z**nu
+        else:
+            return self.func(*self.args)
+
     def _eval_is_extended_real(self):
         nu, z = self.args
         if nu.is_integer and z.is_extended_real:
             return True
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.series.order import Order
+        nu, z = self.args
+
+        if z.limit(x, 0) is S.Zero:
+            s = [(-1)**k * z**(2 * k) / (factorial(k) * factorial(nu + k)
+                    * 2**(2 * k)) for k in range((n + 1)//2)] + [Order(z**(n))]
+            return ((z / 2)**nu * Add(*s)).expand()
+
+        return super(besselj, self)._eval_nseries(x, n, logx, cdir)
 
     def _sage_(self):
         import sage.all as sage
@@ -298,10 +318,30 @@ class bessely(BesselBase):
     def _eval_rewrite_as_yn(self, nu, z, **kwargs):
         return sqrt(2*z/pi) * yn(nu - S.Half, self.argument)
 
+    def _eval_as_leading_term(self, x, cdir=0):
+        nu, z = self.args
+        arg = z.as_leading_term(x)
+        if x in arg.free_symbols:
+            return z**nu
+        else:
+            return self.func(*self.args)
+
     def _eval_is_extended_real(self):
         nu, z = self.args
         if nu.is_integer and z.is_positive:
             return True
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        nu, z = self.args
+
+        if z.limit(x, 0) is nu is S.Zero:
+            s = [(-1)**(k + 1) * harmonic(k) * (z / 2)**(2*k)
+                    / (factorial(k)**2) for k in range((n + 1)//2)]
+            b = besselj(0, z)._eval_nseries(x, n, logx, cdir)
+            t = ((log(z / 2) + S.EulerGamma) * b)
+            return ((2 / pi) * (t + Add(*s))).expand()
+
+        return super(bessely, self)._eval_nseries(x, n, logx, cdir)
 
     def _sage_(self):
         import sage.all as sage
@@ -375,7 +415,7 @@ class besseli(BesselBase):
                 return I**(-nu)*besselj(nu, -newz)
 
         # branch handling:
-        from sympy import unpolarify, exp
+        from sympy import unpolarify
         if nu.is_integer:
             newz = unpolarify(z)
             if newz != z:
@@ -389,7 +429,7 @@ class besseli(BesselBase):
             return besseli(nnu, z)
 
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
-        from sympy import polar_lift, exp
+        from sympy import polar_lift
         return exp(-I*pi*nu/2)*besselj(nu, polar_lift(I)*z)
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):

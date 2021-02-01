@@ -4,7 +4,7 @@ from sympy import (jn, yn, symbols, Symbol, sin, cos, pi, S, jn_zeros, besselj,
                    bessely, besseli, besselk, hankel1, hankel2, hn1, hn2,
                    expand_func, sqrt, sinh, cosh, diff, series, gamma, hyper,
                    I, O, oo, conjugate, uppergamma, exp, Integral, Sum,
-                   Rational)
+                   Rational, log, polar_lift, exp_polar)
 from sympy.functions.special.bessel import fn
 from sympy.functions.special.bessel import (airyai, airybi,
                                             airyaiprime, airybiprime, marcumq)
@@ -33,6 +33,12 @@ def test_bessel_twoinputs():
         raises(TypeError, lambda: f(1))
         raises(TypeError, lambda: f(1, 2, 3))
 
+def test_bessel_series():
+    assert besselj(0, x).series(x) == 1 - x**2/4 + x**4/64 + O(x**6)
+    assert bessely(0, x).series(x, n=4) == 2*S.EulerGamma/pi - 2*log(2)/pi \
+        + 2*log(x)/pi + x**2*(-log(x)/(2*pi) - S.EulerGamma/(2*pi) \
+        + log(2)/(2*pi) + 1/(2*pi)) + O(x**4*log(x))
+
 
 def test_diff():
     assert besselj(n, z).diff(z) == besselj(n - 1, z)/2 - besselj(n + 1, z)/2
@@ -44,8 +50,6 @@ def test_diff():
 
 
 def test_rewrite():
-    from sympy import polar_lift, exp, I
-
     assert besselj(n, z).rewrite(jn) == sqrt(2*z/pi)*jn(n - S.Half, z)
     assert bessely(n, z).rewrite(yn) == sqrt(2*z/pi)*yn(n - S.Half, z)
     assert besseli(n, z).rewrite(besselj) == \
@@ -105,8 +109,6 @@ def test_rewrite():
 
 
 def test_expand():
-    from sympy import exp_polar, I
-
     assert expand_func(besselj(S.Half, z).rewrite(jn)) == \
         sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
     assert expand_func(bessely(S.Half, z).rewrite(yn)) == \
@@ -287,7 +289,6 @@ def test_jn_zeros():
 
 
 def test_bessel_eval():
-    from sympy import I, Symbol
     n, m, k = Symbol('n', integer=True), Symbol('m'), Symbol('k', integer=True, zero=False)
 
     for f in [besselj, besseli]:
@@ -373,7 +374,6 @@ def test_meromorphic():
 
 
 def test_conjugate():
-    from sympy import conjugate, I, Symbol
     n = Symbol('n')
     z = Symbol('z', extended_real=False)
     x = Symbol('x', extended_real=True)
@@ -411,7 +411,6 @@ def test_conjugate():
 
 
 def test_branching():
-    from sympy import exp_polar, polar_lift, Symbol, I, exp
     assert besselj(polar_lift(k), x) == besselj(k, x)
     assert besseli(polar_lift(k), x) == besseli(k, x)
 
