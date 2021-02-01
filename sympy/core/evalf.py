@@ -1640,10 +1640,10 @@ class EvalfMixin:
         return r
 
     def _eval_evalf(self, prec):
-        """.. deprecated:: 1.7.1
-            Use `_eval_evalf_options` instead.
+        """ Use only when you have to call mpmath related functions.
+            Using `_eval_evalf_options` in considered the best way.
             It calls `_eval_evalf_options` by default with default optional
-                parameters .
+                parameters if not defined.
         """
 
         options = {'maxprec': max(prec, int(100*LG10)), 'chop': False,
