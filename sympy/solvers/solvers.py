@@ -485,7 +485,7 @@ def solve(f, *symbols, **flags):
         * To solve for a symbol implicitly, use implicit=True:
 
             >>> solve(x + exp(x), x)
-            [Lambda(integer, -LambertW(1, integer))]
+            [-LambertW(1)]
             >>> solve(x + exp(x), x, implicit=True)
             [-exp(x)]
 
@@ -548,7 +548,7 @@ def solve(f, *symbols, **flags):
             >>> solve(x**2 - y**2, x, y, dict=True)
             [{x: -y}, {x: y}]
             >>> solve(x**2 - y**2/exp(x), x, y, dict=True)
-            [{x: 2*LambertW(-y/2, integer)}, {x: 2*LambertW(y/2, integer)}]
+            [{x: 2*LambertW(-y/2)}, {x: 2*LambertW(y/2)}]
             >>> solve(x**2 - y**2/exp(x), y, x)
             [(-x*sqrt(exp(x)), x), (x*sqrt(exp(x)), x)]
 
@@ -2546,7 +2546,7 @@ def _tsolve(eq, sym, **flags):
     [-5/2 + log(2)/log(3), (-5*log(3)/2 + log(2) + I*pi)/log(3)]
 
     >>> tsolve(log(x) + 2*x, x)
-    [LambertW(2, integer)/2]
+    [LambertW(2)/2]
 
     """
     if 'tsolve_saw' not in flags:
@@ -2721,6 +2721,26 @@ def _tsolve(eq, sym, **flags):
                     domain = S.Complexes
 
                 sols = _solve_lambert(_eq, sym, g, domain)
+                integer = Symbol('integer',integer=True)
+                soln = []
+                checkArg = False
+                for argSol in sols:
+                    if argSol.has(integer) and not argSol.has(Lambda):
+                        checkArg = True
+                        pq = argSol.subs({integer:0})
+                        if pq:
+                            soln.append(pq)
+                            pq = argSol.subs({integer:-1})
+                        if (pq.atoms(LambertW).pop()).is_negative and argSol.has(integer):
+                            pq1 = argSol.replace(integer, -1)
+                            soln.append(pq1)
+                    if argSol.is_number:
+                        soln.append(argSol)
+
+                if not checkArg:
+                    sols = list(set(soln+sols))
+                else:
+                    sols = list(set(soln))
                 # use a simplified form if it satisfies eq
                 # and has fewer operations
                 for n, s in enumerate(sols):
@@ -2730,7 +2750,7 @@ def _tsolve(eq, sym, **flags):
                         if ok is None:
                             ok = _eq.subs(sym, ns).equals(0)
                         if ok:
-                            sols[n] = ns
+                            sols.append(ns)
                 return sols
             except NotImplementedError:
                 # maybe it's a convoluted function

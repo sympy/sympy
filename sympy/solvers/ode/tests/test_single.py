@@ -1557,7 +1557,7 @@ def _get_examples_ode_sol_1st_exact():
 
     '1st_exact_02': {
         'eq': (2*x*f(x) + 1)/f(x) + (f(x) - x)/f(x)**2*f(x).diff(x),
-        'sol': [Eq(f(x), exp(C1 - x**2 + LambertW(-x*exp(-C1 + x**2), C2)))],
+        'sol': [Eq(f(x), exp(C1 - x**2 + LambertW(-x*exp(-C1 + x**2))))],
         'XFAIL': ['lie_group'], #It shows dsolve raises an exception: List index out of range for lie_group
         'slow': True,
         'checkodesol_XFAIL':True

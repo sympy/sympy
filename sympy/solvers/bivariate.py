@@ -239,7 +239,7 @@ def _lambert1(eq, x, domain):
                     sol = lambert_helper(xusolns,sol,u,rhs)
         else:
             if not domain.is_subset(S.Reals):
-                rhs = Lambda(integer, -c/b + (a/d)*LambertW(arg,integer))
+                rhs = -c/b + (a/d)*LambertW(arg,integer)
             else:
                 rhs = -c/b + (a/d)*LambertW(arg)
         sol = lambert_helper(xusolns,sol,u,rhs)

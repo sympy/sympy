@@ -1,4 +1,7 @@
-from sympy import Derivative, Dummy, Eq, Function, I, Integral, Lambda, LambertW, Ne, O, Piecewise, Poly, Rational, S, Subs, Symbol, acos, acosh, asin, atan, atan2, collect, cos, diff, exp, im, log, pi, re, rootof, sec, sin, sinh, sqrt, symbols, tan
+from sympy import (acos, acosh, atan, cos, Derivative, diff,
+    Dummy, Eq, Ne, exp, Function, I, Integral, LambertW, log, O, pi,
+    Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
+    Piecewise, symbols, Poly, sec, re, im, atan2, collect)
 
 from sympy.solvers.ode import (classify_ode,
     homogeneous_order, infinitesimals, checkinfsol,
@@ -845,7 +848,6 @@ def test_homogeneous_order():
 @slow
 def test_1st_homogeneous_coeff_ode():
     # Type: First order homogeneous, y'=f(y/x)
-    integer = Symbol('integer',integer=True)
     eq1 = f(x)/x*cos(f(x)/x) - (x/f(x)*sin(f(x)/x) + cos(f(x)/x))*f(x).diff(x)
     eq2 = x*f(x).diff(x) - f(x) - x*sin(f(x)/x)
     eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x), x)
@@ -857,9 +859,9 @@ def test_1st_homogeneous_coeff_ode():
 
     sol1 = Eq(log(x), C1 - log(f(x)*sin(f(x)/x)/x))
     sol2 = Eq(log(x), log(C1) + log(cos(f(x)/x) - 1)/2 - log(cos(f(x)/x) + 1)/2)
-    sol3 = Eq(f(x), -exp(C1)*LambertW(-x*exp(1 - C1), C2))
+    sol3 = Eq(f(x), -exp(C1)*LambertW(-x*exp(-C1 + 1)))
     sol4 = Eq(log(f(x)), C1 - 2*exp(x/f(x)))
-    sol5 = Eq(f(x), exp(Lambda(integer, 2*C1 - log(x) + LambertW(-2*x**4*exp(-4*C1), integer)/2)))
+    sol5 = Eq(f(x), exp(2*C1 + LambertW(-2*x**4*exp(-4*C1))/2)/x)
     sol6 = Eq(log(x), C1 + exp(-f(x)/x)*sin(f(x)/x)/2 + exp(-f(x)/x)*cos(f(x)/x)/2)
     sol7 = Eq(log(f(x)), C1 - 2*sqrt(-x/f(x) + 1))
     sol8 = Eq(log(x), C1 - log(sqrt(1 + f(x)**2/x**2)) + atan(f(x)/x))
@@ -895,15 +897,14 @@ def test_1st_homogeneous_coeff_ode_check2():
 
 
 def test_1st_homogeneous_coeff_ode_check3():
-    # more improvement required in lambert
     eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x), x)
     # This solution is correct:
-    sol3 = Eq(f(x), -exp(C1)*LambertW(-x*exp(1 - C1), C2))
+    sol3 = Eq(f(x), -exp(C1)*LambertW(-x*exp(1 - C1)))
     assert dsolve(eq3) == sol3
     # FIXME: Checked in test_1st_homogeneous_coeff_ode_check3_check below
 
     # Alternate form:
-    sol3a = Eq(f(x), x*exp(1 - LambertW(C1*x, C2)))
+    sol3a = Eq(f(x), x*exp(1 - LambertW(C1*x)))
     assert checkodesol(eq3, sol3a, solve_for_func=True)[0]
 
 
@@ -911,7 +912,7 @@ def test_1st_homogeneous_coeff_ode_check3():
 def test_1st_homogeneous_coeff_ode_check3_check():
     # See test_1st_homogeneous_coeff_ode_check3 above
     eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x), x)
-    sol3 = Eq(f(x), -exp(C1)*LambertW(-x*exp(1 - C1), C2))
+    sol3 = Eq(f(x), -exp(C1)*LambertW(-x*exp(1 - C1)))
     assert checkodesol(eq3, sol3) == (True, 0)  # XFAIL
 
 

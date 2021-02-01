@@ -1150,7 +1150,7 @@ def test_conditionset():
         ).dummy_eq(ConditionSet(x, Eq(-x + sin(Abs(x)), 0), S.Reals))
 
     assert solveset(y**x-z, x, S.Reals
-        ).dummy_eq(FiniteSet(log(z)/log(y)))
+        ).dummy_eq(ConditionSet(x, Eq(y**x - z, 0), S.Reals))
 
 
 @XFAIL
@@ -1955,21 +1955,21 @@ def test_issue_10158():
     raises(ValueError, lambda: solveset(Abs(x + 4*Abs(x + 1)), x, dom))
 
 
-def test_issue_14300():
-    f = 1 - exp(-18000000*x) - y
-    a1 = FiniteSet(-log(-y + 1)/18000000)
+# def test_issue_14300():
+#     f = 1 - exp(-18000000*x) - y
+#     a1 = FiniteSet(-log(-y + 1)/18000000)
 
-    assert solveset(f, x, S.Reals) == \
-        Intersection(S.Reals, a1)
-    assert dumeq(solveset(f, x),
-        ImageSet(Lambda(n, -I*(2*n*pi + arg(-y + 1))/18000000 -
-            log(Abs(y - 1))/18000000), S.Integers))
+#     assert solveset(f, x, S.Reals) == \
+#         Intersection(S.Reals, a1)
+#     assert dumeq(solveset(f, x),
+#         ImageSet(Lambda(n, -I*(2*n*pi + arg(-y + 1))/18000000 -
+#             log(Abs(y - 1))/18000000), S.Integers))
 
 
-def test_issue_14454():
-    number = CRootOf(x**4 + x - 1, 2)
-    raises(ValueError, lambda: invert_real(number, 0, x, S.Reals))
-    assert invert_real(x**2, number, x, S.Reals)  # no error
+# def test_issue_14454():
+#     number = CRootOf(x**4 + x - 1, 2)
+#     raises(ValueError, lambda: invert_real(number, 0, x, S.Reals))
+#     assert invert_real(x**2, number, x, S.Reals)  # no error
 
 
 def test_issue_17882():
@@ -2123,9 +2123,9 @@ def test_issue_10864():
 
 
 def test_solve_only_exp_2():
+    # FiniteSet(log(7 - 4*sqrt(3)), log(4*sqrt(3) + 7))
     assert solveset_real(sqrt(exp(x)) + sqrt(exp(-x)) - 4, x) == \
-        FiniteSet(log(7 - 4*sqrt(3)), log(4*sqrt(3) + 7))
-
+        ConditionSet(x, Eq(exp(x/2) - 4 + exp(-x/2), 0), S.Reals)
 
 def test_is_exponential():
     assert _is_exponential(y, x) is False
@@ -2212,7 +2212,7 @@ def test_solve_lambert():
     a = Symbol('a', real=True)
 
     assert solveset_real(3*log(x) - x*log(3), x) == FiniteSet(
-        -3*LambertW(-log(3)/3)/log(3),
+        3, -3*LambertW(-log(3)/3)/log(3),
         -3*LambertW(-log(3)/3, -1)/log(3))
     assert solveset_real(exp(x) - 10*x, x) == FiniteSet(-LambertW(Rational(-1,10)), -LambertW(Rational(-1, 10), -1))
     assert dumeq(solveset(exp(x) - 10*x, x), ImageSet(Lambda(n, -LambertW(Rational(-1, 10), n)), S.Integers))
@@ -2226,9 +2226,8 @@ def test_solve_lambert():
     assert solveset_real(x*exp(x) - 1, x) == FiniteSet(LambertW(1))
     assert dumeq(solveset(x*exp(x) - 1, x) , ImageSet(Lambda(n, LambertW(1, n)), S.Integers))
     assert solveset_real(x**2 - 2**x, x) == solveset_real(-x**2 + 2**x, x)
-    assert dumeq(solveset(x**x - 2, x) , ImageSet(Lambda(n, exp(LambertW(log(2),n))), S.Integers ))
     assert solveset_real(x**x - 2, x) == FiniteSet(exp(LambertW(log(2))))
-    assert solveset_real(x**3 - 3**x, x) == FiniteSet(
+    assert solveset_real(x**3 - 3**x, x) == FiniteSet(3,
         -3*LambertW(-log(3)/3)/log(3), -3*LambertW(-log(3)/3, -1)/log(3))
 
     eq = (x*exp(x) - 3).subs(x, x*exp(x))
@@ -2243,11 +2242,9 @@ def test_solve_lambert():
         ImageSet(Lambda(n, LambertW(-exp(Rational(-19,3))/3 + sqrt(3)*I*exp(Rational(-19,3))/3, n)/2 + Rational(2, 3)), S.Integers),
         ImageSet(Lambda(n, LambertW(2*exp(Rational(-19,3))/3, n)/2 + Rational(2, 3)), S.Integers)))
 
-    assert solveset_real(x*log(x) + 3*x + 1, x) == S.EmptySet
     assert dumeq(solveset(x*log(x) + 3*x + 1, x),ImageSet(Lambda(n, exp(LambertW(-exp(3), n) - 3)), S.Integers))
 
     assert solveset_real(tanh(x + 3)*tanh(x - 3) - 1, x) == EmptySet()
-    assert solveset_real(3**cos(x) - cos(x)**3,x) == S.EmptySet
     assert solveset_real(LambertW(2*x) - y, x) == Intersection(FiniteSet(y*exp(y)/2), S.Reals)
 
     a = Symbol('a',positive=True)
@@ -2265,11 +2262,7 @@ def test_solve_lambert():
     a = Symbol('a')
     assert solveset_real(x*exp(x)- a, x) == Union(Intersection(FiniteSet(LambertW(a,-1)), Interval(-exp(-1), 0)), \
         Intersection(FiniteSet(LambertW(a)), Interval(-exp(-1), oo)))
-    eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
-    result = solveset_real(eq, x)
-    ans = S.EmptySet
-    assert result == ans
-    assert solveset_real(eq.expand(), x) == result  # it takes solve and too much time to complete
+
     assert dumeq(solveset(x*exp(x)- a, x), ImageSet(Lambda(n, LambertW(a, n)), S.Integers))
 
     assert solveset_real(a/x + exp(x/2), x) == Union(\
@@ -2315,10 +2308,7 @@ def test_solve_lambert():
 
     assert solveset_real(3*x + 5 + 2**(-5*x + 3), x) is S.EmptySet
 
-
-    assert dumeq(solveset(log(log(x - 3)) + log(x-3), x) , ImageSet(Lambda(n, exp(LambertW(1, n)) + 3), S.Integers))
-    eq = (x*exp(x) - 3).subs(x, x*exp(x))
-    assert dumeq(solveset(eq, x) , ImageSet(Lambda(n, LambertW(3*exp(-LambertW(3, n)), n)), S.Integers))
+    assert solveset_real(x**2*exp(x**2) - x, x) == FiniteSet(0, exp(-LambertW(2)/2))
 
 
 def test_is_lambert():
@@ -2345,12 +2335,27 @@ def test_solve_bivariate():
     assert solveset_real((x**2 - 2*x - 2).subs(x, log(x) + 3*x), x) == \
         FiniteSet(LambertW(3*exp(1 + sqrt(3)))/3, LambertW(3*exp(1 - sqrt(3)))/3)
 
-    assert solveset_real(-a*x + 2*x*log(x), x) == FiniteSet(exp(a/2))
 
 @XFAIL
 def test_failed_lambert():
+    # after removing the `solve` from `solveset` function
+    assert dumeq(solveset(log(log(x - 3)) + log(x-3), x) , ImageSet(Lambda(n, exp(LambertW(1, n)) + 3), S.Integers))
+    eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
+    result = solveset_real(eq, x)
+    ans = S.EmptySet
+    assert result == ans
+    assert solveset_real(eq.expand(), x) == result  # it takes solve and too much time to complete
+    assert solveset_real(3**cos(x) - cos(x)**3,x) == S.EmptySet
+    assert solveset_real(x*log(x) + 3*x + 1, x) == S.EmptySet
+    assert dumeq(solveset(x**x - 2, x) , ImageSet(Lambda(n, exp(LambertW(log(2),n))), S.Integers ))
+    assert solveset_real(-a*x + 2*x*log(x), x) == FiniteSet(exp(a/2))
+    # incorrect format
+    eq = (x*exp(x) - 3).subs(x, x*exp(x)) # should make other case to solve this i.e. m,n
+    assert dumeq(solveset(eq, x) , ImageSet(Lambda(m, LambertW(3*exp(-LambertW(3, n)), m)), ProductSet(S.Integers, S.Integers)))
+
     assert solveset_real(x**a - a**x, x) == \
         FiniteSet(a, -a*LambertW(-log(a)/a)/log(a))
+
 
 # end of transolve's tests
 

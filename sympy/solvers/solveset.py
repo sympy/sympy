@@ -22,7 +22,7 @@ from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
 from sympy.simplify.simplify import simplify, fraction, trigsimp
-from sympy.simplify import powdenest, logcombine
+from sympy.simplify import logcombine, nsimplify, powdenest
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
                              piecewise_fold, Piecewise, LambertW)
@@ -1101,6 +1101,15 @@ def _solveset(f, symbol, domain, _check=False):
                                         ConditionSet(pow_sym, re(pow_sym)>0, domain))
                             else:
                                 result = _transolve(equation, symbol, domain)
+                                if isinstance(result,(FiniteSet)) and domain.is_subset(S.Reals):
+                                    for n, s in enumerate(result):
+                                        ns = nsimplify(s)
+                                        if ns != s and ns.count_ops() <= s.count_ops():
+                                            ok = checksol(f, symbol, ns)
+                                            if ok is None:
+                                                ok = f.subs(symbol, ns).equals(0)
+                                            if ok:
+                                                result += FiniteSet(ns)
                         else:
                             result += result_rational
                 else:
@@ -1121,42 +1130,9 @@ def _solveset(f, symbol, domain, _check=False):
                 result = _result - singularities
 
     if _check:
-        if (isinstance(result,ConditionSet)) and \
-                    (not isinstance(result,list)):
-            x = Symbol('x',real=True)
-            f = f.subs({symbol: x})
-            if _is_lambert(f,x):
+        if (isinstance(result,ConditionSet)):
 
-                if result.has(cos,sin):
-                    if (result.has(exp)) or (f.has(sqrt(x))) or\
-                        f.has(Abs):
-                        return result
-                    elif not domain.is_subset(S.Integers) and \
-                        ((result.has(cos) and not result.has(sin)) or \
-                            (result.has(sin) and not result.has(cos))) :
-                        try:
-                            fx = _solve(f, x)
-                            return _solveset_reduce(fx, symbol, result, domain)
-                        except NotImplementedError:
-                            pass
-                elif domain.is_subset(S.Reals):
-                    if not any(i for i in f.atoms(Pow) if i.exp is S.Half) and f.count_ops() < 120:
-                        if not (f.has(exp) and f.has(Pow)):
-                            if not domain.is_subset(S.Reals):
-                                dmn = False
-                            else:
-                                dmn = True
-                            indls = _tsolve(f,x,dmn=dmn)
-                            return _solveset_reduce(indls, symbol, result, domain)
-                elif domain.is_subset(S.Complexes) and not result.has(Ne):
-                    if not any(i for i in f.atoms(Pow) if i.exp is S.Half) and f.count_ops() < 120:
-                        indls = _tsolve(f,x)
-                        if indls is None or indls == [] or len(indls) == 1:
-                            result = _solveset_reduce(indls, symbol, result, domain)
-                        if indls is not None:
-                            return helper_to_solve_as_lambert(indls, f, symbol, domain,flag=None)
-            else:
-                return result
+            return result
 
         elif isinstance(result,ConditionSet):
             # it wasn't solved or has enumerated all conditions
@@ -1177,44 +1153,12 @@ def _solveset(f, symbol, domain, _check=False):
                       if isinstance(s, RootOf)
                       or domain_check(fx, symbol, s)])
         elif isinstance(result,list):
-            for _ in range(len(result) - 1):
-                result = result[_] + result[_+1]
             if len(result) == 1:
                 return result[0]
+            for _ in range(len(result) - 1):
+                result = result[_] + result[_+1]
 
     return result
-
-
-def _solveset_reduce(fx, symbol, result, domain):
-    if fx is None or fx == []:
-        return result
-    elif fx is not None:
-        if len(fx) == 1:
-            if fx[0] == 0:
-                return result
-            if not fx[0].has(Symbol):
-                if not fx[0].is_real and domain.is_subset(S.Reals):
-                    return S.EmptySet
-    if fx is not None and domain.is_subset(S.Reals):
-        args = []
-        j = -1
-        for i in fx:
-            j += 1
-            if not isinstance(i,int):
-                integer = Symbol('integer',integer=True)
-                if not i.has(I) and (i.is_real or not i.has(integer))and domain.is_subset(S.Reals):
-                    if result.has(log(symbol)) and i == S(0):
-                        continue
-                    args.append(fx[j])
-            elif isinstance(i,int) and i.is_real and domain.is_subset(S.Reals):
-                args.append(fx[j])
-            if i.has(Dummy):
-                return EmptySet
-        fx = FiniteSet(*args)
-        return fx
-    elif domain.is_subset(S.Reals):
-        fx = FiniteSet(*fx)
-        return fx
 
 
 def _is_modular(f, symbol):
@@ -2445,8 +2389,21 @@ def solveset(f, symbol=None, domain=S.Complexes):
         f = f.xreplace({d: e})
     f = piecewise_fold(f)
 
-    return _solveset(f, symbol, domain, _check=True)
+    result = _solveset(f, symbol, domain, _check=True)
+    if domain.is_subset(S.Reals) and _is_lambert(f, symbol) and isinstance(result,FiniteSet):
+        f = factor(powdenest(f))
+        if f.is_Mul:
+            for m in f.args:
+                if m in {S.NegativeInfinity, S.ComplexInfinity, S.Infinity}:
+                    result = set()
+                    break
+                result1 = solveset(m, symbol,domain)
+                for ar in result1.args:
+                    for a in result.args:
+                        if ar.expand() != a.expand():
+                            result = result1 + result
 
+    return result
 
 def solveset_real(f, symbol):
     return solveset(f, symbol, S.Reals)
