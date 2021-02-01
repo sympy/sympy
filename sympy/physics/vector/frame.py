@@ -1,5 +1,5 @@
-from sympy.core.backend import (diff, expand, sin, cos, sympify,
-                   eye, symbols, ImmutableMatrix as Matrix, MatrixBase)
+from sympy.core.backend import (diff, expand, sin, cos, sympify, eye, symbols,
+                                ImmutableMatrix as Matrix, MatrixBase)
 from sympy import (trigsimp, solve, Symbol, Dummy)
 from sympy.physics.vector.vector import Vector, _check_vector
 from sympy.utilities.misc import translate
@@ -500,30 +500,26 @@ class ReferenceFrame:
         self._dcm_cache.update({parent: parent_orient.T})
         parent._dcm_cache.update({self: parent_orient})
 
-    def orient_axis(self, parent_frame, vector_axis, amount):
-        """Sets the orientation of this frame with respect to a another(parent)
-        reference frame by rotating about a fixed axis.
-        Axis should be fixed in parent frame.
-        It creates a direction cosine matrix defined by a simple rotation about a
-        single axis fixed in both reference frames. This is a rotation about an
-        arbitrary, non-time-varying axis by some angle. The axis is supplied as a Vector.
+    def orient_axis(self, parent, axis, angle):
+        """Sets the orientation of this reference frame with respect to a
+        parent reference frame by rotating through and able about an axis fixed
+        in the parent reference frame.
 
         Parameters
         ==========
 
-        parent_frame : ReferenceFrame
+        parent : ReferenceFrame
             Reference frame that this reference frame will be rotated relative
             to.
-
-        vector_axis : Vector
-            The axis(a vector in the parent frame) about which
-            the frame is to be rotated. It need not be a unit vector.
-
-        amount : expr/sym/func
-            The amount by which it the frame is to be rotated.
+        axis : Vector
+            Vector fixed in the parent frame about about which this frame is
+            rotated. It need not be a unit vector and the rotation follows the
+            right hand rule.
+        angle : sympifiable
+            Angle in radians by which it the frame is to be rotated.
 
         Examples
-        ==========
+        ========
 
         Setup variables for the examples:
 
@@ -532,13 +528,12 @@ class ReferenceFrame:
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
         >>> B = ReferenceFrame('B')
-
         >>> B.orient_axis(N, N.x, q1)
 
-        The ``orient_axis()`` method generates a direction cosine matrix and its
-        transpose which defines the orientation of B relative to N and vice
+        The ``orient_axis()`` method generates a direction cosine matrix and
+        its transpose which defines the orientation of B relative to N and vice
         versa. Once orient is called, ``dcm()`` outputs the appropriate
-        direction cosine matrix.
+        direction cosine matrix:
 
         >>> B.dcm(N)
         Matrix([
@@ -546,8 +541,9 @@ class ReferenceFrame:
         [0,  cos(q1), sin(q1)],
         [0, -sin(q1), cos(q1)]])
 
-        The following two lines show how the sense of the rotation can be
-        defined. Both lines produce the same result.
+        The following two lines show that the sense of the rotation can be
+        defined by negating the vector direction or the angle. Both lines
+        produce the same result.
 
         >>> B.orient_axis(N, -N.x, q1)
         >>> B.orient_axis(N, N.x, -q1)
@@ -555,17 +551,16 @@ class ReferenceFrame:
         """
 
         from sympy.physics.vector.functions import dynamicsymbols
-        _check_frame(parent_frame)
+        _check_frame(parent)
 
-        amount = sympify(amount)
+        amount = sympify(angle)
         theta = amount
-        axis = vector_axis
         axis = _check_vector(axis)
         parent_orient_axis = []
 
-        if not axis.dt(parent_frame) == 0:
+        if not axis.dt(parent) == 0:
             raise ValueError('Axis cannot be time-varying.')
-        axis = axis.express(parent_frame).normalize()
+        axis = axis.express(parent).normalize()
         axis = axis.args[0][0]
         parent_orient_axis = ((eye(3) - axis * axis.T) * cos(theta) +
                             Matrix([[0, -axis[2], axis[1]],
@@ -573,50 +568,71 @@ class ReferenceFrame:
                                     [-axis[1], axis[0], 0]]) *
                             sin(theta) + axis * axis.T)
 
-        self._dcm(parent_frame, parent_orient_axis)
+        self._dcm(parent, parent_orient_axis)
 
         thetad = (amount).diff(dynamicsymbols._t)
-        wvec = thetad * vector_axis.express(parent_frame).normalize()
-        self._ang_vel_dict.update({parent_frame: wvec})
-        parent_frame._ang_vel_dict.update({self: -wvec})
+        wvec = thetad*axis.express(parent).normalize()
+        self._ang_vel_dict.update({parent: wvec})
+        parent._ang_vel_dict.update({self: -wvec})
         self._var_dict = {}
 
     def orient_explicit(self, parent, dcm):
-        """Sets the orientation of this reference frame relative to another
-        (parent) reference frame by setting the direction cosine matrix explicitly.
+        """Sets the orientation of this reference frame relative to a parent
+        reference frame by explicitly setting the direction cosine matrix.
 
         Parameters
         ==========
 
         parent : ReferenceFrame
-            Reference frame that this referece frame will be rotated relative to.
-
+            Reference frame that this referece frame will be rotated relative
+            to.
         dcm : Matrix, shape(3, 3)
+            Direction cosine matrix that specifies the relative rotation
+            between the two reference frames.
 
         Examples
-        ==========
+        ========
 
         Setup variables for the examples:
 
         >>> from sympy import symbols
         >>> from sympy.physics.vector import ReferenceFrame
         >>> q1 = symbols('q1')
+        >>> A = ReferenceFrame('A')
         >>> B = ReferenceFrame('B')
         >>> N = ReferenceFrame('N')
 
-        The orientation of frame A can be set to be the same as frame B in the following way:
+        A simple rotation of ``A`` relative to ``N`` about ``N.x`` is defined
+        by the following direction cosine matrix:
 
-        >>> B.orient_axis(N, N.x, q1)
-        >>> A = ReferenceFrame('A')
-        >>> A.orient_explicit(N, N.dcm(B))
+        >>> dcm = Matrix([[1, 0, 0],
+        ...               [0, cos(q1), -sin(q1)],
+        ...               [0, sin(q1), cos(q1)]])
+        >>> A.orient_explicit(N, dcm)
         >>> A.dcm(N)
         Matrix([
         [1,       0,      0],
         [0,  cos(q1), sin(q1)],
         [0, -sin(q1), cos(q1)]])
 
-        **Note carefully that** ``N.dcm(B)`` **was passed into** ``orient_explicit()``
-        **for** ``A.dcm(N)`` **to match** ``B.dcm(N)``.
+        This is equivalent to using ``orient_axis()``:
+
+        >>> B.orient_axis(N, N.x, q1)
+        >>> B.dcm(N)
+        Matrix([
+        [1,       0,      0],
+        [0,  cos(q1), sin(q1)],
+        [0, -sin(q1), cos(q1)]])
+
+        **Note carefully that** ``N.dcm(B)`` **(the transpose) would be passed
+        into** ``orient_explicit()`` **for** ``A.dcm(N)`` **to match**
+        ``B.dcm(N)``:
+
+        >>> A.orient_explicit(N, N.dcm(B))
+        Matrix([
+        [1,       0,      0],
+        [0,  cos(q1), sin(q1)],
+        [0, -sin(q1), cos(q1)]])
 
         """
 
@@ -637,7 +653,7 @@ class ReferenceFrame:
         self._var_dict = {}
 
     def _rot(self, axis, angle):
-        """DCM for simple axis 1,2,or 3 rotations. """
+        """DCM for simple axis 1,2,or 3 rotations."""
         if axis == 1:
             return Matrix([[1, 0, 0],
                            [0, cos(angle), -sin(angle)],
@@ -651,12 +667,15 @@ class ReferenceFrame:
                            [sin(angle), cos(angle), 0],
                            [0, 0, 1]])
 
-    def orient_body_fixed(self, parent, amounts, rot_order):
-        """Rotates this reference frame relative to the provided reference frame(parent)
-        by rotating through three successive simple rotations. Each subsequent axis
-        of rotation is about the "body fixed" unit vectors of the new intermediate
-        reference frame. This type of rotation is also referred to rotating through
-        the `Euler and Tait-Bryan Angles <https://en.wikipedia.org/wiki/Euler_angles>`_.
+    def orient_body_fixed(self, parent, angles, rotation_order):
+        """Rotates this reference frame relative to the parent reference frame
+        by righthand rotating through three successive body fixed simple axis
+        rotations. Each subsequent axis of rotation is about the "body fixed"
+        unit vectors of a new intermediate reference frame. This type of
+        rotation is also referred to rotating through the `Euler and Tait-Bryan
+        Angles`_.
+
+        .. _Euler and Tait-Bryan Angles: https://en.wikipedia.org/wiki/Euler_angles
 
         Parameters
         ==========
@@ -664,23 +683,29 @@ class ReferenceFrame:
         parent : ReferenceFrame
             Reference frame that this reference frame will be rotated relative
             to.
-
-        amounts : 3-tuple of expressions, symbols, or functions
-            The string ``'123'`` and integer ``123`` are equivalent.
+        angles : 3-tuple of sympifiables
+            Three angles in radians used for the successive rotations.
+        rotation_order : 3 character string or 3 digit integer
+            Order of the rotations about each intermediate reference frames'
+            unit vectors. The Euler rotation about the X, Z', X'' axes can be
+            specified by the strings ``'XZX'``, ``'131'``, or the integer
+            ``131``. There are 12 unique valid rotation orders (6 Euler and 6
+            Tait-Bryan).
 
         Examples
-        =========
+        ========
+
         Setup variables for the examples:
 
         >>> from sympy import symbols
         >>> from sympy.physics.vector import ReferenceFrame
-        >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
+        >>> q1, q2, q3 = symbols('q1, q2, q3')
         >>> N = ReferenceFrame('N')
         >>> B = ReferenceFrame('B')
         >>> B1 = ReferenceFrame('B')
         >>> B2 = ReferenceFrame('B2')
 
-        For example, the classic Euler Angle rotation can be done by:
+        For example, a classic Euler Angle rotation can be done by:
 
         >>> B.orient_body_fixed(N, (q1, q2, q3), 'XYX')
         >>> B.dcm(N)
@@ -689,9 +714,10 @@ class ReferenceFrame:
         [sin(q2)*sin(q3), -sin(q1)*sin(q3)*cos(q2) + cos(q1)*cos(q3),  sin(q1)*cos(q3) + sin(q3)*cos(q1)*cos(q2)],
         [sin(q2)*cos(q3), -sin(q1)*cos(q2)*cos(q3) - sin(q3)*cos(q1), -sin(q1)*sin(q3) + cos(q1)*cos(q2)*cos(q3)]])
 
-        This rotates B relative to N through ``q1`` about ``N.x``, then rotates
-        B again through q2 about B.y, and finally through q3 about B.x. It is
-        equivalent to:
+        This rotates reference frame B relative to reference frame N through
+        ``q1`` about ``N.x``, then rotates B again through ``q2`` about
+        ``B.y``, and finally through ``q3`` about ``B.x``. It is equivalent to
+        three successive ``orient_axis()`` calls:
 
         >>> B1.orient_axis(N, N.x, q1)
         >>> B2.orient_axis(B1, B1.y, q2)
@@ -714,17 +740,17 @@ class ReferenceFrame:
 
         _check_frame(parent)
 
-        amounts = list(amounts)
+        amounts = list(angles)
         for i, v in enumerate(amounts):
             if not isinstance(v, Vector):
                 amounts[i] = sympify(v)
 
         approved_orders = ('123', '231', '312', '132', '213', '321', '121',
-                            '131', '212', '232', '313', '323', '')
+                           '131', '212', '232', '313', '323', '')
         # make sure XYZ => 123
-        rot_order = translate(str(rot_order), 'XYZxyz', '123123')
+        rot_order = translate(str(rotation_order), 'XYZxyz', '123123')
         if rot_order not in approved_orders:
-            raise TypeError('The supplied order is not an approved type')
+            raise TypeError('The rotation order is not a valid order.')
 
         parent_orient_body = []
         if not (len(amounts) == 3 & len(rot_order) == 3):
@@ -732,8 +758,9 @@ class ReferenceFrame:
         a1 = int(rot_order[0])
         a2 = int(rot_order[1])
         a3 = int(rot_order[2])
-        parent_orient_body = (self._rot(a1, amounts[0]) * self._rot(a2, amounts[1]) *
-                            self._rot(a3, amounts[2]))
+        parent_orient_body = (self._rot(a1, amounts[0]) *
+                              self._rot(a2, amounts[1]) *
+                              self._rot(a3, amounts[2]))
 
         self._dcm(parent, parent_orient_body)
 
@@ -743,7 +770,7 @@ class ReferenceFrame:
             q1, q2, q3 = amounts
             u1, u2, u3 = symbols('u1, u2, u3', cls=Dummy)
             templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
-                                            'body', rot_order)
+                                           'body', rot_order)
             templist = [expand(i) for i in templist]
             td = solve(templist, [u1, u2, u3])
             u1 = expand(td[u1])
@@ -756,34 +783,34 @@ class ReferenceFrame:
         parent._ang_vel_dict.update({self: -wvec})
         self._var_dict = {}
 
-    def orient_space_fixed(self, parent, amounts, rot_order):
-        """Sets the orientation of this reference frame relative to another
-        (parent) reference frame.
+    def orient_space_fixed(self, parent, angles, rotation_order):
+        """Rotates this reference frame relative to the parent reference frame
+        by righthand rotating through three successive space fixed simple axis
+        rotations. Each subsequent axis of rotation is about the "space fixed"
+        unit vectors of the parent reference frame.
 
         Parameters
         ==========
-
         parent : ReferenceFrame
-            Referernce frame that this reference frame will be rotated relative to.
-
-        amounts : 3-tuple of expressions, symbols, or functions
-            Expressions defining the rotation angles or direction cosine
-            matrix.
-
-        rot_order : str or int
-            The string ``'123'`` and integer ``123`` are equivalent.
+            Reference frame that this reference frame will be rotated relative
+            to.
+        angles : 3-tuple of sympifiables
+            Three angles in radians used for the successive rotations.
+        rotation_order : 3 character string or 3 digit integer
+            Order of the rotations about each intermediate reference frames'
+            unit vectors. The Euler rotation about the X, Z', X'' axes can be
+            specified by the strings ``'XZX'``, ``'131'``, or the integer
+            ``131``. There are 12 unique valid rotation orders (6 Euler and 6
+            Tait-Bryan).
 
         Examples
-        ==========
-        Rotates the reference frame in three
-        successive simple rotations but the axes of rotation are the
-        "Space-fixed" axes. For example:
+        ========
 
         Setup variables for the examples:
 
         >>> from sympy import symbols
         >>> from sympy.physics.vector import ReferenceFrame
-        >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
+        >>> q1, q2, q3 = symbols('q1, q2, q3')
         >>> N = ReferenceFrame('N')
         >>> B = ReferenceFrame('B')
         >>> B1 = ReferenceFrame('B')
@@ -801,7 +828,7 @@ class ReferenceFrame:
         >>> B1.orient_axis(N, N.z, q1)
         >>> B2.orient_axis(B1, N.x, q2)
         >>> B.orient_axis(B2, N.y, q3)
-        >>> B.dcm(N).simplify()  # doctest: +SKIP
+        >>> B.dcm(N).simplify()
         Matrix([
         [ sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1)],
         [-sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1), cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3)],
@@ -829,15 +856,15 @@ class ReferenceFrame:
 
         _check_frame(parent)
 
-        amounts = list(amounts)
+        amounts = list(angles)
         for i, v in enumerate(amounts):
             if not isinstance(v, Vector):
                 amounts[i] = sympify(v)
 
         approved_orders = ('123', '231', '312', '132', '213', '321', '121',
-                            '131', '212', '232', '313', '323', '')
+                           '131', '212', '232', '313', '323', '')
         # make sure XYZ => 123
-        rot_order = translate(str(rot_order), 'XYZxyz', '123123')
+        rot_order = translate(str(rotation_order), 'XYZxyz', '123123')
         if rot_order not in approved_orders:
             raise TypeError('The supplied order is not an approved type')
         parent_orient_space = []
@@ -847,8 +874,9 @@ class ReferenceFrame:
         a1 = int(rot_order[0])
         a2 = int(rot_order[1])
         a3 = int(rot_order[2])
-        parent_orient_space = (self._rot(a3, amounts[2]) * self._rot(a2, amounts[1]) *
-                            self._rot(a1, amounts[0]))
+        parent_orient_space = (self._rot(a3, amounts[2]) *
+                               self._rot(a2, amounts[1]) *
+                               self._rot(a1, amounts[0]))
 
         self._dcm(parent, parent_orient_space)
 
@@ -858,7 +886,7 @@ class ReferenceFrame:
             q1, q2, q3 = amounts
             u1, u2, u3 = symbols('u1, u2, u3', cls=Dummy)
             templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
-                                            'space', rot_order)
+                                           'space', rot_order)
             templist = [expand(i) for i in templist]
             td = solve(templist, [u1, u2, u3])
             u1 = expand(td[u1])
@@ -872,21 +900,27 @@ class ReferenceFrame:
         self._var_dict = {}
 
     def orient_quaternion(self, parent, amounts):
-        """Sets the orientation of this reference frame relative to another
-        (parent) reference frame.
+        """Sets the orientation of this reference frame relative to a parent
+        reference frame via an orientation quaternion. An orientation
+        quaternion is defined as a finite rotation a unit vector, ``(lambda_x,
+        lambda_y, lambda_z)``, by an angle ``theta``. The orientation
+        quaternion is described by four parameters:
+
+        - ``q0 = cos(theta/2)``
+        - ``q1 = lambda_x*sin(theta/2)``
+        - ``q2 = lambda_y*sin(theta/2)``
+        - ``q3 = lambda_z*sin(theta/2)``
 
         Parameters
         ==========
-
         parent : ReferenceFrame
-            Reference frame that this reference frame will be rotated relative to.
-
-        amounts : 4-tuple of expressions, symbols, or functions.
-            Expressions defining the rotation angles or direction cosine
-            matrix.
+            Reference frame that this reference frame will be rotated relative
+            to.
+        amounts : 4-tuple of sympifiable
+            The four quaternion scalars as defined above.
 
         Examples
-        =========
+        ========
 
         Setup variables for the examples:
 
@@ -896,15 +930,7 @@ class ReferenceFrame:
         >>> N = ReferenceFrame('N')
         >>> B = ReferenceFrame('B')
 
-        This method orients the reference frame using
-        quaternions. Quaternion rotation is defined as a finite rotation about
-        lambda, a unit vector, by an amount theta. This orientation is
-        described by four parameters:
-
-        - ``q0 = cos(theta/2)``
-        - ``q1 = lambda_x sin(theta/2)``
-        - ``q2 = lambda_y sin(theta/2)``
-        - ``q3 = lambda_z sin(theta/2)``
+        Set the orientation:
 
         >>> B.orient_quaternion(N, (q0, q1, q2, q3))
         >>> B.dcm(N)
@@ -927,15 +953,16 @@ class ReferenceFrame:
         if not (isinstance(amounts, (list, tuple)) & (len(amounts) == 4)):
             raise TypeError('Amounts are a list or tuple of length 4')
         q0, q1, q2, q3 = amounts
-        parent_orient_quaternion = (Matrix([[q0**2 + q1**2 - q2**2 - q3**2,
-                                    2 * (q1 * q2 - q0 * q3),
-                                    2 * (q0 * q2 + q1 * q3)],
-                                    [2 * (q1 * q2 + q0 * q3),
-                                    q0**2 - q1**2 + q2**2 - q3**2,
-                                    2 * (q2 * q3 - q0 * q1)],
-                                    [2 * (q1 * q3 - q0 * q2),
-                                    2 * (q0 * q1 + q2 * q3),
-                                    q0**2 - q1**2 - q2**2 + q3**2]]))
+        parent_orient_quaternion = (
+            Matrix([[q0**2 + q1**2 - q2**2 - q3**2,
+                     2 * (q1 * q2 - q0 * q3),
+                     2 * (q0 * q2 + q1 * q3)],
+                    [2 * (q1 * q2 + q0 * q3),
+                     q0**2 - q1**2 + q2**2 - q3**2,
+                     2 * (q2 * q3 - q0 * q1)],
+                    [2 * (q1 * q3 - q0 * q2),
+                     2 * (q0 * q1 + q2 * q3),
+                     q0**2 - q1**2 - q2**2 + q3**2]]))
 
         self._dcm(parent, parent_orient_quaternion)
 
