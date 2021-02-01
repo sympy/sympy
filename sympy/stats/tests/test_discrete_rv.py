@@ -9,12 +9,10 @@ from sympy.stats import (P, E, variance, density, characteristic_function,
                          where, moment_generating_function, skewness, cdf,
                          kurtosis, coskewness)
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
-                                   Poisson, Geometric, Hermite, Logarithmic,
+                                   FlorySchulz, Poisson, Geometric, Hermite, Logarithmic,
                                     NegativeBinomial, Skellam, YuleSimon, Zeta,
                                     DiscreteRV)
-from sympy.stats.rv import sample
-from sympy.testing.pytest import slow, nocache_fail, raises, skip, ignore_warnings
-from sympy.external import import_module
+from sympy.testing.pytest import slow, nocache_fail, raises, ignore_warnings
 from sympy.stats.symbolic_probability import Expectation
 
 x = Symbol('x')
@@ -40,6 +38,15 @@ def test_Poisson():
         assert isinstance(E(2*x, evaluate=False), Expectation)
     # issue 8248
     assert x.pspace.compute_expectation(1) == 1
+
+def test_FlorySchulz():
+    a = Symbol("a")
+    z = Symbol("z")
+    x = FlorySchulz('x' , a)
+    assert E(x) == (2 - a)/a
+    assert (variance(x) - 2*(1 - a)/a**2).simplify() == S(0)
+    assert density(x)(z) == a**2*z*(1 - a)**(z - 1)
+
 
 @slow
 def test_GeometricDistribution():
@@ -142,18 +149,6 @@ def test_zeta():
     assert simplify(variance(x)) == (
         zeta(s) * zeta(s-2) - zeta(s-1)**2) / zeta(s)**2
 
-
-@slow
-def test_sample_discrete():
-    X = Geometric('X', S.Half)
-    scipy = import_module('scipy')
-    if not scipy:
-        skip('Scipy not installed. Abort tests')
-    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        assert next(sample(X)) in X.pspace.domain.set
-        samps = next(sample(X, size=2)) # This takes long time if ran without scipy
-        for samp in samps:
-            assert samp in X.pspace.domain.set
 
 def test_discrete_probability():
     X = Geometric('X', Rational(1, 5))
@@ -298,76 +293,3 @@ def test_product_spaces():
 #    assert str(P(Eq(X1 + X2, 3))) == """Sum(Piecewise((2**(X2 - 2)*(2/3)**(X2 - 1)/6, """ +\
 #        """X2 <= 2), (0, True)), (X2, 1, oo))"""
     assert P(Eq(X1 + X2, 3)) == Rational(1, 12)
-
-
-def test_sample_numpy():
-    distribs_numpy = [
-        Geometric('G', 0.5),
-        Poisson('P', 1),
-        Zeta('Z', 2)
-    ]
-    size = 3
-    numpy = import_module('numpy')
-    if not numpy:
-        skip('Numpy is not installed. Abort tests for _sample_numpy.')
-    else:
-        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-            for X in distribs_numpy:
-                samps = next(sample(X, size=size, library='numpy'))
-                for sam in samps:
-                    assert sam in X.pspace.domain.set
-            raises(NotImplementedError,
-                lambda: next(sample(Skellam('S', 1, 1), library='numpy')))
-    raises(NotImplementedError,
-            lambda: Skellam('S', 1, 1).pspace.distribution.sample(library='tensorflow'))
-
-def test_sample_scipy():
-    p = S(2)/3
-    x = Symbol('x', integer=True, positive=True)
-    pdf = p*(1 - p)**(x - 1) # pdf of Geometric Distribution
-    distribs_scipy = [
-        DiscreteRV(x, pdf, set=S.Naturals),
-        Geometric('G', 0.5),
-        Logarithmic('L', 0.5),
-        NegativeBinomial('N', 5, 0.4),
-        Poisson('P', 1),
-        Skellam('S', 1, 1),
-        YuleSimon('Y', 1),
-        Zeta('Z', 2)
-    ]
-    size = 3
-    numsamples = 5
-    scipy = import_module('scipy')
-    if not scipy:
-        skip('Scipy is not installed. Abort tests for _sample_scipy.')
-    else:
-        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-            z_sample = list(sample(Zeta("G", 7), size=size, numsamples=numsamples))
-            assert len(z_sample) == numsamples
-            for X in distribs_scipy:
-                samps = next(sample(X, size=size, library='scipy'))
-                samps2 = next(sample(X, size=(2, 2), library='scipy'))
-                for sam in samps:
-                    assert sam in X.pspace.domain.set
-                for i in range(2):
-                    for j in range(2):
-                        assert samps2[i][j] in X.pspace.domain.set
-
-def test_sample_pymc3():
-    distribs_pymc3 = [
-        Geometric('G', 0.5),
-        Poisson('P', 1),
-        NegativeBinomial('N', 5, 0.4)
-    ]
-    size = 3
-    pymc3 = import_module('pymc3')
-    if not pymc3:
-        skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
-    else:
-        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-            for X in distribs_pymc3:
-                samps = next(sample(X, size=size, library='pymc3'))
-                for sam in samps:
-                    assert sam in X.pspace.domain.set
-            raises(NotImplementedError,
-                lambda: next(sample(Skellam('S', 1, 1), library='pymc3')))

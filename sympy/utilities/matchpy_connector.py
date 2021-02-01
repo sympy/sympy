@@ -2,12 +2,16 @@
 The objects in this module allow the usage of the MatchPy pattern matching
 library on SymPy expressions.
 """
+import re
+from typing import List, Callable
+
+from sympy.core.sympify import _sympify
 from sympy.external import import_module
 from sympy.functions import (log, sin, cos, tan, cot, csc, sec, erf, gamma, uppergamma)
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi, Ei
-from sympy import (Basic, Mul, Add, Pow, Integral, exp, Symbol)
+from sympy import (Basic, Mul, Add, Pow, Integral, exp, Symbol, Expr, srepr, Equality, Unequality)
 from sympy.utilities.decorator import doctest_depends_on
 
 matchpy = import_module("matchpy")
@@ -29,6 +33,11 @@ if matchpy:
     OneIdentityOperation.register(Mul)
     CommutativeOperation.register(Mul)
     AssociativeOperation.register(Mul)
+
+    Operation.register(Equality)
+    CommutativeOperation.register(Equality)
+    Operation.register(Unequality)
+    CommutativeOperation.register(Unequality)
 
     Operation.register(exp)
     Operation.register(log)
@@ -102,6 +111,8 @@ class _WildAbstract(Wildcard, Symbol):
     def __init__(self, variable_name=None, optional=None, **assumptions):
         min_length = self.min_length
         fixed_size = self.fixed_size
+        if optional is not None:
+            optional = _sympify(optional)
         Wildcard.__init__(self, min_length, fixed_size, str(variable_name), optional)
 
     def __new__(cls, variable_name=None, optional=None, **assumptions):
@@ -128,6 +139,9 @@ class _WildAbstract(Wildcard, Symbol):
     def __repr__(self):
         return str(self)
 
+    def __str__(self):
+        return self.name
+
 
 @doctest_depends_on(modules=('matchpy',))
 class WildDot(_WildAbstract):
@@ -145,3 +159,110 @@ class WildPlus(_WildAbstract):
 class WildStar(_WildAbstract):
     min_length = 0
     fixed_size = False
+
+
+def _get_srepr(expr):
+    s = srepr(expr)
+    s = re.sub(r"WildDot\('(\w+)'\)", r"\1", s)
+    s = re.sub(r"WildPlus\('(\w+)'\)", r"*\1", s)
+    s = re.sub(r"WildStar\('(\w+)'\)", r"*\1", s)
+    return s
+
+
+@doctest_depends_on(modules=('matchpy',))
+class Replacer:
+    """
+    Replacer object to perform multiple pattern matching and subexpression
+    replacements in SymPy expressions.
+
+    Examples
+    ========
+
+    Example to construct a simple first degree equation solver:
+
+    >>> from sympy.utilities.matchpy_connector import WildDot, Replacer
+    >>> from sympy import Equality, Symbol
+    >>> x = Symbol("x")
+    >>> a_ = WildDot("a_", optional=1)
+    >>> b_ = WildDot("b_", optional=0)
+
+    The lines above have defined two wildcards, ``a_`` and ``b_``, the
+    coefficients of the equation `a x + b = 0`. The optional values specified
+    indicate which expression to return in case no match is found, they are
+    necessary in equations like `a x = 0` and `x + b = 0`.
+
+    Create two constraints to make sure that ``a_`` and ``b_`` will not match
+    any expression containing ``x``:
+
+    >>> from matchpy import CustomConstraint
+    >>> free_x_a = CustomConstraint(lambda a_: not a_.has(x))
+    >>> free_x_b = CustomConstraint(lambda b_: not b_.has(x))
+
+    Now create the rule replacer with the constraints:
+
+    >>> replacer = Replacer(common_constraints=[free_x_a, free_x_b])
+
+    Add the matching rule:
+
+    >>> replacer.add(Equality(a_*x + b_, 0), -b_/a_)
+
+    Let's try it:
+
+    >>> replacer.replace(Equality(3*x + 4, 0))
+    -4/3
+
+    Notice that it won't match equations expressed with other patterns:
+
+    >>> eq = Equality(3*x, 4)
+    >>> replacer.replace(eq)
+    Eq(3*x, 4)
+
+    In order to extend the matching patterns, define another one (we also need
+    to clear the cache, because the previous result has already been memorized
+    and the pattern matcher won't iterate again if given the same expression)
+
+    >>> replacer.add(Equality(a_*x, b_), b_/a_)
+    >>> replacer._replacer.matcher.clear()
+    >>> replacer.replace(eq)
+    4/3
+    """
+
+    def __init__(self, common_constraints: list = []):
+        self._replacer = matchpy.ManyToOneReplacer()
+        self._common_constraint = common_constraints
+
+    def _get_lambda(self, lambda_str: str) -> Callable[..., Expr]:
+        exec("from sympy import *")
+        return eval(lambda_str, locals())
+
+    def _get_custom_constraint(self, constraint_expr: Expr, condition_template: str) -> Callable[..., Expr]:
+        wilds = list(map(lambda x: x.name, constraint_expr.atoms(_WildAbstract)))
+        lambdaargs = ', '.join(wilds)
+        fullexpr = _get_srepr(constraint_expr)
+        condition = condition_template.format(fullexpr)
+        return matchpy.CustomConstraint(
+            self._get_lambda(f"lambda {lambdaargs}: ({condition})"))
+
+    def _get_custom_constraint_nonfalse(self, constraint_expr: Expr) -> Callable[..., Expr]:
+        return self._get_custom_constraint(constraint_expr, "({}) != False")
+
+    def _get_custom_constraint_true(self, constraint_expr: Expr) -> Callable[..., Expr]:
+        return self._get_custom_constraint(constraint_expr, "({}) == True")
+
+    def add(self, expr: Expr, result: Expr, conditions_true: List[Expr] = [], conditions_nonfalse: List[Expr] = []) -> None:
+        expr = _sympify(expr)
+        result = _sympify(result)
+        lambda_str = f"lambda {', '.join(map(lambda x: x.name, expr.atoms(_WildAbstract)))}: {_get_srepr(result)}"
+        lambda_expr = self._get_lambda(lambda_str)
+        constraints = self._common_constraint[:]
+        constraint_conditions_true = [
+            self._get_custom_constraint_true(cond) for cond in conditions_true]
+        constraint_conditions_nonfalse = [
+            self._get_custom_constraint_nonfalse(cond) for cond in conditions_nonfalse]
+        constraints.extend(constraint_conditions_true)
+        constraints.extend(constraint_conditions_nonfalse)
+        self._replacer.add(
+            matchpy.ReplacementRule(matchpy.Pattern(expr, *constraints), lambda_expr))
+
+    def replace(self, expr: Expr) -> Expr:
+        return self._replacer.replace(expr)

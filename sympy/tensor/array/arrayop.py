@@ -2,6 +2,7 @@ import itertools
 from collections.abc import Iterable
 
 from sympy import S, Tuple, diff, Basic
+from sympy.core.sympify import _sympify
 
 from sympy.tensor.array.ndim_array import NDimArray
 from sympy.tensor.array.dense_ndim_array import DenseNDimArray, ImmutableDenseNDimArray
@@ -246,6 +247,9 @@ def derive_by_array(expr, dx):
     r"""
     Derivative by arrays. Supports both arrays and scalars.
 
+    Explanation
+    ===========
+
     Given the array `A_{i_1, \ldots, i_N}` and the array `X_{j_1, \ldots, j_M}`
     this function will return a new array `B` defined by
 
@@ -293,9 +297,11 @@ def derive_by_array(expr, dx):
         else:
             return expr.diff(dx)
     else:
+        expr = _sympify(expr)
         if isinstance(dx, array_types):
             return ImmutableDenseNDimArray([expr.diff(i) for i in Flatten(dx)], dx.shape)
         else:
+            dx = _sympify(dx)
             return diff(expr, dx)
 
 

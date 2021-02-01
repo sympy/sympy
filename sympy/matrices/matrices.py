@@ -6,6 +6,8 @@ from sympy.core.compatibility import (
     Callable, NotIterable, as_int, is_sequence)
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
+from sympy.core.kind import _NumberKind, NumberKind, UndefinedKind
+from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, uniquely_named_symbol
@@ -18,14 +20,13 @@ from sympy.polys import cancel
 from sympy.printing import sstr
 from sympy.printing.defaults import Printable
 from sympy.simplify import simplify as _simplify
-from sympy.core.kind import Kind, NumberKind
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
 
 from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
-    ShapeError)
+    ShapeError, MatrixKind)
 
 from .utilities import _iszero, _is_zero_after_expand_mul
 
@@ -48,7 +49,7 @@ from .eigen import (
 from .decompositions import (
     _rank_decomposition, _cholesky, _LDLdecomposition,
     _LUdecomposition, _LUdecomposition_Simple, _LUdecompositionFF,
-    _QRdecomposition)
+    _singular_value_decomposition, _QRdecomposition, _upper_hessenberg_decomposition)
 
 from .graph import _connected_components, _connected_components_decomposition
 
@@ -743,45 +744,24 @@ class MatrixDeprecated(MatrixCommon):
         return self.permute_rows(perm, direction='forward')
 
 
-class MatrixKind(Kind):
+@Mul._kind_dispatcher.register(_NumberKind, MatrixKind)
+def num_mat_mul(k1, k2):
     """
-    Kind for all matrices in SymPy.
-
-    Basic class for this kind is ``MatrixBase`` and ``MatrixExpr``,
-    but any expression representing the matrix can have this.
-
-    Parameters
-    ==========
-
-    element_kind : Kind
-        Kind of the element. Default is ``NumberKind``, which means that
-        the matrix contains only numbers.
-
-    Examples
-    ========
-
-    >>> from sympy import MatrixSymbol, Integral
-    >>> from sympy.abc import x
-    >>> A = MatrixSymbol('A', 2,2)
-    >>> A.kind
-    MatrixKind(NumberKind)
-    >>> Integral(A,x).kind
-    MatrixKind(NumberKind)
-
-    See Also
-    ========
-
-    sympy.tensor.ArrayKind : Kind for N-dimensional arrays.
-
+    Return MatrixKind. The element kind is selected by recursive dispatching.
+    Do not need to dispatch in reversed order because KindDispatcher
+    searches for this automatically.
     """
-    def __new__(cls, element_kind=NumberKind):
-        obj = super().__new__(cls, element_kind)
-        obj.element_kind = element_kind
-        return obj
+    # Deal with Mul._kind_dispatcher's commutativity
+    elemk = Mul._kind_dispatcher(NumberKind, k2.element_kind)
+    return MatrixKind(elemk)
 
-    def __repr__(self):
-        return "MatrixKind(%s)" % self.element_kind
-
+@Mul._kind_dispatcher.register(MatrixKind, MatrixKind)
+def mat_mat_mul(k1, k2):
+    """
+    Return MatrixKind. The element kind is selected by recursive dispatching.
+    """
+    elemk = Mul._kind_dispatcher(k1.element_kind, k2.element_kind)
+    return MatrixKind(elemk)
 
 class MatrixBase(MatrixDeprecated,
                  MatrixCalculus,
@@ -798,7 +778,14 @@ class MatrixBase(MatrixDeprecated,
     zero = S.Zero
     one = S.One
 
-    kind = MatrixKind()
+    @property
+    def kind(self):
+        elem_kinds = set(e.kind for e in self._mat)
+        if len(elem_kinds) == 1:
+            elemkind, = elem_kinds
+        else:
+            elemkind = UndefinedKind
+        return MatrixKind(elemkind)
 
     def __array__(self, dtype=object):
         from .dense import matrix2numpy
@@ -2139,8 +2126,14 @@ class MatrixBase(MatrixDeprecated,
     def LUdecompositionFF(self):
         return _LUdecompositionFF(self)
 
+    def singular_value_decomposition(self):
+        return _singular_value_decomposition(self)
+
     def QRdecomposition(self):
         return _QRdecomposition(self)
+
+    def upper_hessenberg_decomposition(self):
+        return _upper_hessenberg_decomposition(self)
 
     def diagonal_solve(self, rhs):
         return _diagonal_solve(self, rhs)
@@ -2218,7 +2211,9 @@ class MatrixBase(MatrixDeprecated,
     LUdecomposition.__doc__        = _LUdecomposition.__doc__
     LUdecomposition_Simple.__doc__ = _LUdecomposition_Simple.__doc__
     LUdecompositionFF.__doc__      = _LUdecompositionFF.__doc__
+    singular_value_decomposition.__doc__ = _singular_value_decomposition.__doc__
     QRdecomposition.__doc__        = _QRdecomposition.__doc__
+    upper_hessenberg_decomposition.__doc__ = _upper_hessenberg_decomposition.__doc__
 
     diagonal_solve.__doc__         = _diagonal_solve.__doc__
     lower_triangular_solve.__doc__ = _lower_triangular_solve.__doc__

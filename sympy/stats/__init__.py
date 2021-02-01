@@ -116,13 +116,13 @@ __all__ = [
     'BoundedPareto', 'Cauchy', 'Chi', 'ChiNoncentral', 'ChiSquared', 'Dagum', 'Erlang',
     'ExGaussian', 'Exponential', 'ExponentialPower', 'FDistribution',
     'FisherZ', 'Frechet', 'Gamma', 'GammaInverse', 'Gompertz', 'Gumbel',
-    'Kumaraswamy', 'Laplace', 'Levy', 'Logistic', 'LogLogistic', 'LogitNormal', 'LogNormal', 'Lomax',
+    'Kumaraswamy', 'Laplace', 'Levy', 'Logistic','LogCauchy', 'LogLogistic', 'LogitNormal', 'LogNormal', 'Lomax',
     'Moyal', 'Maxwell', 'Nakagami', 'Normal', 'GaussianInverse', 'Pareto', 'PowerFunction',
     'QuadraticU', 'RaisedCosine', 'Rayleigh','Reciprocal', 'StudentT', 'ShiftedGompertz',
     'Trapezoidal', 'Triangular', 'Uniform', 'UniformSum', 'VonMises', 'Wald',
     'Weibull', 'WignerSemicircle', 'ContinuousDistributionHandmade',
 
-    'Geometric','Hermite', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
+    'FlorySchulz', 'Geometric','Hermite', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
     'YuleSimon', 'Zeta', 'DiscreteRV', 'DiscreteDistributionHandmade',
 
     'JointRV', 'Dirichlet', 'GeneralizedMultivariateLogGamma',
@@ -142,7 +142,7 @@ __all__ = [
     'joint_eigen_distribution', 'JointEigenDistribution',
     'level_spacing_distribution',
 
-    'MatrixGamma', 'Wishart', 'MatrixNormal',
+    'MatrixGamma', 'Wishart', 'MatrixNormal', 'MatrixStudentT',
 
     'Probability', 'Expectation', 'Variance', 'Covariance', 'Moment',
     'CentralMoment',
@@ -165,12 +165,12 @@ from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
         BetaPrime, BoundedPareto, Cauchy, Chi, ChiNoncentral, ChiSquared, Dagum, Erlang,
         ExGaussian, Exponential, ExponentialPower, FDistribution, FisherZ,
         Frechet, Gamma, GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace,
-        Levy, Logistic, LogLogistic, LogitNormal, LogNormal, Lomax, Maxwell, Moyal, Nakagami, Normal,
+        Levy, Logistic,LogCauchy ,LogLogistic, LogitNormal, LogNormal, Lomax, Maxwell, Moyal, Nakagami, Normal,
         GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, StudentT,
         PowerFunction, ShiftedGompertz, Trapezoidal, Triangular, Uniform, UniformSum,
         VonMises, Wald, Weibull, WignerSemicircle, ContinuousDistributionHandmade)
 
-from .drv_types import (Geometric, Hermite, Logarithmic, NegativeBinomial, Poisson,
+from .drv_types import (FlorySchulz, Geometric, Hermite, Logarithmic, NegativeBinomial, Poisson,
         Skellam, YuleSimon, Zeta, DiscreteRV, DiscreteDistributionHandmade)
 
 from .joint_rv_types import (JointRV, Dirichlet,
@@ -191,7 +191,7 @@ from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
         GaussianSymplecticEnsemble, joint_eigen_distribution,
         JointEigenDistribution, level_spacing_distribution)
 
-from .matrix_distributions import MatrixGamma, Wishart, MatrixNormal
+from .matrix_distributions import MatrixGamma, Wishart, MatrixNormal, MatrixStudentT
 
 from .symbolic_probability import (Probability, Expectation, Variance,
         Covariance, Moment, CentralMoment)
