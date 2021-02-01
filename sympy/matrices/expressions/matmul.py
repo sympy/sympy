@@ -389,7 +389,7 @@ def combine_one_matrices(mul):
 
     return newmul(factor, *new_args)
 
-def simp_expr(mul):
+def distribute_monom(mul):
     """
     Simplify MatMul expressions
 
@@ -405,7 +405,7 @@ def simp_expr(mul):
     return mul
 
 rules = (
-    simp_expr, any_zeros, remove_ids, combine_one_matrices, combine_powers, unpack, rm_id(lambda x: x == 1),
+    distribute_monom, any_zeros, remove_ids, combine_one_matrices, combine_powers, unpack, rm_id(lambda x: x == 1),
     merge_explicit, factor_in_front, flatten, combine_permutations)
 
 canonicalize = exhaust(typed({MatMul: do_one(*rules)}))
