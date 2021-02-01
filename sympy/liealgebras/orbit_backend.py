@@ -62,7 +62,10 @@ def _orbit_backend(algebra, weight, stabilizer, dtype=None, backend="numpy"):
     # generate full orbit based on dominant weight
     fullorbit = _full_orbit(name,stab_refl_mats, dom, algebra.roots() // 2, backend=backend)
 
-    weight_level = lambda x: sum(x * rot)
+    if backend == "numpy":
+        weight_level = lambda x: sum(np.dot(x,rot))
+    else:
+        weight_level = lambda x: sum(x * rot)
     convention = sorted(fullorbit, key=lambda x: (tuple(x),weight_level(x)))
     return convention[-1:] + convention[:-1]
 
