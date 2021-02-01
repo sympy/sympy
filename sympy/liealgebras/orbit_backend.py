@@ -24,64 +24,127 @@ def _cast_to_type(ary, outtype, backend):
 #   Orbit methods
 #
 
-def _orbit_backend_sympy(algebra, weight, stabilizer):
-    """Returns the orbit stabilizer theorem calculation using
-    sympy objects in an easy to follow, but unperformant, algorithm.
-    The docstring on `cartan_base.StandardCartan.orbit` explains the args."""
-    # Generating the rotation matrices from simple roots
-    # to avoid recalculating them each loop
-    reflection_matrices = algebra._reflection_matrices()
-
-    if stabilizer is not None:
-        reflection_matrices = [reflection_matrices[i] for i in stabilizer]
-
-    # Fill up master list of reflected roots by
-    # continually operating on them until all weights in orbit are found
-    master_list = [weight.as_immutable()]
-    master_list_hash = set()
-    while True:
-        # we use this because we can't change master_list during
-        # iteration (python rule)
-        ref_list = []
-        for w in master_list:
-            # if we've seen w before, we've also see all its reflections
-            if w in master_list_hash:
-                continue
-            for refl in reflection_matrices:
-                reflected = w * refl
-                if reflected not in ref_list and reflected not in master_list:
-                    ref_list.append(reflected)
-                    master_list_hash.add(w)
-
-        # No new reflections have been found
-        if len(ref_list) == 0:
-            break
-
-        master_list += ref_list
-    return master_list
-
-def _orbit_backend_numpy(algebra, weight, stabilizer, dtype):
+def _orbit_backend(algebra, weight, stabilizer, dtype=None, backend="numpy"):
     """Runs the orbit stabilizer theorem using an effecient numpy api empowered
     algorithm. The docstring on `cartan_base.StandardCartan.orbit` explains the args.
     """
-    reflection_matrices = np.array(algebra._reflection_matrices(), dtype=dtype, order='c')
+    name = str(algebra.series) + str(algebra.rank)
+
+    if backend == "numpy" and dtype is None:
+        raise ValueError("orbit needs a dtype if numpy backend is used")
+
+    reflection_matrices = algebra._reflection_matrices()
+    # used to rotate basis
+    omega_inv = algebra.omega_matrix().pinv()
+    stab_refl_mats = reflection_matrices
+    # used to rotate to alpha basis from orthogonal
+    rot = algebra.cartan_matrix().pinv()
+    rot = (omega_inv * rot)
+
+
     # if stabilizers are passed, select relfection matricies corresponding to those
     # simple root indexes
-    stab_refl_mats = reflection_matrices
     if stabilizer:
-        stabilizer = np.array(stabilizer, dtype=int)
-        stab_refl_mats = reflection_matrices[stabilizer]
+        stab_refl_mats = [reflection_matrices[i] for i in stabilizer]
 
-    num_pos = algebra.roots() // 2
-    # used to rotate basis
-    omega_inv = np.array(algebra.omega_matrix().pinv(), dtype=dtype, order="c")
-    weight = np.array(weight, dtype=dtype, order='c').squeeze()
+    if backend == "numpy":
+        weight = np.array(weight, dtype=dtype, order='c').squeeze()
+        omega_inv = np.array(omega_inv, dtype=dtype, order="c")
+        reflection_matrices = np.array(reflection_matrices, dtype=dtype, order='c')
+        stab_refl_mats = np.array(stab_refl_mats, dtype=dtype, order='c')
+        rot = np.array(rot, dtype=dtype, order='c')
+
     # rotate to dominant weyl chamber
-
-    dom = _rotate_to_dominant(reflection_matrices, omega_inv, weight)
+    dom = _rotate_to_dominant(name, reflection_matrices, omega_inv, weight, backend=backend)
+    if backend == "numpy":
+        dom = np.array([dom]).squeeze()
 
     # generate full orbit based on dominant weight
-    return _full_orbit(stab_refl_mats, dom, num_pos)
+    fullorbit = _full_orbit(name,stab_refl_mats, dom, algebra.roots() // 2, backend=backend)
+
+    weight_level = lambda x: sum(x * rot)
+    convention = sorted(fullorbit, key=lambda x: (tuple(x),weight_level(x)))
+    return convention[-1:] + convention[:-1]
+
+
+_cache = {}
+def _reflect(refl_mats, weights, backend="numpy", key=None):
+    """Returns all unique reflections of weights by
+    map applying reflection matrices over the weights
+    """
+    if backend == "numpy":
+        # Nested for loop that is flatten to (N, dim)
+        dim = weights.shape[-1]
+        refs = np.array([refl_mats.dot(w.squeeze()) for w in weights]).reshape(-1,dim)
+        comb = np.concatenate((refs, weights),axis=0)
+        return np.unique(comb, axis=0)
+    else:
+        results = set(weights)
+        global _cache
+        if key not in _cache:
+            _cache[key]={}
+        for w in weights:
+            if _cache.get(w) is not None:
+                reflections = _cache.get(w)
+            else:
+                reflections = [w * r for r in refl_mats]
+                _cache[key][w] = reflections
+
+            results = results.union(set(reflections))
+        return list(results)
+
+def _find_dom(orbits, omega_inv,backend="numpy"):
+    """Returns the dominant weight in list of weights, if exists, else
+    returns an empty array"""
+    if backend=="numpy":
+        for x in orbits:
+            if np.all(np.dot(x, omega_inv) >= 0):
+                return x.squeeze()
+        return np.array([], dtype=orbits.dtype)
+    else:
+        for x in orbits:
+            r = x * omega_inv
+            if all ([i >= 0 for i in r.row(0)]):
+                return x
+        return []
+
+def _rotate_to_dominant(name, refl_mats, omega_inv, weight, typeA=False, backend="numpy"):
+    """Returns the dominant weight by rotating
+    repeatedly across weyl chambers until all
+    elements are positive.
+    """
+
+    if typeA and backend=="numpy":
+        orbits = np.array(list(multiset_permutations(weight)))
+        dom = _find_dom(orbits, omega_inv, backend)
+        if len(dom) == 0:
+            # Check for lack of indexes here
+            raise IndexError("Cannot find dominant weight in given orbit")
+        return dom
+    if backend == "numpy":
+        orbits = np.expand_dims(weight,axis=0)
+    else:
+        orbits = [weight]
+    while True:
+        orbits = _reflect(refl_mats, orbits, backend, key=name)
+        dom = _find_dom(orbits, omega_inv, backend)
+        if len(dom) > 0:
+            return dom
+
+
+
+def _full_orbit(name, refl_mats, weight, num_pos, backend="numpy"):
+    """Returns the full orbit of a weight by
+    operating on the weight by the reflection matrices
+    a number of times equal to the number of positive
+    roots in the algebra."""
+    if backend == "numpy":
+        orbit = np.expand_dims(weight,axis=0)
+    else:
+        orbit = [weight]
+    for _ in range(num_pos):
+        orbit = _reflect(refl_mats, orbit, backend=backend, key=name)
+    return orbit
 
 
 def orbit(algebra, weight, stabilizer=None, dtype=int, backend="sympy", outtype="sympy"):
@@ -92,67 +155,17 @@ def orbit(algebra, weight, stabilizer=None, dtype=int, backend="sympy", outtype=
     `sympy.liealgebra.cartan_base.StandardCartan.orbit`"""
 
     if backend == "sympy":
-        orbit_ = _orbit_backend_sympy(algebra, weight, stabilizer)
+        orbit_ = _orbit_backend(algebra, weight.as_immutable(), stabilizer, backend="sympy")
     elif backend == "numpy":
         if np is None:
             warnings.warn("Numpy is not installed, falling back to sympy")
             return orbit(algebra, weight, stabilizer, dtype=int, backend="sympy", outtype="sympy")
 
-        orbit_ = _orbit_backend_numpy(algebra, weight, stabilizer, dtype)
+        orbit_ = _orbit_backend(algebra, weight, stabilizer, dtype)
     else:
         raise ValueError(f"backend must be 'sympy' or 'numpy' (got '{backend}')")
 
     return _cast_to_type(orbit_, outtype, backend)
-
-def _reflect(refl_mats, weights):
-    """Returns all unique reflections of weights by
-    map applying reflection matrices over the weights
-    """
-    # Nested for loop that is flatten to (N, dim)
-    dim = weights.shape[-1]
-    refs = np.array([refl_mats.dot(w.squeeze()) for w in weights]).reshape(-1,dim)
-    comb = np.concatenate((refs, weights),axis=0)
-    return np.unique(comb, axis=0)
-
-
-def _rotate_to_dominant(refl_mats, omega_inv, weight, typeA=False):
-    """Returns the dominant weight by rotating
-    repeatedly across weyl chambers until all
-    elements are positive.
-    """
-
-    if typeA:
-        orbits = np.array(list(multiset_permutations(weight)))
-        dom = _find_dom(orbits, omega_inv)
-        if len(dom) == 0:
-            # Check for lack of indexes here
-            raise IndexError("Cannot find dominant weight in given orbit")
-        return dom
-
-    orbits = np.expand_dims(weight,axis=0)
-    while True:
-        orbits = _reflect(refl_mats, orbits)
-        dom = _find_dom(orbits, omega_inv)
-        if len(dom) > 0:
-            return dom.squeeze()
-
-def _find_dom(orbits, omega_inv):
-    """Returns the dominant weight in list of weights, if exists, else
-    returns an empty array"""
-    for x in orbits:
-        if np.all(np.dot(x, omega_inv) >= 0):
-            return x
-    return np.array([], dtype=orbits.dtype)
-
-def _full_orbit(refl_mats, weight, num_pos):
-    """Returns the full orbit of a weight by
-    operating on the weight by the reflection matrices
-    a number of times equal to the number of positive
-    roots in the algebra."""
-    orbit = np.expand_dims(weight, axis=0)
-    for _ in range(num_pos):
-        orbit = _reflect(refl_mats, orbit)
-    return orbit
 
 #
 #   Root system methods
