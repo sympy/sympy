@@ -509,7 +509,7 @@ class Integral(AddWithLimits):
                 # check if one limit is oo and function limit at that is oo and
                 # check function non positive or non negative in integration limits
                 infl = [i for i in (a,b) if i.is_infinite]
-                if len(infl) > 0 and any(function.limit(x, i).is_infinite for i in infl):
+                if len(infl) > 0 and any([function.limit(x, i).is_infinite for i in infl]):
                     if solve_univariate_inequality(function>=0, x, domain=xdom, relational=False) == xdom:
                         return S.Infinity if a < b else S.NegativeInfinity
                     elif solve_univariate_inequality(function<=0, x, domain=xdom, relational=False) == xdom:
