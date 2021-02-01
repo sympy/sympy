@@ -85,6 +85,9 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
 
         if isinstance(expr, CodegenArrayTensorProduct):
             expr, contraction_indices = cls._sort_fully_contracted_args(expr, contraction_indices)
+            expr, contraction_indices = cls._lower_contraction_to_addends(expr, contraction_indices)
+            if len(contraction_indices) == 0:
+                return expr
 
         if isinstance(expr, CodegenArrayDiagonal):
             return cls._handle_nested_diagonal(expr, *contraction_indices)
@@ -142,6 +145,37 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         flattened_contraction_indices.sort()
         transform = _build_push_indices_up_func_transformation(flattened_contraction_indices)
         return _apply_recursively_over_nested_lists(transform, indices)
+
+    @classmethod
+    def _lower_contraction_to_addends(cls, expr, contraction_indices):
+        if isinstance(expr, CodegenArrayElementwiseAdd):
+            raise NotImplementedError()
+        if not isinstance(expr, CodegenArrayTensorProduct):
+            return expr, contraction_indices
+        subranks = expr.subranks
+        cumranks = list(accumulate([0] + subranks))
+        contraction_indices_remaining = []
+        contraction_indices_args = [[] for i in expr.args]
+        backshift = set([])
+        for i, contraction_group in enumerate(contraction_indices):
+            for j in range(len(expr.args)):
+                if not isinstance(expr.args[j], CodegenArrayElementwiseAdd):
+                    continue
+                if all(cumranks[j] <= k < cumranks[j+1] for k in contraction_group):
+                    contraction_indices_args[j].append([k - cumranks[j] for k in contraction_group])
+                    backshift.update(contraction_group)
+                    break
+            else:
+                contraction_indices_remaining.append(contraction_group)
+        if len(contraction_indices_remaining) == len(contraction_indices):
+            return expr, contraction_indices
+        total_rank = get_rank(expr)
+        shifts = list(accumulate([1 if i in backshift else 0 for i in range(total_rank)]))
+        contraction_indices_remaining = [Tuple.fromiter(j - shifts[j] for j in i) for i in contraction_indices_remaining]
+        ret = CodegenArrayTensorProduct(*[
+            CodegenArrayContraction(arg, *contr) for arg, contr in zip(expr.args, contraction_indices_args)
+        ])
+        return ret, contraction_indices_remaining
 
     def split_multiple_contractions(self):
         """
@@ -1579,7 +1613,7 @@ def _(expr: ZeroArray):
 
 @array2matrix.register(CodegenArrayTensorProduct)
 def _(expr: CodegenArrayTensorProduct):
-    return _a2m_tensor_product(*expr.args)
+    return _a2m_tensor_product(*[array2matrix(arg) for arg in expr.args])
 
 
 @array2matrix.register(CodegenArrayContraction)
@@ -1589,8 +1623,10 @@ def _(expr: CodegenArrayContraction):
     subexpr = expr.expr
     contraction_indices: Tuple[Tuple[int]] = expr.contraction_indices
     if isinstance(subexpr, CodegenArrayTensorProduct):
-        ua = CodegenArrayElementwiseAdd(*[_a2m_tensor_product(*j) for j in itertools.product(*[i.args if isinstance(i, CodegenArrayElementwiseAdd) else [i] for i in expr.expr.args])])
-        newexpr = CodegenArrayContraction(ua, *contraction_indices)
+        newexpr = CodegenArrayContraction(*[array2matrix(arg) for arg in expr.args])
+        if any(i > 2 for i in newexpr.subranks):
+            addends = CodegenArrayElementwiseAdd(*[_a2m_tensor_product(*j) for j in itertools.product(*[i.args if isinstance(i, CodegenArrayElementwiseAdd) else [i] for i in expr.expr.args])])
+            newexpr = CodegenArrayContraction(addends, *contraction_indices)
         if isinstance(newexpr, CodegenArrayElementwiseAdd):
             ret = array2matrix(newexpr)
             return ret
@@ -1766,7 +1802,8 @@ def _suppress_trivial_dims_in_tensor_product(mat_list):
     # That is, add contractions over trivial dimensions:
     mat_11 = []
     mat_k1 = []
-    mat_list = [i for i in mat_list if i != 1 and not i.is_Identity]
+    from sympy import Identity
+    mat_list = [i for i in mat_list if i != 1 and not isinstance(i, Identity)]
     for mat in mat_list:
         if mat.shape == (1, 1):
             mat_11.append(mat)
