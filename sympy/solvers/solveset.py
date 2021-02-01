@@ -44,7 +44,7 @@ from sympy.polys.polytools import invert
 from sympy.solvers.bivariate import _solve_lambert, _filtered_gens, bivariate_type
 from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
     PolyNonlinearError)
-from sympy.solvers.solvers import _simple_dens, _solve, _tsolve, checksol, denoms, recast_to_symbols, unrad
+from sympy.solvers.solvers import _simple_dens, checksol, denoms, recast_to_symbols, unrad
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
@@ -54,7 +54,6 @@ from sympy.core.compatibility import ordered, default_sort_key, is_sequence
 
 from types import GeneratorType
 from collections import defaultdict
-from sympy import sqrt
 
 
 class NonlinearError(ValueError):
@@ -1131,7 +1130,8 @@ def _solveset(f, symbol, domain, _check=False):
 
     if _check:
         if (isinstance(result,ConditionSet)):
-
+            # it wasn't solved or has enumerated all conditions
+            # -- leave it alone
             return result
 
         elif isinstance(result,ConditionSet):

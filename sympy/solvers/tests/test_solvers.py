@@ -21,7 +21,6 @@ from sympy.testing.pytest import slow, XFAIL, SKIP, raises
 from sympy.testing.randtest import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
-from sympy.sets.sets import EmptySet
 
 
 def NS(e, n=15, **options):

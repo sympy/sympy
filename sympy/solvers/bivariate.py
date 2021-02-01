@@ -1,6 +1,6 @@
 from sympy.core.add import Add
 from sympy.core.compatibility import ordered
-from sympy.core.function import expand_log, Lambda
+from sympy.core.function import expand_log
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
