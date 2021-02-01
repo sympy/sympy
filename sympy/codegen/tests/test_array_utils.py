@@ -11,7 +11,7 @@ from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.expressions.diagonal import DiagMatrix
 from sympy.matrices import Trace, MatMul, Transpose
-from sympy.tensor.array.array_expressions import ZeroArray
+from sympy.tensor.array.expressions.array_expressions import ZeroArray
 from sympy.testing.pytest import raises
 import random
 

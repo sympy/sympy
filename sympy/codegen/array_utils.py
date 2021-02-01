@@ -16,7 +16,7 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.expressions import (MatAdd, MatMul, Trace, Transpose)
 from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
 from sympy.tensor.array import NDimArray
-from sympy.tensor.array.array_expressions import ZeroArray
+from sympy.tensor.array.expressions.array_expressions import ZeroArray
 
 
 class _CodegenArrayAbstract(Basic):

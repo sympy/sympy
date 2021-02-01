@@ -1,5 +1,5 @@
 from sympy import symbols
-from sympy.tensor.array.array_expressions import ZeroArray
+from sympy.tensor.array.expressions.array_expressions import ZeroArray
 from sympy.testing.pytest import raises
 
 
