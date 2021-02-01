@@ -3,6 +3,8 @@ from sympy.core import Basic
 from sympy.matrices import zeros, Matrix, eye, ones
 from sympy.core.sympify import _sympify
 
+from .orbit_backend import orbit, root_system
+
 class Standard_Cartan(Basic):
     """
     Semi-Concrete base class for Cartan types such as A4, etc. In this module we make
@@ -140,7 +142,7 @@ class Standard_Cartan(Basic):
         """
         return [self.fundamental_weight(i) for i in range(self.omega_matrix().rows)]
 
-    def rootsystem(self):
+    def rootsystem(self, **kwargs):
         """Returns the root system of the group ordered from
         highest root to lowest. The roots are found by reflecting
         each simple root about its hyperplane, repeating this procedure
@@ -148,7 +150,7 @@ class Standard_Cartan(Basic):
         The roots are then weighed and sorted according to weight.
 
         Note: This is a costly calculation for groups with
-        rank > 6, most notably E7 and E8
+        rank > 6, most notably E7 and E8, so numpy backend is employed.
 
         Examples
         ========
@@ -163,25 +165,7 @@ class Standard_Cartan(Basic):
         Matrix([[0, -1, 1]]),
         Matrix([[-1, 0, 1]])]
         """
-        s_r = self.simple_roots()
-        rank = self.rank
-
-        orbits = set()
-        for i in s_r:
-            for r in self.orbit(i):
-                orbits.add(r)
-
-        zero_roots = [zeros(1, rank)] * rank
-
-        orbits = [i * self.cocartan_matrix().T for i in orbits] + zero_roots
-
-
-        # rotate back to the orthogonal basis for consistency
-        omega_matrix = self.omega_matrix()
-        # sort roots by their weight level, then general positive number order (2nd one is )
-        sorbits = sorted(orbits, key=lambda x: (-self.root_level(x, "alpha"), tuple(x)))
-
-        return [x * omega_matrix for x in sorbits]
+        return root_system(self, **kwargs)
 
     def roots(self):
         """Returns the number of total roots in the algebra"""
@@ -226,7 +210,7 @@ class Standard_Cartan(Basic):
         n_pos = self.roots() // 2
         return self.rootsystem()[:n_pos]
 
-    def orbit(self, weight, stabilizer=None):
+    def orbit(self, weight, stabilizer=None, **kwargs):
         """
         Returns the orbit of the weight or root by reflecting it
         a plane. A stabilizer may be passed to calculate the orbit using
@@ -245,37 +229,7 @@ class Standard_Cartan(Basic):
         - https://en.wikipedia.org/wiki/Group_action#Orbits_and_stabilizers
 
         """
-        # Generating the rotation matrices from simple roots
-        # to avoid recalculating them each loop
-        reflection_matrices = self._reflection_matrices()
-
-        if stabilizer is not None:
-            reflection_matrices = [reflection_matrices[i] for i in stabilizer]
-
-        # Fill up master list of reflected roots by
-        # continually operating on them until all weights in orbit are found
-        master_list = [weight.as_immutable()]
-        master_list_hash = set()
-        while True:
-            # we use this because we can't change master_list during
-            # iteration (python rule)
-            ref_list = []
-            for w in master_list:
-                # if we've seen w before, we've also see all its reflections
-                if w in master_list_hash:
-                    continue
-                for refl in reflection_matrices:
-                    reflected = w * refl
-                    if reflected not in ref_list and reflected not in master_list:
-                        ref_list.append(reflected)
-                        master_list_hash.add(w)
-
-            # No new reflections have been found
-            if len(ref_list) == 0:
-                break
-
-            master_list += ref_list
-        return master_list
+        return orbit(self, weight, stabilizer=stabilizer, **kwargs)
 
     def _reflection_matrices(self, weight=None):
         """Returns reflection matricies depending on how

@@ -107,3 +107,14 @@ class TypeA(Standard_Cartan):
         diag = "---".join("0" for i in range(1, n+1)) + "\n"
         diag += "   ".join(str(i) for i in range(1, n+1))
         return diag
+
+    def orbit(self, weight, stabilizer=None):
+        """Returns the weyl orbit of the weight. If
+        rank of the algebra is >5, numpy backend is used"""
+        if self.rank > 5:
+            backend = "numpy"
+            dtype = int
+        else:
+            backend = "sympy"
+            dtype=object
+        return super().orbit(weight, stabilizer=stabilizer, dtype=dtype, backend=backend)
