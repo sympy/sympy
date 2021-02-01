@@ -63,7 +63,7 @@ class TypeE(Standard_Cartan):
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("E6")
         >>> c.simple_root(2)
-        Matrix([[0, 1, -1, 0, 0, 0]])
+        Matrix([[-1, 1, 0, 0, 0, 0, 0, 0]])
 
         """
         e8 = [[Rational(1, 2), Rational(-1, 2), Rational(-1, 2),
@@ -122,6 +122,3 @@ class TypeE(Standard_Cartan):
     def orbit(self, weight, stabilizer=None):
         """Returns the weyl orbit of the weight. Numpy backend is used"""
         return super().orbit(weight, stabilizer=stabilizer, dtype=float, backend="numpy")
-
-    def rootsystem(self):
-        return super().rootsystem(dtype=float, backend="numpy")

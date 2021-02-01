@@ -203,7 +203,7 @@ def _roots_system_backend_numpy(algebra, dtype):
     roots = np.concatenate((orbits.dot(rot), *[np.zeros((1, rank))] * rank))
 
     # sort in omega basis by alpha sum, then by order of indexes (last part is convention)
-    roots = np.array(sorted(roots, key=lambda x: (-x.dot(rot2), tuple(x))), dtype=dtype)
+    roots = np.array(sorted(roots, key=lambda x: (-x.dot(rot2), tuple(x))))[::-1]
 
     # return in orthogonal basis
     return roots.dot(rot3)

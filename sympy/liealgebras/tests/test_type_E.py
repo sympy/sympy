@@ -1,5 +1,3 @@
-from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.core.numbers import Rational
 from sympy import Matrix, S
 from sympy.liealgebras.cartan_type import CartanType
 
