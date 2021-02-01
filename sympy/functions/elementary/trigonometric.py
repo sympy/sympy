@@ -3438,7 +3438,7 @@ class atan2(InverseTrigonometricFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_evalf(self, prec):
+    def _eval_evalf_options(self, prec, options):
         y, x = self.args
         if x.is_extended_real and y.is_extended_real:
-            return super()._eval_evalf(prec)
+            return super()._eval_evalf_options(prec, options)
