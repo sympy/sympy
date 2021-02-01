@@ -448,6 +448,8 @@ class Integral(AddWithLimits):
         as_sum : Approximate the integral using a sum
         """
         from sympy.concrete.summations import Sum
+        from sympy.sets import Interval
+        from sympy.solvers.inequalities import solve_univariate_inequality
         if not hints.get('integrals', True):
             return self
 
@@ -498,6 +500,20 @@ class Integral(AddWithLimits):
             function = function.doit(**hints)
         if function.is_zero:
             return S.Zero
+        # check for divergent integrals
+        if len(self.limits) == 1:
+            xab = self.limits[0]
+            if len(xab) == 3 and not xab[1:].free_symbols:
+                (x, a, b) = xab
+                xdom = Interval(Min(a,b),Max(a,b))
+                # check if one limit is oo and function limit at that is oo and
+                # check function non positive or non negative in integration limits
+                infl = [i for i in (a,b) if i.is_infinite]
+                if len(infl) > 0 and any(function.limit(x, i).is_infinite for i in infl):
+                    if solve_univariate_inequality(function>=0, x, domain=xdom, relational=False) == xdom:
+                        return S.Infinity if a < b else S.NegativeInfinity
+                    elif solve_univariate_inequality(function<=0, x, domain=xdom, relational=False) == xdom:
+                        return S.NegativeInfinity if a < b else S.Infinity
 
         # hacks to handle special cases
         if isinstance(function, MatrixBase):

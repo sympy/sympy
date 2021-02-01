@@ -1711,3 +1711,9 @@ def test_divergent():
     assert Integral(f,(x, oo)).is_divergent() == True
     assert Integral(f,(x, 0, oo)).is_divergent() == True
     assert Integral(f,(x, y, oo)).is_divergent() == None
+    assert integrate(f,(x, 0, oo)) == oo
+    assert integrate(f,(x, oo, 0)) == -oo
+    assert integrate(-f,(x, 0, oo)) == -oo
+    # 20831
+    expr = exp(x)*exp(log(x)**2)
+    assert integrate(expr,(x, 1, oo)) == oo
