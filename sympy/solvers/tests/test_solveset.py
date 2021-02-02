@@ -1955,21 +1955,21 @@ def test_issue_10158():
     raises(ValueError, lambda: solveset(Abs(x + 4*Abs(x + 1)), x, dom))
 
 
-# def test_issue_14300():
-#     f = 1 - exp(-18000000*x) - y
-#     a1 = FiniteSet(-log(-y + 1)/18000000)
+def test_issue_14300():
+    f = 1 - exp(-18000000*x) - y
+    a1 = FiniteSet(-log(-y + 1)/18000000)
 
-#     assert solveset(f, x, S.Reals) == \
-#         Intersection(S.Reals, a1)
-#     assert dumeq(solveset(f, x),
-#         ImageSet(Lambda(n, -I*(2*n*pi + arg(-y + 1))/18000000 -
-#             log(Abs(y - 1))/18000000), S.Integers))
+    assert solveset(f, x, S.Reals) == \
+        Intersection(S.Reals, a1)
+    assert dumeq(solveset(f, x),
+        ImageSet(Lambda(n, -I*(2*n*pi + arg(-y + 1))/18000000 -
+            log(Abs(y - 1))/18000000), S.Integers))
 
 
-# def test_issue_14454():
-#     number = CRootOf(x**4 + x - 1, 2)
-#     raises(ValueError, lambda: invert_real(number, 0, x, S.Reals))
-#     assert invert_real(x**2, number, x, S.Reals)  # no error
+def test_issue_14454():
+    number = CRootOf(x**4 + x - 1, 2)
+    raises(ValueError, lambda: invert_real(number, 0, x, S.Reals))
+    assert invert_real(x**2, number, x, S.Reals)  # no error
 
 
 def test_issue_17882():
