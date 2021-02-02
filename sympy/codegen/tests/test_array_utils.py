@@ -114,7 +114,7 @@ def test_codegen_array_recognize_matrix_mul_lines():
                     CodegenArrayTensorProduct(c, b),
                 )
             ), (2, 4)), [0, 1, 3, 2])
-    assert recognize_matrix_expression(cg) == a*b.T*c + a*c.T*b
+    assert recognize_matrix_expression(cg) == a*(b.T*c + c.T*b)
 
     za = ZeroArray(m, n)
     assert recognize_matrix_expression(za) == ZeroMatrix(m, n)
@@ -370,7 +370,7 @@ def test_parsing_of_matrix_expressions():
     expr = M*(2*N + 3*M)
     res = parse_matrix_expression(expr)
     rexpr = recognize_matrix_expression(res)
-    assert expr.expand() == rexpr.doit()
+    assert expr == rexpr
 
     expr = Trace(M)
     result = CodegenArrayContraction(M, (0, 1))
@@ -761,3 +761,35 @@ def test_array_expr_zero_array():
     assert CodegenArrayElementwiseAdd(tp1, za1, tp2) == CodegenArrayElementwiseAdd(tp1, tp2)
     assert CodegenArrayElementwiseAdd(M, zm3) == M
     assert CodegenArrayElementwiseAdd(M, N, zm3) == CodegenArrayElementwiseAdd(M, N)
+
+
+def test_contraction_tp_additions():
+    a = CodegenArrayElementwiseAdd(
+        CodegenArrayTensorProduct(M, N),
+        CodegenArrayTensorProduct(N, M)
+    )
+    tp = CodegenArrayTensorProduct(P, a, Q)
+    expr = CodegenArrayContraction(tp, (3, 4))
+    expected = CodegenArrayTensorProduct(
+        P,
+        CodegenArrayElementwiseAdd(
+            CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2)),
+            CodegenArrayContraction(CodegenArrayTensorProduct(N, M), (1, 2)),
+        ),
+        Q
+    )
+    assert expr == expected
+    assert recognize_matrix_expression(expr) == CodegenArrayTensorProduct(P, M*N + N*M, Q)
+
+    expr = CodegenArrayContraction(tp, (1, 2), (3, 4), (5, 6))
+    result = CodegenArrayContraction(
+        CodegenArrayTensorProduct(
+            P,
+            CodegenArrayElementwiseAdd(
+                CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2)),
+                CodegenArrayContraction(CodegenArrayTensorProduct(N, M), (1, 2)),
+            ),
+            Q
+        ), (1, 2), (3, 4))
+    assert expr == result
+    assert recognize_matrix_expression(expr) == P*(M*N + N*M)*Q
