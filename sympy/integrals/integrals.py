@@ -95,64 +95,11 @@ class Integral(AddWithLimits):
 
     # fixes issue #20809
     def has_free(obj, syms):
-        fs=[]
-        bs=[]
-        flag=True
-        from sympy import Function
-        from sympy.core.numbers import Integer
-        for i in range(1,len(obj.args)):
-            arg=obj.args[i]
-            if isinstance(arg,Tuple):
-                larg=list(arg)
-                l=len(larg)
-                if l == 1:
-                    if isinstance(larg[0],Symbol) or isinstance(larg[0],Function):
-                        bs.append(larg[0])
-                elif l == 2:
-                    bs.append(larg[0])
-                    if not isinstance(larg[1],Integer):
-                        if isinstance(larg[1],Function) or isinstance(larg[1],Symbol):
-                            fs.append(larg[1])
-                        else:
-                            arg1=list(larg[1].args)
-                            for z in arg1:
-                                if not isinstance(z,Integer):
-                                    fs.append(z)
-                elif l == 3:
-                    bs.append(larg[0])
-                    if not isinstance(larg[1],Integer):
-                        if isinstance(larg[1],Function) or isinstance(larg[1],Symbol):
-                            fs.append(larg[1])
-                        else:
-                            arg1=list(larg[1].args)
-                            for z in arg1:
-                                if not isinstance(z,Integer):
-                                    fs.append(z)
-                    if not isinstance(larg[2],Integer):
-                        if isinstance(larg[2],Function) or isinstance(larg[2],Symbol):
-                            fs.append(larg[2])
-                        else:
-                            arg1=list(larg[2].args)
-                            for z in arg1:
-                                if not isinstance(z,Integer):
-                                    fs.append(z)
-        if not fs:
-            lbs=len(bs)
-            if bs[lbs-1] == list(syms)[0]:
-                return True
+        bs = []
+        for _ in recur_free_in(obj, syms, bs):
+            return True
+        else:
             return False
-        fsyms = set(fs).intersection(set(bs))
-        if fsyms:
-            if set(syms).intersection(fsyms):
-                fs=list(reversed(fs))
-                bs=list(reversed(bs))
-                if fs.index(list(syms)[0]) <= bs.index(list(syms)[0]):
-                    return True
-                return False
-        if flag:
-            if set(fs).intersection(syms):
-                return True
-        return False
 
     @property
     def free_symbols(self):
@@ -1463,7 +1410,19 @@ class Integral(AddWithLimits):
             I += limit(((F.subs(x, s - r)) - F.subs(x, s + r)), r, 0, '+')
         return I
 
-
+def recur_free_in(obj, syms, bs):
+    if obj in syms and obj not in bs:
+        yield obj
+    else:
+        if isinstance(obj, Tuple):
+            if len(obj) == 1:
+                yield from recur_free_in(obj[0], syms, bs)
+        for arg in reversed(obj.args[1:]):
+            if obj.args[0] not in bs:
+                if isinstance(arg, Tuple):
+                    if len(arg) > 1 and arg[0] != arg[2]:
+                        bs.append(arg[0])
+            yield from recur_free_in(arg, syms, bs)
 
 def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None, manual=None, **kwargs):
     """integrate(f, var, ...)
