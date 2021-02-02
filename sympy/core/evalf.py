@@ -370,7 +370,8 @@ def get_integer_part(expr, no, options, return_ints=False):
                 assert not iim
                 nexpr = ire
             nint = int(to_int(nexpr, rnd))
-            is_int = ire[2] == 0
+            _, _, new_exp, _ = ire
+            is_int = new_exp == 0
         if not is_int:
             # if there are subs and they all contain integer re/im parts
             # then we can (hopefully) safely substitute them into the

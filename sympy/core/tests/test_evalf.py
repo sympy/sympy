@@ -1,6 +1,6 @@
 from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
-    integrate, log, Mul, N, oo, pi, Pow, product, Product,
+    integrate, log, Mul, N, oo, pi, Pow, product, Product, tan,
     Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat, cosh, acosh, acos)
 from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
@@ -236,7 +236,6 @@ def test_evalf_bugs():
 
 
 def test_evalf_integer_parts():
-    from sympy.functions.elementary.trigonometric import tan
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
     b = floor(log(8)/log(2), evaluate=False)
     assert a.evalf() == 3
