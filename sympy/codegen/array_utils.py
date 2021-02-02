@@ -1623,7 +1623,8 @@ def _(expr: CodegenArrayContraction):
     subexpr = expr.expr
     contraction_indices: Tuple[Tuple[int]] = expr.contraction_indices
     if isinstance(subexpr, CodegenArrayTensorProduct):
-        newexpr = CodegenArrayContraction(*[array2matrix(arg) for arg in expr.args])
+        newexpr = CodegenArrayContraction(array2matrix(subexpr), *contraction_indices)
+        contraction_indices = newexpr.contraction_indices
         if any(i > 2 for i in newexpr.subranks):
             addends = CodegenArrayElementwiseAdd(*[_a2m_tensor_product(*j) for j in itertools.product(*[i.args if isinstance(i, CodegenArrayElementwiseAdd) else [i] for i in expr.expr.args])])
             newexpr = CodegenArrayContraction(addends, *contraction_indices)
@@ -1802,8 +1803,7 @@ def _suppress_trivial_dims_in_tensor_product(mat_list):
     # That is, add contractions over trivial dimensions:
     mat_11 = []
     mat_k1 = []
-    from sympy import Identity
-    mat_list = [i for i in mat_list if i != 1 and not isinstance(i, Identity)]
+    mat_list = [i for i in mat_list if i != 1 and not getattr(i, "is_Identity", False)]
     for mat in mat_list:
         if mat.shape == (1, 1):
             mat_11.append(mat)
