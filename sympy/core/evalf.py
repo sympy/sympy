@@ -353,8 +353,8 @@ def get_integer_part(expr, no, options, return_ints=False):
     # positive or negative (which may fail if very close).
     def calc_part(re_im, nexpr):
         from sympy.core.add import Add
-        n, c, p, b = nexpr
-        is_int = (p == 0)
+        _, _, exponent, _ = nexpr
+        is_int = exponent == 0
         nint = int(to_int(nexpr, rnd))
         if is_int:
             # make sure that we had enough precision to distinguish
@@ -369,9 +369,9 @@ def get_integer_part(expr, no, options, return_ints=False):
                     re_im, size, options)
                 assert not iim
                 nexpr = ire
-                n, c, p, b = nexpr
-                is_int = (p == 0)
-                nint = int(to_int(nexpr, rnd))
+            nint = int(to_int(nexpr, rnd))
+            _, _, new_exp, _ = ire
+            is_int = new_exp == 0
         if not is_int:
             # if there are subs and they all contain integer re/im parts
             # then we can (hopefully) safely substitute them into the
