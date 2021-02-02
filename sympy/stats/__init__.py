@@ -127,7 +127,7 @@ __all__ = [
 
     'JointRV', 'Dirichlet', 'GeneralizedMultivariateLogGamma',
     'GeneralizedMultivariateLogGammaOmega', 'Multinomial', 'MultivariateBeta',
-    'MultivariateEwens', 'MultivariateT', 'NegativeMultinomial',
+    'MultivariateEwens', 'MultivariateT', 'NegativeMultinomial', 'NormalInverseGamma',
     'NormalGamma', 'MultivariateNormal', 'MultivariateLaplace', 'marginal_distribution',
 
     'StochasticProcess', 'DiscreteTimeStochasticProcess',
@@ -177,7 +177,7 @@ from .joint_rv_types import (JointRV, Dirichlet,
         GeneralizedMultivariateLogGamma, GeneralizedMultivariateLogGammaOmega,
         Multinomial, MultivariateBeta, MultivariateEwens, MultivariateT,
         NegativeMultinomial, NormalGamma, MultivariateNormal, MultivariateLaplace,
-        marginal_distribution)
+        marginal_distribution, NormalInverseGamma)
 
 from .stochastic_process_types import (StochasticProcess,
         DiscreteTimeStochasticProcess, DiscreteMarkovChain,
