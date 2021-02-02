@@ -156,8 +156,6 @@ class floor(RoundFunction):
     def _eval_rewrite_as_frac(self, arg, **kwargs):
         return arg - frac(arg)
 
-
-
     def __le__(self, other):
         other = S(other)
         if self.args[0].is_real:
@@ -214,10 +212,12 @@ class floor(RoundFunction):
 
         return Lt(self, other, evaluate=False)
 
+
 @dispatch(floor, Expr)
 def _eval_is_eq(lhs, rhs): # noqa:F811
    return is_eq(lhs.rewrite(ceiling), rhs) or \
         is_eq(lhs.rewrite(frac),rhs)
+
 
 class ceiling(RoundFunction):
     """
@@ -292,8 +292,6 @@ class ceiling(RoundFunction):
     def _eval_is_nonpositive(self):
         return self.args[0].is_nonpositive
 
-
-
     def __lt__(self, other):
         other = S(other)
         if self.args[0].is_real:
@@ -350,9 +348,11 @@ class ceiling(RoundFunction):
 
         return Le(self, other, evaluate=False)
 
+
 @dispatch(ceiling, Basic)  # type:ignore
 def _eval_is_eq(lhs, rhs): # noqa:F811
     return is_eq(lhs.rewrite(floor), rhs) or is_eq(lhs.rewrite(frac),rhs)
+
 
 class frac(Function):
     r"""Represents the fractional part of x
@@ -463,8 +463,6 @@ class frac(Function):
     def _eval_is_negative(self):
         return False
 
-
-
     def __ge__(self, other):
         if self.is_extended_real:
             other = _sympify(other)
@@ -521,6 +519,7 @@ class frac(Function):
                     return S.true
             if other.is_integer and other.is_positive:
                 return S.true
+
 
 @dispatch(frac, Basic)  # type:ignore
 def _eval_is_eq(lhs, rhs): # noqa:F811
