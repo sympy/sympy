@@ -50,12 +50,13 @@ def _orbit_backend(algebra, weight, stabilizer, dtype=None, backend="numpy"):
     if backend == "numpy":
         weight = np.array(weight, dtype=dtype, order='c').squeeze()
         omega_inv = np.array(omega_inv, dtype=dtype, order="c")
-        reflection_matrices = np.array(reflection_matrices, dtype=dtype, order='c')
-        stab_refl_mats = np.array(stab_refl_mats, dtype=dtype, order='c')
+        reflection_matrices = np.array(
+            [np.array(x,dtype=dtype) for x in reflection_matrices], dtype=dtype, order='c')
+        stab_refl_mats = np.array([np.array(x,dtype=dtype) for x in stab_refl_mats], dtype=dtype, order='c')
         rot = np.array(rot, dtype=dtype, order='c')
 
     # rotate to dominant weyl chamber
-    dom = _rotate_to_dominant(name, reflection_matrices, omega_inv, weight, backend=backend)
+    dom = _rotate_to_dominant(name, reflection_matrices, omega_inv, weight, algebra.series=="A", backend=backend)
     if backend == "numpy":
         dom = np.array([dom]).squeeze()
 
