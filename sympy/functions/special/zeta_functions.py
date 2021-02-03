@@ -611,7 +611,7 @@ class riemann_xi(Function):
         from sympy import gamma
         z = zeta(s)
         if s is S.Zero or s is S.One:
-            return S.half
+            return S.Half
 
         if not isinstance(z, zeta):
             return s*(s - 1)*gamma(s/2)*z/(2*pi**(s/2))
