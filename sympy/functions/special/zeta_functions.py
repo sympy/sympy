@@ -590,14 +590,13 @@ class riemann_xi(Function):
     ========
 
     The Riemann Xi function is closely related to the Riemann zeta function.
-    The zeros of Riemann Xi function is precisely the non-trivial zeros
+    The zeros of Riemann Xi function are precisely the non-trivial zeros
     of the zeta function.
 
     >>> from sympy import riemann_xi, zeta
     >>> from sympy.abc import s
     >>> riemann_xi(s).rewrite(zeta)
     pi**(-s/2)*s*(s - 1)*gamma(s/2)*zeta(s)/2
-
 
     References
     ==========
@@ -606,15 +605,20 @@ class riemann_xi(Function):
 
     """
 
-    from sympy import gamma
+
     @classmethod
     def eval(cls, s):
+        from sympy import gamma, rational
         z = zeta(s)
-        if not z.has(zeta):
-            return s * (s - 1) * gamma(s/2) * z / (2 * pi**(s / 2))
+        if s == 0 or s == 1:
+            return rational(1,2)
+
+        if not isinstance(z, zeta):
+            return s*(s - 1)*gamma(s/2)*z/(2*pi**(s/2))
 
     def _eval_rewrite_as_zeta(self, s, **kwargs):
-        return s * (s - 1) * gamma(s/2) * zeta(s) / (2 * pi**(s / 2))
+        from sympy import gamma
+        return s*(s - 1)*gamma(s/2)*zeta(s)/(2*pi**(s/2))
 
 class stieltjes(Function):
     r"""
