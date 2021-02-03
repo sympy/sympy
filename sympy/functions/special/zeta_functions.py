@@ -6,7 +6,6 @@ from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
 from sympy.functions.elementary.exponential import log, exp_polar
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy import Rational
 
 ###############################################################################
 ###################### LERCH TRANSCENDENT #####################################
@@ -611,8 +610,8 @@ class riemann_xi(Function):
     def eval(cls, s):
         from sympy import gamma
         z = zeta(s)
-        if s == 0 or s == 1:
-            return Rational(1,2)
+        if s is S.Zero or s is S.One:
+            return S.half
 
         if not isinstance(z, zeta):
             return s*(s - 1)*gamma(s/2)*z/(2*pi**(s/2))
