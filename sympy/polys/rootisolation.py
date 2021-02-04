@@ -1742,9 +1742,9 @@ class RealInterval:
     def is_disjoint(self, other):
         """Return ``True`` if two isolation intervals are disjoint. """
         if isinstance(other, RealInterval):
-            return (self.b <= other.a or other.b <= self.a)
+            return (self.b < other.a or other.b < self.a)
         assert isinstance(other, ComplexInterval)
-        return (self.b <= other.ax or other.bx <= self.a
+        return (self.b < other.ax or other.bx < self.a
             or other.ay*other.by > 0)
 
     def _inner_refine(self):
@@ -2008,10 +2008,10 @@ class ComplexInterval:
             return other.is_disjoint(self)
         if self.conj != other.conj:  # above and below real axis
             return True
-        re_distinct = (self.bx <= other.ax or other.bx <= self.ax)
+        re_distinct = (self.bx < other.ax or other.bx < self.ax)
         if re_distinct:
             return True
-        im_distinct = (self.by <= other.ay or other.by <= self.ay)
+        im_distinct = (self.by < other.ay or other.by < self.ay)
         return im_distinct
 
     def _inner_refine(self):
