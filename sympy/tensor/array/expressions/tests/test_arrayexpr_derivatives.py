@@ -1,5 +1,7 @@
-from sympy import MatrixSymbol, symbols, Identity
-from sympy.codegen.array_utils import CodegenArrayTensorProduct, CodegenArrayPermuteDims
+from sympy import MatrixSymbol, symbols, Identity, sin, cos
+from sympy.codegen.array_utils import CodegenArrayTensorProduct, CodegenArrayPermuteDims, CodegenArrayDiagonal, \
+    CodegenArrayContraction
+from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.tensor.array.expressions.arrayexpr_derivatives import array_derive
 
 k = symbols("k")
@@ -24,3 +26,20 @@ def test_arrayexpr_derivatives1():
     assert res == CodegenArrayPermuteDims(
         CodegenArrayTensorProduct(I, A, I, B),
         [0, 4, 2, 3, 1, 5, 6, 7])
+
+    cg = CodegenArrayContraction(X, (0, 1))
+    res = array_derive(cg, X)
+    assert res == CodegenArrayContraction(CodegenArrayTensorProduct(I, I), (1, 3))
+
+    cg = CodegenArrayDiagonal(X, (0, 1))
+    res = array_derive(cg, X)
+    assert res == CodegenArrayDiagonal(CodegenArrayTensorProduct(I, I), (1, 3))
+
+    cg = ElementwiseApplyFunction(sin, X)
+    res = array_derive(cg, X)
+    assert res.dummy_eq(CodegenArrayDiagonal(
+        CodegenArrayTensorProduct(
+            ElementwiseApplyFunction(cos, X),
+            I,
+            I
+        ), (0, 3), (1, 5)))

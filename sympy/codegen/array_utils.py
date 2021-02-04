@@ -5,7 +5,8 @@ from functools import reduce, singledispatch
 from itertools import accumulate
 from collections import defaultdict
 
-from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S, Integer, diagonalize_vector, DiagMatrix, ZeroMatrix
+from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S, Integer, diagonalize_vector, DiagMatrix, ZeroMatrix, Pow, \
+    MatPow, HadamardProduct, HadamardPower
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import _af_invert
 from sympy.core.basic import Basic
@@ -65,6 +66,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
     This class is meant to represent contractions of arrays in a form easily
     processable by the code printers.
     """
+
     def __new__(cls, expr, *contraction_indices, **kwargs):
         contraction_indices = _sort_contraction_indices(contraction_indices)
         expr = _sympify(expr)
@@ -555,6 +557,7 @@ class CodegenArrayTensorProduct(_CodegenArrayAbstract):
     r"""
     Class to represent the tensor product of array-like objects.
     """
+
     def __new__(cls, *args):
         args = [_sympify(arg) for arg in args]
         args = cls._flatten(args)
@@ -611,6 +614,7 @@ class CodegenArrayElementwiseAdd(_CodegenArrayAbstract):
     r"""
     Class for elementwise array additions.
     """
+
     def __new__(cls, *args):
         args = [_sympify(arg) for arg in args]
         ranks = [get_rank(arg) for arg in args]
@@ -714,6 +718,7 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
     >>> perm2.permutation.array_form
     [1, 0, 3, 2]
     """
+
     def __new__(cls, expr, permutation, nest_permutation=True):
         from sympy.combinatorics import Permutation
         expr = _sympify(expr)
@@ -973,6 +978,7 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
     Notice that the diagonalized out dimensions are added as new dimensions at
     the end of the indices.
     """
+
     def __new__(cls, expr, *diagonal_indices):
         expr = _sympify(expr)
         diagonal_indices = [Tuple(*sorted(i)) for i in diagonal_indices]
@@ -1072,6 +1078,7 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
             for i, e in enumerate(self._positions):
                 if (isinstance(e, int) and x == e) or (isinstance(e, tuple) and x in e):
                     return i
+
         return _apply_recursively_over_nested_lists(transform, indices)
 
     @classmethod
@@ -1088,6 +1095,7 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
             for i, e in enumerate(positions):
                 if (isinstance(e, int) and x == e) or (isinstance(e, tuple) and x in e):
                     return i
+
         return _apply_recursively_over_nested_lists(transform, indices)
 
     def transform_to_product(self):
@@ -1401,9 +1409,9 @@ def parse_matrix_expression(expr: MatrixExpr) -> Basic:
             if isinstance(arg, MatrixExpr):
                 args.append(arg)
             else:
-                args_nonmat.append(arg)
+                args_nonmat.append(parse_matrix_expression(arg))
         contractions = [(2*i+1, 2*i+2) for i in range(len(args)-1)]
-        scalar = Mul.fromiter(args_nonmat)
+        scalar = CodegenArrayTensorProduct.fromiter(args_nonmat) if args_nonmat else S.One
         if scalar == 1:
             tprod = CodegenArrayTensorProduct(
                 *[parse_matrix_expression(arg) for arg in args])
@@ -1426,6 +1434,27 @@ def parse_matrix_expression(expr: MatrixExpr) -> Basic:
     elif isinstance(expr, Trace):
         inner_expr = parse_matrix_expression(expr.arg)
         return CodegenArrayContraction(inner_expr, (0, len(inner_expr.shape) - 1))
+    elif isinstance(expr, Mul):
+        return CodegenArrayTensorProduct.fromiter(parse_matrix_expression(i) for i in expr.args)
+    elif isinstance(expr, Pow):
+        base = parse_matrix_expression(expr.base)
+        if (expr.exp > 0) == True:
+            return CodegenArrayTensorProduct.fromiter(base for i in range(expr.exp))
+        else:
+            return expr
+    elif isinstance(expr, MatPow):
+        base = parse_matrix_expression(expr.base)
+        if (expr.exp > 0) == True:
+            return parse_matrix_expression(MatMul.fromiter(base for i in range(expr.exp)))
+        else:
+            return expr
+    elif isinstance(expr, HadamardProduct):
+        tp = CodegenArrayTensorProduct.fromiter(expr.args)
+        diag = [[2*i for i in range(len(expr.args))], [2*i+1 for i in range(len(expr.args))]]
+        return CodegenArrayDiagonal(tp, *diag)
+    elif isinstance(expr, HadamardPower):
+        base, exp = expr.args
+        return parse_matrix_expression(HadamardProduct.fromiter(base for i in range(exp)))
     else:
         return expr
 
@@ -1665,8 +1694,11 @@ def _(expr: CodegenArrayPermuteDims):
             counter += rank
         newargs = []
         newperm = []
+        scalars = []
         for pos, arg in zip(newpos, expr.expr.args):
-            if pos == sorted(pos):
+            if len(pos) == 0:
+                scalars.append(array2matrix(arg))
+            elif pos == sorted(pos):
                 newargs.append((array2matrix(arg), pos[0]))
                 newperm.extend(pos)
             elif len(pos) == 2:
@@ -1675,7 +1707,7 @@ def _(expr: CodegenArrayPermuteDims):
             else:
                 raise NotImplementedError()
         newargs = [i[0] for i in newargs]
-        return CodegenArrayPermuteDims(_a2m_tensor_product(*newargs), newperm)
+        return CodegenArrayPermuteDims(_a2m_tensor_product(*scalars, *newargs), newperm)
     elif isinstance(expr.expr, CodegenArrayContraction):
         mat_mul_lines = array2matrix(expr.expr)
         if not isinstance(mat_mul_lines, CodegenArrayTensorProduct):
@@ -1712,7 +1744,24 @@ def _squash_trivial_dims_in_tensorproduct(expr):
     if isinstance(expr, CodegenArrayTensorProduct):
         return _a2m_tensor_product(*_suppress_trivial_dims_in_tensor_product(expr.args))
     if isinstance(expr, CodegenArrayElementwiseAdd):
-        return _a2m_add(*[_squash_trivial_dims_in_tensorproduct(a) for a in expr.args])
+        addends = [_squash_trivial_dims_in_tensorproduct(a) for a in expr.args]
+        if len(set([get_shape(a) for a in addends])) == 1:
+            return _a2m_add(*addends)
+        return expr
+    if isinstance(expr, CodegenArrayPermuteDims):
+        # TODO: find a more generic way to do this:
+        if not isinstance(expr.expr, CodegenArrayTensorProduct):
+            return expr
+        args = [arg.doit() for arg in expr.expr.args]
+        if (expr.permutation == Permutation(3)(1, 2)
+            and len(args) == 2
+            and all(getattr(i, "is_Identity", False) for i in args)
+        ):
+            nonone = [arg for arg in args if get_shape(arg) != (1, 1)]
+            if len(nonone) != 1:
+                return expr
+            else:
+                return nonone[0]
     return expr
 
 
