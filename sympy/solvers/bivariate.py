@@ -202,7 +202,7 @@ def _lambert1(eq, x, domain):
         args = [d/(a*b)*t for t in roots(t**p - e, t).keys()]
     if len(args) == 0:
         return S.EmptySet
-    # for simplicity defined two functions 
+    # for simplicity defined two functions
     # Lambert_Real_Braches , lambert_helper
     def Lambert_Real_Braches():
         for k in lambert_real_branches:
