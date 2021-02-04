@@ -1109,6 +1109,9 @@ class LatexPrinter(Printer):
         tex = r"e^{%s}" % self._print(expr.args[0])
         return self._do_exponent(tex, exp)
 
+    def _print_Exp1(self, expr, exp=None):
+        return "e"
+
     def _print_elliptic_k(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
         if exp is not None:

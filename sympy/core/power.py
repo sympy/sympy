@@ -610,10 +610,20 @@ class Pow(Expr):
             return False
 
     def _eval_is_extended_real(self):
-        from sympy import arg, exp, log, Mul
+        from ..functions import arg, log, exp
+        from .mul import Mul
+
+        if self.base is S.Exp1:
+            if self.exp.is_extended_real:
+                return True
+            elif self.exp.is_imaginary:
+                return (2*S.ImaginaryUnit*self.exp/S.Pi).is_even
+
         real_b = self.base.is_extended_real
         if real_b is None:
             if self.base.func == exp and self.base.args[0].is_imaginary:
+                return self.exp.is_imaginary
+            if self.base.func == Pow and self.base.base is S.Exp1 and self.base.exp.is_imaginary:
                 return self.exp.is_imaginary
             return
         real_e = self.exp.is_extended_real
@@ -856,7 +866,7 @@ class Pow(Expr):
                     new_l.append(Pow(self.base, expo, evaluate=False) if expo != 1 else self.base)
                     return Mul(*new_l)
 
-        if isinstance(old, exp) and self.exp.is_extended_real and self.base.is_positive:
+        if (isinstance(old, exp) or (old.is_Pow and old.base is S.Exp1)) and self.exp.is_extended_real and self.base.is_positive:
             ct1 = old.args[0].as_independent(Symbol, as_Add=False)
             ct2 = (self.exp*log(self.base)).as_independent(
                 Symbol, as_Add=False)
@@ -1247,7 +1257,15 @@ class Pow(Expr):
 
             rp, tp = self.func(r, self.exp), t*self.exp
 
-            return (rp*cos(tp), rp*sin(tp))
+            return rp*cos(tp), rp*sin(tp)
+        elif self.base is S.Exp1:
+            from ..functions import exp
+            re_e, im_e = self.exp.as_real_imag()
+            if deep:
+                re_e = re_e.expand(deep, **hints)
+                im_e = im_e.expand(deep, **hints)
+            c, s = cos(im_e), sin(im_e)
+            return exp(re_e)*c, exp(re_e)*s
         else:
 
             if deep:
@@ -1259,7 +1277,7 @@ class Pow(Expr):
                 else:
                     return (re(expanded), im(expanded))
             else:
-                return (re(self), im(self))
+                return re(self), im(self)
 
     def _eval_derivative(self, s):
         from sympy import log
@@ -1311,6 +1329,9 @@ class Pow(Expr):
                     return True
             elif b.is_irrational:
                 return e.is_zero
+        if b is S.Exp1:
+            if e.is_rational and e.is_nonzero:
+                return False
 
     def _eval_is_algebraic(self):
         def _is_one(expr):
@@ -1322,6 +1343,18 @@ class Pow(Expr):
 
         if self.base.is_zero or _is_one(self.base):
             return True
+        elif self.base is S.Exp1:
+            s = self.func(*self.args)
+            if s.func == self.func:
+                if self.exp.is_nonzero:
+                    if self.exp.is_algebraic:
+                        return False
+                    elif (self.exp/S.Pi).is_rational:
+                        return False
+                    elif (self.exp/(S.ImaginaryUnit*S.Pi)).is_rational:
+                        return True
+            else:
+                return s.is_algebraic
         elif self.exp.is_rational:
             if self.base.is_algebraic is False:
                 return self.exp.is_zero
@@ -1491,11 +1524,29 @@ class Pow(Expr):
         #    g has order O(x**d) where d is strictly positive.
         # 2) Then b**e = (f**e)*((1 + g)**e).
         #    (1 + g)**e is computed using binomial series.
-        from sympy import im, I, ceiling, polygamma, limit, logcombine, EulerGamma, exp, nan, zoo, log, factorial, ff, PoleError, O, powdenest, Wild
+        from sympy import im, I, ceiling, polygamma, logcombine, EulerGamma, nan, zoo, factorial, ff, PoleError, O, powdenest, Wild
         from itertools import product
+        from ..functions import exp, log
+        from ..series import Order, limit
+        from ..simplify import powsimp
+        if self.base is S.Exp1:
+            e_series = self.exp.nseries(x, n=n, logx=logx)
+            if e_series.is_Order:
+                return 1 + e_series
+            e0 = limit(e_series.removeO(), x, 0)
+            if e0 in (-S.NegativeInfinity, S.Infinity):
+                return self
+            t = e_series - e0
+            exp_series = term = exp(e0)
+            # series of exp(e0 + t) in t
+            for i in range(1, n):
+                term *= t/i
+                term = term.nseries(x, n=n, logx=logx)
+                exp_series += term
+            exp_series += Order(t**n, x)
+            return powsimp(exp_series, deep=True, combine='exp')
         self = powdenest(self, force=True).trigsimp()
         b, e = self.as_base_exp()
-
         if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
             raise PoleError()
 
@@ -1606,24 +1657,86 @@ class Pow(Expr):
         return res
 
     def _eval_as_leading_term(self, x, cdir=0):
+        from ..series import Order
         from sympy import exp, I, im, log
         e = self.exp
         b = self.base
-        if e.has(x):
+        if self.base is S.Exp1:
+            arg = self.exp
+            if arg.is_Add:
+                return Mul(*[(S.Exp1**f).as_leading_term(x) for f in arg.args])
+            arg_1 = arg.as_leading_term(x)
+            if Order(x, x).contains(arg_1):
+                return S.One
+            if Order(1, x).contains(arg_1):
+                return S.Exp1**arg_1
+            ####################################################
+            # The correct result here should be 'None'.        #
+            # Indeed arg in not bounded as x tends to 0.       #
+            # Consequently the series expansion does not admit #
+            # the leading term.                                #
+            # For compatibility reasons, the return value here #
+            # is the original function, i.e. exp(arg),         #
+            # instead of None.                                 #
+            ####################################################
+            return S.Exp1**arg
+        elif e.has(x):
             return exp(e * log(b)).as_leading_term(x, cdir=cdir)
-        f = b.as_leading_term(x, cdir=cdir)
-        if (not e.is_integer and f.is_constant() and f.is_real
-            and f.is_negative and im((b - f).dir(x, cdir)) < 0):
-            return self.func(f, e)*exp(-2*e*S.Pi*I)
-        return self.func(f, e)
+        else:
+            f = b.as_leading_term(x, cdir=cdir)
+            if (not e.is_integer and f.is_constant() and f.is_real
+                and f.is_negative and im((b - f).dir(x, cdir)) < 0):
+                return self.func(f, e) * exp(-2 * e * S.Pi * I)
+            return self.func(f, e)
 
     @cacheit
     def _taylor_term(self, n, x, *previous_terms): # of (1 + x)**e
         from sympy import binomial
         return binomial(self.exp, n) * self.func(x, n)
 
+    def taylor_term(self, n, x, *previous_terms):
+        if self.base is not S.Exp1:
+            return super().taylor_term(n, x, *previous_terms)
+        from sympy import sympify, factorial
+        if n < 0:
+            return S.Zero
+        if n == 0:
+            return S.One
+        x = sympify(x)
+        if previous_terms:
+            p = previous_terms[-1]
+            if p is not None:
+                return p * x / n
+        return x**n/factorial(n)
+
     def _sage_(self):
         return self.args[0]._sage_()**self.args[1]._sage_()
+
+    def _eval_rewrite_as_sin(self, base, exp):
+        from ..functions import sin
+        if self.base is S.Exp1:
+            return sin(S.ImaginaryUnit*self.exp + S.Pi/2) - S.ImaginaryUnit*sin(S.ImaginaryUnit*self.exp)
+
+    def _eval_rewrite_as_cos(self, base, exp):
+        from ..functions import cos
+        if self.base is S.Exp1:
+            return cos(S.ImaginaryUnit*self.exp) + S.ImaginaryUnit*cos(S.ImaginaryUnit*self.exp + S.Pi/2)
+
+    def _eval_rewrite_as_tanh(self, base, exp):
+        from ..functions import tanh
+        if self.base is S.Exp1:
+            return (1 + tanh(self.exp/2))/(1 - tanh(self.exp/2))
+
+    def _eval_rewrite_as_sqrt(self, base, exp, **kwargs):
+        from sympy.functions.elementary.trigonometric import sin, cos
+        if base is not S.Exp1:
+            return None
+        if exp.is_Mul:
+            coeff = exp.coeff(S.Pi * S.ImaginaryUnit)
+            if coeff and coeff.is_number:
+                cosine, sine = cos(S.Pi*coeff), sin(S.Pi*coeff)
+                if not isinstance(cosine, cos) and not isinstance (sine, sin):
+                    return cosine + S.ImaginaryUnit*sine
 
     def as_content_primitive(self, radical=False, clear=True):
         """Return the tuple (R, self/R) where R is the positive Rational
