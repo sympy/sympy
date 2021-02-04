@@ -183,7 +183,7 @@ def _lambert1(eq, x, domain):
     p, den = den.as_coeff_Mul()
     e = exp(num/den)
     t = Dummy('t')
-
+    # calculating solutions from args
     if p == 1:
         t = e
         args = [d/(a*b)*t]
@@ -202,55 +202,57 @@ def _lambert1(eq, x, domain):
         args = [d/(a*b)*t for t in roots(t**p - e, t).keys()]
     if len(args) == 0:
         return S.EmptySet
-    # calculating solutions from args
+    # for simplicity defined two functions 
+    # Lambert_Real_Braches , lambert_helper
+    def Lambert_Real_Braches():
+        for k in lambert_real_branches:
+            rhs2 = -c/b + (a/d)*LambertW(arg, k)
+            if rhs2.has(I):
+                continue
+            sol1 = lambert_helper(rhs2)
+        return sol1,rhs2
 
+    def lambert_helper(rhs):
+    # to avoid repetitive code
+        for xu in xusolns:
+            sol.append(xu.subs(u, rhs))
+        return sol
+
+    domainReal = domain.is_subset(S.Reals)
     integer = Symbol('integer',integer=True)
     for arg in args:
-        if not domain.is_subset(S.Reals):
-            rhs = -c/b + (a/d)*LambertW(arg,integer)
+        rhs1 = -c/b + (a/d)*LambertW(arg)
+        LambertReal = LambertW(arg).is_real
 
-        if not len(list(eq.atoms(Symbol,Dummy))) >1:
-            if domain.is_subset(S.Reals):
-                if -1/E <= re(arg) < 0 and LambertW(arg).is_real:
-                    for k in lambert_real_branches:
-                        rhs = -c/b + (a/d)*LambertW(arg, k)
-                        sol = lambert_helper(xusolns,sol,u,rhs)
-                elif re(arg) >= 0 and LambertW(arg).is_real:
-                    rhs = -c/b + (a/d)*LambertW(arg)
+        if domainReal:
+            if not len(list(eq.atoms(Symbol,Dummy))) >1:
+                if LambertReal:
+                    if -1/E <= re(arg) < 0:
+                        sol,rhs = Lambert_Real_Braches()
+                    elif re(arg) >= 0:
+                        rhs = rhs1
                 elif re(arg) < -1/E:
                     return S.EmptySet
-
-        elif (arg.has(Symbol)) and not arg.has(Dummy):
-            if (list(arg.atoms(Symbol))[0]).is_negative and (list(arg.atoms(Symbol))[0]).is_real and domain.is_subset(S.Reals):
-                for k in lambert_real_branches:
-                    rhs = -c/b + (a/d)*LambertW(arg, k)
-                    if rhs.has(I):
-                        continue
-                    sol = lambert_helper(xusolns,sol,u,rhs)
-            if (list(arg.atoms(Symbol))[0]).is_positive and (list(arg.atoms(Symbol))[0]).is_real and domain.is_subset(S.Reals):
-                rhs = -c/b + (a/d)*LambertW(arg)
-                if rhs.has(I):
-                    continue
-            if domain.is_subset(S.Reals):
-                for k in lambert_real_branches:
-                    rhs = -c/b + (a/d)*LambertW(arg, k)
-                    if rhs.has(I):
-                        continue
-                    sol = lambert_helper(xusolns,sol,u,rhs)
-        else:
-            if not domain.is_subset(S.Reals):
-                rhs = -c/b + (a/d)*LambertW(arg,integer)
+            elif (arg.has(Symbol)) and not arg.has(Dummy):
+                SymbolStatus = list(arg.atoms(Symbol))[0]
+                if SymbolStatus.is_real:
+                    if SymbolStatus.is_negative:
+                        sol,rhs = Lambert_Real_Braches()
+                    if SymbolStatus.is_positive:
+                        rhs = rhs1
+                        if rhs.has(I):
+                            continue
+                else:
+                    sol,rhs = Lambert_Real_Braches()
             else:
-                rhs = -c/b + (a/d)*LambertW(arg)
-        sol = lambert_helper(xusolns,sol,u,rhs)
+                rhs = rhs1
+        else:
+            rhs = -c/b + (a/d)*LambertW(arg,integer)
+
+        sol = lambert_helper(rhs)
 
     return list(set(sol))
 
-def lambert_helper(xusolns,sol,u,rhs):
-    # to avoid repetitive code
-    for xu in xusolns:
-        sol.append(xu.subs(u, rhs))
-    return sol
 
 def _lambert_real(eq, x):
     return _lambert1(eq, x, domain=S.Reals)

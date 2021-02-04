@@ -1821,7 +1821,8 @@ def _is_lambert(f, symbol):
     if any(isinstance(arg1, (HyperbolicFunction,TrigonometricFunction)) for arg1 in expanded_terms_factors):
         j = 0
         for arg0 in expanded_terms_factors:
-            if arg0.has(HyperbolicFunction,TrigonometricFunction,Dummy,Symbol) and isinstance(arg0,(Dummy,Symbol,Pow)):
+            if arg0.has(HyperbolicFunction,TrigonometricFunction,Dummy,Symbol)\
+                 and isinstance(arg0,(Dummy,Symbol,Pow)):
                     j += 1
         return j> 0
 
@@ -1833,14 +1834,16 @@ def _is_lambert(f, symbol):
                 for a in list(Mul.make_args(f)):
                     if isinstance(a,exp):
                         base, exponent = a.as_base_exp()
-            if (not exponent.has(symbol,Dummy) and len(add_args) > 1) or (base.has(Dummy)):
+            if (not exponent.has(symbol,Dummy) and \
+                len(add_args) > 1) or (base.has(Dummy)):
                 continue
             if exponent.has(symbol,Dummy, TrigonometricFunction, HyperbolicFunction): # exponent is variable
                 if len(add_args) <= 2:
                     j=0
                     for args in add_args:
                         x = Symbol('x')
-                        if (isinstance(args,Mul) and args.atoms(exp(x))) and (args.atoms(symbol) or args.atoms(Dummy)):
+                        if (isinstance(args,Mul) and args.atoms(exp(x)))\
+                             and (args.atoms(symbol) or args.atoms(Dummy)):
                             if len(add_args) == 1:
                                 return True
                             else:
@@ -1855,8 +1858,9 @@ def _is_lambert(f, symbol):
                 elif len(add_args) > 2:
                     j=0
                     for args in add_args:
-                        if len(list(args.atoms(symbol))) == 1:
-                            if list(args.atoms(symbol))[0].has(symbol): # to check it has more than 2 variables
+                        argList = list(args.atoms(symbol))
+                        if len(argList) == 1:
+                            if argList[0].has(symbol): # to check it has more than 2 variables
                                 j+=1
                         else:
                             return True
@@ -1891,8 +1895,8 @@ def _compute_lambert_solutions(lhs, rhs, symbol,domain):
 
 
 def helper_to_solve_as_lambert(soln, diff, symbol, domain,flag=None):
-
-    if soln and not domain.is_subset(S.Reals):
+    domainReal = domain.is_subset(S.Reals)
+    if soln and not domainReal:
         integer = Symbol('integer',integer=True)
 
         if (soln[-1].has(integer) or soln[-1].has(I)):
@@ -1905,24 +1909,27 @@ def helper_to_solve_as_lambert(soln, diff, symbol, domain,flag=None):
             symbol_List = list(arg2.atoms(Symbol))
             if arg2.has(Symbol) and not arg2.has(Dummy):
                 if len(symbol_List) == 1:
-                    if (symbol_List[0]).is_positive and domain.is_subset(S.Reals):
+                    if (symbol_List[0]).is_positive and domainReal:
                         result = Intersection(FiniteSet(arg2), Interval(0,S.Infinity))
                         return result
 
-                    if domain.is_subset(S.Reals) and not (symbol_List[0]).is_negative and not (symbol_List[0]).is_positive:
-                        result = Union(Intersection(FiniteSet(*[ x for x in soln if x.has(LambertW) and S(-1) in [e.args[-1] for e in x.atoms(LambertW)] ]) , Interval(-exp(-1), 0)),\
-                            Intersection(FiniteSet(*[ x for x in soln if x.has(LambertW) and not S(-1) in [e.args[-1] for e in x.atoms(LambertW) ]  ]), Interval(-exp(-1), S.Infinity)))
+                    if domainReal and not (symbol_List[0]).is_negative and not (symbol_List[0]).is_positive:
+                        result = Union(Intersection(FiniteSet(*[ x for x in soln \
+                            if x.has(LambertW) and S(-1) in [e.args[-1] for e in x.atoms(LambertW)] ]), Interval(-exp(-1), 0)),\
+                            Intersection(FiniteSet(*[ x for x in soln \
+                                if x.has(LambertW) and not S(-1) in [e.args[-1] for e in x.atoms(LambertW)]]),\
+                                     Interval(-exp(-1), S.Infinity)))
                         return result
                     elif (symbol_List[0]).is_negative and (symbol_List[0]).is_real:
                         result = Union(FiniteSet(soln[0]) ,FiniteSet(soln[1]), Interval(-exp(-1), 0))
                         return result
-                    elif domain.is_subset(S.Complexes) and not arg2.has(Lambda):
+                    elif not domainReal and not arg2.has(Lambda):
                         # all other cases for complexes come here
                         n = Dummy('n',integer=True)
                         y = Symbol('y')
                         result = Union(*[ImageSet(Lambda(n,args.replace(y,n)),S.Integers) for args in soln if args!=0 ])
                         return result
-                    elif domain.is_subset(S.Complexes):
+                    elif not domainReal:
                         n = Dummy('n',integer=True)
                         result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
                         return result
@@ -1931,30 +1938,35 @@ def helper_to_solve_as_lambert(soln, diff, symbol, domain,flag=None):
                     if all(x.is_positive for x in symbol_List):
                         result = Intersection(FiniteSet(arg2), Interval(0,S.Infinity))
                         return result
-                    elif domain.is_subset(S.Reals):
-                        result = Union(Intersection(FiniteSet(*[ x for x in soln if x.has(LambertW) and S(-1) in [e.args[-1] for e in x.atoms(LambertW)] ]) , Interval(-exp(-1), 0)),\
-                            Intersection(FiniteSet(*[ x for x in soln if x.has(LambertW) and not S(-1) in [e.args[-1] for e in x.atoms(LambertW) ]  ]), Interval(-exp(-1), S.Infinity)))
+                    elif domainReal:
+                        result = Union(Intersection(FiniteSet(*[ x for x in soln \
+                            if x.has(LambertW) and S(-1) in [e.args[-1] for e in x.atoms(LambertW)]]), Interval(-exp(-1), 0)),\
+                            Intersection(FiniteSet(*[ x for x in soln \
+                                if x.has(LambertW) and not S(-1) in [e.args[-1] for e in x.atoms(LambertW)]]),\
+                                     Interval(-exp(-1), S.Infinity)))
                         return result
-                    elif domain.is_subset(S.Complexes):
+                    elif not domainReal:
                         result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
                         return result
 
-            elif arg2.is_real or domain.is_subset(S.Reals):
+            elif arg2.is_real or domainReal:
                 result = FiniteSet(*soln)
-            elif not arg2.is_real and not domain.is_subset(S.Reals):
+            elif not arg2.is_real and not domainReal:
                 result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
                 if len(soln) == 1 and isinstance(result,FiniteSet):
                     result = ImageSet(result.args[0],S.Integers)
 
             if flag:
-                if arg.atoms(LambertW) == set():
+                LambertArgs = arg.atoms(LambertW)
+                if LambertArgs == set():
                     realLambert = None
                 else:
-                    realLambert = (arg.atoms(LambertW)).pop().is_real
+                    realLambert = (LambertArgs).pop().is_real
 
-                if soln is EmptySet and (_is_lambert(diff,symbol) and (domain.is_subset(S.Reals))):
+                if soln is EmptySet and (_is_lambert(diff,symbol) and (domainReal)):
                     result = S.EmptySet
-                elif ((not arg2.is_real and not realLambert) and not domain.is_subset(S.Reals)) or ((arg2.is_real or realLambert) and arg2.has(Lambda)) :
+                elif ((not arg2.is_real and not realLambert) and not domainReal) or\
+                     ((arg2.is_real or realLambert) and arg2.has(Lambda)) :
                     result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
                     if len(soln) == 1 and isinstance(result,FiniteSet):
                         result = ImageSet(result.args[0],S.Integers)
