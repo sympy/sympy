@@ -798,6 +798,7 @@ def test_solveset_complex_tan():
         imageset(Lambda(n, pi*n + pi/2), S.Integers))
 
 
+@_both_exp_pow
 def test_solve_trig():
     from sympy.abc import n
     assert dumeq(solveset_real(sin(x), x),
@@ -1142,6 +1143,7 @@ def test_other_lambert():
         a, -a*LambertW(-log(a)/a)/log(a))
 
 
+@_both_exp_pow
 def test_solveset():
     f = Function('f')
     raises(ValueError, lambda: solveset(x + y))

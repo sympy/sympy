@@ -201,7 +201,7 @@ def _invert_real(f, g_ys, symbol):
 
     n = Dummy('n', real=True)
 
-    if f.is_Pow and f.base == S.Exp1:
+    if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
         return _invert_real(f.exp,
                             imageset(Lambda(n, log(n)), g_ys),
                             symbol)

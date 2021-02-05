@@ -135,10 +135,10 @@ def compare(a, b, x):
     """Returns "<" if a<b, "=" for a == b, ">" for a>b"""
     # log(exp(...)) must always be simplified here for termination
     la, lb = log(a), log(b)
-    if isinstance(a, Basic) and isinstance(a, exp):
-        la = a.args[0]
-    if isinstance(b, Basic) and isinstance(b, exp):
-        lb = b.args[0]
+    if isinstance(a, Basic) and (isinstance(a, exp) or (a.is_Pow and a.base == S.Exp1)):
+        la = a.exp
+    if isinstance(b, Basic) and (isinstance(b, exp) or (b.is_Pow and b.base == S.Exp1)):
+        lb = b.exp
 
     c = limitinf(la/lb, x)
     if c == 0:
@@ -262,7 +262,7 @@ def mrv(e, x):
         s1, e1 = mrv(a, x)
         s2, e2 = mrv(b, x)
         return mrv_max1(s1, s2, e.func(i, e1, e2), x)
-    elif e.is_Pow:
+    elif e.is_Pow and e.base != S.Exp1:
         e1 = S.One
         while e.is_Pow:
             b1 = e.base
@@ -281,24 +281,24 @@ def mrv(e, x):
     elif isinstance(e, log):
         s, expr = mrv(e.args[0], x)
         return s, log(expr)
-    elif isinstance(e, exp):
+    elif isinstance(e, exp) or (e.is_Pow and e.base == S.Exp1):
         # We know from the theory of this algorithm that exp(log(...)) may always
         # be simplified here, and doing so is vital for termination.
-        if isinstance(e.args[0], log):
-            return mrv(e.args[0].args[0], x)
+        if isinstance(e.exp, log):
+            return mrv(e.exp.args[0], x)
         # if a product has an infinite factor the result will be
         # infinite if there is no zero, otherwise NaN; here, we
         # consider the result infinite if any factor is infinite
-        li = limitinf(e.args[0], x)
+        li = limitinf(e.exp, x)
         if any(_.is_infinite for _ in Mul.make_args(li)):
             s1 = SubsSet()
             e1 = s1[e]
-            s2, e2 = mrv(e.args[0], x)
+            s2, e2 = mrv(e.exp, x)
             su = s1.union(s2)[0]
             su.rewrites[e1] = exp(e2)
             return mrv_max3(s1, e1, s2, exp(e2), su, e1, x)
         else:
-            s, expr = mrv(e.args[0], x)
+            s, expr = mrv(e.exp, x)
             return s, exp(expr)
     elif e.is_Function:
         l = [mrv(a, x) for a in e.args]
@@ -403,6 +403,8 @@ def sign(e, x):
     elif isinstance(e, exp):
         return 1
     elif e.is_Pow:
+        if e.base == S.Exp1:
+            return 1
         s = sign(e.base, x)
         if s == 1:
             return 1

@@ -462,8 +462,8 @@ def periodicity(f, symbol, check=False):
             # else let new orig_f and period be
             # checked below
 
-    if isinstance(f, exp):
-        f = f.func(expand_mul(f.args[0]))
+    if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
+        f = Pow(S.Exp1, expand_mul(f.exp))
         if im(f) != 0:
             period_real = periodicity(re(f), symbol)
             period_imag = periodicity(im(f), symbol)
