@@ -1420,7 +1420,7 @@ def recur_free_in(obj, syms, bs):
         for arg in reversed(obj.args[1:]):
             if obj.args[0] not in bs:
                 if isinstance(arg, Tuple):
-                    if len(arg) > 1 and arg[0] != arg[2]:
+                    if len(arg) > 1 and arg[0] != arg[len(arg) - 1]:
                         bs.append(arg[0])
             yield from recur_free_in(arg, syms, bs)
 

@@ -1721,3 +1721,8 @@ def test_issue_20809():
     assert Integral(x, (x, 0, f(x)), (f(x), 0, y)).has_free({x}) == False
     assert Integral(x, (x, 0, f(x)), (f(x), 0, y),(y,0,f(x))).has_free({f(x)}) == True
     assert Integral(x, (x, 0, f(x)), (f(x), 0, y),(y,0,f(x))).has_free({y}) == False
+    assert Integral(x, (x, y)).has_free({y})  == True
+    assert Integral(x, (x, y)).has_free({x})  == False
+    assert Integral(x, (x, 0, Integral(y, (y, 0, z)))).has_free({x}) == False
+    assert Integral(x, (x, 0, Integral(y, (y, 0, z)))).has_free({y}) == False
+    assert Integral(x, (x, 0, Integral(y, (y, 0, z)))).has_free({z}) == True
