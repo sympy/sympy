@@ -794,26 +794,28 @@ class RiccatiSpecial(SinglePatternODESolver):
 class SecondAutonomousNth(SinglePatternODESolver):
     r"""
     The general second order autonomous differential equation of the form:
-    .. math :: x''(t) + f(x)*x'(t) + g(x) = 0
 
-    This solver is added for the special case in this genre:
+    .. math :: x''(t) = g(x'(t), x(t))
+
+    This solver is added for the special case in the above genre:
+
     .. math :: f''(x) = g(f(x)) f'(x)^n
 
+    Explanation
+    ===========
+
     This special case can be solved using by writing the second derivative in
-    form involving a power of x' and on rewriting the second derivative, rearranging.
+    form involving a power of f'(x) and on rewriting the second derivative, then rearranging.
+    This solver works for any arbitrary value of n defined above.
 
-    For proof of the results, kindly refer the below link:
-    https://en.wikipedia.org/wiki/Autonomous_system_(mathematics)
-    http://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
-
-    Caution: If n is even except for 2, kindly set simplify = False in dsolve()
+    Extras: For faster results, kindly set simplify = False in dsolve().
 
     Examples
     ========
 
     >>> from sympy import Function, symbols, dsolve
     >>> f, g = symbols('f g', cls=Function)
-    >>> x, eq = symbols('x eq')
+    >>> x, eq, n = symbols('x eq n')
 
     >>> eq = f(x).diff(x, x) + f(x).diff(x)**2
     >>> dsolve(eq, hint='2nd_autonomous_nth')
@@ -825,23 +827,29 @@ class SecondAutonomousNth(SinglePatternODESolver):
 
     >>> from sympy import exp, log, cbrt
     >>> eq = f(x).diff(x, 2) - exp(f(x)) + log(f(x))
-    >>> dsolve(eq, hint='2nd_autonomous_nth', simplify=False)
+    >>> dsolve(eq, hint='2nd_autonomous_nth')
     [Eq(Integral(1/sqrt(-2*_v*log(_v) + 2*_v + C1 + 2*exp(_v)), (_v, f(x))), C2 + x),
-    Eq(Integral(1/sqrt(-2*_v*log(_v) + 2*_v + C1 + 2*exp(_v)), (_v, f(x))), C2 - x)]
+    Eq(-Integral(1/sqrt(-2*_v*log(_v) + 2*_v + C1 + 2*exp(_v)), (_v, f(x))), C2 + x)]
 
     >>> eq = f(x).diff(x, 2) + cbrt(f(x)) + 1/f(x)
-    >>> dsolve(eq, hint='2nd_autonomous_nth', simplify=False)
+    >>> dsolve(eq, hint='2nd_autonomous_nth')
     [Eq(sqrt(2)*Integral(1/sqrt(-3*_v**(4/3) + 2*C1 - 4*log(_v)), (_v, f(x))), C2 + x),
-    Eq(sqrt(2)*Integral(1/sqrt(-3*_v**(4/3) + 2*C1 - 4*log(_v)), (_v, f(x))), C2 - x)]
+    Eq(-sqrt(2)*Integral(1/sqrt(-3*_v**(4/3) + 2*C1 - 4*log(_v)), (_v, f(x))), C2 + x)]
 
     >>> eq = f(x).diff(x, x) + f(x).diff(x)**4
-    >>> dsolve(eq, hint='2nd_autonomous_nth', simplify=False)
-    [Eq((C1 + 2*f(x))**(3/2)/3, C2 + x), Eq((C1 + 2*f(x))**(3/2)/3, C2 - x)]
+    >>> dsolve(eq, hint='2nd_autonomous_nth')
+    Eq((C1 + 2*f(x))**(S(3)/2)/3, C2 + x)
+
+    >>> eq = f(x).diff(x, x) + f(x).diff(x)**n
+    >>> dsolve(eq, hint='2nd_autonomous_nth', simplify = False)
+    Eq(Piecewise(((C1 + (n - 2)*f(x))**(1 + 1/(n - 2))/((1 + 1/(n - 2))*(n - 2)), Ne(1/(n - 2), -1)), (log(C1 + (n - 2)*f(x))/(n - 2), True)), C2 + x)
 
     References
     ==========
 
-    https://en.wikipedia.org/wiki/Autonomous_system_(mathematics)
+    .. [1] https://en.wikipedia.org/wiki/Autonomous_system_(mathematics)
+    .. [2] http://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
+
     """
 
     hint = "2nd_autonomous_nth"
@@ -861,23 +869,18 @@ class SecondAutonomousNth(SinglePatternODESolver):
         a, n = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
-        (C1, C2, C3) = self.ode_problem.get_numbered_constants(num=3)
+        (C1, C2) = self.ode_problem.get_numbered_constants(num=2)
         v = Dummy('v')
         a = a.subs(fx, v)
-        if n == 2:
-            arg = exp(Integral(a, v))
-            farg = C1*Integral(arg, (v, fx))
-            return [Eq(farg, C2 + x)]
+        c = C1*Integral(exp(Integral(a, v)), (v, fx))
+        d = Integral((C1 + (n - 2)*Integral(a, v))**(1/(n - 2)), (v, fx))
+        if n == 0:
+            d=d.subs(n,0)
+            return [Eq(d, C2 + x), Eq(-d, C2 + x)]
+        elif n == 2:
+            return [Eq(c, C2 + x)]
         else:
-            C3 = n - 2
-            if n%2 != 0:
-                arg = (C1 + C3*Integral(a, v))**(1/C3)
-                farg = Integral(arg, (v, fx))
-                return [Eq(farg, C2 + x)]
-            else:
-                arg = (C1 + C3*Integral(a, v))**(1/C3)
-                farg = Integral(arg, (v, fx))
-                return [Eq(farg, C2 + x), Eq(farg, C2 - x)]
+            return [Eq(d, C2 + x)]
 
 # Avoid circular import:
 from .ode import dsolve

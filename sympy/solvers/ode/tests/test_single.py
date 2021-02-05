@@ -790,7 +790,7 @@ def _get_examples_ode_sol_factorable():
         'eq': (f(x).diff(x, 2)-exp(f(x)))*f(x).diff(x),
         'sol': [
             Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 + x)) - 1))),
-            Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 - x)) - 1))),
+            Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 + x)) - 1))),
             Eq(f(x), C1)
         ]
     },
@@ -1821,25 +1821,19 @@ def _get_examples_ode_sol_2nd_autonomous_nth():
     },
     '2nd_autonomous_nth_05': {
         'eq': f(x).diff(x, x) + f(x).diff(x)**4,
-        'sol': [
-            Eq((C1 + 2*f(x))**(S(3)/2)/3, C2 + x),
-            Eq((C1 + 2*f(x))**(S(3)/2)/3, C2 - x)
-        ],
+        'sol': [Eq((C1 + 2*f(x))**(S(3)/2)/3, C2 + x)],
         'simplify_flag': False,
     },
     '2nd_autonomous_nth_06': {
         'eq': f(x).diff(x, x) - f(x).diff(x)**4,
-        'sol': [
-            Eq(-(C1 - 2*f(x))**(S(3)/2)/3, C2 + x),
-            Eq(-(C1 - 2*f(x))**(S(3)/2)/3, C2 - x)
-        ],
+        'sol': [Eq(-(C1 - 2*f(x))**(S(3)/2)/3, C2 + x)],
         'simplify_flag': False,
     },
     '2nd_autonomous_nth_07': {
         'eq': f(x).diff(x, 2) - exp(f(x)) + log(f(x)),
         'sol': [
             Eq(Integral(1/sqrt(-2*_v*log(_v) + 2*_v + C1 + 2*exp(_v)), (_v, f(x))), C2 + x),
-            Eq(Integral(1/sqrt(-2*_v*log(_v) + 2*_v + C1 + 2*exp(_v)), (_v, f(x))), C2 - x)
+            Eq(-Integral(1/sqrt(-2*_v*log(_v) + 2*_v + C1 + 2*exp(_v)), (_v, f(x))), C2 + x)
         ],
         'simplify_flag': False,
     },
@@ -1847,7 +1841,7 @@ def _get_examples_ode_sol_2nd_autonomous_nth():
         'eq': f(x).diff(x, 2) + cbrt(f(x)) + 1/f(x),
         'sol': [
             Eq(sqrt(2)*Integral(1/sqrt(-3*_v**(S(4)/3) + 2*C1 - 4*log(_v)), (_v, f(x))), C2 + x),
-            Eq(sqrt(2)*Integral(1/sqrt(-3*_v**(S(4)/3) + 2*C1 - 4*log(_v)), (_v, f(x))), C2 - x)
+            Eq(-sqrt(2)*Integral(1/sqrt(-3*_v**(S(4)/3) + 2*C1 - 4*log(_v)), (_v, f(x))), C2 + x)
         ],
         'simplify_flag': False,
     },
@@ -1855,7 +1849,7 @@ def _get_examples_ode_sol_2nd_autonomous_nth():
         'eq': f(x).diff(x, 2) + sin(f(x)),
         'sol': [
             Eq(Integral(1/sqrt(C1 + 2*cos(_v)), (_v, f(x))), C2 + x),
-            Eq(Integral(1/sqrt(C1 + 2*cos(_v)), (_v, f(x))), C2 - x)
+            Eq(-Integral(1/sqrt(C1 + 2*cos(_v)), (_v, f(x))), C2 + x)
         ],
         'simplify_flag': False,
     },
@@ -1863,7 +1857,7 @@ def _get_examples_ode_sol_2nd_autonomous_nth():
         'eq': f(x).diff(x, 2) + cosh(f(x)),
         'sol': [
             Eq(Integral(1/sqrt(C1 - 2*sinh(_v)), (_v, f(x))), C2 + x),
-            Eq(Integral(1/sqrt(C1 - 2*sinh(_v)), (_v, f(x))), C2 - x)
+            Eq(-Integral(1/sqrt(C1 - 2*sinh(_v)), (_v, f(x))), C2 + x)
         ],
         'simplify_flag': False,
     },
