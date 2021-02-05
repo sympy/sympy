@@ -1208,6 +1208,22 @@ class MatrixSpecial(MatrixRequired):
             return kls.zero
         return kls._new(size, size, entry)
 
+    def upper_triangular(self, kth_diagonal=0):
+        R = self.zeros(self.rows, self.cols)
+
+        for j in range(self.cols):
+            if j - kth_diagonal >= 0:
+                R[:min(self.rows, j - kth_diagonal + 1), j] = self[:min(self.rows, j - kth_diagonal + 1), j]
+
+        return R
+
+    def lower_triangular(self, kth_diagonal=0):
+        L = self.zeros(self.rows, self.cols)
+
+        for j in range(self.cols):
+            if j - kth_diagonal < self.rows:
+                L[max(0, j - kth_diagonal):, j] = self[max(0,j - kth_diagonal):, j]
+        return L
 
 class MatrixProperties(MatrixRequired):
     """Provides basic properties of a matrix."""
@@ -2433,6 +2449,7 @@ class MatrixOperations(MatrixRequired):
         return self.applyfunc(lambda x: trigsimp(x, **opts))
 
 
+
 class MatrixArithmetic(MatrixRequired):
     """Provides basic matrix arithmetic operations.
     Should not be instantiated directly."""
@@ -2841,7 +2858,6 @@ class MatrixArithmetic(MatrixRequired):
     @call_highest_priority('__rsub__')
     def __sub__(self, a):
         return self + (-a)
-
 
 class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):
