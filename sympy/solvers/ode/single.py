@@ -813,41 +813,14 @@ class SecondAutonomousNth(SinglePatternODESolver):
     Examples
     ========
 
-    >>> from sympy import Function, symbols, dsolve
-    >>> f, g = symbols('f g', cls=Function)
-    >>> x, eq, n = symbols('x eq n')
-
-    >>> eq = f(x).diff(x, x) + f(x).diff(x)**2
-    >>> dsolve(eq, hint='2nd_autonomous_nth')
-    Eq(f(x), log(C1*(C2 + x)))
-
-    >>> eq = f(x).diff(x, x) - f(x).diff(x)**2
-    >>> dsolve(eq, hint='2nd_autonomous_nth')
-    Eq(f(x), log(C1/(C2 + x)))
-
-    >>> from sympy import exp, log, cbrt
-    >>> eq = f(x).diff(x, 2) - exp(f(x)) + log(f(x))
-    >>> dsolve(eq, hint='2nd_autonomous_nth')
-    [Eq(Integral(1/sqrt(-2*_v*log(_v) + 2*_v + C1 + 2*exp(_v)), (_v, f(x))), C2 + x),
-    Eq(-Integral(1/sqrt(-2*_v*log(_v) + 2*_v + C1 + 2*exp(_v)), (_v, f(x))), C2 + x)]
-
-    >>> eq = f(x).diff(x, 2) + cbrt(f(x)) + 1/f(x)
-    >>> dsolve(eq, hint='2nd_autonomous_nth')
-    [Eq(sqrt(2)*Integral(1/sqrt(-3*_v**(4/3) + C1 - 4*log(_v)), (_v, f(x))), C2 + x),
-    Eq(-sqrt(2)*Integral(1/sqrt(-3*_v**(4/3) + C1 - 4*log(_v)), (_v, f(x))), C2 + x)]
-
-    >>> eq = f(x).diff(x, x) + f(x).diff(x)**4
-    >>> dsolve(eq, hint='2nd_autonomous_nth')
-    Eq((C1 + 2*f(x))**(3/2)/3, C2 + x)
-
-    >>> eq = f(x).diff(x, x) + f(x).diff(x)**n
-    >>> dsolve(eq, hint='2nd_autonomous_nth', simplify = False)
-    Eq(Piecewise(((C1 + (n - 2)*f(x))**(1 + 1/(n - 2))/((1 + 1/(n - 2))*(n - 2)), Ne(1/(n - 2), -1)), (log(C1 + (n - 2)*f(x))/(n - 2), True)), C2 + x)
-
-    >>> eq = f(x).diff(x, x) + f(x).diff(x)**n
-    >>> dsolve(eq, hint='2nd_autonomous_nth')
-    [Eq(f(x), Piecewise((C1/(n - 2) + (C2*n - C2 + n*x - x)**(n/(n - 1))/(n*(C2*n - C2 + n*x - x)**(2/(n - 1)) - 2*(C2*n - C2 + n*x - x)**(2/(n - 1))), Ne(1/(n - 2), -1)), (nan, True))),
-    Eq(f(x), Piecewise((C1/(n - 2) + exp(C2*n + n*x)/(n*exp(2*C2 + 2*x) - 2*exp(2*C2 + 2*x)), Eq(1/(n - 2), -1)), (nan, True)))]
+    >>> from sympy import Function, dsolve
+    >>> from sympy.abc import x, a, n
+    >>> f = Function('f')
+    >>> eq = f(x).diff(x, 2) + a*f(x).diff(x)**n
+    >>> sol = dsolve(eq, hint = '2nd_autonomous_nth')
+    >>> print(sol)
+    [Eq(f(x), Piecewise((C1/(a*n - 2*a) + (C2*a*n - C2*a + a*n*x - a*x)**(n/(n - 1))/(a*n*(C2*a*n - C2*a + a*n*x - a*x)**(2/(n - 1)) - 2*a*(C2*a*n - C2*a + a*n*x - a*x)**(2/(n - 1))), Ne(1/(n - 2), -1)), (nan, True))),
+    Eq(f(x), Piecewise((C1/(a*n - 2*a) + exp(C2*a*n + a*n*x)/(a*n*exp(2*C2*a + 2*a*x) - 2*a*exp(2*C2*a + 2*a*x)), Eq(1/(n - 2), -1)), (nan, True)))]
 
     References
     ==========
