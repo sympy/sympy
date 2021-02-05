@@ -845,8 +845,8 @@ class SecondAutonomousNth(SinglePatternODESolver):
     Eq(Piecewise(((C1 + (n - 2)*f(x))**(1 + 1/(n - 2))/((1 + 1/(n - 2))*(n - 2)), Ne(1/(n - 2), -1)), (log(C1 + (n - 2)*f(x))/(n - 2), True)), C2 + x)
 
     >>> eq = f(x).diff(x, x) + f(x).diff(x)**n
-    >>> dsolve(eq, hint='2nd_autonomous_nth')    
-    [Eq(f(x), Piecewise((C1/(n - 2) + (C2*n - C2 + n*x - x)**(n/(n - 1))/(n*(C2*n - C2 + n*x - x)**(2/(n - 1)) - 2*(C2*n - C2 + n*x - x)**(2/(n - 1))), Ne(1/(n - 2), -1)), (nan, True))), 
+    >>> dsolve(eq, hint='2nd_autonomous_nth')
+    [Eq(f(x), Piecewise((C1/(n - 2) + (C2*n - C2 + n*x - x)**(n/(n - 1))/(n*(C2*n - C2 + n*x - x)**(2/(n - 1)) - 2*(C2*n - C2 + n*x - x)**(2/(n - 1))), Ne(1/(n - 2), -1)), (nan, True))),
     Eq(f(x), Piecewise((C1/(n - 2) + exp(C2*n + n*x)/(n*exp(2*C2 + 2*x) - 2*exp(2*C2 + 2*x)), Eq(1/(n - 2), -1)), (nan, True)))]
 
     References
