@@ -598,7 +598,7 @@ def rewrite(e, Omega, x, wsym):
     # make sure we know the sign of each exp() term; after the loop,
     # g is going to be the "w" - the simplest one in the mrv set
     for g, _ in Omega:
-        sig = sign(g.args[0], x)
+        sig = sign(g.exp, x)
         if sig != 1 and sig != -1:
             raise NotImplementedError('Result depends on the sign of %s' % sig)
     if sig == 1:
@@ -607,15 +607,15 @@ def rewrite(e, Omega, x, wsym):
     O2 = []
     denominators = []
     for f, var in Omega:
-        c = limitinf(f.args[0]/g.args[0], x)
+        c = limitinf(f.exp/g.exp, x)
         if c.is_Rational:
             denominators.append(c.q)
-        arg = f.args[0]
+        arg = f.exp
         if var in rewrites:
             if not isinstance(rewrites[var], exp):
                 raise ValueError("Value should be exp")
             arg = rewrites[var].args[0]
-        O2.append((var, exp((arg - c*g.args[0]).expand())*wsym**c))
+        O2.append((var, exp((arg - c*g.exp).expand())*wsym**c))
 
     # Remember that Omega contains subexpressions of "e". So now we find
     # them in "e" and substitute them for our rewriting, stored in O2
@@ -631,7 +631,7 @@ def rewrite(e, Omega, x, wsym):
         assert not f.has(var)
 
     # finally compute the logarithm of w (logw).
-    logw = g.args[0]
+    logw = g.exp
     if sig == 1:
         logw = -logw  # log(w)->log(1/w)=-log(w)
 
