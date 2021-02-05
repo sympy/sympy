@@ -1,4 +1,3 @@
-from sympy import FunctionClass
 from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
