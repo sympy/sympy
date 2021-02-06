@@ -1,10 +1,11 @@
 import operator
 from functools import reduce, singledispatch
 
-from sympy import Expr, Transpose, Identity, MatrixSymbol, S
+from sympy import Expr, Transpose, Identity, MatrixSymbol, S, Inverse, MatrixExpr, HadamardProduct
 from sympy.codegen.array_utils import CodegenArrayElementwiseAdd, CodegenArrayPermuteDims, CodegenArrayContraction, \
-    get_shape, CodegenArrayTensorProduct
+    get_shape, CodegenArrayTensorProduct, parse_matrix_expression, CodegenArrayDiagonal, get_rank
 from sympy.combinatorics.permutations import _af_invert
+from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.tensor.array.expressions.array_expressions import ZeroArray
 
 
@@ -72,6 +73,43 @@ def _(expr: Transpose, x: Expr):
     return CodegenArrayPermuteDims(fd, [0, 1, 3, 2])
 
 
+@array_derive.register(Inverse)
+def _(expr: Inverse, x: Expr):
+    mat = expr.I
+    dexpr = array_derive(mat, x)
+    tp = CodegenArrayTensorProduct(-expr, dexpr, expr)
+    mp = CodegenArrayContraction(tp, (1, 4), (5, 6))
+    pp = CodegenArrayPermuteDims(mp, [1, 2, 0, 3])
+    return pp
+
+
+@array_derive.register(ElementwiseApplyFunction)
+def _(expr: ElementwiseApplyFunction, x: Expr):
+    assert get_rank(expr) == 2
+    assert get_rank(x) == 2
+    fdiff = expr._get_function_fdiff()
+    dexpr = array_derive(expr.expr, x)
+    tp = CodegenArrayTensorProduct(
+        ElementwiseApplyFunction(fdiff, expr.expr),
+        dexpr
+    )
+    td = CodegenArrayDiagonal(
+        tp, (0, 4), (1, 5)
+    )
+    return td
+
+
+@array_derive.register(MatrixExpr)
+def _(expr: MatrixExpr, x: Expr):
+    cg = parse_matrix_expression(expr)
+    return array_derive(cg, x)
+
+
+@array_derive.register(HadamardProduct)
+def _(expr: HadamardProduct, x: Expr):
+    raise NotImplementedError()
+
+
 @array_derive.register(CodegenArrayContraction)
 def _(expr: CodegenArrayContraction, x: Expr):
     fd = array_derive(expr.expr, x)
@@ -79,6 +117,14 @@ def _(expr: CodegenArrayContraction, x: Expr):
     contraction_indices = expr.contraction_indices
     new_contraction_indices = [tuple(j + rank_x for j in i) for i in contraction_indices]
     return CodegenArrayContraction(fd, *new_contraction_indices)
+
+
+@array_derive.register(CodegenArrayDiagonal)
+def _(expr: CodegenArrayDiagonal, x: Expr):
+    dsubexpr = array_derive(expr.expr, x)
+    rank_x = len(get_shape(x))
+    diag_indices = [[j + rank_x for j in i] for i in expr.diagonal_indices]
+    return CodegenArrayDiagonal(dsubexpr, *diag_indices)
 
 
 @array_derive.register(CodegenArrayElementwiseAdd)
