@@ -572,6 +572,8 @@ class Pow(Expr):
                 return True
             elif self.exp.is_extended_nonpositive:
                 return False
+        elif self.base == S.Exp1:
+            return self.exp is S.NegativeInfinity
         elif self.base.is_zero is False:
             if self.base.is_finite and self.exp.is_finite:
                 return False
@@ -584,9 +586,9 @@ class Pow(Expr):
                     return self.exp.is_extended_positive
                 elif (1 - abs(self.base)).is_extended_negative:
                     return self.exp.is_extended_negative
-        else: # when self.base.is_zero is None
-            if self.base.is_finite and self.exp.is_negative:
-                return False
+        elif self.base.is_finite and self.exp.is_negative:
+            # when self.base.is_zero is None
+            return False
 
     def _eval_is_integer(self):
         b, e = self.args
@@ -621,7 +623,7 @@ class Pow(Expr):
 
         real_b = self.base.is_extended_real
         if real_b is None:
-            if self.base.func == exp and self.base.args[0].is_imaginary:
+            if self.base.func == exp and self.base.exp.is_imaginary:
                 return self.exp.is_imaginary
             if self.base.func == Pow and self.base.base is S.Exp1 and self.base.exp.is_imaginary:
                 return self.exp.is_imaginary
