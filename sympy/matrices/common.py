@@ -1241,7 +1241,7 @@ class MatrixSpecial(MatrixRequired):
 
         """
 
-        R = self.zeros(self.rows, self.cols)
+        R = (self.zeros(self.rows, self.cols)).as_mutable()
 
         for j in range(self.cols):
             if j - kth_diagonal >= 0:
@@ -1281,7 +1281,7 @@ class MatrixSpecial(MatrixRequired):
         [1, 1, 1, 1]])
 
         """
-        L = self.zeros(self.rows, self.cols)
+        L = (self.zeros(self.rows, self.cols)).as_mutable()
 
         for j in range(self.cols):
             if j - kth_diagonal < self.rows:
