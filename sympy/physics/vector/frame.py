@@ -630,6 +630,7 @@ class ReferenceFrame:
         ``B.dcm(N)``:
 
         >>> A.orient_explicit(N, N.dcm(B))
+        >>> A.dcm(N)
         Matrix([
         [1,       0,      0],
         [0,  cos(q1), sin(q1)],
