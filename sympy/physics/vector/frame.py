@@ -502,7 +502,7 @@ class ReferenceFrame:
 
     def orient_axis(self, parent, axis, angle):
         """Sets the orientation of this reference frame with respect to a
-        parent reference frame by rotating through and able about an axis fixed
+        parent reference frame by rotating through an angle about an axis fixed
         in the parent reference frame.
 
         Parameters
@@ -540,6 +540,11 @@ class ReferenceFrame:
         [1,       0,      0],
         [0,  cos(q1), sin(q1)],
         [0, -sin(q1), cos(q1)]])
+        >>> N.dcm(B)
+        Matrix([
+        [1,       0,        0],
+        [0, cos(q1), -sin(q1)],
+        [0, sin(q1),  cos(q1)]])
 
         The following two lines show that the sense of the rotation can be
         defined by negating the vector direction or the angle. Both lines
@@ -556,23 +561,23 @@ class ReferenceFrame:
         amount = sympify(angle)
         theta = amount
         axis = _check_vector(axis)
-        vector_axis = axis
         parent_orient_axis = []
 
         if not axis.dt(parent) == 0:
             raise ValueError('Axis cannot be time-varying.')
-        axis = axis.express(parent).normalize()
-        axis = axis.args[0][0]
-        parent_orient_axis = ((eye(3) - axis * axis.T) * cos(theta) +
-                            Matrix([[0, -axis[2], axis[1]],
-                                    [axis[2], 0, -axis[0]],
-                                    [-axis[1], axis[0], 0]]) *
-                            sin(theta) + axis * axis.T)
+        unit_axis = axis.express(parent).normalize()
+        unit_col = unit_axis.args[0][0]
+        parent_orient_axis = (
+            (eye(3) - unit_col * unit_col.T) * cos(theta) +
+            Matrix([[0, -unit_col[2], unit_col[1]],
+                    [unit_col[2], 0, -unit_col[0]],
+                    [-unit_col[1], unit_col[0], 0]]) *
+            sin(theta) + unit_col * unit_col.T)
 
         self._dcm(parent, parent_orient_axis)
 
         thetad = (amount).diff(dynamicsymbols._t)
-        wvec = thetad* vector_axis.express(parent).normalize()
+        wvec = thetad*axis.express(parent).normalize()
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
         self._var_dict = {}
@@ -585,7 +590,7 @@ class ReferenceFrame:
         ==========
 
         parent : ReferenceFrame
-            Reference frame that this referece frame will be rotated relative
+            Reference frame that this reference frame will be rotated relative
             to.
         dcm : Matrix, shape(3, 3)
             Direction cosine matrix that specifies the relative rotation
@@ -671,7 +676,7 @@ class ReferenceFrame:
 
     def orient_body_fixed(self, parent, angles, rotation_order):
         """Rotates this reference frame relative to the parent reference frame
-        by righthand rotating through three successive body fixed simple axis
+        by right hand rotating through three successive body fixed simple axis
         rotations. Each subsequent axis of rotation is about the "body fixed"
         unit vectors of a new intermediate reference frame. This type of
         rotation is also referred to rotating through the `Euler and Tait-Bryan
@@ -685,14 +690,15 @@ class ReferenceFrame:
         parent : ReferenceFrame
             Reference frame that this reference frame will be rotated relative
             to.
-        angles : 3-tuple of sympifiables
+        angles : 3-tuple of sympifiable
             Three angles in radians used for the successive rotations.
         rotation_order : 3 character string or 3 digit integer
             Order of the rotations about each intermediate reference frames'
             unit vectors. The Euler rotation about the X, Z', X'' axes can be
             specified by the strings ``'XZX'``, ``'131'``, or the integer
             ``131``. There are 12 unique valid rotation orders (6 Euler and 6
-            Tait-Bryan).
+            Tait-Bryan): zxz, xyx, yzy, zyz, xzx, yxy, xyz, yzx, zxy, xzy, zyx,
+            and yxz.
 
         Examples
         ========
@@ -787,7 +793,7 @@ class ReferenceFrame:
 
     def orient_space_fixed(self, parent, angles, rotation_order):
         """Rotates this reference frame relative to the parent reference frame
-        by righthand rotating through three successive space fixed simple axis
+        by right hand rotating through three successive space fixed simple axis
         rotations. Each subsequent axis of rotation is about the "space fixed"
         unit vectors of the parent reference frame.
 
@@ -796,14 +802,13 @@ class ReferenceFrame:
         parent : ReferenceFrame
             Reference frame that this reference frame will be rotated relative
             to.
-        angles : 3-tuple of sympifiables
+        angles : 3-tuple of sympifiable
             Three angles in radians used for the successive rotations.
         rotation_order : 3 character string or 3 digit integer
-            Order of the rotations about each intermediate reference frames'
-            unit vectors. The Euler rotation about the X, Z', X'' axes can be
-            specified by the strings ``'XZX'``, ``'131'``, or the integer
-            ``131``. There are 12 unique valid rotation orders (6 Euler and 6
-            Tait-Bryan).
+            Order of the rotations about the parent reference frame's unit
+            vectors. The order can be specified by the strings ``'XZX'``,
+            ``'131'``, or the integer ``131``. There are 12 unique valid
+            rotation orders.
 
         Examples
         ========
@@ -901,7 +906,7 @@ class ReferenceFrame:
         parent._ang_vel_dict.update({self: -wvec})
         self._var_dict = {}
 
-    def orient_quaternion(self, parent, amounts):
+    def orient_quaternion(self, parent, numbers):
         """Sets the orientation of this reference frame relative to a parent
         reference frame via an orientation quaternion. An orientation
         quaternion is defined as a finite rotation a unit vector, ``(lambda_x,
@@ -918,8 +923,9 @@ class ReferenceFrame:
         parent : ReferenceFrame
             Reference frame that this reference frame will be rotated relative
             to.
-        amounts : 4-tuple of sympifiable
-            The four quaternion scalars as defined above.
+        numbers : 4-tuple of sympifiable
+            The four quaternion scalar numbers as defined above: ``q0``,
+            ``q1``, ``q2``, ``q3``.
 
         Examples
         ========
@@ -946,15 +952,15 @@ class ReferenceFrame:
         from sympy.physics.vector.functions import dynamicsymbols
         _check_frame(parent)
 
-        amounts = list(amounts)
-        for i, v in enumerate(amounts):
+        numbers = list(numbers)
+        for i, v in enumerate(numbers):
             if not isinstance(v, Vector):
-                amounts[i] = sympify(v)
+                numbers[i] = sympify(v)
 
         parent_orient_quaternion = []
-        if not (isinstance(amounts, (list, tuple)) & (len(amounts) == 4)):
+        if not (isinstance(numbers, (list, tuple)) & (len(numbers) == 4)):
             raise TypeError('Amounts are a list or tuple of length 4')
-        q0, q1, q2, q3 = amounts
+        q0, q1, q2, q3 = numbers
         parent_orient_quaternion = (
             Matrix([[q0**2 + q1**2 - q2**2 - q3**2,
                      2 * (q1 * q2 - q0 * q3),
@@ -969,7 +975,7 @@ class ReferenceFrame:
         self._dcm(parent, parent_orient_quaternion)
 
         t = dynamicsymbols._t
-        q0, q1, q2, q3 = amounts
+        q0, q1, q2, q3 = numbers
         q0d = diff(q0, t)
         q1d = diff(q1, t)
         q2d = diff(q2, t)
@@ -1035,7 +1041,6 @@ class ReferenceFrame:
         if rot_order not in approved_orders:
             raise TypeError('The supplied order is not an approved type')
 
-
         if rot_type == 'AXIS':
             self.orient_axis(parent, amounts[1], amounts[0])
 
@@ -1055,7 +1060,7 @@ class ReferenceFrame:
             raise NotImplementedError('That is not an implemented rotation')
 
     def orientnew(self, newname, rot_type, amounts, rot_order='',
-                variables=None, indices=None, latexs=None):
+                  variables=None, indices=None, latexs=None):
         r"""Returns a new reference frame oriented with respect to this
         reference frame.
 
