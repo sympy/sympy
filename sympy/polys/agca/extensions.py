@@ -332,7 +332,7 @@ class MonogenicFiniteExtension(Domain):
         return ExtElem(rep % self.mod, self)
 
     def exquo(self, f, g):
-        rep = self.domain.exquo(f.rep, g.rep)
+        rep = self.ring.exquo(f.rep, g.rep)
         return ExtElem(rep % self.mod, self)
 
     def is_negative(self, a):
