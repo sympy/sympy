@@ -1158,30 +1158,22 @@ class LatexPrinter(Printer):
             return r"\operatorname{B}%s" % tex
 
     def _print_betainc(self, expr, exp=None):
-        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
-                                        self._print(expr.args[1]))
+        largs = [self._print(arg) for arg in expr.args]
+        tex = r"\left(%s, %s\right)" % (largs[0], largs[1])
 
         if exp is not None:
-            return r"\operatorname{B}_{(%s, %s)}^{%s}%s" % (self._print(expr.args[2]),
-                                                            self._print(expr.args[3]),
-                                                            exp, tex)
+            return r"\operatorname{B}_{(%s, %s)}^{%s}%s" % (largs[2], largs[3], exp, tex)
         else:
-            return r"\operatorname{B}_{(%s, %s)}%s" % (self._print(expr.args[2]),
-                                                       self._print(expr.args[3]),
-                                                       tex)
+            return r"\operatorname{B}_{(%s, %s)}%s" % (largs[2], largs[3], tex)
 
     def _print_betainc_regularized(self, expr, exp=None):
-        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
-                                        self._print(expr.args[1]))
+        largs = [self._print(arg) for arg in expr.args]
+        tex = r"\left(%s, %s\right)" % (largs[0], largs[1])
 
         if exp is not None:
-            return r"\operatorname{I}_{(%s, %s)}^{%s}%s" % (self._print(expr.args[2]),
-                                                            self._print(expr.args[3]),
-                                                            exp, tex)
+            return r"\operatorname{I}_{(%s, %s)}^{%s}%s" % (largs[2], largs[3], exp, tex)
         else:
-            return r"\operatorname{I}_{(%s, %s)}%s" % (self._print(expr.args[2]),
-                                                       self._print(expr.args[3]),
-                                                       tex)
+            return r"\operatorname{I}_{(%s, %s)}%s" % (largs[2], largs[3], tex)
 
     def _print_uppergamma(self, expr, exp=None):
         tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),

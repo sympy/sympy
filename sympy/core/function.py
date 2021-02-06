@@ -548,7 +548,11 @@ class Function(Application, Expr):
                     return None
             return getattr(mpmath, fname)
 
-        func = _get_mpmath_func(self.func.__name__)
+        _eval_mpmath = getattr(self, '_eval_mpmath', None)
+        if _eval_mpmath is None:
+            func = _get_mpmath_func(self.func.__name__)
+        else:
+            func, args = _eval_mpmath()
 
         # Fall-back evaluation
         if func is None:
@@ -566,7 +570,10 @@ class Function(Application, Expr):
         # XXX + 5 is a guess, it is similar to what is used in evalf.py. Should
         #     we be more intelligent about it?
         try:
-            args = [arg._to_mpmath(prec + 5) for arg in self.args]
+            if _eval_mpmath is None:
+                args = [arg._to_mpmath(prec + 5) for arg in self.args]
+            else:
+                args = [arg._to_mpmath(prec + 5) for arg in args]
             def bad(m):
                 from mpmath import mpf, mpc
                 # the precision of an mpf value is the last element
@@ -591,11 +598,7 @@ class Function(Application, Expr):
             return
 
         with mpmath.workprec(prec):
-            _eval_mpmath = getattr(self, '_eval_mpmath', None)
-            if _eval_mpmath is None:
-                v = func(*args)
-            else:
-                v = self._eval_mpmath(func, args)
+            v = func(*args)
             if v == 0:
                 v = mpmath.mpf(v)
 

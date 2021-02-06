@@ -66,8 +66,8 @@ class beta(Function):
     >>> diff(beta(x), x)
     2*(polygamma(0, x) - polygamma(0, 2*x))*beta(x, x)
 
-    We can numerically evaluate the gamma function to arbitrary precision
-    on the whole complex plane:
+    We can numerically evaluate the Beta function to
+    arbitrary precision for any complex numbers x and y:
 
     >>> from sympy import beta
     >>> beta(pi).evalf(40)
@@ -180,8 +180,8 @@ class betainc(Function):
     >>> conjugate(betainc(a, b, x1, x2))
     betainc(conjugate(a), conjugate(b), conjugate(x1), conjugate(x2))
 
-    We can numerically evaluate the Incomplete Beta function
-    to arbitrary precision on the whole complex plane:
+    We can numerically evaluate the Incomplete Beta function to
+    arbitrary precision for any complex numbers a, b, x1 and x2:
 
     >>> from sympy import betainc, I
     >>> betainc(2, 3, 4, 5).evalf(10)
@@ -284,8 +284,8 @@ class betainc_regularized(Function):
     >>> conjugate(betainc_regularized(a, b, x1, x2))
     betainc_regularized(conjugate(a), conjugate(b), conjugate(x1), conjugate(x2))
 
-    We can numerically evaluate the Regularized Incomplete Beta
-    function to arbitrary precision on the whole complex plane:
+    We can numerically evaluate the Regularized Incomplete Beta function
+    to arbitrary precision for any complex numbers a, b, x1 and x2:
 
     >>> from sympy import betainc_regularized, pi, E
     >>> betainc_regularized(1, 2, 0, 0.25).evalf(10)
@@ -321,8 +321,9 @@ class betainc_regularized(Function):
     def __new__(cls, a, b, x1, x2):
         return Function.__new__(cls, a, b, x1, x2)
 
-    def _eval_mpmath(self, func, args):
-        return func(*args, 1)
+    def _eval_mpmath(self):
+        from mpmath import betainc
+        return betainc, (*self.args, S(1))
 
     def fdiff(self, argindex):
         a, b, x1, x2 = self.args

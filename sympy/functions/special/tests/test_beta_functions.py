@@ -3,6 +3,7 @@ from sympy import (symbols, gamma, expand_func, beta, betainc,
         betainc_regularized)
 from sympy.functions.special.gamma_functions import polygamma
 from sympy.core.function import ArgumentIndexError
+from sympy.core.expr import unchanged
 from sympy.testing.pytest import raises
 
 
@@ -10,7 +11,7 @@ def test_beta():
     x, y = symbols('x y')
     t = Dummy('t')
 
-    assert isinstance(beta(x, y), beta)
+    assert unchanged(beta, x, y)
 
     assert beta(5, -3).is_real == True
     assert beta(3, y).is_real is None
@@ -33,8 +34,8 @@ def test_beta():
 def test_betainc():
     a, b, x1, x2 = symbols('a b x1 x2')
 
-    assert isinstance(betainc(a, b, x1, x2), betainc)
-    assert isinstance(betainc(a, b, 0, x1), betainc)
+    assert unchanged(betainc, a, b, x1, x2)
+    assert unchanged(betainc, a, b, 0, x1)
 
     assert betainc(1, 2, 0, -5).is_real == True
     assert betainc(1, 2, 0, x2).is_real is None
@@ -46,8 +47,8 @@ def test_betainc():
 def test_betainc_regularized():
     a, b, x1, x2 = symbols('a b x1 x2')
 
-    assert isinstance(betainc_regularized(a, b, x1, x2), betainc_regularized)
-    assert isinstance(betainc_regularized(a, b, 0, x1), betainc_regularized)
+    assert unchanged(betainc_regularized, a, b, x1, x2)
+    assert unchanged(betainc_regularized, a, b, 0, x1)
 
     assert betainc_regularized(3, 5, 0, -1).is_real == True
     assert betainc_regularized(3, 5, 0, x2).is_real is None
