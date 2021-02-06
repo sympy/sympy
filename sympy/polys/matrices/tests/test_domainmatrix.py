@@ -16,10 +16,8 @@ from sympy.polys.matrices.sdm import SDM
 
 def test_DomainMatrix_init():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    if isinstance(A.rep, DDM):
-        assert A.rep == DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    else:
-        assert A.rep == SDM({0: {0: ZZ(1), 1:ZZ(2)}, 1: {0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
+    # assert A.rep == DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    assert A.rep == SDM({0: {0: ZZ(1), 1:ZZ(2)}, 1: {0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
     assert A.shape == (2, 2)
     assert A.domain == ZZ
 
@@ -259,6 +257,12 @@ def test_DomainMatrix_rref():
 
     Az = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     raises(ValueError, lambda: Az.rref())
+
+
+def test_DomainMatrix_nullspace():
+    A = DomainMatrix([[QQ(1), QQ(1)], [QQ(1), QQ(1)]], (2, 2), ZZ)
+    Anull = DomainMatrix([[QQ(-1), QQ(1)]], (1, 2), ZZ)
+    assert A.nullspace() == Anull
 
 
 def test_DomainMatrix_inv():
