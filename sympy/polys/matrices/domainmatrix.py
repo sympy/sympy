@@ -87,6 +87,10 @@ class DomainMatrix:
         rowstr = '[%s]' % ', '.join(rows_str)
         return 'DomainMatrix(%s, %r, %r)' % (rowstr, self.shape, self.domain)
 
+    def hstack(A, B):
+        A, B = A.unify(B)
+        return A.from_rep(A.rep.hstack(B.rep))
+
     def __add__(A, B):
         if not isinstance(B, DomainMatrix):
             return NotImplemented
@@ -168,7 +172,7 @@ class DomainMatrix:
         return self.from_rep(rref_ddm), tuple(pivots)
 
     def nullspace(self):
-        return self.from_rep(self.rep.nullspace())
+        return self.from_rep(self.rep.nullspace()[0])
 
     def inv(self):
         if not self.domain.is_Field:

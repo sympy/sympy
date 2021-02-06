@@ -80,9 +80,15 @@ class SDM(dict):
                     MT[j][i] = Mij
                 except KeyError:
                     MT[j] = {i: Mij}
-        return M.new(MT, M.shape, M.domain)
+        return M.new(MT, M.shape[::-1], M.domain)
 
     def __mul__(a, b):
+        if b in a.domain:
+            return a.mul(b)
+        else:
+            return NotImplemented
+
+    def __rmul__(a, b):
         if b in a.domain:
             return a.mul(b)
         else:
@@ -131,7 +137,7 @@ class SDM(dict):
         return A.new(Ak, A.shape, K)
 
     def rref(A):
-        B, pivots = sdm_irref(A)
+        B, pivots, _ = sdm_irref(A)
         return A.new(B, A.shape, A.domain), pivots
 
     def inv(A):
@@ -148,7 +154,40 @@ class SDM(dict):
         return A.from_ddm(A.to_ddm().lu_solve(b.to_ddm()))
 
     def nullspace(A):
-        return A.to_ddm().nullspace()
+        ncols = A.shape[1]
+        one = A.domain.one
+        B, pivots, nzcols = sdm_irref(A)
+        K, nonpivots = sdm_nullspace_from_rref(B, one, ncols, pivots, nzcols)
+        K = dict(enumerate(K))
+        shape = (len(K), ncols)
+        return A.new(K, shape, A.domain), nonpivots
+
+    def particular(A):
+        ncols = A.shape[1]
+        B, pivots, nzcols = sdm_irref(A)
+        P = sdm_particular_from_rref(B, ncols, pivots)
+        rep = {0:P} if P else {}
+        return A.new(rep, (1, A.shape[1]), A.domain)
+
+    def hstack(A, *B):
+        Anew = dict(A.copy())
+        rows, cols = A.shape
+        domain = A.domain
+
+        for Bk in B:
+            Bkrows, Bkcols = Bk.shape
+            assert Bkrows == rows
+            assert Bk.domain == domain
+
+            for i, Bki in Bk.items():
+                Ai = Anew.get(i, None)
+                if Ai is None:
+                    Anew[i] = Ai = {}
+                for j, Bkij in Bki.items():
+                    Ai[j + cols] = Bkij
+            cols += Bkcols
+
+        return A.new(Anew, (rows, cols), A.domain)
 
     def charpoly(A):
         return A.to_ddm().charpoly()
@@ -208,7 +247,7 @@ def sdm_irref(A):
     >>> from sympy import QQ
     >>> from sympy.polys.matrices.sdm import sdm_irref
     >>> A = {0: {0: QQ(1), 1: QQ(2)}, 1: {0: QQ(3), 1: QQ(4)}}
-    >>> Arref, pivots = sdm_irref(A)
+    >>> Arref, pivots, _ = sdm_irref(A)
     >>> Arref
     {0: {0: 1}, 1: {1: 1}}
     >>> pivots
@@ -362,6 +401,32 @@ def sdm_irref(A):
 
     # All done!
     pivots = sorted(reduced_pivots | nonreduced_pivots)
+    pivot2row = {p: n for n, p in enumerate(pivots)}
+    nonzero_columns = {c: set(pivot2row[p] for p in s) for c, s in nonzero_columns.items()}
     rows = [pivot_row_map[i] for i in pivots]
     rref = dict(enumerate(rows))
-    return rref, pivots
+    return rref, pivots, nonzero_columns
+
+
+def sdm_nullspace_from_rref(A, one, ncols, pivots, nonzero_cols):
+    """Get nullspace from A which is in RREF"""
+    nonpivots = sorted(set(range(ncols)) - set(pivots))
+
+    K = []
+    for j in nonpivots:
+        Kj = {j:one}
+        for i in nonzero_cols.get(j, ()):
+            Kj[pivots[i]] = -A[i][j]
+        K.append(Kj)
+
+    return K, nonpivots
+
+
+def sdm_particular_from_rref(A, ncols, pivots):
+    """Get a particular solution from A which is in RREF"""
+    P = {}
+    for i, j in enumerate(pivots):
+        Ain = A[i].get(ncols-1, None)
+        if Ain is not None:
+            P[j] = Ain / A[i][j]
+    return P
