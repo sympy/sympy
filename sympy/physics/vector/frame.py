@@ -457,7 +457,7 @@ class ReferenceFrame:
              \hat{\mathbf{a}}_3
            \end{bmatrix}.
 
-        :math:`^{}A\mathbf{R}^B` is the matrix that expresses the B unit
+        :math:`{}^A\mathbf{R}^B` is the matrix that expresses the B unit
         vectors in terms of the A unit vectors.
 
         """
@@ -918,6 +918,10 @@ class ReferenceFrame:
         - ``q2 = lambda_y*sin(theta/2)``
         - ``q3 = lambda_z*sin(theta/2)``
 
+        See `Quaternions and Spatial Rotation
+        <https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation>`_ on
+        Wikipedia for more information.
+
         Parameters
         ==========
         parent : ReferenceFrame
@@ -992,6 +996,10 @@ class ReferenceFrame:
     def orient(self, parent, rot_type, amounts, rot_order=''):
         """Sets the orientation of this reference frame relative to another
         (parent) reference frame.
+
+        .. note:: It is now recommended to use the ``.orient_axis,
+           .orient_body_fixed, .orient_space_fixed, .orient_quaternion``
+           methods for the different rotation types.
 
         Parameters
         ==========
