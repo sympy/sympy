@@ -402,16 +402,28 @@ class C89CodePrinter(CodePrinter):
             (sin(expr.args[0]) / expr.args[0], Ne(expr.args[0], 0)), (1, True))
         return self._print(_piecewise)
 
+    def _loopstart(self, var, start, end, step=1):
+        if step == 1:
+            return ("for (%(var)s=%(start)s; %(var)s<%(end)s; %(var)s++)"% {
+                    'var': var,
+                    'start': start,
+                    'end': end})
+        else:
+            return ("for (%(var)s=%(start)s; %(var)s<%(end)s; %(var)s+=%(step)s)"% {
+                    'var': var,
+                    'start': start,
+                    'end': end,
+                    'step': step})
+
     def _print_For(self, expr):
         target = self._print(expr.target)
         if isinstance(expr.iterable, Range):
-            start, stop, step = expr.iterable.args
+            start, end, step = expr.iterable.args
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
         body = self._print(expr.body)
-        return ('for (int {target} = {start}; {target} < {stop}; {target} += '
-                '{step}) {{\n{body}\n}}').format(target=target, start=start,
-                stop=stop, step=step, body=body)
+        return (self._loopstart(target, start, end, step)
+               + '{{\n{body}\n}}'.format(body=body))
 
     def _print_sign(self, func):
         return '((({0}) > 0) - (({0}) < 0))'.format(self._print(func.args[0]))
@@ -468,6 +480,16 @@ class C89CodePrinter(CodePrinter):
             pretty.append("%s%s" % (tab*level, line))
             level += increase[n]
         return pretty
+
+    def _get_loop_opening_ending(self, indices):
+        open_lines = []
+        close_lines = []
+        for i in indices:
+            open_lines.append(self._loopstart(self._print(i.label),
+                                              self._print(i.lower),
+                                              self._print(i.upper + 1)) + "{")
+            close_lines.append("}")
+        return open_lines, close_lines
 
     def _get_func_suffix(self, type_):
         return self.type_func_suffixes[self.type_aliases.get(type_, type_)]
@@ -642,6 +664,19 @@ class C99CodePrinter(C89CodePrinter):
     # known_functions-dict to copy
     _kf = known_functions_C99  # type: Dict[str, Any]
 
+    def _loopstart(self, var, start, end, step=1):
+        if step == 1:
+            return ("for (int %(var)s=%(start)s; %(var)s<%(end)s; %(var)s++)"% {
+                    'var': var,
+                    'start': start,
+                    'end': end})
+        else:
+            return ("for (int %(var)s=%(start)s; %(var)s<%(end)s; %(var)s+=%(step)s)"% {
+                    'var': var,
+                    'start': start,
+                    'end': end,
+                    'step': step})
+
     # functions with versions with 'f' and 'l' suffixes:
     _prec_funcs = ('fabs fmod remainder remquo fma fmax fmin fdim nan exp exp2'
                    ' expm1 log log10 log2 log1p pow sqrt cbrt hypot sin cos tan'
@@ -707,20 +742,6 @@ class C99CodePrinter(C89CodePrinter):
 
     def _print_Min(self, expr):
         return self._print_math_func(expr, nest=True)
-
-    def _get_loop_opening_ending(self, indices):
-        open_lines = []
-        close_lines = []
-        loopstart = "for (int %(var)s=%(start)s; %(var)s<%(end)s; %(var)s++){"  # C99
-        for i in indices:
-            # C arrays start at 0 and end at dimension-1
-            open_lines.append(loopstart % {
-                'var': self._print(i.label),
-                'start': self._print(i.lower),
-                'end': self._print(i.upper + 1)})
-            close_lines.append("}")
-        return open_lines, close_lines
-
 
 for k in ('Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma'
           ' loggamma sin cos tan asin acos atan atan2 sinh cosh tanh asinh acosh '

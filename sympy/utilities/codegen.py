@@ -967,6 +967,11 @@ class CCodeGen(CodeGen):
                 shape = [d for d in g.shape if d!=1]
                 code_lines.append("double %s[%s];\n"%(self._get_symbol(g), ','.join("%s"%s for s in shape)))
 
+        if self.standard == 'C89':
+            for var in sorted(routine.idx_vars, key=str):
+                typeinfo = self._get_type(get_default_datatype(var))
+                code_lines.append("%s %s;\n" % (typeinfo, self._get_symbol(var)))
+
         dereference = []
         for arg in routine.arguments:
             if isinstance(arg, ResultBase) and not arg.dimensions:

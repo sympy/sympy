@@ -409,7 +409,18 @@ def test_dummy_loops_c():
     x = IndexedBase('x')
     y = IndexedBase('y')
     i = Idx(i, m)
-    expected = (
+    expected_c89 = (
+        '#include "file.h"\n'
+        '#include <math.h>\n'
+        'void test_dummies(int m_%(mno)i, double *x, double *y) {\n'
+        '   int i_%(ino)i;\n'
+        '   for (i_%(ino)i=0; i_%(ino)i<m_%(mno)i; i_%(ino)i++){\n'
+        '      y[i_%(ino)i] = x[i_%(ino)i];\n'
+        '   }\n'
+        '}\n'
+    ) % {'ino': i.label.dummy_index, 'mno': m.dummy_index}
+
+    expected_c99 = (
         '#include "file.h"\n'
         '#include <math.h>\n'
         'void test_dummies(int m_%(mno)i, double *x, double *y) {\n'
@@ -421,10 +432,10 @@ def test_dummy_loops_c():
     r = make_routine('test_dummies', Eq(y[i], x[i]))
     c89 = C89CodeGen()
     c99 = C99CodeGen()
+    code = get_string(c89.dump_c, [r])
+    assert code == expected_c89
     code = get_string(c99.dump_c, [r])
-    assert code == expected
-    with raises(NotImplementedError):
-        get_string(c89.dump_c, [r])
+    assert code == expected_c99
 
 def test_partial_loops_c():
     # check that loop boundaries are determined by Idx, and array strides
@@ -484,8 +495,8 @@ def test_nested_for_c():
         '#include "test.h"\n'
         '#include <math.h>\n'
         'void test(double *x, double *y) {\n'
-        '   for (int i = 0; i < 5; i += 1) {\n'
-        '      for (int j = 0; j < 5; j += 1) {\n'
+        '   for (int i=0; i<5; i++){\n'
+        '      for (int j=0; j<5; j++){\n'
         '         y[5*i + j] = 2*x[5*i + j];\n'
         '      }\n'
         '   }\n'
@@ -513,7 +524,7 @@ def test_for_while_c():
         '#include "test.h"\n'
         '#include <math.h>\n'
         'void test(double *x, double *y) {\n'
-        '   for (int i = 0; i < 5; i += 1) {\n'
+        '   for (int i=0; i<5; i++){\n'
         '      j = 0;\n'
         '      while (j < 5) {\n'
         '         y[j + 5*i] = 2*x[j + 5*i];\n'
@@ -546,8 +557,8 @@ def test_settings_contract_c():
         '#include "test.h"\n'
         '#include <math.h>\n'
         'void test(double *A, int nx, int ny, double *x, double *y) {\n'
-        '   for (int i = 0; i < nx; i += 1) {\n'
-        '      for (int j = 0; j < ny; j += 1) {\n'
+        '   for (int i=0; i<nx; i++){\n'
+        '      for (int j=0; j<ny; j++){\n'
         '         y[i] = A[ny*i + j]*x[j];\n'
         '      }\n'
         '   }\n'
