@@ -71,9 +71,8 @@ def test_MatrixNormal():
     M = MatrixNormal('M', [[5, 6]], [4], [[2, 1], [1, 2]])
     assert M.pspace.distribution.set == MatrixSet(1, 2, S.Reals)
     X = MatrixSymbol('X', 1, 2)
-    term1 = exp(-Trace(Matrix([[ -S(1)/3],[-S(7)/12]])*X)/2 - Trace(Matrix([[ S(2)/3, -S(1)/3],
-        [-S(1)/3,  S(2)/3]])*X.T*Matrix([[-S(5)/4, -S(3)/2]]))/2 - Trace(Matrix([[ S(2)/3, -S(1)/3],
-        [-S(1)/3,  S(2)/3]])*X.T*Matrix([[S(1)/4]])*X)/2 - S(31)/12)
+    term1 = exp(-Trace(Matrix([[ S(2)/3, -S(1)/3], [-S(1)/3, S(2)/3]])*(
+            Matrix([[-5], [-6]]) + X.T)*Matrix([[1/4]])*(Matrix([[-5, -6]]) + X))/2)
     assert density(M)(X).doit() == term1/(24*pi)
     assert density(M)([[7, 8]]).doit() == exp(-S(1)/3)/(24*pi)
     d, n = symbols('d n', positive=True, integer=True)
@@ -84,7 +83,7 @@ def test_MatrixNormal():
     M = MatrixNormal('M', LM, SM1, SM2)
     exprd = 4*(2*pi)**(-d*n/2)*exp(-Trace(SM2**(-1)*(-LM.T + Y.T)*SM1**(-1)*(-LM + Y)
         )/2)*Determinant(SM1)**(-d)*Determinant(SM2)**(-n)
-    assert density(M)(Y).doit() == exprd.doit()
+    assert density(M)(Y).doit() == exprd
     raises(ValueError, lambda: density(M)(1))
     raises(ValueError, lambda: MatrixNormal('M', [1, 2], [[1, 0], [0, 1]], [[1, 0], [2, 1]]))
     raises(ValueError, lambda: MatrixNormal('M', [1, 2], [[1, 0], [2, 1]], [[1, 0], [0, 1]]))

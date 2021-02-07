@@ -370,7 +370,7 @@ def test_parsing_of_matrix_expressions():
     expr = M*(2*N + 3*M)
     res = parse_matrix_expression(expr)
     rexpr = recognize_matrix_expression(res)
-    assert str(expr.expand()) == str(rexpr.doit())
+    assert expr.expand() == rexpr.doit()
 
     expr = Trace(M)
     result = CodegenArrayContraction(M, (0, 1))

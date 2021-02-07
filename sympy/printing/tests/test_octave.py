@@ -256,7 +256,7 @@ def test_MatrixSymbol():
     assert mcode(B*A) == "B*A"
     assert mcode(2*A*B) == "2*A*B"
     assert mcode(B*2*A) == "2*B*A"
-    assert mcode(A*(B + 3*Identity(n))) == "3*A + A*B"
+    assert mcode(A*(B + 3*Identity(n))) == "A*(3*eye(n) + B)"
     assert mcode(A**(x**2)) == "A^(x.^2)"
     assert mcode(A**3) == "A^3"
     assert mcode(A**S.Half) == "A^(1/2)"
