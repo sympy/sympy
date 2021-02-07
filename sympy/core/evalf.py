@@ -1641,7 +1641,7 @@ class EvalfMixin:
 
     def _eval_evalf(self, prec):
         """ Use only when you have to call mpmath related functions.
-            Using `_eval_evalf_options` is considered the best way.
+            Using `_eval_evalf_options` in considered the best way.
             It calls `_eval_evalf_options` by default with default optional
                 parameters if not defined.
         """
@@ -1652,8 +1652,7 @@ class EvalfMixin:
 
     def _eval_evalf_options(self, prec, options):
         """ Helper Function needed to be defined in sub-class .
-        Should recurse on `_evalf_options` or on `_eval_evalf_options` if you don't want to evaluate
-        at that step.
+        Should recurse on `_evalf_options`.
         """
 
         return
