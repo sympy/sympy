@@ -1208,6 +1208,51 @@ class MatrixSpecial(MatrixRequired):
             return kls.zero
         return kls._new(size, size, entry)
 
+    @classmethod
+    def Wilkinson(kls, n):
+        """Returns two square Wilkinson Matrix of size 2*n + 1
+        $W_{2n + 1}^-, W_{2n + 1}^+ =$ Wilkinson(n)
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> wminus, wplus = Matrix.Wilkinson(3)
+        >>> wminus
+        Matrix([
+        [3, 1, 0, 0, 0, 0, 0],
+        [1, 2, 1, 0, 0, 0, 0],
+        [0, 1, 1, 1, 0, 0, 0],
+        [0, 0, 1, 0, 1, 0, 0],
+        [0, 0, 0, 1, 1, 1, 0],
+        [0, 0, 0, 0, 1, 2, 1],
+        [0, 0, 0, 0, 0, 1, 3]])
+        >>> wplus
+        Matrix([
+        [-3,  1,  0, 0, 0, 0, 0],
+        [ 1, -2,  1, 0, 0, 0, 0],
+        [ 0,  1, -1, 1, 0, 0, 0],
+        [ 0,  0,  1, 0, 1, 0, 0],
+        [ 0,  0,  0, 1, 1, 1, 0],
+        [ 0,  0,  0, 0, 1, 2, 1],
+        [ 0,  0,  0, 0, 0, 1, 3]])
+
+        References
+        ==========
+
+        .. [1] https://blogs.mathworks.com/cleve/2013/04/15/wilkinsons-matrices-2/
+        .. [2] J. H. Wilkinson, The Algebraic Eigenvalue Problem, Claredon Press, Oxford, 1965, 662 pp.
+
+        """
+        from sympy.matrices.dense import zeros, diag
+        D = zeros(2*n + 1)
+        for i in range(2*n):
+            D[i, i + 1] = S.One
+
+        wminus = diag([i for i in range(-n, n + 1)], unpack=True) + D + D.T
+        wplus = abs(diag([i for i in range(-n, n + 1)], unpack=True)) + D + D.T
+
+        return wminus, wplus
 
 class MatrixProperties(MatrixRequired):
     """Provides basic properties of a matrix."""
