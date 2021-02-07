@@ -3096,7 +3096,7 @@ def _invert(eq, *symbols, **kwargs):
             lhs = powsimp(powdenest(lhs))
 
         if lhs.is_Function:
-            if hasattr(lhs, 'inverse') and len(lhs.args) == 1:
+            if hasattr(lhs, 'inverse') and lhs.inverse() is not None and len(lhs.args) == 1:
                 #                    -1
                 # f(x) = g  ->  x = f  (g)
                 #
