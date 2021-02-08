@@ -1129,12 +1129,7 @@ def _solveset(f, symbol, domain, _check=False):
                 result = _result - singularities
 
     if _check:
-        if (isinstance(result,ConditionSet)):
-            # it wasn't solved or has enumerated all conditions
-            # -- leave it alone
-            return result
-
-        elif isinstance(result,ConditionSet):
+        if isinstance(result,ConditionSet):
             # it wasn't solved or has enumerated all conditions
             # -- leave it alone
             return result
@@ -1152,11 +1147,6 @@ def _solveset(f, symbol, domain, _check=False):
             result = FiniteSet(*[s for s in result
                       if isinstance(s, RootOf)
                       or domain_check(fx, symbol, s)])
-        elif isinstance(result,list):
-            if len(result) == 1:
-                return result[0]
-            for _ in range(len(result) - 1):
-                result = result[_] + result[_+1]
 
     return result
 
@@ -1807,6 +1797,10 @@ def _solve_as_bivariate(lhs, rhs, symbol, domain):
             usol = _solveset(p, u, domain)
             if not isinstance(usol, ConditionSet):
                 result = [_solveset(g - us, symbol, domain) for us in usol]
+                res = EmptySet
+                for result1 in result:
+                    res += result1
+                result = res
     return result
 
 

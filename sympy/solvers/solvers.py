@@ -1092,12 +1092,6 @@ def solve(f, *symbols, **flags):
     ###########################################################################
     if bare_f:
         solution = _solve(f[0], *symbols, **flags)
-        if solution is not None:
-            for solnArgs in solution:
-                if not isinstance(solnArgs,(dict,tuple,list,set)):
-                    if solnArgs.has(LambertW) and solnArgs.has(Lambda):
-                        return solution
-                        break
 
     else:
         solution = _solve_system(f, symbols, **flags)
