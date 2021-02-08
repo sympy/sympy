@@ -982,15 +982,14 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x, y, z = free_group("x, y, z")
         >>> (x**2*y**-1).contains_generators()
-        {x, y}
+        {y, x}
         >>> (x**3*z).contains_generators()
         {x, z}
 
         """
         group = self.group
         gens = set()
-        for syllable in self.array_form:
-            gens.add(group.dtype(((syllable[0], 1),)))
+        gens = { group.dtype(((syllable[0], 1),)) for syllable in self.array_form }
         return set(gens)
 
     def cyclic_subword(self, from_i, to_j):

@@ -32,7 +32,7 @@ def refine(expr, assumptions=True):
     x
 
     >>> refine(Q.real(x), Q.positive(x))
-    True
+    Q.real(x)
     >>> refine(Q.positive(x), Q.real(x))
     Q.positive(x)
 
