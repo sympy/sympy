@@ -157,7 +157,7 @@ class Collector(DefaultPrinting):
         >>> collector = PcGroup.collector
         >>> power_rel, conj_rel = collector.relations()
         >>> power_rel
-        {x1**3: (), x0**2: ()}
+        {x0**2: (), x1**3: ()}
         >>> conj_rel
         {x0**-1*x1*x0: x1**2}
 
