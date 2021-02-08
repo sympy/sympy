@@ -1642,6 +1642,14 @@ class PrettyPrinter(Printer):
         func_name = greek_unicode['Beta'] if self._use_unicode else 'B'
         return self._print_Function(e, func_name=func_name)
 
+    def _print_betainc(self, e):
+        func_name = "B'"
+        return self._print_Function(e, func_name=func_name)
+    
+    def _print_betainc_regularized(self, e):
+        func_name = 'I'
+        return self._print_Function(e, func_name=func_name)
+
     def _print_gamma(self, e):
         func_name = greek_unicode['Gamma'] if self._use_unicode else 'Gamma'
         return self._print_Function(e, func_name=func_name)
