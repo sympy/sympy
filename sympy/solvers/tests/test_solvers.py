@@ -918,7 +918,7 @@ def _test_issue_5335_float():
 
 def test_issue_5767():
     assert set(solve([x**2 + y + 4], [x])) == \
-        {(-sqrt(-y - 4),), (sqrt(-y - 4),)}
+        {(sqrt(-y - 4),), (-sqrt(-y - 4),)}
 
 
 def test_polysys():
@@ -2158,7 +2158,7 @@ def test_issue_15307():
 
 def test_issue_15415():
     assert solve(x - 3, x) == [3]
-    assert solve([x - 3], x) == {x:3}
+    assert solve([x - 3], x) == {x: 3}
     assert solve(Eq(y + 3*x**2/2, y + 3*x), y) == []
     assert solve([Eq(y + 3*x**2/2, y + 3*x)], y) == []
     assert solve([Eq(y + 3*x**2/2, y + 3*x), Eq(x, 1)], y) == []

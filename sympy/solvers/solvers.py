@@ -375,12 +375,12 @@ def checksol(f, symbol, sol=None, **flags):
     # returns None if it can't conclude
     # TODO: improve solution testing
 
-def is_eq_bool(eq):
+def _is_eq_bool(eq):
     """Returns true if Eq or Ne has True or False as an argument"""
     if isinstance(eq, (Equality, Unequality)):
         return any(side in (S.false, S.true) for side in eq.args)
 
-def invert_eq_bool(fi):
+def _invert_eq_bool(fi):
     """Returns the expression when one argument is a bool and the other an expression in an Eq or Ne"""
     if isinstance(fi, (Equality, Unequality)):
         lhs, rhs = fi.args
@@ -391,7 +391,7 @@ def invert_eq_bool(fi):
             return ~lhs if rhs is unequal else lhs
     return fi
 
-def is_relational(fi):
+def _is_relational(fi):
     return fi.is_Relational and not isinstance(fi, Equality)
 
 
@@ -898,7 +898,7 @@ def solve(f, *symbols, **flags):
 
     # alternate exits
 
-    if any(is_eq_bool(fi) for fi in f):
+    if any(_is_eq_bool(fi) for fi in f):
         for i, fi in enumerate(f):
             if not isinstance(fi, (Equality, Unequality)):
                 continue
@@ -921,10 +921,10 @@ def solve(f, *symbols, **flags):
                         is True or False.
                     '''))
 
-    f_relational = [invert_eq_bool(fi) for fi in f]
+    f_relational = [_invert_eq_bool(fi) for fi in f]
 
-    if any(is_relational(fi) for fi in f_relational):
-        f = [invert_eq_bool(fi) for fi in f_relational]
+    if any(_is_relational(fi) for fi in f_relational):
+        f = [_invert_eq_bool(fi) for fi in f_relational]
         if flags.get('dict', False):
             solution = reduce_inequalities(f_relational, symbols=symbols)
             if isinstance(solution, Equality):
@@ -1074,7 +1074,7 @@ def solve(f, *symbols, **flags):
         # to be obtained to queries like solve((x - y, y), x); without
         # this mod the return value is []
         ok = False
-        if fi.has(*symset):
+        if fi.free_symbols & symset:
             ok = True
         else:
             if fi.is_number:
