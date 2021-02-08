@@ -620,6 +620,70 @@ def test_permute():
                                             [9, 10, 11, 12],
                                             [1,  2,  3,  4]])
 
+def test_upper_triangular():
+
+    A = OperationsOnlyMatrix([
+                [1, 1, 1, 1],
+                [1, 1, 1, 1],
+                [1, 1, 1, 1],
+                [1, 1, 1, 1]
+            ])
+
+    R = A.upper_triangular(kth_diagonal=2)
+    assert R == OperationsOnlyMatrix([
+                        [0, 0, 1, 1],
+                        [0, 0, 0, 1],
+                        [0, 0, 0, 0],
+                        [0, 0, 0, 0]
+                    ])
+
+    R = A.upper_triangular(kth_diagonal=-2)
+    assert R == OperationsOnlyMatrix([
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1],
+                        [0, 1, 1, 1]
+                    ])
+
+    R = A.upper_triangular()
+    assert R == OperationsOnlyMatrix([
+                        [1, 1, 1, 1],
+                        [0, 1, 1, 1],
+                        [0, 0, 1, 1],
+                        [0, 0, 0, 1]
+                    ])
+
+def test_lower_triangular():
+    A = OperationsOnlyMatrix([
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1]
+                    ])
+
+    L = A.lower_triangular()
+    assert L == ArithmeticOnlyMatrix([
+                        [1, 0, 0, 0],
+                        [1, 1, 0, 0],
+                        [1, 1, 1, 0],
+                        [1, 1, 1, 1]])
+
+    L = A.lower_triangular(2)
+    assert L == ArithmeticOnlyMatrix([
+                        [1, 1, 1, 0],
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1]
+                    ])
+
+    L = A.lower_triangular(-2)
+    assert L == ArithmeticOnlyMatrix([
+                        [0, 0, 0, 0],
+                        [0, 0, 0, 0],
+                        [1, 0, 0, 0],
+                        [1, 1, 0, 0]
+                    ])
+
 
 # ArithmeticOnlyMatrix tests
 def test_abs():
@@ -975,76 +1039,6 @@ def test_orthogonalize():
 
     vecs = [Matrix([1, 2, 3]), Matrix([4, 5, 6]), Matrix([7, 8, 9])]
     raises(ValueError, lambda: Matrix.orthogonalize(*vecs, rankcheck=True))
-
-def test_upper_triangular():
-
-    A = Matrix([
-                [1, 1, 1, 1],
-                [1, 1, 1, 1],
-                [1, 1, 1, 1],
-                [1, 1, 1, 1]
-            ])
-
-
-    R = A.upper_triangular(kth_diagonal=2)
-    assert R == Matrix([
-                        [0, 0, 1, 1],
-                        [0, 0, 0, 1],
-                        [0, 0, 0, 0],
-                        [0, 0, 0, 0]
-                    ])
-
-    R = A.upper_triangular(kth_diagonal=-2)
-    assert R == Matrix([
-                        [1, 1, 1, 1],
-                        [1, 1, 1, 1],
-                        [1, 1, 1, 1],
-                        [0, 1, 1, 1]
-                    ])
-
-    R = A.upper_triangular()
-
-    assert R == Matrix([
-                        [1, 1, 1, 1],
-                        [0, 1, 1, 1],
-                        [0, 0, 1, 1],
-                        [0, 0, 0, 1]
-                    ])
-
-def test_lower_triangular():
-    A = Matrix([
-                        [1, 1, 1, 1],
-                        [1, 1, 1, 1],
-                        [1, 1, 1, 1],
-                        [1, 1, 1, 1]
-                    ])
-    L = A.lower_triangular(2)
-
-    assert L == Matrix([
-                        [1, 1, 1, 0],
-                        [1, 1, 1, 1],
-                        [1, 1, 1, 1],
-                        [1, 1, 1, 1]
-                    ])
-
-    L = A.lower_triangular(-2)
-
-    assert L == SpecialOnlyMatrix([
-                        [0, 0, 0, 0],
-                        [0, 0, 0, 0],
-                        [1, 0, 0, 0],
-                        [1, 1, 0, 0]
-                    ])
-
-    L = A.lower_triangular()
-    assert L == Matrix([
-                        [1, 0, 0, 0],
-                        [1, 1, 0, 0],
-                        [1, 1, 1, 0],
-                        [1, 1, 1, 1]
-                    ])
-
-
 
 # CalculusOnlyMatrix tests
 @XFAIL
