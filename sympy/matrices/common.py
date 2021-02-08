@@ -807,6 +807,18 @@ class MatrixSpecial(MatrixRequired):
         return cls._new(rows, cols, entry)
 
     @classmethod
+    def _eval_wilkinson(cls, n):
+        def entry(i, j):
+            return cls.one if i + 1 == j else cls.zero
+
+        D = cls._new(2*n + 1, 2*n + 1, entry)
+
+        wminus = cls.diag([i for i in range(-n, n + 1)], unpack=True) + D + D.T
+        wplus = abs(cls.diag([i for i in range(-n, n + 1)], unpack=True)) + D + D.T
+
+        return wminus, wplus
+
+    @classmethod
     def diag(kls, *args, strict=False, unpack=True, rows=None, cols=None, **kwargs):
         """Returns a matrix with the specified diagonal.
         If matrices are passed, a block-diagonal matrix
@@ -1208,8 +1220,9 @@ class MatrixSpecial(MatrixRequired):
             return kls.zero
         return kls._new(size, size, entry)
 
+
     @classmethod
-    def Wilkinson(kls, n):
+    def wilkinson(kls, n, **kwargs):
         """Returns two square Wilkinson Matrix of size 2*n + 1
         $W_{2n + 1}^-, W_{2n + 1}^+ =$ Wilkinson(n)
 
@@ -1217,7 +1230,7 @@ class MatrixSpecial(MatrixRequired):
         ========
 
         >>> from sympy.matrices import Matrix
-        >>> wminus, wplus = Matrix.Wilkinson(3)
+        >>> wminus, wplus = Matrix.wilkinson(3)
         >>> wminus
         Matrix([
         [-3,  1,  0, 0, 0, 0, 0],
@@ -1244,15 +1257,9 @@ class MatrixSpecial(MatrixRequired):
         .. [2] J. H. Wilkinson, The Algebraic Eigenvalue Problem, Claredon Press, Oxford, 1965, 662 pp.
 
         """
-        from sympy.matrices.dense import zeros, diag
-        D = zeros(2*n + 1)
-        for i in range(2*n):
-            D[i, i + 1] = S.One
-
-        wminus = diag([i for i in range(-n, n + 1)], unpack=True) + D + D.T
-        wplus = abs(diag([i for i in range(-n, n + 1)], unpack=True)) + D + D.T
-
-        return wminus, wplus
+        klass = kwargs.get('cls', kls)
+        n = as_int(n)
+        return klass._eval_wilkinson(n)
 
 class MatrixProperties(MatrixRequired):
     """Provides basic properties of a matrix."""
