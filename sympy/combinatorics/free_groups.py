@@ -982,7 +982,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x, y, z = free_group("x, y, z")
         >>> (x**2*y**-1).contains_generators()
-        {y, x}
+        {x, y}
         >>> (x**3*z).contains_generators()
         {x, z}
 
