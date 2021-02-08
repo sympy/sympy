@@ -399,6 +399,13 @@ class Product(ExprWithIntLimits):
         (k, a, n) = limits
         return Mul(*[term.subs(k, a + i) for i in range(n - a + 1)])
 
+    def _eval_derivative(self, x):
+        from sympy import Sum
+        limits = list(self.limits)
+        if any(x in limit[1:].free_symbols for limit in reversed(limits)):
+            return None
+        return self * Sum(self.function.diff(x) / self.function, self._args[1:], **self.assumptions0)
+
     def is_convergent(self):
         r"""
         See docs of :obj:`.Sum.is_convergent()` for explanation of convergence
