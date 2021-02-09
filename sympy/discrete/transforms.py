@@ -141,9 +141,8 @@ def _number_theoretic_transform(seq, prime, inverse=False):
                         "Number Theoretic Transform")
 
     a = [as_int(x) % p for x in seq]
+    
     n = len(a)
-
-
     if n < 1:
         return a
 
