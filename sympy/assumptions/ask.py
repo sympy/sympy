@@ -2,6 +2,7 @@
 
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
+from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 from sympy.core import sympify
 from sympy.core.cache import cacheit
 from sympy.core.relational import Relational
@@ -10,7 +11,6 @@ from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent)
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 
 
 # Memoization is necessary for the properties of AssumptionKeys to
@@ -239,6 +239,36 @@ class AssumptionKeys:
         from .predicates.matrices import UnitTriangularPredicate
         return UnitTriangularPredicate()
 
+    @memoize_property
+    def eq(self):
+        from .predicates.relational import EqualityPredicate
+        return EqualityPredicate()
+
+    @memoize_property
+    def ne(self):
+        from .predicates.relational import UnequalityPredicate
+        return UnequalityPredicate()
+
+    @memoize_property
+    def ge(self):
+        from .predicates.relational import GreaterThanPredicate
+        return GreaterThanPredicate()
+
+    @memoize_property
+    def le(self):
+        from .predicates.relational import LessThanPredicate
+        return LessThanPredicate()
+
+    @memoize_property
+    def gt(self):
+        from .predicates.relational import StrictGreaterThanPredicate
+        return StrictGreaterThanPredicate()
+
+    @memoize_property
+    def lt(self):
+        from .predicates.relational import StrictLessThanPredicate
+        return StrictLessThanPredicate()
+
 
 Q = AssumptionKeys()
 
@@ -280,14 +310,10 @@ def _extract_facts(expr, symbol, check_reversed_rel=True):
 
 def _extract_all_facts(expr, symbols):
     facts = set()
-    if len(symbols) == 1 and isinstance(symbols[0], Relational):
-        rel = symbols[0]
-        symbols = (rel, rel.reversed)
-
     for clause in expr.clauses:
         args = []
         for literal in clause:
-            if isinstance(literal.lit, AppliedPredicate):
+            if isinstance(literal.lit, AppliedPredicate) and len(literal.lit.arguments) == 1:
                 if literal.lit.arg in symbols:
                     # Add literal if it has 'symbol' in it
                     args.append(Literal(literal.lit.func, literal.is_Not))
@@ -298,6 +324,26 @@ def _extract_all_facts(expr, symbols):
             if args:
                 facts.add(frozenset(args))
     return CNF(facts)
+
+
+def _canonicalize_rel(expr):
+    # canonicalize any Relational and convert it to predicate.
+    # canonicalize relational predicate as well
+    from sympy.simplify.simplify import bottom_up
+    def F(rv):
+        if isinstance(rv, AppliedPredicate) and rv.function == Q.is_true \
+            and isinstance(rv.arguments[0], Relational):
+            rv = rv.arguments[0]
+
+        if isinstance(rv, Relational):
+            rv = rv.canonical.as_Predicate()
+        elif isinstance(rv, AppliedPredicate) and hasattr(rv.function, "as_Relational"):
+            relcls = rv.function.as_Relational()
+            rel = relcls(*rv.arguments, evaluate=False).canonical
+            if hasattr(rel, "as_Predicate"):
+                rv = rel.as_Predicate()
+        return rv
+    return bottom_up(expr, F)
 
 
 def ask(proposition, assumptions=True, context=global_assumptions):
@@ -368,7 +414,9 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     from sympy.assumptions.satask import satask
 
     proposition = sympify(proposition)
+    proposition = _canonicalize_rel(proposition)
     assumptions = sympify(assumptions)
+    assumptions = _canonicalize_rel(assumptions)
 
     if isinstance(proposition, Predicate) or proposition.kind is not BooleanKind:
         raise TypeError("proposition must be a valid logical expression")

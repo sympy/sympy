@@ -42,3 +42,8 @@ class IsTruePredicate(Predicate):
         "FiniteHandler",
         doc="Wrapper allowing to query the truth value of a boolean expression."
     )
+
+    def __call__(self, *args):
+        if len(args) == 1 and hasattr(args[0], "as_Predicate"):
+            return args[0].as_Predicate()
+        return super().__call__(*args)

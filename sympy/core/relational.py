@@ -603,6 +603,10 @@ class Equality(Relational):
         '''
         return (self.lhs - self.rhs).as_poly(*gens, **kwargs)
 
+    def as_Predicate(self):
+        from sympy.assumptions import Q
+        return Q.eq(self.lhs, self.rhs)
+
 
 Eq = Equality
 
@@ -677,6 +681,10 @@ class Unequality(Relational):
             # send back Ne with the new args
             return self.func(*eq.args)
         return eq.negated  # result of Ne is the negated Eq
+
+    def as_Predicate(self):
+        from sympy.assumptions import Q
+        return Q.ne(self.lhs, self.rhs)
 
 
 Ne = Unequality
@@ -997,6 +1005,10 @@ class GreaterThan(_Greater):
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_ge(lhs, rhs)
 
+    def as_Predicate(self):
+        from sympy.assumptions import Q
+        return Q.ge(self.lhs, self.rhs)
+
 
 Ge = GreaterThan
 
@@ -1010,6 +1022,10 @@ class LessThan(_Less):
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_le(lhs, rhs)
+
+    def as_Predicate(self):
+        from sympy.assumptions import Q
+        return Q.le(self.lhs, self.rhs)
 
 
 Le = LessThan
@@ -1025,6 +1041,10 @@ class StrictGreaterThan(_Greater):
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_gt(lhs, rhs)
 
+    def as_Predicate(self):
+        from sympy.assumptions import Q
+        return Q.gt(self.lhs, self.rhs)
+
 
 Gt = StrictGreaterThan
 
@@ -1038,6 +1058,10 @@ class StrictLessThan(_Less):
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_lt(lhs, rhs)
+
+    def as_Predicate(self):
+        from sympy.assumptions import Q
+        return Q.lt(self.lhs, self.rhs)
 
 
 Lt = StrictLessThan
