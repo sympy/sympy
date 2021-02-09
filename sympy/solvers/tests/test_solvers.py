@@ -1681,8 +1681,7 @@ def test_lambert_multivariate():
           [LambertW(3*exp(-sqrt(2)))/3, LambertW(3*exp(sqrt(2)))/3]
     assert solve((x**2 - 2*x - 2).subs(x, log(x) + 3*x)) == \
           [LambertW(3*exp(1 - sqrt(3)))/3, LambertW(3*exp(1 + sqrt(3)))/3]
-    eq = (x*exp(x) - 3).subs(x, x*exp(x))
-    assert solve(eq) == [LambertW(3*exp(-LambertW(3)))]
+
     # coverage test
     raises(NotImplementedError, lambda: solve(x - sin(x)*log(y - x), x))
     ans = [3, -3*LambertW(-log(3)/3)/log(3), -3*LambertW(-log(3)/3, -1)/log(3)]  # 3 and 2.478...
@@ -1696,6 +1695,9 @@ def test_other_lambert():
     assert solve(3*sin(x) - x*sin(3), x) == [3]
     assert set(solve(x**a - a**x), x) == {
         a, -a*LambertW(-log(a)/a)/log(a)}
+    # after improving lambert little more with solvify...
+    eq = (x*exp(x) - 3).subs(x, x*exp(x))
+    assert solve(eq) == [LambertW(3*exp(-LambertW(3)))]
 
 
 @slow

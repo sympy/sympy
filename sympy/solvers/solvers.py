@@ -2699,20 +2699,13 @@ def _tsolve(eq, sym, **flags):
                 poly = lhs.as_poly()
                 g = _filtered_gens(poly, sym)
                 _eq = lhs - rhs
-                if 'dmn' in flags:
-                    if not (flags['dmn'] is True):
-                        domain = S.Complexes
-                    else:
-                        domain = S.Reals
-                else:
-                    domain = S.Complexes
 
-                sols = _solve_lambert(_eq, sym, g, domain)
+                sols = _solve_lambert(_eq, sym, g, S.Complexes)
                 integer = Symbol('integer',integer=True)
                 soln = []
                 checkArg = False
                 for argSol in sols:
-                    if argSol.has(integer) and not argSol.has(Lambda):
+                    if argSol.has(integer):
                         checkArg = True
                         pq = argSol.subs({integer:0})
                         if pq:

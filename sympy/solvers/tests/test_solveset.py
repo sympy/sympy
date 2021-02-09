@@ -2274,12 +2274,6 @@ def test_solve_lambert():
 
 
     # check collection
-    b = Symbol('b')
-    eq = 3*log(a**(3*x + 5)) + b*log(a**(3*x + 5)) + a**(3*x + 5)
-    assert solveset_real(eq, x) == Union(Intersection(FiniteSet((-log(a**5) - LambertW(1/(b + 3), -1))/(3*log(a))), Interval(-exp(-1), 0)),\
-         Intersection(FiniteSet((-log(a**5) - LambertW(1/(b + 3)))/(3*log(a))), Interval(-exp(-1), oo)))
-    assert dumeq(solveset(eq, x), ImageSet(Lambda(n, (-log(a**5) - LambertW(1/(b + 3), n))/(3*log(a))), S.Integers))
-
     p = symbols('p', positive=True)
     eq = 3*log(p**(3*x + 5)) + p**(3*x + 5)
     assert dumeq(solveset(eq, x), ImageSet(Lambda(n, Rational(-5, 3) - LambertW(Rational(1, 3), n)/(3*log(p))), S.Integers))
@@ -2355,6 +2349,12 @@ def test_failed_lambert():
 
     assert solveset_real(x**a - a**x, x) == \
         FiniteSet(a, -a*LambertW(-log(a)/a)/log(a))
+    #  solvify not giving solution to equation
+    b = Symbol('b')
+    eq = 3*log(a**(3*x + 5)) + b*log(a**(3*x + 5)) + a**(3*x + 5)
+    assert solveset_real(eq, x) == Union(Intersection(FiniteSet((-log(a**5) - LambertW(1/(b + 3), -1))/(3*log(a))), Interval(-exp(-1), 0)),\
+         Intersection(FiniteSet((-log(a**5) - LambertW(1/(b + 3)))/(3*log(a))), Interval(-exp(-1), oo)))
+    assert dumeq(solveset(eq, x), ImageSet(Lambda(n, (-log(a**5) - LambertW(1/(b + 3), n))/(3*log(a))), S.Integers))
 
 
 # end of transolve's tests

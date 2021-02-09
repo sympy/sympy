@@ -154,11 +154,7 @@ def _lambert1(eq, x, domain):
 
     # invert the generator X1 so we have x(u)
     u = Dummy('rhs')
-    if not domain.is_subset(S.Reals):
-        dmn = False
-    else:
-        dmn = True
-    xusolns = solve(X1 - u, x,dmn=dmn)
+    xusolns = solvify(X1 - u, x,domain)
 
     # There are infinitely many branches for LambertW
     # but only branches for k = -1 and 0 might be real. The k = 0
@@ -616,3 +612,4 @@ def bivariate_type(f, x, y, *, first=True):
             if new is not None:
                 return a*x*y + b*y, new, u
             x, y = y, x
+from sympy.solvers.solveset import solvify

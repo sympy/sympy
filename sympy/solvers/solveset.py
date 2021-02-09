@@ -41,7 +41,6 @@ from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor, lcm, gcd)
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polytools import invert
-from sympy.solvers.bivariate import _solve_lambert, _filtered_gens, bivariate_type
 from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
     PolyNonlinearError)
 from sympy.solvers.solvers import _simple_dens, checksol, denoms, recast_to_symbols, unrad
@@ -2483,16 +2482,18 @@ def solvify(f, symbol, domain):
 
     We classify the output based on the type of solution returned by `solveset`.
 
-    Solution    |    Output
+    Solution     |    Output
     ----------------------------------------
-    FiniteSet   | list
+    FiniteSet    | list
 
-    ImageSet,   | list (if `f` is periodic)
-    Union       |
+    ImageSet,    | list (if `f` is periodic)
+    Union        |
 
-    EmptySet    | empty list
+    Intersection | list
 
-    Others      | None
+    EmptySet     | empty list
+
+    Others       | None
 
 
     Raises
@@ -2529,6 +2530,12 @@ def solvify(f, symbol, domain):
 
     elif isinstance(solution_set, FiniteSet):
         result = list(solution_set)
+
+    elif isinstance(solution_set, Intersection):
+        result = []
+        for argSet in solution_set.args:
+            if isinstance(argSet,FiniteSet):
+                result += list(argSet)
 
     else:
         period = periodicity(f, symbol)
@@ -3844,3 +3851,5 @@ def nonlinsolve(system, *symbols):
         result = substitution(
             polys_expr + nonpolys, symbols, exclude=denominators)
         return result
+
+from sympy.solvers.bivariate import _solve_lambert, _filtered_gens, bivariate_type
