@@ -1705,14 +1705,7 @@ def _solve(f, *symbols, **flags):
         try:
             soln = _tsolve(f_num, symbol, **flags)
             if soln is not None:
-                for solnArgs in soln:
-                    if solnArgs.has(LambertW) and solnArgs.has(Lambda):
-                        return soln
-                        break
-                    else:
-                        result = soln
-            if result is False and soln == []:
-                return soln
+                result = soln
 
         except PolynomialError:
             pass
