@@ -17,7 +17,7 @@ from sympy.core.assumptions import check_assumptions
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key)
 from sympy.core.sympify import sympify
-from sympy.core import Add, Dummy, Equality, Expr, Lambda, Mul, Pow, S, Symbol, Unequality, Wild
+from sympy.core import Add, Dummy, Equality, Expr, Mul, Pow, S, Symbol, Unequality, Wild
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
