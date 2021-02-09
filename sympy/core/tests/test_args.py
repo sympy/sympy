@@ -2555,7 +2555,16 @@ def test_sympy__functions__special__gamma_functions__multigamma():
 
 def test_sympy__functions__special__beta_functions__beta():
     from sympy.functions.special.beta_functions import beta
+    assert _test_args(beta(x))
     assert _test_args(beta(x, x))
+
+def test_sympy__functions__special__beta_functions__betainc():
+    from sympy.functions.special.beta_functions import betainc
+    assert _test_args(betainc(a, b, x, y))
+
+def test_sympy__functions__special__beta_functions__betainc_regularized():
+    from sympy.functions.special.beta_functions import betainc_regularized
+    assert _test_args(betainc_regularized(a, b, x, y))
 
 
 def test_sympy__functions__special__mathieu_functions__MathieuBase():

@@ -1160,6 +1160,18 @@ class LatexPrinter(Printer):
         else:
             return r"\operatorname{B}%s" % tex
 
+    def _print_betainc(self, expr, exp=None, operator='B'):
+        largs = [self._print(arg) for arg in expr.args]
+        tex = r"\left(%s, %s\right)" % (largs[0], largs[1])
+
+        if exp is not None:
+            return r"\operatorname{%s}_{(%s, %s)}^{%s}%s" % (operator, largs[2], largs[3], exp, tex)
+        else:
+            return r"\operatorname{%s}_{(%s, %s)}%s" % (operator, largs[2], largs[3], tex)
+
+    def _print_betainc_regularized(self, expr, exp=None):
+        return self._print_betainc(expr, exp, operator='I')
+
     def _print_uppergamma(self, expr, exp=None):
         tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
                                         self._print(expr.args[1]))
