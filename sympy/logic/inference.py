@@ -247,10 +247,10 @@ class KB:
 
 
 class PropKB(KB):
-    """A KB for Propositional Logic.  Inefficient, with no indexing."""
+    """ A KB for Propositional Logic.  Inefficient, with no indexing. """
 
     def tell(self, sentence):
-        """Add the sentence's clauses to the KB
+        """ Add the sentence's clauses to the KB
 
         Examples
         ========
