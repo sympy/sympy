@@ -33,7 +33,7 @@ from sympy.tensor.array import (ImmutableDenseNDimArray,
                                 MutableSparseNDimArray,
                                 MutableDenseNDimArray,
                                 tensorproduct)
-from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
     fibonacci, tribonacci
@@ -339,6 +339,7 @@ def test_latex_symbols_failing():
         r"{\mathrm{mass}}^{3} \cdot {\mathrm{volume}}^{3}"
 
 
+@_both_exp_pow
 def test_latex_functions():
     assert latex(exp(x)) == "e^{x}"
     assert latex(exp(1) + exp(2)) == "e + e^{2}"
@@ -1079,32 +1080,32 @@ def test_latex_Integers():
 def test_latex_ImageSet():
     x = Symbol('x')
     assert latex(ImageSet(Lambda(x, x**2), S.Naturals)) == \
-        r"\left\{x^{2}\; |\; x \in \mathbb{N}\right\}"
+        r"\left\{x^{2}\; \middle|\; x \in \mathbb{N}\right\}"
     y = Symbol('y')
 
     imgset = ImageSet(Lambda((x, y), x + y), {1, 2, 3}, {3, 4})
     assert latex(imgset) == \
-        r"\left\{x + y\; |\; x \in \left\{1, 2, 3\right\} , y \in \left\{3, 4\right\}\right\}"
+        r"\left\{x + y\; \middle|\; x \in \left\{1, 2, 3\right\} , y \in \left\{3, 4\right\}\right\}"
 
     imgset = ImageSet(Lambda(((x, y),), x + y), ProductSet({1, 2, 3}, {3, 4}))
     assert latex(imgset) == \
-        r"\left\{x + y\; |\; \left( x, \  y\right) \in \left\{1, 2, 3\right\} \times \left\{3, 4\right\}\right\}"
+        r"\left\{x + y\; \middle|\; \left( x, \  y\right) \in \left\{1, 2, 3\right\} \times \left\{3, 4\right\}\right\}"
 
 
 def test_latex_ConditionSet():
     x = Symbol('x')
     assert latex(ConditionSet(x, Eq(x**2, 1), S.Reals)) == \
-        r"\left\{x \mid x \in \mathbb{R} \wedge x^{2} = 1 \right\}"
+        r"\left\{x\; \middle|\; x \in \mathbb{R} \wedge x^{2} = 1 \right\}"
     assert latex(ConditionSet(x, Eq(x**2, 1), S.UniversalSet)) == \
-        r"\left\{x \mid x^{2} = 1 \right\}"
+        r"\left\{x\; \middle|\; x^{2} = 1 \right\}"
 
 
 def test_latex_ComplexRegion():
     assert latex(ComplexRegion(Interval(3, 5)*Interval(4, 6))) == \
-        r"\left\{x + y i\; |\; x, y \in \left[3, 5\right] \times \left[4, 6\right] \right\}"
+        r"\left\{x + y i\; \middle|\; x, y \in \left[3, 5\right] \times \left[4, 6\right] \right\}"
     assert latex(ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)) == \
         r"\left\{r \left(i \sin{\left(\theta \right)} + \cos{\left(\theta "\
-        r"\right)}\right)\; |\; r, \theta \in \left[0, 1\right] \times \left[0, 2 \pi\right) \right\}"
+        r"\right)}\right)\; \middle|\; r, \theta \in \left[0, 1\right] \times \left[0, 2 \pi\right) \right\}"
 
 
 def test_latex_Contains():
@@ -2477,7 +2478,7 @@ def test_issue_15353():
     sol = ConditionSet(
         Tuple(x, a), Eq(sin(a*x), 0) & Eq(cos(a*x), 0), S.Complexes**2)
     assert latex(sol) == \
-        r'\left\{\left( x, \  a\right) \mid \left( x, \  a\right) \in ' \
+        r'\left\{\left( x, \  a\right)\; \middle|\; \left( x, \  a\right) \in ' \
         r'\mathbb{C}^{2} \wedge \sin{\left(a x \right)} = 0 \wedge ' \
         r'\cos{\left(a x \right)} = 0 \right\}'
 

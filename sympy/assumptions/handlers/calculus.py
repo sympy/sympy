@@ -6,7 +6,7 @@ infinitesimal, finite, etc.
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Mul, Pow, Symbol
 from sympy.core.numbers import (Exp1, GoldenRatio, ImaginaryUnit, Infinity, NaN,
-    NegativeInfinity, Number, Pi, TribonacciConstant)
+    NegativeInfinity, Number, Pi, TribonacciConstant, E)
 from sympy.functions import cos, exp, log, sign, sin
 from sympy.logic.boolalg import conjuncts
 
@@ -177,6 +177,9 @@ def _(expr, assumptions):
 
     * Otherwise unknown
     """
+    if expr.base == E:
+        return ask(Q.finite(expr.exp), assumptions)
+
     base_bounded = ask(Q.finite(expr.base), assumptions)
     exp_bounded = ask(Q.finite(expr.exp), assumptions)
     if base_bounded is None and exp_bounded is None:  # Common Case
@@ -195,7 +198,7 @@ def _(expr, assumptions):
 
 @FinitePredicate.register(exp)
 def _(expr, assumptions):
-    return ask(Q.finite(expr.args[0]), assumptions)
+    return ask(Q.finite(expr.exp), assumptions)
 
 @FinitePredicate.register(log)
 def _(expr, assumptions):

@@ -108,7 +108,7 @@ from .series import (Order, O, limit, Limit, gruntz, series, approximants,
 
 from .functions import (factorial, factorial2, rf, ff, binomial,
         RisingFactorial, FallingFactorial, subfactorial, carmichael,
-        fibonacci, lucas, tribonacci, harmonic, bernoulli, bell, euler,
+        fibonacci, lucas, motzkin, tribonacci, harmonic, bernoulli, bell, euler,
         catalan, genocchi, partition, sqrt, root, Min, Max, Id, real_root,
         cbrt, re, im, sign, Abs, conjugate, arg, polar_lift,
         periodic_argument, unbranched_argument, principal_branch, transpose,
@@ -216,7 +216,7 @@ from .integrals import (integrate, Integral, line_integrate, mellin_transform,
         HankelTransform, InverseHankelTransform, singularityintegrate)
 
 from .tensor import (IndexedBase, Idx, Indexed, get_contraction_structure,
-        get_indices, MutableDenseNDimArray, ImmutableDenseNDimArray,
+        get_indices, shape, MutableDenseNDimArray, ImmutableDenseNDimArray,
         MutableSparseNDimArray, ImmutableSparseNDimArray, NDimArray,
         tensorproduct, tensorcontraction, tensordiagonal, derive_by_array,
         permutedims, Array, DenseNDimArray, SparseNDimArray)
@@ -252,11 +252,6 @@ from .plotting import plot, textplot, plot_backends, plot_implicit, plot_paramet
 from .interactive import init_session, init_printing
 
 evalf._create_evalf_table()
-
-# This is slow to import:
-#import abc
-
-from .deprecated import C, ClassRegistry, class_registry
 
 __all__ = [
     # sympy.core
@@ -329,7 +324,7 @@ __all__ = [
     # sympy.functions
     'factorial', 'factorial2', 'rf', 'ff', 'binomial', 'RisingFactorial',
     'FallingFactorial', 'subfactorial', 'carmichael', 'fibonacci', 'lucas',
-    'tribonacci', 'harmonic', 'bernoulli', 'bell', 'euler', 'catalan',
+    'motzkin', 'tribonacci', 'harmonic', 'bernoulli', 'bell', 'euler', 'catalan',
     'genocchi', 'partition', 'sqrt', 'root', 'Min', 'Max', 'Id', 'real_root',
     'cbrt', 're', 'im', 'sign', 'Abs', 'conjugate', 'arg', 'polar_lift',
     'periodic_argument', 'unbranched_argument', 'principal_branch',
@@ -456,7 +451,7 @@ __all__ = [
 
     # sympy.tensor
     'IndexedBase', 'Idx', 'Indexed', 'get_contraction_structure',
-    'get_indices', 'MutableDenseNDimArray', 'ImmutableDenseNDimArray',
+    'get_indices', 'shape', 'MutableDenseNDimArray', 'ImmutableDenseNDimArray',
     'MutableSparseNDimArray', 'ImmutableSparseNDimArray', 'NDimArray',
     'tensorproduct', 'tensorcontraction', 'tensordiagonal', 'derive_by_array',
     'permutedims', 'Array', 'DenseNDimArray', 'SparseNDimArray',
@@ -492,9 +487,6 @@ __all__ = [
 
     # sympy.testing
     'test', 'doctest',
-
-    # sympy.deprecated:
-    'C', 'ClassRegistry', 'class_registry',
 ]
 
 
@@ -517,7 +509,6 @@ __all__.extend([
     'assumptions',
     'calculus',
     'concrete',
-    'deprecated',
     'discrete',
     'external',
     'functions',
