@@ -159,6 +159,11 @@ class ConditionSet(Set):
                 condition = And(condition.xreplace(reps), c)
                 base_set = b
 
+        # flatten ConditionSet(Contains(ConditionSet())) expressions
+        if isinstance(condition, Contains) and (sym == condition.args[0]):
+            if isinstance(condition.args[1], Set):
+                return condition.args[1].intersect(base_set)
+
         rv = Basic.__new__(cls, sym, condition, base_set)
         return rv if know is None else Union(know, rv)
 
@@ -188,12 +193,22 @@ class ConditionSet(Set):
                 ok_sig(i, j) for i, j in zip(a, b))
         if not ok_sig(self.sym, other):
             return S.false
+
+        # try doing base_cond first and return
+        # False immediately if it is False
+        base_cond = Contains(other, self.base_set)
+        if base_cond is S.false:
+            return S.false
+
+        # Substitute other into condition. This could raise e.g. for
+        # ConditionSet(x, 1/x >= 0, Reals).contains(0)
+        lamda = Lambda((self.sym,), self.condition)
         try:
-            return And(
-                Contains(other, self.base_set),
-                Lambda((self.sym,), self.condition)(other))
+            lambda_cond = lamda(other)
         except TypeError:
             return Contains(other, self, evaluate=False)
+        else:
+            return And(base_cond, lambda_cond)
 
     def as_relational(self, other):
         f = Lambda(self.sym, self.condition)

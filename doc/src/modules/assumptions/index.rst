@@ -61,7 +61,6 @@ Contents
     ask.rst
     assume.rst
     refine.rst
-    handlers/index.rst
     predicates.rst
 
 
