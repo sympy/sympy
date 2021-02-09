@@ -883,7 +883,7 @@ def test_MatMul_MatAdd():
     from sympy import MatrixSymbol
 
     X, Y = MatrixSymbol("X", 2, 2), MatrixSymbol("Y", 2, 2)
-    assert str(2*(X + Y)) == "2*(X + Y)"
+    assert str(2*(X + Y)) == "2*X + 2*Y"
 
     assert str(I*X) == "I*X"
     assert str(-I*X) == "-I*X"
@@ -963,7 +963,7 @@ def test_MatrixSymbol_printing():
     B = MatrixSymbol("B", 3, 3)
 
     assert str(A - A*B - B) == "A - A*B - B"
-    assert str(A*B - (A+B)) == "-(A + B) + A*B"
+    assert str(A*B - (A+B)) == "-A + A*B - B"
     assert str(A**(-1)) == "A**(-1)"
     assert str(A**3) == "A**3"
 
