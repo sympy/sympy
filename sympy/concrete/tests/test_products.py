@@ -1,6 +1,6 @@
 from sympy import (symbols, Symbol, product, combsimp, factorial, rf, sqrt, cos,
                    Function, Product, Rational, Sum, oo, exp, log, S, pi,
-                   KroneckerDelta, Derivative, diff)
+                   KroneckerDelta, Derivative, diff, sin, polygamma, gamma)
 from sympy.testing.pytest import raises
 from sympy import simplify
 
@@ -384,7 +384,9 @@ def test_KroneckerDelta_Product():
     assert Product(x*KroneckerDelta(x, y), (x, 0, 1)).doit() == 0
 
 def test_issue_20848():
-    w, y, z = symbols('w y z')
+    t, y, z = symbols('t y z')
     assert diff(Product(x, (y, 1, z)), x) == Product(x, (y, 1, z))*Sum(1/x, (y, 1, z))
     assert diff(Product(x, (y, x, z)), x) == Derivative(Product(x, (y, x, z)), x)
-    assert diff(Product(w, (x, 1, z)), x) == S(0)
+    assert diff(Product(t, (x, 1, z)), x) == S(0)
+    assert Product(sin(n*x), (n, -1, 1)).diff(x).doit() == S(0)
+    assert Product(x*y, (x, 1, z), (y, 1, m)).diff(z).doit() == m*factorial(m)**z*factorial(z)**m*gamma(z + 1)*polygamma(0, z + 1)/factorial(z) + log(factorial(m))*factorial(m)**z*factorial(z)**m
