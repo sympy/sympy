@@ -394,6 +394,34 @@ def _invert_eq_bool(fi):
 def _is_relational(fi):
     return fi.is_Relational and not isinstance(fi, Equality)
 
+def _handle_relational(f_relational, symbols, flags):
+    f = [_invert_eq_bool(fi) for fi in f_relational]
+    if flags.get('dict', False):
+        solution = reduce_inequalities(f_relational, symbols=symbols)
+        if isinstance(solution, Equality):
+            return [{solution.lhs: solution.rhs}]
+        solution = list(solution.args)
+        for sol in solution:
+            # Behavior for types like StrictLessThan is not defined
+            if not isinstance(sol, (Or, Equality)):
+                warnings.warn(filldedent('''
+                    Warning: Ignoring dict=True due to
+                    incompatible type of %s.''' % sol))
+                return reduce_inequalities(f_relational, symbols=symbols)
+        intermediate = [sol for sol in solution
+                        if isinstance(sol, Equality)]
+        solution[:] = [sol.args for sol in solution
+                       if sol not in intermediate]
+        solutions = [intermediate + list(sol)
+                     for sol in itertools.product(*solution)]
+        for i in range(len(solutions)):
+            ele = {}
+            for sol in solutions[i]:
+                ele[sol.lhs] = sol.rhs
+            solutions[i] = ele
+        return [] if solutions == [{}] else solutions
+    return reduce_inequalities(f_relational, symbols=symbols)
+
 
 def solve(f, *symbols, **flags):
     r"""
@@ -924,32 +952,7 @@ def solve(f, *symbols, **flags):
     f_relational = [_invert_eq_bool(fi) for fi in f]
 
     if any(_is_relational(fi) for fi in f_relational):
-        f = [_invert_eq_bool(fi) for fi in f_relational]
-        if flags.get('dict', False):
-            solution = reduce_inequalities(f_relational, symbols=symbols)
-            if isinstance(solution, Equality):
-                return [{solution.lhs: solution.rhs}]
-            solution = list(solution.args)
-            for sol in solution:
-                # Behavior for types like StrictLessThan is not defined
-                if not isinstance(sol, (Or, Equality)):
-                    warnings.warn(filldedent('''
-                        Warning: Ignoring dict=True due to
-                        incompatible type of %s.''' % sol))
-                    return reduce_inequalities(f_relational, symbols=symbols)
-            intermediate = [sol for sol in solution
-                            if isinstance(sol, Equality)]
-            solution[:] = [sol.args for sol in solution
-                           if sol not in intermediate]
-            solutions = [intermediate + list(sol)
-                         for sol in itertools.product(*solution)]
-            for i in range(len(solutions)):
-                ele = {}
-                for sol in solutions[i]:
-                    ele[sol.lhs] = sol.rhs
-                solutions[i] = ele
-            return [] if solutions == [{}] else solutions
-        return reduce_inequalities(f_relational, symbols=symbols)
+        return _handle_relational(f_relational, symbols, flags)
 
     # preprocess equation(s)
 
