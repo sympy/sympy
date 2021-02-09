@@ -12,7 +12,7 @@ instead of the slightly more clunky-looking
 Caveats
 =======
 
-1. As of the time of writing this, the names ``C``, ``O``, ``S``, ``I``, ``N``,
+1. As of the time of writing this, the names ``O``, ``S``, ``I``, ``N``,
 ``E``, and ``Q`` are colliding with names defined in SymPy. If you import them
 from both ``sympy.abc`` and ``sympy``, the second import will "win".
 This is an issue only for * imports, which should only be used for short-lived

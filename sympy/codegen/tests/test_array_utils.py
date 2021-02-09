@@ -1,6 +1,6 @@
 from sympy import (
     symbols, IndexedBase, Identity, cos, Inverse, tensorcontraction,
-    permutedims, tensorproduct, ZeroMatrix)
+    permutedims, tensorproduct, ZeroMatrix, HadamardProduct, HadamardPower, MatPow)
 from sympy.codegen.array_utils import (
     CodegenArrayContraction, CodegenArrayTensorProduct, CodegenArrayDiagonal,
     CodegenArrayPermuteDims, CodegenArrayElementwiseAdd, _codegen_array_parse,
@@ -11,7 +11,7 @@ from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.expressions.diagonal import DiagMatrix
 from sympy.matrices import Trace, MatMul, Transpose
-from sympy.tensor.array.array_expressions import ZeroArray
+from sympy.tensor.array.expressions.array_expressions import ZeroArray
 from sympy.testing.pytest import raises
 import random
 
@@ -19,10 +19,15 @@ import random
 A, B = symbols("A B", cls=IndexedBase)
 i, j, k, l, m, n = symbols("i j k l m n")
 
+I = Identity(k)
+
 M = MatrixSymbol("M", k, k)
 N = MatrixSymbol("N", k, k)
 P = MatrixSymbol("P", k, k)
 Q = MatrixSymbol("Q", k, k)
+
+a = MatrixSymbol("a", k, 1)
+b = MatrixSymbol("b", k, 1)
 
 
 def test_codegen_array_contraction_construction():
@@ -114,10 +119,21 @@ def test_codegen_array_recognize_matrix_mul_lines():
                     CodegenArrayTensorProduct(c, b),
                 )
             ), (2, 4)), [0, 1, 3, 2])
-    assert recognize_matrix_expression(cg) == a*b.T*c + a*c.T*b
+    assert recognize_matrix_expression(cg) == a*(b.T*c + c.T*b)
 
     za = ZeroArray(m, n)
     assert recognize_matrix_expression(za) == ZeroMatrix(m, n)
+
+    cg = CodegenArrayTensorProduct(3, M)
+    assert recognize_matrix_expression(cg) == 3*M
+
+    # TODO: not yet supported:
+
+    # cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N, P), (0, 2, 4), (1, 3, 5))
+    # assert recognize_matrix_expression(cg) == HadamardProduct(M, N, P)
+
+    # cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N, P), (0, 3, 4), (1, 2, 5))
+    # assert recognize_matrix_expression(cg) == HadamardProduct(M, N.T, P)
 
 
 def test_codegen_array_flatten():
@@ -370,11 +386,35 @@ def test_parsing_of_matrix_expressions():
     expr = M*(2*N + 3*M)
     res = parse_matrix_expression(expr)
     rexpr = recognize_matrix_expression(res)
-    assert expr.expand() == rexpr.doit()
+    assert expr == rexpr
 
     expr = Trace(M)
     result = CodegenArrayContraction(M, (0, 1))
     assert parse_matrix_expression(expr) == result
+
+    expr = 3*Trace(M)
+    result = CodegenArrayContraction(CodegenArrayTensorProduct(3, M), (0, 1))
+    assert parse_matrix_expression(expr) == result
+
+    expr = 3*Trace(Trace(M) * M)
+    result = CodegenArrayContraction(CodegenArrayTensorProduct(3, M, M), (0, 1), (2, 3))
+    assert parse_matrix_expression(expr) == result
+
+    expr = 3*Trace(M)**2
+    result = CodegenArrayContraction(CodegenArrayTensorProduct(3, M, M), (0, 1), (2, 3))
+    assert parse_matrix_expression(expr) == result
+
+    expr = HadamardProduct(M, N)
+    result = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N), (0, 2), (1, 3))
+    assert parse_matrix_expression(expr) == result
+
+    expr = HadamardPower(M, 2)
+    result = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, M), (0, 2), (1, 3))
+    assert parse_matrix_expression(expr) == result
+
+    expr = M**2
+    assert isinstance(expr, MatPow)
+    assert parse_matrix_expression(expr) == CodegenArrayContraction(CodegenArrayTensorProduct(M, M), (1, 2))
 
 
 def test_special_matrices():
@@ -761,3 +801,50 @@ def test_array_expr_zero_array():
     assert CodegenArrayElementwiseAdd(tp1, za1, tp2) == CodegenArrayElementwiseAdd(tp1, tp2)
     assert CodegenArrayElementwiseAdd(M, zm3) == M
     assert CodegenArrayElementwiseAdd(M, N, zm3) == CodegenArrayElementwiseAdd(M, N)
+
+
+def test_contraction_tp_additions():
+    a = CodegenArrayElementwiseAdd(
+        CodegenArrayTensorProduct(M, N),
+        CodegenArrayTensorProduct(N, M)
+    )
+    tp = CodegenArrayTensorProduct(P, a, Q)
+    expr = CodegenArrayContraction(tp, (3, 4))
+    expected = CodegenArrayTensorProduct(
+        P,
+        CodegenArrayElementwiseAdd(
+            CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2)),
+            CodegenArrayContraction(CodegenArrayTensorProduct(N, M), (1, 2)),
+        ),
+        Q
+    )
+    assert expr == expected
+    assert recognize_matrix_expression(expr) == CodegenArrayTensorProduct(P, M*N + N*M, Q)
+
+    expr = CodegenArrayContraction(tp, (1, 2), (3, 4), (5, 6))
+    result = CodegenArrayContraction(
+        CodegenArrayTensorProduct(
+            P,
+            CodegenArrayElementwiseAdd(
+                CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2)),
+                CodegenArrayContraction(CodegenArrayTensorProduct(N, M), (1, 2)),
+            ),
+            Q
+        ), (1, 2), (3, 4))
+    assert expr == result
+    assert recognize_matrix_expression(expr) == P*(M*N + N*M)*Q
+
+
+def test_recognize_expression_implicit_mul():
+
+    cg = CodegenArrayTensorProduct(a, b)
+    assert recognize_matrix_expression(cg) == a*b.T
+
+    cg = CodegenArrayTensorProduct(a, I, b)
+    assert recognize_matrix_expression(cg) == a*b.T
+
+    cg = CodegenArrayContraction(CodegenArrayTensorProduct(I, I), (1, 2))
+    assert recognize_matrix_expression(cg) == I
+
+    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(I, Identity(1)), [0, 2, 1, 3])
+    assert recognize_matrix_expression(cg) == I

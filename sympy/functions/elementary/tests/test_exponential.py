@@ -4,14 +4,21 @@ from sympy import (
     adjoint, conjugate, transpose, O, refine,
     sin, cos, sinh, cosh, tanh, exp_polar, re, simplify,
     AccumBounds, MatrixSymbol, Pow, gcd, Sum, Product)
+from sympy.core.parameters import global_parameters
 from sympy.functions.elementary.exponential import match_real_imag
 from sympy.abc import x, y, z
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, _both_exp_pow
 
 
+@_both_exp_pow
 def test_exp_values():
+    if global_parameters.exp_is_pow:
+        assert type(exp(x)) is Pow
+    else:
+        assert type(exp(x)) is exp
+
     k = Symbol('k', integer=True)
 
     assert exp(nan) is nan
@@ -50,6 +57,7 @@ def test_exp_values():
     assert exp(oo, evaluate=False).is_finite is False
 
 
+@_both_exp_pow
 def test_exp_period():
     assert exp(I*pi*Rational(9, 4)) == exp(I*pi/4)
     assert exp(I*pi*Rational(46, 18)) == exp(I*pi*Rational(5, 9))
@@ -69,18 +77,22 @@ def test_exp_period():
     assert exp((-1 + 4*n)*I*pi/2) == -I
 
 
+@_both_exp_pow
 def test_exp_log():
     x = Symbol("x", real=True)
     assert log(exp(x)) == x
     assert exp(log(x)) == x
-    assert log(x).inverse() == exp
-    assert exp(x).inverse() == log
+
+    if not global_parameters.exp_is_pow:
+        assert log(x).inverse() == exp
+        assert exp(x).inverse() == log
 
     y = Symbol("y", polar=True)
     assert log(exp_polar(z)) == z
     assert exp(log(y)) == y
 
 
+@_both_exp_pow
 def test_exp_expand():
     e = exp(log(Rational(2))*(1 + x) - log(Rational(2))*x)
     assert e.expand() == 2
@@ -88,6 +100,7 @@ def test_exp_expand():
     assert exp(x + y).expand() == exp(x)*exp(y)
 
 
+@_both_exp_pow
 def test_exp__as_base_exp():
     assert exp(x).as_base_exp() == (E, x)
     assert exp(2*x).as_base_exp() == (E, 2*x)
@@ -144,6 +157,7 @@ def test_exp_transpose():
     assert transpose(exp(x)) == exp(transpose(x))
 
 
+@_both_exp_pow
 def test_exp_rewrite():
     from sympy.concrete.summations import Sum
     assert exp(x).rewrite(sin) == sinh(x) + cosh(x)
@@ -154,9 +168,10 @@ def test_exp_rewrite():
     assert exp(x).rewrite(tanh) == (1 + tanh(x/2))/(1 - tanh(x/2))
     assert exp(pi*I/4).rewrite(sqrt) == sqrt(2)/2 + sqrt(2)*I/2
     assert exp(pi*I/3).rewrite(sqrt) == S.Half + sqrt(3)*I/2
-    assert exp(x*log(y)).rewrite(Pow) == y**x
-    assert exp(log(x)*log(y)).rewrite(Pow) in [x**log(y), y**log(x)]
-    assert exp(log(log(x))*y).rewrite(Pow) == log(x)**y
+    if not global_parameters.exp_is_pow:
+        assert exp(x*log(y)).rewrite(Pow) == y**x
+        assert exp(log(x)*log(y)).rewrite(Pow) in [x**log(y), y**log(x)]
+        assert exp(log(log(x))*y).rewrite(Pow) == log(x)**y
 
     n = Symbol('n', integer=True)
 
@@ -166,10 +181,12 @@ def test_exp_rewrite():
             == 4/(3 - sqrt(3)*I))
 
 
+@_both_exp_pow
 def test_exp_leading_term():
     assert exp(x).as_leading_term(x) == 1
     assert exp(2 + x).as_leading_term(x) == exp(2)
     assert exp((2*x + 3) / (x+1)).as_leading_term(x) == exp(3)
+
     # The following tests are commented, since now SymPy returns the
     # original function when the leading term in the series expansion does
     # not exist.
@@ -178,6 +195,7 @@ def test_exp_leading_term():
     # raises(NotImplementedError, lambda: exp(x + 1/x).as_leading_term(x))
 
 
+@_both_exp_pow
 def test_exp_taylor_term():
     x = symbols('x')
     assert exp(x).taylor_term(1, x) == x
@@ -572,6 +590,7 @@ def test_exp_expand_NC():
     assert exp(x + y + z).expand() == exp(x)*exp(y)*exp(z)
 
 
+@_both_exp_pow
 def test_as_numer_denom():
     n = symbols('n', negative=True)
     assert exp(x).as_numer_denom() == (exp(x), 1)

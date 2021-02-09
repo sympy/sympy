@@ -17,7 +17,7 @@ from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
 from sympy.matrices import Matrix, SparseMatrix
-from sympy.testing.pytest import XFAIL, slow, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, slow, raises, warns_deprecated_sympy, _both_exp_pow
 import math
 
 
@@ -1094,6 +1094,7 @@ def test_commutative():
     assert ask(Q.commutative(log(x))) is True
 
 
+@_both_exp_pow
 def test_complex():
     assert ask(Q.complex(x)) is None
     assert ask(Q.complex(x), Q.complex(x)) is True
@@ -1260,6 +1261,7 @@ def test_extended_real():
     assert ask(Q.extended_real(x + S.Infinity), Q.real(x)) is True
 
 
+@_both_exp_pow
 def test_rational():
     assert ask(Q.rational(x), Q.integer(x)) is True
     assert ask(Q.rational(x), Q.irrational(x)) is False
@@ -1426,6 +1428,7 @@ def test_hermitian():
         Q.imaginary(x) & Q.imaginary(y) & Q.imaginary(z)) is True
 
 
+@_both_exp_pow
 def test_imaginary():
     assert ask(Q.imaginary(x)) is None
     assert ask(Q.imaginary(x), Q.real(x)) is False
@@ -1733,6 +1736,7 @@ def test_prime():
     assert ask(Q.prime(x**y), Q.integer(x) & Q.integer(y)) is False
 
 
+@_both_exp_pow
 def test_positive():
     assert ask(Q.positive(x), Q.positive(x)) is True
     assert ask(Q.positive(x), Q.negative(x)) is False
@@ -1861,6 +1865,7 @@ def test_real_pow():
     assert ask(Q.real(x**(I*pi/log(x))), Q.real(x)) is True
 
 
+@_both_exp_pow
 def test_real_functions():
     # trigonometric functions
     assert ask(Q.real(sin(x))) is None
@@ -1918,6 +1923,7 @@ def test_matrix():
     assert ask(Q.antihermitian(_A)) is None
 
 
+@_both_exp_pow
 def test_algebraic():
     assert ask(Q.algebraic(x)) is None
 

@@ -553,8 +553,8 @@ def exptrigsimp(expr):
         def signlog(expr, sign=1):
             if expr is S.Exp1:
                 return sign, 1
-            elif isinstance(expr, exp):
-                return sign, expr.args[0]
+            elif isinstance(expr, exp) or (expr.is_Pow and expr.base == S.Exp1):
+                return sign, expr.exp
             elif sign == 1:
                 return signlog(-expr, sign=-1)
             else:
