@@ -42,7 +42,7 @@ class AssumptionsContext(set):
     >>> global_assumptions
     AssumptionsContext({Q.real(x)})
     >>> ask(Q.real(x))
-
+    True
 
     And remove them:
 
@@ -294,7 +294,7 @@ class Predicate(Boolean, metaclass=PredicateMeta):
     >>> from sympy import Predicate, Integer
     >>> Q.P = Predicate("P")
     >>> type(Q.P)
-    <class 'sympy.assumptions.assume.Predicate'>
+    <class 'sympy.assumptions.assume.UndefinedPredicate'>
     >>> Q.P(1)
     Q.P(1)
     >>> Q.P.register(Integer)(lambda expr, assump: True)
@@ -387,9 +387,9 @@ class UndefinedPredicate(Predicate):
     >>> from sympy import Predicate, Q
     >>> Q.P = Predicate('P')
     >>> Q.P.func
-    <class 'sympy.assumptions.assume.Predicate'>
+    <class 'sympy.assumptions.assume.UndefinedPredicate'>
     >>> Q.P.name
-    'P'
+    Str('P')
 
     """
 
