@@ -6,6 +6,7 @@ from sympy.core.function import (Function, ArgumentIndexError, _coeff_isneg,
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Rational
+from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
@@ -74,16 +75,16 @@ class ExpBase(Function):
         return self.func(1), Mul(*self.args)
 
     def _eval_adjoint(self):
-        return self.func(self.args[0].adjoint())
+        return self.func(self.exp.adjoint())
 
     def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate())
+        return self.func(self.exp.conjugate())
 
     def _eval_transpose(self):
-        return self.func(self.args[0].transpose())
+        return self.func(self.exp.transpose())
 
     def _eval_is_finite(self):
-        arg = self.args[0]
+        arg = self.exp
         if arg.is_infinite:
             if arg.is_extended_negative:
                 return True
@@ -104,7 +105,7 @@ class ExpBase(Function):
             return s.is_rational
 
     def _eval_is_zero(self):
-        return (self.args[0] is S.NegativeInfinity)
+        return self.exp is S.NegativeInfinity
 
     def _eval_power(self, other):
         """exp(arg)**e -> exp(arg*e) if assumptions allow it.
@@ -260,6 +261,8 @@ class exp(ExpBase):
         from sympy.sets.setexpr import SetExpr
         from sympy.matrices.matrices import MatrixBase
         from sympy import im, logcombine, re
+        if global_parameters.exp_is_pow:
+            return Pow(S.Exp1, arg)
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -454,9 +457,9 @@ class exp(ExpBase):
                 return False
 
     def _eval_is_extended_positive(self):
-        if self.args[0].is_extended_real:
+        if self.exp.is_extended_real:
             return not self.args[0] is S.NegativeInfinity
-        elif self.args[0].is_imaginary:
+        elif self.exp.is_imaginary:
             arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
             return arg2.is_even
 
@@ -464,7 +467,7 @@ class exp(ExpBase):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
         from sympy import ceiling, limit, oo, Order, powsimp, Wild, expand_complex
-        arg = self.args[0]
+        arg = self.exp
         arg_series = arg._eval_nseries(x, n=n, logx=logx)
         if arg_series.is_Order:
             return 1 + arg_series
@@ -669,6 +672,8 @@ class log(Function):
             elif arg.is_Rational and arg.p == 1:
                 return -cls(arg.q)
 
+        if arg.is_Pow and arg.base is S.Exp1 and arg.exp.is_extended_real:
+            return arg.exp
         I = S.ImaginaryUnit
         if isinstance(arg, exp) and arg.args[0].is_extended_real:
             return arg.args[0]

@@ -6,7 +6,7 @@ from sympy.core import sympify
 from sympy.core.cache import cacheit
 from sympy.core.relational import Relational
 from sympy.core.kind import BooleanKind
-from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent)
+from sympy.logic.boolalg import (to_cnf, And, Not, Implies, Equivalent)
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -241,42 +241,6 @@ class AssumptionKeys:
 
 
 Q = AssumptionKeys()
-
-def _extract_facts(expr, symbol, check_reversed_rel=True):
-    """
-    Helper for ask().
-
-    Explanation
-    ===========
-
-    Extracts the facts relevant to the symbol from an assumption.
-    Returns None if there is nothing to extract.
-    """
-    if isinstance(symbol, Relational):
-        if check_reversed_rel:
-            rev = _extract_facts(expr, symbol.reversed, False)
-            if rev is not None:
-                return rev
-    if isinstance(expr, bool):
-        return
-    if not expr.has(symbol):
-        return
-    if isinstance(expr, AppliedPredicate):
-        if expr.arg == symbol:
-            return expr.func
-        else:
-            return
-    if isinstance(expr, Not) and expr.args[0].func in (And, Or):
-        cls = Or if expr.args[0] == And else And
-        expr = cls(*[~arg for arg in expr.args[0].args])
-    args = [_extract_facts(arg, symbol) for arg in expr.args]
-    if isinstance(expr, And):
-        args = [x for x in args if x is not None]
-        if args:
-            return expr.func(*args)
-    if args and all(x is not None for x in args):
-        return expr.func(*args)
-
 
 def _extract_all_facts(expr, symbols):
     facts = set()

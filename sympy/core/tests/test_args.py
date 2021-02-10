@@ -2555,7 +2555,16 @@ def test_sympy__functions__special__gamma_functions__multigamma():
 
 def test_sympy__functions__special__beta_functions__beta():
     from sympy.functions.special.beta_functions import beta
+    assert _test_args(beta(x))
     assert _test_args(beta(x, x))
+
+def test_sympy__functions__special__beta_functions__betainc():
+    from sympy.functions.special.beta_functions import betainc
+    assert _test_args(betainc(a, b, x, y))
+
+def test_sympy__functions__special__beta_functions__betainc_regularized():
+    from sympy.functions.special.beta_functions import betainc_regularized
+    assert _test_args(betainc_regularized(a, b, x, y))
 
 
 def test_sympy__functions__special__mathieu_functions__MathieuBase():
@@ -4366,8 +4375,8 @@ def test_sympy__tensor__array__array_derivatives__ArrayDerivative():
     assert _test_args(arrder)
 
 
-def test_sympy__tensor__array__array_expressions__ZeroArray():
-    from sympy.tensor.array.array_expressions import ZeroArray
+def test_sympy__tensor__array__expressions__array_expressions__ZeroArray():
+    from sympy.tensor.array.expressions.array_expressions import ZeroArray
     m, n, k = symbols("m n k")
     za = ZeroArray(m, n, k, 2)
     assert _test_args(za)
