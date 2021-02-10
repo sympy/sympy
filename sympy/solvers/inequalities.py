@@ -514,23 +514,6 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
 
         if rv is None:
             n, d = e.as_numer_denom()
-            try:
-                if gen not in n.free_symbols and len(e.free_symbols) > 1:
-                    raise ValueError
-                # this might raise ValueError on its own
-                # or it might give None...
-                solns = solvify(e, gen, domain)
-                if solns is None:
-                    # in which case we raise ValueError
-                    raise ValueError
-            except (ValueError, NotImplementedError):
-                # replace gen with generic x since it's
-                # univariate anyway
-                raise NotImplementedError(filldedent('''
-                    The inequality, %s, cannot be solved using
-                    solve_univariate_inequality.
-                    ''' % expr.subs(gen, Symbol('x'))))
-
             expanded_e = expand_mul(e)
             def valid(x):
                 # this is used to see if gen=x satisfies the
@@ -560,21 +543,40 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                         'relationship did not evaluate: %s' % r)
 
             singularities = []
-            for d in denoms(expr, gen):
-                singularities.extend(solvify(d, gen, domain))
-            if not continuous:
-                domain = continuous_domain(expanded_e, gen, domain)
 
             include_x = '=' in expr.rel_op and expr.rel_op != '!='
+            try:
+                for d in denoms(expr, gen):
+                    singularities.extend(solvify(d, gen, domain))
+                if not continuous:
+                    domain = continuous_domain(expanded_e, gen, domain)
+                if gen not in n.free_symbols and len(e.free_symbols) > 1:
+                    raise ValueError
+                # this might raise ValueError on its own
+                # or it might give None...
+                solns = solvify(e, gen, domain)
+                if solns is None:
+                    # in which case we raise ValueError
+                    raise ValueError
+                else:
+                    discontinuities = set(domain.boundary -
+                        FiniteSet(domain.inf, domain.sup))
+                    # remove points that are not between inf and sup of domain
+                    critical_points = FiniteSet(*(solns + singularities + list(
+                        discontinuities))).intersection(
+                        Interval(domain.inf, domain.sup,
+                        domain.inf not in domain, domain.sup not in domain))
+                    if isinstance(critical_points,Intersection):
+                        raise ValueError
+            except (ValueError, NotImplementedError):
+                # replace gen with generic x since it's
+                # univariate anyway
+                raise NotImplementedError(filldedent('''
+                    The inequality, %s, cannot be solved using
+                    solve_univariate_inequality.
+                    ''' % expr.subs(gen, Symbol('x'))))
 
             try:
-                discontinuities = set(domain.boundary -
-                    FiniteSet(domain.inf, domain.sup))
-                # remove points that are not between inf and sup of domain
-                critical_points = FiniteSet(*(solns + singularities + list(
-                    discontinuities))).intersection(
-                    Interval(domain.inf, domain.sup,
-                    domain.inf not in domain, domain.sup not in domain))
                 if all(r.is_number for r in critical_points):
                     reals = _nsort(critical_points, separated=True)[0]
                 else:
