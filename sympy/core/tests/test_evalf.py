@@ -1,6 +1,6 @@
 from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral, Matrix,
-    integrate, log, Mul, N, oo, pi, Pow, product, Product, Float, Basic, FiniteSet, tan
+    integrate, log, Mul, N, oo, pi, Pow, product, Product, Float, Basic, FiniteSet, tan,
     Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat, cosh, acosh, acos)
 from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
