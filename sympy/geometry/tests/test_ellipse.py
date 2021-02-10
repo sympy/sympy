@@ -420,6 +420,9 @@ def test_reflect():
 def test_is_tangent():
     e1 = Ellipse(Point(0, 0), 3, 5)
     c1 = Circle(Point(2, -2), 7)
+    c0 = Circle(Point(0,0),2)
+    assert c0.is_tangent(Polygon((-2,-2),(-2,2),(2,2),(3,0),(2,-2))) == True
+    assert c0.is_tangent(Polygon((2,2),(3,0),(2,-2),(-2,-2),(-2,2))) == True
     assert e1.is_tangent(Point(0, 0)) is False
     assert e1.is_tangent(Point(3, 0)) is False
     assert e1.is_tangent(e1) is True
