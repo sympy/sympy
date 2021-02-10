@@ -14,6 +14,7 @@ from sympy.core.compatibility import default_sort_key
 from sympy.core.mul import Mul
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.matrices.common import MatrixCommon
 from sympy.matrices.expressions import (MatAdd, MatMul, Trace, Transpose)
 from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
 from sympy.tensor.array import NDimArray
@@ -790,17 +791,18 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
         if not isinstance(expr.expr, CodegenArrayTensorProduct):
             return expr, permutation
         args = expr.expr.args
+        subranks = [get_rank(arg) for arg in expr.expr.args]
 
         contraction_indices = expr.contraction_indices
         contraction_indices_flat = [j for i in contraction_indices for j in i]
-        cumul = list(accumulate([0] + expr.subranks))
+        cumul = list(accumulate([0] + subranks))
 
         # Spread the permutation in its array form across the args in the corresponding
         # tensor-product arguments with free indices:
         permutation_array_blocks_up = []
         image_form = _af_invert(permutation.array_form)
         counter = 0
-        for i, e in enumerate(expr.subranks):
+        for i, e in enumerate(subranks):
             current = []
             for j in range(cumul[i], cumul[i+1]):
                 if j in contraction_indices_flat:
@@ -1145,7 +1147,7 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
             arg_indices, arg_positions = zip(*tuple_links)
             if len(arg_indices) != len(set(arg_indices)):
                 # Maybe trace should be supported?
-                raise NotImplementedError
+                raise NotImplementedError()
 
             args_updates = {}
             count_nondiagonal = 0
@@ -1740,29 +1742,126 @@ def _(expr: CodegenArrayElementwiseAdd):
     return _a2m_add(*addends)
 
 
-def _squash_trivial_dims_in_tensorproduct(expr):
-    if isinstance(expr, CodegenArrayTensorProduct):
-        return _a2m_tensor_product(*_suppress_trivial_dims_in_tensor_product(expr.args))
-    if isinstance(expr, CodegenArrayElementwiseAdd):
-        addends = [_squash_trivial_dims_in_tensorproduct(a) for a in expr.args]
-        if len(set([get_shape(a) for a in addends])) == 1:
-            return _a2m_add(*addends)
-        return expr
-    if isinstance(expr, CodegenArrayPermuteDims):
-        # TODO: find a more generic way to do this:
-        if not isinstance(expr.expr, CodegenArrayTensorProduct):
-            return expr
-        args = [arg.doit() for arg in expr.expr.args]
-        if (expr.permutation == Permutation(3)(1, 2)
-            and len(args) == 2
-            and all(getattr(i, "is_Identity", False) for i in args)
-        ):
-            nonone = [arg for arg in args if get_shape(arg) != (1, 1)]
-            if len(nonone) != 1:
-                return expr
+@singledispatch
+def _remove_trivial_dims(expr):
+    return expr, []
+
+
+@_remove_trivial_dims.register(CodegenArrayTensorProduct)
+def _(expr: CodegenArrayTensorProduct):
+    # Recognize expressions like [x, y] with shape (k, 1, k, 1) as `x*y.T`.
+    # The matrix expression has to be equivalent to the tensor product of the
+    # matrices, with trivial dimensions (i.e. dim=1) dropped.
+    # That is, add contractions over trivial dimensions:
+
+    removed = []
+    newargs = []
+    cumul = list(accumulate([0] + [get_rank(arg) for arg in expr.args]))
+    pending = None
+    prev_i = None
+    for i, arg in enumerate(expr.args):
+        current_range = list(range(cumul[i], cumul[i+1]))
+        if not isinstance(arg, (MatrixExpr, MatrixCommon)):
+            newargs.append(arg)
+            continue
+        elif getattr(arg, "is_Identity", False):
+            if arg.shape == (1, 1):
+                # Ignore identity matrices of shape (1, 1) - they are equivalent to scalar 1.
+                removed.extend(current_range)
+                continue
+            k = arg.shape[0]
+            if pending == k:
+                # OK, there is already
+                removed.extend(current_range)
+                continue
+            elif pending is None:
+                newargs.append(arg)
+                pending = k
+                prev_i = i
+            elif pending != k:
+                pending = k
+                prev_i = i
+                newargs.append(arg)
+        elif arg.shape == (1, 1):
+            # Matrix is equivalent to scalar:
+            if len(newargs) == 0:
+                newargs.append(arg)
+            elif 1 in get_shape(newargs[-1]):
+                if newargs[-1].shape[1] == 1:
+                    newargs[-1] = newargs[-1]*arg
+                else:
+                    newargs[-1] = arg*newargs[-1]
+                removed.extend(current_range)
             else:
-                return nonone[0]
-    return expr
+                newargs.append(arg)
+        elif 1 in arg.shape:
+            k = [i for i in arg.shape if i != 1][0]
+            if pending is None:
+                pending = k
+                prev_i = i
+                newargs.append(arg)
+            elif pending == k:
+                prev = newargs[-1]
+                if prev.is_Identity:
+                    removed.extend([cumul[prev_i], cumul[prev_i]+1])
+                    newargs[-1] = arg
+                    prev_i = i
+                    continue
+                if prev.shape[0] == 1:
+                    d1 = cumul[prev_i]
+                    prev = _a2m_transpose(prev)
+                else:
+                    d1 = cumul[prev_i] + 1
+                if arg.shape[1] == 1:
+                    d2 = cumul[i] + 1
+                    arg = _a2m_transpose(arg)
+                else:
+                    d2 = cumul[i]
+                newargs[-1] = prev*arg
+                pending = None
+                removed.extend([d1, d2])
+            else:
+                newargs.append(arg)
+                pending = k
+                prev_i = i
+        else:
+            newargs.append(arg)
+            pending = None
+    return _a2m_tensor_product(*newargs), sorted(removed)
+
+
+@_remove_trivial_dims.register(CodegenArrayElementwiseAdd)
+def _(expr: CodegenArrayElementwiseAdd):
+    rec = [_remove_trivial_dims(arg) for arg in expr.args]
+    newargs, removed = zip(*rec)
+    if len(set(map(tuple, removed))) != 1:
+        return expr, []
+    return _a2m_add(*newargs), removed[0]
+
+
+@_remove_trivial_dims.register(CodegenArrayPermuteDims)
+def _(expr: CodegenArrayPermuteDims):
+    subexpr, subremoved = _remove_trivial_dims(expr.expr)
+    p = _af_invert(expr.permutation.array_form)
+    shift = list(accumulate([1 if i in subremoved else 0 for i in range(len(p))]))
+    premoved = [expr.permutation(i) for i in subremoved]
+    p2 = [e - shift[e] for i, e in enumerate(p) if e not in subremoved]
+    # TODO: check if subremoved should be permuted as well...
+    return CodegenArrayPermuteDims(subexpr, p2), sorted(premoved)
+
+
+@_remove_trivial_dims.register(CodegenArrayContraction)
+def _(expr: CodegenArrayContraction):
+    newexpr, removed = _remove_trivial_dims(expr.expr)
+    new_contraction_indices = [tuple(j for j in i if j not in removed) for i in expr.contraction_indices]
+    return CodegenArrayContraction(newexpr, *new_contraction_indices), removed
+
+
+@_remove_trivial_dims.register(CodegenArrayDiagonal)
+def _(expr: CodegenArrayDiagonal):
+    newexpr, removed = _remove_trivial_dims(expr.expr)
+    new_diag_indices = [tuple(j for j in i if j not in removed) for i in expr.diagonal_indices]
+    return CodegenArrayDiagonal(newexpr, *new_diag_indices), removed
 
 
 def recognize_matrix_expression(expr):
@@ -1841,34 +1940,8 @@ def recognize_matrix_expression(expr):
     The two lines have free indices at axes 0, 3 and 4, 7, respectively.
     """
     rec = array2matrix(expr)
-    rec = _squash_trivial_dims_in_tensorproduct(rec)
+    rec, removed = _remove_trivial_dims(rec)
     return rec
-
-
-def _suppress_trivial_dims_in_tensor_product(mat_list):
-    # Recognize expressions like [x, y] with shape (k, 1, k, 1) as `x*y.T`.
-    # The matrix expression has to be equivalent to the tensor product of the
-    # matrices, with trivial dimensions (i.e. dim=1) dropped.
-    # That is, add contractions over trivial dimensions:
-    mat_11 = []
-    mat_k1 = []
-    mat_list = [i for i in mat_list if i != 1 and not getattr(i, "is_Identity", False)]
-    for mat in mat_list:
-        if mat.shape == (1, 1):
-            mat_11.append(mat)
-        elif 1 in mat.shape:
-            if mat.shape[0] == 1:
-                mat_k1.append(mat.T)
-            else:
-                mat_k1.append(mat)
-        else:
-            return mat_list
-    if len(mat_k1) > 2:
-        return mat_list
-    a = MatMul.fromiter(mat_k1[:1])
-    b = MatMul.fromiter(mat_k1[1:])
-    x = MatMul.fromiter(mat_11)
-    return [a*x*b.T]
 
 
 def _apply_recursively_over_nested_lists(func, arr):

@@ -5,7 +5,7 @@ from sympy.codegen.array_utils import (
     CodegenArrayContraction, CodegenArrayTensorProduct, CodegenArrayDiagonal,
     CodegenArrayPermuteDims, CodegenArrayElementwiseAdd, _codegen_array_parse,
     parse_indexed_expression, recognize_matrix_expression,
-    parse_matrix_expression, nest_permutation)
+    parse_matrix_expression, nest_permutation, _remove_trivial_dims)
 from sympy import MatrixSymbol, Sum
 from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -28,6 +28,8 @@ Q = MatrixSymbol("Q", k, k)
 
 a = MatrixSymbol("a", k, 1)
 b = MatrixSymbol("b", k, 1)
+c = MatrixSymbol("c", k, 1)
+d = MatrixSymbol("d", k, 1)
 
 
 def test_codegen_array_contraction_construction():
@@ -848,3 +850,49 @@ def test_recognize_expression_implicit_mul():
 
     cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(I, Identity(1)), [0, 2, 1, 3])
     assert recognize_matrix_expression(cg) == I
+
+
+def test_remove_trivial_dims():
+
+    # Tensor Product:
+    assert _remove_trivial_dims(CodegenArrayTensorProduct(a, b)) == (a * b.T, [1, 3])
+    assert _remove_trivial_dims(CodegenArrayTensorProduct(a.T, b)) == (a * b.T, [0, 3])
+    assert _remove_trivial_dims(CodegenArrayTensorProduct(a, b.T)) == (a * b.T, [1, 2])
+    assert _remove_trivial_dims(CodegenArrayTensorProduct(a.T, b.T)) == (a * b.T, [0, 2])
+
+    assert _remove_trivial_dims(CodegenArrayTensorProduct(I, a.T, b.T)) == (a * b.T, [0, 1, 2, 4])
+    assert _remove_trivial_dims(CodegenArrayTensorProduct(a.T, I, b.T)) == (a * b.T, [0, 2, 3, 4])
+
+    assert _remove_trivial_dims(CodegenArrayTensorProduct(a, I)) == (a, [2, 3])
+    assert _remove_trivial_dims(CodegenArrayTensorProduct(I, a)) == (a, [0, 1])
+
+    assert _remove_trivial_dims(CodegenArrayTensorProduct(a.T, b.T, c, d)) == (
+        CodegenArrayTensorProduct(a * b.T, c * d.T), [0, 2, 5, 7])
+    assert _remove_trivial_dims(CodegenArrayTensorProduct(a.T, I, b.T, c, d, I)) == (
+        CodegenArrayTensorProduct(a * b.T, c * d.T, I), [0, 2, 3, 4, 7, 9])
+
+    # Addition:
+
+    cg = CodegenArrayElementwiseAdd(CodegenArrayTensorProduct(a, b), CodegenArrayTensorProduct(c, d))
+    assert _remove_trivial_dims(cg) == (a * b.T + c * d.T, [1, 3])
+
+    # Permute Dims:
+
+    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(a, b), Permutation(3)(1, 2))
+    assert _remove_trivial_dims(cg) == (a * b.T, [2, 3])
+
+    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(a, I, b), Permutation(5)(1, 2, 3, 4))
+    assert _remove_trivial_dims(cg) == (a * b.T, [2, 3, 4, 5])
+
+    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(I, b, a), Permutation(5)(1, 2, 4, 5, 3))
+    assert _remove_trivial_dims(cg) == (b * a.T, [0, 1, 2, 3])
+
+    # Diagonal:
+
+    cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, a), (1, 2))
+    assert _remove_trivial_dims(cg) == (cg, [])
+
+    # Contraction:
+
+    cg = CodegenArrayContraction(CodegenArrayTensorProduct(M, a), (1, 2))
+    assert _remove_trivial_dims(cg) == (cg, [])
