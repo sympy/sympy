@@ -1,5 +1,5 @@
 from sympy import Basic, Mul, Pow, degree, Symbol, expand, cancel, Expr, exp, roots
-from sympy.core.evalf import EvalfMixin
+from sympy.core.evalf import EvalfMixin, evalf_options
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify, _sympify
@@ -230,10 +230,10 @@ class TransferFunction(Basic, EvalfMixin):
         argnew = TransferFunction(arg_num, arg_den, self.var)
         return self if old == self.var else argnew
 
-    def _eval_evalf(self, prec):
+    def _eval_evalf_options(self, prec, options):
         return TransferFunction(
-            self.num._eval_evalf(prec),
-            self.den._eval_evalf(prec),
+            evalf_options(self.num, prec, options),
+            evalf_options(self.den, prec, options),
             self.var)
 
     def _eval_simplify(self, **kwargs):

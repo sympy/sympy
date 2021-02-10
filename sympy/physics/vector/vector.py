@@ -3,7 +3,7 @@ from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros,
 from sympy import trigsimp
 from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
-from sympy.core.evalf import EvalfMixin, prec_to_dps
+from sympy.core.evalf import EvalfMixin, evalf_options
 
 __all__ = ['Vector']
 
@@ -711,12 +711,12 @@ class Vector(Printable, EvalfMixin):
 
         return self.to_matrix(reference_frame).free_symbols
 
-    def _eval_evalf(self, prec):
+    def _eval_evalf_options(self, prec, options):
         if not self.args:
             return self
         new_args = []
         for mat, frame in self.args:
-            new_args.append([mat.evalf(n=prec_to_dps(prec)), frame])
+            new_args.append([evalf_options(mat, prec, options), frame])
         return Vector(new_args)
 
     def xreplace(self, rule):
