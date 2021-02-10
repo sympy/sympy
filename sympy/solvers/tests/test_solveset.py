@@ -31,7 +31,7 @@ from sympy.simplify import simplify
 from sympy.tensor.indexed import Indexed
 from sympy.utilities.iterables import numbered_symbols
 
-from sympy.testing.pytest import (XFAIL, raises, skip, slow, SKIP)
+from sympy.testing.pytest import (XFAIL, raises, skip, slow, SKIP, _both_exp_pow)
 from sympy.testing.randtest import verify_numerically as tn
 from sympy.physics.units import cm
 
@@ -53,6 +53,7 @@ def dumeq(i, j):
     return i == j or i.dummy_eq(j)
 
 
+@_both_exp_pow
 def test_invert_real():
     x = Symbol('x', real=True)
 
@@ -797,6 +798,7 @@ def test_solveset_complex_tan():
         imageset(Lambda(n, pi*n + pi/2), S.Integers))
 
 
+@_both_exp_pow
 def test_solve_trig():
     from sympy.abc import n
     assert dumeq(solveset_real(sin(x), x),
@@ -1141,6 +1143,7 @@ def test_other_lambert():
         a, -a*LambertW(-log(a)/a)/log(a))
 
 
+@_both_exp_pow
 def test_solveset():
     f = Function('f')
     raises(ValueError, lambda: solveset(x + y))

@@ -253,11 +253,6 @@ from .interactive import init_session, init_printing
 
 evalf._create_evalf_table()
 
-# This is slow to import:
-#import abc
-
-from .deprecated import C, ClassRegistry, class_registry
-
 __all__ = [
     # sympy.core
     'sympify', 'SympifyError', 'cacheit', 'Basic', 'Atom',
@@ -492,9 +487,6 @@ __all__ = [
 
     # sympy.testing
     'test', 'doctest',
-
-    # sympy.deprecated:
-    'C', 'ClassRegistry', 'class_registry',
 ]
 
 
@@ -517,7 +509,6 @@ __all__.extend([
     'assumptions',
     'calculus',
     'concrete',
-    'deprecated',
     'discrete',
     'external',
     'functions',

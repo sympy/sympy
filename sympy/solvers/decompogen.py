@@ -42,9 +42,14 @@ def decompogen(f, symbol):
 
     # ===== Simple Functions ===== #
     if isinstance(f, (Function, Pow)):
-        if f.args[0] == symbol:
+        from sympy import S
+        if f.is_Pow and f.base == S.Exp1:
+            arg = f.exp
+        else:
+            arg = f.args[0]
+        if arg == symbol:
             return [f]
-        result += [f.subs(f.args[0], symbol)] + decompogen(f.args[0], symbol)
+        result += [f.subs(arg, symbol)] + decompogen(arg, symbol)
         return result
 
     # ===== Convert to Polynomial ===== #

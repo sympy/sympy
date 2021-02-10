@@ -201,6 +201,11 @@ def _invert_real(f, g_ys, symbol):
 
     n = Dummy('n', real=True)
 
+    if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
+        return _invert_real(f.exp,
+                            imageset(Lambda(n, log(n)), g_ys),
+                            symbol)
+
     if hasattr(f, 'inverse') and not isinstance(f, (
             TrigonometricFunction,
             HyperbolicFunction,
@@ -333,12 +338,12 @@ def _invert_complex(f, g_ys, symbol):
         return _invert_complex(f.args[0],
                                imageset(Lambda(n, f.inverse()(n)), g_ys), symbol)
 
-    if isinstance(f, exp):
+    if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
         if isinstance(g_ys, FiniteSet):
             exp_invs = Union(*[imageset(Lambda(n, I*(2*n*pi + arg(g_y)) +
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
-            return _invert_complex(f.args[0], exp_invs, symbol)
+            return _invert_complex(f.exp, exp_invs, symbol)
 
     return (f, g_ys)
 
