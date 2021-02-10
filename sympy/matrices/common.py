@@ -2484,6 +2484,84 @@ class MatrixOperations(MatrixRequired):
         from sympy.simplify import trigsimp
         return self.applyfunc(lambda x: trigsimp(x, **opts))
 
+    def upper_triangular(self, k=0):
+        """returns the elements on and above the kth diagonal of a matrix.
+        If k is not specified then simply returns upper-triangular portion
+        of a matrix
+
+        Examples
+        ========
+
+        >>> from sympy import ones
+        >>> A = ones(4)
+        >>> A.upper_triangular()
+        Matrix([
+        [1, 1, 1, 1],
+        [0, 1, 1, 1],
+        [0, 0, 1, 1],
+        [0, 0, 0, 1]])
+
+        >>> A.upper_triangular(2)
+        Matrix([
+        [0, 0, 1, 1],
+        [0, 0, 0, 1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0]])
+
+        >>> A.upper_triangular(-1)
+        Matrix([
+        [1, 1, 1, 1],
+        [1, 1, 1, 1],
+        [0, 1, 1, 1],
+        [0, 0, 1, 1]])
+
+        """
+
+        def entry(i, j):
+            return self[i, j] if i + k <= j else self.zero
+
+        return self._new(self.rows, self.cols, entry)
+
+
+    def lower_triangular(self, k=0):
+        """returns the elements on and below the kth diagonal of a matrix.
+        If k is not specified then simply returns lower-triangular portion
+        of a matrix
+
+        Examples
+        ========
+
+        >>> from sympy import ones
+        >>> A = ones(4)
+        >>> A.lower_triangular()
+        Matrix([
+        [1, 0, 0, 0],
+        [1, 1, 0, 0],
+        [1, 1, 1, 0],
+        [1, 1, 1, 1]])
+
+        >>> A.lower_triangular(-2)
+        Matrix([
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [1, 0, 0, 0],
+        [1, 1, 0, 0]])
+
+        >>> A.lower_triangular(1)
+        Matrix([
+        [1, 1, 0, 0],
+        [1, 1, 1, 0],
+        [1, 1, 1, 1],
+        [1, 1, 1, 1]])
+
+        """
+
+        def entry(i, j):
+            return self[i, j] if i + k >= j else self.zero
+
+        return self._new(self.rows, self.cols, entry)
+
+
 
 class MatrixArithmetic(MatrixRequired):
     """Provides basic matrix arithmetic operations.
@@ -2893,7 +2971,6 @@ class MatrixArithmetic(MatrixRequired):
     @call_highest_priority('__rsub__')
     def __sub__(self, a):
         return self + (-a)
-
 
 class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):
