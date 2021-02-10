@@ -1698,6 +1698,29 @@ def test_other_lambert():
     # after improving lambert little more with solvify...
     eq = (x*exp(x) - 3).subs(x, x*exp(x))
     assert solve(eq) == [LambertW(3*exp(-LambertW(3)))]
+    # check collection
+    # will work after solvify improves little more (below 2 cases)
+    ax = a**(3*x + 5)
+    ans = solve(3*log(ax) + b*log(ax) + ax, x)
+    x0 = 1/log(a)
+    x1 = sqrt(3)*I
+    x2 = b + 3
+    x3 = x2*LambertW(1/x2)/a**5
+    x4 = x3**Rational(1, 3)/2
+    assert ans == [
+        x0*log(x4*(x1 - 1)),
+        x0*log(-x4*(x1 + 1)),
+        x0*log(x3)/3]
+    x1 = LambertW(Rational(1, 3))
+    x2 = a**(-5)
+    x3 = 3**Rational(1, 3)
+    x4 = 3**Rational(5, 6)*I
+    x5 = x1**Rational(1, 3)*x2**Rational(1, 3)/2
+    ans = solve(3*log(ax) + ax, x)
+    assert ans == [
+        x0*log(3*x1*x2)/3,
+        x0*log(x5*(-x3 + x4)),
+        x0*log(-x5*(x3 + x4))]
 
 
 @slow
@@ -1728,28 +1751,6 @@ def test_lambert_bivariate():
         [Rational(1, 5) + LambertW(-21*exp(Rational(3, 5))/5)/7]
     assert solve((log(x) + x).subs(x, x**2 + 1)) == [
         -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
-    # check collection
-    ax = a**(3*x + 5)
-    ans = solve(3*log(ax) + b*log(ax) + ax, x)
-    x0 = 1/log(a)
-    x1 = sqrt(3)*I
-    x2 = b + 3
-    x3 = x2*LambertW(1/x2)/a**5
-    x4 = x3**Rational(1, 3)/2
-    assert ans == [
-        x0*log(x4*(x1 - 1)),
-        x0*log(-x4*(x1 + 1)),
-        x0*log(x3)/3]
-    x1 = LambertW(Rational(1, 3))
-    x2 = a**(-5)
-    x3 = 3**Rational(1, 3)
-    x4 = 3**Rational(5, 6)*I
-    x5 = x1**Rational(1, 3)*x2**Rational(1, 3)/2
-    ans = solve(3*log(ax) + ax, x)
-    assert ans == [
-        x0*log(3*x1*x2)/3,
-        x0*log(x5*(-x3 + x4)),
-        x0*log(-x5*(x3 + x4))]
     # coverage
     p = symbols('p', positive=True)
     eq = 4*2**(2*p + 3) - 2*p - 3
