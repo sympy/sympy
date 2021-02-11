@@ -1,3 +1,10 @@
+#!/usr/bin/env python
+"""
+Run tests for specific packages that use optional dependencies.
+
+The optional dependencies need to be installed before running this.
+"""
+
 class TestsFailedError(Exception):
     pass
 
