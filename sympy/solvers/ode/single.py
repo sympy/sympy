@@ -852,5 +852,80 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
         return [Eq(lhs, C2 + x), Eq(lhs, C2 - x)]
 
 
+class Lienard(SinglePatternODESolver):
+    r"""
+    The general form of the Lienard ODE:
+
+    .. math :: y''(x) + f(x)*y'(x) + y(x)
+
+    We solve using the fact that all linear second order homogeneous ODEs
+    can be transformed into first order ODEs of Riccati type.
+    Here we solve using the transformation as:
+
+    .. math :: b(x) = y'(x)/y(x)
+
+    .. math :: y''(x) = b'(x)*y(x) + y(x)*b(x)**2
+
+    On substituting,
+
+    .. math :: b'(x) + b(x)**2 + f(x)*b(x) + 1
+
+    So this new nonlinear first order ODE in b(x) is obtained, further we can try to find b(x)
+    by solving this ode using dsolve. Later, we can find y(x) by:
+
+    .. math :: y(x) = exp(Integral(b(x),x))
+
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Symbol
+    >>> f = Function('f')
+    >>> x = Symbol('x')
+
+    >>> eq = f(x).diff(x, x) + 2/x*f(x).diff(x) + f(x)
+    >>> sol = dsolve(eq, hint='lienard',simplify=False)
+    >>> print(sol)
+    Eq(f(x), exp(C2)/(x*sqrt(tan(C1 + x)**2 + 1)))
+
+    >>> eq = f(x).diff(x,2) + x*f(x).diff(x) + f(x)
+    >>> sol = dsolve(eq, hint='lienard',simplify=False)
+    >>> print(sol)
+    Eq(f(x), exp(x**2*(-C1**2 - 1)/2 + x**4*(C1**2/2 + (-C1**2 - 1)*(6*C1**2 + 1)/6
+    + 1/6)/4 + x**6*(-C1**2*(-3*C1**2 - 1)/15 - 7*C1**2/60 + (-36*C1**2 - 5)*(-C1**2 - 1)/120
+    + (-C1**2 - 1)*(-16*C1**2*(-3*C1**2 - 1) - 36*C1**2 + 8*(-9*C1**2 - 1)*(-C1**2 - 1) - 5)/120 - 1/60)/6
+    + C2 + C1*x + C1*x**3*(2*C1**2 + 1)/6 + C1*x**5*(-12*C1**2 + 8*(-3*C1**2 - 1)*(-C1**2 - 1) - 5)/120 + O(x**7)))
+
+    References
+    ==========
+
+    .. [1] https://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Lienard
+    .. [2] https://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
+
+    """
+
+    hint = "lienard"
+    has_integral = True
+    order = [2]
+
+    def _wilds(self, f, x, order):
+        a = Wild('a', exclude=[f(x).diff(x), f(x).diff(x, 2)])
+        return (a,)
+
+    def _equation(self, fx, x, order):
+        a = self.wilds()[0]
+        return fx.diff(x, 2) + a*fx.diff(x) + fx
+
+    def _get_general_solution(self, *, simplify: bool = True):
+        a = self.wilds_match()[0]
+        fx = self.ode_problem.func
+        x = self.ode_problem.sym
+        (C1, C2) = self.ode_problem.get_numbered_constants(num=2)
+        eq = Derivative(fx, x) + fx**2 + a*fx + 1
+        sol =  dsolve(eq)
+        b = exp(Integral(sol.rhs, x) + C2)
+        return [Eq(fx, b)]
+
+
 # Avoid circular import:
 from .ode import dsolve
