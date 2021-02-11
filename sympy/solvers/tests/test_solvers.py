@@ -5,7 +5,7 @@ from sympy import (
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
     root, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
-    E, cbrt, denom, Add, Piecewise, GoldenRatio, TribonacciConstant)
+    E, cbrt, denom, Add, Piecewise, GoldenRatio, TribonacciConstant, pow, var)
 
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -20,7 +20,7 @@ from sympy.polys.rootoftools import CRootOf
 from sympy.testing.pytest import slow, XFAIL, SKIP, raises
 from sympy.testing.randtest import verify_numerically as tn
 
-from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
+from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m, R
 
 
 def NS(e, n=15, **options):
@@ -1668,8 +1668,8 @@ def test_issue_14607():
                      tau_I: tau_1 + tau_2,
                      tau_D: tau_1*tau_2/(tau_1 + tau_2)}
 
-    for var in vars:
-        assert s[0][var].simplify() == knownsolution[var].simplify()
+    for i in vars:
+        assert s[0][i].simplify() == knownsolution[i].simplify()
 
 
 def test_lambert_multivariate():
@@ -2290,3 +2290,16 @@ def test_issue_19509():
         -d + a + sqrt(-b + c),
         d + a - sqrt(-b - c),
         d + a + sqrt(-b - c)]
+
+
+def test_issue_4886():
+    Ra , Rb = var('Ra , Rb',positive = True)
+    Ra  = pow(R , 2)*pow(a , 2)
+    Rb  = pow(R , 2)*pow(b , 2)
+    m   = pow(a , 2) + pow(b , 2)
+    C1 , C2 , C3 , C4 = var('C1 , C2 , C3 , C4' , positive = True)
+    C1  = a*c - b*sqrt(Ra + Rb - pow(c , 2))
+    C2  = a*sqrt(Ra + Rb - pow(c , 2)) + b*c
+    C3  = a*c + b*sqrt(Ra+Rb-pow(c,2))
+    C4  = -a*sqrt( Ra + Rb - pow(c , 2)) + b*c
+    assert solve([x**2 + y**2 - R**2, a*x + b*y - c] , x , y) == [(C1/m , C2/m) , (C3/m , C4/m)]
