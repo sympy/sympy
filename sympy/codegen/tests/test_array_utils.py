@@ -5,13 +5,13 @@ from sympy.codegen.array_utils import (
     CodegenArrayContraction, CodegenArrayTensorProduct, CodegenArrayDiagonal,
     CodegenArrayPermuteDims, CodegenArrayElementwiseAdd, _codegen_array_parse,
     parse_indexed_expression, recognize_matrix_expression,
-    parse_matrix_expression, nest_permutation, _remove_trivial_dims)
+    parse_matrix_expression, nest_permutation, _remove_trivial_dims, _array_diag2contr_diagmatrix)
 from sympy import MatrixSymbol, Sum
 from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.expressions.diagonal import DiagMatrix
 from sympy.matrices import Trace, MatMul, Transpose
-from sympy.tensor.array.expressions.array_expressions import ZeroArray
+from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray
 from sympy.testing.pytest import raises
 import random
 
@@ -896,3 +896,35 @@ def test_remove_trivial_dims():
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(M, a), (1, 2))
     assert _remove_trivial_dims(cg) == (cg, [])
+
+
+def test_diag2contraction_diagmatrix():
+    cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, a), (1, 2))
+    res = _array_diag2contr_diagmatrix(cg)
+    assert res.shape == cg.shape
+    assert res == CodegenArrayContraction(CodegenArrayTensorProduct(M, OneArray(1), DiagMatrix(a)), (1, 3))
+
+    raises(ValueError, lambda: CodegenArrayDiagonal(CodegenArrayTensorProduct(a, M), (1, 2)))
+
+    cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(a.T, M), (1, 2))
+    res = _array_diag2contr_diagmatrix(cg)
+    assert res.shape == cg.shape
+    assert res == CodegenArrayContraction(CodegenArrayTensorProduct(OneArray(1), M, DiagMatrix(a.T)), (1, 4))
+
+    cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(a.T, M, N, b.T), (1, 2), (4, 7))
+    res = _array_diag2contr_diagmatrix(cg)
+    assert res.shape == cg.shape
+    assert res == CodegenArrayContraction(
+        CodegenArrayTensorProduct(OneArray(1), M, N, OneArray(1), DiagMatrix(a.T), DiagMatrix(b.T)), (1, 7), (3, 9))
+
+    cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(a, M, N, b.T), (0, 2), (4, 7))
+    res = _array_diag2contr_diagmatrix(cg)
+    assert res.shape == cg.shape
+    assert res == CodegenArrayContraction(
+        CodegenArrayTensorProduct(OneArray(1), M, N, OneArray(1), DiagMatrix(a), DiagMatrix(b.T)), (1, 6), (3, 9))
+
+    cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(a, M, N, b.T), (0, 4), (3, 7))
+    res = _array_diag2contr_diagmatrix(cg)
+    assert res.shape == cg.shape
+    assert res == CodegenArrayContraction(
+        CodegenArrayTensorProduct(OneArray(1), M, N, OneArray(1), DiagMatrix(a), DiagMatrix(b.T)), (3, 6), (2, 9))

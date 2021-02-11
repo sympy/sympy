@@ -18,7 +18,7 @@ from sympy.matrices.common import MatrixCommon
 from sympy.matrices.expressions import (MatAdd, MatMul, Trace, Transpose)
 from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
 from sympy.tensor.array import NDimArray
-from sympy.tensor.array.expressions.array_expressions import ZeroArray
+from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray
 
 
 class _CodegenArrayAbstract(Basic):
@@ -1627,6 +1627,49 @@ def _support_function_tp1_recognize(contraction_indices, args):
         # Let's inject the coefficient:
         return_list[0] = coeff*return_list[0]
     return _a2m_tensor_product(*return_list)
+
+
+def _array_diag2contr_diagmatrix(expr: CodegenArrayDiagonal):
+    if isinstance(expr.expr, CodegenArrayTensorProduct):
+        args = list(expr.expr.args)
+        diag_indices = list(expr.diagonal_indices)
+        mapping = _get_mapping_from_subranks([_get_subrank(arg) for arg in args])
+        tuple_links = [[mapping[j] for j in i] for i in diag_indices]
+        contr_indices = []
+        total_rank = get_rank(expr)
+        for i, (abs_pos, rel_pos) in enumerate(zip(diag_indices, tuple_links)):
+            if len(abs_pos) != 2:
+                continue
+            (pos1_outer, pos1_inner), (pos2_outer, pos2_inner) = rel_pos
+            arg1 = args[pos1_outer]
+            arg2 = args[pos2_outer]
+            if get_rank(arg1) != 2 or get_rank(arg2) != 2:
+                continue
+            pos1_in2 = 1 - pos1_inner
+            pos2_in2 = 1 - pos2_inner
+            if arg1.shape[pos1_in2] == 1:
+                darg1 = DiagMatrix(arg1)
+                args.append(darg1)
+                contr_indices.append(((pos2_outer, pos2_inner), (len(args)-1, pos1_inner)))
+                total_rank += 1
+                diag_indices[i] = None
+                args[pos1_outer] = OneArray(arg1.shape[pos1_in2])
+            elif arg2.shape[pos2_in2] == 1:
+                darg2 = DiagMatrix(arg2)
+                args.append(darg2)
+                contr_indices.append(((pos1_outer, pos1_inner), (len(args)-1, pos2_inner)))
+                total_rank += 1
+                diag_indices[i] = None
+                args[pos2_outer] = OneArray(arg2.shape[pos2_in2])
+        diag_indices_new = [i for i in diag_indices if i is not None]
+        cumul = list(accumulate([0] + [get_rank(arg) for arg in args]))
+        contr_indices2 = [tuple(cumul[a] + b for a, b in i) for i in contr_indices]
+        tc = CodegenArrayContraction(
+            CodegenArrayTensorProduct(*args), *contr_indices2
+        )
+        td = CodegenArrayDiagonal(tc, *diag_indices_new)
+        return td
+    return expr
 
 
 @singledispatch
