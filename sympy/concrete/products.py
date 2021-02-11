@@ -400,16 +400,19 @@ class Product(ExprWithIntLimits):
         return Mul(*[term.subs(k, a + i) for i in range(n - a + 1)])
 
     def _eval_derivative(self, x):
-        if self.is_zero:
+        from sympy.concrete.summations import Sum, Dummy, Symbol, Derivative
+        if isinstance(x, Symbol) and x not in self.free_symbols:
             return S.Zero
-        from sympy.concrete.summations import Sum, Dummy
-        i = Dummy('i')
-        f = self.function
-        limits = list(self.limits)
-        _, a, b = limits[0]
-        if any(x in limit[1:].free_symbols for limit in limits):
+        f, limits = self.function, list(self.limits)
+        limit = limits.pop(-1)
+        if limits:
+            f = self.func(f, *limits)
+        _, a, b = limit
+        if x in a.free_symbols or x in b.free_symbols:
             return None
-        return Sum(f.subs(_, i).diff(x) * Product(f, (_, a, i - 1)) * Product(f, (_, i + 1, b)), (i, a, b), **self.assumptions0)
+        h = Dummy()
+        rv = Sum( Product(f, (_, a, h - 1)) * Product(f, (_, h + 1, b)) * Derivative(f, x, evaluate=True).subs(_, h), (h, a, b))
+        return rv
 
     def is_convergent(self):
         r"""
