@@ -725,18 +725,22 @@ class Quaternion(Expr):
         """
         Returns the scalar part of the quaternion.
 
+        Explanation
+        ===========
+
+        The scalar component of a quaternion is the real part of the quaternion.
+        It gives the rotation angle, and the three imaginary components, when
+        normalized, give the direction ofthe rotation axis.
+
         Returns
         =======
 
-        The scalar part of the quaternion.
+        expr: real number representing the scalar part of the quaternion.
 
         Examples
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
-        >>> q = Quaternion(1, 1, 1, 1)
-        >>> q.scalar()
-        1
 
         >>> q = Quaternion(4, 8, 13, 12)
         >>> q.scalar()
@@ -750,10 +754,17 @@ class Quaternion(Expr):
         """
         Returns the vector part of the quaternion.
 
+        Explanation
+        ===========
+
+        The vector part of a quaternion is also called a versor that is the complex
+        part of that quaternion.The vector part of the quaternion when normalized, gives
+        the rotation axis.
+
         Returns
         =======
 
-        V : The vector part of the quaternion.
+        Quaternion: represnting vector part of the quaternion.
 
         Examples
         ========
@@ -767,18 +778,27 @@ class Quaternion(Expr):
         >>> q.vector()
         0 + 8*i + 13*j + 12*k
 
+        See Also
+        ========
+        https://en.wikipedia.org/wiki/Versor
+
         """
 
         return Quaternion(0, self.b, self.c, self.d)
 
     def axis(self):
         """
-        Returns the axis that is the versor of the vector part of the quaternion.
+        Returns the axis of the quaternion.
+
+        Explanation
+        ===========
+
+        The axis of a quaternion is the normalized versor (vector part) of that quaternion.
 
         Returns
         =======
 
-        The axis of the quaternion.
+        Quaternion: representing axis of the provided quaternion.
 
         Examples
         ========
@@ -792,6 +812,10 @@ class Quaternion(Expr):
         >>> q.axis()
         0 + 8*sqrt(377)/377*i + sqrt(377)/29*j + 12*sqrt(377)/377*k
 
+        See Also
+        ========
+        vector
+
         """
 
         return Quaternion(0, self.b, self.c, self.d).normalize()
@@ -799,6 +823,12 @@ class Quaternion(Expr):
     def is_pure(self):
         """
         Returns true if the quaternion is pure else returns false.
+
+        Explanation
+        ===========
+
+        A pure quaternion (also a vector quaternion) is a quaternion with scalar
+        part equal to 0.
 
         Examples
         ========
@@ -823,7 +853,7 @@ class Quaternion(Expr):
         Returns
         =======
 
-        The angle of the quaternion.
+        expr: The angle of the quaternion.
 
         Examples
         ========
@@ -845,10 +875,17 @@ class Quaternion(Expr):
         """
         Returns True if the plane of the two quaternions are coplanar else returns False.
 
+        Explanation
+        ===========
+
+        checks if the 3D vectors written as quaternions are in the same plane.
+        In order to return a True, the quaternions and the origin should be in the
+        same plane, and the real part must be zero for it to make sense.
+
         Parameters
         ==========
 
-        other : a quaternion
+        other : a Quaternion
 
         Examples
         ========
@@ -862,6 +899,11 @@ class Quaternion(Expr):
         >>> q1 = Quaternion(2, 8, 13, 12)
         >>> q.coplanar(q1)
         False
+
+        See Also
+        ========
+
+        is_pure
 
         """
         if not self.is_pure() and self.a == 0 or not other.is_pure() and other.a == 0:
@@ -877,11 +919,16 @@ class Quaternion(Expr):
         Returns True if the axis of the pure quaternions seen as 3D vectors
         self, q1, and q2 are coplanar else returns False.
 
+        Explanation
+        ===========
+
+        Two general quaternions are coplanar (in this arc sense) when their axes are parallel.
+
         Parameters
         ==========
 
-        q1 : a pure quaternion.
-        q2 : a pure quaternion.
+        q1 : a pure Quaternion.
+        q2 : a pure Quaternion.
 
         Examples
         ========
@@ -910,10 +957,15 @@ class Quaternion(Expr):
         """
         Returns True if the two pure quaternions seen as 3D vectors are parallel else returns False.
 
+        Explanation
+        ===========
+
+        Two pure quaternions are called parallel when their product is commutative.
+
         Parameters
         ==========
 
-        other : a quaternion
+        other : a Quaternion
 
         Examples
         ========
@@ -939,10 +991,15 @@ class Quaternion(Expr):
         """
         Returns True if the two pure quaternions seen as 3D vectors are orthogonal else returns False.
 
+        Explanation
+        ===========
+
+        Two pure quaternions are called orthogonal when their product is anti-commutative.
+
         Parameters
         ==========
 
-        other : a quaternion
+        other : a Quaternion
 
         Examples
         ========
@@ -969,10 +1026,15 @@ class Quaternion(Expr):
         """
         Returns the index vector of the quaternion.
 
+        Explanation
+        ===========
+
+        Index vector is given by |q| Ax(q) where Ax(q) is the axis of the quaternion q.
+
         Returns
         =======
 
-            Index vector of the quaternion.
+        Quaternion: representing index vector of the provided quaternion.
 
         Examples
         ========
@@ -986,6 +1048,11 @@ class Quaternion(Expr):
         >>> q.index_vector()
         0 + 2*i + 2*j + 0*k
 
+        See Also
+        ========
+
+        axis
+
         """
 
         return self.norm() * Quaternion(0, self.b, self.c, self.d).normalize()
@@ -997,7 +1064,7 @@ class Quaternion(Expr):
         Returns
         =======
 
-        Mensor of the quaternion.
+        expr: real number represnting the mensor of the quaternion.
 
         Examples
         ========
