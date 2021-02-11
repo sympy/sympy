@@ -338,6 +338,12 @@ class Pow(Expr):
         obj.is_commutative = (b.is_commutative and e.is_commutative)
         return obj
 
+    def inverse(self, argindex=1):
+        if self.base == S.Exp1:
+            from sympy import log
+            return log
+        return None
+
     @property
     def base(self):
         return self._args[0]
@@ -948,10 +954,14 @@ class Pow(Expr):
         """a**(n + m) -> a**n*a**m"""
         b = self.base
         e = self.exp
+        if b == S.Exp1:
+            from sympy import Sum, Product
+            if isinstance(e, Sum) and e.is_commutative:
+                return Product(self.func(b, e.function), *e.limits)
         if e.is_Add and e.is_commutative:
             expr = []
             for x in e.args:
-                expr.append(self.func(self.base, x))
+                expr.append(self.func(b, x))
             return Mul(*expr)
         return self.func(b, e)
 
