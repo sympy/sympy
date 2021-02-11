@@ -132,12 +132,11 @@ class floor(RoundFunction):
             return arg.approximation_interval(Integer)[0]
 
     def _eval_as_leading_term(self, x, cdir=0):
-        arg = self.args[0].as_leading_term(x)
+        arg = self.args[0]
         arg0 = arg.subs(x, 0)
         if arg0.is_finite:
-            res = self._eval_nseries(x, n=1, logx=None, cdir=cdir)
-            return res.as_leading_term(x, cdir=cdir)
-        return arg
+            return self._eval_nseries(x, n=1, logx=None, cdir=cdir)
+        return arg.as_leading_term(x)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.args[0]
@@ -282,12 +281,11 @@ class ceiling(RoundFunction):
             return arg.approximation_interval(Integer)[1]
 
     def _eval_as_leading_term(self, x, cdir=0):
-        arg = self.args[0].as_leading_term(x)
+        arg = self.args[0]
         arg0 = arg.subs(x, 0)
         if arg0.is_finite:
-            res = self._eval_nseries(x, n=1, logx=None, cdir=cdir)
-            return res.as_leading_term(x, cdir=cdir)
-        return arg
+            return self._eval_nseries(x, n=1, logx=None, cdir=cdir)
+        return arg.as_leading_term(x)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.args[0]

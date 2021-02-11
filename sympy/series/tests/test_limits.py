@@ -136,7 +136,7 @@ def test_floor():
     assert limit(floor(x), x, 248, "-") == 247
 
     # https://github.com/sympy/sympy/issues/14478
-    assert limit(x/2*floor(3/x), x, 0, '+') == 3/2
+    assert limit(x*floor(3/x)/2, x, 0, '+') == Rational(3, 2)
     assert limit(floor(x + 1/2) - floor(x), x, oo) == AccumBounds(-0.5, 1.5)
 
 
@@ -166,7 +166,7 @@ def test_ceiling():
     assert limit(ceiling(x), x, 248, "-") == 248
 
     # https://github.com/sympy/sympy/issues/14478
-    assert limit(x/2*ceiling(3/x), x, 0, '+') == 3/2
+    assert limit(x*ceiling(3/x)/2, x, 0, '+') == Rational(3, 2)
     assert limit(ceiling(x + 1/2) - ceiling(x), x, oo) == AccumBounds(-0.5, 1.5)
 
 
