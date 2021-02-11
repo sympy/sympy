@@ -51,6 +51,10 @@ def tensorproduct(*args):
         return S.One
     if len(args) == 1:
         return _arrayfy(args[0])
+    from sympy.codegen.array_utils import _CodegenArrayAbstract, CodegenArrayTensorProduct
+    from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
+    if any(isinstance(arg, (_ArrayExpr, _CodegenArrayAbstract)) for arg in args):
+        return CodegenArrayTensorProduct(*args)
     if len(args) > 2:
         return tensorproduct(tensorproduct(args[0], args[1]), *args[2:])
 
@@ -151,6 +155,11 @@ def tensorcontraction(array, *contraction_axes):
     [a*e + b*g, a*f + b*h],
     [c*e + d*g, c*f + d*h]])
     """
+    from sympy.codegen.array_utils import _CodegenArrayAbstract, CodegenArrayContraction
+    from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
+    if isinstance(array, (_ArrayExpr, _CodegenArrayAbstract)):
+        return CodegenArrayContraction(array, *contraction_axes)
+
     array, remaining_indices, remaining_shape, summed_deltas = _util_contraction_diagonal(array, *contraction_axes)
 
     # Compute the contracted array:
@@ -345,6 +354,11 @@ def permutedims(expr, perm):
 
     """
     from sympy.tensor.array import SparseNDimArray
+
+    from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
+    from sympy.codegen.array_utils import _CodegenArrayAbstract, CodegenArrayPermuteDims
+    if isinstance(expr, (_ArrayExpr, _CodegenArrayAbstract)):
+        return CodegenArrayPermuteDims(expr, perm)
 
     if not isinstance(expr, NDimArray):
         expr = ImmutableDenseNDimArray(expr)
