@@ -812,7 +812,8 @@ class Quaternion(Expr):
 
         See Also
         ========
-        vector
+
+        vector_part
 
         """
 
@@ -842,7 +843,7 @@ class Quaternion(Expr):
 
         See Also
         ========
-        scalar
+        scalar_part
 
         """
 
@@ -872,7 +873,7 @@ class Quaternion(Expr):
         If q is a quaternion given by q = a + b*i + c*j + d*k where a, b, c and d
         are real numbers then the angle of the quaternion is given by
 
-            angle = atan2(sqrt(b**2 + c**2 + d**2), a)
+            angle := atan2 (\sqrt(b^2+c^2+d^2), a)
 
         Returns
         =======
@@ -895,7 +896,8 @@ class Quaternion(Expr):
 
         return atan2(Quaternion(0, self.b, self.c, self.d).norm(), self.a)
 
-    def coplanar(self, other):
+    @classmethod
+    def coplanar(cls, q1, q2):
         """
         Returns True if the plane of the two quaternions are coplanar else returns False.
 
@@ -909,19 +911,20 @@ class Quaternion(Expr):
         Parameters
         ==========
 
-        other : a Quaternion
+        q1 : a Quaternion
+        q2 : a Quaternion
 
         Examples
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
-        >>> q = Quaternion(1, 4, 4, 4)
-        >>> q1 = Quaternion(2, 8, 8, 8)
-        >>> q.coplanar(q1)
+        >>> q1 = Quaternion(1, 4, 4, 4)
+        >>> q2 = Quaternion(2, 8, 8, 8)
+        >>> Quaternion.coplanar(q1, q2)
         True
 
         >>> q1 = Quaternion(2, 8, 13, 12)
-        >>> q.coplanar(q1)
+        >>> Quaternion.coplanar(q1, q2)
         False
 
         See Also
@@ -930,18 +933,19 @@ class Quaternion(Expr):
         is_pure
 
         """
-        if (self.a == self.b == self.c == self.d == 0) or (other.a == other.b == other.c == other.d == 0):
+        if (q1.a == q1.b == q1.c == q1.d == 0) or (q2.a == q2.b == q2.c == q2.d == 0):
             raise ValueError('Any of the provided quaternions must not be 0')
 
-        aq = self.axis()
-        ar = other.axis()
+        aq = q1.axis()
+        ar = q2.axis()
 
         return (aq == ar or aq == -ar)
 
-    def ternary_coplanar(self, q1, q2):
+    @classmethod
+    def ternary_coplanar(cls, q1, q2, q3):
         """
         Returns True if the axis of the pure quaternions seen as 3D vectors
-        self, q1, and q2 are coplanar else returns False.
+        q1, q1, and q2 are coplanar else returns False.
 
         Explanation
         ===========
@@ -953,28 +957,29 @@ class Quaternion(Expr):
 
         q1 : a pure Quaternion.
         q2 : a pure Quaternion.
+        q3 : a pure Quaternion.
 
         Examples
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
-        >>> q = Quaternion(0, 4, 4, 4)
-        >>> q1 = Quaternion(0, 8, 8, 8)
-        >>> q2 = Quaternion(0, 24, 24, 24)
-        >>> q.ternary_coplanar(q1, q2)
+        >>> q1 = Quaternion(0, 4, 4, 4)
+        >>> q2 = Quaternion(0, 8, 8, 8)
+        >>> q3 = Quaternion(0, 24, 24, 24)
+        >>> Quaternion.ternary_coplanar(q1, q2, q3)
         True
 
         >>> q1 = Quaternion(0, 8, 16, 8)
         >>> q2 = Quaternion(0, 8, 3, 12)
-        >>> q.ternary_coplanar(q1, q2)
+        >>> Quaternion.ternary_coplanar(q1, q2, q3)
         False
 
         """
 
-        if not q1.a == 0 or not q2.a == 0 or not self.a == 0:
+        if not q2.a == 0 or not q3.a == 0 or not q1.a == 0:
             raise ValueError('The provided quaternions must be pure')
 
-        M = Matrix([[self.b, self.c, self.d], [q1.b, q1.c, q1.d], [q2.b, q2.c, q2.d]])
+        M = Matrix([[q1.b, q1.c, q1.d], [q2.b, q2.c, q2.d], [q3.b, q3.c, q3.d]])
         return M.det() == 0
 
     def parallel(self, other):
@@ -1053,7 +1058,7 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Index vector is given by |q| Ax(q) where Ax(q) is the axis of the quaternion q.
+        Index vector is given by mod(q) Ax(q) where Ax(q) is the axis of the quaternion q.
 
         Returns
         =======
