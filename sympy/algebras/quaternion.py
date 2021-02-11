@@ -864,7 +864,7 @@ class Quaternion(Expr):
         return self.a == 0  and not (self.a == self.b == self.c == self.d)
 
     def angle(self):
-        """
+        r"""
         Returns the angle of the quaternion measured in the real-axis plane.
 
         Explanation
