@@ -2532,21 +2532,20 @@ def test_issue_18208():
            y0 - 12,
            y1 - 20]
 
+    expected = [38 - x3, x3 - 10, 23 - x3, x3, 12 - x7, x7 + 6, 16 - x7, x7,
+                8, 20, 2, 5, 1, 6, 1, 21, 12, 20, -y11 + y9 + 2, y11 - y9 + 21,
+                -y11 - y7 + y9 + 24, y11 + y7 - y9 - 3, 33 - y7, y7, 27 - y9, y9,
+                27 - y11, y11]
+
+    A, b = linear_eq_to_matrix(eqs, vars)
+
     # solve
-    solve_expected = {x0: 38 - x3, x1: x3 - 10, x2: 23 - x3, x4: 12 - x7, x5: x7 + 6,
-                x6: 16 - x7, x8: 8, x9: 20, x10: 2, x11: 5, x12: 1, x13: 6, x14: 1,
-                x15: 21, y0: 12, y1: 20, y2: -y11 + y9 + 2, y3: y11 - y9 + 21,
-                y4: -y11 - y7 + y9 + 24, y5: y11 + y7 - y9 - 3, y6: 33 - y7, y8: 27 - y9,
-                y10: 27 - y11}
+    solve_expected = {v:eq for v, eq in zip(vars, expected) if v != eq}
 
     assert solve(eqs, vars) == solve_expected
 
     # linsolve
-    A, b = linear_eq_to_matrix(eqs, vars)
-    linsolve_expected = FiniteSet((38 - x3, x3 - 10, 23 - x3, x3, 12 - x7, x7 + 6, 16 - x7, x7,
-                          8, 20, 2, 5, 1, 6, 1, 21, 12, 20, -y11 + y9 + 2, y11 - y9 + 21,
-                          -y11 - y7 + y9 + 24, y11 + y7 - y9 - 3, 33 - y7, y7, 27 - y9, y9,
-                          27 - y11, y11))
+    linsolve_expected = FiniteSet(Tuple(*expected))
 
     assert linsolve(eqs, vars) == linsolve_expected
     assert linsolve((A, b), vars) == linsolve_expected
