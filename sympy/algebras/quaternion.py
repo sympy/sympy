@@ -880,9 +880,9 @@ class Quaternion(Expr):
         See Also
         ========
         scalar
-        
+
         """
-        
+
         if isinstance(self.a, Symbol):
             z = self.a.is_zero
             if not z:
@@ -897,8 +897,6 @@ class Quaternion(Expr):
                     return
                 else:
                     return True
-                    
-            
         return self.a == 0  and not (self.a == self.b == self.c == self.d)
 
     def angle(self):
@@ -1079,7 +1077,7 @@ class Quaternion(Expr):
         True
 
         """
-        
+
         if not self.a == 0 or not other.a == 0:
             raise ValueError('The provided quaternions must be pure')
 
