@@ -1,5 +1,5 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, PoleError, log, sqrt, N, Symbol, Subs, pi, symbols, atan, LambertW, Rational, tan, cot, sec, cosec
+    Function, PoleError, log, sqrt, N, Symbol, Subs, pi, symbols, atan, LambertW, Rational
 from sympy.abc import x, y, n, k
 from sympy.testing.pytest import raises
 from sympy.series.gruntz import calculate_series
@@ -17,30 +17,6 @@ def test_cos():
     assert e1 == e2
 
 
-def test_tan():
-    e1 = tan(x).series(x, 0)
-    e2 = series(tan(x), x, 0)
-    assert e1 == e2
-
-
-def test_cot():
-    e1 = cot(x).series(x, 0)
-    e2 = series(cot(x), x, 0)
-    assert e1 == e2
-
-
-def test_sec():
-    e1 = sec(x).series(x, 0)
-    e2 = series(sec(x), x, 0)
-    assert e1 == e2
-
-
-def test_cosec():
-    e1 = cosec(x).series(x, 0)
-    e2 = series(cosec(x), x, 0)
-    assert e1 == e2
-
-
 def test_exp():
     e1 = exp(x).series(x, 0)
     e2 = series(exp(x), x, 0)
@@ -50,36 +26,6 @@ def test_exp():
 def test_exp2():
     e1 = exp(cos(x)).series(x, 0)
     e2 = series(exp(cos(x)), x, 0)
-    assert e1 == e2
-
-
-def test_exp3():
-    e1 = exp(sin(x)).series(x, 0)
-    e2 = series(exp(sin(x)), x, 0)
-    assert e1 == e2
-
-
-def test_exp4():
-    e1 = exp(tan(x)).series(x, 0)
-    e2 = series(exp(tan(x)), x, 0)
-    assert e1 == e2
-
-
-def test_exp5():
-    e1 = exp(cot(x)).series(x, 0)
-    e2 = series(exp(cot(x)), x, 0)
-    assert e1 == e2
-
-
-def test_exp6():
-    e1 = exp(sec(x)).series(x, 0)
-    e2 = series(exp(sec(x)), x, 0)
-    assert e1 == e2
-
-
-def test_exp7():
-    e1 = exp(cosec(x)).series(x, 0)
-    e2 = series(exp(cosec(x)), x, 0)
     assert e1 == e2
 
 
