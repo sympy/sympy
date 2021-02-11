@@ -103,11 +103,11 @@ def test_quaternion_functions():
     n = Symbol('n', integer=True)
     raises(TypeError, lambda: q1**n)
 
-    assert Quaternion(22, 23, 55, 8).scalar() == 22
-    assert Quaternion(w, x, y, z).scalar() == w
+    assert Quaternion(22, 23, 55, 8).scalar_part() == 22
+    assert Quaternion(w, x, y, z).scalar_part() == w
 
-    assert Quaternion(22, 23, 55, 8).vector() == Quaternion(0, 23, 55, 8)
-    assert Quaternion(w, x, y, z).vector() == Quaternion(0, x, y, z)
+    assert Quaternion(22, 23, 55, 8).vector_part() == Quaternion(0, 23, 55, 8)
+    assert Quaternion(w, x, y, z).vector_part() == Quaternion(0, x, y, z)
 
     assert q1.axis() == Quaternion(0, 2*sqrt(29)/29, 3*sqrt(29)/29, 4*sqrt(29)/29)
     assert q.axis() == Quaternion(0, x/sqrt(x**2 + y**2 + z**2), y/sqrt(x**2 + y**2 + z**2), z/sqrt(x**2 + y**2 + z**2))

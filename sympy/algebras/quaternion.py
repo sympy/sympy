@@ -1,7 +1,7 @@
 # References :
 # http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
 # https://en.wikipedia.org/wiki/Quaternion
-from sympy import S, Rational
+from sympy import S, Rational, Symbol
 from sympy import re, im, conjugate, sign
 from sympy import sqrt, sin, cos, acos, exp, ln, atan2
 from sympy import trigsimp
@@ -9,7 +9,7 @@ from sympy import integrate
 from sympy import Matrix
 from sympy import sympify
 from sympy.core.expr import Expr
-
+from sympy.core.logic import fuzzy_and
 
 class Quaternion(Expr):
     """Provides basic quaternion operations.
@@ -721,16 +721,15 @@ class Quaternion(Expr):
             return Matrix([[m00, m01, m02, m03], [m10, m11, m12, m13],
                           [m20, m21, m22, m23], [m30, m31, m32, m33]])
 
-    def scalar(self):
+    def scalar_part(self):
         """
         Returns the scalar part of the quaternion.
 
         Explanation
         ===========
 
-        The scalar component of a quaternion is the real part of the quaternion.
-        It gives the rotation angle, and the three imaginary components, when
-        normalized, give the direction ofthe rotation axis.
+        If q is a quaternion given by q = a + b*i + c*j + d*k where a, b, c and d
+        are real numbers then the scalar part of q is a.
 
         Returns
         =======
@@ -743,39 +742,38 @@ class Quaternion(Expr):
         >>> from sympy.algebras.quaternion import Quaternion
 
         >>> q = Quaternion(4, 8, 13, 12)
-        >>> q.scalar()
+        >>> q.scalar_part()
         4
 
         """
 
         return self.a
 
-    def vector(self):
+    def vector_part(self):
         """
         Returns the vector part of the quaternion.
 
         Explanation
         ===========
 
-        The vector part of a quaternion is also called a versor that is the complex
-        part of that quaternion.The vector part of the quaternion when normalized, gives
-        the rotation axis.
+        If q is a quaternion given by q = a + b*i + c*j + d*k where a, b, c and d
+        are real numbers then the vector part of q is b*i + c*j + d*k.
 
         Returns
         =======
 
-        Quaternion: represnting vector part of the quaternion.
+        Quaternion: representing vector part of the quaternion.
 
         Examples
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 1, 1, 1)
-        >>> q.vector()
+        >>> q.vector_part()
         0 + 1*i + 1*j + 1*k
 
         >>> q = Quaternion(4, 8, 13, 12)
-        >>> q.vector()
+        >>> q.vector_part()
         0 + 8*i + 13*j + 12*k
 
         See Also
@@ -842,13 +840,41 @@ class Quaternion(Expr):
         >>> q.is_pure()
         True
 
+        See Also
+        ========
+        scalar
+        
         """
-
-        return self.a == 0 and not (self.a == self.b == self.c == self.d)
+        
+        if isinstance(self.a, Symbol):
+            z = self.a.is_zero
+            if not z:
+                return False
+            elif z == None:
+                return
+            else:
+                x = fuzzy_and(self.b.is_zero, self.c.is_zero,self.d.is_zero)
+                if x:
+                    return False
+                if x == None:
+                    return
+                else:
+                    return True
+                    
+            
+        return self.a == 0  and not (self.a == self.b == self.c == self.d)
 
     def angle(self):
         """
         Returns the angle of the quaternion measured in the real-axis plane.
+
+        Explanation
+        ===========
+
+        If q is a quaternion given by q = a + b*i + c*j + d*k where a, b, c and d
+        are real numbers then the angle of the quaternion is given by
+
+            angle = atan2(sqrt(b**2 + c**2 + d**2), a)
 
         Returns
         =======
@@ -906,7 +932,7 @@ class Quaternion(Expr):
         is_pure
 
         """
-        if not self.is_pure() and self.a == 0 or not other.is_pure() and other.a == 0:
+        if (self.a == self.b == self.c == self.d == 0) or (other.a == other.b == other.c == other.d == 0):
             raise ValueError('Any of the provided quaternions must not be 0')
 
         aq = self.axis()
@@ -1016,7 +1042,7 @@ class Quaternion(Expr):
         True
 
         """
-
+        
         if not self.a == 0 or not other.a == 0:
             raise ValueError('The provided quaternions must be pure')
 
