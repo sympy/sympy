@@ -306,7 +306,6 @@ class Pow(Expr):
                 if b == S.Exp1:
                     from sympy import AccumBounds
                     return AccumBounds(Pow(b, e.min), Pow(b, e.max))
-                raise NotImplementedError("Power of AccumBounds only implemented for base E")
             # Only perform autosimplification if exponent or base is a Symbol or number
             elif (b.is_Symbol or b.is_number) and (e.is_Symbol or e.is_number) and\
                 e.is_integer and _coeff_isneg(b):
