@@ -3152,6 +3152,7 @@ def count_ops(expr, visual=False):
         DIV = Symbol('DIV')
         SUB = Symbol('SUB')
         ADD = Symbol('ADD')
+        EXP = Symbol('EXP')
         while args:
             a = args.pop()
 
@@ -3204,6 +3205,13 @@ def count_ops(expr, visual=False):
             if a.is_Pow and a.exp is S.NegativeOne:
                 ops.append(DIV)
                 args.append(a.base)  # won't be -Mul but could be Add
+                continue
+            if a == S.Exp1:
+                ops.append(EXP)
+                continue
+            if a.is_Pow and a.base == S.Exp1:
+                ops.append(EXP)
+                args.append(a.exp)
                 continue
             if a.is_Mul or isinstance(a, LatticeOp):
                 o = Symbol(a.func.__name__.upper())
