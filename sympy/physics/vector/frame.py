@@ -710,7 +710,7 @@ class ReferenceFrame:
         >>> q1, q2, q3 = symbols('q1, q2, q3')
         >>> N = ReferenceFrame('N')
         >>> B = ReferenceFrame('B')
-        >>> B1 = ReferenceFrame('B')
+        >>> B1 = ReferenceFrame('B1')
         >>> B2 = ReferenceFrame('B2')
 
         For example, a classic Euler Angle rotation can be done by:
@@ -820,7 +820,7 @@ class ReferenceFrame:
         >>> q1, q2, q3 = symbols('q1, q2, q3')
         >>> N = ReferenceFrame('N')
         >>> B = ReferenceFrame('B')
-        >>> B1 = ReferenceFrame('B')
+        >>> B1 = ReferenceFrame('B1')
         >>> B2 = ReferenceFrame('B2')
 
         >>> B.orient_space_fixed(N, (q1, q2, q3), '312')
@@ -837,9 +837,9 @@ class ReferenceFrame:
         >>> B.orient_axis(B2, N.y, q3)
         >>> B.dcm(N).simplify()
         Matrix([
-        [ sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), sin(q1)*cos(q2),                                                                                sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1)],
-        [-sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1), cos(q1)*cos(q2), sin(-q1 + q2 + q3)/4 - sin(q1 - q2 + q3)/4 + sin(q1 + q2 - q3)/4 + sin(q1 + q2 + q3)/4 + cos(q1 - q3)/2 - cos(q1 + q3)/2],
-        [                           sin(q3)*cos(q2),        -sin(q2),                                                                                                          cos(q2)*cos(q3)]])
+        [ sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1)],
+        [-sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1), cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3)],
+        [                           sin(q3)*cos(q2),        -sin(q2),                           cos(q2)*cos(q3)]])
 
         It is worth noting that space-fixed and body-fixed rotations are
         related by the order of the rotations, i.e. the reverse order of body
