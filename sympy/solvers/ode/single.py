@@ -856,7 +856,7 @@ class Lienard(SinglePatternODESolver):
     r"""
     The general form of the Lienard ODE:
 
-    .. math :: y''(x) + f(x)*y'(x) + y(x)
+    .. math :: y''(x) + f(x)*y'(x) + y(x) = 0
 
     We solve using the fact that all linear second order homogeneous ODEs
     can be transformed into first order ODEs of Riccati type.
@@ -868,7 +868,7 @@ class Lienard(SinglePatternODESolver):
 
     On substituting,
 
-    .. math :: b'(x) + b(x)**2 + f(x)*b(x) + 1
+    .. math :: b'(x) + b(x)**2 + f(x)*b(x) + 1 = 0
 
     So this new nonlinear first order ODE in b(x) is obtained, further we can try to find b(x)
     by solving this ode using dsolve. Later, we can find y(x) by:
@@ -887,14 +887,6 @@ class Lienard(SinglePatternODESolver):
     >>> sol = dsolve(eq, hint='lienard',simplify=False)
     >>> print(sol)
     Eq(f(x), exp(C2)/(x*sqrt(tan(C1 + x)**2 + 1)))
-
-    >>> eq = f(x).diff(x,2) + x*f(x).diff(x) + f(x)
-    >>> sol = dsolve(eq, hint='lienard',simplify=False)
-    >>> print(sol)
-    Eq(f(x), exp(x**2*(-C1**2 - 1)/2 + x**4*(C1**2/2 + (-C1**2 - 1)*(6*C1**2 + 1)/6
-    + 1/6)/4 + x**6*(-C1**2*(-3*C1**2 - 1)/15 - 7*C1**2/60 + (-36*C1**2 - 5)*(-C1**2 - 1)/120
-    + (-C1**2 - 1)*(-16*C1**2*(-3*C1**2 - 1) - 36*C1**2 + 8*(-9*C1**2 - 1)*(-C1**2 - 1) - 5)/120 - 1/60)/6
-    + C2 + C1*x + C1*x**3*(2*C1**2 + 1)/6 + C1*x**5*(-12*C1**2 + 8*(-3*C1**2 - 1)*(-C1**2 - 1) - 5)/120 + O(x**7)))
 
     References
     ==========

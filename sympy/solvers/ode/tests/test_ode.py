@@ -1561,7 +1561,7 @@ def test_2nd_power_series_ordinary():
     assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) + x*(f(x).diff(x)) + f(x)
-    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert classify_ode(eq) == ('2nd_power_series_ordinary', 'lienard')
     sol = Eq(f(x), C2*(x**4/8 - x**2/2 + 1) + C1*x*(-x**2/3 + 1) + O(x**6))
     assert dsolve(eq) == sol
     # FIXME: checkodesol fails for this solution...
