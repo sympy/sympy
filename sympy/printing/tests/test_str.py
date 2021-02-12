@@ -15,6 +15,7 @@ from sympy.polys import (Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ,
     ZZ_I, QQ_I, lex, grlex)
 from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
 from sympy.tensor import NDimArray
+from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
 
 from sympy.testing.pytest import raises
 
@@ -1031,3 +1032,7 @@ def test_Predicate():
 
 def test_AppliedPredicate():
     assert sstr(Q.even(x)) == 'Q.even(x)'
+
+def test_printing_str_array_expressions():
+    assert sstr(ArraySymbol("A", 2, 3, 4)) == "A"
+    assert sstr(ArrayElement("A", (2, 1/(1-x), 0))) == "A[2, 1/(1 - x), 0]"

@@ -1,3 +1,4 @@
+from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
 from sympy.tensor.toperators import PartialDerivative
 
 from sympy import (
@@ -2708,3 +2709,7 @@ def test_pickleable():
     # this tests that the _PrintFunction instance is pickleable
     import pickle
     assert pickle.loads(pickle.dumps(latex)) is latex
+
+def test_printing_latex_array_expressions():
+    assert latex(ArraySymbol("A", 2, 3, 4)) == "A"
+    assert latex(ArrayElement("A", (2, 1/(1-x), 0))) == "{{A}_{2, \\frac{1}{1 - x}, 0}}"

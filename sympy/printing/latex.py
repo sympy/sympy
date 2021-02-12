@@ -1892,6 +1892,12 @@ class LatexPrinter(Printer):
                 self.parenthesize(expr.expr, PRECEDENCE["Mul"], False)
             )
 
+    def _print_ArraySymbol(self, expr):
+        return self._print(expr.name)
+
+    def _print_ArrayElement(self, expr):
+        return "{{%s}_{%s}}" % (expr.name, ", ".join([f"{self._print(i)}" for i in expr.indices]))
+
     def _print_UniversalSet(self, expr):
         return r"\mathbb{U}"
 
