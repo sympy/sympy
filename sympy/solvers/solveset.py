@@ -206,7 +206,7 @@ def _invert_real(f, g_ys, symbol):
                             imageset(Lambda(n, log(n)), g_ys),
                             symbol)
 
-    if hasattr(f, 'inverse') and not isinstance(f, (
+    if hasattr(f, 'inverse') and f.inverse() is not None and not isinstance(f, (
             TrigonometricFunction,
             HyperbolicFunction,
             )):
@@ -329,7 +329,7 @@ def _invert_complex(f, g_ys, symbol):
                 return (h, S.EmptySet)
             return _invert_complex(h, imageset(Lambda(n, n/g), g_ys), symbol)
 
-    if hasattr(f, 'inverse') and \
+    if hasattr(f, 'inverse') and f.inverse() is not None and \
        not isinstance(f, TrigonometricFunction) and \
        not isinstance(f, HyperbolicFunction) and \
        not isinstance(f, exp):
