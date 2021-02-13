@@ -97,6 +97,7 @@ class SDM(dict):
     def matmul(A, B):
         if A.domain != B.domain:
             raise DDMDomainError
+        zero = A.domain.zero
         C = {}
         BT = B.transpose()
         for i, Ai in A.items():
@@ -106,7 +107,8 @@ class SDM(dict):
                 BTj_ks = set(BTj)
                 knonzero = Ai_ks & BTj_ks
                 if knonzero:
-                    Cij = sum(Ai[k] * BTj[k] for k in knonzero)
+                    terms = (Ai[k] * BTj[k] for k in knonzero)
+                    Cij = sum(terms, zero)
                     if Cij:
                         Ci[j] = Cij
             if Ci:
@@ -284,13 +286,13 @@ def sdm_irref(A):
     """
     #
     # Any zeros in the matrix are not stored at all so an element is zero if
-    # its the row dict has no index at that key. A row is entirely zero if its
+    # its row dict has no index at that key. A row is entirely zero if its
     # row index is not in the outer dict. Since rref reorders the rows and
     # removes zero rows we can completely discard the row indices. The first
-    # step then copys the row dicts into a list sorted by the index of the
+    # step then copies the row dicts into a list sorted by the index of the
     # first nonzero column in each row.
     #
-    # The algorithm then processes each row ai one at a time. Previously seen
+    # The algorithm then processes each row Ai one at a time. Previously seen
     # rows are used to cancel their pivot columns from Ai. Then a pivot from
     # Ai is chosen and is cancelled from all previously seen rows. At this
     # point Ai joins the previously seen rows. Once all rows are seen all
@@ -300,11 +302,11 @@ def sdm_irref(A):
     # group consists of all rows that have been reduced to a single nonzero
     # element (the pivot). There is no need to attempt any further reduction
     # with these. Rows that still have other nonzeros need to be considered
-    # when ai is cancelled from the previously seen rows.
+    # when Ai is cancelled from the previously seen rows.
     #
     # A dict nonzerocolumns is used to map from a column index to a set of
     # previously seen rows that still have a nonzero element in that column.
-    # This means that we can cancel the pivot from ai into the previously seen
+    # This means that we can cancel the pivot from Ai into the previously seen
     # rows without needing to loop over each row that might have a zero in
     # that column.
     #
@@ -319,7 +321,7 @@ def sdm_irref(A):
     # pivot indices.
     pivot_row_map = {}
 
-    # Set of pivot indices for rows that are fuly reduced to a single nonzero.
+    # Set of pivot indices for rows that are fully reduced to a single nonzero.
     reduced_pivots = set()
 
     # Set of pivot indices for rows not fully reduced

@@ -30,10 +30,10 @@ from collections import defaultdict
 
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.function import expand_mul
 from sympy.core.singleton import S
 
 from sympy.polys.constructor import construct_domain
+from sympy.polys.solvers import PolyNonlinearError
 
 from .sdm import (
     SDM,
@@ -126,7 +126,31 @@ def sympy_dict_to_dm(eqs_coeffs, eqs_rhs, syms):
     return sdm_aug
 
 
+def _expand_eqs_deprecated(eqs):
+    """Use expand to cancel nonlinear terms.
+
+    This approach matches previous behaviour of linsolve but should be
+    deprecated.
+    """
+    def expand_eq(eq):
+        if eq.is_Equality:
+            eq = eq.lhs - eq.rhs
+        return eq.expand()
+
+    return [expand_eq(eq) for eq in eqs]
+
+
 def _linear_eq_to_dict(eqs, syms):
+    """Convert a system Expr/Eq equations into dict form"""
+    try:
+        return _linear_eq_to_dict_inner(eqs, syms)
+    except PolyNonlinearError:
+        # XXX: This should be deprecated:
+        eqs = _expand_eqs_deprecated(eqs)
+        return _linear_eq_to_dict_inner(eqs, syms)
+
+
+def _linear_eq_to_dict_inner(eqs, syms):
     """Convert a system Expr/Eq equations into dict form"""
     syms = set(syms)
     eqsdict, eqs_rhs = [], []
@@ -171,7 +195,7 @@ def _lin_eq2dict(a, symset):
             terms = {sym: coeff * c for sym, c in terms.items()}
             return  coeff * terms_coeff, terms
     elif a.is_Equality:
-        return _lin_eq2dict(expand_mul(a.lhs - a.rhs), symset)
+        return _lin_eq2dict(a.lhs - a.rhs, symset)
     elif not a.free_symbols & symset:
         return a, {}
     else:
