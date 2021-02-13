@@ -1362,7 +1362,6 @@ def test_issue_5901():
     f, g, h = map(Function, 'fgh')
     a = Symbol('a')
     D = Derivative(f(x), x)
-    G = Derivative(g(a), a)
     assert solve(f(x) + f(x).diff(x), f(x)) == \
         [-D]
     assert solve(f(x) - 3, f(x)) == \
@@ -1374,14 +1373,9 @@ def test_issue_5901():
     assert solve([f(x) - 3*f(x).diff(x), f(x)**2 - y + 4], f(x), y) == \
         [(3*D, 9*D**2 + 4)]
     eq = -f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a)
-    syms = [g(a), h(a)]
-    syms_found, sols_found = solve(eq, h(a), g(a), set=True)
-    assert syms_found == syms
-    # For these expressions dummy_eq doesn't work so we extract the dummy
-    X1 = list(sols_found)[0][0]
-    sols = { (X1, +sqrt(X1**2*f(a)**2 - G)/f(a)),
-             (X1, -sqrt(X1**2*f(a)**2 - G)/f(a)) }
-    assert sols == sols_found
+    assert solve(eq, h(a), g(a), set=True) == \
+        ([g(a), h(a)], {(g(a), -sqrt(f(a)**2*g(a)**2 - Derivative(g(a), a))/f(a)), (g(a), sqrt(f(a)**2*g(a)**2 -
+            Derivative(g(a), a))/f(a))})
     args = [f(x).diff(x, 2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
     assert set(solve(*args)) == \
         {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))}

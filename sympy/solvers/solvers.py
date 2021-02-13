@@ -395,7 +395,6 @@ def _is_relational(fi):
     return fi.is_Relational and not isinstance(fi, Equality)
 
 def _handle_relational(f_relational, symbols, flags):
-    f = [_invert_eq_bool(fi) for fi in f_relational]
     if flags.get('dict', False):
         solution = reduce_inequalities(f_relational, symbols=symbols)
         if isinstance(solution, Equality):
@@ -421,6 +420,14 @@ def _handle_relational(f_relational, symbols, flags):
             solutions[i] = ele
         return [] if solutions == [{}] else solutions
     return reduce_inequalities(f_relational, symbols=symbols)
+
+def _collapse_eq_to_expr(fi):
+    if not isinstance(fi, Equality):
+        return fi
+    elif 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args]:
+        return fi.lhs - fi.rhs
+    else:
+        return fi.rewrite(Add, evaluate=False)
 
 
 def solve(f, *symbols, **flags):
@@ -952,6 +959,7 @@ def solve(f, *symbols, **flags):
     f_relational = [_invert_eq_bool(fi) for fi in f]
 
     if any(_is_relational(fi) for fi in f_relational):
+        f = [_invert_eq_bool(fi) for fi in f_relational]
         return _handle_relational(f_relational, symbols, flags)
 
     # preprocess equation(s)
@@ -969,17 +977,8 @@ def solve(f, *symbols, **flags):
             return [], set()
         return []
 
-
-    def collapse_eq_to_expr(fi):
-        if not isinstance(fi, Equality):
-            return fi
-        elif 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args]:
-            return fi.lhs - fi.rhs
-        else:
-            return fi.rewrite(Add, evaluate=False)
-
     # Canonicalise Eqs
-    f = [collapse_eq_to_expr(fi) for fi in f]
+    f = [_collapse_eq_to_expr(fi) for fi in f]
 
     # XXX: Why is this changing bare_f?
     if any(fi.is_Matrix for fi in f):
@@ -1025,28 +1024,34 @@ def solve(f, *symbols, **flags):
             if e.has(*symbols):
                 raise NotImplementedError('solving %s when the argument '
                     'is not real or imaginary.' % e)
+
         # arg
         fi = fi.replace(arg, lambda a: arg(a).rewrite(atan2).rewrite(atan))
+
         # save changes
         f[i] = fi
+
     # see if re(s) or im(s) appear
-    irf = []
-    for s in symbols:
-        if s.is_extended_real or s.is_imaginary:
-            continue  # neither re(x) nor im(x) will appear
-        # if re(s) or im(s) appear, the auxiliary equation must be present
-        if any(fi.has(re(s), im(s)) for fi in f):
-            irf.append((s, re(s) + S.ImaginaryUnit*im(s)))
-    if irf:
-        for s, rhs in irf:
-            for i, fi in enumerate(f):
-                f[i] = fi.xreplace({s: rhs})
-            f.append(s - rhs)
-            symbols.extend([re(s), im(s)])
-        if bare_f:
-            bare_f = False
-        flags['dict'] = True
+    freim = [fi for fi in f if fi.has(re, im)]
+    if freim:
+        irf = []
+        for s in symbols:
+            if s.is_extended_real or s.is_imaginary:
+                continue  # neither re(x) nor im(x) will appear
+            # if re(s) or im(s) appear, the auxiliary equation must be present
+            if any(fi.has(re(s), im(s)) for fi in freim):
+                irf.append((s, re(s) + S.ImaginaryUnit*im(s)))
+        if irf:
+            for s, rhs in irf:
+                for i, fi in enumerate(f):
+                    f[i] = fi.xreplace({s: rhs})
+                f.append(s - rhs)
+                symbols.extend([re(s), im(s)])
+            if bare_f:
+                bare_f = False
+            flags['dict'] = True
     # end of real/imag handling  -----------------------------
+
     symbols = list(uniq(symbols))
     if not ordered_symbols:
         # we do this to make the results returned canonical in case f
@@ -1057,6 +1062,7 @@ def solve(f, *symbols, **flags):
     f, symbols, swap_sym = recast_to_symbols(f, symbols)
     # this is needed in the next two events
     symset = set(symbols)
+
     # get rid of equations that have no symbols of interest; we don't
     # try to solve them because the user didn't ask and they might be
     # hard to solve; this means that solutions may be given in terms
@@ -1095,6 +1101,7 @@ def solve(f, *symbols, **flags):
         return []
     f = newf
     del newf
+
     # mask off any Object that we aren't going to invert: Derivative,
     # Integral, etc... so that solving for anything that they contain will
     # give an implicit solution
@@ -1122,9 +1129,11 @@ def solve(f, *symbols, **flags):
     del seen
     non_inverts = dict(list(zip(non_inverts, [Dummy() for _ in non_inverts])))
     f = [fi.subs(non_inverts) for fi in f]
+
     # Both xreplace and subs are needed below: xreplace to force substitution
     # inside Derivative, subs to handle non-straightforward substitutions
     non_inverts = [(v, k.xreplace(swap_sym).subs(swap_sym)) for k, v in non_inverts.items()]
+
     # rationalize Floats
     floats = False
     if flags.get('rational', True) is not False:
@@ -1132,6 +1141,7 @@ def solve(f, *symbols, **flags):
             if fi.has(Float):
                 floats = True
                 f[i] = nsimplify(fi, rational=True)
+
     # capture any denominators before rewriting since
     # they may disappear after the rewrite, e.g. issue 14779
     flags['_denominators'] = _simple_dens(f[0], symbols)
@@ -1146,6 +1156,7 @@ def solve(f, *symbols, **flags):
     for i, fi in enumerate(f):
         if _has_piecewise(fi):
             f[i] = piecewise_fold(fi)
+
     #
     # try to get a solution
     ###########################################################################
@@ -1153,21 +1164,10 @@ def solve(f, *symbols, **flags):
         solution = _solve(f[0], *symbols, **flags)
     else:
         solution = _solve_system(f, symbols, **flags)
+
     #
     # postprocessing
     ###########################################################################
-
-    # undo the dictionary solutions returned when the system was only partially
-    # solved with poly-system if all symbols are present
-    if (
-            not flags.get('dict', False) and
-            solution and
-            ordered_symbols and
-            not isinstance(solution, dict) and
-            all(isinstance(sol, dict) for sol in solution)
-    ):
-        solution = [tuple([r.get(s, s).subs(r) for s in symbols])
-                    for r in solution]
 
     # Restore masked-off objects
     if non_inverts:
@@ -1195,6 +1195,7 @@ def solve(f, *symbols, **flags):
         else:
             raise NotImplementedError(filldedent('''
                             no handling of %s was implemented''' % solution))
+
     # Restore original "symbols" if a dictionary is returned.
     # This is not necessary for
     #   - the single univariate equation case
@@ -1214,14 +1215,29 @@ def solve(f, *symbols, **flags):
                 solution[i] = {swap_sym.get(k, k): v.subs(swap_sym)
                               for k, v in sol.items()}
 
+    # undo the dictionary solutions returned when the system was only partially
+    # solved with poly-system if all symbols are present
+    if (
+            not flags.get('dict', False) and
+            solution and
+            ordered_symbols and
+            not isinstance(solution, dict) and
+            all(isinstance(sol, dict) for sol in solution)
+    ):
+        solution = [tuple([r.get(s, s) for s in symbols])
+                    for r in solution]
+
     # Get assumptions about symbols, to filter solutions.
     # Note that if assumptions about a solution can't be verified, it is still
     # returned.
     check = flags.get('check', True)
+
     # restore floats
     if floats and solution and flags.get('rational', None) is None:
         solution = nfloat(solution, exponent=False)
+
     if check and solution:  # assumption checking
+
         warn = flags.get('warn', False)
         got_None = []  # solutions for which one or more symbols gave None
         no_False = []  # solutions for which no symbols gave False
@@ -1261,6 +1277,7 @@ def solve(f, *symbols, **flags):
                     no_False.append(sol)
                     if test is None:
                         got_None.append(sol)
+
         elif isinstance(solution, dict):
             a_None = False
             for symb, val in solution.items():
@@ -1275,6 +1292,7 @@ def solve(f, *symbols, **flags):
                 no_False = solution
                 if a_None:
                     got_None.append(solution)
+
         elif isinstance(solution, (Relational, And, Or)):
             if len(symbols) != 1:
                 raise ValueError("Length should be 1")
@@ -1285,6 +1303,7 @@ def solve(f, *symbols, **flags):
             # TODO: check also variable assumptions for inequalities
         else:
             raise TypeError('Unrecognized solution')  # improve the checker
+
         solution = no_False
         if warn and got_None:
             warnings.warn(filldedent("""
@@ -1296,11 +1315,15 @@ def solve(f, *symbols, **flags):
     ###########################################################################
 
     as_dict = flags.get('dict', False)
+    as_set = flags.get('set', False)
+
     if not as_set and isinstance(solution, list):
         # Make sure that a list of solutions is ordered in a canonical way.
         solution.sort(key=default_sort_key)
+
     if not as_dict and not as_set:
         return solution or []
+
     # return a list of mappings or []
     if not solution:
         solution = []
