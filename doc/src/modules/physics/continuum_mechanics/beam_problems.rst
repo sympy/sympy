@@ -74,7 +74,7 @@ point load of 12 kN is applied at the free end of the beam.
 .. note::
 
     The user is free to choose their own sign convention. In this case the
-    upward forces and counterclockwise bending moment being positive.
+    downward forces and counterclockwise bending moment being positive.
 
 The beam must be initialized with the length, modulus of elasticity, and the
 second moment of area. These quantities can be symbols or numbers.
@@ -100,7 +100,7 @@ and the polynomial order is specified as -1:
    :format: doctest
    :include-source: True
 
-   >>> b.apply_load(-12, 9, -1)
+   >>> b.apply_load(12, 9, -1)
 
 The ``load`` attribute can then be used to access the loading function in
 singularity function form:
@@ -112,7 +112,7 @@ singularity function form:
 
    >>> b.load
               -1
-   -12⋅<x - 9>
+   12⋅<x - 9>
 
 Similarly, the positive moment can be applied with a polynomial order -2:
 
@@ -130,7 +130,7 @@ The distributed load is of order 0 and spans x=0 to x=5:
    :format: doctest
    :include-source: True
 
-   >>> b.apply_load(-8, 0, 0, end=5)
+   >>> b.apply_load(8, 0, 0, end=5)
 
 The fixed end imposes two boundary conditions: 1) no vertical deflection and 2)
 no rotation. These are specified by appending tuples of x values and the
@@ -157,7 +157,7 @@ need to be applied to the beam to maintain static equilibrium:
    >>> b.apply_load(M, 0, -2)
    >>> b.load
         -2        -1        0             -2            0             -1
-   M⋅<x>   + R⋅<x>   - 8⋅<x>  + 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9>
+   M⋅<x>   + R⋅<x>   + 8⋅<x>  + 50⋅<x - 5>   - 8⋅<x - 5>  + 12⋅<x - 9>
 
 These two variables can be solved for in terms of the applied loads and the
 final loading can be displayed:
@@ -169,10 +169,10 @@ final loading can be displayed:
 
    >>> b.solve_for_reaction_loads(R, M)
    >>> b.reaction_loads
-       {M: -258, R: 52}
+       {M: 158, R: -52}
    >>> b.load
                 -2         -1        0             -2            0             -1
-       - 258⋅<x>   + 52⋅<x>   - 8⋅<x>  + 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9>
+       158⋅<x>   - 52⋅<x>   + 8⋅<x>  + 50⋅<x - 5>   - 8⋅<x - 5>  + 12⋅<x - 9>
 
 At this point, the beam is fully defined and the internal shear and bending
 moments are calculated:
@@ -183,11 +183,11 @@ moments are calculated:
    :include-source: True
 
    >>> b.shear_force()
-                -1         0        1             -1            1             0
-       - 258⋅<x>   + 52⋅<x>  - 8⋅<x>  + 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9>
+             -1         0        1             -1            1             0
+    - 158⋅<x>   + 52⋅<x>  - 8⋅<x>  - 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9> 
    >>> b.bending_moment()
                 0         1        2             0            2             1
-       - 258⋅<x>  + 52⋅<x>  - 4⋅<x>  + 50⋅<x - 5>  + 4⋅<x - 5>  - 12⋅<x - 9>
+       - 158⋅<x>  + 52⋅<x>  - 4⋅<x>  - 50⋅<x - 5>  + 4⋅<x - 5>  - 12⋅<x - 9>
 
 These can be visualized by calling the respective plot methods:
 
@@ -208,19 +208,19 @@ with:
    :include-source: True
 
    >>> b.slope()
-                                   3                          3
-                1         2   4⋅<x>              1   4⋅<x - 5>             2
-       - 258⋅<x>  + 26⋅<x>  - ────── + 50⋅<x - 5>  + ────────── - 6⋅<x - 9>
-                                3                        3
-       ─────────────────────────────────────────────────────────────────────
-                                        E⋅I
+     ⎛                            3                          3             ⎞ 
+     ⎜         1         2   4⋅<x>              1   4⋅<x - 5>             2⎟ 
+    -⎜- 158⋅<x>  + 26⋅<x>  - ────── - 50⋅<x - 5>  + ────────── - 6⋅<x - 9> ⎟ 
+     ⎝                         3                        3                  ⎠ 
+    ─────────────────────────────────────────────────────────────────────────
+                                       E⋅I                                   
    >>> b.deflection()
-                          3      4                        4
-                2   26⋅<x>    <x>              2   <x - 5>             3
-       - 129⋅<x>  + ─────── - ──── + 25⋅<x - 5>  + ──────── - 2⋅<x - 9>
-                       3       3                      3
-       ─────────────────────────────────────────────────────────────────
-                                      E⋅I
+     ⎛                  3      4                        4             ⎞ 
+     ⎜        2   26⋅<x>    <x>              2   <x - 5>             3⎟ 
+    -⎜- 79⋅<x>  + ─────── - ──── - 25⋅<x - 5>  + ──────── - 2⋅<x - 9> ⎟ 
+     ⎝               3       3                      3                 ⎠ 
+    ────────────────────────────────────────────────────────────────────
+                                    E⋅I                                 
 
 The slope and deflection of the beam can be plotted so long as numbers are
 provided for the modulus and second moment:
@@ -246,7 +246,7 @@ Example 2
 ---------
 
 There is a beam of length 30 meters. A moment of magnitude 120 Nm is
-applied in the clockwise direction at the end of the beam. A point load
+applied in the counter-clockwise direction at the end of the beam. A point load
 of magnitude 8 N is applied from the top of the beam at the starting
 point. There are two simple supports below the beam. One at the end
 and another one at a distance of 10 meters from the start. The
@@ -263,7 +263,7 @@ deflection is restricted at both the supports.
 
 .. note::
 
-    Using the sign convention of upward forces and counterclockwise moment
+    Using the sign convention of downward forces and counterclockwise moment
     being positive.
 
 >>> from sympy.physics.continuum_mechanics.beam import Beam
@@ -271,7 +271,7 @@ deflection is restricted at both the supports.
 >>> E, I = symbols('E, I')
 >>> R1, R2 = symbols('R1, R2')
 >>> b = Beam(30, E, I)
->>> b.apply_load(-8, 0, -1)
+>>> b.apply_load(8, 0, -1)
 >>> b.apply_load(R1, 10, -1)
 >>> b.apply_load(R2, 30, -1)
 >>> b.apply_load(120, 30, -2)
@@ -279,41 +279,41 @@ deflection is restricted at both the supports.
 >>> b.bc_deflection.append((30, 0))
 >>> b.solve_for_reaction_loads(R1, R2)
 >>> b.reaction_loads
-    {R₁: 6, R₂: 2}
+    {R₁: -18, R₂: 10}
 >>> b.load
-           -1             -1               -2             -1
-    - 8⋅<x>   + 6⋅<x - 10>   + 120⋅<x - 30>   + 2⋅<x - 30>
+         -1              -1               -2              -1
+    8⋅<x>   - 18⋅<x - 10>   + 120⋅<x - 30>   + 10⋅<x - 30>  
 >>> b.shear_force()
-           0             0               -1             0
-    - 8⋅<x>  + 6⋅<x - 10>  + 120⋅<x - 30>   + 2⋅<x - 30>
+           0              0               -1              0
+    - 8⋅<x>  + 18⋅<x - 10>  - 120⋅<x - 30>   - 10⋅<x - 30> 
 >>> b.bending_moment()
-           1             1               0             1
-    - 8⋅<x>  + 6⋅<x - 10>  + 120⋅<x - 30>  + 2⋅<x - 30>
+           1              1               0              1
+    - 8⋅<x>  + 18⋅<x - 10>  - 120⋅<x - 30>  - 10⋅<x - 30> 
 >>> b.slope()
-           2             2               1           2   4000
-    - 4⋅<x>  + 3⋅<x - 10>  + 120⋅<x - 30>  + <x - 30>  + ────
-                                                          3
+         2             2               1             2   1600
+    4⋅<x>  - 9⋅<x - 10>  + 120⋅<x - 30>  + 5⋅<x - 30>  - ────
+                                                          3  
     ─────────────────────────────────────────────────────────
-                               E⋅I
+                               E⋅I                           
 >>> b.deflection()
-                  3                                      3
-    4000⋅x   4⋅<x>            3              2   <x - 30>
-    ────── - ────── + <x - 10>  + 60⋅<x - 30>  + ───────── - 12000
-      3        3                                     3
-    ──────────────────────────────────────────────────────────────
-                                 E⋅I
+                    3                                          3       
+      1600⋅x   4⋅<x>              3              2   5⋅<x - 30>        
+    - ────── + ────── - 3⋅<x - 10>  + 60⋅<x - 30>  + ─────────── + 4000
+        3        3                                        3            
+    ───────────────────────────────────────────────────────────────────
+                                    E⋅I                                
 
 Example 3
 ---------
 
 A beam of length 6 meters is having a roller support at the start and a hinged
 support at the end. A counterclockwise moment of 1.5 kN-m is applied at the mid
-of the beam. A constant distributed load of 3 kN/m and a ramp load of 1 kN/m is
+of the beam. A constant distributed load of 3 kN/m and a ramp load of 1 kN/m/m is
 applied from the mid till the end of the beam.
 
 ::
 
-                              ramp load = 1 KN/m
+                              ramp load = 1 KN/m/m
                             constant load = 3 KN/m
                          |------------------------|
                        ⭯ 1.5 KN-m
@@ -325,51 +325,76 @@ applied from the mid till the end of the beam.
 
 .. note::
 
-    Using the sign convention of upward forces and counterclockwise moment
+    Using the sign convention of downward forces and counterclockwise moment
     being positive.
 
->>> from sympy.physics.continuum_mechanics.beam import Beam
->>> from sympy import symbols
->>> E, I = symbols('E, I')
->>> R1, R2 = symbols('R1, R2')
->>> b = Beam(6, E, I)
->>> b.apply_load(R1, 0, -1)
->>> b.apply_load(1.5, 3, -2)
->>> b.apply_load(-3, 3, 0)
->>> b.apply_load(-1, 3, 1)
->>> b.apply_load(R2, 6, -1)
->>> b.bc_deflection.append((0, 0))
->>> b.bc_deflection.append((6, 0))
->>> b.solve_for_reaction_loads(R1, R2)
->>> b.reaction_loads
-    {R₁: 2.75, R₂: 10.75}
->>> b.load
-            -1              -2            0          1                -1
-    2.75⋅<x>   + 1.5⋅<x - 3>   - 3⋅<x - 3>  - <x - 3>  + 10.75⋅<x - 6>
->>> b.shear_force()
-                                                    2
-            0              -1            1   <x - 3>                 0
-    2.75⋅<x>  + 1.5⋅<x - 3>   - 3⋅<x - 3>  - ──────── + 10.75⋅<x - 6>
-                                                2
->>> b.bending_moment()
-                                        2          3
-            1              0   3⋅<x - 3>    <x - 3>                 1
-    2.75⋅<x>  + 1.5⋅<x - 3>  - ────────── - ──────── + 10.75⋅<x - 6>
-                                   2           6
->>> b.slope()
-                                       3          4
-             2              1   <x - 3>    <x - 3>                 2
-    1.375⋅<x>  + 1.5⋅<x - 3>  - ──────── - ──────── + 5.375⋅<x - 6>  - 15.6
-                                   2          24
-    ───────────────────────────────────────────────────────────────────────
-                                      E⋅I
->>> b.deflection()
-                                                              4          5
-                                   3               2   <x - 3>    <x - 3>                            3
-    -15.6⋅x + 0.458333333333333⋅<x>  + 0.75⋅<x - 3>  - ──────── - ──────── + 1.79166666666667⋅<x - 6>
-                                                          8         120
-    ──────────────────────────────────────────────────────────────────────────────────────────────────
-                                                   E⋅I
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: True
+
+   >>> from sympy.physics.continuum_mechanics.beam import Beam
+   >>> from sympy import symbols, plot, S
+   >>> E, I = symbols('E, I')
+   >>> R1, R2 = symbols('R1, R2')
+   >>> b = Beam(6, E, I)
+   >>> b.apply_load(R1, 0, -1)
+   >>> b.apply_load(-S(3)/2, 3, -2)
+   >>> b.apply_load(3, 3, 0)
+   >>> b.apply_load(1, 3, 1)
+   >>> b.apply_load(R2, 6, -1)
+   >>> b.bc_deflection.append((0, 0))
+   >>> b.bc_deflection.append((6, 0))
+   >>> b.solve_for_reaction_loads(R1, R2)
+   >>> b.reaction_loads
+      {R₁: -11/4, R₂: -43/4}
+
+   >>> b.load
+               -1            -2                                     -1
+         11⋅<x>     3⋅<x - 3>              0          1   43⋅<x - 6>
+       - ──────── - ─────────── + 3⋅<x - 3>  + <x - 3>  - ────────────
+            4            2                                     4
+
+.. plot::
+   :context:
+   :format: doctest
+   :include-source: True
+
+   >>> plot(b.load)  # doctest: +SKIP
+
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: True
+
+   >>> b.shear_force()
+               0            -1                       2             0
+         11⋅<x>    3⋅<x - 3>              1   <x - 3>    43⋅<x - 6>
+         ─────── + ─────────── - 3⋅<x - 3>  - ──────── + ───────────
+            4           2                        2            4
+
+   >>> b.bending_moment()
+               1            0            2          3             1
+          11⋅<x>    3⋅<x - 3>     3⋅<x - 3>    <x - 3>    43⋅<x - 6>
+         ─────── + ────────── - ────────── - ──────── + ───────────
+            4          2            2           6            4
+
+   >>> b.slope()
+               2            1          3          4             2
+         11⋅<x>    3⋅<x - 3>    <x - 3>    <x - 3>    43⋅<x - 6>    78
+       - ─────── - ────────── + ──────── + ──────── - ─────────── + ──
+            8          2           2          24           8        5
+       ───────────────────────────────────────────────────────────────
+                                    E⋅I
+
+
+   >>> b.deflection()
+                    3            2          4          5             3
+       78⋅x   11⋅<x>    3⋅<x - 3>    <x - 3>    <x - 3>    43⋅<x - 6>
+       ──── - ─────── - ────────── + ──────── + ──────── - ───────────
+        5        24         4           8         120           24
+       ───────────────────────────────────────────────────────────────
+                                    E⋅I
 
 Example 4
 ---------
@@ -415,12 +440,12 @@ to a distributed constant load of 10 KN/m from the starting point till
     10⋅<x>  - 26.0⋅<x - 1>   - 10⋅<x - 2>  + 20⋅<x - 5>   - 22.0⋅<x - 7>   + 8⋅<x - 7.5>
 
     >>> b.shear_force()
-          1               0             1             0               0              0
-    10⋅<x>  - 26.0⋅<x - 1>  - 10⋅<x - 2>  + 20⋅<x - 5>  - 22.0⋅<x - 7>  + 8⋅<x - 7.5>
+            1               0             1             0               0              0
+    - 10⋅<x>  + 26.0⋅<x - 1>  + 10⋅<x - 2>  - 20⋅<x - 5>  + 22.0⋅<x - 7>  - 8⋅<x - 7.5> 
 
     >>> b.bending_moment()
-         2               1            2             1               1              1
-    5⋅<x>  - 26.0⋅<x - 1>  - 5⋅<x - 2>  + 20⋅<x - 5>  - 22.0⋅<x - 7>  + 8⋅<x - 7.5>
+           2               1            2             1               1              1
+    - 5⋅<x>  + 26.0⋅<x - 1>  + 5⋅<x - 2>  - 20⋅<x - 5>  + 22.0⋅<x - 7>  - 8⋅<x - 7.5> 
 
     >>> b.bc_deflection = [(1, 0), (7, 0)]
     >>> b.slope()
@@ -443,7 +468,7 @@ Example 5
 
 A cantilever beam of length 6 meters is under downward distributed constant
 load with magnitude of 4.0 KN/m from starting point till 2 meters away
-from it. A ramp load of 1 kN/m applied from the mid till the end of
+from it. A ramp load of 1 kN/m/m applied from the mid till the end of
 the beam. A point load of 12KN is also applied in same direction 4 meters
 away from start.
 
@@ -455,7 +480,7 @@ away from start.
                              |   . | | |
                              V . | | | |
   \\\\|   4 KN/m             . | | | | |
-  \\\\|___________         . 1 KN/m  | |
+  \\\\|___________         . 1 KN/m/m| |
   \\\\|| | | | | |       . V V V V V V V
   \\\\|V V V V V V     |---------------|
   \\\\|________________________________
@@ -484,31 +509,31 @@ away from start.
     ───────── - ──────── + 4⋅<x>  - 4⋅<x - 2>  + <x - 3>  + 12⋅<x - 4>   - 3⋅<x - 6>  - <x - 6>
         2          2
     >>> b.shear_force()
-           -1         0                                2                                     2
-    157⋅<x>     49⋅<x>         1            1   <x - 3>              0            1   <x - 6>
-    ───────── - ─────── + 4⋅<x>  - 4⋅<x - 2>  + ──────── + 12⋅<x - 4>  - 3⋅<x - 6>  - ────────
-        2          2                               2                                     2
+             -1         0                                2                                   2
+       157⋅<x>     49⋅<x>        1            1    <x - 3>            0           1    <x - 6>
+    - ───────── + ─────── - 4⋅<x>  + 4⋅<x - 2>  - ──────── - 12⋅<x - 4>  + 3⋅<x - 6>  + ────────
+          2          2                              2                                    2
     >>> b.bending_moment()
-           0         1                                3                          2          3
-    157⋅<x>    49⋅<x>         2            2   <x - 3>              1   3⋅<x - 6>    <x - 6>
-    ──────── - ─────── + 2⋅<x>  - 2⋅<x - 2>  + ──────── + 12⋅<x - 4>  - ────────── - ────────
-       2          2                               6                         2           6
+             0         1                                3                          2          3
+      157⋅<x>    49⋅<x>         2            2   <x - 3>              1   3⋅<x - 6>    <x - 6>
+    - ──────── + ─────── - 2⋅<x>  + 2⋅<x - 2>  - ──────── - 12⋅<x - 4>  + ────────── + ────────
+         2          2                               6                         2           6
     >>> b.bc_deflection = [(0, 0)]
     >>> b.bc_slope = [(0, 0)]
     >>> b.slope()
-           1         2        3            3          4                       3          4
-    157⋅<x>    49⋅<x>    2⋅<x>    2⋅<x - 2>    <x - 3>             2   <x - 6>    <x - 6>
-    ──────── - ─────── + ────── - ────────── + ──────── + 6⋅<x - 4>  - ──────── - ────────
-       2          4        3          3           24                      2          24
-    ──────────────────────────────────────────────────────────────────────────────────────
-                                             E⋅I
+     ⎛         1         2        3            3          4                       3          4⎞ 
+     ⎜  157⋅<x>    49⋅<x>    2⋅<x>    2⋅<x - 2>    <x - 3>             2   <x - 6>    <x - 6> ⎟ 
+    -⎜- ──────── + ─────── - ────── + ────────── - ──────── - 6⋅<x - 4>  + ──────── + ────────⎟ 
+     ⎝     2          4        3          3           24                      2          24   ⎠ 
+    ────────────────────────────────────────────────────────────────────────────────────────────
+                                                E⋅I                                             
     >>> b.deflection()
-           2         3      4          4          5                       4          5
-    157⋅<x>    49⋅<x>    <x>    <x - 2>    <x - 3>             3   <x - 6>    <x - 6>
-    ──────── - ─────── + ──── - ──────── + ──────── + 2⋅<x - 4>  - ──────── - ────────
-       4          12      6        6         120                      8         120
-    ──────────────────────────────────────────────────────────────────────────────────
-                                           E⋅I
+     ⎛         2         3      4          4          5                       4          5⎞ 
+     ⎜  157⋅<x>    49⋅<x>    <x>    <x - 2>    <x - 3>             3   <x - 6>    <x - 6> ⎟ 
+    -⎜- ──────── + ─────── - ──── + ──────── - ──────── - 2⋅<x - 4>  + ──────── + ────────⎟ 
+     ⎝     4          12      6        6         120                      8         120   ⎠ 
+    ────────────────────────────────────────────────────────────────────────────────────────
+                                              E⋅I                                           
 
 Example 6
 ---------
@@ -533,6 +558,8 @@ overhanging end.
 
 .. code:: pycon
 
+    >>> from sympy.physics.continuum_mechanics.beam import Beam
+    >>> from sympy import symbols
     >>> R1, R2 = symbols('R1, R2')
     >>> E, I = symbols('E, I')
     >>> b = Beam(11, E, I)
@@ -551,12 +578,12 @@ overhanging end.
     >>> b.shear_force()
             0                                       0
       37⋅<x>             1            1   27⋅<x - 8>              -1
-    - ─────── + 2⋅<x - 2>  - 2⋅<x - 6>  - ─────────── + 5⋅<x - 11>
+      ─────── - 2⋅<x - 2>  + 2⋅<x - 6>  + ─────────── - 5⋅<x - 11>
          8                                     8
     >>> b.bending_moment()
             1                                   1
       37⋅<x>           2          2   27⋅<x - 8>              0
-    - ─────── + <x - 2>  - <x - 6>  - ─────────── + 5⋅<x - 11>
+      ─────── - <x - 2>  + <x - 6>  + ─────────── - 5⋅<x - 11>
          8                                 8
     >>> b.bc_deflection = [(0, 0), (8, 0)]
     >>> b.slope()
@@ -627,34 +654,34 @@ beam.
     >>> b.shear_force()
              -1               -1        0              0             0
       F⋅l⋅<x>     F⋅l⋅<-l + x>     F⋅<x>         l         F⋅<-l + x>
-    - ───────── + ────────────── + ────── - F⋅<- ─ + x>  + ───────────
+      ───────── - ────────────── - ────── + F⋅<- ─ + x>  - ───────────
           8             8            2           2              2
 
     >>> b.bending_moment()
              0               0        1              1             1
       F⋅l⋅<x>    F⋅l⋅<-l + x>    F⋅<x>         l         F⋅<-l + x>
-    - ──────── + ───────────── + ────── - F⋅<- ─ + x>  + ───────────
+      ──────── - ───────────── - ────── + F⋅<- ─ + x>  - ───────────
          8             8           2           2              2
 
     >>> b.slope()
-                                                     2
-                                               l
-             1               1        2   F⋅<- ─ + x>              2
-      F⋅l⋅<x>    F⋅l⋅<-l + x>    F⋅<x>         2         F⋅<-l + x>
-    - ──────── + ───────────── + ────── - ──────────── + ───────────
-         8             8           4           2              4
-    ────────────────────────────────────────────────────────────────
-                                  E⋅I
+     ⎛                                               2              ⎞ 
+     ⎜                                         l                    ⎟ 
+     ⎜       1               1        2   F⋅<- ─ + x>              2⎟ 
+     ⎜F⋅l⋅<x>    F⋅l⋅<-l + x>    F⋅<x>         2         F⋅<-l + x> ⎟ 
+    -⎜──────── - ───────────── - ────── + ──────────── - ───────────⎟ 
+     ⎝   8             8           4           2              4     ⎠ 
+    ──────────────────────────────────────────────────────────────────
+                                   E⋅I                                
 
     >>> b.deflection()
-                                                     3
-                                               l
-             2               2        3   F⋅<- ─ + x>              3
-      F⋅l⋅<x>    F⋅l⋅<-l + x>    F⋅<x>         2         F⋅<-l + x>
-    - ──────── + ───────────── + ────── - ──────────── + ───────────
-         16            16          12          6              12
-    ────────────────────────────────────────────────────────────────
-                                  E⋅I
+     ⎛                                               3              ⎞ 
+     ⎜                                         l                    ⎟ 
+     ⎜       2               2        3   F⋅<- ─ + x>              3⎟ 
+     ⎜F⋅l⋅<x>    F⋅l⋅<-l + x>    F⋅<x>         2         F⋅<-l + x> ⎟ 
+    -⎜──────── - ───────────── - ────── + ──────────── - ───────────⎟ 
+     ⎝   16            16          12          6              12    ⎠ 
+    ──────────────────────────────────────────────────────────────────
+                                   E⋅I                                
 
 
 Example 8
@@ -710,13 +737,13 @@ applied at a distance of ``3*l`` from the starting point.
     >>> b.shear_force()
              -1          0               0                               0
       P⋅l⋅<x>     3⋅P⋅<x>    5⋅P⋅<-l + x>                0   P⋅<-4⋅l + x>
-    - ───────── + ──────── - ───────────── + P⋅<-3⋅l + x>  - ─────────────
+      ───────── - ──────── + ───────────── - P⋅<-3⋅l + x>  + ─────────────
           4          4             4                               2
 
     >>> b.bending_moment()
             0          1               1                               1
       P⋅l⋅<x>    3⋅P⋅<x>    5⋅P⋅<-l + x>                1   P⋅<-4⋅l + x>
-    - ──────── + ──────── - ───────────── + P⋅<-3⋅l + x>  - ─────────────
+      ──────── - ──────── + ───────────── - P⋅<-3⋅l + x>  + ─────────────
          4          4             4                               2
 
     >>> b.slope()
@@ -773,18 +800,18 @@ A pointload of magnitude 20 N is applied from the top at its free end.
           -2         -1             -1
     80⋅<x>   - 20⋅<x>   + 20⋅<x - 4>
     >>> b.shear_force()
-          -1         0             0
-    80⋅<x>   - 20⋅<x>  + 20⋅<x - 4>
+            -1         0             0
+    - 80⋅<x>   + 20⋅<x>  - 20⋅<x - 4> 
     >>> b.bending_moment()
-          0         1             1
-    80⋅<x>  - 20⋅<x>  + 20⋅<x - 4>
+            0         1             1
+    - 80⋅<x>  + 20⋅<x>  - 20⋅<x - 4> 
     >>> b.slope()
-    ⎛      1         2             2             ⎞
-    ⎜80⋅<x>  - 10⋅<x>  + 10⋅<x - 4>    120       ⎟
-    ⎜─────────────────────────────── - ───       ⎟                              ⎛      1         2             2⎞    0                     ⎛      1         2             2⎞        0
-    ⎜               I                   I    80.0⎟        0   0.666666666666667⋅⎝80⋅<x>  - 10⋅<x>  + 10⋅<x - 4> ⎠⋅<x>    0.666666666666667⋅⎝80⋅<x>  - 10⋅<x>  + 10⋅<x - 4> ⎠⋅<x - 2>
-    ⎜───────────────────────────────────── + ────⎟⋅<x - 2>  + ──────────────────────────────────────────────────────── - ────────────────────────────────────────────────────────────
-    ⎝                  E                     E⋅I ⎠                                      E⋅I                                                          E⋅I
+    ⎛          1         2             2             ⎞                                                                                                                                       
+    ⎜  - 80⋅<x>  + 10⋅<x>  - 10⋅<x - 4>    120       ⎟                                                                                                                                       
+    ⎜  ───────────────────────────────── + ───       ⎟                              ⎛        1         2             2⎞    0                     ⎛        1         2             2⎞        0
+    ⎜                  I                    I    80.0⎟        0   0.666666666666667⋅⎝- 80⋅<x>  + 10⋅<x>  - 10⋅<x - 4> ⎠⋅<x>    0.666666666666667⋅⎝- 80⋅<x>  + 10⋅<x>  - 10⋅<x - 4> ⎠⋅<x - 2> 
+    ⎜- ─────────────────────────────────────── + ────⎟⋅<x - 2>  - ────────────────────────────────────────────────────────── + ──────────────────────────────────────────────────────────────
+    ⎝                     E                      E⋅I ⎠                                       E⋅I                                                            E⋅I                              
 
 Example 10
 ----------
@@ -838,16 +865,16 @@ from the top at a distance of ``2*l`` from starting point.
          18               9                18                               18
 
     >>> b.shear_force()
-             -1                   -1          0                                  0
-    5⋅P⋅l⋅<x>     4⋅P⋅l⋅<-3⋅l + x>     5⋅P⋅<x>                0   13⋅P⋅<-3⋅l + x>
-    ─────────── - ────────────────── - ──────── + P⋅<-2⋅l + x>  - ────────────────
-         18               9               18                             18
+               -1                   -1          0                                  0
+      5⋅P⋅l⋅<x>     4⋅P⋅l⋅<-3⋅l + x>     5⋅P⋅<x>                0   13⋅P⋅<-3⋅l + x>
+    - ─────────── + ────────────────── + ──────── - P⋅<-2⋅l + x>  + ────────────────
+           18               9               18                             18
 
     >>> b.bending_moment()
-             0                   0          1                                  1
-    5⋅P⋅l⋅<x>    4⋅P⋅l⋅<-3⋅l + x>    5⋅P⋅<x>                1   13⋅P⋅<-3⋅l + x>
-    ────────── - ───────────────── - ──────── + P⋅<-2⋅l + x>  - ────────────────
-        18               9              18                             18
+               0                   0          1                                  1
+      5⋅P⋅l⋅<x>    4⋅P⋅l⋅<-3⋅l + x>    5⋅P⋅<x>                1   13⋅P⋅<-3⋅l + x>
+    - ────────── + ───────────────── + ──────── - P⋅<-2⋅l + x>  + ────────────────
+          18               9              18                             18
 
     >>> b.slope()
     ⎛         1          2               2⎞        ⎛         1          2               2⎞             ⎛   2                   1               2               2                  2⎞

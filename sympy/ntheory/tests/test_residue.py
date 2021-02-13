@@ -1,5 +1,5 @@
 from collections import defaultdict
-from sympy import S, Symbol, Tuple
+from sympy import S, Symbol, Tuple, Dummy
 
 from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, totient, primerange, sqrt_mod, \
@@ -130,7 +130,7 @@ def test_residue():
     #issue 10816
     assert is_nthpow_residue(1, 0, 1) is False
     assert is_nthpow_residue(1, 0, 2) is True
-    assert is_nthpow_residue(3, 0, 2) is False
+    assert is_nthpow_residue(3, 0, 2) is True
     assert is_nthpow_residue(0, 1, 8) is True
     assert is_nthpow_residue(2, 3, 2) is True
     assert is_nthpow_residue(2, 3, 9) is False
@@ -150,13 +150,13 @@ def test_residue():
     assert is_nthpow_residue(36010, 8, 87382) is True
     assert is_nthpow_residue(28552, 6, 2218) is True
     assert is_nthpow_residue(92712, 9, 50026) is True
-    x = set([pow(i, 56, 1024) for i in range(1024)])
-    assert set([a for a in range(1024) if is_nthpow_residue(a, 56, 1024)]) == x
-    x = set([ pow(i, 256, 2048) for i in range(2048)])
-    assert set([a for a in range(2048) if is_nthpow_residue(a, 256, 2048)]) == x
-    x = set([ pow(i, 11, 324000) for i in range(1000)])
+    x = {pow(i, 56, 1024) for i in range(1024)}
+    assert {a for a in range(1024) if is_nthpow_residue(a, 56, 1024)} == x
+    x = { pow(i, 256, 2048) for i in range(2048)}
+    assert {a for a in range(2048) if is_nthpow_residue(a, 256, 2048)} == x
+    x = { pow(i, 11, 324000) for i in range(1000)}
     assert [ is_nthpow_residue(a, 11, 324000) for a in x]
-    x = set([ pow(i, 17, 22217575536) for i in range(1000)])
+    x = { pow(i, 17, 22217575536) for i in range(1000)}
     assert [ is_nthpow_residue(a, 17, 22217575536) for a in x]
     assert is_nthpow_residue(676, 3, 5364)
     assert is_nthpow_residue(9, 12, 36)
@@ -165,6 +165,8 @@ def test_residue():
     assert is_nthpow_residue(31, 4, 41)
     assert not is_nthpow_residue(2, 2, 5)
     assert is_nthpow_residue(8547, 12, 10007)
+    assert is_nthpow_residue(Dummy(even=True) + 3, 3, 2) == True
+    assert nthroot_mod(Dummy(odd=True), 3, 2) == 1
 
     assert nthroot_mod(29, 31, 74) == [45]
     assert nthroot_mod(1801, 11, 2663) == 44
@@ -274,6 +276,7 @@ def test_residue():
     assert polynomial_congruence(10*x**2 + 14*x + 20, 2) == [0, 1]
     assert polynomial_congruence(x**3 + 3, 16) == [5]
     assert polynomial_congruence(65*x**2 + 121*x + 72, 277) == [249, 252]
+    assert polynomial_congruence(x**4 - 4, 27) == [5, 22]
     assert polynomial_congruence(35*x**3 - 6*x**2 - 567*x + 2308, 148225) == [86957,
         111157, 122531, 146731]
     assert polynomial_congruence(x**16 - 9, 36) == [3, 9, 15, 21, 27, 33]

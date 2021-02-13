@@ -22,7 +22,8 @@ __all__ = [
     'get_basis', 'enumerate_states',
 
     'KetBase', 'BraBase', 'StateBase', 'State', 'Ket', 'Bra', 'TimeDepState',
-    'TimeDepBra', 'TimeDepKet', 'Wavefunction',
+    'TimeDepBra', 'TimeDepKet', 'OrthogonalKet', 'OrthogonalBra',
+    'OrthogonalState', 'Wavefunction',
 
     'TensorProduct', 'tensor_product_simp',
 
@@ -50,7 +51,8 @@ from .represent import (represent, rep_innerproduct, rep_expectation,
         integrate_result, get_basis, enumerate_states)
 
 from .state import (KetBase, BraBase, StateBase, State, Ket, Bra,
-        TimeDepState, TimeDepBra, TimeDepKet, Wavefunction)
+        TimeDepState, TimeDepBra, TimeDepKet, OrthogonalKet,
+        OrthogonalBra, OrthogonalState, Wavefunction)
 
 from .tensorproduct import TensorProduct, tensor_product_simp
 

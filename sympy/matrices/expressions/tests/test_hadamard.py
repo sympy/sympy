@@ -25,7 +25,7 @@ def test_HadamardProduct():
     mix = HadamardProduct(Z*A, B)*C
     assert mix.shape == (n, k)
 
-    assert set(HadamardProduct(A, B, A).T.args) == set((A.T, A.T, B.T))
+    assert set(HadamardProduct(A, B, A).T.args) == {A.T, A.T, B.T}
 
 
 def test_HadamardProduct_isnt_commutative():

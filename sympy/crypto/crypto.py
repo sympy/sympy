@@ -12,8 +12,6 @@ and the Diffie-Hellman key exchange.
 
 """
 
-from __future__ import print_function
-
 from string import whitespace, ascii_uppercase as uppercase, printable
 from functools import reduce
 import warnings
@@ -81,12 +79,11 @@ bifid6 = AZ() + '0123456789'
 bifid10 = printable
 
 
-def padded_key(key, symbols, filter=True):
+def padded_key(key, symbols):
     """Return a string of the distinct characters of ``symbols`` with
-    those of ``key`` appearing first, omitting characters in ``key``
-    that are not in ``symbols``. A ValueError is raised if a) there are
-    duplicate characters in ``symbols`` or b) there are characters
-    in ``key`` that are  not in ``symbols``.
+    those of ``key`` appearing first. A ValueError is raised if
+    a) there are duplicate characters in ``symbols`` or
+    b) there are characters in ``key`` that are  not in ``symbols``.
 
     Examples
     ========
@@ -102,8 +99,8 @@ def padded_key(key, symbols, filter=True):
     """
     syms = list(uniq(symbols))
     if len(syms) != len(symbols):
-        extra = ''.join(sorted(set(
-            [i for i in symbols if symbols.count(i) > 1])))
+        extra = ''.join(sorted({
+            i for i in symbols if symbols.count(i) > 1}))
         raise ValueError('duplicate characters in symbols: %s' % extra)
     extra = set(key) - set(syms)
     if extra:
@@ -111,7 +108,8 @@ def padded_key(key, symbols, filter=True):
             'characters in key but not symbols: %s' % ''.join(
             sorted(extra)))
     key0 = ''.join(list(uniq(key)))
-    return key0 + ''.join([i for i in syms if i not in key0])
+    # remove from syms characters in key0
+    return key0 + translate(''.join(syms), None, key0)
 
 
 def check_and_join(phrase, symbols=None, filter=None):
@@ -300,8 +298,8 @@ def encipher_rot13(msg, symbols=None):
     """
     Performs the ROT13 encryption on a given plaintext ``msg``.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     ROT13 is a substitution cipher which substitutes each letter
     in the plaintext message for the letter furthest away from it
@@ -328,8 +326,8 @@ def decipher_rot13(msg, symbols=None):
     """
     Performs the ROT13 decryption on a given plaintext ``msg``.
 
-    Notes
-    =====
+    Explanation
+    ============
 
     ``decipher_rot13`` is equivalent to ``encipher_rot13`` as both
     ``decipher_shift`` with a key of 13 and ``encipher_shift`` key with a
@@ -361,6 +359,9 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
     r"""
     Performs the affine cipher encryption on plaintext ``msg``, and
     returns the ciphertext.
+
+    Explanation
+    ===========
 
     Encryption is based on the map `x \rightarrow ax+b` (mod `N`)
     where ``N`` is the number of characters in the alphabet.
@@ -465,8 +466,8 @@ def encipher_atbash(msg, symbols=None):
     r"""
     Enciphers a given ``msg`` into its Atbash ciphertext and returns it.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     Atbash is a substitution cipher originally used to encrypt the Hebrew
     alphabet. Atbash works on the principle of mapping each alphabet to its
@@ -481,15 +482,15 @@ def encipher_atbash(msg, symbols=None):
     decipher_atbash
 
     """
-    return encipher_affine(msg, (25,25), symbols)
+    return encipher_affine(msg, (25, 25), symbols)
 
 
 def decipher_atbash(msg, symbols=None):
     r"""
     Deciphers a given ``msg`` using Atbash cipher and returns it.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     ``decipher_atbash`` is functionally equivalent to ``encipher_atbash``.
     However, it has still been added as a separate function to maintain
@@ -520,7 +521,7 @@ def decipher_atbash(msg, symbols=None):
     encipher_atbash
 
     """
-    return decipher_affine(msg, (25,25), symbols)
+    return decipher_affine(msg, (25, 25), symbols)
 
 #################### substitution cipher ###########################
 
@@ -532,8 +533,8 @@ def encipher_substitution(msg, old, new=None):
     If ``old`` is a mapping, then new is ignored and the replacements
     defined by ``old`` are used.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     This is a more general than the affine cipher in that the key can
     only be recovered by determining the mapping for each symbol.
@@ -614,8 +615,8 @@ def encipher_vigenere(msg, key, symbols=None):
     >>> decipher_vigenere(msg, key, alp)
     'BETWEENSUBTLESHADINGANDTHEABSENC'
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     The Vigenere cipher is named after Blaise de Vigenere, a sixteenth
     century diplomat and cryptographer, by a historical accident.
@@ -787,8 +788,8 @@ def encipher_hill(msg, key, symbols=None, pad="Q"):
     r"""
     Return the Hill cipher encryption of ``msg``.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     The Hill cipher [1]_, invented by Lester S. Hill in the 1920's [2]_,
     was the first polygraphic cipher in which it was practical
@@ -1008,7 +1009,7 @@ def encipher_bifid(msg, key, symbols=None):
     r, c = zip(*[row_col[x] for x in msg])
     rc = r + c
     ch = {i: ch for ch, i in row_col.items()}
-    rv = ''.join((ch[i] for i in zip(rc[::2], rc[1::2])))
+    rv = ''.join(ch[i] for i in zip(rc[::2], rc[1::2]))
     return rv
 
 
@@ -1102,13 +1103,13 @@ def decipher_bifid(msg, key, symbols=None):
         long_key = list(long_key) + [x for x in A if x not in long_key]
 
     # the reverse fractionalization
-    row_col = dict(
-        [(ch, divmod(i, N)) for i, ch in enumerate(long_key)])
+    row_col = {
+        ch: divmod(i, N) for i, ch in enumerate(long_key)}
     rc = [i for c in msg for i in row_col[c]]
     n = len(msg)
     rc = zip(*(rc[:n], rc[n:]))
     ch = {i: ch for ch, i in row_col.items()}
-    rv = ''.join((ch[i] for i in rc))
+    rv = ''.join(ch[i] for i in rc)
     return rv
 
 
@@ -1157,6 +1158,9 @@ def encipher_bifid5(msg, key):
     r"""
     Performs the Bifid cipher encryption on plaintext ``msg``, and
     returns the ciphertext.
+
+    Explanation
+    ===========
 
     This is the version of the Bifid cipher that uses the `5 \times 5`
     Polybius square. The letter "J" is ignored so it must be replaced
@@ -1260,6 +1264,9 @@ def encipher_bifid5(msg, key):
 def decipher_bifid5(msg, key):
     r"""
     Return the Bifid cipher decryption of ``msg``.
+
+    Explanation
+    ===========
 
     This is the version of the Bifid cipher that uses the `5 \times 5`
     Polybius square; the letter "J" is ignored unless a ``key`` of
@@ -1451,7 +1458,7 @@ def _decipher_rsa_crt(i, d, factors):
         Ciphertext
 
     d : integer
-        The exponent component
+        The exponent component.
 
     factors : list of relatively-prime integers
         The integers given must be coprime and the product must equal
@@ -1486,14 +1493,14 @@ def _decipher_rsa_crt(i, d, factors):
     return result[0]
 
 
-def _rsa_key(*args, **kwargs):
+def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, multipower=None):
     r"""A private subroutine to generate RSA key
 
     Parameters
     ==========
 
     public, private : bool, optional
-        Flag to generate either a public key, a private key
+        Flag to generate either a public key, a private key.
 
     totient : 'Euler' or 'Carmichael'
         Different notation used for totient.
@@ -1503,12 +1510,6 @@ def _rsa_key(*args, **kwargs):
     """
     from sympy.ntheory import totient as _euler
     from sympy.ntheory import reduced_totient as _carmichael
-
-    public = kwargs.pop('public', True)
-    private = kwargs.pop('private', True)
-    totient = kwargs.pop('totient', 'Euler')
-    index = kwargs.pop('index', None)
-    multipower = kwargs.pop('multipower', None)
 
     if len(args) < 2:
         return False
@@ -2049,6 +2050,11 @@ def decipher_rsa(i, key, factors=None):
 
     >>> decipher_rsa(new_msg, prk, factors=[p, q])
     12
+
+    See Also
+    ========
+
+    encipher_rsa
     """
     return _encipher_decipher_rsa(i, key, factors=factors)
 
@@ -2060,6 +2066,9 @@ def kid_rsa_public_key(a, b, A, B):
     r"""
     Kid RSA is a version of RSA useful to teach grade school children
     since it does not involve exponentiation.
+
+    Explanation
+    ===========
 
     Alice wants to talk to Bob. Bob generates keys as follows.
     Key generation:
@@ -2193,7 +2202,7 @@ char_morse = {v: k for k, v in morse_char.items()}
 def encode_morse(msg, sep='|', mapping=None):
     """
     Encodes a plaintext into popular Morse Code with letters
-    separated by `sep` and words by a double `sep`.
+    separated by ``sep`` and words by a double ``sep``.
 
     Examples
     ========
@@ -2239,7 +2248,7 @@ def encode_morse(msg, sep='|', mapping=None):
 
 def decode_morse(msg, sep='|', mapping=None):
     """
-    Decodes a Morse Code with letters separated by `sep`
+    Decodes a Morse Code with letters separated by ``sep``
     (default is '|') and words by `word_sep` (default is '||)
     into plaintext.
 
@@ -2531,6 +2540,9 @@ def elgamal_private_key(digit=10, seed=None):
     r"""
     Return three number tuple as private key.
 
+    Explanation
+    ===========
+
     Elgamal encryption is based on the mathmatical problem
     called the Discrete Logarithm Problem (DLP). For example,
 
@@ -2611,7 +2623,10 @@ def elgamal_public_key(key):
 
 def encipher_elgamal(i, key, seed=None):
     r"""
-    Encrypt message with public key
+    Encrypt message with public key.
+
+    Explanation
+    ===========
 
     ``i`` is a plaintext message expressed as an integer.
     ``key`` is public key (p, r, e). In order to encrypt
@@ -2668,7 +2683,7 @@ def encipher_elgamal(i, key, seed=None):
 
 def decipher_elgamal(msg, key):
     r"""
-    Decrypt message with private key
+    Decrypt message with private key.
 
     `msg = (c_{1}, c_{2})`
 
@@ -2710,6 +2725,9 @@ def decipher_elgamal(msg, key):
 def dh_private_key(digit=10, seed=None):
     r"""
     Return three integer tuple as private key.
+
+    Explanation
+    ===========
 
     Diffie-Hellman key exchange is based on the mathematical problem
     called the Discrete Logarithm Problem (see ElGamal).
@@ -2858,7 +2876,7 @@ def dh_shared_key(key, b):
 def _legendre(a, p):
     """
     Returns the legendre symbol of a and p
-    assuming that p is a prime
+    assuming that p is a prime.
 
     i.e. 1 if a is a quadratic residue mod p
         -1 if a is not a quadratic residue mod p
@@ -2899,37 +2917,45 @@ def _random_coprime_stream(n, seed=None):
 
 def gm_private_key(p, q, a=None):
     """
-    Check if p and q can be used as private keys for
+    Check if ``p`` and ``q`` can be used as private keys for
     the Goldwasser-Micali encryption. The method works
     roughly as follows.
 
-    Pick two large primes p ands q. Call their product N.
-    Given a message as an integer i, write i in its
-    bit representation b_0,...,b_n. For each k,
+    Explanation
+    ===========
 
-     if b_k = 0:
-        let a_k be a random square
-        (quadratic residue) modulo p * q
-        such that jacobi_symbol(a, p * q) = 1
-     if b_k = 1:
-        let a_k be a random non-square
-        (non-quadratic residue) modulo p * q
-        such that jacobi_symbol(a, p * q) = 1
+    $\\cdot$ Pick two large primes $p$ and $q$.
 
-    return [a_1, a_2,...]
+    $\\cdot$ Call their product $N$.
 
-    b_k can be recovered by checking whether or not
-    a_k is a residue. And from the b_k's, the message
+    $\\cdot$ Given a message as an integer $i$, write $i$ in its
+    bit representation $b_0$ , $\\dotsc$ , $b_n$ .
+
+    $\\cdot$ For each $k$ ,
+
+     if $b_k$ = 0:
+        let $a_k$ be a random square
+        (quadratic residue) modulo $p q$
+        such that $jacobi \\_symbol(a, p q) = 1$
+     if $b_k$ = 1:
+        let $a_k$ be a random non-square
+        (non-quadratic residue) modulo $p q$
+        such that $jacobi \\_ symbol(a, p q) = 1$
+
+    returns [$a_1$ , $a_2$ , $\\dotsc$ ]
+
+    $b_k$ can be recovered by checking whether or not
+    $a_k$ is a residue. And from the $b_k$ 's, the message
     can be reconstructed.
 
-    The idea is that, while jacobi_symbol(a, p * q)
-    can be easily computed (and when it is equal to -1 will
-    tell you that a is not a square mod p * q), quadratic
+    The idea is that, while $jacobi \\_ symbol(a, p q)$
+    can be easily computed (and when it is equal to $-1$ will
+    tell you that $a$ is not a square mod $p q$ ), quadratic
     residuosity modulo a composite number is hard to compute
     without knowing its factorization.
 
-    Moreover, approximately half the numbers coprime to p * q have
-    jacobi_symbol equal to 1. And among those, approximately half
+    Moreover, approximately half the numbers coprime to $p q$ have
+    $jacobi \\_ symbol$ equal to $1$ . And among those, approximately half
     are residues and approximately half are not. This maximizes the
     entropy of the code.
 
@@ -2966,7 +2992,7 @@ def gm_private_key(p, q, a=None):
 
 def gm_public_key(p, q, a=None, seed=None):
     """
-    Compute public keys for p and q.
+    Compute public keys for ``p`` and ``q``.
     Note that in Goldwasser-Micali Encryption,
     public keys are randomly selected.
 
@@ -3146,6 +3172,9 @@ def bg_private_key(p, q):
     Check if p and q can be used as private keys for
     the Blum-Goldwasser cryptosystem.
 
+    Explanation
+    ===========
+
     The three necessary checks for p and q to pass
     so that they can be used as private keys:
 
@@ -3188,6 +3217,9 @@ def bg_public_key(p, q):
     """
     Calculates public keys from private keys.
 
+    Explanation
+    ===========
+
     The function first checks the validity of
     private keys passed as arguments and
     then returns their product.
@@ -3212,6 +3244,9 @@ def bg_public_key(p, q):
 def encipher_bg(i, key, seed=None):
     """
     Encrypts the message using public key and seed.
+
+    Explanation
+    ===========
 
     ALGORITHM:
         1. Encodes i as a string of L bits, m.
@@ -3274,6 +3309,9 @@ def encipher_bg(i, key, seed=None):
 def decipher_bg(message, key):
     """
     Decrypts the message using private keys.
+
+    Explanation
+    ===========
 
     ALGORITHM:
         1. Let, c be the encrypted message, y the second number received,

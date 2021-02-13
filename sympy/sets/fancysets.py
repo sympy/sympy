@@ -1,12 +1,10 @@
-from __future__ import print_function, division
-
 from functools import reduce
 
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
-from sympy.core.logic import fuzzy_not, fuzzy_or
+from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
 from sympy.core.numbers import oo, Integer
 from sympy.core.relational import Eq
 from sympy.core.singleton import Singleton, S
@@ -44,8 +42,6 @@ class Rationals(Set, metaclass=Singleton):
     def _contains(self, other):
         if not isinstance(other, Expr):
             return False
-        if other.is_Number:
-            return other.is_Rational
         return other.is_rational
 
     def __iter__(self):
@@ -241,7 +237,7 @@ class Reals(Interval, metaclass=Singleton):
     Examples
     ========
 
-    >>> from sympy import S, Interval, Rational, pi, I
+    >>> from sympy import S, Rational, pi, I
     >>> 5 in S.Reals
     True
     >>> Rational(-1, 2) in S.Reals
@@ -729,10 +725,14 @@ class Range(Set):
             return S.Infinity
         return Integer(abs(dif//self.step))
 
-    def __nonzero__(self):
-        return self.start != self.stop
+    @property
+    def is_finite_set(self):
+        if self.start.is_integer and self.stop.is_integer:
+            return True
+        return self.size.is_finite
 
-    __bool__ = __nonzero__
+    def __bool__(self):
+        return self.start != self.stop
 
     def __getitem__(self, i):
         from sympy.functions.elementary.integers import ceiling
@@ -1257,25 +1257,28 @@ class ComplexRegion(Set):
         # self in rectangular form
         if not self.polar:
             re, im = other if isTuple else other.as_real_imag()
-            for element in self.psets:
-                if And(element.args[0]._contains(re),
-                        element.args[1]._contains(im)):
-                    return True
-            return False
+            return fuzzy_or(fuzzy_and([
+                pset.args[0]._contains(re),
+                pset.args[1]._contains(im)])
+                for pset in self.psets)
 
         # self in polar form
         elif self.polar:
+            if other.is_zero:
+                # ignore undefined complex argument
+                return fuzzy_or(pset.args[0]._contains(S.Zero)
+                    for pset in self.psets)
             if isTuple:
                 r, theta = other
-            elif other.is_zero:
-                r, theta = S.Zero, S.Zero
             else:
                 r, theta = Abs(other), arg(other)
-            for element in self.psets:
-                if And(element.args[0]._contains(r),
-                        element.args[1]._contains(theta)):
-                    return True
-            return False
+            if theta.is_real and theta.is_number:
+                # angles in psets are normalized to [0, 2pi)
+                theta %= 2*S.Pi
+                return fuzzy_or(fuzzy_and([
+                    pset.args[0]._contains(r),
+                    pset.args[1]._contains(theta)])
+                    for pset in self.psets)
 
 
 class CartesianComplexRegion(ComplexRegion):
@@ -1414,7 +1417,9 @@ class Complexes(CartesianComplexRegion, metaclass=Singleton):
     is_finite_set = False
 
     # Override property from superclass since Complexes has no args
-    sets = ProductSet(S.Reals, S.Reals)
+    @property
+    def sets(self):
+        return ProductSet(S.Reals, S.Reals)
 
     def __new__(cls):
         return Set.__new__(cls)

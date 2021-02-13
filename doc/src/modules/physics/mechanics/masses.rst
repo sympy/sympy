@@ -227,6 +227,8 @@ the reference frame is created and the kinematics are done. ::
   >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
   >>> from sympy.physics.mechanics import RigidBody, Particle, Point, outer
   >>> from sympy.physics.mechanics import linear_momentum, angular_momentum
+  >>> from sympy.physics.vector import init_vprinting
+  >>> init_vprinting(pretty_print=False)
   >>> m, M, l1 = symbols('m M l1')
   >>> q1d = dynamicsymbols('q1d')
   >>> N = ReferenceFrame('N')
@@ -331,6 +333,8 @@ by going through an identical procedure. ::
   >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, outer
   >>> from sympy.physics.mechanics import RigidBody, Particle
   >>> from sympy.physics.mechanics import kinetic_energy, potential_energy, Point
+  >>> from sympy.physics.vector import init_vprinting
+  >>> init_vprinting(pretty_print=False)
   >>> m, M, l1, g, h, H = symbols('m M l1 g h H')
   >>> omega = dynamicsymbols('omega')
   >>> N = ReferenceFrame('N')
@@ -352,9 +356,9 @@ The user can then determine the kinetic energy of any number of entities of the
 system: ::
 
   >>> kinetic_energy(N, Pa)
-  2*l1**2*m*omega(t)**2
+  2*l1**2*m*omega**2
   >>> kinetic_energy(N, Pa, A)
-  M*l1**2*omega(t)**2/2 + 2*l1**2*m*omega(t)**2 + omega(t)**2/2
+  M*l1**2*omega**2/2 + 2*l1**2*m*omega**2 + omega**2/2
 
 It should be noted that the user can determine either kinetic energy relative
 to any frame in :mod:`sympy.physics.mechanics` as the user is allowed to specify the
@@ -375,7 +379,9 @@ be determined: ::
 One can also determine the Lagrangian for this system: ::
 
   >>> from sympy.physics.mechanics import Lagrangian
+  >>> from sympy.physics.vector import init_vprinting
+  >>> init_vprinting(pretty_print=False)
   >>> Lagrangian(N, Pa, A)
-  -H*M*g + M*l1**2*omega(t)**2/2 - g*h*m + 2*l1**2*m*omega(t)**2 + omega(t)**2/2
+  -H*M*g + M*l1**2*omega**2/2 - g*h*m + 2*l1**2*m*omega**2 + omega**2/2
 
 Please refer to the docstrings to learn more about each function.

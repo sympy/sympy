@@ -162,8 +162,8 @@ def test_product_rules():
 
     # Sixth product rule
     lhs = (delop ^ (u ^ v)).doit()
-    rhs = ((u * (delop & v) - v * (delop & u) +
-           (v & delop)(u) - (u & delop)(v))).doit()
+    rhs = (u * (delop & v) - v * (delop & u) +
+           (v & delop)(u) - (u & delop)(v)).doit()
     assert simplify(lhs) == simplify(rhs)
 
 
@@ -290,7 +290,7 @@ def test_mixed_coordinates():
     b = CoordSys3D('b')
     c = CoordSys3D('c')
     assert gradient(a.x*b.y) == b.y*a.i + a.x*b.j
-    assert gradient(3*cos(q)*a.x*b.x+a.y*(a.x+((cos(q)+b.x)))) ==\
+    assert gradient(3*cos(q)*a.x*b.x+a.y*(a.x+(cos(q)+b.x))) ==\
            (a.y + 3*b.x*cos(q))*a.i + (a.x + b.x + cos(q))*a.j + (3*a.x*cos(q) + a.y)*b.i
     # Some tests need further work:
     # assert gradient(a.x*(cos(a.x+b.x))) == (cos(a.x + b.x))*a.i + a.x*Gradient(cos(a.x + b.x))

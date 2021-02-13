@@ -40,7 +40,7 @@ def test_get_dixon_polynomial_numerical():
     y ** 2 * a[0] * a[1] + y ** 2 * a[1] - y * a[0] * a[1] ** 2 + y * \
     a[1] ** 2
 
-    assert dixon.get_dixon_polynomial().factor() == polynomial
+    assert dixon.get_dixon_polynomial().as_expr().expand() == polynomial
 
 def test_get_max_degrees():
     """Tests max degrees function."""

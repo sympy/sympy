@@ -61,5 +61,6 @@ class MatrixSolve(Token, MatrixExpr):
 
     _construct_matrix = staticmethod(sympify)
 
-    def __init__(self, matrix, vector):
-        self.shape = self.vector.shape
+    @property
+    def shape(self):
+        return self.vector.shape

@@ -284,6 +284,10 @@ def test_CRootOf_real_roots():
     assert Poly(x**5 + x + 1).real_roots(radicals=False) == [rootof(
         x**3 - x**2 + 1, 0)]
 
+    # https://github.com/sympy/sympy/issues/20902
+    p = Poly(-3*x**4 - 10*x**3 - 12*x**2 - 6*x - 1, x, domain='ZZ')
+    assert CRootOf.real_roots(p) == [S(-1), S(-1), S(-1), S(-1)/3]
+
 
 def test_CRootOf_all_roots():
     assert Poly(x**5 + x + 1).all_roots() == [
@@ -574,3 +578,13 @@ def test_issue_15920():
     r = rootof(x**5 - x + 1, 0)
     p = Integral(x, (x, 1, y))
     assert unchanged(Eq, r, p)
+
+
+def test_issue_19113():
+    eq = y**3 - y + 1
+    # generator is a canonical x in RootOf
+    assert str(Poly(eq).real_roots()) == '[CRootOf(x**3 - x + 1, 0)]'
+    assert str(Poly(eq.subs(y, tan(y))).real_roots()
+        ) == '[CRootOf(x**3 - x + 1, 0)]'
+    assert str(Poly(eq.subs(y, tan(x))).real_roots()
+        ) == '[CRootOf(x**3 - x + 1, 0)]'

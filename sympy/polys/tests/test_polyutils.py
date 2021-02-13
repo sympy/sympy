@@ -45,6 +45,9 @@ def test__nsort():
     assert len(_nsort(r, separated=True)[0]) == 0
     b, c, a = exp(-1000), exp(-999), exp(-1001)
     assert _nsort((b, c, a)) == [a, b, c]
+    # issue 12560
+    a = cos(1)**2 + sin(1)**2 - 1
+    assert _nsort([a]) == [a]
 
 
 def test__sort_gens():

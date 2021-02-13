@@ -12,7 +12,8 @@ from sympy.testing.randtest import (random_complex_number as randcplx,
                                       verify_numerically as tn,
                                       test_derivative_numerically as td,
                                       _randint)
-from sympy.testing.pytest import raises
+from sympy.simplify import besselsimp
+from sympy.testing.pytest import raises, slow
 
 from sympy.abc import z, n, k, x
 
@@ -104,7 +105,7 @@ def test_rewrite():
 
 
 def test_expand():
-    from sympy import besselsimp, Symbol, exp, exp_polar, I
+    from sympy import exp_polar, I
 
     assert expand_func(besselj(S.Half, z).rewrite(jn)) == \
         sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
@@ -142,35 +143,6 @@ def test_expand():
         besselsimp(besselk(Rational(-5, 2), z)) == \
         sqrt(2)*sqrt(pi)*(z**2 + 3*z + 3)*exp(-z)/(2*z**Rational(5, 2))
 
-    def check(eq, ans):
-        return tn(eq, ans) and eq == ans
-
-    rn = randcplx(a=1, b=0, d=0, c=2)
-
-    for besselx in [besselj, bessely, besseli, besselk]:
-        ri = S(2*randint(-11, 10) + 1) / 2  # half integer in [-21/2, 21/2]
-        assert tn(besselsimp(besselx(ri, z)), besselx(ri, z))
-
-    assert check(expand_func(besseli(rn, x)),
-                 besseli(rn - 2, x) - 2*(rn - 1)*besseli(rn - 1, x)/x)
-    assert check(expand_func(besseli(-rn, x)),
-                 besseli(-rn + 2, x) + 2*(-rn + 1)*besseli(-rn + 1, x)/x)
-
-    assert check(expand_func(besselj(rn, x)),
-                 -besselj(rn - 2, x) + 2*(rn - 1)*besselj(rn - 1, x)/x)
-    assert check(expand_func(besselj(-rn, x)),
-                 -besselj(-rn + 2, x) + 2*(-rn + 1)*besselj(-rn + 1, x)/x)
-
-    assert check(expand_func(besselk(rn, x)),
-                 besselk(rn - 2, x) + 2*(rn - 1)*besselk(rn - 1, x)/x)
-    assert check(expand_func(besselk(-rn, x)),
-                 besselk(-rn + 2, x) - 2*(-rn + 1)*besselk(-rn + 1, x)/x)
-
-    assert check(expand_func(bessely(rn, x)),
-                 -bessely(rn - 2, x) + 2*(rn - 1)*bessely(rn - 1, x)/x)
-    assert check(expand_func(bessely(-rn, x)),
-                 -bessely(-rn + 2, x) + 2*(-rn + 1)*bessely(-rn + 1, x)/x)
-
     n = Symbol('n', integer=True, positive=True)
 
     assert expand_func(besseli(n + 2, z)) == \
@@ -201,6 +173,38 @@ def test_expand():
         assert besselx(i, r).is_extended_real is True
     for besselx in [bessely, besselk]:
         assert besselx(i, r).is_extended_real is None
+
+
+@slow
+def test_slow_expand():
+    def check(eq, ans):
+        return tn(eq, ans) and eq == ans
+
+    rn = randcplx(a=1, b=0, d=0, c=2)
+
+    for besselx in [besselj, bessely, besseli, besselk]:
+        ri = S(2*randint(-11, 10) + 1) / 2  # half integer in [-21/2, 21/2]
+        assert tn(besselsimp(besselx(ri, z)), besselx(ri, z))
+
+    assert check(expand_func(besseli(rn, x)),
+                 besseli(rn - 2, x) - 2*(rn - 1)*besseli(rn - 1, x)/x)
+    assert check(expand_func(besseli(-rn, x)),
+                 besseli(-rn + 2, x) + 2*(-rn + 1)*besseli(-rn + 1, x)/x)
+
+    assert check(expand_func(besselj(rn, x)),
+                 -besselj(rn - 2, x) + 2*(rn - 1)*besselj(rn - 1, x)/x)
+    assert check(expand_func(besselj(-rn, x)),
+                 -besselj(-rn + 2, x) + 2*(-rn + 1)*besselj(-rn + 1, x)/x)
+
+    assert check(expand_func(besselk(rn, x)),
+                 besselk(rn - 2, x) + 2*(rn - 1)*besselk(rn - 1, x)/x)
+    assert check(expand_func(besselk(-rn, x)),
+                 besselk(-rn + 2, x) - 2*(-rn + 1)*besselk(-rn + 1, x)/x)
+
+    assert check(expand_func(bessely(rn, x)),
+                 -bessely(rn - 2, x) + 2*(rn - 1)*bessely(rn - 1, x)/x)
+    assert check(expand_func(bessely(-rn, x)),
+                 -bessely(-rn + 2, x) + 2*(-rn + 1)*bessely(-rn + 1, x)/x)
 
 
 def test_fn():
@@ -342,6 +346,30 @@ def test_bessel_nan():
     # FIXME: could have these return NaN; for now just fix infinite recursion
     for f in [besselj, bessely, besseli, besselk, hankel1, hankel2, yn, jn]:
         assert f(1, S.NaN) == f(1, S.NaN, evaluate=False)
+
+
+def test_meromorphic():
+    assert besselj(2, x).is_meromorphic(x, 1) == True
+    assert besselj(2, x).is_meromorphic(x, 0) == True
+    assert besselj(2, x).is_meromorphic(x, oo) == False
+    assert besselj(S(2)/3, x).is_meromorphic(x, 1) == True
+    assert besselj(S(2)/3, x).is_meromorphic(x, 0) == False
+    assert besselj(S(2)/3, x).is_meromorphic(x, oo) == False
+    assert besselj(x, 2*x).is_meromorphic(x, 2) == False
+    assert besselk(0, x).is_meromorphic(x, 1) == True
+    assert besselk(2, x).is_meromorphic(x, 0) == True
+    assert besseli(0, x).is_meromorphic(x, 1) == True
+    assert besseli(2, x).is_meromorphic(x, 0) == True
+    assert bessely(0, x).is_meromorphic(x, 1) == True
+    assert bessely(0, x).is_meromorphic(x, 0) == False
+    assert bessely(2, x).is_meromorphic(x, 0) == True
+    assert hankel1(3, x**2 + 2*x).is_meromorphic(x, 1) == True
+    assert hankel1(0, x).is_meromorphic(x, 0) == False
+    assert hankel2(11, 4).is_meromorphic(x, 5) == True
+    assert hn1(6, 7*x**3 + 4).is_meromorphic(x, 7) == True
+    assert hn2(3, 2*x).is_meromorphic(x, 9) == True
+    assert jn(5, 2*x + 7).is_meromorphic(x, 4) == True
+    assert yn(8, x**2 + 11).is_meromorphic(x, 6) == True
 
 
 def test_conjugate():

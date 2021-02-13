@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import print_function
 
 DESCRIPTION = """
 Runs all the examples for testing purposes and reports successes and failures
@@ -120,7 +119,7 @@ def load_example_module(example):
     return mod
 
 
-def run_examples(windowed=False, quiet=False, summary=True):
+def run_examples(*, windowed=False, quiet=False, summary=True):
     """Run all examples in the list of modules.
 
     Returns a boolean value indicating whether all the examples were
@@ -152,7 +151,7 @@ def run_examples(windowed=False, quiet=False, summary=True):
     return len(failures) == 0
 
 
-def run_example(example, reporter=None):
+def run_example(example, *, reporter=None):
     """Run a specific example.
 
     Returns a boolean value indicating whether the example was successful.
@@ -180,7 +179,7 @@ def run_example(example, reporter=None):
         return False
 
 
-class DummyFile(object):
+class DummyFile:
     def write(self, x):
         pass
 
@@ -195,7 +194,7 @@ def suppress_output(fn):
         sys.stdout = save_stdout
 
 
-def show_summary(successes, failures, reporter=None):
+def show_summary(successes, failures, *, reporter=None):
     """Shows a summary detailing which examples were successful and which failed."""
     if reporter:
         reporter.write("-" * reporter.terminal_width)

@@ -688,7 +688,7 @@ def rubi_rule_parser(fullform, header=None, module_name='rubi_object'):
 
     if header is None:  # use default header values
         path_header = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        header = open(os.path.join(path_header, "header.py.txt"), "r").read()
+        header = open(os.path.join(path_header, "header.py.txt")).read()
         header = header.format(module_name)
 
     cons_dict = {}  # dict keeps track of constraints that has been encountered, thus avoids repetition of constraints.

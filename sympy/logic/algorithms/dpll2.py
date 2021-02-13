@@ -8,7 +8,6 @@ Features:
 References:
   - https://en.wikipedia.org/wiki/DPLL_algorithm
 """
-from __future__ import print_function, division
 
 from collections import defaultdict
 from heapq import heappush, heappop
@@ -73,7 +72,7 @@ def _all_models(models):
             yield False
 
 
-class SATSolver(object):
+class SATSolver:
     """
     Class for representing a SAT solver capable of
      finding a model to a boolean theory in conjunctive
@@ -215,8 +214,8 @@ class SATSolver(object):
 
                 # Stopping condition for a satisfying theory
                 if 0 == lit:
-                    yield dict((self.symbols[abs(lit) - 1],
-                                lit > 0) for lit in self.var_settings)
+                    yield {self.symbols[abs(lit) - 1]:
+                                lit > 0 for lit in self.var_settings}
                     while self._current_level.flipped:
                         self._undo()
                     if len(self.levels) == 1:
@@ -650,7 +649,7 @@ class SATSolver(object):
         pass
 
 
-class Level(object):
+class Level:
     """
     Represents a single level in the DPLL algorithm, and contains
     enough information for a sound backtracking procedure.

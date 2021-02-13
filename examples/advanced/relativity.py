@@ -28,7 +28,7 @@ def d(m, x):
     return grad(m[0, 0], x)
 
 
-class MT(object):
+class MT:
     def __init__(self, m):
         self.gdd = m
         self.guu = m.inv()
@@ -43,7 +43,7 @@ class MT(object):
         return self.guu[i, j]
 
 
-class G(object):
+class G:
     def __init__(self, g, x):
         self.g = g
         self.x = x
@@ -58,7 +58,7 @@ class G(object):
         return r
 
 
-class Riemann(object):
+class Riemann:
     def __init__(self, G, x):
         self.G = G
         self.x = x
@@ -73,7 +73,7 @@ class Riemann(object):
         return r
 
 
-class Ricci(object):
+class Ricci:
     def __init__(self, R, x):
         self.R = R
         self.x = x

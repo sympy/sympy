@@ -14,15 +14,15 @@ _x, _y = symbols("x y")
 FunctionUnion = (FunctionClass, Lambda)
 
 
-@dispatch(FunctionClass, Set)  # type: ignore
+@dispatch(FunctionClass, Set)  # type: ignore # noqa:F811
 def _set_function(f, x): # noqa:F811
     return None
 
-@dispatch(FunctionUnion, FiniteSet)  # type: ignore
+@dispatch(FunctionUnion, FiniteSet)  # type: ignore # noqa:F811
 def _set_function(f, x): # noqa:F811
     return FiniteSet(*map(f, x))
 
-@dispatch(Lambda, Interval)  # type: ignore
+@dispatch(Lambda, Interval)  # type: ignore # noqa:F811
 def _set_function(f, x): # noqa:F811
     from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.solvers.solveset import solveset
@@ -67,8 +67,10 @@ def _set_function(f, x): # noqa:F811
         return
 
     try:
-        sing = [i for i in singularities(expr, var)
-            if i.is_real and i in x]
+        from sympy.polys.polyutils import _nsort
+        sing = list(singularities(expr, var, x))
+        if len(sing) > 1:
+            sing = _nsort(sing)
     except NotImplementedError:
         return
 
@@ -82,7 +84,10 @@ def _set_function(f, x): # noqa:F811
         _end = f(x.end)
 
     if len(sing) == 0:
-        solns = list(solveset(diff(expr, var), var))
+        soln_expr = solveset(diff(expr, var), var)
+        if not (isinstance(soln_expr, FiniteSet) or soln_expr is EmptySet):
+            return
+        solns = list(soln_expr)
 
         extr = [_start, _end] + [f(i) for i in solns
                                  if i.is_real and i in x]
@@ -111,7 +116,7 @@ def _set_function(f, x): # noqa:F811
                     for i in range(0, len(sing) - 1)]) + \
             imageset(f, Interval(sing[-1], x.end, True, x.right_open))
 
-@dispatch(FunctionClass, Interval)  # type: ignore
+@dispatch(FunctionClass, Interval)  # type: ignore # noqa:F811
 def _set_function(f, x): # noqa:F811
     if f == exp:
         return Interval(exp(x.start), exp(x.end), x.left_open, x.right_open)
@@ -119,11 +124,11 @@ def _set_function(f, x): # noqa:F811
         return Interval(log(x.start), log(x.end), x.left_open, x.right_open)
     return ImageSet(Lambda(_x, f(_x)), x)
 
-@dispatch(FunctionUnion, Union)  # type: ignore
+@dispatch(FunctionUnion, Union)  # type: ignore # noqa:F811
 def _set_function(f, x): # noqa:F811
     return Union(*(imageset(f, arg) for arg in x.args))
 
-@dispatch(FunctionUnion, Intersection)  # type: ignore
+@dispatch(FunctionUnion, Intersection)  # type: ignore # noqa:F811
 def _set_function(f, x): # noqa:F811
     from sympy.sets.sets import is_function_invertible_in_set
     # If the function is invertible, intersect the maps of the sets.
@@ -132,15 +137,15 @@ def _set_function(f, x): # noqa:F811
     else:
         return ImageSet(Lambda(_x, f(_x)), x)
 
-@dispatch(FunctionUnion, type(EmptySet))  # type: ignore
+@dispatch(FunctionUnion, type(EmptySet))  # type: ignore # noqa:F811
 def _set_function(f, x): # noqa:F811
     return x
 
-@dispatch(FunctionUnion, Set)  # type: ignore
+@dispatch(FunctionUnion, Set)  # type: ignore # noqa:F811
 def _set_function(f, x): # noqa:F811
     return ImageSet(Lambda(_x, f(_x)), x)
 
-@dispatch(FunctionUnion, Range)  # type: ignore
+@dispatch(FunctionUnion, Range)  # type: ignore # noqa:F811
 def _set_function(f, self): # noqa:F811
     from sympy.core.function import expand_mul
     if not self:
@@ -165,7 +170,7 @@ def _set_function(f, self): # noqa:F811
     if F != expr:
         return imageset(x, F, Range(self.size))
 
-@dispatch(FunctionUnion, Integers)  # type: ignore
+@dispatch(FunctionUnion, Integers)  # type: ignore # noqa:F811
 def _set_function(f, self): # noqa:F811
     expr = f.expr
     if not isinstance(expr, Expr):
@@ -215,7 +220,7 @@ def _set_function(f, self): # noqa:F811
         return ImageSet(Lambda(n, expr), S.Integers)
 
 
-@dispatch(FunctionUnion, Naturals)  # type: ignore
+@dispatch(FunctionUnion, Naturals)  # type: ignore # noqa:F811
 def _set_function(f, self): # noqa:F811
     expr = f.expr
     if not isinstance(expr, Expr):
@@ -242,7 +247,7 @@ def _set_function(f, self): # noqa:F811
             return Range(c, -oo, step)
 
 
-@dispatch(FunctionUnion, Reals)  # type: ignore
+@dispatch(FunctionUnion, Reals)  # type: ignore # noqa:F811
 def _set_function(f, self): # noqa:F811
     expr = f.expr
     if not isinstance(expr, Expr):

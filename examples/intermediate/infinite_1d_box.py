@@ -43,7 +43,7 @@ def E_n(n, a, mass):
     return ((n * pi / a)**2) / mass
 
 
-def energy_corrections(perturbation, n, a=10, mass=0.5):
+def energy_corrections(perturbation, n, *, a=10, mass=0.5):
     """
     Calculating first two order corrections due to perturbation theory and
     returns tuple where zero element is unperturbated energy, and two second

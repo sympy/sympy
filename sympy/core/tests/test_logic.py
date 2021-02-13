@@ -1,4 +1,3 @@
-from sympy.core.compatibility import PY3
 from sympy.core.logic import (fuzzy_not, Logic, And, Or, Not, fuzzy_and,
     fuzzy_or, _fuzzy_group, _torf, fuzzy_nand, fuzzy_xor)
 from sympy.testing.pytest import raises
@@ -77,8 +76,7 @@ def test_logic_cmp():
 
     assert Not('a') < Not('b')
     assert (Not('b') < Not('a')) is False
-    if PY3:
-        assert (Not('a') < 2) is False
+    assert (Not('a') < 2) is False
 
 
 def test_logic_onearg():

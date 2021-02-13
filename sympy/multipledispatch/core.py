@@ -9,7 +9,7 @@ from .dispatcher import Dispatcher, MethodDispatcher, ambiguity_warn
 global_namespace = dict()  # type: Dict[str, Any]
 
 
-def dispatch(*types, **kwargs):
+def dispatch(*types, namespace=global_namespace, on_ambiguity=ambiguity_warn):
     """ Dispatch function on the types of the inputs
 
     Supports dispatch on all non-keyword arguments.
@@ -28,7 +28,7 @@ def dispatch(*types, **kwargs):
     ...     return x + 1
 
     >>> @dispatch(float)
-    ... def f(x):
+    ... def f(x): # noqa: F811
     ...     return x - 1
 
     >>> f(3)
@@ -50,12 +50,9 @@ def dispatch(*types, **kwargs):
     ...     def __init__(self, data):
     ...         self.data = data
     ...     @dispatch(int)
-    ...     def __init__(self, datum):
+    ...     def __init__(self, datum): # noqa: F811
     ...         self.data = [datum]
     """
-    namespace = kwargs.get('namespace', global_namespace)
-    on_ambiguity = kwargs.get('on_ambiguity', ambiguity_warn)
-
     types = tuple(types)
 
     def _(func):
@@ -81,9 +78,5 @@ def ismethod(func):
     Note that this has to work as the method is defined but before the class is
     defined.  At this stage methods look like functions.
     """
-    if hasattr(inspect, "signature"):
-        signature = inspect.signature(func)
-        return signature.parameters.get('self', None) is not None
-    else:
-        spec = inspect.getargspec(func)
-        return spec and spec.args and spec.args[0] == 'self'
+    signature = inspect.signature(func)
+    return signature.parameters.get('self', None) is not None

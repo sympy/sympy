@@ -43,7 +43,7 @@ def test_expevalbug():
 
 
 def test_cmp_bug1():
-    class T(object):
+    class T:
         pass
 
     t = T()
@@ -54,7 +54,7 @@ def test_cmp_bug1():
 
 
 def test_cmp_bug2():
-    class T(object):
+    class T:
         pass
 
     t = T()

@@ -8,9 +8,11 @@
     >>> solve(x**5+5*x**4+10*x**3+10*x**2+5*x+1,x)
     [-1]
 """
+from sympy.core.assumptions import check_assumptions, failing_assumptions
+
 from .solvers import solve, solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs, nsolve, solve_linear, checksol, \
-    det_quick, inv_quick, check_assumptions, failing_assumptions
+    det_quick, inv_quick
 
 from .diophantine import diophantine
 

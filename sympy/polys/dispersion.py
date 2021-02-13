@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S
 from sympy.polys import Poly
 
@@ -94,14 +92,14 @@ def dispersionset(p, q=None, *gens, **args):
 
     # We define the dispersion of constant polynomials to be zero
     if p.degree() < 1 or q.degree() < 1:
-        return set([0])
+        return {0}
 
     # Factor p and q over the rationals
     fp = p.factor_list()
     fq = q.factor_list() if not same else fp
 
     # Iterate over all pairs of factors
-    J = set([])
+    J = set()
     for s, unused in fp[1]:
         for t, unused in fq[1]:
             m = s.degree()

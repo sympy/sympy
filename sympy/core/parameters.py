@@ -63,13 +63,16 @@ class _global_parameters(local):
     def __setattr__(self, name, value):
         if getattr(self, name) != value:
             clear_cache()
-        return super(_global_parameters, self).__setattr__(name, value)
+        return super().__setattr__(name, value)
 
-global_parameters = _global_parameters(evaluate=True, distribute=True)
+global_parameters = _global_parameters(evaluate=True, distribute=True, exp_is_pow=False)
 
 @contextmanager
 def evaluate(x):
     """ Control automatic evaluation
+
+    Explanation
+    ===========
 
     This context manager controls whether or not all SymPy functions evaluate
     by default.
@@ -103,6 +106,9 @@ def evaluate(x):
 def distribute(x):
     """ Control automatic distribution of Number over Add
 
+    Explanation
+    ===========
+
     This context manager controls whether or not Mul distribute Number over
     Add. Plan is to avoid distributing Number over Add in all of sympy. Once
     that is done, this contextmanager will be removed.
@@ -126,3 +132,30 @@ def distribute(x):
         yield
     finally:
         global_parameters.distribute = old
+
+
+@contextmanager
+def _exp_is_pow(x):
+    """
+    Control whether `e^x` should be represented as ``exp(x)`` or a ``Pow(E, x)``.
+
+    Examples
+    ========
+
+    >>> from sympy import exp
+    >>> from sympy.abc import x
+    >>> from sympy.core.parameters import _exp_is_pow
+    >>> with _exp_is_pow(True): print(type(exp(x)))
+    <class 'sympy.core.power.Pow'>
+    >>> with _exp_is_pow(False): print(type(exp(x)))
+    exp
+    """
+    old = global_parameters.exp_is_pow
+
+    clear_cache()
+    try:
+        global_parameters.exp_is_pow = x
+        yield
+    finally:
+        clear_cache()
+        global_parameters.exp_is_pow = old

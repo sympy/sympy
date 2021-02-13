@@ -1,10 +1,10 @@
 from sympy.combinatorics.permutations import Permutation
-from sympy.combinatorics.named_groups import SymmetricGroup
-
+from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup, DihedralGroup
+from sympy.matrices import Matrix
 
 def test_pc_presentation():
     Groups = [SymmetricGroup(3), SymmetricGroup(4), SymmetricGroup(9).sylow_subgroup(3),
-         SymmetricGroup(9).sylow_subgroup(2), SymmetricGroup(8).sylow_subgroup(2)]
+         SymmetricGroup(9).sylow_subgroup(2), SymmetricGroup(8).sylow_subgroup(2), DihedralGroup(10)]
 
     S = SymmetricGroup(125).sylow_subgroup(5)
     G = S.derived_series()[2]
@@ -73,18 +73,15 @@ def test_exponent_vector():
 
 
 def test_induced_pcgs():
-    G = SymmetricGroup(9).sylow_subgroup(3)
-    PcGroup = G.polycyclic_group()
-    collector = PcGroup.collector
-    gens = [G[0], G[1]]
-    ipcgs = collector.induced_pcgs(gens)
-    order = [gen.order() for gen in ipcgs]
-    assert order == [3, 3]
+    G = [SymmetricGroup(9).sylow_subgroup(3), SymmetricGroup(20).sylow_subgroup(2), AlternatingGroup(4),
+    DihedralGroup(4), DihedralGroup(10), DihedralGroup(9), SymmetricGroup(3), SymmetricGroup(4)]
 
-    G = SymmetricGroup(20).sylow_subgroup(2)
-    PcGroup = G.polycyclic_group()
-    collector = PcGroup.collector
-    gens = [G[0], G[1], G[2], G[3]]
-    ipcgs = collector.induced_pcgs(gens)
-    order = [gen.order() for gen in ipcgs]
-    assert order ==[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+    for g in G:
+        PcGroup = g.polycyclic_group()
+        collector = PcGroup.collector
+        gens = [gen for gen in g.generators]
+        ipcgs = collector.induced_pcgs(gens)
+        m = []
+        for i in ipcgs:
+            m.append(collector.exponent_vector(i))
+        assert Matrix(m).is_upper

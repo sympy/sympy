@@ -1,5 +1,5 @@
 from sympy import Dummy, S, symbols, pi, sqrt, asin, sin, cos, Rational
-from sympy.geometry import Line, Point, Ray, Segment, Point3D, Line3D, Ray3D, Segment3D, Plane
+from sympy.geometry import Line, Point, Ray, Segment, Point3D, Line3D, Ray3D, Segment3D, Plane, Circle
 from sympy.geometry.util import are_coplanar
 from sympy.testing.pytest import raises
 
@@ -23,8 +23,14 @@ def test_plane():
     l2 = Line3D(Point3D(0, -2, 0), Point3D(3, 1, 1))
     l3 = Line3D(Point3D(0, -1, 0), Point3D(5, -1, 9))
 
+    raises(ValueError, lambda: Plane(p1, p1, p1))
+
     assert Plane(p1, p2, p3) != Plane(p1, p3, p2)
     assert Plane(p1, p2, p3).is_coplanar(Plane(p1, p3, p2))
+    assert Plane(p1, p2, p3).is_coplanar(p1)
+    assert Plane(p1, p2, p3).is_coplanar(Circle(p1, 1)) is False
+    assert Plane(p1, normal_vector=(0, 0, 1)).is_coplanar(Circle(p1, 1))
+
     assert pl3 == Plane(Point3D(0, 0, 0), normal_vector=(1, -2, 1))
     assert pl3 != pl4
     assert pl4 == pl4b
@@ -68,12 +74,16 @@ def test_plane():
 
     assert pl3.is_parallel(pl6) is False
     assert pl4.is_parallel(pl6)
+    assert pl3.is_parallel(Line(p1, p2))
     assert pl6.is_parallel(l1) is False
 
     assert pl3.is_perpendicular(pl6)
     assert pl4.is_perpendicular(pl7)
     assert pl6.is_perpendicular(pl7)
+    assert pl6.is_perpendicular(pl4) is False
     assert pl6.is_perpendicular(l1) is False
+    assert pl6.is_perpendicular(Line((0, 0, 0), (1, 1, 1)))
+    assert pl6.is_perpendicular((1, 1)) is False
 
     assert pl6.distance(pl6.arbitrary_point(u, v)) == 0
     assert pl7.distance(pl7.arbitrary_point(u, v)) == 0
@@ -136,6 +146,8 @@ def test_plane():
     # pts as tuples
     assert p.perpendicular_plane((1, 0, 1), (1, 1, 1)) == \
         Plane(Point3D(1, 0, 1), (0, 0, -1))
+    # more than two planes
+    raises(ValueError, lambda: p.perpendicular_plane((1, 0, 1), (1, 1, 1), (1, 1, 0)))
 
     a, b = Point3D(0, 0, 0), Point3D(0, 1, 0)
     Z = (0, 0, 1)
@@ -154,6 +166,9 @@ def test_plane():
     # case 2&3
     assert Plane(b, normal_vector=b.args).perpendicular_plane(n, n + b) == \
         Plane(Point3D(0, 0, 1), (1, 0, 0))
+
+    p = Plane(a, normal_vector=(0, 0, 1))
+    assert p.perpendicular_plane() == Plane(a, normal_vector=(1, 0, 0))
 
     assert pl6.intersection(pl6) == [pl6]
     assert pl4.intersection(pl4.p1) == [pl4.p1]
@@ -178,6 +193,7 @@ def test_plane():
     assert pl9.intersection(pl11) == [Line3D(Point3D(0, 0, 1), Point3D(12, 0, 1))]
     assert pl9.intersection(pl4) == [Line3D(Point3D(0, 0, 0), Point3D(12, 0, -12))]
     assert pl3.random_point() in pl3
+    assert pl3.random_point(seed=1) in pl3
 
     # test geometrical entity using equals
     assert pl4.intersection(pl4.p1)[0].equals(pl4.p1)
@@ -203,6 +219,7 @@ def test_plane():
     assert pl8.equals(pl8)
     assert pl8.equals(Plane(p1, normal_vector=(0, 0, -12)))
     assert pl8.equals(Plane(p1, normal_vector=(0, 0, -12*sqrt(3))))
+    assert pl8.equals(p1) is False
 
     # issue 8570
     l2 = Line3D(Point3D(Rational(50000004459633, 5000000000000),
@@ -237,7 +254,11 @@ def test_dimension_normalization():
 
 def test_parameter_value():
     t, u, v = symbols("t, u v")
-    p = Plane((0, 0, 0), (0, 0, 1), (0, 1, 0))
+    p1, p2, p3 = Point(0, 0, 0), Point(0, 0, 1), Point(0, 1, 0)
+    p = Plane(p1, p2, p3)
     assert p.parameter_value((0, -3, 2), t) == {t: asin(2*sqrt(13)/13)}
     assert p.parameter_value((0, -3, 2), u, v) == {u: 3, v: 2}
+    assert p.parameter_value(p1, t) == p1
     raises(ValueError, lambda: p.parameter_value((1, 0, 0), t))
+    raises(ValueError, lambda: p.parameter_value(Line(Point(0, 0), Point(1, 1)), t))
+    raises(ValueError, lambda: p.parameter_value((0, -3, 2), t, 1))

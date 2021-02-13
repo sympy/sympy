@@ -1,6 +1,5 @@
 """Tools to assist importing optional external modules."""
 
-from __future__ import print_function, division
 import sys
 from distutils.version import LooseVersion
 

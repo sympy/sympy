@@ -71,3 +71,7 @@ def test_issue_5654():
 
 def test_issue_6499():
     assert residue(1/(exp(z) - 1), z, 0) == 1
+
+
+def test_issue_14037():
+    assert residue(sin(x**50)/x**51, x, 0) == 1

@@ -422,6 +422,14 @@ def test_issue_12780():
     raises(TypeError, lambda: i.subs(n, 1.5))
 
 
+def test_issue_18604():
+    m = symbols("m")
+    assert Idx("i", m).name == 'i'
+    assert Idx("i", m).lower == 0
+    assert Idx("i", m).upper == m - 1
+    m = symbols("m", real=False)
+    raises(TypeError, lambda: Idx("i", m))
+
 def test_Subs_with_Indexed():
     A = IndexedBase("A")
     i, j, k = symbols("i,j,k")

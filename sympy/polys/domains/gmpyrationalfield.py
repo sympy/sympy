@@ -1,6 +1,5 @@
 """Implementation of :class:`GMPYRationalField` class. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.groundtypes import (
     GMPYRational, SymPyRational,
@@ -59,16 +58,21 @@ class GMPYRationalField(RationalField):
         """Convert a GMPY `mpq` object to `dtype`. """
         return a
 
+    def from_GaussianRationalField(K1, a, K0):
+        """Convert a `GaussianElement` object to `dtype`. """
+        if a.y == 0:
+            return GMPYRational(a.x)
+
     def from_RealField(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """
         return GMPYRational(*map(int, K0.to_rational(a)))
 
     def exquo(self, a, b):
-        """Exact quotient of `a` and `b`, implies `__div__`.  """
+        """Exact quotient of `a` and `b`, implies `__truediv__`.  """
         return GMPYRational(a) / GMPYRational(b)
 
     def quo(self, a, b):
-        """Quotient of `a` and `b`, implies `__div__`. """
+        """Quotient of `a` and `b`, implies `__truediv__`. """
         return GMPYRational(a) / GMPYRational(b)
 
     def rem(self, a, b):
@@ -76,7 +80,7 @@ class GMPYRationalField(RationalField):
         return self.zero
 
     def div(self, a, b):
-        """Division of `a` and `b`, implies `__div__`. """
+        """Division of `a` and `b`, implies `__truediv__`. """
         return GMPYRational(a) / GMPYRational(b), self.zero
 
     def numer(self, a):
