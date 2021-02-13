@@ -186,131 +186,131 @@ class Domain:
 
     """
 
-    #: The type (class) of the elements of this :py:class:`~.Domain`:
-    #:
-    #: >>> from sympy import ZZ, QQ, Symbol
-    #: >>> ZZ.dtype
-    #: <class 'int'>
-    #: >>> z = ZZ(2)
-    #: >>> z
-    #: 2
-    #: >>> type(z)
-    #: <class 'int'>
-    #: >>> type(z) == ZZ.dtype
-    #: True
-    #:
-    #: Every domain has an associated **dtype** ("datatype") which is the
-    #: class of the associated domain elements.
-    #:
-    #: See also
-    #: ========
-    #:
-    #: of_type
-    #:
     dtype = None        # type: Optional[Type]
+    """The type (class) of the elements of this :py:class:`~.Domain`:
 
-    #: The zero element of the :py:class:`~.Domain`:
-    #:
-    #: >>> from sympy import QQ
-    #: >>> QQ.zero
-    #: 0
-    #: >>> QQ.of_type(QQ.zero)
-    #: True
-    #:
-    #: See also
-    #: ========
-    #:
-    #: of_type
-    #: one
-    #:
+    >>> from sympy import ZZ, QQ, Symbol
+    >>> ZZ.dtype
+    <class 'int'>
+    >>> z = ZZ(2)
+    >>> z
+    2
+    >>> type(z)
+    <class 'int'>
+    >>> type(z) == ZZ.dtype
+    True
+
+    Every domain has an associated **dtype** ("datatype") which is the
+    class of the associated domain elements.
+
+    See also
+    ========
+
+    of_type
+    """
+
     zero = None         # type: Optional[Any]
+    """The zero element of the :py:class:`~.Domain`:
 
-    #: The one element of the :py:class:`~.Domain`:
-    #:
-    #: >>> from sympy import QQ
-    #: >>> QQ.one
-    #: 1
-    #: >>> QQ.of_type(QQ.one)
-    #: True
-    #:
-    #: See also
-    #: ========
-    #:
-    #: of_type
-    #: zero
-    #:
+    >>> from sympy import QQ
+    >>> QQ.zero
+    0
+    >>> QQ.of_type(QQ.zero)
+    True
+
+    See also
+    ========
+
+    of_type
+    one
+    """
+
     one = None          # type: Optional[Any]
+    """The one element of the :py:class:`~.Domain`:
 
-    #: Boolean flag indicating if the domain is a :py:class:`~.Ring`.
-    #:
-    #: >>> from sympy import ZZ
-    #: >>> ZZ.is_Ring
-    #: True
-    #:
-    #: Basically every :py:class:`~.Domain` represents a ring so this flag is
-    #: not that useful.
-    #:
-    #: See also
-    #: ========
-    #:
-    #: is_PID
-    #: is_Field
-    #: get_ring
-    #: has_assoc_Ring
-    #:
+    >>> from sympy import QQ
+    >>> QQ.one
+    1
+    >>> QQ.of_type(QQ.one)
+    True
+
+    See also
+    ========
+
+    of_type
+    zero
+    """
+
     is_Ring = False
+    """Boolean flag indicating if the domain is a :py:class:`~.Ring`.
 
-    #: Boolean flag indicating if the domain is a :py:class:`~.Field`.
-    #:
-    #: >>> from sympy import ZZ, QQ
-    #: >>> ZZ.is_Field
-    #: False
-    #: >>> QQ.is_Field
-    #: True
-    #:
-    #: See also
-    #: ========
-    #:
-    #: is_PID
-    #: is_Ring
-    #: get_field
-    #: has_assoc_Field
-    #:
+    >>> from sympy import ZZ
+    >>> ZZ.is_Ring
+    True
+
+    Basically every :py:class:`~.Domain` represents a ring so this flag is
+    not that useful.
+
+    See also
+    ========
+
+    is_PID
+    is_Field
+    get_ring
+    has_assoc_Ring
+    """
+
     is_Field = False
+    """Boolean flag indicating if the domain is a :py:class:`~.Field`.
 
-    #: Boolean flag indicating if the domain has an associated
-    #: :py:class:`~.Ring`.
-    #:
-    #: >>> from sympy import QQ
-    #: >>> QQ.has_assoc_Ring
-    #: True
-    #: >>> QQ.get_ring()
-    #: ZZ
-    #:
-    #: See also
-    #: ========
-    #:
-    #: is_Field
-    #: get_ring
-    #:
+    >>> from sympy import ZZ, QQ
+    >>> ZZ.is_Field
+    False
+    >>> QQ.is_Field
+    True
+
+    See also
+    ========
+
+    is_PID
+    is_Ring
+    get_field
+    has_assoc_Field
+    """
+
     has_assoc_Ring = False
+    """Boolean flag indicating if the domain has an associated
+    :py:class:`~.Ring`.
 
-    #: Boolean flag indicating if the domain has an associated
-    #: :py:class:`~.Field`.
-    #:
-    #: >>> from sympy import ZZ
-    #: >>> ZZ.has_assoc_Field
-    #: True
-    #: >>> ZZ.get_field()
-    #: QQ
-    #:
-    #: See also
-    #: ========
-    #:
-    #: is_Field
-    #: get_field
-    #:
+    >>> from sympy import QQ
+    >>> QQ.has_assoc_Ring
+    True
+    >>> QQ.get_ring()
+    ZZ
+
+    See also
+    ========
+
+    is_Field
+    get_ring
+    """
+
     has_assoc_Field = False
+    """Boolean flag indicating if the domain has an associated
+    :py:class:`~.Field`.
+
+    >>> from sympy import ZZ
+    >>> ZZ.has_assoc_Field
+    True
+    >>> ZZ.get_field()
+    QQ
+
+    See also
+    ========
+
+    is_Field
+    get_field
+    """
 
     is_FiniteField = is_FF = False
     is_IntegerRing = is_ZZ = False
@@ -331,23 +331,23 @@ class Domain:
     is_Simple = False
     is_Composite = False
 
-    #: Boolean flag indicating if the domain is a `principal ideal domain`_.
-    #:
-    #: >>> from sympy import ZZ
-    #: >>> ZZ.has_assoc_Field
-    #: True
-    #: >>> ZZ.get_field()
-    #: QQ
-    #:
-    #: .. _principal ideal domain: https://en.wikipedia.org/wiki/Principal_ideal_domain
-    #:
-    #: See also
-    #: ========
-    #:
-    #: is_Field
-    #: get_field
-    #:
     is_PID = False
+    """Boolean flag indicating if the domain is a `principal ideal domain`_.
+
+    >>> from sympy import ZZ
+    >>> ZZ.has_assoc_Field
+    True
+    >>> ZZ.get_field()
+    QQ
+
+    .. _principal ideal domain: https://en.wikipedia.org/wiki/Principal_ideal_domain
+
+    See also
+    ========
+
+    is_Field
+    get_field
+    """
 
     has_CharacteristicZero = False
 

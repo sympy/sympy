@@ -214,29 +214,35 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         else:
             orig_ext = ext
 
-        #: Original elements given to generate the extension.
-        #:
-        #: >>> from sympy import QQ, sqrt
-        #: >>> K = QQ.algebraic_field(sqrt(2), sqrt(3))
-        #: >>> K.orig_ext
-        #: (sqrt(2), sqrt(3))
         self.orig_ext = orig_ext
+        """
+        Original elements given to generate the extension.
 
-        #: Primitive element used for the extension.
-        #:
-        #: >>> from sympy import QQ, sqrt
-        #: >>> K = QQ.algebraic_field(sqrt(2), sqrt(3))
-        #: >>> K.ext
-        #: sqrt(2) + sqrt(3)
+        >>> from sympy import QQ, sqrt
+        >>> K = QQ.algebraic_field(sqrt(2), sqrt(3))
+        >>> K.orig_ext
+        (sqrt(2), sqrt(3))
+        """
+
         self.ext = to_number_field(ext)
+        """
+        Primitive element used for the extension.
 
-        #: Minimal polynomial for the primitive element of the extension.
-        #:
-        #: >>> from sympy import QQ, sqrt
-        #: >>> K = QQ.algebraic_field(sqrt(2))
-        #: >>> K.mod
-        #: DMP([1, 0, -2], QQ, None)
+        >>> from sympy import QQ, sqrt
+        >>> K = QQ.algebraic_field(sqrt(2), sqrt(3))
+        >>> K.ext
+        sqrt(2) + sqrt(3)
+        """
+
         self.mod = self.ext.minpoly.rep
+        """
+        Minimal polynomial for the primitive element of the extension.
+
+        >>> from sympy import QQ, sqrt
+        >>> K = QQ.algebraic_field(sqrt(2))
+        >>> K.mod
+        DMP([1, 0, -2], QQ, None)
+        """
 
         self.domain = self.dom = dom
 
