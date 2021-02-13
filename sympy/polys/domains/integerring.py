@@ -34,7 +34,7 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
     has_assoc_Field = True
 
     def get_field(self):
-        """Return the associated field of fractions :ref:`QQ`
+        r"""Return the associated field of fractions :ref:`QQ`
 
         Returns
         =======
