@@ -1743,6 +1743,7 @@ def _solve_system(exprs, symbols, **flags):
         symsset = set(symbols)
         exprsyms = {e: e.free_symbols & symsset for e in exprs}
         E = []
+        sym_indices = {sym: i for i, sym in enumerate(symbols)}
         for n, e1 in enumerate(exprs):
             for e2 in exprs[:n]:
                 # Equations are connected if they share a symbol
@@ -1756,7 +1757,7 @@ def _solve_system(exprs, symbols, **flags):
                 subsyms = set()
                 for e in subexpr:
                     subsyms |= exprsyms[e]
-                subsyms = list(ordered(subsyms))
+                subsyms = list(sorted(subsyms, key = lambda x: sym_indices[x]))
                 # use canonical subset to solve these equations
                 # since there may be redundant equations in the set:
                 # take the first equation of several that may have the
