@@ -8,7 +8,7 @@ from sympy.utilities import public
 
 @public
 class RationalField(Field, CharacteristicZero, SimpleDomain):
-    """The domain ``QQ`` representing the integers `\mathbb{Q}`.
+    r"""The domain ``QQ`` representing the integers `\mathbb{Q}`.
 
     The :py:class:`RationalField` class represents the ring of integers as a
     :py:class:`~.Domain` in the domain system. :py:class:`RationalField` is a

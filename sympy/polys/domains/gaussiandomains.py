@@ -311,7 +311,7 @@ class GaussianDomain():
 
 
 class GaussianIntegerRing(GaussianDomain, Ring):
-    """Ring of Gaussian integers ``ZZ_I``
+    r"""Ring of Gaussian integers ``ZZ_I``
 
     The :ref:`ZZ_I` domain represents the `Gaussian integers`_ `\mathbb{Z}[i]`
     as a :py:class:`~.Domain` in the domain system (see
@@ -465,7 +465,7 @@ ZZ_I = GaussianInteger._parent = GaussianIntegerRing()
 
 
 class GaussianRationalField(GaussianDomain, Field):
-    """Field of Gaussian rationals ``QQ_I``
+    r"""Field of Gaussian rationals ``QQ_I``
 
     The :ref:`QQ_I` domain represents the `Gaussian rationals`_ `\mathbb{Q}(i)`
     as a :py:class:`~.Domain` in the domain system (see

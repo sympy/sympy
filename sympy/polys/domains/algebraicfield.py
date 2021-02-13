@@ -10,7 +10,7 @@ from sympy.utilities import public
 
 @public
 class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
-    """Algebraic number field :ref:`QQ(a)`
+    r"""Algebraic number field :ref:`QQ(a)`
 
     A :ref:`QQ(a)` domain represents an `algebraic number field`_
     `\mathbb{Q}(a)` as a :py:class:`~.Domain` in the domain system (see

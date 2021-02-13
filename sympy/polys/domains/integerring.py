@@ -10,7 +10,7 @@ import math
 
 @public
 class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
-    """The domain ``ZZ`` representing the integers `\mathbb{Z}`.
+    r"""The domain ``ZZ`` representing the integers `\mathbb{Z}`.
 
     The :py:class:`IntegerRing` class represents the ring of integers as a
     :py:class:`~.Domain` in the domain system. :py:class:`IntegerRing` is a

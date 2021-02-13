@@ -11,7 +11,7 @@ from sympy.polys.domains.groundtypes import SymPyInteger
 
 @public
 class FiniteField(Field, SimpleDomain):
-    """Finite field of prime order :ref:`GF(p)`
+    r"""Finite field of prime order :ref:`GF(p)`
 
     A :ref:`GF(p)` domain represents a `finite field`_ `\mathbb{F}_p` of prime
     order as :py:class:`~.Domain` in the domain system (see
