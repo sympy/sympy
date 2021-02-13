@@ -776,10 +776,6 @@ class Quaternion(Expr):
         >>> q.vector_part()
         0 + 8*i + 13*j + 12*k
 
-        See Also
-        ========
-        https://en.wikipedia.org/wiki/Versor
-
         """
 
         return Quaternion(0, self.b, self.c, self.d)
