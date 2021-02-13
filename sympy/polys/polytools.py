@@ -5946,7 +5946,7 @@ def _symbolic_factor_list(expr, opt, method):
         if arg.is_Number or (isinstance(arg, Expr) and pure_complex(arg)):
             coeff *= arg
             continue
-        elif arg.is_Pow:
+        elif arg.is_Pow and arg.base != S.Exp1:
             base, exp = arg.args
             if base.is_Number and exp.is_Number:
                 coeff *= arg

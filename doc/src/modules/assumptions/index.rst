@@ -6,21 +6,9 @@ Assumptions
 
 .. automodule:: sympy.assumptions
 
-Contents
-========
 
-.. toctree::
-    :maxdepth: 3
-
-    ask.rst
-    assume.rst
-    refine.rst
-    handlers/index.rst
-
-
-Predicates
-==========
-
+Predicate
+=========
 
 .. autoclass:: sympy.assumptions.assume::Predicate
    :noindex:
@@ -62,6 +50,18 @@ from module sympy.assumptions. ::
      >>> with assuming(*facts):
      ...     print(ask(Q.positive(2*x + y)))
      True
+
+
+Contents
+========
+
+.. toctree::
+    :maxdepth: 3
+
+    ask.rst
+    assume.rst
+    refine.rst
+    predicates.rst
 
 
 Performance improvements

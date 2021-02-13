@@ -937,9 +937,9 @@ class Mul(Expr, AssocOp):
         if d.is_Mul:
             n, d = [i._eval_expand_mul(**hints) if i.is_Mul else i
                 for i in (n, d)]
-            expr = n/d
-            if not expr.is_Mul:
-                return expr
+        expr = n/d
+        if not expr.is_Mul:
+            return expr
 
         plain, sums, rewrite = [], [], False
         for factor in expr.args:
@@ -1197,6 +1197,7 @@ class Mul(Expr, AssocOp):
         like oo/oo return 1 (instead of a nan) and ``I`` behaves like
         a symbol instead of sqrt(-1).
         """
+        from sympy.simplify.simplify import signsimp
         from .symbol import Dummy
         if lhs == rhs:
             return S.One
@@ -1227,7 +1228,7 @@ class Mul(Expr, AssocOp):
             if len(b) != blen:
                 lhs = Mul(*[k**v for k, v in a.items()]).xreplace(i_)
                 rhs = Mul(*[k**v for k, v in b.items()]).xreplace(i_)
-        return lhs/rhs
+        return signsimp(lhs/rhs)
 
     def as_powers_dict(self):
         d = defaultdict(int)

@@ -328,6 +328,10 @@ class RandomIndexedSymbol(RandomSymbol):
             return free_syms
         return {self}
 
+    @property
+    def pspace(self):
+        return self.args[1]
+
 class RandomMatrixSymbol(RandomSymbol, MatrixSymbol): # type: ignore
     def __new__(cls, symbol, n, m, pspace=None):
         n, m = _sympify(n), _sympify(m)
@@ -339,6 +343,7 @@ class RandomMatrixSymbol(RandomSymbol, MatrixSymbol): # type: ignore
 
     symbol = property(lambda self: self.args[0])
     pspace = property(lambda self: self.args[3])
+
 
 class ProductPSpace(PSpace):
     """
@@ -616,8 +621,9 @@ def pspace(expr):
     if all(rv.pspace == rvs[0].pspace for rv in rvs):
         return rvs[0].pspace
     from sympy.stats.compound_rv import CompoundPSpace
+    from sympy.stats.stochastic_process import StochasticPSpace
     for rv in rvs:
-        if isinstance(rv.pspace, CompoundPSpace):
+        if isinstance(rv.pspace, (CompoundPSpace, StochasticPSpace)):
             return rv.pspace
     # Otherwise make a product space
     return IndependentProductPSpace(*[rv.pspace for rv in rvs])
@@ -1500,6 +1506,7 @@ def rv_subs(expr, symbols=None):
     swapdict = {rv: rv.symbol for rv in symbols}
     return expr.subs(swapdict)
 
+
 class NamedArgsMixin:
     _argnames = ()  # type: tTuple[str, ...]
 
@@ -1509,6 +1516,54 @@ class NamedArgsMixin:
         except ValueError:
             raise AttributeError("'%s' object has no attribute '%s'" % (
                 type(self).__name__, attr))
+
+
+class Distribution(Basic):
+
+    def sample(self, size=(), library='scipy', seed=None):
+        """ A random realization from the distribution """
+
+        module = import_module(library)
+        if library in {'scipy', 'numpy', 'pymc3'} and module is None:
+            raise ValueError("Failed to import %s" % library)
+
+        if library == 'scipy':
+            # scipy does not require map as it can handle using custom distributions.
+            # However, we will still use a map where we can.
+
+            # TODO: do this for drv.py and frv.py if necessary.
+            # TODO: add more distributions here if there are more
+            # See links below referring to sections beginning with "A common parametrization..."
+            # I will remove all these comments if everything is ok.
+
+            from sympy.stats.sampling.sample_scipy import do_sample_scipy
+            samps = do_sample_scipy(self, size, seed)
+        elif library == 'numpy':
+            from sympy.stats.sampling.sample_numpy import do_sample_numpy
+            import numpy
+            if seed is None or isinstance(seed, int):
+                rand_state = numpy.random.default_rng(seed=seed)
+            else:
+                rand_state = seed
+            samps = do_sample_numpy(self, size, rand_state)
+        elif library == 'pymc3':
+            from sympy.stats.sampling.sample_pymc3 import do_sample_pymc3
+            import pymc3
+            with pymc3.Model():
+                if do_sample_pymc3(self):
+                    samps = pymc3.sample(size, chains=1, progressbar=False, random_seed=seed)[:]['X']
+                else:
+                    samps = None
+        else:
+            raise NotImplementedError("Sampling from %s is not supported yet."
+                                      % str(library))
+
+        if samps is not None:
+            return samps
+        raise NotImplementedError(
+            "Sampling for %s is not currently implemented from %s"
+            % (self, library))
+
 
 def _value_check(condition, message):
     """
@@ -1610,7 +1665,7 @@ def _symbol_converter(sym):
     True
     """
     if isinstance(sym, str):
-            sym = Symbol(sym)
+        sym = Symbol(sym)
     if not isinstance(sym, Symbol):
         raise TypeError("%s is neither a Symbol nor a string"%(sym))
     return sym

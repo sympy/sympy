@@ -2147,12 +2147,21 @@ class Expr(Basic, EvalfMixin):
 
         See Also
         ========
-        normal: return a/b instead of a, b
-        """
 
+        normal: return ``a/b`` instead of ``(a, b)``
+
+        """
         return self, S.One
 
     def normal(self):
+        """ expression -> a/b
+
+        See Also
+        ========
+
+        as_numer_denom: return ``(a, b)`` instead of ``a/b``
+
+        """
         from .mul import _unevaluated_Mul
         n, d = self.as_numer_denom()
         if d is S.One:
@@ -3682,11 +3691,6 @@ class Expr(Basic, EvalfMixin):
         """See the factor() function in sympy.polys.polytools"""
         from sympy.polys import factor
         return factor(self, *gens, **args)
-
-    def refine(self, assumption=True):
-        """See the refine function in sympy.assumptions"""
-        from sympy.assumptions import refine
-        return refine(self, assumption)
 
     def cancel(self, *gens, **args):
         """See the cancel function in sympy.polys"""

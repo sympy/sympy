@@ -7,8 +7,10 @@ from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
 from sympy.multipledispatch.dispatcher import (
-    Dispatcher, MDNotImplementedError
+    Dispatcher, MDNotImplementedError, str_signature
 )
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import is_sequence
 from sympy.utilities.source import get_class
 
 
@@ -180,18 +182,53 @@ class AppliedPredicate(Boolean):
 
 
 class PredicateMeta(ManagedProperties):
-    """
-    Metaclass for ``Predicate``
-
-    If class attribute ``handler`` is not defined, assigns empty Dispatcher
-    to it.
-    """
     def __new__(cls, clsname, bases, dct):
+        # If handler is not defined, assign empty dispatcher.
         if "handler" not in dct:
             name = f"Ask{clsname.capitalize()}Handler"
             handler = Dispatcher(name, doc="Handler for key %s" % name)
             dct["handler"] = handler
+
+        dct["_orig_doc"] = dct.get("__doc__", "")
+
         return super().__new__(cls, clsname, bases, dct)
+
+    @property
+    def __doc__(cls):
+        handler = cls.handler
+        doc = cls._orig_doc
+        if cls is not Predicate and handler is not None:
+            doc += "Handler\n"
+            doc += "    =======\n\n"
+
+            # Append the handler's doc without breaking sphinx documentation.
+            docs = ["    Multiply dispatched method: %s" % handler.name]
+            if handler.doc:
+                for line in handler.doc.splitlines():
+                    if not line:
+                        continue
+                    docs.append("    %s" % line)
+            other = []
+            for sig in handler.ordering[::-1]:
+                func = handler.funcs[sig]
+                if func.__doc__:
+                    s = '    Inputs: <%s>' % str_signature(sig)
+                    lines = []
+                    for line in func.__doc__.splitlines():
+                        lines.append("    %s" % line)
+                    s += "\n".join(lines)
+                    docs.append(s)
+                else:
+                    other.append(str_signature(sig))
+            if other:
+                othersig = "    Other signatures:"
+                for line in other:
+                    othersig += "\n        * %s" % line
+                docs.append(othersig)
+
+            doc += '\n\n'.join(docs)
+
+        return doc
 
 
 class Predicate(Boolean, metaclass=PredicateMeta):
@@ -291,11 +328,26 @@ class Predicate(Boolean, metaclass=PredicateMeta):
         # May be overridden
         return type(self).__name__
 
-    def register(self, *types, **kwargs):
-        if self.handler is None:
-            # condition for UndefinedPredicate
-            raise TypeError("%s cannot be dispatched." % type(self))
-        return self.handler.register(*types, **kwargs)
+    @classmethod
+    def register(cls, *types, **kwargs):
+        """
+        Register the signature to the handler.
+        """
+        if cls.handler is None:
+            raise TypeError("%s cannot be dispatched." % type(cls))
+        return cls.handler.register(*types, **kwargs)
+
+    @classmethod
+    def register_many(cls, *types, **kwargs):
+        """
+        Register multiple signatures to same handler.
+        """
+        def _(func):
+            for t in types:
+                if not is_sequence(t):
+                    t = (t,)  # for convenience, allow passing `type` to mean `(type,)`
+                cls.register(*t, **kwargs)(func)
+        return _
 
     def __call__(self, *args):
         return AppliedPredicate(self, *args)
@@ -342,6 +394,8 @@ class UndefinedPredicate(Predicate):
 
     """
 
+    handler = None
+
     def __new__(cls, name, handlers=None):
         # "handlers" parameter supports old design
         if not isinstance(name, Str):
@@ -354,10 +408,6 @@ class UndefinedPredicate(Predicate):
     def name(self):
         return self.args[0]
 
-    @property
-    def handler(self):
-        return None
-
     def _hashable_content(self):
         return (self.name,)
 
@@ -368,16 +418,32 @@ class UndefinedPredicate(Predicate):
         return AppliedPredicate(self, expr)
 
     def add_handler(self, handler):
-        # Will be deprecated
+        SymPyDeprecationWarning(
+            feature="Predicate.add_handler() method",
+            useinstead="multipledispatch handler of Predicate",
+            issue=20873,
+            deprecated_since_version="1.8"
+        ).warn()
         self.handlers.append(handler)
 
     def remove_handler(self, handler):
-        # Will be deprecated
+        SymPyDeprecationWarning(
+            feature="Predicate.remove_handler() method",
+            useinstead="multipledispatch handler of Predicate",
+            issue=20873,
+            deprecated_since_version="1.8"
+        ).warn()
         self.handlers.remove(handler)
 
     def eval(self, args, assumptions=True):
         # Support for deprecated design
         # When old design is removed, this will always return None
+        SymPyDeprecationWarning(
+            feature="Evaluating UndefinedPredicate",
+            useinstead="multipledispatch handler of Predicate",
+            issue=20873,
+            deprecated_since_version="1.8"
+        ).warn()
         expr, = args
         res, _res = None, None
         mro = inspect.getmro(type(expr))

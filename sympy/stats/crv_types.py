@@ -400,6 +400,7 @@ class BetaDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         return hyper((self.alpha,), (self.alpha + self.beta,), t)
 
+
 def Beta(name, alpha, beta):
     r"""
     Create a Continuous Random Variable with a Beta distribution.
@@ -714,6 +715,7 @@ class CauchyDistribution(SingleContinuousDistribution):
     def _quantile(self, p):
         return self.x0 + self.gamma*tan(pi*(p - S.Half))
 
+
 def Cauchy(name, x0, gamma):
     r"""
     Create a continuous random variable with a Cauchy distribution.
@@ -936,6 +938,7 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
 
     def  _moment_generating_function(self, t):
         return (1 - 2*t)**(-self.k/2)
+
 
 def ChiSquared(name, k):
     r"""
@@ -1284,6 +1287,7 @@ class ExponentialDistribution(SingleContinuousDistribution):
 
     def _quantile(self, p):
         return -log(1-p)/self.rate
+
 
 def Exponential(name, rate):
     r"""
@@ -1708,6 +1712,7 @@ class GammaDistribution(SingleContinuousDistribution):
 
     def _moment_generating_function(self, t):
         return (1- self.theta*t)**(-self.k)
+
 
 def Gamma(name, k, theta):
     r"""
@@ -2642,6 +2647,7 @@ class LogNormalDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         raise NotImplementedError('Moment generating function of the log-normal distribution is not defined.')
 
+
 def LogNormal(name, mean, std):
     r"""
     Create a continuous random variable with a log-normal distribution.
@@ -3042,6 +3048,7 @@ class NormalDistribution(SingleContinuousDistribution):
     def _quantile(self, p):
         mean, std = self.mean, self.std
         return mean + std*sqrt(2)*erfinv(2*p - 1)
+
 
 def Normal(name, mean, std):
     r"""
@@ -3803,6 +3810,7 @@ class StudentTDistribution(SingleContinuousDistribution):
 
     def _moment_generating_function(self, t):
         raise NotImplementedError('The moment generating function for the Student-T distribution is undefined.')
+
 
 def StudentT(name, nu):
     r"""

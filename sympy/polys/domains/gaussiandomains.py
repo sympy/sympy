@@ -45,6 +45,9 @@ class GaussianElement(DomainElement):
             return NotImplemented
         return [self.y, self.x] < [other.y, other.x]
 
+    def __pos__(self):
+        return self
+
     def __neg__(self):
         return self.new(-self.x, -self.y)
 
