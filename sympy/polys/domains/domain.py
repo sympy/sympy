@@ -1004,7 +1004,7 @@ class Domain:
         2.5
 
         Using ``/`` with :ref:`ZZ` will lead to incorrect results so
-        :py:meth:`~.Domain.div` should be used instead.
+        :py:meth:`~.Domain.exquo` should be used instead.
 
         """
         raise NotImplementedError

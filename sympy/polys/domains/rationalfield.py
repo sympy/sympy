@@ -8,13 +8,14 @@ from sympy.utilities import public
 
 @public
 class RationalField(Field, CharacteristicZero, SimpleDomain):
-    r"""The domain ``QQ`` representing the integers `\mathbb{Q}`.
+    r"""Abstract base class for the domain :ref:`QQ`.
 
-    The :py:class:`RationalField` class represents the ring of integers as a
-    :py:class:`~.Domain` in the domain system. :py:class:`RationalField` is a
-    super class of :py:class:`PythonRationalField` and
-    :py:class:`GMPYRationalField` one of which will be the implementation for
-    :ref:`QQ` depending on whether or not ``gmpy`` or ``gmpy2`` is installed.
+    The :py:class:`RationalField` class represents the field of rational
+    numbers $\mathbb{Q}$ as a :py:class:`~.Domain` in the domain system.
+    :py:class:`RationalField` is a superclass of
+    :py:class:`PythonRationalField` and :py:class:`GMPYRationalField` one of
+    which will be the implementation for :ref:`QQ` depending on whether either
+    of ``gmpy`` or ``gmpy2`` is installed or not.
 
     See also
     ========
