@@ -65,8 +65,8 @@ class Domain:
     ``/,//,%`` might be usable. For example in :ref:`ZZ` both ``//`` (floor
     division) and ``%`` (modulo division) can be used but ``/`` (true
     division) can not. Since :ref:`QQ` is a :py:class:`~.Field` its elements
-    can be used with ``/`` but `//` and `%` should not be used. Some domains
-    have a :py:meth:`~.Domain.gcd` method.
+    can be used with ``/`` but ``//`` and ``%`` should not be used. Some
+    domains have a :py:meth:`~.Domain.gcd` method.
 
     >>> ZZ(2) + ZZ(3)
     5
