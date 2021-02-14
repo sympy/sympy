@@ -5,6 +5,8 @@ from sympy.core.exprtools import factor_terms
 from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
+from sympy.core.function import Derivative
+from sympy.core.symbol import Dummy, Symbol
 
 
 class Product(ExprWithIntLimits):
@@ -400,18 +402,18 @@ class Product(ExprWithIntLimits):
         return Mul(*[term.subs(k, a + i) for i in range(n - a + 1)])
 
     def _eval_derivative(self, x):
-        from sympy.concrete.summations import Sum, Dummy, Symbol, Derivative
+        from sympy.concrete.summations import Sum
         if isinstance(x, Symbol) and x not in self.free_symbols:
             return S.Zero
         f, limits = self.function, list(self.limits)
         limit = limits.pop(-1)
         if limits:
             f = self.func(f, *limits)
-        _, a, b = limit
+        i, a, b = limit
         if x in a.free_symbols or x in b.free_symbols:
             return None
         h = Dummy()
-        rv = Sum( Product(f, (_, a, h - 1)) * Product(f, (_, h + 1, b)) * Derivative(f, x, evaluate=True).subs(_, h), (h, a, b))
+        rv = Sum( Product(f, (i, a, h - 1)) * Product(f, (i, h + 1, b)) * Derivative(f, x, evaluate=True).subs(i, h), (h, a, b))
         return rv
 
     def is_convergent(self):
