@@ -2242,8 +2242,6 @@ def test_solve_lambert():
         ImageSet(Lambda(n, LambertW(-exp(Rational(-19,3))/3 + sqrt(3)*I*exp(Rational(-19,3))/3, n)/2 + Rational(2, 3)), S.Integers),
         ImageSet(Lambda(n, LambertW(2*exp(Rational(-19,3))/3, n)/2 + Rational(2, 3)), S.Integers)))
 
-    assert dumeq(solveset(x*log(x) + 3*x + 1, x),ImageSet(Lambda(n, exp(LambertW(-exp(3), n) - 3)), S.Integers))
-
     assert solveset_real(tanh(x + 3)*tanh(x - 3) - 1, x) == EmptySet()
     assert solveset_real(LambertW(2*x) - y, x) == Intersection(FiniteSet(y*exp(y)/2), S.Reals)
 
@@ -2271,7 +2269,6 @@ def test_solve_lambert():
 
     assert dumeq(solveset(a/x + exp(x/2), x),\
         Complement(ImageSet(Lambda(n, 2*LambertW(-a/2, n)), S.Integers), FiniteSet(0)))
-
 
     # check collection
     p = symbols('p', positive=True)
@@ -2343,6 +2340,7 @@ def test_failed_lambert():
     assert solveset_real(x*log(x) + 3*x + 1, x) == S.EmptySet
     assert dumeq(solveset(x**x - 2, x) , ImageSet(Lambda(n, exp(LambertW(log(2),n))), S.Integers ))
     assert solveset_real(-a*x + 2*x*log(x), x) == FiniteSet(exp(a/2))
+    assert dumeq(solveset(x*log(x) + 3*x + 1, x),ImageSet(Lambda(n, exp(LambertW(-exp(3), n) - 3)), S.Integers))
     # incorrect format
     eq = (x*exp(x) - 3).subs(x, x*exp(x)) # should make other case to solve this i.e. m,n
     assert dumeq(solveset(eq, x) , ImageSet(Lambda(m, LambertW(3*exp(-LambertW(3, n)), m)), ProductSet(S.Integers, S.Integers)))

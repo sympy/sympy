@@ -2700,29 +2700,7 @@ def _tsolve(eq, sym, **flags):
                 g = _filtered_gens(poly, sym)
                 _eq = lhs - rhs
 
-                sols = _solve_lambert(_eq, sym, g, S.Complexes)
-                integer = Symbol('integer',integer=True)
-                soln = []
-                checkArg = False
-                for argSol in sols:
-                    if argSol.has(integer):
-                        checkArg = True
-                        pq = argSol.subs({integer:0})
-                        if pq:
-                            soln.append(pq)
-                            pq = argSol.subs({integer:-1})
-                        if (pq.atoms(LambertW).pop()).is_negative and argSol.has(integer):
-                            pq1 = argSol.replace(integer, -1)
-                            soln.append(pq1)
-                    if argSol.is_number:
-                        soln.append(argSol)
-
-                if not checkArg:
-                    sols = list(set(soln+sols))
-                else:
-                    sols = list(set(soln))
-                # use a simplified form if it satisfies eq
-                # and has fewer operations
+                sols = _solve_lambert(_eq, sym, g, None)
                 for n, s in enumerate(sols):
                     ns = nsimplify(s)
                     if ns != s and ns.count_ops() <= s.count_ops():

@@ -1105,6 +1105,7 @@ def _solveset(f, symbol, domain, _check=False):
                             else:
                                 result = _transolve(equation, symbol, domain)
                                 if isinstance(result,(FiniteSet)) and domain.is_subset(S.Reals):
+                                    # to get more possible solutions
                                     for n, s in enumerate(result):
                                         ns = nsimplify(s)
                                         if ns != s and ns.count_ops() <= s.count_ops():
@@ -1892,84 +1893,34 @@ def _compute_lambert_solutions(lhs, rhs, symbol,domain):
         pass
 
 
-def helper_to_solve_as_lambert(soln, diff, symbol, domain,flag=None):
-    domainReal = domain.is_subset(S.Reals)
-    if soln and not domainReal:
-        integer = Symbol('integer',integer=True)
+def helper_to_solve_as_lambert(soln, domain):
+    domain_real = domain.is_subset(S.Reals)
 
-        if (soln[-1].has(integer) or soln[-1].has(I)):
-            n = Dummy('n',integer=True)
-            soln = [Lambda(n,x.subs(integer,n)) for x in soln]
-
-    if soln is not None:
-        for arg2 in soln:
-            soln = list(set(soln))
-            symbol_List = list(arg2.atoms(Symbol))
+    for arg2 in soln:
+        symbol_List = list(arg2.atoms(Symbol))
+        if domain_real:
             if arg2.has(Symbol) and not arg2.has(Dummy):
-                if len(symbol_List) == 1:
-                    if (symbol_List[0]).is_positive and domainReal:
-                        result = Intersection(FiniteSet(arg2), Interval(0,S.Infinity))
-                        return result
-
-                    if domainReal and not (symbol_List[0]).is_negative and not (symbol_List[0]).is_positive:
-                        result = Union(Intersection(FiniteSet(*[ x for x in soln \
-                            if x.has(LambertW) and S(-1) in [e.args[-1] for e in x.atoms(LambertW)] ]), Interval(-exp(-1), 0)),\
-                            Intersection(FiniteSet(*[ x for x in soln \
-                                if x.has(LambertW) and not S(-1) in [e.args[-1] for e in x.atoms(LambertW)]]),\
-                                     Interval(-exp(-1), S.Infinity)))
-                        return result
-                    elif (symbol_List[0]).is_negative and (symbol_List[0]).is_real:
-                        result = Union(FiniteSet(soln[0]) ,FiniteSet(soln[1]), Interval(-exp(-1), 0))
-                        return result
-                    elif not domainReal and not arg2.has(Lambda):
-                        # all other cases for complexes come here
-                        n = Dummy('n',integer=True)
-                        y = Symbol('y')
-                        result = Union(*[ImageSet(Lambda(n,args.replace(y,n)),S.Integers) for args in soln if args!=0 ])
-                        return result
-                    elif not domainReal:
-                        n = Dummy('n',integer=True)
-                        result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
-                        return result
-
-                if len(symbol_List) > 1:
-                    if all(x.is_positive for x in symbol_List):
-                        result = Intersection(FiniteSet(arg2), Interval(0,S.Infinity))
-                        return result
-                    elif domainReal:
-                        result = Union(Intersection(FiniteSet(*[ x for x in soln \
-                            if x.has(LambertW) and S(-1) in [e.args[-1] for e in x.atoms(LambertW)]]), Interval(-exp(-1), 0)),\
-                            Intersection(FiniteSet(*[ x for x in soln \
-                                if x.has(LambertW) and not S(-1) in [e.args[-1] for e in x.atoms(LambertW)]]),\
-                                     Interval(-exp(-1), S.Infinity)))
-                        return result
-                    elif not domainReal:
-                        result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
-                        return result
-
-            elif arg2.is_real or domainReal:
-                result = FiniteSet(*soln)
-            elif not arg2.is_real and not domainReal:
-                result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
-                if len(soln) == 1 and isinstance(result,FiniteSet):
-                    result = ImageSet(result.args[0],S.Integers)
-
-            if flag:
-                LambertArgs = arg.atoms(LambertW)
-                if LambertArgs == set():
-                    realLambert = None
+                if all(x.is_positive for x in symbol_List):
+                    result = Intersection(FiniteSet(arg2), Interval(0,S.Infinity))
+                    return result
+                elif all(x.is_real and x.is_negative for x in symbol_List):
+                    result = Union(*[FiniteSet(args) for args in soln], Interval(-exp(-1), 0))
+                    return result
+                elif not all(x.is_positive or x.is_real or x.is_negative for x in symbol_List):
+                    result = Union(Intersection(FiniteSet(*[ x for x in soln \
+                        if x.has(LambertW) and S(-1) in [e.args[-1] for e in x.atoms(LambertW)] ]), Interval(-exp(-1), 0)),\
+                        Intersection(FiniteSet(*[ x for x in soln \
+                            if x.has(LambertW) and not S(-1) in [e.args[-1] for e in x.atoms(LambertW)]]),\
+                                    Interval(-exp(-1), S.Infinity)))
+                    return result
                 else:
-                    realLambert = (LambertArgs).pop().is_real
-
-                if soln is EmptySet and (_is_lambert(diff,symbol) and (domainReal)):
-                    result = S.EmptySet
-                elif ((not arg2.is_real and not realLambert) and not domainReal) or\
-                     ((arg2.is_real or realLambert) and arg2.has(Lambda)) :
-                    result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
-                    if len(soln) == 1 and isinstance(result,FiniteSet):
-                        result = ImageSet(result.args[0],S.Integers)
-                elif (arg2.is_real or realLambert) and not arg.has(Lambda):
                     result = FiniteSet(*soln)
+            if soln is EmptySet:
+                result = S.EmptySet
+            else:
+                result = FiniteSet(*soln)
+        else:
+            result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
 
     return result
 
@@ -1984,8 +1935,8 @@ def _solve_as_lambert(lhs, rhs, symbol, domain):
     soln = _compute_lambert_solutions(lhs, rhs, symbol, domain)
     diff = lhs - rhs
     if soln:
-        result = helper_to_solve_as_lambert(soln, diff, symbol, domain)
-    if soln is EmptySet and (_is_lambert(diff,symbol) and (domain.is_subset(S.Reals))):
+        result = helper_to_solve_as_lambert(soln, domain)
+    if soln is EmptySet and domain.is_subset(S.Reals):
         result = S.EmptySet
     elif soln is None:
      # try with positive `symbol`
@@ -1993,8 +1944,7 @@ def _solve_as_lambert(lhs, rhs, symbol, domain):
         pos_lhs = lhs.subs({symbol: u})
         soln = _compute_lambert_solutions(pos_lhs, rhs, u,domain)
         if soln:
-            flag = True
-            result = helper_to_solve_as_lambert(soln, diff, symbol, domain, flag)
+            result = helper_to_solve_as_lambert(soln, domain)
 
     return result
 
@@ -2400,7 +2350,8 @@ def solveset(f, symbol=None, domain=S.Complexes):
     f = piecewise_fold(f)
 
     result = _solveset(f, symbol, domain, _check=True)
-    if domain.is_subset(S.Reals) and _is_lambert(f, symbol) and isinstance(result,FiniteSet):
+    if domain.is_subset(S.Reals) and _is_lambert(f, symbol) \
+        and isinstance(result,FiniteSet):
         f = factor(powdenest(f))
         if f.is_Mul:
             for m in f.args:
