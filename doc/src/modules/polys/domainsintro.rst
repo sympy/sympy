@@ -52,7 +52,7 @@ representing the implementation of those coefficients::
   DMP([1, 1/2, 0], QQ, None)
   >>> p.rep.rep
   [1, 1/2, 0]
-  >>> type(p.rep.rep[0])
+  >>> type(p.rep.rep[0])  # doctest: +SKIP
   <class 'sympy.polys.domains.pythonrational.PythonRational'>
 
 Here the domain is :ref:`QQ` which represents the implementation of the
@@ -279,7 +279,7 @@ which can then be used in ordinary arithmetic operations.::
   2
   >>> z1 + z1
   4
-  >>> type(z1)
+  >>> type(z1)  # doctest: +SKIP
   <class 'int'>
   >>> z1 in ZZ
   True
@@ -293,7 +293,7 @@ gives a ``float`` which is not an element of :ref:`ZZ`::
 
   >>> z1 / z1
   1.0
-  >>> type(z1 / z1)
+  >>> type(z1 / z1)  # doctest: +SKIP
   <class 'float'>
   >>> ZZ.is_Field
   False
@@ -319,7 +319,7 @@ division::
   2/3
   >>> q1 / q2
   3/4
-  >>> type(q1)
+  >>> type(q1)  # doctest: +SKIP
   <class 'sympy.polys.domains.pythonrational.PythonRational'>
 
 In general code that is expected to work with elements of an arbitrary domain
@@ -369,17 +369,17 @@ C rather than Python and is many times faster than the pure Python
 implementation of :ref:`QQ` that is used when gmpy is not installed.
 
 In general the Python type used for the elements of a domain can be checked
-from the :py:attr:`~.Domain.dtype` attribute of the domain. The
-:py:meth:`~.Domain.of_type` method can be used to check if an object is an
-instance of :py:attr:`~.Domain.dtype`.::
+from the :py:attr:`~.Domain.dtype` attribute of the domain. When gmpy is
+installed the dtype for :ref:`ZZ` is `mpz` which is not an actual type and can
+not be used with `isinstance`. For this reason the :py:meth:`~.Domain.of_type`
+method can be used to check if an object is an element of
+:py:attr:`~.Domain.dtype`.::
 
   >>> z = ZZ(2)
-  >>> type(z)
+  >>> type(z)  # doctest: +SKIP
   <class 'int'>
-  >>> ZZ.dtype
+  >>> ZZ.dtype  # doctest: +SKIP
   <class 'int'>
-  >>> isinstance(z, ZZ.dtype)
-  True
   >>> ZZ.of_type(z)
   True
 
@@ -413,7 +413,7 @@ expressions and domain elements::
   2
   >>> type(z_sympy)
   <class 'sympy.core.numbers.Integer'>
-  >>> type(z_zz)
+  >>> type(z_zz)  # doctest: +SKIP
   <class 'int'>
   >>> ZZ.to_sympy(z_zz)
   2
@@ -685,11 +685,11 @@ The printing support for these is less developed but we can use
   >>> K
   QQ<sqrt(2)>
   >>> b = K.one + K.from_sympy(sqrt(2))
-  >>> b
+  >>> b  # doctest: +SKIP
   ANP([1, 1], [1, 0, -2], QQ)
   >>> K.to_sympy(b)
   1 + sqrt(2)
-  >>> b ** 2
+  >>> b ** 2  # doctest: +SKIP
   ANP([2, 3], [1, 0, -2], QQ)
   >>> K.to_sympy(b**2)
   2*sqrt(2) + 3
@@ -722,7 +722,7 @@ generators such as `\mathbb{Q}(\sqrt{2},\sqrt{3})`::
   >>> sqrt2 = K.from_sympy(sqrt(2))
   >>> sqrt3 = K.from_sympy(sqrt(3))
   >>> p = (K.one + sqrt2) * (K.one + sqrt3)
-  >>> p
+  >>> p  # doctest: +SKIP
   ANP([1/2, 1, -3/2], [1, 0, -10, 0, 1], QQ)
   >>> K.to_sympy(p)
   1 + sqrt(2) + sqrt(3) + sqrt(6)
@@ -928,7 +928,7 @@ two versions of :ref:`K[x]` using :py:meth:`~.Domain.poly_ring` and
 The internal representation of the old polynomial ring domain is the
 :py:class:`~.DMP` representation as a list of (lists of) coefficients::
 
-  >>> repr(p2)
+  >>> repr(p2)  # doctest: +SKIP
   'DMP([1, 0, 1], ZZ, ZZ[x])'
 
 The most notable use of the :py:class:`~.DMP` representation of polynomials is
@@ -1134,7 +1134,7 @@ that domain::
   [3, 2]
   >>> type(elements_sympy[0])
   <class 'sympy.core.numbers.Integer'>
-  >>> type(elements_K[0])
+  >>> type(elements_K[0])  # doctest: +SKIP
   <class 'int'>
 
 In this example we see that the two integers ``3`` and ``2`` can be
@@ -1359,7 +1359,7 @@ This is the internal implementation of :py:class:`~.Poly`::
   [1, 0, 1]
   >>> type(d.rep)
   <class 'list'>
-  >>> type(d.rep[0])
+  >>> type(d.rep[0])  # doctest: +SKIP
   <class 'int'>
   >>> d.dom
   ZZ
@@ -1456,7 +1456,7 @@ then we get a fully dense DMP list of lists of lists representation::
   [[[1], []], [[]], [[1, 0]]]
   >>> p.rep.rep[0][0][0]
   1
-  >>> type(p.rep.rep[0][0][0])
+  >>> type(p.rep.rep[0][0][0])  # doctest: +SKIP
   <class 'int'>
 
 On the other hand we can make a :py:class:`~.Poly` with a fully sparse
