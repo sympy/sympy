@@ -51,13 +51,13 @@ class Domain:
     >>> from sympy import ZZ, QQ
     >>> ZZ(2)
     2
-    >>> ZZ.dtype
+    >>> ZZ.dtype  # doctest: +SKIP
     <class 'int'>
-    >>> type(ZZ(2))
+    >>> type(ZZ(2))  # doctest: +SKIP
     <class 'int'>
     >>> QQ(1, 2)
     1/2
-    >>> type(QQ(1, 2))
+    >>> type(QQ(1, 2))  # doctest: +SKIP
     <class 'sympy.polys.domains.pythonrational.PythonRational'>
 
     The corresponding domain elements can be used with the arithmetic
@@ -65,8 +65,8 @@ class Domain:
     ``/,//,%`` might be usable. For example in :ref:`ZZ` both ``//`` (floor
     division) and ``%`` (modulo division) can be used but ``/`` (true
     division) can not. Since :ref:`QQ` is a :py:class:`~.Field` its elements
-    can also be used with ``/``. Some domains have a :py:meth:`~.Domain.gcd`
-    method.
+    can be used with ``/`` but `//` and `%` should not be used. Some domains
+    have a :py:meth:`~.Domain.gcd` method.
 
     >>> ZZ(2) + ZZ(3)
     5
@@ -76,8 +76,6 @@ class Domain:
     1
     >>> QQ(1, 2) / QQ(2, 3)
     3/4
-    >>> QQ(1, 2) % QQ(2, 3)
-    0
     >>> ZZ.gcd(ZZ(4), ZZ(2))
     2
     >>> QQ.gcd(QQ(2,7), QQ(5,3))
@@ -138,9 +136,9 @@ class Domain:
     >>> from sympy import ZZ, QQ
     >>> ez = ZZ(2)
     >>> eq = QQ.convert_from(ez, ZZ)
-    >>> type(ez)
+    >>> type(ez)  # doctest: +SKIP
     <class 'int'>
-    >>> type(eq)
+    >>> type(eq)  # doctest: +SKIP
     <class 'sympy.polys.domains.pythonrational.PythonRational'>
 
     Elements from different domains should not be mixed in arithmetic or other

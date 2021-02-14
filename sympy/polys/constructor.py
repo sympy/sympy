@@ -308,7 +308,7 @@ def construct_domain(obj, **args):
     ZZ
     >>> elements
     [2, 3, 4]
-    >>> type(elements[0])
+    >>> type(elements[0])  # doctest: +SKIP
     <class 'int'>
     >>> type(expressions[0])
     <class 'sympy.core.numbers.Integer'>
@@ -341,7 +341,7 @@ def construct_domain(obj, **args):
     >>> from sympy import sqrt
     >>> construct_domain([sqrt(2)])
     (EX, [EX(sqrt(2))])
-    >>> construct_domain([sqrt(2)], extension=True)
+    >>> construct_domain([sqrt(2)], extension=True)  # doctest: +SKIP
     (QQ<sqrt(2)>, [ANP([1, 0], [1, 0, -2], QQ)])
 
     See also

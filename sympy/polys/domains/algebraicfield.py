@@ -95,7 +95,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     >>> K
     QQ<sqrt(2)>
     >>> xk = K.from_sympy(3 + 4*sqrt(2))
-    >>> xk
+    >>> xk  # doctest: +SKIP
     ANP([4, 3], [1, 0, -2], QQ)
 
     Elements of :ref:`QQ(a)` are instances of :py:class:`~.ANP` which have
@@ -110,7 +110,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
     >>> xk = K.from_sympy(3 + 4*sqrt(2))
     >>> yk = K.from_sympy(2 + 3*sqrt(2))
-    >>> xk * yk
+    >>> xk * yk  # doctest: +SKIP
     ANP([17, 30], [1, 0, -2], QQ)
     >>> K.to_sympy(xk * yk)
     17*sqrt(2) + 30
