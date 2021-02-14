@@ -1933,7 +1933,6 @@ def _solve_as_lambert(lhs, rhs, symbol, domain):
     """
     result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
     soln = _compute_lambert_solutions(lhs, rhs, symbol, domain)
-    diff = lhs - rhs
     if soln:
         result = helper_to_solve_as_lambert(soln, domain)
     if soln is EmptySet and domain.is_subset(S.Reals):
