@@ -814,13 +814,12 @@ class SecondAutonomousNth(SinglePatternODESolver):
     ========
 
     >>> from sympy import Function, dsolve
-    >>> from sympy.abc import x, a, n
+    >>> from sympy.abc import x
     >>> f = Function('f')
-    >>> eq = f(x).diff(x, 2) + a*f(x).diff(x)**n
+    >>> eq = f(x).diff(x, x) + f(x).diff(x)**2
     >>> sol = dsolve(eq, hint = '2nd_autonomous_nth')
     >>> print(sol)
-    [Eq(f(x), Piecewise((C1/(a*n - 2*a) + (C2*a*n - C2*a + a*n*x - a*x)**(n/(n - 1))/(a*n*(C2*a*n - C2*a + a*n*x - a*x)**(2/(n - 1)) - 2*a*(C2*a*n - C2*a + a*n*x - a*x)**(2/(n - 1))), Ne(1/(n - 2), -1)), (nan, True))),
-    Eq(f(x), Piecewise((C1/(a*n - 2*a) + exp(C2*a*n + a*n*x)/(a*n*exp(2*C2*a + 2*a*x) - 2*a*exp(2*C2*a + 2*a*x)), Eq(1/(n - 2), -1)), (nan, True)))]
+    Eq(f(x), log(C1*(C2 + x)))
 
     References
     ==========
@@ -852,6 +851,10 @@ class SecondAutonomousNth(SinglePatternODESolver):
         a = a.subs(fx, v)
         c = C1*Integral(exp(Integral(a, v)), (v, fx))
         d = Integral((C1 + (n - 2)*Integral(a, v))**(1/(n - 2)), (v, fx))
+        e = d.subs(n, 0)
+        f = d.subs(n, 1)
+        from sympy import Piecewise
+        return [Eq(Piecewise((-e, Eq(n, 0))), -C2 - x), Eq(Piecewise((f, Eq(1/(n - 2), -1)), (c, Eq(n, 2)), (-e, Eq(n, 0)), (d, True)), C2 + x)]
         if n == 0:
             d=d.subs(n,0)
             return [Eq(d, C2 + x), Eq(-d, C2 + x)]
