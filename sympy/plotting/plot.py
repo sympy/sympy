@@ -563,7 +563,7 @@ class Line2DBaseSeries(BaseSeries):
     def get_segments(self):
         np = import_module('numpy')
         points = self.get_points()
-        if self.steps is True:
+        if self.steps == True:
             x = np.array((points[0], points[0])).T.flatten()[1:]
             y = np.array((points[1], points[1])).T.flatten()[:-1]
             points = (x, y)
@@ -682,21 +682,21 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 # Sample ten points if complex values are encountered
                 # at both ends. If there is a real value in between, then
                 # sample those points further.
-                elif p[1] is None and q[1] is None:
+                elif p[1] == None and q[1] == None:
                     if self.xscale == 'log':
                         xarray = np.logspace(p[0], q[0], 10)
                     else:
                         xarray = np.linspace(p[0], q[0], 10)
                     yarray = list(map(f, xarray))
-                    if any(y is not None for y in yarray):
+                    if any(y != None for y in yarray):
                         for i in range(len(yarray) - 1):
-                            if yarray[i] is not None or yarray[i + 1] is not None:
+                            if yarray[i] != None or yarray[i + 1] != None:
                                 sample([xarray[i], yarray[i]],
                                     [xarray[i + 1], yarray[i + 1]], depth + 1)
 
                 # Sample further if one of the end points in None (i.e. a
                 # complex value) or the three points are not almost collinear.
-                elif (p[1] is None or q[1] is None or new_point[1] is None
+                elif (p[1] == None or q[1] == None or new_point[1] == None
                         or not flat(p, new_point, q)):
                     sample(p, new_point, depth + 1)
                     sample(new_point, q, depth + 1)
@@ -712,7 +712,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
     def get_points(self):
         np = import_module('numpy')
-        if self.only_integers is True:
+        if self.only_integers == True:
             if self.xscale == 'log':
                 list_x = np.logspace(int(self.start), int(self.end),
                         num=int(self.end) - int(self.start) + 1)
@@ -817,16 +817,16 @@ class Parametric2DLineSeries(Line2DBaseSeries):
             # Sample ten points if complex values are encountered
             # at both ends. If there is a real value in between, then
             # sample those points further.
-            elif ((p[0] is None and q[1] is None) or
-                    (p[1] is None and q[1] is None)):
+            elif ((p[0] == None and q[1] == None) or
+                    (p[1] == None and q[1] == None)):
                 param_array = np.linspace(param_p, param_q, 10)
                 x_array = list(map(f_x, param_array))
                 y_array = list(map(f_y, param_array))
-                if any(x is not None and y is not None
+                if any(x != None and y != None
                         for x, y in zip(x_array, y_array)):
                     for i in range(len(y_array) - 1):
-                        if ((x_array[i] is not None and y_array[i] is not None) or
-                                (x_array[i + 1] is not None and y_array[i + 1] is not None)):
+                        if ((x_array[i] != None and y_array[i] != None) or
+                                (x_array[i + 1] != None and y_array[i + 1] != None)):
                             point_a = [x_array[i], y_array[i]]
                             point_b = [x_array[i + 1], y_array[i + 1]]
                             sample(param_array[i], param_array[i], point_a,
@@ -834,8 +834,8 @@ class Parametric2DLineSeries(Line2DBaseSeries):
 
             # Sample further if one of the end points in None (i.e. a complex
             # value) or the three points are not almost collinear.
-            elif (p[0] is None or p[1] is None
-                    or q[1] is None or q[0] is None
+            elif (p[0] == None or p[1] == None
+                    or q[1] == None or q[0] == None
                     or not flat(p, new_point, q)):
                 sample(param_p, param_new, p, new_point, depth + 1)
                 sample(param_new, param_q, new_point, q, depth + 1)

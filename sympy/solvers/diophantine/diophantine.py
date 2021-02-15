@@ -161,7 +161,7 @@ class DiophantineEquationType:
     def __init__(self, equation, free_symbols=None):
         self.equation = _sympify(equation).expand(force=True)
 
-        if free_symbols is not None:
+        if free_symbols != None:
             self.free_symbols = free_symbols
         else:
             self.free_symbols = list(self.equation.free_symbols)
@@ -192,7 +192,7 @@ class DiophantineEquationType:
 
     @property
     def parameters(self):
-        if self._parameters is None:
+        if self._parameters == None:
             self._parameters = symbols('t_:%i' % (self.n_parameters,), integer=True)
         return self._parameters
 
@@ -203,7 +203,7 @@ class DiophantineEquationType:
         if not self.matches():
             raise ValueError("This equation does not match the %s equation type." % self.name)
 
-        if parameters is not None:
+        if parameters != None:
             if len(parameters) != self.n_parameters:
                 raise ValueError("Expected %s parameter(s) but got %s" % (self.n_parameters, len(parameters)))
 
@@ -421,7 +421,7 @@ class Linear(DiophantineEquationType):
 
                 sol = sol_x, sol_y = base_solution_linear(k, A[i], B[i], pnew)
 
-                if p is S.One:
+                if p == S.One:
                     if None in sol:
                         return result
                 else:
@@ -736,9 +736,9 @@ class HomogeneousTernaryQuadraticNormal(DiophantineEquationType):
             return result
 
         if (
-            sqrt_mod(-b_2*c_2, a_2) is None or
-            sqrt_mod(-c_2*a_2, b_2) is None or
-            sqrt_mod(-a_2*b_2, c_2) is None):
+            sqrt_mod(-b_2*c_2, a_2) == None or
+            sqrt_mod(-c_2*a_2, b_2) == None or
+            sqrt_mod(-a_2*b_2, c_2) == None):
             return result
 
         z_0, x_0, y_0 = descent(A, B)
@@ -843,7 +843,7 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
             else:
                 var[0], var[1] = _var[1], _var[0]
                 y_0, x_0, z_0 = unpack_sol(_diop_ternary_quadratic(var, coeff))
-                if x_0 is not None:
+                if x_0 != None:
                     result.add((x_0, y_0, z_0))
                 return result
 
@@ -878,7 +878,7 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
 
                 x_0, y_0, z_0 = unpack_sol(_diop_ternary_quadratic(var, _coeff))
 
-                if x_0 is None:
+                if x_0 == None:
                     return result
 
                 p, q = _rational_pq(B*y_0 + C*z_0, 2*A)
@@ -909,7 +909,7 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
                 # Ax**2 + D*y**2 + F*z**2 = 0, C may be zero
                 x_0, y_0, z_0 = unpack_sol(_diop_ternary_quadratic_normal(var, coeff))
 
-        if x_0 is None:
+        if x_0 == None:
             return result
 
         result.add(_remove_gcd(x_0, y_0, z_0))
@@ -1413,7 +1413,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                     xy_coeff = True
                     x_coeff = True
                     var1_mul_var2 = map(lambda a: a[0]*a[1], var_mul)
-                    # if coeff(y*z), coeff(y*x), coeff(x*z) is not 0 then
+                    # if coeff(y*z), coeff(y*x), coeff(x*z) != 0 then
                     # `xy_coeff` => True and do_permute_sign => False.
                     # Means no permuted solution.
                     for v1_mul_v2 in var1_mul_var2:
@@ -1561,7 +1561,7 @@ def merge_solution(var, var_t, solution):
             sol.append(next(params))
 
     for val, symb in zip(sol, var):
-        if check_assumptions(val, **symb.assumptions0) is False:
+        if check_assumptions(val, **symb.assumptions0) == False:
             return tuple()
 
     return tuple(sol)
@@ -1646,7 +1646,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     elif eq_type == GeneralSumOfEvenPowers.name:
         return diop_general_sum_of_even_powers(eq, limit=S.Infinity)
 
-    if eq_type is not None and eq_type not in diop_known:
+    if eq_type != None and eq_type not in diop_known:
             raise ValueError(filldedent('''
     Alhough this type of equation was identified, it is not yet
     handled. It should, however, be listed in `diop_known` at the
@@ -1772,12 +1772,12 @@ def diop_linear(eq, param=symbols("t", integer=True)):
 
     if diop_type == Linear.name:
         parameters = None
-        if param is not None:
+        if param != None:
             parameters = symbols('%s_0:%i' % (param, len(var)), integer=True)
 
         result = Linear(eq).solve(parameters=parameters)
 
-        if param is None:
+        if param == None:
             result = result(*[0]*len(result.parameters))
 
         if len(result) > 0:
@@ -1820,7 +1820,7 @@ def base_solution_linear(c, a, b, t=None):
     a, b, c = _remove_gcd(a, b, c)
 
     if c == 0:
-        if t is not None:
+        if t != None:
             if b < 0:
                 t = -t
             return (b*t , -a*t)
@@ -1833,7 +1833,7 @@ def base_solution_linear(c, a, b, t=None):
         y0 *= sign(b)
 
         if divisible(c, d):
-            if t is not None:
+            if t != None:
                 if b < 0:
                     t = -t
                 return (c*x0 + b*t, c*y0 - a*t)
@@ -1934,7 +1934,7 @@ def diop_quadratic(eq, param=symbols("t", integer=True)):
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type == BinaryQuadratic.name:
-        if param is not None:
+        if param != None:
             parameters = [param, Symbol("u", integer=True)]
         else:
             parameters = None
@@ -2543,7 +2543,7 @@ def length(P, Q, D):
     """
     from sympy.ntheory.continued_fraction import continued_fraction_periodic
     v = continued_fraction_periodic(P, Q, D)
-    if type(v[-1]) is list:
+    if type(v[-1]) == list:
         rpt = len(v[-1])
         nonrpt = len(v) - 1
     else:
@@ -3007,7 +3007,7 @@ def _parametrize_ternary_quadratic(solution, _var, coeff):
 
     v = list(_var)  # copy
 
-    if x_0 is None:
+    if x_0 == None:
         return (None, None, None)
 
     if solution.count(0) >= 2:
@@ -3250,7 +3250,7 @@ def ldescent(A, B):
                 B_0, d = sign(Q)*i, sQ
                 break
 
-    if B_0 is not None:
+    if B_0 != None:
         W, X, Y = ldescent(A, B_0)
         return _remove_gcd((-A*X + r*W), (r*X - W), Y*(B_0*d))
 
@@ -3462,7 +3462,7 @@ def diop_general_pythagorean(eq, param=symbols("m", integer=True)):
     var, coeff, diop_type  = classify_diop(eq, _dict=False)
 
     if diop_type == GeneralPythagorean.name:
-        if param is None:
+        if param == None:
             params = None
         else:
             params = symbols('%s1:%i' % (param, len(var)), integer=True)
@@ -3594,7 +3594,7 @@ def partition(n, k=None, zeros=False):
 
     """
     from sympy.utilities.iterables import ordered_partitions
-    if not zeros or k is None:
+    if not zeros or k == None:
         for i in ordered_partitions(n, k):
             yield tuple(i)
     else:
@@ -3868,7 +3868,7 @@ def power_representation(n, p, k, zeros=False):
             '''Todd G. Will, "When Is n^2 a Sum of k Squares?", [online].
                 Available: https://www.maa.org/sites/default/files/Will-MMz-201037918.pdf'''
             return
-        if feasible is not True:  # it's prime and k == 2
+        if feasible != True:  # it's prime and k == 2
             yield prime_as_sum_of_two_squares(n)
             return
 
