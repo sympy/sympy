@@ -1007,6 +1007,7 @@ def _solveset(f, symbol, domain, _check=False):
         m, h = h.as_independent(symbol, as_Add=False)
         if m not in {S.ComplexInfinity, S.Zero, S.Infinity,
                               S.NegativeInfinity}:
+            f = a/m + h
             f = f.together()
 
     # assign the solvers to use
