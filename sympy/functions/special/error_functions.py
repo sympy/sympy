@@ -1865,14 +1865,16 @@ class Si(TrigonometricIntegral):
         from sympy.series.order import Order
         point = args0[0]
 
+        # Expansion at oo
         if point is S.Infinity:
             z = self.args[0]
-            p = [(-1)**k * factorial(2*k) / z**(2*k) for k in range(0, n)] + \
-                    [Order(1/z**n, x)]
-            q = [(-1)**k * factorial(2*k + 1) / z**(2*k+1) for k in range(0, n)] + \
-                    [Order(1/z**n, x)]
+            p = [(-1)**k * factorial(2*k) / z**(2*k)
+                    for k in range(0, int(n/2))] + [Order(1/z**n, x)]
+            q = [(-1)**k * factorial(2*k + 1) / z**(2*k + 1)
+                    for k in range(0, int((n - 1)/2))] + [Order(1/z**n, x)]
             return pi/2 - (cos(z)/z)*Add(*p) - (sin(z)/z)*Add(*q)
 
+        # All other points are not handled
         return super(Si, self)._eval_aseries(n, args0, x, logx)
 
     def _eval_is_zero(self):
@@ -1991,14 +1993,16 @@ class Ci(TrigonometricIntegral):
         from sympy.series.order import Order
         point = args0[0]
 
+        # Expansion at oo
         if point is S.Infinity:
             z = self.args[0]
-            p = [(-1)**k * factorial(2*k) / z**(2*k) for k in range(0, n)] + \
-                    [Order(1/z**n, x)]
-            q = [(-1)**k * factorial(2*k + 1) / z**(2*k+1) for k in range(0, n)] + \
-                    [Order(1/z**n, x)]
+            p = [(-1)**k * factorial(2*k) / z**(2*k)
+                    for k in range(0, int(n/2))] + [Order(1/z**n, x)]
+            q = [(-1)**k * factorial(2*k + 1) / z**(2*k + 1)
+                    for k in range(0, int((n - 1)/2))] + [Order(1/z**n, x)]
             return (sin(z)/z)*Add(*p) - (cos(z)/z)*Add(*q)
 
+        # All other points are not handled
         return super(Ci, self)._eval_aseries(n, args0, x, logx)
 
     def _sage_(self):

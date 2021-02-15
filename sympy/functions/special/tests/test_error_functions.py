@@ -597,7 +597,7 @@ def test_si():
         Si(1) + (x - 1)*sin(1) + (x - 1)**2*(-sin(1)/2 + cos(1)/2) + O((x - 1)**3, (x, 1))
 
     assert Si(x).series(x, oo) == pi/2 + (-sin(x)*(120/x**5 - 6/x**3 + 1/x + O(x**(-7), (x, oo))) -\
-                                (-720/x**6 + 24/x**4 - 2/x**2 + 1 + O(x**(-7), (x, oo)))*cos(x))/x
+                                (24/x**4 - 2/x**2 + 1 + O(x**(-7), (x, oo)))*cos(x))/x
 
     t = Symbol('t', Dummy=True)
     assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
@@ -645,7 +645,7 @@ def test_ci():
         EulerGamma + log(x) + x**2/4 + x**4/96 + O(x**5)
 
     assert Ci(x).series(x, oo) == (-cos(x)*(120/x**5 - 6/x**3 + 1/x + O(x**(-7), (x, oo))) +\
-                                (-720/x**6 + 24/x**4 - 2/x**2 + 1 + O(x**(-7), (x, oo)))*sin(x))/x
+                                (24/x**4 - 2/x**2 + 1 + O(x**(-7), (x, oo)))*sin(x))/x
     assert limit(log(x) - Ci(2*x), x, 0) == -log(2) - EulerGamma
     assert Ci(x).rewrite(uppergamma) == -expint(1, x*exp_polar(-I*pi/2))/2 -\
                                         expint(1, x*exp_polar(I*pi/2))/2
