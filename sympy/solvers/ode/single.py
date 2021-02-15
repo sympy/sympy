@@ -855,13 +855,7 @@ class SecondAutonomousNth(SinglePatternODESolver):
         f = d.subs(n, 1)
         from sympy import Piecewise
         return [Eq(Piecewise((-e, Eq(n, 0))), -C2 - x), Eq(Piecewise((f, Eq(1/(n - 2), -1)), (c, Eq(n, 2)), (-e, Eq(n, 0)), (d, True)), C2 + x)]
-        if n == 0:
-            d=d.subs(n,0)
-            return [Eq(d, C2 + x), Eq(-d, C2 + x)]
-        elif n == 2:
-            return [Eq(c, C2 + x)]
-        else:
-            return [Eq(d, C2 + x)]
+
 
 # Avoid circular import:
 from .ode import dsolve
