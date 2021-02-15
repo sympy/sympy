@@ -1,7 +1,7 @@
 from sympy import symbols, ImmutableDenseNDimArray, tensorproduct, tensorcontraction, permutedims
 from sympy.codegen.array_utils import CodegenArrayPermuteDims
 from sympy.combinatorics import Permutation
-from sympy.tensor.array.expressions.array_expressions import ZeroArray, ArraySymbol, ArrayElement
+from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol, ArrayElement
 from sympy.testing.pytest import raises
 
 
@@ -42,3 +42,18 @@ def test_zero_array():
     za = ZeroArray(m, n, k, 2)
     assert za.shape == (m, n, k, 2)
     raises(ValueError, lambda: za.as_explicit())
+
+
+def test_one_array():
+    assert OneArray() == 1
+    assert OneArray().is_Integer
+
+    oa = OneArray(3, 2, 4)
+    assert oa.shape == (3, 2, 4)
+    oa_e = oa.as_explicit()
+    assert oa_e.shape == (3, 2, 4)
+
+    m, n, k = symbols("m n k")
+    oa = OneArray(m, n, k, 2)
+    assert oa.shape == (m, n, k, 2)
+    raises(ValueError, lambda: oa.as_explicit())
