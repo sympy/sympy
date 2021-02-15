@@ -242,8 +242,9 @@ class erf(Function):
         from sympy.series.order import Order
         point = args0[0]
 
-        if point is S.Infinity:
+        if point in [S.Infinity, S.NegativeInfinity]:
             z = self.args[0]
+
             s = [(-1)**k * factorial2(2*k - 1) / (z**(2*k + 1) * 2**k)
                     for k in range(0, n)] + [Order(1/z**n, x)]
             return S.One - (exp(-z**2)/sqrt(pi)) * Add(*s)
