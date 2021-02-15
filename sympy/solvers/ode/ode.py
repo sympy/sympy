@@ -694,10 +694,11 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         else:
             sols = solvefunc(eq, func, order, match)
         if iterable(sols):
-            for i, arg in enumerate(sols):
-                if isinstance(arg, BooleanFalse):
-                    sols.pop(i)
-                    InLoop = False
+            if hint == '2nd_autonomous_nth':
+                for i, arg in enumerate(sols):
+                    if isinstance(arg, BooleanFalse):
+                        sols.pop(i)
+                        InLoop = False
             rv = [odesimp(eq, s, func, hint) for s in sols]
         else:
             rv =  odesimp(eq, sols, func, hint)
@@ -715,18 +716,19 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
 
     if isinstance(rv, list):
         if simplify:
-            len_rv = len(rv)
-            for i, arg in enumerate(rv):
-                if i >= len_rv:
-                    break
-                if isinstance(arg, list):
-                    rv.pop(i)
-                    for eqns in arg:
-                        rv.append(eqns)
-            lhs = arg.lhs
-            rhs = arg.rhs
-            if lhs != func and InLoop:
-                rv[0] = Eq(-lhs, rhs)
+            if hint == '2nd_autonomous_nth':
+                len_rv = len(rv)
+                for i, arg in enumerate(rv):
+                    if i >= len_rv:
+                        break
+                    if isinstance(arg, list):
+                        rv.pop(i)
+                        for eqns in arg:
+                            rv.append(eqns)
+                lhs = arg.lhs
+                rhs = arg.rhs
+                if lhs != func and InLoop:
+                    rv[0] = Eq(-lhs, rhs)
             rv = _remove_redundant_solutions(eq, rv, order, func.args[0])
         if len(rv) == 1:
             rv = rv[0]
