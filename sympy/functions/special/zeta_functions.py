@@ -1,6 +1,6 @@
 """ Riemann zeta and related function. """
 
-from sympy.core import Function, S, sympify, pi, I
+from sympy.core import Add, Function, S, sympify, pi, I, Symbol
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
 from sympy.functions.elementary.exponential import log, exp_polar
@@ -201,16 +201,18 @@ class lerchphi(Function):
         return self._eval_rewrite_helper(z, s, a, polylog)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        from sympy.core import Add
         from sympy.functions.combinatorial.factorials import binomial
+        from sympy.series.order import Order
         z, s, a = self.args
 
         p = []
         for k in range(0, n):
-            q = [(-1)**i * binomial(k, i) * (a + i)**(-s) for i in range(0, k)]
-            t = (-z/(1-z))**k * Add(*q)
+            i = Symbol('i')
+            q_terms = (-1)**i * binomial(k, i) * (a + i)**(-s)
+            q = [q_terms.subs(i, j) for j in range(0, k)]
+            t = (-z/(1 - z))**k * Add(*q)
             p.append(t)
-        return Add(*p)
+        return Add(*p) + Order(z**n, x)
 
 ###############################################################################
 ###################### POLYLOGARITHM ##########################################
@@ -545,19 +547,22 @@ class zeta(Function):
             raise ArgumentIndexError
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        from sympy.core import Add
         from sympy.functions.combinatorial.factorials import binomial
+        from sympy.series.order import Order
 
         if len(self.args) == 2:
             s, a = self.args
-            if a != 1:
+            if a != S.One:
                 return super(zeta, self)._eval_nseries(x, n, logx)
+
         p = []
         for k in range(0, n):
-            q = [(-1)**i * binomial(k, i) / (i+1)**(x) for i in range(0, k)]
-            t = S.Half**(k+1) * Add(*q)
+            i = Symbol('i')
+            q_terms = (-1)**i * binomial(k, i) / (i + 1)**(x)
+            q = [q_terms.subs(i, j) for j in range(0, k)]
+            t = S.Half**(k + 1) * Add(*q)
             p.append(t)
-        return 1/(1 - 2**(1-x)) * Add(*p)
+        return 1/(1 - 2**(1 - x)) * Add(*p) + Order(x**n, x)
 
 
 class dirichlet_eta(Function):
