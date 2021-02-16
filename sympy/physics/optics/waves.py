@@ -270,9 +270,9 @@ class TWave(Expr):
                                       self._phase - other.phase)),
                              self._frequency,
                              atan2(self._amplitude*sin(self._phase)
-                             +other._amplitude*sin(other._phase),
+                             + other._amplitude*sin(other._phase),
                              self._amplitude*cos(self._phase)
-                             +other._amplitude*cos(other._phase))
+                             + other._amplitude*cos(other._phase))
                              )
             else:
                 raise NotImplementedError("Interference of waves with different frequencies"
@@ -291,19 +291,19 @@ class TWave(Expr):
             raise TypeError(type(other).__name__ + " and TWave objects can't be multiplied.")
 
     def __sub__(self, other):
-            return self.__add__(-1*other)
+        return self.__add__(-1*other)
 
     def __neg__(self):
-            return self.__mul__(-1)
+        return self.__mul__(-1)
 
     def __radd__(self, other):
-            return self.__add__(other)
+        return self.__add__(other)
 
     def __rmul__(self, other):
-            return self.__mul__(other)
+        return self.__mul__(other)
 
-    def __rsub__(self,other):
-            return (-self).__radd__(other)
+    def __rsub__(self, other):
+        return (-self).__radd__(other)
 
     def _eval_rewrite_as_sin(self, *args, **kwargs):
         return self._amplitude*sin(self.wavenumber*Symbol('x')
