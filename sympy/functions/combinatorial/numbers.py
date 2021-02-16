@@ -2084,7 +2084,7 @@ class motzkin(Function):
 
     References
     ==========
-    
+
     .. [1] https://en.wikipedia.org/wiki/Motzkin_number
     .. [2] https://mathworld.wolfram.com/MotzkinNumber.html
 
