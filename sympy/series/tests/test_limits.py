@@ -542,6 +542,17 @@ def test_issue_8730():
     assert limit(subfactorial(x), x, oo) is oo
 
 
+def test_issue_9252():
+    n = Symbol('n', integer=True)
+    c = Symbol('c', positive=True)
+    # limit should depend on the value of c
+    raises(NotImplementedError, lambda: limit((log(n))**(n/log(n)) / c**n, n, oo))
+
+
+def test_issue_9449():
+    assert limit((Abs(x + y) - Abs(x - y))/(2*x), x, 0) == sign(y)
+
+
 def test_issue_9558():
     assert limit(sin(x)**15, x, 0, '-') == 0
 
@@ -906,3 +917,7 @@ def test_issue_7535():
     assert oo*(1/sin(oo)) == AccumBounds(-oo, oo)
     assert oo*(1/sin(-oo)) == AccumBounds(-oo, oo)
     assert -oo*(1/sin(oo)) == AccumBounds(-oo, oo)
+
+
+def test_issue_20704():
+    assert limit(x*(Abs(1/x + y) - Abs(y - 1/x))/2, x, 0) == 0
