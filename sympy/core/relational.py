@@ -508,10 +508,6 @@ class Equality(Relational):
 
         return Relational.__new__(cls, lhs, rhs)
 
-    @classmethod
-    def _eval_relation(cls, lhs, rhs):
-        return _sympify(lhs == rhs)
-
     def _eval_rewrite_as_Add(self, *args, **kwargs):
         """
         return Eq(L, R) as L - R. To control the evaluation of
@@ -548,12 +544,7 @@ class Equality(Relational):
 
     @property
     def binary_symbols(self):
-        if S.true in self.args or S.false in self.args:
-            if self.lhs.is_Symbol:
-                return {self.lhs}
-            elif self.rhs.is_Symbol:
-                return {self.rhs}
-        return set()
+        return self.as_Predicate().binary_symbols
 
     def _eval_simplify(self, **kwargs):
         rel = self.as_Predicate().simplify(**kwargs)
@@ -638,18 +629,9 @@ class Unequality(Relational):
 
         return Relational.__new__(cls, lhs, rhs, **options)
 
-    @classmethod
-    def _eval_relation(cls, lhs, rhs):
-        return _sympify(lhs != rhs)
-
     @property
     def binary_symbols(self):
-        if S.true in self.args or S.false in self.args:
-            if self.lhs.is_Symbol:
-                return {self.lhs}
-            elif self.rhs.is_Symbol:
-                return {self.rhs}
-        return set()
+        return self.as_Predicate().binary_symbols
 
     def _eval_simplify(self, **kwargs):
         rel = self.as_Predicate().simplify(**kwargs)

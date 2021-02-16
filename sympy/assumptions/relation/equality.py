@@ -68,6 +68,15 @@ class EqualityPredicate(BinaryRelation):
     def _simplify_applied(self, lhs, rhs, **kwargs):
         return eqsimp(self(lhs, rhs), **kwargs)
 
+    def _eval_binary_symbols(self, lhs, rhs):
+        args = (lhs, rhs)
+        if S.true in args or S.false in args:
+            if lhs.is_Symbol:
+                return {lhs}
+            elif rhs.is_Symbol:
+                return {rhs}
+        return set()
+
 
 def is_eq(lhs, rhs, assumptions):
     """
@@ -184,5 +193,14 @@ class UnequalityPredicate(BinaryRelation):
     def _simplify_applied(self, lhs, rhs, **kwargs):
         eq = Q.eq(lhs, rhs).simplify(**kwargs)
         return self(*eq.arguments)
+
+    def _eval_binary_symbols(self, lhs, rhs):
+        args = (lhs, rhs)
+        if S.true in args or S.false in args:
+            if lhs.is_Symbol:
+                return {lhs}
+            elif rhs.is_Symbol:
+                return {rhs}
+        return set()
 
 from .simplify import eqsimp

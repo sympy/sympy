@@ -132,12 +132,7 @@ class BinaryRelation(Predicate):
         return self(lhs, rhs)
 
     def _eval_binary_symbols(self, lhs, rhs):
-        args = (lhs, rhs)
-        if S.true in args or S.false in args:
-            if lhs.is_Symbol:
-                return {lhs}
-            elif rhs.is_Symbol:
-                return {rhs}
+        # override where necessary
         return set()
 
 
