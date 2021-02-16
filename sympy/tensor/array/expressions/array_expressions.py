@@ -64,7 +64,7 @@ class ArrayElement(_ArrayExpr):
         return self._args[1]
 
 
-class ZeroArray(Expr):
+class ZeroArray(_ArrayExpr):
     """
     Symbolic array of zeros. Equivalent to ``ZeroMatrix`` for matrices.
     """
@@ -86,7 +86,7 @@ class ZeroArray(Expr):
         return ImmutableDenseNDimArray.zeros(*self.shape)
 
 
-class OneArray(Expr):
+class OneArray(_ArrayExpr):
     """
     Symbolic array of ones.
     """

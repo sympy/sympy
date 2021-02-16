@@ -5,7 +5,8 @@ from sympy.codegen.array_utils import (
     CodegenArrayContraction, CodegenArrayTensorProduct, CodegenArrayDiagonal,
     CodegenArrayPermuteDims, CodegenArrayElementwiseAdd, _codegen_array_parse,
     parse_indexed_expression, recognize_matrix_expression,
-    parse_matrix_expression, nest_permutation, _remove_trivial_dims, _array_diag2contr_diagmatrix)
+    parse_matrix_expression, nest_permutation, _remove_trivial_dims, _array_diag2contr_diagmatrix,
+    _support_function_tp1_recognize)
 from sympy import MatrixSymbol, Sum
 from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -478,11 +479,12 @@ def test_recognize_diagonalized_vectors():
 
     cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(A, a), (1, 2))
     assert cg.transform_to_product() == CodegenArrayContraction(CodegenArrayTensorProduct(A, DiagMatrix(a)), (1, 2))
+    assert _array_diag2contr_diagmatrix(cg) == CodegenArrayContraction(CodegenArrayTensorProduct(A, OneArray(1), DiagMatrix(a)), (1, 3))
     assert recognize_matrix_expression(cg) == A*DiagMatrix(a)
 
     cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(a, b), (0, 2))
     assert cg.transform_to_product() == CodegenArrayContraction(CodegenArrayTensorProduct(DiagMatrix(a), b), (0, 2))
-    assert recognize_matrix_expression(cg).doit() == DiagMatrix(a)*b
+    assert recognize_matrix_expression(cg) == b.T*DiagMatrix(a)
 
     cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(A, a), (0, 2))
     assert cg.transform_to_product() == CodegenArrayContraction(CodegenArrayTensorProduct(A, DiagMatrix(a)), (0, 2))
@@ -545,7 +547,7 @@ def test_recognize_diagonalized_vectors():
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, a, C, a, B), (1, 2, 4), (5, 6, 8))
     expected = CodegenArrayContraction(CodegenArrayTensorProduct(DiagMatrix(a), DiagMatrix(a), C, A, B), (0, 4), (1, 7), (2, 5), (3, 8))
     assert cg.split_multiple_contractions() == expected
-    assert recognize_matrix_expression(cg).doit() == A*DiagMatrix(a)*C*DiagMatrix(a)*B
+    assert recognize_matrix_expression(cg) == A*DiagMatrix(a)*C*DiagMatrix(a)*B
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(a, I1, b, I1, (a.T*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
     assert cg.split_multiple_contractions().dummy_eq(CodegenArrayContraction(CodegenArrayTensorProduct((a.T * b).applyfunc(cos), I1, I1, a, b), (0, 2), (1, 4), (3, 7), (5, 9)))
@@ -882,10 +884,10 @@ def test_remove_trivial_dims():
     assert _remove_trivial_dims(cg) == (a * b.T, [2, 3])
 
     cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(a, I, b), Permutation(5)(1, 2, 3, 4))
-    assert _remove_trivial_dims(cg) == (a * b.T, [2, 3, 4, 5])
+    assert _remove_trivial_dims(cg) == (a * b.T, [1, 2, 4, 5])
 
     cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(I, b, a), Permutation(5)(1, 2, 4, 5, 3))
-    assert _remove_trivial_dims(cg) == (b * a.T, [0, 1, 2, 3])
+    assert _remove_trivial_dims(cg) == (b * a.T, [0, 3, 4, 5])
 
     # Diagonal:
 
@@ -928,3 +930,57 @@ def test_diag2contraction_diagmatrix():
     assert res.shape == cg.shape
     assert res == CodegenArrayContraction(
         CodegenArrayTensorProduct(OneArray(1), M, N, OneArray(1), DiagMatrix(a), DiagMatrix(b.T)), (3, 6), (2, 9))
+
+
+def test_recognize_products_support_function():
+    A = MatrixSymbol("A", k, k)
+    B = MatrixSymbol("B", k, k)
+    C = MatrixSymbol("C", k, k)
+    D = MatrixSymbol("D", k, k)
+
+    X = MatrixSymbol("X", k, k)
+    Y = MatrixSymbol("Y", k, k)
+
+    assert _support_function_tp1_recognize([], [2 * k]) == 2 * k
+
+    assert _support_function_tp1_recognize([(1, 2)], [A, 2 * k, B, 3]) == 6 * k * A * B
+
+    assert _support_function_tp1_recognize([(0, 3), (1, 2)], [A, B]) == Trace(A * B)
+
+    assert _support_function_tp1_recognize([(1, 2)], [A, B]) == A * B
+    assert _support_function_tp1_recognize([(0, 2)], [A, B]) == A.T * B
+    assert _support_function_tp1_recognize([(1, 3)], [A, B]) == A * B.T
+    assert _support_function_tp1_recognize([(0, 3)], [A, B]) == A.T * B.T
+
+    assert _support_function_tp1_recognize([(1, 2), (5, 6)], [A, B, C, D]) == CodegenArrayTensorProduct(A * B, C * D)
+    assert _support_function_tp1_recognize([(1, 4), (3, 6)], [A, B, C, D]) == CodegenArrayPermuteDims(
+        CodegenArrayTensorProduct(A * C, B * D), [0, 2, 1, 3])
+
+    assert _support_function_tp1_recognize([(0, 3), (1, 4)], [A, B, C]) == B * A * C
+
+    assert _support_function_tp1_recognize([(9, 10), (1, 2), (5, 6), (3, 4), (7, 8)],
+                                           [X, Y, A, B, C, D]) == X * Y * A * B * C * D
+
+    assert _support_function_tp1_recognize([(9, 10), (1, 2), (5, 6), (3, 4)],
+                                           [X, Y, A, B, C, D]) == CodegenArrayTensorProduct(X * Y * A * B, C * D)
+
+    assert _support_function_tp1_recognize([(1, 7), (3, 8), (4, 11)], [X, Y, A, B, C, D]) == CodegenArrayPermuteDims(
+        CodegenArrayTensorProduct(X * B.T, Y * C, D * A), [0, 2, 5, 1, 3, 4]
+    )
+
+    assert _support_function_tp1_recognize([(0, 1), (3, 6), (5, 8)], [X, A, B, C, D]) == CodegenArrayPermuteDims(
+        CodegenArrayTensorProduct(Trace(X) * A * C, B * D), [0, 2, 1, 3])
+
+    assert _support_function_tp1_recognize([(1, 2), (3, 4), (5, 6), (7, 8)], [A, A, B, C, D]) == A ** 2 * B * C * D
+    assert _support_function_tp1_recognize([(1, 2), (3, 4), (5, 6), (7, 8)], [X, A, B, C, D]) == X * A * B * C * D
+
+    assert _support_function_tp1_recognize([(1, 6), (3, 8), (5, 10)], [X, Y, A, B, C, D]) == CodegenArrayPermuteDims(
+        CodegenArrayTensorProduct(X * B, Y * C, A * D), [0, 2, 4, 1, 3, 5]
+    )
+
+    assert _support_function_tp1_recognize([(1, 4), (3, 6)], [A, B, C, D]) == CodegenArrayPermuteDims(
+        CodegenArrayTensorProduct(A * C, B * D), [0, 2, 1, 3])
+
+    assert _support_function_tp1_recognize([(0, 4), (1, 7), (2, 5), (3, 8)], [X, A, B, C, D]) == C*X.T*B*A*D
+
+    assert _support_function_tp1_recognize([(0, 4), (1, 7), (2, 5), (3, 8)], [X, A, B, C, D]) == C*X.T*B*A*D
