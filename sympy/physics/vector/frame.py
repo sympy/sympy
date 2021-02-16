@@ -819,6 +819,7 @@ class ReferenceFrame:
         >>> from sympy.physics.vector import ReferenceFrame
         >>> q1, q2, q3 = symbols('q1, q2, q3')
         >>> N = ReferenceFrame('N')
+        >>> A = ReferenceFrame('A')
         >>> B = ReferenceFrame('B')
         >>> B1 = ReferenceFrame('B1')
         >>> B2 = ReferenceFrame('B2')
@@ -834,8 +835,8 @@ class ReferenceFrame:
 
         >>> B1.orient_axis(N, N.z, q1)
         >>> B2.orient_axis(B1, N.x, q2)
-        >>> B.orient_axis(B2, N.y, q3)
-        >>> B.dcm(N).simplify() # doctest: +SKIP
+        >>> A.orient_axis(B2, N.y, q3)
+        >>> A.dcm(N).simplify() # doctest: +SKIP
         Matrix([
         [ sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1)],
         [-sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1), cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3)],
