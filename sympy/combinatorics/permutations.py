@@ -15,7 +15,7 @@ from sympy.polys.polytools import lcm
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs)
 from mpmath.libmp.libintmath import ifac
-from sympy.multipledispatch import dispatch
+
 
 def _af_rmul(a, b):
     """
@@ -3087,10 +3087,3 @@ class AppliedPermutation(Expr):
 
         obj = super().__new__(cls, perm, x)
         return obj
-
-
-@dispatch(Permutation, Permutation)
-def _eval_is_eq(lhs, rhs):
-    if lhs._size != rhs._size:
-        return None
-    return lhs._array_form == rhs._array_form

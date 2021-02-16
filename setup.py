@@ -81,6 +81,7 @@ modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
     'sympy.assumptions.predicates',
+    'sympy.assumptions.relation',
     'sympy.benchmarks',
     'sympy.calculus',
     'sympy.categories',

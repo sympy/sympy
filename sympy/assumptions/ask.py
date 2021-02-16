@@ -2,6 +2,7 @@
 
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
+from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 from sympy.core import sympify
 from sympy.core.cache import cacheit
 from sympy.core.relational import Relational
@@ -10,7 +11,6 @@ from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent)
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 
 
 # Memoization is necessary for the properties of AssumptionKeys to
@@ -239,6 +239,16 @@ class AssumptionKeys:
         from .predicates.matrices import UnitTriangularPredicate
         return UnitTriangularPredicate()
 
+    @memoize_property
+    def eq(self):
+        from .relation.handlers import EqualityPredicate
+        return EqualityPredicate()
+
+    @memoize_property
+    def ne(self):
+        from .relation.handlers import UnequalityPredicate
+        return UnequalityPredicate()
+
 
 Q = AssumptionKeys()
 
@@ -287,7 +297,7 @@ def _extract_all_facts(expr, symbols):
     for clause in expr.clauses:
         args = []
         for literal in clause:
-            if isinstance(literal.lit, AppliedPredicate):
+            if isinstance(literal.lit, AppliedPredicate) and len(literal.lit.arguments) == 1:
                 if literal.lit.arg in symbols:
                     # Add literal if it has 'symbol' in it
                     args.append(Literal(literal.lit.func, literal.is_Not))

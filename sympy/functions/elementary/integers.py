@@ -1,14 +1,11 @@
-from sympy import Basic, Expr
-
 from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_or
 from sympy.core.numbers import Integer
-from sympy.core.relational import Gt, Lt, Ge, Le, Relational, is_eq
+from sympy.core.relational import Gt, Lt, Ge, Le, Relational
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
-from sympy.multipledispatch import dispatch
 
 ###############################################################################
 ######################### FLOOR and CEILING FUNCTIONS #########################
@@ -213,12 +210,6 @@ class floor(RoundFunction):
         return Lt(self, other, evaluate=False)
 
 
-@dispatch(floor, Expr)
-def _eval_is_eq(lhs, rhs): # noqa:F811
-   return is_eq(lhs.rewrite(ceiling), rhs) or \
-        is_eq(lhs.rewrite(frac),rhs)
-
-
 class ceiling(RoundFunction):
     """
     Ceiling is a univariate function which returns the smallest integer
@@ -347,11 +338,6 @@ class ceiling(RoundFunction):
             return S.true
 
         return Le(self, other, evaluate=False)
-
-
-@dispatch(ceiling, Basic)  # type:ignore
-def _eval_is_eq(lhs, rhs): # noqa:F811
-    return is_eq(lhs.rewrite(floor), rhs) or is_eq(lhs.rewrite(frac),rhs)
 
 
 class frac(Function):
@@ -519,17 +505,3 @@ class frac(Function):
                     return S.true
             if other.is_integer and other.is_positive:
                 return S.true
-
-
-@dispatch(frac, Basic)  # type:ignore
-def _eval_is_eq(lhs, rhs): # noqa:F811
-    if (lhs.rewrite(floor) == rhs) or \
-        (lhs.rewrite(ceiling) == rhs):
-        return True
-    # Check if other < 0
-    if rhs.is_extended_negative:
-        return False
-    # Check if other >= 1
-    res = lhs._value_one_or_more(rhs)
-    if res is not None:
-        return False

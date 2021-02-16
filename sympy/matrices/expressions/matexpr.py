@@ -16,7 +16,6 @@ from sympy.matrices.common import NonSquareMatrixError
 from sympy.simplify import simplify
 from sympy.matrices.matrices import MatrixKind
 from sympy.utilities.misc import filldedent
-from sympy.multipledispatch import dispatch
 
 
 def _sympifyit(arg, retval=None):
@@ -589,16 +588,6 @@ class MatrixExpr(Expr):
         from .applyfunc import ElementwiseApplyFunction
         return ElementwiseApplyFunction(func, self)
 
-@dispatch(MatrixExpr, Expr)
-def _eval_is_eq(lhs, rhs): # noqa:F811
-    return False
-
-@dispatch(MatrixExpr, MatrixExpr)  # type: ignore
-def _eval_is_eq(lhs, rhs): # noqa:F811
-    if lhs.shape != rhs.shape:
-        return False
-    if (lhs - rhs).is_ZeroMatrix:
-        return True
 
 def get_postprocessor(cls):
     def _postprocessor(expr):

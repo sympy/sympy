@@ -5,7 +5,7 @@ import inspect
 from sympy.core.assumptions import ManagedProperties
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
-from sympy.logic.boolalg import Boolean
+from sympy.logic.boolalg import Boolean, false, true
 from sympy.multipledispatch.dispatcher import (
     Dispatcher, MDNotImplementedError, str_signature
 )
@@ -178,6 +178,12 @@ class AppliedPredicate(Boolean):
             i = self.arguments[0]
             if i.is_Boolean or i.is_Symbol or isinstance(i, (Eq, Ne)):
                 return i.binary_symbols
+        if self.function in (Q.eq, Q.ne):
+            if true in self.arguments or false in self.arguments:
+                if self.arguments[0].is_Symbol:
+                    return {self.arguments[0]}
+                elif self.arguments[1].is_Symbol:
+                    return {self.arguments[1]}
         return set()
 
 
@@ -303,7 +309,8 @@ class Predicate(Boolean, metaclass=PredicateMeta):
       ...
     TypeError: <class 'sympy.assumptions.assume.UndefinedPredicate'> cannot be dispatched.
 
-    The tautological predicate ``Q.is_true`` can be used to wrap other objects:
+    The tautological predicate ``Q.is_true`` can be used to wrap other objects.
+
     >>> Q.is_true(x > 1)
     Q.is_true(x > 1)
 

@@ -28,10 +28,11 @@ class Expr(Basic, EvalfMixin):
     used only for argument storage and expression manipulation, i.e.
     pattern matching, substitutions, etc).
 
-    If you want to override the comparisons of expressions:
-    Should use _eval_is_ge for inequality, or _eval_is_eq, with multiple dispatch.
-    _eval_is_ge return true if x >= y, false if x < y, and None if the two types
-    are not comparable or the comparison is indeterminate
+    If you want to override the comparisons of expressions, you should register
+    the handler to multipledispatch functions. For equality, use ``Q.eq``. Detailed
+    explanation is in ``sympy.assumptions`` module. For inequality, use  ``_eval_is_ge``.
+    These functions returns ``True`` if the relation is true, ``False`` if not, and
+    ``None`` if the comparison is indeterminate.
 
     See Also
     ========
