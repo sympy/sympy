@@ -2233,27 +2233,27 @@ class schroder(Function):
         if n > 0:
              if n == 1 or n == 2:
                 return True
-             dp = {}
-             i = 0
-             j = 0
+             recurrence_array = {}
+             row = 0
+             col = 0
              while True:
-                j=0
-                while j <= i:
-                    if j == 0:
-                        dp[str(i)+'-'+str(j)] = 1
-                    elif i == j:
-                        dp[str(i)+'-'+str(j)] = dp[str(i)+'-'+str(j-1)] + \
-                            dp[str(i-1)+'-'+str(j-1)]
-                        if dp[str(i)+'-'+str(j)] == n:
+                col = 0
+                while col <= row:
+                    if col == 0:
+                        recurrence_array[str(row) + '-' + str(col)] = 1
+                    elif row == col:
+                        recurrence_array[str(row) + '-' + str(col)] = recurrence_array[str(row) + '-' + str(col-1)] + \
+                            recurrence_array[str(row-1) + '-' + str(col-1)]
+                        if recurrence_array[str(row) + '-' + str(col)] == n:
                             return True
-                        elif dp[str(i)+'-'+str(j)] > n:
+                        elif recurrence_array[str(row) + '-' + str(col)] > n:
                             return False
 
                     else:
-                        dp[str(i)+'-'+str(j)] = dp[str(i-1)+'-'+str(j)] + \
-                            dp[str(i-1)+'-'+str(j-1)] + dp[str(i)+'-'+str(j-1)]
-                    j +=1
-                i +=1
+                        recurrence_array[str(row)+ '-' + str(col)] = recurrence_array[str(row-1)+ '-' + str(col)] + \
+                            recurrence_array[str(row-1) + '-' + str(col-1)] + recurrence_array[str(row) + '-' + str(col-1)]
+                    col +=1
+                row +=1
 
         else:
             return False
@@ -2261,29 +2261,29 @@ class schroder(Function):
     @staticmethod
     def find_schroder_numbers_in_range(x, y):
         if 0 <= x <= y:
-             dp = {}
-             i = 0
-             j = 0
+             recurrence_array = {}
+             row = 0
+             col = 0
              schroders = []
              if x <= 1:
                  schroders.append(1)
              while True:
-                j=0
-                while j <= i:
-                    if j == 0:
-                        dp[str(i) + '-' + str(j)] = 1
-                    elif i == j:
-                        dp[str(i) + '-'+str(j)] = dp[str(i) + '-' + str(j-1)] \
-                            + dp[str(i-1) + '-' + str(j-1)]
-                        if x <= dp[str(i) + '-' + str(j)] <= y:
-                            schroders.append(dp[str(i) + '-' + str(j)])
-                        elif dp[str(i) + '-' + str(j)] > y:
+                col = 0
+                while col <= row:
+                    if col == 0:
+                        recurrence_array[str(row) + '-' + str(col)] = 1
+                    elif row == col:
+                        recurrence_array[str(row) + '-' + str(col)] = recurrence_array[str(row) + '-' + str(col-1)] + \
+                            recurrence_array[str(row-1) + '-' + str(col-1)]
+                        if x <= recurrence_array[str(row) + '-' + str(col)] <= y:
+                            schroders.append(recurrence_array[str(row) + '-' + str(col)])
+                        elif recurrence_array[str(row) + '-' + str(col)] > y:
                             return schroders
                     else:
-                        dp[str(i) + '-' + str(j)] = dp[str(i-1) + '-' + str(j)] +\
-                            dp[str(i-1) + '-' + str(j-1)] + dp[str(i) + '-' + str(j-1)]
-                    j +=1
-                i +=1
+                        recurrence_array[str(row) + '-' + str(col)] = recurrence_array[str(row-1) + '-' + str(col)] +\
+                            recurrence_array[str(row-1) + '-' + str(col-1)] + recurrence_array[str(row) + '-' + str(col-1)]
+                    col +=1
+                row +=1
 
         else:
             raise ValueError('The provided range is not valid. This condition \
@@ -2297,23 +2297,23 @@ class schroder(Function):
             raise ValueError('The provided number must be a positive integer')
         if n <= 0:
             raise ValueError('The provided number must be a positive integer')
-        dp = {}
-        i = 0
-        j = 0
+        recurrence_array = {}
+        row = 0
+        col = 0
         schroders = []
         schroders.append(1)
-        while i < n:
-            j=0
-            while j <= i:
-                if j == 0:
-                    dp[str(i) + '-' + str(j)] = 1
-                elif i == j:
-                    dp[str(i) + '-' + str(j)] = dp[str(i) + '-' + str(j-1)] + \
-                        dp[str(i-1) + '-' + str(j-1)]
-                    schroders.append(dp[str(i) + '-' + str(j)])
+        while row < n:
+            col = 0
+            while col <= row:
+                if col == 0:
+                    recurrence_array[str(row) + '-' + str(col)] = 1
+                elif row == col:
+                    recurrence_array[str(row) + '-' + str(col)] = recurrence_array[str(row) + '-' + str(col-1)] + \
+                            recurrence_array[str(row-1) + '-' + str(col-1)]
+                    schroders.append(recurrence_array[str(row) + '-' + str(col)])
                 else:
-                    dp[str(i) + '-' + str(j)] = dp[str(i-1) + '-' + str(j)] + \
-                        dp[str(i-1) + '-' + str(j-1)] + dp[str(i) + '-' + str(j-1)]
-                j +=1
-            i +=1
+                    recurrence_array[str(row) + '-' + str(col)] = recurrence_array[str(row-1) + '-' + str(col)] +\
+                            recurrence_array[str(row-1) + '-' + str(col-1)] + recurrence_array[str(row) + '-' + str(col-1)]
+                col +=1
+            row +=1
         return schroders
