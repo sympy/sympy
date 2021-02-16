@@ -36,6 +36,10 @@ class EqualityPredicate(BinaryRelation):
     str_name = latex_name = "="
     handler = Dispatcher("EqualityHandler", doc="Handler for key 'eq'.")
 
+    @property
+    def negated(self):
+        return Q.ne
+
     def eval(self, args, assumptions=True):
 
         # NaN never equals to anything
@@ -172,6 +176,10 @@ class UnequalityPredicate(BinaryRelation):
     str_name = "!="
     latex_name = r"\neq"
     handler = Dispatcher("UnequalityHandler", doc="Handler for key 'ne'.")
+
+    @property
+    def negated(self):
+        return Q.eq
 
     def _simplify_applied(self, lhs, rhs, **kwargs):
         eq = Q.eq(lhs, rhs).simplify(**kwargs)

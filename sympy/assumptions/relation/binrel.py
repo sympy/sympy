@@ -3,7 +3,7 @@ General binary relations.
 """
 
 from sympy import S
-from sympy.assumptions import AppliedPredicate, Predicate
+from sympy.assumptions import AppliedPredicate, ask, Predicate
 from sympy.core.compatibility import ordered
 from sympy.core.kind import BooleanKind
 
@@ -84,6 +84,10 @@ class BinaryRelation(Predicate):
             return self
         return None
 
+    @property
+    def negated(self):
+        return None
+
     def _compare_reflexive(self, lhs, rhs):
         # quick exit for structurally same arguments
         # do not check != here because it cannot catch the
@@ -127,6 +131,15 @@ class BinaryRelation(Predicate):
         lhs, rhs = lhs.simplify(**kwargs), rhs.simplify(**kwargs)
         return self(lhs, rhs)
 
+    def _eval_binary_symbols(self, lhs, rhs):
+        args = (lhs, rhs)
+        if S.true in args or S.false in args:
+            if lhs.is_Symbol:
+                return {lhs}
+            elif rhs.is_Symbol:
+                return {rhs}
+        return set()
+
 
 class AppliedBinaryRelation(AppliedPredicate):
     """
@@ -166,6 +179,13 @@ class AppliedBinaryRelation(AppliedPredicate):
         if not any(side.kind is BooleanKind for side in self.arguments):
             return revfunc(-self.lhs, -self.rhs)
         return self
+
+    @property
+    def negated(self):
+        neg_rel = self.function.negated
+        if neg_rel is None:
+            return ~self
+        return neg_rel(*self.arguments)
 
     @property
     def canonical(self):
@@ -217,6 +237,18 @@ class AppliedBinaryRelation(AppliedPredicate):
         rel = self.simplify()
         return rel.function.eval(rel.arguments, assumptions)
 
-
     def _eval_simplify(self, **kwargs):
         return self.function._simplify_applied(self.lhs, self.rhs, **kwargs)
+
+    def _eval_evalf(self, prec):
+        return self.function(*[s._evalf(prec) for s in self.arguments])
+
+    def __bool__(self):
+        ret = ask(self)
+        if ret is None:
+            raise TypeError("Cannot determine truth value of %s" % self)
+        return ret
+
+    @property
+    def binary_symbols(self):
+        return self.function._eval_binary_symbols(*self.arguments)
