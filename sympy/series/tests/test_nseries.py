@@ -1,6 +1,6 @@
 from sympy import (Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh,
     sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, cot, Integer,
-    PoleError, floor, ceiling, asin, symbols, limit, Piecewise, Eq, sign,
+    PoleError, floor, ceiling, asin, symbols, limit, sign,
     Derivative, S)
 from sympy.abc import x, y, z
 
