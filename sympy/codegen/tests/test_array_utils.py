@@ -478,23 +478,27 @@ def test_recognize_diagonalized_vectors():
     # Transform diagonal operator to contraction:
 
     cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(A, a), (1, 2))
-    assert cg.transform_to_product() == CodegenArrayContraction(CodegenArrayTensorProduct(A, DiagMatrix(a)), (1, 2))
     assert _array_diag2contr_diagmatrix(cg) == CodegenArrayContraction(CodegenArrayTensorProduct(A, OneArray(1), DiagMatrix(a)), (1, 3))
     assert recognize_matrix_expression(cg) == A*DiagMatrix(a)
 
     cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(a, b), (0, 2))
-    assert cg.transform_to_product() == CodegenArrayContraction(CodegenArrayTensorProduct(DiagMatrix(a), b), (0, 2))
+    assert _array_diag2contr_diagmatrix(cg) == CodegenArrayPermuteDims(
+        CodegenArrayContraction(CodegenArrayTensorProduct(DiagMatrix(a), OneArray(1), b), (0, 3)), [1, 2, 0]
+    )
     assert recognize_matrix_expression(cg) == b.T*DiagMatrix(a)
 
     cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(A, a), (0, 2))
-    assert cg.transform_to_product() == CodegenArrayContraction(CodegenArrayTensorProduct(A, DiagMatrix(a)), (0, 2))
+    assert _array_diag2contr_diagmatrix(cg) == CodegenArrayContraction(CodegenArrayTensorProduct(A, OneArray(1), DiagMatrix(a)), (0, 3))
     assert recognize_matrix_expression(cg) == A.T*DiagMatrix(a)
 
     cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(I, x, I1), (0, 2), (3, 5))
-    assert cg.transform_to_product() == CodegenArrayContraction(CodegenArrayTensorProduct(I, DiagMatrix(x), I1), (0, 2))
+    assert _array_diag2contr_diagmatrix(cg) == CodegenArrayContraction(CodegenArrayTensorProduct(I, OneArray(1), I1, DiagMatrix(x)), (0, 5))
+    assert recognize_matrix_expression(cg) == DiagMatrix(x)
 
     cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(I, x, A, B), (1, 2), (5, 6))
-    assert cg.transform_to_product() == CodegenArrayDiagonal(CodegenArrayContraction(CodegenArrayTensorProduct(I, DiagMatrix(x), A, B), (1, 2)), (3, 4))
+    assert _array_diag2contr_diagmatrix(cg) == CodegenArrayDiagonal(CodegenArrayContraction(CodegenArrayTensorProduct(I, OneArray(1), A, B, DiagMatrix(x)), (1, 7)), (5, 6))
+    # TODO: not yet working
+    #  assert recognize_matrix_expression(cg)
 
     cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(x, I1), (1, 2))
     assert isinstance(cg, CodegenArrayDiagonal)
@@ -502,7 +506,7 @@ def test_recognize_diagonalized_vectors():
     assert recognize_matrix_expression(cg) == x
 
     cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(x, I), (0, 2))
-    assert cg.transform_to_product() == CodegenArrayContraction(CodegenArrayTensorProduct(DiagMatrix(x), I), (0, 2))
+    assert _array_diag2contr_diagmatrix(cg) == CodegenArrayContraction(CodegenArrayTensorProduct(OneArray(1), I, DiagMatrix(x)), (1, 3))
     assert recognize_matrix_expression(cg).doit() == DiagMatrix(x)
 
     raises(ValueError, lambda: CodegenArrayDiagonal(x, (1,)))

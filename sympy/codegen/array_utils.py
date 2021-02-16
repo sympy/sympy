@@ -1100,94 +1100,6 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
 
         return _apply_recursively_over_nested_lists(transform, indices)
 
-    def transform_to_product(self):
-        from sympy import ask, Q
-
-        diagonal_indices = self.diagonal_indices
-        if isinstance(self.expr, CodegenArrayContraction):
-            # invert Diagonal and Contraction:
-            diagonal_down = CodegenArrayContraction._push_indices_down(
-                self.expr.contraction_indices,
-                diagonal_indices
-            )
-            newexpr = CodegenArrayDiagonal(
-                self.expr.expr,
-                *diagonal_down
-            ).transform_to_product()
-            contraction_up = newexpr._push_indices_up(
-                diagonal_down,
-                self.expr.contraction_indices
-            )
-            return CodegenArrayContraction(
-                newexpr,
-                *contraction_up
-            )
-        if not isinstance(self.expr, CodegenArrayTensorProduct):
-            return self
-        args = list(self.expr.args)
-
-        # TODO: unify API
-        subranks = [get_rank(i) for i in args]
-        # TODO: unify API
-        mapping = _get_mapping_from_subranks(subranks)
-        new_contraction_indices = []
-        drop_diagonal_indices = []
-
-        for indl, links in enumerate(diagonal_indices):
-            if len(links) > 2:
-                continue
-
-            # Also consider the case of diagonal matrices being contracted:
-            current_dimension = self.expr.shape[links[0]]
-            if current_dimension == 1:
-                drop_diagonal_indices.append(indl)
-                continue
-
-            tuple_links = [mapping[i] for i in links]
-            arg_indices, arg_positions = zip(*tuple_links)
-            if len(arg_indices) != len(set(arg_indices)):
-                # Maybe trace should be supported?
-                raise NotImplementedError()
-
-            args_updates = {}
-            count_nondiagonal = 0
-            last = None
-            expression_is_square = False
-            # Check that all args are vectors:
-            for arg_ind, arg_pos in tuple_links:
-                mat = args[arg_ind]
-                if 1 in mat.shape and mat.shape != (1, 1):
-                    args_updates[arg_ind] = DiagMatrix(mat)
-                    last = arg_ind
-                else:
-                    expression_is_square = True
-                    if not ask(Q.diagonal(mat)):
-                        count_nondiagonal += 1
-                        if count_nondiagonal > 1:
-                            break
-            if count_nondiagonal > 1:
-                continue
-            # TODO: if count_nondiagonal == 0 then the sub-expression can be recognized as HadamardProduct.
-            for arg_ind, newmat in args_updates.items():
-                if not expression_is_square and arg_ind == last:
-                    continue
-                args[arg_ind] = newmat
-            drop_diagonal_indices.append(indl)
-            new_contraction_indices.append(links)
-
-        new_diagonal_indices = CodegenArrayContraction._push_indices_up(
-            new_contraction_indices,
-            [e for i, e in enumerate(diagonal_indices) if i not in drop_diagonal_indices]
-        )
-
-        return CodegenArrayDiagonal(
-            CodegenArrayContraction(
-                CodegenArrayTensorProduct(*args),
-                *new_contraction_indices
-            ),
-            *new_diagonal_indices
-        )
-
     @classmethod
     def _get_positions_shape(cls, shape, diagonal_indices):
         data1 = tuple((i, shp) for i, shp in enumerate(shape) if not any(i in j for j in diagonal_indices))
@@ -1628,6 +1540,7 @@ def _array_diag2contr_diagmatrix(expr: CodegenArrayDiagonal):
         tuple_links = [[mapping[j] for j in i] for i in diag_indices]
         contr_indices = []
         total_rank = get_rank(expr)
+        replaced = [False for arg in args]
         for i, (abs_pos, rel_pos) in enumerate(zip(diag_indices, tuple_links)):
             if len(abs_pos) != 2:
                 continue
@@ -1635,6 +1548,10 @@ def _array_diag2contr_diagmatrix(expr: CodegenArrayDiagonal):
             arg1 = args[pos1_outer]
             arg2 = args[pos2_outer]
             if get_rank(arg1) != 2 or get_rank(arg2) != 2:
+                if replaced[pos1_outer]:
+                    diag_indices[i] = None
+                if replaced[pos2_outer]:
+                    diag_indices[i] = None
                 continue
             pos1_in2 = 1 - pos1_inner
             pos2_in2 = 1 - pos2_inner
@@ -1645,6 +1562,7 @@ def _array_diag2contr_diagmatrix(expr: CodegenArrayDiagonal):
                 total_rank += 1
                 diag_indices[i] = None
                 args[pos1_outer] = OneArray(arg1.shape[pos1_in2])
+                replaced[pos1_outer] = True
             elif arg2.shape[pos2_in2] == 1:
                 darg2 = DiagMatrix(arg2)
                 args.append(darg2)
@@ -1652,6 +1570,7 @@ def _array_diag2contr_diagmatrix(expr: CodegenArrayDiagonal):
                 total_rank += 1
                 diag_indices[i] = None
                 args[pos2_outer] = OneArray(arg2.shape[pos2_in2])
+                replaced[pos2_outer] = True
         diag_indices_new = [i for i in diag_indices if i is not None]
         cumul = list(accumulate([0] + [get_rank(arg) for arg in args]))
         contr_indices2 = [tuple(cumul[a] + b for a, b in i) for i in contr_indices]
