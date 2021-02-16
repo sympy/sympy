@@ -276,6 +276,11 @@ def test_issue_5164():
     assert limit(x**(-0.5), x, 4) == S(4)**(-0.5)
 
 
+def test_issue_5383():
+    func = (1.0 * 1 + 1.0 * x)**(1.0 * 1 / x)
+    assert limit(func, x, 0) == E.n()
+
+
 def test_issue_14793():
     expr = ((x + S(1)/2) * log(x) - x + log(2*pi)/2 - \
         log(factorial(x)) + S(1)/(12*x))*x**3
