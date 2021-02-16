@@ -6,7 +6,7 @@ from sympy.codegen.array_utils import (
     CodegenArrayPermuteDims, CodegenArrayElementwiseAdd, _codegen_array_parse,
     parse_indexed_expression, recognize_matrix_expression,
     parse_matrix_expression, nest_permutation, _remove_trivial_dims, _array_diag2contr_diagmatrix,
-    _support_function_tp1_recognize)
+    _support_function_tp1_recognize, array2matrix)
 from sympy import MatrixSymbol, Sum
 from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -934,6 +934,13 @@ def test_diag2contraction_diagmatrix():
     assert res.shape == cg.shape
     assert res == CodegenArrayContraction(
         CodegenArrayTensorProduct(OneArray(1), M, N, OneArray(1), DiagMatrix(a), DiagMatrix(b.T)), (3, 6), (2, 9))
+
+    I1 = Identity(1)
+    x = MatrixSymbol("x", k, 1)
+    A = MatrixSymbol("A", k, k)
+    cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(x, A.T, I1), (0, 2))
+    assert _array_diag2contr_diagmatrix(cg).shape == cg.shape
+    assert array2matrix(cg).shape == cg.shape
 
 
 def test_recognize_products_support_function():

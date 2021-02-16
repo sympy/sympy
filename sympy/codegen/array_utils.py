@@ -1641,7 +1641,8 @@ def _(expr: CodegenArrayPermuteDims):
         return _a2m_transpose(array2matrix(expr.expr))
     elif isinstance(expr.expr, CodegenArrayTensorProduct):
         ranks = expr.expr.subranks
-        newrange = [expr.permutation(i) for i in range(sum(ranks))]
+        inv_permutation = expr.permutation**(-1)
+        newrange = [inv_permutation(i) for i in range(sum(ranks))]
         newpos = []
         counter = 0
         for rank in ranks:
@@ -1662,7 +1663,7 @@ def _(expr: CodegenArrayPermuteDims):
             else:
                 raise NotImplementedError()
         newargs = [i[0] for i in newargs]
-        return CodegenArrayPermuteDims(_a2m_tensor_product(*scalars, *newargs), newperm)
+        return CodegenArrayPermuteDims(_a2m_tensor_product(*scalars, *newargs), _af_invert(newperm))
     elif isinstance(expr.expr, CodegenArrayContraction):
         mat_mul_lines = array2matrix(expr.expr)
         if not isinstance(mat_mul_lines, CodegenArrayTensorProduct):
