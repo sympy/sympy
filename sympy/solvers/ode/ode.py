@@ -683,7 +683,6 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
 
     free = eq.free_symbols
     cons = lambda s: s.free_symbols.difference(free)
-    InLoop = True
 
     if simplify:
         # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
@@ -694,12 +693,11 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         else:
             sols = solvefunc(eq, func, order, match)
         if iterable(sols):
-            if hint == '2nd_autonomous_nth':
-                for i, arg in enumerate(sols):
-                    if isinstance(arg, BooleanFalse):
-                        sols.pop(i)
-                        InLoop = False
-            rv = [odesimp(eq, s, func, hint) for s in sols]
+            rv = []
+            for s in sols:
+                t = odesimp(eq, s, func, hint)
+                if t is not None:
+                    rv.append(t)
         else:
             rv =  odesimp(eq, sols, func, hint)
     else:
@@ -716,19 +714,6 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
 
     if isinstance(rv, list):
         if simplify:
-            if hint == '2nd_autonomous_nth':
-                len_rv = len(rv)
-                for i, arg in enumerate(rv):
-                    if i >= len_rv:
-                        break
-                    if isinstance(arg, list):
-                        rv.pop(i)
-                        for eqns in arg:
-                            rv.append(eqns)
-                lhs = arg.lhs
-                rhs = arg.rhs
-                if lhs != func and InLoop:
-                    rv[0] = Eq(-lhs, rhs)
             rv = _remove_redundant_solutions(eq, rv, order, func.args[0])
         if len(rv) == 1:
             rv = rv[0]
@@ -2277,6 +2262,33 @@ def odesimp(ode, eq, func, hint):
        \2*x /
 
     """
+
+    if hint == '2nd_autonomous_nth':
+        if isinstance(eq, BooleanFalse):
+            return None
+        else:
+            n = Symbol('n')
+            x = func.args[0]
+            f = func
+            df = Derivative(f, x)
+            for arg in ode.args:
+                if arg.has(df):
+                    if isinstance(arg, Pow):
+                        n = arg.as_base_exp()[1]
+                    else:
+                        n = arg.args[0].as_base_exp()[1]
+                elif not isinstance(arg, Derivative):
+                    n = 0
+            if isinstance(n, Symbol):
+                eq = _handle_Integral(eq, func, hint)
+                return eq
+            elif n == 0:
+                lhs = eq.lhs
+                rhs = eq.rhs
+                C2 = Symbol('C2')
+                if rhs.has(-C2 - x):
+                    eq = Eq(-lhs, -rhs)
+
     x = func.args[0]
     f = func.func
     C1 = get_numbered_constants(eq, num=1)
