@@ -662,11 +662,7 @@ class Abs(Function):
         if direction.has(log(x)):
             direction = direction.subs(log(x), logx)
         s = self.args[0]._eval_nseries(x, n=n, logx=logx)
-        when = Eq(direction, 0)
-        return Piecewise(
-            ((s.subs(direction, 0)), when),
-            (sign(direction)*s, True),
-        )
+        return (sign(direction)*s).expand()
 
     def _sage_(self):
         import sage.all as sage

@@ -2,7 +2,7 @@ from itertools import product as cartes
 
 from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
-    atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I,
+    atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I, E,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
     binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
     acos, erf, erfc, erfi, LambertW, factorial, digamma, uppergamma,
@@ -284,6 +284,11 @@ def test_issue_5164():
     assert limit(x**(-0.5), x, 4) == S(4)**(-0.5)
 
 
+def test_issue_5383():
+    func = (1.0 * 1 + 1.0 * x)**(1.0 * 1 / x)
+    assert limit(func, x, 0) == E.n()
+
+
 def test_issue_14793():
     expr = ((x + S(1)/2) * log(x) - x + log(2*pi)/2 - \
         log(factorial(x)) + S(1)/(12*x))*x**3
@@ -548,6 +553,18 @@ def test_issue_8481():
 
 def test_issue_8730():
     assert limit(subfactorial(x), x, oo) is oo
+
+
+def test_issue_9252():
+    n = Symbol('n', integer=True)
+    c = Symbol('c', positive=True)
+    assert limit((log(n))**(n/log(n)) / (1 + c)**n, n, oo) == 0
+    # limit should depend on the value of c
+    raises(NotImplementedError, lambda: limit((log(n))**(n/log(n)) / c**n, n, oo))
+
+
+def test_issue_9449():
+    assert limit((Abs(x + y) - Abs(x - y))/(2*x), x, 0) == sign(y)
 
 
 def test_issue_9558():
@@ -918,3 +935,7 @@ def test_issue_7535():
     assert oo*(1/sin(oo)) == AccumBounds(-oo, oo)
     assert oo*(1/sin(-oo)) == AccumBounds(-oo, oo)
     assert -oo*(1/sin(oo)) == AccumBounds(-oo, oo)
+
+
+def test_issue_20704():
+    assert limit(x*(Abs(1/x + y) - Abs(y - 1/x))/2, x, 0) == 0
