@@ -235,9 +235,6 @@ class AppliedBinaryRelation(AppliedPredicate):
     def _eval_simplify(self, **kwargs):
         return self.function._simplify_applied(self.lhs, self.rhs, **kwargs)
 
-    def _eval_evalf(self, prec):
-        return self.function(*[s._evalf(prec) for s in self.arguments])
-
     def __bool__(self):
         ret = ask(self)
         if ret is None:
