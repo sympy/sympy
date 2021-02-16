@@ -56,8 +56,9 @@ class logaddexp(Function):
     def _eval_rewrite_as_log(self, x1, x2, **kwargs):
         return _logaddexp(x1, x2)
 
-    def _eval_evalf(self, *args, **kwargs):
-        return self.rewrite(log).evalf(*args, **kwargs)
+    def _eval_evalf_options(self, *args, **kwargs):
+        from sympy.core.evalf import evalf_options
+        return evalf_options(self.rewrite(log), *args, **kwargs)
 
     def _eval_simplify(self, *args, **kwargs):
         a, b = map(lambda x: x.simplify(**kwargs), self.args)
@@ -98,8 +99,9 @@ class logaddexp2(Function):
     def _eval_rewrite_as_log(self, x1, x2, **kwargs):
         return _logaddexp2(x1, x2)
 
-    def _eval_evalf(self, *args, **kwargs):
-        return self.rewrite(log).evalf(*args, **kwargs)
+    def _eval_evalf_options(self, *args, **kwargs):
+        from sympy.core.evalf import evalf_options
+        return evalf_options(self.rewrite(log), *args, **kwargs)
 
     def _eval_simplify(self, *args, **kwargs):
         a, b = map(lambda x: x.simplify(**kwargs).factor(), self.args)

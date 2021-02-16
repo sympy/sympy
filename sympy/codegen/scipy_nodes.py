@@ -27,8 +27,9 @@ class cosm1(Function):
     def _eval_rewrite_as_cos(self, x, **kwargs):
         return _cosm1(x)
 
-    def _eval_evalf(self, *args, **kwargs):
-        return self.rewrite(cos).evalf(*args, **kwargs)
+    def _eval_evalf_options(self, *args, **kwargs):
+        from sympy.core.evalf import evalf_options
+        return evalf_options(self.rewrite(cos), *args, **kwargs)
 
     def _eval_simplify(self, x, **kwargs):
         candidate = _cosm1(x.simplify(**kwargs))

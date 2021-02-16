@@ -1319,6 +1319,13 @@ def _create_evalf_table():
 
 
 def evalf(x, prec, options):
+    """
+    See Also
+    ========
+
+    EvalfMixin
+    """
+
     from sympy import re as re_, im as im_
     try:
         rf = evalf_table[x.func]
@@ -1326,8 +1333,17 @@ def evalf(x, prec, options):
     except KeyError:
         # Fall back to ordinary evalf if possible
         if 'subs' in options:
-            x = x.subs(evalf_subs(prec, options['subs']))
-        xe = x._eval_evalf(prec)
+            try:
+                x = x.subs(evalf_subs(prec, options['subs']))
+            except AttributeError:
+                pass
+        if hasattr(x, '_eval_evalf_options'):
+            # `_eval_evalf_options` have higher priority than `_eval_evalf`
+            xe = x._eval_evalf_options(prec, options)
+            if xe is None:
+                xe = x._eval_evalf(prec)
+        else:
+            xe = x._eval_evalf(prec)
         if xe is None:
             raise NotImplementedError
         as_real_imag = getattr(xe, "as_real_imag", None)
@@ -1375,9 +1391,149 @@ def evalf(x, prec, options):
         check_target(x, r, prec)
     return r
 
+def evalf_options(x, prec, options):
+    """Handles `evalf` and other helper functions for `.evalf`."""
+    from sympy import Float
+    try:
+        result = evalf(x, prec + 4, options)
+    except NotImplementedError:
+        # First try with '_eval_evalf_options'
+        v = x._eval_evalf_options(prec, options)
+        if v is None:
+            # If '_eval_evalf_options' is not defined in subclass fall back to `eval_evalf`
+            if hasattr(x, 'subs') and 'subs' in options:
+                # Make `_eval_evalf` work with `subs`
+                v = x.subs(options['subs'])._eval_evalf(prec)
+            else:
+                v = x._eval_evalf(prec)
+        if v is None:
+            return x
+        elif not v.is_number:
+            return v
+        try:
+            # If the result is numerical, normalize it
+            result = evalf(v, prec, options)
+        except NotImplementedError:
+            # Probably contains symbols or unknown functions
+            return v
+    re, im, re_acc, im_acc = result
+    if re:
+        p = max(min(prec, re_acc), 1)
+        re = Float._new(re, p)
+    else:
+        re = S.Zero
+    if im:
+        p = max(min(prec, im_acc), 1)
+        im = Float._new(im, p)
+        return re + im*S.ImaginaryUnit
+    else:
+        return re
 
 class EvalfMixin:
-    """Mixin class adding evalf capabililty."""
+    """Mixin class adding evalf capabililty.
+
+    Notes
+    ======
+
+    1) Inherit `EvalfMixin` to add evalf capability.
+
+    2) Override `_eval_evalf_options` and recurse using `.evalf_options` .
+
+    3) Avoid using `._evalf` and `_eval_evalf` because they lack precision
+        and ignores optional parameters.
+
+    4) `_eval_evalf` calls `_eval_evalf_options` by default with default optional parameters.
+
+    5) `._evalf` and `_eval_evalf` are depricated .
+
+    6) If a class has both `_eval_evalf` and `_eval_evalf_options` defined then version 1.7
+        and below version would use `_eval_evalf` but newer versions would first try with
+        `_eval_evalf_options`. If `_eval_evalf_options` returns None(most probably function
+        not overridden) then `evalf` would revert back to `_eval_evalf`, if present, for that
+        particulat step.
+
+    Warnings
+    ========
+
+    For Sympy's older version (<=1.7) `._eval_evalf` is broken and may give AttributeError. It's
+    best to use `_eval_evalf_options`
+
+    Examples
+    ========
+
+    >>> from sympy import pi, Basic, Float, Expr
+    >>> from sympy.core.evalf import EvalfMixin, evalf_options, prec_to_dps
+
+    Inheriting EvalfMixin to a  non-Basic subclass to make `.evalf` work
+
+    >>> class A(EvalfMixin):
+    ...     is_number = False
+    ...     def func(self):
+    ...         return A
+    ...     def __init__(self, a):
+    ...         self.val = a
+    ...     def _eval_evalf_options(self, prec, options):
+    ...         return evalf_options(self.val, prec, options)
+    ...
+
+    >>> a = A(pi)
+    >>> a.evalf(2)
+    3.1
+
+    Inheriting EvalfMixin to a Basic subclass to make `.evalf` work
+
+    >>> class X(EvalfMixin, Basic):
+    ...    def _eval_evalf_options(self, prec,  options):
+    ...        return Float('2.0')
+    ...
+
+    >>> X().evalf(2)
+    2.0
+
+    Using `.evalf` with Expr subclass
+
+    >>> class Y(Expr):
+    ...     def __init__(self, a):
+    ...         self.val = a
+    ...     def _eval_evalf_options(self, prec,  options):
+    ...         return evalf_options(self.val, prec, options)
+    ...
+
+    >>> Y(pi).evalf(2)
+    3.1
+
+    For Sympy version 1.7 and below , `evalf_options` and `_eval_evalf_options` won't work.
+
+    For older versions the appropriate way to use `.evalf` is to define `_eval_evalf` and
+    make it recurse on `.evalf()`.
+
+    >>> class Z(Expr):
+    ...     def __init__(self, a):
+    ...         self.arg = a
+    ...
+    ...     def _eval_evalf(self, prec):
+    ...         return self.arg.evalf(n=prec_to_dps(prec))
+    ...
+
+    >>> Z(pi).evalf(2)
+    3.1
+
+    For a class to work with both newer and older versions of Sympy it is best to define
+    both `_eval_evalf_options` and `_eval_evalf` in class.
+    `_eval_evalf_options` would have higher priority.
+
+    >>> class B(Expr):
+    ...     def _eval_evalf(self, prec):
+    ...         return Float('1')
+    ...
+    ...     def _eval_evalf_options(self, prec,  options):
+    ...         return Float('0')
+    ...
+
+    >>> B().evalf(1)
+    0
+
+    """
 
     __slots__ = ()  # type: Tuple[str, ...]
 
@@ -1446,7 +1602,7 @@ class EvalfMixin:
         >>> (x + y - z).evalf(subs=values)
         1.00000000000000
         """
-        from sympy import Float, Number
+        from sympy import Number
         n = n if n is not None else 15
 
         if subs and is_sequence(subs):
@@ -1459,7 +1615,6 @@ class EvalfMixin:
             m = _mag(rv)
             rv = rv.round(1 - m)
             return rv
-
         if not evalf_table:
             _create_evalf_table()
         prec = dps_to_prec(n)
@@ -1469,47 +1624,37 @@ class EvalfMixin:
             options['subs'] = subs
         if quad is not None:
             options['quad'] = quad
-        try:
-            result = evalf(self, prec + 4, options)
-        except NotImplementedError:
-            # Fall back to the ordinary evalf
-            if hasattr(self, 'subs') and subs is not None:  # issue 20291
-                v = self.subs(subs)._eval_evalf(prec)
-            else:
-                v = self._eval_evalf(prec)
-            if v is None:
-                return self
-            elif not v.is_number:
-                return v
-            try:
-                # If the result is numerical, normalize it
-                result = evalf(v, prec, options)
-            except NotImplementedError:
-                # Probably contains symbols or unknown functions
-                return v
-        re, im, re_acc, im_acc = result
-        if re:
-            p = max(min(prec, re_acc), 1)
-            re = Float._new(re, p)
-        else:
-            re = S.Zero
-        if im:
-            p = max(min(prec, im_acc), 1)
-            im = Float._new(im, p)
-            return re + im*S.ImaginaryUnit
-        else:
-            return re
+        return evalf_options(self, prec, options)
 
     n = evalf
 
     def _evalf(self, prec):
-        """Helper for evalf. Does the same thing but takes binary precision"""
+        """Helper for evalf. Does the same thing but takes binary precision.
+
+        .. deprecated:: 1.7.1
+            Use `_eval_evalf_options` instead.
+        """
         r = self._eval_evalf(prec)
         if r is None:
             r = self
         return r
 
     def _eval_evalf(self, prec):
+        """ Use only when you have to call mpmath related functions.
+            Using `_eval_evalf_options` in considered the best way.
+            It calls `_eval_evalf_options` by default with default optional
+                parameters if not defined.
+        """
+
+        options = {'maxprec': max(prec, int(100*LG10)), 'chop': False,
+                'strict': False, 'verbose': False}
+        return self._eval_evalf_options(prec, options)
+
+    def _eval_evalf_options(self, prec, options):
+        """ Helper Function needed to be defined in sub-class .
+        Should recurse on `_evalf_options`.
+        """
+
         return
 
     def _to_mpmath(self, prec, allow_ints=True):
