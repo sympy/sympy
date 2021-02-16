@@ -9,7 +9,6 @@ from sympy.testing.pytest import raises
 
 c = speed_of_light.convert_to(m/s)
 
-
 def test_twave():
     A1, phi1, A2, phi2, f = symbols('A1, phi1, A2, phi2, f')
     n = Symbol('n')  # Refractive index
