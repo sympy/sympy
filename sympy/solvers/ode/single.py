@@ -852,9 +852,9 @@ class SecondAutonomousNth(SinglePatternODESolver):
         c = C1*Integral(exp(Integral(a, v)), (v, fx))
         d = Integral((C1 + (n - 2)*Integral(a, v))**(1/(n - 2)), (v, fx))
         e = d.subs(n, 0)
-        f = d.subs(n, 1)
         from sympy import Piecewise
-        return [Eq(Piecewise((-e, Eq(n, 0))), -C2 - x), Eq(Piecewise((f, Eq(1/(n - 2), -1)), (c, Eq(n, 2)), (-e, Eq(n, 0)), (d, True)), C2 + x)]
+        sol = Piecewise((e, Eq(n, 0)), (c, Eq(n, 2)), (d, True))
+        return [Eq(Piecewise((-e, Eq(n, 0))), C2 + x), Eq(sol, C2 + x)]
 
 
 # Avoid circular import:

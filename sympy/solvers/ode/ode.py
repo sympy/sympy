@@ -2262,32 +2262,22 @@ def odesimp(ode, eq, func, hint):
        \2*x /
 
     """
-
+    if isinstance(eq, BooleanFalse):
+        return None
     if hint == '2nd_autonomous_nth':
-        if isinstance(eq, BooleanFalse):
-            return None
-        else:
-            n = Symbol('n')
-            x = func.args[0]
-            f = func
-            df = Derivative(f, x)
-            for arg in ode.args:
-                if arg.has(df):
-                    if isinstance(arg, Pow):
-                        n = arg.as_base_exp()[1]
-                    else:
-                        n = arg.args[0].as_base_exp()[1]
-                elif not isinstance(arg, Derivative):
-                    n = 0
-            if isinstance(n, Symbol):
-                eq = _handle_Integral(eq, func, hint)
-                return eq
-            elif n == 0:
-                lhs = eq.lhs
-                rhs = eq.rhs
-                C2 = Symbol('C2')
-                if rhs.has(-C2 - x):
-                    eq = Eq(-lhs, -rhs)
+        n = Symbol('n')
+        f = func
+        x = f.args[0]
+        df = Derivative(f, x)
+        for arg in ode.args:
+            if arg.has(df):
+                if isinstance(arg, Pow):
+                    n = arg.as_base_exp()[1]
+                else:
+                    n = arg.args[0].as_base_exp()[1]
+        if isinstance(n, Symbol):
+            eq = _handle_Integral(eq, func, hint)
+            return eq
 
     x = func.args[0]
     f = func.func
