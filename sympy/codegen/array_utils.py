@@ -6,7 +6,7 @@ from itertools import accumulate
 from collections import defaultdict
 
 from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S, Integer, diagonalize_vector, DiagMatrix, ZeroMatrix, Pow, \
-    MatPow, HadamardProduct, HadamardPower
+    MatPow, HadamardProduct, HadamardPower, tensorcontraction, tensorproduct, permutedims, tensordiagonal
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import _af_invert
 from sympy.core.basic import Basic
@@ -547,6 +547,9 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         args, dlinks = _get_contraction_links([self], self.subranks, *self.contraction_indices)
         return dlinks
 
+    def as_explicit(self):
+        return tensorcontraction(self.expr.as_explicit(), *self.contraction_indices)
+
 
 def get_shape(expr):
     if hasattr(expr, "shape"):
@@ -610,6 +613,9 @@ class CodegenArrayTensorProduct(_CodegenArrayAbstract):
         args = [i for arg in args for i in (arg.args if isinstance(arg, cls) else [arg])]
         return args
 
+    def as_explicit(self):
+        return tensorproduct(*[arg.as_explicit() if hasattr(arg, "as_explicit") else arg for arg in self.args])
+
 
 class CodegenArrayElementwiseAdd(_CodegenArrayAbstract):
     r"""
@@ -654,6 +660,9 @@ class CodegenArrayElementwiseAdd(_CodegenArrayAbstract):
             else:
                 new_args.append(arg)
         return new_args
+
+    def as_explicit(self):
+        return Add.fromiter([arg.as_explicit() for arg in self.args])
 
 
 class CodegenArrayPermuteDims(_CodegenArrayAbstract):
@@ -947,6 +956,9 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
             return CodegenArrayElementwiseAdd(*[CodegenArrayPermuteDims(arg, permutation) for arg in expr.args])
         return None
 
+    def as_explicit(self):
+        return permutedims(self.expr.as_explicit(), self.permutation)
+
 
 def nest_permutation(expr):
     if isinstance(expr, CodegenArrayPermuteDims):
@@ -1109,6 +1121,9 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
         positions = pos1 + pos2
         shape = shp1 + shp2
         return positions, shape
+
+    def as_explicit(self):
+        return tensordiagonal(self.expr.as_explicit(), *self.diagonal_indices)
 
 
 def get_rank(expr):

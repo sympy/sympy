@@ -1,7 +1,7 @@
 import operator
 from functools import reduce
 import itertools
-from sympy import Expr, ImmutableDenseNDimArray, S, Symbol
+from sympy import Expr, ImmutableDenseNDimArray, S, Symbol, Integer
 from sympy.core.sympify import _sympify
 
 
@@ -34,6 +34,8 @@ class ArraySymbol(_ArrayExpr):
         return ArrayElement(self, item)
 
     def as_explicit(self):
+        if any(not isinstance(i, (int, Integer)) for i in self.shape):
+            raise ValueError("cannot express explicit array with symbolic shape")
         data = [self[i] for i in itertools.product(*[range(j) for j in self.shape])]
         return ImmutableDenseNDimArray(data).reshape(*self.shape)
 
