@@ -18,7 +18,7 @@ from sympy.matrices.common import MatrixCommon
 from sympy.matrices.expressions import (MatAdd, MatMul, Trace, Transpose)
 from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
 from sympy.tensor.array import NDimArray
-from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray
+from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, _ArrayExpr
 
 
 class _CodegenArrayAbstract(Basic):
@@ -1100,94 +1100,6 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
 
         return _apply_recursively_over_nested_lists(transform, indices)
 
-    def transform_to_product(self):
-        from sympy import ask, Q
-
-        diagonal_indices = self.diagonal_indices
-        if isinstance(self.expr, CodegenArrayContraction):
-            # invert Diagonal and Contraction:
-            diagonal_down = CodegenArrayContraction._push_indices_down(
-                self.expr.contraction_indices,
-                diagonal_indices
-            )
-            newexpr = CodegenArrayDiagonal(
-                self.expr.expr,
-                *diagonal_down
-            ).transform_to_product()
-            contraction_up = newexpr._push_indices_up(
-                diagonal_down,
-                self.expr.contraction_indices
-            )
-            return CodegenArrayContraction(
-                newexpr,
-                *contraction_up
-            )
-        if not isinstance(self.expr, CodegenArrayTensorProduct):
-            return self
-        args = list(self.expr.args)
-
-        # TODO: unify API
-        subranks = [get_rank(i) for i in args]
-        # TODO: unify API
-        mapping = _get_mapping_from_subranks(subranks)
-        new_contraction_indices = []
-        drop_diagonal_indices = []
-
-        for indl, links in enumerate(diagonal_indices):
-            if len(links) > 2:
-                continue
-
-            # Also consider the case of diagonal matrices being contracted:
-            current_dimension = self.expr.shape[links[0]]
-            if current_dimension == 1:
-                drop_diagonal_indices.append(indl)
-                continue
-
-            tuple_links = [mapping[i] for i in links]
-            arg_indices, arg_positions = zip(*tuple_links)
-            if len(arg_indices) != len(set(arg_indices)):
-                # Maybe trace should be supported?
-                raise NotImplementedError()
-
-            args_updates = {}
-            count_nondiagonal = 0
-            last = None
-            expression_is_square = False
-            # Check that all args are vectors:
-            for arg_ind, arg_pos in tuple_links:
-                mat = args[arg_ind]
-                if 1 in mat.shape and mat.shape != (1, 1):
-                    args_updates[arg_ind] = DiagMatrix(mat)
-                    last = arg_ind
-                else:
-                    expression_is_square = True
-                    if not ask(Q.diagonal(mat)):
-                        count_nondiagonal += 1
-                        if count_nondiagonal > 1:
-                            break
-            if count_nondiagonal > 1:
-                continue
-            # TODO: if count_nondiagonal == 0 then the sub-expression can be recognized as HadamardProduct.
-            for arg_ind, newmat in args_updates.items():
-                if not expression_is_square and arg_ind == last:
-                    continue
-                args[arg_ind] = newmat
-            drop_diagonal_indices.append(indl)
-            new_contraction_indices.append(links)
-
-        new_diagonal_indices = CodegenArrayContraction._push_indices_up(
-            new_contraction_indices,
-            [e for i, e in enumerate(diagonal_indices) if i not in drop_diagonal_indices]
-        )
-
-        return CodegenArrayDiagonal(
-            CodegenArrayContraction(
-                CodegenArrayTensorProduct(*args),
-                *new_contraction_indices
-            ),
-            *new_diagonal_indices
-        )
-
     @classmethod
     def _get_positions_shape(cls, shape, diagonal_indices):
         data1 = tuple((i, shp) for i, shp in enumerate(shape) if not any(i in j for j in diagonal_indices))
@@ -1530,7 +1442,7 @@ def _a2m_tensor_product(*args):
     scalars = []
     arrays = []
     for arg in args:
-        if isinstance(arg, (MatrixExpr, _CodegenArrayAbstract)):
+        if isinstance(arg, (MatrixExpr, _ArrayExpr, _CodegenArrayAbstract)):
             arrays.append(arg)
         else:
             scalars.append(arg)
@@ -1563,70 +1475,61 @@ def _a2m_transpose(arg):
     if isinstance(arg, _CodegenArrayAbstract):
         return CodegenArrayPermuteDims(arg, [1, 0])
     else:
-        return Transpose(arg)
+        return Transpose(arg).doit()
 
 
 def _support_function_tp1_recognize(contraction_indices, args):
-    if not isinstance(args, list):
-        args = [args]
     subranks = [get_rank(i) for i in args]
     coeff = reduce(lambda x, y: x*y, [arg for arg, srank in zip(args, subranks) if srank == 0], S.One)
     mapping = _get_mapping_from_subranks(subranks)
-    reverse_mapping = {v: k for k, v in mapping.items()}
-    args, dlinks = _get_contraction_links(args, subranks, *contraction_indices)
-    flatten_contractions = [j for i in contraction_indices for j in i]
-    total_rank = sum(subranks)
-    # TODO: turn `free_indices` into a list?
-    free_indices = {i: i for i in range(total_rank) if i not in flatten_contractions}
-    return_list = []
-    while free_indices or dlinks:
-        if free_indices:
-            first_index, starting_argind = min(free_indices.items(), key=lambda x: x[1])
-            free_indices.pop(first_index)
-            starting_argind, starting_pos = mapping[starting_argind]
+    new_contraction_indices = list(contraction_indices)
+    newargs = args[:]  # make a copy of the list
+    removed = [None for i in newargs]
+    cumul = list(accumulate([0] + [get_rank(arg) for arg in args]))
+    new_perms = [list(range(cumul[i], cumul[i+1])) for i, arg in enumerate(args)]
+    for pi, contraction_pair in enumerate(contraction_indices):
+        if len(contraction_pair) != 2:
+            continue
+        i1, i2 = contraction_pair
+        a1, e1 = mapping[i1]
+        a2, e2 = mapping[i2]
+        while removed[a1] is not None:
+            a1, e1 = removed[a1]
+        while removed[a2] is not None:
+            a2, e2 = removed[a2]
+        if a1 == a2:
+            trace_arg = newargs[a1]
+            newargs[a1] = Trace(trace_arg)._normalize()
+            new_contraction_indices[pi] = None
+            continue
+        if not isinstance(newargs[a1], MatrixExpr) or not isinstance(newargs[a2], MatrixExpr):
+            continue
+        arg1 = newargs[a1]
+        arg2 = newargs[a2]
+        if (e1 == 1 and e2 == 1) or (e1 == 0 and e2 == 0):
+            arg2 = Transpose(arg2)
+        if e1 == 1:
+            argnew = arg1*arg2
         else:
-            # Maybe a Trace
-            starting_argind = min(dlinks)
-            starting_pos = 0
-        current_argind, current_pos = starting_argind, starting_pos
-        matmul_args = []
-        last_index = None
-        while True:
-            elem = array2matrix(args[current_argind])
-            if current_pos == 1:
-                elem = _a2m_transpose(elem)
-            matmul_args.append(elem)
-            other_pos = 1 - current_pos
-            if current_argind not in dlinks:
-                other_absolute = reverse_mapping[current_argind, other_pos]
-                free_indices.pop(other_absolute, None)
-                break
-            link_dict = dlinks.pop(current_argind)
-            if other_pos not in link_dict:
-                if free_indices:
-                    last_index = [i for i, j in free_indices.items() if mapping[j] == (current_argind, other_pos)][0]
-                else:
-                    last_index = None
-                break
-            if len(link_dict) > 2:
-                raise NotImplementedError("not a matrix multiplication line")
-            # Get the last element of `link_dict` as the next link. The last
-            # element is the correct start for trace expressions:
-            current_argind, current_pos = link_dict[other_pos]
-            if current_argind == starting_argind:
-                # This is a trace:
-                if len(matmul_args) > 1:
-                    matmul_args = [_a2m_trace(_a2m_mul(*matmul_args))]
-                elif args[current_argind].shape != (1, 1):
-                    matmul_args = [_a2m_trace(*matmul_args)]
-                break
-        dlinks.pop(starting_argind, None)
-        free_indices.pop(last_index, None)
-        return_list.append(_a2m_mul(*matmul_args))
-    if coeff != 1:
-        # Let's inject the coefficient:
-        return_list[0] = coeff*return_list[0]
-    return _a2m_tensor_product(*return_list)
+            argnew = arg2*arg1
+        removed[a2] = a1, e1
+        new_perms[a1][e1] = new_perms[a2][1 - e2]
+        new_perms[a2] = None
+        newargs[a1] = argnew
+        newargs[a2] = None
+        new_contraction_indices[pi] = None
+    new_contraction_indices = [i for i in new_contraction_indices if i is not None]
+    newargs2 = [arg for arg in newargs if arg is not None]
+    if len(newargs2) == 0:
+        return coeff
+    tp = _a2m_tensor_product(*newargs2)
+    tc = CodegenArrayContraction(tp, *new_contraction_indices)
+    new_perms2 = CodegenArrayContraction._push_indices_up(contraction_indices, [i for i in new_perms if i is not None])
+    permutation = _af_invert([j for i in new_perms2 for j in i if j is not None])
+    if permutation == [1, 0] and len(newargs2) == 1:
+        return Transpose(newargs2[0]).doit()
+    tperm = CodegenArrayPermuteDims(tc, permutation)
+    return tperm
 
 
 def _array_diag2contr_diagmatrix(expr: CodegenArrayDiagonal):
@@ -1637,6 +1540,7 @@ def _array_diag2contr_diagmatrix(expr: CodegenArrayDiagonal):
         tuple_links = [[mapping[j] for j in i] for i in diag_indices]
         contr_indices = []
         total_rank = get_rank(expr)
+        replaced = [False for arg in args]
         for i, (abs_pos, rel_pos) in enumerate(zip(diag_indices, tuple_links)):
             if len(abs_pos) != 2:
                 continue
@@ -1644,6 +1548,10 @@ def _array_diag2contr_diagmatrix(expr: CodegenArrayDiagonal):
             arg1 = args[pos1_outer]
             arg2 = args[pos2_outer]
             if get_rank(arg1) != 2 or get_rank(arg2) != 2:
+                if replaced[pos1_outer]:
+                    diag_indices[i] = None
+                if replaced[pos2_outer]:
+                    diag_indices[i] = None
                 continue
             pos1_in2 = 1 - pos1_inner
             pos2_in2 = 1 - pos2_inner
@@ -1654,6 +1562,7 @@ def _array_diag2contr_diagmatrix(expr: CodegenArrayDiagonal):
                 total_rank += 1
                 diag_indices[i] = None
                 args[pos1_outer] = OneArray(arg1.shape[pos1_in2])
+                replaced[pos1_outer] = True
             elif arg2.shape[pos2_in2] == 1:
                 darg2 = DiagMatrix(arg2)
                 args.append(darg2)
@@ -1661,6 +1570,7 @@ def _array_diag2contr_diagmatrix(expr: CodegenArrayDiagonal):
                 total_rank += 1
                 diag_indices[i] = None
                 args[pos2_outer] = OneArray(arg2.shape[pos2_in2])
+                replaced[pos2_outer] = True
         diag_indices_new = [i for i in diag_indices if i is not None]
         cumul = list(accumulate([0] + [get_rank(arg) for arg in args]))
         contr_indices2 = [tuple(cumul[a] + b for a, b in i) for i in contr_indices]
@@ -1707,7 +1617,7 @@ def _(expr: CodegenArrayContraction):
             return ret
         assert isinstance(newexpr, CodegenArrayContraction)
         ret = _support_function_tp1_recognize(contraction_indices, list(newexpr.expr.args))
-        return ret
+        return array2matrix(ret)
     elif not isinstance(subexpr, _CodegenArrayAbstract):
         ret = array2matrix(subexpr)
         if isinstance(ret, MatrixExpr):
@@ -1719,7 +1629,7 @@ def _(expr: CodegenArrayContraction):
 
 @array2matrix.register(CodegenArrayDiagonal)
 def _(expr: CodegenArrayDiagonal):
-    pexpr = expr.transform_to_product()
+    pexpr = _array_diag2contr_diagmatrix(expr)
     if expr == pexpr:
         return expr
     return array2matrix(pexpr)
@@ -1731,7 +1641,8 @@ def _(expr: CodegenArrayPermuteDims):
         return _a2m_transpose(array2matrix(expr.expr))
     elif isinstance(expr.expr, CodegenArrayTensorProduct):
         ranks = expr.expr.subranks
-        newrange = [expr.permutation(i) for i in range(sum(ranks))]
+        inv_permutation = expr.permutation**(-1)
+        newrange = [inv_permutation(i) for i in range(sum(ranks))]
         newpos = []
         counter = 0
         for rank in ranks:
@@ -1752,7 +1663,7 @@ def _(expr: CodegenArrayPermuteDims):
             else:
                 raise NotImplementedError()
         newargs = [i[0] for i in newargs]
-        return CodegenArrayPermuteDims(_a2m_tensor_product(*scalars, *newargs), newperm)
+        return CodegenArrayPermuteDims(_a2m_tensor_product(*scalars, *newargs), _af_invert(newperm))
     elif isinstance(expr.expr, CodegenArrayContraction):
         mat_mul_lines = array2matrix(expr.expr)
         if not isinstance(mat_mul_lines, CodegenArrayTensorProduct):
@@ -1804,6 +1715,9 @@ def _(expr: CodegenArrayTensorProduct):
     prev_i = None
     for i, arg in enumerate(expr.args):
         current_range = list(range(cumul[i], cumul[i+1]))
+        if isinstance(arg, OneArray):
+            removed.extend(current_range)
+            continue
         if not isinstance(arg, (MatrixExpr, MatrixCommon)):
             newargs.append(arg)
             continue
@@ -1885,12 +1799,16 @@ def _(expr: CodegenArrayElementwiseAdd):
 @_remove_trivial_dims.register(CodegenArrayPermuteDims)
 def _(expr: CodegenArrayPermuteDims):
     subexpr, subremoved = _remove_trivial_dims(expr.expr)
-    p = _af_invert(expr.permutation.array_form)
+    p = expr.permutation.array_form
+    pinv = _af_invert(expr.permutation.array_form)
     shift = list(accumulate([1 if i in subremoved else 0 for i in range(len(p))]))
-    premoved = [expr.permutation(i) for i in subremoved]
+    premoved = [pinv[i] for i in subremoved]
     p2 = [e - shift[e] for i, e in enumerate(p) if e not in subremoved]
     # TODO: check if subremoved should be permuted as well...
-    return CodegenArrayPermuteDims(subexpr, p2), sorted(premoved)
+    newexpr = CodegenArrayPermuteDims(subexpr, p2)
+    if newexpr != expr:
+        newexpr = array2matrix(newexpr)
+    return newexpr, sorted(premoved)
 
 
 @_remove_trivial_dims.register(CodegenArrayContraction)
