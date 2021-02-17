@@ -1864,8 +1864,7 @@ def _get_examples_ode_sol_lienard():
             'examples': {
     'lienard_01': {
         'eq': f(x).diff(x, x) + 2/x*f(x).diff(x) + f(x),
-        'sol': [Eq(f(x), exp(C2)/(x*sqrt(tan(C1 + x)**2 + 1)))],
-        'simplify_flag': False,
+        'sol': [Eq(f(x), C1/(x*sqrt(tan(C2 + x)**2 + 1)))],
     }
     }
     }

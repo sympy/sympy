@@ -884,9 +884,9 @@ class Lienard(SinglePatternODESolver):
     >>> x = Symbol('x')
 
     >>> eq = f(x).diff(x, x) + 2/x*f(x).diff(x) + f(x)
-    >>> sol = dsolve(eq, hint='lienard',simplify=False)
+    >>> sol = dsolve(eq, hint='lienard')
     >>> print(sol)
-    Eq(f(x), exp(C2)/(x*sqrt(tan(C1 + x)**2 + 1)))
+    Eq(f(x), C1/(x*sqrt(tan(C2 + x)**2 + 1)))
 
     References
     ==========
@@ -914,8 +914,10 @@ class Lienard(SinglePatternODESolver):
         x = self.ode_problem.sym
         (C1, C2) = self.ode_problem.get_numbered_constants(num=2)
         eq = Derivative(fx, x) + fx**2 + a*fx + 1
-        sol =  dsolve(eq)
-        b = exp(Integral(sol.rhs, x) + C2)
+        sol =  dsolve(eq).rhs
+        from sympy import simplify
+        sol = simplify(sol)
+        b = exp(Integral(sol, x) + C2)
         return [Eq(fx, b)]
 
 
