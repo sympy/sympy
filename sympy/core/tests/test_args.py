@@ -9,6 +9,7 @@ import re
 
 from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
                    Eq, log, Function, Rational)
+from sympy.codegen.array_utils import ArrayElementwiseApplyFunc
 
 from sympy.testing.pytest import XFAIL, SKIP
 
@@ -4882,6 +4883,12 @@ def test_sympy__codegen__array_utils__CodegenArrayPermuteDims():
     from sympy.codegen.array_utils import CodegenArrayPermuteDims
     A = MatrixSymbol("A", 4, 4)
     assert _test_args(CodegenArrayPermuteDims(A, (1, 0)))
+
+
+def test_sympy__codegen__array_utils__ArrayElementwiseApplyFunc():
+    from sympy.tensor.array.expressions.array_expressions import ArraySymbol
+    A = ArraySymbol("A", 4)
+    assert _test_args(ArrayElementwiseApplyFunc(exp, A))
 
 
 def test_sympy__codegen__ast__Assignment():
