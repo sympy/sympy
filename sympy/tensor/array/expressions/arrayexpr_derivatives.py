@@ -3,10 +3,11 @@ from functools import reduce, singledispatch
 
 from sympy import Expr, Transpose, Identity, MatrixSymbol, S, Inverse, MatrixExpr, HadamardProduct
 from sympy.codegen.array_utils import CodegenArrayElementwiseAdd, CodegenArrayPermuteDims, CodegenArrayContraction, \
-    get_shape, CodegenArrayTensorProduct, parse_matrix_expression, CodegenArrayDiagonal, get_rank
+    get_shape, CodegenArrayTensorProduct, parse_matrix_expression, CodegenArrayDiagonal, get_rank, \
+    ArrayElementwiseApplyFunc
 from sympy.combinatorics.permutations import _af_invert
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
-from sympy.tensor.array.expressions.array_expressions import ZeroArray
+from sympy.tensor.array.expressions.array_expressions import ZeroArray, ArraySymbol
 
 
 @singledispatch
@@ -47,6 +48,16 @@ def _(expr: CodegenArrayTensorProduct, x: Expr):
         return S.Zero
     else:
         return CodegenArrayElementwiseAdd(*addend_list)
+
+
+@array_derive.register(ArraySymbol)
+def _(expr: ArraySymbol, x: Expr):
+    if expr == x:
+        return CodegenArrayPermuteDims(
+            CodegenArrayTensorProduct.fromiter(Identity(i) for i in expr.shape),
+            [2*i for i in range(len(expr.shape))] + [2*i+1 for i in range(len(expr.shape))]
+        )
+    return ZeroArray(*(x.shape + expr.shape))
 
 
 @array_derive.register(MatrixSymbol)
@@ -97,6 +108,21 @@ def _(expr: ElementwiseApplyFunction, x: Expr):
         tp, (0, 4), (1, 5)
     )
     return td
+
+
+@array_derive.register(ArrayElementwiseApplyFunc)
+def _(expr: ArrayElementwiseApplyFunc, x: Expr):
+    fdiff = expr._get_function_fdiff()
+    subexpr = expr.expr
+    dsubexpr = array_derive(subexpr, x)
+    tp = CodegenArrayTensorProduct(
+        dsubexpr,
+        ArrayElementwiseApplyFunc(fdiff, subexpr)
+    )
+    b = get_rank(x)
+    c = get_rank(expr)
+    diag_indices = [(b + i, b + c + i) for i in range(c)]
+    return CodegenArrayDiagonal(tp, *diag_indices)
 
 
 @array_derive.register(MatrixExpr)

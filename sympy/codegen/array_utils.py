@@ -6,7 +6,8 @@ from itertools import accumulate
 from collections import defaultdict
 
 from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S, Integer, diagonalize_vector, DiagMatrix, ZeroMatrix, Pow, \
-    MatPow, HadamardProduct, HadamardPower, tensorcontraction, tensorproduct, permutedims, tensordiagonal
+    MatPow, HadamardProduct, HadamardPower, tensorcontraction, tensorproduct, permutedims, tensordiagonal, Lambda, \
+    Dummy, symbols, Function
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import _af_invert
 from sympy.core.basic import Basic
@@ -16,6 +17,7 @@ from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.common import MatrixCommon
 from sympy.matrices.expressions import (MatAdd, MatMul, Trace, Transpose)
+from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
 from sympy.tensor.array import NDimArray
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, _ArrayExpr
@@ -1126,6 +1128,41 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
         return tensordiagonal(self.expr.as_explicit(), *self.diagonal_indices)
 
 
+class ArrayElementwiseApplyFunc(_CodegenArrayAbstract):
+
+    def __new__(cls, function, element):
+
+        if not isinstance(function, Lambda):
+            d = Dummy('d')
+            function = Lambda(d, function(d))
+
+        obj = _CodegenArrayAbstract.__new__(cls, function, element)
+        obj._subranks = _get_subranks(element)
+        return obj
+
+    @property
+    def function(self):
+        return self.args[0]
+
+    @property
+    def expr(self):
+        return self.args[1]
+
+    @property
+    def shape(self):
+        return self.expr.shape
+
+    def _get_function_fdiff(self):
+        d = Dummy("d")
+        function = self.function(d)
+        fdiff = function.diff(d)
+        if isinstance(fdiff, Function):
+            fdiff = type(fdiff)
+        else:
+            fdiff = Lambda(d, fdiff)
+        return fdiff
+
+
 def get_rank(expr):
     if isinstance(expr, (MatrixExpr, MatrixElement)):
         return 2
@@ -1373,7 +1410,10 @@ def parse_matrix_expression(expr: MatrixExpr) -> Basic:
             return expr
     elif isinstance(expr, MatPow):
         base = parse_matrix_expression(expr.base)
-        if (expr.exp > 0) == True:
+        if expr.exp.is_Integer != True:
+            b = symbols("b", cls=Dummy)
+            return ArrayElementwiseApplyFunc(Lambda(b, b**expr.exp), parse_matrix_expression(base))
+        elif (expr.exp > 0) == True:
             return parse_matrix_expression(MatMul.fromiter(base for i in range(expr.exp)))
         else:
             return expr
@@ -1632,7 +1672,7 @@ def _(expr: CodegenArrayContraction):
             return ret
         assert isinstance(newexpr, CodegenArrayContraction)
         ret = _support_function_tp1_recognize(contraction_indices, list(newexpr.expr.args))
-        return array2matrix(ret)
+        return ret
     elif not isinstance(subexpr, _CodegenArrayAbstract):
         ret = array2matrix(subexpr)
         if isinstance(ret, MatrixExpr):
@@ -1644,7 +1684,8 @@ def _(expr: CodegenArrayContraction):
 
 @array2matrix.register(CodegenArrayDiagonal)
 def _(expr: CodegenArrayDiagonal):
-    pexpr = _array_diag2contr_diagmatrix(expr)
+    expr2 = array2matrix(expr.expr)
+    pexpr = _array_diag2contr_diagmatrix(CodegenArrayDiagonal(expr2, *expr.diagonal_indices))
     if expr == pexpr:
         return expr
     return array2matrix(pexpr)
@@ -1686,7 +1727,7 @@ def _(expr: CodegenArrayPermuteDims):
             expr_shape = get_shape(expr)
             if all(expr_shape[i] == 1 for i in flat_cyclic_form):
                 return mat_mul_lines
-            raise NotImplementedError()
+            return mat_mul_lines
         permutation = Permutation(2*len(mat_mul_lines.args)-1)*expr.permutation
         permuted = [permutation(i) for i in range(2*len(mat_mul_lines.args))]
         args_array = [None for i in mat_mul_lines.args]
@@ -1709,6 +1750,15 @@ def _(expr: CodegenArrayPermuteDims):
 def _(expr: CodegenArrayElementwiseAdd):
     addends = [array2matrix(arg) for arg in expr.args]
     return _a2m_add(*addends)
+
+
+@array2matrix.register(ArrayElementwiseApplyFunc)
+def _(expr: ArrayElementwiseApplyFunc):
+    subexpr = array2matrix(expr.expr)
+    if isinstance(subexpr, MatrixExpr):
+        return ElementwiseApplyFunction(expr.function, subexpr)
+    else:
+        return ArrayElementwiseApplyFunc(expr.function, subexpr)
 
 
 @singledispatch
@@ -1734,7 +1784,9 @@ def _(expr: CodegenArrayTensorProduct):
             removed.extend(current_range)
             continue
         if not isinstance(arg, (MatrixExpr, MatrixCommon)):
-            newargs.append(arg)
+            rarg, rem = _remove_trivial_dims(arg)
+            removed.extend(rem)
+            newargs.append(rarg)
             continue
         elif getattr(arg, "is_Identity", False):
             if arg.shape == (1, 1):
@@ -1755,6 +1807,7 @@ def _(expr: CodegenArrayTensorProduct):
                 prev_i = i
                 newargs.append(arg)
         elif arg.shape == (1, 1):
+            arg, _ = _remove_trivial_dims(arg)
             # Matrix is equivalent to scalar:
             if len(newargs) == 0:
                 newargs.append(arg)
@@ -1830,6 +1883,8 @@ def _(expr: CodegenArrayPermuteDims):
 def _(expr: CodegenArrayContraction):
     newexpr, removed = _remove_trivial_dims(expr.expr)
     new_contraction_indices = [tuple(j for j in i if j not in removed) for i in expr.contraction_indices]
+    # Remove possible empty tuples "()":
+    new_contraction_indices = [i for i in new_contraction_indices if i]
     return CodegenArrayContraction(newexpr, *new_contraction_indices), removed
 
 
@@ -1838,6 +1893,21 @@ def _(expr: CodegenArrayDiagonal):
     newexpr, removed = _remove_trivial_dims(expr.expr)
     new_diag_indices = [tuple(j for j in i if j not in removed) for i in expr.diagonal_indices]
     return CodegenArrayDiagonal(newexpr, *new_diag_indices), removed
+
+
+@_remove_trivial_dims.register(ElementwiseApplyFunction)
+def _(expr: ElementwiseApplyFunction):
+    subexpr, removed = _remove_trivial_dims(expr.expr)
+    if subexpr.shape == (1, 1):
+        # TODO: move this to ElementwiseApplyFunction
+        return expr.function(subexpr), removed + [0, 1]
+    return ElementwiseApplyFunction(expr.function, subexpr)
+
+
+@_remove_trivial_dims.register(ArrayElementwiseApplyFunc)
+def _(expr: ArrayElementwiseApplyFunc):
+    subexpr, removed = _remove_trivial_dims(expr.expr)
+    return ArrayElementwiseApplyFunc(expr.function, subexpr), removed
 
 
 def recognize_matrix_expression(expr):
