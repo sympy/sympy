@@ -1158,7 +1158,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         If an equation contains multiple independent variables, one or more
         of them can also be substituted. Note that this should not be confused
-        with PDE substitution. This is still a substitution in an ODE with 
+        with PDE substitution. This is still a substitution in an ODE with
         different independent variables.
 
         >>> a, b, t, u, x, y = symbols('a b t u x y')
