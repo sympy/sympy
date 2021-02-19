@@ -1077,6 +1077,151 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         return None
 
+    def dsubs(self, subsdict, mapdict=None):
+        r"""
+        Function that substitutes for variables in an ordinary differential equation.
+
+        The inputs are ``subsdict`` and ``mapdict``.
+
+        ``subsdict``: A dictionary specifying the variable transformations with
+            the old variable as key and the transformation as value.
+
+        ``mapdict``: In case a transformation contains more than one new
+        variable, mapdict must be provided to tell SymPy which variable
+        should be considered for substitution. For eg:
+
+        If you want to substitute for `x = at^2` where `t` is the new
+        independent variable, `subsdict` must be {x: a*t**2} and mapdict
+        must be {x: t}. It is ``None`` by default.
+
+        Returns
+        =======
+
+        The transformed differential equation
+
+        Examples
+        ========
+
+        Let us see how ``dsubs`` works using an example of homogeneous
+        ODEs which can be solved using the substitution `v = \frac{y}{x}`.
+
+        >>> from sympy import symbols, Function, dsolve
+        >>> x, t = symbols('x t')
+        >>> y, v = symbols('y v', cls=Function)
+        >>> eq = y(x).diff(x) - (x**2 + y(x)**2)/(x*y(x))
+
+        Transform the homogeneous equation to a linear equation
+
+        >>> homeq = eq.dsubs({x:t, y(x): t*v(t)}).subs(t, x).simplify()
+        >>> homeq
+        x*Derivative(v(x), x) - 1/v(x)
+
+        Find the solutions for the transformed equation
+
+        >>> sols = dsolve(homeq)
+        >>> sols
+        [Eq(v(x), -sqrt(C1 + 2*log(x))), Eq(v(x), sqrt(C1 + 2*log(x)))]
+
+        Re-substitute `v = y x` to get the solutions to the
+        original equation
+
+        >>> sols = list(map(lambda sol:sol.subs(v(x), x*y(x)), sols))
+        >>> sols
+        [Eq(x*y(x), -sqrt(C1 + 2*log(x))), Eq(x*y(x), sqrt(C1 + 2*log(x)))]
+
+        Let us look at another example - The 2nd order Cauchy Euler equation.
+
+        >>> x, a, b, t = symbols('x a b t')
+        >>> y, phi = symbols('y phi', cls=Function)
+        >>> eq = x**2*y(x).diff(x, 2) + a*x*y(x).diff(x) + b*y(x)
+
+        Transform the equation using the substitutions `x = e^t`
+        and `y(x) = \phi(t)`
+
+        >>> from sympy import exp, log, sqrt, logcombine
+        >>> eqtrans = eq.dsubs({x: exp(t), y(x): phi(t)}).simplify()
+        >>> eqtrans
+        a*Derivative(phi(t), t) + b*phi(t) - Derivative(phi(t), t) + Derivative(phi(t), (t, 2))
+
+        The equation is now transformed to a constant-coefficient equation.
+
+        >>> sol = dsolve(eqtrans)
+        >>> sol
+        Eq(phi(t), C1*exp(t*(-a - sqrt(a**2 - 2*a - 4*b + 1) + 1)/2) + C2*exp(t*(-a + sqrt(a**2 - 2*a - 4*b + 1) + 1)/2))
+
+        Re-substitute for `\phi(t)` and `t` to get the solution for
+        the original equation.
+
+        >>> sol = logcombine(sol.subs(phi(t), y(x)).subs(t, log(x)), force=True)
+        >>> sol
+        Eq(y(x), C1*x**(-a/2 - sqrt(a**2 - 2*a - 4*b + 1)/2 + 1/2) + C2*x**(-a/2 + sqrt(a**2 - 2*a - 4*b + 1)/2 + 1/2))
+
+        If an equation contains multiple independent variables, one or more
+        of them can also be substituted. Note that this should not be confused
+        with PDE substitution. This is still a substitution in an ODE with 
+        different independent variables.
+
+        >>> a, b, t, u, x, y = symbols('a b t u x y')
+        >>> f, g, h = symbols('f g h', cls=Function)
+        >>> eq = f(x).diff(x, 2) + g(y).diff(y) + h(t).diff(t, 3)
+        >>> eqnew = eq.dsubs({t : log(u), y : sqrt(b)})
+        >>> eqnew.simplify().expand()
+        2*sqrt(b)*Derivative(g(b), b) + u**3*Derivative(h(u), (u, 3)) + 3*u**2*Derivative(h(u), (u, 2)) + u*Derivative(h(u), u) + Derivative(f(x), (x, 2))
+        """
+        from sympy.core.function import Function, Derivative
+        from sympy.core.symbol import Symbol
+
+        def diffx(e, sym, n):
+            if isinstance(sym, Function):
+                if n > 1:
+                    return diffx(diffx(e, sym, n-1), sym, 1)
+                return Derivative(e, sym.args[0]) / Derivative(sym, sym.args[0])
+            else:
+                return Derivative(e, (sym, n))
+
+        eq = self
+        old_funcs = eq.atoms(Function)
+
+        if mapdict is None:
+            mapdict = {}
+        for var in subsdict:
+            if var not in mapdict:
+                satoms = list(subsdict[var].atoms(Symbol))
+                fatoms = list(subsdict[var].atoms(Function))
+                if (len(satoms) > 1 and isinstance(var, Symbol)) or (len(fatoms) > 1 and not isinstance(var, Function)):
+                    raise ValueError("Rules are ambiguous. Please specify the symbols or functions to be mapped in the mapdict")
+                if isinstance(var, Symbol):
+                    if len(satoms):
+                        mapdict[var] = satoms[0]
+                    else:
+                        raise ValueError("Invalid rule. Expected atleast one variable for substitution")
+                else:
+                    if len(fatoms):
+                        mapdict[var] = fatoms[0]
+                    else:
+                        raise ValueError("Invalid rule. Expected atleast one function for substitution")
+
+        for var in subsdict:
+            if isinstance(var, Symbol) and var in mapdict:
+                eq = eq.subs(var, Function(var.name + 'f')(mapdict[var]))
+
+        eq = eq.replace(Derivative, lambda e, vs: diffx(e, vs[0], vs[1]))
+
+        for var in subsdict:
+            if not isinstance(var, Symbol) and var in mapdict:
+                old_var = var.args[0]
+                eq = eq.subs(var.subs(old_var, Function(old_var.name + 'f')(mapdict[old_var])), subsdict[var])
+
+        for var in subsdict:
+            if isinstance(var, Symbol) and var in mapdict:
+                for func in old_funcs:
+                    old_var = func.args[0]
+                    if old_var in subsdict:
+                        eq = eq.subs(func.subs(old_var, Function(old_var.name + 'f')(mapdict[old_var])), func.subs(old_var, mapdict[old_var]))
+                eq = eq.subs(Function(var.name + 'f')(mapdict[var]), subsdict[var])
+
+        return eq.doit()
+
     def xreplace(self, rule):
         """
         Replace occurrences of objects within the expression.
