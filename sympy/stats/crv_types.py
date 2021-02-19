@@ -867,7 +867,7 @@ def ChiNoncentral(name, k, l):
     Parameters
     ==========
 
-    k : A positive Integer, ``k > 0``
+    k : A positive Integer, $k > 0$
         The number of degrees of freedom.
     lambda : Real number, `\lambda > 0`
         Shift parameter.
@@ -1204,7 +1204,7 @@ def ExGaussian(name, mean, std, rate):
         f(x) := \frac{\lambda}{2}e^{\frac{\lambda}{2}(2\mu+\lambda\sigma^2-2x)}
             \text{erfc}(\frac{\mu + \lambda\sigma^2 - x}{\sqrt{2}\sigma})
 
-    with ``x > 0``. Note that the expected value is `1/\lambda`.
+    with $x > 0$. Note that the expected value is `1/\lambda`.
 
     Parameters
     ==========
@@ -1307,7 +1307,7 @@ def Exponential(name, rate):
     .. math::
         f(x) := \lambda \exp(-\lambda x)
 
-    with ``x > 0``. Note that the expected value is `1/\lambda`.
+    with $x > 0$. Note that the expected value is `1/\lambda`.
 
     Parameters
     ==========
