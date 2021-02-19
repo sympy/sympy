@@ -2556,8 +2556,8 @@ def LogNormal(name, mean, std):
 
     mu : Real number
         The log-scale.
-    sigma : Real number, :math:`\sigma^2 > 0`
-        A shape.
+    sigma : Real number
+        A shape. ($\sigma^2 > 0$)
 
     Returns
     =======
@@ -3103,8 +3103,10 @@ def GaussianInverse(name, mean, shape):
     Parameters
     ==========
 
-    mu : Positive number representing the mean.
-    lambda : Positive number representing the shape parameter.
+    mu :
+        Positive number representing the mean.
+    lambda :
+        Positive number representing the shape parameter.
 
     Returns
     =======
@@ -4158,7 +4160,7 @@ def UniformSum(name, n):
     ===========
 
     The probability distribution function depends on a single parameter
-    ``n`` which is an integer.
+    $n$ which is an integer.
 
     The density of the Irwin-Hall distribution is given by
 
