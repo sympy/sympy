@@ -1439,6 +1439,15 @@ def test_linsolve():
     assert linsolve([Eq(y/x, y/x + y)], [x, y]) == {(x, 0)}
     assert linsolve([Eq(x*(x + 1), x**2 + y)], [x, y]) == {(y, y)}
 
+    # corner cases
+    #
+    # XXX: The case below should give the same as for [0]
+    # assert linsolve([], [x]) == {(x,)}
+    assert linsolve([], [x]) == EmptySet()
+    assert linsolve([0], [x]) == {(x,)}
+    assert linsolve([x], [x, y]) == {(0, y)}
+    assert linsolve([x, 0], [x, y]) == {(0, y)}
+
 
 def test_linsolve_large_sparse():
     #
