@@ -128,7 +128,6 @@ when available.
    :members:
 
 .. autoclass:: PythonIntegerRing
-   :members:
 .. autoclass:: GMPYIntegerRing
    :members:
 
