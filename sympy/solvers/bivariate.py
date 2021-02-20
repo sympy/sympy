@@ -160,7 +160,7 @@ def _lambert1(eq, x, domain):
         xusolns = solve(X1 - u, x)
     else:
         domain_real = domain.is_subset(S.Reals)
-        xusolns = solvify(X1 - u, x,domain)
+        xusolns = solvify(X1 - u, x, domain)
 
     # There are infinitely many branches for LambertW
     # but only branches for k = -1 and 0 might be real. The k = 0
@@ -221,45 +221,35 @@ def _lambert1(eq, x, domain):
         return sol
 
     n = Dummy('n',integer=True)
+    len_of_symbol = len(list(eq.atoms(Symbol,Dummy)))
     for arg in args:
-        rhs1 = -c/b + (a/d)*LambertW(arg)
+        rhs = -c/b + (a/d)*LambertW(arg)
         lambert_real = LambertW(arg).is_real
 
-        if domain_real or domain is None:
-            if domain_real:
-                if not len(list(eq.atoms(Symbol,Dummy))) >1:
-                    if lambert_real:
-                        if -1/E <= re(arg) < 0:
-                            sol,rhs = lambert_braches()
-                        elif re(arg) >= 0:
-                            rhs = rhs1
-                    elif re(arg) < -1/E:
-                        return S.EmptySet
+        if domain_real:
+            if not len_of_symbol >1:
+                if lambert_real and -1/E <= re(arg) < 0:
+                    sol,rhs = lambert_braches()
+                elif re(arg) < -1/E:
+                    return S.EmptySet
 
-                if (arg.has(Symbol)) and not arg.has(Dummy):
-                    SymbolStatus = list(arg.atoms(Symbol))[0]
-                    if SymbolStatus.is_real:
-                        if SymbolStatus.is_negative:
-                            sol,rhs = lambert_braches()
-                        if SymbolStatus.is_positive:
-                            rhs = rhs1
-                    else:
+            if (arg.has(Symbol)) and not arg.has(Dummy):
+                symbol_status = (arg.atoms(Symbol)).pop()
+                if symbol_status.is_real:
+                    if symbol_status.is_negative:
                         sol,rhs = lambert_braches()
+                    elif symbol_status.is_positive:
+                        rhs = rhs
                 else:
-                    rhs = rhs1
-            elif domain is None:
-                if not len(list(eq.atoms(Symbol,Dummy))) >1:
-                    if -1/E <= re(arg) < 0 and not arg.has(I):
-                        sol,rhs = lambert_braches()
-                    else:
-                        rhs = rhs1
-                else:
-                    rhs = rhs1
-            else:
-                rhs = rhs1
+                    sol,rhs = lambert_braches()
+
+        elif domain is None:
+            if not len_of_symbol >1:
+                if -1/E <= re(arg) < 0 and not arg.has(I):
+                    sol,rhs = lambert_braches()
+
         else:
             rhs = Lambda(n, -c/b + (a/d)*LambertW(arg,n))
-
 
         sol = lambert_helper(rhs)
 
@@ -597,4 +587,6 @@ def bivariate_type(f, x, y, *, first=True):
             if new is not None:
                 return a*x*y + b*y, new, u
             x, y = y, x
+
+
 from sympy.solvers.solveset import solvify

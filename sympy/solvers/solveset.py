@@ -43,7 +43,9 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polytools import invert
 from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
     PolyNonlinearError)
-from sympy.solvers.solvers import _simple_dens, checksol, denoms, recast_to_symbols, unrad
+from sympy.polys.matrices.linsolve import _linsolve
+from sympy.solvers.solvers import (checksol, denoms, unrad,
+    _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
@@ -1818,12 +1820,10 @@ def _is_lambert(f, symbol):
     expanded_terms_factors = list(_term_factors(f.expand()))
 
     if any(isinstance(arg1, (HyperbolicFunction,TrigonometricFunction)) for arg1 in expanded_terms_factors):
-        j = 0
         for arg0 in expanded_terms_factors:
             if arg0.has(HyperbolicFunction,TrigonometricFunction,Dummy,Symbol)\
                  and isinstance(arg0,(Dummy,Symbol,Pow)):
-                    j += 1
-        return j> 0
+                    return True
 
     elif any(isinstance(arg1, (Pow, exp)) for arg1 in expanded_terms_factors):
         for arg1 in expanded_terms_factors:
@@ -3806,5 +3806,6 @@ def nonlinsolve(system, *symbols):
         result = substitution(
             polys_expr + nonpolys, symbols, exclude=denominators)
         return result
+
 
 from sympy.solvers.bivariate import _solve_lambert, _filtered_gens, bivariate_type
