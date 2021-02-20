@@ -931,7 +931,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """
         return self.args[2]
 
-    def communication_classes(self) -> tList[tTuple[tList[Basic], Boolean, Integer]]:
+    def communication_classes(self) -> tList[tTuple[tList[Basic], bool, Integer]]:
         """
         Returns the list of communication classes that partition
         the states of the markov chain.
@@ -1203,7 +1203,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         See Also
         ========
 
-        sympy.stats.stochastic_process_types.DiscreteMarkovChain.limiting_distribution
+        sympy.stats.DiscreteMarkovChain.limiting_distribution
         """
         trans_probs = self.transition_probabilities
         n = self.number_of_states
@@ -1309,8 +1309,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         See Also
         ========
 
-        sympy.stats.stochastic_process_types.DiscreteMarkovChain.communication_classes
-        sympy.stats.stochastic_process_types.DiscreteMarkovChain.canonical_form
+        sympy.stats.DiscreteMarkovChain.communication_classes
+        sympy.stats.DiscreteMarkovChain.canonical_form
 
         References
         ==========
@@ -1428,8 +1428,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         See Also
         ========
 
-        sympy.stats.stochastic_process_types.DiscreteMarkovChain.communication_classes
-        sympy.stats.stochastic_process_types.DiscreteMarkovChain.decompose
+        sympy.stats.DiscreteMarkovChain.communication_classes
+        sympy.stats.DiscreteMarkovChain.decompose
 
         References
         ==========
