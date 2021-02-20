@@ -17,16 +17,21 @@ from .exceptions import NonSquareMatrixError, ShapeError
 
 from .ddm import DDM
 
+from .sdm import SDM
+
 
 class DomainMatrix:
 
     def __init__(self, rows, shape, domain):
-        self.rep = DDM(rows, shape, domain)
+        if isinstance(rows, list):
+            self.rep = SDM.from_list(rows, shape, domain)
+        else:
+            self.rep = SDM(rows, shape, domain)
         self.shape = shape
         self.domain = domain
 
     @classmethod
-    def from_ddm(cls, ddm):
+    def from_rep(cls, ddm):
         return cls(ddm, ddm.shape, ddm.domain)
 
     @classmethod
@@ -52,11 +57,7 @@ class DomainMatrix:
         return K, items_K
 
     def convert_to(self, K):
-        Kold = self.domain
-        if K == Kold:
-            return self.from_ddm(self.rep.copy())
-        new_rows = [[K.convert_from(e, Kold) for e in row] for row in self.rep]
-        return DomainMatrix(new_rows, self.shape, K)
+        return self.from_rep(self.rep.convert_to(K))
 
     def to_field(self):
         K = self.domain.get_field()
@@ -76,13 +77,19 @@ class DomainMatrix:
 
     def to_Matrix(self):
         from sympy.matrices.dense import MutableDenseMatrix
-        rows_sympy = [[self.domain.to_sympy(e) for e in row] for row in self.rep]
+        elemlist = self.rep.to_list()
+        rows_sympy = [[self.domain.to_sympy(e) for e in row] for row in elemlist]
         return MutableDenseMatrix(rows_sympy)
 
     def __repr__(self):
-        rows_str = ['[%s]' % (', '.join(map(str, row))) for row in self.rep]
+        elemlist = self.rep.to_list()
+        rows_str = ['[%s]' % (', '.join(map(str, row))) for row in elemlist]
         rowstr = '[%s]' % ', '.join(rows_str)
         return 'DomainMatrix(%s, %r, %r)' % (rowstr, self.shape, self.domain)
+
+    def hstack(A, B):
+        A, B = A.unify(B)
+        return A.from_rep(A.rep.hstack(B.rep))
 
     def __add__(A, B):
         if not isinstance(B, DomainMatrix):
@@ -102,13 +109,13 @@ class DomainMatrix:
         if isinstance(B, DomainMatrix):
             return A.matmul(B)
         elif B in A.domain:
-            return A.from_ddm(A.rep * B)
+            return A.from_rep(A.rep * B)
         else:
             return NotImplemented
 
     def __rmul__(A, B):
         if B in A.domain:
-            return A.from_ddm(A.rep * B)
+            return A.from_rep(A.rep * B)
         else:
             return NotImplemented
 
@@ -123,23 +130,23 @@ class DomainMatrix:
             raise ShapeError("shape")
         if A.domain != B.domain:
             raise ValueError("domain")
-        return A.from_ddm(A.rep.add(B.rep))
+        return A.from_rep(A.rep.add(B.rep))
 
     def sub(A, B):
         if A.shape != B.shape:
             raise ShapeError("shape")
         if A.domain != B.domain:
             raise ValueError("domain")
-        return A.from_ddm(A.rep.sub(B.rep))
+        return A.from_rep(A.rep.sub(B.rep))
 
     def neg(A):
-        return A.from_ddm(A.rep.neg())
+        return A.from_rep(A.rep.neg())
 
     def mul(A, b):
-        return A.from_ddm(A.rep.mul(b))
+        return A.from_rep(A.rep.mul(b))
 
     def matmul(A, B):
-        return A.from_ddm(A.rep.matmul(B.rep))
+        return A.from_rep(A.rep.matmul(B.rep))
 
     def pow(A, n):
         if n < 0:
@@ -162,10 +169,10 @@ class DomainMatrix:
         if not self.domain.is_Field:
             raise ValueError('Not a field')
         rref_ddm, pivots = self.rep.rref()
-        return self.from_ddm(rref_ddm), tuple(pivots)
+        return self.from_rep(rref_ddm), tuple(pivots)
 
     def nullspace(self):
-        return self.from_ddm(self.rep.nullspace())
+        return self.from_rep(self.rep.nullspace()[0])
 
     def inv(self):
         if not self.domain.is_Field:
@@ -174,7 +181,7 @@ class DomainMatrix:
         if m != n:
             raise NonSquareMatrixError
         inv = self.rep.inv()
-        return self.from_ddm(inv)
+        return self.from_rep(inv)
 
     def det(self):
         m, n = self.shape
@@ -186,7 +193,7 @@ class DomainMatrix:
         if not self.domain.is_Field:
             raise ValueError('Not a field')
         L, U, swaps = self.rep.lu()
-        return self.from_ddm(L), self.from_ddm(U), swaps
+        return self.from_rep(L), self.from_rep(U), swaps
 
     def lu_solve(self, rhs):
         if self.shape[0] != rhs.shape[0]:
@@ -194,7 +201,7 @@ class DomainMatrix:
         if not self.domain.is_Field:
             raise ValueError('Not a field')
         sol = self.rep.lu_solve(rhs.rep)
-        return self.from_ddm(sol)
+        return self.from_rep(sol)
 
     def charpoly(self):
         m, n = self.shape
@@ -204,7 +211,7 @@ class DomainMatrix:
 
     @classmethod
     def eye(cls, n, domain):
-        return cls.from_ddm(DDM.eye(n, domain))
+        return cls.from_rep(DDM.eye(n, domain))
 
     def __eq__(A, B):
         """A == B"""

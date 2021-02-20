@@ -11,7 +11,11 @@ from sympy.utilities import public
 
 @public
 class GMPYRationalField(RationalField):
-    """Rational field based on GMPY mpq class. """
+    """Rational field based on GMPY's ``mpq`` type.
+
+    This will be the implementation of :ref:`QQ` if ``gmpy`` or ``gmpy2`` is
+    installed. Elements will be of type ``gmpy.mpq``.
+    """
 
     dtype = GMPYRational
     zero = dtype(0)

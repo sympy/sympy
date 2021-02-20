@@ -95,9 +95,9 @@ def test_vector_integrate():
     assert vector_integrate(C.i*C.y - C.z, point) == ParametricIntegral(C.y*C.i, ParametricRegion((2, 3)))
 
     c3 = ImplicitRegion((x, y), x**2 + y**2 - 4)
-    assert vector_integrate(45, c3) == 360*pi
+    assert vector_integrate(45, c3) == 180*pi
     c4 = ImplicitRegion((x, y), (x - 3)**2 + (y - 4)**2 - 9)
-    assert vector_integrate(1, c4) == 12*pi
+    assert vector_integrate(1, c4) == 6*pi
 
     pl = Plane(Point(1, 1, 1), Point(2, 3, 4), Point(2, 2, 2))
     raises(ValueError, lambda: vector_integrate(C.x*C.z*C.i + C.k, pl))
