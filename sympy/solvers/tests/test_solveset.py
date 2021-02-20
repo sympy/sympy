@@ -2334,7 +2334,7 @@ def test_solve_bivariate():
         FiniteSet(LambertW(3*exp(sqrt(2)))/3, LambertW(3*exp(-sqrt(2)))/3)
 
     assert solveset_real((x**2 - 2*x - 2).subs(x, log(x) + 3*x), x) == \
-        FiniteSet(LambertW(3*exp(1 + sqrt(3)))/3, LambertW(3*exp(1 - sqrt(3)))/3)
+        FiniteSet(LambertW(3*E*exp(sqrt(3)))/3, LambertW(3*E*exp(-sqrt(3)))/3)
 
 
 @XFAIL

@@ -17,7 +17,8 @@ from sympy.core.assumptions import check_assumptions
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key)
 from sympy.core.sympify import sympify
-from sympy.core import Add, Dummy, Equality, Expr, Mul, Pow, S, Symbol, Unequality, Wild
+from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
+    Pow, Unequality, Wild)
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
@@ -1092,7 +1093,6 @@ def solve(f, *symbols, **flags):
     ###########################################################################
     if bare_f:
         solution = _solve(f[0], *symbols, **flags)
-
     else:
         solution = _solve_system(f, symbols, **flags)
 
@@ -1706,7 +1706,6 @@ def _solve(f, *symbols, **flags):
             soln = _tsolve(f_num, symbol, **flags)
             if soln is not None:
                 result = soln
-
         except PolynomialError:
             pass
     # ----------- end of fallback ----------------------------
@@ -2700,7 +2699,8 @@ def _tsolve(eq, sym, **flags):
                 poly = lhs.as_poly()
                 g = _filtered_gens(poly, sym)
                 _eq = lhs - rhs
-
+                # use a simplified form if it satisfies eq
+                # and has fewer operations
                 sols = _solve_lambert(_eq, sym, g, None)
                 for n, s in enumerate(sols):
                     ns = nsimplify(s)

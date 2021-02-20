@@ -1136,7 +1136,7 @@ def _solveset(f, symbol, domain, _check=False):
                 result = _result - singularities
 
     if _check:
-        if isinstance(result,ConditionSet):
+        if isinstance(result, ConditionSet):
             # it wasn't solved or has enumerated all conditions
             # -- leave it alone
             return result

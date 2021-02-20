@@ -186,22 +186,10 @@ def _lambert1(eq, x, domain):
     e = exp(num/den)
     t = Dummy('t')
     # calculating solutions from args
-    if p == 1:
-        t = e
-        args = [d/(a*b)*t]
-    elif domain is S.Reals:
-        ind_ls = [d/(a*b)*t for t in roots(t**p - e, t).keys()]
-        args = []
-        j = -1
-        for i in ind_ls:
-            j += 1
-            if not isinstance(i,int):
-                if not i.has(I):
-                    args.append(ind_ls[j])
-            elif isinstance(i,int):
-                args.append(ind_ls[j])
-    else:
-        args = [d/(a*b)*t for t in roots(t**p - e, t).keys()]
+    root_list = list(roots(t**p - e, t))
+    if domain is S.Reals:
+        root_list = [r for r in root_list if not r.has(I)]
+    args = [r*d/(a*b) for r in root_list]
     if len(args) == 0:
         return S.EmptySet
     # for simplicity defined two functions
