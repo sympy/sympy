@@ -6,6 +6,10 @@ Dimensions and dimension systems
 
 .. autoclass:: Dimension
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: DimensionSystem
    :members:
+   :undoc-members:
+   :private-members:

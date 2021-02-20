@@ -39,6 +39,9 @@ nitpicky = True
 
 # To stop docstrings inheritance.
 autodoc_inherit_docstrings = False
+autodoc_default_options = {
+    'member-order': 'groupwise',
+}
 
 # MathJax file, which is free to use.  See https://www.mathjax.org/#gettingstarted
 # As explained in the link using latest.js will get the latest version even

@@ -14,7 +14,9 @@ The approach of the function ``multiset_partitions_taocp`` is extended
 and generalized by the class ``MultisetPartitionTraverser``.
 
 .. autoclass:: MultisetPartitionTraverser
-   :members: count_partitions,
+   :members:
+   :undoc-members:
+   :private-members: count_partitions,
              enum_all,
              enum_large,
              enum_range,

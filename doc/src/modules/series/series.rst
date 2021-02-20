@@ -12,6 +12,8 @@ The main purpose of this module is the computation of limits.
 
 .. autoclass:: sympy.series.limits::Limit
    :members:
+   :undoc-members:
+   :private-members:
 
 As is explained above, the workhorse for limit computations is the
 function gruntz() which implements Gruntz' algorithm for computing limits.
@@ -119,6 +121,8 @@ Reference
 
 .. autoclass:: sympy.series.gruntz::SubsSet
    :members:
+   :undoc-members:
+   :private-members:
 
 More Intuitive Series Expansion
 -------------------------------
@@ -159,6 +163,8 @@ Reference
 
 .. autoclass:: sympy.series.order::Order
    :members:
+   :undoc-members:
+   :private-members:
 
 Series Acceleration
 -------------------

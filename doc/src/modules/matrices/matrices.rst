@@ -527,40 +527,61 @@ MatrixDeterminant Class Reference
 ---------------------------------
 .. autoclass:: MatrixDeterminant
    :members:
+   :undoc-members:
+   :private-members:
 
 MatrixReductions Class Reference
 --------------------------------
 .. autoclass:: MatrixReductions
-    :members:
+   :members:
+   :undoc-members:
+   :private-members:
 
 MatrixSubspaces Class Reference
 -------------------------------
 .. autoclass:: MatrixSubspaces
    :members:
+   :undoc-members:
+   :private-members:
 
 MatrixEigen Class Reference
 ---------------------------
 .. autoclass:: MatrixEigen
    :members:
+   :undoc-members:
+   :private-members:
 
 MatrixCalculus Class Reference
 ------------------------------
 .. autoclass:: MatrixCalculus
    :members:
+   :undoc-members:
+   :private-members:
 
 MatrixBase Class Reference
 --------------------------
 .. autoclass:: MatrixBase
    :members:
+   :undoc-members:
+   :private-members:
 
 Matrix Exceptions Reference
 ---------------------------
 
 .. autoclass:: MatrixError
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: ShapeError
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: NonSquareMatrixError
+   :members:
+   :undoc-members:
+   :private-members:
 
 
 Matrix Functions Reference

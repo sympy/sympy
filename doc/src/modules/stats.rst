@@ -101,11 +101,29 @@ Joint Types
 Stochastic Processes
 --------------------
 .. autoclass:: DiscreteMarkovChain
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: ContinuousMarkovChain
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: BernoulliProcess
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: PoissonProcess
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: WienerProcess
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: GammaProcess
+   :members:
+   :undoc-members:
+   :private-members:
 
 Matrix Distributions
 --------------------
@@ -116,22 +134,37 @@ Matrix Distributions
 Compound Distribution
 ---------------------
 .. autoclass:: sympy.stats.compound_rv.CompoundDistribution
+   :members:
+   :undoc-members:
+   :private-members:
 
 Interface
 ^^^^^^^^^
 
 .. autofunction:: P
 .. autoclass:: Probability
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: E
 .. autoclass:: Expectation
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: density
 .. autofunction:: entropy
 .. autofunction:: given
 .. autofunction:: where
 .. autofunction:: variance
 .. autoclass:: Variance
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: covariance
 .. autoclass:: Covariance
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: coskewness
 .. autofunction:: median
 .. autofunction:: std
@@ -145,12 +178,27 @@ Interface
 .. autofunction:: sympy.stats.rv.sampling_P
 .. autofunction:: sympy.stats.rv.sampling_E
 .. autoclass:: Moment
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: moment
 .. autoclass:: CentralMoment
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: cmoment
 .. autoclass:: ExpectationMatrix
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: VarianceMatrix
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: CrossCovarianceMatrix
+   :members:
+   :undoc-members:
+   :private-members:
 
 Mechanics
 ^^^^^^^^^

@@ -41,6 +41,10 @@ ImmutableMatrix Class Reference
 
 .. autoclass:: ImmutableMatrix
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: ImmutableDenseMatrix
    :members:
+   :undoc-members:
+   :private-members:

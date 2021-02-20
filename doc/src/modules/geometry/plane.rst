@@ -5,3 +5,5 @@ Plane
 
 .. autoclass:: Plane
    :members:
+   :undoc-members:
+   :private-members:

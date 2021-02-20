@@ -71,12 +71,18 @@ Basic polynomial manipulation functions
 
 .. autoclass:: Poly
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: PurePoly
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: GroebnerBasis
    :members:
+   :undoc-members:
+   :private-members:
 
 Extra polynomial manipulation functions
 =======================================
@@ -109,6 +115,8 @@ Algebraic number fields
 
 .. autoclass:: AlgebraicNumber
    :members:
+   :undoc-members:
+   :private-members:
 
 Monomials encoded as tuples
 ===========================
@@ -116,6 +124,9 @@ Monomials encoded as tuples
 .. currentmodule:: sympy.polys.monomials
 
 .. autoclass:: Monomial
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: itermonomials
 .. autofunction:: monomial_count
 
@@ -125,9 +136,21 @@ Orderings of monomials
 .. currentmodule:: sympy.polys.orderings
 
 .. autoclass:: MonomialOrder
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: LexOrder
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: GradedLexOrder
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: ReversedGradedLexOrder
+   :members:
+   :undoc-members:
+   :private-members:
 
 Formal manipulation of roots of polynomials
 ===========================================
@@ -137,10 +160,16 @@ Formal manipulation of roots of polynomials
 .. autofunction:: rootof
 .. autoclass:: RootOf
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: ComplexRootOf
    :members:
+   :undoc-members:
    :private-members:
 .. autoclass:: RootSum
+   :members:
+   :undoc-members:
+   :private-members:
 
 Symbolic root-finding algorithms
 ================================

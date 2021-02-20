@@ -44,12 +44,17 @@ HolonomicFunction
 -----------------
 
 .. autoclass:: HolonomicFunction
+   :members:
+   :undoc-members:
+   :private-members:
 
 DifferentialOperator
 --------------------
 
 .. autoclass:: DifferentialOperator
    :members:
+   :undoc-members:
+   :private-members:
 
 
 DifferentialOperators
@@ -62,3 +67,5 @@ DifferentialOperatorAlgebra
 
 .. autoclass:: DifferentialOperatorAlgebra
    :members:
+   :undoc-members:
+   :private-members:

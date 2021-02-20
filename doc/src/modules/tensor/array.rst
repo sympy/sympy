@@ -11,15 +11,23 @@ Classes
 
 .. autoclass:: ImmutableDenseNDimArray
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: ImmutableSparseNDimArray
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: MutableDenseNDimArray
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: MutableSparseNDimArray
    :members:
+   :undoc-members:
+   :private-members:
 
 
 Functions

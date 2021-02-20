@@ -6,3 +6,5 @@ Unit prefixes
 
 .. autoclass:: Prefix
    :members:
+   :undoc-members:
+   :private-members:

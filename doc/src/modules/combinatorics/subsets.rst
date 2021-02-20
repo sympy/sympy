@@ -7,5 +7,7 @@ Subsets
 
 .. autoclass:: Subset
    :members:
+   :undoc-members:
+   :private-members:
 
 .. automethod:: sympy.combinatorics.subsets.ksubsets

@@ -5,37 +5,59 @@ Lie Algebra
 .. automodule:: sympy.liealgebras
 
 .. autoclass:: sympy.liealgebras.root_system.RootSystem
-    :members:
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.liealgebras.type_a.TypeA
-    :members:
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.liealgebras.type_b.TypeB
-    :members:
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.liealgebras.type_c.TypeC
-    :members:
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.liealgebras.type_d.TypeD
-    :members:
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.liealgebras.type_e.TypeE
-    :members:
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.liealgebras.type_f.TypeF
-    :members:
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.liealgebras.type_g.TypeG
-    :members:
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.liealgebras.weyl_group.WeylGroup
-    :members:
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.liealgebras.cartan_type.CartanType_generator
-    :members:
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.liealgebras.cartan_type.Standard_Cartan
-    :members:
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autofunction:: sympy.liealgebras.dynkin_diagram.DynkinDiagram
 

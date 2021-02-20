@@ -5,18 +5,32 @@ Methods for computing and manipulating Formal Power Series.
 
 .. autoclass:: sympy.series.formal::FormalPowerSeries
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autofunction:: sympy.series.formal::fps
 
 .. autofunction:: sympy.series.formal::compute_fps
 
 .. autoclass:: sympy.series.formal::FormalPowerSeriesCompose
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.series.formal::FormalPowerSeriesInverse
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.series.formal::FormalPowerSeriesProduct
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.series.formal::FiniteFormalPowerSeries
+   :members:
+   :undoc-members:
+   :private-members:
 
 
 Rational Algorithm

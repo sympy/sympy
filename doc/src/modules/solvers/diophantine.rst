@@ -492,55 +492,97 @@ These classes are intended for internal use in the Diophantine module.
 DiophantineSolutionSet
 ^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.DiophantineSolutionSet
+   :members:
+   :undoc-members:
+   :private-members:
 
 DiophantineEquationType
 ^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.DiophantineEquationType
+   :members:
+   :undoc-members:
+   :private-members:
 
 Univariate
 ^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.Univariate
+   :members:
+   :undoc-members:
+   :private-members:
 
 Linear
 ^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.Linear
+   :members:
+   :undoc-members:
+   :private-members:
 
 BinaryQuadratic
 ^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.BinaryQuadratic
+   :members:
+   :undoc-members:
+   :private-members:
 
 InhomogeneousTernaryQuadratic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.InhomogeneousTernaryQuadratic
+   :members:
+   :undoc-members:
+   :private-members:
 
 HomogeneousTernaryQuadraticNormal
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.HomogeneousTernaryQuadraticNormal
+   :members:
+   :undoc-members:
+   :private-members:
 
 HomogeneousTernaryQuadratic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.HomogeneousTernaryQuadratic
+   :members:
+   :undoc-members:
+   :private-members:
 
 InhomogeneousGeneralQuadratic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.InhomogeneousGeneralQuadratic
+   :members:
+   :undoc-members:
+   :private-members:
 
 HomogeneousGeneralQuadratic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.HomogeneousGeneralQuadratic
+   :members:
+   :undoc-members:
+   :private-members:
 
 GeneralSumOfSquares
 ^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.GeneralSumOfSquares
+   :members:
+   :undoc-members:
+   :private-members:
 
 GeneralPythagorean
 ^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.GeneralPythagorean
+   :members:
+   :undoc-members:
+   :private-members:
 
 CubicThue
 ^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.CubicThue
+   :members:
+   :undoc-members:
+   :private-members:
 
 GeneralSumOfEvenPowers
 ^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.GeneralSumOfEvenPowers
+   :members:
+   :undoc-members:
+   :private-members:

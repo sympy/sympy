@@ -606,6 +606,9 @@ Options
 .. automodule:: sympy.polys.polyoptions
 
 .. autoclass:: sympy.polys.polyoptions.Options
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: sympy.polys.polyoptions.build_options
 
 Configuration
@@ -625,30 +628,102 @@ TODO sort and explain
 .. currentmodule:: sympy.polys.polyerrors
 
 .. autoclass:: BasePolynomialError
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: ExactQuotientFailed
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: OperationNotSupported
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: HeuristicGCDFailed
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: HomomorphismFailed
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: IsomorphismFailed
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: ExtraneousFactors
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: EvaluationFailed
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: RefinementFailed
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: CoercionFailed
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: NotInvertible
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: NotReversible
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: NotAlgebraic
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: DomainError
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: PolynomialError
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: UnificationFailed
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: GeneratorsNeeded
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: ComputationFailed
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: GeneratorsError
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: UnivariatePolynomialError
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: MultivariatePolynomialError
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: PolificationFailed
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: OptionError
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: FlagError
+   :members:
+   :undoc-members:
+   :private-members:
 
 Reference
 =========

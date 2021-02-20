@@ -6,3 +6,5 @@ Units and unit systems
 
 .. autoclass:: UnitSystem
    :members:
+   :undoc-members:
+   :private-members:

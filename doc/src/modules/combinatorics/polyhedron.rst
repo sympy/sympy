@@ -7,3 +7,5 @@ Polyhedron
 
 .. autoclass:: Polyhedron
    :members:
+   :undoc-members:
+   :private-members:

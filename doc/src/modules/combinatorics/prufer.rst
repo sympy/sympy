@@ -7,3 +7,5 @@ Prufer Sequences
 
 .. autoclass:: Prufer
    :members:
+   :undoc-members:
+   :private-members:

@@ -5,3 +5,5 @@ Curves
 
 .. autoclass:: Curve
    :members:
+   :undoc-members:
+   :private-members:

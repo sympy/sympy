@@ -50,26 +50,59 @@ Boolean functions
 -----------------
 
 .. autoclass:: sympy.logic.boolalg::BooleanTrue
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.logic.boolalg::BooleanFalse
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.logic.boolalg::And
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.logic.boolalg::Or
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.logic.boolalg::Not
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.logic.boolalg::Xor
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.logic.boolalg::Nand
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.logic.boolalg::Nor
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.logic.boolalg::Implies
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.logic.boolalg::Equivalent
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.logic.boolalg::ITE
+   :members:
+   :undoc-members:
+   :private-members:
 
 The following functions can be used to handle Conjunctive and Disjunctive Normal
 forms-

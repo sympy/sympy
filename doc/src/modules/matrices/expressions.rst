@@ -26,38 +26,72 @@ Matrix Expressions Core Reference
 ---------------------------------
 .. autoclass:: MatrixExpr
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: MatrixSymbol
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: MatAdd
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: MatMul
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: MatPow
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: HadamardProduct
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: HadamardPower
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: Inverse
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: Transpose
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: Trace
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: FunctionMatrix
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: PermutationMatrix
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: MatrixPermute
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: Identity
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: ZeroMatrix
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: CompanionMatrix
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: MatrixSet
    :members:
+   :undoc-members:
+   :private-members:
 
 Block Matrices
 --------------
@@ -70,6 +104,10 @@ sub-blocks. They can work with :class:`MatrixExpr` or
 
 .. autoclass:: BlockMatrix
    :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: BlockDiagMatrix
    :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: block_collapse

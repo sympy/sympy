@@ -14,3 +14,5 @@ Gamma matrices
 
 .. automodule:: sympy.physics.hep.gamma_matrices
     :members:
+   :undoc-members:
+   :private-members:

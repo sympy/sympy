@@ -12,6 +12,8 @@ All functions support the methods documented below, inherited from
 .. autoclass:: sympy.core.function.Function
    :noindex:
    :members:
+   :undoc-members:
+   :private-members:
 
 .. _functions-contents:
 

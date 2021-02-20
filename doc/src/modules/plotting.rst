@@ -30,6 +30,8 @@ Plot Class
 
 .. autoclass:: sympy.plotting.plot::Plot
    :members:
+   :undoc-members:
+   :private-members:
 
 Plotting Function Reference
 ---------------------------
@@ -51,51 +53,79 @@ PlotGrid Class
 
 .. autoclass:: sympy.plotting.plot::PlotGrid
    :members:
+   :undoc-members:
+   :private-members:
 
 Series Classes
 --------------
 
 .. autoclass:: sympy.plotting.plot::BaseSeries
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.plotting.plot::Line2DBaseSeries
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.plotting.plot::LineOver1DRangeSeries
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.plotting.plot::Parametric2DLineSeries
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.plotting.plot::Line3DBaseSeries
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.plotting.plot::Parametric3DLineSeries
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.plotting.plot::SurfaceBaseSeries
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.plotting.plot::SurfaceOver2DRangeSeries
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.plotting.plot::ParametricSurfaceSeries
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.plotting.plot_implicit::ImplicitSeries
    :members:
+   :undoc-members:
+   :private-members:
 
 Backends
 --------
 
 .. autoclass:: sympy.plotting.plot::BaseBackend
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.plotting.plot::MatplotlibBackend
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.plotting.plot::TextBackend
    :members:
+   :undoc-members:
+   :private-members:
 
 Pyglet Plotting
 ---------------

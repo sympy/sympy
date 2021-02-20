@@ -162,6 +162,8 @@ EPath class
 ^^^^^^^^^^^
 .. autoclass:: EPath
    :members:
+   :undoc-members:
+   :private-members:
 
 epath
 ^^^^^

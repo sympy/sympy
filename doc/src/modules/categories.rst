@@ -31,24 +31,38 @@ diagrams.
 
 .. autoclass:: Object
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: Morphism
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: NamedMorphism
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: CompositeMorphism
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: IdentityMorphism
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: Category
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: Diagram
    :members:
+   :undoc-members:
+   :private-members:
 
 Diagram Drawing
 ---------------
@@ -60,11 +74,18 @@ diagrams.
 
 .. autoclass:: DiagramGrid
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: ArrowStringDescription
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: XypicDiagramDrawer
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autofunction:: xypic_draw_diagram
 

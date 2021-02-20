@@ -514,4 +514,5 @@ Internal API Reference
 
 .. automodule:: sympy.integrals.meijerint
    :members:
+   :undoc-members:
    :private-members:

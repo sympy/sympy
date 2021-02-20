@@ -6,6 +6,8 @@ Physical quantities
 
 .. autoclass:: Quantity
    :members:
+   :undoc-members:
+   :private-members:
 
 -----------------------------
 Conversion between quantities

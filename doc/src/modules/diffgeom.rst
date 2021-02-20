@@ -11,45 +11,73 @@ Base Class Reference
 --------------------
 .. autoclass:: Manifold
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: Patch
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: CoordSystem
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: CoordinateSymbol
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: Point
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: BaseScalarField
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: BaseVectorField
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: Commutator
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: Differential
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: TensorProduct
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: WedgeProduct
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: LieDerivative
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: BaseCovarDerivativeOp
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: CovarDerivativeOp
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autofunction:: intcurve_series
 

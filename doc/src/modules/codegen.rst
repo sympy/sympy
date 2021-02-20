@@ -547,33 +547,45 @@ Classes and functions for rewriting expressions (sympy.codegen.rewriting)
 
 .. automodule:: sympy.codegen.rewriting
    :members:
+   :undoc-members:
+   :private-members:
 
 .. automodule:: sympy.codegen.matrix_nodes
    :members:
+   :undoc-members:
+   :private-members:
 
 Tools for simplifying expressions using approximations (sympy.codegen.approximations)
 -------------------------------------------------------------------------------------
 
 .. automodule:: sympy.codegen.approximations
    :members:
+   :undoc-members:
+   :private-members:
 
 Classes for abstract syntax trees (sympy.codegen.ast)
 -----------------------------------------------------
 
 .. automodule:: sympy.codegen.ast
    :members:
+   :undoc-members:
+   :private-members:
 
 Special C math functions (sympy.codegen.cfunctions)
 ---------------------------------------------------
 
 .. automodule:: sympy.codegen.cfunctions
    :members:
+   :undoc-members:
+   :private-members:
 
 C specific AST nodes (sympy.codegen.cnodes)
 -------------------------------------------
 
 .. automodule:: sympy.codegen.cnodes
    :members:
+   :undoc-members:
+   :private-members:
 
 
 C++ specific AST nodes (sympy.codegen.cxxnodes)
@@ -581,12 +593,16 @@ C++ specific AST nodes (sympy.codegen.cxxnodes)
 
 .. automodule:: sympy.codegen.cxxnodes
    :members:
+   :undoc-members:
+   :private-members:
 
 Fortran specific AST nodes (sympy.codegen.fnodes)
 -------------------------------------------------
 
 .. automodule:: sympy.codegen.fnodes
    :members:
+   :undoc-members:
+   :private-members:
 
 
 Algorithms (sympy.codegen.algorithms)
@@ -594,6 +610,8 @@ Algorithms (sympy.codegen.algorithms)
 
 .. automodule:: sympy.codegen.algorithms
    :members:
+   :undoc-members:
+   :private-members:
 
 
 Python utilities (sympy.codegen.pyutils)
@@ -601,6 +619,8 @@ Python utilities (sympy.codegen.pyutils)
 
 .. automodule:: sympy.codegen.pyutils
    :members:
+   :undoc-members:
+   :private-members:
 
 
 C utilities (sympy.codegen.cutils)
@@ -608,6 +628,8 @@ C utilities (sympy.codegen.cutils)
 
 .. automodule:: sympy.codegen.cutils
    :members:
+   :undoc-members:
+   :private-members:
 
 
 Fortran utilities (sympy.codegen.futils)
@@ -615,6 +637,8 @@ Fortran utilities (sympy.codegen.futils)
 
 .. automodule:: sympy.codegen.futils
    :members:
+   :undoc-members:
+   :private-members:
 
 
 Array utilities (sympy.codegen.array_utils)
@@ -622,3 +646,5 @@ Array utilities (sympy.codegen.array_utils)
 
 .. automodule:: sympy.codegen.array_utils
    :members:
+   :undoc-members:
+   :private-members:

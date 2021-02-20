@@ -51,3 +51,5 @@ API Reference
 
 .. automodule:: sympy.utilities.autowrap
    :members:
+   :undoc-members:
+   :private-members:

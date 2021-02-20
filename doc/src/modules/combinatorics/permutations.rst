@@ -7,9 +7,13 @@ Permutations
 
 .. autoclass:: Permutation
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: Cycle
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autofunction:: _af_parity
 

@@ -89,3 +89,5 @@ Docstring
 
 .. automodule:: sympy.utilities.iterables
    :members:
+   :undoc-members:
+   :private-members:

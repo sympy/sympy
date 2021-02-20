@@ -9,6 +9,8 @@ KaneMethod
 
 .. automodule:: sympy.physics.mechanics.kane
    :members:
+   :undoc-members:
+   :private-members:
 
 
 LagrangesMethod
@@ -16,3 +18,5 @@ LagrangesMethod
 
 .. automodule:: sympy.physics.mechanics.lagrange
    :members:
+   :undoc-members:
+   :private-members:

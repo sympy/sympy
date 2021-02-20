@@ -17,3 +17,5 @@ This section lists the classes implemented by the Algebras module.
 
 .. autoclass:: Quaternion
    :members:
+   :undoc-members:
+   :private-members:

@@ -84,12 +84,18 @@ Concrete Class Reference
 ------------------------
 .. autoclass:: sympy.concrete.summations.Sum
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.concrete.products.Product
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.concrete.expr_with_intlimits.ExprWithIntLimits
    :members:
+   :undoc-members:
+   :private-members:
 
 Concrete Functions Reference
 ----------------------------

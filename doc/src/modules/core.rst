@@ -31,11 +31,15 @@ Basic
 ^^^^^
 .. autoclass:: Basic
    :members:
+   :undoc-members:
+   :private-members:
 
 Atom
 ^^^^
 .. autoclass:: Atom
    :members:
+   :undoc-members:
+   :private-members:
 
 core
 ----
@@ -50,9 +54,13 @@ S
 
 .. autoclass:: sympy.core.singleton.SingletonRegistry
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: Singleton
    :members:
+   :undoc-members:
+   :private-members:
 
 expr
 ----
@@ -62,16 +70,22 @@ Expr
 ^^^^
 .. autoclass:: Expr
    :members:
+   :undoc-members:
+   :private-members:
 
 UnevaluatedExpr
 ^^^^^^^^^^^^^^^
 .. autoclass:: UnevaluatedExpr
    :members:
+   :undoc-members:
+   :private-members:
 
 AtomicExpr
 ^^^^^^^^^^
 .. autoclass:: AtomicExpr
    :members:
+   :undoc-members:
+   :private-members:
 
 symbol
 ------
@@ -81,16 +95,22 @@ Symbol
 ^^^^^^
 .. autoclass:: Symbol
    :members:
+   :undoc-members:
+   :private-members:
 
 Wild
 ^^^^
 .. autoclass:: Wild
    :members:
+   :undoc-members:
+   :private-members:
 
 Dummy
 ^^^^^
 .. autoclass:: Dummy
    :members:
+   :undoc-members:
+   :private-members:
 
 symbols
 ^^^^^^^
@@ -108,31 +128,43 @@ Number
 ^^^^^^
 .. autoclass:: Number
    :members:
+   :undoc-members:
+   :private-members:
 
 Float
 ^^^^^
 .. autoclass:: Float
    :members:
+   :undoc-members:
+   :private-members:
 
 Rational
 ^^^^^^^^
 .. autoclass:: Rational
    :members:
+   :undoc-members:
+   :private-members:
 
 Integer
 ^^^^^^^
 .. autoclass:: Integer
    :members:
+   :undoc-members:
+   :private-members:
 
 NumberSymbol
 ^^^^^^^^^^^^
 .. autoclass:: NumberSymbol
    :members:
+   :undoc-members:
+   :private-members:
 
 RealNumber
 ^^^^^^^^^^
 .. autoclass:: RealNumber
    :members:
+   :undoc-members:
+   :private-members:
 
 igcd
 ^^^^
@@ -151,90 +183,120 @@ Zero
 
 .. autoclass:: Zero
    :members:
+   :undoc-members:
+   :private-members:
 
 One
 ^^^
 
 .. autoclass:: One
    :members:
+   :undoc-members:
+   :private-members:
 
 NegativeOne
 ^^^^^^^^^^^
 
 .. autoclass:: NegativeOne
    :members:
+   :undoc-members:
+   :private-members:
 
 Half
 ^^^^
 
 .. autoclass:: Half
    :members:
+   :undoc-members:
+   :private-members:
 
 NaN
 ^^^
 
 .. autoclass:: NaN
    :members:
+   :undoc-members:
+   :private-members:
 
 Infinity
 ^^^^^^^^
 
 .. autoclass:: Infinity
    :members:
+   :undoc-members:
+   :private-members:
 
 NegativeInfinity
 ^^^^^^^^^^^^^^^^
 
 .. autoclass:: NegativeInfinity
    :members:
+   :undoc-members:
+   :private-members:
 
 ComplexInfinity
 ^^^^^^^^^^^^^^^
 
 .. autoclass:: ComplexInfinity
    :members:
+   :undoc-members:
+   :private-members:
 
 Exp1
 ^^^^
 
 .. autoclass:: Exp1
    :members:
+   :undoc-members:
+   :private-members:
 
 ImaginaryUnit
 ^^^^^^^^^^^^^
 
 .. autoclass:: ImaginaryUnit
    :members:
+   :undoc-members:
+   :private-members:
 
 Pi
 ^^
 
 .. autoclass:: Pi
    :members:
+   :undoc-members:
+   :private-members:
 
 EulerGamma
 ^^^^^^^^^^
 
 .. autoclass:: EulerGamma
    :members:
+   :undoc-members:
+   :private-members:
 
 Catalan
 ^^^^^^^
 
 .. autoclass:: Catalan
    :members:
+   :undoc-members:
+   :private-members:
 
 GoldenRatio
 ^^^^^^^^^^^
 
 .. autoclass:: GoldenRatio
    :members:
+   :undoc-members:
+   :private-members:
 
 TribonacciConstant
 ^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: TribonacciConstant
    :members:
+   :undoc-members:
+   :private-members:
 
 mod_inverse
 ^^^^^^^^^^^
@@ -249,6 +311,8 @@ Pow
 ^^^
 .. autoclass:: Pow
    :members:
+   :undoc-members:
+   :private-members:
 
 integer_nthroot
 ^^^^^^^^^^^^^^^
@@ -266,6 +330,8 @@ Mul
 ^^^
 .. autoclass:: Mul
    :members:
+   :undoc-members:
+   :private-members:
 
 prod
 ^^^^
@@ -279,6 +345,8 @@ Add
 ^^^
 .. autoclass:: Add
    :members:
+   :undoc-members:
+   :private-members:
 
 mod
 ---
@@ -288,6 +356,8 @@ Mod
 ^^^
 .. autoclass:: Mod
    :members:
+   :undoc-members:
+   :private-members:
 
 relational
 ----------
@@ -297,69 +367,97 @@ Rel
 ^^^
 .. autoclass:: Relational
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: Rel
    :members:
+   :undoc-members:
+   :private-members:
 
 Eq
 ^^
 .. autoclass:: Eq
    :members:
+   :undoc-members:
+   :private-members:
 
 Ne
 ^^
 .. autoclass:: Ne
    :members:
+   :undoc-members:
+   :private-members:
 
 Lt
 ^^
 .. autoclass:: Lt
    :members:
+   :undoc-members:
+   :private-members:
 
 Le
 ^^
 .. autoclass:: Le
    :members:
+   :undoc-members:
+   :private-members:
 
 Gt
 ^^
 .. autoclass:: Gt
    :members:
+   :undoc-members:
+   :private-members:
 
 Ge
 ^^
 .. autoclass:: Ge
    :members:
+   :undoc-members:
+   :private-members:
 
 Equality
 ^^^^^^^^
 .. autoclass:: Equality
    :members:
+   :undoc-members:
+   :private-members:
 
 GreaterThan
 ^^^^^^^^^^^
 .. autoclass:: GreaterThan
    :members:
+   :undoc-members:
+   :private-members:
 
 LessThan
 ^^^^^^^^
 .. autoclass:: LessThan
    :members:
+   :undoc-members:
+   :private-members:
 
 Unequality
 ^^^^^^^^^^
 .. autoclass:: Unequality
    :members:
+   :undoc-members:
+   :private-members:
 
 StrictGreaterThan
 ^^^^^^^^^^^^^^^^^
 .. autoclass:: StrictGreaterThan
    :members:
+   :undoc-members:
+   :private-members:
 
 StrictLessThan
 ^^^^^^^^^^^^^^
 .. autoclass:: StrictLessThan
    :members:
+   :undoc-members:
+   :private-members:
 
 multidimensional
 ----------------
@@ -369,6 +467,8 @@ vectorize
 ^^^^^^^^^
 .. autoclass:: vectorize
    :members:
+   :undoc-members:
+   :private-members:
 
 function
 --------
@@ -378,16 +478,21 @@ Lambda
 ^^^^^^
 .. autoclass:: Lambda
    :members:
+   :undoc-members:
+   :private-members:
 
 WildFunction
 ^^^^^^^^^^^^
 .. autoclass:: WildFunction
    :members:
+   :undoc-members:
+   :private-members:
 
 Derivative
 ^^^^^^^^^^
 .. autoclass:: Derivative
    :members:
+   :undoc-members:
    :private-members:
 
 diff
@@ -398,11 +503,15 @@ FunctionClass
 ^^^^^^^^^^^^^
 .. autoclass:: FunctionClass
    :members:
+   :undoc-members:
+   :private-members:
 
 Function
 ^^^^^^^^
 .. autoclass:: Function
    :members:
+   :undoc-members:
+   :private-members:
 
 .. note:: Not all functions are the same
 
@@ -434,6 +543,8 @@ Subs
 ^^^^
 .. autoclass:: Subs
    :members:
+   :undoc-members:
+   :private-members:
 
 expand
 ^^^^^^
@@ -443,6 +554,8 @@ PoleError
 ^^^^^^^^^
 .. autoclass:: PoleError
    :members:
+   :undoc-members:
+   :private-members:
 
 count_ops
 ^^^^^^^^^
@@ -493,11 +606,15 @@ EvalfMixin
 
 .. autoclass:: EvalfMixin
    :members:
+   :undoc-members:
+   :private-members:
 
 PrecisionExhausted
 ^^^^^^^^^^^^^^^^^^
 .. autoclass:: PrecisionExhausted
    :members:
+   :undoc-members:
+   :private-members:
 
 N
 ^
@@ -511,11 +628,15 @@ Tuple
 ^^^^^
 .. autoclass:: Tuple
    :members:
+   :undoc-members:
+   :private-members:
 
 Dict
 ^^^^
 .. autoclass:: Dict
    :members:
+   :undoc-members:
+   :private-members:
 
 compatibility
 -------------
@@ -558,13 +679,19 @@ Kind
 ^^^^
 .. autoclass:: Kind
    :members:
+   :undoc-members:
+   :private-members:
 
 NumberKind
 ^^^^^^^^^^
 .. autoclass:: NumberKind
    :members:
+   :undoc-members:
+   :private-members:
 
 BooleanKind
 ^^^^^^^^^^^
 .. autoclass:: BooleanKind
    :members:
+   :undoc-members:
+   :private-members:

@@ -38,21 +38,33 @@ Abstract Domains
 
 .. autoclass:: sympy.polys.domains.domain.Domain
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.polys.domains.domainelement.DomainElement
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.polys.domains.field.Field
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.polys.domains.ring.Ring
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.polys.domains.simpledomain.SimpleDomain
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.polys.domains.compositedomain.CompositeDomain
    :members:
+   :undoc-members:
+   :private-members:
 
 
 .. _GF(p):
@@ -62,10 +74,18 @@ GF(p)
 
 .. autoclass:: FiniteField
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: PythonFiniteField
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: GMPYFiniteField
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. _ZZ:
 
@@ -124,9 +144,17 @@ when available.
 
 .. autoclass:: IntegerRing
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: PythonIntegerRing
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: GMPYIntegerRing
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. _QQ:
 
@@ -177,11 +205,22 @@ preferred because it is significantly faster.
 
 .. autoclass:: RationalField
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: PythonRationalField
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: GMPYRationalField
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: PythonRational
+   :members:
+   :undoc-members:
+   :private-members:
 
 
 Gaussian domains
@@ -192,7 +231,13 @@ The Gaussian domains :ref:`ZZ_I` and :ref:`QQ_I` share common superclasses
 :py:class:`~.GaussianDomain` for the domains themselves.
 
 .. autoclass:: sympy.polys.domains.gaussiandomains.GaussianDomain
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: sympy.polys.domains.gaussiandomains.GaussianElement
+   :members:
+   :undoc-members:
+   :private-members:
 
 
 .. _ZZ_I:
@@ -202,7 +247,13 @@ ZZ_I
 ====
 
 .. autoclass:: sympy.polys.domains.gaussiandomains.GaussianIntegerRing
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: sympy.polys.domains.gaussiandomains.GaussianInteger
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. _QQ_I:
 
@@ -211,7 +262,13 @@ QQ_I
 ====
 
 .. autoclass:: sympy.polys.domains.gaussiandomains.GaussianRationalField
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: sympy.polys.domains.gaussiandomains.GaussianRational
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. _QQ(a):
 
@@ -221,6 +278,8 @@ QQ<a>
 
 .. autoclass:: AlgebraicField
    :members:
+   :undoc-members:
+   :private-members:
 
 .. _RR:
 
@@ -230,8 +289,13 @@ RR
 
 .. autoclass:: RealField
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.polys.domains.mpelements.RealElement
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. _CC:
 
@@ -241,8 +305,13 @@ CC
 
 .. autoclass:: ComplexField
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.polys.domains.mpelements.ComplexElement
+   :members:
+   :undoc-members:
+   :private-members:
 
 .. _K[x]:
 
@@ -252,6 +321,8 @@ K[x]
 
 .. autoclass:: PolynomialRing
    :members:
+   :undoc-members:
+   :private-members:
 
 .. _K(x):
 
@@ -261,6 +332,8 @@ K(x)
 
 .. autoclass:: FractionField
    :members:
+   :undoc-members:
+   :private-members:
 
 .. _EX:
 
@@ -270,14 +343,22 @@ EX
 
 .. autoclass:: ExpressionDomain
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: sympy.polys.domains.expressiondomain::ExpressionDomain.Expression
+   :members:
+   :undoc-members:
+   :private-members:
 
 
 Quotient ring
 =============
 
 .. autoclass:: sympy.polys.domains.quotientring.QuotientRing
+   :members:
+   :undoc-members:
+   :private-members:
 
 
 Sparse polynomials
@@ -294,9 +375,13 @@ Sparse polynomials are represented as dictionaries.
 
 .. autoclass:: PolyRing
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: PolyElement
    :members:
+   :undoc-members:
+   :private-members:
 
 
 Sparse rational functions
@@ -313,9 +398,13 @@ Sparse polynomials are represented as dictionaries.
 
 .. autoclass:: FracField
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: FracElement
    :members:
+   :undoc-members:
+   :private-members:
 
 
 Dense polynomials
@@ -325,12 +414,18 @@ Dense polynomials
 
 .. autoclass:: DMP
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: DMF
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: ANP
    :members:
+   :undoc-members:
+   :private-members:
 
 
 .. _integers: https://en.wikipedia.org/wiki/Integer

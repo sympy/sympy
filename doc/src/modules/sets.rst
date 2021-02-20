@@ -11,6 +11,8 @@ Set
 ^^^
 .. autoclass:: Set
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autofunction:: imageset
 
@@ -21,11 +23,15 @@ Interval
 ^^^^^^^^
 .. autoclass:: Interval
    :members:
+   :undoc-members:
+   :private-members:
 
 FiniteSet
 ^^^^^^^^^
 .. autoclass:: FiniteSet
    :members:
+   :undoc-members:
+   :private-members:
 
 Compound Sets
 -------------
@@ -37,26 +43,36 @@ Union
 ^^^^^
 .. autoclass:: Union
    :members:
+   :undoc-members:
+   :private-members:
 
 Intersection
 ^^^^^^^^^^^^
 .. autoclass:: Intersection
    :members:
+   :undoc-members:
+   :private-members:
 
 ProductSet
 ^^^^^^^^^^
 .. autoclass:: ProductSet
    :members:
+   :undoc-members:
+   :private-members:
 
 Complement
 ^^^^^^^^^^
 .. autoclass:: Complement
    :members:
+   :undoc-members:
+   :private-members:
 
 SymmetricDifference
 ^^^^^^^^^^^^^^^^^^^
 .. autoclass:: SymmetricDifference
    :members:
+   :undoc-members:
+   :private-members:
 
 Singleton Sets
 --------------
@@ -65,11 +81,15 @@ EmptySet
 ^^^^^^^^
 .. autoclass:: EmptySet
    :members:
+   :undoc-members:
+   :private-members:
 
 UniversalSet
 ^^^^^^^^^^^^
 .. autoclass:: UniversalSet
    :members:
+   :undoc-members:
+   :private-members:
 
 Special Sets
 ------------
@@ -79,48 +99,68 @@ Naturals
 ^^^^^^^^
 .. autoclass:: Naturals
    :members:
+   :undoc-members:
+   :private-members:
 
 Naturals0
 ^^^^^^^^^
 .. autoclass:: Naturals0
    :members:
+   :undoc-members:
+   :private-members:
 
 Integers
 ^^^^^^^^
 .. autoclass:: Integers
    :members:
+   :undoc-members:
+   :private-members:
 
 
 Reals
 ^^^^^
 .. autoclass:: Reals
    :members:
+   :undoc-members:
+   :private-members:
 
 Complexes
 ^^^^^^^^^
 .. autoclass:: Complexes
    :members:
+   :undoc-members:
+   :private-members:
 
 ImageSet
 ^^^^^^^^
 .. autoclass:: ImageSet
    :members:
+   :undoc-members:
+   :private-members:
 
 Range
 ^^^^^
 .. autoclass:: Range
    :members:
+   :undoc-members:
+   :private-members:
 
 ComplexRegion
 ^^^^^^^^^^^^^
 .. autoclass:: ComplexRegion
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: CartesianComplexRegion
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: PolarComplexRegion
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autofunction:: normalize_theta_set
 
@@ -133,6 +173,8 @@ PowerSet
 ^^^^^^^^
 .. autoclass:: PowerSet
    :members:
+   :undoc-members:
+   :private-members:
 
 Iteration over sets
 ^^^^^^^^^^^^^^^^^^^
@@ -167,4 +209,6 @@ ConditionSet
 ^^^^^^^^^^^^
 
 .. autoclass:: ConditionSet
-    :members:
+   :members:
+   :undoc-members:
+   :private-members:

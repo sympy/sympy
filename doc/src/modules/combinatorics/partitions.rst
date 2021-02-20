@@ -7,9 +7,13 @@ Partitions
 
 .. autoclass:: Partition
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autoclass:: IntegerPartition
    :members:
+   :undoc-members:
+   :private-members:
 
 .. autofunction:: random_integer_partition
 

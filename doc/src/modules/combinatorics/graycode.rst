@@ -7,6 +7,8 @@ Gray Code
 
 .. autoclass:: GrayCode
    :members:
+   :undoc-members:
+   :private-members:
 
 .. automethod:: sympy.combinatorics.graycode.random_bitstring
 

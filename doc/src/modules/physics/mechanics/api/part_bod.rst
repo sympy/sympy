@@ -9,6 +9,8 @@ Particle
 
 .. automodule:: sympy.physics.mechanics.particle
    :members:
+   :undoc-members:
+   :private-members:
 
 
 RigidBody
@@ -16,6 +18,8 @@ RigidBody
 
 .. automodule:: sympy.physics.mechanics.rigidbody
    :members:
+   :undoc-members:
+   :private-members:
 
 
 inertia

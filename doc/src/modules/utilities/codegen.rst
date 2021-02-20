@@ -50,3 +50,5 @@ API Reference
 
 .. automodule:: sympy.utilities.codegen
    :members:
+   :undoc-members:
+   :private-members:

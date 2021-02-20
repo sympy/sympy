@@ -62,31 +62,69 @@ SymPy has special support for definite integrals, and integral transforms.
 
 .. autofunction:: mellin_transform
 .. autoclass:: MellinTransform
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: inverse_mellin_transform
 .. autoclass:: InverseMellinTransform
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: laplace_transform
 .. autoclass:: LaplaceTransform
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: inverse_laplace_transform
 .. autoclass:: InverseLaplaceTransform
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: fourier_transform
 .. autofunction:: _fourier_transform
 .. autoclass:: FourierTransform
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: inverse_fourier_transform
 .. autoclass:: InverseFourierTransform
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: sine_transform
 .. autoclass:: SineTransform
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: inverse_sine_transform
 .. autoclass:: InverseSineTransform
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: cosine_transform
 .. autoclass:: CosineTransform
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: inverse_cosine_transform
 .. autoclass:: InverseCosineTransform
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: hankel_transform
 .. autoclass:: HankelTransform
+   :members:
+   :undoc-members:
+   :private-members:
 .. autofunction:: inverse_hankel_transform
 .. autoclass:: InverseHankelTransform
+   :members:
+   :undoc-members:
+   :private-members:
 .. autoclass:: IntegralTransform
    :members:
+   :undoc-members:
+   :private-members:
 .. autoexception:: IntegralTransformError
 
 Internals
@@ -136,6 +174,9 @@ SymPy first applies several heuristic algorithms, as these are the fastest:
 
    .. autofunction:: sympy.integrals.risch::risch_integrate
    .. autoclass:: sympy.integrals.risch::NonElementaryIntegral
+   :members:
+   :undoc-members:
+   :private-members:
 
 6. For non-elementary definite integrals, SymPy uses so-called Meijer G-functions.
    Details are described in :ref:`g-functions`.
@@ -171,6 +212,8 @@ The class :class:`~.Integral` represents an unevaluated integral and has some me
 
 .. autoclass:: sympy.integrals.integrals::Integral
    :members:
+   :undoc-members:
+   :private-members:
 
    .. data:: is_commutative
 
@@ -181,6 +224,8 @@ common superclass of :class:`~.Integral` and :class:`~.Sum`.
 
 .. autoclass:: sympy.concrete.expr_with_limits::ExprWithLimits
    :members:
+   :undoc-members:
+   :private-members:
 
 TODO and Bugs
 -------------

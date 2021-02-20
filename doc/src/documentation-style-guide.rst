@@ -1138,6 +1138,8 @@ relevant docstrings from geometry module into documentation::
 
     .. autoclass:: Point
        :members:
+       :undoc-members:
+       :private-members:
 
     Lines
     =====
@@ -1146,15 +1148,23 @@ relevant docstrings from geometry module into documentation::
 
     .. autoclass:: LinearEntity
        :members:
+       :undoc-members:
+       :private-members:
 
     .. autoclass:: Line
        :members:
+       :undoc-members:
+       :private-members:
 
     .. autoclass:: Ray
        :members:
+       :undoc-members:
+       :private-members:
 
     .. autoclass:: Segment
        :members:
+       :undoc-members:
+       :private-members:
 
     Curves
     ======
@@ -1163,6 +1173,8 @@ relevant docstrings from geometry module into documentation::
 
     .. autoclass:: Curve
        :members:
+       :undoc-members:
+       :private-members:
 
     Ellipses
     ========
@@ -1171,9 +1183,13 @@ relevant docstrings from geometry module into documentation::
 
     .. autoclass:: Ellipse
        :members:
+       :undoc-members:
+       :private-members:
 
     .. autoclass:: Circle
        :members:
+       :undoc-members:
+       :private-members:
 
     Polygons
     ========
@@ -1182,12 +1198,18 @@ relevant docstrings from geometry module into documentation::
 
     .. autoclass:: Polygon
       :members:
+      :undoc-members:
+      :private-members:
 
     .. autoclass:: RegularPolygon
        :members:
+       :undoc-members:
+       :private-members:
 
     .. autoclass:: Triangle
        :members:
+       :undoc-members:
+       :private-members:
 
 First namespace is set to particular submodule (file) with ``.. module::``
 directive, then docstrings are imported with ``.. autoclass::`` or ``..

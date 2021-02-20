@@ -11,9 +11,15 @@ Predicate
 =========
 
 .. autoclass:: sympy.assumptions.assume::Predicate
+   :members:
+   :undoc-members:
+   :private-members:
    :noindex:
 
 .. autoclass:: sympy.assumptions.assume::AppliedPredicate
+   :members:
+   :undoc-members:
+   :private-members:
    :noindex:
 
 
