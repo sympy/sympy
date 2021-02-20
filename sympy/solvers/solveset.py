@@ -43,7 +43,6 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polytools import invert
 from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
     PolyNonlinearError)
-from sympy.polys.matrices.linsolve import _linsolve
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
