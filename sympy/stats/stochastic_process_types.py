@@ -931,7 +931,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """
         return self.args[2]
 
-    def communication_classes(self) -> tList[tTuple[tList[Basic], bool, Integer]]:
+    def communication_classes(self) -> tList[tTuple[tList[Basic], Boolean, Integer]]:
         """
         Returns the list of communication classes that partition
         the states of the markov chain.
