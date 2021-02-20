@@ -662,11 +662,7 @@ class Abs(Function):
         if direction.has(log(x)):
             direction = direction.subs(log(x), logx)
         s = self.args[0]._eval_nseries(x, n=n, logx=logx)
-        when = Eq(direction, 0)
-        return Piecewise(
-            ((s.subs(direction, 0)), when),
-            (sign(direction)*s, True),
-        )
+        return (sign(direction)*s).expand()
 
     def _sage_(self):
         import sage.all as sage
@@ -1301,6 +1297,8 @@ def _polarify(eq, lift, pause=False):
         if lift:
             return polar_lift(r)
         return r
+    elif eq.is_Pow and eq.base == S.Exp1:
+        return eq.func(S.Exp1, _polarify(eq.exp, lift, pause=False))
     elif eq.is_Function:
         return eq.func(*[_polarify(arg, lift, pause=False) for arg in eq.args])
     elif isinstance(eq, Integral):

@@ -1,8 +1,9 @@
 from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.function import (Function, ArgumentIndexError, _coeff_isneg,
-        expand_mul)
+from sympy.core.function import (
+    Function, ArgumentIndexError, _coeff_isneg,
+    expand_mul, FunctionClass)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Rational
@@ -198,7 +199,14 @@ class exp_polar(ExpBase):
         return ExpBase.as_base_exp(self)
 
 
-class exp(ExpBase):
+class ExpMeta(FunctionClass):
+    def __instancecheck__(cls, instance):
+        if exp in instance.__class__.__mro__:
+            return True
+        return isinstance(instance, Pow) and instance.base is S.Exp1
+
+
+class exp(ExpBase, metaclass=ExpMeta):
     """
     The exponential function, :math:`e^x`.
 
@@ -261,9 +269,11 @@ class exp(ExpBase):
         from sympy.sets.setexpr import SetExpr
         from sympy.matrices.matrices import MatrixBase
         from sympy import im, logcombine, re
-        if global_parameters.exp_is_pow:
+        if isinstance(arg, MatrixBase):
+            return arg.exp()
+        elif global_parameters.exp_is_pow:
             return Pow(S.Exp1, arg)
-        if arg.is_Number:
+        elif arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg.is_zero:
@@ -355,9 +365,6 @@ class exp(ExpBase):
                     out.append(newa)
             if out or argchanged:
                 return Mul(*out)*cls(Add(*add), evaluate=False)
-
-        elif isinstance(arg, MatrixBase):
-            return arg.exp()
 
         if arg.is_zero:
             return S.One
@@ -675,10 +682,10 @@ class log(Function):
         if arg.is_Pow and arg.base is S.Exp1 and arg.exp.is_extended_real:
             return arg.exp
         I = S.ImaginaryUnit
-        if isinstance(arg, exp) and arg.args[0].is_extended_real:
-            return arg.args[0]
-        elif isinstance(arg, exp) and arg.args[0].is_number:
-            r_, i_ = match_real_imag(arg.args[0])
+        if isinstance(arg, exp) and arg.exp.is_extended_real:
+            return arg.exp
+        elif isinstance(arg, exp) and arg.exp.is_number:
+            r_, i_ = match_real_imag(arg.exp)
             if i_ and i_.is_comparable:
                 i_ %= 2*S.Pi
                 if i_ > S.Pi:

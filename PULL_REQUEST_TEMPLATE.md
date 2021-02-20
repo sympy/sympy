@@ -17,10 +17,23 @@ open. -->
 
 #### Release Notes
 
-<!-- Write the release notes for this release below. See
-https://github.com/sympy/sympy/wiki/Writing-Release-Notes for more information
-on how to write release notes. The bot will check your release notes
-automatically to see if they are formatted correctly. -->
+<!-- Write the release notes for this release below between the BEGIN and END
+statements. The basic format is a bulleted list with the name of the subpackage
+and the release note for this PR. For example:
+
+* solvers
+  * Added a new solver for logarithmic equations.
+
+* functions
+  * Fixed a bug with log of integers.
+
+or if no release note(s) should be included use:
+
+NO ENTRY
+
+See https://github.com/sympy/sympy/wiki/Writing-Release-Notes for more
+information on how to write release notes. The bot will check your release
+notes automatically to see if they are formatted correctly. -->
 
 <!-- BEGIN RELEASE NOTES -->
 
