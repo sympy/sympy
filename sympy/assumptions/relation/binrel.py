@@ -31,7 +31,9 @@ class BinaryRelation(Predicate):
 
     >>> from sympy import Q, ask, sin, cos
     >>> from sympy.abc import x
-    >>> ask(Q.eq(sin(x)**2+cos(x)**2, 1))
+    >>> Q.eq(sin(x)**2+cos(x)**2, 1)
+    sin(x)**2 + cos(x)**2 = 1
+    >>> ask(_)
     True
 
     You can define a new binary relation by subclassing and dispatching.
@@ -50,7 +52,7 @@ class BinaryRelation(Predicate):
     >>> R(2, 1)
     2 R 1
 
-    Now, we can use ``ask()`` to evaluate the applied to boolean value.
+    Now, we can use ``ask()`` to evaluate it to boolean value.
 
     >>> ask(R(2, 1))
     True
@@ -58,7 +60,7 @@ class BinaryRelation(Predicate):
     False
 
     ``R`` returns ``False`` with minimum cost if two arguments have same
-    tree structure because R is antireflexive relation [1] by
+    structure because R is antireflexive relation [1] by
     ``is_reflexive = False``.
 
     >>> ask(R(x, x))

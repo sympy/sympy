@@ -18,10 +18,43 @@ __all__ = ['EqualityPredicate', 'UnequalityPredicate']
 
 class EqualityPredicate(BinaryRelation):
     """
-    Binary predicate for ``==``
+    Binary predicate for $=$.
+
+    This uses :func:`sympy.core.relational.is_eq()` for evaluation. Dispatching
+    the handler via ``Q.eq`` is supported.
+
+    Examples
+    ========
+
+    >>> from sympy import ask, Q
+    >>> Q.eq(0, 0)
+    0 = 0
+    >>> ask(_)
+    True
+
+    New types can be supported by registration.
+
+    >>> from sympy import Basic
+    >>> class MyBasic(Basic):
+    ...     def __new__(cls, arg):
+    ...         return super().__new__(cls, arg)
+    >>> @Q.eq.register(MyBasic, MyBasic)
+    ... def _(lhs, rhs):
+    ...     return ask(Q.eq(lhs.args[0], rhs.args[0]))
+
+    >>> ask(Q.eq(MyBasic(1), MyBasic(1)))
+    True
+    >>> ask(Q.eq(MyBasic(2), MyBasic(1)))
+    False
+
+    By dispatching to ``Q.eq``, ``MyBasic`` is supported by ``Q.ne`` as well.
+
+    >>> ask(Q.ne(MyBasic(1), MyBasic(1)))
+    False
+    >>> ask(Q.ne(MyBasic(2), MyBasic(1)))
+    True
 
     """
-    # TODO: Add examples
 
     is_reflexive = True
     is_symmetric = True
@@ -51,8 +84,12 @@ class EqualityPredicate(BinaryRelation):
 
 
 class UnequalityPredicate(BinaryRelation):
-    """
-    Binary predicate for ``!=``.
+    r"""
+    Binary predicate for $\neq$.
+
+    This predicate delegates evaluation logic to ``Q.eq`` and does not support
+    multipledispatch handler. To support new types, dispatch them to ``Q.eq``.
+    See the docstring of :obj:`sympy.assumptions.relation.equality.EqualityPredicate`.
 
     """
     # TODO: Add examples

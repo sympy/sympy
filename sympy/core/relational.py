@@ -1275,11 +1275,8 @@ def is_eq(lhs, rhs):
     >>> is_eq(a, b)
     True
 
-
     Examples
     ========
-
-
 
     >>> is_eq(S(0), S(0))
     True
@@ -1297,8 +1294,6 @@ def is_eq(lhs, rhs):
 
     >>> Eq(S(0), x)
     Eq(0, x)
-
-
 
     """
     from sympy.core.add import Add
