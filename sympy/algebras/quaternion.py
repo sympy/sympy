@@ -1,7 +1,7 @@
 # References :
 # http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
 # https://en.wikipedia.org/wiki/Quaternion
-from sympy import S, Rational, Symbol
+from sympy import S, Rational
 from sympy import re, im, conjugate, sign
 from sympy import sqrt, sin, cos, acos, exp, ln, atan2
 from sympy import trigsimp
@@ -9,6 +9,7 @@ from sympy import integrate
 from sympy import Matrix
 from sympy import sympify
 from sympy.core.expr import Expr
+from sympy.core.logic import fuzzy_not
 
 class Quaternion(Expr):
     """Provides basic quaternion operations.
@@ -842,14 +843,12 @@ class Quaternion(Expr):
 
         """
 
-        if isinstance(self.a, Symbol):
-            return self.a.is_zero
-
-        return self.a == 0
+        return self.a.is_zero
 
     def is_zero_quaternion(self):
         """
-        Returns true if the quaternion is zero else returns false.
+        Returns true if the quaternion is zero or false if it is not zero and None
+        if the value is unknown.
 
         Explanation
         ===========
@@ -945,6 +944,7 @@ class Quaternion(Expr):
         See Also
         ========
 
+        ternary_coplanar
         is_pure
 
         """
@@ -954,13 +954,13 @@ class Quaternion(Expr):
         aq = q1.axis()
         ar = q2.axis()
 
-        return (aq == ar or aq == -ar)
+        return (aq - ar).is_zero_quaternion() or (aq + ar).is_zero_quaternion()
 
     @classmethod
     def ternary_coplanar(cls, q1, q2, q3):
         """
         Returns True if the axis of the pure quaternions seen as 3D vectors
-        q1, q1, and q2 are coplanar else returns False.
+        q1, q2, and q3 are coplanar else returns False.
 
         Explanation
         ===========
@@ -989,9 +989,15 @@ class Quaternion(Expr):
         >>> Quaternion.ternary_coplanar(q1, q2, q3)
         False
 
+        See Also
+        ========
+
+        axis
+        is_pure
+
         """
 
-        if not q2.is_pure() or not q3.is_pure() or not q1.is_pure():
+        if fuzzy_not(q1.is_pure()) or fuzzy_not(q2.is_pure()) or fuzzy_not(q3.is_pure()):
             raise ValueError('The provided quaternions must be pure')
 
         M = Matrix([[q1.b, q1.c, q1.d], [q2.b, q2.c, q2.d], [q3.b, q3.c, q3.d]]).det()
@@ -1026,7 +1032,7 @@ class Quaternion(Expr):
 
         """
 
-        if not self.is_pure() or not other.is_pure():
+        if fuzzy_not(self.is_pure()) or fuzzy_not(other.is_pure()):
             raise ValueError('The provided quaternions must be pure')
 
         return (self*other - other*self).is_zero_quaternion()
@@ -1061,7 +1067,7 @@ class Quaternion(Expr):
 
         """
 
-        if not self.is_pure() or not other.is_pure():
+        if fuzzy_not(self.is_pure()) or fuzzy_not(other.is_pure()):
             raise ValueError('The provided quaternions must be pure')
 
         return (self*other + other*self).is_zero_quaternion()
