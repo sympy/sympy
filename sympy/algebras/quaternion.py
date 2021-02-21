@@ -844,20 +844,40 @@ class Quaternion(Expr):
         """
 
         if isinstance(self.a, Symbol):
-            z = self.a.is_zero
-            if not z:
-                return False
-            elif z == None:
-                return
-            else:
-                x = fuzzy_and(self.b.is_zero, self.c.is_zero,self.d.is_zero)
-                if x:
-                    return False
-                if x == None:
-                    return
-                else:
-                    return True
-        return self.a == 0  and not (self.a == self.b == self.c == self.d)
+            return self.a.is_zero
+
+        return self.a == 0
+
+    def is_zero_quaternion(self):
+        """
+        Returns true if the quaternion is zero else returns false.
+
+        Explanation
+        ===========
+
+        A zero quaternion is a quaternion with scalar it's part and vector part
+        both equal to 0.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(1, 0, 0, 0)
+        >>> q.is_zero_quaternion()
+        False
+
+        >>> q = Quaternion(0, 0, 0, 0)
+        >>> q.is_zero_quaternion()
+        True
+
+        See Also
+        ========
+        scalar_part
+        vector_part
+
+        """
+
+        return self.norm().is_zero
 
     def angle(self):
         r"""
@@ -890,7 +910,7 @@ class Quaternion(Expr):
 
         """
 
-        return atan2(Quaternion(0, self.b, self.c, self.d).norm(), self.a)
+        return atan2(self.vector_part().norm(), self.scalar_part())
 
     @classmethod
     def coplanar(cls, q1, q2):
@@ -929,7 +949,7 @@ class Quaternion(Expr):
         is_pure
 
         """
-        if (q1.a == q1.b == q1.c == q1.d == 0) or (q2.a == q2.b == q2.c == q2.d == 0):
+        if (q1.is_zero_quaternion()) or (q2.is_zero_quaternion()):
             raise ValueError('Any of the provided quaternions must not be 0')
 
         aq = q1.axis()
@@ -972,11 +992,11 @@ class Quaternion(Expr):
 
         """
 
-        if not q2.a == 0 or not q3.a == 0 or not q1.a == 0:
+        if not q2.is_pure() or not q3.is_pure() or not q1.is_pure():
             raise ValueError('The provided quaternions must be pure')
 
-        M = Matrix([[q1.b, q1.c, q1.d], [q2.b, q2.c, q2.d], [q3.b, q3.c, q3.d]])
-        return M.det() == 0
+        M = Matrix([[q1.b, q1.c, q1.d], [q2.b, q2.c, q2.d], [q3.b, q3.c, q3.d]]).det()
+        return M.is_zero
 
     def parallel(self, other):
         """
@@ -1007,10 +1027,10 @@ class Quaternion(Expr):
 
         """
 
-        if not self.a == 0 or not other.a == 0:
+        if not self.is_pure() or not other.is_pure():
             raise ValueError('The provided quaternions must be pure')
 
-        return (Quaternion._generic_mul(self, other) == Quaternion._generic_mul(other, self))
+        return (self*other - other*self).is_zero_quaternion()
 
     def orthogonal(self, other):
         """
@@ -1042,10 +1062,10 @@ class Quaternion(Expr):
 
         """
 
-        if not self.a == 0 or not other.a == 0:
+        if not self.is_pure() or not other.is_pure():
             raise ValueError('The provided quaternions must be pure')
 
-        return (Quaternion._generic_mul(self, other) == -Quaternion._generic_mul(other, self))
+        return (self*other + other*self).is_zero_quaternion()
 
     def index_vector(self):
         """
@@ -1080,7 +1100,7 @@ class Quaternion(Expr):
 
         """
 
-        return self.norm() * Quaternion(0, self.b, self.c, self.d).normalize()
+        return self.norm() * self.vector_part().normalize()
 
     def mensor(self):
         """

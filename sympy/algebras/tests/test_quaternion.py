@@ -112,7 +112,7 @@ def test_quaternion_functions():
     assert q1.axis() == Quaternion(0, 2*sqrt(29)/29, 3*sqrt(29)/29, 4*sqrt(29)/29)
     assert q.axis() == Quaternion(0, x/sqrt(x**2 + y**2 + z**2), y/sqrt(x**2 + y**2 + z**2), z/sqrt(x**2 + y**2 + z**2))
 
-    assert q0.is_pure() == False
+    assert q0.is_pure() == True
     assert q1.is_pure() == False
     assert Quaternion(0, 0, 0, 3).is_pure() == True
     assert Quaternion(0, 2, 10, 3).is_pure() == True
@@ -141,6 +141,9 @@ def test_quaternion_functions():
 
     assert Quaternion(4, 3, 9, 4).mensor() == log(sqrt(122))
     assert Quaternion(3, 3, 0, 2).mensor() == log(sqrt(22))
+
+    assert q0.is_zero_quaternion() == True
+    assert q1.is_zero_quaternion() == False
 
 def test_quaternion_conversions():
     q1 = Quaternion(1, 2, 3, 4)
