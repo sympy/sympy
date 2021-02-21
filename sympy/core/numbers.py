@@ -18,6 +18,7 @@ from sympy.core.compatibility import (as_int, HAS_GMPY, SYMPY_INTS,
     gmpy)
 from sympy.core.cache import lru_cache
 from .kind import NumberKind
+from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
 from mpmath.libmp import bitcount
@@ -3272,6 +3273,11 @@ class NaN(Number, metaclass=Singleton):
 
 nan = S.NaN
 
+@dispatch(NaN, Expr) # type:ignore
+def _eval_is_eq(a, b): # noqa:F811
+    return False
+
+
 class ComplexInfinity(AtomicExpr, metaclass=Singleton):
     r"""Complex infinity.
 
@@ -3990,6 +3996,10 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
         return (Float(0)._mpf_, Float(1)._mpf_)
 
 I = S.ImaginaryUnit
+
+@dispatch(Tuple, Number) # type:ignore
+def _eval_is_eq(self, other): # noqa: F811
+    return False
 
 def sympify_fractions(f):
     return Rational(f.numerator, f.denominator, 1)

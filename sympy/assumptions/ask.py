@@ -241,12 +241,12 @@ class AssumptionKeys:
 
     @memoize_property
     def eq(self):
-        from .relation.handlers import EqualityPredicate
+        from .relation.equality import EqualityPredicate
         return EqualityPredicate()
 
     @memoize_property
     def ne(self):
-        from .relation.handlers import UnequalityPredicate
+        from .relation.equality import UnequalityPredicate
         return UnequalityPredicate()
 
 

@@ -1,4 +1,3 @@
-from sympy.assumptions import Q
 from sympy.core.logic import fuzzy_and
 from sympy.core.sympify import _sympify
 from sympy.multipledispatch import dispatch
@@ -1165,8 +1164,8 @@ def test_is_eq():
         def __new__(cls, base, exp):
             return Basic.__new__(cls, _sympify(base), _sympify(exp))
 
-    @Q.eq.register(PowTest, PowTest)
-    def _(lhs, rhs, assumptions):
+    @dispatch(PowTest, PowTest)
+    def _eval_is_eq(lhs, rhs):
         if type(lhs) == PowTest and type(rhs) == PowTest:
             return fuzzy_and([is_eq(lhs.args[0], rhs.args[0]), is_eq(lhs.args[1], rhs.args[1])])
 
