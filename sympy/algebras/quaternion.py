@@ -9,7 +9,6 @@ from sympy import integrate
 from sympy import Matrix
 from sympy import sympify
 from sympy.core.expr import Expr
-from sympy.core.logic import fuzzy_and
 
 class Quaternion(Expr):
     """Provides basic quaternion operations.
