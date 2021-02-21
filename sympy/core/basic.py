@@ -1164,6 +1164,15 @@ class Basic(Printable, metaclass=ManagedProperties):
                 return self.func(*args), True
         return self, False
 
+    def has_free(self, syms):
+        bs=[]
+        for _ in recur_free_in(self, syms, bs):
+            return True
+        else:
+            if set(bs).intersection(syms):
+                return False
+            return True
+
     @cacheit
     def has(self, *patterns):
         """
@@ -1812,6 +1821,20 @@ class Basic(Printable, metaclass=ManagedProperties):
             obj = f(obj)
 
         return obj
+
+def recur_free_in(obj, syms, bs):
+    from sympy import Tuple, Integer
+    if obj in syms and obj not in bs:
+        yield obj
+    else:
+        for arg in reversed(obj.args[1:]):
+            if isinstance(arg, Integer):
+                continue
+            if obj.args[0] not in bs:
+                if isinstance(arg, Tuple):
+                    if len(arg) > 1 and arg[0] != arg[len(arg) - 1]:
+                        bs.append(arg[0])
+            yield from recur_free_in(arg, syms, bs)
 
 class Atom(Basic):
     """

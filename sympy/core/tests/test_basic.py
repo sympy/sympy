@@ -11,7 +11,7 @@ from sympy.core.sympify import SympifyError
 from sympy.core.function import Function, Lambda
 from sympy.core.compatibility import default_sort_key
 
-from sympy import sin, Q, cos, gamma, Tuple, Integral, Sum
+from sympy import sin, Q, cos, gamma, Tuple, Integral, Sum, Product, Derivative
 from sympy.functions.elementary.exponential import exp
 from sympy.testing.pytest import raises
 from sympy.core import I, pi
@@ -319,3 +319,19 @@ def test_replace_exceptions():
     raises(TypeError, lambda: e.replace(b*c, c.is_real))
     raises(TypeError, lambda: e.replace(b.is_real, 1))
     raises(TypeError, lambda: e.replace(lambda d: d.is_Number, 1))
+
+def test_has_free():
+    x, y, z, i, j, k = symbols('x y z i j k')
+    f = Function('f')
+    assert Sum(x, (x, 0, x)).has_free({x}) == True
+    assert Sum(x, (x, 0, Sum(y, (y, 0, z)))).has_free({x}) == False
+    assert Sum(x, (x, 0, Sum(y, (y, 0, z)))).has_free({y}) == False
+    assert Sum(x, (x, 0, Sum(y, (y, 0, z)))).has_free({z}) == True
+    assert Product(x, (x, 0, x)).has_free({x}) == True
+    assert Product(x, (x, 0, Product(y, (y, 0, z)))).has_free({x}) == False
+    assert Product(x, (x, 0, Product(y, (y, 0, z)))).has_free({y}) == False
+    assert Product(x, (x, 0, Product(y, (y, 0, z)))).has_free({z}) == True
+    assert Derivative(Derivative(f(x, y), y), x).has_free({x}) == False
+    assert Derivative(Derivative(f(x, y), y), x).has_free({y}) == False
+    assert Derivative(f(x), x, x, y, x).has_free({x}) == False
+    assert Derivative(f(x), x, x, y, x).has_free({y}) == False
