@@ -372,7 +372,10 @@ def _solve_lin_sys_component(eqs_coeffs, eqs_rhs, ring):
             convert = ring.ring.ground_new
         else:
             convert = ring.ground_new
-        echelon = [[convert(eij) for eij in ei] for ei in echelon.rep.to_ddm()]
+        echelon = echelon.rep.to_ddm()
+        vals_set = {v for row in echelon for v in row}
+        vals_map = {v: convert(v) for v in vals_set}
+        echelon = [[vals_map[eij] for eij in ei] for ei in echelon]
         for i, p in enumerate(pivots):
             v = echelon[i][-1] - sum(echelon[i][j]*g[j] for j in range(p+1, len(g)) if echelon[i][j])
             sols[keys[p]] = v
