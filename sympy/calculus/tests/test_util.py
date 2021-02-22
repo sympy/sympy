@@ -7,7 +7,7 @@ from sympy.calculus.util import (function_range, continuous_domain, not_empty_in
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import (Interval, FiniteSet, EmptySet, Complement,
                             Union)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 from sympy.abc import x
 
 a = Symbol('a', real=True)
@@ -105,6 +105,7 @@ def test_not_empty_in():
            lambda: not_empty_in(FiniteSet(x).intersect(S.Reals), x, a))
 
 
+@_both_exp_pow
 def test_periodicity():
     x = Symbol('x')
     y = Symbol('y')
@@ -549,5 +550,6 @@ def test_issue_16469():
     f = abs(x)
     assert function_range(f, x, S.Reals) == Interval(0, oo, False, True)
 
+@_both_exp_pow
 def test_issue_18747():
     assert periodicity(exp(pi*I*(x/4+S.Half/2)), x) == 8

@@ -8,7 +8,7 @@ from .expr import Expr
 from .evalf import PrecisionExhausted
 from .function import (_coeff_isneg, expand_complex, expand_multinomial,
     expand_mul)
-from .logic import fuzzy_bool, fuzzy_not, fuzzy_and
+from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
 from .compatibility import as_int, HAS_GMPY, gmpy
 from .parameters import global_parameters
 from sympy.utilities.iterables import sift
@@ -694,7 +694,7 @@ class Pow(Expr):
     def _eval_is_complex(self):
 
         if self.base == S.Exp1:
-            return self.exp.is_complex
+            return fuzzy_or([self.exp.is_complex, self.exp.is_extended_negative])
 
         if all(a.is_complex for a in self.args) and self._eval_is_finite():
             return True
@@ -1323,8 +1323,11 @@ class Pow(Expr):
 
     def _eval_evalf(self, prec):
         base, exp = self.as_base_exp()
-        if base != S.Exp1:
-            base = base._evalf(prec)
+        if base == S.Exp1:
+            # Use mpmath function associated to class "exp":
+            from sympy import exp as exp_function
+            return exp_function(self.exp, evaluate=False)._eval_evalf(prec)
+        base = base._evalf(prec)
         if not exp.is_Integer:
             exp = exp._evalf(prec)
         if exp.is_negative and base.is_number and base.is_extended_real is False:
