@@ -551,10 +551,19 @@ class Equality(Relational):
 
     def _eval_simplify(self, **kwargs):
         rel = self.as_Predicate().simplify(**kwargs)
-        ret = rel.refine()
-        if isinstance(ret, BooleanAtom):
-            return ret
-        return self.func(*rel.arguments)
+        ret = rel.function.eval(rel.arguments)
+        if ret is None:
+            r = self.func(*rel.arguments)
+        elif ret:
+            r = S.true
+        else:
+            r = S.false
+        # Did we get a simplified result?
+        measure = kwargs['measure']
+        if measure(r) < kwargs['ratio'] * measure(self):
+            return r
+        else:
+            return self
 
     def integrate(self, *args, **kwargs):
         """See the integrate function in sympy.integrals"""

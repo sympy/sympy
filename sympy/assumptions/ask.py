@@ -328,6 +328,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     It should be discerned from :func:`~.refine()` which does not reduce
     the expression to ``None``.
 
+    Unlike :func:~.`refine()`, the return value is not SymPy object.
+
     Parameters
     ==========
 

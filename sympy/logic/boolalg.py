@@ -181,7 +181,12 @@ class Boolean(Basic):
 
     def _eval_refine(self, assumptions):
         from sympy.assumptions import ask
-        return ask(self, assumptions)
+        ret = ask(self, assumptions)
+        if ret is True:
+            return true
+        elif ret is False:
+            return false
+        return None
 
 
 class BooleanAtom(Boolean):

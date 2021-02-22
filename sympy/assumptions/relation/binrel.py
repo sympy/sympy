@@ -6,6 +6,8 @@ from sympy import S
 from sympy.assumptions import AppliedPredicate, ask, Predicate
 from sympy.core.compatibility import ordered
 from sympy.core.kind import BooleanKind
+from sympy.core.parameters import global_parameters
+from sympy.logic.boolalg import BooleanAtom
 
 __all__ = ["BinaryRelation", "AppliedBinaryRelation"]
 
@@ -74,6 +76,8 @@ class BinaryRelation(Predicate):
 
     is_reflexive = None
     is_symmetric = None
+
+    is_Relational = True    # compatibility for old Relational
 
     def __call__(self, *args):
         if not len(args) == 2:
@@ -246,3 +250,26 @@ class AppliedBinaryRelation(AppliedPredicate):
     @property
     def binary_symbols(self):
         return self.function._eval_binary_symbols(*self.arguments)
+
+
+class _DeprecatedRelational(AppliedBinaryRelation):
+    """
+    Class to make migration from ``core/relational`` to this module.
+    Old signatures such as ``Eq(x, y)`` returns this class. Evaluates by
+    default and by simplification.
+
+    """
+    def __new__(cls, predicate, *args, **options):
+        evaluate = options.pop('evaluate', global_parameters.evaluate)
+        if evaluate:
+            val = predicate.eval(args)
+            if val is not None:
+                return val
+        return super().__new__(cls, predicate, *args)
+
+    def _eval_simplify(self, **kwargs):
+        rel = super()._eval_simplify(**kwargs)
+        ret = rel.refine()
+        if isinstance(ret, BooleanAtom):
+            return ret
+        return rel

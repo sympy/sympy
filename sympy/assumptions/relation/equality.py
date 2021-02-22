@@ -122,4 +122,5 @@ class UnequalityPredicate(BinaryRelation):
                 return {rhs}
         return set()
 
+
 from .simplify import eqsimp
