@@ -1,8 +1,7 @@
 from sympy import ImmutableDenseNDimArray, tensorproduct, MatrixSymbol, tensorcontraction, tensordiagonal, permutedims, \
     Symbol
-from sympy.codegen.array_utils import CodegenArrayTensorProduct, CodegenArrayContraction, CodegenArrayDiagonal, \
-    CodegenArrayPermuteDims
-from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol
+from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol, \
+    CodegenArrayTensorProduct, CodegenArrayPermuteDims, CodegenArrayDiagonal, CodegenArrayContraction
 from sympy.testing.pytest import raises
 
 

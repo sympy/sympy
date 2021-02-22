@@ -51,7 +51,8 @@ def tensorproduct(*args):
         return S.One
     if len(args) == 1:
         return _arrayfy(args[0])
-    from sympy.codegen.array_utils import _CodegenArrayAbstract, CodegenArrayTensorProduct
+    from sympy.tensor.array.expressions.array_expressions import _CodegenArrayAbstract
+    from sympy.tensor.array.expressions.array_expressions import CodegenArrayTensorProduct
     from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
     from sympy import MatrixSymbol
     if any(isinstance(arg, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)) for arg in args):
@@ -156,7 +157,8 @@ def tensorcontraction(array, *contraction_axes):
     [a*e + b*g, a*f + b*h],
     [c*e + d*g, c*f + d*h]])
     """
-    from sympy.codegen.array_utils import _CodegenArrayAbstract, CodegenArrayContraction
+    from sympy.tensor.array.expressions.array_expressions import CodegenArrayContraction
+    from sympy.tensor.array.expressions.array_expressions import _CodegenArrayAbstract
     from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
     from sympy import MatrixSymbol
     if isinstance(array, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)):
@@ -231,7 +233,8 @@ def tensordiagonal(array, *diagonal_axes):
         raise ValueError("need at least two axes to diagonalize")
 
     from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
-    from sympy.codegen.array_utils import _CodegenArrayAbstract, CodegenArrayDiagonal
+    from sympy.tensor.array.expressions.array_expressions import _CodegenArrayAbstract
+    from sympy.tensor.array.expressions.array_expressions import CodegenArrayDiagonal
     from sympy import MatrixSymbol
     if isinstance(array, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)):
         return CodegenArrayDiagonal(array, *diagonal_axes)
@@ -365,7 +368,8 @@ def permutedims(expr, perm):
     from sympy.tensor.array import SparseNDimArray
 
     from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
-    from sympy.codegen.array_utils import _CodegenArrayAbstract, CodegenArrayPermuteDims
+    from sympy.tensor.array.expressions.array_expressions import _CodegenArrayAbstract
+    from sympy.tensor.array.expressions.array_expressions import CodegenArrayPermuteDims
     from sympy import MatrixSymbol
     if isinstance(expr, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)):
         return CodegenArrayPermuteDims(expr, perm)

@@ -851,7 +851,7 @@ class NumPyPrinter(PythonCodePrinter):
         return "%s(%s)" % (self._module_format('numpy.einsum'), ", ".join(array_list))
 
     def _print_CodegenArrayContraction(self, expr):
-        from sympy.codegen.array_utils import CodegenArrayTensorProduct
+        from ..tensor.array.expressions.array_expressions import CodegenArrayTensorProduct
         base = expr.expr
         contraction_indices = expr.contraction_indices
         if not contraction_indices:

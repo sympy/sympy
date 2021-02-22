@@ -125,7 +125,9 @@ class ElementwiseApplyFunction(MatrixExpr):
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy import Identity
-        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct, CodegenArrayDiagonal
+        from sympy.tensor.array.expressions.array_expressions import CodegenArrayContraction
+        from sympy.tensor.array.expressions.array_expressions import CodegenArrayDiagonal
+        from sympy.tensor.array.expressions.array_expressions import CodegenArrayTensorProduct
         from sympy.core.expr import ExprBuilder
 
         fdiff = self._get_function_fdiff()

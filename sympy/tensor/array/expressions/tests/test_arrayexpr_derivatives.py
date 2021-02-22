@@ -1,8 +1,7 @@
 from sympy import MatrixSymbol, symbols, Identity, sin, cos
-from sympy.codegen.array_utils import CodegenArrayTensorProduct, CodegenArrayPermuteDims, CodegenArrayDiagonal, \
-    CodegenArrayContraction, ArrayElementwiseApplyFunc
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
-from sympy.tensor.array.expressions.array_expressions import ArraySymbol
+from sympy.tensor.array.expressions.array_expressions import ArraySymbol, CodegenArrayTensorProduct, \
+    CodegenArrayPermuteDims, CodegenArrayDiagonal, ArrayElementwiseApplyFunc, CodegenArrayContraction
 from sympy.tensor.array.expressions.arrayexpr_derivatives import array_derive
 
 k = symbols("k")

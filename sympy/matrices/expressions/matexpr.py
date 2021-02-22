@@ -651,7 +651,7 @@ def _matrix_derivative(expr, x):
 
     parts = [i.build() for i in lines]
 
-    from sympy.codegen.array_utils import recognize_matrix_expression
+    from sympy.tensor.array.expressions.conv_array_to_matrix import recognize_matrix_expression
 
     parts = [[recognize_matrix_expression(j).doit() for j in i] for i in parts]
 
@@ -938,7 +938,8 @@ class _LeftRightArgs:
 
     def _multiply_pointer(self, pointer, other):
         from sympy.core.expr import ExprBuilder
-        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
+        from ...tensor.array.expressions.array_expressions import CodegenArrayTensorProduct
+        from ...tensor.array.expressions.array_expressions import CodegenArrayContraction
 
         subexpr = ExprBuilder(
             CodegenArrayContraction,

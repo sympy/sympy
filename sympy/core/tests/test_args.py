@@ -9,7 +9,6 @@ import re
 
 from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
                    Eq, log, Function, Rational)
-from sympy.codegen.array_utils import ArrayElementwiseApplyFunc
 
 from sympy.testing.pytest import XFAIL, SKIP
 
@@ -4851,42 +4850,42 @@ def test_sympy__physics__optics__medium__Medium():
     assert _test_args(Medium('m'))
 
 
-def test_sympy__codegen__array_utils__CodegenArrayContraction():
-    from sympy.codegen.array_utils import CodegenArrayContraction
+def test_sympy__tensor__array__expressions__array_expressions__CodegenArrayContraction():
+    from sympy.tensor.array.expressions.array_expressions import CodegenArrayContraction
     from sympy import IndexedBase
     A = symbols("A", cls=IndexedBase)
     assert _test_args(CodegenArrayContraction(A, (0, 1)))
 
 
-def test_sympy__codegen__array_utils__CodegenArrayDiagonal():
-    from sympy.codegen.array_utils import CodegenArrayDiagonal
+def test_sympy__tensor__array__expressions__array_expressions__CodegenArrayDiagonal():
+    from sympy.tensor.array.expressions.array_expressions import CodegenArrayDiagonal
     from sympy import IndexedBase
     A = symbols("A", cls=IndexedBase)
     assert _test_args(CodegenArrayDiagonal(A, (0, 1)))
 
 
-def test_sympy__codegen__array_utils__CodegenArrayTensorProduct():
-    from sympy.codegen.array_utils import CodegenArrayTensorProduct
+def test_sympy__tensor__array__expressions__array_expressions__CodegenArrayTensorProduct():
+    from sympy.tensor.array.expressions.array_expressions import CodegenArrayTensorProduct
     from sympy import IndexedBase
     A, B = symbols("A B", cls=IndexedBase)
     assert _test_args(CodegenArrayTensorProduct(A, B))
 
 
-def test_sympy__codegen__array_utils__CodegenArrayElementwiseAdd():
-    from sympy.codegen.array_utils import CodegenArrayElementwiseAdd
+def test_sympy__tensor__array__expressions__array_expressions__CodegenArrayElementwiseAdd():
+    from sympy.tensor.array.expressions.array_expressions import CodegenArrayElementwiseAdd
     from sympy import IndexedBase
     A, B = symbols("A B", cls=IndexedBase)
     assert _test_args(CodegenArrayElementwiseAdd(A, B))
 
 
-def test_sympy__codegen__array_utils__CodegenArrayPermuteDims():
-    from sympy.codegen.array_utils import CodegenArrayPermuteDims
+def test_sympy__tensor__array__expressions__array_expressions__CodegenArrayPermuteDims():
+    from sympy.tensor.array.expressions.array_expressions import CodegenArrayPermuteDims
     A = MatrixSymbol("A", 4, 4)
     assert _test_args(CodegenArrayPermuteDims(A, (1, 0)))
 
 
-def test_sympy__codegen__array_utils__ArrayElementwiseApplyFunc():
-    from sympy.tensor.array.expressions.array_expressions import ArraySymbol
+def test_sympy__tensor__array__expressions__array_expressions__ArrayElementwiseApplyFunc():
+    from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElementwiseApplyFunc
     A = ArraySymbol("A", 4)
     assert _test_args(ArrayElementwiseApplyFunc(exp, A))
 

@@ -105,7 +105,8 @@ class HadamardProduct(MatrixExpr):
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.core.expr import ExprBuilder
-        from sympy.codegen.array_utils import CodegenArrayDiagonal, CodegenArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import CodegenArrayDiagonal
+        from sympy.tensor.array.expressions.array_expressions import CodegenArrayTensorProduct
         from sympy.matrices.expressions.matexpr import _make_matrix
 
         with_x_ind = [i for i, arg in enumerate(self.args) if arg.has(x)]
@@ -429,8 +430,8 @@ class HadamardPower(MatrixExpr):
         )
 
     def _eval_derivative_matrix_lines(self, x):
-        from sympy.codegen.array_utils import CodegenArrayTensorProduct
-        from sympy.codegen.array_utils import CodegenArrayDiagonal
+        from sympy.tensor.array.expressions.array_expressions import CodegenArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import CodegenArrayDiagonal
         from sympy.core.expr import ExprBuilder
         from sympy.matrices.expressions.matexpr import _make_matrix
 

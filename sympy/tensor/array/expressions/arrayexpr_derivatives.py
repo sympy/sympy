@@ -2,12 +2,12 @@ import operator
 from functools import reduce, singledispatch
 
 from sympy import Expr, Transpose, Identity, MatrixSymbol, S, Inverse, MatrixExpr, HadamardProduct
-from sympy.codegen.array_utils import CodegenArrayElementwiseAdd, CodegenArrayPermuteDims, CodegenArrayContraction, \
-    get_shape, CodegenArrayTensorProduct, parse_matrix_expression, CodegenArrayDiagonal, get_rank, \
-    ArrayElementwiseApplyFunc
 from sympy.combinatorics.permutations import _af_invert
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
-from sympy.tensor.array.expressions.array_expressions import ZeroArray, ArraySymbol
+from sympy.tensor.array.expressions.array_expressions import ZeroArray, ArraySymbol, CodegenArrayTensorProduct, \
+    CodegenArrayElementwiseAdd, CodegenArrayPermuteDims, CodegenArrayDiagonal, ArrayElementwiseApplyFunc, get_rank, \
+    get_shape, CodegenArrayContraction
+from sympy.tensor.array.expressions.conv_matrix_to_array import parse_matrix_expression
 
 
 @singledispatch
@@ -166,7 +166,7 @@ def _(expr: CodegenArrayPermuteDims, x: Expr):
 
 
 def matrix_derive(expr, x):
-    from sympy.codegen.array_utils import parse_matrix_expression, recognize_matrix_expression
+    from sympy.tensor.array.expressions.conv_array_to_matrix import recognize_matrix_expression
     ce = parse_matrix_expression(expr)
     dce = array_derive(ce, x)
     return recognize_matrix_expression(dce).doit()

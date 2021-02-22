@@ -8,9 +8,10 @@ from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
-from sympy.codegen.array_utils import (CodegenArrayTensorProduct, CodegenArrayDiagonal,
-                                       CodegenArrayPermuteDims, CodegenArrayElementwiseAdd, parse_matrix_expression)
+from sympy.tensor.array.expressions.array_expressions import CodegenArrayTensorProduct, CodegenArrayElementwiseAdd, \
+    CodegenArrayPermuteDims, CodegenArrayDiagonal
 from sympy.printing.lambdarepr import NumPyPrinter
+from sympy.tensor.array.expressions.conv_matrix_to_array import parse_matrix_expression
 
 from sympy.testing.pytest import warns_deprecated_sympy
 from sympy.testing.pytest import skip, raises

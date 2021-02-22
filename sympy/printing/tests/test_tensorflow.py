@@ -1,7 +1,7 @@
 import random
 from sympy import symbols, Derivative
-from sympy.codegen.array_utils import (CodegenArrayTensorProduct, CodegenArrayElementwiseAdd,
-                                       CodegenArrayPermuteDims, CodegenArrayDiagonal, parse_matrix_expression)
+from sympy.tensor.array.expressions.array_expressions import CodegenArrayTensorProduct, CodegenArrayElementwiseAdd, \
+    CodegenArrayPermuteDims, CodegenArrayDiagonal
 from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
 from sympy.external import import_module
 from sympy.functions import \
@@ -12,6 +12,7 @@ from sympy.matrices import Matrix, MatrixBase, eye, randMatrix
 from sympy.matrices.expressions import \
     Determinant, HadamardProduct, Inverse, MatrixSymbol, Trace
 from sympy.printing.tensorflow import tensorflow_code
+from sympy.tensor.array.expressions.conv_matrix_to_array import parse_matrix_expression
 from sympy.utilities.lambdify import lambdify
 from sympy.testing.pytest import skip
 from sympy.testing.pytest import XFAIL

@@ -1,0 +1,99 @@
+from sympy import MatrixSymbol, Transpose, Inverse, Trace, HadamardProduct, HadamardPower, MatPow, symbols, Identity
+from sympy.tensor.array.expressions.array_expressions import CodegenArrayTensorProduct, CodegenArrayContraction, \
+    CodegenArrayPermuteDims, CodegenArrayDiagonal
+from sympy.tensor.array.expressions.conv_array_to_matrix import recognize_matrix_expression
+from sympy.tensor.array.expressions.conv_matrix_to_array import parse_matrix_expression
+
+i, j, k, l, m, n = symbols("i j k l m n")
+
+I = Identity(k)
+
+M = MatrixSymbol("M", k, k)
+N = MatrixSymbol("N", k, k)
+P = MatrixSymbol("P", k, k)
+Q = MatrixSymbol("Q", k, k)
+
+A = MatrixSymbol("A", k, k)
+B = MatrixSymbol("B", k, k)
+C = MatrixSymbol("C", k, k)
+D = MatrixSymbol("D", k, k)
+
+X = MatrixSymbol("X", k, k)
+Y = MatrixSymbol("Y", k, k)
+
+a = MatrixSymbol("a", k, 1)
+b = MatrixSymbol("b", k, 1)
+c = MatrixSymbol("c", k, 1)
+d = MatrixSymbol("d", k, 1)
+
+
+def test_arrayexpr_convert_matrix_to_array():
+
+    expr = M*N
+    result = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2))
+    assert parse_matrix_expression(expr) == result
+
+    expr = M*N*M
+    result = CodegenArrayContraction(CodegenArrayTensorProduct(M, N, M), (1, 2), (3, 4))
+    assert parse_matrix_expression(expr) == result
+
+    expr = Transpose(M)
+    assert parse_matrix_expression(expr) == CodegenArrayPermuteDims(M, [1, 0])
+
+    expr = M*Transpose(N)
+    assert parse_matrix_expression(expr) == CodegenArrayContraction(CodegenArrayTensorProduct(M, CodegenArrayPermuteDims(N, [1, 0])), (1, 2))
+
+    expr = 3*M*N
+    res = parse_matrix_expression(expr)
+    rexpr = recognize_matrix_expression(res)
+    assert expr == rexpr
+
+    expr = 3*M + N*M.T*M + 4*k*N
+    res = parse_matrix_expression(expr)
+    rexpr = recognize_matrix_expression(res)
+    assert expr == rexpr
+
+    expr = Inverse(M)*N
+    rexpr = recognize_matrix_expression(parse_matrix_expression(expr))
+    assert expr == rexpr
+
+    expr = M**2
+    rexpr = recognize_matrix_expression(parse_matrix_expression(expr))
+    assert expr == rexpr
+
+    expr = M*(2*N + 3*M)
+    res = parse_matrix_expression(expr)
+    rexpr = recognize_matrix_expression(res)
+    assert expr == rexpr
+
+    expr = Trace(M)
+    result = CodegenArrayContraction(M, (0, 1))
+    assert parse_matrix_expression(expr) == result
+
+    expr = 3*Trace(M)
+    result = CodegenArrayContraction(CodegenArrayTensorProduct(3, M), (0, 1))
+    assert parse_matrix_expression(expr) == result
+
+    expr = 3*Trace(Trace(M) * M)
+    result = CodegenArrayContraction(CodegenArrayTensorProduct(3, M, M), (0, 1), (2, 3))
+    assert parse_matrix_expression(expr) == result
+
+    expr = 3*Trace(M)**2
+    result = CodegenArrayContraction(CodegenArrayTensorProduct(3, M, M), (0, 1), (2, 3))
+    assert parse_matrix_expression(expr) == result
+
+    expr = HadamardProduct(M, N)
+    result = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N), (0, 2), (1, 3))
+    assert parse_matrix_expression(expr) == result
+
+    expr = HadamardPower(M, 2)
+    result = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, M), (0, 2), (1, 3))
+    assert parse_matrix_expression(expr) == result
+
+    expr = M**2
+    assert isinstance(expr, MatPow)
+    assert parse_matrix_expression(expr) == CodegenArrayContraction(CodegenArrayTensorProduct(M, M), (1, 2))
+
+    expr = a.T*b
+    cg = parse_matrix_expression(expr)
+    assert cg == CodegenArrayContraction(CodegenArrayTensorProduct(a, b), (0, 2))

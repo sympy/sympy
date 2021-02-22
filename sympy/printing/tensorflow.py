@@ -226,7 +226,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         )
 
     def _print_CodegenArrayContraction(self, expr):
-        from sympy.codegen.array_utils import CodegenArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import CodegenArrayTensorProduct
         base = expr.expr
         contraction_indices = expr.contraction_indices
         contraction_string, letters_free, letters_dum = self._get_einsum_string(base.subranks, contraction_indices)
@@ -243,7 +243,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         raise NotImplementedError()
 
     def _print_CodegenArrayDiagonal(self, expr):
-        from sympy.codegen.array_utils import CodegenArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import CodegenArrayTensorProduct
         diagonal_indices = list(expr.diagonal_indices)
         if len(diagonal_indices) > 1:
             # TODO: this should be handled in sympy.codegen.array_utils,

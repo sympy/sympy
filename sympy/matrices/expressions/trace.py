@@ -52,7 +52,7 @@ class Trace(Expr):
         return expr._eval_derivative(v)
 
     def _eval_derivative_matrix_lines(self, x):
-        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import CodegenArrayTensorProduct, CodegenArrayContraction
         from sympy.core.expr import ExprBuilder
         r = self.args[0]._eval_derivative_matrix_lines(x)
         for lr in r:
