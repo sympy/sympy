@@ -32,7 +32,7 @@ Functions that are for internal use:
    ODEs which raises exception.
 
 """
-from sympy import (acos, asin, asinh, atan, cos, Derivative, Dummy, diff, cbrt,
+from sympy import (acos, acosh, asin, asinh, atan, cos, Derivative, Dummy, diff, cbrt,
     E, Eq, exp, hyper, I, im, Integral, integrate, LambertW, log, Ne, pi, Piecewise, Rational,
     re, rootof, S, sin, sinh, cosh, tan, sqrt, symbols, Ei, erfi)
 
@@ -341,6 +341,26 @@ def test_SingleODESolver():
     assert problem.is_autonomous == False
 
 
+def test_1st_homogeneous_coeff_ode():
+    #These were marked as test_1st_homogeneous_coeff_corner_case
+    eq1 = f(x).diff(x) - f(x)/x
+    c1 = classify_ode(eq1, f(x))
+    eq2 = x*f(x).diff(x) - f(x)
+    c2 = classify_ode(eq2, f(x))
+    sdi = "1st_homogeneous_coeff_subs_dep_div_indep"
+    sid = "1st_homogeneous_coeff_subs_indep_div_dep"
+    assert sid not in c1 and sdi not in c1
+    assert sid not in c2 and sdi not in c2
+    _ode_solver_test(_get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep)
+    _ode_solver_test(_get_examples_ode_sol_1st_homogeneous_coeff_best)
+
+
+@slow
+def test_slow_examples_1st_homogeneous_coeff_ode():
+    _ode_solver_test(_get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep, run_slow_test=True)
+    _ode_solver_test(_get_examples_ode_sol_1st_homogeneous_coeff_best, run_slow_test=True)
+
+
 def test_nth_linear_constant_coeff_homogeneous():
     _ode_solver_test(_get_examples_ode_sol_nth_linear_constant_coeff_homogeneous)
 
@@ -574,6 +594,7 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
 
 @_add_example_keys
 def _get_examples_ode_sol_euler_homogeneous():
+    r1, r2, r3, r4, r5 = [rootof(x**5 - 14*x**4 + 71*x**3 - 154*x**2 + 120*x - 1, n) for n in range(5)]
     return {
             'hint': "nth_linear_euler_eq_homogeneous",
             'func': f(x),
@@ -612,6 +633,12 @@ def _get_examples_ode_sol_euler_homogeneous():
         'eq': sin(x)*x**2*f(x).diff(x, 2) + sin(x)*x*f(x).diff(x) + sin(x)*f(x),
         'sol': [Eq(f(x), C1*sin(log(x)) + C2*cos(log(x)))],
         'XFAIL': ['2nd_power_series_regular','nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients']
+    },
+
+    'euler_hom_07': {
+        'eq': x**6 * f(x).diff(x, 6) - x*f(x).diff(x) + f(x),
+        'sol': [Eq(f(x), C1*x + C2*x**r1 + C3*x**r2 + C4*x**r3 + C5*x**r4 + C6*x**r5)],
+        'checkodesol_XFAIL':True
     },
     }
     }
@@ -691,6 +718,11 @@ def _get_examples_ode_sol_euler_var_para():
     'euler_var_05': {
         'eq': -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x,
         'sol': [Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))]
+    },
+
+    'euler_var_06': {
+        'eq': x**2 * f(x).diff(x, 2) + x * f(x).diff(x) + 4 * f(x) - 1/x,
+        'sol': [Eq(f(x), C1*sin(2*log(x)) + C2*cos(2*log(x)) + 1/(5*x))]
     },
     }
     }
@@ -879,7 +911,8 @@ def _get_examples_ode_sol_factorable():
     # kamke ode 1.1
     'fact_17': {
         'eq': f(x).diff(x)-(a4*x**4 + a3*x**3 + a2*x**2 + a1*x + a0)**(-1/2),
-        'sol': [Eq(f(x), C1 + Integral(1/sqrt(a0 + a1*x + a2*x**2 + a3*x**3 + a4*x**4), x))]
+        'sol': [Eq(f(x), C1 + Integral(1/sqrt(a0 + a1*x + a2*x**2 + a3*x**3 + a4*x**4), x))],
+        'slow': True
     },
 
     # This is from issue: https://github.com/sympy/sympy/issues/9446
@@ -2378,6 +2411,110 @@ def _get_examples_ode_sol_nth_linear_constant_coeff_homogeneous():
         'eq': Eq(I * f(x).diff(x,x,x) + f(x).diff(x), 0),
         'sol': [Eq(f(x), C1 + C2*exp(-sqrt(I)*x) + C3*exp(sqrt(I)*x))],
     },
+
+    'lin_const_coeff_hom_42': {
+        'eq': f(x).diff(x, x) + y*f(x),
+        'sol': [Eq(f(x), C1*exp(-x*sqrt(-y)) + C2*exp(x*sqrt(-y)))],
+    },
+    }
+    }
+
+
+@_add_example_keys
+def _get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep():
+    # FIXME: example5 don't work with checkodesol (because of **x?)
+    # previous code was testing with these other solution:
+    # example5_solb = Eq(f(x), log(log(C1/x)**(-x)))
+    return {
+            'hint': "1st_homogeneous_coeff_subs_dep_div_indep",
+            'func': f(x),
+            'examples':{
+    'dep_div_indep_01': {
+        'eq': f(x)/x*cos(f(x)/x) - (x/f(x)*sin(f(x)/x) + cos(f(x)/x))*f(x).diff(x),
+        'sol': [Eq(log(x), C1 - log(f(x)*sin(f(x)/x)/x))],
+        'slow': True
+    },
+
+    #indep_div_dep actually has a simpler solution for example 2 but it runs too slow.
+    'dep_div_indep_02': {
+        'eq': x*f(x).diff(x) - f(x) - x*sin(f(x)/x),
+        'sol': [Eq(log(x), log(C1) + log(cos(f(x)/x) - 1)/2 - log(cos(f(x)/x) + 1)/2)],
+        'simplify_flag':False,
+    },
+
+    'dep_div_indep_03': {
+        'eq': x*exp(f(x)/x) - f(x)*sin(f(x)/x) + x*sin(f(x)/x)*f(x).diff(x),
+        'sol': [Eq(log(x), C1 + exp(-f(x)/x)*sin(f(x)/x)/2 + exp(-f(x)/x)*cos(f(x)/x)/2)],
+        'slow': True
+    },
+
+    'dep_div_indep_04': {
+        'eq': f(x).diff(x) - f(x)/x + 1/sin(f(x)/x),
+        'sol': [Eq(f(x), x*(-acos(C1 + log(x)) + 2*pi)), Eq(f(x), x*acos(C1 + log(x)))],
+        'slow': True
+    },
+
+    'dep_div_indep_05': {
+        'eq': x*exp(f(x)/x) + f(x) - x*f(x).diff(x),
+        'sol': [Eq(f(x), log((1/(C1 - log(x)))**x))],
+        'checkodesol_XFAIL':True, 
+    },
+    }
+    }
+
+
+@_add_example_keys
+def _get_examples_ode_sol_1st_homogeneous_coeff_best():
+    # FIXME: example1 and example3 don't work with checkodesol (because of LambertW?)
+    # previous code was testing with these other solutions:
+    # example1_solb = Eq(-f(x)/(1 + log(x/f(x))), C1)
+    # example3_solb = Eq(log(C1*x*sqrt(1/x)*sqrt(f(x))) + x**2/(2*f(x)**2), 0)
+    return {
+            'hint': "1st_homogeneous_coeff_best",
+            'func': f(x),
+            'examples':{
+    '1st_homogeneous_coeff_best_01': {
+        'eq': f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x), x),
+        'sol': [Eq(f(x), -exp(C1)*LambertW(-x*exp(-C1 + 1)))],
+        'checkodesol_XFAIL':True,
+    },
+
+    '1st_homogeneous_coeff_best_02': {
+        'eq': 2*f(x)*exp(x/f(x)) + f(x)*f(x).diff(x) - 2*x*exp(x/f(x))*f(x).diff(x),
+        'sol': [Eq(log(f(x)), C1 - 2*exp(x/f(x)))],
+    },
+
+    '1st_homogeneous_coeff_best_03': {
+        'eq': 2*x**2*f(x) + f(x)**3 + (x*f(x)**2 - 2*x**3)*f(x).diff(x),
+        'sol': [Eq(f(x), exp(2*C1 + LambertW(-2*x**4*exp(-4*C1))/2)/x)],
+        'checkodesol_XFAIL':True,
+    },
+
+    '1st_homogeneous_coeff_best_04': {
+        'eq': (x + sqrt(f(x)**2 - x*f(x)))*f(x).diff(x) - f(x),
+        'sol': [Eq(log(f(x)), C1 - 2*sqrt(-x/f(x) + 1))],
+        'slow': True,
+    },
+
+    '1st_homogeneous_coeff_best_05': {
+        'eq': x + f(x) - (x - f(x))*f(x).diff(x),
+        'sol': [Eq(log(x), C1 - log(sqrt(1 + f(x)**2/x**2)) + atan(f(x)/x))],
+    },
+
+    '1st_homogeneous_coeff_best_06': {
+        'eq': x*f(x).diff(x) - f(x) - x*sin(f(x)/x),
+        'sol': [Eq(f(x), 2*x*atan(C1*x))],
+    },
+
+    '1st_homogeneous_coeff_best_07': {
+        'eq': x**2 + f(x)**2 - 2*x*f(x)*f(x).diff(x),
+        'sol': [Eq(f(x), -sqrt(x*(C1 + x))), Eq(f(x), sqrt(x*(C1 + x)))],
+    },
+
+    '1st_homogeneous_coeff_best_08': {
+        'eq': f(x)**2 + (x*sqrt(f(x)**2 - x**2) - x*f(x))*f(x).diff(x),
+        'sol': [Eq(log(x), C1 - log(f(x)/x) + acosh(f(x)/x))],
+    },
     }
     }
 
@@ -2404,6 +2541,8 @@ def _get_all_examples():
     _get_examples_ode_sol_separable_reduced + \
     _get_examples_ode_sol_lie_group + \
     _get_examples_ode_sol_2nd_linear_airy + \
-    _get_examples_ode_sol_nth_linear_constant_coeff_homogeneous
+    _get_examples_ode_sol_nth_linear_constant_coeff_homogeneous +\
+    _get_examples_ode_sol_1st_homogeneous_coeff_best +\
+    _get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep
 
     return all_examples
