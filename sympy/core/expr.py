@@ -3015,6 +3015,8 @@ class Expr(Basic, EvalfMixin):
                 o = s1.getO()
                 s1 = s1.removeO()
             else:
+                if s1.has(Order):
+                    return s1
                 o = Order(x**n, x)
                 s1done = s1.doit()
                 if (s1done + o).removeO() == s1done:

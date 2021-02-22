@@ -1869,9 +1869,9 @@ class Si(TrigonometricIntegral):
         if point is S.Infinity:
             z = self.args[0]
             p = [(-1)**k * factorial(2*k) / z**(2*k)
-                    for k in range(0, int(n/2))] + [Order(1/z**n, x)]
-            q = [(-1)**k * factorial(2*k + 1) / z**(2*k + 1)
                     for k in range(0, int((n - 1)/2))] + [Order(1/z**n, x)]
+            q = [(-1)**k * factorial(2*k + 1) / z**(2*k + 1)
+                    for k in range(0, int(n/2) - 1)] + [Order(1/z**n, x)]
             return pi/2 - (cos(z)/z)*Add(*p) - (sin(z)/z)*Add(*q)
 
         # All other points are not handled
@@ -1997,9 +1997,9 @@ class Ci(TrigonometricIntegral):
         if point is S.Infinity:
             z = self.args[0]
             p = [(-1)**k * factorial(2*k) / z**(2*k)
-                    for k in range(0, int(n/2))] + [Order(1/z**n, x)]
-            q = [(-1)**k * factorial(2*k + 1) / z**(2*k + 1)
                     for k in range(0, int((n - 1)/2))] + [Order(1/z**n, x)]
+            q = [(-1)**k * factorial(2*k + 1) / z**(2*k + 1)
+                    for k in range(0, int(n/2) - 1)] + [Order(1/z**n, x)]
             return (sin(z)/z)*Add(*p) - (cos(z)/z)*Add(*q)
 
         # All other points are not handled

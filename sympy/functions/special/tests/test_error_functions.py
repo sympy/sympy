@@ -91,7 +91,8 @@ def test_erf_series():
     assert erf(x).series(x, 0, 7) == 2*x/sqrt(pi) - \
         2*x**3/3/sqrt(pi) + x**5/5/sqrt(pi) + O(x**7)
 
-    assert erf(x).series(x, oo) ==1 +  O(x**(-6), (x, oo))
+    assert erf(x).series(x, oo) == \
+        -exp(-x**2)*(3/(4*x**5) - 1/(2*x**3) + 1/x + O(x**(-6), (x, oo)))/sqrt(pi) + 1
 
 
 def test_erf_evalf():
@@ -166,7 +167,8 @@ def test_erfc_series():
     assert erfc(x).series(x, 0, 7) == 1 - 2*x/sqrt(pi) + \
         2*x**3/3/sqrt(pi) - x**5/5/sqrt(pi) + O(x**7)
 
-    assert erfc(x).series(x, oo) == O(x**(-6), (x, oo))
+    assert erfc(x).series(x, oo) == \
+            (3/(4*x**5) - 1/(2*x**3) + 1/x + O(x**(-6), (x, oo)))*exp(-x**2)/sqrt(pi)
 
 
 def test_erfc_evalf():
@@ -352,7 +354,6 @@ def mytd(expr1, expr2, x):
 
 
 def tn_branch(func, s=None):
-    from sympy import I, pi, exp_polar
     from random import uniform
 
     def fn(x):
@@ -450,7 +451,8 @@ def test_expint():
         z**3*(log(z)/6 - Rational(11, 36) + EulerGamma/6 - I*pi/6) - z**4/24 + \
         z**5/240 + O(z**6)
 
-    assert expint(n, x).series(x, oo, n=3) == O(x**(-3), (x, oo))
+    assert expint(n, x).series(x, oo, n=3) == \
+        (n*(n + 1)/x**2 - n/x + 1 + O(x**(-3), (x, oo)))*exp(-x)/x
 
     assert expint(z, y).series(z, 0, 2) == exp(-y)/y - z*meijerg(((), (1, 1)),
                                   ((0, 0, 1), ()), y)/y + O(z**2)
@@ -596,8 +598,9 @@ def test_si():
     assert Si(x).nseries(x, 1, n=3) == \
         Si(1) + (x - 1)*sin(1) + (x - 1)**2*(-sin(1)/2 + cos(1)/2) + O((x - 1)**3, (x, 1))
 
-    assert Si(x).series(x, oo) == pi/2 + (-sin(x)*(120/x**5 - 6/x**3 + 1/x + O(x**(-7), (x, oo))) -\
-                                (24/x**4 - 2/x**2 + 1 + O(x**(-7), (x, oo)))*cos(x))/x
+    assert Si(x).series(x, oo) == pi/2 - (- 6/x**3 + 1/x \
+        + O(x**(-7), (x, oo)))*sin(x)/x - (24/x**4 - 2/x**2 + 1 \
+        + O(x**(-7), (x, oo)))*cos(x)/x
 
     t = Symbol('t', Dummy=True)
     assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
@@ -638,14 +641,14 @@ def test_ci():
     assert tn_arg(Ci)
     assert tn_arg(Chi)
 
-    from sympy import O, EulerGamma, log, limit
     assert Ci(x).nseries(x, n=4) == \
         EulerGamma + log(x) - x**2/4 + x**4/96 + O(x**5)
     assert Chi(x).nseries(x, n=4) == \
         EulerGamma + log(x) + x**2/4 + x**4/96 + O(x**5)
 
-    assert Ci(x).series(x, oo) == (-cos(x)*(120/x**5 - 6/x**3 + 1/x + O(x**(-7), (x, oo))) +\
-                                (24/x**4 - 2/x**2 + 1 + O(x**(-7), (x, oo)))*sin(x))/x
+    assert Ci(x).series(x, oo) == -cos(x)*(-6/x**3 + 1/x \
+        + O(x**(-7), (x, oo)))/x + (24/x**4 - 2/x**2 + 1 \
+        + O(x**(-7), (x, oo)))*sin(x)/x
     assert limit(log(x) - Ci(2*x), x, 0) == -log(2) - EulerGamma
     assert Ci(x).rewrite(uppergamma) == -expint(1, x*exp_polar(-I*pi/2))/2 -\
                                         expint(1, x*exp_polar(I*pi/2))/2
