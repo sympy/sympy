@@ -1,18 +1,18 @@
 from sympy import (
     symbols, IndexedBase, Identity, cos, Inverse, tensorcontraction,
-    permutedims, tensorproduct, ZeroMatrix, HadamardProduct, HadamardPower, MatPow)
+    permutedims, tensorproduct, ZeroMatrix, HadamardProduct, HadamardPower, MatPow, sin)
 from sympy.codegen.array_utils import (
     CodegenArrayContraction, CodegenArrayTensorProduct, CodegenArrayDiagonal,
     CodegenArrayPermuteDims, CodegenArrayElementwiseAdd, _codegen_array_parse,
     parse_indexed_expression, recognize_matrix_expression,
     parse_matrix_expression, nest_permutation, _remove_trivial_dims, _array_diag2contr_diagmatrix,
-    _support_function_tp1_recognize, array2matrix)
+    _support_function_tp1_recognize, array2matrix, ArrayElementwiseApplyFunc)
 from sympy import MatrixSymbol, Sum
 from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.expressions.diagonal import DiagMatrix
 from sympy.matrices import Trace, MatMul, Transpose
-from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray
+from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol
 from sympy.testing.pytest import raises
 import random
 
@@ -137,6 +137,12 @@ def test_codegen_array_recognize_matrix_mul_lines():
 
     # cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N, P), (0, 3, 4), (1, 2, 5))
     # assert recognize_matrix_expression(cg) == HadamardProduct(M, N.T, P)
+
+    x = MatrixSymbol("x", k, 1)
+    cg = CodegenArrayPermuteDims(
+        CodegenArrayContraction(CodegenArrayTensorProduct(OneArray(1), x, OneArray(1), DiagMatrix(Identity(1))),
+                                (0, 5)), Permutation(1, 2, 3))
+    assert recognize_matrix_expression(cg) == x
 
 
 def test_codegen_array_flatten():
@@ -995,3 +1001,10 @@ def test_recognize_products_support_function():
     assert _support_function_tp1_recognize([(0, 4), (1, 7), (2, 5), (3, 8)], [X, A, B, C, D]) == C*X.T*B*A*D
 
     assert _support_function_tp1_recognize([(0, 4), (1, 7), (2, 5), (3, 8)], [X, A, B, C, D]) == C*X.T*B*A*D
+
+
+def test_array_expr_applyfunc():
+
+    A = ArraySymbol("A", 3, k, 2)
+    aaf = ArrayElementwiseApplyFunc(sin, A)
+    assert aaf.shape == (3, k, 2)
