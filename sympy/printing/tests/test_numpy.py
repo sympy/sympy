@@ -11,7 +11,7 @@ from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqr
 from sympy.tensor.array.expressions.array_expressions import CodegenArrayTensorProduct, CodegenArrayElementwiseAdd, \
     CodegenArrayPermuteDims, CodegenArrayDiagonal
 from sympy.printing.lambdarepr import NumPyPrinter
-from sympy.tensor.array.expressions.conv_matrix_to_array import parse_matrix_expression
+from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 
 from sympy.testing.pytest import warns_deprecated_sympy
 from sympy.testing.pytest import skip, raises
@@ -79,7 +79,7 @@ def test_codegen_einsum():
     M = MatrixSymbol("M", 2, 2)
     N = MatrixSymbol("N", 2, 2)
 
-    cg = parse_matrix_expression(M*N)
+    cg = convert_matrix_to_array(M * N)
     f = lambdify((M, N), cg, 'numpy')
 
     ma = np.matrix([[1, 2], [3, 4]])

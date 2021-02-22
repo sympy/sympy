@@ -69,11 +69,11 @@ def _support_function_tp1_recognize(contraction_indices, args):
 
 
 @singledispatch
-def array2matrix(expr):
+def _array2matrix(expr):
     return expr
 
 
-@array2matrix.register(ZeroArray)
+@_array2matrix.register(ZeroArray)
 def _(expr: ZeroArray):
     if get_rank(expr) == 2:
         return ZeroMatrix(*expr.shape)
@@ -81,32 +81,32 @@ def _(expr: ZeroArray):
         return expr
 
 
-@array2matrix.register(CodegenArrayTensorProduct)
+@_array2matrix.register(CodegenArrayTensorProduct)
 def _(expr: CodegenArrayTensorProduct):
-    return _a2m_tensor_product(*[array2matrix(arg) for arg in expr.args])
+    return _a2m_tensor_product(*[_array2matrix(arg) for arg in expr.args])
 
 
-@array2matrix.register(CodegenArrayContraction)
+@_array2matrix.register(CodegenArrayContraction)
 def _(expr: CodegenArrayContraction):
     expr = expr.flatten_contraction_of_diagonal()
     expr = expr.split_multiple_contractions()
     subexpr = expr.expr
     contraction_indices: Tuple[Tuple[int]] = expr.contraction_indices
     if isinstance(subexpr, CodegenArrayTensorProduct):
-        newexpr = CodegenArrayContraction(array2matrix(subexpr), *contraction_indices)
+        newexpr = CodegenArrayContraction(_array2matrix(subexpr), *contraction_indices)
         contraction_indices = newexpr.contraction_indices
         if any(i > 2 for i in newexpr.subranks):
             addends = CodegenArrayElementwiseAdd(*[_a2m_tensor_product(*j) for j in itertools.product(*[i.args if isinstance(i,
                                                                                                                              CodegenArrayElementwiseAdd) else [i] for i in expr.expr.args])])
             newexpr = CodegenArrayContraction(addends, *contraction_indices)
         if isinstance(newexpr, CodegenArrayElementwiseAdd):
-            ret = array2matrix(newexpr)
+            ret = _array2matrix(newexpr)
             return ret
         assert isinstance(newexpr, CodegenArrayContraction)
         ret = _support_function_tp1_recognize(contraction_indices, list(newexpr.expr.args))
         return ret
     elif not isinstance(subexpr, _CodegenArrayAbstract):
-        ret = array2matrix(subexpr)
+        ret = _array2matrix(subexpr)
         if isinstance(ret, MatrixExpr):
             assert expr.contraction_indices == ((0, 1),)
             return _a2m_trace(ret)
@@ -114,19 +114,19 @@ def _(expr: CodegenArrayContraction):
             return CodegenArrayContraction(ret, *expr.contraction_indices)
 
 
-@array2matrix.register(CodegenArrayDiagonal)
+@_array2matrix.register(CodegenArrayDiagonal)
 def _(expr: CodegenArrayDiagonal):
-    expr2 = array2matrix(expr.expr)
+    expr2 = _array2matrix(expr.expr)
     pexpr = _array_diag2contr_diagmatrix(CodegenArrayDiagonal(expr2, *expr.diagonal_indices))
     if expr == pexpr:
         return expr
-    return array2matrix(pexpr)
+    return _array2matrix(pexpr)
 
 
-@array2matrix.register(CodegenArrayPermuteDims)
+@_array2matrix.register(CodegenArrayPermuteDims)
 def _(expr: CodegenArrayPermuteDims):
     if expr.permutation.array_form == [1, 0]:
-        return _a2m_transpose(array2matrix(expr.expr))
+        return _a2m_transpose(_array2matrix(expr.expr))
     elif isinstance(expr.expr, CodegenArrayTensorProduct):
         ranks = expr.expr.subranks
         inv_permutation = expr.permutation**(-1)
@@ -141,19 +141,19 @@ def _(expr: CodegenArrayPermuteDims):
         scalars = []
         for pos, arg in zip(newpos, expr.expr.args):
             if len(pos) == 0:
-                scalars.append(array2matrix(arg))
+                scalars.append(_array2matrix(arg))
             elif pos == sorted(pos):
-                newargs.append((array2matrix(arg), pos[0]))
+                newargs.append((_array2matrix(arg), pos[0]))
                 newperm.extend(pos)
             elif len(pos) == 2:
-                newargs.append((_a2m_transpose(array2matrix(arg)), pos[0]))
+                newargs.append((_a2m_transpose(_array2matrix(arg)), pos[0]))
                 newperm.extend(reversed(pos))
             else:
                 raise NotImplementedError()
         newargs = [i[0] for i in newargs]
         return CodegenArrayPermuteDims(_a2m_tensor_product(*scalars, *newargs), _af_invert(newperm))
     elif isinstance(expr.expr, CodegenArrayContraction):
-        mat_mul_lines = array2matrix(expr.expr)
+        mat_mul_lines = _array2matrix(expr.expr)
         if not isinstance(mat_mul_lines, CodegenArrayTensorProduct):
             flat_cyclic_form = [j for i in expr.permutation.cyclic_form for j in i]
             expr_shape = get_shape(expr)
@@ -178,15 +178,15 @@ def _(expr: CodegenArrayPermuteDims):
         raise NotImplementedError()
 
 
-@array2matrix.register(CodegenArrayElementwiseAdd)
+@_array2matrix.register(CodegenArrayElementwiseAdd)
 def _(expr: CodegenArrayElementwiseAdd):
-    addends = [array2matrix(arg) for arg in expr.args]
+    addends = [_array2matrix(arg) for arg in expr.args]
     return _a2m_add(*addends)
 
 
-@array2matrix.register(ArrayElementwiseApplyFunc)
+@_array2matrix.register(ArrayElementwiseApplyFunc)
 def _(expr: ArrayElementwiseApplyFunc):
-    subexpr = array2matrix(expr.expr)
+    subexpr = _array2matrix(expr.expr)
     if isinstance(subexpr, MatrixExpr):
         return ElementwiseApplyFunction(expr.function, subexpr)
     else:
@@ -307,7 +307,7 @@ def _(expr: CodegenArrayPermuteDims):
     # TODO: check if subremoved should be permuted as well...
     newexpr = CodegenArrayPermuteDims(subexpr, p2)
     if newexpr != expr:
-        newexpr = array2matrix(newexpr)
+        newexpr = _array2matrix(newexpr)
     return newexpr, sorted(premoved)
 
 
@@ -342,7 +342,7 @@ def _(expr: ArrayElementwiseApplyFunc):
     return ArrayElementwiseApplyFunc(expr.function, subexpr), removed
 
 
-def recognize_matrix_expression(expr):
+def convert_array_to_matrix(expr):
     r"""
     Recognize matrix expressions in codegen objects.
 
@@ -352,75 +352,75 @@ def recognize_matrix_expression(expr):
     Examples
     ========
 
-    >>> from sympy.tensor.array.expressions.conv_indexed_to_array import parse_indexed_expression
+    >>> from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array
     >>> from sympy.tensor.array.expressions.array_expressions import CodegenArrayTensorProduct
     >>> from sympy import MatrixSymbol, Sum
     >>> from sympy.abc import i, j, k, l, N
     >>> from sympy.tensor.array.expressions.array_expressions import CodegenArrayContraction
-    >>> from sympy.tensor.array.expressions.conv_matrix_to_array import parse_matrix_expression
-    >>> from sympy.tensor.array.expressions.conv_array_to_matrix import recognize_matrix_expression
+    >>> from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+    >>> from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
     >>> A = MatrixSymbol("A", N, N)
     >>> B = MatrixSymbol("B", N, N)
     >>> C = MatrixSymbol("C", N, N)
     >>> D = MatrixSymbol("D", N, N)
 
     >>> expr = Sum(A[i, j]*B[j, k], (j, 0, N-1))
-    >>> cg = parse_indexed_expression(expr)
-    >>> recognize_matrix_expression(cg)
+    >>> cg = convert_indexed_to_array(expr)
+    >>> convert_array_to_matrix(cg)
     A*B
-    >>> cg = parse_indexed_expression(expr, first_indices=[k])
-    >>> recognize_matrix_expression(cg)
+    >>> cg = convert_indexed_to_array(expr, first_indices=[k])
+    >>> convert_array_to_matrix(cg)
     B.T*A.T
 
     Transposition is detected:
 
     >>> expr = Sum(A[j, i]*B[j, k], (j, 0, N-1))
-    >>> cg = parse_indexed_expression(expr)
-    >>> recognize_matrix_expression(cg)
+    >>> cg = convert_indexed_to_array(expr)
+    >>> convert_array_to_matrix(cg)
     A.T*B
-    >>> cg = parse_indexed_expression(expr, first_indices=[k])
-    >>> recognize_matrix_expression(cg)
+    >>> cg = convert_indexed_to_array(expr, first_indices=[k])
+    >>> convert_array_to_matrix(cg)
     B.T*A
 
     Detect the trace:
 
     >>> expr = Sum(A[i, i], (i, 0, N-1))
-    >>> cg = parse_indexed_expression(expr)
-    >>> recognize_matrix_expression(cg)
+    >>> cg = convert_indexed_to_array(expr)
+    >>> convert_array_to_matrix(cg)
     Trace(A)
 
     Recognize some more complex traces:
 
     >>> expr = Sum(A[i, j]*B[j, i], (i, 0, N-1), (j, 0, N-1))
-    >>> cg = parse_indexed_expression(expr)
-    >>> recognize_matrix_expression(cg)
+    >>> cg = convert_indexed_to_array(expr)
+    >>> convert_array_to_matrix(cg)
     Trace(A*B)
 
     More complicated expressions:
 
     >>> expr = Sum(A[i, j]*B[k, j]*A[l, k], (j, 0, N-1), (k, 0, N-1))
-    >>> cg = parse_indexed_expression(expr)
-    >>> recognize_matrix_expression(cg)
+    >>> cg = convert_indexed_to_array(expr)
+    >>> convert_array_to_matrix(cg)
     A*B.T*A.T
 
     Expressions constructed from matrix expressions do not contain literal
     indices, the positions of free indices are returned instead:
 
     >>> expr = A*B
-    >>> cg = parse_matrix_expression(expr)
-    >>> recognize_matrix_expression(cg)
+    >>> cg = convert_matrix_to_array(expr)
+    >>> convert_array_to_matrix(cg)
     A*B
 
     If more than one line of matrix multiplications is detected, return
     separate matrix multiplication factors embedded in a tensor product object:
 
     >>> cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, B, C, D), (1, 2), (5, 6))
-    >>> recognize_matrix_expression(cg)
+    >>> convert_array_to_matrix(cg)
     CodegenArrayTensorProduct(A*B, C*D)
 
     The two lines have free indices at axes 0, 3 and 4, 7, respectively.
     """
-    rec = array2matrix(expr)
+    rec = _array2matrix(expr)
     rec, removed = _remove_trivial_dims(rec)
     return rec
 

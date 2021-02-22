@@ -651,9 +651,9 @@ def _matrix_derivative(expr, x):
 
     parts = [i.build() for i in lines]
 
-    from sympy.tensor.array.expressions.conv_array_to_matrix import recognize_matrix_expression
+    from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
 
-    parts = [[recognize_matrix_expression(j).doit() for j in i] for i in parts]
+    parts = [[convert_array_to_matrix(j).doit() for j in i] for i in parts]
 
     def _get_shape(elem):
         if isinstance(elem, MatrixExpr):

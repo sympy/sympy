@@ -8,14 +8,14 @@ from sympy.tensor.array.expressions.array_expressions import CodegenArrayPermute
 from sympy.tensor.array.expressions.utils import _get_argindex, _get_diagonal_indices
 
 
-def parse_indexed_expression(expr, first_indices=None):
+def convert_indexed_to_array(expr, first_indices=None):
     r"""
     Parse indexed expression into a form useful for code generation.
 
     Examples
     ========
 
-    >>> from sympy.tensor.array.expressions.conv_indexed_to_array import parse_indexed_expression
+    >>> from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array
     >>> from sympy import MatrixSymbol, Sum, symbols
 
     >>> i, j, k, d = symbols("i j k d")
@@ -25,14 +25,14 @@ def parse_indexed_expression(expr, first_indices=None):
     Recognize the trace in summation form:
 
     >>> expr = Sum(M[i, i], (i, 0, d-1))
-    >>> parse_indexed_expression(expr)
+    >>> convert_indexed_to_array(expr)
     CodegenArrayContraction(M, (0, 1))
 
     Recognize the extraction of the diagonal by using the same index `i` on
     both axes of the matrix:
 
     >>> expr = M[i, i]
-    >>> parse_indexed_expression(expr)
+    >>> convert_indexed_to_array(expr)
     CodegenArrayDiagonal(M, (0, 1))
 
     This function can help perform the transformation expressed in two
@@ -43,12 +43,12 @@ def parse_indexed_expression(expr, first_indices=None):
     Recognize the matrix multiplication in summation form:
 
     >>> expr = Sum(M[i, j]*N[j, k], (j, 0, d-1))
-    >>> parse_indexed_expression(expr)
+    >>> convert_indexed_to_array(expr)
     CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2))
 
     Specify that ``k`` has to be the starting index:
 
-    >>> parse_indexed_expression(expr, first_indices=[k])
+    >>> convert_indexed_to_array(expr, first_indices=[k])
     CodegenArrayContraction(CodegenArrayTensorProduct(N, M), (0, 3))
     """
 

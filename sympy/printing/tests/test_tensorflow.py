@@ -12,7 +12,7 @@ from sympy.matrices import Matrix, MatrixBase, eye, randMatrix
 from sympy.matrices.expressions import \
     Determinant, HadamardProduct, Inverse, MatrixSymbol, Trace
 from sympy.printing.tensorflow import tensorflow_code
-from sympy.tensor.array.expressions.conv_matrix_to_array import parse_matrix_expression
+from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 from sympy.utilities.lambdify import lambdify
 from sympy.testing.pytest import skip
 from sympy.testing.pytest import XFAIL
@@ -362,7 +362,7 @@ def test_codegen_einsum():
         M = MatrixSymbol("M", 2, 2)
         N = MatrixSymbol("N", 2, 2)
 
-        cg = parse_matrix_expression(M*N)
+        cg = convert_matrix_to_array(M * N)
         f = lambdify((M, N), cg, 'tensorflow')
 
         ma = tf.constant([[1, 2], [3, 4]])

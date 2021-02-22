@@ -7,7 +7,7 @@ from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, ArraySymbol, CodegenArrayTensorProduct, \
     CodegenArrayElementwiseAdd, CodegenArrayPermuteDims, CodegenArrayDiagonal, ArrayElementwiseApplyFunc, get_rank, \
     get_shape, CodegenArrayContraction
-from sympy.tensor.array.expressions.conv_matrix_to_array import parse_matrix_expression
+from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 
 
 @singledispatch
@@ -127,7 +127,7 @@ def _(expr: ArrayElementwiseApplyFunc, x: Expr):
 
 @array_derive.register(MatrixExpr)
 def _(expr: MatrixExpr, x: Expr):
-    cg = parse_matrix_expression(expr)
+    cg = convert_matrix_to_array(expr)
     return array_derive(cg, x)
 
 
@@ -166,7 +166,7 @@ def _(expr: CodegenArrayPermuteDims, x: Expr):
 
 
 def matrix_derive(expr, x):
-    from sympy.tensor.array.expressions.conv_array_to_matrix import recognize_matrix_expression
-    ce = parse_matrix_expression(expr)
+    from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
+    ce = convert_matrix_to_array(expr)
     dce = array_derive(ce, x)
-    return recognize_matrix_expression(dce).doit()
+    return convert_array_to_matrix(dce).doit()

@@ -5,7 +5,7 @@ from sympy.tensor.array.expressions.array_expressions import CodegenArrayDiagona
     CodegenArrayPermuteDims, CodegenArrayElementwiseAdd, CodegenArrayContraction, ArrayElementwiseApplyFunc
 
 
-def parse_matrix_expression(expr: MatrixExpr) -> Basic:
+def convert_matrix_to_array(expr: MatrixExpr) -> Basic:
     if isinstance(expr, MatMul):
         args_nonmat = []
         args = []
@@ -13,46 +13,46 @@ def parse_matrix_expression(expr: MatrixExpr) -> Basic:
             if isinstance(arg, MatrixExpr):
                 args.append(arg)
             else:
-                args_nonmat.append(parse_matrix_expression(arg))
+                args_nonmat.append(convert_matrix_to_array(arg))
         contractions = [(2*i+1, 2*i+2) for i in range(len(args)-1)]
         scalar = CodegenArrayTensorProduct.fromiter(args_nonmat) if args_nonmat else S.One
         if scalar == 1:
             tprod = CodegenArrayTensorProduct(
-                *[parse_matrix_expression(arg) for arg in args])
+                *[convert_matrix_to_array(arg) for arg in args])
         else:
             tprod = CodegenArrayTensorProduct(
                 scalar,
-                *[parse_matrix_expression(arg) for arg in args])
+                *[convert_matrix_to_array(arg) for arg in args])
         return CodegenArrayContraction(
                 tprod,
                 *contractions
         )
     elif isinstance(expr, MatAdd):
         return CodegenArrayElementwiseAdd(
-                *[parse_matrix_expression(arg) for arg in expr.args]
+                *[convert_matrix_to_array(arg) for arg in expr.args]
         )
     elif isinstance(expr, Transpose):
         return CodegenArrayPermuteDims(
-                parse_matrix_expression(expr.args[0]), [1, 0]
+                convert_matrix_to_array(expr.args[0]), [1, 0]
         )
     elif isinstance(expr, Trace):
-        inner_expr = parse_matrix_expression(expr.arg)
+        inner_expr = convert_matrix_to_array(expr.arg)
         return CodegenArrayContraction(inner_expr, (0, len(inner_expr.shape) - 1))
     elif isinstance(expr, Mul):
-        return CodegenArrayTensorProduct.fromiter(parse_matrix_expression(i) for i in expr.args)
+        return CodegenArrayTensorProduct.fromiter(convert_matrix_to_array(i) for i in expr.args)
     elif isinstance(expr, Pow):
-        base = parse_matrix_expression(expr.base)
+        base = convert_matrix_to_array(expr.base)
         if (expr.exp > 0) == True:
             return CodegenArrayTensorProduct.fromiter(base for i in range(expr.exp))
         else:
             return expr
     elif isinstance(expr, MatPow):
-        base = parse_matrix_expression(expr.base)
+        base = convert_matrix_to_array(expr.base)
         if expr.exp.is_Integer != True:
             b = symbols("b", cls=Dummy)
-            return ArrayElementwiseApplyFunc(Lambda(b, b**expr.exp), parse_matrix_expression(base))
+            return ArrayElementwiseApplyFunc(Lambda(b, b**expr.exp), convert_matrix_to_array(base))
         elif (expr.exp > 0) == True:
-            return parse_matrix_expression(MatMul.fromiter(base for i in range(expr.exp)))
+            return convert_matrix_to_array(MatMul.fromiter(base for i in range(expr.exp)))
         else:
             return expr
     elif isinstance(expr, HadamardProduct):
@@ -61,6 +61,6 @@ def parse_matrix_expression(expr: MatrixExpr) -> Basic:
         return CodegenArrayDiagonal(tp, *diag)
     elif isinstance(expr, HadamardPower):
         base, exp = expr.args
-        return parse_matrix_expression(HadamardProduct.fromiter(base for i in range(exp)))
+        return convert_matrix_to_array(HadamardProduct.fromiter(base for i in range(exp)))
     else:
         return expr

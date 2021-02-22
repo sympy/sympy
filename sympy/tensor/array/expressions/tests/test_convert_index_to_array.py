@@ -2,8 +2,8 @@ from sympy import Sum, MatrixSymbol, Identity, symbols, IndexedBase, KroneckerDe
 from sympy.combinatorics import Permutation
 from sympy.tensor.array.expressions.array_expressions import CodegenArrayContraction, CodegenArrayTensorProduct, \
     CodegenArrayDiagonal, CodegenArrayElementwiseAdd, CodegenArrayPermuteDims
-from sympy.tensor.array.expressions.conv_array_to_matrix import recognize_matrix_expression
-from sympy.tensor.array.expressions.conv_indexed_to_array import parse_indexed_expression, _convert_indexed_to_array
+from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
+from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array, _convert_indexed_to_array
 from sympy.testing.pytest import raises
 
 
@@ -67,29 +67,29 @@ def test_arrayexpr_convert_index_to_array_support_function():
 def test_arrayexpr_convert_indexed_to_array_expression():
 
     s = Sum(A[i]*B[i], (i, 0, 3))
-    cg = parse_indexed_expression(s)
+    cg = convert_indexed_to_array(s)
     assert cg == CodegenArrayContraction(CodegenArrayTensorProduct(A, B), (0, 1))
 
     expr = M*N
     result = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2))
     elem = expr[i, j]
-    assert parse_indexed_expression(elem) == result
+    assert convert_indexed_to_array(elem) == result
 
     expr = M*N*M
     elem = expr[i, j]
     result = CodegenArrayContraction(CodegenArrayTensorProduct(M, M, N), (1, 4), (2, 5))
-    cg = parse_indexed_expression(elem)
+    cg = convert_indexed_to_array(elem)
     assert cg == result
 
-    cg = parse_indexed_expression((M*N*P)[i,j])
+    cg = convert_indexed_to_array((M * N * P)[i, j])
     assert cg == CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P), (1, 2), (3, 4))
 
-    cg = parse_indexed_expression((M*N.T*P)[i,j])
+    cg = convert_indexed_to_array((M * N.T * P)[i, j])
     assert cg == CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P), (1, 3), (2, 4))
 
     expr = -2*M*N
     elem = expr[i, j]
-    cg = parse_indexed_expression(elem)
+    cg = convert_indexed_to_array(elem)
     assert cg == CodegenArrayContraction(CodegenArrayTensorProduct(-2, M, N), (1, 2))
 
 
@@ -97,48 +97,48 @@ def test_arrayexpr_convert_indexed_to_array_and_back_to_matrix():
 
     expr = a.T*b
     elem = expr[0, 0]
-    cg = parse_indexed_expression(elem)
+    cg = convert_indexed_to_array(elem)
     assert cg == CodegenArrayContraction(CodegenArrayTensorProduct(a, b), (0, 2))
 
     expr = M[i,j] + N[i,j]
     p1, p2 = _convert_indexed_to_array(expr)
-    assert recognize_matrix_expression(p1) == M + N
+    assert convert_array_to_matrix(p1) == M + N
 
     expr = M[i,j] + N[j,i]
     p1, p2 = _convert_indexed_to_array(expr)
-    assert recognize_matrix_expression(p1) == M + N.T
+    assert convert_array_to_matrix(p1) == M + N.T
 
     expr = M[i,j]*N[k,l] + N[i,j]*M[k,l]
     p1, p2 = _convert_indexed_to_array(expr)
-    assert recognize_matrix_expression(p1) == CodegenArrayElementwiseAdd(
+    assert convert_array_to_matrix(p1) == CodegenArrayElementwiseAdd(
         CodegenArrayTensorProduct(M, N),
         CodegenArrayTensorProduct(N, M))
 
     expr = (M*N*P)[i, j]
     p1, p2 = _convert_indexed_to_array(expr)
-    assert recognize_matrix_expression(p1) == M*N*P
+    assert convert_array_to_matrix(p1) == M * N * P
 
     expr = Sum(M[i,j]*(N*P)[j,m], (j, 0, k-1))
     p1, p2 = _convert_indexed_to_array(expr)
-    assert recognize_matrix_expression(p1) == M*N*P
+    assert convert_array_to_matrix(p1) == M * N * P
 
     expr = Sum((P[j, m] + P[m, j])*(M[i,j]*N[m,n] + N[i,j]*M[m,n]), (j, 0, k-1), (m, 0, k-1))
     p1, p2 = _convert_indexed_to_array(expr)
-    assert recognize_matrix_expression(p1) == M*P*N + M*P.T*N + N*P*M + N*P.T*M
+    assert convert_array_to_matrix(p1) == M * P * N + M * P.T * N + N * P * M + N * P.T * M
 
 
 def test_arrayexpr_convert_indexed_to_array_out_of_bounds():
 
     expr = Sum(M[i, i], (i, 0, 4))
-    raises(ValueError, lambda: parse_indexed_expression(expr))
+    raises(ValueError, lambda: convert_indexed_to_array(expr))
     expr = Sum(M[i, i], (i, 0, k))
-    raises(ValueError, lambda: parse_indexed_expression(expr))
+    raises(ValueError, lambda: convert_indexed_to_array(expr))
     expr = Sum(M[i, i], (i, 1, k-1))
-    raises(ValueError, lambda: parse_indexed_expression(expr))
+    raises(ValueError, lambda: convert_indexed_to_array(expr))
 
     expr = Sum(M[i, j]*N[j,m], (j, 0, 4))
-    raises(ValueError, lambda: parse_indexed_expression(expr))
+    raises(ValueError, lambda: convert_indexed_to_array(expr))
     expr = Sum(M[i, j]*N[j,m], (j, 0, k))
-    raises(ValueError, lambda: parse_indexed_expression(expr))
+    raises(ValueError, lambda: convert_indexed_to_array(expr))
     expr = Sum(M[i, j]*N[j,m], (j, 1, k-1))
-    raises(ValueError, lambda: parse_indexed_expression(expr))
+    raises(ValueError, lambda: convert_indexed_to_array(expr))

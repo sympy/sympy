@@ -288,8 +288,8 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
 
     This is evident when transforming back to matrix form:
 
-    >>> from sympy.tensor.array.expressions.conv_array_to_matrix import recognize_matrix_expression
-    >>> recognize_matrix_expression(cg)
+    >>> from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
+    >>> convert_array_to_matrix(cg)
     M.T
 
     >>> N = MatrixSymbol("N", 3, 2)
@@ -1172,7 +1172,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         Examples
         ========
 
-        >>> from sympy.tensor.array.expressions.conv_matrix_to_array import parse_matrix_expression
+        >>> from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
         >>> from sympy import MatrixSymbol
         >>> from sympy.abc import N
         >>> A = MatrixSymbol("A", N, N)
@@ -1180,7 +1180,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         >>> C = MatrixSymbol("C", N, N)
         >>> D = MatrixSymbol("D", N, N)
 
-        >>> cg = parse_matrix_expression(C*D*A*B)
+        >>> cg = convert_matrix_to_array(C*D*A*B)
         >>> cg
         CodegenArrayContraction(CodegenArrayTensorProduct(A, D, C, B), (0, 3), (1, 6), (2, 5))
         >>> cg.sort_args_by_name()
@@ -1214,7 +1214,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
 
         >>> from sympy import MatrixSymbol
         >>> from sympy.abc import N
-        >>> from sympy.tensor.array.expressions.conv_matrix_to_array import parse_matrix_expression
+        >>> from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
         >>> A = MatrixSymbol("A", N, N)
         >>> B = MatrixSymbol("B", N, N)
         >>> C = MatrixSymbol("C", N, N)
@@ -1225,7 +1225,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
 
         `A_{ij} B_{jk} C_{kl} D_{lm}`
 
-        >>> cg = parse_matrix_expression(A*B*C*D)
+        >>> cg = convert_matrix_to_array(A*B*C*D)
         >>> cg
         CodegenArrayContraction(CodegenArrayTensorProduct(B, C, A, D), (0, 5), (1, 2), (3, 6))
 
