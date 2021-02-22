@@ -2457,7 +2457,7 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep():
     'dep_div_indep_05': {
         'eq': x*exp(f(x)/x) + f(x) - x*f(x).diff(x),
         'sol': [Eq(f(x), log((1/(C1 - log(x)))**x))],
-        'checkodesol_XFAIL':True, 
+        'checkodesol_XFAIL':True,
     },
     }
     }
