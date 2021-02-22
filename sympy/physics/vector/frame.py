@@ -298,25 +298,25 @@ class ReferenceFrame:
         if num not in connect_type.keys():
             raise ValueError('Valid values for num are 0, 1, or 2.')
 
-        outlist = [[self]]
+        possible_connecting_paths = [[self]]
         oldlist = [[]]
-        while outlist != oldlist:
-            oldlist = outlist[:]
-            for v in outlist:
-                templist = v[-1]._dlist[num].keys()
-                for v2 in templist:
-                    if not v.__contains__(v2):
-                        littletemplist = v + [v2]
-                        if not outlist.__contains__(littletemplist):
-                            outlist.append(littletemplist)
+        while possible_connecting_paths != oldlist:
+            oldlist = possible_connecting_paths[:]  # make a copy
+            for frame_list in possible_connecting_paths:
+                frames_adjacent_to_last = frame_list[-1]._dlist[num].keys()
+                for adjacent_frame in frames_adjacent_to_last:
+                    if adjacent_frame not in frame_list:
+                        connecting_path = frame_list + [adjacent_frame]
+                        if connecting_path not in possible_connecting_paths:
+                            possible_connecting_paths.append(connecting_path)
 
-        for v in oldlist:
-            if v[-1] != other:
-                outlist.remove(v)
-        outlist.sort(key=len)
+        for connecting_path in oldlist:
+            if connecting_path[-1] != other:
+                possible_connecting_paths.remove(connecting_path)
+        possible_connecting_paths.sort(key=len)
 
-        if len(outlist) != 0:
-            return outlist[0]
+        if len(possible_connecting_paths) != 0:
+            return possible_connecting_paths[0]  # selects the shortest path
 
         msg = 'No connecting {} path found between {} and {}.'
         raise ValueError(msg.format(connect_type[num], self.name, other.name))
