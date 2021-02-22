@@ -302,18 +302,19 @@ class ReferenceFrame:
         oldlist = [[]]
         while outlist != oldlist:
             oldlist = outlist[:]
-            for i, v in enumerate(outlist):
+            for v in outlist:
                 templist = v[-1]._dlist[num].keys()
-                for i2, v2 in enumerate(templist):
+                for v2 in templist:
                     if not v.__contains__(v2):
                         littletemplist = v + [v2]
                         if not outlist.__contains__(littletemplist):
                             outlist.append(littletemplist)
 
-        for i, v in enumerate(oldlist):
+        for v in oldlist:
             if v[-1] != other:
                 outlist.remove(v)
         outlist.sort(key=len)
+
         if len(outlist) != 0:
             return outlist[0]
 
