@@ -8,8 +8,8 @@ from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
-from sympy.tensor.array.expressions.array_expressions import CodegenArrayTensorProduct, CodegenArrayElementwiseAdd, \
-    CodegenArrayPermuteDims, CodegenArrayDiagonal
+from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
+    PermuteDims, ArrayDiagonal
 from sympy.printing.lambdarepr import NumPyPrinter
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 
@@ -100,31 +100,31 @@ def test_codegen_extra():
     mc = np.matrix([[2, 0], [1, 2]])
     md = np.matrix([[1,-1], [4, 7]])
 
-    cg = CodegenArrayTensorProduct(M, N)
+    cg = ArrayTensorProduct(M, N)
     f = lambdify((M, N), cg, 'numpy')
     assert (f(ma, mb) == np.einsum(ma, [0, 1], mb, [2, 3])).all()
 
-    cg = CodegenArrayElementwiseAdd(M, N)
+    cg = ArrayAdd(M, N)
     f = lambdify((M, N), cg, 'numpy')
     assert (f(ma, mb) == ma+mb).all()
 
-    cg = CodegenArrayElementwiseAdd(M, N, P)
+    cg = ArrayAdd(M, N, P)
     f = lambdify((M, N, P), cg, 'numpy')
     assert (f(ma, mb, mc) == ma+mb+mc).all()
 
-    cg = CodegenArrayElementwiseAdd(M, N, P, Q)
+    cg = ArrayAdd(M, N, P, Q)
     f = lambdify((M, N, P, Q), cg, 'numpy')
     assert (f(ma, mb, mc, md) == ma+mb+mc+md).all()
 
-    cg = CodegenArrayPermuteDims(M, [1, 0])
+    cg = PermuteDims(M, [1, 0])
     f = lambdify((M,), cg, 'numpy')
     assert (f(ma) == ma.T).all()
 
-    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [1, 2, 3, 0])
+    cg = PermuteDims(ArrayTensorProduct(M, N), [1, 2, 3, 0])
     f = lambdify((M, N), cg, 'numpy')
     assert (f(ma, mb) == np.transpose(np.einsum(ma, [0, 1], mb, [2, 3]), (1, 2, 3, 0))).all()
 
-    cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N), (1, 2))
+    cg = ArrayDiagonal(ArrayTensorProduct(M, N), (1, 2))
     f = lambdify((M, N), cg, 'numpy')
     assert (f(ma, mb) == np.diagonal(np.einsum(ma, [0, 1], mb, [2, 3]), axis1=1, axis2=2)).all()
 

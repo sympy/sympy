@@ -938,14 +938,14 @@ class _LeftRightArgs:
 
     def _multiply_pointer(self, pointer, other):
         from sympy.core.expr import ExprBuilder
-        from ...tensor.array.expressions.array_expressions import CodegenArrayTensorProduct
-        from ...tensor.array.expressions.array_expressions import CodegenArrayContraction
+        from ...tensor.array.expressions.array_expressions import ArrayTensorProduct
+        from ...tensor.array.expressions.array_expressions import ArrayContraction
 
         subexpr = ExprBuilder(
-            CodegenArrayContraction,
+            ArrayContraction,
             [
                 ExprBuilder(
-                    CodegenArrayTensorProduct,
+                    ArrayTensorProduct,
                     [
                         pointer,
                         other
@@ -953,7 +953,7 @@ class _LeftRightArgs:
                 ),
                 (1, 2)
             ],
-            validator=CodegenArrayContraction._validate
+            validator=ArrayContraction._validate
         )
 
         return subexpr

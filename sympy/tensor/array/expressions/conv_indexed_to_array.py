@@ -3,8 +3,8 @@ from collections import defaultdict
 from sympy import Sum, Mul, KroneckerDelta, Indexed, IndexedBase, Add
 from sympy.combinatorics import Permutation
 from sympy.matrices.expressions.matexpr import MatrixElement
-from sympy.tensor.array.expressions.array_expressions import CodegenArrayPermuteDims, CodegenArrayDiagonal, \
-    CodegenArrayContraction, CodegenArrayTensorProduct, CodegenArrayElementwiseAdd
+from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayDiagonal, \
+    ArrayContraction, ArrayTensorProduct, ArrayAdd
 from sympy.tensor.array.expressions.utils import _get_argindex, _get_diagonal_indices
 
 
@@ -26,14 +26,14 @@ def convert_indexed_to_array(expr, first_indices=None):
 
     >>> expr = Sum(M[i, i], (i, 0, d-1))
     >>> convert_indexed_to_array(expr)
-    CodegenArrayContraction(M, (0, 1))
+    ArrayContraction(M, (0, 1))
 
     Recognize the extraction of the diagonal by using the same index `i` on
     both axes of the matrix:
 
     >>> expr = M[i, i]
     >>> convert_indexed_to_array(expr)
-    CodegenArrayDiagonal(M, (0, 1))
+    ArrayDiagonal(M, (0, 1))
 
     This function can help perform the transformation expressed in two
     different mathematical notations as:
@@ -44,12 +44,12 @@ def convert_indexed_to_array(expr, first_indices=None):
 
     >>> expr = Sum(M[i, j]*N[j, k], (j, 0, d-1))
     >>> convert_indexed_to_array(expr)
-    CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2))
+    ArrayContraction(ArrayTensorProduct(M, N), (1, 2))
 
     Specify that ``k`` has to be the starting index:
 
     >>> convert_indexed_to_array(expr, first_indices=[k])
-    CodegenArrayContraction(CodegenArrayTensorProduct(N, M), (0, 3))
+    ArrayContraction(ArrayTensorProduct(N, M), (0, 3))
     """
 
     result, indices = _convert_indexed_to_array(expr)
@@ -60,7 +60,7 @@ def convert_indexed_to_array(expr, first_indices=None):
             first_indices.remove(i)
     first_indices.extend([i for i in indices if i not in first_indices])
     permutation = [first_indices.index(i) for i in indices]
-    return CodegenArrayPermuteDims(result, permutation)
+    return PermuteDims(result, permutation)
 
 
 def _convert_indexed_to_array(expr):
@@ -77,7 +77,7 @@ def _convert_indexed_to_array(expr):
                     raise ValueError("summation index and array dimension mismatch: %s" % ind)
         contraction_indices = []
         subindices = list(subindices)
-        if isinstance(subexpr, CodegenArrayDiagonal):
+        if isinstance(subexpr, ArrayDiagonal):
             diagonal_indices = list(subexpr.diagonal_indices)
             dindices = subindices[-len(diagonal_indices):]
             subindices = subindices[:-len(diagonal_indices)]
@@ -91,7 +91,7 @@ def _convert_indexed_to_array(expr):
                 if ind in summation_indices:
                     pass
             if diagonal_indices:
-                subexpr = CodegenArrayDiagonal(subexpr.expr, *diagonal_indices)
+                subexpr = ArrayDiagonal(subexpr.expr, *diagonal_indices)
             else:
                 subexpr = subexpr.expr
 
@@ -105,7 +105,7 @@ def _convert_indexed_to_array(expr):
         free_indices = [i for i in subindices if i is not None]
         indices_ret = list(free_indices)
         indices_ret.sort(key=lambda x: free_indices.index(x))
-        return CodegenArrayContraction(
+        return ArrayContraction(
                 subexpr,
                 *contraction_indices,
                 free_indices=free_indices
@@ -128,7 +128,7 @@ def _convert_indexed_to_array(expr):
             for index in kindices:
                 kronecker_delta_repl[index] = kindices
         # Remove KroneckerDelta objects, their relations should be handled by
-        # CodegenArrayDiagonal:
+        # ArrayDiagonal:
         newargs = []
         newindices = []
         for arg, loc_indices in zip(args, indices):
@@ -138,23 +138,23 @@ def _convert_indexed_to_array(expr):
             newindices.append(loc_indices)
         flattened_indices = [kronecker_delta_repl.get(j, j) for i in newindices for j in i]
         diagonal_indices, ret_indices = _get_diagonal_indices(flattened_indices)
-        tp = CodegenArrayTensorProduct(*newargs)
+        tp = ArrayTensorProduct(*newargs)
         if diagonal_indices:
-            return (CodegenArrayDiagonal(tp, *diagonal_indices), ret_indices)
+            return (ArrayDiagonal(tp, *diagonal_indices), ret_indices)
         else:
             return tp, ret_indices
     if isinstance(expr, MatrixElement):
         indices = expr.args[1:]
         diagonal_indices, ret_indices = _get_diagonal_indices(indices)
         if diagonal_indices:
-            return (CodegenArrayDiagonal(expr.args[0], *diagonal_indices), ret_indices)
+            return (ArrayDiagonal(expr.args[0], *diagonal_indices), ret_indices)
         else:
             return expr.args[0], ret_indices
     if isinstance(expr, Indexed):
         indices = expr.indices
         diagonal_indices, ret_indices = _get_diagonal_indices(indices)
         if diagonal_indices:
-            return (CodegenArrayDiagonal(expr.base, *diagonal_indices), ret_indices)
+            return (ArrayDiagonal(expr.base, *diagonal_indices), ret_indices)
         else:
             return expr.args[0], ret_indices
     if isinstance(expr, IndexedBase):
@@ -172,6 +172,6 @@ def _convert_indexed_to_array(expr):
                 raise NotImplementedError("indices must be the same")
             permutation = Permutation([index0.index(j) for j in indices[i]])
             # Perform index permutations:
-            args[i] = CodegenArrayPermuteDims(args[i], permutation)
-        return CodegenArrayElementwiseAdd(*args), index0
+            args[i] = PermuteDims(args[i], permutation)
+        return ArrayAdd(*args), index0
     return expr, ()

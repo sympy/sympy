@@ -845,18 +845,18 @@ class NumPyPrinter(PythonCodePrinter):
         return '{}({})'.format(self._module_format('numpy.block'),
                                  self._print(expr.args[0].tolist()))
 
-    def _print_CodegenArrayTensorProduct(self, expr):
+    def _print_ArrayTensorProduct(self, expr):
         array_list = [j for i, arg in enumerate(expr.args) for j in
                 (self._print(arg), "[%i, %i]" % (2*i, 2*i+1))]
         return "%s(%s)" % (self._module_format('numpy.einsum'), ", ".join(array_list))
 
-    def _print_CodegenArrayContraction(self, expr):
-        from ..tensor.array.expressions.array_expressions import CodegenArrayTensorProduct
+    def _print_ArrayContraction(self, expr):
+        from ..tensor.array.expressions.array_expressions import ArrayTensorProduct
         base = expr.expr
         contraction_indices = expr.contraction_indices
         if not contraction_indices:
             return self._print(base)
-        if isinstance(base, CodegenArrayTensorProduct):
+        if isinstance(base, ArrayTensorProduct):
             counter = 0
             d = {j: min(i) for i in contraction_indices for j in i}
             indices = []
@@ -876,12 +876,12 @@ class NumPyPrinter(PythonCodePrinter):
             )
         raise NotImplementedError()
 
-    def _print_CodegenArrayDiagonal(self, expr):
+    def _print_ArrayDiagonal(self, expr):
         diagonal_indices = list(expr.diagonal_indices)
         if len(diagonal_indices) > 1:
             # TODO: this should be handled in sympy.codegen.array_utils,
             # possibly by creating the possibility of unfolding the
-            # CodegenArrayDiagonal object into nested ones. Same reasoning for
+            # ArrayDiagonal object into nested ones. Same reasoning for
             # the array contraction.
             raise NotImplementedError
         if len(diagonal_indices[0]) != 2:
@@ -893,14 +893,14 @@ class NumPyPrinter(PythonCodePrinter):
             diagonal_indices[0][1],
         )
 
-    def _print_CodegenArrayPermuteDims(self, expr):
+    def _print_PermuteDims(self, expr):
         return "%s(%s, %s)" % (
             self._module_format("numpy.transpose"),
             self._print(expr.expr),
             self._print(expr.permutation.array_form),
         )
 
-    def _print_CodegenArrayElementwiseAdd(self, expr):
+    def _print_ArrayAdd(self, expr):
         return self._expand_fold_binary_op('numpy.add', expr.args)
 
     _print_lowergamma = CodePrinter._print_not_supported

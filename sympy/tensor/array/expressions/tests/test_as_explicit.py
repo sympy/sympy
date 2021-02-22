@@ -1,7 +1,7 @@
 from sympy import ImmutableDenseNDimArray, tensorproduct, MatrixSymbol, tensorcontraction, tensordiagonal, permutedims, \
     Symbol
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol, \
-    CodegenArrayTensorProduct, CodegenArrayPermuteDims, CodegenArrayDiagonal, CodegenArrayContraction
+    ArrayTensorProduct, PermuteDims, ArrayDiagonal, ArrayContraction
 from sympy.testing.pytest import raises
 
 
@@ -20,19 +20,19 @@ def test_array_as_explicit_call():
     B = ArraySymbol("B", 3, 3)
 
     texpr = tensorproduct(A, B)
-    assert isinstance(texpr, CodegenArrayTensorProduct)
+    assert isinstance(texpr, ArrayTensorProduct)
     assert texpr.as_explicit() == tensorproduct(A.as_explicit(), B.as_explicit())
 
     texpr = tensorcontraction(A, (0, 1))
-    assert isinstance(texpr, CodegenArrayContraction)
+    assert isinstance(texpr, ArrayContraction)
     assert texpr.as_explicit() == A[0, 0] + A[1, 1] + A[2, 2]
 
     texpr = tensordiagonal(A, (0, 1))
-    assert isinstance(texpr, CodegenArrayDiagonal)
+    assert isinstance(texpr, ArrayDiagonal)
     assert texpr.as_explicit() == ImmutableDenseNDimArray([A[0, 0], A[1, 1], A[2, 2]])
 
     texpr = permutedims(A, [1, 0])
-    assert isinstance(texpr, CodegenArrayPermuteDims)
+    assert isinstance(texpr, PermuteDims)
     assert texpr.as_explicit() == permutedims(A.as_explicit(), [1, 0])
 
 
@@ -42,17 +42,17 @@ def test_array_as_explicit_matrix_symbol():
     B = MatrixSymbol("B", 3, 3)
 
     texpr = tensorproduct(A, B)
-    assert isinstance(texpr, CodegenArrayTensorProduct)
+    assert isinstance(texpr, ArrayTensorProduct)
     assert texpr.as_explicit() == tensorproduct(A.as_explicit(), B.as_explicit())
 
     texpr = tensorcontraction(A, (0, 1))
-    assert isinstance(texpr, CodegenArrayContraction)
+    assert isinstance(texpr, ArrayContraction)
     assert texpr.as_explicit() == A[0, 0] + A[1, 1] + A[2, 2]
 
     texpr = tensordiagonal(A, (0, 1))
-    assert isinstance(texpr, CodegenArrayDiagonal)
+    assert isinstance(texpr, ArrayDiagonal)
     assert texpr.as_explicit() == ImmutableDenseNDimArray([A[0, 0], A[1, 1], A[2, 2]])
 
     texpr = permutedims(A, [1, 0])
-    assert isinstance(texpr, CodegenArrayPermuteDims)
+    assert isinstance(texpr, PermuteDims)
     assert texpr.as_explicit() == permutedims(A.as_explicit(), [1, 0])
