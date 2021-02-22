@@ -5,6 +5,7 @@ General binary relations.
 from sympy import S
 from sympy.assumptions import AppliedPredicate, ask, Predicate
 from sympy.core.compatibility import ordered
+from sympy.core.evalf import EvalfMixin
 from sympy.core.kind import BooleanKind
 from sympy.core.parameters import global_parameters
 from sympy.logic.boolalg import BooleanAtom
@@ -252,11 +253,11 @@ class AppliedBinaryRelation(AppliedPredicate):
         return self.function._eval_binary_symbols(*self.arguments)
 
 
-class _DeprecatedRelational(AppliedBinaryRelation):
+class _DeprecatedRelational(AppliedBinaryRelation, EvalfMixin):
     """
     Class to make migration from ``core/relational`` to this module.
     Old signatures such as ``Eq(x, y)`` returns this class. Evaluates by
-    default and by simplification.
+    construction and by simplification.
 
     """
     def __new__(cls, predicate, *args, **options):

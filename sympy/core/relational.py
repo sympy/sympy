@@ -1,6 +1,7 @@
 from typing import Dict, Union, Type
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from .assumptions import ManagedProperties
 from .basic import S, Atom
 from .compatibility import ordered
 from .basic import Basic
@@ -41,7 +42,22 @@ def _canonical(cond):
     # the tests so I've removed it...
 
 
-class Relational(Boolean, EvalfMixin):
+class RelationalMeta(ManagedProperties):
+    """
+    Metaclass to make ``isinstance(Q.eq(...), Eq)`` return ``True``.
+    """
+    def __instancecheck__(self, other):
+        from sympy import Q
+        from sympy.assumptions.relation import AppliedBinaryRelation
+        if isinstance(other, AppliedBinaryRelation):
+            rel_types = {Q.eq: Eq, Q.ne: Ne}
+            reltyp = rel_types.get(other.function, None)
+            if reltyp is not None:
+                return issubclass(reltyp, self)
+        return super().__instancecheck__(other)
+
+
+class Relational(Boolean, EvalfMixin, metaclass=RelationalMeta):
     """Base class for all relation types.
 
     Explanation
