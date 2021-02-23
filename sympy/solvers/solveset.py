@@ -1921,6 +1921,7 @@ def helper_to_solve_as_lambert(soln, domain):
                 result = FiniteSet(*soln)
         else:
             try:
+                # giving error at test_sysode_linear_neq_order1_type4
                 result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
             except ValueError:
                 result = None
