@@ -3306,8 +3306,12 @@ def unrad(eq, *syms, **flags):
 
     # check for trivial case
     # - already a polynomial in integer powers
+    poly_gens = []
+    for i in poly.gens:
+        if not i.is_number:
+            poly_gens.append(i)
     if all(_Q(g) == 1 for g in gens):
-        if (len(gens) == len(poly.gens) and d!=1):
+        if (len(gens) == len(poly_gens) and d!=1):
             return eq, []
         else:
             return
