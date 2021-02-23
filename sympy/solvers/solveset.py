@@ -1920,10 +1920,7 @@ def helper_to_solve_as_lambert(soln, domain):
             else:
                 result = FiniteSet(*soln)
         else:
-            try:
-                result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
-            except ValueError:
-                result = None
+            result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
 
     return result
 
@@ -1947,8 +1944,6 @@ def _solve_as_lambert(lhs, rhs, symbol, domain):
         soln = _compute_lambert_solutions(pos_lhs, rhs, u,domain)
         if soln:
             result = helper_to_solve_as_lambert(soln, domain)
-            if result is None:
-                result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
 
     return result
 
@@ -2328,16 +2323,15 @@ def solveset(f, symbol=None, domain=S.Complexes):
     # solveset should ignore assumptions on symbols
     if symbol not in _rc:
         x = _rc[0] if domain.is_subset(S.Reals) else _rc[1]
-        if not isinstance(f,list):
-            rv = solveset(f.xreplace({symbol: x}), x, domain)
-            # try to use the original symbol if possible
-            try:
-                _rv = rv.xreplace({x: symbol})
-            except TypeError:
-                _rv = rv
-            if rv.dummy_eq(_rv):
-                rv = _rv
-            return rv
+        rv = solveset(f.xreplace({symbol: x}), x, domain)
+        # try to use the original symbol if possible
+        try:
+            _rv = rv.xreplace({x: symbol})
+        except TypeError:
+            _rv = rv
+        if rv.dummy_eq(_rv):
+            rv = _rv
+        return rv
 
     # Abs has its own handling method which avoids the
     # rewriting property that the first piece of abs(x)

@@ -13,7 +13,7 @@ from sympy.core.function import _mexpand
 from sympy.simplify.simplify import separatevars
 from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import powsimp
-from sympy.solvers.solvers import _invert, solve
+from sympy.solvers.solvers import solve, _invert
 from sympy.utilities.iterables import uniq
 from sympy import re
 from sympy.core import Lambda, Symbol
