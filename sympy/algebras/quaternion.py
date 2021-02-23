@@ -9,7 +9,7 @@ from sympy import integrate
 from sympy import Matrix
 from sympy import sympify
 from sympy.core.expr import Expr
-from sympy.core.logic import fuzzy_not
+from sympy.core.logic import fuzzy_not, fuzzy_or
 
 class Quaternion(Expr):
     """Provides basic quaternion operations.
@@ -954,7 +954,7 @@ class Quaternion(Expr):
         aq = q1.axis()
         ar = q2.axis()
 
-        return (aq - ar).is_zero_quaternion() or (aq + ar).is_zero_quaternion()
+        return fuzzy_or((aq - ar).is_zero_quaternion(), (aq + ar).is_zero_quaternion())
 
     @classmethod
     def ternary_coplanar(cls, q1, q2, q3):
