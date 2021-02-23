@@ -116,6 +116,7 @@ def test_exp__as_base_exp():
     assert exp(x).exp == x
 
 
+@_both_exp_pow
 def test_exp_infinity():
     assert exp(I*y) != nan
     assert refine(exp(I*oo)) is nan
@@ -526,6 +527,7 @@ def test_log_AccumBounds():
     assert log(AccumBounds(1, E)) == AccumBounds(0, 1)
 
 
+@_both_exp_pow
 def test_lambertw():
     k = Symbol('k')
 
