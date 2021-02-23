@@ -1920,7 +1920,10 @@ def helper_to_solve_as_lambert(soln, domain):
             else:
                 result = FiniteSet(*soln)
         else:
-            result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
+            try:
+                result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
+            except ValueError:
+                result = None
 
     return result
 
@@ -1944,6 +1947,8 @@ def _solve_as_lambert(lhs, rhs, symbol, domain):
         soln = _compute_lambert_solutions(pos_lhs, rhs, u,domain)
         if soln:
             result = helper_to_solve_as_lambert(soln, domain)
+            if result is None:
+                result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
 
     return result
 
