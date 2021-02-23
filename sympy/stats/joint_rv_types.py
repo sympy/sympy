@@ -18,7 +18,8 @@ __all__ = ['JointRV',
 'MultivariateEwens',
 'MultivariateT',
 'NegativeMultinomial',
-'NormalGamma'
+'NormalGamma',
+'NormalInverseGammaDistribution'
 ]
 
 def multivariate_rv(cls, sym, *args):
@@ -439,14 +440,14 @@ def NormalGamma(sym, mu, lamda, alpha, beta):
 class NormalInverseGammaDistribution(JointDistribution):
 
     _argnames = ('mu', 'lamda', 'alpha', 'beta')
-    is_Continuous=True
+    is_Continuous = True
 
     @staticmethod
     def check(mu, lamda, alpha, beta):
         _value_check(mu.is_real, "Location must be real.")
-        _value_check(lamda > 0, "Lambda must be positive")
-        _value_check(alpha > 0, "alpha must be positive")
-        _value_check(beta > 0, "beta must be positive")
+        _value_check(lamda.is_positive, "Lambda must be positive")
+        _value_check(alpha.is_positive, "alpha must be positive")
+        _value_check(beta.is_positive, "beta must be positive")
 
     @property
     def set(self):

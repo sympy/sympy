@@ -82,9 +82,9 @@ def test_NormalInverseGamma():
     assert density(ng)(1, 1) == 32.0*exp(-4)/sqrt(pi)
     assert density(ng)(7, 2) == 1.0*sqrt(2)*exp(-20)/sqrt(pi)
     assert ng.pspace.distribution.set == ProductSet(S.Reals, Interval(0, oo))
-    raises(ValueError, lambda:NormalGamma('G', 1, 2, 3, -1))
-    raises(ValueError, lambda:NormalGamma('G', 1, 2, -3, 1))
-    raises(ValueError, lambda:NormalGamma('G', 1, -2, 3, 1))
+    raises(ValueError, lambda: NormalInverseGamma('G', 1, 2, 3, -1))
+    raises(ValueError, lambda: NormalInverseGamma('G', 1, 2, -3, 1))
+    raises(ValueError, lambda: NormalInverseGamma('G', 1, -2, 3, 1))
 
 
 def test_GeneralizedMultivariateLogGammaDistribution():
