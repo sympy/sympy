@@ -635,7 +635,7 @@ def _get_examples_ode_sol_euler_homogeneous():
         'XFAIL': ['2nd_power_series_regular','nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients']
     },
 
-    'euler_hom_07': {
+    'euler_hom_08': {
         'eq': x**6 * f(x).diff(x, 6) - x*f(x).diff(x) + f(x),
         'sol': [Eq(f(x), C1*x + C2*x**r1 + C3*x**r2 + C4*x**r3 + C5*x**r4 + C6*x**r5)],
         'checkodesol_XFAIL':True
@@ -2422,9 +2422,6 @@ def _get_examples_ode_sol_nth_linear_constant_coeff_homogeneous():
 
 @_add_example_keys
 def _get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep():
-    # FIXME: example5 don't work with checkodesol (because of **x?)
-    # previous code was testing with these other solution:
-    # example5_solb = Eq(f(x), log(log(C1/x)**(-x)))
     return {
             'hint': "1st_homogeneous_coeff_subs_dep_div_indep",
             'func': f(x),
@@ -2454,10 +2451,12 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep():
         'slow': True
     },
 
+    # previous code was testing with these other solution:
+    # example5_solb = Eq(f(x), log(log(C1/x)**(-x)))
     'dep_div_indep_05': {
         'eq': x*exp(f(x)/x) + f(x) - x*f(x).diff(x),
         'sol': [Eq(f(x), log((1/(C1 - log(x)))**x))],
-        'checkodesol_XFAIL':True,
+        'checkodesol_XFAIL':True, #(because of **x?)
     },
     }
     }
@@ -2465,18 +2464,16 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep():
 
 @_add_example_keys
 def _get_examples_ode_sol_1st_homogeneous_coeff_best():
-    # FIXME: example1 and example3 don't work with checkodesol (because of LambertW?)
-    # previous code was testing with these other solutions:
-    # example1_solb = Eq(-f(x)/(1 + log(x/f(x))), C1)
-    # example3_solb = Eq(log(C1*x*sqrt(1/x)*sqrt(f(x))) + x**2/(2*f(x)**2), 0)
     return {
             'hint': "1st_homogeneous_coeff_best",
             'func': f(x),
             'examples':{
+    # previous code was testing this with other solution:
+    # example1_solb = Eq(-f(x)/(1 + log(x/f(x))), C1)
     '1st_homogeneous_coeff_best_01': {
         'eq': f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x), x),
         'sol': [Eq(f(x), -exp(C1)*LambertW(-x*exp(-C1 + 1)))],
-        'checkodesol_XFAIL':True,
+        'checkodesol_XFAIL':True, #(because of LambertW?)
     },
 
     '1st_homogeneous_coeff_best_02': {
@@ -2484,10 +2481,12 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_best():
         'sol': [Eq(log(f(x)), C1 - 2*exp(x/f(x)))],
     },
 
+    # previous code was testing this with other solution:
+    # example3_solb = Eq(log(C1*x*sqrt(1/x)*sqrt(f(x))) + x**2/(2*f(x)**2), 0)
     '1st_homogeneous_coeff_best_03': {
         'eq': 2*x**2*f(x) + f(x)**3 + (x*f(x)**2 - 2*x**3)*f(x).diff(x),
         'sol': [Eq(f(x), exp(2*C1 + LambertW(-2*x**4*exp(-4*C1))/2)/x)],
-        'checkodesol_XFAIL':True,
+        'checkodesol_XFAIL':True,  #(because of LambertW?)
     },
 
     '1st_homogeneous_coeff_best_04': {

@@ -1,5 +1,5 @@
-from sympy import (acos, acosh, atan, cos, Derivative, diff,
-    Dummy, Eq, Ne, exp, Function, I, Integral, LambertW, log, O, pi,
+from sympy import (acosh, atan, cos, Derivative, diff,
+    Eq, Ne, exp, Function, I, Integral, log, O, pi,
     Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
     Piecewise, symbols, Poly, sec, re, im, atan2, collect)
 
