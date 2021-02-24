@@ -954,7 +954,7 @@ class Quaternion(Expr):
         aq = q1.axis()
         ar = q2.axis()
 
-        return fuzzy_or((aq - ar).is_zero_quaternion(), (aq + ar).is_zero_quaternion())
+        return fuzzy_or([(aq - ar).is_zero_quaternion(), (aq + ar).is_zero_quaternion()])
 
     @classmethod
     def ternary_coplanar(cls, q1, q2, q3):
