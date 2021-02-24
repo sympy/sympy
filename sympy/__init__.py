@@ -67,7 +67,8 @@ from .logic import (to_cnf, to_dnf, to_nnf, And, Or, Not, Xor, Nand, Nor,
         true, false, satisfiable)
 
 from .assumptions import (AppliedPredicate, Predicate, AssumptionsContext,
-        assuming, Q, ask, register_handler, remove_handler, refine)
+        assuming, Q, ask, register_handler, remove_handler, refine,
+        AppliedBinaryRelation)
 
 from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         degree, total_degree, degree_list, LC, LM, LT, pdiv, prem, pquo,
@@ -278,7 +279,7 @@ __all__ = [
 
     # sympy.assumptions
     'AppliedPredicate', 'Predicate', 'AssumptionsContext', 'assuming', 'Q',
-    'ask', 'register_handler', 'remove_handler', 'refine',
+    'ask', 'register_handler', 'remove_handler', 'refine', 'AppliedBinaryRelation',
 
     # sympy.polys
     'Poly', 'PurePoly', 'poly_from_expr', 'parallel_poly_from_expr', 'degree',
