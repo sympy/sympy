@@ -328,6 +328,21 @@ class MCodePrinter(CodePrinter):
         dvars = [i[0] if i[1] == 1 else i for i in expr.variable_count]
         return "Hold[D[" + ', '.join(self.doprint(a) for a in [dexpr] + dvars) + "]]"
 
+    def _print_AppliedBinaryRelation(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+
+        rel = expr.function
+        if hasattr(rel, 'mcode_name'):
+            op = rel.mcode_name
+        elif hasattr(rel, 'rel_op'):
+            op = rel.rel_op
+        elif hasattr(rel, 'name'):
+            op = rel.name
+        else:
+            op = type(rel).__name__
+
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _get_comment(self, text):
         return "(* {} *)".format(text)

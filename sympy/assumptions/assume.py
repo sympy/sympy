@@ -356,7 +356,7 @@ class Predicate(Boolean, metaclass=PredicateMeta):
                 cls.register(*t, **kwargs)(func)
         return _
 
-    def __call__(self, *args):
+    def __call__(self, *args, **options):
         return AppliedPredicate(self, *args)
 
     def eval(self, args, assumptions=True):

@@ -773,3 +773,21 @@ class FCodePrinter(CodePrinter):
     def _print_ArrayConstructor(self, ac):
         fmtstr = "[%s]" if self._settings["standard"] >= 2003 else '(/%s/)'
         return fmtstr % ', '.join(map(lambda arg: self._print(arg), ac.elements))
+
+    def _print_AppliedBinaryRelation(self, expr):
+        rel, args = expr.function, expr.arguments
+        lhs, rhs = args
+
+        lhs_code = self._print(lhs)
+        rhs_code = self._print(rhs)
+
+        if hasattr(rel, 'fortran_name'):
+            name = rel.fortran_name
+        elif hasattr(rel, 'rel_op'):
+            name = rel.rel_op
+        elif hasattr(rel, 'name'):
+            name = rel.name
+        else:
+            name = type(rel).__name__
+
+        return "{} {} {}".format(lhs_code, name, rhs_code)

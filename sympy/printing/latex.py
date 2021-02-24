@@ -2679,6 +2679,8 @@ class LatexPrinter(Printer):
 
         if hasattr(rel, 'latex_name'):
             name = rel.latex_name
+        elif hasattr(rel, 'rel_op'):
+            name = rel.rel_op
         elif hasattr(rel, 'name'):
             name = rel.name
         else:

@@ -887,6 +887,8 @@ class StrPrinter(Printer):
 
         if hasattr(rel, 'str_name'):
             name = rel.str_name
+        elif hasattr(rel, 'rel_op'):
+            name = rel.rel_op
         elif hasattr(rel, 'name'):
             name = rel.name
         else:

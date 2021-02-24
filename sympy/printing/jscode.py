@@ -208,6 +208,22 @@ class JavascriptCodePrinter(CodePrinter):
             level += increase[n]
         return pretty
 
+    def _print_AppliedBinaryRelation(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+
+        rel = expr.function
+        if hasattr(rel, 'jscode_name'):
+            name = rel.jscode_name
+        elif hasattr(rel, 'rel_op'):
+            name = rel.rel_op
+        elif hasattr(rel, 'name'):
+            name = rel.name
+        else:
+            name = type(rel).__name__
+
+        return "{} {} {}".format(lhs_code, name, rhs_code)
+
 
 def jscode(expr, assign_to=None, **settings):
     """Converts an expr to a string of javascript code

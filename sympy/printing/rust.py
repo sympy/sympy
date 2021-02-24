@@ -472,6 +472,20 @@ class RustCodePrinter(CodePrinter):
             rhs_code = self._print(rhs)
             return self._get_statement("%s = %s" % (lhs_code, rhs_code))
 
+    def _print_AppliedBinaryRelation(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        rel = expr.function
+        if hasattr(rel, 'rust_code_name'):
+            op = rel.rust_code_name
+        elif hasattr(rel, 'rel_op'):
+            op = rel.rel_op
+        elif hasattr(rel, 'name'):
+            op = rel.name
+        else:
+            op = type(rel).__name__
+        return "{} {} {}".format(lhs_code, op, rhs_code)
+
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 

@@ -343,6 +343,22 @@ class GLSLPrinter(CodePrinter):
         s = reduce(lambda a,b: mul(a,b), map(lambda t: self._print(t), terms))
         return s
 
+    def _print_AppliedBinaryRelation(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+
+        rel = expr.function
+        if hasattr(rel, 'glsl_code_name'):
+            name = rel.glsl_code_name
+        elif hasattr(rel, 'rel_op'):
+            name = rel.rel_op
+        elif hasattr(rel, 'name'):
+            name = rel.name
+        else:
+            name = type(rel).__name__
+
+        return "{} {} {}".format(lhs_code, name, rhs_code)
+
 def glsl_code(expr,assign_to=None,**settings):
     """Converts an expr to a string of GLSL code
 

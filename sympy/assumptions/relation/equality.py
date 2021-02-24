@@ -9,7 +9,7 @@ References
 """
 from sympy import S
 from sympy.assumptions import Q
-from sympy.core.relational import is_eq, is_neq, _eval_is_eq
+from sympy.core.relational import Eq, Ne, is_eq, is_neq, _eval_is_eq
 
 from .binrel import BinaryRelation
 
@@ -60,12 +60,18 @@ class EqualityPredicate(BinaryRelation):
     is_symmetric = True
 
     name = 'eq'
-    str_name = latex_name = "="
+    rel_op = "=="
+    str_name = pretty_name = latex_name = "="
+
     handler = _eval_is_eq   # this allows registering via Q.eq
 
     @property
     def negated(self):
         return Q.ne
+
+    @property
+    def as_old_relational(self):
+        return Eq
 
     def eval(self, args, assumptions=True):
         return is_eq(*args)
@@ -98,13 +104,19 @@ class UnequalityPredicate(BinaryRelation):
     is_symmetric = True
 
     name = 'ne'
-    str_name = "!="
+    rel_op = "!="
     latex_name = r"\neq"
+    fortran_name = "/="
+
     handler = None
 
     @property
     def negated(self):
         return Q.eq
+
+    @property
+    def as_old_relational(self):
+        return Ne
 
     def eval(self, args, assumptions=True):
         return is_neq(*args)

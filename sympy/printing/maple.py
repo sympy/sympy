@@ -246,6 +246,25 @@ class MapleCodePrinter(CodePrinter):
             _second_arg = '{var}'.format(var=self._print(_var))
         return 'diff({func_expr}, {sec_arg})'.format(func_expr=self._print(_f), sec_arg=_second_arg)
 
+    def _print_AppliedBinaryRelation(self, expr):
+        PREC=precedence(expr)
+        lhs_code = self.parenthesize(expr.lhs, PREC)
+        rhs_code = self.parenthesize(expr.rhs, PREC)
+
+        rel = expr.function
+        if hasattr(rel, 'maple_code_name'):
+            op = rel.maple_code_name
+        elif hasattr(rel, 'rel_op'):
+            op = rel.rel_op
+        elif hasattr(rel, 'name'):
+            op = rel.name
+        else:
+            op = type(rel).__name__
+
+        if op in spec_relational_ops:
+            op = spec_relational_ops[op]
+        return "{lhs} {rel_op} {rhs}".format(lhs=lhs_code, rel_op=op, rhs=rhs_code)
+
 
 def maple_code(expr, assign_to=None, **settings):
     r"""Converts ``expr`` to a string of Maple code.

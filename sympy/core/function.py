@@ -3323,11 +3323,11 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
         else:
             pass  # pure_complex(rv) is likely True
         return rv
-    elif rv.is_Atom:
-        return rv
     elif rv.is_Relational:
         args_nfloat = (nfloat(arg, **kw) for arg in rv.args)
         return rv.func(*args_nfloat)
+    elif rv.is_Atom:
+        return rv
 
 
     # watch out for RootOf instances that don't like to have

@@ -2742,12 +2742,15 @@ class PrettyPrinter(Printer):
         rel, args = expr.function, expr.arguments
         lhs, rhs = args
 
-        if hasattr(rel, 'str_name'):
-            name = rel.str_name
+        if hasattr(rel, 'pretty_name'):
+            name = rel.pretty_name
+        elif hasattr(rel, 'rel_op'):
+            name = rel.rel_op
         elif hasattr(rel, 'name'):
             name = rel.name
         else:
             name = type(rel).__name__
+
         op = prettyForm(name)
         l = self._print(lhs)
         r = self._print(rhs)

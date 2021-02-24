@@ -708,6 +708,21 @@ class C99CodePrinter(C89CodePrinter):
     def _print_Min(self, expr):
         return self._print_math_func(expr, nest=True)
 
+    def _print_AppliedBinaryRelation(self, expr):
+        rel, args = expr.function, expr.arguments
+        lhs, rhs = args
+
+        if hasattr(rel, 'c_name'):
+            name = rel.c_name
+        elif hasattr(rel, 'rel_op'):
+            name = rel.rel_op
+        elif hasattr(rel, 'name'):
+            name = rel.name
+        else:
+            name = type(rel).__name__
+
+        return "%s %s %s" % (self._print(lhs), name, self._print(rhs))
+
     def _get_loop_opening_ending(self, indices):
         open_lines = []
         close_lines = []

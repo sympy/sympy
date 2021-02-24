@@ -3,12 +3,13 @@ General binary relations.
 """
 
 from sympy import S
-from sympy.assumptions import AppliedPredicate, ask, Predicate
+from sympy.assumptions import AppliedPredicate, ask, Predicate, Q
 from sympy.core.compatibility import ordered
 from sympy.core.evalf import EvalfMixin
 from sympy.core.kind import BooleanKind
 from sympy.core.parameters import global_parameters
-from sympy.logic.boolalg import BooleanAtom
+from sympy.core.relational import Relational
+from sympy.logic.boolalg import BooleanAtom, conjuncts, Not
 
 __all__ = ["BinaryRelation", "AppliedBinaryRelation"]
 
@@ -150,6 +151,12 @@ class AppliedBinaryRelation(AppliedPredicate):
 
     """
 
+    is_Relational = True    # compatibility for old Relational
+
+    @property
+    def rel_op(self):
+        return self.function.rel_op
+
     @property
     def lhs(self):
         """The left-hand side of the relation."""
@@ -186,7 +193,7 @@ class AppliedBinaryRelation(AppliedPredicate):
     def negated(self):
         neg_rel = self.function.negated
         if neg_rel is None:
-            return ~self
+            return Not(self, evaluate=False)
         return neg_rel(*self.arguments)
 
     @property
@@ -231,6 +238,15 @@ class AppliedBinaryRelation(AppliedPredicate):
         return r
 
     def _eval_ask(self, assumptions):
+        # After CNF in assumptions module is modified to take polyadic
+        # predicate, this will be removed
+        if any(rel in conjuncts(assumptions) for rel in (self, self.reversed)):
+            return True
+        neg_rels = (self.negated, self.reversed.negated, Not(self, evaluate=False),
+            Not(self.reversed, evaluate=False))
+        if any(rel in conjuncts(assumptions) for rel in neg_rels):
+            return False
+
         ret = self.function.eval(self.arguments, assumptions)
         if ret is not None:
             return ret
@@ -251,6 +267,71 @@ class AppliedBinaryRelation(AppliedPredicate):
     @property
     def binary_symbols(self):
         return self.function._eval_binary_symbols(*self.arguments)
+
+    def _eval_as_set(self):
+        # self is univariate and periodicity(self, x) in (0, None)
+        from sympy.solvers.inequalities import solve_univariate_inequality
+        from sympy.sets.conditionset import ConditionSet
+        syms = self.free_symbols
+        assert len(syms) == 1
+        x = syms.pop()
+        try:
+            xset = solve_univariate_inequality(self, x, relational=False)
+        except NotImplementedError:
+            # solve_univariate_inequality raises NotImplementedError for
+            # unsolvable equations/inequalities.
+            xset = ConditionSet(x, self, S.Reals)
+        return xset
+
+    def equals(self, other, failing_expression=False):
+        """Return True if the sides of the relationship are mathematically
+        identical and the type of relationship is the same.
+        If failing_expression is True, return the expression whose truth value
+        was unknown."""
+        if isinstance(other, AppliedBinaryRelation):
+            if self == other or self.reversed == other:
+                return True
+            a, b = self, other
+            if a.function in (Q.eq, Q.ne) or b.func in (Q.eq, Q.ne):
+                if a.function != b.function:
+                    return False
+                left, right = [i.equals(j,
+                                        failing_expression=failing_expression)
+                               for i, j in zip(a.arguments, b.arguments)]
+                if left is True:
+                    return right
+                if right is True:
+                    return left
+                lr, rl = [i.equals(j, failing_expression=failing_expression)
+                          for i, j in zip(a.arguments, b.reversed.arguments)]
+                if lr is True:
+                    return rl
+                if rl is True:
+                    return lr
+                e = (left, right, lr, rl)
+                if all(i is False for i in e):
+                    return False
+                for i in e:
+                    if i not in (True, False):
+                        return i
+            else:
+                if b.function != a.function:
+                    b = b.reversed
+                if a.function != b.function:
+                    return False
+                left = a.lhs.equals(b.lhs,
+                                    failing_expression=failing_expression)
+                if left is False:
+                    return False
+                right = a.rhs.equals(b.rhs,
+                                     failing_expression=failing_expression)
+                if right is False:
+                    return False
+                if left is True:
+                    return right
+                return left
+        elif isinstance(other, Relational):
+            return False
 
 
 class _DeprecatedRelational(AppliedBinaryRelation, EvalfMixin):
