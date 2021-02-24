@@ -1697,6 +1697,7 @@ def test_other_lambert():
     assert set(solve(x**a - a**x), x) == {
         a, -a*LambertW(-log(a)/a)/log(a)}
 
+
 @slow
 def test_lambert_bivariate():
     # tests passing current implementation
@@ -1747,14 +1748,6 @@ def test_lambert_bivariate():
         x0*log(3*x1*x2)/3,
         x0*log(x5*(-x3 + x4)),
         x0*log(-x5*(x3 + x4))]
-    ans = solve((a/x + exp(x/2)).diff(x, 2), x)
-    x0 = (-a)**Rational(1, 3)
-    x1 = sqrt(3)*I
-    x2 = x0/6
-    assert ans == [
-        6*LambertW(x0/3),
-        6*LambertW(x2*(x1 - 1)),
-        6*LambertW(-x2*(x1 + 1))]
     # coverage
     p = symbols('p', positive=True)
     eq = 4*2**(2*p + 3) - 2*p - 3
@@ -1768,6 +1761,14 @@ def test_lambert_bivariate():
         exp(-z + LambertW(2*z**4*exp(2*z))/2)/z]
     # cases when p != S.One
     # issue 4271
+    ans = solve((a/x + exp(x/2)).diff(x, 2), x)
+    x0 = (-a)**Rational(1, 3)
+    x1 = sqrt(3)*I
+    x2 = x0/6
+    assert ans == [
+        6*LambertW(x0/3),
+        6*LambertW(x2*(x1 - 1)),
+        6*LambertW(-x2*(x1 + 1))]
     assert solve((1/x + exp(x/2)).diff(x, 2), x) == \
                 [6*LambertW(Rational(-1, 3)), 6*LambertW(Rational(1, 6) - sqrt(3)*I/6), \
                 6*LambertW(Rational(1, 6) + sqrt(3)*I/6), 6*LambertW(Rational(-1, 3), -1)]
