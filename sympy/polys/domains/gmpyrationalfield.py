@@ -1,4 +1,4 @@
-"""Implementation of :class:``GMPYRationalField`` class. """
+"""Implementation of :class:`GMPYRationalField` class. """
 
 
 from sympy.polys.domains.groundtypes import (
