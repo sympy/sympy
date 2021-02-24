@@ -11,10 +11,10 @@ from sympy.utilities import public
 
 @public
 class GMPYRationalField(RationalField):
-    """Rational field based on GMPY's ````mpq```` type.
+    """Rational field based on GMPY's ``mpq`` type.
 
-    This will be the implementation of :ref:``QQ`` if ````gmpy```` or ````gmpy2```` is
-    installed. Elements will be of type ````gmpy.mpq````.
+    This will be the implementation of :ref:``QQ`` if ``gmpy`` or ``gmpy2`` is
+    installed. Elements will be of type ``gmpy.mpq``.
     """
 
     dtype = GMPYRational
@@ -27,7 +27,7 @@ class GMPYRationalField(RationalField):
         pass
 
     def get_ring(self):
-        """Returns ring associated with ````self````. """
+        """Returns ring associated with ``self``. """
         from sympy.polys.domains import GMPYIntegerRing
         return GMPYIntegerRing()
 
