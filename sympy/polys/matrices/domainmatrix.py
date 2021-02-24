@@ -22,44 +22,53 @@ from .sdm import SDM
 
 class DomainMatrix:
     r"""
-        The idea behind DomainMatrix is to associate :py:class:`~.Domain` with matrix.
+    The idea behind DomainMatrix is to associate :py:class:`~.Domain` with matrix.
 
-        Explanation
-        ===========
+    Explanation
+    ===========
 
-        DomainMatrix uses "domain elements" for its internal representation
-        which makes it more faster for many common operations
-        than current sympy Matrix class, but this advantage makes it not
-        entirely compatible with Matrix.
-        DomainMatrix could be found analogous to numpy arrays with "dtype".
-        In the DomainMatrix, each matrix has a domain such as ZZ(Integers)
-        or QQ<sqrt(2)>[Algebraic Number Field].
+    DomainMatrix uses "domain elements" for its internal representation
+    which makes it more faster for many common operations
+    than current sympy Matrix class, but this advantage makes it not
+    entirely compatible with Matrix.
+    DomainMatrix could be found analogous to numpy arrays with "dtype".
+    In the DomainMatrix, each matrix has a domain such as ZZ(Integers)
+    or QQ<sqrt(2)>[Algebraic Number Field].
 
-        Examples
-        ========
 
-        Creating a DomainMatrix from the existing Matrix class:
+    Examples
+    ========
 
-        >>> from sympy import Matrix
-        >>> from sympy.polys.matrices import DomainMatrix
-        >>> Matrix1 = Matrix([
-        ...         [2, 73],
-        ...         [27, 86]])
-        >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-        >>> domainMatrix
-        DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
+    Creating a DomainMatrix from the existing Matrix class:
 
-        See Also
-        ========
+    >>> from sympy import Matrix
+    >>> from sympy.polys.matrices import DomainMatrix
+    >>> Matrix1 = Matrix([
+    ...    [1, 2],
+    ...    [3, 4]])
+    >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
+    >>> domainMatrix
+    DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
 
-        :py:class:`~.ddm`
-        :py:class:`~.Domain`
+    Driectly forming a DomainMatrix:
 
-        References
-        ==========
+    >>> from sympy import ZZ
+    >>> from sympy.polys.matrices import DomainMatrix
+    >>> domainMatrix = DomainMatrix([
+    ...    [ZZ(1), ZZ(2)],
+    ...    [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    >>> domainMatrix
+    DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
 
-        .. module:: sympy.polys.domainsintro
-        :py:class:`~.Poly`
+    See Also
+    ========
+
+    :py:class:`~.ddm`
+    :py:class:`~.Domain`
+    :py:class:`~.Poly`
+
+    References
+    ==========
 
     """
 
@@ -99,45 +108,39 @@ class DomainMatrix:
 
     def convert_to(self, K):
         r"""
-            Returns a DomainMatrix with the desired domain or field
+        Returns a DomainMatrix with the desired domain or field
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix, CC
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
+        >>> from sympy import ZZ, CC
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix = DomainMatrix([
+        ...    [ZZ(1), ZZ(2)],
+        ...    [ZZ(3), ZZ(4)]], (2, 2), ZZ)
 
-            >>> domainMatrix.convert_to(CC)
-            DomainMatrix([[(2.0 + 0.0j), (73.0 + 0.0j)],
-            [(27.0 + 0.0j), (86.0 + 0.0j)]], (2, 2), CC)
+        >>> domainMatrix.convert_to(CC)
+        DomainMatrix([[(1.0 + 0.0j), (2.0 + 0.0j)],
+        [(3.0 + 0.0j), (4.0 + 0.0j)]], (2, 2), CC)
 
         """
         return self.from_rep(self.rep.convert_to(K))
 
     def to_field(self):
         r"""
-            Returns a DomainMatrix with the appropriate field
+        Returns a DomainMatrix with the appropriate field
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix = DomainMatrix([
+        ...    [ZZ(1), ZZ(2)],
+        ...    [ZZ(3), ZZ(4)]], (2, 2), ZZ)
 
-            >>> domainMatrix.to_field()
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), QQ)
+        >>> domainMatrix.to_field()
+        DomainMatrix([[1, 2], [3, 4]], (2, 2), QQ)
 
         """
         K = self.domain.get_field()
@@ -145,29 +148,28 @@ class DomainMatrix:
 
     def unify(self, other):
         r"""
-            Unifies any two DomainMatrix with different domains
+        Unifies any two DomainMatrix with different domains
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> Matrix2 = Matrix([
-            ...         [19, 30],
-            ...         [56, 14]])
-            >>> domainMatrix1 = DomainMatrix.from_Matrix(Matrix2)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
-            >>> domainMatrix1
-            DomainMatrix([[19, 30], [56, 14]], (2, 2), ZZ)
+        >>> from sympy import ZZ, QQ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix1 = DomainMatrix([
+        ...    [ZZ(1), ZZ(2)],
+        ...    [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> domainMatrix2 = domainMatrix1.convert_to(QQ)
 
-            >>> domainMatrix.unify(domainMatrix1)
-            (DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ),
-            DomainMatrix([[19, 30], [56, 14]], (2, 2), ZZ))
+        >>> dM1_new, dM2_new = domainMatrix1.unify(domainMatrix2)
+        >>> dM1_new
+        DomainMatrix([[1, 2], [3, 4]], (2, 2), QQ)
+        >>> dM2_new
+        DomainMatrix([[1, 2], [3, 4]], (2, 2), QQ)
+
+        See Also
+        ========
+
+        :py:meth:`~.convert_to`
 
         """
         K1 = self.domain
@@ -183,33 +185,32 @@ class DomainMatrix:
 
     def to_Matrix(self):
         r"""
-            Returns a MutableDenseMatrix for a DomainMatrix.
-            This method can be used to make changes to a DomainMatrix.
+        Returns a MutableDenseMatrix for a DomainMatrix.
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix = DomainMatrix([
+        ...    [ZZ(1), ZZ(2)],
+        ...    [ZZ(3), ZZ(4)]], (2, 2), ZZ)
 
-            >>> mutableDomainMatrix = domainMatrix.to_Matrix()
-            >>> mutableDomainMatrix
-            Matrix([
-            [ 2, 73],
-            [27, 86]])
-            >>> mutableDomainMatrix[0]
-            2
-            >>> mutableDomainMatrix[0] = 56
-            >>> mutableDomainMatrix
-            Matrix([
-            [56, 73],
-            [27, 86]])
+        >>> mutableDomainMatrix = domainMatrix.to_Matrix()
+        >>> mutableDomainMatrix
+        Matrix([
+        [1, 2],
+        [3, 4]])
+        >>> mutableDomainMatrix[0] = 4
+        >>> mutableDomainMatrix
+        Matrix([
+        [4, 2],
+        [3, 4]])
+
+        See Also
+        ========
+
+        :py:meth:`~.from_Matrix`
 
         """
         from sympy.matrices.dense import MutableDenseMatrix
@@ -218,25 +219,6 @@ class DomainMatrix:
         return MutableDenseMatrix(rows_sympy)
 
     def __repr__(self):
-        r"""
-            Represents the DomainMatrix
-
-            Usage
-            =====
-
-            >>> from sympy import Matrix
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
-
-            >>> domainMatrix.__repr__()
-            'DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)'
-
-        """
         elemlist = self.rep.to_list()
         rows_str = ['[%s]' % (', '.join(map(str, row))) for row in elemlist]
         rowstr = '[%s]' % ', '.join(rows_str)
@@ -282,28 +264,27 @@ class DomainMatrix:
 
     def add(A, B):
         r"""
-            Adds two DomainMatrix matrices
+        Adds two DomainMatrix matrices of the same Domain
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> Matrix2 = Matrix([
-            ...         [19, 30],
-            ...         [56, 14]])
-            >>> domainMatrix1 = DomainMatrix.from_Matrix(Matrix2)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
-            >>> domainMatrix1
-            DomainMatrix([[19, 30], [56, 14]], (2, 2), ZZ)
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix1 = DomainMatrix([
+        ...    [ZZ(1), ZZ(2)],
+        ...    [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> domainMatrix2 = DomainMatrix([
+        ...    [ZZ(4), ZZ(3)],
+        ...    [ZZ(2), ZZ(1)]], (2, 2), ZZ)
 
-            >>> domainMatrix.add(domainMatrix1)
-            DomainMatrix([[21, 103], [83, 100]], (2, 2), ZZ)
+        >>> domainMatrix1.add(domainMatrix2)
+        DomainMatrix([[5, 5], [5, 5]], (2, 2), ZZ)
+
+        See Also
+        ========
+
+        :py:meth:`~.sub`
 
         """
         if A.shape != B.shape:
@@ -314,28 +295,27 @@ class DomainMatrix:
 
     def sub(A, B):
         r"""
-            Subtracts two DomainMatrix matrices
+        Subtracts two DomainMatrix matrices of the same Domain
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> Matrix2 = Matrix([
-            ...         [19, 30],
-            ...         [56, 14]])
-            >>> domainMatrix1 = DomainMatrix.from_Matrix(Matrix2)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
-            >>> domainMatrix1
-            DomainMatrix([[19, 30], [56, 14]], (2, 2), ZZ)
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix1 = DomainMatrix([
+        ...    [ZZ(1), ZZ(2)],
+        ...    [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> domainMatrix2 = DomainMatrix([
+        ...    [ZZ(4), ZZ(3)],
+        ...    [ZZ(2), ZZ(1)]], (2, 2), ZZ)
 
-            >>> domainMatrix.sub(domainMatrix1)
-            DomainMatrix([[-17, 43], [-29, 72]], (2, 2), ZZ)
+        >>> domainMatrix1.sub(domainMatrix2)
+        DomainMatrix([[-3, -1], [1, 3]], (2, 2), ZZ)
+
+        See Also
+        ========
+
+        :py:meth:`~.add`
 
         """
         if A.shape != B.shape:
@@ -346,113 +326,110 @@ class DomainMatrix:
 
     def neg(A):
         r"""
-            Returns the negative of DomainMatrix
+        Returns the negative of DomainMatrix
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix = DomainMatrix([
+        ...    [ZZ(1), ZZ(2)],
+        ...    [ZZ(3), ZZ(4)]], (2, 2), ZZ)
 
-            >>> domainMatrix.neg()
-            DomainMatrix([[-2, -73], [-27, -86]], (2, 2), ZZ)
+        >>> domainMatrix.neg()
+        DomainMatrix([[-1, -2], [-3, -4]], (2, 2), ZZ)
+
+        See Also
+        ========
+
+        :py:meth:`~.inv`
 
         """
         return A.from_rep(A.rep.neg())
 
     def mul(A, b):
         r"""
-            Performs term by term multiplication for the second DomainMatrix
-            w.r.t first DomainMatrix. Returns a DomainMatrix whose rows are
-            list of DomainMatrix matrices created after term by term multiplication.
+        Performs term by term multiplication for the second DomainMatrix
+        w.r.t first DomainMatrix. Returns a DomainMatrix whose rows are
+        list of DomainMatrix matrices created after term by term multiplication.
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> Matrix2 = Matrix([
-            ...         [19, 30],
-            ...         [56, 14]])
-            >>> domainMatrix1 = DomainMatrix.from_Matrix(Matrix2)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
-            >>> domainMatrix1
-            DomainMatrix([[19, 30], [56, 14]], (2, 2), ZZ)
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix1 = DomainMatrix([
+        ...    [ZZ(1), ZZ(2)],
+        ...    [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> domainMatrix2 = DomainMatrix([
+        ...    [ZZ(1), ZZ(1)],
+        ...    [ZZ(0), ZZ(1)]], (2, 2), ZZ)
 
-            >>> domainMatrix.mul(domainMatrix1)
-            DomainMatrix([[DomainMatrix([[38, 60], [112, 28]], (2, 2), ZZ),
-            DomainMatrix([[1387, 2190], [4088, 1022]], (2, 2), ZZ)],
-            [DomainMatrix([[513, 810], [1512, 378]], (2, 2), ZZ),
-            DomainMatrix([[1634, 2580], [4816, 1204]], (2, 2), ZZ)]], (2, 2), ZZ)
+        >>> domainMatrix1.mul(domainMatrix2)
+        DomainMatrix([[DomainMatrix([[1, 1], [0, 1]], (2, 2), ZZ),
+        DomainMatrix([[2, 2], [0, 2]], (2, 2), ZZ)],
+        [DomainMatrix([[3, 3], [0, 3]], (2, 2), ZZ),
+        DomainMatrix([[4, 4], [0, 4]], (2, 2), ZZ)]], (2, 2), ZZ)
+
+        See Also
+        ========
+
+        :py:meth:`~.matmul`
 
         """
         return A.from_rep(A.rep.mul(b))
 
     def matmul(A, B):
         r"""
-            Performs matrix multiplication of two DomainMatrix matrices
+        Performs matrix multiplication of two DomainMatrix matrices
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> Matrix2 = Matrix([
-            ...         [19, 30],
-            ...         [56, 14]])
-            >>> domainMatrix1 = DomainMatrix.from_Matrix(Matrix2)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
-            >>> domainMatrix1
-            DomainMatrix([[19, 30], [56, 14]], (2, 2), ZZ)
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix1 = DomainMatrix([
+        ...    [ZZ(1), ZZ(2)],
+        ...    [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> domainMatrix2 = DomainMatrix([
+        ...    [ZZ(1), ZZ(1)],
+        ...    [ZZ(0), ZZ(1)]], (2, 2), ZZ)
 
-            >>> domainMatrix.matmul(domainMatrix1)
-            DomainMatrix([[4126, 1082], [5329, 2014]], (2, 2), ZZ)
+        >>> domainMatrix1.matmul(domainMatrix2)
+        DomainMatrix([[1, 3], [3, 7]], (2, 2), ZZ)
+
+        See Also
+        ========
+
+        :py:meth:`~.mul`
+
+        :py:meth:`~.pow`
 
         """
         return A.from_rep(A.rep.matmul(B.rep))
 
     def pow(A, n):
         r"""
-            Perfoms multiplication on the given DomainMatrix for the given number of times.
-            Or else computes A^n
+        Perfoms multiplication on the given DomainMatrix for the given number of times.
+        Or else computes A^n
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> Matrix2 = Matrix([
-            ...         [19, 30],
-            ...         [56, 14]])
-            >>> domainMatrix1 = DomainMatrix.from_Matrix(Matrix2)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
-            >>> domainMatrix1
-            DomainMatrix([[19, 30], [56, 14]], (2, 2), ZZ)
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix = DomainMatrix([
+        ...    [ZZ(1), ZZ(1)],
+        ...    [ZZ(0), ZZ(1)]], (2, 2), ZZ)
 
+        >>> domainMatrix.pow(2)
+        DomainMatrix([[1, 2], [0, 1]], (2, 2), ZZ)
 
-            >>> domainMatrix.pow(2)
-            DomainMatrix([[1975, 6424], [2376, 9367]], (2, 2), ZZ)
+        See Also
+        ========
+
+        :py:meth:`~.matmul`
 
         """
         if n < 0:
@@ -473,25 +450,29 @@ class DomainMatrix:
 
     def rref(self):
         r"""
-            Returns reduced-row echelon form and list of pivots for the DomainMatrix
+        Returns reduced-row echelon form and list of pivots for the DomainMatrix
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix, RR
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
-            >>> dMF = domainMatrix.convert_to(RR)
-            >>> dMF
-            DomainMatrix([[2.0, 73.0], [27.0, 86.0]], (2, 2), RR)
+        >>> from sympy import ZZ, QQ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix = DomainMatrix([
+        ...    [ZZ(1), ZZ(1)],
+        ...    [ZZ(0), ZZ(1)]], (2, 2), ZZ)
+        >>> dMF = domainMatrix.convert_to(QQ)
+        >>> dMF
+        DomainMatrix([[1, 1], [0, 1]], (2, 2), QQ)
 
-            >>> dMF.rref()
-            (DomainMatrix([[1.0, 0.0], [0.0, 1.0]], (2, 2), RR), (0, 1))
+        >>> dMF.rref()
+        (DomainMatrix([[1, 0], [0, 1]], (2, 2), QQ), (0, 1))
+
+        See Also
+        ========
+
+        :py:meth:`~.convert_to`
+
+        :py:meth:`~.lu`
 
         """
         if not self.domain.is_Field:
@@ -501,51 +482,49 @@ class DomainMatrix:
 
     def nullspace(self):
         r"""
-            Returns the Null Space for the DomainMatrix
+        Returns the Null Space for the DomainMatrix
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix, RR
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
-            >>> dMF = domainMatrix.convert_to(RR)
-            >>> dMF
-            DomainMatrix([[2.0, 73.0], [27.0, 86.0]], (2, 2), RR)
+        >>> from sympy import ZZ, QQ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix = DomainMatrix([
+        ...    [ZZ(1), ZZ(1)],
+        ...    [ZZ(0), ZZ(1)]], (2, 2), ZZ)
+        >>> dMF = domainMatrix.convert_to(QQ)
+        >>> dMF
+        DomainMatrix([[1, 1], [0, 1]], (2, 2), QQ)
 
-            >>> dMF.nullspace()
-            DomainMatrix([], (0, 2), RR)
+        >>> dMF.nullspace()
+        DomainMatrix([], (0, 2), QQ)
 
         """
         return self.from_rep(self.rep.nullspace()[0])
 
     def inv(self):
         r"""
-            Finds the inverse of the DomainMatrix if exists
+        Finds the inverse of the DomainMatrix if exists
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix, RR
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
-            >>> dMF = domainMatrix.convert_to(RR)
-            >>> dMF
-            DomainMatrix([[2.0, 73.0], [27.0, 86.0]], (2, 2), RR)
+        >>> from sympy import ZZ, QQ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix = DomainMatrix([
+        ...    [ZZ(1), ZZ(1)],
+        ...    [ZZ(0), ZZ(1)]], (2, 2), ZZ)
+        >>> dMF = domainMatrix.convert_to(QQ)
+        >>> dMF
+        DomainMatrix([[1, 1], [0, 1]], (2, 2), QQ)
 
-            >>> dMF.inv()
-            DomainMatrix([[-0.0478043357420789, 0.0405780989438577],
-            [0.0150083379655364, -0.00111172873818788]], (2, 2), RR)
+        >>> dMF.inv()
+        DomainMatrix([[1, -1], [0, 1]], (2, 2), QQ)
+
+        See Also
+        ========
+
+        :py:meth:`~.neg`
 
         """
         if not self.domain.is_Field:
@@ -558,22 +537,19 @@ class DomainMatrix:
 
     def det(self):
         r"""
-            Returns the determinant value for a Square DomainMatrix
+        Returns the determinant value for a Square DomainMatrix
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix = DomainMatrix([
+        ...    [ZZ(1), ZZ(2)],
+        ...    [ZZ(3), ZZ(4)]], (2, 2), ZZ)
 
-            >>> domainMatrix.det()
-            -1799
+        >>> domainMatrix.det()
+        -2
 
         """
         m, n = self.shape
@@ -583,27 +559,29 @@ class DomainMatrix:
 
     def lu(self):
         r"""
-            Returns Lower and Upper decomposition(L, U triangular matrices)
-            of the DomainMatrix
+        Returns Lower and Upper decomposition(L, U triangular matrices)
+        of the DomainMatrix
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix, RR
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
-            >>> dMF = domainMatrix.convert_to(RR)
-            >>> dMF
-            DomainMatrix([[2.0, 73.0], [27.0, 86.0]], (2, 2), RR)
+        >>> from sympy import ZZ, QQ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix = DomainMatrix([
+        ...    [ZZ(1), ZZ(2)],
+        ...    [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> dMF = domainMatrix.convert_to(QQ)
+        >>> dMF
+        DomainMatrix([[1, 2], [3, 4]], (2, 2), QQ)
 
-            >>> dMF.lu()
-            (DomainMatrix([[1.0, 0.0], [13.5, 1.0]], (2, 2), RR),
-            DomainMatrix([[2.0, 73.0], [0.0, -899.5]], (2, 2), RR), [])
+        >>> dMF.lu()
+        (DomainMatrix([[1, 0], [3, 1]], (2, 2), QQ),
+        DomainMatrix([[1, 2], [0, -2]], (2, 2), QQ), [])
+
+        See Also
+        ========
+
+        :py:meth:`~.lu_solve`
 
         """
         if not self.domain.is_Field:
@@ -613,32 +591,28 @@ class DomainMatrix:
 
     def lu_solve(self, rhs):
         r"""
-            Solver for "DomainMatrix" x in the A*x = B, where A, B
-            are DomainMatrix matrices.
+        Solver for "DomainMatrix" x in the A*x = B, where A, B
+        are DomainMatrix matrices.
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix, RR
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> A = Matrix([
-            ...    [77, 97],
-            ...    [76, 31]])
-            >>> B = Matrix([
-            ...    [54, 30],
-            ...    [72, 77]])
-            >>> A1 = DomainMatrix.from_Matrix(A)
-            >>> B1 = DomainMatrix.from_Matrix(B)
-            >>> A1
-            DomainMatrix([[77, 97], [76, 31]], (2, 2), ZZ)
-            >>> B1
-            DomainMatrix([[54, 30], [72, 77]], (2, 2), ZZ)
-            >>> A1f = A1.convert_to(RR)
-            >>> B1f = B1.convert_to(RR)
+        >>> from sympy import RR
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix1 = DomainMatrix([
+        ...    [RR(1), RR(2)],
+        ...    [RR(3), RR(4)]], (2, 2), RR)
+        >>> domainMatrix2 = DomainMatrix([
+        ...    [RR(1), RR(1)],
+        ...    [RR(0), RR(1)]], (2, 2), RR)
 
-            >>> A1f.lu_solve(B1f)
-            DomainMatrix([[1.06519558676028, 1.31173520561685],
-            [-0.288866599799398, -0.731995987963892]], (2, 2), RR)
+        >>> domainMatrix1.lu_solve(domainMatrix2)
+        DomainMatrix([[-2.0, -1.0], [1.5, 1.0]], (2, 2), RR)
+
+        See Also
+        ========
+
+        :py:meth:`~.lu`
 
         """
         if self.shape[0] != rhs.shape[0]:
@@ -650,22 +624,19 @@ class DomainMatrix:
 
     def charpoly(self):
         r"""
-            Returns the coefficients of the characteristic polynomial of the DomainMatrix
+        Returns the coefficients of the characteristic polynomial of the DomainMatrix
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix = DomainMatrix([
+        ...    [ZZ(1), ZZ(2)],
+        ...    [ZZ(3), ZZ(4)]], (2, 2), ZZ)
 
-            >>> domainMatrix.charpoly()
-            [1, -88, -1799]
+        >>> domainMatrix.charpoly()
+        [1, -5, -2]
 
         """
         m, n = self.shape
@@ -679,30 +650,24 @@ class DomainMatrix:
 
     def __eq__(A, B):
         r"""
-            Checks for two DomainMatrix matrices two be equal or not
+        Checks for two DomainMatrix matrices two be equal or not
 
-            Usage
-            =====
+        Usage
+        =====
 
-            >>> from sympy import Matrix
-            >>> from sympy.polys.matrices import DomainMatrix
-            >>> Matrix1 = Matrix([
-            ...         [2, 73],
-            ...         [27, 86]])
-            >>> domainMatrix = DomainMatrix.from_Matrix(Matrix1)
-            >>> Matrix2 = Matrix([
-            ...         [19, 30],
-            ...         [56, 14]])
-            >>> domainMatrix1 = DomainMatrix.from_Matrix(Matrix2)
-            >>> domainMatrix
-            DomainMatrix([[2, 73], [27, 86]], (2, 2), ZZ)
-            >>> domainMatrix1
-            DomainMatrix([[19, 30], [56, 14]], (2, 2), ZZ)
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> domainMatrix1 = DomainMatrix([
+        ...    [ZZ(1), ZZ(2)],
+        ...    [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> domainMatrix2 = DomainMatrix([
+        ...    [ZZ(1), ZZ(1)],
+        ...    [ZZ(0), ZZ(1)]], (2, 2), ZZ)
 
-            >>> domainMatrix.__eq__(domainMatrix)
-            True
-            >>> domainMatrix.__eq__(domainMatrix1)
-            False
+        >>> domainMatrix1.__eq__(domainMatrix1)
+        True
+        >>> domainMatrix1.__eq__(domainMatrix2)
+        False
 
         """
         if not isinstance(B, DomainMatrix):
