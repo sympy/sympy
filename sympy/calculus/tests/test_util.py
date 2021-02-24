@@ -411,6 +411,12 @@ def test_issue_18795():
     assert (a + r)/a == AccumBounds(-oo, oo)*AccumBounds(r - 1, r + 1)
     assert (b + a)/a == AccumBounds(-oo, oo)
 
+
+def test_issue_19869():
+    t = symbols('t')
+    assert (maximum(sqrt(3)*(t - 1)/(3*sqrt(t**2 + 1))  , t)) == sqrt(3)/3
+
+
 def test_AccumBounds_func():
     assert (x**2 + 2*x + 1).subs(x, AccumBounds(-1, 1)) == AccumBounds(-1, 4)
     assert exp(AccumBounds(0, 1)) == AccumBounds(1, E)
