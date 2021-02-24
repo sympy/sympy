@@ -3020,6 +3020,9 @@ class Expr(Basic, EvalfMixin):
                     s1 += Order(x**n, x)
                 o = s1.getO()
                 s1 = s1.removeO()
+            elif s1.has(Order):
+                # asymptotic expansion
+                return s1
             else:
                 o = Order(x**n, x)
                 s1done = s1.doit()
