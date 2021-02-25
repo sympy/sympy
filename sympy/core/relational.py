@@ -499,13 +499,11 @@ class Equality(Relational):
     the method `as_expr` if one tries to create `x - y` from Eq(x, y).
     This can be done with the `rewrite(Add)` method.
     """
-    rel_op = '=='
 
     __slots__ = ()
 
-    is_Equality = True
-
     def __new__(cls, lhs, rhs=None, **options):
+        from sympy.assumptions.relation.binrel import _DeprecatedEq
 
         if rhs is None:
             SymPyDeprecationWarning(
@@ -515,93 +513,11 @@ class Equality(Relational):
                 deprecated_since_version="1.5"
             ).warn()
             rhs = 0
-        evaluate = options.pop('evaluate', global_parameters.evaluate)
+
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
-        if evaluate:
-            val = is_eq(lhs, rhs)
-            if val is None:
-                return cls(lhs, rhs, evaluate=False)
-            else:
-                return _sympify(val)
 
-        return Relational.__new__(cls, lhs, rhs)
-
-    def _eval_rewrite_as_Add(self, *args, **kwargs):
-        """
-        return Eq(L, R) as L - R. To control the evaluation of
-        the result set pass `evaluate=True` to give L - R;
-        if `evaluate=None` then terms in L and R will not cancel
-        but they will be listed in canonical order; otherwise
-        non-canonical args will be returned.
-
-        Examples
-        ========
-
-        >>> from sympy import Eq, Add
-        >>> from sympy.abc import b, x
-        >>> eq = Eq(x + b, x - b)
-        >>> eq.rewrite(Add)
-        2*b
-        >>> eq.rewrite(Add, evaluate=None).args
-        (b, b, x, -x)
-        >>> eq.rewrite(Add, evaluate=False).args
-        (b, x, b, -x)
-        """
-        from .add import _unevaluated_Add, Add
-        L, R = args
-        evaluate = kwargs.get('evaluate', True)
-        if evaluate:
-            # allow cancellation of args
-            return L - R
-        args = Add.make_args(L) + Add.make_args(-R)
-        if evaluate is None:
-            # no cancellation, but canonical
-            return _unevaluated_Add(*args)
-        # no cancellation, not canonical
-        return Add._from_args(args)
-
-    @property
-    def binary_symbols(self):
-        return self.as_Predicate().binary_symbols
-
-    def _eval_simplify(self, **kwargs):
-        rel = self.as_Predicate().simplify(**kwargs)
-        ret = rel.function.eval(rel.arguments)
-        if ret is None:
-            r = self.func(*rel.arguments)
-        elif ret:
-            r = S.true
-        else:
-            r = S.false
-        # Did we get a simplified result?
-        measure = kwargs['measure']
-        if measure(r) < kwargs['ratio'] * measure(self):
-            return r
-        else:
-            return self
-
-    def integrate(self, *args, **kwargs):
-        """See the integrate function in sympy.integrals"""
-        from sympy.integrals import integrate
-        return integrate(self, *args, **kwargs)
-
-    def as_poly(self, *gens, **kwargs):
-        '''Returns lhs-rhs as a Poly
-
-        Examples
-        ========
-
-        >>> from sympy import Eq
-        >>> from sympy.abc import x
-        >>> Eq(x**2, 1).as_poly(x)
-        Poly(x**2 - 1, x, domain='ZZ')
-        '''
-        return (self.lhs - self.rhs).as_poly(*gens, **kwargs)
-
-    def as_Predicate(self):
-        from sympy.assumptions import Q
-        return Q.eq(*self.args)
+        return _DeprecatedEq(lhs, rhs, **options)
 
 
 Eq = Equality
@@ -640,37 +556,16 @@ class Unequality(Relational):
     same algorithms, including any available `_eval_Eq` methods.
 
     """
-    rel_op = '!='
 
     __slots__ = ()
 
     def __new__(cls, lhs, rhs, **options):
+        from sympy.assumptions.relation.binrel import _DeprecatedNe
+
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
-        evaluate = options.pop('evaluate', global_parameters.evaluate)
-        if evaluate:
-            val = is_neq(lhs, rhs)
-            if val is None:
-                return cls(lhs, rhs, evaluate=False)
-            else:
-                return _sympify(val)
 
-        return Relational.__new__(cls, lhs, rhs, **options)
-
-    @property
-    def binary_symbols(self):
-        return self.as_Predicate().binary_symbols
-
-    def _eval_simplify(self, **kwargs):
-        rel = self.as_Predicate().simplify(**kwargs)
-        ret = rel.refine()
-        if isinstance(ret, BooleanAtom):
-            return ret
-        return self.func(*rel.arguments)
-
-    def as_Predicate(self):
-        from sympy.assumptions import Q
-        return Q.ne(*self.args)
+        return _DeprecatedNe(lhs, rhs, **options)
 
 
 Ne = Unequality

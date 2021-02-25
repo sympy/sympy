@@ -187,6 +187,9 @@ class MathMLContentPrinter(MathMLPrinterBase):
             'StrictLessThan': 'lt',
             'Union': 'union',
             'Intersection': 'intersect',
+            # support for old relational
+            '_DeprecatedEq': 'eq',
+            '_DeprecatedNe': 'neq',
         }
 
         for cls in e.__class__.__mro__:
@@ -536,6 +539,13 @@ class MathMLContentPrinter(MathMLPrinterBase):
         x.appendChild(self._print(e.rhs))
         return x
 
+    def _print_AppliedBinaryRelation(self, e):
+        x = self.dom.createElement('apply')
+        x.appendChild(self.dom.createElement(self.mathml_tag(e)))
+        x.appendChild(self._print(e.lhs))
+        x.appendChild(self._print(e.rhs))
+        return x
+
     def _print_list(self, seq):
         """MathML reference for the <list> element:
         http://www.w3.org/TR/MathML2/chapter4.html#contm.list"""
@@ -611,6 +621,10 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'LessThan': '&#x2264;',
             'StrictGreaterThan': '>',
             'StrictLessThan': '<',
+            # support for old relational
+            '_DeprecatedEq': '=',
+            '_DeprecatedNe': '&#x2260;',
+            #
             'lerchphi': '&#x3A6;',
             'zeta': '&#x3B6;',
             'dirichlet_eta': '&#x3B7;',
@@ -1508,6 +1522,15 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return msup
 
     def _print_Relational(self, e):
+        mrow = self.dom.createElement('mrow')
+        mrow.appendChild(self._print(e.lhs))
+        x = self.dom.createElement('mo')
+        x.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
+        mrow.appendChild(x)
+        mrow.appendChild(self._print(e.rhs))
+        return mrow
+
+    def _print_AppliedBinaryRelation(self, e):
         mrow = self.dom.createElement('mrow')
         mrow.appendChild(self._print(e.lhs))
         x = self.dom.createElement('mo')

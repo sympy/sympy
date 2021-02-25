@@ -1682,7 +1682,7 @@ class Basic(Printable, metaclass=ManagedProperties):
     def _eval_rewrite(self, pattern, rule, **hints):
         if self.is_Atom:
             if hasattr(self, rule):
-                return getattr(self, rule)(**hints)
+                return getattr(self, rule)()
             return self
 
         if hints.get('deep', True):

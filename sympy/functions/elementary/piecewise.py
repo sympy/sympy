@@ -957,14 +957,15 @@ class Piecewise(Function):
         return _canonical(last)
 
     def _eval_rewrite_as_KroneckerDelta(self, *args):
-        from sympy import Ne, Eq, Not, KroneckerDelta
+        from sympy import Ne, Eq, Not, KroneckerDelta, Q
+        from sympy.assumptions import AppliedBinaryRelation
 
         rules = {
             And: [False, False],
             Or: [True, True],
             Not: [True, False],
-            Eq: [None, None],
-            Ne: [None, None]
+            Q.eq: [None, None],
+            Q.ne: [None, None]
         }
 
         class UnrecognizedCondition(Exception):
@@ -997,6 +998,9 @@ class Piecewise(Function):
         for value, cond in args:
             if type(cond) in rules:
                 conditions.append((value, cond))
+            elif isinstance(cond, AppliedBinaryRelation):
+                if cond.function in rules:
+                    conditions.append((value, cond))
             elif cond is S.true:
                 if true_value is None:
                     true_value = value

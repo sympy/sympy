@@ -9,7 +9,8 @@ from sympy.core.evalf import EvalfMixin
 from sympy.core.kind import BooleanKind
 from sympy.core.parameters import global_parameters
 from sympy.core.relational import Relational
-from sympy.logic.boolalg import BooleanAtom, conjuncts, Not
+from sympy.core.sympify import _sympify
+from sympy.logic.boolalg import conjuncts, Not
 
 __all__ = ["BinaryRelation", "AppliedBinaryRelation"]
 
@@ -36,7 +37,7 @@ class BinaryRelation(Predicate):
     >>> from sympy import Q, ask, sin, cos
     >>> from sympy.abc import x
     >>> Q.eq(sin(x)**2+cos(x)**2, 1)
-    sin(x)**2 + cos(x)**2 = 1
+    Q.eq(sin(x)**2 + cos(x)**2, 1)
     >>> ask(_)
     True
 
@@ -78,8 +79,6 @@ class BinaryRelation(Predicate):
 
     is_reflexive = None
     is_symmetric = None
-
-    is_Relational = True    # compatibility for old Relational
 
     def __call__(self, *args):
         if not len(args) == 2:
@@ -151,6 +150,7 @@ class AppliedBinaryRelation(AppliedPredicate):
 
     """
 
+    is_Atom = False
     is_Relational = True    # compatibility for old Relational
 
     @property
@@ -334,6 +334,9 @@ class AppliedBinaryRelation(AppliedPredicate):
             return False
 
 
+# compatibility for old relational
+
+
 class _DeprecatedRelational(AppliedBinaryRelation, EvalfMixin):
     """
     Class to make migration from ``core/relational`` to this module.
@@ -344,14 +347,140 @@ class _DeprecatedRelational(AppliedBinaryRelation, EvalfMixin):
     def __new__(cls, predicate, *args, **options):
         evaluate = options.pop('evaluate', global_parameters.evaluate)
         if evaluate:
+            args = tuple(_sympify(a) for a in args)
             val = predicate.eval(args)
             if val is not None:
-                return val
+                return _sympify(val)
         return super().__new__(cls, predicate, *args)
+
+    @property
+    def func(self):
+        return self.function.as_old_relational
+
+    @property
+    def reversed(self):
+        rel = super().reversed
+        return rel.function.as_old_relational(*rel.arguments)
+
+    @property
+    def reversedsign(self):
+        rel = super().reversedsign
+        return rel.function.as_old_relational(*rel.arguments)
+
+    @property
+    def negated(self):
+        rel = super().negated
+        return rel.function.as_old_relational(*rel.arguments)
+
+    @property
+    def canonical(self):
+        rel = super().canonical
+        return rel.function.as_old_relational(*rel.arguments)
 
     def _eval_simplify(self, **kwargs):
         rel = super()._eval_simplify(**kwargs)
-        ret = rel.refine()
-        if isinstance(ret, BooleanAtom):
-            return ret
-        return rel
+        ret = rel.function.eval(rel.arguments)
+        if ret is not None:
+            return _sympify(ret)
+        return rel.function.as_old_relational(*rel.arguments)
+
+    def _eval_evalf(self, prec):
+        args = (s._evalf(prec) for s in self.arguments)
+        return self.function.as_old_relational(*args)
+
+    def _eval_trigsimp(self, **opts):
+        from sympy.simplify import trigsimp
+        args = (trigsimp(self.lhs, **opts), trigsimp(self.rhs, **opts))
+        return self.function.as_old_relational(*args)
+
+    def expand(self, **kwargs):
+        args = (arg.expand(**kwargs) for arg in self.arguments)
+        return self.function.as_old_relational(*args)
+
+    def _sympystr(self, printer, **kwargs):
+        charmap = {
+            Q.eq : "Eq",
+            Q.ne : "Ne"
+        }
+        head = charmap[self.function]
+        return "%s(%s)" % (head, printer.stringify(self.arguments, ", "))
+
+    def _eval_ask(self, assumptions):
+        rel = self.function(*self.arguments)
+        return rel._eval_ask(assumptions)
+
+
+class _DeprecatedEq(_DeprecatedRelational):
+
+    is_Equality = True
+
+    def __new__(cls, *args, **options):
+        if len(args) == 2:
+            # allow rel.__class__(rel.lhs, rel.rhs)
+            args = (Q.eq, args[0], args[1])
+        return super().__new__(cls, *args, **options)
+
+    def _eval_rewrite_as_Add(self, *args, **kwargs):
+        """
+        return Eq(L, R) as L - R. To control the evaluation of
+        the result set pass `evaluate=True` to give L - R;
+        if `evaluate=None` then terms in L and R will not cancel
+        but they will be listed in canonical order; otherwise
+        non-canonical args will be returned.
+
+        Examples
+        ========
+
+        >>> from sympy import Eq, Add
+        >>> from sympy.abc import b, x
+        >>> eq = Eq(x + b, x - b)
+        >>> eq.rewrite(Add)
+        2*b
+        >>> eq.rewrite(Add, evaluate=None).args
+        (b, b, x, -x)
+        >>> eq.rewrite(Add, evaluate=False).args
+        (b, x, b, -x)
+        """
+        if self.function is not Q.eq:
+            return self
+
+        from sympy.core.add import _unevaluated_Add, Add
+        L, R = self.arguments
+        evaluate = kwargs.get('evaluate', True)
+        if evaluate:
+            # allow cancellation of args
+            return L - R
+        args = Add.make_args(L) + Add.make_args(-R)
+        if evaluate is None:
+            # no cancellation, but canonical
+            return _unevaluated_Add(*args)
+        # no cancellation, not canonical
+        return Add._from_args(args)
+
+    def integrate(self, *args, **kwargs):
+        """See the integrate function in sympy.integrals"""
+        from sympy.integrals import integrate
+        return integrate(self, *args, **kwargs)
+
+    def as_poly(self, *gens, **kwargs):
+        '''Returns lhs-rhs as a Poly
+
+        Examples
+        ========
+
+        >>> from sympy import Eq
+        >>> from sympy.abc import x
+        >>> Eq(x**2, 1).as_poly(x)
+        Poly(x**2 - 1, x, domain='ZZ')
+        '''
+        if self.function is not Q.eq:
+            raise AttributeError("%s does not support attribute 'as_poly'" % self.function)
+        return (self.lhs - self.rhs).as_poly(*gens, **kwargs)
+
+
+class _DeprecatedNe(_DeprecatedRelational):
+    def __new__(cls, *args, **options):
+        if len(args) == 2:
+            # allow rel.__class__(rel.lhs, rel.rhs)
+            args = (Q.ne, args[0], args[1])
+        return super().__new__(cls, *args, **options)

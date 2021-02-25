@@ -1,5 +1,6 @@
 import keyword as kw
 import sympy
+from sympy.assumptions.relation.binrel import _DeprecatedRelational
 from .repr import ReprPrinter
 from .str import StrPrinter
 
@@ -35,6 +36,16 @@ class PythonPrinter(ReprPrinter, StrPrinter):
         if symbol not in self.symbols:
             self.symbols.append(symbol)
         return StrPrinter._print_Symbol(self, expr)
+
+    def _print_AppliedBinaryRelation(self, expr):
+        if isinstance(expr, _DeprecatedRelational):
+            rel_dict = {sympy.Q.eq: "Eq", sympy.Q.ne: "Ne"}
+            rel = rel_dict.get(expr.function, None)
+            if rel is not None:
+                lhs = StrPrinter._print(self, expr.lhs)
+                rhs = StrPrinter._print(self, expr.rhs)
+                return "%s(%s, %s)" % (rel, lhs, rhs)
+        return StrPrinter._print_AppliedBinaryRelation(self, expr)
 
     def _print_module(self, expr):
         raise ValueError('Modules in the expression are unacceptable')

@@ -28,7 +28,7 @@ class EqualityPredicate(BinaryRelation):
 
     >>> from sympy import ask, Q
     >>> Q.eq(0, 0)
-    0 = 0
+    Q.eq(0, 0)
     >>> ask(_)
     True
 
@@ -61,7 +61,7 @@ class EqualityPredicate(BinaryRelation):
 
     name = 'eq'
     rel_op = "=="
-    str_name = pretty_name = latex_name = "="
+    latex_name = "="
 
     handler = _eval_is_eq   # this allows registering via Q.eq
 

@@ -139,7 +139,7 @@ class AppliedPredicate(Boolean):
         if len(args) == 2:
             # backwards compatibility
             return args[1]
-        raise TypeError("'arg' property is allowed only for unary predicates.")
+        return args[1:]
 
     @property
     def args(self):

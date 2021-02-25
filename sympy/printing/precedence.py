@@ -48,8 +48,11 @@ PRECEDENCE_VALUES = {
     "HadamardProduct": PRECEDENCE["Mul"],
     "HadamardPower": PRECEDENCE["Pow"],
     "KroneckerProduct": PRECEDENCE["Mul"],
+    # support for old relational
     "Equality": PRECEDENCE["Mul"],
     "Unequality": PRECEDENCE["Mul"],
+    "_DeprecatedEq": PRECEDENCE["Mul"],
+    "_DeprecatedNe": PRECEDENCE["Mul"],
 }
 
 # Sometimes it's not enough to assign a fixed precedence value to a

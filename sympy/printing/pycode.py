@@ -275,6 +275,21 @@ class AbstractPythonCodePrinter(CodePrinter):
             return '({lhs} {op} {rhs})'.format(op=expr.rel_op, lhs=lhs, rhs=rhs)
         return super()._print_Relational(expr)
 
+    def _print_AppliedBinaryRelation(self, expr):
+        op = {
+            '==' :'equal',
+            '!=' :'not_equal',
+            '<'  :'less',
+            '<=' :'less_equal',
+            '>'  :'greater',
+            '>=' :'greater_equal',
+        }
+        if expr.rel_op in op:
+            lhs = self._print(expr.lhs)
+            rhs = self._print(expr.rhs)
+            return '({lhs} {op} {rhs})'.format(op=expr.rel_op, lhs=lhs, rhs=rhs)
+        return super()._print_Relational(expr)
+
     def _print_ITE(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
         return self._print(expr.rewrite(Piecewise))

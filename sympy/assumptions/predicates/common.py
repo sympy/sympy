@@ -1,4 +1,5 @@
-from sympy.assumptions import Predicate
+from sympy.assumptions import Predicate, AppliedPredicate
+from sympy.assumptions.relation.binrel import _DeprecatedRelational
 from sympy.multipledispatch import Dispatcher
 
 
@@ -42,3 +43,12 @@ class IsTruePredicate(Predicate):
         "FiniteHandler",
         doc="Wrapper allowing to query the truth value of a boolean expression."
     )
+
+    def __call__(self, arg, **options):
+        # No need to wrap another predicate
+        if isinstance(arg, _DeprecatedRelational):
+            # convert to new relation
+            return arg.function(*arg.arguments)
+        elif isinstance(arg, AppliedPredicate):
+            return arg
+        return super().__call__(arg, **options)

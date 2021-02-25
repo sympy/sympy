@@ -4,6 +4,7 @@ A Printer for generating readable representation of most sympy classes.
 
 from typing import Any, Dict
 
+from sympy.assumptions.relation.binrel import _DeprecatedRelational
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
 from .printer import Printer, print_function
@@ -882,19 +883,43 @@ class StrPrinter(Printer):
         return self._print(s.name)
 
     def _print_AppliedBinaryRelation(self, expr):
+
+        if isinstance(expr, _DeprecatedRelational):
+            charmap = {
+                "==": "Eq",
+                "!=": "Ne",
+                ":=": "Assignment",
+                '+=': "AddAugmentedAssignment",
+                "-=": "SubAugmentedAssignment",
+                "*=": "MulAugmentedAssignment",
+                "/=": "DivAugmentedAssignment",
+                "%=": "ModAugmentedAssignment",
+            }
+        else:
+            charmap = {
+                "==": "Q.eq",
+                "!=": "Q.ne",
+            }
+
         rel, args = expr.function, expr.arguments
         lhs, rhs = args
 
         if hasattr(rel, 'str_name'):
-            name = rel.str_name
+            op = rel.str_name
         elif hasattr(rel, 'rel_op'):
-            name = rel.rel_op
+            op = rel.rel_op
         elif hasattr(rel, 'name'):
-            name = rel.name
+            op = rel.name
         else:
-            name = type(rel).__name__
+            op = type(rel).__name__
 
-        return "%s %s %s" % (self._print(lhs), name, self._print(rhs))
+        if op in charmap:
+            return '%s(%s, %s)' % (charmap[expr.rel_op], self._print(expr.lhs),
+                                   self._print(expr.rhs))
+
+        return '%s %s %s' % (self.parenthesize(expr.lhs, precedence(expr)),
+                           self._relationals.get(op) or op,
+                           self.parenthesize(expr.rhs, precedence(expr)))
 
 
 @print_function(StrPrinter)

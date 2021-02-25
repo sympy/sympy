@@ -2743,20 +2743,19 @@ class PrettyPrinter(Printer):
         lhs, rhs = args
 
         if hasattr(rel, 'pretty_name'):
-            name = rel.pretty_name
+            op = rel.pretty_name
         elif hasattr(rel, 'rel_op'):
-            name = rel.rel_op
+            op = rel.rel_op
         elif hasattr(rel, 'name'):
-            name = rel.name
+            op = rel.name
         else:
-            name = type(rel).__name__
+            op = type(rel).__name__
 
-        op = prettyForm(name)
+        op = prettyForm(' ' + xsym(op) + ' ')
         l = self._print(lhs)
         r = self._print(rhs)
-        pform = prettyForm(*stringPict.next(l, ' ', op, ' ', r))
+        pform = prettyForm(*stringPict.next(l, op, r))
         return pform
-
 
 @print_function(PrettyPrinter)
 def pretty(expr, **settings):
