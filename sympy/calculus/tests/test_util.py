@@ -42,7 +42,7 @@ def test_function_range():
     assert function_range(cos(x), x, Interval(-oo, -4)
         ) == Interval(-1, 1)
     assert function_range(cos(x), x, S.EmptySet) == S.EmptySet
-    assert function_range(x/(sqrt(x**2+1)),x,S.Real) = Interval.open(-1,1)
+    assert function_range(x/(sqrt(x**2+1)),x,S.Real) == Interval.open(-1,1)
     raises(NotImplementedError, lambda : function_range(
         exp(x)*(sin(x) - cos(x))/2 - x, x, S.Reals))
     raises(NotImplementedError, lambda : function_range(
