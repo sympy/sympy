@@ -3277,6 +3277,7 @@ nan = S.NaN
 def _eval_is_eq(a, b): # noqa:F811
     return False
 
+
 class ComplexInfinity(AtomicExpr, metaclass=Singleton):
     r"""Complex infinity.
 

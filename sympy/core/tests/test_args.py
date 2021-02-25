@@ -8,7 +8,7 @@ import os
 import re
 
 from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
-                   Eq, log, Function, Rational)
+                   Eq, log, Function, Rational, Q)
 
 from sympy.testing.pytest import XFAIL, SKIP
 
@@ -17,6 +17,7 @@ a, b, c, x, y, z = symbols('a,b,c,x,y,z')
 
 whitelist = [
      "sympy.assumptions.predicates",    # tested by test_predicates()
+     "sympy.assumptions.relation.equality",    # tested by test_predicates()
 ]
 
 def test_all_classes_are_tested():
@@ -32,9 +33,6 @@ def test_all_classes_are_tested():
     for root, dirs, files in os.walk(sympy_path):
         module = root.replace(prefix, "").replace(os.sep, ".")
 
-        if module in whitelist:
-            continue
-
         for file in files:
             if file.startswith(("_", "test_", "bench_")):
                 continue
@@ -45,6 +43,10 @@ def test_all_classes_are_tested():
                 text = f.read()
 
             submodule = module + '.' + file[:-3]
+
+            if any(submodule.startswith(wpath) for wpath in whitelist):
+                continue
+
             names = re_cls.findall(text)
 
             if not names:
@@ -111,6 +113,13 @@ def test_predicates():
 def test_sympy__assumptions__assume__UndefinedPredicate():
     from sympy.assumptions.assume import Predicate
     assert _test_args(Predicate("test"))
+
+@SKIP('abstract class')
+def test_sympy__assumptions__relation__binrel__BinaryRelation():
+    pass
+
+def test_sympy__assumptions__relation__binrel__AppliedBinaryRelation():
+    assert _test_args(Q.eq(1, 2))
 
 def test_sympy__assumptions__sathandlers__UnevaluatedOnFree():
     from sympy.assumptions.sathandlers import UnevaluatedOnFree
