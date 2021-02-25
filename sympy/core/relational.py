@@ -503,7 +503,7 @@ class Equality(Relational):
     __slots__ = ()
 
     def __new__(cls, lhs, rhs=None, **options):
-        from sympy.assumptions.relation.equality import _DeprecatedEq
+        from sympy.assumptions.relation.deprecated import _DeprecatedEq
 
         if rhs is None:
             SymPyDeprecationWarning(
@@ -560,7 +560,7 @@ class Unequality(Relational):
     __slots__ = ()
 
     def __new__(cls, lhs, rhs, **options):
-        from sympy.assumptions.relation.equality import _DeprecatedNe
+        from sympy.assumptions.relation.deprecated import _DeprecatedNe
 
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
