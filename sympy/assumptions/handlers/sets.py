@@ -14,6 +14,8 @@ from sympy import I, Eq, conjugate
 from sympy.matrices import Determinant, MatrixBase, Trace
 from sympy.matrices.expressions.matexpr import MatrixElement
 
+from sympy.multipledispatch import MDNotImplementedError
+
 from .common import test_closed_group
 from ..predicates.sets import (IntegerPredicate, RationalPredicate,
     IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
@@ -44,7 +46,10 @@ def _(expr, assumptions):
 
 @IntegerPredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_integer
+    ret = expr.is_integer
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @IntegerPredicate.register_many(Add, Pow)
 def _(expr, assumptions):
@@ -111,7 +116,10 @@ def _(expr, assumptions):
 
 @RationalPredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_rational
+    ret = expr.is_rational
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @RationalPredicate.register_many(Add, Mul)
 def _(expr, assumptions):
@@ -177,7 +185,10 @@ def _(expr, assumptions):
 
 @IrrationalPredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_irrational
+    ret = expr.is_irrational
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @IrrationalPredicate.register(Basic)
 def _(expr, assumptions):
@@ -213,7 +224,10 @@ def _(expr, assumptions):
 
 @RealPredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_real
+    ret = expr.is_real
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @RealPredicate.register(Add)
 def _(expr, assumptions):
@@ -367,7 +381,7 @@ def _(expr, assumptions):
     * Hermitian + !Hermitian -> !Hermitian
     """
     if expr.is_number:
-        return None
+        raise MDNotImplementedError
     return test_closed_group(expr, assumptions, Q.hermitian)
 
 @HermitianPredicate.register(Mul)
@@ -380,7 +394,7 @@ def _(expr, assumptions):
     * Antihermitian*Antihermitian -> Hermitian
     """
     if expr.is_number:
-        return None
+        raise MDNotImplementedError
     nccount = 0
     result = True
     for arg in expr.args:
@@ -401,24 +415,27 @@ def _(expr, assumptions):
     * Hermitian**Integer -> Hermitian
     """
     if expr.is_number:
-        return None
+        raise MDNotImplementedError
     if expr.base == E:
         if ask(Q.hermitian(expr.exp), assumptions):
             return True
-        return
+        raise MDNotImplementedError
     if ask(Q.hermitian(expr.base), assumptions):
         if ask(Q.integer(expr.exp), assumptions):
             return True
+    raise MDNotImplementedError
 
 @HermitianPredicate.register_many(cos, sin)
 def _(expr, assumptions):
     if ask(Q.hermitian(expr.args[0]), assumptions):
         return True
+    raise MDNotImplementedError
 
 @HermitianPredicate.register(exp)
 def _(expr, assumptions):
     if ask(Q.hermitian(expr.exp), assumptions):
         return True
+    raise MDNotImplementedError
 
 @HermitianPredicate.register(MatrixBase)
 def _(mat, assumptions):
@@ -431,6 +448,8 @@ def _(mat, assumptions):
                 ret_val = None
             if cond == False:
                 return False
+    if ret_val is None:
+        raise MDNotImplementedError
     return ret_val
 
 
@@ -447,7 +466,10 @@ def _(expr, assumptions):
 
 @ComplexPredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_complex
+    ret = expr.is_complex
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @ComplexPredicate.register_many(Add, Mul)
 def _(expr, assumptions):
@@ -485,7 +507,10 @@ def _(expr, assumptions):
 
 @ImaginaryPredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_imaginary
+    ret = expr.is_imaginary
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @ImaginaryPredicate.register(Add)
 def _(expr, assumptions):
@@ -634,7 +659,7 @@ def _(expr, assumptions):
     * Antihermitian + !Antihermitian -> !Antihermitian
     """
     if expr.is_number:
-        return None
+        raise MDNotImplementedError
     return test_closed_group(expr, assumptions, Q.antihermitian)
 
 @AntihermitianPredicate.register(Mul)
@@ -647,7 +672,7 @@ def _(expr, assumptions):
     * Antihermitian*Antihermitian -> !Antihermitian
     """
     if expr.is_number:
-        return None
+        raise MDNotImplementedError
     nccount = 0
     result = False
     for arg in expr.args:
@@ -670,7 +695,7 @@ def _(expr, assumptions):
     * Antihermitian**Odd  -> Antihermitian
     """
     if expr.is_number:
-        return None
+        raise MDNotImplementedError
     if ask(Q.hermitian(expr.base), assumptions):
         if ask(Q.integer(expr.exp), assumptions):
             return False
@@ -679,6 +704,7 @@ def _(expr, assumptions):
             return False
         elif ask(Q.odd(expr.exp), assumptions):
             return True
+    raise MDNotImplementedError
 
 @AntihermitianPredicate.register(MatrixBase)
 def _(mat, assumptions):
@@ -691,6 +717,8 @@ def _(mat, assumptions):
                 ret_val = None
             if cond == False:
                 return False
+    if ret_val is None:
+        raise MDNotImplementedError
     return ret_val
 
 

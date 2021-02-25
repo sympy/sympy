@@ -370,11 +370,9 @@ class Predicate(Boolean, metaclass=PredicateMeta):
         for func in self.handler.dispatch_iter(*types):
             try:
                 result = func(*args, assumptions)
+                return result
             except MDNotImplementedError:
                 continue
-            else:
-                if result is not None:
-                    return result
         return result
 
 
