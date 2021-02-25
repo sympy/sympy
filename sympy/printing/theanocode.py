@@ -249,6 +249,14 @@ class TheanoPrinter(Printer):
             rv = tt.Rop(rv, var, tt.ones_like(var))
         return rv
 
+    def _print_AppliedBinaryRelation(self, expr, **kwargs):
+        if expr.function is sympy.Q.eq:
+            op = tt.eq
+        else:
+            raise TypeError("theano does not support %s" % expr.function)
+        children = [self._print(arg, **kwargs) for arg in expr.arguments]
+        return op(*children)
+
     def emptyPrinter(self, expr):
         return expr
 
