@@ -92,7 +92,13 @@ class Expr(Basic, EvalfMixin):
         coeff, expr = self.as_coeff_Mul()
 
         if expr.is_Pow:
-            expr, exp = expr.args
+            if expr.base is S.Exp1:
+                # If we remove this, many doctests will go crazy:
+                # (keeps E**x sorted like the exp(x) function,
+                #  part of exp(x) to E**x transition)
+                expr, exp = Function("exp")(expr.exp), S.One
+            else:
+                expr, exp = expr.args
         else:
             expr, exp = expr, S.One
 
@@ -3014,6 +3020,9 @@ class Expr(Basic, EvalfMixin):
                     s1 += Order(x**n, x)
                 o = s1.getO()
                 s1 = s1.removeO()
+            elif s1.has(Order):
+                # asymptotic expansion
+                return s1
             else:
                 o = Order(x**n, x)
                 s1done = s1.doit()

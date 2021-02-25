@@ -489,15 +489,15 @@ class Equality(Relational):
     for exact structural equality between two expressions; this class
     compares expressions mathematically.
 
-    If either object defines an `_eval_Eq` method, it can be used in place of
-    the default algorithm.  If `lhs._eval_Eq(rhs)` or `rhs._eval_Eq(lhs)`
+    If either object defines an ``_eval_Eq`` method, it can be used in place of
+    the default algorithm.  If ``lhs._eval_Eq(rhs)`` or ``rhs._eval_Eq(lhs)``
     returns anything other than None, that return value will be substituted for
-    the Equality.  If None is returned by `_eval_Eq`, an Equality object will
+    the Equality.  If None is returned by ``_eval_Eq``, an Equality object will
     be created as usual.
 
     Since this object is already an expression, it does not respond to
-    the method `as_expr` if one tries to create `x - y` from Eq(x, y).
-    This can be done with the `rewrite(Add)` method.
+    the method ``as_expr`` if one tries to create `x - y` from ``Eq(x, y)``.
+    This can be done with the ``rewrite(Add)`` method.
     """
 
     __slots__ = ()

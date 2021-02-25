@@ -1,3 +1,4 @@
+from typing import Callable
 from math import log as _log
 
 from .sympify import _sympify
@@ -7,7 +8,7 @@ from .expr import Expr
 from .evalf import PrecisionExhausted
 from .function import (_coeff_isneg, expand_complex, expand_multinomial,
     expand_mul)
-from .logic import fuzzy_bool, fuzzy_not, fuzzy_and
+from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
 from .compatibility import as_int, HAS_GMPY, gmpy
 from .parameters import global_parameters
 from sympy.utilities.iterables import sift
@@ -301,6 +302,10 @@ class Pow(Expr):
                 return b
             elif e == -1 and not b:
                 return S.ComplexInfinity
+            elif e.__class__.__name__ == "AccumulationBounds":
+                if b == S.Exp1:
+                    from sympy import AccumBounds
+                    return AccumBounds(Pow(b, e.min), Pow(b, e.max))
             # Only perform autosimplification if exponent or base is a Symbol or number
             elif (b.is_Symbol or b.is_number) and (e.is_Symbol or e.is_number) and\
                 e.is_integer and _coeff_isneg(b):
@@ -337,6 +342,12 @@ class Pow(Expr):
             return obj
         obj.is_commutative = (b.is_commutative and e.is_commutative)
         return obj
+
+    def inverse(self, argindex=1):
+        if self.base == S.Exp1:
+            from sympy import log
+            return log
+        return None
 
     @property
     def base(self):
@@ -682,6 +693,9 @@ class Pow(Expr):
 
     def _eval_is_complex(self):
 
+        if self.base == S.Exp1:
+            return fuzzy_or([self.exp.is_complex, self.exp.is_extended_negative])
+
         if all(a.is_complex for a in self.args) and self._eval_is_finite():
             return True
 
@@ -693,6 +707,16 @@ class Pow(Expr):
                 if odd is not None:
                     return odd
                 return
+
+        if self.base == S.Exp1:
+            f = 2 * self.exp / (S.Pi*S.ImaginaryUnit)
+            # exp(pi*integer) = 1 or -1, so not imaginary
+            if f.is_even:
+                return False
+            # exp(pi*integer + pi/2) = I or -I, so it is imaginary
+            if f.is_odd:
+                return True
+            return None
 
         if self.exp.is_imaginary:
             imlog = log(self.base).is_imaginary
@@ -766,6 +790,7 @@ class Pow(Expr):
 
     def _eval_subs(self, old, new):
         from sympy import exp, log, Symbol
+
         def _check(ct1, ct2, old):
             """Return (bool, pow, remainder_pow) where, if bool is True, then the
             exponent of Pow `old` will combine with `pow` so the substitution
@@ -823,8 +848,11 @@ class Pow(Expr):
 
             return False, None, None
 
-        if old == self.base:
-            return new**self.exp._subs(old, new)
+        if old == self.base or (old == exp and self.base == S.Exp1):
+            if new.is_Function and isinstance(new, Callable):
+                return new(self.exp._subs(old, new))
+            else:
+                return new**self.exp._subs(old, new)
 
         # issue 10829: (4**x - 3*y + 2).subs(2**x, y) -> y**2 - 3*y + 2
         if isinstance(old, self.func) and self.exp == old.exp:
@@ -869,7 +897,7 @@ class Pow(Expr):
                     return Mul(*new_l)
 
         if (isinstance(old, exp) or (old.is_Pow and old.base is S.Exp1)) and self.exp.is_extended_real and self.base.is_positive:
-            ct1 = old.args[0].as_independent(Symbol, as_Add=False)
+            ct1 = old.exp.as_independent(Symbol, as_Add=False)
             ct2 = (self.exp*log(self.base)).as_independent(
                 Symbol, as_Add=False)
             ok, pow, remainder_pow = _check(ct1, ct2, old)
@@ -934,6 +962,8 @@ class Pow(Expr):
 
     def _eval_transpose(self):
         from sympy.functions.elementary.complexes import transpose
+        if self.base == S.Exp1:
+            return self.func(S.Exp1, self.exp.transpose())
         i, p = self.exp.is_integer, (self.base.is_complex or self.base.is_infinite)
         if p:
             return self.base**self.exp
@@ -948,10 +978,14 @@ class Pow(Expr):
         """a**(n + m) -> a**n*a**m"""
         b = self.base
         e = self.exp
+        if b == S.Exp1:
+            from sympy import Sum, Product
+            if isinstance(e, Sum) and e.is_commutative:
+                return Product(self.func(b, e.function), *e.limits)
         if e.is_Add and e.is_commutative:
             expr = []
             for x in e.args:
-                expr.append(self.func(self.base, x))
+                expr.append(self.func(b, x))
             return Mul(*expr)
         return self.func(b, e)
 
@@ -1289,6 +1323,10 @@ class Pow(Expr):
 
     def _eval_evalf(self, prec):
         base, exp = self.as_base_exp()
+        if base == S.Exp1:
+            # Use mpmath function associated to class "exp":
+            from sympy import exp as exp_function
+            return exp_function(self.exp, evaluate=False)._eval_evalf(prec)
         base = base._evalf(prec)
         if not exp.is_Integer:
             exp = exp._evalf(prec)
@@ -1440,7 +1478,10 @@ class Pow(Expr):
         if base.has(Symbol):
             # delay evaluation if expo is non symbolic
             # (as exp(x*log(5)) automatically reduces to x**5)
-            return exp(log(base)*expo, evaluate=expo.has(Symbol))
+            if global_parameters.exp_is_pow:
+                return Pow(S.Exp1, log(base)*expo, evaluate=expo.has(Symbol))
+            else:
+                return exp(log(base)*expo, evaluate=expo.has(Symbol))
 
         else:
             return exp((log(abs(base)) + I*arg(base))*expo)

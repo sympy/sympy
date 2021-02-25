@@ -3463,3 +3463,10 @@ def test_deserialized_poly_equals_original():
 def test_issue_20389():
     result = degree(x * (x + 1) - x ** 2 - x, x)
     assert result == -oo
+
+
+def test_issue_20985():
+    from sympy import symbols
+    w, R = symbols('w R')
+    poly = Poly(1.0 + I*w/R, w, 1/R)
+    assert poly.degree() == S(1)

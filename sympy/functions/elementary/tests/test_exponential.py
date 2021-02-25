@@ -116,6 +116,7 @@ def test_exp__as_base_exp():
     assert exp(x).exp == x
 
 
+@_both_exp_pow
 def test_exp_infinity():
     assert exp(I*y) != nan
     assert refine(exp(I*oo)) is nan
@@ -126,6 +127,7 @@ def test_exp_infinity():
     assert exp(x).is_complex is None
 
 
+@_both_exp_pow
 def test_exp_subs():
     x = Symbol('x')
     e = (exp(3*log(x), evaluate=False))  # evaluates to x**3
@@ -141,6 +143,7 @@ def test_exp_subs():
     assert exp(3*log(x)).subs(x**2, y) == y**Rational(3, 2)
     # differentiate between E and exp
     assert exp(exp(x + E)).subs(exp, 3) == 3**(3**(x + E))
+    assert exp(exp(x + E)).subs(exp, sin) == sin(sin(x + E))
     assert exp(exp(x + E)).subs(E, 3) == 3**(3**(x + 3))
     assert exp(3).subs(E, sin) == sin(3)
 
@@ -153,6 +156,7 @@ def test_exp_conjugate():
     assert conjugate(exp(x)) == exp(conjugate(x))
 
 
+@_both_exp_pow
 def test_exp_transpose():
     assert transpose(exp(x)) == exp(transpose(x))
 
@@ -376,6 +380,7 @@ def test_log_exp():
     assert log(exp(-5*I)) == -5*I + 2*I*pi
 
 
+@_both_exp_pow
 def test_exp_assumptions():
     r = Symbol('r', real=True)
     i = Symbol('i', imaginary=True)
@@ -388,6 +393,11 @@ def test_exp_assumptions():
         assert e(r).is_imaginary is False
         assert e(re(x)).is_extended_real is True
         assert e(re(x)).is_imaginary is False
+
+    assert Pow(E, I*pi, evaluate=False).is_imaginary == False
+    assert Pow(E, 2*I*pi, evaluate=False).is_imaginary == False
+    assert Pow(E, I*pi/2, evaluate=False).is_imaginary == True
+    assert Pow(E, I*pi/3, evaluate=False).is_imaginary is None
 
     assert exp(0, evaluate=False).is_algebraic
 
@@ -405,6 +415,7 @@ def test_exp_assumptions():
     assert exp(I*pi*r, evaluate=False).is_algebraic is True
 
 
+@_both_exp_pow
 def test_exp_AccumBounds():
     assert exp(AccumBounds(1, 2)) == AccumBounds(E, E**2)
 
@@ -516,6 +527,7 @@ def test_log_AccumBounds():
     assert log(AccumBounds(1, E)) == AccumBounds(0, 1)
 
 
+@_both_exp_pow
 def test_lambertw():
     k = Symbol('k')
 
@@ -604,6 +616,7 @@ def test_as_numer_denom():
     assert exp(-n).as_numer_denom() == (exp(-n), 1)
 
 
+@_both_exp_pow
 def test_polar():
     x, y = symbols('x y', polar=True)
 

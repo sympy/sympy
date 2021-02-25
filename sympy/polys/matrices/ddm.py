@@ -143,6 +143,12 @@ class DDM(list):
         else:
             return NotImplemented
 
+    def __rmul__(a, b):
+        if b in a.domain:
+            return a.mul(b)
+        else:
+            return NotImplemented
+
     def __matmul__(a, b):
         if isinstance(b, DDM):
             return a.matmul(b)

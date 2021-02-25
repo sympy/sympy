@@ -39,9 +39,9 @@ def test_DDM_getsetitem():
 
 def test_DDM_str():
     ddm = DDM([[ZZ(0), ZZ(1)], [ZZ(2), ZZ(3)]], (2, 2), ZZ)
-    if HAS_GMPY:
+    if HAS_GMPY: # pragma: no cover
         assert str(ddm) == 'DDM([[mpz(0), mpz(1)], [mpz(2), mpz(3)]], (2, 2), ZZ)'
-    else:
+    else:        # pragma: no cover
         assert str(ddm) == 'DDM([[0, 1], [2, 3]], (2, 2), ZZ)'
 
 
@@ -139,6 +139,9 @@ def test_DDM_neg():
 
 def test_DDM_mul():
     A = DDM([[ZZ(1)]], (1, 1), ZZ)
+    A2 = DDM([[ZZ(2)]], (1, 1), ZZ)
+    assert A * ZZ(2) == A2
+    assert ZZ(2) * A == A2
     raises(TypeError, lambda: [[1]] * A)
     raises(TypeError, lambda: A * [[1]])
 
@@ -215,6 +218,12 @@ def test_DDM_rref():
     Ar = DDM([[QQ(1), QQ(0), QQ(0)], [QQ(0), QQ(0), QQ(1)]], (2, 3), QQ)
     pivots = [0, 2]
     assert A.rref() == (Ar, pivots)
+
+
+def test_DDM_nullspace():
+     A = DDM([[QQ(1), QQ(1)], [QQ(1), QQ(1)]], (2, 2), QQ)
+     Anull = DDM([[QQ(-1), QQ(1)]], (1, 2), QQ)
+     assert A.nullspace() == Anull
 
 
 def test_DDM_det():

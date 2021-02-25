@@ -44,6 +44,7 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polytools import invert
 from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
     PolyNonlinearError)
+from sympy.polys.matrices.linsolve import _linsolve
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
@@ -206,7 +207,7 @@ def _invert_real(f, g_ys, symbol):
                             imageset(Lambda(n, log(n)), g_ys),
                             symbol)
 
-    if hasattr(f, 'inverse') and not isinstance(f, (
+    if hasattr(f, 'inverse') and f.inverse() is not None and not isinstance(f, (
             TrigonometricFunction,
             HyperbolicFunction,
             )):
@@ -329,7 +330,7 @@ def _invert_complex(f, g_ys, symbol):
                 return (h, S.EmptySet)
             return _invert_complex(h, imageset(Lambda(n, n/g), g_ys), symbol)
 
-    if hasattr(f, 'inverse') and \
+    if hasattr(f, 'inverse') and f.inverse() is not None and \
        not isinstance(f, TrigonometricFunction) and \
        not isinstance(f, HyperbolicFunction) and \
        not isinstance(f, exp):
@@ -2656,20 +2657,24 @@ def linsolve(system, *symbols):
                     symbols for which a solution is being sought must
                     be given as a sequence, too.
                 '''))
-            eqs = system
-            try:
-                eqs, ring = sympy_eqs_to_ring(eqs, symbols)
-            except PolynomialError as exc:
-                # e.g. cos(x) contains an element of the set of generators
-                raise NonlinearError(str(exc))
 
+            #
+            # Pass to the sparse solver implemented in polys. It is important
+            # that we do not attempt to convert the equations to a matrix
+            # because that would be very inefficient for large sparse systems
+            # of equations.
+            #
+            eqs = system
+            eqs = [sympify(eq) for eq in eqs]
             try:
-                sol = solve_lin_sys(eqs, ring, _raw=False)
+                sol = _linsolve(eqs, symbols)
             except PolyNonlinearError as exc:
+                # e.g. cos(x) contains an element of the set of generators
                 raise NonlinearError(str(exc))
 
             if sol is None:
                 return S.EmptySet
+
             sol = FiniteSet(Tuple(*(sol.get(sym, sym) for sym in symbols)))
             return sol
 
