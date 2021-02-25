@@ -3296,7 +3296,7 @@ def unrad(eq, *syms, **flags):
 
     eq = _mexpand(eq, recursive=True)
     if eq.is_number:
-        return
+        return eq,[]
 
     syms = set(syms) or eq.free_symbols
     poly = eq.as_poly()
