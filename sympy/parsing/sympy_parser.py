@@ -984,8 +984,8 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         global_dict = {}
         exec('from sympy import *', global_dict)
         # after Relational is removed from core/relation, delete these lines
-        exec('from sympy.assumptions.relation.binrel import _DeprecatedEq', global_dict)
-        exec('from sympy.assumptions.relation.binrel import _DeprecatedNe', global_dict)
+        exec('from sympy.assumptions.relation.equality import _DeprecatedEq', global_dict)
+        exec('from sympy.assumptions.relation.equality import _DeprecatedNe', global_dict)
     elif not isinstance(global_dict, dict):
         raise TypeError('expecting global_dict to be a dict')
 
