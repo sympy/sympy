@@ -341,6 +341,10 @@ def test_SingleODESolver():
     assert problem.is_autonomous == False
 
 
+def test_linear_coefficients():
+    _ode_solver_test(_get_examples_ode_sol_linear_coefficients)
+
+
 def test_1st_homogeneous_coeff_ode():
     #These were marked as test_1st_homogeneous_coeff_corner_case
     eq1 = f(x).diff(x) - f(x)/x
@@ -375,6 +379,8 @@ def test_Airy_equation():
 
 
 def test_lie_group():
+    eqn = exp(f(x).diff(x)-f(x))
+    assert 'lie_group' not in classify_ode(eqn, f(x))
     _ode_solver_test(_get_examples_ode_sol_lie_group)
 
 
@@ -1004,6 +1010,11 @@ def _get_examples_ode_sol_liouville():
     'liouville_06': {
         'eq': Eq((x*exp(f(x))).diff(x, x), 0),
         'sol': [Eq(f(x), log(C1 + C2/x))],
+    },
+
+    'liouville_07': {
+        'eq': (diff(f(x), x)/x + diff(f(x), x, x)/2 - diff(f(x), x)**2/2)*exp(-f(x))/exp(f(x)),
+        'sol': [Eq(f(x), C1 + log(x) - log(C2 + x))],
     },
     }
     }
@@ -2416,6 +2427,13 @@ def _get_examples_ode_sol_nth_linear_constant_coeff_homogeneous():
         'eq': f(x).diff(x, x) + y*f(x),
         'sol': [Eq(f(x), C1*exp(-x*sqrt(-y)) + C2*exp(x*sqrt(-y)))],
     },
+
+    #This example is from issue: https://github.com/sympy/sympy/issues/15237
+    'lin_const_coeff_hom_43': {
+        'eq': Derivative(x*f(x), x, x, x),
+        'sol': [],
+        'XFAIL': ['nth_linear_constant_coeff_homogeneous'] #Raises Value error
+    },
     }
     }
 
@@ -2461,6 +2479,18 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep():
     }
     }
 
+@_add_example_keys
+def _get_examples_ode_sol_linear_coefficients():
+    return {
+            'hint': "linear_coefficients",
+            'func': f(x),
+            'examples':{
+    'linear_coeff_01': {
+        'eq': f(x).diff(x) + (3 + 2*f(x))/(x + 3),
+        'sol': [Eq(f(x), C1/(x**2 + 6*x + 9) - Rational(3, 2))],
+    },
+    }
+    }
 
 @_add_example_keys
 def _get_examples_ode_sol_1st_homogeneous_coeff_best():
@@ -2542,6 +2572,7 @@ def _get_all_examples():
     _get_examples_ode_sol_2nd_linear_airy + \
     _get_examples_ode_sol_nth_linear_constant_coeff_homogeneous +\
     _get_examples_ode_sol_1st_homogeneous_coeff_best +\
-    _get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep
+    _get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep +\
+    _get_examples_ode_sol_linear_coefficients
 
     return all_examples
