@@ -1,23 +1,14 @@
-from sympy import (acosh, atan, cos, Derivative, diff,
-    Eq, Ne, exp, Function, I, Integral, log, O, pi,
-    Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
-    Piecewise, symbols, Poly, sec, re, im, atan2, collect)
+from sympy import (atan, Eq, exp, Function, log,
+    Rational, sin, sqrt, Symbol, tan, symbols)
 
-from sympy.solvers.ode import (classify_ode,
-    homogeneous_order, infinitesimals, checkinfsol,
-    dsolve)
+from sympy.solvers.ode import (infinitesimals, checkinfsol, dsolve)
 
-from sympy.solvers.ode.subscheck import checkodesol, checksysodesol
-from sympy.solvers.ode.ode import (_linear_coeff_match,
-    _undetermined_coefficients_match, classify_sysode,
-    constant_renumber, constantsimp, get_numbered_constants, solve_ics)
+from sympy.solvers.ode.subscheck import checkodesol
+
+from sympy.testing.pytest import XFAIL, slow
 
 
-from sympy.solvers.deutils import ode_order
-from sympy.testing.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
-
-
-C1 = symbol('C1')
+C1 = Symbol('C1')
 x, y = symbols("x y")
 f = Function('f')
 xi = Function('xi')
@@ -95,6 +86,7 @@ def test_heuristic_function_sum():
 
 def test_heuristic_abaco2_similar():
     a, b = symbols("a b")
+    F = Function('F')
     eq = f(x).diff(x) - F(a*x + b*f(x))
     i = infinitesimals(eq, hint='abaco2_similar')
     assert i == [{eta(x, f(x)): -a/b, xi(x, f(x)): 1}]
@@ -109,8 +101,7 @@ def test_heuristic_abaco2_similar():
 def test_heuristic_abaco2_unique_unknown():
 
     a, b = symbols("a b")
-    x = Symbol("x", positive=True)
-
+    F = Function('F')
     eq = f(x).diff(x) - x**(a - 1)*(f(x)**(1 - b))*F(x**a/a + f(x)**b/b)
     i = infinitesimals(eq, hint='abaco2_unique_unknown')
     assert i == [{eta(x, f(x)): -f(x)*f(x)**(-b), xi(x, f(x)): x*x**(-a)}]

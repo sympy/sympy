@@ -1,11 +1,10 @@
-from sympy import (acosh, atan, cos, Derivative, diff,
+from sympy import (acosh, cos, Derivative, diff,
     Eq, Ne, exp, Function, I, Integral, log, O, pi,
-    Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
+    Rational, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
     Piecewise, symbols, Poly, sec, re, im, atan2, collect)
 
 from sympy.solvers.ode import (classify_ode,
-    homogeneous_order, infinitesimals, checkinfsol,
-    dsolve)
+    homogeneous_order, dsolve)
 
 from sympy.solvers.ode.subscheck import checkodesol, checksysodesol
 from sympy.solvers.ode.ode import (_linear_coeff_match,
