@@ -419,6 +419,12 @@ class StrPrinter(Printer):
     def _print_TensAdd(self, expr):
         return expr._print()
 
+    def _print_ArraySymbol(self, expr):
+        return self._print(expr.name)
+
+    def _print_ArrayElement(self, expr):
+        return "%s[%s]" % (expr.name, ", ".join([self._print(i) for i in expr.indices]))
+
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % self._print(a) for a in expr.args]
         return 'PermutationGroup([\n%s])' % ',\n'.join(p)
@@ -807,13 +813,13 @@ class StrPrinter(Printer):
         return expr.name + '_'
 
     def _print_WildDot(self, expr):
-        return expr.name + '_'
+        return expr.name
 
     def _print_WildPlus(self, expr):
-        return expr.name + '__'
+        return expr.name
 
     def _print_WildStar(self, expr):
-        return expr.name + '___'
+        return expr.name
 
     def _print_Zero(self, expr):
         if self._settings.get("sympy_integers", False):

@@ -353,8 +353,8 @@ def get_integer_part(expr, no, options, return_ints=False):
     # positive or negative (which may fail if very close).
     def calc_part(re_im, nexpr):
         from sympy.core.add import Add
-        n, c, p, b = nexpr
-        is_int = (p == 0)
+        _, _, exponent, _ = nexpr
+        is_int = exponent == 0
         nint = int(to_int(nexpr, rnd))
         if is_int:
             # make sure that we had enough precision to distinguish
@@ -369,9 +369,9 @@ def get_integer_part(expr, no, options, return_ints=False):
                     re_im, size, options)
                 assert not iim
                 nexpr = ire
-                n, c, p, b = nexpr
-                is_int = (p == 0)
-                nint = int(to_int(nexpr, rnd))
+            nint = int(to_int(nexpr, rnd))
+            _, _, new_exp, _ = ire
+            is_int = new_exp == 0
         if not is_int:
             # if there are subs and they all contain integer re/im parts
             # then we can (hopefully) safely substitute them into the
@@ -1291,7 +1291,7 @@ def _create_evalf_table():
         NaN: lambda x, prec, options: (fnan, None, prec, None),
 
         exp: lambda x, prec, options: evalf_pow(
-            Pow(S.Exp1, x.args[0], evaluate=False), prec, options),
+            Pow(S.Exp1, x.exp, evaluate=False), prec, options),
 
         cos: evalf_trig,
         sin: evalf_trig,
@@ -1473,7 +1473,10 @@ class EvalfMixin:
             result = evalf(self, prec + 4, options)
         except NotImplementedError:
             # Fall back to the ordinary evalf
-            v = self._eval_evalf(prec)
+            if hasattr(self, 'subs') and subs is not None:  # issue 20291
+                v = self.subs(subs)._eval_evalf(prec)
+            else:
+                v = self._eval_evalf(prec)
             if v is None:
                 return self
             elif not v.is_number:

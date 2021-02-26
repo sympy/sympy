@@ -8,7 +8,7 @@ Assumptions
 
 
 Predicate
-==========
+=========
 
 .. autoclass:: sympy.assumptions.assume::Predicate
    :noindex:
@@ -61,7 +61,6 @@ Contents
     ask.rst
     assume.rst
     refine.rst
-    handlers/index.rst
     predicates.rst
 
 

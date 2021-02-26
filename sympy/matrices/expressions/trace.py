@@ -112,6 +112,21 @@ class Trace(Expr):
             else:
                 return Trace(self.arg)
 
+    def _normalize(self):
+        # Normalization of trace of matrix products. Use transposition and
+        # cyclic properties of traces to make sure the arguments of the matrix
+        # product are sorted and the first argument is not a trasposition.
+        from sympy import MatMul, Transpose, default_sort_key
+        trace_arg = self.arg
+        if isinstance(trace_arg, MatMul):
+            indmin = min(range(len(trace_arg.args)), key=lambda x: default_sort_key(trace_arg.args[x]))
+            if isinstance(trace_arg.args[indmin], Transpose):
+                trace_arg = Transpose(trace_arg).doit()
+                indmin = min(range(len(trace_arg.args)), key=lambda x: default_sort_key(trace_arg.args[x]))
+            trace_arg = MatMul.fromiter(trace_arg.args[indmin:] + trace_arg.args[:indmin])
+            return Trace(trace_arg)
+        return self
+
     def _eval_rewrite_as_Sum(self, expr, **kwargs):
         from sympy import Sum, Dummy
         i = Dummy('i')

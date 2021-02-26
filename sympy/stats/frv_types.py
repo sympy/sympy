@@ -419,6 +419,7 @@ class BinomialDistribution(SingleFiniteDistribution):
         return {k*self.succ + (self.n-k)*self.fail: self.pmf(k)
                     for k in range(0, self.n + 1)}
 
+
 def Binomial(name, n, p, succ=1, fail=0):
     r"""
     Create a Finite Random Variable representing a binomial distribution.

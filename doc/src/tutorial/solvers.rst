@@ -54,9 +54,9 @@ an ``Interval`` or ``ImageSet`` of the solutions.
     >>> solveset(x - x, x, domain=S.Reals)
     ℝ
     >>> solveset(sin(x) - 1, x, domain=S.Reals)
-    ⎧        π        ⎫
-    ⎨2⋅n⋅π + ─ | n ∊ ℤ⎬
-    ⎩        2        ⎭
+    ⎧        π │      ⎫
+    ⎨2⋅n⋅π + ─ │ n ∊ ℤ⎬
+    ⎩        2 │      ⎭
 
 
 If there are no solutions, an ``EmptySet`` is returned and if it
@@ -65,7 +65,7 @@ is not able to find solutions then a ``ConditionSet`` is returned.
     >>> solveset(exp(x), x)     # No solution exists
     ∅
     >>> solveset(cos(x) - x, x)  # Not able to find solution
-    {x | x ∊ ℂ ∧ (-x + cos(x) = 0)}
+    {x │ x ∊ ℂ ∧ (-x + cos(x) = 0)}
 
 
 In the ``solveset`` module, the linear system of equations is solved using ``linsolve``.
@@ -120,7 +120,7 @@ In the ``solveset`` module, the non linear system of equations is solved using
 
 	>>> system = [exp(x) - sin(y), 1/y - 3]
 	>>> nonlinsolve(system, vars)
-	{({2⋅n⋅ⅈ⋅π + log(sin(1/3)) | n ∊ ℤ}, 1/3)}
+	{({2⋅n⋅ⅈ⋅π + log(sin(1/3)) │ n ∊ ℤ}, 1/3)}
 
 4. When the system is positive-dimensional system (has infinitely many solutions):
 
