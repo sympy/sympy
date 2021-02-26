@@ -365,14 +365,11 @@ class Predicate(Boolean, metaclass=PredicateMeta):
 
         This uses only direct resolution methods, not logical inference.
         """
-        types = tuple(type(a) for a in args)
         result = None
-        for func in self.handler.dispatch_iter(*types):
-            try:
-                result = func(*args, assumptions)
-                return result
-            except MDNotImplementedError:
-                continue
+        try:
+            result = self.handler(*args, assumptions=assumptions)
+        except NotImplementedError:
+            pass
         return result
 
 
