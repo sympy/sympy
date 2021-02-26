@@ -1533,7 +1533,7 @@ def test_nonlinsolve_using_substitution():
 def test_nonlinsolve_using_substitution1():
     system = [z**2*x**2 - z**2*y**2/exp(x)]
     syms = [y, x, z]
-    assert dumeq(nonlinsolve(system,syms) , {(y, x, 0), \
+    assert dumeq(nonlinsolve(system, syms) , {(y, x, 0), \
         (y, ImageSet(Lambda(n, 2*LambertW(-y/2, n)), S.Integers), z), \
             (y, ImageSet(Lambda(n, 2*LambertW(y/2, n)), S.Integers), z)})
 
@@ -2314,15 +2314,15 @@ def test_solve_lambert():
 
 def test_is_lambert():
     a, b, c = symbols('a,b,c')
-    assert _is_lambert(x**2,x) is False
-    assert _is_lambert(a**x**2+b*x+c,x) is True
-    assert _is_lambert(E**2,x) is False
-    assert _is_lambert(x*E**2,x) is False
-    assert _is_lambert(3*log(x) - x*log(3),x) is True
-    assert _is_lambert(log(log(x - 3)) + log(x-3),x) is True
-    assert _is_lambert(5*x - 1 + 3*exp(2 - 7*x),x) is True
-    assert _is_lambert((a/x + exp(x/2)).diff(x, 2),x) is True
-    assert _is_lambert((x**2 - 2*x + 1).subs(x, log(x) + 3*x), x) is True
+    assert _is_lambert(x**2) is False
+    assert _is_lambert(a**x**2+b*x+c) is True
+    assert _is_lambert(E**2) is False
+    assert _is_lambert(x*E**2) is False
+    assert _is_lambert(3*log(x) - x*log(3)) is True
+    assert _is_lambert(log(log(x - 3)) + log(x-3)) is True
+    assert _is_lambert(5*x - 1 + 3*exp(2 - 7*x)) is True
+    assert _is_lambert((a/x + exp(x/2)).diff(x, 2)) is True
+    assert _is_lambert((x**2 - 2*x + 1).subs(x, (log(x) + 3*x)**2 - 1)) is True
 
 
 def test_solve_bivariate():

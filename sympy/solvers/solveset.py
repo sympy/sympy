@@ -1813,77 +1813,20 @@ def _solve_as_bivariate(lhs, rhs, symbol, domain):
     return result
 
 
-def _is_lambert(f, symbol):
+def _is_lambert(f):
     r"""
     Return True if the equation is of Lambert type, else False.
-    Equations containing more than two variables involving
+    Equations containing more than two variables (in proper format) involving
     `Pow`, `HyperbolicFunction`,`TrigonometricFunction`, `log` or `exp`
     terms are currently treated as Lambert types.
     """
-    expanded_terms_factors = list(_term_factors(f.expand()))
+    term_factors = list(_term_factors(f.expand()))
 
-    if any(isinstance(arg1, (HyperbolicFunction,TrigonometricFunction)) for arg1 in expanded_terms_factors):
-        for arg0 in expanded_terms_factors:
-            if arg0.has(HyperbolicFunction,TrigonometricFunction,Dummy,Symbol)\
-                 and isinstance(arg0,(Dummy,Symbol,Pow)):
-                    return True
+    lambert_condition1 = len(Add.make_args(f)) >= 2 and len([arg for arg in term_factors if arg.has(Symbol)]) >= 2
+    lambert_condition2 = any(isinstance(arg, (log, HyperbolicFunction, TrigonometricFunction)) and arg.has(Symbol) for arg in term_factors)
+    lambert_condition3 = any(isinstance(arg, (Pow, exp)) and arg.has(Symbol) for arg in term_factors if (arg.as_base_exp()[1]).has(Symbol))
 
-    elif any(isinstance(arg1, (Pow, exp)) for arg1 in expanded_terms_factors):
-        for arg1 in expanded_terms_factors:
-            base, exponent = arg1.as_base_exp()
-            add_args = list(Add.make_args(f))
-            if isinstance(arg1,(Pow,Mul)) and len(add_args) == 1:
-                for a in list(Mul.make_args(f)):
-                    if isinstance(a,exp):
-                        base, exponent = a.as_base_exp()
-            if (not exponent.has(symbol,Dummy) and \
-                len(add_args) > 1) or (base.has(Dummy)):
-                continue
-            if exponent.has(symbol,Dummy, \
-                TrigonometricFunction, HyperbolicFunction): # exponent is variable
-                if len(add_args) <= 2:
-                    j=0
-                    for args in add_args:
-                        x = Symbol('x')
-                        if (isinstance(args,Mul) and args.atoms(exp(x)))\
-                             and (args.atoms(symbol) or args.atoms(Dummy)):
-                            if len(add_args) == 1:
-                                return True
-                            else:
-                                for ar in list(Mul.make_args(args)):
-                                    return ar.is_real
-                        elif len(list(args.atoms(symbol,Dummy))) == 1:
-                            if list(args.atoms(symbol))[0].has(symbol,Dummy):
-                                j+=1
-                        else:
-                            return True
-                    return j>1
-                elif len(add_args) > 2:
-                    # to check it has more than 2 variables
-                    j=0
-                    for args in add_args:
-                        argList = list(args.atoms(symbol))
-                        if len(argList) == 1:
-                            if argList[0].has(symbol):
-                                j+=1
-                        else:
-                            return True
-                    return j>1
-            else:
-                return False
-
-    if any(isinstance(arg1, (log)) for arg1 in expanded_terms_factors):
-        i, j, k = 0,0,0
-        # to check it has more than 2 variables
-        for arg2 in list(_term_factors(f)):
-            if arg2.atoms(log) :
-                j += 1
-                if arg2.has((symbol)):
-                    i += 1
-            elif arg2.has(symbol):
-                k += 1
-
-        return (j>1 or k>0) and (i >0)
+    return lambert_condition1 and lambert_condition2 or lambert_condition3
 
 
 def _compute_lambert_solutions(lhs, rhs, symbol,domain):
@@ -1958,6 +1901,24 @@ def _solve_as_lambert(lhs, rhs, symbol, domain):
             result = _compute_lambert_intervals(soln, domain)
             if result is None:
                 result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
+
+    if isinstance(result,FiniteSet):
+        # to get more solutions if that
+        # could be factorized
+        f = factor(powdenest(lhs-rhs))
+        if f.is_Mul:
+            for m in f.args:
+                if m in {S.NegativeInfinity, \
+                    S.ComplexInfinity, S.Infinity}:
+                    result = set()
+                    break
+                result1 = solveset(m, symbol,domain)
+                # if the result after evaluation remains the same
+                # then the prior result is returned
+                for ar in result1.args:
+                    for a in result.args:
+                        if ar.expand() != a.expand():
+                            result = result1 + result
 
     return result
 
@@ -2157,7 +2118,7 @@ def _transolve(f, symbol, domain):
         # check if it is logarithmic type equation
         elif _is_logarithmic(lhs, symbol):
             result = _solve_logarithm(lhs, rhs, symbol, domain)
-        elif _is_lambert(lhs, symbol):
+        elif _is_lambert(lhs - rhs):
             # try to get solutions in form of Lambert
             result = _solve_as_lambert(lhs, rhs, symbol, domain)
             if isinstance(result, ConditionSet):
@@ -2178,7 +2139,7 @@ def _transolve(f, symbol, domain):
 
         if lhs.is_Add:
             result = add_type(lhs, rhs, symbol, domain)
-        elif _is_lambert(lhs, symbol):
+        elif _is_lambert(lhs - rhs):
             # try to get solutions in form of Lambert
             result = _solve_as_lambert(lhs, rhs, symbol, domain)
             if isinstance(result, ConditionSet):
@@ -2361,26 +2322,8 @@ def solveset(f, symbol=None, domain=S.Complexes):
         f = f.xreplace({d: e})
     f = piecewise_fold(f)
 
-    result = _solveset(f, symbol, domain, _check=True)
-    if _is_lambert(f, symbol) and isinstance(result,FiniteSet):
-        # it could be extended to other than lambert
-        # if solutions are incomplete and that should be factorized
-        f = factor(powdenest(f))
-        if f.is_Mul:
-            for m in f.args:
-                if m in {S.NegativeInfinity, \
-                    S.ComplexInfinity, S.Infinity}:
-                    result = set()
-                    break
-                result1 = solveset(m, symbol,domain)
-                # if the result after evaluation remains the same
-                # then the prior result is returned
-                for ar in result1.args:
-                    for a in result.args:
-                        if ar.expand() != a.expand():
-                            result = result1 + result
+    return _solveset(f, symbol, domain, _check=True)
 
-    return result
 
 def solveset_real(f, symbol):
     return solveset(f, symbol, S.Reals)
@@ -3445,8 +3388,8 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         if soln_imageset:
                             # replace all lambda variables with 0.
                             try:
+                            # error if non lambda terms enters
                                 imgst = soln_imageset[sol]
-                            # imageset(lambda(),) with 0 returns keyerror
                             except KeyError:
                                 continue
 
@@ -3519,7 +3462,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         # return [{x : -y, y : y}]
         result_all_variables = result_infinite
     # not including lambert part since complex part has ImageSet for integers
-    # which is not compatable to find intersection
+    # which is not compatible to find intersection
     if (intersections or complements) and not has_lambert:
         result_all_variables = add_intersection_complement(
             result_all_variables, intersections, complements)

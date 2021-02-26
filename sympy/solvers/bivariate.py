@@ -193,7 +193,7 @@ def _lambert1(eq, x, domain):
     if len(args) == 0:
         return S.EmptySet
     # for simplicity defined two functions
-    # Lambert_Real_Braches , lambert_helper
+    # lambert_branches , lambert_helper
     def lambert_braches():
         for k in lambert_real_branches:
             rhs2 = -c/b + (a/d)*LambertW(arg, k)
@@ -215,7 +215,7 @@ def _lambert1(eq, x, domain):
         lambert_real = LambertW(arg).is_real
 
         if domain_real:
-            if not len_of_symbol >1:
+            if len_of_symbol <= 1:
                 if lambert_real and -1/E <= re(arg) < 0:
                     sol,rhs = lambert_braches()
                 elif re(arg) < -1/E:
@@ -232,7 +232,7 @@ def _lambert1(eq, x, domain):
                     sol,rhs = lambert_braches()
 
         elif domain is None:
-            if not len_of_symbol >1:
+            if len_of_symbol <= 1:
                 if -1/E <= re(arg) < 0 and not arg.has(I):
                     sol,rhs = lambert_braches()
 
