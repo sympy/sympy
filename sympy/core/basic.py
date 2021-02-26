@@ -1166,7 +1166,8 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> eq = f(x).diff(x, 2) + g(y).diff(y) + h(t).diff(t, 3)
         >>> eqnew = eq.dsubs({t : log(u), y : sqrt(b)})
         >>> eqnew.simplify().expand()
-        2*sqrt(b)*Derivative(g(b), b) + u**3*Derivative(h(u), (u, 3)) + 3*u**2*Derivative(h(u), (u, 2)) + u*Derivative(h(u), u) + Derivative(f(x), (x, 2))
+        2*sqrt(b)*Derivative(g(b), b) + u**3*Derivative(h(u), (u, 3)) +
+        3*u**2*Derivative(h(u), (u, 2)) + u*Derivative(h(u), u) + Derivative(f(x), (x, 2))
         """
         from sympy.core.function import Function, Derivative
         from sympy.core.symbol import Symbol
