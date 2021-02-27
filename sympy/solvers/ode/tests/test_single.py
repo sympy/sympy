@@ -379,8 +379,6 @@ def test_Airy_equation():
 
 
 def test_lie_group():
-    eqn = exp(f(x).diff(x)-f(x))
-    assert 'lie_group' not in classify_ode(eqn, f(x))
     _ode_solver_test(_get_examples_ode_sol_lie_group)
 
 
@@ -645,6 +643,13 @@ def _get_examples_ode_sol_euler_homogeneous():
         'eq': x**6 * f(x).diff(x, 6) - x*f(x).diff(x) + f(x),
         'sol': [Eq(f(x), C1*x + C2*x**r1 + C3*x**r2 + C4*x**r3 + C5*x**r4 + C6*x**r5)],
         'checkodesol_XFAIL':True
+    },
+
+     #This example is from issue: https://github.com/sympy/sympy/issues/15237 #This example is from issue:
+     #  https://github.com/sympy/sympy/issues/15237
+    'euler_hom_09': {
+        'eq': Derivative(x*f(x), x, x, x),
+        'sol': [Eq(f(x), C1 + C2/x + C3*x)],
     },
     }
     }
@@ -1014,7 +1019,7 @@ def _get_examples_ode_sol_liouville():
 
     'liouville_07': {
         'eq': (diff(f(x), x)/x + diff(f(x), x, x)/2 - diff(f(x), x)**2/2)*exp(-f(x))/exp(f(x)),
-        'sol': [Eq(f(x), C1 + log(x) - log(C2 + x))],
+        'sol': [Eq(f(x), log(x/(C1 + C2*x)))],
     },
     }
     }
@@ -2426,13 +2431,6 @@ def _get_examples_ode_sol_nth_linear_constant_coeff_homogeneous():
     'lin_const_coeff_hom_42': {
         'eq': f(x).diff(x, x) + y*f(x),
         'sol': [Eq(f(x), C1*exp(-x*sqrt(-y)) + C2*exp(x*sqrt(-y)))],
-    },
-
-    #This example is from issue: https://github.com/sympy/sympy/issues/15237
-    'lin_const_coeff_hom_43': {
-        'eq': Derivative(x*f(x), x, x, x),
-        'sol': [],
-        'XFAIL': ['nth_linear_constant_coeff_homogeneous'] #Raises Value error
     },
     }
     }
