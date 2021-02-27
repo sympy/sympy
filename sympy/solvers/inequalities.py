@@ -555,10 +555,8 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 # this might raise ValueError on its own
                 # or it might give None...
                 solns = solvify(e, gen, domain)
-                if solns is None:
-                    # in which case we raise ValueError
-                    raise ValueError
-                else:
+
+                if solns is not None:
                     discontinuities = set(domain.boundary -
                         FiniteSet(domain.inf, domain.sup))
                     # remove points that are not between inf and sup of domain
@@ -566,8 +564,11 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                         discontinuities))).intersection(
                         Interval(domain.inf, domain.sup,
                         domain.inf not in domain, domain.sup not in domain))
-                    if isinstance(critical_points,Intersection):
-                        raise ValueError
+                    if not isinstance(critical_points,(FiniteSet,EmptySet)):
+                        solns = None
+                if solns is None:
+                    # in which case we raise ValueError
+                    raise ValueError
             except (ValueError, NotImplementedError):
                 # replace gen with generic x since it's
                 # univariate anyway

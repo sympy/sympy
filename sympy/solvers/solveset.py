@@ -3243,7 +3243,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             elif eq is not None:
                 newresult, rnew, delete_soln = _append_eq(
                     eq, newresult, rnew, delete_soln)
-            elif soln_imageset:
+            elif soln_imageset and sol.has(Dummy):
                 rnew[sym] = soln_imageset[sol]
                 # restore original imageset
                 _restore_imgset(rnew, original_imageset, newresult)
@@ -3385,13 +3385,9 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                                 # Then subs known value
                                 rnew[k] = v.subs(sym, sol)
                         # and add this new solution
-                        if soln_imageset:
-                            # replace all lambda variables with 0.
-                            try:
-                            # error if non lambda terms enters
-                                imgst = soln_imageset[sol]
-                            except KeyError:
-                                continue
+                        if soln_imageset and sol.has(Dummy):
+                            # since imageset will be having a dummy)
+                            imgst = soln_imageset[sol]
 
                             rnew[sym] = imgst.lamda(
                                 *[0 for i in range(0, len(
@@ -3437,6 +3433,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 
     # overall result
     result = new_result_real + new_result_complex
+
     result_all_variables = []
     result_infinite = []
     for res in result:
