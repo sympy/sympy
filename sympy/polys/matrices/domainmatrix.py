@@ -215,7 +215,7 @@ class DomainMatrix:
 
     @classmethod
     def zeros(cls, shape, domain):
-        """Return zero matrix of size shape, belonging to the specified domain
+        """Returns a zero DomainMatrix of size shape, belonging to the specified domain
 
         Examples
         ========
