@@ -1374,8 +1374,7 @@ def test_issue_5901():
         [(3*D, 9*D**2 + 4)]
     eq = -f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a)
     assert solve(eq, h(a), g(a), set=True) == \
-        ([g(a), h(a)], {(g(a), -sqrt(f(a)**2*g(a)**2 - Derivative(g(a), a))/f(a)), (g(a), sqrt(f(a)**2*g(a)**2 -
-            Derivative(g(a), a))/f(a))})
+        ([g(a), h(a)], {(g(a), -sqrt(f(a)**2*g(a)**2 - Derivative(g(a), a))/f(a)), (g(a), sqrt(f(a)**2*g(a)**2 - Derivative(g(a), a))/f(a))})
     args = [f(x).diff(x, 2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
     assert set(solve(*args)) == \
         {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))}

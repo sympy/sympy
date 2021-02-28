@@ -391,9 +391,6 @@ def _invert_eq_bool(fi):
             return ~lhs if rhs is unequal else lhs
     return fi
 
-def _is_relational(fi):
-    return fi.is_Relational and not isinstance(fi, Equality)
-
 def _handle_relational(f_relational, symbols, flags):
     if flags.get('dict', False):
         solution = reduce_inequalities(f_relational, symbols=symbols)
@@ -428,6 +425,22 @@ def _collapse_eq_to_expr(fi):
         return fi.lhs - fi.rhs
     else:
         return fi.rewrite(Add, evaluate=False)
+
+def _swap_dict(solution, swap_sym):
+    """Helper function to handle pure dict-like solutions like {y(t): 2, x(t): 1/3}"""
+    solution = {swap_sym.get(k, k): v.subs(swap_sym)
+                     for k, v in solution.items()}
+    return solution
+
+def _swap_list(solution, swap_sym):
+    """
+    Helper function to handle list solutions which
+    have an dictionary inside like [{g(x): 0, f(x): 2}]
+    """
+    for i, sol in enumerate(solution):
+        solution[i] = {swap_sym.get(k, k): v.subs(swap_sym)
+                      for k, v in sol.items()}
+    return solution
 
 
 def solve(f, *symbols, **flags):
@@ -958,6 +971,9 @@ def solve(f, *symbols, **flags):
 
     f_relational = [_invert_eq_bool(fi) for fi in f]
 
+    def _is_relational(fi):
+        return fi.is_Relational and not isinstance(fi, Equality)
+
     if any(_is_relational(fi) for fi in f_relational):
         f = [_invert_eq_bool(fi) for fi in f_relational]
         return _handle_relational(f_relational, symbols, flags)
@@ -980,7 +996,7 @@ def solve(f, *symbols, **flags):
     # Canonicalise Eqs
     f = [_collapse_eq_to_expr(fi) for fi in f]
 
-    # XXX: Why is this changing bare_f?
+    # This is changing bare_f so that f is passed to _solve_system
     if any(fi.is_Matrix for fi in f):
         bare_f = False
 
@@ -1061,6 +1077,8 @@ def solve(f, *symbols, **flags):
     # we can solve for non-symbol entities by replacing them with Dummy symbols
     f, symbols, swap_sym = recast_to_symbols(f, symbols)
     # this is needed in the next two events
+    # symset is the new set of symbols where non-symbol objects such as function
+    # have been replaced with dummy symbols
     symset = set(symbols)
 
     # get rid of equations that have no symbols of interest; we don't
@@ -1105,7 +1123,10 @@ def solve(f, *symbols, **flags):
     # mask off any Object that we aren't going to invert: Derivative,
     # Integral, etc... so that solving for anything that they contain will
     # give an implicit solution
+    # e.g. a recasted expression like [_X1 - 3*Derivative(_X1, x)]
+    # is tranformed to [-3*_Dummy_32 + _X1] after this step
     seen = set()
+    # non_inverts keeps track of the masked off objects
     non_inverts = set()
     for fi in f:
         pot = preorder_traversal(fi)
@@ -1170,6 +1191,7 @@ def solve(f, *symbols, **flags):
     ###########################################################################
 
     # Restore masked-off objects
+    # from non_inverts
     if non_inverts:
 
         def _do_dict(solution):
@@ -1205,15 +1227,18 @@ def solve(f, *symbols, **flags):
     #
     # ** unless there were Derivatives with the symbols, but those were handled
     #    above.
+    # for example,
+    # [{_X0: 3*Derivative(f(x), x), y: 9*Derivative(f(x), x)**2 + 4}]
+    # is transformed to
+    # [{f(x): 3*Derivative(f(x), x), y: 9*Derivative(f(x), x)**2 + 4}]
+
     if swap_sym:
         symbols = [swap_sym.get(k, k) for k in symbols]
         if isinstance(solution, dict):
-            solution = {swap_sym.get(k, k): v.subs(swap_sym)
-                             for k, v in solution.items()}
+            solution = _swap_dict(solution, swap_sym)
+
         elif solution and isinstance(solution, list) and isinstance(solution[0], dict):
-            for i, sol in enumerate(solution):
-                solution[i] = {swap_sym.get(k, k): v.subs(swap_sym)
-                              for k, v in sol.items()}
+            solution = _swap_list(solution, swap_sym)
 
     # undo the dictionary solutions returned when the system was only partially
     # solved with poly-system if all symbols are present
