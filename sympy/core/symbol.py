@@ -315,6 +315,9 @@ class Symbol(AtomicExpr, Boolean):
         if old.is_Pow:
             return Pow(self, S.One, evaluate=False)._eval_subs(old, new)
 
+    def _eval_refine(self, assumptions):
+        return self
+
     @property
     def assumptions0(self):
         return {key: value for key, value

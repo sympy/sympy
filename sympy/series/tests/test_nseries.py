@@ -1,6 +1,6 @@
 from sympy import (Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh,
     sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, cot, Integer,
-    PoleError, floor, ceiling, asin, symbols, limit, Piecewise, Eq, sign,
+    PoleError, floor, ceiling, asin, symbols, limit, sign,
     Derivative, S)
 from sympy.abc import x, y, z
 
@@ -450,8 +450,7 @@ def test_abs():
     assert abs(x + 1).nseries(x, n=4) == x + 1
     assert abs(sin(x)).nseries(x, n=4) == x - Rational(1, 6)*x**3 + O(x**4)
     assert abs(sin(-x)).nseries(x, n=4) == x - Rational(1, 6)*x**3 + O(x**4)
-    assert abs(x - a).nseries(x, 1) == Piecewise((x - 1, Eq(1 - a, 0)),
-                                                ((x - a)*sign(1 - a), True))
+    assert abs(x - a).nseries(x, 1) == -a*sign(1 - a) + (x - 1)*sign(1 - a) + sign(1 - a)
 
 
 def test_dir():

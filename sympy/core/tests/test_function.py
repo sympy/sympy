@@ -8,13 +8,14 @@ from sympy.core.cache import clear_cache
 from sympy.core.expr import unchanged
 from sympy.core.function import (PoleError, _mexpand, arity,
         BadSignatureError, BadArgumentsError)
+from sympy.core.parameters import _exp_is_pow
 from sympy.core.sympify import sympify
 from sympy.matrices import MutableMatrix, ImmutableMatrix
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
 from sympy.tensor.array import NDimArray
 from sympy.utilities.iterables import subsets, variations
-from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy, _both_exp_pow
 
 from sympy.abc import t, w, x, y, z
 f, g, h = symbols('f g h', cls=Function)
@@ -505,6 +506,7 @@ def test_extensibility_eval():
     assert MyFunc(0) == (0, 0, 0)
 
 
+@_both_exp_pow
 def test_function_non_commutative():
     x = Symbol('x', commutative=False)
     assert f(x).is_commutative is False
@@ -1133,10 +1135,16 @@ def test_Derivative_as_finite_difference():
 
 def test_issue_11159():
     # Tests Application._eval_subs
-    expr1 = E
-    expr0 = expr1 * expr1
-    expr1 = expr0.subs(expr1,expr0)
-    assert expr0 == expr1
+    with _exp_is_pow(False):
+        expr1 = E
+        expr0 = expr1 * expr1
+        expr1 = expr0.subs(expr1,expr0)
+        assert expr0 == expr1
+    with _exp_is_pow(True):
+        expr1 = E
+        expr0 = expr1 * expr1
+        expr2 = expr0.subs(expr1, expr0)
+        assert expr2 == E ** 4
 
 
 def test_issue_12005():

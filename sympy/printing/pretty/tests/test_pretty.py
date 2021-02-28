@@ -42,7 +42,7 @@ from sympy.tensor.functions import TensorProduct
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices, TensorHead,
                                  TensorElement, tensor_heads)
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross, Laplacian
 
@@ -1298,6 +1298,7 @@ tan (x)\
     assert upretty(expr) == ucode_str
 
 
+@_both_exp_pow
 def test_pretty_functions():
     """Tests for Abs, conjugate, exp, function braces, and factorial."""
     expr = (2*x + exp(x))
@@ -1321,8 +1322,13 @@ e  + 2*x\
  x     \n\
 ℯ + 2⋅x\
 """
+    ucode_str_3 = \
+"""\
+ x      \n\
+ℯ  + 2⋅x\
+"""
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
-    assert upretty(expr) in [ucode_str_1, ucode_str_2]
+    assert upretty(expr) in [ucode_str_1, ucode_str_2, ucode_str_3]
 
     expr = Abs(x)
     ascii_str = \
@@ -4081,33 +4087,64 @@ def test_pretty_SetExpr():
 
 def test_pretty_ImageSet():
     imgset = ImageSet(Lambda((x, y), x + y), {1, 2, 3}, {3, 4})
-    ascii_str = '{x + y | x in {1, 2, 3} , y in {3, 4}}'
-    ucode_str = '{x + y | x ∊ {1, 2, 3} , y ∊ {3, 4}}'
+    ascii_str = '{x + y | x in {1, 2, 3}, y in {3, 4}}'
+    ucode_str = '{x + y │ x ∊ {1, 2, 3}, y ∊ {3, 4}}'
     assert pretty(imgset) == ascii_str
     assert upretty(imgset) == ucode_str
 
     imgset = ImageSet(Lambda(((x, y),), x + y), ProductSet({1, 2, 3}, {3, 4}))
     ascii_str = '{x + y | (x, y) in {1, 2, 3} x {3, 4}}'
-    ucode_str = '{x + y | (x, y) ∊ {1, 2, 3} × {3, 4}}'
+    ucode_str = '{x + y │ (x, y) ∊ {1, 2, 3} × {3, 4}}'
     assert pretty(imgset) == ascii_str
     assert upretty(imgset) == ucode_str
 
     imgset = ImageSet(Lambda(x, x**2), S.Naturals)
-    ascii_str = \
-    '  2                 \n'\
-    '{x  | x in Naturals}'
+    ascii_str = '''\
+  2                 \n\
+{x  | x in Naturals}'''
     ucode_str = '''\
-⎧ 2        ⎫\n\
-⎨x  | x ∊ ℕ⎬\n\
-⎩          ⎭'''
+⎧ 2 │      ⎫\n\
+⎨x  │ x ∊ ℕ⎬\n\
+⎩   │      ⎭'''
     assert pretty(imgset) == ascii_str
     assert upretty(imgset) == ucode_str
 
+    # TODO: The "x in N" parts below should be centered independently of the
+    # 1/x**2 fraction
+    imgset = ImageSet(Lambda(x, 1/x**2), S.Naturals)
+    ascii_str = '''\
+ 1                  \n\
+{-- | x in Naturals}
+  2                 \n\
+ x                  '''
+    ucode_str = '''\
+⎧1  │      ⎫\n\
+⎪── │ x ∊ ℕ⎪\n\
+⎨ 2 │      ⎬\n\
+⎪x  │      ⎪\n\
+⎩   │      ⎭'''
+    assert pretty(imgset) == ascii_str
+    assert upretty(imgset) == ucode_str
+
+    imgset = ImageSet(Lambda((x, y), 1/(x + y)**2), S.Naturals, S.Naturals)
+    ascii_str = '''\
+    1                                    \n\
+{-------- | x in Naturals, y in Naturals}
+        2                                \n\
+ (x + y)                                 '''
+    ucode_str = '''\
+⎧   1     │             ⎫
+⎪──────── │ x ∊ ℕ, y ∊ ℕ⎪
+⎨       2 │             ⎬
+⎪(x + y)  │             ⎪
+⎩         │             ⎭'''
+    assert pretty(imgset) == ascii_str
+    assert upretty(imgset) == ucode_str
 
 def test_pretty_ConditionSet():
     from sympy import ConditionSet
     ascii_str = '{x | x in (-oo, oo) and sin(x) = 0}'
-    ucode_str = '{x | x ∊ ℝ ∧ (sin(x) = 0)}'
+    ucode_str = '{x │ x ∊ ℝ ∧ (sin(x) = 0)}'
     assert pretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ascii_str
     assert upretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ucode_str
 
@@ -4120,14 +4157,79 @@ def test_pretty_ConditionSet():
     assert pretty(ConditionSet(x, Or(x > 1, x < -1), FiniteSet(1, 2))) == '{2}'
     assert upretty(ConditionSet(x, Or(x > 1, x < -1), FiniteSet(1, 2))) == '{2}'
 
+    condset = ConditionSet(x, 1/x**2 > 0)
+    ascii_str = '''\
+     1      \n\
+{x | -- > 0}
+      2     \n\
+     x      '''
+    ucode_str = '''\
+⎧  │ ⎛1     ⎞⎫
+⎪x │ ⎜── > 0⎟⎪
+⎨  │ ⎜ 2    ⎟⎬
+⎪  │ ⎝x     ⎠⎪
+⎩  │         ⎭'''
+    assert pretty(condset) == ascii_str
+    assert upretty(condset) == ucode_str
+
+    condset = ConditionSet(x, 1/x**2 > 0, S.Reals)
+    ascii_str = '''\
+                        1      \n\
+{x | x in (-oo, oo) and -- > 0}
+                         2     \n\
+                        x      '''
+    ucode_str = '''\
+⎧  │         ⎛1     ⎞⎫
+⎪x │ x ∊ ℝ ∧ ⎜── > 0⎟⎪
+⎨  │         ⎜ 2    ⎟⎬
+⎪  │         ⎝x     ⎠⎪
+⎩  │                 ⎭'''
+    assert pretty(condset) == ascii_str
+    assert upretty(condset) == ucode_str
 
 def test_pretty_ComplexRegion():
     from sympy import ComplexRegion
-    ucode_str = '{x + y⋅ⅈ | x, y ∊ [3, 5] × [4, 6]}'
-    assert upretty(ComplexRegion(Interval(3, 5)*Interval(4, 6))) == ucode_str
+    cregion = ComplexRegion(Interval(3, 5)*Interval(4, 6))
+    ascii_str = '{x + y*I | x, y in [3, 5] x [4, 6]}'
+    ucode_str = '{x + y⋅ⅈ │ x, y ∊ [3, 5] × [4, 6]}'
+    assert pretty(cregion) == ascii_str
+    assert upretty(cregion) == ucode_str
 
-    ucode_str = '{r⋅(ⅈ⋅sin(θ) + cos(θ)) | r, θ ∊ [0, 1] × [0, 2⋅π)}'
-    assert upretty(ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)) == ucode_str
+    cregion = ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)
+    ascii_str = '{r*(I*sin(theta) + cos(theta)) | r, theta in [0, 1] x [0, 2*pi)}'
+    ucode_str = '{r⋅(ⅈ⋅sin(θ) + cos(θ)) │ r, θ ∊ [0, 1] × [0, 2⋅π)}'
+    assert pretty(cregion) == ascii_str
+    assert upretty(cregion) == ucode_str
+
+    cregion = ComplexRegion(Interval(3, 1/a**2)*Interval(4, 6))
+    ascii_str = '''\
+                       1            \n\
+{x + y*I | x, y in [3, --] x [4, 6]}
+                        2           \n\
+                       a            '''
+    ucode_str = '''\
+⎧        │        ⎡   1 ⎤         ⎫
+⎪x + y⋅ⅈ │ x, y ∊ ⎢3, ──⎥ × [4, 6]⎪
+⎨        │        ⎢    2⎥         ⎬
+⎪        │        ⎣   a ⎦         ⎪
+⎩        │                        ⎭'''
+    assert pretty(cregion) == ascii_str
+    assert upretty(cregion) == ucode_str
+
+    cregion = ComplexRegion(Interval(0, 1/a**2)*Interval(0, 2*pi), polar=True)
+    ascii_str = '''\
+                                                 1               \n\
+{r*(I*sin(theta) + cos(theta)) | r, theta in [0, --] x [0, 2*pi)}
+                                                  2              \n\
+                                                 a               '''
+    ucode_str = '''\
+⎧                      │        ⎡   1 ⎤           ⎫
+⎪r⋅(ⅈ⋅sin(θ) + cos(θ)) │ r, θ ∊ ⎢0, ──⎥ × [0, 2⋅π)⎪
+⎨                      │        ⎢    2⎥           ⎬
+⎪                      │        ⎣   a ⎦           ⎪
+⎩                      │                          ⎭'''
+    assert pretty(cregion) == ascii_str
+    assert upretty(cregion) == ucode_str
 
 def test_pretty_Union_issue_10414():
     a, b = Interval(2, 3), Interval(4, 7)
@@ -5942,7 +6044,11 @@ def test_PrettyPoly():
 
 def test_issue_6285():
     assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
-    assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
+    assert pretty(Pow(x, (1/pi))) == \
+    ' 1 \n'\
+    ' --\n'\
+    ' pi\n'\
+    'x  '
 
 
 def test_issue_6359():
@@ -7205,6 +7311,51 @@ def test_is_combining():
         [False, True, False, False]
 
 
+def test_issue_17616():
+    assert pretty(pi**(1/exp(1))) == \
+   '  / -1\\\n'\
+   '  \\e  /\n'\
+   'pi     '
+
+    assert upretty(pi**(1/exp(1))) == \
+   ' ⎛ -1⎞\n'\
+   ' ⎝ℯ  ⎠\n'\
+   'π     '
+
+    assert pretty(pi**(1/pi)) == \
+    '  1 \n'\
+    '  --\n'\
+    '  pi\n'\
+    'pi  '
+
+    assert upretty(pi**(1/pi)) == \
+    ' 1\n'\
+    ' ─\n'\
+    ' π\n'\
+    'π '
+
+    assert pretty(pi**(1/EulerGamma)) == \
+    '      1     \n'\
+    '  ----------\n'\
+    '  EulerGamma\n'\
+    'pi          '
+
+    assert upretty(pi**(1/EulerGamma)) == \
+    ' 1\n'\
+    ' ─\n'\
+    ' γ\n'\
+    'π '
+
+    z = Symbol("x_17")
+    assert upretty(7**(1/z)) == \
+    'x₁₇___\n'\
+    ' ╲╱ 7 '
+
+    assert pretty(7**(1/z)) == \
+    'x_17___\n'\
+    '  \\/ 7 '
+
+
 def test_issue_17857():
     assert pretty(Range(-oo, oo)) == '{..., -1, 0, 1, ...}'
     assert pretty(Range(oo, -oo, -1)) == '{..., 1, 0, -1, ...}'
@@ -7214,26 +7365,26 @@ def test_issue_18272():
     n = Symbol('n')
 
     assert upretty(ConditionSet(x, Eq(-x + exp(x), 0), S.Complexes)) == \
-    '⎧            ⎛      x    ⎞⎫\n'\
-    '⎨x | x ∊ ℂ ∧ ⎝-x + ℯ  = 0⎠⎬\n'\
-    '⎩                         ⎭'
+    '⎧  │         ⎛      x    ⎞⎫\n'\
+    '⎨x │ x ∊ ℂ ∧ ⎝-x + ℯ  = 0⎠⎬\n'\
+    '⎩  │                      ⎭'
     assert upretty(ConditionSet(x, Contains(n/2, Interval(0, oo)), FiniteSet(-n/2, n/2))) == \
-    '⎧        ⎧-n   n⎫   ⎛n         ⎞⎫\n'\
-    '⎨x | x ∊ ⎨───, ─⎬ ∧ ⎜─ ∈ [0, ∞)⎟⎬\n'\
-    '⎩        ⎩ 2   2⎭   ⎝2         ⎠⎭'
+    '⎧  │     ⎧-n   n⎫   ⎛n         ⎞⎫\n'\
+    '⎨x │ x ∊ ⎨───, ─⎬ ∧ ⎜─ ∈ [0, ∞)⎟⎬\n'\
+    '⎩  │     ⎩ 2   2⎭   ⎝2         ⎠⎭'
     assert upretty(ConditionSet(x, Eq(Piecewise((1, x >= 3), (x/2 - 1/2, x >= 2), (1/2, x >= 1),
                 (x/2, True)) - 1/2, 0), Interval(0, 3))) == \
-    '⎧                 ⎛⎛⎧   1     for x ≥ 3⎞          ⎞⎫\n'\
-    '⎪                 ⎜⎜⎪                  ⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪x                 ⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪─ - 0.5  for x ≥ 2⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪2                 ⎟          ⎟⎪\n'\
-    '⎨x | x ∊ [0, 3] ∧ ⎜⎜⎨                  ⎟ - 0.5 = 0⎟⎬\n'\
-    '⎪                 ⎜⎜⎪  0.5    for x ≥ 1⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪                  ⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪   x              ⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪   ─     otherwise⎟          ⎟⎪\n'\
-    '⎩                 ⎝⎝⎩   2              ⎠          ⎠⎭'
+    '⎧  │              ⎛⎛⎧   1     for x ≥ 3⎞          ⎞⎫\n'\
+    '⎪  │              ⎜⎜⎪                  ⎟          ⎟⎪\n'\
+    '⎪  │              ⎜⎜⎪x                 ⎟          ⎟⎪\n'\
+    '⎪  │              ⎜⎜⎪─ - 0.5  for x ≥ 2⎟          ⎟⎪\n'\
+    '⎪  │              ⎜⎜⎪2                 ⎟          ⎟⎪\n'\
+    '⎨x │ x ∊ [0, 3] ∧ ⎜⎜⎨                  ⎟ - 0.5 = 0⎟⎬\n'\
+    '⎪  │              ⎜⎜⎪  0.5    for x ≥ 1⎟          ⎟⎪\n'\
+    '⎪  │              ⎜⎜⎪                  ⎟          ⎟⎪\n'\
+    '⎪  │              ⎜⎜⎪   x              ⎟          ⎟⎪\n'\
+    '⎪  │              ⎜⎜⎪   ─     otherwise⎟          ⎟⎪\n'\
+    '⎩  │              ⎝⎝⎩   2              ⎠          ⎠⎭'
 
 def test_Str():
     from sympy.core.symbol import Str

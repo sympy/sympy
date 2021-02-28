@@ -62,6 +62,8 @@ class DiscreteDistributionHandmade(SingleDiscreteDistribution):
         val = Sum(pdf(x), (x, set._inf, set._sup)).doit()
         _value_check(Eq(val, 1) != S.false, "The pdf is incorrect on the given set.")
 
+
+
 def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
     """
     Create a Discrete Random Variable given the following:
@@ -440,7 +442,6 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
         p = self.p
 
         return ((1 - p) / (1 - p * exp(t)))**r
-
 
 def NegativeBinomial(name, r, p):
     r"""
