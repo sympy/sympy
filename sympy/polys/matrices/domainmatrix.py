@@ -213,6 +213,22 @@ class DomainMatrix:
     def eye(cls, n, domain):
         return cls.from_rep(DDM.eye(n, domain))
 
+    @classmethod
+    def zeros(cls, shape, domain):
+        """Return zero matrix of size shape, belonging to the specified domain
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import QQ
+        >>> DomainMatrix.zeros((2, 3), QQ)
+        DomainMatrix([[0, 0, 0], [0, 0, 0]], (2, 3), QQ)
+
+        """
+
+        return cls.from_rep(DDM.zeros(shape, domain))
+
     def __eq__(A, B):
         """A == B"""
         if not isinstance(B, DomainMatrix):
