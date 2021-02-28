@@ -6,9 +6,7 @@ from sympy.core.assumptions import ManagedProperties
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean, false, true
-from sympy.multipledispatch.dispatcher import (
-    Dispatcher, MDNotImplementedError, str_signature
-)
+from sympy.multipledispatch.dispatcher import Dispatcher, str_signature
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.source import get_class
@@ -365,16 +363,11 @@ class Predicate(Boolean, metaclass=PredicateMeta):
 
         This uses only direct resolution methods, not logical inference.
         """
-        types = tuple(type(a) for a in args)
         result = None
-        for func in self.handler.dispatch_iter(*types):
-            try:
-                result = func(*args, assumptions)
-            except MDNotImplementedError:
-                continue
-            else:
-                if result is not None:
-                    return result
+        try:
+            result = self.handler(*args, assumptions=assumptions)
+        except NotImplementedError:
+            pass
         return result
 
 
