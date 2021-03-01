@@ -291,40 +291,41 @@ def test_torch_derivative():
     assert torch_code(expr) == 'torch.autograd.grad(torch.sin(x), x)[0]'
 
 
-def test_requires_grad():
-    M = MatrixSymbol("M", 2, 2)
-    N = MatrixSymbol("N", 2, 2)
-    P = MatrixSymbol("P", 2, 2)
-
-    ma = torch.tensor([[1.0, 2.0], [3.0, 4.0]], requires_grad=True)
-    mb = torch.tensor([[1.0, -2.0], [-1.0, 3.0]], requires_grad=True)
-    mc = torch.tensor([[2.0, 0.0], [1.0, 2.0]], requires_grad=True)
-
-    cg = ArrayAdd(M, N, P)
-    assert torch_code(cg) == 'torch.add(torch.add(M, N), P)'
-    f = lambdify((M, N, P), cg, 'torch')
-    y = f(ma, mb, mc)
-    assert y.grad_fn is not None
-
-
-def test_matrix_requires_grad():
-    x, y, a, b, c, d = symbols('x y a b c d')
-    X = x, y
-    t = symbols('t')
-    args = a, b, c, d
-
-    lotka_volterra = Matrix([[a * x - b * x * y], [-c * y + d * x * y]])
-    expr = lotka_volterra
-
-    assert expr.is_Matrix
-
-    printer = TorchPrinter(settings={'requires_grad': True})
-    f = lambdify([t, X, args], expr, printer=printer, modules='torch')
-
-    k_ = torch.tensor([1.5, 1.0, 3.0, 1.0], requires_grad=True).float()
-    y_ = torch.tensor([10.0, 5.0], requires_grad=True).float()
-    t_ = torch.tensor([0.0], requires_grad=True).float()
-
-    r = f(t_, y_, k_)
-
-    assert r.requires_grad is True
+# Requires Grad tests tb implemented
+# def test_requires_grad():
+#     M = MatrixSymbol("M", 2, 2)
+#     N = MatrixSymbol("N", 2, 2)
+#     P = MatrixSymbol("P", 2, 2)
+#
+#     ma = torch.tensor([[1.0, 2.0], [3.0, 4.0]], requires_grad=True)
+#     mb = torch.tensor([[1.0, -2.0], [-1.0, 3.0]], requires_grad=True)
+#     mc = torch.tensor([[2.0, 0.0], [1.0, 2.0]], requires_grad=True)
+#
+#     cg = ArrayAdd(M, N, P)
+#     assert torch_code(cg) == 'torch.add(torch.add(M, N), P)'
+#     f = lambdify((M, N, P), cg, 'torch')
+#     y = f(ma, mb, mc)
+#     assert y.grad_fn is not None
+#
+#
+# def test_matrix_requires_grad():
+#     x, y, a, b, c, d = symbols('x y a b c d')
+#     X = x, y
+#     t = symbols('t')
+#     args = a, b, c, d
+#
+#     lotka_volterra = Matrix([[a * x - b * x * y], [-c * y + d * x * y]])
+#     expr = lotka_volterra
+#
+#     assert expr.is_Matrix
+#
+#     printer = TorchPrinter(settings={'requires_grad': True})
+#     f = lambdify([t, X, args], expr, printer=printer, modules='torch')
+#
+#     k_ = torch.tensor([1.5, 1.0, 3.0, 1.0], requires_grad=True).float()
+#     y_ = torch.tensor([10.0, 5.0], requires_grad=True).float()
+#     t_ = torch.tensor([0.0], requires_grad=True).float()
+#
+#     r = f(t_, y_, k_)
+#
+#     assert r.requires_grad is True
