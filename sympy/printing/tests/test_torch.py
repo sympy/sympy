@@ -3,9 +3,9 @@ from sympy import symbols, Derivative
 from sympy.printing.torch import torch_code
 from sympy import (eye, MatrixSymbol, Matrix)
 from sympy.tensor.array import NDimArray
-from sympy.codegen.array_utils import (
-        CodegenArrayTensorProduct, CodegenArrayElementwiseAdd,
-        CodegenArrayPermuteDims, CodegenArrayDiagonal, _CodegenArrayAbstract)
+from sympy.tensor.array.expressions.array_expressions import (
+        ArrayTensorProduct, ArrayAdd,
+        PermuteDims, ArrayDiagonal, _CodegenArrayAbstract)
 from sympy.utilities.lambdify import lambdify
 from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
 from sympy.functions import \
@@ -236,49 +236,49 @@ def test_codegen_extra():
     mc = torch.tensor([[2, 0], [1, 2]])
     md = torch.tensor([[1, -1], [4, 7]])
 
-    cg = CodegenArrayTensorProduct(M, N)
+    cg = ArrayTensorProduct(M, N)
     assert torch_code(cg) == 'torch.einsum("ab,cd", [M, N])'
     f = lambdify((M, N), cg, 'torch')
     y = f(ma, mb)
     c = torch.einsum("ij,kl", ma, mb)
     assert (y == c).all()
 
-    cg = CodegenArrayElementwiseAdd(M, N)
+    cg = ArrayAdd(M, N)
     assert torch_code(cg) == 'torch.add(M, N)'
     f = lambdify((M, N), cg, 'torch')
     y = f(ma, mb)
     c = ma + mb
     assert (y == c).all()
 
-    cg = CodegenArrayElementwiseAdd(M, N, P)
+    cg = ArrayAdd(M, N, P)
     assert torch_code(cg) == 'torch.add(torch.add(M, N), P)'
     f = lambdify((M, N, P), cg, 'torch')
     y = f(ma, mb, mc)
     c = ma + mb + mc
     assert (y == c).all()
 
-    cg = CodegenArrayElementwiseAdd(M, N, P, Q)
+    cg = ArrayAdd(M, N, P, Q)
     assert torch_code(cg) == 'torch.add(torch.add(torch.add(M, N), P), Q)'
     f = lambdify((M, N, P, Q), cg, 'torch')
     y = f(ma, mb, mc, md)
     c = ma + mb + mc + md
     assert (y == c).all()
 
-    cg = CodegenArrayPermuteDims(M, [1, 0])
+    cg = PermuteDims(M, [1, 0])
     assert torch_code(cg) == 'M.permute(1, 0)'
     f = lambdify((M,), cg, 'torch')
     y = f(ma)
     c = ma.T
     assert (y == c).all()
 
-    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [1, 2, 3, 0])
+    cg = PermuteDims(ArrayTensorProduct(M, N), [1, 2, 3, 0])
     assert torch_code(cg) == 'torch.einsum("ab,cd", [M, N]).permute(1, 2, 3, 0)'
     f = lambdify((M, N), cg, 'torch')
     y = f(ma, mb)
     c = torch.einsum("ab,cd", ma, mb).permute(1, 2, 3, 0)
     assert (y == c).all()
 
-    cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N), (1, 2))
+    cg = ArrayDiagonal(ArrayTensorProduct(M, N), (1, 2))
     assert torch_code(cg) == 'torch.einsum("ab,bc->acb", [M, N])'
     f = lambdify((M, N), cg, 'torch')
     y = f(ma, mb)
@@ -300,7 +300,7 @@ def test_requires_grad():
     mb = torch.tensor([[1.0, -2.0], [-1.0, 3.0]], requires_grad=True)
     mc = torch.tensor([[2.0, 0.0], [1.0, 2.0]], requires_grad=True)
 
-    cg = CodegenArrayElementwiseAdd(M, N, P)
+    cg = ArrayAdd(M, N, P)
     assert torch_code(cg) == 'torch.add(torch.add(M, N), P)'
     f = lambdify((M, N, P), cg, 'torch')
     y = f(ma, mb, mc)
