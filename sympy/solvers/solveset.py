@@ -343,7 +343,7 @@ def _invert_complex(f, g_ys, symbol):
     if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
         if any(e for e in Add.make_args(f) if len(e.atoms(exp)) == 2):
             # can solve upto `(d*exp(exp(a*x+b)) + c)` format and `a` should be present
-            f1 = (f.args[0]).args[0]
+            f1 = [f for f1 in f.args for f in f1.args if f1.has(Symbol) and f.has(Symbol)][0]
             b = f1.replace(symbol,0)
             a = (f1 -b) / symbol
             if not a.has(symbol) and a != 0:

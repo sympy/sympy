@@ -1181,6 +1181,7 @@ def test_solveset():
     assert solveset(atan(log(x)) > 0, x, domain=Interval.open(0, oo)) == Interval.open(1, oo)
 
 
+@_both_exp_pow
 def test_double_exp():
     assert dumeq(solveset(exp(exp(x))-5, x),\
          imageset(Lambda(((k, n),), 2*k*I*pi + log(Abs(2*n*I*pi + log(5)))), ProductSet(S.Integers, S.Integers)))
