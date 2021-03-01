@@ -1171,12 +1171,6 @@ def test_solveset():
     assert solveset(x - 1 >= 0, x, S.Reals) == Interval(1, oo)
     assert solveset(exp(x) - 1 >= 0, x, S.Reals) == Interval(0, oo)
 
-    assert dumeq(solveset(exp(exp(x))-5, x),\
-         imageset(Lambda(((k, n),), 2*k*I*pi + log(Abs(2*n*I*pi + log(5)))), ProductSet(S.Integers, S.Integers)))
-
-    assert dumeq(solveset(d*exp(exp(a*x + b)) + c, x),\
-         imageset(Lambda(((k, n),), (2*k*I*pi - b + log(Abs(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))))/a),\
-              ProductSet(S.Integers, S.Integers)))
     assert dumeq(solveset(exp(x) - 1, x), imageset(Lambda(n, 2*I*pi*n), S.Integers))
     assert dumeq(solveset(Eq(exp(x), 1), x), imageset(Lambda(n, 2*I*pi*n),
                                                   S.Integers))
@@ -1185,6 +1179,34 @@ def test_solveset():
 
     # issue 19977
     assert solveset(atan(log(x)) > 0, x, domain=Interval.open(0, oo)) == Interval.open(1, oo)
+
+
+@_both_exp_pow
+def test_multi_exp():
+    k1, k2, k3 = symbols('k1, k2, k3')
+    assert dumeq(solveset(exp(exp(x)) - 5, x),\
+         imageset(Lambda(((k1, n),), I*(2*k1*pi + arg(2*n*I*pi + log(5))) + log(Abs(2*n*I*pi + log(5)))),\
+             ProductSet(S.Integers, S.Integers)))
+    assert dumeq(solveset((d*exp(exp(a*x + b)) + c), x),\
+        imageset(Lambda(x, (-b + x)/a), ImageSet(Lambda(((k1, n),), \
+            I*(2*k1*pi + arg(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))) + log(Abs(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d))))), \
+                ProductSet(S.Integers, S.Integers))))
+
+    assert dumeq(solveset((d*exp(exp(exp(a*x + b))) + c), x),\
+        imageset(Lambda(x, (-b + x)/a), ImageSet(Lambda(((k2, k1, n),), \
+            I*(2*k2*pi + arg(I*(2*k1*pi + arg(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))) + \
+                log(Abs(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))))) + log(Abs(I*(2*k1*pi + arg(I*(2*n*pi + arg(-c/d)) + \
+                    log(Abs(c/d)))) + log(Abs(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d))))))), \
+                        ProductSet(S.Integers, S.Integers, S.Integers))))
+
+    assert dumeq(solveset((d*exp(exp(exp(exp(a*x + b)))) + c), x),\
+        ImageSet(Lambda(x, (-b + x)/a), ImageSet(Lambda(((k3, k2, k1, n),), \
+            I*(2*k3*pi + arg(I*(2*k2*pi + arg(I*(2*k1*pi + arg(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))) + \
+                log(Abs(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))))) + log(Abs(I*(2*k1*pi + arg(I*(2*n*pi + arg(-c/d)) + \
+                    log(Abs(c/d)))) + log(Abs(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))))))) + log(Abs(I*(2*k2*pi + \
+                        arg(I*(2*k1*pi + arg(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))) + log(Abs(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))))) + \
+                            log(Abs(I*(2*k1*pi + arg(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))) + log(Abs(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d))))))))), \
+             ProductSet(S.Integers, S.Integers, S.Integers, S.Integers))))
 
 
 def test__solveset_multi():
