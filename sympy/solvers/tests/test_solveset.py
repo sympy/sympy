@@ -2116,6 +2116,7 @@ def test_exponential_real():
     e7 = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
     e8 = -9*exp(-2*x + 5) + 4*exp(3*x + 1)
     e9 = 2**x + 4**x + 8**x - 84
+    e10 = 29*2**(x + 1)*615**(x) - 123*2726**(x)
 
     assert solveset(e1, x, S.Reals) == FiniteSet(
         -3*log(2)/(-2*log(3) + log(2)))
@@ -2128,6 +2129,7 @@ def test_exponential_real():
     assert solveset(e7, x, S.Reals) == FiniteSet(2)
     assert solveset(e8, x, S.Reals) == FiniteSet(-2*log(2)/5 + 2*log(3)/5 + Rational(4, 5))
     assert solveset(e9, x, S.Reals) == FiniteSet(2)
+    assert solveset(e10,x, S.Reals) == FiniteSet((-log(29) - log(2) + log(123))/(-log(2726) + log(2) + log(615)))
 
     assert solveset_real(-9*exp(-2*x + 5) + 2**(x + 1), x) == FiniteSet(
         -((-5 - 2*log(3) + log(2))/(log(2) + 2)))
@@ -2201,6 +2203,7 @@ def test_expo_conditionset():
 
 def test_exponential_symbols():
     x, y, z = symbols('x y z', positive=True)
+    xr, zr = symbols('xr, zr', real=True)
 
     assert solveset(z**x - y, x, S.Reals) == Intersection(
         S.Reals, FiniteSet(log(y)/log(z)))
@@ -2215,8 +2218,11 @@ def test_exponential_symbols():
     assert solveset(x**x, x, Interval.Lopen(0,oo)).dummy_eq(
         ConditionSet(w, Eq(w**w, 0), Interval.open(0, oo)))
     assert solveset(x**y - 1, y, S.Reals) == FiniteSet(0)
-    assert solveset(exp(x/y)*exp(-z/y) - 2, y, S.Reals) == FiniteSet(
-        (x - z)/log(2)) - FiniteSet(0)
+    assert solveset(exp(x/y)*exp(-z/y) - 2, y, S.Reals) == \
+    Complement(ConditionSet(y, Eq(im(x)/y, 0) & Eq(im(z)/y, 0), \
+    Complement(Intersection(FiniteSet((x - z)/log(2)), S.Reals), FiniteSet(0))), FiniteSet(0))
+    assert solveset(exp(xr/y)*exp(-zr/y) - 2, y, S.Reals) == \
+		Complement(FiniteSet((xr - zr)/log(2)), FiniteSet(0))
 
     assert solveset(a**x - b**x, x).dummy_eq(ConditionSet(
         w, Ne(a, 0) & Ne(b, 0), FiniteSet(0)))
