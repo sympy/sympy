@@ -1,5 +1,4 @@
 import random
-import inspect
 from sympy import symbols, Derivative
 from sympy.printing.torch import torch_code
 from sympy import (eye, MatrixSymbol, Matrix)
@@ -12,7 +11,7 @@ from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
 from sympy.functions import \
     Abs, ceiling, exp, floor, sign, sin, asin, cos, \
     acos, tan, atan, cosh, acosh, sinh, asinh, tanh, atanh, \
-    re, im, arg, erf, loggamma, sqrt  # ,atan2
+    re, im, arg, erf, loggamma, sqrt
 from sympy.testing.pytest import skip
 from sympy.external import import_module
 from sympy.printing.torch import TorchPrinter
