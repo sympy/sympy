@@ -208,8 +208,16 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
 
     """
     result = []
+    skip = False
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
+        if skip:
+            skip = False
+            continue
+        if tok[0] == OP and tok[1] == '.' and nextTok[0] == NAME:
+            # Dotted name. Do not do implicit multiplication
+            skip = True
+            continue
         if (isinstance(tok, AppliedFunction) and
               isinstance(nextTok, AppliedFunction)):
             result.append((OP, '*'))
