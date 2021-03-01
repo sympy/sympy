@@ -1,7 +1,7 @@
 import random
 from sympy import symbols, Derivative
-from sympy.codegen.array_utils import (CodegenArrayTensorProduct, CodegenArrayElementwiseAdd,
-                                       CodegenArrayPermuteDims, CodegenArrayDiagonal, parse_matrix_expression)
+from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
+    PermuteDims, ArrayDiagonal
 from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
 from sympy.external import import_module
 from sympy.functions import \
@@ -12,6 +12,7 @@ from sympy.matrices import Matrix, MatrixBase, eye, randMatrix
 from sympy.matrices.expressions import \
     Determinant, HadamardProduct, Inverse, MatrixSymbol, Trace
 from sympy.printing.tensorflow import tensorflow_code
+from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 from sympy.utilities.lambdify import lambdify
 from sympy.testing.pytest import skip
 from sympy.testing.pytest import XFAIL
@@ -361,7 +362,7 @@ def test_codegen_einsum():
         M = MatrixSymbol("M", 2, 2)
         N = MatrixSymbol("N", 2, 2)
 
-        cg = parse_matrix_expression(M*N)
+        cg = convert_matrix_to_array(M * N)
         f = lambdify((M, N), cg, 'tensorflow')
 
         ma = tf.constant([[1, 2], [3, 4]])
@@ -388,7 +389,7 @@ def test_codegen_extra():
         mc = tf.constant([[2, 0], [1, 2]])
         md = tf.constant([[1,-1], [4, 7]])
 
-        cg = CodegenArrayTensorProduct(M, N)
+        cg = ArrayTensorProduct(M, N)
         assert tensorflow_code(cg) == \
             'tensorflow.linalg.einsum("ab,cd", M, N)'
         f = lambdify((M, N), cg, 'tensorflow')
@@ -396,14 +397,14 @@ def test_codegen_extra():
         c = session.run(tf.einsum("ij,kl", ma, mb))
         assert (y == c).all()
 
-        cg = CodegenArrayElementwiseAdd(M, N)
+        cg = ArrayAdd(M, N)
         assert tensorflow_code(cg) == 'tensorflow.math.add(M, N)'
         f = lambdify((M, N), cg, 'tensorflow')
         y = session.run(f(ma, mb))
         c = session.run(ma + mb)
         assert (y == c).all()
 
-        cg = CodegenArrayElementwiseAdd(M, N, P)
+        cg = ArrayAdd(M, N, P)
         assert tensorflow_code(cg) == \
             'tensorflow.math.add(tensorflow.math.add(M, N), P)'
         f = lambdify((M, N, P), cg, 'tensorflow')
@@ -411,7 +412,7 @@ def test_codegen_extra():
         c = session.run(ma + mb + mc)
         assert (y == c).all()
 
-        cg = CodegenArrayElementwiseAdd(M, N, P, Q)
+        cg = ArrayAdd(M, N, P, Q)
         assert tensorflow_code(cg) == \
             'tensorflow.math.add(' \
                 'tensorflow.math.add(tensorflow.math.add(M, N), P), Q)'
@@ -420,14 +421,14 @@ def test_codegen_extra():
         c = session.run(ma + mb + mc + md)
         assert (y == c).all()
 
-        cg = CodegenArrayPermuteDims(M, [1, 0])
+        cg = PermuteDims(M, [1, 0])
         assert tensorflow_code(cg) == 'tensorflow.transpose(M, [1, 0])'
         f = lambdify((M,), cg, 'tensorflow')
         y = session.run(f(ma))
         c = session.run(tf.transpose(ma))
         assert (y == c).all()
 
-        cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [1, 2, 3, 0])
+        cg = PermuteDims(ArrayTensorProduct(M, N), [1, 2, 3, 0])
         assert tensorflow_code(cg) == \
             'tensorflow.transpose(' \
                 'tensorflow.linalg.einsum("ab,cd", M, N), [1, 2, 3, 0])'
@@ -436,7 +437,7 @@ def test_codegen_extra():
         c = session.run(tf.transpose(tf.einsum("ab,cd", ma, mb), [1, 2, 3, 0]))
         assert (y == c).all()
 
-        cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N), (1, 2))
+        cg = ArrayDiagonal(ArrayTensorProduct(M, N), (1, 2))
         assert tensorflow_code(cg) == \
             'tensorflow.linalg.einsum("ab,bc->acb", M, N)'
         f = lambdify((M, N), cg, 'tensorflow')

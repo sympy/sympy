@@ -201,6 +201,10 @@ class ExprWithLimits(Expr):
         return self._args[0]
 
     @property
+    def kind(self):
+        return self.function.kind
+
+    @property
     def limits(self):
         """Return the limits of expression.
 

@@ -856,6 +856,8 @@ class WignerD(Expr):
         alpha = sympify(self.alpha)
         beta = sympify(self.beta)
         gamma = sympify(self.gamma)
+        if alpha == 0 and beta == 0 and gamma == 0:
+            return KroneckerDelta(m, mp)
         if not j.is_number:
             raise ValueError(
                 'j parameter must be numerical to evaluate, got %s' % j)
@@ -949,7 +951,6 @@ class SpinState(State):
         gamma = sympify(options.get('gamma', 0))
         size, mvals = m_values(j)
         result = zeros(size, 1)
-        # TODO: Use KroneckerDelta if all Euler angles == 0
         # breaks finding angles on L930
         for p, mval in enumerate(mvals):
             if m.is_number:

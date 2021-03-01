@@ -10,6 +10,32 @@ from sympy.testing.pytest import raises
 Vector.simp = True
 
 
+def test_dict_list():
+
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    C = ReferenceFrame('C')
+    D = ReferenceFrame('D')
+    E = ReferenceFrame('E')
+    F = ReferenceFrame('F')
+
+    B.orient_axis(A, A.x, 1.0)
+    C.orient_axis(B, B.x, 1.0)
+    D.orient_axis(C, C.x, 1.0)
+
+    assert D._dict_list(A, 0) == [D, C, B, A]
+
+    E.orient_axis(D, D.x, 1.0)
+
+    assert C._dict_list(A, 0) == [C, B, A]
+    assert C._dict_list(E, 0) == [C, D, E]
+
+    # only 0, 1, 2 permitted for second argument
+    raises(ValueError, lambda: C._dict_list(E, 5))
+    # no connecting path
+    raises(ValueError, lambda: F._dict_list(A, 0))
+
+
 def test_coordinate_vars():
     """Tests the coordinate variables functionality"""
     A = ReferenceFrame('A')
@@ -367,7 +393,7 @@ def test_reference_frame():
     raises(TypeError, lambda: B.orient(N, 'Space', [q1, q2, q3], '222'))
     raises(TypeError, lambda: B.orient(N, 'Axis', [q1, N.x + 2 * N.y], '222'))
     raises(TypeError, lambda: B.orient(N, 'Axis', q1))
-    raises(TypeError, lambda: B.orient(N, 'Axis', [q1]))
+    raises(IndexError, lambda: B.orient(N, 'Axis', [q1]))
     raises(TypeError, lambda: B.orient(N, 'Quaternion', [q0, q1, q2, q3], '222'))
     raises(TypeError, lambda: B.orient(N, 'Quaternion', q0))
     raises(TypeError, lambda: B.orient(N, 'Quaternion', [q0, q1, q2]))
@@ -416,3 +442,32 @@ def test_dcm_diff_16824():
 
     assert simplify(AwB.dot(A.y) - alpha2) == 0
     assert simplify(AwB.dot(B.y) - beta2) == 0
+
+def test_orient_explicit():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    A.orient_explicit(B, eye(3))
+    assert A.dcm(B) == Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+def test_orient_axis():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    assert A.orient_axis(B,-B.x, 1) == A.orient_axis(B, B.x, -1)
+
+def test_orient_body():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B.orient_body_fixed(A, (1,1,0), 'XYX')
+    assert B.dcm(A) == Matrix([[cos(1), sin(1)**2, -sin(1)*cos(1)], [0, cos(1), sin(1)], [sin(1), -sin(1)*cos(1), cos(1)**2]])
+
+def test_orient_space():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B.orient_space_fixed(A, (0,0,0), '123')
+    assert B.dcm(A) == Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+def test_orient_quaternion():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B.orient_quaternion(A, (0,0,0,0))
+    assert B.dcm(A) == Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])

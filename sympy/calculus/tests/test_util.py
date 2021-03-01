@@ -7,7 +7,7 @@ from sympy.calculus.util import (function_range, continuous_domain, not_empty_in
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import (Interval, FiniteSet, EmptySet, Complement,
                             Union)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 from sympy.abc import x
 
 a = Symbol('a', real=True)
@@ -105,6 +105,7 @@ def test_not_empty_in():
            lambda: not_empty_in(FiniteSet(x).intersect(S.Reals), x, a))
 
 
+@_both_exp_pow
 def test_periodicity():
     x = Symbol('x')
     y = Symbol('y')
@@ -254,6 +255,9 @@ def test_maximum():
         ) is S.One
     assert maximum(cos(x)-sin(x), x, S.Reals) == sqrt(2)
     assert maximum(y, x, S.Reals) == y
+    assert maximum(abs(a**3 + a), a, Interval(0, 2)) == 10
+    assert maximum(abs(60*a**3 + 24*a), a, Interval(0, 2)) == 528
+    assert maximum(abs(12*a*(5*a**2 + 2)), a, Interval(0, 2)) == 528
 
     raises(ValueError, lambda : maximum(sin(x), x, S.EmptySet))
     raises(ValueError, lambda : maximum(log(cos(x)), x, S.EmptySet))
@@ -546,5 +550,6 @@ def test_issue_16469():
     f = abs(x)
     assert function_range(f, x, S.Reals) == Interval(0, oo, False, True)
 
+@_both_exp_pow
 def test_issue_18747():
     assert periodicity(exp(pi*I*(x/4+S.Half/2)), x) == 8

@@ -1,5 +1,4 @@
 """ Generic SymPy-Independent Strategies """
-from sympy.core.compatibility import get_function_name
 
 identity = lambda x: x
 
@@ -52,7 +51,7 @@ def debug(rule, file=None):
         expr = args[0]
         result = rule(*args, **kwargs)
         if result != expr:
-            file.write("Rule: %s\n" % get_function_name(rule))
+            file.write("Rule: %s\n" % rule.__name__)
             file.write("In:   %s\nOut:  %s\n\n"%(expr, result))
         return result
     return debug_rl

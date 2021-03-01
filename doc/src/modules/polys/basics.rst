@@ -405,7 +405,7 @@ Division
 
 The function :func:`~.div` provides division of polynomials with remainder.
 That is, for polynomials ``f`` and ``g``, it computes ``q`` and ``r``, such
-that `f = g \cdot q + r` and `\deg(r) < q`. For polynomials in one variables
+that `f = g \cdot q + r` and `\deg(r) < \deg(q)`. For polynomials in one variables
 with coefficients in a field, say, the rational numbers, ``q`` and ``r`` are
 uniquely defined this way::
 

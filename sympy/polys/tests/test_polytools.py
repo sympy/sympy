@@ -2077,6 +2077,9 @@ def test_gcd_numbers_vs_polys():
     assert gcd(3.0, 9.0) == 1.0
     assert gcd(3.0*x, 9.0) == 1.0
 
+    # partial fix of 20597
+    assert gcd(Mul(2, 3, evaluate=False), 2) == 2
+
 
 def test_terms_gcd():
     assert terms_gcd(1) == 1
@@ -3460,3 +3463,10 @@ def test_deserialized_poly_equals_original():
 def test_issue_20389():
     result = degree(x * (x + 1) - x ** 2 - x, x)
     assert result == -oo
+
+
+def test_issue_20985():
+    from sympy import symbols
+    w, R = symbols('w R')
+    poly = Poly(1.0 + I*w/R, w, 1/R)
+    assert poly.degree() == S(1)
