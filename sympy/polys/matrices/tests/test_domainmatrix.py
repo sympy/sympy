@@ -434,3 +434,9 @@ def test_DomainMatrix_eye():
     assert A.rep == SDM.eye(3, QQ)
     assert A.shape == (3, 3)
     assert A.domain == QQ
+
+def test_DomainMatrix_zeros():
+    A = DomainMatrix.zeros((1, 2), QQ)
+    assert A.rep == SDM.zeros((1, 2), QQ)
+    assert A.shape == (1, 2)
+    assert A.domain == QQ
