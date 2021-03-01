@@ -2222,7 +2222,7 @@ def test_exponential_symbols():
     Complement(ConditionSet(y, Eq(im(x)/y, 0) & Eq(im(z)/y, 0), \
     Complement(Intersection(FiniteSet((x - z)/log(2)), S.Reals), FiniteSet(0))), FiniteSet(0))
     assert solveset(exp(xr/y)*exp(-zr/y) - 2, y, S.Reals) == \
-		Complement(FiniteSet((xr - zr)/log(2)), FiniteSet(0))
+        Complement(FiniteSet((xr - zr)/log(2)), FiniteSet(0))
 
     assert solveset(a**x - b**x, x).dummy_eq(ConditionSet(
         w, Ne(a, 0) & Ne(b, 0), FiniteSet(0)))
