@@ -6,6 +6,7 @@ from sympy.core.function import (Function, ArgumentIndexError, _coeff_isneg,
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Rational
+from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
@@ -260,6 +261,8 @@ class exp(ExpBase):
         from sympy.sets.setexpr import SetExpr
         from sympy.matrices.matrices import MatrixBase
         from sympy import im, logcombine, re
+        if global_parameters.exp_is_pow:
+            return Pow(S.Exp1, arg)
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -669,6 +672,8 @@ class log(Function):
             elif arg.is_Rational and arg.p == 1:
                 return -cls(arg.q)
 
+        if arg.is_Pow and arg.base is S.Exp1 and arg.exp.is_extended_real:
+            return arg.exp
         I = S.ImaginaryUnit
         if isinstance(arg, exp) and arg.args[0].is_extended_real:
             return arg.args[0]

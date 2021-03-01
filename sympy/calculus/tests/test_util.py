@@ -254,6 +254,9 @@ def test_maximum():
         ) is S.One
     assert maximum(cos(x)-sin(x), x, S.Reals) == sqrt(2)
     assert maximum(y, x, S.Reals) == y
+    assert maximum(abs(a**3 + a), a, Interval(0, 2)) == 10
+    assert maximum(abs(60*a**3 + 24*a), a, Interval(0, 2)) == 528
+    assert maximum(abs(12*a*(5*a**2 + 2)), a, Interval(0, 2)) == 528
 
     raises(ValueError, lambda : maximum(sin(x), x, S.EmptySet))
     raises(ValueError, lambda : maximum(log(cos(x)), x, S.EmptySet))

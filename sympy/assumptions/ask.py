@@ -9,6 +9,7 @@ from sympy.core.kind import BooleanKind
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent)
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 
 
@@ -145,40 +146,13 @@ class AssumptionKeys:
 
     @memoize_property
     def commutative(self):
-        """
-        Commutative predicate.
-
-        Explanation
-        ===========
-
-        ``ask(Q.commutative(x))`` is true iff ``x`` commutes with any other
-        object with respect to multiplication operation.
-
-        """
-        # TODO: Add examples
-        return Predicate('commutative')
+        from .handlers.common import CommutativePredicate
+        return CommutativePredicate()
 
     @memoize_property
     def is_true(self):
-        """
-        Generic predicate.
-
-        Explanation
-        ===========
-
-        ``ask(Q.is_true(x))`` is true iff ``x`` is true. This only makes
-        sense if ``x`` is a predicate.
-
-        Examples
-        ========
-
-        >>> from sympy import ask, Q, symbols
-        >>> x = symbols('x')
-        >>> ask(Q.is_true(True))
-        True
-
-        """
-        return Predicate('is_true')
+        from .handlers.common import IsTruePredicate
+        return IsTruePredicate()
 
     @memoize_property
     def symmetric(self):
@@ -463,22 +437,18 @@ def ask_full_inference(proposition, assumptions, known_facts_cnf):
 def register_handler(key, handler):
     """
     Register a handler in the ask system. key must be a string and handler a
-    class inheriting from AskHandler::
+    class inheriting from AskHandler.
 
-        >>> from sympy.assumptions import register_handler, ask, Q
-        >>> from sympy.assumptions.handlers import AskHandler
-        >>> class MersenneHandler(AskHandler):
-        ...     # Mersenne numbers are in the form 2**n - 1, n integer
-        ...     @staticmethod
-        ...     def Integer(expr, assumptions):
-        ...         from sympy import log
-        ...         return ask(Q.integer(log(expr + 1, 2)))
-        >>> register_handler('mersenne', MersenneHandler)
-        >>> ask(Q.mersenne(7))
-        True
+    .. deprecated:: 1.8.
+        Use multipledispatch handler instead. See :obj:`~.Predicate`.
 
     """
-    # Will be deprecated
+    SymPyDeprecationWarning(
+        feature="register_handler() function",
+        useinstead="multipledispatch handler of Predicate",
+        issue=20873,
+        deprecated_since_version="1.8"
+    ).warn()
     if isinstance(key, Predicate):
         key = key.name.name
     Qkey = getattr(Q, key, None)
@@ -489,8 +459,19 @@ def register_handler(key, handler):
 
 
 def remove_handler(key, handler):
-    """Removes a handler from the ask system. Same syntax as register_handler"""
-    # Will be deprecated
+    """
+    Removes a handler from the ask system. Same syntax as register_handler
+
+    .. deprecated:: 1.8.
+        Use multipledispatch handler instead. See :obj:`~.Predicate`.
+
+    """
+    SymPyDeprecationWarning(
+        feature="remove_handler() function",
+        useinstead="multipledispatch handler of Predicate",
+        issue=20873,
+        deprecated_since_version="1.8"
+    ).warn()
     if isinstance(key, Predicate):
         key = key.name.name
     getattr(Q, key).remove_handler(handler)
@@ -574,17 +555,6 @@ def compute_known_facts(known_facts, known_facts_keys):
             break_long_words=False))
         for k, v in zip(keys, values)]) + ','
     return fact_string % (p, c, m)
-
-# handlers tells us what ask handler we should use
-# for a particular key
-_val_template = 'sympy.assumptions.handlers.%s'
-_handlers = [
-    ("commutative",       "AskCommutativeHandler"),
-    ("is_true",           "common.TautologicalHandler"),
-]
-
-for name, value in _handlers:
-    register_handler(name, _val_template % value)
 
 @cacheit
 def get_known_facts_keys():

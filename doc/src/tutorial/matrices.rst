@@ -54,18 +54,20 @@ expressions or as keys to dictionaries.  If you need an immutable version of
 Basic Operations
 ================
 
+Here are some basic operations on ``Matrix``.
+
 Shape
 -----
 
-Here are some basic operations on ``Matrix``.  To get the shape of a matrix
-use ``shape``
+To get the shape of a matrix, use :func:`~.shape()` function.
 
+    >>> from sympy import shape
     >>> M = Matrix([[1, 2, 3], [-2, 0, 4]])
     >>> M
     ⎡1   2  3⎤
     ⎢        ⎥
     ⎣-2  0  4⎦
-    >>> M.shape
+    >>> shape(M)
     (2, 3)
 
 Accessing Rows and Columns

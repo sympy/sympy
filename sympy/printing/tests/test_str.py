@@ -7,6 +7,7 @@ from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice,
     Q)
 from sympy.core import Expr, Mul
+from sympy.core.parameters import _exp_is_pow
 from sympy.external import import_module
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.physics.units import second, joule
@@ -100,6 +101,8 @@ def test_EulerGamma():
 
 def test_Exp():
     assert str(E) == "E"
+    with _exp_is_pow(True):
+        assert str(exp(x)) == "E**x"
 
 
 def test_factorial():

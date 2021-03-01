@@ -216,7 +216,7 @@ from .integrals import (integrate, Integral, line_integrate, mellin_transform,
         HankelTransform, InverseHankelTransform, singularityintegrate)
 
 from .tensor import (IndexedBase, Idx, Indexed, get_contraction_structure,
-        get_indices, MutableDenseNDimArray, ImmutableDenseNDimArray,
+        get_indices, shape, MutableDenseNDimArray, ImmutableDenseNDimArray,
         MutableSparseNDimArray, ImmutableSparseNDimArray, NDimArray,
         tensorproduct, tensorcontraction, tensordiagonal, derive_by_array,
         permutedims, Array, DenseNDimArray, SparseNDimArray)
@@ -456,7 +456,7 @@ __all__ = [
 
     # sympy.tensor
     'IndexedBase', 'Idx', 'Indexed', 'get_contraction_structure',
-    'get_indices', 'MutableDenseNDimArray', 'ImmutableDenseNDimArray',
+    'get_indices', 'shape', 'MutableDenseNDimArray', 'ImmutableDenseNDimArray',
     'MutableSparseNDimArray', 'ImmutableSparseNDimArray', 'NDimArray',
     'tensorproduct', 'tensorcontraction', 'tensordiagonal', 'derive_by_array',
     'permutedims', 'Array', 'DenseNDimArray', 'SparseNDimArray',

@@ -15,6 +15,7 @@ from sympy.core import SympifyError, Add
 from sympy.core.basic import Atom
 from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.decorators import call_highest_priority
+from sympy.core.kind import Kind, NumberKind
 from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -2987,6 +2988,69 @@ class _MatrixWrapper:
         cols = self.cols
 
         return iter(sympify(mat[r, c]) for r in range(self.rows) for c in range(cols))
+
+
+class MatrixKind(Kind):
+    """
+    Kind for all matrices in SymPy.
+
+    Basic class for this kind is ``MatrixBase`` and ``MatrixExpr``,
+    but any expression representing the matrix can have this.
+
+    Parameters
+    ==========
+
+    element_kind : Kind
+        Kind of the element. Default is :obj:NumberKind `<sympy.core.kind.NumberKind>`,
+        which means that the matrix contains only numbers.
+
+    Examples
+    ========
+
+    Any instance of matrix class has ``MatrixKind``.
+
+    >>> from sympy import MatrixSymbol
+    >>> A = MatrixSymbol('A', 2,2)
+    >>> A.kind
+    MatrixKind(NumberKind)
+
+    Although expression representing a matrix may be not instance of
+    matrix class, it will have ``MatrixKind`` as well.
+
+    >>> from sympy import Integral
+    >>> from sympy.matrices.expressions import MatrixExpr
+    >>> from sympy.abc import x
+    >>> intM = Integral(A, x)
+    >>> isinstance(intM, MatrixExpr)
+    False
+    >>> intM.kind
+    MatrixKind(NumberKind)
+
+    Use ``isinstance()`` to check for ``MatrixKind` without specifying
+    the element kind. Use ``is`` with specifying the element kind.
+
+    >>> from sympy import Matrix
+    >>> from sympy.matrices import MatrixKind
+    >>> from sympy.core.kind import NumberKind
+    >>> boolM = Matrix([True, False])
+    >>> isinstance(boolM.kind, MatrixKind)
+    True
+    >>> boolM.kind is MatrixKind(NumberKind)
+    False
+
+    See Also
+    ========
+
+    shape : Function to return the shape of objects with ``MatrixKind``.
+
+    """
+    def __new__(cls, element_kind=NumberKind):
+        obj = super().__new__(cls, element_kind)
+        obj.element_kind = element_kind
+        return obj
+
+    def __repr__(self):
+        return "MatrixKind(%s)" % self.element_kind
 
 
 def _matrixify(mat):
