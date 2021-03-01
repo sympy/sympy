@@ -14,7 +14,7 @@ from sympy.functions import \
     re, im, arg, erf, loggamma, sqrt
 from sympy.testing.pytest import skip
 from sympy.external import import_module
-from sympy.printing.torch import TorchPrinter
+# from sympy.printing.torch import TorchPrinter
 
 torch = import_module("torch")
 
