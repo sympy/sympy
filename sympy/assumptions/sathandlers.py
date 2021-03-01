@@ -1,10 +1,10 @@
 from collections import defaultdict
+from collections.abc import MutableMapping
 
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
 from sympy.assumptions.cnf import AND, OR, to_NNF
 from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
-from sympy.core.compatibility import MutableMapping
 from sympy.core.numbers import ImaginaryUnit
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify

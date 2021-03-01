@@ -44,6 +44,7 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polytools import invert
 from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
     PolyNonlinearError)
+from sympy.polys.matrices.linsolve import _linsolve
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
@@ -201,7 +202,12 @@ def _invert_real(f, g_ys, symbol):
 
     n = Dummy('n', real=True)
 
-    if hasattr(f, 'inverse') and not isinstance(f, (
+    if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
+        return _invert_real(f.exp,
+                            imageset(Lambda(n, log(n)), g_ys),
+                            symbol)
+
+    if hasattr(f, 'inverse') and f.inverse() is not None and not isinstance(f, (
             TrigonometricFunction,
             HyperbolicFunction,
             )):
@@ -324,7 +330,7 @@ def _invert_complex(f, g_ys, symbol):
                 return (h, S.EmptySet)
             return _invert_complex(h, imageset(Lambda(n, n/g), g_ys), symbol)
 
-    if hasattr(f, 'inverse') and \
+    if hasattr(f, 'inverse') and f.inverse() is not None and \
        not isinstance(f, TrigonometricFunction) and \
        not isinstance(f, HyperbolicFunction) and \
        not isinstance(f, exp):
@@ -333,12 +339,12 @@ def _invert_complex(f, g_ys, symbol):
         return _invert_complex(f.args[0],
                                imageset(Lambda(n, f.inverse()(n)), g_ys), symbol)
 
-    if isinstance(f, exp):
+    if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
         if isinstance(g_ys, FiniteSet):
             exp_invs = Union(*[imageset(Lambda(n, I*(2*n*pi + arg(g_y)) +
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
-            return _invert_complex(f.args[0], exp_invs, symbol)
+            return _invert_complex(f.exp, exp_invs, symbol)
 
     return (f, g_ys)
 
@@ -434,7 +440,27 @@ def _domain_check(f, symbol, p):
         return True
     elif f.subs(symbol, p).is_infinite:
         return False
+    elif isinstance(f, Piecewise):
+        # Check the cases of the Piecewise in turn. There might be invalid
+        # expressions in later cases that don't apply e.g.
+        #    solveset(Piecewise((0, Eq(x, 0)), (1/x, True)), x)
+        for expr, cond in f.args:
+            condsubs = cond.subs(symbol, p)
+            if condsubs is S.false:
+                continue
+            elif condsubs is S.true:
+                return _domain_check(expr, symbol, p)
+            else:
+                # We don't know which case of the Piecewise holds. On this
+                # basis we cannot decide whether any solution is in or out of
+                # the domain. Ideally this function would allow returning a
+                # symbolic condition for the validity of the solution that
+                # could be handled in the calling code. In the mean time we'll
+                # give this particular solution the benefit of the doubt and
+                # let it pass.
+                return True
     else:
+        # TODO : We should not blindly recurse through all args of arbitrary expressions like this
         return all([_domain_check(g, symbol, p)
                     for g in f.args])
 
@@ -2631,20 +2657,24 @@ def linsolve(system, *symbols):
                     symbols for which a solution is being sought must
                     be given as a sequence, too.
                 '''))
-            eqs = system
-            try:
-                eqs, ring = sympy_eqs_to_ring(eqs, symbols)
-            except PolynomialError as exc:
-                # e.g. cos(x) contains an element of the set of generators
-                raise NonlinearError(str(exc))
 
+            #
+            # Pass to the sparse solver implemented in polys. It is important
+            # that we do not attempt to convert the equations to a matrix
+            # because that would be very inefficient for large sparse systems
+            # of equations.
+            #
+            eqs = system
+            eqs = [sympify(eq) for eq in eqs]
             try:
-                sol = solve_lin_sys(eqs, ring, _raw=False)
+                sol = _linsolve(eqs, symbols)
             except PolyNonlinearError as exc:
+                # e.g. cos(x) contains an element of the set of generators
                 raise NonlinearError(str(exc))
 
             if sol is None:
                 return S.EmptySet
+
             sol = FiniteSet(Tuple(*(sol.get(sym, sym) for sym in symbols)))
             return sol
 
@@ -3193,9 +3223,9 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     new_result_complex, solve_call2, cnd_call2 = _solve_using_known_values(
         old_result, solveset_complex)
 
-    # when `total_solveset_call` is equals to `total_conditionset`
-    # means solvest fails to solve all the eq.
-    # return conditionset in this case
+    # If total_solveset_call is equal to total_conditionset
+    # then solveset failed to solve all of the equations.
+    # In this case we return a ConditionSet here.
     total_conditionset += (cnd_call1 + cnd_call2)
     total_solveset_call += (solve_call1 + solve_call2)
 

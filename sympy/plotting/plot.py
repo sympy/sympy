@@ -24,11 +24,11 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 
 
 import warnings
+from collections.abc import Callable
 
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
 from sympy.core.function import arity
-from sympy.core.compatibility import Callable
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
 
@@ -1493,8 +1493,8 @@ def flat(x, y, z, eps=1e-3):
     #   workaround for `lambdify` in `.experimental_lambdify` fails
     #   to return numerical values in some cases. Lower-level fix
     #   in `lambdify` is possible.
-    vector_a = (x - y).astype(np.float)
-    vector_b = (z - y).astype(np.float)
+    vector_a = (x - y).astype(np.float64)
+    vector_b = (z - y).astype(np.float64)
     dot_product = np.dot(vector_a, vector_b)
     vector_a_norm = np.linalg.norm(vector_a)
     vector_b_norm = np.linalg.norm(vector_b)

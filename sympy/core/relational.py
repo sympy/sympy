@@ -302,9 +302,12 @@ class Relational(Boolean, EvalfMixin):
 
     def _eval_simplify(self, **kwargs):
         from .add import Add
+        from sympy.core.expr import Expr
         r = self
         r = r.func(*[i.simplify(**kwargs) for i in r.args])
         if r.is_Relational:
+            if not isinstance(r.lhs, Expr) or not isinstance(r.rhs, Expr):
+                return r
             dif = r.lhs - r.rhs
             # replace dif with a valid Number that will
             # allow a definitive comparison with 0
@@ -470,15 +473,15 @@ class Equality(Relational):
     for exact structural equality between two expressions; this class
     compares expressions mathematically.
 
-    If either object defines an `_eval_Eq` method, it can be used in place of
-    the default algorithm.  If `lhs._eval_Eq(rhs)` or `rhs._eval_Eq(lhs)`
+    If either object defines an ``_eval_Eq`` method, it can be used in place of
+    the default algorithm.  If ``lhs._eval_Eq(rhs)`` or ``rhs._eval_Eq(lhs)``
     returns anything other than None, that return value will be substituted for
-    the Equality.  If None is returned by `_eval_Eq`, an Equality object will
+    the Equality.  If None is returned by ``_eval_Eq``, an Equality object will
     be created as usual.
 
     Since this object is already an expression, it does not respond to
-    the method `as_expr` if one tries to create `x - y` from Eq(x, y).
-    This can be done with the `rewrite(Add)` method.
+    the method ``as_expr`` if one tries to create `x - y` from ``Eq(x, y)``.
+    This can be done with the ``rewrite(Add)`` method.
     """
     rel_op = '=='
 
@@ -507,10 +510,6 @@ class Equality(Relational):
                 return _sympify(val)
 
         return Relational.__new__(cls, lhs, rhs)
-
-    @classmethod
-    def _eval_relation(cls, lhs, rhs):
-        return _sympify(lhs == rhs)
 
     def _eval_rewrite_as_Add(self, *args, **kwargs):
         """
@@ -548,36 +547,14 @@ class Equality(Relational):
 
     @property
     def binary_symbols(self):
-        if S.true in self.args or S.false in self.args:
-            if self.lhs.is_Symbol:
-                return {self.lhs}
-            elif self.rhs.is_Symbol:
-                return {self.rhs}
-        return set()
+        return self.as_Predicate().binary_symbols
 
     def _eval_simplify(self, **kwargs):
-        from .add import Add
-        from sympy.solvers.solveset import linear_coeffs
-        # standard simplify
-        e = super()._eval_simplify(**kwargs)
-        if not isinstance(e, Equality):
-            return e
-        free = self.free_symbols
-        if len(free) == 1:
-            try:
-                x = free.pop()
-                m, b = linear_coeffs(
-                    e.rewrite(Add, evaluate=False), x)
-                if m.is_zero is False:
-                    enew = e.func(x, -b / m)
-                else:
-                    enew = e.func(m * x, -b)
-                measure = kwargs['measure']
-                if measure(enew) <= kwargs['ratio'] * measure(e):
-                    e = enew
-            except ValueError:
-                pass
-        return e.canonical
+        rel = self.as_Predicate().simplify(**kwargs)
+        ret = rel.refine()
+        if isinstance(ret, BooleanAtom):
+            return ret
+        return self.func(*rel.arguments)
 
     def integrate(self, *args, **kwargs):
         """See the integrate function in sympy.integrals"""
@@ -596,6 +573,10 @@ class Equality(Relational):
         Poly(x**2 - 1, x, domain='ZZ')
         '''
         return (self.lhs - self.rhs).as_poly(*gens, **kwargs)
+
+    def as_Predicate(self):
+        from sympy.assumptions import Q
+        return Q.eq(*self.args)
 
 
 Eq = Equality
@@ -651,26 +632,20 @@ class Unequality(Relational):
 
         return Relational.__new__(cls, lhs, rhs, **options)
 
-    @classmethod
-    def _eval_relation(cls, lhs, rhs):
-        return _sympify(lhs != rhs)
-
     @property
     def binary_symbols(self):
-        if S.true in self.args or S.false in self.args:
-            if self.lhs.is_Symbol:
-                return {self.lhs}
-            elif self.rhs.is_Symbol:
-                return {self.rhs}
-        return set()
+        return self.as_Predicate().binary_symbols
 
     def _eval_simplify(self, **kwargs):
-        # simplify as an equality
-        eq = Equality(*self.args)._eval_simplify(**kwargs)
-        if isinstance(eq, Equality):
-            # send back Ne with the new args
-            return self.func(*eq.args)
-        return eq.negated  # result of Ne is the negated Eq
+        rel = self.as_Predicate().simplify(**kwargs)
+        ret = rel.refine()
+        if isinstance(ret, BooleanAtom):
+            return ret
+        return self.func(*rel.arguments)
+
+    def as_Predicate(self):
+        from sympy.assumptions import Q
+        return Q.ne(*self.args)
 
 
 Ne = Unequality
@@ -1300,11 +1275,8 @@ def is_eq(lhs, rhs):
     >>> is_eq(a, b)
     True
 
-
     Examples
     ========
-
-
 
     >>> is_eq(S(0), S(0))
     True
@@ -1322,8 +1294,6 @@ def is_eq(lhs, rhs):
 
     >>> Eq(S(0), x)
     Eq(0, x)
-
-
 
     """
     from sympy.core.add import Add

@@ -1,4 +1,4 @@
-from sympy import Symbol, Rational
+from sympy import Symbol, Rational, S
 from sympy.geometry import Circle, Ellipse, Line, Point, Polygon, Ray, RegularPolygon, Segment, Triangle
 from sympy.geometry.entity import scale, GeometryEntity
 from sympy.testing.pytest import raises
@@ -24,6 +24,17 @@ def test_entity():
     assert GeometryEntity.encloses(c, Polygon(Point(0, 0), Point(1, 0), Point(0, 1)))
     assert GeometryEntity.encloses(c, RegularPolygon(Point(8, 8), 1, 3)) is False
 
+
+def test_svg():
+    a = Symbol('a')
+    b = Symbol('b')
+    d = Symbol('d')
+
+    entity = Circle(Point(a, b), d)
+    assert entity._repr_svg_() is None
+
+    entity = Circle(Point(0, 0), S.Infinity)
+    assert entity._repr_svg_() is None
 
 
 def test_subs():

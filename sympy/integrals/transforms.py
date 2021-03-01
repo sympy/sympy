@@ -1,7 +1,8 @@
 """ Integral Transforms """
+from functools import reduce
 
 from sympy.core import S
-from sympy.core.compatibility import reduce, iterable
+from sympy.core.compatibility import iterable
 from sympy.core.function import Function
 from sympy.core.relational import _canonical, Ge, Gt
 from sympy.core.numbers import oo
@@ -614,7 +615,7 @@ def _rewrite_gamma(f, s, a, b):
                 exp = fact.exp
             else:
                 base = exp_polar(1)
-                exp = fact.args[0]
+                exp = fact.exp
             if exp.is_Integer:
                 cond = is_numer
                 if exp < 0:

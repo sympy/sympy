@@ -3,7 +3,7 @@ from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.core import Basic, Tuple
 from sympy.core.compatibility import as_int
 from sympy.sets import FiniteSet
-from sympy.utilities.iterables import (minlex, unflatten, flatten)
+from sympy.utilities.iterables import (minlex, unflatten, flatten, default_sort_key)
 
 rmul = Perm.rmul
 
@@ -386,7 +386,7 @@ class Polyhedron(Basic):
         .. [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
 
         """
-        faces = [minlex(f, directed=False, is_set=True) for f in faces]
+        faces = [minlex(f, directed=False, key=default_sort_key) for f in faces]
         corners, faces, pgroup = args = \
             [Tuple(*a) for a in (corners, faces, pgroup)]
         obj = Basic.__new__(cls, *args)
@@ -697,7 +697,7 @@ def _pgroup_calcs():
             reorder = unflatten([c[j] for j in flat_faces], n)
             # make them canonical
             reorder = [tuple(map(as_int,
-                       minlex(f, directed=False, is_set=True)))
+                       minlex(f, directed=False)))
                        for f in reorder]
             # map face to vertex: the resulting list of vertices are the
             # permutation that we seek for the double

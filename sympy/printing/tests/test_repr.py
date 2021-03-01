@@ -3,9 +3,8 @@ from typing import Any, Dict
 from sympy.testing.pytest import raises
 from sympy import (symbols, sympify, Function, Integer, Matrix, Abs,
     Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false, ones,
-    sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild, MatrixSymbol)
+    sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild, MatrixSymbol, Q)
 from sympy.combinatorics import Cycle, Permutation
-from sympy.core.compatibility import exec_
 from sympy.core.symbol import Str
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
@@ -18,7 +17,7 @@ x, y = symbols('x,y')
 # eval(srepr(expr)) == expr has to succeed in the right environment. The right
 # environment is the scope of "from sympy import *" for most cases.
 ENV = {"Str": Str}  # type: Dict[str, Any]
-exec_("from sympy import *", ENV)
+exec("from sympy import *", ENV)
 
 
 def sT(expr, string, import_stmt=None):
@@ -32,7 +31,7 @@ def sT(expr, string, import_stmt=None):
         ENV2 = ENV
     else:
         ENV2 = ENV.copy()
-        exec_(import_stmt, ENV2)
+        exec(import_stmt, ENV2)
 
     assert srepr(expr) == string
     assert eval(string, ENV2) == expr
@@ -335,3 +334,9 @@ def test_set():
     assert srepr(s) == "set()"
     s = {x, y}
     assert srepr(s) in ("{Symbol('x'), Symbol('y')}", "{Symbol('y'), Symbol('x')}")
+
+def test_Predicate():
+    sT(Q.even, "Q.even")
+
+def test_AppliedPredicate():
+    sT(Q.even(Symbol('z')), "AppliedPredicate(Q.even, Symbol('z'))")

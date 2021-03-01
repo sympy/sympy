@@ -7,7 +7,7 @@ from sympy import (
     FunctionMatrix, Lambda, Derivative, Eq)
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
 
 
 def N_equals(a, b):
@@ -725,6 +725,7 @@ def test_transpose():
     assert transpose(-x) == -transpose(x)
 
 
+@_both_exp_pow
 def test_polarify():
     from sympy import polar_lift, polarify
     x = Symbol('x')
@@ -965,6 +966,8 @@ def test_zero_assumptions():
     assert re(nzni).is_zero is False
     assert im(nzni).is_zero is None
 
+
+@_both_exp_pow
 def test_issue_15893():
     f = Function('f', real=True)
     x = Symbol('x', real=True)
