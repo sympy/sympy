@@ -46,6 +46,7 @@ from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
 from sympy.polys.matrices.linsolve import _linsolve
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
+from sympy.solvers.bivariate import _solve_lambert, _filtered_gens, bivariate_type
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
@@ -2392,18 +2393,16 @@ def solvify(f, symbol, domain):
 
     We classify the output based on the type of solution returned by `solveset`.
 
-    Solution     |    Output
+    Solution    |    Output
     ----------------------------------------
-    FiniteSet    | list
+    FiniteSet   | list
 
-    ImageSet,    | list (if `f` is periodic)
-    Union        |
+    ImageSet,   | list (if `f` is periodic)
+    Union       |
 
-    Intersection | list
+    EmptySet    | empty list
 
-    EmptySet     | empty list
-
-    Others       | None
+    Others      | None
 
 
     Raises
@@ -2441,6 +2440,71 @@ def solvify(f, symbol, domain):
     elif isinstance(solution_set, FiniteSet):
         result = list(solution_set)
 
+    else:
+        period = periodicity(f, symbol)
+        if period is not None:
+            solutions = S.EmptySet
+            iter_solutions = ()
+            if isinstance(solution_set, ImageSet):
+                iter_solutions = (solution_set,)
+            elif isinstance(solution_set, Union):
+                if all(isinstance(i, ImageSet) for i in solution_set.args):
+                    iter_solutions = solution_set.args
+
+            for solution in iter_solutions:
+                solutions += solution.intersect(Interval(0, period, False, True))
+
+            if isinstance(solutions, FiniteSet):
+                result = list(solutions)
+
+        else:
+            solution = solution_set.intersect(domain)
+            if isinstance(solution, FiniteSet):
+                result += solution
+
+    return result
+
+
+def convert_to_list(solution_set, period, domain):
+    """Converts a solution set (from `solveset`) by having a period (from `periodicity`)
+    to a list.
+
+    Returns
+    =======
+
+    We classify the output based on the type of solution given by `solution_set`.
+
+    Solution     |    Output
+    ----------------------------------------
+    FiniteSet    | list
+
+    ImageSet,    | list (if `f` is periodic)
+    Union        |
+
+    Intersection | list
+
+    EmptySet     | empty list
+
+    Others       | None
+
+
+    Raises
+    ======
+
+    NotImplementedError
+        A ConditionSet is the input.
+
+    """
+    result = None
+    if solution_set is S.EmptySet:
+        result = []
+
+    elif isinstance(solution_set, ConditionSet):
+        raise NotImplementedError('solveset is unable to solve this equation.')
+
+    elif isinstance(solution_set, FiniteSet):
+        result = list(solution_set)
+
     elif isinstance(solution_set, Intersection):
         result = []
         for argSet in solution_set.args:
@@ -2448,7 +2512,6 @@ def solvify(f, symbol, domain):
                 result += list(argSet)
 
     else:
-        period = periodicity(f, symbol)
         if period is not None:
             solutions = S.EmptySet
             iter_solutions = ()
@@ -3757,6 +3820,3 @@ def nonlinsolve(system, *symbols):
         result = substitution(
             polys_expr + nonpolys, symbols, exclude=denominators)
         return result
-
-
-from sympy.solvers.bivariate import _solve_lambert, _filtered_gens, bivariate_type

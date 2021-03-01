@@ -128,6 +128,9 @@ def _lambert1(eq, x, domain):
     where X = g(x) and x = g^-1(X), return the Lambert solution,
         ``x = g^-1(-c/b + (a/d)*W(d/(a*b)*exp(c*d/a/b)*exp(-f/a)))``.
     """
+    from sympy.solvers.solveset import solveset, convert_to_list
+    from sympy.calculus.util import periodicity
+
     eq = _mexpand(expand_log(eq))
     mainlog = _mostfunc(eq, log, x)
     if not mainlog:
@@ -159,8 +162,12 @@ def _lambert1(eq, x, domain):
         domain_real = None
         xusolns = solve(X1 - u, x)
     else:
+        # converting solutions from `solveset` into `list` format
+        # by having `periodicity` and passing it to `convert_to_list`
+        xusolns_1 = solveset(X1 - u, x, domain)
+        period = periodicity(X1 - u, x)
+        xusolns = convert_to_list(xusolns_1, period, domain)
         domain_real = domain.is_subset(S.Reals)
-        xusolns = solvify(X1 - u, x, domain)
 
     # There are infinitely many branches for LambertW
     # but only branches for k = -1 and 0 might be real. The k = 0
@@ -575,6 +582,3 @@ def bivariate_type(f, x, y, *, first=True):
             if new is not None:
                 return a*x*y + b*y, new, u
             x, y = y, x
-
-
-from sympy.solvers.solveset import solvify
