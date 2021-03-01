@@ -1,5 +1,5 @@
 import random
-
+import inspect
 from sympy import symbols, Derivative
 from sympy.printing.torch import torch_code
 from sympy import (eye, MatrixSymbol, Matrix)
@@ -15,6 +15,7 @@ from sympy.functions import \
     re, im, arg, erf, loggamma, sqrt  # ,atan2
 from sympy.testing.pytest import skip
 from sympy.external import import_module
+from sympy.printing.torch import TorchPrinter
 
 torch = import_module("torch")
 
@@ -34,10 +35,12 @@ if torch is not None:
 
 def _compare_torch_matrix(variables, expr):
     f = lambdify(variables, expr, 'torch')
+
     random_matrices = [Matrix([[random.randint(0, 10) for k in
-        range(i.shape[1])] for j in range(i.shape[0])]) for i in variables]
-    random_variables = [eval(torch_code(i)) for i in
-            random_matrices]
+                       range(i.shape[1])] for j in range(i.shape[0])]) for i in variables]
+
+    random_variables = [eval(torch_code(i)) for i in random_matrices]
+
     r = f(*random_variables)
     e = expr.subs({k: v for k, v in zip(variables, random_matrices)}).doit()
     if isinstance(e, _CodegenArrayAbstract):
@@ -209,7 +212,7 @@ def test_torch_matrix():
     assert f(eye(3)) == eye(3)
 
     expr = M*N
-    assert torch_code(expr) == "torch.mm(M, N)"
+    assert torch_code(expr) == "torch.matmul(M, N)"
     _compare_torch_matrix((M, N), expr)
 
     expr = M**3
@@ -217,7 +220,7 @@ def test_torch_matrix():
     _compare_torch_matrix((M,), expr)
 
     expr = M*N*P*Q
-    assert torch_code(expr) == "torch.mm(torch.mm(torch.mm(M, N), P), Q)"
+    assert torch_code(expr) == "torch.matmul(torch.matmul(torch.matmul(M, N), P), Q)"
     _compare_torch_matrix((M, N, P, Q), expr)
 
 
@@ -287,3 +290,42 @@ def test_codegen_extra():
 def test_torch_derivative():
     expr = Derivative(sin(x), x)
     assert torch_code(expr) == 'torch.autograd.grad(torch.sin(x), x)[0]'
+
+
+def test_requires_grad():
+    M = MatrixSymbol("M", 2, 2)
+    N = MatrixSymbol("N", 2, 2)
+    P = MatrixSymbol("P", 2, 2)
+
+    ma = torch.tensor([[1.0, 2.0], [3.0, 4.0]], requires_grad=True)
+    mb = torch.tensor([[1.0, -2.0], [-1.0, 3.0]], requires_grad=True)
+    mc = torch.tensor([[2.0, 0.0], [1.0, 2.0]], requires_grad=True)
+
+    cg = CodegenArrayElementwiseAdd(M, N, P)
+    assert torch_code(cg) == 'torch.add(torch.add(M, N), P)'
+    f = lambdify((M, N, P), cg, 'torch')
+    y = f(ma, mb, mc)
+    assert y.grad_fn is not None
+
+
+def test_matrix_requires_grad():
+    x, y, a, b, c, d = symbols('x y a b c d')
+    X = x, y
+    t = symbols('t')
+    args = a, b, c, d
+
+    lotka_volterra = Matrix([[a * x - b * x * y], [-c * y + d * x * y]])
+    expr = lotka_volterra
+
+    assert expr.is_Matrix
+
+    printer = TorchPrinter(settings={'requires_grad': True})
+    f = lambdify([t, X, args], expr, printer=printer, modules='torch')
+
+    k_ = torch.tensor([1.5, 1.0, 3.0, 1.0], requires_grad=True).float()
+    y_ = torch.tensor([10.0, 5.0], requires_grad=True).float()
+    t_ = torch.tensor([0.0], requires_grad=True).float()
+
+    r = f(t_, y_, k_)
+
+    assert r.requires_grad is True

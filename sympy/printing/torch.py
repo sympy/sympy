@@ -71,18 +71,21 @@ class TorchPrinter(AbstractPythonCodePrinter):
 
     _default_settings = dict(
         AbstractPythonCodePrinter._default_settings,
-        torch_version=None
+        torch_version=None,
+        requires_grad=False,
     )
 
     def __init__(self, settings=None):
         super().__init__(settings)
 
         version = self._settings['torch_version']
+        self.requires_grad = self._settings['requires_grad']
         if version is None and torch:
             version = torch.__version__
         self.torch_version = version
 
     def _print_Function(self, expr):
+
         op = self.mapping.get(type(expr), None)
         if op is None:
             return super()._print_Basic(expr)
@@ -163,10 +166,17 @@ class TorchPrinter(AbstractPythonCodePrinter):
 
     def _print_MatrixBase(self, expr):
         data = "["+", ".join(["["+", ".join([self._print(j) for j in i])+"]" for i in expr.tolist()])+"]"
-        return "%s(%s)" % (
-            self._module_format("torch.FloatTensor"),
-            str(data)
-        )
+
+        if self.requires_grad:
+            return "%s(%s, requires_grad=True, dtype=torch.float64)" % (
+                self._module_format("torch.tensor"),
+                str(data)
+            )
+        else:
+            return "%s(%s)" % (
+                self._module_format("torch.FloatTensor"),
+                str(data)
+            )
 
     def _print_CodegenArrayTensorProduct(self, expr):
         # array_list = [j for i, arg in enumerate(expr.args) for j in
@@ -232,6 +242,6 @@ class TorchPrinter(AbstractPythonCodePrinter):
         return self._expand_fold_binary_op('torch.add', expr.args)
 
 
-def torch_code(expr, **settings):
-    printer = TorchPrinter()
+def torch_code(expr, requires_grad=False, **settings):
+    printer = TorchPrinter(settings={'requires_grad': requires_grad})
     return printer.doprint(expr, **settings)
