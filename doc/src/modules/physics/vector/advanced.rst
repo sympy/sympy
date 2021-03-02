@@ -18,10 +18,6 @@ accessed like so::
 
    >>> from sympy.physics.vector import TIME
 
-or::
-
-   >>> from sympy.physics.mechanics import TIME
-
 The default behavior is::
 
    >>> TIME
