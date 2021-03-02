@@ -855,7 +855,8 @@ class Quaternion(Expr):
 
     def is_pure(self):
         """
-        Returns true if the quaternion is pure else returns false.
+        Returns true if the quaternion is pure, false if the quaternion is not pure
+        or returns none if it is unknown.
 
         Explanation
         ===========
@@ -891,7 +892,7 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        A zero quaternion is a quaternion with scalar it's part and vector part
+        A zero quaternion is a quaternion with it's scalar part and vector part
         both equal to 0.
 
         Examples
@@ -1117,7 +1118,8 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Index vector is given by mod(q) Ax(q) where Ax(q) is the axis of the quaternion q.
+        Index vector is given by mod(q) Ax(q) where Ax(q) is the axis of the quaternion q,
+        where mod(q) is the magnitude of the quaternion.
 
         Returns
         =======
@@ -1148,6 +1150,7 @@ class Quaternion(Expr):
     def mensor(self):
         """
         Returns the mensor of the quaternion.
+        mensor is the log of the norm.
 
         Returns
         =======
@@ -1165,6 +1168,11 @@ class Quaternion(Expr):
         >>> q = Quaternion(0, 2, 2, 0)
         >>> q.mensor()
         log(2*sqrt(2))
+
+        See Also
+        ========
+
+        norm
 
         """
 
