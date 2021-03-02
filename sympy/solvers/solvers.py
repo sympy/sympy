@@ -905,8 +905,16 @@ def solve(f, *symbols, **flags):
     exclude = flags.pop('exclude', set())
     as_set = flags.get('set', False)
 
+    # _solve() and _solve_system() are the two main solvers where the processed equation
+    # f is passed to. _solve() can only deal with single expression. _solve_system()
+    # can deal with a system of equations. For example, in case of solve(f(x), x),
+    # the expression f(x) will be passed to _solve(), whereas in case of
+    # solve([f(x), g(x)], x) the expression will be passed to _solve_system()
+    # The purpose of bare_f is to decide whether the expression is to be
+    # passed to _solve() or _solve_system(). bare_f is set to False if the
+    # expression is to be passed to _solve_system() and True if _solve()
 
-    if iterable(f):
+    if iterable(f): # iterable expression implies the possible existence of system of equations like [f(x,y), g(x,y)]
         bare_f = False
     else:
         f = [f]
@@ -996,7 +1004,7 @@ def solve(f, *symbols, **flags):
     # Canonicalise Eqs
     f = [_collapse_eq_to_expr(fi) for fi in f]
 
-    # This is changing bare_f so that f is passed to _solve_system
+    # This is changing bare_f so that matrices are passed to _solve_system
     if any(fi.is_Matrix for fi in f):
         bare_f = False
 
@@ -1013,6 +1021,8 @@ def solve(f, *symbols, **flags):
 
     for i, fi in enumerate(f):
         # if we can split it into real and imaginary parts then do so
+        # For e.g., if f=solve(x + 3 + y*I), then f will be modified to in this block [x+3, y]
+        # Hence, bare_f is also changed as we get a system of two equations from a single equation
         freei = f[i].free_symbols
         if freei and all(s.is_extended_real or s.is_imaginary for s in freei):
             fr, fi = f[i].as_real_imag()
@@ -1048,6 +1058,11 @@ def solve(f, *symbols, **flags):
         f[i] = fi
 
     # see if re(s) or im(s) appear
+    # if theyappear, the expression is modified so that we get a solution
+    # for s too, along with both re(s) and im(s). For example, f = [re(x) - 1, im(x) - 2]
+    # is modified to [re(x) - 1, im(x) - 2, x - re(x) - im(x)] in this block and as the
+    # final solution we get [{x: 1 + 2*I, re(x): 1, im(x): 2}].
+    # Since we are solving for a system of 3 equations, bare_f is changed to False.
     freim = [fi for fi in f if fi.has(re, im)]
     if freim:
         irf = []
@@ -1066,6 +1081,7 @@ def solve(f, *symbols, **flags):
             if bare_f:
                 bare_f = False
             flags['dict'] = True
+
     # end of real/imag handling  -----------------------------
 
     symbols = list(uniq(symbols))
