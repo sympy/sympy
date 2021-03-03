@@ -322,7 +322,7 @@ class ReferenceFrame:
         raise ValueError(msg.format(connect_type[num], self.name, other.name))
 
     def _w_diff_dcm(self, otherframe):
-        """Angular velocity from time differentiating the DCM. """        
+        """Angular velocity from time differentiating the DCM. """
         from sympy.physics.vector.functions import TIME
         dcm2diff = otherframe.dcm(self)
         diffed = dcm2diff.diff(TIME)
