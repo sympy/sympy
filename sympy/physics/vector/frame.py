@@ -322,7 +322,7 @@ class ReferenceFrame:
         raise ValueError(msg.format(connect_type[num], self.name, other.name))
 
     def _w_diff_dcm(self, otherframe):
-        """Angular velocity from time differentiating the DCM. """
+        """Angular velocity from time differentiating the DCM. """        
         from sympy.physics.vector.functions import TIME
         dcm2diff = otherframe.dcm(self)
         diffed = dcm2diff.diff(TIME)
@@ -607,7 +607,7 @@ class ReferenceFrame:
 
         """
 
-        from sympy.physics.vector.functions import dynamicsymbols
+        from sympy.physics.vector.functions import dynamicsymbols, TIME
         _check_frame(parent)
 
         amount = sympify(angle)
@@ -628,7 +628,7 @@ class ReferenceFrame:
 
         self._dcm(parent, parent_orient_axis)
 
-        thetad = (amount).diff(dynamicsymbols._t)
+        thetad = (amount).diff(TIME)
         wvec = thetad*axis.express(parent).normalize()
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
@@ -1005,7 +1005,7 @@ class ReferenceFrame:
 
         """
 
-        from sympy.physics.vector.functions import dynamicsymbols
+        from sympy.physics.vector.functions import dynamicsymbols, TIME
         _check_frame(parent)
 
         numbers = list(numbers)
@@ -1030,7 +1030,7 @@ class ReferenceFrame:
 
         self._dcm(parent, parent_orient_quaternion)
 
-        t = dynamicsymbols._t
+        t = TIME
         q0, q1, q2, q3 = numbers
         q0d = diff(q0, t)
         q1d = diff(q1, t)
