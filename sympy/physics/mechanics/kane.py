@@ -210,8 +210,8 @@ class KanesMethod:
             self._k_nh = (vel - self._f_nh).jacobian(self.u)
             # If no acceleration constraints given, calculate them.
             if not acc:
-                _f_dnh = (self._k_nh.diff(dynamicsymbols._t) * self.u +
-                          self._f_nh.diff(dynamicsymbols._t))
+                _f_dnh = (self._k_nh.diff(TIME) * self.u +
+                          self._f_nh.diff(TIME))
                 if self._qdot_u_map is not None:
                     _f_dnh = msubs(_f_dnh, self._qdot_u_map)
                 self._f_dnh = _f_dnh
@@ -450,7 +450,7 @@ class KanesMethod:
 
         # Form dictionary to set auxiliary speeds & their derivatives to 0.
         uaux = self._uaux
-        uauxdot = uaux.diff(dynamicsymbols._t)
+        uauxdot = uaux.diff(TIME)
         uaux_zero = {i: 0 for i in Matrix([uaux, uauxdot])}
 
         # Checking for dynamic symbols outside the dynamic differential
