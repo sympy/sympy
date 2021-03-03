@@ -508,6 +508,7 @@ def test_different_time_symbol():
     # Set it back to the original so no other functions in this file are
     # affected.
     sympy.physics.vector.functions.TIME = t
+    assert q.diff(TIME) == 0
 
 
 def test_dynamicsymbols():
