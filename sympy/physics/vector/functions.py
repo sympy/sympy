@@ -632,7 +632,7 @@ def dynamicsymbols(names, level=0,**assumptions):
 
     """
     esses = symbols(names, cls=Function,**assumptions)
-    t = dynamicsymbols._t
+    t = TIME
     if iterable(esses):
         esses = [reduce(diff, [t] * level, e(t)) for e in esses]
         return esses
@@ -642,5 +642,6 @@ def dynamicsymbols(names, level=0,**assumptions):
 
 # TODO : _t should be removed in the future, but there is a lot of code in the
 # wild accessing it even though it was technically "private".
+# NOTE : dynamicsymbols._t can't be updated, to update time variable update `TIME` .
 dynamicsymbols._t = TIME
 dynamicsymbols._str = '\''

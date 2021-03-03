@@ -496,8 +496,7 @@ def test_different_time_symbol_old():
     x = Symbol('x')
     dynamicsymbols._t = x
     q = dynamicsymbols('q')
-    assert q.diff(x) == Derivative(Function('q')(x), x)
-
+    assert q.diff(x) != Derivative(Function('q')(x), x) #dynamicsymbos._t can't be updated
 
 def test_different_time_symbol():
     import sympy.physics.vector.functions
