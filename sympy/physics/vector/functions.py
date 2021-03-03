@@ -627,7 +627,7 @@ def dynamicsymbols(names, level=0):
 
     """
     esses = symbols(names, cls=Function)
-    t = TIME
+    t = dynamicsymbols._t
     if iterable(esses):
         esses = [reduce(diff, [t] * level, e(t)) for e in esses]
         return esses
