@@ -607,7 +607,7 @@ class ReferenceFrame:
 
         """
 
-        from sympy.physics.vector.functions import dynamicsymbols, TIME
+        from sympy.physics.vector.functions import TIME
         _check_frame(parent)
 
         amount = sympify(angle)
@@ -1005,7 +1005,7 @@ class ReferenceFrame:
 
         """
 
-        from sympy.physics.vector.functions import dynamicsymbols, TIME
+        from sympy.physics.vector.functions import TIME
         _check_frame(parent)
 
         numbers = list(numbers)
