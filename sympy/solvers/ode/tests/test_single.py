@@ -263,7 +263,7 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
 
             if not (checkodesol_too_slow and ON_TRAVIS):
                 if not checkodesol_XFAIL:
-                    if checkodesol(eq, dsolve_sol, solve_for_func=False) != expected_checkodesol:
+                    if checkodesol(eq, func, dsolve_sol, solve_for_func=False) != expected_checkodesol:
                         result['unsolve_list'] = example
                         xpass = False
                         message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
@@ -1510,6 +1510,7 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
         'eq': Eq( u(t).diff(t,t) + R /L*u(t).diff(t) + 1/(L*C)*u(t), alpha),
         'sol': [Eq(u(t), C*L*alpha + C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L))
         + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)))],
+        'func': u(t)
     },
 
     'undet_39': {
