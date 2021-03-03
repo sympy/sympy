@@ -42,6 +42,7 @@ def test_function_range():
     assert function_range(cos(x), x, Interval(-oo, -4)
         ) == Interval(-1, 1)
     assert function_range(cos(x), x, S.EmptySet) == S.EmptySet
+    assert function_range(x/sqrt(x**2+1), x, S.Reals) == Interval.open(-1,1)
     raises(NotImplementedError, lambda : function_range(
         exp(x)*(sin(x) - cos(x))/2 - x, x, S.Reals))
     raises(NotImplementedError, lambda : function_range(
@@ -258,6 +259,7 @@ def test_maximum():
     assert maximum(abs(a**3 + a), a, Interval(0, 2)) == 10
     assert maximum(abs(60*a**3 + 24*a), a, Interval(0, 2)) == 528
     assert maximum(abs(12*a*(5*a**2 + 2)), a, Interval(0, 2)) == 528
+    assert maximum(x/sqrt(x**2+1), x, S.Reals) == 1
 
     raises(ValueError, lambda : maximum(sin(x), x, S.EmptySet))
     raises(ValueError, lambda : maximum(log(cos(x)), x, S.EmptySet))
@@ -286,6 +288,7 @@ def test_minimum():
         ) is S.NegativeOne
     assert minimum(cos(x)-sin(x), x, S.Reals) == -sqrt(2)
     assert minimum(y, x, S.Reals) == y
+    assert minimum(x/sqrt(x**2+1), x, S.Reals) == -1
 
     raises(ValueError, lambda : minimum(sin(x), x, S.EmptySet))
     raises(ValueError, lambda : minimum(log(cos(x)), x, S.EmptySet))

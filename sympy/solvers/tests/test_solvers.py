@@ -315,6 +315,13 @@ def test_issue_7190():
     assert solve(log(x-3) + log(x+3), x) == [sqrt(10)]
 
 
+def test_issue_21004():
+    x = symbols('x')
+    f = x/sqrt(x**2+1)
+    f_diff = f.diff(x)
+    assert solve(f_diff, x) == []
+
+
 def test_linear_system():
     x, y, z, t, n = symbols('x, y, z, t, n')
 
