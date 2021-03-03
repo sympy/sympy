@@ -1,7 +1,6 @@
 from sympy.strategies.branch.core import (exhaust, debug, multiplex,
         condition, notempty, chain, onaction, sfilter, yieldify, do_one,
         identity)
-from sympy.core.compatibility import get_function_name, range
 
 def posdec(x):
     if x > 0:
@@ -26,8 +25,7 @@ def inc(x):
     yield x + 1
 
 def one_to_n(n):
-    for i in range(n):
-        yield i
+    yield from range(n)
 
 def test_exhaust():
     brl = exhaust(branch5)
@@ -36,14 +34,14 @@ def test_exhaust():
     assert set(brl(5)) == {0, 10}
 
 def test_debug():
-    from sympy.core.compatibility import StringIO
+    from io import StringIO
     file = StringIO()
     rl = debug(posdec, file)
     list(rl(5))
     log = file.getvalue()
     file.close()
 
-    assert get_function_name(posdec) in log
+    assert posdec.__name__ in log
     assert '5' in log
     assert '4' in log
 
@@ -56,7 +54,7 @@ def test_multiplex():
 def test_condition():
     brl = condition(even, branch5)
     assert set(brl(4)) == set(branch5(4))
-    assert set(brl(5)) == set([])
+    assert set(brl(5)) == set()
 
 def test_sfilter():
     brl = sfilter(even, one_to_n)

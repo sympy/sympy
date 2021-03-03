@@ -1,6 +1,5 @@
 from sympy.matrices.expressions import MatrixExpr
 from sympy import MatrixBase, Dummy, Lambda, Function, FunctionClass
-from sympy.core.basic import Basic
 from sympy.core.sympify import sympify, _sympify
 
 
@@ -50,7 +49,7 @@ class ElementwiseApplyFunction(MatrixExpr):
         if not expr.is_Matrix:
             raise ValueError("{} must be a matrix instance.".format(expr))
 
-        if not isinstance(function, FunctionClass):
+        if not isinstance(function, (FunctionClass, Lambda)):
             d = Dummy('d')
             function = Lambda(d, function(d))
 
@@ -126,7 +125,9 @@ class ElementwiseApplyFunction(MatrixExpr):
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy import Identity
-        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct, CodegenArrayDiagonal
+        from sympy.tensor.array.expressions.array_expressions import ArrayContraction
+        from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
+        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
         from sympy.core.expr import ExprBuilder
 
         fdiff = self._get_function_fdiff()
@@ -144,10 +145,10 @@ class ElementwiseApplyFunction(MatrixExpr):
                     ptr2 = i.second_pointer
 
                 subexpr = ExprBuilder(
-                    CodegenArrayDiagonal,
+                    ArrayDiagonal,
                     [
                         ExprBuilder(
-                            CodegenArrayTensorProduct,
+                            ArrayTensorProduct,
                             [
                                 ewdiff,
                                 ptr1,
@@ -156,7 +157,7 @@ class ElementwiseApplyFunction(MatrixExpr):
                         ),
                         (0, 2) if iscolumn else (1, 4)
                     ],
-                    validator=CodegenArrayDiagonal._validate
+                    validator=ArrayDiagonal._validate
                 )
                 i._lines = [subexpr]
                 i._first_pointer_parent = subexpr.args[0].args
@@ -171,16 +172,16 @@ class ElementwiseApplyFunction(MatrixExpr):
                 newptr1 = Identity(ptr1.shape[1])
                 newptr2 = Identity(ptr2.shape[1])
                 subexpr = ExprBuilder(
-                    CodegenArrayContraction,
+                    ArrayContraction,
                     [
                         ExprBuilder(
-                            CodegenArrayTensorProduct,
+                            ArrayTensorProduct,
                             [ptr1, newptr1, ewdiff, ptr2, newptr2]
                         ),
                         (1, 2, 4),
                         (5, 7, 8),
                     ],
-                    validator=CodegenArrayContraction._validate
+                    validator=ArrayContraction._validate
                 )
                 i._first_pointer_parent = subexpr.args[0].args
                 i._first_pointer_index = 1

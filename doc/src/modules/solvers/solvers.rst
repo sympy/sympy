@@ -31,25 +31,21 @@ so solving x**2 == 1 translates into the following code::
 The first argument for :func:`~sympy.solvers.solvers.solve` is an equation (equaled to zero) and the second argument
 is the symbol that we want to solve the equation for.
 
-.. autofunction:: sympy.solvers.solvers.solve
+.. autofunction:: sympy.solvers.solvers::solve
 
-.. autofunction:: sympy.solvers.solvers.solve_linear
+.. autofunction:: sympy.solvers.solvers::solve_linear
 
-.. autofunction:: sympy.solvers.solvers.solve_linear_system
+.. autofunction:: sympy.solvers.solvers::solve_linear_system
 
-.. autofunction:: sympy.solvers.solvers.solve_linear_system_LU
+.. autofunction:: sympy.solvers.solvers::solve_linear_system_LU
 
-.. autofunction:: sympy.solvers.solvers.solve_undetermined_coeffs
+.. autofunction:: sympy.solvers.solvers::solve_undetermined_coeffs
 
-.. autofunction:: sympy.solvers.solvers.nsolve
+.. autofunction:: sympy.solvers.solvers::nsolve
 
-.. autofunction:: sympy.solvers.solvers.check_assumptions
+.. autofunction:: sympy.solvers.solvers::checksol
 
-.. autofunction:: sympy.solvers.solvers.failing_assumptions
-
-.. autofunction:: sympy.solvers.solvers.checksol
-
-.. autofunction:: sympy.solvers.solvers.unrad
+.. autofunction:: sympy.solvers.solvers::unrad
 
 Ordinary Differential equations (ODEs)
 --------------------------------------
@@ -64,7 +60,7 @@ See :ref:`pde-docs`.
 Deutils (Utilities for solving ODE's and PDE's)
 -----------------------------------------------
 
-.. autofunction:: sympy.solvers.deutils.ode_order
+.. autofunction:: sympy.solvers.deutils::ode_order
 
 Recurrence Equations
 --------------------
@@ -82,9 +78,9 @@ Recurrence Equations
 Systems of Polynomial Equations
 -------------------------------
 
-.. autofunction:: sympy.solvers.polysys.solve_poly_system
+.. autofunction:: sympy.solvers.polysys::solve_poly_system
 
-.. autofunction:: sympy.solvers.polysys.solve_triangulated
+.. autofunction:: sympy.solvers.polysys::solve_triangulated
 
 Diophantine Equations (DEs)
 ---------------------------

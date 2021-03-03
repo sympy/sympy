@@ -1,4 +1,5 @@
 from sympy.assumptions.ask import Q
+from sympy.assumptions.refine import refine
 from sympy.core.numbers import oo
 from sympy.core.relational import Equality, Eq, Ne
 from sympy.core.singleton import S
@@ -15,13 +16,15 @@ from sympy.logic.boolalg import (
     eliminate_implications, is_nnf, is_cnf, is_dnf, simplify_logic,
     to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
     BooleanAtom, is_literal, term_to_integer, integer_to_term,
-    truth_table, as_Boolean)
+    truth_table, as_Boolean, to_anf, is_anf, distribute_xor_over_and,
+    anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial,
+    _check_pair, _convert_to_varsSOP, _convert_to_varsPOS)
 from sympy.assumptions.cnf import CNF
 
-from sympy.utilities.pytest import raises, XFAIL, slow
-from sympy.utilities import cartes
+from sympy.testing.pytest import raises, XFAIL, slow
+from sympy.utilities.iterables import cartes
 
-from itertools import combinations
+from itertools import combinations, permutations
 
 A, B, C, D = symbols('A:D')
 a, b, c, d, e, w, x, y, z = symbols('a:e w:z')
@@ -59,7 +62,9 @@ def test_And():
     e = A > 1
     assert And(e, e.canonical) == e.canonical
     g, l, ge, le = A > B, B < A, A >= B, B <= A
-    assert And(g, l, ge, le) == And(l, le)
+    assert And(g, l, ge, le) == And(ge, g)
+    assert {And(*i) for i in permutations((l,g,le,ge))} == {And(ge, g)}
+    assert And(And(Eq(a, 0), Eq(b, 0)), And(Ne(a, 0), Eq(c, 0))) is false
 
 
 def test_Or():
@@ -249,14 +254,14 @@ def test_simplification():
     dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]
     assert (
         SOPform([w, x, y, z], minterms, dontcares) ==
-        Or(And(Not(w), z), And(y, z)))
+        Or(And(y, z), And(Not(w), Not(x))))
     assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
 
     minterms = [1, 3, 7, 11, 15]
     dontcares = [0, 2, 5]
     assert (
         SOPform([w, x, y, z], minterms, dontcares) ==
-        Or(And(Not(w), z), And(y, z)))
+        Or(And(y, z), And(Not(w), Not(x))))
     assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
 
     minterms = [1, [0, 0, 1, 1], 7, [1, 0, 1, 1],
@@ -264,14 +269,14 @@ def test_simplification():
     dontcares = [0, [0, 0, 1, 0], 5]
     assert (
         SOPform([w, x, y, z], minterms, dontcares) ==
-        Or(And(Not(w), z), And(y, z)))
+        Or(And(y, z), And(Not(w), Not(x))))
     assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
 
     minterms = [1, {y: 1, z: 1}]
     dontcares = [0, [0, 0, 1, 0], 5]
     assert (
         SOPform([w, x, y, z], minterms, dontcares) ==
-        Or(And(Not(w), z), And(y, z)))
+        Or(And(y, z), And(Not(w), Not(x))))
     assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
 
 
@@ -380,11 +385,21 @@ def test_bool_symbol():
 
 
 def test_is_boolean():
-    assert true.is_Boolean
+    assert isinstance(True, Boolean) is False
+    assert isinstance(true, Boolean) is True
+    assert 1 == True
+    assert 1 != true
+    assert (1 == true) is False
+    assert 0 == False
+    assert 0 != false
+    assert (0 == false) is False
+    assert true.is_Boolean is True
     assert (A & B).is_Boolean
     assert (A | B).is_Boolean
     assert (~A).is_Boolean
     assert (A ^ B).is_Boolean
+    assert A.is_Boolean != isinstance(A, Boolean)
+    assert isinstance(A, Boolean)
 
 
 def test_subs():
@@ -458,6 +473,28 @@ def test_disjuncts():
 def test_distribute():
     assert distribute_and_over_or(Or(And(A, B), C)) == And(Or(A, C), Or(B, C))
     assert distribute_or_over_and(And(A, Or(B, C))) == Or(And(A, B), And(A, C))
+    assert distribute_xor_over_and(And(A, Xor(B, C))) == Xor(And(A, B), And(A, C))
+
+
+def test_to_anf():
+    x, y, z = symbols('x,y,z')
+    assert to_anf(And(x, y)) == And(x, y)
+    assert to_anf(Or(x, y)) == Xor(x, y, And(x, y))
+    assert to_anf(Or(Implies(x, y), And(x, y), y)) == \
+            Xor(x, True, x & y, remove_true=False)
+    assert to_anf(Or(Nand(x, y), Nor(x, y), Xnor(x, y), Implies(x, y))) == True
+    assert to_anf(Or(x, Not(y), Nor(x,z), And(x, y), Nand(y, z))) == \
+            Xor(True, And(y, z), And(x, y, z), remove_true=False)
+    assert to_anf(Xor(x, y)) == Xor(x, y)
+    assert to_anf(Not(x)) == Xor(x, True, remove_true=False)
+    assert to_anf(Nand(x, y)) == Xor(True, And(x, y), remove_true=False)
+    assert to_anf(Nor(x, y)) == Xor(x, y, True, And(x, y), remove_true=False)
+    assert to_anf(Implies(x, y)) == Xor(x, True, And(x, y), remove_true=False)
+    assert to_anf(Equivalent(x, y)) == Xor(x, y, True, remove_true=False)
+    assert to_anf(Nand(x | y, x >> y), deep=False) == \
+            Xor(True, And(Or(x, y), Implies(x, y)), remove_true=False)
+    assert to_anf(Nor(x ^ y, x & y), deep=False) == \
+            Xor(True, Or(Xor(x, y), And(x, y)), remove_true=False)
 
 
 def test_to_nnf():
@@ -503,6 +540,24 @@ def test_to_cnf():
         And(Or(Not(B), A), Or(Not(C), A), Or(B, C, Not(A)))
     assert to_cnf(A + 1) == A + 1
 
+
+def test_issue_18904():
+    x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15 = symbols('x1:16')
+    eq = (( x1 & x2 & x3 & x4 & x5 & x6 & x7 & x8 & x9 )  |
+        ( x1 & x2 & x3 & x4 & x5 & x6 & x7 & x10 & x9 )  |
+        ( x1 & x11 & x3 & x12 & x5 & x13 & x14 & x15 & x9 ))
+    assert is_cnf(to_cnf(eq))
+    raises(ValueError, lambda: to_cnf(eq, simplify=True))
+    for f, t in zip((And, Or), (to_cnf, to_dnf)):
+        eq = f(x1, x2, x3, x4, x5, x6, x7, x8, x9)
+        raises(ValueError, lambda: to_cnf(eq, simplify=True))
+        assert t(eq, simplify=True, force=True) == eq
+
+
+def test_issue_9949():
+    assert is_cnf(to_cnf((b > -5) | (a > 2) & (a < 4)))
+
+
 def test_to_CNF():
     assert CNF.CNF_to_cnf(CNF.to_CNF(~(B | C))) == to_cnf(~(B | C))
     assert CNF.CNF_to_cnf(CNF.to_CNF((A & B) | C)) == to_cnf((A & B) | C)
@@ -540,6 +595,17 @@ def test_to_int_repr():
         sorted_recursive([[1, 2], [1, 3]])
     assert sorted_recursive(to_int_repr([x | y, z | ~x], [x, y, z])) == \
         sorted_recursive([[1, 2], [3, -1]])
+
+
+def test_is_anf():
+    x, y = symbols('x,y')
+    assert is_anf(true) is True
+    assert is_anf(false) is True
+    assert is_anf(x) is True
+    assert is_anf(And(x, y)) is True
+    assert is_anf(Xor(x, y, And(x, y))) is True
+    assert is_anf(Xor(x, y, Or(x, y))) is False
+    assert is_anf(Xor(Not(x), y)) is False
 
 
 def test_is_nnf():
@@ -629,6 +695,8 @@ def test_is_literal():
     assert is_literal(Not(Q.zero(A))) is True
     assert is_literal(Or(A, B)) is False
     assert is_literal(And(Q.zero(A), Q.zero(B))) is False
+    assert is_literal(x < 3)
+    assert not is_literal(x + y < 3)
 
 
 def test_operators():
@@ -913,19 +981,19 @@ def test_as_Boolean():
 
 
 def test_binary_symbols():
-    assert ITE(x < 1, y, z).binary_symbols == set((y, z))
+    assert ITE(x < 1, y, z).binary_symbols == {y, z}
     for f in (Eq, Ne):
         assert f(x, 1).binary_symbols == set()
-        assert f(x, True).binary_symbols == set([x])
-        assert f(x, False).binary_symbols == set([x])
+        assert f(x, True).binary_symbols == {x}
+        assert f(x, False).binary_symbols == {x}
     assert S.true.binary_symbols == set()
     assert S.false.binary_symbols == set()
-    assert x.binary_symbols == set([x])
-    assert And(x, Eq(y, False), Eq(z, 1)).binary_symbols == set([x, y])
+    assert x.binary_symbols == {x}
+    assert And(x, Eq(y, False), Eq(z, 1)).binary_symbols == {x, y}
     assert Q.prime(x).binary_symbols == set()
     assert Q.is_true(x < 1).binary_symbols == set()
-    assert Q.is_true(x).binary_symbols == set([x])
-    assert Q.is_true(Eq(x, True)).binary_symbols == set([x])
+    assert Q.is_true(x).binary_symbols == {x}
+    assert Q.is_true(Eq(x, True)).binary_symbols == {x}
     assert Q.prime(x).binary_symbols == set()
 
 
@@ -1088,3 +1156,92 @@ def test_issue_17530():
     raises(TypeError, lambda: Or(x + y < 0, x - y < 0).subs(r))
     raises(TypeError, lambda: And(x + y > 0, x - y < 0).subs(r))
     raises(TypeError, lambda: And(x + y > 0, x - y < 0).subs(r))
+
+
+def test_anf_coeffs():
+    assert anf_coeffs([1, 0]) == [1, 1]
+    assert anf_coeffs([0, 0, 0, 1]) == [0, 0, 0, 1]
+    assert anf_coeffs([0, 1, 1, 1]) == [0, 1, 1, 1]
+    assert anf_coeffs([1, 1, 1, 0]) == [1, 0, 0, 1]
+    assert anf_coeffs([1, 0, 0, 0]) == [1, 1, 1, 1]
+    assert anf_coeffs([1, 0, 0, 1]) == [1, 1, 1, 0]
+    assert anf_coeffs([1, 1, 0, 1]) == [1, 0, 1, 1]
+
+
+def test_ANFform():
+    x, y = symbols('x,y')
+    assert ANFform([x], [1, 1]) == True
+    assert ANFform([x], [0, 0]) == False
+    assert ANFform([x], [1, 0]) == Xor(x, True, remove_true=False)
+    assert ANFform([x, y], [1, 1, 1, 0]) == \
+        Xor(True, And(x, y), remove_true=False)
+
+
+def test_bool_minterm():
+    x, y = symbols('x,y')
+    assert bool_minterm(3, [x, y]) == And(x, y)
+    assert bool_minterm([1, 0], [x, y]) == And(Not(y), x)
+
+
+def test_bool_maxterm():
+    x, y = symbols('x,y')
+    assert bool_maxterm(2, [x, y]) == Or(Not(x), y)
+    assert bool_maxterm([0, 1], [x, y]) == Or(Not(y), x)
+
+
+def test_bool_monomial():
+    x, y = symbols('x,y')
+    assert bool_monomial(1, [x, y]) == y
+    assert bool_monomial([1, 1], [x, y]) == And(x, y)
+
+
+def test_check_pair():
+    assert _check_pair([0, 1, 0], [0, 1, 1]) == 2
+    assert _check_pair([0, 1, 0], [1, 1, 1]) == -1
+
+
+def test_convert_to_varsSOP():
+    assert _convert_to_varsSOP([0, 1, 0], [x, y, z]) ==  And(Not(x), y, Not(z))
+    assert _convert_to_varsSOP([3, 1, 0], [x, y, z]) ==  And(y, Not(z))
+
+
+def test_convert_to_varsPOS():
+    assert _convert_to_varsPOS([0, 1, 0], [x, y, z]) == Or(x, Not(y), z)
+    assert _convert_to_varsPOS([3, 1, 0], [x, y, z]) ==  Or(Not(y), z)
+
+
+def test_refine():
+    # relational
+    assert not refine(x < 0, ~Q.is_true(x < 0))
+    assert refine(x < 0, Q.is_true(x < 0))
+    assert refine(x < 0, Q.is_true(0 > x)) == True
+    assert refine(x < 0, Q.is_true(y < 0)) == (x < 0)
+    assert not refine(x <= 0, ~Q.is_true(x <= 0))
+    assert refine(x <= 0,  Q.is_true(x <= 0))
+    assert refine(x <= 0,  Q.is_true(0 >= x)) == True
+    assert refine(x <= 0,  Q.is_true(y <= 0)) == (x <= 0)
+    assert not refine(x > 0, ~Q.is_true(x > 0))
+    assert refine(x > 0,  Q.is_true(x > 0))
+    assert refine(x > 0,  Q.is_true(0 < x)) == True
+    assert refine(x > 0,  Q.is_true(y > 0)) == (x > 0)
+    assert not refine(x >= 0, ~Q.is_true(x >= 0))
+    assert refine(x >= 0,  Q.is_true(x >= 0))
+    assert refine(x >= 0,  Q.is_true(0 <= x)) == True
+    assert refine(x >= 0,  Q.is_true(y >= 0)) == (x >= 0)
+    assert not refine(Eq(x, 0), ~Q.is_true(Eq(x, 0)))
+    assert refine(Eq(x, 0),  Q.is_true(Eq(x, 0)))
+    assert refine(Eq(x, 0),  Q.is_true(Eq(0, x))) == True
+    assert refine(Eq(x, 0),  Q.is_true(Eq(y, 0))) == Eq(x, 0)
+    assert not refine(Ne(x, 0), ~Q.is_true(Ne(x, 0)))
+    assert refine(Ne(x, 0), Q.is_true(Ne(0, x))) == True
+    assert refine(Ne(x, 0),  Q.is_true(Ne(x, 0)))
+    assert refine(Ne(x, 0),  Q.is_true(Ne(y, 0))) == (Ne(x, 0))
+
+    # boolean functions
+    assert refine(And(x > 0, y > 0), Q.is_true(x > 0)) == (y > 0)
+    assert refine(And(x > 0, y > 0), Q.is_true(x > 0) & Q.is_true(y > 0)) == True
+
+    # predicates
+    assert refine(Q.positive(x), Q.positive(x)) == True
+    assert refine(Q.positive(x), Q.negative(x)) == False
+    assert refine(Q.positive(x), Q.real(x)) == Q.positive(x)

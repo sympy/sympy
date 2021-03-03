@@ -5,7 +5,7 @@ from sympy.sets.contains import Contains
 from sympy.sets.fancysets import Interval
 from sympy.sets.powerset import PowerSet
 from sympy.sets.sets import FiniteSet
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 
 def test_powerset_creation():

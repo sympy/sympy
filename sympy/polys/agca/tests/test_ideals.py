@@ -2,7 +2,7 @@
 
 from sympy.polys import QQ, ilex
 from sympy.abc import x, y, z
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_ideal_operations():

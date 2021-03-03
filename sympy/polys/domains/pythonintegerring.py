@@ -1,6 +1,5 @@
 """Implementation of :class:`PythonIntegerRing` class. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.groundtypes import (
     PythonInteger, SymPyInteger, python_sqrt,
@@ -12,7 +11,11 @@ from sympy.utilities import public
 
 @public
 class PythonIntegerRing(IntegerRing):
-    """Integer ring based on Python's ``int`` type. """
+    """Integer ring based on Python's ``int`` type.
+
+    This will be used as :ref:`ZZ` if ``gmpy`` and ``gmpy2`` are not
+    installed. Elements are instances of the standard Python ``int`` type.
+    """
 
     dtype = PythonInteger
     zero = dtype(0)

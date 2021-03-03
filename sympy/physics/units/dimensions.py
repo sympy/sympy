@@ -10,22 +10,23 @@ no time dimension (but a velocity dimension instead) - in the basis - so the
 question of adding time to length has no meaning.
 """
 
-from __future__ import division
+from typing import Dict as tDict
 
 import collections
+from functools import reduce
 
-from sympy import Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict, default_sort_key
-from sympy.core.compatibility import reduce, string_types
+from sympy import (Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict,
+    default_sort_key)
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
-class _QuantityMapper(object):
+class _QuantityMapper:
 
-    _quantity_scale_factors_global = {}
-    _quantity_dimensional_equivalence_map_global = {}
-    _quantity_dimension_global = {}
+    _quantity_scale_factors_global = {}  # type: tDict[Expr, Expr]
+    _quantity_dimensional_equivalence_map_global = {}  # type: tDict[Expr, Expr]
+    _quantity_dimension_global = {}  # type: tDict[Expr, Expr]
 
     def __init__(self, *args, **kwargs):
         self._quantity_dimension_map = {}
@@ -132,7 +133,8 @@ class Dimension(Expr):
 
     _op_priority = 13.0
 
-    _dimensional_dependencies = dict()
+    # XXX: This doesn't seem to be used anywhere...
+    _dimensional_dependencies = dict()  # type: ignore
 
     is_commutative = True
     is_number = False
@@ -142,7 +144,7 @@ class Dimension(Expr):
 
     def __new__(cls, name, symbol=None):
 
-        if isinstance(name, string_types):
+        if isinstance(name, str):
             name = Symbol(name)
         else:
             name = sympify(name)
@@ -150,7 +152,7 @@ class Dimension(Expr):
         if not isinstance(name, Expr):
             raise TypeError("Dimension name needs to be a valid math expression")
 
-        if isinstance(symbol, string_types):
+        if isinstance(symbol, str):
             symbol = Symbol(symbol)
         elif symbol is not None:
             assert isinstance(symbol, Symbol)
@@ -203,7 +205,7 @@ class Dimension(Expr):
                 raise TypeError("cannot sum dimension and quantity")
             if isinstance(other, Dimension) and self == other:
                 return self
-            return super(Dimension, self).__add__(other)
+            return super().__add__(other)
         return self
 
     def __radd__(self, other):
@@ -235,20 +237,17 @@ class Dimension(Expr):
                 return Dimension(self.name*other.name)
             if not other.free_symbols:  # other.is_number cannot be used
                 return self
-            return super(Dimension, self).__mul__(other)
+            return super().__mul__(other)
         return self
 
     def __rmul__(self, other):
         return self.__mul__(other)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         return self*Pow(other, -1)
 
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         return other * pow(self, -1)
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     @classmethod
     def _from_dimensional_dependencies(cls, dependencies):
@@ -258,7 +257,7 @@ class Dimension(Expr):
 
     @classmethod
     def _get_dimensional_dependencies_for_name(cls, name):
-        from sympy.physics.units.unitsystem.si import dimsys_default
+        from sympy.physics.units.systems.si import dimsys_default
         SymPyDeprecationWarning(
             deprecated_since_version="1.2",
             issue=13336,
@@ -268,7 +267,7 @@ class Dimension(Expr):
         return dimsys_default.get_dimensional_dependencies(name)
 
     @property
-    def is_dimensionless(self, dimensional_dependencies=None):
+    def is_dimensionless(self):
         """
         Check if the dimension object really has a dimension.
 
@@ -276,14 +275,15 @@ class Dimension(Expr):
         """
         if self.name == 1:
             return True
-        if dimensional_dependencies is None:
-            from sympy.physics.units.unitsystem.si import dimsys_default
-            SymPyDeprecationWarning(
-                deprecated_since_version="1.2",
-                issue=13336,
-                feature="wrong class",
-            ).warn()
-            dimensional_dependencies=dimsys_default
+
+        from sympy.physics.units.systems.si import dimsys_default
+        SymPyDeprecationWarning(
+            deprecated_since_version="1.2",
+            issue=13336,
+            feature="wrong class",
+        ).warn()
+        dimensional_dependencies=dimsys_default
+
         return dimensional_dependencies.get_dimensional_dependencies(self) == {}
 
     def has_integer_powers(self, dim_sys):
@@ -334,7 +334,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             ).warn()
 
         def parse_dim(dim):
-            if isinstance(dim, string_types):
+            if isinstance(dim, str):
                 dim = Dimension(Symbol(dim))
             elif isinstance(dim, Dimension):
                 pass
@@ -358,7 +358,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         def parse_dim_name(dim):
             if isinstance(dim, Dimension):
                 return dim.name
-            elif isinstance(dim, string_types):
+            elif isinstance(dim, str):
                 return Symbol(dim)
             elif isinstance(dim, Symbol):
                 return dim
@@ -382,7 +382,7 @@ class DimensionSystem(Basic, _QuantityMapper):
                 raise ValueError("Dimension %s both in base and derived" % dim)
             if dim.name not in dimensional_dependencies:
                 # TODO: should this raise a warning?
-                dimensional_dependencies[dim] = Dict({dim.name: 1})
+                dimensional_dependencies[dim.name] = Dict({dim.name: 1})
 
         base_dims.sort(key=default_sort_key)
         derived_dims.sort(key=default_sort_key)
@@ -406,6 +406,11 @@ class DimensionSystem(Basic, _QuantityMapper):
         return self.args[2]
 
     def _get_dimensional_dependencies_for_name(self, name):
+        if isinstance(name, Dimension):
+            name = name.name
+
+        if isinstance(name, str):
+            name = Symbol(name)
 
         if name.is_Symbol:
             # Dimensions not included in the dependencies are considered
@@ -425,6 +430,12 @@ class DimensionSystem(Basic, _QuantityMapper):
                     ret[k] += v
             return {k: v for (k, v) in ret.items() if v != 0}
 
+        if name.is_Add:
+            dicts = [get_for_name(i) for i in name.args]
+            if all([d == dicts[0] for d in dicts[1:]]):
+                return dicts[0]
+            raise TypeError("Only equivalent dimensions can be added or subtracted.")
+
         if name.is_Pow:
             dim = get_for_name(name.base)
             return {k: v*name.exp for (k, v) in dim.items()}
@@ -441,12 +452,9 @@ class DimensionSystem(Basic, _QuantityMapper):
             else:
                 return get_for_name(result)
 
-    def get_dimensional_dependencies(self, name, mark_dimensionless=False):
-        if isinstance(name, Dimension):
-            name = name.name
-        if isinstance(name, string_types):
-            name = Symbol(name)
+        raise TypeError("Type {} not implemented for get_dimensional_dependencies".format(type(name)))
 
+    def get_dimensional_dependencies(self, name, mark_dimensionless=False):
         dimdep = self._get_dimensional_dependencies_for_name(name)
         if mark_dimensionless and dimdep == {}:
             return {'dimensionless': 1}
@@ -553,7 +561,7 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         List all canonical dimension names.
         """
-        dimset = set([])
+        dimset = set()
         for i in self.base_dims:
             dimset.update(set(self.get_dimensional_dependencies(i).keys()))
         return tuple(sorted(dimset, key=str))

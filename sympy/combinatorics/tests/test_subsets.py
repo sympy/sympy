@@ -1,5 +1,5 @@
 from sympy.combinatorics.subsets import Subset, ksubsets
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_subset():

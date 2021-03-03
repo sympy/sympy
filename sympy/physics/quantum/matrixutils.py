@@ -1,7 +1,5 @@
 """Utilities to deal with sympy.Matrix, numpy and scipy.sparse."""
 
-from __future__ import print_function, division
-
 from sympy import MatrixBase, I, Expr, Integer
 from sympy.matrices import eye, zeros
 from sympy.external import import_module
@@ -27,14 +25,14 @@ __all__ = [
 
 np = import_module('numpy')
 if not np:
-    class numpy_ndarray(object):
+    class numpy_ndarray:
         pass
 else:
-    numpy_ndarray = np.ndarray
+    numpy_ndarray = np.ndarray  # type: ignore
 
-scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 if not scipy:
-    class scipy_sparse_matrix(object):
+    class scipy_sparse_matrix:
         pass
     sparse = None
 else:
@@ -42,10 +40,10 @@ else:
     # Try to find spmatrix.
     if hasattr(sparse, 'base'):
         # Newer versions have it under scipy.sparse.base.
-        scipy_sparse_matrix = sparse.base.spmatrix
+        scipy_sparse_matrix = sparse.base.spmatrix  # type: ignore
     elif hasattr(sparse, 'sparse'):
         # Older versions have it under scipy.sparse.sparse.
-        scipy_sparse_matrix = sparse.sparse.spmatrix
+        scipy_sparse_matrix = sparse.sparse.spmatrix  # type: ignore
 
 
 def sympy_to_numpy(m, **options):

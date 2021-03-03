@@ -1,9 +1,6 @@
 """Simple Harmonic Oscillator 1-Dimension"""
 
-from __future__ import print_function, division
-
 from sympy import sqrt, I, Symbol, Integer, S
-from sympy.core.compatibility import range
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.state import Bra, Ket, State
@@ -155,7 +152,7 @@ class RaisingOp(SHOOp):
     def _print_contents_pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
-        pform = pform**prettyForm(u'\N{DAGGER}')
+        pform = pform**prettyForm('\N{DAGGER}')
         return pform
 
     def _print_contents_latex(self, printer, *args):

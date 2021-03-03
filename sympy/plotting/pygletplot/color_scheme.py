@@ -1,12 +1,9 @@
-from __future__ import print_function, division
-
 from sympy import Basic, Symbol, symbols, lambdify
-from sympy.core.compatibility import range, string_types
 from .util import interpolate, rinterpolate, create_bounds, update_bounds
 from sympy.utilities.iterables import sift
 
 
-class ColorGradient(object):
+class ColorGradient:
     colors = [0.4, 0.4, 0.4], [0.9, 0.9, 0.9]
     intervals = 0.0, 1.0
 
@@ -46,7 +43,7 @@ class ColorGradient(object):
 default_color_schemes = {}  # defined at the bottom of this file
 
 
-class ColorScheme(object):
+class ColorScheme:
 
     def __init__(self, *args, **kwargs):
         self.args = args
@@ -54,7 +51,7 @@ class ColorScheme(object):
 
         if len(args) == 1 and not isinstance(args[0], Basic) and callable(args[0]):
             self.f = args[0]
-        elif len(args) == 1 and isinstance(args[0], string_types):
+        elif len(args) == 1 and isinstance(args[0], str):
             if args[0] in default_color_schemes:
                 cs = default_color_schemes[args[0]]
                 self.f, self.gradient = cs.f, cs.gradient.copy()

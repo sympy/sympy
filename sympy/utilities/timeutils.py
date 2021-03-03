@@ -1,14 +1,12 @@
 """Simple tools for timing functions' execution, when IPython is not available. """
 
-from __future__ import print_function, division
 
 import timeit
 import math
 
-from sympy.core.compatibility import range
 
 _scales = [1e0, 1e3, 1e6, 1e9]
-_units = [u's', u'ms', u'\N{GREEK SMALL LETTER MU}s', u'ns']
+_units = ['s', 'ms', '\N{GREEK SMALL LETTER MU}s', 'ns']
 
 
 def timed(func, setup="pass", limit=None):

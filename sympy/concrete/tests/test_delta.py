@@ -3,7 +3,7 @@ from sympy.concrete.delta import deltaproduct as dp, deltasummation as ds, _extr
 from sympy.core import Eq, S, symbols, oo
 from sympy.functions import KroneckerDelta as KD, Piecewise, piecewise_fold
 from sympy.logic import And
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 i, j, k, l, m = symbols("i j k l m", integer=True, finite=True)
 x, y = symbols("x y", commutative=False)

@@ -344,3 +344,10 @@ p.rubric {
     color: #2f441e;
     font-family: "Trebuchet MS", sans-serif;
 }
+
+/*
+To fit long MathJax equations inside the document body
+*/
+.MathJax_Display {
+    overflow: auto hidden;
+}

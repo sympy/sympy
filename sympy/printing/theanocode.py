@@ -1,6 +1,6 @@
-from __future__ import print_function, division
+from typing import Any, Dict
 
-from sympy.core.compatibility import range, is_sequence
+from sympy.core.compatibility import is_sequence
 from sympy.external import import_module
 from sympy.printing.printer import Printer
 import sympy
@@ -54,7 +54,7 @@ if theano:
             sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
             sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
             sympy.conjugate: tt.conj,
-            sympy.numbers.ImaginaryUnit: lambda:tt.complex(0,1),
+            sympy.core.numbers.ImaginaryUnit: lambda:tt.complex(0,1),
             # Matrices
             sympy.MatAdd: tt.Elemwise(ts.add),
             sympy.HadamardProduct: tt.Elemwise(ts.mul),
@@ -96,7 +96,7 @@ class TheanoPrinter(Printer):
 
     def __init__(self, *args, **kwargs):
         self.cache = kwargs.pop('cache', dict())
-        super(TheanoPrinter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _get_key(self, s, name=None, dtype=None, broadcastable=None):
         """ Get the cache key for a Sympy object.
@@ -300,7 +300,7 @@ class TheanoPrinter(Printer):
         return self._print(expr, dtypes=dtypes, broadcastables=broadcastables)
 
 
-global_cache = {}
+global_cache = {}  # type: Dict[Any, Any]
 
 
 def theano_code(expr, cache=None, **kwargs):
@@ -387,7 +387,8 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
     return {}
 
 
-def theano_function(inputs, outputs, scalar=False, **kwargs):
+def theano_function(inputs, outputs, scalar=False, *,
+        dim=None, dims=None, broadcastables=None, **kwargs):
     """
     Create a Theano function from SymPy expressions.
 
@@ -483,10 +484,7 @@ def theano_function(inputs, outputs, scalar=False, **kwargs):
     dtypes = kwargs.pop('dtypes', {})
 
     broadcastables = dim_handling(
-        inputs,
-        dim=kwargs.pop('dim', None),
-        dims=kwargs.pop('dims', None),
-        broadcastables=kwargs.pop('broadcastables', None),
+        inputs, dim=dim, dims=dims, broadcastables=broadcastables,
     )
 
     # Print inputs/outputs

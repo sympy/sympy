@@ -1,7 +1,5 @@
 """Solvers of systems of polynomial equations. """
 
-from __future__ import print_function, division
-
 from sympy.core import S
 from sympy.polys import Poly, groebner, roots
 from sympy.polys.polytools import parallel_poly_from_expr
@@ -19,6 +17,24 @@ class SolveFailed(Exception):
 def solve_poly_system(seq, *gens, **args):
     """
     Solve a system of polynomial equations.
+
+    Parameters
+    ==========
+
+    seq: a list/tuple/set
+        Listing all the equations that are needed to be solved
+    gens: generators
+        generators of the equations in seq for which we want the
+        solutions
+    args: Keyword arguments
+        Special options for solving the equations
+
+    Returns
+    =======
+
+    List[Tuple]
+        A List of tuples. Solutions for symbols that satisfy the
+        equations listed in seq
 
     Examples
     ========
@@ -49,6 +65,23 @@ def solve_poly_system(seq, *gens, **args):
 
 def solve_biquadratic(f, g, opt):
     """Solve a system of two bivariate quadratic polynomial equations.
+
+    Parameters
+    ==========
+
+    f: a single Expr or Poly
+        First equation
+    g: a single Expr or Poly
+        Second Equation
+    opt: an Options object
+        For specifying keyword arguments and generators
+
+    Returns
+    =======
+
+    List[Tuple]
+        A List of tuples. Solutions for symbols that satisfy the
+        equations listed in seq.
 
     Examples
     ========
@@ -124,6 +157,21 @@ def solve_generic(polys, opt):
     on the root finding algorithms. If no solutions were found, it
     means only that roots() failed, but the system is solvable. To
     overcome this difficulty use numerical algorithms instead.
+
+    Parameters
+    ==========
+
+    polys: a list/tuple/set
+        Listing all the polynomial equations that are needed to be solved
+    opt: an Options object
+        For specifying keyword arguments and generators
+
+    Returns
+    =======
+
+    List[Tuple]
+        A List of tuples. Solutions for symbols that satisfy the
+        equations listed in seq
 
     References
     ==========
@@ -252,6 +300,24 @@ def solve_triangulated(polys, *gens, **args):
     domain and then by iteratively computing polynomial factorizations in
     appropriately constructed algebraic extensions of the ground domain.
 
+    Parameters
+    ==========
+
+    polys: a list/tuple/set
+        Listing all the equations that are needed to be solved
+    gens: generators
+        generators of the equations in polys for which we want the
+        solutions
+    args: Keyword arguments
+        Special options for solving the equations
+
+    Returns
+    =======
+
+    List[Tuple]
+        A List of tuples. Solutions for symbols that satisfy the
+        equations listed in polys
+
     Examples
     ========
 
@@ -284,7 +350,7 @@ def solve_triangulated(polys, *gens, **args):
     dom = f.get_domain()
 
     zeros = f.ground_roots()
-    solutions = set([])
+    solutions = set()
 
     for zero in zeros:
         solutions.add(((zero,), dom))
@@ -293,7 +359,7 @@ def solve_triangulated(polys, *gens, **args):
     vars_seq = postfixes(gens[1:])
 
     for var, vars in zip(var_seq, vars_seq):
-        _solutions = set([])
+        _solutions = set()
 
         for values, dom in solutions:
             H, mapping = [], list(zip(vars, values))

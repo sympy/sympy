@@ -7,11 +7,11 @@ Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
 
-from __future__ import print_function, division
+from typing import Callable, Dict
 
 from sympy.core import S, Symbol, Rational, Integer, Add, Dummy
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import as_int, SYMPY_INTS, range
+from sympy.core.compatibility import as_int, SYMPY_INTS
 from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import E, pi
@@ -813,7 +813,7 @@ class harmonic(Function):
 
     # Generate one memoized Harmonic number-generating function for each
     # order and store it in a dictionary
-    _functions = {}
+    _functions = {}  # type: Dict[Integer, Callable[[int], Rational]]
 
     @classmethod
     def eval(cls, n, m=None):
@@ -900,7 +900,7 @@ class harmonic(Function):
 
         return self
 
-    def _eval_rewrite_as_tractable(self, n, m=1, **kwargs):
+    def _eval_rewrite_as_tractable(self, n, m=1, limitvar=None, **kwargs):
         from sympy import polygamma
         return self.rewrite(polygamma).rewrite("tractable", deep=True)
 
@@ -1081,8 +1081,8 @@ class catalan(Function):
     Examples
     ========
 
-    >>> from sympy import (Symbol, binomial, gamma, hyper, polygamma,
-    ...             catalan, diff, combsimp, Rational, I)
+    >>> from sympy import (Symbol, binomial, gamma, hyper, catalan,
+    ...                    diff, combsimp, Rational, I)
 
     >>> [catalan(i) for i in range(1,10)]
     [1, 2, 5, 14, 42, 132, 429, 1430, 4862]
@@ -1172,7 +1172,7 @@ class catalan(Function):
     def _eval_rewrite_as_factorial(self, n, **kwargs):
         return factorial(2*n) / (factorial(n+1) * factorial(n))
 
-    def _eval_rewrite_as_gamma(self, n, **kwargs):
+    def _eval_rewrite_as_gamma(self, n, piecewise=True, **kwargs):
         from sympy import gamma
         # The gamma function allows to generalize Catalan numbers to complex n
         return 4**n*gamma(n + S.Half)/(gamma(S.Half)*gamma(n + 2))
@@ -2044,3 +2044,137 @@ def nT(n, k=None):
     for discard in m.enum_range(n[_M], k-1, k):
         tot += 1
     return tot
+
+
+#-----------------------------------------------------------------------------#
+#                                                                             #
+#                          Motzkin numbers                                    #
+#                                                                             #
+#-----------------------------------------------------------------------------#
+
+
+class motzkin(Function):
+    """
+    The nth Motzkin number is the number
+    of ways of drawing non-intersecting chords
+    between n points on a circle (not necessarily touching
+    every point by a chord). The Motzkin numbers are named
+    after Theodore Motzkin and have diverse applications
+    in geometry, combinatorics and number theory.
+
+    Motzkin numbers are the integer sequence defined by the
+    initial terms `M_0 = 1`, `M_1 = 1` and the two-term recurrence relation
+    `M_n = \frac{2*n + 1}{n + 2} * M_{n-1} + \frac{3n - 3}{n + 2} * M_{n-2}`.
+
+
+    Examples
+    ========
+
+    >>> from sympy import motzkin
+
+    >>> motzkin.is_motzkin(5)
+    False
+    >>> motzkin.find_motzkin_numbers_in_range(2,300)
+    [2, 4, 9, 21, 51, 127]
+    >>> motzkin.find_motzkin_numbers_in_range(2,900)
+    [2, 4, 9, 21, 51, 127, 323, 835]
+    >>> motzkin.find_first_n_motzkins(10)
+    [1, 1, 2, 4, 9, 21, 51, 127, 323, 835]
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Motzkin_number
+    .. [2] https://mathworld.wolfram.com/MotzkinNumber.html
+
+    """
+
+    @staticmethod
+    def is_motzkin(n):
+        try:
+            n = as_int(n)
+        except ValueError:
+            return False
+        if n > 0:
+             if n == 1 or n == 2:
+                return True
+
+             tn1 = 1
+             tn = 2
+             i = 3
+             while tn < n:
+                 a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
+                 i += 1
+                 tn1 = tn
+                 tn = a
+
+             if tn == n:
+                 return True
+             else:
+                 return False
+
+        else:
+            return False
+
+    @staticmethod
+    def find_motzkin_numbers_in_range(x, y):
+        if 0 <= x <= y:
+            motzkins = list()
+            if x <= 1 <= y:
+                motzkins.append(1)
+            tn1 = 1
+            tn = 2
+            i = 3
+            while tn <= y:
+                if tn >= x:
+                    motzkins.append(tn)
+                a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
+                i += 1
+                tn1 = tn
+                tn = int(a)
+
+            return motzkins
+
+        else:
+            raise ValueError('The provided range is not valid. This condition should satisfy x <= y')
+
+    @staticmethod
+    def find_first_n_motzkins(n):
+        try:
+            n = as_int(n)
+        except ValueError:
+            raise ValueError('The provided number must be a positive integer')
+        if n < 0:
+            raise ValueError('The provided number must be a positive integer')
+        motzkins = list()
+        if n >= 0:
+            motzkins.append(1)
+        if n >= 1:
+            motzkins.append(1)
+        tn1 = 1
+        tn = 2
+        i = 3
+        while i <= n:
+            motzkins.append(tn)
+            a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
+            i += 1
+            tn1 = tn
+            tn = int(a)
+
+        return motzkins
+
+    @staticmethod
+    @recurrence_memo([S.One, S.One])
+    def _motzkin(n, prev):
+        return ((2*n + 1)*prev[-1] + (3*n - 3)*prev[-2]) // (n + 2)
+
+    @classmethod
+    def eval(cls, n):
+        try:
+            n = as_int(n)
+        except ValueError:
+            raise ValueError('The provided number must be a positive integer')
+        if n < 0:
+            raise ValueError('The provided number must be a positive integer')
+        return Integer(cls._motzkin(n - 1))

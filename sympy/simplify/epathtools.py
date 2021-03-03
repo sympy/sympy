@@ -1,12 +1,9 @@
 """Tools for manipulation of expressions using paths. """
 
-from __future__ import print_function, division
-from sympy.core.compatibility import range
-
 from sympy.core import Basic
 
 
-class EPath(object):
+class EPath:
     r"""
     Manipulate expressions using paths.
 
@@ -27,7 +24,7 @@ class EPath(object):
 
     """
 
-    __slots__ = ["_path", "_epath"]
+    __slots__ = ("_path", "_epath")
 
     def __new__(cls, path):
         """Construct new EPath. """
@@ -284,6 +281,9 @@ class EPath(object):
 def epath(path, expr=None, func=None, args=None, kwargs=None):
     r"""
     Manipulate parts of an expression selected by a path.
+
+    Explanation
+    ===========
 
     This function allows to manipulate large nested expressions in single
     line of code, utilizing techniques to those applied in XML processing

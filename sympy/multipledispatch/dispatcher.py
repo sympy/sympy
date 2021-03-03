@@ -1,3 +1,5 @@
+from typing import Set
+
 from warnings import warn
 import inspect
 from .conflict import ordering, ambiguities, super_signature, AmbiguityWarning
@@ -8,6 +10,8 @@ import itertools as itl
 class MDNotImplementedError(NotImplementedError):
     """ A NotImplementedError for multiple dispatch """
 
+
+### Functions for on_ambiguity
 
 def ambiguity_warn(dispatcher, ambiguities):
     """ Raise warning when ambiguity is detected
@@ -26,7 +30,48 @@ def ambiguity_warn(dispatcher, ambiguities):
     warn(warning_text(dispatcher.name, ambiguities), AmbiguityWarning)
 
 
-_unresolved_dispatchers = set()
+class RaiseNotImplementedError:
+    """Raise ``NotImplementedError`` when called."""
+
+    def __init__(self, dispatcher):
+        self.dispatcher = dispatcher
+
+    def __call__(self, *args, **kwargs):
+        types = tuple(type(a) for a in args)
+        raise NotImplementedError(
+            "Ambiguous signature for %s: <%s>" % (
+            self.dispatcher.name, str_signature(types)
+        ))
+
+def ambiguity_register_error_ignore_dup(dispatcher, ambiguities):
+    """
+    If super signature for ambiguous types is duplicate types, ignore it.
+    Else, register instance of ``RaiseNotImplementedError`` for ambiguous types.
+
+    Parameters
+    ----------
+    dispatcher : Dispatcher
+        The dispatcher on which the ambiguity was detected
+    ambiguities : set
+        Set of type signature pairs that are ambiguous within this dispatcher
+
+    See Also:
+        Dispatcher.add
+        ambiguity_warn
+    """
+    for amb in ambiguities:
+        signature = tuple(super_signature(amb))
+        if len(set(signature)) == 1:
+            continue
+        dispatcher.add(
+            signature, RaiseNotImplementedError(dispatcher),
+            on_ambiguity=ambiguity_register_error_ignore_dup
+        )
+
+###
+
+
+_unresolved_dispatchers = set() # type: Set[Dispatcher]
 _resolve = [True]
 
 
@@ -41,7 +86,7 @@ def restart_ordering(on_ambiguity=ambiguity_warn):
         dispatcher.reorder(on_ambiguity=on_ambiguity)
 
 
-class Dispatcher(object):
+class Dispatcher:
     """ Dispatch methods based on type signature
 
     Use ``dispatch`` to add implementations
@@ -55,7 +100,7 @@ class Dispatcher(object):
     ...     return x + 1
 
     >>> @dispatch(float)
-    ... def f(x):
+    ... def f(x): # noqa: F811
     ...     return x - 1
 
     >>> f(3)

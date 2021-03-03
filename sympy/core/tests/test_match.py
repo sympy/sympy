@@ -1,9 +1,9 @@
 from sympy import (abc, Add, cos, collect, Derivative, diff, exp, Float, Function,
     I, Integer, log, Mul, oo, Poly, Rational, S, sin, sqrt, Symbol, symbols,
-    Wild, pi, meijerg
+    Wild, pi, meijerg, Sum
 )
 
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 
 def test_symbol():
@@ -473,6 +473,7 @@ def test__combine_inverse():
     assert Mul._combine_inverse(oo*I*y, oo*I) == y
     assert Mul._combine_inverse(oo*y, -oo) == -y
     assert Mul._combine_inverse(-oo*y, oo) == -y
+    assert Mul._combine_inverse((1-exp(x/y)),(exp(x/y)-1)) == -1
     assert Add._combine_inverse(oo, oo) is S.Zero
     assert Add._combine_inverse(oo*I, oo*I) is S.Zero
     assert Add._combine_inverse(x*oo, x*oo) is S.Zero
@@ -508,7 +509,7 @@ def test_issue_3883():
     a, b, c = symbols('a b c', cls=Wild, exclude=(gamma,))
 
     assert f.match(a * log(gamma) + b * gamma + c) == \
-        {a: Rational(-1, 2), b: -(x - mu)**2/2, c: log(2*pi)/2}
+        {a: Rational(-1, 2), b: -(mu - x)**2/2, c: log(2*pi)/2}
     assert f.expand().collect(gamma).match(a * log(gamma) + b * gamma + c) == \
         {a: Rational(-1, 2), b: (-(x - mu)**2/2).expand(), c: (log(2*pi)/2).expand()}
     g1 = Wild('g1', exclude=[gamma])
@@ -684,8 +685,8 @@ def test_gh_issue_2711():
     a = Wild('a')
     b = Wild('b')
 
-    assert f.find(a) == set([(S.Zero,), ((), ()), ((S.Zero,), ()), x, S.Zero,
-                             (), meijerg(((), ()), ((S.Zero,), ()), x)])
+    assert f.find(a) == {(S.Zero,), ((), ()), ((S.Zero,), ()), x, S.Zero,
+                             (), meijerg(((), ()), ((S.Zero,), ()), x)}
     assert f.find(a + b) == \
         {meijerg(((), ()), ((S.Zero,), ()), x), x, S.Zero}
     assert f.find(a**2) == {meijerg(((), ()), ((S.Zero,), ()), x), x}
@@ -706,3 +707,21 @@ def test_match_issue_17397():
         - 4*Derivative(f(x), (x, 2)) - 2*Derivative(f(x), x)/x + 4*Derivative(f(x), (x, 2))/x
     r = collect(eq, [f(x).diff(x, 2), f(x).diff(x), f(x)]).match(deq)
     assert r == {a3: x - 4 + 4/x, b3: 1 - 2/x, c3: x - 4}
+
+
+def test_match_terms():
+    X, Y = map(Wild, "XY")
+    x, y, z = symbols('x y z')
+    assert (5*y - x).match(5*X - Y) == {X: y, Y: x}
+    # 15907
+    assert (x + (y - 1)*z).match(x + X*z) == {X: y - 1}
+    # 20747
+    assert (x - log(x/y)*(1-exp(x/y))).match(x - log(X/y)*(1-exp(x/y))) == {X: x}
+
+
+def test_match_bound():
+    V, W = map(Wild, "VW")
+    x, y = symbols('x y')
+    assert Sum(x, (x, 1, 2)).match(Sum(y, (y, 1, W))) == {W: 2}
+    assert Sum(x, (x, 1, 2)).match(Sum(V, (V, 1, W))) == {W: 2, V:x}
+    assert Sum(x, (x, 1, 2)).match(Sum(V, (V, 1, 2))) == {V:x}

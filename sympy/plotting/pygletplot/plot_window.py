@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.compatibility import clock
 
 import pyglet.gl as pgl
@@ -39,7 +37,7 @@ class PlotWindow(ManagedWindow):
         self.caption_update_interval = 0.2
         self.drawing_first_object = True
 
-        super(PlotWindow, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def setup(self):
         self.camera = PlotCamera(self, ortho=self.ortho)
@@ -67,7 +65,7 @@ class PlotWindow(ManagedWindow):
         self.camera.setup_projection()
 
     def on_resize(self, w, h):
-        super(PlotWindow, self).on_resize(w, h)
+        super().on_resize(w, h)
         if self.camera is not None:
             self.camera.setup_projection()
 

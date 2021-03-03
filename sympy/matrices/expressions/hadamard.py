@@ -1,9 +1,7 @@
-from __future__ import print_function, division
-
 from sympy.core import Mul, sympify
-from sympy.matrices.expressions.matexpr import (
-    MatrixExpr, ShapeError, OneMatrix, ZeroMatrix
-)
+from sympy.matrices.common import ShapeError
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix
 from sympy.strategies import (
     unpack, flatten, condition, exhaust, rm_id, sort
 )
@@ -60,13 +58,15 @@ class HadamardProduct(MatrixExpr):
     """
     is_HadamardProduct = True
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, evaluate=False, check=True):
         args = list(map(sympify, args))
-        check = kwargs.get('check', True)
         if check:
             validate(*args)
 
-        return super(HadamardProduct, cls).__new__(cls, *args)
+        obj = super().__new__(cls, *args)
+        if evaluate:
+            obj = obj.doit(deep=False)
+        return obj
 
     @property
     def shape(self):
@@ -105,7 +105,8 @@ class HadamardProduct(MatrixExpr):
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.core.expr import ExprBuilder
-        from sympy.codegen.array_utils import CodegenArrayDiagonal, CodegenArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
+        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
         from sympy.matrices.expressions.matexpr import _make_matrix
 
         with_x_ind = [i for i, arg in enumerate(self.args) if arg.has(x)]
@@ -122,17 +123,17 @@ class HadamardProduct(MatrixExpr):
                 l1 = i._lines[i._first_line_index]
                 l2 = i._lines[i._second_line_index]
                 subexpr = ExprBuilder(
-                    CodegenArrayDiagonal,
+                    ArrayDiagonal,
                     [
                         ExprBuilder(
-                            CodegenArrayTensorProduct,
+                            ArrayTensorProduct,
                             [
                                 ExprBuilder(_make_matrix, [l1]),
                                 hadam,
                                 ExprBuilder(_make_matrix, [l2]),
                             ]
                         ),
-                    ] + diagonal,  # turn into *diagonal after dropping Python 2.7
+                    *diagonal],
 
                 )
                 i._first_pointer_parent = subexpr.args[0].args[0].args
@@ -375,7 +376,7 @@ class HadamardPower(MatrixExpr):
                 .format(base.shape, exp.shape)
                 )
 
-        obj = super(HadamardPower, cls).__new__(cls, base, exp)
+        obj = super().__new__(cls, base, exp)
         return obj
 
     @property
@@ -429,8 +430,8 @@ class HadamardPower(MatrixExpr):
         )
 
     def _eval_derivative_matrix_lines(self, x):
-        from sympy.codegen.array_utils import CodegenArrayTensorProduct
-        from sympy.codegen.array_utils import CodegenArrayDiagonal
+        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
         from sympy.core.expr import ExprBuilder
         from sympy.matrices.expressions.matexpr import _make_matrix
 
@@ -441,18 +442,18 @@ class HadamardPower(MatrixExpr):
             l1 = i._lines[i._first_line_index]
             l2 = i._lines[i._second_line_index]
             subexpr = ExprBuilder(
-                CodegenArrayDiagonal,
+                ArrayDiagonal,
                 [
                     ExprBuilder(
-                        CodegenArrayTensorProduct,
+                        ArrayTensorProduct,
                         [
                             ExprBuilder(_make_matrix, [l1]),
                             self.exp*hadamard_power(self.base, self.exp-1),
                             ExprBuilder(_make_matrix, [l2]),
                         ]
                     ),
-                ] + diagonal,  # turn into *diagonal after dropping Python 2.7
-                validator=CodegenArrayDiagonal._validate
+                *diagonal],
+                validator=ArrayDiagonal._validate
             )
             i._first_pointer_parent = subexpr.args[0].args[0].args
             i._first_pointer_index = 0

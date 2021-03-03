@@ -56,7 +56,11 @@ Ntheory Functions Reference
 
 .. autofunction:: divisors
 
+.. autofunction:: proper_divisors
+
 .. autofunction:: divisor_count
+
+.. autofunction:: proper_divisor_count
 
 .. autofunction:: udivisors
 
@@ -144,6 +148,8 @@ Ntheory Functions Reference
 
 .. autofunction:: isprime
 
+.. autofunction:: is_gaussian_prime
+
 .. module:: sympy.ntheory.residue_ntheory
 
 .. autofunction:: n_order
@@ -173,6 +179,9 @@ Ntheory Functions Reference
 .. automodule:: sympy.ntheory.continued_fraction
    :members:
 
+.. automodule:: sympy.ntheory.digits
+   :members:
+
 .. autoclass:: sympy.ntheory.mobius
    :members:
 
@@ -183,3 +192,56 @@ Ntheory Functions Reference
 .. module:: sympy.ntheory.bbp_pi
 
 .. autofunction:: pi_hex_digits
+
+.. module:: sympy.ntheory.ecm
+
+ECM function
+============
+
+The `ecm` function is a subexponential factoring algorithm capable of factoring
+numbers of around ~35 digits comfortably within few seconds. The time complexity
+of `ecm` is dependent on the smallest proper factor of the number. So even if the
+number is really large but its factors are comparatively smaller then `ecm`
+can easily factor them. For example we take `N` with 15 digit factors
+`15154262241479`, `15423094826093`, `799333555511111`, `809709509409109`,
+`888888877777777`, `914148152112161`. Now N is a 87 digit number. `ECM` takes 
+under around 47s to factorise this.
+
+.. autofunction:: ecm
+
+Examples
+========
+
+ >>> from sympy.ntheory import ecm
+ >>> ecm(7060005655815754299976961394452809, B1=100000, B2=1000000)
+ {6988699669998001, 1010203040506070809}
+ >>> ecm(122921448543883967430908091422761898618349713604256384403202282756086473494959648313841, B1=100000, B2=1000000)
+ {15154262241479,
+ 15423094826093,
+ 799333555511111,
+ 809709509409109,
+ 888888877777777,
+ 914148152112161}
+
+.. module:: sympy.ntheory.qs
+
+QS function
+===========
+
+The `qs` function is a subexponential factoring algorithm, the fastest
+factoring algorithm for numbers within 100 digits. The time complexity of
+`qs` is dependent on the size of the number so it is used if the number contains
+large factors. Due to this while factoring numbers first `ecm` is used to get
+smaller factors of around ~15 digits then `qs` is used to get larger factors.
+
+For factoring `2709077133180915240135586837960864768806330782747` which is a semi-prime number
+with two 25 digit factors. `qs` is able to factorize this in around 248s.
+
+.. autofunction:: qs
+
+Examples
+========
+
+ >>> from sympy.ntheory import qs
+ >>> qs(5915587277*3267000013, 1000, 10000)
+ {3267000013, 5915587277}

@@ -5,7 +5,7 @@ from sympy.physics.units import (
     planck_length, planck_mass, planck_temperature, planck_time, radians,
     second, speed_of_light, steradian, time, km)
 from sympy.physics.units.util import convert_to, check_dimensions
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def NS(e, n=15, **options):
@@ -122,6 +122,7 @@ def test_check_dimensions():
     assert check_dimensions(length + x) == length + x
     # after subs we get 2*length; check will clear the constant
     assert check_dimensions((length + x).subs(x, length)) == length
+    assert check_dimensions(newton*meter + joule) == joule + meter*newton
     raises(ValueError, lambda: check_dimensions(inch + 1))
     raises(ValueError, lambda: check_dimensions(length + 1))
     raises(ValueError, lambda: check_dimensions(length + time))

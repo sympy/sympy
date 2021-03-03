@@ -6,6 +6,9 @@ Polynomials Manipulation Module Reference
 
 .. automodule:: sympy.polys
 
+See :ref:`polys-docs` for an index of documentation for the polys module and
+:ref:`polys-basics` for an introductory explanation.
+
 Basic polynomial manipulation functions
 =======================================
 
@@ -33,8 +36,6 @@ Basic polynomial manipulation functions
 .. autofunction:: subresultants
 .. autofunction:: resultant
 .. autofunction:: discriminant
-.. autofunction:: sympy.polys.dispersion.dispersion
-.. autofunction:: sympy.polys.dispersion.dispersionset
 .. autofunction:: terms_gcd
 .. autofunction:: cofactors
 .. autofunction:: gcd

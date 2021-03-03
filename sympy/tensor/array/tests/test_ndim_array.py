@@ -1,9 +1,10 @@
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy import (
     Array, ImmutableDenseNDimArray, ImmutableSparseNDimArray,
-    MutableDenseNDimArray, MutableSparseNDimArray
+    MutableDenseNDimArray, MutableSparseNDimArray, sin, cos,
+    simplify, Matrix
 )
-
+from sympy.abc import x, y
 
 array_types = [
     ImmutableDenseNDimArray,
@@ -31,3 +32,17 @@ def test_array_negative_indices():
         raises(ValueError, lambda: test_array[-3, :])
 
         assert test_array[-1, -1] == 10
+
+
+def test_issue_18361():
+    A = Array([sin(2 * x) - 2 * sin(x) * cos(x)])
+    B = Array([sin(x)**2 + cos(x)**2, 0])
+    C = Array([(x + x**2)/(x*sin(y)**2 + x*cos(y)**2), 2*sin(x)*cos(x)])
+    assert simplify(A) == Array([0])
+    assert simplify(B) == Array([1, 0])
+    assert simplify(C) == Array([x + 1, sin(2*x)])
+
+def test_issue_20222():
+    A = Array([[1, 2], [3, 4]])
+    B = Matrix([[1,2],[3,4]])
+    raises(TypeError, lambda: A - B)

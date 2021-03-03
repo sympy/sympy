@@ -23,7 +23,7 @@ import sympy
 import mpmath
 from sympy.abc import x, y, z
 from sympy.utilities.decorator import conserve_mpmath_dps
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 # first, systematically check, that all operations are implemented and don't
@@ -186,7 +186,7 @@ def test_Matrix_mul():
 
 
 def test_Matrix_array():
-    class matarray(object):
+    class matarray:
         def __array__(self):
             from numpy import array
             return array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])

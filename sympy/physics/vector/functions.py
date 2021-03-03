@@ -1,9 +1,8 @@
-from __future__ import print_function, division
+from functools import reduce
 
 from sympy.core.backend import (sympify, diff, sin, cos, Matrix, symbols,
                                 Function, S, Symbol)
 from sympy import integrate, trigsimp
-from sympy.core.compatibility import reduce
 from .vector import Vector, _check_vector
 from .frame import CoordinateSym, _check_frame
 from .dyadic import Dyadic
@@ -25,7 +24,7 @@ def cross(vec1, vec2):
     if not isinstance(vec1, (Vector, Dyadic)):
         raise TypeError('Cross product is between two vectors')
     return vec1 ^ vec2
-cross.__doc__ += Vector.cross.__doc__
+cross.__doc__ += Vector.cross.__doc__  # type: ignore
 
 
 def dot(vec1, vec2):
@@ -33,7 +32,7 @@ def dot(vec1, vec2):
     if not isinstance(vec1, (Vector, Dyadic)):
         raise TypeError('Dot product is between two vectors')
     return vec1 & vec2
-dot.__doc__ += Vector.dot.__doc__
+dot.__doc__ += Vector.dot.__doc__  # type: ignore
 
 
 def express(expr, frame, frame2=None, variables=False):
@@ -68,6 +67,8 @@ def express(expr, frame, frame2=None, variables=False):
     ========
 
     >>> from sympy.physics.vector import ReferenceFrame, outer, dynamicsymbols
+    >>> from sympy.physics.vector import init_vprinting
+    >>> init_vprinting(pretty_print=False)
     >>> N = ReferenceFrame('N')
     >>> q = dynamicsymbols('q')
     >>> B = N.orientnew('B', 'Axis', [q, N.z])
@@ -78,7 +79,7 @@ def express(expr, frame, frame2=None, variables=False):
     >>> express(B.x, N)
     cos(q)*N.x + sin(q)*N.y
     >>> express(N[0], B, variables=True)
-    B_x*cos(q(t)) - B_y*sin(q(t))
+    B_x*cos(q) - B_y*sin(q)
 
     """
 
@@ -124,7 +125,7 @@ def express(expr, frame, frame2=None, variables=False):
     else:
         if variables:
             #Given expr is a scalar field
-            frame_set = set([])
+            frame_set = set()
             expr = sympify(expr)
             #Substitute all the coordinate variables
             for x in expr.free_symbols:
@@ -163,6 +164,8 @@ def time_derivative(expr, frame, order=1):
     ========
 
     >>> from sympy.physics.vector import ReferenceFrame, dynamicsymbols
+    >>> from sympy.physics.vector import init_vprinting
+    >>> init_vprinting(pretty_print=False)
     >>> from sympy import Symbol
     >>> q1 = Symbol('q1')
     >>> u1 = dynamicsymbols('u1')
@@ -174,7 +177,7 @@ def time_derivative(expr, frame, order=1):
     >>> time_derivative(v, N)
     u1'*N.x
     >>> time_derivative(u1*A[0], N)
-    N_x*Derivative(u1(t), t)
+    N_x*u1'
     >>> B = N.orientnew('B', 'Axis', [u1, N.z])
     >>> from sympy.physics.vector import outer
     >>> d = outer(N.x, N.x)
@@ -220,7 +223,7 @@ def outer(vec1, vec2):
     if not isinstance(vec1, Vector):
         raise TypeError('Outer product is between two Vectors')
     return vec1 | vec2
-outer.__doc__ += Vector.outer.__doc__
+outer.__doc__ += Vector.outer.__doc__  # type: ignore
 
 
 def kinematic_equations(speeds, coords, rot_type, rot_order=''):
@@ -423,6 +426,8 @@ def get_motion_params(frame, **kwargs):
     ========
 
     >>> from sympy.physics.vector import ReferenceFrame, get_motion_params, dynamicsymbols
+    >>> from sympy.physics.vector import init_vprinting
+    >>> init_vprinting(pretty_print=False)
     >>> from sympy import symbols
     >>> R = ReferenceFrame('R')
     >>> v1, v2, v3 = dynamicsymbols('v1 v2 v3')
@@ -575,8 +580,8 @@ def partial_velocity(vel_vecs, gen_speeds, frame):
     return vec_partials
 
 
-def dynamicsymbols(names, level=0):
-    """Returns functions of time with the provide names.
+def dynamicsymbols(names, level=0,**assumptions):
+    """Uses symbols and Function for functions of time.
 
     Creates a SymPy UndefinedFunction, which is then initialized as a function
     of a variable, the default being the value store in
@@ -592,41 +597,42 @@ def dynamicsymbols(names, level=0):
     level : int
         Level of differentiation of the returned function; d/dt once of t,
         twice of t, etc.
+    assumptions :
+        - real(bool) : This is used to set the dynamicsymbol as real,
+                    by default is False.
+        - positive(bool) : This is used to set the dynamicsymbol as positive,
+                    by default is False.
+        - commutative(bool) : This is used to set the commutative property of
+                    a dynamicsymbol, by default is True.
+        - integer(bool) : This is used to set the dynamicsymbol as integer,
+                    by default is False.
 
     Examples
     ========
 
     >>> from sympy import diff
     >>> from sympy.physics.vector import dynamicsymbols
-    >>> q = dynamicsymbols('q')
-    >>> q
-    q(t)
-    >>> from sympy.physics.vector import TIME
-    >>> diff(q, TIME)
-    Derivative(q(t), t)
-    >>> dynamicsymbols('q', 2)
-    Derivative(q(t), (t, 2))
-    >>> q1, q2 = dynamicsymbols('q1:3')
-    >>> q1, q2
-    (q1(t), q2(t))
-
-    ``dynamicsymbols`` is essentially a wrapper to ``symbols`` that does the
-    following:
-
-    >>> from sympy import symbols, Function
-    >>> from sympy.physics.vector import TIME as t
-    >>> Function('q')(t)
-    q(t)
-    >>> diff(Function('q')(t), t)
-    Derivative(q(t), t)
-
-    See Also
-    ========
-
-    symbols
+    >>> from sympy import diff, Symbol
+    >>> q1 = dynamicsymbols('q1')
+    >>> q1
+    q1(t)
+    >>> q2 = dynamicsymbols('q2', real=True)
+    >>> q2.is_real
+    True
+    >>> q3 = dynamicsymbols('q3', positive=True)
+    >>> q3.is_positive
+    True
+    >>> q4, q5 = dynamicsymbols('q4,q5', commutative=False)
+    >>> bool(q4*q5 != q5*q4)
+    True
+    >>> q6 = dynamicsymbols('q6', integer=True)
+    >>> q6.is_integer
+    True
+    >>> diff(q1, Symbol('t'))
+    Derivative(q1(t), t)
 
     """
-    esses = symbols(names, cls=Function)
+    esses = symbols(names, cls=Function,**assumptions)
     t = dynamicsymbols._t
     if iterable(esses):
         esses = [reduce(diff, [t] * level, e(t)) for e in esses]
@@ -639,3 +645,4 @@ def dynamicsymbols(names, level=0):
 # wild accessing it even though it was technically "private".
 dynamicsymbols._t = TIME
 dynamicsymbols._str = '\''
+

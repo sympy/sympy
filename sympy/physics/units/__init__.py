@@ -28,7 +28,6 @@ Useful functions:
 
 """
 
-from sympy.core.compatibility import string_types
 from .dimensions import Dimension, DimensionSystem
 from .unitsystem import UnitSystem
 from .util import convert_to
@@ -242,7 +241,7 @@ def find_unit(quantity, unit_system="SI"):
 
     import sympy.physics.units as u
     rv = []
-    if isinstance(quantity, string_types):
+    if isinstance(quantity, str):
         rv = [i for i in dir(u) if quantity in i and isinstance(getattr(u, i), Quantity)]
         dim = getattr(u, quantity)
         if isinstance(dim, Dimension):
@@ -267,7 +266,6 @@ def find_unit(quantity, unit_system="SI"):
 # They were not dimensions, but units (old Unit class).
 
 __all__ = [
-    'string_types',
     'Dimension', 'DimensionSystem',
     'UnitSystem',
     'convert_to',

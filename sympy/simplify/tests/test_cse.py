@@ -5,19 +5,17 @@ from operator import add
 from sympy import (
     Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
     Matrix, S, cos, sin, Eq, Function, Tuple, CRootOf,
-    IndexedBase, Idx, Piecewise, O
+    IndexedBase, Idx, Piecewise, O, signsimp
 )
 from sympy.core.function import count_ops
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.iterables import subsets
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises
 from sympy.matrices import (MutableDenseMatrix, MutableSparseMatrix,
         ImmutableDenseMatrix, ImmutableSparseMatrix)
 from sympy.matrices.expressions import MatrixSymbol
-
-from sympy.core.compatibility import range
 
 
 w, x, y, z = symbols('w,x,y,z')
@@ -539,6 +537,15 @@ def test_issue_13000():
     assert cse_eq == eq
 
 
+def test_issue_18203():
+    eq = CRootOf(x**5 + 11*x - 2, 0) + CRootOf(x**5 + 11*x - 2, 1)
+    assert cse(eq) == ([], [eq])
+
+
 def test_unevaluated_mul():
     eq = Mul(x + y, x + y, evaluate=False)
     assert cse(eq) == ([(x0, x + y)], [x0**2])
+
+def test_issue_18991():
+    A = MatrixSymbol('A', 2, 2)
+    assert signsimp(-A * A - A) == -A * A - A

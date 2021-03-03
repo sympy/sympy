@@ -1,9 +1,8 @@
-from sympy import Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D, Abs
-from sympy.core.compatibility import range
+from sympy import Eq, Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D, Abs, sec
 from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment,
                             Triangle, intersection)
-from sympy.utilities.pytest import raises, slow
+from sympy.testing.pytest import raises, slow
 from sympy import integrate
 from sympy.functions.special.elliptic_integrals import elliptic_e
 from sympy.functions.elementary.miscellaneous import Max
@@ -34,6 +33,7 @@ def test_object_from_equation():
     assert Circle(x**2 + y**2 + 6*x + 8) == Circle(Point2D(-3, 0), 1)
     assert Circle(x**2 + y**2 + 6*y + 8) == Circle(Point2D(0, -3), 1)
     assert Circle(6*(x**2) + 6*(y**2) + 6*x + 8*y - 25) == Circle(Point2D(Rational(-1, 2), Rational(-2, 3)), 5*sqrt(37)/6)
+    assert Circle(Eq(a**2 + b**2, 25), x='a', y=b) == Circle(Point2D(0, 0), 5)
     raises(GeometryError, lambda: Circle(x**2 + y**2 + 3*x + 4*y + 26))
     raises(GeometryError, lambda: Circle(x**2 + y**2 + 25))
     raises(GeometryError, lambda: Circle(a**2 + b**2 + 25, x='a', y='b'))
@@ -67,7 +67,9 @@ def test_ellipse_geom():
     assert Circle(Point(0, 0), Point(1, 1), Point(2, 2)) == Segment2D(Point2D(0, 0), Point2D(2, 2))
 
     raises(ValueError, lambda: Ellipse(None, None, None, 1))
+    raises(ValueError, lambda: Ellipse())
     raises(GeometryError, lambda: Circle(Point(0, 0)))
+    raises(GeometryError, lambda: Circle(Symbol('x')*Symbol('y')))
 
     # Basic Stuff
     assert Ellipse(None, 1, 1).center == Point(0, 0)
@@ -75,6 +77,9 @@ def test_ellipse_geom():
     assert e1 != e2
     assert e1 != l1
     assert p4 in e1
+    assert e1 in e1
+    assert e2 in e2
+    assert 1 not in e2
     assert p2 not in e2
     assert e1.area == pi
     assert e2.area == pi/2
@@ -113,6 +118,7 @@ def test_ellipse_geom():
     assert e1.encloses(RegularPolygon(p2, 5, 3)) is False
 
     assert e2.arbitrary_point() in e2
+    raises(ValueError, lambda: Ellipse(Point(x, y), 1, 1).arbitrary_point(parameter='x'))
 
     # Foci
     f1, f2 = Point(sqrt(12), 0), Point(-sqrt(12), 0)
@@ -236,6 +242,7 @@ def test_ellipse_geom():
         Point(Rational(-1, 2), 0), Point(S.Half, 0)]
     raises(TypeError, lambda: intersection(e2, Line((0, 0, 0), (0, 0, 1))))
     raises(TypeError, lambda: intersection(e2, Rational(12)))
+    raises(TypeError, lambda: Ellipse.intersection(e2, 1))
     # some special case intersections
     csmall = Circle(p1, 3)
     cbig = Circle(p1, 5)
@@ -332,6 +339,20 @@ def test_construction():
     e4 = Ellipse(Point(0, 0), hradius=1, eccentricity=0)
     assert e4.vradius == 1
 
+    #tests for eccentricity > 1
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity = S(3)/2))
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity=sec(5)))
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity=S.Pi-S(2)))
+
+    #tests for eccentricity = 1
+    #if vradius is not defined
+    assert Ellipse(None, 1, None, 1).length == 2
+    #if hradius is not defined
+    raises(GeometryError, lambda: Ellipse(None, None, 1, eccentricity = 1))
+
+    #tests for eccentricity < 0
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity = -3))
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity = -0.5))
 
 def test_ellipse_random_point():
     y1 = Symbol('y1', real=True)
@@ -341,6 +362,9 @@ def test_ellipse_random_point():
         r = e3.random_point()
         # substitution should give zero*y1**2
         assert e3.equation(rx, ry).subs(zip((rx, ry), r.args)).equals(0)
+    # test for the case with seed
+    r = e3.random_point(seed=1)
+    assert e3.equation(rx, ry).subs(zip((rx, ry), r.args)).equals(0)
 
 
 def test_repr():
@@ -390,6 +414,7 @@ def test_reflect():
     assert e.area == -e.reflect(Line((1, 0), slope=0)).area
     assert e.area == -e.reflect(Line((1, 0), slope=oo)).area
     raises(NotImplementedError, lambda: e.reflect(Line((1, 0), slope=m)))
+    assert Circle((0, 1), 1).reflect(Line((0, 0), (1, 1))) == Circle(Point2D(1, 0), -1)
 
 
 def test_is_tangent():
@@ -414,6 +439,7 @@ def test_is_tangent():
     assert e1.is_tangent(Segment((12, 12), (3, 0))) is False
     assert e1.is_tangent(Segment((-3, 0), (3, 0))) is False
     assert e1.is_tangent(Segment((-3, 5), (3, 5))) is True
+    assert e1.is_tangent(Line((10, 0), (10, 10))) is False
     assert e1.is_tangent(Line((0, 0), (1, 1))) is False
     assert e1.is_tangent(Line((-3, 0), (-2.99, -0.001))) is False
     assert e1.is_tangent(Line((-3, 0), (-3, 1))) is True
@@ -450,6 +476,10 @@ def test_second_moment_of_area():
     assert I_yy == e.second_moment_of_area()[1]
     assert I_xx == e.second_moment_of_area()[0]
     assert I_xy == e.second_moment_of_area()[2]
+    #checking for other point
+    t1 = e.second_moment_of_area(Point(6,5))
+    t2 = (580*pi, 845*pi, 600*pi)
+    assert t1==t2
 
 
 def test_section_modulus_and_polar_second_moment_of_area():
@@ -473,6 +503,11 @@ def test_section_modulus_and_polar_second_moment_of_area():
     assert e.section_modulus() == (18*pi, 6*pi)
     assert e.polar_second_moment_of_area() == 120*pi
 
+    e = Ellipse(Point(0, 0), 2, 2)
+    assert e.section_modulus() == (2*pi, 2*pi)
+    assert e.section_modulus(Point(2, 2)) == (2*pi, 2*pi)
+    assert e.section_modulus((2, 2)) == (2*pi, 2*pi)
+
 
 def test_circumference():
     M = Symbol('M')
@@ -480,9 +515,6 @@ def test_circumference():
     assert Ellipse(Point(0, 0), M, m).circumference == 4 * M * elliptic_e((M ** 2 - m ** 2) / M**2)
 
     assert Ellipse(Point(0, 0), 5, 4).circumference == 20 * elliptic_e(S(9) / 25)
-
-    # degenerate ellipse
-    assert Ellipse(None, 1, None, 1).length == 2
 
     # circle
     assert Ellipse(None, 1, None, 0).circumference == 2*pi
@@ -526,3 +558,25 @@ def test_director_circle():
     assert e.director_circle() == Circle((x, y), sqrt(a**2 + b**2))
     # a special case where Ellipse is a Circle
     assert Circle((3, 4), 8).director_circle() == Circle((3, 4), 8*sqrt(2))
+
+
+def test_evolute():
+    #ellipse centered at h,k
+    x, y, h, k = symbols('x y h k',real = True)
+    a, b = symbols('a b')
+    e = Ellipse(Point(h, k), a, b)
+    t1 = (e.hradius*(x - e.center.x))**Rational(2, 3)
+    t2 = (e.vradius*(y - e.center.y))**Rational(2, 3)
+    E = t1 + t2 - (e.hradius**2 - e.vradius**2)**Rational(2, 3)
+    assert e.evolute() == E
+    #Numerical Example
+    e = Ellipse(Point(1, 1), 6, 3)
+    t1 = (6*(x - 1))**Rational(2, 3)
+    t2 = (3*(y - 1))**Rational(2, 3)
+    E = t1 + t2 - (27)**Rational(2, 3)
+    assert e.evolute() == E
+
+
+def test_svg():
+    e1 = Ellipse(Point(1, 0), 3, 2)
+    assert e1._svg(2, "#FFAAFF") == '<ellipse fill="#FFAAFF" stroke="#555555" stroke-width="4.0" opacity="0.6" cx="1.00000000000000" cy="0" rx="3.00000000000000" ry="2.00000000000000"/>'

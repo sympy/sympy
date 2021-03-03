@@ -1,17 +1,19 @@
 from sympy import (S, Symbol, Sum, I, lambdify, re, im, log, simplify, sqrt,
-                   zeta, pi, besseli, Dummy, oo, Piecewise, Rational, erf, beta,
-                   floor)
+                   zeta, pi, besseli, Dummy, oo, Piecewise, Rational, beta,
+                   floor, FiniteSet)
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
 from sympy.logic.boolalg import Or
 from sympy.sets.fancysets import Range
 from sympy.stats import (P, E, variance, density, characteristic_function,
-                         where, moment_generating_function, skewness, cdf)
+                         where, moment_generating_function, skewness, cdf,
+                         kurtosis, coskewness)
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
-                                   Poisson, Geometric, Logarithmic, NegativeBinomial, Skellam,
-                                   YuleSimon, Zeta)
-from sympy.stats.rv import sample
-from sympy.utilities.pytest import slow, nocache_fail
+                                   FlorySchulz, Poisson, Geometric, Hermite, Logarithmic,
+                                    NegativeBinomial, Skellam, YuleSimon, Zeta,
+                                    DiscreteRV)
+from sympy.testing.pytest import slow, nocache_fail, raises, ignore_warnings
+from sympy.stats.symbolic_probability import Expectation
 
 x = Symbol('x')
 
@@ -20,6 +22,7 @@ def test_PoissonDistribution():
     l = 3
     p = PoissonDistribution(l)
     assert abs(p.cdf(10).evalf() - 1) < .001
+    assert abs(p.cdf(10.4).evalf() - 1) < .001
     assert p.expectation(x, x) == l
     assert p.expectation(x**2, x) - p.expectation(x, x)**2 == l
 
@@ -30,17 +33,61 @@ def test_Poisson():
     assert E(x) == l
     assert variance(x) == l
     assert density(x) == PoissonDistribution(l)
-    assert isinstance(E(x, evaluate=False), Sum)
-    assert isinstance(E(2*x, evaluate=False), Sum)
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert isinstance(E(x, evaluate=False), Expectation)
+        assert isinstance(E(2*x, evaluate=False), Expectation)
+    # issue 8248
+    assert x.pspace.compute_expectation(1) == 1
+
+def test_FlorySchulz():
+    a = Symbol("a")
+    z = Symbol("z")
+    x = FlorySchulz('x' , a)
+    assert E(x) == (2 - a)/a
+    assert (variance(x) - 2*(1 - a)/a**2).simplify() == S(0)
+    assert density(x)(z) == a**2*z*(1 - a)**(z - 1)
 
 
+@slow
 def test_GeometricDistribution():
     p = S.One / 5
     d = GeometricDistribution(p)
     assert d.expectation(x, x) == 1/p
     assert d.expectation(x**2, x) - d.expectation(x, x)**2 == (1-p)/p**2
     assert abs(d.cdf(20000).evalf() - 1) < .001
+    assert abs(d.cdf(20000.8).evalf() - 1) < .001
+    G = Geometric('G', p=S(1)/4)
+    assert cdf(G)(S(7)/2) == P(G <= S(7)/2)
 
+    X = Geometric('X', Rational(1, 5))
+    Y = Geometric('Y', Rational(3, 10))
+    assert coskewness(X, X + Y, X + 2*Y).simplify() == sqrt(230)*Rational(81, 1150)
+
+
+def test_Hermite():
+    a1 = Symbol("a1", positive=True)
+    a2 = Symbol("a2", negative=True)
+    raises(ValueError, lambda: Hermite("H", a1, a2))
+
+    a1 = Symbol("a1", negative=True)
+    a2 = Symbol("a2", positive=True)
+    raises(ValueError, lambda: Hermite("H", a1, a2))
+
+    a1 = Symbol("a1", positive=True)
+    x = Symbol("x")
+    H = Hermite("H", a1, a2)
+    assert moment_generating_function(H)(x) == exp(a1*(exp(x) - 1)
+                                            + a2*(exp(2*x) - 1))
+    assert characteristic_function(H)(x) == exp(a1*(exp(I*x) - 1)
+                                            + a2*(exp(2*I*x) - 1))
+    assert E(H) == a1 + 2*a2
+
+    H = Hermite("H", a1=5, a2=4)
+    assert density(H)(2) == 33*exp(-9)/2
+    assert E(H) == 13
+    assert variance(H) == 21
+    assert kurtosis(H) == Rational(464,147)
+    assert skewness(H) == 37*sqrt(21)/441
 
 def test_Logarithmic():
     p = S.Half
@@ -48,7 +95,8 @@ def test_Logarithmic():
     assert E(x) == -p / ((1 - p) * log(1 - p))
     assert variance(x) == -1/log(2)**2 + 2/log(2)
     assert E(2*x**2 + 3*x + 4) == 4 + 7 / log(2)
-    assert isinstance(E(x, evaluate=False), Sum)
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert isinstance(E(x, evaluate=False), Expectation)
 
 
 @nocache_fail
@@ -60,7 +108,8 @@ def test_negative_binomial():
     # This hangs when run with the cache disabled:
     assert variance(x) == p*r / (1-p)**2
     assert E(x**5 + 2*x + 3) == Rational(9207, 4)
-    assert isinstance(E(x, evaluate=False), Sum)
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert isinstance(E(x, evaluate=False), Expectation)
 
 
 def test_skellam():
@@ -87,7 +136,8 @@ def test_yule_simon():
     x = YuleSimon('x', rho)
     assert simplify(E(x)) == rho / (rho - 1)
     assert simplify(variance(x)) == rho**2 / ((rho - 1)**2 * (rho - 2))
-    assert isinstance(E(x, evaluate=False), Sum)
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert isinstance(E(x, evaluate=False), Expectation)
     # To test the cdf function
     assert cdf(x)(x) == Piecewise((-beta(floor(x), 4)*floor(x) + 1, x >= 1), (0, True))
 
@@ -98,16 +148,6 @@ def test_zeta():
     assert E(x) == zeta(s-1) / zeta(s)
     assert simplify(variance(x)) == (
         zeta(s) * zeta(s-2) - zeta(s-1)**2) / zeta(s)**2
-
-
-@slow
-def test_sample_discrete():
-    X, Y, Z = Geometric('X', S.Half), Poisson('Y', 4), Poisson('Z', 1000)
-    W = Poisson('W', Rational(1, 100))
-    assert sample(X) in X.pspace.domain.set
-    assert sample(Y) in Y.pspace.domain.set
-    assert sample(Z) in Z.pspace.domain.set
-    assert sample(W) in W.pspace.domain.set
 
 
 def test_discrete_probability():
@@ -132,6 +172,22 @@ def test_discrete_probability():
     assert P(G < 3) == x*(2-x)
     assert P(Eq(G, 3)) == x*(-x + 1)**2
 
+
+def test_DiscreteRV():
+    p = S(1)/2
+    x = Symbol('x', integer=True, positive=True)
+    pdf = p*(1 - p)**(x - 1) # pdf of Geometric Distribution
+    D = DiscreteRV(x, pdf, set=S.Naturals, check=True)
+    assert E(D) == E(Geometric('G', S(1)/2)) == 2
+    assert P(D > 3) == S(1)/8
+    assert D.pspace.domain.set == S.Naturals
+    raises(ValueError, lambda: DiscreteRV(x, x, FiniteSet(*range(4)), check=True))
+
+    # purposeful invalid pmf but it should not raise since check=False
+    # see test_drv_types.test_ContinuousRV for explanation
+    X = DiscreteRV(x, 1/x, S.Naturals)
+    assert P(X < 2) == 1
+    assert E(X) == oo
 
 def test_precomputed_characteristic_functions():
     import mpmath
@@ -226,7 +282,8 @@ def test_product_spaces():
     #assert str(P(X1 + X2 < 3, evaluate=False)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """\
     #    + """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, -oo, -1))"""
     n = Dummy('n')
-    assert P(X1 + X2 < 3, evaluate=False).dummy_eq(Sum(Piecewise((2**(-n)/4,
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert P(X1 + X2 < 3, evaluate=False).rewrite(Sum).dummy_eq(Sum(Piecewise((2**(-n)/4,
          n + 2 >= 1), (0, True)), (n, -oo, -1))/3)
     #assert str(P(X1 + X2 > 3)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """ +\
     #    """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, 1, oo))"""

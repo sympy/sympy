@@ -1,5 +1,5 @@
 from sympy import Symbol, var, Function, FunctionClass
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 def test_var():
     ns = {"var": var, "raises": raises}
@@ -51,11 +51,11 @@ def test_var_keywords():
 
 def test_var_cls():
     ns = {"var": var, "Function": Function}
-    f = eval("var('f', cls=Function)", ns)
+    eval("var('f', cls=Function)", ns)
 
     assert isinstance(ns['f'], FunctionClass)
 
-    g, h = eval("var('g,h', cls=Function)", ns)
+    eval("var('g,h', cls=Function)", ns)
 
     assert isinstance(ns['g'], FunctionClass)
     assert isinstance(ns['h'], FunctionClass)

@@ -1,3 +1,4 @@
+from sympy import S
 from sympy.strategies.rl import (rm_id, glom, flatten, unpack, sort, distribute,
         subs, rebuild)
 from sympy import Basic
@@ -55,5 +56,5 @@ def test_subs():
 
 def test_rebuild():
     from sympy import Add
-    expr = Basic.__new__(Add, 1, 2)
+    expr = Basic.__new__(Add, S(1), S(2))
     assert rebuild(expr) == 3

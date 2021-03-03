@@ -1,5 +1,5 @@
 from sympy.printing.tree import tree
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 
 # Remove this flag after making _assumptions cache deterministic.
@@ -184,11 +184,11 @@ def test_print_tree_MatAdd_noassumptions():
     test_str = \
 """MatAdd: A + B
 +-MatrixSymbol: A
-| +-Symbol: A
+| +-Str: A
 | +-Integer: 3
 | +-Integer: 3
 +-MatrixSymbol: B
-  +-Symbol: B
+  +-Str: B
   +-Integer: 3
   +-Integer: 3
 """

@@ -1,11 +1,10 @@
-from sympy.core.compatibility import range
 from sympy import symbols, FiniteSet
 from sympy.combinatorics.polyhedron import (Polyhedron,
     tetrahedron, cube as square, octahedron, dodecahedron, icosahedron,
     cube_faces)
 from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 rmul = Permutation.rmul
 

@@ -31,10 +31,9 @@ complete source code files.
 # .. _Rational64: http://rust-num.github.io/num/num/rational/type.Rational64.html
 # .. _BigRational: http://rust-num.github.io/num/num/rational/type.BigRational.html
 
-from __future__ import print_function, division
+from typing import Any, Dict
 
 from sympy.core import S, Rational, Float, Lambda
-from sympy.core.compatibility import string_types, range
 from sympy.printing.codeprinter import CodePrinter
 
 # Rust's methods for integer and float can be found at here :
@@ -230,7 +229,7 @@ class RustCodePrinter(CodePrinter):
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
         'inline': False,
-    }
+    }  # type: Dict[str, Any]
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
@@ -299,7 +298,7 @@ class RustCodePrinter(CodePrinter):
             cond_func = self.known_functions[expr.func.__name__]
             func = None
             style = 1
-            if isinstance(cond_func, string_types):
+            if isinstance(cond_func, str):
                 func = cond_func
             else:
                 for cond, func, style in cond_func:
@@ -341,14 +340,14 @@ class RustCodePrinter(CodePrinter):
         return self._print_Function(expr)
 
     def _print_Float(self, expr, _type=False):
-        ret = super(RustCodePrinter, self)._print_Float(expr)
+        ret = super()._print_Float(expr)
         if _type:
             return ret + '_f64'
         else:
             return ret
 
     def _print_Integer(self, expr, _type=False):
-        ret = super(RustCodePrinter, self)._print_Integer(expr)
+        ret = super()._print_Integer(expr)
         if _type:
             return ret + '_i32'
         else:
@@ -362,7 +361,7 @@ class RustCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array
@@ -442,23 +441,17 @@ class RustCodePrinter(CodePrinter):
         else:
             raise ValueError("Full Matrix Support in Rust need Crates (https://crates.io/keywords/matrix).")
 
+    def _print_SparseMatrix(self, mat):
+        # do not allow sparse matrices to be made dense
+        return self._print_not_supported(mat)
+
     def _print_MatrixElement(self, expr):
         return "%s[%s]" % (expr.parent,
                            expr.j + expr.i*expr.parent.shape[1])
 
-    # FIXME: Str/CodePrinter could define each of these to call the _print
-    # method from higher up the class hierarchy (see _print_NumberSymbol).
-    # Then subclasses like us would not need to repeat all this.
-    _print_Matrix = \
-        _print_DenseMatrix = \
-        _print_MutableDenseMatrix = \
-        _print_ImmutableMatrix = \
-        _print_ImmutableDenseMatrix = \
-        _print_MatrixBase
-
     def _print_Symbol(self, expr):
 
-        name = super(RustCodePrinter, self)._print_Symbol(expr)
+        name = super()._print_Symbol(expr)
 
         if expr in self._dereference:
             return '(*%s)' % name
@@ -482,7 +475,7 @@ class RustCodePrinter(CodePrinter):
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
-        if isinstance(code, string_types):
+        if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 

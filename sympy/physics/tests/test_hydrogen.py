@@ -1,8 +1,7 @@
 from sympy import exp, integrate, oo, S, simplify, sqrt, symbols, pi, sin, \
     cos, I, Rational
-from sympy.core.compatibility import range
 from sympy.physics.hydrogen import R_nl, E_nl, E_nl_dirac, Psi_nlm
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 n, r, Z = symbols('n r Z')
 

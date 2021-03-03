@@ -7,7 +7,8 @@ from sympy.physics.vector.functions import (cross, dot, express,
                                             partial_velocity,
                                             get_motion_params, dynamicsymbols,
                                             TIME)
-from sympy.utilities.pytest import raises
+                                            get_motion_params, dynamicsymbols)
+from sympy.testing.pytest import raises
 
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
@@ -509,3 +510,16 @@ def test_different_time_symbol():
     # Set it back to the original so no other functions in this file are
     # affected.
     sympy.physics.vector.functions.TIME = t
+    
+def test_dynamicsymbols():
+    #Tests to check the assumptions applied to dynamicsymbols
+    f1 = dynamicsymbols('f1')
+    f2 = dynamicsymbols('f2', real=True)
+    f3 = dynamicsymbols('f3', positive=True)
+    f4, f5 = dynamicsymbols('f4,f5', commutative=False)
+    f6 = dynamicsymbols('f6', integer=True)
+    assert f1.is_real is None
+    assert f2.is_real
+    assert f3.is_positive
+    assert f4*f5 != f5*f4
+    assert f6.is_integer

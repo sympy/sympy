@@ -9,7 +9,7 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy import symbols, S
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.abc import a, b, c, d, e, x, y, z
 

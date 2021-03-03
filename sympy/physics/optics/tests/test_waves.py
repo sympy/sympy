@@ -5,7 +5,7 @@ from sympy.functions.elementary.exponential import exp
 from sympy.physics.units import speed_of_light, m, s
 from sympy.physics.optics import TWave
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 c = speed_of_light.convert_to(m/s)
 

@@ -3,7 +3,7 @@
 Includes functions for fast creating matrices like zero, one/eye, random
 matrix, etc.
 """
-from .common import ShapeError, NonSquareMatrixError
+from .common import ShapeError, NonSquareMatrixError, MatrixKind
 from .dense import (
     GramSchmidt, casoratian, diag, eye, hessian, jordan_cell,
     list2numpy, matrix2numpy, matrix_multiply_elementwise, ones,
@@ -27,10 +27,13 @@ from .expressions import (
     Transpose, ZeroMatrix, OneMatrix, blockcut, block_collapse, matrix_symbols, Adjoint,
     hadamard_product, HadamardProduct, HadamardPower, Determinant, det,
     diagonalize_vector, DiagMatrix, DiagonalMatrix, DiagonalOf, trace,
-    DotProduct, kronecker_product, KroneckerProduct)
+    DotProduct, kronecker_product, KroneckerProduct,
+    PermutationMatrix, MatrixPermute, MatrixSet, Permanent, per)
+
+from .utilities import dotprodsimp
 
 __all__ = [
-    'ShapeError', 'NonSquareMatrixError',
+    'ShapeError', 'NonSquareMatrixError', 'MatrixKind',
 
     'GramSchmidt', 'casoratian', 'diag', 'eye', 'hessian', 'jordan_cell',
     'list2numpy', 'matrix2numpy', 'matrix_multiply_elementwise', 'ones',
@@ -58,5 +61,8 @@ __all__ = [
     'hadamard_product', 'HadamardProduct', 'HadamardPower', 'Determinant',
     'det', 'diagonalize_vector', 'DiagMatrix', 'DiagonalMatrix',
     'DiagonalOf', 'trace', 'DotProduct', 'kronecker_product',
-    'KroneckerProduct',
+    'KroneckerProduct', 'PermutationMatrix', 'MatrixPermute', 'MatrixSet',
+    'Permanent', 'per',
+
+    'dotprodsimp',
 ]

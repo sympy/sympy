@@ -1,7 +1,7 @@
 from random import randint
 
 from sympy.ntheory.bbp_pi import pi_hex_digits
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 # http://www.herongyang.com/Cryptography/Blowfish-First-8366-Hex-Digits-of-PI.html

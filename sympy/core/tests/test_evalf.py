@@ -1,15 +1,14 @@
 from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
-    integrate, log, Mul, N, oo, pi, Pow, product, Product,
+    integrate, log, Mul, N, oo, pi, Pow, product, Product, tan,
     Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat, cosh, acosh, acos)
 from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
     scaled_zero, get_integer_part, as_mpmath, evalf)
 from mpmath import inf, ninf
 from mpmath.libmp.libmpf import from_float
-from sympy.core.compatibility import long, range
 from sympy.core.expr import unchanged
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import n, x, y
 
 
@@ -197,7 +196,7 @@ def test_evalf_bugs():
     # because the order depends on the hashes of the terms.
     assert NS(20 - 5008329267844*n**25 - 477638700*n**37 - 19*n,
               subs={n: .01}) == '19.8100000000000'
-    assert NS(((x - 1)*((1 - x))**1000).n()
+    assert NS(((x - 1)*(1 - x)**1000).n()
               ) == '(1.00000000000000 - x)**1000*(x - 1.00000000000000)'
     assert NS((-x).n()) == '-x'
     assert NS((-2*x).n()) == '-2.00000000000000*x'
@@ -245,12 +244,12 @@ def test_evalf_integer_parts():
     assert ceiling(10*(sin(1)**2 + cos(1)**2)) == 10
 
     assert int(floor(factorial(50)/E, evaluate=False).evalf(70)) == \
-        long(11188719610782480504630258070757734324011354208865721592720336800)
+        int(11188719610782480504630258070757734324011354208865721592720336800)
     assert int(ceiling(factorial(50)/E, evaluate=False).evalf(70)) == \
-        long(11188719610782480504630258070757734324011354208865721592720336801)
-    assert int(floor((GoldenRatio**999 / sqrt(5) + S.Half))
+        int(11188719610782480504630258070757734324011354208865721592720336801)
+    assert int(floor(GoldenRatio**999 / sqrt(5) + S.Half)
                .evalf(1000)) == fibonacci(999)
-    assert int(floor((GoldenRatio**1000 / sqrt(5) + S.Half))
+    assert int(floor(GoldenRatio**1000 / sqrt(5) + S.Half)
                .evalf(1000)) == fibonacci(1000)
 
     assert ceiling(x).evalf(subs={x: 3}) == 3
@@ -262,6 +261,16 @@ def test_evalf_integer_parts():
 
     assert float((floor(1.5, evaluate=False)+1/9).evalf()) == 1 + 1/9
     assert float((floor(0.5, evaluate=False)+20).evalf()) == 20
+
+    # issue 19991
+    n = 1169809367327212570704813632106852886389036911
+    r = 744723773141314414542111064094745678855643068
+
+    assert floor(n / (pi / 2)) == r
+    assert floor(80782 * sqrt(2)) == 114242
+
+    # issue 20076
+    assert 260515 - floor(260515/pi + 1/2) * pi == atan(tan(260515))
 
 
 def test_evalf_trig_zero_detection():
@@ -356,8 +365,7 @@ def test_evalf_relational():
     # one that doesn't
     assert unchanged(Eq, (3 - I)**2/2 + I, 0)
     assert Eq((3 - I)**2/2 + I, 0).n() is S.false
-    # note: these don't always evaluate to Boolean
-    assert nfloat(Eq((3 - I)**2 + I, 0)) == Eq((3.0 - I)**2 + I, 0)
+    assert nfloat(Eq((3 - I)**2 + I, 0)) == S.false
 
 
 def test_issue_5486():
@@ -451,8 +459,8 @@ def test_infinities():
 
 
 def test_to_mpmath():
-    assert sqrt(3)._to_mpmath(20)._mpf_ == (0, long(908093), -19, 20)
-    assert S(3.2)._to_mpmath(20)._mpf_ == (0, long(838861), -18, 20)
+    assert sqrt(3)._to_mpmath(20)._mpf_ == (0, int(908093), -19, 20)
+    assert S(3.2)._to_mpmath(20)._mpf_ == (0, int(838861), -18, 20)
 
 
 def test_issue_6632_evalf():
@@ -581,3 +589,16 @@ def test_issue_13425():
 
 def test_issue_17421():
     assert N(acos(-I + acosh(cosh(cosh(1) + I)))) == 1.0*I
+
+
+def test_issue_20291():
+    from sympy import FiniteSet, Complement, Intersection, Reals, EmptySet
+    a = Symbol('a')
+    b = Symbol('b')
+    A = FiniteSet(a, b)
+    assert A.evalf(subs={a: 1, b: 2}) == FiniteSet(1.0, 2.0)
+    B = FiniteSet(a-b, 1)
+    assert B.evalf(subs={a: 1, b: 2}) == FiniteSet(-1.0, 1.0)
+
+    sol = Complement(Intersection(FiniteSet(-b/2 - sqrt(b**2-4*pi)/2), Reals), FiniteSet(0))
+    assert sol.evalf(subs={b: 1}) == EmptySet

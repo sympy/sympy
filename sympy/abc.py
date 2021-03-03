@@ -12,7 +12,7 @@ instead of the slightly more clunky-looking
 Caveats
 =======
 
-1. As of the time of writing this, the names ``C``, ``O``, ``S``, ``I``, ``N``,
+1. As of the time of writing this, the names ``O``, ``S``, ``I``, ``N``,
 ``E``, and ``Q`` are colliding with names defined in SymPy. If you import them
 from both ``sympy.abc`` and ``sympy``, the second import will "win".
 This is an issue only for * imports, which should only be used for short-lived
@@ -51,13 +51,12 @@ pi(C, Q)
 
 """
 
-from __future__ import print_function, division
+from typing import Any, Dict
 
 import string
 
 from .core import Symbol, symbols
 from .core.alphabets import greeks
-from .core.compatibility import exec_
 
 ##### Symbol definitions #####
 
@@ -92,8 +91,8 @@ _greek = list(greeks) # make a copy, so we can mutate it
 _greek.remove("lambda")
 _greek.append("lamda")
 
-ns = {}
-exec_('from sympy import *', ns)
+ns = {}  # type: Dict[str, Any]
+exec('from sympy import *', ns)
 _clash1 = {}
 _clash2 = {}
 while ns:

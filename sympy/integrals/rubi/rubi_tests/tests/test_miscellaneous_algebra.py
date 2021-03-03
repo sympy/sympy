@@ -21,7 +21,7 @@ from sympy.integrals.rubi.utility_function import (EllipticE, EllipticF,
     hypergeom, rubi_test, AppellF1, EllipticPi, Log, Sqrt, ArcTan, ArcTanh, ArcSin, ArcCos, Hypergeometric2F1)
 from sympy import pi as Pi
 from sympy import S, hyper, I, simplify, exp_polar, symbols,elliptic_pi,elliptic_e, elliptic_f
-from sympy.utilities.pytest import SKIP
+from sympy.testing.pytest import SKIP
 from sympy import acsch as arccsch, acsc as arccsc
 from sympy import acsch, acsc
 

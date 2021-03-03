@@ -1,9 +1,7 @@
 import random
-
 from sympy import symbols, Derivative
-from sympy.codegen.array_utils import (CodegenArrayContraction,
-        CodegenArrayTensorProduct, CodegenArrayElementwiseAdd,
-        CodegenArrayPermuteDims, CodegenArrayDiagonal)
+from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
+    PermuteDims, ArrayDiagonal
 from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
 from sympy.external import import_module
 from sympy.functions import \
@@ -14,8 +12,10 @@ from sympy.matrices import Matrix, MatrixBase, eye, randMatrix
 from sympy.matrices.expressions import \
     Determinant, HadamardProduct, Inverse, MatrixSymbol, Trace
 from sympy.printing.tensorflow import tensorflow_code
+from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 from sympy.utilities.lambdify import lambdify
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
+from sympy.testing.pytest import XFAIL
 
 
 tf = tensorflow = import_module("tensorflow")
@@ -45,6 +45,38 @@ def _compare_tensorflow_matrix(variables, expr, use_float=False):
         random_matrices = [randMatrix(v.rows, v.cols) for v in variables]
     else:
         random_matrices = [randMatrix(v.rows, v.cols)/100. for v in variables]
+
+    graph = tf.Graph()
+    r = None
+    with graph.as_default():
+        random_variables = [eval(tensorflow_code(i)) for i in random_matrices]
+        session = tf.compat.v1.Session(graph=graph)
+        r = session.run(f(*random_variables))
+
+    e = expr.subs({k: v for k, v in zip(variables, random_matrices)})
+    e = e.doit()
+    if e.is_Matrix:
+        if not isinstance(e, MatrixBase):
+            e = e.as_explicit()
+        e = e.tolist()
+
+    if not use_float:
+        assert (r == e).all()
+    else:
+        r = [i for row in r for i in row]
+        e = [i for row in e for i in row]
+        assert all(
+            abs(a-b) < 10**-(4-int(log(abs(a), 10))) for a, b in zip(r, e))
+
+
+# Creating a custom inverse test.
+# See https://github.com/sympy/sympy/issues/18469
+def _compare_tensorflow_matrix_inverse(variables, expr, use_float=False):
+    f = lambdify(variables, expr, 'tensorflow')
+    if not use_float:
+        random_matrices = [eye(v.rows, v.cols)*4 for v in variables]
+    else:
+        random_matrices = [eye(v.rows, v.cols)*3.14 for v in variables]
 
     graph = tf.Graph()
     r = None
@@ -129,6 +161,9 @@ def test_tensorflow_printing():
             " [tensorflow.math.exp(z), -t]])"
 
 
+# This (random) test is XFAIL because it fails occasionally
+# See https://github.com/sympy/sympy/issues/18469
+@XFAIL
 def test_tensorflow_math():
     if not tf:
         skip("TensorFlow not installed")
@@ -167,7 +202,7 @@ def test_tensorflow_math():
 
     expr = acos(x)
     assert tensorflow_code(expr) == "tensorflow.math.acos(x)"
-    _compare_tensorflow_scalar((x,), expr, rng=lambda: random.random())
+    _compare_tensorflow_scalar((x,), expr, rng=lambda: random.uniform(0, 0.95))
 
     expr = sin(x)
     assert tensorflow_code(expr) == "tensorflow.math.sin(x)"
@@ -260,6 +295,9 @@ def test_tensorflow_relational():
     _compare_tensorflow_relational((x, y), expr)
 
 
+# This (random) test is XFAIL because it fails occasionally
+# See https://github.com/sympy/sympy/issues/18469
+@XFAIL
 def test_tensorflow_matrices():
     if not tf:
         skip("TensorFlow not installed")
@@ -302,7 +340,7 @@ def test_tensorflow_matrices():
 
     expr = Inverse(M)
     assert tensorflow_code(expr) == "tensorflow.linalg.inv(M)"
-    _compare_tensorflow_matrix((M,), expr, use_float=True)
+    _compare_tensorflow_matrix_inverse((M,), expr, use_float=True)
 
     expr = M.T
     assert tensorflow_code(expr, tensorflow_version='1.14') == \
@@ -324,7 +362,7 @@ def test_codegen_einsum():
         M = MatrixSymbol("M", 2, 2)
         N = MatrixSymbol("N", 2, 2)
 
-        cg = CodegenArrayContraction.from_MatMul(M*N)
+        cg = convert_matrix_to_array(M * N)
         f = lambdify((M, N), cg, 'tensorflow')
 
         ma = tf.constant([[1, 2], [3, 4]])
@@ -351,7 +389,7 @@ def test_codegen_extra():
         mc = tf.constant([[2, 0], [1, 2]])
         md = tf.constant([[1,-1], [4, 7]])
 
-        cg = CodegenArrayTensorProduct(M, N)
+        cg = ArrayTensorProduct(M, N)
         assert tensorflow_code(cg) == \
             'tensorflow.linalg.einsum("ab,cd", M, N)'
         f = lambdify((M, N), cg, 'tensorflow')
@@ -359,14 +397,14 @@ def test_codegen_extra():
         c = session.run(tf.einsum("ij,kl", ma, mb))
         assert (y == c).all()
 
-        cg = CodegenArrayElementwiseAdd(M, N)
+        cg = ArrayAdd(M, N)
         assert tensorflow_code(cg) == 'tensorflow.math.add(M, N)'
         f = lambdify((M, N), cg, 'tensorflow')
         y = session.run(f(ma, mb))
         c = session.run(ma + mb)
         assert (y == c).all()
 
-        cg = CodegenArrayElementwiseAdd(M, N, P)
+        cg = ArrayAdd(M, N, P)
         assert tensorflow_code(cg) == \
             'tensorflow.math.add(tensorflow.math.add(M, N), P)'
         f = lambdify((M, N, P), cg, 'tensorflow')
@@ -374,7 +412,7 @@ def test_codegen_extra():
         c = session.run(ma + mb + mc)
         assert (y == c).all()
 
-        cg = CodegenArrayElementwiseAdd(M, N, P, Q)
+        cg = ArrayAdd(M, N, P, Q)
         assert tensorflow_code(cg) == \
             'tensorflow.math.add(' \
                 'tensorflow.math.add(tensorflow.math.add(M, N), P), Q)'
@@ -383,14 +421,14 @@ def test_codegen_extra():
         c = session.run(ma + mb + mc + md)
         assert (y == c).all()
 
-        cg = CodegenArrayPermuteDims(M, [1, 0])
+        cg = PermuteDims(M, [1, 0])
         assert tensorflow_code(cg) == 'tensorflow.transpose(M, [1, 0])'
         f = lambdify((M,), cg, 'tensorflow')
         y = session.run(f(ma))
         c = session.run(tf.transpose(ma))
         assert (y == c).all()
 
-        cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [1, 2, 3, 0])
+        cg = PermuteDims(ArrayTensorProduct(M, N), [1, 2, 3, 0])
         assert tensorflow_code(cg) == \
             'tensorflow.transpose(' \
                 'tensorflow.linalg.einsum("ab,cd", M, N), [1, 2, 3, 0])'
@@ -399,7 +437,7 @@ def test_codegen_extra():
         c = session.run(tf.transpose(tf.einsum("ab,cd", ma, mb), [1, 2, 3, 0]))
         assert (y == c).all()
 
-        cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N), (1, 2))
+        cg = ArrayDiagonal(ArrayTensorProduct(M, N), (1, 2))
         assert tensorflow_code(cg) == \
             'tensorflow.linalg.einsum("ab,bc->acb", M, N)'
         f = lambdify((M, N), cg, 'tensorflow')

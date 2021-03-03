@@ -1,5 +1,5 @@
 from sympy.plotting.intervalmath import interval
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_interval():

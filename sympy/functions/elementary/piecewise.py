@@ -1,8 +1,5 @@
-from __future__ import print_function, division
-
 from sympy.core import Basic, S, Function, diff, Tuple, Dummy
 from sympy.core.basic import as_Basic
-from sympy.core.compatibility import range
 from sympy.core.numbers import Rational, NumberSymbol
 from sympy.core.relational import (Equality, Unequality, Relational,
     _canonical)
@@ -78,7 +75,7 @@ class Piecewise(Function):
     Examples
     ========
 
-    >>> from sympy import Piecewise, log, ITE, piecewise_fold
+    >>> from sympy import Piecewise, log, piecewise_fold
     >>> from sympy.abc import x, y
     >>> f = x**2
     >>> g = log(x)
@@ -321,7 +318,7 @@ class Piecewise(Function):
     def _eval_simplify(self, **kwargs):
         return piecewise_simplify(self, **kwargs)
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         for e, c in self.args:
             if c == True or c.subs(x, 0) == True:
                 return e.as_leading_term(x)
@@ -440,19 +437,6 @@ class Piecewise(Function):
             args = [(e, args[e]) for e in uniq(exprinorder)]
             # add in the last arg
             args.append((expr, True))
-            # if any condition reduced to True, it needs to go last
-            # and there should only be one of them or else the exprs
-            # should agree
-            trues = [i for i in range(len(args)) if args[i][1] is S.true]
-            if not trues:
-                # make the last one True since all cases were enumerated
-                e, c = args[-1]
-                args[-1] = (e, S.true)
-            else:
-                assert len(set([e for e, c in [args[i] for i in trues]])) == 1
-                args.append(args.pop(trues.pop()))
-                while trues:
-                    args.pop(trues.pop())
             return Piecewise(*args)
 
     def _eval_integral(self, x, _first=True, **kwargs):
@@ -554,7 +538,7 @@ class Piecewise(Function):
 
         if a is None or b is None:
             # In this case, it is just simple substitution
-            return super(Piecewise, self)._eval_interval(sym, a, b)
+            return super()._eval_interval(sym, a, b)
         else:
             x, lo, hi = map(as_Basic, (sym, a, b))
 
@@ -724,8 +708,8 @@ class Piecewise(Function):
                 %s appeared: %s''' % (sym, cond)))
 
         # make self canonical wrt Relationals
-        reps = dict([
-            (r, _solve_relational(r)) for r in self.atoms(Relational)])
+        reps = {
+            r: _solve_relational(r) for r in self.atoms(Relational)}
         # process args individually so if any evaluate, their position
         # in the original Piecewise will be known
         args = [i.xreplace(reps) for i in self.args]
@@ -790,7 +774,7 @@ class Piecewise(Function):
 
         return list(uniq(int_expr))
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         args = [(ec.expr._eval_nseries(x, n, logx), ec.cond) for ec in self.args]
         return self.func(*args)
 
@@ -903,12 +887,17 @@ class Piecewise(Function):
          (3, Interval(4, oo))]
         >>> p.as_expr_set_pairs(Interval(0, 3))
         [(1, Interval.Ropen(0, 2)),
-         (2, Interval(2, 3)), (3, EmptySet)]
+         (2, Interval(2, 3))]
         """
         exp_sets = []
         U = domain
         complex = not domain.is_subset(S.Reals)
+        cond_free = set()
         for expr, cond in self.args:
+            cond_free |= cond.free_symbols
+            if len(cond_free) > 1:
+                raise NotImplementedError(filldedent('''
+                    multivariate conditions are not handled.'''))
             if complex:
                 for i in cond.atoms(Relational):
                     if not isinstance(i, (Equality, Unequality)):
@@ -918,7 +907,8 @@ class Piecewise(Function):
                             setting domain=S.Reals'''))
             cond_int = U.intersect(cond.as_set())
             U = U - cond_int
-            exp_sets.append((expr, cond_int))
+            if cond_int != S.EmptySet:
+                exp_sets.append((expr, cond_int))
         return exp_sets
 
     def _eval_rewrite_as_ITE(self, *args, **kwargs):
@@ -1188,6 +1178,8 @@ def piecewise_simplify_arguments(expr, **kwargs):
 
 def piecewise_simplify(expr, **kwargs):
     expr = piecewise_simplify_arguments(expr, **kwargs)
+    if not isinstance(expr, Piecewise):
+        return expr
     args = list(expr.args)
 
     _blessed = lambda e: getattr(e.lhs, '_diff_wrt', False) and (
@@ -1234,9 +1226,10 @@ def piecewise_simplify(expr, **kwargs):
             if eqs and not other:
                 eqs = list(ordered(eqs))
                 for e in eqs:
-                    # these blessed lhs objects behave like Symbols
-                    # and the rhs are simple replacements for the "symbols"
-                    if _blessed(e):
+                    # allow 2 args to collapse into 1 for any e
+                    # otherwise limit simplification to only simple-arg
+                    # Eq instances
+                    if len(args) == 2 or _blessed(e):
                         _prevexpr = _prevexpr.subs(*e.args)
                         _expr = _expr.subs(*e.args)
             # Did it evaluate to the same?

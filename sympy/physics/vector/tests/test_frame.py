@@ -1,12 +1,39 @@
-from sympy import symbols, sin, cos, pi, zeros, eye, ImmutableMatrix as Matrix
+from sympy import (symbols, sin, cos, pi, zeros, eye, simplify, ImmutableMatrix
+                   as Matrix)
 from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
                                   dynamicsymbols, time_derivative, express,
                                   dot)
 from sympy.physics.vector.frame import _check_frame
 from sympy.physics.vector.vector import VectorTypeError
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 Vector.simp = True
+
+
+def test_dict_list():
+
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    C = ReferenceFrame('C')
+    D = ReferenceFrame('D')
+    E = ReferenceFrame('E')
+    F = ReferenceFrame('F')
+
+    B.orient_axis(A, A.x, 1.0)
+    C.orient_axis(B, B.x, 1.0)
+    D.orient_axis(C, C.x, 1.0)
+
+    assert D._dict_list(A, 0) == [D, C, B, A]
+
+    E.orient_axis(D, D.x, 1.0)
+
+    assert C._dict_list(A, 0) == [C, B, A]
+    assert C._dict_list(E, 0) == [C, D, E]
+
+    # only 0, 1, 2 permitted for second argument
+    raises(ValueError, lambda: C._dict_list(E, 5))
+    # no connecting path
+    raises(ValueError, lambda: F._dict_list(A, 0))
 
 
 def test_coordinate_vars():
@@ -366,7 +393,7 @@ def test_reference_frame():
     raises(TypeError, lambda: B.orient(N, 'Space', [q1, q2, q3], '222'))
     raises(TypeError, lambda: B.orient(N, 'Axis', [q1, N.x + 2 * N.y], '222'))
     raises(TypeError, lambda: B.orient(N, 'Axis', q1))
-    raises(TypeError, lambda: B.orient(N, 'Axis', [q1]))
+    raises(IndexError, lambda: B.orient(N, 'Axis', [q1]))
     raises(TypeError, lambda: B.orient(N, 'Quaternion', [q0, q1, q2, q3], '222'))
     raises(TypeError, lambda: B.orient(N, 'Quaternion', q0))
     raises(TypeError, lambda: B.orient(N, 'Quaternion', [q0, q1, q2]))
@@ -382,3 +409,65 @@ def test_reference_frame():
 
 def test_check_frame():
     raises(VectorTypeError, lambda: _check_frame(0))
+
+
+def test_dcm_diff_16824():
+    # NOTE : This is a regression test for the bug introduced in PR 14758,
+    # identified in 16824, and solved by PR 16828.
+
+    # This is the solution to Problem 2.2 on page 264 in Kane & Lenvinson's
+    # 1985 book.
+
+    q1, q2, q3 = dynamicsymbols('q1:4')
+
+    s1 = sin(q1)
+    c1 = cos(q1)
+    s2 = sin(q2)
+    c2 = cos(q2)
+    s3 = sin(q3)
+    c3 = cos(q3)
+
+    dcm = Matrix([[c2*c3, s1*s2*c3 - s3*c1, c1*s2*c3 + s3*s1],
+                  [c2*s3, s1*s2*s3 + c3*c1, c1*s2*s3 - c3*s1],
+                  [-s2,   s1*c2,            c1*c2]])
+
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B.orient(A, 'DCM', dcm)
+
+    AwB = B.ang_vel_in(A)
+
+    alpha2 = s3*c2*q1.diff() + c3*q2.diff()
+    beta2 = s1*c2*q3.diff() + c1*q2.diff()
+
+    assert simplify(AwB.dot(A.y) - alpha2) == 0
+    assert simplify(AwB.dot(B.y) - beta2) == 0
+
+def test_orient_explicit():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    A.orient_explicit(B, eye(3))
+    assert A.dcm(B) == Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+def test_orient_axis():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    assert A.orient_axis(B,-B.x, 1) == A.orient_axis(B, B.x, -1)
+
+def test_orient_body():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B.orient_body_fixed(A, (1,1,0), 'XYX')
+    assert B.dcm(A) == Matrix([[cos(1), sin(1)**2, -sin(1)*cos(1)], [0, cos(1), sin(1)], [sin(1), -sin(1)*cos(1), cos(1)**2]])
+
+def test_orient_space():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B.orient_space_fixed(A, (0,0,0), '123')
+    assert B.dcm(A) == Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+def test_orient_quaternion():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B.orient_quaternion(A, (0,0,0,0))
+    assert B.dcm(A) == Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])

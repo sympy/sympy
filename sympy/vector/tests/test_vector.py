@@ -6,7 +6,7 @@ from sympy.vector.vector import Vector, BaseVector, VectorAdd, \
      VectorMul, VectorZero
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.vector import Cross, Dot, cross
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 C = CoordSys3D('C')
 

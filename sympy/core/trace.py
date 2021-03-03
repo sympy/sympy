@@ -1,7 +1,4 @@
-from __future__ import print_function, division
-
 from sympy import Expr, Add, Mul, Pow, sympify, Matrix, Tuple
-from sympy.core.compatibility import range
 from sympy.utilities import default_sort_key
 
 
@@ -23,8 +20,12 @@ def _is_scalar(e):
 def _cycle_permute(l):
     """ Cyclic permutations based on canonical ordering
 
+    Explanation
+    ===========
+
     This method does the sort based ascii values while
     a better approach would be to used lexicographic sort.
+
     TODO: Handle condition such as symbols have subscripts/superscripts
     in case of lexicographic sort
 
@@ -153,6 +154,12 @@ class Tr(Expr):
 
             return Expr.__new__(cls, expr, indices)
 
+    @property
+    def kind(self):
+        expr = self.args[0]
+        expr_kind = expr.kind
+        return expr_kind.element_kind
+
     def doit(self, **kwargs):
         """ Perform the trace operation.
 
@@ -183,6 +190,7 @@ class Tr(Expr):
 
         Parameters
         ==========
+
         pos : integer, if positive, shift-right, else shift-left
 
         Examples

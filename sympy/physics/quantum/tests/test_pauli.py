@@ -5,7 +5,7 @@ from sympy.physics.quantum.pauli import (SigmaOpBase, SigmaX, SigmaY, SigmaZ,
                                          SigmaMinus, SigmaPlus,
                                          qsimplify_pauli)
 from sympy.physics.quantum.pauli import SigmaZKet, SigmaZBra
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 sx, sy, sz = SigmaX(), SigmaY(), SigmaZ()

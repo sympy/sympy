@@ -1,9 +1,7 @@
 """Tools for manipulating of large commutative expressions. """
 
-from __future__ import print_function, division
-
 from sympy.core.add import Add
-from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS, range
+from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic, preorder_traversal
@@ -51,7 +49,7 @@ def _monotonic_sign(self):
     ========
 
     >>> from sympy.core.exprtools import _monotonic_sign as F
-    >>> from sympy import Dummy, S
+    >>> from sympy import Dummy
     >>> nn = Dummy(integer=True, nonnegative=True)
     >>> p = Dummy(integer=True, positive=True)
     >>> p2 = Dummy(integer=True, positive=True)
@@ -215,6 +213,9 @@ def decompose_power(expr):
     """
     Decompose power into symbolic base and integer exponent.
 
+    Explanation
+    ===========
+
     This is strictly only valid if the exponent from which
     the integer is extracted is itself an integer or the
     base is positive. These conditions are assumed and not
@@ -284,10 +285,10 @@ def decompose_power_rat(expr):
     return base, exp
 
 
-class Factors(object):
+class Factors:
     """Efficient representation of ``f_1*f_2*...*f_n``."""
 
-    __slots__ = ['factors', 'gens']
+    __slots__ = ('factors', 'gens')
 
     def __init__(self, factors=None):  # Factors
         """Initialize Factors from dict or expr.
@@ -358,8 +359,8 @@ class Factors(object):
             for f in list(factors.keys()):
                 if isinstance(f, Rational) and not isinstance(f, Integer):
                     p, q = Integer(f.p), Integer(f.q)
-                    factors[p] = (factors[p] if p in factors else 0) + factors[f]
-                    factors[q] = (factors[q] if q in factors else 0) - factors[f]
+                    factors[p] = (factors[p] if p in factors else S.Zero) + factors[f]
+                    factors[q] = (factors[q] if q in factors else S.Zero) - factors[f]
                     factors.pop(f)
             if i:
                 factors[I] = S.One*i
@@ -448,14 +449,12 @@ class Factors(object):
         args = []
         for factor, exp in self.factors.items():
             if exp != 1:
-                b, e = factor.as_base_exp()
-                if isinstance(exp, int):
-                    e = _keep_coeff(Integer(exp), e)
-                elif isinstance(exp, Rational):
+                if isinstance(exp, Integer):
+                    b, e = factor.as_base_exp()
                     e = _keep_coeff(exp, e)
+                    args.append(b**e)
                 else:
-                    e *= exp
-                args.append(b**e)
+                    args.append(factor**exp)
             else:
                 args.append(factor)
         return Mul(*args)
@@ -794,10 +793,8 @@ class Factors(object):
     def __divmod__(self, other):  # Factors
         return self.div(other)
 
-    def __div__(self, other):  # Factors
+    def __truediv__(self, other):  # Factors
         return self.quo(other)
-
-    __truediv__ = __div__
 
     def __mod__(self, other):  # Factors
         return self.rem(other)
@@ -814,10 +811,10 @@ class Factors(object):
         return not self == other
 
 
-class Term(object):
+class Term:
     """Efficient representation of ``coeff*(numer/denom)``. """
 
-    __slots__ = ['coeff', 'numer', 'denom']
+    __slots__ = ('coeff', 'numer', 'denom')
 
     def __init__(self, term, numer=None, denom=None):  # Term
         if numer is None and denom is None:
@@ -903,13 +900,11 @@ class Term(object):
         else:
             return NotImplemented
 
-    def __div__(self, other):  # Term
+    def __truediv__(self, other):  # Term
         if isinstance(other, Term):
             return self.quo(other)
         else:
             return NotImplemented
-
-    __truediv__ = __div__
 
     def __pow__(self, other):  # Term
         if isinstance(other, SYMPY_INTS):
@@ -929,12 +924,17 @@ class Term(object):
 def _gcd_terms(terms, isprimitive=False, fraction=True):
     """Helper function for :func:`gcd_terms`.
 
-    If ``isprimitive`` is True then the call to primitive
-    for an Add will be skipped. This is useful when the
-    content has already been extrated.
+    Parameters
+    ==========
 
-    If ``fraction`` is True then the expression will appear over a common
-    denominator, the lcm of all term denominators.
+    isprimitive : boolean, optional
+        If ``isprimitive`` is True then the call to primitive
+        for an Add will be skipped. This is useful when the
+        content has already been extrated.
+
+    fraction : boolean, optional
+        If ``fraction`` is True then the expression will appear over a common
+        denominator, the lcm of all term denominators.
     """
 
     if isinstance(terms, Basic) and not isinstance(terms, Tuple):
@@ -989,19 +989,26 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
 def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     """Compute the GCD of ``terms`` and put them together.
 
-    ``terms`` can be an expression or a non-Basic sequence of expressions
-    which will be handled as though they are terms from a sum.
+    Parameters
+    ==========
 
-    If ``isprimitive`` is True the _gcd_terms will not run the primitive
-    method on the terms.
+    terms : Expr
+        Can be an expression or a non-Basic sequence of expressions
+        which will be handled as though they are terms from a sum.
 
-    ``clear`` controls the removal of integers from the denominator of an Add
-    expression. When True (default), all numerical denominator will be cleared;
-    when False the denominators will be cleared only if all terms had numerical
-    denominators other than 1.
+    isprimitive : bool, optional
+        If ``isprimitive`` is True the _gcd_terms will not run the primitive
+        method on the terms.
 
-    ``fraction``, when True (default), will put the expression over a common
-    denominator.
+    clear : bool, optional
+        It controls the removal of integers from the denominator of an Add
+        expression. When True (default), all numerical denominator will be cleared;
+        when False the denominators will be cleared only if all terms had numerical
+        denominators other than 1.
+
+    fraction : bool, optional
+        When True (default), will put the expression over a common
+        denominator.
 
     Examples
     ========
@@ -1036,6 +1043,7 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
 
     See Also
     ========
+
     factor_terms, sympy.polys.polytools.terms_gcd
 
     """
@@ -1141,7 +1149,7 @@ def _factor_sum_int(expr, **kwargs):
     limits = expr.limits
 
     # get the wrt variables
-    wrt = set([i.args[0] for i in limits])
+    wrt = {i.args[0] for i in limits}
 
     # factor out any common terms that are independent of wrt
     f = factor_terms(result, **kwargs)
@@ -1157,18 +1165,25 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     changing the underlying structure of the expr. No expansion or
     simplification (and no processing of non-commutatives) is performed.
 
-    If radical=True then a radical common to all terms will be factored
-    out of any Add sub-expressions of the expr.
+    Parameters
+    ==========
 
-    If clear=False (default) then coefficients will not be separated
-    from a single Add if they can be distributed to leave one or more
-    terms with integer coefficients.
+    radical: bool, optional
+        If radical=True then a radical common to all terms will be factored
+        out of any Add sub-expressions of the expr.
 
-    If fraction=True (default is False) then a common denominator will be
-    constructed for the expression.
+    clear : bool, optional
+        If clear=False (default) then coefficients will not be separated
+        from a single Add if they can be distributed to leave one or more
+        terms with integer coefficients.
 
-    If sign=True (default) then even if the only factor in common is a -1,
-    it will be factored out of the expression.
+    fraction : bool, optional
+        If fraction=True (default is False) then a common denominator will be
+        constructed for the expression.
+
+    sign : bool, optional
+        If sign=True (default) then even if the only factor in common is a -1,
+        it will be factored out of the expression.
 
     Examples
     ========
@@ -1202,6 +1217,7 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
 
     See Also
     ========
+
     gcd_terms, sympy.polys.polytools.terms_gcd
 
     """
@@ -1266,12 +1282,9 @@ def _mask_nc(eq, name=None):
     and cannot be made commutative. The third value returned is a list
     of any non-commutative symbols that appear in the returned equation.
 
-    ``name``, if given, is the name that will be used with numbered Dummy
-    variables that will replace the non-commutative objects and is mainly
-    used for doctesting purposes.
+    Explanation
+    ===========
 
-    Notes
-    =====
     All non-commutative objects other than Symbols are replaced with
     a non-commutative Symbol. Identical objects will be identified
     by identical symbols.
@@ -1282,11 +1295,19 @@ def _mask_nc(eq, name=None):
     replacements in this case since some care must be taken to keep
     track of the ordering of symbols when they occur within Muls.
 
+    Parameters
+    ==========
+
+    name : str
+        ``name``, if given, is the name that will be used with numbered Dummy
+        variables that will replace the non-commutative objects and is mainly
+        used for doctesting purposes.
+
     Examples
     ========
 
     >>> from sympy.physics.secondquant import Commutator, NO, F, Fd
-    >>> from sympy import symbols, Mul
+    >>> from sympy import symbols
     >>> from sympy.core.exprtools import _mask_nc
     >>> from sympy.abc import x, y
     >>> A, B, C = symbols('A,B,C', commutative=False)
@@ -1319,22 +1340,6 @@ def _mask_nc(eq, name=None):
     >>> eq = A*Commutator(A, B) + B*Commutator(A, C)
     >>> _mask_nc(eq, 'd')
     (A*_d0 + B*_d1, {_d0: Commutator(A, B), _d1: Commutator(A, C)}, [_d0, _d1, A, B])
-
-    If there is an object that:
-
-        - doesn't contain nc-symbols
-        - but has arguments which derive from Basic, not Expr
-        - and doesn't define an _eval_is_commutative routine
-
-    then it will give False (or None?) for the is_commutative test. Such
-    objects are also removed by this routine:
-
-    >>> from sympy import Basic
-    >>> eq = (1 + Mul(Basic(), Basic(), evaluate=False))
-    >>> eq.is_commutative
-    False
-    >>> _mask_nc(eq, 'd')
-    (_d0**2 + 1, {_d0: Basic()}, [])
 
     """
     name = name or 'mask'

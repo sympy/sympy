@@ -1,7 +1,5 @@
-from __future__ import division, print_function
-
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
-from sympy.core.compatibility import as_int, range, ordered
+from sympy.core.compatibility import as_int, ordered
 from sympy.core.symbol import _symbol, Dummy, symbols
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
@@ -32,6 +30,12 @@ class Polygon(GeometrySet):
     ==========
 
     vertices : sequence of Points
+
+    Optional parameters
+    ==========
+
+    n : If > 0, an n-sided RegularPolygon is created. See below.
+        Default value is 0.
 
     Attributes
     ==========
@@ -71,7 +75,7 @@ class Polygon(GeometrySet):
     Examples
     ========
 
-    >>> from sympy import Point, Polygon, pi
+    >>> from sympy import Polygon, pi
     >>> p1, p2, p3, p4, p5 = [(0, 0), (1, 0), (5, 1), (0, 1), (3, 0)]
     >>> Polygon(p1, p2, p3, p4)
     Polygon(Point2D(0, 0), Point2D(1, 0), Point2D(5, 1), Point2D(0, 1))
@@ -109,9 +113,8 @@ class Polygon(GeometrySet):
 
     """
 
-    def __new__(cls, *args, **kwargs):
-        if kwargs.get('n', 0):
-            n = kwargs.pop('n')
+    def __new__(cls, *args, n = 0, **kwargs):
+        if n:
             args = list(args)
             # return a virtual polygon with n sides
             if len(args) == 2:  # center, radius
@@ -394,7 +397,7 @@ class Polygon(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Polygon, symbols
+        >>> from sympy import Polygon, symbols
         >>> a, b = symbols('a, b')
         >>> p1, p2, p3, p4, p5 = [(0, 0), (a, 0), (a, b), (0, b), (a/3, b/3)]
         >>> rectangle = Polygon(p1, p2, p3, p4)
@@ -469,13 +472,13 @@ class Polygon(GeometrySet):
         Q_x, Q_y: number or sympy expressions
             Q_x is the first moment of area about the x-axis
             Q_y is the first moment of area about the y-axis
-            A negetive sign indicates that the section modulus is
+            A negative sign indicates that the section modulus is
             determined for a section below (or left of) the centroidal axis
 
         Examples
         ========
 
-        >>> from sympy import Point, Polygon, symbol
+        >>> from sympy import Point, Polygon
         >>> a, b = 50, 10
         >>> p1, p2, p3, p4 = [(0, b), (0, 0), (a, 0), (a, b)]
         >>> p = Polygon(p1, p2, p3, p4)
@@ -564,7 +567,7 @@ class Polygon(GeometrySet):
         S_x, S_y: numbers or SymPy expressions
                   S_x is the section modulus with respect to the x-axis
                   S_y is the section modulus with respect to the y-axis
-                  A negetive sign indicates that the section modulus is
+                  A negative sign indicates that the section modulus is
                   determined for a point below the centroidal axis
 
         Examples
@@ -715,7 +718,6 @@ class Polygon(GeometrySet):
         ========
 
         >>> from sympy import Polygon, Point
-        >>> from sympy.abc import t
         >>> p = Polygon((0, 0), (4, 0), (4, 4))
         >>> p.encloses_point(Point(2, 1))
         True
@@ -808,7 +810,7 @@ class Polygon(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Polygon, S, Symbol
+        >>> from sympy import Polygon, Symbol
         >>> t = Symbol('t', real=True)
         >>> tri = Polygon((0, 0), (1, 0), (1, 1))
         >>> p = tri.arbitrary_point('t')
@@ -975,7 +977,7 @@ class Polygon(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Symbol, Polygon, Line
+        >>> from sympy import Polygon, Line
         >>> a, b = 20, 10
         >>> p1, p2, p3, p4 = [(0, b), (0, 0), (a, 0), (a, b)]
         >>> rectangle = Polygon(p1, p2, p3, p4)
@@ -1290,8 +1292,8 @@ class Polygon(GeometrySet):
         from sympy.core.evalf import N
 
         verts = map(N, self.vertices)
-        coords = ["{0},{1}".format(p.x, p.y) for p in verts]
-        path = "M {0} L {1} z".format(coords[0], " L ".join(coords[1:]))
+        coords = ["{},{}".format(p.x, p.y) for p in verts]
+        path = "M {} L {} z".format(coords[0], " L ".join(coords[1:]))
         return (
             '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
             'stroke-width="{0}" opacity="0.6" d="{1}" />'
@@ -1370,6 +1372,40 @@ class Polygon(GeometrySet):
 
         return False
 
+    def bisectors(p, prec=None):
+        """Returns angle bisectors of a polygon. If prec is given
+        then approximate the point defining the ray to that precision.
+
+        The distance between the points defining the bisector ray is 1.
+
+        Examples
+        ========
+
+        >>> from sympy import Polygon, Point
+        >>> p = Polygon(Point(0, 0), Point(2, 0), Point(1, 1), Point(0, 3))
+        >>> p.bisectors(2)
+        {Point2D(0, 0): Ray2D(Point2D(0, 0), Point2D(0.71, 0.71)),
+         Point2D(0, 3): Ray2D(Point2D(0, 3), Point2D(0.23, 2.0)),
+         Point2D(1, 1): Ray2D(Point2D(1, 1), Point2D(0.19, 0.42)),
+         Point2D(2, 0): Ray2D(Point2D(2, 0), Point2D(1.1, 0.38))}
+        """
+        b = {}
+        pts = list(p.args)
+        pts.append(pts[0])  # close it
+        cw = Polygon._isright(*pts[:3])
+        if cw:
+            pts = list(reversed(pts))
+        for v, a in p.angles.items():
+            i = pts.index(v)
+            p1, p2 = Point._normalize_dimension(pts[i], pts[i + 1])
+            ray = Ray(p1, p2).rotate(a/2, v)
+            dir = ray.direction
+            ray = Ray(ray.p1, ray.p1 + dir/dir.distance((0, 0)))
+            if prec is not None:
+                ray = Ray(ray.p1, ray.p2.n(prec))
+            b[v] = ray
+        return b
+
 
 class RegularPolygon(Polygon):
     """
@@ -1433,7 +1469,7 @@ class RegularPolygon(Polygon):
 
     """
 
-    __slots__ = ['_n', '_center', '_radius', '_rot']
+    __slots__ = ('_n', '_center', '_radius', '_rot')
 
     def __new__(self, c, r, n, rot=0, **kwargs):
         r, n, rot = map(sympify, (r, n, rot))
@@ -1882,7 +1918,7 @@ class RegularPolygon(Polygon):
         """Override GeometryEntity.rotate to first rotate the RegularPolygon
         about its center.
 
-        >>> from sympy import Point, RegularPolygon, Polygon, pi
+        >>> from sympy import Point, RegularPolygon, pi
         >>> t = RegularPolygon(Point(1, 0), 1, 3)
         >>> t.vertices[0] # vertex on x-axis
         Point2D(2, 0)
@@ -1995,7 +2031,7 @@ class RegularPolygon(Polygon):
         return self.args == o.args
 
     def __hash__(self):
-        return super(RegularPolygon, self).__hash__()
+        return super().__hash__()
 
 
 class Triangle(Polygon):
@@ -2588,7 +2624,7 @@ class Triangle(Polygon):
         The exradius touches the side of the triangle to which it is keyed, e.g.
         the exradius touching side 2 is:
 
-        >>> from sympy.geometry import Point, Triangle, Segment2D, Point2D
+        >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.exradii[t.sides[2]]

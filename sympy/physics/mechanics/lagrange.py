@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.backend import diff, zeros, Matrix, eye, sympify
 from sympy.physics.vector.functions import TIME
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
@@ -12,8 +10,11 @@ from sympy.utilities.iterables import iterable
 __all__ = ['LagrangesMethod']
 
 
-class LagrangesMethod(object):
+class LagrangesMethod:
     """Lagrange's method object.
+
+    Explanation
+    ===========
 
     This object generates the equations of motion in a two step procedure. The
     first step involves the initialization of LagrangesMethod by supplying the
@@ -58,7 +59,7 @@ class LagrangesMethod(object):
 
         >>> from sympy.physics.mechanics import LagrangesMethod, Lagrangian
         >>> from sympy.physics.mechanics import ReferenceFrame, Particle, Point
-        >>> from sympy.physics.mechanics import dynamicsymbols, kinetic_energy
+        >>> from sympy.physics.mechanics import dynamicsymbols
         >>> from sympy import symbols
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
@@ -103,7 +104,7 @@ class LagrangesMethod(object):
 
     def __init__(self, Lagrangian, qs, forcelist=None, bodies=None, frame=None,
                  hol_coneqs=None, nonhol_coneqs=None):
-        """Supply the following for the initialization of LagrangesMethod
+        """Supply the following for the initialization of LagrangesMethod.
 
         Lagrangian : Sympifyable
 
@@ -177,7 +178,7 @@ class LagrangesMethod(object):
         """
 
         qds = self._qdots
-        qdd_zero = dict((i, 0) for i in self._qdoubledots)
+        qdd_zero = {i: 0 for i in self._qdoubledots}
         n = len(self.q)
 
         # Internally we represent the EOM as four terms:
@@ -229,6 +230,9 @@ class LagrangesMethod(object):
     def mass_matrix(self):
         """Returns the mass matrix, which is augmented by the Lagrange
         multipliers, if necessary.
+
+        Explanation
+        ===========
 
         If the system is described by 'n' generalized coordinates and there are
         no constraint equations then an n X n matrix is returned.
@@ -289,6 +293,7 @@ class LagrangesMethod(object):
 
         Parameters
         ==========
+
         q_ind, qd_ind : array_like, optional
             The independent generalized coordinates and speeds.
         q_dep, qd_dep : array_like, optional
@@ -349,6 +354,9 @@ class LagrangesMethod(object):
             **kwargs):
         """Linearize the equations of motion about a symbolic operating point.
 
+        Explanation
+        ===========
+
         If kwarg A_and_B is False (default), returns M, A, B, r for the
         linearized form, M*[q', u']^T = A*[q_ind, u_ind]^T + B*r.
 
@@ -377,10 +385,11 @@ class LagrangesMethod(object):
 
     def solve_multipliers(self, op_point=None, sol_type='dict'):
         """Solves for the values of the lagrange multipliers symbolically at
-        the specified operating point
+        the specified operating point.
 
         Parameters
         ==========
+
         op_point : dict or iterable of dicts, optional
             Point at which to solve at. The operating point is specified as
             a dictionary or iterable of dictionaries of {symbol: value}. The
@@ -409,8 +418,8 @@ class LagrangesMethod(object):
             raise TypeError("op_point must be either a dictionary or an "
                             "iterable of dictionaries.")
         # Compose the system to be solved
-        mass_matrix = self.mass_matrix.col_join((-self.lam_coeffs.row_join(
-                zeros(k, k))))
+        mass_matrix = self.mass_matrix.col_join(-self.lam_coeffs.row_join(
+                zeros(k, k)))
         force_matrix = self.forcing.col_join(self._f_cd)
         # Sub in the operating point
         mass_matrix = msubs(mass_matrix, op_point_dict)
@@ -425,7 +434,7 @@ class LagrangesMethod(object):
             raise ValueError("Unknown sol_type {:}.".format(sol_type))
 
     def rhs(self, inv_method=None, **kwargs):
-        """Returns equations that can be solved numerically
+        """Returns equations that can be solved numerically.
 
         Parameters
         ==========

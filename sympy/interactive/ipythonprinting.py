@@ -26,8 +26,6 @@ notebook.
 # Imports
 #-----------------------------------------------------------------------------
 
-from __future__ import print_function, division
-
 import warnings
 
 from sympy.interactive.printing import init_printing
