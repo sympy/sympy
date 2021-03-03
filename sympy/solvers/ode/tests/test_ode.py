@@ -1,7 +1,7 @@
 from sympy import (acosh, cos, Derivative, diff,
-    Eq, Ne, exp, Function, I, Integral, log, O, pi,
-    Rational, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
-    Piecewise, symbols, Poly, sec, re, im, atan2, collect)
+    Eq, exp, Function, I, Integral, log, O, pi,
+    Rational, S, sin, sqrt, Subs, Symbol, tan, sinh,
+    symbols, Poly, re, im, atan2, collect)
 
 from sympy.solvers.ode import (classify_ode,
     homogeneous_order, dsolve)
@@ -726,63 +726,6 @@ def test_ode_order():
         x*sin(Derivative(x*Derivative(f(x), x)**2, x, x)), f(x)) == 3
 
 
-# In all tests below, checkodesol has the order option set to prevent
-# superfluous calls to ode_order(), and the solve_for_func flag set to False
-# because dsolve() already tries to solve for the function, unless the
-# simplify=False option is set.
-def test_old_ode_tests():
-    # These are simple tests from the old ode module
-    eq1 = Eq(f(x).diff(x), 0)
-    eq2 = Eq(3*f(x).diff(x) - 5, 0)
-    eq3 = Eq(3*f(x).diff(x), 5)
-    eq4 = Eq(9*f(x).diff(x, x) + f(x), 0)
-    eq5 = Eq(9*f(x).diff(x, x), f(x))
-    # Type: a(x)f'(x)+b(x)*f(x)+c(x)=0
-    eq6 = Eq(x**2*f(x).diff(x) + 3*x*f(x) - sin(x)/x, 0)
-    eq7 = Eq(f(x).diff(x, x) - 3*diff(f(x), x) + 2*f(x), 0)
-    # Type: 2nd order, constant coefficients (two real different roots)
-    eq8 = Eq(f(x).diff(x, x) - 4*diff(f(x), x) + 4*f(x), 0)
-    # Type: 2nd order, constant coefficients (two real equal roots)
-    eq9 = Eq(f(x).diff(x, x) + 2*diff(f(x), x) + 3*f(x), 0)
-    # Type: 2nd order, constant coefficients (two complex roots)
-    eq10 = Eq(3*f(x).diff(x) - 1, 0)
-    eq11 = Eq(x*f(x).diff(x) - 1, 0)
-    sol1 = Eq(f(x), C1)
-    sol2 = Eq(f(x), C1 + x*Rational(5, 3))
-    sol3 = Eq(f(x), C1 + x*Rational(5, 3))
-    sol4 = Eq(f(x), C1*sin(x/3) + C2*cos(x/3))
-    sol5 = Eq(f(x), C1*exp(-x/3) + C2*exp(x/3))
-    sol6 = Eq(f(x), (C1 - cos(x))/x**3)
-    sol7 = Eq(f(x), (C1 + C2*exp(x))*exp(x))
-    sol8 = Eq(f(x), (C1 + C2*x)*exp(2*x))
-    sol9 = Eq(f(x), (C1*sin(x*sqrt(2)) + C2*cos(x*sqrt(2)))*exp(-x))
-    sol10 = Eq(f(x), C1 + x/3)
-    sol11 = Eq(f(x), C1 + log(x))
-    assert dsolve(eq1) == sol1
-    assert dsolve(eq1.lhs) == sol1
-    assert dsolve(eq2) == sol2
-    assert dsolve(eq3) == sol3
-    assert dsolve(eq4) == sol4
-    assert dsolve(eq5) == sol5
-    assert dsolve(eq6) == sol6
-    assert dsolve(eq7) == sol7
-    assert dsolve(eq8) == sol8
-    assert dsolve(eq9) == sol9
-    assert dsolve(eq10) == sol10
-    assert dsolve(eq11) == sol11
-    assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq4, sol4, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq5, sol5, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq6, sol6, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq7, sol7, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq8, sol8, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq9, sol9, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq10, sol10, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq11, sol11, order=1, solve_for_func=False)[0]
-
-
 def test_homogeneous_order():
     assert homogeneous_order(exp(y/x) + tan(y/x), x, y) == 0
     assert homogeneous_order(x**2 + sin(x)*cos(y), x, y) is None
@@ -944,27 +887,6 @@ def test_undetermined_coefficients_match():
     assert _undetermined_coefficients_match(2**(x**2), x) == {'test': False}
 
 
-def test_issue_12623():
-    t = symbols("t")
-    u = symbols("u",cls=Function)
-    R, L, C, E_0, alpha = symbols("R L C E_0 alpha",positive=True)
-    omega = Symbol('omega')
-
-    eqRLC_1 = Eq( u(t).diff(t,t) + R /L*u(t).diff(t) + 1/(L*C)*u(t), alpha)
-    sol_1 = Eq(u(t), C*L*alpha + C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)))
-    assert dsolve(eqRLC_1) == sol_1
-    assert checkodesol(eqRLC_1, sol_1) == (True, 0)
-
-    eqRLC_2 = Eq( L*C*u(t).diff(t,t) + R*C*u(t).diff(t) + u(t), E_0*exp(I*omega*t) )
-    sol_2 = Eq(u(t),
-            C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L))
-          + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L))
-          + E_0*exp(I*omega*t)/(-C*L*omega**2 + I*C*R*omega + 1))
-    assert dsolve(eqRLC_2) == sol_2
-    assert checkodesol(eqRLC_2, sol_2) == (True, 0)
-    #issue-https://github.com/sympy/sympy/issues/12623
-
-
 def test_issue_4785():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
@@ -1042,27 +964,6 @@ def test_issue_5095():
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'fdsjf'))
 
 
-def test_exact_enhancement():
-    f = Function('f')(x)
-    df = Derivative(f, x)
-    eq = f/x**2 + ((f*x - 1)/x)*df
-    sol = [Eq(f, (i*sqrt(C1*x**2 + 1) + 1)/x) for i in (-1, 1)]
-    assert set(dsolve(eq, f)) == set(sol)
-    assert checkodesol(eq, sol, order=1, solve_for_func=False) == [(True, 0), (True, 0)]
-
-    eq = (x*f - 1) + df*(x**2 - x*f)
-    sol = [Eq(f, x - sqrt(C1 + x**2 - 2*log(x))),
-           Eq(f, x + sqrt(C1 + x**2 - 2*log(x)))]
-    assert set(dsolve(eq, f)) == set(sol)
-    assert checkodesol(eq, sol, order=1, solve_for_func=False) == [(True, 0), (True, 0)]
-
-    eq = (x + 2)*sin(f) + df*x*cos(f)
-    sol = [Eq(f, -asin(C1*exp(-x)/x**2) + pi),
-           Eq(f, asin(C1*exp(-x)/x**2))]
-    assert set(dsolve(eq, f)) == set(sol)
-    assert checkodesol(eq, sol, order=1, solve_for_func=False) == [(True, 0), (True, 0)]
-
-
 def test_homogeneous_function():
     f = Function('f')
     eq1 = tan(x + f(x))
@@ -1111,58 +1012,6 @@ def test_constantsimp_take_problem():
     assert len(Poly(constantsimp(exp(C1) + c + c*x, [C1])).gens) == 2
 
 
-def test_issue_6879():
-    f = Function('f')
-    eq = Eq(Derivative(f(x), x, 2) - 2*Derivative(f(x), x) + f(x), sin(x))
-    sol = (C1 + C2*x)*exp(x) + cos(x)/2
-    assert dsolve(eq).rhs == sol
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-
-def test_issue_6989():
-    f = Function('f')
-    k = Symbol('k')
-
-    eq = f(x).diff(x) - x*exp(-k*x)
-    csol = Eq(f(x), C1 + Piecewise(
-            ((-k*x - 1)*exp(-k*x)/k**2, Ne(k**2, 0)),
-            (x**2/2, True)
-        ))
-    sol = dsolve(eq, f(x))
-    assert sol == csol
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-    eq = -f(x).diff(x) + x*exp(-k*x)
-    csol = Eq(f(x), C1 + Piecewise(
-        ((-k*x - 1)*exp(-k*x)/k**2, Ne(k**2, 0)),
-        (x**2/2, True)
-    ))
-    sol = dsolve(eq, f(x))
-    assert sol == csol
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-
-def test_issue_6247():
-    eq = f(x).diff(x, x) + 4*f(x)
-    sol = Eq(f(x), C1*sin(2*x) + C2*cos(2*x))
-    assert dsolve(eq) == sol
-    assert checkodesol(eq, sol, order=1)[0]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def test_series():
     C1 = Symbol("C1")
     eq = f(x).diff(x) - f(x)
@@ -1181,19 +1030,6 @@ def test_series():
     assert dsolve(eq, hint='1st_power_series', ics={f(2): 2}, n=3) == sol
     # FIXME: The solution here should be O((x-2)**3) so is incorrect
     #assert checkodesol(eq, sol, order=1)[0]
-
-
-@XFAIL
-def test_lie_group_issue15219():
-    eqn = exp(f(x).diff(x)-f(x))
-    assert 'lie_group' not in classify_ode(eqn, f(x))
-
-
-def test_issue_7081():
-    eq = x*(f(x).diff(x)) + 1 - f(x)**2
-    s = Eq(f(x), -1/(-C1 + x**2)*(C1 + x**2))
-    assert dsolve(eq) == s
-    assert checkodesol(eq, s) == (True, 0)
 
 
 @slow
@@ -1272,15 +1108,6 @@ def test_2nd_power_series_regular():
     assert checkodesol(eq, sol) == (True, 0)
 
 
-def test_issue_7093():
-    x = Symbol("x") # assuming x is real leads to an error
-    sol = [Eq(f(x), C1 - 2*x*sqrt(x**3)/5),
-           Eq(f(x), C1 + 2*x*sqrt(x**3)/5)]
-    eq = Derivative(f(x), x)**2 - x**3
-    assert set(dsolve(eq)) == set(sol)
-    assert checkodesol(eq, sol) == [(True, 0)] * 2
-
-
 def test_dsolve_linsystem_symbol():
     eps = Symbol('epsilon', positive=True)
     eq1 = (Eq(diff(f(x), x), -eps*g(x)), Eq(diff(g(x), x), eps*f(x)))
@@ -1305,74 +1132,6 @@ def test_issue_15056():
     t = Symbol('t')
     C3 = Symbol('C3')
     assert get_numbered_constants(Symbol('C1') * Function('C2')(t)) == C3
-
-
-def test_issue_10379():
-    t,y = symbols('t,y')
-    eq = f(t).diff(t)-(1-51.05*y*f(t))
-    sol =  Eq(f(t), (0.019588638589618*exp(y*(C1 - 51.05*t)) + 0.019588638589618)/y)
-    dsolve_sol = dsolve(eq, rational=False)
-    assert str(dsolve_sol) == str(sol)
-    assert checkodesol(eq, dsolve_sol)[0]
-
-
-def test_issue_10867():
-    x = Symbol('x')
-    eq = Eq(g(x).diff(x).diff(x), (x-2)**2 + (x-3)**3)
-    sol = Eq(g(x), C1 + C2*x + x**5/20 - 2*x**4/3 + 23*x**3/6 - 23*x**2/2)
-    assert dsolve(eq, g(x)) == sol
-    assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
-
-
-def test_issue_4838():
-    # Issue #15999
-    eq = f(x).diff(x) - C1*f(x)
-    sol = Eq(f(x), C2*exp(C1*x))
-    assert dsolve(eq, f(x)) == sol
-    assert checkodesol(eq, sol, order=1, solve_for_func=False) == (True, 0)
-
-    # Issue #13691
-    eq = f(x).diff(x) - C1*g(x).diff(x)
-    sol = Eq(f(x), C2 + C1*g(x))
-    assert dsolve(eq, f(x)) == sol
-    assert checkodesol(eq, sol, f(x), order=1, solve_for_func=False) == (True, 0)
-
-    # Issue #4838
-    eq = f(x).diff(x) - 3*C1 - 3*x**2
-    sol = Eq(f(x), C2 + 3*C1*x + x**3)
-    assert dsolve(eq, f(x)) == sol
-    assert checkodesol(eq, sol, order=1, solve_for_func=False) == (True, 0)
-
-
-@slow
-def test_issue_14395():
-    eq = Derivative(f(x), x, x) + 9*f(x) - sec(x)
-    sol = Eq(f(x), (C1 - x/3 + sin(2*x)/3)*sin(3*x) + (C2 + log(cos(x))
-        - 2*log(cos(x)**2)/3 + 2*cos(x)**2/3)*cos(3*x))
-    assert dsolve(eq, f(x)) == sol
-    # FIXME: assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
-
-
-# Needs to be a way to know how to combine derivatives in the expression
-def test_factoring_ode():
-    from sympy import Mul
-    eqn = Derivative(x*f(x), x, x, x) + Derivative(f(x), x, x, x)
-    # 2-arg Mul!
-    soln = Eq(f(x), C1 + C2*x + C3/Mul(2, (x + 1), evaluate=False))
-    assert checkodesol(eqn, soln, order=2, solve_for_func=False)[0]
-    assert soln == dsolve(eqn, f(x))
-
-
-def test_issue_11542():
-    m = 96
-    g = 9.8
-    k = .2
-    f1 = g * m
-    t = Symbol('t')
-    v = Function('v')
-    v_equation = dsolve(f1 - k * (v(t) ** 2) - m * Derivative(v(t)), 0)
-    assert str(v_equation) == \
-        'Eq(v(t), -68.585712797929/tanh(C1 - 0.142886901662352*t))'
 
 
 def test_issue_15913():

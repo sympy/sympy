@@ -1,7 +1,7 @@
 from sympy import (atan, Eq, exp, Function, log,
     Rational, sin, sqrt, Symbol, tan, symbols)
 
-from sympy.solvers.ode import (infinitesimals, checkinfsol, dsolve)
+from sympy.solvers.ode import (classify_ode, infinitesimals, checkinfsol, dsolve)
 
 from sympy.solvers.ode.subscheck import checkodesol
 
@@ -140,3 +140,9 @@ def test_user_infinitesimals():
     infinitesimals = {'xi':sqrt(f(x) - 1)/sqrt(f(x) + 1), 'eta':0}
     assert dsolve(eq, hint='lie_group', **infinitesimals) == sol
     assert checkodesol(eq, sol) == (True, 0)
+
+
+@XFAIL
+def test_lie_group_issue15219():
+    eqn = exp(f(x).diff(x)-f(x))
+    assert 'lie_group' not in classify_ode(eqn, f(x))

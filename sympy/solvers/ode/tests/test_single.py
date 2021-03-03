@@ -33,8 +33,8 @@ Functions that are for internal use:
 
 """
 from sympy import (acos, acosh, asin, asinh, atan, cos, Derivative, Dummy, diff, cbrt,
-    E, Eq, exp, hyper, I, im, Integral, integrate, LambertW, log, Ne, pi, Piecewise, Rational,
-    re, rootof, S, sin, sinh, cosh, tan, sqrt, symbols, Ei, erfi)
+    E, Eq, exp, hyper, I, im, Integral, integrate, LambertW, log, Mul, Ne, pi, Piecewise, Rational,
+    re, rootof, S, sin, sinh, cosh, tan, tanh, sec, sqrt, symbols, Ei, erfi)
 
 from sympy.core import Function, Symbol
 from sympy.functions import airyai, airybi, besselj, bessely
@@ -932,6 +932,12 @@ def _get_examples_ode_sol_factorable():
         'sol': [Eq(f(x), C1 + pi*x - Integral(asin(f(2*x)), x)), Eq(f(x), C1 + Integral(asin(f(2*x)), x))],
         'checkodesol_XFAIL':True
     },
+
+    # This is from issue: https://github.com/sympy/sympy/issues/7093
+    'fact_19': {
+        'eq': Derivative(f(x), x)**2 - x**3,
+        'sol': [Eq(f(x), C1 - 2*x*sqrt(x**3)/5), Eq(f(x), C1 + 2*x*sqrt(x**3)/5)],
+    },
     }
     }
 
@@ -1029,6 +1035,7 @@ def _get_examples_ode_sol_liouville():
 def _get_examples_ode_sol_nth_algebraic():
     M, m, r, t = symbols('M m r t')
     phi = Function('phi')
+    k = Symbol('k')
     # This one needs a substitution f' = g.
     # 'algeb_12': {
     #     'eq': -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x,
@@ -1114,6 +1121,62 @@ def _get_examples_ode_sol_nth_algebraic():
         'sol': [Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))],
         'XFAIL': ['nth_algebraic']  # It passes only when prep=False is set in dsolve.
     },
+
+     # These are simple tests from the old ode module example 14-18
+    'algeb_14': {
+        'eq': Eq(f(x).diff(x), 0),
+        'sol': [Eq(f(x), C1)],
+    },
+
+    'algeb_15': {
+        'eq': Eq(3*f(x).diff(x) - 5, 0),
+        'sol': [Eq(f(x), C1 + x*Rational(5, 3))],
+    },
+
+    'algeb_16': {
+        'eq': Eq(3*f(x).diff(x), 5),
+        'sol': [Eq(f(x), C1 + x*Rational(5, 3))],
+    },
+
+    # Type: 2nd order, constant coefficients (two complex roots)
+    'algeb_17': {
+        'eq': Eq(3*f(x).diff(x) - 1, 0),
+        'sol': [Eq(f(x), C1 + x/3)],
+    },
+
+    'algeb_18': {
+        'eq': Eq(x*f(x).diff(x) - 1, 0),
+        'sol': [Eq(f(x), C1 + log(x))],
+    },
+
+    # https://github.com/sympy/sympy/issues/6989
+    'algeb_19': {
+        'eq': f(x).diff(x) - x*exp(-k*x),
+        'sol': [Eq(f(x), C1 + Piecewise(((-k*x - 1)*exp(-k*x)/k**2, Ne(k**2, 0)),(x**2/2, True)))],
+    },
+
+    'algeb_20': {
+        'eq': -f(x).diff(x) + x*exp(-k*x),
+        'sol': [Eq(f(x), C1 + Piecewise(((-k*x - 1)*exp(-k*x)/k**2, Ne(k**2, 0)),(x**2/2, True)))],
+    },
+
+    # https://github.com/sympy/sympy/issues/10867
+    'algeb_21': {
+        'eq': Eq(g(x).diff(x).diff(x), (x-2)**2 + (x-3)**3),
+        'sol': [Eq(g(x), C1 + C2*x + x**5/20 - 2*x**4/3 + 23*x**3/6 - 23*x**2/2)],
+    },
+
+    # https://github.com/sympy/sympy/issues/13691
+    'algeb_22': {
+        'eq': f(x).diff(x) - C1*g(x).diff(x),
+        'sol': [Eq(f(x), C2 + C1*g(x))],
+    },
+
+    # https://github.com/sympy/sympy/issues/4838
+    'algeb_23': {
+        'eq': f(x).diff(x) - 3*C1 - 3*x**2,
+        'sol': [Eq(f(x), C2 + 3*C1*x + x**3)],
+    },
     }
     }
 
@@ -1191,6 +1254,13 @@ def _get_examples_ode_sol_nth_order_reducible():
         Eq(f(x), C1 + sqrt(2)*(I*C2 + I*x)*sqrt(1/(C2 + x)))],
         'slow': True,
     },
+
+    # Needs to be a way to know how to combine derivatives in the expression
+    'reducible_12': {
+        'eq': Derivative(x*f(x), x, x, x) + Derivative(f(x), x, x, x),
+        'sol': [Eq(f(x), C1 + C2*x + C3/Mul(2, (x + 1), evaluate=False))], # 2-arg Mul!
+        'slow': True,
+    },
     }
     }
 
@@ -1203,6 +1273,10 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
     g = exp(-x)
     f2 = f(x).diff(x, 2)
     c = 3*f(x).diff(x, 3) + 5*f2 + f(x).diff(x) - f(x) - x
+    t = symbols("t")
+    u = symbols("u",cls=Function)
+    R, L, C, E_0, alpha = symbols("R L C E_0 alpha",positive=True)
+    omega = Symbol('omega')
     return {
             'hint': "nth_linear_constant_coeff_undetermined_coefficients",
             'func': f(x),
@@ -1430,6 +1504,26 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
         'eq': f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x - exp(I*x),
         'sol': [Eq(f(x), C1 + x**2*(I*exp(I*x)/8 + 1) + (C2 + C3*x)*sin(x) + (C4 + C5*x)*cos(x))],
     },
+
+    # https://github.com/sympy/sympy/issues/12623
+    'undet_38': {
+        'eq': Eq( u(t).diff(t,t) + R /L*u(t).diff(t) + 1/(L*C)*u(t), alpha),
+        'sol': [Eq(u(t), C*L*alpha + C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L))
+        + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)))],
+    },
+
+    'undet_39': {
+        'eq': Eq( L*C*u(t).diff(t,t) + R*C*u(t).diff(t) + u(t), E_0*exp(I*omega*t) ),
+        'sol': [Eq(u(t), C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L))
+        + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L))
+        + E_0*exp(I*omega*t)/(-C*L*omega**2 + I*C*R*omega + 1))],
+    },
+
+    # https://github.com/sympy/sympy/issues/6879
+    'undet_40': {
+        'eq': Eq(Derivative(f(x), x, 2) - 2*Derivative(f(x), x) + f(x), sin(x)),
+        'sol': [Eq(f(x), (C1 + C2*x)*exp(x) + cos(x)/2)],
+    },
     }
     }
 
@@ -1438,7 +1532,12 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
 def _get_examples_ode_sol_separable():
     # test_separable1-5 are from Ordinary Differential Equations, Tenenbaum and
     # Pollard, pg. 55
-    a = Symbol('a')
+    t,a = symbols('a,t')
+    m = 96
+    g = 9.8
+    k = .2
+    f1 = g * m
+    v = Function('v')
     return {
             'hint': "separable",
             'func': f(x),
@@ -1566,10 +1665,8 @@ def _get_examples_ode_sol_separable():
 
     'separable_21': {
         'eq': f(x)*diff(f(x), x) + x - 3*x*f(x)**2,
-        'sol': [
-            Eq(f(x), -sqrt(3)*sqrt(C1*exp(3*x**2) + 1)/3),
-            Eq(f(x), sqrt(3)*sqrt(C1*exp(3*x**2) + 1)/3)
-        ],
+        'sol': [Eq(f(x), -sqrt(3)*sqrt(C1*exp(3*x**2) + 1)/3),
+        Eq(f(x), sqrt(3)*sqrt(C1*exp(3*x**2) + 1)/3)],
     },
 
     'separable_22': {
@@ -1577,6 +1674,32 @@ def _get_examples_ode_sol_separable():
         'sol': [Eq(f(x), log(-1/(C1 + exp(x))))],
         'XFAIL': ['lie_group'] #It shows 'NoneType' object is not subscriptable for lie_group.
     },
+
+    # https://github.com/sympy/sympy/issues/7081
+    'separable_23': {
+        'eq': x*(f(x).diff(x)) + 1 - f(x)**2,
+        'sol': [Eq(f(x), -1/(-C1 + x**2)*(C1 + x**2))],
+    },
+
+    # https://github.com/sympy/sympy/issues/10379
+    'separable_24': {
+        'eq': f(t).diff(t)-(1-51.05*y*f(t)),
+        'sol': [Eq(f(t), (0.019588638589618*exp(y*(C1 - 51.05*t)) + 0.019588638589618)/y)],
+        'func': f(t),
+    },
+
+    # https://github.com/sympy/sympy/issues/15999
+    'separable_25': {
+        'eq': f(x).diff(x) - C1*f(x),
+        'sol': [Eq(f(x), C2*exp(C1*x))],
+    },
+
+    'separable_26': {
+        'eq': f1 - k * (v(t) ** 2) - m * Derivative(v(t)),
+        'sol': [Eq(v(t), -68.585712797929/tanh(C1 - 0.142886901662352*t))],
+        'func': v(t),
+        'checkodesol_XFAIL': True,
+    }
     }
     }
 
@@ -1651,6 +1774,28 @@ def _get_examples_ode_sol_1st_exact():
         (x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))))],
         'slow': True,
         'dsolve_too_slow':True
+    },
+
+    # Type: a(x)f'(x)+b(x)*f(x)+c(x)=0
+    '1st_exact_08': {
+        'eq': Eq(x**2*f(x).diff(x) + 3*x*f(x) - sin(x)/x, 0),
+        'sol': [Eq(f(x), (C1 - cos(x))/x**3)],
+    },
+
+    # these examples are from test_exact_enhancement
+    '1st_exact_09': {
+        'eq': f(x)/x**2 + ((f(x)*x - 1)/x)*f(x).diff(x),
+        'sol': [Eq(f(x), (i*sqrt(C1*x**2 + 1) + 1)/x) for i in (-1, 1)],
+    },
+
+    '1st_exact_10': {
+        'eq': (x*f(x) - 1) + f(x).diff(x)*(x**2 - x*f(x)),
+        'sol': [Eq(f(x), x - sqrt(C1 + x**2 - 2*log(x))), Eq(f(x), x + sqrt(C1 + x**2 - 2*log(x)))],
+    },
+
+    '1st_exact_11': {
+        'eq': (x + 2)*sin(f(x)) + f(x).diff(x)*x*cos(f(x)),
+        'sol': [Eq(f(x), -asin(C1*exp(-x)/x**2) + pi), Eq(f(x), asin(C1*exp(-x)/x**2))],
     },
     }
     }
@@ -1748,6 +1893,14 @@ def _get_examples_ode_sol_nth_linear_var_of_parameters():
     'var_of_parameters_14': {
         'eq': f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - exp(I*x),
         'sol': [Eq(f(x), C1 + (C2 + x*(C3 - x/8) + 5*exp(2*I*x)/16)*sin(x) + (C4 + x*(C5 + I*x/8) + 5*I*exp(2*I*x)/16)*cos(x) - I*exp(I*x))],
+    },
+
+    # https://github.com/sympy/sympy/issues/14395
+    'var_of_parameters_15': {
+        'eq': Derivative(f(x), x, x) + 9*f(x) - sec(x),
+        'sol': [Eq(f(x), (C1 - x/3 + sin(2*x)/3)*sin(3*x) + (C2 + log(cos(x))
+        - 2*log(cos(x)**2)/3 + 2*cos(x)**2/3)*cos(3*x))],
+        'slow': True,
     },
     }
     }
@@ -2431,6 +2584,38 @@ def _get_examples_ode_sol_nth_linear_constant_coeff_homogeneous():
     'lin_const_coeff_hom_42': {
         'eq': f(x).diff(x, x) + y*f(x),
         'sol': [Eq(f(x), C1*exp(-x*sqrt(-y)) + C2*exp(x*sqrt(-y)))],
+    },
+
+    'lin_const_coeff_hom_43': {
+        'eq': Eq(9*f(x).diff(x, x) + f(x), 0),
+        'sol': [Eq(f(x), C1*sin(x/3) + C2*cos(x/3))],
+    },
+
+    'lin_const_coeff_hom_44': {
+        'eq': Eq(9*f(x).diff(x, x), f(x)),
+        'sol': [Eq(f(x), C1*exp(-x/3) + C2*exp(x/3))],
+    },
+
+    'lin_const_coeff_hom_45': {
+        'eq': Eq(f(x).diff(x, x) - 3*diff(f(x), x) + 2*f(x), 0),
+        'sol': [Eq(f(x), (C1 + C2*exp(x))*exp(x))],
+    },
+
+    'lin_const_coeff_hom_46': {
+        'eq': Eq(f(x).diff(x, x) - 4*diff(f(x), x) + 4*f(x), 0),
+        'sol': [Eq(f(x), (C1 + C2*x)*exp(2*x))],
+    },
+
+    # Type: 2nd order, constant coefficients (two real equal roots)
+    'lin_const_coeff_hom_47': {
+        'eq': Eq(f(x).diff(x, x) + 2*diff(f(x), x) + 3*f(x), 0),
+        'sol': [Eq(f(x), (C1*sin(x*sqrt(2)) + C2*cos(x*sqrt(2)))*exp(-x))],
+    },
+
+    #These were from issue: https://github.com/sympy/sympy/issues/6247
+    'lin_const_coeff_hom_48': {
+        'eq': f(x).diff(x, x) + 4*f(x),
+        'sol': [Eq(f(x), C1*sin(2*x) + C2*cos(2*x))],
     },
     }
     }
