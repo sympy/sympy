@@ -2,7 +2,7 @@ from sympy.utilities import dict_merge
 from sympy.utilities.iterables import iterable
 from sympy.physics.vector.functions import TIME
 from sympy.physics.vector import (Dyadic, Vector, ReferenceFrame,
-                                  Point, dynamicsymbols)
+                                  Point)
 from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle

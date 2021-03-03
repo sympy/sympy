@@ -3,7 +3,7 @@ __all__ = ['Linearizer']
 from sympy.core.backend import Matrix, eye, zeros
 from sympy import Dummy
 from sympy.utilities.iterables import flatten
-from sympy.physics.vector import dynamicsymbols, TIME
+from sympy.physics.vector import TIME
 from sympy.physics.mechanics.functions import msubs
 
 from collections import namedtuple

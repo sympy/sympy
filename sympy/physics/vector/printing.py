@@ -28,7 +28,7 @@ class VectorStrPrinter(StrPrinter):
             return StrPrinter().doprint(e)
 
     def _print_Function(self, e):
-        from sympy.physics.vector.functions import dynamicsymbols, TIME
+        from sympy.physics.vector.functions import TIME
         t = TIME
         if isinstance(type(e), UndefinedFunction):
             return StrPrinter().doprint(e).replace("(%s)" % t, '')
@@ -45,7 +45,7 @@ class VectorLatexPrinter(LatexPrinter):
     """Latex Printer for vector expressions. """
 
     def _print_Function(self, expr, exp=None):
-        from sympy.physics.vector.functions import dynamicsymbols, TIME
+        from sympy.physics.vector.functions import TIME
         func = expr.func.__name__
         t = TIME
 
@@ -67,7 +67,7 @@ class VectorLatexPrinter(LatexPrinter):
             return super()._print_Function(expr, exp)
 
     def _print_Derivative(self, der_expr):
-        from sympy.physics.vector.functions import dynamicsymbols, TIME
+        from sympy.physics.vector.functions import TIME
         # make sure it is in the right form
         der_expr = der_expr.doit()
         if not isinstance(der_expr, Derivative):
@@ -107,7 +107,7 @@ class VectorPrettyPrinter(PrettyPrinter):
     """Pretty Printer for vectorialexpressions. """
 
     def _print_Derivative(self, deriv):
-        from sympy.physics.vector.functions import dynamicsymbols, TIME
+        from sympy.physics.vector.functions import TIME
         # XXX use U('PARTIAL DIFFERENTIAL') here ?
         t = TIME
         dot_i = 0
@@ -154,7 +154,7 @@ class VectorPrettyPrinter(PrettyPrinter):
         return pform
 
     def _print_Function(self, e):
-        from sympy.physics.vector.functions import dynamicsymbols, TIME
+        from sympy.physics.vector.functions import TIME
         t = TIME
         # XXX works only for applied functions
         func = e.func

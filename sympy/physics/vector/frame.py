@@ -323,7 +323,7 @@ class ReferenceFrame:
 
     def _w_diff_dcm(self, otherframe):
         """Angular velocity from time differentiating the DCM. """
-        from sympy.physics.vector.functions import dynamicsymbols, TIME
+        from sympy.physics.vector.functions import TIME
         dcm2diff = otherframe.dcm(self)
         diffed = dcm2diff.diff(TIME)
         angvelmat = diffed * dcm2diff.T
@@ -1005,7 +1005,7 @@ class ReferenceFrame:
 
         """
 
-        from sympy.physics.vector.functions import dynamicsymbols, TIME
+        from sympy.physics.vector.functions import dynamicsymbols
         _check_frame(parent)
 
         numbers = list(numbers)

@@ -610,7 +610,6 @@ def dynamicsymbols(names, level=0,**assumptions):
     Examples
     ========
 
-    >>> from sympy import diff
     >>> from sympy.physics.vector import dynamicsymbols
     >>> from sympy import diff, Symbol
     >>> q1 = dynamicsymbols('q1')

@@ -1,6 +1,5 @@
 from sympy.core.backend import eye, Matrix, zeros
 from sympy.physics.vector.functions import TIME
-from sympy.physics.mechanics import dynamicsymbols
 from sympy.physics.mechanics.functions import find_dynamicsymbols
 
 __all__ = ['SymbolicSystem']
