@@ -263,7 +263,7 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
 
             if not (checkodesol_too_slow and ON_TRAVIS):
                 if not checkodesol_XFAIL:
-                    if checkodesol(eq, func, dsolve_sol, solve_for_func=False) != expected_checkodesol:
+                    if checkodesol(eq, dsolve_sol, solve_for_func=False) != expected_checkodesol:
                         result['unsolve_list'] = example
                         xpass = False
                         message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
