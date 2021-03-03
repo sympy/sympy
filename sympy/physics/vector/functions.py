@@ -645,4 +645,3 @@ def dynamicsymbols(names, level=0,**assumptions):
 # wild accessing it even though it was technically "private".
 dynamicsymbols._t = TIME
 dynamicsymbols._str = '\''
-

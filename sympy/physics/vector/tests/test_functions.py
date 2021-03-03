@@ -7,7 +7,6 @@ from sympy.physics.vector.functions import (cross, dot, express,
                                             partial_velocity,
                                             get_motion_params, dynamicsymbols,
                                             TIME)
-                                            get_motion_params, dynamicsymbols)
 from sympy.testing.pytest import raises
 
 Vector.simp = True
@@ -510,7 +509,8 @@ def test_different_time_symbol():
     # Set it back to the original so no other functions in this file are
     # affected.
     sympy.physics.vector.functions.TIME = t
-    
+
+
 def test_dynamicsymbols():
     #Tests to check the assumptions applied to dynamicsymbols
     f1 = dynamicsymbols('f1')
