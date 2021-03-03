@@ -494,9 +494,12 @@ def test_partial_velocity():
 
 def test_different_time_symbol_old():
     x = Symbol('x')
+    m = dynamicsymbols('m')
+    assert m.diff(TIME) == m.diff(dynamicsymbols._t)
     dynamicsymbols._t = x
     q = dynamicsymbols('q')
-    assert q.diff(x) != Derivative(Function('q')(x), x) #dynamicsymbos._t can't be updated
+    assert q.diff(x) != Derivative(Function('q')(x), x) # Updating dynamicsymbos._t won't effect DynamicSymbols
+
 
 def test_different_time_symbol():
     import sympy.physics.vector.functions
