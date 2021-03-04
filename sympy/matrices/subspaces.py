@@ -1,3 +1,5 @@
+from sympy.polys.matrices.domainmatrix import DomainMatrix
+
 from .utilities import _iszero
 
 
@@ -35,6 +37,11 @@ def _columnspace(M, simplify=False):
     return [M.col(i) for i in pivots]
 
 
+def _nullspace_DOM(M):
+    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    return DOM.nullspace().to_Matrix()
+
+
 def _nullspace(M, simplify=False, iszerofunc=_iszero):
     """Returns list of vectors (Matrix objects) that span nullspace of ``M``
 
@@ -61,23 +68,7 @@ def _nullspace(M, simplify=False, iszerofunc=_iszero):
     rowspace
     """
 
-    reduced, pivots = M.rref(iszerofunc=iszerofunc, simplify=simplify)
-
-    free_vars = [i for i in range(M.cols) if i not in pivots]
-    basis     = []
-
-    for free_var in free_vars:
-        # for each free variable, we will set it to 1 and all others
-        # to 0.  Then, we will use back substitution to solve the system
-        vec           = [M.zero] * M.cols
-        vec[free_var] = M.one
-
-        for piv_row, piv_col in enumerate(pivots):
-            vec[piv_col] -= reduced[piv_row, free_var]
-
-        basis.append(vec)
-
-    return [M._new(M.cols, 1, b) for b in basis]
+    return _nullspace_DOM(M)
 
 
 def _rowspace(M, simplify=False):

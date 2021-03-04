@@ -8,6 +8,7 @@ from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
 from sympy import sympify
 from sympy.functions.combinatorial.numbers import nC
+from sympy.polys.matrices.domainmatrix import DomainMatrix
 
 from .common import MatrixError, NonSquareMatrixError
 from .utilities import (
@@ -327,6 +328,11 @@ def _adjugate(M, method="berkowitz"):
     return M.cofactor_matrix(method=method).transpose()
 
 
+def _charpoly_DOM(M):
+    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    return DOM.charpoly()
+    
+
 # This functions is a candidate for caching if it gets implemented for matrices.
 def _charpoly(M, x='lambda', simplify=_simplify):
     """Computes characteristic polynomial det(x*I - M) where I is
@@ -398,21 +404,15 @@ def _charpoly(M, x='lambda', simplify=_simplify):
 
     det
     """
-
-    if not M.is_square:
-        raise NonSquareMatrixError()
-    if M.is_lower or M.is_upper:
-        diagonal_elements = M.diagonal()
-        x = uniquely_named_symbol(x, diagonal_elements, modify=lambda s: '_' + s)
-        m = 1
-        for i in diagonal_elements:
-            m = m * (x - simplify(i))
-        return PurePoly(m, x)
-
-    berk_vector = _berkowitz_vector(M)
-    x = uniquely_named_symbol(x, berk_vector, modify=lambda s: '_' + s)
-
-    return PurePoly([simplify(a) for a in berk_vector], x)
+    m = 0
+    from sympy import Matrix
+    coeff = _charpoly_DOM(M)
+    charpoly_vector = Matrix(coeff)
+    l = len(coeff)
+    x = uniquely_named_symbol(x, charpoly_vector, modify=lambda s: '_' + s)
+    for i in range(l):
+        m = m + coeff[i]*x**(l-i-1)
+    return PurePoly(m, x)
 
 
 def _cofactor(M, i, j, method="berkowitz"):
@@ -538,6 +538,10 @@ def _per(M):
     perm = sympify(perm)
     return perm.simplify()
 
+def _det_DOM(M):
+    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    return DOM.det()
+
 # This functions is a candidate for caching if it gets implemented for matrices.
 def _det(M, method="bareiss", iszerofunc=None):
     """Computes the determinant of a matrix if ``M`` is a concrete matrix object
@@ -613,6 +617,9 @@ def _det(M, method="bareiss", iszerofunc=None):
 
     # sanitize `method`
     method = method.lower()
+
+    if not method == "berkowitz":
+        return _det_DOM(M)
 
     if method == "bareis":
         method = "bareiss"

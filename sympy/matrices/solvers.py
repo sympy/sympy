@@ -1,6 +1,7 @@
 from sympy.core.function import expand_mul
 from sympy.core.symbol import Dummy, uniquely_named_symbol, symbols
 from sympy.utilities.iterables import numbered_symbols
+from sympy.polys.matrices.domainmatrix import DomainMatrix
 
 from .common import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
 from .eigen import _fuzzy_positive_definite
@@ -306,6 +307,12 @@ def _LDLsolve(M, rhs):
         return (L.T).upper_triangular_solve(Z)
 
 
+def _LUsolve_DOM(M, rhs):
+    DOM_M = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    DOM_rhs = DomainMatrix.from_Matrix(rhs, field=True, extension=True)
+    return DOM_M.lu_solve(DOM_rhs).to_Matrix()
+
+
 def _LUsolve(M, rhs, iszerofunc=_iszero):
     """Solve the linear system ``Ax = rhs`` for ``x`` where ``A = M``.
 
@@ -325,6 +332,7 @@ def _LUsolve(M, rhs, iszerofunc=_iszero):
     pinv_solve
     LUdecomposition
     """
+    return _LUsolve_DOM(M, rhs)
 
     if rhs.rows != M.rows:
         raise ShapeError(

@@ -2,6 +2,7 @@ from types import FunctionType
 
 from sympy.simplify.simplify import (
     simplify as _simplify, dotprodsimp as _dotprodsimp)
+from sympy.polys.matrices.domainmatrix import DomainMatrix
 
 from .utilities import _get_intermediate_simp, _iszero
 from .determinant import _find_reasonable_pivot
@@ -147,6 +148,11 @@ def _is_echelon(M, iszerofunc=_iszero):
     return zeros_below and _is_echelon(M[1:, 1:], iszerofunc)
 
 
+def _echelon_form_DOM(M):
+    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    return DOM.rref()[0].to_Matrix()
+
+
 def _echelon_form(M, iszerofunc=_iszero, simplify=False, with_pivots=False):
     """Returns a matrix row-equivalent to ``M`` that is in echelon form. Note
     that echelon form of a matrix is *not* unique, however, properties like the
@@ -162,16 +168,7 @@ def _echelon_form(M, iszerofunc=_iszero, simplify=False, with_pivots=False):
     [1,  2],
     [0, -2]])
     """
-
-    simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
-
-    mat, pivots, _ = _row_reduce(M, iszerofunc, simpfunc,
-            normalize_last=True, normalize=False, zero_above=False)
-
-    if with_pivots:
-        return mat, pivots
-
-    return mat
+    return _echelon_form_DOM(M)
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
@@ -245,6 +242,12 @@ def _rank(M, iszerofunc=_iszero, simplify=False):
     return len(pivots)
 
 
+def _rref_DOM(M):
+    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    DOM_rref, DOM_pivots = DOM.rref()
+    return DOM_rref.to_Matrix(), DOM_pivots
+
+
 def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
         normalize_last=True):
     """Return reduced row-echelon form of matrix and indices of pivot vars.
@@ -300,12 +303,4 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     of the matrix, set ``noramlize_last=False``
     """
 
-    simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
-
-    mat, pivot_cols, _ = _row_reduce(M, iszerofunc, simpfunc,
-            normalize_last, normalize=True, zero_above=True)
-
-    if pivots:
-        mat = (mat, pivot_cols)
-
-    return mat
+    return _rref_DOM(M)

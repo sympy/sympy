@@ -1,4 +1,5 @@
 from sympy.core.numbers import mod_inverse
+from sympy.polys.matrices.domainmatrix import DomainMatrix
 
 from .common import MatrixError, NonSquareMatrixError, NonInvertibleMatrixError
 from .utilities import _iszero
@@ -219,6 +220,10 @@ def _inv_ADJ(M, iszerofunc=_iszero):
     d = _verify_invertible(M, iszerofunc=iszerofunc)
 
     return M.adjugate() / d
+
+def _inverse_DOM(M):
+    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    return DOM.inv().to_Matrix()
 
 def _inv_GE(M, iszerofunc=_iszero):
     """Calculates the inverse using Gaussian elimination.
@@ -456,7 +461,8 @@ def _inv(M, method=None, iszerofunc=_iszero, try_block_diag=False):
         return diag(*r)
 
     if method == "GE":
-        rv = M.inverse_GE(iszerofunc=iszerofunc)
+        rv = _inverse_DOM(M)
+        print(rv)
     elif method == "LU":
         rv = M.inverse_LU(iszerofunc=iszerofunc)
     elif method == "ADJ":
@@ -464,7 +470,7 @@ def _inv(M, method=None, iszerofunc=_iszero, try_block_diag=False):
     elif method == "CH":
         rv = M.inverse_CH(iszerofunc=iszerofunc)
     elif method == "LDL":
-        rv = M.inverse_LDL(iszerofunc=iszerofunc)
+        rv = _inverse_DOM(M)
     elif method == "QR":
         rv = M.inverse_QR(iszerofunc=iszerofunc)
     elif method == "BLOCK":

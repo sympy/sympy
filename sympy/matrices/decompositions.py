@@ -3,6 +3,7 @@ import copy
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.miscellaneous import Min, sqrt
 from sympy.functions.elementary.complexes import sign
+from sympy.polys.matrices.domainmatrix import DomainMatrix
 
 from .common import NonSquareMatrixError, NonPositiveDefiniteMatrixError
 from .utilities import _get_intermediate_simp, _iszero
@@ -574,6 +575,12 @@ def _LDLdecomposition_sparse(M, hermitian=True):
     return M._new(L), M._new(D)
 
 
+def _LUdecomposition_DOM(M):
+    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    L, U, swaps = DOM.lu()
+    return L.to_Matrix(), U.to_Matrix(), swaps
+
+
 def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
     """Returns (L, U, perm) where L is a lower triangular matrix with unit
     diagonal, U is an upper triangular matrix, and perm is a list of row
@@ -643,7 +650,7 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
     LUdecompositionFF
     LUsolve
     """
-
+    return _LUdecomposition_DOM(M)
     combined, p = M.LUdecomposition_Simple(iszerofunc=iszerofunc,
         simpfunc=simpfunc, rankcheck=rankcheck)
 
