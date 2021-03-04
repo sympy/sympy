@@ -381,7 +381,8 @@ def _is_eq_bool(eq):
         return any(side in (S.false, S.true) for side in eq.args)
 
 def _invert_eq_bool(fi):
-    """Returns the expression when one argument is a bool and the other an expression in an Eq or Ne"""
+    """Returns the expression when one argument is a bool and the other an expression in an Eq or Ne
+    """
     if isinstance(fi, (Equality, Unequality)):
         lhs, rhs = fi.args
         unequal = S.true if isinstance(fi, Unequality) else S.false
@@ -392,6 +393,7 @@ def _invert_eq_bool(fi):
     return fi
 
 def _handle_relational(f_relational, symbols, flags):
+    """Handles relational expressions like [x/(x + 1) > 1] and [x**2 - 2 < 0, x**2 - 1 > 0]"""
     if flags.get('dict', False):
         solution = reduce_inequalities(f_relational, symbols=symbols)
         if isinstance(solution, Equality):
@@ -953,7 +955,8 @@ def solve(f, *symbols, **flags):
         symbols = [s for s in symbols if s not in exclude]
 
     # alternate exits
-
+    # This block handles cases like Eq(bool, var), Eq(var, bool), Ne(var, bool) and Ne(bool, var)
+    # The two return statements in the block return the solution directly in such cases
     if any(_is_eq_bool(fi) for fi in f):
         for i, fi in enumerate(f):
             if not isinstance(fi, (Equality, Unequality)):
@@ -977,13 +980,16 @@ def solve(f, *symbols, **flags):
                         is True or False.
                     '''))
 
+    # Relational expressions are transformed into equations
+    # For example, if f is Eq(x < 1, True) then f_relational is set to [x < 1]
+    # and if f is Ne(False, x >= 1), f_relational is set to [x >= 1]
+
     f_relational = [_invert_eq_bool(fi) for fi in f]
 
     def _is_relational(fi):
         return fi.is_Relational and not isinstance(fi, Equality)
 
     if any(_is_relational(fi) for fi in f_relational):
-        f = [_invert_eq_bool(fi) for fi in f_relational]
         return _handle_relational(f_relational, symbols, flags)
 
     # preprocess equation(s)
@@ -995,6 +1001,8 @@ def solve(f, *symbols, **flags):
     # expressions from Poly etc.
     # This should be handled later:
 
+    #This block handles cases like Eq(x**2, True), Eq(2*x, True) but not Eq(x, True)
+    # which has already been handled above
     f = [fi for fi in f if fi is not S.true]
     if any(fi is S.false for fi in f):
         if as_set:
