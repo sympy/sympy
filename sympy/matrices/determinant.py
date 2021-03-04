@@ -8,6 +8,7 @@ from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
 from sympy import sympify
 from sympy.functions.combinatorial.numbers import nC
+from sympy.polys.matrices.domainmatrix import DomainMatrix
 
 from .common import MatrixError, NonSquareMatrixError
 from .utilities import (
@@ -327,6 +328,11 @@ def _adjugate(M, method="berkowitz"):
     return M.cofactor_matrix(method=method).transpose()
 
 
+def _charpoly_DOM(M):
+    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    return DOM.charpoly()
+
+
 # This functions is a candidate for caching if it gets implemented for matrices.
 def _charpoly(M, x='lambda', simplify=_simplify):
     """Computes characteristic polynomial det(x*I - M) where I is
@@ -398,21 +404,21 @@ def _charpoly(M, x='lambda', simplify=_simplify):
 
     det
     """
-
-    if not M.is_square:
-        raise NonSquareMatrixError()
-    if M.is_lower or M.is_upper:
-        diagonal_elements = M.diagonal()
-        x = uniquely_named_symbol(x, diagonal_elements, modify=lambda s: '_' + s)
-        m = 1
-        for i in diagonal_elements:
-            m = m * (x - simplify(i))
-        return PurePoly(m, x)
-
-    berk_vector = _berkowitz_vector(M)
-    x = uniquely_named_symbol(x, berk_vector, modify=lambda s: '_' + s)
-
-    return PurePoly([simplify(a) for a in berk_vector], x)
+    from sympy.polys.domains.pythonrational import PythonRational
+    from sympy.polys.domains.gaussiandomains import GaussianRational
+    from sympy import EX
+    m = 0
+    coeff = _charpoly_DOM(M)
+    l = len(coeff)
+    x = uniquely_named_symbol(x, modify=lambda s: '_' + s)
+    for i in range(l):
+        if not isinstance(coeff[i], PythonRational):
+            if isinstance(coeff[i], GaussianRational):
+                coeff[i] = EX.to_sympy(coeff[i])
+            else:
+                coeff[i] = EX.to_sympy(coeff[i])
+        m = m + coeff[i]*x**(l-i-1)
+    return PurePoly(m, x)
 
 
 def _cofactor(M, i, j, method="berkowitz"):
