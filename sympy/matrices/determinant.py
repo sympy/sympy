@@ -331,7 +331,7 @@ def _adjugate(M, method="berkowitz"):
 def _charpoly_DOM(M):
     DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
     return DOM.charpoly()
-    
+
 
 # This functions is a candidate for caching if it gets implemented for matrices.
 def _charpoly(M, x='lambda', simplify=_simplify):
