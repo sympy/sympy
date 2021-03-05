@@ -6,9 +6,10 @@ from sympy.core.symbol import uniquely_named_symbol
 from sympy.polys import PurePoly, cancel
 from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
-from sympy import sympify
+from sympy import sympify, Symbol
 from sympy.functions.combinatorial.numbers import nC
 from sympy.polys.matrices.domainmatrix import DomainMatrix
+from sympy.polys.domains.pythonrational import PythonRational
 
 from .common import MatrixError, NonSquareMatrixError
 from .utilities import (
@@ -329,8 +330,27 @@ def _adjugate(M, method="berkowitz"):
 
 
 def _charpoly_DOM(M):
+    x = Symbol('x')
     DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
-    return DOM.charpoly()
+    K = DOM.domain
+    coeff = DOM.charpoly()
+    coeffs = []
+    flag = True
+    for e in coeff:
+        if isinstance(e, PythonRational):
+            flag = False
+            coeffs.append(e)
+        else:
+            coeffs.append(K.to_sympy(e))
+    if flag:
+        x = uniquely_named_symbol(x, coeffs, modify=lambda s: '_' + s)
+    else:
+        x = uniquely_named_symbol(x, modify=lambda s: '_' + s)
+    l = len(coeffs)
+    m = 0
+    for i in range(l):
+        m = m + coeffs[i]*x**(l-i-1)
+    return PurePoly(m, x)
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
@@ -404,21 +424,7 @@ def _charpoly(M, x='lambda', simplify=_simplify):
 
     det
     """
-    from sympy.polys.domains.pythonrational import PythonRational
-    from sympy.polys.domains.gaussiandomains import GaussianRational
-    from sympy import EX
-    m = 0
-    coeff = _charpoly_DOM(M)
-    l = len(coeff)
-    x = uniquely_named_symbol(x, modify=lambda s: '_' + s)
-    for i in range(l):
-        if not isinstance(coeff[i], PythonRational):
-            if isinstance(coeff[i], GaussianRational):
-                coeff[i] = EX.to_sympy(coeff[i])
-            else:
-                coeff[i] = EX.to_sympy(coeff[i])
-        m = m + coeff[i]*x**(l-i-1)
-    return PurePoly(m, x)
+    return _charpoly_DOM(M)
 
 
 def _cofactor(M, i, j, method="berkowitz"):
