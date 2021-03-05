@@ -67,9 +67,9 @@ def fgraph_of(*exprs):
     theano.gof.FunctionGraph
     """
     outs = list(map(theano_code_, exprs))
-    ins = theano.gof.graph.inputs(outs)
-    ins, outs = theano.gof.graph.clone(ins, outs)
-    return theano.gof.FunctionGraph(ins, outs)
+    ins = theano.graph.basic.graph_inputs(outs)
+    ins, outs = theano.graph.basic.clone(ins, outs)
+    return theano.graph.fg.FunctionGraph(ins, outs)
 
 
 def theano_simplify(fgraph):
@@ -350,7 +350,7 @@ def test_theano_function_scalar():
             f = theano_function_(inputs, outputs, dims=in_dims, scalar=scalar)
 
             # Check the theano_function attribute is set whether wrapped or not
-            assert isinstance(f.theano_function, theano.compile.function_module.Function)
+            assert isinstance(f.theano_function, theano.compile.function.types.Function)
 
             # Feed in inputs of the appropriate size and get outputs
             in_values = [
@@ -401,7 +401,7 @@ def test_slice():
     assert theq_slice(theano_code_(slice(1, x, 3), dtypes=dtypes), slice(1, xt, 3))
 
 def test_MatrixSlice():
-    from theano import Constant
+    from theano.graph.basic import Constant
 
     cache = {}
 
@@ -556,9 +556,9 @@ def test_cache_complex():
     # Iterate through variables in the Theano computational graph that the
     # printed expression depends on
     seen = set()
-    for v in theano.gof.graph.ancestors([expr_t]):
+    for v in theano.graph.basic.ancestors([expr_t]):
         # Owner-less, non-constant variables should be our symbols
-        if v.owner is None and not isinstance(v, theano.gof.graph.Constant):
+        if v.owner is None and not isinstance(v, theano.graph.basic.Constant):
             # Check it corresponds to a symbol and appears only once
             assert v.name in symbol_names
             assert v.name not in seen

@@ -494,7 +494,7 @@ def theano_function(inputs, outputs, scalar=False, *,
     toutputs = list(map(code, outputs))
 
     #fix constant expressions as variables
-    toutputs = [output if isinstance(output, theano.Variable) else tt.as_tensor_variable(output) for output in toutputs]
+    toutputs = [output if isinstance(output, theano.graph.basic.Variable) else tt.as_tensor_variable(output) for output in toutputs]
 
     if len(toutputs) == 1:
         toutputs = toutputs[0]
