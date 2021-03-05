@@ -1137,8 +1137,8 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> eq.dsubs({x: a*t**2}, [t], unknown=[cos(x)], known=[f(x)])
         cos(t) + Subs(Derivative(f(_xi_1), (_xi_1, 2)), _xi_1, a*t**2)
 
-        Let us see how ``dsubs`` works for some typical cases using an example 
-        of homogeneous ODEs which can be solved using the substitution 
+        Let us see how ``dsubs`` works for some typical cases using an example
+        of homogeneous ODEs which can be solved using the substitution
         `v = \frac{y}{x}`.
 
         >>> from sympy import symbols, Function, dsolve
