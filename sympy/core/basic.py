@@ -1077,22 +1077,24 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         return None
 
-    def dsubs(self, subsdict, mapdict=None):
+    def dsubs(self, subsdict, newvars=None, known=None, unknown=None):
         r"""
         Function that substitutes for variables in an ordinary differential equation.
 
-        The inputs are ``subsdict`` and ``mapdict``.
+        The inputs are -
 
-        ``subsdict``: A dictionary specifying the variable transformations with
-            the old variable as key and the transformation as value.
+        ``subsdict``: A dictionary specifying the variable transformations
+        with the old variable as key and the transformation as value.
 
-        ``mapdict``: In case a transformation contains more than one new
-        variable, mapdict must be provided to tell SymPy which variable
-        should be considered for substitution. For eg:
+        ``newvars``: A list of new variables in the transformation rules.
+        It is required if the number of new variables is not the same as
+        the number of old variables.
 
-        If you want to substitute for `x = at^2` where `t` is the new
-        independent variable, `subsdict` must be {x: a*t**2} and mapdict
-        must be {x: t}. It is ``None`` by default.
+        ``known``: A list of functions which should be treated as functions
+        whose differentiation rule is known to SymPy.
+
+        ``unknown``: A list of functions which should be treated as functions
+        whose differentiation rule is unknown to SymPy.
 
         Returns
         =======
@@ -1102,8 +1104,42 @@ class Basic(Printable, metaclass=ManagedProperties):
         Examples
         ========
 
-        Let us see how ``dsubs`` works using an example of homogeneous
-        ODEs which can be solved using the substitution `v = \frac{y}{x}`.
+        A basic transformation can be achieved by -
+
+        >>> from sympy import symbols, Function, cos
+        >>> f = Function('f')
+        >>> x, a, t = symbols('x a t')
+        >>> eq = f(x).diff(x) + f(x)
+        >>> eq.dsubs({x: t**2})
+        f(t) + Derivative(f(t), t)/(2*t)
+
+        To apply a transformation with number of new variables greater
+        than number of old variables, a list of new variables must be
+        given. For example, a transformation `x = a t` would be done as -
+
+        >>> eq.dsubs({x: a*t}, newvars=[t])
+        f(t) + Derivative(f(t), t)/a
+
+        For functions which are ``known``, the transformation rule is
+        substituted whereas for ``unknown`` functions, the new variable
+        is directly substituted. In the following example, Cos is a
+        function "known" to SymPy while f is a function "unknown" to SymPy.
+
+        >>> eq = f(x).diff(x, 2) + cos(x)
+        >>> eq.dsubs({x: a*t**2}, [t])
+        cos(a*t**2) + (Derivative(f(t), (t, 2))/(2*a*t) -
+        Derivative(f(t), t)/(2*a*t**2))/(2*a*t)
+
+        >>> eq.dsubs({x: a*t**2}, [t], known=[f(x)])
+        cos(a*t**2) + Subs(Derivative(f(_xi_1), (_xi_1, 2)), _xi_1, a*t**2)
+        >>> eq.dsubs({x: a*t**2}, [t], unknown=[cos(x)])
+        cos(t) + (Derivative(f(t), (t, 2))/(2*a*t) - Derivative(f(t), t)/(2*a*t**2))/(2*a*t)
+        >>> eq.dsubs({x: a*t**2}, [t], unknown=[cos(x)], known=[f(x)])
+        cos(t) + Subs(Derivative(f(_xi_1), (_xi_1, 2)), _xi_1, a*t**2)
+
+        Let us see how ``dsubs`` works for some typical cases using an example 
+        of homogeneous ODEs which can be solved using the substitution 
+        `v = \frac{y}{x}`.
 
         >>> from sympy import symbols, Function, dsolve
         >>> x, t = symbols('x t')
@@ -1169,7 +1205,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         2*sqrt(b)*Derivative(g(b), b) + u**3*Derivative(h(u), (u, 3)) +
         3*u**2*Derivative(h(u), (u, 2)) + u*Derivative(h(u), u) + Derivative(f(x), (x, 2))
         """
-        from sympy.core.function import Function, Derivative
+        from sympy.core.function import Function, Derivative, AppliedUndef
         from sympy.core.symbol import Symbol
 
         def diffx(e, sym, n):
@@ -1182,25 +1218,47 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         eq = self
         old_funcs = eq.atoms(Function)
+        mapdict = {}
+        if known is None and unknown is None:
+            unknown = eq.atoms(AppliedUndef)
+            known = old_funcs.difference(unknown)
+        else:
+            if known is None:
+                unknown = eq.atoms(AppliedUndef).union(unknown)
+                known = old_funcs.difference(unknown)
+            elif unknown is None:
+                unknown = eq.atoms(AppliedUndef).difference(known)
+                known = old_funcs.difference(unknown).union(known)
+            else:
+                unknown = eq.atoms(AppliedUndef).difference(known).union(unknown)
+                known = old_funcs.difference(unknown).union(known)
 
-        if mapdict is None:
-            mapdict = {}
         for var in subsdict:
-            if var not in mapdict:
-                satoms = list(subsdict[var].atoms(Symbol))
-                fatoms = list(subsdict[var].atoms(Function))
-                if (len(satoms) > 1 and isinstance(var, Symbol)) or (len(fatoms) > 1 and not isinstance(var, Function)):
-                    raise ValueError("Rules are ambiguous. Please specify the symbols or functions to be mapped in the mapdict")
-                if isinstance(var, Symbol):
-                    if len(satoms):
-                        mapdict[var] = satoms[0]
-                    else:
-                        raise ValueError("Invalid rule. Expected atleast one variable for substitution")
+            if not isinstance(var, Symbol) and not isinstance(var, Function):
+                raise ValueError(f"Expected Symbol or Function in the transformation rule, recieved {var.__class__.__name__}")
+            if isinstance(var, Symbol):
+                atoms = subsdict[var].atoms(Symbol)
+            else:
+                atoms = subsdict[var].atoms(AppliedUndef)
+            if not len(atoms):
+                raise ValueError(f"Invalid rule. Expected atleast one {var.__class__.__name__} for substitution")
+
+            multi = False
+            to_map = None
+            if newvars is None:
+                if len(atoms) > 1:
+                    raise ValueError("Missing a list of the new variables")
                 else:
-                    if len(fatoms):
-                        mapdict[var] = fatoms[0]
-                    else:
-                        raise ValueError("Invalid rule. Expected atleast one function for substitution")
+                    to_map = atoms.pop()
+            else:
+                for atom in atoms:
+                    if atom in newvars:
+                        if multi:
+                            raise ValueError(f"Rules contain more than one {var.__class__.__name__}.")
+                        else:
+                            multi = True
+                            to_map = atom
+            mapdict[var] = to_map
 
         for var in subsdict:
             if isinstance(var, Symbol) and var in mapdict:
@@ -1215,7 +1273,11 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         for var in subsdict:
             if isinstance(var, Symbol) and var in mapdict:
-                for func in old_funcs:
+                for func in known:
+                    old_var = func.args[0]
+                    if old_var in subsdict:
+                        eq = eq.subs(func.subs(old_var, Function(old_var.name + 'f')(mapdict[old_var])), func.subs(old_var, subsdict[old_var]))
+                for func in unknown:
                     old_var = func.args[0]
                     if old_var in subsdict:
                         eq = eq.subs(func.subs(old_var, Function(old_var.name + 'f')(mapdict[old_var])), func.subs(old_var, mapdict[old_var]))

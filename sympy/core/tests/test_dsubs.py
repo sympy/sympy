@@ -13,7 +13,7 @@ def test_dsubs():
 
     # Order 2
     eq = f(x).diff(x, 2)
-    assert eq.dsubs({x: a*y}, {x: y}) == f(y).diff(y, 2)/a**2
+    assert eq.dsubs({x: a*y}, [y]) == f(y).diff(y, 2)/a**2
 
     assert eq.dsubs({x: u**3}).simplify() == (f(u).diff(u, 2)*u - 2*f(u).diff(u))/(9*u**5)
 
@@ -30,7 +30,7 @@ def test_dsubs():
 
     # https://stackoverflow.com/questions/57840957/differential-equation-change-of-variables-with-sympy
     eq = -hbar**2*psi(x).diff(x, 2)/(2*m) + m*w**2*x**2*psi(x)/2 - E*psi(x)
-    assert eq.dsubs({x: u*sqrt(hbar/(m*w)), psi(x): H(u)*exp(-u*u/2)}, {x: u}).simplify().expand().collect(exp(-u**2/2)) == \
+    assert eq.dsubs({x: u*sqrt(hbar/(m*w)), psi(x): H(u)*exp(-u*u/2)}, [u]).simplify().expand().collect(exp(-u**2/2)) == \
         (-E*H(u) + u*w*hbar*Derivative(H(u), u) + w*hbar*H(u)/2 - w*hbar*Derivative(H(u), (u, 2))/2)*exp(-u**2/2)
 
     # Order 3
