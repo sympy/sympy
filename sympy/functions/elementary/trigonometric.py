@@ -478,16 +478,13 @@ class sin(TrigonometricFunction):
         return sin(arg)
 
     def _eval_as_leading_term(self, x, cdir=0):
-        from sympy import Order
-        arg = self.args[0].as_leading_term(x)
-
-        if x in arg.free_symbols and Order(1, x).contains(arg):
-            return arg
-        else:
-            if not arg.subs(x, 0).is_finite:
-                return self
-            else:
-                return self.func(arg)
+        arg = self.args[0]
+        x0 = arg.subs(x, 0).cancel()
+        n = x0/S.Pi
+        if n.is_integer:
+            lt = (arg - n*S.Pi).as_leading_term(x)
+            return ((-1)**n)*lt
+        return self.func(x0) if x0.is_finite else self
 
     def _eval_is_extended_real(self):
         if self.args[0].is_extended_real:
