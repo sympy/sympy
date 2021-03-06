@@ -109,13 +109,20 @@ class TypeD(Standard_Cartan):
         diag += "   ".join(str(i) for i in range(1, n-1)) + "   "+str(n)
         return diag
 
-    def orbit(self, weight, stabilizer=None):
-        """Returns the weyl orbit of the weight. If
-        rank of the algebra is >5, numpy backend is used"""
-        if self.rank >= 5:
-            backend = "numpy"
-            dtype = float
-        else:
-            backend = "sympy"
-            dtype = object
-        return super().orbit(weight, stabilizer=stabilizer, dtype=dtype, backend=backend)
+    def rootsystem(self, **kwargs):
+        # doc string inherited
+        if self._is_default_basis:
+            n = self.rank
+            proots = []
+            zero_root = self.basic_root(0,0) * 0
+            for i in range(0, n-1):
+                for j in range(i+1, n):
+                    root = self.basic_root(i, j)
+                    proots += [root, -root]
+                    root2 = self.basic_root(i, j)
+                    root2[j] = 1
+                    proots += [root2, -root2]
+            proots += n * [zero_root]
+            return sorted(proots, key=self._orbit_sorter_lambda())
+
+        return self._backend.rootsystem(**kwargs)

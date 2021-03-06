@@ -1,6 +1,6 @@
 from .cartan_base import Standard_Cartan
-from sympy.core.backend import Matrix, Rational
-
+from sympy.core.backend import Matrix,ImmutableMatrix, Rational
+from sympy.utilities.iterables import multiset_permutations
 
 class TypeE(Standard_Cartan):
 
@@ -79,7 +79,7 @@ class TypeE(Standard_Cartan):
 
 
         roots = e8[:self.rank - 1] + [e8[-1]]
-        return Matrix([roots[i-1]])
+        return ImmutableMatrix([roots[i-1]])
 
 
 
@@ -119,6 +119,46 @@ class TypeE(Standard_Cartan):
         diag += "1   " + "   ".join(str(i) for i in range(2,n))
         return diag
 
-    def orbit(self, weight, stabilizer=None):
-        """Returns the weyl orbit of the weight. Numpy backend is used"""
-        return super().orbit(weight, stabilizer=stabilizer, dtype=float, backend="numpy")
+    def rootsystem(self, **kwargs):
+        # doc string inherited
+        if self._is_default_basis:
+            return _e_root_system(self.rank, self.basic_root, self._orbit_sorter_lambda())
+        return super().rootsystem(**kwargs)
+
+
+def _e_root_system(n, basic_root, sort_key):
+    """Returns the TypeE root system based based on enumeration"""
+    def mirror_add(l, r):
+        l.extend([ImmutableMatrix(r),ImmutableMatrix(-r)])
+
+    proots = []
+    # enumerated integer roots
+    for i in range(n-1):
+        top = n-1 if n != 8 else n
+        for j in range(i+1, top):
+            mirror_add(proots, basic_root(i, j))
+            r = basic_root(i, j)
+            r[i] = 1
+            mirror_add(proots, r)
+
+
+    # all possible plus/minus combos of rationals for n-1 entries
+    # some are not possible as they have non integer values for dynkin coeffecients (aka omega basis)
+    m=n-1
+    for combo in set(tuple(x[:m]) for x in multiset_permutations([Rational(1, 2)]*m + [Rational(-1, 2)]*m)):
+        tail = [Rational(-1, 2), Rational(-1, 2), Rational(1, 2)][n-6:]
+        frac_root = ImmutableMatrix([list(combo) + tail])
+
+        _, t = sort_key(frac_root)
+        if all(x.is_integer for x in t):
+            proots.append(ImmutableMatrix(frac_root))
+            proots.append(ImmutableMatrix(-frac_root))
+
+    if n == 7:
+        mirror_add(proots, ImmutableMatrix([[0, 0, 0, 0, 0, 0, -1, 1]]))
+
+    proots += [ImmutableMatrix(basic_root(0,0) * 0)] * n
+
+    proots = sorted(proots, key=sort_key)
+
+    return proots

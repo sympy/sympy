@@ -63,7 +63,7 @@ class RootSystem(Basic):
         [Matrix([[1, -1, 0, 0]]), Matrix([[0, 1, -1, 0]]), Matrix([[0, 0, 1, -1]])]
 
         """
-        return self.cartan_type.simple_roots()
+        return self.cartan_type.simple_roots
 
 
     def all_roots(self):
@@ -119,7 +119,7 @@ class RootSystem(Basic):
 
         """
 
-        alpha = self.cartan_type.simple_roots()
+        alpha = self.cartan_type.simple_roots
         if root1 > len(alpha) or root2 > len(alpha):
             raise ValueError("You've used a root that doesn't exist!")
         return alpha[root1] + alpha[root2]

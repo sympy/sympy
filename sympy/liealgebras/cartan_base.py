@@ -1,10 +1,7 @@
 from sympy.matrices.matrices import MatrixBase
 from sympy.core import Basic
-from sympy.matrices import zeros, Matrix, eye, ones
+from sympy.matrices import ImmutableMatrix, zeros, Matrix, eye
 from sympy.core.sympify import _sympify
-
-from .orbit_backend import orbit, root_system
-
 class Standard_Cartan(Basic):
     """
     Semi-Concrete base class for Cartan types such as A4, etc. In this module we make
@@ -27,6 +24,15 @@ class Standard_Cartan(Basic):
     def __new__(cls, series, n):
         n= _sympify(n)
         return super().__new__(cls, series, n)
+
+    def __init__(self, *args, **kwargs):
+        self._simple_roots=[Matrix(self.simple_root(i+1)) for i in range(self.rank)]
+        self._is_default_basis=True
+
+        # properties for caching
+        self._omega_inv = None
+        self._reflection_matrices_ = self._reflection_matrices()
+
 
     @property
     def rank(self):
@@ -59,10 +65,11 @@ class Standard_Cartan(Basic):
         - https://mathworld.wolfram.com/CartanMatrix.html
 
         """
+
         r = self.rank
         cartan_matrix = zeros(r,r)
-        for i, sr_i in enumerate(self.simple_roots()):
-            for j, sr_j in enumerate(self.simple_roots()):
+        for i, sr_i in enumerate(self.simple_roots):
+            for j, sr_j in enumerate(self.simple_roots):
                 cartan_matrix[j,i] = 2 * sr_i.dot(sr_j) / sr_i.dot(sr_i)
         return cartan_matrix
 
@@ -82,7 +89,7 @@ class Standard_Cartan(Basic):
 
         """
         return Matrix([
-                2 * x / x.dot(x) for x in self.simple_roots()])
+                2 * x / x.dot(x) for x in self.simple_roots])
 
     def omega_matrix(self):
         """
@@ -90,7 +97,6 @@ class Standard_Cartan(Basic):
         the fundamental weights of the algebra in the orthogonal
         basis.
         """
-
         return self.cocartan_matrix().pinv().T
 
     def simple_root(self, i):
@@ -99,12 +105,28 @@ class Standard_Cartan(Basic):
         """
         raise NotImplementedError("Do not call this method directly from the base class.")
 
-
+    @property
     def simple_roots(self) -> list:
         """
-        Returns the simple roots of the algebra.
+        Returns the simple roots of the algebra. This property
+        accept overriding by passing your choice of roots. If this
+        is done the entire algebra should recalculate its properties.
+
+        Example
+        =======
+        >>> from sympy.liealgebras import CartanType
+        >>> g2 = CartanType("G2")
+        >>> sr = g2.simple_roots # defaulted
+        >>> # g2.simple_roots = <my basis choice>
         """
-        return [Matrix(self.simple_root(i+1)) for i in range(self.rank)]
+        return self._simple_roots
+
+    @simple_roots.setter
+    def simple_roots(self, val):
+        _list_of_mat_typecheck(val)
+        self._simple_roots = val
+        self._is_default_basis = False
+
 
     def fundamental_weight(self, i):
         r"""
@@ -143,14 +165,8 @@ class Standard_Cartan(Basic):
         return [self.fundamental_weight(i) for i in range(self.omega_matrix().rows)]
 
     def rootsystem(self, **kwargs):
-        """Returns the root system of the group ordered from
-        highest root to lowest. The roots are found by reflecting
-        each simple root about its hyperplane, repeating this procedure
-        on each subsequent root generated until no more are found.
-        The roots are then weighed and sorted according to weight.
-
-        Note: This is a costly calculation for groups with
-        rank > 6, most notably E7 and E8, so numpy backend is employed.
+        """Returns the entire rootsystem of the algebra. This
+        includes the positive, negative and zeros of the algebra.
 
         Examples
         ========
@@ -165,7 +181,16 @@ class Standard_Cartan(Basic):
         Matrix([[0, -1, 1]]),
         Matrix([[-1, 0, 1]])]
         """
-        return root_system(self, **kwargs)
+        orbits = set()
+        for i in self._simple_roots:
+            for r in self.orbit(i):
+                orbits.add(r)
+
+        zero_roots = [self._simple_roots[0] * 0] * self.rank
+
+        orbits = list(orbits) + zero_roots
+        return sorted(orbits, key=self._orbit_sorter_lambda())
+
 
     def roots(self):
         """Returns the number of total roots in the algebra"""
@@ -191,17 +216,81 @@ class Standard_Cartan(Basic):
         >>> g2.root_level(rs[0])
         5
         """
-        if not hasattr(self, "_cached_r"):
-            inverse_cartan = self.cartan_matrix().pinv()
-            self._cached_r = inverse_cartan * ones(inverse_cartan.rows, 1)
+        if basis == "orthogonal":
+            return sum(root * self.omega_matrix().pinv() * self.cartan_matrix().pinv())
+        else:
+            return sum(root * self.cartan_matrix().pinv())
 
-        r = self._cached_r
+    def _orbit_sorter_lambda(self, basis="orthogonal"):
+        """Returns a function that takes in a weight and generates the
+        the tuple for sorting rootsystem, positiveroots, orbits. Constructing
+        the function return type allows caching for
+        """
+        self._omega_inv = self._omega_inv or self.omega_matrix().pinv()
+        inverse_cartan = self.cartan_matrix().pinv()
+        rot = inverse_cartan
+        if basis == "orthogonal":
+            rot = self._omega_inv * rot
 
-        # TODO: Add basis features throughout class
-        if basis == 'orthogonal':
-            root = root * self.omega_matrix().pinv()
+        def sorter(w):
+            a = w * rot
+            return (-sum(a), tuple(a))
+        return sorter
 
-        return (root * r)[0]
+    def is_dom(self, w, backend="orthogonal"):
+        """Returns a boolean on whether the weight or root passed
+        is dominant under the algebra. A dominant weight is a
+        weight where all the dynkin coefficients are positive. The
+        default basis in this class is orthogonal, but to get the basis
+        where each element in the vector is a dynkin coefficient, it
+        needs to be rotated to the omega basis by multiplying it by
+        omega inverse.
+        """
+        if backend == "orthogonal":
+            self._omega_inv = self._omega_inv or self.omega_matrix().pinv()
+            w = w * self._omega_inv
+        return all([i >= 0 for i in w.row(0)])
+
+    def _reflect_with_mats(self, weights, matrices):
+        """Utility method for rotating list of weights by
+        list of matrices and returning the unique results"""
+        results = set(weights)
+        for w in weights:
+            results = results.union([w * r for r in matrices])
+        return list(results)
+
+    def rotate_to_dominant(self, weight):
+        """Returns the domiant weight by
+        continually rotates the weight and its reflections
+        until the dominant weight is found.
+        Weight is in the orthogonal basis."""
+        if self.is_dom(weight):
+            return weight
+
+        running_list = set([weight])
+        while True:
+            temp_list = set()
+            for i in running_list:
+                # rather than call _reflect_with_mats
+                # we choose to check each reflection
+                # so when running_list gets big, we
+                # aren't wasting compute if the dom
+                # is halfway through this iteration's
+                # list
+                for r in self._reflection_matrices_:
+                    rotated = i * r
+                    if self.is_dom(rotated):
+                        return rotated
+                    temp_list.add(rotated)
+            running_list = running_list.union(temp_list)
+
+    def _full_orbit(self, weight, stabs):
+        """Construct the full orbit from reflecting repeatedly
+        until all the roots are accounted for."""
+        orbit = [weight]
+        for _ in range(self.roots() // 2):
+            orbit = self._reflect_with_mats(orbit, stabs)
+        return orbit
 
     def positive_roots(self):
         """Returns the set of all positive roots that are greater
@@ -229,7 +318,33 @@ class Standard_Cartan(Basic):
         - https://en.wikipedia.org/wiki/Group_action#Orbits_and_stabilizers
 
         """
-        return orbit(self, weight, stabilizer=stabilizer, **kwargs)
+        if stabilizer is None:
+            stab_refl_mats = self._reflection_matrices_
+        else:
+            stab_refl_mats = [self._reflection_matrices_[i] for i in stabilizer]
+
+        if not isinstance(weight, ImmutableMatrix):
+            weight = weight.as_immutable()
+
+        dominant_weight = self.rotate_to_dominant(weight)
+
+        full_orbit = self._full_orbit(dominant_weight, stab_refl_mats)
+
+        return sorted(full_orbit, key=self._orbit_sorter_lambda())
+
+    def _generate_rootsystem(self, **kwargs):
+        """Generates all the roots by unique
+        orbits of all simple roots"""
+        orbits = set()
+        for i in self._simple_roots:
+            for r in self.orbit(i):
+                orbits.add(r)
+
+        zero_roots = [self.simple_roots[0] * 0] * self.rank
+
+        orbits = list(orbits) + zero_roots
+        return sorted(orbits, key=self._sorting_func)
+
 
     def _reflection_matrices(self, weight=None):
         """Returns reflection matricies depending on how
@@ -243,14 +358,27 @@ class Standard_Cartan(Basic):
         - If weight is type of list (implied of MatrixBase) then
         rotations are done on each MatrixBase and returned.
         """
-        reflection_matrix = lambda v: (eye(len(v)) - 2 * v.T * v / v.dot(v)).as_immutable()
 
         # simple_roots generated reflection matrices
         if weight is None:
-            return [reflection_matrix(x) for x in self.simple_roots()]
+            return [reflection_matrix(x) for x in self.simple_roots]
 
         if isinstance(weight, MatrixBase):
             return reflection_matrix(weight)
 
         if isinstance(weight,list):
             return [reflection_matrix(x) for x in weight]
+
+
+def reflection_matrix(v):
+    """Returns the reflection matrix to reflect about a vector
+    """
+    return (eye(len(v)) - 2 * v.T * v / v.dot(v)).as_immutable()
+
+
+def _list_of_mat_typecheck(val):
+    """Runs validation on a list of matrices"""
+    if isinstance(val, list):
+        if all([isinstance(x, Matrix) for x in val]):
+            return
+    raise TypeError("Simple roots must be list of sympy.Matrix")

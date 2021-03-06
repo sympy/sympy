@@ -9,6 +9,9 @@ class TypeF(Standard_Cartan):
             raise ValueError("n should be 4")
         return Standard_Cartan.__new__(cls, "F", 4)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+
     def dimension(self):
         """Dimension of the vector space V underlying the Lie algebra
 
