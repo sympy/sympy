@@ -1078,9 +1078,10 @@ def _solveset(f, symbol, domain, _check=False):
         elif isinstance(rhs_s, FiniteSet):
             for equation in [lhs - rhs for rhs in rhs_s]:
                 if equation == f:
+                    eq_expand = equation.expand()
                     if any(_has_rational_power(g, symbol)[0]
-                           for g in equation.args) or _has_rational_power(
-                           equation, symbol)[0]:
+                           for g in eq_expand.args) or _has_rational_power(
+                           eq_expand, symbol)[0]:
                         result += _solve_radical(equation,
                                                  symbol,
                                                  solver)

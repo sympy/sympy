@@ -212,6 +212,11 @@ def test_issue_18449():
     # TODO: Is the above solution set definitely complete?
 
 
+def test_issue_21047():
+    f = (2 -x)**2 + (sqrt(x - 1) - 1)**6
+    assert(solveset(f, x, S.Reals)) == FiniteSet(2)
+
+
 def test_is_function_class_equation():
     from sympy.abc import x, a
     assert _is_function_class_equation(TrigonometricFunction,
@@ -451,6 +456,9 @@ def test_solveset_sqrt_2():
 
     eq = sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))
     assert solveset_real(eq, x) == FiniteSet()
+
+    eq = f = (x-4)**2 + (sqrt(x)-2)**4
+    assert solveset_real(eq, x) == FiniteSet(-4, 4)
 
     eq = (sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
     ans = solveset_real(eq, x)
