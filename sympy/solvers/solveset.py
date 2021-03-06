@@ -1776,7 +1776,7 @@ def _compute_lambert_solutions(lhs, rhs, symbol):
     =======
 
     >>> from sympy.solvers.solveset import _compute_lambert_solutions
-    >>> from sympy import symbols
+    >>> from sympy import symbols, exp
     >>> x = symbols('x')
     >>> _compute_lambert_solutions(x*exp(x), 1, x)
     [LambertW(1)]
