@@ -2238,6 +2238,7 @@ def test_solve_logarithm():
 
 # lambert tests for solveset
 def test_solve_lambert():
+    yr = Symbol('yr', real=True)
     assert solveset_real(x*exp(x) - 1, x) == FiniteSet(LambertW(1))
     assert solveset_real(exp(x) + x, x) == FiniteSet(-LambertW(1))
     assert solveset_real(x + 2**x, x) == \
@@ -2256,8 +2257,6 @@ def test_solve_lambert():
     # coverage test
     assert solveset_real(tanh(x + 3)*tanh(x - 3) - 1, x) == EmptySet()
 
-    assert solveset_real(x*log(x) + 3*x + 1, x) == \
-        FiniteSet(exp(-3 + LambertW(-exp(3))))
     eq = (x*exp(x) - 3).subs(x, x*exp(x))
     assert solveset_real(eq, x) == \
         FiniteSet(LambertW(3*exp(-LambertW(3))))
@@ -2270,19 +2269,14 @@ def test_solve_lambert():
     eq = 3*log(a**(3*x + 5)) + b*log(a**(3*x + 5)) + a**(3*x + 5)
     assert solveset_real(eq, x) == FiniteSet((-log(a**5) - LambertW(1/(b + 3)))/(3*log(a)))
 
-
-    assert solveset_real(x**3 - 3**x, x) == \
-        FiniteSet(-3*LambertW(-log(3)/3)/log(3), -3*LambertW(-log(3)/3, -1)/log(3))
-
-    assert solveset_real(x**2 - 2**x, x) == \
-        solveset_real(-x**2 + 2**x, x)
-
     assert solveset_real(3*log(x) - x*log(3), x) == FiniteSet(
         -3*LambertW(-log(3)/3)/log(3),
         -3*LambertW(-log(3)/3, -1)/log(3))
 
     assert solveset_real(LambertW(2*x) - y, x) == \
         Intersection(FiniteSet(y*exp(y)/2), S.Reals)
+    assert solveset_real(LambertW(2*x) - yr, x) == \
+        FiniteSet(yr*exp(yr)/2)
 
 
 @XFAIL
@@ -2320,6 +2314,17 @@ def test_failed_lambert():
     assert solveset_real((a/x + exp(x/2)).diff(x, 2), x) == FiniteSet(
         6*LambertW((-1)**Rational(1, 3)*a**Rational(1, 3)/3))
 
+    # giving soltuions with positive dummy
+    assert solveset_real(x*log(x) + 3*x + 1, x) == \
+        FiniteSet(exp(-3 + LambertW(-exp(3))))
+
+    assert solveset_real(x**3 - 3**x, x) == \
+        FiniteSet(-3*LambertW(-log(3)/3)/log(3), -3*LambertW(-log(3)/3, -1)/log(3))
+
+    assert solveset_real(x**2 - 2**x, x) == \
+        solveset_real(-x**2 + 2**x, x)
+
+
 @XFAIL
 def test_solve_bivariate():
     assert solveset_real((x**2 - 2*x + 1).subs(x, log(x) + 3*x), x) == \
@@ -2328,7 +2333,6 @@ def test_solve_bivariate():
         FiniteSet(LambertW(3*exp(-sqrt(2)))/3, LambertW(3*exp(sqrt(2)))/3)
     assert solveset_real((x**2 - 2*x - 2).subs(x, log(x) + 3*x), x) == \
         FiniteSet(LambertW(3*exp(1 + sqrt(3)))/3, LambertW(3*exp(-sqrt(3) + 1))/3)
-
 
 
 @XFAIL

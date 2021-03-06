@@ -307,6 +307,7 @@ def _invert_real(f, g_ys, symbol):
 
     if isinstance(f, LambertW):
         return _invert_real(f.args[0], imageset(Lambda(n, n*exp(n)), g_ys), symbol)
+
     return (f, g_ys)
 
 
@@ -1757,7 +1758,7 @@ def _is_logarithmic(f, symbol):
     return rv
 
 
-def _is_lambert(f, symbol):
+def _is_lambert(f):
     r"""
     Return True if the equation is of Lambert type, else False.
     Equations containing `Pow`, `log` or `exp` terms are currently
@@ -1767,9 +1768,19 @@ def _is_lambert(f, symbol):
 
 
 def _compute_lambert_solutions(lhs, rhs, symbol):
-    """
-    Computes the Lambert solutions. Returns `None` if it
-    fails doing so.
+    r"""
+    Computes the equations whose solutions will be given in terms
+    of the list of LambertW function. Returns `None` if it fails doing so.
+
+    Example
+    =======
+
+    >>> from sympy.solvers.solveset import _compute_lambert_solutions
+    >>> from sympy import symbols
+    >>> x = symbols('x')
+    >>> _compute_lambert_solutions(x*exp(x), 1, x)
+    [LambertW(1)]
+
     """
     try:
         poly = lhs.as_poly()
@@ -1782,20 +1793,17 @@ def _compute_lambert_solutions(lhs, rhs, symbol):
 def _solve_as_lambert(lhs, rhs, symbol, domain):
     r"""
     Helper solver to handle equations having Lambert solutions.
-    First tries to solve equation directly. If unsuccessful
-    attempts to find the solutions by making the `symbol` positive.
+    Initally tries to solve equation directly.
+
+    Notes
+    =====
+    This function needs more improvements.
+
     """
     result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
 
     soln = _compute_lambert_solutions(lhs, rhs, symbol)
-    if soln is None:
-        # try with positive `symbol`
-        u = Dummy('u', positive=True)
-        pos_lhs = lhs.subs({symbol: u})
-        soln = _compute_lambert_solutions(pos_lhs, rhs, u)
-        if soln:
-            result = FiniteSet(*soln)
-    else:
+    if soln:
         result = FiniteSet(*soln)
 
     return result
@@ -1996,7 +2004,7 @@ def _transolve(f, symbol, domain):
         # check if it is logarithmic type equation
         elif _is_logarithmic(lhs, symbol):
             result = _solve_logarithm(lhs, rhs, symbol, domain)
-        elif _is_lambert(lhs, symbol):
+        elif _is_lambert(lhs - rhs):
             # try to get solutions in form of Lambert
             result = _solve_as_lambert(lhs, rhs, symbol, domain)
 
@@ -2012,11 +2020,8 @@ def _transolve(f, symbol, domain):
         assert (len(rhs_s.args)) == 1
         rhs = rhs_s.args[0]
 
-        if lhs.is_Add:
+        if (lhs - rhs).is_Add:
             result = add_type(lhs, rhs, symbol, domain)
-        elif _is_lambert(lhs, symbol):
-            # try to get solutions in form of Lambert
-            result = _solve_as_lambert(lhs, rhs, symbol, domain)
     else:
         result = rhs_s
 
