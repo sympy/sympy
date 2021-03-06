@@ -457,7 +457,7 @@ def test_solveset_sqrt_2():
     eq = sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))
     assert solveset_real(eq, x) == FiniteSet()
 
-    eq = f = (x-4)**2 + (sqrt(x)-2)**4
+    eq = (x-4)**2 + (sqrt(x)-2)**4
     assert solveset_real(eq, x) == FiniteSet(-4, 4)
 
     eq = (sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
