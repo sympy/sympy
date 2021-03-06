@@ -5,8 +5,7 @@ from sympy.physics.vector.functions import (cross, dot, express,
                                             time_derivative,
                                             kinematic_equations, outer,
                                             partial_velocity,
-                                            get_motion_params, dynamicsymbols,
-                                            TIME)
+                                            get_motion_params, dynamicsymbols)
 from sympy.testing.pytest import raises
 
 Vector.simp = True
@@ -380,7 +379,7 @@ def test_time_derivative():
 
 def test_get_motion_methods():
     #Initialization
-    t = TIME
+    t = dynamicsymbols.t
     s1, s2, s3 = symbols('s1 s2 s3')
     S1, S2, S3 = symbols('S1 S2 S3')
     S4, S5, S6 = symbols('S4 S5 S6')
@@ -490,28 +489,6 @@ def test_partial_velocity():
 
     raises(TypeError, lambda: partial_velocity(Dmc.vel(N), u_list, N))
     raises(TypeError, lambda: partial_velocity(vel_list, u1, N))
-
-
-def test_different_time_symbol_old():
-    x = Symbol('x')
-    m = dynamicsymbols('m')
-    assert m.diff(TIME) == m.diff(dynamicsymbols._t)
-    dynamicsymbols._t = x
-    q = dynamicsymbols('q')
-    assert q.diff(x) != Derivative(Function('q')(x), x) # Updating dynamicsymbos._t won't effect DynamicSymbols
-
-
-def test_different_time_symbol():
-    import sympy.physics.vector.functions
-    t = sympy.physics.vector.functions.TIME
-    x = Symbol('x')
-    sympy.physics.vector.functions.TIME = x
-    q = dynamicsymbols('q')
-    assert q.diff(x) == Derivative(Function('q')(x), x)
-    # Set it back to the original so no other functions in this file are
-    # affected.
-    sympy.physics.vector.functions.TIME = t
-    assert q.diff(TIME) == 0
 
 
 def test_dynamicsymbols():

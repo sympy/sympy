@@ -1,8 +1,7 @@
 from sympy.utilities import dict_merge
 from sympy.utilities.iterables import iterable
-from sympy.physics.vector.functions import TIME
 from sympy.physics.vector import (Dyadic, Vector, ReferenceFrame,
-                                  Point)
+                                  Point, dynamicsymbols)
 from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
@@ -546,7 +545,7 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     {a(t), b(t), c(t)}
 
     """
-    t_set = {TIME}
+    t_set = {dynamicsymbols.t}
     if exclude:
         if iterable(exclude):
             exclude_set = set(exclude)

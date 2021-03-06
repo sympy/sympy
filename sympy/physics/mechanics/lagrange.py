@@ -1,5 +1,4 @@
 from sympy.core.backend import diff, zeros, Matrix, eye, sympify
-from sympy.physics.vector.functions import TIME
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
 from sympy.physics.mechanics.functions import (find_dynamicsymbols, msubs,
                                                _f_list_parser)
@@ -160,13 +159,13 @@ class LagrangesMethod:
         if not iterable(qs):
             raise TypeError('Generalized coordinates must be an iterable')
         self._q = Matrix(qs)
-        self._qdots = self.q.diff(TIME)
-        self._qdoubledots = self._qdots.diff(TIME)
+        self._qdots = self.q.diff(dynamicsymbols.t)
+        self._qdoubledots = self._qdots.diff(dynamicsymbols.t)
 
         mat_build = lambda x: Matrix(x) if x else Matrix()
         hol_coneqs = mat_build(hol_coneqs)
         nonhol_coneqs = mat_build(nonhol_coneqs)
-        self.coneqs = Matrix([hol_coneqs.diff(TIME),
+        self.coneqs = Matrix([hol_coneqs.diff(dynamicsymbols.t),
                 nonhol_coneqs])
         self._hol_coneqs = hol_coneqs
 
@@ -186,7 +185,7 @@ class LagrangesMethod:
 
         # First term
         self._term1 = self._L.jacobian(qds)
-        self._term1 = self._term1.diff(TIME).T
+        self._term1 = self._term1.diff(dynamicsymbols.t).T
 
         # Second term
         self._term2 = self._L.jacobian(self.q).T
@@ -200,7 +199,7 @@ class LagrangesMethod:
             self.lam_coeffs = -coneqs.jacobian(qds)
             self._term3 = self.lam_coeffs.T * self.lam_vec
             # Extracting the coeffecients of the qdds from the diff coneqs
-            diffconeqs = coneqs.diff(TIME)
+            diffconeqs = coneqs.diff(dynamicsymbols.t)
             self._m_cd = diffconeqs.jacobian(self._qdoubledots)
             # The remaining terms i.e. the 'forcing' terms in diff coneqs
             self._f_cd = -diffconeqs.subs(qdd_zero)
@@ -301,7 +300,7 @@ class LagrangesMethod:
         """
 
         # Compose vectors
-        t = TIME
+        t = dynamicsymbols.t
         q = self.q
         u = self._qdots
         ud = u.diff(t)
@@ -343,7 +342,7 @@ class LagrangesMethod:
         r.sort(key=default_sort_key)
         # Check for any derivatives of variables in r that are also found in r.
         for i in r:
-            if diff(i, TIME) in r:
+            if diff(i, dynamicsymbols.t) in r:
                 raise ValueError('Cannot have derivatives of specified \
                                  quantities when linearizing forcing terms.')
 

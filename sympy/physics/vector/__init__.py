@@ -9,7 +9,7 @@ __all__ = [
 
     'cross', 'dot', 'express', 'time_derivative', 'outer',
     'kinematic_equations', 'get_motion_params', 'partial_velocity',
-    'dynamicsymbols','TIME',
+    'dynamicsymbols',
 
     'vprint', 'vsstrrepr', 'vsprint', 'vpprint', 'vlatex', 'init_vprinting',
 
@@ -27,7 +27,7 @@ from .point import Point
 
 from .functions import (cross, dot, express, time_derivative, outer,
         kinematic_equations, get_motion_params, partial_velocity,
-        dynamicsymbols, TIME)
+        dynamicsymbols)
 
 from .printing import (vprint, vsstrrepr, vsprint, vpprint, vlatex,
         init_vprinting)
