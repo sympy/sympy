@@ -64,8 +64,10 @@ GF(p)
    :members:
 
 .. autoclass:: PythonFiniteField
+   :members:
 
 .. autoclass:: GMPYFiniteField
+   :members:
 
 .. _ZZ:
 
@@ -127,6 +129,7 @@ when available.
 
 .. autoclass:: PythonIntegerRing
 .. autoclass:: GMPYIntegerRing
+   :members:
 
 .. _QQ:
 
@@ -180,6 +183,7 @@ preferred because it is significantly faster.
 
 .. autoclass:: PythonRationalField
 .. autoclass:: GMPYRationalField
+   :members:
 
 .. autoclass:: PythonRational
 
@@ -192,7 +196,9 @@ The Gaussian domains :ref:`ZZ_I` and :ref:`QQ_I` share common superclasses
 :py:class:`~.GaussianDomain` for the domains themselves.
 
 .. autoclass:: sympy.polys.domains.gaussiandomains.GaussianDomain
+   :members:
 .. autoclass:: sympy.polys.domains.gaussiandomains.GaussianElement
+   :members:
 
 
 .. _ZZ_I:
@@ -202,7 +208,9 @@ ZZ_I
 ====
 
 .. autoclass:: sympy.polys.domains.gaussiandomains.GaussianIntegerRing
+   :members:
 .. autoclass:: sympy.polys.domains.gaussiandomains.GaussianInteger
+   :members:
 
 .. _QQ_I:
 
@@ -211,7 +219,9 @@ QQ_I
 ====
 
 .. autoclass:: sympy.polys.domains.gaussiandomains.GaussianRationalField
+   :members:
 .. autoclass:: sympy.polys.domains.gaussiandomains.GaussianRational
+   :members:
 
 .. _QQ(a):
 
@@ -232,6 +242,7 @@ RR
    :members:
 
 .. autoclass:: sympy.polys.domains.mpelements.RealElement
+   :members:
 
 .. _CC:
 
@@ -243,6 +254,7 @@ CC
    :members:
 
 .. autoclass:: sympy.polys.domains.mpelements.ComplexElement
+   :members:
 
 .. _K[x]:
 
@@ -272,6 +284,7 @@ EX
    :members:
 
 .. autoclass:: sympy.polys.domains.expressiondomain::ExpressionDomain.Expression
+   :members:
 
 
 Quotient ring
