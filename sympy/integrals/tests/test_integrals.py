@@ -1704,3 +1704,16 @@ def test_issue_4231():
 def test_issue_17841():
     f = diff(1/(x**2+x+I), x)
     assert integrate(f, x) == 1/(x**2 + x + I)
+
+def test_divergent():
+    f = x**2
+    assert Integral(f,(x, )).is_divergent() == True
+    assert Integral(f,(x, oo)).is_divergent() == True
+    assert Integral(f,(x, 0, oo)).is_divergent() == True
+    assert Integral(f,(x, y, oo)).is_divergent() == None
+    assert integrate(f,(x, 0, oo)) == oo
+    assert integrate(f,(x, oo, 0)) == -oo
+    assert integrate(-f,(x, 0, oo)) == -oo
+    # 20831
+    expr = exp(x)*exp(log(x)**2)
+    assert integrate(expr,(x, 1, oo)) == oo

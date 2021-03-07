@@ -154,6 +154,60 @@ class Integral(AddWithLimits):
         if self.function.is_zero is False and got_none is False:
             return False
 
+    def is_divergent(self):
+        """
+        Check if the intergal is divergent for the integration limits.
+
+        Examples
+        ========
+
+        >>> from sympy import Integral, oo
+        >>> from sympy.abc import x
+        >>> f = x**2
+        >>> Integral(f,(x, 0, oo)).is_divergent()
+        True
+        >>> Integral(f,(x, )).is_divergent()
+        True
+        >>> f = x**3
+        >>> Integral(f,(x,oo)).is_divergent()
+        True
+        >>> f = x**3
+        >>> print(Integral(f,(x, )).is_divergent())
+        None
+        """
+        from sympy.sets import Interval
+        from sympy.solvers.inequalities import solve_univariate_inequality
+        from sympy.core.numbers import Rational
+
+        function = self.function
+        # check for divergent integrals
+        if len(self.limits) == 1:
+            xab = self.limits[0]
+            if xab[1:].free_symbols:
+                return None
+            if len(xab) == 3:
+                (x, a, b) = xab
+            elif len(xab) == 2:
+                x, a = xab[:2]
+                b = Rational(0)
+            else:
+                x = xab[0]
+                a, b = (-oo,oo)
+            xdom = Interval(Min(a,b),Max(a,b))
+            # check if one limit is oo and function limit at that is oo and
+            # check function non positive or non negative in integration limits
+            if any(i.is_infinite for i in (a,b)) and \
+                function.limit(x,[i for i in (a,b) if i.is_infinite][0]).is_infinite:
+                if solve_univariate_inequality(function>=0, x, domain=xdom, relational=False) == xdom:
+                    return True
+                elif solve_univariate_inequality(function<=0, x, domain=xdom, relational=False) == xdom:
+                    return True
+                else:
+                    return None
+        else:
+            # check can't be done for double or more integrals
+            return None
+
     def transform(self, x, u):
         r"""
         Performs a change of variables from `x` to `u` using the relationship
@@ -395,6 +449,8 @@ class Integral(AddWithLimits):
         as_sum : Approximate the integral using a sum
         """
         from sympy.concrete.summations import Sum
+        from sympy.sets import Interval
+        from sympy.solvers.inequalities import solve_univariate_inequality
         if not hints.get('integrals', True):
             return self
 
@@ -445,6 +501,20 @@ class Integral(AddWithLimits):
             function = function.doit(**hints)
         if function.is_zero:
             return S.Zero
+        # check for divergent integrals
+        if len(self.limits) == 1:
+            xab = self.limits[0]
+            if len(xab) == 3 and not xab[1:].free_symbols:
+                (x, a, b) = xab
+                xdom = Interval(Min(a,b),Max(a,b))
+                # check if one limit is oo and function limit at that is oo and
+                # check function non positive or non negative in integration limits
+                infl = [i for i in (a,b) if i.is_infinite]
+                if len(infl) > 0 and any([function.limit(x, i).is_infinite for i in infl]):
+                    if solve_univariate_inequality(function>=0, x, domain=xdom, relational=False) == xdom:
+                        return S.Infinity if a < b else S.NegativeInfinity
+                    elif solve_univariate_inequality(function<=0, x, domain=xdom, relational=False) == xdom:
+                        return S.NegativeInfinity if a < b else S.Infinity
 
         # hacks to handle special cases
         if isinstance(function, MatrixBase):
