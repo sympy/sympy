@@ -1,3 +1,4 @@
+from sympy.matrices.common import ShapeError
 from sympy.matrices.matrices import MatrixBase
 from sympy.core import Basic
 from sympy.matrices import ImmutableMatrix, zeros, Matrix, eye
@@ -31,7 +32,7 @@ class Standard_Cartan(Basic):
 
         # properties for caching
         self._omega_inv = None
-        self._reflection_matrices_ = self._reflection_matrices()
+        self._reflection_matrices_ = self.reflection_matrices()
 
 
     @property
@@ -126,6 +127,8 @@ class Standard_Cartan(Basic):
         _list_of_mat_typecheck(val)
         self._simple_roots = val
         self._is_default_basis = False
+        self._reflection_matrices_=self.reflection_matrices(val)
+        self._omega_inv=self.omega_matrix().pinv()
 
 
     def fundamental_weight(self, i):
@@ -182,11 +185,11 @@ class Standard_Cartan(Basic):
         Matrix([[-1, 0, 1]])]
         """
         orbits = set()
-        for i in self._simple_roots:
+        for i in self.simple_roots:
             for r in self.orbit(i):
                 orbits.add(r)
 
-        zero_roots = [self._simple_roots[0] * 0] * self.rank
+        zero_roots = [self.simple_roots[0] * 0] * self.rank
 
         orbits = list(orbits) + zero_roots
         return sorted(orbits, key=self._orbit_sorter_lambda())
@@ -332,21 +335,8 @@ class Standard_Cartan(Basic):
 
         return sorted(full_orbit, key=self._orbit_sorter_lambda())
 
-    def _generate_rootsystem(self, **kwargs):
-        """Generates all the roots by unique
-        orbits of all simple roots"""
-        orbits = set()
-        for i in self._simple_roots:
-            for r in self.orbit(i):
-                orbits.add(r)
 
-        zero_roots = [self.simple_roots[0] * 0] * self.rank
-
-        orbits = list(orbits) + zero_roots
-        return sorted(orbits, key=self._sorting_func)
-
-
-    def _reflection_matrices(self, weight=None):
+    def reflection_matrices(self, weight=None):
         """Returns reflection matricies depending on how
         weight is (or isn't) passed.
 
@@ -379,6 +369,9 @@ def reflection_matrix(v):
 def _list_of_mat_typecheck(val):
     """Runs validation on a list of matrices"""
     if isinstance(val, list):
-        if all([isinstance(x, Matrix) for x in val]):
-            return
-    raise TypeError("Simple roots must be list of sympy.Matrix")
+        for obj in val:
+            if not isinstance(obj, Matrix):
+                raise TypeError("Simple roots must be list of sympy.Matrix")
+            if obj.shape[-1] == 1:
+                raise ShapeError("Simple roots must be of shape (1,-1)")
+
