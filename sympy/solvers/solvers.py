@@ -444,6 +444,110 @@ def _swap_list(solution, swap_sym):
                       for k, v in sol.items()}
     return solution
 
+def _handle_equality(f):
+    """
+    This block handles cases like Eq(bool, var), Eq(var, bool), Ne(var, bool) and Ne(bool, var)
+    The two return statements in the block return the solution directly in such cases
+    """
+    if any(_is_eq_bool(fi) for fi in f):
+        for i, fi in enumerate(f):
+            # if not isinstance(fi, (Equality, Unequality)):
+            #     continue
+            args = fi.args
+            if args[1] in (S.true, S.false):
+                args = args[1], args[0]
+            L, R = args
+            if L in (S.false, S.true):
+                if isinstance(fi, Unequality):
+                    L = ~L
+                if R.is_Relational:
+                    pass
+                elif R.is_Symbol:
+                    return L
+                elif R.is_Boolean and (~R).is_Symbol:
+                    return ~L
+                else:
+                    raise NotImplementedError(filldedent('''
+                        Unanticipated argument of Eq when other arg
+                        is True or False.
+                    '''))
+
+def _handle_equality_func(f, as_set):
+#This function handles cases like Eq(x**2, True), Eq(2*x, True) but not Eq(x, True)
+# which has already been handled above
+    if any(fi is S.false for fi in f):
+        if as_set:
+            return [], set()
+        return []
+
+def _split_real_img(f, bare_f):
+    for i, fi in enumerate(f):
+        # if we can split it into real and imaginary parts then do so
+        # For e.g., if f=solve(x + 3 + y*I), then f will be modified to in this block [x+3, y]
+        # Hence, bare_f is also changed as we get a system of two equations from a single equation
+        freei = f[i].free_symbols
+        if freei and all(s.is_extended_real or s.is_imaginary for s in freei):
+            fr, fi = f[i].as_real_imag()
+            # accept as long as new re, im, arg or atan2 are not introduced
+            had = f[i].atoms(re, im, arg, atan2)
+            if fr and fi and fr != fi and not any(
+                    i.atoms(re, im, arg, atan2) - had for i in (fr, fi)):
+                if bare_f:
+                    bare_f = False
+                f[i: i + 1] = [fr, fi]
+    return f, bare_f
+
+def _handle_abs_args(fi, symbols):
+    """this function converts Abs into Piecewise, arg into Piecewise and atan"""
+    # Abs
+    while True:
+        was = fi
+        fi = fi.replace(Abs, lambda arg:
+            separatevars(Abs(arg)).rewrite(Piecewise) if arg.has(*symbols)
+            else Abs(arg))
+        if was == fi:
+            break
+    for e in fi.find(Abs):
+        if e.has(*symbols):
+            raise NotImplementedError('solving %s when the argument '
+                'is not real or imaginary.' % e)
+
+    # arg
+    fi = fi.replace(arg, lambda a: arg(a).rewrite(atan2).rewrite(atan))
+
+    return fi
+
+def _mask(non_inverts, seen, symset, implicit, f):
+    """
+    The functions masks, i.e. replaces objects such as Derivative and Integral
+    with dummy symbols. For instance, [f(x) - 3*Derivative(f(x), x)] becomes [_X0 + Derivative(_X0, x)]
+    by recast_to_symbols(), which in turn is modified to [_Dummy_3077 + _X0] by _mask(). The thing to
+    note is that _mask() doesn't affect any object other than Derivatives and Integrals.
+    """
+    for fi in f:
+        pot = preorder_traversal(fi)
+        for p in pot:
+            if not isinstance(p, Expr) or isinstance(p, Piecewise):
+                pass
+            elif (isinstance(p, bool) or
+                    not p.args or
+                    p in symset or
+                    p.is_Add or p.is_Mul or
+                    p.is_Pow and not implicit or
+                    p.is_Function and not implicit) and p.func not in (re, im):
+                continue
+            elif not p in seen:
+                seen.add(p)
+                if p.free_symbols & symset:
+                    non_inverts.add(p)
+                else:
+                    continue
+            pot.skip()
+    del seen
+    non_inverts = dict(list(zip(non_inverts, [Dummy() for _ in non_inverts])))
+    f = [fi.subs(non_inverts) for fi in f]
+    return non_inverts, f
+
 
 def solve(f, *symbols, **flags):
     r"""
@@ -955,30 +1059,10 @@ def solve(f, *symbols, **flags):
         symbols = [s for s in symbols if s not in exclude]
 
     # alternate exits
-    # This block handles cases like Eq(bool, var), Eq(var, bool), Ne(var, bool) and Ne(bool, var)
-    # The two return statements in the block return the solution directly in such cases
-    if any(_is_eq_bool(fi) for fi in f):
-        for i, fi in enumerate(f):
-            if not isinstance(fi, (Equality, Unequality)):
-                continue
-            args = fi.args
-            if args[1] in (S.true, S.false):
-                args = args[1], args[0]
-            L, R = args
-            if L in (S.false, S.true):
-                if isinstance(fi, Unequality):
-                    L = ~L
-                if R.is_Relational:
-                    pass
-                elif R.is_Symbol:
-                    return L
-                elif R.is_Boolean and (~R).is_Symbol:
-                    return ~L
-                else:
-                    raise NotImplementedError(filldedent('''
-                        Unanticipated argument of Eq when other arg
-                        is True or False.
-                    '''))
+
+    res = _handle_equality(f)
+    if res is not None:
+        return res
 
     # Relational expressions are transformed into equations
     # For example, if f is Eq(x < 1, True) then f_relational is set to [x < 1]
@@ -1001,13 +1085,10 @@ def solve(f, *symbols, **flags):
     # expressions from Poly etc.
     # This should be handled later:
 
-    #This block handles cases like Eq(x**2, True), Eq(2*x, True) but not Eq(x, True)
-    # which has already been handled above
     f = [fi for fi in f if fi is not S.true]
-    if any(fi is S.false for fi in f):
-        if as_set:
-            return [], set()
-        return []
+    res2 = _handle_equality_func(f, as_set)
+    if res2 is not None:
+        return res2
 
     # Canonicalise Eqs
     f = [_collapse_eq_to_expr(fi) for fi in f]
@@ -1026,47 +1107,17 @@ def solve(f, *symbols, **flags):
 
     # Extract equations from polys and matrices
     f = [fi for fj in f for fi in extract_scalar_equations(fj)]
-
-    for i, fi in enumerate(f):
-        # if we can split it into real and imaginary parts then do so
-        # For e.g., if f=solve(x + 3 + y*I), then f will be modified to in this block [x+3, y]
-        # Hence, bare_f is also changed as we get a system of two equations from a single equation
-        freei = f[i].free_symbols
-        if freei and all(s.is_extended_real or s.is_imaginary for s in freei):
-            fr, fi = f[i].as_real_imag()
-            # accept as long as new re, im, arg or atan2 are not introduced
-            had = f[i].atoms(re, im, arg, atan2)
-            if fr and fi and fr != fi and not any(
-                    i.atoms(re, im, arg, atan2) - had for i in (fr, fi)):
-                if bare_f:
-                    bare_f = False
-                f[i: i + 1] = [fr, fi]
-
+    #split real and imaginary components
+    f, bare_f = _split_real_img(f, bare_f)
     # rewrite hyperbolics in terms of exp
     f = [fi.rewrite(HyperbolicFunction, exp) for fi in f]
-
+    # this loop handles Abs, arg
     for i, fi in enumerate(f):
-        # Abs
-        while True:
-            was = fi
-            fi = fi.replace(Abs, lambda arg:
-                separatevars(Abs(arg)).rewrite(Piecewise) if arg.has(*symbols)
-                else Abs(arg))
-            if was == fi:
-                break
-        for e in fi.find(Abs):
-            if e.has(*symbols):
-                raise NotImplementedError('solving %s when the argument '
-                    'is not real or imaginary.' % e)
-
-        # arg
-        fi = fi.replace(arg, lambda a: arg(a).rewrite(atan2).rewrite(atan))
-
         # save changes
-        f[i] = fi
+        f[i] = _handle_abs_args(fi, symbols)
 
     # see if re(s) or im(s) appear
-    # if theyappear, the expression is modified so that we get a solution
+    # if they appear, the expression is modified so that we get a solution
     # for s too, along with both re(s) and im(s). For example, f = [re(x) - 1, im(x) - 2]
     # is modified to [re(x) - 1, im(x) - 2, x - re(x) - im(x)] in this block and as the
     # final solution we get [{x: 1 + 2*I, re(x): 1, im(x): 2}].
@@ -1152,28 +1203,8 @@ def solve(f, *symbols, **flags):
     seen = set()
     # non_inverts keeps track of the masked off objects
     non_inverts = set()
-    for fi in f:
-        pot = preorder_traversal(fi)
-        for p in pot:
-            if not isinstance(p, Expr) or isinstance(p, Piecewise):
-                pass
-            elif (isinstance(p, bool) or
-                    not p.args or
-                    p in symset or
-                    p.is_Add or p.is_Mul or
-                    p.is_Pow and not implicit or
-                    p.is_Function and not implicit) and p.func not in (re, im):
-                continue
-            elif not p in seen:
-                seen.add(p)
-                if p.free_symbols & symset:
-                    non_inverts.add(p)
-                else:
-                    continue
-            pot.skip()
-    del seen
-    non_inverts = dict(list(zip(non_inverts, [Dummy() for _ in non_inverts])))
-    f = [fi.subs(non_inverts) for fi in f]
+
+    non_inverts, f = _mask(non_inverts, seen, symset, implicit, f)
 
     # Both xreplace and subs are needed below: xreplace to force substitution
     # inside Derivative, subs to handle non-straightforward substitutions
