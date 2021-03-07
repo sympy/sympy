@@ -581,8 +581,8 @@ def dynamicsymbols(names, level=0, time=Symbol('t'), **assumptions):
     """Uses symbols and Function for functions of time.
 
     Creates a SymPy UndefinedFunction, which is then initialized as a function
-    of a variable, the default being Symbol('t'). 
-    ``names`` follows the same conventions as the first arugment to `symbols`. 
+    of a variable, the default being Symbol('t').
+    ``names`` follows the same conventions as the first arugment to `symbols`.
     See the documentation for `symbols()` for an explanation of the options.
 
     Parameters
