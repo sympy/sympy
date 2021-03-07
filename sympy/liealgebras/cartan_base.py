@@ -374,4 +374,3 @@ def _list_of_mat_typecheck(val):
                 raise TypeError("Simple roots must be list of sympy.Matrix")
             if obj.shape[-1] == 1:
                 raise ShapeError("Simple roots must be of shape (1,-1)")
-
