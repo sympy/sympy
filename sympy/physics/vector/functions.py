@@ -642,3 +642,6 @@ def dynamicsymbols(names, level=0, time=Symbol('t'), **assumptions):
 # NOTE: Change dynamicsymbols.t to change the time variable in other functions.
 dynamicsymbols.t = Symbol('t')
 dynamicsymbols._str = '\''
+
+# NOTE: Please use `dynamicsymbols.t` instead, `dyamicsymbols._t` will be dropped in subsequent release.
+dynamicsymbols._t = Symbol('t')
