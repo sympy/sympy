@@ -577,7 +577,7 @@ def partial_velocity(vel_vecs, gen_speeds, frame):
     return vec_partials
 
 
-def dynamicsymbols(names, level=0, time=Symbol('t', real=True), **assumptions):
+def dynamicsymbols(names, level=0, time=Symbol('t'), **assumptions):
     """Uses symbols and Function for functions of time.
 
     Creates a SymPy UndefinedFunction, which is then initialized as a function
@@ -614,6 +614,7 @@ def dynamicsymbols(names, level=0, time=Symbol('t', real=True), **assumptions):
     >>> q1
     q1(t)
     >>> q = dynamicsymbols('q', time=Symbol('tau'))
+    >>> q
     q(tau)
     >>> q2 = dynamicsymbols('q2', real=True)
     >>> q2.is_real
@@ -631,14 +632,13 @@ def dynamicsymbols(names, level=0, time=Symbol('t', real=True), **assumptions):
     Derivative(q1(t), t)
 
     """
-    esses = symbols(names, cls=Function,**assumptions)
-    t = time
+    esses = symbols(names, cls=Function, **assumptions)
     if iterable(esses):
-        esses = [reduce(diff, [t] * level, e(t)) for e in esses]
+        esses = [reduce(diff, [time] * level, e(time)) for e in esses]
         return esses
     else:
-        return reduce(diff, [t] * level, esses(t))
+        return reduce(diff, [time] * level, esses(time))
 
 # NOTE: Change dynamicsymbols.t to change the time variable in other functions.
-dynamicsymbols.t = Symbol('t', real=True)
+dynamicsymbols.t = Symbol('t')
 dynamicsymbols._str = '\''
