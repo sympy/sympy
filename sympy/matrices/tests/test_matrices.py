@@ -1687,7 +1687,7 @@ def test_Matrix_berkowitz_charpoly():
         Poly(x**2 + (K_i*UA + K_w*UA + 2*K_i*K_w)/(K_i + K_w)*x +
         K_i*K_w*UA/(K_i + K_w), x, domain='ZZ(K_i,K_w,UA)')
 
-    assert type(charpoly) is Poly
+    assert type(charpoly) is PurePoly
 
     A = Matrix([[1, 3], [2, 0]])
     assert A.charpoly() == A.charpoly(x) == PurePoly(x**2 - x - 6)

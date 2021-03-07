@@ -367,7 +367,7 @@ def test_cofactor_and_minors():
 
 def test_charpoly():
     x, y = Symbol('x'), Symbol('y')
-    z, _x = Symbol('z'), Symbol('_x')
+    z, t = Symbol('z'), Symbol('t')
     from sympy.abc import a,b,c
 
     m = DeterminantOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
@@ -383,4 +383,4 @@ def test_charpoly():
     assert n.charpoly() == Poly(x**4 - 167*x**3 + 8811*x**2 - 173457*x + 1080540, x, domain = 'QQ')
 
     n = DeterminantOnlyMatrix(3, 3, [x, 0, 0, a, y, 0, b, c, z])
-    assert n.charpoly() == Poly(_x**3 - (x+y+z)*_x**2 + _x*(x*y+y*z+x*z) - x*y*z , _x, domain = 'ZZ(x,y,z,a,b,c)')
+    assert n.charpoly() == Poly(t**3 - (x+y+z)*t**2 + t*(x*y+y*z+x*z) - x*y*z , t, domain = 'ZZ(x,y,z,a,b,c)')

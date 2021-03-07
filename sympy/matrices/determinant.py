@@ -3,13 +3,12 @@ from types import FunctionType
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import uniquely_named_symbol
-from sympy.polys import Poly, cancel
+from sympy.polys import PurePoly, cancel
 from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
-from sympy import sympify, Symbol
+from sympy import sympify
 from sympy.functions.combinatorial.numbers import nC
 from sympy.polys.matrices.domainmatrix import DomainMatrix
-from sympy.polys.domains import EX
 
 from .common import MatrixError, NonSquareMatrixError
 from .utilities import (
@@ -332,20 +331,16 @@ def _adjugate(M, method="berkowitz"):
 def _charpoly_DOM(M, x):
     DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
     x = uniquely_named_symbol(x, M, modify=lambda s: '_' + s)
-    K = DOM.domain
-    coeff = DOM.charpoly()
-    coeffs = coeff
-    if K == EX:
-        coeffs = []
-        for e in coeff:
-            coeffs.append(K.from_sympy(e))
-    return Poly(coeffs, x, domain = K)
+    return PurePoly(DOM.charpoly(), x, domain=DOM.domain)
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _charpoly(M, x, simplify=_simplify):
+def _charpoly(M, x='lambda', simplify=_simplify):
     """Computes characteristic polynomial det(x*I - M) where I is
     the identity matrix.
+
+    A PurePoly is returned, so using different variables for ``x`` does
+    not affect the comparison or the polynomials:
 
     Parameters
     ==========
@@ -364,15 +359,15 @@ def _charpoly(M, x, simplify=_simplify):
     >>> from sympy.abc import x, y
     >>> M = Matrix([[1, 3], [2, 0]])
     >>> M.charpoly()
-    Poly(x**2 - x - 6, x, domain='QQ')
+    PurePoly(lambda**2 - lambda - 6, lambda, domain='QQ')
     >>> M.charpoly(x) == M.charpoly(y)
-    False
+    True
 
-    Specifying ``x`` is optional; a symbol named ``x`` is used by
-    default:
+    Specifying ``x`` is optional; a symbol named ``lambda`` is used by
+    default (which looks good when pretty-printed in unicode):
 
     >>> M.charpoly().as_expr()
-    x**2 - x - 6
+    lambda**2 - lambda - 6
 
     And if ``x`` clashes with an existing symbol, underscores will
     be prepended to the name to make it unique:
@@ -395,8 +390,7 @@ def _charpoly(M, x, simplify=_simplify):
 
     det
     """
-    if x == 'lambda':
-        x = Symbol('x')
+
     return _charpoly_DOM(M, x)
 
 
