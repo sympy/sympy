@@ -3,13 +3,13 @@ from types import FunctionType
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import uniquely_named_symbol
-from sympy.polys import PurePoly, cancel
+from sympy.polys import Poly, cancel
 from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
 from sympy import sympify, Symbol
 from sympy.functions.combinatorial.numbers import nC
 from sympy.polys.matrices.domainmatrix import DomainMatrix
-from sympy.polys.domains.pythonrational import PythonRational
+from sympy.polys.domains import EX
 
 from .common import MatrixError, NonSquareMatrixError
 from .utilities import (
@@ -329,43 +329,29 @@ def _adjugate(M, method="berkowitz"):
     return M.cofactor_matrix(method=method).transpose()
 
 
-def _charpoly_DOM(M):
-    x = Symbol('x')
+def _charpoly_DOM(M, x):
     DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    x = uniquely_named_symbol(x, M, modify=lambda s: '_' + s)
     K = DOM.domain
     coeff = DOM.charpoly()
-    coeffs = []
-    flag = True
-    for e in coeff:
-        if isinstance(e, PythonRational):
-            flag = False
-            coeffs.append(e)
-        else:
-            coeffs.append(K.to_sympy(e))
-    if flag:
-        x = uniquely_named_symbol(x, coeffs, modify=lambda s: '_' + s)
-    else:
-        x = uniquely_named_symbol(x, modify=lambda s: '_' + s)
-    l = len(coeffs)
-    m = 0
-    for i in range(l):
-        m = m + coeffs[i]*x**(l-i-1)
-    return PurePoly(m, x)
+    coeffs = coeff
+    if K == EX:
+        coeffs = []
+        for e in coeff:
+            coeffs.append(K.from_sympy(e))
+    return Poly(coeffs, x, domain = K)
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _charpoly(M, x='lambda', simplify=_simplify):
+def _charpoly(M, x, simplify=_simplify):
     """Computes characteristic polynomial det(x*I - M) where I is
     the identity matrix.
-
-    A PurePoly is returned, so using different variables for ``x`` does
-    not affect the comparison or the polynomials:
 
     Parameters
     ==========
 
     x : string, optional
-        Name for the "lambda" variable, defaults to "lambda".
+        Name for the "x" variable, defaults to "x".
 
     simplify : function, optional
         Simplification function to use on the characteristic polynomial
@@ -378,17 +364,15 @@ def _charpoly(M, x='lambda', simplify=_simplify):
     >>> from sympy.abc import x, y
     >>> M = Matrix([[1, 3], [2, 0]])
     >>> M.charpoly()
-    PurePoly(lambda**2 - lambda - 6, lambda, domain='ZZ')
+    Poly(x**2 - x - 6, x, domain='QQ')
     >>> M.charpoly(x) == M.charpoly(y)
-    True
-    >>> M.charpoly(x) == M.charpoly(y)
-    True
+    False
 
-    Specifying ``x`` is optional; a symbol named ``lambda`` is used by
-    default (which looks good when pretty-printed in unicode):
+    Specifying ``x`` is optional; a symbol named ``x`` is used by
+    default:
 
     >>> M.charpoly().as_expr()
-    lambda**2 - lambda - 6
+    x**2 - x - 6
 
     And if ``x`` clashes with an existing symbol, underscores will
     be prepended to the name to make it unique:
@@ -406,25 +390,14 @@ def _charpoly(M, x='lambda', simplify=_simplify):
     >>> M.charpoly(x).gen == x
     False
 
-    Notes
-    =====
-
-    The Samuelson-Berkowitz algorithm is used to compute
-    the characteristic polynomial efficiently and without any
-    division operations.  Thus the characteristic polynomial over any
-    commutative ring without zero divisors can be computed.
-
-    If the determinant det(x*I - M) can be found out easily as
-    in the case of an upper or a lower triangular matrix, then
-    instead of Samuelson-Berkowitz algorithm, eigenvalues are computed
-    and the characteristic polynomial with their help.
-
     See Also
     ========
 
     det
     """
-    return _charpoly_DOM(M)
+    if x == 'lambda':
+        x = Symbol('x')
+    return _charpoly_DOM(M, x)
 
 
 def _cofactor(M, i, j, method="berkowitz"):
