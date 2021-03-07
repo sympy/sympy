@@ -653,8 +653,8 @@ def is_gaussian_prime(num):
     from sympy import sympify
     num = sympify(num)
     a, b = num.as_real_imag()
-    a = as_int(a)
-    b = as_int(b)
+    a = as_int(a, strict=False)
+    b = as_int(b, strict=False)
     if a == 0:
         b = abs(b)
         return isprime(b) and b % 4 == 3

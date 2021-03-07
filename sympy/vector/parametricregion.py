@@ -181,7 +181,7 @@ def _(obj, parameters=('t', 's')):
     for i in range(len(obj.variables) - 1):
         # Each parameter is replaced by its tangent to simplify intergation
         parameter = _symbol(parameters[i], real=True)
-        definition = [trigsimp(elem.subs(parameter, tan(parameter))) for elem in definition]
+        definition = [trigsimp(elem.subs(parameter, tan(parameter/2))) for elem in definition]
         bounds.append((parameter, 0, 2*pi),)
 
     definition = Tuple(*definition)

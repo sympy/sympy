@@ -1,6 +1,7 @@
 from sympy.core import (
     Basic, Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
     Expr, I, nan, pi, symbols, oo, zoo, N)
+from sympy.core.parameters import global_parameters
 from sympy.core.tests.test_evalf import NS
 from sympy.core.function import expand_multinomial
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
@@ -13,7 +14,7 @@ from sympy.series.order import O
 from sympy.sets import FiniteSet
 from sympy.core.expr import unchanged
 from sympy.core.power import power
-from sympy.testing.pytest import warns_deprecated_sympy
+from sympy.testing.pytest import warns_deprecated_sympy, _both_exp_pow
 
 
 def test_rational():
@@ -220,6 +221,7 @@ def test_power_with_noncommutative_mul_as_base():
     assert (2*x*y)**3 == 8*(x*y)**3
 
 
+@_both_exp_pow
 def test_power_rewrite_exp():
     assert (I**I).rewrite(exp) == exp(-pi/2)
 
@@ -246,7 +248,10 @@ def test_power_rewrite_exp():
 
     x, y = symbols('x y')
     assert (x**y).rewrite(exp) == exp(y*log(x))
-    assert (7**x).rewrite(exp) == exp(x*log(7), evaluate=False)
+    if global_parameters.exp_is_pow:
+        assert (7**x).rewrite(exp) == Pow(S.Exp1, x*log(7), evaluate=False)
+    else:
+        assert (7**x).rewrite(exp) == exp(x*log(7), evaluate=False)
     assert ((2 + 3*I)**x).rewrite(exp) == exp(x*(log(sqrt(13)) + I*atan(Rational(3, 2))))
     assert (y**(5 + 6*I)).rewrite(exp) == exp(log(y)*(5 + 6*I))
 

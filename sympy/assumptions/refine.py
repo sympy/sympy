@@ -3,7 +3,8 @@ from typing import Dict, Callable
 from sympy.core import S, Add, Expr, Basic, Mul
 from sympy.logic.boolalg import Boolean
 
-from sympy.assumptions import Q, ask  # type: ignore
+from sympy.assumptions import ask, Q  # type: ignore
+
 
 def refine(expr, assumptions=True):
     """
@@ -44,6 +45,7 @@ def refine(expr, assumptions=True):
     """
     if not isinstance(expr, Basic):
         return expr
+
     if not expr.is_Atom:
         args = [refine(arg, assumptions) for arg in expr.args]
         # TODO: this will probably not work with Integral or Polynomial

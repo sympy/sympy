@@ -44,6 +44,7 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polytools import invert
 from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
     PolyNonlinearError)
+from sympy.polys.matrices.linsolve import _linsolve
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
@@ -201,7 +202,12 @@ def _invert_real(f, g_ys, symbol):
 
     n = Dummy('n', real=True)
 
-    if hasattr(f, 'inverse') and not isinstance(f, (
+    if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
+        return _invert_real(f.exp,
+                            imageset(Lambda(n, log(n)), g_ys),
+                            symbol)
+
+    if hasattr(f, 'inverse') and f.inverse() is not None and not isinstance(f, (
             TrigonometricFunction,
             HyperbolicFunction,
             )):
@@ -324,7 +330,7 @@ def _invert_complex(f, g_ys, symbol):
                 return (h, S.EmptySet)
             return _invert_complex(h, imageset(Lambda(n, n/g), g_ys), symbol)
 
-    if hasattr(f, 'inverse') and \
+    if hasattr(f, 'inverse') and f.inverse() is not None and \
        not isinstance(f, TrigonometricFunction) and \
        not isinstance(f, HyperbolicFunction) and \
        not isinstance(f, exp):
@@ -333,12 +339,12 @@ def _invert_complex(f, g_ys, symbol):
         return _invert_complex(f.args[0],
                                imageset(Lambda(n, f.inverse()(n)), g_ys), symbol)
 
-    if isinstance(f, exp):
+    if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
         if isinstance(g_ys, FiniteSet):
             exp_invs = Union(*[imageset(Lambda(n, I*(2*n*pi + arg(g_y)) +
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
-            return _invert_complex(f.args[0], exp_invs, symbol)
+            return _invert_complex(f.exp, exp_invs, symbol)
 
     return (f, g_ys)
 
@@ -1530,8 +1536,8 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     a_term = a.as_independent(symbol)[1]
     b_term = b.as_independent(symbol)[1]
 
-    a_base, a_exp = a_term.base, a_term.exp
-    b_base, b_exp = b_term.base, b_term.exp
+    a_base, a_exp = a_term.as_base_exp()
+    b_base, b_exp = b_term.as_base_exp()
 
     from sympy.functions.elementary.complexes import im
 
@@ -2651,20 +2657,24 @@ def linsolve(system, *symbols):
                     symbols for which a solution is being sought must
                     be given as a sequence, too.
                 '''))
-            eqs = system
-            try:
-                eqs, ring = sympy_eqs_to_ring(eqs, symbols)
-            except PolynomialError as exc:
-                # e.g. cos(x) contains an element of the set of generators
-                raise NonlinearError(str(exc))
 
+            #
+            # Pass to the sparse solver implemented in polys. It is important
+            # that we do not attempt to convert the equations to a matrix
+            # because that would be very inefficient for large sparse systems
+            # of equations.
+            #
+            eqs = system
+            eqs = [sympify(eq) for eq in eqs]
             try:
-                sol = solve_lin_sys(eqs, ring, _raw=False)
+                sol = _linsolve(eqs, symbols)
             except PolyNonlinearError as exc:
+                # e.g. cos(x) contains an element of the set of generators
                 raise NonlinearError(str(exc))
 
             if sol is None:
                 return S.EmptySet
+
             sol = FiniteSet(Tuple(*(sol.get(sym, sym) for sym in symbols)))
             return sol
 
@@ -3213,9 +3223,9 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     new_result_complex, solve_call2, cnd_call2 = _solve_using_known_values(
         old_result, solveset_complex)
 
-    # when `total_solveset_call` is equals to `total_conditionset`
-    # means solvest fails to solve all the eq.
-    # return conditionset in this case
+    # If total_solveset_call is equal to total_conditionset
+    # then solveset failed to solve all of the equations.
+    # In this case we return a ConditionSet here.
     total_conditionset += (cnd_call1 + cnd_call2)
     total_solveset_call += (solve_call1 + solve_call2)
 

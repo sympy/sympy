@@ -128,7 +128,7 @@ from .functions import (factorial, factorial2, rf, ff, binomial,
         chebyshevu, chebyshevu_root, chebyshevt_root, laguerre,
         assoc_laguerre, gegenbauer, jacobi, jacobi_normalized, Ynm, Ynm_c,
         Znm, elliptic_k, elliptic_f, elliptic_e, elliptic_pi, beta, mathieus,
-        mathieuc, mathieusprime, mathieucprime)
+        mathieuc, mathieusprime, mathieucprime, betainc, betainc_regularized)
 
 from .ntheory import (nextprime, prevprime, prime, primepi, primerange,
         randprime, Sieve, sieve, primorial, cycle_length, composite,
@@ -253,11 +253,6 @@ from .interactive import init_session, init_printing
 
 evalf._create_evalf_table()
 
-# This is slow to import:
-#import abc
-
-from .deprecated import C, ClassRegistry, class_registry
-
 __all__ = [
     # sympy.core
     'sympify', 'SympifyError', 'cacheit', 'Basic', 'Atom',
@@ -352,7 +347,8 @@ __all__ = [
     'chebyshevu_root', 'chebyshevt_root', 'laguerre', 'assoc_laguerre',
     'gegenbauer', 'jacobi', 'jacobi_normalized', 'Ynm', 'Ynm_c', 'Znm',
     'elliptic_k', 'elliptic_f', 'elliptic_e', 'elliptic_pi', 'beta',
-    'mathieus', 'mathieuc', 'mathieusprime', 'mathieucprime',
+    'mathieus', 'mathieuc', 'mathieusprime', 'mathieucprime', 'betainc',
+    'betainc_regularized',
 
     # sympy.ntheory
     'nextprime', 'prevprime', 'prime', 'primepi', 'primerange', 'randprime',
@@ -492,9 +488,6 @@ __all__ = [
 
     # sympy.testing
     'test', 'doctest',
-
-    # sympy.deprecated:
-    'C', 'ClassRegistry', 'class_registry',
 ]
 
 
@@ -517,7 +510,6 @@ __all__.extend([
     'assumptions',
     'calculus',
     'concrete',
-    'deprecated',
     'discrete',
     'external',
     'functions',

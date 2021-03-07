@@ -462,15 +462,15 @@ def periodicity(f, symbol, check=False):
             # else let new orig_f and period be
             # checked below
 
-    if isinstance(f, exp):
-        f = f.func(expand_mul(f.args[0]))
+    if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
+        f = Pow(S.Exp1, expand_mul(f.exp))
         if im(f) != 0:
             period_real = periodicity(re(f), symbol)
             period_imag = periodicity(im(f), symbol)
             if period_real is not None and period_imag is not None:
                 period = lcim([period_real, period_imag])
 
-    if f.is_Pow:
+    if f.is_Pow and f.base != S.Exp1:
         base, expo = f.args
         base_has_sym = base.has(symbol)
         expo_has_sym = expo.has(symbol)

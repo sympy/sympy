@@ -315,6 +315,13 @@ def test_issue_7190():
     assert solve(log(x-3) + log(x+3), x) == [sqrt(10)]
 
 
+def test_issue_21004():
+    x = symbols('x')
+    f = x/sqrt(x**2+1)
+    f_diff = f.diff(x)
+    assert solve(f_diff, x) == []
+
+
 def test_linear_system():
     x, y, z, t, n = symbols('x, y, z, t, n')
 
@@ -2300,3 +2307,10 @@ def test_issue_20747():
             / (1 - exp(c0/(DBH*c3 + THT*c4 + c2))))
     sol = [THT*term**(1/c1) - term**(1/c1) + 1]
     assert solve(eq, HT) == sol
+
+def test_issue_20902():
+    f = (t / ((1 + t) ** 2))
+    assert solve(f.subs({t: 3 * x + 2}).diff(x) > 0, x) == (S(-1) < x) & (x < S(-1)/3)
+    assert solve(f.subs({t: 3 * x + 3}).diff(x) > 0, x) == (S(-4)/3 < x) & (x < S(-2)/3)
+    assert solve(f.subs({t: 3 * x + 4}).diff(x) > 0, x) == (S(-5)/3 < x) & (x < S(-1))
+    assert solve(f.subs({t: 3 * x + 2}).diff(x) > 0, x) == (S(-1) < x) & (x < S(-1)/3)

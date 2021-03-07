@@ -31,10 +31,11 @@ from sympy.simplify import simplify
 from sympy.tensor.indexed import Indexed
 from sympy.utilities.iterables import numbered_symbols
 
-from sympy.testing.pytest import (XFAIL, raises, skip, slow, SKIP)
+from sympy.testing.pytest import (XFAIL, raises, skip, slow, SKIP, _both_exp_pow)
 from sympy.testing.randtest import verify_numerically as tn
 from sympy.physics.units import cm
 
+from sympy.solvers import solve
 from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
@@ -53,6 +54,7 @@ def dumeq(i, j):
     return i == j or i.dummy_eq(j)
 
 
+@_both_exp_pow
 def test_invert_real():
     x = Symbol('x', real=True)
 
@@ -797,6 +799,7 @@ def test_solveset_complex_tan():
         imageset(Lambda(n, pi*n + pi/2), S.Integers))
 
 
+@_both_exp_pow
 def test_solve_trig():
     from sympy.abc import n
     assert dumeq(solveset_real(sin(x), x),
@@ -1141,6 +1144,7 @@ def test_other_lambert():
         a, -a*LambertW(-log(a)/a)/log(a))
 
 
+@_both_exp_pow
 def test_solveset():
     f = Function('f')
     raises(ValueError, lambda: solveset(x + y))
@@ -1434,6 +1438,15 @@ def test_linsolve():
     assert linsolve([Eq(1/x, 1/x + y)], [x, y]) == {(x, 0)}
     assert linsolve([Eq(y/x, y/x + y)], [x, y]) == {(x, 0)}
     assert linsolve([Eq(x*(x + 1), x**2 + y)], [x, y]) == {(y, y)}
+
+    # corner cases
+    #
+    # XXX: The case below should give the same as for [0]
+    # assert linsolve([], [x]) == {(x,)}
+    assert linsolve([], [x]) == EmptySet()
+    assert linsolve([0], [x]) == {(x,)}
+    assert linsolve([x], [x, y]) == {(0, y)}
+    assert linsolve([x, 0], [x, y]) == {(0, y)}
 
 
 def test_linsolve_large_sparse():
@@ -2103,6 +2116,7 @@ def test_exponential_real():
     e7 = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
     e8 = -9*exp(-2*x + 5) + 4*exp(3*x + 1)
     e9 = 2**x + 4**x + 8**x - 84
+    e10 = 29*2**(x + 1)*615**(x) - 123*2726**(x)
 
     assert solveset(e1, x, S.Reals) == FiniteSet(
         -3*log(2)/(-2*log(3) + log(2)))
@@ -2115,6 +2129,7 @@ def test_exponential_real():
     assert solveset(e7, x, S.Reals) == FiniteSet(2)
     assert solveset(e8, x, S.Reals) == FiniteSet(-2*log(2)/5 + 2*log(3)/5 + Rational(4, 5))
     assert solveset(e9, x, S.Reals) == FiniteSet(2)
+    assert solveset(e10,x, S.Reals) == FiniteSet((-log(29) - log(2) + log(123))/(-log(2726) + log(2) + log(615)))
 
     assert solveset_real(-9*exp(-2*x + 5) + 2**(x + 1), x) == FiniteSet(
         -((-5 - 2*log(3) + log(2))/(log(2) + 2)))
@@ -2188,6 +2203,7 @@ def test_expo_conditionset():
 
 def test_exponential_symbols():
     x, y, z = symbols('x y z', positive=True)
+    xr, zr = symbols('xr, zr', real=True)
 
     assert solveset(z**x - y, x, S.Reals) == Intersection(
         S.Reals, FiniteSet(log(y)/log(z)))
@@ -2202,8 +2218,11 @@ def test_exponential_symbols():
     assert solveset(x**x, x, Interval.Lopen(0,oo)).dummy_eq(
         ConditionSet(w, Eq(w**w, 0), Interval.open(0, oo)))
     assert solveset(x**y - 1, y, S.Reals) == FiniteSet(0)
-    assert solveset(exp(x/y)*exp(-z/y) - 2, y, S.Reals) == FiniteSet(
-        (x - z)/log(2)) - FiniteSet(0)
+    assert solveset(exp(x/y)*exp(-z/y) - 2, y, S.Reals) == \
+    Complement(ConditionSet(y, Eq(im(x)/y, 0) & Eq(im(z)/y, 0), \
+    Complement(Intersection(FiniteSet((x - z)/log(2)), S.Reals), FiniteSet(0))), FiniteSet(0))
+    assert solveset(exp(xr/y)*exp(-zr/y) - 2, y, S.Reals) == \
+        Complement(FiniteSet((xr - zr)/log(2)), FiniteSet(0))
 
     assert solveset(a**x - b**x, x).dummy_eq(ConditionSet(
         w, Ne(a, 0) & Ne(b, 0), FiniteSet(0)))
@@ -2487,6 +2506,87 @@ def test_issue_10426():
         Intersection(S.Complexes, ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*x))) + 2*im(x))),
         S.Integers)))).dummy_eq(Dummy('x,n'))
 
+def test_issue_18208():
+    vars = symbols('x0:16') + symbols('y0:12')
+    x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,\
+    y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11 = vars
+
+    eqs = [x0 + x1 + x2 + x3 - 51,
+           x0 + x1 + x4 + x5 - 46,
+           x2 + x3 + x6 + x7 - 39,
+           x0 + x3 + x4 + x7 - 50,
+           x1 + x2 + x5 + x6 - 35,
+           x4 + x5 + x6 + x7 - 34,
+           x4 + x5 + x8 + x9 - 46,
+           x10 + x11 + x6 + x7 - 23,
+           x11 + x4 + x7 + x8 - 25,
+           x10 + x5 + x6 + x9 - 44,
+           x10 + x11 + x8 + x9 - 35,
+           x12 + x13 + x8 + x9 - 35,
+           x10 + x11 + x14 + x15 - 29,
+           x11 + x12 + x15 + x8 - 35,
+           x10 + x13 + x14 + x9 - 29,
+           x12 + x13 + x14 + x15 - 29,
+           y0 + y1 + y2 + y3 - 55,
+           y0 + y1 + y4 + y5 - 53,
+           y2 + y3 + y6 + y7 - 56,
+           y0 + y3 + y4 + y7 - 57,
+           y1 + y2 + y5 + y6 - 52,
+           y4 + y5 + y6 + y7 - 54,
+           y4 + y5 + y8 + y9 - 48,
+           y10 + y11 + y6 + y7 - 60,
+           y11 + y4 + y7 + y8 - 51,
+           y10 + y5 + y6 + y9 - 57,
+           y10 + y11 + y8 + y9 - 54,
+           x10 - 2,
+           x11 - 5,
+           x12 - 1,
+           x13 - 6,
+           x14 - 1,
+           x15 - 21,
+           y0 - 12,
+           y1 - 20]
+
+    expected = [38 - x3, x3 - 10, 23 - x3, x3, 12 - x7, x7 + 6, 16 - x7, x7,
+                8, 20, 2, 5, 1, 6, 1, 21, 12, 20, -y11 + y9 + 2, y11 - y9 + 21,
+                -y11 - y7 + y9 + 24, y11 + y7 - y9 - 3, 33 - y7, y7, 27 - y9, y9,
+                27 - y11, y11]
+
+    A, b = linear_eq_to_matrix(eqs, vars)
+
+    # solve
+    solve_expected = {v:eq for v, eq in zip(vars, expected) if v != eq}
+
+    assert solve(eqs, vars) == solve_expected
+
+    # linsolve
+    linsolve_expected = FiniteSet(Tuple(*expected))
+
+    assert linsolve(eqs, vars) == linsolve_expected
+    assert linsolve((A, b), vars) == linsolve_expected
+
+    # gauss_jordan_solve
+    gj_solve, new_vars = A.gauss_jordan_solve(b)
+    gj_solve = [i for i in gj_solve]
+    tau0, tau1, tau2, tau3, tau4 = symbols([str(v) for v in new_vars])
+
+    gj_expected = linsolve_expected.subs(zip([x3, x7, y7, y9, y11], new_vars))
+
+    assert FiniteSet(Tuple(*gj_solve)) == gj_expected
+
+    # nonlinsolve
+    # The solution set of nonlinsolve is currently equivalent to linsolve and is
+    # also correct. However, we would prefer to use the same symbols as parameters
+    # for the solution to the underdetermined system in all cases if possible.
+    # We want a solution that is not just equivalent but also given in the same form.
+    # This test may be changed should nonlinsolve be modified in this way.
+
+    nonlinsolve_expected = FiniteSet((38 - x3, x3 - 10, 23 - x3, x3, 12 - x7, x7 + 6,
+                                      16 - x7, x7, 8, 20, 2, 5, 1, 6, 1, 21, 12, 20,
+                                      -y5 + y7 - 1, y5 - y7 + 24, 21 - y5, y5, 33 - y7,
+                                      y7, 27 - y9, y9, -y5 + y7 - y9 + 24, y5 - y7 + y9 + 3))
+
+    assert nonlinsolve(eqs, vars) == nonlinsolve_expected
 
 @XFAIL
 def test_substitution_with_infeasible_solution():

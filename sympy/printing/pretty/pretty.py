@@ -1326,10 +1326,14 @@ class PrettyPrinter(Printer):
 
         return D
 
-    def _hprint_vseparator(self, p1, p2):
-        tmp = prettyForm(*p1.right(p2))
+    def _hprint_vseparator(self, p1, p2, left=None, right=None, delimiter='', ifascii_nougly=False):
+        if ifascii_nougly and not self._use_unicode:
+            return self._print_seq((p1, '|', p2), left=left, right=right,
+                                   delimiter=delimiter, ifascii_nougly=True)
+        tmp = self._print_seq((p1, p2,), left=left, right=right, delimiter=delimiter)
         sep = stringPict(vobj('|', tmp.height()), baseline=tmp.baseline)
-        return prettyForm(*p1.right(sep, p2))
+        return self._print_seq((p1, sep, p2), left=left, right=right,
+                               delimiter=delimiter)
 
     def _print_hyper(self, e):
         # FIXME refactor Matrix, Piecewise, and this into a tabular environment
@@ -1468,6 +1472,9 @@ class PrettyPrinter(Printer):
         #      what about exp_polar(0), exp_polar(1)?
         base = prettyForm(pretty_atom('Exp1', 'e'))
         return base ** self._print(e.args[0])
+
+    def _print_Exp1(self, e):
+        return prettyForm(pretty_atom('Exp1', 'e'))
 
     def _print_Function(self, e, sort=False, func_name=None):
         # optional argument func_name for supplying custom names
@@ -1642,6 +1649,14 @@ class PrettyPrinter(Printer):
         func_name = greek_unicode['Beta'] if self._use_unicode else 'B'
         return self._print_Function(e, func_name=func_name)
 
+    def _print_betainc(self, e):
+        func_name = "B'"
+        return self._print_Function(e, func_name=func_name)
+
+    def _print_betainc_regularized(self, e):
+        func_name = 'I'
+        return self._print_Function(e, func_name=func_name)
+
     def _print_gamma(self, e):
         func_name = greek_unicode['Gamma'] if self._use_unicode else 'Gamma'
         return self._print_Function(e, func_name=func_name)
@@ -1727,7 +1742,7 @@ class PrettyPrinter(Printer):
             pform = self._hprint_vseparator(pforma0, pforma1)
         else:
             pforma2 = self._print(e.args[2])
-            pforma = self._hprint_vseparator(pforma1, pforma2)
+            pforma = self._hprint_vseparator(pforma1, pforma2, ifascii_nougly=False)
             pforma = prettyForm(*pforma.left('; '))
             pform = prettyForm(*pforma.left(pforma0))
         pform = prettyForm(*pform.parens())
@@ -2103,12 +2118,25 @@ class PrettyPrinter(Printer):
         sets = ts.base_sets
         signature = fun.signature
         expr = self._print(fun.expr)
-        bar = self._print("|")
+
+        # TODO: the stuff to the left of the | and the stuff to the right of
+        # the | should have independent baselines, that way something like
+        # ImageSet(Lambda(x, 1/x**2), S.Naturals) prints the "x in N" part
+        # centered on the right instead of aligned with the fraction bar on
+        # the left. The same also applies to ConditionSet and ComplexRegion
         if len(signature) == 1:
-            return self._print_seq((expr, bar, signature[0], inn, sets[0]), "{", "}", ' ')
+            S = self._print_seq((signature[0], inn, sets[0]),
+                                delimiter=' ')
+            return self._hprint_vseparator(expr, S,
+                                           left='{', right='}',
+                                           ifascii_nougly=True, delimiter=' ')
         else:
-            pargs = tuple(j for var, setv in zip(signature, sets) for j in (var, inn, setv, ","))
-            return self._print_seq((expr, bar) + pargs[:-1], "{", "}", ' ')
+            pargs = tuple(j for var, setv in zip(signature, sets) for j in
+                          (var, ' ', inn, ' ', setv, ", "))
+            S = self._print_seq(pargs[:-1], delimiter='')
+            return self._hprint_vseparator(expr, S,
+                                           left='{', right='}',
+                                           ifascii_nougly=True, delimiter=' ')
 
     def _print_ConditionSet(self, ts):
         if self._use_unicode:
@@ -2130,14 +2158,16 @@ class PrettyPrinter(Printer):
                 cond = self._print(cond)
                 cond = prettyForm(*cond.parens())
 
-        bar = self._print("|")
-
         if ts.base_set is S.UniversalSet:
-            return self._print_seq((variables, bar, cond), "{", "}", ' ')
+            return self._hprint_vseparator(variables, cond, left="{",
+                                           right="}", ifascii_nougly=True,
+                                           delimiter=' ')
 
         base = self._print(ts.base_set)
-        return self._print_seq((variables, bar, variables, inn,
-                                base, _and, cond), "{", "}", ' ')
+        C = self._print_seq((variables, inn, base, _and, cond),
+                            delimiter=' ')
+        return self._hprint_vseparator(variables, C, left="{", right="}",
+                                       ifascii_nougly=True, delimiter=' ')
 
     def _print_ComplexRegion(self, ts):
         if self._use_unicode:
@@ -2146,10 +2176,12 @@ class PrettyPrinter(Printer):
             inn = 'in'
         variables = self._print_seq(ts.variables)
         expr = self._print(ts.expr)
-        bar = self._print("|")
         prodsets = self._print(ts.sets)
 
-        return self._print_seq((expr, bar, variables, inn, prodsets), "{", "}", ' ')
+        C = self._print_seq((variables, inn, prodsets),
+                            delimiter=' ')
+        return self._hprint_vseparator(expr, C, left="{", right="}",
+                                       ifascii_nougly=True, delimiter=' ')
 
     def _print_Contains(self, e):
         var, set = e.args
@@ -2201,7 +2233,7 @@ class PrettyPrinter(Printer):
     _print_SeqMul = _print_SeqFormula
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
-            parenthesize=lambda x: False):
+            parenthesize=lambda x: False, ifascii_nougly=True):
         s = None
         try:
             for item in seq:
@@ -2239,7 +2271,7 @@ class PrettyPrinter(Printer):
             if s is None:
                 s = stringPict('')
 
-        s = prettyForm(*s.parens(left, right, ifascii_nougly=True))
+        s = prettyForm(*s.parens(left, right, ifascii_nougly=ifascii_nougly))
         return s
 
     def join(self, delimiter, args):
@@ -2713,6 +2745,23 @@ class PrettyPrinter(Printer):
 
     def _print_Str(self, s):
         return self._print(s.name)
+
+    def _print_AppliedBinaryRelation(self, expr):
+        rel, args = expr.function, expr.arguments
+        lhs, rhs = args
+
+        if hasattr(rel, 'str_name'):
+            name = rel.str_name
+        elif hasattr(rel, 'name'):
+            name = rel.name
+        else:
+            name = type(rel).__name__
+        op = prettyForm(name)
+        l = self._print(lhs)
+        r = self._print(rhs)
+        pform = prettyForm(*stringPict.next(l, ' ', op, ' ', r))
+        return pform
+
 
 @print_function(PrettyPrinter)
 def pretty(expr, **settings):

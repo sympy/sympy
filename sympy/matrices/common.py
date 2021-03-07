@@ -807,6 +807,18 @@ class MatrixSpecial(MatrixRequired):
         return cls._new(rows, cols, entry)
 
     @classmethod
+    def _eval_wilkinson(cls, n):
+        def entry(i, j):
+            return cls.one if i + 1 == j else cls.zero
+
+        D = cls._new(2*n + 1, 2*n + 1, entry)
+
+        wminus = cls.diag([i for i in range(-n, n + 1)], unpack=True) + D + D.T
+        wplus = abs(cls.diag([i for i in range(-n, n + 1)], unpack=True)) + D + D.T
+
+        return wminus, wplus
+
+    @classmethod
     def diag(kls, *args, strict=False, unpack=True, rows=None, cols=None, **kwargs):
         """Returns a matrix with the specified diagonal.
         If matrices are passed, a block-diagonal matrix
@@ -1208,6 +1220,46 @@ class MatrixSpecial(MatrixRequired):
             return kls.zero
         return kls._new(size, size, entry)
 
+
+    @classmethod
+    def wilkinson(kls, n, **kwargs):
+        """Returns two square Wilkinson Matrix of size 2*n + 1
+        $W_{2n + 1}^-, W_{2n + 1}^+ =$ Wilkinson(n)
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> wminus, wplus = Matrix.wilkinson(3)
+        >>> wminus
+        Matrix([
+        [-3,  1,  0, 0, 0, 0, 0],
+        [ 1, -2,  1, 0, 0, 0, 0],
+        [ 0,  1, -1, 1, 0, 0, 0],
+        [ 0,  0,  1, 0, 1, 0, 0],
+        [ 0,  0,  0, 1, 1, 1, 0],
+        [ 0,  0,  0, 0, 1, 2, 1],
+        [ 0,  0,  0, 0, 0, 1, 3]])
+        >>> wplus
+        Matrix([
+        [3, 1, 0, 0, 0, 0, 0],
+        [1, 2, 1, 0, 0, 0, 0],
+        [0, 1, 1, 1, 0, 0, 0],
+        [0, 0, 1, 0, 1, 0, 0],
+        [0, 0, 0, 1, 1, 1, 0],
+        [0, 0, 0, 0, 1, 2, 1],
+        [0, 0, 0, 0, 0, 1, 3]])
+
+        References
+        ==========
+
+        .. [1] https://blogs.mathworks.com/cleve/2013/04/15/wilkinsons-matrices-2/
+        .. [2] J. H. Wilkinson, The Algebraic Eigenvalue Problem, Claredon Press, Oxford, 1965, 662 pp.
+
+        """
+        klass = kwargs.get('cls', kls)
+        n = as_int(n)
+        return klass._eval_wilkinson(n)
 
 class MatrixProperties(MatrixRequired):
     """Provides basic properties of a matrix."""
@@ -2432,6 +2484,84 @@ class MatrixOperations(MatrixRequired):
         from sympy.simplify import trigsimp
         return self.applyfunc(lambda x: trigsimp(x, **opts))
 
+    def upper_triangular(self, k=0):
+        """returns the elements on and above the kth diagonal of a matrix.
+        If k is not specified then simply returns upper-triangular portion
+        of a matrix
+
+        Examples
+        ========
+
+        >>> from sympy import ones
+        >>> A = ones(4)
+        >>> A.upper_triangular()
+        Matrix([
+        [1, 1, 1, 1],
+        [0, 1, 1, 1],
+        [0, 0, 1, 1],
+        [0, 0, 0, 1]])
+
+        >>> A.upper_triangular(2)
+        Matrix([
+        [0, 0, 1, 1],
+        [0, 0, 0, 1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0]])
+
+        >>> A.upper_triangular(-1)
+        Matrix([
+        [1, 1, 1, 1],
+        [1, 1, 1, 1],
+        [0, 1, 1, 1],
+        [0, 0, 1, 1]])
+
+        """
+
+        def entry(i, j):
+            return self[i, j] if i + k <= j else self.zero
+
+        return self._new(self.rows, self.cols, entry)
+
+
+    def lower_triangular(self, k=0):
+        """returns the elements on and below the kth diagonal of a matrix.
+        If k is not specified then simply returns lower-triangular portion
+        of a matrix
+
+        Examples
+        ========
+
+        >>> from sympy import ones
+        >>> A = ones(4)
+        >>> A.lower_triangular()
+        Matrix([
+        [1, 0, 0, 0],
+        [1, 1, 0, 0],
+        [1, 1, 1, 0],
+        [1, 1, 1, 1]])
+
+        >>> A.lower_triangular(-2)
+        Matrix([
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [1, 0, 0, 0],
+        [1, 1, 0, 0]])
+
+        >>> A.lower_triangular(1)
+        Matrix([
+        [1, 1, 0, 0],
+        [1, 1, 1, 0],
+        [1, 1, 1, 1],
+        [1, 1, 1, 1]])
+
+        """
+
+        def entry(i, j):
+            return self[i, j] if i + k >= j else self.zero
+
+        return self._new(self.rows, self.cols, entry)
+
+
 
 class MatrixArithmetic(MatrixRequired):
     """Provides basic matrix arithmetic operations.
@@ -2841,7 +2971,6 @@ class MatrixArithmetic(MatrixRequired):
     @call_highest_priority('__rsub__')
     def __sub__(self, a):
         return self + (-a)
-
 
 class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):

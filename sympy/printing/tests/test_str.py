@@ -7,6 +7,7 @@ from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice,
     Q)
 from sympy.core import Expr, Mul
+from sympy.core.parameters import _exp_is_pow
 from sympy.external import import_module
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.physics.units import second, joule
@@ -14,6 +15,7 @@ from sympy.polys import (Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ,
     ZZ_I, QQ_I, lex, grlex)
 from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
 from sympy.tensor import NDimArray
+from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
 
 from sympy.testing.pytest import raises
 
@@ -100,6 +102,8 @@ def test_EulerGamma():
 
 def test_Exp():
     assert str(E) == "E"
+    with _exp_is_pow(True):
+        assert str(exp(x)) == "E**x"
 
 
 def test_factorial():
@@ -880,7 +884,7 @@ def test_MatMul_MatAdd():
     from sympy import MatrixSymbol
 
     X, Y = MatrixSymbol("X", 2, 2), MatrixSymbol("Y", 2, 2)
-    assert str(2*(X + Y)) == "2*(X + Y)"
+    assert str(2*(X + Y)) == "2*X + 2*Y"
 
     assert str(I*X) == "I*X"
     assert str(-I*X) == "-I*X"
@@ -960,7 +964,7 @@ def test_MatrixSymbol_printing():
     B = MatrixSymbol("B", 3, 3)
 
     assert str(A - A*B - B) == "A - A*B - B"
-    assert str(A*B - (A+B)) == "-(A + B) + A*B"
+    assert str(A*B - (A+B)) == "-A + A*B - B"
     assert str(A**(-1)) == "A**(-1)"
     assert str(A**3) == "A**3"
 
@@ -1028,3 +1032,7 @@ def test_Predicate():
 
 def test_AppliedPredicate():
     assert sstr(Q.even(x)) == 'Q.even(x)'
+
+def test_printing_str_array_expressions():
+    assert sstr(ArraySymbol("A", 2, 3, 4)) == "A"
+    assert sstr(ArrayElement("A", (2, 1/(1-x), 0))) == "A[2, 1/(1 - x), 0]"

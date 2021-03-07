@@ -5,10 +5,8 @@ import inspect
 from sympy.core.assumptions import ManagedProperties
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
-from sympy.logic.boolalg import Boolean
-from sympy.multipledispatch.dispatcher import (
-    Dispatcher, MDNotImplementedError, str_signature
-)
+from sympy.logic.boolalg import Boolean, false, true
+from sympy.multipledispatch.dispatcher import Dispatcher, str_signature
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.source import get_class
@@ -178,6 +176,12 @@ class AppliedPredicate(Boolean):
             i = self.arguments[0]
             if i.is_Boolean or i.is_Symbol or isinstance(i, (Eq, Ne)):
                 return i.binary_symbols
+        if self.function in (Q.eq, Q.ne):
+            if true in self.arguments or false in self.arguments:
+                if self.arguments[0].is_Symbol:
+                    return {self.arguments[0]}
+                elif self.arguments[1].is_Symbol:
+                    return {self.arguments[1]}
         return set()
 
 
@@ -303,7 +307,8 @@ class Predicate(Boolean, metaclass=PredicateMeta):
       ...
     TypeError: <class 'sympy.assumptions.assume.UndefinedPredicate'> cannot be dispatched.
 
-    The tautological predicate ``Q.is_true`` can be used to wrap other objects:
+    The tautological predicate ``Q.is_true`` can be used to wrap other objects.
+
     >>> Q.is_true(x > 1)
     Q.is_true(x > 1)
 
@@ -358,16 +363,11 @@ class Predicate(Boolean, metaclass=PredicateMeta):
 
         This uses only direct resolution methods, not logical inference.
         """
-        types = tuple(type(a) for a in args)
         result = None
-        for func in self.handler.dispatch_iter(*types):
-            try:
-                result = func(*args, assumptions)
-            except MDNotImplementedError:
-                continue
-            else:
-                if result is not None:
-                    return result
+        try:
+            result = self.handler(*args, assumptions=assumptions)
+        except NotImplementedError:
+            pass
         return result
 
 

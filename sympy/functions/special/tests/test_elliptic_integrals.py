@@ -152,10 +152,15 @@ def test_P():
     assert P(n, m).diff(n) == (E(m) + (m - n)*K(m)/n +
         (n**2 - m)*P(n, m)/n)/(2*(m - n)*(n - 1))
     assert P(n, m).diff(m) == (E(m)/(m - 1) + P(n, m))/(2*(n - m))
-    rx, ry = randcplx(), randcplx()
-    assert td(P(n, rx, ry), n)
-    assert td(P(rx, z, ry), z)
-    assert td(P(rx, ry, m), m)
+
+    # These tests fail due to
+    # https://github.com/fredrik-johansson/mpmath/issues/571#issuecomment-777201962
+    # https://github.com/sympy/sympy/issues/20933#issuecomment-777080385
+    #
+    # rx, ry = randcplx(), randcplx()
+    # assert td(P(n, rx, ry), n)
+    # assert td(P(rx, z, ry), z)
+    # assert td(P(rx, ry, m), m)
 
     assert P(n, z, m).series(z) == z + z**3*(m/6 + n/3) + \
         z**5*(3*m**2/40 + m*n/10 - m/30 + n**2/5 - n/15) + O(z**6)
