@@ -32,7 +32,7 @@ class Standard_Cartan(Basic):
 
         # properties for caching
         self._omega_inv = None
-        self._reflection_matrices_ = self.reflection_matrices()
+        self._reflection_matrices_ = self._reflection_matrices()
 
 
     @property
@@ -127,7 +127,7 @@ class Standard_Cartan(Basic):
         _list_of_mat_typecheck(val)
         self._simple_roots = val
         self._is_default_basis = False
-        self._reflection_matrices_=self.reflection_matrices(val)
+        self._reflection_matrices_=self._reflection_matrices(val)
         self._omega_inv=self.omega_matrix().pinv()
 
 
@@ -336,7 +336,7 @@ class Standard_Cartan(Basic):
         return sorted(full_orbit, key=self._orbit_sorter_lambda())
 
 
-    def reflection_matrices(self, weight=None):
+    def _reflection_matrices(self, weight=None):
         """Returns reflection matricies depending on how
         weight is (or isn't) passed.
 
