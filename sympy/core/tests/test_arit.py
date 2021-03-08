@@ -8,8 +8,7 @@ from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
 from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy.testing.randtest import verify_numerically
-from sympy.functions.elementary.trigonometric import asin, sinh, cosh
-from sympy.integrals import integrate
+from sympy.functions.elementary.trigonometric import asin
 
 
 a, c, x, y, z = symbols('a,c,x,y,z')
@@ -2326,13 +2325,5 @@ def test_issue_17130():
 
 
 def test_issue_21034():
-    x = Symbol('x', real=True, nonzero=True)
-    f1 = x*(-x**4/asin(5)**4 - x*sinh(x + log(asin(5))) + 5)
-    e = -I*log((re(asin(5)) + I*im(asin(5)))/sqrt(re(asin(5))**2 + im(asin(5))**2))
-    e2 = -I*log((re(asin(5)) + I*im(asin(5)))/sqrt(re(asin(5))**2 + im(asin(5))**2))/pi
-    assert integrate(f1, x) == \
-        -x**6/(6*asin(5)**4) - x**2*cosh(x + log(asin(5))) + 5*x**2/2 + 2*x*sinh(x + log(asin(5))) - 2*cosh(x + log(asin(5)))
-    assert f1.is_zero is None
-    assert sinh(x + log(asin(5))).is_extended_positive is None
-    assert e % pi
-    assert e2.round(2)
+    e = -I*log((re(asin(5)) + I*im(asin(5)))/sqrt(re(asin(5))**2 + im(asin(5))**2))/pi
+    assert e.round(2)
