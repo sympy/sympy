@@ -7,6 +7,7 @@ from sympy.core.power import Pow
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.combinatorial.numbers import harmonic
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
+from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt, root
@@ -234,10 +235,18 @@ class besselj(BesselBase):
         from sympy.series.order import Order
         nu, z = self.args
 
-        if z.limit(x, 0) is S.Zero:
+        # In case of powers less than 1, number of terms need to be computed
+        # separately to avoid repeated callings of _eval_nseries with wrong n
+        try:
+            _, exp = z.leadterm(x)
+        except (ValueError, NotImplementedError):
+            return self
+
+        if exp.is_positive:
+            newn = ceiling(n/exp)
             s = [(-1)**k * z**(2 * k) / (factorial(k) * factorial(nu + k)
-                    * 2**(2 * k)) for k in range((n + 1)//2)] + [Order(z**(n))]
-            return ((z / 2)**nu * Add(*s)).expand()
+                    * 2**(2 * k)) for k in range((newn + 1) // 2)]
+            return ((z / 2)**nu * Add(*s)).expand() + Order(x**n, x)
 
         return super(besselj, self)._eval_nseries(x, n, logx, cdir)
 
@@ -334,9 +343,17 @@ class bessely(BesselBase):
     def _eval_nseries(self, x, n, logx, cdir=0):
         nu, z = self.args
 
-        if z.limit(x, 0) is nu is S.Zero:
+        # In case of powers less than 1, number of terms need to be computed
+        # separately to avoid repeated callings of _eval_nseries with wrong n
+        try:
+            _, exp = z.leadterm(x)
+        except (ValueError, NotImplementedError):
+            return self
+
+        if exp.is_positive:
+            newn = ceiling(n/exp)
             s = [(-1)**(k + 1) * harmonic(k) * (z / 2)**(2*k)
-                    / (factorial(k)**2) for k in range((n + 1)//2)]
+                    / (factorial(k)**2) for k in range((newn + 1)//2)]
             b = besselj(0, z)._eval_nseries(x, n, logx, cdir)
             t = ((log(z / 2) + S.EulerGamma) * b)
             return ((2 / pi) * (t + Add(*s))).expand()
