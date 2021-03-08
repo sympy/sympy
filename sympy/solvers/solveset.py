@@ -1800,13 +1800,11 @@ def _solve_as_lambert(lhs, rhs, symbol, domain):
     This function needs more improvements.
 
     """
-    result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
-
     soln = _compute_lambert_solutions(lhs, rhs, symbol)
     if soln:
-        result = FiniteSet(*soln)
-
-    return result
+        return FiniteSet(*soln)
+    else:
+        return ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
 
 
 def _transolve(f, symbol, domain):
@@ -2020,8 +2018,14 @@ def _transolve(f, symbol, domain):
         assert (len(rhs_s.args)) == 1
         rhs = rhs_s.args[0]
 
-        if (lhs - rhs).is_Add:
+        if lhs.is_Add:
             result = add_type(lhs, rhs, symbol, domain)
+        elif _is_lambert(lhs - rhs):
+            # try to get solutions in form of Lambert since `a*f(x) = c`
+            # will not come under lhs.is_add and which can't be solved by
+            # invert_complex for lambert type. (it's exception because of many
+            # forms and code of such cases are covered in `_solve_lambert`).
+            result = _solve_as_lambert(lhs, rhs, symbol, domain)
     else:
         result = rhs_s
 
