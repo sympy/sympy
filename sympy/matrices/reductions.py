@@ -2,6 +2,7 @@ from types import FunctionType
 
 from sympy.simplify.simplify import (
     simplify as _simplify, dotprodsimp as _dotprodsimp)
+from sympy.polys.matrices.domainmatrix import DomainMatrix
 
 from .utilities import _get_intermediate_simp, _iszero
 from .determinant import _find_reasonable_pivot
@@ -245,6 +246,14 @@ def _rank(M, iszerofunc=_iszero, simplify=False):
     return len(pivots)
 
 
+def _rref_DOM(M, pivots):
+    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    DOM_rref, DOM_pivots = DOM.rref()
+    if pivots:
+        return DOM_rref.to_Matrix(), DOM_pivots
+    return DOM_rref.to_Matrix()
+
+
 def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
         normalize_last=True):
     """Return reduced row-echelon form of matrix and indices of pivot vars.
@@ -300,12 +309,4 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     of the matrix, set ``noramlize_last=False``
     """
 
-    simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
-
-    mat, pivot_cols, _ = _row_reduce(M, iszerofunc, simpfunc,
-            normalize_last, normalize=True, zero_above=True)
-
-    if pivots:
-        mat = (mat, pivot_cols)
-
-    return mat
+    return _rref_DOM(M, pivots)
