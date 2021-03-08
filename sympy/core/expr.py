@@ -3767,7 +3767,7 @@ class Expr(Basic, EvalfMixin):
                     'Expected a number but got %s:' % func_name(x))
         elif x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
             return x
-        if not x.is_extended_real:
+        if x.is_extended_real is False:
             r, i = x.as_real_imag()
             return r.round(n) + S.ImaginaryUnit*i.round(n)
         if not x:
