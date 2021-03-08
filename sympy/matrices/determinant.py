@@ -406,7 +406,6 @@ def _charpoly(M, x='lambda', simplify=_simplify):
 
     if not M.is_square:
         raise NonSquareMatrixError()
-
     if M.is_lower or M.is_upper:
         diagonal_elements = M.diagonal()
         x = uniquely_named_symbol(x, diagonal_elements, modify=lambda s: '_' + s)

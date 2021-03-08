@@ -368,6 +368,7 @@ def test_cofactor_and_minors():
 def test_charpoly():
     x, y = Symbol('x'), Symbol('y')
     z, t = Symbol('z'), Symbol('t')
+
     from sympy.abc import a,b,c
 
     m = DeterminantOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
