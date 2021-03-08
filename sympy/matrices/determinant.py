@@ -329,7 +329,7 @@ def _adjugate(M, method="berkowitz"):
 
 
 def _charpoly_DOM(M, x):
-    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    DOM = DomainMatrix.from_Matrix(M, extension=True)
     x = uniquely_named_symbol(x, M, modify=lambda s: '_' + s)
     return PurePoly(DOM.charpoly(), x, domain=DOM.domain)
 
@@ -346,7 +346,7 @@ def _charpoly(M, x='lambda', simplify=_simplify):
     ==========
 
     x : string, optional
-        Name for the "x" variable, defaults to "x".
+        Name for the "lambda" variable, defaults to "lambda".
 
     simplify : function, optional
         Simplification function to use on the characteristic polynomial
@@ -359,7 +359,7 @@ def _charpoly(M, x='lambda', simplify=_simplify):
     >>> from sympy.abc import x, y
     >>> M = Matrix([[1, 3], [2, 0]])
     >>> M.charpoly()
-    PurePoly(lambda**2 - lambda - 6, lambda, domain='QQ')
+    PurePoly(lambda**2 - lambda - 6, lambda, domain='ZZ')
     >>> M.charpoly(x) == M.charpoly(y)
     True
 
@@ -385,11 +385,35 @@ def _charpoly(M, x='lambda', simplify=_simplify):
     >>> M.charpoly(x).gen == x
     False
 
+    Notes
+    =====
+
+    The Samuelson-Berkowitz algorithm is used to compute
+    the characteristic polynomial efficiently and without any
+    division operations. Thus the characteristic polynomial over any
+    commutative ring without zero divisors can be computed.
+
+    If the determinant det(x*I - M) can be found out easily as
+    in the case of an upper or a lower triangular matrix, then
+    instead of Samuelson-Berkowitz algorithm, eigenvalues are computed
+    and the characteristic polynomial with their help.
+
     See Also
     ========
 
     det
     """
+
+    if not M.is_square:
+        raise NonSquareMatrixError()
+
+    if M.is_lower or M.is_upper:
+        diagonal_elements = M.diagonal()
+        x = uniquely_named_symbol(x, diagonal_elements, modify=lambda s: '_' + s)
+        m = 1
+        for i in diagonal_elements:
+            m = m * (x - simplify(i))
+        return PurePoly(m, x)
 
     return _charpoly_DOM(M, x)
 
