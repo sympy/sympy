@@ -18,7 +18,7 @@ from functools import reduce
 from sympy import (Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict,
     default_sort_key)
 from sympy import (sin, cos, tan, cot, sec, csc, asin,
-                  acos, atan, acot, asec, acsc)
+                  acos, atan, acot, asec, acsc, log, exp)
 from sympy import pi, E
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
@@ -459,13 +459,13 @@ class DimensionSystem(Basic, _QuantityMapper):
                         return {}
                     else:
                         raise TypeError("The input argument for the function {} must be dimensionless or have dimensions of angle".format(name.func))
-                elif name.func in (asin, acos, atan, acot, asec, acsc):
+                elif name.func in (asin, acos, atan, acot, asec, acsc, log, exp):
                     if dicts[0] == {}:
                         return {}
                     else:
                         raise TypeError("The input argument for the function {} must be dimensionless".format(name.func))
                 else:
-                    raise TypeError("get_dimensional_dependencies not implement for function {}".format(name.func))
+                    raise TypeError("get_dimensional_dependencies not implement for function {}".format(name.func))                
             else:
                 return get_for_name(result)
 
