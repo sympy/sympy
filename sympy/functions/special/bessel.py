@@ -5,14 +5,13 @@ from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_or, fuzzy_not
 from sympy.core.power import Pow
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.functions.combinatorial.numbers import harmonic
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.complexes import re, im
-from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.gamma_functions import gamma, digamma
 from sympy.functions.special.hyper import hyper
 from sympy.polys.orthopolys import spherical_bessel_fn as fn
 
@@ -244,9 +243,10 @@ class besselj(BesselBase):
 
         if exp.is_positive:
             newn = ceiling(n/exp)
-            s = [(-1)**k * z**(2 * k) / (factorial(k) * factorial(nu + k)
+            t = z._eval_nseries(x, n, logx, cdir).removeO()
+            s = [(-1)**k * t**(2 * k) / (factorial(k) * factorial(nu + k)
                     * 2**(2 * k)) for k in range((newn + 1) // 2)]
-            return ((z / 2)**nu * Add(*s)).expand() + Order(x**n, x)
+            return ((t / 2)**nu * Add(*s)).expand() + Order(x**n, x)
 
         return super(besselj, self)._eval_nseries(x, n, logx, cdir)
 
@@ -352,11 +352,15 @@ class bessely(BesselBase):
 
         if exp.is_positive:
             newn = ceiling(n/exp)
-            s = [(-1)**(k + 1) * harmonic(k) * (z / 2)**(2*k)
-                    / (factorial(k)**2) for k in range((newn + 1)//2)]
-            b = besselj(0, z)._eval_nseries(x, n, logx, cdir)
-            t = ((log(z / 2) + S.EulerGamma) * b)
-            return ((2 / pi) * (t + Add(*s))).expand()
+            t = z._eval_nseries(x, n, logx, cdir).removeO()
+            bn = besselj(nu, z)
+            a = ((2/pi)*log(z/2)*bn)._eval_nseries(x, n, logx, cdir)
+            b = [(t/2)**(2*k - nu)*factorial(nu - k - 1)/(pi*factorial(k))
+                    for k in range(nu - 1)]
+            c = [(-1)**k*(t/2)**(2*k + nu)*(digamma(k + nu + 1)
+                + digamma(k + 1))/(pi*factorial(k)*factorial(k + nu))
+                    for k in range((newn + 1) // 2)]
+            return a - Add(*b) - Add(*c) # Order term comes from a
 
         return super(bessely, self)._eval_nseries(x, n, logx, cdir)
 
