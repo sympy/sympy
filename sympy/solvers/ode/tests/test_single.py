@@ -402,6 +402,9 @@ def test_2nd_nonlinear_autonomous_conserved_integral():
 def test_2nd_linear_bessel_equation():
     _ode_solver_test(_get_examples_ode_sol_2nd_linear_bessel)
 
+def test_lienard():
+    _ode_solver_test(_get_examples_ode_sol_lienard)
+
 
 def test_nth_algebraic():
     eqn = f(x) + f(x)*f(x).diff(x)
@@ -1854,6 +1857,20 @@ def _get_examples_ode_sol_2nd_nonlinear_autonomous_conserved():
 
 
 @_add_example_keys
+def _get_examples_ode_sol_lienard():
+    return {
+            'hint': "lienard",
+            'func': f(x),
+            'examples': {
+    'lienard_01': {
+        'eq': f(x).diff(x, x) + 2/x*f(x).diff(x) + f(x),
+        'sol': [Eq(f(x), C1/(x*sqrt(tan(C2 + x)**2 + 1)))],
+    }
+    }
+    }
+
+
+@_add_example_keys
 def _get_examples_ode_sol_separable_reduced():
     df = f(x).diff(x)
     return {
@@ -2404,6 +2421,7 @@ def _get_all_examples():
     _get_examples_ode_sol_separable_reduced + \
     _get_examples_ode_sol_lie_group + \
     _get_examples_ode_sol_2nd_linear_airy + \
-    _get_examples_ode_sol_nth_linear_constant_coeff_homogeneous
+    _get_examples_ode_sol_nth_linear_constant_coeff_homogeneous + \
+    _get_examples_ode_sol_lienard
 
     return all_examples
