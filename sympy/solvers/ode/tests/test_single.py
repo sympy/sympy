@@ -263,7 +263,7 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
 
             if not (checkodesol_too_slow and ON_TRAVIS):
                 if not checkodesol_XFAIL:
-                    if checkodesol(eq, dsolve_sol, solve_for_func=False) != expected_checkodesol:
+                    if checkodesol(eq, dsolve_sol, func, solve_for_func=False) != expected_checkodesol:
                         result['unsolve_list'] = example
                         xpass = False
                         message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
@@ -1164,12 +1164,14 @@ def _get_examples_ode_sol_nth_algebraic():
     'algeb_21': {
         'eq': Eq(g(x).diff(x).diff(x), (x-2)**2 + (x-3)**3),
         'sol': [Eq(g(x), C1 + C2*x + x**5/20 - 2*x**4/3 + 23*x**3/6 - 23*x**2/2)],
+        'func': g(x),
     },
 
     # https://github.com/sympy/sympy/issues/13691
     'algeb_22': {
         'eq': f(x).diff(x) - C1*g(x).diff(x),
         'sol': [Eq(f(x), C2 + C1*g(x))],
+        'func': f(x),
     },
 
     # https://github.com/sympy/sympy/issues/4838
@@ -1518,6 +1520,7 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
         'sol': [Eq(u(t), C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L))
         + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L))
         + E_0*exp(I*omega*t)/(-C*L*omega**2 + I*C*R*omega + 1))],
+        'func': u(t),
     },
 
     # https://github.com/sympy/sympy/issues/6879
@@ -1682,12 +1685,13 @@ def _get_examples_ode_sol_separable():
         'sol': [Eq(f(x), -1/(-C1 + x**2)*(C1 + x**2))],
     },
 
-    # https://github.com/sympy/sympy/issues/10379
-    'separable_24': {
-        'eq': f(t).diff(t)-(1-51.05*y*f(t)),
-        'sol': [Eq(f(t), (0.019588638589618*exp(y*(C1 - 51.05*t)) + 0.019588638589618)/y)],
-        'func': f(t),
-    },
+    # # https://github.com/sympy/sympy/issues/10379
+    # 'separable_24': {
+    #     'eq': f(t).diff(t)-(1-51.05*y*f(t)),
+    #     'sol': [Eq(f(t), (0.019588638589618*exp(y*(C1 - 51.05*t)) + 0.019588638589618)/y)],
+    #     'func': f(t),
+    #     'checkodesol_XFAIL': True,
+    # },
 
     # https://github.com/sympy/sympy/issues/15999
     'separable_25': {
@@ -1695,12 +1699,12 @@ def _get_examples_ode_sol_separable():
         'sol': [Eq(f(x), C2*exp(C1*x))],
     },
 
-    'separable_26': {
-        'eq': f1 - k * (v(t) ** 2) - m * Derivative(v(t)),
-        'sol': [Eq(v(t), -68.585712797929/tanh(C1 - 0.142886901662352*t))],
-        'func': v(t),
-        'checkodesol_XFAIL': True,
-    }
+    # 'separable_26': {
+    #     'eq': f1 - k * (v(t) ** 2) - m * Derivative(v(t)),
+    #     'sol': [Eq(v(t), -68.585712797929/tanh(C1 - 0.142886901662352*t))],
+    #     'func': v(t),
+    #     'checkodesol_XFAIL': True,
+    # }
     }
     }
 
