@@ -3,6 +3,7 @@ import copy
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.miscellaneous import Min, sqrt
 from sympy.functions.elementary.complexes import sign
+from sympy.polys.matrices import DomainMatrix
 
 from .common import NonSquareMatrixError, NonPositiveDefiniteMatrixError
 from .utilities import _get_intermediate_simp, _iszero
@@ -574,7 +575,7 @@ def _LDLdecomposition_sparse(M, hermitian=True):
     return M._new(L), M._new(D)
 
 
-def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
+def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False, use_domain=False):
     """Returns (L, U, perm) where L is a lower triangular matrix with unit
     diagonal, U is an upper triangular matrix, and perm is a list of row
     swap index pairs. If A is the original matrix, then
@@ -643,6 +644,9 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
     LUdecompositionFF
     LUsolve
     """
+
+    if use_domain:
+        return _LUdecomposition_DomainMatrix(M)
 
     combined, p = M.LUdecomposition_Simple(iszerofunc=iszerofunc,
         simpfunc=simpfunc, rankcheck=rankcheck)
@@ -1062,6 +1066,17 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
                                 " the LU decomposition of this matrix.")
 
     return lu, row_swaps
+
+def _LUdecomposition_DomainMatrix(M):
+    dM = DomainMatrix.from_Matrix(M)
+    dM = dM.to_field()
+
+    L, U, p = dM.lu()
+    L = L.to_Matrix()
+    U = U.to_Matrix()
+
+    return L, U, p
+
 
 def _LUdecompositionFF(M):
     """Compute a fraction-free LU decomposition.

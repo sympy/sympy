@@ -2114,9 +2114,9 @@ class MatrixBase(MatrixDeprecated,
         raise NotImplementedError('This function is implemented in DenseMatrix or SparseMatrix')
 
     def LUdecomposition(self, iszerofunc=_iszero, simpfunc=None,
-            rankcheck=False):
+            rankcheck=False, use_domain=False):
         return _LUdecomposition(self, iszerofunc=iszerofunc, simpfunc=simpfunc,
-                rankcheck=rankcheck)
+                rankcheck=rankcheck, use_domain=use_domain)
 
     def LUdecomposition_Simple(self, iszerofunc=_iszero, simpfunc=None,
             rankcheck=False):
