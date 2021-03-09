@@ -17,6 +17,9 @@ from functools import reduce
 
 from sympy import (Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict,
     default_sort_key)
+from sympy import (sin, cos, tan, cot, sec, csc, asin,
+                  acos, atan, acot, asec, acsc)
+from sympy import pi, E
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -253,7 +256,7 @@ class Dimension(Expr):
     def _from_dimensional_dependencies(cls, dependencies):
         return reduce(lambda x, y: x * y, (
             Dimension(d)**e for d, e in dependencies.items()
-        ))
+        ), 1)
 
     @classmethod
     def _get_dimensional_dependencies_for_name(cls, name):
@@ -417,7 +420,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             # as base dimensions:
             return dict(self.dimensional_dependencies.get(name, {name: 1}))
 
-        if name.is_Number:
+        if name.is_Number or name.is_NumberSymbol:
             return {}
 
         get_for_name = self._get_dimensional_dependencies_for_name
@@ -445,10 +448,24 @@ class DimensionSystem(Basic, _QuantityMapper):
                 get_for_name(arg)) for arg in name.args)
             result = name.func(*args)
 
+            dicts = [get_for_name(i) for i in name.args]
+
             if isinstance(result, Dimension):
                 return self.get_dimensional_dependencies(result)
             elif result.func == name.func:
-                return {}
+                print(name.func)
+                if name.func in (sin, cos, tan, cot, sec, csc):
+                    if dicts[0] == {} or dicts[0] == {Symbol('angle'): 1}:
+                        return {}
+                    else:
+                        raise TypeError("The input argument for the function {} must be dimensionless or have dimensions of angle".format(name.func))
+                elif name.func in (asin, acos, atan, acot, asec, acsc):
+                    if dicts[0] == {}:
+                        return {}
+                    else:
+                        raise TypeError("The input argument for the function {} must be dimensionless".format(name.func))
+                else:
+                    raise TypeError("get_dimensional_dependencies not implement for function {}".format(name.func))
             else:
                 return get_for_name(result)
 
