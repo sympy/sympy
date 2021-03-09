@@ -548,6 +548,19 @@ def _mask(non_inverts, seen, symset, implicit, f):
     f = [fi.subs(non_inverts) for fi in f]
     return non_inverts, f
 
+def _swapsol(solution, swap_sym):
+    """
+    Swaps masked(dummy) symbols with actual ones. For instance, if the solution is
+    {_X0: (-a12*b2 + a22*b1), _X1: (a11*b2 - a21*b1)}
+    and swap_sym is {_X0: x(t), _X1: y(t)}, then the following will be returned as solution
+    {x(t): (-a12*b2 + a22*b1), y(t): (a11*b2 - a21*b1)}
+    """
+    if isinstance(solution, dict):
+        solution = _swap_dict(solution, swap_sym)
+    elif solution and isinstance(solution, list) and isinstance(solution[0], dict):
+        solution = _swap_list(solution, swap_sym)
+    return solution
+
 
 def solve(f, *symbols, **flags):
     r"""
@@ -1289,12 +1302,7 @@ def solve(f, *symbols, **flags):
 
     if swap_sym:
         symbols = [swap_sym.get(k, k) for k in symbols]
-        if isinstance(solution, dict):
-            solution = _swap_dict(solution, swap_sym)
-
-        elif solution and isinstance(solution, list) and isinstance(solution[0], dict):
-            solution = _swap_list(solution, swap_sym)
-
+        solution = _swapsol(solution, swap_sym)
     # undo the dictionary solutions returned when the system was only partially
     # solved with poly-system if all symbols are present
     if (
