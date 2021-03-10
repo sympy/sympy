@@ -240,6 +240,8 @@ GOOD_PAIRS = [
     (r"a \negmedspace b", _Mul(a, b)),
     (r"a \negthickspace b", _Mul(a, b)),
     (r"\int x \, dx", Integral(x, x)),
+    (r"\log_2 x", _log(x, 2)),
+    (r"\log_a x", _log(x, a)),
 ]
 
 def test_parseable():
@@ -248,10 +250,7 @@ def test_parseable():
         assert parse_latex(latex_str) == sympy_expr
 
 # At time of migration from latex2sympy, should work but doesn't
-FAILING_PAIRS = [
-    (r"\log_2 x", _log(x, 2)),
-    (r"\log_a x", _log(x, a)),
-]
+FAILING_PAIRS = []
 
 def test_failing_parseable():
     from sympy.parsing.latex import parse_latex
