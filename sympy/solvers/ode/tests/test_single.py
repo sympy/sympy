@@ -1537,7 +1537,7 @@ def _get_examples_ode_sol_separable():
     # test_separable1-5 are from Ordinary Differential Equations, Tenenbaum and
     # Pollard, pg. 55
     t,a = symbols('a,t')
-    m = 96
+    # m = 96
     # g = 9.8
     # k = .2
     # f1 = g * m
