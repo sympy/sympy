@@ -34,7 +34,7 @@ Functions that are for internal use:
 """
 from sympy import (acos, acosh, asin, asinh, atan, cos, Derivative, Dummy, diff, cbrt,
     E, Eq, exp, hyper, I, im, Integral, integrate, LambertW, log, Mul, Ne, pi, Piecewise, Rational,
-    re, rootof, S, sin, sinh, cosh, tan, tanh, sec, sqrt, symbols, Ei, erfi)
+    re, rootof, S, sin, sinh, cosh, tan, sec, sqrt, symbols, Ei, erfi)
 
 from sympy.core import Function, Symbol
 from sympy.functions import airyai, airybi, besselj, bessely
@@ -1538,10 +1538,10 @@ def _get_examples_ode_sol_separable():
     # Pollard, pg. 55
     t,a = symbols('a,t')
     m = 96
-    g = 9.8
-    k = .2
-    f1 = g * m
-    v = Function('v')
+    # g = 9.8
+    # k = .2
+    # f1 = g * m
+    # v = Function('v')
     return {
             'hint': "separable",
             'func': f(x),
