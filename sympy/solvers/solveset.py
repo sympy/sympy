@@ -307,7 +307,7 @@ def _invert_real(f, g_ys, symbol):
     return (f, g_ys)
 
 
-def _invert_complex(f, g_ys, symbol):
+def _invert_complex(f, g_ys, symbol,check=False):
     """Helper function for _invert."""
 
     if f == symbol:
@@ -341,19 +341,30 @@ def _invert_complex(f, g_ys, symbol):
                                imageset(Lambda(n, f.inverse()(n)), g_ys), symbol)
 
     if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
-        if any(e for e in Add.make_args(f) if len(e.atoms(exp)) == 2):
-            # can solve upto `(d*exp(exp(a*x+b)) + c)` format and `a` should be present
-            f1 = [f for f1 in f.args for f in f1.args if f1.has(Symbol) and f.has(Symbol)][0]
-            b = f1.replace(symbol,0)
-            a = (f1 -b) / symbol
-            if not a.has(symbol) and a != 0:
-                return  symbol, Union(*[imageset(Lambda(((k, n),), (I*(2*k*pi) - b +
-                log(Abs([I*(2*n*pi + arg(g_y)) + log(Abs(g_y)) ][0])))/a) , S.Integers**2) for g_y in g_ys if g_y != 0 ])
+        if check and isinstance(g_ys, ImageSet):
+            # can solve upto `(d*exp(exp(a*x**n + b*x**(n-1) + ... + f)) + c)` format
+            g = g_ys.replace(symbol,n)
+            g_y = (g.lamda.expr)
+            soln = solvify(f.exp, symbol, S.Complexes)
+            exp_invs = EmptySet
+            for sol in soln:
+                num , den = sol.as_numer_denom()
+                exp_invs += Union(*[imageset(Lambda(((k, n),), (I*(2*k*pi + arg(g_y))
+                                         + log(Abs(g_y)) + num )/den), S.Integers**2)])
+
+            return _invert_complex(symbol, exp_invs, symbol)
 
         elif isinstance(g_ys, FiniteSet):
             exp_invs = Union(*[imageset(Lambda(n, I*(2*n*pi + arg(g_y)) +
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
+
+            if (f.exp).has(exp):
+                exp_invs = Union(*[imageset(Lambda(symbol, I*(2*symbol*pi + arg(g_y)) +
+                                               log(Abs(g_y))), S.Integers)
+                               for g_y in g_ys if g_y != 0])
+                return _invert_complex(f.exp, exp_invs, symbol,check=True)
+
             return _invert_complex(f.exp, exp_invs, symbol)
 
     return (f, g_ys)
