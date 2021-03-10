@@ -1754,6 +1754,82 @@ def _is_logarithmic(f, symbol):
     return rv
 
 
+def _is_lambert(f, symbol):
+    r"""
+    The below 3 conditions are currently considered as Lambert type:
+
+    1. Equations containing more than two operands and `symbol`s involving any of 
+       `Pow`, `exp`, `HyperbolicFunction`,`TrigonometricFunction`, `log` terms.
+
+    2. In `Pow`, `exp` the exponent should have `symbol` whereas for 
+       `HyperbolicFunction`,`TrigonometricFunction`, `log` should contain `symbol`.
+
+    3. For `HyperbolicFunction`,`TrigonometricFunction` the number of trigonometric functions in 
+       equation should be less than number of symbols. (since `A*cos(x) + B*sin(x) - c`
+       is not the Lambert type).
+
+    Parameters
+    ==========
+
+    f : Expr
+        The equation to be checked
+
+    symbol : Symbol
+        The variable in which the equation is checked
+
+    Some forms of lambert equations are :
+        1. B**B = R 
+        2. B*(b*log(B) + c)**a = R
+        3. a*log(b*B + c) + d*B = R
+        4. (b*B + c)*exp(d*B + g) = R
+        5. g*exp(d*B + h) - b*B = c
+        6. d*p**(a*B + g) - b*B = c
+        7. A*cos(x) + B*sin(x) - e*x = d
+        8. A*cosh(x) + B*sinh(x) - e*x = d
+
+    Returns
+    =======
+
+    ``True`` if the equation is Lambert otherwise ``False``.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solveset import _is_lambert
+    >>> from sympy import symbols, cosh, sinh, log
+    >>> x = symbols('x')
+
+    >>> _is_lambert(3*log(x) - x*log(3), x) 
+    True
+    >>> _is_lambert(log(log(x - 3)) + log(x-3), x)
+    True
+    >>> _is_lambert(cosh(x) - sinh(x), x)
+    False
+    >>> _is_lambert((x**2 - 2*x + 1).subs(x, (log(x) + 3*x)**2 - 1), x)
+    True
+
+    """
+    term_factors = list(_term_factors(f.expand()))
+
+    # total number of symbols in equation
+    no_of_symbols = len([arg for arg in term_factors if arg.has(symbol)])
+    # total number of trigonometric terms in equation
+    no_of_trig = len([arg for arg in term_factors \
+        if arg.has(HyperbolicFunction, TrigonometricFunction)])
+
+    if f.is_Add and no_of_symbols >= 2 :
+        # `log`, `HyperbolicFunction`, `TrigonometricFunction` should have symbols
+        # and no_of_trig < no_of_symbols
+        if any(isinstance(arg, (log, HyperbolicFunction, TrigonometricFunction))\
+            for arg in term_factors if arg.has(symbol) and no_of_trig < no_of_symbols):
+            return True
+        # here, `Pow`, `exp` exponent should have symbols
+        elif any(isinstance(arg, (Pow, exp)) \
+            for arg in term_factors if (arg.as_base_exp()[1]).has(symbol)):
+            return True
+    return False
+
+
 def _transolve(f, symbol, domain):
     r"""
     Function to solve transcendental equations. It is a helper to
