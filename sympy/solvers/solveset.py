@@ -1758,13 +1758,13 @@ def _is_lambert(f, symbol):
     r"""
     The below 3 conditions are currently considered as Lambert type:
 
-    1. Equations containing more than two operands and `symbol`s involving any of 
+    1. Equations containing more than two operands and `symbol`s involving any of
        `Pow`, `exp`, `HyperbolicFunction`,`TrigonometricFunction`, `log` terms.
 
-    2. In `Pow`, `exp` the exponent should have `symbol` whereas for 
+    2. In `Pow`, `exp` the exponent should have `symbol` whereas for
        `HyperbolicFunction`,`TrigonometricFunction`, `log` should contain `symbol`.
 
-    3. For `HyperbolicFunction`,`TrigonometricFunction` the number of trigonometric functions in 
+    3. For `HyperbolicFunction`,`TrigonometricFunction` the number of trigonometric functions in
        equation should be less than number of symbols. (since `A*cos(x) + B*sin(x) - c`
        is not the Lambert type).
 
@@ -1777,15 +1777,19 @@ def _is_lambert(f, symbol):
     symbol : Symbol
         The variable in which the equation is checked
 
-    Some forms of lambert equations are :
-        1. B**B = R 
-        2. B*(b*log(B) + c)**a = R
-        3. a*log(b*B + c) + d*B = R
-        4. (b*B + c)*exp(d*B + g) = R
-        5. g*exp(d*B + h) - b*B = c
-        6. d*p**(a*B + g) - b*B = c
-        7. A*cos(x) + B*sin(x) - e*x = d
-        8. A*cosh(x) + B*sinh(x) - e*x = d
+    Some forms of lambert equations are:
+        1. X**X = C
+        2. X*(B*log(X) + D)**A = C
+        3. A*log(B*X + A) + d*X = C
+        4. (B*X + A)*exp(d*X + g) = C
+        5. g*exp(B*X + h) - B*X = C
+        6. A*D**(E*X + g) - B*X = C
+        7. A*cos(X) + B*sin(X) - D*X = C
+        8. A*cosh(X) + B*sinh(X) - D*X = C
+
+    Where X is any variable,
+          A, B, C, D, E are any constants,
+          g, h are linear functions or log terms.
 
     Returns
     =======
@@ -1799,7 +1803,7 @@ def _is_lambert(f, symbol):
     >>> from sympy import symbols, cosh, sinh, log
     >>> x = symbols('x')
 
-    >>> _is_lambert(3*log(x) - x*log(3), x) 
+    >>> _is_lambert(3*log(x) - x*log(3), x)
     True
     >>> _is_lambert(log(log(x - 3)) + log(x-3), x)
     True
