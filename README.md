@@ -19,7 +19,7 @@ blogged about SymPy...
 License: New BSD License (see the LICENSE file for details) covers all
 files in the sympy repository unless stated otherwise.
 
-Our mailing list is at
+Join our mailing list at
 <https://groups.google.com/forum/?fromgroups#!forum/sympy>.
 
 We have community chat at [Gitter](https://gitter.im/sympy/sympy). Feel
