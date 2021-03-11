@@ -1700,8 +1700,9 @@ def _get_examples_ode_sol_separable():
 
     'separable_26': {
         'eq': f1 - k * (v(t) ** 2) - m * Derivative(v(t)),
-        'sol': [Eq(v(t), -68.585712797929006/tanh(C1 - 0.14288690166235199*t))],
+        'sol': [Eq(v(t), -68.585712797928991/tanh(C1 - 0.14288690166235204*t))],
         'func': v(t),
+        'checkodesol_XFAIL': True,
     }
     }
     }
