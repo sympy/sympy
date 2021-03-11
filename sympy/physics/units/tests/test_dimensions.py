@@ -130,4 +130,4 @@ def test_Dimension_functions():
     assert dimsys_SI.get_dimensional_dependencies(Abs(length)) == {"length": 1}
     assert dimsys_SI.get_dimensional_dependencies(Abs(length/length)) == {}
 
-    assert dimsys_SI.get_dimensional_dependencies(sqrt(-1)) == {} 
+    assert dimsys_SI.get_dimensional_dependencies(sqrt(-1)) == {}
