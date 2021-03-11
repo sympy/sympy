@@ -418,7 +418,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             # as base dimensions:
             return dict(self.dimensional_dependencies.get(name, {name: 1}))
 
-        if name.is_Number or name.is_NumberSymbol:
+        if name.is_number or name.is_NumberSymbol:
             return {}
 
         get_for_name = self._get_dimensional_dependencies_for_name
