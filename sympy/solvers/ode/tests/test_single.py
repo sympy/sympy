@@ -34,7 +34,7 @@ Functions that are for internal use:
 """
 from sympy import (acos, acosh, asin, asinh, atan, cos, Derivative, Dummy, diff, cbrt,
     E, Eq, exp, hyper, I, im, Integral, integrate, LambertW, log, Mul, Ne, pi, Piecewise, Rational,
-    re, rootof, S, sin, sinh, cosh, tan, sec, sqrt, symbols, Ei, erfi)
+    re, rootof, S, sin, sinh, cosh, tan, tanh, sec, sqrt, symbols, Ei, erfi)
 
 from sympy.core import Function, Symbol
 from sympy.functions import airyai, airybi, besselj, bessely
@@ -1537,11 +1537,11 @@ def _get_examples_ode_sol_separable():
     # test_separable1-5 are from Ordinary Differential Equations, Tenenbaum and
     # Pollard, pg. 55
     t,a = symbols('a,t')
-    # m = 96
-    # g = 9.8
-    # k = .2
-    # f1 = g * m
-    # v = Function('v')
+    m = 96
+    g = 9.8
+    k = .2
+    f1 = g * m
+    v = Function('v')
     return {
             'hint': "separable",
             'func': f(x),
@@ -1685,13 +1685,12 @@ def _get_examples_ode_sol_separable():
         'sol': [Eq(f(x), -1/(-C1 + x**2)*(C1 + x**2))],
     },
 
-    # # https://github.com/sympy/sympy/issues/10379
-    # 'separable_24': {
-    #     'eq': f(t).diff(t)-(1-51.05*y*f(t)),
-    #     'sol': [Eq(f(t), (0.019588638589618*exp(y*(C1 - 51.05*t)) + 0.019588638589618)/y)],
-    #     'func': f(t),
-    #     'checkodesol_XFAIL': True,
-    # },
+    # https://github.com/sympy/sympy/issues/10379
+    'separable_24': {
+        'eq': f(t).diff(t)-(1-51.05*y*f(t)),
+        'sol': [Eq(f(t), (0.019588638589618023*exp(y*(C1 - 51.049999999999997*t)) + 0.019588638589618023)/y)],
+        'func': f(t),
+    },
 
     # https://github.com/sympy/sympy/issues/15999
     'separable_25': {
@@ -1699,12 +1698,11 @@ def _get_examples_ode_sol_separable():
         'sol': [Eq(f(x), C2*exp(C1*x))],
     },
 
-    # 'separable_26': {
-    #     'eq': f1 - k * (v(t) ** 2) - m * Derivative(v(t)),
-    #     'sol': [Eq(v(t), -68.585712797929/tanh(C1 - 0.142886901662352*t))],
-    #     'func': v(t),
-    #     'checkodesol_XFAIL': True,
-    # }
+    'separable_26': {
+        'eq': f1 - k * (v(t) ** 2) - m * Derivative(v(t)),
+        'sol': [Eq(v(t), -68.585712797929006/tanh(C1 - 0.14288690166235199*t))],
+        'func': v(t),
+    }
     }
     }
 
