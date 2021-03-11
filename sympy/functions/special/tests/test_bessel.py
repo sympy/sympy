@@ -34,7 +34,7 @@ def test_bessel_twoinputs():
         raises(TypeError, lambda: f(1, 2, 3))
 
 
-def test_bessel_series():
+def test_besselj_series():
     assert besselj(0, x).series(x) == 1 - x**2/4 + x**4/64 + O(x**6)
     assert besselj(0, x**(1.1)).series(x) == 1 + x**4.4/64 - x**2.2/4 + O(x**6)
     assert besselj(0, x**2 + x).series(x) == 1 - x**2/4 - x**3/2\
@@ -50,7 +50,10 @@ def test_bessel_series():
     assert besselj(1, 2*sqrt(x)).series(x) == sqrt(x) - x**Rational(3, 2)/2\
         + x**Rational(5, 2)/12 - x**Rational(7, 2)/144 + x**Rational(9, 2)/2880\
         - x**Rational(11, 2)/86400 + O(x**6)
+    assert besselj(-2, sin(x)).series(x, n=4) == besselj(2, sin(x)).series(x, n=4)
 
+
+def test_bessely_series():
     const = 2*S.EulerGamma/pi - 2*log(2)/pi + 2*log(x)/pi
     assert bessely(0, x).series(x, n=4) == const + x**2*(-log(x)/(2*pi)\
         + (2 - 2*S.EulerGamma)/(4*pi) + log(2)/(2*pi)) + O(x**4*log(x))
@@ -58,24 +61,25 @@ def test_bessel_series():
         - 2*log(2)/pi + 2.2*log(x)/pi + x**2.2*(-0.55*log(x)/pi\
         + (2 - 2*S.EulerGamma)/(4*pi) + log(2)/(2*pi)) + O(x**4*log(x))
     assert bessely(0, x**2 + x).series(x, n=4) == \
-        const + (2 - 2*S.EulerGamma)*(x**2/2 + x/2)**2/pi + 2*x/pi\
+        const - (2 - 2*S.EulerGamma)*(-x**3/2 - x**2/4)/pi + 2*x/pi\
         + x**2*(-log(x)/(2*pi) - 1/pi + log(2)/(2*pi))\
         + x**3*(-log(x)/pi + 1/(6*pi) + log(2)/pi) + O(x**4*log(x))
     assert bessely(0, x/(1 - x)).series(x, n=3) == const\
-        + (2 - 2*S.EulerGamma)*(x**2/2 + x/2)**2/pi + 2*x/pi\
-        + x**2*(-log(x)/(2*pi) + log(2)/(2*pi) + 1/pi) + O(x**3*log(x))
+        + 2*x/pi + x**2*(-log(x)/(2*pi) + (2 - 2*S.EulerGamma)/(4*pi)\
+        + log(2)/(2*pi) + 1/pi) + O(x**3*log(x))
     assert bessely(0, log(1 + x)).series(x, n=3) == const\
-        + (2 - 2*S.EulerGamma)*(-x**2/4 + x/2)**2/pi - x/pi\
-        + x**2*(-log(x)/(2*pi) + log(2)/(2*pi) + 5/(12*pi)) + O(x**3*log(x))
-    assert bessely(1, sin(x)).series(x, n=4) == \
-        -(1/pi)*(1 - 2*S.EulerGamma)*(-x**3/12 + x/2) + (Rational(5, 2)\
-        - 2*S.EulerGamma)*(-x**3/12 + x/2)**3/(2*pi) + x*(log(x)/pi- log(2)/pi)\
+        - x/pi + x**2*(-log(x)/(2*pi) + (2 - 2*S.EulerGamma)/(4*pi)\
+        + log(2)/(2*pi) + 5/(12*pi)) + O(x**3*log(x))
+    assert bessely(1, sin(x)).series(x, n=4) == -(1/pi)*(1 - 2*S.EulerGamma)\
+        *(-x**3/12 + x/2) + x*(log(x)/pi - log(2)/pi)\
+        + x**2*(Rational(5, 2) - 2*S.EulerGamma)*(-x**3/12 + x/2)/(8*pi)\
         + x**3*(-7*log(x)/(24*pi) - 1/(6*pi) + 7*log(2)/(24*pi)) + O(x**4*log(x))
     assert bessely(1, 2*sqrt(x)).series(x, n=3) == sqrt(x)*(log(x)/pi \
         - (1 - 2*S.EulerGamma)/pi) + x**Rational(3, 2)*(-log(x)/(2*pi)\
         + (Rational(5, 2) - 2*S.EulerGamma)/(2*pi))\
         + x**Rational(5, 2)*(log(x)/(12*pi)\
         - (Rational(10, 3) - 2*S.EulerGamma)/(12*pi)) + O(x**3*log(x))
+    assert bessely(-2, sin(x)).series(x, n=4) == bessely(2, sin(x)).series(x, n=4)
 
 
 def test_diff():

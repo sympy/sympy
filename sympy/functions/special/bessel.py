@@ -243,10 +243,15 @@ class besselj(BesselBase):
 
         if exp.is_positive:
             newn = ceiling(n/exp)
-            t = z._eval_nseries(x, n, logx, cdir).removeO()
-            s = [(-1)**k * t**(2 * k) / (factorial(k) * factorial(nu + k)
-                    * 2**(2 * k)) for k in range((newn + 1) // 2)]
-            return ((t / 2)**nu * Add(*s)).expand() + Order(x**n, x)
+            r = z._eval_nseries(x, n, logx, cdir).removeO()
+            t = (z**2)._eval_nseries(x, n, logx, cdir).removeO()
+
+            term = 1/gamma(nu + 1)
+            s = [term]
+            for k in range(1, (newn + 1)//2):
+                term *= -t/(4*k*(nu + k))
+                s.append(term)
+            return ((r/2)**nu*Add(*s)).expand() + Order(x**n, x)
 
         return super(besselj, self)._eval_nseries(x, n, logx, cdir)
 
@@ -350,16 +355,31 @@ class bessely(BesselBase):
         except (ValueError, NotImplementedError):
             return self
 
-        if exp.is_positive:
+        if exp.is_positive and nu.is_integer:
             newn = ceiling(n/exp)
-            t = z._eval_nseries(x, n, logx, cdir).removeO()
             bn = besselj(nu, z)
             a = ((2/pi)*log(z/2)*bn)._eval_nseries(x, n, logx, cdir)
-            b = [(t/2)**(2*k - nu)*factorial(nu - k - 1)/(pi*factorial(k))
-                    for k in range(nu - 1)]
-            c = [(-1)**k*(t/2)**(2*k + nu)*(digamma(k + nu + 1)
-                + digamma(k + 1))/(pi*factorial(k)*factorial(k + nu))
-                    for k in range((newn + 1) // 2)]
+
+            b, c = [], []
+            r = z._eval_nseries(x, n, logx, cdir).removeO()
+            t = (z**2)._eval_nseries(x, n, logx, cdir).removeO()
+
+            # In case n is given very small, r can become 0, which would
+            # make term evaluate to zoo
+            if nu > S.One and not r is S.Zero:
+                term = (r/2)**(-nu)*factorial(nu - 1)/pi
+                b.append(term)
+                for k in range(1, nu - 1):
+                    term *= t*(nu - k - 1)/(4*pi*k)
+                    b.append(term)
+
+            p = (r/2)**nu/(pi*factorial(nu))
+            term = p*(digamma(nu + 1) - S.EulerGamma)
+            c.append(term)
+            for k in range(1, (newn + 1)//2):
+                p *= -t/(4*k*(k + nu))
+                term = p*(digamma(k + nu + 1) + digamma(k + 1))
+                c.append(term)
             return a - Add(*b) - Add(*c) # Order term comes from a
 
         return super(bessely, self)._eval_nseries(x, n, logx, cdir)
