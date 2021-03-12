@@ -61,7 +61,7 @@ def test_bessely_series():
         - 2*log(2)/pi + 2.2*log(x)/pi + x**2.2*(-0.55*log(x)/pi\
         + (2 - 2*S.EulerGamma)/(4*pi) + log(2)/(2*pi)) + O(x**4*log(x))
     assert bessely(0, x**2 + x).series(x, n=4) == \
-        const - (2 - 2*S.EulerGamma)*(-x**3/2 - x**2/4)/pi + 2*x/pi\
+        const - (2 - 2*S.EulerGamma)*(-x**3/(2*pi) - x**2/(4*pi)) + 2*x/pi\
         + x**2*(-log(x)/(2*pi) - 1/pi + log(2)/(2*pi))\
         + x**3*(-log(x)/pi + 1/(6*pi) + log(2)/pi) + O(x**4*log(x))
     assert bessely(0, x/(1 - x)).series(x, n=3) == const\
@@ -71,9 +71,9 @@ def test_bessely_series():
         - x/pi + x**2*(-log(x)/(2*pi) + (2 - 2*S.EulerGamma)/(4*pi)\
         + log(2)/(2*pi) + 5/(12*pi)) + O(x**3*log(x))
     assert bessely(1, sin(x)).series(x, n=4) == -(1/pi)*(1 - 2*S.EulerGamma)\
-        *(-x**3/12 + x/2) + x*(log(x)/pi - log(2)/pi)\
-        + x**2*(Rational(5, 2) - 2*S.EulerGamma)*(-x**3/12 + x/2)/(8*pi)\
-        + x**3*(-7*log(x)/(24*pi) - 1/(6*pi) + 7*log(2)/(24*pi)) + O(x**4*log(x))
+        * (-x**3/12 + x/2) + x*(log(x)/pi - log(2)/pi) + x**3*(-7*log(x)\
+        / (24*pi) - 1/(6*pi) + (Rational(5, 2) - 2*S.EulerGamma)/(16*pi)\
+        + 7*log(2)/(24*pi)) + O(x**4*log(x))
     assert bessely(1, 2*sqrt(x)).series(x, n=3) == sqrt(x)*(log(x)/pi \
         - (1 - 2*S.EulerGamma)/pi) + x**Rational(3, 2)*(-log(x)/(2*pi)\
         + (Rational(5, 2) - 2*S.EulerGamma)/(2*pi))\

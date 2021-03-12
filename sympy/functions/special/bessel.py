@@ -1,7 +1,7 @@
 from functools import wraps
 
 from sympy import Add, S, pi, I, Rational, Wild, cacheit, sympify
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import Function, ArgumentIndexError, _mexpand
 from sympy.core.logic import fuzzy_or, fuzzy_not
 from sympy.core.power import Pow
 from sympy.functions.combinatorial.factorials import factorial
@@ -14,7 +14,6 @@ from sympy.functions.elementary.complexes import re, im
 from sympy.functions.special.gamma_functions import gamma, digamma
 from sympy.functions.special.hyper import hyper
 from sympy.polys.orthopolys import spherical_bessel_fn as fn
-
 
 # TODO
 # o Scorer functions G1 and G2
@@ -243,15 +242,19 @@ class besselj(BesselBase):
 
         if exp.is_positive:
             newn = ceiling(n/exp)
-            r = z._eval_nseries(x, n, logx, cdir).removeO()
-            t = (z**2)._eval_nseries(x, n, logx, cdir).removeO()
+            o = Order(x**n, x)
+            r = (z/2)._eval_nseries(x, n, logx, cdir).removeO()
+            if r is S.Zero:
+                return o
+            t = (_mexpand(r**2) + o).removeO()
 
-            term = 1/gamma(nu + 1)
+            term = r**nu/gamma(nu + 1)
             s = [term]
             for k in range(1, (newn + 1)//2):
-                term *= -t/(4*k*(nu + k))
+                term *= -t/(k*(nu + k))
+                term = (_mexpand(term) + o).removeO()
                 s.append(term)
-            return ((r/2)**nu*Add(*s)).expand() + Order(x**n, x)
+            return Add(*s) + o
 
         return super(besselj, self)._eval_nseries(x, n, logx, cdir)
 
@@ -346,6 +349,7 @@ class bessely(BesselBase):
             return True
 
     def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.series.order import Order
         nu, z = self.args
 
         # In case of powers less than 1, number of terms need to be computed
@@ -361,23 +365,26 @@ class bessely(BesselBase):
             a = ((2/pi)*log(z/2)*bn)._eval_nseries(x, n, logx, cdir)
 
             b, c = [], []
-            r = z._eval_nseries(x, n, logx, cdir).removeO()
-            t = (z**2)._eval_nseries(x, n, logx, cdir).removeO()
+            o = Order(x**n, x)
+            r = (z/2)._eval_nseries(x, n, logx, cdir).removeO()
+            if r is S.Zero:
+                return o
+            t = (_mexpand(r**2) + o).removeO()
 
-            # In case n is given very small, r can become 0, which would
-            # make term evaluate to zoo
-            if nu > S.One and not r is S.Zero:
-                term = (r/2)**(-nu)*factorial(nu - 1)/pi
+            if nu > S.One:
+                term = r**(-nu)*factorial(nu - 1)/pi
                 b.append(term)
                 for k in range(1, nu - 1):
-                    term *= t*(nu - k - 1)/(4*pi*k)
+                    term *= t*(nu - k - 1)/k
+                    term = (_mexpand(term) + o).removeO()
                     b.append(term)
 
-            p = (r/2)**nu/(pi*factorial(nu))
+            p = r**nu/(pi*factorial(nu))
             term = p*(digamma(nu + 1) - S.EulerGamma)
             c.append(term)
             for k in range(1, (newn + 1)//2):
-                p *= -t/(4*k*(k + nu))
+                p *= -t/(k*(k + nu))
+                p = (_mexpand(p) + o).removeO()
                 term = p*(digamma(k + nu + 1) + digamma(k + 1))
                 c.append(term)
             return a - Add(*b) - Add(*c) # Order term comes from a
