@@ -561,6 +561,59 @@ def _swapsol(solution, swap_sym):
         solution = _swap_list(solution, swap_sym)
     return solution
 
+def _check_assumption_list(solution, symbols, got_None, no_False):
+    if isinstance(solution[0], tuple):
+        for sol in solution:
+            for symb, val in zip(symbols, sol):
+                test = check_assumptions(val, **symb.assumptions0)
+                if test is False:
+                    break
+                if test is None:
+                    got_None.append(sol)
+            else:
+                no_False.append(sol)
+    elif isinstance(solution[0], dict):
+        for sol in solution:
+            a_None = False
+            for symb, val in sol.items():
+                test = check_assumptions(val, **symb.assumptions0)
+                if test:
+                    continue
+                if test is False:
+                    break
+                a_None = True
+            else:
+                no_False.append(sol)
+                if a_None:
+                    got_None.append(sol)
+    else:  # list of expressions
+        for sol in solution:
+            test = check_assumptions(sol, **symbols[0].assumptions0)
+            if test is False:
+                continue
+            no_False.append(sol)
+            if test is None:
+                got_None.append(sol)
+
+    return solution, got_None, no_False
+
+def _check_assumption_dict(solution, got_None, no_False):
+    a_None = False
+    for symb, val in solution.items():
+        test = check_assumptions(val, **symb.assumptions0)
+        if test:
+            continue
+        if test is False:
+            no_False = None
+            break
+        a_None = True
+    else:
+        no_False = solution
+        if a_None:
+            got_None.append(solution)
+
+    return solution, got_None, no_False
+
 
 def solve(f, *symbols, **flags):
     r"""
@@ -1333,53 +1386,12 @@ def solve(f, *symbols, **flags):
             # this has already been checked and is in as_set form
             return solution
         elif isinstance(solution, list):
-            if isinstance(solution[0], tuple):
-                for sol in solution:
-                    for symb, val in zip(symbols, sol):
-                        test = check_assumptions(val, **symb.assumptions0)
-                        if test is False:
-                            break
-                        if test is None:
-                            got_None.append(sol)
-                    else:
-                        no_False.append(sol)
-            elif isinstance(solution[0], dict):
-                for sol in solution:
-                    a_None = False
-                    for symb, val in sol.items():
-                        test = check_assumptions(val, **symb.assumptions0)
-                        if test:
-                            continue
-                        if test is False:
-                            break
-                        a_None = True
-                    else:
-                        no_False.append(sol)
-                        if a_None:
-                            got_None.append(sol)
-            else:  # list of expressions
-                for sol in solution:
-                    test = check_assumptions(sol, **symbols[0].assumptions0)
-                    if test is False:
-                        continue
-                    no_False.append(sol)
-                    if test is None:
-                        got_None.append(sol)
+
+            solution, got_None, no_False = _check_assumption_list(solution, symbols, got_None, no_False)
 
         elif isinstance(solution, dict):
-            a_None = False
-            for symb, val in solution.items():
-                test = check_assumptions(val, **symb.assumptions0)
-                if test:
-                    continue
-                if test is False:
-                    no_False = None
-                    break
-                a_None = True
-            else:
-                no_False = solution
-                if a_None:
-                    got_None.append(solution)
+
+            solution, got_None, no_False = _check_assumption_dict(solution, got_None, no_False)
 
         elif isinstance(solution, (Relational, And, Or)):
             if len(symbols) != 1:
