@@ -1300,10 +1300,12 @@ def is_eq(lhs, rhs):
     from sympy.functions.elementary.complexes import arg
     from sympy.simplify.simplify import clear_coefficients
     from sympy.utilities.iterables import sift
-
+    from sympy.core.sympify import _sympify
     # here, _eval_Eq is only called for backwards compatibility
     # new code should use is_eq with multiple dispatch as
     # outlined in the docstring
+
+    lhs, rhs = _sympify(lhs), _sympify(rhs)
     for side1, side2 in (lhs, rhs), (rhs, lhs):
         eval_func = getattr(side1, '_eval_Eq', None)
         if eval_func is not None:
