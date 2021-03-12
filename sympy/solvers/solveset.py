@@ -1831,14 +1831,14 @@ def _is_lambert(f, symbol):
     no_of_trig = len([arg for arg in term_factors \
         if arg.has(HyperbolicFunction, TrigonometricFunction)])
 
-    if f.is_Add and no_of_symbols >= 2 :
+    if f.is_Add and no_of_symbols >= 2:
         # `log`, `HyperbolicFunction`, `TrigonometricFunction` should have symbols
         # and no_of_trig < no_of_symbols
-        if no_of_trig < no_of_symbols:
-            lambert_funcs = (log, HyperbolicFunction, TrigonometricFunction)
-            if any(isinstance(arg, lambert_funcs)\
-                for arg in term_factors if arg.has(symbol)):
-                return True
+        lambert_funcs = (log, HyperbolicFunction, TrigonometricFunction)
+        if any(isinstance(arg, lambert_funcs)\
+            for arg in term_factors if arg.has(symbol)):
+                if no_of_trig < no_of_symbols:
+                    return True
         # here, `Pow`, `exp` exponent should have symbols
         elif any(isinstance(arg, (Pow, exp)) \
             for arg in term_factors if (arg.as_base_exp()[1]).has(symbol)):
