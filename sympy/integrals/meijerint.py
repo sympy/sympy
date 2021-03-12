@@ -1825,7 +1825,7 @@ def meijerint_definite(f, x, a, b):
     if is_eq(a, -oo) and not is_eq(b, oo):
         return meijerint_definite(f.subs(x, -x), x, -b, -a)
 
-    elif is_eq(a, oo):
+    elif is_eq(a, -oo):
         # Integrating -oo to oo. We need to find a place to split the integral.
         _debug('  Integrating -oo to +oo.')
         innermost = _find_splitting_points(f, x)
