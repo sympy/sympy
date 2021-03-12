@@ -1756,7 +1756,12 @@ def _is_logarithmic(f, symbol):
 
 def _is_lambert(f, symbol):
     r"""
-    The below 3 conditions are currently considered as Lambert type:
+    If this returns ``False`` then the Lambert solver (``_solve_lambert``) will not be called.
+
+    Explanation
+    ===========
+
+    Quick check for cases that the Lambert solver might be able to handle.
 
     1. Equations containing more than two operands and `symbol`s involving any of
        `Pow`, `exp`, `HyperbolicFunction`,`TrigonometricFunction`, `log` terms.
@@ -1767,15 +1772,6 @@ def _is_lambert(f, symbol):
     3. For `HyperbolicFunction`,`TrigonometricFunction` the number of trigonometric functions in
        equation should be less than number of symbols. (since `A*cos(x) + B*sin(x) - c`
        is not the Lambert type).
-
-    Parameters
-    ==========
-
-    f : Expr
-        The equation to be checked
-
-    symbol : Symbol
-        The variable in which the equation is checked
 
     Some forms of lambert equations are:
         1. X**X = C
@@ -1791,10 +1787,19 @@ def _is_lambert(f, symbol):
           A, B, C, D, E are any constants,
           g, h are linear functions or log terms.
 
+    Parameters
+    ==========
+
+    f : Expr
+        The equation to be checked
+
+    symbol : Symbol
+        The variable in which the equation is checked
+
     Returns
     =======
 
-    ``True`` if the equation is Lambert otherwise ``False``.
+    If this returns ``False`` then the Lambert solver (``_solve_lambert``) will not be called.
 
     Examples
     ========
@@ -1812,6 +1817,11 @@ def _is_lambert(f, symbol):
     >>> _is_lambert((x**2 - 2*x + 1).subs(x, (log(x) + 3*x)**2 - 1), x)
     True
 
+    See Also
+    ========
+
+    _solve_lambert
+
     """
     term_factors = list(_term_factors(f.expand()))
 
@@ -1824,9 +1834,11 @@ def _is_lambert(f, symbol):
     if f.is_Add and no_of_symbols >= 2 :
         # `log`, `HyperbolicFunction`, `TrigonometricFunction` should have symbols
         # and no_of_trig < no_of_symbols
-        if any(isinstance(arg, (log, HyperbolicFunction, TrigonometricFunction))\
-            for arg in term_factors if arg.has(symbol) and no_of_trig < no_of_symbols):
-            return True
+        if no_of_trig < no_of_symbols:
+            lambert_funcs = (log, HyperbolicFunction, TrigonometricFunction)
+            if any(isinstance(arg, lambert_funcs)\
+                for arg in term_factors if arg.has(symbol)):
+                return True
         # here, `Pow`, `exp` exponent should have symbols
         elif any(isinstance(arg, (Pow, exp)) \
             for arg in term_factors if (arg.as_base_exp()[1]).has(symbol)):
