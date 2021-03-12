@@ -2822,17 +2822,17 @@ def linsolve(system, *symbols):
     return sol
 
 
-
 ##############################################################################
 # ------------------------------nonlinsolve ---------------------------------#
 ##############################################################################
 
+
 def _return_conditionset(eqs, symbols):
-        # return conditionset
-        eqs = (Eq(lhs, 0) for lhs in eqs)
-        condition_set = ConditionSet(
-            Tuple(*symbols), And(*eqs), S.Complexes**len(symbols))
-        return condition_set
+    # return conditionset
+    eqs = (Eq(lhs, 0) for lhs in eqs)
+    condition_set = ConditionSet(
+        Tuple(*symbols), And(*eqs), S.Complexes**len(symbols))
+    return condition_set
 
 
 def substitution(system, symbols, result=[{}], known_symbols=[],
@@ -3365,12 +3365,12 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 
 
 def _solveset_work(system, symbols):
-        soln = solveset(system[0], symbols[0])
-        if isinstance(soln, FiniteSet):
-            _soln = FiniteSet(*[tuple((s,)) for s in soln])
-            return _soln
-        else:
-            return FiniteSet(tuple(FiniteSet(soln)))
+    soln = solveset(system[0], symbols[0])
+    if isinstance(soln, FiniteSet):
+        _soln = FiniteSet(*[tuple((s,)) for s in soln])
+        return _soln
+    else:
+        return FiniteSet(tuple(FiniteSet(soln)))
 
 
 def _handle_positive_dimensional(polys, symbols, denominators):
@@ -3387,7 +3387,6 @@ def _handle_positive_dimensional(polys, symbols, denominators):
         new_system, symbols, result, [],
         denominators)
     return result
-
 # end of def _handle_positive_dimensional()
 
 
