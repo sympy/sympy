@@ -36,6 +36,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
+from sympy.core.relational import is_eq
 from sympy.simplify import hyperexpand, powdenest, collect
 from sympy.simplify.fu import sincos_to_sum
 from sympy.logic.boolalg import And, Or, BooleanAtom
@@ -1817,14 +1818,14 @@ def meijerint_definite(f, x, a, b):
     f = f.subs(x, d)
     x = d
 
-    if a == b:
+    if is_eq(a, b):
         return (S.Zero, True)
 
     results = []
-    if a is -oo and b is not oo:
+    if is_eq(a, -oo) and not is_eq(b, oo):
         return meijerint_definite(f.subs(x, -x), x, -b, -a)
 
-    elif a is -oo:
+    elif is_eq(a, oo):
         # Integrating -oo to oo. We need to find a place to split the integral.
         _debug('  Integrating -oo to +oo.')
         innermost = _find_splitting_points(f, x)
@@ -1851,11 +1852,11 @@ def meijerint_definite(f, x, a, b):
             res = res1 + res2
             return res, cond
 
-    elif a is oo:
+    elif is_eq(a, oo):
         res = meijerint_definite(f, x, b, oo)
         return -res[0], res[1]
 
-    elif (a, b) == (0, oo):
+    elif is_eq(a, 0) and is_eq(b, oo):
         # This is a common case - try it directly first.
         res = _meijerint_definite_2(f, x)
         if res:
@@ -1865,7 +1866,7 @@ def meijerint_definite(f, x, a, b):
                 return res
 
     else:
-        if b is oo:
+        if is_eq(b, oo):
             for split in _find_splitting_points(f, x):
                 if (a - split >= 0) == True:
                     _debug('Trying x -> x + %s' % split)
