@@ -247,7 +247,7 @@ def _rank(M, iszerofunc=_iszero, simplify=False):
 
 
 def _rref_DOM(M, pivots):
-    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    DOM = DomainMatrix.from_Matrix(M, field=True)
     DOM_rref, DOM_pivots = DOM.rref()
     if pivots:
         return DOM_rref.to_Matrix(), DOM_pivots
