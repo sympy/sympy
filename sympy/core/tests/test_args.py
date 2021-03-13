@@ -2769,6 +2769,11 @@ def test_sympy__functions__special__zeta_functions__dirichlet_eta():
     assert _test_args(dirichlet_eta(x))
 
 
+def test_sympy__functions__special__zeta_functions__riemann_xi():
+    from sympy.functions.special.zeta_functions import riemann_xi
+    assert _test_args(riemann_xi(x))
+
+
 def test_sympy__functions__special__zeta_functions__zeta():
     from sympy.functions.special.zeta_functions import zeta
     assert _test_args(zeta(101))
