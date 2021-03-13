@@ -739,7 +739,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
     from sympy.core.symbol import Symbol
 
     # If the user hasn't specified any modules, use what is available.
-    if modules is None:
+    if modules:
         try:
             _import("scipy")
         except ImportError:
