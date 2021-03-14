@@ -34,7 +34,7 @@ pip install\
   'matplotlib>=2.2'\
   'numpy==1.18.5'\
   scipy\
-  theano\
+  aesara\
   ipython\
   symengine\
   tensorflow\

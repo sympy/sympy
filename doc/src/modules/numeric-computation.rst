@@ -14,7 +14,7 @@ systems, allowing you to create mathematical expressions in SymPy and then
 ship them off to the numeric system of your choice.  This page documents many
 of the options available including the ``math`` library, the popular array
 computing package ``numpy``, code generation in ``Fortran`` or ``C``, and the
-use of the array compiler ``Theano``.
+use of the array compiler ``Aesara``.
 
 Subs/evalf
 ----------
@@ -90,37 +90,37 @@ The ``autowrap`` module contains methods that help in efficient computation.
 
 The API reference of all the above is listed here: :py:func:`sympy.utilities.autowrap`.
 
-Theano
+Aesara
 ------
 
 SymPy has a strong connection with
-`Theano <http://deeplearning.net/software/theano/>`_, a mathematical array
-compiler.  SymPy expressions can be easily translated to Theano graphs and then
-compiled using the Theano compiler chain.
+`Aesara <https://aesara.readthedocs.io/en/latest/>`_, a mathematical array
+compiler.  SymPy expressions can be easily translated to Aesara graphs and then
+compiled using the Aesara compiler chain.
 
     >>> from sympy import *
     >>> from sympy.abc import x
     >>> expr = sin(x)/x
 
-    >>> from sympy.printing.theanocode import theano_function
-    >>> f = theano_function([x], [expr])
+    >>> from sympy.printing.aesaracode import aesara_function
+    >>> f = aesara_function([x], [expr])
 
-If array broadcasting or types are desired then Theano requires this extra
+If array broadcasting or types are desired then Aesara requires this extra
 information
 
-    >>> f = theano_function([x], [expr], dims={x: 1}, dtypes={x: 'float64'})
+    >>> f = aesara_function([x], [expr], dims={x: 1}, dtypes={x: 'float64'})
 
-Theano has a more sophisticated code generation system than SymPy's C/Fortran
+Aesara has a more sophisticated code generation system than SymPy's C/Fortran
 code printers.  Among other things it handles common sub-expressions and
-compilation onto the GPU.  Theano also supports SymPy Matrix and Matrix
+compilation onto the GPU.  Aesara also supports SymPy Matrix and Matrix
 Expression objects.
 
 So Which Should I Use?
 ----------------------
 
 The options here were listed in order from slowest and least dependencies to
-fastest and most dependencies.  For example, if you have Theano installed then
-that will often be the best choice.  If you don't have Theano but do have
+fastest and most dependencies.  For example, if you have Aesara installed then
+that will often be the best choice.  If you don't have Aesara but do have
 ``f2py`` then you should use ``ufuncify``.
 
 +-----------------+-------+-----------------------------+---------------+
@@ -134,5 +134,5 @@ that will often be the best choice.  If you don't have Theano but do have
 +-----------------+-------+-----------------------------+---------------+
 | ufuncify        | 10ns  | Complex vector expressions  | f2py, Cython  |
 +-----------------+-------+-----------------------------+---------------+
-| Theano          | 10ns  | Many outputs, CSE, GPUs     | Theano        |
+| Aesara          | 10ns  | Many outputs, CSE, GPUs     | Aesara        |
 +-----------------+-------+-----------------------------+---------------+

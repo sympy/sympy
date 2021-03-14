@@ -6,69 +6,69 @@ from sympy.printing.printer import Printer
 import sympy
 from functools import partial
 
-from sympy.utilities.decorator import doctest_depends_on
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-theano = import_module('theano')
+aesara = import_module('aesara')
 
-if theano:
-    ts = theano.scalar
-    tt = theano.tensor
-    from theano.sandbox import linalg as tlinalg
+if aesara:
+    aes = aesara.scalar
+    aet = aesara.tensor
+    from aesara.tensor import nlinalg
+    from aesara.tensor.elemwise import Elemwise
+    from aesara.tensor.elemwise import DimShuffle
 
     mapping = {
-            sympy.Add: tt.add,
-            sympy.Mul: tt.mul,
-            sympy.Abs: tt.abs_,
-            sympy.sign: tt.sgn,
-            sympy.ceiling: tt.ceil,
-            sympy.floor: tt.floor,
-            sympy.log: tt.log,
-            sympy.exp: tt.exp,
-            sympy.sqrt: tt.sqrt,
-            sympy.cos: tt.cos,
-            sympy.acos: tt.arccos,
-            sympy.sin: tt.sin,
-            sympy.asin: tt.arcsin,
-            sympy.tan: tt.tan,
-            sympy.atan: tt.arctan,
-            sympy.atan2: tt.arctan2,
-            sympy.cosh: tt.cosh,
-            sympy.acosh: tt.arccosh,
-            sympy.sinh: tt.sinh,
-            sympy.asinh: tt.arcsinh,
-            sympy.tanh: tt.tanh,
-            sympy.atanh: tt.arctanh,
-            sympy.re: tt.real,
-            sympy.im: tt.imag,
-            sympy.arg: tt.angle,
-            sympy.erf: tt.erf,
-            sympy.gamma: tt.gamma,
-            sympy.loggamma: tt.gammaln,
-            sympy.Pow: tt.pow,
-            sympy.Eq: tt.eq,
-            sympy.StrictGreaterThan: tt.gt,
-            sympy.StrictLessThan: tt.lt,
-            sympy.LessThan: tt.le,
-            sympy.GreaterThan: tt.ge,
-            sympy.And: tt.and_,
-            sympy.Or: tt.or_,
-            sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
-            sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
-            sympy.conjugate: tt.conj,
-            sympy.core.numbers.ImaginaryUnit: lambda:tt.complex(0,1),
+            sympy.Add: aet.add,
+            sympy.Mul: aet.mul,
+            sympy.Abs: aet.abs_,
+            sympy.sign: aet.sgn,
+            sympy.ceiling: aet.ceil,
+            sympy.floor: aet.floor,
+            sympy.log: aet.log,
+            sympy.exp: aet.exp,
+            sympy.sqrt: aet.sqrt,
+            sympy.cos: aet.cos,
+            sympy.acos: aet.arccos,
+            sympy.sin: aet.sin,
+            sympy.asin: aet.arcsin,
+            sympy.tan: aet.tan,
+            sympy.atan: aet.arctan,
+            sympy.atan2: aet.arctan2,
+            sympy.cosh: aet.cosh,
+            sympy.acosh: aet.arccosh,
+            sympy.sinh: aet.sinh,
+            sympy.asinh: aet.arcsinh,
+            sympy.tanh: aet.tanh,
+            sympy.atanh: aet.arctanh,
+            sympy.re: aet.real,
+            sympy.im: aet.imag,
+            sympy.arg: aet.angle,
+            sympy.erf: aet.erf,
+            sympy.gamma: aet.gamma,
+            sympy.loggamma: aet.gammaln,
+            sympy.Pow: aet.pow,
+            sympy.Eq: aet.eq,
+            sympy.StrictGreaterThan: aet.gt,
+            sympy.StrictLessThan: aet.lt,
+            sympy.LessThan: aet.le,
+            sympy.GreaterThan: aet.ge,
+            sympy.And: aet.and_,
+            sympy.Or: aet.or_,
+            sympy.Max: aet.maximum,  # Sympy accept >2 inputs, Aesara only 2
+            sympy.Min: aet.minimum,  # Sympy accept >2 inputs, Aesara only 2
+            sympy.conjugate: aet.conj,
+            sympy.core.numbers.ImaginaryUnit: lambda:aet.complex(0,1),
             # Matrices
-            sympy.MatAdd: tt.Elemwise(ts.add),
-            sympy.HadamardProduct: tt.Elemwise(ts.mul),
-            sympy.Trace: tlinalg.trace,
-            sympy.Determinant : tlinalg.det,
-            sympy.Inverse: tlinalg.matrix_inverse,
-            sympy.Transpose: tt.DimShuffle((False, False), [1, 0]),
+            sympy.MatAdd: Elemwise(aes.add),
+            sympy.HadamardProduct: Elemwise(aes.mul),
+            sympy.Trace: nlinalg.trace,
+            sympy.Determinant : nlinalg.det,
+            sympy.Inverse: nlinalg.matrix_inverse,
+            sympy.Transpose: DimShuffle((False, False), [1, 0]),
     }
 
 
-class TheanoPrinter(Printer):
-    """ Code printer which creates Theano symbolic expression graphs.
+class AesaraPrinter(Printer):
+    """ Code printer which creates Aesara symbolic expression graphs.
 
     Parameters
     ==========
@@ -79,22 +79,22 @@ class TheanoPrinter(Printer):
         global state pass an empty dictionary. Note: the dictionary is not
         copied on initialization of the printer and will be updated in-place,
         so using the same dict object when creating multiple printers or making
-        multiple calls to :func:`.theano_code` or :func:`.theano_function` means
+        multiple calls to :func:`.aesara_code` or :func:`.aesara_function` means
         the cache is shared between all these applications.
 
     Attributes
     ==========
 
     cache : dict
-        A cache of Theano variables which have been created for Sympy
+        A cache of Aesara variables which have been created for Sympy
         symbol-like objects (e.g. :class:`sympy.core.symbol.Symbol` or
         :class:`sympy.matrices.expressions.MatrixSymbol`). This is used to
         ensure that all references to a given symbol in an expression (or
-        multiple expressions) are printed as the same Theano variable, which is
+        multiple expressions) are printed as the same Aesara variable, which is
         created only once. Symbols are differentiated only by name and type. The
         format of the cache's contents should be considered opaque to the user.
     """
-    printmethod = "_theano"
+    printmethod = "_aesara"
 
     def __init__(self, *args, **kwargs):
         self.cache = kwargs.pop('cache', dict())
@@ -120,7 +120,7 @@ class TheanoPrinter(Printer):
 
     def _get_or_create(self, s, name=None, dtype=None, broadcastable=None):
         """
-        Get the Theano variable for a Sympy symbol from the cache, or create it
+        Get the Aesara variable for a Sympy symbol from the cache, or create it
         if it does not exist.
         """
 
@@ -137,7 +137,7 @@ class TheanoPrinter(Printer):
         if key in self.cache:
             return self.cache[key]
 
-        value = tt.tensor(name=name, dtype=dtype, broadcastable=broadcastable)
+        value = aet.tensor(name=name, dtype=dtype, broadcastable=broadcastable)
         self.cache[key] = value
         return value
 
@@ -166,11 +166,11 @@ class TheanoPrinter(Printer):
         return self._get_or_create(X, dtype=dtype, broadcastable=(None, None))
 
     def _print_DenseMatrix(self, X, **kwargs):
-        if not hasattr(tt, 'stacklists'):
+        if not hasattr(aet, 'stacklists'):
             raise NotImplementedError(
-               "Matrix translation not yet supported in this version of Theano")
+               "Matrix translation not yet supported in this version of Aesara")
 
-        return tt.stacklists([
+        return aet.stacklists([
             [self._print(arg, **kwargs) for arg in L]
             for L in X.tolist()
         ])
@@ -181,7 +181,7 @@ class TheanoPrinter(Printer):
         children = [self._print(arg, **kwargs) for arg in expr.args]
         result = children[0]
         for child in children[1:]:
-            result = tt.dot(result, child)
+            result = aet.dot(result, child)
         return result
 
     def _print_MatPow(self, expr, **kwargs):
@@ -189,10 +189,10 @@ class TheanoPrinter(Printer):
         result = 1
         if isinstance(children[1], int) and children[1] > 0:
             for i in range(children[1]):
-                result = tt.dot(result, children[0])
+                result = aet.dot(result, children[0])
         else:
             raise NotImplementedError('''Only non-negative integer
-           powers of matrices can be handled by Theano at the moment''')
+           powers of matrices can be handled by Aesara at the moment''')
         return result
 
     def _print_MatrixSlice(self, expr, **kwargs):
@@ -206,7 +206,7 @@ class TheanoPrinter(Printer):
         blocks = [[self._print(expr.blocks[r, c], **kwargs)
                         for c in range(ncols)]
                         for r in range(nrows)]
-        return tt.join(0, *[tt.join(1, *row) for row in blocks])
+        return aet.join(0, *[aet.join(1, *row) for row in blocks])
 
 
     def _print_slice(self, expr, **kwargs):
@@ -228,15 +228,15 @@ class TheanoPrinter(Printer):
         # One condition only
         if len(expr.args) == 1:
             # Return value if condition else NaN
-            return tt.switch(p_cond, p_e, np.nan)
+            return aet.switch(p_cond, p_e, np.nan)
 
         # Return value_1 if condition_1 else evaluate remaining conditions
         p_remaining = self._print(sympy.Piecewise(*expr.args[1:]), **kwargs)
-        return tt.switch(p_cond, p_e, p_remaining)
+        return aet.switch(p_cond, p_e, p_remaining)
 
     def _print_Rational(self, expr, **kwargs):
-        return tt.true_div(self._print(expr.p, **kwargs),
-                           self._print(expr.q, **kwargs))
+        return aet.true_div(self._print(expr.p, **kwargs),
+                            self._print(expr.q, **kwargs))
 
     def _print_Integer(self, expr, **kwargs):
         return expr.p
@@ -245,28 +245,30 @@ class TheanoPrinter(Printer):
         return self._print(sympy.gamma(expr.args[0] + 1), **kwargs)
 
     def _print_Derivative(self, deriv, **kwargs):
+        from aesara.gradient import Rop
+
         rv = self._print(deriv.expr, **kwargs)
         for var in deriv.variables:
             var = self._print(var, **kwargs)
-            rv = tt.Rop(rv, var, tt.ones_like(var))
+            rv = Rop(rv, var, aet.ones_like(var))
         return rv
 
     def emptyPrinter(self, expr):
         return expr
 
     def doprint(self, expr, dtypes=None, broadcastables=None):
-        """ Convert a Sympy expression to a Theano graph variable.
+        """ Convert a Sympy expression to a Aesara graph variable.
 
         The ``dtypes`` and ``broadcastables`` arguments are used to specify the
-        data type, dimension, and broadcasting behavior of the Theano variables
+        data type, dimension, and broadcasting behavior of the Aesara variables
         corresponding to the free symbols in ``expr``. Each is a mapping from
         Sympy symbols to the value of the corresponding argument to
-        ``theano.tensor.Tensor``.
+        ``aesara.tensor.var.TensorVariable``.
 
         See the corresponding `documentation page`__ for more information on
-        broadcasting in Theano.
+        broadcasting in Aesara.
 
-        .. __: http://deeplearning.net/software/theano/tutorial/broadcasting.html
+        .. __: https://aesara.readthedocs.io/en/latest/tutorial/broadcasting.html
 
         Parameters
         ==========
@@ -275,22 +277,22 @@ class TheanoPrinter(Printer):
             Sympy expression to print.
 
         dtypes : dict
-            Mapping from Sympy symbols to Theano datatypes to use when creating
-            new Theano variables for those symbols. Corresponds to the ``dtype``
-            argument to ``theano.tensor.Tensor``. Defaults to ``'floatX'``
+            Mapping from Sympy symbols to Aesara datatypes to use when creating
+            new Aesara variables for those symbols. Corresponds to the ``dtype``
+            argument to ``aesara.tensor.var.TensorVariable``. Defaults to ``'floatX'``
             for symbols not included in the mapping.
 
         broadcastables : dict
             Mapping from Sympy symbols to the value of the ``broadcastable``
-            argument to ``theano.tensor.Tensor`` to use when creating Theano
+            argument to ``aesara.tensor.var.TensorVariable`` to use when creating Aesara
             variables for those symbols. Defaults to the empty tuple for symbols
             not included in the mapping (resulting in a scalar).
 
         Returns
         =======
 
-        theano.gof.graph.Variable
-            A variable corresponding to the expression's value in a Theano
+        aesara.graph.basic.Variable
+            A variable corresponding to the expression's value in a Aesara
             symbolic expression graph.
 
         """
@@ -305,9 +307,9 @@ class TheanoPrinter(Printer):
 global_cache = {}  # type: Dict[Any, Any]
 
 
-def theano_code(expr, cache=None, **kwargs):
+def aesara_code(expr, cache=None, **kwargs):
     """
-    Convert a Sympy expression into a Theano graph variable.
+    Convert a Sympy expression into a Aesara graph variable.
 
     Parameters
     ==========
@@ -316,42 +318,36 @@ def theano_code(expr, cache=None, **kwargs):
         Sympy expression object to convert.
 
     cache : dict
-        Cached Theano variables (see :class:`TheanoPrinter.cache
-        <TheanoPrinter>`). Defaults to the module-level global cache.
+        Cached Aesara variables (see :class:`AesaraPrinter.cache
+        <AesaraPrinter>`). Defaults to the module-level global cache.
 
     dtypes : dict
-        Passed to :meth:`.TheanoPrinter.doprint`.
+        Passed to :meth:`.AesaraPrinter.doprint`.
 
     broadcastables : dict
-        Passed to :meth:`.TheanoPrinter.doprint`.
+        Passed to :meth:`.AesaraPrinter.doprint`.
 
     Returns
     =======
 
-    theano.gof.graph.Variable
-        A variable corresponding to the expression's value in a Theano symbolic
+    aesara.graph.basic.Variable
+        A variable corresponding to the expression's value in a Aesara symbolic
         expression graph.
 
     """
-    SymPyDeprecationWarning(
-        feature="sympy.printing.theanocode",
-        useinstead="Theano is deprecated; use Aesara and sympy.printing.aesaracode",
-        issue=21150,
-        deprecated_since_version="1.8").warn()
-
-    if not theano:
-        raise ImportError("theano is required for theano_code")
+    if not aesara:
+        raise ImportError("aesara is required for aesara_code")
 
     if cache is None:
         cache = global_cache
 
-    return TheanoPrinter(cache=cache, settings={}).doprint(expr, **kwargs)
+    return AesaraPrinter(cache=cache, settings={}).doprint(expr, **kwargs)
 
 
 def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
     r"""
-    Get value of ``broadcastables`` argument to :func:`.theano_code` from
-    keyword arguments to :func:`.theano_function`.
+    Get value of ``broadcastables`` argument to :func:`.aesara_code` from
+    keyword arguments to :func:`.aesara_function`.
 
     Included for backwards compatibility.
 
@@ -371,7 +367,7 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
 
     broadcastables : dict
         Explicit value of ``broadcastables`` argument to
-        :meth:`.TheanoPrinter.doprint`. If not None function will return this value unchanged.
+        :meth:`.AesaraPrinter.doprint`. If not None function will return this value unchanged.
 
     Returns
     =======
@@ -395,14 +391,13 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
     return {}
 
 
-@doctest_depends_on(modules=('theano',))
-def theano_function(inputs, outputs, scalar=False, *,
+def aesara_function(inputs, outputs, scalar=False, *,
         dim=None, dims=None, broadcastables=None, **kwargs):
     """
-    Create a Theano function from SymPy expressions.
+    Create a Aesara function from SymPy expressions.
 
-    The inputs and outputs are converted to Theano variables using
-    :func:`.theano_code` and then passed to ``theano.function``.
+    The inputs and outputs are converted to Aesara variables using
+    :func:`.aesara_code` and then passed to ``aesara.function``.
 
     Parameters
     ==========
@@ -417,17 +412,17 @@ def theano_function(inputs, outputs, scalar=False, *,
 
     scalar : bool
         Convert 0-dimensional arrays in output to scalars. This will return a
-        Python wrapper function around the Theano function object.
+        Python wrapper function around the Aesara function object.
 
     cache : dict
-        Cached Theano variables (see :class:`TheanoPrinter.cache
-        <TheanoPrinter>`). Defaults to the module-level global cache.
+        Cached Aesara variables (see :class:`AesaraPrinter.cache
+        <AesaraPrinter>`). Defaults to the module-level global cache.
 
     dtypes : dict
-        Passed to :meth:`.TheanoPrinter.doprint`.
+        Passed to :meth:`.AesaraPrinter.doprint`.
 
     broadcastables : dict
-        Passed to :meth:`.TheanoPrinter.doprint`.
+        Passed to :meth:`.AesaraPrinter.doprint`.
 
     dims : dict
         Alternative to ``broadcastables`` argument. Mapping from elements of
@@ -437,7 +432,7 @@ def theano_function(inputs, outputs, scalar=False, *,
     dim : int
         Another alternative to the ``broadcastables`` argument. Common number of
         dimensions to use for all arrays/tensors.
-        ``theano_function([x, y], [...], dim=2)`` is equivalent to using
+        ``aesara_function([x, y], [...], dim=2)`` is equivalent to using
         ``broadcastables={x: (False, False), y: (False, False)}``.
 
     Returns
@@ -450,32 +445,32 @@ def theano_function(inputs, outputs, scalar=False, *,
         function will return a list of arrays. See description of the ``squeeze``
         argument above for the behavior when a single output is passed in a list.
         The returned object will either be an instance of
-        ``theano.compile.function_module.Function`` or a Python wrapper
+        ``aesara.compile.function.types.Function`` or a Python wrapper
         function around one. In both cases, the returned value will have a
-        ``theano_function`` attribute which points to the return value of
-        ``theano.function``.
+        ``aesara_function`` attribute which points to the return value of
+        ``aesara.function``.
 
     Examples
     ========
 
     >>> from sympy.abc import x, y, z
-    >>> from sympy.printing.theanocode import theano_function
+    >>> from sympy.printing.aesaracode import aesara_function
 
     A simple function with one input and one output:
 
-    >>> f1 = theano_function([x], [x**2 - 1], scalar=True)
+    >>> f1 = aesara_function([x], [x**2 - 1], scalar=True)
     >>> f1(3)
     8.0
 
     A function with multiple inputs and one output:
 
-    >>> f2 = theano_function([x, y, z], [(x**z + y**z)**(1/z)], scalar=True)
+    >>> f2 = aesara_function([x, y, z], [(x**z + y**z)**(1/z)], scalar=True)
     >>> f2(3, 4, 2)
     5.0
 
     A function with multiple inputs and multiple outputs:
 
-    >>> f3 = theano_function([x, y], [x**2 + y**2, x**2 - y**2], scalar=True)
+    >>> f3 = aesara_function([x, y], [x**2 + y**2, x**2 - y**2], scalar=True)
     >>> f3(2, 3)
     [13.0, -5.0]
 
@@ -485,16 +480,10 @@ def theano_function(inputs, outputs, scalar=False, *,
     dim_handling
 
     """
-    SymPyDeprecationWarning(
-        feature="sympy.printing.theanocode",
-        useinstead="Theano is deprecated; use Aesara and sympy.printing.aesaracode",
-        issue=21150,
-        deprecated_since_version="1.8").warn()
+    if not aesara:
+        raise ImportError("Aesara is required for aesara_function")
 
-    if not theano:
-        raise ImportError("theano is required for theano_function")
-
-    # Pop off non-theano keyword args
+    # Pop off non-aesara keyword args
     cache = kwargs.pop('cache', {})
     dtypes = kwargs.pop('dtypes', {})
 
@@ -503,25 +492,25 @@ def theano_function(inputs, outputs, scalar=False, *,
     )
 
     # Print inputs/outputs
-    code = partial(theano_code, cache=cache, dtypes=dtypes,
+    code = partial(aesara_code, cache=cache, dtypes=dtypes,
                    broadcastables=broadcastables)
     tinputs = list(map(code, inputs))
     toutputs = list(map(code, outputs))
 
     #fix constant expressions as variables
-    toutputs = [output if isinstance(output, theano.Variable) else tt.as_tensor_variable(output) for output in toutputs]
+    toutputs = [output if isinstance(output, aesara.graph.basic.Variable) else aet.as_tensor_variable(output) for output in toutputs]
 
     if len(toutputs) == 1:
         toutputs = toutputs[0]
 
-    # Compile theano func
-    func = theano.function(tinputs, toutputs, **kwargs)
+    # Compile aesara func
+    func = aesara.function(tinputs, toutputs, **kwargs)
 
     is_0d = [len(o.variable.broadcastable) == 0 for o in func.outputs]
 
     # No wrapper required
     if not scalar or not any(is_0d):
-        func.theano_function = func
+        func.aesara_function = func
         return func
 
     # Create wrapper to convert 0-dimensional outputs to scalars
@@ -536,5 +525,5 @@ def theano_function(inputs, outputs, scalar=False, *,
 
     wrapper.__wrapped__ = func
     wrapper.__doc__ = func.__doc__
-    wrapper.theano_function = func
+    wrapper.aesara_function = func
     return wrapper
