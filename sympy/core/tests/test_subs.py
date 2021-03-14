@@ -872,4 +872,3 @@ def test_subs_undefined_result():
     expr2 = x**y
     assert expr2.subs([(x, 0), (y, 0)]) == 1
     assert expr2.subs([(x, 0), (y, 0)], simultaneous=True) == 1
-    
