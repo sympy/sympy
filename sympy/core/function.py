@@ -2100,6 +2100,10 @@ class Lambda(Expr):
         """Return ``True`` if this ``Lambda`` is an identity function. """
         return self.signature == self.expr
 
+    def _eval_evalf(self, prec):
+        from sympy.core.evalf import prec_to_dps
+        return self.func(self.args[0], self.args[1].evalf(n=prec_to_dps(prec)))
+
 
 class Subs(Expr):
     """
