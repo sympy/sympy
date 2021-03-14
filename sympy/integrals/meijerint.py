@@ -1771,7 +1771,6 @@ def _meijerint_indefinite_1(f, x):
     return Piecewise((res, _my_unpolarify(cond)), (Integral(f, x), True))
 
 
-
 @timeit
 def meijerint_definite(f, x, a, b):
     """
@@ -1831,7 +1830,7 @@ def meijerint_definite(f, x, a, b):
         return (S.Zero, True)
 
     results = []
-    if is_eq(a, S.NegativeInfinity) and not is_eq(b, S.Infinity):
+    if is_eq(a, S.NegativeInfinity) and is_eq(b, S.Infinity) == False:
         return meijerint_definite(f.subs(x, -x), x, -b, -a)
 
     elif is_eq(a, S.NegativeInfinity):
