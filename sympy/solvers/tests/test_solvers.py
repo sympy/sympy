@@ -1668,8 +1668,8 @@ def test_issue_14607():
                      tau_I: tau_1 + tau_2,
                      tau_D: tau_1*tau_2/(tau_1 + tau_2)}
 
-    for i in vars:
-        assert s[0][i].simplify() == knownsolution[i].simplify()
+    for _var in vars:
+        assert s[0][_var].simplify() == knownsolution[_var].simplify()
 
 
 def test_lambert_multivariate():
@@ -2293,13 +2293,14 @@ def test_issue_19509():
 
 
 def test_issue_4886():
-    Ra , Rb = var('Ra , Rb',positive = True)
-    Ra  = pow(R , 2)*pow(a , 2)
-    Rb  = pow(R , 2)*pow(b , 2)
-    m   = pow(a , 2) + pow(b , 2)
-    C1 , C2 , C3 , C4 = var('C1 , C2 , C3 , C4' , positive = True)
-    C1  = a*c - b*sqrt(Ra + Rb - pow(c , 2))
-    C2  = a*sqrt(Ra + Rb - pow(c , 2)) + b*c
-    C3  = a*c + b*sqrt(Ra+Rb-pow(c,2))
-    C4  = -a*sqrt( Ra + Rb - pow(c , 2)) + b*c
-    assert solve([x**2 + y**2 - R**2, a*x + b*y - c] , x , y) == [(C1/m , C2/m) , (C3/m , C4/m)]
+    Ra = Symbol('Ra', positive=True)
+    Rb = Symbol('Rb', positive=True)
+    Ra = R**2*a**2
+    Rb = R**2*b**2
+    m  = a**2 + b**2
+    C1, C2, C3, C4 = symbols('C1 C2 C3 C4', positive = True)    
+    C1 =  b*(((-a*sqrt(Ra + Rb - c**2)))/m + (b*c)/m ) - c
+    C2 = ((-a*sqrt(Ra + Rb - c**2))/m + (b*c)/m)
+    C3 = b*(((a*sqrt(Ra + Rb - c**2)))/m + (b*c)/m ) - c
+    C4 = ((a*sqrt(Ra + Rb - c**2))/m + (b*c)/m)
+    assert solve([x**2 + y**2 - R**2, a*x + b*y - c] , x , y) == [(-(C1/a) , C2) , (-(C3/a) , C4)]
