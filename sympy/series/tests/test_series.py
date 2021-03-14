@@ -40,7 +40,7 @@ def test_exp():
     e2 = series(exp(cos(x)), x, 0)
     assert e1 == e2
 
-     e1 = exp(sin(x)).series(x, 0)
+    e1 = exp(sin(x)).series(x, 0)
     e2 = series(exp(sin(x)), x, 0)
     assert e1 == e2
 
