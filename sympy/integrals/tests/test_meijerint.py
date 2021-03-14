@@ -9,6 +9,7 @@ from sympy.testing.pytest import slow
 from sympy.testing.randtest import (verify_numerically,
         random_complex_number as randcplx)
 from sympy.abc import x, y, a, b, c, d, s, t, z
+from sympy.core.mul import Mul
 
 
 def test_rewrite_single():
@@ -728,8 +729,7 @@ def test_issue_6462():
 
 
 def test_issue_21063():
-    from sympy import symbol
+    from sympy import Symbol
     x = Symbol('x')
     assert integrate(exp(-x ** 2), (x, -oo, oo)) == sqrt(pi)
     assert integrate(exp(-x ** 2), (x, Mul((-1), oo, evaluate=False), oo)) == sqrt(pi)
-
