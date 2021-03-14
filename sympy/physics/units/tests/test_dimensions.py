@@ -117,8 +117,10 @@ def test_Dimension_mul_div_exp():
 
 def test_Dimension_functions():
     raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(cos(length)))
-    raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(atan2(length,time)))
+    raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(atan2(length, time)))
     raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(log(length)))
+    raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(log(100, length)))
+    raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(log(length, 10)))
 
     assert dimsys_SI.get_dimensional_dependencies(pi) == {}
 
@@ -127,7 +129,9 @@ def test_Dimension_functions():
 
     assert dimsys_SI.get_dimensional_dependencies(atan2(length, length)) == {}
 
+    assert dimsys_SI.get_dimensional_dependencies(log(length / length, length / length)) == {}
+
     assert dimsys_SI.get_dimensional_dependencies(Abs(length)) == {"length": 1}
-    assert dimsys_SI.get_dimensional_dependencies(Abs(length/length)) == {}
+    assert dimsys_SI.get_dimensional_dependencies(Abs(length / length)) == {}
 
     assert dimsys_SI.get_dimensional_dependencies(sqrt(-1)) == {}
