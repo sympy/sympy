@@ -863,7 +863,7 @@ def test_issue_19558():
     assert e.subs(x, oo) == AccumBounds(-oo, oo)
     assert (sin(x) + cos(x)).subs(x, oo) == AccumBounds(-2, 2)
     
-
+    
 def test_subs_undefined_result():
     x, y = symbols("x, y")
     expr = x/y
