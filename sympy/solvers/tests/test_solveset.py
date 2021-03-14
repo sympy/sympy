@@ -2265,10 +2265,12 @@ def test_solve_lambert():
 
     # check collection
     a = Symbol('a',real=True)
-    assert solveset_real(3*log(a**(3*x + 5)) + a**(3*x + 5), x) == FiniteSet(-(log(a**5) + LambertW(Rational(1, 3)))/(3*log(a)))
+    assert solveset_real(3*log(a**(3*x + 5)) + a**(3*x + 5), x) == \
+        FiniteSet(-S(1)*((log(a**5) + LambertW(Rational(1, 3)))/(3*log(a))))
 
     eq = 3*log(a**(3*x + 5)) + b*log(a**(3*x + 5)) + a**(3*x + 5)
-    assert solveset_real(eq, x) == FiniteSet((-log(a**5) - LambertW(1/(b + 3)))/(3*log(a)))
+    assert solveset_real(eq, x) == FiniteSet(
+        -S(1)*((log(a**5) + LambertW(1/(b + 3)))/(3*log(a))))
 
     assert solveset_real(3*log(x) - x*log(3), x) == FiniteSet(
         -3*LambertW(-log(3)/3)/log(3),
@@ -2342,10 +2344,8 @@ def test_other_lambert():
     assert solveset_real(x**a - a**x, x) == FiniteSet(
         a, -a*LambertW(-log(a)/a)/log(a))
 
-# end of lambert tests
 
 
-# lambert tests
 def test_is_lambert():
     a, b, c = symbols('a,b,c')
     assert _is_lambert(x**2, x) is False

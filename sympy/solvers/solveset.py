@@ -1886,7 +1886,7 @@ def _is_lambert(f, symbol):
 
             # total number of lambert_funcs terms in equation
             no_of_lambert_func = len([arg for arg in term_factors \
-                if arg.has(log, HyperbolicFunction, TrigonometricFunction) and arg.has(symbol)])
+                if arg.has(HyperbolicFunction, TrigonometricFunction) and arg.has(symbol)])
             if no_of_lambert_func < no_of_symbols:
                 return True
         # here, `Pow`, `exp` exponent should have symbols
@@ -1909,7 +1909,6 @@ def _transolve(f, symbol, domain):
 
         - Exponential equations
         - Logarithmic equations
-        - Lambert type equations
 
     Parameters
     ==========
