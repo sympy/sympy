@@ -1675,8 +1675,8 @@ def test_issue_14607():
                      tau_I: tau_1 + tau_2,
                      tau_D: tau_1*tau_2/(tau_1 + tau_2)}
 
-    for _var in vars:
-        assert s[0][_var].simplify() == knownsolution[_var].simplify()
+    for var in vars:
+        assert s[0][var].simplify() == knownsolution[var].simplify()
 
 
 def test_lambert_multivariate():
