@@ -37,6 +37,7 @@ from sympy.core.numbers import Rational
 from sympy.core.cache import cacheit
 from sympy.core.relational import is_eq
 from sympy.core.symbol import Dummy, Wild
+from sympy.core.sympify import _sympify
 from sympy.simplify import hyperexpand, powdenest, collect
 from sympy.simplify.fu import sincos_to_sum
 from sympy.logic.boolalg import And, Or, BooleanAtom
@@ -1770,6 +1771,7 @@ def _meijerint_indefinite_1(f, x):
     return Piecewise((res, _my_unpolarify(cond)), (Integral(f, x), True))
 
 
+
 @timeit
 def meijerint_definite(f, x, a, b):
     """
@@ -1810,6 +1812,13 @@ def meijerint_definite(f, x, a, b):
     if f.has(SingularityFunction):
         _debug('Integrand has Singularity Function terms - giving up.')
         return None
+
+    # Check if the limits are already symified or not
+    # is_eq can only be used with sympified objects
+    if not hasattr(a, '__sympy__'):
+        a = _sympify(a)
+    if not hasattr(b, '__sympy__'):
+        b = _sympify(b)
 
     f_, x_, a_, b_ = f, x, a, b
 
