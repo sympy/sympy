@@ -20,7 +20,7 @@ from sympy.polys.rootoftools import CRootOf
 from sympy.testing.pytest import slow, XFAIL, SKIP, raises
 from sympy.testing.randtest import verify_numerically as tn
 
-from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
+from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m, R
 
 
 def NS(e, n=15, **options):
@@ -1675,8 +1675,8 @@ def test_issue_14607():
                      tau_I: tau_1 + tau_2,
                      tau_D: tau_1*tau_2/(tau_1 + tau_2)}
 
-    for var in vars:
-        assert s[0][var].simplify() == knownsolution[var].simplify()
+    for _var in vars:
+        assert s[0][_var].simplify() == knownsolution[_var].simplify()
 
 
 def test_lambert_multivariate():
@@ -2314,3 +2314,16 @@ def test_issue_20902():
     assert solve(f.subs({t: 3 * x + 3}).diff(x) > 0, x) == (S(-4)/3 < x) & (x < S(-2)/3)
     assert solve(f.subs({t: 3 * x + 4}).diff(x) > 0, x) == (S(-5)/3 < x) & (x < S(-1))
     assert solve(f.subs({t: 3 * x + 2}).diff(x) > 0, x) == (S(-1) < x) & (x < S(-1)/3)
+
+def test_issue_4886():
+    Ra = Symbol('Ra', positive=True)
+    Rb = Symbol('Rb', positive=True)
+    Ra = R**2*a**2
+    Rb = R**2*b**2
+    m  = a**2 + b**2
+    C1, C2, C3, C4 = symbols('C1 C2 C3 C4', positive = True)    
+    C1 =  b*(((-a*sqrt(Ra + Rb - c**2)))/m + (b*c)/m ) - c
+    C2 = ((-a*sqrt(Ra + Rb - c**2))/m + (b*c)/m)
+    C3 = b*(((a*sqrt(Ra + Rb - c**2)))/m + (b*c)/m ) - c
+    C4 = ((a*sqrt(Ra + Rb - c**2))/m + (b*c)/m)
+    assert solve([x**2 + y**2 - R**2, a*x + b*y - c] , x , y) == [(-(C1/a) , C2) , (-(C3/a) , C4)]
