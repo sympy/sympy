@@ -2326,7 +2326,5 @@ def test_issue_4886():
     c2 = ((-a*sqrt(ra + rb - c ** 2)) / m + (b * c) / m)
     c3 = b*(((a*sqrt(ra + rb - c ** 2))) / m + (b * c) / m) - c
     c4 = ((a*sqrt(ra + rb - c ** 2)) / m + (b * c) / m)
-    assert solve([x**2 + y**2 - R**2, a*x + b*y - c], x, y) == \
-        [(-(c1 / a), c2), (-(c3 / a), c4)]
+    assert solve([x**2 + y**2 - R**2, a*x + b*y - c], x, y) == [(-(c1 / a), c2), (-(c3 / a), c4)]
     
-        
