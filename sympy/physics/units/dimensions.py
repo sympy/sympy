@@ -441,7 +441,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             dim_base = get_for_name(name.base)
             dim_exp = get_for_name(name.exp)
             if dim_exp != {}:
-                raise TypeError("The exponent for the power operator must be unitless.")
+                raise TypeError("The exponent for the power operator must be dimensionless.")
             return {k: v*name.exp for (k, v) in dim_base.items()}
 
         if name.is_Function:
