@@ -168,11 +168,6 @@ def _invert(f_x, y, x, domain=S.Complexes):
     if x in y.free_symbols:
         raise ValueError("y should be independent of x ")
 
-    if _is_lambert(f_x - y, x):
-        s = _solve_as_lambert(f_x, y, x, domain)
-        if s.has(LambertW):
-            return x, s
-
     if domain.is_subset(S.Reals):
         x1, s = _invert_real(f_x, FiniteSet(y), x)
     else:
@@ -313,6 +308,11 @@ def _invert_real(f, g_ys, symbol):
     if isinstance(f, LambertW):
         return _invert_real(f.args[0], imageset(Lambda(n, n*exp(n)), g_ys), symbol)
 
+    if _is_lambert(f - g_ys.args[0], symbol):
+        s = _solve_as_lambert(f, g_ys.args[0], symbol, domain=S.Reals)
+        if s.has(LambertW):
+            return symbol, s
+
     return (f, g_ys)
 
 
@@ -354,6 +354,11 @@ def _invert_complex(f, g_ys, symbol):
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
             return _invert_complex(f.exp, exp_invs, symbol)
+
+    if _is_lambert(f - g_ys.args[0], symbol):
+        s = _solve_as_lambert(f, g_ys.args[0], symbol, domain=S.Complexes)
+        if s.has(LambertW):
+            return symbol, s
 
     return (f, g_ys)
 
@@ -1883,21 +1888,21 @@ def _is_lambert(f, symbol):
         lambert_funcs = (log, HyperbolicFunction, TrigonometricFunction)
         if any(isinstance(arg, lambert_funcs)\
             for arg in term_factors if arg.has(symbol)):
-
-            # total number of lambert_funcs terms in equation
-            no_of_lambert_func = len([arg for arg in term_factors \
+            # total number of trig terms in equation
+            no_of_trig = len([arg for arg in term_factors \
                 if arg.has(HyperbolicFunction, TrigonometricFunction) and arg.has(symbol)])
-            if no_of_lambert_func < no_of_symbols:
+            if no_of_trig < no_of_symbols:
                 return True
-        # here, `Pow`, `exp` exponent should have symbols
+
+        # here, `Pow`, `exp` exponent should have symbols and no_of_exp < no_of_symbols
         elif any(isinstance(arg, (Pow, exp)) \
             for arg in term_factors if (arg.as_base_exp()[1]).has(symbol)):
-
             # total number of no_of_exp terms in equation
             no_of_exp = len([arg for arg in term_factors \
                 if arg.has(Pow, exp) and (arg.as_base_exp()[1]).has(symbol)])
             if no_of_exp < no_of_symbols:
                 return True
+
     return False
 
 
