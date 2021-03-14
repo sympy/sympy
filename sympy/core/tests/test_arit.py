@@ -8,6 +8,7 @@ from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
 from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy.testing.randtest import verify_numerically
+from sympy.functions.elementary.trigonometric import asin
 
 
 a, c, x, y, z = symbols('a,c,x,y,z')
@@ -2321,3 +2322,8 @@ def test_issue_18507():
 def test_issue_17130():
     e = Add(b, -b, I, -I, evaluate=False)
     assert e.is_zero is None # ideally this would be True
+
+
+def test_issue_21034():
+    e = -I*log((re(asin(5)) + I*im(asin(5)))/sqrt(re(asin(5))**2 + im(asin(5))**2))/pi
+    assert e.round(2)

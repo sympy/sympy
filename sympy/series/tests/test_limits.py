@@ -939,3 +939,7 @@ def test_issue_7535():
 
 def test_issue_20704():
     assert limit(x*(Abs(1/x + y) - Abs(y - 1/x))/2, x, 0) == 0
+
+
+def test_issue_21038():
+    assert limit(sin(pi*x)/(3*x - 12), x, 4) == pi/3

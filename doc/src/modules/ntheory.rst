@@ -71,26 +71,26 @@ Ntheory Functions Reference
 .. autofunction:: antidivisor_count
 
 .. autoclass:: totient
-    :members:
+   :members:
 
 .. autoclass:: reduced_totient
-    :members:
+   :members:
 
 .. autoclass:: divisor_sigma
-    :members:
+   :members:
 
 .. autoclass:: udivisor_sigma
-    :members:
+   :members:
 
 .. autofunction:: core
 
 .. autofunction:: digits
 
 .. autoclass:: primenu
-    :members:
+   :members:
 
 .. autoclass:: primeomega
-    :members:
+   :members:
 
 .. autofunction:: mersenne_prime_exponent
 
@@ -204,7 +204,7 @@ of `ecm` is dependent on the smallest proper factor of the number. So even if th
 number is really large but its factors are comparatively smaller then `ecm`
 can easily factor them. For example we take `N` with 15 digit factors
 `15154262241479`, `15423094826093`, `799333555511111`, `809709509409109`,
-`888888877777777`, `914148152112161`. Now N is a 87 digit number. `ECM` takes 
+`888888877777777`, `914148152112161`. Now N is a 87 digit number. `ECM` takes
 under around 47s to factorise this.
 
 .. autofunction:: ecm
