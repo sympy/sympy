@@ -372,7 +372,7 @@ class PolyRing(DefaultPrinting, IPolys):
         domain = self.domain
 
         def _rebuild(expr):
-            
+
             generator = mapping.get(expr)
 
             if generator is not None:

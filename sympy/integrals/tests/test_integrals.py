@@ -417,8 +417,8 @@ def test_issue_21024():
     f = (x**2 + exp(5))/x
     F = x**2/2 + exp(5)*log(x)
     assert F == integrate(f, x)
-    
-    #This test case fails as sinh is express in terms of E 
+
+    #This test case fails as sinh is express in terms of E
     f = x/(2*x + tanh(1))
     F = x/2 - log(2*x + tanh(1))*tanh(1)/4
     assert F == integrate(f, x)
@@ -470,7 +470,7 @@ def test_issue_21024():
     f = x*(x + exp(10)/x**2) + x
     F =  x**3/3 + x**2/2 + exp(10)*log(x)
     assert F == integrate(f, x)
-    
+
     f = x + x/(5*x + sinh(3))
     F = x**2/2 + x/5 - (-1 + E)*(1 + E)*(1 + E + exp(2))*(-E + 1 + exp(2))*exp(-3)*log(5*x + sinh(3))/50
     assert F == integrate(f, x)
