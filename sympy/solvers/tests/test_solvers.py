@@ -2316,14 +2316,14 @@ def test_issue_20902():
     assert solve(f.subs({t: 3 * x + 2}).diff(x) > 0, x) == (S(-1) < x) & (x < S(-1)/3)
 
 def test_issue_4886():
-    Ra = Symbol('Ra', positive=True)
-    Rb = Symbol('Rb', positive=True)
-    Ra = R**2*a**2
-    Rb = R**2*b**2
+    ra = Symbol('ra', positive=True)
+    rb = Symbol('rb', positive=True)
+    ra = R**2*a**2
+    rb = R**2*b**2
     m  = a**2 + b**2
-    C1, C2, C3, C4 = symbols('C1 C2 C3 C4', positive = True)    
-    C1 =  b*(((-a*sqrt(Ra + Rb - c**2)))/m + (b*c)/m ) - c
-    C2 = ((-a*sqrt(Ra + Rb - c**2))/m + (b*c)/m)
-    C3 = b*(((a*sqrt(Ra + Rb - c**2)))/m + (b*c)/m ) - c
-    C4 = ((a*sqrt(Ra + Rb - c**2))/m + (b*c)/m)
-    assert solve([x**2 + y**2 - R**2, a*x + b*y - c] , x , y) == [(-(C1/a) , C2) , (-(C3/a) , C4)]
+    c1, c2, c3, c4 = symbols('c1 c2 c3 c4', positive = True)    
+    c1 =  b*(((-a*sqrt(ra + rb - c**2)))/m + (b*c)/m ) - c
+    c2 = ((-a*sqrt(ra + rb - c**2))/m + (b*c)/m)
+    c3 = b*(((a*sqrt(ra + rb - c**2)))/m + (b*c)/m ) - c
+    c4 = ((a*sqrt(ra + rb - c**2))/m + (b*c)/m)
+    assert solve([x**2 + y**2 - R**2, a*x + b*y - c] , x , y) == [(-(c1/a) , c2) , (-(c3/a) , c4)]
