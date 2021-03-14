@@ -1,5 +1,5 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, PoleError, log, sqrt, N, Symbol, Subs, pi, symbols, atan, LambertW, Rational
+    Function, PoleError, log, sqrt, N, Symbol, Subs, pi, symbols, atan, LambertW, Rational, tan, cot, sec, csc
 from sympy.abc import x, y, n, k
 from sympy.testing.pytest import raises
 from sympy.series.gruntz import calculate_series
