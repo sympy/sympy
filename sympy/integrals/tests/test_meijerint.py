@@ -725,3 +725,11 @@ def test_issue_6462():
     # exception
     assert integrate(cos(x**n)/x**n, x, meijerg=True).subs(n, 2).equals(
             integrate(cos(x**2)/x**2, x, meijerg=True))
+
+
+def test_issue_21063():
+    from sympy import symbol
+    x = Symbol('x')
+    assert integrate(exp(-x ** 2), (x, -oo, oo)) == sqrt(pi)
+    assert integrate(exp(-x ** 2), (x, Mul((-1), oo, evaluate=False), oo)) == sqrt(pi)
+
