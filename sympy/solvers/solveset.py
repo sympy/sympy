@@ -168,6 +168,11 @@ def _invert(f_x, y, x, domain=S.Complexes):
     if x in y.free_symbols:
         raise ValueError("y should be independent of x ")
 
+    if _is_lambert(f_x - y, x):
+        s = _solve_as_lambert(f_x, y, x, domain)
+        if s.has(LambertW):
+            return x, s
+
     if domain.is_subset(S.Reals):
         x1, s = _invert_real(f_x, FiniteSet(y), x)
     else:
@@ -1879,9 +1884,9 @@ def _is_lambert(f, symbol):
         if any(isinstance(arg, lambert_funcs)\
             for arg in term_factors if arg.has(symbol)):
 
-            # total number of lambert_func_1 terms in equation
+            # total number of lambert_funcs terms in equation
             no_of_lambert_func = len([arg for arg in term_factors \
-                if arg.has(lambert_func_1) and arg.has(symbol)])])
+                if arg.has(log, HyperbolicFunction, TrigonometricFunction) and arg.has(symbol)])
             if no_of_lambert_func < no_of_symbols:
                 return True
         # here, `Pow`, `exp` exponent should have symbols
@@ -2091,9 +2096,6 @@ def _transolve(f, symbol, domain):
         # check if it is logarithmic type equation
         elif _is_logarithmic(lhs, symbol):
             result = _solve_logarithm(lhs, rhs, symbol, domain)
-        elif _is_lambert(lhs - rhs):
-            # try to get solutions in form of Lambert
-            result = _solve_as_lambert(lhs, rhs, symbol, domain)
 
         return result
 
@@ -2109,12 +2111,6 @@ def _transolve(f, symbol, domain):
 
         if lhs.is_Add:
             result = add_type(lhs, rhs, symbol, domain)
-        elif _is_lambert(lhs - rhs):
-            # try to get solutions in form of Lambert since `a*f(x) = c`
-            # will not come under lhs.is_add and which can't be solved by
-            # invert_complex for lambert type. (it's exception because of many
-            # forms and code of such cases are covered in `_solve_lambert`).
-            result = _solve_as_lambert(lhs, rhs, symbol, domain)
     else:
         result = rhs_s
 

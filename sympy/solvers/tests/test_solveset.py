@@ -2239,6 +2239,9 @@ def test_solve_logarithm():
 # lambert tests for solveset
 def test_solve_lambert():
     yr = Symbol('yr', real=True)
+    b = Symbol('b')
+    a = Symbol('a')
+
     assert solveset_real(x*exp(x) - 1, x) == FiniteSet(LambertW(1))
     assert solveset_real(exp(x) + x, x) == FiniteSet(-LambertW(1))
     assert solveset_real(x + 2**x, x) == \
@@ -2247,7 +2250,6 @@ def test_solve_lambert():
     assert solveset_real(3*x + log(4*x), x) == \
         FiniteSet(LambertW(Rational(3, 4))/3)
 
-    a = Symbol('a', real=True)
     assert solveset_real(a/x + exp(x/2), x) == \
         Complement(FiniteSet(2*LambertW(-a/2)), FiniteSet(0))
     assert solveset_real((a/x + exp(x/2)).diff(x), x) == \
@@ -2261,11 +2263,10 @@ def test_solve_lambert():
     assert solveset_real(eq, x) == \
         FiniteSet(LambertW(3*exp(-LambertW(3))))
 
-    assert solveset_real(3*log(a**(3*x + 5)) + a**(3*x + 5), x) == \
-        FiniteSet((-log(a**5) - LambertW(Rational(1, 3)))/(3*log(a)))
-
     # check collection
-    b = Symbol('b')
+    a = Symbol('a',real=True)
+    assert solveset_real(3*log(a**(3*x + 5)) + a**(3*x + 5), x) == FiniteSet(-(log(a**5) + LambertW(Rational(1, 3)))/(3*log(a)))
+
     eq = 3*log(a**(3*x + 5)) + b*log(a**(3*x + 5)) + a**(3*x + 5)
     assert solveset_real(eq, x) == FiniteSet((-log(a**5) - LambertW(1/(b + 3)))/(3*log(a)))
 
