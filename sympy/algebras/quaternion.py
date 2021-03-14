@@ -885,7 +885,7 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        If q is a quaternion given by q = a + b*i + c*j + d*k where a, b, c and d
+        If q is a quaternion given by ``q = a + b*i + c*j + d*k`` where a, b, c and d
         are real numbers then the angle of the quaternion is given by
 
             angle := atan2 (\sqrt(b^2+c^2+d^2), a)
@@ -914,14 +914,15 @@ class Quaternion(Expr):
     @classmethod
     def coplanar(cls, q1, q2):
         """
-        Returns True if the plane of the two quaternions are coplanar else returns False.
+        Returns True if the plane of the two quaternions are coplanar.
 
         Explanation
         ===========
 
-        checks if the 3D vectors written as quaternions are in the same plane.
-        In order to return a True, the quaternions and the origin should be in the
-        same plane, and the real part must be zero for it to make sense.
+        checks if the 3D vectors written as quaternions are in the same plane which means
+        the 3D vectors are parallel to the same plane. In order to return a True,
+        the quaternions and the origin should be in the same plane, and the real
+        part must be zero for it to make sense.
 
         Parameters
         ==========
@@ -961,7 +962,7 @@ class Quaternion(Expr):
     def ternary_coplanar(cls, q1, q2, q3):
         """
         Returns True if the axis of the pure quaternions seen as 3D vectors
-        q1, q2, and q3 are coplanar else returns False.
+        q1, q2, and q3 are coplanar.
 
         Explanation
         ===========
@@ -1006,12 +1007,13 @@ class Quaternion(Expr):
 
     def parallel(self, other):
         """
-        Returns True if the two pure quaternions seen as 3D vectors are parallel else returns False.
+        Returns True if the two pure quaternions seen as 3D vectors are parallel.
 
         Explanation
         ===========
 
-        Two pure quaternions are called parallel when their product is commutative.
+        Two pure quaternions are called parallel when their vector product is commutative which
+        means that the quaternion seen as 3D vectors have same direction.
 
         Parameters
         ==========
@@ -1040,7 +1042,7 @@ class Quaternion(Expr):
 
     def orthogonal(self, other):
         """
-        Returns True if the two pure quaternions seen as 3D vectors are orthogonal else returns False.
+        Returns True if the two pure quaternions seen as 3D vectors are orthogonal.
 
         Explanation
         ===========
@@ -1081,7 +1083,7 @@ class Quaternion(Expr):
         ===========
 
         Index vector is given by mod(q) Ax(q) where Ax(q) is the axis of the quaternion q,
-        where mod(q) is the magnitude of the quaternion.
+        where mod(q) is the `norm` of the quaternion.
 
         Returns
         =======
@@ -1104,6 +1106,7 @@ class Quaternion(Expr):
         ========
 
         axis
+        norm
 
         """
 
@@ -1111,8 +1114,7 @@ class Quaternion(Expr):
 
     def mensor(self):
         """
-        Returns the mensor of the quaternion.
-        mensor is the log of the norm.
+        Returns the log of the norm of the quaternion.
 
         Returns
         =======
