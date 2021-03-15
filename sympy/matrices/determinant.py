@@ -648,15 +648,14 @@ def _det(M, method="bareiss", iszerofunc=None):
     n = M.rows
 
     if n == M.cols: # square check is done in individual method functions
+        # 1. if M is triangular - calculate the product of the diagonal entries
         if M.is_upper or M.is_lower:
             m = 1
             for i in range(n):
                 m = m * M[i, i]
             return _get_intermediate_simp(_dotprodsimp)(m)
-        elif n == 0:
-            return M.one
-        elif n == 1:
-            return M[0,0]
+        # 2. if M is 2x2 or 3x3 - let's use the hardcoded formula
+        #    (not checking 0x0 and 1x1 matrices as they are _always_ upper & lower triangular)
         elif n == 2:
             m = M[0, 0] * M[1, 1] - M[0, 1] * M[1, 0]
             return _get_intermediate_simp(_dotprodsimp)(m)
@@ -669,6 +668,7 @@ def _det(M, method="bareiss", iszerofunc=None):
                 - M[0, 1] * M[1, 0] * M[2, 2])
             return _get_intermediate_simp(_dotprodsimp)(m)
 
+    # 3. otherwise - let's resort to one of our algorithms
     if method == "bareiss":
         return M._eval_det_bareiss(iszerofunc=iszerofunc)
     elif method == "berkowitz":
