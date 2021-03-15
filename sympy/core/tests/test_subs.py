@@ -3,7 +3,7 @@ from sympy import (
     Integer, Eq, symbols, Add, I, Float, log, Rational,
     Lambda, atan2, cse, cot, tan, S, Tuple, Basic, Dict,
     Piecewise, oo, Mul, factor, nsimplify, zoo, Subs, RootOf,
-    AccumBounds, Matrix, zeros, ZeroMatrix, nan, zoo)
+    AccumBounds, Matrix, zeros, ZeroMatrix, nan)
 from sympy.core.basic import _aresame
 from sympy.testing.pytest import XFAIL
 from sympy.abc import a, x, y, z, t
