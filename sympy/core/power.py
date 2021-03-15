@@ -7,7 +7,7 @@ from .singleton import S
 from .expr import Expr
 from .evalf import PrecisionExhausted
 from .function import (_coeff_isneg, expand_complex, expand_multinomial,
-    expand_mul)
+    expand_mul, _mexpand)
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
 from .compatibility import as_int, HAS_GMPY, gmpy
 from .parameters import global_parameters
@@ -1693,10 +1693,9 @@ class Pow(Expr):
             ex = e1 + inex
             res += terms[e1]*inco*x**(ex)
 
-        for i in (1, 2, 3):
-            if (res - self).subs(x, i) is not S.Zero:
-                res += O(x**n, x)
-                break
+        if not (e.is_integer and e.is_positive and (e*d - n).is_nonpositive and
+                res == _mexpand(self)):
+            res += O(x**n, x)
         return res
 
     def _eval_as_leading_term(self, x, cdir=0):
