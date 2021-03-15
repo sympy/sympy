@@ -37,7 +37,6 @@ from sympy.core.numbers import Rational
 from sympy.core.cache import cacheit
 from sympy.core.relational import is_eq
 from sympy.core.symbol import Dummy, Wild
-from sympy.core.sympify import _sympify
 from sympy.simplify import hyperexpand, powdenest, collect
 from sympy.simplify.fu import sincos_to_sum
 from sympy.logic.boolalg import And, Or, BooleanAtom
