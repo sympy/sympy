@@ -1812,13 +1812,6 @@ def meijerint_definite(f, x, a, b):
         _debug('Integrand has Singularity Function terms - giving up.')
         return None
 
-    # Check if the limits are already symified or not
-    # is_eq can only be used with sympified objects
-    if not hasattr(a, '__sympy__'):
-        a = _sympify(a)
-    if not hasattr(b, '__sympy__'):
-        b = _sympify(b)
-
     f_, x_, a_, b_ = f, x, a, b
 
     # Let's use a dummy in case any of the boundaries has x.
@@ -1830,7 +1823,7 @@ def meijerint_definite(f, x, a, b):
         return (S.Zero, True)
 
     results = []
-    if is_eq(a, S.NegativeInfinity) and is_eq(b, S.Infinity) == False:
+    if is_eq(a, S.NegativeInfinity) and is_eq(b, S.Infinity) is not True:
         return meijerint_definite(f.subs(x, -x), x, -b, -a)
 
     elif is_eq(a, S.NegativeInfinity):

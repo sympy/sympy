@@ -76,7 +76,7 @@ def test_meijerint_indefinite_numerically():
 
 
 def test_meijerint_definite():
-    v, b = meijerint_definite(x, x, 0, 0)
+    v, b = meijerint_definite(x, x, S.Zero, S.Zero)
     assert v.is_zero and b is True
     v, b = meijerint_definite(x, x, oo, oo)
     assert v.is_zero and b is True
@@ -137,27 +137,27 @@ def test_meijerint():
     # TODO what simplifications should be done automatically?
     # This tests "extra case" for antecedents_1.
     a, b = symbols('a b', positive=True)
-    assert simplify(meijerint_definite(x**a, x, 0, b)[0]) == \
+    assert simplify(meijerint_definite(x**a, x, S.Zero, b)[0]) == \
         b**(a + 1)/(a + 1)
 
     # This tests various conditions and expansions:
-    meijerint_definite((x + 1)**3*exp(-x), x, 0, oo) == (16, True)
+    meijerint_definite((x + 1)**3*exp(-x), x, S.Zero, oo) == (16, True)
 
     # Again, how about simplifications?
     sigma, mu = symbols('sigma mu', positive=True)
-    i, c = meijerint_definite(exp(-((x - mu)/(2*sigma))**2), x, 0, oo)
+    i, c = meijerint_definite(exp(-((x - mu)/(2*sigma))**2), x, S.Zero, oo)
     assert simplify(i) == sqrt(pi)*sigma*(2 - erfc(mu/(2*sigma)))
     assert c == True
 
-    i, _ = meijerint_definite(exp(-mu*x)*exp(sigma*x), x, 0, oo)
+    i, _ = meijerint_definite(exp(-mu*x)*exp(sigma*x), x, S.Zero, oo)
     # TODO it would be nice to test the condition
     assert simplify(i) == 1/(mu - sigma)
 
     # Test substitutions to change limits
-    assert meijerint_definite(exp(x), x, -oo, 2) == (exp(2), True)
+    assert meijerint_definite(exp(x), x, -oo, S(2)) == (exp(2), True)
     # Note: causes a NaN in _check_antecedents
-    assert expand(meijerint_definite(exp(x), x, 0, I)[0]) == exp(I) - 1
-    assert expand(meijerint_definite(exp(-x), x, 0, x)[0]) == \
+    assert expand(meijerint_definite(exp(x), x, S.Zero, I)[0]) == exp(I) - 1
+    assert expand(meijerint_definite(exp(-x), x, S.Zero, x)[0]) == \
         1 - exp(-exp(I*arg(x))*abs(x))
 
     # Test -oo to oo
@@ -171,7 +171,7 @@ def test_meijerint():
     assert meijerint_definite(sinc(x)**2, x, -oo, oo) == (pi, True)
 
     # Test one of the extra conditions for 2 g-functinos
-    assert meijerint_definite(exp(-x)*sin(x), x, 0, oo) == (S.Half, True)
+    assert meijerint_definite(exp(-x)*sin(x), x, S.Zero, oo) == (S.Half, True)
 
     # Test a bug
     def res(n):
@@ -190,7 +190,7 @@ def test_meijerint():
     a, b, s = symbols('a b s')
     from sympy import And, re
     assert meijerint_definite(meijerg([], [], [a/2], [-a/2], x/4)
-                  *meijerg([], [], [b/2], [-b/2], x/4)*x**(s - 1), x, 0, oo) == \
+                  *meijerg([], [], [b/2], [-b/2], x/4)*x**(s - 1), x, S.Zero, oo) == \
         (4*2**(2*s - 2)*gamma(-2*s + 1)*gamma(a/2 + b/2 + s)
          /(gamma(-a/2 + b/2 - s + 1)*gamma(a/2 - b/2 - s + 1)
            *gamma(a/2 + b/2 - s + 1)),
@@ -212,7 +212,7 @@ def test_meijerint():
 
     # Test a bug with argument 1/x
     alpha = symbols('alpha', positive=True)
-    assert meijerint_definite((2 - x)**alpha*sin(alpha/x), x, 0, 2) == \
+    assert meijerint_definite((2 - x)**alpha*sin(alpha/x), x, S.Zero, S(2)) == \
         (sqrt(pi)*alpha*gamma(alpha + 1)*meijerg(((), (alpha/2 + S.Half,
         alpha/2 + 1)), ((0, 0, S.Half), (Rational(-1, 2),)), alpha**2/16)/4, True)
 
