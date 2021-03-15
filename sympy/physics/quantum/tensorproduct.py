@@ -29,7 +29,8 @@ _combined_printing = False
 
 
 def combined_tensor_printing(combined):
-    """Set flag controlling whether tensor products of states should be
+    """
+    Set flag controlling whether tensor products of states should be
     printed as a combined bra/ket or as an explicit tensor product of different
     bra/kets. This is a global setting for all TensorProduct class instances.
 
@@ -45,7 +46,8 @@ def combined_tensor_printing(combined):
 
 
 class TensorProduct(Expr):
-    """The tensor product of two or more arguments.
+    """
+    The tensor product of two or more arguments.
 
     For matrices, this uses ``matrix_tensor_product`` to compute the Kronecker
     or tensor product matrix. For other objects a symbolic ``TensorProduct``
@@ -265,7 +267,8 @@ class TensorProduct(Expr):
 
 
 def tensor_product_simp_Mul(e):
-    """Simplify a Mul with TensorProducts.
+    """
+    Simplify a Mul with TensorProducts.
 
     Current the main use of this is to simplify a ``Mul`` of ``TensorProduct``s
     to a ``TensorProduct`` of ``Muls``. It currently only works for relatively
@@ -357,7 +360,8 @@ def tensor_product_simp_Mul(e):
         return e
 
 def tensor_product_simp_Pow(e):
-    """Evaluates ``Pow`` expressions whose base is ``TensorProduct``"""
+    """
+    Evaluates ``Pow`` expressions whose base is ``TensorProduct``"""
     if not isinstance(e, Pow):
         return e
 
