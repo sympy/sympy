@@ -309,9 +309,9 @@ def _invert_real(f, g_ys, symbol):
         return _invert_real(f.args[0], imageset(Lambda(n, n*exp(n)), g_ys), symbol)
 
     if _is_lambert(f - g_ys.args[0], symbol):
-        s = _solve_as_lambert(f, g_ys.args[0], symbol, domain=S.Reals)
-        if s.has(LambertW):
-            return symbol, s
+        soln = _solve_as_lambert(f, g_ys.args[0], symbol, domain=S.Reals)
+        if soln:
+            return symbol, soln
 
     return (f, g_ys)
 
@@ -354,11 +354,6 @@ def _invert_complex(f, g_ys, symbol):
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
             return _invert_complex(f.exp, exp_invs, symbol)
-
-    if _is_lambert(f - g_ys.args[0], symbol):
-        s = _solve_as_lambert(f, g_ys.args[0], symbol, domain=S.Complexes)
-        if s.has(LambertW):
-            return symbol, s
 
     return (f, g_ys)
 
@@ -1768,44 +1763,30 @@ def _is_logarithmic(f, symbol):
     return rv
 
 
-def _compute_lambert_solutions(lhs, rhs, symbol):
+def _solve_as_lambert(lhs, rhs, symbol, domain):
     r"""
     Computes the equations whose solutions will be given in terms
-    of the list of LambertW function. Returns `None` if it fails doing so.
+    of the `LambertW` function. Returns `None` if it fails doing so.
 
     Example
     =======
 
-    >>> from sympy.solvers.solveset import _compute_lambert_solutions
-    >>> from sympy import symbols, exp
+    >>> from sympy.solvers.solveset import _solve_as_lambert
+    >>> from sympy import symbols, exp, S
     >>> x = symbols('x')
-    >>> _compute_lambert_solutions(x*exp(x), 1, x)
-    [LambertW(1)]
+    >>> _solve_as_lambert(x*exp(x), 1, x, S.Reals)
+    FiniteSet(LambertW(1))
 
     """
+    poly = lhs.as_poly()
+    gens = _filtered_gens(poly, symbol)
     try:
-        poly = lhs.as_poly()
-        gens = _filtered_gens(poly, symbol)
-        return _solve_lambert(lhs - rhs, symbol, gens)
+        soln = _solve_lambert(lhs - rhs, symbol, gens)
+        if domain.is_subset(S.Reals):
+            soln = [s for s in soln if not s.has(I)]
+        return FiniteSet(*soln)
     except NotImplementedError:
         pass
-
-
-def _solve_as_lambert(lhs, rhs, symbol, domain):
-    r"""
-    Helper solver to handle equations having Lambert solutions.
-    Initally tries to solve equation directly.
-
-    Notes
-    =====
-    This function needs more improvements.
-
-    """
-    soln = _compute_lambert_solutions(lhs, rhs, symbol)
-    if soln:
-        return FiniteSet(*soln)
-    else:
-        return ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
 
 
 def _is_lambert(f, symbol):
@@ -1890,7 +1871,7 @@ def _is_lambert(f, symbol):
             for arg in term_factors if arg.has(symbol)):
             # total number of trig terms in equation
             no_of_trig = len([arg for arg in term_factors \
-                if arg.has(HyperbolicFunction, TrigonometricFunction) and arg.has(symbol)])
+                if isinstance(arg, (HyperbolicFunction, TrigonometricFunction)) and arg.has(symbol)])
             if no_of_trig < no_of_symbols:
                 return True
 
@@ -1899,7 +1880,7 @@ def _is_lambert(f, symbol):
             for arg in term_factors if (arg.as_base_exp()[1]).has(symbol)):
             # total number of no_of_exp terms in equation
             no_of_exp = len([arg for arg in term_factors \
-                if arg.has(Pow, exp) and (arg.as_base_exp()[1]).has(symbol)])
+                if isinstance(arg, (Pow, exp)) and (arg.as_base_exp()[1]).has(symbol)])
             if no_of_exp < no_of_symbols:
                 return True
 

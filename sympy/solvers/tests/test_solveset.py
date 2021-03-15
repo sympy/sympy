@@ -1532,14 +1532,10 @@ def test_nonlinsolve_using_substitution():
     soln = (-s_x, y)
     assert nonlinsolve(system, [x, y]) == FiniteSet(soln)
 
-@XFAIL
-def test_nonlinsolve_using_substitution_1():
-    # giving incomplete solution due to not
-    # complete development of lambert
     system = [z**2*x**2 - z**2*y**2/exp(x)]
     soln_real_1 = (y, x, 0)
-    soln_real_2 = (-exp(x/2)*Abs(x), x, z)
-    soln_real_3 = (exp(x/2)*Abs(x), x, z)
+    soln_real_2 = (y, 2*LambertW(-y/2), z)
+    soln_real_3 = (y, 2*LambertW(y/2), z)
     soln_complex_1 = (-x*exp(x/2), x, z)
     soln_complex_2 = (x*exp(x/2), x, z)
     syms = [y, x, z]
@@ -2278,6 +2274,20 @@ def test_solve_lambert():
     assert solveset_real(LambertW(2*x) - yr, x) == \
         FiniteSet(yr*exp(yr)/2)
 
+    # giving complex solutions to real ones
+    # issue 4739
+    assert solveset_real(3*x + 5 + 2**(-5*x + 3), x) == S.EmptySet
+
+    assert solveset_real(2*x + 5 + log(3*x - 2), x) == \
+        FiniteSet(Rational(2, 3) + LambertW(2*exp(Rational(-19, 3))/3)/2)
+
+    p = symbols('p', positive=True)
+    assert solveset_real(3*log(p**(3*x + 5)) + p**(3*x + 5), x) == \
+        Intersection(FiniteSet(Rational(-5, 3) - LambertW(Rational(1, 3))/(3*log(p))), S.Reals)
+    # issue 4271
+    assert solveset_real((a/x + exp(x/2)).diff(x, 2), x) == Complement(Intersection(\
+        FiniteSet(6*LambertW((-a)**(Rational(1, 3))/3)), S.Reals), FiniteSet(0))
+
 
 @XFAIL
 def test_failed_lambert():
@@ -2297,22 +2307,6 @@ def test_failed_lambert():
     assert solveset_real(3**cos(x) - cos(x)**3, x) == FiniteSet(
         acos(-3*LambertW(-log(3)/3)/log(3)))
 
-    # giving complex solutions to real ones
-    # issue 4739
-    ans = solveset_real(3*x + 5 + 2**(-5*x + 3), x)
-    assert ans == FiniteSet(Rational(-5, 3) +
-                            LambertW(-10240*2**Rational(1, 3)*log(2)/3)/(5*log(2)))
-    assert solveset_real(2*x + 5 + log(3*x - 2), x) == \
-        FiniteSet(Rational(2, 3) + LambertW(2*exp(Rational(-19, 3))/3)/2)
-    p = symbols('p', positive=True)
-    assert solveset_real(3*log(p**(3*x + 5)) + p**(3*x + 5), x) == \
-        FiniteSet(
-        log((-3**Rational(1, 3) - 3**Rational(5, 6)*I)*LambertW(Rational(1, 3))**Rational(1, 3)/(2*p**Rational(5, 3)))/log(p),
-        log((-3**Rational(1, 3) + 3**Rational(5, 6)*I)*LambertW(Rational(1, 3))**Rational(1, 3)/(2*p**Rational(5, 3)))/log(p),
-        log((3*LambertW(Rational(1, 3))/p**5)**(1/(3*log(p)))),)  # checked numerically
-    # issue 4271
-    assert solveset_real((a/x + exp(x/2)).diff(x, 2), x) == FiniteSet(
-        6*LambertW((-1)**Rational(1, 3)*a**Rational(1, 3)/3))
 
     # giving soltuions with positive dummy
     assert solveset_real(x*log(x) + 3*x + 1, x) == \
