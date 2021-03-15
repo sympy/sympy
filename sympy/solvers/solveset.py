@@ -1870,8 +1870,9 @@ def _is_lambert(f, symbol):
         if any(isinstance(arg, lambert_funcs)\
             for arg in term_factors if arg.has(symbol)):
             # total number of trig terms in equation
-            no_of_trig = len([arg for arg in term_factors \
-                if isinstance(arg, (HyperbolicFunction, TrigonometricFunction)) and arg.has(symbol)])
+            trig_types = (HyperbolicFunction, TrigonometricFunction)
+            is_trig_term = lambda a: isinstance(a, trig_types) and a.has(symbol)
+            no_of_trig = len([arg for arg in term_factors if is_trig_term(arg)])
             if no_of_trig < no_of_symbols:
                 return True
 
@@ -1879,8 +1880,9 @@ def _is_lambert(f, symbol):
         elif any(isinstance(arg, (Pow, exp)) \
             for arg in term_factors if (arg.as_base_exp()[1]).has(symbol)):
             # total number of no_of_exp terms in equation
-            no_of_exp = len([arg for arg in term_factors \
-                if isinstance(arg, (Pow, exp)) and (arg.as_base_exp()[1]).has(symbol)])
+            exp_types = (Pow, exp)
+            is_exp_term = lambda a: isinstance(a, exp_types) and (a.as_base_exp()[1]).has(symbol)
+            no_of_exp = len([arg for arg in term_factors if is_exp_term(arg)])
             if no_of_exp < no_of_symbols:
                 return True
 
