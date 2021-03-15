@@ -1622,7 +1622,7 @@ class Pow(Expr):
         g = (b/f - S.One).cancel()
         maxpow = n - m*e
 
-        if maxpow < S.Zero:
+        if maxpow.is_negative:
             return O(x**(m*e), x)
 
         if g.is_zero:
@@ -1675,7 +1675,7 @@ class Pow(Expr):
         terms = {S.Zero: S.One}
         tk = gterms
 
-        while k*d < maxpow:
+        while (k*d - maxpow).is_negative:
             coeff = ff(e, k)/factorial(k)
             for ex in tk:
                 terms[ex] = terms.get(ex, S.Zero) + coeff*tk[ex]
