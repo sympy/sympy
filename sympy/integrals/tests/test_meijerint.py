@@ -735,4 +735,3 @@ def test_issue_21063():
     assert integrate(exp(-x ** 2), (x, Mul((-1), oo, evaluate=False), oo)) == sqrt(pi)
     assert integrate(exp(-x ** 2), (x, oo, Mul((-1), oo, evaluate=False))) == -sqrt(pi)
     assert integrate(exp(-x ** 2), (x, Mul((-1), oo, evaluate=False), Mul((1), oo, evaluate=False))) == sqrt(pi)
-
