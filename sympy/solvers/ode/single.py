@@ -14,12 +14,13 @@ from sympy.core import S
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, Function, expand, Subs
+from sympy.core.numbers import Float
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.core.mul import Mul
 from sympy.functions import exp, sqrt, tan, log
 from sympy.integrals import Integral
-from sympy.polys.polytools import cancel, factor, factor_list
+from sympy.polys.polytools import cancel, factor
 from sympy.simplify import simplify
 from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
@@ -259,7 +260,7 @@ class SinglePatternODESolver(SingleODESolver):
 
         if not pattern.coeff(df).has(Wild):
             eq = expand(eq / eq.coeff(df))
-        eq = eq.collect([f(x).diff(x)], func = cancel)
+        eq = eq.collect([f(x).diff(x), f(x)], func = cancel)
 
         self._wilds_match = match = eq.match(pattern)
         if match is not None:
@@ -418,22 +419,20 @@ class FirstExact(SinglePatternODESolver):
 
     Examples
     ========
-    >>> from sympy import Symbol,Function
-    >>> from sympy import E,dsolve,Eq,log,sin,cos
-    >>> x=Symbol('x')
-    >>> f=Function('f')
-    >>> eq=Eq(0,(sin(x)*sin(f(x))-x*E**f(x))*f(x).diff(x)-(E**f(x)+cos(x)*cos(f(x))))
-    >>> dsolve(eq,hint='1st_exact')
-    Eq(x*exp(f(x)) + sin(x)*cos(f(x)), C1)
-    >>> dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x),f(x), hint='1st_exact')
+
+    >>> from sympy import Function, dsolve, cos, sin
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x),
+    ... f(x), hint='1st_exact')
     Eq(x*cos(f(x)) + f(x)**3/3, C1)
 
     References
     ==========
 
-    - "Differential Equations With Applications And Historical Notes",
-       Second Edition, George.F.Simmons
     - https://en.wikipedia.org/wiki/Exact_differential_equation
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 73
 
     # indirect doctest
 
