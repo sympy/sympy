@@ -2283,10 +2283,14 @@ def test_solve_lambert():
 
     p = symbols('p', positive=True)
     assert solveset_real(3*log(p**(3*x + 5)) + p**(3*x + 5), x) == \
-        Intersection(FiniteSet(Rational(-5, 3) - LambertW(Rational(1, 3))/(3*log(p))), S.Reals)
+        Intersection(FiniteSet(Rational(-5, 3) - LambertW(Rational(1, 3))/(3*log(p)),
+         Rational(-5, 3) - LambertW(Rational(-1, 6) - sqrt(3)*I/6)/(3*log(p)),
+          Rational(-5, 3) - LambertW(Rational(-1, 6) + sqrt(3)*I/6)/(3*log(p))), S.Reals)
     # issue 4271
     assert solveset_real((a/x + exp(x/2)).diff(x, 2), x) == Complement(Intersection(\
-        FiniteSet(6*LambertW((-a)**(Rational(1, 3))/3)), S.Reals), FiniteSet(0))
+        FiniteSet(6*LambertW((-a)**(Rational(1, 3))/3), \
+            6*LambertW(-(-a)**(Rational(1, 3))/6 - sqrt(3)*I*(-a)**(Rational(1, 3))/6), \
+                6*LambertW(-(-a)**(Rational(1, 3))/6 + sqrt(3)*I*(-a)**(Rational(1, 3))/6)), S.Reals), FiniteSet(0))
 
 
 @XFAIL

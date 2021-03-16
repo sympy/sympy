@@ -310,7 +310,7 @@ def _invert_real(f, g_ys, symbol):
 
     if _is_lambert(f - g_ys.args[0], symbol):
         soln = _solve_as_lambert(f, g_ys.args[0], symbol, domain=S.Reals)
-        if soln:
+        if soln is not None:
             return symbol, soln
 
     return (f, g_ys)
@@ -1782,11 +1782,12 @@ def _solve_as_lambert(lhs, rhs, symbol, domain):
     gens = _filtered_gens(poly, symbol)
     try:
         soln = _solve_lambert(lhs - rhs, symbol, gens)
-        if domain.is_subset(S.Reals):
-            soln = [s for s in soln if not s.has(I)]
-        return FiniteSet(*soln)
     except NotImplementedError:
-        pass
+        return None
+    else:
+        if domain.is_subset(S.Reals) and len((lhs - rhs).atoms(Symbol)) == 1:
+            soln = [s for s in soln if s.is_real]
+        return FiniteSet(*soln)
 
 
 def _is_lambert(f, symbol):
