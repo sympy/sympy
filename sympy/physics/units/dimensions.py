@@ -17,7 +17,7 @@ from functools import reduce
 
 from sympy import (Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict,
     default_sort_key)
-from sympy import sin, cos, tan, cot, sec, csc
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -454,7 +454,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             if isinstance(result, Dimension):
                 return self.get_dimensional_dependencies(result)
             elif result.func == name.func:
-                if isinstance(name, (sin, cos, tan, cot, sec, csc)):
+                if isinstance(name, TrigonometricFunction):
                     if dicts[0] == {} or dicts[0] == {Symbol('angle'): 1}:
                         return {}
                     else:

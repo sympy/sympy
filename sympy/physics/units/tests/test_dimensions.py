@@ -1,6 +1,6 @@
 from sympy.physics.units.systems.si import dimsys_SI
 
-from sympy import S, Symbol, sqrt, cos, log, atan2, pi, Abs
+from sympy import S, Symbol, sqrt, cos, acos, log, atan2, pi, Abs
 from sympy.physics.units.dimensions import Dimension
 from sympy.physics.units.definitions.dimension_definitions import (
     length, time, mass, force, pressure, angle
@@ -117,6 +117,7 @@ def test_Dimension_mul_div_exp():
 
 def test_Dimension_functions():
     raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(cos(length)))
+    raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(acos(angle)))
     raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(atan2(length, time)))
     raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(log(length)))
     raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(log(100, length)))
