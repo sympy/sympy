@@ -454,7 +454,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             if isinstance(result, Dimension):
                 return self.get_dimensional_dependencies(result)
             elif result.func == name.func:
-                if name.func in (sin, cos, tan, cot, sec, csc):
+                if isinstance(name, (sin, cos, tan, cot, sec, csc)):
                     if dicts[0] == {} or dicts[0] == {Symbol('angle'): 1}:
                         return {}
                     else:
