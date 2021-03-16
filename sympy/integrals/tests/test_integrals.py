@@ -404,7 +404,7 @@ def test_issue_18133():
 
 def test_issue_21024():
     x = Symbol('x', real=True, nonzero=True)
-    cnt=0
+    
     f = log(x)*log(4*x) + log(3*x + exp(2))
     F = x*log(x)**2 + x*(1 - 2*log(2)) + (-2*x + 2*x*log(2))*log(x) + \
         (x + exp(2)/6)*log(3*x + exp(2)) + exp(2)*log(3*x + exp(2))/6
