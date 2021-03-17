@@ -18,6 +18,7 @@
 7. [Clean](#clean)
 8. [Bugs](#bugs)
 9. [Brief History](#brief-history)
+10. [Citation](#citation)
 
 ## Preface
 See the AUTHORS file for the list of authors.
