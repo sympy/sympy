@@ -6365,9 +6365,13 @@ def factor(f, *gens, deep=False, **args):
     """
     f = sympify(f)
 
+    #handle a special case when the equation
+    #is inside power functions
     switch = True
+
     if type(f) != list and f.func == Pow:
         switch= False
+
     if deep:
         from sympy.simplify.simplify import bottom_up
         def _try_factor(expr):
