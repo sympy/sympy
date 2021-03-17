@@ -439,10 +439,10 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         if name.is_Pow:
             dim_base = get_for_name(name.base)
-            dim_exp = get_for_name(name.exp)
-            if dim_exp != {}:
-                raise TypeError("The exponent for the power operator must be dimensionless.")
-            return {k: v*name.exp for (k, v) in dim_base.items()}
+            if name.exp.is_number or name.exp.is_NumberSymbol or name.exp.is_Symbol:
+                return {k: v*name.exp for (k, v) in dim_base.items()}
+            else:
+                raise TypeError("The exponent for the power operator must be a Symbol or dimensionless.")
 
         if name.is_Function:
             args = (Dimension._from_dimensional_dependencies(

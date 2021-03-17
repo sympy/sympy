@@ -100,6 +100,12 @@ def test_Dimension_mul_div_exp():
     assert dimsys_SI.get_dimensional_dependencies(length ** -1) == {"length": -1}
     assert dimsys_SI.get_dimensional_dependencies(velo ** -1.5) == {"length": -1.5, "time": 1.5}
 
+
+    length_a = length**"a"
+    assert dimsys_SI.get_dimensional_dependencies(length_a) == {"length": Symbol("a")}
+
+    assert dimsys_SI.get_dimensional_dependencies(length**pi) == {"length": pi}
+
     raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(length**length))
 
     assert length != 1
