@@ -26,6 +26,22 @@ We have community chat at [Gitter](https://gitter.im/sympy/sympy). Feel
 free to ask us anything there. We have a very welcoming and helpful
 community.
 
+## Table of contents
+
+- [SymPy](#sympy)
+  - [Table of contents](#table-of-contents)
+  - [Download](#download)
+  - [Documentation and Usage](#documentation-and-usage)
+  - [Installation](#installation)
+  - [Contributing](#contributing)
+  - [Tests](#tests)
+  - [Regenerate Experimental <span class="title-ref">LaTeX</span> Parser/Lexer](#regenerate-experimental-latex-parserlexer)
+  - [Clean](#clean)
+  - [Bugs](#bugs)
+  - [Brief History](#brief-history)
+  - [Citation](#citation)
+
+
 ## Download
 
 The recommended installation method is through Anaconda,
