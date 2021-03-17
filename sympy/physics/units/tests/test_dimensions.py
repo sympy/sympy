@@ -104,6 +104,7 @@ def test_Dimension_mul_div_exp():
     assert dimsys_SI.get_dimensional_dependencies(length_a) == {"length": Symbol("a")}
 
     assert dimsys_SI.get_dimensional_dependencies(length**pi) == {"length": pi}
+    assert dimsys_SI.get_dimensional_dependencies(length**(length/length)) == {"length": Dimension(1)}
 
     raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(length**length))
 
