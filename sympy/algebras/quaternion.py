@@ -1152,7 +1152,7 @@ class Quaternion(Expr):
         ===========
 
         Index vector is given by mod(q) Ax(q) where Ax(q) is the axis of the quaternion q,
-        where mod(q) is the `norm`(magnitude) of the quaternion.
+        where mod(q) is the `norm` (magnitude) of the quaternion.
 
         Returns
         =======
