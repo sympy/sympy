@@ -930,6 +930,13 @@ class Quaternion(Expr):
         q1 : a Quaternion
         q2 : a Quaternion
 
+        Returns
+        =======
+
+        True : if the plane of the two quaternions are coplanar
+        False : if the plane of the two quaternions are not coplanar
+        None : if the plane of the two quaternions are coplanar is unknown.
+
         Examples
         ========
 
@@ -976,6 +983,16 @@ class Quaternion(Expr):
         q2 : a pure Quaternion.
         q3 : a pure Quaternion.
 
+        Returns
+        =======
+
+        True : if the axis of the pure quaternions seen as 3D vectors
+        q1, q2, and q3 are coplanar.
+        False : if the axis of the pure quaternions seen as 3D vectors
+        q1, q2, and q3 are not coplanar.
+        None : if the axis of the pure quaternions seen as 3D vectors
+        q1, q2, and q3 are coplanar is unknown.
+
         Examples
         ========
 
@@ -1020,6 +1037,13 @@ class Quaternion(Expr):
 
         other : a Quaternion
 
+        Returns
+        =======
+
+        True : if the two pure quaternions seen as 3D vectors are parallel.
+        False : if the two pure quaternions seen as 3D vectors are not parallel.
+        None : if the two pure quaternions seen as 3D vectors are parallel is unknown.
+
         Examples
         ========
 
@@ -1053,6 +1077,13 @@ class Quaternion(Expr):
         ==========
 
         other : a Quaternion
+
+        Returns
+        =======
+
+        True : if the two pure quaternions seen as 3D vectors are orthogonal.
+        False : if the two pure quaternions seen as 3D vectors are not orthogonal.
+        None : if the two pure quaternions seen as 3D vectors are orthogonal is unknown.
 
         Examples
         ========
