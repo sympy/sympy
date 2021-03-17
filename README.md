@@ -7,8 +7,19 @@
 [![codecov Badge](https://codecov.io/gh/sympy/sympy/branch/master/graph/badge.svg)](https://codecov.io/gh/sympy/sympy)
 
 [![SymPy Banner](banner.svg)](https://sympy.org/)
+## Contents
 
+1. [Preface](#preface)
+2. [Download](#download)
+3. [Documentation](#documentation-and-usage)
+4. [Installation](#installation)
+5. [Contributing](#tests)
+6. [Regenerate Experimental](#regenerate-experimental-latex-parserlexer)
+7. [Clean](#clean)
+8. [Bugs](#bugs)
+9. [Brief History](#brief-history)
 
+## Preface
 See the AUTHORS file for the list of authors.
 
 And many more people helped on the SymPy mailing list, reported bugs,
@@ -109,6 +120,8 @@ Then, in the `sympy` repository that you cloned, simply run:
 
 See <https://docs.sympy.org/dev/install.html> for more information.
 
+[Back to Contents](#contents)
+
 ## Contributing
 
 We welcome contributions from anyone, even if you are new to open
@@ -120,6 +133,8 @@ to look at the issues tagged [Easy to Fix](https://github.com/sympy/sympy/issues
 Please note that all participants in this project are expected to follow
 our Code of Conduct. By participating in this project you agree to abide
 by its terms. See [CODE\_OF\_CONDUCT.md](CODE_OF_CONDUCT.md).
+
+[Back to Contents](#contents)
 
 ## Tests
 
@@ -135,6 +150,8 @@ by Travis CI.
 
 To test pull requests, use
 [sympy-bot](https://github.com/sympy/sympy-bot).
+
+[Back to Contents](#contents)
 
 ## Regenerate Experimental <span class="title-ref">LaTeX</span> Parser/Lexer
 
@@ -160,6 +177,8 @@ After making changes to `sympy/parsing/latex/LaTeX.g4`, run:
 
     $ ./setup.py antlr
 
+[Back to Contents](#contents)
+
 ## Clean
 
 To clean everything (thus getting the same tree as in the repository):
@@ -184,6 +203,9 @@ and you will lose them forever. Be sure to check things with `git
 status`, `git diff`, `git clean -Xn` and `git clean -n` before doing any
 of those.
 
+[Back to Contents](#contents)
+
+
 ## Bugs
 
 Our issue tracker is at <https://github.com/sympy/sympy/issues>. Please
@@ -192,6 +214,9 @@ GitHub and create a pull request. We welcome all changes, big or small,
 and we will help you make the pull request if you are new to git (just
 ask on our mailing list or Gitter Channel). If you further have any queries, you can find answers
 on Stack Overflow using the [sympy](https://stackoverflow.com/questions/tagged/sympy) tag.
+
+[Back to Contents](#contents)
+
 
 ## Brief History
 
@@ -276,3 +301,6 @@ details). That said, although not required by the SymPy license, if it
 is convenient for you, please cite SymPy when using it in your work and
 also consider contributing all your changes back, so that we can
 incorporate it and all of us will benefit in the end.
+
+[Back to Contents](#contents)
+
