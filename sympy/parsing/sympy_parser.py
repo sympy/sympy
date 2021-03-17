@@ -208,8 +208,16 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
 
     """
     result = []
+    skip = False
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
+        if skip:
+            skip = False
+            continue
+        if tok[0] == OP and tok[1] == '.' and nextTok[0] == NAME:
+            # Dotted name. Do not do implicit multiplication
+            skip = True
+            continue
         if (isinstance(tok, AppliedFunction) and
               isinstance(nextTok, AppliedFunction)):
             result.append((OP, '*'))
@@ -900,7 +908,6 @@ def eval_expr(code, local_dict, global_dict):
     """
     expr = eval(
         code, global_dict, local_dict)  # take local objects in preference
-
     return expr
 
 
@@ -1004,7 +1011,10 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     if not evaluate:
         code = compile(evaluateFalse(code), '<string>', 'eval')
 
-    return eval_expr(code, local_dict, global_dict)
+    try:
+        return eval_expr(code, local_dict, global_dict)
+    except Exception as e:
+        raise e from ValueError(f"Error from parse_expr with transformed code: {code!r}")
 
 
 def evaluateFalse(s):

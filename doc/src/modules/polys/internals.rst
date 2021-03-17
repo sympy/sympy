@@ -606,6 +606,7 @@ Options
 .. automodule:: sympy.polys.polyoptions
 
 .. autoclass:: sympy.polys.polyoptions.Options
+   :members:
 .. autofunction:: sympy.polys.polyoptions.build_options
 
 Configuration
@@ -625,30 +626,54 @@ TODO sort and explain
 .. currentmodule:: sympy.polys.polyerrors
 
 .. autoclass:: BasePolynomialError
+   :members:
 
 .. autoclass:: ExactQuotientFailed
+   :members:
 .. autoclass:: OperationNotSupported
+   :members:
 .. autoclass:: HeuristicGCDFailed
+   :members:
 .. autoclass:: HomomorphismFailed
+   :members:
 .. autoclass:: IsomorphismFailed
+   :members:
 .. autoclass:: ExtraneousFactors
+   :members:
 .. autoclass:: EvaluationFailed
+   :members:
 .. autoclass:: RefinementFailed
+   :members:
 .. autoclass:: CoercionFailed
+   :members:
 .. autoclass:: NotInvertible
+   :members:
 .. autoclass:: NotReversible
+   :members:
 .. autoclass:: NotAlgebraic
+   :members:
 .. autoclass:: DomainError
+   :members:
 .. autoclass:: PolynomialError
+   :members:
 .. autoclass:: UnificationFailed
+   :members:
 .. autoclass:: GeneratorsNeeded
+   :members:
 .. autoclass:: ComputationFailed
+   :members:
 .. autoclass:: GeneratorsError
+   :members:
 .. autoclass:: UnivariatePolynomialError
+   :members:
 .. autoclass:: MultivariatePolynomialError
+   :members:
 .. autoclass:: PolificationFailed
+   :members:
 .. autoclass:: OptionError
+   :members:
 .. autoclass:: FlagError
+   :members:
 
 Reference
 =========

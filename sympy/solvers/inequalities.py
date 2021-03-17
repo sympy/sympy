@@ -16,6 +16,7 @@ from sympy.polys.polyutils import _nsort
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
 
+
 def solve_poly_inequality(poly, rel):
     """Solve a polynomial inequality with rational coefficients.
 
@@ -881,6 +882,7 @@ def _solve_inequality(ie, s, linear=False):
 
     conds.append(rv)
     return And(*conds)
+
 
 def _reduce_inequalities(inequalities, symbols):
     # helper for reduce_inequalities
