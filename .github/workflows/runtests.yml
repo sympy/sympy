@@ -210,5 +210,4 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 2.7
-      - run: pip install mpmath
       - run: bin/test_py2_import.py
