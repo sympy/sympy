@@ -457,47 +457,42 @@ class FirstExact(SinglePatternODESolver):
 
         m, n = self.wilds_match()
 
-        try:
-            if simplify(m) != 0:
-                m = m.subs(fx,y)
-                n = n.subs(fx,y)
-                numerator= simplify(m.diff(y)-n.diff(x))
-                # The following few conditions try to convert a non-exact
-                # differential equation into an exact one.
-                # References :
-                #1. Differential equations with applications
-                # and historical notes - George E. Simmons
-                #2. https://math.okstate.edu/people/binegar/2233-S99/2233-l12.pdf
-                if numerator:
-                    # If (dP/dy - dQ/dx) / Q = f(x)
-                    # then exp(integral(f(x))*equation becomes exact
-                    factor = simplify(numerator/n)
+        if simplify(m) != 0:
+            m = m.subs(fx,y)
+            n = n.subs(fx,y)
+            numerator= simplify(m.diff(y)-n.diff(x))
+            # The following few conditions try to convert a non-exact
+            # differential equation into an exact one.
+            # References :
+            #1. Differential equations with applications
+            # and historical notes - George E. Simmons
+            #2. https://math.okstate.edu/people/binegar/2233-S99/2233-l12.pdf
+            if numerator:
+                # If (dP/dy - dQ/dx) / Q = f(x)
+                # then exp(integral(f(x))*equation becomes exact
+                factor = simplify(numerator/n)
+                variables = factor.free_symbols
+                if len(variables) == 1 and x == variables.pop():
+                    factor = exp(Integral(factor).doit())
+                    m *= factor
+                    n *= factor
+                    self._wilds_match[P] = m.subs(y, fx)
+                    self._wilds_match[Q] = n.subs(y, fx)
+                    return True
+                else:
+                    # If (dP/dy - dQ/dx) / -P = f(y)
+                    # then exp(integral(f(y))*equation becomes exact
+                    factor = simplify(-numerator / m)
                     variables = factor.free_symbols
-                    if len(variables) == 1 and x == variables.pop():
+                    if len(variables) == 1 and y == variables.pop():
                         factor = exp(Integral(factor).doit())
                         m *= factor
                         n *= factor
                         self._wilds_match[P] = m.subs(y, fx)
                         self._wilds_match[Q] = n.subs(y, fx)
                         return True
-                    else:
-                        # If (dP/dy - dQ/dx) / -P = f(y)
-                        # then exp(integral(f(y))*equation becomes exact
-                        factor = simplify(-numerator / m)
-                        variables = factor.free_symbols
-                        if len(variables) == 1 and y == variables.pop():
-                            factor = exp(Integral(factor).doit())
-                            m *= factor
-                            n *= factor
-                            self._wilds_match[P] = m.subs(y, fx)
-                            self._wilds_match[Q] = n.subs(y, fx)
-                            return True
-                else:
-                    return True
-        except NotImplementedError:
-            # Differentiating the coefficients might fail because of things
-            # like f(2*x).diff(x).  See issue 4624 and issue 4719.
-            pass
+            else:
+                return True
 
         return False
 
