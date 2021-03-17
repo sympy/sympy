@@ -229,6 +229,21 @@ class DomainMatrix:
 
         return cls.from_rep(DDM.zeros(shape, domain))
 
+    @classmethod
+    def ones(cls, shape, domain):
+        """Returns a zero DomainMatrix of size shape, belonging to the specified domain
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import QQ
+        >>> DomainMatrix.ones((2,3), QQ)
+        DomainMatrix([[1, 1, 1], [1, 1, 1]], (2, 3), QQ)
+
+        """
+        return cls.from_rep(DDM.ones(shape, domain))
+
     def __eq__(A, B):
         """A == B"""
         if not isinstance(B, DomainMatrix):
