@@ -247,6 +247,27 @@ def _rank(M, iszerofunc=_iszero, simplify=False):
     return len(pivots)
 
 
+def _check_expr(M):
+    """Checks whether all the elements of the Matrix are Expr before converting to DomainMatrix.
+
+    Parameters
+    ==========
+
+    M:  Matrix
+
+    Returns
+    =======
+
+    Boolean
+        True if all elements are of type Expr, else False
+
+    """
+    types = set(map(type, M))
+    if all(issubclass(t, Expr) for t in types):
+        return True
+    return False
+
+
 def _rref_DOM(M, pivots):
     DOM = DomainMatrix.from_Matrix(M, field=True)
     DOM_rref, DOM_pivots = DOM.rref()
@@ -310,8 +331,7 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     of the matrix, set ``noramlize_last=False``
     """
 
-    types = set(map(type, M))
-    if all(issubclass(t, Expr) for t in types):
+    if _check_expr(M):
         return _rref_DOM(M, pivots)
 
     simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
