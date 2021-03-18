@@ -30,6 +30,9 @@ class DomainMatrix:
         self.shape = shape
         self.domain = domain
 
+    def __getitem__(self, key):
+        return self.rep.to_list()[key]
+
     @classmethod
     def from_rep(cls, ddm):
         return cls(ddm, ddm.shape, ddm.domain)
@@ -118,6 +121,19 @@ class DomainMatrix:
             return A.from_rep(A.rep * B)
         else:
             return NotImplemented
+
+    def __smul__(self, other):
+        if not isinstance(other, DomainScalar):
+            other = DomainScalar(other, self.domain)
+
+        self, other = self.unify(other)
+        mat = self.rep.to_list()
+        rows, cols = self.shape
+        ele = other.element
+        for r in range(rows):
+            for c in range(cols):
+                mat[r][c] = mat[r][c]*ele
+        return DomainMatrix.from_list_sympy(rows, cols, mat)
 
     def __pow__(A, n):
         """A ** n"""
@@ -234,3 +250,51 @@ class DomainMatrix:
         if not isinstance(B, DomainMatrix):
             return NotImplemented
         return A.rep == B.rep
+
+
+class DomainScalar:
+    r"""
+    docstring
+    """
+
+    def __init__(self, element, domain):
+        self.element = element
+        self.domain = domain
+
+    @classmethod
+    def new(cls, element, domain):
+        return cls(element, domain)
+
+    def __repr__(self):
+        return repr(self.element)
+
+    @classmethod
+    def from_sympy(cls, expr):
+        [domain, [element]] = construct_domain([expr])
+        return cls.new(element, domain)
+
+    def to_domain(self, domain):
+        element = domain.convert_from(self.element, self.domain)
+        return self.new(element, domain)
+
+    def unify(self, other):
+        domain = self.domain.unify(other.domain)
+        return self.to_domain(domain), other.to_domain(domain)
+
+    def __add__(self, other):
+        if not isinstance(other, DomainScalar):
+            return NotImplemented
+        self, other = self.unify(other)
+        return self.new(self.element + other.element, self.domain)
+
+    def __sub__(self, other):
+        if not isinstance(other, DomainScalar):
+            return NotImplemented
+        self, other = self.unify(other)
+        return self.new(self.element - other.element, self.domain)
+
+    def __mul__(self, other):
+        if not isinstance(other, DomainScalar):
+            return NotImplemented
+        self, other = self.unify(other)
+        return self.new(self.element * other.element, self.domain)
