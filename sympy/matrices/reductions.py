@@ -3,6 +3,7 @@ from types import FunctionType
 from sympy.simplify.simplify import (
     simplify as _simplify, dotprodsimp as _dotprodsimp)
 from sympy.polys.matrices.domainmatrix import DomainMatrix
+from sympy.core.expr import Expr
 
 from .utilities import _get_intermediate_simp, _iszero
 from .determinant import _find_reasonable_pivot
@@ -309,4 +310,16 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     of the matrix, set ``noramlize_last=False``
     """
 
-    return _rref_DOM(M, pivots)
+    types = list(map(type, M))
+    if all(issubclass(t, Expr) for t in types):
+        return _rref_DOM(M, pivots)
+
+    simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
+
+    mat, pivot_cols, _ = _row_reduce(M, iszerofunc, simpfunc,
+            normalize_last, normalize=True, zero_above=True)
+
+    if pivots:
+        mat = (mat, pivot_cols)
+
+    return mat
