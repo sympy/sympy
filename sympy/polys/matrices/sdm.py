@@ -94,6 +94,13 @@ class SDM(dict):
         else:
             return NotImplemented
 
+    def __smul__(a, e):
+        rows, cols = a.shape
+        for r in range(rows):
+            for c in range(cols):
+                a[r][c] = a[r][c]*e
+        return a
+
     def matmul(A, B):
         if A.domain != B.domain:
             raise DDMDomainError

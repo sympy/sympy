@@ -31,7 +31,19 @@ class DomainMatrix:
         self.domain = domain
 
     def __getitem__(self, key):
-        return self.rep.to_list()[key]
+        rows, cols = self.shape
+        i, j = key
+        if isinstance(i, slice):
+            if i.start is None:
+                i = i.stop + rows
+            else:
+                i = i.start
+        if isinstance(j, slice):
+            if j.start is None:
+                j = j.stop + cols
+            else:
+                j = j.start
+        return DomainScalar(self.rep[i][j], self.domain)
 
     @classmethod
     def from_rep(cls, ddm):
@@ -122,19 +134,6 @@ class DomainMatrix:
         else:
             return NotImplemented
 
-    def __smul__(self, other):
-        if not isinstance(other, DomainScalar):
-            other = DomainScalar(other, self.domain)
-
-        self, other = self.unify(other)
-        mat = self.rep.to_list()
-        rows, cols = self.shape
-        ele = other.element
-        for r in range(rows):
-            for c in range(cols):
-                mat[r][c] = mat[r][c]*ele
-        return DomainMatrix.from_list_sympy(rows, cols, mat)
-
     def __pow__(A, n):
         """A ** n"""
         if not isinstance(n, int):
@@ -163,6 +162,12 @@ class DomainMatrix:
 
     def matmul(A, B):
         return A.from_rep(A.rep.matmul(B.rep))
+
+    def scalarmul(A, lamda):
+        if not isinstance(lamda, DomainScalar):
+            lamda = DomainScalar.from_sympy(lamda)
+        A, lamda = A.unify(lamda)
+        return A.from_rep(A.rep.__smul__(lamda.element))
 
     def pow(A, n):
         if n < 0:

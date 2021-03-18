@@ -2,6 +2,7 @@ from sympy.testing.pytest import raises
 
 from sympy.core.numbers import Rational
 from sympy.functions import sqrt
+from sympy.core.symbol import S
 
 from sympy.matrices.common import (NonInvertibleMatrixError,
     NonSquareMatrixError, ShapeError)
@@ -440,3 +441,8 @@ def test_DomainMatrix_zeros():
     assert A.rep == SDM.zeros((1, 2), QQ)
     assert A.shape == (1, 2)
     assert A.domain == QQ
+
+def test_DomainMatrix_scalarmul():
+    A = DomainMatrix.from_Matrix(Matrix([[1, 2], [3, 4]]))
+    a=(S(3)/2)
+    assert A.scalarmul(a) == DomainMatrix([[S(3)/2, 3], [S(9)/2, 6]], (2, 2), QQ)
