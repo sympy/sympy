@@ -1,5 +1,6 @@
 from types import FunctionType
 
+from sympy.core.expr import Expr
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import uniquely_named_symbol
@@ -413,6 +414,12 @@ def _charpoly(M, x='lambda', simplify=_simplify):
         for i in diagonal_elements:
             m = m * (x - simplify(i))
         return PurePoly(m, x)
+
+    types = list(map(type, M))
+    if all(issubclass(t, Expr) for t in types):
+        berk_vector = _berkowitz_vector(M)
+        x = uniquely_named_symbol(x, berk_vector, modify=lambda s: '_' + s)
+        return PurePoly([simplify(a) for a in berk_vector], x)
 
     return _charpoly_DOM(M, x)
 
