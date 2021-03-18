@@ -67,6 +67,13 @@ class SDM(dict):
         return cls({}, shape, domain)
 
     @classmethod
+    def ones(cls, shape, domain):
+        one = domain.one
+        m, n = shape
+        sdm = {i: {j: one for j in range(n)} for i in range(m)}
+        return cls(sdm, shape, domain)
+
+    @classmethod
     def eye(cls, size, domain):
         one = domain.one
         sdm = {i: {i: one} for i in range(size)}
