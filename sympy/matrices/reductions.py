@@ -310,7 +310,7 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     of the matrix, set ``noramlize_last=False``
     """
 
-    types = list(map(type, M))
+    types = set(map(type, M))
     if all(issubclass(t, Expr) for t in types):
         return _rref_DOM(M, pivots)
 
