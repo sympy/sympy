@@ -943,6 +943,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     >>> classify_ode(Eq(f(x).diff(x), 0), f(x))
     ('nth_algebraic',
     'separable',
+    '1st_exact',
     '1st_linear',
     'Bernoulli',
     '1st_homogeneous_coeff_best',
@@ -950,7 +951,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     '1st_homogeneous_coeff_subs_dep_div_indep',
     '1st_power_series', 'lie_group', 'nth_linear_constant_coeff_homogeneous',
     'nth_linear_euler_eq_homogeneous',
-    'nth_algebraic_Integral', 'separable_Integral',
+    'nth_algebraic_Integral', 'separable_Integral', '1st_exact_Integral',
     '1st_linear_Integral', 'Bernoulli_Integral',
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
