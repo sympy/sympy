@@ -309,11 +309,11 @@ def _invert_real(f, g_ys, symbol):
 
 def _invert_complex(f, g_ys, symbol):
     """Helper function for _invert."""
+
     if f == symbol:
         return (f, g_ys)
 
     n = Dummy('n')
-    k = Dummy('k')
 
     if f.is_Add:
         # f = g + h
@@ -341,26 +341,20 @@ def _invert_complex(f, g_ys, symbol):
 
     if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
         if isinstance(g_ys, ImageSet):
-            # can solve upto `(d*exp(exp(a*x**n + b*x**(n-1) + ... + f)) + c)` format.
+            # can solve upto `(d*exp(exp(...(exp(a*x + b))...) + c)` format.
             # Further can be improved to `(d*exp(exp(...(exp(a*x**n + b*x**(n-1) + ... + f))...) + c)`.
             g_ys_expr = g_ys.lamda.expr
             g_ys_vars = g_ys.lamda.variables
-            soln = solvify(f.exp, symbol, S.Complexes)
-            exp_invs = EmptySet
-            for sol in soln:
-                num , den = sol.as_numer_denom()
-                g_ys_vars_1 = (k,) + g_ys_vars
-                exp_invs += Union(*[imageset(Lambda((g_ys_vars_1,), (I*(2*k*pi + arg(g_ys_expr))
-                                         + log(Abs(g_ys_expr)) + num )/den), S.Integers**2)])
-
-            return _invert_complex(symbol, exp_invs, symbol)
+            k = Dummy('k{}'.format(len(g_ys_vars)))
+            g_ys_vars_1 = (k,) + g_ys_vars
+            exp_invs = Union(*[imageset(Lambda((g_ys_vars_1,), (I*(2*k*pi + arg(g_ys_expr))
+                                         + log(Abs(g_ys_expr)))), S.Integers**(len(g_ys_vars_1)))])
 
         elif isinstance(g_ys, FiniteSet):
             exp_invs = Union(*[imageset(Lambda(n, I*(2*n*pi + arg(g_y)) +
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
-
-            return _invert_complex(f.exp, exp_invs, symbol)
+        return _invert_complex(f.exp, exp_invs, symbol)
 
     return (f, g_ys)
 

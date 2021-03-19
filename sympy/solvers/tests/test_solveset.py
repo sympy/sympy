@@ -1182,32 +1182,31 @@ def test_solveset():
 
 
 @_both_exp_pow
-def test_double_exp():
+def test_multi_exp():
+    k1, k2, k3 = symbols('k1, k2, k3')
     assert dumeq(solveset(exp(exp(x)) - 5, x),\
-         imageset(Lambda(((k, n),), I*(2*k*pi + arg(2*n*I*pi + log(5))) + log(Abs(2*n*I*pi + log(5)))),\
+         imageset(Lambda(((k1, n),), I*(2*k1*pi + arg(2*n*I*pi + log(5))) + log(Abs(2*n*I*pi + log(5)))),\
              ProductSet(S.Integers, S.Integers)))
-    assert dumeq(solveset(d*exp(exp(a*x + b)) + c, x),\
-        imageset(Lambda(((k, n),), (-b + I*(2*k*pi + arg(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))) + \
-             log(Abs(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))))/a), ProductSet(S.Integers, S.Integers)))
+    assert dumeq(solveset((d*exp(exp(a*x + b)) + c), x),\
+        imageset(Lambda(x, (-b + x)/a), ImageSet(Lambda(((k1, n),), \
+            I*(2*k1*pi + arg(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))) + log(Abs(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d))))), \
+                ProductSet(S.Integers, S.Integers))))
 
-    assert dumeq(solveset(d*exp(exp(a*x**2 + b*x + c)) + e, x),\
-        Union(ImageSet(Lambda(((k, n),), (-b + I*(2*k*pi + arg(I*(2*n*pi + arg(-e/d)) + log(Abs(e/d)))) - sqrt(-4*a*c + b**2) + \
-            log(Abs(I*(2*n*pi + arg(-e/d)) + log(Abs(e/d)))))/(2*a)), ProductSet(S.Integers, S.Integers)),
-        ImageSet(Lambda(((k, n),), (-b + I*(2*k*pi + arg(I*(2*n*pi + arg(-e/d)) + log(Abs(e/d)))) + sqrt(-4*a*c + b**2) + \
-            log(Abs(I*(2*n*pi + arg(-e/d)) + log(Abs(e/d)))))/(2*a)), ProductSet(S.Integers, S.Integers))))
-    assert dumeq(solveset(exp(exp(x**2 - 4*x + 1)) + 5, x),\
-        Union(ImageSet(Lambda(((k, n),), I*(2*k*pi + arg(I*pi*(2*n + 1) + log(5))) + \
-            log(Abs(I*(2*n*pi + pi) + log(5))) - sqrt(3) + 2), ProductSet(S.Integers, S.Integers)),\
-            ImageSet(Lambda(((k, n),), I*(2*k*pi + arg(I*pi*(2*n + 1) + log(5))) + \
-                log(Abs(I*(2*n*pi + pi) + log(5))) + sqrt(3) + 2), ProductSet(S.Integers, S.Integers))))
+    assert dumeq(solveset((d*exp(exp(exp(a*x + b))) + c), x),\
+        imageset(Lambda(x, (-b + x)/a), ImageSet(Lambda(((k2, k1, n),), \
+            I*(2*k2*pi + arg(I*(2*k1*pi + arg(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))) + \
+                log(Abs(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))))) + log(Abs(I*(2*k1*pi + arg(I*(2*n*pi + arg(-c/d)) + \
+                    log(Abs(c/d)))) + log(Abs(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d))))))), \
+                        ProductSet(S.Integers, S.Integers, S.Integers))))
 
-    assert dumeq(solveset(6*exp(exp(x**3 - 2*x**2 - 3*x + 4)) + 5, x),\
-        Union(ImageSet(Lambda(((k, n),), I*(2*k*pi + arg(I*pi*(2*n + 1) + log(Rational(5, 6)))) + \
-            log(Abs(I*(2*n*pi + pi) + log(Rational(5, 6)))) + 1), ProductSet(S.Integers, S.Integers)),\
-             ImageSet(Lambda(((k, n),), I*(2*k*pi + arg(I*pi*(2*n + 1) + log(Rational(5, 6))))/2 + \
-                 log(Abs(I*(2*n*pi + pi) + log(Rational(5, 6))))/2 + Rational(1, 2) + sqrt(17)/2), ProductSet(S.Integers, S.Integers)),\
-            ImageSet(Lambda(((k, n),), I*(2*k*pi + arg(I*pi*(2*n + 1) + log(Rational(5, 6))))/2 + \
-                      log(Abs(I*(2*n*pi + pi) + log(Rational(5, 6))))/2 - sqrt(17)/2 + Rational(1, 2)), ProductSet(S.Integers, S.Integers))))
+    assert dumeq(solveset((d*exp(exp(exp(exp(a*x + b)))) + c), x),\
+        ImageSet(Lambda(x, (-b + x)/a), ImageSet(Lambda(((k3, k2, k1, n),), \
+            I*(2*k3*pi + arg(I*(2*k2*pi + arg(I*(2*k1*pi + arg(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))) + \
+                log(Abs(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))))) + log(Abs(I*(2*k1*pi + arg(I*(2*n*pi + arg(-c/d)) + \
+                    log(Abs(c/d)))) + log(Abs(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))))))) + log(Abs(I*(2*k2*pi + \
+                        arg(I*(2*k1*pi + arg(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))) + log(Abs(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))))) + \
+                            log(Abs(I*(2*k1*pi + arg(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d)))) + log(Abs(I*(2*n*pi + arg(-c/d)) + log(Abs(c/d))))))))), \
+             ProductSet(S.Integers, S.Integers, S.Integers, S.Integers))))
 
 
 def test__solveset_multi():
