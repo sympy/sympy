@@ -77,6 +77,11 @@ def test_DDM_zeros():
     assert ddmz.shape == (3, 4)
     assert ddmz.domain == QQ
 
+def test_DDM_ones():
+    ddmone = DDM.ones((2, 3), QQ)
+    assert list(ddmone) == [[QQ(1)] * 3] * 2
+    assert ddmone.shape == (2, 3)
+    assert ddmone.domain == QQ
 
 def test_DDM_eye():
     ddmz = DDM.eye(3, QQ)

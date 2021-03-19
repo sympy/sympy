@@ -440,3 +440,9 @@ def test_DomainMatrix_zeros():
     assert A.rep == SDM.zeros((1, 2), QQ)
     assert A.shape == (1, 2)
     assert A.domain == QQ
+
+def test_DomainMatrix_ones():
+    A = DomainMatrix.ones((2, 3), QQ)
+    assert A.rep == SDM.ones((2, 3), QQ)
+    assert A.shape == (2, 3)
+    assert A.domain == QQ
