@@ -1,6 +1,5 @@
 from types import FunctionType
 
-from sympy.core.expr import Expr
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import uniquely_named_symbol
@@ -10,6 +9,7 @@ from sympy.simplify.simplify import (simplify as _simplify,
 from sympy import sympify
 from sympy.functions.combinatorial.numbers import nC
 from sympy.polys.matrices.domainmatrix import DomainMatrix
+from sympy.polys.domains.fractionfield import FractionField
 
 from .common import MatrixError, NonSquareMatrixError
 from .utilities import (
@@ -329,10 +329,8 @@ def _adjugate(M, method="berkowitz"):
     return M.cofactor_matrix(method=method).transpose()
 
 
-def _charpoly_DOM(M, x):
-    DOM = DomainMatrix.from_Matrix(M, extension=True)
-    x = uniquely_named_symbol(x, M, modify=lambda s: '_' + s)
-    return PurePoly(DOM.charpoly(), x, domain=DOM.domain)
+def _charpoly_DOM(DOM, x, domain):
+    return PurePoly(DOM.charpoly(), x, domain=domain)
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
@@ -415,13 +413,15 @@ def _charpoly(M, x='lambda', simplify=_simplify):
             m = m * (x - simplify(i))
         return PurePoly(m, x)
 
-    types = list(map(type, M))
-    if all(issubclass(t, Expr) for t in types):
+    DOM = DomainMatrix.from_Matrix(M, extension=True)
+    domain = DOM.domain
+    if domain == 'EX' or isinstance(domain, FractionField):
         berk_vector = _berkowitz_vector(M)
         x = uniquely_named_symbol(x, berk_vector, modify=lambda s: '_' + s)
         return PurePoly([simplify(a) for a in berk_vector], x)
 
-    return _charpoly_DOM(M, x)
+    x = uniquely_named_symbol(x, M, modify=lambda s: '_' + s)
+    return _charpoly_DOM(DOM, x, domain)
 
 
 def _cofactor(M, i, j, method="berkowitz"):
