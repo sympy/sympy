@@ -2,14 +2,14 @@ from types import FunctionType
 
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
-from sympy.core.symbol import uniquely_named_symbol, Symbol
+from sympy.core.symbol import uniquely_named_symbol
 from sympy.polys import PurePoly, cancel
 from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
 from sympy import sympify
 from sympy.functions.combinatorial.numbers import nC
 from sympy.polys.matrices.domainmatrix import DomainMatrix
-from sympy.polys.domains.fractionfield import FractionField
+from sympy.polys.domains import EX
 
 from .common import MatrixError, NonSquareMatrixError
 from .utilities import (
@@ -329,8 +329,7 @@ def _adjugate(M, method="berkowitz"):
     return M.cofactor_matrix(method=method).transpose()
 
 
-def _charpoly_DOM(DOM, M, x, domain):
-    x = uniquely_named_symbol(x, M, modify=lambda s: '_' + s)
+def _charpoly_DOM(DOM, x, domain):
     return PurePoly(DOM.charpoly(), x, domain=domain)
 
 
@@ -416,15 +415,25 @@ def _charpoly(M, x='lambda', simplify=_simplify):
 
     DOM = DomainMatrix.from_Matrix(M, extension=True)
     domain = DOM.domain
-    if domain == 'EX' or isinstance(domain, FractionField):
-        if isinstance(domain, FractionField):
-            if all(isinstance(t, Symbol) for t in domain.symbols):
-                return _charpoly_DOM(DOM, M, x, domain)
+    if domain == EX:
+        # In general Matrix with Expr will be faster than DomainMatrix with EX.
+        use_domain = False
+    elif domain.is_FractionField and not all(t.is_Symbol for t in domain.symbols):
+        # In general, DomainMatrix will be faster for a FractionField.
+        # But we want to call simplify for FractionField having non-symbol generators.
+        use_domain = False
+    else:
+        # General idea is that domains except mentioned above will use the faster implementation DomainMatrix.
+        #  For e.g. ZZ, ZZ_I, QQ, QQ_I, ZZ[x, y], QQ(x, y), QQ<sqrt(2)> etc.
+        use_domain = True
+
+    if use_domain:
+        x = uniquely_named_symbol(x, M, modify=lambda s: '_' + s)
+        return _charpoly_DOM(DOM, x, domain)
+    else:
         berk_vector = _berkowitz_vector(M)
         x = uniquely_named_symbol(x, berk_vector, modify=lambda s: '_' + s)
         return PurePoly([simplify(a) for a in berk_vector], x)
-
-    return _charpoly_DOM(DOM, M, x, domain)
 
 
 def _cofactor(M, i, j, method="berkowitz"):
