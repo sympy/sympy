@@ -176,7 +176,7 @@ class DomainMatrix:
             lamda = 1/lamda
             lamda = DomainScalar.from_sympy(lamda)
         else:
-            lamda = lamda.__inv__()
+            lamda = lamda.__pow__(-1)
 
         A, lamda = A.unify(lamda)
         return A.from_rep(A.rep.__smul__(lamda.element))
@@ -322,12 +322,11 @@ class DomainScalar:
         return self.from_sympy(self.element // other.element)
 
     def __pow__(self, n):
-        if self.element == 0 and n == -1:
+        if not isinstance(n, int):
+            return NotImplemented
+        if self.element == 0 and n < 0:
             raise ZeroDivisionError
-        return self.from_sympy(self.element**n)
-
-    def __inv__(self):
-        return self.__pow__(-1)
+        return self.new(self.element**n, self.domain)
 
     def __pos__(self):
         if self.element < 0:
