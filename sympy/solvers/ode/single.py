@@ -471,31 +471,26 @@ class FirstExact(SinglePatternODESolver):
             # and historical notes - George E. Simmons
             # 2. https://math.okstate.edu/people/binegar/2233-S99/2233-l12.pdf
 
-            # If (dP/dy - dQ/dx) / Q = f(x)
-            # then exp(integral(f(x))*equation becomes exact
-            factor = cancel(numerator/n)
-            variables = factor.free_symbols
-            if len(variables) == 1 and x == variables.pop():
-                factor = exp(Integral(factor).doit())
-                m *= factor
-                n *= factor
-                self._wilds_match[P] = m.subs(y, fx)
-                self._wilds_match[Q] = n.subs(y, fx)
-                return True
-            else:
+            factor_n = cancel(numerator/n)
+            factor_m = cancel(-numerator/m)
+            if factor_n.free_symbols == {x}:
+                # If (dP/dy - dQ/dx) / Q = f(x)
+                # then exp(integral(f(x))*equation becomes exact
+                factor = factor_n
+            elif factor_m.free_symbols == {y}:
                 # If (dP/dy - dQ/dx) / -P = f(y)
                 # then exp(integral(f(y))*equation becomes exact
-                factor = cancel(-numerator/m)
-                variables = factor.free_symbols
-                if len(variables) == 1 and y == variables.pop():
-                    factor = exp(Integral(factor).doit())
-                    m *= factor
-                    n *= factor
-                    self._wilds_match[P] = m.subs(y, fx)
-                    self._wilds_match[Q] = n.subs(y, fx)
-                    return True
+                factor = factor_m
+            else:
+                # Couldn't convert to exact
+                return False
 
-        return False
+            factor = exp(Integral(factor).doit())
+            m *= factor
+            n *= factor
+            self._wilds_match[P] = m.subs(y, fx)
+            self._wilds_match[Q] = n.subs(y, fx)
+            return True
 
     def _get_general_solution(self, *, simplify: bool = True):
         m, n = self.wilds_match()
