@@ -169,6 +169,18 @@ class DomainMatrix:
         A, lamda = A.unify(lamda)
         return A.from_rep(A.rep.__smul__(lamda.element))
 
+    def scalardiv(A, lamda):
+        if not isinstance(lamda, DomainScalar):
+            if lamda == 0:
+                raise ZeroDivisionError
+            lamda = 1/lamda
+            lamda = DomainScalar.from_sympy(lamda)
+        else:
+            lamda = lamda.__inv__()
+
+        A, lamda = A.unify(lamda)
+        return A.from_rep(A.rep.__smul__(lamda.element))
+
     def pow(A, n):
         if n < 0:
             raise NotImplementedError('Negative powers')
@@ -303,3 +315,21 @@ class DomainScalar:
             return NotImplemented
         self, other = self.unify(other)
         return self.new(self.element * other.element, self.domain)
+
+    def __floordiv__(self, other):
+        if not isinstance(other, DomainScalar):
+            return NotImplemented
+        return self.from_sympy(self.element // other.element)
+
+    def __pow__(self, n):
+        if self.element == 0 and n == -1:
+            raise ZeroDivisionError
+        return self.from_sympy(self.element**n)
+
+    def __inv__(self):
+        return self.__pow__(-1)
+
+    def __pos__(self):
+        if self.element < 0:
+            self.element = - self.element
+        return self.new(self.element, self.domain)

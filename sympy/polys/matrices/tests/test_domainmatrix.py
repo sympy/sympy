@@ -446,3 +446,8 @@ def test_DomainMatrix_scalarmul():
     A = DomainMatrix.from_Matrix(Matrix([[1, 2], [3, 4]]))
     a=(S(3)/2)
     assert A.scalarmul(a) == DomainMatrix([[S(3)/2, 3], [S(9)/2, 6]], (2, 2), QQ)
+
+def test_DomainMatrix_scalardiv():
+    A = DomainMatrix.from_Matrix(Matrix([[1, 2], [3, 4]]))
+    a=(S(3)/2)
+    assert A.scalardiv(a) == DomainMatrix([[S(2)/3, S(4)/3], [2, S(8)/3]], (2, 2), QQ)
