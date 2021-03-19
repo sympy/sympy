@@ -30,3 +30,4 @@ Contents
     ringseries.rst
     literature.rst
     solvers.rst
+    domainmatrix.rst
