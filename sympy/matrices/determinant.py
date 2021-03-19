@@ -2,7 +2,7 @@ from types import FunctionType
 
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
-from sympy.core.symbol import uniquely_named_symbol
+from sympy.core.symbol import uniquely_named_symbol, Symbol
 from sympy.polys import PurePoly, cancel
 from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
@@ -329,7 +329,8 @@ def _adjugate(M, method="berkowitz"):
     return M.cofactor_matrix(method=method).transpose()
 
 
-def _charpoly_DOM(DOM, x, domain):
+def _charpoly_DOM(DOM, M, x, domain):
+    x = uniquely_named_symbol(x, M, modify=lambda s: '_' + s)
     return PurePoly(DOM.charpoly(), x, domain=domain)
 
 
@@ -416,12 +417,14 @@ def _charpoly(M, x='lambda', simplify=_simplify):
     DOM = DomainMatrix.from_Matrix(M, extension=True)
     domain = DOM.domain
     if domain == 'EX' or isinstance(domain, FractionField):
+        if isinstance(domain, FractionField):
+            if all(isinstance(t, Symbol) for t in domain.symbols):
+                return _charpoly_DOM(DOM, M, x, domain)
         berk_vector = _berkowitz_vector(M)
         x = uniquely_named_symbol(x, berk_vector, modify=lambda s: '_' + s)
         return PurePoly([simplify(a) for a in berk_vector], x)
 
-    x = uniquely_named_symbol(x, M, modify=lambda s: '_' + s)
-    return _charpoly_DOM(DOM, x, domain)
+    return _charpoly_DOM(DOM, M, x, domain)
 
 
 def _cofactor(M, i, j, method="berkowitz"):
