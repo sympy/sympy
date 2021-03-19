@@ -2276,10 +2276,15 @@ def test_solve_lambert():
 
     # giving complex solutions to real ones
     # issue 4739
-    assert solveset_real(3*x + 5 + 2**(-5*x + 3), x) == S.EmptySet
-
-    assert solveset_real(2*x + 5 + log(3*x - 2), x) == \
-        FiniteSet(Rational(2, 3) + LambertW(2*exp(Rational(-19, 3))/3)/2)
+    assert solveset_real(3*x + 5 + 2**(x + 3), x) == Intersection(FiniteSet(\
+        Rational(-5, 3) - LambertW(2*2**(Rational(1, 3))*log(2)/3)/log(2), 
+        Rational(-5, 3) - LambertW((-2**(Rational(1, 3)) + 2**(Rational(1, 3))*sqrt(3)*I)*log(2)/3)/log(2), 
+        Rational(-5, 3) - LambertW((-2**(Rational(1, 3)) - 2**(Rational(1, 3))*sqrt(3)*I)*log(2)/3)/log(2)), S.Reals)
+    
+    
+    assert solveset_real(2*x + 5 + log(3*x - 2), x) == Intersection(FiniteSet(\
+        LambertW(2*exp(Rational(-19, 3))/3)/2 + Rational(2, 3), Rational(2, 3) + LambertW(-exp(Rational(-19, 3))/3 - sqrt(3)*I*exp(Rational(-19, 3))/3)/2, \
+            Rational(2, 3) + LambertW(-exp(Rational(-19, 3))/3 + sqrt(3)*I*exp(Rational(-19, 3))/3)/2), S.Reals)
 
     p = symbols('p', positive=True)
     assert solveset_real(3*log(p**(3*x + 5)) + p**(3*x + 5), x) == \

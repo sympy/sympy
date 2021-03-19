@@ -1785,8 +1785,6 @@ def _solve_as_lambert(lhs, rhs, symbol, domain):
     except NotImplementedError:
         return None
     else:
-        if domain.is_subset(S.Reals) and len((lhs - rhs).atoms(Symbol)) == 1:
-            soln = [s for s in soln if s.is_real]
         return FiniteSet(*soln)
 
 
