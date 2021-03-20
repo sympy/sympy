@@ -92,6 +92,19 @@ class DDM(list):
         if not (len(self) == m and all(len(row) == n for row in self)):
             raise DDMBadInputError("Inconsistent row-list/shape")
 
+    def to_list(self):
+        return list(self)
+
+    def to_ddm(self):
+        return self
+
+    def convert_to(self, K):
+        Kold = self.domain
+        if K == Kold:
+            return self.copy()
+        rows = ([K.convert_from(e, Kold) for e in row] for row in self)
+        return DDM(rows, self.shape, K)
+
     def __str__(self):
         cls = type(self).__name__
         rows = list.__str__(self)
@@ -210,15 +223,17 @@ class DDM(list):
         domain = a.domain
 
         basis = []
+        nonpivots = []
         for i in range(cols):
             if i in pivots:
                 continue
+            nonpivots.append(i)
             vec = [domain.one if i == j else domain.zero for j in range(cols)]
             for ii, jj in enumerate(pivots):
                 vec[jj] -= rref[ii][i]
             basis.append(vec)
 
-        return DDM(basis, (len(basis), cols), domain)
+        return DDM(basis, (len(basis), cols), domain), nonpivots
 
     def det(a):
         """Determinant of a"""

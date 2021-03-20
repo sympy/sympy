@@ -223,7 +223,8 @@ def test_DDM_rref():
 def test_DDM_nullspace():
      A = DDM([[QQ(1), QQ(1)], [QQ(1), QQ(1)]], (2, 2), QQ)
      Anull = DDM([[QQ(-1), QQ(1)]], (1, 2), QQ)
-     assert A.nullspace() == Anull
+     nonpivots = [1]
+     assert A.nullspace() == (Anull, [1])
 
 
 def test_DDM_det():
