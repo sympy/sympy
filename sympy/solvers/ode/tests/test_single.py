@@ -1519,7 +1519,7 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
         'eq': Eq( L*C*u(t).diff(t,t) + R*C*u(t).diff(t) + u(t), E_0*exp(I*omega*t) ),
         'sol': [Eq(u(t), C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L))
         + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L))
-        + E_0*exp(I*omega*t)/(-C*L*omega**2 + I*C*R*omega + 1))],
+        - E_0*exp(I*omega*t)/(C*L*omega**2 - I*C*R*omega - 1))],
         'func': u(t),
     },
 

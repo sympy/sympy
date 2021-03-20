@@ -182,7 +182,7 @@ def test_exp_rewrite():
     assert Sum((exp(pi*I/2)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == Rational(4, 5) + I*Rational(2, 5)
     assert Sum((exp(pi*I/4)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(1 - sqrt(2)*(1 + I)/4)
     assert (Sum((exp(pi*I/3)/2)**n, (n, 0, oo)).rewrite(sqrt).doit().cancel()
-            == 4/(3 - sqrt(3)*I))
+            == 4*I/(sqrt(3) + 3*I))
 
 
 @_both_exp_pow

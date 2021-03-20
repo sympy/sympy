@@ -270,47 +270,21 @@ class GaussianDomain():
         """Inject generators into this domain. """
         return self.poly_ring(*gens)
 
-    # We need to define the sign-related functions to ensure canonicalisation
-    # of rational functions in FractionField (e.g. -1/-1)
-
-    def _sign(self, element):
-        """Sign used for canonicalisation
-
-        The sign is:
-
-        1 for the right-half plane and upper imaginary axis
-        -1 for the left-half plane and lower imaginary axis
-        0 for zero
-
-        This means that when canonicalising the denominator of a fraction
-        either x is positive or if it is zero then y is positive e.g.:
-
-        -1/-1  ->  1
-        -I/-I  ->  1
-        """
-        c = element.x or element.y
-        if c < 0:
-            return -1
-        elif c > 0:
-            return 1
-        else:
-            return 0
-
     def is_negative(self, element):
         """Returns ``False`` for any ``GaussianElement``. """
-        return self._sign(element) == -1
+        return False
 
     def is_positive(self, element):
         """Returns ``False`` for any ``GaussianElement``. """
-        return self._sign(element) == 1
+        return False
 
     def is_nonnegative(self, element):
         """Returns ``False`` for any ``GaussianElement``. """
-        return self._sign(element) != -1
+        return False
 
     def is_nonpositive(self, element):
         """Returns ``False`` for any ``GaussianElement``. """
-        return self._sign(element) != 1
+        return False
 
     def from_ZZ_gmpy(K1, a, K0):
         """Convert a GMPY mpz to ``self.dtype``."""
@@ -462,7 +436,7 @@ class GaussianIntegerRing(GaussianDomain, Ring):
 
         Also multiply the other arguments by the same power of i.
         """
-        unit = self.units[-d.quadrant()]  # - for inverse power
+        unit = self.canonical_unit(d)
         d *= unit
         args = tuple(a*unit for a in args)
         return (d,) + args if args else d
