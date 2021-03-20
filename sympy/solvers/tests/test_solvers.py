@@ -1763,7 +1763,7 @@ def test_lambert_bivariate():
         acos(3), acos(-3*LambertW(-log(3)/3)/log(3))}
     # should give only one solution after using `uniq`
     assert solve(2*log(x) - 2*log(z) + log(z + log(x) + log(z)), x) == [
-        exp(-z + LambertW(2*z**4*exp(2*z))/2)/z]
+        exp(-z + LambertW(2*z**4*exp(2*z))/2)/z, exp(-z + LambertW(2*z**4*exp(2*z), -1)/2)/z]
     # cases when p != S.One
     # issue 4271
     ans = solve((a/x + exp(x/2)).diff(x, 2), x)

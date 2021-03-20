@@ -2689,7 +2689,7 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_best():
     # example1_solb = Eq(-f(x)/(1 + log(x/f(x))), C1)
     '1st_homogeneous_coeff_best_01': {
         'eq': f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x), x),
-        'sol': [Eq(f(x), -exp(C1)*LambertW(-x*exp(-C1 + 1)))],
+        'sol': [Eq(f(x), x*exp(1 - LambertW(C1*x))), Eq(f(x), x*exp(1 - LambertW(C1*x, -1)))],
         'checkodesol_XFAIL':True, #(because of LambertW?)
     },
 

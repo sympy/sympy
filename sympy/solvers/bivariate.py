@@ -3,7 +3,7 @@ from sympy.core.compatibility import ordered
 from sympy.core.function import expand_log
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy
+from sympy.core.symbol import Dummy, Symbol
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import root
 from sympy.polys.polyroots import roots
@@ -181,7 +181,10 @@ def _lambert(eq, x):
     for arg in args:
         for k in lambert_real_branches:
             w = LambertW(arg, k)
-            if k and not w.is_real:
+            print(w.is_real, len((w).atoms(Symbol)), len((w).atoms(x)), w)
+            if (k and not w.is_real) and \
+                (not len((w).atoms(Symbol)) >= 1 \
+                    or len((w).atoms(x)) >= 1):
                 continue
             rhs = -c/b + (a/d)*w
 
