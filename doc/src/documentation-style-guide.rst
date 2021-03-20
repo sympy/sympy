@@ -181,8 +181,7 @@ Once you have created your development environment, follow these steps:
 
 For Debian/Ubuntu, install the prerequisites::
 
-   apt-get install python-sphinx texlive-latex-recommended dvipng librsvg2-bin
-   imagemagick docbook2x graphviz
+   apt-get install python3-sphinx texlive-latex-recommended dvipng librsvg2-bin imagemagick docbook2x graphviz
    python -m pip install sphinx-math-dollar
 
 And do::
