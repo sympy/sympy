@@ -2219,8 +2219,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not (domain.is_Field and domain.has_assoc_Ring):
             _, p, q = f.cofactors(g)
 
-            if q.is_negative:
+            u = q.canonical_unit()
+            if u == domain.one:
+                p, q = p, q
+            elif u == -domain.one:
                 p, q = -p, -q
+            else:
+                p = p.mul_ground(u)
+                q = q.mul_ground(u)
         else:
             new_ring = ring.clone(domain=domain.get_ring())
 
@@ -2250,6 +2256,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             q = q.mul_ground(cq)
 
         return p, q
+
+    def canonical_unit(f):
+        domain = f.ring.domain
+        return domain.canonical_unit(f.LC)
 
     def diff(f, x):
         """Computes partial derivative in ``x``.

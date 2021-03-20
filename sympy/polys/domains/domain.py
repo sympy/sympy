@@ -898,6 +898,12 @@ class Domain:
         """Returns True if ``a`` is non-negative. """
         return a >= 0
 
+    def canonical_unit(self, a):
+        if self.is_negative(a):
+            return -self.one
+        else:
+            return self.one
+
     def abs(self, a):
         """Absolute value of ``a``, implies ``__abs__``. """
         return abs(a)

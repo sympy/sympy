@@ -467,6 +467,10 @@ class GaussianIntegerRing(GaussianDomain, Ring):
         args = tuple(a*unit for a in args)
         return (d,) + args if args else d
 
+    def canonical_unit(self, d):
+        unit = self.units[-d.quadrant()]  # - for inverse power
+        return unit
+
     def gcd(self, a, b):
         """Greatest common divisor of a and b over ZZ_I."""
         while b:
