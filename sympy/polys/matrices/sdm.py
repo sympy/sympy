@@ -70,7 +70,8 @@ class SDM(dict):
     def ones(cls, shape, domain):
         one = domain.one
         m, n = shape
-        sdm = {i: {j: one for j in range(n)} for i in range(m)}
+        row = dict(zip(range(n), [one]*n))
+        sdm = {i: row.copy() for i in range(m)}
         return cls(sdm, shape, domain)
 
     @classmethod
