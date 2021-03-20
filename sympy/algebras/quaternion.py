@@ -734,7 +734,7 @@ class Quaternion(Expr):
         Returns
         =======
 
-        expr: real number representing the scalar part of the quaternion.
+        Expr: real number representing the scalar part of the quaternion.
 
         Examples
         ========
@@ -801,10 +801,6 @@ class Quaternion(Expr):
         >>> q = Quaternion(1, 1, 1, 1)
         >>> q.axis()
         0 + sqrt(3)/3*i + sqrt(3)/3*j + sqrt(3)/3*k
-
-        >>> q = Quaternion(4, 8, 13, 12)
-        >>> q.axis()
-        0 + 8*sqrt(377)/377*i + sqrt(377)/29*j + 12*sqrt(377)/377*k
 
         See Also
         ========
@@ -888,7 +884,8 @@ class Quaternion(Expr):
         If q is a quaternion given by ``q = a + b*i + c*j + d*k`` where a, b, c and d
         are real numbers then the angle of the quaternion is given by
 
-            angle := atan2 (\sqrt(b^2+c^2+d^2), a)
+        .. math::
+            angle := atan2(\sqrt{b^2 + c^2 + d^2}, {a})
 
         Returns
         =======
@@ -1128,10 +1125,6 @@ class Quaternion(Expr):
         >>> q = Quaternion(2, 4, 2, 4)
         >>> q.index_vector()
         0 + 4*sqrt(10)/3*i + 2*sqrt(10)/3*j + 4*sqrt(10)/3*k
-
-        >>> q = Quaternion(0, 2, 2, 0)
-        >>> q.index_vector()
-        0 + 2*i + 2*j + 0*k
 
         See Also
         ========
