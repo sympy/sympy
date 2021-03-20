@@ -181,7 +181,6 @@ def _lambert(eq, x):
     for arg in args:
         for k in lambert_real_branches:
             w = LambertW(arg, k)
-            print(w.is_real, len((w).atoms(Symbol)), len((w).atoms(x)), w)
             if (k and not w.is_real) and \
                 (not len((w).atoms(Symbol)) >= 1 \
                     or len((w).atoms(x)) >= 1):
