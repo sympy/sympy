@@ -7,7 +7,6 @@ References
 .. [1] https://en.wikipedia.org/wiki/Equality_(mathematics)
 .. [2] https://en.wikipedia.org/wiki/Inequation
 """
-from sympy import S
 from sympy.assumptions import Q
 from sympy.core.relational import is_eq, is_neq, _eval_is_eq
 
@@ -28,7 +27,7 @@ class EqualityPredicate(BinaryRelation):
 
     >>> from sympy import ask, Q
     >>> Q.eq(0, 0)
-    0 = 0
+    Q.eq(0, 0)
     >>> ask(_)
     True
 
@@ -60,7 +59,6 @@ class EqualityPredicate(BinaryRelation):
     is_symmetric = True
 
     name = 'eq'
-    str_name = latex_name = "="
     handler = _eval_is_eq   # this allows registering via Q.eq
 
     @property
@@ -69,18 +67,6 @@ class EqualityPredicate(BinaryRelation):
 
     def eval(self, args, assumptions=True):
         return is_eq(*args)
-
-    def _simplify_applied(self, lhs, rhs, **kwargs):
-        return eqsimp(self(lhs, rhs), **kwargs)
-
-    def _eval_binary_symbols(self, lhs, rhs):
-        args = (lhs, rhs)
-        if S.true in args or S.false in args:
-            if lhs.is_Symbol:
-                return {lhs}
-            elif rhs.is_Symbol:
-                return {rhs}
-        return set()
 
 
 class UnequalityPredicate(BinaryRelation):
@@ -98,8 +84,6 @@ class UnequalityPredicate(BinaryRelation):
     is_symmetric = True
 
     name = 'ne'
-    str_name = "!="
-    latex_name = r"\neq"
     handler = None
 
     @property
@@ -108,18 +92,3 @@ class UnequalityPredicate(BinaryRelation):
 
     def eval(self, args, assumptions=True):
         return is_neq(*args)
-
-    def _simplify_applied(self, lhs, rhs, **kwargs):
-        eq = Q.eq(lhs, rhs).simplify(**kwargs)
-        return self(*eq.arguments)
-
-    def _eval_binary_symbols(self, lhs, rhs):
-        args = (lhs, rhs)
-        if S.true in args or S.false in args:
-            if lhs.is_Symbol:
-                return {lhs}
-            elif rhs.is_Symbol:
-                return {rhs}
-        return set()
-
-from .simplify import eqsimp

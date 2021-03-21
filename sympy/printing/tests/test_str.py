@@ -587,6 +587,11 @@ def test_Relational():
     assert str(Ne(x, 1) & Ne(x, 2)) == "Ne(x, 1) & Ne(x, 2)"
 
 
+def test_AppliedBinaryRelation():
+    assert str(Q.eq(x, y)) == "Q.eq(x, y)"
+    assert str(Q.ne(x, y)) == "Q.ne(x, y)"
+
+
 def test_CRootOf():
     assert str(rootof(x**5 + 2*x - 1, 0)) == "CRootOf(x**5 + 2*x - 1, 0)"
 

@@ -9,6 +9,7 @@ import ast
 import unicodedata
 from io import StringIO
 
+from sympy.assumptions.ask import AssumptionKeys
 from sympy.core.compatibility import iterable
 from sympy.core.basic import Basic
 from sympy.core import Symbol
@@ -560,7 +561,7 @@ def auto_symbol(tokens, local_dict, global_dict):
                 continue
             elif name in global_dict:
                 obj = global_dict[name]
-                if isinstance(obj, (Basic, type)) or callable(obj):
+                if isinstance(obj, (AssumptionKeys, Basic, type)) or callable(obj):
                     result.append((NAME, name))
                     continue
 

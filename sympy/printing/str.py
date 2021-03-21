@@ -890,15 +890,9 @@ class StrPrinter(Printer):
     def _print_AppliedBinaryRelation(self, expr):
         rel, args = expr.function, expr.arguments
         lhs, rhs = args
-
-        if hasattr(rel, 'str_name'):
-            name = rel.str_name
-        elif hasattr(rel, 'name'):
-            name = rel.name
-        else:
-            name = type(rel).__name__
-
-        return "%s %s %s" % (self._print(lhs), name, self._print(rhs))
+        return '%s(%s, %s)' % (self._print(rel),
+                               self._print(expr.lhs),
+                               self._print(expr.rhs))
 
 
 @print_function(StrPrinter)

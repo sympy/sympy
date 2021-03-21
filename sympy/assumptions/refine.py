@@ -22,6 +22,8 @@ def refine(expr, assumptions=True):
     ``False``. Unlike :func:~.`ask()`, the expression will not be reduced
     if the truth value cannot be determined.
 
+    The return value is always SymPy object.
+
     Examples
     ========
 
