@@ -3,7 +3,7 @@ from sympy import (
     Integer, Eq, symbols, Add, I, Float, log, Rational,
     Lambda, atan2, cse, cot, tan, S, Tuple, Basic, Dict,
     Piecewise, oo, Mul, factor, nsimplify, zoo, Subs, RootOf,
-    AccumBounds, Matrix, zeros, ZeroMatrix, nan)
+    AccumBounds, Matrix, zeros, ZeroMatrix)
 from sympy.core.basic import _aresame
 from sympy.testing.pytest import XFAIL
 from sympy.abc import a, x, y, z, t
@@ -862,13 +862,3 @@ def test_issue_19558():
 
     assert e.subs(x, oo) == AccumBounds(-oo, oo)
     assert (sin(x) + cos(x)).subs(x, oo) == AccumBounds(-2, 2)
-
-def test_subs_undefined_result():
-    x, y = symbols("x, y")
-    expr = x/y
-    assert expr.subs([(x, 0), (y, 0)]) == 0
-    assert expr.subs([(x, 0), (y, 0)], simultaneous=True) == nan
-    assert expr.subs([(x, 2), (y, 0)], simultaneous=True) == zoo
-    expr2 = x**y
-    assert expr2.subs([(x, 0), (y, 0)]) == 1
-    assert expr2.subs([(x, 0), (y, 0)], simultaneous=True) == 1
