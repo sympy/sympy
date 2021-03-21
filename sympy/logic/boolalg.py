@@ -1986,12 +1986,14 @@ def is_literal(expr):
     False
 
     """
+    from sympy.assumptions import AppliedPredicate
+
     if isinstance(expr, Not):
         return is_literal(expr.args[0])
-    elif expr in (True, False) or expr.is_Atom:
+    elif expr in (True, False) or isinstance(expr, AppliedPredicate) or expr.is_Atom:
         return True
     elif not isinstance(expr, BooleanFunction) and all(
-            a.is_Atom for a in expr.args):
+            (isinstance(expr, AppliedPredicate) or a.is_Atom) for a in expr.args):
         return True
     return False
 
