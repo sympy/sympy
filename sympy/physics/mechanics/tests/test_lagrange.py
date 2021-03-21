@@ -211,9 +211,9 @@ def test_rolling_disc():
     BodyD.potential_energy = - m * g * r * cos(q2)
     Lag = Lagrangian(N, BodyD)
     q = [q1, q2, q3]
-    q1 = Function('q1')
-    q2 = Function('q2')
-    q3 = Function('q3')
+    q1 = Function('q1', real=True)
+    q2 = Function('q2', real=True)
+    q3 = Function('q3', real=True)
     l = LagrangesMethod(Lag, q)
     l.form_lagranges_equations()
     RHS = l.rhs()

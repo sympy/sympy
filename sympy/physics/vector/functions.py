@@ -626,6 +626,9 @@ def dynamicsymbols(names, level=0,**assumptions):
     Derivative(q1(t), t)
 
     """
+    if 'commutative' not in assumptions:
+        if 'real' not in assumptions:
+            assumptions['real'] = True
     esses = symbols(names, cls=Function,**assumptions)
     t = dynamicsymbols._t
     if iterable(esses):

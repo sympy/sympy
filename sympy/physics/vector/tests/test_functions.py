@@ -496,7 +496,7 @@ def test_dynamicsymbols():
     f3 = dynamicsymbols('f3', positive=True)
     f4, f5 = dynamicsymbols('f4,f5', commutative=False)
     f6 = dynamicsymbols('f6', integer=True)
-    assert f1.is_real is None
+    assert f1.is_real is True
     assert f2.is_real
     assert f3.is_positive
     assert f4*f5 != f5*f4
