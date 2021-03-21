@@ -270,6 +270,10 @@ class GaussianDomain():
         """Inject generators into this domain. """
         return self.poly_ring(*gens)
 
+    def canonical_unit(self, d):
+        unit = self.units[-d.quadrant()]  # - for inverse power
+        return unit
+
     def is_negative(self, element):
         """Returns ``False`` for any ``GaussianElement``. """
         return False
@@ -441,10 +445,6 @@ class GaussianIntegerRing(GaussianDomain, Ring):
         args = tuple(a*unit for a in args)
         return (d,) + args if args else d
 
-    def canonical_unit(self, d):
-        unit = self.units[-d.quadrant()]  # - for inverse power
-        return unit
-
     def gcd(self, a, b):
         """Greatest common divisor of a and b over ZZ_I."""
         while b:
@@ -587,6 +587,8 @@ class GaussianRationalField(GaussianDomain, Field):
     dtype = GaussianRational
     zero = dtype(0, 0)
     one = dtype(1, 0)
+    imag_unit = dtype(0, 1)
+    units = (one, imag_unit, -one, -imag_unit)  # powers of i
 
     rep = 'QQ_I'
 

@@ -2218,15 +2218,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         if not (domain.is_Field and domain.has_assoc_Ring):
             _, p, q = f.cofactors(g)
-
-            u = q.canonical_unit()
-            if u == domain.one:
-                p, q = p, q
-            elif u == -domain.one:
-                p, q = -p, -q
-            else:
-                p = p.mul_ground(u)
-                q = q.mul_ground(u)
         else:
             new_ring = ring.clone(domain=domain.get_ring())
 
@@ -2242,18 +2233,20 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             p = p.set_ring(ring)
             q = q.set_ring(ring)
 
-            p_neg = p.is_negative
-            q_neg = q.is_negative
-
-            if p_neg and q_neg:
-                p, q = -p, -q
-            elif p_neg:
-                cp, p = -cp, -p
-            elif q_neg:
-                cp, q = -cp, -q
-
             p = p.mul_ground(cp)
             q = q.mul_ground(cq)
+
+        # Make canonical with respect to sign or quadrant in the case of ZZ_I
+        # or QQ_I. This ensures that the LC of the denominator is canonical by
+        # multiplying top and bottom by a unit of the ring.
+        u = q.canonical_unit()
+        if u == domain.one:
+            p, q = p, q
+        elif u == -domain.one:
+            p, q = -p, -q
+        else:
+            p = p.mul_ground(u)
+            q = q.mul_ground(u)
 
         return p, q
 
