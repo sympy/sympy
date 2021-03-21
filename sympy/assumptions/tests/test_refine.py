@@ -1,5 +1,5 @@
 from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
-                   atan, atan2, nan, Symbol, re, im, sign)
+                   atan, atan2, nan, Symbol, re, im, sign, arg)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -160,6 +160,10 @@ def test_sign():
     x = Symbol('x', complex=True)
     assert refine(sign(x), Q.zero(x)) == 0
 
+def test_arg():
+    x = Symbol('x', complex = True)
+    assert refine(arg(x), Q.positive(x)) == 0
+    assert refine(arg(x), Q.negative(x)) == pi
 
 def test_func_args():
     class MyClass(Expr):
