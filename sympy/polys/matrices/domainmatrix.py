@@ -570,7 +570,12 @@ class DomainMatrix:
             raise ShapeError("shape")
         if A.domain != B.domain:
             raise ValueError("domain")
+        if isinstance(A.rep, list) != isinstance(B.rep, list):
+            A = A.to_dense()
+            B = B.to_dense()
+
         return A.from_rep(A.rep.add(B.rep))
+
 
     def sub(A, B):
         r"""
@@ -622,6 +627,11 @@ class DomainMatrix:
             raise ShapeError("shape")
         if A.domain != B.domain:
             raise ValueError("domain")
+
+        if isinstance(A.rep, list) != isinstance(B.rep, list):
+            A = A.to_dense()
+            B = B.to_dense()
+
         return A.from_rep(A.rep.sub(B.rep))
 
     def neg(A):
@@ -696,6 +706,10 @@ class DomainMatrix:
         matmul
 
         """
+        if isinstance(A.rep, list) != isinstance(B.rep, list):
+            A = A.to_dense()
+            B = B.to_dense()
+
         return A.from_rep(A.rep.mul(b))
 
     def matmul(A, B):
@@ -735,6 +749,11 @@ class DomainMatrix:
         mul, pow, add, sub
 
         """
+
+        if isinstance(A.rep, list) != isinstance(B.rep, list):
+            A = A.to_dense()
+            B = B.to_dense()
+
         return A.from_rep(A.rep.matmul(B.rep))
 
     def pow(A, n):
