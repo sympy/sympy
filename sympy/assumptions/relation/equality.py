@@ -75,6 +75,20 @@ class UnequalityPredicate(BinaryRelation):
     Evaluation logic of this predicate is delegated to
     :func:`~.core.relational.is_neq()`
 
+    Examples
+    ========
+
+    >>> from sympy import ask, Q
+    >>> Q.ne(0, 0)
+    Q.ne(0, 0)
+    >>> ask(_)
+    False
+
+    See Also
+    ========
+
+    sympy.core.relational.Ne
+
     """
     # TODO: Add examples
 
