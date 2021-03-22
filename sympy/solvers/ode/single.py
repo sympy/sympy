@@ -457,8 +457,8 @@ class FirstExact(SinglePatternODESolver):
 
         m, n = self.wilds_match()
 
-        m = m.subs(fx,y)
-        n = n.subs(fx,y)
+        m = m.subs(fx, y)
+        n = n.subs(fx, y)
         numerator = cancel(m.diff(y) - n.diff(x))
         if numerator.is_zero:
             # Is exact
@@ -485,7 +485,7 @@ class FirstExact(SinglePatternODESolver):
                 # Couldn't convert to exact
                 return False
 
-            factor = exp(Integral(factor).doit())
+            factor = exp(Integral(factor))
             m *= factor
             n *= factor
             self._wilds_match[P] = m.subs(y, fx)
