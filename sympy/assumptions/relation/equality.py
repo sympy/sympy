@@ -26,7 +26,7 @@ class EqualityPredicate(BinaryRelation):
     Binary predicate for $=$.
 
     The purpose of this class is to provide the instance which represent
-    the equality predicate in order to allow the logical inference. 
+    the equality predicate in order to allow the logical inference.
     This class must remain internal to assumptions module and user must
     use :obj:`~.Eq()` instead to construct the equality expression.
 
@@ -68,7 +68,7 @@ class UnequalityPredicate(BinaryRelation):
     Binary predicate for $\neq$.
 
     The purpose of this class is to provide the instance which represent
-    the inequation predicate in order to allow the logical inference. 
+    the inequation predicate in order to allow the logical inference.
     This class must remain internal to assumptions module and user must
     use :obj:`~.Ne()` instead to construct the inequation expression.
 
