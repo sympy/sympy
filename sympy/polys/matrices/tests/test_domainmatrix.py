@@ -16,8 +16,8 @@ from sympy.polys.matrices.sdm import SDM
 
 def test_DomainMatrix_init():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    # assert A.rep == DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    assert A.rep == SDM({0: {0: ZZ(1), 1:ZZ(2)}, 1: {0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
+    assert A.rep == DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    # assert A.rep == SDM({0: {0: ZZ(1), 1:ZZ(2)}, 1: {0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
     assert A.shape == (2, 2)
     assert A.domain == ZZ
 
@@ -25,17 +25,22 @@ def test_DomainMatrix_init():
 
 
 def test_DomainMatrix_from_rep():
-    # ddm = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    ddm = SDM({0: {0: ZZ(1), 1:ZZ(2)}, 1: {0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
+    ddm = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     A = DomainMatrix.from_rep(ddm)
     assert A.rep == ddm
     assert A.shape == (2, 2)
     assert A.domain == ZZ
 
+    sdm = SDM({0: {0: ZZ(1), 1:ZZ(2)}, 1: {0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
+    A = DomainMatrix.from_rep(sdm)
+    assert A.rep == sdm
+    assert A.shape == (2, 2)
+    assert A.domain == ZZ
+
 
 def test_DomainMatrix_from_list_sympy():
-    # ddm = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    ddm = SDM({0: {0: ZZ(1), 1:ZZ(2)}, 1: {0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
+    ddm = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    # ddm = SDM({0: {0: ZZ(1), 1:ZZ(2)}, 1: {0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
     A = DomainMatrix.from_list_sympy(2, 2, [[1, 2], [3, 4]])
     assert A.rep == ddm
     assert A.shape == (2, 2)
@@ -48,7 +53,6 @@ def test_DomainMatrix_from_list_sympy():
         (2, 2),
         K
     )
-    ddm = SDM.from_ddm(ddm)
     A = DomainMatrix.from_list_sympy(
         2, 2, [[1 + sqrt(2), 2 + sqrt(2)], [3 + sqrt(2), 4 + sqrt(2)]],
         extension=True)
@@ -59,7 +63,6 @@ def test_DomainMatrix_from_list_sympy():
 
 def test_DomainMatrix_from_Matrix():
     ddm = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    ddm = SDM.from_ddm(ddm)
     A = DomainMatrix.from_Matrix(Matrix([[1, 2], [3, 4]]))
     assert A.rep == ddm
     assert A.shape == (2, 2)
@@ -72,7 +75,6 @@ def test_DomainMatrix_from_Matrix():
         (2, 2),
         K
     )
-    ddm = SDM.from_ddm(ddm)
     A = DomainMatrix.from_Matrix(
         Matrix([[1 + sqrt(2), 2 + sqrt(2)], [3 + sqrt(2), 4 + sqrt(2)]]),
         extension=True)

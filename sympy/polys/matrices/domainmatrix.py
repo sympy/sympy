@@ -20,6 +20,12 @@ from .ddm import DDM
 from .sdm import SDM
 
 
+# Map from format string to class for internal representation
+# defaulting to either dense ot sparse
+_REPCLS_SPARSE = {'dense': DDM, 'sparse': SDM, None: SDM}
+_REPCLS_DENSE  = {'dense': DDM, 'sparse': SDM, None: DDM}
+
+
 class DomainMatrix:
     r"""
     Associate Matrix with :py:class:`~.Domain`
@@ -69,7 +75,7 @@ class DomainMatrix:
 
     """
 
-    def __init__(self, rows, shape, domain):
+    def __new__(cls, rows, shape, domain, *, fmt=None):
         """
         Creates a :py:class:`~.DomainMatrix`.
 
@@ -87,16 +93,86 @@ class DomainMatrix:
             If any of rows, shape and domain are not provided
 
         """
-        if isinstance(rows, list):
-            self.rep = SDM.from_list(rows, shape, domain)
+        if isinstance(rows, (DDM, SDM)):
+            raise TypeError("Use from_rep to initialise from SDM/DDM")
+        elif isinstance(rows, list):
+            rep = DDM(rows, shape, domain)
+        elif isinstance(rows, dict):
+            rep = SDM(rows, shape, domain)
         else:
-            self.rep = SDM(rows, shape, domain)
-        self.shape = shape
-        self.domain = domain
+            msg = "Input should be DDM, SDM, list-of-lists or dict-of-dicts"
+            raise TypeError(msg)
+
+        if fmt is not None:
+            if fmt == 'sparse':
+                rep = rep.to_sdm()
+            elif fmt == 'dense':
+                rep = rep.to_ddm()
+            else:
+                raise ValueError("fmt should be 'sparse' or 'dense'")
+
+        return cls.from_rep(rep)
 
     @classmethod
-    def from_rep(cls, ddm):
-        return cls(ddm, ddm.shape, ddm.domain)
+    def from_rep(cls, rep):
+        """Create a new DomainMatrix efficiently from DDM/SDM.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+
+        Create a `~.DomainMatrix` with an dense internal representation as
+        `~.DDM`:
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> drep = SDM({0: {0: ZZ(1), 1:ZZ(2)}, 1: {0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
+        >>> dM = DomainMatrix.from_rep(drep)
+        >>> dM
+        DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
+
+
+        Create a `~.DomainMatrix` with a sparse internal representation as
+        `~.SDM`:
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import ZZ
+        >>> drep = SDM({0:{1:ZZ(1)},1:{0:ZZ(2)}}, (2, 2), ZZ)
+        >>> dM = DomainMatrix.from_rep(drep)
+        >>> dM
+        DomainMatrix([[0, 1], [2, 0]], (2, 2), ZZ)
+
+        Parameters
+        ==========
+
+        rep: `~.SDM` or `~.DDM`
+            The internal sparse or dense representation of the matrix.
+
+        Returns
+        =======
+
+        DomainMatrix
+            A `~.DomainMatrix` wrapping *rep*.
+
+        Notes
+        =====
+
+        This takes ownership of rep as its internal representation. If rep is
+        being mutated elsewhere then a copy should be provided to
+        ``from_rep``. Only minimal verification or checking is done on *rep*
+        as this is supposed to be an efficient internal routine.
+
+        """
+        if not isinstance(rep, (DDM, SDM)):
+            raise TypeError("rep should be of type DDM or SDM")
+        self = super().__new__(cls)
+        self.rep = rep
+        self.shape = rep.shape
+        self.domain = rep.domain
+        return self
 
     @classmethod
     def from_list_sympy(cls, nrows, ncols, rows, **kwargs):
@@ -955,10 +1031,10 @@ class DomainMatrix:
         DomainMatrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], (3, 3), QQ)
 
         """
-        return cls.from_rep(DDM.eye(n, domain))
+        return cls.from_rep(SDM.eye(n, domain))
 
     @classmethod
-    def zeros(cls, shape, domain):
+    def zeros(cls, shape, domain, *, fmt='sparse'):
         """Returns a zero DomainMatrix of size shape, belonging to the specified domain
 
         Examples
@@ -970,12 +1046,11 @@ class DomainMatrix:
         DomainMatrix([[0, 0, 0], [0, 0, 0]], (2, 3), QQ)
 
         """
-
-        return cls.from_rep(DDM.zeros(shape, domain))
+        return cls.from_rep(SDM.zeros(shape, domain))
 
     def __eq__(A, B):
         r"""
-        Checks for two DomainMatrix matrices two be equal or not
+        Checks for two DomainMatrix matrices to be equal or not
 
         Parameters
         ==========
