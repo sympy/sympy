@@ -1,14 +1,20 @@
 """
-Module for mathematical equality [1] and inequation [2].
+Module for mathematical equality [1] and inequalities [2].
+
+The purpose of this module is to provide the instances which represent the
+binary predicates in order to combine the relationals into logical inference
+system. Every class in this module should remain internal to assumptions module,
+and user must use the classes in ``core/relational`` instead to construct the
+relational expressions.
 
 References
 ==========
 
 .. [1] https://en.wikipedia.org/wiki/Equality_(mathematics)
-.. [2] https://en.wikipedia.org/wiki/Inequation
+.. [2] https://en.wikipedia.org/wiki/Inequality_(mathematics)
 """
 from sympy.assumptions import Q
-from sympy.core.relational import is_eq, is_neq, _eval_is_eq
+from sympy.core.relational import is_eq, is_neq
 
 from .binrel import BinaryRelation
 
@@ -19,8 +25,13 @@ class EqualityPredicate(BinaryRelation):
     """
     Binary predicate for $=$.
 
-    This uses :func:`sympy.core.relational.is_eq()` for evaluation. Dispatching
-    the handler via ``Q.eq`` is supported.
+    The purpose of this class is to provide the instance which represent
+    the equality predicate in order to allow the logical inference. 
+    This class must remain internal to assumptions module and user must
+    use :obj:`~.Eq()` instead to construct the equality expression.
+
+    Evaluation logic of this predicate is delegated to
+    :func:`~.core.relational.is_eq()`
 
     Examples
     ========
@@ -31,27 +42,10 @@ class EqualityPredicate(BinaryRelation):
     >>> ask(_)
     True
 
-    New types can be supported by registration.
+    See Also
+    ========
 
-    >>> from sympy import Basic
-    >>> class MyBasic(Basic):
-    ...     def __new__(cls, arg):
-    ...         return super().__new__(cls, arg)
-    >>> @Q.eq.register(MyBasic, MyBasic)
-    ... def _(lhs, rhs):
-    ...     return ask(Q.eq(lhs.args[0], rhs.args[0]))
-
-    >>> ask(Q.eq(MyBasic(1), MyBasic(1)))
-    True
-    >>> ask(Q.eq(MyBasic(2), MyBasic(1)))
-    False
-
-    By dispatching to ``Q.eq``, ``MyBasic`` is supported by ``Q.ne`` as well.
-
-    >>> ask(Q.ne(MyBasic(1), MyBasic(1)))
-    False
-    >>> ask(Q.ne(MyBasic(2), MyBasic(1)))
-    True
+    sympy.core.relational.Eq
 
     """
 
@@ -59,7 +53,7 @@ class EqualityPredicate(BinaryRelation):
     is_symmetric = True
 
     name = 'eq'
-    handler = _eval_is_eq   # this allows registering via Q.eq
+    handler = None  # Do not allow dispatching by this predicate
 
     @property
     def negated(self):
@@ -73,9 +67,13 @@ class UnequalityPredicate(BinaryRelation):
     r"""
     Binary predicate for $\neq$.
 
-    This predicate delegates evaluation logic to ``Q.eq`` and does not support
-    multipledispatch handler. To support new types, dispatch them to ``Q.eq``.
-    See the docstring of :obj:`sympy.assumptions.relation.equality.EqualityPredicate`.
+    The purpose of this class is to provide the instance which represent
+    the inequation predicate in order to allow the logical inference. 
+    This class must remain internal to assumptions module and user must
+    use :obj:`~.Ne()` instead to construct the inequation expression.
+
+    Evaluation logic of this predicate is delegated to
+    :func:`~.core.relational.is_neq()`
 
     """
     # TODO: Add examples
