@@ -323,11 +323,11 @@ class DomainMatrix:
 
         >>> from sympy.polys.matrices import DomainMatrix
         >>> from sympy import QQ
-        >>> A = DomainMatrix([[1, 0],[0, 2]], (2, 2), QQ, fmt='dense')
+        >>> A = DomainMatrix([[1, 0],[0, 2]], (2, 2), QQ)
         >>> A
         DomainMatrix([[1, 0], [0, 2]], (2, 2), QQ)
         >>> B = A.to_sparse()
-        >>> B
+        >>> B.rep
         {0: {0: 1}, 1: {1: 2}}
 
 
@@ -335,7 +335,7 @@ class DomainMatrix:
         if isinstance(self.rep, dict):
             return self
 
-        return SDM.from_ddm(self.rep)
+        return self.from_rep(SDM.from_ddm(self.rep))
 
     def to_dense(self):
         """
@@ -352,14 +352,14 @@ class DomainMatrix:
         >>> A.rep
         {0: {0: 1}, 1: {1: 2}}
         >>> B = A.to_dense()
-        >>> B
+        >>> B.rep
         [[1, 0], [0, 2]]
 
         """
         if isinstance(self.rep, list):
             return self
 
-        return SDM.to_ddm(self.rep)
+        return self.from_rep(SDM.to_ddm(self.rep))
 
 
     def unify(self, other):
