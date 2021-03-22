@@ -126,8 +126,6 @@ class DomainMatrix:
         Create a `~.DomainMatrix` with an dense internal representation as
         `~.DDM`:
 
-        >>> from sympy.polys.matrices import DomainMatrix
-        >>> from sympy.polys.matrices.ddm import DDM
         >>> drep = SDM({0: {0: ZZ(1), 1:ZZ(2)}, 1: {0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
         >>> dM = DomainMatrix.from_rep(drep)
         >>> dM
@@ -706,10 +704,6 @@ class DomainMatrix:
         matmul
 
         """
-        if isinstance(A.rep, list) != isinstance(B.rep, list):
-            A = A.to_dense()
-            B = B.to_dense()
-
         return A.from_rep(A.rep.mul(b))
 
     def matmul(A, B):
