@@ -25,7 +25,7 @@ from sympy import (
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
-from sympy.abc import mu, tau, d
+from sympy.abc import mu, tau
 from sympy.printing.latex import (latex, translate, greek_letters_set,
                                   tex_greek_dictionary, multiline_latex,
                                   latex_escape, LatexPrinter)
@@ -52,7 +52,6 @@ from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Lap
 from sympy.sets.setexpr import SetExpr
 from sympy.sets.sets import \
     Union, Intersection, Complement, SymmetricDifference, ProductSet
-from sympy.physics.continuum_mechanics import Beam
 import sympy as sym
 
 
