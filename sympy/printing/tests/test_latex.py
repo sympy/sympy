@@ -212,7 +212,7 @@ def test_latex_SingularityFunction():
     assert latex(SingularityFunction(x, 4, -2)) == \
         r"{\left\langle x - 4 \right\rangle}^{-2}"
     assert latex(SingularityFunction(x, 4, -1)) == \
-        r"{\left\langle x - 4 \right\rangle}^{-1}"    
+        r"{\left\langle x - 4 \right\rangle}^{-1}"
     assert latex(SingularityFunction(x, 0, 0)**2) == \
         r"{\\left\\langle x \\right\\rangle}^{0}"
 
