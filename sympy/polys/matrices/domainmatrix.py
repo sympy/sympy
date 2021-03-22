@@ -312,6 +312,56 @@ class DomainMatrix:
         K = self.domain.get_field()
         return self.convert_to(K)
 
+    def to_sparse(self):
+        """
+
+        Converts internal representation of DomainMatrix
+        from dense to sparse
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import QQ
+        >>> A = DomainMatrix([[1, 0],[0, 2]], (2, 2), QQ, fmt='dense')
+        >>> A
+        DomainMatrix([[1, 0], [0, 2]], (2, 2), QQ)
+        >>> B = A.to_sparse()
+        >>> B
+        {0: {0: 1}, 1: {1: 2}}
+
+
+        """
+        if isinstance(self.rep, dict):
+            return self
+
+        return SDM.from_ddm(self.rep)
+
+    def to_dense(self):
+        """
+
+        Converts internal representation of
+        a DomainMatrix from sparse to dense
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import QQ
+        >>> A = DomainMatrix({0: {0: 1}, 1: {1: 2}}, (2, 2), QQ)
+        >>> A.rep
+        {0: {0: 1}, 1: {1: 2}}
+        >>> B = A.to_dense()
+        >>> B
+        [[1, 0], [0, 2]]
+
+        """
+        if isinstance(self.rep, list):
+            return self
+
+        return SDM.to_ddm(self.rep)
+
+
     def unify(self, other):
         r"""
         Unify the domains of self and other
