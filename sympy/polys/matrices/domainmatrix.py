@@ -120,12 +120,12 @@ class DomainMatrix:
         Examples
         ========
 
-        >>> from sympy.polys.domains import ZZ
-        >>> from sympy.polys.matrices import DomainMatrix
-
         Create a `~.DomainMatrix` with an dense internal representation as
         `~.DDM`:
 
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy.polys.matrices.sdm import SDM
         >>> drep = SDM({0: {0: ZZ(1), 1:ZZ(2)}, 1: {0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
         >>> dM = DomainMatrix.from_rep(drep)
         >>> dM
@@ -467,11 +467,8 @@ class DomainMatrix:
 
         >>> from sympy import ZZ, QQ
         >>> from sympy.polys.matrices import DomainMatrix
-        >>> A = DomainMatrix([
-        ...    [ZZ(1), ZZ(2), ZZ(3)]], (1, 3), ZZ)
-        >>> B = DomainMatrix([
-        ...    [QQ(-1, 2), QQ(1, 2), QQ(1, 3)]],(1, 3), QQ)
-
+        >>> A = DomainMatrix([[ZZ(1), ZZ(2), ZZ(3)]], (1, 3), ZZ)
+        >>> B = DomainMatrix([[QQ(-1, 2), QQ(1, 2), QQ(1, 3)]],(1, 3), QQ)
         >>> A.hstack(B)
         DomainMatrix([[1, 2, 3, -1/2, 1/2, 1/3]], (1, 6), QQ)
 
@@ -481,6 +478,11 @@ class DomainMatrix:
         unify
 
         """
+
+        if isinstance(A.rep, list) != isinstance(B.rep, list):
+            A = A.to_dense()
+            B = B.to_dense()
+
         A, B = A.unify(B)
         return A.from_rep(A.rep.hstack(B.rep))
 

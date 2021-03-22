@@ -211,6 +211,26 @@ class DDM(list):
         ddm_imatmul(c, a, b)
         return c
 
+    def hstack(A, *B):
+        Anew = list(A.copy())
+        rows, cols = A.shape
+        domain = A.domain
+
+        for Bk in B:
+            Bkrows, Bkcols = Bk.shape
+            assert Bkrows == rows
+            assert Bk.domain == domain
+
+            for i, Bki in enumerate(Bk):
+                Ai = Anew[i]
+                if Ai is None:
+                    Anew[i] = Ai = []
+                for Bkij in (Bki):
+                    Ai.append(Bkij)
+            cols += Bkcols
+
+        return DDM(Anew, (rows, cols), A.domain)
+
     def rref(a):
         """Reduced-row echelon form of a and list of pivots"""
         b = a.copy()
