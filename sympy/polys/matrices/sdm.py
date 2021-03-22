@@ -19,6 +19,33 @@ class SDM(dict):
     basic matrix arithmetic +, -, *, **.
     """
     def __init__(self, elemsdict, shape, domain):
+        """
+        Creates a :py:class:`~.SDM`.
+
+        Parameters
+        ==========
+
+        elemsdict : Represents non-zero elements of SDM as a dict of dicts
+        shape : Represents dimension of SDM
+        domain : Represents :py:class:`~.Domain` of SDM
+
+        Raises
+        ======
+
+        TypeError
+            If any of elemsdict, shape and domain are not provided
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> elemsdict = {0:{1:2}, 1:{}}
+        >>> A = SDM(elemsdict, (2, 2), QQ)
+        >>> A
+        {0: {1: 2}, 1: {}}
+
+        """
         super().__init__(elemsdict)
         self.shape = self.rows, self.cols = m, n = shape
         self.domain = domain
@@ -30,14 +57,79 @@ class SDM(dict):
 
     @classmethod
     def new(cls, sdm, shape, domain):
+        """
+
+        Parameters
+        ==========
+        sdm: A dict of dicts for non-zero elements in SDM
+        shape: Represents dimension of SDM
+        domain: Represents :py:class:`~.Domain` of SDM
+
+        Returns
+        =======
+
+        An :py:class:`~.SDM` object
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> elemsdict = {0:{1:2}, 1:{}}
+        >>> A = SDM.new(elemsdict, (2, 2), QQ)
+        >>> A
+        {0: {1: 2}, 1: {}}
+
+        """
         return cls(sdm, shape, domain)
 
     def copy(A):
+        """
+        Returns the copy of a :py:class:`~.SDM` object
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> elemsdict = {0:{1:2}, 1:{}}
+        >>> A = SDM(elemsdict, (2, 2), QQ)
+        >>> B = SDM.copy(A)
+        >>> B
+        {0: {1: 2}, 1: {}}
+
+        """
         Ac = {i: Ai.copy() for i, Ai in A.items()}
         return A.new(Ac, A.shape, A.domain)
 
     @classmethod
     def from_list(cls, ddm, shape, domain):
+        """
+
+        Parameters
+        ==========
+
+        ddm: list of lists containing elements of :py:class:`~.SDM`
+        shape: Dimensions of :py:class:`~.SDM`
+        domain: Represents :py:class:`~.Domain` of :py:class:`~.SDM` object
+
+        Returns
+        =======
+
+        :py:class:`~.SDM` containing elements of ddm
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> ddm = [[QQ(1, 2), 0], [0, QQ(3, 4)]]
+        >>> A = SDM.from_list(ddm, (2, 2), QQ)
+        >>> A
+        {0: {0: mpq(1,2)}, 1: {1: mpq(3,4)}}
+
+        """
+
         m, n = shape
         if not (len(ddm) == m and all(len(row) == n for row in ddm)):
             raise DDMBadInputError("Inconsistent row-list/shape")
@@ -48,9 +140,39 @@ class SDM(dict):
 
     @classmethod
     def from_ddm(cls, ddm):
+        """
+        converts object of :py:class:`~.DDM` to
+        :py:class:`~.SDM`
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> ddm = DDM( [[QQ(1, 2), 0], [0, QQ(3, 4)]], (2, 2), QQ)
+        >>> A = SDM.from_ddm(ddm)
+        >>> A
+        {0: {0: mpq(1,2)}, 1: {1: mpq(3,4)}}
+
+        """
         return cls.from_list(ddm, ddm.shape, ddm.domain)
 
     def to_list(M):
+        """
+
+        Converts a :py:class:`~.SDM` object to a list
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> elemsdict = {0:{1:2}, 1:{}}
+        >>> A = SDM(elemsdict, (2, 2), QQ)
+        >>> A.to_list()
+        [[mpq(0,1), 2], [mpq(0,1), mpq(0,1)]]
+
+        """
         m, n = M.shape
         zero = M.domain.zero
         ddm = [[zero] * n for _ in range(m)]
@@ -60,19 +182,76 @@ class SDM(dict):
         return ddm
 
     def to_ddm(M):
+        """
+        Convert a :py:class:`~.SDM` object to a :py:class:`~.DDM` object
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM({0:{1:2}, 1:{}}, (2, 2), QQ)
+        >>> A.to_ddm()
+        [[mpq(0,1), 2], [mpq(0,1), mpq(0,1)]]
+
+        """
         return DDM(M.to_list(), M.shape, M.domain)
 
     @classmethod
     def zeros(cls, shape, domain):
+        """
+
+        Returns a :py:class:`~.SDM` of size shape,
+        belonging to the specified domain
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM.zeros((2, 3), QQ)
+        >>> A
+        {}
+
+        """
         return cls({}, shape, domain)
 
     @classmethod
     def eye(cls, size, domain):
+        """
+
+        Returns a identity :py:class:`~.SDM` matrix of dimensions
+        size x size, belonging to the specified domain
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> I = SDM.eye(2, QQ)
+        >>> I
+        {0: {0: mpq(1,1)}, 1: {1: mpq(1,1)}}
+
+        """
         one = domain.one
         sdm = {i: {i: one} for i in range(size)}
         return cls(sdm, (size, size), domain)
 
     def transpose(M):
+        """
+
+        Returns the transpose of a :py:class:`~.SDM` matrix
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM({0:{1:2}, 1:{}}, (2, 2), QQ)
+        >>> A.transpose()
+        {1: {0: 2}}
+
+        """
         MT = {}
         for i, Mi in M.items():
             for j, Mij in Mi.items():
@@ -143,12 +322,32 @@ class SDM(dict):
         return A.new(B, A.shape, A.domain), pivots
 
     def inv(A):
+        """
+
+        Returns
+        -------
+
+        Inverse of A
+
+        """
         return A.from_ddm(A.to_ddm().inv())
 
     def det(A):
+        """
+
+        Returns
+        -------
+
+        Determinant of A
+
+        """
         return A.to_ddm().det()
 
     def lu(A):
+        """
+
+
+        """
         L, U, swaps = A.to_ddm().lu()
         return A.from_ddm(L), A.from_ddm(U), swaps
 
