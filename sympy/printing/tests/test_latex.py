@@ -25,7 +25,7 @@ from sympy import (
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
-from sympy.abc import mu, tau
+from sympy.abc import mu, tau, d
 from sympy.printing.latex import (latex, translate, greek_letters_set,
                                   tex_greek_dictionary, multiline_latex,
                                   latex_escape, LatexPrinter)
@@ -52,7 +52,7 @@ from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Lap
 from sympy.sets.setexpr import SetExpr
 from sympy.sets.sets import \
     Union, Intersection, Complement, SymmetricDifference, ProductSet
-
+from sympy.physics.continuum_mechanics import Beam
 import sympy as sym
 
 
@@ -70,10 +70,10 @@ def test_printmethod():
             return "foo(%s)" % printer._print(self.args[0])
     assert latex(R(x)) == r"foo(x)"
 
-    class R(Abs):
+    class B(Abs):
         def _latex(self, printer):
             return "foo"
-    assert latex(R(x)) == r"foo"
+    assert latex(B(x)) == r"foo"
 
 
 def test_latex_basic():
@@ -212,7 +212,9 @@ def test_latex_SingularityFunction():
     assert latex(SingularityFunction(x, 4, -2)) == \
         r"{\left\langle x - 4 \right\rangle}^{-2}"
     assert latex(SingularityFunction(x, 4, -1)) == \
-        r"{\left\langle x - 4 \right\rangle}^{-1}"
+        r"{\left\langle x - 4 \right\rangle}^{-1}"    
+    assert latex(SingularityFunction(x, 0, 0)**2) == \
+        r"{\\left\\langle x \\right\\rangle}^{0}"
 
 
 def test_latex_cycle():
@@ -2703,4 +2705,4 @@ def test_pickleable():
 
 def test_printing_latex_array_expressions():
     assert latex(ArraySymbol("A", 2, 3, 4)) == "A"
-    assert latex(ArrayElement("A", (2, 1/(1-x), 0))) == "{{A}_{2, \\frac{1}{1 - x}, 0}}"
+    assert latex(ArrayElement("A", (2, 1/(1-x), 0))) == "{{A}_{2, \\frac{1}{1 - x}, 0}}"     
