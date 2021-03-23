@@ -274,6 +274,36 @@ class SDM(dict):
             return NotImplemented
 
     def matmul(A, B):
+        """
+        Performs matrix multiplication of two SDM matrices
+
+        Parameters
+        ==========
+
+        A, B: SDM to multiply
+
+        Returns
+        =======
+
+        SDM
+            SDM after multiplication
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> A = SDM({0:{1: 2}, 1:{0:1}}, (2, 2), ZZ)
+        >>> B = SDM({0:{0:2, 1:3}, 1:{0:4}}, (2, 2), ZZ)
+        >>> A.matmul(B)
+        {0: {0: mpz(8)}, 1: {0: mpz(2), 1: mpz(3)}}
+
+        See Also
+        ========
+
+        mul, pow, add, sub
+
+        """
         if A.domain != B.domain:
             raise DDMDomainError
         zero = A.domain.zero
@@ -295,22 +325,95 @@ class SDM(dict):
         return A.new(C, A.shape, A.domain)
 
     def mul(A, b):
+        """
+        Multiplies each element of A with a scalar b
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> A = SDM({0:{1: ZZ(2)}, 1:{0:ZZ(1)}}, (2, 2), ZZ)
+        >>> A.mul(ZZ(3))
+        {0: {1: mpz(6)}, 1: {0: mpz(3)}}
+
+        """
         Csdm = unop_dict(A, lambda aij: aij*b)
         return A.new(Csdm, A.shape, A.domain)
 
     def add(A, B):
+        """
+
+        Adds two `~.SDM` matrices
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> A = SDM({0:{1: ZZ(2)}, 1:{0:ZZ(1)}}, (2, 2), ZZ)
+        >>> B  = SDM({0:{0: ZZ(3)}, 1:{1:ZZ(4)}}, (2, 2), ZZ)
+        >>> A.add(B)
+        {0: {1: mpz(2), 0: mpz(3)}, 1: {0: mpz(1), 1: mpz(4)}}
+
+
+        """
+
         Csdm = binop_dict(A, B, add, pos, pos)
         return A.new(Csdm, A.shape, A.domain)
 
     def sub(A, B):
+        """
+
+        Subtracts two `~.SDM` matrices
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> A = SDM({0:{1: ZZ(2)}, 1:{0:ZZ(1)}}, (2, 2), ZZ)
+        >>> B  = SDM({0:{0: ZZ(3)}, 1:{1:ZZ(4)}}, (2, 2), ZZ)
+        >>> A.sub(B)
+        {0: {1: mpz(2), 0: mpz(-3)}, 1: {0: mpz(1), 1: mpz(-4)}}
+
+        """
         Csdm = binop_dict(A, B, sub, pos, neg)
         return A.new(Csdm, A.shape, A.domain)
 
     def neg(A):
+        """
+
+        Returns the negative of a `~.SDM` matrix
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> A = SDM({0:{1: ZZ(2)}, 1:{0:ZZ(1)}}, (2, 2), ZZ)
+        >>> A.neg()
+        {0: {1: mpz(-2)}, 1: {0: mpz(-1)}}
+
+        """
         Csdm = unop_dict(A, neg)
         return A.new(Csdm, A.shape, A.domain)
 
     def convert_to(A, K):
+        """
+
+        Converts the `~.Domain` of a `~.SDM` matrix to K
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ, QQ
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> A = SDM({0:{1: ZZ(2)}, 1:{0:ZZ(1)}}, (2, 2), ZZ)
+        >>> A.convert_to(QQ)
+        {0: {1: mpq(2,1)}, 1: {0: mpq(1,1)}}
+
+        """
         Kold = A.domain
         if K == Kold:
             return A.copy()
@@ -318,6 +421,15 @@ class SDM(dict):
         return A.new(Ak, A.shape, K)
 
     def rref(A):
+        """
+
+        Returns reduced-row echelon form and list of pivots for the `~.SDM`
+
+        Examples
+        ========
+
+
+        """
         B, pivots, _ = sdm_irref(A)
         return A.new(B, A.shape, A.domain), pivots
 
