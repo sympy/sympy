@@ -359,21 +359,52 @@ class DomainMatrix:
 
         return self.from_rep(SDM.to_ddm(self.rep))
 
+    def _unify_domain(self, other):
+        K1 = self.domain
+        K2 = other.domain
+        if K1 == K2:
+            return self, other
+        K = K1.unify(K2)
+        if K1 != K:
+            self = self.convert_to(K)
+        if K2 != K:
+            other = other.convert_to(K)
+        return self, other
 
-    def unify(self, other):
-        r"""
-        Unify the domains of self and other
+    def _unify_fmt(self, other, fmt):
+        if isinstance(self.rep, list) == isinstance(other.rep, list):
+            return self, other
+
+        if fmt is None:
+            return self.to_dense(), other.to_dense()
+        else:
+            if fmt == 'sparse':
+                return self.to_sparse(), other.to_sparse()
+            elif fmt == 'dense':
+                return self.to_dense(), other.to_dense()
+            else:
+                raise ValueError("fmt should be 'sparse' or 'dense'")
+
+    def unify(self, other, domain=True, fmt='dense'):
+        """
+        Unify the domains of self and other when domain=True,
+        otherwise unifies internal representation 'sparse'
+        and 'dense' of DomainMatrix
 
         Parameters
         ==========
 
         other : another DomainMatrix
+        domain: specifies whether unify domain or internal representation
+        fmt: if domain=False, fmt='dense'/'sparse' specifies which representation
+            to convert to
 
         Returns
         =======
 
         (dM1, dM2)
-            dM1, dM2 DomainMatrix matrices with unified Domain
+            dM1, dM2 DomainMatrix matrices with unified Domain, if domain=True
+            dM1, dM2 DomainMatrix with same internal representation, if domain=False
 
         Examples
         ========
@@ -391,19 +422,14 @@ class DomainMatrix:
         See Also
         ========
 
-        convert_to
+        convert_to, to_dense, to_sparse
 
         """
-        K1 = self.domain
-        K2 = other.domain
-        if K1 == K2:
-            return self, other
-        K = K1.unify(K2)
-        if K1 != K:
-            self = self.convert_to(K)
-        if K2 != K:
-            other = other.convert_to(K)
-        return self, other
+
+        if domain:
+            return self._unify_domain(other)
+        else:
+            return self._unify_fmt(other, fmt)
 
     def to_Matrix(self):
         r"""

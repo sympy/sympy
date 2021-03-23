@@ -132,6 +132,20 @@ def test_DomainMatrix_unify():
     assert Aq.unify(Az) == (Aq, Aq)
     assert Aq.unify(Aq) == (Aq, Aq)
 
+    As = DomainMatrix({0: {1: ZZ(1)}, 1:{0:ZZ(2)}}, (2, 2), ZZ)
+    Ad = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+
+    assert As.unify(As, domain=False) == (As, As)
+    assert Ad.unify(Ad, domain=False) == (Ad, Ad)
+
+    Bs, Bd = As.unify(Ad, domain=False)
+    assert Bs.rep == DDM([[0, 1], [2, 0]], (2, 2), ZZ)
+    assert Bd.rep == DDM([[1, 2],[3, 4]], (2, 2), ZZ)
+
+    Bs, Bd = As.unify(Ad, domain=False, fmt='sparse')
+    assert Bs.rep == {0: {1: 1}, 1: {0: 2}}
+    assert Bd.rep == {0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}}
+
 
 def test_DomainMatrix_to_Matrix():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
@@ -167,6 +181,12 @@ def test_DomainMatrix_add():
     raises(ValueError, lambda: Az.add(Aq))
     raises(ValueError, lambda: Aq.add(Az))
 
+    As = DomainMatrix({0: {1: ZZ(1)}, 1: {0: ZZ(2)}}, (2, 2), ZZ)
+    Ad = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+
+    assert As + Ad == DomainMatrix([[1, 3], [5, 4]], (2, 2), ZZ)
+    assert (As + Ad).rep == DDM([[1, 3], [5, 4]], (2, 2), ZZ)
+
 
 def test_DomainMatrix_sub():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
@@ -192,6 +212,13 @@ def test_DomainMatrix_sub():
     raises(ValueError, lambda: Az.sub(Aq))
     raises(ValueError, lambda: Aq.sub(Az))
 
+    As = DomainMatrix({0: {1: ZZ(1)}, 1: {0: ZZ(2)}}, (2, 2), ZZ)
+    Ad = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+
+    assert As - Ad == DomainMatrix([[-1, -1], [-1, -4]], (2, 2), ZZ)
+    assert (As - Ad).rep == DDM([[-1, -1], [-1, -4]], (2, 2), ZZ)
+    assert As - Ad == -(Ad - As)
+    assert (As - Ad).rep == -(Ad - As).rep
 
 def test_DomainMatrix_neg():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
@@ -226,6 +253,13 @@ def test_DomainMatrix_mul():
     x = ZZ(0)
     assert A * x == x * A == A.mul(x) == AA
 
+    As = DomainMatrix({0: {1: ZZ(1)}, 1: {0: ZZ(2)}}, (2, 2), ZZ)
+    Ad = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+
+    assert As*Ad == DomainMatrix([[3, 4], [2, 4]], (2, 2), ZZ)
+    assert (As*Ad).rep == DDM([[3, 4], [2, 4]], (2, 2), ZZ)
+    assert (Ad * As) == DomainMatrix([[4, 1], [8, 3]], (2, 2), ZZ)
+    assert (Ad*As).rep == DDM([[4, 1], [8, 3]], (2, 2), ZZ)
 
 def test_DomainMatrix_pow():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
