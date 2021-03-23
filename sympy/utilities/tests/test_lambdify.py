@@ -36,6 +36,7 @@ numpy = import_module('numpy')
 scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
+cupy = import_module('cupy')
 
 if tensorflow:
     # Hide Tensorflow warnings
@@ -1353,3 +1354,42 @@ def test_scipy_special_math():
 
     cm1 = lambdify((x,), cosm1(x), modules='scipy')
     assert abs(cm1(1e-20) + 5e-41) < 1e-200
+
+
+def test_cupy_array_arg():
+    if not cupy:
+        skip("CuPy not installed")
+
+    f = lambdify([[x, y]], x*x + y, 'cupy')
+    result = f(cupy.array([2.0, 1.0]))
+    assert result == 5
+    assert "cupy" in str(type(result))
+
+
+def test_cupy_array_arg_using_numpy():
+    # numpy functions can be run on cupy arrays
+    # unclear if we can "officialy" support this,
+    # depends on numpy __array_function__ support
+    if not cupy:
+        skip("CuPy not installed")
+
+    f = lambdify([[x, y]], x*x + y, 'numpy')
+    result = f(cupy.array([2.0, 1.0]))
+    assert result == 5
+    assert "cupy" in str(type(result))
+
+def test_cupy_dotproduct():
+    if not cupy:
+        skip("CuPy not installed")
+
+    A = Matrix([x, y, z])
+    f1 = lambdify([x, y, z], DotProduct(A, A), modules='cupy')
+    f2 = lambdify([x, y, z], DotProduct(A, A.T), modules='cupy')
+    f3 = lambdify([x, y, z], DotProduct(A.T, A), modules='cupy')
+    f4 = lambdify([x, y, z], DotProduct(A, A.T), modules='cupy')
+
+    assert f1(1, 2, 3) == \
+        f2(1, 2, 3) == \
+        f3(1, 2, 3) == \
+        f4(1, 2, 3) == \
+        cupy.array([14])
