@@ -20,7 +20,7 @@ from sympy.functions.special.polynomials import \
     assoc_legendre, assoc_laguerre, jacobi
 from sympy.matrices import Matrix, MatrixSymbol, SparseMatrix
 from sympy.printing.lambdarepr import LambdaPrinter
-from sympy.printing.pycode import NumPyPrinter
+from sympy.printing.numpy import NumPyPrinter
 from sympy.utilities.lambdify import implemented_function, lambdastr
 from sympy.testing.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps

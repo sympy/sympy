@@ -785,9 +785,9 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         if _module_present('mpmath', namespaces):
             from sympy.printing.pycode import MpmathPrinter as Printer # type: ignore
         elif _module_present('scipy', namespaces):
-            from sympy.printing.pycode import SciPyPrinter as Printer # type: ignore
+            from sympy.printing.numpy import SciPyPrinter as Printer # type: ignore
         elif _module_present('numpy', namespaces):
-            from sympy.printing.pycode import NumPyPrinter as Printer # type: ignore
+            from sympy.printing.numpy import NumPyPrinter as Printer # type: ignore
         elif _module_present('numexpr', namespaces):
             from sympy.printing.lambdarepr import NumExprPrinter as Printer # type: ignore
         elif _module_present('tensorflow', namespaces):

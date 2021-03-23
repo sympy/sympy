@@ -10,9 +10,9 @@ from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
 from sympy.printing.pycode import (
-    MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter,
-    SymPyPrinter
+    MpmathPrinter, PythonCodePrinter, pycode, SymPyPrinter
 )
+from sympy.printing.numpy import NumPyPrinter, SciPyPrinter
 from sympy.testing.pytest import raises
 from sympy.tensor import IndexedBase
 from sympy.testing.pytest import skip

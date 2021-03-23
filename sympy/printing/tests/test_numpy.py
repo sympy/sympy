@@ -10,7 +10,7 @@ from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
     PermuteDims, ArrayDiagonal
-from sympy.printing.lambdarepr import NumPyPrinter
+from sympy.printing.numpy import NumPyPrinter
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 
 from sympy.testing.pytest import warns_deprecated_sympy
