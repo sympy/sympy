@@ -467,3 +467,28 @@ for k in SciPyPrinter._kf:
 for k in SciPyPrinter._kc:
     setattr(SciPyPrinter, '_print_%s' % k, _print_known_const)
 
+
+class CuPyPrinter(NumPyPrinter):
+    """
+    CuPy printer which handles vectorized piecewise functions,
+    logical operators, etc.
+    """
+
+    _module = 'CuPy'
+    a = 1
+    _kf = {}
+    for k, v in _known_functions_numpy.items():
+        _kf[k] = _module.lower() + "." + v
+
+    _kc = {}
+    for k, v in _known_constants_numpy.items():
+        _kc[k] = _module.lower() + '.' + v
+
+    def __init__(self, settings=None):
+        super().__init__(settings=settings)
+
+for k in CuPyPrinter._kf:
+    setattr(CuPyPrinter, '_print_%s' % k, _print_known_func)
+
+for k in CuPyPrinter._kc:
+    setattr(CuPyPrinter, '_print_%s' % k, _print_known_const)

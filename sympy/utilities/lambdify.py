@@ -25,6 +25,7 @@ MATH_DEFAULT = {}  # type: Dict[str, Any]
 MPMATH_DEFAULT = {}  # type: Dict[str, Any]
 NUMPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
 SCIPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
+CUPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
 TENSORFLOW_DEFAULT = {}  # type: Dict[str, Any]
 SYMPY_DEFAULT = {}  # type: Dict[str, Any]
 NUMEXPR_DEFAULT = {}  # type: Dict[str, Any]
@@ -37,6 +38,7 @@ MATH = MATH_DEFAULT.copy()
 MPMATH = MPMATH_DEFAULT.copy()
 NUMPY = NUMPY_DEFAULT.copy()
 SCIPY = SCIPY_DEFAULT.copy()
+CUPY = CUPY_DEFAULT.copy()
 TENSORFLOW = TENSORFLOW_DEFAULT.copy()
 SYMPY = SYMPY_DEFAULT.copy()
 NUMEXPR = NUMEXPR_DEFAULT.copy()
@@ -83,6 +85,7 @@ MPMATH_TRANSLATIONS = {
 
 NUMPY_TRANSLATIONS = {}  # type: Dict[str, str]
 SCIPY_TRANSLATIONS = {}  # type: Dict[str, str]
+CUPY_TRANSLATIONS = {}  # type: Dict[str, str]
 
 TENSORFLOW_TRANSLATIONS = {}  # type: Dict[str, str]
 
@@ -94,6 +97,7 @@ MODULES = {
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
+    "cupy": (CUPY, CUPY_DEFAULT, CUPY_TRANSLATIONS, ("import cupy",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import tensorflow",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
@@ -788,6 +792,8 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
             from sympy.printing.numpy import SciPyPrinter as Printer # type: ignore
         elif _module_present('numpy', namespaces):
             from sympy.printing.numpy import NumPyPrinter as Printer # type: ignore
+        elif _module_present('cupy', namespaces):
+            from sympy.printing.numpy import CuPyPrinter as Printer # type: ignore
         elif _module_present('numexpr', namespaces):
             from sympy.printing.lambdarepr import NumExprPrinter as Printer # type: ignore
         elif _module_present('tensorflow', namespaces):
