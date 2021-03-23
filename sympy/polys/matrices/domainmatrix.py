@@ -317,9 +317,10 @@ class DomainScalar:
         return self.new(self.element * other.element, self.domain)
 
     def __floordiv__(self, other):
+        from sympy.polys.domains import ZZ
         if not isinstance(other, DomainScalar):
             return NotImplemented
-        return self.from_sympy(self.element // other.element)
+        return self.from_sympy(ZZ(self.element) // ZZ(other.element))
 
     def __pow__(self, n):
         if not isinstance(n, int):
