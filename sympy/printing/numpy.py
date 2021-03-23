@@ -27,6 +27,8 @@ _known_constants_numpy = {
     'NegativeInfinity': 'NINF'
 }
 
+_numpy_known_functions = {k: 'numpy.' + v for k, v in _known_functions_numpy.items()}
+_numpy_known_constants = {k: 'numpy.' + v for k, v in _known_constants_numpy.items()}
 
 class NumPyPrinter(PythonCodePrinter):
     """
@@ -34,15 +36,9 @@ class NumPyPrinter(PythonCodePrinter):
     logical operators, etc.
     """
 
-    _module = 'NumPy'
-    a = 0
-    _kf = {}
-    for k, v in _known_functions_numpy.items():
-        _kf[k] = _module.lower() + "." + v
-
-    _kc = {}
-    for k, v in _known_constants_numpy.items():
-        _kc[k] = _module.lower() + '.' + v
+    _module = 'numpy'
+    _kf = _numpy_known_functions
+    _kc = _numpy_known_constants
 
     def __init__(self, settings=None):
         """
@@ -50,9 +46,7 @@ class NumPyPrinter(PythonCodePrinter):
         `module` specifies the array module to use, currently 'NumPy' or 'CuPy'
         """
         self.language = "Python with {}".format(self._module)
-        self._module = self._module.lower()
         self.printmethod = "_{}code".format(self._module)
-
 
         self._kf = {**PythonCodePrinter._kf, **self._kf}
 
@@ -312,11 +306,12 @@ class NumPyPrinter(PythonCodePrinter):
     _print_fresnelc = CodePrinter._print_not_supported
     _print_fresnels = CodePrinter._print_not_supported
 
-for k in NumPyPrinter._kf:
-    setattr(NumPyPrinter, '_print_%s' % k, _print_known_func)
+for func in _numpy_known_functions:
+    setattr(NumPyPrinter, f'_print_{func}', _print_known_func)
 
-for k in NumPyPrinter._kc:
-    setattr(NumPyPrinter, '_print_%s' % k, _print_known_const)
+for const in _numpy_known_constants:
+    setattr(NumPyPrinter, f'_print_{const}', _print_known_const)
+
 
 _known_functions_scipy_special = {
     'erf': 'erf',
@@ -347,19 +342,17 @@ _known_constants_scipy_constants = {
     'GoldenRatio': 'golden_ratio',
     'Pi': 'pi',
 }
+_scipy_known_functions = {k : "scipy.special." + v for k, v in _known_functions_scipy_special.items()}
+_scipy_known_constants = {k : "scipy.constants." + v for k, v in _known_constants_scipy_constants.items()}
 
 class SciPyPrinter(NumPyPrinter):
 
-    language = "Python with SciPy"
-    _kf = {k: 'scipy.special.' + v for k, v in _known_functions_scipy_special.items()}
-    _kc = {k: 'scipy.constants.' + v for k, v in _known_constants_scipy_constants.items()}
-
-    _kf = {**NumPyPrinter._kf, **_kf}
-    _kc = {**NumPyPrinter._kc, **_kc}
-
+    _kf = {**NumPyPrinter._kf, **_scipy_known_functions}
+    _kc = {**NumPyPrinter._kc, **_scipy_known_constants}
 
     def __init__(self, settings=None):
         super().__init__(settings=settings)
+        self.language = "Python with SciPy and NumPy"
 
     def _print_SparseMatrix(self, expr):
         i, j, data = [], [], []
@@ -461,12 +454,15 @@ class SciPyPrinter(NumPyPrinter):
                 limit_str)
 
 
-for k in SciPyPrinter._kf:
-    setattr(SciPyPrinter, '_print_%s' % k, _print_known_func)
+for func in _scipy_known_functions:
+    setattr(SciPyPrinter, f'_print_{func}', _print_known_func)
 
-for k in SciPyPrinter._kc:
-    setattr(SciPyPrinter, '_print_%s' % k, _print_known_const)
+for const in _scipy_known_constants:
+    setattr(SciPyPrinter, f'_print_{const}', _print_known_const)
 
+
+_cupy_known_functions = {k : "cupy." + v for k, v in _known_functions_numpy.items()}
+_cupy_known_constants = {k : "cupy." + v for k, v in _known_constants_numpy.items()}
 
 class CuPyPrinter(NumPyPrinter):
     """
@@ -474,21 +470,15 @@ class CuPyPrinter(NumPyPrinter):
     logical operators, etc.
     """
 
-    _module = 'CuPy'
-    a = 1
-    _kf = {}
-    for k, v in _known_functions_numpy.items():
-        _kf[k] = _module.lower() + "." + v
-
-    _kc = {}
-    for k, v in _known_constants_numpy.items():
-        _kc[k] = _module.lower() + '.' + v
+    _module = 'cupy'
+    _kf = _cupy_known_functions
+    _kc = _cupy_known_constants
 
     def __init__(self, settings=None):
         super().__init__(settings=settings)
 
-for k in CuPyPrinter._kf:
-    setattr(CuPyPrinter, '_print_%s' % k, _print_known_func)
+for func in _cupy_known_functions:
+    setattr(CuPyPrinter, f'_print_{func}', _print_known_func)
 
-for k in CuPyPrinter._kc:
-    setattr(CuPyPrinter, '_print_%s' % k, _print_known_const)
+for const in _cupy_known_constants:
+    setattr(CuPyPrinter, f'_print_{const}', _print_known_const)
