@@ -1536,13 +1536,11 @@ def test_nonlinsolve_using_substitution():
     soln_real_1 = (y, x, 0)
     soln_real_2 = (y, 2*LambertW(-y/2), z)
     soln_real_3 = (y, 2*LambertW(y/2), z)
-    soln_real_4 = (y, 2*LambertW(-y/2, -1), z)
-    soln_real_5 = (y, 2*LambertW(y/2, -1), z)
     soln_complex_1 = (-x*exp(x/2), x, z)
     soln_complex_2 = (x*exp(x/2), x, z)
     syms = [y, x, z]
     soln = FiniteSet(soln_real_1, soln_complex_1, soln_complex_2,\
-        soln_real_2, soln_real_3, soln_real_4, soln_real_5)
+        soln_real_2, soln_real_3)
     assert nonlinsolve(system,syms) == soln
 
 
@@ -2249,10 +2247,9 @@ def test_solve_lambert():
         FiniteSet(LambertW(Rational(3, 4))/3)
 
     assert solveset_real(a/x + exp(x/2), x) == Complement(Intersection(\
-        FiniteSet(2*LambertW(-a/2), 2*LambertW(-a/2, -1)), S.Reals), FiniteSet(0))
+        FiniteSet(2*LambertW(-a/2)), S.Reals), FiniteSet(0))
     assert solveset_real((a/x + exp(x/2)).diff(x), x) == Complement(Intersection(\
-        FiniteSet(4*LambertW(-sqrt(2)*sqrt(a)/4), 4*LambertW(sqrt(2)*sqrt(a)/4),\
-        4*LambertW(-sqrt(2)*sqrt(a)/4, -1), 4*LambertW(sqrt(2)*sqrt(a)/4, -1)),\
+        FiniteSet(4*LambertW(-sqrt(2)*sqrt(a)/4), 4*LambertW(sqrt(2)*sqrt(a)/4)),\
          S.Reals), FiniteSet(0))
     # coverage test
     assert solveset_real(tanh(x + 3)*tanh(x - 3) - 1, x) == EmptySet()
@@ -2267,7 +2264,7 @@ def test_solve_lambert():
 
     eq = 3*log(a**(3*x + 5)) + b*log(a**(3*x + 5)) + a**(3*x + 5)
     assert solveset_real(eq, x) == Intersection(FiniteSet(\
-        (-log(a**5) - LambertW(1/(b + 3)))/(3*log(a)), (-log(a**5) - LambertW(1/(b + 3), -1))/(3*log(a))), S.Reals)
+        (-log(a**5) - LambertW(1/(b + 3)))/(3*log(a))), S.Reals)
 
     assert solveset_real(3*log(x) - x*log(3) + 3, x) == FiniteSet(-3*LambertW(-exp(-1)*log(3)/3)/log(3),\
          -3*LambertW(-exp(-1)*log(3)/3, -1)/log(3))
@@ -2297,11 +2294,9 @@ def test_solve_lambert():
 
     # issue 4271
     assert solveset_real((a/x + exp(x/2)).diff(x, 2), x) == Complement(Intersection(\
-        FiniteSet(6*LambertW((-a)**(Rational(1, 3))/3), 6*LambertW((-a)**(Rational(1, 3))/3, -1), \
+        FiniteSet(6*LambertW((-a)**(Rational(1, 3))/3),\
             6*LambertW(-(-a)**(Rational(1, 3))/6 - sqrt(3)*I*(-a)**(Rational(1, 3))/6), \
-                6*LambertW(-(-a)**(Rational(1, 3))/6 - sqrt(3)*I*(-a)**(Rational(1, 3))/6, -1), \
-                6*LambertW(-(-a)**(Rational(1, 3))/6 + sqrt(3)*I*(-a)**(Rational(1, 3))/6),\
-                    6*LambertW(-(-a)**(Rational(1, 3))/6 + sqrt(3)*I*(-a)**(Rational(1, 3))/6, -1)), S.Reals), FiniteSet(0))
+                6*LambertW(-(-a)**(Rational(1, 3))/6 + sqrt(3)*I*(-a)**(Rational(1, 3))/6)), S.Reals), FiniteSet(0))
 
 
 @XFAIL
