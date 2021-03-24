@@ -574,8 +574,13 @@ def test_Domain_convert():
     R, x = ring("x", ZZ)
     assert ZZ.convert(x - x) == 0
     assert ZZ.convert(x - x, R.to_domain()) == 0
-
-    assert ZZ[E].convert(exp(3))
+   
+    
+def test_exponential_domain():
+    K = ZZ[E]
+    eK = K.from_sympy(E)
+    assert K.from_sympy(exp(3)) == eK ** 3
+    assert K.convert(exp(3)) == eK ** 3
 
 
 def test_GlobalPolynomialRing_convert():
