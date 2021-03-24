@@ -3,7 +3,7 @@ from sympy.core.compatibility import ordered
 from sympy.core.function import expand_log
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Symbol
+from sympy.core.symbol import Dummy
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import root
 from sympy.polys.polyroots import roots
