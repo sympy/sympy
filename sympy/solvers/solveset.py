@@ -2318,8 +2318,7 @@ def solvify(f, symbol, domain):
     ImageSet,   | list (if `f` is periodic)
     Union       |
 
-    Union       | list
-   (with FiniteSet)
+    Union       | list (with FiniteSet)
 
     EmptySet    | empty list
 
