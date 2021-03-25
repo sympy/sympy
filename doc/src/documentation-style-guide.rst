@@ -206,7 +206,8 @@ For Fedora (and maybe other RPM-based distributions), install the
 prerequisites::
 
    dnf install python3-sphinx librsvg2 ImageMagick docbook2X texlive-dvipng-bin
-   texlive-scheme-medium librsvg2-tools python -m pip install sphinx-math-dollar
+   texlive-scheme-medium librsvg2-tools
+   python -m pip install sphinx-math-dollar
 
 After that, run::
 
