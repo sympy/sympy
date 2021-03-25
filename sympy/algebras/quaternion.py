@@ -826,10 +826,6 @@ class Quaternion(Expr):
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
-        >>> q = Quaternion(1, 1, 1, 1)
-        >>> q.is_pure()
-        False
-
         >>> q = Quaternion(0, 8, 13, 12)
         >>> q.is_pure()
         True
@@ -899,10 +895,6 @@ class Quaternion(Expr):
         >>> q = Quaternion(1, 4, 4, 4)
         >>> q.angle()
         atan(4*sqrt(3))
-
-        >>> q = Quaternion(0, 8, 13, 12)
-        >>> q.angle()
-        pi/2
 
         """
 
@@ -1152,10 +1144,8 @@ class Quaternion(Expr):
         >>> q = Quaternion(2, 4, 2, 4)
         >>> q.mensor()
         log(2*sqrt(10))
-
-        >>> q = Quaternion(0, 2, 2, 0)
-        >>> q.mensor()
-        log(2*sqrt(2))
+        >>> q.norm()
+        2*sqrt(10)
 
         See Also
         ========
