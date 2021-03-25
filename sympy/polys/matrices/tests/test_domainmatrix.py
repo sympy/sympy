@@ -9,7 +9,7 @@ from sympy.matrices.common import (NonInvertibleMatrixError,
 from sympy.matrices.dense import Matrix
 from sympy.polys import ZZ, QQ
 
-from sympy.polys.matrices.domainmatrix import DomainMatrix, DomainScalar
+from sympy.polys.matrices.domainmatrix import DomainMatrix
 from sympy.polys.matrices.exceptions import DDMBadInputError, DDMDomainError
 from sympy.polys.matrices.ddm import DDM
 from sympy.polys.matrices.sdm import SDM
@@ -446,99 +446,12 @@ def test_DomainMatrix_zeros():
 
 def test_DomainMatrix_scalarmul():
     A = DomainMatrix.from_Matrix(Matrix([[1, 2], [3, 4]]))
-    a=(S(3)/2)
-    assert A.scalarmul(a) == DomainMatrix([[S(3)/2, 3], [S(9)/2, 6]], (2, 2), QQ)
+    lamda = (S(3)/2)
+    assert A.scalarmul(lamda) == DomainMatrix([[QQ(3)/QQ(2), QQ(3)], [QQ(9)/QQ(2), QQ(6)]], (2, 2), QQ)
 
+    raises(TypeError, lambda: A.scalarmul(DomainMatrix([[1]],(1, 1),ZZ)))
 
 def test_DomainMatrix_scalardiv():
     A = DomainMatrix.from_Matrix(Matrix([[1, 2], [3, 4]]))
     a=(S(3)/2)
-    assert A.scalardiv(a) == DomainMatrix([[S(2)/3, S(4)/3], [2, S(8)/3]], (2, 2), QQ)
-
-
-def test_DomainScalar_init():
-    A = DomainScalar(ZZ(1), ZZ)
-    assert A.element ==  ZZ(1)
-    assert A.domain == ZZ
-
-
-def test_DomainScalar_new():
-    A = DomainScalar(ZZ(1), ZZ)
-    B = A.new(ZZ(4), ZZ)
-    assert B.element == ZZ(4)
-    assert B.domain == ZZ
-
-
-def test_DomainScalar_repr():
-    A = DomainScalar(ZZ(1), ZZ)
-    assert A.__repr__() == '1'
-
-
-def test_DomainScalar_from_sympy():
-    expr = ZZ(1)
-    B = DomainScalar.from_sympy(expr)
-    assert B.element == ZZ(1)
-    assert B.domain == ZZ
-
-
-def test_DomainScalar_to_domain():
-    A = DomainScalar(ZZ(1), ZZ)
-    B = A.to_domain(QQ)
-    assert B.element == QQ(1)
-    assert B.domain == QQ
-
-
-def test_DomainScalar_unify():
-    A = DomainScalar(ZZ(1), ZZ)
-    B = DomainScalar(QQ(2), QQ)
-    A, B = A.unify(B)
-    assert A.domain == QQ
-    assert B.domain == QQ
-
-
-def test_DomainScalar_add():
-    A = DomainScalar(ZZ(1), ZZ)
-    B = DomainScalar(QQ(2), QQ)
-    C = A.__add__(B)
-    assert C.element == QQ(3)
-    assert C.domain == QQ
-
-
-def test_DomainScalar_sub():
-    A = DomainScalar(ZZ(1), ZZ)
-    B = DomainScalar(QQ(2), QQ)
-    C = A.__sub__(B)
-    assert C.element == QQ(-1)
-    assert C.domain == QQ
-
-
-def test_DomainScalar_mul():
-    A = DomainScalar(ZZ(1), ZZ)
-    B = DomainScalar(QQ(2), QQ)
-    C = A.__mul__(B)
-    assert C.element == QQ(2)
-    assert C.domain == QQ
-
-
-def test_DomainScalar_floordiv():
-    A = DomainScalar(ZZ(-5), ZZ)
-    B = DomainScalar(QQ(2), QQ)
-    C = A.__floordiv__(B)
-    assert C.element == QQ(-3)
-    assert C.domain == ZZ
-
-
-def test_DomainScalar_pow():
-    A = DomainScalar(ZZ(-5), ZZ)
-    B = A.__pow__(2)
-    assert B.element == ZZ(25)
-    assert B.domain == ZZ
-
-    raises(ZeroDivisionError, lambda: DomainScalar(ZZ(0), ZZ).__pow__(-2))
-
-
-def test_DomainScalar_pos():
-    A = DomainScalar(ZZ(-5), ZZ)
-    B = A.__pos__()
-    assert B.element == ZZ(5)
-    assert B.domain == ZZ
+    assert A.scalardiv(a) == DomainMatrix([[QQ(2)/QQ(3), QQ(4)/QQ(3)], [QQ(2), QQ(8)/QQ(3)]], (2, 2), QQ)

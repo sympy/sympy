@@ -19,6 +19,9 @@ from .ddm import DDM
 
 from .sdm import SDM
 
+from .domainscalar import DomainScalar
+
+from sympy.core.expr import Expr
 
 class DomainMatrix:
 
@@ -29,21 +32,6 @@ class DomainMatrix:
             self.rep = SDM(rows, shape, domain)
         self.shape = shape
         self.domain = domain
-
-    def __getitem__(self, key):
-        rows, cols = self.shape
-        i, j = key
-        if isinstance(i, slice):
-            if i.start is None:
-                i = i.stop + rows
-            else:
-                i = i.start
-        if isinstance(j, slice):
-            if j.start is None:
-                j = j.stop + cols
-            else:
-                j = j.start
-        return DomainScalar(self.rep[i][j], self.domain)
 
     @classmethod
     def from_rep(cls, ddm):
@@ -165,21 +153,33 @@ class DomainMatrix:
 
     def scalarmul(A, lamda):
         if not isinstance(lamda, DomainScalar):
+            if not isinstance(lamda, Expr):
+                if isinstance(lamda, DomainMatrix) or isinstance(lamda, DDM) or isinstance(lamda, SDM):
+                    raise TypeError
             lamda = DomainScalar.from_sympy(lamda)
+
         A, lamda = A.unify(lamda)
-        return A.from_rep(A.rep.__smul__(lamda.element))
+        if lamda.element == lamda.domain.zero:
+            return DomainScalar(A.domain.zero, A.domain)
+        if lamda.element == lamda.domain.one:
+            return A
+
+        return A.from_rep(A.rep.scalarmul(lamda.element))
 
     def scalardiv(A, lamda):
         if not isinstance(lamda, DomainScalar):
-            if lamda == 0:
-                raise ZeroDivisionError
-            lamda = 1/lamda
+            if not isinstance(lamda, Expr):
+                if isinstance(lamda, DomainMatrix) or isinstance(lamda, DDM) or isinstance(lamda, SDM):
+                    raise TypeError
             lamda = DomainScalar.from_sympy(lamda)
-        else:
-            lamda = lamda.__pow__(-1)
 
         A, lamda = A.unify(lamda)
-        return A.from_rep(A.rep.__smul__(lamda.element))
+        if lamda.element == lamda.domain.zero:
+            raise ZeroDivisionError
+        if lamda.element == lamda.domain.one:
+            return A
+
+        return A.scalarmul(1/lamda.element)
 
     def pow(A, n):
         if n < 0:
@@ -267,69 +267,3 @@ class DomainMatrix:
         if not isinstance(B, DomainMatrix):
             return NotImplemented
         return A.rep == B.rep
-
-
-class DomainScalar:
-    r"""
-    docstring
-    """
-
-    def __init__(self, element, domain):
-        self.element = element
-        self.domain = domain
-
-    @classmethod
-    def new(cls, element, domain):
-        return cls(element, domain)
-
-    def __repr__(self):
-        return repr(self.element)
-
-    @classmethod
-    def from_sympy(cls, expr):
-        [domain, [element]] = construct_domain([expr])
-        return cls.new(element, domain)
-
-    def to_domain(self, domain):
-        element = domain.convert_from(self.element, self.domain)
-        return self.new(element, domain)
-
-    def unify(self, other):
-        domain = self.domain.unify(other.domain)
-        return self.to_domain(domain), other.to_domain(domain)
-
-    def __add__(self, other):
-        if not isinstance(other, DomainScalar):
-            return NotImplemented
-        self, other = self.unify(other)
-        return self.new(self.element + other.element, self.domain)
-
-    def __sub__(self, other):
-        if not isinstance(other, DomainScalar):
-            return NotImplemented
-        self, other = self.unify(other)
-        return self.new(self.element - other.element, self.domain)
-
-    def __mul__(self, other):
-        if not isinstance(other, DomainScalar):
-            return NotImplemented
-        self, other = self.unify(other)
-        return self.new(self.element * other.element, self.domain)
-
-    def __floordiv__(self, other):
-        from sympy.polys.domains import ZZ
-        if not isinstance(other, DomainScalar):
-            return NotImplemented
-        return self.from_sympy(ZZ(self.element) // ZZ(other.element))
-
-    def __pow__(self, n):
-        if not isinstance(n, int):
-            return NotImplemented
-        if self.element == 0 and n < 0:
-            raise ZeroDivisionError
-        return self.new(self.element**n, self.domain)
-
-    def __pos__(self):
-        if self.element < 0:
-            self.element = - self.element
-        return self.new(self.element, self.domain)

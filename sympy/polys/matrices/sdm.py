@@ -94,12 +94,10 @@ class SDM(dict):
         else:
             return NotImplemented
 
-    def __smul__(a, e):
-        rows, cols = a.shape
-        for r in range(rows):
-            for c in range(cols):
-                a[r][c] = a[r][c]*e
-        return a
+    def scalarmul(A, lamda):
+        """ Internal method of DomainMatrix.scalarmul for Scalar multiplication"""
+        scalmul = unop_dict(A, lambda aij: aij*lamda)
+        return A.new(scalmul, A.shape, A.domain)
 
     def matmul(A, B):
         if A.domain != B.domain:

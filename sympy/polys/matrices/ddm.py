@@ -155,12 +155,9 @@ class DDM(list):
         else:
             return NotImplemented
 
-    def __smul__(a, e):
-        rows, cols = a.shape
-        for r in range(rows):
-            for c in range(cols):
-                a[r][c] = a[r][c]*e
-        return a
+    def scalarmul(A, lamda):
+        """ Internal method of DomainMatrix.scalarmul for Scalar multiplication"""
+        return A.mul(lamda)
 
     @classmethod
     def _check(cls, a, op, b, ashape, bshape):
