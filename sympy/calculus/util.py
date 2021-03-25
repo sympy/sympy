@@ -1,4 +1,4 @@
-from sympy import Order, S, log, limit, lcm_list, im, re, Dummy
+from sympy import Order, S, log, limit, lcm_list, im, re, Dummy, Piecewise
 from sympy.core import Add, Mul, Pow
 from sympy.core.basic import Basic
 from sympy.core.compatibility import iterable
@@ -510,6 +510,11 @@ def periodicity(f, symbol, check=False):
         elif (a.is_polynomial(symbol) and degree(a, symbol) == 1 and
             symbol not in n.free_symbols):
                 period = Abs(n / a.diff(symbol))
+
+    elif isinstance(f, Piecewise):
+        # Returning None, as the return type, period of the `piecewise`
+        # also should be a piecewise. (i.e. the return type is not favorable)
+        return None
 
     elif period is None:
         from sympy.solvers.decompogen import compogen
