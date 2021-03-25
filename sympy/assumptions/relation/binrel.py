@@ -200,7 +200,3 @@ class AppliedBinaryRelation(AppliedPredicate):
         if ret is None:
             raise TypeError("Cannot determine truth value of %s" % self)
         return ret
-
-    @property
-    def binary_symbols(self):
-        return self.function._eval_binary_symbols(*self.arguments)
