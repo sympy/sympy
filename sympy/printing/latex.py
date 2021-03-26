@@ -1968,10 +1968,12 @@ class LatexPrinter(Printer):
             tex = r"\left(%s\right)^{%s}" % (tex, exp)
         return tex
 
-    def _print_SingularityFunction(self, expr):
+    def _print_SingularityFunction(self, expr, exp=None):
         shift = self._print(expr.args[0] - expr.args[1])
         power = self._print(expr.args[2])
         tex = r"{\left\langle %s \right\rangle}^{%s}" % (shift, power)
+        if exp:
+            tex = r"{\left({\langle %s \rangle}^{%s}\right)}^{%s}" % (shift, power, exp)
         return tex
 
     def _print_Heaviside(self, expr, exp=None):
