@@ -507,7 +507,7 @@ class FirstExact(SinglePatternODESolver):
 
         gen_sol = Eq(Subs(Integral(m, x)
                           + Integral(n - Integral(m, x).diff(y), y), y, fx), C1)
-        return gen_sol
+        return [gen_sol]
 
 
 class FirstLinear(SinglePatternODESolver):
