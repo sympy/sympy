@@ -460,6 +460,7 @@ class FirstExact(SinglePatternODESolver):
         m = m.subs(fx, y)
         n = n.subs(fx, y)
         numerator = cancel(m.diff(y) - n.diff(x))
+
         if numerator.is_zero:
             # Is exact
             return True
@@ -473,19 +474,21 @@ class FirstExact(SinglePatternODESolver):
 
             factor_n = cancel(numerator/n)
             factor_m = cancel(-numerator/m)
-            if factor_n.free_symbols == {x}:
+            if y not in factor_n.free_symbols:
                 # If (dP/dy - dQ/dx) / Q = f(x)
                 # then exp(integral(f(x))*equation becomes exact
                 factor = factor_n
-            elif factor_m.free_symbols == {y}:
+                integration_variable = x
+            elif x not in factor_m.free_symbols:
                 # If (dP/dy - dQ/dx) / -P = f(y)
                 # then exp(integral(f(y))*equation becomes exact
                 factor = factor_m
+                integration_variable = y
             else:
                 # Couldn't convert to exact
                 return False
 
-            factor = exp(Integral(factor))
+            factor = exp(Integral(factor, integration_variable))
             m *= factor
             n *= factor
             self._wilds_match[P] = m.subs(y, fx)

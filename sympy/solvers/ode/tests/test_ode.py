@@ -210,12 +210,14 @@ def test_classify_ode():
     a = classify_ode(Eq(f(x).diff(x) + f(x), x), f(x))
     b = classify_ode(f(x).diff(x)*f(x) + f(x)*f(x) - x*f(x), f(x))
     c = classify_ode(f(x).diff(x)/f(x) + f(x)/f(x) - x/f(x), f(x))
-    assert a == ('1st_linear',
+    assert a == ('1st_exact',
+        '1st_linear',
         'Bernoulli',
         'almost_linear',
         '1st_power_series', "lie_group",
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
+        '1st_exact_Integral',
         '1st_linear_Integral',
         'Bernoulli_Integral',
         'almost_linear_Integral',
@@ -242,8 +244,8 @@ def test_classify_ode():
 
     assert classify_ode(
         2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)
-    ) == ('Bernoulli', 'almost_linear', 'lie_group',
-        'Bernoulli_Integral', 'almost_linear_Integral')
+    ) == ('1st_exact', 'Bernoulli', 'almost_linear', 'lie_group',
+        '1st_exact_Integral', 'Bernoulli_Integral', 'almost_linear_Integral')
     assert 'Riccati_special_minus2' in \
         classify_ode(2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2), f(x))
     raises(ValueError, lambda: classify_ode(x + f(x, y).diff(x).diff(
@@ -717,11 +719,11 @@ def test_undetermined_coefficients_match():
 def test_issue_4785():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
-    assert classify_ode(eq, f(x)) == ('1st_linear', 'almost_linear',
-        '1st_power_series', 'lie_group',
+    assert classify_ode(eq, f(x)) == ('1st_exact', '1st_linear',
+        'almost_linear', '1st_power_series', 'lie_group',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
-        '1st_linear_Integral', 'almost_linear_Integral',
+        '1st_exact_Integral', '1st_linear_Integral', 'almost_linear_Integral',
         'nth_linear_constant_coeff_variation_of_parameters_Integral')
     # issue 4864
     eq = (x**2 + f(x)**2)*f(x).diff(x) - 2*x*f(x)
