@@ -384,36 +384,51 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     else:
         key, args = Q.is_true, (proposition,)
 
+    # convert local and global assumptions to CNF
     assump = CNF.from_prop(assumptions)
     assump.extend(context)
 
+    # extract the relevant facts from assumptions with respect to args
     local_facts = _extract_all_facts(assump, args)
 
     known_facts_cnf = get_all_known_facts()
     known_facts_dict = get_known_facts_dict()
 
+    # convert default facts and assumed facts to encoded CNF
     enc_cnf = EncodedCNF()
     enc_cnf.from_cnf(CNF(known_facts_cnf))
     enc_cnf.add_from_cnf(local_facts)
 
+    # check the satisfiability of given assumptions
     if local_facts.clauses and satisfiable(enc_cnf) is False:
         raise ValueError("inconsistent assumptions %s" % assumptions)
 
     if local_facts.clauses:
 
+        # quick exit if the prerequisite of proposition is not true
+        # e.g. proposition = Q.odd(x), assumptions = ~Q.integer(x)
         if len(local_facts.clauses) == 1:
             cl, = local_facts.clauses
-            f, = cl if len(cl)==1 else [None]
-            if f and f.is_Not and f.arg in known_facts_dict.get(key, []):
-                return False
+            if len(cl) == 1:
+                f, = cl
+                if f.is_Not and f.arg in known_facts_dict.get(key, []):
+                    return False
 
         for clause in local_facts.clauses:
             if len(clause) == 1:
                 f, = clause
                 fdict = known_facts_dict.get(f.arg, None) if not f.is_Not else None
-                if fdict and key in fdict:
+                if fdict is None:
+                    pass
+                elif key in fdict:
+                    # quick exit if proposition is directly satisfied by assumption
+                    # e.g. proposition = Q.integer(x), assumptions = Q.odd(x)
                     return True
-                if fdict and Not(key) in known_facts_dict[f.arg]:
+                elif Not(key) in fdict:
+                    # quick exit if proposition is directly rejected by assumption
+                    # example might be proposition = Q.even(x), assumptions = Q.odd(x)
+                    # but known_facts_dict does not have such information yet and
+                    # such example is computed by satask.
                     return False
 
     # direct resolution method, no logic
