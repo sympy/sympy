@@ -56,33 +56,6 @@ class SDM(dict):
 
     """
     def __init__(self, elemsdict, shape, domain):
-        """
-        Creates a :py:class:`~.SDM`.
-
-        Parameters
-        ==========
-
-        elemsdict : Represents non-zero elements of SDM as a dict of dicts
-        shape : Represents dimension of SDM
-        domain : Represents :py:class:`~.Domain` of SDM
-
-        Raises
-        ======
-
-        TypeError
-            If any of elemsdict, shape and domain are not provided
-
-        Examples
-        ========
-
-        >>> from sympy.polys.matrices.sdm import SDM
-        >>> from sympy import QQ
-        >>> elemsdict = {0:{1:QQ(2)}, 1:{}}
-        >>> A = SDM(elemsdict, (2, 2), QQ)
-        >>> A
-        {0: {1: 2}, 1: {}}
-
-        """
         super().__init__(elemsdict)
         self.shape = self.rows, self.cols = m, n = shape
         self.domain = domain
