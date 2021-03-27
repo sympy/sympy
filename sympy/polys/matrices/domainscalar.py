@@ -63,22 +63,15 @@ class DomainScalar:
         if not isinstance(other, DomainScalar):
             return NotImplemented
         self, other = self.unify(other)
-        K = self.domain
-        if not K.is_Field:
-            K = K.get_field()
-        return self.new(K.quo(self.element, other.element), self.domain)
+        return self.new(self.domain.quo(self.element, other.element), self.domain)
 
     def __pow__(self, n):
         if not isinstance(n, int):
             return NotImplemented
-        if self.element == 0 and n < 0:
-            raise ZeroDivisionError
         return self.new(self.element**n, self.domain)
 
     def __pos__(self):
-        if self.element < 0:
-            self.element = - self.element
-        return self.new(self.element, self.domain)
+        return self.new(+self.element, self.domain)
 
     def __eq__(self, other):
         if not isinstance(other, DomainScalar):
