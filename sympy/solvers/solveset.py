@@ -2348,7 +2348,6 @@ def solvify(f, symbol, domain):
         if isinstance(sol, Intersection):
             sol = sol.args[1]
         if isinstance(sol, ImageSet):
-            soln_imagest = sol
             expr2 = sol.lamda.expr
             sol = FiniteSet(expr2)
 
