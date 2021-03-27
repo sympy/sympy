@@ -576,6 +576,8 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     discontinuities))).intersection(
                     Interval(domain.inf, domain.sup,
                     domain.inf not in domain, domain.sup not in domain))
+                if isinstance(critical_points, Intersection):
+                    critical_points = critical_points.args[1]
                 if all(r.is_number for r in critical_points):
                     reals = _nsort(critical_points, separated=True)[0]
                 else:

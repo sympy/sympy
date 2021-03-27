@@ -2343,6 +2343,8 @@ def solvify(f, symbol, domain):
     def other_to_finite_set(sol):
         # this function converts the below mentioned
         # type of sets into finite set
+        if isinstance(sol, ConditionSet):
+            raise NotImplementedError('solveset is unable to solve this equation.')
         if isinstance(sol, Complement):
             sol = sol.args[0]
         if isinstance(sol, Intersection):
@@ -2357,7 +2359,6 @@ def solvify(f, symbol, domain):
 
     solution_set = solveset(f, symbol, domain)
     result = None
-
     if solution_set is S.EmptySet:
         result = []
 
