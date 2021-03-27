@@ -2313,21 +2313,14 @@ def solvify(f, symbol, domain):
 
     Solution    |    Output
     ----------------------------------------
-    FiniteSet   | list
-
-    ImageSet,   | list (if `f` is periodic)
-    Union       |
-
-    EmptySet    | empty list
-
-    Others      | None
+    Any Set     | list
 
 
     Raises
     ======
 
     NotImplementedError
-        A ConditionSet is the input.
+        If ConditionSet containing unsolved result is the input.
 
     Examples
     ========
@@ -2342,17 +2335,35 @@ def solvify(f, symbol, domain):
     >>> solvify(tan(x), x, S.Reals)
     [0]
     >>> solvify(exp(x) - 1, x, S.Complexes)
-
+    [2*_n*I*pi]
     >>> solvify(exp(x) - 1, x, S.Reals)
     [0]
 
     """
+    def other_to_finite_set(sol):
+        # this function converts the below mentioned
+        # type of sets into finite set
+        if isinstance(sol, Complement):
+            sol = sol.args[0]
+        if isinstance(sol, Intersection):
+            sol = sol.args[1]
+        if isinstance(sol, ImageSet):
+            soln_imagest = sol
+            expr2 = sol.lamda.expr
+            sol = FiniteSet(expr2)
+
+        if not isinstance(sol, FiniteSet):
+            sol = FiniteSet(sol)
+        return sol
+
     solution_set = solveset(f, symbol, domain)
     result = None
+
     if solution_set is S.EmptySet:
         result = []
 
-    elif isinstance(solution_set, ConditionSet):
+    elif isinstance(solution_set, ConditionSet) \
+        and solution_set.args[2] is domain:
         raise NotImplementedError('solveset is unable to solve this equation.')
 
     elif isinstance(solution_set, FiniteSet):
@@ -2375,10 +2386,20 @@ def solvify(f, symbol, domain):
             if isinstance(solutions, FiniteSet):
                 result = list(solutions)
 
-        else:
-            solution = solution_set.intersect(domain)
-            if isinstance(solution, FiniteSet):
-                result += solution
+        if result is None:
+            sol = solution_set.intersect(domain)
+            if isinstance(sol, ConditionSet):
+                sol = sol.args[2]
+            if isinstance(sol, Union):
+                sol_args = sol.args
+                sol = S.EmptySet
+                for sol_arg2 in sol_args:
+                    sol += other_to_finite_set(sol_arg2)
+            else:
+                sol = other_to_finite_set(sol)
+
+            if isinstance(sol, FiniteSet):
+                result = list(sol)
 
     return result
 

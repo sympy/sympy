@@ -1321,7 +1321,49 @@ def test_solvify():
 
 
 def test_abs_invert_solvify():
-    assert solvify(sin(Abs(x)), x, S.Reals) is None
+    assert dumeq(solvify(sin(Abs(x)), x, S.Reals), [n*pi])
+
+def test_solvify_other():
+    eq1 = -y + x/sqrt(-x**2 + 1)
+    eq2 = -y**2 + x**2/(-x**2 + 1)
+    eq3 = x + (a - b)/(-2*a + 2*b)
+    eq4 = z**2 + exp(2*x) - sin(y)
+    eq5 = sqrt(r)*Abs(tan(t))/sqrt(tan(t)**2 + 1) + x*tan(t)
+    eq6 = 1 - exp(-18000000*x) - y
+    eq7 = exp(x/y)*exp(-z/y) - 2
+    eq8 = z - log(x) + log(y/(x*(-1 + y**2/x**2)))
+
+    assert solvify(eq1, x, S.Reals) == [y*sqrt(1/(y**2 + 1)), -y*sqrt(1/(y**2 + 1))]
+    assert solvify(eq2, x, S.Reals) == [y*sqrt(1/(y**2 + 1)), -y*sqrt(1/(y**2 + 1))]
+    assert solvify(eq3, x, S.Reals) == [-((a - b)/(-2*a + 2*b))]
+    assert solvify(eq4, x, S.Reals) == [log(-z**2 + sin(y))/2]
+    assert solvify(eq5, x, S.Reals) == [-sqrt(r)*Abs(tan(t))/(sqrt(tan(t)**2 + 1)*tan(t))]
+    assert solvify(eq6, x, S.Reals) == [-log(1 - y)/18000000]
+    assert solvify(eq7, x, S.Reals) == [y*log(2*exp(z/y))]
+    assert solvify(eq8, x, S.Reals) == [sqrt(y**2 - y*exp(z)), -sqrt(y**2 - y*exp(z))]
+    assert solvify(x**2 + a, x, S.Reals) == [sqrt(-a), -sqrt(-a)]
+
+    C1, C2 = symbols('C1 C2')
+    f = Function('f')
+    assert solvify(C1 + C2/x**2 - exp(-f(x)), f(x), S.Reals) == [-log(C1 + C2/x**2)]
+
+    assert solvify(x**2 - y**2/exp(x), y, S.Reals) == [sqrt(x**2*exp(x)), -sqrt(x**2*exp(x))]
+
+    assert dumeq(solvify(exp(x) - 1, x, S.Complexes), [2*n*I*pi])
+
+    assert dumeq(solvify(exp(x) - I, x, S.Complexes), [I*(2*n*pi + pi/2)])
+    assert dumeq(solvify(sinh(x).rewrite(exp), x, S.Complexes), [n*I*pi])
+
+    assert dumeq(solvify(sinh(x) + tanh(x) - 1, x, S.Complexes), [2*n*I*pi + log(sqrt(2)/2 + sqrt(Rational(-1, 2) + sqrt(2))), \
+        I*(2*n*pi + pi) + log(-sqrt(2)/2 + sqrt(Rational(-1, 2) + sqrt(2))), \
+            I*(2*n*pi - atan(sqrt(2)*sqrt(Rational(1, 2) + sqrt(2))) + pi) + log(sqrt(1 + sqrt(2))), \
+                I*(2*n*pi - pi + atan(sqrt(2)*sqrt(Rational(1, 2) + sqrt(2)))) + log(sqrt(1 + sqrt(2)))])
+
+    assert solvify((a*x + b)*(exp(x) - 3), x, S.Reals) == [log(3), -b/a]
+
+    assert dumeq(solvify(Eq(sin(Abs(x)), 1), x, domain=S.Reals),[(-1)**n*pi/2 + n*pi, n*pi - (-1)**(-n)*pi/2])
+
+    assert dumeq(solvify(tan(x).rewrite(exp), x, S.Complexes), [n*pi])
 
 
 def test_linear_eq_to_matrix():
