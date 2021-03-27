@@ -275,9 +275,25 @@ class SDM(dict):
                     MT[j] = {i: Mij}
         return M.new(MT, M.shape[::-1], M.domain)
 
-    def __mul__(a, b):
-        if b in a.domain:
-            return a.mul(b)
+    def __add__(A, B):
+        if not isinstance(B, SDM):
+            return NotImplemented
+        return A.add(B)
+
+    def __sub__(A, B):
+        if not isinstance(B, SDM):
+            return NotImplemented
+        return A.sub(B)
+
+    def __neg__(A):
+        return A.neg()
+
+    def __mul__(A, B):
+        """A * B"""
+        if isinstance(B, SDM):
+            return A.matmul(B)
+        elif B in A.domain:
+            return A.mul(B)
         else:
             return NotImplemented
 
@@ -413,28 +429,6 @@ class SDM(dict):
         """
         Csdm = unop_dict(A, neg)
         return A.new(Csdm, A.shape, A.domain)
-
-    def __add__(A, B):
-        if not isinstance(B, SDM):
-            return NotImplemented
-        return A.add(B)
-
-    def __sub__(A, B):
-        if not isinstance(B, SDM):
-            return NotImplemented
-        return A.sub(B)
-
-    def __neg__(A):
-        return A.neg()
-
-    def __mul__(A, B):
-        """A * B"""
-        if isinstance(B, SDM):
-            return A.matmul(B)
-        elif B in A.domain:
-            return A.mul(B)
-        else:
-            return NotImplemented
 
     def convert_to(A, K):
         """
