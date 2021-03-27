@@ -17,6 +17,43 @@ class SDM(dict):
 
     This is a dict subclass and is a wrapper for a dict of dicts that supports
     basic matrix arithmetic +, -, *, **.
+
+
+    In order to create a new :py:class:`~.SDM`, a dict
+    of dicts mapping non-zero elements to their
+    corresponding row and column in the matrix is needed.
+
+    We also need to specify the shape and :py:class:`~.Domain`
+    of our :py:class:`~.SDM` object.
+
+    We declare a 2x2 :py:class:`~.SDM` matrix belonging
+    to QQ domain as shown below.
+
+    >>> from sympy.polys.matrices.sdm import SDM
+    >>> from sympy import QQ
+    >>> elemsdict = {0:{1:QQ(2)}}
+    >>> A = SDM(elemsdict, (2, 2), QQ)
+    >>> A
+    {0: {1: 2}}
+
+    We can manipulate :py:class:`~.SDM` the same way
+    as a :py:class:`~.Matrix`
+
+    >>> from sympy import ZZ
+    >>> A = SDM({0:{1: ZZ(2)}, 1:{0:ZZ(1)}}, (2, 2), ZZ)
+    >>> B  = SDM({0:{0: ZZ(3)}, 1:{1:ZZ(4)}}, (2, 2), ZZ)
+    >>> A + B
+    {0: {0: 3, 1: 2}, 1: {0: 1, 1: 4}}
+
+    Multiplication
+
+    >>> A = SDM({0:{1: ZZ(2)}, 1:{0:ZZ(1)}}, (2, 2), ZZ)
+    >>> B = SDM({0:{0: ZZ(3)}, 1:{1:ZZ(4)}}, (2, 2), ZZ)
+    >>> A*B
+    {0: {1: 8}, 1: {0: 3}}
+    >>> A*ZZ(2)
+    {0: {1: 4}, 1: {0: 2}}
+
     """
     def __init__(self, elemsdict, shape, domain):
         """
@@ -126,7 +163,7 @@ class SDM(dict):
 
         >>> from sympy.polys.matrices.sdm import SDM
         >>> from sympy import QQ
-        >>> ddm = [[QQ(1, 2), 0], [0, QQ(3, 4)]]
+        >>> ddm = [[QQ(1, 2), QQ(0)], [QQ(0), QQ(3, 4)]]
         >>> A = SDM.from_list(ddm, (2, 2), QQ)
         >>> A
         {0: {0: 1/2}, 1: {1: 3/4}}
@@ -292,6 +329,13 @@ class SDM(dict):
         SDM
             SDM after multiplication
 
+        Raises
+        ======
+
+        DomainError
+            If domain of A does not match
+            with that of B
+
         Examples
         ========
 
@@ -351,7 +395,7 @@ class SDM(dict):
         >>> from sympy import ZZ
         >>> from sympy.polys.matrices.sdm import SDM
         >>> A = SDM({0:{1: ZZ(2)}, 1:{0:ZZ(1)}}, (2, 2), ZZ)
-        >>> B  = SDM({0:{0: ZZ(3)}, 1:{1:ZZ(4)}}, (2, 2), ZZ)
+        >>> B = SDM({0:{0: ZZ(3)}, 1:{1:ZZ(4)}}, (2, 2), ZZ)
         >>> A.add(B)
         {0: {0: 3, 1: 2}, 1: {0: 1, 1: 4}}
 
@@ -396,6 +440,28 @@ class SDM(dict):
         """
         Csdm = unop_dict(A, neg)
         return A.new(Csdm, A.shape, A.domain)
+
+    def __add__(A, B):
+        if not isinstance(B, SDM):
+            return NotImplemented
+        return A.add(B)
+
+    def __sub__(A, B):
+        if not isinstance(B, SDM):
+            return NotImplemented
+        return A.sub(B)
+
+    def __neg__(A):
+        return A.neg()
+
+    def __mul__(A, B):
+        """A * B"""
+        if isinstance(B, SDM):
+            return A.matmul(B)
+        elif B in A.domain:
+            return A.mul(B)
+        else:
+            return NotImplemented
 
     def convert_to(A, K):
         """
@@ -446,7 +512,7 @@ class SDM(dict):
 
         >>> from sympy import QQ
         >>> from sympy.polys.matrices.sdm import SDM
-        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0: QQ(3), 1: QQ(4)}}, (2, 2), QQ)
+        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
         >>> A.inv()
         {0: {0: -2, 1: 1}, 1: {0: 3/2, 1: -1/2}}
 
@@ -462,7 +528,7 @@ class SDM(dict):
 
         >>> from sympy import QQ
         >>> from sympy.polys.matrices.sdm import SDM
-        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0: QQ(3), 1: QQ(4)}}, (2, 2), QQ)
+        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
         >>> A.det()
         -2
 
@@ -479,7 +545,7 @@ class SDM(dict):
 
         >>> from sympy import QQ
         >>> from sympy.polys.matrices.sdm import SDM
-        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0: QQ(3), 1: QQ(4)}}, (2, 2), QQ)
+        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
         >>> A.lu()
         ({0: {0: 1}, 1: {0: 3, 1: 1}}, {0: {0: 1, 1: 2}, 1: {1: -2}}, [])
 
@@ -497,7 +563,7 @@ class SDM(dict):
 
         >>> from sympy import QQ
         >>> from sympy.polys.matrices.sdm import SDM
-        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0: QQ(3), 1: QQ(4)}}, (2, 2), QQ)
+        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
         >>> b = SDM({0:{0:QQ(1)}, 1:{0:QQ(2)}}, (2, 1), QQ)
         >>> A.lu_solve(b)
         {1: {0: 1/2}}
@@ -545,7 +611,7 @@ class SDM(dict):
         >>> from sympy import QQ
         >>> from sympy.polys.matrices.sdm import SDM
         >>> B = SDM({0:{0:QQ(1)}, 1:{0:QQ(2)}}, (2, 1), QQ)
-        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0: QQ(3), 1: QQ(4)}}, (2, 2), QQ)
+        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
         >>> A.hstack(B)
         {0: {0: 1, 1: 2, 2: 1}, 1: {0: 3, 1: 4, 2: 2}}
 
@@ -580,10 +646,19 @@ class SDM(dict):
 
         >>> from sympy import QQ
         >>> from sympy.polys.matrices.sdm import SDM
-        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0: QQ(3), 1: QQ(4)}}, (2, 2), QQ)
+        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
         >>> A.charpoly()
         [1, -5, -2]
 
+        We can create a polynomial using the
+        coefficients using :py:class:`~.Poly`
+
+        >>> from sympy import Symbol
+        >>> from sympy.polys import Poly
+        >>> x = Symbol('x')
+        >>> p = Poly(A.charpoly(), x, domain=A.domain)
+        >>> p
+        Poly(x**2 - 5*x - 2, x, domain='QQ')
 
         """
         return A.to_ddm().charpoly()
