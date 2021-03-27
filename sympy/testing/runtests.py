@@ -727,6 +727,11 @@ def _get_doctest_blacklist():
             "doc/src/modules/numeric-computation.rst",
         ])
 
+    if import_module('cupy') is None:
+        blacklist.extend([
+            "doc/src/modules/numeric-computation.rst",
+        ])
+
     if import_module('antlr4') is None:
         blacklist.extend([
             "sympy/parsing/autolev/__init__.py",
