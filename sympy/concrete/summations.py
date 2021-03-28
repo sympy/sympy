@@ -1378,6 +1378,28 @@ def eval_sum_residue(f, i_a_b):
             return None
         return numer, denom
 
+    def get_poles(denom):
+        roots = denom.sqf_part().all_roots()
+        roots = sift(roots, lambda x: x.is_integer)
+        if None in roots:
+            return None
+        int_roots, nonint_roots = roots[True], roots[False]
+        return int_roots, nonint_roots
+
+    def get_shift(denom):
+        n = denom.degree(i)
+        a = denom.coeff_monomial(i**n)
+        b = denom.coeff_monomial(i**(n-1))
+        shift = - b / a / n
+        return shift
+
+    def get_residue_factor(numer, denom, alternating):
+        if not alternating:
+            residue_factor = (numer.as_expr() / denom.as_expr()) * cot(S.Pi * i)
+        else:
+            residue_factor = (numer.as_expr() / denom.as_expr()) * csc(S.Pi * i)
+        return residue_factor
+
     # We don't know how to deal with symbolic constants in summand
     if f.free_symbols - set([i]):
         return None
@@ -1406,66 +1428,87 @@ def eval_sum_residue(f, i_a_b):
     if denom.degree(i) - numer.degree(i) < 2:
         return None
 
-    roots = denom.sqf_part().all_roots()
-    roots = sift(roots, lambda x: x.is_integer)
-    if None in roots:
-        return None
-    int_roots, nonint_roots = roots[True], roots[False]
-
-    if not alternating:
-        residue_expr = (numer.as_expr() / denom.as_expr()) * cot(S.Pi * i)
-    else:
-        residue_expr = (numer.as_expr() / denom.as_expr()) * csc(S.Pi * i)
-
     if (a, b) == (S.NegativeInfinity, S.Infinity):
+        poles = get_poles(denom)
+        if poles is None:
+            return None
+        int_roots, nonint_roots = poles
+
         if int_roots:
             return None
 
-        residues = [residue(residue_expr, i, root) for root in nonint_roots]
+        residue_factor = get_residue_factor(numer, denom, alternating)
+        residues = [residue(residue_factor, i, root) for root in nonint_roots]
         return -S.Pi * sum(residues)
 
-    if is_even_function(numer, denom):
-        if not (a.is_finite and b is S.Infinity):
+    if not (a.is_finite and b is S.Infinity):
+        return None
+
+    if not is_even_function(numer, denom):
+        # Try shifting summation and check if the summand can be made
+        # and even function from the origin.
+        # Sum(f(n), (n, a, b)) => Sum(f(n + s), (n, a - s, b - s))
+        shift = get_shift(denom)
+
+        if not shift.is_Integer:
+            return None
+        if shift == 0:
             return None
 
-        if int_roots:
-            int_roots = [int(root) for root in int_roots]
-            int_roots_max = max(int_roots)
-            int_roots_min = min(int_roots)
-            # Integer valued poles must be next to each other
-            # and also symmetric from origin (Because the function is even)
-            if not len(int_roots) == int_roots_max - int_roots_min + 1:
-                return None
+        numer = numer.shift(shift)
+        denom = denom.shift(shift)
 
-            # Check whether the summation indices contain poles
-            if a <= max(int_roots):
-                return None
+        if not is_even_function(numer, denom):
+            return None
 
-        residues = [residue(residue_expr, i, root) for root in int_roots + nonint_roots]
-        full_sum = -S.Pi * sum(residues)
-
-        if not int_roots:
-            # Compute Sum(f, (i, 0, oo)) by adding a extraneous evaluation
-            # at the origin.
-            half_sum = (full_sum + f.xreplace({i: 0})) / 2
-
-            # Add and subtract extraneous evaluations
-            extraneous_neg = [f.xreplace({i: i0}) for i0 in range(int(a), 0)]
-            extraneous_pos = [f.xreplace({i: i0}) for i0 in range(0, int(a))]
-            result = half_sum + sum(extraneous_neg) - sum(extraneous_pos)
-
-            return result
-
+        if alternating:
+            f = (-1)**i * ((-1)**shift * numer.as_expr() / denom.as_expr())
         else:
-            # Compute Sum(f, (i, min(poles) + 1, oo))
-            half_sum = full_sum / 2
+            f = numer.as_expr() / denom.as_expr()
+        return eval_sum_residue(f, (i, a-shift, b-shift))
 
-            # Subtract extraneous evaluations
-            extraneous = [f.xreplace({i: i0}) for i0 in range(max(int_roots) + 1, int(a))]
-            result = half_sum - sum(extraneous)
+    poles = get_poles(denom)
+    if poles is None:
+        return None
+    int_roots, nonint_roots = poles
 
-            return result
-    return None
+    if int_roots:
+        int_roots = [int(root) for root in int_roots]
+        int_roots_max = max(int_roots)
+        int_roots_min = min(int_roots)
+        # Integer valued poles must be next to each other
+        # and also symmetric from origin (Because the function is even)
+        if not len(int_roots) == int_roots_max - int_roots_min + 1:
+            return None
+
+        # Check whether the summation indices contain poles
+        if a <= max(int_roots):
+            return None
+
+    residue_factor = get_residue_factor(numer, denom, alternating)
+    residues = [residue(residue_factor, i, root) for root in int_roots + nonint_roots]
+    full_sum = -S.Pi * sum(residues)
+
+    if not int_roots:
+        # Compute Sum(f, (i, 0, oo)) by adding a extraneous evaluation
+        # at the origin.
+        half_sum = (full_sum + f.xreplace({i: 0})) / 2
+
+        # Add and subtract extraneous evaluations
+        extraneous_neg = [f.xreplace({i: i0}) for i0 in range(int(a), 0)]
+        extraneous_pos = [f.xreplace({i: i0}) for i0 in range(0, int(a))]
+        result = half_sum + sum(extraneous_neg) - sum(extraneous_pos)
+
+        return result
+
+    # Compute Sum(f, (i, min(poles) + 1, oo))
+    half_sum = full_sum / 2
+
+    # Subtract extraneous evaluations
+    extraneous = [f.xreplace({i: i0}) for i0 in range(max(int_roots) + 1, int(a))]
+    result = half_sum - sum(extraneous)
+
+    return result
 
 
 def _eval_matrix_sum(expression):
