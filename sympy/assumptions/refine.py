@@ -18,11 +18,9 @@ def refine(expr, assumptions=True):
     the form which is only valid under certain assumptions. Note that
     ``simplify()`` is generally not done in refining process.
 
-    Refining boolean expression involves reducing it to ``True`` or
-    ``False``. Unlike :func:~.`ask()`, the expression will not be reduced
+    Refining boolean expression involves reducing it to ``S.true`` or
+    ``S.false``. Unlike :func:`~.ask()`, the expression will not be reduced
     if the truth value cannot be determined.
-
-    The return value is always SymPy object.
 
     Examples
     ========

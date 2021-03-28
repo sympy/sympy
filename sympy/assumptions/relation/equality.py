@@ -3,9 +3,9 @@ Module for mathematical equality [1] and inequalities [2].
 
 The purpose of this module is to provide the instances which represent the
 binary predicates in order to combine the relationals into logical inference
-system. Every class in this module should remain internal to assumptions module,
-and user must use the classes in ``core/relational`` instead to construct the
-relational expressions.
+system. Objects such as ``Q.eq``, ``Q.lt`` should remain internal to
+assumptions module, and user must use the classes such as :obj:`~.Eq()`,
+:obj:`~.Lt()` instead to construct the relational expressions.
 
 References
 ==========
@@ -31,7 +31,7 @@ class EqualityPredicate(BinaryRelation):
     This class must remain internal to assumptions module and user must
     use :obj:`~.Eq()` instead to construct the equality expression.
 
-    Evaluation logic of this predicate is delegated to
+    Evaluating this predicate to ``True`` or ``False`` is done by
     :func:`~.core.relational.is_eq()`
 
     Examples
@@ -72,7 +72,7 @@ class UnequalityPredicate(BinaryRelation):
     This class must remain internal to assumptions module and user must
     use :obj:`~.Ne()` instead to construct the inequation expression.
 
-    Evaluation logic of this predicate is delegated to
+    Evaluating this predicate to ``True`` or ``False`` is done by
     :func:`~.core.relational.is_neq()`
 
     Examples
@@ -113,7 +113,7 @@ class StrictGreaterThanPredicate(BinaryRelation):
     This class must remain internal to assumptions module and user must
     use :obj:`~.Gt()` instead to construct the equality expression.
 
-    Evaluation logic of this predicate is delegated to
+    Evaluating this predicate to ``True`` or ``False`` is done by
     :func:`~.core.relational.is_gt()`
 
     Examples
@@ -158,7 +158,7 @@ class GreaterThanPredicate(BinaryRelation):
     This class must remain internal to assumptions module and user must
     use :obj:`~.Ge()` instead to construct the equality expression.
 
-    Evaluation logic of this predicate is delegated to
+    Evaluating this predicate to ``True`` or ``False`` is done by
     :func:`~.core.relational.is_ge()`
 
     Examples
@@ -203,7 +203,7 @@ class StrictLessThanPredicate(BinaryRelation):
     This class must remain internal to assumptions module and user must
     use :obj:`~.Lt()` instead to construct the equality expression.
 
-    Evaluation logic of this predicate is delegated to
+    Evaluating this predicate to ``True`` or ``False`` is done by
     :func:`~.core.relational.is_lt()`
 
     Examples
@@ -248,7 +248,7 @@ class LessThanPredicate(BinaryRelation):
     This class must remain internal to assumptions module and user must
     use :obj:`~.Le()` instead to construct the equality expression.
 
-    Evaluation logic of this predicate is delegated to
+    Evaluating this predicate to ``True`` or ``False`` is done by
     :func:`~.core.relational.is_le()`
 
     Examples
