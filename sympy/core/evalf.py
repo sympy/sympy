@@ -25,7 +25,6 @@ from mpmath.libmp.gammazeta import mpf_bernoulli
 from .compatibility import SYMPY_INTS
 from .sympify import sympify
 from .singleton import S
-from .basic import doit
 from sympy.utilities.iterables import is_sequence
 
 LG10 = math.log(10, 2)
