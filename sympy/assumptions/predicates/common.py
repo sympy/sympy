@@ -15,7 +15,7 @@ class CommutativePredicate(Predicate):
     """
     # TODO: Add examples
     name = 'commutative'
-    handler = Dispatcher("FiniteHandler", doc="Handler for key 'commutative'.")
+    handler = Dispatcher("CommutativeHandler", doc="Handler for key 'commutative'.")
 
 
 class IsTruePredicate(Predicate):
@@ -39,6 +39,6 @@ class IsTruePredicate(Predicate):
     """
     name = 'is_true'
     handler = Dispatcher(
-        "FiniteHandler",
+        "IsTrueHandler",
         doc="Wrapper allowing to query the truth value of a boolean expression."
     )
