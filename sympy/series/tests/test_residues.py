@@ -1,5 +1,5 @@
 from sympy import (residue, Symbol, Function, sin, I, exp, log, pi,
-                   factorial, sqrt, Rational)
+                   factorial, sqrt, Rational, cot)
 from sympy.testing.pytest import XFAIL, raises
 from sympy.abc import x, z, a, s
 
@@ -75,3 +75,7 @@ def test_issue_6499():
 
 def test_issue_14037():
     assert residue(sin(x**50)/x**51, x, 0) == 1
+
+
+def test_issue_21176():
+    assert residue(x**2*cot(pi*x)/(x**4 + 1), x, -sqrt(2)/2 - sqrt(2)*I/2) == 0
