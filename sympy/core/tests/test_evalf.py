@@ -612,4 +612,3 @@ def test_issue_21147():
     assert Mul(2, Pow(0,-1, evaluate=False), evaluate=False).evalf() == zoo
     expr = Pow(0, -1, evaluate=False)
     assert expr.evalf() == expr.doit()
-    
