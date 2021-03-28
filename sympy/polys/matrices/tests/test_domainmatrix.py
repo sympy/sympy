@@ -447,11 +447,11 @@ def test_DomainMatrix_zeros():
 def test_DomainMatrix_scalarmul():
     A = DomainMatrix.from_Matrix(Matrix([[1, 2], [3, 4]]))
     lamda = (S(3)/2)
-    assert A.scalarmul(lamda) == DomainMatrix([[QQ(3)/QQ(2), QQ(3)], [QQ(9)/QQ(2), QQ(6)]], (2, 2), QQ)
+    assert A * lamda == DomainMatrix([[QQ(3)/QQ(2), QQ(3)], [QQ(9)/QQ(2), QQ(6)]], (2, 2), QQ)
 
-    raises(TypeError, lambda: A.scalarmul(DomainMatrix([[1]],(1, 1),ZZ)))
+    raises(TypeError, lambda: A * DDM([[1]],(1, 1),ZZ))
 
 def test_DomainMatrix_scalardiv():
     A = DomainMatrix.from_Matrix(Matrix([[1, 2], [3, 4]]))
     a=(S(3)/2)
-    assert A.scalardiv(a) == DomainMatrix([[QQ(2)/QQ(3), QQ(4)/QQ(3)], [QQ(2), QQ(8)/QQ(3)]], (2, 2), QQ)
+    assert A / a == DomainMatrix([[QQ(2)/QQ(3), QQ(4)/QQ(3)], [QQ(2), QQ(8)/QQ(3)]], (2, 2), QQ)

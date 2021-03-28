@@ -21,8 +21,6 @@ from .sdm import SDM
 
 from .domainscalar import DomainScalar
 
-from sympy.core.expr import Expr
-
 class DomainMatrix:
 
     def __init__(self, rows, shape, domain):
@@ -113,7 +111,14 @@ class DomainMatrix:
             return A.matmul(B)
         elif B in A.domain:
             return A.from_rep(A.rep * B)
+        elif isinstance(B, DomainScalar):
+            return A.scalarmul(B)
         else:
+            if not isinstance(B, DomainScalar):
+                if isinstance(B, dict) or isinstance(B, list) or isinstance(B, DDM) or isinstance(B, SDM): # will still miss cases like what if matrix is passed
+                    raise TypeError("unsupported operand type(s) for *:  'DomainMatrix' and '%s'" % type(B).__name__)
+
+                return A.scalarmul(DomainScalar.from_sympy(B))
             return NotImplemented
 
     def __rmul__(A, B):
@@ -152,12 +157,6 @@ class DomainMatrix:
         return A.from_rep(A.rep.matmul(B.rep))
 
     def scalarmul(A, lamda):
-        if not isinstance(lamda, DomainScalar):
-            if not isinstance(lamda, Expr):
-                if isinstance(lamda, DomainMatrix) or isinstance(lamda, DDM) or isinstance(lamda, SDM):
-                    raise TypeError
-            lamda = DomainScalar.from_sympy(lamda)
-
         A, lamda = A.unify(lamda)
         if lamda.element == lamda.domain.zero:
             return DomainScalar(A.domain.zero, A.domain)
@@ -166,11 +165,12 @@ class DomainMatrix:
 
         return A.from_rep(A.rep.scalarmul(lamda.element))
 
-    def scalardiv(A, lamda):
+    def __truediv__(A, lamda):
+        """ Method for Scalar Divison"""
         if not isinstance(lamda, DomainScalar):
-            if not isinstance(lamda, Expr):
-                if isinstance(lamda, DomainMatrix) or isinstance(lamda, DDM) or isinstance(lamda, SDM):
-                    raise TypeError
+            if isinstance(lamda, DomainMatrix) or isinstance(lamda, DDM) or isinstance(lamda, SDM):
+                raise TypeError("unsupported operand type(s) for /:  'DomainMatrix' and '%s'" % type(lamda).__name__)
+
             lamda = DomainScalar.from_sympy(lamda)
 
         A, lamda = A.unify(lamda)
@@ -179,7 +179,7 @@ class DomainMatrix:
         if lamda.element == lamda.domain.one:
             return A
 
-        return A.scalarmul(1/lamda.element)
+        return A.scalarmul(DomainScalar.from_sympy(1/lamda.element))
 
     def pow(A, n):
         if n < 0:

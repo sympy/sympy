@@ -54,8 +54,12 @@ class DomainScalar:
         return self.new(self.element - other.element, self.domain)
 
     def __mul__(self, other):
+        from .domainmatrix import DomainMatrix # it raises circular imports if defined at top or bottom
         if not isinstance(other, DomainScalar):
+            if isinstance(other, DomainMatrix):
+                return other.scalarmul(self)
             return NotImplemented
+
         self, other = self.unify(other)
         return self.new(self.element * other.element, self.domain)
 
