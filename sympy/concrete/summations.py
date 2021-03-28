@@ -1359,6 +1359,16 @@ def eval_sum_residue(f, i_a_b):
         \sum_{n=-\infty, g(n) \ne 0}^{\infty} (-1)^n \frac{f(n)}{g(n)} =
         -\pi \sum_{\alpha|g(\alpha)=0}
         \text{Res}(\csc(\pi x) \frac{f(x)}{g(x)}, \alpha)
+
+    References
+    ==========
+
+    .. [#] http://www.supermath.info/InfiniteSeriesandtheResidueTheorem.pdf
+
+    .. [#] Asmar N.H., Grafakos L. (2018) Residue Theory.
+           In: Complex Analysis with Applications.
+           Undergraduate Texts in Mathematics. Springer, Cham.
+           https://doi.org/10.1007/978-3-319-94063-2_5
     """
     i, a, b = i_a_b
 
