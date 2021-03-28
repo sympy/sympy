@@ -1,7 +1,7 @@
 from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
     integrate, log, Mul, N, oo, pi, Pow, product, Product, tan,
-    Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat, cosh, acosh, acos)
+    Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat, cosh, acosh, acos, zoo, doit)
 from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
     scaled_zero, get_integer_part, as_mpmath, evalf)
@@ -605,3 +605,10 @@ def test_issue_20291():
 
     sol = Complement(Intersection(FiniteSet(-b/2 - sqrt(b**2-4*pi)/2), Reals), FiniteSet(0))
     assert sol.evalf(subs={b: 1}) == EmptySet
+
+
+def test_issue_21147():
+    assert Pow(0, -1, evaluate=False).evalf() == zoo
+    assert Mul(2, Pow(0,-1, evaluate=False), evaluate=False).evalf() == zoo
+    expr = Pow(0, -1, evaluate=False)
+    assert expr.evalf() == expr.doit()

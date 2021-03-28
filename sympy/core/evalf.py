@@ -25,7 +25,7 @@ from mpmath.libmp.gammazeta import mpf_bernoulli
 from .compatibility import SYMPY_INTS
 from .sympify import sympify
 from .singleton import S
-
+from .basic import doit
 from sympy.utilities.iterables import is_sequence
 
 LG10 = math.log(10, 2)
@@ -1500,7 +1500,8 @@ class EvalfMixin:
             m = _mag(rv)
             rv = rv.round(1 - m)
             return rv
-
+        if self.doit() is S.ComplexInfinity: # issue 21147
+            return self.doit()
         if not evalf_table:
             _create_evalf_table()
         prec = dps_to_prec(n)
