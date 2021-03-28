@@ -1360,6 +1360,45 @@ def eval_sum_residue(f, i_a_b):
         -\pi \sum_{\alpha|g(\alpha)=0}
         \text{Res}(\csc(\pi x) \frac{f(x)}{g(x)}, \alpha)
 
+    Examples
+    ========
+
+    >>> from sympy import Sum, oo, Symbol
+    >>> x = Symbol('x')
+
+    Doubly infinite series of rational functions.
+
+    >>> Sum(1 / (x**2 + 1), (x, -oo, oo)).doit()
+    pi/tanh(pi)
+
+    Doubly infinite alternating series of rational functions.
+
+    >>> Sum((-1)**x / (x**2 + 1), (x, -oo, oo)).doit()
+    pi/sinh(pi)
+
+    Infinite series of even rational functions.
+
+    >>> Sum(1 / (x**2 + 1), (x, 0, oo)).doit()
+    1/2 + pi/(2*tanh(pi))
+
+    Infinite series of alternating even rational functions.
+
+    >>> Sum((-1)**x / (x**2 + 1), (x, 0, oo)).doit()
+    pi/(2*sinh(pi)) + 1/2
+
+    This also have heuristics to transform arbitrarily shifted summand or
+    arbitrarily shifted summation range to the canonical problem the
+    formula can handle.
+
+    >>> Sum(1 / (x**2 + 2*x + 2), (x, -1, oo)).doit()
+    1/2 + pi/(2*tanh(pi))
+    >>> Sum(1 / (x**2 + 4*x + 5), (x, -2, oo)).doit()
+    1/2 + pi/(2*tanh(pi))
+    >>> Sum(1 / (x**2 + 1), (x, 1, oo)).doit()
+    -1/2 + pi/(2*tanh(pi))
+    >>> Sum(1 / (x**2 + 1), (x, 2, oo)).doit()
+    -1 + pi/(2*tanh(pi))
+
     References
     ==========
 
