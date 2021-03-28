@@ -309,8 +309,10 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     This function evaluates the proposition to ``True`` or ``False`` if
     the truth value can be determined. If not, it returns ``None``.
-    It should be discerned from :func:`~.refine()` which does not reduce
-    the expression to ``None`` and returns simplified SymPy object.
+
+    It should be discerned from :func:`~.refine()` which, when applied to a
+    proposition, simplifies the argument to symbolic ``Boolean`` instead of
+    Python built-in ``True``, ``False`` or ``None``.
 
     Parameters
     ==========
