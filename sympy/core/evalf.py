@@ -1498,7 +1498,7 @@ class EvalfMixin:
             rv = self.evalf(2, subs, maxn, chop, strict, quad, verbose)
             m = _mag(rv)
             rv = rv.round(1 - m)
-            return rv        
+            return rv
         if not evalf_table:
             _create_evalf_table()
         prec = dps_to_prec(n)
