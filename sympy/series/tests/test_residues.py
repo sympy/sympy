@@ -79,4 +79,3 @@ def test_issue_14037():
 
 def test_issue_21176():
     assert residue(x**2*cot(pi*x)/(x**4 + 1), x, -sqrt(2)/2 - sqrt(2)*I/2) == 0
-    
