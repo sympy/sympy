@@ -1499,9 +1499,7 @@ class EvalfMixin:
             rv = self.evalf(2, subs, maxn, chop, strict, quad, verbose)
             m = _mag(rv)
             rv = rv.round(1 - m)
-            return rv
-        if self.doit() is S.ComplexInfinity: # issue 21147
-            return self.doit()
+            return rv        
         if not evalf_table:
             _create_evalf_table()
         prec = dps_to_prec(n)
@@ -1529,6 +1527,8 @@ class EvalfMixin:
             except NotImplementedError:
                 # Probably contains symbols or unknown functions
                 return v
+        if self.doit() is S.ComplexInfinity: # issue 21147
+            return self.doit()
         re, im, re_acc, im_acc = result
         if re:
             p = max(min(prec, re_acc), 1)
