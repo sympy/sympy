@@ -24,7 +24,7 @@ def test_components():
     assert components(Derivative(f(x), x), x) == \
         {x, f(x), Derivative(f(x), x)}
     assert components(f(x)*diff(f(x), x), x) == \
-        {x, f(x), Derivative(f(x), x), Derivative(f(x), x)}
+        {x, f(x), Derivative(f(x), x)}
 
 def test_issue_10680():
     assert isinstance(integrate(x**log(x**log(x**log(x))),x), Integral)
