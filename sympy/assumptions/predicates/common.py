@@ -1,4 +1,5 @@
-from sympy.assumptions import Predicate, AppliedPredicate
+from sympy.assumptions import Predicate, AppliedPredicate, Q
+from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.multipledispatch import Dispatcher
 
 
@@ -18,6 +19,8 @@ class CommutativePredicate(Predicate):
     handler = Dispatcher("CommutativeHandler", doc="Handler for key 'commutative'.")
 
 
+binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
+
 class IsTruePredicate(Predicate):
     """
     Generic predicate.
@@ -32,7 +35,7 @@ class IsTruePredicate(Predicate):
     ========
 
     >>> from sympy import ask, Q
-    >>> from sympy.abc import x
+    >>> from sympy.abc import x, y
     >>> ask(Q.is_true(True))
     True
 
@@ -41,12 +44,24 @@ class IsTruePredicate(Predicate):
     >>> Q.is_true(Q.even(x))
     Q.even(x)
 
+    Wrapping binary relation classes in SymPy core returns applied binary
+    relational predicates.
+
+    >>> from sympy.core import Eq, Gt
+    >>> Q.is_true(Eq(x, y))
+    Q.eq(x, y)
+    >>> Q.is_true(Gt(x, y))
+    Q.gt(x, y)
+
     Notes
     =====
 
     This class is designed to wrap the boolean objects so that they can
     behave as if they are applied predicates. Consequently, wrapping another
     applied predicate is unnecessary and thus it just returns the argument.
+    Also, binary relation classes in SymPy core have binary predicates to
+    represent themselves and thus wrapping them with ``Q.is_true`` converts them
+    to these applied predicates.
 
     """
     name = 'is_true'
@@ -59,4 +74,8 @@ class IsTruePredicate(Predicate):
         # No need to wrap another predicate
         if isinstance(arg, AppliedPredicate):
             return arg
+        # Convert relational predicates instead of wrapping them
+        if getattr(arg, "is_Relational", False):
+            pred = binrelpreds[arg.func]
+            return pred(*arg.args)
         return super().__call__(arg)
