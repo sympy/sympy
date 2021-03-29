@@ -10,6 +10,7 @@ from sympy.core.expr import unchanged
 from sympy.core.relational import Eq, Ne, Le, Lt, LessThan
 from sympy.logic import And, Or, Xor
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy.solvers.tests.test_solveset import dumeq
 
 from sympy.abc import x, y, z, m, n
 
@@ -1510,7 +1511,7 @@ def test_Union_imageset_linear_expression():
     img1 = ImageSet(Lambda(n, 30*n + 15), S.Integers)
     img2 = ImageSet(Lambda(n, 30*n), S.Integers)
     uni = ImageSet(Lambda(n, 15*n), S.Integers)
-    assert Union(img1, img2) == uni
+    assert dumeq(Union(img1, img2), uni)
 
     img1 = ImageSet(Lambda(n, n + 5), S.Integers)
     img2 = ImageSet(Lambda(n, 3*n), S.Integers)
@@ -1545,7 +1546,7 @@ def test_union_imageset():
     assert Union(img1, S.EmptySet) == img1
 
     img2 = ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)
-    assert Union(img1, img2).dummy_eq(ImageSet(Lambda(n, n * pi), S.Integers))
+    assert dumeq(Union(img1, img2), ImageSet(Lambda(n, n * pi), S.Integers))
 
     img2 = ImageSet(Lambda(n, 2*n*pi + pi), Interval(0, 10))
     uni = Union(img1, img2, evaluate=False)
@@ -1559,7 +1560,7 @@ def test_union_imageset():
     img1 = ImageSet(Lambda(n, 2*n*pi + pi/4), S.Integers)
     img2 = ImageSet(Lambda(n, 2*n*pi + 5*pi/ 4), S.Integers)
     union = ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
-    assert Union(img1, img2).dummy_eq(union)
+    assert dumeq(Union(img1, img2), union)
 
     img1 = ImageSet(Lambda(n, 2*n*pi - pi/3), S.Integers)
     img2 = ImageSet(Lambda(n, 2*n*pi + 2*pi/3), S.Integers)
@@ -1567,7 +1568,7 @@ def test_union_imageset():
     img4 = ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers)
     img5 = ImageSet(Lambda(n, n*pi + pi/3), S.Integers)
     img6 = ImageSet(Lambda(n, n*pi + 2*pi/3), S.Integers)
-    assert Union(img1, img2, img3, img4).dummy_eq(Union(img5, img6, evaluate=False))
+    assert dumeq(Union(img1, img2, img3, img4), Union(img5, img6, evaluate=False))
 
     img1 = ImageSet(Lambda(n, 4*n*pi + pi/4), S.Integers)
     img2 = ImageSet(Lambda(n, 4*n*pi + 5*pi/4), S.Integers)
@@ -1585,17 +1586,17 @@ def test_union_imageset():
     img1 = ImageSet(Lambda(n, 4*n*pi + 2*pi), S.Integers)
     img2 = ImageSet(Lambda(n, 4*n*pi), S.Integers)
     uni = ImageSet(Lambda(n, 2*n*pi), S.Integers)
-    assert Union(img1, img2).dummy_eq(uni)
+    assert dumeq(Union(img1, img2), uni)
 
     img1 = ImageSet(Lambda(n, 12*n*pi + 6*pi), S.Integers)
     img2 = ImageSet(Lambda(n, 12*n*pi), S.Integers)
     uni = ImageSet(Lambda(n, 6*n*pi), S.Integers)
-    assert Union(img1, img2).dummy_eq(uni)
+    assert dumeq(Union(img1, img2), uni)
 
     img1 = ImageSet(Lambda(n, 7*n*pi), S.Integers)
     img2 = ImageSet(Lambda(n, 7*n*pi + 7*pi), S.Integers)
     uni = ImageSet(Lambda(n, 7*n*pi), S.Integers)
-    assert Union(img1, img2).dummy_eq(uni)
+    assert Union(img1, img2) == uni
 
     img1 = ImageSet(Lambda(n, n*pi + 2*pi/3), S.Integers)
     img2 = ImageSet(Lambda(n, n*pi + pi/6), S.Integers)
@@ -1603,8 +1604,8 @@ def test_union_imageset():
     img4 = ImageSet(Lambda(n, n*pi + 5 * pi/6), S.Integers)
     uni1 = ImageSet(Lambda(n, pi*n/2 + pi/6), S.Integers)
     uni2 = ImageSet(Lambda(n, pi*n/2 + pi/3), S.Integers)
-    assert Union(img1, img2).dummy_eq(uni1)
-    assert Union(img3, img4).dummy_eq(uni2)
+    assert dumeq(Union(img1, img2), uni1)
+    assert dumeq(Union(img3, img4), uni2)
 
 
 def test_DisjointUnion():

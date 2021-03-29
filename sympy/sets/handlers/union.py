@@ -144,7 +144,8 @@ def union_sets(a, b): # noqa:F811
 
 @dispatch(ImageSet, ImageSet)  # type: ignore
 def union_sets(a, b): # noqa:F811
-    """Simplify union of two arithmetic sequences if possible.
+    r"""
+    Simplify union of two arithmetic sequences if possible.
 
     Given two ``ImageSet``s *a* and *b* representing arithmetic sequences
     respectively defined by $n \mapsto p n + q$ and $n \mapsto r n + s$, with
@@ -157,11 +158,12 @@ def union_sets(a, b): # noqa:F811
 
     """
     if (a.base_set != S.Integers or b.base_set != S.Integers or
-        not all(isinstance(imgset.lamda.expr, Expr) for imgset in (a, b))):
-            return None
+            not all(isinstance(imgset.lamda.expr, Expr)
+            for imgset in (a, b))):
+        return None
 
     def extract_linear_coeffs(imgset):
-        """Returns $p$, $q$ in $n \mapsto p n + q$; else None."""
+        # Returns $p$, $q$ in $n \mapsto p n + q$; else None.
         expr = imgset.lamda.expr
         var = imgset.lamda.variables
         if len(var) > 1:
@@ -177,11 +179,16 @@ def union_sets(a, b): # noqa:F811
     rs = extract_linear_coeffs(b)
     if not rs:
         return
+
     p, q, r, s = *pq, *rs
+    if cancel((s - q)/p).is_positive:
+        # to maintain order so the tests shouldn't fail
+        return union_sets(b, a)
 
     def in_sequence(x, p, q):
         # x == p*n + q iff n == (x - q)/p
         return cancel((x - q)/p).is_integer == True
+
     def is_subset(p, q, r, s):
         # checks whether {p*n + q} is a subset of {r*m + s}
         if not cancel(p/r).is_integer:
@@ -204,6 +211,6 @@ def union_sets(a, b): # noqa:F811
             return imageset(Lambda(n, u*n + v), S.Integers)
     return None
 
-@dispatch(Set, Set)  # type: ignore
+@dispatch(Set, Set)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     return None
