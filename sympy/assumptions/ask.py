@@ -424,12 +424,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
                     # quick exit if proposition is directly satisfied by assumption
                     # e.g. proposition = Q.integer(x), assumptions = Q.odd(x)
                     return True
-                elif Not(key) in fdict:
-                    # quick exit if proposition is directly rejected by assumption
-                    # example might be proposition = Q.even(x), assumptions = Q.odd(x)
-                    # but known_facts_dict does not have such information yet and
-                    # such example is computed by satask.
-                    return False
 
     # direct resolution method, no logic
     res = key(*args)._eval_ask(assumptions)
