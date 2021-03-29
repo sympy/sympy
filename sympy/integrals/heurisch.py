@@ -743,7 +743,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     if solution is not None:
         antideriv = solution.subs(rev_mapping)
-        antideriv = cancel(antideriv).expand(force=True)
+        antideriv = cancel(antideriv).expand()
 
         if antideriv.is_Add:
             antideriv = antideriv.as_independent(x)[1]
