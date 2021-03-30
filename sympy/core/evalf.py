@@ -1441,9 +1441,9 @@ class EvalfMixin:
             Specifies how to replace tiny real or imaginary parts in
             subresults by exact zeros. e.g.
             ``a = Rational('37751345442791/1000000000000000000000000')
-             b = exp(-24)
-             (a-b).evalf(n=20, chop=True)  #incorrect method
-             a.expand().evalf(n=20, chop=True) - b.expand().evalf(n=20, chop=True) #correct method``
+            b = exp(-24)
+            (a-b).evalf(n=20, chop=True)  #incorrect method
+            a.expand().evalf(n=20, chop=True) - b.expand().evalf(n=20, chop=True) #correct method``
 
             When ``True`` the chop value defaults to standard precision.
 
