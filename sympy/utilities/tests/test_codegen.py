@@ -87,7 +87,6 @@ def test_empty_c_header():
     assert source == "#ifndef PROJECT__FILE__H\n#define PROJECT__FILE__H\n#endif\n"
 
 
-
 def test_simple_c_code():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
@@ -547,7 +546,6 @@ def test_multidim_c_argument_cse():
         "}\n"
     )
     assert code == expected
-
 
 
 def test_ccode_results_named_ordered():
