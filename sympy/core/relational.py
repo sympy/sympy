@@ -1108,33 +1108,33 @@ def _eval_is_eq(lhs, rhs):  # noqa:F811
     return fuzzy_and(fuzzy_bool(is_eq(s, o)) for s, o in zip(lhs, rhs))
 
 
-def is_lt(lhs, rhs):
+def is_lt(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
     """Fuzzy bool for lhs is strictly less than rhs.
 
-    See the docstring for is_ge for more
+    See the docstring for :func:`~.is_ge` for more.
     """
-    return fuzzy_not(is_ge(lhs, rhs))
+    return fuzzy_not(is_ge(lhs, rhs, getter))
 
 
-def is_gt(lhs, rhs):
+def is_gt(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
     """Fuzzy bool for lhs is strictly greater than rhs.
 
-    See the docstring for is_ge for more
+    See the docstring for :func:`~.is_ge` for more.
     """
-    return fuzzy_not(is_le(lhs, rhs))
+    return fuzzy_not(is_le(lhs, rhs, getter))
 
 
-def is_le(lhs, rhs):
+def is_le(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
     """Fuzzy bool for lhs is less than or equal to rhs.
-    is_gt calls is_lt
-    See the docstring for is_ge for more
+
+    See the docstring for :func:`~.is_ge` for more.
     """
-    return is_ge(rhs, lhs)
+    return is_ge(rhs, lhs, getter)
 
 
-def is_ge(lhs, rhs):
+def is_ge(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
     """
-    Fuzzy bool for lhs is greater than or equal to rhs.
+    Fuzzy bool for *lhs* is greater than or equal to *rhs*.
 
     Parameters
     ==========
@@ -1149,12 +1149,15 @@ def is_ge(lhs, rhs):
         and an instance of expression. Throws an exception if
         lhs is not an instance of expression.
 
+    getter : callable, optional
+        Function which gets the property of expressions.
+
     Returns
     =======
 
-    Expr : True if lhs is greater than or equal to rhs, false is
-        lhs is less than rhs, and None if the comparison between
-        lhs and rhs is indeterminate.
+    ``True`` if *lhs* is greater than or equal to *rhs*, ``False`` if
+    *lhs* is less than *rhs*, and ``None`` if the comparison between
+    *lhs* and *rhs* is indeterminate.
 
     Explanation
     ===========
@@ -1165,7 +1168,7 @@ def is_ge(lhs, rhs):
     is_ge(x, y) := is_ge(x, y)
     is_le(x, y) := is_ge(y, x)
     is_lt(x, y) := fuzzy_not(is_ge(x, y))
-    is_gt(x, y) = fuzzy_not(is_ge(y, x))
+    is_gt(x, y) := fuzzy_not(is_ge(y, x))
 
     To maintain these equivalences in fuzzy logic it is important that in cases where
     either x or y is non-real all comparisons will give None.
@@ -1202,7 +1205,6 @@ def is_ge(lhs, rhs):
 
     Examples
     ========
-
 
     >>> is_ge(S(2), S(0))
     True
@@ -1255,7 +1257,7 @@ def is_neq(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
 
 def is_eq(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
     """
-    Fuzzy bool representing mathematical equality between lhs and rhs.
+    Fuzzy bool representing mathematical equality between *lhs* and *rhs*.
 
     Parameters
     ==========
@@ -1272,8 +1274,8 @@ def is_eq(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
     Returns
     =======
 
-    ``True`` if lhs is equal to rhs, ``False`` is lhs is not equal to rhs,
-    and ``None`` if the comparison between lhs and rhs is indeterminate.
+    ``True`` if *lhs* is equal to *rhs*, ``False`` is *lhs* is not equal to *rhs*,
+    and ``None`` if the comparison between *lhs* and *rhs* is indeterminate.
 
     Explanation
     ===========
