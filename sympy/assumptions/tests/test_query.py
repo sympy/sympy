@@ -2340,3 +2340,8 @@ def test_Predicate_handler_is_unique():
     mp1 = MyPredicate('mp1')
     mp2 = MyPredicate('mp2')
     assert mp1.handler is mp2.handler
+
+
+def test_relational():
+    assert ask(Q.eq(x, 0), Q.zero(x))
+    assert not ask(Q.eq(x, 0), Q.nonzero(x))

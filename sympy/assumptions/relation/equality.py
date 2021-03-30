@@ -13,7 +13,7 @@ References
 .. [1] https://en.wikipedia.org/wiki/Equality_(mathematics)
 .. [2] https://en.wikipedia.org/wiki/Inequality_(mathematics)
 """
-from sympy.assumptions import Q
+from sympy.assumptions import ask, Q
 from sympy.core.relational import is_eq, is_neq, is_gt, is_ge, is_lt, is_le
 
 from .binrel import BinaryRelation
@@ -21,6 +21,27 @@ from .binrel import BinaryRelation
 __all__ = ['EqualityPredicate', 'UnequalityPredicate', 'StrictGreaterThanPredicate',
     'GreaterThanPredicate', 'StrictLessThanPredicate', 'LessThanPredicate']
 
+
+def newassump_getter(assumptions):
+    """
+    Returns a function which gets the property of an expression with
+    new assumption system.
+
+    Examples
+    ========
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.relation.equality import newassump_getter
+    >>> from sympy.abc import x
+    >>> getter = newassump_getter(Q.even(x))
+    >>> getter(x, "integer")
+    True
+
+    """
+    def getter(expr, key):
+        pred = getattr(Q, key)
+        return ask(pred(expr), assumptions)
+    return getter
 
 class EqualityPredicate(BinaryRelation):
     """
@@ -60,7 +81,9 @@ class EqualityPredicate(BinaryRelation):
         return Q.ne
 
     def eval(self, args, assumptions=True):
-        return is_eq(*args)
+        if assumptions == True:
+            return is_eq(*args)
+        return is_eq(*args, getter=newassump_getter(assumptions))
 
 
 class UnequalityPredicate(BinaryRelation):
