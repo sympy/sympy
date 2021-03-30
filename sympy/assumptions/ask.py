@@ -389,18 +389,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     """
     from sympy.assumptions.satask import satask
 
-    def relcls_to_relpred(expr):
-        # recursively replace relational class to relational predicate
-        if not expr.args:
-            return expr
-        binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
-        func = binrelpreds.get(expr.func, expr.func)
-        args = (relcls_to_relpred(i) for i in expr.args)
-        return func(*args)
-
-    proposition = relcls_to_relpred(sympify(proposition))
-    assumptions = relcls_to_relpred(sympify(assumptions))
-    context = {relcls_to_relpred(a) for a in context}
+    proposition = sympify(proposition)
+    assumptions = sympify(assumptions)
 
     if isinstance(proposition, Predicate) or proposition.kind is not BooleanKind:
         raise TypeError("proposition must be a valid logical expression")
@@ -408,8 +398,11 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
         raise TypeError("assumptions must be a valid logical expression")
 
+    binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
     if isinstance(proposition, AppliedPredicate):
         key, args = proposition.function, proposition.arguments
+    elif proposition.func in binrelpreds:
+        key, args = binrelpreds[proposition.func], proposition.args
     else:
         key, args = Q.is_true, (proposition,)
 
