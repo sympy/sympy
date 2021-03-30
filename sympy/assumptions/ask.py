@@ -249,6 +249,26 @@ class AssumptionKeys:
         from .relation.equality import UnequalityPredicate
         return UnequalityPredicate()
 
+    @memoize_property
+    def gt(self):
+        from .relation.equality import StrictGreaterThanPredicate
+        return StrictGreaterThanPredicate()
+
+    @memoize_property
+    def ge(self):
+        from .relation.equality import GreaterThanPredicate
+        return GreaterThanPredicate()
+
+    @memoize_property
+    def lt(self):
+        from .relation.equality import StrictLessThanPredicate
+        return StrictLessThanPredicate()
+
+    @memoize_property
+    def le(self):
+        from .relation.equality import LessThanPredicate
+        return LessThanPredicate()
+
 
 Q = AssumptionKeys()
 
@@ -318,8 +338,10 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     This function evaluates the proposition to ``True`` or ``False`` if
     the truth value can be determined. If not, it returns ``None``.
-    It should be discerned from :func:`~.refine()` which does not reduce
-    the expression to ``None``.
+
+    It should be discerned from :func:`~.refine()` which, when applied to a
+    proposition, simplifies the argument to symbolic ``Boolean`` instead of
+    Python built-in ``True``, ``False`` or ``None``.
 
     Parameters
     ==========

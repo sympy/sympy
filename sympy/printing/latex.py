@@ -2691,18 +2691,15 @@ class LatexPrinter(Printer):
     def _print_mpq(self, expr):
         return str(expr)
 
-    def _print_AppliedBinaryRelation(self, expr):
-        rel, args = expr.function, expr.arguments
-        lhs, rhs = args
+    def _print_Predicate(self, expr):
+        return str(expr)
 
-        if hasattr(rel, 'latex_name'):
-            name = rel.latex_name
-        elif hasattr(rel, 'name'):
-            name = rel.name
-        else:
-            name = type(rel).__name__
-
-        return "%s %s %s" % (self._print(lhs), name, self._print(rhs))
+    def _print_AppliedPredicate(self, expr):
+        pred = expr.function
+        args = expr.arguments
+        pred_latex = self._print(pred)
+        args_latex = ', '.join([self._print(a) for a in args])
+        return '%s(%s)' % (pred_latex, args_latex)
 
     def emptyPrinter(self, expr):
         # default to just printing as monospace, like would normally be shown
