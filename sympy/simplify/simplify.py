@@ -1075,7 +1075,10 @@ def logcombine(expr, force=False):
             return rv
 
         # collapse multi-logs as far as possible in a canonical way
-        # TODO: see if x*log(a)+x*log(a)*log(b) -> x*log(a)*(1+log(b))?
+        # Check if x*log(a)+x*log(a)*log(b) -> x*log(a)*(1+log(b)): False
+        # x*log(a)+x*log(a)*log(b) -> x*(log(b)+1)*log(a) only when we call
+        # simplify(logcombine(x*log(a)+x*log(a)*log(b))). Simply calling
+        # logcombine() is not enough to get the above expected result
         # -- in this case, it's unambiguous, but if it were were a log(c) in
         # each term then it's arbitrary whether they are grouped by log(a) or
         # by log(c). So for now, just leave this alone; it's probably better to

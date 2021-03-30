@@ -452,6 +452,7 @@ def test_logcombine_1():
     a = Symbol("a")
     z, w = symbols("z,w", positive=True)
     b = Symbol("b", real=True)
+    assert logcombine(x*log(a)+x*log(a)*log(b)) == x*log(a)*log(b) + x*log(a)
     assert logcombine(log(x) + 2*log(y)) == log(x) + 2*log(y)
     assert logcombine(log(x) + 2*log(y), force=True) == log(x*y**2)
     assert logcombine(a*log(w) + log(z)) == a*log(w) + log(z)
