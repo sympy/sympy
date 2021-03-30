@@ -7,6 +7,13 @@ def test_Ynm():
     th, ph = Symbol("theta", real=True), Symbol("phi", real=True)
     from sympy.abc import n,m
 
+    assert Ynm(n, m, th, ph)._eval_rewrite_as_polynomial(2, -3, th, ph) == 0
+    assert Ynm(n, m, th, ph)._eval_rewrite_as_polynomial(2, 3, th, ph) == 0
+    assert Ynm(n, m, th, ph)._eval_rewrite_as_polynomial(-2, -1, th, ph) == 0
+    assert Ynm(n, m, th, ph)._eval_rewrite_as_cos(2, -3, th, ph) == 0
+    assert Ynm(n, m, th, ph)._eval_rewrite_as_cos(2, 3, th, ph) == 0
+    assert Ynm(n, m, th, ph)._eval_rewrite_as_cos(-2, 1, th, ph) == 0
+
     assert Ynm(0, 0, th, ph).expand(func=True) == 1/(2*sqrt(pi))
     assert Ynm(1, -1, th, ph) == -exp(-2*I*ph)*Ynm(1, 1, th, ph)
     assert Ynm(1, -1, th, ph).expand(func=True) == sqrt(6)*sin(th)*exp(-I*ph)/(4*sqrt(pi))
