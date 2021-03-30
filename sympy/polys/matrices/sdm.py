@@ -37,7 +37,7 @@ class SDM(dict):
     {0: {1: 2}}
 
     We can manipulate :py:class:`~.SDM` the same way
-    as a :py:class:`~.Matrix`
+    as a Matrix class
 
     >>> from sympy import ZZ
     >>> A = SDM({0:{1: ZZ(2)}, 1:{0:ZZ(1)}}, (2, 2), ZZ)
@@ -691,7 +691,7 @@ def sdm_irref(A):
     >>> pivots
     [0, 1]
 
-    The analogous calculation with :py:class:`~.Matrix` would be
+    The analogous calculation with Matrix class would be
 
     >>> from sympy import Matrix
     >>> M = Matrix([[1, 2], [3, 4]])
