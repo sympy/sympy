@@ -163,8 +163,8 @@ SI.set_quantity_scale_factor(stefan_boltzmann_constant, pi**2 * boltzmann_consta
 SI.set_quantity_dimension(atomic_mass_constant, mass)
 SI.set_quantity_scale_factor(atomic_mass_constant, 1.66053906660e-24*gram)
 
-#electron rest mass
-#REF: NIST 2018 CODATA
+# Electron rest mass
+# REF: NIST 2018 CODATA
 SI.set_quantity_dimension(electron_rest_mass_constant, mass)
 SI.set_quantity_scale_factor(electron_rest_mass_constant, 9.1093837015e-31*kilogram )
 
