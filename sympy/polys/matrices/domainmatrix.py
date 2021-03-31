@@ -385,26 +385,23 @@ class DomainMatrix:
             else:
                 raise ValueError("fmt should be 'sparse' or 'dense'")
 
-    def unify(self, other, domain=True, fmt='dense'):
+    def unify(self, other, fmt='dense'):
         """
-        Unify the domains of self and other when domain=True,
-        otherwise unifies internal representation 'sparse'
-        and 'dense' of DomainMatrix
+        Unifies the domains and the format of self and other
+        matrices.
 
         Parameters
         ==========
 
         other : another DomainMatrix
-        domain: specifies whether unify domain or internal representation
-        fmt: if domain=False, fmt='dense'/'sparse' specifies which representation
+        fmt: fmt='dense'/'sparse' specifies which representation
             to convert to
 
         Returns
         =======
 
         (dM1, dM2)
-            dM1, dM2 DomainMatrix matrices with unified Domain, if domain=True
-            dM1, dM2 DomainMatrix with same internal representation, if domain=False
+            dM1, dM2 DomainMatrix matrices with unified Domain and format
 
         Examples
         ========
@@ -419,6 +416,15 @@ class DomainMatrix:
         >>> A.unify(B)
         (DomainMatrix([[1, 2, 3]], (1, 3), QQ), DomainMatrix([[1/2, 3/5]], (1, 2), QQ))
 
+        >>> A = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+        >>> B = DomainMatrix({0:{0: ZZ(1)}}, (2, 2), ZZ)
+        >>> B.rep
+        {0: {0: 1}}
+
+        >>> C, D = A.unify(B)
+        >>> D.rep
+        [[1, 0], [0, 0]]
+
         See Also
         ========
 
@@ -426,10 +432,8 @@ class DomainMatrix:
 
         """
 
-        if domain:
-            return self._unify_domain(other)
-        else:
-            return self._unify_fmt(other, fmt)
+        dM1, dM2 = self._unify_domain(other)
+        return dM1._unify_fmt(dM2, fmt)
 
     def to_Matrix(self):
         r"""
@@ -597,8 +601,7 @@ class DomainMatrix:
         if A.domain != B.domain:
             raise ValueError("domain")
         if isinstance(A.rep, list) != isinstance(B.rep, list):
-            A = A.to_dense()
-            B = B.to_dense()
+            raise ValueError("format")
 
         return A.from_rep(A.rep.add(B.rep))
 
@@ -655,8 +658,7 @@ class DomainMatrix:
             raise ValueError("domain")
 
         if isinstance(A.rep, list) != isinstance(B.rep, list):
-            A = A.to_dense()
-            B = B.to_dense()
+            raise ValueError("format")
 
         return A.from_rep(A.rep.sub(B.rep))
 
@@ -773,8 +775,7 @@ class DomainMatrix:
         """
 
         if isinstance(A.rep, list) != isinstance(B.rep, list):
-            A = A.to_dense()
-            B = B.to_dense()
+            raise ValueError("format")
 
         return A.from_rep(A.rep.matmul(B.rep))
 

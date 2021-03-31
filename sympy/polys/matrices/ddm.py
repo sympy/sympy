@@ -211,23 +211,19 @@ class DDM(list):
         ddm_imatmul(c, a, b)
         return c
 
-    def hstack(A, *B):
+    def hstack(A, B):
         Anew = list(A.copy())
         rows, cols = A.shape
         domain = A.domain
 
-        for Bk in B:
-            Bkrows, Bkcols = Bk.shape
-            assert Bkrows == rows
-            assert Bk.domain == domain
+        Brows, Bcols = B.shape
+        assert Brows == rows
+        assert B.domain == A.domain
 
-            for i, Bki in enumerate(Bk):
-                Ai = Anew[i]
-                if Ai is None:
-                    Anew[i] = Ai = []
-                for Bkij in (Bki):
-                    Ai.append(Bkij)
-            cols += Bkcols
+        cols += Bcols
+
+        for i, Bi in enumerate(B):
+            Anew[i].extend(Bi)
 
         return DDM(Anew, (rows, cols), A.domain)
 
