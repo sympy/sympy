@@ -2622,9 +2622,6 @@ def test_latex_decimal_separator():
 
     assert(latex(Mul(3.4,5.3), decimal_separator = 'comma') == r'18{,}02')
     assert(latex(3.4*5.3, decimal_separator = 'comma') == r'18{,}02')
-    x = symbols('x')
-    y = symbols('y')
-    z = symbols('z')
     assert(latex(x*5.3 + 2**y**3.4 + 4.5 + z, decimal_separator = 'comma') == r'2^{y^{3{,}4}} + 5{,}3 x + z + 4{,}5')
 
     assert(latex(0.987, decimal_separator='comma') == r'0{,}987')
