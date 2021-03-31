@@ -463,7 +463,7 @@ class Beam:
 
         if end:
             # load has an end point within the length of the beam.
-            self.handle_end(x, value, start, order, end)
+            self._handle_end(x, value, start, order, end, type="apply")
 
     def remove_load(self, value, start, order, end=None):
         """
@@ -526,9 +526,9 @@ class Beam:
 
         if end:
             # load has an end point within the length of the beam.
-            self.handle_end(x, value, start, order, end)
+            self._handle_end(x, value, start, order, end, type="remove")
 
-    def handle_end(self, x, value, start, order, end):
+    def _handle_end(self, x, value, start, order, end, type):
         """
         This functions handles the optional `end` value in the
         `apply_load` and `remove_load` functions. When the value
@@ -543,9 +543,19 @@ class Beam:
         # singularity functions that subtract from the load past the end
         # point such that it evaluates to zero past 'end'.
         f = value*x**order
-        for i in range(0, order + 1):
-            self._load -= (f.diff(x, i).subs(x, end - start) *
-                            SingularityFunction(x, end, i)/factorial(i))
+
+        if type == "apply":
+            # iterating for "apply_load" method
+            for i in range(0, order + 1):
+                self._load -= (f.diff(x, i).subs(x, end - start) *
+                                SingularityFunction(x, end, i)/factorial(i))
+        elif type == "remove":
+            # iterating for "remove_load" method
+            for i in range(0, order + 1):
+                    self._load += (f.diff(x, i).subs(x, end - start) *
+                                    SingularityFunction(x, end, i)/factorial(i))
+
+        
 
     @property
     def load(self):
