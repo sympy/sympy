@@ -463,7 +463,7 @@ class Beam:
 
         if end:
             # load has an end point within the length of the beam.
-            handle_end(x, value, start, order, end)
+            self.handle_end(x, value, start, order, end)
 
     def remove_load(self, value, start, order, end=None):
         """
@@ -526,7 +526,7 @@ class Beam:
 
         if end:
             # load has an end point within the length of the beam.
-            handle_end(x, value, start, order, end)
+            self.handle_end(x, value, start, order, end)
 
     def handle_end(self, x, value, start, order, end):
         """
