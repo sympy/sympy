@@ -1443,7 +1443,7 @@ class EvalfMixin:
             >>> from sympy import Rational, exp
             >>> a = Rational('37751345442791/1000000000000000000000000')
             >>> b = exp(-24)
-            >>> (a-b).evalf(n=20, chop=True)  
+            >>> (a-b).evalf(n=20, chop=True)
             0
             >>> a.expand().evalf(n=20, chop=True) - b.expand().evalf(n=20, chop=True)
             2.2483521874930362719e-26
