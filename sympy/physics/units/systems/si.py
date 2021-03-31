@@ -165,6 +165,7 @@ SI.set_quantity_scale_factor(atomic_mass_constant, 1.66053906660e-24*gram)
 
 # Electron rest mass
 # REF: NIST 2018 CODATA
+
 SI.set_quantity_dimension(electron_rest_mass_constant, mass)
 SI.set_quantity_scale_factor(electron_rest_mass_constant, 9.1093837015e-31*kilogram )
 
