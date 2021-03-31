@@ -530,7 +530,7 @@ class Beam:
 
     def handle_end(self, x, value, start, order, end):
         """
-        This functions handles the optional `end` value in the 
+        This functions handles the optional `end` value in the
         `apply_load` and `remove_load` functions. When the value
         of end is not NULL, this function will be executed.
         """
