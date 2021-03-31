@@ -218,7 +218,7 @@ class DDM(list):
 
         Brows, Bcols = B.shape
         assert Brows == rows
-        assert B.domain == A.domain
+        assert B.domain == domain
 
         cols += Bcols
 
