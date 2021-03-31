@@ -3,6 +3,9 @@ from sympy.physics.vector import Point
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
+from sympy.physics.quantum.constants import hbar, m_e
+from sympy import (pi, sin, cos, sqrt, Symbol, symbols)
+
 __all__ = ['Particle']
 
 
@@ -275,3 +278,11 @@ class Particle:
         from sympy.physics.mechanics import inertia_of_point_mass
         return inertia_of_point_mass(self.mass, self.point.pos_from(point),
                                      frame)
+
+    def electron_scattering(self, kinetic_energy, scattering_degree):
+        """By using Broglie relation and Lau condition, we can calculate the reciprocal lattic vector value"""
+        lambdaa = hbar/sqrt(2*m_e*kinetic_energy)
+        k = 2*pi/lambdaa
+        q = 2*k*sin(scattering_degree/2)
+        return q
+

@@ -57,3 +57,6 @@ class HBar(NumberSymbol, metaclass=Singleton):
 
 # Create an instance for everyone to use.
 hbar = HBar()
+
+#electron rest mass is 8.1871057769(25)×10−14 based on: https://en.wikipedia.org/wiki/Electron_rest_mass
+m_e = 8.1871057769*10**(−14)
