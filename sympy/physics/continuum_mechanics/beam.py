@@ -555,7 +555,6 @@ class Beam:
                     self._load += (f.diff(x, i).subs(x, end - start) *
                                     SingularityFunction(x, end, i)/factorial(i))
 
-        
 
     @property
     def load(self):
