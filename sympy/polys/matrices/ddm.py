@@ -84,6 +84,9 @@ class DDM(list):
     This is a list subclass and is a wrapper for a list of lists that supports
     basic matrix arithmetic +, -, *, **.
     """
+
+    fmt = 'dense'
+
     def __init__(self, rowslist, shape, domain):
         super().__init__(rowslist)
         self.shape = self.rows, self.cols = m, n = shape

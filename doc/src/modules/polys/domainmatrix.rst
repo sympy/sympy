@@ -46,3 +46,10 @@ DDM Class Reference
 
 .. autoclass:: DDM
    :members:
+
+SDM Class Reference
+===================
+.. currentmodule:: sympy.polys.matrices.sdm
+
+.. autoclass:: SDM
+   :members:

@@ -9,7 +9,8 @@ from sympy.matrices.dense import Matrix
 from sympy.polys import ZZ, QQ
 
 from sympy.polys.matrices.domainmatrix import DomainMatrix
-from sympy.polys.matrices.exceptions import DDMBadInputError, DDMDomainError
+from sympy.polys.matrices.exceptions import (DDMBadInputError, DDMDomainError,
+        DDMShapeError)
 from sympy.polys.matrices.ddm import DDM
 from sympy.polys.matrices.sdm import SDM
 
@@ -135,14 +136,14 @@ def test_DomainMatrix_unify():
     As = DomainMatrix({0: {1: ZZ(1)}, 1:{0:ZZ(2)}}, (2, 2), ZZ)
     Ad = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
 
-    assert As.unify(As, domain=False) == (As, As)
-    assert Ad.unify(Ad, domain=False) == (Ad, Ad)
+    assert As.unify(As) == (As, As)
+    assert Ad.unify(Ad) == (Ad, Ad)
 
-    Bs, Bd = As.unify(Ad, domain=False)
+    Bs, Bd = As.unify(Ad, fmt='dense')
     assert Bs.rep == DDM([[0, 1], [2, 0]], (2, 2), ZZ)
     assert Bd.rep == DDM([[1, 2],[3, 4]], (2, 2), ZZ)
 
-    Bs, Bd = As.unify(Ad, domain=False, fmt='sparse')
+    Bs, Bd = As.unify(Ad, fmt='sparse')
     assert Bs.rep == {0: {1: 1}, 1: {0: 2}}
     assert Bd.rep == {0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}}
 
@@ -169,17 +170,18 @@ def test_DomainMatrix_add():
 
     A1 = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     A2 = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
-    raises(ShapeError, lambda: A1 + A2)
-    raises(ShapeError, lambda: A2 + A1)
-    raises(ShapeError, lambda: A1.add(A2))
-    raises(ShapeError, lambda: A2.add(A1))
+    raises(DDMShapeError, lambda: A1 + A2)
+    raises(DDMShapeError, lambda: A2 + A1)
+    raises(DDMShapeError, lambda: A1.add(A2))
+    raises(DDMShapeError, lambda: A2.add(A1))
 
     Az = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     Aq = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(4)]], (2, 2), QQ)
-    raises(ValueError, lambda: Az + Aq)
-    raises(ValueError, lambda: Aq + Az)
-    raises(ValueError, lambda: Az.add(Aq))
-    raises(ValueError, lambda: Aq.add(Az))
+    Asum = DomainMatrix([[QQ(2), QQ(4)], [QQ(6), QQ(8)]], (2, 2), QQ)
+    assert Az + Aq == Asum
+    assert Aq + Az == Asum
+    raises(DDMDomainError, lambda: Az.add(Aq))
+    raises(DDMDomainError, lambda: Aq.add(Az))
 
     As = DomainMatrix({0: {1: ZZ(1)}, 1: {0: ZZ(2)}}, (2, 2), ZZ)
     Ad = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
@@ -200,17 +202,18 @@ def test_DomainMatrix_sub():
 
     A1 = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     A2 = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
-    raises(ShapeError, lambda: A1 - A2)
-    raises(ShapeError, lambda: A2 - A1)
-    raises(ShapeError, lambda: A1.sub(A2))
-    raises(ShapeError, lambda: A2.sub(A1))
+    raises(DDMShapeError, lambda: A1 - A2)
+    raises(DDMShapeError, lambda: A2 - A1)
+    raises(DDMShapeError, lambda: A1.sub(A2))
+    raises(DDMShapeError, lambda: A2.sub(A1))
 
     Az = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     Aq = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(4)]], (2, 2), QQ)
-    raises(ValueError, lambda: Az - Aq)
-    raises(ValueError, lambda: Aq - Az)
-    raises(ValueError, lambda: Az.sub(Aq))
-    raises(ValueError, lambda: Aq.sub(Az))
+    Adiff = DomainMatrix([[QQ(0), QQ(0)], [QQ(0), QQ(0)]], (2, 2), QQ)
+    assert Az - Aq == Adiff
+    assert Aq - Az == Adiff
+    raises(DDMDomainError, lambda: Az.sub(Aq))
+    raises(DDMDomainError, lambda: Aq.sub(Az))
 
     As = DomainMatrix({0: {1: ZZ(1)}, 1: {0: ZZ(2)}}, (2, 2), ZZ)
     Ad = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
@@ -238,8 +241,9 @@ def test_DomainMatrix_mul():
 
     Az = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     Aq = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(4)]], (2, 2), QQ)
-    raises(DDMDomainError, lambda: Az * Aq)
-    raises(DDMDomainError, lambda: Aq * Az)
+    Aprod = DomainMatrix([[QQ(7), QQ(10)], [QQ(15), QQ(22)]], (2, 2), QQ)
+    assert Az * Aq == Aprod
+    assert Aq * Az == Aprod
     raises(DDMDomainError, lambda: Az.matmul(Aq))
     raises(DDMDomainError, lambda: Aq.matmul(Az))
 
@@ -265,8 +269,8 @@ def test_DomainMatrix_pow():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     A2 = DomainMatrix([[ZZ(7), ZZ(10)], [ZZ(15), ZZ(22)]], (2, 2), ZZ)
     A3 = DomainMatrix([[ZZ(37), ZZ(54)], [ZZ(81), ZZ(118)]], (2, 2), ZZ)
-    eye = DomainMatrix([[ZZ(1), ZZ(0)], [ZZ(0), ZZ(1)]], (2, 2), ZZ)
-    assert A**0 == A.pow(0) == eye
+    eye = DomainMatrix.eye(2, ZZ)
+    assert (A**0) == A.pow(0) == eye
     assert A**1 == A.pow(1) == A
     assert A**2 == A.pow(2) == A2
     assert A**3 == A.pow(3) == A3

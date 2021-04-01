@@ -18,6 +18,9 @@ class SDM(dict):
     This is a dict subclass and is a wrapper for a dict of dicts that supports
     basic matrix arithmetic +, -, *, **.
     """
+
+    fmt = 'sparse'
+
     def __init__(self, elemsdict, shape, domain):
         super().__init__(elemsdict)
         self.shape = self.rows, self.cols = m, n = shape
