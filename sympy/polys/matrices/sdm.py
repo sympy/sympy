@@ -79,13 +79,7 @@ class SDM(dict):
         return cls(sdm, (size, size), domain)
 
     def transpose(M):
-        MT = {}
-        for i, Mi in M.items():
-            for j, Mij in Mi.items():
-                try:
-                    MT[j][i] = Mij
-                except KeyError:
-                    MT[j] = {i: Mij}
+        MT = sdm_transpose(M)
         return M.new(MT, M.shape[::-1], M.domain)
 
     def __mul__(a, b):
@@ -103,22 +97,8 @@ class SDM(dict):
     def matmul(A, B):
         if A.domain != B.domain:
             raise DDMDomainError
-        zero = A.domain.zero
-        C = {}
-        BT = B.transpose()
-        for i, Ai in A.items():
-            Ai_ks = set(Ai)
-            Ci = {}
-            for j, BTj in BT.items():
-                BTj_ks = set(BTj)
-                knonzero = Ai_ks & BTj_ks
-                if knonzero:
-                    terms = (Ai[k] * BTj[k] for k in knonzero)
-                    Cij = sum(terms, zero)
-                    if Cij:
-                        Ci[j] = Cij
-            if Ci:
-                C[i] = Ci
+        K = A.domain
+        C = sdm_matmul(A, B)
         return A.new(C, A.shape, A.domain)
 
     def mul(A, b):
@@ -238,6 +218,58 @@ def unop_dict(A, f):
         if Bi:
             B[i] = Bi
     return B
+
+
+def sdm_transpose(M):
+    MT = {}
+    for i, Mi in M.items():
+        for j, Mij in Mi.items():
+            try:
+                MT[j][i] = Mij
+            except KeyError:
+                MT[j] = {i: Mij}
+    return MT
+
+
+def sdm_matmul(A, B):
+    #
+    # Should be fast if A and B are very sparse.
+    # Consider e.g. A = B = eye(1000).
+    #
+    # The idea here is that we compute C = A*B in terms of the rows of C and
+    # B since the dict of dicts representation naturally stores the matrix as
+    # rows. The ith row of C (Ci) is equal to the sum of Aik * Bk where Bk is
+    # the kth row of B. The algorithm below loops over each nonzero element
+    # Aik of A and if the corresponding row Bj is nonzero then we do
+    #    Ci += Aik * Bk.
+    # To make this more efficient we don't need to loop over all elements Aik.
+    # Instead for each row Ai we compute the intersection of the nonzero
+    # columns in Ai with the nonzero rows in B. That gives the k such that
+    # Aik and Bk are both nonzero. In Python the intersection of two sets
+    # of int can be computed very efficiently.
+    #
+    C = {}
+    B_knz = set(B)
+    for i, Ai in A.items():
+        Ci = {}
+        Ai_knz = set(Ai)
+        for k in Ai_knz & B_knz:
+            Aik = Ai[k]
+            for j, Bkj in B[k].items():
+                Cij = Ci.get(j, None)
+                if Cij is not None:
+                    Cij = Cij + Aik * Bkj
+                    if Cij:
+                        Ci[j] = Cij
+                    else:
+                        Ci.pop(j)
+                else:
+                    Cij = Aik * Bkj
+                    if Cij:
+                        Ci[j] = Cij
+        if Ci:
+            C[i] = Ci
+    return C
 
 
 def sdm_irref(A):
