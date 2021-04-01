@@ -2709,5 +2709,5 @@ def test_printing_latex_array_expressions():
 def test_issue_21204():
     e1 = "6-(-8)"
     e2 = "5-(-2)"
-    assert latex(sympify(e, evaluate = False)) == 6-(-8)
-    assert latex(sympify(e, evaluate = False)) == 5-(-2)
+    assert latex(sympify(e1, evaluate = False)) == 6-(-8)
+    assert latex(sympify(e2, evaluate = False)) == 5-(-2)
