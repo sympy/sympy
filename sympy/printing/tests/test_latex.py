@@ -52,6 +52,7 @@ from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Lap
 from sympy.sets.setexpr import SetExpr
 from sympy.sets.sets import \
     Union, Intersection, Complement, SymmetricDifference, ProductSet
+from sympy.core.sympify import sympify
 
 import sympy as sym
 
@@ -2704,3 +2705,9 @@ def test_pickleable():
 def test_printing_latex_array_expressions():
     assert latex(ArraySymbol("A", 2, 3, 4)) == "A"
     assert latex(ArrayElement("A", (2, 1/(1-x), 0))) == "{{A}_{2, \\frac{1}{1 - x}, 0}}"
+
+def test_issue_21204():
+    e1 = "6-(-8)"
+    e2 = "5-(-2)"
+    assert latex(sympify(e, evaluate = False)) == 6-(-8)
+    assert latex(sympify(e, evaluate = False)) == 5-(-2)
