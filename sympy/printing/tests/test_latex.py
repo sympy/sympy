@@ -1655,6 +1655,7 @@ def test_PrettyPoly():
 
 
 def test_integral_transforms():
+    f = Function("f")
 
     assert latex(MellinTransform(f(x), x, k)) == \
         r"\mathcal{M}_{x}\left[f{\left(x \right)}\right]\left(k\right)"
