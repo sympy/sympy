@@ -1,3 +1,5 @@
+from sympy.core.compatibility import HAS_GMPY
+
 from sympy.testing.pytest import raises
 
 from sympy.core.numbers import Rational
@@ -182,7 +184,10 @@ def test_DomainMatrix_to_Matrix():
 
 def test_DomainMatrix_repr():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    assert repr(A) == 'DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)'
+    if HAS_GMPY: # pragma: no cover
+        assert repr(A) == 'DomainMatrix([[mpz(1), mpz(2)], [mpz(3), mpz(4)]], (2, 2), ZZ)'
+    else:        # pragma: no cover
+        assert repr(A) == 'DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)'
 
 
 def test_DomainMatrix_add():

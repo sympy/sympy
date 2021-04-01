@@ -112,8 +112,11 @@ class DDM(list):
         return DDM(rows, self.shape, K)
 
     def __str__(self):
+        return list.__repr__(self)
+
+    def __repr__(self):
         cls = type(self).__name__
-        rows = list.__str__(self)
+        rows = list.__repr__(self)
         return '%s(%s, %s, %s)' % (cls, rows, self.shape, self.domain)
 
     def __eq__(self, other):

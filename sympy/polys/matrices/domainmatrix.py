@@ -21,12 +21,6 @@ from .ddm import DDM
 from .sdm import SDM
 
 
-# Map from format string to class for internal representation
-# defaulting to either dense ot sparse
-_REPCLS_SPARSE = {'dense': DDM, 'sparse': SDM, None: SDM}
-_REPCLS_DENSE  = {'dense': DDM, 'sparse': SDM, None: DDM}
-
-
 class DomainMatrix:
     r"""
     Associate Matrix with :py:class:`~.Domain`
@@ -71,6 +65,7 @@ class DomainMatrix:
     ========
 
     DDM
+    SDM
     Domain
     Poly
 
@@ -477,10 +472,7 @@ class DomainMatrix:
         return MutableDenseMatrix(rows_sympy)
 
     def __repr__(self):
-        elemlist = self.rep.to_list()
-        rows_str = ['[%s]' % (', '.join(map(str, row))) for row in elemlist]
-        rowstr = '[%s]' % ', '.join(rows_str)
-        return 'DomainMatrix(%s, %r, %r)' % (rowstr, self.shape, self.domain)
+        return 'DomainMatrix(%s, %r, %r)' % (str(self.rep), self.shape, self.domain)
 
     def hstack(A, B):
         r"""
