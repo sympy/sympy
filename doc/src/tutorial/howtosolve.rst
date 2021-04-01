@@ -104,7 +104,7 @@ solve_decomposition()
 
 ``solve_decomposition`` uses the principle of rewriting and decomposition to solve equations.
 
-For instance, if we have to solve an equation ``f(x)=0`` where ``f(x) = 4**x - 3(2**x) + 2``, by the method of decomposition ``f(x)`` is broken converted to ``g(x)**2 - 3*g(x) + 2`` where ``g(x) = 2 **x``.
+For instance, if we have to solve an equation ``f(x) = 0`` where ``f(x) = 4**x - 3(2**x) + 2``, by the method of decomposition ``f(x)`` is broken converted to ``g(x)**2 - 3*g(x) + 2`` where ``g(x) = 2 **x``.
 
 Substituting ``g(x)`` with a dummy variable ``t``, we get a polynomial in ``f(t)`` given as
 
@@ -123,3 +123,37 @@ Calculating the solutions of these functions is comparatively easier with respec
 ``2**x - 1 = 0 or 2**x - 2 = 0``
 
 that is, ``x = 0 or 1``
+
+The disadvantage with ``solve_decomposition`` is that it cannot solve multivariate equations.
+
+    >>> from sympy.solvers.solveset import solve_decomposition
+    >>> from sympy import Symbol
+    >>> from sympy.abc import x,y
+    >>> solve_decomposition(4**x-3*(2**x)+2, x,S.Reals)
+    FiniteSet(0, 1)
+
+
+solvify()
+==========
+
+``solvify`` is essentially a wrapper around ``solveset`` such that the return value is the same as the ``solve`` API.
+
+    >>> from sympy.solvers.solveset import solvify
+    >>> from sympy import Symbol
+    >>> from sympy.abc import x,y
+    >>> solvify(x**2 - 9, x, S.Reals)
+    [-3, 3]
+
+
+rsolve()
+=========
+
+``rsolve()`` solves univariate recurrence relations.
+
+    >>> from sympy import Function, rsolve
+    >>> from sympy.abc import n
+    >>> y = Function('y')
+    >>> f = (n - 1)*y(n + 2) - (n**2 + 3*n - 2)*y(n + 1) + 2*n*(n + 1)*y(n)
+    >>> rsolve(f, y(n))
+    2**n*C0 + C1*factorial(n)
+
