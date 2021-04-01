@@ -49,7 +49,7 @@ This is the oldest and as of now, the most versatile solver in Sympy. It can sol
 
 The return type is a Sympy expression and is, therefore, easy to handle. However, this comes at a cost. ``solve`` does not guarantee if it has returned all the solutions. It cannot handle cases with infinite solutions.
 
-    >>> from sympy.solvers import solve
+    >>> from sympy.solvers import solve, sin
     >>> from sympy import Symbol
     >>> x = Symbol('x')
     >>> solve(sin(x),x)
@@ -93,7 +93,7 @@ nonlinsolve()
 ``nonlinsolve`` is able to solve both overdetermined and underdetermined systems of nonlinear equation. However, the return types are more awkward than ``linsolve``. In the following code, the returned solution is a ``FiniteSet`` containing two tuples, of the two elements of which one is an ``Expr`` and the other is an ``ImageSet``.
 
     >>> from sympy.solvers import linsolve
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, sin
     >>> from sympy.abc import x,y
     >>> nonlinsolve([sin(y)], [x, y]) 
     FiniteSet((x, ImageSet(Lambda(_n, 2*_n*pi), Integers)), (x, ImageSet(Lambda(_n, 2*_n*pi + pi), Integers)))
@@ -156,4 +156,3 @@ rsolve()
     >>> f = (n - 1)*y(n + 2) - (n**2 + 3*n - 2)*y(n + 1) + 2*n*(n + 1)*y(n)
     >>> rsolve(f, y(n))
     2**n*C0 + C1*factorial(n)
-
