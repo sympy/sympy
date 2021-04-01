@@ -60,8 +60,8 @@ class lowergamma(sym.lowergamma):
     pass   # testing notation inheritance by a subclass with same name
 
 
-x, y, z, t, w, a, b, c, s, p = symbols('x y z t w a b c s p')
-k, m, n = symbols('k m n', integer=True)
+x, y, z, t, w, a, b, c, s, p, x1, x2, n1, n2, d, k, f, i, j, e = symbols('x y z t w a b c s p x1 x2 n1 n2 d k f i j e')
+k, m, n, f, g, h = symbols('k m n f g h', integer=True)
 
 
 def test_printmethod():
@@ -716,14 +716,10 @@ def test_latex_derivatives():
     assert latex(diff(f(x), (x, n))) == \
         r"\frac{d^{n}}{d x^{n}} f{\left(x \right)}"
 
-    x1 = Symbol('x1')
-    x2 = Symbol('x2')
     assert latex(diff(f(x1, x2), x1)) == r'\frac{\partial}{\partial x_{1}} f{\left(x_{1},x_{2} \right)}'
 
-    n1 = Symbol('n1')
     assert latex(diff(f(x), (x, n1))) == r'\frac{d^{n_{1}}}{d x^{n_{1}}} f{\left(x \right)}'
 
-    n2 = Symbol('n2')
     assert latex(diff(f(x), (x, Max(n1, n2)))) == \
         r'\frac{d^{\max\left(n_{1}, n_{2}\right)}}{d x^{\max\left(n_{1}, n_{2}\right)}} f{\left(x \right)}'
 
@@ -858,7 +854,6 @@ def test_latex_sequences():
     latex_str = r'\left\{a^{2}\right\}_{a=0}^{x}'
     assert latex(s7) == latex_str
 
-    b = Symbol('b')
     s8 = SeqFormula(b*a**2, (a, 0, 2))
     latex_str = r'\left[0, b, 4 b\right]'
     assert latex(s8) == latex_str
@@ -942,7 +937,6 @@ def test_latex_productset():
 
 
 def test_set_operators_parenthesis():
-    a, b, c, d = symbols('a:d')
     A = FiniteSet(a)
     B = FiniteSet(b)
     C = FiniteSet(c)
@@ -1077,11 +1071,9 @@ def test_latex_Integers():
 
 
 def test_latex_ImageSet():
-    x = Symbol('x')
     assert latex(ImageSet(Lambda(x, x**2), S.Naturals)) == \
         r"\left\{x^{2}\; \middle|\; x \in \mathbb{N}\right\}"
 
-    y = Symbol('y')
     imgset = ImageSet(Lambda((x, y), x + y), {1, 2, 3}, {3, 4})
     assert latex(imgset) == \
         r"\left\{x + y\; \middle|\; x \in \left\{1, 2, 3\right\} , y \in \left\{3, 4\right\}\right\}"
@@ -1092,7 +1084,6 @@ def test_latex_ImageSet():
 
 
 def test_latex_ConditionSet():
-    x = Symbol('x')
     assert latex(ConditionSet(x, Eq(x**2, 1), S.Reals)) == \
         r"\left\{x\; \middle|\; x \in \mathbb{R} \wedge x^{2} = 1 \right\}"
     assert latex(ConditionSet(x, Eq(x**2, 1), S.UniversalSet)) == \
@@ -1108,7 +1099,6 @@ def test_latex_ComplexRegion():
 
 
 def test_latex_Contains():
-    x = Symbol('x')
     assert latex(Contains(x, S.Naturals)) == r"x \in \mathbb{N}"
 
 
@@ -1312,7 +1302,6 @@ def test_latex_Matrix():
 
 
 def test_latex_matrix_with_functions():
-    t = symbols('t')
     theta1 = symbols('theta1', cls=Function)
 
     M = Matrix([[sin(theta1(t)), cos(theta1(t))],
@@ -1330,7 +1319,6 @@ def test_latex_matrix_with_functions():
 
 
 def test_latex_NDimArray():
-    x, y, z, w = symbols("x y z w")
 
     for ArrayType in (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
                       MutableDenseNDimArray, MutableSparseNDimArray):
@@ -1415,7 +1403,6 @@ def test_latex_issue_4576():
 
 
 def test_latex_pow_fraction():
-    x = Symbol('x')
     # Testing exp
     assert r'e^{-x}' in latex(exp(-x)/2).replace(' ', '')  # Remove Whitespace
 
@@ -1572,8 +1559,6 @@ def test_lamda():
 
 
 def test_custom_symbol_names():
-    x = Symbol('x')
-    y = Symbol('y')
     assert latex(x) == r"x"
     assert latex(x, symbol_names={x: "x_i"}) == r"x_i"
     assert latex(x + y, symbol_names={x: "x_i"}) == r"x_i + y"
@@ -1598,7 +1583,6 @@ def test_matMul():
     from sympy.printing.latex import LatexPrinter
     A = MatrixSymbol('A', 5, 5)
     B = MatrixSymbol('B', 5, 5)
-    x = Symbol('x')
     lp = LatexPrinter()
     assert lp._print_MatMul(2*A) == r'2 A'
     assert lp._print_MatMul(2*x*A) == r'2 x A'
@@ -1612,8 +1596,6 @@ def test_matMul():
 
 
 def test_latex_MatrixSlice():
-    n = Symbol('n', integer=True)
-    x, y, z, w, t, = symbols('x y z w t')
     X = MatrixSymbol('X', n, n)
     Y = MatrixSymbol('Y', 10, 10)
     Z = MatrixSymbol('Z', 10, 10)
@@ -1673,11 +1655,6 @@ def test_PrettyPoly():
 
 
 def test_integral_transforms():
-    x = Symbol("x")
-    k = Symbol("k")
-    f = Function("f")
-    a = Symbol("a")
-    b = Symbol("b")
 
     assert latex(MellinTransform(f(x), x, k)) == \
         r"\mathcal{M}_{x}\left[f{\left(x \right)}\right]\left(k\right)"
@@ -2200,7 +2177,6 @@ def test_issue_13651():
 
 
 def test_latex_UnevaluatedExpr():
-    x = symbols("x")
     he = UnevaluatedExpr(1/x)
     assert latex(he) == latex(1/x) == r"\frac{1}{x}"
     assert latex(he**2) == r"\left(\frac{1}{x}\right)^{2}"
@@ -2220,7 +2196,6 @@ def test_MatrixElement_printing():
     F = C[0, 0].subs(C, A - B)
     assert latex(F) == r"\left(A - B\right)_{0, 0}"
 
-    i, j, k = symbols("i j k")
     M = MatrixSymbol("M", k, k)
     N = MatrixSymbol("N", k, k)
     assert latex((M*N)[i, j]) == \
@@ -2412,7 +2387,6 @@ def test_latex_printer_tensor():
 
 
 def test_multiline_latex():
-    a, b, c, d, e, f = symbols('a b c d e f')
     expr = -a + 2*b -3*c +4*d -5*e
     expected = r"\begin{eqnarray}" + "\n"\
         r"f & = &- a \nonumber\\" + "\n"\
@@ -2465,7 +2439,6 @@ def test_multiline_latex():
 
 def test_issue_15353():
     from sympy import ConditionSet, Tuple, S, sin, cos
-    a, x = symbols('a x')
     # Obtained from nonlinsolve([(sin(a*x)),cos(a*x)],[x,a])
     sol = ConditionSet(
         Tuple(x, a), Eq(sin(a*x), 0) & Eq(cos(a*x), 0), S.Complexes**2)
@@ -2537,7 +2510,6 @@ def test_MatrixSymbol_bold():
 
 def test_AppliedPermutation():
     p = Permutation(0, 1, 2)
-    x = Symbol('x')
     assert latex(AppliedPermutation(p, x)) == \
         r'\sigma_{\left( 0\; 1\; 2\right)}(x)'
 
@@ -2598,8 +2570,6 @@ def test_issue_17092():
 
 def test_latex_decimal_separator():
 
-    x, y, z, t = symbols('x y z t')
-    k, m, n = symbols('k m n', integer=True)
     f, g, h = symbols('f g h', cls=Function)
 
     # comma decimal_separator
