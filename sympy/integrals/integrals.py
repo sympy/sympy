@@ -26,6 +26,7 @@ from sympy.series import limit
 from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
 from sympy.simplify.fu import sincos_to_sum
+from sympy.tensor.functions import shape
 from sympy.utilities.misc import filldedent
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -1622,3 +1623,10 @@ def line_integrate(field, curve, vars):
 
     integral = Integral(Ft, curve.limits).doit(deep=False)
     return integral
+
+
+### Property function dispatching ###
+
+@shape.register(Integral)
+def _(expr):
+    return shape(expr.function)

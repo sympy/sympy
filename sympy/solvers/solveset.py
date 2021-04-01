@@ -44,6 +44,7 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polytools import invert
 from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
     PolyNonlinearError)
+from sympy.polys.matrices.linsolve import _linsolve
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
@@ -201,7 +202,12 @@ def _invert_real(f, g_ys, symbol):
 
     n = Dummy('n', real=True)
 
-    if hasattr(f, 'inverse') and not isinstance(f, (
+    if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
+        return _invert_real(f.exp,
+                            imageset(Lambda(n, log(n)), g_ys),
+                            symbol)
+
+    if hasattr(f, 'inverse') and f.inverse() is not None and not isinstance(f, (
             TrigonometricFunction,
             HyperbolicFunction,
             )):
@@ -324,7 +330,7 @@ def _invert_complex(f, g_ys, symbol):
                 return (h, S.EmptySet)
             return _invert_complex(h, imageset(Lambda(n, n/g), g_ys), symbol)
 
-    if hasattr(f, 'inverse') and \
+    if hasattr(f, 'inverse') and f.inverse() is not None and \
        not isinstance(f, TrigonometricFunction) and \
        not isinstance(f, HyperbolicFunction) and \
        not isinstance(f, exp):
@@ -333,12 +339,22 @@ def _invert_complex(f, g_ys, symbol):
         return _invert_complex(f.args[0],
                                imageset(Lambda(n, f.inverse()(n)), g_ys), symbol)
 
-    if isinstance(f, exp):
-        if isinstance(g_ys, FiniteSet):
+    if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
+        if isinstance(g_ys, ImageSet):
+            # can solve upto `(d*exp(exp(...(exp(a*x + b))...) + c)` format.
+            # Further can be improved to `(d*exp(exp(...(exp(a*x**n + b*x**(n-1) + ... + f))...) + c)`.
+            g_ys_expr = g_ys.lamda.expr
+            g_ys_vars = g_ys.lamda.variables
+            k = Dummy('k{}'.format(len(g_ys_vars)))
+            g_ys_vars_1 = (k,) + g_ys_vars
+            exp_invs = Union(*[imageset(Lambda((g_ys_vars_1,), (I*(2*k*pi + arg(g_ys_expr))
+                                         + log(Abs(g_ys_expr)))), S.Integers**(len(g_ys_vars_1)))])
+
+        elif isinstance(g_ys, FiniteSet):
             exp_invs = Union(*[imageset(Lambda(n, I*(2*n*pi + arg(g_y)) +
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
-            return _invert_complex(f.args[0], exp_invs, symbol)
+        return _invert_complex(f.exp, exp_invs, symbol)
 
     return (f, g_ys)
 
@@ -1530,8 +1546,8 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     a_term = a.as_independent(symbol)[1]
     b_term = b.as_independent(symbol)[1]
 
-    a_base, a_exp = a_term.base, a_term.exp
-    b_base, b_exp = b_term.base, b_term.exp
+    a_base, a_exp = a_term.as_base_exp()
+    b_base, b_exp = b_term.as_base_exp()
 
     from sympy.functions.elementary.complexes import im
 
@@ -1746,6 +1762,98 @@ def _is_logarithmic(f, symbol):
         if saw_log:
             rv = True
     return rv
+
+
+def _is_lambert(f, symbol):
+    r"""
+    If this returns ``False`` then the Lambert solver (``_solve_lambert``) will not be called.
+
+    Explanation
+    ===========
+
+    Quick check for cases that the Lambert solver might be able to handle.
+
+    1. Equations containing more than two operands and `symbol`s involving any of
+       `Pow`, `exp`, `HyperbolicFunction`,`TrigonometricFunction`, `log` terms.
+
+    2. In `Pow`, `exp` the exponent should have `symbol` whereas for
+       `HyperbolicFunction`,`TrigonometricFunction`, `log` should contain `symbol`.
+
+    3. For `HyperbolicFunction`,`TrigonometricFunction` the number of trigonometric functions in
+       equation should be less than number of symbols. (since `A*cos(x) + B*sin(x) - c`
+       is not the Lambert type).
+
+    Some forms of lambert equations are:
+        1. X**X = C
+        2. X*(B*log(X) + D)**A = C
+        3. A*log(B*X + A) + d*X = C
+        4. (B*X + A)*exp(d*X + g) = C
+        5. g*exp(B*X + h) - B*X = C
+        6. A*D**(E*X + g) - B*X = C
+        7. A*cos(X) + B*sin(X) - D*X = C
+        8. A*cosh(X) + B*sinh(X) - D*X = C
+
+    Where X is any variable,
+          A, B, C, D, E are any constants,
+          g, h are linear functions or log terms.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The equation to be checked
+
+    symbol : Symbol
+        The variable in which the equation is checked
+
+    Returns
+    =======
+
+    If this returns ``False`` then the Lambert solver (``_solve_lambert``) will not be called.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solveset import _is_lambert
+    >>> from sympy import symbols, cosh, sinh, log
+    >>> x = symbols('x')
+
+    >>> _is_lambert(3*log(x) - x*log(3), x)
+    True
+    >>> _is_lambert(log(log(x - 3)) + log(x-3), x)
+    True
+    >>> _is_lambert(cosh(x) - sinh(x), x)
+    False
+    >>> _is_lambert((x**2 - 2*x + 1).subs(x, (log(x) + 3*x)**2 - 1), x)
+    True
+
+    See Also
+    ========
+
+    _solve_lambert
+
+    """
+    term_factors = list(_term_factors(f.expand()))
+
+    # total number of symbols in equation
+    no_of_symbols = len([arg for arg in term_factors if arg.has(symbol)])
+    # total number of trigonometric terms in equation
+    no_of_trig = len([arg for arg in term_factors \
+        if arg.has(HyperbolicFunction, TrigonometricFunction)])
+
+    if f.is_Add and no_of_symbols >= 2:
+        # `log`, `HyperbolicFunction`, `TrigonometricFunction` should have symbols
+        # and no_of_trig < no_of_symbols
+        lambert_funcs = (log, HyperbolicFunction, TrigonometricFunction)
+        if any(isinstance(arg, lambert_funcs)\
+            for arg in term_factors if arg.has(symbol)):
+                if no_of_trig < no_of_symbols:
+                    return True
+        # here, `Pow`, `exp` exponent should have symbols
+        elif any(isinstance(arg, (Pow, exp)) \
+            for arg in term_factors if (arg.as_base_exp()[1]).has(symbol)):
+            return True
+    return False
 
 
 def _transolve(f, symbol, domain):
@@ -2651,20 +2759,24 @@ def linsolve(system, *symbols):
                     symbols for which a solution is being sought must
                     be given as a sequence, too.
                 '''))
-            eqs = system
-            try:
-                eqs, ring = sympy_eqs_to_ring(eqs, symbols)
-            except PolynomialError as exc:
-                # e.g. cos(x) contains an element of the set of generators
-                raise NonlinearError(str(exc))
 
+            #
+            # Pass to the sparse solver implemented in polys. It is important
+            # that we do not attempt to convert the equations to a matrix
+            # because that would be very inefficient for large sparse systems
+            # of equations.
+            #
+            eqs = system
+            eqs = [sympify(eq) for eq in eqs]
             try:
-                sol = solve_lin_sys(eqs, ring, _raw=False)
+                sol = _linsolve(eqs, symbols)
             except PolyNonlinearError as exc:
+                # e.g. cos(x) contains an element of the set of generators
                 raise NonlinearError(str(exc))
 
             if sol is None:
                 return S.EmptySet
+
             sol = FiniteSet(Tuple(*(sol.get(sym, sym) for sym in symbols)))
             return sol
 
@@ -2720,17 +2832,17 @@ def linsolve(system, *symbols):
     return sol
 
 
-
 ##############################################################################
 # ------------------------------nonlinsolve ---------------------------------#
 ##############################################################################
 
+
 def _return_conditionset(eqs, symbols):
-        # return conditionset
-        eqs = (Eq(lhs, 0) for lhs in eqs)
-        condition_set = ConditionSet(
-            Tuple(*symbols), And(*eqs), S.Complexes**len(symbols))
-        return condition_set
+    # return conditionset
+    eqs = (Eq(lhs, 0) for lhs in eqs)
+    condition_set = ConditionSet(
+        Tuple(*symbols), And(*eqs), S.Complexes**len(symbols))
+    return condition_set
 
 
 def substitution(system, symbols, result=[{}], known_symbols=[],
@@ -3213,9 +3325,9 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     new_result_complex, solve_call2, cnd_call2 = _solve_using_known_values(
         old_result, solveset_complex)
 
-    # when `total_solveset_call` is equals to `total_conditionset`
-    # means solvest fails to solve all the eq.
-    # return conditionset in this case
+    # If total_solveset_call is equal to total_conditionset
+    # then solveset failed to solve all of the equations.
+    # In this case we return a ConditionSet here.
     total_conditionset += (cnd_call1 + cnd_call2)
     total_solveset_call += (solve_call1 + solve_call2)
 
@@ -3263,12 +3375,12 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 
 
 def _solveset_work(system, symbols):
-        soln = solveset(system[0], symbols[0])
-        if isinstance(soln, FiniteSet):
-            _soln = FiniteSet(*[tuple((s,)) for s in soln])
-            return _soln
-        else:
-            return FiniteSet(tuple(FiniteSet(soln)))
+    soln = solveset(system[0], symbols[0])
+    if isinstance(soln, FiniteSet):
+        _soln = FiniteSet(*[tuple((s,)) for s in soln])
+        return _soln
+    else:
+        return FiniteSet(tuple(FiniteSet(soln)))
 
 
 def _handle_positive_dimensional(polys, symbols, denominators):
@@ -3285,7 +3397,6 @@ def _handle_positive_dimensional(polys, symbols, denominators):
         new_system, symbols, result, [],
         denominators)
     return result
-
 # end of def _handle_positive_dimensional()
 
 

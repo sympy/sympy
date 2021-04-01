@@ -78,7 +78,7 @@ def _eigenvects_mpmath(M):
     return result
 
 
-# This functions is a candidate for caching if it gets implemented for matrices.
+# This function is a candidate for caching if it gets implemented for matrices.
 def _eigenvals(
     M, error_when_incomplete=True, *, simplify=False, multiple=False,
     rational=False, **flags):

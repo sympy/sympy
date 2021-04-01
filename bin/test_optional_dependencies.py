@@ -1,3 +1,16 @@
+#!/usr/bin/env python
+"""
+Run tests for specific packages that use optional dependencies.
+
+The optional dependencies need to be installed before running this.
+"""
+
+
+# Add the local sympy to sys.path (needed for CI)
+from get_sympy import path_hack
+path_hack()
+
+
 class TestsFailedError(Exception):
     pass
 
@@ -18,8 +31,8 @@ test_list = [
     # llvmlite
     '*llvm*',
 
-    # theano
-    '*theano*',
+    # aesara
+    '*aesara*',
 
     # gmpy
     'polys',
@@ -68,8 +81,8 @@ doctest_list = [
     # llvmlite
     '*llvm*',
 
-    # theano
-    '*theano*',
+    # aesara
+    '*aesara*',
 
     # gmpy
     'polys',

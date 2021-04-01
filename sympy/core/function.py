@@ -553,7 +553,12 @@ class Function(Application, Expr):
                     return None
             return getattr(mpmath, fname)
 
-        func = _get_mpmath_func(self.func.__name__)
+        _eval_mpmath = getattr(self, '_eval_mpmath', None)
+        if _eval_mpmath is None:
+            func = _get_mpmath_func(self.func.__name__)
+            args = self.args
+        else:
+            func, args = _eval_mpmath()
 
         # Fall-back evaluation
         if func is None:
@@ -571,7 +576,7 @@ class Function(Application, Expr):
         # XXX + 5 is a guess, it is similar to what is used in evalf.py. Should
         #     we be more intelligent about it?
         try:
-            args = [arg._to_mpmath(prec + 5) for arg in self.args]
+            args = [arg._to_mpmath(prec + 5) for arg in args]
             def bad(m):
                 from mpmath import mpf, mpc
                 # the precision of an mpf value is the last element
@@ -2100,6 +2105,10 @@ class Lambda(Expr):
         """Return ``True`` if this ``Lambda`` is an identity function. """
         return self.signature == self.expr
 
+    def _eval_evalf(self, prec):
+        from sympy.core.evalf import prec_to_dps
+        return self.func(self.args[0], self.args[1].evalf(n=prec_to_dps(prec)))
+
 
 class Subs(Expr):
     """
@@ -3152,6 +3161,7 @@ def count_ops(expr, visual=False):
         DIV = Symbol('DIV')
         SUB = Symbol('SUB')
         ADD = Symbol('ADD')
+        EXP = Symbol('EXP')
         while args:
             a = args.pop()
 
@@ -3205,6 +3215,13 @@ def count_ops(expr, visual=False):
                 ops.append(DIV)
                 args.append(a.base)  # won't be -Mul but could be Add
                 continue
+            if a == S.Exp1:
+                ops.append(EXP)
+                continue
+            if a.is_Pow and a.base == S.Exp1:
+                ops.append(EXP)
+                args.append(a.exp)
+                continue
             if a.is_Mul or isinstance(a, LatticeOp):
                 o = Symbol(a.func.__name__.upper())
                 # count the args
@@ -3247,7 +3264,7 @@ def count_ops(expr, visual=False):
                 a = args.pop()
 
                 if a.args:
-                    o = Symbol(a.func.__name__.upper())
+                    o = Symbol(type(a).__name__.upper())
                     if a.is_Boolean:
                         ops.append(o*(len(a.args)-1))
                     else:

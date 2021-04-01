@@ -42,7 +42,7 @@ def _(x):
 
 class RandomDomain(Basic):
     """
-    Represents a set of variables and the values which they can take
+    Represents a set of variables and the values which they can take.
 
     See Also
     ========
@@ -77,7 +77,7 @@ class RandomDomain(Basic):
 
 class SingleDomain(RandomDomain):
     """
-    A single variable and its domain
+    A single variable and its domain.
 
     See Also
     ========
@@ -106,7 +106,7 @@ class SingleDomain(RandomDomain):
 
 class MatrixDomain(RandomDomain):
     """
-    A Random Matrix variable and its domain
+    A Random Matrix variable and its domain.
 
     """
     def __new__(cls, symbol, set):
@@ -124,7 +124,7 @@ class MatrixDomain(RandomDomain):
 
 class ConditionalDomain(RandomDomain):
     """
-    A RandomDomain with an attached condition
+    A RandomDomain with an attached condition.
 
     See Also
     ========
@@ -159,7 +159,10 @@ class ConditionalDomain(RandomDomain):
 
 class PSpace(Basic):
     """
-    A Probability Space
+    A Probability Space.
+
+    Explanation
+    ===========
 
     Probability Spaces encode processes that equal different values
     probabilistically. These underly Random Symbols which occur in SymPy
@@ -237,10 +240,13 @@ class SinglePSpace(PSpace):
 
 class RandomSymbol(Expr):
     """
-    Random Symbols represent ProbabilitySpaces in SymPy Expressions
+    Random Symbols represent ProbabilitySpaces in SymPy Expressions.
     In principle they can take on any value that their symbol can take on
     within the associated PSpace with probability determined by the PSpace
     Density.
+
+    Explanation
+    ===========
 
     Random Symbols contain pspace and symbol properties.
     The pspace property points to the represented Probability Space
@@ -363,7 +369,7 @@ class IndependentProductPSpace(ProductPSpace):
     A probability space resulting from the merger of two independent probability
     spaces.
 
-    Often created using the function, pspace
+    Often created using the function, pspace.
     """
 
     def __new__(cls, *spaces):
@@ -514,7 +520,7 @@ class IndependentProductPSpace(ProductPSpace):
 
 class ProductDomain(RandomDomain):
     """
-    A domain resulting from the merger of two independent domains
+    A domain resulting from the merger of two independent domains.
 
     See Also
     ========
@@ -656,7 +662,11 @@ def rs_swap(a, b):
 
 
 def given(expr, condition=None, **kwargs):
-    r""" Conditional Random Expression
+    r""" Conditional Random Expression.
+
+    Explanation
+    ===========
+
     From a random expression and a condition on that expression creates a new
     probability space from the condition and returns the same expression on that
     conditional probability space.
@@ -738,7 +748,7 @@ def given(expr, condition=None, **kwargs):
 
 def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     """
-    Returns the expected value of a random expression
+    Returns the expected value of a random expression.
 
     Parameters
     ==========
@@ -780,7 +790,7 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
 def probability(condition, given_condition=None, numsamples=None,
                 evaluate=True, **kwargs):
     """
-    Probability that a condition is true, optionally given a second condition
+    Probability that a condition is true, optionally given a second condition.
 
     Parameters
     ==========
@@ -867,6 +877,9 @@ def density(expr, condition=None, evaluate=True, numsamples=None, **kwargs):
     Probability density of a random expression, optionally given a second
     condition.
 
+    Explanation
+    ===========
+
     This density will take on different forms for different types of
     probability spaces. Discrete variables produce Dicts. Continuous
     variables produce Lambdas.
@@ -911,7 +924,10 @@ def cdf(expr, condition=None, evaluate=True, **kwargs):
     """
     Cumulative Distribution Function of a random expression.
 
-    optionally given a second condition
+    optionally given a second condition.
+
+    Explanation
+    ===========
 
     This density will take on different forms for different types of
     probability spaces.
@@ -951,9 +967,9 @@ def cdf(expr, condition=None, evaluate=True, **kwargs):
 
 def characteristic_function(expr, condition=None, evaluate=True, **kwargs):
     """
-    Characteristic function of a random expression, optionally given a second condition
+    Characteristic function of a random expression, optionally given a second condition.
 
-    Returns a Lambda
+    Returns a Lambda.
 
     Examples
     ========
@@ -1027,7 +1043,7 @@ def where(condition, given_condition=None, **kwargs):
 def sample(expr, condition=None, size=(), library='scipy',
            numsamples=1, seed=None, **kwargs):
     """
-    A realization of the random expression
+    A realization of the random expression.
 
     Parameters
     ==========
@@ -1116,6 +1132,9 @@ def quantile(expr, evaluate=True, **kwargs):
     r"""
     Return the :math:`p^{th}` order quantile of a probability distribution.
 
+    Explanation
+    ===========
+
     Quantile is defined as the value at which the probability of the random
     variable is less than or equal to the given probability.
 
@@ -1162,7 +1181,7 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
                     numsamples=S.Infinity, seed=None, **kwargs):
 
     """
-    Returns an iterator of realizations from the expression given a condition
+    Returns an iterator of realizations from the expression given a condition.
 
     Parameters
     ==========
@@ -1333,7 +1352,7 @@ def sample_iter_subs(expr, condition=None, size=(),
 def sampling_P(condition, given_condition=None, library='scipy', numsamples=1,
                evalf=True, seed=None, **kwargs):
     """
-    Sampling version of P
+    Sampling version of P.
 
     See Also
     ========
@@ -1365,7 +1384,7 @@ def sampling_P(condition, given_condition=None, library='scipy', numsamples=1,
 def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
                evalf=True, seed=None, **kwargs):
     """
-    Sampling version of E
+    Sampling version of E.
 
     See Also
     ========
@@ -1386,7 +1405,7 @@ def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
 def sampling_density(expr, given_condition=None, library='scipy',
                     numsamples=1, seed=None, **kwargs):
     """
-    Sampling version of density
+    Sampling version of density.
 
     See Also
     ========
@@ -1405,7 +1424,7 @@ def sampling_density(expr, given_condition=None, library='scipy',
 
 def dependent(a, b):
     """
-    Dependence of two random expressions
+    Dependence of two random expressions.
 
     Two expressions are independent if knowledge of one does not change
     computations on the other.
@@ -1442,7 +1461,7 @@ def dependent(a, b):
 
 def independent(a, b):
     """
-    Independence of two random expressions
+    Independence of two random expressions.
 
     Two expressions are independent if knowledge of one does not change
     computations on the other.

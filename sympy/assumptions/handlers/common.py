@@ -27,6 +27,7 @@ class AskHandler:
 
 
 class CommonHandler(AskHandler):
+    # Deprecated
     """Defines some useful methods common to most Handlers. """
 
     @staticmethod
@@ -94,7 +95,11 @@ def _(expr, assumptions):
 
 @IsTruePredicate.register(Not)
 def _(expr, assumptions):
-    value = ask(expr.args[0], assumptions=assumptions)
+    arg = expr.args[0]
+    if arg.is_Symbol:
+        # symbol used as abstract boolean object
+        return None
+    value = ask(arg, assumptions=assumptions)
     if value in (True, False):
         return not value
     else:

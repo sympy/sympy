@@ -41,7 +41,7 @@ def dom_eigenvects(A, l=Dummy('lambda')):
 
             AA_items = [
                 [Poly.from_list([item], l, domain=domain).rep for item in row]
-                for row in A.rep]
+                for row in A.rep.to_ddm()]
             AA_items = [[field(item) for item in row] for row in AA_items]
             AA = DomainMatrix(AA_items, (rows, cols), field)
             EE_items = [
@@ -62,7 +62,7 @@ def dom_eigenvects_to_sympy(
     result = []
 
     for field, eigenvalue, multiplicity, eigenvects in rational_eigenvects:
-        eigenvects = eigenvects.rep
+        eigenvects = eigenvects.rep.to_ddm()
         eigenvalue = field.to_sympy(eigenvalue)
         new_eigenvects = [
             Matrix([field.to_sympy(x) for x in vect])
@@ -70,7 +70,7 @@ def dom_eigenvects_to_sympy(
         result.append((eigenvalue, multiplicity, new_eigenvects))
 
     for field, minpoly, multiplicity, eigenvects in algebraic_eigenvects:
-        eigenvects = eigenvects.rep
+        eigenvects = eigenvects.rep.to_ddm()
         l = minpoly.gens[0]
 
         eigenvects = [[field.to_sympy(x) for x in vect] for vect in eigenvects]

@@ -3277,6 +3277,7 @@ nan = S.NaN
 def _eval_is_eq(a, b): # noqa:F811
     return False
 
+
 class ComplexInfinity(AtomicExpr, metaclass=Singleton):
     r"""Complex infinity.
 
@@ -3476,7 +3477,91 @@ class Exp1(NumberSymbol, metaclass=Singleton):
 
     def _eval_power(self, expt):
         from sympy import exp
-        return exp(expt)
+        if global_parameters.exp_is_pow:
+            return self._eval_power_exp_is_pow(expt)
+        else:
+            return exp(expt)
+
+    def _eval_power_exp_is_pow(self, arg):
+        from ..functions.elementary.exponential import log
+        from . import Add, Mul, Pow
+        if arg.is_Number:
+            if arg is oo:
+                return oo
+            elif arg == -oo:
+                return S.Zero
+        elif isinstance(arg, log):
+            return arg.args[0]
+
+        # don't autoexpand Pow or Mul (see the issue 3351):
+        elif not arg.is_Add:
+            Ioo = I*oo
+            if arg in [Ioo, -Ioo]:
+                return nan
+
+            coeff = arg.coeff(pi*I)
+            if coeff:
+                if (2*coeff).is_integer:
+                    if coeff.is_even:
+                        return S.One
+                    elif coeff.is_odd:
+                        return S.NegativeOne
+                    elif (coeff + S.Half).is_even:
+                        return -I
+                    elif (coeff + S.Half).is_odd:
+                        return I
+                elif coeff.is_Rational:
+                    ncoeff = coeff % 2 # restrict to [0, 2pi)
+                    if ncoeff > 1: # restrict to (-pi, pi]
+                        ncoeff -= 2
+                    if ncoeff != coeff:
+                        return S.Exp1**(ncoeff*S.Pi*S.ImaginaryUnit)
+
+            # Warning: code in risch.py will be very sensitive to changes
+            # in this (see DifferentialExtension).
+
+            # look for a single log factor
+
+            coeff, terms = arg.as_coeff_Mul()
+
+            # but it can't be multiplied by oo
+            if coeff in (oo, -oo):
+                return
+
+            coeffs, log_term = [coeff], None
+            for term in Mul.make_args(terms):
+                if isinstance(term, log):
+                    if log_term is None:
+                        log_term = term.args[0]
+                    else:
+                        return
+                elif term.is_comparable:
+                    coeffs.append(term)
+                else:
+                    return
+
+            return log_term**Mul(*coeffs) if log_term else None
+        elif arg.is_Add:
+            out = []
+            add = []
+            argchanged = False
+            for a in arg.args:
+                if a is S.One:
+                    add.append(a)
+                    continue
+                newa = self**a
+                if isinstance(newa, Pow) and newa.base is self:
+                    if newa.exp != a:
+                        add.append(newa.exp)
+                        argchanged = True
+                    else:
+                        add.append(a)
+                else:
+                    out.append(newa)
+            if out or argchanged:
+                return Mul(*out)*Pow(self, Add(*add), evaluate=False)
+        elif arg.is_Matrix:
+            return arg.exp()
 
     def _eval_rewrite_as_sin(self, **kwargs):
         from sympy import sin

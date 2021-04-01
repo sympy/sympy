@@ -4,10 +4,12 @@ Handlers for keys related to number theory: prime, even, odd, etc.
 
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Float, Mul, Pow, S
-from sympy.core.numbers import (ImaginaryUnit, Infinity, Integer, NegativeInfinity,
-    NumberSymbol, Rational)
+from sympy.core.numbers import (ImaginaryUnit, Infinity, Integer, NaN,
+    NegativeInfinity, NumberSymbol, Rational)
 from sympy.functions import Abs, im, re
 from sympy.ntheory import isprime
+
+from sympy.multipledispatch import MDNotImplementedError
 
 from ..predicates.ntheory import (PrimePredicate, CompositePredicate,
     EvenPredicate, OddPredicate)
@@ -31,7 +33,10 @@ def _PrimePredicate_number(expr, assumptions):
 
 @PrimePredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_prime
+    ret = expr.is_prime
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @PrimePredicate.register(Basic)
 def _(expr, assumptions):
@@ -64,7 +69,7 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return isprime(expr)
 
-@PrimePredicate.register_many(Rational, Infinity, NegativeInfinity, ImaginaryUnit)
+@PrimePredicate.register_many(Rational, Infinity, NaN, NegativeInfinity, ImaginaryUnit)
 def _(expr, assumptions):
     return False
 
@@ -81,7 +86,10 @@ def _(expr, assumptions):
 
 @CompositePredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_composite
+    ret = expr.is_composite
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @CompositePredicate.register(Basic)
 def _(expr, assumptions):
@@ -102,6 +110,10 @@ def _(expr, assumptions):
     else:
         return _positive
 
+@CompositePredicate.register(NaN)
+def _(expr, assumptions):
+    return False
+
 
 # EvenPredicate
 
@@ -119,7 +131,10 @@ def _EvenPredicate_number(expr, assumptions):
 
 @EvenPredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_even
+    ret = expr.is_even
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @EvenPredicate.register(Basic)
 def _(expr, assumptions):
@@ -204,7 +219,7 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return not bool(expr.p & 1)
 
-@EvenPredicate.register_many(Rational, Infinity, NegativeInfinity, ImaginaryUnit)
+@EvenPredicate.register_many(Rational, Infinity, NaN, NegativeInfinity, ImaginaryUnit)
 def _(expr, assumptions):
     return False
 
@@ -232,7 +247,10 @@ def _(expr, assumptions):
 
 @OddPredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_odd
+    ret = expr.is_odd
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @OddPredicate.register(Basic)
 def _(expr, assumptions):
@@ -243,3 +261,7 @@ def _(expr, assumptions):
             return None
         return not _even
     return _integer
+
+@OddPredicate.register(NaN)
+def _(expr, assumptions):
+    return False

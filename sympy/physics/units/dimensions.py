@@ -17,6 +17,7 @@ from functools import reduce
 
 from sympy import (Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict,
     default_sort_key)
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -253,7 +254,7 @@ class Dimension(Expr):
     def _from_dimensional_dependencies(cls, dependencies):
         return reduce(lambda x, y: x * y, (
             Dimension(d)**e for d, e in dependencies.items()
-        ))
+        ), 1)
 
     @classmethod
     def _get_dimensional_dependencies_for_name(cls, name):
@@ -417,7 +418,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             # as base dimensions:
             return dict(self.dimensional_dependencies.get(name, {name: 1}))
 
-        if name.is_Number:
+        if name.is_number or name.is_NumberSymbol:
             return {}
 
         get_for_name = self._get_dimensional_dependencies_for_name
@@ -437,18 +438,33 @@ class DimensionSystem(Basic, _QuantityMapper):
             raise TypeError("Only equivalent dimensions can be added or subtracted.")
 
         if name.is_Pow:
-            dim = get_for_name(name.base)
-            return {k: v*name.exp for (k, v) in dim.items()}
+            dim_base = get_for_name(name.base)
+            dim_exp = get_for_name(name.exp)
+            if dim_exp == {} or name.exp.is_Symbol:
+                return {k: v*name.exp for (k, v) in dim_base.items()}
+            else:
+                raise TypeError("The exponent for the power operator must be a Symbol or dimensionless.")
 
         if name.is_Function:
             args = (Dimension._from_dimensional_dependencies(
                 get_for_name(arg)) for arg in name.args)
             result = name.func(*args)
 
+            dicts = [get_for_name(i) for i in name.args]
+
             if isinstance(result, Dimension):
                 return self.get_dimensional_dependencies(result)
             elif result.func == name.func:
-                return {}
+                if isinstance(name, TrigonometricFunction):
+                    if dicts[0] == {} or dicts[0] == {Symbol('angle'): 1}:
+                        return {}
+                    else:
+                        raise TypeError("The input argument for the function {} must be dimensionless or have dimensions of angle.".format(name.func))
+                else:
+                    if all( (item == {} for item in dicts) ):
+                        return {}
+                    else:
+                        raise TypeError("The input arguments for the function {} must be dimensionless.".format(name.func))
             else:
                 return get_for_name(result)
 
