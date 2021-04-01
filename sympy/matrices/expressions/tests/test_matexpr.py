@@ -341,7 +341,7 @@ def test_issue_7842():
     assert Eq(A, B) == True
 
 
-def test_issue_21208():
+def test_issue_21195():
     t = symbols('t')
     x = Function('x')(t)
     dx = x.diff(t)
