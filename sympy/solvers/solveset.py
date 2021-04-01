@@ -1056,11 +1056,6 @@ def _solveset(f, symbol, domain, _check=False):
         result = solver(Add(f.lhs, - f.rhs, evaluate=False), symbol, domain)
 
     elif f.is_Relational:
-        if not domain.is_subset(S.Reals):
-            raise NotImplementedError(filldedent('''
-                Inequalities in the complex domain are
-                not supported. Try the real domain by
-                setting domain=S.Reals'''))
         try:
             result = solve_univariate_inequality(
             f, symbol, domain=domain, relational=False)
