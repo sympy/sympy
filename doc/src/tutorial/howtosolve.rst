@@ -97,3 +97,29 @@ nonlinsolve()
     >>> from sympy.abc import x,y
     >>> nonlinsolve([sin(y)], [x, y]) 
     FiniteSet((x, ImageSet(Lambda(_n, 2*_n*pi), Integers)), (x, ImageSet(Lambda(_n, 2*_n*pi + pi), Integers)))
+
+
+solve_decomposition()
+======================
+
+``solve_decomposition`` uses the principle of rewriting and decomposition to solve equations.
+
+For instance, if we have to solve an equation ``f(x)=0`` where ``f(x) = 4**x - 3(2**x) + 2``, by the method of decomposition ``f(x)`` is broken converted to ``g(x)**2 - 3*g(x) + 2`` where ``g(x) = 2 **x``.
+
+Substituting ``g(x)`` with a dummy variable ``t``, we get a polynomial in ``f(t)`` given as
+
+``f(t) = (t - 1)*(t - 2)``
+
+Resubstituting the value of ``t`` as ``g(x)`` and further composing ``f(x)`` from ``g(x)``, we get
+
+``f(x) = (2**x - 1)*(2**x - 2)``
+
+We can now represent ``f(x)`` as the product of two simpler functions by the idea of rewriting
+
+``f(x) = k(x) * l(x)``
+
+Calculating the solutions of these functions is comparatively easier with respect to the original equation. We solve for these functions separately and get individual solutions as
+
+``2**x - 1 = 0 or 2**x - 2 = 0``
+
+that is, ``x = 0 or 1``
