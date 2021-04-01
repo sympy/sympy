@@ -7,7 +7,7 @@ Module for the SDM class.
 from operator import add, neg, pos, sub
 from collections import defaultdict
 
-from .exceptions import DDMBadInputError, DDMDomainError
+from .exceptions import DDMBadInputError, DDMDomainError, DDMShapeError
 
 from .ddm import DDM
 
@@ -97,9 +97,12 @@ class SDM(dict):
     def matmul(A, B):
         if A.domain != B.domain:
             raise DDMDomainError
-        K = A.domain
+        m, n = A.shape
+        n2, o = B.shape
+        if n != n2:
+            raise DDMShapeError
         C = sdm_matmul(A, B)
-        return A.new(C, A.shape, A.domain)
+        return A.new(C, (m, o), A.domain)
 
     def mul(A, b):
         Csdm = unop_dict(A, lambda aij: aij*b)
