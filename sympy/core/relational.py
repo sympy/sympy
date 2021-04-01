@@ -1108,31 +1108,31 @@ def _eval_is_eq(lhs, rhs):  # noqa:F811
     return fuzzy_and(fuzzy_bool(is_eq(s, o)) for s, o in zip(lhs, rhs))
 
 
-def is_lt(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
+def is_lt(lhs, rhs):
     """Fuzzy bool for lhs is strictly less than rhs.
 
     See the docstring for :func:`~.is_ge` for more.
     """
-    return fuzzy_not(is_ge(lhs, rhs, getter))
+    return fuzzy_not(is_ge(lhs, rhs))
 
 
-def is_gt(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
+def is_gt(lhs, rhs):
     """Fuzzy bool for lhs is strictly greater than rhs.
 
     See the docstring for :func:`~.is_ge` for more.
     """
-    return fuzzy_not(is_le(lhs, rhs, getter))
+    return fuzzy_not(is_le(lhs, rhs))
 
 
-def is_le(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
+def is_le(lhs, rhs):
     """Fuzzy bool for lhs is less than or equal to rhs.
 
     See the docstring for :func:`~.is_ge` for more.
     """
-    return is_ge(rhs, lhs, getter)
+    return is_ge(rhs, lhs)
 
 
-def is_ge(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
+def is_ge(lhs, rhs):
     """
     Fuzzy bool for *lhs* is greater than or equal to *rhs*.
 
@@ -1148,9 +1148,6 @@ def is_ge(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
         The right-hand side of the expression, must be sympified
         and an instance of expression. Throws an exception if
         lhs is not an instance of expression.
-
-    getter : callable, optional
-        Function which gets the property of expressions.
 
     Returns
     =======
@@ -1247,15 +1244,15 @@ def is_ge(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
                     return rv
 
 
-def is_neq(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
+def is_neq(lhs, rhs):
     """Fuzzy bool for lhs does not equal rhs.
 
     See the docstring for :func:`~.is_eq` for more.
     """
-    return fuzzy_not(is_eq(lhs, rhs, getter))
+    return fuzzy_not(is_eq(lhs, rhs))
 
 
-def is_eq(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
+def is_eq(lhs, rhs):
     """
     Fuzzy bool representing mathematical equality between *lhs* and *rhs*.
 
@@ -1267,9 +1264,6 @@ def is_eq(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
 
     rhs : Expr
         The right-hand side of the expression, must be sympified.
-
-    getter : callable, optional
-        Function which gets the property of expressions.
 
     Returns
     =======
@@ -1283,10 +1277,6 @@ def is_eq(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
     This function is intended to give a relatively fast determination and
     deliberately does not attempt slow calculations that might help in
     obtaining a determination of True or False in more difficult cases.
-
-    To perform assumption-based determination, pass suitable function to
-    *getter* parameter. See :obj:`sympy.assumptions.relation.equality.EqualityPredicate`
-    for the example.
 
     :func:`~.is_neq` calls this function to return its value, so supporting
     new type with this function will ensure correct behavior for ``is_neq``
@@ -1372,30 +1362,29 @@ def is_eq(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
         isinstance(rhs, Boolean)):
         return False  # only Booleans can equal Booleans
 
-    if getter(lhs, 'infinite') or getter(rhs, 'infinite'):
-        if fuzzy_xor([getter(lhs, 'infinite'), getter(rhs, 'infinite')]):
+    if lhs.is_infinite or rhs.is_infinite:
+        if fuzzy_xor([lhs.is_infinite, rhs.is_infinite]):
             return False
-        if fuzzy_xor([getter(lhs, 'extended_real'), getter(rhs, 'extended_real')]):
+        if fuzzy_xor([lhs.is_extended_real, rhs.is_extended_real]):
             return False
-        if fuzzy_and([getter(lhs, 'extended_real'), getter(rhs, 'extended_real')]):
-            return fuzzy_xor([getter(lhs, 'extended_positive'),
-                              fuzzy_not(getter(rhs, 'extended_positive'))])
+        if fuzzy_and([lhs.is_extended_real, rhs.is_extended_real]):
+            return fuzzy_xor([lhs.is_extended_positive, fuzzy_not(rhs.is_extended_positive)])
 
         # Try to split real/imaginary parts and equate them
         I = S.ImaginaryUnit
 
         def split_real_imag(expr):
             real_imag = lambda t: (
-                'real' if getter(t, 'extended_real') else
-                'imag' if getter(I*t, 'extended_real') else None)
+                'real' if t.is_extended_real else
+                'imag' if (I * t).is_extended_real else None)
             return sift(Add.make_args(expr), real_imag)
 
         lhs_ri = split_real_imag(lhs)
         if not lhs_ri[None]:
             rhs_ri = split_real_imag(rhs)
             if not rhs_ri[None]:
-                eq_real = Eq(Add(*lhs_ri['real']), Add(*rhs_ri['real']))
-                eq_imag = Eq(I * Add(*lhs_ri['imag']), I * Add(*rhs_ri['imag']))
+                eq_real = is_eq(Add(*lhs_ri['real']), Add(*rhs_ri['real']))
+                eq_imag = is_eq(I * Add(*lhs_ri['imag']), I * Add(*rhs_ri['imag']))
                 return fuzzy_and(map(fuzzy_bool, [eq_real, eq_imag]))
 
         # Compare e.g. zoo with 1+I*oo by comparing args
@@ -1403,14 +1392,14 @@ def is_eq(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
         argrhs = arg(rhs)
         # Guard against Eq(nan, nan) -> Falsesymp
         if not (arglhs == S.NaN and argrhs == S.NaN):
-            return fuzzy_bool(Eq(arglhs, argrhs))
+            return fuzzy_bool(is_eq(arglhs, argrhs))
 
     if all(isinstance(i, Expr) for i in (lhs, rhs)):
         # see if the difference evaluates
         dif = lhs - rhs
-        z = getter(dif, 'zero')
+        z = dif.is_zero
         if z is not None:
-            if z is False and getter(dif, 'commutative'):  # issue 10728
+            if z is False and dif.is_commutative:  # issue 10728
                 return False
             if z:
                 return True
@@ -1422,13 +1411,13 @@ def is_eq(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
         # see if the ratio evaluates
         n, d = dif.as_numer_denom()
         rv = None
-        if getter(n, 'zero'):
-            rv = getter(d, 'nonzero')
-        elif getter(n, 'finite'):
-            if getter(d, 'infinite'):
+        if n.is_zero:
+            rv = d.is_nonzero
+        elif n.is_finite:
+            if d.is_infinite:
                 rv = True
-            elif getter(n, 'zero') is False:
-                rv = getter(d, 'infinite')
+            elif n.is_zero is False:
+                rv = d.is_infinite
                 if rv is None:
                     # if the condition that makes the denominator
                     # infinite does not make the original expression
@@ -1436,10 +1425,10 @@ def is_eq(lhs, rhs, getter=lambda x, key: getattr(x, 'is_%s' % key)):
                     l, r = clear_coefficients(d, S.Infinity)
                     args = [_.subs(l, r) for _ in (lhs, rhs)]
                     if args != [lhs, rhs]:
-                        rv = fuzzy_bool(Eq(*args))
+                        rv = fuzzy_bool(is_eq(*args))
                         if rv is True:
                             rv = None
-        elif any(getter(a, 'infinite') for a in Add.make_args(n)):
+        elif any(a.is_infinite for a in Add.make_args(n)):
             # (inf or nan)/x != 0
             rv = False
         if rv is not None:
