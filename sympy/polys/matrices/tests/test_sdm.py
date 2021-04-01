@@ -157,6 +157,16 @@ def test_SDM_convert_to():
     assert D.domain == ZZ
 
 
+def test_SDM_hstack():
+    A = SDM({0:{1:ZZ(1)}}, (2, 2), ZZ)
+    B = SDM({1:{1:ZZ(1)}}, (2, 2), ZZ)
+    AA = SDM({0:{1:ZZ(1), 3:ZZ(1)}}, (2, 4), ZZ)
+    AB = SDM({0:{1:ZZ(1)}, 1:{3:ZZ(1)}}, (2, 4), ZZ)
+    assert SDM.hstack(A) == A
+    assert SDM.hstack(A, A) == AA
+    assert SDM.hstack(A, B) == AB
+
+
 def test_SDM_inv():
     A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
     B = SDM({0:{0:QQ(-2), 1:QQ(1)}, 1:{0:QQ(3, 2), 1:QQ(-1, 2)}}, (2, 2), QQ)

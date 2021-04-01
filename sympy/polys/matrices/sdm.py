@@ -65,6 +65,9 @@ class SDM(dict):
     def to_ddm(M):
         return DDM(M.to_list(), M.shape, M.domain)
 
+    def to_sdm(M):
+        return M
+
     @classmethod
     def zeros(cls, shape, domain):
         return cls({}, shape, domain)

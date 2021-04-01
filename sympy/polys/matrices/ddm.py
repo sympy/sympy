@@ -101,6 +101,9 @@ class DDM(list):
     def to_ddm(self):
         return self
 
+    def to_sdm(self):
+        return SDM.from_list(self, self.shape, self.domain)
+
     def convert_to(self, K):
         Kold = self.domain
         if K == Kold:
@@ -305,3 +308,6 @@ class DDM(list):
         vec = ddm_berk(a, K)
         coeffs = [vec[i][0] for i in range(n+1)]
         return coeffs
+
+
+from .sdm import SDM

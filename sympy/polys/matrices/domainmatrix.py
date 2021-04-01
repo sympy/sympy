@@ -101,7 +101,7 @@ class DomainMatrix:
         elif isinstance(rows, dict):
             rep = SDM(rows, shape, domain)
         else:
-            msg = "Input should be DDM, SDM, list-of-lists or dict-of-dicts"
+            msg = "Input should be list-of-lists or dict-of-dicts"
             raise TypeError(msg)
 
         if fmt is not None:

@@ -71,6 +71,13 @@ def test_DDM_eq():
     assert (ddm3 != ddm1) is True
 
 
+def test_DDM_convert_to():
+    ddm = DDM([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+    assert ddm.convert_to(ZZ) == ddm
+    ddmq = ddm.convert_to(QQ)
+    assert ddmq.domain == QQ
+
+
 def test_DDM_zeros():
     ddmz = DDM.zeros((3, 4), QQ)
     assert list(ddmz) == [[QQ(0)] * 4] * 3
