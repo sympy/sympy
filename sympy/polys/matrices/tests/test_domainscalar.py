@@ -1,5 +1,3 @@
-from sympy.testing.pytest import raises
-
 from sympy.core.symbol import S
 from sympy.polys import ZZ, QQ
 from sympy.polys.matrices.domainscalar import DomainScalar
@@ -19,7 +17,7 @@ def test_DomainScalar_new():
 
 def test_DomainScalar_repr():
     A = DomainScalar(ZZ(1), ZZ)
-    assert repr(A) == '1'
+    assert repr(A.element) == '1'
 
 
 def test_DomainScalar_from_sympy():
@@ -69,5 +67,3 @@ def test_DomainScalar_pow():
     A = DomainScalar(ZZ(-5), ZZ)
     B = A**(2)
     assert B == DomainScalar(ZZ(25), ZZ)
-
-    raises(ZeroDivisionError, lambda: DomainScalar(ZZ(0), ZZ).__pow__(-2))
