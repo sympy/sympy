@@ -984,7 +984,6 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     if type(transformations) is str:
         from sympy.parsing.sympy_parser import standard_transformations, implicit_multiplication_application
         transformations = (standard_transformations + (implicit_multiplication_application,))
-        
     if local_dict is None:
         local_dict = {}
     elif not isinstance(local_dict, dict):
