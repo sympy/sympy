@@ -1,6 +1,6 @@
 from sympy import (Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh,
     sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, cot, Integer,
-    PoleError, floor, ceiling, asin, symbols, limit, sign,
+    PoleError, floor, ceiling, asin, symbols, limit, sign, cbrt,
     Derivative, S)
 from sympy.abc import x, y, z
 
@@ -36,6 +36,11 @@ def test_pow_0():
 
 def test_pow_1():
     assert ((1 + x)**2).nseries(x, n=5) == x**2 + 2*x + 1
+
+    # https://github.com/sympy/sympy/issues/21075
+    assert ((sqrt(x) + 1)**2).nseries(x) == 2*sqrt(x) + x + 1
+    assert ((sqrt(x) + cbrt(x))**2).nseries(x) == 2*x**Rational(5, 6)\
+        + x**Rational(2, 3) + x
 
 
 def test_geometric_1():

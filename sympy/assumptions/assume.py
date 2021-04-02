@@ -109,8 +109,6 @@ class AppliedPredicate(Boolean):
     """
     __slots__ = ()
 
-    is_Atom = True  # do not attempt to decompose this
-
     def __new__(cls, predicate, *args):
         if not isinstance(predicate, Predicate):
             raise TypeError("%s is not a Predicate." % predicate)

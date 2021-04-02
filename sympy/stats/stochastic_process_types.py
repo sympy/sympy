@@ -2046,7 +2046,7 @@ class CountingProcess(ContinuousTimeStochasticProcess):
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         """
-        Computes probability
+        Computes probability.
 
         Parameters
         ==========

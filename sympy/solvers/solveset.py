@@ -340,11 +340,21 @@ def _invert_complex(f, g_ys, symbol):
                                imageset(Lambda(n, f.inverse()(n)), g_ys), symbol)
 
     if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
-        if isinstance(g_ys, FiniteSet):
+        if isinstance(g_ys, ImageSet):
+            # can solve upto `(d*exp(exp(...(exp(a*x + b))...) + c)` format.
+            # Further can be improved to `(d*exp(exp(...(exp(a*x**n + b*x**(n-1) + ... + f))...) + c)`.
+            g_ys_expr = g_ys.lamda.expr
+            g_ys_vars = g_ys.lamda.variables
+            k = Dummy('k{}'.format(len(g_ys_vars)))
+            g_ys_vars_1 = (k,) + g_ys_vars
+            exp_invs = Union(*[imageset(Lambda((g_ys_vars_1,), (I*(2*k*pi + arg(g_ys_expr))
+                                         + log(Abs(g_ys_expr)))), S.Integers**(len(g_ys_vars_1)))])
+
+        elif isinstance(g_ys, FiniteSet):
             exp_invs = Union(*[imageset(Lambda(n, I*(2*n*pi + arg(g_y)) +
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
-            return _invert_complex(f.exp, exp_invs, symbol)
+        return _invert_complex(f.exp, exp_invs, symbol)
 
     return (f, g_ys)
 
@@ -3009,52 +3019,52 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     # end of def add_intersection_complement()
 
     def _extract_main_soln(sym, sol, soln_imageset):
-            """Separate the Complements, Intersections, ImageSet lambda expr
-            and its base_set.
-            """
-            # if there is union, then need to check
-            # Complement, Intersection, Imageset.
-            # Order should not be changed.
-            if isinstance(sol, Complement):
-                # extract solution and complement
-                complements[sym] = sol.args[1]
-                sol = sol.args[0]
-                # complement will be added at the end
-                # using `add_intersection_complement` method
-            if isinstance(sol, Intersection):
-                # Interval/Set will be at 0th index always
-                if sol.args[0] not in (S.Reals, S.Complexes):
-                    # Sometimes solveset returns soln with intersection
-                    # S.Reals or S.Complexes. We don't consider that
-                    # intersection.
-                    intersections[sym] = sol.args[0]
-                sol = sol.args[1]
-            # after intersection and complement Imageset should
-            # be checked.
-            if isinstance(sol, ImageSet):
-                soln_imagest = sol
-                expr2 = sol.lamda.expr
-                sol = FiniteSet(expr2)
-                soln_imageset[expr2] = soln_imagest
+        """Separate the Complements, Intersections, ImageSet lambda expr
+        and its base_set.
+        """
+        # if there is union, then need to check
+        # Complement, Intersection, Imageset.
+        # Order should not be changed.
+        if isinstance(sol, Complement):
+            # extract solution and complement
+            complements[sym] = sol.args[1]
+            sol = sol.args[0]
+            # complement will be added at the end
+            # using `add_intersection_complement` method
+        if isinstance(sol, Intersection):
+            # Interval/Set will be at 0th index always
+            if sol.args[0] not in (S.Reals, S.Complexes):
+                # Sometimes solveset returns soln with intersection
+                # S.Reals or S.Complexes. We don't consider that
+                # intersection.
+                intersections[sym] = sol.args[0]
+            sol = sol.args[1]
+        # after intersection and complement Imageset should
+        # be checked.
+        if isinstance(sol, ImageSet):
+            soln_imagest = sol
+            expr2 = sol.lamda.expr
+            sol = FiniteSet(expr2)
+            soln_imageset[expr2] = soln_imagest
 
-            # if there is union of Imageset or other in soln.
-            # no testcase is written for this if block
-            if isinstance(sol, Union):
-                sol_args = sol.args
-                sol = S.EmptySet
-                # We need in sequence so append finteset elements
-                # and then imageset or other.
-                for sol_arg2 in sol_args:
-                    if isinstance(sol_arg2, FiniteSet):
-                        sol += sol_arg2
-                    else:
-                        # ImageSet, Intersection, complement then
-                        # append them directly
-                        sol += FiniteSet(sol_arg2)
+        # if there is union of Imageset or other in soln.
+        # no testcase is written for this if block
+        if isinstance(sol, Union):
+            sol_args = sol.args
+            sol = S.EmptySet
+            # We need in sequence so append finteset elements
+            # and then imageset or other.
+            for sol_arg2 in sol_args:
+                if isinstance(sol_arg2, FiniteSet):
+                    sol += sol_arg2
+                else:
+                    # ImageSet, Intersection, complement then
+                    # append them directly
+                    sol += FiniteSet(sol_arg2)
 
-            if not isinstance(sol, FiniteSet):
-                sol = FiniteSet(sol)
-            return sol, soln_imageset
+        if not isinstance(sol, FiniteSet):
+            sol = FiniteSet(sol)
+        return sol, soln_imageset
     # end of def _extract_main_soln()
 
     # helper function for _append_new_soln
