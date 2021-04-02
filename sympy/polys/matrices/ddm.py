@@ -155,10 +155,6 @@ class DDM(list):
         else:
             return NotImplemented
 
-    def scalarmul(A, lamda):
-        """ Internal method of DomainMatrix.scalarmul for Scalar multiplication"""
-        return A.mul(lamda)
-
     @classmethod
     def _check(cls, a, op, b, ashape, bshape):
         if a.domain != b.domain:

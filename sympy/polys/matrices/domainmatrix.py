@@ -105,6 +105,9 @@ class DomainMatrix:
             return NotImplemented
         return A.sub(B)
 
+    def __neg__(A):
+        return A.neg()
+
     def __mul__(A, B):
         """A * B"""
         if isinstance(B, DomainMatrix):
@@ -142,7 +145,7 @@ class DomainMatrix:
             raise ValueError("domain")
         return A.from_rep(A.rep.sub(B.rep))
 
-    def __neg__(A):
+    def neg(A):
         return A.from_rep(A.rep.neg())
 
     def mul(A, b):

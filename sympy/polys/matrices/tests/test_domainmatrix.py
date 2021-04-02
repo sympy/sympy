@@ -185,7 +185,7 @@ def test_DomainMatrix_sub():
 def test_DomainMatrix_neg():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     Aneg = DomainMatrix([[ZZ(-1), ZZ(-2)], [ZZ(-3), ZZ(-4)]], (2, 2), ZZ)
-    assert -A == Aneg
+    assert -A == A.neg() == Aneg
 
 
 def test_DomainMatrix_mul():
@@ -452,8 +452,8 @@ def test_DomainMatrix_scalarmul():
 
     raises(TypeError, lambda: A * 1.5)
 
-def test_DomainMatrix_scalardiv():
+def test_DomainMatrix_truediv():
     A = DomainMatrix.from_Matrix(Matrix([[1, 2], [3, 4]]))
     lamda = DomainScalar(QQ(3)/QQ(2), QQ)
     assert A / lamda == DomainMatrix([[QQ(2)/QQ(3), QQ(4)/QQ(3)], [QQ(2), QQ(8)/QQ(3)]], (2, 2), QQ)
-    assert A / 2 == DomainMatrix([[0.5, 1.0], [1.5, 2.0]], (2, 2), RR)
+    assert A / 2 == DomainMatrix([[RR(0.5), RR(1.0)], [RR(1.5), RR(2.0)]], (2, 2), RR)
