@@ -742,16 +742,39 @@ class Piecewise(Function):
             if isinstance(cond, And):
                 lower = S.NegativeInfinity
                 upper = S.Infinity
+                exclude = []
                 for cond2 in cond.args:
                     if isinstance(cond2, Equality):
                         lower = upper  # ignore
                         break
+                    elif isinstance(cond2, Unequality):
+                        l, r = cond2.args
+                        if l == sym:
+                            exclude.append(r)
+                        elif r == sym:
+                            exclude.append(l)
+                        else:
+                            nonsymfail(cond2)
+                        continue
                     elif cond2.lts == sym:
                         upper = Min(cond2.gts, upper)
                     elif cond2.gts == sym:
                         lower = Max(cond2.lts, lower)
                     else:
                         nonsymfail(cond2)  # should never get here
+                if exclude:
+                    exclude = list(ordered(exclude))
+                    newcond = []
+                    for i, e in enumerate(exclude):
+                        if e < lower == True or e > upper == True:
+                            continue
+                        if not newcond:
+                            newcond.append((None, lower))  # add a primer
+                        newcond.append((newcond[-1][1], e))
+                    newcond.append((newcond[-1][1], upper))
+                    newcond.pop(0)  # remove the primer
+                    expr_cond.extend([(iarg, expr, And(i[0] < sym, sym < i[1])) for i in newcond])
+                    continue
             elif isinstance(cond, Relational):
                 lower, upper = cond.lts, cond.gts  # part 1: initialize with givens
                 if cond.lts == sym:                # part 1a: expand the side ...
