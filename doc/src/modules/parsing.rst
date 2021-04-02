@@ -28,6 +28,8 @@ applied in the order given.
 
 .. autodata:: sympy.parsing.sympy_parser.standard_transformations
 
+.. autodata:: sympy.parsing.sympy_parser.all_transformations
+
 .. autofunction:: sympy.parsing.sympy_parser.split_symbols
 
 .. autofunction:: sympy.parsing.sympy_parser.split_symbols_custom

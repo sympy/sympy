@@ -882,6 +882,11 @@ def convert_equals_signs(result, local_dict, global_dict):
 standard_transformations = (lambda_notation, auto_symbol, repeated_decimals, auto_number,
     factorial_notation)
 
+#: A sensibly extensive selection of transformations for :func:`parse_expr`.
+#: Additionally to the standard transformations, the relaxed syntax described at
+#: :func:`implicit_multiplication_application` will be parsed.
+all_transformations = (standard_transformations + (implicit_multiplication_application,))
+
 
 def stringify_expr(s, local_dict, global_dict, transformations):
     """
@@ -930,12 +935,15 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         with ``from sympy import *``; provide this parameter to override
         this behavior (for instance, to parse ``"Q & S"``).
 
-    transformations : tuple, optional
+    transformations : tuple or the string ``all``, optional
         A tuple of transformation functions used to modify the tokens of the
-        parsed expression before evaluation. The default transformations
-        convert numeric literals into their SymPy equivalents, convert
-        undefined variables into SymPy symbols, and allow the use of standard
-        mathematical factorial notation (e.g. ``x!``).
+        parsed expression before evaluation or the string ``all``. The
+        default transformations convert numeric literals into their SymPy
+        equivalents, convert undefined variables into SymPy symbols, and
+        allow the use of standard mathematical factorial notation (e.g.
+        ``x!``). If the string ``all`` is passed, then additionally to the
+        default transformations the transformation
+        :func:`implicit_multiplication_application` is applied.
 
     evaluate : bool, optional
         When False, the order of the arguments will remain as they were in the
@@ -956,6 +964,8 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     ...     (implicit_multiplication_application,))
     >>> parse_expr("2x", transformations=transformations)
     2*x
+    >>> parse_expr("7!x + sin**2 x", transformations='all')
+    5040*x + sin(x)**2
 
     When evaluate=False, some automatic simplifications will not occur:
 
@@ -995,18 +1005,21 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
 
     transformations = transformations or ()
     if transformations:
-        if not iterable(transformations):
+        if transformations == 'all':
+            transformations = all_transformations
+        elif not iterable(transformations):
             raise TypeError(
-                '`transformations` should be a list of functions.')
-        for _ in transformations:
-            if not callable(_):
-                raise TypeError(filldedent('''
-                    expected a function in `transformations`,
-                    not %s''' % func_name(_)))
-            if arity(_) != 3:
-                raise TypeError(filldedent('''
-                    a transformation should be function that
-                    takes 3 arguments'''))
+                '`transformations` should be a list of functions or the string `all`.')
+        else:
+            for _ in transformations:
+                if not callable(_):
+                    raise TypeError(filldedent('''
+                        expected a function in `transformations`,
+                        not %s''' % func_name(_)))
+                if arity(_) != 3:
+                    raise TypeError(filldedent('''
+                        a transformation should be function that
+                        takes 3 arguments'''))
     code = stringify_expr(s, local_dict, global_dict, transformations)
 
     if not evaluate:
