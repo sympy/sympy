@@ -979,6 +979,7 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
 
     stringify_expr, eval_expr, standard_transformations,
     implicit_multiplication_application
+    
     """
     if type(transformations) is str:
         from sympy.parsing.sympy_parser import standard_transformations, implicit_multiplication_application
