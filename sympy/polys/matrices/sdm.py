@@ -31,6 +31,18 @@ class SDM(dict):
         if not all(0 <= c < n for row in self.values() for c in row):
             raise DDMBadInputError("Column out of range")
 
+    def __str__(self):
+        rowsstr = []
+        for i, row in self.items():
+            elemsstr = ', '.join('%s: %s' % (j, elem) for j, elem in row.items())
+            rowsstr.append('%s: {%s}' % (i, elemsstr))
+        return '{%s}' % ', '.join(rowsstr)
+
+    def __repr__(self):
+        cls = type(self).__name__
+        rows = dict.__repr__(self)
+        return '%s(%s, %s, %s)' % (cls, rows, self.shape, self.domain)
+
     @classmethod
     def new(cls, sdm, shape, domain):
         return cls(sdm, shape, domain)

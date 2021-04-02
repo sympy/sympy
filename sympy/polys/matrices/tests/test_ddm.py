@@ -40,7 +40,7 @@ def test_DDM_getsetitem():
 def test_DDM_str():
     ddm = DDM([[ZZ(0), ZZ(1)], [ZZ(2), ZZ(3)]], (2, 2), ZZ)
     if HAS_GMPY: # pragma: no cover
-        assert str(ddm) == '[[mpz(0), mpz(1)], [mpz(2), mpz(3)]]'
+        assert str(ddm) == '[[0, 1], [2, 3]]'
         assert repr(ddm) == 'DDM([[mpz(0), mpz(1)], [mpz(2), mpz(3)]], (2, 2), ZZ)'
     else:        # pragma: no cover
         assert repr(ddm) == 'DDM([[0, 1], [2, 3]], (2, 2), ZZ)'

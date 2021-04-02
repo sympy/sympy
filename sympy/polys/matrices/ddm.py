@@ -112,7 +112,8 @@ class DDM(list):
         return DDM(rows, self.shape, K)
 
     def __str__(self):
-        return list.__repr__(self)
+        rowsstr = ['[%s]' % ', '.join(map(str, row)) for row in self]
+        return '[%s]' % ', '.join(rowsstr)
 
     def __repr__(self):
         cls = type(self).__name__

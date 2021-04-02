@@ -2,7 +2,7 @@
 Tests for the basic functionality of the SDM class.
 """
 
-
+from sympy.core.compatibility import HAS_GMPY
 from sympy.testing.pytest import raises
 
 from sympy import QQ, ZZ
@@ -20,6 +20,15 @@ def test_SDM():
 
     raises(DDMBadInputError, lambda: SDM({5:{1:ZZ(0)}}, (2, 2), ZZ))
     raises(DDMBadInputError, lambda: SDM({0:{5:ZZ(0)}}, (2, 2), ZZ))
+
+
+def test_DDM_str():
+    sdm = SDM({0:{0:ZZ(1)}, 1:{1:ZZ(1)}}, (2, 2), ZZ)
+    assert str(sdm) == '{0: {0: 1}, 1: {1: 1}}'
+    if HAS_GMPY: # pragma: no cover
+        assert repr(sdm) == 'SDM({0: {0: mpz(1)}, 1: {1: mpz(1)}}, (2, 2), ZZ)'
+    else:        # pragma: no cover
+        assert repr(sdm) == 'SDM({0: {0: 1}, 1: {1: 1}}, (2, 2), ZZ)'
 
 
 def test_SDM_new():

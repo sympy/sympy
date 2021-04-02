@@ -121,12 +121,11 @@ class DomainMatrix:
 
         >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.matrices import DomainMatrix
-        >>> from sympy.polys.matrices.sdm import SDM
-        >>> drep = SDM({0: {0: ZZ(1), 1:ZZ(2)}, 1: {0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> drep = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
         >>> dM = DomainMatrix.from_rep(drep)
         >>> dM
         DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
-
 
         Create a :py:class:`~.DomainMatrix` with a sparse internal
         representation as :py:class:`~.SDM`:
@@ -137,7 +136,7 @@ class DomainMatrix:
         >>> drep = SDM({0:{1:ZZ(1)},1:{0:ZZ(2)}}, (2, 2), ZZ)
         >>> dM = DomainMatrix.from_rep(drep)
         >>> dM
-        DomainMatrix([[0, 1], [2, 0]], (2, 2), ZZ)
+        DomainMatrix({0: {1: 1}, 1: {0: 2}}, (2, 2), ZZ)
 
         Parameters
         ==========
@@ -1111,7 +1110,7 @@ class DomainMatrix:
         >>> from sympy.polys.matrices import DomainMatrix
         >>> from sympy import QQ
         >>> DomainMatrix.eye(3, QQ)
-        DomainMatrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], (3, 3), QQ)
+        DomainMatrix({0: {0: 1}, 1: {1: 1}, 2: {2: 1}}, (3, 3), QQ)
 
         """
         return cls.from_rep(SDM.eye(n, domain))
@@ -1126,7 +1125,7 @@ class DomainMatrix:
         >>> from sympy.polys.matrices import DomainMatrix
         >>> from sympy import QQ
         >>> DomainMatrix.zeros((2, 3), QQ)
-        DomainMatrix([[0, 0, 0], [0, 0, 0]], (2, 3), QQ)
+        DomainMatrix({}, (2, 3), QQ)
 
         """
         return cls.from_rep(SDM.zeros(shape, domain))
