@@ -647,9 +647,9 @@ def get_known_facts():
         Implies(Q.even & Q.positive & ~Q.prime, Q.composite),
 
         # hermitian and antihermitian
-        Implies(Q.antihermitian, ~Q.hermitian),
         Implies(Q.real, Q.hermitian),
         Implies(Q.imaginary, Q.antihermitian),
+        Implies(Q.zero, Q.hermitian | Q.antihermitian),
 
         # define finity and infinity, and build extended real line
         Implies(Q.infinite, ~Q.finite),
