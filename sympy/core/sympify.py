@@ -140,8 +140,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     In order to parse non-Python syntax use ``parse_expr``:
 
-    >>> from sympy.parsing.sympy_parser import standard_transformations,
-    ... implicit_multiplication_application
+    >>> from sympy.parsing.sympy_parser import (standard_transformations,
+    ... implicit_multiplication_application, parse_expr)
     >>> transformations = (standard_transformations +
     ... (implicit_multiplication_application,))
     >>> parse_expr("2x + 1", transformations=transformations)
