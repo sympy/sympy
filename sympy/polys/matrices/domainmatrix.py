@@ -776,7 +776,8 @@ class DomainMatrix:
 
     def scalarmul(A, lamda):
         if lamda.element == lamda.domain.zero:
-            return DomainMatrix.zeros(A.shape, A.domain)
+            m, n = A.shape
+            return DomainMatrix([[lamda.domain.zero]*n]*m, (m, n), A.domain)
         if lamda.element == lamda.domain.one:
             return A
 

@@ -1,12 +1,13 @@
+from sympy.testing.pytest import raises
+
 from sympy.core.symbol import S
 from sympy.polys import ZZ, QQ
 from sympy.polys.matrices.domainscalar import DomainScalar
 
 
-def test_DomainScalar_init():
-    A = DomainScalar(ZZ(1), ZZ)
-    assert A.element ==  ZZ(1)
-    assert A.domain == ZZ
+def test_DomainScalar___new__():
+    raises(TypeError, lambda: DomainScalar(ZZ(1), QQ))
+    raises(TypeError, lambda: DomainScalar(ZZ(1), 1))
 
 
 def test_DomainScalar_new():
@@ -17,7 +18,7 @@ def test_DomainScalar_new():
 
 def test_DomainScalar_repr():
     A = DomainScalar(ZZ(1), ZZ)
-    assert repr(A.element) == '1'
+    assert repr(A) == '1'
 
 
 def test_DomainScalar_from_sympy():
