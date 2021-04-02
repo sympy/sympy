@@ -5,7 +5,7 @@ from sympy.assumptions.assume import assuming, global_assumptions, Predicate
 from sympy.assumptions.ask import compute_known_facts, single_fact_lookup
 from sympy.assumptions.handlers import AskHandler
 from sympy.core.add import Add
-from sympy.core.numbers import (I, Integer, Rational, oo, pi)
+from sympy.core.numbers import (I, Integer, Rational, oo, zoo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
 from sympy.core.symbol import symbols, Symbol
@@ -181,10 +181,61 @@ def test_infinity():
     assert ask(Q.even(oo)) is False
     assert ask(Q.odd(oo)) is False
     assert ask(Q.finite(oo)) is False
+    assert ask(Q.infinite(oo)) is True
     assert ask(Q.prime(oo)) is False
     assert ask(Q.composite(oo)) is False
     assert ask(Q.hermitian(oo)) is False
     assert ask(Q.antihermitian(oo)) is False
+    assert ask(Q.positive_infinite(oo)) is True
+    assert ask(Q.negative_infinite(oo)) is False
+
+    assert ask(Q.commutative(-oo)) is True
+    assert ask(Q.integer(-oo)) is False
+    assert ask(Q.rational(-oo)) is False
+    assert ask(Q.algebraic(-oo)) is False
+    assert ask(Q.real(-oo)) is False
+    assert ask(Q.extended_real(-oo)) is True
+    assert ask(Q.complex(-oo)) is False
+    assert ask(Q.irrational(-oo)) is False
+    assert ask(Q.imaginary(-oo)) is False
+    assert ask(Q.positive(-oo)) is False
+    assert ask(Q.negative(-oo)) is False
+    assert ask(Q.zero(-oo)) is False
+    assert ask(Q.nonzero(-oo)) is False
+    assert ask(Q.even(-oo)) is False
+    assert ask(Q.odd(-oo)) is False
+    assert ask(Q.finite(-oo)) is False
+    assert ask(Q.infinite(-oo)) is True
+    assert ask(Q.prime(-oo)) is False
+    assert ask(Q.composite(-oo)) is False
+    assert ask(Q.hermitian(-oo)) is False
+    assert ask(Q.antihermitian(-oo)) is False
+    assert ask(Q.positive_infinite(-oo)) is False
+    assert ask(Q.negative_infinite(-oo)) is True
+
+    assert ask(Q.commutative(zoo)) is True
+    assert ask(Q.integer(zoo)) is False
+    assert ask(Q.rational(zoo)) is False
+    assert ask(Q.algebraic(zoo)) is False
+    assert ask(Q.real(zoo)) is False
+    assert ask(Q.extended_real(zoo)) is False
+    assert ask(Q.complex(zoo)) is False
+    assert ask(Q.irrational(zoo)) is False
+    assert ask(Q.imaginary(zoo)) is False
+    assert ask(Q.positive(zoo)) is False
+    assert ask(Q.negative(zoo)) is False
+    assert ask(Q.zero(zoo)) is False
+    assert ask(Q.nonzero(zoo)) is False
+    assert ask(Q.even(zoo)) is False
+    assert ask(Q.odd(zoo)) is False
+    assert ask(Q.finite(zoo)) is False
+    assert ask(Q.infinite(zoo)) is True
+    assert ask(Q.prime(zoo)) is False
+    assert ask(Q.composite(zoo)) is False
+    assert ask(Q.hermitian(zoo)) is False
+    assert ask(Q.antihermitian(zoo)) is False
+    assert ask(Q.positive_infinite(zoo)) is False
+    assert ask(Q.negative_infinite(zoo)) is False
 
 
 def test_neg_infinity():
@@ -574,7 +625,6 @@ def test_bounded():
     assert ask(Q.finite(x)) is None
     assert ask(Q.finite(x), Q.finite(x)) is True
     assert ask(Q.finite(x), Q.finite(y)) is None
-    assert ask(Q.finite(x), Q.complex(x)) is None
 
     assert ask(Q.finite(x + 1)) is None
     assert ask(Q.finite(x + 1), Q.finite(x)) is True

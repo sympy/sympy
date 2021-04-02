@@ -127,6 +127,8 @@ def test_infinity():
     assert oo.is_prime is False
     assert oo.is_composite is False
     assert oo.is_number is True
+    assert oo.is_positive_infinite is True
+    assert oo.is_negative_infinite is False
 
 
 def test_neg_infinity():
@@ -161,6 +163,8 @@ def test_neg_infinity():
     assert mm.is_prime is False
     assert mm.is_composite is False
     assert mm.is_number is True
+    assert mm.is_positive_infinite is False
+    assert mm.is_negative_infinite is True
 
 
 def test_zoo():
@@ -168,6 +172,8 @@ def test_zoo():
     assert zoo.is_complex is False
     assert zoo.is_real is False
     assert zoo.is_prime is False
+    assert zoo.is_positive_infinite is False
+    assert zoo.is_negative_infinite is False
 
 
 def test_nan():
@@ -1234,7 +1240,9 @@ def test_assumptions_copy():
         'rational': False,
         'real': False,
         'transcendental': False,
-        'zero': False}
+        'zero': False,
+        'positive_infinite': False,
+        'negative_infinite': False}
 
 
 def test_check_assumptions():
@@ -1263,7 +1271,7 @@ def test_failing_assumptions():
     'negative': None, 'zero': None, 'extended_real': None, 'finite': None,
     'infinite': None, 'extended_negative': None, 'extended_nonnegative': None,
     'extended_nonpositive': None, 'extended_nonzero': None,
-    'extended_positive': None }
+    'extended_positive': None, 'positive_infinite': None, 'negative_infinite': None }
 
 
 def test_common_assumptions():
@@ -1274,7 +1282,8 @@ def test_common_assumptions():
         'rational': True, 'imaginary': False, 'complex': True,
         'commutative': True,'noninteger': False, 'composite': False,
         'infinite': False, 'nonnegative': True, 'finite': True,
-        'transcendental': False,'negative': False}
+        'transcendental': False,'negative': False, 'positive_infinite': False,
+        'negative_infinite': False}
     assert common_assumptions([0, 1, 2], 'positive integer'.split()
         ) == {'integer': True}
     assert common_assumptions([0, 1, 2], []) == {}

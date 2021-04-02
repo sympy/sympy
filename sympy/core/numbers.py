@@ -2842,6 +2842,8 @@ class Infinity(Number, metaclass=Singleton):
     is_comparable = True
     is_extended_positive = True
     is_prime = False
+    is_positive_infinite = True
+    is_negative_infinite = False
 
     __slots__ = ()
 
@@ -3008,6 +3010,8 @@ class NegativeInfinity(Number, metaclass=Singleton):
     is_extended_negative = True
     is_number = True
     is_prime = False
+    is_positive_infinite = False
+    is_negative_infinite = True
 
     __slots__ = ()
 
@@ -3316,6 +3320,8 @@ class ComplexInfinity(AtomicExpr, metaclass=Singleton):
     is_prime = False
     is_complex = False
     is_extended_real = False
+    is_positive_infinite = False
+    is_negative_infinite = False
 
     kind = NumberKind
 

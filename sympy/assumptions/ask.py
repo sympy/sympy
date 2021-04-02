@@ -91,8 +91,18 @@ class AssumptionKeys:
 
     @memoize_property
     def infinite(self):
-        from .predicates.calculus import InfinitePredicate
+        from .handlers.calculus import InfinitePredicate
         return InfinitePredicate()
+
+    @memoize_property
+    def positive_infinite(self):
+        from .handlers.calculus import PositiveInfinitePredicate
+        return PositiveInfinitePredicate()
+
+    @memoize_property
+    def negative_infinite(self):
+        from .handlers.calculus import NegativeInfinitePredicate
+        return NegativeInfinitePredicate()
 
     @memoize_property
     def positive(self):
@@ -571,6 +581,7 @@ def compute_known_facts(known_facts, known_facts_keys):
         )
 
     # -{ Known facts in compressed sets }-
+    # This dictionary means that if a key is True, every item in its value is True.
     @cacheit
     def get_known_facts_dict():
         return {
@@ -605,35 +616,56 @@ def get_known_facts_keys():
 
 @cacheit
 def get_known_facts():
+    # We build the facts starting with these primitive predicates:
+    # negative_infinite, negative, zero, positive, positive_infinite, imagniary
     return And(
-        Implies(Q.infinite, ~Q.finite),
-        Implies(Q.real, Q.complex),
-        Implies(Q.real, Q.hermitian),
-        Equivalent(Q.extended_real, Q.real | Q.infinite),
-        Equivalent(Q.even | Q.odd, Q.integer),
-        Implies(Q.even, ~Q.odd),
-        Implies(Q.prime, Q.integer & Q.positive & ~Q.composite),
-        Implies(Q.integer, Q.rational),
-        Implies(Q.rational, Q.algebraic),
-        Implies(Q.algebraic, Q.complex),
-        Implies(Q.algebraic, Q.finite),
-        Equivalent(Q.transcendental | Q.algebraic, Q.complex & Q.finite),
-        Implies(Q.transcendental, ~Q.algebraic),
-        Implies(Q.transcendental, Q.finite),
-        Implies(Q.imaginary, Q.complex & ~Q.real),
-        Implies(Q.imaginary, Q.antihermitian),
-        Implies(Q.antihermitian, ~Q.hermitian),
-        Equivalent(Q.irrational | Q.rational, Q.real & Q.finite),
-        Implies(Q.irrational, ~Q.rational),
-        Implies(Q.zero, Q.even),
 
+        # primitive predicates exclude each other
+        Implies(Q.negative_infinite, ~Q.positive_infinite),
+        Implies(Q.negative, ~Q.zero & ~Q.positive),
+        Implies(Q.positive, ~Q.zero),
+
+        # build real line and complex plane
         Equivalent(Q.real, Q.negative | Q.zero | Q.positive),
-        Implies(Q.zero, ~Q.negative & ~Q.positive),
-        Implies(Q.negative, ~Q.positive),
-        Equivalent(Q.nonnegative, Q.zero | Q.positive),
-        Equivalent(Q.nonpositive, Q.zero | Q.negative),
-        Equivalent(Q.nonzero, Q.negative | Q.positive),
+        Implies(Q.real, ~Q.imaginary),
+        Implies(Q.real | Q.imaginary, Q.complex),
 
+        # other subsets of complex
+        Implies(Q.transcendental, ~Q.algebraic),
+        Equivalent(Q.algebraic | Q.transcendental, Q.complex),
+        Implies(Q.irrational, ~Q.rational),
+        Equivalent(Q.rational | Q.irrational, Q.real),
+        Implies(Q.rational, Q.algebraic),
+        Implies(Q.integer, Q.rational),
+
+        # integers
+        Implies(Q.even, ~Q.odd),
+        Equivalent(Q.even | Q.odd, Q.integer),
+        Implies(Q.zero, Q.even),
+        Implies(Q.composite, ~Q.prime),
+        Implies(Q.composite | Q.prime, Q.integer & Q.positive),
+        Implies(Q.even & Q.positive & ~Q.prime, Q.composite),
+
+        # hermitian and antihermitian
+        Implies(Q.antihermitian, ~Q.hermitian),
+        Implies(Q.real, Q.hermitian),
+        Implies(Q.imaginary, Q.antihermitian),
+
+        # define finity and infinity, and build extended real line
+        Implies(Q.infinite, ~Q.finite),
+        # Implies(Q.complex, Q.finite),
+        Implies(Q.negative_infinite | Q.positive_infinite, Q.infinite),
+        Equivalent(Q.extended_real, Q.negative_infinite | Q.real | Q.positive_infinite),
+
+        # non[...]
+        Equivalent(Q.nonpositive, Q.negative | Q.zero),
+        Equivalent(Q.nonzero, Q.negative | Q.positive),
+        Equivalent(Q.nonnegative, Q.zero | Q.positive),
+
+        # commutativity
+        Implies(Q.finite | Q.infinite, Q.commutative),
+
+        # matrices
         Implies(Q.orthogonal, Q.positive_definite),
         Implies(Q.orthogonal, Q.unitary),
         Implies(Q.unitary & Q.real, Q.orthogonal),

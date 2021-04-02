@@ -4,6 +4,7 @@ from collections.abc import MutableMapping
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
 from sympy.assumptions.cnf import AND, OR, to_NNF
+from sympy.core.assumptions import _assume_defined, as_property
 from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
 from sympy.core.numbers import ImaginaryUnit
 from sympy.core.rules import Transform
@@ -190,39 +191,15 @@ def _old_assump_replacer(obj):
     if not isinstance(obj, AppliedPredicate):
         return obj
 
-    e = obj.args[0]
+    e = obj.arguments[0]
     ret = None
 
-    if obj.func == Q.positive:
-        ret = e.is_positive
-    elif obj.func == Q.zero:
-        ret = e.is_zero
-    elif obj.func == Q.negative:
-        ret = e.is_negative
-    elif obj.func == Q.nonpositive:
-        ret = e.is_nonpositive
-    elif obj.func == Q.nonzero:
-        ret = e.is_nonzero
-    elif obj.func == Q.nonnegative:
-        ret = e.is_nonnegative
-
-    elif obj.func == Q.rational:
-        ret = e.is_rational
-    elif obj.func == Q.irrational:
-        ret = e.is_irrational
-
-    elif obj.func == Q.even:
-        ret = e.is_even
-    elif obj.func == Q.odd:
-        ret = e.is_odd
-    elif obj.func == Q.integer:
-        ret = e.is_integer
-    elif obj.func == Q.composite:
-        ret = e.is_composite
-    elif obj.func == Q.imaginary:
-        ret = e.is_imaginary
-    elif obj.func == Q.commutative:
-        ret = e.is_commutative
+    for key in _assume_defined:
+        pred = getattr(Q, key, None)
+        if pred is None:
+            continue
+        if obj.func == pred:
+            ret = getattr(e, as_property(key))
 
     if ret is None:
         return obj

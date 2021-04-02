@@ -140,10 +140,10 @@ can be obtained as follows:
     'extended_nonpositive': False, 'extended_nonzero': False,
     'extended_positive': False, 'extended_real': False, 'finite': True,
     'imaginary': False, 'infinite': False, 'integer': False, 'irrational':
-    False, 'negative': False, 'noninteger': False, 'nonnegative': False,
-    'nonpositive': False, 'nonzero': False, 'odd': False, 'positive':
-    False, 'prime': False, 'rational': False, 'real': False, 'zero':
-    False}
+    False, 'negative': False, 'negative_infinite': False, 'noninteger': False,
+    'nonnegative': False, 'nonpositive': False, 'nonzero': False, 'odd': False,
+    'positive': False, 'positive_infinite': False, 'prime': False, 'rational':
+    False, 'real': False, 'zero': False}
 
 Developers Notes
 ================
@@ -159,7 +159,8 @@ will return values and update the dictionary.
     >>> eq.is_finite
     True
     >>> eq._assumptions
-    {'finite': True, 'infinite': False}
+    {'finite': True, 'infinite': False, 'negative_infinite': False,
+    'positive_infinite': False}
 
 For a Symbol, there are two locations for assumptions that may
 be of interest. The ``assumptions0`` attribute gives the full set of
@@ -257,6 +258,9 @@ _assume_rules = FactRules([
     'infinite       ==  !finite',
     'noninteger     ==  extended_real & !integer',
     'extended_nonzero == extended_real & !zero',
+
+    'positive_infinite -> infinite',
+    'negative_infinite -> infinite',
 ])
 
 _assume_defined = _assume_rules.defined_facts.copy()
@@ -290,8 +294,8 @@ def common_assumptions(exprs, check=None):
     >>> from sympy.core.assumptions import common_assumptions
     >>> from sympy import oo, pi, sqrt
     >>> common_assumptions([-4, 0, sqrt(2), 2, pi, oo])
-    {'commutative': True, 'composite': False,
-    'extended_real': True, 'imaginary': False, 'odd': False}
+    {'commutative': True, 'composite': False, 'extended_real': True,
+    'imaginary': False, 'negative_infinite': False, 'odd': False}
 
     By default, all assumptions are tested; pass an iterable of the
     assumptions to limit those that are reported:

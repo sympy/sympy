@@ -5,12 +5,13 @@ infinitesimal, finite, etc.
 
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Mul, Pow, Symbol
-from sympy.core.numbers import (Exp1, GoldenRatio, ImaginaryUnit, Infinity, NaN,
-    NegativeInfinity, Number, Pi, TribonacciConstant, E)
+from sympy.core.numbers import (ComplexInfinity, Exp1, GoldenRatio, ImaginaryUnit,
+    Infinity, NaN, NegativeInfinity, Number, Pi, TribonacciConstant, E)
 from sympy.functions import cos, exp, log, sign, sin
 from sympy.logic.boolalg import conjuncts
 
-from ..predicates.calculus import FinitePredicate
+from ..predicates.calculus import (FinitePredicate, InfinitePredicate,
+    PositiveInfinitePredicate, NegativeInfinitePredicate)
 
 
 # FinitePredicate
@@ -213,6 +214,45 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return True
 
-@FinitePredicate.register_many(Infinity, NegativeInfinity, NaN)
+@FinitePredicate.register_many(ComplexInfinity, Infinity, NegativeInfinity, NaN)
+def _(expr, assumptions):
+    return False
+
+
+# InfinitePredicate
+
+
+@InfinitePredicate.register_many(ComplexInfinity, Infinity, NegativeInfinity)
+def _(expr, assumptions):
+    return True
+
+
+@InfinitePredicate.register(NaN)
+def _(expr, assumptions):
+    return False
+
+
+# PositiveInfinitePredicate
+
+
+@PositiveInfinitePredicate.register(Infinity)
+def _(expr, assumptions):
+    return True
+
+
+@PositiveInfinitePredicate.register_many(NegativeInfinity, ComplexInfinity)
+def _(expr, assumptions):
+    return False
+
+
+# NegativeInfinitePredicate
+
+
+@NegativeInfinitePredicate.register(NegativeInfinity)
+def _(expr, assumptions):
+    return True
+
+
+@NegativeInfinitePredicate.register_many(Infinity, ComplexInfinity)
 def _(expr, assumptions):
     return False
