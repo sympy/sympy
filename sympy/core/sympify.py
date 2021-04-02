@@ -133,6 +133,19 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     Traceback (most recent call last):
     ...
     SympifyError: SympifyError: "could not parse 'x***2'"
+    >>> sympify("2x + 1")
+    Traceback (most recent call last):
+    ...
+    SympifyError : SympifyError: "could not parse '2x'"
+
+    In order to parse non-Python syntax use ``parse_expr``:
+
+    >>> from sympy.parsing.sympy_parser import standard_transformations,
+    ... implicit_multiplication_application
+    >>> transformations = (standard_transformations +
+    ... (implicit_multiplication_application,))
+    >>> parse_expr("2x + 1", transformations=transformations)
+    2*x + 1
 
     Locals
     ------
