@@ -20,8 +20,6 @@ from .ddm import DDM
 
 from .sdm import SDM
 
-from .domainscalar import DomainScalar
-
 from sympy.polys.domains import ZZ
 
 
@@ -1202,3 +1200,6 @@ class DomainMatrix:
         if not isinstance(B, DomainMatrix):
             return NotImplemented
         return A.rep == B.rep
+
+
+from .domainscalar import DomainScalar
