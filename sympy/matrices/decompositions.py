@@ -92,7 +92,7 @@ def _rank_decomposition(M, iszerofunc=_iszero, simplify=False):
     See Also
     ========
 
-    rref
+    sympy.matrices.matrices.MatrixReductions.rref
     """
 
     F, pivot_cols = M.rref(simplify=simplify, iszerofunc=iszerofunc,

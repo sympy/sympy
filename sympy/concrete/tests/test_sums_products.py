@@ -4,9 +4,10 @@ from sympy import (
     nan, oo, pi, Piecewise, Product, product, Rational, S, simplify, Identity,
     sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma,
     Indexed, Idx, IndexedBase, prod, Dummy, lowergamma, Range, floor,
-    rf, MatrixSymbol)
+    rf, MatrixSymbol, tanh, sinh)
 from sympy.abc import a, b, c, d, k, m, x, y, z
-from sympy.concrete.summations import telescopic, _dummy_with_inherited_properties_concrete
+from sympy.concrete.summations import (
+    telescopic, _dummy_with_inherited_properties_concrete, eval_sum_residue)
 from sympy.concrete.expr_with_intlimits import ReorderError
 from sympy.core.facts import InconsistentAssumptions
 from sympy.testing.pytest import XFAIL, raises, slow
@@ -1431,3 +1432,68 @@ def test_matrixsymbol_summation_symbolic_limits():
     n = Symbol('n', integer=True)
     assert Sum(A, (n, 0, N)).doit() == (N+1)*A
     assert Sum(n*A, (n, 0, N)).doit() == (N**2/2+N/2)*A
+
+
+def test_summation_by_residues():
+    x = Symbol('x')
+
+    # Examples from Nakhle H. Asmar, Loukas Grafakos,
+    # Complex Analysis with Applications
+    assert eval_sum_residue(1 / (x**2 + 1), (x, -oo, oo)) == pi/tanh(pi)
+    assert eval_sum_residue(1 / x**6, (x, S(1), oo)) == pi**6/945
+    assert eval_sum_residue(1 / (x**2 + 9), (x, -oo, oo)) == pi/(3*tanh(3*pi))
+    assert eval_sum_residue(1 / (x**2 + 1)**2, (x, -oo, oo)) == \
+        -pi*(-1/(2*tanh(pi)) - I*(-I*pi/tanh(pi) + \
+        I*pi*tanh(pi))/(4*tanh(pi)) + I*(-I*pi*tanh(pi) + \
+        I*pi/tanh(pi))/(4*tanh(pi)))
+    assert eval_sum_residue(x**2 / (x**2 + 1)**2, (x, -oo, oo)) == \
+        -pi*(-1/(2*tanh(pi)) - I*(-I*pi*tanh(pi) + \
+        I*pi/tanh(pi))/(4*tanh(pi)) + I*(-I*pi/tanh(pi) + \
+        I*pi*tanh(pi))/(4*tanh(pi)))
+    assert eval_sum_residue(1 / (4*x**2 - 1), (x, -oo, oo)) == 0
+    assert eval_sum_residue(x**2 / (x**2 - S(1)/4)**2, (x, -oo, oo)) == pi**2/2
+    assert eval_sum_residue(1 / (4*x**2 - 1)**2, (x, -oo, oo)) == pi**2/8
+    assert eval_sum_residue(1 / ((x - S(1)/2)**2 + 1), (x, -oo, oo)) == pi*tanh(pi)
+    assert eval_sum_residue(1 / x**2, (x, S(1), oo)) == pi**2/6
+    assert eval_sum_residue(1 / x**4, (x, S(1), oo)) == pi**4/90
+    assert eval_sum_residue(1 / x**2 / (x**2 + 4), (x, S(1), oo)) == \
+        -pi*(-pi/12 - 1/(16*pi) + 1/(8*tanh(2*pi)))/2
+
+    # Some examples made from 1 / (x**2 + 1)
+    assert eval_sum_residue(1 / (x**2 + 1), (x, S(0), oo)) == \
+        S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (x**2 + 1), (x, S(1), oo)) == \
+        -S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (x**2 + 1), (x, S(-1), oo)) == \
+        1 + pi/(2*tanh(pi))
+    assert eval_sum_residue((-1)**x / (x**2 + 1), (x, -oo, oo)) == \
+        pi/sinh(pi)
+    assert eval_sum_residue((-1)**x / (x**2 + 1), (x, S(0), oo)) == \
+        pi/(2*sinh(pi)) + S(1)/2
+    assert eval_sum_residue((-1)**x / (x**2 + 1), (x, S(1), oo)) == \
+        -S(1)/2 + pi/(2*sinh(pi))
+    assert eval_sum_residue((-1)**x / (x**2 + 1), (x, S(-1), oo)) == \
+        pi/(2*sinh(pi))
+
+    # Some examples made from shifting of 1 / (x**2 + 1)
+    assert eval_sum_residue(1 / (x**2 + 2*x + 2), (x, S(-1), oo)) == S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (x**2 + 4*x + 5), (x, S(-2), oo)) == S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (x**2 - 2*x + 2), (x, S(1), oo)) == S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (x**2 - 4*x + 5), (x, S(2), oo)) == S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue((-1)**x * -1 / (x**2 + 2*x + 2), (x, S(-1), oo)) ==  S(1)/2 + pi/(2*sinh(pi))
+    assert eval_sum_residue((-1)**x * -1 / (x**2 -2*x + 2), (x, S(1), oo)) == S(1)/2 + pi/(2*sinh(pi))
+
+    # Some examples made from 1 / x**2
+    assert eval_sum_residue(1 / x**2, (x, S(2), oo)) == -1 + pi**2/6
+    assert eval_sum_residue(1 / x**2, (x, S(3), oo)) == -S(5)/4 + pi**2/6
+    assert eval_sum_residue((-1)**x / x**2, (x, S(1), oo)) == -pi**2/12
+    assert eval_sum_residue((-1)**x / x**2, (x, S(2), oo)) == 1 - pi**2/12
+
+
+@XFAIL
+def test_summation_by_residues_failing():
+    x = Symbol('x')
+
+    # Failing because of the bug in residue computation
+    assert eval_sum_residue(x**2 / (x**4 + 1), (x, S(1), oo))
+    assert eval_sum_residue(1 / ((x - 1)*(x - 2) + 1), (x, -oo, oo)) != 0
