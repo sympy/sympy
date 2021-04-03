@@ -61,7 +61,7 @@ from sympy.solvers.inequalities import reduce_inequalities
 
 from types import GeneratorType
 from collections import defaultdict
-import warnings
+import warnings, itertools
 
 
 def recast_to_symbols(eqs, symbols):
@@ -374,6 +374,245 @@ def checksol(f, symbol, sol=None, **flags):
         warnings.warn("\n\tWarning: could not verify solution %s." % sol)
     # returns None if it can't conclude
     # TODO: improve solution testing
+
+def _is_eq_bool(eq):
+    """Returns true if Eq or Ne has True or False as an argument"""
+    if isinstance(eq, (Equality, Unequality)):
+        return any(side in (S.false, S.true) for side in eq.args)
+
+def _invert_eq_bool(fi):
+    """Returns the expression when one argument is a bool and the other an expression in an Eq or Ne
+    """
+    if isinstance(fi, (Equality, Unequality)):
+        lhs, rhs = fi.args
+        unequal = S.true if isinstance(fi, Unequality) else S.false
+        if lhs in (S.false, S.true) and rhs.is_Relational:
+            return ~rhs if lhs is unequal else rhs
+        if rhs in (S.false, S.true) and lhs.is_Relational:
+            return ~lhs if rhs is unequal else lhs
+    return fi
+
+def _handle_relational(f_relational, symbols, flags):
+    """Handles relational expressions like [x/(x + 1) > 1] and [x**2 - 2 < 0, x**2 - 1 > 0]"""
+    if flags.get('dict', False):
+        solution = reduce_inequalities(f_relational, symbols=symbols)
+        if isinstance(solution, Equality):
+            return [{solution.lhs: solution.rhs}]
+        solution = list(solution.args)
+        for sol in solution:
+            # Behavior for types like StrictLessThan is not defined
+            if not isinstance(sol, (Or, Equality)):
+                warnings.warn(filldedent('''
+                    Warning: Ignoring dict=True due to
+                    incompatible type of %s.''' % sol))
+                return reduce_inequalities(f_relational, symbols=symbols)
+        intermediate = [sol for sol in solution
+                        if isinstance(sol, Equality)]
+        solution[:] = [sol.args for sol in solution
+                       if sol not in intermediate]
+        solutions = [intermediate + list(sol)
+                     for sol in itertools.product(*solution)]
+        for i in range(len(solutions)):
+            ele = {}
+            for sol in solutions[i]:
+                ele[sol.lhs] = sol.rhs
+            solutions[i] = ele
+        return [] if solutions == [{}] else solutions
+    return reduce_inequalities(f_relational, symbols=symbols)
+
+def _collapse_eq_to_expr(fi):
+    if not isinstance(fi, Equality):
+        return fi
+    elif 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args]:
+        return fi.lhs - fi.rhs
+    else:
+        return fi.rewrite(Add, evaluate=False)
+
+def _swap_dict(solution, swap_sym):
+    """Helper function to handle pure dict-like solutions like {y(t): 2, x(t): 1/3}"""
+    solution = {swap_sym.get(k, k): v.subs(swap_sym)
+                     for k, v in solution.items()}
+    return solution
+
+def _swap_list(solution, swap_sym):
+    """
+    Helper function to handle list solutions which
+    have an dictionary inside like [{g(x): 0, f(x): 2}]
+    """
+    for i, sol in enumerate(solution):
+        solution[i] = {swap_sym.get(k, k): v.subs(swap_sym)
+                      for k, v in sol.items()}
+    return solution
+
+def _handle_equality(f):
+    """
+    This block handles cases like Eq(bool, var), Eq(var, bool), Ne(var, bool) and Ne(bool, var)
+    The two return statements in the block return the solution directly in such cases
+    """
+    if any(_is_eq_bool(fi) for fi in f):
+        for i, fi in enumerate(f):
+            # if not isinstance(fi, (Equality, Unequality)):
+            #     continue
+            args = fi.args
+            if args[1] in (S.true, S.false):
+                args = args[1], args[0]
+            L, R = args
+            if L in (S.false, S.true):
+                if isinstance(fi, Unequality):
+                    L = ~L
+                if R.is_Relational:
+                    pass
+                elif R.is_Symbol:
+                    return L
+                elif R.is_Boolean and (~R).is_Symbol:
+                    return ~L
+                else:
+                    raise NotImplementedError(filldedent('''
+                        Unanticipated argument of Eq when other arg
+                        is True or False.
+                    '''))
+
+def _handle_equality_func(f, as_set):
+#This function handles cases like Eq(x**2, True), Eq(2*x, True) but not Eq(x, True)
+# which has already been handled above
+    if any(fi is S.false for fi in f):
+        if as_set:
+            return [], set()
+        return []
+
+def _split_real_img(f, bare_f):
+    for i, fi in enumerate(f):
+        # if we can split it into real and imaginary parts then do so
+        # For e.g., if f=solve(x + 3 + y*I), then f will be modified to in this block [x+3, y]
+        # Hence, bare_f is also changed as we get a system of two equations from a single equation
+        freei = f[i].free_symbols
+        if freei and all(s.is_extended_real or s.is_imaginary for s in freei):
+            fr, fi = f[i].as_real_imag()
+            # accept as long as new re, im, arg or atan2 are not introduced
+            had = f[i].atoms(re, im, arg, atan2)
+            if fr and fi and fr != fi and not any(
+                    i.atoms(re, im, arg, atan2) - had for i in (fr, fi)):
+                if bare_f:
+                    bare_f = False
+                f[i: i + 1] = [fr, fi]
+    return f, bare_f
+
+def _handle_abs_args(fi, symbols):
+    """this function converts Abs into Piecewise, arg into Piecewise and atan"""
+    # Abs
+    while True:
+        was = fi
+        fi = fi.replace(Abs, lambda arg:
+            separatevars(Abs(arg)).rewrite(Piecewise) if arg.has(*symbols)
+            else Abs(arg))
+        if was == fi:
+            break
+    for e in fi.find(Abs):
+        if e.has(*symbols):
+            raise NotImplementedError('solving %s when the argument '
+                'is not real or imaginary.' % e)
+
+    # arg
+    fi = fi.replace(arg, lambda a: arg(a).rewrite(atan2).rewrite(atan))
+
+    return fi
+
+def _mask(non_inverts, seen, symset, implicit, f):
+    """
+    The functions masks, i.e. replaces objects such as Derivative and Integral
+    with dummy symbols. For instance, [f(x) - 3*Derivative(f(x), x)] becomes [_X0 + Derivative(_X0, x)]
+    by recast_to_symbols(), which in turn is modified to [_Dummy_3077 + _X0] by _mask(). The thing to
+    note is that _mask() doesn't affect any object other than Derivatives and Integrals.
+    """
+    for fi in f:
+        pot = preorder_traversal(fi)
+        for p in pot:
+            if not isinstance(p, Expr) or isinstance(p, Piecewise):
+                pass
+            elif (isinstance(p, bool) or
+                    not p.args or
+                    p in symset or
+                    p.is_Add or p.is_Mul or
+                    p.is_Pow and not implicit or
+                    p.is_Function and not implicit) and p.func not in (re, im):
+                continue
+            elif not p in seen:
+                seen.add(p)
+                if p.free_symbols & symset:
+                    non_inverts.add(p)
+                else:
+                    continue
+            pot.skip()
+    del seen
+    non_inverts = dict(list(zip(non_inverts, [Dummy() for _ in non_inverts])))
+    f = [fi.subs(non_inverts) for fi in f]
+    return non_inverts, f
+
+def _swapsol(solution, swap_sym):
+    """
+    Swaps masked(dummy) symbols with actual ones. For instance, if the solution is
+    {_X0: (-a12*b2 + a22*b1), _X1: (a11*b2 - a21*b1)}
+    and swap_sym is {_X0: x(t), _X1: y(t)}, then the following will be returned as solution
+    {x(t): (-a12*b2 + a22*b1), y(t): (a11*b2 - a21*b1)}
+    """
+    if isinstance(solution, dict):
+        solution = _swap_dict(solution, swap_sym)
+    elif solution and isinstance(solution, list) and isinstance(solution[0], dict):
+        solution = _swap_list(solution, swap_sym)
+    return solution
+
+def _check_assumption_list(solution, symbols, got_None, no_False):
+    if isinstance(solution[0], tuple):
+        for sol in solution:
+            for symb, val in zip(symbols, sol):
+                test = check_assumptions(val, **symb.assumptions0)
+                if test is False:
+                    break
+                if test is None:
+                    got_None.append(sol)
+            else:
+                no_False.append(sol)
+    elif isinstance(solution[0], dict):
+        for sol in solution:
+            a_None = False
+            for symb, val in sol.items():
+                test = check_assumptions(val, **symb.assumptions0)
+                if test:
+                    continue
+                if test is False:
+                    break
+                a_None = True
+            else:
+                no_False.append(sol)
+                if a_None:
+                    got_None.append(sol)
+    else:  # list of expressions
+        for sol in solution:
+            test = check_assumptions(sol, **symbols[0].assumptions0)
+            if test is False:
+                continue
+            no_False.append(sol)
+            if test is None:
+                got_None.append(sol)
+
+    return solution, got_None, no_False
+
+def _check_assumption_dict(solution, got_None, no_False):
+    a_None = False
+    for symb, val in solution.items():
+        test = check_assumptions(val, **symb.assumptions0)
+        if test:
+            continue
+        if test is False:
+            no_False = None
+            break
+        a_None = True
+    else:
+        no_False = solution
+        if a_None:
+            got_None.append(solution)
+
+    return solution, got_None, no_False
 
 
 def solve(f, *symbols, **flags):
@@ -834,23 +1073,25 @@ def solve(f, *symbols, **flags):
     # a dictionary of results will be returned.
     ###########################################################################
 
-    def _sympified_list(w):
-        return list(map(sympify, w if iterable(w) else [w]))
-    bare_f = not iterable(f)
-    ordered_symbols = (symbols and
-                       symbols[0] and
-                       (isinstance(symbols[0], Symbol) or
-                        is_sequence(symbols[0],
-                        include=GeneratorType)
-                       )
-                      )
-    f, symbols = (_sympified_list(w) for w in [f, symbols])
-    if isinstance(f, list):
-        f = [s for s in f if s is not S.true and s is not True]
     implicit = flags.get('implicit', False)
+    exclude = flags.pop('exclude', set())
+    as_set = flags.get('set', False)
 
-    # preprocess symbol(s)
-    ###########################################################################
+    # _solve() and _solve_system() are the two main solvers where the processed equation
+    # f is passed to. _solve() can only deal with single expression. _solve_system()
+    # can deal with a system of equations. For example, in case of solve(f(x), x),
+    # the expression f(x) will be passed to _solve(), whereas in case of
+    # solve([f(x), g(x)], x) the expression will be passed to _solve_system()
+    # The purpose of bare_f is to decide whether the expression is to be
+    # passed to _solve() or _solve_system(). bare_f is set to False if the
+    # expression is to be passed to _solve_system() and True if _solve()
+
+    if iterable(f): # iterable expression implies the possible existence of system of equations like [f(x,y), g(x,y)]
+        bare_f = False
+    else:
+        f = [f]
+        bare_f = True
+    f = [sympify(fi) for fi in f]
     if not symbols:
         # get symbols from equations
         symbols = set().union(*[fi.free_symbols for fi in f])
@@ -863,109 +1104,95 @@ def solve(f, *symbols, **flags):
                         symbols.add(p)
                         pot.skip()  # don't go any deeper
         symbols = list(symbols)
-
         ordered_symbols = False
-    elif len(symbols) == 1 and iterable(symbols[0]):
-        symbols = symbols[0]
+    else:
+        # User has given symbols as *args or as an iterable arg
+        if len(symbols) == 1 and iterable(symbols[0]):
+            symbols = symbols[0]
+            if isinstance(symbols, GeneratorType):
+                symbols = list(symbols)
+        # Has the user given an unordered collection like a set?
+        ordered_symbols = is_sequence(symbols)
+        symbols = [sympify(sym) for sym in symbols]
 
-    # remove symbols the user is not interested in
-    exclude = flags.pop('exclude', set())
+    # Remove symbols the user is not interested in. This removes symbols even
+    # if they were explicitly specified.
+
     if exclude:
-        if isinstance(exclude, Expr):
+        if not iterable(exclude):
             exclude = [exclude]
         exclude = set().union(*[e.free_symbols for e in sympify(exclude)])
-    symbols = [s for s in symbols if s not in exclude]
+        symbols = [s for s in symbols if s not in exclude]
 
+    # alternate exits
+
+    res = _handle_equality(f)
+    if res is not None:
+        return res
+
+    # Relational expressions are transformed into equations
+    # For example, if f is Eq(x < 1, True) then f_relational is set to [x < 1]
+    # and if f is Ne(False, x >= 1), f_relational is set to [x >= 1]
+
+    f_relational = [_invert_eq_bool(fi) for fi in f]
+
+    def _is_relational(fi):
+        return fi.is_Relational and not isinstance(fi, Equality)
+
+    if any(_is_relational(fi) for fi in f_relational):
+        return _handle_relational(f_relational, symbols, flags)
 
     # preprocess equation(s)
-    ###########################################################################
-    for i, fi in enumerate(f):
-        if isinstance(fi, (Equality, Unequality)):
-            if 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args]:
-                fi = fi.lhs - fi.rhs
-            else:
-                L, R = fi.args
-                if isinstance(R, BooleanAtom):
-                    L, R = R, L
-                if isinstance(L, BooleanAtom):
-                    if isinstance(fi, Unequality):
-                        L = ~L
-                    if R.is_Relational:
-                        fi = ~R if L is S.false else R
-                    elif R.is_Symbol:
-                        return L
-                    elif R.is_Boolean and (~R).is_Symbol:
-                        return ~L
-                    else:
-                        raise NotImplementedError(filldedent('''
-                            Unanticipated argument of Eq when other arg
-                            is True or False.
-                        '''))
-                else:
-                    fi = fi.rewrite(Add, evaluate=False)
-            f[i] = fi
 
-        if fi.is_Relational:
-            return reduce_inequalities(f, symbols=symbols)
+    # At this point f consists only of Eq, Expr and Boolean since any other
+    # relational (inequality or unequality) would have been passed to
+    # reduce_inequalities above. We now try to canonicalise this by converting
+    # Eq to Expr and by extracting scalar equations from matrices and
+    # expressions from Poly etc.
+    # This should be handled later:
 
+    f = [fi for fi in f if fi is not S.true]
+    res2 = _handle_equality_func(f, as_set)
+    if res2 is not None:
+        return res2
+
+    # Canonicalise Eqs
+    f = [_collapse_eq_to_expr(fi) for fi in f]
+
+    # This is changing bare_f so that matrices are passed to _solve_system
+    if any(fi.is_Matrix for fi in f):
+        bare_f = False
+
+    def extract_scalar_equations(fi):
         if isinstance(fi, Poly):
-            f[i] = fi.as_expr()
+            return [fi.as_expr()]
+        elif fi.is_Matrix:
+            return list(fi)
+        else:
+            return [fi]
 
-        # rewrite hyperbolics in terms of exp
-        f[i] = f[i].replace(lambda w: isinstance(w, HyperbolicFunction),
-                lambda w: w.rewrite(exp))
-
-        # if we have a Matrix, we need to iterate over its elements again
-        if f[i].is_Matrix:
-            bare_f = False
-            f.extend(list(f[i]))
-            f[i] = S.Zero
-
-        # if we can split it into real and imaginary parts then do so
-        freei = f[i].free_symbols
-        if freei and all(s.is_extended_real or s.is_imaginary for s in freei):
-            fr, fi = f[i].as_real_imag()
-            # accept as long as new re, im, arg or atan2 are not introduced
-            had = f[i].atoms(re, im, arg, atan2)
-            if fr and fi and fr != fi and not any(
-                    i.atoms(re, im, arg, atan2) - had for i in (fr, fi)):
-                if bare_f:
-                    bare_f = False
-                f[i: i + 1] = [fr, fi]
-
-    # real/imag handling -----------------------------
-    if any(isinstance(fi, (bool, BooleanAtom)) for fi in f):
-        if flags.get('set', False):
-            return [], set()
-        return []
-
+    # Extract equations from polys and matrices
+    f = [fi for fj in f for fi in extract_scalar_equations(fj)]
+    #split real and imaginary components
+    f, bare_f = _split_real_img(f, bare_f)
+    # rewrite hyperbolics in terms of exp
+    f = [fi.rewrite(HyperbolicFunction, exp) for fi in f]
+    # this loop handles Abs, arg
     for i, fi in enumerate(f):
-        # Abs
-        while True:
-            was = fi
-            fi = fi.replace(Abs, lambda arg:
-                separatevars(Abs(arg)).rewrite(Piecewise) if arg.has(*symbols)
-                else Abs(arg))
-            if was == fi:
-                break
-
-        for e in fi.find(Abs):
-            if e.has(*symbols):
-                raise NotImplementedError('solving %s when the argument '
-                    'is not real or imaginary.' % e)
-
-        # arg
-        fi = fi.replace(arg, lambda a: arg(a).rewrite(atan2).rewrite(atan))
-
         # save changes
-        f[i] = fi
+        f[i] = _handle_abs_args(fi, symbols)
 
     # see if re(s) or im(s) appear
+    # if they appear, the expression is modified so that we get a solution
+    # for s too, along with both re(s) and im(s). For example, f = [re(x) - 1, im(x) - 2]
+    # is modified to [re(x) - 1, im(x) - 2, x - re(x) - im(x)] in this block and as the
+    # final solution we get [{x: 1 + 2*I, re(x): 1, im(x): 2}].
+    # Since we are solving for a system of 3 equations, bare_f is changed to False.
     freim = [fi for fi in f if fi.has(re, im)]
     if freim:
         irf = []
         for s in symbols:
-            if s.is_real or s.is_imaginary:
+            if s.is_extended_real or s.is_imaginary:
                 continue  # neither re(x) nor im(x) will appear
             # if re(s) or im(s) appear, the auxiliary equation must be present
             if any(fi.has(re(s), im(s)) for fi in freim):
@@ -979,6 +1206,7 @@ def solve(f, *symbols, **flags):
             if bare_f:
                 bare_f = False
             flags['dict'] = True
+
     # end of real/imag handling  -----------------------------
 
     symbols = list(uniq(symbols))
@@ -987,11 +1215,11 @@ def solve(f, *symbols, **flags):
         # contains a system of nonlinear equations; all other cases should
         # be unambiguous
         symbols = sorted(symbols, key=default_sort_key)
-
     # we can solve for non-symbol entities by replacing them with Dummy symbols
     f, symbols, swap_sym = recast_to_symbols(f, symbols)
-
     # this is needed in the next two events
+    # symset is the new set of symbols where non-symbol objects such as function
+    # have been replaced with dummy symbols
     symset = set(symbols)
 
     # get rid of equations that have no symbols of interest; we don't
@@ -1036,30 +1264,13 @@ def solve(f, *symbols, **flags):
     # mask off any Object that we aren't going to invert: Derivative,
     # Integral, etc... so that solving for anything that they contain will
     # give an implicit solution
+    # e.g. a recasted expression like [_X1 - 3*Derivative(_X1, x)]
+    # is tranformed to [-3*_Dummy_32 + _X1] after this step
     seen = set()
+    # non_inverts keeps track of the masked off objects
     non_inverts = set()
-    for fi in f:
-        pot = preorder_traversal(fi)
-        for p in pot:
-            if not isinstance(p, Expr) or isinstance(p, Piecewise):
-                pass
-            elif (isinstance(p, bool) or
-                    not p.args or
-                    p in symset or
-                    p.is_Add or p.is_Mul or
-                    p.is_Pow and not implicit or
-                    p.is_Function and not implicit) and p.func not in (re, im):
-                continue
-            elif not p in seen:
-                seen.add(p)
-                if p.free_symbols & symset:
-                    non_inverts.add(p)
-                else:
-                    continue
-            pot.skip()
-    del seen
-    non_inverts = dict(list(zip(non_inverts, [Dummy() for _ in non_inverts])))
-    f = [fi.subs(non_inverts) for fi in f]
+
+    non_inverts, f = _mask(non_inverts, seen, symset, implicit, f)
 
     # Both xreplace and subs are needed below: xreplace to force substitution
     # inside Derivative, subs to handle non-straightforward substitutions
@@ -1099,7 +1310,9 @@ def solve(f, *symbols, **flags):
     #
     # postprocessing
     ###########################################################################
+
     # Restore masked-off objects
+    # from non_inverts
     if non_inverts:
 
         def _do_dict(solution):
@@ -1135,16 +1348,14 @@ def solve(f, *symbols, **flags):
     #
     # ** unless there were Derivatives with the symbols, but those were handled
     #    above.
+    # for example,
+    # [{_X0: 3*Derivative(f(x), x), y: 9*Derivative(f(x), x)**2 + 4}]
+    # is transformed to
+    # [{f(x): 3*Derivative(f(x), x), y: 9*Derivative(f(x), x)**2 + 4}]
+
     if swap_sym:
         symbols = [swap_sym.get(k, k) for k in symbols]
-        if isinstance(solution, dict):
-            solution = {swap_sym.get(k, k): v.subs(swap_sym)
-                             for k, v in solution.items()}
-        elif solution and isinstance(solution, list) and isinstance(solution[0], dict):
-            for i, sol in enumerate(solution):
-                solution[i] = {swap_sym.get(k, k): v.subs(swap_sym)
-                              for k, v in sol.items()}
-
+        solution = _swapsol(solution, swap_sym)
     # undo the dictionary solutions returned when the system was only partially
     # solved with poly-system if all symbols are present
     if (
@@ -1154,7 +1365,8 @@ def solve(f, *symbols, **flags):
             not isinstance(solution, dict) and
             all(isinstance(sol, dict) for sol in solution)
     ):
-        solution = [tuple([r.get(s, s) for s in symbols]) for r in solution]
+        solution = [tuple([r.get(s, s) for s in symbols])
+                    for r in solution]
 
     # Get assumptions about symbols, to filter solutions.
     # Note that if assumptions about a solution can't be verified, it is still
@@ -1174,53 +1386,12 @@ def solve(f, *symbols, **flags):
             # this has already been checked and is in as_set form
             return solution
         elif isinstance(solution, list):
-            if isinstance(solution[0], tuple):
-                for sol in solution:
-                    for symb, val in zip(symbols, sol):
-                        test = check_assumptions(val, **symb.assumptions0)
-                        if test is False:
-                            break
-                        if test is None:
-                            got_None.append(sol)
-                    else:
-                        no_False.append(sol)
-            elif isinstance(solution[0], dict):
-                for sol in solution:
-                    a_None = False
-                    for symb, val in sol.items():
-                        test = check_assumptions(val, **symb.assumptions0)
-                        if test:
-                            continue
-                        if test is False:
-                            break
-                        a_None = True
-                    else:
-                        no_False.append(sol)
-                        if a_None:
-                            got_None.append(sol)
-            else:  # list of expressions
-                for sol in solution:
-                    test = check_assumptions(sol, **symbols[0].assumptions0)
-                    if test is False:
-                        continue
-                    no_False.append(sol)
-                    if test is None:
-                        got_None.append(sol)
+
+            solution, got_None, no_False = _check_assumption_list(solution, symbols, got_None, no_False)
 
         elif isinstance(solution, dict):
-            a_None = False
-            for symb, val in solution.items():
-                test = check_assumptions(val, **symb.assumptions0)
-                if test:
-                    continue
-                if test is False:
-                    no_False = None
-                    break
-                a_None = True
-            else:
-                no_False = solution
-                if a_None:
-                    got_None.append(solution)
+
+            solution, got_None, no_False = _check_assumption_dict(solution, got_None, no_False)
 
         elif isinstance(solution, (Relational, And, Or)):
             if len(symbols) != 1:
@@ -1230,7 +1401,6 @@ def solve(f, *symbols, **flags):
                     \tWarning: assumptions about variable '%s' are
                     not handled currently.""" % symbols[0]))
             # TODO: check also variable assumptions for inequalities
-
         else:
             raise TypeError('Unrecognized solution')  # improve the checker
 
@@ -1240,7 +1410,6 @@ def solve(f, *symbols, **flags):
                 \tWarning: assumptions concerning following solution(s)
                 can't be checked:""" + '\n\t' +
                 ', '.join(str(s) for s in got_None)))
-
     #
     # done
     ###########################################################################

@@ -925,7 +925,7 @@ def _test_issue_5335_float():
 
 def test_issue_5767():
     assert set(solve([x**2 + y + 4], [x])) == \
-        {(-sqrt(-y - 4),), (sqrt(-y - 4),)}
+        {(sqrt(-y - 4),), (-sqrt(-y - 4),)}
 
 
 def test_polysys():
@@ -1369,7 +1369,6 @@ def test_issue_5901():
     f, g, h = map(Function, 'fgh')
     a = Symbol('a')
     D = Derivative(f(x), x)
-    G = Derivative(g(a), a)
     assert solve(f(x) + f(x).diff(x), f(x)) == \
         [-D]
     assert solve(f(x) - 3, f(x)) == \
@@ -1379,12 +1378,10 @@ def test_issue_5901():
     assert solve([f(x) - 3*f(x).diff(x)], f(x)) == \
         {f(x): 3*D}
     assert solve([f(x) - 3*f(x).diff(x), f(x)**2 - y + 4], f(x), y) == \
-        [{f(x): 3*D, y: 9*D**2 + 4}]
-    assert solve(-f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a),
-                h(a), g(a), set=True) == \
-        ([g(a)], {
-        (-sqrt(h(a)**2*f(a)**2 + G)/f(a),),
-        (sqrt(h(a)**2*f(a)**2+ G)/f(a),)})
+        [(3*D, 9*D**2 + 4)]
+    eq = -f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a)
+    assert solve(eq, h(a), g(a), set=True) == \
+        ([g(a), h(a)], {(g(a), -sqrt(f(a)**2*g(a)**2 - Derivative(g(a), a))/f(a)), (g(a), sqrt(f(a)**2*g(a)**2 - Derivative(g(a), a))/f(a))})
     args = [f(x).diff(x, 2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
     assert set(solve(*args)) == \
         {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))}
@@ -2161,7 +2158,7 @@ def test_issue_15307():
 
 def test_issue_15415():
     assert solve(x - 3, x) == [3]
-    assert solve([x - 3], x) == {x:3}
+    assert solve([x - 3], x) == {x: 3}
     assert solve(Eq(y + 3*x**2/2, y + 3*x), y) == []
     assert solve([Eq(y + 3*x**2/2, y + 3*x)], y) == []
     assert solve([Eq(y + 3*x**2/2, y + 3*x), Eq(x, 1)], y) == []
