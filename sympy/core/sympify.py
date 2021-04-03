@@ -346,6 +346,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         their SymPy equivalents. If True the expression will be evaluated
         and the result will be returned.
 
+    See Also
+    ========
+
+    sympy.parsing.sympy_parser
+
     """
     # XXX: If a is a Basic subclass rather than instance (e.g. sin rather than
     # sin(x)) then a.__sympy__ will be the property. Only on the instance will
