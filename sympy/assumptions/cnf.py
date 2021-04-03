@@ -157,10 +157,12 @@ def to_NNF(expr):
     ``to_NNF`` decomposes the predicate into a combination of primitive
     predicates if possible.
 
+    >>> to_NNF(Q.nonpositive)
+    (Literal(Q.negative, False) | Literal(Q.zero, False))
     >>> to_NNF(Q.nonpositive(x))
     (Literal(Q.negative(x), False) | Literal(Q.zero(x), False))
     """
-    from sympy.assumptions.assume import AppliedPredicate
+    from sympy.assumptions.assume import AppliedPredicate, Predicate
     from sympy.assumptions.ask import get_composite_predicates
 
     if isinstance(expr, Not):
@@ -224,6 +226,12 @@ def to_NNF(expr):
         newpred = comp_dct.get(pred, None)
         if newpred is not None:
             return to_NNF(newpred.rcall(*args))
+
+    if isinstance(expr, Predicate):
+        comp_dct = get_composite_predicates()
+        newpred = comp_dct.get(expr, None)
+        if newpred is not None:
+            return to_NNF(newpred)
 
     return Literal(expr)
 

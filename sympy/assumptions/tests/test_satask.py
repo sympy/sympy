@@ -143,9 +143,15 @@ def test_rational_irrational():
 
     assert satask(Q.irrational(x*y*z), Q.irrational(x) & Q.irrational(y) &
         Q.rational(z)) is None
+    assert satask(Q.irrational(x*y*z), Q.irrational(x) & Q.rational(y) &
+        Q.rational(z)) is True
+    assert satask(Q.irrational(pi*x*y), Q.rational(x) & Q.rational(y)) is True
 
     assert satask(Q.irrational(x + y + z), Q.irrational(x) & Q.irrational(y) &
         Q.rational(z)) is None
+    assert satask(Q.irrational(x + y + z), Q.irrational(x) & Q.rational(y) &
+        Q.rational(z)) is True
+    assert satask(Q.irrational(pi + x + y), Q.rational(x) & Q.rational(y)) is True
 
     assert satask(Q.irrational(x*y*z), Q.rational(x) & Q.rational(y) &
         Q.rational(z)) is False
@@ -162,8 +168,13 @@ def test_even_satask():
     assert satask(Q.even(2)) is True
     assert satask(Q.even(3)) is False
 
+    assert satask(Q.even(x*y), Q.even(x) & Q.odd(y)) is True
+    assert satask(Q.even(x*y), Q.even(x) & Q.integer(y)) is True
+    assert satask(Q.even(x*y), Q.even(x) & Q.even(y)) is True
+    assert satask(Q.even(x*y), Q.odd(x) & Q.odd(y)) is False
     assert satask(Q.even(x*y), Q.even(x)) is None
     assert satask(Q.even(x*y), Q.odd(x) & Q.integer(y)) is None
+    assert satask(Q.even(x*y), Q.odd(x) & Q.odd(y)) is False
 
     assert satask(Q.even(abs(x)), Q.even(x)) is True
     assert satask(Q.even(abs(x)), Q.odd(x)) is False
@@ -174,8 +185,13 @@ def test_odd_satask():
     assert satask(Q.odd(2)) is False
     assert satask(Q.odd(3)) is True
 
+    assert satask(Q.odd(x*y), Q.even(x) & Q.odd(y)) is False
+    assert satask(Q.odd(x*y), Q.even(x) & Q.integer(y)) is False
+    assert satask(Q.odd(x*y), Q.even(x) & Q.even(y)) is False
+    assert satask(Q.odd(x*y), Q.odd(x) & Q.odd(y)) is True
     assert satask(Q.odd(x*y), Q.even(x)) is None
     assert satask(Q.odd(x*y), Q.odd(x) & Q.integer(y)) is None
+    assert satask(Q.odd(x*y), Q.odd(x) & Q.odd(y)) is True
 
     assert satask(Q.odd(abs(x)), Q.even(x)) is False
     assert satask(Q.odd(abs(x)), Q.odd(x)) is True
@@ -186,21 +202,33 @@ def test_integer():
     assert satask(Q.integer(1)) is True
     assert satask(Q.integer(S.Half)) is False
 
+    assert satask(Q.integer(x + y), Q.integer(x) & Q.integer(y)) is True
     assert satask(Q.integer(x + y), Q.integer(x)) is None
 
+    assert satask(Q.integer(x + y), Q.integer(x) & ~Q.integer(y)) is False
+    assert satask(Q.integer(x + y + z), Q.integer(x) & Q.integer(y) &
+        ~Q.integer(z)) is False
     assert satask(Q.integer(x + y + z), Q.integer(x) & ~Q.integer(y) &
         ~Q.integer(z)) is None
     assert satask(Q.integer(x + y + z), Q.integer(x) & ~Q.integer(y)) is None
+    assert satask(Q.integer(x + y), Q.integer(x) & Q.irrational(y)) is False
 
+    assert satask(Q.integer(x*y), Q.integer(x) & Q.integer(y)) is True
     assert satask(Q.integer(x*y), Q.integer(x)) is None
 
     assert satask(Q.integer(x*y), Q.integer(x) & ~Q.integer(y)) is None
+    assert satask(Q.integer(x*y), Q.integer(x) & ~Q.rational(y)) is False
+    assert satask(Q.integer(x*y*z), Q.integer(x) & Q.integer(y) &
+        ~Q.rational(z)) is False
     assert satask(Q.integer(x*y*z), Q.integer(x) & ~Q.rational(y) &
         ~Q.rational(z)) is None
     assert satask(Q.integer(x*y*z), Q.integer(x) & ~Q.rational(y)) is None
+    assert satask(Q.integer(x*y), Q.integer(x) & Q.irrational(y)) is False
 
 
 def test_abs():
+    assert satask(Q.nonnegative(abs(x))) is True
+    assert satask(Q.positive(abs(x)), ~Q.zero(x)) is True
     assert satask(Q.zero(x), ~Q.zero(abs(x))) is False
     assert satask(Q.zero(x), Q.zero(abs(x))) is True
     assert satask(Q.nonzero(x), ~Q.zero(abs(x))) is None # x could be complex
@@ -208,13 +236,22 @@ def test_abs():
 
 
 def test_imaginary():
+    assert satask(Q.imaginary(2*I)) is True
     assert satask(Q.imaginary(x*y), Q.imaginary(x)) is None
+    assert satask(Q.imaginary(x*y), Q.imaginary(x) & Q.real(y)) is True
     assert satask(Q.imaginary(x), Q.real(x)) is False
     assert satask(Q.imaginary(1)) is False
+    assert satask(Q.imaginary(x*y), Q.real(x) & Q.real(y)) is False
+    assert satask(Q.imaginary(x + y), Q.real(x) & Q.real(y)) is False
 
 
 def test_real():
+    assert satask(Q.real(x*y), Q.real(x) & Q.real(y)) is True
+    assert satask(Q.real(x + y), Q.real(x) & Q.real(y)) is True
+    assert satask(Q.real(x*y*z), Q.real(x) & Q.real(y) & Q.real(z)) is True
     assert satask(Q.real(x*y*z), Q.real(x) & Q.real(y)) is None
+    assert satask(Q.real(x*y*z), Q.real(x) & Q.real(y) & Q.imaginary(z)) is False
+    assert satask(Q.real(x + y + z), Q.real(x) & Q.real(y) & Q.real(z)) is True
     assert satask(Q.real(x + y + z), Q.real(x) & Q.real(y)) is None
 
 
