@@ -259,8 +259,8 @@ _assume_rules = FactRules([
     'noninteger     ==  extended_real & !integer',
     'extended_nonzero == extended_real & !zero',
 
-    'positive_infinite -> infinite',
-    'negative_infinite -> infinite',
+    'positive_infinite -> extended_positive & infinite',
+    'negative_infinite -> extended_negative & infinite',
 ])
 
 _assume_defined = _assume_rules.defined_facts.copy()
