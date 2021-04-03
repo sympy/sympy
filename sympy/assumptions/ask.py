@@ -417,16 +417,14 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         key, args = Q.is_true, (proposition,)
 
     # convert local and global assumptions to CNF
-    assump = CNF.from_prop(assumptions)
-    assump.extend(context)
+    assump_cnf = CNF.from_prop(assumptions)
+    assump_cnf.extend(context)
 
     # extract the relevant facts from assumptions with respect to args
-    local_facts = _extract_all_facts(assump, args)
-
-    known_facts_cnf = get_all_known_facts()
-    known_facts_dict = get_known_facts_dict()
+    local_facts = _extract_all_facts(assump_cnf, args)
 
     # convert default facts and assumed facts to encoded CNF
+    known_facts_cnf = get_all_known_facts()
     enc_cnf = EncodedCNF()
     enc_cnf.from_cnf(CNF(known_facts_cnf))
     enc_cnf.add_from_cnf(local_facts)
@@ -435,10 +433,11 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if local_facts.clauses and satisfiable(enc_cnf) is False:
         raise ValueError("inconsistent assumptions %s" % assumptions)
 
+    known_facts_dict = get_known_facts_dict()
     if local_facts.clauses:
 
         # quick exit if the prerequisite of proposition is not true
-        # e.g. proposition = Q.odd(x), assumptions = ~Q.integer(x)
+        # e.g. proposition = Q.zero(x), assumptions = ~Q.even(x)
         if len(local_facts.clauses) == 1:
             cl, = local_facts.clauses
             if len(cl) == 1:
@@ -454,7 +453,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
                     pass
                 elif key in fdict:
                     # quick exit if proposition is directly satisfied by assumption
-                    # e.g. proposition = Q.integer(x), assumptions = Q.odd(x)
+                    # e.g. proposition = Q.even(x), assumptions = Q.zero(x)
                     return True
                 elif Not(key) in fdict:
                     # quick exit if proposition is directly rejected by assumption
@@ -467,6 +466,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     res = key(*args)._eval_ask(assumptions)
     if res is not None:
         return bool(res)
+
     # using satask (still costly)
     res = satask(proposition, assumptions=assumptions, context=context)
     return res
@@ -609,15 +609,35 @@ def compute_known_facts(known_facts, known_facts_keys):
 
 @cacheit
 def get_known_facts_keys():
-    return [
-        getattr(Q, attr)
-        for attr in Q.__class__.__dict__
-        if not attr.startswith('__')]
+    result = []
+    exclude = get_composite_predicates()
+    for attr in Q.__class__.__dict__:
+        if attr.startswith('__'):
+            continue
+        pred = getattr(Q, attr)
+        if pred in exclude:
+            continue
+        result.append(pred)
+    return result
+
+@cacheit
+def get_composite_predicates():
+    # To reduce the complexity of sat, these predicates never goes into facts
+    # but are transformed into the combination of primitive predicates.
+    return {
+        Q.real : Q.negative | Q.zero | Q.positive,
+        Q.integer : Q.even | Q.odd,
+        Q.nonpositive : Q.negative | Q.zero,
+        Q.nonzero : Q.negative | Q.positive,
+        Q.nonnegative : Q.zero | Q.positive,
+        Q.extended_real : Q.negative_infinite | Q.negative | Q.zero | Q.positive | Q.positive_infinite,
+        Q.complex : Q.algebraic | Q.transcendental
+    }
 
 @cacheit
 def get_known_facts():
-    # We build the facts starting with these primitive predicates:
-    # negative_infinite, negative, zero, positive, positive_infinite, imagniary
+    # We build the facts starting with primitive predicates.
+    # DO NOT include the predicates in get_composite_predicates()'s keys here!
     return And(
 
         # primitive predicates exclude each other
@@ -626,41 +646,32 @@ def get_known_facts():
         Implies(Q.positive, ~Q.zero),
 
         # build real line and complex plane
-        Equivalent(Q.real, Q.negative | Q.zero | Q.positive),
-        Implies(Q.real, ~Q.imaginary),
-        Implies(Q.real | Q.imaginary, Q.complex),
+        Implies(Q.negative | Q.zero | Q.positive, ~Q.imaginary),
+        Implies(Q.negative | Q.zero | Q.positive | Q.imaginary, Q.algebraic | Q.transcendental),
 
         # other subsets of complex
         Implies(Q.transcendental, ~Q.algebraic),
-        Equivalent(Q.algebraic | Q.transcendental, Q.complex),
         Implies(Q.irrational, ~Q.rational),
-        Equivalent(Q.rational | Q.irrational, Q.real),
+        Equivalent(Q.rational | Q.irrational, Q.negative | Q.zero | Q.positive),
         Implies(Q.rational, Q.algebraic),
-        Implies(Q.integer, Q.rational),
 
         # integers
         Implies(Q.even, ~Q.odd),
-        Equivalent(Q.even | Q.odd, Q.integer),
+        Implies(Q.even | Q.odd, Q.rational),
         Implies(Q.zero, Q.even),
         Implies(Q.composite, ~Q.prime),
-        Implies(Q.composite | Q.prime, Q.integer & Q.positive),
+        Implies(Q.composite | Q.prime, (Q.even | Q.odd) & Q.positive),
         Implies(Q.even & Q.positive & ~Q.prime, Q.composite),
 
         # hermitian and antihermitian
-        Implies(Q.real, Q.hermitian),
+        Implies(Q.negative | Q.zero | Q.positive, Q.hermitian),
         Implies(Q.imaginary, Q.antihermitian),
         Implies(Q.zero, Q.hermitian | Q.antihermitian),
 
         # define finity and infinity, and build extended real line
         Implies(Q.infinite, ~Q.finite),
-        # Implies(Q.complex, Q.finite),
+        # Implies(Q.algebraic | Q.transcendental, Q.finite), # will be implemented
         Implies(Q.negative_infinite | Q.positive_infinite, Q.infinite),
-        Equivalent(Q.extended_real, Q.negative_infinite | Q.real | Q.positive_infinite),
-
-        # non[...]
-        Equivalent(Q.nonpositive, Q.negative | Q.zero),
-        Equivalent(Q.nonzero, Q.negative | Q.positive),
-        Equivalent(Q.nonnegative, Q.zero | Q.positive),
 
         # commutativity
         Implies(Q.finite | Q.infinite, Q.commutative),
@@ -668,7 +679,7 @@ def get_known_facts():
         # matrices
         Implies(Q.orthogonal, Q.positive_definite),
         Implies(Q.orthogonal, Q.unitary),
-        Implies(Q.unitary & Q.real, Q.orthogonal),
+        Implies(Q.unitary & Q.real_elements, Q.orthogonal),
         Implies(Q.unitary, Q.normal),
         Implies(Q.unitary, Q.invertible),
         Implies(Q.normal, Q.square),
