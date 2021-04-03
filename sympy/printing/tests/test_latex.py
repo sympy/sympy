@@ -60,8 +60,8 @@ class lowergamma(sym.lowergamma):
     pass   # testing notation inheritance by a subclass with same name
 
 
-x, y, z, t, w, a, b, c, s, p, x1, x2, n1, n2, d, k, f, i, j, e = symbols('x y z t w a b c s p x1 x2 n1 n2 d k f i j e')
-k, m, n, f, g, h = symbols('k m n f g h', integer=True)
+a, b, c, d, e, f, i, j, k, n1, n2, p, s, t, w, x, x1, x2, y, z  = symbols('a b c d e f i j k n1 n2 p s t w x x1 x2 y z')
+g, h, k, m, n = symbols('g h k m n', integer=True)
 
 
 def test_printmethod():
