@@ -133,8 +133,10 @@ def print_tree(node, assumptions=True):
     | infinite: False
     | integer: True
     | irrational: False
+    | negative_infinite: False
     | noninteger: False
     | odd: False
+    | positive_infinite: False
     | rational: True
     | real: True
     | transcendental: False
@@ -151,9 +153,11 @@ def print_tree(node, assumptions=True):
       infinite: False
       integer: True
       irrational: False
+      negative_infinite: False
       noninteger: False
       nonzero: True
       odd: True
+      positive_infinite: False
       rational: True
       real: True
       transcendental: False
