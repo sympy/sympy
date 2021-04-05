@@ -445,6 +445,15 @@ class StdFactKB(FactKB):
     def generator(self):
         return self._generator.copy()
 
+    def fill_None(self):
+        """
+        Fill the unknown facts with ``None``. This is used by ``Symbol`` where
+        all relevant facts are found by deduction.
+        """
+        for key in _assume_defined:
+            if key not in self:
+                self._tell(key, None)
+
 
 def as_property(fact):
     """Convert a fact name to the name of the corresponding property"""
