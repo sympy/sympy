@@ -13,7 +13,8 @@ from sympy.core.sympify import _sympify
 
 from ..constructor import construct_domain
 
-from .exceptions import NonSquareMatrixError, ShapeError
+from .exceptions import (NonSquareMatrixError, ShapeError, DDMShapeError,
+        DDMDomainError, DDMFormatError)
 
 from .ddm import DDM
 
@@ -64,12 +65,13 @@ class DomainMatrix:
     ========
 
     DDM
+    SDM
     Domain
     Poly
 
     """
 
-    def __init__(self, rows, shape, domain):
+    def __new__(cls, rows, shape, domain, *, fmt=None):
         """
         Creates a :py:class:`~.DomainMatrix`.
 
@@ -87,16 +89,83 @@ class DomainMatrix:
             If any of rows, shape and domain are not provided
 
         """
-        if isinstance(rows, list):
-            self.rep = SDM.from_list(rows, shape, domain)
+        if isinstance(rows, (DDM, SDM)):
+            raise TypeError("Use from_rep to initialise from SDM/DDM")
+        elif isinstance(rows, list):
+            rep = DDM(rows, shape, domain)
+        elif isinstance(rows, dict):
+            rep = SDM(rows, shape, domain)
         else:
-            self.rep = SDM(rows, shape, domain)
-        self.shape = shape
-        self.domain = domain
+            msg = "Input should be list-of-lists or dict-of-dicts"
+            raise TypeError(msg)
+
+        if fmt is not None:
+            if fmt == 'sparse':
+                rep = rep.to_sdm()
+            elif fmt == 'dense':
+                rep = rep.to_ddm()
+            else:
+                raise ValueError("fmt should be 'sparse' or 'dense'")
+
+        return cls.from_rep(rep)
 
     @classmethod
-    def from_rep(cls, ddm):
-        return cls(ddm, ddm.shape, ddm.domain)
+    def from_rep(cls, rep):
+        """Create a new DomainMatrix efficiently from DDM/SDM.
+
+        Examples
+        ========
+
+        Create a :py:class:`~.DomainMatrix` with an dense internal
+        representation as :py:class:`~.DDM`:
+
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> drep = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> dM = DomainMatrix.from_rep(drep)
+        >>> dM
+        DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
+
+        Create a :py:class:`~.DomainMatrix` with a sparse internal
+        representation as :py:class:`~.SDM`:
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import ZZ
+        >>> drep = SDM({0:{1:ZZ(1)},1:{0:ZZ(2)}}, (2, 2), ZZ)
+        >>> dM = DomainMatrix.from_rep(drep)
+        >>> dM
+        DomainMatrix({0: {1: 1}, 1: {0: 2}}, (2, 2), ZZ)
+
+        Parameters
+        ==========
+
+        rep: SDM or DDM
+            The internal sparse or dense representation of the matrix.
+
+        Returns
+        =======
+
+        DomainMatrix
+            A :py:class:`~.DomainMatrix` wrapping *rep*.
+
+        Notes
+        =====
+
+        This takes ownership of rep as its internal representation. If rep is
+        being mutated elsewhere then a copy should be provided to
+        ``from_rep``. Only minimal verification or checking is done on *rep*
+        as this is supposed to be an efficient internal routine.
+
+        """
+        if not isinstance(rep, (DDM, SDM)):
+            raise TypeError("rep should be of type DDM or SDM")
+        self = super().__new__(cls)
+        self.rep = rep
+        self.shape = rep.shape
+        self.domain = rep.domain
+        return self
 
     @classmethod
     def from_list_sympy(cls, nrows, ncols, rows, **kwargs):
@@ -236,40 +305,51 @@ class DomainMatrix:
         K = self.domain.get_field()
         return self.convert_to(K)
 
-    def unify(self, other):
-        r"""
-        Unify the domains of self and other
-
-        Parameters
-        ==========
-
-        other : another DomainMatrix
-
-        Returns
-        =======
-
-        (dM1, dM2)
-            dM1, dM2 DomainMatrix matrices with unified Domain
+    def to_sparse(self):
+        """
+        Return a sparse DomainMatrix representation of *self*.
 
         Examples
         ========
 
-        >>> from sympy import ZZ, QQ
         >>> from sympy.polys.matrices import DomainMatrix
-        >>> A = DomainMatrix([
-        ...    [ZZ(1), ZZ(2), ZZ(3)]], (1, 3), ZZ)
-        >>> B = DomainMatrix([
-        ...    [QQ(1, 2), QQ(3, 5)]], (1, 2), QQ)
+        >>> from sympy import QQ
+        >>> A = DomainMatrix([[1, 0],[0, 2]], (2, 2), QQ)
+        >>> A.rep
+        [[1, 0], [0, 2]]
+        >>> B = A.to_sparse()
+        >>> B.rep
+        {0: {0: 1}, 1: {1: 2}}
+        """
+        if self.rep.fmt == 'sparse':
+            return self
 
-        >>> A.unify(B)
-        (DomainMatrix([[1, 2, 3]], (1, 3), QQ), DomainMatrix([[1/2, 3/5]], (1, 2), QQ))
+        return self.from_rep(SDM.from_ddm(self.rep))
 
-        See Also
+    def to_dense(self):
+        """
+        Return a dense DomainMatrix representation of *self*.
+
+        Examples
         ========
 
-        convert_to
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import QQ
+        >>> A = DomainMatrix({0: {0: 1}, 1: {1: 2}}, (2, 2), QQ)
+        >>> A.rep
+        {0: {0: 1}, 1: {1: 2}}
+        >>> B = A.to_dense()
+        >>> B.rep
+        [[1, 0], [0, 2]]
 
         """
+        if self.rep.fmt == 'dense':
+            return self
+
+        return self.from_rep(SDM.to_ddm(self.rep))
+
+    def _unify_domain(self, other):
+        """Convert self and other to a common domain"""
         K1 = self.domain
         K2 = other.domain
         if K1 == K2:
@@ -280,6 +360,80 @@ class DomainMatrix:
         if K2 != K:
             other = other.convert_to(K)
         return self, other
+
+    def _unify_fmt(self, other, fmt):
+        """Convert self and other to the same format.
+
+        If both are sparse or both are dense then return both unmodified.
+        Otherwise convert both to the preferred format given as *fmt* which
+        should be 'dense' or 'sparse'.
+        """
+        if self.rep.fmt == other.rep.fmt:
+            return self, other
+        elif fmt == 'sparse':
+            return self.to_sparse(), other.to_sparse()
+        elif fmt == 'dense':
+            return self.to_dense(), other.to_dense()
+        else:
+            raise ValueError("fmt should be 'sparse' or 'dense'")
+
+    def unify(self, other, *, fmt=None):
+        """
+        Unifies the domains and the format of self and other
+        matrices.
+
+        Parameters
+        ==========
+
+        other : another DomainMatrix
+        fmt: string 'dense', 'sparse' or `None` (default)
+            The preferred format to convert to if self and other are not
+            already in the same format. If `None` or not specified then no
+            conversion if performed.
+
+        Returns
+        =======
+
+        (dM1, dM2)
+            dM1, dM2 DomainMatrix matrices with unified Domain and format
+
+        Examples
+        ========
+
+        Unify the domain of DomainMatrix that have different domains:
+
+        >>> from sympy import ZZ, QQ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+        >>> B = DomainMatrix([[QQ(1, 2), QQ(2)]], (1, 2), QQ)
+        >>> Aq, Bq = A.unify(B)
+        >>> Aq
+        DomainMatrix([[1, 2]], (1, 2), QQ)
+        >>> Bq
+        DomainMatrix([[1/2, 2]], (1, 2), QQ)
+
+        Unify the format (dense or sparse):
+
+        >>> A = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+        >>> B = DomainMatrix({0:{0: ZZ(1)}}, (2, 2), ZZ)
+        >>> B.rep
+        {0: {0: 1}}
+
+        >>> A2, B2 = A.unify(B, fmt='dense')
+        >>> B2.rep
+        [[1, 0], [0, 0]]
+
+        See Also
+        ========
+
+        convert_to, to_dense, to_sparse
+
+        """
+
+        dM1, dM2 = self._unify_domain(other)
+        if fmt is not None:
+            dM1, dM2 = dM1._unify_fmt(dM2, fmt)
+        return dM1, dM2
 
     def to_Matrix(self):
         r"""
@@ -317,10 +471,7 @@ class DomainMatrix:
         return MutableDenseMatrix(rows_sympy)
 
     def __repr__(self):
-        elemlist = self.rep.to_list()
-        rows_str = ['[%s]' % (', '.join(map(str, row))) for row in elemlist]
-        rowstr = '[%s]' % ', '.join(rows_str)
-        return 'DomainMatrix(%s, %r, %r)' % (rowstr, self.shape, self.domain)
+        return 'DomainMatrix(%s, %r, %r)' % (str(self.rep), self.shape, self.domain)
 
     def hstack(A, B):
         r"""
@@ -343,11 +494,8 @@ class DomainMatrix:
 
         >>> from sympy import ZZ, QQ
         >>> from sympy.polys.matrices import DomainMatrix
-        >>> A = DomainMatrix([
-        ...    [ZZ(1), ZZ(2), ZZ(3)]], (1, 3), ZZ)
-        >>> B = DomainMatrix([
-        ...    [QQ(-1, 2), QQ(1, 2), QQ(1, 3)]],(1, 3), QQ)
-
+        >>> A = DomainMatrix([[ZZ(1), ZZ(2), ZZ(3)]], (1, 3), ZZ)
+        >>> B = DomainMatrix([[QQ(-1, 2), QQ(1, 2), QQ(1, 3)]],(1, 3), QQ)
         >>> A.hstack(B)
         DomainMatrix([[1, 2, 3, -1/2, 1/2, 1/3]], (1, 6), QQ)
 
@@ -357,17 +505,19 @@ class DomainMatrix:
         unify
 
         """
-        A, B = A.unify(B)
+        A, B = A.unify(B, fmt='dense')
         return A.from_rep(A.rep.hstack(B.rep))
 
     def __add__(A, B):
         if not isinstance(B, DomainMatrix):
             return NotImplemented
+        A, B = A.unify(B, fmt='dense')
         return A.add(B)
 
     def __sub__(A, B):
         if not isinstance(B, DomainMatrix):
             return NotImplemented
+        A, B = A.unify(B, fmt='dense')
         return A.sub(B)
 
     def __neg__(A):
@@ -376,6 +526,7 @@ class DomainMatrix:
     def __mul__(A, B):
         """A * B"""
         if isinstance(B, DomainMatrix):
+            A, B = A.unify(B, fmt='dense')
             return A.matmul(B)
         elif B in A.domain:
             return A.from_rep(A.rep * B)
@@ -393,6 +544,17 @@ class DomainMatrix:
         if not isinstance(n, int):
             return NotImplemented
         return A.pow(n)
+
+    def _check(a, op, b, ashape, bshape):
+        if a.domain != b.domain:
+            msg = "Domain mismatch: %s %s %s" % (a.domain, op, b.domain)
+            raise DDMDomainError(msg)
+        if ashape != bshape:
+            msg = "Shape mismatch: %s %s %s" % (a.shape, op, b.shape)
+            raise DDMShapeError(msg)
+        if a.rep.fmt != b.rep.fmt:
+            msg = "Format mismatch: %s %s %s" % (a.rep.fmt, op, b.rep.fmt)
+            raise DDMFormatError(msg)
 
     def add(A, B):
         r"""
@@ -440,11 +602,9 @@ class DomainMatrix:
         sub, matmul
 
         """
-        if A.shape != B.shape:
-            raise ShapeError("shape")
-        if A.domain != B.domain:
-            raise ValueError("domain")
+        A._check('+', B, A.shape, B.shape)
         return A.from_rep(A.rep.add(B.rep))
+
 
     def sub(A, B):
         r"""
@@ -492,10 +652,7 @@ class DomainMatrix:
         add, matmul
 
         """
-        if A.shape != B.shape:
-            raise ShapeError("shape")
-        if A.domain != B.domain:
-            raise ValueError("domain")
+        A._check('-', B, A.shape, B.shape)
         return A.from_rep(A.rep.sub(B.rep))
 
     def neg(A):
@@ -609,6 +766,8 @@ class DomainMatrix:
         mul, pow, add, sub
 
         """
+
+        A._check('*', B, A.shape[1], B.shape[0])
         return A.from_rep(A.rep.matmul(B.rep))
 
     def pow(A, n):
@@ -652,14 +811,13 @@ class DomainMatrix:
         matmul
 
         """
+        nrows, ncols = A.shape
+        if nrows != ncols:
+            raise NonSquareMatrixError('Power of a nonsquare matrix')
         if n < 0:
             raise NotImplementedError('Negative powers')
         elif n == 0:
-            m, n = A.shape
-            rows = [[A.domain.zero] * m for _ in range(m)]
-            for i in range(m):
-                rows[i][i] = A.domain.one
-            return type(A)(rows, A.shape, A.domain)
+            return A.eye(nrows, A.domain)
         elif n == 1:
             return A
         elif n % 2 == 1:
@@ -952,13 +1110,13 @@ class DomainMatrix:
         >>> from sympy.polys.matrices import DomainMatrix
         >>> from sympy import QQ
         >>> DomainMatrix.eye(3, QQ)
-        DomainMatrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], (3, 3), QQ)
+        DomainMatrix({0: {0: 1}, 1: {1: 1}, 2: {2: 1}}, (3, 3), QQ)
 
         """
-        return cls.from_rep(DDM.eye(n, domain))
+        return cls.from_rep(SDM.eye(n, domain))
 
     @classmethod
-    def zeros(cls, shape, domain):
+    def zeros(cls, shape, domain, *, fmt='sparse'):
         """Returns a zero DomainMatrix of size shape, belonging to the specified domain
 
         Examples
@@ -967,15 +1125,14 @@ class DomainMatrix:
         >>> from sympy.polys.matrices import DomainMatrix
         >>> from sympy import QQ
         >>> DomainMatrix.zeros((2, 3), QQ)
-        DomainMatrix([[0, 0, 0], [0, 0, 0]], (2, 3), QQ)
+        DomainMatrix({}, (2, 3), QQ)
 
         """
-
-        return cls.from_rep(DDM.zeros(shape, domain))
+        return cls.from_rep(SDM.zeros(shape, domain))
 
     def __eq__(A, B):
         r"""
-        Checks for two DomainMatrix matrices two be equal or not
+        Checks for two DomainMatrix matrices to be equal or not
 
         Parameters
         ==========
