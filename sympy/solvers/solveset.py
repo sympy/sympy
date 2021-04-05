@@ -3198,15 +3198,14 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             result = _new_order_result(result, eq)
             for res in result:
                 got_symbol = set()  # symbols solved in one iteration
-                if soln_imageset:
-                    # find the imageset and use its expr.
-                    for key_res, value_res in res.items():
-                        if isinstance(value_res, ImageSet):
-                            res[key_res] = value_res.lamda.expr
-                            original_imageset[key_res] = value_res
-                            dummy_n = value_res.lamda.expr.atoms(Dummy).pop()
-                            (base,) = value_res.base_sets
-                            imgset_yes = (dummy_n, base)
+                # find the imageset and use its expr.
+                for key_res, value_res in res.items():
+                    if isinstance(value_res, ImageSet):
+                        res[key_res] = value_res.lamda.expr
+                        original_imageset[key_res] = value_res
+                        dummy_n = value_res.lamda.expr.atoms(Dummy).pop()
+                        (base,) = value_res.base_sets
+                        imgset_yes = (dummy_n, base)
                 # update eq with everything that is known so far
                 eq2 = eq.subs(res).expand()
                 unsolved_syms = _unsolved_syms(eq2, sort=True)
