@@ -302,9 +302,12 @@ class Relational(Boolean, EvalfMixin):
 
     def _eval_simplify(self, **kwargs):
         from .add import Add
+        from sympy.core.expr import Expr
         r = self
         r = r.func(*[i.simplify(**kwargs) for i in r.args])
         if r.is_Relational:
+            if not isinstance(r.lhs, Expr) or not isinstance(r.rhs, Expr):
+                return r
             dif = r.lhs - r.rhs
             # replace dif with a valid Number that will
             # allow a definitive comparison with 0
@@ -470,15 +473,15 @@ class Equality(Relational):
     for exact structural equality between two expressions; this class
     compares expressions mathematically.
 
-    If either object defines an `_eval_Eq` method, it can be used in place of
-    the default algorithm.  If `lhs._eval_Eq(rhs)` or `rhs._eval_Eq(lhs)`
+    If either object defines an ``_eval_Eq`` method, it can be used in place of
+    the default algorithm.  If ``lhs._eval_Eq(rhs)`` or ``rhs._eval_Eq(lhs)``
     returns anything other than None, that return value will be substituted for
-    the Equality.  If None is returned by `_eval_Eq`, an Equality object will
+    the Equality.  If None is returned by ``_eval_Eq``, an Equality object will
     be created as usual.
 
     Since this object is already an expression, it does not respond to
-    the method `as_expr` if one tries to create `x - y` from Eq(x, y).
-    This can be done with the `rewrite(Add)` method.
+    the method ``as_expr`` if one tries to create `x - y` from ``Eq(x, y)``.
+    This can be done with the ``rewrite(Add)`` method.
     """
     rel_op = '=='
 
@@ -557,10 +560,13 @@ class Equality(Relational):
 
     def _eval_simplify(self, **kwargs):
         from .add import Add
+        from sympy.core.expr import Expr
         from sympy.solvers.solveset import linear_coeffs
         # standard simplify
         e = super()._eval_simplify(**kwargs)
         if not isinstance(e, Equality):
+            return e
+        if not isinstance(e.lhs, Expr) or not isinstance(e.rhs, Expr):
             return e
         free = self.free_symbols
         if len(free) == 1:
@@ -1300,11 +1306,8 @@ def is_eq(lhs, rhs):
     >>> is_eq(a, b)
     True
 
-
     Examples
     ========
-
-
 
     >>> is_eq(S(0), S(0))
     True
@@ -1322,8 +1325,6 @@ def is_eq(lhs, rhs):
 
     >>> Eq(S(0), x)
     Eq(0, x)
-
-
 
     """
     from sympy.core.add import Add

@@ -6,7 +6,6 @@ import os
 import contextlib
 import warnings
 
-from sympy.core.compatibility import get_function_name
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
@@ -145,10 +144,10 @@ else:
             except Exception as e:
                 message = str(e)
                 if message != "Timeout":
-                    raise XFail(get_function_name(func))
+                    raise XFail(func.__name__)
                 else:
                     raise Skipped("Timeout")
-            raise XPass(get_function_name(func))
+            raise XPass(func.__name__)
 
         wrapper = functools.update_wrapper(wrapper, func)
         return wrapper
@@ -213,6 +212,27 @@ else:
                    ' The list of emitted warnings is: %s.'
                    ) % (warningcls, [w.message for w in warnrec])
             raise Failed(msg)
+
+
+def _both_exp_pow(func):
+    """
+    Decorator used to run the test twice: the first time `e^x` is represented
+    as ``Pow(E, x)``, the second time as ``exp(x)`` (exponential object is not
+    a power).
+
+    This is a temporary trick helping to manage the elimination of the class
+    ``exp`` in favor of a replacement by ``Pow(E, ...)``.
+    """
+    from sympy.core.parameters import _exp_is_pow
+
+    def func_wrap():
+        with _exp_is_pow(True):
+            func()
+        with _exp_is_pow(False):
+            func()
+
+    wrapper = functools.update_wrapper(func_wrap, func)
+    return wrapper
 
 
 @contextlib.contextmanager

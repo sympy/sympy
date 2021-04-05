@@ -26,25 +26,32 @@ _u = Dummy('u')
 
 
 def trigintegrate(f, x, conds='piecewise'):
-    """Integrate f = Mul(trig) over x
+    """
+    Integrate f = Mul(trig) over x.
 
-       >>> from sympy import sin, cos, tan, sec
-       >>> from sympy.integrals.trigonometry import trigintegrate
-       >>> from sympy.abc import x
+    Examples
+    ========
 
-       >>> trigintegrate(sin(x)*cos(x), x)
-       sin(x)**2/2
+    >>> from sympy import sin, cos, tan, sec
+    >>> from sympy.integrals.trigonometry import trigintegrate
+    >>> from sympy.abc import x
 
-       >>> trigintegrate(sin(x)**2, x)
-       x/2 - sin(x)*cos(x)/2
+    >>> trigintegrate(sin(x)*cos(x), x)
+    sin(x)**2/2
 
-       >>> trigintegrate(tan(x)*sec(x), x)
-       1/cos(x)
+    >>> trigintegrate(sin(x)**2, x)
+    x/2 - sin(x)*cos(x)/2
 
-       >>> trigintegrate(sin(x)*tan(x), x)
-       -log(sin(x) - 1)/2 + log(sin(x) + 1)/2 - sin(x)
+    >>> trigintegrate(tan(x)*sec(x), x)
+    1/cos(x)
 
-       http://en.wikibooks.org/wiki/Calculus/Integration_techniques
+    >>> trigintegrate(sin(x)*tan(x), x)
+    -log(sin(x) - 1)/2 + log(sin(x) + 1)/2 - sin(x)
+
+    References
+    ==========
+
+    .. [1] http://en.wikibooks.org/wiki/Calculus/Integration_techniques
 
     See Also
     ========

@@ -20,7 +20,7 @@ from sympy.polys.rootoftools import CRootOf
 from sympy.testing.pytest import slow, XFAIL, SKIP, raises
 from sympy.testing.randtest import verify_numerically as tn
 
-from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
+from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m, R
 
 
 def NS(e, n=15, **options):
@@ -313,6 +313,13 @@ def test_issue_7228():
 
 def test_issue_7190():
     assert solve(log(x-3) + log(x+3), x) == [sqrt(10)]
+
+
+def test_issue_21004():
+    x = symbols('x')
+    f = x/sqrt(x**2+1)
+    f_diff = f.diff(x)
+    assert solve(f_diff, x) == []
 
 
 def test_linear_system():
@@ -2290,3 +2297,27 @@ def test_issue_19509():
         -d + a + sqrt(-b + c),
         d + a - sqrt(-b - c),
         d + a + sqrt(-b - c)]
+
+def test_issue_20747():
+    THT, HT, DBH, dib, c0, c1, c2, c3, c4  = symbols('THT HT DBH dib c0 c1 c2 c3 c4')
+    f = DBH*c3 + THT*c4 + c2
+    rhs = 1 - ((HT - 1)/(THT - 1))**c1*(1 - exp(c0/f))
+    eq = dib - DBH*(c0 - f*log(rhs))
+    term = ((1 - exp((DBH*c0 - dib)/(DBH*(DBH*c3 + THT*c4 + c2))))
+            / (1 - exp(c0/(DBH*c3 + THT*c4 + c2))))
+    sol = [THT*term**(1/c1) - term**(1/c1) + 1]
+    assert solve(eq, HT) == sol
+
+def test_issue_20902():
+    f = (t / ((1 + t) ** 2))
+    assert solve(f.subs({t: 3 * x + 2}).diff(x) > 0, x) == (S(-1) < x) & (x < S(-1)/3)
+    assert solve(f.subs({t: 3 * x + 3}).diff(x) > 0, x) == (S(-4)/3 < x) & (x < S(-2)/3)
+    assert solve(f.subs({t: 3 * x + 4}).diff(x) > 0, x) == (S(-5)/3 < x) & (x < S(-1))
+    assert solve(f.subs({t: 3 * x + 2}).diff(x) > 0, x) == (S(-1) < x) & (x < S(-1)/3)
+
+
+def test_issue_4886():
+    z = a*sqrt(R**2*a**2 + R**2*b**2 - c**2)/(a**2 + b**2)
+    t = b*c/(a**2 + b**2)
+    sol = [((b*(t - z) - c)/(-a), t - z), ((b*(t + z) - c)/(-a), t + z)]
+    assert solve([x**2 + y**2 - R**2, a*x + b*y - c], x, y) == sol

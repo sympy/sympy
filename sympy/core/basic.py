@@ -1,12 +1,14 @@
 """Base class for all the objects in SymPy"""
 from collections import defaultdict
+from collections.abc import Mapping
 from itertools import chain, zip_longest
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
-from .compatibility import iterable, ordered, Mapping
+from .compatibility import iterable, ordered
 from .singleton import S
+from .kind import UndefinedKind
 from ._print_helpers import Printable
 
 from inspect import getmro
@@ -105,6 +107,8 @@ class Basic(Printable, metaclass=ManagedProperties):
     is_Point = False
     is_MatAdd = False
     is_MatMul = False
+
+    kind = UndefinedKind
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
@@ -1669,6 +1673,11 @@ class Basic(Printable, metaclass=ManagedProperties):
         """See the simplify function in sympy.simplify"""
         from sympy.simplify import simplify
         return simplify(self, **kwargs)
+
+    def refine(self, assumption=True):
+        """See the refine function in sympy.assumptions"""
+        from sympy.assumptions import refine
+        return refine(self, assumption)
 
     def _eval_rewrite(self, pattern, rule, **hints):
         if self.is_Atom:

@@ -62,29 +62,41 @@ SymPy has special support for definite integrals, and integral transforms.
 
 .. autofunction:: mellin_transform
 .. autoclass:: MellinTransform
+   :members:
 .. autofunction:: inverse_mellin_transform
 .. autoclass:: InverseMellinTransform
+   :members:
 .. autofunction:: laplace_transform
 .. autoclass:: LaplaceTransform
+   :members:
 .. autofunction:: inverse_laplace_transform
 .. autoclass:: InverseLaplaceTransform
+   :members:
 .. autofunction:: fourier_transform
 .. autofunction:: _fourier_transform
 .. autoclass:: FourierTransform
+   :members:
 .. autofunction:: inverse_fourier_transform
 .. autoclass:: InverseFourierTransform
+   :members:
 .. autofunction:: sine_transform
 .. autoclass:: SineTransform
+   :members:
 .. autofunction:: inverse_sine_transform
 .. autoclass:: InverseSineTransform
+   :members:
 .. autofunction:: cosine_transform
 .. autoclass:: CosineTransform
+   :members:
 .. autofunction:: inverse_cosine_transform
 .. autoclass:: InverseCosineTransform
+   :members:
 .. autofunction:: hankel_transform
 .. autoclass:: HankelTransform
+   :members:
 .. autofunction:: inverse_hankel_transform
 .. autoclass:: InverseHankelTransform
+   :members:
 .. autoclass:: IntegralTransform
    :members:
 .. autoexception:: IntegralTransformError
@@ -136,6 +148,7 @@ SymPy first applies several heuristic algorithms, as these are the fastest:
 
    .. autofunction:: sympy.integrals.risch::risch_integrate
    .. autoclass:: sympy.integrals.risch::NonElementaryIntegral
+      :members:
 
 6. For non-elementary definite integrals, SymPy uses so-called Meijer G-functions.
    Details are described in :ref:`g-functions`.

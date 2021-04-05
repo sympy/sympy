@@ -12,7 +12,25 @@ from itertools import zip_longest
 
 class Literal:
     """
-    The smallest element of a CNF object
+    The smallest element of a CNF object.
+
+    Parameters
+    ==========
+
+    lit : Boolean expression
+
+    is_Not : bool
+
+    Examples
+    ========
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.cnf import Literal
+    >>> from sympy.abc import x
+    >>> Literal(Q.even(x))
+    Literal(Q.even(x), False)
+    >>> Literal(~Q.even(x))
+    Literal(Q.even(x), True)
     """
 
     def __new__(cls, lit, is_Not=False):
@@ -211,6 +229,16 @@ class CNF:
     Class to represent CNF of a Boolean expression.
     Consists of set of clauses, which themselves are stored as
     frozenset of Literal objects.
+
+    Examples
+    ========
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.cnf import CNF
+    >>> from sympy.abc import x
+    >>> cnf = CNF.from_prop(Q.real(x) & ~Q.zero(x))
+    >>> cnf.clauses
+    {frozenset({Literal(Q.real(x), False)}), frozenset({Literal(Q.zero(x), True)})}
     """
     def __init__(self, clauses=None):
         if not clauses:

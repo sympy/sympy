@@ -6,6 +6,9 @@ from sympy.core.symbol import uniquely_named_symbol
 from sympy.polys import PurePoly, cancel
 from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
+from sympy import sympify
+from sympy.functions.combinatorial.numbers import nC
+from sympy.polys.matrices.domainmatrix import DomainMatrix
 
 from .common import MatrixError, NonSquareMatrixError
 from .utilities import (
@@ -479,6 +482,67 @@ def _cofactor_matrix(M, method="berkowitz"):
     return M._new(M.rows, M.cols,
             lambda i, j: M.cofactor(i, j, method))
 
+def _per(M):
+    """Returns the permanent of a matrix. Unlike determinant,
+    permanent is defined for both square and non-square matrices.
+
+    For an m x n matrix, with m less than or equal to n,
+    it is given as the sum over the permutations s of size
+    less than or equal to m on [1, 2, . . . n] of the product
+    from i = 1 to m of M[i, s[i]]. Taking the transpose will
+    not affect the value of the permanent.
+
+    In the case of a square matrix, this is the same as the permutation
+    definition of the determinant, but it does not take the sign of the
+    permutation into account. Computing the permanent with this definition
+    is quite inefficient, so here the Ryser formula is used.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    >>> M.per()
+    450
+    >>> M = Matrix([1, 5, 7])
+    >>> M.per()
+    13
+
+    References
+    ==========
+
+    .. [1] Prof. Frank Ben's notes: https://math.berkeley.edu/~bernd/ban275.pdf
+    .. [2] Wikipedia article on Permanent: https://en.wikipedia.org/wiki/Permanent_(mathematics)
+    .. [3] https://reference.wolfram.com/language/ref/Permanent.html
+    .. [4] Permanent of a rectangular matrix : https://arxiv.org/pdf/0904.3251.pdf
+    """
+    import itertools
+
+    m, n = M.shape
+    if m > n:
+        M = M.T
+        m, n = n, m
+    s = list(range(n))
+
+    subsets = []
+    for i in range(1, m + 1):
+        subsets += list(map(list, itertools.combinations(s, i)))
+
+    perm = 0
+    for subset in subsets:
+        prod = 1
+        sub_len = len(subset)
+        for i in range(m):
+             prod *= sum([M[i, j] for j in subset])
+        perm += prod * (-1)**sub_len * nC(n - sub_len, m - sub_len)
+    perm *= (-1)**m
+    perm = sympify(perm)
+    return perm.simplify()
+
+def _det_DOM(M):
+    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    K = DOM.domain
+    return K.to_sympy(DOM.det())
 
 # This functions is a candidate for caching if it gets implemented for matrices.
 def _det(M, method="bareiss", iszerofunc=None):
@@ -499,6 +563,9 @@ def _det(M, method="bareiss", iszerofunc=None):
         Also, if the matrix is an upper or a lower triangular matrix, determinant
         is computed by simple multiplication of diagonal elements, and the
         specified method is ignored.
+
+        If it is set to ``'domain-ge'``, then Gaussian elimination method will
+        be used via using DomainMatrix.
 
         If it is set to ``'bareiss'``, Bareiss' fraction-free algorithm will
         be used.
@@ -551,10 +618,15 @@ def _det(M, method="bareiss", iszerofunc=None):
     -2
     >>> det(M) == M.det()
     True
+    >>> M.det(method="domain-ge")
+    -2
     """
 
     # sanitize `method`
     method = method.lower()
+
+    if method == "domain-ge": # uses DomainMatrix to evalute determinant
+        return _det_DOM(M)
 
     if method == "bareis":
         method = "bareiss"

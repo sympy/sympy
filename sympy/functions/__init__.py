@@ -8,7 +8,7 @@ Special - gamma, zeta,spherical harmonics...
 from sympy.functions.combinatorial.factorials import (factorial, factorial2,
         rf, ff, binomial, RisingFactorial, FallingFactorial, subfactorial)
 from sympy.functions.combinatorial.numbers import (carmichael, fibonacci, lucas, tribonacci,
-        harmonic, bernoulli, bell, euler, catalan, genocchi, partition)
+        harmonic, bernoulli, bell, euler, catalan, genocchi, partition, motzkin)
 from sympy.functions.elementary.miscellaneous import (sqrt, root, Min, Max,
         Id, real_root, cbrt)
 from sympy.functions.elementary.complexes import (re, im, sign, Abs,
@@ -28,7 +28,7 @@ from sympy.functions.special.error_functions import (erf, erfc, erfi, erf2,
 from sympy.functions.special.gamma_functions import (gamma, lowergamma,
         uppergamma, polygamma, loggamma, digamma, trigamma, multigamma)
 from sympy.functions.special.zeta_functions import (dirichlet_eta, zeta,
-        lerchphi, polylog, stieltjes)
+        lerchphi, polylog, stieltjes, riemann_xi)
 from sympy.functions.special.tensor_functions import (Eijk, LeviCivita,
         KroneckerDelta)
 from sympy.functions.special.singularity_functions import SingularityFunction
@@ -43,7 +43,7 @@ from sympy.functions.special.polynomials import (legendre, assoc_legendre,
 from sympy.functions.special.spherical_harmonics import Ynm, Ynm_c, Znm
 from sympy.functions.special.elliptic_integrals import (elliptic_k,
         elliptic_f, elliptic_e, elliptic_pi)
-from sympy.functions.special.beta_functions import beta
+from sympy.functions.special.beta_functions import beta, betainc, betainc_regularized
 from sympy.functions.special.mathieu_functions import (mathieus, mathieuc,
         mathieusprime, mathieucprime)
 ln = log
@@ -52,8 +52,8 @@ __all__ = [
     'factorial', 'factorial2', 'rf', 'ff', 'binomial', 'RisingFactorial',
     'FallingFactorial', 'subfactorial',
 
-    'carmichael', 'fibonacci', 'lucas', 'tribonacci', 'harmonic', 'bernoulli',
-    'bell', 'euler', 'catalan', 'genocchi', 'partition',
+    'carmichael', 'fibonacci', 'lucas', 'motzkin', 'tribonacci', 'harmonic',
+    'bernoulli', 'bell', 'euler', 'catalan', 'genocchi', 'partition',
 
     'sqrt', 'root', 'Min', 'Max', 'Id', 'real_root', 'cbrt',
 
@@ -80,7 +80,7 @@ __all__ = [
     'gamma', 'lowergamma', 'uppergamma', 'polygamma', 'loggamma', 'digamma',
     'trigamma', 'multigamma',
 
-    'dirichlet_eta', 'zeta', 'lerchphi', 'polylog', 'stieltjes',
+    'dirichlet_eta', 'zeta', 'lerchphi', 'polylog', 'stieltjes', 'riemann_xi',
 
     'Eijk', 'LeviCivita', 'KroneckerDelta',
 
@@ -104,7 +104,7 @@ __all__ = [
 
     'elliptic_k', 'elliptic_f', 'elliptic_e', 'elliptic_pi',
 
-    'beta',
+    'beta', 'betainc', 'betainc_regularized',
 
     'mathieus', 'mathieuc', 'mathieusprime', 'mathieucprime',
 ]

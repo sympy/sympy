@@ -2,8 +2,6 @@ from sympy.core.basic import Basic
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S, Singleton
 
-from sympy.core.compatibility import exec_
-
 def test_Singleton():
     global instantiated
     instantiated = 0
@@ -65,7 +63,7 @@ def test_names_in_namespace():
     # str printer should print a form that does not use S. This is because
     # sympify() disables attribute lookups by default for safety purposes.
     d = {}
-    exec_('from sympy import *', d)
+    exec('from sympy import *', d)
 
     for name in dir(S) + list(S._classes_to_install):
         if name.startswith('_'):

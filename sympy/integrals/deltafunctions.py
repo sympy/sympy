@@ -10,6 +10,9 @@ def change_mul(node, x):
        Rearranges the operands of a product, bringing to front any simple
        DiracDelta expression.
 
+       Explanation
+       ===========
+
        If no simple DiracDelta expression was found, then all the DiracDelta
        expressions are simplified (using DiracDelta.expand(diracdelta=True, wrt=x)).
 
@@ -77,6 +80,9 @@ def change_mul(node, x):
 def deltaintegrate(f, x):
     """
     deltaintegrate(f, x)
+
+    Explanation
+    ===========
 
     The idea for integration is the following:
 

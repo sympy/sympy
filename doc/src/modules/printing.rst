@@ -17,9 +17,9 @@ The main class responsible for printing is ``Printer`` (see also its
 `source code <https://github.com/sympy/sympy/blob/master/sympy/printing/printer.py>`_):
 
 .. autoclass:: Printer
-    :members: doprint, _print, set_global_settings, order
+   :members: doprint, _print, set_global_settings, order
 
-    .. autoattribute:: Printer.printmethod
+   .. autoattribute:: Printer.printmethod
 
 
 PrettyPrinter Class
@@ -377,21 +377,21 @@ Rust code printing
 
 .. autofunction:: sympy.printing.rust.rust_code
 
-Theano Code printing
+Aesara Code printing
 --------------------
 
-.. module:: sympy.printing.theanocode
+.. module:: sympy.printing.aesaracode
 
-.. autoclass:: sympy.printing.theanocode.TheanoPrinter
+.. autoclass:: sympy.printing.aesaracode.AesaraPrinter
    :members:
 
-   .. autoattribute:: TheanoPrinter.printmethod
+   .. autoattribute:: AesaraPrinter.printmethod
 
-.. autofunction:: sympy.printing.theanocode.theano_code
+.. autofunction:: sympy.printing.aesaracode.aesara_code
 
-.. autofunction:: sympy.printing.theanocode.theano_function
+.. autofunction:: sympy.printing.aesaracode.aesara_function
 
-.. autofunction:: sympy.printing.theanocode.dim_handling
+.. autofunction:: sympy.printing.aesaracode.dim_handling
 
 Gtk
 ---
@@ -421,6 +421,7 @@ This classes implements printing to strings that can be used by the
 :py:func:`sympy.utilities.lambdify.lambdify` function.
 
 .. autoclass:: LambdaPrinter
+   :members:
 
    .. autoattribute:: LambdaPrinter.printmethod
 
@@ -455,6 +456,7 @@ This class is responsible for MathML printing. See ``sympy.printing.mathml``.
 More info on mathml : http://www.w3.org/TR/MathML2
 
 .. autoclass:: MathMLPrinterBase
+   :members:
 
 .. autoclass:: MathMLContentPrinter
    :members:
@@ -581,6 +583,7 @@ functionality, and additionally lists a number of functions that cannot be
 easily translated to C or Fortran.
 
 .. autoclass:: sympy.printing.codeprinter.CodePrinter
+   :members:
 
    .. autoattribute:: CodePrinter.printmethod
 

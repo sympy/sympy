@@ -1,5 +1,5 @@
 from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
-                   atan, atan2, nan, Symbol, re, im, sign)
+                   atan, atan2, nan, Symbol, re, im, sign, arg)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -63,33 +63,6 @@ def test_exp():
     assert refine(exp(pi*I*2*(x + S.Half))) == -1
     assert refine(exp(pi*I*2*(x + Rational(1, 4)))) == I
     assert refine(exp(pi*I*2*(x + Rational(3, 4)))) == -I
-
-
-def test_Relational():
-    assert not refine(x < 0, ~Q.is_true(x < 0))
-    assert refine(x < 0, Q.is_true(x < 0))
-    assert refine(x < 0, Q.is_true(0 > x)) == True
-    assert refine(x < 0, Q.is_true(y < 0)) == (x < 0)
-    assert not refine(x <= 0, ~Q.is_true(x <= 0))
-    assert refine(x <= 0,  Q.is_true(x <= 0))
-    assert refine(x <= 0,  Q.is_true(0 >= x)) == True
-    assert refine(x <= 0,  Q.is_true(y <= 0)) == (x <= 0)
-    assert not refine(x > 0, ~Q.is_true(x > 0))
-    assert refine(x > 0,  Q.is_true(x > 0))
-    assert refine(x > 0,  Q.is_true(0 < x)) == True
-    assert refine(x > 0,  Q.is_true(y > 0)) == (x > 0)
-    assert not refine(x >= 0, ~Q.is_true(x >= 0))
-    assert refine(x >= 0,  Q.is_true(x >= 0))
-    assert refine(x >= 0,  Q.is_true(0 <= x)) == True
-    assert refine(x >= 0,  Q.is_true(y >= 0)) == (x >= 0)
-    assert not refine(Eq(x, 0), ~Q.is_true(Eq(x, 0)))
-    assert refine(Eq(x, 0),  Q.is_true(Eq(x, 0)))
-    assert refine(Eq(x, 0),  Q.is_true(Eq(0, x))) == True
-    assert refine(Eq(x, 0),  Q.is_true(Eq(y, 0))) == Eq(x, 0)
-    assert not refine(Ne(x, 0), ~Q.is_true(Ne(x, 0)))
-    assert refine(Ne(x, 0), Q.is_true(Ne(0, x))) == True
-    assert refine(Ne(x, 0),  Q.is_true(Ne(x, 0)))
-    assert refine(Ne(x, 0),  Q.is_true(Ne(y, 0))) == (Ne(x, 0))
 
 
 def test_Piecewise():
@@ -187,6 +160,10 @@ def test_sign():
     x = Symbol('x', complex=True)
     assert refine(sign(x), Q.zero(x)) == 0
 
+def test_arg():
+    x = Symbol('x', complex = True)
+    assert refine(arg(x), Q.positive(x)) == 0
+    assert refine(arg(x), Q.negative(x)) == pi
 
 def test_func_args():
     class MyClass(Expr):

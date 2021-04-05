@@ -437,19 +437,6 @@ class Piecewise(Function):
             args = [(e, args[e]) for e in uniq(exprinorder)]
             # add in the last arg
             args.append((expr, True))
-            # if any condition reduced to True, it needs to go last
-            # and there should only be one of them or else the exprs
-            # should agree
-            trues = [i for i in range(len(args)) if args[i][1] is S.true]
-            if not trues:
-                # make the last one True since all cases were enumerated
-                e, c = args[-1]
-                args[-1] = (e, S.true)
-            else:
-                assert len({e for e, c in [args[i] for i in trues]}) == 1
-                args.append(args.pop(trues.pop()))
-                while trues:
-                    args.pop(trues.pop())
             return Piecewise(*args)
 
     def _eval_integral(self, x, _first=True, **kwargs):
@@ -755,16 +742,39 @@ class Piecewise(Function):
             if isinstance(cond, And):
                 lower = S.NegativeInfinity
                 upper = S.Infinity
+                exclude = []
                 for cond2 in cond.args:
                     if isinstance(cond2, Equality):
                         lower = upper  # ignore
                         break
+                    elif isinstance(cond2, Unequality):
+                        l, r = cond2.args
+                        if l == sym:
+                            exclude.append(r)
+                        elif r == sym:
+                            exclude.append(l)
+                        else:
+                            nonsymfail(cond2)
+                        continue
                     elif cond2.lts == sym:
                         upper = Min(cond2.gts, upper)
                     elif cond2.gts == sym:
                         lower = Max(cond2.lts, lower)
                     else:
                         nonsymfail(cond2)  # should never get here
+                if exclude:
+                    exclude = list(ordered(exclude))
+                    newcond = []
+                    for i, e in enumerate(exclude):
+                        if e < lower == True or e > upper == True:
+                            continue
+                        if not newcond:
+                            newcond.append((None, lower))  # add a primer
+                        newcond.append((newcond[-1][1], e))
+                    newcond.append((newcond[-1][1], upper))
+                    newcond.pop(0)  # remove the primer
+                    expr_cond.extend([(iarg, expr, And(i[0] < sym, sym < i[1])) for i in newcond])
+                    continue
             elif isinstance(cond, Relational):
                 lower, upper = cond.lts, cond.gts  # part 1: initialize with givens
                 if cond.lts == sym:                # part 1a: expand the side ...
@@ -900,7 +910,7 @@ class Piecewise(Function):
          (3, Interval(4, oo))]
         >>> p.as_expr_set_pairs(Interval(0, 3))
         [(1, Interval.Ropen(0, 2)),
-         (2, Interval(2, 3)), (3, EmptySet)]
+         (2, Interval(2, 3))]
         """
         exp_sets = []
         U = domain
@@ -920,7 +930,8 @@ class Piecewise(Function):
                             setting domain=S.Reals'''))
             cond_int = U.intersect(cond.as_set())
             U = U - cond_int
-            exp_sets.append((expr, cond_int))
+            if cond_int != S.EmptySet:
+                exp_sets.append((expr, cond_int))
         return exp_sets
 
     def _eval_rewrite_as_ITE(self, *args, **kwargs):

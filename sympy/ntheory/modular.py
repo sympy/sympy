@@ -1,4 +1,6 @@
-from sympy.core.compatibility import as_int, reduce
+from functools import reduce
+
+from sympy.core.compatibility import as_int
 from sympy.core.mul import prod
 from sympy.core.numbers import igcdex, igcd
 from sympy.ntheory.primetest import isprime

@@ -19,7 +19,7 @@ object (such as StringIO).
 
 import sys
 import os
-from sympy.core.compatibility import cStringIO as StringIO
+from io import StringIO
 
 
 def get_resource(identifier, pkgname=__name__):

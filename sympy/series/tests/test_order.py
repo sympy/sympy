@@ -418,6 +418,11 @@ def test_issue_9192():
     assert O(1)*O(1) == O(1)
     assert O(1)**O(1) == O(1)
 
+
+def test_issue_9910():
+    assert O(x*log(x) + sin(x), (x, oo)) == O(x*log(x), (x, oo))
+
+
 def test_performance_of_adding_order():
     l = list(x**i for i in range(1000))
     l.append(O(x**1001))

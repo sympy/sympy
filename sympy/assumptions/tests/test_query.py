@@ -1,14 +1,14 @@
 from sympy.abc import t, w, x, y, z, n, k, m, p, i
 from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
         remove_handler)
-from sympy.assumptions.assume import global_assumptions
+from sympy.assumptions.assume import assuming, global_assumptions, Predicate
 from sympy.assumptions.ask import compute_known_facts, single_fact_lookup
 from sympy.assumptions.handlers import AskHandler
 from sympy.core.add import Add
 from sympy.core.numbers import (I, Integer, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
-from sympy.core.symbol import symbols
+from sympy.core.symbol import symbols, Symbol
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log)
@@ -17,8 +17,7 @@ from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
 from sympy.matrices import Matrix, SparseMatrix
-from sympy.testing.pytest import XFAIL, slow, raises
-from sympy.assumptions.assume import assuming
+from sympy.testing.pytest import XFAIL, slow, raises, warns_deprecated_sympy, _both_exp_pow
 import math
 
 
@@ -1046,7 +1045,10 @@ def test_bounded():
 
     # exponential functions
     assert ask(Q.finite(log(x))) is None
-    assert ask(Q.finite(log(x)), Q.finite(x)) is True
+    assert ask(Q.finite(log(x)), Q.finite(x)) is None
+    assert ask(Q.finite(log(x)), Q.nonzero(x)) is True
+    assert ask(Q.finite(log(x)), Q.infinite(x)) is False
+    assert ask(Q.finite(log(x)), Q.zero(x)) is False
     assert ask(Q.finite(exp(x))) is None
     assert ask(Q.finite(exp(x)), Q.finite(x)) is True
     assert ask(Q.finite(exp(2))) is True
@@ -1092,6 +1094,7 @@ def test_commutative():
     assert ask(Q.commutative(log(x))) is True
 
 
+@_both_exp_pow
 def test_complex():
     assert ask(Q.complex(x)) is None
     assert ask(Q.complex(x), Q.complex(x)) is True
@@ -1258,6 +1261,7 @@ def test_extended_real():
     assert ask(Q.extended_real(x + S.Infinity), Q.real(x)) is True
 
 
+@_both_exp_pow
 def test_rational():
     assert ask(Q.rational(x), Q.integer(x)) is True
     assert ask(Q.rational(x), Q.irrational(x)) is False
@@ -1424,6 +1428,7 @@ def test_hermitian():
         Q.imaginary(x) & Q.imaginary(y) & Q.imaginary(z)) is True
 
 
+@_both_exp_pow
 def test_imaginary():
     assert ask(Q.imaginary(x)) is None
     assert ask(Q.imaginary(x), Q.real(x)) is False
@@ -1731,6 +1736,7 @@ def test_prime():
     assert ask(Q.prime(x**y), Q.integer(x) & Q.integer(y)) is False
 
 
+@_both_exp_pow
 def test_positive():
     assert ask(Q.positive(x), Q.positive(x)) is True
     assert ask(Q.positive(x), Q.negative(x)) is False
@@ -1859,6 +1865,7 @@ def test_real_pow():
     assert ask(Q.real(x**(I*pi/log(x))), Q.real(x)) is True
 
 
+@_both_exp_pow
 def test_real_functions():
     # trigonometric functions
     assert ask(Q.real(sin(x))) is None
@@ -1916,6 +1923,7 @@ def test_matrix():
     assert ask(Q.antihermitian(_A)) is None
 
 
+@_both_exp_pow
 def test_algebraic():
     assert ask(Q.algebraic(x)) is None
 
@@ -2018,60 +2026,57 @@ def test_composite_assumptions():
     assert ask(Q.positive(x), Q.real(x) >> Q.positive(y)) is None
     assert ask(Q.real(x), ~(Q.real(x) >> Q.real(y))) is True
 
-def test_incompatible_resolutors():
-    class Prime2AskHandler(AskHandler):
-        @staticmethod
-        def Number(expr, assumptions):
-            return True
-    register_handler('prime', Prime2AskHandler)
-    raises(ValueError, lambda: ask(Q.prime(4)))
-    remove_handler('prime', Prime2AskHandler)
-
-    class InconclusiveHandler(AskHandler):
-        @staticmethod
-        def Number(expr, assumptions):
-            return None
-    register_handler('prime', InconclusiveHandler)
-    assert ask(Q.prime(3)) is True
-    remove_handler('prime', InconclusiveHandler)
-
 def test_key_extensibility():
     """test that you can add keys to the ask system at runtime"""
     # make sure the key is not defined
     raises(AttributeError, lambda: ask(Q.my_key(x)))
 
+    # Old handler system
     class MyAskHandler(AskHandler):
         @staticmethod
         def Symbol(expr, assumptions):
             return True
-    register_handler('my_key', MyAskHandler)
-    assert ask(Q.my_key(x)) is True
-    assert ask(Q.my_key(x + 1)) is None
-    remove_handler('my_key', MyAskHandler)
-    del Q.my_key
+    try:
+        with warns_deprecated_sympy():
+            register_handler('my_key', MyAskHandler)
+        with warns_deprecated_sympy():
+            assert ask(Q.my_key(x)) is True
+        with warns_deprecated_sympy():
+            assert ask(Q.my_key(x + 1)) is None
+    finally:
+        with warns_deprecated_sympy():
+            remove_handler('my_key', MyAskHandler)
+        del Q.my_key
+    raises(AttributeError, lambda: ask(Q.my_key(x)))
+
+    # New handler system
+    class MyPredicate(Predicate):
+        pass
+    try:
+        Q.my_key = MyPredicate()
+        @Q.my_key.register(Symbol)
+        def _(expr, assumptions):
+            return True
+        assert ask(Q.my_key(x)) is True
+        assert ask(Q.my_key(x+1)) is None
+    finally:
+        del Q.my_key
     raises(AttributeError, lambda: ask(Q.my_key(x)))
 
 
 def test_type_extensibility():
     """test that new types can be added to the ask system at runtime
-    We create a custom type MyType, and override ask Q.prime=True with handler
-    MyAskHandler for this type
-
-    TODO: test incompatible resolutors
     """
     from sympy.core import Basic
 
     class MyType(Basic):
         pass
 
-    class MyAskHandler(AskHandler):
-        @staticmethod
-        def MyType(expr, assumptions):
-            return True
+    @Q.prime.register(MyType)
+    def _(expr, assumptions):
+        return True
 
-    a = MyType()
-    register_handler(Q.prime, MyAskHandler)
-    assert ask(Q.prime(a)) is True
+    assert ask(Q.prime(MyType())) is True
 
 
 def test_single_fact_lookup():
@@ -2253,11 +2258,9 @@ def test_autosimp_used_to_fail():
 
 
 def test_custom_AskHandler():
-    from sympy.assumptions import register_handler, ask, Q
-    from sympy.assumptions.handlers import AskHandler
     from sympy.logic.boolalg import conjuncts
-    from sympy import Symbol
 
+    # Old handler system
     class MersenneHandler(AskHandler):
         @staticmethod
         def Integer(expr, assumptions):
@@ -2268,7 +2271,72 @@ def test_custom_AskHandler():
         def Symbol(expr, assumptions):
             if expr in conjuncts(assumptions):
                 return True
-    register_handler('mersenne', MersenneHandler)
+    try:
+        with warns_deprecated_sympy():
+            register_handler('mersenne', MersenneHandler)
+        n = Symbol('n', integer=True)
+        with warns_deprecated_sympy():
+            assert ask(Q.mersenne(7))
+        with warns_deprecated_sympy():
+            assert ask(Q.mersenne(n), Q.mersenne(n))
+    finally:
+        del Q.mersenne
 
-    n = Symbol('n', integer=True)
-    assert ask(Q.mersenne(n), Q.mersenne(n))
+    # New handler system
+    class MersennePredicate(Predicate):
+        pass
+    try:
+        Q.mersenne = MersennePredicate()
+        @Q.mersenne.register(Integer)
+        def _(expr, assumptions):
+            from sympy import log
+            if ask(Q.integer(log(expr + 1, 2))):
+                return True
+        @Q.mersenne.register(Symbol)
+        def _(expr, assumptions):
+            if expr in conjuncts(assumptions):
+                return True
+        assert ask(Q.mersenne(7))
+        assert ask(Q.mersenne(n), Q.mersenne(n))
+    finally:
+        del Q.mersenne
+
+
+def test_polyadic_predicate():
+
+    class SexyPredicate(Predicate):
+        pass
+    try:
+        Q.sexyprime = SexyPredicate()
+
+        @Q.sexyprime.register(Integer, Integer)
+        def _(int1, int2, assumptions):
+            args = sorted([int1, int2])
+            if not all(ask(Q.prime(a), assumptions) for a in args):
+                return False
+            return args[1] - args[0] == 6
+
+        @Q.sexyprime.register(Integer, Integer, Integer)
+        def _(int1, int2, int3, assumptions):
+            args = sorted([int1, int2, int3])
+            if not all(ask(Q.prime(a), assumptions) for a in args):
+                return False
+            return args[2] - args[1] == 6 and args[1] - args[0] == 6
+
+        assert ask(Q.sexyprime(5, 11))
+        assert ask(Q.sexyprime(7, 13, 19))
+    finally:
+        del Q.sexyprime
+
+
+def test_Predicate_handler_is_unique():
+
+    # Undefined predicate does not have a handler
+    assert Predicate('mypredicate').handler is None
+
+    # Handler of defined predicate is unique to the class
+    class MyPredicate(Predicate):
+        pass
+    mp1 = MyPredicate('mp1')
+    mp2 = MyPredicate('mp2')
+    assert mp1.handler is mp2.handler

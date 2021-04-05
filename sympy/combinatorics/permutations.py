@@ -1,11 +1,13 @@
 import random
 from collections import defaultdict
+from collections.abc import Iterable
+from functools import reduce
 
 from sympy.core.parameters import global_parameters
 from sympy.core.basic import Atom
 from sympy.core.expr import Expr
 from sympy.core.compatibility import \
-    is_sequence, reduce, as_int, Iterable
+    is_sequence, as_int
 from sympy.core.numbers import Integer
 from sympy.core.sympify import _sympify
 from sympy.matrices import zeros
@@ -788,6 +790,56 @@ class Permutation(Atom):
     >>> Permutation.from_sequence('SymPy')
     Permutation([1, 3, 2, 0, 4])
 
+    Checking if a Permutation is contained in a Group
+    =================================================
+
+    Generally if you have a group of permutations G on n symbols, and
+    you're checking if a permutation on less than n symbols is part
+    of that group, the check will fail.
+
+    Here is an example for n=5 and we check if the cycle
+    (1,2,3) is in G:
+
+    >>> from sympy import init_printing
+    >>> init_printing(perm_cyclic=True, pretty_print=False)
+    >>> from sympy.combinatorics import Cycle, Permutation
+    >>> from sympy.combinatorics.perm_groups import PermutationGroup
+    >>> G = PermutationGroup(Cycle(2, 3)(4, 5), Cycle(1, 2, 3, 4, 5))
+    >>> p1 = Permutation(Cycle(2, 5, 3))
+    >>> p2 = Permutation(Cycle(1, 2, 3))
+    >>> a1 = Permutation(Cycle(1, 2, 3).list(6))
+    >>> a2 = Permutation(Cycle(1, 2, 3)(5))
+    >>> a3 = Permutation(Cycle(1, 2, 3),size=6)
+    >>> for p in [p1,p2,a1,a2,a3]: p, G.contains(p)
+    ((2 5 3), True)
+    ((1 2 3), False)
+    ((5)(1 2 3), True)
+    ((5)(1 2 3), True)
+    ((5)(1 2 3), True)
+
+    The check for p2 above will fail.
+
+    Checking if p1 is in G works because SymPy knows
+    G is a group on 5 symbols, and p1 is also on 5 symbols
+    (its largest element is 5).
+
+    For ``a1``, the ``.list(6)`` call will extend the permutation to 5
+    symbols, so the test will work as well. In the case of ``a2`` the
+    permutation is being extended to 5 symbols by using a singleton,
+    and in the case of ``a3`` it's extended through the constructor
+    argument ``size=6``.
+
+    There is another way to do this, which is to tell the ``contains``
+    method that the number of symbols the group is on doesn't need to
+    match perfectly the number of symbols for the permutation:
+
+    >>> G.contains(p2,strict=False)
+    True
+
+    This can be via the ``strict`` argument to the ``contains`` method,
+    and SymPy will try to extend the permutation on its own and then
+    perform the containment check.
+
     See Also
     ========
 
@@ -1083,7 +1135,7 @@ class Permutation(Atom):
                     unchecked[j] = False
                 if len(cycle) > 1:
                     cyclic_form.append(cycle)
-                    assert cycle == list(minlex(cycle, is_set=True))
+                    assert cycle == list(minlex(cycle))
         cyclic_form.sort()
         self._cyclic_form = cyclic_form[:]
         return cyclic_form

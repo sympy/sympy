@@ -253,7 +253,15 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
             else:
                 sexpr = expr.base
 
-            if expr.exp.is_Number:
+            if expr.base == S.Exp1:
+                arg = expr.exp
+                if arg.is_Rational:
+                    sexpr, rat_expo = S.Exp1, arg
+                elif arg.is_Mul:
+                    coeff, tail = arg.as_coeff_Mul(rational=True)
+                    sexpr, rat_expo = exp(tail), coeff
+
+            elif expr.exp.is_Number:
                 rat_expo = expr.exp
             else:
                 coeff, tail = expr.exp.as_coeff_Mul()
@@ -263,7 +271,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
                 else:
                     sym_expo = expr.exp
         elif isinstance(expr, exp):
-            arg = expr.args[0]
+            arg = expr.exp
             if arg.is_Rational:
                 sexpr, rat_expo = S.Exp1, arg
             elif arg.is_Mul:
