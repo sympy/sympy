@@ -473,8 +473,7 @@ class KanesMethod:
         return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i,
                 q_d, u_i, u_d, r)
 
-    # TODO : Remove `new_method` after 1.1 has been released.
-    def linearize(self, *, new_method=None, **kwargs):
+    def linearize(self, *, **kwargs):
         """ Linearize the equations of motion about a symbolic operating point.
 
         Explanation
