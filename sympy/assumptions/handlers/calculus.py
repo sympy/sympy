@@ -10,8 +10,7 @@ from sympy.core.numbers import (ComplexInfinity, Exp1, GoldenRatio, ImaginaryUni
 from sympy.functions import cos, exp, log, sign, sin
 from sympy.logic.boolalg import conjuncts
 
-from ..predicates.calculus import (FinitePredicate, InfinitePredicate,
-    PositiveInfinitePredicate, NegativeInfinitePredicate)
+from ..predicates.calculus import FinitePredicate, InfinitePredicate
 
 
 # FinitePredicate
@@ -228,31 +227,5 @@ def _(expr, assumptions):
 
 
 @InfinitePredicate.register(NaN)
-def _(expr, assumptions):
-    return False
-
-
-# PositiveInfinitePredicate
-
-
-@PositiveInfinitePredicate.register(Infinity)
-def _(expr, assumptions):
-    return True
-
-
-@PositiveInfinitePredicate.register_many(NegativeInfinity, ComplexInfinity)
-def _(expr, assumptions):
-    return False
-
-
-# NegativeInfinitePredicate
-
-
-@NegativeInfinitePredicate.register(NegativeInfinity)
-def _(expr, assumptions):
-    return True
-
-
-@NegativeInfinitePredicate.register_many(Infinity, ComplexInfinity)
 def _(expr, assumptions):
     return False
