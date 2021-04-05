@@ -1,4 +1,5 @@
 from sympy.core.containers import Tuple
+from sympy.core.compatibility import ordered
 from sympy.core.function import (Function, Lambda, nfloat, diff)
 from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, oo, pi)
@@ -1698,6 +1699,31 @@ def test_solve_nonlinear_trans():
     assert nonlinsolve([x**2 - y**2/exp(x)], [y, x]) == soln2
     assert nonlinsolve([x**2 - y**2/exp(x)], [y, x]) == soln3
     assert nonlinsolve([x**2 - y**2/exp(x)], [x, y]) == soln4
+
+
+def test_issue_19050():
+    # test_issue_19050 --> TypeError removed
+    assert dumeq(nonlinsolve([x + y, sin(y)], [x, y]),
+        FiniteSet((ImageSet(Lambda(n, -2*n*pi), S.Integers), ImageSet(Lambda(n, 2*n*pi), S.Integers)),\
+             (ImageSet(Lambda(n, -2*n*pi - pi), S.Integers), ImageSet(Lambda(n, 2*n*pi + pi), S.Integers))))
+    assert dumeq(nonlinsolve([x + y, sin(y) + cos(y)], [x, y]),
+        FiniteSet((ImageSet(Lambda(n, -2*n*pi - 3*pi/4), S.Integers), ImageSet(Lambda(n, 2*n*pi + 3*pi/4), S.Integers)), \
+            (ImageSet(Lambda(n, -2*n*pi - 7*pi/4), S.Integers), ImageSet(Lambda(n, 2*n*pi + 7*pi/4), S.Integers))))
+
+
+def test_issue_16618():
+    # AttributeError is removed !
+    # have to remove the redundancy
+    _n = Dummy('n')
+    eqn = [sin(x)*sin(y), cos(x)*cos(y) - 1]
+    ans = FiniteSet((x, 2*n*pi), (2*n*pi, y), (x, 2*n*pi + pi), (2*n*pi + pi, y),\
+        (x, 2*_n*pi), (2*_n*pi, y), (x, 2*_n*pi + pi), (2*_n*pi + pi, y))
+    sol = nonlinsolve(eqn, [x, y])
+
+    for i0, j0 in zip(ordered(sol), ordered(ans)):
+        assert len(i0) == len(j0) == 2
+        assert all(a.dummy_eq(b) for a, b in zip(i0, j0))
+    assert len(sol) == len(ans)
 
 
 def test_issue_5132_1():

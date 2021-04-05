@@ -3,8 +3,9 @@ General binary relations.
 """
 
 from sympy import S
-from sympy.assumptions import AppliedPredicate, ask, Predicate
+from sympy.assumptions import AppliedPredicate, ask, Predicate, Q
 from sympy.core.kind import BooleanKind
+from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.logic.boolalg import conjuncts, Not
 
 __all__ = ["BinaryRelation", "AppliedBinaryRelation"]
@@ -177,13 +178,21 @@ class AppliedBinaryRelation(AppliedPredicate):
         return neg_rel(*self.arguments)
 
     def _eval_ask(self, assumptions):
+        conj_assumps = set()
+        binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
+        for a in conjuncts(assumptions):
+            if a.func in binrelpreds:
+                conj_assumps.add(binrelpreds[a.func](*a.args))
+            else:
+                conj_assumps.add(a)
+
         # After CNF in assumptions module is modified to take polyadic
         # predicate, this will be removed
-        if any(rel in conjuncts(assumptions) for rel in (self, self.reversed)):
+        if any(rel in conj_assumps for rel in (self, self.reversed)):
             return True
         neg_rels = (self.negated, self.reversed.negated, Not(self, evaluate=False),
             Not(self.reversed, evaluate=False))
-        if any(rel in conjuncts(assumptions) for rel in neg_rels):
+        if any(rel in conj_assumps for rel in neg_rels):
             return False
 
         # evaluation using multipledispatching

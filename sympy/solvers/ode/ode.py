@@ -3602,7 +3602,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
         if not term.has(x):
             indicial.append(term)
         else:
-            term = series(term, n=1, x0=x0)
+            term = series(term, x=x, n=1, x0=x0)
             if isinstance(term, Order):
                 indicial.append(S.Zero)
             else:
