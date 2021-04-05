@@ -4,7 +4,6 @@ from collections.abc import MutableMapping
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
 from sympy.assumptions.cnf import AND, OR, to_NNF
-from sympy.core.assumptions import _assume_defined, as_property
 from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
 from sympy.core.numbers import ImaginaryUnit
 from sympy.core.rules import Transform
@@ -187,20 +186,34 @@ class ExactlyOneArg(UnevaluatedOnFree):
         # return And(*[Or(*map(Not, c)) for c in combinations(pred_args, 2)]) & Or(*pred_args)
 
 
+_old_assump_getters = {
+    Q.positive: lambda o: o.is_positive,
+    Q.zero: lambda o: o.is_zero,
+    Q.negative: lambda o: o.is_negative,
+    Q.nonpositive: lambda o: o.is_nonpositive,
+    Q.nonzero: lambda o: o.is_nonzero,
+    Q.nonnegative: lambda o: o.is_nonnegative,
+    Q.rational: lambda o: o.is_rational,
+    Q.irrational: lambda o: o.is_irrational,
+    Q.even: lambda o: o.is_even,
+    Q.odd: lambda o: o.is_odd,
+    Q.integer: lambda o: o.is_integer,
+    Q.composite: lambda o: o.is_composite,
+    Q.imaginary: lambda o: o.is_imaginary,
+    Q.commutative: lambda o: o.is_commutative,
+}
+
 def _old_assump_replacer(obj):
     if not isinstance(obj, AppliedPredicate):
         return obj
 
     e = obj.arguments[0]
-    ret = None
 
-    for key in _assume_defined:
-        pred = getattr(Q, key, None)
-        if pred is None:
-            continue
-        if obj.func == pred:
-            ret = getattr(e, as_property(key))
+    getter = _old_assump_getters.get(obj.function, None)
+    if getter is None:
+        return obj
 
+    ret = getter(e)
     if ret is None:
         return obj
     return ret
