@@ -450,9 +450,10 @@ class StdFactKB(FactKB):
         Fill the unknown facts with ``None``. This is used by ``Symbol`` where
         all relevant facts are found by deduction.
         """
-        for key in _assume_defined:
-            if key not in self:
-                self._tell(key, None)
+        orig_gen = self._generator
+        new_gen = {k:None for k in _assume_defined}
+        new_gen.update(orig_gen)
+        self._generator = new_gen
 
 
 def as_property(fact):
