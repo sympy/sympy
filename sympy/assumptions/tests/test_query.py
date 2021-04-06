@@ -239,25 +239,25 @@ def test_complex_infinity():
 def test_nan():
     nan = S.NaN
     assert ask(Q.commutative(nan)) is True
-    assert ask(Q.integer(nan)) is False
-    assert ask(Q.rational(nan)) is False
-    assert ask(Q.algebraic(nan)) is False
-    assert ask(Q.real(nan)) is False
-    assert ask(Q.extended_real(nan)) is False
-    assert ask(Q.complex(nan)) is False
-    assert ask(Q.irrational(nan)) is False
-    assert ask(Q.imaginary(nan)) is False
-    assert ask(Q.positive(nan)) is False
-    assert ask(Q.nonzero(nan)) is True
-    assert ask(Q.zero(nan)) is False
-    assert ask(Q.even(nan)) is False
-    assert ask(Q.odd(nan)) is False
+    assert ask(Q.integer(nan)) is None
+    assert ask(Q.rational(nan)) is None
+    assert ask(Q.algebraic(nan)) is None
+    assert ask(Q.real(nan)) is None
+    assert ask(Q.extended_real(nan)) is None
+    assert ask(Q.complex(nan)) is None
+    assert ask(Q.irrational(nan)) is None
+    assert ask(Q.imaginary(nan)) is None
+    assert ask(Q.positive(nan)) is None
+    assert ask(Q.nonzero(nan)) is None
+    assert ask(Q.zero(nan)) is None
+    assert ask(Q.even(nan)) is None
+    assert ask(Q.odd(nan)) is None
     assert ask(Q.finite(nan)) is None
     assert ask(Q.infinite(nan)) is None
-    assert ask(Q.prime(nan)) is False
-    assert ask(Q.composite(nan)) is False
-    assert ask(Q.hermitian(nan)) is False
-    assert ask(Q.antihermitian(nan)) is False
+    assert ask(Q.prime(nan)) is None
+    assert ask(Q.composite(nan)) is None
+    assert ask(Q.hermitian(nan)) is None
+    assert ask(Q.antihermitian(nan)) is None
 
 
 def test_Rational_number():
@@ -2278,10 +2278,10 @@ def test_issue_9636():
 
 def test_autosimp_used_to_fail():
     # See issue #9807
-    assert ask(Q.imaginary(0**I)) is False
-    assert ask(Q.imaginary(0**(-I))) is False
-    assert ask(Q.real(0**I)) is False
-    assert ask(Q.real(0**(-I))) is False
+    assert ask(Q.imaginary(0**I)) is None
+    assert ask(Q.imaginary(0**(-I))) is None
+    assert ask(Q.real(0**I)) is None
+    assert ask(Q.real(0**(-I))) is None
 
 
 def test_custom_AskHandler():
