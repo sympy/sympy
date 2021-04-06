@@ -10,31 +10,31 @@ from sympy.sets.fancysets import (Naturals, Naturals0, Integers, Rationals,
 from sympy.sets.sets import UniversalSet, imageset
 
 
-@dispatch(Naturals0, Naturals)  # type: ignore
+@dispatch(Naturals0, Naturals)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     return a
 
-@dispatch(Rationals, Naturals)  # type: ignore
+@dispatch(Rationals, Naturals)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     return a
 
-@dispatch(Rationals, Naturals0)  # type: ignore
+@dispatch(Rationals, Naturals0)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     return a
 
-@dispatch(Reals, Naturals)  # type: ignore
+@dispatch(Reals, Naturals)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     return a
 
-@dispatch(Reals, Naturals0)  # type: ignore
+@dispatch(Reals, Naturals0)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     return a
 
-@dispatch(Reals, Rationals)  # type: ignore
+@dispatch(Reals, Rationals)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     return a
 
-@dispatch(Integers, Set)  # type: ignore
+@dispatch(Integers, Set)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     intersect = Intersection(a, b)
     if intersect == a:
@@ -42,7 +42,7 @@ def union_sets(a, b): # noqa:F811
     elif intersect == b:
         return a
 
-@dispatch(ComplexRegion, Set)  # type: ignore
+@dispatch(ComplexRegion, Set)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     if b.is_subset(S.Reals):
         # treat a subset of reals as a complex region
@@ -57,16 +57,16 @@ def union_sets(a, b): # noqa:F811
             return ComplexRegion(Union(a.sets, b.sets), polar=True)
     return None
 
-@dispatch(type(EmptySet), Set)  # type: ignore
+@dispatch(type(EmptySet), Set)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     return b
 
 
-@dispatch(UniversalSet, Set)  # type: ignore
+@dispatch(UniversalSet, Set)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     return a
 
-@dispatch(ProductSet, ProductSet)  # type: ignore
+@dispatch(ProductSet, ProductSet)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     if b.is_subset(a):
         return a
@@ -81,13 +81,13 @@ def union_sets(a, b): # noqa:F811
             return Union(a1, b1) * a2
     return None
 
-@dispatch(ProductSet, Set)  # type: ignore
+@dispatch(ProductSet, Set)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     if b.is_subset(a):
         return a
     return None
 
-@dispatch(Interval, Interval)  # type: ignore
+@dispatch(Interval, Interval)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     if a._is_comparable(b):
         from sympy.functions.elementary.miscellaneous import Min, Max
@@ -107,11 +107,11 @@ def union_sets(a, b): # noqa:F811
                           (b.end != end or b.right_open))
             return Interval(start, end, left_open, right_open)
 
-@dispatch(Interval, UniversalSet)  # type: ignore
+@dispatch(Interval, UniversalSet)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     return S.UniversalSet
 
-@dispatch(Interval, Set)  # type: ignore
+@dispatch(Interval, Set)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     # If I have open end points and these endpoints are contained in b
     # But only in case, when endpoints are finite. Because
@@ -127,19 +127,19 @@ def union_sets(a, b): # noqa:F811
         open_left = a.left_open and a.start not in b
         open_right = a.right_open and a.end not in b
         new_a = Interval(a.start, a.end, open_left, open_right)
-        return set((new_a, b))
+        return {new_a, b}
     return None
 
-@dispatch(FiniteSet, FiniteSet)  # type: ignore
+@dispatch(FiniteSet, FiniteSet)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     return FiniteSet(*(a._elements | b._elements))
 
-@dispatch(FiniteSet, Set)  # type: ignore
+@dispatch(FiniteSet, Set)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     # If `b` set contains one of my elements, remove it from `a`
     if any(b.contains(x) == True for x in a):
-        return set((
-            FiniteSet(*[x for x in a if b.contains(x) != True]), b))
+        return {
+            FiniteSet(*[x for x in a if b.contains(x) != True]), b}
     return None
 
 @dispatch(ImageSet, ImageSet)  # type: ignore

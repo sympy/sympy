@@ -41,11 +41,11 @@ class IndexedIntegral(Integral):
         function = function.xreplace(repl)
         obj = Integral.__new__(cls, function, *limits, **assumptions)
         obj._indexed_repl = repl
-        obj._indexed_reverse_repl = dict((val, key) for key, val in repl.items())
+        obj._indexed_reverse_repl = {val: key for key, val in repl.items()}
         return obj
 
     def doit(self):
-        res = super(IndexedIntegral, self).doit()
+        res = super().doit()
         return res.xreplace(self._indexed_reverse_repl)
 
     @staticmethod

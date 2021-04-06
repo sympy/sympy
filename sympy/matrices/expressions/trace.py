@@ -1,8 +1,6 @@
-from __future__ import print_function, division
-
 from sympy import Basic, Expr, sympify, S
 from sympy.matrices.matrices import MatrixBase
-from .matexpr import ShapeError
+from sympy.matrices.common import NonSquareMatrixError
 
 
 class Trace(Expr):
@@ -17,6 +15,13 @@ class Trace(Expr):
     >>> A = MatrixSymbol('A', 3, 3)
     >>> Trace(A)
     Trace(A)
+    >>> Trace(eye(3))
+    Trace(Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]]))
+    >>> Trace(eye(3)).simplify()
+    3
     """
     is_Trace = True
     is_commutative = True
@@ -28,7 +33,7 @@ class Trace(Expr):
             raise TypeError("input to Trace, %s, is not a matrix" % str(mat))
 
         if not mat.is_square:
-            raise ShapeError("Trace of a non-square matrix")
+            raise NonSquareMatrixError("Trace of a non-square matrix")
 
         return Basic.__new__(cls, mat)
 
@@ -47,16 +52,16 @@ class Trace(Expr):
         return expr._eval_derivative(v)
 
     def _eval_derivative_matrix_lines(self, x):
-        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayContraction
         from sympy.core.expr import ExprBuilder
         r = self.args[0]._eval_derivative_matrix_lines(x)
         for lr in r:
             if lr.higher == 1:
                 lr.higher = ExprBuilder(
-                    CodegenArrayContraction,
+                    ArrayContraction,
                     [
                         ExprBuilder(
-                            CodegenArrayTensorProduct,
+                            ArrayTensorProduct,
                             [
                                 lr._lines[0],
                                 lr._lines[1],
@@ -64,15 +69,15 @@ class Trace(Expr):
                         ),
                         (1, 3),
                     ],
-                    validator=CodegenArrayContraction._validate
+                    validator=ArrayContraction._validate
                 )
             else:
                 # This is not a matrix line:
                 lr.higher = ExprBuilder(
-                    CodegenArrayContraction,
+                    ArrayContraction,
                     [
                         ExprBuilder(
-                            CodegenArrayTensorProduct,
+                            ArrayTensorProduct,
                             [
                                 lr._lines[0],
                                 lr._lines[1],
@@ -107,6 +112,21 @@ class Trace(Expr):
             else:
                 return Trace(self.arg)
 
+    def _normalize(self):
+        # Normalization of trace of matrix products. Use transposition and
+        # cyclic properties of traces to make sure the arguments of the matrix
+        # product are sorted and the first argument is not a trasposition.
+        from sympy import MatMul, Transpose, default_sort_key
+        trace_arg = self.arg
+        if isinstance(trace_arg, MatMul):
+            indmin = min(range(len(trace_arg.args)), key=lambda x: default_sort_key(trace_arg.args[x]))
+            if isinstance(trace_arg.args[indmin], Transpose):
+                trace_arg = Transpose(trace_arg).doit()
+                indmin = min(range(len(trace_arg.args)), key=lambda x: default_sort_key(trace_arg.args[x]))
+            trace_arg = MatMul.fromiter(trace_arg.args[indmin:] + trace_arg.args[:indmin])
+            return Trace(trace_arg)
+        return self
+
     def _eval_rewrite_as_Sum(self, expr, **kwargs):
         from sympy import Sum, Dummy
         i = Dummy('i')
@@ -119,7 +139,7 @@ def trace(expr):
     Examples
     ========
 
-    >>> from sympy import trace, Symbol, MatrixSymbol, pprint, eye
+    >>> from sympy import trace, Symbol, MatrixSymbol, eye
     >>> n = Symbol('n')
     >>> X = MatrixSymbol('X', n, n)  # A square matrix
     >>> trace(2*X)

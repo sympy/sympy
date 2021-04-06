@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from functools import partial
 from sympy.strategies import chain, minimize
 import sympy.strategies.branch as branch
@@ -8,7 +6,10 @@ from sympy.strategies.branch import yieldify
 identity = lambda x: x
 
 def treeapply(tree, join, leaf=identity):
-    """ Apply functions onto recursive containers (tree)
+    """ Apply functions onto recursive containers (tree).
+
+    Explanation
+    ===========
 
     join - a dictionary mapping container types to functions
       e.g. ``{list: minimize, tuple: chain}``

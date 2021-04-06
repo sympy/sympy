@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from collections import defaultdict, OrderedDict
 from itertools import (
     combinations, combinations_with_replacement, permutations,
@@ -11,12 +9,49 @@ from operator import gt
 from sympy.core import Basic
 
 # this is the logical location of these functions
-from sympy.core.compatibility import (
-    as_int, default_sort_key, is_sequence, iterable, ordered
-)
+from sympy.core.compatibility import (as_int, is_sequence, iterable, ordered)
+from sympy.core.compatibility import default_sort_key  # noqa: F401
+
+import sympy
 
 from sympy.utilities.enumerative import (
     multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
+
+
+def is_palindromic(s, i=0, j=None):
+    """return True if the sequence is the same from left to right as it
+    is from right to left in the whole sequence (default) or in the
+    Python slice ``s[i: j]``; else False.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import is_palindromic
+    >>> is_palindromic([1, 0, 1])
+    True
+    >>> is_palindromic('abcbb')
+    False
+    >>> is_palindromic('abcbb', 1)
+    False
+
+    Normal Python slicing is performed in place so there is no need to
+    create a slice of the sequence for testing:
+
+    >>> is_palindromic('abcbb', 1, -1)
+    True
+    >>> is_palindromic('abcbb', -4, -1)
+    True
+
+    See Also
+    ========
+
+    sympy.ntheory.digits.is_palindromic: tests integers
+
+    """
+    i, j, _ = slice(i, j).indices(len(s))
+    m = (j - i)//2
+    # if length is odd, middle element will be ignored
+    return all(s[i + k] == s[j - 1 - k] for k in range(m))
 
 
 def flatten(iterable, levels=None, cls=None):
@@ -170,7 +205,9 @@ def group(seq, multiple=True):
 
     See Also
     ========
+
     multiset
+
     """
     if not seq:
         return []
@@ -256,8 +293,7 @@ def iproduct(*iterables):
         for e in iterables[0]:
             yield (e,)
     elif len(iterables) == 2:
-        for e12 in _iproduct2(*iterables):
-            yield e12
+        yield from _iproduct2(*iterables)
     else:
         first, others = iterables[0], iterables[1:]
         for ef, eo in _iproduct2(first, iproduct(*others)):
@@ -277,7 +313,9 @@ def multiset(seq):
 
     See Also
     ========
+
     group
+
     """
     rv = defaultdict(int)
     for s in seq:
@@ -335,12 +373,10 @@ def postorder_traversal(node, keys=None):
             else:
                 args = ordered(args)
         for arg in args:
-            for subtree in postorder_traversal(arg, keys):
-                yield subtree
+            yield from postorder_traversal(arg, keys)
     elif iterable(node):
         for item in node:
-            for subtree in postorder_traversal(item, keys):
-                yield subtree
+            yield from postorder_traversal(item, keys)
     yield node
 
 
@@ -388,7 +424,7 @@ def interactive_traversal(expr):
         for i, arg in enumerate(args):
             cprint(GREEN, "[", BGREEN, i, GREEN, "] ", BLUE, type(arg), END)
             pprint(arg)
-            print
+            print()
 
         if n_args == 1:
             choices = '0'
@@ -437,7 +473,7 @@ def interactive_traversal(expr):
     return _interactive_traversal(expr, 0)
 
 
-def ibin(n, bits=0, str=False):
+def ibin(n, bits=None, str=False):
     """Return a list of length ``bits`` corresponding to the binary value
     of ``n`` with small bits to the right (last). If bits is omitted, the
     length will be the number required to represent ``n``. If the bits are
@@ -457,8 +493,6 @@ def ibin(n, bits=0, str=False):
     [1, 0]
     >>> ibin(2, 4)
     [0, 0, 1, 0]
-    >>> ibin(2, 4)[::-1]
-    [0, 1, 0, 0]
 
     If all lists corresponding to 0 to 2**n - 1, pass a non-integer
     for bits:
@@ -483,17 +517,31 @@ def ibin(n, bits=0, str=False):
     ['000', '001', '010', '011', '100', '101', '110', '111']
 
     """
-    if not str:
-        try:
-            bits = as_int(bits)
-            return [1 if i == "1" else 0 for i in bin(n)[2:].rjust(bits, "0")]
-        except ValueError:
-            return variations(list(range(2)), n, repetition=True)
+    if n < 0:
+        raise ValueError("negative numbers are not allowed")
+    n = as_int(n)
+
+    if bits is None:
+        bits = 0
     else:
         try:
-            bits = as_int(bits)
-            return bin(n)[2:].rjust(bits, "0")
+             bits = as_int(bits)
         except ValueError:
+            bits = -1
+        else:
+            if n.bit_length() > bits:
+                raise ValueError(
+                    "`bits` must be >= {}".format(n.bit_length()))
+
+    if not str:
+        if bits >= 0:
+            return [1 if i == "1" else 0 for i in bin(n)[2:].rjust(bits, "0")]
+        else:
+            return variations(list(range(2)), n, repetition=True)
+    else:
+        if bits >= 0:
+            return bin(n)[2:].rjust(bits, "0")
+        else:
             return (bin(i)[2:].rjust(n, "0") for i in range(2**n))
 
 
@@ -534,14 +582,12 @@ def variations(seq, n, repetition=False):
         seq = tuple(seq)
         if len(seq) < n:
             return
-        for i in permutations(seq, n):
-            yield i
+        yield from permutations(seq, n)
     else:
         if n == 0:
             yield ()
         else:
-            for i in product(seq, repeat=n):
-                yield i
+            yield from product(seq, repeat=n)
 
 
 def subsets(seq, k=None, repetition=False):
@@ -586,15 +632,12 @@ def subsets(seq, k=None, repetition=False):
     """
     if k is None:
         for k in range(len(seq) + 1):
-            for i in subsets(seq, k, repetition):
-                yield i
+            yield from subsets(seq, k, repetition)
     else:
         if not repetition:
-            for i in combinations(seq, k):
-                yield i
+            yield from combinations(seq, k)
         else:
-            for i in combinations_with_replacement(seq, k):
-                yield i
+            yield from combinations_with_replacement(seq, k)
 
 
 def filter_symbols(iterator, exclude):
@@ -678,7 +721,7 @@ def capture(func):
     '2\\n-\\nx\\n'
 
     """
-    from sympy.core.compatibility import StringIO
+    from io import StringIO
     import sys
 
     stdout = sys.stdout
@@ -761,6 +804,7 @@ def sift(seq, keyfunc, binary=False):
     ========
 
     ordered
+
     """
     if not binary:
         m = defaultdict(list)
@@ -1067,7 +1111,7 @@ def strongly_connected_components(G):
     See Also
     ========
 
-    sympy.utilities.iterables.connected_components()
+    sympy.utilities.iterables.connected_components
 
     """
     # Map from a vertex to its neighbours
@@ -1181,7 +1225,7 @@ def connected_components(G):
     See Also
     ========
 
-    sympy.utilities.iterables.strongly_connected_components()
+    sympy.utilities.iterables.strongly_connected_components
 
     """
     # Duplicate edges both ways so that the graph is effectively undirected
@@ -1231,7 +1275,7 @@ def rotate_right(x, y):
     return x[y:] + x[:y]
 
 
-def least_rotation(x):
+def least_rotation(x, key=None):
     '''
     Returns the number of steps of left rotation required to
     obtain lexicographically minimal string/list/tuple, etc.
@@ -1252,6 +1296,7 @@ def least_rotation(x):
     .. [1] https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
 
     '''
+    if key is None: key = sympy.Id
     S = x + x      # Concatenate string to it self to avoid modular arithmetic
     f = [-1] * len(S)     # Failure function
     k = 0       # Least rotation of string found so far
@@ -1259,11 +1304,11 @@ def least_rotation(x):
         sj = S[j]
         i = f[j-k-1]
         while i != -1 and sj != S[k+i+1]:
-            if sj < S[k+i+1]:
+            if key(sj) < key(S[k+i+1]):
                 k = j-i-1
             i = f[i]
         if sj != S[k+i+1]:
-            if sj < S[k]:
+            if key(sj) < key(S[k]):
                 k = j
             f[j-k] = -1
         else:
@@ -1401,7 +1446,7 @@ def _partition(seq, vector, m=None):
     See Also
     ========
 
-    combinatorics.partitions.Partition.from_rgs()
+    combinatorics.partitions.Partition.from_rgs
 
     """
     if m is None:
@@ -1566,8 +1611,8 @@ def multiset_partitions(multiset, m=None):
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
     sympy.functions.combinatorial.numbers.nT
-    """
 
+    """
     # This function looks at the supplied input and dispatches to
     # several special-case routines as they apply.
     if type(multiset) is int:
@@ -1695,21 +1740,6 @@ def partitions(n, m=None, k=None, size=False):
     {2: 1, 4: 1}
     {3: 2}
 
-    Note that the _same_ dictionary object is returned each time.
-    This is for speed:  generating each partition goes quickly,
-    taking constant time, independent of n.
-
-    >>> [p for p in partitions(6, k=2)]
-    [{1: 6}, {1: 6}, {1: 6}, {1: 6}]
-
-    If you want to build a list of the returned dictionaries then
-    make a copy of them:
-
-    >>> [p.copy() for p in partitions(6, k=2)]  # doctest: +SKIP
-    [{2: 3}, {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]
-    >>> [(M, p.copy()) for M, p in partitions(6, k=2, size=True)]  # doctest: +SKIP
-    [(3, {2: 3}), (4, {1: 2, 2: 2}), (5, {1: 4, 2: 1}), (6, {1: 6})]
-
     References
     ==========
 
@@ -1718,6 +1748,7 @@ def partitions(n, m=None, k=None, size=False):
 
     See Also
     ========
+
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
 
@@ -1758,9 +1789,9 @@ def partitions(n, m=None, k=None, size=False):
         keys.append(r)
     room = m - q - bool(r)
     if size:
-        yield sum(ms.values()), ms
+        yield sum(ms.values()), ms.copy()
     else:
-        yield ms
+        yield ms.copy()
 
     while keys != [1]:
         # Reuse any 1's.
@@ -1798,9 +1829,9 @@ def partitions(n, m=None, k=None, size=False):
             break
         room -= need
         if size:
-            yield sum(ms.values()), ms
+            yield sum(ms.values()), ms.copy()
         else:
-            yield ms
+            yield ms.copy()
 
 
 def ordered_partitions(n, m=None, sort=True):
@@ -2046,8 +2077,13 @@ def has_variety(seq):
 def uniq(seq, result=None):
     """
     Yield unique elements from ``seq`` as an iterator. The second
-    parameter ``result``  is used internally; it is not necessary to pass
-    anything for this.
+    parameter ``result``  is used internally; it is not necessary
+    to pass anything for this.
+
+    Note: changing the sequence during iteration will raise a
+    RuntimeError if the size of the sequence is known; if you pass
+    an iterator and advance the iterator you will change the
+    output of this routine but there will be no warning.
 
     Examples
     ========
@@ -2065,21 +2101,31 @@ def uniq(seq, result=None):
     [[1], [2, 1]]
     """
     try:
+        n = len(seq)
+    except TypeError:
+        n = None
+    def check():
+        # check that size of seq did not change during iteration;
+        # if n == None the object won't support size changing, e.g.
+        # an iterator can't be changed
+        if n is not None and len(seq) != n:
+            raise RuntimeError('sequence changed size during iteration')
+    try:
         seen = set()
         result = result or []
         for i, s in enumerate(seq):
             if not (s in seen or seen.add(s)):
                 yield s
+                check()
     except TypeError:
         if s not in result:
             yield s
+            check()
             result.append(s)
         if hasattr(seq, '__getitem__'):
-            for s in uniq(seq[i + 1:], result):
-                yield s
+            yield from uniq(seq[i + 1:], result)
         else:
-            for s in uniq(seq, result):
-                yield s
+            yield from uniq(seq, result)
 
 
 def generate_bell(n):
@@ -2129,6 +2175,7 @@ def generate_bell(n):
 
     See Also
     ========
+
     sympy.combinatorics.permutations.Permutation.next_trotterjohnson
 
     References
@@ -2155,8 +2202,7 @@ def generate_bell(n):
         yield (0, 1)
         yield (1, 0)
     elif n == 3:
-        for li in [(0, 1, 2), (0, 2, 1), (2, 0, 1), (2, 1, 0), (1, 2, 0), (1, 0, 2)]:
-            yield li
+        yield from [(0, 1, 2), (0, 2, 1), (2, 0, 1), (2, 1, 0), (1, 2, 0), (1, 0, 2)]
     else:
         m = n - 1
         op = [0] + [-1]*m
@@ -2249,14 +2295,13 @@ def generate_derangements(perm):
 
     See Also
     ========
+
     sympy.functions.combinatorial.factorials.subfactorial
+
     """
-    p = multiset_permutations(perm)
-    indices = range(len(perm))
-    p0 = next(p)
-    for pi in p:
-        if all(pi[i] != p0[i] for i in indices):
-            yield pi
+    for p in multiset_permutations(perm):
+        if not any(i == j for i, j in zip(perm, p)):
+            yield p
 
 
 def necklaces(n, k, free=False):
@@ -2355,17 +2400,18 @@ def generate_oriented_forest(n):
                 break
 
 
-def minlex(seq, directed=True, is_set=False, small=None):
+def minlex(seq, directed=True, key=None):
     """
-    Return a tuple where the smallest element appears first; if
-    ``directed`` is True (default) then the order is preserved, otherwise
-    the sequence will be reversed if that gives a smaller ordering.
+    Return the rotation of the sequence in which the lexically smallest
+    elements appear first, e.g. `cba ->acb`.
 
-    If every element appears only once then is_set can be set to True
-    for more efficient processing.
+    The sequence returned is a tuple, unless the input sequence is a string
+    in which case a string is returned.
 
-    If the smallest element is known at the time of calling, it can be
-    passed and the calculation of the smallest element will be omitted.
+    If ``directed`` is False then the smaller of the sequence and the
+    reversed sequence is returned, e.g. `cba -> abc`.
+
+    If ``key`` is not None then it is used to extract a comparison key from each element in iterable.
 
     Examples
     ========
@@ -2383,51 +2429,22 @@ def minlex(seq, directed=True, is_set=False, small=None):
     >>> minlex('11010011000', directed=False)
     '00011001011'
 
+    >>> minlex(('bb', 'aaa', 'c', 'a'))
+    ('a', 'bb', 'aaa', 'c')
+    >>> minlex(('bb', 'aaa', 'c', 'a'), key=len)
+    ('c', 'a', 'bb', 'aaa')
+
     """
-    is_str = isinstance(seq, str)
-    seq = list(seq)
-    if small is None:
-        small = min(seq, key=default_sort_key)
-    if is_set:
-        i = seq.index(small)
-        if not directed:
-            n = len(seq)
-            p = (i + 1) % n
-            m = (i - 1) % n
-            if default_sort_key(seq[p]) > default_sort_key(seq[m]):
-                seq = list(reversed(seq))
-                i = n - i - 1
-        if i:
-            seq = rotate_left(seq, i)
-        best = seq
-    else:
-        count = seq.count(small)
-        if count == 1 and directed:
-            best = rotate_left(seq, seq.index(small))
-        else:
-            # if not directed, and not a set, we can't just
-            # pass this off to minlex with is_set True since
-            # peeking at the neighbor may not be sufficient to
-            # make the decision so we continue...
-            best = seq
-            for i in range(count):
-                seq = rotate_left(seq, seq.index(small, count != 1))
-                if seq < best:
-                    best = seq
-                # it's cheaper to rotate now rather than search
-                # again for these in reversed order so we test
-                # the reverse now
-                if not directed:
-                    seq = rotate_left(seq, 1)
-                    seq = list(reversed(seq))
-                    if seq < best:
-                        best = seq
-                    seq = list(reversed(seq))
-                    seq = rotate_right(seq, 1)
-    # common return
-    if is_str:
-        return ''.join(best)
-    return tuple(best)
+
+    if key is None: key = sympy.Id
+    best = rotate_left(seq, least_rotation(seq, key=key))
+    if not directed:
+        rseq = seq[::-1]
+        rbest = rotate_left(rseq, least_rotation(rseq, key=key))
+        best = min(best, rbest, key=key)
+
+    # Convert to tuple, unless we started with a string.
+    return tuple(best) if not isinstance(seq, str) else best
 
 
 def runs(seq, op=gt):
@@ -2474,12 +2491,12 @@ def kbins(l, k, ordered=None):
     Examples
     ========
 
-    >>> from sympy.utilities.iterables import kbins
+    >>> from __future__ import print_function
 
     The default is to give the items in the same order, but grouped
     into k partitions without any reordering:
 
-    >>> from __future__ import print_function
+    >>> from sympy.utilities.iterables import kbins
     >>> for p in kbins(list(range(5)), 2):
     ...     print(p)
     ...
@@ -2504,9 +2521,9 @@ def kbins(l, k, ordered=None):
         10 means A == D
         11 means A == A
 
-    >>> for ordered in [None, 0, 1, 10, 11]:
-    ...     print('ordered = %s' % ordered)
-    ...     for p in kbins(list(range(3)), 2, ordered=ordered):
+    >>> for ordered_flag in [None, 0, 1, 10, 11]:
+    ...     print('ordered = %s' % ordered_flag)
+    ...     for p in kbins(list(range(3)), 2, ordered=ordered_flag):
     ...         print('     %s' % p)
     ...
     ordered = None
@@ -2546,6 +2563,7 @@ def kbins(l, k, ordered=None):
 
     See Also
     ========
+
     partitions, multiset_partitions
 
     """
@@ -2562,16 +2580,13 @@ def kbins(l, k, ordered=None):
                         yield [lista[:i]] + part
 
     if ordered is None:
-        for p in partition(l, k):
-            yield p
+        yield from partition(l, k)
     elif ordered == 11:
         for pl in multiset_permutations(l):
             pl = list(pl)
-            for p in partition(pl, k):
-                yield p
+            yield from partition(pl, k)
     elif ordered == 00:
-        for p in multiset_partitions(l, k):
-            yield p
+        yield from multiset_partitions(l, k)
     elif ordered == 10:
         for p in multiset_partitions(l, k):
             for perm in permutations(p):

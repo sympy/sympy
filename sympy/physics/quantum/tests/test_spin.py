@@ -3675,6 +3675,14 @@ def test_wignerd():
         j, m, mp, alpha, beta, gamma) == WignerD(j, m, mp, alpha, beta, gamma)
     assert Rotation.d(j, m, mp, beta) == WignerD(j, m, mp, 0, beta, 0)
 
+def test_wignerD():
+    i,j=symbols('i j')
+    assert Rotation.D(1, 1, 1, 0, 0, 0) == WignerD(1, 1, 1, 0, 0, 0)
+    assert Rotation.D(1, 1, 2, 0, 0, 0) == WignerD(1, 1, 2, 0, 0, 0)
+    assert Rotation.D(1, i**2 - j**2, i**2 - j**2, 0, 0, 0) == WignerD(1, i**2 - j**2, i**2 - j**2, 0, 0, 0)
+    assert Rotation.D(1, i, i, 0, 0, 0) == WignerD(1, i, i, 0, 0, 0)
+    assert Rotation.D(1, i, i+1, 0, 0, 0) == WignerD(1, i, i+1, 0, 0, 0)
+    assert Rotation.D(1, 0, 0, 0, 0, 0) == WignerD(1, 0, 0, 0, 0, 0)
 
 def test_jplus():
     assert Commutator(Jplus, Jminus).doit() == 2*hbar*Jz

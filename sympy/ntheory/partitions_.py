@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 from mpmath.libmp import (fzero, from_int, from_rational,
     fone, fhalf, bitcount, to_int, to_str, mpf_mul, mpf_div, mpf_sub,
     mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, mpf_cos, mpf_sin)

@@ -5,7 +5,7 @@ from operator import add
 from sympy import (
     Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
     Matrix, S, cos, sin, Eq, Function, Tuple, CRootOf,
-    IndexedBase, Idx, Piecewise, O
+    IndexedBase, Idx, Piecewise, O, signsimp
 )
 from sympy.core.function import count_ops
 from sympy.simplify.cse_opts import sub_pre, sub_post
@@ -545,3 +545,7 @@ def test_issue_18203():
 def test_unevaluated_mul():
     eq = Mul(x + y, x + y, evaluate=False)
     assert cse(eq) == ([(x0, x + y)], [x0**2])
+
+def test_issue_18991():
+    A = MatrixSymbol('A', 2, 2)
+    assert signsimp(-A * A - A) == -A * A - A

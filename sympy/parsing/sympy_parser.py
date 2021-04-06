@@ -1,7 +1,5 @@
 """Transform a string with Python-like source code into SymPy expression. """
 
-from __future__ import print_function, division
-
 from tokenize import (generate_tokens, untokenize, TokenError,
     NUMBER, STRING, NAME, OP, ENDMARKER, ERRORTOKEN, NEWLINE)
 
@@ -9,8 +7,10 @@ from keyword import iskeyword
 
 import ast
 import unicodedata
+from io import StringIO
 
-from sympy.core.compatibility import exec_, StringIO, iterable
+from sympy.assumptions.ask import AssumptionKeys
+from sympy.core.compatibility import iterable
 from sympy.core.basic import Basic
 from sympy.core import Symbol
 from sympy.core.function import arity
@@ -79,7 +79,7 @@ def _add_factorial_tokens(name, result):
     return result
 
 
-class AppliedFunction(object):
+class AppliedFunction:
     """
     A group of tokens representing a function and its arguments.
 
@@ -209,8 +209,16 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
 
     """
     result = []
+    skip = False
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
+        if skip:
+            skip = False
+            continue
+        if tok[0] == OP and tok[1] == '.' and nextTok[0] == NAME:
+            # Dotted name. Do not do implicit multiplication
+            skip = True
+            continue
         if (isinstance(tok, AppliedFunction) and
               isinstance(nextTok, AppliedFunction)):
             result.append((OP, '*'))
@@ -561,7 +569,7 @@ def auto_symbol(tokens, local_dict, global_dict):
                 continue
             elif name in global_dict:
                 obj = global_dict[name]
-                if isinstance(obj, (Basic, type)) or callable(obj):
+                if isinstance(obj, (AssumptionKeys, Basic, type)) or callable(obj):
                     result.append((NAME, name))
                     continue
 
@@ -901,7 +909,6 @@ def eval_expr(code, local_dict, global_dict):
     """
     expr = eval(
         code, global_dict, local_dict)  # take local objects in preference
-
     return expr
 
 
@@ -982,7 +989,7 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
 
     if global_dict is None:
         global_dict = {}
-        exec_('from sympy import *', global_dict)
+        exec('from sympy import *', global_dict)
     elif not isinstance(global_dict, dict):
         raise TypeError('expecting global_dict to be a dict')
 
@@ -1005,7 +1012,10 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     if not evaluate:
         code = compile(evaluateFalse(code), '<string>', 'eval')
 
-    return eval_expr(code, local_dict, global_dict)
+    try:
+        return eval_expr(code, local_dict, global_dict)
+    except Exception as e:
+        raise e from ValueError(f"Error from parse_expr with transformed code: {code!r}")
 
 
 def evaluateFalse(s):
@@ -1058,7 +1068,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                 right = ast.Call(
                     func=ast.Name(id='Mul', ctx=ast.Load()),
                     args=[ast.UnaryOp(op=ast.USub(), operand=ast.Num(1)), right],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
                     starargs=None,
                     kwargs=None
                 )
@@ -1069,7 +1079,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                     left = ast.Call(
                     func=ast.Name(id='Pow', ctx=ast.Load()),
                     args=[left, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
                     starargs=None,
                     kwargs=None
                 )
@@ -1077,7 +1087,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                     right = ast.Call(
                     func=ast.Name(id='Pow', ctx=ast.Load()),
                     args=[right, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
                     starargs=None,
                     kwargs=None
                 )
@@ -1085,7 +1095,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             new_node = ast.Call(
                 func=ast.Name(id=sympy_class, ctx=ast.Load()),
                 args=[left, right],
-                keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
                 starargs=None,
                 kwargs=None
             )

@@ -258,7 +258,7 @@ def test_mellin_transform_bessel():
     # TODO products of besselk are a mess
 
     mt = MT(exp(-x/2)*besselk(a, x/2), x, s)
-    mt0 = gammasimp((trigsimp(gammasimp(mt[0].expand(func=True)))))
+    mt0 = gammasimp(trigsimp(gammasimp(mt[0].expand(func=True))))
     assert mt0 == 2*pi**Rational(3, 2)*cos(pi*s)*gamma(-s + S.Half)/(
         (cos(2*pi*a) - cos(2*pi*s))*gamma(-a - s + 1)*gamma(a - s + 1))
     assert mt[1:] == ((Max(-re(a), re(a)), oo), True)
@@ -518,20 +518,20 @@ def test_laplace_transform():
 
     assert LT(Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]]), t, s) ==\
         Matrix([
-            [(1/(s - 1), 1, True), ((s + 1)**(-2), 0, True)],
-            [((s + 1)**(-2), 0, True), (1/(s - 1), 1, True)]
+            [(1/(s - 1), 1, s > 1), ((s + 1)**(-2), 0, True)],
+            [((s + 1)**(-2), 0, True), (1/(s - 1), 1, s > 1)]
         ])
 
 
 def test_issue_8368_7173():
     LT = laplace_transform
     # hyperbolic
-    assert LT(sinh(x), x, s) == (1/(s**2 - 1), 1, True)
-    assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, True)
+    assert LT(sinh(x), x, s) == (1/(s**2 - 1), 1, s > 1)
+    assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, s > 1)
     assert LT(sinh(x + 3), x, s) == (
-        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, True)
+        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, s > 1)
     assert LT(sinh(x)*cosh(x), x, s) == (
-        1/(s**2 - 4), 2, Ne(s/2, 1))
+        1/(s**2 - 4), 2, s > 2)
     # trig (make sure they are not being rewritten in terms of exp)
     assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), 0, True)
 
@@ -833,6 +833,8 @@ def test_issue_8514():
                   - cos(t*sin(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c -
                   b**2))/(2*a)))*exp(-t*(b + cos(atan2(0, -4*a*c + b**2)/2)
                   *sqrt(Abs(4*a*c - b**2)))/(2*a))/sqrt(-4*a*c + b**2)
+
+
 def test_issue_12591():
     x, y = symbols("x y", real=True)
     assert fourier_transform(exp(x), x, y) == FourierTransform(exp(x), x, y)

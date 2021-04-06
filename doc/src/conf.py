@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # SymPy documentation build configuration file, created by
 # sphinx-quickstart.py on Sat Mar 22 19:34:32 2008.
@@ -15,6 +14,8 @@ import sys
 import inspect
 import os
 import subprocess
+from datetime import datetime
+
 import sympy
 
 # If your extensions are in another directory, add it here.
@@ -35,6 +36,10 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
 # Enable warnings for all bad cross references. These are turned into errors
 # with the -W flag in the Makefile.
 nitpicky = True
+
+nitpick_ignore = [
+    ('py:class', 'sympy.logic.boolalg.Boolean')
+]
 
 # To stop docstrings inheritance.
 autodoc_inherit_docstrings = False
@@ -65,7 +70,7 @@ suppress_warnings = ['ref.citation', 'ref.footnote']
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2019 SymPy Development Team'
+copyright = '{} SymPy Development Team'.format(datetime.utcnow().year)
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -172,6 +177,10 @@ latex_documents = [('index', 'sympy-%s.tex' % release, 'SymPy Documentation',
 latex_elements = {
     'babel':     '',
     'fontenc': r'''
+% Define version of \LaTeX that is usable in math mode
+\let\OldLaTeX\LaTeX
+\renewcommand{\LaTeX}{\text{\OldLaTeX}}
+
 \usepackage{bm}
 \usepackage{amssymb}
 \usepackage{fontspec}
@@ -185,8 +194,6 @@ latex_elements = {
     'inputenc':  '',
     'utf8extra': '',
     'preamble':  r'''
-% redefine \LaTeX to be usable in math mode
-\expandafter\def\expandafter\LaTeX\expandafter{\expandafter\text\expandafter{\LaTeX}}
 '''
 }
 
@@ -227,7 +234,7 @@ graphviz_output_format = 'svg'
 commit_hash_filepath = '../commit_hash.txt'
 commit_hash = None
 if os.path.isfile(commit_hash_filepath):
-    with open(commit_hash_filepath, 'r') as f:
+    with open(commit_hash_filepath) as f:
         commit_hash = f.readline()
 
 # Get commit hash from the external file.

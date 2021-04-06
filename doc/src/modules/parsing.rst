@@ -92,7 +92,7 @@ change between releases, and become stricter, more relaxed, or some mix.
 ----------------------------------------------
 
 .. autoclass:: sympy.parsing.latex.LaTeXParsingError
-
+   :members:
 
 SymPy Expression Reference
 --------------------------
@@ -100,24 +100,12 @@ SymPy Expression Reference
 .. module:: sympy.parsing.sym_expr
 
 .. autoclass:: SymPyExpression
-  :members:
-
-`Fortran` Parsing Reference
----------------------------------
-
-.. module:: sympy.parsing.fortran.fortran_parser
-
-.. autoclass:: ASR2PyVisitor
-  :members:
-
-.. autofunction:: call_visitor
-
-.. autofunction:: src_to_sympy
+   :members:
 
 Runtime Installation
 --------------------
 
-The currently-packaged parser backend is partially generated with
+The currently-packaged LaTeX parser backend is partially generated with
 `ANTLR4 <http://antlr4.org>`_,
 but to use the parser, you only need the ``antlr4`` Python package available.
 
@@ -133,3 +121,8 @@ or ``pip`` (Python 2 only)::
 or ``conda`` (Python 2 or Python 3)::
 
     $ conda install --channel=conda-forge antlr-python-runtime
+
+The C parser depends on ``clang`` and the Fortran parser depends on ``LFortran``.
+You can install these packages using::
+
+    $ conda install -c conda-forge lfortran clang

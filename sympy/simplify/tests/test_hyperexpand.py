@@ -392,7 +392,7 @@ def test_meijerg_expand():
     # Testing a bug:
     assert hyperexpand(meijerg([0, 2], [], [], [-1, 1], z)) == \
         Piecewise((0, abs(z) < 1),
-                  (z/2 - 1/(2*z), abs(1/z) < 1),
+                  (z*(1 - 1/z**2)/2, abs(1/z) < 1),
                   (meijerg([0, 2], [], [], [-1, 1], z), True))
 
     # Test that the simplest possible answer is returned:

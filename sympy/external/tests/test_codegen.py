@@ -21,8 +21,6 @@
 # incorporation in various projects. The tests below assume that the binary cc
 # is somewhere in the path and that it can compile ANSI C code.
 
-from __future__ import print_function
-
 from sympy.abc import x, y, z
 from sympy.testing.pytest import skip
 from sympy.utilities.codegen import codegen, make_routine, get_code_generator

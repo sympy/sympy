@@ -4,15 +4,13 @@
 Import diagnostics. Run bin/diagnose_imports.py --help for details.
 """
 
-from __future__ import print_function
-
 from typing import Dict
 
 if __name__ == "__main__":
 
     import sys
     import inspect
-    from sympy.core.compatibility import builtins
+    import builtins
 
     import optparse
 
@@ -93,7 +91,7 @@ if __name__ == "__main__":
 
     builtin_import = builtins.__import__
 
-    class Definition(object):
+    class Definition:
         """Information about a symbol's definition."""
         def __init__(self, name, value, definer):
             self.name = name

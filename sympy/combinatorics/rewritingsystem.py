@@ -1,8 +1,6 @@
-from __future__ import print_function, division
-
 from sympy.combinatorics.rewritingsystem_fsm import StateMachine
 
-class RewritingSystem(object):
+class RewritingSystem:
     '''
     A class implementing rewriting systems for `FpGroup`s.
 

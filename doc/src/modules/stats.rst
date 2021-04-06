@@ -14,6 +14,7 @@ Finite Types
 .. autofunction:: Bernoulli
 .. autofunction:: Coin
 .. autofunction:: Binomial
+.. autofunction:: BetaBinomial
 .. autofunction:: Hypergeometric
 .. autofunction:: FiniteRV
 .. autofunction:: Rademacher
@@ -21,9 +22,11 @@ Finite Types
 Discrete Types
 --------------
 .. autofunction:: Geometric
+.. autofunction:: Hermite
 .. autofunction:: Poisson
 .. autofunction:: Logarithmic
 .. autofunction:: NegativeBinomial
+.. autofunction:: Skellam
 .. autofunction:: YuleSimon
 .. autofunction:: Zeta
 
@@ -33,13 +36,16 @@ Continuous Types
 .. autofunction:: Arcsin
 .. autofunction:: Benini
 .. autofunction:: Beta
+.. autofunction:: BetaNoncentral
 .. autofunction:: BetaPrime
+.. autofunction:: BoundedPareto
 .. autofunction:: Cauchy
 .. autofunction:: Chi
 .. autofunction:: ChiNoncentral
 .. autofunction:: ChiSquared
 .. autofunction:: Dagum
 .. autofunction:: Erlang
+.. autofunction:: ExGaussian
 .. autofunction:: Exponential
 .. autofunction:: FDistribution
 .. autofunction:: FisherZ
@@ -50,9 +56,13 @@ Continuous Types
 .. autofunction:: Gumbel
 .. autofunction:: Kumaraswamy
 .. autofunction:: Laplace
+.. autofunction:: Levy
 .. autofunction:: Logistic
+.. autofunction:: LogLogistic
 .. autofunction:: LogNormal
+.. autofunction:: Lomax
 .. autofunction:: Maxwell
+.. autofunction:: Moyal
 .. autofunction:: Nakagami
 .. autofunction:: Normal
 .. autofunction:: Pareto
@@ -60,6 +70,7 @@ Continuous Types
 .. autofunction:: QuadraticU
 .. autofunction:: RaisedCosine
 .. autofunction:: Rayleigh
+.. autofunction:: Reciprocal
 .. autofunction:: StudentT
 .. autofunction:: ShiftedGompertz
 .. autofunction:: Trapezoidal
@@ -67,6 +78,7 @@ Continuous Types
 .. autofunction:: Uniform
 .. autofunction:: UniformSum
 .. autofunction:: VonMises
+.. autofunction:: Wald
 .. autofunction:: Weibull
 .. autofunction:: WignerSemicircle
 .. autofunction:: ContinuousRV
@@ -74,6 +86,9 @@ Continuous Types
 Joint Types
 -----------
 .. autofunction:: JointRV
+.. autofunction:: marginal_distribution
+.. autofunction:: MultivariateNormal
+.. autofunction:: MultivariateLaplace
 .. autofunction:: GeneralizedMultivariateLogGamma
 .. autofunction:: GeneralizedMultivariateLogGammaOmega
 .. autofunction:: Multinomial
@@ -85,31 +100,73 @@ Joint Types
 
 Stochastic Processes
 --------------------
-.. autofunction:: DiscreteMarkovChain
+.. autoclass:: DiscreteMarkovChain
+   :members:
+.. autoclass:: ContinuousMarkovChain
+   :members:
+.. autoclass:: BernoulliProcess
+   :members:
+.. autoclass:: PoissonProcess
+   :members:
+.. autoclass:: WienerProcess
+   :members:
+.. autoclass:: GammaProcess
+   :members:
+
+Matrix Distributions
+--------------------
+.. autofunction:: MatrixGamma
+.. autofunction:: Wishart
+.. autofunction:: MatrixNormal
+
+Compound Distribution
+---------------------
+.. autoclass:: sympy.stats.compound_rv.CompoundDistribution
+   :members:
 
 Interface
 ^^^^^^^^^
 
 .. autofunction:: P
 .. autoclass:: Probability
+   :members:
 .. autofunction:: E
 .. autoclass:: Expectation
+   :members:
 .. autofunction:: density
 .. autofunction:: entropy
 .. autofunction:: given
 .. autofunction:: where
 .. autofunction:: variance
 .. autoclass:: Variance
+   :members:
 .. autofunction:: covariance
 .. autoclass:: Covariance
+   :members:
+.. autofunction:: coskewness
+.. autofunction:: median
 .. autofunction:: std
 .. autofunction:: sample
 .. autofunction:: sample_iter
-.. autofunction:: sympy.stats.rv.sample_iter_lambdify
-.. autofunction:: sympy.stats.rv.sample_iter_subs
+.. autofunction:: factorial_moment
+.. autofunction:: kurtosis
+.. autofunction:: skewness
+.. autofunction:: correlation
 .. autofunction:: sympy.stats.rv.sampling_density
 .. autofunction:: sympy.stats.rv.sampling_P
 .. autofunction:: sympy.stats.rv.sampling_E
+.. autoclass:: Moment
+   :members:
+.. autofunction:: moment
+.. autoclass:: CentralMoment
+   :members:
+.. autofunction:: cmoment
+.. autoclass:: ExpectationMatrix
+   :members:
+.. autoclass:: VarianceMatrix
+   :members:
+.. autoclass:: CrossCovarianceMatrix
+   :members:
 
 Mechanics
 ^^^^^^^^^

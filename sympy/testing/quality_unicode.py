@@ -44,6 +44,7 @@ unicode_whitelist = [
     r'*/sympy/vector/tests/test_printing.py',
     r'*/sympy/parsing/tests/test_sympy_parser.py',
     r'*/sympy/printing/pretty/tests/test_pretty.py',
+    r'*/sympy/printing/tests/test_conventions.py',
     r'*/sympy/printing/tests/test_preview.py',
     r'*/liealgebras/type_g.py',
     r'*/liealgebras/weyl_group.py',
@@ -62,7 +63,7 @@ unicode_strict_whitelist = [
 ]
 
 
-def test_this_file_encoding(
+def _test_this_file_encoding(
     fname, test_file,
     unicode_whitelist=unicode_whitelist,
     unicode_strict_whitelist=unicode_strict_whitelist):

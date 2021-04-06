@@ -6,7 +6,7 @@ from sympy.polys.polyoptions import (
     Frac, Formal, Polys, Include, All, Gen, Symbols, Method)
 
 from sympy.polys.orderings import lex
-from sympy.polys.domains import FF, GF, ZZ, QQ, RR, CC, EX
+from sympy.polys.domains import FF, GF, ZZ, QQ, QQ_I, RR, CC, EX
 
 from sympy.polys.polyerrors import OptionError, GeneratorsError
 
@@ -257,8 +257,7 @@ def test_Gaussian_postprocess():
 
     assert opt == {
         'gaussian': True,
-        'extension': {I},
-        'domain': QQ.algebraic_field(I),
+        'domain': QQ_I,
     }
 
 

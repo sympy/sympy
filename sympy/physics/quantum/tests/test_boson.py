@@ -23,6 +23,8 @@ def test_bosonoperator():
 
     assert Commutator(a, Dagger(b)).doit() == a * Dagger(b) - Dagger(b) * a
 
+    assert Dagger(exp(a)) == exp(Dagger(a))
+
 
 def test_boson_states():
     a = BosonOp("a")

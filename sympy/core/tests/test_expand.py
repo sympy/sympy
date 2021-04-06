@@ -188,7 +188,7 @@ def test_expand_arit():
     assert e.expand() == 5*a + 5*b + 5*c + 2*a*c + b*c + a*b + a**2 + c**2
     x = Symbol("x")
     s = exp(x*x) - 1
-    e = s.nseries(x, 0, 3)/x**2
+    e = s.nseries(x, 0, 6)/x**2
     assert e.expand() == 1 + x**2/2 + O(x**4)
 
     e = (x*(y + z))**(x*(y + z))*(x + y)
@@ -230,6 +230,15 @@ def test_expand_arit():
     W = W.expand()
     assert W.has(-1672280820*x**15)
 
+def test_expand_mul():
+    # part of issue 20597
+    e = Mul(2, 3, evaluate=False)
+    assert e.expand() == 6
+
+    e = Mul(2, 3, 1/x, evaluate = False)
+    assert e.expand() == 6/x
+    e = Mul(2, R(1, 3), evaluate=False)
+    assert e.expand() == R(2, 3)
 
 def test_power_expand():
     """Test for Pow.expand()"""

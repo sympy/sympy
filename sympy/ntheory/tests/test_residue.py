@@ -150,13 +150,13 @@ def test_residue():
     assert is_nthpow_residue(36010, 8, 87382) is True
     assert is_nthpow_residue(28552, 6, 2218) is True
     assert is_nthpow_residue(92712, 9, 50026) is True
-    x = set([pow(i, 56, 1024) for i in range(1024)])
-    assert set([a for a in range(1024) if is_nthpow_residue(a, 56, 1024)]) == x
-    x = set([ pow(i, 256, 2048) for i in range(2048)])
-    assert set([a for a in range(2048) if is_nthpow_residue(a, 256, 2048)]) == x
-    x = set([ pow(i, 11, 324000) for i in range(1000)])
+    x = {pow(i, 56, 1024) for i in range(1024)}
+    assert {a for a in range(1024) if is_nthpow_residue(a, 56, 1024)} == x
+    x = { pow(i, 256, 2048) for i in range(2048)}
+    assert {a for a in range(2048) if is_nthpow_residue(a, 256, 2048)} == x
+    x = { pow(i, 11, 324000) for i in range(1000)}
     assert [ is_nthpow_residue(a, 11, 324000) for a in x]
-    x = set([ pow(i, 17, 22217575536) for i in range(1000)])
+    x = { pow(i, 17, 22217575536) for i in range(1000)}
     assert [ is_nthpow_residue(a, 17, 22217575536) for a in x]
     assert is_nthpow_residue(676, 3, 5364)
     assert is_nthpow_residue(9, 12, 36)

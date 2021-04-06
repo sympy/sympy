@@ -13,8 +13,8 @@ See the webpage for more information and documentation:
 
 
 import sys
-if sys.version_info < (3, 5):
-    raise ImportError("Python version 3.5 or above is required for SymPy.")
+if sys.version_info < (3, 6):
+    raise ImportError("Python version 3.6 or above is required for SymPy.")
 del sys
 
 
@@ -95,7 +95,7 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         GMPYFiniteField, PythonIntegerRing, GMPYIntegerRing, PythonRational,
         GMPYRationalField, AlgebraicField, PolynomialRing, FractionField,
         ExpressionDomain, FF_python, FF_gmpy, ZZ_python, ZZ_gmpy, QQ_python,
-        QQ_gmpy, GF, FF, ZZ, QQ, RR, CC, EX, construct_domain,
+        QQ_gmpy, GF, FF, ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX, construct_domain,
         swinnerton_dyer_poly, cyclotomic_poly, symmetric_poly, random_poly,
         interpolating_poly, jacobi_poly, chebyshevt_poly, chebyshevu_poly,
         hermite_poly, legendre_poly, laguerre_poly, apart, apart_list,
@@ -108,7 +108,7 @@ from .series import (Order, O, limit, Limit, gruntz, series, approximants,
 
 from .functions import (factorial, factorial2, rf, ff, binomial,
         RisingFactorial, FallingFactorial, subfactorial, carmichael,
-        fibonacci, lucas, tribonacci, harmonic, bernoulli, bell, euler,
+        fibonacci, lucas, motzkin, tribonacci, harmonic, bernoulli, bell, euler,
         catalan, genocchi, partition, sqrt, root, Min, Max, Id, real_root,
         cbrt, re, im, sign, Abs, conjugate, arg, polar_lift,
         periodic_argument, unbranched_argument, principal_branch, transpose,
@@ -128,7 +128,7 @@ from .functions import (factorial, factorial2, rf, ff, binomial,
         chebyshevu, chebyshevu_root, chebyshevt_root, laguerre,
         assoc_laguerre, gegenbauer, jacobi, jacobi_normalized, Ynm, Ynm_c,
         Znm, elliptic_k, elliptic_f, elliptic_e, elliptic_pi, beta, mathieus,
-        mathieuc, mathieusprime, mathieucprime)
+        mathieuc, mathieusprime, mathieucprime, riemann_xi, betainc, betainc_regularized)
 
 from .ntheory import (nextprime, prevprime, prime, primepi, primerange,
         randprime, Sieve, sieve, primorial, cycle_length, composite,
@@ -160,7 +160,7 @@ from .simplify import (simplify, hypersimp, hypersimilar, logcombine,
         ratsimp, ratsimpmodprime)
 
 from .sets import (Set, Interval, Union, EmptySet, FiniteSet, ProductSet,
-        Intersection, imageset, Complement, SymmetricDifference, ImageSet,
+        Intersection, DisjointUnion, imageset, Complement, SymmetricDifference, ImageSet,
         Range, ComplexRegion, Reals, Contains, ConditionSet, Ordinal,
         OmegaPower, ord0, PowerSet, Naturals, Naturals0, UniversalSet,
         Integers, Rationals)
@@ -190,7 +190,7 @@ from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
         Adjoint, hadamard_product, HadamardProduct, HadamardPower,
         Determinant, det, diagonalize_vector, DiagMatrix, DiagonalMatrix,
         DiagonalOf, trace, DotProduct, kronecker_product, KroneckerProduct,
-        PermutationMatrix, MatrixPermute)
+        PermutationMatrix, MatrixPermute, Permanent, per)
 
 from .geometry import (Point, Point2D, Point3D, Line, Ray, Segment, Line2D,
         Segment2D, Ray2D, Line3D, Segment3D, Ray3D, Plane, Ellipse, Circle,
@@ -216,10 +216,10 @@ from .integrals import (integrate, Integral, line_integrate, mellin_transform,
         HankelTransform, InverseHankelTransform, singularityintegrate)
 
 from .tensor import (IndexedBase, Idx, Indexed, get_contraction_structure,
-        get_indices, MutableDenseNDimArray, ImmutableDenseNDimArray,
+        get_indices, shape, MutableDenseNDimArray, ImmutableDenseNDimArray,
         MutableSparseNDimArray, ImmutableSparseNDimArray, NDimArray,
-        tensorproduct, tensorcontraction, derive_by_array, permutedims, Array,
-        DenseNDimArray, SparseNDimArray)
+        tensorproduct, tensorcontraction, tensordiagonal, derive_by_array,
+        permutedims, Array, DenseNDimArray, SparseNDimArray)
 
 from .parsing import parse_expr
 
@@ -252,11 +252,6 @@ from .plotting import plot, textplot, plot_backends, plot_implicit, plot_paramet
 from .interactive import init_session, init_printing
 
 evalf._create_evalf_table()
-
-# This is slow to import:
-#import abc
-
-from .deprecated import C, ClassRegistry, class_registry
 
 __all__ = [
     # sympy.core
@@ -314,7 +309,7 @@ __all__ = [
     'GMPYIntegerRing', 'PythonRational', 'GMPYRationalField',
     'AlgebraicField', 'PolynomialRing', 'FractionField', 'ExpressionDomain',
     'FF_python', 'FF_gmpy', 'ZZ_python', 'ZZ_gmpy', 'QQ_python', 'QQ_gmpy',
-    'GF', 'FF', 'ZZ', 'QQ', 'RR', 'CC', 'EX', 'construct_domain',
+    'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR', 'CC', 'EX', 'construct_domain',
     'swinnerton_dyer_poly', 'cyclotomic_poly', 'symmetric_poly',
     'random_poly', 'interpolating_poly', 'jacobi_poly', 'chebyshevt_poly',
     'chebyshevu_poly', 'hermite_poly', 'legendre_poly', 'laguerre_poly',
@@ -329,7 +324,7 @@ __all__ = [
     # sympy.functions
     'factorial', 'factorial2', 'rf', 'ff', 'binomial', 'RisingFactorial',
     'FallingFactorial', 'subfactorial', 'carmichael', 'fibonacci', 'lucas',
-    'tribonacci', 'harmonic', 'bernoulli', 'bell', 'euler', 'catalan',
+    'motzkin', 'tribonacci', 'harmonic', 'bernoulli', 'bell', 'euler', 'catalan',
     'genocchi', 'partition', 'sqrt', 'root', 'Min', 'Max', 'Id', 'real_root',
     'cbrt', 're', 'im', 'sign', 'Abs', 'conjugate', 'arg', 'polar_lift',
     'periodic_argument', 'unbranched_argument', 'principal_branch',
@@ -352,7 +347,8 @@ __all__ = [
     'chebyshevu_root', 'chebyshevt_root', 'laguerre', 'assoc_laguerre',
     'gegenbauer', 'jacobi', 'jacobi_normalized', 'Ynm', 'Ynm_c', 'Znm',
     'elliptic_k', 'elliptic_f', 'elliptic_e', 'elliptic_pi', 'beta',
-    'mathieus', 'mathieuc', 'mathieusprime', 'mathieucprime',
+    'mathieus', 'mathieuc', 'mathieusprime', 'mathieucprime', 'riemann_xi','betainc',
+    'betainc_regularized',
 
     # sympy.ntheory
     'nextprime', 'prevprime', 'prime', 'primepi', 'primerange', 'randprime',
@@ -390,7 +386,7 @@ __all__ = [
 
     # sympy.sets
     'Set', 'Interval', 'Union', 'EmptySet', 'FiniteSet', 'ProductSet',
-    'Intersection', 'imageset', 'Complement', 'SymmetricDifference',
+    'Intersection', 'imageset', 'DisjointUnion', 'Complement', 'SymmetricDifference',
     'ImageSet', 'Range', 'ComplexRegion', 'Reals', 'Contains', 'ConditionSet',
     'Ordinal', 'OmegaPower', 'ord0', 'PowerSet', 'Reals', 'Naturals',
     'Naturals0', 'UniversalSet', 'Integers', 'Rationals',
@@ -424,7 +420,7 @@ __all__ = [
     'HadamardPower', 'Determinant', 'det', 'diagonalize_vector', 'DiagMatrix',
     'DiagonalMatrix', 'DiagonalOf', 'trace', 'DotProduct',
     'kronecker_product', 'KroneckerProduct', 'PermutationMatrix',
-    'MatrixPermute',
+    'MatrixPermute', 'Permanent', 'per',
 
     # sympy.geometry
     'Point', 'Point2D', 'Point3D', 'Line', 'Ray', 'Segment', 'Line2D',
@@ -456,10 +452,10 @@ __all__ = [
 
     # sympy.tensor
     'IndexedBase', 'Idx', 'Indexed', 'get_contraction_structure',
-    'get_indices', 'MutableDenseNDimArray', 'ImmutableDenseNDimArray',
+    'get_indices', 'shape', 'MutableDenseNDimArray', 'ImmutableDenseNDimArray',
     'MutableSparseNDimArray', 'ImmutableSparseNDimArray', 'NDimArray',
-    'tensorproduct', 'tensorcontraction', 'derive_by_array', 'permutedims',
-    'Array', 'DenseNDimArray', 'SparseNDimArray',
+    'tensorproduct', 'tensorcontraction', 'tensordiagonal', 'derive_by_array',
+    'permutedims', 'Array', 'DenseNDimArray', 'SparseNDimArray',
 
     # sympy.parsing
     'parse_expr',
@@ -492,7 +488,41 @@ __all__ = [
 
     # sympy.testing
     'test', 'doctest',
-
-    # sympy.deprecated:
-    'C', 'ClassRegistry', 'class_registry',
 ]
+
+
+#===========================================================================#
+#                                                                           #
+# XXX: The names below were importable before sympy 1.6 using               #
+#                                                                           #
+#          from sympy import *                                              #
+#                                                                           #
+# This happened implicitly because there was no __all__ defined in this     #
+# __init__.py file. Not every package is imported. The list matches what    #
+# would have been imported before. It is possible that these packages will  #
+# not be imported by a star-import from sympy in future.                    #
+#                                                                           #
+#===========================================================================#
+
+
+__all__.extend([
+    'algebras',
+    'assumptions',
+    'calculus',
+    'concrete',
+    'discrete',
+    'external',
+    'functions',
+    'geometry',
+    'interactive',
+    'multipledispatch',
+    'ntheory',
+    'parsing',
+    'plotting',
+    'polys',
+    'printing',
+    'release',
+    'strategies',
+    'tensor',
+    'utilities',
+])

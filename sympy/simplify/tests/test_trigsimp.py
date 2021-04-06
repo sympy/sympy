@@ -4,7 +4,6 @@ from sympy import (
     Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise , Rational
     )
 
-from sympy.core.compatibility import long
 from sympy.testing.pytest import XFAIL
 
 from sympy.abc import x, y
@@ -285,6 +284,9 @@ def test_hyperbolic_simp():
     e = 2*cosh(x)**2 - 2*sinh(x)**2
     assert trigsimp(log(e)) == log(2)
 
+    # issue 19535:
+    assert trigsimp(sqrt(cosh(x)**2 - 1)) == sqrt(sinh(x)**2)
+
     assert trigsimp(cosh(x)**2*cosh(y)**2 - cosh(x)**2*sinh(y)**2 - sinh(x)**2,
             recursive=True) == 1
     assert trigsimp(sinh(x)**2*sinh(y)**2 - sinh(x)**2*cosh(y)**2 + cosh(x)**2,
@@ -330,7 +332,7 @@ def test_trigsimp_groebner():
 
     # Test quick=False works
     assert trigsimp_groebner(ex, hints=[2]) in results
-    assert trigsimp_groebner(ex, hints=[long(2)]) in results
+    assert trigsimp_groebner(ex, hints=[int(2)]) in results
 
     # test "I"
     assert trigsimp_groebner(sin(I*x)/cos(I*x), hints=[tanh]) == I*tanh(x)

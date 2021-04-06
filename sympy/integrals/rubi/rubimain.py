@@ -72,7 +72,7 @@ if matchpy:
     _E = rubi_unevaluated_expr(E)
 
 
-class LoadRubiReplacer(object):
+class LoadRubiReplacer:
     """
     Class trick to load RUBI only once.
     """

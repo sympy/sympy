@@ -10,9 +10,27 @@ from sympy.logic.boolalg import Or, And, Not, Xnor
 from itertools import zip_longest
 
 
-class Literal(object):
+class Literal:
     """
-    The smallest element of a CNF object
+    The smallest element of a CNF object.
+
+    Parameters
+    ==========
+
+    lit : Boolean expression
+
+    is_Not : bool
+
+    Examples
+    ========
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.cnf import Literal
+    >>> from sympy.abc import x
+    >>> Literal(Q.even(x))
+    Literal(Q.even(x), False)
+    >>> Literal(~Q.even(x))
+    Literal(Q.even(x), True)
     """
 
     def __new__(cls, lit, is_Not=False):
@@ -21,7 +39,7 @@ class Literal(object):
             is_Not = True
         elif isinstance(lit, (AND, OR, Literal)):
             return ~lit if is_Not else lit
-        obj = super(Literal, cls).__new__(cls)
+        obj = super().__new__(cls)
         obj.lit = lit
         obj.is_Not = is_Not
         return obj
@@ -45,7 +63,7 @@ class Literal(object):
         return Literal(self.lit, is_Not)
 
     def __str__(self):
-        return '%s(%s, %s)' % (type(self).__name__, self.lit, self.is_Not)
+        return '{}({}, {})'.format(type(self).__name__, self.lit, self.is_Not)
 
     __repr__ = __str__
 
@@ -57,7 +75,7 @@ class Literal(object):
         return h
 
 
-class OR(object):
+class OR:
     """
     A low-level implementation for Or
     """
@@ -89,7 +107,7 @@ class OR(object):
     __repr__ = __str__
 
 
-class AND(object):
+class AND:
     """
     A low-level implementation for And
     """
@@ -206,11 +224,21 @@ def distribute_AND_over_OR(expr):
                              for arg in expr._args])
 
 
-class CNF(object):
+class CNF:
     """
     Class to represent CNF of a Boolean expression.
     Consists of set of clauses, which themselves are stored as
     frozenset of Literal objects.
+
+    Examples
+    ========
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.cnf import CNF
+    >>> from sympy.abc import x
+    >>> cnf = CNF.from_prop(Q.real(x) & ~Q.zero(x))
+    >>> cnf.clauses
+    {frozenset({Literal(Q.real(x), False)}), frozenset({Literal(Q.zero(x), True)})}
     """
     def __init__(self, clauses=None):
         if not clauses:
@@ -324,7 +352,7 @@ class CNF(object):
         return And(*(Or(*(remove_literal(arg) for arg in clause)) for clause in cnf.clauses))
 
 
-class EncodedCNF(object):
+class EncodedCNF:
     """
     Class for encoding the CNF expression.
     """

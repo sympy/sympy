@@ -8,7 +8,6 @@ sympy.stats.rv
 sympy.stats.frv
 """
 
-from __future__ import print_function, division
 
 from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
@@ -18,9 +17,9 @@ from sympy.functions.special.delta_functions import DiracDelta
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
-from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
-        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
-import random
+from sympy.core.sympify import _sympify
+from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain, is_random,
+        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin, Distribution)
 
 
 class ContinuousDomain(RandomDomain):
@@ -76,7 +75,7 @@ class ProductContinuousDomain(ProductDomain, ContinuousDomain):
 class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
     """
     A domain with continuous support that has been further restricted by a
-    condition such as x > 3
+    condition such as $x > 3$.
     """
 
     def compute_expectation(self, expr, variables=None, **kwargs):
@@ -139,20 +138,23 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                 "Set of Conditional Domain not Implemented")
 
 
-class ContinuousDistribution(Basic):
+class ContinuousDistribution(Distribution):
     def __call__(self, *args):
         return self.pdf(*args)
 
 
 class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
-    """ Continuous distribution of a single variable
+    """ Continuous distribution of a single variable.
+
+    Explanation
+    ===========
 
     Serves as superclass for Normal/Exponential/UniformDistribution etc....
 
     Represented by parameters for each of the specific classes.  E.g
     NormalDistribution is represented by a mean and standard deviation.
 
-    Provides methods for pdf, cdf, and sampling
+    Provides methods for pdf, cdf, and sampling.
 
     See Also
     ========
@@ -170,44 +172,18 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     def check(*args):
         pass
 
-    def sample(self):
-        """ A random realization from the distribution """
-        icdf = self._inverse_cdf_expression()
-        return icdf(random.uniform(0, 1))
-
-    @cacheit
-    def _inverse_cdf_expression(self):
-        """ Inverse of the CDF
-
-        Used by sample
-        """
-        x, z = symbols('x, z', positive=True, cls=Dummy)
-        # Invert CDF
-        try:
-            inverse_cdf = solveset(self.cdf(x) - z, x, S.Reals)
-            if isinstance(inverse_cdf, Intersection) and S.Reals in inverse_cdf.args:
-                inverse_cdf = list(inverse_cdf.args[1])
-        except NotImplementedError:
-            inverse_cdf = None
-        if not inverse_cdf or len(inverse_cdf) != 1:
-            raise NotImplementedError("Could not invert CDF")
-
-        (icdf,) = inverse_cdf
-
-        return Lambda(z, icdf)
-
     @cacheit
     def compute_cdf(self, **kwargs):
-        """ Compute the CDF from the PDF
+        """ Compute the CDF from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x, z = symbols('x, z', real=True, cls=Dummy)
         left_bound = self.set.start
 
         # CDF is integral of PDF from left bound to z
         pdf = self.pdf(x)
-        cdf = integrate(pdf, (x, left_bound, z), **kwargs)
+        cdf = integrate(pdf.doit(), (x, left_bound, z), **kwargs)
         # CDF Ensure that CDF left of left_bound is zero
         cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
@@ -225,13 +201,13 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_characteristic_function(self, **kwargs):
-        """ Compute the characteristic function from the PDF
+        """ Compute the characteristic function from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x, t = symbols('x, t', real=True, cls=Dummy)
         pdf = self.pdf(x)
-        cf = integrate(exp(I*t*x)*pdf, (x, -oo, oo))
+        cf = integrate(exp(I*t*x)*pdf, (x, self.set))
         return Lambda(t, cf)
 
     def _characteristic_function(self, t):
@@ -247,13 +223,13 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_moment_generating_function(self, **kwargs):
-        """ Compute the moment generating function from the PDF
+        """ Compute the moment generating function from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x, t = symbols('x, t', real=True, cls=Dummy)
         pdf = self.pdf(x)
-        mgf = integrate(exp(t * x) * pdf, (x, -oo, oo))
+        mgf = integrate(exp(t * x) * pdf, (x, self.set))
         return Lambda(t, mgf)
 
     def _moment_generating_function(self, t):
@@ -261,14 +237,10 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     def moment_generating_function(self, t, **kwargs):
         """ Moment generating function """
-        if len(kwargs) == 0:
-
-            try:
+        if not kwargs:
                 mgf = self._moment_generating_function(t)
                 if mgf is not None:
                     return mgf
-            except NotImplementedError:
-                return None
         return self.compute_moment_generating_function(**kwargs)(t)
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
@@ -276,6 +248,8 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         if evaluate:
             try:
                 p = poly(expr, var)
+                if p.is_zero:
+                    return S.Zero
                 t = Dummy('t', real=True)
                 mgf = self._moment_generating_function(t)
                 if mgf is None:
@@ -293,17 +267,16 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_quantile(self, **kwargs):
-        """ Compute the Quantile from the PDF
+        """ Compute the Quantile from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x, p = symbols('x, p', real=True, cls=Dummy)
         left_bound = self.set.start
 
         pdf = self.pdf(x)
         cdf = integrate(pdf, (x, left_bound, x), **kwargs)
-
-        quantile = solveset(cdf - p, x, S.Reals)
+        quantile = solveset(cdf - p, x, self.set)
         return Lambda(p, Piecewise((quantile, (p >= 0) & (p <= 1) ), (nan, True)))
 
     def _quantile(self, x):
@@ -316,16 +289,6 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
             if quantile is not None:
                 return quantile
         return self.compute_quantile(**kwargs)(x)
-
-class ContinuousDistributionHandmade(SingleContinuousDistribution):
-    _argnames = ('pdf',)
-
-    @property
-    def set(self):
-        return self.args[1]
-
-    def __new__(cls, pdf, set=Interval(-oo, oo)):
-        return Basic.__new__(cls, pdf, set)
 
 
 class ContinuousPSpace(PSpace):
@@ -349,7 +312,7 @@ class ContinuousPSpace(PSpace):
         else:
             rvs = frozenset(rvs)
 
-        expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
+        expr = expr.xreplace({rv: rv.symbol for rv in rvs})
 
         domain_symbols = frozenset(rv.symbol for rv in rvs)
 
@@ -445,13 +408,14 @@ class ContinuousPSpace(PSpace):
         except NotImplementedError:
             from sympy.stats.rv import density
             expr = condition.lhs - condition.rhs
-            if not random_symbols(expr):
+            if not is_random(expr):
                 dens = self.density
                 comp = condition.rhs
             else:
                 dens = density(expr, **kwargs)
                 comp = 0
             if not isinstance(dens, ContinuousDistribution):
+                from sympy.stats.crv_types import ContinuousDistributionHandmade
                 dens = ContinuousDistributionHandmade(dens, set=self.domain.set)
             # Turn problem into univariate case
             space = SingleContinuousPSpace(z, dens)
@@ -469,7 +433,7 @@ class ContinuousPSpace(PSpace):
         return SingleContinuousDomain(rv.symbol, interval)
 
     def conditional_space(self, condition, normalize=True, **kwargs):
-        condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
+        condition = condition.xreplace({rv: rv.symbol for rv in self.values})
         domain = ConditionalContinuousDomain(self.domain, condition)
         if normalize:
             # create a clone of the variable to
@@ -489,7 +453,7 @@ class ContinuousPSpace(PSpace):
 
 class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     """
-    A continuous probability space over a single univariate variable
+    A continuous probability space over a single univariate variable.
 
     These consist of a Symbol and a SingleContinuousDistribution
 
@@ -505,20 +469,21 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     def domain(self):
         return SingleContinuousDomain(sympify(self.symbol), self.set)
 
-    def sample(self):
+    def sample(self, size=(), library='scipy', seed=None):
         """
-        Internal sample method
+        Internal sample method.
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-        return {self.value: self.distribution.sample()}
+        return {self.value: self.distribution.sample(size, library=library, seed=seed)}
 
     def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
         rvs = rvs or (self.value,)
         if self.value not in rvs:
             return expr
 
-        expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
+        expr = _sympify(expr)
+        expr = expr.xreplace({rv: rv.symbol for rv in rvs})
 
         x = self.value.symbol
         try:

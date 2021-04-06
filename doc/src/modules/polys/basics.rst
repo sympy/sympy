@@ -405,7 +405,7 @@ Division
 
 The function :func:`~.div` provides division of polynomials with remainder.
 That is, for polynomials ``f`` and ``g``, it computes ``q`` and ``r``, such
-that `f = g \cdot q + r` and `\deg(r) < q`. For polynomials in one variables
+that `f = g \cdot q + r` and `\deg(r) < \deg(q)`. For polynomials in one variables
 with coefficients in a field, say, the rational numbers, ``q`` and ``r`` are
 uniquely defined this way::
 
@@ -536,11 +536,13 @@ factors (not necessarily irreducible) of degree 1, 2 etc.::
     >>> f = 2*x**2 + 5*x**3 + 4*x**4 + x**5
 
     >>> sqf_list(f)
-    (1, [(x + 2, 1), (x, 2), (x + 1, 2)])
+                       2
+    (1, [(x + 2, 1), (x  + x, 2)])
 
     >>> sqf(f)
-     2        2
-    x *(x + 1) *(x + 2)
+                    2
+            / 2    \
+    (x + 2)*\x  + x/
 
 Factorization
 -------------

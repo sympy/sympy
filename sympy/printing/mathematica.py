@@ -2,8 +2,6 @@
 Mathematica code printer
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict, Set, Tuple
 
 from sympy.core import Basic, Expr, Float
@@ -155,7 +153,7 @@ class MCodePrinter(CodePrinter):
     def _print_Mul(self, expr):
         PREC = precedence(expr)
         c, nc = expr.args_cnc()
-        res = super(MCodePrinter, self)._print_Mul(expr.func(*c))
+        res = super()._print_Mul(expr.func(*c))
         if nc:
             res += '*'
             res += '**'.join(self.parenthesize(a, PREC) for a in nc)
@@ -165,7 +163,7 @@ class MCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     # Primitive numbers
     def _print_Zero(self, expr):

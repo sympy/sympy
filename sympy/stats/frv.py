@@ -7,21 +7,19 @@ sympy.stats.frv_types
 sympy.stats.rv
 sympy.stats.crv
 """
-from __future__ import print_function, division
-
-import random
 from itertools import product
 
 from sympy import (Basic, Symbol, cacheit, sympify, Mul,
-                   And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan,
+                   And, Or, Piecewise, Eq, Lambda, exp, I, Dummy, nan,
                    Sum, Intersection, S)
 from sympy.core.containers import Dict
 from sympy.core.logic import Logic
 from sympy.core.relational import Relational
+from sympy.core.sympify import _sympify
 from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
                             PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
-                            sumsets, rv_subs, NamedArgsMixin, Density)
+                            sumsets, rv_subs, NamedArgsMixin, Density, Distribution)
 
 
 class FiniteDensity(dict):
@@ -149,8 +147,6 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
         cond = rv_subs(condition)
         return Basic.__new__(cls, domain, cond)
 
-
-
     def _test(self, elem):
         """
         Test the value. If value is boolean, return it. If value is equality
@@ -182,7 +178,8 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
     def as_boolean(self):
         return FiniteDomain.as_boolean(self)
 
-class SingleFiniteDistribution(Basic, NamedArgsMixin):
+
+class SingleFiniteDistribution(Distribution, NamedArgsMixin):
     def __new__(cls, *args):
         args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
@@ -196,7 +193,7 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
     def dict(self):
         if self.is_symbolic:
             return Density(self)
-        return dict((k, self.pmf(k)) for k in self.set)
+        return {k: self.pmf(k) for k in self.set}
 
     def pmf(self, *args): # to be overridden by specific distribution
         raise NotImplementedError()
@@ -232,8 +229,8 @@ class FinitePSpace(PSpace):
     is_Finite = True
 
     def __new__(cls, domain, density):
-        density = dict((sympify(key), sympify(val))
-                for key, val in density.items())
+        density = {sympify(key): sympify(val)
+                for key, val in density.items()}
         public_density = Dict(density)
 
         obj = PSpace.__new__(cls, domain, public_density)
@@ -334,28 +331,17 @@ class FinitePSpace(PSpace):
     def conditional_space(self, condition):
         domain = self.where(condition)
         prob = self.probability(condition)
-        density = dict((key, val / prob)
-                for key, val in self._density.items() if domain._test(key))
+        density = {key: val / prob
+                for key, val in self._density.items() if domain._test(key)}
         return FinitePSpace(domain, density)
 
-    def sample(self):
+    def sample(self, size=(), library='scipy', seed=None):
         """
         Internal sample method
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-        expr = Tuple(*self.values)
-        cdf = self.sorted_cdf(expr, python_float=True)
-
-        x = random.uniform(0, 1)
-        # Find first occurrence with cumulative probability less than x
-        # This should be replaced with binary search
-        for value, cum_prob in cdf:
-            if x < cum_prob:
-                # return dictionary mapping RandomSymbols to values
-                return dict(list(zip(expr, value)))
-
-        assert False, "We should never have gotten to this point"
+        return {self.value: self.distribution.sample(size, library, seed)}
 
 
 class SingleFinitePSpace(SinglePSpace, FinitePSpace):
@@ -391,8 +377,8 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
     @property # type: ignore
     @cacheit
     def _density(self):
-        return dict((FiniteSet((self.symbol, val)), prob)
-                    for val, prob in self.distribution.dict.items())
+        return {FiniteSet((self.symbol, val)): prob
+                    for val, prob in self.distribution.dict.items()}
 
     @cacheit
     def compute_characteristic_function(self, expr):
@@ -453,6 +439,8 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
             func = self.pmf(k) * k if cond != True else self.pmf(k) * expr
             return Sum(Piecewise((func, cond), (S.Zero, True)),
                 (k, self.distribution.low, self.distribution.high)).doit()
+
+        expr = _sympify(expr)
         expr = rv_subs(expr, rvs)
         return FinitePSpace(self.domain, self.distribution).compute_expectation(expr, rvs, **kwargs)
 
@@ -475,8 +463,8 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
             self
         domain = self.where(condition)
         prob = self.probability(condition)
-        density = dict((key, val / prob)
-                for key, val in self._density.items() if domain._test(key))
+        density = {key: val / prob
+                for key, val in self._density.items() if domain._test(key)}
         return FinitePSpace(domain, density)
 
 

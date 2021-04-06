@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 from sympy.core.compatibility import is_sequence
@@ -8,6 +6,8 @@ from sympy.printing.printer import Printer
 import sympy
 from functools import partial
 
+from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 theano = import_module('theano')
 
@@ -98,7 +98,7 @@ class TheanoPrinter(Printer):
 
     def __init__(self, *args, **kwargs):
         self.cache = kwargs.pop('cache', dict())
-        super(TheanoPrinter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _get_key(self, s, name=None, dtype=None, broadcastable=None):
         """ Get the cache key for a Sympy object.
@@ -333,6 +333,12 @@ def theano_code(expr, cache=None, **kwargs):
         expression graph.
 
     """
+    SymPyDeprecationWarning(
+        feature="sympy.printing.theanocode",
+        useinstead="Theano is deprecated; use Aesara and sympy.printing.aesaracode",
+        issue=21150,
+        deprecated_since_version="1.8").warn()
+
     if not theano:
         raise ImportError("theano is required for theano_code")
 
@@ -389,7 +395,9 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
     return {}
 
 
-def theano_function(inputs, outputs, scalar=False, **kwargs):
+@doctest_depends_on(modules=('theano',))
+def theano_function(inputs, outputs, scalar=False, *,
+        dim=None, dims=None, broadcastables=None, **kwargs):
     """
     Create a Theano function from SymPy expressions.
 
@@ -477,6 +485,12 @@ def theano_function(inputs, outputs, scalar=False, **kwargs):
     dim_handling
 
     """
+    SymPyDeprecationWarning(
+        feature="sympy.printing.theanocode",
+        useinstead="Theano is deprecated; use Aesara and sympy.printing.aesaracode",
+        issue=21150,
+        deprecated_since_version="1.8").warn()
+
     if not theano:
         raise ImportError("theano is required for theano_function")
 
@@ -485,10 +499,7 @@ def theano_function(inputs, outputs, scalar=False, **kwargs):
     dtypes = kwargs.pop('dtypes', {})
 
     broadcastables = dim_handling(
-        inputs,
-        dim=kwargs.pop('dim', None),
-        dims=kwargs.pop('dims', None),
-        broadcastables=kwargs.pop('broadcastables', None),
+        inputs, dim=dim, dims=dims, broadcastables=broadcastables,
     )
 
     # Print inputs/outputs

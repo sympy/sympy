@@ -1,5 +1,3 @@
-from sympy.testing.pytest import warns_deprecated_sympy
-
 from sympy.core.backend import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
                                 zeros)
 from sympy import simplify
@@ -24,10 +22,7 @@ def test_one_dof():
     BL = [pa]
 
     KM = KanesMethod(N, [q], [u], kd)
-    # The old input format raises a deprecation warning, so catch it here so
-    # it doesn't cause py.test to fail.
-    with warns_deprecated_sympy():
-        KM.kanes_equations(FL, BL)
+    KM.kanes_equations(BL, FL)
 
     MM = KM.mass_matrix
     forcing = KM.forcing
@@ -67,10 +62,7 @@ def test_two_dof():
     # pass relevant information, and form Fr & Fr*. Then we calculate the mass
     # matrix and forcing terms, and finally solve for the udots.
     KM = KanesMethod(N, q_ind=[q1, q2], u_ind=[u1, u2], kd_eqs=kd)
-    # The old input format raises a deprecation warning, so catch it here so
-    # it doesn't cause py.test to fail.
-    with warns_deprecated_sympy():
-        KM.kanes_equations(FL, BL)
+    KM.kanes_equations(BL, FL)
     MM = KM.mass_matrix
     forcing = KM.forcing
     rhs = MM.inv() * forcing
@@ -96,8 +88,7 @@ def test_pend():
     BL = [pa]
 
     KM = KanesMethod(N, [q], [u], kd)
-    with warns_deprecated_sympy():
-        KM.kanes_equations(FL, BL)
+    KM.kanes_equations(BL, FL)
     MM = KM.mass_matrix
     forcing = KM.forcing
     rhs = MM.inv() * forcing
@@ -160,8 +151,7 @@ def test_rolling_disc():
     # terms, then solve for the u dots (time derivatives of the generalized
     # speeds).
     KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd)
-    with warns_deprecated_sympy():
-        KM.kanes_equations(ForceList, BodyList)
+    KM.kanes_equations(BodyList, ForceList)
     MM = KM.mass_matrix
     forcing = KM.forcing
     rhs = MM.inv() * forcing
@@ -217,15 +207,13 @@ def test_aux():
 
     KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3, u4, u5],
                      kd_eqs=kd)
-    with warns_deprecated_sympy():
-        (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
+    (fr, frstar) = KM.kanes_equations(BodyList, ForceList)
     fr = fr.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
     frstar = frstar.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
 
     KM2 = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd,
                       u_auxiliary=[u4, u5])
-    with warns_deprecated_sympy():
-        (fr2, frstar2) = KM2.kanes_equations(ForceList, BodyList)
+    (fr2, frstar2) = KM2.kanes_equations(BodyList, ForceList)
     fr2 = fr2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
     frstar2 = frstar2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
 
@@ -288,8 +276,7 @@ def test_parallel_axis():
                  (C, N.x * F)]
 
     km = KanesMethod(N, [q1, q2], [u1, u2], kindiffs)
-    with warns_deprecated_sympy():
-        (fr, frstar) = km.kanes_equations(forceList, bodyList)
+    (fr, frstar) = km.kanes_equations(bodyList, forceList)
     mm = km.mass_matrix_full
     assert mm[3, 3] == Iz
 

@@ -1,7 +1,5 @@
 """This module implements tools for integrating rational functions. """
 
-from __future__ import print_function, division
-
 from sympy import S, Symbol, symbols, I, log, atan, \
     roots, RootSum, Lambda, cancel, Dummy
 
@@ -11,9 +9,15 @@ def ratint(f, x, **flags):
     """
     Performs indefinite integration of rational functions.
 
+    Explanation
+    ===========
+
     Given a field :math:`K` and a rational function :math:`f = p/q`,
     where :math:`p` and :math:`q` are polynomials in :math:`K[x]`,
     returns a function :math:`g` such that :math:`f = g'`.
+
+    Examples
+    ========
 
     >>> from sympy.integrals.rationaltools import ratint
     >>> from sympy.abc import x
@@ -24,7 +28,7 @@ def ratint(f, x, **flags):
     References
     ==========
 
-    .. [Bro05] M. Bronstein, Symbolic Integration I: Transcendental
+    .. [1] M. Bronstein, Symbolic Integration I: Transcendental
        Functions, Second Edition, Springer-Verlag, 2005, pp. 35-70
 
     See Also
@@ -115,6 +119,9 @@ def ratint_ratpart(f, g, x):
     """
     Horowitz-Ostrogradsky algorithm.
 
+    Explanation
+    ===========
+
     Given a field K and polynomials f and g in K[x], such that f and g
     are coprime and deg(f) < deg(g), returns fractions A and B in K(x),
     such that f/g = A' + B and B has square-free denominator.
@@ -175,6 +182,9 @@ def ratint_logpart(f, g, x, t=None):
     r"""
     Lazard-Rioboo-Trager algorithm.
 
+    Explanation
+    ===========
+
     Given a field K and polynomials f and g in K[x], such that f and g
     are coprime, deg(f) < deg(g) and g is square-free, returns a list
     of tuples (s_i, q_i) of polynomials, for i = 1..n, such that s_i
@@ -224,7 +234,8 @@ def ratint_logpart(f, g, x, t=None):
     def _include_sign(c, sqf):
         if c.is_extended_real and (c < 0) == True:
             h, k = sqf[0]
-            sqf[0] = h*c, k
+            c_poly = c.as_poly(h.gens)
+            sqf[0] = h*c_poly, k
 
     C, res_sqf = res.sqf_list()
     _include_sign(C, res_sqf)
@@ -247,6 +258,7 @@ def ratint_logpart(f, g, x, t=None):
             inv, coeffs = h_lc.invert(q), [S.One]
 
             for coeff in h.coeffs()[1:]:
+                coeff = coeff.as_poly(inv.gens)
                 T = (inv*coeff).rem(q)
                 coeffs.append(T.as_expr())
 
@@ -260,6 +272,9 @@ def ratint_logpart(f, g, x, t=None):
 def log_to_atan(f, g):
     """
     Convert complex logarithms to real arctangents.
+
+    Explanation
+    ===========
 
     Given a real field K and polynomials f and g in K[x], with g != 0,
     returns a sum h of arctangents of polynomials in K[x], such that:
@@ -307,6 +322,9 @@ def log_to_real(h, q, x, t):
     r"""
     Convert complex logarithms to real functions.
 
+    Explanation
+    ===========
+
     Given real field K and polynomials h in K[t,x] and q in K[t],
     returns real function f such that:
                           ___
@@ -320,7 +338,7 @@ def log_to_real(h, q, x, t):
 
         >>> from sympy.integrals.rationaltools import log_to_real
         >>> from sympy.abc import x, y
-        >>> from sympy import Poly, sqrt, S
+        >>> from sympy import Poly, S
         >>> log_to_real(Poly(x + 3*y/2 + S(1)/2, x, domain='QQ[y]'),
         ... Poly(3*y**2 + 1, y, domain='ZZ'), x, y)
         2*sqrt(3)*atan(2*sqrt(3)*x/3 + sqrt(3)/3)/3
