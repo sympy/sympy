@@ -912,7 +912,7 @@ def solve(f, *symbols, **flags):
             f[i] = fi.as_expr()
 
         # rewrite hyperbolics in terms of exp
-        f[i] = f[i].replace(lambda w: (w.free_symbols & set(symbols)) and isinstance(w, HyperbolicFunction),
+        f[i] = f[i].replace(lambda w: len(w.free_symbols & set(symbols)) and isinstance(w, HyperbolicFunction),
                 lambda w: w.rewrite(exp))
 
         # if we have a Matrix, we need to iterate over its elements again
