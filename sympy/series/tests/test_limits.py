@@ -441,7 +441,7 @@ def test_factorial():
 def test_issue_6560():
     e = (5*x**3/4 - x*Rational(3, 4) + (y*(3*x**2/2 - S.Half) +
                              35*x**4/8 - 15*x**2/4 + Rational(3, 8))/(2*(y + 1)))
-    assert limit(e, y, oo) == (5*x**3 + 3*x**2 - 3*x - 1)/4
+    assert limit(e, y, oo) == (x + 1)*(5*x**2 - 2*x - 1)/4
 
 @XFAIL
 def test_issue_5172():
@@ -639,7 +639,10 @@ def test_issue_12769():
         2*F0**(b + 1)*K**(2*b)*a*r*s0*(b**2 - 2*b + 1) - \
         2*F0**(b + 1)*K**(b + 1)*a**2*(b - 1))/((b - 1)*(b**2 - 2*b + 1))))*(b*r -  b - r + 1)
 
-    assert fx.subs(K, F0).cancel().together() == limit(fx, K, F0).together()
+    assert fx.subs(K, F0).cancel().together() == \
+        F0**(2*b)*s0*(b*r**2 - 2*b*r + b - r**2 + 2*r - 1)
+    assert limit(fx, K, F0).factor() == \
+        F0**(2*b)*s0*(b - 1)*(r - 1)*(r - sqrt(1/(b**2 - 2*b + 1))*Abs(b - 1))
 
 
 def test_issue_13332():
@@ -893,7 +896,7 @@ def test_issue_19586():
 def test_issue_13715():
     n = Symbol('n')
     p = Symbol('p', zero=True)
-    assert limit(n + p, n, 0) == p
+    assert limit(n + p, n, 0) == 0
 
 
 def test_issue_15055():

@@ -345,6 +345,10 @@ def test_limits():
     assert limit(meijerg((), (), (1,), (0,), -x), x, 0) == \
             meijerg(((), ()), ((1,), (0,)), 0) # issue 6052
 
+    # https://github.com/sympy/sympy/issues/11465
+    assert limit(1/hyper((1, ), (1, ), x), x, 0) == 1
+
+
 def test_appellf1():
     a, b1, b2, c, x, y = symbols('a b1 b2 c x y')
     assert appellf1(a, b2, b1, c, y, x) == appellf1(a, b1, b2, c, x, y)

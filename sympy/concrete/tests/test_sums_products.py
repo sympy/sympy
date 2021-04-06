@@ -1332,6 +1332,11 @@ def test_issue_14313():
     assert Sum(S.Half**floor(n/2), (n, 1, oo)).is_convergent()
 
 
+def test_issue_14563():
+    # The assertion was failing due to no assumptions methods in Sums and Product
+    assert 1 % Sum(1, (x, 0, 1)) == 1
+
+
 def test_issue_16735():
     assert Sum(5**n/gamma(n+1), (n, 1, oo)).is_convergent() is S.true
 

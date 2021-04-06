@@ -529,6 +529,10 @@ def test_tan():
     assert tan(r).is_finite is None
     assert tan(I*r).is_finite is True
 
+    # https://github.com/sympy/sympy/issues/21177
+    f = tan(pi*(x + S(3)/2))/(3*x)
+    assert f.as_leading_term(x) == -1/(3*pi*x**2)
+
 
 def test_tan_series():
     assert tan(x).series(x, 0, 9) == \
@@ -683,6 +687,10 @@ def test_cot():
     assert cot(i).is_finite is True
 
     assert cot(x).subs(x, 3*pi) is zoo
+
+    # https://github.com/sympy/sympy/issues/21177
+    f = cot(pi*(x + 4))/(3*x)
+    assert f.as_leading_term(x) == 1/(3*pi*x**2)
 
 
 def test_tan_cot_sin_cos_evalf():

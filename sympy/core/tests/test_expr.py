@@ -441,6 +441,18 @@ def test_as_leading_term():
 
     raises(ValueError, lambda: (x + 1).as_leading_term(1))
 
+    # https://github.com/sympy/sympy/issues/21177
+    f = -3*x + (x + Rational(3, 2) - sqrt(3)*S.ImaginaryUnit/2)**2\
+        - Rational(3, 2) + 3*sqrt(3)*S.ImaginaryUnit/2
+    assert f.as_leading_term(x) == -sqrt(3)*S.ImaginaryUnit*x
+
+    # https://github.com/sympy/sympy/issues/21245
+    f = 1 - x - x**2
+    fi = (1 + sqrt(5))/2
+    assert f.subs(x, y + 1/fi).as_leading_term(y) == \
+        -4*y*(20 + 9*sqrt(5))/(16*sqrt(5) + 36)
+
+
 def test_leadterm2():
     assert (x*cos(1)*cos(1 + sin(1)) + sin(1 + sin(1))).leadterm(x) == \
            (sin(1 + sin(1)), 0)

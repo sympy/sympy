@@ -978,11 +978,12 @@ class Add(Expr, AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x, cdir=0):
-        from sympy import expand_mul, Order
+        from sympy import Order
+        from .function import _mexpand
 
         old = self
 
-        expr = expand_mul(self)
+        expr = _mexpand(self)
         if not expr.is_Add:
             return expr.as_leading_term(x, cdir=cdir)
 
@@ -1004,11 +1005,11 @@ class Add(Expr, AssocOp):
         except TypeError:
             return expr
 
-        new_expr=new_expr.together()
+        new_expr = new_expr.together().factor()
         if new_expr.is_Add:
             new_expr = new_expr.simplify()
 
-        if not new_expr:
+        if new_expr.is_zero:
             # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
             n0 = min.getn()

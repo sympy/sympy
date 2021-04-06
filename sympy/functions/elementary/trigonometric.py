@@ -1254,11 +1254,15 @@ class tan(TrigonometricFunction):
 
     def _eval_as_leading_term(self, x, cdir=0):
         arg = self.args[0]
-        x0 = arg.subs(x, 0)
-        n = x0/S.Pi
-        if n.is_integer:
-            lt = (arg - n*S.Pi).as_leading_term(x)
-            return lt if n.is_even else -1/lt
+        x0 = arg.subs(x, 0).cancel()
+        n1 = x0/S.Pi
+        if n1.is_integer: # Handling zeroes
+            lt = (arg - n1*S.Pi).as_leading_term(x)
+            return lt
+        n2 = (x0 + S.Pi/2)/S.Pi
+        if n2.is_integer: # Handling infinites
+            lt = (arg - n2*S.Pi + S.Pi/2).as_leading_term(x)
+            return -1/lt
         if not x0.is_finite:
             return self
         return self.func(x0)
@@ -1537,13 +1541,19 @@ class cot(TrigonometricFunction):
         return y
 
     def _eval_as_leading_term(self, x, cdir=0):
-        from sympy import Order
-        arg = self.args[0].as_leading_term(x)
-
-        if x in arg.free_symbols and Order(1, x).contains(arg):
-            return 1/arg
-        else:
-            return self.func(arg)
+        arg = self.args[0]
+        x0 = arg.subs(x, 0).cancel()
+        n1 = (x0 + S.Pi/2)/S.Pi
+        if n1.is_integer: # Handling zeroes
+            lt = (arg - n1*S.Pi + S.Pi/2).as_leading_term(x)
+            return -lt
+        n2 = x0/S.Pi
+        if n2.is_integer: # Handling infinities
+            lt = (arg - n2*S.Pi).as_leading_term(x)
+            return 1/lt
+        if not x0.is_finite:
+            return self
+        return self.func(x0)
 
     def _eval_is_extended_real(self):
         return self.args[0].is_extended_real
