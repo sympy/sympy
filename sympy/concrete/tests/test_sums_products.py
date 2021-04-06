@@ -1327,7 +1327,6 @@ def test_issue_8016():
         cos(pi*n/2)*gamma(m + 1)/gamma(n/2 + 1)/gamma(m - n/2 + 1)
 
 
-@XFAIL
 def test_issue_14313():
     assert Sum(S.Half**floor(n/2), (n, 1, oo)).is_convergent()
 
@@ -1448,13 +1447,9 @@ def test_summation_by_residues():
     assert eval_sum_residue(1 / x**6, (x, S(1), oo)) == pi**6/945
     assert eval_sum_residue(1 / (x**2 + 9), (x, -oo, oo)) == pi/(3*tanh(3*pi))
     assert eval_sum_residue(1 / (x**2 + 1)**2, (x, -oo, oo)) == \
-        -pi*(-1/(2*tanh(pi)) - I*(-I*pi/tanh(pi) + \
-        I*pi*tanh(pi))/(4*tanh(pi)) + I*(-I*pi*tanh(pi) + \
-        I*pi/tanh(pi))/(4*tanh(pi)))
+        -pi*(-pi/(2*tanh(pi)**2) - 1/(2*tanh(pi)) + pi/2)
     assert eval_sum_residue(x**2 / (x**2 + 1)**2, (x, -oo, oo)) == \
-        -pi*(-1/(2*tanh(pi)) - I*(-I*pi*tanh(pi) + \
-        I*pi/tanh(pi))/(4*tanh(pi)) + I*(-I*pi/tanh(pi) + \
-        I*pi*tanh(pi))/(4*tanh(pi)))
+        -pi*(-pi/2 - 1/(2*tanh(pi)) + pi/(2*tanh(pi)**2))
     assert eval_sum_residue(1 / (4*x**2 - 1), (x, -oo, oo)) == 0
     assert eval_sum_residue(x**2 / (x**2 - S(1)/4)**2, (x, -oo, oo)) == pi**2/2
     assert eval_sum_residue(1 / (4*x**2 - 1)**2, (x, -oo, oo)) == pi**2/8
@@ -1495,7 +1490,6 @@ def test_summation_by_residues():
     assert eval_sum_residue((-1)**x / x**2, (x, S(2), oo)) == 1 - pi**2/12
 
 
-@XFAIL
 def test_summation_by_residues_failing():
     x = Symbol('x')
 
