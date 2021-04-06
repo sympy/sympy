@@ -1535,7 +1535,9 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     newlhs = powdenest(lhs)
     if lhs != newlhs:
         # it may also be advantageous to factor the new expr
-        return _solveset(factor(newlhs - rhs), symbol, domain)  # try again with _solveset
+        neweq = factor(newlhs - rhs)
+        if neweq != (lhs - rhs):
+            return _solveset(neweq, symbol, domain)  # try again with _solveset
 
     if not (isinstance(lhs, Add) and len(lhs.args) == 2):
         # solving for the sum of more than two powers is possible
@@ -3248,15 +3250,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         soln = solver(eq2, sym)
                         total_solvest_call += 1
                         soln_new = S.EmptySet
-                        if isinstance(soln, ConditionSet):
-                            if soln.base_set in (S.Reals, S.Complexes):
-                                soln = S.EmptySet
-                                # don't do `continue` we may get soln
-                                # in terms of other symbol(s)
-                                not_solvable = True
-                                total_conditionst += 1
-                            else:
-                                soln = soln.base_set
                         if isinstance(soln, Complement):
                             # separate solution and complement
                             complements[sym] = soln.args[1]
@@ -3280,6 +3273,15 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         # If sovleset is not able to solve equation `eq2`. Next
                         # time we may get soln using next equation `eq2`
                         continue
+                    if isinstance(soln, ConditionSet):
+                        if soln.base_set in (S.Reals, S.Complexes):
+                            soln = S.EmptySet
+                            # don't do `continue` we may get soln
+                            # in terms of other symbol(s)
+                            not_solvable = True
+                            total_conditionst += 1
+                        else:
+                            soln = soln.base_set
 
                     if soln is not S.EmptySet:
                         soln, soln_imageset = _extract_main_soln(
