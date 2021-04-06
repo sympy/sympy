@@ -1554,7 +1554,7 @@ def test_nonlinsolve_basic():
 
 
 def test_nonlinsolve_abs():
-    soln = FiniteSet((x, Abs(x)))
+    soln = FiniteSet((y, y), (-y, y))
     assert nonlinsolve([Abs(x) - y], x, y) == soln
 
 
@@ -1705,11 +1705,8 @@ def test_issue_19050():
 
 def test_issue_16618():
     # AttributeError is removed !
-    # have to remove the redundancy
-    _n = Dummy('n')
     eqn = [sin(x)*sin(y), cos(x)*cos(y) - 1]
-    ans = FiniteSet((x, 2*n*pi), (2*n*pi, y), (x, 2*n*pi + pi), (2*n*pi + pi, y),\
-        (x, 2*_n*pi), (2*_n*pi, y), (x, 2*_n*pi + pi), (2*_n*pi + pi, y))
+    ans = FiniteSet((x, 2*n*pi), (2*n*pi, y), (x, 2*n*pi + pi), (2*n*pi + pi, y))
     sol = nonlinsolve(eqn, [x, y])
 
     for i0, j0 in zip(ordered(sol), ordered(ans)):
@@ -1903,6 +1900,62 @@ def test_raises_substitution():
     raises(ValueError, lambda: substitution([x**2 -1], [sin(x)]))
     raises(TypeError, lambda: substitution([x**2 -1], x))
     raises(TypeError, lambda: substitution([x**2 -1], 1))
+
+
+def test_issue_21022():
+    from sympy.core.sympify import sympify
+
+    eqs = [
+    'k-16',
+    'p-8',
+    'y*y+z*z-x*x',
+    'd - x + p',
+    'd*d+k*k-y*y',
+    'z*z-p*p-k*k',
+    'abc-efg',
+    ]
+    efg = Symbol('efg')
+    eqs = [sympify(x) for x in eqs]
+
+    syb = list(ordered(set.union(*[x.free_symbols for x in eqs])))
+    res = nonlinsolve(eqs, syb)
+
+    ans = FiniteSet(
+    (efg, sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
+    efg, 16, 8, 8 + sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
+    sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16, -8*sqrt(5)),
+    (efg, sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
+    efg, 16, 8, 8 + sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
+    sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16, 8*sqrt(5)),
+    (efg, -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
+    efg, 16, 8, -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16) + 8,
+    sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16, -8*sqrt(5)),
+    (efg, -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
+    efg, 16, 8, -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16) + 8,
+    sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16, 8*sqrt(5))
+    )
+
+    assert len(res) == len(ans) == 4
+    assert res == ans
+    for result in res.args:
+        assert len(result) == 8
+
+
+def test_issue_17933():
+    eq1 = x*sin(45) - y*cos(q)
+    eq2 = x*cos(45) - y*sin(q)
+    eq3 = 9*x*sin(45)/10 + y*cos(q)
+    eq4 = 9*x*cos(45)/10 + y*sin(z) - z
+
+    assert nonlinsolve([eq1, eq2, eq3, eq4], x, y, z, q) ==\
+        FiniteSet((0, 0, 0, q))
+
+
+def test_issue_14565():
+    # removed redundancy
+    assert dumeq(nonlinsolve([k + m, k + m*exp(-2*pi*k)], [k, m]) ,
+        FiniteSet((-n*I, ImageSet(Lambda(n, n*I), S.Integers))))
+
 
 # end of tests for nonlinsolve
 
@@ -2591,9 +2644,9 @@ def test_issue_17276():
 
 
 def test_issue_10426():
-    x=Dummy('x')
-    a=Symbol('a')
-    n=Dummy('n')
+    x = Dummy('x')
+    a = Symbol('a')
+    n = Dummy('n')
     assert (solveset(sin(x + a) - sin(x), a)).dummy_eq(Dummy('x')) == (Union(
         ImageSet(Lambda(n, 2*n*pi), S.Integers),
         Intersection(S.Complexes, ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*x))) + 2*im(x))),
