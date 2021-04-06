@@ -912,7 +912,7 @@ def solve(f, *symbols, **flags):
             f[i] = fi.as_expr()
 
         # rewrite hyperbolics in terms of exp
-        f[i] = f[i].replace(lambda w: isinstance(w, HyperbolicFunction),
+        f[i] = f[i].replace(lambda w: (w.free_symbols & set(symbols)) and isinstance(w, HyperbolicFunction),
                 lambda w: w.rewrite(exp))
 
         # if we have a Matrix, we need to iterate over its elements again
@@ -2296,7 +2296,7 @@ def solve_linear_system(system, *symbols, **flags):
     {}
 
     """
-    do_simplify = flags.get('simplify', True)
+    do_simplify = flags.get('simplify', False)
 
     assert system.shape[1] == len(symbols) + 1
 

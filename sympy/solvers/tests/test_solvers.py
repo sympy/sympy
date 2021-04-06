@@ -2319,7 +2319,7 @@ def test_issue_20902():
 def test_issue_21034():
     system = Matrix([[1, 0, 12],
         [0, 1, -(-6 - 6*exp(exp(-4*I))*exp(exp(4*I)))*exp(-exp(-4*I)/2)*exp(-exp(4*I)/2)]])
-    assert solve_linear_system(system, x, y) == {x: 12, y: 12*cosh(cos(4))}
+    assert solve_linear_system(system, x, y, simplify=True) == {x: 12, y: 12*cosh(cos(4))}
     #Do not change this test to any other form as some integrals might fail if expanded form
     #of hyperbolic cos is used, such as -(-6 - 6*exp(exp(-4*I))*exp(exp(4*I)))*exp(-exp(-4*I)/2)*exp(-exp(4*I)/2)
     #instead of simplified cosh(cos(4)). Refer to issue 21034
