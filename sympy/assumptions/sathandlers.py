@@ -204,16 +204,13 @@ _old_assump_getters = {
 }
 
 def _old_assump_replacer(obj):
-    if not isinstance(obj, AppliedPredicate):
-        return obj
-
-    e = obj.arguments[0]
+    # obj is AppliedPredicate
 
     getter = _old_assump_getters.get(obj.function, None)
     if getter is None:
         return obj
 
-    ret = getter(e)
+    ret = getter(*obj.arguments)
     if ret is None:
         return obj
     return ret
