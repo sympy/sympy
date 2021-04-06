@@ -330,6 +330,14 @@ def _invert_complex(f, g_ys, symbol):
                 return (h, S.EmptySet)
             return _invert_complex(h, imageset(Lambda(n, n/g), g_ys), symbol)
 
+    if f.is_Pow:
+        base, expo = f.args
+        # special case: g**r = 0
+        # Could be improved like `_invert_real` to handle more general cases.
+        if expo.is_Rational and g_ys == FiniteSet(0):
+            if expo.is_positive:
+                return _invert_complex(base, g_ys, symbol)
+
     if hasattr(f, 'inverse') and f.inverse() is not None and \
        not isinstance(f, TrigonometricFunction) and \
        not isinstance(f, HyperbolicFunction) and \

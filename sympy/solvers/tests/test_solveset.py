@@ -151,6 +151,7 @@ def test_invert_real():
 def test_invert_complex():
     assert invert_complex(x + 3, y, x) == (x, FiniteSet(y - 3))
     assert invert_complex(x*3, y, x) == (x, FiniteSet(y / 3))
+    assert invert_complex((x - 1)**3, 0, x) == (x, FiniteSet(1))
 
     assert dumeq(invert_complex(exp(x), y, x),
         (x, imageset(Lambda(n, I*(2*pi*n + arg(y)) + log(Abs(y))), S.Integers)))
