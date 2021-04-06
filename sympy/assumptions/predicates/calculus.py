@@ -17,8 +17,6 @@ class FinitePredicate(Predicate):
 
     >>> from sympy import Q, ask, S, oo, I, zoo
     >>> from sympy.abc import x
-    >>> ask(Q.finite(S.NaN))
-    False
     >>> ask(Q.finite(oo))
     False
     >>> ask(Q.finite(-oo))
@@ -30,6 +28,8 @@ class FinitePredicate(Predicate):
     >>> ask(Q.finite(2 + 3*I))
     True
     >>> print(ask(Q.finite(x), Q.positive(x)))
+    None
+    >>> print(ask(Q.finite(S.NaN)))
     None
 
     References

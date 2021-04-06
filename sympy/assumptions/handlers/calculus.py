@@ -213,9 +213,13 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return True
 
-@FinitePredicate.register_many(ComplexInfinity, Infinity, NegativeInfinity, NaN)
+@FinitePredicate.register_many(ComplexInfinity, Infinity, NegativeInfinity)
 def _(expr, assumptions):
     return False
+
+@FinitePredicate.register(NaN)
+def _(expr, assumptions):
+    return None
 
 
 # InfinitePredicate
@@ -225,7 +229,6 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return True
 
-
 @InfinitePredicate.register(NaN)
 def _(expr, assumptions):
-    return False
+    return None
