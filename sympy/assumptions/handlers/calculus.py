@@ -228,7 +228,3 @@ def _(expr, assumptions):
 @InfinitePredicate.register_many(ComplexInfinity, Infinity, NegativeInfinity)
 def _(expr, assumptions):
     return True
-
-@InfinitePredicate.register(NaN)
-def _(expr, assumptions):
-    return None

@@ -253,6 +253,7 @@ def test_nan():
     assert ask(Q.even(nan)) is False
     assert ask(Q.odd(nan)) is False
     assert ask(Q.finite(nan)) is None
+    assert ask(Q.infinite(nan)) is None
     assert ask(Q.prime(nan)) is False
     assert ask(Q.composite(nan)) is False
     assert ask(Q.hermitian(nan)) is False
