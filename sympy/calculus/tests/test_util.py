@@ -1,6 +1,6 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    cot, sec, csc, Abs, symbols, I, re, simplify,
-                   expint, Rational)
+                   expint, Rational, Heaviside, Piecewise)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds, is_convex,
                                  stationary_points, minimum, maximum)
@@ -68,6 +68,10 @@ def test_continuous_domain():
         Union(Interval.open(-oo, 0), Interval.open(0, oo))
     assert continuous_domain(1/(x**2 - 4) + 2, x, S.Reals) == \
         Union(Interval.open(-oo, -2), Interval.open(-2, 2), Interval.open(2, oo))
+    assert continuous_domain(Heaviside(1/2 - x), x, Interval(0,1)) == \
+        Union(Interval.Ropen(0, 1/2), Interval.Lopen(1/2, 1))
+    assert continuous_domain(Piecewise((0, x < 1/2), (1, True)), x, S.Reals) ==\
+        Union(Interval.open(-oo, 1/2), Interval.open(1/2, oo))
     domain = continuous_domain(log(tan(x)**2 + 1), x, S.Reals)
     assert not domain.contains(3*pi/2)
     assert domain.contains(5)
