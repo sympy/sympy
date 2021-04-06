@@ -395,7 +395,7 @@ __all__ = [
     'josephson_constant',
     'von_klitzing_constant',
     'amu', 'amus', 'atomic_mass_unit', 'atomic_mass_constant',
-    'me', 'electron_rest_mass_constant,'
+    'me', 'electron_rest_mass_constant',
     'gee', 'gees', 'acceleration_due_to_gravity',
     'u0', 'magnetic_constant', 'vacuum_permeability',
     'e0', 'electric_constant', 'vacuum_permittivity',
