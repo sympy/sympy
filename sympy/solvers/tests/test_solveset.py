@@ -1565,7 +1565,7 @@ def test_trig_system_fail():
     # http://www.vitutor.com/geometry/trigonometry/equations_systems.html#uno
     sys = [sin(x) + sin(y) - (sqrt(3) + 1)/2,
         sin(x) - sin(y) - (sqrt(3) - 1)/2]
-    # gives 
+    # gives
     # ConditionSet((x, y), Eq(2*sin(x) - 2*sin(y) - sqrt(3) + 1, 0) &
     # Eq(2*sin(x) + 2*sin(y) - sqrt(3) - 1, 0), ProductSet(Complexes,
     # Complexes))
