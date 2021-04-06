@@ -639,10 +639,7 @@ def test_issue_12769():
         2*F0**(b + 1)*K**(2*b)*a*r*s0*(b**2 - 2*b + 1) - \
         2*F0**(b + 1)*K**(b + 1)*a**2*(b - 1))/((b - 1)*(b**2 - 2*b + 1))))*(b*r -  b - r + 1)
 
-    assert fx.subs(K, F0).cancel().together() == \
-        F0**(2*b)*s0*(b*r**2 - 2*b*r + b - r**2 + 2*r - 1)
-    assert limit(fx, K, F0).factor() == \
-        F0**(2*b)*s0*(b - 1)*(r - 1)*(r - sqrt(1/(b**2 - 2*b + 1))*Abs(b - 1))
+    assert fx.subs(K, F0).factor(deep=True) == limit(fx, K, F0).factor(deep=True)
 
 
 def test_issue_13332():
