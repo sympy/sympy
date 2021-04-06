@@ -2,7 +2,7 @@
 from functools import reduce
 
 from sympy.core import S
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, ordered
 from sympy.core.function import Function
 from sympy.core.relational import _canonical, Ge, Gt
 from sympy.core.numbers import oo
@@ -1084,13 +1084,13 @@ def _laplace_transform(f, t, s_, simplify=True):
                 a = Max(a_, a)
             else:
                 aux = And(aux, Or(*aux_))
-        return a, aux
+        return a, aux.canonical if aux.is_Relational else aux
 
     conds = [process_conds(c) for c in disjuncts(cond)]
     conds2 = [x for x in conds if x[1] != False and x[0] != -oo]
     if not conds2:
         conds2 = [x for x in conds if x[1] != False]
-    conds = conds2
+    conds = list(ordered(conds2))
 
     def cnt(expr):
         if expr == True or expr == False:
@@ -1100,7 +1100,7 @@ def _laplace_transform(f, t, s_, simplify=True):
 
     if not conds:
         raise IntegralTransformError('Laplace', f, 'no convergence found')
-    a, aux = conds[0]
+    a, aux = conds[0]  # XXX is [0] always the right one?
 
     def sbs(expr):
         return expr.subs(s, s_)

@@ -39,7 +39,7 @@ def _IntegerPredicate_number(expr, assumptions):
 def _(expr, assumptions):
     return True
 
-@IntegerPredicate.register_many(Exp1, GoldenRatio, ImaginaryUnit, Infinity, NaN,
+@IntegerPredicate.register_many(Exp1, GoldenRatio, ImaginaryUnit, Infinity,
     NegativeInfinity, Pi, Rational, TribonacciConstant)
 def _(expr, assumptions):
     return False
@@ -110,7 +110,7 @@ def _(expr, assumptions):
     return None
 
 @RationalPredicate.register_many(Exp1, GoldenRatio, ImaginaryUnit, Infinity,
-    NaN, NegativeInfinity, Pi, TribonacciConstant)
+    NegativeInfinity, Pi, TribonacciConstant)
 def _(expr, assumptions):
     return False
 
@@ -179,10 +179,6 @@ def _(expr, assumptions):
 
 # IrrationalPredicate
 
-@IrrationalPredicate.register(NaN)
-def _(expr, assumptions):
-    return False
-
 @IrrationalPredicate.register(Expr)
 def _(expr, assumptions):
     ret = expr.is_irrational
@@ -218,7 +214,7 @@ def _RealPredicate_number(expr, assumptions):
 def _(expr, assumptions):
     return True
 
-@RealPredicate.register_many(ImaginaryUnit, Infinity, NaN, NegativeInfinity)
+@RealPredicate.register_many(ImaginaryUnit, Infinity, NegativeInfinity)
 def _(expr, assumptions):
     return False
 
@@ -353,20 +349,12 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return True
 
-@ExtendedRealPredicate.register(NaN)
-def _(expr, assumptions):
-    return False
-
 @ExtendedRealPredicate.register_many(Add, Mul, Pow)
 def _(expr, assumptions):
     return test_closed_group(expr, assumptions, Q.extended_real)
 
 
 # HermitianPredicate
-
-@HermitianPredicate.register(NaN)
-def _(expr, assumptions):
-    return False
 
 @HermitianPredicate.register(object)
 def _(expr, assumptions):
@@ -460,7 +448,7 @@ def _(mat, assumptions):
 def _(expr, assumptions):
     return True
 
-@ComplexPredicate.register_many(Infinity, NaN, NegativeInfinity)
+@ComplexPredicate.register_many(Infinity, NegativeInfinity)
 def _(expr, assumptions):
     return False
 
@@ -485,6 +473,10 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return ask(Q.complex_elements(expr.args[0]), assumptions)
 
+@ComplexPredicate.register(NaN)
+def _(expr, assumptions):
+    return None
+
 
 # ImaginaryPredicate
 
@@ -500,10 +492,6 @@ def _Imaginary_number(expr, assumptions):
 @ImaginaryPredicate.register(ImaginaryUnit)
 def _(expr, assumptions):
     return True
-
-@ImaginaryPredicate.register(NaN)
-def _(expr, assumptions):
-    return False
 
 @ImaginaryPredicate.register(Expr)
 def _(expr, assumptions):
@@ -639,12 +627,12 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return not (expr.as_real_imag()[1] == 0)
 
+@ImaginaryPredicate.register(NaN)
+def _(expr, assumptions):
+    return None
+
 
 # AntihermitianPredicate
-
-@AntihermitianPredicate.register(NaN)
-def _(expr, assumptions):
-    return False
 
 @AntihermitianPredicate.register(object)
 def _(expr, assumptions):
@@ -729,7 +717,7 @@ def _(mat, assumptions):
 def _(expr, assumptions):
     return True
 
-@AlgebraicPredicate.register_many(ComplexInfinity, Exp1, Infinity, NaN,
+@AlgebraicPredicate.register_many(ComplexInfinity, Exp1, Infinity,
     NegativeInfinity, Pi)
 def _(expr, assumptions):
     return False

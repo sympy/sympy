@@ -5,8 +5,8 @@ from sympy.assumptions.assume import (global_assumptions, Predicate,
 from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 from sympy.core import sympify
 from sympy.core.cache import cacheit
-from sympy.core.relational import Relational
 from sympy.core.kind import BooleanKind
+from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.logic.boolalg import (to_cnf, And, Not, Implies, Equivalent)
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
@@ -303,9 +303,6 @@ def _extract_all_facts(assump, exprs):
 
     """
     facts = set()
-    if len(exprs) == 1 and isinstance(exprs[0], Relational):
-        rel = exprs[0]
-        exprs = (rel, rel.reversed)
 
     for clause in assump.clauses:
         args = []
@@ -379,7 +376,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         Relations in assumptions are not implemented (yet), so the following
         will not give a meaningful result.
 
-        >>> ask(Q.positive(x), Q.is_true(x > 0))
+        >>> ask(Q.positive(x), x > 0)
 
         It is however a work in progress.
 
@@ -401,8 +398,11 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
         raise TypeError("assumptions must be a valid logical expression")
 
+    binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
     if isinstance(proposition, AppliedPredicate):
         key, args = proposition.function, proposition.arguments
+    elif proposition.func in binrelpreds:
+        key, args = binrelpreds[proposition.func], proposition.args
     else:
         key, args = Q.is_true, (proposition,)
 
