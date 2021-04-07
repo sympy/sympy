@@ -2319,7 +2319,7 @@ def test_issue_20902():
 def test_issue_21034():
     a = symbols('a', real=True)
     system = [x - cosh(cos(4)), y - sinh(cos(a)), z - tanh(x)]
-    assert solve(system, x, y, z) == {x: cosh(cos(4)), z: tanh(cosh(cos(4))), 
+    assert solve(system, x, y, z) == {x: cosh(cos(4)), z: tanh(cosh(cos(4))),
         y: sinh(cos(a))}
     #Constants inside hyperbolic functions should not be rewritten in terms of exp
     newsystem = [(exp(x) - exp(-x)) - tanh(x)*(exp(x) + exp(-x)) + x - 5]
