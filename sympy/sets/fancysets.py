@@ -910,14 +910,17 @@ class Range(Set):
 
     def as_relational(self, x):
         """Rewrite a Range in terms of equalities and logic operators. """
-        from sympy.functions.elementary.integers import floor
         if self.size == 1:
             return Eq(x, self[0])
         else:
+            from sympy.core.mod import Mod
+            from sympy.functions.elementary.integers import floor
+            md = self.start % self.step
             return And(
                 Eq(x, floor(x)),
                 x >= self.inf if self.inf in self else x > self.inf,
-                x <= self.sup if self.sup in self else x < self.sup)
+                x <= self.sup if self.sup in self else x < self.sup,
+                Eq(Mod(x, self.step), md))
 
 converter[range] = lambda r: Range(r.start, r.stop, r.step)
 
