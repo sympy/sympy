@@ -23,7 +23,6 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 """
 
 
-import warnings
 from collections.abc import Callable
 
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
@@ -139,11 +138,13 @@ class Plot:
 
         For example, if ``MatplotlibBackend`` is being used, then
         Matplotlib string colors are acceptable ("red", "r", "cyan", "c", ...).
-        We can also specify grayscale colors by setting a float
-        value `0 < color < 1`. We can also specify a function returning a single
-        value: this will be used to apply a color-loop.
+        Alternatively, we can use a float number `0 < color < 1` wrapped in a
+        string (for example, `line_color="0.5"`) to specify grayscale colors.
+        Alternatively, We can specify a function returning a single
+        float value: this will be used to apply a color-loop (for example,
+        `line_color=lambda x: math.cos(x)`).
 
-        Note that by setting ``line_color``, it would be applied simultaneously
+        Note that by setting line_color, it would be applied simultaneously
         to all the series.
 
     options:
@@ -2106,9 +2107,9 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
     series = []
     plot_expr = check_arguments(args, 3, 1)
     series = [Parametric3DLineSeries(*arg, **kwargs) for arg in plot_expr]
-    kwargs.setdefault("xlabel", "x")
-    kwargs.setdefault("ylabel", "y")
-    kwargs.setdefault("zlabel", "f(x, y)")
+    xlabel = kwargs.setdefault("xlabel", "x")
+    ylabel = kwargs.setdefault("ylabel", "y")
+    kwargs.setdefault("zlabel", "f(%s, %s)" % (xlabel, ylabel))
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
@@ -2357,10 +2358,8 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
     series = []
     plot_expr = check_arguments(args, 3, 2)
     series = [ParametricSurfaceSeries(*arg, **kwargs) for arg in plot_expr]
-    xlabel = "x"
-    ylabel = "y"
-    kwargs.setdefault("xlabel", xlabel)
-    kwargs.setdefault("ylabel", ylabel)
+    xlabel = kwargs.setdefault("xlabel", "x")
+    ylabel = kwargs.setdefault("ylabel", "y")
     kwargs.setdefault("zlabel", "f(%s, %s)" % (xlabel, ylabel))
     plots = Plot(*series, **kwargs)
     if show:
