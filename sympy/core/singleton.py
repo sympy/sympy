@@ -1,8 +1,6 @@
 """Singleton mechanism"""
 
 
-from typing import Any, Dict, Type
-
 from .core import Registry
 from .assumptions import ManagedProperties
 from .sympify import sympify
