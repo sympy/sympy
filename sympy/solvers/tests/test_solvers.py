@@ -2317,9 +2317,15 @@ def test_issue_20902():
 
 
 def test_issue_21034():
-    system = Matrix([[1, 0, 12],
-        [0, 1, -(-6 - 6*exp(exp(-4*I))*exp(exp(4*I)))*exp(-exp(-4*I)/2)*exp(-exp(4*I)/2)]])
-    assert solve_linear_system(system, x, y, simplify=True) == {x: 12, y: 12*cosh(cos(4))}
+    a = symbols('a', real=True)
+    system = [x - cosh(cos(4)), y - sinh(cos(a)), z - tanh(x)]
+    assert solve(system, x, y, z) == {x: cosh(cos(4)), z: tanh(cosh(cos(4))), 
+        y: sinh(cos(a))}
+    #Constants inside hyperbolic functions should not be rewritten in terms of exp
+    newsystem = [(exp(x) - exp(-x)) - tanh(x)*(exp(x) + exp(-x)) + x - 5]
+    assert solve(newsystem, x) == {x: 5}
+    #If the variable of interest is present in hyperbolic function, only then
+    # it shouuld be rewritten in terms of exp and solved further
 
 
 def test_issue_4886():

@@ -2296,12 +2296,7 @@ def solve_linear_system(system, *symbols, **flags):
     {}
 
     """
-    do_simplify = flags.get('simplify', False)
-
     assert system.shape[1] == len(symbols) + 1
-
-    if do_simplify:
-        system = system.applyfunc(simplify)
 
     # This is just a wrapper for solve_lin_sys
     eqs = list(system * Matrix(symbols + (-1,)))
