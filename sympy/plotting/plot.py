@@ -1009,7 +1009,7 @@ class SurfaceBaseSeries(BaseSeries):
             else:
                 return f(*variables)
         else:
-            return c*np.ones(self.nb_of_points)
+            return c*np.ones(min(self.nb_of_points_x, self.nb_of_points_y))
 
 
 class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
