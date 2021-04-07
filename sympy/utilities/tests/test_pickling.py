@@ -40,7 +40,7 @@ excluded_attrs = {
 def check(a, exclude=[], check_attr=True):
     """ Check that pickling and copying round-trips.
     """
-    protocols = [0, 1, 2, copy.copy, copy.deepcopy, 3, 4]
+    protocols = [2, copy.copy, copy.deepcopy, 3, 4]
     if cloudpickle:
         protocols.extend([cloudpickle])
 

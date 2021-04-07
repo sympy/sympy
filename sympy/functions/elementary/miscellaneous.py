@@ -42,17 +42,16 @@ class IdentityFunction(Lambda, metaclass=Singleton):
 
     """
 
-    def __new__(cls):
-        x = Dummy('x')
-        #construct "by hand" to avoid infinite loop
-        return Expr.__new__(cls, Tuple(x), x)
+    _symbol = Dummy('x')
 
     @property
-    def args(self):
-        return ()
+    def signature(self):
+        return Tuple(self._symbol)
 
-    def __getnewargs__(self):
-        return ()
+    @property
+    def expr(self):
+        return self._symbol
+
 
 Id = S.IdentityFunction
 
