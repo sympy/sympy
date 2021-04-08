@@ -71,6 +71,8 @@ def test_continuous_domain():
     domain = continuous_domain(log(tan(x)**2 + 1), x, S.Reals)
     assert not domain.contains(3*pi/2)
     assert domain.contains(5)
+    d = Symbol('d', even=True, zero=False)
+    assert continuous_domain(x**(1/d), x, S.Reals) == Interval(0, oo)
 
 
 def test_not_empty_in():
