@@ -300,6 +300,12 @@ def test_minimum():
     raises(ValueError, lambda : minimum(sin(x), S.One))
 
 
+def test_issue_19869():
+    t = symbols('t')
+    assert (maximum(sqrt(3)*(t - 1)/(3*sqrt(t**2 + 1)), t)
+        ) == sqrt(3)/3
+
+
 def test_AccumBounds():
     assert AccumBounds(1, 2).args == (1, 2)
     assert AccumBounds(1, 2).delta is S.One

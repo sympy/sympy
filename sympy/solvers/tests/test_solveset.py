@@ -213,6 +213,14 @@ def test_issue_18449():
     # TODO: Is the above solution set definitely complete?
 
 
+def test_issue_21047():
+    f = (2 - x)**2 + (sqrt(x - 1) - 1)**6
+    assert(solveset(f, x, S.Reals)) == FiniteSet(2)
+    f = (sqrt(x)-1)**2 + (sqrt(x)+1)**2 -2*x**2 + sqrt(2)
+    assert solveset(f, x, S.Reals) == FiniteSet(
+        S.Half - sqrt(2*sqrt(2) + 5)/2, S.Half + sqrt(2*sqrt(2) + 5)/2)
+
+
 def test_is_function_class_equation():
     from sympy.abc import x, a
     assert _is_function_class_equation(TrigonometricFunction,
@@ -387,16 +395,6 @@ def test_return_root_of():
                        CRootOf(x**6 - x + 1, 5))
 
 
-def test__has_rational_power():
-    from sympy.solvers.solveset import _has_rational_power
-    assert _has_rational_power(sqrt(2), x)[0] is False
-    assert _has_rational_power(x*sqrt(2), x)[0] is False
-
-    assert _has_rational_power(x**2*sqrt(x), x) == (True, 2)
-    assert _has_rational_power(sqrt(2)*x**Rational(1, 3), x) == (True, 3)
-    assert _has_rational_power(sqrt(x)*x**Rational(1, 3), x) == (True, 6)
-
-
 def test_solveset_sqrt_1():
     assert solveset_real(sqrt(5*x + 6) - 2 - x, x) == \
         FiniteSet(-S.One, S(2))
@@ -452,6 +450,9 @@ def test_solveset_sqrt_2():
 
     eq = sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))
     assert solveset_real(eq, x) == FiniteSet()
+
+    eq = (x - 4)**2 + (sqrt(x) - 2)**4
+    assert solveset_real(eq, x) == FiniteSet(-4, 4)
 
     eq = (sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
     ans = solveset_real(eq, x)
@@ -1294,13 +1295,9 @@ def test_solveset_domain():
 
 
 def test_improve_coverage():
-    from sympy.solvers.solveset import _has_rational_power
     solution = solveset(exp(x) + sin(x), x, S.Reals)
     unsolved_object = ConditionSet(x, Eq(exp(x) + sin(x), 0), S.Reals)
     assert solution.dummy_eq(unsolved_object)
-
-    assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
-    assert _has_rational_power((sin(x)**2)*(exp(x) + 1)**3, x) == (False, S.One)
 
 
 def test_issue_9522():
