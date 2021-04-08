@@ -84,6 +84,9 @@ class DDM(list):
     This is a list subclass and is a wrapper for a list of lists that supports
     basic matrix arithmetic +, -, *, **.
     """
+
+    fmt = 'dense'
+
     def __init__(self, rowslist, shape, domain):
         super().__init__(rowslist)
         self.shape = self.rows, self.cols = m, n = shape
@@ -92,9 +95,29 @@ class DDM(list):
         if not (len(self) == m and all(len(row) == n for row in self)):
             raise DDMBadInputError("Inconsistent row-list/shape")
 
+    def to_list(self):
+        return list(self)
+
+    def to_ddm(self):
+        return self
+
+    def to_sdm(self):
+        return SDM.from_list(self, self.shape, self.domain)
+
+    def convert_to(self, K):
+        Kold = self.domain
+        if K == Kold:
+            return self.copy()
+        rows = ([K.convert_from(e, Kold) for e in row] for row in self)
+        return DDM(rows, self.shape, K)
+
     def __str__(self):
+        rowsstr = ['[%s]' % ', '.join(map(str, row)) for row in self]
+        return '[%s]' % ', '.join(rowsstr)
+
+    def __repr__(self):
         cls = type(self).__name__
-        rows = list.__str__(self)
+        rows = list.__repr__(self)
         return '%s(%s, %s, %s)' % (cls, rows, self.shape, self.domain)
 
     def __eq__(self, other):
@@ -198,6 +221,22 @@ class DDM(list):
         ddm_imatmul(c, a, b)
         return c
 
+    def hstack(A, B):
+        Anew = list(A.copy())
+        rows, cols = A.shape
+        domain = A.domain
+
+        Brows, Bcols = B.shape
+        assert Brows == rows
+        assert B.domain == domain
+
+        cols += Bcols
+
+        for i, Bi in enumerate(B):
+            Anew[i].extend(Bi)
+
+        return DDM(Anew, (rows, cols), A.domain)
+
     def rref(a):
         """Reduced-row echelon form of a and list of pivots"""
         b = a.copy()
@@ -210,15 +249,17 @@ class DDM(list):
         domain = a.domain
 
         basis = []
+        nonpivots = []
         for i in range(cols):
             if i in pivots:
                 continue
+            nonpivots.append(i)
             vec = [domain.one if i == j else domain.zero for j in range(cols)]
             for ii, jj in enumerate(pivots):
                 vec[jj] -= rref[ii][i]
             basis.append(vec)
 
-        return DDM(basis, (len(basis), cols), domain)
+        return DDM(basis, (len(basis), cols), domain), nonpivots
 
     def det(a):
         """Determinant of a"""
@@ -271,3 +312,6 @@ class DDM(list):
         vec = ddm_berk(a, K)
         coeffs = [vec[i][0] for i in range(n+1)]
         return coeffs
+
+
+from .sdm import SDM

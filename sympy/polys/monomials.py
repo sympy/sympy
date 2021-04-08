@@ -14,37 +14,36 @@ from sympy.core.compatibility import is_sequence
 @public
 def itermonomials(variables, max_degrees, min_degrees=None):
     r"""
-    `max_degrees` and `min_degrees` are either both integers or both lists.
-    Unless otherwise specified, `min_degrees` is either 0 or [0,...,0].
+    ``max_degrees`` and ``min_degrees`` are either both integers or both lists.
+    Unless otherwise specified, ``min_degrees`` is either ``0`` or
+    ``[0, ..., 0]``.
 
-    A generator of all monomials `monom` is returned, such that
+    A generator of all monomials ``monom`` is returned, such that
     either
-    min_degree <= total_degree(monom) <= max_degree,
+    ``min_degree <= total_degree(monom) <= max_degree``,
     or
-    min_degrees[i] <= degree_list(monom)[i] <= max_degrees[i], for all i.
+    ``min_degrees[i] <= degree_list(monom)[i] <= max_degrees[i]``,
+    for all ``i``.
 
-    Case I:: `max_degrees` and `min_degrees` are both integers.
-    ===========================================================
-    Given a set of variables `V` and a min_degree `N` and a max_degree `M`
-    generate a set of monomials of degree less than or equal to `N` and greater
-    than or equal to `M`. The total number of monomials in commutative
-    variables is huge and is given by the following formula if `M = 0`:
+    Case I. ``max_degrees`` and ``min_degrees`` are both integers
+    =============================================================
+
+    Given a set of variables $V$ and a min_degree $N$ and a max_degree $M$
+    generate a set of monomials of degree less than or equal to $N$ and greater
+    than or equal to $M$. The total number of monomials in commutative
+    variables is huge and is given by the following formula if $M = 0$:
 
         .. math::
-
             \frac{(\#V + N)!}{\#V! N!}
 
     For example if we would like to generate a dense polynomial of
-    a total degree `N = 50` and `M = 0`, which is the worst case, in 5
+    a total degree $N = 50$ and $M = 0$, which is the worst case, in 5
     variables, assuming that exponents and all of coefficients are 32-bit long
     and stored in an array we would need almost 80 GiB of memory! Fortunately
     most polynomials, that we will encounter, are sparse.
 
-    Examples
-    ========
-
-    Consider monomials in commutative variables `x` and `y`
-    and non-commutative variables `a` and `b`::
+    Consider monomials in commutative variables $x$ and $y$
+    and non-commutative variables $a$ and $b$::
 
         >>> from sympy import symbols
         >>> from sympy.polys.monomials import itermonomials
@@ -64,19 +63,19 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         >>> sorted(itermonomials([x, y], 2, 1), key=monomial_key('grlex', [y, x]))
         [x, y, x**2, x*y, y**2]
 
+    Case II. ``max_degrees`` and ``min_degrees`` are both lists
+    ===========================================================
 
-    Case II:: `max_degrees` and `min_degrees` are both lists.
-    =========================================================
-    If max_degrees = [d_1, ..., d_n] and min_degrees = [e_1, ..., e_n],
-    the number of monomials generated is:
+    If ``max_degrees = [d_1, ..., d_n]`` and
+    ``min_degrees = [e_1, ..., e_n]``, the number of monomials generated
+    is:
 
-        (d_1 - e_1 + 1) * ... * (d_n - e_n + 1)
+    .. math::
+        (d_1 - e_1 + 1) (d_2 - e_2 + 1) \cdots (d_n - e_n + 1)
 
-    Example
-    =======
-
-    Let us generate all monomials `monom` in variables `x`, and `y`
-    such that [1, 2][i] <= degree_list(monom)[i] <= [2, 4][i], i = 0, 1 ::
+    Let us generate all monomials ``monom`` in variables $x$ and $y$
+    such that ``[1, 2][i] <= degree_list(monom)[i] <= [2, 4][i]``,
+    ``i = 0, 1`` ::
 
         >>> from sympy import symbols
         >>> from sympy.polys.monomials import itermonomials

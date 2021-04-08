@@ -3,9 +3,10 @@ General binary relations.
 """
 
 from sympy import S
-from sympy.assumptions import AppliedPredicate, ask, Predicate
-from sympy.core.compatibility import ordered
+from sympy.assumptions import AppliedPredicate, ask, Predicate, Q
 from sympy.core.kind import BooleanKind
+from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+from sympy.logic.boolalg import conjuncts, Not
 
 __all__ = ["BinaryRelation", "AppliedBinaryRelation"]
 
@@ -32,7 +33,7 @@ class BinaryRelation(Predicate):
     >>> from sympy import Q, ask, sin, cos
     >>> from sympy.abc import x
     >>> Q.eq(sin(x)**2+cos(x)**2, 1)
-    sin(x)**2 + cos(x)**2 = 1
+    Q.eq(sin(x)**2 + cos(x)**2, 1)
     >>> ask(_)
     True
 
@@ -40,30 +41,30 @@ class BinaryRelation(Predicate):
     Here, we define a relation $R$ such that $x R y$ returns true if
     $x = y + 1$.
 
-    >>> from sympy import ask, Number
+    >>> from sympy import ask, Number, Q
     >>> from sympy.assumptions import BinaryRelation
     >>> class MyRel(BinaryRelation):
     ...     name = "R"
     ...     is_reflexive = False
-    >>> R = MyRel()
-    >>> @R.register(Number, Number)
+    >>> Q.R = MyRel()
+    >>> @Q.R.register(Number, Number)
     ... def _(n1, n2, assumptions):
     ...     return ask(Q.zero(n1 - n2 - 1), assumptions)
-    >>> R(2, 1)
-    2 R 1
+    >>> Q.R(2, 1)
+    Q.R(2, 1)
 
     Now, we can use ``ask()`` to evaluate it to boolean value.
 
-    >>> ask(R(2, 1))
+    >>> ask(Q.R(2, 1))
     True
-    >>> ask(R(1, 2))
+    >>> ask(Q.R(1, 2))
     False
 
-    ``R`` returns ``False`` with minimum cost if two arguments have same
-    structure because R is antireflexive relation [1] by
+    ``Q.R`` returns ``False`` with minimum cost if two arguments have same
+    structure because it is antireflexive relation [1] by
     ``is_reflexive = False``.
 
-    >>> ask(R(x, x))
+    >>> ask(Q.R(x, x))
     False
 
     References
@@ -114,7 +115,7 @@ class BinaryRelation(Predicate):
         if ret is not None:
             return ret
 
-        # don't perform simplify here. (done by AppliedBinaryRelation._eval_ask)
+        # don't perform simplify on args here. (done by AppliedBinaryRelation._eval_ask)
         # evaluate by multipledispatch
         lhs, rhs = args
         ret = self.handler(lhs, rhs, assumptions=assumptions)
@@ -128,14 +129,6 @@ class BinaryRelation(Predicate):
                 ret = self.handler(rhs, lhs, assumptions=assumptions)
 
         return ret
-
-    def _simplify_applied(self, lhs, rhs, **kwargs):
-        lhs, rhs = lhs.simplify(**kwargs), rhs.simplify(**kwargs)
-        return self(lhs, rhs)
-
-    def _eval_binary_symbols(self, lhs, rhs):
-        # override where necessary
-        return set()
 
 
 class AppliedBinaryRelation(AppliedPredicate):
@@ -181,68 +174,38 @@ class AppliedBinaryRelation(AppliedPredicate):
     def negated(self):
         neg_rel = self.function.negated
         if neg_rel is None:
-            return ~self
+            return Not(self, evaluate=False)
         return neg_rel(*self.arguments)
 
-    @property
-    def canonical(self):
-        """
-        Return a canonical form of the relational by putting a
-        number on the rhs, canonically removing a sign or else
-        ordering the args canonically. No other simplification is
-        attempted.
-        """
-        args = self.arguments
-        r = self
-        if r.rhs.is_number:
-            if any(side is S.NaN for side in (r.lhs, r.rhs)):
-                pass
-            elif r.rhs.is_Number and r.lhs.is_Number and r.lhs > r.rhs:
-                r = r.reversed
-        elif r.lhs.is_number:
-            r = r.reversed
-        elif tuple(ordered(args)) != args:
-            r = r.reversed
-
-        LHS_CEMS = getattr(r.lhs, 'could_extract_minus_sign', None)
-        RHS_CEMS = getattr(r.rhs, 'could_extract_minus_sign', None)
-
-        if any(side.kind is BooleanKind for side in r.arguments):
-            return r
-
-        # Check if first value has negative sign
-        if LHS_CEMS and LHS_CEMS():
-            return r.reversedsign
-        elif not r.rhs.is_number and RHS_CEMS and RHS_CEMS():
-            # Right hand side has a minus, but not lhs.
-            # How does the expression with reversed signs behave?
-            # This is so that expressions of the type
-            # Eq(x, -y) and Eq(-x, y)
-            # have the same canonical representation
-            expr1, _ = ordered([r.lhs, -r.rhs])
-            if expr1 != r.lhs:
-                return r.reversed.reversedsign
-
-        return r
-
     def _eval_ask(self, assumptions):
+        conj_assumps = set()
+        binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
+        for a in conjuncts(assumptions):
+            if a.func in binrelpreds:
+                conj_assumps.add(binrelpreds[a.func](*a.args))
+            else:
+                conj_assumps.add(a)
+
+        # After CNF in assumptions module is modified to take polyadic
+        # predicate, this will be removed
+        if any(rel in conj_assumps for rel in (self, self.reversed)):
+            return True
+        neg_rels = (self.negated, self.reversed.negated, Not(self, evaluate=False),
+            Not(self.reversed, evaluate=False))
+        if any(rel in conj_assumps for rel in neg_rels):
+            return False
+
+        # evaluation using multipledispatching
         ret = self.function.eval(self.arguments, assumptions)
         if ret is not None:
             return ret
 
-        # simplify and try again
-        rel = self.simplify()
-        return rel.function.eval(rel.arguments, assumptions)
-
-    def _eval_simplify(self, **kwargs):
-        return self.function._simplify_applied(self.lhs, self.rhs, **kwargs)
+        # simplify the args and try again
+        args = tuple(a.simplify() for a in self.arguments)
+        return self.function.eval(args, assumptions)
 
     def __bool__(self):
         ret = ask(self)
         if ret is None:
             raise TypeError("Cannot determine truth value of %s" % self)
         return ret
-
-    @property
-    def binary_symbols(self):
-        return self.function._eval_binary_symbols(*self.arguments)

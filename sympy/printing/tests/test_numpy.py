@@ -10,7 +10,8 @@ from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
     PermuteDims, ArrayDiagonal
-from sympy.printing.lambdarepr import NumPyPrinter
+from sympy.printing.numpy import NumPyPrinter, SciPyPrinter, _numpy_known_constants, \
+    _numpy_known_functions, _scipy_known_constants, _scipy_known_functions
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 
 from sympy.testing.pytest import warns_deprecated_sympy
@@ -314,3 +315,30 @@ def test_issue_17006():
     n = symbols('n', integer=True)
     N = MatrixSymbol("M", n, n)
     raises(NotImplementedError, lambda: lambdify(N, N + Identity(n)))
+
+def test_numpy_known_funcs_consts():
+    assert _numpy_known_constants['NaN'] == 'numpy.nan'
+    assert _numpy_known_constants['EulerGamma'] == 'numpy.euler_gamma'
+
+    assert _numpy_known_functions['acos'] == 'numpy.arccos'
+    assert _numpy_known_functions['log'] == 'numpy.log'
+
+def test_scipy_known_funcs_consts():
+    assert _scipy_known_constants['GoldenRatio'] == 'scipy.constants.golden_ratio'
+    assert _scipy_known_constants['Pi'] == 'scipy.constants.pi'
+
+    assert _scipy_known_functions['erf'] == 'scipy.special.erf'
+    assert _scipy_known_functions['factorial'] == 'scipy.special.factorial'
+
+def test_numpy_print_methods():
+    prntr = NumPyPrinter()
+    assert hasattr(prntr, '_print_acos')
+    assert hasattr(prntr, '_print_log')
+
+def test_scipy_print_methods():
+    prntr = SciPyPrinter()
+    assert hasattr(prntr, '_print_acos')
+    assert hasattr(prntr, '_print_log')
+    assert hasattr(prntr, '_print_erf')
+    assert hasattr(prntr, '_print_factorial')
+    assert hasattr(prntr, '_print_chebyshevt')

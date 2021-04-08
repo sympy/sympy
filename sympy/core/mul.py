@@ -1904,7 +1904,7 @@ class Mul(Expr, AssocOp):
                 res += Order(x**n, x)
             return res
 
-        res = 0
+        res = S.Zero
         ords2 = [Add.make_args(factor) for factor in facs]
 
         for fac in product(*ords2):
