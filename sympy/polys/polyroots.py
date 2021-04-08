@@ -512,6 +512,8 @@ def roots_quintic(f):
         if not all(coeff.is_Rational for coeff in l):
             return result
         f = Poly(f/coeff_5)
+    elif not all(coeff.is_Rational for coeff in (p, q, r, s)):
+        return result
     quintic = PolyQuintic(f)
 
     # Eqn standardized. Algo for solving starts here
