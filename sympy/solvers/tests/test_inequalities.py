@@ -15,6 +15,7 @@ from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.abc import x, y
 from sympy.functions.elementary.integers import floor
+from sympy.core.mod import Mod
 
 from sympy.testing.pytest import raises, XFAIL
 
@@ -416,14 +417,15 @@ def test_integer_domain_relational_isolve():
     assert isolve((x - 1)*(x - 2)*(x - 4) < 0, x, domain=dom) == Eq(x, 3)
 
     x = Symbol('x')
-    assert isolve(x + 2 < 0, x, domain=S.Integers) ==\
-        (x <= -3) & (x > -oo) & Eq(x, floor(x))
-    assert isolve(2*x + 3 > 0, x, domain=S.Integers) ==\
-        (x >= -1) & (x < oo) & Eq(x, floor(x))
-    assert isolve((x**2 + 3*x - 2) < 0, x, domain=S.Integers) ==\
-        (x >= -3) & (x <= 0) & Eq(x, floor(x))
-    assert isolve((x**2 + 3*x - 2) > 0, x, domain=S.Integers) ==\
-        ((x >= 1) & (x < oo) & Eq(x, floor(x))) | ((x <= -4) & (x > -oo) & Eq(x, floor(x)))
+    assert isolve(x + 2 < 0, x, domain=S.Integers) == \
+           (x <= -3) & (x > -oo) & Eq(x, floor(x)) & Eq(Mod(x, -1), oo)
+    assert isolve(2 * x + 3 > 0, x, domain=S.Integers) == \
+           (x >= -1) & (x < oo) & Eq(x, floor(x)) & Eq(Mod(x, 1), 0)
+    assert isolve((x ** 2 + 3 * x - 2) < 0, x, domain=S.Integers) == \
+           (x >= -3) & (x <= 0) & Eq(x, floor(x)) & Eq(Mod(x, 1), 0)
+    assert isolve((x ** 2 + 3 * x - 2) > 0, x, domain=S.Integers) == \
+           ((x >= 1) & (x < oo) & Eq(x, floor(x)) & Eq(Mod(x, 1), 0)) | (
+                   (x <= -4) & (x > -oo) & Eq(x, floor(x)) & Eq(Mod(x, -1), oo))
 
 
 def test_issue_10671_12466():
