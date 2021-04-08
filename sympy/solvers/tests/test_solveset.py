@@ -1585,7 +1585,7 @@ def test_trig_system_fail():
     sys = [x + y - pi/2, sin(x) + sin(y) - 1]
     # solveset returns conditionset for sin(x) + sin(y) - 1
     soln_1 = (ImageSet(Lambda(n, n*pi + pi/2), S.Integers),
-        ImageSet(Lambda(n, n*pi)), S.Integers)
+        ImageSet(Lambda(n, n*pi), S.Integers))
     soln_1 = FiniteSet(soln_1)
     soln_2 = (ImageSet(Lambda(n, n*pi), S.Integers),
         ImageSet(Lambda(n, n*pi+ pi/2), S.Integers))
