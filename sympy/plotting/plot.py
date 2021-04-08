@@ -2107,9 +2107,9 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
     series = []
     plot_expr = check_arguments(args, 3, 1)
     series = [Parametric3DLineSeries(*arg, **kwargs) for arg in plot_expr]
-    xlabel = kwargs.setdefault("xlabel", "x")
-    ylabel = kwargs.setdefault("ylabel", "y")
-    kwargs.setdefault("zlabel", "f(%s, %s)" % (xlabel, ylabel))
+    kwargs.setdefault("xlabel", "x")
+    kwargs.setdefault("ylabel", "y")
+    kwargs.setdefault("zlabel", "z")
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
@@ -2358,9 +2358,9 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
     series = []
     plot_expr = check_arguments(args, 3, 2)
     series = [ParametricSurfaceSeries(*arg, **kwargs) for arg in plot_expr]
-    xlabel = kwargs.setdefault("xlabel", "x")
-    ylabel = kwargs.setdefault("ylabel", "y")
-    kwargs.setdefault("zlabel", "f(%s, %s)" % (xlabel, ylabel))
+    kwargs.setdefault("xlabel", "x")
+    kwargs.setdefault("ylabel", "y")
+    kwargs.setdefault("zlabel", "z")
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
