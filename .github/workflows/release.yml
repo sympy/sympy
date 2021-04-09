@@ -1,0 +1,35 @@
+# ------------------------------------------------------------------ #
+#                                                                    #
+#           SymPy CI script for Github Actions                       #
+#                                                                    #
+#   Run on the release brancha dn builds the release artifacts.      #
+#                                                                    #
+# ------------------------------------------------------------------ #
+
+name: release
+on:
+  push:
+    branches:
+      - 1.8
+  pull_request:
+    branches:
+      - 1.8
+jobs:
+
+  # -------------------- Build artifacts --------------------------- #
+
+  build:
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - run: release/ci_release_script.sh
+
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build_artifacts
+          path: release-1.8
