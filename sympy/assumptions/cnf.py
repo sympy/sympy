@@ -143,7 +143,27 @@ def to_NNF(expr):
     """
     Generates the Negation Normal Form of any boolean expression in terms
     of AND, OR, and Literal objects.
+
+    Examples
+    ========
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.cnf import to_NNF
+    >>> from sympy.abc import x
+    >>> expr = Q.even(x) & ~Q.positive(x)
+    >>> to_NNF(expr)
+    (Literal(Q.even(x), False) & Literal(Q.positive(x), True))
+
+    ``to_NNF`` decomposes the predicate into a combination of primitive
+    predicates if possible.
+
+    >>> to_NNF(Q.nonpositive)
+    (Literal(Q.negative, False) | Literal(Q.zero, False))
+    >>> to_NNF(Q.nonpositive(x))
+    (Literal(Q.negative(x), False) | Literal(Q.zero(x), False))
     """
+    from sympy.assumptions.assume import AppliedPredicate, Predicate
+    from sympy.assumptions.ask import get_composite_predicates
 
     if isinstance(expr, Not):
         arg = expr.args[0]
@@ -200,8 +220,20 @@ def to_NNF(expr):
         R = to_NNF(expr.args[2])
         return AND(OR(~L, M), OR(L, R))
 
-    else:
-        return Literal(expr)
+    if isinstance(expr, AppliedPredicate):
+        comp_dct = get_composite_predicates()
+        pred, args = expr.function, expr.arguments
+        newpred = comp_dct.get(pred, None)
+        if newpred is not None:
+            return to_NNF(newpred.rcall(*args))
+
+    if isinstance(expr, Predicate):
+        comp_dct = get_composite_predicates()
+        newpred = comp_dct.get(expr, None)
+        if newpred is not None:
+            return to_NNF(newpred)
+
+    return Literal(expr)
 
 
 def distribute_AND_over_OR(expr):
@@ -238,7 +270,9 @@ class CNF:
     >>> from sympy.abc import x
     >>> cnf = CNF.from_prop(Q.real(x) & ~Q.zero(x))
     >>> cnf.clauses
-    {frozenset({Literal(Q.real(x), False)}), frozenset({Literal(Q.zero(x), True)})}
+    {frozenset({Literal(Q.zero(x), True)}),
+    frozenset({Literal(Q.negative(x), False),
+    Literal(Q.positive(x), False), Literal(Q.zero(x), False)})}
     """
     def __init__(self, clauses=None):
         if not clauses:
@@ -317,8 +351,6 @@ class CNF:
             clause_list.append(OR(*lits))
         expr = AND(*clause_list)
         return distribute_AND_over_OR(expr)
-
-
 
     @classmethod
     def all_or(cls, *cnfs):

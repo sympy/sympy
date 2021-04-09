@@ -10,7 +10,8 @@ from sympy.core.numbers import (ComplexInfinity, Exp1, GoldenRatio, ImaginaryUni
 from sympy.functions import cos, exp, log, sign, sin
 from sympy.logic.boolalg import conjuncts
 
-from ..predicates.calculus import FinitePredicate, InfinitePredicate
+from ..predicates.calculus import (FinitePredicate, InfinitePredicate,
+    PositiveInfinitePredicate, NegativeInfinitePredicate)
 
 
 # FinitePredicate
@@ -95,7 +96,7 @@ def _(expr, assumptions):
         _bounded = ask(Q.finite(arg), assumptions)
         if _bounded:
             continue
-        s = ask(Q.positive(arg), assumptions)
+        s = ask(Q.positive(arg) | Q.positive_infinite(arg), assumptions)    # change to Q.extended_positive after it is implemented
         # if there has been more than one sign or if the sign of this arg
         # is None and Bounded is None or there was already
         # an unknown sign, return None
@@ -228,3 +229,29 @@ def _(expr, assumptions):
 @InfinitePredicate.register_many(ComplexInfinity, Infinity, NegativeInfinity)
 def _(expr, assumptions):
     return True
+
+
+# PositiveInfinitePredicate
+
+
+@PositiveInfinitePredicate.register(Infinity)
+def _(expr, assumptions):
+    return True
+
+
+@PositiveInfinitePredicate.register_many(NegativeInfinity, ComplexInfinity)
+def _(expr, assumptions):
+    return False
+
+
+# NegativeInfinitePredicate
+
+
+@NegativeInfinitePredicate.register(NegativeInfinity)
+def _(expr, assumptions):
+    return True
+
+
+@NegativeInfinitePredicate.register_many(Infinity, ComplexInfinity)
+def _(expr, assumptions):
+    return False
