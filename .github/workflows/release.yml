@@ -7,13 +7,16 @@
 # ------------------------------------------------------------------ #
 
 name: release
+env:
+  release_branch: 1.8
+  release_version: 1.8
 on:
   push:
     branches:
-      - 1.8
+      - {{ env.release_branch }}
   pull_request:
     branches:
-      - 1.8
+      - {{ env.release_branch }}
 jobs:
 
   # -------------------- Build artifacts --------------------------- #
@@ -31,10 +34,10 @@ jobs:
         with:
           python-version: 3.8
 
-      - run: release/ci_release_script.sh 1.8
+      - run: release/ci_release_script.sh {{ env.release_version }}
 
       - name: Archive build artifacts
         uses: actions/upload-artifact@v2
         with:
           name: build_artifacts
-          path: sympy/release-1.8
+          path: release-{{ env.release_version }}
