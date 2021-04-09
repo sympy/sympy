@@ -35,6 +35,7 @@ git_whitelist = {
     # Travis and CI
     '.travis.yml',
     '.github/workflows/runtests.yml',
+    '.github/workflows/release.yml',
     '.ci/durations.json',
     '.ci/generate_durations_log.sh',
     '.ci/parse_durations_log.py',
