@@ -7,16 +7,17 @@
 # ------------------------------------------------------------------ #
 
 name: release
-env:
-  release_branch: 1.8
-  release_version: 1.8
 on:
   push:
     branches:
-      - ${{ env.release_branch }}
+      - 1.8
   pull_request:
     branches:
-      - ${{ env.release_branch }}
+      - 1.8
+env:
+  release_branch: 1.8
+  release_version: 1.8
+
 jobs:
 
   # -------------------- Build artifacts --------------------------- #
