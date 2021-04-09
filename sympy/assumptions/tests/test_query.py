@@ -2138,7 +2138,7 @@ def test_compute_known_facts():
 @slow
 def test_known_facts_consistent():
     """"Test that ask_generated.py is up-to-date"""
-    from sympy.assumptions.ask import get_known_facts, get_known_facts_keys
+    from sympy.assumptions.facts import get_known_facts, get_known_facts_keys
     from os.path import abspath, dirname, join
     filename = join(dirname(dirname(abspath(__file__))), 'ask_generated.py')
     with open(filename) as f:
