@@ -13,10 +13,10 @@ env:
 on:
   push:
     branches:
-      - {{ env.release_branch }}
+      - ${{ env.release_branch }}
   pull_request:
     branches:
-      - {{ env.release_branch }}
+      - ${{ env.release_branch }}
 jobs:
 
   # -------------------- Build artifacts --------------------------- #
@@ -34,10 +34,10 @@ jobs:
         with:
           python-version: 3.8
 
-      - run: release/ci_release_script.sh {{ env.release_version }}
+      - run: release/ci_release_script.sh ${{ env.release_version }}
 
       - name: Archive build artifacts
         uses: actions/upload-artifact@v2
         with:
           name: build_artifacts
-          path: release-{{ env.release_version }}
+          path: release-${{ env.release_version }}
