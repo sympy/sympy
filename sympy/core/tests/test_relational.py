@@ -4,7 +4,8 @@ from sympy.multipledispatch import dispatch
 from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
                    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
-                   log, cos, sin, Add, Mul, Pow, floor, ceiling, trigsimp, Reals, Basic, Expr)
+                   log, cos, sin, Add, Mul, Pow, floor, ceiling, trigsimp, Reals,
+                   Basic, Expr, Q)
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -1159,7 +1160,17 @@ def test_EvalEq():
     assert is_eq(PowTest(3, 4), _sympify(4)) is None
     assert is_neq(PowTest(3, 4), PowTest(3,7))
 
+
 def test_is_eq():
+    # test assumption
+    assert not is_eq(x, y, Q.infinite(x) & Q.finite(y))
+    # uncomment after Q.infinite(y) & ~Q.extended_real(y) is fixed to be valid assumption (which is true for zoo)
+    # assert not is_eq(x, y, Q.infinite(x) & Q.infinite(y) & Q.extended_real(x) & ~Q.extended_real(y))
+    assert not is_eq(x+I, y+I, Q.infinite(x) & Q.finite(y))
+    assert not is_eq(1+x*I, 1+y*I, Q.infinite(x) & Q.finite(y))
+    assert is_eq(x, S(0), assumptions=Q.zero(x))
+
+    # test registration
     class PowTest(Expr):
         def __new__(cls, base, exp):
             return Basic.__new__(cls, _sympify(base), _sympify(exp))
@@ -1172,6 +1183,7 @@ def test_is_eq():
     assert is_eq(PowTest(3, 4), PowTest(3,4))
     assert is_eq(PowTest(3, 4), _sympify(4)) is None
     assert is_neq(PowTest(3, 4), PowTest(3,7))
+
 
 def test_is_ge_le():
     class PowTest(Expr):

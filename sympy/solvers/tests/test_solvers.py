@@ -2316,6 +2316,18 @@ def test_issue_20902():
     assert solve(f.subs({t: 3 * x + 2}).diff(x) > 0, x) == (S(-1) < x) & (x < S(-1)/3)
 
 
+def test_issue_21034():
+    a = symbols('a', real=True)
+    system = [x - cosh(cos(4)), y - sinh(cos(a)), z - tanh(x)]
+    assert solve(system, x, y, z) == {x: cosh(cos(4)), z: tanh(cosh(cos(4))),
+        y: sinh(cos(a))}
+    #Constants inside hyperbolic functions should not be rewritten in terms of exp
+    newsystem = [(exp(x) - exp(-x)) - tanh(x)*(exp(x) + exp(-x)) + x - 5]
+    assert solve(newsystem, x) == {x: 5}
+    #If the variable of interest is present in hyperbolic function, only then
+    # it shouuld be rewritten in terms of exp and solved further
+
+
 def test_issue_4886():
     z = a*sqrt(R**2*a**2 + R**2*b**2 - c**2)/(a**2 + b**2)
     t = b*c/(a**2 + b**2)

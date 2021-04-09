@@ -73,6 +73,18 @@ If you have array-based data this can confer a considerable speedup, on the
 order of 10 nano-seconds per element. Unfortunately numpy incurs some start-up
 time and introduces an overhead of a few microseconds.
 
+CuPy is a NumPy-compatible array library that mainly runs on CUDA, but has 
+increasing support for other GPUs manufacturer. It can in many cases be used as 
+a drop-in replacement for numpy. It is particu
+
+    >>> f = lambdify(x, expr, "cupy")
+    >>> import cupy as cp
+    >>> data = cp.linspace(1, 10, 10000)
+    >>> y = f(data) # perform the computation
+    >>> cp.asnumpy(y) # explicitly copy from GPU to CPU / numpy array
+    [ 0.84147098  0.84119981  0.84092844 ... -0.05426074 -0.05433146
+     -0.05440211]
+
 uFuncify
 --------
 
@@ -121,7 +133,9 @@ So Which Should I Use?
 The options here were listed in order from slowest and least dependencies to
 fastest and most dependencies.  For example, if you have Aesara installed then
 that will often be the best choice.  If you don't have Aesara but do have
-``f2py`` then you should use ``ufuncify``.
+``f2py`` then you should use ``ufuncify``. If you have been comfortable using 
+lambdify with the numpy module, but have a GPU, CuPy can provide substantial 
+speedups with little effort.
 
 +-----------------+-------+-----------------------------+---------------+
 | Tool            | Speed | Qualities                   | Dependencies  |
@@ -133,6 +147,8 @@ that will often be the best choice.  If you don't have Aesara but do have
 | lambdify-numpy  | 10ns  | Vector functions            | numpy         |
 +-----------------+-------+-----------------------------+---------------+
 | ufuncify        | 10ns  | Complex vector expressions  | f2py, Cython  |
++-----------------+-------+-----------------------------+---------------+
+| lambdify-cupy   | 10ns  | Vector functions on GPUs    | cupy          |
 +-----------------+-------+-----------------------------+---------------+
 | Aesara          | 10ns  | Many outputs, CSE, GPUs     | Aesara        |
 +-----------------+-------+-----------------------------+---------------+

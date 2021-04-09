@@ -22,14 +22,14 @@ def test_pretty():
 
 def test_global():
     """Test for global assumptions"""
-    global_assumptions.add(Q.is_true(x > 0))
-    assert Q.is_true(x > 0) in global_assumptions
-    global_assumptions.remove(Q.is_true(x > 0))
-    assert not Q.is_true(x > 0) in global_assumptions
+    global_assumptions.add(x > 0)
+    assert (x > 0) in global_assumptions
+    global_assumptions.remove(x > 0)
+    assert not (x > 0) in global_assumptions
     # same with multiple of assumptions
-    global_assumptions.add(Q.is_true(x > 0), Q.is_true(y > 0))
-    assert Q.is_true(x > 0) in global_assumptions
-    assert Q.is_true(y > 0) in global_assumptions
+    global_assumptions.add(x > 0, y > 0)
+    assert (x > 0) in global_assumptions
+    assert (y > 0) in global_assumptions
     global_assumptions.clear()
-    assert not Q.is_true(x > 0) in global_assumptions
-    assert not Q.is_true(y > 0) in global_assumptions
+    assert not (x > 0) in global_assumptions
+    assert not (y > 0) in global_assumptions
