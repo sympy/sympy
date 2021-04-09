@@ -96,7 +96,7 @@ def _(expr, assumptions):
         _bounded = ask(Q.finite(arg), assumptions)
         if _bounded:
             continue
-        s = ask(Q.positive(arg) | Q.positive_infinite(arg), assumptions)    # change to Q.extended_positive after it is implemented
+        s = ask(Q.extended_positive(arg), assumptions)
         # if there has been more than one sign or if the sign of this arg
         # is None and Bounded is None or there was already
         # an unknown sign, return None
