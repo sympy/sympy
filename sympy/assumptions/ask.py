@@ -659,5 +659,6 @@ def get_known_facts():
         Implies(Q.real_elements, Q.complex_elements),
     )
 
+
 from sympy.assumptions.ask_generated import (
     get_known_facts_dict, get_all_known_facts)
