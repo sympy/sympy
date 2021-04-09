@@ -30,8 +30,16 @@ jobs:
       - run: git clone https://github.com/sympy/sympy.git
       - run: git checkout 1.8
         working-directory: sympy
+      - run: git pull
+        working-directory: sympy
 
-      - run: sympy/release/ci_release_script.sh 1.8
+      - run: pwd
+        working-directory: sympy
+
+      - run: ls release
+        working-directory: sympy
+
+      - run: release/ci_release_script.sh 1.8
         working-directory: sympy
 
       - name: Archive build artifacts
