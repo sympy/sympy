@@ -1039,7 +1039,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
                     raise ValueError("Enter valid boundary conditions for Function")
 
             else:
-                raise ValueError("Enter boundary conditions of the form ics={f(point}: value, f(x).diff(x, order).subs(x, point): value}")
+                raise ValueError("Enter boundary conditions of the form ics={f(point): value, f(x).diff(x, order).subs(x, point): value}")
 
     # Any ODE that can be solved with a combination of algebra and
     # integrals e.g.:
