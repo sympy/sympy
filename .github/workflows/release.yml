@@ -2,7 +2,7 @@
 #                                                                    #
 #           SymPy CI script for Github Actions                       #
 #                                                                    #
-#   Run on the release brancha dn builds the release artifacts.      #
+#   Run on the release branch and builds the release artifacts.      #
 #                                                                    #
 # ------------------------------------------------------------------ #
 
@@ -22,14 +22,20 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
           python-version: 3.8
+
+      - run: sudo apt-get install -y git
+      - run: git clone https://github.com/sympy/sympy.git
+      - run: git checkout 1.8
+        working-directory: sympy
+
       - run: release/ci_release_script.sh 1.8
+        working-directory: sympy
 
       - name: Archive build artifacts
         uses: actions/upload-artifact@v2
         with:
           name: build_artifacts
-          path: release-1.8
+          path: sympy/release-1.8
