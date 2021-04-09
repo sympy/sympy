@@ -535,20 +535,21 @@ class ReferenceFrame:
         frames = self._dcm_cache.keys()
         dcm_dict_del = []
         dcm_cache_del = []
-        for frame in frames:
-            if frame in self._dcm_dict:
-                dcm_dict_del += [frame]
-            dcm_cache_del += [frame]
-        for frame in dcm_dict_del:
-            del frame._dcm_dict[self]
-        for frame in dcm_cache_del:
-            del frame._dcm_cache[self]
+        if parent in frames:
+            for frame in frames:
+                if frame in self._dcm_dict:
+                    dcm_dict_del += [frame]
+                dcm_cache_del += [frame]
+            for frame in dcm_dict_del:
+                del frame._dcm_dict[self]
+            for frame in dcm_cache_del:
+                del frame._dcm_cache[self]
         # Add the dcm relationship to _dcm_dict
-        self._dcm_dict = self._dlist[0] = {}
+            self._dcm_dict = self._dlist[0] = {}
+            self._dcm_cache = {}
         self._dcm_dict.update({parent: parent_orient.T})
         parent._dcm_dict.update({self: parent_orient})
         # Also update the dcm cache after resetting it
-        self._dcm_cache = {}
         self._dcm_cache.update({parent: parent_orient.T})
         parent._dcm_cache.update({self: parent_orient})
 
@@ -887,7 +888,7 @@ class ReferenceFrame:
         >>> B1.orient_axis(N, N.z, q1)
         >>> B2.orient_axis(B1, N.x, q2)
         >>> B.orient_axis(B2, N.y, q3)
-        >>> B.dcm(N).simplify() # doctest: +SKIP
+        >>> B.dcm(N).simplify()
         Matrix([
         [ sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1)],
         [-sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1), cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3)],

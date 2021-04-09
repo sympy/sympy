@@ -471,3 +471,29 @@ def test_orient_quaternion():
     B = ReferenceFrame('B')
     B.orient_quaternion(A, (0,0,0,0))
     assert B.dcm(A) == Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+
+def test_vector_cache():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    C = ReferenceFrame('C')
+
+    a, b, c = symbols('a b c')
+
+    B.orient(A, 'Axis', (a, A.x))
+    assert A._dcm_dict[B] == Matrix([[1, 0, 0], [0, cos(a), -sin(a)], [0, sin(a), cos(a)]])
+    assert B._dcm_dict[A] == Matrix([[1, 0, 0], [0, cos(a), sin(a)], [0, -sin(a), cos(a)]])
+    assert C._dcm_dict == {}
+
+    B.orient(C, 'Axis', (b, C.x))
+    # Previous relation is not wiped
+    assert A._dcm_dict[B] == Matrix([[1, 0, 0], [0, cos(a), -sin(a)], [0, sin(a), cos(a)]])
+    assert B._dcm_dict[A] == Matrix([[1, 0, 0], [0, cos(a), sin(a)], [0, -sin(a), cos(a)]])
+    assert B._dcm_dict[C] == Matrix([[1, 0, 0], [0, cos(b), sin(b)], [0, -sin(b), cos(b)]])
+    assert C._dcm_dict[B] == Matrix([[1, 0, 0], [0, cos(b), -sin(b)], [0, sin(b), cos(b)]])
+
+    A.orient(B, 'Axis', (c, B.x))
+    # Previous relation is updated
+    assert B._dcm_dict[C] == Matrix([[1, 0, 0], [0, cos(b), sin(b)], [0, -sin(b), cos(b)]])
+    assert A._dcm_dict[B] == Matrix([[1, 0, 0], [0, cos(c), sin(c)], [0, -sin(c), cos(c)]])
+    assert B._dcm_dict[A] == Matrix([[1, 0, 0], [0, cos(c), -sin(c)], [0, sin(c), cos(c)]])
+    assert C._dcm_dict[B] == Matrix([[1, 0, 0], [0, cos(b), -sin(b)], [0, sin(b), cos(b)]])
