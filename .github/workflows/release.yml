@@ -37,7 +37,7 @@ jobs:
           python-version: 3.8
 
       - name: Build release files
-         run: release/ci_release_script.sh ${{ env.release_version }}
+        run: release/ci_release_script.sh ${{ env.release_version }}
 
       - name: Store release files
         uses: actions/upload-artifact@v2
