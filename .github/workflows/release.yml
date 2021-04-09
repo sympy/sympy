@@ -26,7 +26,7 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.8
-      - run: release/ci_release_script.sh
+      - run: release/ci_release_script.sh 1.8
 
       - name: Archive build artifacts
         uses: actions/upload-artifact@v2
