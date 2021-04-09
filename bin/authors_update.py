@@ -48,8 +48,6 @@ from sympy.utilities.misc import filldedent
 minimal = '1.8.4.2'
 git_ver = run(['git', '--version'])[12:]
 
-print('git version:', git_ver)
-
 if LooseVersion(git_ver) < LooseVersion(minimal):
     print(yellow("Please use a git version >= %s" % minimal))
 
@@ -68,8 +66,6 @@ def move(l, i1, i2, who):
 # find who git knows ahout
 git_command = ["git", "log", "--topo-order", "--reverse", "--format=%aN <%aE>"]
 git_people = run(git_command).strip().split("\n")
-
-print('git_people', git_people)
 
 # remove duplicates, keeping the original order
 git_people = list(OrderedDict.fromkeys(git_people))
