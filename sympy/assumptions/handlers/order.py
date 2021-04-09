@@ -13,7 +13,10 @@ from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.multipledispatch import MDNotImplementedError
 
 from ..predicates.order import (NegativePredicate, NonNegativePredicate,
-    NonZeroPredicate, ZeroPredicate, NonPositivePredicate, PositivePredicate)
+    NonZeroPredicate, ZeroPredicate, NonPositivePredicate, PositivePredicate,
+    ExtendedNegativePredicate, ExtendedNonNegativePredicate,
+    ExtendedNonPositivePredicate, ExtendedNonZeroPredicate,
+    ExtendedPositivePredicate,)
 
 
 # NegativePredicate
@@ -392,3 +395,44 @@ def _(expr, assumptions):
 @PositivePredicate.register(NaN)
 def _(expr, assumptions):
     return None
+
+
+# ExtendedNegativePredicate
+
+@ExtendedNegativePredicate.register(object)
+def _(expr, assumptions):
+    return ask(Q.negative(expr) | Q.negative_infinite(expr), assumptions)
+
+
+# ExtendedPositivePredicate
+
+@ExtendedPositivePredicate.register(object)
+def _(expr, assumptions):
+    return ask(Q.positive(expr) | Q.positive_infinite(expr), assumptions)
+
+
+# ExtendedNonZeroPredicate
+
+@ExtendedNonZeroPredicate.register(object)
+def _(expr, assumptions):
+    return ask(
+        Q.negative_infinite(expr) | Q.negative(expr) | Q.positive(expr) | Q.positive_infinite(expr),
+        assumptions)
+
+
+# ExtendedNonPositivePredicate
+
+@ExtendedNonPositivePredicate.register(object)
+def _(expr, assumptions):
+    return ask(
+        Q.negative_infinite(expr) | Q.negative(expr) | Q.zero(expr),
+        assumptions)
+
+
+# ExtendedNonNegativePredicate
+
+@ExtendedNonNegativePredicate.register(object)
+def _(expr, assumptions):
+    return ask(
+        Q.zero(expr) | Q.positive(expr) | Q.positive_infinite(expr),
+        assumptions)

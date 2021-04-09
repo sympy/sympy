@@ -120,6 +120,16 @@ class AssumptionKeys:
         return ZeroPredicate()
 
     @memoize_property
+    def extended_positive(self):
+        from .handlers.order import ExtendedPositivePredicate
+        return ExtendedPositivePredicate()
+
+    @memoize_property
+    def extended_negative(self):
+        from .handlers.order import ExtendedNegativePredicate
+        return ExtendedNegativePredicate()
+
+    @memoize_property
     def nonzero(self):
         from .handlers.order import NonZeroPredicate
         return NonZeroPredicate()
@@ -133,6 +143,21 @@ class AssumptionKeys:
     def nonnegative(self):
         from .handlers.order import NonNegativePredicate
         return NonNegativePredicate()
+
+    @memoize_property
+    def extended_nonzero(self):
+        from .handlers.order import ExtendedNonZeroPredicate
+        return ExtendedNonZeroPredicate()
+
+    @memoize_property
+    def extended_nonpositive(self):
+        from .handlers.order import ExtendedNonPositivePredicate
+        return ExtendedNonPositivePredicate()
+
+    @memoize_property
+    def extended_nonnegative(self):
+        from .handlers.order import ExtendedNonNegativePredicate
+        return ExtendedNonNegativePredicate()
 
     @memoize_property
     def even(self):
@@ -631,6 +656,11 @@ def get_composite_predicates():
         Q.nonzero : Q.negative | Q.positive,
         Q.nonnegative : Q.zero | Q.positive,
         Q.extended_real : Q.negative_infinite | Q.negative | Q.zero | Q.positive | Q.positive_infinite,
+        Q.extended_positive: Q.positive | Q.positive_infinite,
+        Q.extended_negative: Q.negative | Q.negative_infinite,
+        Q.extended_nonzero: Q.negative_infinite | Q.negative | Q.positive | Q.positive_infinite,
+        Q.extended_nonpositive: Q.negative_infinite | Q.negative | Q.zero,
+        Q.extended_nonnegative: Q.zero | Q.positive | Q.positive_infinite,
         Q.complex : Q.algebraic | Q.transcendental
     }
 
