@@ -18,9 +18,12 @@ import os
 if sys.version_info < (3, 6):
     sys.exit("This script requires Python 3.6 or newer")
 
-from subprocess import run, PIPE
+from subprocess import check_output, PIPE
 from distutils.version import LooseVersion
 from collections import OrderedDict
+
+def run(cmd):
+    return check_output(cmd, encoding='utf-8')
 
 def red(text):
     return "\033[31m%s\033[0m" % text
@@ -43,7 +46,8 @@ from sympy.utilities.misc import filldedent
 
 # check git version
 minimal = '1.8.4.2'
-git_ver = run(['git', '--version'], stdout=PIPE, encoding='utf-8').stdout[12:]
+git_ver = run(['git', '--version'])[12:]
+
 if LooseVersion(git_ver) < LooseVersion(minimal):
     print(yellow("Please use a git version >= %s" % minimal))
 
@@ -61,7 +65,7 @@ def move(l, i1, i2, who):
 
 # find who git knows ahout
 git_command = ["git", "log", "--topo-order", "--reverse", "--format=%aN <%aE>"]
-git_people = run(git_command, stdout=PIPE, encoding='utf-8').stdout.strip().split("\n")
+git_people = run(git_command).strip().split("\n")
 
 # remove duplicates, keeping the original order
 git_people = list(OrderedDict.fromkeys(git_people))

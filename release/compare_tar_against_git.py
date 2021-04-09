@@ -35,6 +35,7 @@ git_whitelist = {
     # Travis and CI
     '.travis.yml',
     '.github/workflows/runtests.yml',
+    '.github/workflows/release.yml',
     '.ci/durations.json',
     '.ci/generate_durations_log.sh',
     '.ci/parse_durations_log.py',
@@ -134,6 +135,7 @@ git_whitelist = {
     'release/test_install.py',
     'release/sha256.py',
     'release/authors.py',
+    'release/ci_release_script.sh',
     # This is just a distribute version of setup.py. Used mainly for setup.py
     # develop, which we don't care about in the release tarball
     'setupegg.py',

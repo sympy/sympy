@@ -2,10 +2,10 @@
 
 set -o errexit
 
-sudo add-apt-repository ppa:deadsnakes/ppa
+sudo add-apt-repository -y ppa:deadsnakes/ppa
 sudo apt update
 
-sudo apt install\
+sudo apt install -y\
 	antlr4\
 	libgfortran5\
 	python3-venv\
@@ -26,7 +26,7 @@ sudo apt install\
 	gfortran\
 	#
 
-sudo apt install\
+sudo apt install -y\
 	python3.6\
 	python3.6-venv\
 	python3.7\
@@ -34,10 +34,3 @@ sudo apt install\
 	python3.9\
 	python3.9-venv\
 	# python3.8 is installed by default in 20.04
-
-python3 -m venv release/venv_main
-source release/venv_main/bin/activate
-
-pip install -U pip wheel
-pip install -r release/requirements.txt
-pip install -e .
