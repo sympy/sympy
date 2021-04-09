@@ -31,14 +31,48 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
         with:
           python-version: 3.8
 
-      - run: release/ci_release_script.sh ${{ env.release_version }}
+      - name: Build release files
+         run: release/ci_release_script.sh ${{ env.release_version }}
 
-      - name: Archive build artifacts
+      - name: Store release files
         uses: actions/upload-artifact@v2
         with:
-          name: build_artifacts
+          name: release_files
           path: release-${{ env.release_version }}
+
+  # -------------------- Test installation ------------------------- #
+
+  test-install:
+    needs: [build]
+
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        python-version: ['3.6', '3.7', '3.8', '3.9', 'pypy-3.6']
+
+    name: Python ${{ matrix.python-version }} test install
+    steps:
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+
+      - name: Retrieve release files
+      - uses: actions/download-artifact@v2
+        with:
+          name: release_files
+
+      - name: List files
+        run: ls -R
+
+      - name: Install wheel
+        run: pip install sympy-${{ env.release_version }}-py3-none-any.whl
+
+      - name: Run tests after install
+        run: python -c 'import sympy; sympy.test()'
