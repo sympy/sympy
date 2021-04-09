@@ -22,25 +22,16 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
+      # Check out with full git history for authors check:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-python@v2
         with:
           python-version: 3.8
 
-      - run: sudo apt-get install -y git
-      - run: git clone https://github.com/sympy/sympy.git
-      - run: git checkout 1.8
-        working-directory: sympy
-      - run: git pull
-        working-directory: sympy
-
-      - run: pwd
-        working-directory: sympy
-
-      - run: ls release
-        working-directory: sympy
-
       - run: release/ci_release_script.sh 1.8
-        working-directory: sympy
 
       - name: Archive build artifacts
         uses: actions/upload-artifact@v2
