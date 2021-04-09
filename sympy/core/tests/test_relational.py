@@ -1162,13 +1162,22 @@ def test_EvalEq():
 
 
 def test_is_eq():
-    # test assumption
+    # test assumptions
     assert not is_eq(x, y, Q.infinite(x) & Q.finite(y))
+    assert is_neq(x, y, Q.infinite(x) & Q.finite(y))
     # uncomment after Q.infinite(y) & ~Q.extended_real(y) is fixed to be valid assumption (which is true for zoo)
     # assert not is_eq(x, y, Q.infinite(x) & Q.infinite(y) & Q.extended_real(x) & ~Q.extended_real(y))
+    # assert is_neq(x, y, Q.infinite(x) & Q.infinite(y) & Q.extended_real(x) & ~Q.extended_real(y))
     assert not is_eq(x+I, y+I, Q.infinite(x) & Q.finite(y))
+    assert is_neq(x+I, y+I, Q.infinite(x) & Q.finite(y))
     assert not is_eq(1+x*I, 1+y*I, Q.infinite(x) & Q.finite(y))
+    assert is_neq(1+x*I, 1+y*I, Q.infinite(x) & Q.finite(y))
     assert is_eq(x, S(0), assumptions=Q.zero(x))
+    assert not is_eq(x, S(0), assumptions=~Q.zero(x))
+    assert not is_eq(x, S(0), assumptions=Q.nonzero(x))
+    assert not is_neq(x, S(0), assumptions=Q.zero(x))
+    assert is_neq(x, S(0), assumptions=~Q.zero(x))
+    assert is_neq(x, S(0), assumptions=Q.nonzero(x))
 
     # test registration
     class PowTest(Expr):
