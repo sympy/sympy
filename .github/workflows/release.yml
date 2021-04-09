@@ -31,7 +31,7 @@ jobs:
       - run: git checkout 1.8
         working-directory: sympy
 
-      - run: release/ci_release_script.sh 1.8
+      - run: sympy/release/ci_release_script.sh 1.8
         working-directory: sympy
 
       - name: Archive build artifacts
