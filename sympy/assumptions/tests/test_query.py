@@ -2,7 +2,7 @@ from sympy.abc import t, w, x, y, z, n, k, m, p, i
 from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
         remove_handler)
 from sympy.assumptions.assume import assuming, global_assumptions, Predicate
-from sympy.assumptions.ask import compute_known_facts, single_fact_lookup
+from sympy.assumptions.facts import compute_known_facts, single_fact_lookup
 from sympy.assumptions.handlers import AskHandler
 from sympy.core.add import Add
 from sympy.core.numbers import (I, Integer, Rational, oo, zoo, pi)

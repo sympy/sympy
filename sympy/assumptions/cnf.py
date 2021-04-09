@@ -163,7 +163,7 @@ def to_NNF(expr):
     (Literal(Q.negative(x), False) | Literal(Q.zero(x), False))
     """
     from sympy.assumptions.assume import AppliedPredicate, Predicate
-    from sympy.assumptions.ask import get_composite_predicates
+    from sympy.assumptions.facts import get_composite_predicates
 
     if isinstance(expr, Not):
         arg = expr.args[0]
