@@ -2323,6 +2323,8 @@ def solvify(f, symbol, domain):
     ImageSet,   | list (if `f` is periodic)
     Union       |
 
+    Union       | list (with FiniteSet)
+
     EmptySet    | empty list
 
     Others      | None
@@ -2382,7 +2384,16 @@ def solvify(f, symbol, domain):
 
         else:
             solution = solution_set.intersect(domain)
-            if isinstance(solution, FiniteSet):
+            if isinstance(solution, Union):
+                # concerned about only FiniteSet with Union but not about ImageSet
+                # if required could be extend
+                if any(isinstance(i, FiniteSet) for i in solution.args):
+                    result = [sol for soln in solution.args \
+                     for sol in soln.args if isinstance(soln,FiniteSet)]
+                else:
+                    return None
+
+            elif isinstance(solution, FiniteSet):
                 result += solution
 
     return result

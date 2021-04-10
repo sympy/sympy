@@ -1,6 +1,6 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    cot, sec, csc, Abs, symbols, I, re, simplify,
-                   expint, Rational)
+                   expint, Rational, Piecewise)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds, is_convex,
                                  stationary_points, minimum, maximum)
@@ -171,6 +171,9 @@ def test_periodicity():
     assert periodicity((E**x)%3, x) is None
 
     assert periodicity(sin(expint(1, x))/expint(1, x), x) is None
+    # returning `None` for any Piecewise
+    p = Piecewise((0, x < -1), (x**2, x <= 1), (log(x), True))
+    assert periodicity(p, x) is None
 
 
 def test_periodicity_check():
