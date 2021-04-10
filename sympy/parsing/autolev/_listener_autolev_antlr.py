@@ -1475,7 +1475,7 @@ if AutolevListener:
                     except Exception:
                         l.append(self.getValue(ctx.index().getChild(2)) + "-1")
                     self.write(self.symbol_table[ctx.ID().getText().lower()] +
-                               "[" + "".join(l) + "]" + equals + self.getValue(ctx.expr()) + "\n")
+                               "[" + "".join(l) + "]" + " " + equals + " " + self.getValue(ctx.expr()) + "\n")
 
         def exitVecAssign(self, ctx):
             # Handle assignments of the type vec = expr
@@ -1562,11 +1562,11 @@ if AutolevListener:
                 else:
                     name = ch.ID().getText().lower()
                     self.symbol_table.update({vec_text: name})
-                    self.write(name + ctx.getChild(1).getText() + self.getValue(ctx.expr()) + "\n")
+                    self.write(name + " " + ctx.getChild(1).getText() + " " + self.getValue(ctx.expr()) + "\n")
             else:
                 name = ch.ID().getText().lower()
                 self.symbol_table.update({vec_text: name})
-                self.write(name + ctx.getChild(1).getText() + self.getValue(ctx.expr()) + "\n")
+                self.write(name + " " + ctx.getChild(1).getText() + " " + self.getValue(ctx.expr()) + "\n")
 
         def enterInputs2(self, ctx):
             self.in_inputs = True
