@@ -329,8 +329,8 @@ def test_Range_set():
     assert S(builtin_range(1000000000000)) == Range(1000000000000)
 
     # test Range.as_relational
-    assert Range(1, 4).as_relational(x) == (x >= 1) & (x <= 3) & Contains(x, S.Integers) & Eq(Mod(x, 1), 0)
-    assert Range(oo, 1, -2).as_relational(x) == (x >= 3) & (x < oo) & Contains(x, S.Integers) & Eq(Mod(x, 2), 1)
+    assert Range(1, 4).as_relational(x) == (x >= 1) & (x <= 3)  & Eq(Mod(x, 1), 0)
+    assert Range(oo, 1, -2).as_relational(x) == (x >= 3) & (x < oo)  & Eq(Mod(x, 2), 1)
 
 
 def test_Range_symbolic():
@@ -385,7 +385,7 @@ def test_Range_symbolic():
     raises(ValueError, lambda: Range(i).inf)
     # as_relational
     raises(ValueError, lambda: sr.as_relational(x))
-    assert ir.as_relational(x) == Contains(x,S.Integers) & (x >= i) & (x <= i + 18) & Eq(Mod(x, 2), Mod(i, 2))
+    assert ir.as_relational(x) == (x >= i) & (x <= i + 18) & Eq(Mod(x, 2), Mod(i, 2))
     assert Range(i, i + 1).as_relational(x) == Eq(x, i)
     # contains() for symbolic values (issue #18146)
     e = Symbol('e', integer=True, even=True)

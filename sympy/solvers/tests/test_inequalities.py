@@ -14,7 +14,7 @@ from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.abc import x, y
-from sympy.sets.contains import Contains
+
 from sympy.core.mod import Mod
 
 from sympy.testing.pytest import raises, XFAIL
@@ -418,14 +418,14 @@ def test_integer_domain_relational_isolve():
 
     x = Symbol('x')
     assert isolve(x + 2 < 0, x, domain=S.Integers) == \
-           (x <= -3) & (x > -oo) & Contains(x, S.Integers) & Eq(Mod(x, 1), 0)
+           (x <= -3) & (x > -oo) & Eq(Mod(x, 1), 0)
     assert isolve(2 * x + 3 > 0, x, domain=S.Integers) == \
-           (x >= -1) & (x < oo) & Contains(x, S.Integers) & Eq(Mod(x, 1), 0)
+           (x >= -1) & (x < oo)  & Eq(Mod(x, 1), 0)
     assert isolve((x ** 2 + 3 * x - 2) < 0, x, domain=S.Integers) == \
-           (x >= -3) & (x <= 0) & Contains(x, S.Integers) & Eq(Mod(x, 1), 0)
+           (x >= -3) & (x <= 0)  & Eq(Mod(x, 1), 0)
     assert isolve((x ** 2 + 3 * x - 2) > 0, x, domain=S.Integers) == \
-           ((x >= 1) & (x < oo) & Contains(x, S.Integers) & Eq(Mod(x, 1), 0)) | (
-               (x <= -4) & (x > -oo) & Contains(x, S.Integers) & Eq(Mod(x, 1), 0))
+           ((x >= 1) & (x < oo)  & Eq(Mod(x, 1), 0)) | (
+               (x <= -4) & (x > -oo)  & Eq(Mod(x, 1), 0))
 
 
 def test_issue_10671_12466():

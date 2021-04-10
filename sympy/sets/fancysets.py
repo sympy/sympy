@@ -915,7 +915,6 @@ class Range(Set):
             return S.false
         else:
             from sympy.core.mod import Mod
-            from sympy.sets.contains import Contains
             cond = None
             if self.start.is_infinite:
                 if self.stop.is_infinite:
@@ -928,8 +927,7 @@ class Range(Set):
                 a = self.start
             step = abs(self.step)
             cond = Eq(Mod(x, step), a % step) if cond is None else cond
-            return And(Contains(x, S.Integers),
-                       cond,
+            return And(cond,
                        x >= self.inf if self.inf in self else x > self.inf,
                        x <= self.sup if self.sup in self else x < self.sup)
 
