@@ -1156,13 +1156,11 @@ def test_unrad1():
     # watch out for when the cov doesn't involve the symbol of interest
     eq = S('-x + (7*y/8 - (27*x/2 + 27*sqrt(x**2)/2)**(1/3)/3)**3 - 1')
     assert solve(eq, y) == [
-        4*2**Rational(2, 3)*(27*x + 27*sqrt(x**2))**Rational(1, 3)/21 - (Rational(-1, 2) -
-        sqrt(3)*I/2)*(x*Rational(-6912, 343) + sqrt((x*Rational(-13824, 343) - Rational(13824, 343))**2)/2 -
-        Rational(6912, 343))**Rational(1, 3)/3, 4*2**Rational(2, 3)*(27*x + 27*sqrt(x**2))**Rational(1, 3)/21 -
-        (Rational(-1, 2) + sqrt(3)*I/2)*(x*Rational(-6912, 343) + sqrt((x*Rational(-13824, 343) -
-        Rational(13824, 343))**2)/2 - Rational(6912, 343))**Rational(1, 3)/3, 4*2**Rational(2, 3)*(27*x +
-        27*sqrt(x**2))**Rational(1, 3)/21 - (x*Rational(-6912, 343) + sqrt((x*Rational(-13824, 343) -
-        Rational(13824, 343))**2)/2 - Rational(6912, 343))**Rational(1, 3)/3]
+        2**(S(2)/3)*(27*x + 27*sqrt(x**2))**(S(1)/3)*S(4)/21 + (512*x/343 +
+        S(512)/343)**(S(1)/3)*(-S(1)/2 - sqrt(3)*I/2), 2**(S(2)/3)*(27*x +
+        27*sqrt(x**2))**(S(1)/3)*S(4)/21 + (512*x/343 +
+        S(512)/343)**(S(1)/3)*(-S(1)/2 + sqrt(3)*I/2), 2**(S(2)/3)*(27*x +
+        27*sqrt(x**2))**(S(1)/3)*S(4)/21 + (512*x/343 + S(512)/343)**(S(1)/3)]
 
     eq = root(x + 1, 3) - (root(x, 3) + root(x, 5))
     assert check(unrad(eq),

@@ -157,7 +157,13 @@ def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
     assert roots_cubic(Poly(x**3 - 3*x**2 + 3*x - 1, x)) == [1, 1, 1]
 
-    assert roots_cubic(Poly(x**3 + 1, x)) == \
+    # valid for arbitrary y (issue 21263)
+    r = root(y, 3)
+    assert roots_cubic(Poly(x**3 - y, x)) == [r,
+        r*(-S.Half + sqrt(3)*I/2),
+        r*(-S.Half - sqrt(3)*I/2)]
+    # simpler form when y is negative
+    assert roots_cubic(Poly(x**3 - -1, x)) == \
         [-1, S.Half - I*sqrt(3)/2, S.Half + I*sqrt(3)/2]
     assert roots_cubic(Poly(2*x**3 - 3*x**2 - 3*x - 1, x))[0] == \
          S.Half + 3**Rational(1, 3)/2 + 3**Rational(2, 3)/2
@@ -537,8 +543,8 @@ def test_roots0():
     assert roots(eq) == {-2*sqrt(2) + 2: 1, -2*sqrt(2) + 1: 1, -2*sqrt(2) - 1: 1}
 
     assert roots(Poly((x + sqrt(2))**3 - 7, x, domain='EX')) == \
-        {-sqrt(2) - root(7, 3)/2 - sqrt(3)*root(7, 3)*I/2: 1,
-         -sqrt(2) - root(7, 3)/2 + sqrt(3)*root(7, 3)*I/2: 1,
+        {-sqrt(2) + root(7, 3)*(-S.Half - sqrt(3)*I/2): 1,
+         -sqrt(2) + root(7, 3)*(-S.Half + sqrt(3)*I/2): 1,
          -sqrt(2) + root(7, 3): 1}
 
 def test_roots_slow():
