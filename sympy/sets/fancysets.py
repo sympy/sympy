@@ -5,7 +5,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
-from sympy.core.numbers import oo, Integer
+from sympy.core.numbers import oo
 from sympy.core.relational import Eq
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
