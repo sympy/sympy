@@ -51,7 +51,7 @@ _GROUND_TYPES_MAP = {
 }
 
 try:
-    FF, ZZ, QQ = _GROUND_TYPES_MAP[GROUND_TYPES]  # type: Tuple[Type[FiniteField], Domain, Domain]
+    FF, ZZ, QQ = _GROUND_TYPES_MAP[GROUND_TYPES]  # type: Type[FiniteField], Domain, Domain
 except KeyError:
     raise ValueError("invalid ground types: %s" % GROUND_TYPES)
 
