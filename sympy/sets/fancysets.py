@@ -717,13 +717,12 @@ class Range(Set):
         if not self:
             return S.Zero
         dif = self.stop - self.start
-        if self.has(Symbol):
-            if dif.has(Symbol) or self.step.has(Symbol) or (
-                    not self.start.is_integer and not self.stop.is_integer):
-                raise ValueError('invalid method for symbolic range')
-        if dif.is_infinite:
-            return S.Infinity
-        return Integer(abs(dif//self.step))
+        n = abs(dif // self.step)
+        if not n.is_Integer:
+            if n.is_infinite:
+                return S.Infinity
+            raise ValueError('invalid method for symbolic range')
+        return n
 
     @property
     def is_finite_set(self):
@@ -912,15 +911,27 @@ class Range(Set):
         """Rewrite a Range in terms of equalities and logic operators. """
         if self.size == 1:
             return Eq(x, self[0])
+        elif self.size == 0:
+            return S.false
         else:
             from sympy.core.mod import Mod
-            from sympy.functions.elementary.integers import floor
-            md = self.start % self.step
-            return And(
-                Eq(x, floor(x)),
-                x >= self.inf if self.inf in self else x > self.inf,
-                x <= self.sup if self.sup in self else x < self.sup,
-                Eq(Mod(x, self.step), md))
+            from sympy.sets.contains import Contains
+            cond = None
+            if self.start.is_infinite:
+                if self.stop.is_infinite:
+                    cond = S.true
+                else:
+                    a = self.reversed.start
+            elif self.start == self.stop:
+                cond = S.false  # null range
+            else:
+                a = self.start
+            step = abs(self.step)
+            cond = Eq(Mod(x, step), a % step) if cond is None else cond
+            return And(Contains(x, S.Integers),
+                       cond,
+                       x >= self.inf if self.inf in self else x > self.inf,
+                       x <= self.sup if self.sup in self else x < self.sup)
 
 converter[range] = lambda r: Range(r.start, r.stop, r.step)
 

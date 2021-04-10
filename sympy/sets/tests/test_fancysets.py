@@ -174,6 +174,8 @@ def test_inf_Range_len():
     assert Range(0, -oo, -2).size is S.Infinity
     assert Range(oo, 0, -2).size is S.Infinity
     assert Range(-oo, 0, 2).size is S.Infinity
+    i = Symbol('i', integer=True)
+    assert Range(0, 4 * i, i).size == 4
 
 
 def test_Range_set():
@@ -327,8 +329,8 @@ def test_Range_set():
     assert S(builtin_range(1000000000000)) == Range(1000000000000)
 
     # test Range.as_relational
-    assert Range(1, 4).as_relational(x) == (x >= 1) & (x <= 3) & Eq(x, floor(x)) & Eq(Mod(x,1),0)
-    assert Range(oo, 1, -2).as_relational(x) == (x >= 3) & (x < oo) & Eq(x, floor(x)) & Eq(Mod(x,-2),1)
+    assert Range(1, 4).as_relational(x) == (x >= 1) & (x <= 3) & Contains(x, S.Integers) & Eq(Mod(x, 1), 0)
+    assert Range(oo, 1, -2).as_relational(x) == (x >= 3) & (x < oo) & Contains(x, S.Integers) & Eq(Mod(x, 2), 1)
 
 
 def test_Range_symbolic():
@@ -383,8 +385,7 @@ def test_Range_symbolic():
     raises(ValueError, lambda: Range(i).inf)
     # as_relational
     raises(ValueError, lambda: sr.as_relational(x))
-    assert ir.as_relational(x) == (
-        x >= i) & Eq(x, floor(x)) & (x <= i + 18) & Eq(Mod(x,2),i%2)
+    assert ir.as_relational(x) == Contains(x,S.Integers) & (x >= i) & (x <= i + 18) & Eq(Mod(x, 2), Mod(i, 2))
     assert Range(i, i + 1).as_relational(x) == Eq(x, i)
     # contains() for symbolic values (issue #18146)
     e = Symbol('e', integer=True, even=True)
