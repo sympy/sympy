@@ -157,7 +157,7 @@ def _(expr, assumptions):
         elif _bounded is None:
             if result is None:
                 return None
-            if ask(Q.nonzero(arg), assumptions) is None:
+            if ask(Q.extended_nonzero(arg), assumptions) is None:
                 return None
             if result is not False:
                 result = None
@@ -185,13 +185,13 @@ def _(expr, assumptions):
     exp_bounded = ask(Q.finite(expr.exp), assumptions)
     if base_bounded is None and exp_bounded is None:  # Common Case
         return None
-    if base_bounded is False and ask(Q.nonzero(expr.exp), assumptions):
+    if base_bounded is False and ask(Q.extended_nonzero(expr.exp), assumptions):
         return False
     if base_bounded and exp_bounded:
         return True
-    if (abs(expr.base) <= 1) == True and ask(Q.positive(expr.exp), assumptions):
+    if (abs(expr.base) <= 1) == True and ask(Q.extended_positive(expr.exp), assumptions):
         return True
-    if (abs(expr.base) >= 1) == True and ask(Q.negative(expr.exp), assumptions):
+    if (abs(expr.base) >= 1) == True and ask(Q.extended_negative(expr.exp), assumptions):
         return True
     if (abs(expr.base) >= 1) == True and exp_bounded is False:
         return False
@@ -207,7 +207,7 @@ def _(expr, assumptions):
     # querying Q.infinite may be removed.
     if ask(Q.infinite(expr.args[0]), assumptions):
         return False
-    return ask(Q.nonzero(expr.args[0]), assumptions)
+    return ask(~Q.zero(expr.args[0]), assumptions)
 
 @FinitePredicate.register_many(cos, sin, Number, Pi, Exp1, GoldenRatio,
     TribonacciConstant, ImaginaryUnit, sign)
