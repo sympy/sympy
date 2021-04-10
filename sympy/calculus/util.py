@@ -512,9 +512,7 @@ def periodicity(f, symbol, check=False):
                 period = Abs(n / a.diff(symbol))
 
     elif isinstance(f, Piecewise):
-        # Returning None, as the return type, period of the `piecewise`
-        # also should be a piecewise. (i.e. the return type is not favorable)
-        return None
+        pass  # not handling Piecewise yet as the return type is not favorable
 
     elif period is None:
         from sympy.solvers.decompogen import compogen
