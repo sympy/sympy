@@ -153,6 +153,7 @@ def test_issue_16589():
     roots_eq = roots(eq)
     assert 0 in roots_eq
 
+
 def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
     assert roots_cubic(Poly(x**3 - 3*x**2 + 3*x - 1, x)) == [1, 1, 1]
@@ -232,6 +233,11 @@ def test_roots_quartic():
     for rep in reps:
         sol = roots_quartic(Poly(eq.subs(rep), x))
         assert all([verify_numerically(w.subs(rep) - s, 0) for w, s in zip(ans, sol)])
+
+
+def test_issue_21287():
+    assert not any(isinstance(i, Piecewise) for i in roots_quartic(
+        Poly(x**4 - x**2*(3 + 5*I) + 2*x*(-1 + I) - 1 + 3*I, x)))
 
 
 def test_roots_cyclotomic():

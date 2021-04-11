@@ -341,6 +341,12 @@ def roots_quartic(f):
                         ans.append((s*w - t*root)/2 - aon4)
                 return ans
 
+            # whether a Piecewise is returned or not
+            # depends on knowing p, so try to put
+            # in a simple form
+            p = _mexpand(p)
+
+
             # p == 0 case
             y1 = e*Rational(-5, 6) - q**TH
             if p.is_zero:
