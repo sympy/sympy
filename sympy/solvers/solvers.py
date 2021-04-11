@@ -1671,8 +1671,7 @@ def _solve(f, *symbols, **flags):
                             flags['simplify'] = flags.get('simplify', False)
                         result = soln
 
-    # fallback if above fails
-    # -----------------------
+
     if result is False:
         # try unrad
         if flags.pop('_unrad', True):

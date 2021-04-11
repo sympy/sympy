@@ -27,6 +27,7 @@ from sympy.simplify import powdenest, logcombine
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
                              piecewise_fold, Piecewise)
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
@@ -53,6 +54,7 @@ from sympy.utilities import filldedent
 from sympy.utilities.iterables import numbered_symbols, has_dups
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
+from sympy.core.function import Function
 
 from types import GeneratorType
 from collections import defaultdict
@@ -903,6 +905,77 @@ def _solve_radical(f, symbol, solveset_solver):
     return solution_set
 
 
+def _recursive_check_f(f):
+    not_compute = False
+    floor_type = False
+
+    if isinstance(f, floor):
+        floor_type = True
+        f, not_compute, _ = _recursive_check_f(f.args[0])
+        return f, not_compute, floor_type
+    elif isinstance(f, Function):
+        not_compute = True
+        return f, not_compute, floor_type
+    elif f.is_Add:
+        cp_f = 0
+        operation_type = "Add"
+    elif f.is_Mul:
+        cp_f = 1
+        operation_type = "Mul"
+    elif f.is_Pow:
+        cp_f, not_compute, floor_type = _recursive_check_f(f.args[0])
+        return cp_f ** f.args[1], not_compute, floor_type
+    else:
+        return f, not_compute, floor_type
+
+    arg = f.args
+    lst = list(arg)
+
+    for i, r in enumerate(arg):
+        if isinstance(r, Function):
+            if type(r) == floor:
+                floor_type = True
+                lst[i], temp_not_compute, _ = _recursive_check_f(r.args[0])
+                not_compute = temp_not_compute if temp_not_compute else not_compute
+            else:
+                not_compute = True
+                return f, not_compute, floor_type
+        if r.is_Mul or r.is_Add or r.is_Pow:
+            temp_r = r.args[0] if r.is_Pow else r
+            lst[i], temp_not_compute, temp_floor_type = _recursive_check_f(temp_r)
+            lst[i] = lst[i] ** r.args[1] if r.is_Pow else lst[i]
+            floor_type = floor_type if floor_type else temp_floor_type
+            not_compute = temp_not_compute if temp_not_compute else not_compute
+
+        cp_f = cp_f + lst[i] if operation_type == "Add" else cp_f * lst[i]
+
+    return cp_f, not_compute, floor_type
+
+
+def _solve_floor(f, symbol, solver):
+    """ Helper functions to solve equations with floor """
+    floor_eq, not_compute, floor_type = _recursive_check_f(f)
+
+    if not_compute:
+        raise NotImplementedError(filldedent('''
+                                The floor equation
+                                cannot be solved with
+                                the current implementation.
+                                '''))
+
+    if floor_type is False:
+        return EmptySet
+    else:
+        result = set()
+
+    lower_limit = solver(floor_eq, symbol)
+    upper_limit = solver(floor_eq-1, symbol)
+
+    for l, r in zip(lower_limit, upper_limit):
+        result.add(Interval.Ropen(l, r) if l < r else Interval.Lopen(r, l))
+    return Union(*result)
+
+
 def _solve_abs(f, symbol, domain):
     """ Helper function to solve equation involving absolute value function """
     if not domain.is_subset(S.Reals):
@@ -1070,6 +1143,13 @@ def _solveset(f, symbol, domain, _check=False):
         except NotImplementedError:
             result = ConditionSet(symbol, f, domain)
         return result
+    elif f.has(floor):
+        if not domain.is_subset(S.Reals):
+            raise ValueError(filldedent('''
+                Floor expressions have meaning
+                only in real plane not in imaginary
+                one.'''))
+        result = _solve_floor(f, symbol, solver)
     elif _is_modular(f, symbol):
         result = _solve_modular(f, symbol, domain)
     else:
@@ -2189,7 +2269,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     if not isinstance(f, (Expr, Relational, Number)):
         raise ValueError("%s is not a valid SymPy expression" % f)
 
-    if not isinstance(symbol, (Expr, Relational)) and  symbol is not None:
+    if not isinstance(symbol, (Expr, Relational)) and symbol is not None:
         raise ValueError("%s is not a valid SymPy symbol" % symbol)
 
     if not isinstance(domain, Set):

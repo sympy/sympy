@@ -11,6 +11,7 @@ from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
     sinh, tanh, cosh, sech, coth)
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
@@ -2672,6 +2673,16 @@ def test_solve_modular():
     assert dumeq(solveset(c - Mod(a**(n - 4)*b, m), n, S.Integers),
             Intersection(ImageSet(Lambda(n, 2147483646*n + 104), S.Naturals0),
             S.Integers))
+
+
+def test_solve_floor():
+    assert solveset(floor(x), x, S.Reals) == Interval.Ropen(0, 1)
+    assert solveset(floor(x+1), x, S.Reals) == Interval.Ropen(-1, 0)
+    assert solveset(x*floor(x+1), x, S.Reals) == Interval(-1, 0)
+    assert solveset(floor(2*x-3)-5, x, S.Reals) == Interval.Ropen(4, 9/2)
+
+    raises(NotImplementedError, lambda: solveset(floor(x) + sin(x), x, S.Reals))
+    raises(NotImplementedError, lambda: solveset(floor(2/(1 + (x*sin(x)))), x, S.Reals))
 
 # end of modular tests
 
