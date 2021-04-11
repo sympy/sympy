@@ -214,62 +214,37 @@ def test_issue_18449():
 
 def test_is_function_class_equation():
     from sympy.abc import x, a
-    assert _is_function_class_equation(TrigonometricFunction,
-                                       tan(x), x) is True
-    assert _is_function_class_equation(TrigonometricFunction,
-                                       tan(x) - 1, x) is True
-    assert _is_function_class_equation(TrigonometricFunction,
-                                       tan(x) + sin(x), x) is True
-    assert _is_function_class_equation(TrigonometricFunction,
-                                       tan(x) + sin(x) - a, x) is True
-    assert _is_function_class_equation(TrigonometricFunction,
-                                       sin(x)*tan(x) + sin(x), x) is True
-    assert _is_function_class_equation(TrigonometricFunction,
-                                       sin(x)*tan(x + a) + sin(x), x) is True
-    assert _is_function_class_equation(TrigonometricFunction,
-                                       sin(x)*tan(x*a) + sin(x), x) is True
-    assert _is_function_class_equation(TrigonometricFunction,
-                                       a*tan(x) - 1, x) is True
-    assert _is_function_class_equation(TrigonometricFunction,
-                                       tan(x)**2 + sin(x) - 1, x) is True
-    assert _is_function_class_equation(TrigonometricFunction,
-                                       tan(x) + x, x) is False
-    assert _is_function_class_equation(TrigonometricFunction,
-                                       tan(x**2), x) is False
-    assert _is_function_class_equation(TrigonometricFunction,
-                                       tan(x**2) + sin(x), x) is False
-    assert _is_function_class_equation(TrigonometricFunction,
-                                       tan(x)**sin(x), x) is False
-    assert _is_function_class_equation(TrigonometricFunction,
-                                       tan(sin(x)) + sin(x), x) is False
-    assert _is_function_class_equation(HyperbolicFunction,
-                                       tanh(x), x) is True
-    assert _is_function_class_equation(HyperbolicFunction,
-                                       tanh(x) - 1, x) is True
-    assert _is_function_class_equation(HyperbolicFunction,
-                                       tanh(x) + sinh(x), x) is True
-    assert _is_function_class_equation(HyperbolicFunction,
-                                       tanh(x) + sinh(x) - a, x) is True
-    assert _is_function_class_equation(HyperbolicFunction,
-                                       sinh(x)*tanh(x) + sinh(x), x) is True
-    assert _is_function_class_equation(HyperbolicFunction,
-                                       sinh(x)*tanh(x + a) + sinh(x), x) is True
-    assert _is_function_class_equation(HyperbolicFunction,
-                                       sinh(x)*tanh(x*a) + sinh(x), x) is True
-    assert _is_function_class_equation(HyperbolicFunction,
-                                       a*tanh(x) - 1, x) is True
-    assert _is_function_class_equation(HyperbolicFunction,
-                                       tanh(x)**2 + sinh(x) - 1, x) is True
-    assert _is_function_class_equation(HyperbolicFunction,
-                                       tanh(x) + x, x) is False
-    assert _is_function_class_equation(HyperbolicFunction,
-                                       tanh(x**2), x) is False
-    assert _is_function_class_equation(HyperbolicFunction,
-                                       tanh(x**2) + sinh(x), x) is False
-    assert _is_function_class_equation(HyperbolicFunction,
-                                       tanh(x)**sinh(x), x) is False
-    assert _is_function_class_equation(HyperbolicFunction,
-                                       tanh(sinh(x)) + sinh(x), x) is False
+    trig_class = _is_function_class_equation
+
+    assert trig_class(TrigonometricFunction, tan(x), x) is True
+    assert trig_class(TrigonometricFunction, tan(x) - 1, x) is True
+    assert trig_class(TrigonometricFunction, tan(x) + sin(x), x) is True
+    assert trig_class(TrigonometricFunction, tan(x) + sin(x) - a, x) is True
+    assert trig_class(TrigonometricFunction, sin(x)*tan(x) + sin(x), x) is True
+    assert trig_class(TrigonometricFunction, sin(x)*tan(x + a) + sin(x), x) is True
+    assert trig_class(TrigonometricFunction, sin(x)*tan(x*a) + sin(x), x) is True
+    assert trig_class(TrigonometricFunction, a*tan(x) - 1, x) is True
+    assert trig_class(TrigonometricFunction, tan(x)**2 + sin(x) - 1, x) is True
+    assert trig_class(TrigonometricFunction, tan(x) + x, x) is False
+    assert trig_class(TrigonometricFunction, tan(x**2), x) is False
+    assert trig_class(TrigonometricFunction, tan(x**2) + sin(x), x) is False
+    assert trig_class(TrigonometricFunction, tan(x)**sin(x), x) is False
+    assert trig_class(TrigonometricFunction, tan(sin(x)) + sin(x), x) is True
+    assert trig_class(TrigonometricFunction, tan(sin(x) + 2) + 5, x) is True
+    assert trig_class(HyperbolicFunction, tanh(x), x) is True
+    assert trig_class(HyperbolicFunction, tanh(x) - 1, x) is True
+    assert trig_class(HyperbolicFunction, tanh(x) + sinh(x), x) is True
+    assert trig_class(HyperbolicFunction, tanh(x) + sinh(x) - a, x) is True
+    assert trig_class(HyperbolicFunction, sinh(x)*tanh(x) + sinh(x), x) is True
+    assert trig_class(HyperbolicFunction, sinh(x)*tanh(x + a) + sinh(x), x) is True
+    assert trig_class(HyperbolicFunction, sinh(x)*tanh(x*a) + sinh(x), x) is True
+    assert trig_class(HyperbolicFunction, a*tanh(x) - 1, x) is True
+    assert trig_class(HyperbolicFunction, tanh(x)**2 + sinh(x) - 1, x) is True
+    assert trig_class(HyperbolicFunction, tanh(x) + x, x) is False
+    assert trig_class(HyperbolicFunction, tanh(x**2), x) is False
+    assert trig_class(HyperbolicFunction, tanh(x**2) + sinh(x), x) is False
+    assert trig_class(HyperbolicFunction, tanh(x)**sinh(x), x) is False
+    assert trig_class(HyperbolicFunction, tanh(sinh(x)) + sinh(x), x) is True
 
 
 def test_garbage_input():
@@ -1030,6 +1005,54 @@ def test_issue_9616():
         Complement(
             ImageSet(Lambda(n, 2*n*I*pi + log(sqrt(2)/2 + sqrt(-S.Half + sqrt(2)))), S.Integers),
             ImageSet(Lambda(n, I*(2*n*pi + pi)/2), S.Integers))))
+
+
+def test_issue_17667():
+    # simpler output for irrational
+    # solved with help of _solve_as_poly
+    # TODO: try to group more such equations which gives
+    #       complex results into _solve_as_poly or try to make
+    #       invert powerful and integrate it in better way.
+    assert dumeq(solveset(tan(x)-sqrt(2), x, Interval(0, pi/2)),\
+            FiniteSet(atan(sqrt(2))))
+    assert dumeq(solveset(tan(x)-sqrt(2), x, S.Reals),\
+            ImageSet(Lambda(n, n*pi + atan(sqrt(2))), S.Integers))
+    assert dumeq(solveset(tan(x)-pi, x, Interval(0, pi/2)),\
+            FiniteSet(atan(pi)))
+    assert dumeq(solveset(tan(x)-pi, x, S.Reals),\
+            ImageSet(Lambda(n, n*pi + atan(pi)), S.Integers))
+    assert dumeq(solveset(sin(x)-pi, x, Interval(0, pi/2)),\
+            Intersection(ImageSet(Lambda(n, (-1)**n*asin(pi) + n*pi), S.Integers), Interval(0, pi/2)))
+
+
+def test_nested_trig():
+    # have to extend more like upto trig(trig + a) + b
+    # or trig(trig + a) + trig (where trig = sin, cos, csc,..)
+    # this is solved with the help of solve_decomposition
+
+    eq1 = sin(tan(x) + 1) - 1
+    eq2 = cos(sin(x) + 1) - 1
+    eq3 = sec(tan(3*x) + 1) - 1
+    eq4 = cot(cos(x) - 1) + 2
+    eq5 = cos(sin(x) + a) - 1
+    eq6 = sin(cos(x) + S.Half)
+    eq7 = sec(cos(x) + a)
+
+    assert dumeq(solveset(eq1, x, S.Reals),\
+            ImageSet(Lambda(n, 2*n*pi - 1 + pi/2), S.Integers))
+    assert dumeq(solveset(eq2, x, S.Reals),\
+            ImageSet(Lambda(n, 2*n*pi + 3*pi/2), S.Integers))
+    assert dumeq(solveset(eq3, x, S.Reals),\
+            ImageSet(Lambda(n, Rational(2, 3)*n*pi + Rational(-1, 3) + Rational(2, 3)*pi), S.Integers))
+    assert dumeq(solveset(eq4, x, S.Reals),\
+            Union(ImageSet(Lambda(n, 2*n*pi + acos(1 - atan(Rational(1, 2)))), S.Integers), \
+                ImageSet(Lambda(n, 2*n*pi - acos(1 - atan(Rational(1, 2))) + 2*pi), S.Integers)))
+    assert dumeq(solveset(eq5, x, S.Reals),\
+            ImageSet(Lambda(n, 2*n*pi - a), S.Integers))
+    assert dumeq(solveset(eq6, x, S.Reals),\
+            Union(ImageSet(Lambda(n, 2*n*pi + Rational(4, 3)*pi), S.Integers), \
+                ImageSet(Lambda(n, 2*n*pi + Rational(2, 3)*pi), S.Integers)))
+    assert dumeq(solveset(eq7, x, S.Reals), S.EmptySet)
 
 
 def test_solve_invalid_sol():
