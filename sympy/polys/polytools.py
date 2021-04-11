@@ -6159,7 +6159,7 @@ def to_rational_coeffs(f):
                 func = c.func
             else:
                 args = [c]
-            c1, c2 = sift(args, lambda z: z.is_rational, binary=True)
+            c1, c2 = sift(args, lambda z: z.is_rational==True, binary=True)
             alpha = -func(*c2)/n
             f2 = f1.shift(alpha)
             return alpha, f2
