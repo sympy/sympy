@@ -1336,6 +1336,7 @@ def test_solvify_piecewise():
 
 
 def test_abs_invert_solvify():
+    x = Symbol('x')
     assert dumeq(solvify(sin(Abs(x)), x, S.Reals), [n*pi])
     x = Symbol('x',positive=True)
     assert solvify(sin(Abs(x)), x, S.Reals) == [0, pi]
