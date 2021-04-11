@@ -402,6 +402,118 @@ def test_issue_13749():
 def test_issue_18133():
     assert integrate(exp(x)/(1 + x)**2, x) == NonElementaryIntegral(exp(x)/(x + 1)**2, x)
 
+def test_issue_21024():
+    x = Symbol('x', real=True, nonzero=True)
+
+    f = log(x)*log(4*x) + log(3*x + exp(2))
+    F1 = x*log(x)**2 + x*(1 - 2*log(2)) + (-2*x + 2*x*log(2))*log(x) + \
+        (x + exp(2)/6)*log(3*x + exp(2)) + exp(2)*log(3*x + exp(2))/6
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f = (x + exp(3))/x**2
+    F1 = log(x) - exp(3)/x
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f = (x**2 + exp(5))/x
+    F1 = x**2/2 + exp(5)*log(x)
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f = x/(2*x + tanh(1))
+    F1 = x/2 - (-1 + E)*(1 + E)*log(2*x + tanh(1))/(4*(1 + exp(2)))
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f = x - sinh(4)/x
+    F1 = x**2/2 - (-1 + E)*(1 + E)*(1 + exp(2))*(1 + exp(4))*exp(-4)*log(x)/2
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f = log(x + exp(5)/x)
+    F1 = integrate(f,x).diff(x)
+    assert simplify(f - F1) == 0
+
+    f = x**5/(x + E)
+    F1 = x**5/5 - E*x**4/4 + x**3*exp(2)/3 - x**2*exp(3)/2 + x*exp(4) - exp(5)*log(x + E)
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f = 4*x/(x + sinh(5))
+    F1 = 4*x - 2*(-1 + E)*(1 + E)*(1 + E + exp(2) + \
+        exp(3) + exp(4))*(-exp(3) - E + 1 + exp(2) + exp(4))*exp(-5)*log(x + sinh(5))
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f = x**2/(2*x + sinh(2))
+    F1 = x**2/4 - x*sinh(2)/4 + (-1 + E)**2*(1 + E)**2*(1 + exp(2))**2*exp(-4)*log(2*x + sinh(2))/32
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f = -x**2/(x + E)
+    F1 = -x**2/2 + E*x - exp(2)*log(x + E)
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f = (2*x + 3)*exp(5)/x
+    F1 = 2*x*exp(5) + 3*exp(5)*log(x)
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f = x + 2 + cosh(3)/x
+    F1 = x**2/2 + 2*x + (1 + exp(2))*(-exp(2) + 1 + exp(4))*exp(-3)*log(x)/2
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f = x - tanh(1)/x**3
+    F1 = x**2/2 + (-1 + exp(2))/(x**2*(2 + 2*exp(2)))
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f = (3*x - exp(6))/x
+    F1 = 3*x - exp(6)*log(x)
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f =  x**4/(x + exp(5))**2 + x
+    F1 =  x**3/3 + x**2*(1/2 - exp(5)) + 3*x*exp(10) - 4*exp(15)*log(x + exp(5)) - exp(20)/(x + exp(5))
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f = x*(x + exp(10)/x**2) + x
+    F1 =  x**3/3 + x**2/2 + exp(10)*log(x)
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f = x + x/(5*x + sinh(3))
+    F1 = x**2/2 + x/5 - (-1 + E)*(1 + E)*(1 + E + exp(2))*(-E + 1 + exp(2))*exp(-3)*log(5*x + sinh(3))/50
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f = (x + exp(3))/(2*x**2 + 2*x)
+    F1 = exp(3)*log(x)/2 - (-1 + E)*(1 + E + exp(2))*log(x + ((-1 + E)*(1 + E + exp(2)) \
+        + exp(3))/(-1 + 2*exp(3)))/2
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f = log(x + 4*sinh(4))
+    F1 = x*log(x + 4*sinh(4)) - x + 2*(-1 + E)*(1 + E)*(1 + \
+         exp(2))*(1 + exp(4))*exp(-4)*log(x + 4*sinh(4))
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f = -x + 20*(exp(-5) - atan(4)/x)**3*sin(4)/x
+    F1 = (-x**2*exp(15)/2 + 20*log(x)*sin(4) + (180*x**2*exp(5)*sin(4)*atan(4) - \
+        90*x*exp(10)*sin(4)*atan(4)**2 + 20*exp(15)*sin(4)*atan(4)**3)/(3*x**3))*exp(-15)
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
+    f =  2*x**2*exp(-4) + 6/x
+    F1 = (2*x**3/3 + 6*exp(4)*log(x))*exp(-4)
+    F2 = integrate(f,x)
+    assert simplify(F1 - F2) == 0
+
 
 def test_matrices():
     M = Matrix(2, 2, lambda i, j: (i + j + 1)*sin((i + j + 1)*x))
