@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
-from .printer import Printer, print_function
+from .printer import Printer, _print_Integer__scientific, print_function
 from sympy.printing.precedence import precedence, PRECEDENCE
 
 from mpmath.libmp import prec_to_dps, to_str as mlib_to_str
@@ -305,7 +305,7 @@ class StrPrinter(Printer):
 
         if not b:
             return sign + '*'.join(a_str)
-        elif len(b) == 1:
+        elif len(b) == 1 and '*10' not in b_str[0]:
             return sign + '*'.join(a_str) + "/" + b_str[0]
         else:
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
@@ -605,6 +605,16 @@ class StrPrinter(Printer):
                          self.parenthesize(expr.exp, PREC, strict=False))
 
     def _print_Integer(self, expr):
+        scientific = _print_Integer__scientific(self, expr)
+        if scientific is None:
+            try:
+                return str(expr.p)
+            except AttributeError:
+                return str(expr)
+        else:
+            return scientific
+
+        _print_int = _print_long = _print_Integer
         if self._settings.get("sympy_integers", False):
             return "S(%s)" % (expr)
         return str(expr.p)
@@ -641,11 +651,12 @@ class StrPrinter(Printer):
 
     def _print_Rational(self, expr):
         if expr.q == 1:
-            return str(expr.p)
+            return self._print(expr.p)
         else:
-            if self._settings.get("sympy_integers", False):
-                return "S(%s)/%s" % (expr.p, expr.q)
-            return "%s/%s" % (expr.p, expr.q)
+            _p, _q = self._print(expr.p), self._print(expr.q)
+            if '*10' in _q:
+                _q = '(%s)' % _q
+            return "%s/%s" % (_p, _q)
 
     def _print_PythonRational(self, expr):
         if expr.q == 1:

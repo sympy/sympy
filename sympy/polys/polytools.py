@@ -6336,7 +6336,7 @@ def factor(f, *gens, deep=False, **args):
     >>> factor((x**2 - 1)/(x**2 + 4*x + 4))
     (x - 1)*(x + 1)/(x + 2)**2
     >>> factor((x**2 + 4*x + 4)**10000000*(x**2 + 1))
-    (x + 2)**20000000*(x**2 + 1)
+    (x + 2)**20*10**6*(x**2 + 1)
 
     By default, factor deals with an expression as a whole:
 

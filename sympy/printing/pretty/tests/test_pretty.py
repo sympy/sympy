@@ -6681,6 +6681,50 @@ def test_issue_10472():
     assert upretty(M) == ucode_str
 
 
+def test_pretty_Integer():
+    e2 = S(10)**2
+    s2 = '100'
+    assert pretty(e2) == s2
+    assert upretty(e2) == s2
+
+    e20 = S(10)**20
+    s20 = """\
+  20
+10  """
+    u20 = u"""\
+  20
+10  """
+    assert pretty(e20) == s20
+    assert upretty(e20) == u20
+
+    e2m = S(10)**-2
+    s2m = '1/100'
+    assert pretty(e2m) == s2m
+    assert upretty(e2m) == s2m
+
+    e20m = S(10)**-20
+    s20m = '1/10**20'
+    u20m = u'1/10**20'
+    assert pretty(e20m) == s20m
+    assert upretty(e20m) == u20m
+
+    e20n = -S(10)**20
+    s20n = """\
+   20
+-10  """
+    u20n = u"""\
+   20
+-10  """
+    assert pretty(e20n) == s20n
+    assert upretty(e20n) == u20n
+
+    e20nm = -S(10)**-20
+    s20nm = '-1/10**20'
+    u20nm = u'-1/10**20'
+    assert pretty(e20nm) == s20nm
+    assert upretty(e20nm) == u20nm
+    assert pretty(123456789) == '123456789'
+    assert upretty(123456789) == u'123456789'
 def test_MatrixElement_printing():
     # test cases for issue #11821
     A = MatrixSymbol("A", 1, 3)
