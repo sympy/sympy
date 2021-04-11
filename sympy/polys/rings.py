@@ -372,6 +372,7 @@ class PolyRing(DefaultPrinting, IPolys):
         domain = self.domain
 
         def _rebuild(expr):
+
             generator = mapping.get(expr)
 
             if generator is not None:
@@ -380,10 +381,12 @@ class PolyRing(DefaultPrinting, IPolys):
                 return reduce(add, list(map(_rebuild, expr.args)))
             elif expr.is_Mul:
                 return reduce(mul, list(map(_rebuild, expr.args)))
-            elif expr.is_Pow and expr.exp.is_Integer and expr.exp >= 0:
-                return _rebuild(expr.base)**int(expr.exp)
             else:
-                return self.ground_new(domain.convert(expr))
+                base, exp = expr.as_base_exp()
+                if exp.is_Integer and exp > 1:
+                    return _rebuild(base)**int(exp)
+                else:
+                    return self.ground_new(domain.convert(expr))
 
         return _rebuild(sympify(expr))
 

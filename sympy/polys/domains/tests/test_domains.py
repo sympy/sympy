@@ -1,6 +1,6 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import I, S, sqrt, sin, oo, Poly, Float, Rational, pi
+from sympy import I, S, sqrt, sin, oo, Poly, Float, Rational, pi, exp, E
 from sympy.abc import x, y, z
 
 from sympy.core.compatibility import HAS_GMPY
@@ -574,6 +574,8 @@ def test_Domain_convert():
     R, x = ring("x", ZZ)
     assert ZZ.convert(x - x) == 0
     assert ZZ.convert(x - x, R.to_domain()) == 0
+
+    assert ZZ[E].convert(exp(3))
 
 
 def test_GlobalPolynomialRing_convert():

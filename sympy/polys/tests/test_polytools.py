@@ -55,7 +55,7 @@ from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise, Derivative,
-    exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
+    exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff,symbols)
 
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
@@ -2579,6 +2579,12 @@ def test_factor():
     f = 5*x + 3*exp(2 - 7*x)
     assert factor(f, deep=True) == factor(f, deep=True, fraction=True)
     assert factor(f, deep=True, fraction=False) == 5*x + 3*exp(2)*exp(-7*x)
+    #issue 21000
+    mu_1, mu_2 = symbols("mu_1, mu_2", positive = True, real = True)
+    a = 4*mu_1**2*mu_2**2 + x**2*(mu_1**2 - 2*mu_1*mu_2 + mu_2**2)
+    assert factor(sqrt(a), deep = True) == sqrt(4*mu_1**2*mu_2**2 + x**2*(mu_1 - mu_2)**2)
+    assert factor((a)**2, deep = True) == (4*mu_1**2*mu_2**2 + x**2*(mu_1 - mu_2)**2)**2
+    assert factor((a)**.5, deep = True) == (4*mu_1**2*mu_2**2 + x**2*(mu_1 - mu_2)**2)**0.5
 
 
 def test_factor_large():

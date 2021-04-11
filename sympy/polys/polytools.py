@@ -5,7 +5,7 @@ from functools import wraps, reduce
 from operator import mul
 
 from sympy.core import (
-    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
+    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple, Pow
 )
 from sympy.core.basic import preorder_traversal
 from sympy.core.compatibility import iterable, ordered
@@ -6364,6 +6364,14 @@ def factor(f, *gens, deep=False, **args):
 
     """
     f = sympify(f)
+
+    #handle a special case when the equation
+    #is inside power functions
+    switch = True
+
+    if type(f) != list and f.func == Pow:
+        switch= False
+
     if deep:
         from sympy.simplify.simplify import bottom_up
         def _try_factor(expr):
@@ -6371,7 +6379,7 @@ def factor(f, *gens, deep=False, **args):
             Factor, but avoid changing the expression when unable to.
             """
             fac = factor(expr, *gens, **args)
-            if fac.is_Mul or fac.is_Pow:
+            if fac.is_Mul or fac.is_Pow and switch:
                 return fac
             return expr
 
