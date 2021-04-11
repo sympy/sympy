@@ -26,6 +26,7 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 import warnings
 from collections.abc import Callable
 
+from sympy.core.numbers import Float, Integer, Zero
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
 from sympy.core.function import arity
@@ -492,7 +493,7 @@ class BaseSeries:
 
     is_3Dline = False
     # Some of the backends expect:
-    #  - get_points returning 1D np.arrays list_x, list_y, list_y
+    #  - get_points returning 1D np.arrays list_x, list_y, list_z
     #  - get_segments returning np.array (done in Line2DBaseSeries)
     #  - get_color_array returning 1D np.array (done in Line2DBaseSeries)
     # with the colors calculated at the points from get_points
@@ -1238,6 +1239,13 @@ class MatplotlibBackend(BaseBackend):
         for s in series:
             # Create the collections
             if s.is_2Dline:
+                if isinstance(s, LineOver1DRangeSeries) and isinstance(s.expr, (Float, Integer, Zero)):
+                    y = float(s.expr)
+                    if y:
+                        mi, ma = sorted([0, 2*y])
+                    else:
+                        mi, ma = -1, 1
+                    ax.set_ylim(mi, ma)
                 collection = self.LineCollection(s.get_segments())
                 ax.add_collection(collection)
             elif s.is_contour:
@@ -1303,7 +1311,9 @@ class MatplotlibBackend(BaseBackend):
                     collection.set_color(s.surface_color)
 
         Axes3D = mpl_toolkits.mplot3d.Axes3D
-        if not isinstance(ax, Axes3D):
+        if all(isinstance(s, LineOver1DRangeSeries) and isinstance(s.expr, (Float, Integer, Zero)) for s in series):
+            pass
+        elif not isinstance(ax, Axes3D):
             ax.autoscale_view(
                 scalex=ax.get_autoscalex_on(),
                 scaley=ax.get_autoscaley_on())
