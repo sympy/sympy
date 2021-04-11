@@ -4,11 +4,10 @@ from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erf
                    gamma, beta, Piecewise, Integral, sin, cos, tan, atan, sinh, cosh,
                    besseli, floor, expand_func, Rational, I, re, Lambda, asin,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
-                   factorial, binomial, erfi, besselj, besselk, factor_terms)
+                   factorial, binomial, erfi, besselj, besselk)
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
-from sympy.sets.sets import FiniteSet, Complement
-from sympy.sets.conditionset import ConditionSet
+from sympy.sets.sets import FiniteSet, Complement, Intersection
 from sympy.stats import (P, E, where, density, variance, covariance, skewness, kurtosis, median,
                          given, pspace, cdf, characteristic_function, moment_generating_function,
                          ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral, BetaPrime,
@@ -48,12 +47,9 @@ def test_single_normal():
 
     assert P(X**2 < 1) == erf(2**S.Half/2)
     ans = quantile(Y)(x)
-    eq = ans.atoms(Eq).pop()
-    ans = factor_terms(ans.xreplace({eq: Eq(eq.lhs.simplify().factor(), 0)}
-        ).xreplace({eq.atoms(Dummy).pop(): y}))
-    assert ans == Complement(ConditionSet(y, Eq((-mu +
-        y)*(2*x + erf(sqrt(2)*(mu - y)/(2*sigma)) - 1),
-        0), S.Reals), FiniteSet(mu))
+    assert ans == Complement(Intersection(FiniteSet(
+        sqrt(2)*sigma*(sqrt(2)*mu/(2*sigma)+ erfinv(2*x - 1))),
+        Interval(-oo, oo)), FiniteSet(mu))
     assert E(X, Eq(X, mu)) == mu
 
     assert median(X) == FiniteSet(0)

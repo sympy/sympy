@@ -1058,11 +1058,27 @@ def _solveset(f, symbol, domain, _check=False):
                         result += _solve_abs(f, symbol, domain)
                     else:
                         result_rational = _solve_as_rational(equation, symbol, domain)
-                        if isinstance(result_rational, ConditionSet):
-                            # may be a transcendental type equation
-                            result += _transolve(equation, symbol, domain)
-                        else:
+                        if not isinstance(result_rational, ConditionSet):
                             result += result_rational
+                        else:
+                            # may be a transcendental type equation
+                            t_result = _transolve(equation, symbol, domain)
+                            if isinstance(t_result, ConditionSet):
+                                # might need factoring; this is expensive so we
+                                # have delayed until now. To avoid recursion
+                                # errors look for a non-trivial factoring into
+                                # a product of symbol dependent terms; I think
+                                # that something that factors as a Pow would
+                                # have already been recognized by now.
+                                factored = equation.factor()
+                                if factored.is_Mul and equation != factored:
+                                    _, dep = factored.as_independent(symbol)
+                                    if not dep.is_Add:
+                                        # non-trivial factoring of equation
+                                        # but use form with constants
+                                        # in case they need special handling
+                                        t_result = solver(factored, symbol)
+                            result += t_result
                 else:
                     result += solver(equation, symbol)
 

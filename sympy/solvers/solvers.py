@@ -3283,8 +3283,7 @@ def unrad(eq, *syms, **flags):
     _take = flags.setdefault('_take', _take)
 
     if isinstance(eq, Eq):
-        eq = eq.rewrite(Add)
-        assert isinstance(eq, Expr)
+        eq = eq.lhs - eq.rhs  # XXX legacy Eq as Eqn support
     elif not isinstance(eq, Expr):
         return
 
