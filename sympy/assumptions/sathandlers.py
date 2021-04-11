@@ -186,44 +186,31 @@ class ExactlyOneArg(UnevaluatedOnFree):
         # return And(*[Or(*map(Not, c)) for c in combinations(pred_args, 2)]) & Or(*pred_args)
 
 
+_old_assump_getters = {
+    Q.positive: lambda o: o.is_positive,
+    Q.zero: lambda o: o.is_zero,
+    Q.negative: lambda o: o.is_negative,
+    Q.nonpositive: lambda o: o.is_nonpositive,
+    Q.nonzero: lambda o: o.is_nonzero,
+    Q.nonnegative: lambda o: o.is_nonnegative,
+    Q.rational: lambda o: o.is_rational,
+    Q.irrational: lambda o: o.is_irrational,
+    Q.even: lambda o: o.is_even,
+    Q.odd: lambda o: o.is_odd,
+    Q.integer: lambda o: o.is_integer,
+    Q.composite: lambda o: o.is_composite,
+    Q.imaginary: lambda o: o.is_imaginary,
+    Q.commutative: lambda o: o.is_commutative,
+}
+
 def _old_assump_replacer(obj):
-    if not isinstance(obj, AppliedPredicate):
+    # obj is AppliedPredicate
+
+    getter = _old_assump_getters.get(obj.function, None)
+    if getter is None:
         return obj
 
-    e = obj.args[0]
-    ret = None
-
-    if obj.func == Q.positive:
-        ret = e.is_positive
-    elif obj.func == Q.zero:
-        ret = e.is_zero
-    elif obj.func == Q.negative:
-        ret = e.is_negative
-    elif obj.func == Q.nonpositive:
-        ret = e.is_nonpositive
-    elif obj.func == Q.nonzero:
-        ret = e.is_nonzero
-    elif obj.func == Q.nonnegative:
-        ret = e.is_nonnegative
-
-    elif obj.func == Q.rational:
-        ret = e.is_rational
-    elif obj.func == Q.irrational:
-        ret = e.is_irrational
-
-    elif obj.func == Q.even:
-        ret = e.is_even
-    elif obj.func == Q.odd:
-        ret = e.is_odd
-    elif obj.func == Q.integer:
-        ret = e.is_integer
-    elif obj.func == Q.composite:
-        ret = e.is_composite
-    elif obj.func == Q.imaginary:
-        ret = e.is_imaginary
-    elif obj.func == Q.commutative:
-        ret = e.is_commutative
-
+    ret = getter(*obj.arguments)
     if ret is None:
         return obj
     return ret

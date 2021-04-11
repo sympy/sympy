@@ -456,6 +456,20 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     from sympy.solvers.solvers import denoms
     from sympy.solvers.solveset import solvify, solveset
 
+    if domain.is_subset(S.Reals) is False:
+        raise NotImplementedError(filldedent('''
+        Inequalities in the complex domain are
+        not supported. Try the real domain by
+        setting domain=S.Reals'''))
+    elif domain is not S.Reals:
+        rv = solve_univariate_inequality(
+        expr, gen, relational=False, continuous=continuous).intersection(domain)
+        if relational:
+            rv = rv.as_relational(gen)
+        return rv
+    else:
+        pass  # continue with attempt to solve in Real domain
+
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
     # real.

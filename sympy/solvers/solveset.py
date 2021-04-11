@@ -330,6 +330,14 @@ def _invert_complex(f, g_ys, symbol):
                 return (h, S.EmptySet)
             return _invert_complex(h, imageset(Lambda(n, n/g), g_ys), symbol)
 
+    if f.is_Pow:
+        base, expo = f.args
+        # special case: g**r = 0
+        # Could be improved like `_invert_real` to handle more general cases.
+        if expo.is_Rational and g_ys == FiniteSet(0):
+            if expo.is_positive:
+                return _invert_complex(base, g_ys, symbol)
+
     if hasattr(f, 'inverse') and f.inverse() is not None and \
        not isinstance(f, TrigonometricFunction) and \
        not isinstance(f, HyperbolicFunction) and \
@@ -1056,11 +1064,6 @@ def _solveset(f, symbol, domain, _check=False):
         result = solver(Add(f.lhs, - f.rhs, evaluate=False), symbol, domain)
 
     elif f.is_Relational:
-        if not domain.is_subset(S.Reals):
-            raise NotImplementedError(filldedent('''
-                Inequalities in the complex domain are
-                not supported. Try the real domain by
-                setting domain=S.Reals'''))
         try:
             result = solve_univariate_inequality(
             f, symbol, domain=domain, relational=False)
@@ -1532,7 +1535,9 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     newlhs = powdenest(lhs)
     if lhs != newlhs:
         # it may also be advantageous to factor the new expr
-        return _solveset(factor(newlhs - rhs), symbol, domain)  # try again with _solveset
+        neweq = factor(newlhs - rhs)
+        if neweq != (lhs - rhs):
+            return _solveset(neweq, symbol, domain)  # try again with _solveset
 
     if not (isinstance(lhs, Add) and len(lhs.args) == 2):
         # solving for the sum of more than two powers is possible
@@ -2313,6 +2318,7 @@ def solvify(f, symbol, domain):
 
     Solution    |    Output
     ----------------------------------------
+
     Any Set     | list
 
 
@@ -3040,52 +3046,59 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     # end of def add_intersection_complement()
 
     def _extract_main_soln(sym, sol, soln_imageset):
-            """Separate the Complements, Intersections, ImageSet lambda expr
-            and its base_set.
-            """
-            # if there is union, then need to check
-            # Complement, Intersection, Imageset.
-            # Order should not be changed.
-            if isinstance(sol, Complement):
-                # extract solution and complement
-                complements[sym] = sol.args[1]
-                sol = sol.args[0]
-                # complement will be added at the end
-                # using `add_intersection_complement` method
-            if isinstance(sol, Intersection):
-                # Interval/Set will be at 0th index always
-                if sol.args[0] not in (S.Reals, S.Complexes):
-                    # Sometimes solveset returns soln with intersection
-                    # S.Reals or S.Complexes. We don't consider that
-                    # intersection.
-                    intersections[sym] = sol.args[0]
-                sol = sol.args[1]
-            # after intersection and complement Imageset should
-            # be checked.
-            if isinstance(sol, ImageSet):
-                soln_imagest = sol
-                expr2 = sol.lamda.expr
-                sol = FiniteSet(expr2)
-                soln_imageset[expr2] = soln_imagest
+        """Separate the Complements, Intersections, ImageSet lambda expr and
+        its base_set. This function returns the unmasks sol from different classes
+        of sets and also returns the appended ImageSet elements in a
+        soln_imageset (dict: where key as unmasked element and value as ImageSet).
+        """
+        # if there is union, then need to check
+        # Complement, Intersection, Imageset.
+        # Order should not be changed.
+        if isinstance(sol, ConditionSet):
+            # extracts any solution in ConditionSet
+            sol = sol.base_set
 
-            # if there is union of Imageset or other in soln.
-            # no testcase is written for this if block
-            if isinstance(sol, Union):
-                sol_args = sol.args
-                sol = S.EmptySet
-                # We need in sequence so append finteset elements
-                # and then imageset or other.
-                for sol_arg2 in sol_args:
-                    if isinstance(sol_arg2, FiniteSet):
-                        sol += sol_arg2
-                    else:
-                        # ImageSet, Intersection, complement then
-                        # append them directly
-                        sol += FiniteSet(sol_arg2)
+        if isinstance(sol, Complement):
+            # extract solution and complement
+            complements[sym] = sol.args[1]
+            sol = sol.args[0]
+            # complement will be added at the end
+            # using `add_intersection_complement` method
 
-            if not isinstance(sol, FiniteSet):
-                sol = FiniteSet(sol)
-            return sol, soln_imageset
+        # if there is union of Imageset or other in soln.
+        # no testcase is written for this if block
+        if isinstance(sol, Union):
+            sol_args = sol.args
+            sol = S.EmptySet
+            # We need in sequence so append finteset elements
+            # and then imageset or other.
+            for sol_arg2 in sol_args:
+                if isinstance(sol_arg2, FiniteSet):
+                    sol += sol_arg2
+                else:
+                    # ImageSet, Intersection, complement then
+                    # append them directly
+                    sol += FiniteSet(sol_arg2)
+
+        if isinstance(sol, Intersection):
+            # Interval/Set will be at 0th index always
+            if sol.args[0] not in (S.Reals, S.Complexes):
+                # Sometimes solveset returns soln with intersection
+                # S.Reals or S.Complexes. We don't consider that
+                # intersection.
+                intersections[sym] = sol.args[0]
+            sol = sol.args[1]
+        # after intersection and complement Imageset should
+        # be checked.
+        if isinstance(sol, ImageSet):
+            soln_imagest = sol
+            expr2 = sol.lamda.expr
+            sol = FiniteSet(expr2)
+            soln_imageset[expr2] = soln_imagest
+
+        if not isinstance(sol, FiniteSet):
+            sol = FiniteSet(sol)
+        return sol, soln_imageset
     # end of def _extract_main_soln()
 
     # helper function for _append_new_soln
@@ -3175,7 +3188,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             elif eq is not None:
                 newresult, rnew, delete_soln = _append_eq(
                     eq, newresult, rnew, delete_soln)
-            elif soln_imageset:
+            elif sol in soln_imageset.keys():
                 rnew[sym] = soln_imageset[sol]
                 # restore original imageset
                 _restore_imgset(rnew, original_imageset, newresult)
@@ -3224,15 +3237,14 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             result = _new_order_result(result, eq)
             for res in result:
                 got_symbol = set()  # symbols solved in one iteration
-                if soln_imageset:
-                    # find the imageset and use its expr.
-                    for key_res, value_res in res.items():
-                        if isinstance(value_res, ImageSet):
-                            res[key_res] = value_res.lamda.expr
-                            original_imageset[key_res] = value_res
-                            dummy_n = value_res.lamda.expr.atoms(Dummy).pop()
-                            (base,) = value_res.base_sets
-                            imgset_yes = (dummy_n, base)
+                # find the imageset and use its expr.
+                for key_res, value_res in res.items():
+                    if isinstance(value_res, ImageSet):
+                        res[key_res] = value_res.lamda.expr
+                        original_imageset[key_res] = value_res
+                        dummy_n = value_res.lamda.expr.atoms(Dummy).pop()
+                        (base,) = value_res.base_sets
+                        imgset_yes = (dummy_n, base)
                 # update eq with everything that is known so far
                 eq2 = eq.subs(res).expand()
                 unsolved_syms = _unsolved_syms(eq2, sort=True)
@@ -3284,11 +3296,14 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         # time we may get soln using next equation `eq2`
                         continue
                     if isinstance(soln, ConditionSet):
+                        if soln.base_set in (S.Reals, S.Complexes):
                             soln = S.EmptySet
                             # don't do `continue` we may get soln
                             # in terms of other symbol(s)
                             not_solvable = True
                             total_conditionst += 1
+                        else:
+                            soln = soln.base_set
 
                     if soln is not S.EmptySet:
                         soln, soln_imageset = _extract_main_soln(
@@ -3317,7 +3332,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                                 # Then subs known value
                                 rnew[k] = v.subs(sym, sol)
                         # and add this new solution
-                        if soln_imageset:
+                        if sol in soln_imageset.keys():
                             # replace all lambda variables with 0.
                             imgst = soln_imageset[sol]
                             rnew[sym] = imgst.lamda(
@@ -3355,8 +3370,19 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     if total_conditionset == total_solveset_call and total_solveset_call != -1:
         return _return_conditionset(eqs_in_better_order, all_symbols)
 
+    # don't keep duplicate solutions
+    filtered_complex = []
+    for i in list(new_result_complex):
+        for j in list(new_result_real):
+            if i.keys() != j.keys():
+                continue
+            if all(a.dummy_eq(b) for a, b in zip(i.values(), j.values()) \
+                if type(a) != int or type(b) != int):
+                break
+        else:
+            filtered_complex.append(i)
     # overall result
-    result = new_result_real + new_result_complex
+    result = new_result_real + filtered_complex
 
     result_all_variables = []
     result_infinite = []

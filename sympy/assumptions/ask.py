@@ -5,8 +5,8 @@ from sympy.assumptions.assume import (global_assumptions, Predicate,
 from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 from sympy.core import sympify
 from sympy.core.cache import cacheit
-from sympy.core.relational import Relational
 from sympy.core.kind import BooleanKind
+from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.logic.boolalg import (to_cnf, And, Not, Implies, Equivalent)
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
@@ -249,24 +249,70 @@ class AssumptionKeys:
         from .relation.equality import UnequalityPredicate
         return UnequalityPredicate()
 
+    @memoize_property
+    def gt(self):
+        from .relation.equality import StrictGreaterThanPredicate
+        return StrictGreaterThanPredicate()
+
+    @memoize_property
+    def ge(self):
+        from .relation.equality import GreaterThanPredicate
+        return GreaterThanPredicate()
+
+    @memoize_property
+    def lt(self):
+        from .relation.equality import StrictLessThanPredicate
+        return StrictLessThanPredicate()
+
+    @memoize_property
+    def le(self):
+        from .relation.equality import LessThanPredicate
+        return LessThanPredicate()
+
 
 Q = AssumptionKeys()
 
-def _extract_all_facts(expr, symbols):
-    facts = set()
-    if len(symbols) == 1 and isinstance(symbols[0], Relational):
-        rel = symbols[0]
-        symbols = (rel, rel.reversed)
+def _extract_all_facts(assump, exprs):
+    """
+    Extract all relevant assumptions from *assump* with respect to given *exprs*.
 
-    for clause in expr.clauses:
+    Parameters
+    ==========
+
+    assump : sympy.assumptions.cnf.CNF
+
+    exprs : tuple of expressions
+
+    Returns
+    =======
+
+    sympy.assumptions.cnf.CNF
+
+    Examples
+    ========
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.cnf import CNF
+    >>> from sympy.assumptions.ask import _extract_all_facts
+    >>> from sympy.abc import x, y
+    >>> assump = CNF.from_prop(Q.positive(x) & Q.integer(y))
+    >>> exprs = (x,)
+    >>> cnf = _extract_all_facts(assump, exprs)
+    >>> cnf.clauses
+    {frozenset({Literal(Q.positive, False)})}
+
+    """
+    facts = set()
+
+    for clause in assump.clauses:
         args = []
         for literal in clause:
             if isinstance(literal.lit, AppliedPredicate) and len(literal.lit.arguments) == 1:
-                if literal.lit.arg in symbols:
-                    # Add literal if it has 'symbol' in it
-                    args.append(Literal(literal.lit.func, literal.is_Not))
+                if literal.lit.arg in exprs:
+                    # Add literal if it has matching in it
+                    args.append(Literal(literal.lit.function, literal.is_Not))
                 else:
-                    # If any of the literals doesn't have 'symbol' don't add the whole clause.
+                    # If any of the literals doesn't have matching expr don't add the whole clause.
                     break
         else:
             if args:
@@ -289,8 +335,10 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     This function evaluates the proposition to ``True`` or ``False`` if
     the truth value can be determined. If not, it returns ``None``.
-    It should be discerned from :func:`~.refine()` which does not reduce
-    the expression to ``None``.
+
+    It should be discerned from :func:`~.refine()` which, when applied to a
+    proposition, simplifies the argument to symbolic ``Boolean`` instead of
+    Python built-in ``True``, ``False`` or ``None``.
 
     Parameters
     ==========
@@ -328,7 +376,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         Relations in assumptions are not implemented (yet), so the following
         will not give a meaningful result.
 
-        >>> ask(Q.positive(x), Q.is_true(x > 0))
+        >>> ask(Q.positive(x), x > 0)
 
         It is however a work in progress.
 
@@ -350,41 +398,59 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
         raise TypeError("assumptions must be a valid logical expression")
 
+    binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
     if isinstance(proposition, AppliedPredicate):
         key, args = proposition.function, proposition.arguments
+    elif proposition.func in binrelpreds:
+        key, args = binrelpreds[proposition.func], proposition.args
     else:
         key, args = Q.is_true, (proposition,)
 
+    # convert local and global assumptions to CNF
     assump = CNF.from_prop(assumptions)
     assump.extend(context)
 
+    # extract the relevant facts from assumptions with respect to args
     local_facts = _extract_all_facts(assump, args)
 
     known_facts_cnf = get_all_known_facts()
     known_facts_dict = get_known_facts_dict()
 
+    # convert default facts and assumed facts to encoded CNF
     enc_cnf = EncodedCNF()
     enc_cnf.from_cnf(CNF(known_facts_cnf))
     enc_cnf.add_from_cnf(local_facts)
 
+    # check the satisfiability of given assumptions
     if local_facts.clauses and satisfiable(enc_cnf) is False:
         raise ValueError("inconsistent assumptions %s" % assumptions)
 
     if local_facts.clauses:
 
+        # quick exit if the prerequisite of proposition is not true
+        # e.g. proposition = Q.odd(x), assumptions = ~Q.integer(x)
         if len(local_facts.clauses) == 1:
             cl, = local_facts.clauses
-            f, = cl if len(cl)==1 else [None]
-            if f and f.is_Not and f.arg in known_facts_dict.get(key, []):
-                return False
+            if len(cl) == 1:
+                f, = cl
+                if f.is_Not and f.arg in known_facts_dict.get(key, []):
+                    return False
 
         for clause in local_facts.clauses:
             if len(clause) == 1:
                 f, = clause
                 fdict = known_facts_dict.get(f.arg, None) if not f.is_Not else None
-                if fdict and key in fdict:
+                if fdict is None:
+                    pass
+                elif key in fdict:
+                    # quick exit if proposition is directly satisfied by assumption
+                    # e.g. proposition = Q.integer(x), assumptions = Q.odd(x)
                     return True
-                if fdict and Not(key) in known_facts_dict[f.arg]:
+                elif Not(key) in fdict:
+                    # quick exit if proposition is directly rejected by assumption
+                    # example might be proposition = Q.even(x), assumptions = Q.odd(x)
+                    # but known_facts_dict does not have such information yet and
+                    # such example is computed by satask.
                     return False
 
     # direct resolution method, no logic
@@ -592,6 +658,7 @@ def get_known_facts():
         Implies(Q.integer_elements, Q.real_elements),
         Implies(Q.real_elements, Q.complex_elements),
     )
+
 
 from sympy.assumptions.ask_generated import (
     get_known_facts_dict, get_all_known_facts)

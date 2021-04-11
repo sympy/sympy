@@ -154,8 +154,8 @@ class ZeroPredicate(Predicate):
     True
     >>> ask(Q.zero(1/oo))
     True
-    >>> ask(Q.zero(0*oo))
-    False
+    >>> print(ask(Q.zero(0*oo)))
+    None
     >>> ask(Q.zero(1))
     False
     >>> ask(Q.zero(x*y), Q.zero(x) | Q.zero(y))

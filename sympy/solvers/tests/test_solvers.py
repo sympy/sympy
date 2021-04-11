@@ -20,7 +20,7 @@ from sympy.polys.rootoftools import CRootOf
 from sympy.testing.pytest import slow, XFAIL, SKIP, raises
 from sympy.testing.randtest import verify_numerically as tn
 
-from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
+from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m, R
 
 
 def NS(e, n=15, **options):
@@ -2314,3 +2314,22 @@ def test_issue_20902():
     assert solve(f.subs({t: 3 * x + 3}).diff(x) > 0, x) == (S(-4)/3 < x) & (x < S(-2)/3)
     assert solve(f.subs({t: 3 * x + 4}).diff(x) > 0, x) == (S(-5)/3 < x) & (x < S(-1))
     assert solve(f.subs({t: 3 * x + 2}).diff(x) > 0, x) == (S(-1) < x) & (x < S(-1)/3)
+
+
+def test_issue_21034():
+    a = symbols('a', real=True)
+    system = [x - cosh(cos(4)), y - sinh(cos(a)), z - tanh(x)]
+    assert solve(system, x, y, z) == {x: cosh(cos(4)), z: tanh(cosh(cos(4))),
+        y: sinh(cos(a))}
+    #Constants inside hyperbolic functions should not be rewritten in terms of exp
+    newsystem = [(exp(x) - exp(-x)) - tanh(x)*(exp(x) + exp(-x)) + x - 5]
+    assert solve(newsystem, x) == {x: 5}
+    #If the variable of interest is present in hyperbolic function, only then
+    # it shouuld be rewritten in terms of exp and solved further
+
+
+def test_issue_4886():
+    z = a*sqrt(R**2*a**2 + R**2*b**2 - c**2)/(a**2 + b**2)
+    t = b*c/(a**2 + b**2)
+    sol = [((b*(t - z) - c)/(-a), t - z), ((b*(t + z) - c)/(-a), t + z)]
+    assert solve([x**2 + y**2 - R**2, a*x + b*y - c], x, y) == sol

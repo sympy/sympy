@@ -2,13 +2,14 @@
 Tests for the basic functionality of the SDM class.
 """
 
-
+from sympy.core.compatibility import HAS_GMPY
 from sympy.testing.pytest import raises
 
 from sympy import QQ, ZZ
 from sympy.polys.matrices.sdm import SDM
 from sympy.polys.matrices.ddm import DDM
-from sympy.polys.matrices.exceptions import DDMBadInputError, DDMDomainError
+from sympy.polys.matrices.exceptions import (DDMBadInputError, DDMDomainError,
+        DDMShapeError)
 
 
 def test_SDM():
@@ -19,6 +20,15 @@ def test_SDM():
 
     raises(DDMBadInputError, lambda: SDM({5:{1:ZZ(0)}}, (2, 2), ZZ))
     raises(DDMBadInputError, lambda: SDM({0:{5:ZZ(0)}}, (2, 2), ZZ))
+
+
+def test_DDM_str():
+    sdm = SDM({0:{0:ZZ(1)}, 1:{1:ZZ(1)}}, (2, 2), ZZ)
+    assert str(sdm) == '{0: {0: 1}, 1: {1: 1}}'
+    if HAS_GMPY: # pragma: no cover
+        assert repr(sdm) == 'SDM({0: {0: mpz(1)}, 1: {1: mpz(1)}}, (2, 2), ZZ)'
+    else:        # pragma: no cover
+        assert repr(sdm) == 'SDM({0: {0: 1}, 1: {1: 1}}, (2, 2), ZZ)'
 
 
 def test_SDM_new():
@@ -118,6 +128,19 @@ def test_SDM_matmul():
     B = SDM({0:{0:ZZ(7), 1:ZZ(10)}, 1:{0:ZZ(15), 1:ZZ(22)}}, (2, 2), ZZ)
     assert A.matmul(A) == B
 
+    A22 = SDM({0:{0:ZZ(4)}}, (2, 2), ZZ)
+    A32 = SDM({0:{0:ZZ(2)}}, (3, 2), ZZ)
+    A23 = SDM({0:{0:ZZ(4)}}, (2, 3), ZZ)
+    A33 = SDM({0:{0:ZZ(8)}}, (3, 3), ZZ)
+    A22 = SDM({0:{0:ZZ(8)}}, (2, 2), ZZ)
+    assert A32.matmul(A23) == A33
+    assert A23.matmul(A32) == A22
+    # XXX: @ not supported by SDM...
+    #assert A32.matmul(A23) == A32 @ A23 == A33
+    #assert A23.matmul(A32) == A23 @ A32 == A22
+    #raises(DDMShapeError, lambda: A23 @ A22)
+    raises(DDMShapeError, lambda: A23.matmul(A22))
+
 
 def test_SDM_add():
     A = SDM({0:{1:ZZ(1)}, 1:{0:ZZ(2), 1:ZZ(3)}}, (2, 2), ZZ)
@@ -155,6 +178,16 @@ def test_SDM_convert_to():
     D = A.convert_to(ZZ)
     assert D == A
     assert D.domain == ZZ
+
+
+def test_SDM_hstack():
+    A = SDM({0:{1:ZZ(1)}}, (2, 2), ZZ)
+    B = SDM({1:{1:ZZ(1)}}, (2, 2), ZZ)
+    AA = SDM({0:{1:ZZ(1), 3:ZZ(1)}}, (2, 4), ZZ)
+    AB = SDM({0:{1:ZZ(1)}, 1:{3:ZZ(1)}}, (2, 4), ZZ)
+    assert SDM.hstack(A) == A
+    assert SDM.hstack(A, A) == AA
+    assert SDM.hstack(A, B) == AB
 
 
 def test_SDM_inv():

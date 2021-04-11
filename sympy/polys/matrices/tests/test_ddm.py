@@ -40,9 +40,11 @@ def test_DDM_getsetitem():
 def test_DDM_str():
     ddm = DDM([[ZZ(0), ZZ(1)], [ZZ(2), ZZ(3)]], (2, 2), ZZ)
     if HAS_GMPY: # pragma: no cover
-        assert str(ddm) == 'DDM([[mpz(0), mpz(1)], [mpz(2), mpz(3)]], (2, 2), ZZ)'
+        assert str(ddm) == '[[0, 1], [2, 3]]'
+        assert repr(ddm) == 'DDM([[mpz(0), mpz(1)], [mpz(2), mpz(3)]], (2, 2), ZZ)'
     else:        # pragma: no cover
-        assert str(ddm) == 'DDM([[0, 1], [2, 3]], (2, 2), ZZ)'
+        assert repr(ddm) == 'DDM([[0, 1], [2, 3]], (2, 2), ZZ)'
+        assert str(ddm) == '[[0, 1], [2, 3]]'
 
 
 def test_DDM_eq():
@@ -69,6 +71,13 @@ def test_DDM_eq():
     assert (ddm3 == ddm1) is False
     assert (ddm1 != ddm3) is True
     assert (ddm3 != ddm1) is True
+
+
+def test_DDM_convert_to():
+    ddm = DDM([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+    assert ddm.convert_to(ZZ) == ddm
+    ddmq = ddm.convert_to(QQ)
+    assert ddmq.domain == QQ
 
 
 def test_DDM_zeros():
@@ -188,6 +197,15 @@ def test_DDM_matmul():
     raises(DDMShapeError, lambda: Z05 @ Z40)
     raises(DDMShapeError, lambda: Z05.matmul(Z40))
 
+def test_DDM_hstack():
+
+    A = DDM([[ZZ(1), ZZ(2), ZZ(3)]], (1, 3), ZZ)
+    B = DDM([[ZZ(4), ZZ(5)]], (1, 2), ZZ)
+    Ah = A.hstack(B)
+
+    assert Ah.shape == (1, 5)
+    assert Ah.domain == ZZ
+    assert Ah == DDM([[ZZ(1), ZZ(2), ZZ(3), ZZ(4), ZZ(5)]], (1, 5), ZZ)
 
 def test_DDM_rref():
 
@@ -223,7 +241,8 @@ def test_DDM_rref():
 def test_DDM_nullspace():
      A = DDM([[QQ(1), QQ(1)], [QQ(1), QQ(1)]], (2, 2), QQ)
      Anull = DDM([[QQ(-1), QQ(1)]], (1, 2), QQ)
-     assert A.nullspace() == Anull
+     nonpivots = [1]
+     assert A.nullspace() == (Anull, nonpivots)
 
 
 def test_DDM_det():
