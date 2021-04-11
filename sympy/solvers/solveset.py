@@ -637,8 +637,10 @@ def _solve_trig1(f, symbol, domain):
         try:
             poly_ar = Poly(ar, symbol)
         except PolynomialError:
-            # for PolynomialError then trying it to solve with solve_decomposition
-            return solve_decomposition(f, symbol, domain)
+            # For PolynomialError trying to solve with solve_decomposition.
+            # Here nested trig will be utilized mostly.
+            # As of now, trig is only solving for S.Reals.
+            return solve_decomposition(f, symbol, domain=S.Reals)
         if poly_ar.degree() > 1:  # degree >1 still bad
             raise _SolveTrig1Error("degree of variable must not exceed one")
         if poly_ar.degree() == 0:  # degree 0, don't care

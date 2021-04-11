@@ -167,9 +167,9 @@ def function_range(f, symbol, domain):
         interval_iter = intervals.args
 
     else:
-            raise NotImplementedError(filldedent('''
-                Unable to find range for the given domain.
-                '''))
+        raise NotImplementedError(filldedent('''
+            Unable to find range for the given domain.
+            '''))
 
     for interval in interval_iter:
         if isinstance(interval, FiniteSet):
