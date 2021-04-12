@@ -872,7 +872,7 @@ class Expr(Basic, EvalfMixin):
 
             # check to see that we can get a value
             try:
-                n2 = self._eval_evalf(2)
+                n2 = self._eval_evalf(3)
             # XXX: This shouldn't be caught here
             # Catches ValueError: hypsum() failed to converge to the requested
             # 34 bits of accuracy
@@ -882,10 +882,12 @@ class Expr(Basic, EvalfMixin):
                 return None
             if getattr(n2, '_prec', 1) == 1:  # no significance
                 return None
-            if n2 is S.NaN:
-                return None
 
             f = self.evalf(2)
+            if f is None or f is S.NaN:
+                return None
+            if f in (S.Infinity, S.NegativeInfinity):
+                return bool((f > 0) if positive else (f < 0))
             if f.is_Float:
                 match = f, S.Zero
             else:
@@ -896,7 +898,7 @@ class Expr(Basic, EvalfMixin):
             if not (i.is_Number and r.is_Number):
                 return False
             if r._prec != 1 and i._prec != 1:
-                return bool(not i and ((r > 0) if positive else (r < 0)))
+                return None if i else bool((r > 0) if positive else (r < 0))
             elif r._prec == 1 and (not i or i._prec == 1) and \
                     self.is_algebraic and not self.has(Function):
                 try:

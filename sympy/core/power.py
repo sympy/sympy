@@ -13,7 +13,7 @@ from .compatibility import as_int, HAS_GMPY, gmpy
 from .parameters import global_parameters
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.multipledispatch import Dispatcher
+from sympy.multipledispatch import Dispatcher, dispatch
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
 
@@ -291,6 +291,10 @@ class Pow(Expr):
                 deprecated_since_version="1.7"
             ).warn()
 
+        if e.is_Number and (not e is S.NaN) and e >= S(100):
+            if b.is_Number and (not b is S.NaN) and b >= S(100):
+                evaluate = False
+
         if evaluate:
             if b is S.Zero and e is S.NegativeInfinity:
                 return S.ComplexInfinity
@@ -528,7 +532,7 @@ class Pow(Expr):
         if self.base == self.exp:
             if self.base.is_extended_nonnegative:
                 return True
-        elif self.base.is_positive:
+        if self.base.is_positive:
             if self.exp.is_real:
                 return True
         elif self.base.is_extended_negative:
@@ -1892,6 +1896,20 @@ class Pow(Expr):
 
 power = Dispatcher('power')
 power.add((object, object), Pow)
+
+@dispatch(Pow, Pow)
+def _eval_is_ge(a, b):
+    from sympy.core.relational import is_ge
+    from sympy.functions.elementary.exponential import log
+    if is_ge(a.base, S.One) and is_ge(b.base, S.One):
+        if a.base == b.base:
+            return is_ge(a.exp, b.exp)
+        base_greater = is_ge(a.base, b.base)
+        exp_greater = is_ge(a.exp, b.exp)
+        rv = fuzzy_and([base_greater, exp_greater])
+        if base_greater != exp_greater and rv is not None:
+            rv = is_ge(log(log(a.base)) + log(a.exp), log(log(b.base)) + log(b.exp))
+        return rv
 
 from .add import Add
 from .numbers import Integer
