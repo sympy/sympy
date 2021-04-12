@@ -139,7 +139,7 @@ class AND:
     __repr__ = __str__
 
 
-def to_NNF(expr):
+def to_NNF(expr, composite_map={}):
     """
     Generates the Negation Normal Form of any boolean expression in terms
     of AND, OR, and Literal objects.
@@ -154,41 +154,41 @@ def to_NNF(expr):
     >>> to_NNF(expr)
     (Literal(Q.even(x), False) & Literal(Q.positive(x), True))
 
-    ``to_NNF`` decomposes the predicate into a combination of primitive
-    predicates if possible.
+    If ``composite_map`` argument is given, ``to_NNF`` decomposes the
+    specified predicate into a combination of primitive predicates.
 
-    >>> to_NNF(Q.nonpositive)
+    >>> cmap = {Q.nonpositive: Q.negative | Q.zero}
+    >>> to_NNF(Q.nonpositive, cmap)
     (Literal(Q.negative, False) | Literal(Q.zero, False))
-    >>> to_NNF(Q.nonpositive(x))
+    >>> to_NNF(Q.nonpositive(x), cmap)
     (Literal(Q.negative(x), False) | Literal(Q.zero(x), False))
     """
     from sympy.assumptions.assume import AppliedPredicate, Predicate
-    from sympy.assumptions.facts import get_composite_predicates
 
     if isinstance(expr, Not):
         arg = expr.args[0]
-        tmp = to_NNF(arg)  # Strategy: negate the NNF of expr
+        tmp = to_NNF(arg, composite_map)  # Strategy: negate the NNF of expr
         return ~tmp
 
     if isinstance(expr, Or):
-        return OR(*[to_NNF(x) for x in Or.make_args(expr)])
+        return OR(*[to_NNF(x, composite_map) for x in Or.make_args(expr)])
 
     if isinstance(expr, And):
-        return AND(*[to_NNF(x) for x in And.make_args(expr)])
+        return AND(*[to_NNF(x, composite_map) for x in And.make_args(expr)])
 
     if isinstance(expr, Nand):
-        tmp = AND(*[to_NNF(x) for x in expr.args])
+        tmp = AND(*[to_NNF(x, composite_map) for x in expr.args])
         return ~tmp
 
     if isinstance(expr, Nor):
-        tmp = OR(*[to_NNF(x) for x in expr.args])
+        tmp = OR(*[to_NNF(x, composite_map) for x in expr.args])
         return ~tmp
 
     if isinstance(expr, Xor):
         cnfs = []
         for i in range(0, len(expr.args) + 1, 2):
             for neg in combinations(expr.args, i):
-                clause = [~to_NNF(s) if s in neg else to_NNF(s)
+                clause = [~to_NNF(s, composite_map) if s in neg else to_NNF(s, composite_map)
                           for s in expr.args]
                 cnfs.append(OR(*clause))
         return AND(*cnfs)
@@ -197,41 +197,39 @@ def to_NNF(expr):
         cnfs = []
         for i in range(0, len(expr.args) + 1, 2):
             for neg in combinations(expr.args, i):
-                clause = [~to_NNF(s) if s in neg else to_NNF(s)
+                clause = [~to_NNF(s, composite_map) if s in neg else to_NNF(s, composite_map)
                           for s in expr.args]
                 cnfs.append(OR(*clause))
         return ~AND(*cnfs)
 
     if isinstance(expr, Implies):
-        L, R = to_NNF(expr.args[0]), to_NNF(expr.args[1])
+        L, R = to_NNF(expr.args[0], composite_map), to_NNF(expr.args[1], composite_map)
         return OR(~L, R)
 
     if isinstance(expr, Equivalent):
         cnfs = []
         for a, b in zip_longest(expr.args, expr.args[1:], fillvalue=expr.args[0]):
-            a = to_NNF(a)
-            b = to_NNF(b)
+            a = to_NNF(a, composite_map)
+            b = to_NNF(b, composite_map)
             cnfs.append(OR(~a, b))
         return AND(*cnfs)
 
     if isinstance(expr, ITE):
-        L = to_NNF(expr.args[0])
-        M = to_NNF(expr.args[1])
-        R = to_NNF(expr.args[2])
+        L = to_NNF(expr.args[0], composite_map)
+        M = to_NNF(expr.args[1], composite_map)
+        R = to_NNF(expr.args[2], composite_map)
         return AND(OR(~L, M), OR(L, R))
 
     if isinstance(expr, AppliedPredicate):
-        comp_dct = get_composite_predicates()
         pred, args = expr.function, expr.arguments
-        newpred = comp_dct.get(pred, None)
+        newpred = composite_map.get(pred, None)
         if newpred is not None:
-            return to_NNF(newpred.rcall(*args))
+            return to_NNF(newpred.rcall(*args), composite_map)
 
     if isinstance(expr, Predicate):
-        comp_dct = get_composite_predicates()
-        newpred = comp_dct.get(expr, None)
+        newpred = composite_map.get(expr, None)
         if newpred is not None:
-            return to_NNF(newpred)
+            return to_NNF(newpred, composite_map)
 
     return Literal(expr)
 
@@ -368,7 +366,8 @@ class CNF:
 
     @classmethod
     def to_CNF(cls, expr):
-        expr = to_NNF(expr)
+        from sympy.assumptions.facts import get_composite_predicates
+        expr = to_NNF(expr, get_composite_predicates())
         expr = distribute_AND_over_OR(expr)
         return expr
 
