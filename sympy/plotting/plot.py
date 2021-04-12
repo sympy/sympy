@@ -2724,7 +2724,7 @@ def _check_arguments(args, nexpr, npar):
 
 def _plot_sympify(args):
     """ By allowing the users to set custom labels to the expressions being
-    plotted, a critical issue is raised: whenever a special character like $, \,
+    plotted, a critical issue is raised: whenever a special character like $,
     {, }, ... is used in the label (type string), sympify will raise an error.
     This function recursively loop over the arguments passed to the plot
     functions: the sympify function will be applied to all arguments except
