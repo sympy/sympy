@@ -2648,7 +2648,7 @@ def _check_arguments(args, nexpr, npar):
        >>> from sympy import cos, sin, symbols
        >>> from sympy.plotting.plot import _check_arguments
        >>> x = symbols('x')
-       >>> _check_arguments([cos(x), sin(x)], 1, 2)
+       >>> _check_arguments([cos(x), sin(x)], 2, 1)
            [(cos(x), sin(x), (x, -10, 10), '(cos(x), sin(x))')]
 
        >>> _check_arguments([x, x**2], 1, 1)
