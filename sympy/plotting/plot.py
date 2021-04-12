@@ -31,6 +31,7 @@ from sympy.external import import_module
 from sympy.core.function import arity
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # N.B.
 # When changing the minimum module version for matplotlib, please change
@@ -594,12 +595,12 @@ class Line2DBaseSeries(BaseSeries):
 class List2DSeries(Line2DBaseSeries):
     """Representation for a line consisting of list of points."""
 
-    def __init__(self, list_x, list_y):
+    def __init__(self, list_x, list_y, label=""):
         np = import_module('numpy')
         super().__init__()
         self.list_x = np.array(list_x)
         self.list_y = np.array(list_y)
-        self.label = 'list'
+        self.label = label
 
     def __str__(self):
         return 'list plot'
@@ -611,10 +612,10 @@ class List2DSeries(Line2DBaseSeries):
 class LineOver1DRangeSeries(Line2DBaseSeries):
     """Representation for a line consisting of a SymPy expression over a range."""
 
-    def __init__(self, expr, var_start_end, **kwargs):
+    def __init__(self, expr, var_start_end, label="", **kwargs):
         super().__init__()
         self.expr = sympify(expr)
-        self.label = kwargs.get('label', None) or str(self.expr)
+        self.label = label
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
@@ -734,12 +735,11 @@ class Parametric2DLineSeries(Line2DBaseSeries):
 
     is_parametric = True
 
-    def __init__(self, expr_x, expr_y, var_start_end, **kwargs):
+    def __init__(self, expr_x, expr_y, var_start_end, label="", **kwargs):
         super().__init__()
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
-        self.label = kwargs.get('label', None) or \
-                            "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
+        self.label = label
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
@@ -870,13 +870,12 @@ class Parametric3DLineSeries(Line3DBaseSeries):
     """Representation for a 3D line consisting of two parametric sympy
     expressions and a range."""
 
-    def __init__(self, expr_x, expr_y, expr_z, var_start_end, **kwargs):
+    def __init__(self, expr_x, expr_y, expr_z, var_start_end, label="", **kwargs):
         super().__init__()
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
         self.expr_z = sympify(expr_z)
-        self.label = kwargs.get('label', None) or \
-                        "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
+        self.label = label
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
@@ -953,7 +952,7 @@ class SurfaceBaseSeries(BaseSeries):
 class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
     """Representation for a 3D surface consisting of a sympy expression and 2D
     range."""
-    def __init__(self, expr, var_start_end_x, var_start_end_y, **kwargs):
+    def __init__(self, expr, var_start_end_x, var_start_end_y, label="", **kwargs):
         super().__init__()
         self.expr = sympify(expr)
         self.var_x = sympify(var_start_end_x[0])
@@ -962,6 +961,7 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
         self.var_y = sympify(var_start_end_y[0])
         self.start_y = float(var_start_end_y[1])
         self.end_y = float(var_start_end_y[2])
+        self.label = label
         self.nb_of_points_x = kwargs.get('nb_of_points_x', 50)
         self.nb_of_points_y = kwargs.get('nb_of_points_y', 50)
         self.surface_color = kwargs.get('surface_color', None)
@@ -1000,7 +1000,7 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
 
     def __init__(
         self, expr_x, expr_y, expr_z, var_start_end_u, var_start_end_v,
-            **kwargs):
+        label="", **kwargs):
         super().__init__()
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
@@ -1011,6 +1011,7 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
         self.var_v = sympify(var_start_end_v[0])
         self.start_v = float(var_start_end_v[1])
         self.end_v = float(var_start_end_v[2])
+        self.label = label
         self.nb_of_points_u = kwargs.get('nb_of_points_u', 50)
         self.nb_of_points_v = kwargs.get('nb_of_points_v', 50)
         self.surface_color = kwargs.get('surface_color', None)
@@ -1068,7 +1069,7 @@ class ContourSeries(BaseSeries):
 
     is_contour = True
 
-    def __init__(self, expr, var_start_end_x, var_start_end_y):
+    def __init__(self, expr, var_start_end_x, var_start_end_y, label=""):
         super().__init__()
         self.nb_of_points_x = 50
         self.nb_of_points_y = 50
@@ -1079,7 +1080,7 @@ class ContourSeries(BaseSeries):
         self.var_y = sympify(var_start_end_y[0])
         self.start_y = float(var_start_end_y[1])
         self.end_y = float(var_start_end_y[2])
-
+        self.label = label
         self.get_points = self.get_meshes
 
         self._xlim = (self.start_x, self.end_x)
@@ -1284,7 +1285,7 @@ class MatplotlibBackend(BaseBackend):
 
             # Customise the collections with the corresponding per-series
             # options.
-            if hasattr(s, 'label'):
+            if hasattr(s, 'label') and (not s.is_contour):
                 collection.set_label(s.label)
             if s.is_line and s.line_color:
                 if isinstance(s.line_color, (float, int)) or isinstance(s.line_color, Callable):
@@ -1539,8 +1540,12 @@ def plot(*args, show=True, **kwargs):
         The first argument is the expression representing the function
         of single variable to be plotted.
 
-        The last argument is a 3-tuple denoting the range of the free
+        The next argument is a 3-tuple denoting the range of the free
         variable. e.g. ``(x, 0, 5)``
+
+        The last optional argument is a string denoting the label of the
+        expression to be visualized on the legend. If not provided, the label
+        will be the string representation of the expression.
 
         Typical usage examples are in the followings:
 
@@ -1552,6 +1557,9 @@ def plot(*args, show=True, **kwargs):
             ``plot(expr1, expr2, ..., range, **kwargs)``
         - Plotting multiple expressions with multiple ranges.
             ``plot((expr1, range1), (expr2, range2), ..., **kwargs)``
+        - Plotting multiple expressions with multiple ranges and custom labels.
+            ``plot((expr1, range1, label1), (expr2, range2, label2), ...,
+                legend=True, **kwargs)``
 
         It is best practice to specify range explicitly because default
         range may change in the future if a more advanced default range
@@ -1577,9 +1585,9 @@ def plot(*args, show=True, **kwargs):
         the expression, if the plot has only one expression.
 
     label : str, optional
-        The label of the expression in the plot. It will be used when
-        called with ``legend``. Default is the name of the expression.
-        e.g. ``sin(x)``
+        This option is no longer used. Refer to ``args`` to understand
+        how to set labels which will be visualized when called with
+        ``legend``.
 
     xlabel : str, optional
         Label for the x-axis.
@@ -1702,6 +1710,18 @@ def plot(*args, show=True, **kwargs):
        [0]: cartesian line: x**2 for x over (-6.0, 6.0)
        [1]: cartesian line: x for x over (-5.0, 5.0)
 
+    Multiple plots with different ranges and custom labels.
+
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot((x**2, (x, -6, 6), "$f_{1}$"), (x, "f2"), legend=True)
+       Plot object containing:
+       [0]: cartesian line: x**2 for x over (-6.0, 6.0)
+       [1]: cartesian line: x for x over (-10.0, 10.0)
+
     No adaptive sampling.
 
     .. plot::
@@ -1719,7 +1739,7 @@ def plot(*args, show=True, **kwargs):
     Plot, LineOver1DRangeSeries
 
     """
-    args = list(map(sympify, args))
+    args = _plot_sympify(args)
     free = set()
     for a in args:
         if isinstance(a, Expr):
@@ -1731,8 +1751,9 @@ def plot(*args, show=True, **kwargs):
     x = free.pop() if free else Symbol('x')
     kwargs.setdefault('xlabel', x.name)
     kwargs.setdefault('ylabel', 'f(%s)' % x.name)
+    kwargs = _remove_label_key(kwargs)
     series = []
-    plot_expr = check_arguments(args, 1, 1)
+    plot_expr = _check_arguments(args, 1, 1)
     series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in plot_expr]
 
     plots = Plot(*series, **kwargs)
@@ -1757,6 +1778,9 @@ def plot_parametric(*args, show=True, **kwargs):
             ``plot_parametric((expr_x, expr_y), ..., range)``
         - Plotting multiple parametric curves with different ranges
             ``plot_parametric((expr_x, expr_y, range), ...)``
+        - Plotting multiple parametric curves with different ranges and
+        custom labels
+            ``plot_parametric((expr_x, expr_y, range, label), ...)``
 
         ``expr_x`` is the expression representing $x$ component of the
         parametric function.
@@ -1766,6 +1790,10 @@ def plot_parametric(*args, show=True, **kwargs):
 
         ``range`` is a 3-tuple denoting the parameter symbol, start and
         stop. For example, ``(u, 0, 5)``.
+
+        ``label`` is an optional string denoting the label of the expression
+        to be visualized on the legend. If not provided, the label will be the
+        string representation of the expression.
 
         If the range is not specified, then a default range of (-10, 10)
         is used.
@@ -1801,9 +1829,9 @@ def plot_parametric(*args, show=True, **kwargs):
         See :class:`Plot` for more details.
 
     label : str, optional
-        The label of the expression in the plot. It will be used when
-        called with ``legend``. Default is the name of the expression.
-        e.g. ``sin(x)``
+        This option is no longer used. Refer to ``args`` to understand
+        how to set labels which will be visualized when called with
+        ``legend``.
 
     xlabel : str, optional
         Label for the x-axis.
@@ -1881,6 +1909,20 @@ def plot_parametric(*args, show=True, **kwargs):
        [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-5.0, 5.0)
        [1]: parametric cartesian line: (cos(u), u) for u over (-5.0, 5.0)
 
+    A parametric plot with multiple expressions with different ranges and
+    custom labels for each curve:
+
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot_parametric((cos(u), sin(u), (u, -5, 5), "a"),
+       ...     (cos(u), u, "b"))
+       Plot object containing:
+       [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-5.0, 5.0)
+       [1]: parametric cartesian line: (cos(u), u) for u over (-10.0, 10.0)
+
     Notes
     =====
 
@@ -1924,9 +1966,10 @@ def plot_parametric(*args, show=True, **kwargs):
 
     Plot, Parametric2DLineSeries
     """
-    args = list(map(sympify, args))
+    args = _plot_sympify(args)
     series = []
-    plot_expr = check_arguments(args, 2, 1)
+    kwargs = _remove_label_key(kwargs)
+    plot_expr = _check_arguments(args, 2, 1)
     series = [Parametric2DLineSeries(*arg, **kwargs) for arg in plot_expr]
     plots = Plot(*series, **kwargs)
     if show:
@@ -1943,13 +1986,14 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
 
     Single plot:
 
-    ``plot3d_parametric_line(expr_x, expr_y, expr_z, range, **kwargs)``
+    ``plot3d_parametric_line(expr_x, expr_y, expr_z, range, label, **kwargs)``
 
     If the range is not specified, then a default range of (-10, 10) is used.
 
     Multiple plots.
 
-    ``plot3d_parametric_line((expr_x, expr_y, expr_z, range), ..., **kwargs)``
+    ``plot3d_parametric_line((expr_x, expr_y, expr_z, range, label),
+        ..., **kwargs)``
 
     Ranges have to be specified for every expression.
 
@@ -1967,6 +2011,10 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
 
     ``range``: ``(u, 0, 5)``, A 3-tuple denoting the range of the parameter
     variable.
+
+    ``label`` : An optional string denoting the label of the expression
+        to be visualized on the legend. If not provided, the label will be the
+        string representation of the expression.
 
     Keyword Arguments
     =================
@@ -2035,6 +2083,19 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
        [0]: 3D parametric cartesian line: (cos(u), sin(u), u) for u over (-5.0, 5.0)
        [1]: 3D parametric cartesian line: (sin(u), u**2, u) for u over (-5.0, 5.0)
 
+    Multiple plots with different ranges and custom labels.
+
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot3d_parametric_line((cos(u), sin(u), u, (u, -5, 5), "a"),
+       ...     (sin(u), u**2, u, (u, -3, 3), "b"), legend=True)
+       Plot object containing:
+       [0]: 3D parametric cartesian line: (cos(u), sin(u), u) for u over (-5.0, 5.0)
+       [1]: 3D parametric cartesian line: (sin(u), u**2, u) for u over (-3.0, 3.0)
+
 
     See Also
     ========
@@ -2042,9 +2103,10 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
     Plot, Parametric3DLineSeries
 
     """
-    args = list(map(sympify, args))
+    args = _plot_sympify(args)
     series = []
-    plot_expr = check_arguments(args, 3, 1)
+    kwargs = _remove_label_key(kwargs)
+    plot_expr = _check_arguments(args, 3, 1)
     series = [Parametric3DLineSeries(*arg, **kwargs) for arg in plot_expr]
     plots = Plot(*series, **kwargs)
     if show:
@@ -2177,9 +2239,10 @@ def plot3d(*args, show=True, **kwargs):
 
     """
 
-    args = list(map(sympify, args))
+    args = _plot_sympify(args)
     series = []
-    plot_expr = check_arguments(args, 1, 2)
+    kwargs = _remove_label_key(kwargs)
+    plot_expr = _check_arguments(args, 1, 2)
     series = [SurfaceOver2DRangeSeries(*arg, **kwargs) for arg in plot_expr]
     plots = Plot(*series, **kwargs)
     if show:
@@ -2285,9 +2348,10 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
 
     """
 
-    args = list(map(sympify, args))
+    args = _plot_sympify(args)
     series = []
-    plot_expr = check_arguments(args, 3, 2)
+    kwargs = _remove_label_key(kwargs)
+    plot_expr = _check_arguments(args, 3, 2)
     series = [ParametricSurfaceSeries(*arg, **kwargs) for arg in plot_expr]
     plots = Plot(*series, **kwargs)
     if show:
@@ -2368,12 +2432,13 @@ def plot_contour(*args, show=True, **kwargs):
 
     """
 
-    args = list(map(sympify, args))
-    plot_expr = check_arguments(args, 1, 2)
+    args = _plot_sympify(args)
+    kwargs = _remove_label_key(kwargs)
+    plot_expr = _check_arguments(args, 1, 2)
     series = [ContourSeries(*arg) for arg in plot_expr]
     plot_contours = Plot(*series, **kwargs)
-    if len(plot_expr[0].free_symbols) > 2:
-        raise ValueError('Contour Plot cannot Plot for more than two variables.')
+    # if len(plot_expr[0].free_symbols) > 2:
+    #     raise ValueError('Contour Plot cannot Plot for more than two variables.')
     if show:
         plot_contours.show()
     return plot_contours
@@ -2400,6 +2465,13 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
        >>> check_arguments([x, x**2], 1, 1)
            [(x, (x, -10, 10)), (x**2, (x, -10, 10))]
     """
+
+    SymPyDeprecationWarning(
+        feature = "check_arguments",
+        useinstead = "_check_arguments",
+        issue = 21300,
+        deprecated_since_version = "1.8.1").warn()
+
     if not args:
         return []
     if expr_len > 1 and isinstance(args[0], Expr):
@@ -2482,3 +2554,203 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
                     raise ValueError("The ranges should be a tuple of "
                                      "length 3, got %s" % str(arg[i + expr_len]))
         return args
+
+
+def _is_range(r):
+    """ A range is defined as (symbol, start, end). start and end should
+    be numbers.
+    """
+    return (isinstance(r, Tuple) and (len(r) == 3) and
+                r.args[1].is_number and r.args[2].is_number)
+
+def _create_ranges(free_symbols, ranges, npar):
+    """ This function does two things:
+    1. Check if the number of free symbols is in agreement with the type of plot
+        chosen. For example, plot() requires 1 free symbol; plot3d() requires 2
+        free symbols.
+    2. Sometime users create plots without providing ranges for the variables.
+        Here we create the necessary ranges.
+
+    free_symbols
+        The free symbols contained in the expressions to be plotted
+
+    ranges
+        The limiting ranges provided by the user
+
+    npar
+        The number of free symbols required by the plot functions. For example,
+        npar=1 for plot, npar=2 for plot3d, ...
+
+    """
+
+    get_default_range = lambda symbol: Tuple(symbol, -10, 10)
+
+    if len(free_symbols) > npar:
+        raise ValueError(
+            "Too many free symbols.\n" +
+            "Expected {} free symbols.\n".format(npar) +
+            "Received {}: {}".format(len(free_symbols), free_symbols)
+        )
+
+    if len(ranges) > npar:
+        raise ValueError(
+            "Too many ranges. Received %s, expected %s" % (len(ranges), npar))
+
+    # free symbols in the ranges provided by the user
+    rfs = set().union([r[0] for r in ranges])
+    if len(rfs) != len(ranges):
+        raise ValueError("Multiple ranges with the same symbol")
+
+    if len(ranges) < npar:
+        symbols = free_symbols.difference(rfs)
+        if symbols != set():
+            # add a range for each missing free symbols
+            for s in symbols:
+                ranges.append(get_default_range(s))
+        # if there is still room, fill them with dummys
+        for i in range(npar - len(ranges)):
+            ranges.append(get_default_range(Dummy()))
+
+    return ranges
+
+def _check_arguments(args, nexpr, npar):
+    """ Checks the arguments and converts into tuples of the
+    form (exprs, ranges, name_expr).
+
+    Parameters
+    ==========
+
+    args
+        The arguments provided to the plot functions
+
+    nexpr
+        The number of sub-expression forming an expression to be plotted. For
+        example:
+        nexpr=1 for plot.
+        nexpr=2 for plot_parametric: a curve is represented by a tuple of two
+            elements.
+        nexpr=1 for plot3d.
+        nexpr=3 for plot3d_parametric_line: a curve is represented by a tuple
+            of three elements.
+
+    npar
+        The number of free symbols required by the plot functions. For example,
+        npar=1 for plot, npar=2 for plot3d, ...
+
+    Examples
+    ========
+
+    .. plot::
+       :context: reset
+       :format: doctest
+       :include-source: True
+
+       >>> from sympy import cos, sin, symbols
+       >>> from sympy.plotting.plot import _check_arguments
+       >>> x = symbols('x')
+       >>> _check_arguments([cos(x), sin(x)], 1, 2)
+           [(cos(x), sin(x), (x, -10, 10), '(cos(x), sin(x))')]
+
+       >>> _check_arguments([x, x**2], 1, 1)
+           [(x, (x, -10, 10), 'x'), (x**2, (x, -10, 10), 'x**2')]
+    """
+    if not args:
+        return []
+    output = []
+
+    if all([isinstance(a, Expr) for a in args[:nexpr]]):
+        # In this case, with a single plot command, we are plotting either:
+        #   1. one expression
+        #   2. multiple expressions over the same range
+
+        res = [not (_is_range(a) or isinstance(a, str)) for a in args]
+        exprs = [a for a, b in zip(args, res) if b]
+        ranges = [r for r in args[nexpr:] if _is_range(r)]
+        label = args[-1] if isinstance(args[-1], str) else ""
+
+        if not all([_is_range(r) for r in ranges]):
+            raise ValueError(
+                        "Expressions must be followed by ranges. Received:\n"
+                        "Expressions: %s\n"
+                        "Others: %s" % (exprs, ranges))
+        free_symbols = set().union(*[e.free_symbols for e in exprs])
+        ranges = _create_ranges(free_symbols, ranges, npar)
+
+        if nexpr > 1:
+            # in case of plot_parametric or plot3d_parametric_line, there will
+            # be 2 or 3 expressions defining a curve. Group them together.
+            if len(exprs) == nexpr:
+                exprs = (tuple(exprs),)
+        for expr in exprs:
+            # need this if-else to deal with both plot/plot3d and
+            # plot_parametric/plot3d_parametric_line
+            e = (expr,) if isinstance(expr, Expr) else expr
+            current_label = (label if label else
+                    (str(expr) if isinstance(expr, Expr) else str(e)))
+            output.append((*e, *ranges, current_label))
+
+
+    else:
+        # In this case, we are plotting multiple expressions, each one with its
+        # range. Each "expression" to be plotted has the following form:
+        # (expr, range, label) where label is optional
+
+        # look for "global" range and label
+        labels = [a for a in args if isinstance(a, str)]
+        ranges = [a for a in args if _is_range(a)]
+        n = len(ranges) + len(labels)
+        new_args = args[:-n] if n > 0 else args
+
+        # Each arg has the form (expr1, expr2, ..., range1 [optional], ...,
+        #   label [optional])
+        for arg in new_args:
+            # look for "local" range and label. If there is not, use "global".
+            l = [a for a in arg if isinstance(a, str)]
+            if not l:
+                l = labels
+            r = [a for a in arg if _is_range(a)]
+            if not r:
+                r = ranges.copy()
+
+            arg = arg[:nexpr]
+            free_symbols = set().union(*[a.free_symbols for a in arg])
+            if len(r) != npar:
+                r = _create_ranges(free_symbols, r, npar)
+            label = (str(arg[0]) if nexpr == 1 else str(arg)) if not l else l[0]
+            output.append((*arg, *r, label))
+        return output
+
+    return output
+
+def _plot_sympify(args):
+    """ By allowing the users to set custom labels to the expressions being
+    plotted, a critical issue is raised: whenever a special character like $, \,
+    {, }, ... is used in the label (type string), sympify will raise an error.
+    This function recursively loop over the arguments passed to the plot
+    functions: the sympify function will be applied to all arguments except
+    those of type string.
+    """
+    if isinstance(args, Expr):
+        return args
+
+    args = list(args)
+    for i, a in enumerate(args):
+        if isinstance(a, (list, tuple)):
+            args[i] = Tuple(*_plot_sympify(a), sympify=False)
+        elif not isinstance(a, str):
+            args[i] = sympify(a)
+    if isinstance(args, tuple):
+        return Tuple(*args, sympify=False)
+    return args
+
+def _remove_label_key(d):
+    """The "label" keyword is no longer needed in the plot, as it will clash
+    with the label provided by the user (or the one automatically generated by
+    _check_arguments()). By removing this keyword, the __init__ method of
+    the *Series classes will only receive one "label", avoiding the following
+    error:
+    TypeError: __init__() got multiple values for argument 'label'
+    """
+    if "label" in d.keys():
+        d.pop("label")
+    return d
