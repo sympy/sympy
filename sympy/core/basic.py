@@ -126,6 +126,12 @@ class Basic(Printable, metaclass=ManagedProperties):
     def __getstate__(self):
         return None
 
+    def __reduce_ex__(self, protocol):
+        if protocol < 2:
+            msg = "Only pickle protocol 2 or higher is supported by sympy"
+            raise NotImplementedError(msg)
+        return super().__reduce_ex__(protocol)
+
     def __hash__(self):
         # hash cannot be cached using cache_it because infinite recurrence
         # occurs as hash is needed for setting cache dictionary keys
