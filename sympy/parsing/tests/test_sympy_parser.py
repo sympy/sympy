@@ -3,7 +3,7 @@
 
 import sys
 
-
+from sympy.assumptions import Q
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
 from sympy.functions import exp, factorial, factorial2, sin
 from sympy.logic import And
@@ -49,6 +49,7 @@ def test_sympy_parser():
             Pow(3, 1, evaluate=False),
             evaluate=False),
         'Limit(sin(x), x, 0, dir="-")': Limit(sin(x), x, 0, dir='-'),
+        'Q.even(x)': Q.even(x),
 
 
     }

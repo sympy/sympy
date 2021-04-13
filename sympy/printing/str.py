@@ -419,6 +419,12 @@ class StrPrinter(Printer):
     def _print_TensAdd(self, expr):
         return expr._print()
 
+    def _print_ArraySymbol(self, expr):
+        return self._print(expr.name)
+
+    def _print_ArrayElement(self, expr):
+        return "%s[%s]" % (expr.name, ", ".join([self._print(i) for i in expr.indices]))
+
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % self._print(a) for a in expr.args]
         return 'PermutationGroup([\n%s])' % ',\n'.join(p)
@@ -880,6 +886,14 @@ class StrPrinter(Printer):
 
     def _print_Str(self, s):
         return self._print(s.name)
+
+    def _print_AppliedBinaryRelation(self, expr):
+        rel, args = expr.function, expr.arguments
+        lhs, rhs = args
+        return '%s(%s, %s)' % (self._print(rel),
+                               self._print(expr.lhs),
+                               self._print(expr.rhs))
+
 
 @print_function(StrPrinter)
 def sstr(expr, **settings):

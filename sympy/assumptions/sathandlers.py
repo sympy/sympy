@@ -4,6 +4,7 @@ from collections.abc import MutableMapping
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
 from sympy.assumptions.cnf import AND, OR, to_NNF
+from sympy.assumptions.facts import get_composite_predicates
 from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
 from sympy.core.numbers import ImaginaryUnit
 from sympy.core.rules import Transform
@@ -93,7 +94,7 @@ class UnevaluatedOnFree(BooleanFunction):
     def apply(self, expr=None):
         if expr is None:
             return
-        pred = to_NNF(self.pred)
+        pred = to_NNF(self.pred, get_composite_predicates())
         return self._eval_apply(expr, pred)
 
     def _eval_apply(self, expr, pred):
@@ -203,44 +204,31 @@ class ExactlyOneArg(UnevaluatedOnFree):
         # return And(*[Or(*map(Not, c)) for c in combinations(pred_args, 2)]) & Or(*pred_args)
 
 
+_old_assump_getters = {
+    Q.positive: lambda o: o.is_positive,
+    Q.zero: lambda o: o.is_zero,
+    Q.negative: lambda o: o.is_negative,
+    Q.nonpositive: lambda o: o.is_nonpositive,
+    Q.nonzero: lambda o: o.is_nonzero,
+    Q.nonnegative: lambda o: o.is_nonnegative,
+    Q.rational: lambda o: o.is_rational,
+    Q.irrational: lambda o: o.is_irrational,
+    Q.even: lambda o: o.is_even,
+    Q.odd: lambda o: o.is_odd,
+    Q.integer: lambda o: o.is_integer,
+    Q.composite: lambda o: o.is_composite,
+    Q.imaginary: lambda o: o.is_imaginary,
+    Q.commutative: lambda o: o.is_commutative,
+}
+
 def _old_assump_replacer(obj):
-    if not isinstance(obj, AppliedPredicate):
+    # obj is AppliedPredicate
+
+    getter = _old_assump_getters.get(obj.function, None)
+    if getter is None:
         return obj
 
-    e = obj.args[0]
-    ret = None
-
-    if obj.func == Q.positive:
-        ret = e.is_positive
-    elif obj.func == Q.zero:
-        ret = e.is_zero
-    elif obj.func == Q.negative:
-        ret = e.is_negative
-    elif obj.func == Q.nonpositive:
-        ret = e.is_nonpositive
-    elif obj.func == Q.nonzero:
-        ret = e.is_nonzero
-    elif obj.func == Q.nonnegative:
-        ret = e.is_nonnegative
-
-    elif obj.func == Q.rational:
-        ret = e.is_rational
-    elif obj.func == Q.irrational:
-        ret = e.is_irrational
-
-    elif obj.func == Q.even:
-        ret = e.is_even
-    elif obj.func == Q.odd:
-        ret = e.is_odd
-    elif obj.func == Q.integer:
-        ret = e.is_integer
-    elif obj.func == Q.composite:
-        ret = e.is_composite
-    elif obj.func == Q.imaginary:
-        ret = e.is_imaginary
-    elif obj.func == Q.commutative:
-        ret = e.is_commutative
-
+    ret = getter(*obj.arguments)
     if ret is None:
         return obj
     return ret
@@ -261,7 +249,7 @@ class CheckOldAssump(UnevaluatedOnFree):
     def apply(self, expr=None, is_Not=False):
         arg = self.args[0](expr) if callable(self.args[0]) else self.args[0]
         res = Equivalent(arg, evaluate_old_assump(arg))
-        return to_NNF(res)
+        return to_NNF(res, get_composite_predicates())
 
 
 class CheckIsPrime(UnevaluatedOnFree):
@@ -269,7 +257,7 @@ class CheckIsPrime(UnevaluatedOnFree):
         from sympy import isprime
         arg = self.args[0](expr) if callable(self.args[0]) else self.args[0]
         res = Equivalent(arg, isprime(expr))
-        return to_NNF(res)
+        return to_NNF(res, get_composite_predicates())
 
 class CustomLambda:
     """
@@ -281,7 +269,7 @@ class CustomLambda:
         self.lamda = lamda
 
     def apply(self, *args):
-        return to_NNF(self.lamda(*args))
+        return to_NNF(self.lamda(*args), get_composite_predicates())
 
 
 class ClassFactRegistry(MutableMapping):

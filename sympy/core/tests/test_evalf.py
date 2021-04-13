@@ -1,6 +1,6 @@
 from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
-    integrate, log, Mul, N, oo, pi, Pow, product, Product,
+    integrate, log, Mul, N, oo, pi, Pow, product, Product, tan,
     Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat, cosh, acosh, acos)
 from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
@@ -234,6 +234,9 @@ def test_evalf_bugs():
     #issue 13076
     assert NS(Mul(Max(0, y), x, evaluate=False).evalf()) == 'x*Max(0, y)'
 
+    #issue 18516
+    assert NS(log(S(3273390607896141870013189696827599152216642046043064789483291368096133796404674554883270092325904157150886684127560071009217256545885393053328527589376)/36360291795869936842385267079543319118023385026001623040346035832580600191583895484198508262979388783308179702534403855752855931517013066142992430916562025780021771247847643450125342836565813209972590371590152578728008385990139795377610001).evalf(15, chop=True)) == '-oo'
+
 
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
@@ -261,6 +264,16 @@ def test_evalf_integer_parts():
 
     assert float((floor(1.5, evaluate=False)+1/9).evalf()) == 1 + 1/9
     assert float((floor(0.5, evaluate=False)+20).evalf()) == 20
+
+    # issue 19991
+    n = 1169809367327212570704813632106852886389036911
+    r = 744723773141314414542111064094745678855643068
+
+    assert floor(n / (pi / 2)) == r
+    assert floor(80782 * sqrt(2)) == 114242
+
+    # issue 20076
+    assert 260515 - floor(260515/pi + 1/2) * pi == atan(tan(260515))
 
 
 def test_evalf_trig_zero_detection():
@@ -579,3 +592,16 @@ def test_issue_13425():
 
 def test_issue_17421():
     assert N(acos(-I + acosh(cosh(cosh(1) + I)))) == 1.0*I
+
+
+def test_issue_20291():
+    from sympy import FiniteSet, Complement, Intersection, Reals, EmptySet
+    a = Symbol('a')
+    b = Symbol('b')
+    A = FiniteSet(a, b)
+    assert A.evalf(subs={a: 1, b: 2}) == FiniteSet(1.0, 2.0)
+    B = FiniteSet(a-b, 1)
+    assert B.evalf(subs={a: 1, b: 2}) == FiniteSet(-1.0, 1.0)
+
+    sol = Complement(Intersection(FiniteSet(-b/2 - sqrt(b**2-4*pi)/2), Reals), FiniteSet(0))
+    assert sol.evalf(subs={b: 1}) == EmptySet
