@@ -1218,8 +1218,7 @@ def is_ge(lhs, rhs, assumptions=None):
     True
     >>> is_le(a, b)
     True
-
-   """
+    """
     from sympy.assumptions.wrapper import AssumptionsWrapper, is_extended_nonnegative
 
     if not (isinstance(lhs, Expr) and isinstance(rhs, Expr)):

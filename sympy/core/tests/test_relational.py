@@ -1186,6 +1186,11 @@ def test_is_eq():
 
 
 def test_is_ge_le():
+    # test assumptions
+    assert is_ge(x, S(0), Q.nonnegative(x)) is True
+    assert is_ge(x, S(0), Q.negative(x)) is False
+
+    # test registration
     class PowTest(Expr):
         def __new__(cls, base, exp):
             return Basic.__new__(cls, _sympify(base), _sympify(exp))
