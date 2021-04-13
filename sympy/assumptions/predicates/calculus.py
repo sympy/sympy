@@ -27,8 +27,8 @@ class FinitePredicate(Predicate):
     True
     >>> ask(Q.finite(2 + 3*I))
     True
-    >>> print(ask(Q.finite(x), Q.positive(x)))
-    None
+    >>> ask(Q.finite(x), Q.positive(x))
+    True
     >>> print(ask(Q.finite(S.NaN)))
     None
 
@@ -60,3 +60,23 @@ class InfinitePredicate(Predicate):
         "InfiniteHandler",
         doc="""Handler for Q.infinite key."""
     )
+
+
+class PositiveInfinitePredicate(Predicate):
+    """
+    Positive infinity predicate.
+
+    ``Q.positive_infinite(x)`` is true iff ``x`` is positive infinity ``oo``.
+    """
+    name = 'positive_infinite'
+    handler = Dispatcher("PositiveInfiniteHandler")
+
+
+class NegativeInfinitePredicate(Predicate):
+    """
+    Negative infinity predicate.
+
+    ``Q.negative_infinite(x)`` is true iff ``x`` is negative infinity ``-oo``.
+    """
+    name = 'negative_infinite'
+    handler = Dispatcher("NegativeInfiniteHandler")

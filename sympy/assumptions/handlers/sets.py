@@ -638,6 +638,8 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     if isinstance(expr, MatrixBase):
         return None
+    if ask(Q.zero(expr), assumptions):
+        return True
     return ask(Q.imaginary(expr), assumptions)
 
 @AntihermitianPredicate.register(Add)
