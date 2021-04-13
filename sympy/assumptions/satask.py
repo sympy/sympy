@@ -100,7 +100,7 @@ def get_relevant_facts(proposition, assumptions=None,
             cnf_fact = CNF.to_CNF(fact)
             newfact = cnf_fact.rcall(expr)
             relevant_facts = relevant_facts._and(newfact)
-            newexprs |= {key.args[0] for key in newfact.all_predicates()
+            newexprs |= {key.arguments[0] for key in newfact.all_predicates()
                              if isinstance(key, AppliedPredicate)}
 
     return newexprs - exprs, relevant_facts
