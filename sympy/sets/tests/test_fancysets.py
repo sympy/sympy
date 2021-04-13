@@ -480,6 +480,9 @@ def test_Integers_eval_imageset():
     y = Symbol('y')
     L = imageset(x, 2*x + y, S.Integers)
     assert y + 4 in L
+    a, b, c = 0.092, 0.433, 0.341
+    assert a in imageset(x, a + c*x, S.Integers)
+    assert b in imageset(x, b + c*x, S.Integers)
 
     _x = symbols('x', negative=True)
     eq = _x**2 - _x + 1
