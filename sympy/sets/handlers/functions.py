@@ -192,8 +192,9 @@ def _set_function(f, self): # noqa:F811
     a = Wild('a', exclude=[n])
     b = Wild('b', exclude=[n])
     match = expr.match(a*n + b)
-    if match and match[a] and (not any(
-            i.atoms(Float) for i in (match[a], match[b]))):
+    if match and match[a] and (
+            not match[a].atoms(Float) and
+            not match[b].atoms(Float)):
         # canonical shift
         a, b = match[a], match[b]
         if a in [1, -1]:
