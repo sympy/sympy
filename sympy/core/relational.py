@@ -1377,8 +1377,7 @@ def is_eq(lhs, rhs, assumptions=None):
         if fuzzy_xor([_lhs.is_extended_real, _rhs.is_extended_real]):
             return False
         if fuzzy_and([_lhs.is_extended_real, _rhs.is_extended_real]):
-            # change to _lhs and _rhs when Q.extended_positive is implemented
-            return fuzzy_xor([lhs.is_extended_positive, fuzzy_not(rhs.is_extended_positive)])
+            return fuzzy_xor([_lhs.is_extended_positive, fuzzy_not(_rhs.is_extended_positive)])
 
         # Try to split real/imaginary parts and equate them
         I = S.ImaginaryUnit
