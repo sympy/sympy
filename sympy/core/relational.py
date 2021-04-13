@@ -1184,11 +1184,17 @@ def is_ge(lhs, rhs, assumptions=None):
     ========
 
     >>> from sympy import S, Q
-    >>> from sympy.core.relational import is_ge
+    >>> from sympy.core.relational import is_ge, is_le, is_gt, is_lt
     >>> from sympy.abc import x
     >>> is_ge(S(2), S(0))
     True
     >>> is_ge(S(0), S(2))
+    False
+    >>> is_le(S(0), S(2))
+    True
+    >>> is_gt(S(0), S(2))
+    False
+    >>> is_lt(S(2), S(0))
     False
 
     Assumptions can be passed to evaluate the quality which is otherwise
