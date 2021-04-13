@@ -574,29 +574,20 @@ class Line2DBaseSeries(BaseSeries):
         self.only_integers = False
         self.line_color = None
 
-    def get_segments(self, legacy=True):
-        """
-        Parameters
-        ==========
-
-            legacy : Boolean
-                Default to True. If True, returns a collection of segments to be
-                used in Matplotlib's LineCollection. If False, returns the x and
-                y lists of coordinate of the points.
-
-        """
+    def get_data(self):
         np = import_module('numpy')
         points = self.get_points()
         if self.steps is True:
             x = np.array((points[0], points[0])).T.flatten()[1:]
             y = np.array((points[1], points[1])).T.flatten()[:-1]
             points = (x, y)
-
-        if legacy:
-            points = np.ma.array(points).T.reshape(-1, 1, self._dim)
-            return np.ma.concatenate([points[:-1], points[1:]], axis=1)
-
         return points
+
+    def get_segments(self):
+        np = import_module('numpy')
+        points = type(self).get_data(self)
+        points = np.ma.array(points).T.reshape(-1, 1, self._dim)
+        return np.ma.concatenate([points[:-1], points[1:]], axis=1)
 
     def get_color_array(self):
         np = import_module('numpy')
@@ -656,9 +647,18 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         return 'cartesian line: %s for %s over %s' % (
             str(self.expr), str(self.var), str((self.start, self.end)))
 
-    def get_segments(self, legacy=True):
-        """
-        Adaptively gets segments for plotting.
+    def get_data(self):
+        """ Return lists of coordinates for plotting. Depending on the
+        `adaptive` option, this function will either use an adaptive algorithm
+        or it will uniformly sample the expression over the provided range.
+
+        Returns
+        =======
+            x: list
+                List of x-coordinates
+            y: list
+                List of y-coordinates
+
 
         Explanation
         ===========
@@ -673,20 +673,12 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         .. [1] Adaptive polygonal approximation of parametric curves,
                Luiz Henrique de Figueiredo.
 
-        Parameters
-        ==========
-
-            legacy : Boolean
-                Default to True. If True, returns a collection of segments to be
-                used in Matplotlib's LineCollection. If False, returns the x and
-                y lists of coordinate of the points.
         """
 
         if self.only_integers or not self.adaptive:
-            return super().get_segments(legacy)
+            return super().get_data()
         else:
             f = lambdify([self.var], self.expr)
-            list_segments = []
             x_coords = []
             y_coords = []
             np = import_module('numpy')
@@ -708,7 +700,6 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
                 # Maximum depth
                 if depth > self.depth:
-                    list_segments.append([p, q])
                     x_coords.append(q[0])
                     y_coords.append(q[1])
 
@@ -740,7 +731,6 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                     sample(p, new_point, depth + 1)
                     sample(new_point, q, depth + 1)
                 else:
-                    list_segments.append([p, q])
                     x_coords.append(q[0])
                     y_coords.append(q[1])
 
@@ -751,9 +741,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
             sample(np.array([self.start, f_start]),
                    np.array([self.end, f_end]), 0)
 
-            if legacy:
-                return list_segments
-            return (x_coords, y_coords)
+        return (x_coords, y_coords)
 
     def get_points(self):
         np = import_module('numpy')
@@ -810,9 +798,18 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         list_y = fy(param)
         return (list_x, list_y)
 
-    def get_segments(self, legacy=True):
-        """
-        Adaptively gets segments for plotting.
+    def get_data(self):
+        """ Return lists of coordinates for plotting. Depending on the
+        `adaptive` option, this function will either use an adaptive algorithm
+        or it will uniformly sample the expression over the provided range.
+
+        Returns
+        =======
+            x: list
+                List of x-coordinates
+            y: list
+                List of y-coordinates
+
 
         Explanation
         ===========
@@ -827,21 +824,13 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         .. [1] Adaptive polygonal approximation of parametric curves,
             Luiz Henrique de Figueiredo.
 
-        Parameters
-        ==========
-
-            legacy : Boolean
-                Default to True. If True, returns a collection of segments to be
-                used in Matplotlib's LineCollection. If False, returns the x and
-                y lists of coordinate of the points.
-
         """
+
         if not self.adaptive:
-            return super().get_segments(legacy)
+            return super().get_data()
 
         f_x = lambdify([self.var], self.expr_x)
         f_y = lambdify([self.var], self.expr_y)
-        list_segments = []
         x_coords = []
         y_coords = []
 
@@ -861,7 +850,6 @@ class Parametric2DLineSeries(Line2DBaseSeries):
 
             # Maximum depth
             if depth > self.depth:
-                list_segments.append([p, q])
                 x_coords.append(q[0])
                 y_coords.append(q[1])
 
@@ -897,7 +885,6 @@ class Parametric2DLineSeries(Line2DBaseSeries):
                 sample(param_p, param_new, p, new_point, depth + 1)
                 sample(param_new, param_q, new_point, q, depth + 1)
             else:
-                list_segments.append([p, q])
                 x_coords.append(q[0])
                 y_coords.append(q[1])
 
@@ -909,9 +896,16 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         end = [f_end_x, f_end_y]
         sample(self.start, self.end, start, end, 0)
 
-        if legacy:
-            return list_segments
         return x_coords, y_coords
+
+    def get_segments(self):
+        """ Return a Numpy masked array representing a list of segments having
+        the following form: [[[x0, y0], [x1, y1]], [[x1, y1], [x2, y2]], ...]
+        """
+        np = import_module('numpy')
+        points = self.get_data()
+        points = np.ma.array(points).T.reshape(-1, 1, self._dim)
+        return np.ma.concatenate([points[:-1], points[1:]], axis=1)
 
 
 ### 3D lines
@@ -1302,11 +1296,12 @@ class MatplotlibBackend(BaseBackend):
             if s.is_2Dline:
                 if (isinstance(s.line_color, (int, float)) or
                         callable(s.line_color)):
-                    collection = self.LineCollection(s.get_segments())
+                    data = s.get_segments()
+                    collection = self.LineCollection(data)
                     collection.set_array(s.get_color_array())
                     ax.add_collection(collection)
                 else:
-                    line, = ax.plot(*s.get_segments(False), label=s.label,
+                    line, = ax.plot(*s.get_data(), label=s.label,
                         color=s.line_color)
             elif s.is_contour:
                 ax.contour(*s.get_meshes())
@@ -1318,7 +1313,7 @@ class MatplotlibBackend(BaseBackend):
                     collection.set_array(s.get_color_array())
                     ax.add_collection(collection)
                 else:
-                    ax.plot(*s.get_segments(False), label=s.label,
+                    ax.plot(*s.get_data(), label=s.label,
                         color=s.line_color)
 
                 xlims.append(s._xlim)
