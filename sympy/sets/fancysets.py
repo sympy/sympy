@@ -494,7 +494,7 @@ class ImageSet(Set):
 class Range(Set):
     """
     Represents a range of integers. Can be called as Range(stop),
-    Range(start, stop), or Range(start, stop, step); when stop is
+    Range(start, stop), or Range(start, stop, step); when step is
     not given it defaults to 1.
 
     `Range(stop)` is the same as `Range(0, stop, 1)` and the stop value
