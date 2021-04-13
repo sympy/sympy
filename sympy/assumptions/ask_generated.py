@@ -7,13 +7,14 @@ Instead, run ./bin/ask_update.py.
 """
 
 from sympy.core.cache import cacheit
-from sympy.logic.boolalg import And
 from sympy.assumptions.cnf import Literal
 from sympy.assumptions.ask import Q
 
-# -{ Known facts as a set }-
 @cacheit
 def get_all_known_facts():
+    """
+    Known facts as CNF clauses. Used by satask.
+    """
     return {
         frozenset((Literal(Q.algebraic, False), Literal(Q.imaginary, True), Literal(Q.transcendental, False))),
         frozenset((Literal(Q.algebraic, False), Literal(Q.negative, True), Literal(Q.transcendental, False))),
@@ -82,81 +83,13 @@ def get_all_known_facts():
         frozenset((Literal(Q.triangular, False), Literal(Q.upper_triangular, True)))
     }
 
-# -{ Known facts in Conjunctive Normal Form }-
-@cacheit
-def get_known_facts_cnf():
-    return And(
-        Q.invertible | Q.singular,
-        Q.algebraic | ~Q.rational,
-        Q.antihermitian | ~Q.imaginary,
-        Q.commutative | ~Q.finite,
-        Q.commutative | ~Q.infinite,
-        Q.complex_elements | ~Q.real_elements,
-        Q.even | ~Q.zero,
-        Q.finite | ~Q.algebraic,
-        Q.finite | ~Q.transcendental,
-        Q.fullrank | ~Q.invertible,
-        Q.hermitian | ~Q.negative,
-        Q.hermitian | ~Q.positive,
-        Q.hermitian | ~Q.zero,
-        Q.infinite | ~Q.negative_infinite,
-        Q.infinite | ~Q.positive_infinite,
-        Q.invertible | ~Q.positive_definite,
-        Q.invertible | ~Q.unitary,
-        Q.lower_triangular | ~Q.diagonal,
-        Q.normal | ~Q.diagonal,
-        Q.normal | ~Q.unitary,
-        Q.positive_definite | ~Q.orthogonal,
-        Q.positive | ~Q.composite,
-        Q.positive | ~Q.prime,
-        Q.rational | ~Q.even,
-        Q.rational | ~Q.odd,
-        Q.real_elements | ~Q.integer_elements,
-        Q.square | ~Q.invertible,
-        Q.square | ~Q.normal,
-        Q.square | ~Q.symmetric,
-        Q.symmetric | ~Q.diagonal,
-        Q.triangular | ~Q.lower_triangular,
-        Q.triangular | ~Q.unit_triangular,
-        Q.triangular | ~Q.upper_triangular,
-        Q.unitary | ~Q.orthogonal,
-        Q.upper_triangular | ~Q.diagonal,
-        ~Q.algebraic | ~Q.transcendental,
-        ~Q.composite | ~Q.prime,
-        ~Q.even | ~Q.odd,
-        ~Q.finite | ~Q.infinite,
-        ~Q.imaginary | ~Q.negative,
-        ~Q.imaginary | ~Q.positive,
-        ~Q.imaginary | ~Q.zero,
-        ~Q.invertible | ~Q.singular,
-        ~Q.irrational | ~Q.rational,
-        ~Q.negative_infinite | ~Q.positive_infinite,
-        ~Q.negative | ~Q.positive,
-        ~Q.negative | ~Q.zero,
-        ~Q.positive | ~Q.zero,
-        Q.algebraic | Q.transcendental | ~Q.imaginary,
-        Q.algebraic | Q.transcendental | ~Q.negative,
-        Q.algebraic | Q.transcendental | ~Q.positive,
-        Q.algebraic | Q.transcendental | ~Q.zero,
-        Q.antihermitian | Q.hermitian | ~Q.zero,
-        Q.even | Q.odd | ~Q.composite,
-        Q.even | Q.odd | ~Q.prime,
-        Q.irrational | Q.rational | ~Q.negative,
-        Q.irrational | Q.rational | ~Q.positive,
-        Q.irrational | Q.rational | ~Q.zero,
-        Q.lower_triangular | Q.upper_triangular | ~Q.triangular,
-        Q.diagonal | ~Q.lower_triangular | ~Q.upper_triangular,
-        Q.invertible | ~Q.fullrank | ~Q.square,
-        Q.orthogonal | ~Q.real_elements | ~Q.unitary,
-        Q.negative | Q.positive | Q.zero | ~Q.irrational,
-        Q.negative | Q.positive | Q.zero | ~Q.rational,
-        Q.composite | Q.prime | ~Q.even | ~Q.positive
-    )
-
 # -{ Known facts in compressed sets }-
-# This dictionary means that if a key is True, every item in its value is True.
 @cacheit
 def get_known_facts_dict():
+    """
+    Logical implication as dictionary. Key implies every item in its value.
+    Used for quick lookup of single facts.
+    """
     return {
         Q.algebraic: set([Q.algebraic, Q.commutative, Q.finite]),
         Q.antihermitian: set([Q.antihermitian]),
