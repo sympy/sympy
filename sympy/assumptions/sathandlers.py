@@ -16,6 +16,23 @@ from sympy.matrices.expressions import MatMul
 # APIs here may be subject to change
 
 
+def _find_freepredicate(expr):
+    # Find unapplied predicate from expression tree.
+    # Ignore the predicate in AppliedPredicate.
+    if isinstance(expr, Predicate):
+        return {expr}
+    if not expr.args:
+        return set()
+    if isinstance(expr, AppliedPredicate):
+        args = expr.arguments
+    else:
+        args = expr.args
+    result = set()
+    for arg in args:
+        result.update(_find_freepredicate(arg))
+    return result
+
+
 class UnevaluatedOnFree(BooleanFunction):
     """
     Represents a Boolean function that remains unevaluated on free predicates.
@@ -53,7 +70,7 @@ class UnevaluatedOnFree(BooleanFunction):
     def __new__(cls, arg):
         # Mostly type checking here
         arg = _sympify(arg)
-        predicates = arg.atoms(Predicate)
+        predicates = _find_freepredicate(arg)
         applied_predicates = arg.atoms(AppliedPredicate)
         if predicates and applied_predicates:
             raise ValueError("arg must be either completely free or singly applied")
@@ -62,12 +79,12 @@ class UnevaluatedOnFree(BooleanFunction):
             obj.pred = arg
             obj.expr = None
             return obj
-        predicate_args = {pred.args[0] for pred in applied_predicates}
+        predicate_args = {pred.arguments[0] for pred in applied_predicates}
         if len(predicate_args) > 1:
             raise ValueError("The AppliedPredicates in arg must be applied to a single expression.")
         obj = BooleanFunction.__new__(cls, arg)
         obj.expr = predicate_args.pop()
-        obj.pred = arg.xreplace(Transform(lambda e: e.func, lambda e:
+        obj.pred = arg.xreplace(Transform(lambda e: e.function, lambda e:
             isinstance(e, AppliedPredicate)))
         applied = obj.apply(obj.expr)
         if applied is None:

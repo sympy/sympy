@@ -92,7 +92,7 @@ def get_relevant_facts(proposition, assumptions=None,
             req_keys |= tmp_keys
         keys |= {l for l in lkeys if find_symbols(l) & req_keys != set()}
 
-        exprs = {key.args[0] if isinstance(key, AppliedPredicate) else key for key in keys}
+        exprs = {key.arguments[0] if isinstance(key, AppliedPredicate) else key for key in keys}
         return exprs, relevant_facts
 
     for expr in exprs:
@@ -100,7 +100,7 @@ def get_relevant_facts(proposition, assumptions=None,
             cnf_fact = CNF.to_CNF(fact)
             newfact = cnf_fact.rcall(expr)
             relevant_facts = relevant_facts._and(newfact)
-            newexprs |= {key.args[0] for key in newfact.all_predicates()
+            newexprs |= {key.arguments[0] for key in newfact.all_predicates()
                              if isinstance(key, AppliedPredicate)}
 
     return newexprs - exprs, relevant_facts
