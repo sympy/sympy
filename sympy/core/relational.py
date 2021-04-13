@@ -1183,7 +1183,7 @@ def is_ge(lhs, rhs, assumptions=None):
     Examples
     ========
 
-    >>> from sympy import S
+    >>> from sympy import S, Q
     >>> from sympy.core.relational import is_ge
     >>> from sympy.abc import x
     >>> is_ge(S(2), S(0))
