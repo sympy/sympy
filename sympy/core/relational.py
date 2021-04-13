@@ -1236,7 +1236,7 @@ def is_ge(lhs, rhs, assumptions=None):
             # otherwise get stuck in infinite recursion
             if n2 in (S.Infinity, S.NegativeInfinity):
                 n2 = float(n2)
-            return _sympify(n2 >= 0)
+            return n2 >= 0
 
         _lhs = AssumptionsWrapper(lhs, assumptions)
         _rhs = AssumptionsWrapper(rhs, assumptions)
