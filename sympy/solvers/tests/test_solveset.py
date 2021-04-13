@@ -214,6 +214,14 @@ def test_issue_18449():
     # TODO: Is the above solution set definitely complete?
 
 
+def test_issue_21047():
+    f = (2 - x)**2 + (sqrt(x - 1) - 1)**6
+    assert(solveset(f, x, S.Reals)) == FiniteSet(2)
+    f = (sqrt(x)-1)**2 + (sqrt(x)+1)**2 -2*x**2 + sqrt(2)
+    assert solveset(f, x, S.Reals) == FiniteSet(
+        S.Half - sqrt(2*sqrt(2) + 5)/2, S.Half + sqrt(2*sqrt(2) + 5)/2)
+
+
 def test_is_function_class_equation():
     from sympy.abc import x, a
     assert _is_function_class_equation(TrigonometricFunction,
@@ -388,16 +396,6 @@ def test_return_root_of():
                        CRootOf(x**6 - x + 1, 5))
 
 
-def test__has_rational_power():
-    from sympy.solvers.solveset import _has_rational_power
-    assert _has_rational_power(sqrt(2), x)[0] is False
-    assert _has_rational_power(x*sqrt(2), x)[0] is False
-
-    assert _has_rational_power(x**2*sqrt(x), x) == (True, 2)
-    assert _has_rational_power(sqrt(2)*x**Rational(1, 3), x) == (True, 3)
-    assert _has_rational_power(sqrt(x)*x**Rational(1, 3), x) == (True, 6)
-
-
 def test_solveset_sqrt_1():
     assert solveset_real(sqrt(5*x + 6) - 2 - x, x) == \
         FiniteSet(-S.One, S(2))
@@ -453,6 +451,9 @@ def test_solveset_sqrt_2():
 
     eq = sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))
     assert solveset_real(eq, x) == FiniteSet()
+
+    eq = (x - 4)**2 + (sqrt(x) - 2)**4
+    assert solveset_real(eq, x) == FiniteSet(-4, 4)
 
     eq = (sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
     ans = solveset_real(eq, x)
@@ -1295,13 +1296,9 @@ def test_solveset_domain():
 
 
 def test_improve_coverage():
-    from sympy.solvers.solveset import _has_rational_power
     solution = solveset(exp(x) + sin(x), x, S.Reals)
     unsolved_object = ConditionSet(x, Eq(exp(x) + sin(x), 0), S.Reals)
     assert solution.dummy_eq(unsolved_object)
-
-    assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
-    assert _has_rational_power((sin(x)**2)*(exp(x) + 1)**3, x) == (False, S.One)
 
 
 def test_issue_9522():
@@ -1322,7 +1319,24 @@ def test_solvify():
     raises(NotImplementedError, lambda: solvify(sin(exp(x)), x, S.Complexes))
 
 
+def test_solvify_piecewise():
+    p1 = Piecewise((0, x < -1), (x**2, x <= 1), (log(x), True))
+    p2 = Piecewise((0, x < -10), (x**2 + 5*x - 6, x >= -9))
+    p3 = Piecewise((0, Eq(x, 0)), (x**2/Abs(x), True))
+    p4 = Piecewise((0, Eq(x, pi)), ((x - pi)/sin(x), True))
+
+    # issue 21079
+    assert solvify(p1, x, S.Reals) == [0]
+    assert solvify(p2, x, S.Reals) == [-6, 1]
+    assert solvify(p3, x, S.Reals) == [0]
+    assert solvify(p4, x, S.Reals) == [pi]
+
+
 def test_abs_invert_solvify():
+
+    x = Symbol('x',positive=True)
+    assert solvify(sin(Abs(x)), x, S.Reals) == [0, pi]
+    x = Symbol('x')
     assert solvify(sin(Abs(x)), x, S.Reals) is None
 
 
@@ -1589,7 +1603,7 @@ def test_trig_system_fail():
     sys = [x + y - pi/2, sin(x) + sin(y) - 1]
     # solveset returns conditionset for sin(x) + sin(y) - 1
     soln_1 = (ImageSet(Lambda(n, n*pi + pi/2), S.Integers),
-        ImageSet(Lambda(n, n*pi)), S.Integers)
+        ImageSet(Lambda(n, n*pi), S.Integers))
     soln_1 = FiniteSet(soln_1)
     soln_2 = (ImageSet(Lambda(n, n*pi), S.Integers),
         ImageSet(Lambda(n, n*pi+ pi/2), S.Integers))
@@ -2248,6 +2262,10 @@ def test_transolve():
     assert _transolve(3**x, x, S.Reals) == S.EmptySet
     assert _transolve(3**x - 9**(x + 5), x, S.Reals) == FiniteSet(-10)
 
+
+def test_issue_21276():
+    eq = (2*x*(y - z) - y*erf(y - z) - y + z*erf(y - z) + z)**2
+    assert solveset(eq.expand(), y) == FiniteSet(z, z + erfinv(2*x - 1))
 
 # exponential tests
 def test_exponential_real():
