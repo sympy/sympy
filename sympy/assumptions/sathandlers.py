@@ -4,6 +4,7 @@ from collections.abc import MutableMapping
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
 from sympy.assumptions.cnf import AND, OR, to_NNF
+from sympy.assumptions.facts import get_composite_predicates
 from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
 from sympy.core.numbers import ImaginaryUnit
 from sympy.core.rules import Transform
@@ -13,6 +14,23 @@ from sympy.logic.boolalg import (Equivalent, Implies, BooleanFunction)
 from sympy.matrices.expressions import MatMul
 
 # APIs here may be subject to change
+
+
+def _find_freepredicate(expr):
+    # Find unapplied predicate from expression tree.
+    # Ignore the predicate in AppliedPredicate.
+    if isinstance(expr, Predicate):
+        return {expr}
+    if not expr.args:
+        return set()
+    if isinstance(expr, AppliedPredicate):
+        args = expr.arguments
+    else:
+        args = expr.args
+    result = set()
+    for arg in args:
+        result.update(_find_freepredicate(arg))
+    return result
 
 
 class UnevaluatedOnFree(BooleanFunction):
@@ -52,7 +70,7 @@ class UnevaluatedOnFree(BooleanFunction):
     def __new__(cls, arg):
         # Mostly type checking here
         arg = _sympify(arg)
-        predicates = arg.atoms(Predicate)
+        predicates = _find_freepredicate(arg)
         applied_predicates = arg.atoms(AppliedPredicate)
         if predicates and applied_predicates:
             raise ValueError("arg must be either completely free or singly applied")
@@ -61,12 +79,12 @@ class UnevaluatedOnFree(BooleanFunction):
             obj.pred = arg
             obj.expr = None
             return obj
-        predicate_args = {pred.args[0] for pred in applied_predicates}
+        predicate_args = {pred.arguments[0] for pred in applied_predicates}
         if len(predicate_args) > 1:
             raise ValueError("The AppliedPredicates in arg must be applied to a single expression.")
         obj = BooleanFunction.__new__(cls, arg)
         obj.expr = predicate_args.pop()
-        obj.pred = arg.xreplace(Transform(lambda e: e.func, lambda e:
+        obj.pred = arg.xreplace(Transform(lambda e: e.function, lambda e:
             isinstance(e, AppliedPredicate)))
         applied = obj.apply(obj.expr)
         if applied is None:
@@ -76,7 +94,7 @@ class UnevaluatedOnFree(BooleanFunction):
     def apply(self, expr=None):
         if expr is None:
             return
-        pred = to_NNF(self.pred)
+        pred = to_NNF(self.pred, get_composite_predicates())
         return self._eval_apply(expr, pred)
 
     def _eval_apply(self, expr, pred):
@@ -231,7 +249,7 @@ class CheckOldAssump(UnevaluatedOnFree):
     def apply(self, expr=None, is_Not=False):
         arg = self.args[0](expr) if callable(self.args[0]) else self.args[0]
         res = Equivalent(arg, evaluate_old_assump(arg))
-        return to_NNF(res)
+        return to_NNF(res, get_composite_predicates())
 
 
 class CheckIsPrime(UnevaluatedOnFree):
@@ -239,7 +257,7 @@ class CheckIsPrime(UnevaluatedOnFree):
         from sympy import isprime
         arg = self.args[0](expr) if callable(self.args[0]) else self.args[0]
         res = Equivalent(arg, isprime(expr))
-        return to_NNF(res)
+        return to_NNF(res, get_composite_predicates())
 
 class CustomLambda:
     """
@@ -251,7 +269,7 @@ class CustomLambda:
         self.lamda = lamda
 
     def apply(self, *args):
-        return to_NNF(self.lamda(*args))
+        return to_NNF(self.lamda(*args), get_composite_predicates())
 
 
 class ClassFactRegistry(MutableMapping):

@@ -138,16 +138,6 @@ class AppliedPredicate(Boolean):
         raise TypeError("'arg' property is allowed only for unary predicates.")
 
     @property
-    def args(self):
-        # Will be deprecated and return normal Basic.func
-        return self._args[1:]
-
-    @property
-    def func(self):
-        # Will be deprecated and return normal Basic.func
-        return self._args[0]
-
-    @property
     def function(self):
         """
         Return the predicate.
@@ -360,6 +350,10 @@ class Predicate(Boolean, metaclass=PredicateMeta):
         except NotImplementedError:
             pass
         return result
+
+    def _eval_refine(self, assumptions):
+        # When Predicate is no longer Boolean, delete this method
+        return self
 
 
 class UndefinedPredicate(Predicate):

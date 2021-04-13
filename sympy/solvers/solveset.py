@@ -559,7 +559,8 @@ def _is_function_class_equation(func_class, f, symbol):
 
 def _solve_as_rational(f, symbol, domain):
     """ solve rational functions"""
-    f = together(f, deep=True)
+    from sympy.core.function import _mexpand
+    f = together(_mexpand(f, recursive=True), deep=True)
     g, h = fraction(f)
     if not h.has(symbol):
         try:
@@ -834,44 +835,9 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
         return ConditionSet(symbol, Eq(f, 0), domain)
 
 
-def _has_rational_power(expr, symbol):
-    """
-    Returns (bool, den) where bool is True if the term has a
-    non-integer rational power and den is the denominator of the
-    expression's exponent.
-
-    Examples
-    ========
-
-    >>> from sympy.solvers.solveset import _has_rational_power
-    >>> from sympy import sqrt
-    >>> from sympy.abc import x
-    >>> _has_rational_power(sqrt(x), x)
-    (True, 2)
-    >>> _has_rational_power(x**2, x)
-    (False, 1)
-    """
-    a, p, q = Wild('a'), Wild('p'), Wild('q')
-    pattern_match = expr.match(a*p**q) or {}
-    if pattern_match.get(a, S.Zero).is_zero:
-        return (False, S.One)
-    elif p not in pattern_match.keys():
-        return (False, S.One)
-    elif isinstance(pattern_match[q], Rational) \
-            and pattern_match[p].has(symbol):
-        if not pattern_match[q].q == S.One:
-            return (True, pattern_match[q].q)
-
-    if not isinstance(pattern_match[a], Pow) \
-            or isinstance(pattern_match[a], Mul):
-        return (False, S.One)
-    else:
-        return _has_rational_power(pattern_match[a], symbol)
-
-
-def _solve_radical(f, symbol, solveset_solver):
+def _solve_radical(f, unradf, symbol, solveset_solver):
     """ Helper function to solve equations with radicals """
-    res = unrad(f)
+    res = unradf
     eq, cov = res if res else (f, [])
     if not cov:
         result = solveset_solver(eq, symbol) - \
@@ -1091,21 +1057,36 @@ def _solveset(f, symbol, domain, _check=False):
         elif isinstance(rhs_s, FiniteSet):
             for equation in [lhs - rhs for rhs in rhs_s]:
                 if equation == f:
-                    if any(_has_rational_power(g, symbol)[0]
-                           for g in equation.args) or _has_rational_power(
-                           equation, symbol)[0]:
-                        result += _solve_radical(equation,
+                    u = unrad(f)
+                    if u:
+                        result += _solve_radical(equation, u,
                                                  symbol,
                                                  solver)
                     elif equation.has(Abs):
                         result += _solve_abs(f, symbol, domain)
                     else:
                         result_rational = _solve_as_rational(equation, symbol, domain)
-                        if isinstance(result_rational, ConditionSet):
-                            # may be a transcendental type equation
-                            result += _transolve(equation, symbol, domain)
-                        else:
+                        if not isinstance(result_rational, ConditionSet):
                             result += result_rational
+                        else:
+                            # may be a transcendental type equation
+                            t_result = _transolve(equation, symbol, domain)
+                            if isinstance(t_result, ConditionSet):
+                                # might need factoring; this is expensive so we
+                                # have delayed until now. To avoid recursion
+                                # errors look for a non-trivial factoring into
+                                # a product of symbol dependent terms; I think
+                                # that something that factors as a Pow would
+                                # have already been recognized by now.
+                                factored = equation.factor()
+                                if factored.is_Mul and equation != factored:
+                                    _, dep = factored.as_independent(symbol)
+                                    if not dep.is_Add:
+                                        # non-trivial factoring of equation
+                                        # but use form with constants
+                                        # in case they need special handling
+                                        t_result = solver(factored, symbol)
+                            result += t_result
                 else:
                     result += solver(equation, symbol)
 

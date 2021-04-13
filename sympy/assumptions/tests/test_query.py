@@ -2,7 +2,7 @@ from sympy.abc import t, w, x, y, z, n, k, m, p, i
 from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
         remove_handler)
 from sympy.assumptions.assume import assuming, global_assumptions, Predicate
-from sympy.assumptions.ask import compute_known_facts, single_fact_lookup
+from sympy.assumptions.facts import compute_known_facts, single_fact_lookup
 from sympy.assumptions.handlers import AskHandler
 from sympy.core.add import Add
 from sympy.core.numbers import (I, Integer, Rational, oo, zoo, pi)
@@ -140,7 +140,7 @@ def test_zero_0():
     assert ask(Q.prime(z)) is False
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
-    assert ask(Q.antihermitian(z)) is False
+    assert ask(Q.antihermitian(z)) is True
 
 
 def test_negativeone():
@@ -176,7 +176,7 @@ def test_infinity():
     assert ask(Q.irrational(oo)) is False
     assert ask(Q.imaginary(oo)) is False
     assert ask(Q.positive(oo)) is False
-    #assert ask(Q.extended_positive(oo)) is True
+    assert ask(Q.extended_positive(oo)) is True
     assert ask(Q.negative(oo)) is False
     assert ask(Q.even(oo)) is False
     assert ask(Q.odd(oo)) is False
@@ -186,6 +186,8 @@ def test_infinity():
     assert ask(Q.composite(oo)) is False
     assert ask(Q.hermitian(oo)) is False
     assert ask(Q.antihermitian(oo)) is False
+    assert ask(Q.positive_infinite(oo)) is True
+    assert ask(Q.negative_infinite(oo)) is False
 
 
 def test_neg_infinity():
@@ -201,7 +203,7 @@ def test_neg_infinity():
     assert ask(Q.imaginary(mm)) is False
     assert ask(Q.positive(mm)) is False
     assert ask(Q.negative(mm)) is False
-    #assert ask(Q.extended_negative(mm)) is True
+    assert ask(Q.extended_negative(mm)) is True
     assert ask(Q.even(mm)) is False
     assert ask(Q.odd(mm)) is False
     assert ask(Q.finite(mm)) is False
@@ -210,6 +212,8 @@ def test_neg_infinity():
     assert ask(Q.composite(mm)) is False
     assert ask(Q.hermitian(mm)) is False
     assert ask(Q.antihermitian(mm)) is False
+    assert ask(Q.positive_infinite(-oo)) is False
+    assert ask(Q.negative_infinite(-oo)) is True
 
 
 def test_complex_infinity():
@@ -234,6 +238,8 @@ def test_complex_infinity():
     assert ask(Q.composite(zoo)) is False
     assert ask(Q.hermitian(zoo)) is False
     assert ask(Q.antihermitian(zoo)) is False
+    assert ask(Q.positive_infinite(zoo)) is False
+    assert ask(Q.negative_infinite(zoo)) is False
 
 
 def test_nan():
@@ -595,13 +601,13 @@ def test_I():
     assert ask(Q.real(z)) is True
 
 
-
+@XFAIL  # definition for boundedness fixed! will be changed in next commit
 def test_bounded():
     x, y, z = symbols('x,y,z')
     assert ask(Q.finite(x)) is None
     assert ask(Q.finite(x), Q.finite(x)) is True
     assert ask(Q.finite(x), Q.finite(y)) is None
-    assert ask(Q.finite(x), Q.complex(x)) is None
+    assert ask(Q.finite(x), Q.complex(x)) is True
 
     assert ask(Q.finite(x + 1)) is None
     assert ask(Q.finite(x + 1), Q.finite(x)) is True
@@ -610,7 +616,7 @@ def test_bounded():
     # B + B
     assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)) is True
     assert ask(
-        Q.finite(a), Q.finite(x) & Q.finite(y) & Q.positive(x)) is True
+        Q.finite(a), Q.positive(x) & Q.finite(y)) is True
     assert ask(
         Q.finite(a), Q.finite(x) & Q.finite(y) & Q.positive(y)) is True
     assert ask(Q.finite(a),
@@ -1354,12 +1360,13 @@ def test_rational():
 
 def test_hermitian():
     assert ask(Q.hermitian(x)) is None
-    assert ask(Q.hermitian(x), Q.antihermitian(x)) is False
+    assert ask(Q.hermitian(x), Q.antihermitian(x)) is None
     assert ask(Q.hermitian(x), Q.imaginary(x)) is False
     assert ask(Q.hermitian(x), Q.prime(x)) is True
     assert ask(Q.hermitian(x), Q.real(x)) is True
+    assert ask(Q.hermitian(x), Q.zero(x)) is True
 
-    assert ask(Q.hermitian(x + 1), Q.antihermitian(x)) is False
+    assert ask(Q.hermitian(x + 1), Q.antihermitian(x)) is None
     assert ask(Q.hermitian(x + 1), Q.complex(x)) is None
     assert ask(Q.hermitian(x + 1), Q.hermitian(x)) is True
     assert ask(Q.hermitian(x + 1), Q.imaginary(x)) is False
@@ -1373,9 +1380,9 @@ def test_hermitian():
         Q.hermitian(x + y), Q.antihermitian(x) & Q.antihermitian(y)) is None
     assert ask(Q.hermitian(x + y), Q.antihermitian(x) & Q.complex(y)) is None
     assert ask(
-        Q.hermitian(x + y), Q.antihermitian(x) & Q.hermitian(y)) is False
+        Q.hermitian(x + y), Q.antihermitian(x) & Q.hermitian(y)) is None
     assert ask(Q.hermitian(x + y), Q.antihermitian(x) & Q.imaginary(y)) is None
-    assert ask(Q.hermitian(x + y), Q.antihermitian(x) & Q.real(y)) is False
+    assert ask(Q.hermitian(x + y), Q.antihermitian(x) & Q.real(y)) is None
     assert ask(Q.hermitian(x + y), Q.hermitian(x) & Q.complex(y)) is None
     assert ask(Q.hermitian(x + y), Q.hermitian(x) & Q.hermitian(y)) is True
     assert ask(Q.hermitian(x + y), Q.hermitian(x) & Q.imaginary(y)) is False
@@ -1410,12 +1417,13 @@ def test_hermitian():
     assert ask(Q.antihermitian(x + 1), Q.complex(x)) is None
     assert ask(Q.antihermitian(x + 1), Q.hermitian(x)) is None
     assert ask(Q.antihermitian(x + 1), Q.imaginary(x)) is False
-    assert ask(Q.antihermitian(x + 1), Q.real(x)) is False
+    assert ask(Q.antihermitian(x + 1), Q.real(x)) is None
     assert ask(Q.antihermitian(x + I), Q.antihermitian(x)) is True
     assert ask(Q.antihermitian(x + I), Q.complex(x)) is None
-    assert ask(Q.antihermitian(x + I), Q.hermitian(x)) is False
+    assert ask(Q.antihermitian(x + I), Q.hermitian(x)) is None
     assert ask(Q.antihermitian(x + I), Q.imaginary(x)) is True
     assert ask(Q.antihermitian(x + I), Q.real(x)) is False
+    assert ask(Q.antihermitian(x), Q.zero(x)) is True
 
     assert ask(
         Q.antihermitian(x + y), Q.antihermitian(x) & Q.antihermitian(y)
@@ -1423,7 +1431,7 @@ def test_hermitian():
     assert ask(
         Q.antihermitian(x + y), Q.antihermitian(x) & Q.complex(y)) is None
     assert ask(
-        Q.antihermitian(x + y), Q.antihermitian(x) & Q.hermitian(y)) is False
+        Q.antihermitian(x + y), Q.antihermitian(x) & Q.hermitian(y)) is None
     assert ask(
         Q.antihermitian(x + y), Q.antihermitian(x) & Q.imaginary(y)) is True
     assert ask(Q.antihermitian(x + y), Q.antihermitian(x) & Q.real(y)
@@ -1432,13 +1440,13 @@ def test_hermitian():
     assert ask(Q.antihermitian(x + y), Q.hermitian(x) & Q.hermitian(y)
         ) is None
     assert ask(
-        Q.antihermitian(x + y), Q.hermitian(x) & Q.imaginary(y)) is False
+        Q.antihermitian(x + y), Q.hermitian(x) & Q.imaginary(y)) is None
     assert ask(Q.antihermitian(x + y), Q.hermitian(x) & Q.real(y)) is None
     assert ask(Q.antihermitian(x + y), Q.imaginary(x) & Q.complex(y)) is None
     assert ask(Q.antihermitian(x + y), Q.imaginary(x) & Q.imaginary(y)) is True
     assert ask(Q.antihermitian(x + y), Q.imaginary(x) & Q.real(y)) is False
     assert ask(Q.antihermitian(x + y), Q.real(x) & Q.complex(y)) is None
-    assert ask(Q.antihermitian(x + y), Q.real(x) & Q.real(y)) is False
+    assert ask(Q.antihermitian(x + y), Q.real(x) & Q.real(y)) is None
 
     assert ask(Q.antihermitian(I*x), Q.real(x)) is True
     assert ask(Q.antihermitian(I*x), Q.antihermitian(x)) is False
@@ -1446,7 +1454,7 @@ def test_hermitian():
     assert ask(Q.antihermitian(x*y), Q.antihermitian(x) & Q.real(y)) is True
 
     assert ask(Q.antihermitian(x + y + z),
-        Q.real(x) & Q.real(y) & Q.real(z)) is False
+        Q.real(x) & Q.real(y) & Q.real(z)) is None
     assert ask(Q.antihermitian(x + y + z),
         Q.real(x) & Q.real(y) & Q.imaginary(z)) is None
     assert ask(Q.antihermitian(x + y + z),
@@ -2130,7 +2138,7 @@ def test_compute_known_facts():
 @slow
 def test_known_facts_consistent():
     """"Test that ask_generated.py is up-to-date"""
-    from sympy.assumptions.ask import get_known_facts, get_known_facts_keys
+    from sympy.assumptions.facts import get_known_facts, get_known_facts_keys
     from os.path import abspath, dirname, join
     filename = join(dirname(dirname(abspath(__file__))), 'ask_generated.py')
     with open(filename) as f:
