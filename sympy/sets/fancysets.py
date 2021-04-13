@@ -958,9 +958,9 @@ class Range(Set):
         except ValueError:  # inf/sup unknown
             a, b = self.start, self.stop - self.step
             range_cond = Or(
-                And(x > a if a.is_infinite else x >= a,
+                And(self.step >= 1, x > a if a.is_infinite else x >= a,
                 x < b if b.is_infinite else x <= b),
-                And(x < a if a.is_infinite else x <= a,
+                And(self.step <= -1, x < a if a.is_infinite else x <= a,
                 x > b if b.is_infinite else x >= b))
         return And(in_seq, ints, range_cond)
 

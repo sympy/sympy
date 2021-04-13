@@ -431,12 +431,13 @@ def test_Range_symbolic():
     assert ir.as_relational(x) == ((x >= i) & (x <= i + 18) &
         Eq(Mod(-i + x, 2), 0))
     assert ir2.as_relational(x) == Eq(
-        Mod(-i + x, 3*i), 0) & (((x >= i) & (x <= 7*i)) |
-        ((x <= i) & (x >= 7*i)))
+        Mod(-i + x, 3*i), 0) & (((x >= i) & (x <= 7*i) & (3*i >= 1)) |
+        ((x <= i) & (x >= 7*i) & (3*i <= -1)))
     assert Range(i, i + 1).as_relational(x) == Eq(x, i)
     assert sr.as_relational(z) == Eq(
         Mod(t, 1), 0) & Eq(Mod(x, 1), 0) & Eq(Mod(-x + z, t), 0
-        ) & (((z >= x) & (z <= -t + y)) | ((z <= x) & (z >= -t + y)))
+        ) & (((z >= x) & (z <= -t + y) & (t >= 1)) |
+        ((z <= x) & (z >= -t + y) & (t <= -1)))
     assert xr.as_relational(z) == Eq(z, x) & Eq(Mod(x, 1), 0)
     # symbols can clash if user wants (but it must be integer)
     assert xr.as_relational(x) == Eq(Mod(x, 1), 0)
