@@ -462,18 +462,8 @@ class Beam:
         self._load += value*SingularityFunction(x, start, order)
 
         if end:
-            if order.is_negative:
-                msg = ("If 'end' is provided the 'order' of the load cannot "
-                       "be negative, i.e. 'end' is only valid for distributed "
-                       "loads.")
-                raise ValueError(msg)
-            # NOTE : A Taylor series can be used to define the summation of
-            # singularity functions that subtract from the load past the end
-            # point such that it evaluates to zero past 'end'.
-            f = value*x**order
-            for i in range(0, order + 1):
-                self._load -= (f.diff(x, i).subs(x, end - start) *
-                               SingularityFunction(x, end, i)/factorial(i))
+            # load has an end point within the length of the beam.
+            self._handle_end(x, value, start, order, end, type="apply")
 
     def remove_load(self, value, start, order, end=None):
         """
@@ -535,21 +525,36 @@ class Beam:
             raise ValueError(msg)
 
         if end:
-            # TODO : This is essentially duplicate code wrt to apply_load,
-            # would be better to move it to one location and both methods use
-            # it.
-            if order.is_negative:
-                msg = ("If 'end' is provided the 'order' of the load cannot "
-                       "be negative, i.e. 'end' is only valid for distributed "
-                       "loads.")
-                raise ValueError(msg)
-            # NOTE : A Taylor series can be used to define the summation of
-            # singularity functions that subtract from the load past the end
-            # point such that it evaluates to zero past 'end'.
-            f = value*x**order
+            # load has an end point within the length of the beam.
+            self._handle_end(x, value, start, order, end, type="remove")
+
+    def _handle_end(self, x, value, start, order, end, type):
+        """
+        This functions handles the optional `end` value in the
+        `apply_load` and `remove_load` functions. When the value
+        of end is not NULL, this function will be executed.
+        """
+        if order.is_negative:
+            msg = ("If 'end' is provided the 'order' of the load cannot "
+                    "be negative, i.e. 'end' is only valid for distributed "
+                    "loads.")
+            raise ValueError(msg)
+        # NOTE : A Taylor series can be used to define the summation of
+        # singularity functions that subtract from the load past the end
+        # point such that it evaluates to zero past 'end'.
+        f = value*x**order
+
+        if type == "apply":
+            # iterating for "apply_load" method
             for i in range(0, order + 1):
-                self._load += (f.diff(x, i).subs(x, end - start) *
-                               SingularityFunction(x, end, i)/factorial(i))
+                self._load -= (f.diff(x, i).subs(x, end - start) *
+                                SingularityFunction(x, end, i)/factorial(i))
+        elif type == "remove":
+            # iterating for "remove_load" method
+            for i in range(0, order + 1):
+                    self._load += (f.diff(x, i).subs(x, end - start) *
+                                    SingularityFunction(x, end, i)/factorial(i))
+
 
     @property
     def load(self):
