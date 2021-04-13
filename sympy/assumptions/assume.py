@@ -351,6 +351,10 @@ class Predicate(Boolean, metaclass=PredicateMeta):
             pass
         return result
 
+    def _eval_refine(self, assumptions):
+        # When Predicate is no longer Boolean, delete this method
+        return self
+
 
 class UndefinedPredicate(Predicate):
     """
