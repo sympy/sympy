@@ -390,7 +390,13 @@ def test_Range_symbolic():
     raises(ValueError, lambda: len(sr))
     raises(ValueError, lambda: sr.size)
     # bool
-    assert bool(ir) == bool(sr) == bool(xr) == True
+    assert bool(Range(0)) == False
+    assert bool(xr)
+    assert bool(ir)
+    assert bool(ipr)
+    assert bool(inr)
+    raises(ValueError, lambda: bool(sr))
+    raises(ValueError, lambda: bool(ir2))
     # inf
     raises(ValueError, lambda: xr.inf)
     raises(ValueError, lambda: sr.inf)

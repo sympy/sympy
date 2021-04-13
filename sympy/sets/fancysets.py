@@ -6,7 +6,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
 from sympy.core.numbers import oo
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, is_eq
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
 from sympy.core.sympify import _sympify, sympify, converter
@@ -677,13 +677,13 @@ class Range(Set):
             if not n.is_extended_positive or not all(
                     i.is_integer or i.is_infinite for i in self.args):
                 raise ValueError('invalid method for symbolic range')
-        if not self:
+        if self.start == self.stop:
             return self
         return self.func(
             self.stop - self.step, self.start - self.step, -self.step)
 
     def _contains(self, other):
-        if not self:
+        if self.start == self.stop:
             return S.false
         if other.is_infinite:
             return S.false
@@ -719,7 +719,7 @@ class Range(Set):
         n = self.size  # validate
         if self.start in [S.NegativeInfinity, S.Infinity]:
             raise TypeError("Cannot iterate over Range with infinite start")
-        elif self:
+        elif self.start != self.stop:
             i = self.start
             if n.is_infinite:
                 while True:
@@ -738,7 +738,7 @@ class Range(Set):
 
     @property
     def size(self):
-        if not self:
+        if self.start == self.stop:
             return S.Zero
         dif = self.stop - self.start
         n = dif/self.step
@@ -758,7 +758,10 @@ class Range(Set):
         # this only distinguishes between definite null range
         # and non-null/unknown null; getting True doesn't mean
         # that it actually is not null
-        return self.start != self.stop
+        b = is_eq(self.start, self.stop)
+        if b is None:
+            raise ValueError('cannot tell if Range is null or not')
+        return not bool(b)
 
     def __getitem__(self, i):
         from sympy.functions.elementary.integers import ceiling
@@ -772,7 +775,7 @@ class Range(Set):
             "with an infinite value"
         if isinstance(i, slice):
             if self.size.is_finite:  # validates, too
-                if not self:
+                if self.start == self.stop:
                     return Range(0)
                 start, stop, step = i.indices(self.size)
                 n = ceiling((stop - start)/step)
@@ -874,7 +877,7 @@ class Range(Set):
                 elif start > 0:
                     raise ValueError(ooslice)
         else:
-            if not self:
+            if self.start == self.stop:
                 raise IndexError('Range index out of range')
             if not (all(i.is_integer or i.is_infinite
                     for i in self.args) and ((self.stop - self.start)/
@@ -946,16 +949,19 @@ class Range(Set):
         in_seq = Eq(Mod(x - a, step), 0)
         ints = And(Eq(Mod(a, 1), 0), Eq(Mod(step, 1), 0))
         n = (self.stop - self.start)/self.step
+        if n == 0:
+            return S.EmptySet.as_relational(x)
+        if n == 1:
+            return And(Eq(x, a), ints)
         try:
-            if n == 0:
-                return S.EmptySet.as_relational(x)
-            if n == 1:
-                return And(Eq(x, a), ints)
             a, b = self.inf, self.sup
+        except ValueError:
+            a = None
+        if a is not None:
             range_cond = And(
                 x > a if a.is_infinite else x >= a,
                 x < b if b.is_infinite else x <= b)
-        except ValueError:  # inf/sup unknown
+        else:
             a, b = self.start, self.stop - self.step
             range_cond = Or(
                 And(self.step >= 1, x > a if a.is_infinite else x >= a,
