@@ -143,15 +143,16 @@ class Sieve:
             self.extend(int(self._list[-1] * 1.5))
 
     def primerange(self, a, b=None):
-        """Generate all prime numbers in the range [a, b) when both a and b are
-           provided and generates all prime numbers till a when only a is provided.
+        """Generate all prime numbers in the range [2, a) or [a, b).
 
         Examples
         ========
 
-        >>> from sympy import sieve
+        >>> from sympy import sieve, prime
         >>> print([i for i in sieve.primerange(7, 19)])
         [7, 11, 13, 17]
+        >>> list(sieve.primerange(prime(10) + 1))  # first 10 primes
+        [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
 
         >>> print([i for i in sieve.primerange(19)])
         [2, 3, 5, 7, 11, 13, 17]
@@ -647,8 +648,9 @@ def prevprime(n):
         n -= 4
 
 
-def primerange(a, b):
-    """ Generate a list of all prime numbers in the range [a, b).
+def primerange(a, b=None):
+    """ Generate a list of all prime numbers in the range [2, a),
+        or [a, b).
 
         If the range exists in the default sieve, the values will
         be returned from there; otherwise values will be returned
@@ -657,9 +659,11 @@ def primerange(a, b):
         Examples
         ========
 
-        >>> from sympy import primerange, sieve
+        >>> from sympy import primerange, sieve, prime
         >>> print([i for i in primerange(1, 30)])
         [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+        >>> list(primerange(prime(5) + 1))  # first 5 primes
+        [2, 3, 5, 7, 11]
 
         The Sieve method, primerange, is generally faster but it will
         occupy more memory as the sieve stores values. The default
@@ -692,6 +696,7 @@ def primerange(a, b):
         See Also
         ========
 
+        prime : Return the ith prime
         nextprime : Return the ith prime greater than n
         prevprime : Return the largest prime smaller than n
         randprime : Returns a random prime in a given range
@@ -708,6 +713,8 @@ def primerange(a, b):
     """
     from sympy.functions.elementary.integers import ceiling
 
+    if b is None:
+        a, b = 2, a
     if a >= b:
         return
     # if we already have the range, return it
