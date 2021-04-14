@@ -474,6 +474,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
 def _ask_single_fact(key, local_facts):
     """
+    Compute the truth value of single predicate using assumptions.
+
     Parameters
     ==========
 
@@ -496,8 +498,13 @@ def _ask_single_fact(key, local_facts):
     >>> from sympy.assumptions.ask import _ask_single_fact
     >>> from sympy.abc import x
 
-    If prerequisite of proposition is not satisfied, return ``False``.
+    If prerequisite of proposition is rejected by the assumption,
+    return ``False``.
 
+    >>> key, assump = Q.zero, ~Q.zero
+    >>> local_facts = CNF.from_prop(assump)
+    >>> _ask_single_fact(key, local_facts)
+    False
     >>> key, assump = Q.zero, ~Q.even
     >>> local_facts = CNF.from_prop(assump)
     >>> _ask_single_fact(key, local_facts)
@@ -509,6 +516,13 @@ def _ask_single_fact(key, local_facts):
     >>> local_facts = CNF.from_prop(assump)
     >>> _ask_single_fact(key, local_facts)
     True
+
+    If proposition rejects the assumption, return ``False``.
+
+    >>> key, assump = ~Q.zero, Q.zero
+    >>> local_facts = CNF.from_prop(assump)
+    >>> _ask_single_fact(key, local_facts)
+    False
     """
     if local_facts.clauses:
 
@@ -519,7 +533,7 @@ def _ask_single_fact(key, local_facts):
             if len(cl) == 1:
                 f, = cl
                 if f.is_Not and f.arg in known_facts_dict.get(key, []):
-                    # the prerequisite of proposition is not true
+                    # the prerequisite of proposition is rejected
                     return False
 
         for clause in local_facts.clauses:
@@ -532,10 +546,7 @@ def _ask_single_fact(key, local_facts):
                     # assumption implies the proposition
                     return True
                 elif Not(key) in fdict:
-                    # quick exit if proposition is directly rejected by assumption
-                    # example might be proposition = Q.even(x), assumptions = Q.odd(x)
-                    # but known_facts_dict does not have such information yet and
-                    # such example is computed by satask.
+                    # proposition rejects the assumption
                     return False
 
     return None
