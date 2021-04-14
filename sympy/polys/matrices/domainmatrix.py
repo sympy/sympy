@@ -20,9 +20,6 @@ from .ddm import DDM
 
 from .sdm import SDM
 
-from sympy.polys.constructor import construct_domain
-
-
 class DomainMatrix:
     r"""
     Associate Matrix with :py:class:`~.Domain`
