@@ -519,7 +519,7 @@ def _ask_single_fact(key, local_facts):
 
     If proposition rejects the assumption, return ``False``.
 
-    >>> key, assump = ~Q.zero, Q.zero
+    >>> key, assump = Q.even, Q.odd
     >>> local_facts = CNF.from_prop(assump)
     >>> _ask_single_fact(key, local_facts)
     False
