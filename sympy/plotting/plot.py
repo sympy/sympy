@@ -656,6 +656,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         =======
             x: list
                 List of x-coordinates
+
             y: list
                 List of y-coordinates
 
@@ -807,6 +808,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         =======
             x: list
                 List of x-coordinates
+
             y: list
                 List of y-coordinates
 
