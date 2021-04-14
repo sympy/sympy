@@ -105,7 +105,7 @@ class Sieve:
         newsieve = _arange(begin, n + 1)
 
         # Now eliminate all multiples of primes in [2, sqrt(n)]
-        for p in self.primerange(2, maxbase):
+        for p in self.primerange(maxbase):
             # Start counting at a multiple of p, offsetting
             # the index to account for the new sieve's base index
             startindex = (-begin) % p
@@ -149,13 +149,22 @@ class Sieve:
         ========
 
         >>> from sympy import sieve, prime
-        >>> print([i for i in sieve.primerange(7, 19)])
-        [7, 11, 13, 17]
-        >>> list(sieve.primerange(prime(10) + 1))  # first 10 primes
-        [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+
+        All primes less than 19:
 
         >>> print([i for i in sieve.primerange(19)])
         [2, 3, 5, 7, 11, 13, 17]
+
+        All primes greater than or equal to 7 and less than 19:
+
+        >>> print([i for i in sieve.primerange(7, 19)])
+        [7, 11, 13, 17]
+
+        All primes through the 10th prime
+
+        >>> list(sieve.primerange(prime(10) + 1))
+        [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+
         """
         from sympy.functions.elementary.integers import ceiling
 
@@ -471,9 +480,20 @@ class primepi(Function):
         Examples
         ========
 
-        >>> from sympy import primepi
+        >>> from sympy import primepi, prime, prevprime, isprime
         >>> primepi(25)
         9
+
+        So there are 9 primes less than or equal to 25. Is 25 prime?
+
+        >>> isprime(25)
+        False
+
+        It isn't. So the first prime less than 25 must be the
+        9th prime:
+
+        >>> prevprime(25) == prime(9)
+        True
 
         See Also
         ========
@@ -659,16 +679,28 @@ def primerange(a, b=None):
         Examples
         ========
 
-        >>> from sympy import primerange, sieve, prime
-        >>> print([i for i in primerange(1, 30)])
+        >>> from sympy import primerange, prime
+
+        All primes less than 19:
+
+        >>> list(primerange(19))
+        [2, 3, 5, 7, 11, 13, 17]
+
+        All primes greater than or equal to 7 and less than 19:
+
+        >>> list(primerange(7, 19))
+        [7, 11, 13, 17]
+
+        All primes through the 10th prime
+
+        >>> list(primerange(prime(10) + 1))
         [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
-        >>> list(primerange(prime(5) + 1))  # first 5 primes
-        [2, 3, 5, 7, 11]
 
         The Sieve method, primerange, is generally faster but it will
         occupy more memory as the sieve stores values. The default
         instance of Sieve, named sieve, can be used:
 
+        >>> from sympy import sieve
         >>> list(sieve.primerange(1, 30))
         [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
 
