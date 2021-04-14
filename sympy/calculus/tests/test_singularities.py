@@ -37,13 +37,16 @@ def test_is_increasing():
     assert is_increasing(x**3 - 3*x**2 + 4*x, S.Reals)
     assert is_increasing(-x**2, Interval(-oo, 0))
     assert not is_increasing(-x**2, Interval(0, oo))
-    assert not is_increasing(4*x**3 - 6*x**2 - 72*x + 30, Interval(-2, 3))
+    assert not is_increasing(4*x**3 - 6*x**2 - 72*x + 30,
+        Interval(-2, 3))
     assert is_increasing(x**2 + y, Interval(1, oo), x)
     assert is_increasing(-x**2*a, Interval(1, oo), x)
     assert is_increasing(1)
 
-    assert is_increasing(4*x**3 - 6*x**2 - 72*x + 30, Interval(-2, 3)) is False
-    assert is_increasing(x**5 -5*x +7,Union(Interval(-oo, -1), Interval(1, oo))) is True
+    assert is_increasing(4*x**3 - 6*x**2 - 72*x + 30,
+        Interval(-2, 3)) is False
+    assert is_increasing(x**5 - 5*x + 7, Union(
+        Interval(-oo, -1), Interval(1, oo))) is True
 
 
 def test_is_strictly_increasing():

@@ -1,5 +1,5 @@
 from sympy import S, Symbol
-from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_not
+from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_not, fuzzy_or
 from sympy.core.relational import Eq
 from sympy.sets.sets import FiniteSet, Interval, Set, Union, ProductSet
 from sympy.sets.fancysets import Complexes, Reals, Range, Rationals
@@ -8,9 +8,11 @@ from sympy.multipledispatch import dispatch
 
 _inf_sets = [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals, S.Complexes]
 
+
 @dispatch(Set, Set)  # type: ignore # noqa:F811
 def is_subset_sets(a, b): # noqa:F811
     return None
+
 
 @dispatch(Interval, Interval)  # type: ignore # noqa:F811
 def is_subset_sets(a, b): # noqa:F811
@@ -24,6 +26,7 @@ def is_subset_sets(a, b): # noqa:F811
     if (b.right_open and not a.right_open and fuzzy_bool(Eq(a.end, b.end))):
         return False
 
+
 @dispatch(Interval, FiniteSet)  # type: ignore # noqa:F811
 def is_subset_sets(a_interval, b_fs): # noqa:F811
     # An Interval can only be a subset of a finite set if it is finite
@@ -31,25 +34,37 @@ def is_subset_sets(a_interval, b_fs): # noqa:F811
     if fuzzy_not(a_interval.measure.is_zero):
         return False
 
+
 @dispatch(Interval, Union)  # type: ignore # noqa:F811
 def is_subset_sets(a_interval, b_u): # noqa:F811
     if all(isinstance(s, (Interval, FiniteSet)) for s in b_u.args):
         intervals = [s for s in b_u.args if isinstance(s, Interval)]
-        sol = S.EmptySet
-        for interval in intervals:
-            sol = sol.union(a_interval.intersect(interval))
-        if sol == a_interval:
-            return True
-        else:
+        if (a_interval == S.Reals and all(
+                i.start.is_finite and i.start.is_Number or
+                i.end.is_finite and i.end.is_Number
+                for i in intervals)):
+            # there are no ambiguous boundaries in Union so
+            # guaranteed gaps
             return False
-    else:
-        return
+        if all(fuzzy_bool(a_interval.start < s.start) for s in intervals):
+            return False
+        if all(fuzzy_bool(a_interval.end > s.end) for s in intervals):
+            return False
+        if a_interval.measure.is_nonzero:
+            no_overlap = lambda s: fuzzy_or([
+                    fuzzy_bool(s.end <= a_interval.start),
+                    fuzzy_bool(s.start >= a_interval.end),
+                    ])
+            if all(no_overlap(s) for s in intervals):
+                return False
+
 
 @dispatch(Range, Range)  # type: ignore # noqa:F811
 def is_subset_sets(a, b): # noqa:F811
     if a.step == b.step == 1:
         return fuzzy_and([fuzzy_bool(a.start >= b.start),
                           fuzzy_bool(a.stop <= b.stop)])
+
 
 @dispatch(Range, Interval)  # type: ignore # noqa:F811
 def is_subset_sets(a_range, b_interval): # noqa:F811
@@ -63,6 +78,7 @@ def is_subset_sets(a_range, b_interval): # noqa:F811
         else:
             cond_right = a_range.sup <= b_interval.right
         return fuzzy_and([cond_left, cond_right])
+
 
 @dispatch(Range, FiniteSet)  # type: ignore # noqa:F811
 def is_subset_sets(a_range, b_finiteset): # noqa:F811
@@ -98,39 +114,48 @@ def is_subset_sets(a_range, b_finiteset): # noqa:F811
                 return True
         return None
 
+
 @dispatch(Interval, Range)  # type: ignore # noqa:F811
 def is_subset_sets(a_interval, b_range): # noqa:F811
     if a_interval.measure.is_extended_nonzero:
         return False
+
 
 @dispatch(Interval, Rationals)  # type: ignore # noqa:F811
 def is_subset_sets(a_interval, b_rationals): # noqa:F811
     if a_interval.measure.is_extended_nonzero:
         return False
 
+
 @dispatch(Range, Complexes)  # type: ignore # noqa:F811
 def is_subset_sets(a, b): # noqa:F811
     return True
+
 
 @dispatch(Complexes, Interval)  # type: ignore # noqa:F811
 def is_subset_sets(a, b): # noqa:F811
     return False
 
+
 @dispatch(Complexes, Range)  # type: ignore # noqa:F811
 def is_subset_sets(a, b): # noqa:F811
     return False
+
 
 @dispatch(Complexes, Rationals)  # type: ignore # noqa:F811
 def is_subset_sets(a, b): # noqa:F811
     return False
 
+
 @dispatch(Rationals, Reals)  # type: ignore # noqa:F811
 def is_subset_sets(a, b): # noqa:F811
     return True
 
+
 @dispatch(Rationals, Range)  # type: ignore # noqa:F811
 def is_subset_sets(a, b): # noqa:F811
     return False
+
 
 @dispatch(ProductSet, FiniteSet)  # type: ignore # noqa:F811
 def is_subset_sets(a_ps, b_fs): # noqa:F811
