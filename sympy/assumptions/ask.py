@@ -496,7 +496,6 @@ def _ask_single_fact(key, local_facts):
     >>> from sympy import Q
     >>> from sympy.assumptions.cnf import CNF
     >>> from sympy.assumptions.ask import _ask_single_fact
-    >>> from sympy.abc import x
 
     If prerequisite of proposition is rejected by the assumption,
     return ``False``.
