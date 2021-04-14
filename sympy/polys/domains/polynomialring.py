@@ -74,6 +74,10 @@ class PolynomialRing(Ring, CompositeDomain):
         K = self.domain
         return K.is_unit(K.convert_from(a, self))
 
+    def canonical_unit(self, a):
+        u = self.domain.canonical_unit(a.LC)
+        return self.ring.ground_new(u)
+
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
         return a.as_expr()
