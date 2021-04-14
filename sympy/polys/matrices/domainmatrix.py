@@ -20,6 +20,8 @@ from .ddm import DDM
 
 from .sdm import SDM
 
+from sympy.polys.constructor import construct_domain
+
 
 class DomainMatrix:
     r"""
@@ -242,6 +244,20 @@ class DomainMatrix:
         Matrix
 
         """
+        m, n = M.shape
+        non_zero = 0
+
+        for i in range(m):
+            for j in range(n):
+                if not M[i, j].is_zero:
+                    non_zero += 1
+
+        if non_zero < (m*(n - 1) - 1)/2:
+            flattened_list = [elem for row in M.tolist() for elem in row]
+            domain = construct_domain(flattened_list)
+            sdm = SDM.from_list(M.tolist(), M.shape, domain)
+            return cls.from_rep(sdm)
+
         return cls.from_list_sympy(*M.shape, M.tolist(), **kwargs)
 
     @classmethod
