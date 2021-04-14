@@ -1,10 +1,10 @@
-from sympy import S, Symbol
+from sympy import S, Symbol, Dummy
 from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_not, fuzzy_or
 from sympy.core.relational import Eq
 from sympy.sets.sets import FiniteSet, Interval, Set, Union, ProductSet
 from sympy.sets.fancysets import Complexes, Reals, Range, Rationals
 from sympy.multipledispatch import dispatch
-
+from sympy.utilities.iterables import sift
 
 _inf_sets = [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals, S.Complexes]
 
@@ -39,22 +39,43 @@ def is_subset_sets(a_interval, b_fs): # noqa:F811
 def is_subset_sets(a_interval, b_u): # noqa:F811
     if all(isinstance(s, (Interval, FiniteSet)) for s in b_u.args):
         intervals = [s for s in b_u.args if isinstance(s, Interval)]
-        if (a_interval == S.Reals and all(
-                i.start.is_finite and i.start.is_Number or
-                i.end.is_finite and i.end.is_Number
-                for i in intervals)):
-            # there are no ambiguous boundaries in Union so
-            # guaranteed gaps
-            return False
+        if a_interval == S.Reals and not b_u.free_symbols:
+            lo, hi = b_u.inf, b_u.sup
+            if lo is S.NegativeInfinity and hi is S.Infinity:
+                inf, fin = sift(intervals, lambda x:
+                    x.inf.is_infinite or x.sup.is_infinite, binary=True)
+                inf, sup = sift(inf, lambda x:
+                    x.inf.is_infinite, binary=True)
+                d = Dummy(positive=1)
+                small = S.NegativeInfinity
+                for i in inf:
+                    if fuzzy_bool(i.sup > small):
+                        small = i.sup
+                        if i.sup not in i:
+                            small -= d
+                big = S.Infinity
+                for i in sup:
+                    if fuzzy_bool(i.inf < big):
+                        big = i.inf
+                        if i.inf not in i:
+                            big += d
+                b = (small - big).is_nonnegative
+                if b is None:
+                    return  # unresolved finite intervals
+                if b:
+                    return True
+                if not fin:
+                    return False
+            elif lo.is_number or hi.is_number:
+                return False
         if all(fuzzy_bool(a_interval.start < s.start) for s in intervals):
             return False
         if all(fuzzy_bool(a_interval.end > s.end) for s in intervals):
             return False
         if a_interval.measure.is_nonzero:
             no_overlap = lambda s: fuzzy_or([
-                    fuzzy_bool(s.end <= a_interval.start),
-                    fuzzy_bool(s.start >= a_interval.end),
-                    ])
+                    (s.end - a_interval.start).is_extended_nonpositive,
+                    (s.start - a_interval.end).is_extended_nonnegative])
             if all(no_overlap(s) for s in intervals):
                 return False
 

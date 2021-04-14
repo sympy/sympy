@@ -692,10 +692,18 @@ def test_is_subset():
 
     assert Interval(3, 4).is_subset(Union(Interval(0, 1), Interval(2, 5))) is True
     assert Interval(3, 6).is_subset(Union(Interval(0, 1), Interval(2, 5))) is False
-    assert Interval(-oo, oo).is_subset(Union(Interval(-oo, 2),Interval(2,oo))) is True
-    assert Interval(-oo, oo).is_subset(Union(Interval(-oo, 2),Interval(4,oo))) is False
+    assert Interval(-oo, oo).is_subset(
+        Union(Interval(-oo, 2), Interval(2, oo))) is True
+    assert Interval(-oo, oo).is_subset(
+        Union(Interval(-oo, 2), Interval(4, oo))) is False
     assert Interval(-oo, oo).is_subset(Interval(2, oo)) is False
-    assert Interval(-oo, oo).is_subset(Union(Interval.Ropen(-oo, 2), Interval.Lopen(2, oo))) is False
+    assert Interval(-oo, oo).is_subset(
+        Union(Interval.Ropen(-oo, 2), Interval.Lopen(2, oo))) is False
+    assert Interval(-oo, oo).is_subset(
+        Union(Interval(-oo, 2), Interval(2, oo), evaluate=False))
+    assert Interval(-oo, oo).is_subset(
+        Union(Interval(-oo, 2), Interval(3, 4), Interval(5, oo),
+        evaluate=False)) is None
 
     assert FiniteSet(1, 2, 3, 4).is_subset(Interval(0, 5)) is True
     assert S.EmptySet.is_subset(FiniteSet(1, 2, 3)) is True
