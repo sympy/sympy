@@ -728,7 +728,7 @@ def primerange(a, b=None):
         See Also
         ========
 
-        prime : Return the ith prime
+        prime : Return the nth prime
         nextprime : Return the ith prime greater than n
         prevprime : Return the largest prime smaller than n
         randprime : Returns a random prime in a given range
