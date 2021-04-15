@@ -1041,6 +1041,32 @@ def test_gaussian_domains():
             assert G.denom(q2) == ZZ_I(6)
 
 
+def test_canonical_unit():
+
+    for K in [ZZ, QQ, RR]: # CC?
+        assert K.canonical_unit(K(2)) == K(1)
+        assert K.canonical_unit(K(-2)) == K(-1)
+
+    for K in [ZZ_I, QQ_I]:
+        i = K.from_sympy(I)
+        assert K.canonical_unit(K(2)) == K(1)
+        assert K.canonical_unit(K(2)*i) == -i
+        assert K.canonical_unit(-K(2)) == K(-1)
+        assert K.canonical_unit(-K(2)*i) == i
+
+    K = ZZ[x]
+    assert K.canonical_unit(K(x + 1)) == K(1)
+    assert K.canonical_unit(K(-x + 1)) == K(-1)
+
+    K = ZZ_I[x]
+    assert K.canonical_unit(K.from_sympy(I*x)) == ZZ_I(0, -1)
+
+    K = ZZ_I.frac_field(x, y)
+    i = K.from_sympy(I)
+    assert i / i == K.one
+    assert (K.one + i)/(i - K.one) == -i
+
+
 def test_issue_18278():
     assert str(RR(2).parent()) == 'RR'
     assert str(CC(2).parent()) == 'CC'
