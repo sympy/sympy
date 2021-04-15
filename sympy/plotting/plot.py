@@ -2469,7 +2469,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
     SymPyDeprecationWarning(
         feature = "check_arguments",
         useinstead = "_check_arguments",
-        issue = 21300,
+        issue = 21330,
         deprecated_since_version = "1.8.1").warn()
 
     if not args:
