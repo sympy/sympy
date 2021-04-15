@@ -8,7 +8,7 @@ expressions. ``plot_backends`` is a dictionary with all the backends.
 This module gives only the essential. For all the fancy stuff use directly
 the backend. You can get the backend wrapper for every plot from the
 ``_backend`` attribute. Moreover the data series classes have various useful
-methods like ``get_points``, ``get_segments``, ``get_meshes``, etc, that may
+methods like ``get_points``, ``get_meshes``, etc, that may
 be useful if you wish to use another plotting library.
 
 Especially if you need publication ready graphs and this module is not enough
@@ -30,6 +30,8 @@ from sympy.external import import_module
 from sympy.core.function import arity
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
 # N.B.
 # When changing the minimum module version for matplotlib, please change
 # the same in the `SymPyDocTestFinder`` in `sympy/testing/runtests.py`
@@ -499,14 +501,12 @@ class BaseSeries:
     is_2Dline = False
     # Some of the backends expect:
     #  - get_points returning 1D np.arrays list_x, list_y
-    #  - get_segments returning np.array (done in Line2DBaseSeries)
     #  - get_color_array returning 1D np.array (done in Line2DBaseSeries)
     # with the colors calculated at the points from get_points
 
     is_3Dline = False
     # Some of the backends expect:
     #  - get_points returning 1D np.arrays list_x, list_y, list_y
-    #  - get_segments returning np.array (done in Line2DBaseSeries)
     #  - get_color_array returning 1D np.array (done in Line2DBaseSeries)
     # with the colors calculated at the points from get_points
 
@@ -583,6 +583,12 @@ class Line2DBaseSeries(BaseSeries):
         return points
 
     def get_segments(self):
+        SymPyDeprecationWarning(
+                feature="get_segments",
+                issue=21329,
+                deprecated_since_version="1.8.1",
+                useinstead="MatplotlibBackend.get_segments").warn()
+
         np = import_module('numpy')
         points = type(self).get_data(self)
         points = np.ma.array(points).T.reshape(-1, 1, self._dim)
@@ -1279,7 +1285,8 @@ class MatplotlibBackend(BaseBackend):
                 self.ax[i].xaxis.set_ticks_position('bottom')
                 self.ax[i].yaxis.set_ticks_position('left')
 
-    def _get_segments(self, x, y, z=None):
+    @staticmethod
+    def get_segments(x, y, z=None):
         """ Convert two list of coordinates to a list of segments to be used
         with Matplotlib's LineCollection.
 
@@ -1316,27 +1323,28 @@ class MatplotlibBackend(BaseBackend):
         for s in series:
             # Create the collections
             if s.is_2Dline:
+                x, y = s.get_data()
                 if (isinstance(s.line_color, (int, float)) or
                         callable(s.line_color)):
-                    segments = self._get_segments(*s.get_data())
+                    segments = self.get_segments(x, y)
                     collection = self.LineCollection(segments)
                     collection.set_array(s.get_color_array())
                     ax.add_collection(collection)
                 else:
-                    line, = ax.plot(*s.get_data(), label=s.label,
-                        color=s.line_color)
+                    line, = ax.plot(x, y, label=s.label, color=s.line_color)
             elif s.is_contour:
                 ax.contour(*s.get_meshes())
             elif s.is_3Dline:
+                x, y, z = s.get_data()
                 if (isinstance(s.line_color, (int, float)) or
                         callable(s.line_color)):
                     art3d = mpl_toolkits.mplot3d.art3d
-                    segments = self._get_segments(*s.get_data())
+                    segments = self.get_segments(x, y, z)
                     collection = art3d.Line3DCollection(segments)
                     collection.set_array(s.get_color_array())
                     ax.add_collection(collection)
                 else:
-                    ax.plot(*s.get_data(), label=s.label,
+                    ax.plot(x, y, z, label=s.label,
                         color=s.line_color)
 
                 xlims.append(s._xlim)
