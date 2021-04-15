@@ -997,7 +997,10 @@ class SurfaceBaseSeries(BaseSeries):
             else:
                 return f(*variables)
         else:
-            return c*np.ones(min(self.nb_of_points_x, self.nb_of_points_y))
+            if isinstance(self, SurfaceOver2DRangeSeries):
+                return c*np.ones(min(self.nb_of_points_x, self.nb_of_points_y))
+            else:
+                return c*np.ones(min(self.nb_of_points_u, self.nb_of_points_v))
 
 
 class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
@@ -1276,7 +1279,7 @@ class MatplotlibBackend(BaseBackend):
                 self.ax[i].xaxis.set_ticks_position('bottom')
                 self.ax[i].yaxis.set_ticks_position('left')
 
-    def _get_segments(self, x, y, dim):
+    def _get_segments(self, x, y, z=None):
         """ Convert two list of coordinates to a list of segments to be used
         with Matplotlib's LineCollection.
 
@@ -1288,11 +1291,16 @@ class MatplotlibBackend(BaseBackend):
             y: list
                 List of y-coordinates
 
-            dim: int
-                Number of dimensions.
+            z: list
+                List of z-coordinates for a 3D line.
         """
         np = import_module('numpy')
-        points = (x, y)
+        if z is not None:
+            dim = 3
+            points = (x, y, z)
+        else:
+            dim = 2
+            points = (x, y)
         points = np.ma.array(points).T.reshape(-1, 1, dim)
         return np.ma.concatenate([points[:-1], points[1:]], axis=1)
 
@@ -1310,7 +1318,7 @@ class MatplotlibBackend(BaseBackend):
             if s.is_2Dline:
                 if (isinstance(s.line_color, (int, float)) or
                         callable(s.line_color)):
-                    segments = self._get_segments(*s.get_data(), 2)
+                    segments = self._get_segments(*s.get_data())
                     collection = self.LineCollection(segments)
                     collection.set_array(s.get_color_array())
                     ax.add_collection(collection)
@@ -1323,7 +1331,7 @@ class MatplotlibBackend(BaseBackend):
                 if (isinstance(s.line_color, (int, float)) or
                         callable(s.line_color)):
                     art3d = mpl_toolkits.mplot3d.art3d
-                    segments = self._get_segments(*s.get_data(), 3)
+                    segments = self._get_segments(*s.get_data())
                     collection = art3d.Line3DCollection(segments)
                     collection.set_array(s.get_color_array())
                     ax.add_collection(collection)
