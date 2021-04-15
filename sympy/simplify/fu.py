@@ -319,7 +319,10 @@ def _TR56(rv, f, g, h, max, pow):
         if rv.exp == 2:
             return h(g(rv.base.args[0])**2)
         else:
-            if rv.exp == 4:
+            if rv.exp % 2 == 1:
+                e = rv.exp//2
+                return f(rv.base.args[0])*h(g(rv.base.args[0])**2)**e
+            elif rv.exp == 4:
                 e = 2
             elif not pow:
                 if rv.exp % 2:
