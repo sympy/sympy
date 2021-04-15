@@ -1005,11 +1005,12 @@ class Add(Expr, AssocOp):
         except TypeError:
             return expr
 
-        new_expr = new_expr.together().factor()
-        if new_expr.is_Add:
+        new_expr = new_expr.factor() # To factor the expanded multinomials
+        iszero = new_expr.is_zero
+        if iszero is None:
             new_expr = new_expr.simplify()
-
-        if new_expr.is_zero:
+            iszero = new_expr.is_zero
+        if iszero is True:
             # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
             n0 = min.getn()

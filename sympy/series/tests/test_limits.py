@@ -441,7 +441,7 @@ def test_factorial():
 def test_issue_6560():
     e = (5*x**3/4 - x*Rational(3, 4) + (y*(3*x**2/2 - S.Half) +
                              35*x**4/8 - 15*x**2/4 + Rational(3, 8))/(2*(y + 1)))
-    assert limit(e, y, oo) == (x + 1)*(5*x**2 - 2*x - 1)/4
+    assert limit(e, y, oo) == (x + 1)*(-5*x**2 + 2*x + 1)/-4
 
 @XFAIL
 def test_issue_5172():

@@ -1659,14 +1659,10 @@ class Pow(Expr):
             else:
                 raise NotImplementedError()
         if not d.is_positive:
-            g = (b - f).simplify()/f
+            g = g.simplify()
             _, d = g.leadterm(x)
             if not d.is_positive:
-                if limit(g/x**maxpow, x, 0) == 0:
-                    # g has higher order zero
-                    return f**e + e*f**e*g  # first term of binomial series
-                else:
-                    raise NotImplementedError()
+                raise NotImplementedError()
 
         gpoly = g._eval_nseries(x, n=ceiling(maxpow), logx=logx, cdir=cdir).removeO()
         gterms = {}
