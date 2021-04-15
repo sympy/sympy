@@ -2470,7 +2470,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
         feature = "check_arguments",
         useinstead = "_check_arguments",
         issue = 21330,
-        deprecated_since_version = "1.8.1").warn()
+        deprecated_since_version = "1.9").warn()
 
     if not args:
         return []
