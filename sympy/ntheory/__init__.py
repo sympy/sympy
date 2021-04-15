@@ -30,7 +30,7 @@ from .qs import qs
 __all__ = [
     'nextprime', 'prevprime', 'prime', 'primepi', 'primerange', 'randprime',
     'Sieve', 'sieve', 'primorial', 'cycle_length', 'composite', 'compositepi',
-    'nprime',
+    'nprimes',
 
     'isprime', 'is_gaussian_prime',
 

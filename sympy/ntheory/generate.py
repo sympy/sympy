@@ -1075,7 +1075,7 @@ def nprimes(k, n=None):
         if k < 1:
             raise ValueError("k must be a positive integer.")
         return list(sieve[1 : k+1])
-    
+
     n, k = map(as_int, (n, k))
     if n < 1:
         raise ValueError("n must be a positive integer.")
