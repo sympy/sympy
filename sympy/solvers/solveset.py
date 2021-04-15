@@ -240,7 +240,7 @@ def _invert_real(f, g_ys, symbol):
 
         if not expo_has_sym:
             res = imageset(Lambda(n, real_root(n, expo)), g_ys)
-            if expo.is_rational:
+            if expo.is_rational or expo.is_Float:
                 numer, denom = expo.as_numer_denom()
                 if denom % 2 == 0:
                     base_positive = solveset(base >= 0, symbol, S.Reals)
@@ -257,10 +257,9 @@ def _invert_real(f, g_ys, symbol):
 
                 else:
                     return _invert_real(base, res, symbol)
-            else:
-                if not base.is_positive:
-                    raise ValueError("x**w where w is irrational is not "
-                                     "defined for negative x")
+            elif expo.is_irrational:
+                g_ys_pos = g_ys & Interval(0, oo)
+                res = imageset(Lambda(n, real_root(n, expo)), g_ys_pos)
                 return _invert_real(base, res, symbol)
 
         if not base_has_sym:

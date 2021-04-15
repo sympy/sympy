@@ -92,7 +92,12 @@ def test_invert_real():
     assert invert_real(x**S.Half, y, x) == (x, FiniteSet(y**2))
 
     raises(ValueError, lambda: invert_real(x, x, x))
-    raises(ValueError, lambda: invert_real(x**pi, y, x))
+
+    # issue 21236
+    assert invert_real(x**pi, y, x) == (x, FiniteSet(y**(1/pi)))
+    assert invert_real(x**pi, -E, x) == (x, EmptySet())
+    assert invert_real(x**(3/2), 1000, x) == (x, FiniteSet(1000**(2/3)))
+
     raises(ValueError, lambda: invert_real(S.One, y, x))
 
     assert invert_real(x**31 + x, y, x) == (x**31 + x, FiniteSet(y))
