@@ -37,7 +37,7 @@ from sympy import (acos, acosh, asin, asinh, atan, cos, Derivative, Dummy, diff,
     re, rootof, S, sin, sinh, cosh, tan, tanh, sec, sqrt, symbols, Ei, erfi)
 
 from sympy.core import Function, Symbol
-from sympy.functions import airyai, airybi, besselj, bessely
+from sympy.functions import airyai, airybi, besselj, bessely, lowergamma
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.solvers.ode import classify_ode, dsolve
 from sympy.solvers.ode.ode import allhints, _remove_redundant_solutions
@@ -988,6 +988,8 @@ def _get_examples_ode_sol_almost_linear():
 
 @_add_example_keys
 def _get_examples_ode_sol_liouville():
+    n = Symbol('n')
+    _y = Dummy('y')
     return {
             'hint': "Liouville",
             'func': f(x),
@@ -1026,6 +1028,11 @@ def _get_examples_ode_sol_liouville():
     'liouville_07': {
         'eq': (diff(f(x), x)/x + diff(f(x), x, x)/2 - diff(f(x), x)**2/2)*exp(-f(x))/exp(f(x)),
         'sol': [Eq(f(x), log(x/(C1 + C2*x)))],
+    },
+
+    'liouville_08': {
+        'eq': x**2*diff(f(x),x) + (n*f(x) + f(x)**2)*diff(f(x),x)**2 + diff(f(x), (x, 2)),
+        'sol': [Eq(C1 + C2*lowergamma(Rational(1,3), x**3/3) + NonElementaryIntegral(exp(_y**3/3)*exp(_y**2*n/2), (_y, f(x))), 0)],
     },
     }
     }
