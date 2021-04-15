@@ -1006,33 +1006,34 @@ def compositepi(n):
         return 0
     return n - primepi(n) - 1
 
-def nprime(nth, kth=1):
-    """ Returns kth to nth prime numbers(both inclusive).
+def nprimes(k, n=None):
+    """ Returns first k prime numbers or kth to nth prime numbers(both inclusive).
 
-    Parameters
-    ==========
+        Examples
+        ========
 
-    nth : integer
-        The nth prime number upto which prime numbers will be generated.
+        >>> from sympy.ntheory import nprimes
+        >>> nprimes(5)
+        [2, 3, 5, 7, 11]
 
-    kth : integer
-        The kth prime number from which prime numbers will be generated.By default 1.
+        >>> nprimes(3, 7)
+        [5, 7, 11, 13, 17]
 
-    Examples
-    ========
+        >>> nprimes(20, 25)
+        [71, 73, 79, 83, 89, 97]
 
-    >>> from sympy.ntheory import nprime
-    >>> nprime(5)
-    [2, 3, 5, 7, 11]
-
-    >>> nprime(7, 3)
-    [5, 7, 11, 13, 17]
     """
-    n, k = map(int, (nth, kth))
+    if n is None:
+        k = as_int(k)
+        if k < 1:
+            raise ValueError("k must be a positive integer.")
+        return list(sieve[1 : k+1])
+    
+    n, k = map(as_int, (n, k))
     if n < 1:
-        raise ValueError("nth must be a positive integer; nprime(1) == 2")
+        raise ValueError("n must be a positive integer.")
     if k < 1:
-        raise ValueError("kth must be a positive integer; nprime(3, 2) == [3, 5]")
+        raise ValueError("k must be a positive integer.")
     if k>n:
-        raise ValueError("kth can't be greater than nth")
+        return []
     return list(sieve[k : n+1])
