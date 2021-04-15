@@ -1287,7 +1287,7 @@ class MatplotlibBackend(BaseBackend):
 
             y: list
                 List of y-coordinates
-            
+
             dim: int
                 Number of dimensions.
         """
