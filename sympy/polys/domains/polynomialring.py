@@ -86,8 +86,16 @@ class PolynomialRing(Ring, CompositeDomain):
         """Convert SymPy's expression to `dtype`. """
         return self.ring.from_expr(a)
 
+    def from_ZZ(K1, a, K0):
+        """Convert a Python `int` object to `dtype`. """
+        return K1(K1.domain.convert(a, K0))
+
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """
+        return K1(K1.domain.convert(a, K0))
+
+    def from_QQ(K1, a, K0):
+        """Convert a Python `Fraction` object to `dtype`. """
         return K1(K1.domain.convert(a, K0))
 
     def from_QQ_python(K1, a, K0):

@@ -417,17 +417,20 @@ class Domain:
         if self.of_type(element):
             return element
 
-        from sympy.polys.domains import PythonIntegerRing, GMPYIntegerRing, GMPYRationalField, RealField, ComplexField
+        from sympy.polys.domains import ZZ, QQ, RealField, ComplexField
+
+        if ZZ.of_type(element):
+            return self.convert_from(element, ZZ)
 
         if isinstance(element, int):
-            return self.convert_from(element, PythonIntegerRing())
+            return self.convert_from(ZZ(element), ZZ)
 
         if HAS_GMPY:
-            integers = GMPYIntegerRing()
+            integers = ZZ
             if isinstance(element, integers.tp):
                 return self.convert_from(element, integers)
 
-            rationals = GMPYRationalField()
+            rationals = QQ
             if isinstance(element, rationals.tp):
                 return self.convert_from(element, rationals)
 
@@ -597,6 +600,10 @@ class Domain:
         convert_from
         """
         raise NotImplementedError
+
+    def from_FF(K1, a, K0):
+        """Convert ``ModularInteger(int)`` to ``dtype``. """
+        return None
 
     def from_FF_python(K1, a, K0):
         """Convert ``ModularInteger(int)`` to ``dtype``. """

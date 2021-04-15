@@ -3,7 +3,7 @@
 
 from sympy.polys.domains.groundtypes import (
     GMPYRational, SymPyRational,
-    gmpy_numer, gmpy_denom, gmpy_factorial,
+    gmpy_numer, gmpy_denom, factorial as gmpy_factorial,
 )
 from sympy.polys.domains.rationalfield import RationalField
 from sympy.polys.polyerrors import CoercionFailed
