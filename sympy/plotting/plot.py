@@ -900,15 +900,6 @@ class Parametric2DLineSeries(Line2DBaseSeries):
 
         return x_coords, y_coords
 
-    def get_segments(self):
-        """ Return a Numpy masked array representing a list of segments having
-        the following form: [[[x0, y0], [x1, y1]], [[x1, y1], [x2, y2]], ...]
-        """
-        np = import_module('numpy')
-        points = self.get_data()
-        points = np.ma.array(points).T.reshape(-1, 1, self._dim)
-        return np.ma.concatenate([points[:-1], points[1:]], axis=1)
-
 
 ### 3D lines
 class Line3DBaseSeries(Line2DBaseSeries):
