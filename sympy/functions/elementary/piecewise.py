@@ -887,7 +887,7 @@ class Piecewise(Function):
             except TypeError:
                 pass
 
-    def as_expr_set_pairs(self, domain=S.Reals):
+    def as_expr_set_pairs(self, domain=None):
         """Return tuples for each argument of self that give
         the expression and the interval in which it is valid
         which is contained within the given domain.
@@ -912,6 +912,8 @@ class Piecewise(Function):
         [(1, Interval.Ropen(0, 2)),
          (2, Interval(2, 3))]
         """
+        if domain is None:
+            domain = S.Reals
         exp_sets = []
         U = domain
         complex = not domain.is_subset(S.Reals)
