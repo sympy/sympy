@@ -108,9 +108,9 @@ def test_DomainMatrix_from_Matrix():
 
     A = DomainMatrix.from_Matrix(Matrix([[0, 0], [0, 0]]))
 
-    assert A.rep == SDM({}, (2, 2), (ZZ, [0, 0, 0, 0]))
+    assert A.rep == SDM({}, (2, 2), ZZ)
     assert A.shape == (2, 2)
-    assert A.domain == (ZZ, [0, 0, 0, 0])
+    assert A.domain == ZZ
 
 def test_DomainMatrix_eq():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)

@@ -250,10 +250,8 @@ class DomainMatrix:
                     non_zero += 1
 
         if non_zero < (m*(n - 1) - 1)/2:
-            flattened_list = [elem for row in M.tolist() for elem in row]
-            domain = construct_domain(flattened_list)
-            sdm = SDM.from_list(M.tolist(), M.shape, domain)
-            return cls.from_rep(sdm)
+            ddm = cls.from_list_sympy(*M.shape, M.tolist(), **kwargs)
+            return ddm.to_sparse()
 
         return cls.from_list_sympy(*M.shape, M.tolist(), **kwargs)
 
