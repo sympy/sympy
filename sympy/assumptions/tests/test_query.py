@@ -1287,11 +1287,18 @@ def test_evenness_in_ternary_integer_product_with_even():
 
 
 def test_extended_real():
+    assert ask(Q.extended_real(x), Q.positive_infinite(x)) is True
     assert ask(Q.extended_real(x), Q.positive(x)) is True
+    assert ask(Q.extended_real(x), Q.zero(x)) is True
+    assert ask(Q.extended_real(x), Q.negative(x)) is True
+    assert ask(Q.extended_real(x), Q.negative_infinite(x)) is True
+
     assert ask(Q.extended_real(-x), Q.positive(x)) is True
     assert ask(Q.extended_real(-x), Q.negative(x)) is True
 
     assert ask(Q.extended_real(x + S.Infinity), Q.real(x)) is True
+
+    assert ask(Q.extended_real(x), Q.infinite(x)) is None
 
 
 @_both_exp_pow
@@ -2375,3 +2382,10 @@ def test_Predicate_handler_is_unique():
     mp1 = MyPredicate('mp1')
     mp2 = MyPredicate('mp2')
     assert mp1.handler is mp2.handler
+
+
+def test_relational():
+    assert ask(Q.eq(x, 0), Q.zero(x))
+    assert not ask(Q.eq(x, 0), Q.nonzero(x))
+    assert not ask(Q.ne(x, 0), Q.zero(x))
+    assert ask(Q.ne(x, 0), Q.nonzero(x))
