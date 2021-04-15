@@ -138,28 +138,25 @@ def compute_known_facts(known_facts, known_facts_keys):
     """
 
     from sympy.core.cache import cacheit
-    from sympy.logic.boolalg import And
     from sympy.assumptions.cnf import Literal
     from sympy.assumptions.ask import Q
 
-    # -{ Known facts as a set }-
     @cacheit
     def get_all_known_facts():
+        """
+        Known facts as CNF clauses. Used by satask.
+        """
         return {
             %s
         }
 
-    # -{ Known facts in Conjunctive Normal Form }-
-    @cacheit
-    def get_known_facts_cnf():
-        return And(
-            %s
-        )
-
     # -{ Known facts in compressed sets }-
-    # This dictionary means that if a key is True, every item in its value is True.
     @cacheit
     def get_known_facts_dict():
+        """
+        Logical implication as dictionary. Key implies every item in its value.
+        Used for quick lookup of single facts.
+        """
         return {
             %s
         }
@@ -169,7 +166,6 @@ def compute_known_facts(known_facts, known_facts_keys):
     HANG = ' '*8
     cnf = to_cnf(known_facts)
     cnf_ = CNF.to_CNF(known_facts)
-    c = LINE.join([str(a) for a in cnf.args])
 
     p = LINE.join(sorted(['frozenset((' + ', '.join(str(lit) for lit in sorted(clause, key=str)) +'))' for clause in cnf_.clauses]))
     mapping = single_fact_lookup(known_facts_keys, cnf)
@@ -181,7 +177,7 @@ def compute_known_facts(known_facts, known_facts_keys):
             subsequent_indent=HANG,
             break_long_words=False))
         for k, v in zip(keys, values)]) + ','
-    return fact_string % (p, c, m)
+    return fact_string % (p, m)
 
 
 def single_fact_lookup(known_facts_keys, known_facts_cnf):
