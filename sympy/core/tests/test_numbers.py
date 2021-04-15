@@ -13,7 +13,7 @@ from sympy.core.power import integer_nthroot, isqrt, integer_log
 from sympy.polys.domains.groundtypes import PythonRational
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
-from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
 
 from mpmath import mpf
 from mpmath.rational import mpq
@@ -854,6 +854,7 @@ def test_Div_By_Zero():
     assert -1/Float(0) is zoo
 
 
+@_both_exp_pow
 def test_Infinity_inequations():
     assert oo > pi
     assert not (oo < pi)

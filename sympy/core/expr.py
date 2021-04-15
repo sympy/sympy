@@ -92,7 +92,13 @@ class Expr(Basic, EvalfMixin):
         coeff, expr = self.as_coeff_Mul()
 
         if expr.is_Pow:
-            expr, exp = expr.args
+            if expr.base is S.Exp1:
+                # If we remove this, many doctests will go crazy:
+                # (keeps E**x sorted like the exp(x) function,
+                #  part of exp(x) to E**x transition)
+                expr, exp = Function("exp")(expr.exp), S.One
+            else:
+                expr, exp = expr.args
         else:
             expr, exp = expr, S.One
 
@@ -2147,12 +2153,21 @@ class Expr(Basic, EvalfMixin):
 
         See Also
         ========
-        normal: return a/b instead of a, b
-        """
 
+        normal: return ``a/b`` instead of ``(a, b)``
+
+        """
         return self, S.One
 
     def normal(self):
+        """ expression -> a/b
+
+        See Also
+        ========
+
+        as_numer_denom: return ``(a, b)`` instead of ``a/b``
+
+        """
         from .mul import _unevaluated_Mul
         n, d = self.as_numer_denom()
         if d is S.One:
@@ -3005,6 +3020,9 @@ class Expr(Basic, EvalfMixin):
                     s1 += Order(x**n, x)
                 o = s1.getO()
                 s1 = s1.removeO()
+            elif s1.has(Order):
+                # asymptotic expansion
+                return s1
             else:
                 o = Order(x**n, x)
                 s1done = s1.doit()
@@ -3749,7 +3767,7 @@ class Expr(Basic, EvalfMixin):
                     'Expected a number but got %s:' % func_name(x))
         elif x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
             return x
-        if not x.is_extended_real:
+        if x.is_extended_real is False:
             r, i = x.as_real_imag()
             return r.round(n) + S.ImaginaryUnit*i.round(n)
         if not x:

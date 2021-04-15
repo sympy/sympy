@@ -11,9 +11,11 @@ Predicate
 =========
 
 .. autoclass:: sympy.assumptions.assume::Predicate
+   :members:
    :noindex:
 
 .. autoclass:: sympy.assumptions.assume::AppliedPredicate
+   :members:
    :noindex:
 
 
@@ -61,7 +63,6 @@ Contents
     ask.rst
     assume.rst
     refine.rst
-    handlers/index.rst
     predicates.rst
 
 

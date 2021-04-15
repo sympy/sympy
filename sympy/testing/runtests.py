@@ -721,9 +721,14 @@ def _get_doctest_blacklist():
     if ON_TRAVIS or import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
 
-    if import_module('theano') is None:
+    if import_module('aesara') is None:
         blacklist.extend([
-            "sympy/printing/theanocode.py",
+            "sympy/printing/aesaracode.py",
+            "doc/src/modules/numeric-computation.rst",
+        ])
+
+    if import_module('cupy') is None:
+        blacklist.extend([
             "doc/src/modules/numeric-computation.rst",
         ])
 

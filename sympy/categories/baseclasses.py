@@ -612,7 +612,7 @@ class Diagram(Basic):
     {g*f:A-->C: EmptySet, id:A-->A: EmptySet, id:B-->B: EmptySet, id:C-->C: EmptyS
     et, f:A-->B: EmptySet, g:B-->C: EmptySet}
     >>> d = Diagram([f, g], {g * f: "unique"})
-    >>> pprint(d.conclusions)
+    >>> pprint(d.conclusions,use_unicode=False)
     {g*f:A-->C: {unique}}
 
     References

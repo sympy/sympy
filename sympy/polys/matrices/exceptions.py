@@ -33,8 +33,13 @@ class DDMShapeError(DDMError):
     pass
 
 
+class DDMFormatError(DDMError):
+    """mixed dense/sparse not supported"""
+    pass
+
+
 __all__ = [
-    'DDMError', 'DDMShapeError', 'DDMDomainError',
+    'DDMError', 'DDMShapeError', 'DDMDomainError', 'DDMFormatError',
 
     'NonSquareMatrixError', 'NonInvertibleMatrixError', 'ShapeError',
 ]

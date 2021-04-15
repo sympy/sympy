@@ -166,10 +166,11 @@ def _sort_factors(factors, **args):
         return sorted(factors, key=order_no_multiple_key)
 
 illegal = [S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity]
+illegal_types = [type(obj) for obj in illegal]
 finf = [float(i) for i in illegal[1:3]]
 def _not_a_coeff(expr):
     """Do not treat NaN and infinities as valid polynomial coefficients. """
-    if expr in illegal or expr in finf:
+    if type(expr) in illegal_types or expr in finf:
         return True
     if type(expr) is float and float(expr) != expr:
         return True  # nan

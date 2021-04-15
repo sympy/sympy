@@ -1,4 +1,4 @@
-from sympy import Order, S, log, limit, lcm_list, im, re, Dummy
+from sympy import Order, S, log, limit, lcm_list, im, re, Dummy, Piecewise
 from sympy.core import Add, Mul, Pow
 from sympy.core.basic import Basic
 from sympy.core.compatibility import iterable
@@ -64,14 +64,13 @@ def continuous_domain(f, symbol, domain):
 
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
-    from sympy.solvers.solveset import _has_rational_power
     from sympy.calculus.singularities import singularities
 
     if domain.is_subset(S.Reals):
         constrained_interval = domain
         for atom in f.atoms(Pow):
-            predicate, denomin = _has_rational_power(atom, symbol)
-            if predicate and denomin == 2:
+            den = atom.exp.as_numer_denom()[1]
+            if den.is_even and den.is_nonzero:
                 constraint = solve_univariate_inequality(atom.base >= 0,
                                                          symbol).as_set()
                 constrained_interval = Intersection(constraint,
@@ -462,15 +461,15 @@ def periodicity(f, symbol, check=False):
             # else let new orig_f and period be
             # checked below
 
-    if isinstance(f, exp):
-        f = f.func(expand_mul(f.args[0]))
+    if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
+        f = Pow(S.Exp1, expand_mul(f.exp))
         if im(f) != 0:
             period_real = periodicity(re(f), symbol)
             period_imag = periodicity(im(f), symbol)
             if period_real is not None and period_imag is not None:
                 period = lcim([period_real, period_imag])
 
-    if f.is_Pow:
+    if f.is_Pow and f.base != S.Exp1:
         base, expo = f.args
         base_has_sym = base.has(symbol)
         expo_has_sym = expo.has(symbol)
@@ -510,6 +509,9 @@ def periodicity(f, symbol, check=False):
         elif (a.is_polynomial(symbol) and degree(a, symbol) == 1 and
             symbol not in n.free_symbols):
                 period = Abs(n / a.diff(symbol))
+
+    elif isinstance(f, Piecewise):
+        pass  # not handling Piecewise yet as the return type is not favorable
 
     elif period is None:
         from sympy.solvers.decompogen import compogen

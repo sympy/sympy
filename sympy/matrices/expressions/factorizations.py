@@ -6,29 +6,47 @@ class Factorization(MatrixExpr):
     shape = property(lambda self: self.arg.shape)  # type: ignore
 
 class LofLU(Factorization):
-    predicates = Q.lower_triangular,
+    @property
+    def predicates(self):
+        return (Q.lower_triangular,)
 class UofLU(Factorization):
-    predicates = Q.upper_triangular,
+    @property
+    def predicates(self):
+        return (Q.upper_triangular,)
 
 class LofCholesky(LofLU): pass
 class UofCholesky(UofLU): pass
 
 class QofQR(Factorization):
-    predicates = Q.orthogonal,
+    @property
+    def predicates(self):
+        return (Q.orthogonal,)
 class RofQR(Factorization):
-    predicates = Q.upper_triangular,
+    @property
+    def predicates(self):
+        return (Q.upper_triangular,)
 
 class EigenVectors(Factorization):
-    predicates = Q.orthogonal,
+    @property
+    def predicates(self):
+        return (Q.orthogonal,)
 class EigenValues(Factorization):
-    predicates = Q.diagonal,
+    @property
+    def predicates(self):
+        return (Q.diagonal,)
 
 class UofSVD(Factorization):
-    predicates = Q.orthogonal,
+    @property
+    def predicates(self):
+        return (Q.orthogonal,)
 class SofSVD(Factorization):
-    predicates = Q.diagonal,
+    @property
+    def predicates(self):
+        return (Q.diagonal,)
 class VofSVD(Factorization):
-    predicates = Q.orthogonal,
+    @property
+    def predicates(self):
+        return (Q.orthogonal,)
 
 
 def lu(expr):

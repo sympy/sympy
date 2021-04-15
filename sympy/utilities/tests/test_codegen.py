@@ -508,6 +508,46 @@ def test_output_arg_c_reserved_words():
     assert result[0][1] == expected
 
 
+def test_multidim_c_argument_cse():
+    A_sym = MatrixSymbol('A', 3, 3)
+    b_sym = MatrixSymbol('b', 3, 1)
+    A = Matrix(A_sym)
+    b = Matrix(b_sym)
+    c = A*b
+    cgen = CCodeGen(project="test", cse=True)
+    r = cgen.routine("c", c)
+    r.arguments[-1].result_var = "out"
+    r.arguments[-1]._name = "out"
+    code = get_string(cgen.dump_c, [r], prefix="test")
+    expected = (
+        '#include "test.h"\n'
+        "#include <math.h>\n"
+        "void c(double *A, double *b, double *out) {\n"
+        "   double x0[9];\n"
+        "   x0[0] = A[0];\n"
+        "   x0[1] = A[1];\n"
+        "   x0[2] = A[2];\n"
+        "   x0[3] = A[3];\n"
+        "   x0[4] = A[4];\n"
+        "   x0[5] = A[5];\n"
+        "   x0[6] = A[6];\n"
+        "   x0[7] = A[7];\n"
+        "   x0[8] = A[8];\n"
+        "   double x1[3];\n"
+        "   x1[0] = b[0];\n"
+        "   x1[1] = b[1];\n"
+        "   x1[2] = b[2];\n"
+        "   const double x2 = x1[0];\n"
+        "   const double x3 = x1[1];\n"
+        "   const double x4 = x1[2];\n"
+        "   out[0] = x2*x0[0] + x3*x0[1] + x4*x0[2];\n"
+        "   out[1] = x2*x0[3] + x3*x0[4] + x4*x0[5];\n"
+        "   out[2] = x2*x0[6] + x3*x0[7] + x4*x0[8];\n"
+        "}\n"
+    )
+    assert code == expected
+
+
 def test_ccode_results_named_ordered():
     x, y, z = symbols('x,y,z')
     B, C = symbols('B,C')

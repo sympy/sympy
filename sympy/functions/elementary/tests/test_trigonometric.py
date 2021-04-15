@@ -1222,6 +1222,10 @@ def test_leading_terms():
             eq = func(a)
             assert eq.as_leading_term(x) == eq
 
+    # https://github.com/sympy/sympy/issues/21038
+    f = sin(pi*(x + 4))/(3*x)
+    assert f.as_leading_term(x) == pi/3
+
 
 def test_atan2_expansion():
     assert cancel(atan2(x**2, x + 1).diff(x) - atan(x**2/(x + 1)).diff(x)) == 0
