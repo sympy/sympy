@@ -896,6 +896,8 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         f_end_x = f_x(self.end)
         f_end_y = f_y(self.end)
         end = [f_end_x, f_end_y]
+        x_coords.append(f_start_x)
+        y_coords.append(f_start_y)
         sample(self.start, self.end, start, end, 0)
 
         return x_coords, y_coords
