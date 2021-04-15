@@ -30,7 +30,6 @@ from sympy.external import import_module
 from sympy.core.function import arity
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
-
 # N.B.
 # When changing the minimum module version for matplotlib, please change
 # the same in the `SymPyDocTestFinder`` in `sympy/testing/runtests.py`
@@ -1277,6 +1276,26 @@ class MatplotlibBackend(BaseBackend):
                 self.ax[i].xaxis.set_ticks_position('bottom')
                 self.ax[i].yaxis.set_ticks_position('left')
 
+    def _get_segments(self, x, y, dim):
+        """ Convert two list of coordinates to a list of segments to be used
+        with Matplotlib's LineCollection.
+
+        Parameters
+        ==========
+            x: list
+                List of x-coordinates
+
+            y: list
+                List of y-coordinates
+            
+            dim: int
+                Number of dimensions.
+        """
+        np = import_module('numpy')
+        points = (x, y)
+        points = np.ma.array(points).T.reshape(-1, 1, dim)
+        return np.ma.concatenate([points[:-1], points[1:]], axis=1)
+
     def _process_series(self, series, ax, parent):
         np = import_module('numpy')
         mpl_toolkits = import_module(
@@ -1291,8 +1310,8 @@ class MatplotlibBackend(BaseBackend):
             if s.is_2Dline:
                 if (isinstance(s.line_color, (int, float)) or
                         callable(s.line_color)):
-                    data = s.get_segments()
-                    collection = self.LineCollection(data)
+                    segments = self._get_segments(*s.get_data(), 2)
+                    collection = self.LineCollection(segments)
                     collection.set_array(s.get_color_array())
                     ax.add_collection(collection)
                 else:
@@ -1304,7 +1323,8 @@ class MatplotlibBackend(BaseBackend):
                 if (isinstance(s.line_color, (int, float)) or
                         callable(s.line_color)):
                     art3d = mpl_toolkits.mplot3d.art3d
-                    collection = art3d.Line3DCollection(s.get_segments())
+                    segments = self._get_segments(*s.get_data(), 3)
+                    collection = art3d.Line3DCollection(segments)
                     collection.set_array(s.get_color_array())
                     ax.add_collection(collection)
                 else:
