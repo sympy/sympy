@@ -1344,7 +1344,7 @@ def TR14(rv, first=True):
 
 
 def TR15(rv, max=4, pow=False):
-    """Convert sin(x)*-2 to 1 + cot(x)**2.
+    """Convert sin(x)**-2 to 1 + cot(x)**2.
 
     See _TR56 docstring for advanced use of ``max`` and ``pow``.
 
@@ -1365,7 +1365,7 @@ def TR15(rv, max=4, pow=False):
 
         e = rv.exp
         if e % 2 == 1:
-            return TR15(rv.base**(e+1))/rv.base
+            return TR15(rv.base**(e + 1))/rv.base
 
         ia = 1/rv
         a = _TR56(ia, sin, cot, lambda x: 1 + x, max=max, pow=pow)
@@ -1377,7 +1377,7 @@ def TR15(rv, max=4, pow=False):
 
 
 def TR16(rv, max=4, pow=False):
-    """Convert cos(x)*-2 to 1 + tan(x)**2.
+    """Convert cos(x)**-2 to 1 + tan(x)**2.
 
     See _TR56 docstring for advanced use of ``max`` and ``pow``.
 
@@ -1398,7 +1398,7 @@ def TR16(rv, max=4, pow=False):
 
         e = rv.exp
         if e % 2 == 1:
-            return TR15(rv.base**(e+1))/rv.base
+            return TR15(rv.base**(e + 1))/rv.base
 
         ia = 1/rv
         a = _TR56(ia, cos, tan, lambda x: 1 + x, max=max, pow=pow)
