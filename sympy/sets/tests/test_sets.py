@@ -1624,3 +1624,4 @@ def test_finiteset_simplify():
 def test_Union_size():
     assert Union(Range(5),Range(5,7)).size == 7
     assert Union(Range(13,15,1),Range(-2,10,4)).size == 5
+    
