@@ -1361,14 +1361,13 @@ def TR15(rv, max=4, pow=False):
         if not (isinstance(rv, Pow) and isinstance(rv.base, sin)):
             return rv
 
-        e = rv.exp
-        if e % 2 == 1:
-            return TR15(rv.base**(e+1))/rv.base
-
         ia = 1/rv
         a = _TR56(ia, sin, cot, lambda x: 1 + x, max=max, pow=pow)
         if a != ia:
-            rv = a
+            if rv.exp % 2 == 1:
+                rv = a*rv.base**-2
+            else:
+                rv = a
         return rv
 
     return bottom_up(rv, f)
@@ -1394,13 +1393,13 @@ def TR16(rv, max=4, pow=False):
         if not (isinstance(rv, Pow) and isinstance(rv.base, cos)):
             return rv
 
-        e = rv.exp
-        if e % 2 == 1:
-            return TR15(rv.base**(e+1))/rv.base
-
         ia = 1/rv
         a = _TR56(ia, cos, tan, lambda x: 1 + x, max=max, pow=pow)
         if a != ia:
+            if rv.exp % 2 == 1:
+                rv = a*rv.base**-2
+            else:
+                rv = a
             rv = a
         return rv
 
