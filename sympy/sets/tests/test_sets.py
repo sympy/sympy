@@ -1620,3 +1620,7 @@ def test_issue_20379():
 def test_finiteset_simplify():
     S = FiniteSet(1, cos(1)**2 + sin(1)**2)
     assert S.simplify() == {1}
+
+def test_Union_size():
+    assert Union(Range(5),Range(5,7)).size == 7
+    assert Union(Range(13,15,1),Range(-2,10,4)).size == 5
