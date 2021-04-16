@@ -1276,6 +1276,19 @@ class Union(Set, LatticeOp):
             return b
         return Union(*map(boundary_of_set, range(len(self.args))))
 
+    @property
+    def size(self):
+        """Returns the cardinality of the Union of two disjoint Ranges"""
+        from sympy.sets.fancysets import Range
+        from sympy.sets.sets import EmptySet
+        if len(self.args)==2 and \
+           all(isinstance(s,Range) for s in self.args) and \
+           isinstance(self.args[0].intersect(self.args[1]),EmptySet):
+            return self.args[0].size + self.args[1].size
+        else:
+            raise NotImplementedError('Union size has only been implemented ' +
+                                      'for the Union of two disjoint Ranges')
+
     def _contains(self, other):
         return Or(*[s.contains(other) for s in self.args])
 
