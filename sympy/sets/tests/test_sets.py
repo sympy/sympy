@@ -703,7 +703,7 @@ def test_is_subset():
         Union(Interval(-oo, 2), Interval(2, oo), evaluate=False))
     assert Interval(-oo, oo).is_subset(
         Union(Interval(-oo, 2), Interval(3, 4), Interval(5, oo),
-        evaluate=False)) is None
+        evaluate=False)) is False
 
     assert FiniteSet(1, 2, 3, 4).is_subset(Interval(0, 5)) is True
     assert S.EmptySet.is_subset(FiniteSet(1, 2, 3)) is True

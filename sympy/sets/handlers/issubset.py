@@ -37,47 +37,59 @@ def is_subset_sets(a_interval, b_fs): # noqa:F811
 
 @dispatch(Interval, Union)  # type: ignore # noqa:F811
 def is_subset_sets(a_interval, b_u): # noqa:F811
-    if all(isinstance(s, (Interval, FiniteSet)) for s in b_u.args):
-        intervals = [s for s in b_u.args if isinstance(s, Interval)]
-        if a_interval == S.Reals and not b_u.free_symbols:
-            lo, hi = b_u.inf, b_u.sup
-            if lo is S.NegativeInfinity and hi is S.Infinity:
-                inf, fin = sift(intervals, lambda x:
-                    x.inf.is_infinite or x.sup.is_infinite, binary=True)
-                inf, sup = sift(inf, lambda x:
-                    x.inf.is_infinite, binary=True)
-                d = Dummy(positive=1)
-                small = S.NegativeInfinity
-                for i in inf:
-                    if fuzzy_bool(i.sup > small):
-                        small = i.sup
-                        if i.sup not in i:
-                            small -= d
-                big = S.Infinity
-                for i in sup:
-                    if fuzzy_bool(i.inf < big):
-                        big = i.inf
-                        if i.inf not in i:
-                            big += d
-                b = (small - big).is_nonnegative
-                if b is None:
-                    return  # unresolved finite intervals
-                if b:
-                    return True
-                if not fin:
-                    return False
-            elif lo.is_number or hi.is_number:
-                return False
-        if all(fuzzy_bool(a_interval.start < s.start) for s in intervals):
-            return False
-        if all(fuzzy_bool(a_interval.end > s.end) for s in intervals):
-            return False
-        if a_interval.measure.is_nonzero:
-            no_overlap = lambda s: fuzzy_or([
-                    (s.end - a_interval.start).is_extended_nonpositive,
-                    (s.start - a_interval.end).is_extended_nonnegative])
-            if all(no_overlap(s) for s in intervals):
-                return False
+    from sympy import Complement
+    unk = False
+    fin = []
+    remain = a_interval
+    for i in b_u.args:
+        if isinstance(i, FiniteSet):
+            fin.append(i)
+            continue
+        if not isinstance(i, (Union, Interval)):
+            return
+        j = remain - i
+        if j is S.EmptySet:
+            return True
+
+        if isinstance(j, Complement):
+            remain = j.args[0]
+            unk = True
+        else:
+            remain = j
+
+    if unk:
+        return
+    del unk
+
+    if isinstance(remain, Interval):
+        return False
+
+    if isinstance(remain, Union):
+        assert any(isinstance(i, Interval) for i in remain.args)
+        return False
+
+    assert isinstance(remain, FiniteSet)
+
+    if not fin:
+        return False
+
+    nremain = len(remain)
+    nfin = sum((len(i) for i in fin))
+    if nfin < nremain:
+        return False
+
+    unk = False
+    for i in fin:
+        j = remain - i
+        if isinstance(j, Complement):
+            remain = j.args[0]
+            unk = True
+        else:
+            remain = j
+    if j is S.EmptySet:
+        return True
+    if not unk:
+        return False
 
 
 @dispatch(Range, Range)  # type: ignore # noqa:F811
