@@ -2447,23 +2447,6 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
     """
     Checks the arguments and converts into tuples of the
     form (exprs, ranges).
-
-    Examples
-    ========
-
-    .. plot::
-       :context: reset
-       :format: doctest
-       :include-source: True
-
-       >>> from sympy import cos, sin, symbols
-       >>> from sympy.plotting.plot import check_arguments
-       >>> x = symbols('x')
-       >>> check_arguments([cos(x), sin(x)], 2, 1)
-           [(cos(x), sin(x), (x, -10, 10))]
-
-       >>> check_arguments([x, x**2], 1, 1)
-           [(x, (x, -10, 10)), (x**2, (x, -10, 10))]
     """
 
     SymPyDeprecationWarning(
