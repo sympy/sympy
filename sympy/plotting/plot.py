@@ -2437,8 +2437,6 @@ def plot_contour(*args, show=True, **kwargs):
     plot_expr = _check_arguments(args, 1, 2)
     series = [ContourSeries(*arg) for arg in plot_expr]
     plot_contours = Plot(*series, **kwargs)
-    # if len(plot_expr[0].free_symbols) > 2:
-    #     raise ValueError('Contour Plot cannot Plot for more than two variables.')
     if show:
         plot_contours.show()
     return plot_contours
