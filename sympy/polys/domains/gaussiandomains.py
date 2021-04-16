@@ -2,7 +2,8 @@
 
 from sympy.core.numbers import I
 from sympy.polys.polyerrors import CoercionFailed
-from sympy.polys.domains import ZZ, QQ
+from sympy.polys.domains.integerring import ZZ
+from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.domains.algebraicfield import AlgebraicField
 from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.domainelement import DomainElement
@@ -294,8 +295,16 @@ class GaussianDomain():
         """Convert a GMPY mpz to ``self.dtype``."""
         return K1(a)
 
+    def from_ZZ(K1, a, K0):
+        """Convert a ZZ_python element to ``self.dtype``."""
+        return K1(a)
+
     def from_ZZ_python(K1, a, K0):
         """Convert a ZZ_python element to ``self.dtype``."""
+        return K1(a)
+
+    def from_QQ(K1, a, K0):
+        """Convert a GMPY mpq to ``self.dtype``."""
         return K1(a)
 
     def from_QQ_gmpy(K1, a, K0):
@@ -414,9 +423,9 @@ class GaussianIntegerRing(GaussianDomain, Ring):
     """
     dom = ZZ
     dtype = GaussianInteger
-    zero = dtype(0, 0)
-    one = dtype(1, 0)
-    imag_unit = dtype(0, 1)
+    zero = dtype(ZZ(0), ZZ(0))
+    one = dtype(ZZ(1), ZZ(0))
+    imag_unit = dtype(ZZ(0), ZZ(1))
     units = (one, imag_unit, -one, -imag_unit)  # powers of i
 
     rep = 'ZZ_I'
@@ -585,9 +594,9 @@ class GaussianRationalField(GaussianDomain, Field):
     """
     dom = QQ
     dtype = GaussianRational
-    zero = dtype(0, 0)
-    one = dtype(1, 0)
-    imag_unit = dtype(0, 1)
+    zero = dtype(QQ(0), QQ(0))
+    one = dtype(QQ(1), QQ(0))
+    imag_unit = dtype(QQ(0), QQ(1))
     units = (one, imag_unit, -one, -imag_unit)  # powers of i
 
     rep = 'QQ_I'

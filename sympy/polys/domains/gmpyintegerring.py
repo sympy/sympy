@@ -3,8 +3,8 @@
 
 from sympy.polys.domains.groundtypes import (
     GMPYInteger, SymPyInteger,
-    gmpy_factorial,
-    gmpy_gcdex, gmpy_gcd, gmpy_lcm, gmpy_sqrt,
+    factorial as gmpy_factorial,
+    gmpy_gcdex, gmpy_gcd, gmpy_lcm, sqrt as gmpy_sqrt,
 )
 from sympy.polys.domains.integerring import IntegerRing
 from sympy.polys.polyerrors import CoercionFailed
@@ -47,6 +47,11 @@ class GMPYIntegerRing(IntegerRing):
     def from_ZZ_python(K1, a, K0):
         """Convert Python's ``int`` to GMPY's ``mpz``. """
         return GMPYInteger(a)
+
+    def from_QQ(K1, a, K0):
+        """Convert Python's ``Fraction`` to GMPY's ``mpz``. """
+        if a.denominator == 1:
+            return GMPYInteger(a.numerator)
 
     def from_QQ_python(K1, a, K0):
         """Convert Python's ``Fraction`` to GMPY's ``mpz``. """

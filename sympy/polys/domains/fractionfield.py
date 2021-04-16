@@ -63,45 +63,53 @@ class FractionField(Field, CompositeDomain):
         return hash((self.__class__.__name__, self.dtype.field, self.domain, self.symbols))
 
     def __eq__(self, other):
-        """Returns `True` if two domains are equivalent. """
+        """Returns ``True`` if two domains are equivalent. """
         return isinstance(other, FractionField) and \
             (self.dtype.field, self.domain, self.symbols) ==\
             (other.dtype.field, other.domain, other.symbols)
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """Convert ``a`` to a SymPy object. """
         return a.as_expr()
 
     def from_sympy(self, a):
-        """Convert SymPy's expression to `dtype`. """
+        """Convert SymPy's expression to ``dtype``. """
         return self.field.from_expr(a)
 
+    def from_ZZ(K1, a, K0):
+        """Convert a Python ``int`` object to ``dtype``. """
+        return K1(K1.domain.convert(a, K0))
+
     def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
+        """Convert a Python ``int`` object to ``dtype``. """
+        return K1(K1.domain.convert(a, K0))
+
+    def from_QQ(K1, a, K0):
+        """Convert a Python ``Fraction`` object to ``dtype``. """
         return K1(K1.domain.convert(a, K0))
 
     def from_QQ_python(K1, a, K0):
-        """Convert a Python `Fraction` object to `dtype`. """
+        """Convert a Python ``Fraction`` object to ``dtype``. """
         return K1(K1.domain.convert(a, K0))
 
     def from_ZZ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpz` object to `dtype`. """
+        """Convert a GMPY ``mpz`` object to ``dtype``. """
         return K1(K1.domain.convert(a, K0))
 
     def from_QQ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpq` object to `dtype`. """
+        """Convert a GMPY ``mpq`` object to ``dtype``. """
         return K1(K1.domain.convert(a, K0))
 
     def from_GaussianRationalField(K1, a, K0):
-        """Convert a `GaussianRational` object to `dtype`. """
+        """Convert a ``GaussianRational`` object to ``dtype``. """
         return K1(K1.domain.convert(a, K0))
 
     def from_GaussianIntegerRing(K1, a, K0):
-        """Convert a `GaussianInteger` object to `dtype`. """
+        """Convert a ``GaussianInteger`` object to ``dtype``. """
         return K1(K1.domain.convert(a, K0))
 
     def from_RealField(K1, a, K0):
-        """Convert a mpmath `mpf` object to `dtype`. """
+        """Convert a mpmath ``mpf`` object to ``dtype``. """
         return K1(K1.domain.convert(a, K0))
 
     def from_AlgebraicField(K1, a, K0):
@@ -124,23 +132,23 @@ class FractionField(Field, CompositeDomain):
             return None
 
     def get_ring(self):
-        """Returns a field associated with `self`. """
+        """Returns a field associated with ``self``. """
         return self.field.to_ring().to_domain()
 
     def is_positive(self, a):
-        """Returns True if `LC(a)` is positive. """
+        """Returns True if ``LC(a)`` is positive. """
         return self.domain.is_positive(a.numer.LC)
 
     def is_negative(self, a):
-        """Returns True if `LC(a)` is negative. """
+        """Returns True if ``LC(a)`` is negative. """
         return self.domain.is_negative(a.numer.LC)
 
     def is_nonpositive(self, a):
-        """Returns True if `LC(a)` is non-positive. """
+        """Returns True if ``LC(a)`` is non-positive. """
         return self.domain.is_nonpositive(a.numer.LC)
 
     def is_nonnegative(self, a):
-        """Returns True if `LC(a)` is non-negative. """
+        """Returns True if ``LC(a)`` is non-negative. """
         return self.domain.is_nonnegative(a.numer.LC)
 
     def numer(self, a):
@@ -152,5 +160,5 @@ class FractionField(Field, CompositeDomain):
         return a.denom
 
     def factorial(self, a):
-        """Returns factorial of `a`. """
+        """Returns factorial of ``a``. """
         return self.dtype(self.domain.factorial(a))

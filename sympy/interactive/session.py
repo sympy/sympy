@@ -29,7 +29,7 @@ just install the 'ipython' package and start isympy again.
 def _make_message(ipython=True, quiet=False, source=None):
     """Create a banner for an interactive session. """
     from sympy import __version__ as sympy_version
-    from sympy.polys.domains import GROUND_TYPES
+    from sympy.external.gmpy import GROUND_TYPES
     from sympy.utilities.misc import ARCH
     from sympy import SYMPY_DEBUG
 

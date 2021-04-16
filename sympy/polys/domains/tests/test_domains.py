@@ -1,6 +1,6 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import I, S, sqrt, sin, oo, Poly, Float, Rational, pi
+from sympy import I, S, sqrt, sin, oo, Poly, Float, Integer, Rational, pi
 from sympy.abc import x, y, z
 
 from sympy.core.compatibility import HAS_GMPY
@@ -603,6 +603,13 @@ def test_FractionField__init():
     assert ZZ.frac_field() == F.to_domain()
 
 
+def test_FractionField_convert():
+    K = QQ.frac_field(x)
+    assert K.convert(QQ(2, 3), QQ) == K.from_sympy(Rational(2, 3))
+    K = QQ.frac_field(x)
+    assert K.convert(ZZ(2), ZZ) == K.from_sympy(Integer(2))
+
+
 def test_inject():
     assert ZZ.inject(x, y, z) == ZZ[x, y, z]
     assert ZZ[x].inject(y, z) == ZZ[x, y, z]
@@ -933,6 +940,10 @@ def test_gaussian_domains():
     assert QQ_I(S(3)/4, 0) != S(3)/4 # and this to Rational?
     assert ZZ_I(0, 0).quadrant() == 0
     assert ZZ_I(-1, 0).quadrant() == 2
+
+    assert QQ_I.convert(QQ(3, 2)) == QQ_I(QQ(3, 2), QQ(0))
+    assert QQ_I.convert(QQ(3, 2), QQ) == QQ_I(QQ(3, 2), QQ(0))
+
     for G in (QQ_I, ZZ_I):
 
         q = G(3, 4)

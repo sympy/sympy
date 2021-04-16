@@ -1,7 +1,7 @@
 """Ground types for various mathematical domains in SymPy. """
 
 import builtins
-from sympy.core.compatibility import HAS_GMPY
+from sympy.external.gmpy import HAS_GMPY, factorial, sqrt
 
 PythonInteger = builtins.int
 PythonReal = builtins.float
@@ -21,32 +21,20 @@ from sympy import (
     Rational as SymPyRational,
 )
 
-if HAS_GMPY == 1:
-    from gmpy import (
-        mpz as GMPYInteger,
-        mpq as GMPYRational,
-        fac as gmpy_factorial,
-        numer as gmpy_numer,
-        denom as gmpy_denom,
-        gcdext as gmpy_gcdex,
-        gcd as gmpy_gcd,
-        lcm as gmpy_lcm,
-        sqrt as gmpy_sqrt,
-        qdiv as gmpy_qdiv,
-    )
-elif HAS_GMPY == 2:
+if HAS_GMPY == 2:
     from gmpy2 import (
         mpz as GMPYInteger,
         mpq as GMPYRational,
-        fac as gmpy_factorial,
         numer as gmpy_numer,
         denom as gmpy_denom,
         gcdext as gmpy_gcdex,
         gcd as gmpy_gcd,
         lcm as gmpy_lcm,
-        isqrt as gmpy_sqrt,
         qdiv as gmpy_qdiv,
     )
+    gcdex = gmpy_gcdex
+    gcd = gmpy_gcd
+    lcm = gmpy_lcm
 else:
     class _GMPYInteger:
         def __init__(self, obj):
@@ -58,25 +46,15 @@ else:
 
     GMPYInteger = _GMPYInteger
     GMPYRational = _GMPYRational
-    gmpy_factorial = None
     gmpy_numer = None
     gmpy_denom = None
     gmpy_gcdex = None
     gmpy_gcd = None
     gmpy_lcm = None
-    gmpy_sqrt = None
     gmpy_qdiv = None
-
-
-import mpmath.libmp as mlib
-
-
-def python_sqrt(n):
-    return int(mlib.isqrt(n))
-
-
-def python_factorial(n):
-    return int(mlib.ifac(n))
+    gcdex = python_gcdex
+    gcd = python_gcd
+    lcm = python_lcm
 
 
 __all__ = [
@@ -88,13 +66,11 @@ __all__ = [
 
     'SymPyReal', 'SymPyInteger', 'SymPyRational',
 
-    'GMPYInteger', 'GMPYRational', 'gmpy_factorial', 'gmpy_numer',
-    'gmpy_denom', 'gmpy_gcdex', 'gmpy_gcd', 'gmpy_lcm', 'gmpy_sqrt',
+    'GMPYInteger', 'GMPYRational', 'gmpy_numer',
+    'gmpy_denom', 'gmpy_gcdex', 'gmpy_gcd', 'gmpy_lcm',
     'gmpy_qdiv',
 
+    'factorial', 'sqrt',
+
     'GMPYInteger', 'GMPYRational',
-
-    'mlib',
-
-    'python_sqrt', 'python_factorial'
 ]

@@ -72,6 +72,9 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
         else:
             raise CoercionFailed("expected complex number, got %s" % expr)
 
+    def from_ZZ(self, element, base):
+        return self.dtype(element)
+
     def from_ZZ_python(self, element, base):
         return self.dtype(element)
 
@@ -128,3 +131,6 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
     def almosteq(self, a, b, tolerance=None):
         """Check if ``a`` and ``b`` are almost equal. """
         return self._context.almosteq(a, b, tolerance)
+
+
+CC = ComplexField()
