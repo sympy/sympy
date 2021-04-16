@@ -575,6 +575,9 @@ def test_Domain_convert():
     assert ZZ.convert(x - x) == 0
     assert ZZ.convert(x - x, R.to_domain()) == 0
 
+    assert CC.convert(ZZ_I(1, 2)) == CC(1, 2)
+    assert CC.convert(QQ_I(1, 2)) == CC(1, 2)
+
 
 def test_GlobalPolynomialRing_convert():
     K1 = QQ.old_poly_ring(x)
