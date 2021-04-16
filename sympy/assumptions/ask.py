@@ -457,34 +457,10 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if local_facts.clauses and satisfiable(enc_cnf) is False:
         raise ValueError("inconsistent assumptions %s" % assumptions)
 
-    known_facts_dict = get_known_facts_dict()
-    if local_facts.clauses:
-
-        # quick exit if the prerequisite of proposition is not true
-        # e.g. proposition = Q.zero(x), assumptions = ~Q.even(x)
-        if len(local_facts.clauses) == 1:
-            cl, = local_facts.clauses
-            if len(cl) == 1:
-                f, = cl
-                if f.is_Not and f.arg in known_facts_dict.get(key, []):
-                    return False
-
-        for clause in local_facts.clauses:
-            if len(clause) == 1:
-                f, = clause
-                fdict = known_facts_dict.get(f.arg, None) if not f.is_Not else None
-                if fdict is None:
-                    pass
-                elif key in fdict:
-                    # quick exit if proposition is directly satisfied by assumption
-                    # e.g. proposition = Q.even(x), assumptions = Q.zero(x)
-                    return True
-                elif Not(key) in fdict:
-                    # quick exit if proposition is directly rejected by assumption
-                    # example might be proposition = Q.even(x), assumptions = Q.odd(x)
-                    # but known_facts_dict does not have such information yet and
-                    # such example is computed by satask.
-                    return False
+    # quick computation for single fact
+    res = _ask_single_fact(key, local_facts)
+    if res is not None:
+        return res
 
     # direct resolution method, no logic
     res = key(*args)._eval_ask(assumptions)
@@ -494,6 +470,85 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     # using satask (still costly)
     res = satask(proposition, assumptions=assumptions, context=context)
     return res
+
+
+def _ask_single_fact(key, local_facts):
+    """
+    Compute the truth value of single predicate using assumptions.
+
+    Parameters
+    ==========
+
+    key : sympy.assumptions.assume.Predicate
+        Proposition predicate.
+
+    local_facts : sympy.assumptions.cnf.CNF
+        Local assumption in CNF form.
+
+    Returns
+    =======
+
+    ``True``, ``False`` or ``None``
+
+    Examples
+    ========
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.cnf import CNF
+    >>> from sympy.assumptions.ask import _ask_single_fact
+
+    If prerequisite of proposition is rejected by the assumption,
+    return ``False``.
+
+    >>> key, assump = Q.zero, ~Q.zero
+    >>> local_facts = CNF.from_prop(assump)
+    >>> _ask_single_fact(key, local_facts)
+    False
+    >>> key, assump = Q.zero, ~Q.even
+    >>> local_facts = CNF.from_prop(assump)
+    >>> _ask_single_fact(key, local_facts)
+    False
+
+    If assumption implies the proposition, return ``True``.
+
+    >>> key, assump = Q.even, Q.zero
+    >>> local_facts = CNF.from_prop(assump)
+    >>> _ask_single_fact(key, local_facts)
+    True
+
+    If proposition rejects the assumption, return ``False``.
+
+    >>> key, assump = Q.even, Q.odd
+    >>> local_facts = CNF.from_prop(assump)
+    >>> _ask_single_fact(key, local_facts)
+    False
+    """
+    if local_facts.clauses:
+
+        known_facts_dict = get_known_facts_dict()
+
+        if len(local_facts.clauses) == 1:
+            cl, = local_facts.clauses
+            if len(cl) == 1:
+                f, = cl
+                if f.is_Not and f.arg in known_facts_dict.get(key, []):
+                    # the prerequisite of proposition is rejected
+                    return False
+
+        for clause in local_facts.clauses:
+            if len(clause) == 1:
+                f, = clause
+                fdict = known_facts_dict.get(f.arg, None) if not f.is_Not else None
+                if fdict is None:
+                    pass
+                elif key in fdict:
+                    # assumption implies the proposition
+                    return True
+                elif Not(key) in fdict:
+                    # proposition rejects the assumption
+                    return False
+
+    return None
 
 
 def register_handler(key, handler):

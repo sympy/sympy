@@ -60,7 +60,10 @@ class EqualityPredicate(BinaryRelation):
         return Q.ne
 
     def eval(self, args, assumptions=True):
-        return is_eq(*args)
+        if assumptions == True:
+            # default assumptions for is_eq is None
+            assumptions = None
+        return is_eq(*args, assumptions)
 
 
 class UnequalityPredicate(BinaryRelation):
@@ -101,7 +104,10 @@ class UnequalityPredicate(BinaryRelation):
         return Q.eq
 
     def eval(self, args, assumptions=True):
-        return is_neq(*args)
+        if assumptions == True:
+            # default assumptions for is_neq is None
+            assumptions = None
+        return is_neq(*args, assumptions)
 
 
 class StrictGreaterThanPredicate(BinaryRelation):
