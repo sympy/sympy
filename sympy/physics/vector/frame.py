@@ -190,9 +190,9 @@ class ReferenceFrame:
             self.latex_vecs = latexs
         self.name = name
         self._var_dict = {}
-        #The _dcm_dict dictionary will only store the dcms of parent-child
-        #relationships. The _dcm_cache dictionary will work as the dcm
-        #cache.
+        #The _dcm_dict dictionary will only store the dcms of immediate parent-child
+        #relationships. The _dcm_cache dictionary will store calculated dcm along with
+        #all content of _dcm_dict for faster retrieval of dcms.
         self._dcm_dict = {}
         self._dcm_cache = {}
         self._ang_vel_dict = {}
@@ -529,9 +529,12 @@ class ReferenceFrame:
         return outdcm
 
     def _dcm(self, parent, parent_orient):
-        # Reset the _dcm_cache of this frame, and remove it from the
-        # _dcm_caches of the frames it is linked to. Also remove it from the
-        # _dcm_dict of its parent
+        # If parent.oreint(self) is already defined,then
+        # update the _dcm_dict of parent while over write
+        # all content of self._dcm_dict and self._dcm_cache
+        # with new dcm relation.
+        # else update _dcm_cache and _dcm_dict of both
+        # self and parent.
         frames = self._dcm_cache.keys()
         dcm_dict_del = []
         dcm_cache_del = []
@@ -540,16 +543,21 @@ class ReferenceFrame:
                 if frame in self._dcm_dict:
                     dcm_dict_del += [frame]
                 dcm_cache_del += [frame]
+            # Reset the _dcm_cache of this frame, and remove it from the
+            # _dcm_caches of the frames it is linked to. Also remove it from the
+            # _dcm_dict of its parent
             for frame in dcm_dict_del:
                 del frame._dcm_dict[self]
             for frame in dcm_cache_del:
                 del frame._dcm_cache[self]
-        # Add the dcm relationship to _dcm_dict
+        # Reset the _dcm_dict
             self._dcm_dict = self._dlist[0] = {}
+        # Reset the _dcm_cache
             self._dcm_cache = {}
+        # Add the dcm relationship to _dcm_dict
         self._dcm_dict.update({parent: parent_orient.T})
         parent._dcm_dict.update({self: parent_orient})
-        # Also update the dcm cache after resetting it
+        # Update the dcm cache
         self._dcm_cache.update({parent: parent_orient.T})
         parent._dcm_cache.update({self: parent_orient})
 
