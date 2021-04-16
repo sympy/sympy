@@ -1697,18 +1697,6 @@ def plot(*args, show=True, **kwargs):
        [1]: cartesian line: x**2 for x over (-5.0, 5.0)
        [2]: cartesian line: x**3 for x over (-5.0, 5.0)
 
-    Multiple plots with different ranges.
-
-    .. plot::
-       :context: close-figs
-       :format: doctest
-       :include-source: True
-
-       >>> plot((x**2, (x, -6, 6)), (x, (x, -5, 5)))
-       Plot object containing:
-       [0]: cartesian line: x**2 for x over (-6.0, 6.0)
-       [1]: cartesian line: x for x over (-5.0, 5.0)
-
     Multiple plots with different ranges and custom labels.
 
     .. plot::
@@ -1716,10 +1704,10 @@ def plot(*args, show=True, **kwargs):
        :format: doctest
        :include-source: True
 
-       >>> plot((x**2, (x, -6, 6), "$f_{1}$"), (x, "f2"), legend=True)
+       >>> plot((x**2, (x, -6, 6), "$f_{1}$"), (x, (x, -5, 5), "f2"), legend=True)
        Plot object containing:
        [0]: cartesian line: x**2 for x over (-6.0, 6.0)
-       [1]: cartesian line: x for x over (-10.0, 10.0)
+       [1]: cartesian line: x for x over (-5.0, 5.0)
 
     No adaptive sampling.
 
@@ -1894,20 +1882,6 @@ def plot_parametric(*args, show=True, **kwargs):
        [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-10.0, 10.0)
        [1]: parametric cartesian line: (u, cos(u)) for u over (-10.0, 10.0)
 
-    A parametric plot with multiple expressions with different ranges
-    for each curve:
-
-    .. plot::
-       :context: close-figs
-       :format: doctest
-       :include-source: True
-
-       >>> plot_parametric((cos(u), sin(u), (u, -5, 5)),
-       ...     (cos(u), u, (u, -5, 5)))
-       Plot object containing:
-       [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-5.0, 5.0)
-       [1]: parametric cartesian line: (cos(u), u) for u over (-5.0, 5.0)
-
     A parametric plot with multiple expressions with different ranges and
     custom labels for each curve:
 
@@ -2067,19 +2041,6 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
        Plot object containing:
        [0]: 3D parametric cartesian line: (cos(u), sin(u), u) for u over (-5.0, 5.0)
 
-
-    Multiple plots.
-
-    .. plot::
-       :context: close-figs
-       :format: doctest
-       :include-source: True
-
-       >>> plot3d_parametric_line((cos(u), sin(u), u, (u, -5, 5)),
-       ...     (sin(u), u**2, u, (u, -5, 5)))
-       Plot object containing:
-       [0]: 3D parametric cartesian line: (cos(u), sin(u), u) for u over (-5.0, 5.0)
-       [1]: 3D parametric cartesian line: (sin(u), u**2, u) for u over (-5.0, 5.0)
 
     Multiple plots with different ranges and custom labels.
 
