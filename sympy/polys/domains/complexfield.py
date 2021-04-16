@@ -99,6 +99,9 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
         return (self.dtype(int(x.numerator)) / int(x.denominator) +
                 self.dtype(0, int(y.numerator)) / int(y.denominator))
 
+    def from_AlgebraicField(self, element, base):
+        return self.from_sympy(base.to_sympy(element).evalf(self.dps))
+
     def from_RealField(self, element, base):
         return self.dtype(element)
 

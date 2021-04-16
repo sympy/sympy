@@ -582,15 +582,15 @@ def test_Domain_convert():
         check_element(K3.convert_from(K2.zero, K2), K3.zero, K1, K2, K3)
 
     def composite_domains(K):
-        return [K1, K1[y], K1[z], K1[y, z], K1.frac_field(y),
-                K1.frac_field(z), K1.frac_field(y, z)]
+        return [K, K[y], K[z], K[y, z],
+                   K.frac_field(y), K.frac_field(z), K.frac_field(y, z)]
 
     QQ2 = QQ.algebraic_field(sqrt(2))
     QQ3 = QQ.algebraic_field(sqrt(3))
     doms = [ZZ, QQ, QQ2, QQ3, QQ_I, ZZ_I, RR, CC]
 
-    for K1 in doms:
-        for K2 in doms:
+    for i, K1 in enumerate(doms):
+        for K2 in doms[i:]:
             for K3 in composite_domains(K1):
                 for K4 in composite_domains(K2):
                     check_domains(K3, K4)

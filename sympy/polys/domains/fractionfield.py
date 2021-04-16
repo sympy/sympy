@@ -118,15 +118,24 @@ class FractionField(Field, CompositeDomain):
 
     def from_AlgebraicField(K1, a, K0):
         """Convert an algebraic number to ``dtype``. """
-        if K1.domain == K0:
+        if K1.domain != K0:
+            a = K1.domain.convert_from(a, K0)
+        if a is not None:
             return K1.new(a)
 
     def from_PolynomialRing(K1, a, K0):
         """Convert a polynomial to ``dtype``. """
         try:
-            return K1.new(a)
+            return K1.new(a.set_ring(K1.field.ring))
         except (CoercionFailed, GeneratorsError):
-            return None
+            # XXX: We get here if K1=ZZ(x,y) and K0=QQ[x,y]
+            # and the poly a in K0 has non-integer coefficients.
+            # It seems that K1.new can handle this but K1.new doesn't work
+            # when K0.domain is an algebraic field...
+            try:
+                return K1.new(a)
+            except (CoercionFailed, GeneratorsError):
+                return None
 
     def from_FractionField(K1, a, K0):
         """Convert a rational function to ``dtype``. """

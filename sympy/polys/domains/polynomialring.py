@@ -128,7 +128,9 @@ class PolynomialRing(Ring, CompositeDomain):
 
     def from_AlgebraicField(K1, a, K0):
         """Convert an algebraic number to ``dtype``. """
-        if K1.domain == K0:
+        if K1.domain != K0:
+            a = K1.domain.convert_from(a, K0)
+        if a is not None:
             return K1.new(a)
 
     def from_PolynomialRing(K1, a, K0):
