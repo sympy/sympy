@@ -293,7 +293,7 @@ def _TR56(rv, f, g, h, max, pow):
     >>> from sympy import sin, cos
     >>> h = lambda x: 1 - x
     >>> T(sin(x)**3, sin, cos, h, 4, False)
-    sin(x)**3
+    sin(x)*(1- cos(x)**2)
     >>> T(sin(x)**6, sin, cos, h, 6, False)
     (1 - cos(x)**2)**3
     >>> T(sin(x)**6, sin, cos, h, 6, True)
