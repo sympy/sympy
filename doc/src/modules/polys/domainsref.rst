@@ -190,6 +190,16 @@ preferred because it is significantly faster.
 .. autoclass:: sympy.external.pythonmpq.PythonMPQ
 
 
+.. _MPQ:
+
+
+MPQ
+===
+
+The ``MPQ`` type is either :py:class:`~.PythonMPQ` or otherwise the ``mpq``
+type from ``gmpy2``.
+
+
 Gaussian domains
 ================
 
