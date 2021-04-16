@@ -7,7 +7,7 @@ from sympy.calculus.singularities import (
     is_strictly_decreasing,
     is_monotonic
 )
-from sympy.sets import Interval, FiniteSet, Union
+from sympy.sets import Interval, FiniteSet
 from sympy.testing.pytest import raises
 from sympy.abc import x, y
 
