@@ -44,7 +44,8 @@ def is_subset_sets(a_interval, b_u): # noqa:F811
             fin.append(i)
             continue
         if not isinstance(i, (Union, Interval)):
-            return
+            unk = True
+            continue
         j = remain - i
         if j is S.EmptySet:
             return True

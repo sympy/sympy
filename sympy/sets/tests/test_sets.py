@@ -704,7 +704,17 @@ def test_is_subset():
     assert Interval(-oo, oo).is_subset(
         Union(Interval(-oo, 2), Interval(3, 4), Interval(5, oo),
         evaluate=False)) is False
-
+    assert S.Reals.is_subset(Union(Interval.Ropen(-oo,1), FiniteSet(1),
+         Interval.open(1, 2), Interval.Lopen(2, oo), evaluate=False) is False
+    assert S.Reals.is_subset(Union(Interval.Ropen(-oo,1), FiniteSet(1, 2),
+        Interval.open(1, 2), Interval.Lopen(2, oo), evaluate=False) is True
+    assert S.Reals.is_subset(Union(Interval.Ropen(-oo,1), FiniteSet(1, 3),
+        Interval.open(1, 2), Interval.Lopen(2, oo), evaluate=False) is False
+    assert S.Reals.is_subset(Union(Interval.Ropen(-oo,1), FiniteSet(x, y),
+        Interval.open(1, 2), Interval.Lopen(2, oo), evaluate=False) is False
+    assert S.Reals.is_subset(Union(Interval.Ropen(-oo,1), FiniteSet(1, 2),
+        Interval.open(1, 2), Interval.Lopen(2, oo),
+        Intersection(FiniteSet(x), Interval(1, 2)), evaluate=False) is True
     assert FiniteSet(1, 2, 3, 4).is_subset(Interval(0, 5)) is True
     assert S.EmptySet.is_subset(FiniteSet(1, 2, 3)) is True
 
