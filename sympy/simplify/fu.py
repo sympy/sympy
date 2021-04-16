@@ -316,6 +316,8 @@ def _TR56(rv, f, g, h, max, pow):
             return rv
         if (rv.exp > max) == True:
             return rv
+        if rv.exp == 1:
+            return rv
         if rv.exp == 2:
             return h(g(rv.base.args[0])**2)
         else:
