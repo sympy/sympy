@@ -569,6 +569,32 @@ def test_Domain_is_unit():
 
 
 def test_Domain_convert():
+
+    def check_element(e1, e2, K1, K2, K3):
+        assert type(e1) is type(e2), '%s, %s: %s %s -> %s' % (e1, e2, K1, K2, K3)
+        assert e1 == e2, '%s, %s: %s %s -> %s' % (e1, e2, K1, K2, K3)
+
+    def check_domains(K1, K2):
+        K3 = K1.unify(K2)
+        check_element(K3.convert_from(K1.one,  K1), K3.one , K1, K2, K3)
+        check_element(K3.convert_from(K2.one,  K2), K3.one , K1, K2, K3)
+        check_element(K3.convert_from(K1.zero, K1), K3.zero, K1, K2, K3)
+        check_element(K3.convert_from(K2.zero, K2), K3.zero, K1, K2, K3)
+
+    def composite_domains(K):
+        return [K1, K1[y], K1[z], K1[y, z], K1.frac_field(y),
+                K1.frac_field(z), K1.frac_field(y, z)]
+
+    QQ2 = QQ.algebraic_field(sqrt(2))
+    QQ3 = QQ.algebraic_field(sqrt(3))
+    doms = [ZZ, QQ, QQ2, QQ3, QQ_I, ZZ_I, RR, CC]
+
+    for K1 in doms:
+        for K2 in doms:
+            for K3 in composite_domains(K1):
+                for K4 in composite_domains(K2):
+                    check_domains(K3, K4)
+
     assert QQ.convert(10e-52) == QQ(1684996666696915, 1684996666696914987166688442938726917102321526408785780068975640576)
 
     R, x = ring("x", ZZ)

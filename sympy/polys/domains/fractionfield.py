@@ -112,6 +112,10 @@ class FractionField(Field, CompositeDomain):
         """Convert a mpmath ``mpf`` object to ``dtype``. """
         return K1(K1.domain.convert(a, K0))
 
+    def from_ComplexField(K1, a, K0):
+        """Convert a mpmath ``mpf`` object to ``dtype``. """
+        return K1(K1.domain.convert(a, K0))
+
     def from_AlgebraicField(K1, a, K0):
         """Convert an algebraic number to ``dtype``. """
         if K1.domain == K0:

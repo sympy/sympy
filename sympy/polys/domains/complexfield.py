@@ -75,6 +75,9 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
     def from_ZZ(self, element, base):
         return self.dtype(element)
 
+    def from_QQ(self, element, base):
+        return self.dtype(int(element.numerator)) / int(element.denominator)
+
     def from_ZZ_python(self, element, base):
         return self.dtype(element)
 
