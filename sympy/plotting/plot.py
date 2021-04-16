@@ -1558,8 +1558,7 @@ def plot(*args, show=True, **kwargs):
         - Plotting multiple expressions with multiple ranges.
             ``plot((expr1, range1), (expr2, range2), ..., **kwargs)``
         - Plotting multiple expressions with multiple ranges and custom labels.
-            ``plot((expr1, range1, label1), (expr2, range2, label2), ...,
-                legend=True, **kwargs)``
+            ``plot((expr1, range1, label1), (expr2, range2, label2), ..., legend=True, **kwargs)``
 
         It is best practice to specify range explicitly because default
         range may change in the future if a more advanced default range
@@ -1779,7 +1778,7 @@ def plot_parametric(*args, show=True, **kwargs):
         - Plotting multiple parametric curves with different ranges
             ``plot_parametric((expr_x, expr_y, range), ...)``
         - Plotting multiple parametric curves with different ranges and
-        custom labels
+            custom labels
             ``plot_parametric((expr_x, expr_y, range, label), ...)``
 
         ``expr_x`` is the expression representing $x$ component of the
@@ -1992,8 +1991,7 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
 
     Multiple plots.
 
-    ``plot3d_parametric_line((expr_x, expr_y, expr_z, range, label),
-        ..., **kwargs)``
+    ``plot3d_parametric_line((expr_x, expr_y, expr_z, range, label), ..., **kwargs)``
 
     Ranges have to be specified for every expression.
 
