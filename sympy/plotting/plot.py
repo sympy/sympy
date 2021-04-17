@@ -586,7 +586,7 @@ class Line2DBaseSeries(BaseSeries):
         SymPyDeprecationWarning(
                 feature="get_segments",
                 issue=21329,
-                deprecated_since_version="1.8.1",
+                deprecated_since_version="1.9",
                 useinstead="MatplotlibBackend.get_segments").warn()
 
         np = import_module('numpy')
