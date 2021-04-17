@@ -660,6 +660,31 @@ class MatrixShaping(MatrixRequired):
             return [[] for i in range(self.rows)]
         return self._eval_tolist()
 
+    def todod(M):
+        """Returns matrix as dict of dicts containing non-zero elements of the Matrix
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> A = Matrix([[0, 1],[0, 3]])
+        >>> A
+        Matrix([
+        [0, 1],
+        [0, 3]])
+        >>> A.todod()
+        {0: {1: 1}, 1: {1: 3}}
+
+
+        """
+        rowsdict = {}
+        Mlol = M.tolist()
+        for i, Mi in enumerate(Mlol):
+            row = {j: Mij for j, Mij in enumerate(Mi) if Mij}
+            if row:
+                rowsdict[i] = row
+        return rowsdict
+
     def vec(self):
         """Return the Matrix converted into a one column matrix by stacking columns
 

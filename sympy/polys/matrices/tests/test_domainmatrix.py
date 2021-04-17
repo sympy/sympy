@@ -84,6 +84,12 @@ def test_DomainMatrix_from_list_sympy():
     assert A.shape == (2, 2)
     assert A.domain == K
 
+def test_DomainMatrix_from_dict_sympy():
+    sdm = SDM({0: {0: QQ(1, 2)}, 1: {1: QQ(2, 3)}}, (2, 2), QQ)
+    A = DomainMatrix.from_dict_sympy(2, 2, {0: {0: QQ(1, 2)}, 1: {1: QQ(2, 3)}})
+    assert A.rep == sdm
+    assert A.shape == (2, 2)
+    assert A.domain == QQ
 
 def test_DomainMatrix_from_Matrix():
     ddm = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)

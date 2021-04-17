@@ -14,7 +14,7 @@ from sympy.core.sympify import _sympify
 from ..constructor import construct_domain
 
 from .exceptions import (NonSquareMatrixError, ShapeError, DDMShapeError,
-        DDMDomainError, DDMFormatError)
+        DDMDomainError, DDMFormatError, DDMBadInputError)
 
 from .ddm import DDM
 
@@ -194,7 +194,7 @@ class DomainMatrix:
         See Also
         ========
 
-        sympy.polys.constructor.construct_domain
+        sympy.polys.constructor.construct_domain, from_dict_sympy
 
         """
         assert len(rows) == nrows
@@ -207,6 +207,53 @@ class DomainMatrix:
         domain_rows = [[items_domain[ncols*r + c] for c in range(ncols)] for r in range(nrows)]
 
         return DomainMatrix(domain_rows, (nrows, ncols), domain)
+
+    @classmethod
+    def from_dict_sympy(cls, nrows, ncols, elemsdict, **kwargs):
+        """
+
+        Parameters
+        ==========
+
+        nrows: number of rows
+        ncols: number of cols
+        elemsdict: dict of dicts containing non-zero elements of the DomainMatrix
+
+        Returns
+        =======
+
+        DomainMatrix containing elements of elemsdict
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import QQ, ZZ
+        >>> elemsdict = {0: {1: QQ(1, 2)}, 1: {0: ZZ(1)}}
+        >>> DomainMatrix.from_dict_sympy(2, 3, elemsdict)
+        DomainMatrix({0: {1: 1/2}, 1: {0: 1}}, (2, 3), QQ)
+
+        See Also
+        ========
+
+        from_list_sympy
+
+        """
+        if not all(0 <= r < nrows for r in elemsdict):
+            raise DDMBadInputError("Row out of range")
+        if not all(0 <= c < ncols for row in elemsdict.values() for c in row):
+            raise DDMBadInputError("Column out of range")
+
+        items_sympy = [_sympify(item) for row in elemsdict.values() for item in row.values()]
+        domain, items_domain = cls.get_domain(items_sympy, **kwargs)
+
+        idx = 0
+        for i, row in enumerate(elemsdict.values()):
+            for j in row.keys():
+                elemsdict[i][j] = items_domain[idx]
+                idx += 1
+
+        return DomainMatrix(elemsdict, (nrows, ncols), domain)
 
     @classmethod
     def from_Matrix(cls, M, **kwargs):
@@ -250,8 +297,7 @@ class DomainMatrix:
                     non_zero += 1
 
         if non_zero < (m*(n - 1) - 1)/2:
-            ddm = cls.from_list_sympy(*M.shape, M.tolist(), **kwargs)
-            return ddm.to_sparse()
+            return cls.from_dict_sympy(*M.shape, M.todod(), **kwargs)
 
         return cls.from_list_sympy(*M.shape, M.tolist(), **kwargs)
 
