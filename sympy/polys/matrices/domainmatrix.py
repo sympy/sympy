@@ -248,10 +248,11 @@ class DomainMatrix:
         domain, items_domain = cls.get_domain(items_sympy, **kwargs)
 
         idx = 0
-        for i, row in enumerate(elemsdict.values()):
-            for j in row.keys():
-                elemsdict[i][j] = items_domain[idx]
-                idx += 1
+
+        for i, row in zip(elemsdict.keys(), elemsdict.values()):
+                for j in row.keys():
+                    elemsdict[i][j] = items_domain[idx]
+                    idx += 1
 
         return DomainMatrix(elemsdict, (nrows, ncols), domain)
 
