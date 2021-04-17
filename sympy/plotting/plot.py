@@ -574,12 +574,31 @@ class Line2DBaseSeries(BaseSeries):
         self.line_color = None
 
     def get_data(self):
+        """ Return lists of coordinates for plotting the line.
+
+        Returns
+        =======
+            x: list
+                List of x-coordinates
+
+            y: list
+                List of y-coordinates
+
+            y: list
+                List of z-coordinates in case of Parametric3DLineSeries
+        """
         np = import_module('numpy')
         points = self.get_points()
         if self.steps is True:
-            x = np.array((points[0], points[0])).T.flatten()[1:]
-            y = np.array((points[1], points[1])).T.flatten()[:-1]
-            points = (x, y)
+            if len(points) == 2:
+                x = np.array((points[0], points[0])).T.flatten()[1:]
+                y = np.array((points[1], points[1])).T.flatten()[:-1]
+                points = (x, y)
+            else:
+                x = np.repeat(points[0], 3)[2:]
+                y = np.repeat(points[1], 3)[:-2]
+                z = np.repeat(points[2], 3)[1:-1]
+                points = (x, y, z)
         return points
 
     def get_segments(self):
@@ -652,7 +671,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         return 'cartesian line: %s for %s over %s' % (
             str(self.expr), str(self.var), str((self.start, self.end)))
 
-    def get_data(self):
+    def get_points(self):
         """ Return lists of coordinates for plotting. Depending on the
         `adaptive` option, this function will either use an adaptive algorithm
         or it will uniformly sample the expression over the provided range.
@@ -680,9 +699,8 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                Luiz Henrique de Figueiredo.
 
         """
-
         if self.only_integers or not self.adaptive:
-            return super().get_data()
+            return self._uniform_sampling()
         else:
             f = lambdify([self.var], self.expr)
             x_coords = []
@@ -749,7 +767,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
         return (x_coords, y_coords)
 
-    def get_points(self):
+    def _uniform_sampling(self):
         np = import_module('numpy')
         if self.only_integers is True:
             if self.xscale == 'log':
@@ -796,7 +814,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         np = import_module('numpy')
         return np.linspace(self.start, self.end, num=self.nb_of_points)
 
-    def get_points(self):
+    def _uniform_sampling(self):
         param = self.get_parameter_points()
         fx = vectorized_lambdify([self.var], self.expr_x)
         fy = vectorized_lambdify([self.var], self.expr_y)
@@ -804,7 +822,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         list_y = fy(param)
         return (list_x, list_y)
 
-    def get_data(self):
+    def get_points(self):
         """ Return lists of coordinates for plotting. Depending on the
         `adaptive` option, this function will either use an adaptive algorithm
         or it will uniformly sample the expression over the provided range.
@@ -832,9 +850,8 @@ class Parametric2DLineSeries(Line2DBaseSeries):
             Luiz Henrique de Figueiredo.
 
         """
-
         if not self.adaptive:
-            return super().get_data()
+            return self._uniform_sampling()
 
         f_x = lambdify([self.var], self.expr_x)
         f_y = lambdify([self.var], self.expr_y)
