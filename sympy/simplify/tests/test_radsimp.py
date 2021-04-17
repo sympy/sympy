@@ -1,12 +1,12 @@
 from sympy import (
-    sqrt, Derivative, symbols, collect, Function, factor, Wild, S,
+    sqrt, cbrt, Derivative, symbols, collect, Function, factor, Wild, S,
     collect_const, log, fraction, I, cos, Add, O,sin, rcollect,
     Mul, Pow, radsimp, diff, root, Symbol, Rational, exp, Abs)
 
 from sympy.core.expr import unchanged
 from sympy.core.mul import _unevaluated_Mul as umul
 from sympy.simplify.radsimp import (_unevaluated_Add,
-    collect_sqrt, fraction_expand, collect_abs)
+    collect_sqrt, fraction_expand, collect_abs, rationalize)
 from sympy.testing.pytest import raises
 
 from sympy.abc import x, y, z, a, b, c, d
@@ -155,6 +155,34 @@ def test_radsimp_issue_3214():
     s = sqrt(c**2 - p**2)
     b = (c + I*p - s)/(c + I*p + s)
     assert radsimp(b) == -I*(c + I*p - sqrt(c**2 - p**2))**2/(2*c*p)
+
+
+def test_rationalize():
+    assert rationalize(sqrt(2) - 1) == (1 + sqrt(2), 1)
+    assert rationalize(sqrt(2) + sqrt(3) + sqrt(5)) == \
+        (2*sqrt(6)*(-sqrt(5) + sqrt(2) + sqrt(3)), 24)
+    assert rationalize(5**Rational(3, 2) - 5**Rational(4, 3)) == \
+        ((1 + sqrt(5))*(5**Rational(2, 3) + 5**Rational(5, 6) + 5), 100)
+    assert rationalize(2*sqrt(5) - 1) == (1 + 2*sqrt(5), 19)
+    assert rationalize(sqrt(3) - cbrt(2)) == \
+        ((2 + 3*sqrt(3))*(2**Rational(2, 3) + 2**Rational(1, 3)*sqrt(3) + 3),
+        23)
+    assert rationalize(
+        2*5**Rational(5, 2) - 2*5**Rational(7, 3)
+        - 10*5**Rational(3, 2) + 10*5**Rational(4, 3)
+    ) == (1, 0)
+
+    a, b, c = symbols('a b c')
+    assert rationalize(a + sqrt(b + sqrt(c))) == (
+        (a - sqrt(b + sqrt(c)))*(a**2 - b + sqrt(c)),
+        a**4 - 2*a**2*b + b**2 - c
+    )
+    assert rationalize(1 + sqrt(2 + sqrt(3))) == (
+        (-1 + sqrt(3))*(-1 + sqrt(sqrt(3) + 2)), 2)
+    assert rationalize(a + sqrt(b + cbrt(c))) == (
+        (a - sqrt(b + c**Rational(1, 3)))*(a**4 - 2*a**2*b + b**2 + c**Rational(2, 3) + c**Rational(1, 3)*(a**2 - b)),
+        a**6 - 3*a**4*b + 3*a**2*b**2 - b**3 - c
+    )
 
 
 def test_collect_1():
