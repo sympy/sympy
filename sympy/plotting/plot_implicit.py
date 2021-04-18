@@ -412,6 +412,11 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
     elif depth < 0:
         depth = 0
 
+    # uniform experience between the different plot function when it comes to
+    # set the number of discretization points
+    if "n1" in kwargs.keys():
+        points = kwargs["n1"]
+
     series_argument = ImplicitSeries(expr, var_start_end_x, var_start_end_y,
                                     has_equality, adaptive, depth,
                                     points, line_color)

@@ -122,3 +122,12 @@ def test_region_and():
         compare_images(cmp_filename, test_filename, 0.005)
     finally:
         TmpFileManager.cleanup()
+
+def test_nb_discretization_points():
+    x, y = symbols('x y')
+    p = plot_implicit(Eq(y, cos(x)), (x, -5, 5), (y, -2, 2))
+    assert p._series[0].nb_of_points == 300
+    p = plot_implicit(Eq(y, cos(x)), (x, -5, 5), (y, -2, 2), points=200)
+    assert p._series[0].nb_of_points == 200
+    p = plot_implicit(Eq(y, cos(x)), (x, -5, 5), (y, -2, 2), n1=100)
+    assert p._series[0].nb_of_points == 100
