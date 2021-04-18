@@ -1731,7 +1731,7 @@ def plot(*args, show=True, **kwargs):
 
     adaptive : bool, optional
         The default value is set to ``True``. Set adaptive to ``False``
-        and specify ``nb_of_points`` if uniform sampling is required.
+        and specify ``n1`` if uniform sampling is required.
 
         The plotting uses an adaptive algorithm which samples
         recursively to accurately plot. The adaptive algorithm uses a
@@ -1746,9 +1746,9 @@ def plot(*args, show=True, **kwargs):
         If the ``adaptive`` flag is set to ``False``, this will be
         ignored.
 
-    nb_of_points : int, optional
+    n1 : int, optional
         Used when the ``adaptive`` is set to ``False``. The function
-        is uniformly sampled at ``nb_of_points`` number of points.
+        is uniformly sampled at ``n1`` number of points.
 
         If the ``adaptive`` flag is set to ``True``, this will be
         ignored.
@@ -1813,7 +1813,7 @@ def plot(*args, show=True, **kwargs):
        :format: doctest
        :include-source: True
 
-       >>> plot(x**2, adaptive=False, nb_of_points=400)
+       >>> plot(x**2, adaptive=False, n1=400)
        Plot object containing:
        [0]: cartesian line: x**2 for x over (-10.0, 10.0)
 
@@ -1835,6 +1835,7 @@ def plot(*args, show=True, **kwargs):
     x = free.pop() if free else Symbol('x')
     kwargs.setdefault('xlabel', x.name)
     kwargs.setdefault('ylabel', 'f(%s)' % x.name)
+    kwargs = _set_discretization_points(kwargs, "p")
     series = []
     plot_expr = check_arguments(args, 1, 1)
     series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in plot_expr]
@@ -1885,13 +1886,13 @@ def plot_parametric(*args, show=True, **kwargs):
         Specifies whether to use the adaptive sampling or not.
 
         The default value is set to ``True``. Set adaptive to ``False``
-        and specify ``nb_of_points`` if uniform sampling is required.
+        and specify ``n1`` if uniform sampling is required.
 
     depth :  int, optional
         The recursion depth of the adaptive algorithm. A depth of
         value $n$ samples a maximum of $2^n$ points.
 
-    nb_of_points : int, optional
+    n1 : int, optional
         Used when the ``adaptive`` flag is set to ``False``.
 
         Specifies the number of the points used for the uniform
@@ -2029,6 +2030,7 @@ def plot_parametric(*args, show=True, **kwargs):
     """
     args = list(map(sympify, args))
     series = []
+    kwargs = _set_discretization_points(kwargs, "pp")
     plot_expr = check_arguments(args, 2, 1)
     series = [Parametric2DLineSeries(*arg, **kwargs) for arg in plot_expr]
     plots = Plot(*series, **kwargs)
@@ -2076,8 +2078,7 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
 
     Arguments for ``Parametric3DLineSeries`` class.
 
-    ``nb_of_points``: The range is uniformly sampled at ``nb_of_points``
-    number of points.
+    ``n1``: The range is uniformly sampled at ``n1`` number of points.
 
     Aesthetics:
 
@@ -2149,6 +2150,7 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
 
     """
     args = list(map(sympify, args))
+    kwargs = _set_discretization_points(kwargs, "p3dpl")
     series = []
     plot_expr = check_arguments(args, 3, 1)
     series = [Parametric3DLineSeries(*arg, **kwargs) for arg in plot_expr]
@@ -2205,11 +2207,9 @@ def plot3d(*args, show=True, **kwargs):
 
     Arguments for ``SurfaceOver2DRangeSeries`` class:
 
-    ``nb_of_points_x``: int. The x range is sampled uniformly at
-    ``nb_of_points_x`` of points.
+    ``n1``: int. The x range is sampled uniformly at ``n1`` of points.
 
-    ``nb_of_points_y``: int. The y range is sampled uniformly at
-    ``nb_of_points_y`` of points.
+    ``n2``: int. The y range is sampled uniformly at ``n2`` of points.
 
     Aesthetics:
 
@@ -2287,6 +2287,7 @@ def plot3d(*args, show=True, **kwargs):
     """
 
     args = list(map(sympify, args))
+    kwargs = _set_discretization_points(kwargs, "p3d")
     series = []
     plot_expr = check_arguments(args, 1, 2)
     series = [SurfaceOver2DRangeSeries(*arg, **kwargs) for arg in plot_expr]
@@ -2343,11 +2344,9 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
 
     Arguments for ``ParametricSurfaceSeries`` class:
 
-    ``nb_of_points_u``: int. The ``u`` range is sampled uniformly at
-    ``nb_of_points_v`` of points
+    ``n1``: int. The ``u`` range is sampled uniformly at ``n1`` of points
 
-    ``nb_of_points_y``: int. The ``v`` range is sampled uniformly at
-    ``nb_of_points_y`` of points
+    ``n2``: int. The ``v`` range is sampled uniformly at ``n2`` of points
 
     Aesthetics:
 
@@ -2400,6 +2399,7 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
     """
 
     args = list(map(sympify, args))
+    kwargs = _set_discretization_points(kwargs, "p3dps")
     series = []
     plot_expr = check_arguments(args, 3, 2)
     series = [ParametricSurfaceSeries(*arg, **kwargs) for arg in plot_expr]
@@ -2455,11 +2455,9 @@ def plot_contour(*args, show=True, **kwargs):
 
     Arguments for ``ContourSeries`` class:
 
-    ``nb_of_points_x``: int. The x range is sampled uniformly at
-    ``nb_of_points_x`` of points.
+    ``n1``: int. The x range is sampled uniformly at ``n1`` of points.
 
-    ``nb_of_points_y``: int. The y range is sampled uniformly at
-    ``nb_of_points_y`` of points.
+    ``n2``: int. The y range is sampled uniformly at ``n2`` of points.
 
     Aesthetics:
 
@@ -2486,6 +2484,7 @@ def plot_contour(*args, show=True, **kwargs):
     """
 
     args = list(map(sympify, args))
+    kwargs = _set_discretization_points(kwargs, "pc")
     plot_expr = check_arguments(args, 1, 2)
     series = [ContourSeries(*arg) for arg in plot_expr]
     plot_contours = Plot(*series, **kwargs)
@@ -2599,3 +2598,32 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
                     raise ValueError("The ranges should be a tuple of "
                                      "length 3, got %s" % str(arg[i + expr_len]))
         return args
+
+def _set_discretization_points(kwargs, pt):
+    """ This function allows the user two use the keyword arguments n1 and n2
+    to specify the number of discretization points in two directions.
+
+    Parameters
+    ==========
+
+        kwargs : dict
+
+        pt : str
+            The calling plot function. Can be one of:
+            ["p", "pp", "p3d", "p3dl", "p3ds", "pc", "pi"]
+            to indicate plot, plot_parametric, ..., respectively.
+    """
+    if pt in ["p", "pp", "p3dpl", "pi"]:
+        if "n1" in kwargs.keys():
+            kwargs["nb_of_points"] = kwargs["n1"]
+    elif pt in ["p3d", "pc"]:
+        if "n1" in kwargs.keys():
+            kwargs["nb_of_points_x"] = kwargs["n1"]
+        if "n2" in kwargs.keys():
+            kwargs["nb_of_points_y"] = kwargs["n2"]
+    elif pt in ["p3dps"]:
+        if "n1" in kwargs.keys():
+            kwargs["nb_of_points_u"] = kwargs["n1"]
+        if "n2" in kwargs.keys():
+            kwargs["nb_of_points_v"] = kwargs["n2"]
+    return kwargs

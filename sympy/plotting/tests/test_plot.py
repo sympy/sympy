@@ -725,3 +725,24 @@ def test_custom_coloring():
             surface_color=lambda a, b: a**2 + b**2)
     plot3d(x*y, (x, -5, 5), (y, -5, 5), surface_color=1)
     plot3d(x*y, (x, -5, 5), (y, -5, 5), surface_color="r")
+
+def test_nb_discretization_points():
+    x = Symbol('x')
+    y = Symbol('y')
+    u = Symbol('u')
+    v = Symbol('v')
+    p = plot(cos(x), n1=50)
+    assert p._series[0].nb_of_points == 50
+    p = plot_parametric(cos(u), sin(u), n1=50)
+    assert p._series[0].nb_of_points == 50
+    p = plot3d_parametric_line(cos(u), sin(u), u, n1=50)
+    assert p._series[0].nb_of_points == 50
+    p = plot3d(x + y, n1=40, n2=30)
+    assert p._series[0].nb_of_points_x == 40
+    assert p._series[0].nb_of_points_y == 30
+    p = plot_contour(x + y, n1=40, n2=30)
+    assert p._series[0].nb_of_points_x == 40
+    assert p._series[0].nb_of_points_y == 30
+    p = plot3d_parametric_surface(cos(u + v), sin(u - v), u - v, n1=40, n2=30)
+    assert p._series[0].nb_of_points_u == 40
+    assert p._series[0].nb_of_points_v == 30
