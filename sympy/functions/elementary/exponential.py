@@ -418,7 +418,7 @@ class exp(ExpBase, metaclass=ExpMeta):
         sympy.functions.elementary.complexes.re
         sympy.functions.elementary.complexes.im
         """
-        from .trigonometric import cos, sin
+        from sympy.functions.elementary.trigonometric import cos, sin
         re, im = self.args[0].as_real_imag()
         if deep:
             re = re.expand(deep, **hints)
