@@ -248,13 +248,14 @@ class DomainMatrix:
         domain, items_domain = cls.get_domain(items_sympy, **kwargs)
 
         idx = 0
-
+        items_dict = {}
         for i, row in zip(elemsdict.keys(), elemsdict.values()):
+                items_dict[i] = {}
                 for j in row.keys():
-                    elemsdict[i][j] = items_domain[idx]
+                    items_dict[i][j] = items_domain[idx]
                     idx += 1
 
-        return DomainMatrix(elemsdict, (nrows, ncols), domain)
+        return DomainMatrix(items_dict, (nrows, ncols), domain)
 
     @classmethod
     def from_Matrix(cls, M, **kwargs):
