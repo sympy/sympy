@@ -145,6 +145,7 @@ def get_all_relevant_facts(proposition, assumptions, context,
     Examples
     ========
 
+    >>> from sympy import Q
     >>> from sympy.assumptions.cnf import CNF
     >>> from sympy.assumptions.satask import get_all_relevant_facts
     >>> from sympy.abc import x, y
