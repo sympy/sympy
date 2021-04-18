@@ -11,16 +11,18 @@ def satask(proposition, assumptions=True, context=global_assumptions,
         use_known_facts=True, iterations=oo):
     props = CNF.from_prop(proposition)
     _props = CNF.from_prop(~proposition)
-    if context:
-        tmp = CNF()
-        context = tmp.extend(context)
+
     assumptions = CNF.from_prop(assumptions)
 
-    sat = get_all_relevant_facts(props, assumptions, context,
-        use_known_facts=use_known_facts, iterations=iterations)
+    context_cnf = CNF()
     if context:
-        sat.add_from_cnf(context)
+        context_cnf = context_cnf.extend(context)
+
+    sat = get_all_relevant_facts(props, assumptions, context_cnf,
+        use_known_facts=use_known_facts, iterations=iterations)
     sat.add_from_cnf(assumptions)
+    if context:
+        sat.add_from_cnf(context_cnf)
 
     return check_satisfiability(props, _props, sat)
 
@@ -106,8 +108,41 @@ def get_relevant_facts(proposition, assumptions=None,
     return newexprs - exprs, relevant_facts
 
 
-def get_all_relevant_facts(proposition, assumptions=True,
-    context=global_assumptions, use_known_facts=True, iterations=oo):
+def get_all_relevant_facts(proposition, assumptions, context,
+        use_known_facts=True, iterations=oo):
+    """
+    Extract all relevant facts from *proposition* and *assumptions*.
+
+    This function extracts the facts by recursively calling
+    ``get_all_relevant_facts()``. Extracted facts are converted to
+    ``EncodedCNF`` and returned.
+
+    Parameters
+    ==========
+
+    proposition : sympy.assumptions.cnf.CNF
+        CNF generated from proposition expression
+
+    assumptions : sympy.assumptions.cnf.CNF
+        CNF generated from assumption expression
+
+    context : sympy.assumptions.cnf.CNF
+        CNF generated from assumptions context
+
+    use_known_facts : bool, optional
+        If ``True``, facts from ``sympy.assumptions.ask_generated`` module
+        are encoded as well.
+
+    iterations : int, optional
+        Number of times that relevant facts are recursively extracted.
+        Default is infinite times until no new fact is found.
+
+    Returns
+    =======
+
+    sympy.assumptions.cnf.EncodedCNF
+
+    """
     # The relevant facts might introduce new keys, e.g., Q.zero(x*y) will
     # introduce the keys Q.zero(x) and Q.zero(y), so we need to run it until
     # we stop getting new things. Hopefully this strategy won't lead to an
