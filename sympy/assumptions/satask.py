@@ -114,7 +114,7 @@ def get_all_relevant_facts(proposition, assumptions, context,
     Extract all relevant facts from *proposition* and *assumptions*.
 
     This function extracts the facts by recursively calling
-    ``get_all_relevant_facts()``. Extracted facts are converted to
+    ``get_relevant_facts()``. Extracted facts are converted to
     ``EncodedCNF`` and returned.
 
     Parameters
