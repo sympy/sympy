@@ -142,6 +142,18 @@ def get_all_relevant_facts(proposition, assumptions, context,
 
     sympy.assumptions.cnf.EncodedCNF
 
+    Examples
+    ========
+
+    >>> from sympy.assumptions.cnf import CNF
+    >>> from sympy.assumptions.satask import get_all_relevant_facts
+    >>> from sympy.abc import x, y
+    >>> props = CNF.from_prop(Q.nonzero(x*y))
+    >>> assump = CNF.from_prop(Q.nonzero(x))
+    >>> context = CNF.from_prop(Q.nonzero(y))
+    >>> get_all_relevant_facts(props, assump, context) #doctest: +SKIP
+    <sympy.assumptions.cnf.EncodedCNF at 0x7f09faa6ccd0>
+
     """
     # The relevant facts might introduce new keys, e.g., Q.zero(x*y) will
     # introduce the keys Q.zero(x) and Q.zero(y), so we need to run it until
