@@ -49,59 +49,163 @@ def check_satisfiability(prop, _prop, factbase):
         raise ValueError("Inconsistent assumptions")
 
 
-def get_relevant_facts(proposition, assumptions=None,
-    context=None, exprs=None,
-    relevant_facts=None):
+def extract_predargs(proposition, assumptions=None, context=None):
+    """
+    Extract every expression in the argument of predicates from *proposition*,
+    *assumptions* and *context*.
+
+    Parameters
+    ==========
+
+    proposition : sympy.assumptions.cnf.CNF
+
+    assumptions : sympy.assumptions.cnf.CNF, optional
+
+    context : sympy.assumptions.cnf.CNF, optional
+        CNF generated from assumptions context
+
+    Examples
+    ========
+
+    >>> from sympy import Q, Abs
+    >>> from sympy.assumptions.cnf import CNF
+    >>> from sympy.assumptions.satask import extract_predargs
+    >>> from sympy.abc import x, y
+    >>> props = CNF.from_prop(Q.zero(Abs(x*y)))
+    >>> assump = CNF.from_prop(Q.zero(x) & Q.zero(y))
+    >>> extract_predargs(props, assump)
+    {x, y, Abs(x*y)}
+
+    """
+    req_keys = find_symbols(proposition)
+    keys = proposition.all_predicates()
+    # XXX: We need this since True/False are not Basic
+    lkeys = set()
+    if assumptions:
+        lkeys |= assumptions.all_predicates()
+    if context:
+        lkeys |= context.all_predicates()
+
+    lkeys = lkeys - {S.true, S.false}
+    tmp_keys = None
+    while tmp_keys != set():
+        tmp = set()
+        for l in lkeys:
+            syms = find_symbols(l)
+            if (syms & req_keys) != set():
+                tmp |= syms
+        tmp_keys = tmp - req_keys
+        req_keys |= tmp_keys
+    keys |= {l for l in lkeys if find_symbols(l) & req_keys != set()}
+
+    exprs = set()
+    for key in keys:
+        if isinstance(key, AppliedPredicate):
+            exprs |= set(key.arguments)
+        else:
+            exprs.add(key)
+    return exprs
+
+def find_symbols(pred):
+    """
+    Find every :obj:`~.Symbol` in *pred*.
+
+    Parameters
+    ==========
+
+    pred : sympy.assumptions.cnf.CNF, or any Expr
+
+    """
+    if isinstance(pred, CNF):
+        symbols = set()
+        for a in pred.all_predicates():
+            symbols |= find_symbols(a)
+        return symbols
+    return pred.atoms(Symbol)
+
+
+def get_relevant_facts(exprs, relevant_facts=None):
+    """
+    Extract relevant facts from the items in *exprs*. Facts are defined in
+    ``assumptions.sathandlers`` module.
+
+    This function is recursively called by ``get_all_relevant_facts()``.
+
+    Parameters
+    ==========
+
+    exprs : set
+        Expressions whose relevant facts are searched
+
+    relevant_facts : sympy.assumptions.cnf.CNF, optional
+        Pre-discovered relevant facts
+
+    Returns
+    =======
+
+    exprs : set
+        Candidates for next relevant fact searching.
+
+    relevant_facts : sympy.assumptions.cnf.CNF
+        Updated relevant facts.
+
+    Examples
+    ========
+
+    Here, we will see how facts relevant to ``Abs(x*y)`` are recursively
+    extracted. On the first run, set containing the expression is passed
+    without pre-discovered relevant facts. The result is a set containig
+    candidates for next run, and ``CNF()`` instance containing facts
+    which are relevant to ``Abs`` and its argument.
+
+    >>> from sympy import Abs
+    >>> from sympy.assumptions.satask import get_relevant_facts
+    >>> from sympy.abc import x, y
+    >>> exprs = {Abs(x*y)}
+    >>> exprs, facts = get_relevant_facts(exprs)
+    >>> exprs
+    {x*y}
+    >>> facts.clauses #doctest: +SKIP
+    {frozenset({Literal(Q.odd(Abs(x*y)), False), Literal(Q.odd(x*y), True)}),
+    frozenset({Literal(Q.zero(Abs(x*y)), False), Literal(Q.zero(x*y), True)}),
+    frozenset({Literal(Q.even(Abs(x*y)), False), Literal(Q.even(x*y), True)}),
+    frozenset({Literal(Q.zero(Abs(x*y)), True), Literal(Q.zero(x*y), False)}),
+    frozenset({Literal(Q.even(Abs(x*y)), False),
+                Literal(Q.odd(Abs(x*y)), False),
+                Literal(Q.odd(x*y), True)}),
+    frozenset({Literal(Q.even(Abs(x*y)), False),
+                Literal(Q.even(x*y), True),
+                Literal(Q.odd(Abs(x*y)), False)}),
+    frozenset({Literal(Q.positive(Abs(x*y)), False),
+                Literal(Q.zero(Abs(x*y)), False)})}
+
+    We pass the first run's results to the second run, and get the expressions
+    for next run and updated facts.
+
+    >>> exprs, facts = get_relevant_facts(exprs, relevant_facts=facts)
+    >>> exprs
+    {x, y}
+
+    On final run, no more candidate is returned thus we know that all
+    relevant facts are successfully retrieved.
+
+    >>> exprs, facts = get_relevant_facts(exprs, relevant_facts=facts)
+    >>> exprs
+    set()
+
+    """
+    if not relevant_facts:
+        relevant_facts = CNF()
 
     newexprs = set()
-
-    if not assumptions:
-        assumptions = CNF({S.true})
-
-    if not relevant_facts:
-        relevant_facts = set()
-
-    def find_symbols(pred):
-        if isinstance(pred, CNF):
-            symbols = set()
-            for a in pred.all_predicates():
-                symbols |= find_symbols(a)
-            return symbols
-        if isinstance(pred.args, AppliedPredicate):
-            return {pred.args[0]}
-        return pred.atoms(Symbol)
-
-    if not exprs:
-        req_keys = find_symbols(proposition)
-        keys = proposition.all_predicates()
-        # XXX: We need this since True/False are not Basic
-        lkeys = set()
-        lkeys |= assumptions.all_predicates()
-        if context:
-            lkeys |= context.all_predicates()
-
-        lkeys = lkeys - {S.true, S.false}
-        tmp_keys = None
-        while tmp_keys != set():
-            tmp = set()
-            for l in lkeys:
-                syms = find_symbols(l)
-                if (syms & req_keys) != set():
-                    tmp |= syms
-            tmp_keys = tmp - req_keys
-            req_keys |= tmp_keys
-        keys |= {l for l in lkeys if find_symbols(l) & req_keys != set()}
-
-        exprs = {key.arguments[0] if isinstance(key, AppliedPredicate) else key for key in keys}
-        return exprs, relevant_facts
-
     for expr in exprs:
         for fact in fact_registry[expr.func]:
             cnf_fact = CNF.to_CNF(fact)
             newfact = cnf_fact.rcall(expr)
             relevant_facts = relevant_facts._and(newfact)
-            newexprs |= {key.arguments[0] for key in newfact.all_predicates()
-                             if isinstance(key, AppliedPredicate)}
+            for key in newfact.all_predicates():
+                if isinstance(key, AppliedPredicate):
+                    newexprs |= set(key.arguments)
 
     return newexprs - exprs, relevant_facts
 
@@ -116,13 +220,15 @@ def get_all_relevant_facts(proposition, assumptions=True,
     relevant_facts = CNF()
     exprs = None
     all_exprs = set()
-    while exprs != set():
-        exprs, relevant_facts = get_relevant_facts(proposition,
-                assumptions, context, exprs=exprs,
-                relevant_facts=relevant_facts)
+    while True:
+        if i == 0:
+            exprs = extract_predargs(proposition, assumptions, context)
         all_exprs |= exprs
+        exprs, relevant_facts = get_relevant_facts(exprs, relevant_facts)
         i += 1
         if i >= iterations:
+            break
+        if not exprs:
             break
 
     if use_known_facts:
