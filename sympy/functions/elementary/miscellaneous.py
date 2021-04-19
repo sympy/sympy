@@ -6,7 +6,6 @@ from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import (Application, Lambda,
     ArgumentIndexError)
 from sympy.core.expr import Expr
-from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
@@ -357,11 +356,15 @@ def real_root(arg, n=None, evaluate=None):
     from sympy.functions.elementary.complexes import Abs, im, sign
     from sympy.functions.elementary.piecewise import Piecewise
     if n is not None:
+        #raise error if arg is not real
+        if Eq(im(arg), S.Zero) == False:
+            raise ValueError("The argument '%s' is not a real number." %arg)
+        if sympify(arg).is_integer and sympify(n).is_integer:
+            if arg < 0 and n % 2 == 0:
+                raise ValueError("The arguments ('%s', '%s') result in an nonreal result" %(arg, n))
         return Piecewise(
             (root(arg, n, evaluate=evaluate), Or(Eq(n, S.One), Eq(n, S.NegativeOne))),
-            (Mul(sign(arg), root(Abs(arg), n, evaluate=evaluate), evaluate=evaluate),
-            And(Eq(im(arg), S.Zero), Eq(Mod(n, 2), S.One))),
-            (root(arg, n, evaluate=evaluate), True))
+            (Mul(sign(arg), root(Abs(arg), n, evaluate=evaluate), evaluate=evaluate), True))
     rv = sympify(arg)
     n1pow = Transform(lambda x: -(-x.base)**x.exp,
                       lambda x:
