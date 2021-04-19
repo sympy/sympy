@@ -6,6 +6,7 @@ please refer to sympy.logic classes And, Or, Not, etc.
 """
 from itertools import combinations, product
 from sympy import S, Nor, Nand, Xor, Implies, Equivalent, ITE
+from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.logic.boolalg import Or, And, Not, Xnor
 from itertools import zip_longest
 
@@ -147,12 +148,17 @@ def to_NNF(expr, composite_map={}):
     Examples
     ========
 
-    >>> from sympy import Q
+    >>> from sympy import Q, Eq
     >>> from sympy.assumptions.cnf import to_NNF
-    >>> from sympy.abc import x
+    >>> from sympy.abc import x, y
     >>> expr = Q.even(x) & ~Q.positive(x)
     >>> to_NNF(expr)
     (Literal(Q.even(x), False) & Literal(Q.positive(x), True))
+
+    Supported boolean objects are converted to corresponding predicates.
+
+    >>> to_NNF(Eq(x, y))
+    Literal(Q.eq(x, y), False)
 
     If ``composite_map`` argument is given, ``to_NNF`` decomposes the
     specified predicate into a combination of primitive predicates.
@@ -163,7 +169,13 @@ def to_NNF(expr, composite_map={}):
     >>> to_NNF(Q.nonpositive(x), cmap)
     (Literal(Q.negative(x), False) | Literal(Q.zero(x), False))
     """
+    from sympy.assumptions.ask import Q
     from sympy.assumptions.assume import AppliedPredicate, Predicate
+
+    binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
+    if type(expr) in binrelpreds:
+        pred = binrelpreds[type(expr)]
+        expr = pred(*expr.args)
 
     if isinstance(expr, Not):
         arg = expr.args[0]
