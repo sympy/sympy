@@ -358,6 +358,16 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     """
     Function to evaluate the proposition with assumptions.
 
+    Explanation
+    ===========
+
+    This function evaluates the proposition to ``True`` or ``False`` if
+    the truth value can be determined. If not, it returns ``None``.
+
+    It should be discerned from :func:`~.refine()` which, when applied to a
+    proposition, simplifies the argument to symbolic ``Boolean`` instead of
+    Python built-in ``True``, ``False`` or ``None``.
+
     **Syntax**
 
         * ask(proposition)
@@ -366,13 +376,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         * ask(proposition, assumptions)
             Evaluate the *proposition* with respect to *assumptions* in
             global assumption context.
-
-    This function evaluates the proposition to ``True`` or ``False`` if
-    the truth value can be determined. If not, it returns ``None``.
-
-    It should be discerned from :func:`~.refine()` which, when applied to a
-    proposition, simplifies the argument to symbolic ``Boolean`` instead of
-    Python built-in ``True``, ``False`` or ``None``.
 
     Parameters
     ==========
@@ -387,6 +390,18 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     context : AssumptionsContext, optional
         Default assumptions to evaluate the *proposition*. By default,
         this is ``sympy.assumptions.global_assumptions`` variable.
+
+    Returns
+    =======
+
+    ``True``, ``False``, or ``None``
+
+    Raises
+    ======
+
+    TypeError : *proposition* or *assumptions* is not valid logical expression
+
+    ValueError : assumptions are inconsistent
 
     Examples
     ========
@@ -405,14 +420,22 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     >>> print(ask(Q.odd(3*x))) # cannot determine unless we know x
     None
 
-    **Remarks**
+    ``ValueError`` is raised if assumptions are inconsistent.
 
-        Relations in assumptions are not implemented (yet), so the following
-        will not give a meaningful result.
+    >>> ask(Q.integer(x), Q.even(x) & Q.odd(x))
+    Traceback (most recent call last):
+      ...
+    ValueError: inconsistent assumptions Q.even(x) & Q.odd(x)
 
-        >>> ask(Q.positive(x), x > 0)
+    Notes
+    =====
 
-        It is however a work in progress.
+    Relations in assumptions are not implemented (yet), so the following
+    will not give a meaningful result.
+
+    >>> ask(Q.positive(x), x > 0)
+
+    It is however a work in progress.
 
     See Also
     ========
