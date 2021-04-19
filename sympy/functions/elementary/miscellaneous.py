@@ -1,6 +1,7 @@
 from sympy.core import Function, S, sympify
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
+from sympy.core.compatibility import ordered
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import (Application, Lambda,
     ArgumentIndexError)
@@ -405,7 +406,7 @@ class MinMaxBase(Expr, LatticeOp):
 
         # base creation
         _args = frozenset(args)
-        obj = Expr.__new__(cls, _args, **assumptions)
+        obj = Expr.__new__(cls, *ordered(_args), **assumptions)
         obj._argset = _args
         return obj
 
