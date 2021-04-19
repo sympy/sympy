@@ -252,4 +252,4 @@ def test_nprime():
     raises(ValueError, lambda: nprimes(0))
     raises(ValueError, lambda: nprimes(10, 0))
     raises(ValueError, lambda: nprimes(10,-5))
-    assert nprimes(10, 2) == []
+    raises(ValueError, lambda: nprimes(5,1))
