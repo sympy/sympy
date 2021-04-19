@@ -1054,7 +1054,7 @@ def compositepi(n):
     return n - primepi(n) - 1
 
 def nprimes(k, n=None):
-    """ Returns first k prime numbers or kth to nth prime numbers(both inclusive).
+    """ Returns first n prime numbers or kth to nth prime numbers (both inclusive).
 
         Examples
         ========
