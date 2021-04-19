@@ -190,7 +190,7 @@ class ReferenceFrame:
             self.latex_vecs = latexs
         self.name = name
         self._var_dict = {}
-        #The _dcm_dict dictionary will only store the dcms of immediate parent-child
+        #The _dcm_dict dictionary will only store the dcms of adjacent parent-child
         #relationships. The _dcm_cache dictionary will store calculated dcm along with
         #all content of _dcm_dict for faster retrieval of dcms.
         self._dcm_dict = {}
@@ -533,7 +533,7 @@ class ReferenceFrame:
         # update the _dcm_dict of parent while over write
         # all content of self._dcm_dict and self._dcm_cache
         # with new dcm relation.
-        # else update _dcm_cache and _dcm_dict of both
+        # Else update _dcm_cache and _dcm_dict of both
         # self and parent.
         frames = self._dcm_cache.keys()
         dcm_dict_del = []
