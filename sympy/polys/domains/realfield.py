@@ -90,6 +90,9 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
     def from_QQ_gmpy(self, element, base):
         return self.dtype(int(element.numerator)) / int(element.denominator)
 
+    def from_AlgebraicField(self, element, base):
+        return self.from_sympy(base.to_sympy(element).evalf(self.dps))
+
     def from_RealField(self, element, base):
         if self == base:
             return element
