@@ -1080,4 +1080,4 @@ def nprimes(k, n=None):
         raise ValueError("k must be a positive integer.")
     if k > n:
         raise ValueError('k should not be less than n')
-    return list(sieve[k : n+1])
+    return list(sieve[k: n + 1])
