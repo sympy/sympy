@@ -857,7 +857,7 @@ def test_2nd_power_series_ordinary():
     C1, C2 = symbols("C1 C2")
 
     eq = f(x).diff(x, 2) - x*f(x)
-    assert classify_ode(eq) == ('2nd_linear_airy', '2nd_power_series_ordinary')
+    assert classify_ode(eq) == ('2nd_linear_airy', '2nd_power_series_ordinary', '2nd_autonomous_nth')
     sol = Eq(f(x), C2*(x**3/6 + 1) + C1*x*(x**3/12 + 1) + O(x**6))
     assert dsolve(eq, hint='2nd_power_series_ordinary') == sol
     assert checkodesol(eq, sol) == (True, 0)
@@ -895,7 +895,7 @@ def test_2nd_power_series_ordinary():
     # assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) + x*f(x)
-    assert classify_ode(eq) == ('2nd_linear_airy', '2nd_power_series_ordinary')
+    assert classify_ode(eq) == ('2nd_linear_airy', '2nd_power_series_ordinary', '2nd_autonomous_nth')
     sol = Eq(f(x), C2*(x**6/180 - x**3/6 + 1) + C1*x*(-x**3/12 + 1) + O(x**7))
     assert dsolve(eq, hint='2nd_power_series_ordinary', n=7) == sol
     assert checkodesol(eq, sol) == (True, 0)

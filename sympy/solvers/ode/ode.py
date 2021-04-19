@@ -330,8 +330,7 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral",
     "Liouville_Integral",
-    "2nd_nonlinear_autonomous_conserved",
-    "2nd_nonlinear_autonomous_conserved_Integral",
+    "2nd_autonomous_nth",
     )
 
 lie_heuristics = (
@@ -694,7 +693,11 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         else:
             sols = solvefunc(eq, func, order, match)
         if iterable(sols):
-            rv = [odesimp(eq, s, func, hint) for s in sols]
+            rv = []
+            for s in sols:
+                t = odesimp(eq, s, func, hint)
+                if t is not None:
+                    rv.append(t)
         else:
             rv =  odesimp(eq, sols, func, hint)
     else:
@@ -1052,7 +1055,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         Bernoulli: ('Bernoulli',),
         Factorable: ('factorable',),
         RiccatiSpecial: ('Riccati_special_minus2',),
-        SecondNonlinearAutonomousConserved: ('2nd_nonlinear_autonomous_conserved',),
+        SecondAutonomousNth: ('2nd_autonomous_nth',),
     }
     for solvercls in solvers:
         solver = solvercls(ode)
@@ -2259,6 +2262,23 @@ def odesimp(ode, eq, func, hint):
        \2*x /
 
     """
+    if isinstance(eq, BooleanFalse):
+        return None
+    if hint == '2nd_autonomous_nth':
+        n = Symbol('n')
+        f = func
+        x = f.args[0]
+        df = Derivative(f, x)
+        for arg in ode.args:
+            if arg.has(df):
+                if isinstance(arg, Pow):
+                    n = arg.as_base_exp()[1]
+                else:
+                    n = arg.args[0].as_base_exp()[1]
+        if isinstance(n, Symbol):
+            eq = _handle_Integral(eq, func, hint)
+            return eq
+
     x = func.args[0]
     f = func.func
     C1 = get_numbered_constants(eq, num=1)
@@ -7094,5 +7114,4 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 
 #This import is written at the bottom to avoid circular imports.
 from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
-        Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
-        SecondNonlinearAutonomousConserved)
+        Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial, SecondAutonomousNth)

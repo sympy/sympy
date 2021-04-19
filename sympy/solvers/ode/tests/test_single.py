@@ -56,6 +56,7 @@ _u = Dummy('u')
 y = Symbol('y')
 f = Function('f')
 g = Function('g')
+_v = Dummy('v')
 C1, C2, C3, C4, C5, C6, C7, C8, C9, C10  = symbols('C1:11')
 
 
@@ -408,19 +409,8 @@ def test_2nd_2F1_hypergeometric_integral():
     assert checkodesol(eq, sol) == (True, 0)
 
 
-def test_2nd_nonlinear_autonomous_conserved():
-    _ode_solver_test(_get_examples_ode_sol_2nd_nonlinear_autonomous_conserved)
-
-
-def test_2nd_nonlinear_autonomous_conserved_integral():
-    eq = f(x).diff(x, 2) + asin(f(x))
-    actual = [Eq(Integral(1/sqrt(C1 - 2*Integral(asin(_u), _u)), (_u, f(x))), C2 + x),
-    Eq(Integral(1/sqrt(C1 - 2*Integral(asin(_u), _u)), (_u, f(x))), C2 - x)]
-    solved = dsolve(eq, hint='2nd_nonlinear_autonomous_conserved_Integral', simplify=False)
-    for a,s in zip(actual, solved):
-        assert a.dummy_eq(s)
-    # checkodesol unable to simplify solutions with f(x) in an integral equation
-    assert checkodesol(eq, [s.doit() for s in solved]) == [(True, 0), (True, 0)]
+def test_2nd_autonomous_nth():
+    _ode_solver_test(_get_examples_ode_sol_2nd_autonomous_nth)
 
 
 def test_2nd_linear_bessel_equation():
@@ -843,7 +833,7 @@ def _get_examples_ode_sol_factorable():
         'eq': (f(x).diff(x, 2)-exp(f(x)))*f(x).diff(x),
         'sol': [
             Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 + x)) - 1))),
-            Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 - x)) - 1))),
+            Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 + x)) - 1))),
             Eq(f(x), C1)
         ]
     },
@@ -2015,53 +2005,61 @@ def _get_examples_ode_sol_2nd_2F1_hypergeometric():
     }
     }
 
+
 @_add_example_keys
-def _get_examples_ode_sol_2nd_nonlinear_autonomous_conserved():
+def _get_examples_ode_sol_2nd_autonomous_nth():
     return {
-            'hint': "2nd_nonlinear_autonomous_conserved",
+            'hint': "2nd_autonomous_nth",
             'func': f(x),
             'examples': {
-    '2nd_nonlinear_autonomous_conserved_01': {
-        'eq': f(x).diff(x, 2) + exp(f(x)) + log(f(x)),
-        'sol': [
-            Eq(Integral(1/sqrt(C1 - 2*_u*log(_u) + 2*_u - 2*exp(_u)), (_u, f(x))), C2 + x),
-            Eq(Integral(1/sqrt(C1 - 2*_u*log(_u) + 2*_u - 2*exp(_u)), (_u, f(x))), C2 - x)
-        ],
-        'simplify_flag': False,
+    '2nd_autonomous_nth_01': {
+        'eq': f(x).diff(x, x) + f(x).diff(x)**2,
+        'sol': [Eq(f(x), log(C1*(C2 + x)))],
     },
-    '2nd_nonlinear_autonomous_conserved_02': {
+    '2nd_autonomous_nth_02': {
+        'eq': f(x).diff(x, x) - f(x).diff(x)**2,
+        'sol': [Eq(f(x), log(C1/(C2 + x)))],
+    },
+    '2nd_autonomous_nth_03': {
+        'eq': f(x).diff(x, x) + f(x).diff(x)**3,
+        'sol': [Eq(f(x), -C1 - sqrt(C1**2 + C2 + 2*x)), Eq(f(x), -C1 + sqrt(C1**2 + C2 + 2*x))],
+    },
+    '2nd_autonomous_nth_04': {
+        'eq': f(x).diff(x, x) - f(x).diff(x)**3,
+        'sol': [Eq(f(x), C1 - sqrt(C1**2 + C2 - 2*x)), Eq(f(x), C1 + sqrt(C1**2 + C2 - 2*x))],
+    },
+    '2nd_autonomous_nth_05': {
+        'eq': f(x).diff(x, x) + f(x).diff(x)**4,
+        'sol': [Eq((C1 + 2*f(x))**(S(3)/2)/3, C2 + x)],
+    },
+    '2nd_autonomous_nth_06': {
+        'eq': f(x).diff(x, 2) - exp(f(x)) + log(f(x)),
+        'sol': [
+            Eq(Integral(1/sqrt(-2*_v*log(_v) + 2*_v + C1 + 2*exp(_v)), (_v, f(x))), C2 + x),
+            Eq(-Integral(1/sqrt(-2*_v*log(_v) + 2*_v + C1 + 2*exp(_v)), (_v, f(x))), C2 + x)
+        ],
+    },
+    '2nd_autonomous_nth_07': {
         'eq': f(x).diff(x, 2) + cbrt(f(x)) + 1/f(x),
         'sol': [
-            Eq(sqrt(2)*Integral(1/sqrt(2*C1 - 3*_u**Rational(4, 3) - 4*log(_u)), (_u, f(x))), C2 + x),
-            Eq(sqrt(2)*Integral(1/sqrt(2*C1 - 3*_u**Rational(4, 3) - 4*log(_u)), (_u, f(x))), C2 - x)
+            Eq(-sqrt(2)*Integral(1/sqrt(-3*_v**(S(4)/3) + 2*C1 - 4*log(_v)), (_v, f(x))), C2 + x),
+            Eq(sqrt(2)*Integral(1/sqrt(-3*_v**(S(4)/3) + 2*C1 - 4*log(_v)), (_v, f(x))), C2 + x)
         ],
-        'simplify_flag': False,
     },
-    '2nd_nonlinear_autonomous_conserved_03': {
+    '2nd_autonomous_nth_08': {
         'eq': f(x).diff(x, 2) + sin(f(x)),
         'sol': [
-            Eq(Integral(1/sqrt(C1 + 2*cos(_u)), (_u, f(x))), C2 + x),
-            Eq(Integral(1/sqrt(C1 + 2*cos(_u)), (_u, f(x))), C2 - x)
+            Eq(-Integral(1/sqrt(C1 + 2*cos(_v)), (_v, f(x))), C2 + x),
+            Eq(Integral(1/sqrt(C1 + 2*cos(_v)), (_v, f(x))), C2 + x)
         ],
-        'simplify_flag': False,
     },
-    '2nd_nonlinear_autonomous_conserved_04': {
+    '2nd_autonomous_nth_09': {
         'eq': f(x).diff(x, 2) + cosh(f(x)),
         'sol': [
-            Eq(Integral(1/sqrt(C1 - 2*sinh(_u)), (_u, f(x))), C2 + x),
-            Eq(Integral(1/sqrt(C1 - 2*sinh(_u)), (_u, f(x))), C2 - x)
+            Eq(-Integral(1/sqrt(C1 - 2*sinh(_v)), (_v, f(x))), C2 + x),
+            Eq(Integral(1/sqrt(C1 - 2*sinh(_v)), (_v, f(x))), C2 + x)
         ],
-        'simplify_flag': False,
     },
-    '2nd_nonlinear_autonomous_conserved_05': {
-        'eq': f(x).diff(x, 2) + asin(f(x)),
-        'sol': [
-            Eq(Integral(1/sqrt(C1 - 2*_u*asin(_u) - 2*sqrt(1 - _u**2)), (_u, f(x))), C2 + x),
-            Eq(Integral(1/sqrt(C1 - 2*_u*asin(_u) - 2*sqrt(1 - _u**2)), (_u, f(x))), C2 - x)
-        ],
-        'simplify_flag': False,
-        'XFAIL': ['2nd_nonlinear_autonomous_conserved_Integral']
-    }
     }
     }
 
@@ -2758,9 +2756,9 @@ def _get_all_examples():
     _get_examples_ode_sol_liouville + \
     _get_examples_ode_sol_separable + \
     _get_examples_ode_sol_nth_linear_var_of_parameters + \
+    _get_examples_ode_sol_2nd_autonomous_nth + \
     _get_examples_ode_sol_2nd_linear_bessel + \
     _get_examples_ode_sol_2nd_2F1_hypergeometric + \
-    _get_examples_ode_sol_2nd_nonlinear_autonomous_conserved + \
     _get_examples_ode_sol_separable_reduced + \
     _get_examples_ode_sol_lie_group + \
     _get_examples_ode_sol_2nd_linear_airy + \

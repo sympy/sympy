@@ -791,65 +791,70 @@ class RiccatiSpecial(SinglePatternODESolver):
         return [gensol]
 
 
-class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
+class SecondAutonomousNth(SinglePatternODESolver):
     r"""
-    Gives solution for the autonomous second order nonlinear
-    differential equation of the form
+    The general second order autonomous differential equation of the form:
 
-    .. math :: f''(x) = g(f(x))
+    .. math :: x''(t) = g(x'(t), x(t))
 
-    The solution for this differential equation can be computed
-    by multiplying by `f'(x)` and integrating on both sides,
-    converting it into a first order differential equation.
+    This solver is added for the special case in the above genre:
+
+    .. math :: f''(x) = g(f(x)) f'(x)^n
+
+    Explanation
+    ===========
+
+    This special case can be solved using by writing the second derivative in
+    form involving a power of f'(x) and on rewriting the second derivative, then rearranging.
+    This solver works for any arbitrary value of n defined above.
+
+    Extras: For faster results, kindly set simplify = False in dsolve().
 
     Examples
     ========
 
-    >>> from sympy import Function, symbols, dsolve
-    >>> f, g = symbols('f g', cls=Function)
-    >>> x = symbols('x')
-
-    >>> eq = f(x).diff(x, 2) - g(f(x))
-    >>> dsolve(eq, simplify=False)
-    [Eq(Integral(1/sqrt(C1 + 2*Integral(g(_u), _u)), (_u, f(x))), C2 + x),
-    Eq(Integral(1/sqrt(C1 + 2*Integral(g(_u), _u)), (_u, f(x))), C2 - x)]
-
-    >>> from sympy import exp, log
-    >>> eq = f(x).diff(x, 2) - exp(f(x)) + log(f(x))
-    >>> dsolve(eq, simplify=False)
-    [Eq(Integral(1/sqrt(-2*_u*log(_u) + 2*_u + C1 + 2*exp(_u)), (_u, f(x))), C2 + x),
-    Eq(Integral(1/sqrt(-2*_u*log(_u) + 2*_u + C1 + 2*exp(_u)), (_u, f(x))), C2 - x)]
+    >>> from sympy import Function, dsolve
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = f(x).diff(x, x) + f(x).diff(x)**2
+    >>> sol = dsolve(eq, hint = '2nd_autonomous_nth')
+    >>> print(sol)
+    Eq(f(x), log(C1*(C2 + x)))
 
     References
     ==========
 
-    http://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
+    .. [1] https://en.wikipedia.org/wiki/Autonomous_system_(mathematics)
+    .. [2] http://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
+
     """
-    hint = "2nd_nonlinear_autonomous_conserved"
+
+    hint = "2nd_autonomous_nth"
     has_integral = True
     order = [2]
 
     def _wilds(self, f, x, order):
-        fy = Wild('fy', exclude=[0, f(x).diff(x), f(x).diff(x, 2)])
-        return (fy,)
+        a = Wild('a', exclude=[0, f(x).diff(x), f(x).diff(x, 2)])
+        n = Wild('n', exclude=[x, f(x), f(x).diff(x), f(x).diff(x, 2)])
+        return a, n
 
     def _equation(self, fx, x, order):
-        fy = self.wilds()[0]
-        return fx.diff(x, 2) + fy
-
-    def _verify(self, fx):
-        return self.ode_problem.is_autonomous
+        a, n = self.wilds()
+        return fx.diff(x, 2) + a*fx.diff(x)**n
 
     def _get_general_solution(self, *, simplify: bool = True):
-        g = self.wilds_match()[0]
+        a, n = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
-        u = Dummy('u')
-        g = g.subs(fx, u)
-        C1, C2 = self.ode_problem.get_numbered_constants(num=2)
-        inside = -2*Integral(g, u) + C1
-        lhs = Integral(1/sqrt(inside), (u, fx))
-        return [Eq(lhs, C2 + x), Eq(lhs, C2 - x)]
+        (C1, C2) = self.ode_problem.get_numbered_constants(num=2)
+        v = Dummy('v')
+        a = a.subs(fx, v)
+        c = C1*Integral(exp(Integral(a, v)), (v, fx))
+        d = Integral((C1 + (n - 2)*Integral(a, v))**(1/(n - 2)), (v, fx))
+        e = d.subs(n, 0)
+        from sympy import Piecewise
+        sol = Piecewise((e, Eq(n, 0)), (c, Eq(n, 2)), (d, True))
+        return [Eq(Piecewise((-e, Eq(n, 0))), C2 + x), Eq(sol, C2 + x)]
 
 
 # Avoid circular import:
