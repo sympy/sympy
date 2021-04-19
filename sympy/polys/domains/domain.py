@@ -728,7 +728,8 @@ class Domain:
 
             if ((K0.is_FractionField and K1.is_PolynomialRing or
                  K1.is_FractionField and K0.is_PolynomialRing) and
-                 (not K0_ground.is_Field or not K1_ground.is_Field) and domain.is_Field):
+                 (not K0_ground.is_Field or not K1_ground.is_Field) and domain.is_Field
+                 and domain.has_assoc_Ring):
                 domain = domain.get_ring()
 
             if K0.is_Composite and (not K1.is_Composite or K0.is_FractionField or K1.is_PolynomialRing):
