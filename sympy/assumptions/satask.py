@@ -28,21 +28,21 @@ def satask(proposition, assumptions=True, context=global_assumptions,
     Parameters
     ==========
 
-    proposition : any boolean expression
-        Proposition which will be evaluated to boolean value
+    proposition : Any boolean expression.
+        Proposition which will be evaluated to boolean value.
 
-    assumptions : any boolean expression, optional
+    assumptions : Any boolean expression, optional.
         Local assumptions to evaluate the *proposition*.
 
-    context : AssumptionsContext, optional
+    context : AssumptionsContext, optional.
         Default assumptions to evaluate the *proposition*. By default,
         this is ``sympy.assumptions.global_assumptions`` variable.
 
-    use_known_facts : bool, optional
+    use_known_facts : bool, optional.
         If ``True``, facts from ``sympy.assumptions.ask_generated`` module
         are passed to SAT solver as well.
 
-    iterations : int, optional
+    iterations : int, optional.
         Number of times that relevant facts are recursively extracted.
         Default is infinite times until no new fact is found.
 
@@ -113,10 +113,10 @@ def extract_predargs(proposition, assumptions=None, context=None):
 
     proposition : sympy.assumptions.cnf.CNF
 
-    assumptions : sympy.assumptions.cnf.CNF, optional
+    assumptions : sympy.assumptions.cnf.CNF, optional.
 
-    context : sympy.assumptions.cnf.CNF, optional
-        CNF generated from assumptions context
+    context : sympy.assumptions.cnf.CNF, optional.
+        CNF generated from assumptions context.
 
     Examples
     ========
@@ -167,7 +167,7 @@ def find_symbols(pred):
     Parameters
     ==========
 
-    pred : sympy.assumptions.cnf.CNF, or any Expr
+    pred : sympy.assumptions.cnf.CNF, or any Expr.
 
     """
     if isinstance(pred, CNF):
@@ -189,10 +189,10 @@ def get_relevant_facts(exprs, relevant_facts=None):
     ==========
 
     exprs : set
-        Expressions whose relevant facts are searched
+        Expressions whose relevant facts are searched.
 
-    relevant_facts : sympy.assumptions.cnf.CNF, optional
-        Pre-discovered relevant facts
+    relevant_facts : sympy.assumptions.cnf.CNF, optional.
+        Pre-discovered relevant facts.
 
     Returns
     =======
@@ -277,19 +277,19 @@ def get_all_relevant_facts(proposition, assumptions, context,
     ==========
 
     proposition : sympy.assumptions.cnf.CNF
-        CNF generated from proposition expression
+        CNF generated from proposition expression.
 
     assumptions : sympy.assumptions.cnf.CNF
-        CNF generated from assumption expression
+        CNF generated from assumption expression.
 
     context : sympy.assumptions.cnf.CNF
-        CNF generated from assumptions context
+        CNF generated from assumptions context.
 
-    use_known_facts : bool, optional
+    use_known_facts : bool, optional.
         If ``True``, facts from ``sympy.assumptions.ask_generated`` module
         are encoded as well.
 
-    iterations : int, optional
+    iterations : int, optional.
         Number of times that relevant facts are recursively extracted.
         Default is infinite times until no new fact is found.
 

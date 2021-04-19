@@ -380,14 +380,14 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     Parameters
     ==========
 
-    proposition : any boolean expression
+    proposition : Any boolean expression.
         Proposition which will be evaluated to boolean value. If this is
         not ``AppliedPredicate``, it will be wrapped by ``Q.is_true``.
 
-    assumptions : any boolean expression, optional
+    assumptions : Any boolean expression, optional.
         Local assumptions to evaluate the *proposition*.
 
-    context : AssumptionsContext, optional
+    context : AssumptionsContext, optional.
         Default assumptions to evaluate the *proposition*. By default,
         this is ``sympy.assumptions.global_assumptions`` variable.
 
@@ -399,9 +399,9 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     Raises
     ======
 
-    TypeError : *proposition* or *assumptions* is not valid logical expression
+    TypeError : *proposition* or *assumptions* is not valid logical expression.
 
-    ValueError : assumptions are inconsistent
+    ValueError : assumptions are inconsistent.
 
     Examples
     ========
