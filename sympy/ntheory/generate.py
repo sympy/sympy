@@ -1071,10 +1071,7 @@ def nprimes(k, n=None):
 
     """
     if n is None:
-        k = as_int(k)
-        if k < 1:
-            raise ValueError("k must be a positive integer.")
-        return list(sieve[1 : k+1])
+        k, n = 1, k
 
     n, k = map(as_int, (n, k))
     if n < 1:
