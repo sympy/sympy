@@ -239,26 +239,31 @@ def _invert_real(f, g_ys, symbol):
         expo_has_sym = expo.has(symbol)
 
         if not expo_has_sym:
-            root = Lambda(n, real_root(n, expo))
+
             if expo.is_rational:
                 n, d = expo.as_numer_denom()
                 if d % 2 == 0 and n % 2 == 1 and d.is_zero is False:
+                    root = Lambda(n, real_root(n, expo))
                     g_ys_pos = g_ys & Interval(0, oo)
                     res = imageset(root, g_ys_pos)
                     base_positive = solveset(base >= 0, symbol, S.Reals)
                     _inv, _set = _invert_real(base, res, symbol)
                     return (_inv, _set.intersect(base_positive))
                 if n % 2 == 0 and d % 2 == 1:
+                    root = Lambda(n, real_root(n, expo))
                     res = imageset(root, g_ys)
                     n = Dummy("n")
                     neg_res = imageset(Lambda(n, -n), res)
                     return _invert_real(base, res + neg_res, symbol)
-                return _invert_real(base, imageset(root, g_ys), symbol)
+
             if expo.is_irrational:
+                root = Lambda(n, real_root(n, expo))
                 g_ys_pos = g_ys & Interval(0, oo)
                 res = imageset(root, g_ys_pos)
                 return _invert_real(base, res, symbol)
-            # indeterminate exponent, e.g. Float
+
+            # indeterminate exponent, e.g. Float or parity of
+            # numer, denom of rational could not be determined
             return (f, g_ys)
 
         if not base_has_sym:
