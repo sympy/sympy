@@ -1053,20 +1053,20 @@ def compositepi(n):
         return 0
     return n - primepi(n) - 1
 
-def nprimes(k, n=None):
+def primes(k, n=None):
     """ Returns first n prime numbers or kth to nth prime numbers (both inclusive).
 
         Examples
         ========
 
-        >>> from sympy.ntheory import nprimes
-        >>> nprimes(5)
+        >>> from sympy.ntheory import primes
+        >>> primes(5)
         [2, 3, 5, 7, 11]
 
-        >>> nprimes(3, 7)
+        >>> primes(3, 7)
         [5, 7, 11, 13, 17]
 
-        >>> nprimes(20, 25)
+        >>> primes(20, 25)
         [71, 73, 79, 83, 89, 97]
 
     """
