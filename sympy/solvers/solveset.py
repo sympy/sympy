@@ -239,30 +239,27 @@ def _invert_real(f, g_ys, symbol):
         expo_has_sym = expo.has(symbol)
 
         if not expo_has_sym:
-            res = imageset(Lambda(n, real_root(n, expo)), g_ys)
+            root = Lambda(n, real_root(n, expo))
             if expo.is_rational:
-                numer, denom = expo.as_numer_denom()
-                if denom % 2 == 0:
+                n, d = expo.as_numer_denom()
+                if d % 2 == 0 and n % 2 == 1 and d.is_zero is False:
+                    g_ys_pos = g_ys & Interval(0, oo)
+                    res = imageset(root, g_ys_pos)
                     base_positive = solveset(base >= 0, symbol, S.Reals)
-                    res = imageset(Lambda(n, real_root(n, expo)
-                        ), g_ys.intersect(
-                        Interval.Ropen(S.Zero, S.Infinity)))
                     _inv, _set = _invert_real(base, res, symbol)
                     return (_inv, _set.intersect(base_positive))
-
-                elif numer % 2 == 0:
-                        n = Dummy('n')
-                        neg_res = imageset(Lambda(n, -n), res)
-                        return _invert_real(base, res + neg_res, symbol)
-
-                else:
-                    return _invert_real(base, res, symbol)
-            elif expo.is_irrational:
+                if n % 2 == 0 and d % 2 == 1:
+                    res = imageset(root, g_ys)
+                    n = Dummy("n")
+                    neg_res = imageset(Lambda(n, -n), res)
+                    return _invert_real(base, res + neg_res, symbol)
+                return _invert_real(base, imageset(root, g_ys), symbol)
+            if expo.is_irrational:
                 g_ys_pos = g_ys & Interval(0, oo)
-                res = imageset(Lambda(n, real_root(n, expo)), g_ys_pos)
+                res = imageset(root, g_ys_pos)
                 return _invert_real(base, res, symbol)
-            elif expo.is_Float:
-                return (f, g_ys)
+            # indeterminate exponent, e.g. Float
+            return (f, g_ys)
 
         if not base_has_sym:
             rhs = g_ys.args[0]

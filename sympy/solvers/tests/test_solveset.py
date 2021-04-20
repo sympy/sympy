@@ -96,7 +96,8 @@ def test_invert_real():
     # issue 21236
     assert invert_real(x**pi, y, x) == (x, FiniteSet(y**(1/pi)))
     assert invert_real(x**pi, -E, x) == (x, EmptySet())
-    assert invert_real(x**(3/2), 1000, x) == (x, FiniteSet(1000**(2/3)))
+    assert invert_real(x**Rational(3/2), 1000, x) == (x, FiniteSet(100))
+    assert invert_real(x**1.0, 1, x) == (x**1.0, FiniteSet(1))
 
     raises(ValueError, lambda: invert_real(S.One, y, x))
 
@@ -2816,3 +2817,7 @@ def test_substitution_with_infeasible_solution():
         (0, Complement(FiniteSet(p01), FiniteSet(0)), 0, p11, 0, 0, 0, 0, 0, 0, 0, -l2*p11/p01, -l3*p11/p01, l2, l3),
     )
     assert sol != nonlinsolve(system, solvefor)
+
+def test_issue_21236():
+    x, y, z = symbols("x y z")
+    assert solveset(x**y - z, x, S.Reals) == ConditionSet(x, Eq(x**y - z, 0), S.Reals)
