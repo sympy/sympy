@@ -1108,31 +1108,31 @@ def _eval_is_eq(lhs, rhs):  # noqa:F811
     return fuzzy_and(fuzzy_bool(is_eq(s, o)) for s, o in zip(lhs, rhs))
 
 
-def is_lt(lhs, rhs):
+def is_lt(lhs, rhs, assumptions=None):
     """Fuzzy bool for lhs is strictly less than rhs.
 
     See the docstring for :func:`~.is_ge` for more.
     """
-    return fuzzy_not(is_ge(lhs, rhs))
+    return fuzzy_not(is_ge(lhs, rhs, assumptions))
 
 
-def is_gt(lhs, rhs):
+def is_gt(lhs, rhs, assumptions=None):
     """Fuzzy bool for lhs is strictly greater than rhs.
 
     See the docstring for :func:`~.is_ge` for more.
     """
-    return fuzzy_not(is_le(lhs, rhs))
+    return fuzzy_not(is_le(lhs, rhs, assumptions))
 
 
-def is_le(lhs, rhs):
+def is_le(lhs, rhs, assumptions=None):
     """Fuzzy bool for lhs is less than or equal to rhs.
 
     See the docstring for :func:`~.is_ge` for more.
     """
-    return is_ge(rhs, lhs)
+    return is_ge(rhs, lhs, assumptions)
 
 
-def is_ge(lhs, rhs):
+def is_ge(lhs, rhs, assumptions=None):
     """
     Fuzzy bool for *lhs* is greater than or equal to *rhs*.
 
@@ -1149,15 +1149,22 @@ def is_ge(lhs, rhs):
         and an instance of expression. Throws an exception if
         lhs is not an instance of expression.
 
+    assumptions: Boolean, optional
+        Assumptions taken to evaluate the inequality.
+
     Returns
     =======
 
-    ``True`` if *lhs* is greater than or equal to *rhs*, ``False`` if
-    *lhs* is less than *rhs*, and ``None`` if the comparison between
-    *lhs* and *rhs* is indeterminate.
+    ``True`` if *lhs* is greater than or equal to *rhs*, ``False`` if *lhs*
+    is less than *rhs*, and ``None`` if the comparison between *lhs* and
+    *rhs* is indeterminate.
 
     Explanation
     ===========
+
+    This function is intended to give a relatively fast determination and
+    deliberately does not attempt slow calculations that might help in
+    obtaining a determination of True or False in more difficult cases.
 
     The four comparison functions ``is_le``, ``is_lt``, ``is_ge``, and ``is_gt`` are
     each implemented in terms of ``is_ge`` in the following way:
@@ -1167,58 +1174,59 @@ def is_ge(lhs, rhs):
     is_lt(x, y) := fuzzy_not(is_ge(x, y))
     is_gt(x, y) := fuzzy_not(is_ge(y, x))
 
+    Therefore, supporting new type with this function will ensure behavior for
+    other three functions as well.
+
     To maintain these equivalences in fuzzy logic it is important that in cases where
     either x or y is non-real all comparisons will give None.
-
-    InEquality classes, such as Lt, Gt, etc. Use one of is_ge, is_le, etc.
-    To implement comparisons with ``Gt(a, b)`` or ``a > b`` etc for an ``Expr`` subclass
-    it is only necessary to define a dispatcher method for ``_eval_is_ge`` like
-
-    >>> from sympy.core.relational import is_ge, is_lt, is_gt
-    >>> from sympy.abc import x
-    >>> from sympy import S, Expr, sympify
-    >>> from sympy.multipledispatch import dispatch
-    >>> class MyExpr(Expr):
-    ...     def __new__(cls, arg):
-    ...         return Expr.__new__(cls, sympify(arg))
-    ...     @property
-    ...     def value(self):
-    ...         return self.args[0]
-    ...
-    >>> @dispatch(MyExpr, MyExpr)
-    ... def _eval_is_ge(a, b):
-    ...     return is_ge(a.value, b.value)
-    ...
-    >>> a = MyExpr(1)
-    >>> b = MyExpr(2)
-    >>> a < b
-    True
-    >>> a <= b
-    True
-    >>> a > b
-    False
-    >>> is_lt(a, b)
-    True
 
     Examples
     ========
 
+    >>> from sympy import S, Q
+    >>> from sympy.core.relational import is_ge, is_le, is_gt, is_lt
+    >>> from sympy.abc import x
     >>> is_ge(S(2), S(0))
     True
     >>> is_ge(S(0), S(2))
     False
-    >>> is_ge(S(0), x)
-
-    >>> is_gt(S(2), S(0))
+    >>> is_le(S(0), S(2))
     True
     >>> is_gt(S(0), S(2))
     False
-    >>> is_lt(S(0), S(2))
-    True
     >>> is_lt(S(2), S(0))
     False
 
-   """
+    Assumptions can be passed to evaluate the quality which is otherwise
+    indeterminate.
+
+    >>> print(is_ge(x, S(0)))
+    None
+    >>> is_ge(x, S(0), assumptions=Q.positive(x))
+    True
+
+    New types can be supported by dispatching to ``_eval_is_ge``.
+
+    >>> from sympy import Expr, sympify
+    >>> from sympy.multipledispatch import dispatch
+    >>> class MyExpr(Expr):
+    ...     def __new__(cls, arg):
+    ...         return super().__new__(cls, sympify(arg))
+    ...     @property
+    ...     def value(self):
+    ...         return self.args[0]
+    >>> @dispatch(MyExpr, MyExpr)
+    ... def _eval_is_ge(a, b):
+    ...     return is_ge(a.value, b.value)
+    >>> a = MyExpr(1)
+    >>> b = MyExpr(2)
+    >>> is_ge(b, a)
+    True
+    >>> is_le(a, b)
+    True
+    """
+    from sympy.assumptions.wrapper import AssumptionsWrapper, is_extended_nonnegative
+
     if not (isinstance(lhs, Expr) and isinstance(rhs, Expr)):
         raise TypeError("Can only compare inequalities with Expr")
 
@@ -1233,13 +1241,16 @@ def is_ge(lhs, rhs):
             # otherwise get stuck in infinite recursion
             if n2 in (S.Infinity, S.NegativeInfinity):
                 n2 = float(n2)
-            return _sympify(n2 >= 0)
-        if lhs.is_extended_real and rhs.is_extended_real:
-            if (lhs.is_infinite and lhs.is_extended_positive) or (rhs.is_infinite and rhs.is_extended_negative):
+            return n2 >= 0
+
+        _lhs = AssumptionsWrapper(lhs, assumptions)
+        _rhs = AssumptionsWrapper(rhs, assumptions)
+        if _lhs.is_extended_real and _rhs.is_extended_real:
+            if (_lhs.is_infinite and _lhs.is_extended_positive) or (_rhs.is_infinite and _rhs.is_extended_negative):
                 return True
             diff = lhs - rhs
             if diff is not S.NaN:
-                rv = diff.is_extended_nonnegative
+                rv = is_extended_nonnegative(diff, assumptions)
                 if rv is not None:
                     return rv
 

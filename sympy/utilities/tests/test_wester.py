@@ -1179,6 +1179,7 @@ def test_N5():
     assert ask(k*x**2 > k*y**2, (x > y) & (y > 0) & (k > 0)) is True
 
 
+@slow
 @XFAIL
 def test_N6():
     x, y, k, n = symbols('x y k n', real=True)

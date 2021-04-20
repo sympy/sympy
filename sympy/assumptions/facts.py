@@ -103,8 +103,14 @@ def get_known_facts():
 
 @cacheit
 def get_known_facts_keys():
+    exclude = set()
+    for pred in get_composite_predicates():
+        exclude.add(pred)
+    for pred in [Q.eq, Q.ne, Q.gt, Q.lt, Q.ge, Q.le]:
+        # sat does not support polyadic predicates yet
+        exclude.add(pred)
+
     result = []
-    exclude = get_composite_predicates()
     for attr in Q.__class__.__dict__:
         if attr.startswith('__'):
             continue
