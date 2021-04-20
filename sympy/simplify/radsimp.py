@@ -1320,14 +1320,14 @@ def rationalize(denom):
             base, exp = origin.args
             s, t, d = gcdex(denom, dest ** exp.q - base ** exp.p, dest)
             if d != 1:
-                return S.One, S.Zero
+                raise ValueError("The denominator may be zero")
             new_numer, new_denom = s.as_numer_denom()
             numer *= new_numer
             denom = new_denom
         elif origin.is_algebraic:
             s, t, d = gcdex(denom, minpoly(origin, dest), dest)
             if d != 1:
-                return S.One, S.Zero
+                raise ValueError("The denominator may be zero")
             new_numer, new_denom = s.as_numer_denom()
             numer *= new_numer
             denom = new_denom
