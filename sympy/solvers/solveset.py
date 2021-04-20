@@ -262,7 +262,7 @@ def _invert_real(f, g_ys, symbol):
                 res = imageset(Lambda(n, real_root(n, expo)), g_ys_pos)
                 return _invert_real(base, res, symbol)
             elif expo.is_Float:
-                return _invert_real(base, res, symbol)
+                return (f, g_ys)
 
         if not base_has_sym:
             rhs = g_ys.args[0]
