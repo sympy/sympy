@@ -1005,19 +1005,15 @@ class Add(Expr, AssocOp):
         except TypeError:
             return expr
 
-        new_expr = new_expr.factor() # To factor the expanded multinomials
-        iszero = new_expr.is_zero
-        if iszero is None:
-            new_expr = new_expr.simplify()
-            iszero = new_expr.is_zero
-        if iszero is True:
+        new_expr = new_expr.trigsimp().factor()
+        if not new_expr:
             # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
             n0 = min.getn()
             res = Order(1)
             incr = S.One
             while res.is_Order:
-                res = old._eval_nseries(x, n=n0+incr, logx=None, cdir=cdir).cancel().powsimp().trigsimp()
+                res = old._eval_nseries(x, n=n0+incr, logx=None, cdir=cdir).cancel().trigsimp()
                 incr *= 2
             return res.as_leading_term(x, cdir=cdir)
 

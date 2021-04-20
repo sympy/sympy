@@ -333,7 +333,7 @@ def test_issue_20697():
 
 def test_issue_21245():
     fi = (1 + sqrt(5))/2
-    assert (1/(1 - x - x**2)).series(x, 1/fi, 1) == (-36/(80 + 36*sqrt(5))\
-        - 16*sqrt(5)/(80 + 36*sqrt(5)))/(x - 1/(S.Half + sqrt(5)/2))\
-        + 1220*sqrt(5)/(13640 + 6100*sqrt(5)) + 2728/(13640 + 6100*sqrt(5))\
-        + O(x - 2/(1 + sqrt(5)), (x, 2/(1 + sqrt(5))))
+    assert (1/(1 - x - x**2)).series(x, 1/fi, 1) == \
+        (-36/(80 + 36*sqrt(5)) - 16*sqrt(5)/(80 + 36*sqrt(5)))/(x - 1/(S.Half\
+        + sqrt(5)/2)) + 1220*sqrt(5)/(13640 + 6100*sqrt(5)) + 2728/(13640\
+        + 6100*sqrt(5)) + O(x - 2/(1 + sqrt(5)), (x, 2/(1 + sqrt(5))))
