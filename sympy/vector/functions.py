@@ -12,6 +12,9 @@ def express(expr, system, system2=None, variables=False):
     """
     Global function for 'express' functionality.
 
+    Explanation
+    ===========
+
     Re-expresses a Vector, Dyadic or scalar(sympyfiable) in the given
     coordinate system.
 
@@ -27,15 +30,15 @@ def express(expr, system, system2=None, variables=False):
         The expression to re-express in CoordSys3D 'system'
 
     system: CoordSys3D
-        The coordinate system the expr is to be expressed in
+        The coordinate system the expr is to be expressed in.
 
     system2: CoordSys3D
-        The other coordinate system required for re-expression
+        The other coordinate system required for re-expression.
         (only for a Dyadic Expr)
 
     variables : boolean
         Specifies whether to substitute the coordinate variables present
-        in expr, in terms of those of parameter system
+        in expr, in terms of those of parameter system.
 
     Examples
     ========
@@ -226,6 +229,11 @@ def is_conservative(field):
     >>> is_conservative(R.z*R.j)
     False
 
+    Returns
+    =======
+
+    bool
+
     """
 
     # Field is conservative irrespective of system
@@ -258,6 +266,11 @@ def is_solenoidal(field):
     True
     >>> is_solenoidal(R.y * R.j)
     False
+
+    Returns
+    =======
+
+    bool
 
     """
 
@@ -327,6 +340,9 @@ def scalar_potential_difference(field, coord_sys, point1, point2):
     Returns the scalar potential difference between two points in a
     certain coordinate system, wrt a given field.
 
+    Explanation
+    ===========
+
     If a scalar field is provided, its values at the two points are
     considered. If a conservative vector field is provided, the values
     of its scalar potential function at the two points are used.
@@ -395,6 +411,9 @@ def matrix_to_vector(matrix, system):
     """
     Converts a vector in matrix form to a Vector instance.
 
+    Explanation
+    ===========
+
     It is assumed that the elements of the Matrix represent the
     measure numbers of the components of the vector along basis
     vectors of 'system'.
@@ -436,7 +455,10 @@ def _path(from_object, to_object):
     to 'to_object', along with the index of the first common
     ancestor in the tree.
 
-    Returns (index, list) tuple.
+    Returns
+    =======
+
+    tuple: (index, list)
     """
 
     if from_object._root != to_object._root:
