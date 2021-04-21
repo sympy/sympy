@@ -357,17 +357,20 @@ class CoordSystem(Atom):
     @staticmethod
     def _inverse_transformation(sys1, sys2):
         # Find the transformation relation from sys2 to sys1
-        forward_transform = sys1.transform(sys2)
-        forward_syms, forward_results = forward_transform.args
+        forward_transform_expressions = sys1.transform(sys2)
+        # Coordinate transformations are defined in terms of Symbols rather than CoordSymbols, so must be converted
+        forward_transform_expressions = to_coord_symbol(sys1.symbols, forward_transform_expressions)
 
-        inv_syms = [i.as_dummy() for i in forward_syms]
         inv_results = solve(
-            [t[0] - t[1] for t in zip(inv_syms, forward_results)],
-            list(forward_syms), dict=True)[0]
-        inv_results = [inv_results[s] for s in forward_syms]
+            [t[0] - t[1] for t in zip(sys2.symbols, forward_transform_expressions)],
+            list(sys1.symbols), dict=True)
+        if len(inv_results) == 0:
+            raise NotImplementedError(
+                "Cannot solve inverse transformation of {}".format(forward_transform_expressions))
 
-        signature = tuple(inv_syms)
-        expr = Matrix(inv_results)
+        inv_results = inv_results[0]
+        signature = tuple(sys1.symbols)
+        expr = Matrix([inv_results[s] for s in signature])
         return Lambda(signature, expr)
 
     @classmethod
@@ -1702,6 +1705,11 @@ def dummyfy(args, exprs):
     reps = dict(zip(args, d_args))
     d_exprs = Matrix([_sympify(expr).subs(reps) for expr in exprs])
     return d_args, d_exprs
+
+
+def to_coord_symbol(args, exprs):
+    coord_symbols = {Symbol(arg.name, **arg.assumptions0): arg for arg in args}
+    return Matrix([expr.subs(coord_symbols) for expr in exprs])
 
 
 ###############################################################################
