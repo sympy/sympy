@@ -242,6 +242,7 @@ def _invert_real(f, g_ys, symbol):
 
             if expo.is_rational:
                 num, den = expo.as_numer_denom()
+
                 if den % 2 == 0 and num % 2 == 1 and den.is_zero is False:
                     root = Lambda(n, real_root(n, expo))
                     g_ys_pos = g_ys & Interval(0, oo)
@@ -249,22 +250,26 @@ def _invert_real(f, g_ys, symbol):
                     base_positive = solveset(base >= 0, symbol, S.Reals)
                     _inv, _set = _invert_real(base, res, symbol)
                     return (_inv, _set.intersect(base_positive))
-                if num % 2 == 0 and den % 2 == 1:
+
+                if den % 2 == 1:
                     root = Lambda(n, real_root(n, expo))
                     res = imageset(root, g_ys)
-                    n = Dummy("n")
-                    neg_res = imageset(Lambda(n, -n), res)
-                    return _invert_real(base, res + neg_res, symbol)
+                    if num % 2 == 0:
+                        neg_res = imageset(Lambda(n, -n), res)
+                        return _invert_real(base, res + neg_res, symbol)
+                    if num % 2 == 1:
+                        return _invert_real(base, res, symbol)
 
-            if expo.is_irrational:
+            elif expo.is_irrational:
                 root = Lambda(n, real_root(n, expo))
                 g_ys_pos = g_ys & Interval(0, oo)
                 res = imageset(root, g_ys_pos)
                 return _invert_real(base, res, symbol)
 
-            # indeterminate exponent, e.g. Float or parity of
-            # num, den of rational could not be determined
-            return (f, g_ys)
+            else:
+                # indeterminate exponent, e.g. Float or parity of
+                # num, den of rational could not be determined
+                pass  # use default return
 
         if not base_has_sym:
             rhs = g_ys.args[0]
