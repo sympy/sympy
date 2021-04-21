@@ -472,7 +472,7 @@ def test_orient_quaternion():
     B.orient_quaternion(A, (0,0,0,0))
     assert B.dcm(A) == Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
 
-def test_vector_cache():
+def test_frame_dict():
     A = ReferenceFrame('A')
     B = ReferenceFrame('B')
     C = ReferenceFrame('C')
