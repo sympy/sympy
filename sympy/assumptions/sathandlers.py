@@ -2,286 +2,95 @@ from collections import defaultdict
 from collections.abc import MutableMapping
 
 from sympy.assumptions.ask import Q
-from sympy.assumptions.assume import Predicate, AppliedPredicate
-from sympy.assumptions.cnf import AND, OR, to_NNF
-from sympy.assumptions.facts import get_composite_predicates
 from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
 from sympy.core.numbers import ImaginaryUnit
-from sympy.core.rules import Transform
-from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import Abs
-from sympy.logic.boolalg import (Equivalent, Implies, BooleanFunction)
+from sympy.logic.boolalg import (Equivalent, Implies, And, Or)
 from sympy.matrices.expressions import MatMul
 
 # APIs here may be subject to change
 
 
-def _find_freepredicate(expr):
-    # Find unapplied predicate from expression tree.
-    # Ignore the predicate in AppliedPredicate.
-    if isinstance(expr, Predicate):
-        return {expr}
-    if not expr.args:
-        return set()
-    if isinstance(expr, AppliedPredicate):
-        args = expr.arguments
-    else:
-        args = expr.args
-    result = set()
-    for arg in args:
-        result.update(_find_freepredicate(arg))
-    return result
+### Helper classes ###
 
-
-class UnevaluatedOnFree(BooleanFunction):
+class ArgFactHandler:
     """
-    Represents a Boolean function that remains unevaluated on free predicates.
-
-    Explanation
-    ===========
-
-    This is intended to be a superclass of other classes, which define the
-    behavior on singly applied predicates.
-
-    A free predicate is a predicate that is not applied, or a combination
-    thereof. For example, Q.zero or Or(Q.positive, Q.negative).
-
-    A singly applied predicate is a free predicate applied everywhere to a
-    single expression. For instance, Q.zero(x) and Or(Q.positive(x*y),
-    Q.negative(x*y)) are singly applied, but Or(Q.positive(x), Q.negative(y))
-    and Or(Q.positive, Q.negative(y)) are not.
-
-    The boolean literals True and False are considered to be both free and
-    singly applied.
-
-    This class raises ValueError unless the input is a free predicate or a
-    singly applied predicate.
-
-    On a free predicate, this class remains unevaluated. On a singly applied
-    predicate, the method apply() is called and returned, or the original
-    expression returned if apply() returns None. When apply() is called,
-    self.expr is set to the unique expression that the predicates are applied
-    at. self.pred is set to the free form of the predicate.
-
-    The typical usage is to create this class with free predicates and
-    evaluate it using .rcall().
+    Class to help apply boolean function to the arguments of expression.
 
     """
-    def __new__(cls, arg):
-        # Mostly type checking here
-        arg = _sympify(arg)
-        predicates = _find_freepredicate(arg)
-        applied_predicates = arg.atoms(AppliedPredicate)
-        if predicates and applied_predicates:
-            raise ValueError("arg must be either completely free or singly applied")
-        if not applied_predicates:
-            obj = BooleanFunction.__new__(cls, arg)
-            obj.pred = arg
-            obj.expr = None
-            return obj
-        predicate_args = {pred.arguments[0] for pred in applied_predicates}
-        if len(predicate_args) > 1:
-            raise ValueError("The AppliedPredicates in arg must be applied to a single expression.")
-        obj = BooleanFunction.__new__(cls, arg)
-        obj.expr = predicate_args.pop()
-        obj.pred = arg.xreplace(Transform(lambda e: e.function, lambda e:
-            isinstance(e, AppliedPredicate)))
-        applied = obj.apply(obj.expr)
-        if applied is None:
-            return obj
-        return applied
-
-    def apply(self, expr=None):
-        if expr is None:
-            return
-        pred = to_NNF(self.pred, get_composite_predicates())
-        return self._eval_apply(expr, pred)
-
-    def _eval_apply(self, expr, pred):
-        return None
+    def __init__(self, func):
+        if not callable(func):
+            raise ValueError(
+                "Argument of ArgFactHandler must be callable, but %s is not." % func)
+        self.func = func
 
 
-class AllArgs(UnevaluatedOnFree):
+class AllArgs(ArgFactHandler):
     """
-    Class representing vectorizing a predicate over all the .args of an
-    expression
+    Apply the function to all arguments of the expression.
 
-    See the docstring of UnevaluatedOnFree for more information on this
-    class.
-
-    The typical usage is to evaluate predicates with expressions using .rcall().
-
-    Example
-    =======
-
-    >>> from sympy.assumptions.sathandlers import AllArgs
-    >>> from sympy import symbols, Q
-    >>> x, y = symbols('x y')
-    >>> a = AllArgs(Q.positive | Q.negative)
-    >>> a
-    AllArgs(Q.negative | Q.positive)
-    >>> a.rcall(x*y)
-    ((Literal(Q.negative(x), False) | Literal(Q.positive(x), False)) & (Literal(Q.negative(y), False) | \
-    Literal(Q.positive(y), False)))
-
-    See Also
+    Examples
     ========
 
-    UnevaluatedOnFree
+    >>> from sympy import Q
+    >>> from sympy.assumptions.sathandlers import AllArgs
+    >>> from sympy.abc import x, y
+    >>> allargs = AllArgs(lambda x: Q.negative(x) | Q.positive(x))
+    >>> allargs(x*y)
+    (Q.negative(x) | Q.positive(x)) & (Q.negative(y) | Q.positive(y))
 
     """
+    def __call__(self, expr):
+        return And(*[self.func(arg) for arg in expr.args])
 
-    def _eval_apply(self, expr, pred):
-        return AND(*[pred.rcall(arg) for arg in expr.args])
 
-
-class AnyArgs(UnevaluatedOnFree):
+class AnyArgs(ArgFactHandler):
     """
-    Class representing vectorizing a predicate over any of the .args of an
-    expression.
+    Apply the function to any argument of the expression.
 
-    See the docstring of UnevaluatedOnFree for more information on this
-    class.
+    Examples
+    ========
 
-    The typical usage is to evaluate predicates with expressions using .rcall().
-
-    Example
-    =======
+    >>> from sympy import Q
     >>> from sympy.assumptions.sathandlers import AnyArgs
-    >>> from sympy import symbols, Q
-    >>> x, y = symbols('x y')
-    >>> a = AnyArgs(Q.positive & Q.negative)
-    >>> a
-    AnyArgs(Q.negative & Q.positive)
-    >>> a.rcall(x*y)
-    ((Literal(Q.negative(x), False) & Literal(Q.positive(x), False)) | (Literal(Q.negative(y), False) & \
-    Literal(Q.positive(y), False)))
+    >>> from sympy.abc import x, y
+    >>> anyargs = AnyArgs(lambda x: Q.negative(x) & Q.positive(x))
+    >>> anyargs(x*y)
+    (Q.negative(x) & Q.positive(x)) | (Q.negative(y) & Q.positive(y))
 
     """
+    def __call__(self, expr):
+        return Or(*[self.func(arg) for arg in expr.args])
 
-    def _eval_apply(self, expr, pred):
-        return OR(*[pred.rcall(arg) for arg in expr.args])
 
-
-class ExactlyOneArg(UnevaluatedOnFree):
+class ExactlyOneArg(ArgFactHandler):
     """
-    Class representing a predicate holding on exactly one of the .args of an
-    expression.
+    Apply the function to exactly one argument of the expression.
 
-    See the docstring of UnevaluatedOnFree for more information on this
-    class.
+    Examples
+    ========
 
-    The typical usage is to evaluate predicate with expressions using
-    .rcall().
-
-    Example
-    =======
+    >>> from sympy import Q
     >>> from sympy.assumptions.sathandlers import ExactlyOneArg
-    >>> from sympy import symbols, Q
-    >>> x, y = symbols('x y')
-    >>> a = ExactlyOneArg(Q.positive)
-    >>> a
-    ExactlyOneArg(Q.positive)
-    >>> a.rcall(x*y)
-    ((Literal(Q.positive(x), False) & Literal(Q.positive(y), True)) | (Literal(Q.positive(x), True) & \
-    Literal(Q.positive(y), False)))
+    >>> from sympy.abc import x, y
+    >>> onearg = ExactlyOneArg(Q.positive)
+    >>> onearg(x*y)
+    (Q.positive(x) & ~Q.positive(y)) | (Q.positive(y) & ~Q.positive(x))
 
     """
-
-    def _eval_apply(self, expr, pred):
-        pred_args = [pred.rcall(arg) for arg in expr.args]
-        # Technically this is xor, but if one term in the disjunction is true,
-        # it is not possible for the remainder to be true, so regular or is
-        # fine in this case.
-        res = OR(*[AND(pred_args[i], *[~lit for lit in pred_args[:i] +
+    def __call__(self, expr):
+        pred_args = [self.func(arg) for arg in expr.args]
+        res = Or(*[And(pred_args[i], *[~lit for lit in pred_args[:i] +
             pred_args[i+1:]]) for i in range(len(pred_args))])
         return res
-        # Note: this is the equivalent cnf form. The above is more efficient
-        # as the first argument of an implication, since p >> q is the same as
-        # q | ~p, so the the ~ will convert the Or to and, and one just needs
-        # to distribute the q across it to get to cnf.
-
-        # return And(*[Or(*map(Not, c)) for c in combinations(pred_args, 2)]) & Or(*pred_args)
 
 
-_old_assump_getters = {
-    Q.positive: lambda o: o.is_positive,
-    Q.zero: lambda o: o.is_zero,
-    Q.negative: lambda o: o.is_negative,
-    Q.nonpositive: lambda o: o.is_nonpositive,
-    Q.nonzero: lambda o: o.is_nonzero,
-    Q.nonnegative: lambda o: o.is_nonnegative,
-    Q.rational: lambda o: o.is_rational,
-    Q.irrational: lambda o: o.is_irrational,
-    Q.even: lambda o: o.is_even,
-    Q.odd: lambda o: o.is_odd,
-    Q.integer: lambda o: o.is_integer,
-    Q.composite: lambda o: o.is_composite,
-    Q.imaginary: lambda o: o.is_imaginary,
-    Q.commutative: lambda o: o.is_commutative,
-}
+### Fact registry ###
 
-def _old_assump_replacer(obj):
-    # obj is AppliedPredicate
-
-    getter = _old_assump_getters.get(obj.function, None)
-    if getter is None:
-        return obj
-
-    ret = getter(*obj.arguments)
-    if ret is None:
-        return obj
-    return ret
-
-
-def evaluate_old_assump(pred):
+class FactRegistry(MutableMapping):
     """
-    Replace assumptions of expressions replaced with their values in the old
-    assumptions (like Q.negative(-1) => True). Useful because some direct
-    computations for numeric objects is defined most conveniently in the old
-    assumptions.
+    Base class for fact registries
 
-    """
-    return pred.xreplace(Transform(_old_assump_replacer))
-
-
-class CheckOldAssump(UnevaluatedOnFree):
-    def apply(self, expr=None, is_Not=False):
-        arg = self.args[0](expr) if callable(self.args[0]) else self.args[0]
-        res = Equivalent(arg, evaluate_old_assump(arg))
-        return to_NNF(res, get_composite_predicates())
-
-
-class CheckIsPrime(UnevaluatedOnFree):
-    def apply(self, expr=None, is_Not=False):
-        from sympy import isprime
-        arg = self.args[0](expr) if callable(self.args[0]) else self.args[0]
-        res = Equivalent(arg, isprime(expr))
-        return to_NNF(res, get_composite_predicates())
-
-class CustomLambda:
-    """
-    Interface to lambda with rcall
-
-    Workaround until we get a better way to represent certain facts.
-    """
-    def __init__(self, lamda):
-        self.lamda = lamda
-
-    def apply(self, *args):
-        return to_NNF(self.lamda(*args), get_composite_predicates())
-
-
-class ClassFactRegistry(MutableMapping):
-    """
-    Register handlers against classes.
-
-    Explanation
-    ===========
-
-    ``registry[C] = handler`` registers ``handler`` for class
-    ``C``. ``registry[C]`` returns a set of handlers for class ``C``, or any
-    of its superclasses.
     """
     def __init__(self, d=None):
         d = d or {}
@@ -290,13 +99,6 @@ class ClassFactRegistry(MutableMapping):
 
     def __setitem__(self, key, item):
         self.d[key] = frozenset(item)
-
-    def __getitem__(self, key):
-        ret = self.d[key]
-        for k in self.d:
-            if issubclass(key, k):
-                ret |= self.d[k]
-        return ret
 
     def __delitem__(self, key):
         del self.d[key]
@@ -310,97 +112,328 @@ class ClassFactRegistry(MutableMapping):
     def __repr__(self):
         return repr(self.d)
 
+    def __call__(self, expr):
+        handlers = self[expr.func]
+        return {h(expr) for h in handlers}
 
-fact_registry = ClassFactRegistry()
+    def register(self, item):
+        def _(func):
+            self[item] |= {func}
+            return func
+        return _
+
+    def register_many(self, *classes):
+        def _(func):
+            for cls in classes:
+                self[cls] |= {func}
+            return func
+        return _
 
 
-def register_fact(klass, fact, registry=fact_registry):
-    registry[klass] |= {fact}
+class ClassFactRegistry(FactRegistry):
+    """
+    Register handlers against classes.
+
+    Explanation
+    ===========
+
+    ``register`` method registers the handler function for the class.
+
+    ``registry[C]`` returns a set of handlers for class ``C``, or any
+    of its superclasses.
+
+    ``registry(expr)`` returns a set of facts for *expr*.
+
+    Examples
+    ========
+
+    Here, we register the facts for ``Abs``.
+
+    >>> from sympy import Abs, Q
+    >>> from sympy.logic.boolalg import Equivalent
+    >>> from sympy.assumptions.sathandlers import ClassFactRegistry
+    >>> reg = ClassFactRegistry()
+    >>> @reg.register(Abs)
+    ... def f1(expr):
+    ...     return Q.nonnegative(expr)
+    >>> @reg.register(Abs)
+    ... def f2(expr):
+    ...     arg = expr.args[0]
+    ...     return Equivalent(~Q.zero(arg), ~Q.zero(expr))
+
+    Getting the item of the registry with class returns the registered
+    handlers for the class.
+
+    >>> reg[Abs] == frozenset({f1, f2})
+    True
+
+    Calling the registry with expression returns the defined facts for the
+    expression.
+
+    >>> from sympy.abc import x
+    >>> reg(Abs(x))
+    {Q.nonnegative(Abs(x)), Equivalent(~Q.zero(x), ~Q.zero(Abs(x)))}
+
+    """
+    def __getitem__(self, key):
+        ret = self.d[key]
+        for k in self.d:
+            if issubclass(key, k):
+                ret |= self.d[k]
+        return ret
+
+    def __call__(self, expr):
+        handlers = self[expr.func]
+        return {h(expr) for h in handlers}
+
+class_fact_registry = ClassFactRegistry()
 
 
-for klass, fact in [
-    (Mul, Equivalent(Q.zero, AnyArgs(Q.zero))),
-    (MatMul, Implies(AllArgs(Q.square), Equivalent(Q.invertible, AllArgs(Q.invertible)))),
-    (Add, Implies(AllArgs(Q.positive), Q.positive)),
-    (Add, Implies(AllArgs(Q.negative), Q.negative)),
-    (Mul, Implies(AllArgs(Q.positive), Q.positive)),
-    (Mul, Implies(AllArgs(Q.commutative), Q.commutative)),
-    (Mul, Implies(AllArgs(Q.real), Q.commutative)),
 
-    (Pow, CustomLambda(lambda power: Implies(Q.real(power.base) &
-    Q.even(power.exp) & Q.nonnegative(power.exp), Q.nonnegative(power)))),
-    (Pow, CustomLambda(lambda power: Implies(Q.nonnegative(power.base) & Q.odd(power.exp) & Q.nonnegative(power.exp), Q.nonnegative(power)))),
-    (Pow, CustomLambda(lambda power: Implies(Q.nonpositive(power.base) & Q.odd(power.exp) & Q.nonnegative(power.exp), Q.nonpositive(power)))),
+### Class fact registration ###
 
-    # This one can still be made easier to read. I think we need basic pattern
-    # matching, so that we can just write Equivalent(Q.zero(x**y), Q.zero(x) & Q.positive(y))
-    (Pow, CustomLambda(lambda power: Equivalent(Q.zero(power), Q.zero(power.base) & Q.positive(power.exp)))),
-    (Integer, CheckIsPrime(Q.prime)),
-    (Integer, CheckOldAssump(Q.composite)),
+## Abs ##
+
+@class_fact_registry.register(Abs)
+def _(expr):
+    return Q.nonnegative(expr)
+
+@class_fact_registry.register(Abs)
+def _(expr):
+    arg = expr.args[0]
+    return Equivalent(~Q.zero(arg), ~Q.zero(expr))
+
+@class_fact_registry.register(Abs)
+def _(expr):
+    arg = expr.args[0]
+    return Implies(Q.even(arg), Q.even(expr))
+
+@class_fact_registry.register(Abs)
+def _(expr):
+    arg = expr.args[0]
+    return Implies(Q.odd(arg), Q.odd(expr))
+
+@class_fact_registry.register(Abs)
+def _(expr):
+    arg = expr.args[0]
+    return Implies(Q.integer(arg), Q.integer(expr))
+
+
+### Add ##
+
+@class_fact_registry.register(Add)
+def _(expr):
+    allargs_positive = AllArgs(Q.positive)(expr)
+    return Implies(allargs_positive, Q.positive(expr))
+
+@class_fact_registry.register(Add)
+def _(expr):
+    allargs_negative = AllArgs(Q.negative)(expr)
+    return Implies(allargs_negative, Q.negative(expr))
+
+@class_fact_registry.register(Add)
+def _(expr):
+    allargs_real = AllArgs(Q.real)(expr)
+    return Implies(allargs_real, Q.real(expr))
+
+@class_fact_registry.register(Add)
+def _(expr):
+    allargs_rational = AllArgs(Q.rational)(expr)
+    return Implies(allargs_rational, Q.rational(expr))
+
+@class_fact_registry.register(Add)
+def _(expr):
+    allargs_integer = AllArgs(Q.integer)(expr)
+    return Implies(allargs_integer, Q.integer(expr))
+
+@class_fact_registry.register(Add)
+def _(expr):
+    onearg_notinteger = ExactlyOneArg(lambda x: ~Q.integer(x))(expr)
+    return Implies(onearg_notinteger, ~Q.integer(expr))
+
+@class_fact_registry.register(Add)
+def _(expr):
+    allargs_real = AllArgs(Q.real)(expr)
+    onearg_irrational = ExactlyOneArg(Q.irrational)(expr)
+    return Implies(allargs_real, Implies(onearg_irrational, Q.irrational(expr)))
+
+
+### Mul ###
+
+@class_fact_registry.register(Mul)
+def _(expr):
+    anyargs_zero = AnyArgs(Q.zero)(expr)
+    return Equivalent(Q.zero(expr), anyargs_zero)
+
+@class_fact_registry.register(Mul)
+def _(expr):
+    allargs_positive = AllArgs(Q.positive)(expr)
+    return Implies(allargs_positive, Q.positive(expr))
+
+@class_fact_registry.register(Mul)
+def _(expr):
+    allargs_real = AllArgs(Q.real)(expr)
+    return Implies(allargs_real, Q.real(expr))
+
+@class_fact_registry.register(Mul)
+def _(expr):
+    allargs_rational = AllArgs(Q.rational)(expr)
+    return Implies(allargs_rational, Q.rational(expr))
+
+@class_fact_registry.register(Mul)
+def _(expr):
+    allargs_integer = AllArgs(Q.integer)(expr)
+    return Implies(allargs_integer, Q.integer(expr))
+
+@class_fact_registry.register(Mul)
+def _(expr):
+    onearg_notrational = ExactlyOneArg(lambda x: ~Q.rational(x))(expr)
+    return Implies(onearg_notrational, ~Q.integer(expr))
+
+@class_fact_registry.register(Mul)
+def _(expr):
+    allargs_commutative = AllArgs(Q.commutative)(expr)
+    return Implies(allargs_commutative, Q.commutative(expr))
+
+@class_fact_registry.register(Mul)
+def _(expr):
     # Implicitly assumes Mul has more than one arg
     # Would be AllArgs(Q.prime | Q.composite) except 1 is composite
-    (Mul, Implies(AllArgs(Q.prime), ~Q.prime)),
     # More advanced prime assumptions will require inequalities, as 1 provides
     # a corner case.
-    (Mul, Implies(AllArgs(Q.imaginary | Q.real), Implies(ExactlyOneArg(Q.imaginary), Q.imaginary))),
-    (Mul, Implies(AllArgs(Q.real), Q.real)),
-    (Add, Implies(AllArgs(Q.real), Q.real)),
+    allargs_prime = AllArgs(Q.prime)(expr)
+    return Implies(allargs_prime, ~Q.prime(expr))
+
+@class_fact_registry.register(Mul)
+def _(expr):
     # General Case: Odd number of imaginary args implies mul is imaginary(To be implemented)
-    (Mul, Implies(AllArgs(Q.real), Implies(ExactlyOneArg(Q.irrational),
-        Q.irrational))),
-    (Add, Implies(AllArgs(Q.real), Implies(ExactlyOneArg(Q.irrational),
-        Q.irrational))),
-    (Mul, Implies(AllArgs(Q.rational), Q.rational)),
-    (Add, Implies(AllArgs(Q.rational), Q.rational)),
+    allargs_imag_or_real = AllArgs(lambda x: Q.imaginary(x) | Q.real(x))(expr)
+    onearg_imaginary = ExactlyOneArg(Q.imaginary)(expr)
+    return Implies(allargs_imag_or_real, Implies(onearg_imaginary, Q.imaginary(expr)))
 
-    (Abs, Q.nonnegative),
-    (Abs, Equivalent(AllArgs(~Q.zero), ~Q.zero)),
+@class_fact_registry.register(Mul)
+def _(expr):
+    allargs_real = AllArgs(Q.real)(expr)
+    onearg_irrational = ExactlyOneArg(Q.irrational)(expr)
+    return Implies(allargs_real, Implies(onearg_irrational, Q.irrational(expr)))
 
+@class_fact_registry.register(Mul)
+def _(expr):
     # Including the integer qualification means we don't need to add any facts
     # for odd, since the assumptions already know that every integer is
     # exactly one of even or odd.
-    (Mul, Implies(AllArgs(Q.integer), Equivalent(AnyArgs(Q.even), Q.even))),
+    allargs_integer = AllArgs(Q.integer)(expr)
+    anyargs_even = AnyArgs(Q.even)(expr)
+    return Implies(allargs_integer, Equivalent(anyargs_even, Q.even(expr)))
 
-    (Abs, Implies(AllArgs(Q.even), Q.even)),
-    (Abs, Implies(AllArgs(Q.odd), Q.odd)),
 
-    (Add, Implies(AllArgs(Q.integer), Q.integer)),
-    (Add, Implies(ExactlyOneArg(~Q.integer), ~Q.integer)),
-    (Mul, Implies(AllArgs(Q.integer), Q.integer)),
-    (Mul, Implies(ExactlyOneArg(~Q.rational), ~Q.integer)),
-    (Abs, Implies(AllArgs(Q.integer), Q.integer)),
+### MatMul ###
 
-    (Number, CheckOldAssump(Q.negative)),
-    (Number, CheckOldAssump(Q.zero)),
-    (Number, CheckOldAssump(Q.positive)),
-    (Number, CheckOldAssump(Q.nonnegative)),
-    (Number, CheckOldAssump(Q.nonzero)),
-    (Number, CheckOldAssump(Q.nonpositive)),
-    (Number, CheckOldAssump(Q.rational)),
-    (Number, CheckOldAssump(Q.irrational)),
-    (Number, CheckOldAssump(Q.even)),
-    (Number, CheckOldAssump(Q.odd)),
-    (Number, CheckOldAssump(Q.integer)),
-    (Number, CheckOldAssump(Q.imaginary)),
-    # For some reason NumberSymbol does not subclass Number
-    (NumberSymbol, CheckOldAssump(Q.negative)),
-    (NumberSymbol, CheckOldAssump(Q.zero)),
-    (NumberSymbol, CheckOldAssump(Q.positive)),
-    (NumberSymbol, CheckOldAssump(Q.nonnegative)),
-    (NumberSymbol, CheckOldAssump(Q.nonzero)),
-    (NumberSymbol, CheckOldAssump(Q.nonpositive)),
-    (NumberSymbol, CheckOldAssump(Q.rational)),
-    (NumberSymbol, CheckOldAssump(Q.irrational)),
-    (NumberSymbol, CheckOldAssump(Q.imaginary)),
-    (ImaginaryUnit, CheckOldAssump(Q.negative)),
-    (ImaginaryUnit, CheckOldAssump(Q.zero)),
-    (ImaginaryUnit, CheckOldAssump(Q.positive)),
-    (ImaginaryUnit, CheckOldAssump(Q.nonnegative)),
-    (ImaginaryUnit, CheckOldAssump(Q.nonzero)),
-    (ImaginaryUnit, CheckOldAssump(Q.nonpositive)),
-    (ImaginaryUnit, CheckOldAssump(Q.rational)),
-    (ImaginaryUnit, CheckOldAssump(Q.irrational)),
-    (ImaginaryUnit, CheckOldAssump(Q.imaginary))
-    ]:
+@class_fact_registry.register(MatMul)
+def _(expr):
+    allargs_square = AllArgs(Q.square)(expr)
+    allargs_invertible = AllArgs(Q.invertible)(expr)
+    return Implies(allargs_square, Equivalent(Q.invertible(expr), allargs_invertible))
 
-    register_fact(klass, fact)
+
+### Pow ###
+
+@class_fact_registry.register(Pow)
+def _(expr):
+    base, exp = expr.base, expr.exp
+    return Implies(Q.real(base) & Q.even(exp) & Q.nonnegative(exp), Q.nonnegative(expr))
+
+@class_fact_registry.register(Pow)
+def _(expr):
+    base, exp = expr.base, expr.exp
+    return Implies(Q.nonnegative(base) & Q.odd(exp) & Q.nonnegative(exp), Q.nonnegative(expr))
+
+@class_fact_registry.register(Pow)
+def _(expr):
+    base, exp = expr.base, expr.exp
+    return Implies(Q.nonpositive(base) & Q.odd(exp) & Q.nonnegative(exp), Q.nonpositive(expr))
+
+@class_fact_registry.register(Pow)
+def _(expr):
+    base, exp = expr.base, expr.exp
+    return Equivalent(Q.zero(expr), Q.zero(base) & Q.positive(exp))
+
+
+### Integer ###
+
+@class_fact_registry.register(Integer)
+def _(expr):
+    from sympy import isprime
+    return Equivalent(Q.prime(expr), isprime(expr))
+
+@class_fact_registry.register(Integer)
+def _(expr):
+    return Equivalent(Q.composite(expr), expr.is_composite)
+
+
+
+### Numbers ###
+
+@class_fact_registry.register_many(Number, NumberSymbol, ImaginaryUnit)
+def _(expr):
+    pred = Q.negative(expr)
+    ret = expr.is_negative
+    if ret is None:
+        return True
+    return Equivalent(pred, ret)
+
+@class_fact_registry.register_many(Number, NumberSymbol, ImaginaryUnit)
+def _(expr):
+    pred = Q.zero(expr)
+    ret = expr.is_zero
+    if ret is None:
+        return True
+    return Equivalent(pred, ret)
+
+@class_fact_registry.register_many(Number, NumberSymbol, ImaginaryUnit)
+def _(expr):
+    pred = Q.positive(expr)
+    ret = expr.is_positive
+    if ret is None:
+        return True
+    return Equivalent(pred, ret)
+
+@class_fact_registry.register_many(Number, NumberSymbol, ImaginaryUnit)
+def _(expr):
+    pred = Q.rational(expr)
+    ret = expr.is_rational
+    if ret is None:
+        return True
+    return Equivalent(pred, ret)
+
+@class_fact_registry.register_many(Number, NumberSymbol, ImaginaryUnit)
+def _(expr):
+    pred = Q.irrational(expr)
+    ret = expr.is_irrational
+    if ret is None:
+        return True
+    return Equivalent(pred, ret)
+
+@class_fact_registry.register_many(Number, NumberSymbol, ImaginaryUnit)
+def _(expr):
+    pred = Q.even(expr)
+    ret = expr.is_even
+    if ret is None:
+        return True
+    return Equivalent(pred, ret)
+
+@class_fact_registry.register_many(Number, NumberSymbol, ImaginaryUnit)
+def _(expr):
+    pred = Q.odd(expr)
+    ret = expr.is_odd
+    if ret is None:
+        return True
+    return Equivalent(pred, ret)
+
+@class_fact_registry.register_many(Number, NumberSymbol, ImaginaryUnit)
+def _(expr):
+    pred = Q.imaginary(expr)
+    ret = expr.is_imaginary
+    if ret is None:
+        return True
+    return Equivalent(pred, ret)
