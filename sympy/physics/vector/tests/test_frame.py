@@ -479,19 +479,19 @@ def test_vector_cache():
 
     a, b, c = symbols('a b c')
 
-    B.orient(A, 'Axis', (a, A.x))
+    B.orient_axis(A, A.x, a)
     assert A._dcm_dict == {B: Matrix([[1, 0, 0],[0, cos(a), -sin(a)],[0, sin(a),  cos(a)]])}
     assert B._dcm_dict == {A: Matrix([[1, 0, 0],[0,  cos(a), sin(a)],[0, -sin(a), cos(a)]])}
     assert C._dcm_dict == {}
 
-    B.orient(C, 'Axis', (b, C.x))
+    B.orient_axis(C, C.x, b)
     # Previous relation is not wiped
     assert A._dcm_dict == {B: Matrix([[1, 0, 0],[0, cos(a), -sin(a)],[0, sin(a),  cos(a)]])}
     assert B._dcm_dict == {A: Matrix([[1, 0, 0],[0,  cos(a), sin(a)],[0, -sin(a), cos(a)]]), \
         C: Matrix([[1, 0, 0],[0,  cos(b), sin(b)],[0, -sin(b), cos(b)]])}
     assert C._dcm_dict == {B: Matrix([[1, 0, 0],[0, cos(b), -sin(b)],[0, sin(b),  cos(b)]])}
 
-    A.orient(B, 'Axis', (c, B.x))
+    A.orient_axis(B, B.x, c)
     # Previous relation is updated
     assert B._dcm_dict == {C: Matrix([[1, 0, 0],[0,  cos(b), sin(b)],[0, -sin(b), cos(b)]]),\
         A: Matrix([[1, 0, 0],[0, cos(c), -sin(c)],[0, sin(c),  cos(c)]])}
