@@ -29,34 +29,34 @@ def test_ArgFactHandler():
 
     class MyArgFactHandler(ArgFactHandler):
         def __call__(self, expr):
-            return self.func(expr)
+            return self.apply((expr,))
 
-    a = MyArgFactHandler(Q.positive)
-    b = MyArgFactHandler(lambda x: Q.positive(x) | Q.negative(x))
+    a = MyArgFactHandler((x,), Q.positive(x))
+    b = MyArgFactHandler((x,), Q.positive(x) | Q.negative(x))
 
     assert a(x) == Q.positive(x)
     assert b(x) == Q.positive(x) | Q.negative(x)
 
-    raises(ValueError, lambda: MyArgFactHandler(Q.positive(x)))
+    raises(TypeError, lambda: MyArgFactHandler(Q.positive))
 
 
 def test_AllArgs():
-    a = AllArgs(Q.zero)
-    b = AllArgs(lambda x: Q.positive(x) | Q.negative(x))
+    a = AllArgs(x, Q.zero(x))
+    b = AllArgs(x, Q.positive(x) | Q.negative(x))
     assert a(x*y) == And(Q.zero(x), Q.zero(y))
     assert b(x*y) == And(Q.positive(x) | Q.negative(x), Q.positive(y) | Q.negative(y))
 
 
 def test_AnyArgs():
-    a = AnyArgs(Q.zero)
-    b = AnyArgs(lambda x: Q.positive(x) & Q.negative(x))
+    a = AnyArgs(x, Q.zero(x))
+    b = AnyArgs(x, Q.positive(x) & Q.negative(x))
     assert a(x*y) == Or(Q.zero(x), Q.zero(y))
     assert b(x*y) == Or(Q.positive(x) & Q.negative(x), Q.positive(y) & Q.negative(y))
 
 
 def test_ExactlyOneArg():
-    a = ExactlyOneArg(Q.zero)
-    b = ExactlyOneArg(lambda x: Q.positive(x) | Q.negative(x))
+    a = ExactlyOneArg(x, Q.zero(x))
+    b = ExactlyOneArg(x, Q.positive(x) | Q.negative(x))
     assert a(x*y) == Or(Q.zero(x) & ~Q.zero(y), Q.zero(y) & ~Q.zero(x))
     assert a(x*y*z) == Or(Q.zero(x) & ~Q.zero(y) & ~Q.zero(z), Q.zero(y)
         & ~Q.zero(x) & ~Q.zero(z), Q.zero(z) & ~Q.zero(x) & ~Q.zero(y))
