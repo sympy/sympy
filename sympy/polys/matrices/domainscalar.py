@@ -64,7 +64,7 @@ class DomainScalar:
     def __mul__(self, other):
         if not isinstance(other, DomainScalar):
             if isinstance(other, DomainMatrix):
-                self, other = self.unify(other)
+                other, self = other.unify(self)
                 return other.scalarmul(self)
             return NotImplemented
 

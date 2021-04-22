@@ -530,12 +530,13 @@ class DomainMatrix:
         if isinstance(B, DomainMatrix):
             A, B = A.unify(B, fmt='dense')
             return A.matmul(B)
-        if isinstance(B, int):
-            B = DomainScalar(B, ZZ)
-        if isinstance(B, DomainScalar):
+        elif B in A.domain:
+            return A.from_rep(A.rep * B)
+        elif isinstance(B, DomainScalar):
             A, B = A.unify(B)
             return A.scalarmul(B)
-        return NotImplemented
+        else:
+            return NotImplemented
 
     def __rmul__(A, B):
         if B in A.domain:
@@ -786,7 +787,7 @@ class DomainMatrix:
     def __truediv__(A, lamda):
         """ Method for Scalar Divison"""
         if isinstance(lamda, int):
-            lamda = DomainScalar(lamda, ZZ)
+            lamda = DomainScalar(ZZ(lamda), ZZ)
 
         if not isinstance(lamda, DomainScalar):
             return NotImplemented
