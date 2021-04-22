@@ -1307,9 +1307,11 @@ class Ellipse(GeometrySet):
 
             # handle horizontal and vertical tangent lines
             if len(tangent_points) == 1:
-                assert tangent_points[0][
-                           0] == p.x or tangent_points[0][1] == p.y
-                return [Line(p, p + Point(1, 0)), Line(p, p + Point(0, 1))]
+                if tangent_points[0][
+                           0] == p.x or tangent_points[0][1] == p.y:
+                    return [Line(p, p + Point(1, 0)), Line(p, p + Point(0, 1))]
+                else:
+                    return [Line(p, p + Point(0, 1)), Line(p, tangent_points[0])]
 
             # others
             return [Line(p, tangent_points[0]), Line(p, tangent_points[1])]

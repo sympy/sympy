@@ -912,8 +912,8 @@ def solve(f, *symbols, **flags):
             f[i] = fi.as_expr()
 
         # rewrite hyperbolics in terms of exp
-        f[i] = f[i].replace(lambda w: isinstance(w, HyperbolicFunction),
-                lambda w: w.rewrite(exp))
+        f[i] = f[i].replace(lambda w: isinstance(w, HyperbolicFunction) and \
+            (len(w.free_symbols & set(symbols)) > 0), lambda w: w.rewrite(exp))
 
         # if we have a Matrix, we need to iterate over its elements again
         if f[i].is_Matrix:
@@ -3296,7 +3296,7 @@ def unrad(eq, *syms, **flags):
 
     eq = _mexpand(eq, recursive=True)
     if eq.is_number:
-        return
+        return eq, []
 
     syms = set(syms) or eq.free_symbols
     poly = eq.as_poly()

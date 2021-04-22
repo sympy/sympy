@@ -128,7 +128,7 @@ from .functions import (factorial, factorial2, rf, ff, binomial,
         chebyshevu, chebyshevu_root, chebyshevt_root, laguerre,
         assoc_laguerre, gegenbauer, jacobi, jacobi_normalized, Ynm, Ynm_c,
         Znm, elliptic_k, elliptic_f, elliptic_e, elliptic_pi, beta, mathieus,
-        mathieuc, mathieusprime, mathieucprime, betainc, betainc_regularized)
+        mathieuc, mathieusprime, mathieucprime, riemann_xi, betainc, betainc_regularized)
 
 from .ntheory import (nextprime, prevprime, prime, primepi, primerange,
         randprime, Sieve, sieve, primorial, cycle_length, composite,
@@ -347,7 +347,7 @@ __all__ = [
     'chebyshevu_root', 'chebyshevt_root', 'laguerre', 'assoc_laguerre',
     'gegenbauer', 'jacobi', 'jacobi_normalized', 'Ynm', 'Ynm_c', 'Znm',
     'elliptic_k', 'elliptic_f', 'elliptic_e', 'elliptic_pi', 'beta',
-    'mathieus', 'mathieuc', 'mathieusprime', 'mathieucprime', 'betainc',
+    'mathieus', 'mathieuc', 'mathieusprime', 'mathieucprime', 'riemann_xi','betainc',
     'betainc_regularized',
 
     # sympy.ntheory

@@ -2,7 +2,7 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
         Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed,
-        Matrix, Basic, Dict, oo, zoo, nan, Pow)
+        Matrix, Basic, Dict, oo, zoo, nan, Pow, sstr)
 from sympy.core.basic import _aresame
 from sympy.core.cache import clear_cache
 from sympy.core.expr import unchanged
@@ -1387,3 +1387,16 @@ def test_issue_20683():
 def test_issue_10503():
     f = exp(x**3)*cos(x**6)
     assert f.series(x, 0, 14) == 1 + x**3 + x**6/2 + x**9/6 - 11*x**12/24 + O(x**14)
+
+
+def test_issue_17382():
+    # copied from sympy/core/tests/test_evalf.py
+    def NS(e, n=15, **options):
+        return sstr(sympify(e).evalf(n, **options), full_prec=True)
+
+    x = Symbol('x')
+    expr = solveset(2 * cos(x) * cos(2 * x) - 1, x, S.Reals)
+    expected = "Union(" \
+               "ImageSet(Lambda(_n, 6.28318530717959*_n + 5.79812359592087), Integers), " \
+               "ImageSet(Lambda(_n, 6.28318530717959*_n + 0.485061711258717), Integers))"
+    assert NS(expr) == expected

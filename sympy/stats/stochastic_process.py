@@ -9,6 +9,9 @@ class StochasticPSpace(ProductPSpace):
     and their random variables. Contains mechanics to do
     computations for queries of stochastic processes.
 
+    Explanation
+    ===========
+
     Initialized by symbol, the specific process and
     distribution(optional) if the random indexed symbols
     of the process follows any specific distribution, like,

@@ -2041,16 +2041,19 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
     [[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
 
     You can also pass the initial conditions for the system of ODEs:
+
     >>> dsolve_system(eqs, ics={f(0): 1, g(0): 0})
     [[Eq(f(x), exp(x)/2 + exp(-x)/2), Eq(g(x), exp(x)/2 - exp(-x)/2)]]
 
     Optionally, you can pass the dependent variables and the independent
     variable for which the system is to be solved:
+
     >>> funcs = [f(x), g(x)]
     >>> dsolve_system(eqs, funcs=funcs, t=x)
     [[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
 
     Lets look at an implicit system of ODEs:
+
     >>> eqs = [Eq(f(x).diff(x)**2, g(x)**2), Eq(g(x).diff(x), g(x))]
     >>> dsolve_system(eqs)
     [[Eq(f(x), C1 - C2*exp(x)), Eq(g(x), C2*exp(x))], [Eq(f(x), C1 + C2*exp(x)), Eq(g(x), C2*exp(x))]]

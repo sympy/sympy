@@ -1704,3 +1704,15 @@ def test_issue_4231():
 def test_issue_17841():
     f = diff(1/(x**2+x+I), x)
     assert integrate(f, x) == 1/(x**2 + x + I)
+
+
+def test_issue_21034():
+    x = Symbol('x', real=True, nonzero=True)
+    f1 = x*(-x**4/asin(5)**4 - x*sinh(x + log(asin(5))) + 5)
+    f2 = (x + cosh(cos(4)))/(x*(x + 1/(12*x)))
+
+    assert integrate(f1, x) == \
+        -x**6/(6*asin(5)**4) - x**2*cosh(x + log(asin(5))) + 5*x**2/2 + 2*x*sinh(x + log(asin(5))) - 2*cosh(x + log(asin(5)))
+
+    assert integrate(f2, x) == \
+        log(x**2 + S(1)/12)/2 + 2*sqrt(3)*cosh(cos(4))*atan(2*sqrt(3)*x)

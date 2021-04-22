@@ -559,6 +559,11 @@ def _per(M):
     perm = sympify(perm)
     return perm.simplify()
 
+def _det_DOM(M):
+    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    K = DOM.domain
+    return K.to_sympy(DOM.det())
+
 # This functions is a candidate for caching if it gets implemented for matrices.
 def _det(M, method="bareiss", iszerofunc=None):
     """Computes the determinant of a matrix if ``M`` is a concrete matrix object
@@ -578,6 +583,9 @@ def _det(M, method="bareiss", iszerofunc=None):
         Also, if the matrix is an upper or a lower triangular matrix, determinant
         is computed by simple multiplication of diagonal elements, and the
         specified method is ignored.
+
+        If it is set to ``'domain-ge'``, then Gaussian elimination method will
+        be used via using DomainMatrix.
 
         If it is set to ``'bareiss'``, Bareiss' fraction-free algorithm will
         be used.
@@ -630,10 +638,15 @@ def _det(M, method="bareiss", iszerofunc=None):
     -2
     >>> det(M) == M.det()
     True
+    >>> M.det(method="domain-ge")
+    -2
     """
 
     # sanitize `method`
     method = method.lower()
+
+    if method == "domain-ge": # uses DomainMatrix to evalute determinant
+        return _det_DOM(M)
 
     if method == "bareis":
         method = "bareiss"

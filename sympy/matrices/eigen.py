@@ -78,7 +78,7 @@ def _eigenvects_mpmath(M):
     return result
 
 
-# This functions is a candidate for caching if it gets implemented for matrices.
+# This function is a candidate for caching if it gets implemented for matrices.
 def _eigenvals(
     M, error_when_incomplete=True, *, simplify=False, multiple=False,
     rational=False, **flags):
@@ -186,6 +186,17 @@ def _eigenvals(
         **flags)
 
 
+eigenvals_error_message = \
+"It is not always possible to express the eigenvalues of a matrix " + \
+"of size 5x5 or higher in radicals. " + \
+"We have CRootOf, but domains other than the rationals are not " + \
+"currently supported. " + \
+"If there are no symbols in the matrix, " + \
+"it should still be possible to compute numeric approximations " + \
+"of the eigenvalues using " + \
+"M.evalf().eigenvals() or M.charpoly().nroots()."
+
+
 def _eigenvals_list(
     M, error_when_incomplete=True, simplify=False, **flags):
     iblocks = M.connected_components()
@@ -208,7 +219,7 @@ def _eigenvals_list(
                 eigs = [CRootOf(f, x, idx) for idx in range(degree)]
             except NotImplementedError:
                 if error_when_incomplete:
-                    raise MatrixError
+                    raise MatrixError(eigenvals_error_message)
                 else:
                     eigs = []
 
@@ -243,7 +254,7 @@ def _eigenvals_dict(
                 eigs = {CRootOf(f, x, idx): 1 for idx in range(degree)}
             except NotImplementedError:
                 if error_when_incomplete:
-                    raise MatrixError
+                    raise MatrixError(eigenvals_error_message)
                 else:
                     eigs = {}
 

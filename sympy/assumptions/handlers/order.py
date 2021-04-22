@@ -5,10 +5,12 @@ Handlers related to order relations: positive, negative, etc.
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Mul, Pow
 from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
-from sympy.core.numbers import ImaginaryUnit, NaN, E
+from sympy.core.numbers import E, ImaginaryUnit, NaN
 from sympy.functions import Abs, acos, acot, asin, atan, exp, factorial, log
 from sympy.matrices import Determinant, Trace
 from sympy.matrices.expressions.matexpr import MatrixElement
+
+from sympy.multipledispatch import MDNotImplementedError
 
 from ..predicates.order import (NegativePredicate, NonNegativePredicate,
     NonZeroPredicate, ZeroPredicate, NonPositivePredicate, PositivePredicate)
@@ -42,7 +44,10 @@ def _(expr, assumptions):
 
 @NegativePredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_negative
+    ret = expr.is_negative
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @NegativePredicate.register(Add)
 def _(expr, assumptions):
@@ -116,6 +121,7 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     if ask(Q.real(expr.exp), assumptions):
         return False
+    raise MDNotImplementedError
 
 
 # NonNegativePredicate
@@ -131,14 +137,20 @@ def _(expr, assumptions):
 
 @NonNegativePredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_nonnegative
+    ret = expr.is_nonnegative
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 
 # NonZeroPredicate
 
 @NonZeroPredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_nonzero
+    ret = expr.is_nonzero
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @NonZeroPredicate.register(Basic)
 def _(expr, assumptions):
@@ -171,20 +183,23 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return ask(Q.nonzero(expr.base), assumptions)
 
-@NonZeroPredicate.register(NaN)
-def _(expr, assumptions):
-    return True
-
 @NonZeroPredicate.register(Abs)
 def _(expr, assumptions):
     return ask(Q.nonzero(expr.args[0]), assumptions)
+
+@NonZeroPredicate.register(NaN)
+def _(expr, assumptions):
+    return None
 
 
 # ZeroPredicate
 
 @ZeroPredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_zero
+    ret = expr.is_zero
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @ZeroPredicate.register(Basic)
 def _(expr, assumptions):
@@ -201,7 +216,10 @@ def _(expr, assumptions):
 
 @NonPositivePredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_nonpositive
+    ret = expr.is_nonpositive
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @NonPositivePredicate.register(Basic)
 def _(expr, assumptions):
@@ -236,7 +254,10 @@ def _PositivePredicate_number(expr, assumptions):
 
 @PositivePredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_positive
+    ret = expr.is_positive
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @PositivePredicate.register(Basic)
 def _(expr, assumptions):
@@ -367,3 +388,7 @@ def _(expr, assumptions):
 @PositivePredicate.register(acot)
 def _(expr, assumptions):
     return ask(Q.real(expr.args[0]), assumptions)
+
+@PositivePredicate.register(NaN)
+def _(expr, assumptions):
+    return None

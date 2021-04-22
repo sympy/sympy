@@ -5,7 +5,7 @@ from sympy.assumptions.assume import assuming, global_assumptions, Predicate
 from sympy.assumptions.ask import compute_known_facts, single_fact_lookup
 from sympy.assumptions.handlers import AskHandler
 from sympy.core.add import Add
-from sympy.core.numbers import (I, Integer, Rational, oo, pi)
+from sympy.core.numbers import (I, Integer, Rational, oo, zoo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
 from sympy.core.symbol import symbols, Symbol
@@ -181,6 +181,7 @@ def test_infinity():
     assert ask(Q.even(oo)) is False
     assert ask(Q.odd(oo)) is False
     assert ask(Q.finite(oo)) is False
+    assert ask(Q.infinite(oo)) is True
     assert ask(Q.prime(oo)) is False
     assert ask(Q.composite(oo)) is False
     assert ask(Q.hermitian(oo)) is False
@@ -204,33 +205,59 @@ def test_neg_infinity():
     assert ask(Q.even(mm)) is False
     assert ask(Q.odd(mm)) is False
     assert ask(Q.finite(mm)) is False
+    assert ask(Q.infinite(oo)) is True
     assert ask(Q.prime(mm)) is False
     assert ask(Q.composite(mm)) is False
     assert ask(Q.hermitian(mm)) is False
     assert ask(Q.antihermitian(mm)) is False
 
 
+def test_complex_infinity():
+    assert ask(Q.commutative(zoo)) is True
+    assert ask(Q.integer(zoo)) is False
+    assert ask(Q.rational(zoo)) is False
+    assert ask(Q.algebraic(zoo)) is False
+    assert ask(Q.real(zoo)) is False
+    assert ask(Q.extended_real(zoo)) is False
+    assert ask(Q.complex(zoo)) is False
+    assert ask(Q.irrational(zoo)) is False
+    assert ask(Q.imaginary(zoo)) is False
+    assert ask(Q.positive(zoo)) is False
+    assert ask(Q.negative(zoo)) is False
+    assert ask(Q.zero(zoo)) is False
+    assert ask(Q.nonzero(zoo)) is False
+    assert ask(Q.even(zoo)) is False
+    assert ask(Q.odd(zoo)) is False
+    assert ask(Q.finite(zoo)) is False
+    assert ask(Q.infinite(zoo)) is True
+    assert ask(Q.prime(zoo)) is False
+    assert ask(Q.composite(zoo)) is False
+    assert ask(Q.hermitian(zoo)) is False
+    assert ask(Q.antihermitian(zoo)) is False
+
+
 def test_nan():
     nan = S.NaN
     assert ask(Q.commutative(nan)) is True
-    assert ask(Q.integer(nan)) is False
-    assert ask(Q.rational(nan)) is False
-    assert ask(Q.algebraic(nan)) is False
-    assert ask(Q.real(nan)) is False
-    assert ask(Q.extended_real(nan)) is False
-    assert ask(Q.complex(nan)) is False
-    assert ask(Q.irrational(nan)) is False
-    assert ask(Q.imaginary(nan)) is False
-    assert ask(Q.positive(nan)) is False
-    assert ask(Q.nonzero(nan)) is True
-    assert ask(Q.zero(nan)) is False
-    assert ask(Q.even(nan)) is False
-    assert ask(Q.odd(nan)) is False
-    assert ask(Q.finite(nan)) is False
-    assert ask(Q.prime(nan)) is False
-    assert ask(Q.composite(nan)) is False
-    assert ask(Q.hermitian(nan)) is False
-    assert ask(Q.antihermitian(nan)) is False
+    assert ask(Q.integer(nan)) is None
+    assert ask(Q.rational(nan)) is None
+    assert ask(Q.algebraic(nan)) is None
+    assert ask(Q.real(nan)) is None
+    assert ask(Q.extended_real(nan)) is None
+    assert ask(Q.complex(nan)) is None
+    assert ask(Q.irrational(nan)) is None
+    assert ask(Q.imaginary(nan)) is None
+    assert ask(Q.positive(nan)) is None
+    assert ask(Q.nonzero(nan)) is None
+    assert ask(Q.zero(nan)) is None
+    assert ask(Q.even(nan)) is None
+    assert ask(Q.odd(nan)) is None
+    assert ask(Q.finite(nan)) is None
+    assert ask(Q.infinite(nan)) is None
+    assert ask(Q.prime(nan)) is None
+    assert ask(Q.composite(nan)) is None
+    assert ask(Q.hermitian(nan)) is None
+    assert ask(Q.antihermitian(nan)) is None
 
 
 def test_Rational_number():
@@ -2251,10 +2278,10 @@ def test_issue_9636():
 
 def test_autosimp_used_to_fail():
     # See issue #9807
-    assert ask(Q.imaginary(0**I)) is False
-    assert ask(Q.imaginary(0**(-I))) is False
-    assert ask(Q.real(0**I)) is False
-    assert ask(Q.real(0**(-I))) is False
+    assert ask(Q.imaginary(0**I)) is None
+    assert ask(Q.imaginary(0**(-I))) is None
+    assert ask(Q.real(0**I)) is None
+    assert ask(Q.real(0**(-I))) is None
 
 
 def test_custom_AskHandler():
