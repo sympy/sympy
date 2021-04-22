@@ -3,9 +3,10 @@ from collections.abc import MutableMapping
 
 from sympy.assumptions.ask import Q
 from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol, Symbol)
+from sympy.core.compatibility import iterable
 from sympy.core.numbers import ImaginaryUnit
 from sympy.functions.elementary.complexes import Abs
-from sympy.logic.boolalg import (Equivalent, Implies, And, Or)
+from sympy.logic.boolalg import (Boolean, Equivalent, And, Or, Implies)
 from sympy.matrices.expressions import MatMul
 
 # APIs here may be subject to change
@@ -198,6 +199,17 @@ class ClassFactRegistry(FactRegistry):
     >>> reg(Abs(x))
     {Q.nonnegative(Abs(x)), Equivalent(~Q.zero(x), ~Q.zero(Abs(x)))}
 
+    Multiple facts can be registered at once by letting handler return an
+    iterable.
+
+    >>> reg2 = ClassFactRegistry()
+    >>> @reg2.register(Abs)
+    ... def _(expr):
+    ...     arg = expr.args[0]
+    ...     return [Q.even(arg) >> Q.even(expr), Q.odd(arg) >> Q.odd(expr)]
+    >>> reg2(Abs(x))
+    {Implies(Q.even(x), Q.even(Abs(x))), Implies(Q.odd(x), Q.odd(Abs(x)))}
+
     """
     def __getitem__(self, key):
         ret = self.d[key]
@@ -208,7 +220,16 @@ class ClassFactRegistry(FactRegistry):
 
     def __call__(self, expr):
         handlers = self[expr.func]
-        return {h(expr) for h in handlers}
+        ret = set()
+        for h in handlers:
+            val = h(expr)
+            if isinstance(val, (bool, Boolean)):
+                ret.add(val)
+            elif iterable(val):
+                ret.update(val)
+            else:
+                raise TypeError("Unexpected result from %s(%s) : %s" % (self, expr, val))
+        return ret
 
 class_fact_registry = ClassFactRegistry()
 
@@ -222,60 +243,26 @@ x = Symbol('x')
 
 @class_fact_registry.register(Abs)
 def _(expr):
-    return Q.nonnegative(expr)
-
-@class_fact_registry.register(Abs)
-def _(expr):
     arg = expr.args[0]
-    return Equivalent(~Q.zero(arg), ~Q.zero(expr))
-
-@class_fact_registry.register(Abs)
-def _(expr):
-    arg = expr.args[0]
-    return Implies(Q.even(arg), Q.even(expr))
-
-@class_fact_registry.register(Abs)
-def _(expr):
-    arg = expr.args[0]
-    return Implies(Q.odd(arg), Q.odd(expr))
-
-@class_fact_registry.register(Abs)
-def _(expr):
-    arg = expr.args[0]
-    return Implies(Q.integer(arg), Q.integer(expr))
+    return [Q.nonnegative(expr), 
+            Equivalent(~Q.zero(arg), ~Q.zero(expr)),
+            Q.even(arg) >> Q.even(expr),
+            Q.odd(arg) >> Q.odd(expr),
+            Q.integer(arg) >> Q.integer(expr),
+            ]
 
 
 ### Add ##
 
 @class_fact_registry.register(Add)
 def _(expr):
-    allargs_positive = AllArgs(x, Q.positive(x))(expr)
-    return Implies(allargs_positive, Q.positive(expr))
-
-@class_fact_registry.register(Add)
-def _(expr):
-    allargs_negative = AllArgs(x, Q.negative(x))(expr)
-    return Implies(allargs_negative, Q.negative(expr))
-
-@class_fact_registry.register(Add)
-def _(expr):
-    allargs_real = AllArgs(x, Q.real(x))(expr)
-    return Implies(allargs_real, Q.real(expr))
-
-@class_fact_registry.register(Add)
-def _(expr):
-    allargs_rational = AllArgs(x, Q.rational(x))(expr)
-    return Implies(allargs_rational, Q.rational(expr))
-
-@class_fact_registry.register(Add)
-def _(expr):
-    allargs_integer = AllArgs(x, Q.integer(x))(expr)
-    return Implies(allargs_integer, Q.integer(expr))
-
-@class_fact_registry.register(Add)
-def _(expr):
-    onearg_notinteger = ExactlyOneArg(x, ~Q.integer(x))(expr)
-    return Implies(onearg_notinteger, ~Q.integer(expr))
+    return [AllArgs(x, Q.positive(x))(expr) >> Q.positive(expr),
+            AllArgs(x, Q.negative(x))(expr) >> Q.negative(expr),
+            AllArgs(x, Q.real(x))(expr) >> Q.real(expr),
+            AllArgs(x, Q.rational(x))(expr) >> Q.rational(expr),
+            AllArgs(x, Q.integer(x))(expr) >> Q.integer(expr),
+            ExactlyOneArg(x, ~Q.integer(x))(expr) >> ~Q.integer(expr),
+            ]
 
 @class_fact_registry.register(Add)
 def _(expr):
@@ -288,38 +275,14 @@ def _(expr):
 
 @class_fact_registry.register(Mul)
 def _(expr):
-    anyargs_zero = AnyArgs(x, Q.zero(x))(expr)
-    return Equivalent(Q.zero(expr), anyargs_zero)
-
-@class_fact_registry.register(Mul)
-def _(expr):
-    allargs_positive = AllArgs(x, Q.positive(x))(expr)
-    return Implies(allargs_positive, Q.positive(expr))
-
-@class_fact_registry.register(Mul)
-def _(expr):
-    allargs_real = AllArgs(x, Q.real(x))(expr)
-    return Implies(allargs_real, Q.real(expr))
-
-@class_fact_registry.register(Mul)
-def _(expr):
-    allargs_rational = AllArgs(x, Q.rational(x))(expr)
-    return Implies(allargs_rational, Q.rational(expr))
-
-@class_fact_registry.register(Mul)
-def _(expr):
-    allargs_integer = AllArgs(x, Q.integer(x))(expr)
-    return Implies(allargs_integer, Q.integer(expr))
-
-@class_fact_registry.register(Mul)
-def _(expr):
-    onearg_notrational = ExactlyOneArg(x, ~Q.rational(x))(expr)
-    return Implies(onearg_notrational, ~Q.integer(expr))
-
-@class_fact_registry.register(Mul)
-def _(expr):
-    allargs_commutative = AllArgs(x, Q.commutative(x))(expr)
-    return Implies(allargs_commutative, Q.commutative(expr))
+    return [Equivalent(Q.zero(expr), AnyArgs(x, Q.zero(x))(expr)),
+            AllArgs(x, Q.positive(x))(expr) >> Q.positive(expr),
+            AllArgs(x, Q.real(x))(expr) >> Q.real(expr),
+            AllArgs(x, Q.rational(x))(expr) >> Q.rational(expr),
+            AllArgs(x, Q.integer(x))(expr) >> Q.integer(expr),
+            ExactlyOneArg(x, ~Q.rational(x))(expr) >> ~Q.integer(expr),
+            AllArgs(x, Q.commutative(x))(expr) >> Q.commutative(expr),
+            ]
 
 @class_fact_registry.register(Mul)
 def _(expr):
@@ -367,22 +330,12 @@ def _(expr):
 @class_fact_registry.register(Pow)
 def _(expr):
     base, exp = expr.base, expr.exp
-    return Implies(Q.real(base) & Q.even(exp) & Q.nonnegative(exp), Q.nonnegative(expr))
-
-@class_fact_registry.register(Pow)
-def _(expr):
-    base, exp = expr.base, expr.exp
-    return Implies(Q.nonnegative(base) & Q.odd(exp) & Q.nonnegative(exp), Q.nonnegative(expr))
-
-@class_fact_registry.register(Pow)
-def _(expr):
-    base, exp = expr.base, expr.exp
-    return Implies(Q.nonpositive(base) & Q.odd(exp) & Q.nonnegative(exp), Q.nonpositive(expr))
-
-@class_fact_registry.register(Pow)
-def _(expr):
-    base, exp = expr.base, expr.exp
-    return Equivalent(Q.zero(expr), Q.zero(base) & Q.positive(exp))
+    return [
+        (Q.real(base) & Q.even(exp) & Q.nonnegative(exp)) >> Q.nonnegative(expr),
+        (Q.nonnegative(base) & Q.odd(exp) & Q.nonnegative(exp)) >> Q.nonnegative(expr),
+        (Q.nonpositive(base) & Q.odd(exp) & Q.nonnegative(exp)) >> Q.nonpositive(expr),
+        Equivalent(Q.zero(expr), Q.zero(base) & Q.positive(exp))
+    ]
 
 
 ### Integer ###
@@ -390,76 +343,30 @@ def _(expr):
 @class_fact_registry.register(Integer)
 def _(expr):
     from sympy import isprime
-    return Equivalent(Q.prime(expr), isprime(expr))
-
-@class_fact_registry.register(Integer)
-def _(expr):
-    return Equivalent(Q.composite(expr), expr.is_composite)
-
+    return [Equivalent(Q.prime(expr), isprime(expr)),
+            Equivalent(Q.composite(expr), expr.is_composite),
+    ]
 
 
 ### Numbers ###
 
-@class_fact_registry.register_many(Number, NumberSymbol, ImaginaryUnit)
-def _(expr):
-    pred = Q.negative(expr)
-    ret = expr.is_negative
-    if ret is None:
-        return True
-    return Equivalent(pred, ret)
+_old_assump_getters = {
+    Q.positive: lambda o: o.is_positive,
+    Q.zero: lambda o: o.is_zero,
+    Q.negative: lambda o: o.is_negative,
+    Q.rational: lambda o: o.is_rational,
+    Q.irrational: lambda o: o.is_irrational,
+    Q.even: lambda o: o.is_even,
+    Q.odd: lambda o: o.is_odd,
+    Q.imaginary: lambda o: o.is_imaginary,
+}
 
 @class_fact_registry.register_many(Number, NumberSymbol, ImaginaryUnit)
 def _(expr):
-    pred = Q.zero(expr)
-    ret = expr.is_zero
-    if ret is None:
-        return True
-    return Equivalent(pred, ret)
-
-@class_fact_registry.register_many(Number, NumberSymbol, ImaginaryUnit)
-def _(expr):
-    pred = Q.positive(expr)
-    ret = expr.is_positive
-    if ret is None:
-        return True
-    return Equivalent(pred, ret)
-
-@class_fact_registry.register_many(Number, NumberSymbol, ImaginaryUnit)
-def _(expr):
-    pred = Q.rational(expr)
-    ret = expr.is_rational
-    if ret is None:
-        return True
-    return Equivalent(pred, ret)
-
-@class_fact_registry.register_many(Number, NumberSymbol, ImaginaryUnit)
-def _(expr):
-    pred = Q.irrational(expr)
-    ret = expr.is_irrational
-    if ret is None:
-        return True
-    return Equivalent(pred, ret)
-
-@class_fact_registry.register_many(Number, NumberSymbol, ImaginaryUnit)
-def _(expr):
-    pred = Q.even(expr)
-    ret = expr.is_even
-    if ret is None:
-        return True
-    return Equivalent(pred, ret)
-
-@class_fact_registry.register_many(Number, NumberSymbol, ImaginaryUnit)
-def _(expr):
-    pred = Q.odd(expr)
-    ret = expr.is_odd
-    if ret is None:
-        return True
-    return Equivalent(pred, ret)
-
-@class_fact_registry.register_many(Number, NumberSymbol, ImaginaryUnit)
-def _(expr):
-    pred = Q.imaginary(expr)
-    ret = expr.is_imaginary
-    if ret is None:
-        return True
-    return Equivalent(pred, ret)
+    ret = []
+    for p, getter in _old_assump_getters.items():
+        pred = p(expr)
+        prop = getter(expr)
+        if prop is not None:
+            ret.append(Equivalent(pred, prop))
+    return ret
