@@ -11,7 +11,7 @@ It assists in Scalar Multiplication and getitem for DomainMatrix.
 """
 from ..constructor import construct_domain
 
-from sympy.polys.domains import Domain
+from sympy.polys.domains import Domain, ZZ
 
 
 class DomainScalar:
@@ -63,10 +63,10 @@ class DomainScalar:
 
     def __mul__(self, other):
         if not isinstance(other, DomainScalar):
-            if isinstance(other, DomainMatrix):
-                other, self = other.unify(self)
-                return other.scalarmul(self)
-            return NotImplemented
+            if isinstance(other, int):
+                other = DomainScalar(ZZ(other), ZZ)
+            else:
+                return NotImplemented
 
         self, other = self.unify(other)
         return self.new(self.element * other.element, self.domain)
@@ -90,5 +90,8 @@ class DomainScalar:
             return NotImplemented
         return self.element == other.element and self.domain == other.domain
 
+    def is_zero(self):
+        return self.element == self.domain.zero
 
-from .domainmatrix import DomainMatrix
+    def is_one(self):
+        return self.element == self.domain.one

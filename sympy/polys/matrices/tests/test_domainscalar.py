@@ -60,6 +60,7 @@ def test_DomainScalar_mul():
     dm = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     assert A * B == DomainScalar(QQ(2), QQ)
     assert A * dm == dm
+    assert B * 2 == DomainScalar(QQ(4), QQ)
 
     raises(TypeError, lambda: A * 1.5)
 
@@ -67,7 +68,9 @@ def test_DomainScalar_mul():
 def test_DomainScalar_floordiv():
     A = DomainScalar(ZZ(-5), ZZ)
     B = DomainScalar(QQ(2), QQ)
-    assert A // B == DomainScalar(QQ(-5)/QQ(2), QQ)
+    assert A // B == DomainScalar(QQ(-5, 2), QQ)
+    C = DomainScalar(ZZ(2), ZZ)
+    assert A // C == DomainScalar(ZZ(-3), ZZ)
 
     raises(TypeError, lambda: A // 1.5)
 
@@ -84,3 +87,28 @@ def test_DomainScalar_pos():
     A = DomainScalar(QQ(2), QQ)
     B = DomainScalar(QQ(2), QQ)
     assert  +A == B
+
+
+def test_DomainScalar_eq():
+    A = DomainScalar(QQ(2), QQ)
+    assert A == A
+    B = DomainScalar(ZZ(-5), ZZ)
+    assert A != B
+    C = DomainScalar(ZZ(2), ZZ)
+    assert A != C
+    D = [1]
+    assert A != D
+
+
+def test_DomainScalar_isZero():
+    A = DomainScalar(ZZ(0), ZZ)
+    assert A.is_zero() == True
+    B = DomainScalar(ZZ(1), ZZ)
+    assert B.is_zero() == False
+
+
+def test_DomainScalar_isOne():
+    A = DomainScalar(ZZ(1), ZZ)
+    assert A.is_one() == True
+    B = DomainScalar(ZZ(0), ZZ)
+    assert B.is_one() == False

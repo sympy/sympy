@@ -20,6 +20,8 @@ from .ddm import DDM
 
 from .sdm import SDM
 
+from .domainscalar import DomainScalar
+
 from sympy.polys.domains import ZZ
 
 
@@ -541,6 +543,9 @@ class DomainMatrix:
     def __rmul__(A, B):
         if B in A.domain:
             return A.from_rep(A.rep * B)
+        elif isinstance(B, DomainScalar):
+            A, B = A.unify(B)
+            return A.scalarmul(B)
         else:
             return NotImplemented
 
@@ -1202,6 +1207,3 @@ class DomainMatrix:
         if not isinstance(B, DomainMatrix):
             return NotImplemented
         return A.rep == B.rep
-
-
-from .domainscalar import DomainScalar
