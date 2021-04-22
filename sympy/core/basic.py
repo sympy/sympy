@@ -1079,7 +1079,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def dsubs(self, subsdict, newvars=None, known=None, unknown=None):
         r"""
-        Function that substitutes for variables in an ordinary differential equation.
+        Function that substitutes for variables in an Ordinary Differential Equation.
 
         The inputs are -
 
@@ -1131,11 +1131,11 @@ class Basic(Printable, metaclass=ManagedProperties):
         Derivative(f(t), t)/(2*a*t**2))/(2*a*t)
 
         >>> eq.dsubs({x: a*t**2}, [t], known=[f(x)])
-        cos(a*t**2) + Subs(Derivative(f(_xi_1), (_xi_1, 2)), _xi_1, a*t**2)
+        cos(a*t**2) + Derivative(Derivative(f(a*t**2), t)/(2*a*t), t)/(2*a*t)
         >>> eq.dsubs({x: a*t**2}, [t], unknown=[cos(x)])
         cos(t) + (Derivative(f(t), (t, 2))/(2*a*t) - Derivative(f(t), t)/(2*a*t**2))/(2*a*t)
         >>> eq.dsubs({x: a*t**2}, [t], unknown=[cos(x)], known=[f(x)])
-        cos(t) + Subs(Derivative(f(_xi_1), (_xi_1, 2)), _xi_1, a*t**2)
+        cos(t) + Derivative(Derivative(f(a*t**2), t)/(2*a*t), t)/(2*a*t)
 
         Let us see how ``dsubs`` works for some typical cases using an example
         of homogeneous ODEs which can be solved using the substitution
@@ -1192,10 +1192,9 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> sol
         Eq(y(x), C1*x**(-a/2 - sqrt(a**2 - 2*a - 4*b + 1)/2 + 1/2) + C2*x**(-a/2 + sqrt(a**2 - 2*a - 4*b + 1)/2 + 1/2))
 
-        If an equation contains multiple independent variables, one or more
-        of them can also be substituted. Note that this should not be confused
-        with PDE substitution. This is still a substitution in an ODE with
-        different independent variables.
+        If an equation is a sum of different ODEs, there will be multiple
+        independent variables. One or more of them can also be substituted.
+        Note that this should not be confused with PDE substitution.
 
         >>> a, b, t, u, x, y = symbols('a b t u x y')
         >>> f, g, h = symbols('f g h', cls=Function)
@@ -1205,7 +1204,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         2*sqrt(b)*Derivative(g(b), b) + u**3*Derivative(h(u), (u, 3)) +
         3*u**2*Derivative(h(u), (u, 2)) + u*Derivative(h(u), u) + Derivative(f(x), (x, 2))
         """
-        from sympy.core.function import Function, Derivative, AppliedUndef
+        from sympy.core.function import Subs, Function, Derivative, AppliedUndef
         from sympy.core.symbol import Symbol
 
         def diffx(e, sym, n):
@@ -1283,7 +1282,14 @@ class Basic(Printable, metaclass=ManagedProperties):
                         eq = eq.subs(func.subs(old_var, Function(old_var.name + 'f')(mapdict[old_var])), func.subs(old_var, mapdict[old_var]))
                 eq = eq.subs(Function(var.name + 'f')(mapdict[var]), subsdict[var])
 
-        return eq.doit()
+        derivatives = list(eq.atoms(Derivative))
+        derivatives.sort(key=lambda x: len(str(x)), reverse=True)
+        for d in derivatives:
+            done = d.doit()
+            if not len(done.atoms(Subs)):
+                eq = eq.subs(d, done)
+
+        return eq
 
     def xreplace(self, rule):
         """
