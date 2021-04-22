@@ -244,7 +244,7 @@ x = Symbol('x')
 @class_fact_registry.register(Abs)
 def _(expr):
     arg = expr.args[0]
-    return [Q.nonnegative(expr), 
+    return [Q.nonnegative(expr),
             Equivalent(~Q.zero(arg), ~Q.zero(expr)),
             Q.even(arg) >> Q.even(expr),
             Q.odd(arg) >> Q.odd(expr),
