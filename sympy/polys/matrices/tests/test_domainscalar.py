@@ -78,3 +78,9 @@ def test_DomainScalar_pow():
     assert B == DomainScalar(ZZ(25), ZZ)
 
     raises(TypeError, lambda: A**(1.5))
+
+
+def test_DomainScalar_pos():
+    A = DomainScalar(QQ(2), QQ)
+    B = DomainScalar(QQ(2), QQ)
+    assert  +A == B
