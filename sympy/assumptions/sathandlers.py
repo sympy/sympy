@@ -1,5 +1,4 @@
 from collections import defaultdict
-from collections.abc import MutableMapping
 
 from sympy.assumptions.ask import Q
 from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol, Symbol)
@@ -112,75 +111,17 @@ class ExactlyOneArg(ArgFactHandler):
 
 ### Fact registry ###
 
-class FactRegistry(MutableMapping):
-    """
-    Base class for fact registries.
-
-    Explanation
-    ===========
-
-    This class provides regstration of several handlers to any type of
-    variable. Advanced behavior can be implemented by subclassing this
-    class.
-
-    """
-    def __init__(self, d=None):
-        d = d or {}
-        self.d = defaultdict(frozenset, d)
-        super().__init__()
-
-    def __setitem__(self, key, item):
-        self.d[key] = frozenset(item)
-
-    def __delitem__(self, key):
-        del self.d[key]
-
-    def __getitem__(self, key):
-        return self.d[key]
-
-    def __call__(self, arg):
-        return {f(arg) for f in self[arg]}
-
-    def __iter__(self):
-        return self.d.__iter__()
-
-    def __len__(self):
-        return len(self.d)
-
-    def __repr__(self):
-        return repr(self.d)
-
-    def register(self, item):
-        """
-        Register a function to *item*.
-        """
-        def _(func):
-            self[item] |= {func}
-            return func
-        return _
-
-    def register_many(self, *items):
-        """
-        Register a function to every element in *items*.
-        """
-        def _(func):
-            for itm in items:
-                self[itm] |= {func}
-            return func
-        return _
-
-
-class ClassFactRegistry(FactRegistry):
+class ClassFactRegistry:
     """
     Register handlers against classes.
 
     Explanation
     ===========
 
-    ``register`` method registers the handler function for the class.
-
-    ``registry[C]`` returns a set of handlers for class ``C``, or any
-    of its superclasses.
+    ``register`` method registers the handler function for a class. Here,
+    handler function should return a single fact. ``multiregister`` method
+    registers the handler function for multiple classes. Here, handler function
+    should return a container of multiple facts.
 
     ``registry(expr)`` returns a set of facts for *expr*.
 
@@ -201,12 +142,6 @@ class ClassFactRegistry(FactRegistry):
     ...     arg = expr.args[0]
     ...     return Equivalent(~Q.zero(arg), ~Q.zero(expr))
 
-    Getting the item of the registry with class returns the registered
-    handlers for the class.
-
-    >>> reg[Abs] == frozenset({f1, f2})
-    True
-
     Calling the registry with expression returns the defined facts for the
     expression.
 
@@ -214,11 +149,10 @@ class ClassFactRegistry(FactRegistry):
     >>> reg(Abs(x))
     {Q.nonnegative(Abs(x)), Equivalent(~Q.zero(x), ~Q.zero(Abs(x)))}
 
-    Multiple facts can be registered at once by letting handler return an
-    iterable.
+    Multiple facts can be registered at once by ``multiregister`` method.
 
     >>> reg2 = ClassFactRegistry()
-    >>> @reg2.register(Abs)
+    >>> @reg2.multiregister(Abs)
     ... def _(expr):
     ...     arg = expr.args[0]
     ...     return [Q.even(arg) >> Q.even(expr), Q.odd(arg) >> Q.odd(expr)]
@@ -226,24 +160,45 @@ class ClassFactRegistry(FactRegistry):
     {Implies(Q.even(x), Q.even(Abs(x))), Implies(Q.odd(x), Q.odd(Abs(x)))}
 
     """
+    def __init__(self):
+        self.singlefacts = defaultdict(frozenset)
+        self.multifacts = defaultdict(frozenset)
+
+    def register(self, cls):
+        def _(func):
+            self.singlefacts[cls] |= {func}
+            return func
+        return _
+
+    def multiregister(self, *classes):
+        def _(func):
+            for cls in classes:
+                self.multifacts[cls] |= {func}
+            return func
+        return _
+
     def __getitem__(self, key):
-        ret = self.d[key]
-        for k in self.d:
+        ret1 = self.singlefacts[key]
+        for k in self.singlefacts:
             if issubclass(key, k):
-                ret |= self.d[k]
-        return ret
+                ret1 |= self.singlefacts[k]
+
+        ret2 = self.multifacts[key]
+        for k in self.multifacts:
+            if issubclass(key, k):
+                ret2 |= self.multifacts[k]
+
+        return ret1, ret2
 
     def __call__(self, expr):
-        handlers = self[expr.func]
         ret = set()
-        for h in handlers:
-            val = h(expr)
-            if isinstance(val, (bool, Boolean)):
-                ret.add(val)
-            elif iterable(val):
-                ret.update(val)
-            else:
-                raise TypeError("Unexpected result from %s(%s) : %s" % (self, expr, val))
+
+        handlers1, handlers2 = self[expr.func]
+
+        for h in handlers1:
+            ret.add(h(expr))
+        for h in handlers2:
+            ret.update(h(expr))
         return ret
 
 class_fact_registry = ClassFactRegistry()
@@ -256,7 +211,7 @@ x = Symbol('x')
 
 ## Abs ##
 
-@class_fact_registry.register(Abs)
+@class_fact_registry.multiregister(Abs)
 def _(expr):
     arg = expr.args[0]
     return [Q.nonnegative(expr),
@@ -269,7 +224,7 @@ def _(expr):
 
 ### Add ##
 
-@class_fact_registry.register(Add)
+@class_fact_registry.multiregister(Add)
 def _(expr):
     return [AllArgs(x, Q.positive(x))(expr) >> Q.positive(expr),
             AllArgs(x, Q.negative(x))(expr) >> Q.negative(expr),
@@ -288,7 +243,7 @@ def _(expr):
 
 ### Mul ###
 
-@class_fact_registry.register(Mul)
+@class_fact_registry.multiregister(Mul)
 def _(expr):
     return [Equivalent(Q.zero(expr), AnyArgs(x, Q.zero(x))(expr)),
             AllArgs(x, Q.positive(x))(expr) >> Q.positive(expr),
@@ -342,7 +297,7 @@ def _(expr):
 
 ### Pow ###
 
-@class_fact_registry.register(Pow)
+@class_fact_registry.multiregister(Pow)
 def _(expr):
     base, exp = expr.base, expr.exp
     return [
@@ -355,7 +310,7 @@ def _(expr):
 
 ### Integer ###
 
-@class_fact_registry.register(Integer)
+@class_fact_registry.multiregister(Integer)
 def _(expr):
     from sympy import isprime
     return [Equivalent(Q.prime(expr), isprime(expr)),
@@ -376,7 +331,7 @@ _old_assump_getters = {
     Q.imaginary: lambda o: o.is_imaginary,
 }
 
-@class_fact_registry.register_many(Number, NumberSymbol, ImaginaryUnit)
+@class_fact_registry.multiregister(Number, NumberSymbol, ImaginaryUnit)
 def _(expr):
     ret = []
     for p, getter in _old_assump_getters.items():
