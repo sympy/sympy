@@ -49,12 +49,6 @@ class Dyadic(BasisDependent):
         If 'other' is a Dyadic, this returns a Dyadic. Else, it returns
         a Vector (unless an error is encountered).
 
-        Parameters
-        ==========
-
-        other : Dyadic/Vector
-            The other Dyadic or Vector to take the inner product with
-
         Examples
         ========
 
@@ -66,6 +60,12 @@ class Dyadic(BasisDependent):
         (N.i|N.j)
         >>> D1.dot(N.j)
         N.i
+
+        Parameters
+        ==========
+
+        other : Dyadic/Vector
+            The other Dyadic or Vector to take the inner product with
 
         """
 
@@ -100,12 +100,6 @@ class Dyadic(BasisDependent):
         Returns the cross product between this Dyadic, and a Vector, as a
         Vector instance.
 
-        Parameters
-        ==========
-
-        other : Vector
-            The Vector that we are crossing this Dyadic with
-
         Examples
         ========
 
@@ -114,6 +108,12 @@ class Dyadic(BasisDependent):
         >>> d = N.i.outer(N.i)
         >>> d.cross(N.j)
         (N.i|N.k)
+
+        Parameters
+        ==========
+
+        other : Vector
+            The Vector that we are crossing this Dyadic with
 
         """
 
@@ -141,17 +141,6 @@ class Dyadic(BasisDependent):
         Returns the matrix form of the dyadic with respect to one or two
         coordinate systems.
 
-        Parameters
-        ==========
-
-        system : CoordSys3D
-            The coordinate system that the rows and columns of the matrix
-            correspond to. If a second system is provided, this
-            only corresponds to the rows of the matrix.
-        second_system : CoordSys3D, optional, default=None
-            The coordinate system that the columns of the matrix correspond
-            to.
-
         Examples
         ========
 
@@ -172,6 +161,17 @@ class Dyadic(BasisDependent):
         [  cos(q),   -sin(q), 0],
         [2*cos(q), -2*sin(q), 0],
         [       0,         0, 0]])
+
+        Parameters
+        ==========
+
+        system : CoordSys3D
+            The coordinate system that the rows and columns of the matrix
+            correspond to. If a second system is provided, this
+            only corresponds to the rows of the matrix.
+        second_system : CoordSys3D, optional, default=None
+            The coordinate system that the columns of the matrix correspond
+            to.
 
         """
 
