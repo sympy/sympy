@@ -490,17 +490,14 @@ class CoordSys3D(Basic):
         'rotation matrix' of this coordinate system with respect to
         another system.
 
+        Explanation
+        ===========
+
         If v_a is a vector defined in system 'A' (in matrix format)
         and v_b is the same vector defined in system 'B', then
         v_a = A.rotation_matrix(B) * v_b.
 
         A SymPy Matrix is returned.
-
-        Parameters
-        ==========
-
-        other : CoordSys3D
-            The system which the DCM is generated to.
 
         Examples
         ========
@@ -515,6 +512,12 @@ class CoordSys3D(Basic):
         [1,       0,        0],
         [0, cos(q1), -sin(q1)],
         [0, sin(q1),  cos(q1)]])
+
+        Parameters
+        ==========
+
+        other : CoordSys3D
+            The system which the DCM is generated to.
 
         """
         from sympy.vector.functions import _path
@@ -546,14 +549,6 @@ class CoordSys3D(Basic):
         Returns the position vector of the origin of this coordinate
         system with respect to another Point/CoordSys3D.
 
-        Parameters
-        ==========
-
-        other : Point/CoordSys3D
-            If other is a Point, the position of this system's origin
-            wrt it is returned. If its an instance of CoordSyRect,
-            the position wrt its origin is returned.
-
         Examples
         ========
 
@@ -563,6 +558,14 @@ class CoordSys3D(Basic):
         >>> N.position_wrt(N1)
         (-10)*N.i
 
+        Parameters
+        ==========
+
+        other : Point/CoordSys3D
+            If other is a Point, the position of this system's origin
+            wrt it is returned. If its an instance of CoordSyRect,
+            the position wrt its origin is returned.
+
         """
         return self.origin.position_wrt(other)
 
@@ -571,12 +574,6 @@ class CoordSys3D(Basic):
         Returns a dictionary which expresses the coordinate variables
         (base scalars) of this frame in terms of the variables of
         otherframe.
-
-        Parameters
-        ==========
-
-        otherframe : CoordSys3D
-            The other system to map the variables to.
 
         Examples
         ========
@@ -588,6 +585,12 @@ class CoordSys3D(Basic):
         >>> B = A.orient_new_axis('B', q, A.k)
         >>> A.scalar_map(B)
         {A.x: B.x*cos(q) - B.y*sin(q), A.y: B.x*sin(q) + B.y*cos(q), A.z: B.z}
+
+        Parameters
+        ==========
+
+        other : CoordSys3D
+            The other system to map the variables to.
 
         """
 
@@ -609,6 +612,15 @@ class CoordSys3D(Basic):
         Returns a CoordSys3D with its origin located at the given
         position wrt this coordinate system's origin.
 
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSys3D
+        >>> A = CoordSys3D('A')
+        >>> B = A.locate_new('B', 10 * A.i)
+        >>> B.origin.position_wrt(A.origin)
+        10*A.i
+
         Parameters
         ==========
 
@@ -623,15 +635,6 @@ class CoordSys3D(Basic):
             Iterables of 3 strings each, with custom names for base
             vectors and base scalars of the new system respectively.
             Used for simple str printing.
-
-        Examples
-        ========
-
-        >>> from sympy.vector import CoordSys3D
-        >>> A = CoordSys3D('A')
-        >>> B = A.locate_new('B', 10 * A.i)
-        >>> B.origin.position_wrt(A.origin)
-        10*A.i
 
         """
         if variable_names is None:
@@ -652,30 +655,6 @@ class CoordSys3D(Basic):
 
         Please refer to the documentation of the orienter classes
         for more information about the orientation procedure.
-
-        Parameters
-        ==========
-
-        name : str
-            The name of the new CoordSys3D instance.
-
-        orienters : iterable/Orienter
-            An Orienter or an iterable of Orienters for orienting the
-            new coordinate system.
-            If an Orienter is provided, it is applied to get the new
-            system.
-            If an iterable is provided, the orienters will be applied
-            in the order in which they appear in the iterable.
-
-        location : Vector(optional)
-            The location of the new coordinate system's origin wrt this
-            system's origin. If not specified, the origins are taken to
-            be coincident.
-
-        vector_names, variable_names : iterable(optional)
-            Iterables of 3 strings each, with custom names for base
-            vectors and base scalars of the new system respectively.
-            Used for simple str printing.
 
         Examples
         ========
@@ -708,6 +687,31 @@ class CoordSys3D(Basic):
         >>> from sympy.vector import QuaternionOrienter
         >>> q_orienter = QuaternionOrienter(q0, q1, q2, q3)
         >>> D = N.orient_new('D', (q_orienter, ))
+
+        Parameters
+        ==========
+
+        name : str
+            The name of the new CoordSys3D instance.
+
+        orienters : iterable/Orienter
+            An Orienter or an iterable of Orienters for orienting the
+            new coordinate system.
+            If an Orienter is provided, it is applied to get the new
+            system.
+            If an iterable is provided, the orienters will be applied
+            in the order in which they appear in the iterable.
+
+        location : Vector(optional)
+            The location of the new coordinate system's origin wrt this
+            system's origin. If not specified, the origins are taken to
+            be coincident.
+
+        vector_names, variable_names : iterable(optional)
+            Iterables of 3 strings each, with custom names for base
+            vectors and base scalars of the new system respectively.
+            Used for simple str printing.
+
         """
         if variable_names is None:
             variable_names = self._variable_names
@@ -746,6 +750,15 @@ class CoordSys3D(Basic):
         some angle. The angle is supplied as a SymPy expr scalar, and
         the axis is supplied as a Vector.
 
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSys3D
+        >>> from sympy import symbols
+        >>> q1 = symbols('q1')
+        >>> N = CoordSys3D('N')
+        >>> B = N.orient_new_axis('B', q1, N.i + 2 * N.j)
+
         Parameters
         ==========
 
@@ -768,15 +781,6 @@ class CoordSys3D(Basic):
             vectors and base scalars of the new system respectively.
             Used for simple str printing.
 
-        Examples
-        ========
-
-        >>> from sympy.vector import CoordSys3D
-        >>> from sympy import symbols
-        >>> q1 = symbols('q1')
-        >>> N = CoordSys3D('N')
-        >>> B = N.orient_new_axis('B', q1, N.i + 2 * N.j)
-
         """
         if variable_names is None:
             variable_names = self._variable_names
@@ -796,30 +800,11 @@ class CoordSys3D(Basic):
         Body orientation takes this coordinate system through three
         successive simple rotations.
 
+        Explanation
+        ===========
+
         Body fixed rotations include both Euler Angles and
         Tait-Bryan Angles, see https://en.wikipedia.org/wiki/Euler_angles.
-
-        Parameters
-        ==========
-
-        name : string
-            The name of the new coordinate system
-
-        angle1, angle2, angle3 : Expr
-            Three successive angles to rotate the coordinate system by
-
-        rotation_order : string
-            String defining the order of axes for rotation
-
-        location : Vector(optional)
-            The location of the new coordinate system's origin wrt this
-            system's origin. If not specified, the origins are taken to
-            be coincident.
-
-        vector_names, variable_names : iterable(optional)
-            Iterables of 3 strings each, with custom names for base
-            vectors and base scalars of the new system respectively.
-            Used for simple str printing.
 
         Examples
         ========
@@ -852,6 +837,28 @@ class CoordSys3D(Basic):
         >>> B = N.orient_new_body('B', q1, q2, 0, 'ZXZ')
         >>> B = N.orient_new_body('B', 0, 0, 0, 'XYX')
 
+        Parameters
+        ==========
+
+        name : string
+            The name of the new coordinate system
+
+        angle1, angle2, angle3 : Expr
+            Three successive angles to rotate the coordinate system by
+
+        rotation_order : string
+            String defining the order of axes for rotation
+
+        location : Vector(optional)
+            The location of the new coordinate system's origin wrt this
+            system's origin. If not specified, the origins are taken to
+            be coincident.
+
+        vector_names, variable_names : iterable(optional)
+            Iterables of 3 strings each, with custom names for base
+            vectors and base scalars of the new system respectively.
+            Used for simple str printing.
+
         """
 
         orienter = BodyOrienter(angle1, angle2, angle3, rotation_order)
@@ -866,6 +873,28 @@ class CoordSys3D(Basic):
         """
         Space rotation is similar to Body rotation, but the rotations
         are applied in the opposite order.
+
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSys3D
+        >>> from sympy import symbols
+        >>> q1, q2, q3 = symbols('q1 q2 q3')
+        >>> N = CoordSys3D('N')
+
+        To orient a coordinate system D with respect to N, each
+        sequential rotation is always about N's orthogonal unit vectors.
+        For example, a '123' rotation will specify rotations about
+        N.i, then N.j, then N.k.
+        Therefore,
+
+        >>> D = N.orient_new_space('D', q1, q2, q3, '312')
+
+        is same as
+
+        >>> B = N.orient_new_axis('B', q1, N.i)
+        >>> C = B.orient_new_axis('C', q2, N.j)
+        >>> D = C.orient_new_axis('D', q3, N.k)
 
         Parameters
         ==========
@@ -895,28 +924,6 @@ class CoordSys3D(Basic):
         CoordSys3D.orient_new_body : method to orient via Euler
             angles
 
-        Examples
-        ========
-
-        >>> from sympy.vector import CoordSys3D
-        >>> from sympy import symbols
-        >>> q1, q2, q3 = symbols('q1 q2 q3')
-        >>> N = CoordSys3D('N')
-
-        To orient a coordinate system D with respect to N, each
-        sequential rotation is always about N's orthogonal unit vectors.
-        For example, a '123' rotation will specify rotations about
-        N.i, then N.j, then N.k.
-        Therefore,
-
-        >>> D = N.orient_new_space('D', q1, q2, q3, '312')
-
-        is same as
-
-        >>> B = N.orient_new_axis('B', q1, N.i)
-        >>> C = B.orient_new_axis('C', q2, N.j)
-        >>> D = C.orient_new_axis('D', q3, N.k)
-
         """
 
         orienter = SpaceOrienter(angle1, angle2, angle3, rotation_order)
@@ -932,6 +939,9 @@ class CoordSys3D(Basic):
         Quaternions, defined as a finite rotation about lambda, a unit
         vector, by some amount theta.
 
+        Explanation
+        ===========
+
         This orientation is described by four parameters:
 
         q0 = cos(theta/2)
@@ -943,6 +953,15 @@ class CoordSys3D(Basic):
         q3 = lambda_z sin(theta/2)
 
         Quaternion does not take in a rotation order.
+
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSys3D
+        >>> from sympy import symbols
+        >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
+        >>> N = CoordSys3D('N')
+        >>> B = N.orient_new_quaternion('B', q0, q1, q2, q3)
 
         Parameters
         ==========
@@ -963,15 +982,6 @@ class CoordSys3D(Basic):
             vectors and base scalars of the new system respectively.
             Used for simple str printing.
 
-        Examples
-        ========
-
-        >>> from sympy.vector import CoordSys3D
-        >>> from sympy import symbols
-        >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
-        >>> N = CoordSys3D('N')
-        >>> B = N.orient_new_quaternion('B', q0, q1, q2, q3)
-
         """
 
         orienter = QuaternionOrienter(q0, q1, q2, q3)
@@ -983,6 +993,17 @@ class CoordSys3D(Basic):
     def create_new(self, name, transformation, variable_names=None, vector_names=None):
         """
         Returns a CoordSys3D which is connected to self by transformation.
+
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSys3D
+        >>> a = CoordSys3D('a')
+        >>> b = a.create_new('b', transformation='spherical')
+        >>> b.transformation_to_parent()
+        (b.r*sin(b.theta)*cos(b.phi), b.r*sin(b.phi)*sin(b.theta), b.r*cos(b.theta))
+        >>> b.transformation_from_parent()
+        (sqrt(a.x**2 + a.y**2 + a.z**2), acos(a.z/sqrt(a.x**2 + a.y**2 + a.z**2)), atan2(a.y, a.x))
 
         Parameters
         ==========
@@ -998,17 +1019,6 @@ class CoordSys3D(Basic):
             Iterables of 3 strings each, with custom names for base
             vectors and base scalars of the new system respectively.
             Used for simple str printing.
-
-        Examples
-        ========
-
-        >>> from sympy.vector import CoordSys3D
-        >>> a = CoordSys3D('a')
-        >>> b = a.create_new('b', transformation='spherical')
-        >>> b.transformation_to_parent()
-        (b.r*sin(b.theta)*cos(b.phi), b.r*sin(b.phi)*sin(b.theta), b.r*cos(b.theta))
-        >>> b.transformation_from_parent()
-        (sqrt(a.x**2 + a.y**2 + a.z**2), acos(a.z/sqrt(a.x**2 + a.y**2 + a.z**2)), atan2(a.y, a.x))
 
         """
         return CoordSys3D(name, parent=self, transformation=transformation,
