@@ -46,14 +46,6 @@ class Point(Basic):
         Returns the position vector of this Point with respect to
         another Point/CoordSys3D.
 
-        Parameters
-        ==========
-
-        other : Point/CoordSys3D
-            If other is a Point, the position of this Point wrt it is
-            returned. If its an instance of CoordSyRect, the position
-            wrt its origin is returned.
-
         Examples
         ========
 
@@ -62,6 +54,14 @@ class Point(Basic):
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> N.origin.position_wrt(p1)
         (-10)*N.i
+
+        Parameters
+        ==========
+
+        other : Point/CoordSys3D
+            If other is a Point, the position of this Point wrt it is
+            returned. If its an instance of CoordSyRect, the position
+            wrt its origin is returned.
 
         """
 
@@ -97,15 +97,6 @@ class Point(Basic):
         Thus, the position vector of the new Point wrt this one will
         be equal to the given 'position' parameter.
 
-        Parameters
-        ==========
-
-        name : str
-            Name of the new point
-
-        position : Vector
-            The position vector of the new Point wrt this one
-
         Examples
         ========
 
@@ -115,6 +106,15 @@ class Point(Basic):
         >>> p1.position_wrt(N.origin)
         10*N.i
 
+        Parameters
+        ==========
+
+        name : str
+            Name of the new point
+
+        position : Vector
+            The position vector of the new Point wrt this one
+
         """
         return Point(name, position, self)
 
@@ -122,13 +122,6 @@ class Point(Basic):
         """
         Returns the Cartesian/rectangular coordinates of this point
         wrt the origin of the given CoordSys3D instance.
-
-        Parameters
-        ==========
-
-        coordinate_system : CoordSys3D
-            The coordinate system to express the coordinates of this
-            Point in.
 
         Examples
         ========
@@ -139,6 +132,13 @@ class Point(Basic):
         >>> p2 = p1.locate_new('p2', 5 * N.j)
         >>> p2.express_coordinates(N)
         (10, 5, 0)
+
+        Parameters
+        ==========
+
+        coordinate_system : CoordSys3D
+            The coordinate system to express the coordinates of this
+            Point in.
 
         """
 
