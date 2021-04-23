@@ -2,111 +2,101 @@ from collections import defaultdict
 
 from sympy.assumptions.ask import Q
 from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol, Symbol)
-from sympy.core.compatibility import iterable
 from sympy.core.numbers import ImaginaryUnit
 from sympy.functions.elementary.complexes import Abs
-from sympy.logic.boolalg import (Boolean, Equivalent, And, Or, Implies)
+from sympy.logic.boolalg import (Equivalent, And, Or, Implies)
 from sympy.matrices.expressions import MatMul
 
 # APIs here may be subject to change
 
 
-### Helper classes ###
+### Helper functions ###
 
-class ArgFactHandler:
+def allarg(symbol, fact, expr):
     """
-    Class to help apply boolean function to the arguments of expression.
+    Apply all argument of the expression to the fact structure.
 
     Parameters
     ==========
 
-    args : tuple of Symbols.
-        Placeholder symbols representing the arguments of *f*.
+    symbol : Symbol
+        A placeholder symbol.
 
-    f : Any Boolean expression.
+    fact : Boolean
+        Resulting ``Boolean`` expression.
 
-    """
-    def __init__(self, args, f):
-        self.args = args
-        self.f = f
-
-    def __repr__(self):
-        return "%s(%s, %s)" % (type(self).__name__, str(self.args), str(self.f))
-
-    def apply(self, args):
-        return self.f.subs(zip(self.args, args))
-
-
-class AllArgs(ArgFactHandler):
-    """
-    Apply the function to all arguments of the expression.
+    expr : Expr
 
     Examples
     ========
 
     >>> from sympy import Q
-    >>> from sympy.assumptions.sathandlers import AllArgs
+    >>> from sympy.assumptions.sathandlers import allarg
     >>> from sympy.abc import x, y
-    >>> allargs = AllArgs(x, Q.negative(x) | Q.positive(x))
-    >>> allargs(x*y)
+    >>> allarg(x, Q.negative(x) | Q.positive(x), x*y)
     (Q.negative(x) | Q.positive(x)) & (Q.negative(y) | Q.positive(y))
 
     """
-    def __init__(self, x, f):
-        args = (x,)
-        super().__init__(args, f)
-
-    def __call__(self, expr):
-        return And(*[self.apply((arg,)) for arg in expr.args])
+    return And(*[fact.subs(symbol, arg) for arg in expr.args])
 
 
-class AnyArgs(ArgFactHandler):
+def anyarg(symbol, fact, expr):
     """
-    Apply the function to any argument of the expression.
+    Apply any argument of the expression to the fact structure.
+
+    Parameters
+    ==========
+
+    symbol : Symbol
+        A placeholder symbol.
+
+    fact : Boolean
+        Resulting ``Boolean`` expression.
+
+    expr : Expr
 
     Examples
     ========
 
     >>> from sympy import Q
-    >>> from sympy.assumptions.sathandlers import AnyArgs
+    >>> from sympy.assumptions.sathandlers import anyarg
     >>> from sympy.abc import x, y
-    >>> anyargs = AnyArgs(x, Q.negative(x) & Q.positive(x))
-    >>> anyargs(x*y)
+    >>> anyarg(x, Q.negative(x) & Q.positive(x), x*y)
     (Q.negative(x) & Q.positive(x)) | (Q.negative(y) & Q.positive(y))
 
     """
-    def __init__(self, x, f):
-        args = (x,)
-        super().__init__(args, f)
-
-    def __call__(self, expr):
-        return Or(*[self.apply((arg,)) for arg in expr.args])
+    return Or(*[fact.subs(symbol, arg) for arg in expr.args])
 
 
-class ExactlyOneArg(ArgFactHandler):
+def exactlyonearg(symbol, fact, expr):
     """
-    Apply the function to exactly one argument of the expression.
+    Apply exactly one argument of the expression to the fact structure.
+
+    Parameters
+    ==========
+
+    symbol : Symbol
+        A placeholder symbol.
+
+    fact : Boolean
+        Resulting ``Boolean`` expression.
+
+    expr : Expr
 
     Examples
     ========
 
     >>> from sympy import Q
-    >>> from sympy.assumptions.sathandlers import ExactlyOneArg
+    >>> from sympy.assumptions.sathandlers import exactlyonearg
     >>> from sympy.abc import x, y
-    >>> onearg = ExactlyOneArg(x, Q.positive(x))
-    >>> onearg(x*y)
+    >>> exactlyonearg(x, Q.positive(x), x*y)
     (Q.positive(x) & ~Q.positive(y)) | (Q.positive(y) & ~Q.positive(x))
 
     """
-    def __init__(self, x, f):
-        args = (x,)
-        super().__init__(args, f)
-
-    def __call__(self, expr):
-        pred_args = [self.apply((arg,)) for arg in expr.args]
-        res = Or(*[And(pred_args[i], *[~lit for lit in pred_args[:i] +
-            pred_args[i+1:]]) for i in range(len(pred_args))])
-        return res
+    pred_args = [fact.subs(symbol, arg) for arg in expr.args]
+    res = Or(*[And(pred_args[i], *[~lit for lit in pred_args[:i] +
+        pred_args[i+1:]]) for i in range(len(pred_args))])
+    return res
 
 
 ### Fact registry ###
@@ -226,73 +216,73 @@ def _(expr):
 
 @class_fact_registry.multiregister(Add)
 def _(expr):
-    return [AllArgs(x, Q.positive(x))(expr) >> Q.positive(expr),
-            AllArgs(x, Q.negative(x))(expr) >> Q.negative(expr),
-            AllArgs(x, Q.real(x))(expr) >> Q.real(expr),
-            AllArgs(x, Q.rational(x))(expr) >> Q.rational(expr),
-            AllArgs(x, Q.integer(x))(expr) >> Q.integer(expr),
-            ExactlyOneArg(x, ~Q.integer(x))(expr) >> ~Q.integer(expr),
+    return [allarg(x, Q.positive(x), expr) >> Q.positive(expr),
+            allarg(x, Q.negative(x), expr) >> Q.negative(expr),
+            allarg(x, Q.real(x), expr) >> Q.real(expr),
+            allarg(x, Q.rational(x), expr) >> Q.rational(expr),
+            allarg(x, Q.integer(x), expr) >> Q.integer(expr),
+            exactlyonearg(x, ~Q.integer(x), expr) >> ~Q.integer(expr),
             ]
 
 @class_fact_registry.register(Add)
 def _(expr):
-    allargs_real = AllArgs(x, Q.real(x))(expr)
-    onearg_irrational = ExactlyOneArg(x, Q.irrational(x))(expr)
-    return Implies(allargs_real, Implies(onearg_irrational, Q.irrational(expr)))
+    allarg_real = allarg(x, Q.real(x), expr)
+    onearg_irrational = exactlyonearg(x, Q.irrational(x), expr)
+    return Implies(allarg_real, Implies(onearg_irrational, Q.irrational(expr)))
 
 
 ### Mul ###
 
 @class_fact_registry.multiregister(Mul)
 def _(expr):
-    return [Equivalent(Q.zero(expr), AnyArgs(x, Q.zero(x))(expr)),
-            AllArgs(x, Q.positive(x))(expr) >> Q.positive(expr),
-            AllArgs(x, Q.real(x))(expr) >> Q.real(expr),
-            AllArgs(x, Q.rational(x))(expr) >> Q.rational(expr),
-            AllArgs(x, Q.integer(x))(expr) >> Q.integer(expr),
-            ExactlyOneArg(x, ~Q.rational(x))(expr) >> ~Q.integer(expr),
-            AllArgs(x, Q.commutative(x))(expr) >> Q.commutative(expr),
+    return [Equivalent(Q.zero(expr), anyarg(x, Q.zero(x), expr)),
+            allarg(x, Q.positive(x), expr) >> Q.positive(expr),
+            allarg(x, Q.real(x), expr) >> Q.real(expr),
+            allarg(x, Q.rational(x), expr) >> Q.rational(expr),
+            allarg(x, Q.integer(x), expr) >> Q.integer(expr),
+            exactlyonearg(x, ~Q.rational(x), expr) >> ~Q.integer(expr),
+            allarg(x, Q.commutative(x), expr) >> Q.commutative(expr),
             ]
 
 @class_fact_registry.register(Mul)
 def _(expr):
     # Implicitly assumes Mul has more than one arg
-    # Would be AllArgs(x, Q.prime(x) | Q.composite(x)) except 1 is composite
+    # Would be allarg(x, Q.prime(x) | Q.composite(x)) except 1 is composite
     # More advanced prime assumptions will require inequalities, as 1 provides
     # a corner case.
-    allargs_prime = AllArgs(x, Q.prime(x))(expr)
-    return Implies(allargs_prime, ~Q.prime(expr))
+    allarg_prime = allarg(x, Q.prime(x), expr)
+    return Implies(allarg_prime, ~Q.prime(expr))
 
 @class_fact_registry.register(Mul)
 def _(expr):
     # General Case: Odd number of imaginary args implies mul is imaginary(To be implemented)
-    allargs_imag_or_real = AllArgs(x, Q.imaginary(x) | Q.real(x))(expr)
-    onearg_imaginary = ExactlyOneArg(x, Q.imaginary(x))(expr)
-    return Implies(allargs_imag_or_real, Implies(onearg_imaginary, Q.imaginary(expr)))
+    allarg_imag_or_real = allarg(x, Q.imaginary(x) | Q.real(x), expr)
+    onearg_imaginary = exactlyonearg(x, Q.imaginary(x), expr)
+    return Implies(allarg_imag_or_real, Implies(onearg_imaginary, Q.imaginary(expr)))
 
 @class_fact_registry.register(Mul)
 def _(expr):
-    allargs_real = AllArgs(x, Q.real(x))(expr)
-    onearg_irrational = ExactlyOneArg(x, Q.irrational(x))(expr)
-    return Implies(allargs_real, Implies(onearg_irrational, Q.irrational(expr)))
+    allarg_real = allarg(x, Q.real(x), expr)
+    onearg_irrational = exactlyonearg(x, Q.irrational(x), expr)
+    return Implies(allarg_real, Implies(onearg_irrational, Q.irrational(expr)))
 
 @class_fact_registry.register(Mul)
 def _(expr):
     # Including the integer qualification means we don't need to add any facts
     # for odd, since the assumptions already know that every integer is
     # exactly one of even or odd.
-    allargs_integer = AllArgs(x, Q.integer(x))(expr)
-    anyargs_even = AnyArgs(x, Q.even(x))(expr)
-    return Implies(allargs_integer, Equivalent(anyargs_even, Q.even(expr)))
+    allarg_integer = allarg(x, Q.integer(x), expr)
+    anyarg_even = anyarg(x, Q.even(x), expr)
+    return Implies(allarg_integer, Equivalent(anyarg_even, Q.even(expr)))
 
 
 ### MatMul ###
 
 @class_fact_registry.register(MatMul)
 def _(expr):
-    allargs_square = AllArgs(x, Q.square(x))(expr)
-    allargs_invertible = AllArgs(x, Q.invertible(x))(expr)
-    return Implies(allargs_square, Equivalent(Q.invertible(expr), allargs_invertible))
+    allarg_square = allarg(x, Q.square(x), expr)
+    allarg_invertible = allarg(x, Q.invertible(x), expr)
+    return Implies(allarg_square, Equivalent(Q.invertible(expr), allarg_invertible))
 
 
 ### Pow ###
