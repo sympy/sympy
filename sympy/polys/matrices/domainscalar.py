@@ -89,7 +89,9 @@ class DomainScalar:
     def __divmod__(self, other):
         if not isinstance(other, DomainScalar):
             return NotImplemented
-        return (self // other, self % other)
+        self, other = self.unify(other)
+        q, r = self.domain.div(self.element, other.element)
+        return (self.new(q, self.domain), self.new(r, self.domain))
 
     def __pow__(self, n):
         if not isinstance(n, int):

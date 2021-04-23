@@ -23,7 +23,6 @@ from .sdm import SDM
 from .domainscalar import DomainScalar
 
 from sympy.polys.domains import ZZ
-from sympy.core import S
 
 
 class DomainMatrix:
@@ -793,12 +792,7 @@ class DomainMatrix:
     def __truediv__(A, lamda):
         """ Method for Scalar Divison"""
         if isinstance(lamda, int):
-            if lamda == S.Zero:
-                raise ZeroDivisionError
-            elif lamda == S.One:
-                return A.to_field()
-            else:
-                lamda = DomainScalar(ZZ(lamda), ZZ)
+            lamda = DomainScalar(ZZ(lamda), ZZ)
 
         if not isinstance(lamda, DomainScalar):
             return NotImplemented
