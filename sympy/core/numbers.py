@@ -1206,11 +1206,8 @@ class Float(Number):
         return obj
 
     # mpz can't be pickled
-    def __getnewargs__(self):
-        return (mlib.to_pickable(self._mpf_),)
-
-    def __getstate__(self):
-        return {'_prec': self._prec}
+    def __getnewargs_ex__(self):
+        return ((mlib.to_pickable(self._mpf_),), {'precision': self._prec})
 
     def _hashable_content(self):
         return (self._mpf_, self._prec)
@@ -2667,6 +2664,7 @@ class One(IntegerConstant, metaclass=Singleton):
     .. [1] https://en.wikipedia.org/wiki/1_%28number%29
     """
     is_number = True
+    is_positive = True
 
     p = 1
     q = 1
