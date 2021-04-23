@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from sympy.assumptions.ask import Q
-from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol, Symbol)
+from sympy.core import (Add, Mul, Pow, Number, NumberSymbol, Symbol)
 from sympy.core.numbers import ImaginaryUnit
 from sympy.functions.elementary.complexes import Abs
 from sympy.logic.boolalg import (Equivalent, And, Or, Implies)
@@ -298,16 +298,6 @@ def _(expr):
     ]
 
 
-### Integer ###
-
-@class_fact_registry.multiregister(Integer)
-def _(expr):
-    from sympy import isprime
-    return [Equivalent(Q.prime(expr), isprime(expr)),
-            Equivalent(Q.composite(expr), expr.is_composite),
-    ]
-
-
 ### Numbers ###
 
 _old_assump_getters = {
@@ -319,6 +309,8 @@ _old_assump_getters = {
     Q.even: lambda o: o.is_even,
     Q.odd: lambda o: o.is_odd,
     Q.imaginary: lambda o: o.is_imaginary,
+    Q.prime: lambda o: o.is_prime,
+    Q.composite: lambda o: o.is_composite,
 }
 
 @class_fact_registry.multiregister(Number, NumberSymbol, ImaginaryUnit)
