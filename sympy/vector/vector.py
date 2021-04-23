@@ -65,6 +65,10 @@ class Vector(BasisDependent):
         """
         Returns the dot product of this Vector, either with another
         Vector, or a Dyadic, or a Del operator.
+
+        Explanation
+        ===========
+
         If 'other' is a Vector, returns the dot product scalar (Sympy
         expression).
         If 'other' is a Dyadic, the dot product is returned as a Vector.
@@ -72,12 +76,6 @@ class Vector(BasisDependent):
         derivative operator as a Python function. If this function is
         applied to a scalar expression, it returns the directional
         derivative of the scalar field wrt this Vector.
-
-        Parameters
-        ==========
-
-        other: Vector/Dyadic/Del
-            The Vector or Dyadic we are dotting with, or a Del operator .
 
         Examples
         ========
@@ -97,6 +95,12 @@ class Vector(BasisDependent):
         >>> d = C.i.outer(C.i)
         >>> C.i.dot(d)
         C.i
+
+        Parameters
+        ==========
+
+        other: Vector/Dyadic/Del
+            The Vector or Dyadic we are dotting with, or a Del operator .
 
         """
 
@@ -132,14 +136,12 @@ class Vector(BasisDependent):
         """
         Returns the cross product of this Vector with another Vector or
         Dyadic instance.
+
+        Explanation
+        ===========
+
         The cross product is a Vector, if 'other' is a Vector. If 'other'
         is a Dyadic, this returns a Dyadic instance.
-
-        Parameters
-        ==========
-
-        other: Vector/Dyadic
-            The Vector or Dyadic we are crossing with.
 
         Examples
         ========
@@ -156,6 +158,12 @@ class Vector(BasisDependent):
         >>> d = C.i.outer(C.i)
         >>> C.j.cross(d)
         (-1)*(C.k|C.i)
+
+        Parameters
+        ==========
+
+        other: Vector/Dyadic
+            The Vector or Dyadic we are crossing with.
 
         """
 
@@ -182,13 +190,6 @@ class Vector(BasisDependent):
         Returns the outer product of this vector with another, in the
         form of a Dyadic instance.
 
-        Parameters
-        ==========
-
-        other : Vector
-            The Vector with respect to which the outer product is to
-            be computed.
-
         Examples
         ========
 
@@ -196,6 +197,13 @@ class Vector(BasisDependent):
         >>> N = CoordSys3D('N')
         >>> N.i.outer(N.j)
         (N.i|N.j)
+
+        Parameters
+        ==========
+
+        other : Vector
+            The Vector with respect to which the outer product is to
+            be computed.
 
         """
 
@@ -279,12 +287,6 @@ class Vector(BasisDependent):
         Returns the matrix form of this vector with respect to the
         specified coordinate system.
 
-        Parameters
-        ==========
-
-        system : CoordSys3D
-            The system wrt which the matrix form is to be computed
-
         Examples
         ========
 
@@ -297,6 +299,12 @@ class Vector(BasisDependent):
         [a],
         [b],
         [c]])
+
+        Parameters
+        ==========
+
+        system : CoordSys3D
+            The system wrt which the matrix form is to be computed
 
         """
 
