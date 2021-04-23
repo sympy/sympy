@@ -29,7 +29,7 @@ Arithmetic. Master's thesis. University of Toronto, 1996
 """
 
 
-from .plot import BaseSeries, Plot
+from .plot import BaseSeries, Plot, _set_discretization_points
 from .experimental_lambdify import experimental_lambdify, vectorized_lambdify
 from .intervalmath import interval
 from sympy.core.relational import (Equality, GreaterThan, LessThan,
@@ -414,8 +414,9 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
 
     # uniform experience between the different plot function when it comes to
     # set the number of discretization points
-    if "n1" in kwargs.keys():
-        points = kwargs["n1"]
+    kwargs["points"] = points
+    kwargs = _set_discretization_points(kwargs, "pi")
+    points = kwargs["points"]
 
     series_argument = ImplicitSeries(expr, var_start_end_x, var_start_end_y,
                                     has_equality, adaptive, depth,

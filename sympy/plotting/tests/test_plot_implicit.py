@@ -131,3 +131,8 @@ def test_nb_discretization_points():
     assert p._series[0].nb_of_points == 200
     p = plot_implicit(Eq(y, cos(x)), (x, -5, 5), (y, -2, 2), n1=100)
     assert p._series[0].nb_of_points == 100
+    p = plot_implicit(Eq(y, cos(x)), (x, -5, 5), (y, -2, 2), n=100)
+    assert p._series[0].nb_of_points == 100
+    # n has the precedente over n1
+    p = plot_implicit(Eq(y, cos(x)), (x, -5, 5), (y, -2, 2), n=50, n1=100)
+    assert p._series[0].nb_of_points == 50

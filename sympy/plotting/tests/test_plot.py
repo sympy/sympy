@@ -735,14 +735,37 @@ def test_nb_discretization_points():
     assert p._series[0].nb_of_points == 50
     p = plot_parametric(cos(u), sin(u), n1=50)
     assert p._series[0].nb_of_points == 50
+    p = plot_parametric(cos(u), sin(u), n=50)
+    assert p._series[0].nb_of_points == 50
+    # n has the precedente over n1
+    p = plot_parametric(cos(u), sin(u), n=50, n1=60)
+    assert p._series[0].nb_of_points == 50
     p = plot3d_parametric_line(cos(u), sin(u), u, n1=50)
+    assert p._series[0].nb_of_points == 50
+    p = plot3d_parametric_line(cos(u), sin(u), u, n=50)
+    assert p._series[0].nb_of_points == 50
+    # n has the precedente over n1
+    p = plot3d_parametric_line(cos(u), sin(u), u, n=50, n1=60)
     assert p._series[0].nb_of_points == 50
     p = plot3d(x + y, n1=40, n2=30)
     assert p._series[0].nb_of_points_x == 40
     assert p._series[0].nb_of_points_y == 30
+    # n has the precedente over n1 and n2
+    p = plot3d(x + y, n1=40, n2=30, n=20)
+    assert p._series[0].nb_of_points_x == 20
+    assert p._series[0].nb_of_points_y == 20
     p = plot_contour(x + y, n1=40, n2=30)
     assert p._series[0].nb_of_points_x == 40
     assert p._series[0].nb_of_points_y == 30
+    # n has the precedente over n1 and n2
+    p = plot_contour(x + y, n1=40, n2=30, n=20)
+    assert p._series[0].nb_of_points_x == 20
+    assert p._series[0].nb_of_points_y == 20
     p = plot3d_parametric_surface(cos(u + v), sin(u - v), u - v, n1=40, n2=30)
     assert p._series[0].nb_of_points_u == 40
     assert p._series[0].nb_of_points_v == 30
+    # n has the precedente over n1 and n2
+    p = plot3d_parametric_surface(cos(u + v), sin(u - v), u - v,
+            n1=40, n2=30, n=10)
+    assert p._series[0].nb_of_points_u == 10
+    assert p._series[0].nb_of_points_v == 10

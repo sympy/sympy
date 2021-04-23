@@ -1704,7 +1704,7 @@ def plot(*args, show=True, **kwargs):
 
     adaptive : bool, optional
         The default value is set to ``True``. Set adaptive to ``False``
-        and specify ``n1`` if uniform sampling is required.
+        and specify ``n`` if uniform sampling is required.
 
         The plotting uses an adaptive algorithm which samples
         recursively to accurately plot. The adaptive algorithm uses a
@@ -1719,9 +1719,9 @@ def plot(*args, show=True, **kwargs):
         If the ``adaptive`` flag is set to ``False``, this will be
         ignored.
 
-    n1 : int, optional
+    n : int, optional
         Used when the ``adaptive`` is set to ``False``. The function
-        is uniformly sampled at ``n1`` number of points.
+        is uniformly sampled at ``n`` number of points.
 
         If the ``adaptive`` flag is set to ``True``, this will be
         ignored.
@@ -1786,7 +1786,7 @@ def plot(*args, show=True, **kwargs):
        :format: doctest
        :include-source: True
 
-       >>> plot(x**2, adaptive=False, n1=400)
+       >>> plot(x**2, adaptive=False, n=400)
        Plot object containing:
        [0]: cartesian line: x**2 for x over (-10.0, 10.0)
 
@@ -1859,13 +1859,13 @@ def plot_parametric(*args, show=True, **kwargs):
         Specifies whether to use the adaptive sampling or not.
 
         The default value is set to ``True``. Set adaptive to ``False``
-        and specify ``n1`` if uniform sampling is required.
+        and specify ``n`` if uniform sampling is required.
 
     depth :  int, optional
         The recursion depth of the adaptive algorithm. A depth of
         value $n$ samples a maximum of $2^n$ points.
 
-    n1 : int, optional
+    n : int, optional
         Used when the ``adaptive`` flag is set to ``False``.
 
         Specifies the number of the points used for the uniform
@@ -2051,7 +2051,7 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
 
     Arguments for ``Parametric3DLineSeries`` class.
 
-    ``n1``: The range is uniformly sampled at ``n1`` number of points.
+    ``n``: The range is uniformly sampled at ``n`` number of points.
 
     Aesthetics:
 
@@ -2183,6 +2183,9 @@ def plot3d(*args, show=True, **kwargs):
     ``n1``: int. The x range is sampled uniformly at ``n1`` of points.
 
     ``n2``: int. The y range is sampled uniformly at ``n2`` of points.
+
+    ``n``: int. The x and y ranges are sampled uniformly at ``n`` of points.
+    It overrides ``n1`` and ``n2``.
 
     Aesthetics:
 
@@ -2321,6 +2324,9 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
 
     ``n2``: int. The ``v`` range is sampled uniformly at ``n2`` of points
 
+    ``n``: int. The u and v ranges are sampled uniformly at ``n`` of points.
+    It overrides ``n1`` and ``n2``.
+
     Aesthetics:
 
     ``surface_color``: Function which returns a float. Specifies the color for
@@ -2431,6 +2437,9 @@ def plot_contour(*args, show=True, **kwargs):
     ``n1``: int. The x range is sampled uniformly at ``n1`` of points.
 
     ``n2``: int. The y range is sampled uniformly at ``n2`` of points.
+
+    ``n``: int. The x and y ranges are sampled uniformly at ``n`` of points.
+    It overrides ``n1`` and ``n2``.
 
     Aesthetics:
 
@@ -2573,7 +2582,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
         return args
 
 def _set_discretization_points(kwargs, pt):
-    """ This function allows the user two use the keyword arguments n1 and n2
+    """ This function allows the user two use the keyword arguments n, n1 and n2
     to specify the number of discretization points in two directions.
 
     Parameters
@@ -2586,17 +2595,30 @@ def _set_discretization_points(kwargs, pt):
             ["p", "pp", "p3d", "p3dl", "p3ds", "pc", "pi"]
             to indicate plot, plot_parametric, ..., respectively.
     """
-    if pt in ["p", "pp", "p3dpl", "pi"]:
+    if pt in ["p", "pp", "p3dpl"]:
         if "n1" in kwargs.keys():
             kwargs["nb_of_points"] = kwargs["n1"]
+        if "n" in kwargs.keys():
+            kwargs["nb_of_points"] = kwargs["n"]
     elif pt in ["p3d", "pc"]:
         if "n1" in kwargs.keys():
             kwargs["nb_of_points_x"] = kwargs["n1"]
         if "n2" in kwargs.keys():
             kwargs["nb_of_points_y"] = kwargs["n2"]
+        if "n" in kwargs.keys():
+            kwargs["nb_of_points_x"] = kwargs["n"]
+            kwargs["nb_of_points_y"] = kwargs["n"]
     elif pt in ["p3dps"]:
         if "n1" in kwargs.keys():
             kwargs["nb_of_points_u"] = kwargs["n1"]
         if "n2" in kwargs.keys():
             kwargs["nb_of_points_v"] = kwargs["n2"]
+        if "n" in kwargs.keys():
+            kwargs["nb_of_points_u"] = kwargs["n"]
+            kwargs["nb_of_points_v"] = kwargs["n"]
+    elif pt in ["pi"]:
+        if "n1" in kwargs.keys():
+            kwargs["points"] = kwargs["n1"]
+        if "n" in kwargs.keys():
+            kwargs["points"] = kwargs["n"]
     return kwargs
