@@ -23,23 +23,6 @@ def express(expr, system, system2=None, variables=False):
     dyadic are also substituted in terms of the base scalars of the
     given system.
 
-    Parameters
-    ==========
-
-    expr : Vector/Dyadic/scalar(sympyfiable)
-        The expression to re-express in CoordSys3D 'system'
-
-    system: CoordSys3D
-        The coordinate system the expr is to be expressed in.
-
-    system2: CoordSys3D
-        The other coordinate system required for re-expression.
-        (only for a Dyadic Expr)
-
-    variables : boolean
-        Specifies whether to substitute the coordinate variables present
-        in expr, in terms of those of parameter system.
-
     Examples
     ========
 
@@ -56,6 +39,23 @@ def express(expr, system, system2=None, variables=False):
     >>> d = N.i.outer(N.i)
     >>> express(d, B, N) == (cos(q))*(B.i|N.i) + (-sin(q))*(B.j|N.i)
     True
+
+    Parameters
+    ==========
+
+    expr : Vector/Dyadic/scalar(sympyfiable)
+        The expression to re-express in CoordSys3D 'system'
+
+    system: CoordSys3D
+        The coordinate system the expr is to be expressed in.
+
+    system2: CoordSys3D
+        The other coordinate system required for re-expression.
+        (only for a Dyadic Expr)
+
+    variables : boolean
+        Specifies whether to substitute the coordinate variables present
+        in expr, in terms of those of parameter system.
 
     """
 
@@ -133,16 +133,6 @@ def directional_derivative(field, direction_vector):
     Returns the directional derivative of a scalar or vector field computed
     along a given vector in coordinate system which parameters are expressed.
 
-    Parameters
-    ==========
-
-    field : Vector or Scalar
-        The scalar or vector field to compute the directional derivative of
-
-    direction_vector : Vector
-        The vector to calculated directional derivative along them.
-
-
     Examples
     ========
 
@@ -155,6 +145,15 @@ def directional_derivative(field, direction_vector):
     >>> f2 = 5*R.x**2*R.z
     >>> directional_derivative(f2, v1)
     5*R.x**2 + 30*R.x*R.z
+
+    Parameters
+    ==========
+
+    field : Vector or Scalar
+        The scalar or vector field to compute the directional derivative of
+
+    direction_vector : Vector
+        The vector to calculated directional derivative along them.
 
     """
     from sympy.vector.operators import _get_coord_sys_from_expr
@@ -182,12 +181,6 @@ def laplacian(expr):
     Return the laplacian of the given field computed in terms of
     the base scalars of the given coordinate system.
 
-    Parameters
-    ==========
-
-    expr : SymPy Expr or Vector
-        expr denotes a scalar or vector field.
-
     Examples
     ========
 
@@ -199,6 +192,12 @@ def laplacian(expr):
     >>> f = R.x**2*R.i + R.y**3*R.j + R.z**4*R.k
     >>> laplacian(f)
     2*R.i + 6*R.y*R.j + 12*R.z**2*R.k
+
+    Parameters
+    ==========
+
+    expr : SymPy Expr or Vector
+        expr denotes a scalar or vector field.
 
     """
 
@@ -212,12 +211,6 @@ def is_conservative(field):
     """
     Checks if a field is conservative.
 
-    Parameters
-    ==========
-
-    field : Vector
-        The field to check for conservative property
-
     Examples
     ========
 
@@ -228,6 +221,12 @@ def is_conservative(field):
     True
     >>> is_conservative(R.z*R.j)
     False
+
+    Parameters
+    ==========
+
+    field : Vector
+        The field to check for conservative property
 
     Returns
     =======
@@ -250,12 +249,6 @@ def is_solenoidal(field):
     """
     Checks if a field is solenoidal.
 
-    Parameters
-    ==========
-
-    field : Vector
-        The field to check for solenoidal property
-
     Examples
     ========
 
@@ -266,6 +259,12 @@ def is_solenoidal(field):
     True
     >>> is_solenoidal(R.y * R.j)
     False
+
+    Parameters
+    ==========
+
+    field : Vector
+        The field to check for solenoidal property
 
     Returns
     =======
@@ -289,16 +288,6 @@ def scalar_potential(field, coord_sys):
     Returns the scalar potential function of a field in a given
     coordinate system (without the added integration constant).
 
-    Parameters
-    ==========
-
-    field : Vector
-        The vector field whose scalar potential function is to be
-        calculated
-
-    coord_sys : CoordSys3D
-        The coordinate system to do the calculation in
-
     Examples
     ========
 
@@ -311,6 +300,16 @@ def scalar_potential(field, coord_sys):
     >>> grad_field = gradient(scalar_field)
     >>> scalar_potential(grad_field, R)
     2*R.x**2*R.y*R.z
+
+    Parameters
+    ==========
+
+    field : Vector
+        The vector field whose scalar potential function is to be
+        calculated
+
+    coord_sys : CoordSys3D
+        The coordinate system to do the calculation in
 
     """
 
@@ -352,21 +351,6 @@ def scalar_potential_difference(field, coord_sys, point1, point2):
     The position vectors of the two Points are calculated wrt the
     origin of the coordinate system provided.
 
-    Parameters
-    ==========
-
-    field : Vector/Expr
-        The field to calculate wrt
-
-    coord_sys : CoordSys3D
-        The coordinate system to do the calculations in
-
-    point1 : Point
-        The initial Point in given coordinate system
-
-    position2 : Point
-        The second Point in the given coordinate system
-
     Examples
     ========
 
@@ -380,6 +364,21 @@ def scalar_potential_difference(field, coord_sys, point1, point2):
     >>> Q = R.origin.locate_new('O', 3*R.i + R.j + 2*R.k)
     >>> scalar_potential_difference(vectfield, R, P, Q)
     -2*R.x**2*R.y + 18
+
+    Parameters
+    ==========
+
+    field : Vector/Expr
+        The field to calculate wrt
+
+    coord_sys : CoordSys3D
+        The coordinate system to do the calculations in
+
+    point1 : Point
+        The initial Point in given coordinate system
+
+    point2 : Point
+        The second Point in the given coordinate system
 
     """
 
@@ -418,15 +417,6 @@ def matrix_to_vector(matrix, system):
     measure numbers of the components of the vector along basis
     vectors of 'system'.
 
-    Parameters
-    ==========
-
-    matrix : SymPy Matrix, Dimensions: (3, 1)
-        The matrix to be converted to a vector
-
-    system : CoordSys3D
-        The coordinate system the vector is to be defined in
-
     Examples
     ========
 
@@ -439,6 +429,15 @@ def matrix_to_vector(matrix, system):
     C.i + 2*C.j + 3*C.k
     >>> v.to_matrix(C) == m
     True
+
+    Parameters
+    ==========
+
+    matrix : SymPy Matrix, Dimensions: (3, 1)
+        The matrix to be converted to a vector
+
+    system : CoordSys3D
+        The coordinate system the vector is to be defined in
 
     """
 
@@ -459,6 +458,7 @@ def _path(from_object, to_object):
     =======
 
     tuple: (index, list)
+
     """
 
     if from_object._root != to_object._root:
@@ -491,16 +491,6 @@ def orthogonalize(*vlist, orthonormal=False):
     using the Gram - Schmidt process. Returns a list of
     orthogonal or orthonormal vectors.
 
-    Parameters
-    ==========
-
-    vlist : sequence of independent vectors to be made orthogonal.
-
-    orthonormal : Optional parameter
-                  Set to True if the vectors returned should be
-                  orthonormal.
-                  Default: False
-
     Examples
     ========
 
@@ -512,6 +502,16 @@ def orthogonalize(*vlist, orthonormal=False):
     >>> v2 = 2*i + 3*j
     >>> orthogonalize(v1, v2)
     [C.i + 2*C.j, 2/5*C.i + (-1/5)*C.j]
+
+    Parameters
+    ==========
+
+    vlist : sequence of independent vectors to be made orthogonal.
+
+    orthonormal : Optional parameter
+                  Set to True if the vectors returned should be
+                  orthonormal.
+                  Default: False
 
     References
     ==========
