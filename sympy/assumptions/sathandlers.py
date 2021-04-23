@@ -114,7 +114,14 @@ class ExactlyOneArg(ArgFactHandler):
 
 class FactRegistry(MutableMapping):
     """
-    Base class for fact registries
+    Base class for fact registries.
+
+    Explanation
+    ===========
+
+    This class provides regstration of several handlers to any type of
+    variable. Advanced behavior can be implemented by subclassing this
+    class.
 
     """
     def __init__(self, d=None):
@@ -128,6 +135,12 @@ class FactRegistry(MutableMapping):
     def __delitem__(self, key):
         del self.d[key]
 
+    def __getitem__(self, key):
+        return self.d[key]
+
+    def __call__(self, arg):
+        return {f(arg) for f in self[arg]}
+
     def __iter__(self):
         return self.d.__iter__()
 
@@ -137,20 +150,22 @@ class FactRegistry(MutableMapping):
     def __repr__(self):
         return repr(self.d)
 
-    def __call__(self, expr):
-        handlers = self[expr.func]
-        return {h(expr) for h in handlers}
-
     def register(self, item):
+        """
+        Register a function to *item*.
+        """
         def _(func):
             self[item] |= {func}
             return func
         return _
 
-    def register_many(self, *classes):
+    def register_many(self, *items):
+        """
+        Register a function to every element in *items*.
+        """
         def _(func):
-            for cls in classes:
-                self[cls] |= {func}
+            for itm in items:
+                self[itm] |= {func}
             return func
         return _
 
