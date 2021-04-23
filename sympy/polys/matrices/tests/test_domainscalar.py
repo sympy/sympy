@@ -33,6 +33,12 @@ def test_DomainScalar_to_domain():
     assert B == DomainScalar(QQ(1), QQ)
 
 
+def test_DomainScalar_convert_to():
+    A = DomainScalar(ZZ(1), ZZ)
+    B = A.convert_to(QQ)
+    assert B == DomainScalar(QQ(1), QQ)
+
+
 def test_DomainScalar_unify():
     A = DomainScalar(ZZ(1), ZZ)
     B = DomainScalar(QQ(2), QQ)
@@ -73,6 +79,26 @@ def test_DomainScalar_floordiv():
     assert A // C == DomainScalar(ZZ(-3), ZZ)
 
     raises(TypeError, lambda: A // 1.5)
+
+
+def test_DomainScalar_mod():
+    A = DomainScalar(ZZ(5), ZZ)
+    B = DomainScalar(QQ(2), QQ)
+    assert A % B == DomainScalar(QQ(0), QQ)
+    C = DomainScalar(ZZ(2), ZZ)
+    assert A % C == DomainScalar(ZZ(1), ZZ)
+
+    raises(TypeError, lambda: A % 1.5)
+
+
+def test_DomainScalar_divmod():
+    A = DomainScalar(ZZ(5), ZZ)
+    B = DomainScalar(QQ(2), QQ)
+    assert divmod(A, B) == (DomainScalar(QQ(5, 2), QQ), DomainScalar(QQ(0), QQ))
+    C = DomainScalar(ZZ(2), ZZ)
+    assert divmod(A, C) == (DomainScalar(ZZ(2), ZZ), DomainScalar(ZZ(1), ZZ))
+
+    raises(TypeError, lambda: divmod(A, 1.5))
 
 
 def test_DomainScalar_pow():

@@ -45,6 +45,9 @@ class DomainScalar:
         element = domain.convert_from(self.element, self.domain)
         return self.new(element, domain)
 
+    def convert_to(self, domain):
+        return self.to_domain(domain)
+
     def unify(self, other):
         domain = self.domain.unify(other.domain)
         return self.to_domain(domain), other.to_domain(domain)
@@ -76,6 +79,17 @@ class DomainScalar:
             return NotImplemented
         self, other = self.unify(other)
         return self.new(self.domain.quo(self.element, other.element), self.domain)
+
+    def __mod__(self, other):
+        if not isinstance(other, DomainScalar):
+            return NotImplemented
+        self, other = self.unify(other)
+        return self.new(self.domain.rem(self.element, other.element), self.domain)
+
+    def __divmod__(self, other):
+        if not isinstance(other, DomainScalar):
+            return NotImplemented
+        return (self // other, self % other)
 
     def __pow__(self, n):
         if not isinstance(n, int):
