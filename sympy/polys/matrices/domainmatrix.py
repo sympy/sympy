@@ -249,9 +249,9 @@ class DomainMatrix:
 
         idx = 0
         items_dict = {}
-        for i, row in zip(elemsdict.keys(), elemsdict.values()):
+        for i, row in elemsdict.items():
                 items_dict[i] = {}
-                for j in row.keys():
+                for j in row:
                     items_dict[i][j] = items_domain[idx]
                     idx += 1
 
