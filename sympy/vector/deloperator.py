@@ -26,17 +26,6 @@ class Del(Basic):
         Returns the gradient of the given scalar field, as a
         Vector instance.
 
-        Parameters
-        ==========
-
-        scalar_field : SymPy expression
-            The scalar field to calculate the gradient of.
-
-        doit : bool
-            If True, the result is returned after calling .doit() on
-            each component. Else, the returned expression contains
-            Derivative instances
-
         Examples
         ========
 
@@ -47,6 +36,17 @@ class Del(Basic):
         0
         >>> delop(C.x*C.y*C.z).doit()
         C.y*C.z*C.i + C.x*C.z*C.j + C.x*C.y*C.k
+
+        Parameters
+        ==========
+
+        scalar_field : SymPy expression
+            The scalar field to calculate the gradient of.
+
+        doit : bool
+            If True, the result is returned after calling .doit() on
+            each component. Else, the returned expression contains
+            Derivative instances
 
         """
 
@@ -60,17 +60,6 @@ class Del(Basic):
         Represents the dot product between this operator and a given
         vector - equal to the divergence of the vector field.
 
-        Parameters
-        ==========
-
-        vect : Vector
-            The vector whose divergence is to be calculated.
-
-        doit : bool
-            If True, the result is returned after calling .doit() on
-            each component. Else, the returned expression contains
-            Derivative instances
-
         Examples
         ========
 
@@ -83,6 +72,17 @@ class Del(Basic):
         >>> (delop & v).doit()
         C.x*C.y + C.x*C.z + C.y*C.z
 
+        Parameters
+        ==========
+
+        vect : Vector
+            The vector whose divergence is to be calculated.
+
+        doit : bool
+            If True, the result is returned after calling .doit() on
+            each component. Else, the returned expression contains
+            Derivative instances
+
         """
         return divergence(vect, doit=doit)
 
@@ -93,17 +93,6 @@ class Del(Basic):
         """
         Represents the cross product between this operator and a given
         vector - equal to the curl of the vector field.
-
-        Parameters
-        ==========
-
-        vect : Vector
-            The vector whose curl is to be calculated.
-
-        doit : bool
-            If True, the result is returned after calling .doit() on
-            each component. Else, the returned expression contains
-            Derivative instances
 
         Examples
         ========
@@ -117,6 +106,17 @@ class Del(Basic):
             (-C.x*C.z + C.y*C.z)*C.k
         >>> (delop ^ C.i).doit()
         0
+
+        Parameters
+        ==========
+
+        vect : Vector
+            The vector whose curl is to be calculated.
+
+        doit : bool
+            If True, the result is returned after calling .doit() on
+            each component. Else, the returned expression contains
+            Derivative instances
 
         """
 
