@@ -20,6 +20,10 @@ from .ddm import DDM
 
 from .sdm import SDM
 
+from .domainscalar import DomainScalar
+
+from sympy.polys.domains import ZZ
+
 
 class DomainMatrix:
     r"""
@@ -530,12 +534,18 @@ class DomainMatrix:
             return A.matmul(B)
         elif B in A.domain:
             return A.from_rep(A.rep * B)
+        elif isinstance(B, DomainScalar):
+            A, B = A.unify(B)
+            return A.scalarmul(B)
         else:
             return NotImplemented
 
     def __rmul__(A, B):
         if B in A.domain:
             return A.from_rep(A.rep * B)
+        elif isinstance(B, DomainScalar):
+            A, B = A.unify(B)
+            return A.scalarmul(B)
         else:
             return NotImplemented
 
@@ -769,6 +779,31 @@ class DomainMatrix:
 
         A._check('*', B, A.shape[1], B.shape[0])
         return A.from_rep(A.rep.matmul(B.rep))
+
+    def scalarmul(A, lamda):
+        if lamda.element == lamda.domain.zero:
+            m, n = A.shape
+            return DomainMatrix([[lamda.domain.zero]*n]*m, (m, n), A.domain)
+        if lamda.element == lamda.domain.one:
+            return A
+
+        return A.mul(lamda.element)
+
+    def __truediv__(A, lamda):
+        """ Method for Scalar Divison"""
+        if isinstance(lamda, int):
+            lamda = DomainScalar(ZZ(lamda), ZZ)
+
+        if not isinstance(lamda, DomainScalar):
+            return NotImplemented
+
+        A, lamda = A.to_field().unify(lamda)
+        if lamda.element == lamda.domain.zero:
+            raise ZeroDivisionError
+        if lamda.element == lamda.domain.one:
+            return A.to_field()
+
+        return A.mul(1 / lamda.element)
 
     def pow(A, n):
         r"""
