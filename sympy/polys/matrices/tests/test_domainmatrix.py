@@ -533,13 +533,12 @@ def test_DomainMatrix_zeros():
     assert A.shape == (1, 2)
     assert A.domain == QQ
 
-<<<<<<< HEAD
 def test_DomainMatrix_ones():
     A = DomainMatrix.ones((2, 3), QQ)
     assert A.rep == SDM.ones((2, 3), QQ)
     assert A.shape == (2, 3)
     assert A.domain == QQ
-=======
+
 
 def test_DomainMatrix_hstack():
     A = DomainMatrix([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
@@ -572,4 +571,3 @@ def test_DomainMatrix_truediv():
     raises(ZeroDivisionError, lambda: A / 0)
     raises(TypeError, lambda: A / 1.5)
     raises(ZeroDivisionError, lambda: A / DomainScalar(ZZ(0), ZZ))
->>>>>>> 624549a1b07cbdb4836ce47ce2cd779ccaa1c921
