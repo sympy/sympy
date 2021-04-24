@@ -2049,10 +2049,12 @@ def test_gcd():
     assert lcm(f, g, modulus=11, symmetric=False) == l
 
     a, b = sqrt(2), -sqrt(2)
-    assert gcd(a, b) == gcd(b, a) == a
+    assert gcd(a, b) == gcd(b, a) == sqrt(2)
 
     a, b = sqrt(-2), -sqrt(-2)
-    assert gcd(a, b) in (a, b)
+    assert gcd(a, b) == gcd(b, a) == sqrt(2)
+
+    assert gcd(Poly(x - 2, x), Poly(I*x, x)) == Poly(1, x, domain=ZZ_I)
 
     raises(TypeError, lambda: gcd(x))
     raises(TypeError, lambda: lcm(x))
@@ -3349,6 +3351,12 @@ def test_noncommutative():
 def test_to_rational_coeffs():
     assert to_rational_coeffs(
         Poly(x**3 + y*x**2 + sqrt(y), x, domain='EX')) is None
+    # issue 21268
+    assert to_rational_coeffs(
+        Poly(y**3 + sqrt(2)*y**2*sin(x) + 1, y)) is None
+
+    assert to_rational_coeffs(Poly(x, y)) is None
+    assert to_rational_coeffs(Poly(sqrt(2)*y)) is None
 
 
 def test_factor_terms():

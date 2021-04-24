@@ -1295,7 +1295,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         # Differential Equations", pg. 98
 
         s = d*f(x).diff(x, 2) + e*df**2 + k*df
-        r = reduced_eq.match(s)
+        r = reduced_eq.collect(f(x).diff(x)).match(s)
         if r and r[d] != 0:
             y = Dummy('y')
             g = simplify(r[e]/r[d]).subs(f(x), y)

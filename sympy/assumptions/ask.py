@@ -4,10 +4,9 @@ from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
 from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 from sympy.core import sympify
-from sympy.core.cache import cacheit
 from sympy.core.kind import BooleanKind
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
-from sympy.logic.boolalg import (to_cnf, And, Not, Implies, Equivalent)
+from sympy.logic.boolalg import Not
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -91,8 +90,18 @@ class AssumptionKeys:
 
     @memoize_property
     def infinite(self):
-        from .predicates.calculus import InfinitePredicate
+        from .handlers.calculus import InfinitePredicate
         return InfinitePredicate()
+
+    @memoize_property
+    def positive_infinite(self):
+        from .handlers.calculus import PositiveInfinitePredicate
+        return PositiveInfinitePredicate()
+
+    @memoize_property
+    def negative_infinite(self):
+        from .handlers.calculus import NegativeInfinitePredicate
+        return NegativeInfinitePredicate()
 
     @memoize_property
     def positive(self):
@@ -110,6 +119,16 @@ class AssumptionKeys:
         return ZeroPredicate()
 
     @memoize_property
+    def extended_positive(self):
+        from .handlers.order import ExtendedPositivePredicate
+        return ExtendedPositivePredicate()
+
+    @memoize_property
+    def extended_negative(self):
+        from .handlers.order import ExtendedNegativePredicate
+        return ExtendedNegativePredicate()
+
+    @memoize_property
     def nonzero(self):
         from .handlers.order import NonZeroPredicate
         return NonZeroPredicate()
@@ -123,6 +142,21 @@ class AssumptionKeys:
     def nonnegative(self):
         from .handlers.order import NonNegativePredicate
         return NonNegativePredicate()
+
+    @memoize_property
+    def extended_nonzero(self):
+        from .handlers.order import ExtendedNonZeroPredicate
+        return ExtendedNonZeroPredicate()
+
+    @memoize_property
+    def extended_nonpositive(self):
+        from .handlers.order import ExtendedNonPositivePredicate
+        return ExtendedNonPositivePredicate()
+
+    @memoize_property
+    def extended_nonnegative(self):
+        from .handlers.order import ExtendedNonNegativePredicate
+        return ExtendedNonNegativePredicate()
 
     @memoize_property
     def even(self):
@@ -324,6 +358,16 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     """
     Function to evaluate the proposition with assumptions.
 
+    Explanation
+    ===========
+
+    This function evaluates the proposition to ``True`` or ``False`` if
+    the truth value can be determined. If not, it returns ``None``.
+
+    It should be discerned from :func:`~.refine()` which, when applied to a
+    proposition, simplifies the argument to symbolic ``Boolean`` instead of
+    Python built-in ``True``, ``False`` or ``None``.
+
     **Syntax**
 
         * ask(proposition)
@@ -333,26 +377,31 @@ def ask(proposition, assumptions=True, context=global_assumptions):
             Evaluate the *proposition* with respect to *assumptions* in
             global assumption context.
 
-    This function evaluates the proposition to ``True`` or ``False`` if
-    the truth value can be determined. If not, it returns ``None``.
-
-    It should be discerned from :func:`~.refine()` which, when applied to a
-    proposition, simplifies the argument to symbolic ``Boolean`` instead of
-    Python built-in ``True``, ``False`` or ``None``.
-
     Parameters
     ==========
 
-    proposition : any boolean expression
+    proposition : Any boolean expression.
         Proposition which will be evaluated to boolean value. If this is
         not ``AppliedPredicate``, it will be wrapped by ``Q.is_true``.
 
-    assumptions : any boolean expression, optional
+    assumptions : Any boolean expression, optional.
         Local assumptions to evaluate the *proposition*.
 
-    context : AssumptionsContext, optional
+    context : AssumptionsContext, optional.
         Default assumptions to evaluate the *proposition*. By default,
         this is ``sympy.assumptions.global_assumptions`` variable.
+
+    Returns
+    =======
+
+    ``True``, ``False``, or ``None``
+
+    Raises
+    ======
+
+    TypeError : *proposition* or *assumptions* is not valid logical expression.
+
+    ValueError : assumptions are inconsistent.
 
     Examples
     ========
@@ -371,14 +420,22 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     >>> print(ask(Q.odd(3*x))) # cannot determine unless we know x
     None
 
-    **Remarks**
+    ``ValueError`` is raised if assumptions are inconsistent.
 
-        Relations in assumptions are not implemented (yet), so the following
-        will not give a meaningful result.
+    >>> ask(Q.integer(x), Q.even(x) & Q.odd(x))
+    Traceback (most recent call last):
+      ...
+    ValueError: inconsistent assumptions Q.even(x) & Q.odd(x)
 
-        >>> ask(Q.positive(x), x > 0)
+    Notes
+    =====
 
-        It is however a work in progress.
+    Relations in assumptions are not implemented (yet), so the following
+    will not give a meaningful result.
+
+    >>> ask(Q.positive(x), x > 0)
+
+    It is however a work in progress.
 
     See Also
     ========
@@ -407,16 +464,14 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         key, args = Q.is_true, (proposition,)
 
     # convert local and global assumptions to CNF
-    assump = CNF.from_prop(assumptions)
-    assump.extend(context)
+    assump_cnf = CNF.from_prop(assumptions)
+    assump_cnf.extend(context)
 
     # extract the relevant facts from assumptions with respect to args
-    local_facts = _extract_all_facts(assump, args)
-
-    known_facts_cnf = get_all_known_facts()
-    known_facts_dict = get_known_facts_dict()
+    local_facts = _extract_all_facts(assump_cnf, args)
 
     # convert default facts and assumed facts to encoded CNF
+    known_facts_cnf = get_all_known_facts()
     enc_cnf = EncodedCNF()
     enc_cnf.from_cnf(CNF(known_facts_cnf))
     enc_cnf.add_from_cnf(local_facts)
@@ -425,15 +480,82 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if local_facts.clauses and satisfiable(enc_cnf) is False:
         raise ValueError("inconsistent assumptions %s" % assumptions)
 
+    # quick computation for single fact
+    res = _ask_single_fact(key, local_facts)
+    if res is not None:
+        return res
+
+    # direct resolution method, no logic
+    res = key(*args)._eval_ask(assumptions)
+    if res is not None:
+        return bool(res)
+
+    # using satask (still costly)
+    res = satask(proposition, assumptions=assumptions, context=context)
+    return res
+
+
+def _ask_single_fact(key, local_facts):
+    """
+    Compute the truth value of single predicate using assumptions.
+
+    Parameters
+    ==========
+
+    key : sympy.assumptions.assume.Predicate
+        Proposition predicate.
+
+    local_facts : sympy.assumptions.cnf.CNF
+        Local assumption in CNF form.
+
+    Returns
+    =======
+
+    ``True``, ``False`` or ``None``
+
+    Examples
+    ========
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.cnf import CNF
+    >>> from sympy.assumptions.ask import _ask_single_fact
+
+    If prerequisite of proposition is rejected by the assumption,
+    return ``False``.
+
+    >>> key, assump = Q.zero, ~Q.zero
+    >>> local_facts = CNF.from_prop(assump)
+    >>> _ask_single_fact(key, local_facts)
+    False
+    >>> key, assump = Q.zero, ~Q.even
+    >>> local_facts = CNF.from_prop(assump)
+    >>> _ask_single_fact(key, local_facts)
+    False
+
+    If assumption implies the proposition, return ``True``.
+
+    >>> key, assump = Q.even, Q.zero
+    >>> local_facts = CNF.from_prop(assump)
+    >>> _ask_single_fact(key, local_facts)
+    True
+
+    If proposition rejects the assumption, return ``False``.
+
+    >>> key, assump = Q.even, Q.odd
+    >>> local_facts = CNF.from_prop(assump)
+    >>> _ask_single_fact(key, local_facts)
+    False
+    """
     if local_facts.clauses:
 
-        # quick exit if the prerequisite of proposition is not true
-        # e.g. proposition = Q.odd(x), assumptions = ~Q.integer(x)
+        known_facts_dict = get_known_facts_dict()
+
         if len(local_facts.clauses) == 1:
             cl, = local_facts.clauses
             if len(cl) == 1:
                 f, = cl
                 if f.is_Not and f.arg in known_facts_dict.get(key, []):
+                    # the prerequisite of proposition is rejected
                     return False
 
         for clause in local_facts.clauses:
@@ -443,34 +565,12 @@ def ask(proposition, assumptions=True, context=global_assumptions):
                 if fdict is None:
                     pass
                 elif key in fdict:
-                    # quick exit if proposition is directly satisfied by assumption
-                    # e.g. proposition = Q.integer(x), assumptions = Q.odd(x)
+                    # assumption implies the proposition
                     return True
                 elif Not(key) in fdict:
-                    # quick exit if proposition is directly rejected by assumption
-                    # example might be proposition = Q.even(x), assumptions = Q.odd(x)
-                    # but known_facts_dict does not have such information yet and
-                    # such example is computed by satask.
+                    # proposition rejects the assumption
                     return False
 
-    # direct resolution method, no logic
-    res = key(*args)._eval_ask(assumptions)
-    if res is not None:
-        return bool(res)
-    # using satask (still costly)
-    res = satask(proposition, assumptions=assumptions, context=context)
-    return res
-
-
-def ask_full_inference(proposition, assumptions, known_facts_cnf):
-    """
-    Method for inferring properties about objects.
-
-    """
-    if not satisfiable(And(known_facts_cnf, assumptions, proposition)):
-        return False
-    if not satisfiable(And(known_facts_cnf, assumptions, Not(proposition))):
-        return True
     return None
 
 
@@ -515,149 +615,6 @@ def remove_handler(key, handler):
     if isinstance(key, Predicate):
         key = key.name.name
     getattr(Q, key).remove_handler(handler)
-
-
-def single_fact_lookup(known_facts_keys, known_facts_cnf):
-    # Compute the quick lookup for single facts
-    mapping = {}
-    for key in known_facts_keys:
-        mapping[key] = {key}
-        for other_key in known_facts_keys:
-            if other_key != key:
-                if ask_full_inference(other_key, key, known_facts_cnf):
-                    mapping[key].add(other_key)
-    return mapping
-
-
-def compute_known_facts(known_facts, known_facts_keys):
-    """Compute the various forms of knowledge compilation used by the
-    assumptions system.
-
-    Explanation
-    ===========
-
-    This function is typically applied to the results of the ``get_known_facts``
-    and ``get_known_facts_keys`` functions defined at the bottom of
-    this file.
-    """
-    from textwrap import dedent, wrap
-
-    fact_string = dedent('''\
-    """
-    The contents of this file are the return value of
-    ``sympy.assumptions.ask.compute_known_facts``.
-
-    Do NOT manually edit this file.
-    Instead, run ./bin/ask_update.py.
-    """
-
-    from sympy.core.cache import cacheit
-    from sympy.logic.boolalg import And
-    from sympy.assumptions.cnf import Literal
-    from sympy.assumptions.ask import Q
-
-    # -{ Known facts as a set }-
-    @cacheit
-    def get_all_known_facts():
-        return {
-            %s
-        }
-
-    # -{ Known facts in Conjunctive Normal Form }-
-    @cacheit
-    def get_known_facts_cnf():
-        return And(
-            %s
-        )
-
-    # -{ Known facts in compressed sets }-
-    @cacheit
-    def get_known_facts_dict():
-        return {
-            %s
-        }
-    ''')
-    # Compute the known facts in CNF form for logical inference
-    LINE = ",\n        "
-    HANG = ' '*8
-    cnf = to_cnf(known_facts)
-    cnf_ = CNF.to_CNF(known_facts)
-    c = LINE.join([str(a) for a in cnf.args])
-
-    p = LINE.join(sorted(['frozenset((' + ', '.join(str(lit) for lit in sorted(clause, key=str)) +'))' for clause in cnf_.clauses]))
-    mapping = single_fact_lookup(known_facts_keys, cnf)
-    items = sorted(mapping.items(), key=str)
-    keys = [str(i[0]) for i in items]
-    values = ['set(%s)' % sorted(i[1], key=str) for i in items]
-    m = LINE.join(['\n'.join(
-        wrap("{}: {}".format(k, v),
-            subsequent_indent=HANG,
-            break_long_words=False))
-        for k, v in zip(keys, values)]) + ','
-    return fact_string % (p, c, m)
-
-@cacheit
-def get_known_facts_keys():
-    return [
-        getattr(Q, attr)
-        for attr in Q.__class__.__dict__
-        if not attr.startswith('__')]
-
-@cacheit
-def get_known_facts():
-    return And(
-        Implies(Q.infinite, ~Q.finite),
-        Implies(Q.real, Q.complex),
-        Implies(Q.real, Q.hermitian),
-        Equivalent(Q.extended_real, Q.real | Q.infinite),
-        Equivalent(Q.even | Q.odd, Q.integer),
-        Implies(Q.even, ~Q.odd),
-        Implies(Q.prime, Q.integer & Q.positive & ~Q.composite),
-        Implies(Q.integer, Q.rational),
-        Implies(Q.rational, Q.algebraic),
-        Implies(Q.algebraic, Q.complex),
-        Implies(Q.algebraic, Q.finite),
-        Equivalent(Q.transcendental | Q.algebraic, Q.complex & Q.finite),
-        Implies(Q.transcendental, ~Q.algebraic),
-        Implies(Q.transcendental, Q.finite),
-        Implies(Q.imaginary, Q.complex & ~Q.real),
-        Implies(Q.imaginary, Q.antihermitian),
-        Implies(Q.antihermitian, ~Q.hermitian),
-        Equivalent(Q.irrational | Q.rational, Q.real & Q.finite),
-        Implies(Q.irrational, ~Q.rational),
-        Implies(Q.zero, Q.even),
-
-        Equivalent(Q.real, Q.negative | Q.zero | Q.positive),
-        Implies(Q.zero, ~Q.negative & ~Q.positive),
-        Implies(Q.negative, ~Q.positive),
-        Equivalent(Q.nonnegative, Q.zero | Q.positive),
-        Equivalent(Q.nonpositive, Q.zero | Q.negative),
-        Equivalent(Q.nonzero, Q.negative | Q.positive),
-
-        Implies(Q.orthogonal, Q.positive_definite),
-        Implies(Q.orthogonal, Q.unitary),
-        Implies(Q.unitary & Q.real, Q.orthogonal),
-        Implies(Q.unitary, Q.normal),
-        Implies(Q.unitary, Q.invertible),
-        Implies(Q.normal, Q.square),
-        Implies(Q.diagonal, Q.normal),
-        Implies(Q.positive_definite, Q.invertible),
-        Implies(Q.diagonal, Q.upper_triangular),
-        Implies(Q.diagonal, Q.lower_triangular),
-        Implies(Q.lower_triangular, Q.triangular),
-        Implies(Q.upper_triangular, Q.triangular),
-        Implies(Q.triangular, Q.upper_triangular | Q.lower_triangular),
-        Implies(Q.upper_triangular & Q.lower_triangular, Q.diagonal),
-        Implies(Q.diagonal, Q.symmetric),
-        Implies(Q.unit_triangular, Q.triangular),
-        Implies(Q.invertible, Q.fullrank),
-        Implies(Q.invertible, Q.square),
-        Implies(Q.symmetric, Q.square),
-        Implies(Q.fullrank & Q.square, Q.invertible),
-        Equivalent(Q.invertible, ~Q.singular),
-        Implies(Q.integer_elements, Q.real_elements),
-        Implies(Q.real_elements, Q.complex_elements),
-    )
 
 
 from sympy.assumptions.ask_generated import (

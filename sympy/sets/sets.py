@@ -971,23 +971,6 @@ class Interval(Set):
         """
         return self._args[0]
 
-    _inf = left = start
-
-    @classmethod
-    def open(cls, a, b):
-        """Return an interval including neither boundary."""
-        return cls(a, b, True, True)
-
-    @classmethod
-    def Lopen(cls, a, b):
-        """Return an interval not including the left boundary."""
-        return cls(a, b, True, False)
-
-    @classmethod
-    def Ropen(cls, a, b):
-        """Return an interval not including the right boundary."""
-        return cls(a, b, False, True)
-
     @property
     def end(self):
         """
@@ -1004,8 +987,6 @@ class Interval(Set):
 
         """
         return self._args[1]
-
-    _sup = right = end
 
     @property
     def left_open(self):
@@ -1040,6 +1021,37 @@ class Interval(Set):
 
         """
         return self._args[3]
+
+    @classmethod
+    def open(cls, a, b):
+        """Return an interval including neither boundary."""
+        return cls(a, b, True, True)
+
+    @classmethod
+    def Lopen(cls, a, b):
+        """Return an interval not including the left boundary."""
+        return cls(a, b, True, False)
+
+    @classmethod
+    def Ropen(cls, a, b):
+        """Return an interval not including the right boundary."""
+        return cls(a, b, False, True)
+
+    @property
+    def _inf(self):
+        return self.start
+
+    @property
+    def _sup(self):
+        return self.end
+
+    @property
+    def left(self):
+        return self.start
+
+    @property
+    def right(self):
+        return self.end
 
     @property
     def is_empty(self):

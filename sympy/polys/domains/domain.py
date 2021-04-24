@@ -417,17 +417,20 @@ class Domain:
         if self.of_type(element):
             return element
 
-        from sympy.polys.domains import PythonIntegerRing, GMPYIntegerRing, GMPYRationalField, RealField, ComplexField
+        from sympy.polys.domains import ZZ, QQ, RealField, ComplexField
+
+        if ZZ.of_type(element):
+            return self.convert_from(element, ZZ)
 
         if isinstance(element, int):
-            return self.convert_from(element, PythonIntegerRing())
+            return self.convert_from(ZZ(element), ZZ)
 
         if HAS_GMPY:
-            integers = GMPYIntegerRing()
+            integers = ZZ
             if isinstance(element, integers.tp):
                 return self.convert_from(element, integers)
 
-            rationals = GMPYRationalField()
+            rationals = QQ
             if isinstance(element, rationals.tp):
                 return self.convert_from(element, rationals)
 
@@ -598,6 +601,10 @@ class Domain:
         """
         raise NotImplementedError
 
+    def from_FF(K1, a, K0):
+        """Convert ``ModularInteger(int)`` to ``dtype``. """
+        return None
+
     def from_FF_python(K1, a, K0):
         """Convert ``ModularInteger(int)`` to ``dtype``. """
         return None
@@ -721,7 +728,8 @@ class Domain:
 
             if ((K0.is_FractionField and K1.is_PolynomialRing or
                  K1.is_FractionField and K0.is_PolynomialRing) and
-                 (not K0_ground.is_Field or not K1_ground.is_Field) and domain.is_Field):
+                 (not K0_ground.is_Field or not K1_ground.is_Field) and domain.is_Field
+                 and domain.has_assoc_Ring):
                 domain = domain.get_ring()
 
             if K0.is_Composite and (not K1.is_Composite or K0.is_FractionField or K1.is_PolynomialRing):
@@ -897,6 +905,12 @@ class Domain:
     def is_nonnegative(self, a):
         """Returns True if ``a`` is non-negative. """
         return a >= 0
+
+    def canonical_unit(self, a):
+        if self.is_negative(a):
+            return -self.one
+        else:
+            return self.one
 
     def abs(self, a):
         """Absolute value of ``a``, implies ``__abs__``. """

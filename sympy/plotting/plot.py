@@ -8,7 +8,7 @@ expressions. ``plot_backends`` is a dictionary with all the backends.
 This module gives only the essential. For all the fancy stuff use directly
 the backend. You can get the backend wrapper for every plot from the
 ``_backend`` attribute. Moreover the data series classes have various useful
-methods like ``get_points``, ``get_segments``, ``get_meshes``, etc, that may
+methods like ``get_points``, ``get_meshes``, etc, that may
 be useful if you wish to use another plotting library.
 
 Especially if you need publication ready graphs and this module is not enough
@@ -23,7 +23,6 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 """
 
 
-import warnings
 from collections.abc import Callable
 
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
@@ -31,6 +30,7 @@ from sympy.external import import_module
 from sympy.core.function import arity
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # N.B.
 # When changing the minimum module version for matplotlib, please change
@@ -109,6 +109,7 @@ class Plot:
     - title : str
     - xlabel : str
     - ylabel : str
+    - zlabel : str
     - legend : bool
     - xscale : {'linear', 'log'}
     - yscale : {'linear', 'log'}
@@ -132,7 +133,20 @@ class Plot:
 
     Aesthetics:
 
-    - line_color : function which returns a float.
+    - line_color : string, or float, or function, optional
+        Specifies the color for the plot, which depends on the backend being
+        used.
+
+        For example, if ``MatplotlibBackend`` is being used, then
+        Matplotlib string colors are acceptable ("red", "r", "cyan", "c", ...).
+        Alternatively, we can use a float number `0 < color < 1` wrapped in a
+        string (for example, `line_color="0.5"`) to specify grayscale colors.
+        Alternatively, We can specify a function returning a single
+        float value: this will be used to apply a color-loop (for example,
+        `line_color=lambda x: math.cos(x)`).
+
+        Note that by setting line_color, it would be applied simultaneously
+        to all the series.
 
     options:
 
@@ -148,7 +162,7 @@ class Plot:
     """
 
     def __init__(self, *args,
-        title=None, xlabel=None, ylabel=None, aspect_ratio='auto',
+        title=None, xlabel=None, ylabel=None, zlabel=None, aspect_ratio='auto',
         xlim=None, ylim=None, axis_center='auto', axis=True,
         xscale='linear', yscale='linear', legend=False, autoscale=True,
         margin=0, annotations=None, markers=None, rectangles=None,
@@ -161,6 +175,7 @@ class Plot:
         self.title = title
         self.xlabel = xlabel
         self.ylabel = ylabel
+        self.zlabel = zlabel
         self.aspect_ratio = aspect_ratio
         self.axis_center = axis_center
         self.axis = axis
@@ -486,14 +501,12 @@ class BaseSeries:
     is_2Dline = False
     # Some of the backends expect:
     #  - get_points returning 1D np.arrays list_x, list_y
-    #  - get_segments returning np.array (done in Line2DBaseSeries)
     #  - get_color_array returning 1D np.array (done in Line2DBaseSeries)
     # with the colors calculated at the points from get_points
 
     is_3Dline = False
     # Some of the backends expect:
     #  - get_points returning 1D np.arrays list_x, list_y, list_y
-    #  - get_segments returning np.array (done in Line2DBaseSeries)
     #  - get_color_array returning 1D np.array (done in Line2DBaseSeries)
     # with the colors calculated at the points from get_points
 
@@ -560,13 +573,43 @@ class Line2DBaseSeries(BaseSeries):
         self.only_integers = False
         self.line_color = None
 
-    def get_segments(self):
+    def get_data(self):
+        """ Return lists of coordinates for plotting the line.
+
+        Returns
+        =======
+            x: list
+                List of x-coordinates
+
+            y: list
+                List of y-coordinates
+
+            y: list
+                List of z-coordinates in case of Parametric3DLineSeries
+        """
         np = import_module('numpy')
         points = self.get_points()
         if self.steps is True:
-            x = np.array((points[0], points[0])).T.flatten()[1:]
-            y = np.array((points[1], points[1])).T.flatten()[:-1]
-            points = (x, y)
+            if len(points) == 2:
+                x = np.array((points[0], points[0])).T.flatten()[1:]
+                y = np.array((points[1], points[1])).T.flatten()[:-1]
+                points = (x, y)
+            else:
+                x = np.repeat(points[0], 3)[2:]
+                y = np.repeat(points[1], 3)[:-2]
+                z = np.repeat(points[2], 3)[1:-1]
+                points = (x, y, z)
+        return points
+
+    def get_segments(self):
+        SymPyDeprecationWarning(
+                feature="get_segments",
+                issue=21329,
+                deprecated_since_version="1.9",
+                useinstead="MatplotlibBackend.get_segments").warn()
+
+        np = import_module('numpy')
+        points = type(self).get_data(self)
         points = np.ma.array(points).T.reshape(-1, 1, self._dim)
         return np.ma.concatenate([points[:-1], points[1:]], axis=1)
 
@@ -628,9 +671,19 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         return 'cartesian line: %s for %s over %s' % (
             str(self.expr), str(self.var), str((self.start, self.end)))
 
-    def get_segments(self):
-        """
-        Adaptively gets segments for plotting.
+    def get_points(self):
+        """ Return lists of coordinates for plotting. Depending on the
+        `adaptive` option, this function will either use an adaptive algorithm
+        or it will uniformly sample the expression over the provided range.
+
+        Returns
+        =======
+            x: list
+                List of x-coordinates
+
+            y: list
+                List of y-coordinates
+
 
         Explanation
         ===========
@@ -646,12 +699,12 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                Luiz Henrique de Figueiredo.
 
         """
-
         if self.only_integers or not self.adaptive:
-            return super().get_segments()
+            return self._uniform_sampling()
         else:
             f = lambdify([self.var], self.expr)
-            list_segments = []
+            x_coords = []
+            y_coords = []
             np = import_module('numpy')
             def sample(p, q, depth):
                 """ Samples recursively if three points are almost collinear.
@@ -671,7 +724,8 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
                 # Maximum depth
                 if depth > self.depth:
-                    list_segments.append([p, q])
+                    x_coords.append(q[0])
+                    y_coords.append(q[1])
 
                 # Sample irrespective of whether the line is flat till the
                 # depth of 6. We are not using linspace to avoid aliasing.
@@ -701,16 +755,19 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                     sample(p, new_point, depth + 1)
                     sample(new_point, q, depth + 1)
                 else:
-                    list_segments.append([p, q])
+                    x_coords.append(q[0])
+                    y_coords.append(q[1])
 
             f_start = f(self.start)
             f_end = f(self.end)
+            x_coords.append(self.start)
+            y_coords.append(f_start)
             sample(np.array([self.start, f_start]),
                    np.array([self.end, f_end]), 0)
 
-            return list_segments
+        return (x_coords, y_coords)
 
-    def get_points(self):
+    def _uniform_sampling(self):
         np = import_module('numpy')
         if self.only_integers is True:
             if self.xscale == 'log':
@@ -757,7 +814,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         np = import_module('numpy')
         return np.linspace(self.start, self.end, num=self.nb_of_points)
 
-    def get_points(self):
+    def _uniform_sampling(self):
         param = self.get_parameter_points()
         fx = vectorized_lambdify([self.var], self.expr_x)
         fy = vectorized_lambdify([self.var], self.expr_y)
@@ -765,9 +822,19 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         list_y = fy(param)
         return (list_x, list_y)
 
-    def get_segments(self):
-        """
-        Adaptively gets segments for plotting.
+    def get_points(self):
+        """ Return lists of coordinates for plotting. Depending on the
+        `adaptive` option, this function will either use an adaptive algorithm
+        or it will uniformly sample the expression over the provided range.
+
+        Returns
+        =======
+            x: list
+                List of x-coordinates
+
+            y: list
+                List of y-coordinates
+
 
         Explanation
         ===========
@@ -784,11 +851,12 @@ class Parametric2DLineSeries(Line2DBaseSeries):
 
         """
         if not self.adaptive:
-            return super().get_segments()
+            return self._uniform_sampling()
 
         f_x = lambdify([self.var], self.expr_x)
         f_y = lambdify([self.var], self.expr_y)
-        list_segments = []
+        x_coords = []
+        y_coords = []
 
         def sample(param_p, param_q, p, q, depth):
             """ Samples recursively if three points are almost collinear.
@@ -806,7 +874,8 @@ class Parametric2DLineSeries(Line2DBaseSeries):
 
             # Maximum depth
             if depth > self.depth:
-                list_segments.append([p, q])
+                x_coords.append(q[0])
+                y_coords.append(q[1])
 
             # Sample irrespective of whether the line is flat till the
             # depth of 6. We are not using linspace to avoid aliasing.
@@ -840,7 +909,8 @@ class Parametric2DLineSeries(Line2DBaseSeries):
                 sample(param_p, param_new, p, new_point, depth + 1)
                 sample(param_new, param_q, new_point, q, depth + 1)
             else:
-                list_segments.append([p, q])
+                x_coords.append(q[0])
+                y_coords.append(q[1])
 
         f_start_x = f_x(self.start)
         f_start_y = f_y(self.start)
@@ -848,8 +918,11 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         f_end_x = f_x(self.end)
         f_end_y = f_y(self.end)
         end = [f_end_x, f_end_y]
+        x_coords.append(f_start_x)
+        y_coords.append(f_start_y)
         sample(self.start, self.end, start, end, 0)
-        return list_segments
+
+        return x_coords, y_coords
 
 
 ### 3D lines
@@ -867,8 +940,10 @@ class Line3DBaseSeries(Line2DBaseSeries):
 
 
 class Parametric3DLineSeries(Line3DBaseSeries):
-    """Representation for a 3D line consisting of two parametric sympy
+    """Representation for a 3D line consisting of three parametric sympy
     expressions and a range."""
+
+    is_parametric = True
 
     def __init__(self, expr_x, expr_y, expr_z, var_start_end, **kwargs):
         super().__init__()
@@ -947,7 +1022,10 @@ class SurfaceBaseSeries(BaseSeries):
             else:
                 return f(*variables)
         else:
-            return c*np.ones(self.nb_of_points)
+            if isinstance(self, SurfaceOver2DRangeSeries):
+                return c*np.ones(min(self.nb_of_points_x, self.nb_of_points_y))
+            else:
+                return c*np.ones(min(self.nb_of_points_u, self.nb_of_points_v))
 
 
 class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
@@ -1226,6 +1304,32 @@ class MatplotlibBackend(BaseBackend):
                 self.ax[i].xaxis.set_ticks_position('bottom')
                 self.ax[i].yaxis.set_ticks_position('left')
 
+    @staticmethod
+    def get_segments(x, y, z=None):
+        """ Convert two list of coordinates to a list of segments to be used
+        with Matplotlib's LineCollection.
+
+        Parameters
+        ==========
+            x: list
+                List of x-coordinates
+
+            y: list
+                List of y-coordinates
+
+            z: list
+                List of z-coordinates for a 3D line.
+        """
+        np = import_module('numpy')
+        if z is not None:
+            dim = 3
+            points = (x, y, z)
+        else:
+            dim = 2
+            points = (x, y)
+        points = np.ma.array(points).T.reshape(-1, 1, dim)
+        return np.ma.concatenate([points[:-1], points[1:]], axis=1)
+
     def _process_series(self, series, ax, parent):
         np = import_module('numpy')
         mpl_toolkits = import_module(
@@ -1238,16 +1342,30 @@ class MatplotlibBackend(BaseBackend):
         for s in series:
             # Create the collections
             if s.is_2Dline:
-                collection = self.LineCollection(s.get_segments())
-                ax.add_collection(collection)
+                x, y = s.get_data()
+                if (isinstance(s.line_color, (int, float)) or
+                        callable(s.line_color)):
+                    segments = self.get_segments(x, y)
+                    collection = self.LineCollection(segments)
+                    collection.set_array(s.get_color_array())
+                    ax.add_collection(collection)
+                else:
+                    line, = ax.plot(x, y, label=s.label, color=s.line_color)
             elif s.is_contour:
                 ax.contour(*s.get_meshes())
             elif s.is_3Dline:
-                # TODO too complicated, I blame matplotlib
-                art3d = mpl_toolkits.mplot3d.art3d
-                collection = art3d.Line3DCollection(s.get_segments())
-                ax.add_collection(collection)
-                x, y, z = s.get_points()
+                x, y, z = s.get_data()
+                if (isinstance(s.line_color, (int, float)) or
+                        callable(s.line_color)):
+                    art3d = mpl_toolkits.mplot3d.art3d
+                    segments = self.get_segments(x, y, z)
+                    collection = art3d.Line3DCollection(segments)
+                    collection.set_array(s.get_color_array())
+                    ax.add_collection(collection)
+                else:
+                    ax.plot(x, y, z, label=s.label,
+                        color=s.line_color)
+
                 xlims.append(s._xlim)
                 ylims.append(s._ylim)
                 zlims.append(s._zlim)
@@ -1256,6 +1374,13 @@ class MatplotlibBackend(BaseBackend):
                 collection = ax.plot_surface(x, y, z,
                     cmap=getattr(self.cm, 'viridis', self.cm.jet),
                     rstride=1, cstride=1, linewidth=0.1)
+                if isinstance(s.surface_color, (float, int)) or isinstance(s.surface_color, Callable):
+                    color_array = s.get_color_array()
+                    color_array = color_array.reshape(color_array.size)
+                    collection.set_array(color_array)
+                else:
+                    collection.set_color(s.surface_color)
+
                 xlims.append(s._xlim)
                 ylims.append(s._ylim)
                 zlims.append(s._zlim)
@@ -1281,26 +1406,6 @@ class MatplotlibBackend(BaseBackend):
                     '{} is not supported in the sympy plotting module '
                     'with matplotlib backend. Please report this issue.'
                     .format(ax))
-
-            # Customise the collections with the corresponding per-series
-            # options.
-            if hasattr(s, 'label'):
-                collection.set_label(s.label)
-            if s.is_line and s.line_color:
-                if isinstance(s.line_color, (float, int)) or isinstance(s.line_color, Callable):
-                    color_array = s.get_color_array()
-                    collection.set_array(color_array)
-                else:
-                    collection.set_color(s.line_color)
-            if s.is_3Dsurface and s.surface_color:
-                if self.matplotlib.__version__ < "1.2.0":  # TODO in the distant future remove this check
-                    warnings.warn('The version of matplotlib is too old to use surface coloring.')
-                elif isinstance(s.surface_color, (float, int)) or isinstance(s.surface_color, Callable):
-                    color_array = s.get_color_array()
-                    color_array = color_array.reshape(color_array.size)
-                    collection.set_array(color_array)
-                else:
-                    collection.set_color(s.surface_color)
 
         Axes3D = mpl_toolkits.mplot3d.Axes3D
         if not isinstance(ax, Axes3D):
@@ -1371,6 +1476,8 @@ class MatplotlibBackend(BaseBackend):
             ax.set_xlabel(parent.xlabel, position=(1, 0))
         if parent.ylabel:
             ax.set_ylabel(parent.ylabel, position=(0, 1))
+        if isinstance(ax, Axes3D) and parent.zlabel:
+            ax.set_zlabel(parent.zlabel, position=(0, 1))
         if parent.annotations:
             for a in parent.annotations:
                 ax.annotate(**a)
@@ -1563,14 +1670,11 @@ def plot(*args, show=True, **kwargs):
         the ``Plot`` class can then be used to save or display the plot
         by calling the ``save()`` and ``show()`` methods respectively.
 
-    line_color : float, optional
+    line_color : string, or float, or function, optional
         Specifies the color for the plot.
         See ``Plot`` to see how to set color for the plots.
-
-        If there are multiple plots, then the same series series are
-        applied to all the plots. If you want to set these options
-        separately, you can index the ``Plot`` object returned and set
-        it.
+        Note that by setting ``line_color``, it would be applied simultaneously
+        to all the series.
 
     title : str, optional
         Title of the plot. It is set to the latex representation of
@@ -1793,12 +1897,11 @@ def plot_parametric(*args, show=True, **kwargs):
         Specifies the number of the points used for the uniform
         sampling.
 
-    line_color : function
-        A function which returns a float.
-
-        Specifies the color of the plot.
-
-        See :class:`Plot` for more details.
+    line_color : string, or float, or function, optional
+        Specifies the color for the plot.
+        See ``Plot`` to see how to set color for the plots.
+        Note that by setting ``line_color``, it would be applied simultaneously
+        to all the series.
 
     label : str, optional
         The label of the expression in the plot. It will be used when
@@ -1978,8 +2081,11 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
 
     Aesthetics:
 
-    ``line_color``: function which returns a float. Specifies the color for the
-    plot. See ``sympy.plotting.Plot`` for more details.
+    ``line_color``: string, or float, or function, optional
+        Specifies the color for the plot.
+        See ``Plot`` to see how to set color for the plots.
+        Note that by setting ``line_color``, it would be applied simultaneously
+        to all the series.
 
     ``label``: str
         The label to the plot. It will be used when called with ``legend=True``
@@ -2046,6 +2152,9 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
     series = []
     plot_expr = check_arguments(args, 3, 1)
     series = [Parametric3DLineSeries(*arg, **kwargs) for arg in plot_expr]
+    kwargs.setdefault("xlabel", "x")
+    kwargs.setdefault("ylabel", "y")
+    kwargs.setdefault("zlabel", "z")
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
@@ -2181,6 +2290,11 @@ def plot3d(*args, show=True, **kwargs):
     series = []
     plot_expr = check_arguments(args, 1, 2)
     series = [SurfaceOver2DRangeSeries(*arg, **kwargs) for arg in plot_expr]
+    xlabel = series[0].var_x.name
+    ylabel = series[0].var_y.name
+    kwargs.setdefault("xlabel", xlabel)
+    kwargs.setdefault("ylabel", ylabel)
+    kwargs.setdefault("zlabel", "f(%s, %s)" % (xlabel, ylabel))
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
@@ -2289,6 +2403,9 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
     series = []
     plot_expr = check_arguments(args, 3, 2)
     series = [ParametricSurfaceSeries(*arg, **kwargs) for arg in plot_expr]
+    kwargs.setdefault("xlabel", "x")
+    kwargs.setdefault("ylabel", "y")
+    kwargs.setdefault("zlabel", "z")
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()

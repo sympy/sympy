@@ -4,11 +4,12 @@ we support. Also some functions that are needed SymPy-wide and are located
 here for easy import.
 """
 
-from typing import Tuple, Type
-
 import operator
 from collections import defaultdict
-from sympy.external import import_module
+from time import perf_counter as clock
+
+from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, GROUND_TYPES, gmpy
+
 
 """
 Python 2 and Python 3 compatible imports
@@ -472,6 +473,8 @@ def default_sort_key(item, order=None):
     return (cls_index, 0, item.__class__.__name__
             ), args, S.One.sort_key(), S.One
 
+def _node_count(e):
+    return 1 + sum(map(_node_count, e.args))
 
 def _nodes(e):
     """
@@ -486,7 +489,7 @@ def _nodes(e):
     if isinstance(e, Basic):
         if isinstance(e, Derivative):
             return _nodes(e.expr) + len(e.variables)
-        return e.count(Basic)
+        return _node_count(e)
     elif iterable(e):
         return 1 + sum(_nodes(ei) for ei in e)
     elif isinstance(e, dict):
@@ -603,62 +606,3 @@ def ordered(seq, keys=None, default=True, warn=False):
                         'not enough keys to break ties: %s' % u)
         yield from d[k]
         d.pop(k)
-
-# If HAS_GMPY is 0, no supported version of gmpy is available. Otherwise,
-# HAS_GMPY contains the major version number of gmpy; i.e. 1 for gmpy, and
-# 2 for gmpy2.
-
-# Versions of gmpy prior to 1.03 do not work correctly with int(largempz)
-# For example, int(gmpy.mpz(2**256)) would raise OverflowError.
-# See issue 4980.
-
-# Minimum version of gmpy changed to 1.13 to allow a single code base to also
-# work with gmpy2.
-
-def _getenv(key, default=None):
-    from os import getenv
-    return getenv(key, default)
-
-GROUND_TYPES = _getenv('SYMPY_GROUND_TYPES', 'auto').lower()
-
-HAS_GMPY = 0
-
-if GROUND_TYPES != 'python':
-
-    # Don't try to import gmpy2 if ground types is set to gmpy1. This is
-    # primarily intended for testing.
-
-    if GROUND_TYPES != 'gmpy1':
-        gmpy = import_module('gmpy2', min_module_version='2.0.0',
-            module_version_attr='version', module_version_attr_call_args=())
-        if gmpy:
-            HAS_GMPY = 2
-    else:
-        GROUND_TYPES = 'gmpy'
-
-    if not HAS_GMPY:
-        gmpy = import_module('gmpy', min_module_version='1.13',
-            module_version_attr='version', module_version_attr_call_args=())
-        if gmpy:
-            HAS_GMPY = 1
-else:
-    gmpy = None
-
-if GROUND_TYPES == 'auto':
-    if HAS_GMPY:
-        GROUND_TYPES = 'gmpy'
-    else:
-        GROUND_TYPES = 'python'
-
-if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
-    from warnings import warn
-    warn("gmpy library is not installed, switching to 'python' ground types")
-    GROUND_TYPES = 'python'
-
-# SYMPY_INTS is a tuple containing the base types for valid integer types.
-SYMPY_INTS = (int, )  # type: Tuple[Type, ...]
-
-if GROUND_TYPES == 'gmpy':
-    SYMPY_INTS += (type(gmpy.mpz(0)),)
-
-from time import perf_counter as clock
