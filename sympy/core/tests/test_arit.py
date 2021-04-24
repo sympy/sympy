@@ -1914,17 +1914,13 @@ def test_Mod():
     assert ((x - Mod(x, y))/y).rewrite(floor) == floor(x/y)
 
     # issue 21373
-    from sympy.core.cache import clear_cache
     from sympy.functions.elementary.trigonometric import sinh
     from sympy.functions.elementary.piecewise import Piecewise
 
     x_r, y_r = symbols('x_r y_r', real=True)
-    clear_cache()
     (Piecewise((x_r, y_r > x_r), (y_r, True)) / z) % 1
-    clear_cache()
     expr = exp(sinh(Piecewise((x_r, y_r > x_r), (y_r, True)) / z))
     expr.subs({1: 1.0})
-    clear_cache()
     sinh(Piecewise((x_r, y_r > x_r), (y_r, True)) * z ** -1.0).is_zero
 
 
