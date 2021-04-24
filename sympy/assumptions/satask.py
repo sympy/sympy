@@ -5,7 +5,7 @@ Module to evaluate the proposition with assumptions using SAT algorithm.
 from sympy import Symbol, S
 from sympy.assumptions.ask_generated import get_all_known_facts
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
-from sympy.assumptions.sathandlers import fact_registry
+from sympy.assumptions.sathandlers import class_fact_registry
 from sympy.core import oo
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.cnf import CNF, EncodedCNF
@@ -178,7 +178,7 @@ def find_symbols(pred):
     return pred.atoms(Symbol)
 
 
-def get_relevant_facts(exprs, relevant_facts=None):
+def get_relevant_clsfacts(exprs, relevant_facts=None):
     """
     Extract relevant facts from the items in *exprs*. Facts are defined in
     ``assumptions.sathandlers`` module.
@@ -213,10 +213,10 @@ def get_relevant_facts(exprs, relevant_facts=None):
     which are relevant to ``Abs`` and its argument.
 
     >>> from sympy import Abs
-    >>> from sympy.assumptions.satask import get_relevant_facts
+    >>> from sympy.assumptions.satask import get_relevant_clsfacts
     >>> from sympy.abc import x, y
     >>> exprs = {Abs(x*y)}
-    >>> exprs, facts = get_relevant_facts(exprs)
+    >>> exprs, facts = get_relevant_clsfacts(exprs)
     >>> exprs
     {x*y}
     >>> facts.clauses #doctest: +SKIP
@@ -236,14 +236,14 @@ def get_relevant_facts(exprs, relevant_facts=None):
     We pass the first run's results to the second run, and get the expressions
     for next run and updated facts.
 
-    >>> exprs, facts = get_relevant_facts(exprs, relevant_facts=facts)
+    >>> exprs, facts = get_relevant_clsfacts(exprs, relevant_facts=facts)
     >>> exprs
     {x, y}
 
     On final run, no more candidate is returned thus we know that all
     relevant facts are successfully retrieved.
 
-    >>> exprs, facts = get_relevant_facts(exprs, relevant_facts=facts)
+    >>> exprs, facts = get_relevant_clsfacts(exprs, relevant_facts=facts)
     >>> exprs
     set()
 
@@ -253,9 +253,8 @@ def get_relevant_facts(exprs, relevant_facts=None):
 
     newexprs = set()
     for expr in exprs:
-        for fact in fact_registry[expr.func]:
-            cnf_fact = CNF.to_CNF(fact)
-            newfact = cnf_fact.rcall(expr)
+        for fact in class_fact_registry(expr):
+            newfact = CNF.to_CNF(fact)
             relevant_facts = relevant_facts._and(newfact)
             for key in newfact.all_predicates():
                 if isinstance(key, AppliedPredicate):
@@ -270,7 +269,7 @@ def get_all_relevant_facts(proposition, assumptions, context,
     Extract all relevant facts from *proposition* and *assumptions*.
 
     This function extracts the facts by recursively calling
-    ``get_relevant_facts()``. Extracted facts are converted to
+    ``get_relevant_clsfacts()``. Extracted facts are converted to
     ``EncodedCNF`` and returned.
 
     Parameters
@@ -323,7 +322,7 @@ def get_all_relevant_facts(proposition, assumptions, context,
         if i == 0:
             exprs = extract_predargs(proposition, assumptions, context)
         all_exprs |= exprs
-        exprs, relevant_facts = get_relevant_facts(exprs, relevant_facts)
+        exprs, relevant_facts = get_relevant_clsfacts(exprs, relevant_facts)
         i += 1
         if i >= iterations:
             break

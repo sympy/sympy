@@ -1,9 +1,8 @@
-
 from sympy import (S, symbols, Q, assuming, Implies, MatrixSymbol, I, pi, Abs,
     Eq, Gt)
 from sympy.assumptions.cnf import CNF, Literal
 from sympy.assumptions.satask import (satask, extract_predargs,
-    get_relevant_facts)
+    get_relevant_clsfacts)
 
 from sympy.testing.pytest import raises, XFAIL
 
@@ -353,9 +352,9 @@ def test_extract_predargs():
     assert extract_predargs(props, assump) == {x, y, z}
 
 
-def test_get_relevant_facts():
+def test_get_relevant_clsfacts():
     exprs = {Abs(x*y)}
-    exprs, facts = get_relevant_facts(exprs)
+    exprs, facts = get_relevant_clsfacts(exprs)
     assert exprs == {x*y}
     assert facts.clauses == \
         {frozenset({Literal(Q.odd(Abs(x*y)), False), Literal(Q.odd(x*y), True)}),
