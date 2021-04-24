@@ -268,8 +268,8 @@ def test_flatten():
     outer = ConditionSet(x, Contains(x, inner), S.Reals)
     assert outer == ConditionSet(x, sin(x) + x > 0, Interval(-1, 1))
 
-    def test_duplicate():
-        from sympy.core.function import BadSignatureError
-        # test coverage for line 95 in conditionset.py, check for duplicates in symbols
-        dup = symbols('a,a')
-        raises(BadSignatureError, lambda: ConditionSet(dup, x < 0))
+def test_duplicate():
+    from sympy.core.function import BadSignatureError
+    # test coverage for line 95 in conditionset.py, check for duplicates in symbols
+    dup = symbols('a,a')
+    raises(BadSignatureError, lambda: ConditionSet(dup, x < 0))
