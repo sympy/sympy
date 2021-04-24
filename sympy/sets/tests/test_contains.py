@@ -43,4 +43,4 @@ def test_as_set():
 
 def test_type_error():
     # Pass in a parameter not of type "set"
-    raises(TypeError, lambda: Contains(2,None))
+    raises(TypeError, lambda: Contains(2, None))
