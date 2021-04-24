@@ -191,9 +191,10 @@ class DomainMatrix:
         ========
 
         >>> from sympy.polys.matrices import DomainMatrix
-        >>> A = DomainMatrix.from_list_sympy(1, 2, [[1, 0]])
+        >>> from sympy.abc import x, y, z
+        >>> A = DomainMatrix.from_list_sympy(1, 3, [[x, y, z]])
         >>> A
-        DomainMatrix([[1, 0]], (1, 2), ZZ)
+        DomainMatrix([[x, y, z]], (1, 3), ZZ[x,y,z])
 
         See Also
         ========
@@ -232,10 +233,11 @@ class DomainMatrix:
         ========
 
         >>> from sympy.polys.matrices import DomainMatrix
-        >>> from sympy import QQ, ZZ
-        >>> elemsdict = {0: {1: QQ(1, 2)}, 1: {0: ZZ(1)}}
-        >>> DomainMatrix.from_dict_sympy(2, 3, elemsdict)
-        DomainMatrix({0: {1: 1/2}, 1: {0: 1}}, (2, 3), QQ)
+        >>> from sympy.abc import x,y,z
+        >>> elemsdict = {0: {0:x}, 1:{1: y}, 2: {2: z}}
+        >>> A = DomainMatrix.from_dict_sympy(3, 3, elemsdict)
+        >>> A
+        DomainMatrix({0: {0: x}, 1: {1: y}, 2: {2: z}}, (3, 3), ZZ[x,y,z])
 
         See Also
         ========
