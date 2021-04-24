@@ -254,7 +254,24 @@ class StrPrinter(Printer):
         # etc so we display in a straight-forward form that fully preserves all
         # args and their order.
         args = expr.args
-        if args[0] is S.One or any(isinstance(arg, Number) for arg in args[1:]):
+        if args[0] is S.One or any(isinstance(arg, Number) or isinstance(1/arg, Number) for arg in args[1:]):
+            from sympy.utilities.iterables import sift
+            d, n  = sift(args, lambda x:
+                         isinstance(x,Pow) and x.exp == -1,
+                         binary=True
+                         )
+            d = [1/i for i in d]
+            nfactors = [self.parenthesize(arg, prec, strict=False) for arg in n]
+            dfactors = [self.parenthesize(arg, prec, strict=False) for arg in d]
+            numerator_string = '*'.join(nfactors)
+            denominator_string = '*'.join(dfactors)
+            if len(dfactors) > 1:
+                return '%s/(%s)' % (numerator_string, denominator_string)
+            elif dfactors:
+                return '%s/%s' % (numerator_string, denominator_string)
+            else:
+                return numerator_string
+
             factors = [self.parenthesize(a, prec, strict=False) for a in args]
             return '*'.join(factors)
 

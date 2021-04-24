@@ -1009,6 +1009,14 @@ def test_str_special_matrices():
 def test_issue_14567():
     assert factorial(Sum(-1, (x, 0, 0))) + y  # doesn't raise an error
 
+def test_issue_21119():
+    from sympy import sympify
+    assert str(sympify('4/2', evaluate=False)) == '4/2'
+    assert str(sympify('4/-2', evaluate=False)) == '4/(-2)'
+    assert str(sympify('-4/2', evaluate=False)) == '(-4)/2'
+    assert str(sympify('-4/-2', evaluate=False)) == '(-4)/(-2)'
+    assert str(sympify('4/2/1', evaluate=False)) == '4/(2*1)'
+
 def test_Str():
     from sympy.core.symbol import Str
     assert str(Str('x')) == 'x'
