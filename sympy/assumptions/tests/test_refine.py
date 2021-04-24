@@ -1,5 +1,5 @@
 from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
-                   atan, atan2, nan, Symbol, re, im, sign)
+                   atan, atan2, nan, Symbol, re, im, sign, arg)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -66,37 +66,37 @@ def test_exp():
 
 
 def test_Piecewise():
-    assert refine(Piecewise((1, x < 0), (3, True)), Q.is_true(x < 0)) == 1
-    assert refine(Piecewise((1, x < 0), (3, True)), ~Q.is_true(x < 0)) == 3
-    assert refine(Piecewise((1, x < 0), (3, True)), Q.is_true(y < 0)) == \
+    assert refine(Piecewise((1, x < 0), (3, True)), (x < 0)) == 1
+    assert refine(Piecewise((1, x < 0), (3, True)), ~(x < 0)) == 3
+    assert refine(Piecewise((1, x < 0), (3, True)), (y < 0)) == \
         Piecewise((1, x < 0), (3, True))
-    assert refine(Piecewise((1, x > 0), (3, True)), Q.is_true(x > 0)) == 1
-    assert refine(Piecewise((1, x > 0), (3, True)), ~Q.is_true(x > 0)) == 3
-    assert refine(Piecewise((1, x > 0), (3, True)), Q.is_true(y > 0)) == \
+    assert refine(Piecewise((1, x > 0), (3, True)), (x > 0)) == 1
+    assert refine(Piecewise((1, x > 0), (3, True)), ~(x > 0)) == 3
+    assert refine(Piecewise((1, x > 0), (3, True)), (y > 0)) == \
         Piecewise((1, x > 0), (3, True))
-    assert refine(Piecewise((1, x <= 0), (3, True)), Q.is_true(x <= 0)) == 1
-    assert refine(Piecewise((1, x <= 0), (3, True)), ~Q.is_true(x <= 0)) == 3
-    assert refine(Piecewise((1, x <= 0), (3, True)), Q.is_true(y <= 0)) == \
+    assert refine(Piecewise((1, x <= 0), (3, True)), (x <= 0)) == 1
+    assert refine(Piecewise((1, x <= 0), (3, True)), ~(x <= 0)) == 3
+    assert refine(Piecewise((1, x <= 0), (3, True)), (y <= 0)) == \
         Piecewise((1, x <= 0), (3, True))
-    assert refine(Piecewise((1, x >= 0), (3, True)), Q.is_true(x >= 0)) == 1
-    assert refine(Piecewise((1, x >= 0), (3, True)), ~Q.is_true(x >= 0)) == 3
-    assert refine(Piecewise((1, x >= 0), (3, True)), Q.is_true(y >= 0)) == \
+    assert refine(Piecewise((1, x >= 0), (3, True)), (x >= 0)) == 1
+    assert refine(Piecewise((1, x >= 0), (3, True)), ~(x >= 0)) == 3
+    assert refine(Piecewise((1, x >= 0), (3, True)), (y >= 0)) == \
         Piecewise((1, x >= 0), (3, True))
-    assert refine(Piecewise((1, Eq(x, 0)), (3, True)), Q.is_true(Eq(x, 0)))\
+    assert refine(Piecewise((1, Eq(x, 0)), (3, True)), (Eq(x, 0)))\
         == 1
-    assert refine(Piecewise((1, Eq(x, 0)), (3, True)), Q.is_true(Eq(0, x)))\
+    assert refine(Piecewise((1, Eq(x, 0)), (3, True)), (Eq(0, x)))\
         == 1
-    assert refine(Piecewise((1, Eq(x, 0)), (3, True)), ~Q.is_true(Eq(x, 0)))\
+    assert refine(Piecewise((1, Eq(x, 0)), (3, True)), ~(Eq(x, 0)))\
         == 3
-    assert refine(Piecewise((1, Eq(x, 0)), (3, True)), ~Q.is_true(Eq(0, x)))\
+    assert refine(Piecewise((1, Eq(x, 0)), (3, True)), ~(Eq(0, x)))\
         == 3
-    assert refine(Piecewise((1, Eq(x, 0)), (3, True)), Q.is_true(Eq(y, 0)))\
+    assert refine(Piecewise((1, Eq(x, 0)), (3, True)), (Eq(y, 0)))\
         == Piecewise((1, Eq(x, 0)), (3, True))
-    assert refine(Piecewise((1, Ne(x, 0)), (3, True)), Q.is_true(Ne(x, 0)))\
+    assert refine(Piecewise((1, Ne(x, 0)), (3, True)), (Ne(x, 0)))\
         == 1
-    assert refine(Piecewise((1, Ne(x, 0)), (3, True)), ~Q.is_true(Ne(x, 0)))\
+    assert refine(Piecewise((1, Ne(x, 0)), (3, True)), ~(Ne(x, 0)))\
         == 3
-    assert refine(Piecewise((1, Ne(x, 0)), (3, True)), Q.is_true(Ne(y, 0)))\
+    assert refine(Piecewise((1, Ne(x, 0)), (3, True)), (Ne(y, 0)))\
         == Piecewise((1, Ne(x, 0)), (3, True))
 
 
@@ -160,6 +160,10 @@ def test_sign():
     x = Symbol('x', complex=True)
     assert refine(sign(x), Q.zero(x)) == 0
 
+def test_arg():
+    x = Symbol('x', complex = True)
+    assert refine(arg(x), Q.positive(x)) == 0
+    assert refine(arg(x), Q.negative(x)) == pi
 
 def test_func_args():
     class MyClass(Expr):

@@ -5,7 +5,7 @@ Handlers related to order relations: positive, negative, etc.
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Mul, Pow
 from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
-from sympy.core.numbers import ImaginaryUnit, NaN, E
+from sympy.core.numbers import E, ImaginaryUnit, NaN
 from sympy.functions import Abs, acos, acot, asin, atan, exp, factorial, log
 from sympy.matrices import Determinant, Trace
 from sympy.matrices.expressions.matexpr import MatrixElement
@@ -13,7 +13,10 @@ from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.multipledispatch import MDNotImplementedError
 
 from ..predicates.order import (NegativePredicate, NonNegativePredicate,
-    NonZeroPredicate, ZeroPredicate, NonPositivePredicate, PositivePredicate)
+    NonZeroPredicate, ZeroPredicate, NonPositivePredicate, PositivePredicate,
+    ExtendedNegativePredicate, ExtendedNonNegativePredicate,
+    ExtendedNonPositivePredicate, ExtendedNonZeroPredicate,
+    ExtendedPositivePredicate,)
 
 
 # NegativePredicate
@@ -113,7 +116,7 @@ def _(expr, assumptions):
         if ask(Q.odd(expr.exp), assumptions):
             return ask(Q.negative(expr.base), assumptions)
 
-@NegativePredicate.register_many(Abs, ImaginaryUnit, NaN)
+@NegativePredicate.register_many(Abs, ImaginaryUnit)
 def _(expr, assumptions):
     return False
 
@@ -141,10 +144,6 @@ def _(expr, assumptions):
     if ret is None:
         raise MDNotImplementedError
     return ret
-
-@NonNegativePredicate.register(NaN)
-def _(expr, assumptions):
-    return False
 
 
 # NonZeroPredicate
@@ -187,13 +186,13 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return ask(Q.nonzero(expr.base), assumptions)
 
-@NonZeroPredicate.register(NaN)
-def _(expr, assumptions):
-    return True
-
 @NonZeroPredicate.register(Abs)
 def _(expr, assumptions):
     return ask(Q.nonzero(expr.args[0]), assumptions)
+
+@NonZeroPredicate.register(NaN)
+def _(expr, assumptions):
+    return None
 
 
 # ZeroPredicate
@@ -215,10 +214,6 @@ def _(expr, assumptions):
     # TODO: This should be deducible from the nonzero handler
     return fuzzy_or(ask(Q.zero(arg), assumptions) for arg in expr.args)
 
-@ZeroPredicate.register(NaN)
-def _(expr, assumptions):
-    return False
-
 
 # NonPositivePredicate
 
@@ -237,10 +232,6 @@ def _(expr, assumptions):
             return ask(Q.real(expr), assumptions)
         else:
             return notpositive
-
-@NonPositivePredicate.register(NaN)
-def _(expr, assumptions):
-    return False
 
 
 # PositivePredicate
@@ -403,4 +394,45 @@ def _(expr, assumptions):
 
 @PositivePredicate.register(NaN)
 def _(expr, assumptions):
-    return False
+    return None
+
+
+# ExtendedNegativePredicate
+
+@ExtendedNegativePredicate.register(object)
+def _(expr, assumptions):
+    return ask(Q.negative(expr) | Q.negative_infinite(expr), assumptions)
+
+
+# ExtendedPositivePredicate
+
+@ExtendedPositivePredicate.register(object)
+def _(expr, assumptions):
+    return ask(Q.positive(expr) | Q.positive_infinite(expr), assumptions)
+
+
+# ExtendedNonZeroPredicate
+
+@ExtendedNonZeroPredicate.register(object)
+def _(expr, assumptions):
+    return ask(
+        Q.negative_infinite(expr) | Q.negative(expr) | Q.positive(expr) | Q.positive_infinite(expr),
+        assumptions)
+
+
+# ExtendedNonPositivePredicate
+
+@ExtendedNonPositivePredicate.register(object)
+def _(expr, assumptions):
+    return ask(
+        Q.negative_infinite(expr) | Q.negative(expr) | Q.zero(expr),
+        assumptions)
+
+
+# ExtendedNonNegativePredicate
+
+@ExtendedNonNegativePredicate.register(object)
+def _(expr, assumptions):
+    return ask(
+        Q.zero(expr) | Q.positive(expr) | Q.positive_infinite(expr),
+        assumptions)

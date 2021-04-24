@@ -42,7 +42,7 @@ from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1, TR2i
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
-from sympy.polys import roots, cancel, factor, Poly, degree
+from sympy.polys import roots, cancel, factor, Poly
 from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
 
 from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
@@ -912,8 +912,8 @@ def solve(f, *symbols, **flags):
             f[i] = fi.as_expr()
 
         # rewrite hyperbolics in terms of exp
-        f[i] = f[i].replace(lambda w: isinstance(w, HyperbolicFunction),
-                lambda w: w.rewrite(exp))
+        f[i] = f[i].replace(lambda w: isinstance(w, HyperbolicFunction) and \
+            (len(w.free_symbols & set(symbols)) > 0), lambda w: w.rewrite(exp))
 
         # if we have a Matrix, we need to iterate over its elements again
         if f[i].is_Matrix:
@@ -3207,12 +3207,13 @@ def unrad(eq, *syms, **flags):
     >>> unrad(sqrt(x)*x**Rational(1, 3) + 2)
     (x**5 - 64, [])
     >>> unrad(sqrt(x) + root(x + 1, 3))
-    (x**3 - x**2 - 2*x - 1, [])
+    (-x**3 + x**2 + 2*x + 1, [])
     >>> eq = sqrt(x) + root(x, 3) - 2
     >>> unrad(eq)
     (_p**3 + _p**2 - 2, [_p, _p**6 - x])
 
     """
+    from sympy import Equality as Eq
 
     uflags = dict(check=False, simplify=False)
 
@@ -3243,19 +3244,21 @@ def unrad(eq, *syms, **flags):
             for f in eq.args:
                 if f.is_number:
                     continue
-                if f.is_Pow and _take(f, True):
+                if f.is_Pow:
                     args.append(f.base)
                 else:
                     args.append(f)
             eq = Mul(*args)  # leave as Mul for more efficient solving
 
         # make the sign canonical
-        free = eq.free_symbols
-        if len(free) == 1:
-            if eq.coeff(free.pop()**degree(eq)).could_extract_minus_sign():
-                eq = -eq
-        elif eq.could_extract_minus_sign():
-            eq = -eq
+        margs = list(Mul.make_args(eq))
+        changed = False
+        for i, m in enumerate(margs):
+            if m.could_extract_minus_sign():
+                margs[i] = -m
+                changed = True
+        if changed:
+            eq = Mul(*margs, evaluate=False)
 
         return eq, cov
 
@@ -3267,52 +3270,45 @@ def unrad(eq, *syms, **flags):
         return c.q
 
     # define the _take method that will determine whether a term is of interest
-    def _take(d, take_int_pow):
+    def _take(d):
         # return True if coefficient of any factor's exponent's den is not 1
         for pow in Mul.make_args(d):
-            if not (pow.is_Symbol or pow.is_Pow):
+            if not pow.is_Pow:
                 continue
-            b, e = pow.as_base_exp()
-            if not b.has(*syms):
+            if _Q(pow) == 1:
                 continue
-            if not take_int_pow and _Q(pow) == 1:
-                continue
-            free = pow.free_symbols
-            if free.intersection(syms):
+            if pow.free_symbols & syms:
                 return True
         return False
     _take = flags.setdefault('_take', _take)
+
+    if isinstance(eq, Eq):
+        eq = eq.lhs - eq.rhs  # XXX legacy Eq as Eqn support
+    elif not isinstance(eq, Expr):
+        return
 
     cov, nwas, rpt = [flags.setdefault(k, v) for k, v in
         sorted(dict(cov=[], n=None, rpt=0).items())]
 
     # preconditioning
     eq = powdenest(factor_terms(eq, radical=True, clear=True))
-
-    if isinstance(eq, Relational):
-        eq, d = eq, 1
-    else:
-        eq, d = eq.as_numer_denom()
-
+    eq = eq.as_numer_denom()[0]
     eq = _mexpand(eq, recursive=True)
     if eq.is_number:
-        return eq, []
+        return
 
-    syms = set(syms) or eq.free_symbols
+    # see if there are radicals in symbols of interest
+    syms = set(syms) or eq.free_symbols  # _take uses this
     poly = eq.as_poly()
-    gens = [g for g in poly.gens if _take(g, True)]
+    gens = [g for g in poly.gens if _take(g)]
     if not gens:
         return
 
-    # check for trivial case
-    # - already a polynomial in integer powers
-    if all(_Q(g) == 1 for g in gens):
-        if (len(gens) == len(poly.gens) and d!=1):
-            return eq, []
-        else:
-            return
+    # recast poly in terms of eigen-gens
+    poly = eq.as_poly(*gens)
+
     # - an exponent has a symbol of interest (don't handle)
-    if any(g.as_base_exp()[1].has(*syms) for g in gens):
+    if any(g.exp.has(*syms) for g in gens):
         return
 
     def _rads_bases_lcm(poly):
@@ -3323,8 +3319,6 @@ def unrad(eq, *syms, **flags):
         rads = set()
         bases = set()
         for g in poly.gens:
-            if not _take(g, False):
-                continue
             q = _Q(g)
             if q != 1:
                 rads.add(g)
@@ -3332,9 +3326,6 @@ def unrad(eq, *syms, **flags):
                 bases.add(g.base)
         return rads, bases, lcm
     rads, bases, lcm = _rads_bases_lcm(poly)
-
-    if not rads:
-        return
 
     covsym = Dummy('p', nonnegative=True)
 
@@ -3352,7 +3343,7 @@ def unrad(eq, *syms, **flags):
     rterms = {(): []}
     args = Add.make_args(poly.as_expr())
     for t in args:
-        if _take(t, False):
+        if _take(t):
             common = set(t.as_poly().gens).intersection(rads)
             key = tuple(sorted([drad[i] for i in common]))
         else:
@@ -3377,14 +3368,10 @@ def unrad(eq, *syms, **flags):
         if len(bases) == 1:
             b = bases.pop()
             if len(syms) > 1:
-                free = b.free_symbols
-                x = {g for g in gens if g.is_Symbol} & free
-                if not x:
-                    x = free
-                x = ordered(x)
+                x = b.free_symbols
             else:
                 x = syms
-            x = list(x)[0]
+            x = list(ordered(x))[0]
             try:
                 inv = _solve(covsym**lcm - b, x, **uflags)
                 if not inv:
@@ -3394,9 +3381,6 @@ def unrad(eq, *syms, **flags):
                 return _canonical(eq, cov)
             except NotImplementedError:
                 pass
-        else:
-            # no longer consider integer powers as generators
-            gens = [g for g in gens if _Q(g) != 1]
 
         if len(rterms) == 2:
             if not others:

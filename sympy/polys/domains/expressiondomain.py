@@ -151,8 +151,16 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         """Convert SymPy's expression to ``dtype``. """
         return self.dtype(a)
 
+    def from_ZZ(K1, a, K0):
+        """Convert a Python ``int`` object to ``dtype``. """
+        return K1(K0.to_sympy(a))
+
     def from_ZZ_python(K1, a, K0):
         """Convert a Python ``int`` object to ``dtype``. """
+        return K1(K0.to_sympy(a))
+
+    def from_QQ(K1, a, K0):
+        """Convert a Python ``Fraction`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
     def from_QQ_python(K1, a, K0):
@@ -228,3 +236,6 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
     def lcm(self, a, b):
         return a.lcm(b)
+
+
+EX = ExpressionDomain()

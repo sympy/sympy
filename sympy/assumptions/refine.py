@@ -18,8 +18,8 @@ def refine(expr, assumptions=True):
     the form which is only valid under certain assumptions. Note that
     ``simplify()`` is generally not done in refining process.
 
-    Refining boolean expression involves reducing it to ``True`` or
-    ``False``. Unlike :func:~.`ask()`, the expression will not be reduced
+    Refining boolean expression involves reducing it to ``S.true`` or
+    ``S.false``. Unlike :func:`~.ask()`, the expression will not be reduced
     if the truth value cannot be determined.
 
     Examples
@@ -297,6 +297,28 @@ def refine_im(expr, assumptions):
         return - S.ImaginaryUnit * arg
     return _refine_reim(expr, assumptions)
 
+def refine_arg(expr, assumptions):
+    """
+    Handler for complex argument
+
+    Explanation
+    ===========
+
+    >>> from sympy.assumptions.refine import refine_arg
+    >>> from sympy import Q, arg
+    >>> from sympy.abc import x
+    >>> refine_arg(arg(x), Q.positive(x))
+    0
+    >>> refine_arg(arg(x), Q.negative(x))
+    pi
+    """
+    rg = expr.args[0]
+    if ask(Q.positive(rg), assumptions):
+        return S.Zero
+    if ask(Q.negative(rg), assumptions):
+        return S.Pi
+    return None
+
 
 def _refine_reim(expr, assumptions):
     # Helper function for refine_re & refine_im
@@ -379,6 +401,7 @@ handlers_dict = {
     'atan2': refine_atan2,
     're': refine_re,
     'im': refine_im,
+    'arg': refine_arg,
     'sign': refine_sign,
     'MatrixElement': refine_matrixelement
 }  # type: Dict[str, Callable[[Expr, Boolean], Expr]]

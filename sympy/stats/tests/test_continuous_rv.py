@@ -7,7 +7,7 @@ from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erf
                    factorial, binomial, erfi, besselj, besselk)
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
-from sympy.sets.sets import Intersection, FiniteSet
+from sympy.sets.sets import FiniteSet, Complement, Intersection
 from sympy.stats import (P, E, where, density, variance, covariance, skewness, kurtosis, median,
                          given, pspace, cdf, characteristic_function, moment_generating_function,
                          ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral, BetaPrime,
@@ -46,7 +46,10 @@ def test_single_normal():
             2**S.Half*exp(-(x - mu)**2/(2*sigma**2))/(2*pi**S.Half*sigma))
 
     assert P(X**2 < 1) == erf(2**S.Half/2)
-    assert quantile(Y)(x) == Intersection(S.Reals, FiniteSet(sqrt(2)*sigma*(sqrt(2)*mu/(2*sigma) + erfinv(2*x - 1))))
+    ans = quantile(Y)(x)
+    assert ans == Complement(Intersection(FiniteSet(
+        sqrt(2)*sigma*(sqrt(2)*mu/(2*sigma)+ erfinv(2*x - 1))),
+        Interval(-oo, oo)), FiniteSet(mu))
     assert E(X, Eq(X, mu)) == mu
 
     assert median(X) == FiniteSet(0)
