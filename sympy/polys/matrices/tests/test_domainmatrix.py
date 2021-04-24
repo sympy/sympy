@@ -535,7 +535,7 @@ def test_DomainMatrix_zeros():
 
 def test_DomainMatrix_ones():
     A = DomainMatrix.ones((2, 3), QQ)
-    assert A.rep == SDM.ones((2, 3), QQ)
+    assert A.rep == DDM.ones((2, 3), QQ)
     assert A.shape == (2, 3)
     assert A.domain == QQ
 
