@@ -214,6 +214,19 @@ def test_latex_SingularityFunction():
     assert latex(SingularityFunction(x, 4, -1)) == \
         r"{\left\langle x - 4 \right\rangle}^{-1}"
 
+    assert latex(SingularityFunction(x, 4, 5)**3) == \
+        r"{\left({\langle x - 4 \rangle}^{5}\right)}^{3}"
+    assert latex(SingularityFunction(x, -3, 4)**3) == \
+        r"{\left({\langle x + 3 \rangle}^{4}\right)}^{3}"
+    assert latex(SingularityFunction(x, 0, 4)**3) == \
+        r"{\left({\langle x \rangle}^{4}\right)}^{3}"
+    assert latex(SingularityFunction(x, a, n)**3) == \
+        r"{\left({\langle - a + x \rangle}^{n}\right)}^{3}"
+    assert latex(SingularityFunction(x, 4, -2)**3) == \
+        r"{\left({\langle x - 4 \rangle}^{-2}\right)}^{3}"
+    assert latex((SingularityFunction(x, 4, -1)**3)**3) == \
+        r"{\left({\langle x - 4 \rangle}^{-1}\right)}^{9}"
+
 
 def test_latex_cycle():
     assert latex(Cycle(1, 2, 4)) == r"\left( 1\; 2\; 4\right)"

@@ -6118,7 +6118,7 @@ def to_rational_coeffs(f):
         f1 = f1 or f1.monic()
         coeffs = f1.all_coeffs()[1:]
         coeffs = [simplify(coeffx) for coeffx in coeffs]
-        if coeffs[-2]:
+        if len(coeffs) > 1 and coeffs[-2]:
             rescale1_x = simplify(coeffs[-2]/coeffs[-1])
             coeffs1 = []
             for i in range(len(coeffs)):
@@ -6145,22 +6145,16 @@ def to_rational_coeffs(f):
         ``alpha`` is the translating factor, and ``f`` is the shifted
         polynomial; else ``alpha`` is ``None``.
         """
-        from sympy.core.add import Add
         if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
             return None, f
         n = f.degree()
         f1 = f1 or f1.monic()
         coeffs = f1.all_coeffs()[1:]
         c = simplify(coeffs[0])
-        if c and not c.is_rational:
-            func = Add
-            if c.is_Add:
-                args = c.args
-                func = c.func
-            else:
-                args = [c]
-            c1, c2 = sift(args, lambda z: z.is_rational, binary=True)
-            alpha = -func(*c2)/n
+        if c.is_Add and not c.is_rational:
+            rat, nonrat = sift(c.args,
+                lambda z: z.is_rational is True, binary=True)
+            alpha = -c.func(*nonrat)/n
             f2 = f1.shift(alpha)
             return alpha, f2
         return None

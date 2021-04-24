@@ -377,21 +377,21 @@ Rust code printing
 
 .. autofunction:: sympy.printing.rust.rust_code
 
-Theano Code printing
+Aesara Code printing
 --------------------
 
-.. module:: sympy.printing.theanocode
+.. module:: sympy.printing.aesaracode
 
-.. autoclass:: sympy.printing.theanocode.TheanoPrinter
+.. autoclass:: sympy.printing.aesaracode.AesaraPrinter
    :members:
 
-   .. autoattribute:: TheanoPrinter.printmethod
+   .. autoattribute:: AesaraPrinter.printmethod
 
-.. autofunction:: sympy.printing.theanocode.theano_code
+.. autofunction:: sympy.printing.aesaracode.aesara_code
 
-.. autofunction:: sympy.printing.theanocode.theano_function
+.. autofunction:: sympy.printing.aesaracode.aesara_function
 
-.. autofunction:: sympy.printing.theanocode.dim_handling
+.. autofunction:: sympy.printing.aesaracode.dim_handling
 
 Gtk
 ---

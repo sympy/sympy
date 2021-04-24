@@ -93,7 +93,7 @@ func
     >>> Add(x + x).func
     <class 'sympy.core.mul.Mul'>
     >>> Q.even(x).func
-    Q.even
+    <class 'sympy.assumptions.assume.AppliedPredicate'>
 
 As you can see, resulting head may be a class or another SymPy object.
 Keep this in mind when you classify the object with this attribute.

@@ -189,3 +189,7 @@ class ElementwiseApplyFunction(MatrixExpr):
                 i._second_pointer_index = 4
                 i._lines = [subexpr]
         return lr
+
+    def _eval_transpose(self):
+        from sympy import Transpose
+        return self.func(self.function, Transpose(self.expr).doit())

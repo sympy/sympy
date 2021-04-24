@@ -30,7 +30,7 @@ def pytest_report_header(config):
     s = "architecture: %s\n" % ARCH
     from sympy.core.cache import USE_CACHE
     s += "cache:        %s\n" % USE_CACHE
-    from sympy.core.compatibility import GROUND_TYPES, HAS_GMPY
+    from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
     version = ''
     if GROUND_TYPES =='gmpy':
         if HAS_GMPY == 1:
