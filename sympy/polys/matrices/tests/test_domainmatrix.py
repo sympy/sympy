@@ -533,6 +533,12 @@ def test_DomainMatrix_zeros():
     assert A.shape == (1, 2)
     assert A.domain == QQ
 
+def test_DomainMatrix_ones():
+    A = DomainMatrix.ones((2, 3), QQ)
+    assert A.rep == DDM.ones((2, 3), QQ)
+    assert A.shape == (2, 3)
+    assert A.domain == QQ
+
 
 def test_DomainMatrix_hstack():
     A = DomainMatrix([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)

@@ -136,6 +136,13 @@ class DDM(list):
         return DDM(rowslist, shape, domain)
 
     @classmethod
+    def ones(cls, shape, domain):
+        one = domain.one
+        m, n = shape
+        rowlist = ([one] * n for _ in range(m))
+        return DDM(rowlist, shape, domain)
+
+    @classmethod
     def eye(cls, size, domain):
         one = domain.one
         ddm = cls.zeros((size, size), domain)
