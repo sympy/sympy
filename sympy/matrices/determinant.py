@@ -2,8 +2,8 @@ from types import FunctionType
 
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
-from sympy.core.symbol import uniquely_named_symbol
-from sympy.polys import PurePoly, cancel
+from sympy.core.symbol import uniquely_named_symbol, Dummy
+from sympy.polys import PurePoly, cancel, Poly
 from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
 from sympy import sympify
@@ -328,20 +328,8 @@ def _adjugate(M, method="berkowitz"):
     return M.cofactor_matrix(method=method).transpose()
 
 
-def _charpoly_DOM(M, x, simplify):
-    DOM = DomainMatrix.from_Matrix(M)
-    domain = DOM.domain
-
-    simplify_poly = False
-    if domain.is_FractionField and not all(t.is_Symbol for t in domain.symbols):
-        simplify_poly = True
-
-    x = uniquely_named_symbol(x, M, modify=lambda s: '_' + s)
-    p = PurePoly(DOM.charpoly(), x, domain=domain)
-    if simplify_poly:
-        return PurePoly(simplify(p.as_expr()), x)
-
-    return p
+def _charpoly_DOM(DOM):
+    return DOM.charpoly()
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
@@ -424,12 +412,24 @@ def _charpoly(M, x='lambda', simplify=_simplify, use_domain=None):
             m = m * (x - simplify(i))
         return PurePoly(m, x)
 
+    t = Dummy('t')
     if use_domain is False:
         berk_vector = _berkowitz_vector(M)
-        x = uniquely_named_symbol(x, berk_vector, modify=lambda s: '_' + s)
+        dummy_poly = Poly(berk_vector, t)
+        x = uniquely_named_symbol(x, dummy_poly, modify=lambda s: '_' + s)
         return PurePoly([simplify(a) for a in berk_vector], x)
 
-    return _charpoly_DOM(M, x, simplify)
+    DOM = DomainMatrix.from_Matrix(M)
+    domain = DOM.domain
+    dom_vector = _charpoly_DOM(DOM)
+    dummy_poly = PurePoly(dom_vector, t, domain=domain)
+    x = uniquely_named_symbol(x, dummy_poly, modify=lambda s: '_' + s)
+
+    p = PurePoly(dom_vector, x, domain=domain)
+    if domain.is_FractionField and not all(t.is_Symbol for t in domain.symbols):
+        return PurePoly(simplify(p.as_expr()), x)
+
+    return p
 
 
 def _cofactor(M, i, j, method="berkowitz"):
