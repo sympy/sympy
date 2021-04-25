@@ -7,10 +7,11 @@ from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi, I, oo
 from sympy.core.relational import Eq
 from sympy.functions.elementary.exponential import exp, exp_polar, log
+from sympy.functions.elementary.hyperbolic import tanh
 from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import atan, atan2
+from sympy.functions.elementary.trigonometric import atan, atan2, cos, sin
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -589,9 +590,18 @@ class Abs(Function):
             return exp(re(arg.args[0]))
         if isinstance(arg, AppliedUndef):
             return
-        if arg.is_Add and arg.has(S.Infinity, S.NegativeInfinity):
-            if any(a.is_infinite for a in arg.as_real_imag()):
-                return S.Infinity
+         if arg.is_Add:
+            if arg.has(S.Infinity, S.NegativeInfinity):
+                if any(a.is_infinite for a in arg.as_real_imag()):
+                    return S.Infinity
+            else:
+                c, t = arg.as_independent(cos, sin, tanh)
+                if t:
+                    m, t = t.as_independent(cos, sin, tanh)
+                    if isinstance(t, (cos, sin, tanh)) and t.is_real:
+                        if arg.subs(t, Dummy(nonnegative=True) - 1).is_nonnegative:
+                            return arg
+                    return
         if arg.is_zero:
             return S.Zero
         if arg.is_extended_nonnegative:
