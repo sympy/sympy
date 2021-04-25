@@ -52,7 +52,7 @@ class DomainMatrix:
     ...    [3, 4]])
     >>> A = DomainMatrix.from_Matrix(Matrix1)
     >>> A
-    DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
+    DomainMatrix({0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}}, (2, 2), ZZ)
 
     Driectly forming a DomainMatrix:
 
@@ -264,7 +264,7 @@ class DomainMatrix:
         return DomainMatrix(items_dict, (nrows, ncols), domain)
 
     @classmethod
-    def from_Matrix(cls, M, **kwargs):
+    def from_Matrix(cls, M, fmt='sparse',**kwargs):
         r"""
         Convert Matrix to DomainMatrix
 
@@ -288,7 +288,14 @@ class DomainMatrix:
         ...    [2.4, 1]])
         >>> A = DomainMatrix.from_Matrix(M)
         >>> A
-        DomainMatrix([[1.0, 3.4], [2.4, 1.0]], (2, 2), RR)
+        DomainMatrix({0: {0: 1.0, 1: 3.4}, 1: {0: 2.4, 1: 1.0}}, (2, 2), RR)
+
+        We can keep internal representation as ddm using fmt='dense'
+        >>> from sympy import Matrix, QQ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix.from_Matrix(Matrix([[QQ(1, 2), QQ(3, 4)], [QQ(0, 1), QQ(0, 1)]]), fmt='dense')
+        >>> A.rep
+        [[1/2, 3/4], [0, 0]]
 
         See Also
         ========
@@ -296,18 +303,10 @@ class DomainMatrix:
         Matrix
 
         """
-        m, n = M.shape
-        non_zero = 0
+        if fmt == 'dense':
+            return cls.from_list_sympy(*M.shape, M.tolist(), **kwargs)
 
-        for i in range(m):
-            for j in range(n):
-                if not M[i, j].is_zero:
-                    non_zero += 1
-
-        if non_zero < (m*(n - 1) - 1)/2:
-            return cls.from_dict_sympy(*M.shape, M.todod(), **kwargs)
-
-        return cls.from_list_sympy(*M.shape, M.tolist(), **kwargs)
+        return cls.from_dict_sympy(*M.shape, M.todod(), **kwargs)
 
     @classmethod
     def get_domain(cls, items_sympy, **kwargs):
