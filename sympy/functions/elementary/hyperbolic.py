@@ -630,19 +630,32 @@ class tanh(HyperbolicFunction):
         x = None
         if arg.is_Add or arg.is_Mul:
             from sympy import symmetric_poly
+            from sympy.functions.combinatorial.numbers import nC
             n = len(arg.args)
             TX = []
             if arg.is_Add:
                 for x in arg.args:
                     tx = tanh(x, evaluate=False)._eval_expand_trig()
                     TX.append(tx)
+                
+                Yg = numbered_symbols('Y')
+                Y = [ next(Yg) for i in range(n) ]
+
+                p = [0, 0]
+                for i in range(n + 1):
+                    p[1 - i % 2] += symmetric_poly(i, Y)
+                return (p[0]/p[1]).subs(list(zip(Y, TX)))
             else:
                 coeff, terms = arg.as_coeff_Mul()
-                #double angle formula
-                if coeff.is_Integer and coeff == 2:
-                    tx = tanh(terms, evaluate=False)._eval_expand_trig()
-                    TX.append(tx)
-                    TX.append(tx)
+                #tanh(n*z) (general case)
+                if coeff.is_Integer and coeff > 1:
+                    numerator = 0
+                    denominator = 0
+                    for k in range(0,floor((coeff-1)/2)+1):
+                        numerator += nC(range(coeff),2*k+1) * tanh(terms)**(2*k+1)
+                    for k in range(0,floor(coeff/2)+1):
+                        denominator += nC(range(coeff),(2*k)) * tanh(terms)**(2*k)
+                    return numerator / denominator 
                 #half angle formula
                 elif coeff == (1/2):
                     cx = cosh(terms, evaluate=False)._eval_expand_trig()
@@ -650,13 +663,6 @@ class tanh(HyperbolicFunction):
                     return (cx-1)/sx
                 else:
                     return tanh(coeff*terms)
-            Yg = numbered_symbols('Y')
-            Y = [ next(Yg) for i in range(n) ]
-
-            p = [0, 0]
-            for i in range(n + 1):
-                p[1 - i % 2] += symmetric_poly(i, Y)*(1)**((i % 4)//2)
-            return (p[0]/p[1]).subs(list(zip(Y, TX)))
         return tanh(arg)
 
     def _eval_rewrite_as_tractable(self, arg, limitvar=None, **kwargs):
