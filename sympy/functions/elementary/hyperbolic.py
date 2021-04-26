@@ -649,7 +649,7 @@ class tanh(HyperbolicFunction):
                     sx = sinh(terms, evaluate=False)._eval_expand_trig()
                     return (cx-1)/sx
                 else:
-                    return coeff*tanh(terms)
+                    return tanh(coeff*terms)
             Yg = numbered_symbols('Y')
             Y = [ next(Yg) for i in range(n) ]
 
