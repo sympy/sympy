@@ -112,6 +112,25 @@ class DomainMatrix:
 
         return cls.from_rep(rep)
 
+    def __getitem__(self, key):
+        i, j = key
+        m, n = self.shape
+        if not (isinstance(i, slice) or isinstance(j, slice)):
+            return DomainScalar(self.rep.getitem(i, j), self.domain)
+
+        if not isinstance(i, slice):
+            if not -m <= i < m:
+                raise IndexError("Row index out of range")
+            i = i % m
+            i = slice(i, i+1)
+        if not isinstance(j, slice):
+            if not -n <= j < n:
+                raise IndexError("Column index out of range")
+            j = j % n
+            j = slice(j, j+1)
+
+        return self.from_rep(self.rep.extract_slice(i, j))
+
     @classmethod
     def from_rep(cls, rep):
         """Create a new DomainMatrix efficiently from DDM/SDM.

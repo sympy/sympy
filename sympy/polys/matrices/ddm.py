@@ -95,6 +95,15 @@ class DDM(list):
         if not (len(self) == m and all(len(row) == n for row in self)):
             raise DDMBadInputError("Inconsistent row-list/shape")
 
+    def getitem(self, i, j):
+        return self[i][j]
+
+    def extract_slice(self, slice1, slice2):
+        ddm = [row[slice2] for row in self[slice1]]
+        rows = len(ddm)
+        cols = len(ddm[0]) if ddm else len(range(self.shape[1])[slice2])
+        return DDM(ddm, (rows, cols), self.domain)
+
     def to_list(self):
         return list(self)
 
