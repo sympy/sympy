@@ -14,7 +14,7 @@ from sympy.core.sympify import _sympify
 from ..constructor import construct_domain
 
 from .exceptions import (NonSquareMatrixError, ShapeError, DDMShapeError,
-        DDMDomainError, DDMFormatError)
+        DDMDomainError, DDMFormatError, DDMBadInputError)
 
 from .ddm import DDM
 
@@ -23,7 +23,6 @@ from .sdm import SDM
 from .domainscalar import DomainScalar
 
 from sympy.polys.domains import ZZ
-
 
 class DomainMatrix:
     r"""
@@ -53,7 +52,7 @@ class DomainMatrix:
     ...    [3, 4]])
     >>> A = DomainMatrix.from_Matrix(Matrix1)
     >>> A
-    DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
+    DomainMatrix({0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}}, (2, 2), ZZ)
 
     Driectly forming a DomainMatrix:
 
@@ -192,14 +191,15 @@ class DomainMatrix:
         ========
 
         >>> from sympy.polys.matrices import DomainMatrix
-        >>> A = DomainMatrix.from_list_sympy(1, 2, [[1, 0]])
+        >>> from sympy.abc import x, y, z
+        >>> A = DomainMatrix.from_list_sympy(1, 3, [[x, y, z]])
         >>> A
-        DomainMatrix([[1, 0]], (1, 2), ZZ)
+        DomainMatrix([[x, y, z]], (1, 3), ZZ[x,y,z])
 
         See Also
         ========
 
-        sympy.polys.constructor.construct_domain
+        sympy.polys.constructor.construct_domain, from_dict_sympy
 
         """
         assert len(rows) == nrows
@@ -214,7 +214,57 @@ class DomainMatrix:
         return DomainMatrix(domain_rows, (nrows, ncols), domain)
 
     @classmethod
-    def from_Matrix(cls, M, **kwargs):
+    def from_dict_sympy(cls, nrows, ncols, elemsdict, **kwargs):
+        """
+
+        Parameters
+        ==========
+
+        nrows: number of rows
+        ncols: number of cols
+        elemsdict: dict of dicts containing non-zero elements of the DomainMatrix
+
+        Returns
+        =======
+
+        DomainMatrix containing elements of elemsdict
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy.abc import x,y,z
+        >>> elemsdict = {0: {0:x}, 1:{1: y}, 2: {2: z}}
+        >>> A = DomainMatrix.from_dict_sympy(3, 3, elemsdict)
+        >>> A
+        DomainMatrix({0: {0: x}, 1: {1: y}, 2: {2: z}}, (3, 3), ZZ[x,y,z])
+
+        See Also
+        ========
+
+        from_list_sympy
+
+        """
+        if not all(0 <= r < nrows for r in elemsdict):
+            raise DDMBadInputError("Row out of range")
+        if not all(0 <= c < ncols for row in elemsdict.values() for c in row):
+            raise DDMBadInputError("Column out of range")
+
+        items_sympy = [_sympify(item) for row in elemsdict.values() for item in row.values()]
+        domain, items_domain = cls.get_domain(items_sympy, **kwargs)
+
+        idx = 0
+        items_dict = {}
+        for i, row in elemsdict.items():
+                items_dict[i] = {}
+                for j in row:
+                    items_dict[i][j] = items_domain[idx]
+                    idx += 1
+
+        return DomainMatrix(items_dict, (nrows, ncols), domain)
+
+    @classmethod
+    def from_Matrix(cls, M, fmt='sparse',**kwargs):
         r"""
         Convert Matrix to DomainMatrix
 
@@ -238,7 +288,14 @@ class DomainMatrix:
         ...    [2.4, 1]])
         >>> A = DomainMatrix.from_Matrix(M)
         >>> A
-        DomainMatrix([[1.0, 3.4], [2.4, 1.0]], (2, 2), RR)
+        DomainMatrix({0: {0: 1.0, 1: 3.4}, 1: {0: 2.4, 1: 1.0}}, (2, 2), RR)
+
+        We can keep internal representation as ddm using fmt='dense'
+        >>> from sympy import Matrix, QQ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix.from_Matrix(Matrix([[QQ(1, 2), QQ(3, 4)], [QQ(0, 1), QQ(0, 1)]]), fmt='dense')
+        >>> A.rep
+        [[1/2, 3/4], [0, 0]]
 
         See Also
         ========
@@ -246,7 +303,10 @@ class DomainMatrix:
         Matrix
 
         """
-        return cls.from_list_sympy(*M.shape, M.tolist(), **kwargs)
+        if fmt == 'dense':
+            return cls.from_list_sympy(*M.shape, M.tolist(), **kwargs)
+
+        return cls.from_dict_sympy(*M.shape, M.todod(), **kwargs)
 
     @classmethod
     def get_domain(cls, items_sympy, **kwargs):

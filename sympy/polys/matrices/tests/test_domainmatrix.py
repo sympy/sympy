@@ -85,28 +85,40 @@ def test_DomainMatrix_from_list_sympy():
     assert A.shape == (2, 2)
     assert A.domain == K
 
+def test_DomainMatrix_from_dict_sympy():
+    sdm = SDM({0: {0: QQ(1, 2)}, 1: {1: QQ(2, 3)}}, (2, 2), QQ)
+    A = DomainMatrix.from_dict_sympy(2, 2, {0: {0: QQ(1, 2)}, 1: {1: QQ(2, 3)}})
+    assert A.rep == sdm
+    assert A.shape == (2, 2)
+    assert A.domain == QQ
 
 def test_DomainMatrix_from_Matrix():
-    ddm = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    sdm = SDM({0: {0: ZZ(1), 1: ZZ(2)}, 1: {0: ZZ(3), 1: ZZ(4)}}, (2, 2), ZZ)
     A = DomainMatrix.from_Matrix(Matrix([[1, 2], [3, 4]]))
-    assert A.rep == ddm
+    assert A.rep == sdm
     assert A.shape == (2, 2)
     assert A.domain == ZZ
 
     K = QQ.algebraic_field(sqrt(2))
-    ddm = DDM(
-        [[K.convert(1 + sqrt(2)), K.convert(2 + sqrt(2))],
-         [K.convert(3 + sqrt(2)), K.convert(4 + sqrt(2))]],
+    sdm = SDM(
+        {0: {0: K.convert(1 + sqrt(2)), 1: K.convert(2 + sqrt(2))},
+         1: {0: K.convert(3 + sqrt(2)), 1: K.convert(4 + sqrt(2))}},
         (2, 2),
         K
     )
     A = DomainMatrix.from_Matrix(
         Matrix([[1 + sqrt(2), 2 + sqrt(2)], [3 + sqrt(2), 4 + sqrt(2)]]),
         extension=True)
-    assert A.rep == ddm
+    assert A.rep == sdm
     assert A.shape == (2, 2)
     assert A.domain == K
 
+    A = DomainMatrix.from_Matrix(Matrix([[QQ(1, 2), QQ(3, 4)], [QQ(0, 1), QQ(0, 1)]]), fmt='dense')
+    ddm = DDM([[QQ(1, 2), QQ(3, 4)], [QQ(0, 1), QQ(0, 1)]], (2, 2), QQ)
+
+    assert A.rep == ddm
+    assert A.shape == (2, 2)
+    assert A.domain == QQ
 
 def test_DomainMatrix_eq():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
@@ -561,12 +573,12 @@ def test_DomainMatrix_scalarmul():
 def test_DomainMatrix_truediv():
     A = DomainMatrix.from_Matrix(Matrix([[1, 2], [3, 4]]))
     lamda = DomainScalar(QQ(3)/QQ(2), QQ)
-    assert A / lamda == DomainMatrix([[QQ(2, 3), QQ(4, 3)], [QQ(2), QQ(8, 3)]], (2, 2), QQ)
+    assert A / lamda == DomainMatrix({0: {0: QQ(2, 3), 1: QQ(4, 3)}, 1: {0: QQ(2), 1: QQ(8, 3)}}, (2, 2), QQ)
     b = DomainScalar(ZZ(1), ZZ)
-    assert A / b == DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(4)]], (2, 2), QQ)
+    assert A / b == DomainMatrix({0: {0: QQ(1), 1: QQ(2)}, 1: {0: QQ(3), 1: QQ(4)}}, (2, 2), QQ)
 
-    assert A / 1 == DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(4)]], (2, 2), QQ)
-    assert A / 2 == DomainMatrix([[QQ(1, 2), QQ(1)], [QQ(3, 2), QQ(2)]], (2, 2), QQ)
+    assert A / 1 == DomainMatrix({0: {0: QQ(1), 1: QQ(2)}, 1: {0: QQ(3), 1: QQ(4)}}, (2, 2), QQ)
+    assert A / 2 == DomainMatrix({0: {0: QQ(1, 2), 1: QQ(1)}, 1: {0: QQ(3, 2), 1: QQ(2)}}, (2, 2), QQ)
 
     raises(ZeroDivisionError, lambda: A / 0)
     raises(TypeError, lambda: A / 1.5)

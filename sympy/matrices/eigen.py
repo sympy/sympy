@@ -288,6 +288,8 @@ def _eigenspace(M, eigenval, iszerofunc=_iszero, simplify=False):
 
 def _eigenvects_DOM(M, **kwargs):
     DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    DOM = DOM.to_dense()
+
     if DOM.domain != EX:
         rational, algebraic = dom_eigenvects(DOM)
         eigenvects = dom_eigenvects_to_sympy(
