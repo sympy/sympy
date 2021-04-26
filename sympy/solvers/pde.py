@@ -32,10 +32,12 @@ more information on each (run help(pde)):
     variable coefficients.
 
 """
+from functools import reduce
+
 from itertools import combinations_with_replacement
 from sympy.simplify import simplify  # type: ignore
 from sympy.core import Add, S
-from sympy.core.compatibility import reduce, is_sequence
+from sympy.core.compatibility import is_sequence
 from sympy.core.function import Function, expand, AppliedUndef, Subs
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, symbols

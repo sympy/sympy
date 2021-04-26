@@ -21,7 +21,7 @@ sympy_dir = os.path.join(sympy_top, 'sympy')
 if os.path.isdir(sympy_dir):
     sys.path.insert(0, sympy_top)
 
-from sympy.assumptions.ask import (compute_known_facts,
+from sympy.assumptions.facts import (compute_known_facts,
         get_known_facts, get_known_facts_keys)
 
 with open('sympy/assumptions/ask_generated.py', 'w') as f:

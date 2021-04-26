@@ -1,23 +1,24 @@
 """Computational algebraic field theory. """
 
+from functools import reduce
 
 from sympy import (
     S, Rational, AlgebraicNumber, GoldenRatio, TribonacciConstant,
     Add, Mul, sympify, Dummy, expand_mul, I, pi
 )
 from sympy.functions import sqrt, cbrt
-from sympy.core.compatibility import reduce
+
 from sympy.core.exprtools import Factors
 from sympy.core.function import _mexpand
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
+from sympy.polys.densetools import dup_eval
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.orthopolys import dup_chebyshevt
 from sympy.polys.polyerrors import (
     IsomorphismFailed,
-    CoercionFailed,
     NotAlgebraic,
     GeneratorsError,
 )
@@ -35,7 +36,7 @@ from sympy.printing.pycode import PythonCodePrinter, MpmathPrinter
 from sympy.simplify.radsimp import _split_gcd
 from sympy.simplify.simplify import _is_sum_surds
 from sympy.utilities import (
-    numbered_symbols, variations, lambdify, public, sift
+    numbered_symbols, lambdify, public, sift
 )
 
 from mpmath import pslq, mp
@@ -818,17 +819,25 @@ def _minpoly_groebner(ex, x, cls):
 
 minpoly = minimal_polynomial
 
-def _coeffs_generator(n):
-    """Generate coefficients for `primitive_element()`. """
-    for coeffs in variations([1, -1, 2, -2, 3, -3], n, repetition=True):
-        # Two linear combinations with coeffs of opposite signs are
-        # opposites of each other. Hence it suffices to test only one.
-        if coeffs[0] > 0:
-            yield list(coeffs)
+
+def _switch_domain(g, K):
+    # An algebraic relation f(a, b) = 0 over Q can also be written
+    # g(b) = 0 where g is in Q(a)[x] and h(a) = 0 where h is in Q(b)[x].
+    # This function transforms g into h where Q(b) = K.
+    frep = g.rep.inject()
+    hrep = frep.eject(K, front=True)
+
+    return g.new(hrep, g.gens[0])
+
+
+def _linsolve(p):
+    # Compute root of linear polynomial.
+    c, d = p.rep.rep
+    return -d/c
 
 
 @public
-def primitive_element(extension, x=None, *, ex=False, coeffs=_coeffs_generator, polys=False):
+def primitive_element(extension, x=None, *, ex=False, polys=False):
     """Construct a common number field for all extensions. """
     if not extension:
         raise ValueError("can't compute primitive element for empty extension")
@@ -838,16 +847,9 @@ def primitive_element(extension, x=None, *, ex=False, coeffs=_coeffs_generator, 
     else:
         x, cls = Dummy('x'), PurePoly
 
-    coeffs_generator = coeffs
-
     if not ex:
         gen, coeffs = extension[0], [1]
-        # XXX when minimal_polynomial is extended to work
-        # with AlgebraicNumbers this test can be removed
-        if isinstance(gen, AlgebraicNumber):
-            g = gen.minpoly.replace(x)
-        else:
-            g = minimal_polynomial(gen, x, polys=True)
+        g = minimal_polynomial(gen, x, polys=True)
         for ext in extension[1:]:
             _, factors = factor_list(g, extension=ext)
             g = _choose_factor(factors, x, gen)
@@ -860,47 +862,29 @@ def primitive_element(extension, x=None, *, ex=False, coeffs=_coeffs_generator, 
         else:
             return cls(g), coeffs
 
-    generator = numbered_symbols('y', cls=Dummy)
+    gen, coeffs = extension[0], [1]
+    f = minimal_polynomial(gen, x, polys=True)
+    K = QQ.algebraic_field((f, gen))  # incrementally constructed field
+    reps = [K.unit]  # representations of extension elements in K
+    for ext in extension[1:]:
+        p = minimal_polynomial(ext, x, polys=True)
+        L = QQ.algebraic_field((p, ext))
+        _, factors = factor_list(f, domain=L)
+        f = _choose_factor(factors, x, gen)
+        s, g, f = f.sqf_norm()
+        gen += s*ext
+        coeffs.append(s)
+        K = QQ.algebraic_field((f, gen))
+        h = _switch_domain(g, K)
+        erep = _linsolve(h.gcd(p))  # ext as element of K
+        ogen = K.unit - s*erep  # old gen as element of K
+        reps = [dup_eval(_.rep, ogen, K) for _ in reps] + [erep]
 
-    F, Y = [], []
-
-    for ext in extension:
-        y = next(generator)
-
-        if ext.is_Poly:
-            if ext.is_univariate:
-                f = ext.as_expr(y)
-            else:
-                raise ValueError("expected minimal polynomial, got %s" % ext)
-        else:
-            f = minpoly(ext, y)
-
-        F.append(f)
-        Y.append(y)
-
-    for coeffs in coeffs_generator(len(Y)):
-        f = x - sum([ c*y for c, y in zip(coeffs, Y)])
-        G = groebner(F + [f], Y + [x], order='lex', field=True)
-
-        H, g = G[:-1], cls(G[-1], x, domain='QQ')
-
-        for i, (h, y) in enumerate(zip(H, Y)):
-            try:
-                H[i] = Poly(y - h, x,
-                            domain='QQ').all_coeffs()  # XXX: composite=False
-            except CoercionFailed:  # pragma: no cover
-                break  # G is not a triangular set
-        else:
-            break
-    else:  # pragma: no cover
-        raise RuntimeError("run out of coefficient configurations")
-
-    _, g = g.clear_denoms()
-
+    H = [_.rep for _ in reps]
     if not polys:
-        return g.as_expr(), coeffs, H
+        return f.as_expr(), coeffs, H
     else:
-        return g, coeffs, H
+        return f, coeffs, H
 
 
 def is_isomorphism_possible(a, b):

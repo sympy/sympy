@@ -2,19 +2,20 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
         Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed,
-        Matrix, Basic, Dict, oo, zoo, nan, Pow)
+        Matrix, Basic, Dict, oo, zoo, nan, Pow, sstr)
 from sympy.core.basic import _aresame
 from sympy.core.cache import clear_cache
 from sympy.core.expr import unchanged
 from sympy.core.function import (PoleError, _mexpand, arity,
         BadSignatureError, BadArgumentsError)
+from sympy.core.parameters import _exp_is_pow
 from sympy.core.sympify import sympify
 from sympy.matrices import MutableMatrix, ImmutableMatrix
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
 from sympy.tensor.array import NDimArray
 from sympy.utilities.iterables import subsets, variations
-from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy, _both_exp_pow
 
 from sympy.abc import t, w, x, y, z
 f, g, h = symbols('f g h', cls=Function)
@@ -505,6 +506,7 @@ def test_extensibility_eval():
     assert MyFunc(0) == (0, 0, 0)
 
 
+@_both_exp_pow
 def test_function_non_commutative():
     x = Symbol('x', commutative=False)
     assert f(x).is_commutative is False
@@ -1133,10 +1135,16 @@ def test_Derivative_as_finite_difference():
 
 def test_issue_11159():
     # Tests Application._eval_subs
-    expr1 = E
-    expr0 = expr1 * expr1
-    expr1 = expr0.subs(expr1,expr0)
-    assert expr0 == expr1
+    with _exp_is_pow(False):
+        expr1 = E
+        expr0 = expr1 * expr1
+        expr1 = expr0.subs(expr1,expr0)
+        assert expr0 == expr1
+    with _exp_is_pow(True):
+        expr1 = E
+        expr0 = expr1 * expr1
+        expr2 = expr0.subs(expr1, expr0)
+        assert expr2 == E ** 4
 
 
 def test_issue_12005():
@@ -1366,6 +1374,29 @@ def test_Derivative_free_symbols():
     assert diff(f(x), (x, n)).free_symbols == {n, x}
 
 
+def test_issue_20683():
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    y = Derivative(z, x).subs(x,0)
+    assert y.doit() == 0
+    y = Derivative(8, x).subs(x,0)
+    assert y.doit() == 0
+
+
 def test_issue_10503():
     f = exp(x**3)*cos(x**6)
     assert f.series(x, 0, 14) == 1 + x**3 + x**6/2 + x**9/6 - 11*x**12/24 + O(x**14)
+
+
+def test_issue_17382():
+    # copied from sympy/core/tests/test_evalf.py
+    def NS(e, n=15, **options):
+        return sstr(sympify(e).evalf(n, **options), full_prec=True)
+
+    x = Symbol('x')
+    expr = solveset(2 * cos(x) * cos(2 * x) - 1, x, S.Reals)
+    expected = "Union(" \
+               "ImageSet(Lambda(_n, 6.28318530717959*_n + 5.79812359592087), Integers), " \
+               "ImageSet(Lambda(_n, 6.28318530717959*_n + 0.485061711258717), Integers))"
+    assert NS(expr) == expected

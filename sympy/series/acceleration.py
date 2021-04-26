@@ -18,6 +18,9 @@ def richardson(A, k, n, N):
     extrapolation with the terms A(n), A(n+1), ..., A(n+N+1).
     Choosing N ~= 2*n often gives good results.
 
+    Examples
+    ========
+
     A simple example is to calculate exp(1) using the limit definition.
     This limit converges slowly; n = 100 only produces two accurate
     digits:

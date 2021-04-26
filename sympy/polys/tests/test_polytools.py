@@ -1458,6 +1458,20 @@ def test_Poly_rat_clear_denoms():
     assert f.rat_clear_denoms(g) == (f, g)
 
 
+def test_issue_20427():
+    f = Poly(-117968192370600*18**(S(1)/3)/(217603955769048*(24201 +
+        253*sqrt(9165))**(S(1)/3) + 2273005839412*sqrt(9165)*(24201 +
+        253*sqrt(9165))**(S(1)/3)) - 15720318185*2**(S(2)/3)*3**(S(1)/3)*(24201
+        + 253*sqrt(9165))**(S(2)/3)/(217603955769048*(24201 + 253*sqrt(9165))**
+        (S(1)/3) + 2273005839412*sqrt(9165)*(24201 + 253*sqrt(9165))**(S(1)/3))
+        + 15720318185*12**(S(1)/3)*(24201 + 253*sqrt(9165))**(S(2)/3)/(
+        217603955769048*(24201 + 253*sqrt(9165))**(S(1)/3) + 2273005839412*
+        sqrt(9165)*(24201 + 253*sqrt(9165))**(S(1)/3)) + 117968192370600*2**(
+        S(1)/3)*3**(S(2)/3)/(217603955769048*(24201 + 253*sqrt(9165))**(S(1)/3)
+        + 2273005839412*sqrt(9165)*(24201 + 253*sqrt(9165))**(S(1)/3)), x)
+    assert f == Poly(0, x, domain='EX')
+
+
 def test_Poly_integrate():
     assert Poly(x + 1).integrate() == Poly(x**2/2 + x)
     assert Poly(x + 1).integrate(x) == Poly(x**2/2 + x)
@@ -2035,10 +2049,12 @@ def test_gcd():
     assert lcm(f, g, modulus=11, symmetric=False) == l
 
     a, b = sqrt(2), -sqrt(2)
-    assert gcd(a, b) == gcd(b, a) == a
+    assert gcd(a, b) == gcd(b, a) == sqrt(2)
 
     a, b = sqrt(-2), -sqrt(-2)
-    assert gcd(a, b) in (a, b)
+    assert gcd(a, b) == gcd(b, a) == sqrt(2)
+
+    assert gcd(Poly(x - 2, x), Poly(I*x, x)) == Poly(1, x, domain=ZZ_I)
 
     raises(TypeError, lambda: gcd(x))
     raises(TypeError, lambda: lcm(x))
@@ -2062,6 +2078,9 @@ def test_gcd_numbers_vs_polys():
 
     assert gcd(3.0, 9.0) == 1.0
     assert gcd(3.0*x, 9.0) == 1.0
+
+    # partial fix of 20597
+    assert gcd(Mul(2, 3, evaluate=False), 2) == 2
 
 
 def test_terms_gcd():
@@ -3332,6 +3351,12 @@ def test_noncommutative():
 def test_to_rational_coeffs():
     assert to_rational_coeffs(
         Poly(x**3 + y*x**2 + sqrt(y), x, domain='EX')) is None
+    # issue 21268
+    assert to_rational_coeffs(
+        Poly(y**3 + sqrt(2)*y**2*sin(x) + 1, y)) is None
+
+    assert to_rational_coeffs(Poly(x, y)) is None
+    assert to_rational_coeffs(Poly(sqrt(2)*y)) is None
 
 
 def test_factor_terms():
@@ -3441,3 +3466,15 @@ def test_deserialized_poly_equals_original():
         "Deserialized polynomial not equal to original.")
     assert poly.gens == deserialized.gens, (
         "Deserialized polynomial has different generators than original.")
+
+
+def test_issue_20389():
+    result = degree(x * (x + 1) - x ** 2 - x, x)
+    assert result == -oo
+
+
+def test_issue_20985():
+    from sympy import symbols
+    w, R = symbols('w R')
+    poly = Poly(1.0 + I*w/R, w, 1/R)
+    assert poly.degree() == S(1)

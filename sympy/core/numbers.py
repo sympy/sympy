@@ -3,6 +3,7 @@ import decimal
 import fractions
 import math
 import re as regex
+import sys
 
 from .containers import Tuple
 from .sympify import (SympifyError, converter, sympify, _convert_numpy_types, _sympify,
@@ -14,8 +15,9 @@ from .decorators import _sympifyit
 from .cache import cacheit, clear_cache
 from .logic import fuzzy_not
 from sympy.core.compatibility import (as_int, HAS_GMPY, SYMPY_INTS,
-    int_info, gmpy)
+    gmpy)
 from sympy.core.cache import lru_cache
+from .kind import NumberKind
 from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
@@ -258,28 +260,13 @@ def igcd(*args):
             a = gmpy.gcd(a, b) if b else a
         return as_int(a)
     for b in args_temp:
-        a = igcd2(a, b) if b else a
+        a = math.gcd(a, b)
     return a
 
-def _igcd2_python(a, b):
-    """Compute gcd of two Python integers a and b."""
-    if (a.bit_length() > BIGBITS and
-        b.bit_length() > BIGBITS):
-        return igcd_lehmer(a, b)
 
-    a, b = abs(a), abs(b)
-    while b:
-        a, b = b, a % b
-    return a
-
-try:
-    from math import gcd as igcd2
-except ImportError:
-    igcd2 = _igcd2_python
+igcd2 = math.gcd
 
 
-# Use Lehmer's algorithm only for very large numbers.
-BIGBITS = 5000
 def igcd_lehmer(a, b):
     """Computes greatest common divisor of two integers.
 
@@ -333,7 +320,7 @@ def igcd_lehmer(a, b):
     # pair (a, b) with a pair of shorter consecutive elements
     # of the Euclidean gcd sequence until a and b
     # fit into two Python (long) int digits.
-    nbits = 2*int_info.bits_per_digit
+    nbits = 2*sys.int_info.bits_per_digit
 
     while a.bit_length() > nbits and b != 0:
         # Quotients are mostly small integers that can
@@ -600,6 +587,8 @@ class Number(AtomicExpr):
 
     # Used to make max(x._prec, y._prec) return x._prec when only x is a float
     _prec = -1
+
+    kind = NumberKind
 
     def __new__(cls, *obj):
         if len(obj) == 1:
@@ -1217,11 +1206,8 @@ class Float(Number):
         return obj
 
     # mpz can't be pickled
-    def __getnewargs__(self):
-        return (mlib.to_pickable(self._mpf_),)
-
-    def __getstate__(self):
-        return {'_prec': self._prec}
+    def __getnewargs_ex__(self):
+        return ((mlib.to_pickable(self._mpf_),), {'precision': self._prec})
 
     def _hashable_content(self):
         return (self._mpf_, self._prec)
@@ -1397,8 +1383,6 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             return NotImplemented
-        if not self:
-            return not other
         if isinstance(other, Boolean):
             return False
         if other.is_NumberSymbol:
@@ -1419,6 +1403,8 @@ class Float(Number):
             # the mpf tuples
             ompf = other._as_mpf_val(self._prec)
             return bool(mlib.mpf_eq(self._mpf_, ompf))
+        if not self:
+            return not other
         return False    # Float != non-Number
 
     def __ne__(self, other):
@@ -1987,9 +1973,11 @@ class Rational(Number):
                       use_rho=use_rho, use_pm1=use_pm1,
                       verbose=verbose).copy()
 
+    @property
     def numerator(self):
         return self.p
 
+    @property
     def denominator(self):
         return self.q
 
@@ -2447,6 +2435,14 @@ class AlgebraicNumber(Expr):
     is_algebraic = True
     is_number = True
 
+
+    kind = NumberKind
+
+    # Optional alias symbol is not free.
+    # Actually, alias should be a Str, but some methods
+    # expect that it be an instance of Expr.
+    free_symbols = set()
+
     def __new__(cls, expr, coeffs=None, alias=None, **args):
         """Construct a new algebraic number. """
         from sympy import Poly
@@ -2668,6 +2664,7 @@ class One(IntegerConstant, metaclass=Singleton):
     .. [1] https://en.wikipedia.org/wiki/1_%28number%29
     """
     is_number = True
+    is_positive = True
 
     p = 1
     q = 1
@@ -3280,6 +3277,7 @@ nan = S.NaN
 def _eval_is_eq(a, b): # noqa:F811
     return False
 
+
 class ComplexInfinity(AtomicExpr, metaclass=Singleton):
     r"""Complex infinity.
 
@@ -3318,6 +3316,8 @@ class ComplexInfinity(AtomicExpr, metaclass=Singleton):
     is_prime = False
     is_complex = False
     is_extended_real = False
+
+    kind = NumberKind
 
     __slots__ = ()
 
@@ -3371,6 +3371,8 @@ class NumberSymbol(AtomicExpr):
     __slots__ = ()
 
     is_NumberSymbol = True
+
+    kind = NumberKind
 
     def __new__(cls):
         return AtomicExpr.__new__(cls)
@@ -3475,7 +3477,91 @@ class Exp1(NumberSymbol, metaclass=Singleton):
 
     def _eval_power(self, expt):
         from sympy import exp
-        return exp(expt)
+        if global_parameters.exp_is_pow:
+            return self._eval_power_exp_is_pow(expt)
+        else:
+            return exp(expt)
+
+    def _eval_power_exp_is_pow(self, arg):
+        from ..functions.elementary.exponential import log
+        from . import Add, Mul, Pow
+        if arg.is_Number:
+            if arg is oo:
+                return oo
+            elif arg == -oo:
+                return S.Zero
+        elif isinstance(arg, log):
+            return arg.args[0]
+
+        # don't autoexpand Pow or Mul (see the issue 3351):
+        elif not arg.is_Add:
+            Ioo = I*oo
+            if arg in [Ioo, -Ioo]:
+                return nan
+
+            coeff = arg.coeff(pi*I)
+            if coeff:
+                if (2*coeff).is_integer:
+                    if coeff.is_even:
+                        return S.One
+                    elif coeff.is_odd:
+                        return S.NegativeOne
+                    elif (coeff + S.Half).is_even:
+                        return -I
+                    elif (coeff + S.Half).is_odd:
+                        return I
+                elif coeff.is_Rational:
+                    ncoeff = coeff % 2 # restrict to [0, 2pi)
+                    if ncoeff > 1: # restrict to (-pi, pi]
+                        ncoeff -= 2
+                    if ncoeff != coeff:
+                        return S.Exp1**(ncoeff*S.Pi*S.ImaginaryUnit)
+
+            # Warning: code in risch.py will be very sensitive to changes
+            # in this (see DifferentialExtension).
+
+            # look for a single log factor
+
+            coeff, terms = arg.as_coeff_Mul()
+
+            # but it can't be multiplied by oo
+            if coeff in (oo, -oo):
+                return
+
+            coeffs, log_term = [coeff], None
+            for term in Mul.make_args(terms):
+                if isinstance(term, log):
+                    if log_term is None:
+                        log_term = term.args[0]
+                    else:
+                        return
+                elif term.is_comparable:
+                    coeffs.append(term)
+                else:
+                    return
+
+            return log_term**Mul(*coeffs) if log_term else None
+        elif arg.is_Add:
+            out = []
+            add = []
+            argchanged = False
+            for a in arg.args:
+                if a is S.One:
+                    add.append(a)
+                    continue
+                newa = self**a
+                if isinstance(newa, Pow) and newa.base is self:
+                    if newa.exp != a:
+                        add.append(newa.exp)
+                        argchanged = True
+                    else:
+                        add.append(a)
+                else:
+                    out.append(newa)
+            if out or argchanged:
+                return Mul(*out)*Pow(self, Add(*add), evaluate=False)
+        elif arg.is_Matrix:
+            return arg.exp()
 
     def _eval_rewrite_as_sin(self, **kwargs):
         from sympy import sin
@@ -3856,6 +3942,8 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
     is_number = True
     is_algebraic = True
     is_transcendental = False
+
+    kind = NumberKind
 
     __slots__ = ()
 

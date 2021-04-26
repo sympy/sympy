@@ -6,6 +6,7 @@ from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
 from sympy.matrices.matrices import MatrixDeterminant
 from sympy.matrices.common import NonSquareMatrixError, _MinimalMatrix,  _CastableMatrix
+from sympy.functions.combinatorial.factorials import factorial, subfactorial
 
 class DeterminantOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixDeterminant):
     pass
@@ -23,6 +24,7 @@ def test_determinant():
     M = Matrix(( (-3,  2),
                  ( 8, -5) ))
 
+    assert M.det(method="domain-ge") == -1
     assert M.det(method="bareiss") == -1
     assert M.det(method="berkowitz") == -1
     assert M.det(method="lu") == -1
@@ -30,6 +32,7 @@ def test_determinant():
     M = Matrix(( (x,   1),
                  (y, 2*y) ))
 
+    assert M.det(method="domain-ge") == 2*x*y - y
     assert M.det(method="bareiss") == 2*x*y - y
     assert M.det(method="berkowitz") == 2*x*y - y
     assert M.det(method="lu") == 2*x*y - y
@@ -38,6 +41,7 @@ def test_determinant():
                  (1, 2, 3),
                  (1, 3, 6) ))
 
+    assert M.det(method="domain-ge") == 1
     assert M.det(method="bareiss") == 1
     assert M.det(method="berkowitz") == 1
     assert M.det(method="lu") == 1
@@ -47,6 +51,7 @@ def test_determinant():
                  ( 0, -2,  5, 0),
                  ( 5,  0,  3, 4) ))
 
+    assert M.det(method="domain-ge") == -289
     assert M.det(method="bareiss") == -289
     assert M.det(method="berkowitz") == -289
     assert M.det(method="lu") == -289
@@ -56,6 +61,7 @@ def test_determinant():
                  ( 9, 10, 11, 12),
                  (13, 14, 15, 16) ))
 
+    assert M.det(method="domain-ge") == 0
     assert M.det(method="bareiss") == 0
     assert M.det(method="berkowitz") == 0
     assert M.det(method="lu") == 0
@@ -66,6 +72,7 @@ def test_determinant():
                  (0, 0, 0, 3, 2),
                  (2, 0, 0, 0, 3) ))
 
+    assert M.det(method="domain-ge") == 275
     assert M.det(method="bareiss") == 275
     assert M.det(method="berkowitz") == 275
     assert M.det(method="lu") == 275
@@ -75,6 +82,7 @@ def test_determinant():
                  ( 0, -2,  5, 0),
                  ( 5,  0,  3, 4) ))
 
+    assert M.det(method="domain-ge") == 60
     assert M.det(method="bareiss") == 60
     assert M.det(method="berkowitz") == 60
     assert M.det(method="lu") == 60
@@ -84,6 +92,7 @@ def test_determinant():
                  ( 9, 10, 11, 0),
                  (13, 14, 15, 16) ))
 
+    assert M.det(method="domain-ge") == 0
     assert M.det(method="bareiss") == 0
     assert M.det(method="berkowitz") == 0
     assert M.det(method="lu") == 0
@@ -94,6 +103,7 @@ def test_determinant():
                  (0, 0, 0, 3, 2),
                  (0, 0, 0, 0, 3) ))
 
+    assert M.det(method="domain-ge") == 243
     assert M.det(method="bareiss") == 243
     assert M.det(method="berkowitz") == 243
     assert M.det(method="lu") == 243
@@ -104,6 +114,7 @@ def test_determinant():
                  (3, 2, -1,  1,  8),
                  (1, 1,  1,  0,  6) ))
 
+    assert M.det(method="domain-ge") == -55
     assert M.det(method="bareiss") == -55
     assert M.det(method="berkowitz") == -55
     assert M.det(method="lu") == -55
@@ -114,6 +125,7 @@ def test_determinant():
                  ( 1,  2,  3, -2,  5),
                  ( 1,  2,  3,  4, -1) ))
 
+    assert M.det(method="domain-ge") == 11664
     assert M.det(method="bareiss") == 11664
     assert M.det(method="berkowitz") == 11664
     assert M.det(method="lu") == 11664
@@ -124,6 +136,7 @@ def test_determinant():
                  (-3, -2,  4, 5, 3),
                  ( 1,  0,  0, 0, 1) ))
 
+    assert M.det(method="domain-ge") == 123
     assert M.det(method="bareiss") == 123
     assert M.det(method="berkowitz") == 123
     assert M.det(method="lu") == 123
@@ -132,6 +145,7 @@ def test_determinant():
                  (1, 0, 0),
                  (y, z, x) ))
 
+    assert M.det(method="domain-ge") == z**2 - x*y
     assert M.det(method="bareiss") == z**2 - x*y
     assert M.det(method="berkowitz") == z**2 - x*y
     assert M.det(method="lu") == z**2 - x*y
@@ -270,12 +284,24 @@ def test_det():
     assert c.det() == -2
     assert d.det() == 3
     assert e.det() == 4*x - 24
+    assert e.det(method="domain-ge") == 4*x - 24
     assert e.det(method='bareiss') == 4*x - 24
     assert e.det(method='berkowitz') == 4*x - 24
     assert f.det() == i*j*k
     assert g.det() == i*j*k
     assert h.det() == 1
     raises(ValueError, lambda: e.det(iszerofunc="test"))
+
+def test_permanent():
+    M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    assert M.per() == 450
+    for i in range(1, 12):
+        assert ones(i, i).per() == ones(i, i).T.per() == factorial(i)
+        assert (ones(i, i)-eye(i)).per() == (ones(i, i)-eye(i)).T.per() == subfactorial(i)
+
+    a1, a2, a3, a4, a5 = symbols('a_1 a_2 a_3 a_4 a_5')
+    M = Matrix([a1, a2, a3, a4, a5])
+    assert M.per() == M.T.per() == a1 + a2 + a3 + a4 + a5
 
 def test_adjugate():
     x = Symbol('x')

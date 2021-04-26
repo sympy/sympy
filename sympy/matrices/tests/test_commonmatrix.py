@@ -620,6 +620,70 @@ def test_permute():
                                             [9, 10, 11, 12],
                                             [1,  2,  3,  4]])
 
+def test_upper_triangular():
+
+    A = OperationsOnlyMatrix([
+                [1, 1, 1, 1],
+                [1, 1, 1, 1],
+                [1, 1, 1, 1],
+                [1, 1, 1, 1]
+            ])
+
+    R = A.upper_triangular(2)
+    assert R == OperationsOnlyMatrix([
+                        [0, 0, 1, 1],
+                        [0, 0, 0, 1],
+                        [0, 0, 0, 0],
+                        [0, 0, 0, 0]
+                    ])
+
+    R = A.upper_triangular(-2)
+    assert R == OperationsOnlyMatrix([
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1],
+                        [0, 1, 1, 1]
+                    ])
+
+    R = A.upper_triangular()
+    assert R == OperationsOnlyMatrix([
+                        [1, 1, 1, 1],
+                        [0, 1, 1, 1],
+                        [0, 0, 1, 1],
+                        [0, 0, 0, 1]
+                    ])
+
+def test_lower_triangular():
+    A = OperationsOnlyMatrix([
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1]
+                    ])
+
+    L = A.lower_triangular()
+    assert L == ArithmeticOnlyMatrix([
+                        [1, 0, 0, 0],
+                        [1, 1, 0, 0],
+                        [1, 1, 1, 0],
+                        [1, 1, 1, 1]])
+
+    L = A.lower_triangular(2)
+    assert L == ArithmeticOnlyMatrix([
+                        [1, 1, 1, 0],
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1]
+                    ])
+
+    L = A.lower_triangular(-2)
+    assert L == ArithmeticOnlyMatrix([
+                        [0, 0, 0, 0],
+                        [0, 0, 0, 0],
+                        [1, 0, 0, 0],
+                        [1, 1, 0, 0]
+                    ])
+
 
 # ArithmeticOnlyMatrix tests
 def test_abs():
@@ -776,7 +840,6 @@ def test_sub():
 def test_div():
     n = ArithmeticOnlyMatrix(1, 2, [1, 2])
     assert n/2 == ArithmeticOnlyMatrix(1, 2, [S.Half, S(2)/2])
-
 
 # SpecialOnlyMatrix tests
 def test_eye():
@@ -976,6 +1039,38 @@ def test_orthogonalize():
 
     vecs = [Matrix([1, 2, 3]), Matrix([4, 5, 6]), Matrix([7, 8, 9])]
     raises(ValueError, lambda: Matrix.orthogonalize(*vecs, rankcheck=True))
+
+def test_wilkinson():
+
+    wminus, wplus = Matrix.wilkinson(1)
+    assert wminus == Matrix([
+                                [-1, 1, 0],
+                                [1, 0, 1],
+                                [0, 1, 1]])
+    assert wplus == Matrix([
+                            [1, 1, 0],
+                            [1, 0, 1],
+                            [0, 1, 1]])
+
+    wminus, wplus = Matrix.wilkinson(3)
+    assert wminus == Matrix([
+                                [-3,  1,  0, 0, 0, 0, 0],
+                                [1, -2,  1, 0, 0, 0, 0],
+                                [0,  1, -1, 1, 0, 0, 0],
+                                [0,  0,  1, 0, 1, 0, 0],
+                                [0,  0,  0, 1, 1, 1, 0],
+                                [0,  0,  0, 0, 1, 2, 1],
+
+      [0,  0,  0, 0, 0, 1, 3]])
+
+    assert wplus == Matrix([
+                            [3, 1, 0, 0, 0, 0, 0],
+                            [1, 2, 1, 0, 0, 0, 0],
+                            [0, 1, 1, 1, 0, 0, 0],
+                            [0, 0, 1, 0, 1, 0, 0],
+                            [0, 0, 0, 1, 1, 1, 0],
+                            [0, 0, 0, 0, 1, 2, 1],
+                            [0, 0, 0, 0, 0, 1, 3]])
 
 
 # CalculusOnlyMatrix tests

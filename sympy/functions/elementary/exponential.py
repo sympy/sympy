@@ -1,11 +1,13 @@
 from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.function import (Function, ArgumentIndexError, _coeff_isneg,
-        expand_mul)
+from sympy.core.function import (
+    Function, ArgumentIndexError, _coeff_isneg,
+    expand_mul, FunctionClass)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Rational
+from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
@@ -74,16 +76,16 @@ class ExpBase(Function):
         return self.func(1), Mul(*self.args)
 
     def _eval_adjoint(self):
-        return self.func(self.args[0].adjoint())
+        return self.func(self.exp.adjoint())
 
     def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate())
+        return self.func(self.exp.conjugate())
 
     def _eval_transpose(self):
-        return self.func(self.args[0].transpose())
+        return self.func(self.exp.transpose())
 
     def _eval_is_finite(self):
-        arg = self.args[0]
+        arg = self.exp
         if arg.is_infinite:
             if arg.is_extended_negative:
                 return True
@@ -104,7 +106,7 @@ class ExpBase(Function):
             return s.is_rational
 
     def _eval_is_zero(self):
-        return (self.args[0] is S.NegativeInfinity)
+        return self.exp is S.NegativeInfinity
 
     def _eval_power(self, other):
         """exp(arg)**e -> exp(arg*e) if assumptions allow it.
@@ -197,7 +199,14 @@ class exp_polar(ExpBase):
         return ExpBase.as_base_exp(self)
 
 
-class exp(ExpBase):
+class ExpMeta(FunctionClass):
+    def __instancecheck__(cls, instance):
+        if exp in instance.__class__.__mro__:
+            return True
+        return isinstance(instance, Pow) and instance.base is S.Exp1
+
+
+class exp(ExpBase, metaclass=ExpMeta):
     """
     The exponential function, :math:`e^x`.
 
@@ -260,7 +269,11 @@ class exp(ExpBase):
         from sympy.sets.setexpr import SetExpr
         from sympy.matrices.matrices import MatrixBase
         from sympy import im, logcombine, re
-        if arg.is_Number:
+        if isinstance(arg, MatrixBase):
+            return arg.exp()
+        elif global_parameters.exp_is_pow:
+            return Pow(S.Exp1, arg)
+        elif arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg.is_zero:
@@ -353,9 +366,6 @@ class exp(ExpBase):
             if out or argchanged:
                 return Mul(*out)*cls(Add(*add), evaluate=False)
 
-        elif isinstance(arg, MatrixBase):
-            return arg.exp()
-
         if arg.is_zero:
             return S.One
 
@@ -408,12 +418,12 @@ class exp(ExpBase):
         sympy.functions.elementary.complexes.re
         sympy.functions.elementary.complexes.im
         """
-        import sympy
+        from sympy.functions.elementary.trigonometric import cos, sin
         re, im = self.args[0].as_real_imag()
         if deep:
             re = re.expand(deep, **hints)
             im = im.expand(deep, **hints)
-        cos, sin = sympy.cos(im), sympy.sin(im)
+        cos, sin = cos(im), sin(im)
         return (exp(re)*cos, exp(re)*sin)
 
     def _eval_subs(self, old, new):
@@ -445,20 +455,18 @@ class exp(ExpBase):
         return fuzzy_or(complex_extended_negative(self.args[0]))
 
     def _eval_is_algebraic(self):
-        s = self.func(*self.args)
-        if s.func == self.func:
-            if fuzzy_not(self.exp.is_zero):
-                if self.exp.is_algebraic:
-                    return False
-                elif (self.exp/S.Pi).is_rational:
-                    return False
-        else:
-            return s.is_algebraic
+        if (self.exp / S.Pi / S.ImaginaryUnit).is_rational:
+            return True
+        if fuzzy_not(self.exp.is_zero):
+            if self.exp.is_algebraic:
+                return False
+            elif (self.exp / S.Pi).is_rational:
+                return False
 
     def _eval_is_extended_positive(self):
-        if self.args[0].is_extended_real:
+        if self.exp.is_extended_real:
             return not self.args[0] is S.NegativeInfinity
-        elif self.args[0].is_imaginary:
+        elif self.exp.is_imaginary:
             arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
             return arg2.is_even
 
@@ -466,7 +474,7 @@ class exp(ExpBase):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
         from sympy import ceiling, limit, oo, Order, powsimp, Wild, expand_complex
-        arg = self.args[0]
+        arg = self.exp
         arg_series = arg._eval_nseries(x, n=n, logx=logx)
         if arg_series.is_Order:
             return 1 + arg_series
@@ -671,11 +679,13 @@ class log(Function):
             elif arg.is_Rational and arg.p == 1:
                 return -cls(arg.q)
 
+        if arg.is_Pow and arg.base is S.Exp1 and arg.exp.is_extended_real:
+            return arg.exp
         I = S.ImaginaryUnit
-        if isinstance(arg, exp) and arg.args[0].is_extended_real:
-            return arg.args[0]
-        elif isinstance(arg, exp) and arg.args[0].is_number:
-            r_, i_ = match_real_imag(arg.args[0])
+        if isinstance(arg, exp) and arg.exp.is_extended_real:
+            return arg.exp
+        elif isinstance(arg, exp) and arg.exp.is_number:
+            r_, i_ = match_real_imag(arg.exp)
             if i_ and i_.is_comparable:
                 i_ %= 2*S.Pi
                 if i_ > S.Pi:
