@@ -637,7 +637,7 @@ class tanh(HyperbolicFunction):
                 for x in arg.args:
                     tx = tanh(x, evaluate=False)._eval_expand_trig()
                     TX.append(tx)
-                
+
                 Yg = numbered_symbols('Y')
                 Y = [ next(Yg) for i in range(n) ]
 
@@ -647,7 +647,7 @@ class tanh(HyperbolicFunction):
                 return (p[0]/p[1]).subs(list(zip(Y, TX)))
             else:
                 coeff, terms = arg.as_coeff_Mul()
-                #tanh(n*z) (general case)
+                #tanh(n*x) (general case)
                 if coeff.is_Integer and coeff > 1:
                     numerator = 0
                     denominator = 0
@@ -655,7 +655,7 @@ class tanh(HyperbolicFunction):
                         numerator += nC(range(coeff),2*k+1) * tanh(terms)**(2*k+1)
                     for k in range(0,floor(coeff/2)+1):
                         denominator += nC(range(coeff),(2*k)) * tanh(terms)**(2*k)
-                    return numerator / denominator 
+                    return numerator / denominator
                 #half angle formula
                 elif coeff == (1/2):
                     cx = cosh(terms, evaluate=False)._eval_expand_trig()
