@@ -40,9 +40,11 @@ def test_DDM_getsetitem():
 def test_DDM_str():
     ddm = DDM([[ZZ(0), ZZ(1)], [ZZ(2), ZZ(3)]], (2, 2), ZZ)
     if HAS_GMPY: # pragma: no cover
-        assert str(ddm) == 'DDM([[mpz(0), mpz(1)], [mpz(2), mpz(3)]], (2, 2), ZZ)'
+        assert str(ddm) == '[[0, 1], [2, 3]]'
+        assert repr(ddm) == 'DDM([[mpz(0), mpz(1)], [mpz(2), mpz(3)]], (2, 2), ZZ)'
     else:        # pragma: no cover
-        assert str(ddm) == 'DDM([[0, 1], [2, 3]], (2, 2), ZZ)'
+        assert repr(ddm) == 'DDM([[0, 1], [2, 3]], (2, 2), ZZ)'
+        assert str(ddm) == '[[0, 1], [2, 3]]'
 
 
 def test_DDM_eq():
@@ -71,12 +73,24 @@ def test_DDM_eq():
     assert (ddm3 != ddm1) is True
 
 
+def test_DDM_convert_to():
+    ddm = DDM([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+    assert ddm.convert_to(ZZ) == ddm
+    ddmq = ddm.convert_to(QQ)
+    assert ddmq.domain == QQ
+
+
 def test_DDM_zeros():
     ddmz = DDM.zeros((3, 4), QQ)
     assert list(ddmz) == [[QQ(0)] * 4] * 3
     assert ddmz.shape == (3, 4)
     assert ddmz.domain == QQ
 
+def test_DDM_ones():
+    ddmone = DDM.ones((2, 3), QQ)
+    assert list(ddmone) == [[QQ(1)] * 3] * 2
+    assert ddmone.shape == (2, 3)
+    assert ddmone.domain == QQ
 
 def test_DDM_eye():
     ddmz = DDM.eye(3, QQ)
@@ -188,6 +202,15 @@ def test_DDM_matmul():
     raises(DDMShapeError, lambda: Z05 @ Z40)
     raises(DDMShapeError, lambda: Z05.matmul(Z40))
 
+def test_DDM_hstack():
+
+    A = DDM([[ZZ(1), ZZ(2), ZZ(3)]], (1, 3), ZZ)
+    B = DDM([[ZZ(4), ZZ(5)]], (1, 2), ZZ)
+    Ah = A.hstack(B)
+
+    assert Ah.shape == (1, 5)
+    assert Ah.domain == ZZ
+    assert Ah == DDM([[ZZ(1), ZZ(2), ZZ(3), ZZ(4), ZZ(5)]], (1, 5), ZZ)
 
 def test_DDM_rref():
 
@@ -223,7 +246,8 @@ def test_DDM_rref():
 def test_DDM_nullspace():
      A = DDM([[QQ(1), QQ(1)], [QQ(1), QQ(1)]], (2, 2), QQ)
      Anull = DDM([[QQ(-1), QQ(1)]], (1, 2), QQ)
-     assert A.nullspace() == Anull
+     nonpivots = [1]
+     assert A.nullspace() == (Anull, nonpivots)
 
 
 def test_DDM_det():
@@ -346,3 +370,34 @@ def test_DDM_charpoly():
 
     A = DDM([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
     raises(DDMShapeError, lambda: A.charpoly())
+
+
+def test_DDM_getitem():
+    dm = DDM([
+        [ZZ(1), ZZ(2), ZZ(3)],
+        [ZZ(4), ZZ(5), ZZ(6)],
+        [ZZ(7), ZZ(8), ZZ(9)]], (3, 3), ZZ)
+
+    assert dm.getitem(1, 1) == ZZ(5)
+    assert dm.getitem(1, -2) == ZZ(5)
+    assert dm.getitem(-1, -3) == ZZ(7)
+
+    raises(IndexError, lambda: dm.getitem(3, 3))
+
+
+def test_DDM_extract_slice():
+    dm = DDM([
+        [ZZ(1), ZZ(2), ZZ(3)],
+        [ZZ(4), ZZ(5), ZZ(6)],
+        [ZZ(7), ZZ(8), ZZ(9)]], (3, 3), ZZ)
+
+    assert dm.extract_slice(slice(0, 3), slice(0, 3)) == dm
+    assert dm.extract_slice(slice(1, 3), slice(-2)) == DDM([[4], [7]], (2, 1), ZZ)
+    assert dm.extract_slice(slice(1, 3), slice(-2)) == DDM([[4], [7]], (2, 1), ZZ)
+    assert dm.extract_slice(slice(2, 3), slice(-2)) == DDM([[ZZ(7)]], (1, 1), ZZ)
+    assert dm.extract_slice(slice(0, 2), slice(-2)) == DDM([[1], [4]], (2, 1), ZZ)
+    assert dm.extract_slice(slice(-1), slice(-1)) == DDM([[1, 2], [4, 5]], (2, 2), ZZ)
+
+    assert dm.extract_slice(slice(2), slice(3, 4)) == DDM([[], []], (2, 0), ZZ)
+    assert dm.extract_slice(slice(3, 4), slice(2)) == DDM([], (0, 2), ZZ)
+    assert dm.extract_slice(slice(3, 4), slice(3, 4)) == DDM([], (0, 0), ZZ)

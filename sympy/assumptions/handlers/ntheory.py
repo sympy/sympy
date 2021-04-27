@@ -4,10 +4,12 @@ Handlers for keys related to number theory: prime, even, odd, etc.
 
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Float, Mul, Pow, S
-from sympy.core.numbers import (ImaginaryUnit, Infinity, Integer, NegativeInfinity,
-    NumberSymbol, Rational)
+from sympy.core.numbers import (ImaginaryUnit, Infinity, Integer, NaN,
+    NegativeInfinity, NumberSymbol, Rational)
 from sympy.functions import Abs, im, re
 from sympy.ntheory import isprime
+
+from sympy.multipledispatch import MDNotImplementedError
 
 from ..predicates.ntheory import (PrimePredicate, CompositePredicate,
     EvenPredicate, OddPredicate)
@@ -31,7 +33,10 @@ def _PrimePredicate_number(expr, assumptions):
 
 @PrimePredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_prime
+    ret = expr.is_prime
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @PrimePredicate.register(Basic)
 def _(expr, assumptions):
@@ -76,12 +81,19 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return _PrimePredicate_number(expr, assumptions)
 
+@PrimePredicate.register(NaN)
+def _(expr, assumptions):
+    return None
+
 
 # CompositePredicate
 
 @CompositePredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_composite
+    ret = expr.is_composite
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @CompositePredicate.register(Basic)
 def _(expr, assumptions):
@@ -119,7 +131,10 @@ def _EvenPredicate_number(expr, assumptions):
 
 @EvenPredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_even
+    ret = expr.is_even
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @EvenPredicate.register(Basic)
 def _(expr, assumptions):
@@ -227,12 +242,19 @@ def _(expr, assumptions):
     if ask(Q.real(expr.args[0]), assumptions):
         return True
 
+@EvenPredicate.register(NaN)
+def _(expr, assumptions):
+    return None
+
 
 # OddPredicate
 
 @OddPredicate.register(Expr)
 def _(expr, assumptions):
-    return expr.is_odd
+    ret = expr.is_odd
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
 
 @OddPredicate.register(Basic)
 def _(expr, assumptions):

@@ -37,6 +37,10 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
 # with the -W flag in the Makefile.
 nitpicky = True
 
+nitpick_ignore = [
+    ('py:class', 'sympy.logic.boolalg.Boolean')
+]
+
 # To stop docstrings inheritance.
 autodoc_inherit_docstrings = False
 

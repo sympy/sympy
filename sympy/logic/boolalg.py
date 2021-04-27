@@ -181,7 +181,12 @@ class Boolean(Basic):
 
     def _eval_refine(self, assumptions):
         from sympy.assumptions import ask
-        return ask(self, assumptions)
+        ret = ask(self, assumptions)
+        if ret is True:
+            return true
+        elif ret is False:
+            return false
+        return None
 
 
 class BooleanAtom(Boolean):
@@ -437,8 +442,7 @@ class BooleanFunction(Application, Boolean):
     is_Boolean = True
 
     def _eval_simplify(self, **kwargs):
-        rv = self.func(*[
-            a._eval_simplify(**kwargs) for a in self.args])
+        rv = self.func(*[a.simplify(**kwargs) for a in self.args])
         return simplify_logic(rv)
 
     def simplify(self, **kwargs):
@@ -940,26 +944,13 @@ class Not(BooleanFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import (
-            Equality, GreaterThan, LessThan,
-            StrictGreaterThan, StrictLessThan, Unequality)
         if isinstance(arg, Number) or arg in (True, False):
             return false if arg else true
         if arg.is_Not:
             return arg.args[0]
         # Simplify Relational objects.
-        if isinstance(arg, Equality):
-            return Unequality(*arg.args)
-        if isinstance(arg, Unequality):
-            return Equality(*arg.args)
-        if isinstance(arg, StrictLessThan):
-            return GreaterThan(*arg.args)
-        if isinstance(arg, StrictGreaterThan):
-            return LessThan(*arg.args)
-        if isinstance(arg, LessThan):
-            return StrictGreaterThan(*arg.args)
-        if isinstance(arg, GreaterThan):
-            return StrictLessThan(*arg.args)
+        if arg.is_Relational:
+            return arg.negated
 
     def _eval_as_set(self):
         """
@@ -1132,7 +1123,7 @@ class Xor(BooleanFunction):
         # as standard simplify uses simplify_logic which writes things as
         # And and Or, we only simplify the partial expressions before using
         # patterns
-        rv = self.func(*[a._eval_simplify(**kwargs) for a in self.args])
+        rv = self.func(*[a.simplify(**kwargs) for a in self.args])
         if not isinstance(rv, Xor):  # This shouldn't really happen here
             return rv
         patterns = simplify_patterns_xor()
@@ -1986,12 +1977,14 @@ def is_literal(expr):
     False
 
     """
+    from sympy.assumptions import AppliedPredicate
+
     if isinstance(expr, Not):
         return is_literal(expr.args[0])
-    elif expr in (True, False) or expr.is_Atom:
+    elif expr in (True, False) or isinstance(expr, AppliedPredicate) or expr.is_Atom:
         return True
     elif not isinstance(expr, BooleanFunction) and all(
-            a.is_Atom for a in expr.args):
+            (isinstance(expr, AppliedPredicate) or a.is_Atom) for a in expr.args):
         return True
     return False
 

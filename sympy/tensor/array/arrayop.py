@@ -51,11 +51,12 @@ def tensorproduct(*args):
         return S.One
     if len(args) == 1:
         return _arrayfy(args[0])
-    from sympy.codegen.array_utils import _CodegenArrayAbstract, CodegenArrayTensorProduct
+    from sympy.tensor.array.expressions.array_expressions import _CodegenArrayAbstract
+    from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
     from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
     from sympy import MatrixSymbol
     if any(isinstance(arg, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)) for arg in args):
-        return CodegenArrayTensorProduct(*args)
+        return ArrayTensorProduct(*args)
     if len(args) > 2:
         return tensorproduct(tensorproduct(args[0], args[1]), *args[2:])
 
@@ -156,11 +157,12 @@ def tensorcontraction(array, *contraction_axes):
     [a*e + b*g, a*f + b*h],
     [c*e + d*g, c*f + d*h]])
     """
-    from sympy.codegen.array_utils import _CodegenArrayAbstract, CodegenArrayContraction
+    from sympy.tensor.array.expressions.array_expressions import ArrayContraction
+    from sympy.tensor.array.expressions.array_expressions import _CodegenArrayAbstract
     from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
     from sympy import MatrixSymbol
     if isinstance(array, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)):
-        return CodegenArrayContraction(array, *contraction_axes)
+        return ArrayContraction(array, *contraction_axes)
 
     array, remaining_indices, remaining_shape, summed_deltas = _util_contraction_diagonal(array, *contraction_axes)
 
@@ -231,10 +233,11 @@ def tensordiagonal(array, *diagonal_axes):
         raise ValueError("need at least two axes to diagonalize")
 
     from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
-    from sympy.codegen.array_utils import _CodegenArrayAbstract, CodegenArrayDiagonal
+    from sympy.tensor.array.expressions.array_expressions import _CodegenArrayAbstract
+    from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
     from sympy import MatrixSymbol
     if isinstance(array, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)):
-        return CodegenArrayDiagonal(array, *diagonal_axes)
+        return ArrayDiagonal(array, *diagonal_axes)
 
     array, remaining_indices, remaining_shape, diagonal_deltas = _util_contraction_diagonal(array, *diagonal_axes)
 
@@ -365,10 +368,11 @@ def permutedims(expr, perm):
     from sympy.tensor.array import SparseNDimArray
 
     from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
-    from sympy.codegen.array_utils import _CodegenArrayAbstract, CodegenArrayPermuteDims
+    from sympy.tensor.array.expressions.array_expressions import _CodegenArrayAbstract
+    from sympy.tensor.array.expressions.array_expressions import PermuteDims
     from sympy import MatrixSymbol
     if isinstance(expr, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)):
-        return CodegenArrayPermuteDims(expr, perm)
+        return PermuteDims(expr, perm)
 
     if not isinstance(expr, NDimArray):
         expr = ImmutableDenseNDimArray(expr)

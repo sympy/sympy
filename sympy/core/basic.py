@@ -7,7 +7,6 @@ from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import iterable, ordered
-from .singleton import S
 from .kind import UndefinedKind
 from ._print_helpers import Printable
 
@@ -121,19 +120,17 @@ class Basic(Printable, metaclass=ManagedProperties):
     def copy(self):
         return self.func(*self.args)
 
-    def __reduce_ex__(self, proto):
-        """ Pickling support."""
-        return type(self), self.__getnewargs__(), self.__getstate__()
-
     def __getnewargs__(self):
         return self.args
 
     def __getstate__(self):
-        return {}
+        return None
 
-    def __setstate__(self, state):
-        for k, v in state.items():
-            setattr(self, k, v)
+    def __reduce_ex__(self, protocol):
+        if protocol < 2:
+            msg = "Only pickle protocol 2 or higher is supported by sympy"
+            raise NotImplementedError(msg)
+        return super().__reduce_ex__(protocol)
 
     def __hash__(self):
         # hash cannot be cached using cache_it because infinite recurrence
@@ -1165,6 +1162,21 @@ class Basic(Printable, metaclass=ManagedProperties):
         return self, False
 
     def has_free(self, syms):
+
+        def recur_free_in(obj, syms, bs):
+            from sympy import Tuple, Integer
+            if obj in syms and obj not in bs:
+                yield obj
+            else:
+                for arg in reversed(obj.args[1:]):
+                    if isinstance(arg, Integer):
+                        continue
+                    if obj.args[0] not in bs:
+                        if isinstance(arg, Tuple):
+                            if len(arg) > 1 and arg[0] != arg[len(arg) - 1]:
+                                bs.append(arg[0])
+                    yield from recur_free_in(arg, syms, bs)
+
         bs=[]
         for _ in recur_free_in(self, syms, bs):
             return True
@@ -1827,19 +1839,6 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         return obj
 
-def recur_free_in(obj, syms, bs):
-    from sympy import Tuple, Integer
-    if obj in syms and obj not in bs:
-        yield obj
-    else:
-        for arg in reversed(obj.args[1:]):
-            if isinstance(arg, Integer):
-                continue
-            if obj.args[0] not in bs:
-                if isinstance(arg, Tuple):
-                    if len(arg) > 1 and arg[0] != arg[len(arg) - 1]:
-                        bs.append(arg[0])
-            yield from recur_free_in(arg, syms, bs)
 
 class Atom(Basic):
     """
@@ -2083,3 +2082,7 @@ def _make_find_query(query):
     elif isinstance(query, Basic):
         return lambda expr: expr.match(query) is not None
     return query
+
+
+# Delayed to avoid cyclic import
+from .singleton import S

@@ -18,9 +18,12 @@ def test_prime():
     assert prime(4096) == 38873
     assert prime(9096) == 94321
     assert prime(25023) == 287341
+    assert prime(10000000) == 179424673 # issue #20951
+    assert prime(99999999) == 2038074739
     raises(ValueError, lambda: prime(0))
     sieve.extend(3000)
     assert prime(401) == 2749
+    raises(ValueError , lambda: prime(-1))
 
 
 def test_primepi():
@@ -184,14 +187,20 @@ def test_generate():
     assert nextprime(2968) == 2969
     assert prevprime(2930) == 2927
     raises(ValueError, lambda: prevprime(1))
+    raises(ValueError, lambda: prevprime(-4))
 
 
 def test_randprime():
     assert randprime(10, 1) is None
+    assert randprime(3, -3) is None
     assert randprime(2, 3) == 2
     assert randprime(1, 3) == 2
     assert randprime(3, 5) == 3
+    raises(ValueError, lambda: randprime(-12, -2))
+    raises(ValueError, lambda: randprime(-10, 0))
     raises(ValueError, lambda: randprime(20, 22))
+    raises(ValueError, lambda: randprime(0, 2))
+    raises(ValueError, lambda: randprime(1, 2))
     for a in [100, 300, 500, 250000]:
         for b in [100, 300, 500, 250000]:
             p = randprime(a, a + b)

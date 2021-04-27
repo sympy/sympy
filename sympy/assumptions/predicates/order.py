@@ -154,8 +154,8 @@ class ZeroPredicate(Predicate):
     True
     >>> ask(Q.zero(1/oo))
     True
-    >>> ask(Q.zero(0*oo))
-    False
+    >>> print(ask(Q.zero(0*oo)))
+    None
     >>> ask(Q.zero(1))
     False
     >>> ask(Q.zero(x*y), Q.zero(x) | Q.zero(y))
@@ -254,3 +254,137 @@ class PositivePredicate(Predicate):
         doc=("Handler for key 'positive'. Test that an expression is strictly"
         " greater than zero.")
     )
+
+
+class ExtendedPositivePredicate(Predicate):
+    r"""
+    Positive extended real number predicate.
+
+    Explanation
+    ===========
+
+    ``Q.extended_positive(x)`` is true iff ``x`` is extended real and
+    `x > 0`, that is if ``x`` is in the interval `(0, \infty]`.
+
+    Examples
+    ========
+
+    >>> from sympy import ask, I, oo, Q
+    >>> ask(Q.extended_positive(1))
+    True
+    >>> ask(Q.extended_positive(oo))
+    True
+    >>> ask(Q.extended_positive(I))
+    False
+
+    """
+    name = 'extended_positive'
+    handler = Dispatcher("ExtendedPositiveHandler")
+
+
+class ExtendedNegativePredicate(Predicate):
+    r"""
+    Negative extended real number predicate.
+
+    Explanation
+    ===========
+
+    ``Q.extended_negative(x)`` is true iff ``x`` is extended real and
+    `x < 0`, that is if ``x`` is in the interval `[-\infty, 0)`.
+
+    Examples
+    ========
+
+    >>> from sympy import ask, I, oo, Q
+    >>> ask(Q.extended_negative(-1))
+    True
+    >>> ask(Q.extended_negative(-oo))
+    True
+    >>> ask(Q.extended_negative(-I))
+    False
+
+    """
+    name = 'extended_negative'
+    handler = Dispatcher("ExtendedNegativeHandler")
+
+
+class ExtendedNonZeroPredicate(Predicate):
+    """
+    Nonzero extended real number predicate.
+
+    Explanation
+    ===========
+
+    ``ask(Q.extended_nonzero(x))`` is true iff ``x`` is extended real and
+    ``x`` is not zero.
+
+    Examples
+    ========
+
+    >>> from sympy import ask, I, oo, Q
+    >>> ask(Q.extended_nonzero(-1))
+    True
+    >>> ask(Q.extended_nonzero(oo))
+    True
+    >>> ask(Q.extended_nonzero(I))
+    False
+
+    """
+    name = 'extended_nonzero'
+    handler = Dispatcher("ExtendedNonZeroHandler")
+
+
+class ExtendedNonPositivePredicate(Predicate):
+    """
+    Nonpositive extended real number predicate.
+
+    Explanation
+    ===========
+
+    ``ask(Q.extended_nonpositive(x))`` is true iff ``x`` is extended real and
+    ``x`` is not positive.
+
+    Examples
+    ========
+
+    >>> from sympy import ask, I, oo, Q
+    >>> ask(Q.extended_nonpositive(-1))
+    True
+    >>> ask(Q.extended_nonpositive(oo))
+    False
+    >>> ask(Q.extended_nonpositive(0))
+    True
+    >>> ask(Q.extended_nonpositive(I))
+    False
+
+    """
+    name = 'extended_nonpositive'
+    handler = Dispatcher("ExtendedNonPositiveHandler")
+
+
+class ExtendedNonNegativePredicate(Predicate):
+    """
+    Nonnegative extended real number predicate.
+
+    Explanation
+    ===========
+
+    ``ask(Q.extended_nonnegative(x))`` is true iff ``x`` is extended real and
+    ``x`` is not negative.
+
+    Examples
+    ========
+
+    >>> from sympy import ask, I, oo, Q
+    >>> ask(Q.extended_nonnegative(-1))
+    False
+    >>> ask(Q.extended_nonnegative(oo))
+    True
+    >>> ask(Q.extended_nonnegative(0))
+    True
+    >>> ask(Q.extended_nonnegative(I))
+    False
+
+    """
+    name = 'extended_nonnegative'
+    handler = Dispatcher("ExtendedNonNegativeHandler")

@@ -96,6 +96,21 @@ class Integral(AddWithLimits):
 
     # fixes issue #20809
     def has_free(obj, syms):
+
+        def recur_free_in(obj, syms, bs):
+            if obj in syms and obj not in bs:
+                yield obj
+            else:
+                if isinstance(obj, Tuple):
+                    if len(obj) == 1:
+                        yield from recur_free_in(obj[0], syms, bs)
+                for arg in reversed(obj.args[1:]):
+                    if obj.args[0] not in bs:
+                        if isinstance(arg, Tuple):
+                            if len(arg) > 1 and arg[0] != arg[len(arg) - 1]:
+                                bs.append(arg[0])
+                    yield from recur_free_in(arg, syms, bs)
+
         bs = []
         for _ in recur_free_in(obj, syms, bs):
             return True
@@ -1411,19 +1426,6 @@ class Integral(AddWithLimits):
             I += limit(((F.subs(x, s - r)) - F.subs(x, s + r)), r, 0, '+')
         return I
 
-def recur_free_in(obj, syms, bs):
-    if obj in syms and obj not in bs:
-        yield obj
-    else:
-        if isinstance(obj, Tuple):
-            if len(obj) == 1:
-                yield from recur_free_in(obj[0], syms, bs)
-        for arg in reversed(obj.args[1:]):
-            if obj.args[0] not in bs:
-                if isinstance(arg, Tuple):
-                    if len(arg) > 1 and arg[0] != arg[len(arg) - 1]:
-                        bs.append(arg[0])
-            yield from recur_free_in(arg, syms, bs)
 
 def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None, manual=None, **kwargs):
     """integrate(f, var, ...)

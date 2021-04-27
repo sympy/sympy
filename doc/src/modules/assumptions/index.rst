@@ -11,9 +11,11 @@ Predicate
 =========
 
 .. autoclass:: sympy.assumptions.assume::Predicate
+   :members:
    :noindex:
 
 .. autoclass:: sympy.assumptions.assume::AppliedPredicate
+   :members:
    :noindex:
 
 

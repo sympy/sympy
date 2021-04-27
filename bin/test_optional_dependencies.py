@@ -31,8 +31,8 @@ test_list = [
     # llvmlite
     '*llvm*',
 
-    # theano
-    '*theano*',
+    # aesara
+    '*aesara*',
 
     # gmpy
     'polys',
@@ -81,8 +81,8 @@ doctest_list = [
     # llvmlite
     '*llvm*',
 
-    # theano
-    '*theano*',
+    # aesara
+    '*aesara*',
 
     # gmpy
     'polys',
