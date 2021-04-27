@@ -4,6 +4,7 @@ from sympy.simplify.simplify import (
     simplify as _simplify, dotprodsimp as _dotprodsimp)
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 from sympy.core.expr import Expr
+from sympy.polys.domains import EX
 
 from .utilities import _get_intermediate_simp, _iszero
 from .determinant import _find_reasonable_pivot
@@ -268,14 +269,6 @@ def _check_expr(M):
     return False
 
 
-def _rref_DOM(M, pivots):
-    DOM = DomainMatrix.from_Matrix(M, field=True)
-    DOM_rref, DOM_pivots = DOM.rref()
-    if pivots:
-        return DOM_rref.to_Matrix(), DOM_pivots
-    return DOM_rref.to_Matrix()
-
-
 def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
         normalize_last=True):
     """Return reduced row-echelon form of matrix and indices of pivot vars.
@@ -332,7 +325,13 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     """
 
     if M.is_square and _check_expr(M):
-        return _rref_DOM(M, pivots)
+        DOM = DomainMatrix.from_Matrix(M, field=True)
+        if DOM.domain != EX:
+            DOM_rref, DOM_pivots = DOM.rref()
+            if pivots:
+                return DOM_rref.to_Matrix(), DOM_pivots
+
+            return DOM_rref.to_Matrix()
 
     simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
 
