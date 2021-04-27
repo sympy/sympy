@@ -331,7 +331,7 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     of the matrix, set ``noramlize_last=False``
     """
 
-    if _check_expr(M):
+    if M.is_square and _check_expr(M):
         return _rref_DOM(M, pivots)
 
     simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
