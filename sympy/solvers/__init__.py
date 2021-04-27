@@ -19,7 +19,7 @@ from .diophantine import diophantine
 from .recurr import rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper
 
 from .ode import checkodesol, classify_ode, dsolve, \
-    homogeneous_order
+    homogeneous_order, dsubs
 
 from .polysys import solve_poly_system, solve_triangulated
 
@@ -48,7 +48,7 @@ __all__ = [
 
     'rsolve', 'rsolve_poly', 'rsolve_ratio', 'rsolve_hyper',
 
-    'checkodesol', 'classify_ode', 'dsolve', 'homogeneous_order',
+    'checkodesol', 'classify_ode', 'dsolve', 'homogeneous_order', 'dsubs',
 
     'solve_poly_system', 'solve_triangulated',
 
