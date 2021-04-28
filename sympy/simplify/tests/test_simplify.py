@@ -920,5 +920,6 @@ def test_issue_11004():
     b = N*log(k + 1)/(k + 1)
     c = log(k + 1)
 
-    z = k*a - k*b - k*b/c + k*log(k)/2 - k*c/2 - N*log(N) + N*(c + 1) + a - b - b/c + log(N)/2 - c/2 + log(2)/2 + log(pi)/24
+    z = k*a - k*b - k*b/c + k*log(k)/2 - k*c/2 - N*log(N) + N*(c + 1) \
+        + a - b - b/c + log(N)/2 - c/2 + log(2)/2 + log(pi)/24
     assert simplify(z) == k*log(k)/2 - k*log(k + 1)/2 + log(N)/2 - log(k + 1)/2  + log(pi)/24 + log(2)/2
