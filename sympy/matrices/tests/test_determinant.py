@@ -1,6 +1,6 @@
 import random
 from sympy.core.numbers import I
-from sympy import symbols, Symbol, Rational, sqrt, Poly, exp, cosh
+from sympy import symbols, Symbol, Rational, sqrt, Poly, exp, cosh, sin, cos
 from sympy.matrices import Matrix, eye, ones
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
@@ -403,6 +403,12 @@ def test_charpoly():
 
     m = Matrix([[-2, exp(-q), 1], [exp(q), -2, 1], [1, 1, -2]])
     assert m.charpoly() == Poly(x**3 + 6*x**2 + 9*x + 2 - 2*cosh(q), x)
+
+    m = Matrix([[0, -t*cos(t) + sin(t)], [-t*cos(t) + sin(t), 0]])
+    # using Matrix.charpoly() for Expr
+    assert m.charpoly() == Poly(x**2 - (t*cos(t) - sin(t))**2, x, expand=False)
+    # using DomainMatrix.charpoly() in Matrix.charpoly() for EX domain
+    assert m.charpoly(use_domain=True) == Poly(x**2 - t**2*cos(t)**2 + 2*t*sin(t)*cos(t) - sin(t)**2, x)
 
     A = Matrix([
         [16, 63, 65],

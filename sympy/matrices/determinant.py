@@ -9,6 +9,7 @@ from sympy.simplify.simplify import (simplify as _simplify,
 from sympy import sympify
 from sympy.functions.combinatorial.numbers import nC
 from sympy.polys.matrices.domainmatrix import DomainMatrix
+from sympy.polys.domains import EX
 
 from .common import MatrixError, NonSquareMatrixError
 from .utilities import (
@@ -409,6 +410,10 @@ def _charpoly(M, x='lambda', simplify=_simplify, use_domain=None):
         return PurePoly(m, x)
 
     xdum = Dummy('t')
+    DOM = DomainMatrix.from_Matrix(M)
+    domain = DOM.domain
+    if domain == EX and use_domain is not True:
+        use_domain = False
 
     if use_domain is False:
         berk_vector = _berkowitz_vector(M)
@@ -416,8 +421,6 @@ def _charpoly(M, x='lambda', simplify=_simplify, use_domain=None):
         dummy_poly = PurePoly(berk_vector, xdum)
 
     else:
-        DOM = DomainMatrix.from_Matrix(M)
-        domain = DOM.domain
         dom_vector = DOM.charpoly()
         dummy_poly = PurePoly(dom_vector, xdum, domain=domain)
 
