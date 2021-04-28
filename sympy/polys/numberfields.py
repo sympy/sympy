@@ -60,7 +60,7 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
     prec1 = 10
     points = {}
     symbols = dom.symbols if hasattr(dom, 'symbols') else []
-    while True:
+    while prec1 <= prec:
         # when dealing with non-Rational numbers we usually evaluate
         # with `subs` argument but we only need a ballpark evaluation
         xv = {x:v if not v.is_number else v.n(prec1)}

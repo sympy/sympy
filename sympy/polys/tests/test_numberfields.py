@@ -16,6 +16,7 @@ from sympy.polys.numberfields import (
     to_number_field,
     AlgebraicNumber,
     isolate, IntervalPrinter,
+    _choose_factor,
 )
 
 from sympy.polys.partfrac import apart
@@ -299,6 +300,12 @@ def test_minpoly_issue_7113():
 def test_minpoly_issue_7574():
     ex = -(-1)**Rational(1, 3) + (-1)**Rational(2,3)
     assert minimal_polynomial(ex, x) == x + 1
+
+
+def test_choose_factor():
+    # Test that this does not enter an infinite loop:
+    bad_factors = [Poly(x-2, x), Poly(x+2, x)]
+    raises(NotImplementedError, lambda: _choose_factor(bad_factors, x, sqrt(3)))
 
 
 def test_primitive_element():
