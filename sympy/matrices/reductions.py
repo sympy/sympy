@@ -3,8 +3,8 @@ from types import FunctionType
 from sympy.simplify.simplify import (
     simplify as _simplify, dotprodsimp as _dotprodsimp)
 from sympy.polys.matrices.domainmatrix import DomainMatrix
-from sympy.core.expr import Expr
-from sympy.polys.domains import EX
+from sympy.core import Expr, Pow
+from sympy.polys.domains import QQ
 
 from .utilities import _get_intermediate_simp, _iszero
 from .determinant import _find_reasonable_pivot
@@ -268,6 +268,17 @@ def _check_expr(M):
         return True
     return False
 
+def _eval_domain(M):
+    types = set(map(type, M))
+    if all(t.is_Rational for t in types):
+        return QQ
+
+    primitive_element = {p for p in M.atoms(Pow) if p.is_number and p.exp.is_Rational and p.exp.q != 1}
+    if len(primitive_element) == 1:
+        return True
+
+    return None
+
 
 def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
         normalize_last=True):
@@ -325,18 +336,18 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     """
 
     if M.is_square and _check_expr(M):
-        DOM = DomainMatrix.from_Matrix(M, field=True)
-        if DOM.domain != EX:
-            DOM_rref, DOM_pivots = DOM.rref()
-            if pivots:
-                return DOM_rref.to_Matrix(), DOM_pivots
+        domain = _eval_domain(M)
+        extension = None
+        if domain is True:
+            extension = True
 
-            return DOM_rref.to_Matrix()
-
-    simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
-
-    mat, pivot_cols, _ = _row_reduce(M, iszerofunc, simpfunc,
-            normalize_last, normalize=True, zero_above=True)
+        DOM = DomainMatrix.from_Matrix(M, extension=extension, field=True)
+        DOM_mat, pivot_cols = DOM.rref()
+        mat = DOM_mat.to_Matrix()
+    else:
+        simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
+        mat, pivot_cols, _ = _row_reduce(M, iszerofunc, simpfunc,
+                normalize_last, normalize=True, zero_above=True)
 
     if pivots:
         mat = (mat, pivot_cols)
