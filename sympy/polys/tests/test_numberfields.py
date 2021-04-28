@@ -115,6 +115,13 @@ def test_minimal_polynomial():
         sqrt(15)*I/28800000)**(1/3)))''')
     assert minimal_polynomial(eq, x) == 8000*x**2 - 1
 
+    ex = (sqrt(5)*sqrt(I)/(5*sqrt(1 + 125*I))
+            + 25*sqrt(5)/(I**Q(5,2)*(1 + 125*I)**Q(3,2))
+            + 3125*sqrt(5)/(I**Q(11,2)*(1 + 125*I)**Q(3,2))
+            + 5*I*sqrt(1 - I/125))
+    mp = minimal_polynomial(ex, x)
+    assert mp == 25*x**4 + 5000*x**2 + 250016
+
     ex = 1 + sqrt(2) + sqrt(3)
     mp = minimal_polynomial(ex, x)
     assert mp == x**4 - 4*x**3 - 4*x**2 + 16*x - 8
