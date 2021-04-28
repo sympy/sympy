@@ -916,5 +916,9 @@ def test_issue_19161():
     assert (polynomial-x**2).simplify() == 0
 
 def test_issue_11004():
-    z=k*N*log(N)/(k + 1) - k*N*log(k + 1)/(k + 1) - k*N/(k + 1) + k*log(k)/2 - k*log(k + 1)/2 - N*log(N) + N*log(k + 1) + N + N*log(N)/(k + 1) - N*log(k + 1)/(k + 1) - N/(k + 1) + log(N)/2 - log(k + 1)/2 + log(2)/2 + log(pi)/2
-    assert simplify(z) == k*log(k)/2 - k*log(k + 1)/2 + log(N)/2 - log(k + 1)/2  + log(2)/2 + log(pi)/2
+    a = N*log(N)/(k + 1)
+    b = N*log(k + 1)/(k + 1)
+    c = log(k + 1)
+
+    z = k*a - k*b - k*b/c + k*log(k)/2 - k*c/2 - N*log(N) + N*(c + 1) + a - b - b/c + log(N)/2 - c/2 + log(2)/2 + log(pi)/24
+    assert simplify(z) == k*log(k)/2 - k*log(k + 1)/2 + log(N)/2 - log(k + 1)/2  + log(pi)/24 + log(2)/2
