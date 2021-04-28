@@ -628,9 +628,8 @@ class tanh(HyperbolicFunction):
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
         x = None
-        if arg.is_Add or arg.is_Mul:
+        if arg.is_Add:
             from sympy import symmetric_poly
-            from sympy.functions.combinatorial.numbers import nC
             n = len(arg.args)
             TX = []
             if arg.is_Add:
@@ -645,24 +644,17 @@ class tanh(HyperbolicFunction):
                 for i in range(n + 1):
                     p[1 - i % 2] += symmetric_poly(i, Y)
                 return (p[0]/p[1]).subs(list(zip(Y, TX)))
-            else:
-                coeff, terms = arg.as_coeff_Mul()
-                #tanh(n*x) (general case)
-                if coeff.is_Integer and coeff > 1:
-                    numerator = 0
-                    denominator = 0
-                    for k in range(0,floor((coeff-1)/2)+1):
-                        numerator += nC(range(coeff),2*k+1) * tanh(terms)**(2*k+1)
-                    for k in range(0,floor(coeff/2)+1):
-                        denominator += nC(range(coeff),(2*k)) * tanh(terms)**(2*k)
-                    return numerator / denominator
-                #half angle formula
-                elif coeff == (1/2):
-                    cx = cosh(terms, evaluate=False)._eval_expand_trig()
-                    sx = sinh(terms, evaluate=False)._eval_expand_trig()
-                    return (cx-1)/sx
-                else:
-                    return tanh(coeff*terms)
+        else:
+            from sympy.functions.combinatorial.numbers import nC
+            coeff, terms = arg.as_coeff_Mul()
+            if coeff.is_Integer and coeff > 1:
+                numerator = 0
+                denominator = 0
+                for k in range(0,floor((coeff-1)/2)+1):
+                    numerator += nC(range(coeff),2*k+1) * tanh(terms)**(2*k+1)
+                for k in range(0,floor(coeff/2)+1):
+                    denominator += nC(range(coeff),(2*k)) * tanh(terms)**(2*k)
+                return numerator / denominator
         return tanh(arg)
 
     def _eval_rewrite_as_tractable(self, arg, limitvar=None, **kwargs):
