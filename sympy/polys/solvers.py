@@ -3,7 +3,6 @@
 
 from sympy.utilities.iterables import connected_components
 
-from sympy.matrices import MutableDenseMatrix
 from sympy.polys.domains import EX
 from sympy.polys.rings import sring
 from sympy.polys.polyerrors import NotInvertible
@@ -13,10 +12,6 @@ from sympy.polys.domainmatrix import DomainMatrix
 class PolyNonlinearError(Exception):
     """Raised by solve_lin_sys for nonlinear equations"""
     pass
-
-
-class RawMatrix(MutableDenseMatrix):
-    _sympify = staticmethod(lambda x: x)
 
 
 def eqs_to_matrix(eqs_coeffs, eqs_rhs, gens, domain):
