@@ -52,7 +52,10 @@ class DomainMatrix:
         return cls.from_list_sympy(*M.shape, M.tolist(), **kwargs)
 
     @classmethod
-    def get_domain(cls, items_sympy, **kwargs):
+    def get_domain(cls, items_sympy, radicals_limit=None, **kwargs):
+        if radicals_limit == 1:
+            kwargs['extension'] = True
+
         K, items_K = construct_domain(items_sympy, **kwargs)
         return K, items_K
 

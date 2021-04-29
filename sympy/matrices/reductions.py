@@ -4,7 +4,7 @@ from sympy.simplify.simplify import (
     simplify as _simplify, dotprodsimp as _dotprodsimp)
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 from sympy.core import Expr, Pow
-from sympy.polys.domains import QQ
+from sympy.polys.domains import EX
 
 from .utilities import _get_intermediate_simp, _iszero
 from .determinant import _find_reasonable_pivot
@@ -268,16 +268,12 @@ def _check_expr(M):
         return True
     return False
 
+
 def _eval_domain(M):
-    types = set(map(type, M))
-    if all(t.is_Rational for t in types):
-        return QQ
-
+    flat_list = [item for sublist in M.tolist() for item in sublist]
     primitive_element = {p for p in M.atoms(Pow) if p.is_number and p.exp.is_Rational and p.exp.q != 1}
-    if len(primitive_element) == 1:
-        return True
-
-    return None
+    domain = DomainMatrix.get_domain(flat_list, radicals_limit=len(primitive_element), field=True)[0]
+    return domain
 
 
 def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
@@ -334,14 +330,9 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     if you depend on the form row reduction algorithm leaves entries
     of the matrix, set ``noramlize_last=False``
     """
-
-    if M.is_square and _check_expr(M):
-        domain = _eval_domain(M)
-        extension = None
-        if domain is True:
-            extension = True
-
-        DOM = DomainMatrix.from_Matrix(M, extension=extension, field=True)
+    domain = _eval_domain(M)
+    if M.is_square and _check_expr(M) and domain != EX:
+        DOM = DomainMatrix.from_Matrix(M, radicals_limit=1, field=True)
         DOM_mat, pivot_cols = DOM.rref()
         mat = DOM_mat.to_Matrix()
     else:
