@@ -1240,7 +1240,7 @@ class DomainMatrix:
         >>> from sympy.polys.matrices import DomainMatrix
         >>> from sympy import ZZ
         >>> DomainMatrix.diag([ZZ(5), ZZ(6)], ZZ)
-        DomainMatrix({0: {0: 6}, 1: {1: 6}}, (3, 3), ZZ)
+        DomainMatrix({0: {0: 5}, 1: {1: 6}}, (2, 2), ZZ)
 
         """
         if shape is None:
