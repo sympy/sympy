@@ -1746,7 +1746,6 @@ def test_issue_5460():
 
 
 def test_product_irrational():
-    from sympy import I, pi
     assert (I*pi).is_irrational is False
     # The following used to be deduced from the above bug:
     assert (I*pi).is_positive is False
