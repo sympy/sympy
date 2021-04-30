@@ -46,7 +46,7 @@ class RawMatrix(MutableDenseMatrix):
                     val_sympy = val.as_expr()
                 elif hasattr(val, 'parent'):
                     K = val.parent()
-                    val_sympy = other_domain.to_sympy(val)
+                    val_sympy = K.to_sympy(val)
                 elif isinstance(val, int):
                     K = ZZ
                     val_sympy = sympify(val)
