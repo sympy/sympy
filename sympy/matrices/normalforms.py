@@ -10,9 +10,13 @@ from sympy.polys.matrices.normalforms import (
 
 def _to_domain(m, domain=None):
     """Convert Matrix to DomainMatrix"""
+    # XXX: deprecated support for RawMatrix:
+    ring = getattr(m, "ring", None)
     m = m.applyfunc(lambda e: e.as_expr() if isinstance(e, Poly) else e)
+
     dM = DomainMatrix.from_Matrix(m)
-    domain = domain or getattr(m, 'domain', None)
+
+    domain = domain or ring
     if domain is not None:
         dM = dM.convert_to(domain)
     return dM
@@ -51,4 +55,11 @@ def invariant_factors(m, domain=None):
     '''
     dM = _to_domain(m, domain)
     factors = _invf(dM)
-    return tuple(dM.domain.to_sympy(f) for f in factors)
+    factors = tuple(dM.domain.to_sympy(f) for f in factors)
+    # XXX: deprecated.
+    if hasattr(m, "ring"):
+        if m.ring.is_PolynomialRing:
+            K = m.ring
+            to_poly = lambda f: Poly(f, K.symbols, domain=K.domain)
+            factors = tuple(to_poly(f) for f in factors)
+    return factors
