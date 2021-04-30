@@ -903,7 +903,7 @@ def ChiNoncentral(name, k, l):
     >>> X = ChiNoncentral("x", k, l)
 
     >>> density(X)(z)
-    l*z**k*(l*z)**(-k/2)*exp(-l**2/2 - z**2/2)*besseli(k/2 - 1, l*z)
+    l*z**k*exp(-l**2/2 - z**2/2)*besseli(k/2 - 1, l*z)/(l*z)**(k/2)
 
     References
     ==========
@@ -983,7 +983,7 @@ def ChiSquared(name, k):
     >>> X = ChiSquared("x", k)
 
     >>> density(X)(z)
-    2**(-k/2)*z**(k/2 - 1)*exp(-z/2)/gamma(k/2)
+    z**(k/2 - 1)*exp(-z/2)/(2**(k/2)*gamma(k/2))
 
     >>> E(X)
     k
@@ -1710,10 +1710,10 @@ def Frechet(name, a, s=1, m=0):
     >>> X = Frechet("x", a, s, m)
 
     >>> density(X)(z)
-    a*((-m + z)/s)**(-a - 1)*exp(-((-m + z)/s)**(-a))/s
+    a*((-m + z)/s)**(-a - 1)*exp(-1/((-m + z)/s)**a)/s
 
     >>> cdf(X)(z)
-     Piecewise((exp(-((-m + z)/s)**(-a)), m <= z), (0, True))
+    Piecewise((exp(-1/((-m + z)/s)**a), m <= z), (0, True))
 
     References
     ==========
@@ -2832,7 +2832,7 @@ def Lomax(name, alpha, lamda):
     >>> density(X)(x)
     a*(1 + x/l)**(-a - 1)/l
     >>> cdf(X)(x)
-    Piecewise((1 - (1 + x/l)**(-a), x >= 0), (0, True))
+    Piecewise((1 - 1/(1 + x/l)**a, x >= 0), (0, True))
     >>> a = 2
     >>> X = Lomax('X', a, l)
     >>> E(X)

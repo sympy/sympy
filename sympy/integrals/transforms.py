@@ -1173,7 +1173,7 @@ def laplace_transform(f, t, s, **hints):
     >>> from sympy.integrals import laplace_transform
     >>> from sympy.abc import t, s, a
     >>> laplace_transform(t**a, t, s)
-    (s**(-a)*gamma(a + 1)/s, 0, re(a) > -1)
+    (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
 
     See Also
     ========
@@ -1911,7 +1911,7 @@ def hankel_transform(f, r, k, nu, **hints):
 
     >>> ht = hankel_transform(1/r**m, r, k, nu)
     >>> ht
-    2*2**(-m)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
+    2*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/(2**m*gamma(m/2 + nu/2))
 
     >>> inverse_hankel_transform(ht, k, r, nu)
     r**(-m)
@@ -1973,7 +1973,7 @@ def inverse_hankel_transform(F, k, r, nu, **hints):
 
     >>> ht = hankel_transform(1/r**m, r, k, nu)
     >>> ht
-    2*2**(-m)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
+    2*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/(2**m*gamma(m/2 + nu/2))
 
     >>> inverse_hankel_transform(ht, k, r, nu)
     r**(-m)

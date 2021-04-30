@@ -11,7 +11,7 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 
 from mpmath.libmp import prec_to_dps, to_str as mlib_to_str
 
-from sympy.utilities import default_sort_key
+from sympy.utilities import default_sort_key, sift
 
 
 class StrPrinter(Printer):
@@ -254,26 +254,32 @@ class StrPrinter(Printer):
         # etc so we display in a straight-forward form that fully preserves all
         # args and their order.
         args = expr.args
-        if args[0] is S.One or any(isinstance(arg, Number) or isinstance(1/arg, Number) for arg in args[1:]):
-            from sympy.utilities.iterables import sift
-            d, n  = sift(args, lambda x:
-                         isinstance(x,Pow) and x.exp == -1,
-                         binary=True
-                         )
-            d = [1/i for i in d]
-            nfactors = [self.parenthesize(arg, prec, strict=False) for arg in n]
-            dfactors = [self.parenthesize(arg, prec, strict=False) for arg in d]
-            numerator_string = '*'.join(nfactors)
-            denominator_string = '*'.join(dfactors)
+        if args[0] is S.One or any(
+                isinstance(a, Number) or
+                a.is_Pow and all(ai.is_Integer for ai in a.args)
+                for a in args[1:]):
+            d, n = sift(args, lambda x:
+                isinstance(x, Pow) and bool(x.exp.as_coeff_Mul()[0] < 0),
+                binary=True)
+            for i, di in enumerate(d):
+                if di.exp.is_Number:
+                    e = -di.exp
+                else:
+                    dargs = list(di.exp.args)
+                    dargs[0] = -dargs[0]
+                    e = Mul._from_args(dargs)
+                d[i] = Pow(di.base, e, evaluate=False) if e - 1 else di.base
+            nfactors = [self.parenthesize(a, prec, strict=False)
+                for a in n]
+            dfactors = [self.parenthesize(a, prec, strict=False)
+                for a in d]
+            n = '*'.join(nfactors)
+            d = '*'.join(dfactors)
             if len(dfactors) > 1:
-                return '%s/(%s)' % (numerator_string, denominator_string)
+                return '%s/(%s)' % (n, d)
             elif dfactors:
-                return '%s/%s' % (numerator_string, denominator_string)
-            else:
-                return numerator_string
-
-            factors = [self.parenthesize(a, prec, strict=False) for a in args]
-            return '*'.join(factors)
+                return '%s/%s' % (n, d)
+            return n
 
         c, e = expr.as_coeff_Mul()
         if c < 0:
@@ -294,14 +300,29 @@ class StrPrinter(Printer):
             args = Mul.make_args(expr)
 
         # Gather args for numerator/denominator
+        def apow(i):
+            b, e = i.as_base_exp()
+            eargs = list(Mul.make_args(e))
+            if eargs[0] is S.NegativeOne:
+                eargs = eargs[1:]
+            else:
+                eargs[0] = -eargs[0]
+            e = Mul._from_args(eargs)
+            if isinstance(i, Pow):
+                return i.func(b, e, evaluate=False)
+            return i.func(e, evaluate=False)
         for item in args:
-            if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
-                if item.exp != -1:
-                    b.append(Pow(item.base, -item.exp, evaluate=False))
+            if (item.is_commutative and
+                    isinstance(item, Pow) and
+                    bool(item.exp.as_coeff_Mul()[0] < 0)):
+                if item.exp is not S.NegativeOne:
+                    b.append(apow(item))
                 else:
-                    if len(item.args[0].args) != 1 and isinstance(item.base, Mul):   # To avoid situations like #14160
+                    if (len(item.args[0].args) != 1 and
+                            isinstance(item.base, Mul)):
+                        # To avoid situations like #14160
                         pow_paren.append(item)
-                    b.append(Pow(item.base, -item.exp))
+                    b.append(item.base)
             elif item.is_Rational and item is not S.Infinity:
                 if item.p != 1:
                     a.append(Rational(item.p))
@@ -483,12 +504,12 @@ class StrPrinter(Printer):
         for monom, coeff in expr.terms():
             s_monom = []
 
-            for i, exp in enumerate(monom):
-                if exp > 0:
-                    if exp == 1:
+            for i, e in enumerate(monom):
+                if e > 0:
+                    if e == 1:
                         s_monom.append(gens[i])
                     else:
-                        s_monom.append(gens[i] + "**%d" % exp)
+                        s_monom.append(gens[i] + "**%d" % e)
 
             s_monom = "*".join(s_monom)
 

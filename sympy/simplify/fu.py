@@ -115,7 +115,7 @@ def TR2i(rv, half=False):
     for both numerator and denominator)
 
     >>> TR2i(sin(x)**a/(cos(x) + 1)**a)
-    (cos(x) + 1)**(-a)*sin(x)**a
+    sin(x)**a/(cos(x) + 1)**a
 
     """
 

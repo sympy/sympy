@@ -77,7 +77,7 @@ TR11's behavior is similar. It rewrites double angles as smaller angles but
 doesn't do any simplification of the result.
 
     >>> TR11(sin(2)**a*cos(1)**(-a), 1)
-    (2*sin(1)*cos(1))**a*cos(1)**(-a)
+    (2*sin(1)*cos(1))**a/cos(1)**a
     >>> powsimp(_)
     (2*sin(1))**a
 

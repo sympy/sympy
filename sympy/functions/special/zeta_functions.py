@@ -76,7 +76,7 @@ class lerchphi(Function):
     reduces to a sum of Hurwitz zeta functions:
 
     >>> expand_func(lerchphi(-1, s, a))
-    2**(-s)*zeta(s, a/2) - 2**(-s)*zeta(s, a/2 + 1/2)
+    zeta(s, a/2)/2**s - zeta(s, a/2 + 1/2)/2**s
 
     If $a=1$, the Lerch transcendent reduces to the polylogarithm:
 
@@ -595,7 +595,7 @@ class riemann_xi(Function):
     >>> from sympy import riemann_xi, zeta
     >>> from sympy.abc import s
     >>> riemann_xi(s).rewrite(zeta)
-    pi**(-s/2)*s*(s - 1)*gamma(s/2)*zeta(s)/2
+    s*(s - 1)*gamma(s/2)*zeta(s)/(2*pi**(s/2))
 
     References
     ==========
