@@ -125,6 +125,11 @@ class SDM(dict):
         sdm = {i: {i: one} for i in range(size)}
         return cls(sdm, (size, size), domain)
 
+    @classmethod
+    def diag(cls, diagonal, domain, shape):
+        sdm = {i: {i: v} for i, v in enumerate(diagonal) if v}
+        return cls(sdm, shape, domain)
+
     def transpose(M):
         MT = sdm_transpose(M)
         return M.new(MT, M.shape[::-1], M.domain)

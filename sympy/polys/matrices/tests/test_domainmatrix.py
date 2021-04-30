@@ -85,12 +85,19 @@ def test_DomainMatrix_from_list_sympy():
     assert A.shape == (2, 2)
     assert A.domain == K
 
+
 def test_DomainMatrix_from_dict_sympy():
     sdm = SDM({0: {0: QQ(1, 2)}, 1: {1: QQ(2, 3)}}, (2, 2), QQ)
-    A = DomainMatrix.from_dict_sympy(2, 2, {0: {0: QQ(1, 2)}, 1: {1: QQ(2, 3)}})
+    sympy_dict = {0: {0: Rational(1, 2)}, 1: {1: Rational(2, 3)}}
+    A = DomainMatrix.from_dict_sympy(2, 2, sympy_dict)
     assert A.rep == sdm
     assert A.shape == (2, 2)
     assert A.domain == QQ
+
+    fds = DomainMatrix.from_dict_sympy
+    raises(DDMBadInputError, lambda: fds(2, 2, {3: {0: Rational(1, 2)}}))
+    raises(DDMBadInputError, lambda: fds(2, 2, {0: {3: Rational(1, 2)}}))
+
 
 def test_DomainMatrix_from_Matrix():
     sdm = SDM({0: {0: ZZ(1), 1: ZZ(2)}, 1: {0: ZZ(3), 1: ZZ(4)}}, (2, 2), ZZ)
@@ -119,6 +126,7 @@ def test_DomainMatrix_from_Matrix():
     assert A.rep == ddm
     assert A.shape == (2, 2)
     assert A.domain == QQ
+
 
 def test_DomainMatrix_eq():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
@@ -545,11 +553,20 @@ def test_DomainMatrix_zeros():
     assert A.shape == (1, 2)
     assert A.domain == QQ
 
+
 def test_DomainMatrix_ones():
     A = DomainMatrix.ones((2, 3), QQ)
     assert A.rep == DDM.ones((2, 3), QQ)
     assert A.shape == (2, 3)
     assert A.domain == QQ
+
+
+def test_DomainMatrix_diag():
+    A = DomainMatrix({0:{0:ZZ(2)}, 1:{1:ZZ(3)}}, (2, 2), ZZ)
+    assert DomainMatrix.diag([ZZ(2), ZZ(3)], ZZ) == A
+
+    A = DomainMatrix({0:{0:ZZ(2)}, 1:{1:ZZ(3)}}, (3, 4), ZZ)
+    assert DomainMatrix.diag([ZZ(2), ZZ(3)], ZZ, (3, 4)) == A
 
 
 def test_DomainMatrix_hstack():

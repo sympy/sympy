@@ -1230,6 +1230,25 @@ class DomainMatrix:
         return cls.from_rep(SDM.eye(n, domain))
 
     @classmethod
+    def diag(cls, diagonal, domain, shape=None):
+        r"""
+        Return diagonal matrix with entries from ``diagonal``.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import ZZ
+        >>> DomainMatrix.diag([ZZ(5), ZZ(6)], ZZ)
+        DomainMatrix({0: {0: 5}, 1: {1: 6}}, (2, 2), ZZ)
+
+        """
+        if shape is None:
+            N = len(diagonal)
+            shape = (N, N)
+        return cls.from_rep(SDM.diag(diagonal, domain, shape))
+
+    @classmethod
     def zeros(cls, shape, domain, *, fmt='sparse'):
         """Returns a zero DomainMatrix of size shape, belonging to the specified domain
 

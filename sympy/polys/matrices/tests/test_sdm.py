@@ -146,6 +146,10 @@ def test_SDM_matmul():
     #raises(DDMShapeError, lambda: A23 @ A22)
     raises(DDMShapeError, lambda: A23.matmul(A22))
 
+    A = SDM({0: {0: ZZ(-1), 1: ZZ(1)}}, (1, 2), ZZ)
+    B = SDM({0: {0: ZZ(-1)}, 1: {0: ZZ(-1)}}, (2, 1), ZZ)
+    assert A.matmul(B) == SDM({}, (1, 1), ZZ)
+
 
 def test_SDM_add():
     A = SDM({0:{1:ZZ(1)}, 1:{0:ZZ(2), 1:ZZ(3)}}, (2, 2), ZZ)
@@ -264,3 +268,9 @@ def test_SDM_rref():
             {0: {0: QQ(1,1)}, 1: {1: QQ(1,1), 2: QQ(1,1)}},
             (2, 3), QQ)
     assert A.rref() == (Arref, [0, 1])
+
+
+def test_SDM_particular():
+    A = SDM({0:{1:QQ(1)}}, (2, 2), QQ)
+    Apart = SDM({0:{1:QQ(1)}}, (1, 2), QQ)
+    assert A.particular() == Apart
