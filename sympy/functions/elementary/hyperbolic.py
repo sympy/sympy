@@ -7,7 +7,6 @@ from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 from sympy.functions.elementary.exponential import exp, log, match_real_imag
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.integers import floor
-from sympy.utilities.iterables import numbered_symbols
 
 from sympy.core.logic import fuzzy_or, fuzzy_and
 
@@ -637,24 +636,22 @@ class tanh(HyperbolicFunction):
                     tx = tanh(x, evaluate=False)._eval_expand_trig()
                     TX.append(tx)
 
-                Yg = numbered_symbols('Y')
-                Y = [ next(Yg) for i in range(n) ]
-
-                p = [0, 0]
+                p = [0, 0]  # [den, num]
                 for i in range(n + 1):
-                    p[1 - i % 2] += symmetric_poly(i, Y)
-                return (p[0]/p[1]).subs(list(zip(Y, TX)))
+                    p[i % 2] += symmetric_poly(i, TX)
+                return p[1]/p[0]
         else:
             from sympy.functions.combinatorial.numbers import nC
             coeff, terms = arg.as_coeff_Mul()
             if coeff.is_Integer and coeff > 1:
-                numerator = 0
-                denominator = 0
-                for k in range(0,floor((coeff-1)/2)+1):
-                    numerator += nC(range(coeff),2*k+1) * tanh(terms)**(2*k+1)
-                for k in range(0,floor(coeff/2)+1):
-                    denominator += nC(range(coeff),(2*k)) * tanh(terms)**(2*k)
-                return numerator / denominator
+                n = []
+                d = []
+                T = tanh(terms)
+                for k in range(1, coeff + 1, 2):
+                    n.append(nC(range(coeff), k)*T**k)
+                for k in range(0, coeff + 1, 2):
+                    d.append(nC(range(coeff), k)*T**k)
+                return Add(*n)/Add(*d)
         return tanh(arg)
 
     def _eval_rewrite_as_tractable(self, arg, limitvar=None, **kwargs):
