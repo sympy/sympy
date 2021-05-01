@@ -86,6 +86,11 @@ def test_DDM_zeros():
     assert ddmz.shape == (3, 4)
     assert ddmz.domain == QQ
 
+def test_DDM_ones():
+    ddmone = DDM.ones((2, 3), QQ)
+    assert list(ddmone) == [[QQ(1)] * 3] * 2
+    assert ddmone.shape == (2, 3)
+    assert ddmone.domain == QQ
 
 def test_DDM_eye():
     ddmz = DDM.eye(3, QQ)
@@ -365,3 +370,34 @@ def test_DDM_charpoly():
 
     A = DDM([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
     raises(DDMShapeError, lambda: A.charpoly())
+
+
+def test_DDM_getitem():
+    dm = DDM([
+        [ZZ(1), ZZ(2), ZZ(3)],
+        [ZZ(4), ZZ(5), ZZ(6)],
+        [ZZ(7), ZZ(8), ZZ(9)]], (3, 3), ZZ)
+
+    assert dm.getitem(1, 1) == ZZ(5)
+    assert dm.getitem(1, -2) == ZZ(5)
+    assert dm.getitem(-1, -3) == ZZ(7)
+
+    raises(IndexError, lambda: dm.getitem(3, 3))
+
+
+def test_DDM_extract_slice():
+    dm = DDM([
+        [ZZ(1), ZZ(2), ZZ(3)],
+        [ZZ(4), ZZ(5), ZZ(6)],
+        [ZZ(7), ZZ(8), ZZ(9)]], (3, 3), ZZ)
+
+    assert dm.extract_slice(slice(0, 3), slice(0, 3)) == dm
+    assert dm.extract_slice(slice(1, 3), slice(-2)) == DDM([[4], [7]], (2, 1), ZZ)
+    assert dm.extract_slice(slice(1, 3), slice(-2)) == DDM([[4], [7]], (2, 1), ZZ)
+    assert dm.extract_slice(slice(2, 3), slice(-2)) == DDM([[ZZ(7)]], (1, 1), ZZ)
+    assert dm.extract_slice(slice(0, 2), slice(-2)) == DDM([[1], [4]], (2, 1), ZZ)
+    assert dm.extract_slice(slice(-1), slice(-1)) == DDM([[1, 2], [4, 5]], (2, 2), ZZ)
+
+    assert dm.extract_slice(slice(2), slice(3, 4)) == DDM([[], []], (2, 0), ZZ)
+    assert dm.extract_slice(slice(3, 4), slice(2)) == DDM([], (0, 2), ZZ)
+    assert dm.extract_slice(slice(3, 4), slice(3, 4)) == DDM([], (0, 0), ZZ)

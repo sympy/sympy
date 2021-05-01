@@ -14,6 +14,8 @@ from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
+from sympy.utilities.iterables import subsets
+
 from sympy.polys.densetools import dup_eval
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.orthopolys import dup_chebyshevt
@@ -48,37 +50,48 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
     Return a factor having root ``v``
     It is assumed that one of the factors has root ``v``.
     """
+    from sympy.polys.polyutils import illegal
+
     if isinstance(factors[0], tuple):
         factors = [f[0] for f in factors]
     if len(factors) == 1:
         return factors[0]
 
-    points = {x:v}
+    prec1 = 10
+    points = {}
     symbols = dom.symbols if hasattr(dom, 'symbols') else []
-    t = QQ(1, 10)
+    while prec1 <= prec:
+        # when dealing with non-Rational numbers we usually evaluate
+        # with `subs` argument but we only need a ballpark evaluation
+        xv = {x:v if not v.is_number else v.n(prec1)}
+        fe = [f.as_expr().xreplace(xv) for f in factors]
 
-    for n in range(bound**len(symbols)):
-        prec1 = 10
-        n_temp = n
-        for s in symbols:
-            points[s] = n_temp % bound
-            n_temp = n_temp // bound
+        # assign integers [0, n) to symbols (if any)
+        for n in subsets(range(bound), k=len(symbols), repetition=True):
+            for s, i in zip(symbols, n):
+                points[s] = i
 
-        while True:
-            candidates = []
-            eps = t**(prec1 // 2)
-            for f in factors:
-                if abs(f.as_expr().evalf(prec1, points)) < eps:
-                    candidates.append(f)
-            if candidates:
-                factors = candidates
-            if len(factors) == 1:
-                return factors[0]
-            if prec1 > prec:
-                break
-            prec1 *= 2
+            # evaluate the expression at these points
+            candidates = [(abs(f.subs(points).n(prec1)), i)
+                for i,f in enumerate(fe)]
+
+            # if we get invalid numbers (e.g. from division by zero)
+            # we try again
+            if any(i in illegal for i, _ in candidates):
+                continue
+
+            # find the smallest two -- if they differ significantly
+            # then we assume we have found the factor that becomes
+            # 0 when v is substituted into it
+            can = sorted(candidates)
+            (a, ix), (b, _) = can[:2]
+            if b > a * 10**6:  # XXX what to use?
+                return factors[ix]
+
+        prec1 *= 2
 
     raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % v)
+
 
 
 def _separate_sq(p):

@@ -343,7 +343,12 @@ def _(expr, assumptions):
 
 @ExtendedRealPredicate.register(object)
 def _(expr, assumptions):
-    return ask(Q.real(expr), assumptions)
+    return ask(Q.negative_infinite(expr)
+               | Q.negative(expr)
+               | Q.zero(expr)
+               | Q.positive(expr)
+               | Q.positive_infinite(expr),
+            assumptions)
 
 @ExtendedRealPredicate.register_many(Infinity, NegativeInfinity)
 def _(expr, assumptions):
@@ -638,6 +643,8 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     if isinstance(expr, MatrixBase):
         return None
+    if ask(Q.zero(expr), assumptions):
+        return True
     return ask(Q.imaginary(expr), assumptions)
 
 @AntihermitianPredicate.register(Add)

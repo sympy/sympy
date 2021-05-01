@@ -73,6 +73,33 @@ class SDM(dict):
         if not all(0 <= c < n for row in self.values() for c in row):
             raise DDMBadInputError("Column out of range")
 
+    def getitem(self, i, j):
+        try:
+            return self[i][j]
+        except KeyError:
+            m, n = self.shape
+            if -m <= i < m and -n <= j < n:
+                try:
+                    return self[i % m][j % n]
+                except KeyError:
+                    return self.domain.zero
+            else:
+                raise IndexError("index out of range")
+
+    def extract_slice(self, slice1, slice2):
+        m, n = self.shape
+        ri = range(m)[slice1]
+        ci = range(n)[slice2]
+
+        sdm = {}
+        for i, row in self.items():
+            if i in ri:
+                row = {ci.index(j): e for j, e in row.items() if j in ci}
+                if row:
+                    sdm[ri.index(i)] = row
+
+        return self.new(sdm, (len(ri), len(ci)), self.domain)
+
     def __str__(self):
         rowsstr = []
         for i, row in self.items():
@@ -259,6 +286,14 @@ class SDM(dict):
         return cls({}, shape, domain)
 
     @classmethod
+    def ones(cls, shape, domain):
+        one = domain.one
+        m, n = shape
+        row = dict(zip(range(n), [one]*n))
+        sdm = {i: row.copy() for i in range(m)}
+        return cls(sdm, shape, domain)
+
+    @classmethod
     def eye(cls, size, domain):
         """
 
@@ -278,6 +313,11 @@ class SDM(dict):
         one = domain.one
         sdm = {i: {i: one} for i in range(size)}
         return cls(sdm, (size, size), domain)
+
+    @classmethod
+    def diag(cls, diagonal, domain, shape):
+        sdm = {i: {i: v} for i, v in enumerate(diagonal) if v}
+        return cls(sdm, shape, domain)
 
     def transpose(M):
         """

@@ -8,7 +8,8 @@ from sympy.matrices.common import (NonInvertibleMatrixError,
 from sympy.matrices.dense import Matrix
 from sympy.polys import ZZ, QQ
 
-from sympy.polys.matrices.domainmatrix import DomainMatrix
+
+from sympy.polys.matrices.domainmatrix import DomainMatrix, DomainScalar
 from sympy.polys.matrices.exceptions import (DDMBadInputError, DDMDomainError,
         DDMShapeError, DDMFormatError)
 from sympy.polys.matrices.ddm import DDM
@@ -85,26 +86,46 @@ def test_DomainMatrix_from_list_sympy():
     assert A.domain == K
 
 
+def test_DomainMatrix_from_dict_sympy():
+    sdm = SDM({0: {0: QQ(1, 2)}, 1: {1: QQ(2, 3)}}, (2, 2), QQ)
+    sympy_dict = {0: {0: Rational(1, 2)}, 1: {1: Rational(2, 3)}}
+    A = DomainMatrix.from_dict_sympy(2, 2, sympy_dict)
+    assert A.rep == sdm
+    assert A.shape == (2, 2)
+    assert A.domain == QQ
+
+    fds = DomainMatrix.from_dict_sympy
+    raises(DDMBadInputError, lambda: fds(2, 2, {3: {0: Rational(1, 2)}}))
+    raises(DDMBadInputError, lambda: fds(2, 2, {0: {3: Rational(1, 2)}}))
+
+
 def test_DomainMatrix_from_Matrix():
-    ddm = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    sdm = SDM({0: {0: ZZ(1), 1: ZZ(2)}, 1: {0: ZZ(3), 1: ZZ(4)}}, (2, 2), ZZ)
     A = DomainMatrix.from_Matrix(Matrix([[1, 2], [3, 4]]))
-    assert A.rep == ddm
+    assert A.rep == sdm
     assert A.shape == (2, 2)
     assert A.domain == ZZ
 
     K = QQ.algebraic_field(sqrt(2))
-    ddm = DDM(
-        [[K.convert(1 + sqrt(2)), K.convert(2 + sqrt(2))],
-         [K.convert(3 + sqrt(2)), K.convert(4 + sqrt(2))]],
+    sdm = SDM(
+        {0: {0: K.convert(1 + sqrt(2)), 1: K.convert(2 + sqrt(2))},
+         1: {0: K.convert(3 + sqrt(2)), 1: K.convert(4 + sqrt(2))}},
         (2, 2),
         K
     )
     A = DomainMatrix.from_Matrix(
         Matrix([[1 + sqrt(2), 2 + sqrt(2)], [3 + sqrt(2), 4 + sqrt(2)]]),
         extension=True)
-    assert A.rep == ddm
+    assert A.rep == sdm
     assert A.shape == (2, 2)
     assert A.domain == K
+
+    A = DomainMatrix.from_Matrix(Matrix([[QQ(1, 2), QQ(3, 4)], [QQ(0, 1), QQ(0, 1)]]), fmt='dense')
+    ddm = DDM([[QQ(1, 2), QQ(3, 4)], [QQ(0, 1), QQ(0, 1)]], (2, 2), QQ)
+
+    assert A.rep == ddm
+    assert A.shape == (2, 2)
+    assert A.domain == QQ
 
 
 def test_DomainMatrix_eq():
@@ -533,8 +554,93 @@ def test_DomainMatrix_zeros():
     assert A.domain == QQ
 
 
+def test_DomainMatrix_ones():
+    A = DomainMatrix.ones((2, 3), QQ)
+    assert A.rep == DDM.ones((2, 3), QQ)
+    assert A.shape == (2, 3)
+    assert A.domain == QQ
+
+
+def test_DomainMatrix_diag():
+    A = DomainMatrix({0:{0:ZZ(2)}, 1:{1:ZZ(3)}}, (2, 2), ZZ)
+    assert DomainMatrix.diag([ZZ(2), ZZ(3)], ZZ) == A
+
+    A = DomainMatrix({0:{0:ZZ(2)}, 1:{1:ZZ(3)}}, (3, 4), ZZ)
+    assert DomainMatrix.diag([ZZ(2), ZZ(3)], ZZ, (3, 4)) == A
+
+
 def test_DomainMatrix_hstack():
     A = DomainMatrix([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
     B = DomainMatrix([[QQ(3), QQ(4)], [QQ(5), QQ(6)]], (2, 2), QQ)
     AB = DomainMatrix([[QQ(1), QQ(3), QQ(4)], [QQ(2), QQ(5), QQ(6)]], (2, 3), QQ)
     assert A.hstack(B) == AB
+
+
+def test_DomainMatrix_scalarmul():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    lamda = DomainScalar(QQ(3)/QQ(2), QQ)
+    assert A * lamda == DomainMatrix([[QQ(3, 2), QQ(3)], [QQ(9, 2), QQ(6)]], (2, 2), QQ)
+    assert A * 2 == DomainMatrix([[ZZ(2), ZZ(4)], [ZZ(6), ZZ(8)]], (2, 2), ZZ)
+    assert A * DomainScalar(ZZ(0), ZZ) == DomainMatrix([[ZZ(0)]*2]*2, (2, 2), ZZ)
+    assert A * DomainScalar(ZZ(1), ZZ) == A
+
+    raises(TypeError, lambda: A * 1.5)
+
+
+def test_DomainMatrix_truediv():
+    A = DomainMatrix.from_Matrix(Matrix([[1, 2], [3, 4]]))
+    lamda = DomainScalar(QQ(3)/QQ(2), QQ)
+    assert A / lamda == DomainMatrix({0: {0: QQ(2, 3), 1: QQ(4, 3)}, 1: {0: QQ(2), 1: QQ(8, 3)}}, (2, 2), QQ)
+    b = DomainScalar(ZZ(1), ZZ)
+    assert A / b == DomainMatrix({0: {0: QQ(1), 1: QQ(2)}, 1: {0: QQ(3), 1: QQ(4)}}, (2, 2), QQ)
+
+    assert A / 1 == DomainMatrix({0: {0: QQ(1), 1: QQ(2)}, 1: {0: QQ(3), 1: QQ(4)}}, (2, 2), QQ)
+    assert A / 2 == DomainMatrix({0: {0: QQ(1, 2), 1: QQ(1)}, 1: {0: QQ(3, 2), 1: QQ(2)}}, (2, 2), QQ)
+
+    raises(ZeroDivisionError, lambda: A / 0)
+    raises(TypeError, lambda: A / 1.5)
+    raises(ZeroDivisionError, lambda: A / DomainScalar(ZZ(0), ZZ))
+
+
+def test_DomainMatrix_getitem():
+    dM = DomainMatrix([
+        [ZZ(1), ZZ(2), ZZ(3)],
+        [ZZ(4), ZZ(5), ZZ(6)],
+        [ZZ(7), ZZ(8), ZZ(9)]], (3, 3), ZZ)
+
+    assert dM[1:,:-2] == DomainMatrix([[ZZ(4)], [ZZ(7)]], (2, 1), ZZ)
+    assert dM[2,:-2] == DomainMatrix([[ZZ(7)]], (1, 1), ZZ)
+    assert dM[:-2,:-2] == DomainMatrix([[ZZ(1)]], (1, 1), ZZ)
+    assert dM[:-1,0:2] == DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(4), ZZ(5)]], (2, 2), ZZ)
+    assert dM[:, -1] == DomainMatrix([[ZZ(3)], [ZZ(6)], [ZZ(9)]], (3, 1), ZZ)
+    assert dM[-1, :] == DomainMatrix([[ZZ(7), ZZ(8), ZZ(9)]], (1, 3), ZZ)
+    assert dM[::-1, :] == DomainMatrix([
+                            [ZZ(7), ZZ(8), ZZ(9)],
+                            [ZZ(4), ZZ(5), ZZ(6)],
+                            [ZZ(1), ZZ(2), ZZ(3)]], (3, 3), ZZ)
+
+    raises(IndexError, lambda: dM[4, :-2])
+    raises(IndexError, lambda: dM[:-2, 4])
+
+    assert dM[1, 2] == DomainScalar(ZZ(6), ZZ)
+    assert dM[-2, 2] == DomainScalar(ZZ(6), ZZ)
+    assert dM[1, -2] == DomainScalar(ZZ(5), ZZ)
+    assert dM[-1, -3] == DomainScalar(ZZ(7), ZZ)
+
+    raises(IndexError, lambda: dM[3, 3])
+    raises(IndexError, lambda: dM[1, 4])
+    raises(IndexError, lambda: dM[-1, -4])
+
+    dM = DomainMatrix({0: {0: ZZ(1)}}, (10, 10), ZZ)
+    assert dM[5, 5] == DomainScalar(ZZ(0), ZZ)
+    assert dM[0, 0] == DomainScalar(ZZ(1), ZZ)
+
+    dM = DomainMatrix({1: {0: 1}}, (2,1), ZZ)
+    assert dM[0:, 0] == DomainMatrix({1: {0: 1}}, (2, 1), ZZ)
+    raises(IndexError, lambda: dM[3, 0])
+
+    dM = DomainMatrix({2: {2: ZZ(1)}, 4: {4: ZZ(1)}}, (5, 5), ZZ)
+    assert dM[:2,:2] == DomainMatrix({}, (2, 2), ZZ)
+    assert dM[2:,2:] == DomainMatrix({0: {0: 1}, 2: {2: 1}}, (3, 3), ZZ)
+    assert dM[3:,3:] == DomainMatrix({1: {1: 1}}, (2, 2), ZZ)
+    assert dM[2:, 6:] == DomainMatrix({}, (3, 0), ZZ)

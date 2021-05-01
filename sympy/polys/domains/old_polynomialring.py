@@ -61,38 +61,46 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
                      self.gens, self.order))
 
     def __eq__(self, other):
-        """Returns `True` if two domains are equivalent. """
+        """Returns ``True`` if two domains are equivalent. """
         return isinstance(other, PolynomialRingBase) and \
             self.dtype == other.dtype and self.dom == other.dom and \
             self.gens == other.gens and self.order == other.order
 
+    def from_ZZ(K1, a, K0):
+        """Convert a Python ``int`` object to ``dtype``. """
+        return K1(K1.dom.convert(a, K0))
+
     def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
+        """Convert a Python ``int`` object to ``dtype``. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_QQ(K1, a, K0):
+        """Convert a Python ``Fraction`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_QQ_python(K1, a, K0):
-        """Convert a Python `Fraction` object to `dtype`. """
+        """Convert a Python ``Fraction`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_ZZ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpz` object to `dtype`. """
+        """Convert a GMPY ``mpz`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_QQ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpq` object to `dtype`. """
+        """Convert a GMPY ``mpq`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_RealField(K1, a, K0):
-        """Convert a mpmath `mpf` object to `dtype`. """
+        """Convert a mpmath ``mpf`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_AlgebraicField(K1, a, K0):
-        """Convert a `ANP` object to `dtype`. """
+        """Convert a ``ANP`` object to ``dtype``. """
         if K1.dom == K0:
             return K1(a)
 
     def from_PolynomialRing(K1, a, K0):
-        """Convert a `PolyElement` object to `dtype`. """
+        """Convert a ``PolyElement`` object to ``dtype``. """
         if K1.gens == K0.symbols:
             if K1.dom == K0.dom:
                 return K1(dict(a))  # set the correct ring
@@ -108,7 +116,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
             return K1(dict(zip(monoms, coeffs)))
 
     def from_GlobalPolynomialRing(K1, a, K0):
-        """Convert a `DMP` object to `dtype`. """
+        """Convert a ``DMP`` object to ``dtype``. """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
                 return K1(a.rep)  # set the correct ring
@@ -123,15 +131,15 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
             return K1(dict(zip(monoms, coeffs)))
 
     def get_field(self):
-        """Returns a field associated with `self`. """
+        """Returns a field associated with ``self``. """
         return FractionField(self.dom, *self.gens)
 
     def poly_ring(self, *gens):
-        """Returns a polynomial ring, i.e. `K[X]`. """
+        """Returns a polynomial ring, i.e. ``K[X]``. """
         raise NotImplementedError('nested domains not allowed')
 
     def frac_field(self, *gens):
-        """Returns a fraction field, i.e. `K(X)`. """
+        """Returns a fraction field, i.e. ``K(X)``. """
         raise NotImplementedError('nested domains not allowed')
 
     def revert(self, a):
@@ -141,19 +149,19 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
             raise NotReversible('%s is not a unit' % a)
 
     def gcdex(self, a, b):
-        """Extended GCD of `a` and `b`. """
+        """Extended GCD of ``a`` and ``b``. """
         return a.gcdex(b)
 
     def gcd(self, a, b):
-        """Returns GCD of `a` and `b`. """
+        """Returns GCD of ``a`` and ``b``. """
         return a.gcd(b)
 
     def lcm(self, a, b):
-        """Returns LCM of `a` and `b`. """
+        """Returns LCM of ``a`` and ``b``. """
         return a.lcm(b)
 
     def factorial(self, a):
-        """Returns factorial of `a`. """
+        """Returns factorial of ``a``. """
         return self.dtype(self.dom.factorial(a))
 
     def _vector_to_sdm(self, v, order):
@@ -252,11 +260,11 @@ class GlobalPolynomialRing(PolynomialRingBase):
             return K1.from_GlobalPolynomialRing(a.numer(), K0)
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """Convert ``a`` to a SymPy object. """
         return basic_from_dict(a.to_sympy_dict(), *self.gens)
 
     def from_sympy(self, a):
-        """Convert SymPy's expression to `dtype`. """
+        """Convert SymPy's expression to ``dtype``. """
         try:
             rep, _ = dict_from_basic(a, gens=self.gens)
         except PolynomialError:
@@ -268,19 +276,19 @@ class GlobalPolynomialRing(PolynomialRingBase):
         return self(rep)
 
     def is_positive(self, a):
-        """Returns True if `LC(a)` is positive. """
+        """Returns True if ``LC(a)`` is positive. """
         return self.dom.is_positive(a.LC())
 
     def is_negative(self, a):
-        """Returns True if `LC(a)` is negative. """
+        """Returns True if ``LC(a)`` is negative. """
         return self.dom.is_negative(a.LC())
 
     def is_nonpositive(self, a):
-        """Returns True if `LC(a)` is non-positive. """
+        """Returns True if ``LC(a)`` is non-positive. """
         return self.dom.is_nonpositive(a.LC())
 
     def is_nonnegative(self, a):
-        """Returns True if `LC(a)` is non-negative. """
+        """Returns True if ``LC(a)`` is non-negative. """
         return self.dom.is_nonnegative(a.LC())
 
     def _vector_to_sdm(self, v, order):
@@ -305,7 +313,7 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
     dtype = DMF
 
     def new(self, a):
-        """Construct an element of `self` domain from `a`. """
+        """Construct an element of ``self`` domain from ``a``. """
         res = self.dtype(a, self.dom, len(self.gens) - 1, ring=self)
 
         # make sure res is actually in our ring
@@ -327,12 +335,12 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
         return K1((dmf.num, dmf.den))
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """Convert ``a`` to a SymPy object. """
         return (basic_from_dict(a.numer().to_sympy_dict(), *self.gens) /
                 basic_from_dict(a.denom().to_sympy_dict(), *self.gens))
 
     def from_sympy(self, a):
-        """Convert SymPy's expression to `dtype`. """
+        """Convert SymPy's expression to ``dtype``. """
         p, q = a.as_numer_denom()
 
         num, _ = dict_from_basic(p, gens=self.gens)

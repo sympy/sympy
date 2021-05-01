@@ -56,6 +56,8 @@ def test_Factors():
     assert Factors(-I)*I == Factors()
     assert Factors({S.NegativeOne: S(3)})*Factors({S.NegativeOne: S.One, I: S(5)}) == \
         Factors(I)
+    assert Factors(sqrt(I)*I) == Factors(I**(S(3)/2)) == Factors({I: S(3)/2})
+    assert Factors({I: S(3)/2}).as_expr() == I**(S(3)/2)
 
     assert Factors(S(2)**x).div(S(3)**x) == \
         (Factors({S(2): x}), Factors({S(3): x}))
