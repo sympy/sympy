@@ -117,7 +117,7 @@ def get_known_facts_dict():
         ~Q.positive, ~Q.positive_infinite, ~Q.prime, ~Q.rational,
         ~Q.zero]),
         Q.infinite: set([Q.commutative, Q.infinite, ~Q.algebraic,
-        ~Q.composite, ~Q.even, ~Q.finite, ~Q.imaginary, ~Q.irrational,
+        ~Q.composite, ~Q.even, ~Q.extended_real, ~Q.finite, ~Q.imaginary, ~Q.irrational,
         ~Q.negative, ~Q.odd, ~Q.positive, ~Q.prime, ~Q.rational,
         ~Q.transcendental, ~Q.zero]),
         Q.integer_elements: set([Q.complex_elements, Q.integer_elements,
