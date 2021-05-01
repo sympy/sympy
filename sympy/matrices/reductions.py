@@ -269,13 +269,6 @@ def _check_expr(M):
     return False
 
 
-def _eval_domain(M):
-    flat_list = [item for sublist in M.tolist() for item in sublist]
-    primitive_element = {p for p in M.atoms(Pow) if p.is_number and p.exp.is_Rational and p.exp.q != 1}
-    domain = DomainMatrix.get_domain(flat_list, radicals_limit=len(primitive_element), field=True)[0]
-    return domain
-
-
 def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
         normalize_last=True):
     """Return reduced row-echelon form of matrix and indices of pivot vars.
@@ -330,12 +323,16 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     if you depend on the form row reduction algorithm leaves entries
     of the matrix, set ``noramlize_last=False``
     """
-    domain = _eval_domain(M)
-    if M.is_square and _check_expr(M) and domain != EX:
-        DOM = DomainMatrix.from_Matrix(M, radicals_limit=1, field=True)
-        DOM_mat, pivot_cols = DOM.rref()
-        mat = DOM_mat.to_Matrix()
-    else:
+    flag = True
+    if M.is_square and _check_expr(M):
+        primitive_element = {p for p in M.atoms(Pow) if p.is_number and p.exp.is_Rational and p.exp.q != 1}
+        DOM = DomainMatrix.from_Matrix(M, radicals_limit=len(primitive_element), field=True)
+        if DOM.domain != EX:
+            DOM_mat, pivot_cols = DOM.rref()
+            mat = DOM_mat.to_Matrix()
+            flag = False
+
+    if flag:
         simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
         mat, pivot_cols, _ = _row_reduce(M, iszerofunc, simpfunc,
                 normalize_last, normalize=True, zero_above=True)
