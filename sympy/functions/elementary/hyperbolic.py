@@ -626,20 +626,15 @@ class tanh(HyperbolicFunction):
 
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
-        x = None
         if arg.is_Add:
             from sympy import symmetric_poly
             n = len(arg.args)
-            TX = []
-            if arg.is_Add:
-                for x in arg.args:
-                    tx = tanh(x, evaluate=False)._eval_expand_trig()
-                    TX.append(tx)
-
-                p = [0, 0]  # [den, num]
-                for i in range(n + 1):
-                    p[i % 2] += symmetric_poly(i, TX)
-                return p[1]/p[0]
+            TX = [tanh(x, evaluate=False)._eval_expand_trig()
+                for x in arg.args]
+            p = [0, 0]  # [den, num]
+            for i in range(n + 1):
+                p[i % 2] += symmetric_poly(i, TX)
+            return p[1]/p[0]
         else:
             from sympy.functions.combinatorial.numbers import nC
             coeff, terms = arg.as_coeff_Mul()
