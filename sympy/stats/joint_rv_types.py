@@ -580,7 +580,7 @@ def MultivariateEwens(syms, n, theta):
     >>> a2 = Symbol('a2', positive=True)
     >>> ed = MultivariateEwens('E', 2, 1)
     >>> density(ed)(a1, a2)
-    Piecewise((2**(-a2)/(factorial(a1)*factorial(a2)), Eq(a1 + 2*a2, 2)), (0, True))
+    Piecewise((1/(2**a2*factorial(a1)*factorial(a2)), Eq(a1 + 2*a2, 2)), (0, True))
     >>> marginal_distribution(ed, ed[0])(a1)
     Piecewise((1/factorial(a1), Eq(a1, 2)), (0, True))
 
@@ -662,8 +662,8 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     >>> y = symbols('y_1:4', positive=True)
     >>> Gd = GeneralizedMultivariateLogGamma('G', d, v, l, mu)
     >>> density(Gd)(y[0], y[1], y[2])
-    Sum(2**(-n)*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) - exp(y_2) -
-    exp(y_3))/gamma(n + 1)**3, (n, 0, oo))/2
+    Sum(exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) - exp(y_2) -
+    exp(y_3))/(2**n*gamma(n + 1)**3), (n, 0, oo))/2
 
     References
     ==========
