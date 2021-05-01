@@ -13,7 +13,7 @@ from .ddm import DDM
 
 
 class SDM(dict):
-    """Sparse matrix based on polys domain elements
+    r"""Sparse matrix based on polys domain elements
 
     This is a dict subclass and is a wrapper for a dict of dicts that supports
     basic matrix arithmetic +, -, *, **.
@@ -28,13 +28,20 @@ class SDM(dict):
 
     We declare a 2x2 :py:class:`~.SDM` matrix belonging
     to QQ domain as shown below.
+    The 2x2 Matrix in the example is
+
+    .. math::
+           A = \left[\begin{array}{ccc}
+                0 & \frac{1}{2} \\
+                0 & 0 \end{array} \right]
+
 
     >>> from sympy.polys.matrices.sdm import SDM
     >>> from sympy import QQ
-    >>> elemsdict = {0:{1:QQ(2)}}
+    >>> elemsdict = {0:{1:QQ(1, 2)}}
     >>> A = SDM(elemsdict, (2, 2), QQ)
     >>> A
-    {0: {1: 2}}
+    {0: {1: 1/2}}
 
     We can manipulate :py:class:`~.SDM` the same way
     as a Matrix class
@@ -47,8 +54,6 @@ class SDM(dict):
 
     Multiplication
 
-    >>> A = SDM({0:{1: ZZ(2)}, 1:{0:ZZ(1)}}, (2, 2), ZZ)
-    >>> B = SDM({0:{0: ZZ(3)}, 1:{1:ZZ(4)}}, (2, 2), ZZ)
     >>> A*B
     {0: {1: 8}, 1: {0: 3}}
     >>> A*ZZ(2)
@@ -86,8 +91,9 @@ class SDM(dict):
 
         Parameters
         ==========
+
         sdm: A dict of dicts for non-zero elements in SDM
-        shape: Represents dimension of SDM
+        shape: tuple representing dimension of SDM
         domain: Represents :py:class:`~.Domain` of SDM
 
         Returns
@@ -100,10 +106,10 @@ class SDM(dict):
 
         >>> from sympy.polys.matrices.sdm import SDM
         >>> from sympy import QQ
-        >>> elemsdict = {0:{1:2}, 1:{}}
+        >>> elemsdict = {0:{1: QQ(2)}}
         >>> A = SDM.new(elemsdict, (2, 2), QQ)
         >>> A
-        {0: {1: 2}, 1: {}}
+        {0: {1: 2}}
 
         """
         return cls(sdm, shape, domain)
@@ -231,13 +237,17 @@ class SDM(dict):
 
     @classmethod
     def zeros(cls, shape, domain):
-        """
+        r"""
 
         Returns a :py:class:`~.SDM` of size shape,
         belonging to the specified domain
 
-        Examples
-        ========
+        In the example below we declare a matrix A where,
+
+        .. math::
+            A := \left[\begin{array}{ccc}
+            0 & 0 & 0 \\
+            0 & 0 & 0 \end{array} \right]
 
         >>> from sympy.polys.matrices.sdm import SDM
         >>> from sympy import QQ
@@ -284,15 +294,8 @@ class SDM(dict):
         {1: {0: 2}}
 
         """
-        MT = {}
-        for i, Mi in M.items():
-            for j, Mij in Mi.items():
-                try:
-                    MT[j][i] = Mij
-                except KeyError:
-                    MT[j] = {i: Mij}
-
-        return M.new(MT, M.shape[::-1], M.domain)
+        MT = sdm_transpose(M)
+        return MT
 
     def __add__(A, B):
         if not isinstance(B, SDM):
@@ -751,7 +754,7 @@ def sdm_irref(A):
     >>> pivots
     [0, 1]
 
-    The analogous calculation with Matrix class would be
+   The analogous calculation with :py:class:`~.Matrix` would be
 
     >>> from sympy import Matrix
     >>> M = Matrix([[1, 2], [3, 4]])
