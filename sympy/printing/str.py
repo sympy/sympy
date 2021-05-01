@@ -6,6 +6,7 @@ from typing import Any, Dict
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
+from sympy.core.function import _coeff_isneg
 from .printer import Printer, print_function
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -269,10 +270,23 @@ class StrPrinter(Printer):
                     dargs[0] = -dargs[0]
                     e = Mul._from_args(dargs)
                 d[i] = Pow(di.base, e, evaluate=False) if e - 1 else di.base
-            nfactors = [self.parenthesize(a, prec, strict=False)
+
+            # don't parenthesize first factor if negative
+            if _coeff_isneg(n[0]):
+                pre = [str(n.pop(0))]
+            else:
+                pre = []
+            nfactors = pre + [self.parenthesize(a, prec, strict=False)
                 for a in n]
-            dfactors = [self.parenthesize(a, prec, strict=False)
+
+            # don't parenthesize first of denominator unless singleton
+            if len(d) > 1 and _coeff_isneg(d[0]):
+                pre = [str(d.pop(0))]
+            else:
+                pre = []
+            dfactors = pre + [self.parenthesize(a, prec, strict=False)
                 for a in d]
+
             n = '*'.join(nfactors)
             d = '*'.join(dfactors)
             if len(dfactors) > 1:
