@@ -29,6 +29,9 @@ def test_components():
 def test_issue_10680():
     assert isinstance(integrate(x**log(x**log(x**log(x))),x), Integral)
 
+def test_issue_21166():
+    assert integrate(sin(x/sqrt(abs(x))), (x, -1, 1)) == 0
+
 def test_heurisch_polynomials():
     assert heurisch(1, x) == x
     assert heurisch(x, x) == x**2/2
@@ -120,6 +123,7 @@ def test_heurisch_hyperbolic():
 
 def test_heurisch_mixed():
     assert heurisch(sin(x)*exp(x), x) == exp(x)*sin(x)/2 - exp(x)*cos(x)/2
+    assert heurisch(sin(x/sqrt(-x))) == 2*x*cos(x/sqrt(-x))/sqrt(-x) - 2*sin(x/sqrt(-x))
 
 
 def test_heurisch_radicals():
