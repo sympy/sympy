@@ -335,7 +335,7 @@ class SDM(dict):
 
         """
         MT = sdm_transpose(M)
-        return MT
+        return M.new(MT, M.shape[::-1], M.domain)
 
     def __add__(A, B):
         if not isinstance(B, SDM):
@@ -662,8 +662,9 @@ class SDM(dict):
         Examples
         ========
 
-        >>> from sympy import QQ
+        >>> from sympy import QQ, Symbol
         >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy.polys import Poly
         >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
         >>> A.charpoly()
         [1, -5, -2]
@@ -671,8 +672,6 @@ class SDM(dict):
         We can create a polynomial using the
         coefficients using :py:class:`~.Poly`
 
-        >>> from sympy import Symbol
-        >>> from sympy.polys import Poly
         >>> x = Symbol('x')
         >>> p = Poly(A.charpoly(), x, domain=A.domain)
         >>> p
