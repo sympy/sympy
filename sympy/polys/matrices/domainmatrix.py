@@ -247,9 +247,10 @@ class DomainMatrix:
 
     @classmethod
     def get_domain(cls, items_sympy, radicals_limit=None, **kwargs):
-        radicals = {p for k in items_sympy for p in k.atoms(Pow) if p.is_number and p.exp.is_Rational and p.exp.q != 1}
-        if len(radicals) == radicals_limit:
-            kwargs['extension'] = True
+        if radicals_limit is not None:
+            radicals = {p for k in items_sympy for p in k.atoms(Pow) if p.is_number and p.exp.is_Rational and p.exp.q != 1}
+            if len(radicals) <= radicals_limit:
+                kwargs['extension'] = True
 
         K, items_K = construct_domain(items_sympy, **kwargs)
         return K, items_K
