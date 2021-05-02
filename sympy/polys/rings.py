@@ -1209,10 +1209,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return p
 
     def _pow_multinomial(self, n):
-        multinomials = list(multinomial_coefficients(len(self), n).items())
+        multinomials = multinomial_coefficients(len(self), n).items()
         monomial_mulpow = self.ring.monomial_mulpow
         zero_monom = self.ring.zero_monom
-        terms = list(self.iterterms())
+        terms = self.items()
         zero = self.ring.domain.zero
         poly = self.ring.zero
 
@@ -1232,7 +1232,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
             if coeff:
                 poly[monom] = coeff
-            else:
+            elif monom in poly:
                 del poly[monom]
 
         return poly
