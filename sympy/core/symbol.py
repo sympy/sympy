@@ -227,8 +227,19 @@ class Symbol(AtomicExpr, Boolean):
         return True
 
     @staticmethod
+    def _validate_assumptions(assumptions):
+        """Validate assumption strings.
+        """
+        valid_assumptions = set(_assume_defined)
+        diff = set(assumptions) - valid_assumptions
+        if diff:
+            raise ValueError(
+                "invalid assumptions: %s " % ", ".join(diff) +
+                "(allowed: %s)" % ", ".join(valid_assumptions))
+
+    @staticmethod
     def _sanitize(assumptions, obj=None):
-        """Remove None, covert values to bool, check commutativity *in place*.
+        """Validate names, remove None, convert to bool, check commutativity *in place*.
         """
 
         # be strict about commutativity: cannot be None
@@ -268,6 +279,7 @@ class Symbol(AtomicExpr, Boolean):
         False
 
         """
+        cls._validate_assumptions(assumptions)
         cls._sanitize(assumptions, cls)
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
@@ -404,6 +416,7 @@ class Dummy(Symbol):
             dummy_index = Dummy._base_dummy_index + Dummy._count
             Dummy._count += 1
 
+        cls._validate_assumptions(assumptions)
         cls._sanitize(assumptions, cls)
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
@@ -519,6 +532,7 @@ class Wild(Symbol):
     def __new__(cls, name, exclude=(), properties=(), **assumptions):
         exclude = tuple([sympify(x) for x in exclude])
         properties = tuple(properties)
+        cls._validate_assumptions(assumptions)
         cls._sanitize(assumptions, cls)
         return Wild.__xnew__(cls, name, exclude, properties, **assumptions)
 
