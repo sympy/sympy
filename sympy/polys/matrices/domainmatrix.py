@@ -54,7 +54,7 @@ class DomainMatrix:
 
     @classmethod
     def get_domain(cls, items_sympy, radicals_limit=None, **kwargs):
-        radicals = {p for k in items_sympy for p in k.atoms(Pow) if p.is_number and p.exp.is_Rational and p.exp.q != 1}
+        radicals = {p for k in items_sympy if hasattr(k, 'atoms(Pow)') for p in k.atoms(Pow) if p.is_number and p.exp.is_Rational and p.exp.q != 1}
         if len(radicals) == radicals_limit:
             kwargs['extension'] = True
 
