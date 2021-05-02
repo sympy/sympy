@@ -9,6 +9,7 @@ convenience routines for converting between Expr and the poly domains as well
 as unifying matrices with different domains.
 
 """
+from sympy.core import Pow
 from sympy.core.sympify import _sympify
 
 from ..constructor import construct_domain
@@ -53,7 +54,8 @@ class DomainMatrix:
 
     @classmethod
     def get_domain(cls, items_sympy, radicals_limit=None, **kwargs):
-        if radicals_limit == 1:
+        radicals = {p for k in items_sympy for p in k.atoms(Pow) if p.is_number and p.exp.is_Rational and p.exp.q != 1}
+        if len(radicals) == radicals_limit:
             kwargs['extension'] = True
 
         K, items_K = construct_domain(items_sympy, **kwargs)

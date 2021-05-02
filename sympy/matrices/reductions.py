@@ -3,7 +3,7 @@ from types import FunctionType
 from sympy.simplify.simplify import (
     simplify as _simplify, dotprodsimp as _dotprodsimp)
 from sympy.polys.matrices.domainmatrix import DomainMatrix
-from sympy.core import Expr, Pow
+from sympy.core import Expr
 from sympy.polys.domains import EX
 
 from .utilities import _get_intermediate_simp, _iszero
@@ -325,8 +325,7 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     """
     flag = True
     if M.is_square and _check_expr(M):
-        primitive_element = {p for p in M.atoms(Pow) if p.is_number and p.exp.is_Rational and p.exp.q != 1}
-        DOM = DomainMatrix.from_Matrix(M, radicals_limit=len(primitive_element), field=True)
+        DOM = DomainMatrix.from_Matrix(M, radicals_limit=1, field=True)
         if DOM.domain != EX:
             DOM_mat, pivot_cols = DOM.rref()
             mat = DOM_mat.to_Matrix()
