@@ -8,3 +8,4 @@
    :maxdepth: 2
 
    assumptions.rst
+   booleans.rst
