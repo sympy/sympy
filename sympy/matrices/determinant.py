@@ -1,6 +1,5 @@
 from types import FunctionType
 
-from sympy.core import Pow
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import uniquely_named_symbol, Dummy
@@ -411,8 +410,7 @@ def _charpoly(M, x='lambda', simplify=_simplify, use_domain=None):
         return PurePoly(m, x)
 
     xdum = Dummy('t')
-    primitive_element = {p for p in M.atoms(Pow) if p.is_number and p.exp.is_Rational and p.exp.q != 1}
-    DOM = DomainMatrix.from_Matrix(M, radicals_limit=len(primitive_element))
+    DOM = DomainMatrix.from_Matrix(M, radicals_limit=1)
     domain = DOM.domain
     if domain == EX and use_domain is not True:
         use_domain = False

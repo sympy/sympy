@@ -421,7 +421,7 @@ def test_charpoly():
         [24*sqrt(2) + 87, 66 + 80*sqrt(2), 26*sqrt(2) + 91],
         [28*sqrt(2) + 54, 7 + 26*sqrt(2), 18 + 67*sqrt(2)],
         [87 + 67*sqrt(2), 16 + 25*sqrt(2), 68 + 63*sqrt(2)]])
-    assert A.charpoly() == Poly(x**3 + (-162 - 113*sqrt(2))*x**2 + (-8534 - 4297*sqrt(2))*x - 311682*sqrt(2) - 325283, x)
+    assert A.charpoly() == Poly(x**3 + (-162 - 113*sqrt(2))*x**2 + (-8534 - 4297*sqrt(2))*x - 311682*sqrt(2) - 325283, x, domain='QQ<sqrt(2)>')
     assert A.charpoly(use_domain=False) == Poly(x**3 + (-162 - 113*sqrt(2))*x**2 + (-8534 - 4297*sqrt(2))*x - 311682*sqrt(2) - 325283, x)
 
     A = Matrix([
