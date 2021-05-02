@@ -4,9 +4,9 @@
  Assumptions
 =============
 
-The previous page of the tutorial on simplification briefly mentioned setting
-assumptions on symbols in SymPy. This page explains how the assumptions
-systems is used and what the different assumptions predicates mean.
+This page outlines the core assumptions system in SymPy. It explains what the
+core assumptions system is, how the assumptions system is used and what the
+different assumptions predicates mean.
 
 .. note:: This page describes the "old assumptions" system. There is also a
           "new assumptions" system which is described at the end of this page.

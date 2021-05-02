@@ -17,4 +17,3 @@
    solvers.rst
    matrices.rst
    manipulation.rst
-   assumptions.rst
