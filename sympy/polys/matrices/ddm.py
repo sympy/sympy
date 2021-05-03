@@ -120,6 +120,23 @@ class DDM(list):
         rows = ([K.convert_from(e, Kold) for e in row] for row in self)
         return DDM(rows, self.shape, K)
 
+    def transpose(self):
+        """Returns transpose of self
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> from sympy import ZZ
+        >>> A = DDM([[ZZ(1), ZZ(2), ZZ(3)], [ZZ(4), ZZ(5), ZZ(6)]], (2, 3), ZZ)
+        >>> A.transpose()
+        [[1, 4], [2, 5], [3, 6]]
+
+        """
+
+        MT = list(map(list, zip(*self)))
+        return DDM(MT, self.shape[::-1], self.domain)
+
     def __str__(self):
         rowsstr = ['[%s]' % ', '.join(map(str, row)) for row in self]
         return '[%s]' % ', '.join(rowsstr)
