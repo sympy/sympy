@@ -206,6 +206,24 @@ def test_DomainMatrix_repr():
     assert repr(A) == 'DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)'
 
 
+def test_DomainMatrix_transpose():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    AT = DomainMatrix([[ZZ(1), ZZ(3)], [ZZ(2), ZZ(4)]], (2, 2), ZZ)
+    assert A.transpose() == AT
+
+
+def test_DomainMatrix_flat():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    assert A.flat() == [ZZ(1), ZZ(2), ZZ(3), ZZ(4)]
+
+
+def test_DomainMatrix_is_zero_matrix():
+    A = DomainMatrix([[ZZ(1)]], (1, 1), ZZ)
+    B = DomainMatrix([[ZZ(0)]], (1, 1), ZZ)
+    assert A.is_zero_matrix is False
+    assert B.is_zero_matrix is True
+
+
 def test_DomainMatrix_add():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     B = DomainMatrix([[ZZ(2), ZZ(4)], [ZZ(6), ZZ(8)]], (2, 2), ZZ)
@@ -375,6 +393,21 @@ def test_DomainMatrix_nullspace():
     A = DomainMatrix([[QQ(1), QQ(1)], [QQ(1), QQ(1)]], (2, 2), ZZ)
     Anull = DomainMatrix([[QQ(-1), QQ(1)]], (1, 2), ZZ)
     assert A.nullspace() == Anull
+
+
+def test_DomainMatrix_solve():
+    # XXX: Maybe the _solve method should be changed...
+    A = DomainMatrix([[QQ(1), QQ(2)], [QQ(2), QQ(4)]], (2, 2), QQ)
+    b = DomainMatrix([[QQ(1)], [QQ(2)]], (2, 1), QQ)
+    particular = DomainMatrix([[1, 0]], (1, 2), QQ)
+    nullspace = DomainMatrix([[-2, 1]], (1, 2), QQ)
+    assert A._solve(b) == (particular, nullspace)
+
+    b3 = DomainMatrix([[QQ(1)], [QQ(1)], [QQ(1)]], (3, 1), QQ)
+    raises(ShapeError, lambda: A._solve(b3))
+
+    bz = DomainMatrix([[ZZ(1)], [ZZ(1)]], (2, 1), ZZ)
+    raises(ValueError, lambda: A._solve(bz))
 
 
 def test_DomainMatrix_inv():

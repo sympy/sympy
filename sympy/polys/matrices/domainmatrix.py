@@ -556,6 +556,18 @@ class DomainMatrix:
     def __repr__(self):
         return 'DomainMatrix(%s, %r, %r)' % (str(self.rep), self.shape, self.domain)
 
+    def transpose(self):
+        """Matrix transpose of ``self``"""
+        return self.from_rep(self.rep.transpose())
+
+    def flat(self):
+        rows, cols = self.shape
+        return [self[i,j].element for i in range(rows) for j in range(cols)]
+
+    @property
+    def is_zero_matrix(self):
+        return all(self[i, j].element == self.domain.zero for i in range(self.shape[0]) for j in range(self.shape[1]))
+
     def hstack(A, B):
         r"""
         Horizontally stacks 2 Domain Matrices.
@@ -1176,6 +1188,20 @@ class DomainMatrix:
             raise ValueError('Not a field')
         sol = self.rep.lu_solve(rhs.rep)
         return self.from_rep(sol)
+
+    def _solve(A, b):
+        # XXX: Not sure about this method or its signature. It is just created
+        # because it is needed by the holonomic module.
+        if A.shape[0] != b.shape[0]:
+            raise ShapeError("Shape")
+        if A.domain != b.domain or not A.domain.is_Field:
+            raise ValueError('Not a field')
+        Aaug = A.hstack(b)
+        Arref, pivots = Aaug.rref()
+        particular = Arref.from_rep(Arref.rep.particular())
+        nullspace_rep, nonpivots = Arref[:,:-1].rep.nullspace()
+        nullspace = Arref.from_rep(nullspace_rep)
+        return particular, nullspace
 
     def charpoly(self):
         r"""

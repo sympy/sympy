@@ -64,6 +64,7 @@ representation is friendlier.
 from .exceptions import DDMBadInputError, DDMShapeError, DDMDomainError
 
 from .dense import (
+        ddm_transpose,
         ddm_iadd,
         ddm_isub,
         ddm_ineg,
@@ -162,6 +163,14 @@ class DDM(list):
     def copy(self):
         copyrows = (row[:] for row in self)
         return DDM(copyrows, self.shape, self.domain)
+
+    def transpose(self):
+        rows, cols = self.shape
+        if rows:
+            ddmT = ddm_transpose(self)
+        else:
+            ddmT = [[]] * cols
+        return DDM(ddmT, (cols, rows), self.domain)
 
     def __add__(a, b):
         if not isinstance(b, DDM):
@@ -276,6 +285,9 @@ class DDM(list):
             basis.append(vec)
 
         return DDM(basis, (len(basis), cols), domain), nonpivots
+
+    def particular(a):
+        return a.to_sdm().particular().to_ddm()
 
     def det(a):
         """Determinant of a"""
