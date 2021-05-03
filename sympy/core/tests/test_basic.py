@@ -299,6 +299,12 @@ def test_as_dummy():
         assert D != d and D.func == Dummy and D.is_real is None
     assert Dummy().as_dummy().is_commutative
     assert Dummy(commutative=False).as_dummy().is_commutative is False
+    f = Function('f')
+    assert Integral(1, f(x)).free_symbols == {x}
+    assert Integral(x + f(x), (f(x), 0, f(x))).as_dummy() == Integral(
+        _0 + _1, (_0, 0, f(x)))
+    assert Integral(_0 + f(x), (f(x), 0, f(x))).as_dummy() == Integral(
+        _0 + _1, (_1, 0, f(x)))
 
 
 def test_canonical_variables():
