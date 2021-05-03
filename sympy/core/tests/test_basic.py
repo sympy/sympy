@@ -303,10 +303,12 @@ def test_as_dummy():
 
 def test_canonical_variables():
     x, i0, i1 = symbols('x _:2')
+    f = Function('f')
     assert Integral(x, (x, x + 1)).canonical_variables == {x: i0}
     assert Integral(x, (x, x + 1), (i0, 1, 2)).canonical_variables == {
         x: i0, i0: i1}
     assert Integral(x, (x, x + i0)).canonical_variables == {x: i1}
+    assert Integral(x, (f(x), 0, 1)).canonical_variables == {f(x): i0, x: i1}
 
 
 def test_replace_exceptions():

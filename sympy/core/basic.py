@@ -582,9 +582,8 @@ class Basic(Printable, metaclass=ManagedProperties):
         names = {i.name for i in self.free_symbols - set(bound)}
         for b in bound:
             d = next(dums)
-            if b.is_Symbol:
-                while d.name in names:
-                    d = next(dums)
+            while d.name in names:
+                d = next(dums)
             reps[b] = d
         return reps
 
