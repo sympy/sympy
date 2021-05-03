@@ -330,7 +330,7 @@ def _adjugate(M, method="berkowitz"):
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _charpoly(M, x='lambda', simplify=_simplify, use_domain=None):
+def _charpoly(M, x='lambda', use_domain=None):
     """Computes characteristic polynomial det(x*I - M) where I is
     the identity matrix.
 
@@ -342,10 +342,6 @@ def _charpoly(M, x='lambda', simplify=_simplify, use_domain=None):
 
     x : string, optional
         Name for the "lambda" variable, defaults to "lambda".
-
-    simplify : function, optional
-        Simplification function to use on the characteristic polynomial
-        calculated. Defaults to ``simplify``.
 
     Examples
     ========
@@ -406,28 +402,23 @@ def _charpoly(M, x='lambda', simplify=_simplify, use_domain=None):
         x = uniquely_named_symbol(x, diagonal_elements, modify=lambda s: '_' + s)
         m = 1
         for i in diagonal_elements:
-            m = m * (x - simplify(i))
+            m = m * (x - _simplify(i))
         return PurePoly(m, x)
 
     xdum = Dummy('t')
-    DOM = DomainMatrix.from_Matrix(M, radicals_limit=1)
+    DOM = DomainMatrix.from_Matrix(M, radicals_limit=5)
     domain = DOM.domain
     if domain == EX and use_domain is not True:
         use_domain = False
 
     if use_domain is False:
         berk_vector = _berkowitz_vector(M)
-        berk_vector = [simplify(a) for a in berk_vector]
+        berk_vector = [_simplify(a) for a in berk_vector]
         dummy_poly = PurePoly(berk_vector, xdum)
 
     else:
         dom_vector = DOM.charpoly()
         dummy_poly = PurePoly(dom_vector, xdum, domain=domain)
-
-        # XXX: calling simplify like this is a bad idea.
-        # The caller can simplify if they want
-        if domain.is_FractionField and not all(t.is_Symbol for t in getattr(domain, 'symbols', ())):
-            dummy_poly = PurePoly(simplify(dummy_poly.as_expr()), xdum)
 
     xsym = uniquely_named_symbol(x, dummy_poly, modify=lambda s: '_' + s)
     poly = dummy_poly.subs(xdum, xsym)

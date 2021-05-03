@@ -113,8 +113,8 @@ class MatrixDeterminant(MatrixCommon):
     def adjugate(self, method="berkowitz"):
         return _adjugate(self, method=method)
 
-    def charpoly(self, x='lambda', simplify=_simplify, use_domain=None):
-        return _charpoly(self, x=x, simplify=simplify, use_domain=use_domain)
+    def charpoly(self, x='lambda', use_domain=None):
+        return _charpoly(self, x=x, use_domain=use_domain)
 
     def cofactor(self, i, j, method="berkowitz"):
         return _cofactor(self, i, j, method=method)
