@@ -22,6 +22,9 @@ def test_class_handler_registry():
 
     assert my_handler_registry(x*y) == {Q.positive(x*y): fact2, Q.negative(x*y): fact1}
 
+    my_handler_registry.remove_handler(fact2)
+    assert my_handler_registry[Mul] == frozenset({fact1})
+
 
 def test_allargs():
     assert allargs(x, Q.zero(x), x*y) == And(Q.zero(x), Q.zero(y))

@@ -109,11 +109,15 @@ class ClassFactRegistry(MutableMapping):
     Explanation
     ===========
 
-    ``register`` method registers the handler function for a class. Here,
+    ``register()`` method registers the handler function for a class. Here,
     handler function should return a single fact.
 
-    ``registry(expr)`` returns a dictionary of computed facts and their handler
-    functions for *expr*.
+    ``registry(expr)`` method returns a dictionary of computed facts and their
+    handler functions for *expr*.
+
+    ``remove_handler()`` method removes a handler function from every class.
+    This can be useful when you want to extract a compact registry from the
+    pre-built one.
 
     Examples
     ========
@@ -139,6 +143,13 @@ class ClassFactRegistry(MutableMapping):
     >>> reg(Abs(x)) # doctest: +SKIP
     {Q.nonnegative(Abs(x)): <function __main__.f1(expr)>,
      Equivalent(~Q.zero(x), ~Q.zero(Abs(x))): <function __main__.f2(expr)>}
+
+    You can remove unnecessary handler with ``remove_handler()`` method.
+
+    >>> h = reg(Abs(x))[Q.nonnegative(Abs(x))]
+    >>> reg.remove_handler(h)
+    >>> reg(Abs(x)) # doctest: +SKIP
+    {Equivalent(~Q.zero(x), ~Q.zero(Abs(x))): <function __main__.f2(expr)>}
 
     """
     def __init__(self, d=None):
@@ -177,6 +188,12 @@ class ClassFactRegistry(MutableMapping):
     def __call__(self, expr):
         handlers = self[expr.func]
         return {h(expr): h for h in handlers}
+
+    def remove_handler(self, handler):
+        for key in self.d.keys():
+            old_handlers = self.d[key]
+            new_handlers = old_handlers - {handler}
+            self.d[key] = new_handlers
 
 class_fact_registry = ClassFactRegistry()
 
