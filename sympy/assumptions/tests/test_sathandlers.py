@@ -13,13 +13,15 @@ def test_class_handler_registry():
     @my_handler_registry.register(Mul)
     def fact1(expr):
         pass
-    @my_handler_registry.multiregister(Expr)
+    @my_handler_registry.register(Expr)
     def fact2(expr):
         pass
 
-    assert my_handler_registry[Basic] == (frozenset(), frozenset())
-    assert my_handler_registry[Expr] == (frozenset(), frozenset({fact2}))
-    assert my_handler_registry[Mul] == (frozenset({fact1}), frozenset({fact2}))
+    assert my_handler_registry[Basic] == frozenset()
+    assert my_handler_registry[Expr] == frozenset({fact2})
+    assert my_handler_registry[Mul] == frozenset({fact1, fact2})
+
+    assert my_handler_registry(x*y) == {None: fact1}
 
 
 def test_allargs():

@@ -1,4 +1,5 @@
 from collections import defaultdict
+from collections.abc import MutableMapping
 
 from sympy.assumptions.ask import Q
 from sympy.core import (Add, Mul, Pow, Number, NumberSymbol, Symbol)
@@ -101,7 +102,7 @@ def exactlyonearg(symbol, fact, expr):
 
 ### Fact registry ###
 
-class ClassFactRegistry:
+class ClassFactRegistry(MutableMapping):
     """
     Register handlers against classes.
 
@@ -110,9 +111,6 @@ class ClassFactRegistry:
 
     ``register`` method registers the handler function for a class. Here,
     handler function should return a single fact.
-
-    ``multiregister`` method registers the handler function for multiple
-    classes. Here, handler function should return a container of multiple facts.
 
     ``registry(expr)`` returns a dictionary of computed facts and their handler
     functions for *expr*.
@@ -142,60 +140,43 @@ class ClassFactRegistry:
     {Q.nonnegative(Abs(x)): <function __main__.f1(expr)>,
      Equivalent(~Q.zero(x), ~Q.zero(Abs(x))): <function __main__.f2(expr)>}
 
-    Multiple facts can be registered at once by ``multiregister`` method.
-
-    >>> reg2 = ClassFactRegistry()
-    >>> @reg2.multiregister(Abs)
-    ... def _(expr):
-    ...     arg = expr.args[0]
-    ...     return [Q.even(arg) >> Q.even(expr), Q.odd(arg) >> Q.odd(expr)]
-    >>> reg2(Abs(x))
-    {Implies(Q.even(x), Q.even(Abs(x))), Implies(Q.odd(x), Q.odd(Abs(x)))}
-
     """
-    def __init__(self):
-        self.singlefacts = defaultdict(frozenset)
-        self.multifacts = defaultdict(frozenset)
+    def __init__(self, d=None):
+        d = d or {}
+        self.d = defaultdict(frozenset, d)
+        super().__init__()
+
+    def __setitem__(self, key, item):
+        self.d[key] = frozenset(item)
+
+    def __delitem__(self, key):
+        del self.d[key]
+
+    def __iter__(self):
+        return self.d.__iter__()
+
+    def __len__(self):
+        return len(self.d)
+
+    def __repr__(self):
+        return repr(self.d)
 
     def register(self, cls):
         def _(func):
-            self.singlefacts[cls] |= {func}
-            return func
-        return _
-
-    def multiregister(self, *classes):
-        def _(func):
-            for cls in classes:
-                self.multifacts[cls] |= {func}
+            self.d[cls] |= {func}
             return func
         return _
 
     def __getitem__(self, key):
-        ret1 = self.singlefacts[key]
-        for k in self.singlefacts:
+        ret = self.d[key]
+        for k in self.d:
             if issubclass(key, k):
-                ret1 |= self.singlefacts[k]
-
-        ret2 = self.multifacts[key]
-        for k in self.multifacts:
-            if issubclass(key, k):
-                ret2 |= self.multifacts[k]
-
-        return ret1, ret2
+                ret |= self.d[k]
+        return ret
 
     def __call__(self, expr):
-        ret = {}
-
-        handlers1, handlers2 = self[expr.func]
-
-        for h in handlers1:
-            fact = h(expr)
-            ret[fact] = h
-        for h in handlers2:
-            facts = h(expr)
-            for fact in facts:
-                ret[fact] = h
-        return ret
+        handlers = self[expr.func]
+        return {h(expr): h for h in handlers}
 
 class_fact_registry = ClassFactRegistry()
 
@@ -207,28 +188,28 @@ x = Symbol('x')
 
 ## Abs ##
 
-@class_fact_registry.multiregister(Abs)
-def _(expr):
-    arg = expr.args[0]
-    return [Q.nonnegative(expr),
-            Equivalent(~Q.zero(arg), ~Q.zero(expr)),
-            Q.even(arg) >> Q.even(expr),
-            Q.odd(arg) >> Q.odd(expr),
-            Q.integer(arg) >> Q.integer(expr),
-            ]
+for fact in [
+    lambda expr: Q.nonnegative(expr),
+    lambda expr: Equivalent(~Q.zero(expr.args[0]), ~Q.zero(expr)),
+    lambda expr: Q.even(expr.args[0]) >> Q.even(expr),
+    lambda expr: Q.odd(expr.args[0]) >> Q.odd(expr),
+    lambda expr: Q.integer(expr.args[0]) >> Q.integer(expr),
+]:
+    class_fact_registry.register(Abs)(fact)
 
 
 ### Add ##
 
-@class_fact_registry.multiregister(Add)
-def _(expr):
-    return [allargs(x, Q.positive(x), expr) >> Q.positive(expr),
-            allargs(x, Q.negative(x), expr) >> Q.negative(expr),
-            allargs(x, Q.real(x), expr) >> Q.real(expr),
-            allargs(x, Q.rational(x), expr) >> Q.rational(expr),
-            allargs(x, Q.integer(x), expr) >> Q.integer(expr),
-            exactlyonearg(x, ~Q.integer(x), expr) >> ~Q.integer(expr),
-            ]
+for fact in [
+    lambda expr: allargs(x, Q.positive(x), expr) >> Q.positive(expr),
+    lambda expr: allargs(x, Q.negative(x), expr) >> Q.negative(expr),
+    lambda expr: allargs(x, Q.real(x), expr) >> Q.real(expr),
+    lambda expr: allargs(x, Q.rational(x), expr) >> Q.rational(expr),
+    lambda expr: allargs(x, Q.integer(x), expr) >> Q.integer(expr),
+    lambda expr: exactlyonearg(x, ~Q.integer(x), expr) >> ~Q.integer(expr)
+]:
+    class_fact_registry.register(Add)(fact)
+
 
 @class_fact_registry.register(Add)
 def _(expr):
@@ -239,16 +220,16 @@ def _(expr):
 
 ### Mul ###
 
-@class_fact_registry.multiregister(Mul)
-def _(expr):
-    return [Equivalent(Q.zero(expr), anyarg(x, Q.zero(x), expr)),
-            allargs(x, Q.positive(x), expr) >> Q.positive(expr),
-            allargs(x, Q.real(x), expr) >> Q.real(expr),
-            allargs(x, Q.rational(x), expr) >> Q.rational(expr),
-            allargs(x, Q.integer(x), expr) >> Q.integer(expr),
-            exactlyonearg(x, ~Q.rational(x), expr) >> ~Q.integer(expr),
-            allargs(x, Q.commutative(x), expr) >> Q.commutative(expr),
-            ]
+for fact in [
+    lambda expr: Equivalent(Q.zero(expr), anyarg(x, Q.zero(x), expr)),
+    lambda expr: allargs(x, Q.positive(x), expr) >> Q.positive(expr),
+    lambda expr: allargs(x, Q.real(x), expr) >> Q.real(expr),
+    lambda expr: allargs(x, Q.rational(x), expr) >> Q.rational(expr),
+    lambda expr: allargs(x, Q.integer(x), expr) >> Q.integer(expr),
+    lambda expr: exactlyonearg(x, ~Q.rational(x), expr) >> ~Q.integer(expr),
+    lambda expr: allargs(x, Q.commutative(x), expr) >> Q.commutative(expr),
+]:
+    class_fact_registry.register(Mul)(fact)
 
 @class_fact_registry.register(Mul)
 def _(expr):
@@ -293,38 +274,28 @@ def _(expr):
 
 ### Pow ###
 
-@class_fact_registry.multiregister(Pow)
-def _(expr):
-    base, exp = expr.base, expr.exp
-    return [
-        (Q.real(base) & Q.even(exp) & Q.nonnegative(exp)) >> Q.nonnegative(expr),
-        (Q.nonnegative(base) & Q.odd(exp) & Q.nonnegative(exp)) >> Q.nonnegative(expr),
-        (Q.nonpositive(base) & Q.odd(exp) & Q.nonnegative(exp)) >> Q.nonpositive(expr),
-        Equivalent(Q.zero(expr), Q.zero(base) & Q.positive(exp))
-    ]
+for fact in [
+    lambda expr: (Q.real(expr.base) & Q.even(expr.exp) & Q.nonnegative(expr.exp)) >> Q.nonnegative(expr),
+    lambda expr: (Q.nonnegative(expr.base) & Q.odd(expr.exp) & Q.nonnegative(expr.exp)) >> Q.nonnegative(expr),
+    lambda expr: (Q.nonpositive(expr.base) & Q.odd(expr.exp) & Q.nonnegative(expr.exp)) >> Q.nonpositive(expr),
+    lambda expr: Equivalent(Q.zero(expr), Q.zero(expr.base) & Q.positive(expr.exp)),
+]:
+    class_fact_registry.register(Pow)(fact)
 
 
 ### Numbers ###
 
-_old_assump_getters = {
-    Q.positive: lambda o: o.is_positive,
-    Q.zero: lambda o: o.is_zero,
-    Q.negative: lambda o: o.is_negative,
-    Q.rational: lambda o: o.is_rational,
-    Q.irrational: lambda o: o.is_irrational,
-    Q.even: lambda o: o.is_even,
-    Q.odd: lambda o: o.is_odd,
-    Q.imaginary: lambda o: o.is_imaginary,
-    Q.prime: lambda o: o.is_prime,
-    Q.composite: lambda o: o.is_composite,
-}
-
-@class_fact_registry.multiregister(Number, NumberSymbol, ImaginaryUnit)
-def _(expr):
-    ret = []
-    for p, getter in _old_assump_getters.items():
-        pred = p(expr)
-        prop = getter(expr)
-        if prop is not None:
-            ret.append(Equivalent(pred, prop))
-    return ret
+for cls in (Number, NumberSymbol, ImaginaryUnit):
+    for fact in [
+        lambda o: Equivalent(Q.positive(o), o.is_positive) if o.is_positive is not None else True,
+        lambda o: Equivalent(Q.zero(o), o.is_zero) if o.is_zero is not None else True,
+        lambda o: Equivalent(Q.negative(o), o.is_negative) if o.is_negative is not None else True,
+        lambda o: Equivalent(Q.rational(o), o.is_rational) if o.is_rational is not None else True,
+        lambda o: Equivalent(Q.irrational(o), o.is_irrational) if o.is_irrational is not None else True,
+        lambda o: Equivalent(Q.even(o), o.is_even) if o.is_even is not None else True,
+        lambda o: Equivalent(Q.odd(o), o.is_odd) if o.is_odd is not None else True,
+        lambda o: Equivalent(Q.imaginary(o), o.is_imaginary) if o.is_imaginary is not None else True,
+        lambda o: Equivalent(Q.prime(o), o.is_prime) if o.is_prime is not None else True,
+        lambda o: Equivalent(Q.composite(o), o.is_composite) if o.is_composite is not None else True,
+    ]:
+        class_fact_registry.register(cls)(fact)
