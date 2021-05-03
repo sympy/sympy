@@ -1,21 +1,23 @@
 """
 Known facts in assumptions module.
 
-This module defines the facts in ``get_known_facts()``, and supports functions
-to generate the contents in ``sympy.assumptions.ask_generated`` file.
+This module defines the facts between unary predicates in ``get_known_facts()``,
+and supports functions to generate the contents in
+``sympy.assumptions.ask_generated`` file.
 """
 
-from sympy.core.cache import cacheit
 from sympy.assumptions import Q
-from sympy.assumptions.cnf import CNF
+from sympy.assumptions.assume import AppliedPredicate
+from sympy.core.cache import cacheit
+from sympy.core.symbol import Symbol
 from sympy.logic.boolalg import (to_cnf, And, Not, Implies, Equivalent)
 from sympy.logic.inference import satisfiable
 
 
 @cacheit
 def get_composite_predicates():
-    # To reduce the complexity of sat solver, these predicates never goes into facts
-    # but are transformed into the combination of primitive predicates.
+    # To reduce the complexity of sat solver, these predicates are
+    # transformed into the combination of primitive predicates.
     return {
         Q.real : Q.negative | Q.zero | Q.positive,
         Q.integer : Q.even | Q.odd,
@@ -33,81 +35,152 @@ def get_composite_predicates():
 
 
 @cacheit
-def get_known_facts():
-    # We build the facts starting with primitive predicates.
-    # DO NOT include the predicates in get_composite_predicates()'s keys here!
-    return And(
+def get_known_facts(x=None):
+    """
+    Facts between unary predicates.
 
+    Parameters
+    ==========
+
+    x : Symbol, optional
+        Placeholder symbol for unary facts. Default is ``Symbol('x')``.
+
+    Returns
+    =======
+
+    fact : Known facts in conjugated normal form.
+
+    """
+    if x is None:
+        x = Symbol('x')
+    fact = And(
+        # primitive predicates for extended real exclude each other.
+        # finite/infinite ones already reject each other so don't add here.
         # primitive predicates exclude each other
-        Implies(Q.negative_infinite, ~Q.positive_infinite),
-        Implies(Q.negative, ~Q.zero & ~Q.positive),
-        Implies(Q.positive, ~Q.zero),
+        Implies(Q.negative_infinite(x), ~Q.positive_infinite(x)),
+        Implies(Q.negative(x), ~Q.zero(x) & ~Q.positive(x)),
+        Implies(Q.positive(x), ~Q.zero(x)),
 
         # build real line and complex plane
-        Implies(Q.negative | Q.zero | Q.positive, ~Q.imaginary),
-        Implies(Q.negative | Q.zero | Q.positive | Q.imaginary, Q.algebraic | Q.transcendental),
+        Implies(Q.negative(x) | Q.zero(x) | Q.positive(x), ~Q.imaginary(x)),
+        Implies(Q.negative(x) | Q.zero(x) | Q.positive(x) | Q.imaginary(x), Q.algebraic(x) | Q.transcendental(x)),
 
         # other subsets of complex
-        Implies(Q.transcendental, ~Q.algebraic),
-        Implies(Q.irrational, ~Q.rational),
-        Equivalent(Q.rational | Q.irrational, Q.negative | Q.zero | Q.positive),
-        Implies(Q.rational, Q.algebraic),
+        Implies(Q.transcendental(x), ~Q.algebraic(x)),
+        Implies(Q.irrational(x), ~Q.rational(x)),
+        Equivalent(Q.rational(x) | Q.irrational(x), Q.negative(x) | Q.zero(x) | Q.positive(x)),
+        Implies(Q.rational(x), Q.algebraic(x)),
 
         # integers
-        Implies(Q.even, ~Q.odd),
-        Implies(Q.even | Q.odd, Q.rational),
-        Implies(Q.zero, Q.even),
-        Implies(Q.composite, ~Q.prime),
-        Implies(Q.composite | Q.prime, (Q.even | Q.odd) & Q.positive),
-        Implies(Q.even & Q.positive & ~Q.prime, Q.composite),
+        Implies(Q.even(x), ~Q.odd(x)),
+        Implies(Q.even(x) | Q.odd(x), Q.rational(x)),
+        Implies(Q.zero(x), Q.even(x)),
+        Implies(Q.composite(x), ~Q.prime(x)),
+        Implies(Q.composite(x) | Q.prime(x), (Q.even(x) | Q.odd(x)) & Q.positive(x)),
+        Implies(Q.even(x) & Q.positive(x) & ~Q.prime(x), Q.composite(x)),
 
         # hermitian and antihermitian
-        Implies(Q.negative | Q.zero | Q.positive, Q.hermitian),
-        Implies(Q.imaginary, Q.antihermitian),
-        Implies(Q.zero, Q.hermitian | Q.antihermitian),
+        Implies(Q.negative(x) | Q.zero(x) | Q.positive(x), Q.hermitian(x)),
+        Implies(Q.imaginary(x), Q.antihermitian(x)),
+        Implies(Q.zero(x), Q.hermitian(x) | Q.antihermitian(x)),
 
         # define finity and infinity, and build extended real line
-        Implies(Q.infinite, ~Q.finite),
-        Implies(Q.algebraic | Q.transcendental, Q.finite),
-        Implies(Q.negative_infinite | Q.positive_infinite, Q.infinite),
+        Implies(Q.infinite(x), ~Q.finite(x)),
+        Implies(Q.algebraic(x) | Q.transcendental(x), Q.finite(x)),
+        Implies(Q.negative_infinite(x) | Q.positive_infinite(x), Q.infinite(x)),
 
         # commutativity
-        Implies(Q.finite | Q.infinite, Q.commutative),
+        Implies(Q.finite(x) | Q.infinite(x), Q.commutative(x)),
 
         # matrices
-        Implies(Q.orthogonal, Q.positive_definite),
-        Implies(Q.orthogonal, Q.unitary),
-        Implies(Q.unitary & Q.real_elements, Q.orthogonal),
-        Implies(Q.unitary, Q.normal),
-        Implies(Q.unitary, Q.invertible),
-        Implies(Q.normal, Q.square),
-        Implies(Q.diagonal, Q.normal),
-        Implies(Q.positive_definite, Q.invertible),
-        Implies(Q.diagonal, Q.upper_triangular),
-        Implies(Q.diagonal, Q.lower_triangular),
-        Implies(Q.lower_triangular, Q.triangular),
-        Implies(Q.upper_triangular, Q.triangular),
-        Implies(Q.triangular, Q.upper_triangular | Q.lower_triangular),
-        Implies(Q.upper_triangular & Q.lower_triangular, Q.diagonal),
-        Implies(Q.diagonal, Q.symmetric),
-        Implies(Q.unit_triangular, Q.triangular),
-        Implies(Q.invertible, Q.fullrank),
-        Implies(Q.invertible, Q.square),
-        Implies(Q.symmetric, Q.square),
-        Implies(Q.fullrank & Q.square, Q.invertible),
-        Equivalent(Q.invertible, ~Q.singular),
-        Implies(Q.integer_elements, Q.real_elements),
-        Implies(Q.real_elements, Q.complex_elements),
+        Implies(Q.orthogonal(x), Q.positive_definite(x)),
+        Implies(Q.orthogonal(x), Q.unitary(x)),
+        Implies(Q.unitary(x) & Q.real_elements(x), Q.orthogonal(x)),
+        Implies(Q.unitary(x), Q.normal(x)),
+        Implies(Q.unitary(x), Q.invertible(x)),
+        Implies(Q.normal(x), Q.square(x)),
+        Implies(Q.diagonal(x), Q.normal(x)),
+        Implies(Q.positive_definite(x), Q.invertible(x)),
+        Implies(Q.diagonal(x), Q.upper_triangular(x)),
+        Implies(Q.diagonal(x), Q.lower_triangular(x)),
+        Implies(Q.lower_triangular(x), Q.triangular(x)),
+        Implies(Q.upper_triangular(x), Q.triangular(x)),
+        Implies(Q.triangular(x), Q.upper_triangular(x) | Q.lower_triangular(x)),
+        Implies(Q.upper_triangular(x) & Q.lower_triangular(x), Q.diagonal(x)),
+        Implies(Q.diagonal(x), Q.symmetric(x)),
+        Implies(Q.unit_triangular(x), Q.triangular(x)),
+        Implies(Q.invertible(x), Q.fullrank(x)),
+        Implies(Q.invertible(x), Q.square(x)),
+        Implies(Q.symmetric(x), Q.square(x)),
+        Implies(Q.fullrank(x) & Q.square(x), Q.invertible(x)),
+        Equivalent(Q.invertible(x), ~Q.singular(x)),
+        Implies(Q.integer_elements(x), Q.real_elements(x)),
+        Implies(Q.real_elements(x), Q.complex_elements(x)),
     )
+    return fact
+
+
+def generate_known_facts_dict(keys, fact):
+    """
+    Computes and returns a dictionary which contains the relations between
+    unary predicates.
+
+    Each key is a predicate, and item is two groups of predicates.
+    First group contains the predicates which are implied by the key, and
+    second group contains the predicates which are rejected by the key.
+
+    All predicates in *keys* and *fact* must be unary and have same placeholder
+    symbol.
+
+    Parameters
+    ==========
+
+    keys : list of AppliedPredicate instances.
+
+    fact : Fact between predicates in conjugated normal form.
+
+    Examples
+    ========
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.facts import generate_known_facts_dict
+    >>> from sympy.logic.boolalg import And, Implies
+    >>> from sympy.abc import x
+    >>> keys = [Q.even(x), Q.odd(x), Q.zero(x)]
+    >>> fact = And(Implies(Q.even(x), ~Q.odd(x)),
+    ...     Implies(Q.zero(x), Q.even(x)))
+    >>> generate_known_facts_dict(keys, fact)
+    {Q.even: ({Q.even}, {Q.odd}),
+     Q.odd: ({Q.odd}, {Q.even, Q.zero}),
+     Q.zero: ({Q.even, Q.zero}, {Q.odd})}
+    """
+    fact_cnf = to_cnf(fact)
+    mapping = single_fact_lookup(keys, fact_cnf)
+
+    ret = {}
+    for key, value in mapping.items():
+        implied = set()
+        rejected = set()
+        for expr in value:
+            if isinstance(expr, AppliedPredicate):
+                implied.add(expr.function)
+            elif isinstance(expr, Not):
+                pred = expr.args[0]
+                rejected.add(pred.function)
+        ret[key.function] = (implied, rejected)
+    return ret
 
 
 @cacheit
 def get_known_facts_keys():
+    """
+    Return the unapplied unary predicates.
+    """
     exclude = set()
     for pred in get_composite_predicates():
         exclude.add(pred)
     for pred in [Q.eq, Q.ne, Q.gt, Q.lt, Q.ge, Q.le]:
-        # sat does not support polyadic predicates yet
+        # exclude polyadic predicates
         exclude.add(pred)
 
     result = []
@@ -119,71 +192,6 @@ def get_known_facts_keys():
             continue
         result.append(pred)
     return result
-
-
-def compute_known_facts(known_facts, known_facts_keys):
-    """Compute the various forms of knowledge compilation used by the
-    assumptions system.
-
-    Explanation
-    ===========
-
-    This function is typically applied to the results of the ``get_known_facts``
-    and ``get_known_facts_keys`` functions defined at the bottom of
-    this file.
-    """
-    from textwrap import dedent, wrap
-
-    fact_string = dedent('''\
-    """
-    The contents of this file are the return value of
-    ``sympy.assumptions.ask.compute_known_facts``.
-
-    Do NOT manually edit this file.
-    Instead, run ./bin/ask_update.py.
-    """
-
-    from sympy.core.cache import cacheit
-    from sympy.assumptions.cnf import Literal
-    from sympy.assumptions.ask import Q
-
-    @cacheit
-    def get_all_known_facts():
-        """
-        Known facts as CNF clauses. Used by satask.
-        """
-        return {
-            %s
-        }
-
-    # -{ Known facts in compressed sets }-
-    @cacheit
-    def get_known_facts_dict():
-        """
-        Logical implication as dictionary. Key implies every item in its value.
-        Used for quick lookup of single facts.
-        """
-        return {
-            %s
-        }
-    ''')
-    # Compute the known facts in CNF form for logical inference
-    LINE = ",\n        "
-    HANG = ' '*8
-    cnf = to_cnf(known_facts)
-    cnf_ = CNF.to_CNF(known_facts)
-
-    p = LINE.join(sorted(['frozenset((' + ', '.join(str(lit) for lit in sorted(clause, key=str)) +'))' for clause in cnf_.clauses]))
-    mapping = single_fact_lookup(known_facts_keys, cnf)
-    items = sorted(mapping.items(), key=str)
-    keys = [str(i[0]) for i in items]
-    values = ['set(%s)' % sorted(i[1], key=str) for i in items]
-    m = LINE.join(['\n'.join(
-        wrap("{}: {}".format(k, v),
-            subsequent_indent=HANG,
-            break_long_words=False))
-        for k, v in zip(keys, values)]) + ','
-    return fact_string % (p, m)
 
 
 def single_fact_lookup(known_facts_keys, known_facts_cnf):
