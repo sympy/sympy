@@ -950,6 +950,7 @@ def test_symbols():
     assert Integral(2, (x, 1, 2), (y, x, 2), (y, 1, 2)).free_symbols == \
         {x}
     assert Integral(x, (f(y, x), z)).bound_symbols == [f(y, x), x, y]
+    assert Integral(x, (f(y, x), z)).free_symbols == {z}
 
 
 def test_is_zero():

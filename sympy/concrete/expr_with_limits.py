@@ -292,15 +292,16 @@ class ExprWithLimits(Expr):
         function, limits = self.function, self.limits
         isyms = function.free_symbols
         for xab in limits:
+            free0 = xab[0].free_symbols
             if len(xab) == 1:
-                isyms.add(xab[0])
-                continue
-            # take out the target symbol
-            if xab[0] in isyms:
-                isyms.remove(xab[0])
-            # add in the new symbols
-            for i in xab[1:]:
-                isyms.update(i.free_symbols)
+                # these are all free
+                isyms.update(free0)
+            else:
+                # take out the target symbol
+                isyms -= free0
+                # add in the new symbols
+                for i in xab[1:]:
+                    isyms.update(i.free_symbols)
         return isyms
 
     @property
