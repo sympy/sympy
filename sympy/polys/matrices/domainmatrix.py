@@ -553,6 +553,55 @@ class DomainMatrix:
         rows_sympy = [[self.domain.to_sympy(e) for e in row] for row in elemlist]
         return MutableDenseMatrix(rows_sympy)
 
+    def diagonal(self, k=0):
+        r"""
+        Returns the kth diagonal of self. The main diagonal
+        corresponds to `k=0`; diagonals above and below correspond to
+        `k > 0` and `k < 0`, respectively. The values of `self[i, j]`
+        for which `j - i = k`, are returned in order of increasing
+        `i + j`, starting with `i + j = |k|`.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy.polys.domains import ZZ
+        >>> A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> A.diagonal()
+        DomainMatrix([[1, 4]], (1, 2), ZZ)
+        >>> A.diagonal(1)
+        DomainMatrix([[2]], (1, 1), ZZ)
+        >>> A.diagonal(-1)
+        DomainMatrix([[3]], (1, 1), ZZ)
+
+        See Also
+        ========
+        DomainMatrix.diag()
+
+        """
+        from sympy.utilities.misc import filldedent
+
+        diaglist = []
+        elemlist = self.rep.to_list()
+        r = 0 if k > 0 else -k
+        c = 0 if r else k
+
+        nrows, ncols = self.shape
+
+        while True:
+            if r == nrows or c == ncols:
+                break
+            diaglist.append(elemlist[r][c])
+            r += 1
+            c += 1
+
+        if not diaglist:
+            raise ValueError(filldedent('''
+                    The %s diagonal is out of range [%s, %s]''' % (
+                k, 1 - ncols, nrows - 1)))
+
+        return self.from_list_sympy(1, len(diaglist), [diaglist])
+
     def __repr__(self):
         return 'DomainMatrix(%s, %r, %r)' % (str(self.rep), self.shape, self.domain)
 

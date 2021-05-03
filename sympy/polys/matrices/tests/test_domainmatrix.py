@@ -5,6 +5,7 @@ from sympy.functions import sqrt
 
 from sympy.matrices.common import (NonInvertibleMatrixError,
     NonSquareMatrixError, ShapeError)
+
 from sympy.matrices.dense import Matrix
 from sympy.polys import ZZ, QQ
 
@@ -568,6 +569,17 @@ def test_DomainMatrix_diag():
     A = DomainMatrix({0:{0:ZZ(2)}, 1:{1:ZZ(3)}}, (3, 4), ZZ)
     assert DomainMatrix.diag([ZZ(2), ZZ(3)], ZZ, (3, 4)) == A
 
+def test_DomainMatrix_diagonal():
+    A = DomainMatrix({0: {1: ZZ(1), 2: ZZ(2), 3: ZZ(3)},
+                      1: {0: ZZ(1), 1: ZZ(2), 2: ZZ(3), 3: ZZ(4)},
+                      2: {0: ZZ(2), 1: ZZ(3), 2: ZZ(4), 3: ZZ(5)},
+                      3: {0: ZZ(3), 1: ZZ(4), 2: ZZ(5), 3: ZZ(6)}}, (4, 4), ZZ)
+
+    assert A.diagonal() == DomainMatrix([[0, 2, 4, 6]], (1, 4), ZZ)
+    assert A.diagonal(1) == DomainMatrix([[1, 3, 5]], (1, 3), ZZ)
+    assert A.diagonal(-1) == DomainMatrix([[1, 3, 5]], (1, 3), ZZ)
+
+    raises(ValueError, lambda: A.diagonal(4))
 
 def test_DomainMatrix_hstack():
     A = DomainMatrix([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
