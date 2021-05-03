@@ -1,5 +1,5 @@
 from sympy.core.add import Add
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, ordered
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
@@ -14,7 +14,7 @@ from sympy.tensor.indexed import Idx
 from sympy.sets.sets import Interval
 from sympy.sets.fancysets import Range
 from sympy.utilities import flatten
-from sympy.utilities.iterables import sift
+from sympy.utilities.iterables import sift, uniq
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
@@ -243,15 +243,19 @@ class ExprWithLimits(Expr):
 
     @property
     def bound_symbols(self):
-        """Return only variables that are dummy variables.
+        """Return only variables that are dummy variables or
+        are symbols contained by them.
 
         Examples
         ========
 
-        >>> from sympy import Integral
+        >>> from sympy import Integral, Function
         >>> from sympy.abc import x, i, j, k
         >>> Integral(x**i, (i, 1, 3), (j, 2), k).bound_symbols
         [i, j]
+        >>> f = Function('f')
+        >>> Integral(x, (f(x), i)).bound_symbols
+        [f(x), x]
 
         See Also
         ========
@@ -260,7 +264,13 @@ class ExprWithLimits(Expr):
         as_dummy : Rename dummy variables
         sympy.integrals.integrals.Integral.transform : Perform mapping on the dummy variable
         """
-        return [l[0] for l in self.limits if len(l) != 1]
+        rv = []
+        for l in self.limits:
+            if len(l) != 1:
+                rv.append(l[0])
+                if not l[0].is_Symbol:
+                    rv.extend(ordered(l[0].free_symbols))
+        return list(uniq(rv))
 
     @property
     def free_symbols(self):
