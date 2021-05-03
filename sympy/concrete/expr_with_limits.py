@@ -252,7 +252,7 @@ class ExprWithLimits(Expr):
         >>> from sympy import Integral, Function
         >>> from sympy.abc import x, i, j, k
         >>> Integral(x**i, (i, 1, 3), (j, 2), k).bound_symbols
-        [i, j]
+        [i, j, k]
         >>> f = Function('f')
         >>> Integral(x, (f(x), i)).bound_symbols
         [f(x), x]
@@ -266,10 +266,9 @@ class ExprWithLimits(Expr):
         """
         rv = []
         for l in self.limits:
-            if len(l) != 1:
-                rv.append(l[0])
-                if not l[0].is_Symbol:
-                    rv.extend(ordered(l[0].free_symbols))
+            rv.append(l[0])
+            if not l[0].is_Symbol:
+                rv.extend(ordered(l[0].free_symbols))
         return list(uniq(rv))
 
     @property
@@ -303,6 +302,15 @@ class ExprWithLimits(Expr):
                 for i in xab[1:]:
                     isyms.update(i.free_symbols)
         return isyms
+
+    def as_dummy(self):
+        from sympy.core.basic import Basic
+        self2 = self.func(*([self.function] + [
+            i if len(i) > 1 else i*2 for i in self.limits]))
+        rv = Basic.as_dummy(self2)
+        if rv == self2:
+             rv = self
+        return rv
 
     @property
     def is_number(self):

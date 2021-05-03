@@ -305,7 +305,9 @@ def test_as_dummy():
         _0 + _1, (_0, 0, f(x)))
     assert Integral(_0 + f(x), (f(x), 0, f(x))).as_dummy() == Integral(
         _0 + _1, (_1, 0, f(x)))
-
+    # need to use explicit form of evaluate-at integral
+    assert Integral(f(x) + x, f(x)).as_dummy() == Integral(
+        _0 + _1, (_0, f(x)))
 
 def test_canonical_variables():
     x, i0, i1 = symbols('x _:2')

@@ -70,9 +70,13 @@ class Integral(AddWithLimits):
         >>> i = Integral(x, x)
         >>> at = Integral(x, (x, x))
         >>> i.as_dummy()
-        Integral(x, x)
+        Integral(_0, (_0, x))
+        >>> i.subs(x, y)
+        Integral(y, y)
         >>> at.as_dummy()
         Integral(_0, (_0, x))
+        >>> at.subs(x, y)
+        Integral(x, (x, y))
 
         """
 
@@ -397,6 +401,12 @@ class Integral(AddWithLimits):
         from sympy.concrete.summations import Sum
         if not hints.get('integrals', True):
             return self
+        bv = [f[0] for f in self.limits if
+            len(f) == 1 and not f[0].is_Symbol]
+        if bv:
+            free = self.function.free_symbols - set(bv)
+            if any(i.free_symbols & free for i in bv):
+                return self
 
         deep = hints.get('deep', True)
         meijerg = hints.get('meijerg', None)
