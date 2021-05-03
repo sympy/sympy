@@ -109,11 +109,13 @@ class ClassFactRegistry:
     ===========
 
     ``register`` method registers the handler function for a class. Here,
-    handler function should return a single fact. ``multiregister`` method
-    registers the handler function for multiple classes. Here, handler function
-    should return a container of multiple facts.
+    handler function should return a single fact.
 
-    ``registry(expr)`` returns a set of facts for *expr*.
+    ``multiregister`` method registers the handler function for multiple
+    classes. Here, handler function should return a container of multiple facts.
+
+    ``registry(expr)`` returns a dictionary of computed facts and their handler
+    functions for *expr*.
 
     Examples
     ========
@@ -132,12 +134,13 @@ class ClassFactRegistry:
     ...     arg = expr.args[0]
     ...     return Equivalent(~Q.zero(arg), ~Q.zero(expr))
 
-    Calling the registry with expression returns the defined facts for the
-    expression.
+    Calling the registry with expression returns a dictionary of computed
+    facts and their handler functions for the expression.
 
     >>> from sympy.abc import x
-    >>> reg(Abs(x))
-    {Q.nonnegative(Abs(x)), Equivalent(~Q.zero(x), ~Q.zero(Abs(x)))}
+    >>> reg(Abs(x)) # doctest: +SKIP
+    {Q.nonnegative(Abs(x)): <function __main__.f1(expr)>,
+     Equivalent(~Q.zero(x), ~Q.zero(Abs(x))): <function __main__.f2(expr)>}
 
     Multiple facts can be registered at once by ``multiregister`` method.
 
@@ -181,14 +184,17 @@ class ClassFactRegistry:
         return ret1, ret2
 
     def __call__(self, expr):
-        ret = set()
+        ret = {}
 
         handlers1, handlers2 = self[expr.func]
 
         for h in handlers1:
-            ret.add(h(expr))
+            fact = h(expr)
+            ret[fact] = h
         for h in handlers2:
-            ret.update(h(expr))
+            facts = h(expr)
+            for fact in facts:
+                ret[fact] = h
         return ret
 
 class_fact_registry = ClassFactRegistry()
