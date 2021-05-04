@@ -408,3 +408,11 @@ def test_DDM_transpose():
     assert AT == DDM([[0, 0], [1, 3], [2, 4]], (3, 2), ZZ)
     assert AT.shape == (3, 2)
     assert AT.domain == ZZ
+
+    ddm02 = DDM([], (0, 2), ZZ)
+    ddm20 = DDM([[]]*2, (2, 0), ZZ)
+    ddm00 = DDM([], (0, 0), ZZ)
+
+    assert ddm02.transpose() == ddm20
+    assert ddm20.transpose() == ddm02
+    assert ddm00.transpose() == ddm00
