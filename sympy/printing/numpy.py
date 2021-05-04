@@ -220,6 +220,14 @@ class NumPyPrinter(PythonCodePrinter):
         return "%s(%s)" % (self._module_format(self._module + '.mod'), ', '.join(
             map(lambda arg: self._print(arg), expr.args)))
 
+    def _print_Heaviside(self, expr):
+        if len(expr.args) == 1: # Use a default value for Heaviside(0)
+            heaviside0 = 1/2 # Default value of heaviside at x=0. Other options include 0, 1
+        else:
+            heaviside0 = expr.args[1]
+        return "%s(%s,%s)" % (self._module_format('numpy.heaviside'), self._print(expr.args[0]), self._print(heaviside0))
+
+
     def _print_re(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.real'), self._print(expr.args[0]))
 
