@@ -537,11 +537,16 @@ class Abs(Function):
                 return obj
         if not isinstance(arg, Expr):
             raise TypeError("Bad argument type for Abs(): %s" % type(arg))
+
         # handle what we can
         arg = signsimp(arg, evaluate=False)
         n, d = arg.as_numer_denom()
         if d.free_symbols and not n.free_symbols:
             return cls(n)/cls(d)
+        if arg.is_extended_positive:
+            return arg
+        elif arg.is_extended_negative:
+            return -arg
 
         if arg.is_Mul:
             known = []
@@ -751,7 +756,7 @@ class arg(Function):
             arg_ = sign(c)*arg_
         else:
             arg_ = arg
-        if arg_.atoms(AppliedUndef):
+        if any(i.is_extended_positive is None for i in arg_.atoms(AppliedUndef)):
             return
         x, y = arg_.as_real_imag()
         rv = atan2(y, x)
