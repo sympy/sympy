@@ -530,7 +530,6 @@ class Abs(Function):
         from sympy.simplify.simplify import signsimp
         from sympy.core.function import expand_mul
         from sympy.core.power import Pow
-
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()
             if obj is not None:

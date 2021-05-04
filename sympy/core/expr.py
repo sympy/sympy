@@ -932,26 +932,30 @@ class Expr(Basic, EvalfMixin):
 
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
+        at_pt = None in (a, b)
 
         def _eval_endpoint(left):
             c = a if left else b
             if c is None:
                 return 0
-            else:
-                C = self.subs(x, c)
-                if C.has(S.NaN, S.Infinity, S.NegativeInfinity,
-                         S.ComplexInfinity, AccumBounds):
-                    if (a < b) != False:
-                        C = limit(self, x, c, "+" if left else "-")
-                    else:
-                        C = limit(self, x, c, "-" if left else "+")
 
-                    if isinstance(C, Limit):
-                        raise NotImplementedError("Could not compute limit")
+            C = self.subs(x, c)
+            if C.has(S.NaN, S.Infinity, S.NegativeInfinity,
+                    S.ComplexInfinity, AccumBounds):
+                # if left then maybe b is None and we approach from +
+                # if ~left then maybe a is None and we approach from -
+                if at_pt or (a < b) != False:
+                    C = limit(self, x, c, "+" if left else "-")
+                else:
+                    C = limit(self, x, c, "-" if left else "+")
+
+                if isinstance(C, Limit):
+                    raise NotImplementedError("Could not compute limit")
+
             return C
 
         if a == b:
-            return 0
+            return S.Zero
 
         A = _eval_endpoint(left=True)
         if A is S.NaN:
@@ -959,7 +963,7 @@ class Expr(Basic, EvalfMixin):
 
         B = _eval_endpoint(left=False)
 
-        if (a and b) is None:
+        if at_pt:
             return B - A
 
         value = B - A
