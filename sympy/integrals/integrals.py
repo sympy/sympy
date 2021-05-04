@@ -401,8 +401,7 @@ class Integral(AddWithLimits):
         from sympy.concrete.summations import Sum
         if not hints.get('integrals', True):
             return self
-        bv = [f[0] for f in self.limits if
-            len(f) == 1 and not f[0].is_Symbol]
+        bv = [f[0] for f in self.limits if not f[0].is_Symbol]
         if bv:
             free = self.function.free_symbols - set(bv)
             if any(i.free_symbols & free for i in bv):

@@ -104,6 +104,9 @@ def test_constructor():
 
 def test_basics():
 
+    assert Integral(x, (f(x), y)).doit() == Integral(x, (f(x), y))
+    assert Integral(f(x), (x, y)).doit() == Integral(f(x), (x, y))
+
     assert Integral(0, x) != 0
     assert Integral(x, (x, 1, 1)) != 0
     assert Integral(oo, x) != oo
