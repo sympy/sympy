@@ -37,7 +37,7 @@ import warnings
 from contextlib import contextmanager
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import (exec_, PY3, unwrap)
+from sympy.core.compatibility import (PY3, unwrap)
 from sympy.external import import_module
 
 IS_WINDOWS = (os.name == 'nt')
@@ -721,9 +721,14 @@ def _get_doctest_blacklist():
     if ON_TRAVIS or import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
 
-    if import_module('theano') is None:
+    if import_module('aesara') is None:
         blacklist.extend([
-            "sympy/printing/theanocode.py",
+            "sympy/printing/aesaracode.py",
+            "doc/src/modules/numeric-computation.rst",
+        ])
+
+    if import_module('cupy') is None:
+        blacklist.extend([
             "doc/src/modules/numeric-computation.rst",
         ])
 
@@ -1223,7 +1228,7 @@ class SymPyTests:
                         pass
 
                 code = compile(source, filename, "exec", flags=0, dont_inherit=True)
-                exec_(code, gl)
+                exec(code, gl)
             except (SystemExit, KeyboardInterrupt):
                 raise
             except ImportError:
@@ -1398,7 +1403,7 @@ class SymPyDocTests:
     def test_file(self, filename):
         clear_cache()
 
-        from sympy.core.compatibility import StringIO
+        from io import StringIO
         import sympy.interactive.printing as interactive_printing
         from sympy import pprint_use_unicode
 
@@ -2196,7 +2201,7 @@ class PyTestReporter(Reporter):
         self.write("architecture:       %s\n" % ARCH)
         from sympy.core.cache import USE_CACHE
         self.write("cache:              %s\n" % USE_CACHE)
-        from sympy.core.compatibility import GROUND_TYPES, HAS_GMPY
+        from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
         version = ''
         if GROUND_TYPES =='gmpy':
             if HAS_GMPY == 1:

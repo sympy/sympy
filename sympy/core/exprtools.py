@@ -363,7 +363,7 @@ class Factors:
                     factors[q] = (factors[q] if q in factors else S.Zero) - factors[f]
                     factors.pop(f)
             if i:
-                factors[I] = S.One*i
+                factors[I] = factors.get(I, S.Zero) + i
             if nc:
                 factors[Mul(*nc, evaluate=False)] = S.One
         else:
@@ -388,9 +388,7 @@ class Factors:
                         elif a is I:
                             factors[I] = S.One
                         elif a.is_Pow:
-                            if S.NegativeOne not in factors:
-                                factors[S.NegativeOne] = S.Zero
-                            factors[S.NegativeOne] += a.exp
+                            factors[a.base] = factors.get(a.base, S.Zero) + a.exp
                         elif a == 1:
                             factors[a] = S.One
                         elif a == -1:

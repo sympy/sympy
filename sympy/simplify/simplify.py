@@ -134,7 +134,7 @@ def _separatevars(expr, force):
         return expr
 
     # get a Pow ready for expansion
-    if expr.is_Pow:
+    if expr.is_Pow and expr.base != S.Exp1:
         expr = Pow(separatevars(expr.base, force=force), expr.exp)
 
     # First try other expansion methods
@@ -547,6 +547,20 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     Note that ``simplify()`` automatically calls ``doit()`` on the final
     expression. You can avoid this behavior by passing ``doit=False`` as
     an argument.
+
+    Also, it should be noted that simplifying the boolian expression is not
+    well defined. If the expression prefers automatic evaluation (such as
+    :obj:`~.Eq()` or :obj:`~.Or()`), simplification will return ``True`` or
+    ``False`` if truth value can be determined. If the expression is not
+    evaluated by default (such as :obj:`~.Predicate()`), simplification will
+    not reduce it and you should use :func:`~.refine()` or :func:`~.ask()`
+    function. This inconsistency will be resolved in future version.
+
+    See Also
+    ========
+
+    sympy.assumptions.refine.refine : Simplification using assumptions.
+    sympy.assumptions.ask.ask : Query for boolean expressions using assumptions.
     """
 
     def shorter(*choices):
@@ -562,7 +576,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         rv = e.doit() if doit else e
         return shorter(rv, collect_abs(rv))
 
-    expr = sympify(expr)
+    expr = sympify(expr, rational=rational)
     kwargs = dict(
         ratio=kwargs.get('ratio', ratio),
         measure=kwargs.get('measure', measure),
@@ -708,7 +722,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
     short = shorter(short, cancel(short))
     short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
-    if short.has(TrigonometricFunction, HyperbolicFunction, ExpBase):
+    if short.has(TrigonometricFunction, HyperbolicFunction, ExpBase, exp):
         short = exptrigsimp(short)
 
     # get rid of hollow 2-arg Mul factorization
@@ -1128,10 +1142,16 @@ def inversecombine(expr):
     """
 
     def f(rv):
-        if rv.is_Function and hasattr(rv, "inverse"):
+        if isinstance(rv, log):
+            if isinstance(rv.args[0], exp) or (rv.args[0].is_Pow and rv.args[0].base == S.Exp1):
+                rv = rv.args[0].exp
+        elif rv.is_Function and hasattr(rv, "inverse"):
             if (len(rv.args) == 1 and len(rv.args[0].args) == 1 and
-                isinstance(rv.args[0], rv.inverse(argindex=1))):
-                    rv = rv.args[0].args[0]
+               isinstance(rv.args[0], rv.inverse(argindex=1))):
+                rv = rv.args[0].args[0]
+        if rv.is_Pow and rv.base == S.Exp1:
+            if isinstance(rv.exp, log):
+                rv = rv.exp.args[0]
         return rv
 
     return bottom_up(expr, f)

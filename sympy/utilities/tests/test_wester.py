@@ -20,7 +20,7 @@ from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
     FiniteSet, elliptic_e, elliptic_f, powsimp, hessian, wronskian, fibonacci,
     sign, Lambda, Piecewise, Subs, residue, Derivative, logcombine, Symbol,
     Intersection, Union, EmptySet, Interval, idiff, ImageSet, acos, Max,
-    MatMul, conjugate)
+    MatMul, conjugate, Eq)
 
 import mpmath
 from sympy.functions.combinatorial.numbers import stirling
@@ -1006,7 +1006,7 @@ def test_M26():
 def test_M27():
     x = symbols('x', real=True)
     b = symbols('b', real=True)
-    with assuming(Q.is_true(sin(cos(1/E**2) + 1) + b > 0)):
+    with assuming(sin(cos(1/E**2) + 1) + b > 0):
         # TODO: Replace solve with solveset
         solve(log(acos(asin(x**R(2, 3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/E**2))**R(3/2), b + sin(1 + cos(1/E**2))**R(3/2)]
 
@@ -1152,50 +1152,51 @@ def test_M39():
 
 
 def test_N1():
-    assert ask(Q.is_true(E**pi > pi**E))
+    assert ask(E**pi > pi**E)
 
 
 @XFAIL
 def test_N2():
     x = symbols('x', real=True)
-    assert ask(Q.is_true(x**4 - x + 1 > 0)) is True
-    assert ask(Q.is_true(x**4 - x + 1 > 1)) is False
+    assert ask(x**4 - x + 1 > 0) is True
+    assert ask(x**4 - x + 1 > 1) is False
 
 
 @XFAIL
 def test_N3():
     x = symbols('x', real=True)
-    assert ask(Q.is_true(And(Lt(-1, x), Lt(x, 1))), Q.is_true(abs(x) < 1 ))
+    assert ask(And(Lt(-1, x), Lt(x, 1)), abs(x) < 1 )
 
 @XFAIL
 def test_N4():
     x, y = symbols('x y', real=True)
-    assert ask(Q.is_true(2*x**2 > 2*y**2), Q.is_true((x > y) & (y > 0))) is True
+    assert ask(2*x**2 > 2*y**2, (x > y) & (y > 0)) is True
 
 
 @XFAIL
 def test_N5():
     x, y, k = symbols('x y k', real=True)
-    assert ask(Q.is_true(k*x**2 > k*y**2), Q.is_true((x > y) & (y > 0) & (k > 0))) is True
+    assert ask(k*x**2 > k*y**2, (x > y) & (y > 0) & (k > 0)) is True
 
 
+@slow
 @XFAIL
 def test_N6():
     x, y, k, n = symbols('x y k n', real=True)
-    assert ask(Q.is_true(k*x**n > k*y**n), Q.is_true((x > y) & (y > 0) & (k > 0) & (n > 0))) is True
+    assert ask(k*x**n > k*y**n, (x > y) & (y > 0) & (k > 0) & (n > 0)) is True
 
 
 @XFAIL
 def test_N7():
     x, y = symbols('x y', real=True)
-    assert ask(Q.is_true(y > 0), Q.is_true((x > 1) & (y >= x - 1))) is True
+    assert ask(y > 0, (x > 1) & (y >= x - 1)) is True
 
 
 @XFAIL
 def test_N8():
     x, y, z = symbols('x y z', real=True)
-    assert ask(Q.is_true((x == y) & (y == z)),
-               Q.is_true((x >= y) & (y >= z) & (z >= x)))
+    assert ask(Eq(x, y) & Eq(y, z),
+               (x >= y) & (y >= z) & (z >= x))
 
 
 def test_N9():

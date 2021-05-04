@@ -18,12 +18,13 @@ To enable simple substitutions, add the match to find_substitutions.
 """
 
 from typing import Dict as tDict, Optional
-
 from collections import namedtuple, defaultdict
+from collections.abc import Mapping
+from functools import reduce
 
 import sympy
 
-from sympy.core.compatibility import reduce, Mapping, iterable
+from sympy.core.compatibility import iterable
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_not
@@ -1205,6 +1206,9 @@ _cache_dummy = sympy.Dummy("z")
 def integral_steps(integrand, symbol, **options):
     """Returns the steps needed to compute an integral.
 
+    Explanation
+    ===========
+
     This function attempts to mirror what a student would do by hand as
     closely as possible.
 
@@ -1242,6 +1246,7 @@ def integral_steps(integrand, symbol, **options):
 
     Returns
     =======
+
     rule : namedtuple
         The first step; most rules have substeps that must also be
         considered. These substeps can be evaluated using ``manualintegrate``
@@ -1607,6 +1612,9 @@ def _manualintegrate(rule):
 
 def manualintegrate(f, var):
     """manualintegrate(f, var)
+
+    Explanation
+    ===========
 
     Compute indefinite integral of a single variable using an algorithm that
     resembles what a student would do by hand.

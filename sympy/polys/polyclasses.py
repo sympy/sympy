@@ -1670,6 +1670,9 @@ class ANP(PicklableWithSlots, CantSympify):
         """Returns ``True`` if ``f`` is an element of the ground domain. """
         return not f.rep or len(f.rep) == 1
 
+    def __pos__(f):
+        return f
+
     def __neg__(f):
         return f.neg()
 

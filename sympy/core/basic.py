@@ -1,12 +1,13 @@
 """Base class for all the objects in SymPy"""
 from collections import defaultdict
+from collections.abc import Mapping
 from itertools import chain, zip_longest
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
-from .compatibility import iterable, ordered, Mapping
-from .singleton import S
+from .compatibility import iterable, ordered
+from .kind import UndefinedKind
 from ._print_helpers import Printable
 
 from inspect import getmro
@@ -106,6 +107,8 @@ class Basic(Printable, metaclass=ManagedProperties):
     is_MatAdd = False
     is_MatMul = False
 
+    kind = UndefinedKind
+
     def __new__(cls, *args):
         obj = object.__new__(cls)
         obj._assumptions = cls.default_assumptions
@@ -117,19 +120,17 @@ class Basic(Printable, metaclass=ManagedProperties):
     def copy(self):
         return self.func(*self.args)
 
-    def __reduce_ex__(self, proto):
-        """ Pickling support."""
-        return type(self), self.__getnewargs__(), self.__getstate__()
-
     def __getnewargs__(self):
         return self.args
 
     def __getstate__(self):
-        return {}
+        return None
 
-    def __setstate__(self, state):
-        for k, v in state.items():
-            setattr(self, k, v)
+    def __reduce_ex__(self, protocol):
+        if protocol < 2:
+            msg = "Only pickle protocol 2 or higher is supported by sympy"
+            raise NotImplementedError(msg)
+        return super().__reduce_ex__(protocol)
 
     def __hash__(self):
         # hash cannot be cached using cache_it because infinite recurrence
@@ -1670,6 +1671,11 @@ class Basic(Printable, metaclass=ManagedProperties):
         from sympy.simplify import simplify
         return simplify(self, **kwargs)
 
+    def refine(self, assumption=True):
+        """See the refine function in sympy.assumptions"""
+        from sympy.assumptions import refine
+        return refine(self, assumption)
+
     def _eval_rewrite(self, pattern, rule, **hints):
         if self.is_Atom:
             if hasattr(self, rule):
@@ -2051,3 +2057,7 @@ def _make_find_query(query):
     elif isinstance(query, Basic):
         return lambda expr: expr.match(query) is not None
     return query
+
+
+# Delayed to avoid cyclic import
+from .singleton import S

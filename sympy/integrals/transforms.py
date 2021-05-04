@@ -1,7 +1,8 @@
 """ Integral Transforms """
+from functools import reduce
 
 from sympy.core import S
-from sympy.core.compatibility import reduce, iterable
+from sympy.core.compatibility import iterable, ordered
 from sympy.core.function import Function
 from sympy.core.relational import _canonical, Ge, Gt
 from sympy.core.numbers import oo
@@ -614,7 +615,7 @@ def _rewrite_gamma(f, s, a, b):
                 exp = fact.exp
             else:
                 base = exp_polar(1)
-                exp = fact.args[0]
+                exp = fact.exp
             if exp.is_Integer:
                 cond = is_numer
                 if exp < 0:
@@ -1083,13 +1084,13 @@ def _laplace_transform(f, t, s_, simplify=True):
                 a = Max(a_, a)
             else:
                 aux = And(aux, Or(*aux_))
-        return a, aux
+        return a, aux.canonical if aux.is_Relational else aux
 
     conds = [process_conds(c) for c in disjuncts(cond)]
     conds2 = [x for x in conds if x[1] != False and x[0] != -oo]
     if not conds2:
         conds2 = [x for x in conds if x[1] != False]
-    conds = conds2
+    conds = list(ordered(conds2))
 
     def cnt(expr):
         if expr == True or expr == False:
@@ -1099,7 +1100,7 @@ def _laplace_transform(f, t, s_, simplify=True):
 
     if not conds:
         raise IntegralTransformError('Laplace', f, 'no convergence found')
-    a, aux = conds[0]
+    a, aux = conds[0]  # XXX is [0] always the right one?
 
     def sbs(expr):
         return expr.subs(s, s_)
@@ -1172,7 +1173,7 @@ def laplace_transform(f, t, s, **hints):
     >>> from sympy.integrals import laplace_transform
     >>> from sympy.abc import t, s, a
     >>> laplace_transform(t**a, t, s)
-    (s**(-a)*gamma(a + 1)/s, 0, re(a) > -1)
+    (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
 
     See Also
     ========
@@ -1910,7 +1911,7 @@ def hankel_transform(f, r, k, nu, **hints):
 
     >>> ht = hankel_transform(1/r**m, r, k, nu)
     >>> ht
-    2*2**(-m)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
+    2*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/(2**m*gamma(m/2 + nu/2))
 
     >>> inverse_hankel_transform(ht, k, r, nu)
     r**(-m)
@@ -1972,7 +1973,7 @@ def inverse_hankel_transform(F, k, r, nu, **hints):
 
     >>> ht = hankel_transform(1/r**m, r, k, nu)
     >>> ht
-    2*2**(-m)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
+    2*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/(2**m*gamma(m/2 + nu/2))
 
     >>> inverse_hankel_transform(ht, k, r, nu)
     r**(-m)

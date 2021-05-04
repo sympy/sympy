@@ -5,14 +5,15 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from typing import Any, Dict, Iterable
 
+import builtins
 import inspect
 import keyword
 import textwrap
 import linecache
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.core.compatibility import (exec_, is_sequence, iterable,
-    NotIterable, builtins)
+from sympy.core.compatibility import (is_sequence, iterable,
+    NotIterable)
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -24,6 +25,7 @@ MATH_DEFAULT = {}  # type: Dict[str, Any]
 MPMATH_DEFAULT = {}  # type: Dict[str, Any]
 NUMPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
 SCIPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
+CUPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
 TENSORFLOW_DEFAULT = {}  # type: Dict[str, Any]
 SYMPY_DEFAULT = {}  # type: Dict[str, Any]
 NUMEXPR_DEFAULT = {}  # type: Dict[str, Any]
@@ -36,6 +38,7 @@ MATH = MATH_DEFAULT.copy()
 MPMATH = MPMATH_DEFAULT.copy()
 NUMPY = NUMPY_DEFAULT.copy()
 SCIPY = SCIPY_DEFAULT.copy()
+CUPY = CUPY_DEFAULT.copy()
 TENSORFLOW = TENSORFLOW_DEFAULT.copy()
 SYMPY = SYMPY_DEFAULT.copy()
 NUMEXPR = NUMEXPR_DEFAULT.copy()
@@ -77,10 +80,12 @@ MPMATH_TRANSLATIONS = {
     "Ci": "ci",
     "RisingFactorial": "rf",
     "FallingFactorial": "ff",
+    "betainc_regularized": "betainc",
 }
 
 NUMPY_TRANSLATIONS = {}  # type: Dict[str, str]
 SCIPY_TRANSLATIONS = {}  # type: Dict[str, str]
+CUPY_TRANSLATIONS = {}  # type: Dict[str, str]
 
 TENSORFLOW_TRANSLATIONS = {}  # type: Dict[str, str]
 
@@ -92,6 +97,7 @@ MODULES = {
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
+    "cupy": (CUPY, CUPY_DEFAULT, CUPY_TRANSLATIONS, ("import cupy",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import tensorflow",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
@@ -138,7 +144,7 @@ def _import(module, reload=False):
                 continue
         else:
             try:
-                exec_(import_command, {}, namespace)
+                exec(import_command, {}, namespace)
                 continue
             except ImportError:
                 pass
@@ -783,9 +789,11 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         if _module_present('mpmath', namespaces):
             from sympy.printing.pycode import MpmathPrinter as Printer # type: ignore
         elif _module_present('scipy', namespaces):
-            from sympy.printing.pycode import SciPyPrinter as Printer # type: ignore
+            from sympy.printing.numpy import SciPyPrinter as Printer # type: ignore
         elif _module_present('numpy', namespaces):
-            from sympy.printing.pycode import NumPyPrinter as Printer # type: ignore
+            from sympy.printing.numpy import NumPyPrinter as Printer # type: ignore
+        elif _module_present('cupy', namespaces):
+            from sympy.printing.numpy import CuPyPrinter as Printer # type: ignore
         elif _module_present('numexpr', namespaces):
             from sympy.printing.lambdarepr import NumExprPrinter as Printer # type: ignore
         elif _module_present('tensorflow', namespaces):
@@ -846,13 +854,13 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
             if k not in namespace:
                 ln = "from %s import %s" % (mod, k)
                 try:
-                    exec_(ln, {}, namespace)
+                    exec(ln, {}, namespace)
                 except ImportError:
                     # Tensorflow 2.0 has issues with importing a specific
                     # function from its submodule.
                     # https://github.com/tensorflow/tensorflow/issues/33022
                     ln = "%s = %s.%s" % (k, mod, k)
-                    exec_(ln, {}, namespace)
+                    exec(ln, {}, namespace)
                 imp_mod_lines.append(ln)
 
     # Provide lambda expression with builtins, and compatible implementation of range
@@ -863,7 +871,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
     filename = '<lambdifygenerated-%s>' % _lambdify_generated_counter
     _lambdify_generated_counter += 1
     c = compile(funcstr, filename, 'exec')
-    exec_(c, namespace, funclocals)
+    exec(c, namespace, funclocals)
     # mtime has to be None or else linecache.checkcache will remove it
     linecache.cache[filename] = (len(funcstr), None, funcstr.splitlines(True), filename) # type: ignore
 

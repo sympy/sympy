@@ -284,6 +284,10 @@ def test_CRootOf_real_roots():
     assert Poly(x**5 + x + 1).real_roots(radicals=False) == [rootof(
         x**3 - x**2 + 1, 0)]
 
+    # https://github.com/sympy/sympy/issues/20902
+    p = Poly(-3*x**4 - 10*x**3 - 12*x**2 - 6*x - 1, x, domain='ZZ')
+    assert CRootOf.real_roots(p) == [S(-1), S(-1), S(-1), S(-1)/3]
+
 
 def test_CRootOf_all_roots():
     assert Poly(x**5 + x + 1).all_roots() == [

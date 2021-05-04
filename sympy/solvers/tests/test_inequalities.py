@@ -15,6 +15,8 @@ from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.abc import x, y
 
+from sympy.core.mod import Mod
+
 from sympy.testing.pytest import raises, XFAIL
 
 
@@ -296,7 +298,7 @@ def test_solve_univariate_inequality():
     assert isolve(1/(x - 2) > 0, x) == And(S(2) < x, x < oo)
     den = ((x - 1)*(x - 2)).expand()
     assert isolve((x - 1)/den <= 0, x) == \
-        Or(And(-oo < x, x < 1), And(S.One < x, x < 2))
+        (x > -oo) & (x < 2) & Ne(x, 1)
 
     n = Dummy('n')
     raises(NotImplementedError, lambda: isolve(Abs(x) <= n, x, relational=False))
@@ -376,9 +378,8 @@ def test_issue_8974():
 
 def test_issue_10198():
     assert reduce_inequalities(
-        -1 + 1/abs(1/x - 1) < 0) == Or(
-        And(-oo < x, x < 0), And(S.Zero < x, x < S.Half)
-        )
+        -1 + 1/abs(1/x - 1) < 0) == (x > -oo) & (x < 1/2) & Ne(x, 0)
+
     assert reduce_inequalities(abs(1/sqrt(x)) - 1, x) == Eq(x, 1)
     assert reduce_abs_inequality(-3 + 1/abs(1 - 1/x), '<', x) == \
         Or(And(-oo < x, x < 0),
@@ -407,6 +408,24 @@ def test_isolve_Sets():
     n = Dummy('n')
     assert isolve(Abs(x) <= n, x, relational=False) == \
         Piecewise((S.EmptySet, n < 0), (Interval(-n, n), True))
+
+
+def test_integer_domain_relational_isolve():
+
+    dom = FiniteSet(0, 3)
+    x = Symbol('x',zero=False)
+    assert isolve((x - 1)*(x - 2)*(x - 4) < 0, x, domain=dom) == Eq(x, 3)
+
+    x = Symbol('x')
+    assert isolve(x + 2 < 0, x, domain=S.Integers) == \
+           (x <= -3) & (x > -oo) & Eq(Mod(x, 1), 0)
+    assert isolve(2 * x + 3 > 0, x, domain=S.Integers) == \
+           (x >= -1) & (x < oo)  & Eq(Mod(x, 1), 0)
+    assert isolve((x ** 2 + 3 * x - 2) < 0, x, domain=S.Integers) == \
+           (x >= -3) & (x <= 0)  & Eq(Mod(x, 1), 0)
+    assert isolve((x ** 2 + 3 * x - 2) > 0, x, domain=S.Integers) == \
+           ((x >= 1) & (x < oo)  & Eq(Mod(x, 1), 0)) | (
+               (x <= -4) & (x > -oo)  & Eq(Mod(x, 1), 0))
 
 
 def test_issue_10671_12466():

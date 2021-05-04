@@ -1,6 +1,7 @@
 from sympy.core import (
     Basic, Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
     Expr, I, nan, pi, symbols, oo, zoo, N)
+from sympy.core.parameters import global_parameters
 from sympy.core.tests.test_evalf import NS
 from sympy.core.function import expand_multinomial
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
@@ -13,7 +14,7 @@ from sympy.series.order import O
 from sympy.sets import FiniteSet
 from sympy.core.expr import unchanged
 from sympy.core.power import power
-from sympy.testing.pytest import warns_deprecated_sympy
+from sympy.testing.pytest import warns_deprecated_sympy, _both_exp_pow
 
 
 def test_rational():
@@ -220,6 +221,7 @@ def test_power_with_noncommutative_mul_as_base():
     assert (2*x*y)**3 == 8*(x*y)**3
 
 
+@_both_exp_pow
 def test_power_rewrite_exp():
     assert (I**I).rewrite(exp) == exp(-pi/2)
 
@@ -246,7 +248,10 @@ def test_power_rewrite_exp():
 
     x, y = symbols('x y')
     assert (x**y).rewrite(exp) == exp(y*log(x))
-    assert (7**x).rewrite(exp) == exp(x*log(7), evaluate=False)
+    if global_parameters.exp_is_pow:
+        assert (7**x).rewrite(exp) == Pow(S.Exp1, x*log(7), evaluate=False)
+    else:
+        assert (7**x).rewrite(exp) == exp(x*log(7), evaluate=False)
     assert ((2 + 3*I)**x).rewrite(exp) == exp(x*(log(sqrt(13)) + I*atan(Rational(3, 2))))
     assert (y**(5 + 6*I)).rewrite(exp) == exp(log(y)*(5 + 6*I))
 
@@ -313,8 +318,7 @@ def test_issue_6100_12942_4473():
 
 
 def test_issue_6208():
-    from sympy import root, Rational
-    I = S.ImaginaryUnit
+    from sympy import root
     assert sqrt(33**(I*Rational(9, 10))) == -33**(I*Rational(9, 20))
     assert root((6*I)**(2*I), 3).as_base_exp()[1] == Rational(1, 3)  # != 2*I/3
     assert root((6*I)**(I/3), 3).as_base_exp()[1] == I/9
@@ -582,3 +586,10 @@ def test_power_dispatcher():
     assert power(a, b) == NewPow(a, b)
     assert power(b, a) == NewPow(b, a)
     assert power(b, b) == NewPow(b, b)
+
+
+def test_powers_of_I():
+    assert [sqrt(I)**i for i in range(13)] == [
+        1, sqrt(I), I, sqrt(I)**3, -1, -sqrt(I), -I, -sqrt(I)**3,
+        1, sqrt(I), I, sqrt(I)**3, -1]
+    assert sqrt(I)**(S(9)/2) == -I**(S(1)/4)

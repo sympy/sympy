@@ -481,4 +481,80 @@ sqf_normal
 
 reconstruct
 ^^^^^^^^^^^
+
 .. autofunction:: sympy.solvers.diophantine.diophantine::reconstruct
+
+Internal Classes
+------------------
+
+These classes are intended for internal use in the Diophantine module.
+
+DiophantineSolutionSet
+^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.DiophantineSolutionSet
+   :members:
+
+DiophantineEquationType
+^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.DiophantineEquationType
+   :members:
+
+Univariate
+^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.Univariate
+   :members:
+
+Linear
+^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.Linear
+   :members:
+
+BinaryQuadratic
+^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.BinaryQuadratic
+   :members:
+
+InhomogeneousTernaryQuadratic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.InhomogeneousTernaryQuadratic
+   :members:
+
+HomogeneousTernaryQuadraticNormal
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.HomogeneousTernaryQuadraticNormal
+   :members:
+
+HomogeneousTernaryQuadratic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.HomogeneousTernaryQuadratic
+   :members:
+
+InhomogeneousGeneralQuadratic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.InhomogeneousGeneralQuadratic
+   :members:
+
+HomogeneousGeneralQuadratic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.HomogeneousGeneralQuadratic
+   :members:
+
+GeneralSumOfSquares
+^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.GeneralSumOfSquares
+   :members:
+
+GeneralPythagorean
+^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.GeneralPythagorean
+   :members:
+
+CubicThue
+^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.CubicThue
+   :members:
+
+GeneralSumOfEvenPowers
+^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.GeneralSumOfEvenPowers
+   :members:

@@ -522,7 +522,7 @@ def test_factorrat():
     assert str(factorrat(Rational(1, 1), visual=True)) == '1'
     assert str(factorrat(S(25)/14, visual=True)) == '5**2/(2*7)'
     assert str(factorrat(Rational(25, 14), visual=True)) == '5**2/(2*7)'
-    assert str(factorrat(S(-25)/14/9, visual=True)) == '-5**2/(2*3**2*7)'
+    assert str(factorrat(S(-25)/14/9, visual=True)) == '-1*5**2/(2*3**2*7)'
 
     assert factorrat(S(12)/1, multiple=True) == [2, 2, 3]
     assert factorrat(Rational(1, 1), multiple=True) == []

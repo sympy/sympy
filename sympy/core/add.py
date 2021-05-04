@@ -1,7 +1,8 @@
 from collections import defaultdict
-from functools import cmp_to_key
+from functools import cmp_to_key, reduce
+from operator import attrgetter
 from .basic import Basic
-from .compatibility import reduce, is_sequence
+from .compatibility import is_sequence
 from .parameters import global_parameters
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
@@ -9,6 +10,7 @@ from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
+from .kind import UndefinedKind
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
@@ -66,7 +68,87 @@ def _unevaluated_Add(*args):
         newargs.insert(0, co)
     return Add._from_args(newargs)
 
+
 class Add(Expr, AssocOp):
+    """
+    Expression representing addition operation for algebraic group.
+
+    Every argument of ``Add()`` must be ``Expr``. Infix operator ``+``
+    on most scalar objects in SymPy calls this class.
+
+    Another use of ``Add()`` is to represent the structure of abstract
+    addition so that its arguments can be substituted to return different
+    class. Refer to examples section for this.
+
+    ``Add()`` evaluates the argument unless ``evaluate=False`` is passed.
+    The evaluation logic includes:
+
+    1. Flattening
+        ``Add(x, Add(y, z))`` -> ``Add(x, y, z)``
+
+    2. Identity removing
+        ``Add(x, 0, y)`` -> ``Add(x, y)``
+
+    3. Coefficient collecting by ``.as_coeff_Mul()``
+        ``Add(x, 2*x)`` -> ``Mul(3, x)``
+
+    4. Term sorting
+        ``Add(y, x, 2)`` -> ``Add(2, x, y)``
+
+    If no argument is passed, identity element 0 is returned. If single
+    element is passed, that element is returned.
+
+    Note that ``Add(*args)`` is more efficient than ``sum(args)`` because
+    it flattens the arguments. ``sum(a, b, c, ...)`` recursively adds the
+    arguments as ``a + (b + (c + ...))``, which has quadratic complexity.
+    On the other hand, ``Add(a, b, c, d)`` does not assume nested
+    structure, making the complexity linear.
+
+    Since addition is group operation, every argument should have the
+    same :obj:`sympy.core.kind.Kind()`.
+
+    Examples
+    ========
+
+    >>> from sympy import Add, I
+    >>> from sympy.abc import x, y
+    >>> Add(x, 1)
+    x + 1
+    >>> Add(x, x)
+    2*x
+    >>> 2*x**2 + 3*x + I*y + 2*y + 2*x/5 + 1.0*y + 1
+    2*x**2 + 17*x/5 + 3.0*y + I*y + 1
+
+    If ``evaluate=False`` is passed, result is not evaluated.
+
+    >>> Add(1, 2, evaluate=False)
+    1 + 2
+    >>> Add(x, x, evaluate=False)
+    x + x
+
+    ``Add()`` also represents the general structure of addition operation.
+
+    >>> from sympy import MatrixSymbol
+    >>> A,B = MatrixSymbol('A', 2,2), MatrixSymbol('B', 2,2)
+    >>> expr = Add(x,y).subs({x:A, y:B})
+    >>> expr
+    A + B
+    >>> type(expr)
+    <class 'sympy.matrices.expressions.matadd.MatAdd'>
+
+    Note that the printers don't display in args order.
+
+    >>> Add(x, 1)
+    x + 1
+    >>> Add(x, 1).args
+    (1, x)
+
+    See Also
+    ========
+
+    MatAdd
+
+    """
 
     __slots__ = ()
 
@@ -291,6 +373,19 @@ class Add(Expr, AssocOp):
     def class_key(cls):
         """Nice order of classes"""
         return 3, 1, cls.__name__
+
+    @property
+    def kind(self):
+        k = attrgetter('kind')
+        kinds = map(k, self.args)
+        kinds = frozenset(kinds)
+        if len(kinds) != 1:
+            # Since addition is group operator, kind must be same.
+            # We know that this is unexpected signature, so return this.
+            result = UndefinedKind
+        else:
+            result, = kinds
+        return result
 
     def as_coefficients_dict(a):
         """Return a dictionary mapping terms to their Rational coefficient.
@@ -588,7 +683,7 @@ class Add(Expr, AssocOp):
         nz = []
         z = 0
         im_or_z = False
-        im = False
+        im = 0
         for a in self.args:
             if a.is_extended_real:
                 if a.is_zero:
@@ -598,7 +693,7 @@ class Add(Expr, AssocOp):
                 else:
                     return
             elif a.is_imaginary:
-                im = True
+                im += 1
             elif (S.ImaginaryUnit*a).is_extended_real:
                 im_or_z = True
             else:
@@ -609,10 +704,11 @@ class Add(Expr, AssocOp):
             return None
         b = self.func(*nz)
         if b.is_zero:
-            if not im_or_z and not im:
-                return True
-            if im and not im_or_z:
-                return False
+            if not im_or_z:
+                if im == 0:
+                    return True
+                elif im == 1:
+                    return False
         if b.is_zero is False:
             return False
 

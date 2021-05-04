@@ -10,7 +10,9 @@ from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import Float
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.polys import roots
+from sympy.polys import roots, CRootOf, EX
+from sympy.polys.matrices import DomainMatrix
+from sympy.polys.matrices.eigen import dom_eigenvects, dom_eigenvects_to_sympy
 from sympy.simplify import nsimplify, simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -76,12 +78,11 @@ def _eigenvects_mpmath(M):
     return result
 
 
-# This functions is a candidate for caching if it gets implemented for matrices.
+# This function is a candidate for caching if it gets implemented for matrices.
 def _eigenvals(
     M, error_when_incomplete=True, *, simplify=False, multiple=False,
     rational=False, **flags):
-    r"""Return eigenvalues using the Berkowitz algorithm to compute
-    the characteristic polynomial.
+    r"""Compute eigenvalues of the matrix.
 
     Parameters
     ==========
@@ -149,6 +150,14 @@ def _eigenvals(
 
     Eigenvalues of a matrix $A$ can be computed by solving a matrix
     equation $\det(A - \lambda I) = 0$
+
+    It's not always possible to return radical solutions for
+    eigenvalues for matrices larger than $4, 4$ shape due to
+    Abel-Ruffini theorem.
+
+    If there is no radical solution is found for the eigenvalue,
+    it may return eigenvalues in the form of
+    :class:`sympy.polys.rootoftools.ComplexRootOf`.
     """
     if not M:
         if multiple:
@@ -177,6 +186,17 @@ def _eigenvals(
         **flags)
 
 
+eigenvals_error_message = \
+"It is not always possible to express the eigenvalues of a matrix " + \
+"of size 5x5 or higher in radicals. " + \
+"We have CRootOf, but domains other than the rationals are not " + \
+"currently supported. " + \
+"If there are no symbols in the matrix, " + \
+"it should still be possible to compute numeric approximations " + \
+"of the eigenvalues using " + \
+"M.evalf().eigenvals() or M.charpoly().nroots()."
+
+
 def _eigenvals_list(
     M, error_when_incomplete=True, simplify=False, **flags):
     iblocks = M.connected_components()
@@ -188,14 +208,20 @@ def _eigenvals_list(
             charpoly = block.charpoly(simplify=simplify)
         else:
             charpoly = block.charpoly()
+
         eigs = roots(charpoly, multiple=True, **flags)
 
-        if error_when_incomplete:
-            if len(eigs) != block.rows:
-                raise MatrixError(
-                    "Could not compute eigenvalues for {}. if you see this "
-                    "error, please report to SymPy issue tracker."
-                    .format(block))
+        if len(eigs) != block.rows:
+            degree = int(charpoly.degree())
+            f = charpoly.as_expr()
+            x = charpoly.gen
+            try:
+                eigs = [CRootOf(f, x, idx) for idx in range(degree)]
+            except NotImplementedError:
+                if error_when_incomplete:
+                    raise MatrixError(eigenvals_error_message)
+                else:
+                    eigs = []
 
         all_eigs += eigs
 
@@ -217,14 +243,20 @@ def _eigenvals_dict(
             charpoly = block.charpoly(simplify=simplify)
         else:
             charpoly = block.charpoly()
+
         eigs = roots(charpoly, multiple=False, **flags)
 
-        if error_when_incomplete:
-            if sum(eigs.values()) != block.rows:
-                raise MatrixError(
-                    "Could not compute eigenvalues for {}. if you see this "
-                    "error, please report to SymPy issue tracker."
-                    .format(block))
+        if sum(eigs.values()) != block.rows:
+            degree = int(charpoly.degree())
+            f = charpoly.as_expr()
+            x = charpoly.gen
+            try:
+                eigs = {CRootOf(f, x, idx): 1 for idx in range(degree)}
+            except NotImplementedError:
+                if error_when_incomplete:
+                    raise MatrixError(eigenvals_error_message)
+                else:
+                    eigs = {}
 
         for k, v in eigs.items():
             if k in all_eigs:
@@ -254,9 +286,41 @@ def _eigenspace(M, eigenval, iszerofunc=_iszero, simplify=False):
     return ret
 
 
+def _eigenvects_DOM(M, **kwargs):
+    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    DOM = DOM.to_dense()
+
+    if DOM.domain != EX:
+        rational, algebraic = dom_eigenvects(DOM)
+        eigenvects = dom_eigenvects_to_sympy(
+            rational, algebraic, M.__class__, **kwargs)
+        eigenvects = sorted(eigenvects, key=lambda x: default_sort_key(x[0]))
+
+        return eigenvects
+    return None
+
+
+def _eigenvects_sympy(M, iszerofunc, simplify=True, **flags):
+    eigenvals = M.eigenvals(rational=False, **flags)
+
+    # Make sure that we have all roots in radical form
+    for x in eigenvals:
+        if x.has(CRootOf):
+            raise MatrixError(
+                "Eigenvector computation is not implemented if the matrix have "
+                "eigenvalues in CRootOf form")
+
+    eigenvals = sorted(eigenvals.items(), key=default_sort_key)
+    ret = []
+    for val, mult in eigenvals:
+        vects = _eigenspace(M, val, iszerofunc=iszerofunc, simplify=simplify)
+        ret.append((val, mult, vects))
+    return ret
+
+
 # This functions is a candidate for caching if it gets implemented for matrices.
 def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False, **flags):
-    """Return list of triples (eigenval, multiplicity, eigenspace).
+    """Compute eigenvectors of the matrix.
 
     Parameters
     ==========
@@ -291,6 +355,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
 
     Returns
     =======
+
     ret : [(eigenval, multiplicity, eigenspace), ...]
         A ragged list containing tuples of data obtained by ``eigenvals``
         and ``nullspace``.
@@ -332,6 +397,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
     """
     simplify = flags.get('simplify', True)
     primitive = flags.get('simplify', False)
+    flags.pop('simplify', None)  # remove this if it's there
     flags.pop('multiple', None)  # remove this if it's there
 
     if not isinstance(simplify, FunctionType):
@@ -343,15 +409,9 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
             return _eigenvects_mpmath(M)
         M = M.applyfunc(lambda x: nsimplify(x, rational=True))
 
-    eigenvals = M.eigenvals(
-        rational=False, error_when_incomplete=error_when_incomplete,
-        **flags)
-
-    eigenvals = sorted(eigenvals.items(), key=default_sort_key)
-    ret = []
-    for val, mult in eigenvals:
-        vects = _eigenspace(M, val, iszerofunc=iszerofunc, simplify=simplify)
-        ret.append((val, mult, vects))
+    ret = _eigenvects_DOM(M)
+    if ret is None:
+        ret = _eigenvects_sympy(M, iszerofunc, simplify=simplify, **flags)
 
     if primitive:
         # if the primitive flag is set, get rid of any common
@@ -1120,10 +1180,12 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
     # first calculate the jordan block structure
     eigs = mat.eigenvals()
 
-    # make sure that we found all the roots by counting
-    # the algebraic multiplicity
-    if sum(m for m in eigs.values()) != mat.cols:
-        raise MatrixError("Could not compute eigenvalues for {}".format(mat))
+    # Make sure that we have all roots in radical form
+    for x in eigs:
+        if x.has(CRootOf):
+            raise MatrixError(
+                "Jordan normal form is not implemented if the matrix have "
+                "eigenvalues in CRootOf form")
 
     # most matrices have distinct eigenvalues
     # and so are diagonalizable.  In this case, don't
