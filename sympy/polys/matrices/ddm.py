@@ -135,6 +135,10 @@ class DDM(list):
         """
 
         MT = ddm_transpose(self)
+        nrows, ncols = self.shape
+        if nrows == 0:
+            MT = [[]]*ncols
+
         return DDM(MT, self.shape[::-1], self.domain)
 
     def __str__(self):
@@ -351,14 +355,4 @@ from .sdm import SDM
 
 
 def ddm_transpose(M):
-
-    nrows, ncols = M.shape
-    MT = []
-
-    for j in range(ncols):
-        row = []
-        for i in range(nrows):
-            row.append(M[i][j])
-        MT.append(row)
-
-    return MT
+    return list(map(list, zip(*M)))
