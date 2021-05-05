@@ -530,7 +530,6 @@ class Abs(Function):
         from sympy.simplify.simplify import signsimp
         from sympy.core.function import expand_mul
         from sympy.core.power import Pow
-        from sympy.functions.elementary.exponential import exp_polar
 
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()
@@ -544,12 +543,6 @@ class Abs(Function):
         n, d = arg.as_numer_denom()
         if d.free_symbols and not n.free_symbols:
             return cls(n)/cls(d)
-
-        if not arg.atoms(exp_polar):
-            if arg.is_extended_positive:
-                return arg
-            elif arg.is_extended_negative:
-                return -arg
 
         if arg.is_Mul:
             known = []
@@ -596,6 +589,10 @@ class Abs(Function):
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
         if isinstance(arg, AppliedUndef):
+            if arg.is_positive:
+                return arg
+            elif arg.is_negative:
+                return -arg
             return
         if arg.is_Add and arg.has(S.Infinity, S.NegativeInfinity):
             if any(a.is_infinite for a in arg.as_real_imag()):
