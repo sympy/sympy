@@ -401,3 +401,18 @@ def test_DDM_extract_slice():
     assert dm.extract_slice(slice(2), slice(3, 4)) == DDM([[], []], (2, 0), ZZ)
     assert dm.extract_slice(slice(3, 4), slice(2)) == DDM([], (0, 2), ZZ)
     assert dm.extract_slice(slice(3, 4), slice(3, 4)) == DDM([], (0, 0), ZZ)
+
+def test_DDM_transpose():
+    A = DDM([[ZZ(0), ZZ(1), ZZ(2)], [ZZ(0), ZZ(3), ZZ(4)]], (2, 3), ZZ)
+    AT = A.transpose()
+    assert AT == DDM([[0, 0], [1, 3], [2, 4]], (3, 2), ZZ)
+    assert AT.shape == (3, 2)
+    assert AT.domain == ZZ
+
+    ddm02 = DDM([], (0, 2), ZZ)
+    ddm20 = DDM([[]]*2, (2, 0), ZZ)
+    ddm00 = DDM([], (0, 0), ZZ)
+
+    assert ddm02.transpose() == ddm20
+    assert ddm20.transpose() == ddm02
+    assert ddm00.transpose() == ddm00

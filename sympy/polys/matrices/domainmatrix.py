@@ -556,6 +556,16 @@ class DomainMatrix:
     def __repr__(self):
         return 'DomainMatrix(%s, %r, %r)' % (str(self.rep), self.shape, self.domain)
 
+    def transpose(self):
+        """Returns transpose of DomainMatrix
+
+        Examples
+        ========
+
+        """
+
+        return self.from_rep(self.rep.transpose())
+
     def hstack(A, B):
         r"""
         Horizontally stacks 2 Domain Matrices.

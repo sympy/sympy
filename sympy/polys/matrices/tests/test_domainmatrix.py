@@ -242,6 +242,22 @@ def test_DomainMatrix_add():
     assert Ads.rep == DDM([[1, 3], [5, 4]], (2, 2), ZZ)
     raises(DDMFormatError, lambda: As.add(Ad))
 
+def test_DomainMatrix_transpose():
+    Ad = DomainMatrix([[ZZ(0), ZZ(1), ZZ(2)], [ZZ(0), ZZ(3), ZZ(4)]], (2, 3), ZZ)
+    As = Ad.to_sparse()
+
+    assert Ad.transpose() == DomainMatrix([[0, 0], [1, 3], [2, 4]], (3, 2), ZZ)
+    assert As.transpose() == DomainMatrix({1: {0: 1, 1: 3}, 2: {0: 2, 1: 4}}, (3, 2), ZZ)
+
+    Ad = DomainMatrix([], (0, 4), ZZ)
+    As = Ad.to_sparse()
+    assert Ad.transpose() == DomainMatrix([[]]*4, (4, 0), ZZ)
+    assert As.transpose() == DomainMatrix({}, (4, 0), ZZ)
+
+    Ad = DomainMatrix([[]]*4, (4, 0), ZZ)
+    As = Ad.to_sparse()
+    assert Ad.transpose() == DomainMatrix([], (0, 4), ZZ)
+    assert As.transpose() == DomainMatrix({}, (0, 4), ZZ)
 
 def test_DomainMatrix_sub():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
