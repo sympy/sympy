@@ -635,7 +635,7 @@ class tanh(HyperbolicFunction):
             for i in range(n + 1):
                 p[i % 2] += symmetric_poly(i, TX)
             return p[1]/p[0]
-        else:
+        elif arg.is_Mul:
             from sympy.functions.combinatorial.numbers import nC
             coeff, terms = arg.as_coeff_Mul()
             if coeff.is_Integer and coeff > 1:
