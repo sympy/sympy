@@ -554,6 +554,21 @@ class ReferenceFrame:
             self._dcm_dict = self._dlist[0] = {}
         # Reset the _dcm_cache
             self._dcm_cache = {}
+
+        else:
+        #Check for loops and raise warning accordingly.
+            visited = []
+            queue = list(frames)
+            while queue:
+                node = queue.pop(0)
+                if node not in visited:
+                    visited.append(node)
+                    neighbors = node._dcm_dict.keys()
+                    for neighbor in neighbors:
+                        if neighbor == parent:
+                            pass
+                        queue.append(neighbor)
+
         # Add the dcm relationship to _dcm_dict
         self._dcm_dict.update({parent: parent_orient.T})
         parent._dcm_dict.update({self: parent_orient})
