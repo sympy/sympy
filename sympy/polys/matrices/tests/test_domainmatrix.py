@@ -644,3 +644,19 @@ def test_DomainMatrix_getitem():
     assert dM[2:,2:] == DomainMatrix({0: {0: 1}, 2: {2: 1}}, (3, 3), ZZ)
     assert dM[3:,3:] == DomainMatrix({1: {1: 1}}, (2, 2), ZZ)
     assert dM[2:, 6:] == DomainMatrix({}, (3, 0), ZZ)
+
+def test_DomainMatrix_applyfunc():
+    A = DomainMatrix([[ZZ(1), ZZ(2)],
+                      [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    assert A.applyfunc(lambda x: x/2, QQ) == DomainMatrix([[QQ(1, 2), QQ(1)], [QQ(3, 2), QQ(2)]], (2, 2), QQ)
+
+    A = DomainMatrix.eye(3, ZZ)
+    assert A.applyfunc(lambda x: 0) == DomainMatrix.zeros((3, 3), ZZ)
+    assert A.applyfunc(lambda x: 1) == DomainMatrix.from_rep(SDM.ones((3, 3), ZZ))
+
+def test_DomainMatrix_applyfunc_nonzero():
+    A = DomainMatrix.eye(3, ZZ)
+    assert A.applyfunc_nonzero(lambda x: 4) == ZZ(4) * DomainMatrix.eye(3, ZZ)
+
+    B = DomainMatrix([[ZZ(2), ZZ(3)]], (1, 2), ZZ)
+    raises(TypeError, lambda: B.applyfunc_nonzero(lambda x: x + 4))

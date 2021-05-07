@@ -203,6 +203,30 @@ class DDM(list):
             msg = "Shape mismatch: %s %s %s" % (a.shape, op, b.shape)
             raise DDMShapeError(msg)
 
+    def applyfunc(self, f, domain=None):
+        """
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> from sympy import ZZ, QQ
+        >>> A = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> A.applyfunc(lambda x: 2 ** x)
+        [[2, 4], [8, 16]]
+
+        We can also specify the :py:class:`~.Domain` of the output
+
+        >>> A.applyfunc(lambda x: x/5, QQ)
+        [[1/5, 2/5], [3/5, 4/5]]
+
+        """
+        if domain is None:
+            domain = self.domain
+
+        Af = ddm_applyfunc(self, f, domain)
+        return DDM(Af, self.shape, domain)
+
     def add(a, b):
         """a + b"""
         a._check(a, '+', b, a.shape, b.shape)
@@ -331,3 +355,6 @@ class DDM(list):
 
 
 from .sdm import SDM
+
+def ddm_applyfunc(M, f, domain):
+    return [[domain.convert(f(x)) for x in Mi] for Mi in M]

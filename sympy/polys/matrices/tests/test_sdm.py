@@ -274,3 +274,8 @@ def test_SDM_particular():
     A = SDM({0:{1:QQ(1)}}, (2, 2), QQ)
     Apart = SDM({0:{1:QQ(1)}}, (1, 2), QQ)
     assert A.particular() == Apart
+
+def test_SDM_applyfunc():
+    A = SDM.eye(4, ZZ)
+    assert A.applyfunc(lambda x: 2*x) == 2*SDM.eye(4, ZZ)
+    assert A.applyfunc(lambda x: 0) == SDM.zeros((4, 4), ZZ)

@@ -645,6 +645,77 @@ class DomainMatrix:
             msg = "Format mismatch: %s %s %s" % (a.rep.fmt, op, b.rep.fmt)
             raise DDMFormatError(msg)
 
+    def applyfunc(self, f, domain=None):
+        """Applies a function f to every element of a DomainMatrix
+        and converts :py:class:`~.Domain` to domain
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import ZZ
+        >>> A = DomainMatrix([[ZZ(1), ZZ(3)], [ZZ(2), ZZ(4)]], (2, 2), ZZ)
+        >>> f = lambda i: 2 ** i
+        >>> A.applyfunc(f)
+        DomainMatrix([[2, 8], [4, 16]], (2, 2), ZZ)
+
+        We can change the output to appropriate domain as
+        shown below
+
+        >>> from sympy import QQ
+        >>> f = lambda i: i/2
+        >>> A.applyfunc(f, QQ)
+        DomainMatrix([[1/2, 3/2], [1, 2]], (2, 2), QQ)
+
+        See Also
+        ========
+
+        applyfunc_nonzero
+        """
+        if not callable(f):
+            raise TypeError("`f` must be callable")
+        if domain is None:
+            domain = self.domain
+
+        return self.from_rep(self.rep.applyfunc(f, domain))
+
+    def applyfunc_nonzero(self, f, domain=None):
+        """Applies a function f to every non-zero element of a DomainMatrix
+        and converts :py:class:`~.Domain` to domain
+
+        Raises
+        ======
+
+        TypeError:
+                    When internal representation of DomainMatrix
+                    is not `sparse`
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import ZZ, QQ
+        >>> A = DomainMatrix({0: {1: ZZ(1)}, 1: {0: ZZ(3)}}, (2, 2), ZZ)
+        >>> A.applyfunc_nonzero(lambda x: x/2 + 1,  QQ)
+        DomainMatrix({1: {0: 3/2}, 0: {1: 5/2}}, (2, 2), QQ)
+
+        See Also
+        ========
+
+        DomainMatrix.applyfunc
+        """
+
+        if self.rep.fmt != 'sparse':
+            raise TypeError("DomainMatrix should be sparse")
+
+        if not callable(f):
+            raise TypeError("`f` must be callable")
+
+        if domain is None:
+            domain = self.domain
+
+        return self.from_rep(self.rep.applyfunc_nonzero(f, domain))
+
     def add(A, B):
         r"""
         Adds two DomainMatrix matrices of the same Domain

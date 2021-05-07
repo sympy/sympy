@@ -401,3 +401,11 @@ def test_DDM_extract_slice():
     assert dm.extract_slice(slice(2), slice(3, 4)) == DDM([[], []], (2, 0), ZZ)
     assert dm.extract_slice(slice(3, 4), slice(2)) == DDM([], (0, 2), ZZ)
     assert dm.extract_slice(slice(3, 4), slice(3, 4)) == DDM([], (0, 0), ZZ)
+
+def test_DDM_applyfunc():
+    A = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    assert A.applyfunc(lambda x: x / 2, QQ) == DDM([[QQ(1, 2), QQ(1)], [QQ(3, 2), QQ(2)]], (2, 2), QQ)
+
+    A = DDM.eye(3, ZZ)
+    assert A.applyfunc(lambda x: 0) == DDM.zeros((3, 3), ZZ)
+    assert A.applyfunc(lambda x: 1) == DDM.ones((3, 3), ZZ)
