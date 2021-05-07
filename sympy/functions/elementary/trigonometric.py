@@ -3439,5 +3439,3 @@ class atan2(InverseTrigonometricFunction):
         y, x = self.args
         if x.is_extended_real and y.is_extended_real:
             return super()._eval_evalf(prec)
-
-
