@@ -559,14 +559,18 @@ class ReferenceFrame:
         #Check for loops and raise warning accordingly.
             visited = []
             queue = list(frames)
-            while queue:
+            cont = True #Flag to control queue loop.
+            while queue and cont:
                 node = queue.pop(0)
                 if node not in visited:
                     visited.append(node)
                     neighbors = node._dcm_dict.keys()
                     for neighbor in neighbors:
                         if neighbor == parent:
-                            pass
+                            warn('Loops are defined among the orientation of frames. \
+                                This is likely not desired and may cause errors in your calculations.')
+                            cont = False
+                            break
                         queue.append(neighbor)
 
         # Add the dcm relationship to _dcm_dict
