@@ -695,7 +695,7 @@ class SDM(dict):
         We can also specify the output :py:class:`~.Domain`
 
         >>> from sympy import QQ
-        >>> A.applyfunc(lambda x: x + 0.5, QQ)
+        >>> A.applyfunc(lambda x: x + QQ(1, 2), QQ)
         {0: {0: 1/2, 1: 1/2}, 1: {0: 1/2, 1: 1/2}}
 
         """
