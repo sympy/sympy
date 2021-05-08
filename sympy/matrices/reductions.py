@@ -324,7 +324,7 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     of the matrix, set ``noramlize_last=False``
     """
     flag = True
-    if M.is_square and _check_expr(M):
+    if _check_expr(M):
         DOM = DomainMatrix.from_Matrix(M, radicals_limit=1, field=True)
         if DOM.domain != EX:
             DOM_mat, pivot_cols = DOM.rref()
