@@ -204,7 +204,8 @@ class DDM(list):
             raise DDMShapeError(msg)
 
     def applyfunc(self, f, domain=None):
-        """
+        """Applies a function f to every element of a DDM
+        and converts :py:class:`~.Domain` to domain
 
         Examples
         ========
@@ -224,8 +225,31 @@ class DDM(list):
         if domain is None:
             domain = self.domain
 
-        Af = ddm_applyfunc(self, f, domain)
-        return DDM(Af, self.shape, domain)
+        Mf = ddm_applyfunc(self, f, domain)
+        return DDM(Mf, self.shape, domain)
+
+    def applyfunc_nonzero(self, f, domain=None):
+        """Applies a function f to every non-zero element of a DomainMatrix
+        and converts :py:class:`~.Domain` to domain
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> from sympy import ZZ, QQ
+        >>> A = DDM([[ZZ(1), ZZ(0)], [ZZ(0), ZZ(3)]], (2, 2), ZZ)
+        >>> A.applyfunc_nonzero(lambda x: 2 ** x)
+        [[2, 0], [0, 8]]
+        >>> A.applyfunc_nonzero(lambda x: 1/x, QQ)
+        [[1, 0], [0, 1/3]]
+
+        """
+
+        if domain is None:
+            domain = self.domain
+
+        Mf = ddm_applyfunc_nonzero(self, f, domain)
+        return DDM(Mf, self.shape, domain)
 
     def add(a, b):
         """a + b"""
@@ -358,3 +382,6 @@ from .sdm import SDM
 
 def ddm_applyfunc(M, f, domain):
     return [[domain.convert(f(x)) for x in Mi] for Mi in M]
+
+def ddm_applyfunc_nonzero(M, f, domain):
+    return [[domain.convert(f(x)) if not domain.is_zero(x) else domain.zero for x in Mi] for Mi in M]

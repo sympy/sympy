@@ -659,4 +659,4 @@ def test_DomainMatrix_applyfunc_nonzero():
     assert A.applyfunc_nonzero(lambda x: 4) == ZZ(4) * DomainMatrix.eye(3, ZZ)
 
     B = DomainMatrix([[ZZ(2), ZZ(3)]], (1, 2), ZZ)
-    raises(TypeError, lambda: B.applyfunc_nonzero(lambda x: x + 4))
+    assert B.applyfunc_nonzero(lambda x: 0.5*x, QQ) == DomainMatrix([[QQ(1), QQ(3, 2)]], (1, 2), QQ)

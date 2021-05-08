@@ -672,8 +672,7 @@ class DomainMatrix:
 
         applyfunc_nonzero
         """
-        if not callable(f):
-            raise TypeError("`f` must be callable")
+
         if domain is None:
             domain = self.domain
 
@@ -683,13 +682,6 @@ class DomainMatrix:
         """Applies a function f to every non-zero element of a DomainMatrix
         and converts :py:class:`~.Domain` to domain
 
-        Raises
-        ======
-
-        TypeError:
-                    When internal representation of DomainMatrix
-                    is not `sparse`
-
         Examples
         ========
 
@@ -697,20 +689,13 @@ class DomainMatrix:
         >>> from sympy import ZZ, QQ
         >>> A = DomainMatrix({0: {1: ZZ(1)}, 1: {0: ZZ(3)}}, (2, 2), ZZ)
         >>> A.applyfunc_nonzero(lambda x: x/2 + 1,  QQ)
-        DomainMatrix({1: {0: 3/2}, 0: {1: 5/2}}, (2, 2), QQ)
+        DomainMatrix({0: {1: 3/2}, 1: {0: 5/2}}, (2, 2), QQ)
 
         See Also
         ========
 
         DomainMatrix.applyfunc
         """
-
-        if self.rep.fmt != 'sparse':
-            raise TypeError("DomainMatrix should be sparse")
-
-        if not callable(f):
-            raise TypeError("`f` must be callable")
-
         if domain is None:
             domain = self.domain
 

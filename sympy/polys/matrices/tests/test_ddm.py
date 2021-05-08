@@ -409,3 +409,10 @@ def test_DDM_applyfunc():
     A = DDM.eye(3, ZZ)
     assert A.applyfunc(lambda x: 0) == DDM.zeros((3, 3), ZZ)
     assert A.applyfunc(lambda x: 1) == DDM.ones((3, 3), ZZ)
+
+def test_applyfunc_nonzero():
+    A = DDM([[ZZ(1), ZZ(0)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    assert A.applyfunc_nonzero(lambda x: x + 0.5, QQ) == DDM([[QQ(3, 2), QQ(0)], [QQ(7, 2), QQ(9, 2)]], (2, 2), QQ)
+
+    I = DDM.eye(3, ZZ)
+    assert I.applyfunc_nonzero(lambda x: 4) == ZZ(4)*I

@@ -715,7 +715,7 @@ class SDM(dict):
         >>> from sympy import ZZ, QQ
         >>> A = SDM({0: {1 : ZZ(1)}, 1: {0: ZZ(3)}}, (2, 2), ZZ)
         >>> A.applyfunc_nonzero(lambda x: 1 + x/2, QQ)
-         {0: {1: 5/2}, 1: {0: 3/2}}
+        {0: {1: 3/2}, 1: {0: 5/2}}
 
         """
         if domain is None:
@@ -1015,22 +1015,21 @@ def sdm_particular_from_rref(A, ncols, pivots):
 
 
 def sdm_applyfunc(M, shape, f, domain):
+    if domain.is_zero(f(domain.zero)):
+        return sdm_applyfunc_nonzero(M, f, domain)
+
     nrows, ncols = shape
-    Mf = {}
-    for i in range(nrows):
-        Mf[i] = {}
-        for j in range(ncols):
-            try:
+
+    fzero = domain.convert(f(domain.zero))
+    Mf = {i: {j: fzero for j in range(ncols)} for i in range(nrows)}
+
+    for i, Mi in M.items():
+        for j, Mij in Mi.items():
                 domain_elem = domain.convert(f(M[i][j]))
                 if not domain.is_zero(domain_elem):
                     Mf[i][j] = domain_elem
-            except KeyError:
-                domain_elem = domain.convert(f(domain.zero))
-                if not domain.is_zero(domain_elem):
-                    Mf[i][j] = domain_elem
-
-        if not bool(Mf[i]):
-            del Mf[i]
+                else:
+                    del Mf[i][j]
     return Mf
 
 
@@ -1038,9 +1037,12 @@ def sdm_applyfunc_nonzero(M, f, domain):
     Mf = {}
     for i, Mi in M.items():
         for j, Mij in Mi.items():
-            try:
-                Mf[j][i] = domain.convert(f(Mij))
-            except KeyError:
-                Mf[j] = {i: domain.convert(f(Mij))}
+            domain_elem = domain.convert(f(M[i][j]))
+
+            if not domain.is_zero(domain_elem):
+                try:
+                    Mf[i][j] = domain_elem
+                except:
+                    Mf[i] = {j: domain_elem}
 
     return Mf
