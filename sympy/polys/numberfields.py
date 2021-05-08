@@ -462,22 +462,13 @@ def _minpoly_tan(ex):
         if c.is_rational:
             c = c * 2
             n = int(c.q)
-            d = [1] * (n + 1)
-            a = 1
-            for k in range(1, n + 1):
-                a = (a * (n - k + 1))//k
-                if k % 4 == 2 or k % 4 == 3:
-                    d[k] = -a
-                else:
-                    d[k] = a
+            a = n if c.p % 2 == 0 else 1
+            terms = []
+            for k in range((c.p+1)%2, n+1, 2):
+                terms.append(a*x**k)
+                a = -(a*(n-k-1)*(n-k)) // ((k+1)*(k+2))
 
-            if c.p % 2 == 0:
-                coeff = {j : d[j] for j in range(1, n+1, 2)}
-            else:
-                coeff = {j : d[j] for j in range(0, n+1, 2)}
-
-            a = [x**i*coeff[i] for i in coeff.keys()]
-            r = Add(*a)
+            r = Add(*terms)
             _, factors = factor_list(r)
             res = _choose_factor(factors, x, ex)
             return res
