@@ -537,6 +537,7 @@ class Abs(Function):
                 return obj
         if not isinstance(arg, Expr):
             raise TypeError("Bad argument type for Abs(): %s" % type(arg))
+
         # handle what we can
         arg = signsimp(arg, evaluate=False)
         n, d = arg.as_numer_denom()
@@ -588,6 +589,10 @@ class Abs(Function):
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
         if isinstance(arg, AppliedUndef):
+            if arg.is_positive:
+                return arg
+            elif arg.is_negative:
+                return -arg
             return
         if arg.is_Add and arg.has(S.Infinity, S.NegativeInfinity):
             if any(a.is_infinite for a in arg.as_real_imag()):
@@ -751,7 +756,7 @@ class arg(Function):
             arg_ = sign(c)*arg_
         else:
             arg_ = arg
-        if arg_.atoms(AppliedUndef):
+        if any(i.is_extended_positive is None for i in arg_.atoms(AppliedUndef)):
             return
         x, y = arg_.as_real_imag()
         rv = atan2(y, x)
