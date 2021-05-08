@@ -1,4 +1,5 @@
 from sympy.sets.ordinals import Ordinal, OmegaPower, ord0, omega
+from sympy.testing.pytest import raises
 
 def test_string_ordinals():
     assert str(omega) == 'w'
@@ -54,3 +55,13 @@ def test_exponentiation():
     assert w**3 == w*w*w
     assert w**(w + 1) == Ordinal(OmegaPower(omega + 1, 1))
     assert (w**w)*(w**w) == w**(w*2)
+
+def test_comapre_not_instance():
+    w = OmegaPower(omega + 1, 1)
+    assert(not (w == None))
+    assert(not (w < 5))
+    raises(TypeError, lambda: w < 6.66)
+
+def test_is_successort():
+    w = Ordinal(OmegaPower(5, 1))
+    assert not w.is_successor_ordinal

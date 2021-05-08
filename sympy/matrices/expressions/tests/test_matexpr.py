@@ -1,8 +1,9 @@
 from sympy import (KroneckerDelta, diff, Sum, Dummy, factor,
                    expand, zeros, gcd_terms, Eq, Symbol)
 
-from sympy.core import S, symbols, Add, Mul, SympifyError, Rational
-from sympy.functions import sin, cos, sqrt, cbrt, exp
+from sympy.core import (S, symbols, Add, Mul, SympifyError, Rational,
+                    Function)
+from sympy.functions import sin, cos, tan, sqrt, cbrt, exp
 from sympy.simplify import simplify
 from sympy.matrices import (ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError,
@@ -338,6 +339,18 @@ def test_issue_7842():
     A = ZeroMatrix(2, 3)
     B = ZeroMatrix(2, 3)
     assert Eq(A, B) == True
+
+
+def test_issue_21195():
+    t = symbols('t')
+    x = Function('x')(t)
+    dx = x.diff(t)
+    exp1 = cos(x) + cos(x)*dx
+    exp2 = sin(x) + tan(x)*(dx.diff(t))
+    exp3 = sin(x)*sin(t)*(dx.diff(t)).diff(t)
+    A = Matrix([[exp1], [exp2], [exp3]])
+    B = Matrix([[exp1.diff(x)], [exp2.diff(x)], [exp3.diff(x)]])
+    assert A.diff(x) == B
 
 
 def test_MatMul_postprocessor():

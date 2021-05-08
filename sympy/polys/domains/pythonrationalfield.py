@@ -8,10 +8,10 @@ from sympy.utilities import public
 
 @public
 class PythonRationalField(RationalField):
-    """Rational field based on :py:class:`~.PythonRational`.
+    """Rational field based on :ref:`MPQ`.
 
     This will be used as :ref:`QQ` if ``gmpy`` and ``gmpy2`` are not
-    installed. Elements are instances of :py:class:`~.PythonRational`.
+    installed. Elements are instances of :ref:`MPQ`.
     """
 
     dtype = PythonRational

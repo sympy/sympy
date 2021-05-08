@@ -576,7 +576,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         rv = e.doit() if doit else e
         return shorter(rv, collect_abs(rv))
 
-    expr = sympify(expr)
+    expr = sympify(expr, rational=rational)
     kwargs = dict(
         ratio=kwargs.get('ratio', ratio),
         measure=kwargs.get('measure', measure),

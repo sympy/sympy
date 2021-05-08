@@ -53,12 +53,12 @@ representing the implementation of those coefficients::
   >>> p.rep.rep
   [1, 1/2, 0]
   >>> type(p.rep.rep[0])  # doctest: +SKIP
-  <class 'sympy.polys.domains.pythonrational.PythonRational'>
+  <class 'sympy.external.pythonmpq.PythonMPQ'>
 
 Here the domain is :ref:`QQ` which represents the implementation of the
 rational numbers in the domain system. The :py:class:`~.Poly` instance itself
 has a :py:attr:`.Poly.domain` attribute :ref:`QQ` and then a list of
-:py:class:`~.PythonRational` coefficients where :py:class:`~.PythonRational`
+:py:class:`~.PythonMPQ` coefficients where :py:class:`~.PythonMPQ`
 is the class that implements the elements of the :ref:`QQ` domain. The list of
 coefficients ``[1, 1/2, 0]`` gives a standardised low-level representation of
 the polynomial expression ``(1)*x**2 + (1/2)*x + (0)``.
@@ -320,7 +320,7 @@ division::
   >>> q1 / q2
   3/4
   >>> type(q1)  # doctest: +SKIP
-  <class 'sympy.polys.domains.pythonrational.PythonRational'>
+  <class 'sympy.external.pythonmpq.PythonMPQ'>
 
 In general code that is expected to work with elements of an arbitrary domain
 should not use the division operators ``/``, ``//`` and ``%``. Only the operators

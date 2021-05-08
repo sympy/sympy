@@ -4,7 +4,7 @@ import pickle
 
 from sympy.physics.units import meter
 
-from sympy.testing.pytest import XFAIL
+from sympy.testing.pytest import XFAIL, raises
 
 from sympy.core.basic import Atom, Basic
 from sympy.core.core import BasicMeta
@@ -40,7 +40,12 @@ excluded_attrs = {
 def check(a, exclude=[], check_attr=True):
     """ Check that pickling and copying round-trips.
     """
-    protocols = [0, 1, 2, copy.copy, copy.deepcopy, 3, 4]
+    # Pickling with protocols 0 and 1 is disabled for Basic instances:
+    if isinstance(a, Basic):
+        for protocol in [0, 1]:
+            raises(NotImplementedError, lambda: pickle.dumps(a, protocol))
+
+    protocols = [2, copy.copy, copy.deepcopy, 3, 4]
     if cloudpickle:
         protocols.extend([cloudpickle])
 

@@ -410,7 +410,7 @@ class Point:
         ==========
 
         otherpoint : Point
-            The first point of the 2-point theory (O)
+            The first point of the 1-point theory (O)
         outframe : ReferenceFrame
             The frame we want this point's velocity defined in (N)
         interframe : ReferenceFrame

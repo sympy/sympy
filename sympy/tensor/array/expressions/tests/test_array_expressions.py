@@ -173,6 +173,18 @@ def test_arrayexpr_array_flatten():
     assert cg2.args == (M, N, P)
     assert cg2.shape == (k, k)
 
+    expr = ArrayTensorProduct(ArrayDiagonal(X, (0, 1)), ArrayDiagonal(A, (0, 1)))
+    assert expr == ArrayDiagonal(ArrayTensorProduct(X, A), (0, 1), (2, 3))
+
+    expr1 = ArrayDiagonal(ArrayTensorProduct(X, A), (1, 2))
+    expr2 = ArrayTensorProduct(expr1, a)
+    assert expr2 == PermuteDims(ArrayDiagonal(ArrayTensorProduct(X, A, a), (1, 2)), [0, 1, 3, 4, 2])
+
+    expr1 = ArrayContraction(ArrayTensorProduct(X, A), (1, 2))
+    expr2 = ArrayTensorProduct(expr1, a)
+    assert isinstance(expr2, ArrayContraction)
+    assert isinstance(expr2.expr, ArrayTensorProduct)
+
 
 def test_arrayexpr_array_diagonal():
     cg = ArrayDiagonal(M, (1, 0))

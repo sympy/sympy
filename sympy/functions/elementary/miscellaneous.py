@@ -1,6 +1,7 @@
 from sympy.core import Function, S, sympify
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
+from sympy.core.compatibility import ordered
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import (Application, Lambda,
     ArgumentIndexError)
@@ -42,17 +43,16 @@ class IdentityFunction(Lambda, metaclass=Singleton):
 
     """
 
-    def __new__(cls):
-        x = Dummy('x')
-        #construct "by hand" to avoid infinite loop
-        return Expr.__new__(cls, Tuple(x), x)
+    _symbol = Dummy('x')
 
     @property
-    def args(self):
-        return ()
+    def signature(self):
+        return Tuple(self._symbol)
 
-    def __getnewargs__(self):
-        return ()
+    @property
+    def expr(self):
+        return self._symbol
+
 
 Id = S.IdentityFunction
 
@@ -405,7 +405,7 @@ class MinMaxBase(Expr, LatticeOp):
 
         # base creation
         _args = frozenset(args)
-        obj = Expr.__new__(cls, _args, **assumptions)
+        obj = Expr.__new__(cls, *ordered(_args), **assumptions)
         obj._argset = _args
         return obj
 

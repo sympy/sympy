@@ -9,6 +9,7 @@ import ast
 import unicodedata
 from io import StringIO
 
+from sympy.assumptions.ask import AssumptionKeys
 from sympy.core.compatibility import iterable
 from sympy.core.basic import Basic
 from sympy.core import Symbol
@@ -208,8 +209,16 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
 
     """
     result = []
+    skip = False
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
+        if skip:
+            skip = False
+            continue
+        if tok[0] == OP and tok[1] == '.' and nextTok[0] == NAME:
+            # Dotted name. Do not do implicit multiplication
+            skip = True
+            continue
         if (isinstance(tok, AppliedFunction) and
               isinstance(nextTok, AppliedFunction)):
             result.append((OP, '*'))
@@ -560,7 +569,7 @@ def auto_symbol(tokens, local_dict, global_dict):
                 continue
             elif name in global_dict:
                 obj = global_dict[name]
-                if isinstance(obj, (Basic, type)) or callable(obj):
+                if isinstance(obj, (AssumptionKeys, Basic, type)) or callable(obj):
                     result.append((NAME, name))
                     continue
 
@@ -900,7 +909,6 @@ def eval_expr(code, local_dict, global_dict):
     """
     expr = eval(
         code, global_dict, local_dict)  # take local objects in preference
-
     return expr
 
 
@@ -1004,7 +1012,10 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     if not evaluate:
         code = compile(evaluateFalse(code), '<string>', 'eval')
 
-    return eval_expr(code, local_dict, global_dict)
+    try:
+        return eval_expr(code, local_dict, global_dict)
+    except Exception as e:
+        raise e from ValueError(f"Error from parse_expr with transformed code: {code!r}")
 
 
 def evaluateFalse(s):

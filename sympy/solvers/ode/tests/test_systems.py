@@ -1,4 +1,4 @@
-from sympy import (symbols, Symbol, diff, Function, Derivative, Matrix, Rational, S,
+from sympy import (symbols, Symbol, sinh, diff, Function, Derivative, Matrix, Rational, S,
                    I, Eq, sqrt, Mul, pi)
 from sympy.core.containers import Tuple
 from sympy.functions import exp, cos, sin, log, tan, Ci, Si, erf, erfi
@@ -18,6 +18,10 @@ from sympy.testing.pytest import ON_TRAVIS, raises, slow, skip, XFAIL
 
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
+x = symbols('x')
+f = Function('f')
+g = Function('g')
+h = Function('h')
 
 
 def test_linear_ode_to_matrix():
@@ -2350,3 +2354,205 @@ def test_second_order_type2_slow1():
              C4*airybi(t*(2 + I)**(S(1)/3)))]
     assert dsolve(eqs1) == sol1
     assert checksysodesol(eqs1, sol1) == (True, [0, 0])
+
+
+@slow
+@XFAIL
+def test_nonlinear_3eq_order1_type1():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
+    a, b, c = symbols('a b c')
+
+    eqs = [
+        a * f(x).diff(x) - (b - c) * g(x) * h(x),
+        b * g(x).diff(x) - (c - a) * h(x) * f(x),
+        c * h(x).diff(x) - (a - b) * f(x) * g(x),
+    ]
+
+    assert dsolve(eqs) # NotImplementedError
+
+
+@XFAIL
+def test_nonlinear_3eq_order1_type4():
+    eqs = [
+        Eq(f(x).diff(x), (2*h(x)*g(x) - 3*g(x)*h(x))),
+        Eq(g(x).diff(x), (4*f(x)*h(x) - 2*h(x)*f(x))),
+        Eq(h(x).diff(x), (3*g(x)*f(x) - 4*f(x)*g(x))),
+    ]
+    dsolve(eqs)  # KeyError when matching
+    # sol = ?
+    # assert dsolve_sol == sol
+    # assert checksysodesol(eqs, dsolve_sol) == (True, [0, 0, 0])
+
+
+@slow
+@XFAIL
+def test_nonlinear_3eq_order1_type3():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
+    eqs = [
+        Eq(f(x).diff(x), (2*f(x)**2 - 3        )),
+        Eq(g(x).diff(x), (4         - 2*h(x)   )),
+        Eq(h(x).diff(x), (3*h(x)    - 4*f(x)**2)),
+    ]
+    dsolve(eqs)  # Not sure if this finishes...
+    # sol = ?
+    # assert dsolve_sol == sol
+    # assert checksysodesol(eqs, dsolve_sol) == (True, [0, 0, 0])
+
+
+@XFAIL
+def test_nonlinear_3eq_order1_type5():
+    eqs = [
+        Eq(f(x).diff(x), f(x)*(2*f(x) - 3*g(x))),
+        Eq(g(x).diff(x), g(x)*(4*g(x) - 2*h(x))),
+        Eq(h(x).diff(x), h(x)*(3*h(x) - 4*f(x))),
+    ]
+    dsolve(eqs)  # KeyError
+    # sol = ?
+    # assert dsolve_sol == sol
+    # assert checksysodesol(eqs, dsolve_sol) == (True, [0, 0, 0])
+
+
+def test_linear_2eq_order1():
+    x, y, z = symbols('x, y, z', cls=Function)
+    k, l, m, n = symbols('k, l, m, n', Integer=True)
+    t = Symbol('t')
+    x0, y0 = symbols('x0, y0', cls=Function)
+
+    eq1 = (Eq(diff(x(t),t), x(t) + y(t) + 9), Eq(diff(y(t),t), 2*x(t) + 5*y(t) + 23))
+    sol1 = [Eq(x(t), C1*exp(t*(sqrt(6) + 3)) + C2*exp(t*(-sqrt(6) + 3)) - Rational(22, 3)), \
+    Eq(y(t), C1*(2 + sqrt(6))*exp(t*(sqrt(6) + 3)) + C2*(-sqrt(6) + 2)*exp(t*(-sqrt(6) + 3)) - Rational(5, 3))]
+    assert checksysodesol(eq1, sol1) == (True, [0, 0])
+
+    eq2 = (Eq(diff(x(t),t), x(t) + y(t) + 81), Eq(diff(y(t),t), -2*x(t) + y(t) + 23))
+    sol2 = [Eq(x(t), (C1*cos(sqrt(2)*t) + C2*sin(sqrt(2)*t))*exp(t) - Rational(58, 3)), \
+    Eq(y(t), (-sqrt(2)*C1*sin(sqrt(2)*t) + sqrt(2)*C2*cos(sqrt(2)*t))*exp(t) - Rational(185, 3))]
+    assert checksysodesol(eq2, sol2) == (True, [0, 0])
+
+    eq3 = (Eq(diff(x(t),t), 5*t*x(t) + 2*y(t)), Eq(diff(y(t),t), 2*x(t) + 5*t*y(t)))
+    sol3 = [Eq(x(t), (C1*exp(2*t) + C2*exp(-2*t))*exp(Rational(5, 2)*t**2)), \
+    Eq(y(t), (C1*exp(2*t) - C2*exp(-2*t))*exp(Rational(5, 2)*t**2))]
+    assert checksysodesol(eq3, sol3) == (True, [0, 0])
+
+    eq4 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
+    sol4 = [Eq(x(t), (C1*cos((t**3)/3) + C2*sin((t**3)/3))*exp(Rational(5, 2)*t**2)), \
+    Eq(y(t), (-C1*sin((t**3)/3) + C2*cos((t**3)/3))*exp(Rational(5, 2)*t**2))]
+    assert checksysodesol(eq4, sol4) == (True, [0, 0])
+
+    eq5 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + (5*t+9*t**2)*y(t)))
+    sol5 = [Eq(x(t), (C1*exp((sqrt(77)/2 + Rational(9, 2))*(t**3)/3) + \
+    C2*exp((-sqrt(77)/2 + Rational(9, 2))*(t**3)/3))*exp(Rational(5, 2)*t**2)), \
+    Eq(y(t), (C1*(sqrt(77)/2 + Rational(9, 2))*exp((sqrt(77)/2 + Rational(9, 2))*(t**3)/3) + \
+    C2*(-sqrt(77)/2 + Rational(9, 2))*exp((-sqrt(77)/2 + Rational(9, 2))*(t**3)/3))*exp(Rational(5, 2)*t**2))]
+    assert checksysodesol(eq5, sol5) == (True, [0, 0])
+
+    eq6 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), (1-t**2)*x(t) + (5*t+9*t**2)*y(t)))
+    sol6 = [Eq(x(t), C1*x0(t) + C2*x0(t)*Integral(t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0(t)**2, t)), \
+    Eq(y(t), C1*y0(t) + C2*(y0(t)*Integral(t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0(t)**2, t) + \
+    exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0(t)))]
+    s = dsolve(eq6)
+    assert s == sol6   # too complicated to test with subs and simplify
+    # assert checksysodesol(eq10, sol10) == (True, [0, 0])  # this one fails
+
+
+def test_nonlinear_2eq_order1():
+    x, y, z = symbols('x, y, z', cls=Function)
+    t = Symbol('t')
+    eq1 = (Eq(diff(x(t),t),x(t)*y(t)**3), Eq(diff(y(t),t),y(t)**5))
+    sol1 = [
+        Eq(x(t), C1*exp((-1/(4*C2 + 4*t))**(Rational(-1, 4)))),
+        Eq(y(t), -(-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), C1*exp(-1/(-1/(4*C2 + 4*t))**Rational(1, 4))),
+        Eq(y(t), (-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), C1*exp(-I/(-1/(4*C2 + 4*t))**Rational(1, 4))),
+        Eq(y(t), -I*(-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), C1*exp(I/(-1/(4*C2 + 4*t))**Rational(1, 4))),
+        Eq(y(t), I*(-1/(4*C2 + 4*t))**Rational(1, 4))]
+    assert dsolve(eq1) == sol1
+    assert checksysodesol(eq1, sol1) == (True, [0, 0])
+
+    eq2 = (Eq(diff(x(t),t), exp(3*x(t))*y(t)**3),Eq(diff(y(t),t), y(t)**5))
+    sol2 = [
+        Eq(x(t), -log(C1 - 3/(-1/(4*C2 + 4*t))**Rational(1, 4))/3),
+        Eq(y(t), -(-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), -log(C1 + 3/(-1/(4*C2 + 4*t))**Rational(1, 4))/3),
+        Eq(y(t), (-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), -log(C1 + 3*I/(-1/(4*C2 + 4*t))**Rational(1, 4))/3),
+        Eq(y(t), -I*(-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), -log(C1 - 3*I/(-1/(4*C2 + 4*t))**Rational(1, 4))/3),
+        Eq(y(t), I*(-1/(4*C2 + 4*t))**Rational(1, 4))]
+    assert dsolve(eq2) == sol2
+    assert checksysodesol(eq2, sol2) == (True, [0, 0])
+
+    eq3 = (Eq(diff(x(t),t), y(t)*x(t)), Eq(diff(y(t),t), x(t)**3))
+    tt = Rational(2, 3)
+    sol3 = [
+        Eq(x(t), 6**tt/(6*(-sinh(sqrt(C1)*(C2 + t)/2)/sqrt(C1))**tt)),
+        Eq(y(t), sqrt(C1 + C1/sinh(sqrt(C1)*(C2 + t)/2)**2)/3)]
+    assert dsolve(eq3) == sol3
+    # FIXME: assert checksysodesol(eq3, sol3) == (True, [0, 0])
+
+    eq4 = (Eq(diff(x(t),t),x(t)*y(t)*sin(t)**2), Eq(diff(y(t),t),y(t)**2*sin(t)**2))
+    sol4 = {Eq(x(t), -2*exp(C1)/(C2*exp(C1) + t - sin(2*t)/2)), Eq(y(t), -2/(C1 + t - sin(2*t)/2))}
+    assert dsolve(eq4) == sol4
+    # FIXME: assert checksysodesol(eq4, sol4) == (True, [0, 0])
+
+    eq5 = (Eq(x(t),t*diff(x(t),t)+diff(x(t),t)*diff(y(t),t)), Eq(y(t),t*diff(y(t),t)+diff(y(t),t)**2))
+    sol5 = {Eq(x(t), C1*C2 + C1*t), Eq(y(t), C2**2 + C2*t)}
+    assert dsolve(eq5) == sol5
+    assert checksysodesol(eq5, sol5) == (True, [0, 0])
+
+    eq6 = (Eq(diff(x(t),t),x(t)**2*y(t)**3), Eq(diff(y(t),t),y(t)**5))
+    sol6 = [
+        Eq(x(t), 1/(C1 - 1/(-1/(4*C2 + 4*t))**Rational(1, 4))),
+        Eq(y(t), -(-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), 1/(C1 + (-1/(4*C2 + 4*t))**(Rational(-1, 4)))),
+        Eq(y(t), (-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), 1/(C1 + I/(-1/(4*C2 + 4*t))**Rational(1, 4))),
+        Eq(y(t), -I*(-1/(4*C2 + 4*t))**Rational(1, 4)),
+        Eq(x(t), 1/(C1 - I/(-1/(4*C2 + 4*t))**Rational(1, 4))),
+        Eq(y(t), I*(-1/(4*C2 + 4*t))**Rational(1, 4))]
+    assert dsolve(eq6) == sol6
+    assert checksysodesol(eq6, sol6) == (True, [0, 0])
+
+
+@slow
+def test_nonlinear_3eq_order1():
+    x, y, z = symbols('x, y, z', cls=Function)
+    t, u = symbols('t u')
+    eq1 = (4*diff(x(t),t) + 2*y(t)*z(t), 3*diff(y(t),t) - z(t)*x(t), 5*diff(z(t),t) - x(t)*y(t))
+    sol1 = [Eq(4*Integral(1/(sqrt(-4*u**2 - 3*C1 + C2)*sqrt(-4*u**2 + 5*C1 - C2)), (u, x(t))),
+        C3 - sqrt(15)*t/15), Eq(3*Integral(1/(sqrt(-6*u**2 - C1 + 5*C2)*sqrt(3*u**2 + C1 - 4*C2)),
+        (u, y(t))), C3 + sqrt(5)*t/10), Eq(5*Integral(1/(sqrt(-10*u**2 - 3*C1 + C2)*
+        sqrt(5*u**2 + 4*C1 - C2)), (u, z(t))), C3 + sqrt(3)*t/6)]
+    assert [i.dummy_eq(j) for i, j in zip(dsolve(eq1), sol1)]
+    # FIXME: assert checksysodesol(eq1, sol1) == (True, [0, 0, 0])
+
+    eq2 = (4*diff(x(t),t) + 2*y(t)*z(t)*sin(t), 3*diff(y(t),t) - z(t)*x(t)*sin(t), 5*diff(z(t),t) - x(t)*y(t)*sin(t))
+    sol2 = [Eq(3*Integral(1/(sqrt(-6*u**2 - C1 + 5*C2)*sqrt(3*u**2 + C1 - 4*C2)), (u, x(t))), C3 +
+        sqrt(5)*cos(t)/10), Eq(4*Integral(1/(sqrt(-4*u**2 - 3*C1 + C2)*sqrt(-4*u**2 + 5*C1 - C2)),
+        (u, y(t))), C3 - sqrt(15)*cos(t)/15), Eq(5*Integral(1/(sqrt(-10*u**2 - 3*C1 + C2)*
+        sqrt(5*u**2 + 4*C1 - C2)), (u, z(t))), C3 + sqrt(3)*cos(t)/6)]
+    assert [i.dummy_eq(j) for i, j in zip(dsolve(eq2), sol2)]
+    # FIXME: assert checksysodesol(eq2, sol2) == (True, [0, 0, 0])
+
+
+def test_C1_function_9239():
+    t = Symbol('t')
+    C1 = Function('C1')
+    C2 = Function('C2')
+    C3 = Symbol('C3')
+    C4 = Symbol('C4')
+    eq = (Eq(diff(C1(t), t), 9*C2(t)), Eq(diff(C2(t), t), 12*C1(t)))
+    sol = [Eq(C1(t), 9*C3*exp(6*sqrt(3)*t) + 9*C4*exp(-6*sqrt(3)*t)),
+           Eq(C2(t), 6*sqrt(3)*C3*exp(6*sqrt(3)*t) - 6*sqrt(3)*C4*exp(-6*sqrt(3)*t))]
+    assert checksysodesol(eq, sol) == (True, [0, 0])
+
+
+def test_dsolve_linsystem_symbol():
+    eps = Symbol('epsilon', positive=True)
+    eq1 = (Eq(diff(f(x), x), -eps*g(x)), Eq(diff(g(x), x), eps*f(x)))
+    sol1 = [Eq(f(x), -C1*eps*cos(eps*x) - C2*eps*sin(eps*x)),
+            Eq(g(x), -C1*eps*sin(eps*x) + C2*eps*cos(eps*x))]
+    assert checksysodesol(eq1, sol1) == (True, [0, 0])

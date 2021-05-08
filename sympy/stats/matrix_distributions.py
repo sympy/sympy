@@ -14,7 +14,7 @@ from sympy.external import import_module
 class MatrixPSpace(PSpace):
     """
     Represents probability space for
-    Matrix Distributions
+    Matrix Distributions.
     """
     def __new__(cls, sym, distribution, dim_n, dim_m):
         sym = _symbol_converter(sym)
@@ -173,7 +173,7 @@ _get_sample_class_matrixrv = {
 
 class MatrixDistribution(Distribution, NamedArgsMixin):
     """
-    Abstract class for Matrix Distribution
+    Abstract class for Matrix Distribution.
     """
     def __new__(cls, *args):
         args = list(map(sympify, args))

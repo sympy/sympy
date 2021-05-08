@@ -511,6 +511,10 @@ class Equality(Relational):
 
         return Relational.__new__(cls, lhs, rhs)
 
+    @classmethod
+    def _eval_relation(cls, lhs, rhs):
+        return _sympify(lhs == rhs)
+
     def _eval_rewrite_as_Add(self, *args, **kwargs):
         """
         return Eq(L, R) as L - R. To control the evaluation of
@@ -547,14 +551,39 @@ class Equality(Relational):
 
     @property
     def binary_symbols(self):
-        return self.as_Predicate().binary_symbols
+        if S.true in self.args or S.false in self.args:
+            if self.lhs.is_Symbol:
+                return {self.lhs}
+            elif self.rhs.is_Symbol:
+                return {self.rhs}
+        return set()
 
     def _eval_simplify(self, **kwargs):
-        rel = self.as_Predicate().simplify(**kwargs)
-        ret = rel.refine()
-        if isinstance(ret, BooleanAtom):
-            return ret
-        return self.func(*rel.arguments)
+        from .add import Add
+        from sympy.core.expr import Expr
+        from sympy.solvers.solveset import linear_coeffs
+        # standard simplify
+        e = super()._eval_simplify(**kwargs)
+        if not isinstance(e, Equality):
+            return e
+        if not isinstance(e.lhs, Expr) or not isinstance(e.rhs, Expr):
+            return e
+        free = self.free_symbols
+        if len(free) == 1:
+            try:
+                x = free.pop()
+                m, b = linear_coeffs(
+                    e.rewrite(Add, evaluate=False), x)
+                if m.is_zero is False:
+                    enew = e.func(x, -b / m)
+                else:
+                    enew = e.func(m * x, -b)
+                measure = kwargs['measure']
+                if measure(enew) <= kwargs['ratio'] * measure(e):
+                    e = enew
+            except ValueError:
+                pass
+        return e.canonical
 
     def integrate(self, *args, **kwargs):
         """See the integrate function in sympy.integrals"""
@@ -573,10 +602,6 @@ class Equality(Relational):
         Poly(x**2 - 1, x, domain='ZZ')
         '''
         return (self.lhs - self.rhs).as_poly(*gens, **kwargs)
-
-    def as_Predicate(self):
-        from sympy.assumptions import Q
-        return Q.eq(*self.args)
 
 
 Eq = Equality
@@ -632,20 +657,26 @@ class Unequality(Relational):
 
         return Relational.__new__(cls, lhs, rhs, **options)
 
+    @classmethod
+    def _eval_relation(cls, lhs, rhs):
+        return _sympify(lhs != rhs)
+
     @property
     def binary_symbols(self):
-        return self.as_Predicate().binary_symbols
+        if S.true in self.args or S.false in self.args:
+            if self.lhs.is_Symbol:
+                return {self.lhs}
+            elif self.rhs.is_Symbol:
+                return {self.rhs}
+        return set()
 
     def _eval_simplify(self, **kwargs):
-        rel = self.as_Predicate().simplify(**kwargs)
-        ret = rel.refine()
-        if isinstance(ret, BooleanAtom):
-            return ret
-        return self.func(*rel.arguments)
-
-    def as_Predicate(self):
-        from sympy.assumptions import Q
-        return Q.ne(*self.args)
+        # simplify as an equality
+        eq = Equality(*self.args)._eval_simplify(**kwargs)
+        if isinstance(eq, Equality):
+            # send back Ne with the new args
+            return self.func(*eq.args)
+        return eq.negated  # result of Ne is the negated Eq
 
 
 Ne = Unequality
@@ -1077,53 +1108,63 @@ def _eval_is_eq(lhs, rhs):  # noqa:F811
     return fuzzy_and(fuzzy_bool(is_eq(s, o)) for s, o in zip(lhs, rhs))
 
 
-def is_lt(lhs, rhs):
+def is_lt(lhs, rhs, assumptions=None):
     """Fuzzy bool for lhs is strictly less than rhs.
 
-    See the docstring for is_ge for more
+    See the docstring for :func:`~.is_ge` for more.
     """
-    return fuzzy_not(is_ge(lhs, rhs))
+    return fuzzy_not(is_ge(lhs, rhs, assumptions))
 
 
-def is_gt(lhs, rhs):
+def is_gt(lhs, rhs, assumptions=None):
     """Fuzzy bool for lhs is strictly greater than rhs.
 
-    See the docstring for is_ge for more
+    See the docstring for :func:`~.is_ge` for more.
     """
-    return fuzzy_not(is_le(lhs, rhs))
+    return fuzzy_not(is_le(lhs, rhs, assumptions))
 
 
-def is_le(lhs, rhs):
+def is_le(lhs, rhs, assumptions=None):
     """Fuzzy bool for lhs is less than or equal to rhs.
-    is_gt calls is_lt
-    See the docstring for is_ge for more
+
+    See the docstring for :func:`~.is_ge` for more.
     """
-    return is_ge(rhs, lhs)
+    return is_ge(rhs, lhs, assumptions)
 
 
-def is_ge(lhs, rhs):
+def is_ge(lhs, rhs, assumptions=None):
     """
-    Fuzzy bool for lhs is greater than or equal to rhs.
+    Fuzzy bool for *lhs* is greater than or equal to *rhs*.
 
     Parameters
     ==========
 
-    lhs: Expr
+    lhs : Expr
         The left-hand side of the expression, must be sympified,
         and an instance of expression. Throws an exception if
         lhs is not an instance of expression.
 
-    rhs: Expr
+    rhs : Expr
         The right-hand side of the expression, must be sympified
         and an instance of expression. Throws an exception if
         lhs is not an instance of expression.
 
+    assumptions: Boolean, optional
+        Assumptions taken to evaluate the inequality.
+
     Returns
     =======
 
-    Expr : True if lhs is greater than or equal to rhs, false is
-        lhs is less than rhs, and None if the comparison between
-        lhs and rhs is indeterminate.
+    ``True`` if *lhs* is greater than or equal to *rhs*, ``False`` if *lhs*
+    is less than *rhs*, and ``None`` if the comparison between *lhs* and
+    *rhs* is indeterminate.
+
+    Explanation
+    ===========
+
+    This function is intended to give a relatively fast determination and
+    deliberately does not attempt slow calculations that might help in
+    obtaining a determination of True or False in more difficult cases.
 
     The four comparison functions ``is_le``, ``is_lt``, ``is_ge``, and ``is_gt`` are
     each implemented in terms of ``is_ge`` in the following way:
@@ -1131,61 +1172,61 @@ def is_ge(lhs, rhs):
     is_ge(x, y) := is_ge(x, y)
     is_le(x, y) := is_ge(y, x)
     is_lt(x, y) := fuzzy_not(is_ge(x, y))
-    is_gt(x, y) = fuzzy_not(is_ge(y, x))
+    is_gt(x, y) := fuzzy_not(is_ge(y, x))
+
+    Therefore, supporting new type with this function will ensure behavior for
+    other three functions as well.
 
     To maintain these equivalences in fuzzy logic it is important that in cases where
     either x or y is non-real all comparisons will give None.
 
-    InEquality classes, such as Lt, Gt, etc. Use one of is_ge, is_le, etc.
-    To implement comparisons with ``Gt(a, b)`` or ``a > b`` etc for an ``Expr`` subclass
-    it is only necessary to define a dispatcher method for ``_eval_is_ge`` like
-
-    >>> from sympy.core.relational import is_ge, is_lt, is_gt
-    >>> from sympy.abc import x
-    >>> from sympy import S, Expr, sympify
-    >>> from sympy.multipledispatch import dispatch
-    >>> class MyExpr(Expr):
-    ...     def __new__(cls, arg):
-    ...         return Expr.__new__(cls, sympify(arg))
-    ...     @property
-    ...     def value(self):
-    ...         return self.args[0]
-    ...
-    >>> @dispatch(MyExpr, MyExpr)
-    ... def _eval_is_ge(a, b):
-    ...     return is_ge(a.value, b.value)
-    ...
-    >>> a = MyExpr(1)
-    >>> b = MyExpr(2)
-    >>> a < b
-    True
-    >>> a <= b
-    True
-    >>> a > b
-    False
-    >>> is_lt(a, b)
-    True
-
     Examples
     ========
 
-
+    >>> from sympy import S, Q
+    >>> from sympy.core.relational import is_ge, is_le, is_gt, is_lt
+    >>> from sympy.abc import x
     >>> is_ge(S(2), S(0))
     True
     >>> is_ge(S(0), S(2))
     False
-    >>> is_ge(S(0), x)
-
-    >>> is_gt(S(2), S(0))
+    >>> is_le(S(0), S(2))
     True
     >>> is_gt(S(0), S(2))
     False
-    >>> is_lt(S(0), S(2))
-    True
     >>> is_lt(S(2), S(0))
     False
 
-   """
+    Assumptions can be passed to evaluate the quality which is otherwise
+    indeterminate.
+
+    >>> print(is_ge(x, S(0)))
+    None
+    >>> is_ge(x, S(0), assumptions=Q.positive(x))
+    True
+
+    New types can be supported by dispatching to ``_eval_is_ge``.
+
+    >>> from sympy import Expr, sympify
+    >>> from sympy.multipledispatch import dispatch
+    >>> class MyExpr(Expr):
+    ...     def __new__(cls, arg):
+    ...         return super().__new__(cls, sympify(arg))
+    ...     @property
+    ...     def value(self):
+    ...         return self.args[0]
+    >>> @dispatch(MyExpr, MyExpr)
+    ... def _eval_is_ge(a, b):
+    ...     return is_ge(a.value, b.value)
+    >>> a = MyExpr(1)
+    >>> b = MyExpr(2)
+    >>> is_ge(b, a)
+    True
+    >>> is_le(a, b)
+    True
+    """
+    from sympy.assumptions.wrapper import AssumptionsWrapper, is_extended_nonnegative
+
     if not (isinstance(lhs, Expr) and isinstance(rhs, Expr)):
         raise TypeError("Can only compare inequalities with Expr")
 
@@ -1200,58 +1241,87 @@ def is_ge(lhs, rhs):
             # otherwise get stuck in infinite recursion
             if n2 in (S.Infinity, S.NegativeInfinity):
                 n2 = float(n2)
-            return _sympify(n2 >= 0)
-        if lhs.is_extended_real and rhs.is_extended_real:
-            if (lhs.is_infinite and lhs.is_extended_positive) or (rhs.is_infinite and rhs.is_extended_negative):
+            return n2 >= 0
+
+        _lhs = AssumptionsWrapper(lhs, assumptions)
+        _rhs = AssumptionsWrapper(rhs, assumptions)
+        if _lhs.is_extended_real and _rhs.is_extended_real:
+            if (_lhs.is_infinite and _lhs.is_extended_positive) or (_rhs.is_infinite and _rhs.is_extended_negative):
                 return True
             diff = lhs - rhs
             if diff is not S.NaN:
-                rv = diff.is_extended_nonnegative
+                rv = is_extended_nonnegative(diff, assumptions)
                 if rv is not None:
                     return rv
 
 
-def is_neq(lhs, rhs):
+def is_neq(lhs, rhs, assumptions=None):
     """Fuzzy bool for lhs does not equal rhs.
 
-    See the docstring for is_eq for more
+    See the docstring for :func:`~.is_eq` for more.
     """
-    return fuzzy_not(is_eq(lhs, rhs))
+    return fuzzy_not(is_eq(lhs, rhs, assumptions))
 
 
-def is_eq(lhs, rhs):
+def is_eq(lhs, rhs, assumptions=None):
     """
-    Fuzzy bool representing mathematical equality between lhs and rhs.
+    Fuzzy bool representing mathematical equality between *lhs* and *rhs*.
 
     Parameters
     ==========
 
-    lhs: Expr
+    lhs : Expr
         The left-hand side of the expression, must be sympified.
 
-    rhs: Expr
+    rhs : Expr
         The right-hand side of the expression, must be sympified.
+
+    assumptions: Boolean, optional
+        Assumptions taken to evaluate the equality.
 
     Returns
     =======
 
-    True if lhs is equal to rhs, false is lhs is not equal to rhs, and
-    None if the comparison between lhs and rhs is indeterminate.
+    ``True`` if *lhs* is equal to *rhs*, ``False`` is *lhs* is not equal to *rhs*,
+    and ``None`` if the comparison between *lhs* and *rhs* is indeterminate.
 
     Explanation
     ===========
 
-    This function is intended to give a relatively fast determination and deliberately does not attempt slow
-    calculations that might help in obtaining a determination of True or False in more difficult cases.
+    This function is intended to give a relatively fast determination and
+    deliberately does not attempt slow calculations that might help in
+    obtaining a determination of True or False in more difficult cases.
 
-    InEquality classes, such as Lt, Gt, etc. Use one of is_ge, is_le, etc.
-    To implement comparisons with ``Gt(a, b)`` or ``a > b`` etc for an ``Expr`` subclass
-    it is only necessary to define a dispatcher method for ``_eval_is_ge`` like
+    :func:`~.is_neq` calls this function to return its value, so supporting
+    new type with this function will ensure correct behavior for ``is_neq``
+    as well.
 
-    >>> from sympy.core.relational import is_eq
-    >>> from sympy.core.relational import is_neq
-    >>> from sympy import S, Basic, Eq, sympify
+    Examples
+    ========
+
+    >>> from sympy import Q, S
+    >>> from sympy.core.relational import is_eq, is_neq
     >>> from sympy.abc import x
+    >>> is_eq(S(0), S(0))
+    True
+    >>> is_neq(S(0), S(0))
+    False
+    >>> is_eq(S(0), S(2))
+    False
+    >>> is_neq(S(0), S(2))
+    True
+
+    Assumptions can be passed to evaluate the equality which is otherwise
+    indeterminate.
+
+    >>> print(is_eq(x, S(0)))
+    None
+    >>> is_eq(x, S(0), assumptions=Q.zero(x))
+    True
+
+    New types can be supported by dispatching to ``_eval_is_eq``.
+
+    >>> from sympy import Basic, sympify
     >>> from sympy.multipledispatch import dispatch
     >>> class MyBasic(Basic):
     ...     def __new__(cls, arg):
@@ -1266,36 +1336,14 @@ def is_eq(lhs, rhs):
     ...
     >>> a = MyBasic(1)
     >>> b = MyBasic(1)
-    >>> a == b
-    True
-    >>> Eq(a, b)
-    True
-    >>> a != b
-    False
     >>> is_eq(a, b)
     True
-
-    Examples
-    ========
-
-    >>> is_eq(S(0), S(0))
-    True
-    >>> Eq(0, 0)
-    True
-    >>> is_neq(S(0), S(0))
+    >>> is_neq(a, b)
     False
-    >>> is_eq(S(0), S(2))
-    False
-    >>> Eq(0, 2)
-    False
-    >>> is_neq(S(0), S(2))
-    True
-    >>> is_eq(S(0), x)
-
-    >>> Eq(S(0), x)
-    Eq(0, x)
 
     """
+    from sympy.assumptions.wrapper import (AssumptionsWrapper,
+        is_infinite, is_extended_real)
     from sympy.core.add import Add
     from sympy.functions.elementary.complexes import arg
     from sympy.simplify.simplify import clear_coefficients
@@ -1331,29 +1379,32 @@ def is_eq(lhs, rhs):
         isinstance(rhs, Boolean)):
         return False  # only Booleans can equal Booleans
 
-    if lhs.is_infinite or rhs.is_infinite:
-        if fuzzy_xor([lhs.is_infinite, rhs.is_infinite]):
+    _lhs = AssumptionsWrapper(lhs, assumptions)
+    _rhs = AssumptionsWrapper(rhs, assumptions)
+
+    if _lhs.is_infinite or _rhs.is_infinite:
+        if fuzzy_xor([_lhs.is_infinite, _rhs.is_infinite]):
             return False
-        if fuzzy_xor([lhs.is_extended_real, rhs.is_extended_real]):
+        if fuzzy_xor([_lhs.is_extended_real, _rhs.is_extended_real]):
             return False
-        if fuzzy_and([lhs.is_extended_real, rhs.is_extended_real]):
-            return fuzzy_xor([lhs.is_extended_positive, fuzzy_not(rhs.is_extended_positive)])
+        if fuzzy_and([_lhs.is_extended_real, _rhs.is_extended_real]):
+            return fuzzy_xor([_lhs.is_extended_positive, fuzzy_not(_rhs.is_extended_positive)])
 
         # Try to split real/imaginary parts and equate them
         I = S.ImaginaryUnit
 
         def split_real_imag(expr):
             real_imag = lambda t: (
-                'real' if t.is_extended_real else
-                'imag' if (I * t).is_extended_real else None)
+                'real' if is_extended_real(t, assumptions) else
+                'imag' if is_extended_real(I*t, assumptions) else None)
             return sift(Add.make_args(expr), real_imag)
 
         lhs_ri = split_real_imag(lhs)
         if not lhs_ri[None]:
             rhs_ri = split_real_imag(rhs)
             if not rhs_ri[None]:
-                eq_real = Eq(Add(*lhs_ri['real']), Add(*rhs_ri['real']))
-                eq_imag = Eq(I * Add(*lhs_ri['imag']), I * Add(*rhs_ri['imag']))
+                eq_real = is_eq(Add(*lhs_ri['real']), Add(*rhs_ri['real']), assumptions)
+                eq_imag = is_eq(I * Add(*lhs_ri['imag']), I * Add(*rhs_ri['imag']), assumptions)
                 return fuzzy_and(map(fuzzy_bool, [eq_real, eq_imag]))
 
         # Compare e.g. zoo with 1+I*oo by comparing args
@@ -1361,14 +1412,15 @@ def is_eq(lhs, rhs):
         argrhs = arg(rhs)
         # Guard against Eq(nan, nan) -> Falsesymp
         if not (arglhs == S.NaN and argrhs == S.NaN):
-            return fuzzy_bool(Eq(arglhs, argrhs))
+            return fuzzy_bool(is_eq(arglhs, argrhs, assumptions))
 
     if all(isinstance(i, Expr) for i in (lhs, rhs)):
         # see if the difference evaluates
         dif = lhs - rhs
-        z = dif.is_zero
+        _dif = AssumptionsWrapper(dif, assumptions)
+        z = _dif.is_zero
         if z is not None:
-            if z is False and dif.is_commutative:  # issue 10728
+            if z is False and _dif.is_commutative:  # issue 10728
                 return False
             if z:
                 return True
@@ -1380,13 +1432,15 @@ def is_eq(lhs, rhs):
         # see if the ratio evaluates
         n, d = dif.as_numer_denom()
         rv = None
-        if n.is_zero:
-            rv = d.is_nonzero
-        elif n.is_finite:
-            if d.is_infinite:
+        _n = AssumptionsWrapper(n, assumptions)
+        _d = AssumptionsWrapper(d, assumptions)
+        if _n.is_zero:
+            rv = _d.is_nonzero
+        elif _n.is_finite:
+            if _d.is_infinite:
                 rv = True
-            elif n.is_zero is False:
-                rv = d.is_infinite
+            elif _n.is_zero is False:
+                rv = _d.is_infinite
                 if rv is None:
                     # if the condition that makes the denominator
                     # infinite does not make the original expression
@@ -1394,10 +1448,10 @@ def is_eq(lhs, rhs):
                     l, r = clear_coefficients(d, S.Infinity)
                     args = [_.subs(l, r) for _ in (lhs, rhs)]
                     if args != [lhs, rhs]:
-                        rv = fuzzy_bool(Eq(*args))
+                        rv = fuzzy_bool(is_eq(*args, assumptions))
                         if rv is True:
                             rv = None
-        elif any(a.is_infinite for a in Add.make_args(n)):
+        elif any(is_infinite(a, assumptions) for a in Add.make_args(n)):
             # (inf or nan)/x != 0
             rv = False
         if rv is not None:

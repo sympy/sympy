@@ -351,19 +351,19 @@ class PolyRing(DefaultPrinting, IPolys):
 
     __call__ = ring_new
 
-    def from_dict(self, element):
+    def from_dict(self, element, orig_domain=None):
         domain_new = self.domain_new
         poly = self.zero
 
         for monom, coeff in element.items():
-            coeff = domain_new(coeff)
+            coeff = domain_new(coeff, orig_domain)
             if coeff:
                 poly[monom] = coeff
 
         return poly
 
-    def from_terms(self, element):
-        return self.from_dict(dict(element))
+    def from_terms(self, element, orig_domain=None):
+        return self.from_dict(dict(element), orig_domain)
 
     def from_list(self, element):
         return self.from_dict(dmp_to_dict(element, self.ngens-1, self.domain))
@@ -608,9 +608,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return self
         elif self.ring.symbols != new_ring.symbols:
             terms = list(zip(*_dict_reorder(self, self.ring.symbols, new_ring.symbols)))
-            return new_ring.from_terms(terms)
+            return new_ring.from_terms(terms, self.ring.domain)
         else:
-            return new_ring.from_dict(self)
+            return new_ring.from_dict(self, self.ring.domain)
 
     def as_expr(self, *symbols):
         if symbols and len(symbols) != self.ring.ngens:
@@ -2218,9 +2218,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         if not (domain.is_Field and domain.has_assoc_Ring):
             _, p, q = f.cofactors(g)
-
-            if q.is_negative:
-                p, q = -p, -q
         else:
             new_ring = ring.clone(domain=domain.get_ring())
 
@@ -2236,20 +2233,26 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             p = p.set_ring(ring)
             q = q.set_ring(ring)
 
-            p_neg = p.is_negative
-            q_neg = q.is_negative
-
-            if p_neg and q_neg:
-                p, q = -p, -q
-            elif p_neg:
-                cp, p = -cp, -p
-            elif q_neg:
-                cp, q = -cp, -q
-
             p = p.mul_ground(cp)
             q = q.mul_ground(cq)
 
+        # Make canonical with respect to sign or quadrant in the case of ZZ_I
+        # or QQ_I. This ensures that the LC of the denominator is canonical by
+        # multiplying top and bottom by a unit of the ring.
+        u = q.canonical_unit()
+        if u == domain.one:
+            p, q = p, q
+        elif u == -domain.one:
+            p, q = -p, -q
+        else:
+            p = p.mul_ground(u)
+            q = q.mul_ground(u)
+
         return p, q
+
+    def canonical_unit(f):
+        domain = f.ring.domain
+        return domain.canonical_unit(f.LC)
 
     def diff(f, x):
         """Computes partial derivative in ``x``.

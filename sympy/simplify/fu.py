@@ -293,7 +293,7 @@ def _TR56(rv, f, g, h, max, pow):
     >>> from sympy import sin, cos
     >>> h = lambda x: 1 - x
     >>> T(sin(x)**3, sin, cos, h, 4, False)
-    sin(x)**3
+    (1 - cos(x)**2)*sin(x)
     >>> T(sin(x)**6, sin, cos, h, 6, False)
     (1 - cos(x)**2)**3
     >>> T(sin(x)**6, sin, cos, h, 6, True)
@@ -316,10 +316,15 @@ def _TR56(rv, f, g, h, max, pow):
             return rv
         if (rv.exp > max) == True:
             return rv
+        if rv.exp == 1:
+            return rv
         if rv.exp == 2:
             return h(g(rv.base.args[0])**2)
         else:
-            if rv.exp == 4:
+            if rv.exp % 2 == 1:
+                e = rv.exp//2
+                return f(rv.base.args[0])*h(g(rv.base.args[0])**2)**e
+            elif rv.exp == 4:
                 e = 2
             elif not pow:
                 if rv.exp % 2:
@@ -1339,7 +1344,7 @@ def TR14(rv, first=True):
 
 
 def TR15(rv, max=4, pow=False):
-    """Convert sin(x)*-2 to 1 + cot(x)**2.
+    """Convert sin(x)**-2 to 1 + cot(x)**2.
 
     See _TR56 docstring for advanced use of ``max`` and ``pow``.
 
@@ -1358,6 +1363,10 @@ def TR15(rv, max=4, pow=False):
         if not (isinstance(rv, Pow) and isinstance(rv.base, sin)):
             return rv
 
+        e = rv.exp
+        if e % 2 == 1:
+            return TR15(rv.base**(e + 1))/rv.base
+
         ia = 1/rv
         a = _TR56(ia, sin, cot, lambda x: 1 + x, max=max, pow=pow)
         if a != ia:
@@ -1368,7 +1377,7 @@ def TR15(rv, max=4, pow=False):
 
 
 def TR16(rv, max=4, pow=False):
-    """Convert cos(x)*-2 to 1 + tan(x)**2.
+    """Convert cos(x)**-2 to 1 + tan(x)**2.
 
     See _TR56 docstring for advanced use of ``max`` and ``pow``.
 
@@ -1386,6 +1395,10 @@ def TR16(rv, max=4, pow=False):
     def f(rv):
         if not (isinstance(rv, Pow) and isinstance(rv.base, cos)):
             return rv
+
+        e = rv.exp
+        if e % 2 == 1:
+            return TR15(rv.base**(e + 1))/rv.base
 
         ia = 1/rv
         a = _TR56(ia, cos, tan, lambda x: 1 + x, max=max, pow=pow)

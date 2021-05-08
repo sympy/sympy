@@ -96,7 +96,6 @@ def _test_args(obj):
 
 def test_sympy__assumptions__assume__AppliedPredicate():
     from sympy.assumptions.assume import AppliedPredicate, Predicate
-    from sympy import Q
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
     assert _test_args(Q.is_true(True))
 
@@ -105,8 +104,10 @@ def test_sympy__assumptions__assume__Predicate():
     pass
 
 def test_predicates():
-    from sympy.assumptions.ask import get_known_facts_keys
-    predicates = get_known_facts_keys()
+    predicates = [
+        getattr(Q, attr)
+        for attr in Q.__class__.__dict__
+        if not attr.startswith('__')]
     for p in predicates:
         assert _test_args(p)
 
@@ -121,36 +122,9 @@ def test_sympy__assumptions__relation__binrel__BinaryRelation():
 def test_sympy__assumptions__relation__binrel__AppliedBinaryRelation():
     assert _test_args(Q.eq(1, 2))
 
-def test_sympy__assumptions__sathandlers__UnevaluatedOnFree():
-    from sympy.assumptions.sathandlers import UnevaluatedOnFree
-    from sympy import Q
-    assert _test_args(UnevaluatedOnFree(Q.positive))
-
-def test_sympy__assumptions__sathandlers__AllArgs():
-    from sympy.assumptions.sathandlers import AllArgs
-    from sympy import Q
-    assert _test_args(AllArgs(Q.positive))
-
-def test_sympy__assumptions__sathandlers__AnyArgs():
-    from sympy.assumptions.sathandlers import AnyArgs
-    from sympy import Q
-    assert _test_args(AnyArgs(Q.positive))
-
-def test_sympy__assumptions__sathandlers__ExactlyOneArg():
-    from sympy.assumptions.sathandlers import ExactlyOneArg
-    from sympy import Q
-    assert _test_args(ExactlyOneArg(Q.positive))
-
-def test_sympy__assumptions__sathandlers__CheckOldAssump():
-    from sympy.assumptions.sathandlers import CheckOldAssump
-    from sympy import Q
-    assert _test_args(CheckOldAssump(Q.positive))
-
-def test_sympy__assumptions__sathandlers__CheckIsPrime():
-    from sympy.assumptions.sathandlers import CheckIsPrime
-    from sympy import Q
-    # Input must be a number
-    assert _test_args(CheckIsPrime(Q.positive))
+def test_sympy__assumptions__wrapper__AssumptionsWrapper():
+    from sympy.assumptions.wrapper import AssumptionsWrapper
+    assert _test_args(AssumptionsWrapper(x, Q.positive(x)))
 
 
 @SKIP("abstract Class")
@@ -2767,6 +2741,11 @@ def test_sympy__functions__special__tensor_functions__KroneckerDelta():
 def test_sympy__functions__special__zeta_functions__dirichlet_eta():
     from sympy.functions.special.zeta_functions import dirichlet_eta
     assert _test_args(dirichlet_eta(x))
+
+
+def test_sympy__functions__special__zeta_functions__riemann_xi():
+    from sympy.functions.special.zeta_functions import riemann_xi
+    assert _test_args(riemann_xi(x))
 
 
 def test_sympy__functions__special__zeta_functions__zeta():

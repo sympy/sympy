@@ -3,28 +3,19 @@ from sympy.core.numbers import Rational
 from sympy.core.singleton import S, Singleton
 
 def test_Singleton():
-    global instantiated
-    instantiated = 0
 
     class MySingleton(Basic, metaclass=Singleton):
-        def __new__(cls):
-            global instantiated
-            instantiated += 1
-            return Basic.__new__(cls)
+        pass
 
-    assert instantiated == 0
     MySingleton() # force instantiation
-    assert instantiated == 1
     assert MySingleton() is not Basic()
     assert MySingleton() is MySingleton()
     assert S.MySingleton is MySingleton()
-    assert instantiated == 1
 
     class MySingleton_sub(MySingleton):
         pass
-    assert instantiated == 1
+
     MySingleton_sub()
-    assert instantiated == 2
     assert MySingleton_sub() is not MySingleton()
     assert MySingleton_sub() is MySingleton_sub()
 

@@ -73,6 +73,7 @@ sol_simplicity
 factorable
 ^^^^^^^^^^
 .. autoclass:: sympy.solvers.ode.single::Factorable
+   :members:
 
 1st_exact
 ^^^^^^^^^
@@ -93,6 +94,7 @@ factorable
 1st_linear
 ^^^^^^^^^^
 .. autoclass:: sympy.solvers.ode.single::FirstLinear
+   :members:
 
 2nd_linear_airy
 ^^^^^^^^^^^^^^^
@@ -105,6 +107,7 @@ factorable
 Bernoulli
 ^^^^^^^^^
 .. autoclass:: sympy.solvers.ode.single::Bernoulli
+   :members:
 
 Liouville
 ^^^^^^^^^
@@ -113,6 +116,7 @@ Liouville
 Riccati_special_minus2
 ^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.ode.single::RiccatiSpecial
+   :members:
 
 nth_linear_constant_coeff_homogeneous
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -129,6 +133,7 @@ nth_linear_constant_coeff_variation_of_parameters
 nth_algebraic
 ^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.ode.single::NthAlgebraic
+   :members:
 
 nth_order_reducible
 ^^^^^^^^^^^^^^^^^^^
@@ -141,6 +146,7 @@ separable
 almost_linear
 ^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.ode.single::AlmostLinear
+   :members:
 
 linear_coefficients
 ^^^^^^^^^^^^^^^^^^^
