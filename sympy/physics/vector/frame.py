@@ -794,6 +794,7 @@ class ReferenceFrame:
         >>> B = ReferenceFrame('B')
         >>> B1 = ReferenceFrame('B1')
         >>> B2 = ReferenceFrame('B2')
+        >>> B3 = ReferenceFrame('B3')
 
         For example, a classic Euler Angle rotation can be done by:
 
@@ -811,8 +812,8 @@ class ReferenceFrame:
 
         >>> B1.orient_axis(N, N.x, q1)
         >>> B2.orient_axis(B1, B1.y, q2)
-        >>> B.orient_axis(B2, B2.x, q3)
-        >>> B.dcm(N)
+        >>> B3.orient_axis(B2, B2.x, q3)
+        >>> B3.dcm(N)
         Matrix([
         [        cos(q2),                            sin(q1)*sin(q2),                           -sin(q2)*cos(q1)],
         [sin(q2)*sin(q3), -sin(q1)*sin(q3)*cos(q2) + cos(q1)*cos(q3),  sin(q1)*cos(q3) + sin(q3)*cos(q1)*cos(q2)],
@@ -904,6 +905,7 @@ class ReferenceFrame:
         >>> B = ReferenceFrame('B')
         >>> B1 = ReferenceFrame('B1')
         >>> B2 = ReferenceFrame('B2')
+        >>> B3 = ReferenceFrame('B3')
 
         >>> B.orient_space_fixed(N, (q1, q2, q3), '312')
         >>> B.dcm(N)
@@ -916,8 +918,8 @@ class ReferenceFrame:
 
         >>> B1.orient_axis(N, N.z, q1)
         >>> B2.orient_axis(B1, N.x, q2)
-        >>> B.orient_axis(B2, N.y, q3)
-        >>> B.dcm(N).simplify()
+        >>> B3.orient_axis(B2, N.y, q3)
+        >>> B3.dcm(N).simplify()
         Matrix([
         [ sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1)],
         [-sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1), cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3)],
