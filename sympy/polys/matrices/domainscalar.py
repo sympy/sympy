@@ -41,6 +41,9 @@ class DomainScalar:
         [domain, [element]] = construct_domain([expr])
         return cls.new(element, domain)
 
+    def to_sympy(self):
+        return self.domain.to_sympy(self.element)
+
     def to_domain(self, domain):
         element = domain.convert_from(self.element, self.domain)
         return self.new(element, domain)

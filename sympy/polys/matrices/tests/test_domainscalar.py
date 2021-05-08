@@ -5,6 +5,7 @@ from sympy.polys import ZZ, QQ
 from sympy.polys.matrices.domainscalar import DomainScalar
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 
+
 def test_DomainScalar___new__():
     raises(TypeError, lambda: DomainScalar(ZZ(1), QQ))
     raises(TypeError, lambda: DomainScalar(ZZ(1), 1))
@@ -25,6 +26,12 @@ def test_DomainScalar_from_sympy():
     expr = S(1)
     B = DomainScalar.from_sympy(expr)
     assert B == DomainScalar(ZZ(1), ZZ)
+
+
+def test_DomainScalar_to_sympy():
+    B = DomainScalar(ZZ(1), ZZ)
+    expr = B.to_sympy()
+    assert expr.is_Integer and expr == 1
 
 
 def test_DomainScalar_to_domain():

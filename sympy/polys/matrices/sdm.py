@@ -617,7 +617,7 @@ class SDM(dict):
         B, pivots, nzcols = sdm_irref(A)
         P = sdm_particular_from_rref(B, ncols, pivots)
         rep = {0:P} if P else {}
-        return A.new(rep, (1, A.shape[1]), A.domain)
+        return A.new(rep, (1, ncols-1), A.domain)
 
     def hstack(A, *B):
         """

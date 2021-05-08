@@ -582,8 +582,14 @@ def test_Domain_convert():
         check_element(K3.convert_from(K2.zero, K2), K3.zero, K1, K2, K3)
 
     def composite_domains(K):
-        return [K, K[y], K[z], K[y, z],
-                   K.frac_field(y), K.frac_field(z), K.frac_field(y, z)]
+        domains = [
+            K,
+            K[y], K[z], K[y, z],
+            K.frac_field(y), K.frac_field(z), K.frac_field(y, z),
+            # XXX: These should be tested and made to work...
+            # K.old_poly_ring(y), K.old_frac_field(y),
+        ]
+        return domains
 
     QQ2 = QQ.algebraic_field(sqrt(2))
     QQ3 = QQ.algebraic_field(sqrt(3))

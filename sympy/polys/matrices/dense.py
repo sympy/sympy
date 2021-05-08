@@ -43,6 +43,12 @@ from .exceptions import (
     )
 
 
+def ddm_transpose(a):
+    """matrix transpose"""
+    aT = list(map(list, zip(*a)))
+    return aT
+
+
 def ddm_iadd(a, b):
     """a += b"""
     for ai, bi in zip(a, b):

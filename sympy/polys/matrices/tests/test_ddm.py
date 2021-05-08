@@ -110,6 +110,18 @@ def test_DDM_copy():
     assert (ddm1 == ddm2) is True
 
 
+def test_DDM_transpose():
+    ddm = DDM([[QQ(1)], [QQ(2)]], (2, 1), QQ)
+    ddmT = DDM([[QQ(1), QQ(2)]], (1, 2), QQ)
+    assert ddm.transpose() == ddmT
+    ddm02 = DDM([], (0, 2), QQ)
+    ddm02T = DDM([[], []], (2, 0), QQ)
+    assert ddm02.transpose() == ddm02T
+    assert ddm02T.transpose() == ddm02
+    ddm0 = DDM([], (0, 0), QQ)
+    assert ddm0.transpose() == ddm0
+
+
 def test_DDM_add():
     A = DDM([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
     B = DDM([[ZZ(3)], [ZZ(4)]], (2, 1), ZZ)
@@ -248,6 +260,11 @@ def test_DDM_nullspace():
      Anull = DDM([[QQ(-1), QQ(1)]], (1, 2), QQ)
      nonpivots = [1]
      assert A.nullspace() == (Anull, nonpivots)
+
+
+def test_DDM_particular():
+    A = DDM([[QQ(1), QQ(0)]], (1, 2), QQ)
+    assert A.particular() == DDM.zeros((1, 1), QQ)
 
 
 def test_DDM_det():
