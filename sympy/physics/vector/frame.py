@@ -4,6 +4,8 @@ from sympy import (trigsimp, solve, Symbol, Dummy)
 from sympy.physics.vector.vector import Vector, _check_vector
 from sympy.utilities.misc import translate
 
+from warnings import warn
+
 __all__ = ['CoordinateSym', 'ReferenceFrame']
 
 
@@ -567,8 +569,8 @@ class ReferenceFrame:
                     neighbors = node._dcm_dict.keys()
                     for neighbor in neighbors:
                         if neighbor == parent:
-                            warn('Loops are defined among the orientation of frames. \
-                                This is likely not desired and may cause errors in your calculations.')
+                            warn('Loops are defined among the orientation of frames.' + \
+                                ' This is likely not desired and may cause errors in your calculations.')
                             cont = False
                             break
                         queue.append(neighbor)
