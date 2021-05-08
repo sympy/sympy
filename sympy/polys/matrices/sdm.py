@@ -1042,7 +1042,7 @@ def sdm_applyfunc_nonzero(M, f, domain):
             if not domain.is_zero(domain_elem):
                 try:
                     Mf[i][j] = domain_elem
-                except:
+                except KeyError:
                     Mf[i] = {j: domain_elem}
 
     return Mf
