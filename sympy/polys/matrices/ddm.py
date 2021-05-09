@@ -381,4 +381,3 @@ class DDM(list):
 
 
 from .sdm import SDM
-
