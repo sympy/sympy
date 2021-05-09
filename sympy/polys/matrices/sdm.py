@@ -689,7 +689,7 @@ class SDM(dict):
         >>> from sympy.polys.matrices.sdm import SDM
         >>> from sympy import ZZ
         >>> A = SDM.zeros((2, 2), ZZ)
-        >>> A.applyfunc(lambda x: x + 4)
+        >>> A.applyfunc(lambda x: x + ZZ(4))
         {0: {0: 4, 1: 4}, 1: {0: 4, 1: 4}}
 
         We can also specify the output :py:class:`~.Domain`
@@ -714,7 +714,7 @@ class SDM(dict):
         >>> from sympy.polys.matrices.sdm import SDM
         >>> from sympy import ZZ, QQ
         >>> A = SDM({0: {1 : ZZ(1)}, 1: {0: ZZ(3)}}, (2, 2), ZZ)
-        >>> A.applyfunc_nonzero(lambda x: 1 + x/2, QQ)
+        >>> A.applyfunc_nonzero(lambda x: QQ(1) + x/QQ(2), QQ)
         {0: {1: 3/2}, 1: {0: 5/2}}
 
         """
@@ -1019,15 +1019,14 @@ def sdm_applyfunc(M, shape, f, domain):
         return sdm_applyfunc_nonzero(M, f, domain)
 
     nrows, ncols = shape
-
-    fzero = domain.convert(f(domain.zero))
+    fzero = (f(domain.zero))
     Mf = {i: {j: fzero for j in range(ncols)} for i in range(nrows)}
 
     for i, Mi in M.items():
         for j, Mij in Mi.items():
-                domain_elem = domain.convert(f(M[i][j]))
-                if not domain.is_zero(domain_elem):
-                    Mf[i][j] = domain_elem
+                fMij = f(M[i][j])
+                if not domain.is_zero(fMij):
+                    Mf[i][j] = fMij
                 else:
                     del Mf[i][j]
     return Mf
@@ -1037,12 +1036,10 @@ def sdm_applyfunc_nonzero(M, f, domain):
     Mf = {}
     for i, Mi in M.items():
         for j, Mij in Mi.items():
-            domain_elem = domain.convert(f(M[i][j]))
-
-            if not domain.is_zero(domain_elem):
+            fMij = f(M[i][j])
+            if not domain.is_zero(fMij):
                 try:
-                    Mf[i][j] = domain_elem
+                    Mf[i][j] = fMij
                 except KeyError:
-                    Mf[i] = {j: domain_elem}
-
+                    Mf[i] = {j: fMij}
     return Mf

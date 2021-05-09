@@ -218,14 +218,14 @@ class DDM(list):
 
         We can also specify the :py:class:`~.Domain` of the output
 
-        >>> A.applyfunc(lambda x: x/5, QQ)
+        >>> A.applyfunc(lambda x: x/QQ(5), QQ)
         [[1/5, 2/5], [3/5, 4/5]]
 
         """
         if domain is None:
             domain = self.domain
 
-        Mf = ddm_applyfunc(self, f, domain)
+        Mf = ddm_applyfunc(self, f)
         return DDM(Mf, self.shape, domain)
 
     def applyfunc_nonzero(self, f, domain=None):
@@ -240,7 +240,7 @@ class DDM(list):
         >>> A = DDM([[ZZ(1), ZZ(0)], [ZZ(0), ZZ(3)]], (2, 2), ZZ)
         >>> A.applyfunc_nonzero(lambda x: 2 ** x)
         [[2, 0], [0, 8]]
-        >>> A.applyfunc_nonzero(lambda x: 1/x, QQ)
+        >>> A.applyfunc_nonzero(lambda x: QQ(1)/x, QQ)
         [[1, 0], [0, 1/3]]
 
         """
@@ -380,8 +380,8 @@ class DDM(list):
 
 from .sdm import SDM
 
-def ddm_applyfunc(M, f, domain):
-    return [[domain.convert(f(x)) for x in Mi] for Mi in M]
+def ddm_applyfunc(M, f):
+    return [[f(x) for x in Mi] for Mi in M]
 
 def ddm_applyfunc_nonzero(M, f, domain):
-    return [[domain.convert(f(x)) if not domain.is_zero(x) else domain.zero for x in Mi] for Mi in M]
+    return [[f(x) if not domain.is_zero(x) else domain.zero for x in Mi] for Mi in M]

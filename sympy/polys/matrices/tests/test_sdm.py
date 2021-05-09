@@ -277,5 +277,9 @@ def test_SDM_particular():
 
 def test_SDM_applyfunc():
     A = SDM.eye(4, ZZ)
-    assert A.applyfunc(lambda x: 2*x) == 2*SDM.eye(4, ZZ)
-    assert A.applyfunc(lambda x: 0) == SDM.zeros((4, 4), ZZ)
+    assert A.applyfunc(lambda x: ZZ(2) * x) == ZZ(2) * SDM.eye(4, ZZ)
+    assert A.applyfunc(lambda x: ZZ(0)) == SDM.zeros((4, 4), ZZ)
+
+def test_SDM_applyfunc_nonzero():
+    A = SDM.eye(3, ZZ)
+    assert A.applyfunc_nonzero(lambda x: x + QQ(1, 2), QQ) == QQ(3, 2) * SDM.eye(3, QQ)

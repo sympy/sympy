@@ -655,7 +655,7 @@ class DomainMatrix:
         >>> from sympy.polys.matrices import DomainMatrix
         >>> from sympy import ZZ
         >>> A = DomainMatrix([[ZZ(1), ZZ(3)], [ZZ(2), ZZ(4)]], (2, 2), ZZ)
-        >>> f = lambda i: 2 ** i
+        >>> f = lambda i: ZZ(2) ** i
         >>> A.applyfunc(f)
         DomainMatrix([[2, 8], [4, 16]], (2, 2), ZZ)
 
@@ -663,7 +663,7 @@ class DomainMatrix:
         shown below
 
         >>> from sympy import QQ
-        >>> f = lambda i: i/2
+        >>> f = lambda i: i/QQ(2)
         >>> A.applyfunc(f, QQ)
         DomainMatrix([[1/2, 3/2], [1, 2]], (2, 2), QQ)
 
@@ -688,7 +688,7 @@ class DomainMatrix:
         >>> from sympy.polys.matrices import DomainMatrix
         >>> from sympy import ZZ, QQ
         >>> A = DomainMatrix({0: {1: ZZ(1)}, 1: {0: ZZ(3)}}, (2, 2), ZZ)
-        >>> A.applyfunc_nonzero(lambda x: x/2 + 1,  QQ)
+        >>> A.applyfunc_nonzero(lambda x: x/QQ(2) + QQ(1),  QQ)
         DomainMatrix({0: {1: 3/2}, 1: {0: 5/2}}, (2, 2), QQ)
 
         See Also

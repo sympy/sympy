@@ -404,15 +404,15 @@ def test_DDM_extract_slice():
 
 def test_DDM_applyfunc():
     A = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    assert A.applyfunc(lambda x: x / 2, QQ) == DDM([[QQ(1, 2), QQ(1)], [QQ(3, 2), QQ(2)]], (2, 2), QQ)
+    assert A.applyfunc(lambda x: x / QQ(2), QQ) == DDM([[QQ(1, 2), QQ(1)], [QQ(3, 2), QQ(2)]], (2, 2), QQ)
 
     A = DDM.eye(3, ZZ)
-    assert A.applyfunc(lambda x: 0) == DDM.zeros((3, 3), ZZ)
-    assert A.applyfunc(lambda x: 1) == DDM.ones((3, 3), ZZ)
+    assert A.applyfunc(lambda x: ZZ(0)) == DDM.zeros((3, 3), ZZ)
+    assert A.applyfunc(lambda x: ZZ(1)) == DDM.ones((3, 3), ZZ)
 
 def test_applyfunc_nonzero():
     A = DDM([[ZZ(1), ZZ(0)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    assert A.applyfunc_nonzero(lambda x: x + 0.5, QQ) == DDM([[QQ(3, 2), QQ(0)], [QQ(7, 2), QQ(9, 2)]], (2, 2), QQ)
+    assert A.applyfunc_nonzero(lambda x: x + QQ(1, 2), QQ) == DDM([[QQ(3, 2), QQ(0)], [QQ(7, 2), QQ(9, 2)]], (2, 2), QQ)
 
     I = DDM.eye(3, ZZ)
-    assert I.applyfunc_nonzero(lambda x: 4) == ZZ(4)*I
+    assert I.applyfunc_nonzero(lambda x: ZZ(4)) == ZZ(4)*I

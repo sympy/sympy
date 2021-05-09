@@ -648,15 +648,15 @@ def test_DomainMatrix_getitem():
 def test_DomainMatrix_applyfunc():
     A = DomainMatrix([[ZZ(1), ZZ(2)],
                       [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    assert A.applyfunc(lambda x: x/2, QQ) == DomainMatrix([[QQ(1, 2), QQ(1)], [QQ(3, 2), QQ(2)]], (2, 2), QQ)
+    assert A.applyfunc(lambda x: x/QQ(2), QQ) == DomainMatrix([[QQ(1, 2), QQ(1)], [QQ(3, 2), QQ(2)]], (2, 2), QQ)
 
     A = DomainMatrix.eye(3, ZZ)
-    assert A.applyfunc(lambda x: 0) == DomainMatrix.zeros((3, 3), ZZ)
-    assert A.applyfunc(lambda x: 1) == DomainMatrix.from_rep(SDM.ones((3, 3), ZZ))
+    assert A.applyfunc(lambda x: ZZ(0)) == DomainMatrix.zeros((3, 3), ZZ)
+    assert A.applyfunc(lambda x: ZZ(1)) == DomainMatrix.from_rep(SDM.ones((3, 3), ZZ))
 
 def test_DomainMatrix_applyfunc_nonzero():
     A = DomainMatrix.eye(3, ZZ)
-    assert A.applyfunc_nonzero(lambda x: 4) == ZZ(4) * DomainMatrix.eye(3, ZZ)
+    assert A.applyfunc_nonzero(lambda x: ZZ(4)) == ZZ(4) * DomainMatrix.eye(3, ZZ)
 
     B = DomainMatrix([[ZZ(2), ZZ(3)]], (1, 2), ZZ)
-    assert B.applyfunc_nonzero(lambda x: 0.5*x, QQ) == DomainMatrix([[QQ(1), QQ(3, 2)]], (1, 2), QQ)
+    assert B.applyfunc_nonzero(lambda x: QQ(1, 2) * x, QQ) == DomainMatrix([[QQ(1), QQ(3, 2)]], (1, 2), QQ)
