@@ -111,7 +111,7 @@ singularity function form:
    :include-source: True
 
    >>> b.load
-              -1
+             -1
    12⋅<x - 9>
 
 Similarly, the positive moment can be applied with a polynomial order -2:
@@ -171,7 +171,7 @@ final loading can be displayed:
    >>> b.reaction_loads
        {M: 158, R: -52}
    >>> b.load
-                -2         -1        0             -2            0             -1
+              -2         -1        0             -2            0             -1
        158⋅<x>   - 52⋅<x>   + 8⋅<x>  + 50⋅<x - 5>   - 8⋅<x - 5>  + 12⋅<x - 9>
 
 At this point, the beam is fully defined and the internal shear and bending
@@ -184,7 +184,8 @@ moments are calculated:
 
    >>> b.shear_force()
              -1         0        1             -1            1             0
-    - 158⋅<x>   + 52⋅<x>  - 8⋅<x>  - 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9> 
+    - 158⋅<x>   + 52⋅<x>  - 8⋅<x>  - 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9>
+
    >>> b.bending_moment()
                 0         1        2             0            2             1
        - 158⋅<x>  + 52⋅<x>  - 4⋅<x>  - 50⋅<x - 5>  + 4⋅<x - 5>  - 12⋅<x - 9>
@@ -375,7 +376,7 @@ applied from the mid till the end of the beam.
 
    >>> b.bending_moment()
                1            0            2          3             1
-          11⋅<x>    3⋅<x - 3>     3⋅<x - 3>    <x - 3>    43⋅<x - 6>
+         11⋅<x>    3⋅<x - 3>    3⋅<x - 3>    <x - 3>    43⋅<x - 6>
          ─────── + ────────── - ────────── - ──────── + ───────────
             4          2            2           6            4
 
@@ -386,7 +387,6 @@ applied from the mid till the end of the beam.
             8          2           2          24           8        5
        ───────────────────────────────────────────────────────────────
                                     E⋅I
-
 
    >>> b.deflection()
                     3            2          4          5             3
@@ -441,11 +441,11 @@ to a distributed constant load of 10 KN/m from the starting point till
 
     >>> b.shear_force()
             1               0             1             0               0              0
-    - 10⋅<x>  + 26.0⋅<x - 1>  + 10⋅<x - 2>  - 20⋅<x - 5>  + 22.0⋅<x - 7>  - 8⋅<x - 7.5> 
+    - 10⋅<x>  + 26.0⋅<x - 1>  + 10⋅<x - 2>  - 20⋅<x - 5>  + 22.0⋅<x - 7>  - 8⋅<x - 7.5>
 
     >>> b.bending_moment()
            2               1            2             1               1              1
-    - 5⋅<x>  + 26.0⋅<x - 1>  + 5⋅<x - 2>  - 20⋅<x - 5>  + 22.0⋅<x - 7>  - 8⋅<x - 7.5> 
+    - 5⋅<x>  + 26.0⋅<x - 1>  + 5⋅<x - 2>  - 20⋅<x - 5>  + 22.0⋅<x - 7>  - 8⋅<x - 7.5>
 
     >>> b.bc_deflection = [(1, 0), (7, 0)]
     >>> b.slope()
@@ -509,10 +509,10 @@ away from start.
     ───────── - ──────── + 4⋅<x>  - 4⋅<x - 2>  + <x - 3>  + 12⋅<x - 4>   - 3⋅<x - 6>  - <x - 6>
         2          2
     >>> b.shear_force()
-             -1         0                                2                                   2
-       157⋅<x>     49⋅<x>        1            1    <x - 3>            0           1    <x - 6>
+              -1         0                                2                                     2
+       157⋅<x>     49⋅<x>        1            1    <x - 3>             0            1    <x - 6>
     - ───────── + ─────── - 4⋅<x>  + 4⋅<x - 2>  - ──────── - 12⋅<x - 4>  + 3⋅<x - 6>  + ────────
-          2          2                              2                                    2
+          2          2                                2                                    2
     >>> b.bending_moment()
              0         1                                3                          2          3
       157⋅<x>    49⋅<x>         2            2   <x - 3>              1   3⋅<x - 6>    <x - 6>
@@ -741,7 +741,7 @@ applied at a distance of ``3*l`` from the starting point.
           4          4             4                               2
 
     >>> b.bending_moment()
-            0          1               1                               1
+             0          1               1                               1
       P⋅l⋅<x>    3⋅P⋅<x>    5⋅P⋅<-l + x>                1   P⋅<-4⋅l + x>
       ──────── - ──────── + ───────────── - P⋅<-3⋅l + x>  + ─────────────
          4          4             4                               2
