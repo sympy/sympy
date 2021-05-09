@@ -265,12 +265,16 @@ def test_minpoly_compose():
 
     ex = tan(13*pi/45)
     mp = minimal_polynomial(ex, x)
+    assert mp == x**24 - 852*x**22 + 26562*x**20 - 288452*x**18 + 1465839*x**16 - \
+            3852456*x**14 + 5407388*x**12 - 3994152*x**10 + 1475055*x**8 - 250372*x**6 + 15810*x**4 - 276*x**2 + 1
     a = Poly(mp).nroots()
     b = ex.n()
     assert b in a
 
     ex = tan(5*pi/46)
     mp = minimal_polynomial(ex, x)
+    assert mp == 23*x**22 - 1771*x**20 + 33649*x**18 - 245157*x**16 + 817190*x**14 - \
+            1352078*x**12 + 1144066*x**10 - 490314*x**8 + 100947*x**6 - 8855*x**4 + 253*x**2 - 1
     a = Poly(mp).nroots()
     b = ex.n()
     assert b in a

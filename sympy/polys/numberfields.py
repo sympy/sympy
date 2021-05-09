@@ -10,7 +10,6 @@ from sympy.functions import sqrt, cbrt
 
 from sympy.core.exprtools import Factors
 from sympy.core.function import _mexpand
-from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import cos, sin, tan
 from sympy.ntheory import sieve
@@ -451,12 +450,11 @@ def _minpoly_cos(ex, x):
     raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
 
 
-def _minpoly_tan(ex):
+def _minpoly_tan(ex, x):
     """
     Returns the minimal polynomial of ``tan(ex)``
     see https://github.com/sympy/sympy/issues/21430
     """
-    x = Symbol('x', real=True)
     c, a = ex.args[0].as_coeff_Mul()
     if a is pi:
         if c.is_rational:
@@ -605,7 +603,7 @@ def _minpoly_compose(ex, x, dom):
     elif ex.__class__ is cos:
         res = _minpoly_cos(ex, x)
     elif ex.__class__ is tan:
-        res = _minpoly_tan(ex)
+        res = _minpoly_tan(ex, x)
     elif ex.__class__ is exp:
         res = _minpoly_exp(ex, x)
     elif ex.__class__ is CRootOf:
