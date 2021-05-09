@@ -1208,7 +1208,25 @@ class Basic(Printable, metaclass=ManagedProperties):
         False
 
         """
-        return any(self._has(pattern) for pattern in patterns)
+        expressions = set(patterns)
+        tocheck = [self]
+        for subexpr in tocheck:
+            if subexpr in expressions:
+                return True
+            tocheck.extend(subexpr.args)
+
+        types_expr = {pattern for pattern in expressions if isinstance(pattern, BasicMeta)}
+        if types_expr:
+            types_found = set(map(type, tocheck))
+            if types_found:
+                if any(issubclass(t, patterns) for t in types_found):
+                    return True
+        else:
+            for pattern in patterns:
+                if not isinstance(pattern, Basic):
+                    raise SympifyError(pattern)
+
+        return False
 
     def _has(self, pattern):
         """Helper for .has()"""
