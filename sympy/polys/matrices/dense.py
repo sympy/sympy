@@ -335,3 +335,9 @@ def ddm_berk(M, K):
     qout = [[K.zero] for _ in range(n+1)]
     ddm_imatmul(qout, T, q)
     return qout
+
+def ddm_applyfunc(M, f):
+    return [[f(x) for x in Mi] for Mi in M]
+
+def ddm_applyfunc_nonzero(M, f, domain):
+    return [[f(x) if not domain.is_zero(x) else domain.zero for x in Mi] for Mi in M]

@@ -75,6 +75,8 @@ from .dense import (
         ddm_ilu_split,
         ddm_ilu_solve,
         ddm_berk,
+        ddm_applyfunc,
+        ddm_applyfunc_nonzero,
         )
 
 
@@ -380,8 +382,3 @@ class DDM(list):
 
 from .sdm import SDM
 
-def ddm_applyfunc(M, f):
-    return [[f(x) for x in Mi] for Mi in M]
-
-def ddm_applyfunc_nonzero(M, f, domain):
-    return [[f(x) if not domain.is_zero(x) else domain.zero for x in Mi] for Mi in M]
