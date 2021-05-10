@@ -1234,17 +1234,17 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
 
     u = Dummy('u')
 
-    def simp_heaviside(arg):
+    def simp_heaviside(arg,H0=S.Half):
         a = arg.subs(exp(-t), u)
         if a.has(t):
-            return Heaviside(arg)
+            return Heaviside(arg,H0)
         rel = _solve_inequality(a > 0, u)
         if rel.lts == u:
             k = log(rel.gts)
-            return Heaviside(t + k)
+            return Heaviside(t + k,H0)
         else:
             k = log(rel.lts)
-            return Heaviside(-(t + k))
+            return Heaviside(-(t + k),H0)
     f = f.replace(Heaviside, simp_heaviside)
 
     def simp_exp(arg):
