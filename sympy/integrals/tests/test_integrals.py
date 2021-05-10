@@ -720,10 +720,11 @@ def test_subs5():
     e = Integral(exp(-x**2), (x, -oo, oo))
     assert e.subs(x, 5) == e
     e = Integral(exp(-x**2 + y), x)
+    assert e.subs(x, 5) == Integral(exp(-x**2 + y), (x, 5))
     assert e.subs(y, 5) == Integral(exp(-x**2 + 5), x)
     e = Integral(exp(-x**2 + y), (x, x))
     assert e.subs(x, 5) == Integral(exp(y - x**2), (x, 5))
-    assert e.subs(y, 5) == Integral(exp(-x**2 + 5), x)
+    assert e.subs(y, 5) == Integral(exp(-x**2 + 5), (x, x))
     e = Integral(exp(-x**2 + y), (y, -oo, oo), (x, -oo, oo))
     assert e.subs(x, 5) == e
     assert e.subs(y, 5) == e
@@ -753,8 +754,9 @@ def test_subs7():
     e = Integral(sin(x) + sin(y), (x, sin(x), sin(y)),
                                   (y, 1, 2))
     assert e.subs(sin(y), 1) == e
-    assert e.subs(sin(x), 1) == Integral(sin(x) + sin(y), (x, 1, sin(y)),
-                                         (y, 1, 2))
+    assert e.subs(sin(x), 1) == Integral(
+        sin(x) + sin(y), (x, 1, sin(y)), (y, 1, 2))
+
 
 def test_expand():
     e = Integral(f(x)+f(x**2), (x, 1, y))

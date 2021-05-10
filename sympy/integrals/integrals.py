@@ -259,7 +259,7 @@ class Integral(AddWithLimits):
         ========
 
         sympy.concrete.expr_with_limits.ExprWithLimits.variables : Lists the integration variables
-        as_dummy : Replace integration variables with dummy ones
+        sympy.concrete.expr_with_limits.ExprWithLimits.as_dummy : Replace integration variables with dummy ones
         """
         from sympy.solvers.solvers import solve, posify
         d = Dummy('d')

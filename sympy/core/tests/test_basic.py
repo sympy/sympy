@@ -282,7 +282,7 @@ def test_atomic():
 
 
 def test_as_dummy():
-    u, v, x, y, z, _0, _1 = symbols('u v x y z _0 _1')
+    u, v, x, y, z, _0, _1, _2 = symbols('u v x y z _0 _1 _2')
     assert Lambda(x, x + 1).as_dummy() == Lambda(_0, _0 + 1)
     assert Lambda(x, x + _0).as_dummy() == Lambda(_1, _0 + _1)
     eq = (1 + Sum(x, (x, 1, x)))
@@ -308,6 +308,24 @@ def test_as_dummy():
     # need to use explicit form of evaluate-at integral
     assert Integral(f(x) + x, f(x)).as_dummy() == Integral(
         _0 + _1, (_0, f(x)))
+    assert Integral(x, y, z).as_dummy(
+        )  == Integral(x, (_0, y), (_1, z))
+    # if a.doit() == b.doit() then a.as_dummy() == b.as_dummy()
+    # and a.as_dummy().doit() == a.doit()
+    I1 = Integral(x, (x, y), (y, x), (x, y))
+    I2 = Integral(x, (x, y), (y, z), (z, y))
+    assert I1.as_dummy() == I2.as_dummy() and I1.doit() == I2.doit()
+    assert I1.as_dummy().doit() == I2.as_dummy().doit() == I1.doit()
+    I1 = Integral(x, (x, y + 1), (y, z - 1), (z, x))
+    assert I1.as_dummy(
+        ) == Integral(_0, (_0, _1 + 1), (_1, _0 - 1), (_0, x))
+    I1 = Integral(x, x, (y, z), (z, z, v))
+    assert I1.doit() == I1.as_dummy().doit()
+    I1 = Integral(
+        x, x, (y, z), (z, z), (z, z, y))
+    assert I1.as_dummy() == Integral(
+        _0, (_0, x), (_1, _0), _0, (_0, z, y)), I1.as_dummy()
+
 
 def test_canonical_variables():
     x, i0, i1 = symbols('x _:2')

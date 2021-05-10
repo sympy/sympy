@@ -304,13 +304,50 @@ class ExprWithLimits(Expr):
         return isyms
 
     def as_dummy(self):
+        """Return the integral with integration variables replaced
+        with a minimal set of unique, canonical symbols having only
+        the default assumption for commutativity being True.
+
+        Examples
+        ========
+
+        >>> from sympy import Integral, Function
+        >>> from sympy.abc import x, y, z
+        >>> eq = Integral(y, (x, y), (y, z), (z, y))
+        >>> eq.as_dummy()
+        Integral(_1, (_0, _1), (_1, _0), (_0, y))
+        >>> _.doit() == eq.doit()
+        True
+
+        If an integration variable contains free symbols that
+        also appear on their own in the integrand, it will not
+        be true that the evaluated form of the original and
+        dummy form will be the same:
+
+        >>> f = Function('f')
+        >>> eq = Integral(x + f(x), f(x))
+        >>> eq.as_dummy()
+        Integral(_0 + _1, (_0, f(x)))
+        >>> _.doit()
+        _1*f(x) + f(x)**2/2
+
+        The non-dummy form of such an integral does not evaluate:
+
+        >>> eq.doit() == eq
+        True
+        """
         from sympy.core.basic import Basic
+        # need to use explicit form of at_pt limit
         self2 = self.func(*([self.function] + [
             i if len(i) > 1 else i*2 for i in self.limits]))
         rv = Basic.as_dummy(self2)
-        if rv == self2:
-             rv = self
-        return rv
+        dums = [i[0] for i in rv.limits]
+        redun = set().union(*[u.free_symbols for l in rv.limits for u in l[1:]]) & set(dums[2:])
+        reps = {k: rv.limits[0][0] for k in redun}
+        # undo explicit form of at_pt
+        return rv.func(*([rv.function] + [
+            i[0] if len(i) == 2 and i[0] == i[1] else i
+            for i in rv.limits])).xreplace(reps)
 
     @property
     def is_number(self):
@@ -367,12 +404,18 @@ class ExprWithLimits(Expr):
                 old.free_symbols.intersection(self.free_symbols):
             sub_into_func = True
             for i, xab in enumerate(limits):
-                if 1 == len(xab) and old == xab[0]:
+                if len(xab) == 1 and old == xab[0]:
                     if new._diff_wrt:
                         xab = (new,)
                     else:
                         xab = (old, old)
-                limits[i] = Tuple(xab[0], *[l._subs(old, new) for l in xab[1:]])
+                _li = Tuple(xab[0], *[l._subs(old, new) for l in xab[1:]])
+                # simplify redundant limits (x, x)  to (x, )
+                # only if they now became so
+                if len(_li) == 2 and _li != limits[i] and \
+                        _li[0] == _li[1]:
+                    _li = _li[0]
+                limits[i] = _li
                 if len(xab[0].free_symbols.intersection(old.free_symbols)) != 0:
                     sub_into_func = False
                     break
@@ -392,10 +435,6 @@ class ExprWithLimits(Expr):
                     limits[i] = Tuple(xab[0], *[l._subs(old, new) for l in xab[1:]])
                     if old == xab[0]:
                         break
-        # simplify redundant limits (x, x)  to (x, )
-        for i, xab in enumerate(limits):
-            if len(xab) == 2 and (xab[0] - xab[1]).is_zero:
-                limits[i] = Tuple(xab[0], )
 
         # Reorder limits back to representation-form
         limits.reverse()
