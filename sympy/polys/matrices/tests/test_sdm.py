@@ -280,6 +280,13 @@ def test_SDM_applyfunc():
     assert A.applyfunc(lambda x: ZZ(2) * x) == ZZ(2) * SDM.eye(4, ZZ)
     assert A.applyfunc(lambda x: ZZ(0)) == SDM.zeros((4, 4), ZZ)
 
+    A = SDM({0: {1: ZZ(2)}, 1: {0: ZZ(1)}}, (2, 2), ZZ)
+    assert A.applyfunc(lambda x: ZZ(0) if x else ZZ(1)) == SDM.eye(2, ZZ)
+    assert A.applyfunc(lambda x: x if x else ZZ(1)) == SDM({0: {0: ZZ(1), 1: ZZ(2)}, 1: {0: ZZ(1), 1: ZZ(1)}}, (2, 2), ZZ)
+
 def test_SDM_applyfunc_nonzero():
     A = SDM.eye(3, ZZ)
     assert A.applyfunc_nonzero(lambda x: x + QQ(1, 2), QQ) == QQ(3, 2) * SDM.eye(3, QQ)
+
+    A = SDM({0: {1: ZZ(2)}, 1: {0: ZZ(1)}}, (2, 2), ZZ)
+    assert A.applyfunc_nonzero(lambda x: ZZ(0) if x else ZZ(1)) == SDM.zeros((2, 2), ZZ)

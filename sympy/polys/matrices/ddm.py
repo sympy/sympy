@@ -206,8 +206,9 @@ class DDM(list):
             raise DDMShapeError(msg)
 
     def applyfunc(self, f, domain=None):
-        """Applies a function f to every element of a DDM
-        and converts :py:class:`~.Domain` to domain
+        """Applies a function f to every element of a DDM.
+        If the function returns elements from a different :py:class:`~.Domain`
+        then the new domain should be given as the *domain* argument.
 
         Examples
         ========
@@ -231,8 +232,9 @@ class DDM(list):
         return DDM(Mf, self.shape, domain)
 
     def applyfunc_nonzero(self, f, domain=None):
-        """Applies a function f to every non-zero element of a DomainMatrix
-        and converts :py:class:`~.Domain` to domain
+        """Applies a function f to every non-zero element of a DDM.
+        If the function returns elements from a different :py:class:`~.Domain`
+        then the new domain should be given as the *domain* argument.
 
         Examples
         ========

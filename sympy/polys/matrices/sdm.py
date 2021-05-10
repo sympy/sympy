@@ -692,7 +692,8 @@ class SDM(dict):
         >>> A.applyfunc(lambda x: x + ZZ(4))
         {0: {0: 4, 1: 4}, 1: {0: 4, 1: 4}}
 
-        We can also specify the output :py:class:`~.Domain`
+        If the function returns elements from a different :py:class:`~.Domain`
+        then the new domain should be given as the *domain* argument.
 
         >>> from sympy import QQ
         >>> A.applyfunc(lambda x: x + QQ(1, 2), QQ)
@@ -706,7 +707,11 @@ class SDM(dict):
         return SDM(Mf, self.shape, domain)
 
     def applyfunc_nonzero(self, f, domain=None):
-        """Returns SDM after applying function f to each non-zero element
+        """Returns SDM after applying function f to each non-zero element.
+        If the function returns elements from a different :py:class:`~.Domain`
+        then the new domain should be given as the *domain* argument.
+
+        This method is efficient for sparse matrices
 
         Examples
         ========
@@ -721,7 +726,7 @@ class SDM(dict):
         if domain is None:
             domain = self.domain
 
-        Mf = sdm_applyfunc_nonzero(self, f, domain)
+        Mf = unop_dict(self, f)
         return SDM(Mf, self.shape, domain)
 
 def binop_dict(A, B, fab, fa, fb):
@@ -1015,31 +1020,19 @@ def sdm_particular_from_rref(A, ncols, pivots):
 
 
 def sdm_applyfunc(M, shape, f, domain):
-    if domain.is_zero(f(domain.zero)):
-        return sdm_applyfunc_nonzero(M, f, domain)
+    if not f(domain.zero):
+        return unop_dict(M, f)
 
     nrows, ncols = shape
-    fzero = (f(domain.zero))
+    fzero = f(domain.zero)
     Mf = {i: {j: fzero for j in range(ncols)} for i in range(nrows)}
 
     for i, Mi in M.items():
         for j, Mij in Mi.items():
-                fMij = f(M[i][j])
-                if not domain.is_zero(fMij):
-                    Mf[i][j] = fMij
-                else:
-                    del Mf[i][j]
-    return Mf
+            fMij = f(Mij)
+            if fMij:
+                Mf[i][j] = fMij
+            else:
+                del Mf[i][j]
 
-
-def sdm_applyfunc_nonzero(M, f, domain):
-    Mf = {}
-    for i, Mi in M.items():
-        for j, Mij in Mi.items():
-            fMij = f(M[i][j])
-            if not domain.is_zero(fMij):
-                try:
-                    Mf[i][j] = fMij
-                except KeyError:
-                    Mf[i] = {j: fMij}
     return Mf

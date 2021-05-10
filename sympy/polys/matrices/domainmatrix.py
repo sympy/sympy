@@ -647,7 +647,6 @@ class DomainMatrix:
 
     def applyfunc(self, f, domain=None):
         """Applies a function f to every element of a DomainMatrix
-        and converts :py:class:`~.Domain` to domain
 
         Examples
         ========
@@ -659,8 +658,7 @@ class DomainMatrix:
         >>> A.applyfunc(f)
         DomainMatrix([[2, 8], [4, 16]], (2, 2), ZZ)
 
-        We can change the output to appropriate domain as
-        shown below
+        If the function returns elements from a different domain then the new domain should be given as the *domain* argument.
 
         >>> from sympy import QQ
         >>> f = lambda i: i/QQ(2)
@@ -680,7 +678,8 @@ class DomainMatrix:
 
     def applyfunc_nonzero(self, f, domain=None):
         """Applies a function f to every non-zero element of a DomainMatrix
-        and converts :py:class:`~.Domain` to domain
+        and converts :py:class:`~.Domain` to domain. If the function returns elements
+        from a different domain then the new domain should be given as  *domain* argument
 
         Examples
         ========
