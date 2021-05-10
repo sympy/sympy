@@ -39,8 +39,8 @@ def satask(proposition, assumptions=True, context=global_assumptions,
         this is ``sympy.assumptions.global_assumptions`` variable.
 
     use_known_facts : bool, optional.
-        If ``True``, facts from ``sympy.assumptions.ask_generated`` module
-        are passed to SAT solver as well.
+        If ``True``, facts from ``sympy.assumptions.ask_generated``
+        module are passed to SAT solver as well.
 
     iterations : int, optional.
         Number of times that relevant facts are recursively extracted.
@@ -285,8 +285,8 @@ def get_all_relevant_facts(proposition, assumptions, context,
         CNF generated from assumptions context.
 
     use_known_facts : bool, optional.
-        If ``True``, facts from ``sympy.assumptions.ask_generated`` module
-        are encoded as well.
+        If ``True``, facts from ``sympy.assumptions.ask_generated``
+        module are encoded as well.
 
     iterations : int, optional.
         Number of times that relevant facts are recursively extracted.
