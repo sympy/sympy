@@ -413,7 +413,7 @@ Heac
     Heaviside function has the following properties:
 
     1) $\frac{d}{d x} \theta(x) = \delta(x)$
-    2) $\theta(x) = \begin{cases} 0 & \text{for}\: x < 0 \\ \frac12 &
+    2) $\theta(x) = \begin{cases} 0 & \text{for}\: x < 0 \\ \frac{1}{2} &
        \text{for}\: x = 0 \\1 & \text{for}\: x > 0 \end{cases}$
     3) $\frac{d}{d x} \max(x, 0) = \theta(x)$
 
