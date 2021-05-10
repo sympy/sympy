@@ -263,21 +263,15 @@ def test_minpoly_compose():
     mp = minimal_polynomial(ex, x)
     assert degree(mp) == 48 and mp.subs({x:0}) == -16630256576
 
-    ex = tan(13*pi/45)
+    ex = tan(pi/5, evaluate=False)
     mp = minimal_polynomial(ex, x)
-    assert mp == x**24 - 852*x**22 + 26562*x**20 - 288452*x**18 + 1465839*x**16 - \
-            3852456*x**14 + 5407388*x**12 - 3994152*x**10 + 1475055*x**8 - 250372*x**6 + 15810*x**4 - 276*x**2 + 1
-    a = Poly(mp).nroots()
-    b = ex.n()
-    assert b in a
+    assert mp == x**4 - 10*x**2 + 5
+    assert mp.subs(x, tan(pi/5)).is_zero
 
-    ex = tan(5*pi/46)
+    ex = tan(pi/6, evaluate=False)
     mp = minimal_polynomial(ex, x)
-    assert mp == 23*x**22 - 1771*x**20 + 33649*x**18 - 245157*x**16 + 817190*x**14 - \
-            1352078*x**12 + 1144066*x**10 - 490314*x**8 + 100947*x**6 - 8855*x**4 + 253*x**2 - 1
-    a = Poly(mp).nroots()
-    b = ex.n()
-    assert b in a
+    assert mp == 3*x**2 - 1
+    assert mp.subs(x, tan(pi/6)).is_zero
 
     raises(NotAlgebraic, lambda: minimal_polynomial(tan(pi*sqrt(2)), x))
 
