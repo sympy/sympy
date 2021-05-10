@@ -1,4 +1,4 @@
-from sympy.core import S, sympify, diff
+from sympy.core import S, sympify, diff, nan
 from sympy.core.decorators import deprecated
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_not
@@ -409,7 +409,7 @@ class Heaviside(Function):
 
     Explanation
     ===========
-
+Heac
     Heaviside function has the following properties:
 
     1) $\frac{d}{d x} \theta(x) = \delta(x)$
@@ -419,15 +419,12 @@ class Heaviside(Function):
 
     Heaviside(x) is printed as $\theta(x)$ with the SymPy LaTeX printer.
 
-    Regarding to the value at 0, Mathematica defines $\theta(0)=1$, but Maple
-    uses $\theta(0) = \text{undefined}$. Different application areas may have
-    specific conventions. For example, in control theory, it is common practice
-    to assume $\theta(0) = 0$ to match the Laplace transform of a DiracDelta
-    distribution.
+    The value at 0 is set differently in different fields. SymPy uses 1/2,
+    which is a convention from electronics and signal processing.
 
-    To specify the value of Heaviside at ``x=0``, a second argument can be
-    given. Omit this 2nd argument or pass ``None`` to recover the default
-    behavior.
+    To specify a differnt value of Heaviside at ``x=0``, a second argument
+    can be given. Pass ``nan`` as the second argument to get a Heaviside
+    function that does not have a defined value at 0.
 
     Examples
     ========
@@ -439,9 +436,9 @@ class Heaviside(Function):
     >>> Heaviside(-9)
     0
     >>> Heaviside(0)
-    Heaviside(0)
-    >>> Heaviside(0, S.Half)
     1/2
+    >>> Heaviside(0, S.Half)
+    Heaviside(0, nan)
     >>> (Heaviside(x) + 1).replace(Heaviside(x), Heaviside(x, 1))
     Heaviside(x, 1) + 1
 
@@ -492,16 +489,13 @@ class Heaviside(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def __new__(cls, arg, H0=None, **options):
+    def __new__(cls, arg, H0=S.Half, **options):
         if isinstance(H0, Heaviside) and len(H0.args) == 1:
-            H0 = None
-
-        if H0 is None:
-            return super(cls, cls).__new__(cls, arg, **options)
+            H0 = S.Half
         return super(cls, cls).__new__(cls, arg, H0, **options)
 
     @classmethod
-    def eval(cls, arg, H0=None):
+    def eval(cls, arg, H0=S.Half):
         """
         Returns a simplified form or a value of Heaviside depending on the
         argument passed by the Heaviside object.
@@ -562,7 +556,8 @@ class Heaviside(Function):
         elif arg.is_extended_positive:
             return S.One
         elif arg.is_zero:
-            return H0
+            if H0 is not nan:
+                return H0
         elif arg is S.NaN:
             return S.NaN
         elif fuzzy_not(im(arg).is_zero):
@@ -588,8 +583,6 @@ class Heaviside(Function):
         Piecewise((0, x**2 - 1 < 0), (Heaviside(0), Eq(x**2 - 1, 0)), (1, x**2 - 1 > 0))
 
         """
-        if H0 is None:
-            return Piecewise((0, arg < 0), (Heaviside(0), Eq(arg, 0)), (1, arg > 0))
         if H0 == 0:
             return Piecewise((0, arg <= 0), (1, arg > 0))
         if H0 == 1:
