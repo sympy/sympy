@@ -6,7 +6,6 @@ from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 from sympy.core import sympify
 from sympy.core.kind import BooleanKind
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
-from sympy.logic.boolalg import Not
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -554,20 +553,24 @@ def _ask_single_fact(key, local_facts):
             cl, = local_facts.clauses
             if len(cl) == 1:
                 f, = cl
-                if f.is_Not and f.arg in known_facts_dict.get(key, []):
+                prop_facts = known_facts_dict.get(key, None)
+                prop_req = prop_facts[0] if prop_facts is not None else set()
+                if f.is_Not and f.arg in prop_req:
                     # the prerequisite of proposition is rejected
                     return False
 
         for clause in local_facts.clauses:
             if len(clause) == 1:
                 f, = clause
-                fdict = known_facts_dict.get(f.arg, None) if not f.is_Not else None
-                if fdict is None:
-                    pass
-                elif key in fdict:
+                prop_facts = known_facts_dict.get(f.arg, None) if not f.is_Not else None
+                if prop_facts is None:
+                    continue
+
+                prop_req, prop_rej = prop_facts
+                if key in prop_req:
                     # assumption implies the proposition
                     return True
-                elif Not(key) in fdict:
+                elif key in prop_rej:
                     # proposition rejects the assumption
                     return False
 
@@ -617,5 +620,5 @@ def remove_handler(key, handler):
     getattr(Q, key).remove_handler(handler)
 
 
-from sympy.assumptions.ask_generated import (
-    get_known_facts_dict, get_all_known_facts)
+from sympy.assumptions.ask_generated import (get_all_known_facts,
+    get_known_facts_dict)
