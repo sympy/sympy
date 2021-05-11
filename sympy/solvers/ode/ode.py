@@ -332,6 +332,7 @@ allhints = (
     "Liouville_Integral",
     "2nd_nonlinear_autonomous_conserved",
     "2nd_nonlinear_autonomous_conserved_Integral",
+    "1st_rational_riccati",
     )
 
 lie_heuristics = (
@@ -1053,6 +1054,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         Factorable: ('factorable',),
         RiccatiSpecial: ('Riccati_special_minus2',),
         SecondNonlinearAutonomousConserved: ('2nd_nonlinear_autonomous_conserved',),
+        RationalRiccati: ('1st_rational_riccati',),
     }
     for solvercls in solvers:
         solver = solvercls(ode)
@@ -7095,4 +7097,4 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 #This import is written at the bottom to avoid circular imports.
 from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
         Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
-        SecondNonlinearAutonomousConserved)
+        SecondNonlinearAutonomousConserved, RationalRiccati)

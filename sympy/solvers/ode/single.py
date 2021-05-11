@@ -11,18 +11,21 @@ from typing import Dict, Type
 from typing import Iterator, List, Optional
 
 from sympy.core import S
+from sympy.core.add import Add
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, Function, expand
-from sympy.core.numbers import Float
+from sympy.core.numbers import Float, oo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.core.mul import Mul
 from sympy.functions import exp, sqrt, tan, log
 from sympy.integrals import Integral
-from sympy.polys.polytools import cancel, factor
+from sympy.polys.polytools import cancel, factor, degree
+from sympy.polys.polyroots import roots
 from sympy.simplify.simplify import simplify
-from sympy.simplify.radsimp import fraction
+from sympy.simplify.radsimp import fraction, numer, denom
+from sympy.series.limits import limit
 from sympy.utilities import numbered_symbols
 
 from sympy.solvers.solvers import solve
@@ -852,5 +855,254 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
         return [Eq(lhs, C2 + x), Eq(lhs, C2 - x)]
 
 
+class RationalRiccati(SinglePatternODESolver):
+    r"""
+    Gives all rational solutions to the first
+    order Riccati Differential Equation
+
+    .. math :: y' = b_0(x) + b_1(x) y + b_2(x) y^2
+
+    where `b_0`, `b_1` and `b_2` are rational functions of `x`
+    with `b_2 \ne 0` (`b_2 = 0` would make it a Bernoulli equation).
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Function, dsolve, checkodesol
+    >>> f = Function('f')
+    >>> x = Symbol('x')
+
+    >>> eq = x**3*f(x).diff(x) - x**2*f(x) - f(x)**2
+    >>> sols = dsolve(eq, hint="1st_rational_riccati")
+    >>> sols
+    Eq(f(x), x**2*(-x/(C1 + x) + 1))
+    >>> checkodesol(eq, sols)
+    (True, 0)
+
+    >>> eq = -x**4*f(x)**2 + x**3*f(x).diff(x) + x**2*f(x) + 20
+    >>> sols = dsolve(eq, hint="1st_rational_riccati")
+    >>> sols
+    [Eq(f(x), (-9*x**8/(C1 + x**9) + 4/x)/x), Eq(f(x), 4/x**2)]
+    >>> checkodesol(eq, sols)
+    [(True, 0), (True, 0)]
+
+    >>> eq = x**3*f(x).diff(x) - x**2*(f(x) + f(x).diff(x)) + 2*x*f(x) - f(x)**2
+    >>> sols = dsolve(eq, hint="1st_rational_riccati")
+    >>> sols
+    Eq(f(x), x**2*(1 - (x - 1)/(C1 + x)))
+    >>> checkodesol(eq, sols)
+    (True, 0)
+
+    References
+    ==========
+
+    .. [1] Algorithm (Pg 78) - https://www3.risc.jku.at/publications/download/risc_5387/PhDThesisThieu.pdf
+    .. [2] Examples - https://www3.risc.jku.at/publications/download/risc_5197/RISCReport15-19.pdf
+    """
+    has_integral = False
+    hint = "1st_rational_riccati"
+    order = [1]
+
+    def _wilds(self, f, x, order):
+        b0 = Wild('b0', exclude=[f(x), f(x).diff(x)])
+        b1 = Wild('b1', exclude=[f(x), f(x).diff(x)])
+        b2 = Wild('b2', exclude=[f(x), f(x).diff(x)])
+        return (b0, b1, b2)
+
+    def _equation(self, fx, x, order):
+        b0, b1, b2 = self.wilds()
+        return fx.diff(x) - b0 - b1*fx - b2*fx**2
+
+    def _matches(self):
+        eq = self.ode_problem.eq
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        order = self.ode_problem.order
+
+        if order != 1:
+            return False
+
+        pattern = self._equation(f(x), x, order)
+
+        eq = eq.expand().collect(f(x))
+        cf = eq.coeff(f(x).diff(x))
+        eq = Add(*map(lambda x: cancel(x/cf), eq.args)).collect(f(x))
+
+        self._wilds_match = match = eq.match(pattern)
+        if match is not None:
+            return self._verify(f(x))
+        return False
+
+    def _verify(self, fx):
+        b0, b1, b2 = self.wilds_match()
+        x = self.ode_problem.sym
+        return all([b2 != 0, b0.is_rational_function(x), b1.is_rational_function(x), b2.is_rational_function(x)])
+
+    def solve_aux_eq(self, a, x, m, ybar):
+        p = Function('p')
+        auxeq = numer((p(x).diff(x, 2) + 2*ybar*p(x).diff(x) + (ybar.diff(x) + ybar**2 - a)*p(x)).together())
+
+        psyms = get_numbered_constants(auxeq, m)
+        if type(psyms) != tuple:
+            psyms = (psyms, )
+        psol = x**m
+        for i in range(m):
+            psol += psyms[i]*x**i
+        if m != 0:
+            return psol, solve(auxeq.subs(p(x), psol).doit().expand(), psyms, dict=True), True
+        else:
+            cf = auxeq.subs(p(x), psol).doit().expand()
+            return S(1), cf, cf == 0
+
+    def compute_degree(self, x, poles, choice, c, d, N):
+        ybar = 0
+        m = S(d[choice[0]][-1])
+
+        for i in range(len(poles)):
+            for j in range(len(c[i][choice[i + 1]])):
+                if poles[i] == oo and c[i][choice[i + 1]][j] != 0:
+                    return m, ybar, False
+                ybar += c[i][choice[i + 1]][j]/(x - poles[i])**(j+1)
+            m -= c[i][choice[i + 1]][0]
+        for i in range(N+1):
+            ybar += d[choice[0]][i]*x**i
+        return m, ybar, True
+
+    def construct_d(self, a, x, val_inf):
+        ser = a.series(x, oo)
+        N = -val_inf//2
+        # Case 4
+        if val_inf < 0:
+            temp = [0 for i in range(N+2)]
+            temp[N] = sqrt(ser.coeff(x, 2*N))
+            for s in range(N-1, -2, -1):
+                sm = 0
+                for j in range(s+1, N):
+                    sm += temp[j]*temp[N+s-j]
+                if s != -1:
+                    temp[s] = (ser.coeff(x, N+s) - sm)/(2*temp[N])
+            temp1 = list(map(lambda x: -x, temp))
+            temp[-1] = (ser.coeff(x, N+s) - temp[N] - sm)/(2*temp[N])
+            temp1[-1] = (ser.coeff(x, N+s) - temp1[N] - sm)/(2*temp1[N])
+            d = [temp, temp1]
+        # Case 5
+        elif val_inf == 0:
+            temp = [0, 0]
+            temp[0] = sqrt(ser.coeff(x, 0))
+            temp[-1] = ser.coeff(x, -1)/(2*temp[0])
+            d = [temp, list(map(lambda x: -x, temp))]
+        # Case 6
+        else:
+            s_inf = limit(x**2*a, x, oo)
+            d = [[(1 + sqrt(1 + 4*s_inf))/2], [(1 - sqrt(1 + 4*s_inf))/2]]
+        return d
+
+    def construct_c(self, a, x, poles, muls):
+        c = []
+        for pole, mul in zip(poles, muls):
+            c.append([])
+            # Case 3
+            if mul == 1:
+                c[-1].extend([[1], [1]])
+            # Case 1
+            elif mul == 2:
+                r = a.series(x, pole).coeff(x - pole, -2)
+                c[-1].extend([[(1 + sqrt(1 + 4*r))/2], [(1 - sqrt(1 + 4*r))/2]])
+            # Case 2
+            else:
+                ri = mul//2
+                ser = a.series(x, pole)
+                temp = [0 for i in range(ri)]
+                temp[ri-1] = sqrt(ser.coeff(x - pole, -mul))
+                for s in range(ri-1, 0, -1):
+                    sm = 0
+                    for j in range(s+1, ri):
+                        sm += temp[j-1]*temp[ri+s-j-1]
+                    if s!= 1:
+                        temp[s-1] = (ser.coeff(x - pole, -ri-s) - sm)/(2*temp[ri-1])
+                temp1 = list(map(lambda x: -x, temp))
+                temp[0] = (ser.coeff(x - pole, -ri-s) - sm + ri*temp[ri-1])/(2*temp[ri-1])
+                temp1[0] = (ser.coeff(x - pole, -ri-s) - sm + ri*temp1[ri-1])/(2*temp1[ri-1])
+                c[-1].extend([temp, temp1])
+        return c
+
+    def find_poles(self, a, x):
+        p = roots(denom(a), x)
+        a = cancel(a.subs(x, 1/x).together())
+        p_inv = roots(denom(a))
+        if 0 in p_inv:
+            p.update({oo: p_inv[0]})
+        return p
+
+    def val_at_inf(self, a, x):
+        num, denom = a.as_numer_denom()
+        return degree(denom, x) - degree(num, x)
+
+    def _get_general_solution(self, *, simplify: bool = True):
+        # Step 0 :Match the equation
+        b0, b1, b2 = self.wilds_match()
+        fx = self.ode_problem.func
+        x = self.ode_problem.sym
+
+        # Step 1 : Convert to Normal Form
+        a = -b0*b2 + b1**2/4 - b1.diff(x)/2 + 3*b2.diff(x)**2/(4*b2**2) + b1*b2.diff(x)/(2*b2) - b2.diff(x, 2)/(2*b2)
+        a_t = cancel(a.together())
+
+        # Step 2
+        presol = []
+
+        # Step 3 : "a" is 0
+        if a_t == 0:
+            presol.append(1/(x + self.ode_problem.get_numbered_constants(num=1)[0]))
+
+        # Step 4 : "a" is a non-zero constant
+        elif x not in a_t.free_symbols:
+            presol.extend([sqrt(a), -sqrt(a)])
+
+        # Step 5 : Find poles and valuation at infinity
+        poles = self.find_poles(a_t, x)
+        poles, muls = list(poles.keys()), list(poles.values())
+        val_inf = self.val_at_inf(a_t, x)
+
+        if len(poles):
+            # Check necessary conditions
+            if val_inf%2 != 0 or not all(map(lambda mul: (mul == 1 or (mul%2 == 0 and mul >= 2)), muls)):
+                raise ValueError("Rational Solution doesn't exist")
+
+            # Step 6
+            # Construct c-vectors for each singular point
+            c = self.construct_c(a, x, poles, muls)
+
+            # Construct d vectors for each singular point
+            d = self.construct_d(a, x, val_inf)
+
+            # Step 7 : Iterate over all possible combinations and return solutions
+            for it in range(2**(len(poles) + 1)):
+                choice = list(map(lambda x: int(x), bin(it)[2:].zfill(len(poles) + 1)))
+                # Step 8 and 9 : Compute m and ybar
+                m, ybar, exists = self.compute_degree(x, poles, choice, c, d, -val_inf//2)
+
+                # Step 10 : Check if m is non-negative integer
+                if exists and S(m).is_nonnegative == True and S(m).is_integer == True:
+
+                    # Step 11 : Find polynomial solutions of degree m for the auxiliary equation
+                    psol, coeffs, exists = self.solve_aux_eq(a, x, m, ybar)
+
+                    # Step 12 : If valid polynomial solution exists, append solution.
+                    if exists:
+                        if psol == 1 and coeffs == 0:
+                            presol.append(ybar)
+                        elif len(coeffs):
+                            psol = psol.subs(coeffs[0])
+                            presol.append(ybar + psol.diff(x)/psol)
+                elif len(m.free_symbols):
+                    C1 = Symbol('C1')
+                    psol = x**m + C1
+                    presol.append(ybar + psol.diff(x)/psol)
+        # Step 15 : Transform the solutions of the equation in normal form
+        sol = list(map(lambda y: Eq(fx, -y/b2 - b2.diff(x)/(2*b2**2) - b1/(2*b2)), presol))
+        return sol
+
+
 # Avoid circular import:
-from .ode import dsolve
+from .ode import dsolve, get_numbered_constants
