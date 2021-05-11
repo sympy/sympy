@@ -607,7 +607,7 @@ Heac
         Examples
         ========
 
-        >>> from sympy import Heaviside, Symbol, sign, S
+        >>> from sympy import Heaviside, Symbol, sign
         >>> x = Symbol('x', real=True)
 
         >>> Heaviside(x).rewrite(sign)
