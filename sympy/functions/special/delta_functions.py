@@ -645,7 +645,7 @@ Heac
                 (pw1, True))
             return pw2
 
-    def _eval_rewrite_as_SingularityFunction(self, args, **kwargs):
+    def _eval_rewrite_as_SingularityFunction(self, args, H0=S.Half, **kwargs):
         """
         Returns the Heaviside expression written in the form of Singularity
         Functions.
