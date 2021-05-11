@@ -273,6 +273,11 @@ def test_minpoly_compose():
     assert mp == 3*x**2 - 1
     assert mp.subs(x, tan(pi/6)).is_zero
 
+    ex = tan(pi/10, evaluate=False)
+    mp = minimal_polynomial(ex, x)
+    assert mp == 5*x**4 - 10*x**2 + 1
+    assert mp.subs(x, tan(pi/10)).is_zero
+
     raises(NotAlgebraic, lambda: minimal_polynomial(tan(pi*sqrt(2)), x))
 
 
