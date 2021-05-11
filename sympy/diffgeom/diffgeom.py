@@ -26,6 +26,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 # tests and find out why
 from sympy.tensor.array import ImmutableDenseNDimArray
 
+
 class Manifold(Atom):
     """A mathematical manifold.
 
@@ -86,6 +87,7 @@ class Manifold(Atom):
     @property
     def dim(self):
         return self.args[1]
+
 
 class Patch(Atom):
     """A patch on a manifold.
@@ -154,6 +156,7 @@ class Patch(Atom):
     @property
     def dim(self):
         return self.manifold.dim
+
 
 class CoordSystem(Atom):
     """A coordinate system defined on the patch.
@@ -561,6 +564,7 @@ class CoordSystem(Atom):
         For more details see the ``base_oneform`` method of this class."""
         return [self.base_oneform(i) for i in range(self.dim)]
 
+
 class CoordinateSymbol(Symbol):
     """A symbol which denotes an abstract value of i-th coordinate of
     the coordinate system with given context.
@@ -584,23 +588,38 @@ class CoordinateSymbol(Symbol):
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import symbols, Lambda, Matrix, sqrt, atan2, cos, sin
     >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
     >>> m = Manifold('M', 2)
     >>> p = Patch('P', m)
-    >>> _x, _y = symbols('x y', nonnegative=True)
+    >>> x, y = symbols('x y', real=True)
+    >>> r, theta = symbols('r theta', nonnegative=True)
+    >>> relation_dict = {
+    ... ('Car2D', 'Pol'): Lambda((x, y), Matrix([sqrt(x**2 + y**2), atan2(y, x)])),
+    ... ('Pol', 'Car2D'): Lambda((r, theta), Matrix([r*cos(theta), r*sin(theta)]))
+    ... }
+    >>> Car2D = CoordSystem('Car2D', p, [x, y], relation_dict)
+    >>> Pol = CoordSystem('Pol', p, [r, theta], relation_dict)
+    >>> x, y = Car2D.symbols
 
-    >>> C = CoordSystem('C', p, [_x, _y])
-    >>> x, y = C.symbols
+    ``CoordinateSymbol`` contains its coordinate symbol and index.
 
     >>> x.name
     'x'
-    >>> x.coord_sys == C
+    >>> x.coord_sys == Car2D
     True
     >>> x.index
     0
-    >>> x.is_nonnegative
+    >>> x.is_real
     True
+
+    You can transform ``CoordinateSymbol`` into other coordinate system using
+    ``rewrite()`` method.
+
+    >>> x.rewrite(Pol)
+    r*cos(theta)
+    >>> sqrt(x**2+y**2).rewrite(Pol).simplify()
+    r
 
     """
     def __new__(cls, coord_sys, index, **assumptions):
@@ -617,6 +636,11 @@ class CoordinateSymbol(Symbol):
         return (
             self.coord_sys, self.index
         ) + tuple(sorted(self.assumptions0.items()))
+
+    def _eval_rewrite_as_CoordSystem(self, **hints):
+        sys = hints.get("rule")
+        return sys.transform(self.coord_sys)[self.index]
+
 
 class Point(Basic):
     """Point defined in a coordinate system.
@@ -699,6 +723,7 @@ class Point(Basic):
     @property
     def free_symbols(self):
         return self._coords.free_symbols
+
 
 class BaseScalarField(Expr):
     """Base scalar field over a manifold for a given coordinate system.

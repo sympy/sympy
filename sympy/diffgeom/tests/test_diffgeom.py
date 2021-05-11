@@ -36,6 +36,7 @@ def test_R2():
         assert m == R2_p.coord_tuple_transform_to(
             R2_r, R2_r.coord_tuple_transform_to(R2_p, m)).applyfunc(simplify)
 
+
 def test_R3():
     a, b, c = symbols('a b c', positive=True)
     m = Matrix([[a], [b], [c]])
@@ -59,6 +60,12 @@ def test_R3():
         assert m == R3_s.coord_tuple_transform_to(
             R3_c, R3_c.coord_tuple_transform_to(R3_s, m)).applyfunc(simplify)
         #TODO assert m == R3_c.coord_tuple_transform_to(R3_s, R3_s.coord_tuple_transform_to(R3_c, m)).applyfunc(simplify)
+
+
+def test_CoordinateSymbol():
+    x, y = R2_r.symbols
+    r, theta = R2_p.symbols
+    assert y.rewrite(R2_p) == r*sin(theta)
 
 
 def test_point():
@@ -229,6 +236,7 @@ def test_correct_arguments():
 
     raises(ValueError, lambda: contravariant_order(R2.e_x*R2.e_y))
     raises(ValueError, lambda: covariant_order(R2.dx*R2.dy))
+
 
 def test_simplify():
     x, y = R2_r.coord_functions()
