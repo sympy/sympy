@@ -1215,20 +1215,10 @@ class Basic(Printable, metaclass=ManagedProperties):
                 return True
             tocheck.extend(subexpr.args)
 
-        types_expr = {pattern for pattern in expressions if isinstance(pattern, BasicMeta)}
-        if types_expr:
-            types_found = set(map(type, tocheck))
-            if types_found:
-                if any(issubclass(t, patterns) for t in types_found):
-                    return True
-        else:
-            for pattern in patterns:
-                if not isinstance(pattern, Basic):
-                    raise SympifyError(pattern)
+        types_found = set(map(type, tocheck))
+        return any(self._has(pattern, types_found) for pattern in patterns)
 
-        return False
-
-    def _has(self, pattern):
+    def _has(self, pattern, types_found):
         """Helper for .has()"""
         from sympy.core.function import UndefinedFunction, Function
         if isinstance(pattern, UndefinedFunction):
@@ -1236,17 +1226,16 @@ class Basic(Printable, metaclass=ManagedProperties):
             for f in self.atoms(Function, UndefinedFunction))
 
         if isinstance(pattern, BasicMeta):
-            subtrees = preorder_traversal(self)
-            return any(isinstance(arg, pattern) for arg in subtrees)
+            return any(issubclass(t, pattern) for t in types_found)
 
         pattern = _sympify(pattern)
 
         _has_matcher = getattr(pattern, '_has_matcher', None)
         if _has_matcher is not None:
             match = _has_matcher()
-            return any(match(arg) for arg in preorder_traversal(self))
+            return match(self)
         else:
-            return any(arg == pattern for arg in preorder_traversal(self))
+            return self == pattern
 
     def _has_matcher(self):
         """Helper for .has()"""
