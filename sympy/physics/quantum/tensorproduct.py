@@ -141,9 +141,9 @@ class TensorProduct(Expr):
     def _eval_adjoint(self):
         return TensorProduct(*[Dagger(i) for i in self.args])
 
-    def _eval_rewrite(self, pattern, rule, **hints):
+    def _eval_rewrite(self, pattern, method, rule, **hints):
         sargs = self.args
-        terms = [t._eval_rewrite(pattern, rule, **hints) for t in sargs]
+        terms = [t._eval_rewrite(pattern, method, rule, **hints) for t in sargs]
         return TensorProduct(*terms).expand(tensorproduct=True)
 
     def _sympystr(self, printer, *args):

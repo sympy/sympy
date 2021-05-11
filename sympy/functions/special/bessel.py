@@ -679,9 +679,9 @@ class hankel2(BesselBase):
 
 def assume_integer_order(fn):
     @wraps(fn)
-    def g(self, nu, z):
+    def g(self, nu, z, **kwargs):
         if nu.is_integer:
-            return fn(self, nu, z)
+            return fn(self, nu, z, **kwargs)
     return g
 
 
@@ -865,8 +865,8 @@ class yn(SphericalBesselBase):
 
     """
 
-    def _rewrite(self):
-        return self._eval_rewrite_as_bessely(self.order, self.argument)
+    def _rewrite(self, **kwargs):
+        return self._eval_rewrite_as_bessely(self.order, self.argument, **kwargs)
 
     @assume_integer_order
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):

@@ -2643,7 +2643,7 @@ class TensAdd(TensExpr, AssocOp):
             raise ValueError("No iteration on abstract tensors")
         return self.data.flatten().__iter__()
 
-    def _eval_rewrite_as_Indexed(self, *args):
+    def _eval_rewrite_as_Indexed(self, *args, **kwargs):
         return Add.fromiter(args)
 
     def _eval_partial_derivative(self, s):
@@ -3069,7 +3069,7 @@ class Tensor(TensExpr):
     def contract_delta(self, metric):
         return self.contract_metric(metric)
 
-    def _eval_rewrite_as_Indexed(self, tens, indices):
+    def _eval_rewrite_as_Indexed(self, tens, indices, **kwargs):
         from sympy import Indexed
         # TODO: replace .args[0] with .name:
         index_symbols = [i.args[0] for i in self.get_indices()]
@@ -3899,7 +3899,7 @@ class TensMul(TensExpr, AssocOp):
             raise ValueError("No iteration on abstract tensors")
         return self.data.__iter__()
 
-    def _eval_rewrite_as_Indexed(self, *args):
+    def _eval_rewrite_as_Indexed(self, *args, **kwargs):
         from sympy import Sum
         index_symbols = [i.args[0] for i in self.get_indices()]
         args = [arg.args[0] if isinstance(arg, Sum) else arg for arg in args]

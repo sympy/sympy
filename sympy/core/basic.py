@@ -1676,27 +1676,6 @@ class Basic(Printable, metaclass=ManagedProperties):
         from sympy.assumptions import refine
         return refine(self, assumption)
 
-    def _eval_rewrite(self, pattern, rule, **hints):
-        if self.is_Atom:
-            if hasattr(self, rule):
-                return getattr(self, rule)()
-            return self
-
-        if hints.get('deep', True):
-            args = [a._eval_rewrite(pattern, rule, **hints)
-                        if isinstance(a, Basic) else a
-                        for a in self.args]
-        else:
-            args = self.args
-
-        if pattern is None or isinstance(self, pattern):
-            if hasattr(self, rule):
-                rewritten = getattr(self, rule)(*args, **hints)
-                if rewritten is not None:
-                    return rewritten
-
-        return self.func(*args) if hints.get('evaluate', True) else self
-
     def _eval_derivative_n_times(self, s, n):
         # This is the default evaluator for derivatives (as called by `diff`
         # and `Derivative`), it will attempt a loop to derive the expression
@@ -1716,73 +1695,105 @@ class Basic(Printable, metaclass=ManagedProperties):
         else:
             return None
 
-    def rewrite(self, *args, **hints):
-        """ Rewrite functions in terms of other functions.
+    def rewrite(self, *args, deep=True, **hints):
+        """
+        Rewrite *self* using a defined rule.
 
-        Rewrites expression containing applications of functions
-        of one kind in terms of functions of different kind. For
-        example you can rewrite trigonometric functions as complex
-        exponentials or combinatorial functions as gamma function.
+        Rewriting transforms an expression to another, which is mathematically
+        equivalent but structurally different. For example you can rewrite
+        trigonometric functions as complex exponentials or combinatorial
+        functions as gamma function.
 
-        As a pattern this function accepts a list of functions to
-        to rewrite (instances of DefinedFunction class). As rule
-        you can use string or a destination function instance (in
-        this case rewrite() will use the str() function).
+        This method takes a *pattern* and a *rule* as positional arguments.
+        *pattern* is optional parameter which defines the types of expressions
+        that will be transformed. If it is not passed, all possible expressions
+        will be rewritten. *rule* defines how the expression will be rewritten.
 
-        There is also the possibility to pass hints on how to rewrite
-        the given expressions. For now there is only one such hint
-        defined called 'deep'. When 'deep' is set to False it will
-        forbid functions to rewrite their contents.
+        Parameters
+        ==========
+
+        args : *rule*, or *pattern* and *rule*.
+            - *pattern* is a type or an iterable of types.
+            - *rule* can be a string, an instance or a type.
+
+        deep : bool, optional.
+            If ``True``, subexpressions are recursively transformed. Default is
+            ``True``.
 
         Examples
         ========
 
-        >>> from sympy import sin, exp
+        >>> from sympy import cos, sin, exp, I
         >>> from sympy.abc import x
+        >>> expr = cos(x) + I*sin(x)
 
-        Unspecified pattern:
+        If *pattern* is unspecified, all possible expressions are transformed.
 
-        >>> sin(x).rewrite(exp)
-        -I*(exp(I*x) - exp(-I*x))/2
+        >>> expr.rewrite(exp)
+        exp(I*x)
 
-        Pattern as a single function:
+        Pattern can be a type or an iterable of types.
 
-        >>> sin(x).rewrite(sin, exp)
-        -I*(exp(I*x) - exp(-I*x))/2
-
-        Pattern as a list of functions:
-
-        >>> sin(x).rewrite([sin, ], exp)
-        -I*(exp(I*x) - exp(-I*x))/2
+        >>> expr.rewrite(sin, exp)
+        exp(I*x)/2 + cos(x) - exp(-I*x)/2
+        >>> expr.rewrite([cos,], exp)
+        exp(I*x)/2 + I*sin(x) + exp(-I*x)/2
+        >>> expr.rewrite([cos, sin], exp)
+        exp(I*x)
 
         """
+        hints.update(deep=deep)
+
         if not args:
             return self
+
+        pattern = args[:-1]
+        rule = args[-1]
+
+        if isinstance(rule, str):
+            method = "_eval_rewrite_as_%s" % rule
+        elif hasattr(rule, "__name__"):
+            # rule is class or function
+            clsname = rule.__name__
+            method = "_eval_rewrite_as_%s" % clsname
         else:
-            pattern = args[:-1]
-            if isinstance(args[-1], str):
-                rule = '_eval_rewrite_as_' + args[-1]
+            # rule is instance
+            clsname = rule.__class__.__name__
+            method = "_eval_rewrite_as_%s" % clsname
+
+        if pattern:
+            if iterable(pattern[0]):
+                pattern = pattern[0]
+            pattern = tuple(p for p in pattern if self.has(p))
+            if pattern:
+                return self._eval_rewrite(pattern, method, rule, **hints)
             else:
-                # rewrite arg is usually a class but can also be a
-                # singleton (e.g. GoldenRatio) so we check
-                # __name__ or __class__.__name__
-                clsname = getattr(args[-1], "__name__", None)
-                if clsname is None:
-                    clsname = args[-1].__class__.__name__
-                rule = '_eval_rewrite_as_' + clsname
+                return self
+        return self._eval_rewrite(None, method, rule, **hints)
 
-            if not pattern:
-                return self._eval_rewrite(None, rule, **hints)
+    def _eval_rewrite(self, pattern, method, rule, **hints):
+        deep = hints.pop('deep', True)
+
+        if deep:
+            if pattern is None:
+                rewrite_args = (rule,)
             else:
-                if iterable(pattern[0]):
-                    pattern = pattern[0]
+                rewrite_args = (pattern, rule)
+            args = [a.rewrite(*rewrite_args, deep=True, **hints)
+                        if isinstance(a, Basic) else a for a in self.args]
+        else:
+            args = self.args
 
-                pattern = [p for p in pattern if self.has(p)]
+        if pattern is None or isinstance(self, pattern):
+            if hasattr(self, method):
+                rewritten = getattr(self, method)(*args, rule=rule, **hints)
+                if rewritten is not None:
+                    return rewritten
 
-                if pattern:
-                    return self._eval_rewrite(tuple(pattern), rule, **hints)
-                else:
-                    return self
+        if not self.args:
+            return self
+
+        return self.func(*args)
 
     _constructor_postprocessor_mapping = {}  # type: ignore
 

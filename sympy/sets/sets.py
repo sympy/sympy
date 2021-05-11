@@ -2099,7 +2099,7 @@ class DisjointUnion(Set):
                 iter_flag = iter_flag and set_i.is_iterable
         return iter_flag
 
-    def _eval_rewrite_as_Union(self, *sets):
+    def _eval_rewrite_as_Union(self, *sets, **kwargs):
         """
         Rewrites the disjoint union as the union of (``set`` x {``i``})
         where ``set`` is the element in ``sets`` at index = ``i``

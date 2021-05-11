@@ -981,7 +981,7 @@ class Piecewise(Function):
             last = ITE(c, a, last)
         return _canonical(last)
 
-    def _eval_rewrite_as_KroneckerDelta(self, *args):
+    def _eval_rewrite_as_KroneckerDelta(self, *args, **kwargs):
         from sympy import Ne, Eq, Not, KroneckerDelta
 
         rules = {

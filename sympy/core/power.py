@@ -1754,17 +1754,17 @@ class Pow(Expr):
     def _sage_(self):
         return self.args[0]._sage_()**self.args[1]._sage_()
 
-    def _eval_rewrite_as_sin(self, base, exp):
+    def _eval_rewrite_as_sin(self, base, exp, **kwargs):
         from ..functions import sin
         if self.base is S.Exp1:
             return sin(S.ImaginaryUnit*self.exp + S.Pi/2) - S.ImaginaryUnit*sin(S.ImaginaryUnit*self.exp)
 
-    def _eval_rewrite_as_cos(self, base, exp):
+    def _eval_rewrite_as_cos(self, base, exp, **kwargs):
         from ..functions import cos
         if self.base is S.Exp1:
             return cos(S.ImaginaryUnit*self.exp) + S.ImaginaryUnit*cos(S.ImaginaryUnit*self.exp + S.Pi/2)
 
-    def _eval_rewrite_as_tanh(self, base, exp):
+    def _eval_rewrite_as_tanh(self, base, exp, **kwargs):
         from ..functions import tanh
         if self.base is S.Exp1:
             return (1 + tanh(self.exp/2))/(1 - tanh(self.exp/2))
