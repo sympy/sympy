@@ -419,8 +419,9 @@ Heac
 
     Heaviside(x) is printed as $\theta(x)$ with the SymPy LaTeX printer.
 
-    The value at 0 is set differently in different fields. SymPy uses 1/2,
-    which is a convention from electronics and signal processing.
+    The value at 0 is set differently in different fields. SymPy now uses 1/2,
+    which is a convention from electronics and signal processing. (Up to
+    SymPy 1.8, the default was that the value at 0 is undefined.)
 
     To specify a differnt value of Heaviside at ``x=0``, a second argument
     can be given. Pass ``nan`` as the second argument to get a Heaviside
@@ -522,7 +523,7 @@ Heac
         1
 
         >>> Heaviside(0)
-        Heaviside(0)
+        1/2
 
         >>> Heaviside(0, 1)
         1
@@ -533,7 +534,7 @@ Heac
         >>> Heaviside(S.NaN)
         nan
 
-        >>> Heaviside(x).eval(100)
+        >>> Heaviside(x).eval(42)
         1
 
         >>> Heaviside(x - 100).subs(x, 5)
@@ -570,17 +571,20 @@ Heac
         Examples
         ========
 
-        >>> from sympy import Heaviside, Piecewise, Symbol
+        >>> from sympy import Heaviside, Piecewise, Symbol, nan
         >>> x = Symbol('x')
 
         >>> Heaviside(x).rewrite(Piecewise)
-        Piecewise((0, x < 0), (Heaviside(0), Eq(x, 0)), (1, x > 0))
+        Piecewise((0, x < 0), (1/2, Eq(x, 0)), (1, x > 0))
+
+        >>> Heaviside(x,nan).rewrite(Piecewise)
+        Piecewise((0, x < 0), (nan, Eq(x, 0)), (1, x > 0))
 
         >>> Heaviside(x - 5).rewrite(Piecewise)
-        Piecewise((0, x - 5 < 0), (Heaviside(0), Eq(x - 5, 0)), (1, x - 5 > 0))
+        Piecewise((0, x - 5 < 0), (1/2, Eq(x - 5, 0)), (1, x - 5 > 0))
 
         >>> Heaviside(x**2 - 1).rewrite(Piecewise)
-        Piecewise((0, x**2 - 1 < 0), (Heaviside(0), Eq(x**2 - 1, 0)), (1, x**2 - 1 > 0))
+        Piecewise((0, x**2 - 1 < 0), (1/2, Eq(x**2 - 1, 0)), (1, x**2 - 1 > 0))
 
         """
         if H0 == 0:
@@ -589,16 +593,16 @@ Heac
             return Piecewise((0, arg < 0), (1, arg >= 0))
         return Piecewise((0, arg < 0), (H0, Eq(arg, 0)), (1, arg > 0))
 
-    def _eval_rewrite_as_sign(self, arg, H0=None, **kwargs):
+    def _eval_rewrite_as_sign(self, arg, H0=S.Half, **kwargs):
         """
         Represents the Heaviside function in the form of sign function.
 
         Explanation
         ===========
 
-        The value of the second argument of Heaviside must specify Heaviside(0)
-        = 1/2 for rewritting as sign to be strictly equivalent. For easier
-        usage, we also allow this rewriting when Heaviside(0) is undefined.
+        The value of Heaviside(0) must be 1/2 for rewritting as sign to be
+        strictly equivalent. For easier usage, we also allow this rewriting
+        when Heaviside(0) is undefined.
 
         Examples
         ========
@@ -606,16 +610,16 @@ Heac
         >>> from sympy import Heaviside, Symbol, sign, S
         >>> x = Symbol('x', real=True)
 
-        >>> Heaviside(x, H0=S.Half).rewrite(sign)
+        >>> Heaviside(x).rewrite(sign)
         sign(x)/2 + 1/2
 
         >>> Heaviside(x, 0).rewrite(sign)
         Piecewise((sign(x)/2 + 1/2, Ne(x, 0)), (0, True))
 
-        >>> Heaviside(x - 2, H0=S.Half).rewrite(sign)
+        >>> Heaviside(x - 2).rewrite(sign)
         sign(x - 2)/2 + 1/2
 
-        >>> Heaviside(x**2 - 2*x + 1, H0=S.Half).rewrite(sign)
+        >>> Heaviside(x**2 - 2*x + 1).rewrite(sign)
         sign(x**2 - 2*x + 1)/2 + 1/2
 
         >>> y = Symbol('y')

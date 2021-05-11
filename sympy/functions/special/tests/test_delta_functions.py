@@ -103,7 +103,7 @@ def test_heaviside():
     raises(ArgumentIndexError, lambda: Heaviside(x).fdiff(2))
     raises(ValueError, lambda: Heaviside(I))
     raises(ValueError, lambda: Heaviside(2 + 3*I))
-    
+
 
 def test_rewrite():
     x, y = Symbol('x', real=True), Symbol('y')
