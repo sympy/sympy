@@ -228,10 +228,10 @@ def test_Equivalent():
 
 
 def test_Exclusive():
-    assert Exclusive(False, False, False)
-    assert Exclusive(True, False, False)
-    assert not Exclusive(True, True, False)
-    assert not Exclusive(True, True, True)
+    assert Exclusive(False, False, False) is true
+    assert Exclusive(True, False, False) is true
+    assert Exclusive(True, True, False) is false
+    assert Exclusive(True, True, True) is false
 
 
 def test_equals():

@@ -13,7 +13,6 @@ def get_all_known_facts():
     Known facts between unary predicates as CNF clauses.
     """
     return {
-        frozenset((Literal(Q.algebraic, False), Literal(Q.finite, True), Literal(Q.transcendental, False))),
         frozenset((Literal(Q.algebraic, False), Literal(Q.imaginary, True), Literal(Q.transcendental, False))),
         frozenset((Literal(Q.algebraic, False), Literal(Q.negative, True), Literal(Q.transcendental, False))),
         frozenset((Literal(Q.algebraic, False), Literal(Q.positive, True), Literal(Q.transcendental, False))),

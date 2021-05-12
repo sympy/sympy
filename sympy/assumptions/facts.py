@@ -85,7 +85,7 @@ def get_known_facts(x=None):
 
         # define finity and infinity, and build extended real line
         Exclusive(Q.infinite(x), Q.finite(x)),
-        Equivalent(Q.complex(x), Q.finite(x)),
+        Implies(Q.complex(x), Q.finite(x)),
         Implies(Q.negative_infinite(x) | Q.positive_infinite(x), Q.infinite(x)),
 
         # commutativity
