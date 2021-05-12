@@ -704,8 +704,10 @@ class Abs(Function):
 
 class arg(Function):
     """
-    Returns the argument (in radians) of a complex number. For a positive
-    number, the argument is always 0.
+    returns the argument (in radians) of a complex number.  The argument is
+    evaluated in consistent convention with atan2 where the branch-cut is
+    taken along the negative real axis and arg(z) is in the interval
+    (-pi,pi].  For a positive number, the argument is always 0.
 
     Examples
     ========
