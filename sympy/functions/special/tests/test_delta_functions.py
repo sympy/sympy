@@ -6,6 +6,8 @@ from sympy import (
 
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
+from sympy.core.expr import unchanged
+
 from sympy.core.function import ArgumentIndexError
 
 
@@ -80,14 +82,13 @@ def test_DiracDelta():
 
 
 def test_heaviside():
-    assert Heaviside(0,nan).func == Heaviside
     assert Heaviside(-5) == 0
     assert Heaviside(1) == 1
-    assert Heaviside(nan) is nan
+    assert Heaviside(0) == S.Half
 
     assert Heaviside(0, x) == x
-    assert Heaviside(x, nan) == Heaviside(x, nan)
-    assert Heaviside(0, nan) == Heaviside(0, nan)
+    assert unchanged(Heaviside,x, nan)
+    assert Heaviside(0, nan) == nan
 
     assert adjoint(Heaviside(x)) == Heaviside(x)
     assert adjoint(Heaviside(x - y)) == Heaviside(x - y)
@@ -117,6 +118,8 @@ def test_rewrite():
         Piecewise((0, x <= 0), (1, x > 0)))
     assert Heaviside(x, 1).rewrite(Piecewise) == (
         Piecewise((0, x < 0), (1, x >= 0)))
+    assert Heaviside(x, nan).rewrite(Piecewise) == (
+        Piecewise((0, x < 0), (nan, Eq(x, 0)), (1, x > 0)))
 
     assert Heaviside(x).rewrite(sign) == \
         Heaviside(x, H0=Heaviside(0)).rewrite(sign) == \

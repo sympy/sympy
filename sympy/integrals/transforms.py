@@ -1234,7 +1234,7 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
 
     u = Dummy('u')
 
-    def simp_heaviside(arg,H0=S.Half):
+    def simp_heaviside(arg, H0=S.Half):
         a = arg.subs(exp(-t), u)
         if a.has(t):
             return Heaviside(arg,H0)

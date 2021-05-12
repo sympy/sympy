@@ -1,4 +1,4 @@
-from sympy.core import S, sympify, diff, nan
+from sympy.core import S, sympify, diff
 from sympy.core.decorators import deprecated
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_not
@@ -404,12 +404,15 @@ class DiracDelta(Function):
 
 
 class Heaviside(Function):
-    r"""
-    Heaviside Piecewise function.
+    r"""Heaviside step function.
+
+    .. versionchanged:: 1.9
+        ``Heaviside(0)`` now returns 1/2; previously, the default was that
+        the value at 0 was undefined.
 
     Explanation
     ===========
-Heac
+
     Heaviside function has the following properties:
 
     1) $\frac{d}{d x} \theta(x) = \delta(x)$
@@ -419,18 +422,19 @@ Heac
 
     Heaviside(x) is printed as $\theta(x)$ with the SymPy LaTeX printer.
 
-    The value at 0 is set differently in different fields. SymPy now uses 1/2,
-    which is a convention from electronics and signal processing. (Up to
-    SymPy 1.8, the default was that the value at 0 is undefined.)
+    The value at 0 is set differently in different fields. SymPy uses 1/2,
+    which is a convention from electronics and signal processing, and is
+    consistent with solving improper integrals by Fourier transform and
+    convolution.
 
-    To specify a differnt value of Heaviside at ``x=0``, a second argument
-    can be given. Pass ``nan`` as the second argument to get a Heaviside
-    function that does not have a defined value at 0.
+    To specify a different value of Heaviside at ``x=0``, a second argument
+    can be given. Using ``Heaviside(x, nan)`` gives an expression that will
+    evaluate to nan for x=0.
 
     Examples
     ========
 
-    >>> from sympy import Heaviside, S
+    >>> from sympy import Heaviside, nan
     >>> from sympy.abc import x
     >>> Heaviside(9)
     1
@@ -438,8 +442,8 @@ Heac
     0
     >>> Heaviside(0)
     1/2
-    >>> Heaviside(0, S.Half)
-    Heaviside(0, nan)
+    >>> Heaviside(0, nan)
+    nan
     >>> (Heaviside(x) + 1).replace(Heaviside(x), Heaviside(x, 1))
     Heaviside(x, 1) + 1
 
@@ -485,7 +489,6 @@ Heac
 
         """
         if argindex == 1:
-            # property number 1
             return DiracDelta(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
@@ -546,8 +549,9 @@ Heac
         Parameters
         ==========
 
-        arg : argument passed by HeaviSide object
-        HO : boolean flag for HeaviSide Object is set to True
+        arg : argument passed by Heaviside object
+
+        H0 : value of Heaviside(0)
 
         """
         H0 = sympify(H0)
@@ -557,8 +561,7 @@ Heac
         elif arg.is_extended_positive:
             return S.One
         elif arg.is_zero:
-            if H0 is not nan:
-                return H0
+            return H0
         elif arg is S.NaN:
             return S.NaN
         elif fuzzy_not(im(arg).is_zero):
@@ -607,8 +610,9 @@ Heac
         Examples
         ========
 
-        >>> from sympy import Heaviside, Symbol, sign
+        >>> from sympy import Heaviside, Symbol, sign, nan
         >>> x = Symbol('x', real=True)
+        >>> y = Symbol('y')
 
         >>> Heaviside(x).rewrite(sign)
         sign(x)/2 + 1/2
@@ -616,13 +620,14 @@ Heac
         >>> Heaviside(x, 0).rewrite(sign)
         Piecewise((sign(x)/2 + 1/2, Ne(x, 0)), (0, True))
 
+        >>> Heaviside(x, nan).rewrite(sign)
+        Piecewise((sign(x)/2 + 1/2, Ne(x, 0)), (nan, True))
+
         >>> Heaviside(x - 2).rewrite(sign)
         sign(x - 2)/2 + 1/2
 
         >>> Heaviside(x**2 - 2*x + 1).rewrite(sign)
         sign(x**2 - 2*x + 1)/2 + 1/2
-
-        >>> y = Symbol('y')
 
         >>> Heaviside(y).rewrite(sign)
         Heaviside(y)
