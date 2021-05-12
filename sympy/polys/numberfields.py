@@ -11,7 +11,7 @@ from sympy.functions import sqrt, cbrt
 from sympy.core.exprtools import Factors
 from sympy.core.function import _mexpand
 from sympy.functions.elementary.exponential import exp
-from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.elementary.trigonometric import cos, sin, tan
 from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
 from sympy.utilities.iterables import subsets
@@ -463,6 +463,30 @@ def _minpoly_cos(ex, x):
     raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
 
 
+def _minpoly_tan(ex, x):
+    """
+    Returns the minimal polynomial of ``tan(ex)``
+    see https://github.com/sympy/sympy/issues/21430
+    """
+    c, a = ex.args[0].as_coeff_Mul()
+    if a is pi:
+        if c.is_rational:
+            c = c * 2
+            n = int(c.q)
+            a = n if c.p % 2 == 0 else 1
+            terms = []
+            for k in range((c.p+1)%2, n+1, 2):
+                terms.append(a*x**k)
+                a = -(a*(n-k-1)*(n-k)) // ((k+1)*(k+2))
+
+            r = Add(*terms)
+            _, factors = factor_list(r)
+            res = _choose_factor(factors, x, ex)
+            return res
+
+    raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
+
+
 def _minpoly_exp(ex, x):
     """
     Returns the minimal polynomial of ``exp(ex)``
@@ -591,6 +615,8 @@ def _minpoly_compose(ex, x, dom):
         res = _minpoly_sin(ex, x)
     elif ex.__class__ is cos:
         res = _minpoly_cos(ex, x)
+    elif ex.__class__ is tan:
+        res = _minpoly_tan(ex, x)
     elif ex.__class__ is exp:
         res = _minpoly_exp(ex, x)
     elif ex.__class__ is CRootOf:
