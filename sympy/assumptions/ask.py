@@ -458,7 +458,6 @@ def unary_ask(proposition, assumptions=True, context=global_assumptions):
     ========
 
     >>> from sympy import Q
-    >>> from sympy.assumptions.cnf import CNF
     >>> from sympy.assumptions.ask import unary_ask
     >>> from sympy.abc import x
     >>> prop, assump = Q.zero(x), ~Q.zero(x)
@@ -493,7 +492,37 @@ def unary_ask(proposition, assumptions=True, context=global_assumptions):
     if relevant_preds_cnf.clauses and satisfiable(enc_cnf) is False:
         raise ValueError("inconsistent assumptions %s" % assumptions)
 
-    return _ask_single_fact(pred, relevant_preds_cnf)
+    # perform evaluation
+    if relevant_preds_cnf.clauses:
+
+        known_facts_dict = get_known_facts_dict()
+
+        if len(relevant_preds_cnf.clauses) == 1:
+            cl, = relevant_preds_cnf.clauses
+            if len(cl) == 1:
+                f, = cl
+                prop_facts = known_facts_dict.get(pred, None)
+                prop_req = prop_facts[0] if prop_facts is not None else set()
+                if f.is_Not and f.arg in prop_req:
+                    # the prerequisite of proposition is rejected
+                    return False
+
+        for clause in relevant_preds_cnf.clauses:
+            if len(clause) == 1:
+                f, = clause
+                prop_facts = known_facts_dict.get(f.arg, None) if not f.is_Not else None
+                if prop_facts is None:
+                    continue
+
+                prop_req, prop_rej = prop_facts
+                if pred in prop_req:
+                    # assumption implies the proposition
+                    return True
+                elif pred in prop_rej:
+                    # proposition rejects the assumption
+                    return False
+
+    return None
 
 
 def extract_relevant_preds_cnf(cnf, exprs):
@@ -544,89 +573,6 @@ def extract_relevant_preds_cnf(cnf, exprs):
             if args:
                 facts.add(frozenset(args))
     return CNF(facts)
-
-
-def _ask_single_fact(key, local_facts):
-    """
-    Compute the truth value of single predicate using assumptions.
-
-    Parameters
-    ==========
-
-    key : sympy.assumptions.assume.Predicate
-        Proposition predicate.
-
-    local_facts : sympy.assumptions.cnf.CNF
-        Local assumption in CNF form.
-
-    Returns
-    =======
-
-    ``True``, ``False`` or ``None``
-
-    Examples
-    ========
-
-    >>> from sympy import Q
-    >>> from sympy.assumptions.cnf import CNF
-    >>> from sympy.assumptions.ask import _ask_single_fact
-
-    If prerequisite of proposition is rejected by the assumption,
-    return ``False``.
-
-    >>> key, assump = Q.zero, ~Q.zero
-    >>> local_facts = CNF.from_prop(assump)
-    >>> _ask_single_fact(key, local_facts)
-    False
-    >>> key, assump = Q.zero, ~Q.even
-    >>> local_facts = CNF.from_prop(assump)
-    >>> _ask_single_fact(key, local_facts)
-    False
-
-    If assumption implies the proposition, return ``True``.
-
-    >>> key, assump = Q.even, Q.zero
-    >>> local_facts = CNF.from_prop(assump)
-    >>> _ask_single_fact(key, local_facts)
-    True
-
-    If proposition rejects the assumption, return ``False``.
-
-    >>> key, assump = Q.even, Q.odd
-    >>> local_facts = CNF.from_prop(assump)
-    >>> _ask_single_fact(key, local_facts)
-    False
-    """
-    if local_facts.clauses:
-
-        known_facts_dict = get_known_facts_dict()
-
-        if len(local_facts.clauses) == 1:
-            cl, = local_facts.clauses
-            if len(cl) == 1:
-                f, = cl
-                prop_facts = known_facts_dict.get(key, None)
-                prop_req = prop_facts[0] if prop_facts is not None else set()
-                if f.is_Not and f.arg in prop_req:
-                    # the prerequisite of proposition is rejected
-                    return False
-
-        for clause in local_facts.clauses:
-            if len(clause) == 1:
-                f, = clause
-                prop_facts = known_facts_dict.get(f.arg, None) if not f.is_Not else None
-                if prop_facts is None:
-                    continue
-
-                prop_req, prop_rej = prop_facts
-                if key in prop_req:
-                    # assumption implies the proposition
-                    return True
-                elif key in prop_rej:
-                    # proposition rejects the assumption
-                    return False
-
-    return None
 
 
 def register_handler(key, handler):
