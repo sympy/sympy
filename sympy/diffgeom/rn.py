@@ -11,7 +11,7 @@ using the usual `coord_sys.coord_function(index, name)` interface.
 from typing import Any
 import warnings
 
-from sympy import sqrt, atan2, acos, sin, cos, Lambda, Matrix, symbols, Dummy
+from sympy import sqrt, atan2, acos, sin, cos, symbols, Dummy
 from .diffgeom import Manifold, Patch, CoordSystem
 
 __all__ = [
@@ -30,12 +30,12 @@ x, y = symbols('x y', real=True)
 r, theta = symbols('rho theta', nonnegative=True)
 
 relations_2d = {
-    ('rectangular', 'polar'): Lambda((x, y), Matrix([sqrt(x**2 + y**2), atan2(y, x)])),
-    ('polar', 'rectangular'): Lambda((r, theta), Matrix([r*cos(theta), r*sin(theta)])),
+    ('rectangular', 'polar'): (sqrt(x**2 + y**2), atan2(y, x)),
+    ('polar', 'rectangular'): (r*cos(theta), r*sin(theta)),
 }
 
-R2_r = CoordSystem('rectangular', R2_origin, [x, y], relations_2d)  # type: Any
-R2_p = CoordSystem('polar', R2_origin, [r, theta], relations_2d)  # type: Any
+R2_r = CoordSystem('rectangular', R2_origin, (x, y), relations_2d)  # type: Any
+R2_p = CoordSystem('polar', R2_origin, (r, theta), relations_2d)  # type: Any
 
 # support deprecated feature
 with warnings.catch_warnings():
@@ -74,35 +74,23 @@ x, y, z = symbols('x y z', real=True)
 rho, psi, r, theta, phi = symbols('rho psi r theta phi', nonnegative=True)
 
 relations_3d = {
-    ('rectangular', 'cylindrical'):
-        Lambda((x, y, z), Matrix([sqrt(x**2 + y**2), atan2(y, x), z])),
-    ('cylindrical', 'rectangular'):
-        Lambda((rho, psi, z), Matrix([rho*cos(psi), rho*sin(psi), z])),
-    ('rectangular', 'spherical'):
-        Lambda(
-            (x, y, z),
-            Matrix([
-                sqrt(x**2 + y**2 + z**2),
-                acos(z/sqrt(x**2 + y**2 + z**2)),
-                atan2(y, x)])
-        ),
-    ('spherical', 'rectangular'):
-        Lambda(
-            (r, theta, phi),
-            Matrix([r*sin(theta)*cos(phi), r*sin(theta)*sin(phi), r*cos(theta)])
-        ),
-    ('cylindrical', 'spherical'):
-        Lambda(
-            (rho, psi, z),
-            Matrix([sqrt(rho**2 + z**2), acos(z/sqrt(rho**2 + z**2)), psi])
-        ),
-    ('spherical', 'cylindrical'):
-        Lambda((r, theta, phi), Matrix([r*sin(theta), phi, r*cos(theta)])),
+    ('rectangular', 'cylindrical'): (sqrt(x**2 + y**2), atan2(y, x), z),
+    ('cylindrical', 'rectangular'): (rho*cos(psi), rho*sin(psi), z),
+    ('rectangular', 'spherical'): (sqrt(x**2 + y**2 + z**2),
+                                   acos(z/sqrt(x**2 + y**2 + z**2)),
+                                   atan2(y, x)),
+    ('spherical', 'rectangular'): (r*sin(theta)*cos(phi),
+                                   r*sin(theta)*sin(phi),
+                                   r*cos(theta)),
+    ('cylindrical', 'spherical'): (sqrt(rho**2 + z**2),
+                                   acos(z/sqrt(rho**2 + z**2)),
+                                   psi),
+    ('spherical', 'cylindrical'): (r*sin(theta), phi, r*cos(theta)),
 }
 
-R3_r = CoordSystem('rectangular', R3_origin, [x, y, z], relations_3d)  # type: Any
-R3_c = CoordSystem('cylindrical', R3_origin, [rho, psi, z], relations_3d)  # type: Any
-R3_s = CoordSystem('spherical', R3_origin, [r, theta, phi], relations_3d)  # type: Any
+R3_r = CoordSystem('rectangular', R3_origin, (x, y, z), relations_3d)  # type: Any
+R3_c = CoordSystem('cylindrical', R3_origin, (rho, psi, z), relations_3d)  # type: Any
+R3_s = CoordSystem('spherical', R3_origin, (r, theta, phi), relations_3d)  # type: Any
 
 # support deprecated feature
 with warnings.catch_warnings():
