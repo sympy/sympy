@@ -173,12 +173,13 @@ def generate_known_facts_dict(keys, fact):
 @cacheit
 def get_known_facts_keys():
     """
-    Return the unapplied unary predicates.
+    Return every unary predicates registered to ``Q``.
+
+    This function is used to generate the keys for
+    ``generate_known_facts_dict``.
 
     """
     exclude = set()
-    for pred in get_composite_predicates():
-        exclude.add(pred)
     for pred in [Q.eq, Q.ne, Q.gt, Q.lt, Q.ge, Q.le]:
         # exclude polyadic predicates
         exclude.add(pred)
