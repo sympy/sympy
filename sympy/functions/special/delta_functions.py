@@ -404,16 +404,13 @@ class DiracDelta(Function):
 
 
 class Heaviside(Function):
-    r"""Heaviside step function.
-
-    .. versionchanged:: 1.9
-        ``Heaviside(0)`` now returns 1/2; previously, the default was that
-        the value at 0 was undefined.
+    r"""
+    Heaviside step function.
 
     Explanation
     ===========
 
-    Heaviside function has the following properties:
+    The Heaviside step function has the following properties:
 
     1) $\frac{d}{d x} \theta(x) = \delta(x)$
     2) $\theta(x) = \begin{cases} 0 & \text{for}\: x < 0 \\ \frac{1}{2} &
@@ -430,6 +427,8 @@ class Heaviside(Function):
     To specify a different value of Heaviside at ``x=0``, a second argument
     can be given. Using ``Heaviside(x, nan)`` gives an expression that will
     evaluate to nan for x=0.
+
+    .. versionchanged:: 1.9 ``Heaviside(0)`` now returns 1/2 (before: undefined)
 
     Examples
     ========
@@ -520,7 +519,7 @@ class Heaviside(Function):
         >>> from sympy.abc import x
 
         >>> Heaviside(x)
-        Heaviside(x)
+        Heaviside(x, 1/2)
 
         >>> Heaviside(19)
         1
@@ -630,10 +629,10 @@ class Heaviside(Function):
         sign(x**2 - 2*x + 1)/2 + 1/2
 
         >>> Heaviside(y).rewrite(sign)
-        Heaviside(y)
+        Heaviside(y, 1/2)
 
         >>> Heaviside(y**2 - 2*y + 1).rewrite(sign)
-        Heaviside(y**2 - 2*y + 1)
+        Heaviside(y**2 - 2*y + 1, 1/2)
 
         See Also
         ========
