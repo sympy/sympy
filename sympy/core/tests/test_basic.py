@@ -325,6 +325,8 @@ def test_as_dummy():
         x, x, (y, z), (z, z), (z, z, y))
     assert I1.as_dummy() == Integral(
         _0, (_0, x), (_1, _0), _0, (_0, z, y)), I1.as_dummy()
+    assert Integral(x, y, y, x).as_dummy(
+        ) == Integral(_1, _0, (_0, y), (_1, x))
 
 
 def test_canonical_variables():

@@ -303,19 +303,46 @@ class ExprWithLimits(Expr):
                     isyms.update(i.free_symbols)
         return isyms
 
+    @property
+    def canonical_variables(self):
+        """Return a minimal number of dummy symbols for
+        the bound variables.
+
+        Examples
+        ========
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, y, z
+        >>> Integral(x, (x, y), (y, z), z).canonical_variables
+        {x: _0, y: _1, z: _0}
+
+        A new dummy was not needed for variable z so the ``_0``
+        was re-used.
+
+        >>> Integral(x, (x, y), (y, z), z).as_dummy()
+        Integral(_0, (_0, _1), (_1, _0), (_0, z))
+        """
+        reps = super().canonical_variables
+        if len(self.limits) <= 2:
+            return reps
+        _0 = reps[self.limits[0][0]]
+        for i, ui in enumerate(uniq(i[0] for i in self.limits)):
+            if i > 1:
+                reps[ui] = _0
+        return reps
+
     def as_dummy(self):
-        """Return the integral with integration variables replaced
-        with a minimal set of unique, canonical symbols having only
-        the default assumption for commutativity being True.
+        """Return an expression with any limit with length of 1 replaced
+        with one of length 2.
 
         Examples
         ========
 
         >>> from sympy import Integral, Function
         >>> from sympy.abc import x, y, z
-        >>> eq = Integral(y, (x, y), (y, z), (z, y))
+        >>> eq = Integral(x, y)
         >>> eq.as_dummy()
-        Integral(_1, (_0, _1), (_1, _0), (_0, y))
+        Integral(x, (_0, y))
         >>> _.doit() == eq.doit()
         True
 
@@ -341,13 +368,10 @@ class ExprWithLimits(Expr):
         self2 = self.func(*([self.function] + [
             i if len(i) > 1 else i*2 for i in self.limits]))
         rv = Basic.as_dummy(self2)
-        dums = [i[0] for i in rv.limits]
-        redun = set().union(*[u.free_symbols for l in rv.limits for u in l[1:]]) & set(dums[2:])
-        reps = {k: rv.limits[0][0] for k in redun}
         # undo explicit form of at_pt
         return rv.func(*([rv.function] + [
             i[0] if len(i) == 2 and i[0] == i[1] else i
-            for i in rv.limits])).xreplace(reps)
+            for i in rv.limits]))
 
     @property
     def is_number(self):
