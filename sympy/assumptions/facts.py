@@ -15,24 +15,54 @@ from sympy.logic.boolalg import (to_cnf, And, Not, Implies, Equivalent,
 from sympy.logic.inference import satisfiable
 
 
-@cacheit
-def get_composite_predicates():
-    # To reduce the complexity of sat solver, these predicates are
-    # transformed into the combination of primitive predicates.
-    return {
-        Q.real : Q.negative | Q.zero | Q.positive,
-        Q.integer : Q.even | Q.odd,
-        Q.nonpositive : Q.negative | Q.zero,
-        Q.nonzero : Q.negative | Q.positive,
-        Q.nonnegative : Q.zero | Q.positive,
-        Q.extended_real : Q.negative_infinite | Q.negative | Q.zero | Q.positive | Q.positive_infinite,
-        Q.extended_positive: Q.positive | Q.positive_infinite,
-        Q.extended_negative: Q.negative | Q.negative_infinite,
-        Q.extended_nonzero: Q.negative_infinite | Q.negative | Q.positive | Q.positive_infinite,
-        Q.extended_nonpositive: Q.negative_infinite | Q.negative | Q.zero,
-        Q.extended_nonnegative: Q.zero | Q.positive | Q.positive_infinite,
-        Q.complex : Q.algebraic | Q.transcendental
-    }
+def decompose_predicate(pred):
+    """
+    Decompose the predicate into the combination of primitive predicates.
+
+    Explanation
+    ===========
+
+    To reduce the complexity of sat solver, facts are built using the
+    primitive predicates. This function decomposes the predicate into
+    the combination of such predicates if possible.
+
+    Examples
+    ========
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.facts import decompose_predicate
+    >>> from sympy.abc import x
+    >>> decompose_predicate(Q.real(x))
+    Q.negative(x) | Q.positive(x) | Q.zero(x)
+
+    """
+    p, args = pred.function, pred.arguments
+
+    if p == Q.real:
+        return Q.negative(*args) | Q.zero(*args) | Q.positive(*args)
+    if p == Q.integer:
+        return Q.even(*args) | Q.odd(*args)
+    if p == Q.nonpositive:
+        return Q.negative(*args) | Q.zero(*args)
+    if p == Q.nonzero:
+        return Q.negative(*args) | Q.positive(*args)
+    if p == Q.nonnegative:
+        return Q.zero(*args) | Q.positive(*args)
+    if p == Q.extended_real:
+        return Q.negative_infinite(*args) | Q.negative(*args) | Q.zero(*args) | Q.positive(*args) | Q.positive_infinite(*args)
+    if p == Q.extended_positive:
+        return Q.positive(*args) | Q.positive_infinite(*args)
+    if p == Q.extended_negative:
+        return Q.negative(*args) | Q.negative_infinite(*args)
+    if p == Q.extended_nonzero:
+        return Q.negative_infinite(*args) | Q.negative(*args) | Q.positive(*args) | Q.positive_infinite(*args)
+    if p == Q.extended_nonpositive:
+        return Q.negative_infinite(*args) | Q.negative(*args) | Q.zero(*args)
+    if p == Q.extended_nonnegative:
+        return Q.zero(*args) | Q.positive(*args) | Q.positive_infinite(*args)
+    if p == Q.complex:
+        return Q.algebraic(*args) | Q.transcendental(*args)
+    return pred
 
 
 @cacheit
