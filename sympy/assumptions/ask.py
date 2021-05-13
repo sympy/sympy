@@ -401,10 +401,10 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     proposition = sympify(proposition)
     assumptions = sympify(assumptions)
 
-    if isinstance(proposition, Predicate) or proposition.kind is not BooleanKind:
+    if proposition.kind is not BooleanKind:
         raise TypeError("proposition must be a valid logical expression")
 
-    if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
+    if assumptions.kind is not BooleanKind:
         raise TypeError("assumptions must be a valid logical expression")
 
     binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}

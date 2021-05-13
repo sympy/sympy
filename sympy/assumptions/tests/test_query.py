@@ -2128,15 +2128,15 @@ def test_type_extensibility():
 
 
 def test_single_fact_lookup():
-    known_facts = And(Implies(Q.integer, Q.rational),
-                      Implies(Q.rational, Q.real),
-                      Implies(Q.real, Q.complex))
-    known_facts_keys = {Q.integer, Q.rational, Q.real, Q.complex}
+    known_facts = And(Implies(Q.integer(x), Q.rational(x)),
+                      Implies(Q.rational(x), Q.real(x)),
+                      Implies(Q.real(x), Q.complex(x)))
+    known_facts_keys = {Q.integer(x), Q.rational(x), Q.real(x), Q.complex(x)}
 
     known_facts_cnf = to_cnf(known_facts)
     mapping = single_fact_lookup(known_facts_keys, known_facts_cnf)
 
-    assert mapping[Q.rational] == {Q.real, Q.rational, Q.complex}
+    assert mapping[Q.rational(x)] == {Q.real(x), Q.rational(x), Q.complex(x)}
 
 
 def test_generate_known_facts_dict():

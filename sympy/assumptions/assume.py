@@ -3,6 +3,7 @@
 from contextlib import contextmanager
 import inspect
 from sympy.core.assumptions import ManagedProperties
+from sympy.core.basic import Basic
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean, false, true
@@ -222,7 +223,7 @@ class PredicateMeta(ManagedProperties):
         return doc
 
 
-class Predicate(Boolean, metaclass=PredicateMeta):
+class Predicate(Basic, metaclass=PredicateMeta):
     """
     Base class for mathematical predicates. It also serves as a
     constructor for undefined predicate objects.
@@ -385,7 +386,7 @@ class UndefinedPredicate(Predicate):
         # "handlers" parameter supports old design
         if not isinstance(name, Str):
             name = Str(name)
-        obj = super(Boolean, cls).__new__(cls, name)
+        obj = super().__new__(cls, name)
         obj.handlers = handlers or []
         return obj
 
