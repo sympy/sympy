@@ -325,7 +325,7 @@ class ExprWithLimits(Expr):
         _0 = reps[self.limits[0][0]]
         free = self.function.free_symbols
         for i, ui in enumerate(uniq(i[0] for i in self.limits)):
-            if i > 1 and ui not in free:
+            if i > 1 and ui in reps:
                 reps[ui] = _0
         return reps
 

@@ -344,7 +344,7 @@ def test_stress():
       if not j:continue
       I = Integral(i,*j)
       if I.doit() != I.as_dummy().doit():
-       assert None, (I, I.doit())
+       assert None, (I, I.as_dummy())
 
 
 def test_canonical_variables():
