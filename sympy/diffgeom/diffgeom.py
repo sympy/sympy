@@ -6,7 +6,7 @@ from itertools import permutations
 from sympy.combinatorics import Permutation
 from sympy.core import (
     Basic, Expr, Function, diff,
-    Pow, Mul, Add, Atom, Lambda, S, Tuple, Dict
+    Pow, Mul, Add, Lambda, S, Tuple, Dict
 )
 from sympy.core.cache import cacheit
 
@@ -26,15 +26,16 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 # tests and find out why
 from sympy.tensor.array import ImmutableDenseNDimArray
 
-class Manifold(Atom):
-    """A mathematical manifold.
+
+class Manifold(Basic):
+    """
+    A mathematical manifold.
 
     Explanation
     ===========
 
     A manifold is a topological space that locally resembles
     Euclidean space near each point [1].
-
     This class does not provide any means to study the topological
     characteristics of the manifold that it represents, though.
 
@@ -61,7 +62,6 @@ class Manifold(Atom):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Manifold
-
     """
 
     def __new__(cls, name, dim, **kwargs):
@@ -87,17 +87,19 @@ class Manifold(Atom):
     def dim(self):
         return self.args[1]
 
-class Patch(Atom):
-    """A patch on a manifold.
+
+class Patch(Basic):
+    """
+    A patch on a manifold.
 
     Explanation
     ===========
 
-    Coordinate patch, or patch in short, is a simply-connected open set around a point
-    in the manifold [1]. On a manifold one can have many patches that do not always
-    include the whole manifold. On these patches coordinate charts can be defined that
-    permit the parameterization of any point on the patch in terms of a tuple of
-    real numbers (the coordinates).
+    Coordinate patch, or patch in short, is a simply-connected open set around
+    a point in the manifold [1]. On a manifold one can have many patches that
+    do not always include the whole manifold. On these patches coordinate
+    charts can be defined that permit the parameterization of any point on the
+    patch in terms of a tuple of real numbers (the coordinates).
 
     This class does not provide any means to study the topological
     characteristics of the patch that it represents.
@@ -125,7 +127,8 @@ class Patch(Atom):
     References
     ==========
 
-    .. [1] G. Sussman, J. Wisdom, W. Farr, Functional Differential Geometry (2013)
+    .. [1] G. Sussman, J. Wisdom, W. Farr, Functional Differential Geometry
+           (2013)
 
     """
     def __new__(cls, name, manifold, **kwargs):
@@ -155,21 +158,26 @@ class Patch(Atom):
     def dim(self):
         return self.manifold.dim
 
-class CoordSystem(Atom):
-    """A coordinate system defined on the patch.
+
+class CoordSystem(Basic):
+    """
+    A coordinate system defined on the patch.
 
     Explanation
     ===========
 
-    Coordinate system is a system that uses one or more coordinates to uniquely determine
-    the position of the points or other geometric elements on a manifold [1].
+    Coordinate system is a system that uses one or more coordinates to uniquely
+    determine the position of the points or other geometric elements on a
+    manifold [1].
 
-    By passing Symbols to *symbols* parameter, user can define the name and assumptions
-    of coordinate symbols of the coordinate system. If not passed, these symbols are
-    generated automatically and are assumed to be real valued.
-    By passing *relations* parameter, user can define the tranform relations of coordinate
-    systems. Inverse transformation and indirect transformation can be found automatically.
-    If this parameter is not passed, coordinate transformation cannot be done.
+    By passing ``Symbols`` to *symbols* parameter, user can define the name and
+    assumptions of coordinate symbols of the coordinate system. If not passed,
+    these symbols are generated automatically and are assumed to be real valued.
+
+    By passing *relations* parameter, user can define the tranform relations of
+    coordinate systems. Inverse transformation and indirect transformation can
+    be found automatically. If this parameter is not passed, coordinate
+    transformation cannot be done.
 
     Parameters
     ==========
@@ -184,38 +192,49 @@ class CoordSystem(Atom):
         Defines the names and assumptions of coordinate symbols.
 
     relations : dict, optional
-        - key : tuple of two strings, who are the names of systems where
-            the coordinates transform from and transform to.
-        - value : Lambda returning the transformed coordinates.
+        Key is a tuple of two strings, who are the names of the systems where
+        the coordinates transform from and transform to. Value is a tuple of
+        transformed coordinates.
 
     Examples
     ========
 
-    >>> from sympy import symbols, pi, Lambda, Matrix, sqrt, atan2, cos, sin
+    We define two-dimensional Cartesian coordinate system and polar coordinate
+    system.
+
+    >>> from sympy import symbols, pi, sqrt, atan2, cos, sin
     >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
     >>> m = Manifold('M', 2)
     >>> p = Patch('P', m)
-
     >>> x, y = symbols('x y', real=True)
     >>> r, theta = symbols('r theta', nonnegative=True)
     >>> relation_dict = {
-    ... ('Car2D', 'Pol'): Lambda((x, y), Matrix([sqrt(x**2 + y**2), atan2(y, x)])),
-    ... ('Pol', 'Car2D'): Lambda((r, theta), Matrix([r*cos(theta), r*sin(theta)]))
+    ... ('Car2D', 'Pol'): (sqrt(x**2 + y**2), atan2(y, x)),
+    ... ('Pol', 'Car2D'): (r*cos(theta), r*sin(theta))
     ... }
-    >>> Car2D = CoordSystem('Car2D', p, [x, y], relation_dict)
-    >>> Pol = CoordSystem('Pol', p, [r, theta], relation_dict)
+    >>> Car2D = CoordSystem('Car2D', p, (x, y), relation_dict)
+    >>> Pol = CoordSystem('Pol', p, (r, theta), relation_dict)
+
+    ``symbols`` property returns ``CoordinateSymbol`` instances. These symbols
+    are not same with the symbols used to construct the coordinate system.
 
     >>> Car2D
     Car2D
     >>> Car2D.dim
     2
     >>> Car2D.symbols
-    [x, y]
+    (x, y)
+    >>> _[0].func
+    <class 'sympy.diffgeom.diffgeom.CoordinateSymbol'>
+
+    ``transformation()`` method returns the transformation function from
+    one coordinate system to another. ``transform()`` method returns the
+    transformed coordinates.
+
     >>> Car2D.transformation(Pol)
     Lambda((x, y), Matrix([
     [sqrt(x**2 + y**2)],
     [      atan2(y, x)]]))
-
     >>> Car2D.transform(Pol)
     Matrix([
     [sqrt(x**2 + y**2)],
@@ -225,6 +244,11 @@ class CoordSystem(Atom):
     [sqrt(5)],
     [atan(2)]])
 
+    ``jacobian()`` method returns the Jacobian matrix of coordinate
+    transformation between two systems. ``jacobian_determinant()`` method
+    returns the Jacobian determinant of coordinate transformation between two
+    systems.
+
     >>> Pol.jacobian(Car2D)
     Matrix([
     [cos(theta), -r*sin(theta)],
@@ -233,6 +257,10 @@ class CoordSystem(Atom):
     Matrix([
     [0, -1],
     [1,  0]])
+    >>> Car2D.jacobian_determinant(Pol)
+    1/sqrt(x**2 + y**2)
+    >>> Car2D.jacobian_determinant(Pol, [1,0])
+    1
 
     References
     ==========
@@ -249,7 +277,8 @@ class CoordSystem(Atom):
             names = kwargs.get('names', None)
             if names is None:
                 symbols = Tuple(
-                    *[Symbol('%s_%s' % (name.name, i), real=True) for i in range(patch.dim)]
+                    *[Symbol('%s_%s' % (name.name, i), real=True)
+                      for i in range(patch.dim)]
                 )
             else:
                 SymPyDeprecationWarning(
@@ -285,6 +314,8 @@ class CoordSystem(Atom):
             if not isinstance(s2, Str):
                 s2 = Str(s2)
             key = Tuple(s1, s2)
+            if isinstance(v, Lambda):
+                v = tuple(v(*symbols))
             rel_temp[key] = v
         relations = Dict(rel_temp)
 
@@ -320,11 +351,8 @@ class CoordSystem(Atom):
 
     @property
     def symbols(self):
-        return [
-            CoordinateSymbol(
-                self, i, **s._assumptions.generator
-            ) for i,s in enumerate(self.args[2])
-        ]
+        return tuple(CoordinateSymbol(self, i, **s._assumptions.generator)
+            for i,s in enumerate(self.args[2]))
 
     @property
     def relations(self):
@@ -340,19 +368,40 @@ class CoordSystem(Atom):
 
     def transformation(self, sys):
         """
-        Return coordinate transform relation from *self* to *sys* as Lambda.
+        Return coordinate transformation function from *self* to *sys*.
+
+        Parameters
+        ==========
+
+        sys : CoordSystem
+
+        Returns
+        =======
+
+        sympy.Lambda
+
+        Examples
+        ========
+
+        >>> from sympy.diffgeom.rn import R2_r, R2_p
+        >>> R2_r.transformation(R2_p)
+        Lambda((x, y), Matrix([
+        [sqrt(x**2 + y**2)],
+        [      atan2(y, x)]]))
+
         """
-        if self.relations != sys.relations:
-            raise TypeError(
-        "Two coordinate systems have different relations")
+        signature = self.args[2]
 
         key = Tuple(self.name, sys.name)
-        if key in self.relations:
-            return self.relations[key]
+        if self == sys:
+            expr = Matrix(self.symbols)
+        elif key in self.relations:
+            expr = Matrix(self.relations[key])
         elif key[::-1] in self.relations:
-            return self._inverse_transformation(sys, self)
+            expr = Matrix(self._inverse_transformations(sys, self))
         else:
-            return self._indirect_transformation(self, sys)
+            expr = Matrix(self._indirect_transformations(self, sys))
+        return Lambda(signature, expr)
 
     @staticmethod
     def _inverse_transformation(sys1, sys2):
@@ -472,14 +521,40 @@ class CoordSystem(Atom):
         """
         Return the result of coordinate transformation from *self* to *sys*.
         If coordinates are not given, coordinate symbols of *self* are used.
+
+        Parameters
+        ==========
+
+        sys : CoordSystem
+
+        coordinates : Any iterable, optional.
+
+        Returns
+        =======
+
+        sympy.ImmutableDenseMatrix containing CoordinateSymbol
+
+        Examples
+        ========
+
+        >>> from sympy.diffgeom.rn import R2_r, R2_p
+        >>> R2_r.transform(R2_p)
+        Matrix([
+        [sqrt(x**2 + y**2)],
+        [      atan2(y, x)]])
+        >>> R2_r.transform(R2_p, [0, 1])
+        Matrix([
+        [   1],
+        [pi/2]])
+
         """
         if coordinates is None:
-            coordinates = Matrix(self.symbols)
-        else:
-            coordinates = Matrix(coordinates)
+            coordinates = self.symbols
         if self != sys:
             transf = self.transformation(sys)
             coordinates = transf(*coordinates)
+        else:
+            coordinates = Matrix(coordinates)
         return coordinates
 
     def coord_tuple_transform_to(self, to_sys, coords):
@@ -499,7 +574,34 @@ class CoordSystem(Atom):
 
     def jacobian(self, sys, coordinates=None):
         """
-        Return the jacobian matrix of a transformation.
+        Return the jacobian matrix of a transformation on given coordinates.
+        If coordinates are not given, coordinate symbols of *self* are used.
+
+        Parameters
+        ==========
+
+        sys : CoordSystem
+
+        coordinates : Any iterable, optional.
+
+        Returns
+        =======
+
+        sympy.ImmutableDenseMatrix
+
+        Examples
+        ========
+
+        >>> from sympy.diffgeom.rn import R2_r, R2_p
+        >>> R2_p.jacobian(R2_r)
+        Matrix([
+        [cos(theta), -rho*sin(theta)],
+        [sin(theta),  rho*cos(theta)]])
+        >>> R2_p.jacobian(R2_r, [1, 0])
+        Matrix([
+        [1, 0],
+        [0, 1]])
+
         """
         result = self.transform(sys).jacobian(self.symbols)
         if coordinates is not None:
@@ -508,7 +610,33 @@ class CoordSystem(Atom):
     jacobian_matrix = jacobian
 
     def jacobian_determinant(self, sys, coordinates=None):
-        """Return the jacobian determinant of a transformation."""
+        """
+        Return the jacobian determinant of a transformation on given
+        coordinates. If coordinates are not given, coordinate symbols of *self*
+        are used.
+
+        Parameters
+        ==========
+
+        sys : CoordSystem
+
+        coordinates : Any iterable, optional.
+
+        Returns
+        =======
+
+        sympy.Expr
+
+        Examples
+        ========
+
+        >>> from sympy.diffgeom.rn import R2_r, R2_p
+        >>> R2_r.jacobian_determinant(R2_p)
+        1/sqrt(x**2 + y**2)
+        >>> R2_r.jacobian_determinant(R2_p, [1, 0])
+        1
+
+        """
         return self.jacobian(sys, coordinates).det()
 
 
@@ -560,6 +688,7 @@ class CoordSystem(Atom):
         """Returns a list of all base oneforms.
         For more details see the ``base_oneform`` method of this class."""
         return [self.base_oneform(i) for i in range(self.dim)]
+
 
 class CoordinateSymbol(Symbol):
     """A symbol which denotes an abstract value of i-th coordinate of
@@ -617,6 +746,7 @@ class CoordinateSymbol(Symbol):
         return (
             self.coord_sys, self.index
         ) + tuple(sorted(self.assumptions0.items()))
+
 
 class Point(Basic):
     """Point defined in a coordinate system.
@@ -699,6 +829,7 @@ class Point(Basic):
     @property
     def free_symbols(self):
         return self._coords.free_symbols
+
 
 class BaseScalarField(Expr):
     """Base scalar field over a manifold for a given coordinate system.
@@ -927,6 +1058,7 @@ class BaseVectorField(Expr):
         result = result.subs(list(zip(coords, self._coord_sys.coord_functions())))
         return result.doit()
 
+
 def _find_coords(expr):
     # Finds CoordinateSystems existing in expr
     fields = expr.atoms(BaseScalarField, BaseVectorField)
@@ -934,6 +1066,7 @@ def _find_coords(expr):
     for f in fields:
         result.add(f._coord_sys)
     return result
+
 
 class Commutator(Expr):
     r"""Commutator of two vector fields.
@@ -1121,6 +1254,7 @@ class Differential(Expr):
                         t = f.rcall(*(c,) + v[:i] + v[i + 1:j] + v[j + 1:])
                         ret += (-1)**(i + j)*t
             return ret
+
 
 class TensorProduct(Expr):
     """Tensor product of forms.
