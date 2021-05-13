@@ -532,7 +532,7 @@ class CoordSystem(Basic):
         Returns
         =======
 
-        sympy.ImmutableDenseMatrix
+        sympy.ImmutableDenseMatrix containing CoordinateSymbol
 
         Examples
         ========
