@@ -11,7 +11,7 @@ from sympy.assumptions.assume import AppliedPredicate
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Symbol
 from sympy.logic.boolalg import (to_cnf, And, Not, Implies, Equivalent,
-    Exclusive,)
+    Exclusive, Or,)
 from sympy.logic.inference import satisfiable
 
 
@@ -36,32 +36,28 @@ def decompose_predicate(pred):
     Q.negative(x) | Q.positive(x) | Q.zero(x)
 
     """
+    mapping = {
+        Q.real : [Q.negative, Q.zero, Q.positive],
+        Q.integer : [Q.even, Q.odd],
+        Q.nonpositive : [Q.negative, Q.zero],
+        Q.nonzero : [Q.negative, Q.positive],
+        Q.nonnegative : [Q.zero, Q.positive],
+        Q.extended_real : [Q.negative_infinite, Q.negative, Q.zero, Q.positive,
+                           Q.positive_infinite],
+        Q.extended_positive: [Q.positive, Q.positive_infinite],
+        Q.extended_negative: [Q.negative, Q.negative_infinite],
+        Q.extended_nonzero: [Q.negative_infinite, Q.negative, Q.positive,
+                             Q.positive_infinite],
+        Q.extended_nonpositive: [Q.negative_infinite, Q.negative, Q.zero],
+        Q.extended_nonnegative: [Q.zero, Q.positive, Q.positive_infinite],
+        Q.complex : [Q.algebraic, Q.transcendental],
+    }
+
     p, args = pred.function, pred.arguments
 
-    if p == Q.real:
-        return Q.negative(*args) | Q.zero(*args) | Q.positive(*args)
-    if p == Q.integer:
-        return Q.even(*args) | Q.odd(*args)
-    if p == Q.nonpositive:
-        return Q.negative(*args) | Q.zero(*args)
-    if p == Q.nonzero:
-        return Q.negative(*args) | Q.positive(*args)
-    if p == Q.nonnegative:
-        return Q.zero(*args) | Q.positive(*args)
-    if p == Q.extended_real:
-        return Q.negative_infinite(*args) | Q.negative(*args) | Q.zero(*args) | Q.positive(*args) | Q.positive_infinite(*args)
-    if p == Q.extended_positive:
-        return Q.positive(*args) | Q.positive_infinite(*args)
-    if p == Q.extended_negative:
-        return Q.negative(*args) | Q.negative_infinite(*args)
-    if p == Q.extended_nonzero:
-        return Q.negative_infinite(*args) | Q.negative(*args) | Q.positive(*args) | Q.positive_infinite(*args)
-    if p == Q.extended_nonpositive:
-        return Q.negative_infinite(*args) | Q.negative(*args) | Q.zero(*args)
-    if p == Q.extended_nonnegative:
-        return Q.zero(*args) | Q.positive(*args) | Q.positive_infinite(*args)
-    if p == Q.complex:
-        return Q.algebraic(*args) | Q.transcendental(*args)
+    if p in mapping:
+        return Or(*[f(*args) for f in mapping[p]])
+
     return pred
 
 
