@@ -327,6 +327,25 @@ def test_as_dummy():
         _0, (_0, x), (_1, _0), _0, (_0, z, y)), I1.as_dummy()
     assert Integral(x, y, y, x).as_dummy(
         ) == Integral(_1, _0, (_0, y), (_1, x))
+    assert Integral(x, y, z, (x, x)).as_dummy(
+        ) == Integral(_2, (_0, y), (_1, z), (_2, x))
+    v = symbols('a:d')
+
+
+def test_stress():
+    from sympy.utilities.iterables import subsets
+    lim = list(subsets(v,repetition=True))
+    for i in subsets(v, repetition=True):
+     if not i:continue
+     i = Add(*i)
+     for j in subsets(lim, repetition=True):
+      j = [k for k in j if k]
+      if not j:continue
+      I = Integral(i,*j)
+      try:assert I.doit() == I.as_dummy().doit()
+      except:
+       a,b,c=(I,I.doit(),I.as_dummy())
+       assert None, a
 
 
 def test_canonical_variables():
