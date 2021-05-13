@@ -1503,6 +1503,33 @@ class ITE(BooleanFunction):
         from sympy.functions import Piecewise
         return Piecewise((args[1], args[0]), (args[2], True))
 
+
+class Exclusive(BooleanFunction):
+    """
+    True if only one or no argument is true.
+
+    ``Exclusive(A, B, C)`` is equivalent to ``~(A & B) & ~(A & C) & ~(B & C)``.
+
+    Examples
+    ========
+
+    >>> from sympy.logic.boolalg import Exclusive
+    >>> Exclusive(False, False, False)
+    True
+    >>> Exclusive(False, True, False)
+    True
+    >>> Exclusive(False, True, True)
+    False
+
+    """
+    @classmethod
+    def eval(cls, *args):
+        and_args = []
+        for a, b in combinations(args, 2):
+            and_args.append(Not(And(a, b)))
+        return And(*and_args)
+
+
 # end class definitions. Some useful methods
 
 

@@ -10,7 +10,8 @@ from sympy.assumptions import Q
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Symbol
-from sympy.logic.boolalg import (to_cnf, And, Not, Implies, Equivalent)
+from sympy.logic.boolalg import (to_cnf, And, Not, Implies, Equivalent,
+    Exclusive,)
 from sympy.logic.inference import satisfiable
 
 
@@ -53,40 +54,38 @@ def get_known_facts(x=None):
     """
     if x is None:
         x = Symbol('x')
+
     fact = And(
         # primitive predicates for extended real exclude each other.
-        # finite/infinite ones already reject each other so don't add here.
-        # primitive predicates exclude each other
-        Implies(Q.negative_infinite(x), ~Q.positive_infinite(x)),
-        Implies(Q.negative(x), ~Q.zero(x) & ~Q.positive(x)),
-        Implies(Q.positive(x), ~Q.zero(x)),
+        Exclusive(Q.negative_infinite(x), Q.negative(x), Q.zero(x),
+            Q.positive(x), Q.positive_infinite(x)),
 
-        # build real line and complex plane
-        Implies(Q.negative(x) | Q.zero(x) | Q.positive(x), ~Q.imaginary(x)),
-        Implies(Q.negative(x) | Q.zero(x) | Q.positive(x) | Q.imaginary(x), Q.algebraic(x) | Q.transcendental(x)),
+        # build complex plane
+        Exclusive(Q.real(x), Q.imaginary(x)),
+        Implies(Q.real(x) | Q.imaginary(x), Q.complex(x)),
 
         # other subsets of complex
-        Implies(Q.transcendental(x), ~Q.algebraic(x)),
-        Implies(Q.irrational(x), ~Q.rational(x)),
-        Equivalent(Q.rational(x) | Q.irrational(x), Q.negative(x) | Q.zero(x) | Q.positive(x)),
+        Exclusive(Q.transcendental(x), Q.algebraic(x)),
+        Equivalent(Q.real(x), Q.rational(x) | Q.irrational(x)),
+        Exclusive(Q.irrational(x), Q.rational(x)),
         Implies(Q.rational(x), Q.algebraic(x)),
 
         # integers
-        Implies(Q.even(x), ~Q.odd(x)),
-        Implies(Q.even(x) | Q.odd(x), Q.rational(x)),
+        Exclusive(Q.even(x), Q.odd(x)),
+        Implies(Q.integer(x), Q.rational(x)),
         Implies(Q.zero(x), Q.even(x)),
-        Implies(Q.composite(x), ~Q.prime(x)),
-        Implies(Q.composite(x) | Q.prime(x), (Q.even(x) | Q.odd(x)) & Q.positive(x)),
+        Exclusive(Q.composite(x), Q.prime(x)),
+        Implies(Q.composite(x) | Q.prime(x), Q.integer(x) & Q.positive(x)),
         Implies(Q.even(x) & Q.positive(x) & ~Q.prime(x), Q.composite(x)),
 
         # hermitian and antihermitian
-        Implies(Q.negative(x) | Q.zero(x) | Q.positive(x), Q.hermitian(x)),
+        Implies(Q.real(x), Q.hermitian(x)),
         Implies(Q.imaginary(x), Q.antihermitian(x)),
         Implies(Q.zero(x), Q.hermitian(x) | Q.antihermitian(x)),
 
         # define finity and infinity, and build extended real line
-        Implies(Q.infinite(x), ~Q.finite(x)),
-        Implies(Q.algebraic(x) | Q.transcendental(x), Q.finite(x)),
+        Exclusive(Q.infinite(x), Q.finite(x)),
+        Implies(Q.complex(x), Q.finite(x)),
         Implies(Q.negative_infinite(x) | Q.positive_infinite(x), Q.infinite(x)),
 
         # commutativity
@@ -175,6 +174,7 @@ def generate_known_facts_dict(keys, fact):
 def get_known_facts_keys():
     """
     Return the unapplied unary predicates.
+
     """
     exclude = set()
     for pred in get_composite_predicates():
