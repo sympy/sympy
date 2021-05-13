@@ -318,12 +318,9 @@ class ExprWithLimits(Expr):
 
         A new dummy was not needed for variable z so the ``_0``
         was re-used.
-
-        >>> Integral(x, (x, y), (y, z), z).as_dummy()
-        Integral(_0, (_0, _1), (_1, _0), (_0, z))
         """
         reps = super().canonical_variables
-        if len(self.limits) <= 2:
+        if len(reps) <= 2:
             return reps
         _0 = reps[self.limits[0][0]]
         free = self.function.free_symbols
