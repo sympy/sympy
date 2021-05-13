@@ -332,6 +332,7 @@ def test_as_dummy():
 
 
 def test_stress():
+    from sympy import Add
     from sympy.utilities.iterables import subsets
     v = symbols('a:d')
     lim = list(subsets(v,repetition=True))

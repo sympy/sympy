@@ -340,7 +340,7 @@ class ExprWithLimits(Expr):
         ========
 
         >>> from sympy import Integral, Function
-        >>> from sympy.abc import x, y, z
+        >>> from sympy.abc import x, y
         >>> eq = Integral(x, y)
         >>> eq.as_dummy()
         Integral(x, (_0, y))
