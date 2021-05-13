@@ -18,7 +18,7 @@ from sympy.logic.boolalg import (
     BooleanAtom, is_literal, term_to_integer, integer_to_term,
     truth_table, as_Boolean, to_anf, is_anf, distribute_xor_over_and,
     anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial,
-    _check_pair, _convert_to_varsSOP, _convert_to_varsPOS)
+    _check_pair, _convert_to_varsSOP, _convert_to_varsPOS, Exclusive,)
 from sympy.assumptions.cnf import CNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
@@ -225,6 +225,13 @@ def test_Equivalent():
     assert Equivalent(A < 1, A >= 1, 1) is false
     assert Equivalent(A < 1, S.One > A) == Equivalent(1, 1) == Equivalent(0, 0)
     assert Equivalent(Equality(A, B), Equality(B, A)) is true
+
+
+def test_Exclusive():
+    assert Exclusive(False, False, False) is true
+    assert Exclusive(True, False, False) is true
+    assert Exclusive(True, True, False) is false
+    assert Exclusive(True, True, True) is false
 
 
 def test_equals():
