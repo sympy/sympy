@@ -1,6 +1,7 @@
 from sympy.abc import t, w, x, y, z, n, k, m, p, i
 from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
         remove_handler)
+from sympy.assumptions.ask import unary_ask
 from sympy.assumptions.assume import assuming, global_assumptions, Predicate
 from sympy.assumptions.cnf import CNF, Literal
 from sympy.assumptions.facts import (single_fact_lookup,
@@ -2405,3 +2406,10 @@ def test_relational():
     assert not ask(Q.eq(x, 0), Q.nonzero(x))
     assert not ask(Q.ne(x, 0), Q.zero(x))
     assert ask(Q.ne(x, 0), Q.nonzero(x))
+
+
+def test_unary_ask():
+    assert unary_ask(Q.zero(x), ~Q.zero(x)) is False
+    assert unary_ask(Q.zero(x), ~Q.even(x)) is False
+    assert unary_ask(Q.even(x), Q.zero(x)) is True
+    assert unary_ask(Q.even(x), Q.odd(x)) is False
