@@ -104,10 +104,10 @@ def check_satisfiability(prop, _prop, factbase):
         raise ValueError("Inconsistent assumptions")
 
 
-def extract_predargs(proposition, assumptions=None, context=None):
+def extract_preds_exprs(proposition, assumptions=None, context=None):
     """
-    Extract every expression in the argument of predicates from *proposition*,
-    *assumptions* and *context*.
+    Extract every predicate, and every expression in the arguments of predicates
+    from *proposition*, *assumptions* and *context*.
 
     Parameters
     ==========
@@ -119,27 +119,43 @@ def extract_predargs(proposition, assumptions=None, context=None):
     context : sympy.assumptions.cnf.CNF, optional.
         CNF generated from assumptions context.
 
+    Returns
+    =======
+
+    every_preds : set
+        Every predicate from *proposition*, *assumptions* and *context*.
+
+    exprs : set
+        Every expression in the arguments of predicates in *every_preds*.
+
     Examples
     ========
 
     >>> from sympy import Q, Abs
     >>> from sympy.assumptions.cnf import CNF
-    >>> from sympy.assumptions.satask import extract_predargs
+    >>> from sympy.assumptions.satask import extract_preds_exprs
     >>> from sympy.abc import x, y
     >>> props = CNF.from_prop(Q.zero(Abs(x*y)))
     >>> assump = CNF.from_prop(Q.zero(x) & Q.zero(y))
-    >>> extract_predargs(props, assump)
+    >>> preds, exprs = extract_preds_exprs(props, assump)
+    >>> preds
+    {Q.zero(x), Q.zero(y), Q.zero(Abs(x*y))}
+    >>> exprs
     {x, y, Abs(x*y)}
 
     """
+    every_preds = set()
     req_keys = find_symbols(proposition)
+
     keys = proposition.all_predicates()
+    every_preds |= keys
     # XXX: We need this since True/False are not Basic
     lkeys = set()
     if assumptions:
         lkeys |= assumptions.all_predicates()
     if context:
         lkeys |= context.all_predicates()
+    every_preds |= lkeys
 
     lkeys = lkeys - {S.true, S.false}
     tmp_keys = None
@@ -159,7 +175,7 @@ def extract_predargs(proposition, assumptions=None, context=None):
             exprs |= set(key.arguments)
         else:
             exprs.add(key)
-    return exprs
+    return every_preds, exprs
 
 def find_symbols(pred):
     """
@@ -328,7 +344,6 @@ def get_relevant_predfacts(preds, relevant_facts=None):
     return next_preds, relevant_facts
 
 
-
 def get_all_relevant_facts(proposition, assumptions, context,
         use_known_facts=True, iterations=oo):
     """
@@ -382,17 +397,22 @@ def get_all_relevant_facts(proposition, assumptions, context,
     # we stop getting new things. Hopefully this strategy won't lead to an
     # infinite loop in the future.
     i = 0
+
     relevant_facts = CNF()
     all_exprs = set()
+
+    preds, exprs = extract_preds_exprs(proposition, assumptions, context)
+
     while True:
-        if i == 0:
-            exprs = extract_predargs(proposition, assumptions, context)
+        if not preds and not exprs:
+            break
+
+        preds, relevant_facts = get_relevant_predfacts(preds, relevant_facts)
+
         all_exprs |= exprs
         exprs, relevant_facts = get_relevant_clsfacts(exprs, relevant_facts)
         i += 1
         if i >= iterations:
-            break
-        if not exprs:
             break
 
     if use_known_facts:

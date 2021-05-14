@@ -1,8 +1,8 @@
 from sympy import (S, symbols, Q, assuming, Implies, MatrixSymbol, I, pi, Abs,
     Eq, Gt)
 from sympy.assumptions.cnf import CNF, Literal
-from sympy.assumptions.satask import (satask, extract_predargs,
-    get_relevant_clsfacts)
+from sympy.assumptions.satask import (satask, extract_preds_exprs,
+    get_relevant_clsfacts, get_relevant_predfacts,)
 
 from sympy.testing.pytest import raises, XFAIL
 
@@ -339,23 +339,40 @@ def test_prime_composite():
     assert satask(Q.composite(1)) is False
 
 
+def test_inequality_extendedreal():
+    assert satask(Q.extended_real(x), Q.gt(x, y)) is True
+    assert satask(Q.extended_real(y), Q.gt(x, y)) is True
+    assert satask(Q.extended_real(x), Q.ge(x, y)) is True
+    assert satask(Q.extended_real(y), Q.ge(x, y)) is True
+    assert satask(Q.extended_real(x), Q.lt(x, y)) is True
+    assert satask(Q.extended_real(y), Q.lt(x, y)) is True
+    assert satask(Q.extended_real(x), Q.le(x, y)) is True
+    assert satask(Q.extended_real(y), Q.le(x, y)) is True
+
+
 def test_extract_predargs():
     props = CNF.from_prop(Q.zero(Abs(x*y)) & Q.zero(x*y))
     assump = CNF.from_prop(Q.zero(x))
     context = CNF.from_prop(Q.zero(y))
-    assert extract_predargs(props) == {Abs(x*y), x*y}
-    assert extract_predargs(props, assump) == {Abs(x*y), x*y, x}
-    assert extract_predargs(props, assump, context) == {Abs(x*y), x*y, x, y}
+    assert extract_preds_exprs(props) == ({Q.zero(x*y), Q.zero(Abs(x*y))},
+                                          {Abs(x*y), x*y})
+    assert extract_preds_exprs(props, assump) == \
+            ({Q.zero(x), Q.zero(x*y), Q.zero(Abs(x*y))},
+             {Abs(x*y), x*y, x})
+    assert extract_preds_exprs(props, assump, context) == \
+            ({Q.zero(x), Q.zero(y),Q.zero(x*y), Q.zero(Abs(x*y))},
+             {Abs(x*y), x*y, x, y})
 
     props = CNF.from_prop(Eq(x, y))
     assump = CNF.from_prop(Gt(y, z))
-    assert extract_predargs(props, assump) == {x, y, z}
+    assert extract_preds_exprs(props, assump) == ({Q.eq(x, y), Q.gt(y, z)},
+                                                  {x, y, z})
 
 
 def test_get_relevant_clsfacts():
     exprs = {Abs(x*y)}
-    exprs, facts = get_relevant_clsfacts(exprs)
-    assert exprs == {x*y}
+    next_exprs, facts = get_relevant_clsfacts(exprs)
+    assert next_exprs == {x*y}
     assert facts.clauses == \
         {frozenset({Literal(Q.odd(Abs(x*y)), False), Literal(Q.odd(x*y), True)}),
         frozenset({Literal(Q.zero(Abs(x*y)), False), Literal(Q.zero(x*y), True)}),
@@ -369,3 +386,25 @@ def test_get_relevant_clsfacts():
                     Literal(Q.odd(Abs(x*y)), False)}),
         frozenset({Literal(Q.positive(Abs(x*y)), False),
                     Literal(Q.zero(Abs(x*y)), False)})}
+
+
+def test_get_relevant_predfacts():
+    preds = {Q.gt(x, y)}
+    next_preds, facts = get_relevant_predfacts(preds)
+    assert next_preds == {Q.negative_infinite(x), Q.negative_infinite(y),
+                          Q.negative(x), Q.negative(y), Q.positive_infinite(x),
+                          Q.positive_infinite(y), Q.positive(x), Q.positive(y),
+                          Q.zero(x), Q.zero(y)}
+    assert facts.clauses == \
+        {frozenset({Literal(Q.gt(x, y), True),
+                    Literal(Q.negative(x), False),
+                    Literal(Q.negative_infinite(x), False),
+                    Literal(Q.positive(x), False),
+                    Literal(Q.positive_infinite(x), False),
+                    Literal(Q.zero(x), False)}),
+        frozenset({Literal(Q.gt(x, y), True),
+                    Literal(Q.negative(y), False),
+                    Literal(Q.negative_infinite(y), False),
+                    Literal(Q.positive(y), False),
+                    Literal(Q.positive_infinite(y), False),
+                    Literal(Q.zero(y), False)})}
