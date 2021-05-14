@@ -5,7 +5,8 @@ Module to evaluate the proposition with assumptions using SAT algorithm.
 from sympy import Symbol, S
 from sympy.assumptions.ask_generated import get_all_known_facts
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
-from sympy.assumptions.sathandlers import class_fact_registry
+from sympy.assumptions.sathandlers import (class_fact_registry,
+    pred_fact_registry,)
 from sympy.core import oo
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.cnf import CNF, EncodedCNF
@@ -197,7 +198,7 @@ def get_relevant_clsfacts(exprs, relevant_facts=None):
     Returns
     =======
 
-    exprs : set
+    next_exprs : set
         Candidates for next relevant fact searching.
 
     relevant_facts : sympy.assumptions.cnf.CNF
@@ -260,7 +261,72 @@ def get_relevant_clsfacts(exprs, relevant_facts=None):
                 if isinstance(key, AppliedPredicate):
                     newexprs |= set(key.arguments)
 
-    return newexprs - exprs, relevant_facts
+    next_exprs = newexprs - exprs
+    return next_exprs, relevant_facts
+
+
+def get_relevant_predfacts(preds, relevant_facts=None):
+    """
+    Extract relevant facts from the items in *preds*. Facts are defined in
+    ``assumptions.sathandlers`` module.
+
+    Parameters
+    ==========
+
+    preds : set
+        Predicates whose relevant facts are searched.
+
+    relevant_facts : sympy.assumptions.cnf.CNF, optional.
+        Pre-discovered relevant facts.
+
+    Returns
+    =======
+
+    next_preds : set
+        Candidates for next relevant fact searching.
+
+    relevant_facts : sympy.assumptions.cnf.CNF
+        Updated relevant facts.
+
+    Returns
+    =======
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.satask import get_relevant_predfacts
+    >>> from sympy.abc import x, y
+    >>> preds = {Q.gt(x, y)}
+    >>> _, facts = get_relevant_predfacts(preds)
+    >>> facts.clauses #doctest: +SKIP
+    {frozenset({Literal(Q.gt(x, y), True),
+                Literal(Q.negative(x), False),
+                Literal(Q.negative_infinite(x), False),
+                Literal(Q.positive(x), False),
+                Literal(Q.positive_infinite(x), False),
+                Literal(Q.zero(x), False)}),
+    frozenset({Literal(Q.gt(x, y), True),
+                Literal(Q.negative(y), False),
+                Literal(Q.negative_infinite(y), False),
+                Literal(Q.positive(y), False),
+                Literal(Q.positive_infinite(y), False),
+                Literal(Q.zero(y), False)})}
+    """
+    if not relevant_facts:
+        relevant_facts = CNF()
+
+    newpreds = set()
+    for pred in preds:
+        if not isinstance(pred, AppliedPredicate):
+            continue
+        for fact in pred_fact_registry(pred):
+            newfact = CNF.to_CNF(fact)
+            relevant_facts = relevant_facts._and(newfact)
+            for key in newfact.all_predicates():
+                if isinstance(key, AppliedPredicate):
+                    newpreds.add(key)
+
+    next_preds = newpreds - preds
+    return next_preds, relevant_facts
+
 
 
 def get_all_relevant_facts(proposition, assumptions, context,
