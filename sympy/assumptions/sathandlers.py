@@ -222,25 +222,28 @@ class PredFactRegistry(MutableMapping):
     >>> reg = PredFactRegistry()
     >>> @reg.register(Q.gt)
     ... def _(gt):
-    ...     return Q.extended_real(gt.lhs) & Q.extended_real(gt.rhs)
+    ...     return gt >> (Q.extended_real(gt.lhs) & Q.extended_real(gt.rhs))
     >>> @reg.register(Q.gt)
     ... def _(gt):
-    ...     return Q.positive(gt.lhs - gt.rhs)
+    ...     return gt >> Q.positive(gt.lhs - gt.rhs)
 
     Calling the registry with predicate returns a dictionary of computed facts
     and their handler functions for the predicate.
 
     >>> from sympy.abc import x, y
     >>> reg(Q.gt(x, y)) # doctest: +SKIP
-    {Q.extended_real(x) & Q.extended_real(y): <function _ at 0x7fe27b29a940>,
-     Q.positive(x - y): <function _ at 0x7fe27b15e3a0>}
+    {Implies(Q.gt(x, y), Q.extended_real(x) & Q.extended_real(y)):
+        <function _ at 0x7f292267dd30>,
+     Implies(Q.gt(x, y), Q.positive(x - y)):
+        <function _ at 0x7f29226715e0>}
 
     You can remove unnecessary handler with ``remove_handler()`` method.
 
-    >>> h = reg(Q.gt(x, y))[Q.positive(x - y)]
+    >>> h = reg(Q.gt(x, y))[Q.gt(x, y) >> Q.positive(x - y)]
     >>> reg.remove_handler(h)
     >>> reg(Q.gt(x, y)) # doctest: +SKIP
-    {Q.extended_real(x) & Q.extended_real(y): <function _ at 0x7fe27b29a940>}
+    {Implies(Q.gt(x, y), Q.extended_real(x) & Q.extended_real(y)):
+        <function _ at 0x7f292267dd30>}
 
     """
     def __init__(self, d=None):
@@ -418,4 +421,5 @@ def _(expr):
 ### Predicate fact registration ###
 
 for p in (Q.gt, Q.ge, Q.lt, Q.le):
-    pred_fact_registry.register(p)(lambda rel: Q.extended_real(rel.lhs) & Q.extended_real(rel.rhs))
+    fact = lambda r: r >> (Q.extended_real(r.lhs) & Q.extended_real(r.rhs))
+    pred_fact_registry.register(p)(fact)
