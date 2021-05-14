@@ -923,7 +923,7 @@ def get_max_degree(radicals):
     for rad in radicals:
         if max_deg >= 100:
             break
-        n = get_rad_deg(rad)
+        n = get_rad_deg(rad.as_expr())
         if n is False:
             return n
         max_deg *= n
