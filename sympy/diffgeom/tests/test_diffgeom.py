@@ -41,7 +41,7 @@ def test_inverse_transformations():
     p, q, r, s = symbols('p q r s')
 
     relations_quarter_rotation = {
-        ('first', 'second'): Lambda((p, q), Matrix([q, - p]))
+        ('first', 'second'): (q, - p)
     }
 
     R2_pq = CoordSystem('first', R2_origin, [p, q], relations_quarter_rotation)
@@ -52,14 +52,14 @@ def test_inverse_transformations():
 
     a, b = symbols('a b', positive=True)
     relations_uninvertible_transformation = {
-        ('first', 'second'): Lambda((a), Matrix([- a]))
+        ('first', 'second'): (- a,)
     }
 
     R2_a = CoordSystem('first', R2_origin, [a], relations_uninvertible_transformation)
     R2_b = CoordSystem('second', R2_origin, [b], relations_uninvertible_transformation)
 
     # The transform method should throw if it cannot invert the coordinate transformation.
-    # This tranformation is uninvertible because there is no positive a, b satisfying a = -b
+    # This transformation is uninvertible because there is no positive a, b satisfying a = -b
     with raises(NotImplementedError):
         R2_b.transform(R2_a)
 

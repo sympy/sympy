@@ -398,9 +398,9 @@ class CoordSystem(Basic):
         elif key in self.relations:
             expr = Matrix(self.relations[key])
         elif key[::-1] in self.relations:
-            expr = Matrix(self._inverse_transformations(sys, self))
+            expr = Matrix(self._inverse_transformation(sys, self))
         else:
-            expr = Matrix(self._indirect_transformations(self, sys))
+            expr = Matrix(self._indirect_transformation(self, sys))
         return Lambda(signature, expr)
 
     @staticmethod
@@ -419,8 +419,7 @@ class CoordSystem(Basic):
 
         inv_results = inv_results[0]
         signature = tuple(sys1.symbols)
-        expr = Matrix([inv_results[s] for s in signature])
-        return Lambda(signature, expr)
+        return [inv_results[s] for s in signature]
 
     @classmethod
     @cacheit
