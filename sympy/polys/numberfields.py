@@ -669,6 +669,9 @@ def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None):
                               "domain %s" % (x, domain))
 
     if compose:
+        deg = get_max_degree([ex])
+        if deg > 100:
+            raise NotImplementedError("_minpoly_compose is too slow to compute %s" % ex)
         result = _minpoly_compose(ex, x, domain)
         result = result.primitive()[1]
         c = result.coeff(x**degree(result, x))
@@ -835,12 +838,101 @@ def _linsolve(p):
     c, d = p.rep.rep
     return -d/c
 
+def get_rad_deg(rad):
+    if rad is GoldenRatio:
+        return 2
+
+    if rad is TribonacciConstant:
+        return 3
+
+    if rad.is_Add:
+        n = -1
+        for r in rad.args:
+            n = max(n, get_rad_deg(r))
+        return n
+    elif rad.is_Mul:
+        n = 1
+        for r in rad.args:
+            n *= get_rad_deg(r)
+        return n
+    elif rad.is_Pow:
+        return rad.exp.q
+    elif rad.__class__ is sin:
+        c, a = rad.args[0].as_coeff_Mul()
+        if a is pi:
+            if c.is_rational:
+                n = c.q
+                q = sympify(n)
+                if q.is_prime:
+                    return q - 1
+                if c.p == 1:
+                    if q == 9:
+                        return 6
+
+                if n % 2 != 0:
+                    return n
+                else:
+                    return n / 2
+    elif rad.__class__ is cos:
+        c, a = rad.args[0].as_coeff_Mul()
+        if a is pi:
+            if c.is_rational:
+                if c.p == 1:
+                    if c.q == 7 or c.q == 9:
+                        return 3
+                elif c.p == 2:
+                    q = sympify(c.q)
+                    if q.is_prime:
+                        return q // 2
+
+                return sympify(c.q)
+    elif rad.__class__ is exp:
+        c, a = rad.args[0].as_coeff_Mul()
+        q = sympify(c.q)
+        if a == I*pi:
+            if c.is_rational:
+                if c.p == 1 or c.p == -1:
+                    if q == 3:
+                        return 2
+                    if q == 4 or q == 6:
+                        return 4
+                    if q == 8 or q == 10:
+                        return 8
+                    if q == 9:
+                        return 6
+                    if q.is_prime:
+                        return q - 1
+
+                if q % 2 == 1:
+                    return q - 1
+                else:
+                    return q
+    elif rad.__class__ is CRootOf:
+        return Poly(rad.expr).degree()
+
+    raise NotAlgebraic("%s doesn't seem to be an algebraic element" % rad)
+
+
+def get_max_degree(radicals):
+    max_deg = 1
+    for rad in radicals:
+        if max_deg > 100:
+            break
+        n = get_rad_deg(rad)
+        max_deg *= n
+
+    return max_deg
+
 
 @public
 def primitive_element(extension, x=None, *, ex=False, polys=False):
     """Construct a common number field for all extensions. """
     if not extension:
         raise ValueError("can't compute primitive element for empty extension")
+
+    deg = get_max_degree(extension)
+    if deg > 100:
+        return False, False, False
 
     if x is not None:
         x, cls = sympify(x), Poly
