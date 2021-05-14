@@ -743,8 +743,7 @@ class harmonic(Function):
     >>> H = harmonic(25/S(7))
     >>> He = simplify(expand_func(H).doit())
     >>> He
-    log(sin(pi/7)**(-2*cos(pi/7))*sin(2*pi/7)**(2*cos(16*pi/7))*cos(pi/14)**(-2*sin(pi/14))/14)
-    + pi*tan(pi/14)/2 + 30247/9900
+    log(sin(2*pi/7)**(2*cos(16*pi/7))/(14*sin(pi/7)**(2*cos(pi/7))*cos(pi/14)**(2*sin(pi/14)))) + pi*tan(pi/14)/2 + 30247/9900
     >>> He.n(40)
     1.983697455232980674869851942390639915940
     >>> harmonic(25/S(7)).n(40)

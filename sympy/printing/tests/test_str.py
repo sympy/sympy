@@ -245,7 +245,7 @@ def test_Mul():
     assert str(Mul(1, 1, S.Half, evaluate=False)) == '1*1*(1/2)'
     assert str(Mul(1, 1, 2, 3, x, evaluate=False)) == '1*1*2*3*x'
     assert str(Mul(1, -1, evaluate=False)) == '1*(-1)'
-    assert str(Mul(-1, 1, evaluate=False)) == '(-1)*1'
+    assert str(Mul(-1, 1, evaluate=False)) == '-1*1'
     assert str(Mul(4, 3, 2, 1, 0, y, x, evaluate=False)) == '4*3*2*1*0*y*x'
     assert str(Mul(4, 3, 2, 1+z, 0, y, x, evaluate=False)) == '4*3*2*(z + 1)*0*y*x'
     assert str(Mul(Rational(2, 3), Rational(5, 7), evaluate=False)) == '(2/3)*(5/7)'
@@ -1006,13 +1006,30 @@ def test_str_special_matrices():
     assert str(ZeroMatrix(2, 2)) == '0'
     assert str(OneMatrix(2, 2)) == '1'
 
+
 def test_issue_14567():
     assert factorial(Sum(-1, (x, 0, 0))) + y  # doesn't raise an error
+
+
+def test_issue_21119_21460():
+    ss = lambda x: str(S(x, evaluate=False))
+    assert ss('4/2') == '4/2'
+    assert ss('4/-2') == '4/(-2)'
+    assert ss('-4/2') == '-4/2'
+    assert ss('-4/-2') == '-4/(-2)'
+    assert ss('-2*3/-1') == '-2*3/(-1)'
+    assert ss('-2*3/-1/2') == '-2*3/(-1*2)'
+    assert ss('4/2/1') == '4/(2*1)'
+    assert ss('-2/-1/2') == '-2/(-1*2)'
+    assert ss('2*3*4**(-2*3)') == '2*3/4**(2*3)'
+    assert ss('2*3*1*4**(-2*3)') == '2*3*1/4**(2*3)'
+
 
 def test_Str():
     from sympy.core.symbol import Str
     assert str(Str('x')) == 'x'
     assert sstrrepr(Str('x')) == "Str('x')"
+
 
 def test_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField

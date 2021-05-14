@@ -1,9 +1,13 @@
 """Low-level linear systems solver. """
 
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import connected_components
 
-from sympy.matrices import MutableDenseMatrix
+from sympy.core.sympify import sympify
+from sympy.matrices.dense import MutableDenseMatrix
+from sympy.polys.domains import ZZ, QQ
+
 from sympy.polys.domains import EX
 from sympy.polys.rings import sring
 from sympy.polys.polyerrors import NotInvertible
@@ -16,7 +20,46 @@ class PolyNonlinearError(Exception):
 
 
 class RawMatrix(MutableDenseMatrix):
+    """
+    XXX: This class is broken by design. Use DomainMatrix if you want a matrix
+    over the polys domains or Matrix for a matrix with Expr elements. The
+    RawMatrix class will be removed/broken in future in order to reestablish
+    the invariant that the elements of a Matrix should be of type Expr.
+    """
     _sympify = staticmethod(lambda x: x)
+
+    def __init__(self, *args, **kwargs):
+
+        SymPyDeprecationWarning(
+            feature="RawMatrix class",
+            useinstead="DomainMatrix or Matrix",
+            issue=21405,
+            deprecated_since_version="1.9"
+        ).warn()
+
+        domain = ZZ
+        for i in range(self.rows):
+            for j in range(self.cols):
+                val = self[i,j]
+                if getattr(val, 'is_Poly', False):
+                    K = val.domain[val.gens]
+                    val_sympy = val.as_expr()
+                elif hasattr(val, 'parent'):
+                    K = val.parent()
+                    val_sympy = K.to_sympy(val)
+                elif isinstance(val, int):
+                    K = ZZ
+                    val_sympy = sympify(val)
+                else:
+                    for K in ZZ, QQ:
+                        if K.of_type(val):
+                            val_sympy = K.to_sympy(val)
+                            break
+                    else:
+                        raise TypeError
+                domain = domain.unify(K)
+                self[i,j] = val_sympy
+        self.ring = domain
 
 
 def eqs_to_matrix(eqs_coeffs, eqs_rhs, gens, domain):

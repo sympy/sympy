@@ -1573,7 +1573,12 @@ class PrettyPrinter(Printer):
 
     def _print_Heaviside(self, e):
         func_name = greek_unicode['theta'] if self._use_unicode else 'Heaviside'
-        return self._print_Function(e, func_name=func_name)
+        if e.args[1]==1/2:
+            pform = prettyForm(*self._print(e.args[0]).parens())
+            pform = prettyForm(*pform.left(func_name))
+            return pform
+        else:
+            return self._print_Function(e, func_name=func_name)
 
     def _print_fresnels(self, e):
         return self._print_Function(e, func_name="S")

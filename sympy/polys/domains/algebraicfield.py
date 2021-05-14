@@ -294,8 +294,16 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
             raise CoercionFailed(
                 "%s is not a valid algebraic number in %s" % (a, self))
 
+    def from_ZZ(K1, a, K0):
+        """Convert a Python ``int`` object to ``dtype``. """
+        return K1(K1.dom.convert(a, K0))
+
     def from_ZZ_python(K1, a, K0):
         """Convert a Python ``int`` object to ``dtype``. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_QQ(K1, a, K0):
+        """Convert a Python ``Fraction`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_QQ_python(K1, a, K0):

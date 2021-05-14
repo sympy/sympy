@@ -404,7 +404,7 @@ def Logarithmic(name, p):
     >>> X = Logarithmic("x", p)
 
     >>> density(X)(z)
-    -5**(-z)/(z*log(4/5))
+    -1/(5**z*z*log(4/5))
 
     >>> E(X)
     -1/(-4*log(5) + 8*log(2))
@@ -488,7 +488,7 @@ def NegativeBinomial(name, r, p):
     >>> X = NegativeBinomial("x", r, p)
 
     >>> density(X)(z)
-    1024*5**(-z)*binomial(z + 4, z)/3125
+    1024*binomial(z + 4, z)/(3125*5**z)
 
     >>> E(X)
     5/4

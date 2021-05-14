@@ -442,7 +442,7 @@ class sign(Function):
     def _eval_rewrite_as_Heaviside(self, arg, **kwargs):
         from sympy.functions.special.delta_functions import Heaviside
         if arg.is_extended_real:
-            return Heaviside(arg, H0=S(1)/2) * 2 - 1
+            return Heaviside(arg) * 2 - 1
 
     def _eval_rewrite_as_Abs(self, arg, **kwargs):
         return Piecewise((0, Eq(arg, 0)), (arg / Abs(arg), True))
@@ -537,6 +537,7 @@ class Abs(Function):
                 return obj
         if not isinstance(arg, Expr):
             raise TypeError("Bad argument type for Abs(): %s" % type(arg))
+
         # handle what we can
         arg = signsimp(arg, evaluate=False)
         n, d = arg.as_numer_denom()
@@ -588,6 +589,10 @@ class Abs(Function):
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
         if isinstance(arg, AppliedUndef):
+            if arg.is_positive:
+                return arg
+            elif arg.is_negative:
+                return -arg
             return
         if arg.is_Add and arg.has(S.Infinity, S.NegativeInfinity):
             if any(a.is_infinite for a in arg.as_real_imag()):
@@ -699,8 +704,10 @@ class Abs(Function):
 
 class arg(Function):
     """
-    Returns the argument (in radians) of a complex number. For a positive
-    number, the argument is always 0.
+    returns the argument (in radians) of a complex number.  The argument is
+    evaluated in consistent convention with atan2 where the branch-cut is
+    taken along the negative real axis and arg(z) is in the interval
+    (-pi,pi].  For a positive number, the argument is always 0.
 
     Examples
     ========
@@ -751,7 +758,7 @@ class arg(Function):
             arg_ = sign(c)*arg_
         else:
             arg_ = arg
-        if arg_.atoms(AppliedUndef):
+        if any(i.is_extended_positive is None for i in arg_.atoms(AppliedUndef)):
             return
         x, y = arg_.as_real_imag()
         rv = atan2(y, x)

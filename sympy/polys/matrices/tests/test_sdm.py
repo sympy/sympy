@@ -84,6 +84,11 @@ def test_SDM_zeros():
     assert A.shape == (2, 2)
     assert dict(A) == {}
 
+def test_SDM_ones():
+    A = SDM.ones((1, 2), QQ)
+    assert A.domain == QQ
+    assert A.shape == (1, 2)
+    assert dict(A) == {0:{0:QQ(1), 1:QQ(1)}}
 
 def test_SDM_eye():
     A = SDM.eye(2, ZZ)
@@ -140,6 +145,10 @@ def test_SDM_matmul():
     #assert A23.matmul(A32) == A23 @ A32 == A22
     #raises(DDMShapeError, lambda: A23 @ A22)
     raises(DDMShapeError, lambda: A23.matmul(A22))
+
+    A = SDM({0: {0: ZZ(-1), 1: ZZ(1)}}, (1, 2), ZZ)
+    B = SDM({0: {0: ZZ(-1)}, 1: {0: ZZ(-1)}}, (2, 1), ZZ)
+    assert A.matmul(B) == SDM({}, (1, 1), ZZ)
 
 
 def test_SDM_add():
@@ -259,3 +268,9 @@ def test_SDM_rref():
             {0: {0: QQ(1,1)}, 1: {1: QQ(1,1), 2: QQ(1,1)}},
             (2, 3), QQ)
     assert A.rref() == (Arref, [0, 1])
+
+
+def test_SDM_particular():
+    A = SDM({0:{0:QQ(1)}}, (2, 2), QQ)
+    Apart = SDM.zeros((1, 2), QQ)
+    assert A.particular() == Apart

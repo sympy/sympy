@@ -92,7 +92,13 @@ def test_invert_real():
     assert invert_real(x**S.Half, y, x) == (x, FiniteSet(y**2))
 
     raises(ValueError, lambda: invert_real(x, x, x))
-    raises(ValueError, lambda: invert_real(x**pi, y, x))
+
+    # issue 21236
+    assert invert_real(x**pi, y, x) == (x, FiniteSet(y**(1/pi)))
+    assert invert_real(x**pi, -E, x) == (x, EmptySet())
+    assert invert_real(x**Rational(3/2), 1000, x) == (x, FiniteSet(100))
+    assert invert_real(x**1.0, 1, x) == (x**1.0, FiniteSet(1))
+
     raises(ValueError, lambda: invert_real(S.One, y, x))
 
     assert invert_real(x**31 + x, y, x) == (x**31 + x, FiniteSet(y))
@@ -2812,3 +2818,11 @@ def test_substitution_with_infeasible_solution():
         (0, Complement(FiniteSet(p01), FiniteSet(0)), 0, p11, 0, 0, 0, 0, 0, 0, 0, -l2*p11/p01, -l3*p11/p01, l2, l3),
     )
     assert sol != nonlinsolve(system, solvefor)
+
+def test_issue_21236():
+    x, z = symbols("x z")
+    y = symbols('y', rational=True)
+    assert solveset(x**y - z, x, S.Reals) == ConditionSet(x, Eq(x**y - z, 0), S.Reals)
+    e1, e2 = symbols('e1 e2', even=True)
+    y = e1/e2  # don't know if num or den will be odd and the other even
+    assert solveset(x**y - z, x, S.Reals) == ConditionSet(x, Eq(x**y - z, 0), S.Reals)

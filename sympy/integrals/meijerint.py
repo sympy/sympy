@@ -2087,7 +2087,7 @@ def meijerint_inversion(f, x, t):
     >>> from sympy.abc import x, t
     >>> from sympy.integrals.meijerint import meijerint_inversion
     >>> meijerint_inversion(1/x, x, t)
-    Heaviside(t)
+    Heaviside(t, 1/2)
     """
     from sympy import exp, expand, log, Add, Mul, Heaviside
     f_ = f

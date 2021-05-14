@@ -98,8 +98,8 @@ def test_GeneralizedMultivariateLogGammaDistribution():
     assert str(density(G)(y_1, y_2, y_3, y_4)) == den
     marg = ("5*2**(2/3)*5**(1/3)*exp(4*y_1)*exp(-exp(y_1))*Integral(exp(-exp(4*G[3])"
             "/4)*exp(16*G[3])*Integral(exp(-exp(3*G[2])/3)*exp(12*G[2])*Integral(exp("
-            "-exp(2*G[1])/2)*exp(8*G[1])*Sum((-1/4)**n*24**(-n)*(-4 + 2**(2/3)*5**(1/3"
-            "))**n*exp(n*y_1)*exp(2*n*G[1])*exp(3*n*G[2])*exp(4*n*G[3])/(gamma(n + 1)"
+            "-exp(2*G[1])/2)*exp(8*G[1])*Sum((-1/4)**n*(-4 + 2**(2/3)*5**(1/3"
+            "))**n*exp(n*y_1)*exp(2*n*G[1])*exp(3*n*G[2])*exp(4*n*G[3])/(24**n*gamma(n + 1)"
             "*gamma(n + 4)**3), (n, 0, oo)), (G[1], -oo, oo)), (G[2], -oo, oo)), (G[3]"
             ", -oo, oo))/5308416")
     assert str(marginal_distribution(G, G[0])(y_1)) == marg

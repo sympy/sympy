@@ -2049,10 +2049,12 @@ def test_gcd():
     assert lcm(f, g, modulus=11, symmetric=False) == l
 
     a, b = sqrt(2), -sqrt(2)
-    assert gcd(a, b) == gcd(b, a) == a
+    assert gcd(a, b) == gcd(b, a) == sqrt(2)
 
     a, b = sqrt(-2), -sqrt(-2)
-    assert gcd(a, b) in (a, b)
+    assert gcd(a, b) == gcd(b, a) == sqrt(2)
+
+    assert gcd(Poly(x - 2, x), Poly(I*x, x)) == Poly(1, x, domain=ZZ_I)
 
     raises(TypeError, lambda: gcd(x))
     raises(TypeError, lambda: lcm(x))

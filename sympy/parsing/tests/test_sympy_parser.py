@@ -158,10 +158,12 @@ def test_issue_7663():
     assert parse_expr(e, evaluate=0) == parse_expr(e, evaluate=False)
     assert parse_expr(e, evaluate=0).equals(2*(x+1))
 
-def test_issue_10560():
+def test_recursive_evaluate_false_10560():
     inputs = {
-        '4*-3' : '(-3)*4',
+        '4*-3' : '4*-3',
         '-4*3' : '(-4)*3',
+        "-2*x*y": '(-2)*x*y',
+        "x*-4*x": "x*(-4)*x"
     }
     for text, result in inputs.items():
         assert parse_expr(text, evaluate=False) == parse_expr(result, evaluate=False)

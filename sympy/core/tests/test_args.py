@@ -122,31 +122,6 @@ def test_sympy__assumptions__relation__binrel__BinaryRelation():
 def test_sympy__assumptions__relation__binrel__AppliedBinaryRelation():
     assert _test_args(Q.eq(1, 2))
 
-def test_sympy__assumptions__sathandlers__UnevaluatedOnFree():
-    from sympy.assumptions.sathandlers import UnevaluatedOnFree
-    assert _test_args(UnevaluatedOnFree(Q.positive))
-
-def test_sympy__assumptions__sathandlers__AllArgs():
-    from sympy.assumptions.sathandlers import AllArgs
-    assert _test_args(AllArgs(Q.positive))
-
-def test_sympy__assumptions__sathandlers__AnyArgs():
-    from sympy.assumptions.sathandlers import AnyArgs
-    assert _test_args(AnyArgs(Q.positive))
-
-def test_sympy__assumptions__sathandlers__ExactlyOneArg():
-    from sympy.assumptions.sathandlers import ExactlyOneArg
-    assert _test_args(ExactlyOneArg(Q.positive))
-
-def test_sympy__assumptions__sathandlers__CheckOldAssump():
-    from sympy.assumptions.sathandlers import CheckOldAssump
-    assert _test_args(CheckOldAssump(Q.positive))
-
-def test_sympy__assumptions__sathandlers__CheckIsPrime():
-    from sympy.assumptions.sathandlers import CheckIsPrime
-    # Input must be a number
-    assert _test_args(CheckIsPrime(Q.positive))
-
 def test_sympy__assumptions__wrapper__AssumptionsWrapper():
     from sympy.assumptions.wrapper import AssumptionsWrapper
     assert _test_args(AssumptionsWrapper(x, Q.positive(x)))
@@ -3006,6 +2981,10 @@ def test_sympy__logic__boolalg__Xor():
 def test_sympy__logic__boolalg__Xnor():
     from sympy.logic.boolalg import Xnor
     assert _test_args(Xnor(x, y, 2))
+
+def test_sympy__logic__boolalg__Exclusive():
+    from sympy.logic.boolalg import Exclusive
+    assert _test_args(Exclusive(x, y, z))
 
 
 def test_sympy__matrices__matrices__DeferredVector():

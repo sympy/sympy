@@ -64,6 +64,7 @@ representation is friendlier.
 from .exceptions import DDMBadInputError, DDMShapeError, DDMDomainError
 
 from .dense import (
+        ddm_transpose,
         ddm_iadd,
         ddm_isub,
         ddm_ineg,
@@ -94,6 +95,15 @@ class DDM(list):
 
         if not (len(self) == m and all(len(row) == n for row in self)):
             raise DDMBadInputError("Inconsistent row-list/shape")
+
+    def getitem(self, i, j):
+        return self[i][j]
+
+    def extract_slice(self, slice1, slice2):
+        ddm = [row[slice2] for row in self[slice1]]
+        rows = len(ddm)
+        cols = len(ddm[0]) if ddm else len(range(self.shape[1])[slice2])
+        return DDM(ddm, (rows, cols), self.domain)
 
     def to_list(self):
         return list(self)
@@ -136,6 +146,13 @@ class DDM(list):
         return DDM(rowslist, shape, domain)
 
     @classmethod
+    def ones(cls, shape, domain):
+        one = domain.one
+        m, n = shape
+        rowlist = ([one] * n for _ in range(m))
+        return DDM(rowlist, shape, domain)
+
+    @classmethod
     def eye(cls, size, domain):
         one = domain.one
         ddm = cls.zeros((size, size), domain)
@@ -146,6 +163,14 @@ class DDM(list):
     def copy(self):
         copyrows = (row[:] for row in self)
         return DDM(copyrows, self.shape, self.domain)
+
+    def transpose(self):
+        rows, cols = self.shape
+        if rows:
+            ddmT = ddm_transpose(self)
+        else:
+            ddmT = [[]] * cols
+        return DDM(ddmT, (cols, rows), self.domain)
 
     def __add__(a, b):
         if not isinstance(b, DDM):
@@ -260,6 +285,9 @@ class DDM(list):
             basis.append(vec)
 
         return DDM(basis, (len(basis), cols), domain), nonpivots
+
+    def particular(a):
+        return a.to_sdm().particular().to_ddm()
 
     def det(a):
         """Determinant of a"""

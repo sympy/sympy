@@ -893,11 +893,11 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
 
     >>> f = 1/(s**2 - 1)
     >>> inverse_mellin_transform(f, s, x, (-oo, -1))
-    x*(1 - 1/x**2)*Heaviside(x - 1)/2
+    x*(1 - 1/x**2)*Heaviside(x - 1, 1/2)/2
     >>> inverse_mellin_transform(f, s, x, (-1, 1))
-    -x*Heaviside(1 - x)/2 - Heaviside(x - 1)/(2*x)
+    -x*Heaviside(1 - x, 1/2)/2 - Heaviside(x - 1, 1/2)/(2*x)
     >>> inverse_mellin_transform(f, s, x, (1, oo))
-    (1/2 - x**2/2)*Heaviside(1 - x)/x
+    (1/2 - x**2/2)*Heaviside(1 - x, 1/2)/x
 
     See Also
     ========
@@ -1173,7 +1173,7 @@ def laplace_transform(f, t, s, **hints):
     >>> from sympy.integrals import laplace_transform
     >>> from sympy.abc import t, s, a
     >>> laplace_transform(t**a, t, s)
-    (s**(-a)*gamma(a + 1)/s, 0, re(a) > -1)
+    (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
 
     See Also
     ========
@@ -1234,17 +1234,17 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
 
     u = Dummy('u')
 
-    def simp_heaviside(arg):
+    def simp_heaviside(arg, H0=S.Half):
         a = arg.subs(exp(-t), u)
         if a.has(t):
-            return Heaviside(arg)
+            return Heaviside(arg,H0)
         rel = _solve_inequality(a > 0, u)
         if rel.lts == u:
             k = log(rel.gts)
-            return Heaviside(t + k)
+            return Heaviside(t + k,H0)
         else:
             k = log(rel.lts)
-            return Heaviside(-(t + k))
+            return Heaviside(-(t + k),H0)
     f = f.replace(Heaviside, simp_heaviside)
 
     def simp_exp(arg):
@@ -1328,7 +1328,7 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     >>> from sympy.abc import s, t
     >>> a = Symbol('a', positive=True)
     >>> inverse_laplace_transform(exp(-a*s)/s, s, t)
-    Heaviside(-a + t)
+    Heaviside(-a + t, 1/2)
 
     See Also
     ========
@@ -1911,7 +1911,7 @@ def hankel_transform(f, r, k, nu, **hints):
 
     >>> ht = hankel_transform(1/r**m, r, k, nu)
     >>> ht
-    2*2**(-m)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
+    2*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/(2**m*gamma(m/2 + nu/2))
 
     >>> inverse_hankel_transform(ht, k, r, nu)
     r**(-m)
@@ -1973,7 +1973,7 @@ def inverse_hankel_transform(F, k, r, nu, **hints):
 
     >>> ht = hankel_transform(1/r**m, r, k, nu)
     >>> ht
-    2*2**(-m)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
+    2*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/(2**m*gamma(m/2 + nu/2))
 
     >>> inverse_hankel_transform(ht, k, r, nu)
     r**(-m)

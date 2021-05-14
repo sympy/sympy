@@ -40,3 +40,7 @@ def test_as_set():
     # containment in a Set -- rewriting as a Set is not yet implemented
     raises(NotImplementedError, lambda:
            Contains(x, FiniteSet(y)).as_set())
+
+def test_type_error():
+    # Pass in a parameter not of type "set"
+    raises(TypeError, lambda: Contains(2, None))

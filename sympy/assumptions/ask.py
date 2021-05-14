@@ -6,7 +6,6 @@ from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 from sympy.core import sympify
 from sympy.core.kind import BooleanKind
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
-from sympy.logic.boolalg import Not
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -358,6 +357,16 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     """
     Function to evaluate the proposition with assumptions.
 
+    Explanation
+    ===========
+
+    This function evaluates the proposition to ``True`` or ``False`` if
+    the truth value can be determined. If not, it returns ``None``.
+
+    It should be discerned from :func:`~.refine()` which, when applied to a
+    proposition, simplifies the argument to symbolic ``Boolean`` instead of
+    Python built-in ``True``, ``False`` or ``None``.
+
     **Syntax**
 
         * ask(proposition)
@@ -367,26 +376,31 @@ def ask(proposition, assumptions=True, context=global_assumptions):
             Evaluate the *proposition* with respect to *assumptions* in
             global assumption context.
 
-    This function evaluates the proposition to ``True`` or ``False`` if
-    the truth value can be determined. If not, it returns ``None``.
-
-    It should be discerned from :func:`~.refine()` which, when applied to a
-    proposition, simplifies the argument to symbolic ``Boolean`` instead of
-    Python built-in ``True``, ``False`` or ``None``.
-
     Parameters
     ==========
 
-    proposition : any boolean expression
+    proposition : Any boolean expression.
         Proposition which will be evaluated to boolean value. If this is
         not ``AppliedPredicate``, it will be wrapped by ``Q.is_true``.
 
-    assumptions : any boolean expression, optional
+    assumptions : Any boolean expression, optional.
         Local assumptions to evaluate the *proposition*.
 
-    context : AssumptionsContext, optional
+    context : AssumptionsContext, optional.
         Default assumptions to evaluate the *proposition*. By default,
         this is ``sympy.assumptions.global_assumptions`` variable.
+
+    Returns
+    =======
+
+    ``True``, ``False``, or ``None``
+
+    Raises
+    ======
+
+    TypeError : *proposition* or *assumptions* is not valid logical expression.
+
+    ValueError : assumptions are inconsistent.
 
     Examples
     ========
@@ -405,14 +419,22 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     >>> print(ask(Q.odd(3*x))) # cannot determine unless we know x
     None
 
-    **Remarks**
+    ``ValueError`` is raised if assumptions are inconsistent.
 
-        Relations in assumptions are not implemented (yet), so the following
-        will not give a meaningful result.
+    >>> ask(Q.integer(x), Q.even(x) & Q.odd(x))
+    Traceback (most recent call last):
+      ...
+    ValueError: inconsistent assumptions Q.even(x) & Q.odd(x)
 
-        >>> ask(Q.positive(x), x > 0)
+    Notes
+    =====
 
-        It is however a work in progress.
+    Relations in assumptions are not implemented (yet), so the following
+    will not give a meaningful result.
+
+    >>> ask(Q.positive(x), x > 0)
+
+    It is however a work in progress.
 
     See Also
     ========
@@ -457,34 +479,10 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if local_facts.clauses and satisfiable(enc_cnf) is False:
         raise ValueError("inconsistent assumptions %s" % assumptions)
 
-    known_facts_dict = get_known_facts_dict()
-    if local_facts.clauses:
-
-        # quick exit if the prerequisite of proposition is not true
-        # e.g. proposition = Q.zero(x), assumptions = ~Q.even(x)
-        if len(local_facts.clauses) == 1:
-            cl, = local_facts.clauses
-            if len(cl) == 1:
-                f, = cl
-                if f.is_Not and f.arg in known_facts_dict.get(key, []):
-                    return False
-
-        for clause in local_facts.clauses:
-            if len(clause) == 1:
-                f, = clause
-                fdict = known_facts_dict.get(f.arg, None) if not f.is_Not else None
-                if fdict is None:
-                    pass
-                elif key in fdict:
-                    # quick exit if proposition is directly satisfied by assumption
-                    # e.g. proposition = Q.even(x), assumptions = Q.zero(x)
-                    return True
-                elif Not(key) in fdict:
-                    # quick exit if proposition is directly rejected by assumption
-                    # example might be proposition = Q.even(x), assumptions = Q.odd(x)
-                    # but known_facts_dict does not have such information yet and
-                    # such example is computed by satask.
-                    return False
+    # quick computation for single fact
+    res = _ask_single_fact(key, local_facts)
+    if res is not None:
+        return res
 
     # direct resolution method, no logic
     res = key(*args)._eval_ask(assumptions)
@@ -494,6 +492,89 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     # using satask (still costly)
     res = satask(proposition, assumptions=assumptions, context=context)
     return res
+
+
+def _ask_single_fact(key, local_facts):
+    """
+    Compute the truth value of single predicate using assumptions.
+
+    Parameters
+    ==========
+
+    key : sympy.assumptions.assume.Predicate
+        Proposition predicate.
+
+    local_facts : sympy.assumptions.cnf.CNF
+        Local assumption in CNF form.
+
+    Returns
+    =======
+
+    ``True``, ``False`` or ``None``
+
+    Examples
+    ========
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.cnf import CNF
+    >>> from sympy.assumptions.ask import _ask_single_fact
+
+    If prerequisite of proposition is rejected by the assumption,
+    return ``False``.
+
+    >>> key, assump = Q.zero, ~Q.zero
+    >>> local_facts = CNF.from_prop(assump)
+    >>> _ask_single_fact(key, local_facts)
+    False
+    >>> key, assump = Q.zero, ~Q.even
+    >>> local_facts = CNF.from_prop(assump)
+    >>> _ask_single_fact(key, local_facts)
+    False
+
+    If assumption implies the proposition, return ``True``.
+
+    >>> key, assump = Q.even, Q.zero
+    >>> local_facts = CNF.from_prop(assump)
+    >>> _ask_single_fact(key, local_facts)
+    True
+
+    If proposition rejects the assumption, return ``False``.
+
+    >>> key, assump = Q.even, Q.odd
+    >>> local_facts = CNF.from_prop(assump)
+    >>> _ask_single_fact(key, local_facts)
+    False
+    """
+    if local_facts.clauses:
+
+        known_facts_dict = get_known_facts_dict()
+
+        if len(local_facts.clauses) == 1:
+            cl, = local_facts.clauses
+            if len(cl) == 1:
+                f, = cl
+                prop_facts = known_facts_dict.get(key, None)
+                prop_req = prop_facts[0] if prop_facts is not None else set()
+                if f.is_Not and f.arg in prop_req:
+                    # the prerequisite of proposition is rejected
+                    return False
+
+        for clause in local_facts.clauses:
+            if len(clause) == 1:
+                f, = clause
+                prop_facts = known_facts_dict.get(f.arg, None) if not f.is_Not else None
+                if prop_facts is None:
+                    continue
+
+                prop_req, prop_rej = prop_facts
+                if key in prop_req:
+                    # assumption implies the proposition
+                    return True
+                elif key in prop_rej:
+                    # proposition rejects the assumption
+                    return False
+
+    return None
 
 
 def register_handler(key, handler):
@@ -539,5 +620,5 @@ def remove_handler(key, handler):
     getattr(Q, key).remove_handler(handler)
 
 
-from sympy.assumptions.ask_generated import (
-    get_known_facts_dict, get_all_known_facts)
+from sympy.assumptions.ask_generated import (get_all_known_facts,
+    get_known_facts_dict)

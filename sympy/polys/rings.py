@@ -351,19 +351,19 @@ class PolyRing(DefaultPrinting, IPolys):
 
     __call__ = ring_new
 
-    def from_dict(self, element):
+    def from_dict(self, element, orig_domain=None):
         domain_new = self.domain_new
         poly = self.zero
 
         for monom, coeff in element.items():
-            coeff = domain_new(coeff)
+            coeff = domain_new(coeff, orig_domain)
             if coeff:
                 poly[monom] = coeff
 
         return poly
 
-    def from_terms(self, element):
-        return self.from_dict(dict(element))
+    def from_terms(self, element, orig_domain=None):
+        return self.from_dict(dict(element), orig_domain)
 
     def from_list(self, element):
         return self.from_dict(dmp_to_dict(element, self.ngens-1, self.domain))
@@ -608,9 +608,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return self
         elif self.ring.symbols != new_ring.symbols:
             terms = list(zip(*_dict_reorder(self, self.ring.symbols, new_ring.symbols)))
-            return new_ring.from_terms(terms)
+            return new_ring.from_terms(terms, self.ring.domain)
         else:
-            return new_ring.from_dict(self)
+            return new_ring.from_dict(self, self.ring.domain)
 
     def as_expr(self, *symbols):
         if symbols and len(symbols) != self.ring.ngens:
@@ -1209,10 +1209,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return p
 
     def _pow_multinomial(self, n):
-        multinomials = list(multinomial_coefficients(len(self), n).items())
+        multinomials = multinomial_coefficients(len(self), n).items()
         monomial_mulpow = self.ring.monomial_mulpow
         zero_monom = self.ring.zero_monom
-        terms = list(self.iterterms())
+        terms = self.items()
         zero = self.ring.domain.zero
         poly = self.ring.zero
 
@@ -1232,7 +1232,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
             if coeff:
                 poly[monom] = coeff
-            else:
+            elif monom in poly:
                 del poly[monom]
 
         return poly

@@ -239,29 +239,37 @@ def _invert_real(f, g_ys, symbol):
         expo_has_sym = expo.has(symbol)
 
         if not expo_has_sym:
-            res = imageset(Lambda(n, real_root(n, expo)), g_ys)
+
             if expo.is_rational:
-                numer, denom = expo.as_numer_denom()
-                if denom % 2 == 0:
+                num, den = expo.as_numer_denom()
+
+                if den % 2 == 0 and num % 2 == 1 and den.is_zero is False:
+                    root = Lambda(n, real_root(n, expo))
+                    g_ys_pos = g_ys & Interval(0, oo)
+                    res = imageset(root, g_ys_pos)
                     base_positive = solveset(base >= 0, symbol, S.Reals)
-                    res = imageset(Lambda(n, real_root(n, expo)
-                        ), g_ys.intersect(
-                        Interval.Ropen(S.Zero, S.Infinity)))
                     _inv, _set = _invert_real(base, res, symbol)
                     return (_inv, _set.intersect(base_positive))
 
-                elif numer % 2 == 0:
-                        n = Dummy('n')
+                if den % 2 == 1:
+                    root = Lambda(n, real_root(n, expo))
+                    res = imageset(root, g_ys)
+                    if num % 2 == 0:
                         neg_res = imageset(Lambda(n, -n), res)
                         return _invert_real(base, res + neg_res, symbol)
+                    if num % 2 == 1:
+                        return _invert_real(base, res, symbol)
 
-                else:
-                    return _invert_real(base, res, symbol)
-            else:
-                if not base.is_positive:
-                    raise ValueError("x**w where w is irrational is not "
-                                     "defined for negative x")
+            elif expo.is_irrational:
+                root = Lambda(n, real_root(n, expo))
+                g_ys_pos = g_ys & Interval(0, oo)
+                res = imageset(root, g_ys_pos)
                 return _invert_real(base, res, symbol)
+
+            else:
+                # indeterminate exponent, e.g. Float or parity of
+                # num, den of rational could not be determined
+                pass  # use default return
 
         if not base_has_sym:
             rhs = g_ys.args[0]
@@ -2171,7 +2179,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
         raise ValueError("%s is not a valid SymPy expression" % f)
 
     if not isinstance(symbol, (Expr, Relational)) and  symbol is not None:
-        raise ValueError("%s is not a valid SymPy symbol" % symbol)
+        raise ValueError("%s is not a valid SymPy symbol" % (symbol,))
 
     if not isinstance(domain, Set):
         raise ValueError("%s is not a valid domain" %(domain))

@@ -2,8 +2,12 @@ from sympy.abc import t, w, x, y, z, n, k, m, p, i
 from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
         remove_handler)
 from sympy.assumptions.assume import assuming, global_assumptions, Predicate
-from sympy.assumptions.facts import compute_known_facts, single_fact_lookup
+from sympy.assumptions.cnf import CNF, Literal
+from sympy.assumptions.facts import (single_fact_lookup,
+    get_known_facts, generate_known_facts_dict, get_known_facts_keys)
 from sympy.assumptions.handlers import AskHandler
+from sympy.assumptions.ask_generated import (get_all_known_facts,
+    get_known_facts_dict)
 from sympy.core.add import Add
 from sympy.core.numbers import (I, Integer, Rational, oo, zoo, pi)
 from sympy.core.singleton import S
@@ -600,14 +604,13 @@ def test_I():
     assert ask(Q.imaginary(z)) is False
     assert ask(Q.real(z)) is True
 
-
-@XFAIL  # definition for boundedness fixed! will be changed in next commit
 def test_bounded():
     x, y, z = symbols('x,y,z')
     assert ask(Q.finite(x)) is None
     assert ask(Q.finite(x), Q.finite(x)) is True
     assert ask(Q.finite(x), Q.finite(y)) is None
     assert ask(Q.finite(x), Q.complex(x)) is True
+    assert ask(Q.finite(x), Q.extended_real(x)) is None
 
     assert ask(Q.finite(x + 1)) is None
     assert ask(Q.finite(x + 1), Q.finite(x)) is True
@@ -615,393 +618,395 @@ def test_bounded():
     x, y = a.args
     # B + B
     assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)) is True
-    assert ask(
-        Q.finite(a), Q.positive(x) & Q.finite(y)) is True
-    assert ask(
-        Q.finite(a), Q.finite(x) & Q.finite(y) & Q.positive(y)) is True
-    assert ask(Q.finite(a),
-        Q.finite(x) & Q.finite(y) & Q.positive(x) & Q.positive(y)) is True
-    assert ask(Q.finite(a),
-        Q.finite(x) & Q.finite(y) & Q.positive(x) & ~Q.positive(y)) is True
-    assert ask(Q.finite(a),
-        Q.finite(x) & Q.finite(y) & ~Q.positive(x) & Q.positive(y)) is True
-    assert ask(Q.finite(a),
-        Q.finite(x) & Q.finite(y) & ~Q.positive(x) & ~Q.positive(y)) is True
+    assert ask(Q.finite(a), Q.positive(x) & Q.finite(y)) is True
+    assert ask(Q.finite(a), Q.finite(x) & Q.positive(y)) is True
+    assert ask(Q.finite(a), Q.positive(x) & Q.positive(y)) is True
+    assert ask(Q.finite(a), Q.positive(x) & Q.finite(y)
+        & ~Q.positive(y)) is True
+    assert ask(Q.finite(a), Q.finite(x) & ~Q.positive(x)
+        & Q.positive(y)) is True
+    assert ask(Q.finite(a), Q.finite(x) & Q.finite(y) & ~Q.positive(x)
+        & ~Q.positive(y)) is True
     # B + U
     assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y)) is False
-    assert ask(
-        Q.finite(a), Q.finite(x) & ~Q.finite(y) & Q.positive(x)) is False
-    assert ask(
-        Q.finite(a), Q.finite(x) & ~Q.finite(y) & Q.positive(y)) is False
-    assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y) & Q.positive(x) &
-        Q.positive(y)) is False
-    assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y) & Q.positive(x) &
-        ~Q.positive(y)) is False
-    assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y) & ~Q.positive(x) &
-        Q.positive(y)) is False
-    assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y) & ~Q.positive(x) &
-        ~Q.positive(y)) is False
+    assert ask(Q.finite(a), Q.positive(x) & ~Q.finite(y)) is False
+    assert ask(Q.finite(a), Q.finite(x)
+        & Q.positive_infinite(y)) is False
+    assert ask(Q.finite(a), Q.positive(x)
+        & Q.positive_infinite(y)) is False
+    assert ask(Q.finite(a), Q.positive(x) & ~Q.finite(y)
+        & ~Q.positive(y)) is False
+    assert ask(Q.finite(a), Q.finite(x) & ~Q.positive(x)
+        & Q.positive_infinite(y)) is False
+    assert ask(Q.finite(a), Q.finite(x) & ~Q.positive(x) & ~Q.finite(y)
+        & ~Q.positive(y)) is False
     # B + ?
     assert ask(Q.finite(a), Q.finite(x)) is None
-    assert ask(Q.finite(a), Q.finite(x) & Q.positive(x)) is None
-    assert ask(Q.finite(a), Q.finite(x) & Q.positive(y)) is None
-    assert ask(
-        Q.finite(a), Q.finite(x) & Q.positive(x) & Q.positive(y)) is None
-    assert ask(
-        Q.finite(a), Q.finite(x) & Q.positive(x) & ~Q.positive(y)) is None
-    assert ask(
-        Q.finite(a), Q.finite(x) & ~Q.positive(x) & Q.positive(y)) is None
-    assert ask(
-        Q.finite(a), Q.finite(x) & ~Q.positive(x) & ~Q.positive(y)) is None
+    assert ask(Q.finite(a), Q.positive(x)) is None
+    assert ask(Q.finite(a), Q.finite(x)
+        & Q.extended_positive(y)) is None
+    assert ask(Q.finite(a), Q.positive(x)
+        & Q.extended_positive(y)) is None
+    assert ask(Q.finite(a), Q.positive(x) & ~Q.positive(y)) is None
+    assert ask(Q.finite(a), Q.finite(x) & ~Q.positive(x)
+        & Q.extended_positive(y)) is None
+    assert ask(Q.finite(a), Q.finite(x) & ~Q.positive(x)
+        & ~Q.positive(y)) is None
     # U + U
     assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y)) is None
-    assert ask(
-        Q.finite(a), ~Q.finite(x) & ~Q.finite(y) & Q.positive(x)) is None
-    assert ask(
-        Q.finite(a), ~Q.finite(x) & ~Q.finite(y) & Q.positive(y)) is None
-    assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y) & Q.positive(x) &
-        Q.positive(y)) is False
-    assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y) & Q.positive(x) &
-        ~Q.positive(y)) is None
-    assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y) & ~Q.positive(x) &
-        Q.positive(y)) is None
-    assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y) & ~Q.positive(x) &
-        ~Q.positive(y)) is False
+    assert ask(Q.finite(a), Q.positive_infinite(x)
+        & ~Q.finite(y)) is None
+    assert ask(Q.finite(a), ~Q.finite(x)
+        & Q.positive_infinite(y)) is None
+    assert ask(Q.finite(a), Q.positive_infinite(x)
+        & Q.positive_infinite(y)) is False
+    assert ask(Q.finite(a), Q.positive_infinite(x) & ~Q.finite(y)
+        & ~Q.extended_positive(y)) is None
+    assert ask(Q.finite(a), ~Q.finite(x) & ~Q.extended_positive(x)
+        & Q.positive_infinite(y)) is None
+    assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y)
+        & ~Q.extended_positive(x) & ~Q.extended_positive(y)) is False
     # U + ?
     assert ask(Q.finite(a), ~Q.finite(y)) is None
-    assert ask(Q.finite(a), ~Q.finite(y) & Q.positive(x)) is None
-    assert ask(Q.finite(a), ~Q.finite(y) & Q.positive(y)) is None
-    assert ask(
-        Q.finite(a), ~Q.finite(y) & Q.positive(x) & Q.positive(y)) is False
-    assert ask(
-        Q.finite(a), ~Q.finite(y) & Q.positive(x) & ~Q.positive(y)) is None
-    assert ask(
-        Q.finite(a), ~Q.finite(y) & ~Q.positive(x) & Q.positive(y)) is None
-    assert ask(
-        Q.finite(a), ~Q.finite(y) & ~Q.positive(x) & ~Q.positive(y)) is False
+    assert ask(Q.finite(a), Q.extended_positive(x)
+        & ~Q.finite(y)) is None
+    assert ask(Q.finite(a), Q.positive_infinite(y)) is None
+    assert ask(Q.finite(a), Q.extended_positive(x)
+        & Q.positive_infinite(y)) is False
+    assert ask(Q.finite(a), Q.extended_positive(x)
+        & ~Q.finite(y) & ~Q.extended_positive(y)) is None
+    assert ask(Q.finite(a), ~Q.extended_positive(x)
+        & Q.positive_infinite(y)) is None
+    assert ask(Q.finite(a), ~Q.extended_positive(x) & ~Q.finite(y)
+        & ~Q.extended_positive(y)) is False
     # ? + ?
-    assert ask(Q.finite(a),) is None
-    assert ask(Q.finite(a), Q.positive(x)) is None
-    assert ask(Q.finite(a), Q.positive(y)) is None
-    assert ask(Q.finite(a), Q.positive(x) & Q.positive(y)) is None
-    assert ask(Q.finite(a), Q.positive(x) & ~Q.positive(y)) is None
-    assert ask(Q.finite(a), ~Q.positive(x) & Q.positive(y)) is None
-    assert ask(Q.finite(a), ~Q.positive(x) & ~Q.positive(y)) is None
+    assert ask(Q.finite(a)) is None
+    assert ask(Q.finite(a), Q.extended_positive(x)) is None
+    assert ask(Q.finite(a), Q.extended_positive(y)) is None
+    assert ask(Q.finite(a), Q.extended_positive(x)
+        & Q.extended_positive(y)) is None
+    assert ask(Q.finite(a), Q.extended_positive(x)
+        & ~Q.extended_positive(y)) is None
+    assert ask(Q.finite(a), ~Q.extended_positive(x)
+        & Q.extended_positive(y)) is None
+    assert ask(Q.finite(a), ~Q.extended_positive(x)
+        & ~Q.extended_positive(y)) is None
 
     x, y, z = symbols('x,y,z')
     a = x + y + z
     x, y, z = a.args
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) & Q.negative(y) &
-        Q.finite(y) & Q.negative(z) & Q.finite(z)) is True
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) &
-        Q.negative(y) & Q.finite(y) & Q.finite(z)) is True
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) & Q.negative(y) &
-        Q.finite(y) & Q.positive(z) & Q.finite(z)) is True
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) & Q.negative(y) &
-        Q.finite(y) & Q.negative(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) &
-        Q.negative(y) & Q.finite(y) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) & Q.negative(y) &
-        Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) &
-        Q.negative(y) & Q.finite(y) & Q.negative(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) &
-        Q.finite(x) & Q.negative(y) & Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) &
-        Q.negative(y) & Q.finite(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) &
-        Q.finite(x) & Q.finite(y) & Q.finite(z)) is True
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) &
-        Q.finite(y) & Q.positive(z) & Q.finite(z)) is True
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) &
-        Q.finite(y) & Q.negative(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.negative(x) &
-        Q.finite(x) & Q.finite(y) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) &
-        Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.negative(x) &
-        Q.finite(x) & Q.finite(y) & Q.negative(z)) is None
-    assert ask(
-        Q.finite(a), Q.negative(x) & Q.finite(x) & Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.negative(x) &
-        Q.finite(x) & Q.finite(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) & Q.positive(y) &
-        Q.finite(y) & Q.positive(z) & Q.finite(z)) is True
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) & Q.positive(y) &
-        Q.finite(y) & Q.negative(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) &
-        Q.positive(y) & Q.finite(y) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) & Q.positive(y) &
-        Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) &
-        Q.positive(y) & Q.finite(y) & Q.negative(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) &
-        Q.finite(x) & Q.positive(y) & Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) &
-        Q.positive(y) & Q.finite(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) & Q.negative(y) &
-        ~Q.finite(y) & Q.negative(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) &
-        Q.negative(y) & ~Q.finite(y) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) & Q.negative(y) &
-        ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) &
-        Q.negative(y) & ~Q.finite(y) & Q.negative(z)) is False
-    assert ask(Q.finite(a), Q.negative(x) &
-        Q.finite(x) & Q.negative(y) & ~Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) &
-        Q.negative(y) & ~Q.finite(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) &
-        Q.finite(x) & ~Q.finite(y) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) &
-        ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) &
-        Q.finite(x) & ~Q.finite(y) & Q.negative(z)) is None
-    assert ask(
-        Q.finite(a), Q.negative(x) & Q.finite(x) & ~Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.negative(x) &
-        Q.finite(x) & ~Q.finite(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) & Q.positive(y) &
-        ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) &
-        Q.positive(y) & ~Q.finite(y) & Q.negative(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) &
-        Q.finite(x) & Q.positive(y) & ~Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) &
-        Q.positive(y) & ~Q.finite(y) & Q.positive(z)) is False
-    assert ask(Q.finite(a), Q.negative(x) &
-        Q.finite(x) & Q.negative(y) & Q.negative(z)) is None
-    assert ask(
-        Q.finite(a), Q.negative(x) & Q.finite(x) & Q.negative(y)) is None
-    assert ask(Q.finite(a), Q.negative(x) &
-        Q.finite(x) & Q.negative(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) & Q.finite(x)) is None
-    assert ask(
-        Q.finite(a), Q.negative(x) & Q.finite(x) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) &
-        Q.finite(x) & Q.positive(y) & Q.positive(z)) is None
-    assert ask(
-        Q.finite(a), Q.finite(x) & Q.finite(y) & Q.finite(z)) is True
-    assert ask(Q.finite(a),
-        Q.finite(x) & Q.finite(y) & Q.positive(z) & Q.finite(z)) is True
-    assert ask(Q.finite(a), Q.finite(x) &
-        Q.finite(y) & Q.negative(z) & ~Q.finite(z)) is False
-    assert ask(
-        Q.finite(a), Q.finite(x) & Q.finite(y) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.finite(x) &
-        Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is False
-    assert ask(
-        Q.finite(a), Q.finite(x) & Q.finite(y) & Q.negative(z)) is None
-    assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)) is None
-    assert ask(
-        Q.finite(a), Q.finite(x) & Q.finite(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.finite(x) & Q.positive(y) &
-        Q.finite(y) & Q.positive(z) & Q.finite(z)) is True
-    assert ask(Q.finite(a), Q.finite(x) & Q.positive(y) &
-        Q.finite(y) & Q.negative(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.finite(x) &
-        Q.positive(y) & Q.finite(y) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.finite(x) & Q.positive(y) &
-        Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.finite(x) &
-        Q.positive(y) & Q.finite(y) & Q.negative(z)) is None
-    assert ask(
-        Q.finite(a), Q.finite(x) & Q.positive(y) & Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.finite(x) &
-        Q.positive(y) & Q.finite(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.finite(x) & Q.negative(y) &
-        ~Q.finite(y) & Q.negative(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.finite(x) &
-        Q.negative(y) & ~Q.finite(y) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), Q.finite(x) & Q.negative(y) &
-        ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), Q.finite(x) &
-        Q.negative(y) & ~Q.finite(y) & Q.negative(z)) is False
-    assert ask(
-        Q.finite(a), Q.finite(x) & Q.negative(y) & ~Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.finite(x) &
-        Q.negative(y) & ~Q.finite(y) & Q.positive(z)) is None
-    assert ask(
-        Q.finite(a), Q.finite(x) & ~Q.finite(y) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), Q.finite(x) &
-        ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is None
-    assert ask(
-        Q.finite(a), Q.finite(x) & ~Q.finite(y) & Q.negative(z)) is None
-    assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y)) is None
-    assert ask(
-        Q.finite(a), Q.finite(x) & ~Q.finite(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.finite(x) & Q.positive(y) &
-        ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.finite(x) &
-        Q.positive(y) & ~Q.finite(y) & Q.negative(z)) is None
-    assert ask(
-        Q.finite(a), Q.finite(x) & Q.positive(y) & ~Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.finite(x) &
-        Q.positive(y) & ~Q.finite(y) & Q.positive(z)) is False
-    assert ask(
-        Q.finite(a), Q.finite(x) & Q.negative(y) & Q.negative(z)) is None
-    assert ask(Q.finite(a), Q.finite(x) & Q.negative(y)) is None
-    assert ask(
-        Q.finite(a), Q.finite(x) & Q.negative(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.finite(x)) is None
-    assert ask(Q.finite(a), Q.finite(x) & Q.positive(z)) is None
-    assert ask(
-        Q.finite(a), Q.finite(x) & Q.positive(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.positive(x) & Q.finite(x) & Q.positive(y) &
-        Q.finite(y) & Q.positive(z) & Q.finite(z)) is True
-    assert ask(Q.finite(a), Q.positive(x) & Q.finite(x) & Q.positive(y) &
-        Q.finite(y) & Q.negative(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.positive(x) & Q.finite(x) &
-        Q.positive(y) & Q.finite(y) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.positive(x) & Q.finite(x) & Q.positive(y) &
-        Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.positive(x) & Q.finite(x) &
-        Q.positive(y) & Q.finite(y) & Q.negative(z)) is None
-    assert ask(Q.finite(a), Q.positive(x) &
-        Q.finite(x) & Q.positive(y) & Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.positive(x) & Q.finite(x) &
-        Q.positive(y) & Q.finite(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.positive(x) & Q.finite(x) & Q.negative(y) &
-        ~Q.finite(y) & Q.negative(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.positive(x) & Q.finite(x) &
-        Q.negative(y) & ~Q.finite(y) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), Q.positive(x) & Q.finite(x) & Q.negative(y) &
-        ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), Q.positive(x) & Q.finite(x) &
-        Q.negative(y) & ~Q.finite(y) & Q.negative(z)) is False
-    assert ask(Q.finite(a), Q.positive(x) &
-        Q.finite(x) & Q.negative(y) & ~Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.positive(x) & Q.finite(x) &
-        Q.negative(y) & ~Q.finite(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.positive(x) &
-        Q.finite(x) & ~Q.finite(y) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), Q.positive(x) & Q.finite(x) &
-        ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), Q.positive(x) &
-        Q.finite(x) & ~Q.finite(y) & Q.negative(z)) is None
-    assert ask(
-        Q.finite(a), Q.positive(x) & Q.finite(x) & ~Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.positive(x) &
-        Q.finite(x) & ~Q.finite(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.positive(x) & Q.finite(x) & Q.positive(y) &
-        ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.positive(x) & Q.finite(x) &
-        Q.positive(y) & ~Q.finite(y) & Q.negative(z)) is None
-    assert ask(Q.finite(a), Q.positive(x) &
-        Q.finite(x) & Q.positive(y) & ~Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.positive(x) & Q.finite(x) &
-        Q.positive(y) & ~Q.finite(y) & Q.positive(z)) is False
-    assert ask(Q.finite(a), Q.positive(x) &
-        Q.finite(x) & Q.negative(y) & Q.negative(z)) is None
-    assert ask(
-        Q.finite(a), Q.positive(x) & Q.finite(x) & Q.negative(y)) is None
-    assert ask(Q.finite(a), Q.positive(x) &
-        Q.finite(x) & Q.negative(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.positive(x) & Q.finite(x)) is None
-    assert ask(
-        Q.finite(a), Q.positive(x) & Q.finite(x) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.positive(x) &
-        Q.finite(x) & Q.positive(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) & ~Q.finite(x) & Q.negative(y) &
-        ~Q.finite(y) & Q.negative(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.negative(x) & ~Q.finite(x) &
-        Q.negative(y) & ~Q.finite(y) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) & ~Q.finite(x) & Q.negative(y) &
-        ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) & ~Q.finite(x) &
-        Q.negative(y) & ~Q.finite(y) & Q.negative(z)) is False
-    assert ask(Q.finite(a), Q.negative(x) &
-        ~Q.finite(x) & Q.negative(y) & ~Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.negative(x) & ~Q.finite(x) &
-        Q.negative(y) & ~Q.finite(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) &
-        ~Q.finite(x) & ~Q.finite(y) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) & ~Q.finite(x) &
-        ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) &
-        ~Q.finite(x) & ~Q.finite(y) & Q.negative(z)) is None
-    assert ask(
-        Q.finite(a), Q.negative(x) & ~Q.finite(x) & ~Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.negative(x) &
-        ~Q.finite(x) & ~Q.finite(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) & ~Q.finite(x) & Q.positive(y) &
-        ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) & ~Q.finite(x) &
-        Q.positive(y) & ~Q.finite(y) & Q.negative(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) &
-        ~Q.finite(x) & Q.positive(y) & ~Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.negative(x) & ~Q.finite(x) &
-        Q.positive(y) & ~Q.finite(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) &
-        ~Q.finite(x) & Q.negative(y) & Q.negative(z)) is False
-    assert ask(
-        Q.finite(a), Q.negative(x) & ~Q.finite(x) & Q.negative(y)) is None
-    assert ask(Q.finite(a), Q.negative(x) &
-        ~Q.finite(x) & Q.negative(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) & ~Q.finite(x)) is None
-    assert ask(
-        Q.finite(a), Q.negative(x) & ~Q.finite(x) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.negative(x) &
-        ~Q.finite(x) & Q.positive(y) & Q.positive(z)) is None
-    assert ask(
-        Q.finite(a), ~Q.finite(x) & ~Q.finite(y) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), ~Q.finite(x) &
-        ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is None
-    assert ask(
-        Q.finite(a), ~Q.finite(x) & ~Q.finite(y) & Q.negative(z)) is None
-    assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y)) is None
-    assert ask(
-        Q.finite(a), ~Q.finite(x) & ~Q.finite(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), ~Q.finite(x) & Q.positive(y) &
-        ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is None
-    assert ask(Q.finite(a), ~Q.finite(x) &
-        Q.positive(y) & ~Q.finite(y) & Q.negative(z)) is None
-    assert ask(
-        Q.finite(a), ~Q.finite(x) & Q.positive(y) & ~Q.finite(y)) is None
-    assert ask(Q.finite(a), ~Q.finite(x) &
-        Q.positive(y) & ~Q.finite(y) & Q.positive(z)) is None
-    assert ask(
-        Q.finite(a), ~Q.finite(x) & Q.negative(y) & Q.negative(z)) is None
-    assert ask(Q.finite(a), ~Q.finite(x) & Q.negative(y)) is None
-    assert ask(
-        Q.finite(a), ~Q.finite(x) & Q.negative(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), ~Q.finite(x)) is None
-    assert ask(Q.finite(a), ~Q.finite(x) & Q.positive(z)) is None
-    assert ask(
-        Q.finite(a), ~Q.finite(x) & Q.positive(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.positive(x) & ~Q.finite(x) & Q.positive(y) &
-        ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.positive(x) & ~Q.finite(x) &
-        Q.positive(y) & ~Q.finite(y) & Q.negative(z)) is None
-    assert ask(Q.finite(a), Q.positive(x) &
-        ~Q.finite(x) & Q.positive(y) & ~Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.positive(x) & ~Q.finite(x) &
-        Q.positive(y) & ~Q.finite(y) & Q.positive(z)) is False
-    assert ask(Q.finite(a), Q.positive(x) &
-        ~Q.finite(x) & Q.negative(y) & Q.negative(z)) is None
-    assert ask(
-        Q.finite(a), Q.positive(x) & ~Q.finite(x) & Q.negative(y)) is None
-    assert ask(Q.finite(a), Q.positive(x) &
-        ~Q.finite(x) & Q.negative(y) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.positive(x) & ~Q.finite(x)) is None
-    assert ask(
-        Q.finite(a), Q.positive(x) & ~Q.finite(x) & Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.positive(x) &
-        ~Q.finite(x) & Q.positive(y) & Q.positive(z)) is False
-    assert ask(
-        Q.finite(a), Q.negative(x) & Q.negative(y) & Q.negative(z)) is None
+    assert ask(Q.finite(a), Q.negative(x) & Q.negative(y)
+        & Q.negative(z)) is True
+    assert ask(Q.finite(a), Q.negative(x) & Q.negative(y)
+        & Q.finite(z)) is True
+    assert ask(Q.finite(a), Q.negative(x) & Q.negative(y)
+        & Q.positive(z)) is True
+    assert ask(Q.finite(a), Q.negative(x) & Q.negative(y)
+        & Q.negative_infinite(z)) is False
+    assert ask(Q.finite(a), Q.negative(x) & Q.negative(y)
+        & ~Q.finite(z)) is False
+    assert ask(Q.finite(a), Q.negative(x) & Q.negative(y)
+        & Q.positive_infinite(z)) is False
+    assert ask(Q.finite(a), Q.negative(x) & Q.negative(y)
+        & Q.extended_negative(z)) is None
     assert ask(Q.finite(a), Q.negative(x) & Q.negative(y)) is None
-    assert ask(
-        Q.finite(a), Q.negative(x) & Q.negative(y) & Q.positive(z)) is None
+    assert ask(Q.finite(a), Q.negative(x) & Q.negative(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.negative(x) & Q.finite(y)
+        & Q.finite(z)) is True
+    assert ask(Q.finite(a), Q.negative(x) & Q.finite(y)
+        & Q.positive(z)) is True
+    assert ask(Q.finite(a), Q.negative(x) & Q.finite(y)
+        & Q.negative_infinite(z)) is False
+    assert ask(Q.finite(a), Q.negative(x) & Q.finite(y)
+        & ~Q.finite(z)) is False
+    assert ask(Q.finite(a), Q.negative(x) & Q.finite(y)
+        & Q.positive_infinite(z)) is False
+    assert ask(Q.finite(a), Q.negative(x) & Q.finite(y)
+        & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.negative(x) & Q.finite(y)) is None
+    assert ask(Q.finite(a), Q.negative(x) & Q.finite(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.negative(x) & Q.positive(y)
+        & Q.positive(z)) is True
+    assert ask(Q.finite(a), Q.negative(x) & Q.positive(y)
+        & Q.negative_infinite(z)) is False
+    assert ask(Q.finite(a), Q.negative(x) & Q.positive(y)
+        & ~Q.finite(z)) is False
+    assert ask(Q.finite(a), Q.negative(x) & Q.positive(y)
+        & Q.positive_infinite(z)) is False
+    assert ask(Q.finite(a), Q.negative(x) & Q.positive(y)
+        & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.negative(x) & Q.extended_positive(y)
+        & Q.finite(y)) is None
+    assert ask(Q.finite(a), Q.negative(x) & Q.positive(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.negative(x) & Q.negative_infinite(y)
+        & Q.negative_infinite(z)) is False
+    assert ask(Q.finite(a), Q.negative(x) & Q.negative_infinite(y)
+        & ~Q.finite(z)) is None
+    assert ask(Q.finite(a), Q.negative(x) & Q.negative_infinite(y)
+        & Q.positive_infinite(z)) is None
+    assert ask(Q.finite(a), Q.negative(x) & Q.negative_infinite(y)
+        & Q.extended_negative(z)) is False
+    assert ask(Q.finite(a), Q.negative(x)
+        & Q.negative_infinite(y)) is None
+    assert ask(Q.finite(a), Q.negative(x) & Q.negative_infinite(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.negative(x) & ~Q.finite(y)
+        & ~Q.finite(z)) is None
+    assert ask(Q.finite(a), Q.negative(x) & ~Q.finite(y)
+        & Q.positive_infinite(z)) is None
+    assert ask(Q.finite(a), Q.negative(x) & ~Q.finite(y)
+        & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.negative(x) & ~Q.finite(y)) is None
+    assert ask(Q.finite(a), Q.negative(x) & ~Q.finite(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.negative(x) & Q.positive_infinite(y)
+        & Q.positive_infinite(z)) is False
+    assert ask(Q.finite(a), Q.negative(x) & Q.positive_infinite(y)
+        & Q.negative_infinite(z)) is None
+    assert ask(Q.finite(a), Q.negative(x) &
+         Q.positive_infinite(y)) is None
+    assert ask(Q.finite(a), Q.negative(x) & Q.positive_infinite(y)
+        & Q.extended_positive(z)) is False
+    assert ask(Q.finite(a), Q.negative(x) & Q.extended_negative(y)
+        & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.negative(x)
+        & Q.extended_negative(y)) is None
+    assert ask(Q.finite(a), Q.negative(x) & Q.extended_negative(y)
+        & Q.extended_positive(z)) is None
     assert ask(Q.finite(a), Q.negative(x)) is None
-    assert ask(Q.finite(a), Q.negative(x) & Q.positive(z)) is None
-    assert ask(
-        Q.finite(a), Q.negative(x) & Q.positive(y) & Q.positive(z)) is None
+    assert ask(Q.finite(a), Q.negative(x)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.negative(x) & Q.extended_positive(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)
+        & Q.finite(z)) is True
+    assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)
+        & Q.positive(z)) is True
+    assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)
+        & Q.negative_infinite(z)) is False
+    assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)
+        & ~Q.finite(z)) is False
+    assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)
+        & Q.positive_infinite(z)) is False
+    assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)
+        & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)) is None
+    assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.finite(x) & Q.positive(y)
+        & Q.positive(z)) is True
+    assert ask(Q.finite(a), Q.finite(x) & Q.positive(y)
+        & Q.negative_infinite(z)) is False
+    assert ask(Q.finite(a), Q.finite(x) & Q.positive(y)
+        & ~Q.finite(z)) is False
+    assert ask(Q.finite(a), Q.finite(x) & Q.positive(y)
+        & Q.positive_infinite(z)) is False
+    assert ask(Q.finite(a), Q.finite(x) & Q.positive(y)
+        & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.finite(x) & Q.positive(y)) is None
+    assert ask(Q.finite(a), Q.finite(x) & Q.positive(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.finite(x) & Q.negative_infinite(y)
+        & Q.negative_infinite(z)) is False
+    assert ask(Q.finite(a), Q.finite(x) & Q.negative_infinite(y)
+        & ~Q.finite(z)) is None
+    assert ask(Q.finite(a), Q.finite(x) & Q.negative_infinite(y)
+        & Q.positive_infinite(z)) is None
+    assert ask(Q.finite(a), Q.finite(x) & Q.negative_infinite(y)
+        & Q.extended_negative(z)) is False
+    assert ask(Q.finite(a), Q.finite(x)
+        & Q.negative_infinite(y)) is None
+    assert ask(Q.finite(a), Q.finite(x) & Q.negative_infinite(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y)
+        & ~Q.finite(z)) is None
+    assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y)
+        & Q.positive_infinite(z)) is None
+    assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y)
+        & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y)) is None
+    assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.finite(x) & Q.positive_infinite(y)
+        & Q.positive_infinite(z)) is False
+    assert ask(Q.finite(a), Q.finite(x) & Q.positive_infinite(y)
+        & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.finite(x)
+        & Q.positive_infinite(y)) is None
+    assert ask(Q.finite(a), Q.finite(x) & Q.positive_infinite(y)
+        & Q.extended_positive(z)) is False
+    assert ask(Q.finite(a), Q.finite(x) & Q.extended_negative(y)
+        & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.finite(x)
+        & Q.extended_negative(y)) is None
+    assert ask(Q.finite(a), Q.finite(x) & Q.extended_negative(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.finite(x)) is None
+    assert ask(Q.finite(a), Q.finite(x)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.finite(x) & Q.extended_positive(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.positive(x) & Q.positive(y)
+        & Q.positive(z)) is True
+    assert ask(Q.finite(a), Q.positive(x) & Q.positive(y)
+        & Q.negative_infinite(z)) is False
+    assert ask(Q.finite(a), Q.positive(x) & Q.positive(y)
+        & ~Q.finite(z)) is False
+    assert ask(Q.finite(a), Q.positive(x) & Q.positive(y)
+        & Q.positive_infinite(z)) is False
+    assert ask(Q.finite(a), Q.positive(x) & Q.positive(y)
+        & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.positive(x) & Q.positive(y)) is None
+    assert ask(Q.finite(a), Q.positive(x) & Q.positive(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.positive(x) & Q.negative_infinite(y)
+        & Q.negative_infinite(z)) is False
+    assert ask(Q.finite(a), Q.positive(x) & Q.negative_infinite(y)
+        & ~Q.finite(z)) is None
+    assert ask(Q.finite(a), Q.positive(x) & Q.negative_infinite(y)
+        & Q.positive_infinite(z)) is None
+    assert ask(Q.finite(a), Q.positive(x) & Q.negative_infinite(y)
+        & Q.extended_negative(z)) is False
+    assert ask(Q.finite(a), Q.positive(x)
+        & Q.negative_infinite(y)) is None
+    assert ask(Q.finite(a), Q.positive(x) & Q.negative_infinite(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.positive(x) & ~Q.finite(y)
+        & ~Q.finite(z)) is None
+    assert ask(Q.finite(a), Q.positive(x) & ~Q.finite(y)
+        & Q.positive_infinite(z)) is None
+    assert ask(Q.finite(a), Q.positive(x) & ~Q.finite(y)
+        & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.positive(x) & ~Q.finite(y)) is None
+    assert ask(Q.finite(a), Q.positive(x) & ~Q.finite(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.positive(x) & Q.positive_infinite(y)
+        & Q.positive_infinite(z)) is False
+    assert ask(Q.finite(a), Q.positive(x) & Q.positive_infinite(y)
+        & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.positive(x)
+        & Q.positive_infinite(y)) is None
+    assert ask(Q.finite(a), Q.positive(x) & Q.positive_infinite(y)
+        & Q.extended_positive(z)) is False
+    assert ask(Q.finite(a), Q.positive(x) & Q.extended_negative(y)
+        & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.positive(x)
+        & Q.extended_negative(y)) is None
+    assert ask(Q.finite(a), Q.positive(x) & Q.extended_negative(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.positive(x)) is None
+    assert ask(Q.finite(a), Q.positive(x)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.positive(x) & Q.extended_positive(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & Q.negative_infinite(y) & Q.negative_infinite(z)) is False
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & Q.negative_infinite(y) & ~Q.finite(z)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & Q.negative_infinite(y)& Q.positive_infinite(z)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & Q.negative_infinite(y) & Q.extended_negative(z)) is False
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & Q.negative_infinite(y)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & Q.negative_infinite(y) & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & ~Q.finite(y) & ~Q.finite(z)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & ~Q.finite(y) & Q.positive_infinite(z)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & ~Q.finite(y) & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & ~Q.finite(y)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & ~Q.finite(y) & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & Q.positive_infinite(y) & Q.positive_infinite(z)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & Q.positive_infinite(y) & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & Q.positive_infinite(y)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & Q.positive_infinite(y) & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & Q.extended_negative(y) & Q.extended_negative(z)) is False
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & Q.extended_negative(y)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & Q.extended_negative(y) & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.negative_infinite(x)
+        & Q.extended_positive(y) & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y)
+        & ~Q.finite(z)) is None
+    assert ask(Q.finite(a), ~Q.finite(x) & Q.positive_infinite(z)
+        & ~Q.finite(z)) is None
+    assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y)
+        & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y)) is None
+    assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), ~Q.finite(x) & Q.positive_infinite(y)
+        & Q.positive_infinite(z)) is None
+    assert ask(Q.finite(a), ~Q.finite(x) & Q.positive_infinite(y)
+        & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), ~Q.finite(x)
+        & Q.positive_infinite(y)) is None
+    assert ask(Q.finite(a), ~Q.finite(x) & Q.positive_infinite(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), ~Q.finite(x) & Q.extended_negative(y)
+        & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), ~Q.finite(x)
+        & Q.extended_negative(y)) is None
+    assert ask(Q.finite(a), ~Q.finite(x) & Q.extended_negative(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), ~Q.finite(x)) is None
+    assert ask(Q.finite(a), ~Q.finite(x)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), ~Q.finite(x) & Q.extended_positive(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.positive_infinite(x)
+        & Q.positive_infinite(y) & Q.positive_infinite(z)) is False
+    assert ask(Q.finite(a), Q.positive_infinite(x)
+        & Q.positive_infinite(y) & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.positive_infinite(x)
+        & Q.positive_infinite(y)) is None
+    assert ask(Q.finite(a), Q.positive_infinite(x)
+        & Q.positive_infinite(y) & Q.extended_positive(z)) is False
+    assert ask(Q.finite(a), Q.positive_infinite(x)
+        & Q.extended_negative(y) & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.positive_infinite(x)
+        & Q.extended_negative(y)) is None
+    assert ask(Q.finite(a), Q.positive_infinite(x)
+        & Q.extended_negative(y) & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.positive_infinite(x)) is None
+    assert ask(Q.finite(a), Q.positive_infinite(x)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.positive_infinite(x)
+        & Q.extended_positive(y) & Q.extended_positive(z)) is False
+    assert ask(Q.finite(a), Q.extended_negative(x)
+        & Q.extended_negative(y) & Q.extended_negative(z)) is None
+    assert ask(Q.finite(a), Q.extended_negative(x)
+        & Q.extended_negative(y)) is None
+    assert ask(Q.finite(a), Q.extended_negative(x)
+        & Q.extended_negative(y) & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.extended_negative(x)) is None
+    assert ask(Q.finite(a), Q.extended_negative(x)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.extended_negative(x)
+        & Q.extended_positive(y) & Q.extended_positive(z)) is None
     assert ask(Q.finite(a)) is None
-    assert ask(Q.finite(a), Q.positive(z)) is None
-    assert ask(Q.finite(a), Q.positive(y) & Q.positive(z)) is None
-    assert ask(
-        Q.finite(a), Q.positive(x) & Q.positive(y) & Q.positive(z)) is None
+    assert ask(Q.finite(a), Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.extended_positive(y)
+        & Q.extended_positive(z)) is None
+    assert ask(Q.finite(a), Q.extended_positive(x)
+        & Q.extended_positive(y) & Q.extended_positive(z)) is None
 
     assert ask(Q.finite(2*x)) is None
     assert ask(Q.finite(2*x), Q.finite(x)) is True
@@ -1020,28 +1025,28 @@ def test_bounded():
     assert ask(Q.finite(a)) is None
     a = x*y*z
     x, y, z = a.args
-    assert ask(
-        Q.finite(a), Q.finite(x) & Q.finite(y) & Q.finite(z)) is True
-    assert ask(
-        Q.finite(a), Q.finite(x) & Q.finite(y) & ~Q.finite(z)) is False
+    assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)
+        & Q.finite(z)) is True
+    assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)
+        & ~Q.finite(z)) is False
     assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)) is None
-    assert ask(
-        Q.finite(a), Q.finite(x) & ~Q.finite(y) & Q.finite(z)) is False
-    assert ask(
-        Q.finite(a), Q.finite(x) & ~Q.finite(y) & ~Q.finite(z)) is False
+    assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y)
+        & Q.finite(z)) is False
+    assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y)
+        & ~Q.finite(z)) is False
     assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y)) is None
     assert ask(Q.finite(a), Q.finite(x) & Q.finite(z)) is None
     assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(z)) is None
     assert ask(Q.finite(a), Q.finite(x)) is None
-    assert ask(
-        Q.finite(a), ~Q.finite(x) & Q.finite(y) & Q.finite(z)) is False
-    assert ask(
-        Q.finite(a), ~Q.finite(x) & Q.finite(y) & ~Q.finite(z)) is False
+    assert ask(Q.finite(a), ~Q.finite(x) & Q.finite(y)
+        & Q.finite(z)) is False
+    assert ask(Q.finite(a), ~Q.finite(x) & Q.finite(y)
+        & ~Q.finite(z)) is False
     assert ask(Q.finite(a), ~Q.finite(x) & Q.finite(y)) is None
-    assert ask(
-        Q.finite(a), ~Q.finite(x) & ~Q.finite(y) & Q.finite(z)) is False
-    assert ask(
-        Q.finite(a), ~Q.finite(x) & ~Q.finite(y) & ~Q.finite(z)) is False
+    assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y)
+        & Q.finite(z)) is False
+    assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y)
+        & ~Q.finite(z)) is False
     assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y)) is None
     assert ask(Q.finite(a), ~Q.finite(x) & Q.finite(z)) is None
     assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(z)) is None
@@ -1054,10 +1059,11 @@ def test_bounded():
     assert ask(Q.finite(a), ~Q.finite(y)) is None
     assert ask(Q.finite(a), Q.finite(z)) is None
     assert ask(Q.finite(a), ~Q.finite(z)) is None
-    assert ask(Q.finite(a), ~Q.finite(z) &
-        Q.nonzero(x) & Q.nonzero(y) & Q.nonzero(z)) is None
-    assert ask(Q.finite(a), ~Q.finite(y) & ~Q.finite(z) &
-        Q.nonzero(x) & Q.nonzero(y) & Q.nonzero(z)) is False
+    assert ask(Q.finite(a), ~Q.finite(z) & Q.extended_nonzero(x)
+        & Q.extended_nonzero(y) & Q.extended_nonzero(z)) is None
+    assert ask(Q.finite(a), Q.extended_nonzero(x) & ~Q.finite(y)
+        & Q.extended_nonzero(y) & ~Q.finite(z)
+        & Q.extended_nonzero(z)) is False
 
     x, y, z = symbols('x,y,z')
     assert ask(Q.finite(x**2)) is None
@@ -1065,9 +1071,9 @@ def test_bounded():
     assert ask(Q.finite(2**x), Q.finite(x)) is True
     assert ask(Q.finite(x**x)) is None
     assert ask(Q.finite(S.Half ** x)) is None
-    assert ask(Q.finite(S.Half ** x), Q.positive(x)) is True
-    assert ask(Q.finite(S.Half ** x), Q.negative(x)) is None
-    assert ask(Q.finite(2**x), Q.negative(x)) is True
+    assert ask(Q.finite(S.Half ** x), Q.extended_positive(x)) is True
+    assert ask(Q.finite(S.Half ** x), Q.extended_negative(x)) is None
+    assert ask(Q.finite(2**x), Q.extended_negative(x)) is True
     assert ask(Q.finite(sqrt(x))) is None
     assert ask(Q.finite(2**x), ~Q.finite(x)) is False
     assert ask(Q.finite(x**2), ~Q.finite(x)) is False
@@ -1079,7 +1085,7 @@ def test_bounded():
     # exponential functions
     assert ask(Q.finite(log(x))) is None
     assert ask(Q.finite(log(x)), Q.finite(x)) is None
-    assert ask(Q.finite(log(x)), Q.nonzero(x)) is True
+    assert ask(Q.finite(log(x)), ~Q.zero(x)) is True
     assert ask(Q.finite(log(x)), Q.infinite(x)) is False
     assert ask(Q.finite(log(x)), Q.zero(x)) is False
     assert ask(Q.finite(exp(x))) is None
@@ -1287,11 +1293,18 @@ def test_evenness_in_ternary_integer_product_with_even():
 
 
 def test_extended_real():
+    assert ask(Q.extended_real(x), Q.positive_infinite(x)) is True
     assert ask(Q.extended_real(x), Q.positive(x)) is True
+    assert ask(Q.extended_real(x), Q.zero(x)) is True
+    assert ask(Q.extended_real(x), Q.negative(x)) is True
+    assert ask(Q.extended_real(x), Q.negative_infinite(x)) is True
+
     assert ask(Q.extended_real(-x), Q.positive(x)) is True
     assert ask(Q.extended_real(-x), Q.negative(x)) is True
 
     assert ask(Q.extended_real(x + S.Infinity), Q.real(x)) is True
+
+    assert ask(Q.extended_real(x), Q.infinite(x)) is None
 
 
 @_both_exp_pow
@@ -2126,24 +2139,34 @@ def test_single_fact_lookup():
     assert mapping[Q.rational] == {Q.real, Q.rational, Q.complex}
 
 
-def test_compute_known_facts():
-    known_facts = And(Implies(Q.integer, Q.rational),
-                      Implies(Q.rational, Q.real),
-                      Implies(Q.real, Q.complex))
-    known_facts_keys = {Q.integer, Q.rational, Q.real, Q.complex}
+def test_generate_known_facts_dict():
+    known_facts = And(Implies(Q.integer(x), Q.rational(x)),
+                      Implies(Q.rational(x), Q.real(x)),
+                      Implies(Q.real(x), Q.complex(x)))
+    known_facts_keys = {Q.integer(x), Q.rational(x), Q.real(x), Q.complex(x)}
 
-    compute_known_facts(known_facts, known_facts_keys)
+    assert generate_known_facts_dict(known_facts_keys, known_facts) == \
+        {Q.complex: ({Q.complex}, set()),
+         Q.integer: ({Q.complex, Q.integer, Q.rational, Q.real}, set()),
+         Q.rational: ({Q.complex, Q.rational, Q.real}, set()),
+         Q.real: ({Q.complex, Q.real}, set())}
 
 
 @slow
 def test_known_facts_consistent():
     """"Test that ask_generated.py is up-to-date"""
-    from sympy.assumptions.facts import get_known_facts, get_known_facts_keys
-    from os.path import abspath, dirname, join
-    filename = join(dirname(dirname(abspath(__file__))), 'ask_generated.py')
-    with open(filename) as f:
-        assert f.read() == \
-            compute_known_facts(get_known_facts(), get_known_facts_keys())
+    x = Symbol('x')
+    fact = get_known_facts(x)
+    # test cnf clauses of fact between unary predicates
+    cnf = CNF.to_CNF(fact)
+    clauses = set()
+    for cl in cnf.clauses:
+        clauses.add(frozenset(Literal(lit.arg.function, lit.is_Not) for lit in sorted(cl, key=str)))
+    assert get_all_known_facts() == clauses
+    # test dictionary of fact between unary predicates
+    keys = [pred(x) for pred in get_known_facts_keys()]
+    mapping = generate_known_facts_dict(keys, fact)
+    assert get_known_facts_dict() == mapping
 
 
 def test_Add_queries():
@@ -2375,3 +2398,10 @@ def test_Predicate_handler_is_unique():
     mp1 = MyPredicate('mp1')
     mp2 = MyPredicate('mp2')
     assert mp1.handler is mp2.handler
+
+
+def test_relational():
+    assert ask(Q.eq(x, 0), Q.zero(x))
+    assert not ask(Q.eq(x, 0), Q.nonzero(x))
+    assert not ask(Q.ne(x, 0), Q.zero(x))
+    assert ask(Q.ne(x, 0), Q.nonzero(x))

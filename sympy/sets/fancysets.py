@@ -255,8 +255,21 @@ class Reals(Interval, metaclass=Singleton):
 
     ComplexRegion
     """
-    def __new__(cls):
-        return Interval.__new__(cls, S.NegativeInfinity, S.Infinity)
+    @property
+    def start(self):
+        return S.NegativeInfinity
+
+    @property
+    def end(self):
+        return S.Infinity
+
+    @property
+    def left_open(self):
+        return True
+
+    @property
+    def right_open(self):
+        return True
 
     def __eq__(self, other):
         return other == Interval(S.NegativeInfinity, S.Infinity)
