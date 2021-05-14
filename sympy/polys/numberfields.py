@@ -588,7 +588,7 @@ def _minpoly_compose(ex, x, dom):
 
 
 @public
-def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None):
+def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None, limit=None):
     """
     Computes the minimal polynomial of an algebraic element.
 
@@ -669,9 +669,11 @@ def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None):
                               "domain %s" % (x, domain))
 
     if compose:
-        deg = get_max_degree([ex])
-        if deg > 100:
-            raise NotImplementedError("_minpoly_compose is too slow to compute %s" % ex)
+        if limit:
+            deg = get_max_degree([ex])
+            if deg is not False:
+                if deg >= 100:
+                    raise NotImplementedError("_minpoly_compose is too slow to compute %s" % ex)
         result = _minpoly_compose(ex, x, domain)
         result = result.primitive()[1]
         c = result.coeff(x**degree(result, x))
@@ -839,6 +841,9 @@ def _linsolve(p):
     return -d/c
 
 def get_rad_deg(rad):
+    if rad.is_Rational or not rad.is_real:
+        return False
+
     if rad is GoldenRatio:
         return 2
 
@@ -916,9 +921,11 @@ def get_rad_deg(rad):
 def get_max_degree(radicals):
     max_deg = 1
     for rad in radicals:
-        if max_deg > 100:
+        if max_deg >= 100:
             break
         n = get_rad_deg(rad)
+        if n is False:
+            return n
         max_deg *= n
 
     return max_deg
@@ -931,8 +938,9 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
         raise ValueError("can't compute primitive element for empty extension")
 
     deg = get_max_degree(extension)
-    if deg > 100:
-        return False, False, False
+    if deg is not False:
+        if deg >= 100:
+            return False, False, False
 
     if x is not None:
         x, cls = sympify(x), Poly
