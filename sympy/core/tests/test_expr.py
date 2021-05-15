@@ -2122,3 +2122,7 @@ def test_non_string_equality():
 
     assert (x == BadRepr()) is False
     assert (x != BadRepr()) is True
+
+def test_expr_free_symbols():
+    assert (2*exp(x)-3).expr_free_symbols == {x}
+    assert (4*y+3*x).expr_free_symbols == {x, y}

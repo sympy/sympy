@@ -354,6 +354,10 @@ class Symbol(AtomicExpr, Boolean):
     def as_set(self):
         return S.UniversalSet
 
+    @property
+    def expr_free_symbols(self):
+        return {self}
+
 
 class Dummy(Symbol):
     """Dummy symbols are each unique, even if they have the same name:

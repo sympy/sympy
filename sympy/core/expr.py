@@ -3919,10 +3919,6 @@ class AtomicExpr(Atom, Expr):
     def _eval_nseries(self, x, n, logx, cdir=0):
         return self
 
-    @property
-    def expr_free_symbols(self):
-        return {self}
-
 
 def _mag(x):
     """Return integer ``i`` such that .1 <= x/10**i < 1
