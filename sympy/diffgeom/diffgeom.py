@@ -407,15 +407,17 @@ class CoordSystem(Basic):
     def _inverse_transformation(sys1, sys2):
         # Find the transformation relation from sys2 to sys1
         forward_transform_expressions = sys1.transform(sys2)
-        # Coordinate transformations are defined in terms of Symbols rather than CoordSymbols, so must be converted
-        forward_transform_expressions = to_coord_symbol(sys1.symbols, forward_transform_expressions)
 
         inv_results = solve(
             [t[0] - t[1] for t in zip(sys2.symbols, forward_transform_expressions)],
             list(sys1.symbols), dict=True)
         if len(inv_results) == 0:
             raise NotImplementedError(
-                "Cannot solve inverse transformation of {}".format(forward_transform_expressions))
+                "Cannot solve inverse of transformation from {} to {}".format(sys1, sys2))
+        elif len(inv_results) > 1:
+            raise ValueError(
+                "Obtained multiple results for inverse of transformation from {} to {}".format(sys1, sys2)
+            )
 
         inv_results = inv_results[0]
         signature = tuple(sys1.symbols)
@@ -1838,12 +1840,6 @@ def dummyfy(args, exprs):
     reps = dict(zip(args, d_args))
     d_exprs = Matrix([_sympify(expr).subs(reps) for expr in exprs])
     return d_args, d_exprs
-
-
-def to_coord_symbol(args, exprs):
-    coord_symbols = {Symbol(arg.name, **arg.assumptions0): arg for arg in args}
-    return Matrix([expr.subs(coord_symbols) for expr in exprs])
-
 
 ###############################################################################
 # Helpers
