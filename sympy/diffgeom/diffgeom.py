@@ -398,26 +398,30 @@ class CoordSystem(Basic):
         elif key in self.relations:
             expr = Matrix(self.relations[key])
         elif key[::-1] in self.relations:
-            expr = Matrix(self._inverse_transformations(sys, self))
+            expr = Matrix(self._inverse_transformation(sys, self))
         else:
-            expr = Matrix(self._indirect_transformations(self, sys))
+            expr = Matrix(self._indirect_transformation(self, sys))
         return Lambda(signature, expr)
 
     @staticmethod
     def _inverse_transformation(sys1, sys2):
         # Find the transformation relation from sys2 to sys1
-        forward_transform = sys1.transform(sys2)
-        forward_syms, forward_results = forward_transform.args
+        forward_transform_expressions = sys1.transform(sys2)
 
-        inv_syms = [i.as_dummy() for i in forward_syms]
         inv_results = solve(
-            [t[0] - t[1] for t in zip(inv_syms, forward_results)],
-            list(forward_syms), dict=True)[0]
-        inv_results = [inv_results[s] for s in forward_syms]
+            [t[0] - t[1] for t in zip(sys2.symbols, forward_transform_expressions)],
+            list(sys1.symbols), dict=True)
+        if len(inv_results) == 0:
+            raise NotImplementedError(
+                "Cannot solve inverse of transformation from {} to {}".format(sys1, sys2))
+        elif len(inv_results) > 1:
+            raise ValueError(
+                "Obtained multiple results for inverse of transformation from {} to {}".format(sys1, sys2)
+            )
 
-        signature = tuple(inv_syms)
-        expr = Matrix(inv_results)
-        return Lambda(signature, expr)
+        inv_results = inv_results[0]
+        signature = tuple(sys1.symbols)
+        return [inv_results[s] for s in signature]
 
     @classmethod
     @cacheit
@@ -1836,7 +1840,6 @@ def dummyfy(args, exprs):
     reps = dict(zip(args, d_args))
     d_exprs = Matrix([_sympify(expr).subs(reps) for expr in exprs])
     return d_args, d_exprs
-
 
 ###############################################################################
 # Helpers

@@ -1,5 +1,5 @@
-from sympy.diffgeom.rn import R2, R2_p, R2_r, R3_r, R3_c, R3_s
-from sympy.diffgeom import (Commutator, Differential, TensorProduct,
+from sympy.diffgeom.rn import R2, R2_p, R2_r, R3_r, R3_c, R3_s, R2_origin
+from sympy.diffgeom import (CoordSystem, Commutator, Differential, TensorProduct,
         WedgeProduct, BaseCovarDerivativeOp, CovarDerivativeOp, LieDerivative,
         covariant_order, contravariant_order, twoform_to_matrix, metric_to_Christoffel_1st,
         metric_to_Christoffel_2nd, metric_to_Riemann_components,
@@ -35,6 +35,46 @@ def test_R2():
     with warns_deprecated_sympy():
         assert m == R2_p.coord_tuple_transform_to(
             R2_r, R2_r.coord_tuple_transform_to(R2_p, m)).applyfunc(simplify)
+
+
+def test_inverse_transformations():
+    p, q, r, s = symbols('p q r s')
+
+    relations_quarter_rotation = {
+        ('first', 'second'): (q, -p)
+    }
+
+    R2_pq = CoordSystem('first', R2_origin, [p, q], relations_quarter_rotation)
+    R2_rs = CoordSystem('second', R2_origin, [r, s], relations_quarter_rotation)
+
+    # The transform method should derive the inverse transformation if not given explicitly
+    assert R2_rs.transform(R2_pq) == Matrix([[-R2_rs.symbols[1]], [R2_rs.symbols[0]]])
+
+    a, b = symbols('a b', positive=True)
+    relations_uninvertible_transformation = {
+        ('first', 'second'): (-a,)
+    }
+
+    R2_a = CoordSystem('first', R2_origin, [a], relations_uninvertible_transformation)
+    R2_b = CoordSystem('second', R2_origin, [b], relations_uninvertible_transformation)
+
+    # The transform method should throw if it cannot invert the coordinate transformation.
+    # This transformation is uninvertible because there is no positive a, b satisfying a = -b
+    with raises(NotImplementedError):
+        R2_b.transform(R2_a)
+
+    c, d = symbols('c d')
+    relations_ambiguous_inverse = {
+        ('first', 'second'): (c**2,)
+    }
+
+    R2_c = CoordSystem('first', R2_origin, [c], relations_ambiguous_inverse)
+    R2_d = CoordSystem('second', R2_origin, [d], relations_ambiguous_inverse)
+
+    # The transform method should throw if it finds multiple inverses for a coordinate transformation.
+    with raises(ValueError):
+        R2_d.transform(R2_c)
+
 
 def test_R3():
     a, b, c = symbols('a b c', positive=True)
