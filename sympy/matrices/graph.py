@@ -1,6 +1,5 @@
 from sympy.utilities.iterables import \
-    flatten, connected_components
-
+    flatten, connected_components, strongly_connected_components
 from .common import NonSquareMatrixError
 
 
@@ -35,6 +34,15 @@ def _connected_components(M):
     V = range(M.rows)
     E = sorted(M.todok().keys())
     return connected_components((V, E))
+
+
+def _strongly_connected_components(M):
+    if not M.is_square:
+        raise NonSquareMatrixError
+
+    V = range(M.rows)
+    E = sorted(M.todok().keys())
+    return strongly_connected_components((V, E))
 
 
 def _connected_components_decomposition(M):
@@ -113,4 +121,24 @@ def _connected_components_decomposition(M):
     for b in iblocks:
         blocks.append(M[b, b])
     B = BlockDiagMatrix(*blocks)
+    return P, B
+
+
+def _strongly_connected_components_decomposition(M):
+    from sympy.combinatorics.permutations import Permutation
+    from sympy.matrices.expressions.blockmatrix import BlockMatrix
+    from sympy.matrices.expressions.permutation import PermutationMatrix
+
+    iblocks = M.strongly_connected_components()
+
+    p = Permutation(flatten(iblocks))
+    P = PermutationMatrix(p)
+
+    rows = []
+    for a in iblocks:
+        cols = []
+        for b in iblocks:
+            cols.append(M[a, b])
+        rows.append(cols)
+    B = BlockMatrix(rows)
     return P, B
