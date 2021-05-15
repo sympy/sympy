@@ -1,7 +1,8 @@
 from sympy.testing.pytest import raises
 
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, pi
 from sympy.functions import sqrt
+from sympy.functions.elementary.trigonometric import sin, tan
 
 from sympy.matrices.common import (NonInvertibleMatrixError,
     NonSquareMatrixError, ShapeError)
@@ -677,3 +678,10 @@ def test_DomainMatrix_getitem():
     assert dM[2:,2:] == DomainMatrix({0: {0: 1}, 2: {2: 1}}, (3, 3), ZZ)
     assert dM[3:,3:] == DomainMatrix({1: {1: 1}}, (2, 2), ZZ)
     assert dM[2:, 6:] == DomainMatrix({}, (3, 0), ZZ)
+
+
+def test_get_radicals():
+    items_sympy = [4 * tan(13*pi/45) + sqrt(17), sqrt(2) + 4 * sqrt(3),\
+                   sqrt(7) + sqrt(5) * sin(13*pi/45), tan(13*pi/45) * sqrt(11), sqrt(9)]
+    assert DomainMatrix.get_radicals(items_sympy) == \
+           {sqrt(5), sqrt(11), sqrt(17), sqrt(7), sqrt(2), sqrt(3), tan(13*pi/45), sin(13*pi/45)}

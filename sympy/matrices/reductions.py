@@ -2,6 +2,9 @@ from types import FunctionType
 
 from sympy.simplify.simplify import (
     simplify as _simplify, dotprodsimp as _dotprodsimp)
+from sympy.polys.matrices.domainmatrix import DomainMatrix
+from sympy.core import Expr
+from sympy.polys.domains import EX
 
 from .utilities import _get_intermediate_simp, _iszero
 from .determinant import _find_reasonable_pivot
@@ -245,6 +248,27 @@ def _rank(M, iszerofunc=_iszero, simplify=False):
     return len(pivots)
 
 
+def _check_expr(M):
+    """Checks whether all the elements of the Matrix are Expr before converting to DomainMatrix.
+
+    Parameters
+    ==========
+
+    M:  Matrix
+
+    Returns
+    =======
+
+    Boolean
+        True if all elements are of type Expr, else False
+
+    """
+    types = set(map(type, M))
+    if all(issubclass(t, Expr) for t in types):
+        return True
+    return False
+
+
 def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
         normalize_last=True):
     """Return reduced row-echelon form of matrix and indices of pivot vars.
@@ -299,11 +323,18 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     if you depend on the form row reduction algorithm leaves entries
     of the matrix, set ``noramlize_last=False``
     """
+    flag = True
+    if _check_expr(M):
+        DOM = DomainMatrix.from_Matrix(M, radicals_limit=1, field=True)
+        if DOM.domain != EX:
+            DOM_mat, pivot_cols = DOM.rref()
+            mat = DOM_mat.to_Matrix()
+            flag = False
 
-    simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
-
-    mat, pivot_cols, _ = _row_reduce(M, iszerofunc, simpfunc,
-            normalize_last, normalize=True, zero_above=True)
+    if flag:
+        simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
+        mat, pivot_cols, _ = _row_reduce(M, iszerofunc, simpfunc,
+                normalize_last, normalize=True, zero_above=True)
 
     if pivots:
         mat = (mat, pivot_cols)

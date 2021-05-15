@@ -278,6 +278,16 @@ def test_rref():
                 0, 1, 1/(sqrt(x) + x + 1)]):
         assert simplify(i - j).is_zero
 
+    a = Matrix([[21*sqrt(2) + 35, 9 + 26*sqrt(2)], [51 + 63*sqrt(2), 51 + 70*sqrt(2)]])
+    assert a.rref(pivots=False) == Matrix([
+                                         [1, 0],
+                                         [0, 1]])
+
+    a = Matrix([[17*sqrt(2) + 58, 11*sqrt(2) + 41], [2*sqrt(3) + 36, 3*sqrt(3) + 15*sqrt(2)]])
+    assert a.rref(pivots=False) == Matrix([
+                                         [1, 0],
+                                         [0, 1]])
+
 def test_issue_17827():
     C = Matrix([
         [3, 4, -1, 1],
