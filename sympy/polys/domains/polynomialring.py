@@ -142,6 +142,9 @@ class PolynomialRing(Ring, CompositeDomain):
 
     def from_FractionField(K1, a, K0):
         """Convert a rational function to ``dtype``. """
+        if K1.domain == K0:
+            return K1.ring.from_list([a])
+
         q, r = K0.numer(a).div(K0.denom(a))
 
         if r.is_zero:
