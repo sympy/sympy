@@ -671,9 +671,8 @@ def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None, limit
     if compose:
         if limit:
             deg = get_max_degree([ex])
-            if deg is not False:
-                if deg >= 100:
-                    raise NotImplementedError("_minpoly_compose is too slow to compute %s" % ex)
+            if deg >= 100:
+                raise NotImplementedError("_minpoly_compose is too slow to compute %s" % ex)
         result = _minpoly_compose(ex, x, domain)
         result = result.primitive()[1]
         c = result.coeff(x**degree(result, x))
@@ -853,12 +852,16 @@ def get_rad_deg(rad):
     if rad.is_Add:
         n = -1
         for r in rad.args:
-            n = max(n, get_rad_deg(r))
+            k = get_rad_deg(r)
+            if k is not False:
+                n = max(n, k)
         return n
     elif rad.is_Mul:
         n = 1
         for r in rad.args:
-            n *= get_rad_deg(r)
+            k = get_rad_deg(r)
+            if k is not False:
+                n *= k
         return n
     elif rad.is_Pow:
         return rad.exp.q
@@ -874,10 +877,10 @@ def get_rad_deg(rad):
                     if q == 9:
                         return 6
 
-                if n % 2 != 0:
-                    return n
+                if q % 2 == 1:
+                    return q
                 else:
-                    return n / 2
+                    return q / 2
     elif rad.__class__ is cos:
         c, a = rad.args[0].as_coeff_Mul()
         if a is pi:
@@ -890,7 +893,7 @@ def get_rad_deg(rad):
                     if q.is_prime:
                         return q // 2
 
-                return sympify(c.q)
+                return sympify(c.q // 2)
     elif rad.__class__ is exp:
         c, a = rad.args[0].as_coeff_Mul()
         q = sympify(c.q)
@@ -925,9 +928,10 @@ def get_max_degree(radicals):
             break
         while isinstance(rad, AlgebraicNumber):
             rad = rad.as_expr()
+
         n = get_rad_deg(rad)
         if n is False:
-            return n
+            return False
         max_deg *= n
 
     return max_deg
@@ -940,9 +944,11 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
         raise ValueError("can't compute primitive element for empty extension")
 
     deg = get_max_degree(extension)
-    if deg is not False:
-        if deg >= 100:
+    if deg >= 100:
+        if ex and polys:
             return False, False, False
+        else:
+            raise NotImplementedError("primitive_element is too slow for %s" % extension)
 
     if x is not None:
         x, cls = sympify(x), Poly
