@@ -124,12 +124,14 @@ def _connected_components_decomposition(M):
     return P, B
 
 
-def _strongly_connected_components_decomposition(M):
+def _strongly_connected_components_decomposition(M, lower=True):
     from sympy.combinatorics.permutations import Permutation
     from sympy.matrices.expressions.blockmatrix import BlockMatrix
     from sympy.matrices.expressions.permutation import PermutationMatrix
 
     iblocks = M.strongly_connected_components()
+    if not lower:
+        iblocks = list(reversed(iblocks))
 
     p = Permutation(flatten(iblocks))
     P = PermutationMatrix(p)

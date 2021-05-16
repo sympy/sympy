@@ -2210,8 +2210,8 @@ class MatrixBase(MatrixDeprecated,
     def strongly_connected_components(self):
         return _strongly_connected_components(self)
 
-    def strongly_connected_components_decomposition(self):
-        return _strongly_connected_components_decomposition(self)
+    def strongly_connected_components_decomposition(self, lower=True):
+        return _strongly_connected_components_decomposition(self, lower=lower)
 
     rank_decomposition.__doc__     = _rank_decomposition.__doc__
     cholesky.__doc__               = _cholesky.__doc__
