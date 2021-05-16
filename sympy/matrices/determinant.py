@@ -3,6 +3,7 @@ from types import FunctionType
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import uniquely_named_symbol
+from sympy.core.mul import Mul
 from sympy.polys import PurePoly, cancel
 from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
@@ -661,17 +662,18 @@ def _det(M, method="bareiss", iszerofunc=None):
                 - M[0, 1] * M[1, 0] * M[2, 2])
             return _get_intermediate_simp(_dotprodsimp)(m)
 
-    det = M.one
+    dets = []
     for b in M.strongly_connected_components():
         if method == "domain-ge": # uses DomainMatrix to evalute determinant
-            det *= _det_DOM(M[b, b])
+            det = _det_DOM(M[b, b])
         elif method == "bareiss":
-            det *= M[b, b]._eval_det_bareiss(iszerofunc=iszerofunc)
+            det = M[b, b]._eval_det_bareiss(iszerofunc=iszerofunc)
         elif method == "berkowitz":
-            det *= M[b, b]._eval_det_berkowitz()
+            det = M[b, b]._eval_det_berkowitz()
         elif method == "lu":
-            det *= M[b, b]._eval_det_lu(iszerofunc=iszerofunc)
-    return det
+            det = M[b, b]._eval_det_lu(iszerofunc=iszerofunc)
+        dets.append(det)
+    return Mul(*dets)
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.

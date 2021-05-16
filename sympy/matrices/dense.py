@@ -191,6 +191,10 @@ class DenseMatrix(MatrixBase):
         cols = self.cols
         return [mat[i*cols:(i + 1)*cols] for i in range(self.rows)]
 
+    def _eval_todok(self):
+        cols = self.cols
+        return {divmod(ij, cols): e for ij, e in enumerate(self._mat) if e}
+
     def as_immutable(self):
         """Returns an Immutable version of this Matrix
         """
