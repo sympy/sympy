@@ -1033,11 +1033,14 @@ def test_PolyElement_cofactors():
 
 def test_PolyElement_gcd():
     R, x, y = ring("x,y", QQ)
-
     f = QQ(1,2)*x**2 + x + QQ(1,2)
     g = QQ(1,2)*x + QQ(1,2)
+    assert f.gcd(g) == QQ(1,2)*x + QQ(1,2)
 
-    assert f.gcd(g) == x + 1
+    R, x, y = ring("x,y", ZZ)
+    f = ZZ(2)*x**2 + ZZ(5)*x
+    g = ZZ(10)*x
+    assert f.gcd(g) == x
 
 def test_PolyElement_cancel():
     R, x, y = ring("x,y", ZZ)

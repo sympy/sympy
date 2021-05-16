@@ -18,6 +18,7 @@ from sympy.polys.constructor import construct_domain
 from sympy.polys.densebasic import dmp_to_dict, dmp_from_dict
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
+from sympy.polys.euclidtools import gcd_sparse
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.monomials import MonomialOps
 from sympy.polys.orderings import lex
@@ -2161,14 +2162,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return h, cff, cfg
 
     def _gcd(f, g):
-        ring = f.ring
-
-        if ring.domain.is_QQ:
-            return f._gcd_QQ(g)
-        elif ring.domain.is_ZZ:
-            return f._gcd_ZZ(g)
-        else: # TODO: don't use dense representation (port PRS algorithms)
-            return ring.dmp_inner_gcd(f, g)
+        h = gcd_sparse([f, g])
+        return h, h.quo(f), h.quo(g)
 
     def _gcd_ZZ(f, g):
         return heugcd(f, g)
