@@ -390,9 +390,12 @@ def test_DomainMatrix_rref():
 
 
 def test_DomainMatrix_nullspace():
-    A = DomainMatrix([[QQ(1), QQ(1)], [QQ(1), QQ(1)]], (2, 2), ZZ)
-    Anull = DomainMatrix([[QQ(-1), QQ(1)]], (1, 2), ZZ)
+    A = DomainMatrix([[QQ(1), QQ(1)], [QQ(1), QQ(1)]], (2, 2), QQ)
+    Anull = DomainMatrix([[QQ(-1), QQ(1)]], (1, 2), QQ)
     assert A.nullspace() == Anull
+
+    Az = DomainMatrix([[ZZ(1), ZZ(1)], [ZZ(1), ZZ(1)]], (2, 2), ZZ)
+    raises(ValueError, lambda: Az.nullspace())
 
 
 def test_DomainMatrix_solve():
@@ -607,6 +610,19 @@ def test_DomainMatrix_hstack():
     B = DomainMatrix([[QQ(3), QQ(4)], [QQ(5), QQ(6)]], (2, 2), QQ)
     AB = DomainMatrix([[QQ(1), QQ(3), QQ(4)], [QQ(2), QQ(5), QQ(6)]], (2, 3), QQ)
     assert A.hstack(B) == AB
+
+
+def test_DomainMatrix_vstack():
+    A = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+    B = DomainMatrix([[QQ(3), QQ(4)], [QQ(5), QQ(6)]], (2, 2), QQ)
+    AB = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(4)], [QQ(5), QQ(6)]], (3, 2), QQ)
+    assert A.vstack(B) == AB
+
+
+def test_DomainMatrix_applyfunc():
+    A = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+    B = DomainMatrix([[ZZ(2), ZZ(4)]], (1, 2), ZZ)
+    assert A.applyfunc(lambda x: 2*x) == B
 
 
 def test_DomainMatrix_scalarmul():
