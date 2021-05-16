@@ -1751,8 +1751,8 @@ class Basic(Printable, metaclass=ManagedProperties):
         ...             return cos(pi/2 - x, evaluate=False)
         ...         if rule == sqrt:
         ...             return sqrt(1 - cos(x)**2)
-        >>> MySin(sin(x)).rewrite(cos)
-        cos(-cos(x - pi/2) + pi/2)
+        >>> MySin(MySin(x)).rewrite(cos)
+        cos(-cos(-x + pi/2) + pi/2)
         >>> MySin(x).rewrite(sqrt)
         sqrt(1 - cos(x)**2)
 
@@ -1760,35 +1760,12 @@ class Basic(Printable, metaclass=ManagedProperties):
         if not args:
             return self
 
+        hints.update(deep=deep)
+
         pattern = args[:-1]
         rule = args[-1]
 
-        if deep:
-            newargs = [a.rewrite(*pattern, rule, deep=True, **hints)
-                        if isinstance(a, Basic) else a for a in self.args]
-        else:
-            newargs = self.args
-
-        flag = True
-        if pattern:
-            if iterable(pattern[0]):
-                pattern = pattern[0]
-            pattern = tuple(p for p in pattern if self.has(p))
-            if not any(isinstance(self, p) for p in pattern):
-                flag = False
-
-        if flag:
-            ret = self._eval_rewrite(rule, newargs, **hints)
-            if ret is not None:
-                return ret
-        if not newargs:
-            return self
-        return self.func(*newargs)
-
-
-    def _eval_rewrite(self, rule, args, **hints):
-        # Old design. It is recommended to override this method.
-
+        # support old design
         if isinstance(rule, str):
             method = "_eval_rewrite_as_%s" % rule
         elif hasattr(rule, "__name__"):
@@ -1799,14 +1776,40 @@ class Basic(Printable, metaclass=ManagedProperties):
             clsname = rule.__class__.__name__
             method = "_eval_rewrite_as_%s" % clsname
 
-        if hasattr(self, method):
-            rewritten = getattr(self, method)(*args, **hints)
+        if pattern:
+            if iterable(pattern[0]):
+                pattern = pattern[0]
+            pattern = tuple(p for p in pattern if self.has(p))
+            if not pattern:
+                return self
+        else:
+            pattern = None
+
+        return self._rewrite(pattern, rule, method, **hints)
+
+    def _rewrite(self, pattern, rule, method, **hints):
+        deep = hints.pop('deep', True)
+
+        if deep:
+            args = [a._rewrite(pattern, rule, method, **hints)
+                    if isinstance(a, Basic) else a for a in self.args]
+        else:
+            args = self.args
+
+        if pattern is None or isinstance(self, pattern):
+            if hasattr(self, method):
+                rewritten = getattr(self, method)(*args, **hints)
+            else:
+                rewritten = self._eval_rewrite(rule, args, **hints)
             if rewritten is not None:
                 return rewritten
 
         if not args:
             return self
         return self.func(*args)
+
+    def _eval_rewrite(self, rule, args, **hints):
+        return None
 
 
     _constructor_postprocessor_mapping = {}  # type: ignore
