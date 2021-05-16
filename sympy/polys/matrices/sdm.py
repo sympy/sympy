@@ -1030,14 +1030,16 @@ def sdm_applyfunc(M, shape, f, domain):
     Mf = {i: {j: fzero for j in range(ncols)} for i in range(nrows)}
 
     for i, Mi in M.items():
-        num_zero_elems = 0
+        Mfi = Mf[i]
         for j, Mij in Mi.items():
             fMij = f(Mij)
             if fMij:
-                Mf[i][j] = fMij
+                Mfi[j] = fMij
             else:
-                del Mf[i][j]
-                num_zero_elems += 1
-        if num_zero_elems == ncols:
+                del Mfi[j]
+
+        if Mfi:
+           Mf[i] = Mfi
+        else:
             del Mf[i]
     return Mf
