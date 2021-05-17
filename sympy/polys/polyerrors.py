@@ -175,3 +175,7 @@ class OptionError(BasePolynomialError):
 @public
 class FlagError(OptionError):
     pass
+
+@public
+class DegreeLimitExceeded(BasePolynomialError):
+    pass
