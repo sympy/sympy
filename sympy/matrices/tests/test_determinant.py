@@ -1,6 +1,6 @@
 import random
 from sympy.core.numbers import I
-from sympy import symbols, Symbol, Rational, sqrt, Poly
+from sympy import symbols, Symbol, Rational, sqrt, Poly, exp, sin, cos
 from sympy.matrices import Matrix, eye, ones
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
@@ -382,6 +382,7 @@ def test_cofactor_and_minors():
 def test_charpoly():
     x, y = Symbol('x'), Symbol('y')
     z, t = Symbol('z'), Symbol('t')
+    q = Symbol("q", positive = True)
 
     from sympy.abc import a,b,c
 
@@ -399,3 +400,33 @@ def test_charpoly():
 
     n = DeterminantOnlyMatrix(3, 3, [x, 0, 0, a, y, 0, b, c, z])
     assert n.charpoly() == Poly(t**3 - (x+y+z)*t**2 + t*(x*y+y*z+x*z) - x*y*z , t)
+
+    m = Matrix([[-2, exp(-q), 1], [exp(q), -2, 1], [1, 1, -2]])
+    assert m.charpoly() == Poly(x**3 + 6*x**2 + 9*x + (-exp(2*q) + 2*exp(q) - 1)*exp(-q), x)
+
+    m = Matrix([[0, -t*cos(t) + sin(t)], [-t*cos(t) + sin(t), 0]])
+    # using Matrix.charpoly() for Expr
+    assert m.charpoly() == Poly(x**2 - (t*cos(t) - sin(t))**2, x, expand=False)
+    # using DomainMatrix.charpoly() in Matrix.charpoly() for EX domain
+    assert m.charpoly(use_domain=True) == Poly(x**2 - t**2*cos(t)**2 + 2*t*sin(t)*cos(t) - sin(t)**2, x)
+
+    A = Matrix([
+        [16, 63, 65],
+        [65, 24, 3],
+        [31, 73, 34]])
+    assert A.charpoly() == Poly(x**3 - 74*x**2 - 4585*x - 136246, x)
+    assert A.charpoly(use_domain=False) == Poly(x**3 - 74*x**2 - 4585*x - 136246, x)
+
+    A = Matrix([
+        [24*sqrt(2) + 87, 66 + 80*sqrt(2), 26*sqrt(2) + 91],
+        [28*sqrt(2) + 54, 7 + 26*sqrt(2), 18 + 67*sqrt(2)],
+        [87 + 67*sqrt(2), 16 + 25*sqrt(2), 68 + 63*sqrt(2)]])
+    assert A.charpoly() == Poly(x**3 + (-162 - 113*sqrt(2))*x**2 + (-8534 - 4297*sqrt(2))*x - 311682*sqrt(2) - 325283, x, domain='QQ<sqrt(2)>')
+    assert A.charpoly(use_domain=False) == Poly(x**3 + (-162 - 113*sqrt(2))*x**2 + (-8534 - 4297*sqrt(2))*x - 311682*sqrt(2) - 325283, x)
+
+    A = Matrix([
+        [x, 63, 65],
+        [65, 24, 3],
+        [31, 73, y]])
+    assert A.charpoly() == Poly(t**3 + (-x - y - 24)*t**2 + (x*y + 24*x + 24*y - 6329)*t - 24*x*y + 219*x + 4095*y - 265924, t)
+    assert A.charpoly(use_domain=False) == Poly(t**3 + (-x - y - 24)*t**2 + (x*y + 24*x + 24*y - 6329)*t - 24*x*y + 219*x + 4095*y - 265924, t)

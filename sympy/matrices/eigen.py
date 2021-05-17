@@ -205,7 +205,7 @@ def _eigenvals_list(
         block = M[b, b]
 
         if isinstance(simplify, FunctionType):
-            charpoly = block.charpoly(simplify=simplify)
+            charpoly = block.charpoly()
         else:
             charpoly = block.charpoly()
 
@@ -240,7 +240,7 @@ def _eigenvals_dict(
         block = M[b, b]
 
         if isinstance(simplify, FunctionType):
-            charpoly = block.charpoly(simplify=simplify)
+            charpoly = block.charpoly()
         else:
             charpoly = block.charpoly()
 

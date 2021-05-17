@@ -327,8 +327,24 @@ class DomainMatrix:
 
         return cls.from_dict_sympy(*M.shape, M.todod(), **kwargs)
 
+    def get_radicals(elmt_list):
+        radicals = set()
+        for k in elmt_list:
+            if k.is_real and not k.is_Rational:
+                if k.is_Add or k.is_Mul:
+                    elmt_list.extend(k.args)
+                else:
+                    radicals.add(k)
+
+        return radicals
+
     @classmethod
-    def get_domain(cls, items_sympy, **kwargs):
+    def get_domain(cls, items_sympy, radicals_limit=None, **kwargs):
+        if radicals_limit is not None:
+            radicals = DomainMatrix.get_radicals(items_sympy)
+            if len(radicals) <= radicals_limit:
+                kwargs['extension'] = True
+
         K, items_K = construct_domain(items_sympy, **kwargs)
         return K, items_K
 

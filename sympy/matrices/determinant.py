@@ -2,13 +2,14 @@ from types import FunctionType
 
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
-from sympy.core.symbol import uniquely_named_symbol
+from sympy.core.symbol import uniquely_named_symbol, Dummy
 from sympy.polys import PurePoly, cancel
 from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
 from sympy import sympify
 from sympy.functions.combinatorial.numbers import nC
 from sympy.polys.matrices.domainmatrix import DomainMatrix
+from sympy.polys.domains import EX
 
 from .common import MatrixError, NonSquareMatrixError
 from .utilities import (
@@ -329,7 +330,7 @@ def _adjugate(M, method="berkowitz"):
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _charpoly(M, x='lambda', simplify=_simplify):
+def _charpoly(M, x='lambda', use_domain=None):
     """Computes characteristic polynomial det(x*I - M) where I is
     the identity matrix.
 
@@ -342,10 +343,6 @@ def _charpoly(M, x='lambda', simplify=_simplify):
     x : string, optional
         Name for the "lambda" variable, defaults to "lambda".
 
-    simplify : function, optional
-        Simplification function to use on the characteristic polynomial
-        calculated. Defaults to ``simplify``.
-
     Examples
     ========
 
@@ -354,8 +351,6 @@ def _charpoly(M, x='lambda', simplify=_simplify):
     >>> M = Matrix([[1, 3], [2, 0]])
     >>> M.charpoly()
     PurePoly(lambda**2 - lambda - 6, lambda, domain='ZZ')
-    >>> M.charpoly(x) == M.charpoly(y)
-    True
     >>> M.charpoly(x) == M.charpoly(y)
     True
 
@@ -386,7 +381,7 @@ def _charpoly(M, x='lambda', simplify=_simplify):
 
     The Samuelson-Berkowitz algorithm is used to compute
     the characteristic polynomial efficiently and without any
-    division operations.  Thus the characteristic polynomial over any
+    division operations. Thus the characteristic polynomial over any
     commutative ring without zero divisors can be computed.
 
     If the determinant det(x*I - M) can be found out easily as
@@ -407,13 +402,28 @@ def _charpoly(M, x='lambda', simplify=_simplify):
         x = uniquely_named_symbol(x, diagonal_elements, modify=lambda s: '_' + s)
         m = 1
         for i in diagonal_elements:
-            m = m * (x - simplify(i))
+            m = m * (x - _simplify(i))
         return PurePoly(m, x)
 
-    berk_vector = _berkowitz_vector(M)
-    x = uniquely_named_symbol(x, berk_vector, modify=lambda s: '_' + s)
+    xdum = Dummy('t')
+    DOM = DomainMatrix.from_Matrix(M, radicals_limit=1)
+    domain = DOM.domain
+    if domain == EX and use_domain is not True:
+        use_domain = False
 
-    return PurePoly([simplify(a) for a in berk_vector], x)
+    if use_domain is False:
+        berk_vector = _berkowitz_vector(M)
+        berk_vector = [_simplify(a) for a in berk_vector]
+        dummy_poly = PurePoly(berk_vector, xdum)
+
+    else:
+        dom_vector = DOM.charpoly()
+        dummy_poly = PurePoly(dom_vector, xdum, domain=domain)
+
+    xsym = uniquely_named_symbol(x, dummy_poly, modify=lambda s: '_' + s)
+    poly = dummy_poly.subs(xdum, xsym)
+
+    return poly
 
 
 def _cofactor(M, i, j, method="berkowitz"):
