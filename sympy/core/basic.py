@@ -1785,28 +1785,25 @@ class Basic(Printable, metaclass=ManagedProperties):
         else:
             pattern = None
 
-        return self._rewrite(pattern, rule, method, **hints)
-
-    def _rewrite(self, pattern, rule, method, **hints):
-        deep = hints.pop('deep', True)
-
-        if deep:
-            args = [a._rewrite(pattern, rule, method, **hints)
-                    if isinstance(a, Basic) else a for a in self.args]
-        else:
-            args = self.args
-
-        if pattern is None or isinstance(self, pattern):
-            if hasattr(self, method):
-                rewritten = getattr(self, method)(*args, **hints)
+        def _rewrite(expr, pattern, rule, method, **hints):
+            deep = hints.pop('deep', True)
+            if deep:
+                args = [_rewrite(a, pattern, rule, method, **hints)
+                        if isinstance(a, Basic) else a for a in expr.args]
             else:
-                rewritten = self._eval_rewrite(rule, args, **hints)
-            if rewritten is not None:
-                return rewritten
+                args = expr.args
+            if pattern is None or isinstance(expr, pattern):
+                if hasattr(expr, method):
+                    rewritten = getattr(expr, method)(*args, **hints)
+                else:
+                    rewritten = expr._eval_rewrite(rule, args, **hints)
+                if rewritten is not None:
+                    return rewritten
+            if not args:
+                return expr
+            return expr.func(*args)
 
-        if not args:
-            return self
-        return self.func(*args)
+        return _rewrite(self, pattern, rule, method, **hints)
 
     def _eval_rewrite(self, rule, args, **hints):
         return None
