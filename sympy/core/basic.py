@@ -1211,15 +1211,17 @@ class Basic(Printable, metaclass=ManagedProperties):
         expressions = set(patterns)
         tocheck = [self]
         for subexpr in tocheck:
-            if subexpr in expressions:
-                return True
-            tocheck.extend(subexpr.args)
+            if isinstance(subexpr, Basic):
+                if subexpr in expressions:
+                    return True
+                tocheck.extend(subexpr.args)
 
         types_found = set(map(type, tocheck))
         return any(self._has(pattern, types_found) for pattern in patterns)
 
-    def _has(self, pattern, types_found):
+    def _has(self, pattern, types_found=None):
         """Helper for .has()"""
+        from sympy.core import Add, Mul
         from sympy.core.function import UndefinedFunction, Function
         if isinstance(pattern, UndefinedFunction):
             return any(f.func == pattern or f == pattern
@@ -1229,13 +1231,22 @@ class Basic(Printable, metaclass=ManagedProperties):
             return any(issubclass(t, pattern) for t in types_found)
 
         pattern = _sympify(pattern)
+        if pattern.is_Add:
+            self = self.atoms(Add)
+        if pattern.is_Mul:
+            self = self.atoms(Mul)
+
+        try:
+            self = iter(self)
+        except TypeError:
+            self = {self}
 
         _has_matcher = getattr(pattern, '_has_matcher', None)
         if _has_matcher is not None:
             match = _has_matcher()
-            return match(self)
+            return any(match(arg) for arg in self)
         else:
-            return self == pattern
+            return any(arg == pattern for arg in self)
 
     def _has_matcher(self):
         """Helper for .has()"""
