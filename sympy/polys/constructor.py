@@ -103,9 +103,6 @@ def _construct_algebraic(coeffs, opt):
     exts = list(ordered(exts))
 
     g, span, H = primitive_element(exts, ex=True, polys=True)
-    if (g, span, H) == (False, False, False):
-        return EX, None
-
     root = sum([ s*ext for s, ext in zip(span, exts) ])
 
     domain, g = QQ.algebraic_field((g, root)), g.rep.rep
@@ -368,8 +365,6 @@ def construct_domain(obj, **args):
 
     coeffs = list(map(sympify, coeffs))
     result = _construct_simple(coeffs, opt)
-    if result == (EX, None):
-        return _construct_expression(coeffs, opt)
 
     if result is not None:
         if result is not False:

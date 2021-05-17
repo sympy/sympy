@@ -406,7 +406,7 @@ def _charpoly(M, x='lambda', use_domain=None):
         return PurePoly(m, x)
 
     xdum = Dummy('t')
-    DOM = DomainMatrix.from_Matrix(M, radicals_limit=5)
+    DOM = DomainMatrix.from_Matrix(M, radicals_limit=1)
     domain = DOM.domain
     if domain == EX and use_domain is not True:
         use_domain = False
