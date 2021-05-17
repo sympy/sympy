@@ -2124,5 +2124,12 @@ def test_non_string_equality():
     assert (x != BadRepr()) is True
 
 def test_expr_free_symbols():
-    assert (2*exp(x)-3).expr_free_symbols == {x}
-    assert (4*y+3*x).expr_free_symbols == {x, y}
+    from sympy import IndexedBase
+    assert pi.expr_free_symbols == set()
+    assert (x + 2*y).expr_free_symbols == {x, y}
+    assert Derivative(2*x, y).expr_free_symbols == {x}
+    i = Integral(2*x, (y, z))
+    assert i.expr_free_symbols == i.function.free_symbols
+    assert Function('f')(x + 4).expr_free_symbols == {x}
+    b = 4 * IndexedBase(x)[y]
+    assert b.expr_free_symbols == {b.args[1]}
