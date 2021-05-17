@@ -5,7 +5,7 @@ from sympy import (
     integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol, summation,
-    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper
+    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper, Heaviside
 )
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.complexes import periodic_argument
@@ -402,6 +402,11 @@ def test_issue_13749():
 def test_issue_18133():
     assert integrate(exp(x)/(1 + x)**2, x) == NonElementaryIntegral(exp(x)/(x + 1)**2, x)
 
+
+def test_issue_21426():
+    # test integration of the Heaviside function
+    assert simplify(integrate(Heaviside(x - y), (x, a, b)) \
+        + (a - y)*Heaviside(a - y, Rational(1, 2)) - (b - y)*Heaviside(b - y, Rational(1, 2))) == 0
 
 def test_matrices():
     M = Matrix(2, 2, lambda i, j: (i + j + 1)*sin((i + j + 1)*x))

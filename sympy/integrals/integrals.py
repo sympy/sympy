@@ -1082,6 +1082,9 @@ class Integral(AddWithLimits):
                 except NotImplementedError:
                     from sympy.integrals.meijerint import _debug
                     _debug('NotImplementedError from meijerint_definite')
+                if isinstance(h, Piecewise) and len(self.limits[-1]) == 3:
+                    # special methods are needed for definite integrals
+                    h = None
                 if h is not None:
                     parts.append(coeff * h)
                     continue
