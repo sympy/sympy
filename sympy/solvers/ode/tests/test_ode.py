@@ -60,6 +60,8 @@ def test_dsolve_all_hint():
         'nth_algebraic_Integral': Eq(f(x), C1),
         '1st_linear': Eq(f(x), C1),
         '1st_linear_Integral': Eq(f(x), C1 + Integral(0, x)),
+        '1st_exact': Eq(f(x), C1),
+        '1st_exact_Integral': Eq(Subs(Integral(0, x) + Integral(1, _y), _y, f(x)), C1),
         'lie_group': Eq(f(x), C1),
         '1st_homogeneous_coeff_subs_dep_div_indep': Eq(f(x), C1),
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral': Eq(log(x), C1 + Integral(-1/_u1, (_u1, f(x)/x))),
@@ -168,6 +170,7 @@ def test_classify_ode():
     assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == (
         'nth_algebraic',
         'separable',
+        '1st_exact',
         '1st_linear',
         'Bernoulli',
         '1st_homogeneous_coeff_best',
@@ -178,6 +181,7 @@ def test_classify_ode():
         'nth_linear_euler_eq_homogeneous',
         'nth_algebraic_Integral',
         'separable_Integral',
+        '1st_exact_Integral',
         '1st_linear_Integral',
         'Bernoulli_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
@@ -185,6 +189,7 @@ def test_classify_ode():
     assert classify_ode(f(x).diff(x)**2, f(x)) == ('factorable',
          'nth_algebraic',
          'separable',
+         '1st_exact',
          '1st_linear',
          'Bernoulli',
          '1st_homogeneous_coeff_best',
@@ -196,6 +201,7 @@ def test_classify_ode():
          'nth_linear_euler_eq_homogeneous',
          'nth_algebraic_Integral',
          'separable_Integral',
+         '1st_exact_Integral',
          '1st_linear_Integral',
          'Bernoulli_Integral',
          '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
@@ -204,12 +210,14 @@ def test_classify_ode():
     a = classify_ode(Eq(f(x).diff(x) + f(x), x), f(x))
     b = classify_ode(f(x).diff(x)*f(x) + f(x)*f(x) - x*f(x), f(x))
     c = classify_ode(f(x).diff(x)/f(x) + f(x)/f(x) - x/f(x), f(x))
-    assert a == ('1st_linear',
+    assert a == ('1st_exact',
+        '1st_linear',
         'Bernoulli',
         'almost_linear',
         '1st_power_series', "lie_group",
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
+        '1st_exact_Integral',
         '1st_linear_Integral',
         'Bernoulli_Integral',
         'almost_linear_Integral',
@@ -236,8 +244,8 @@ def test_classify_ode():
 
     assert classify_ode(
         2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)
-    ) == ('Bernoulli', 'almost_linear', 'lie_group',
-        'Bernoulli_Integral', 'almost_linear_Integral')
+    ) == ('1st_exact', 'Bernoulli', 'almost_linear', 'lie_group',
+        '1st_exact_Integral', 'Bernoulli_Integral', 'almost_linear_Integral')
     assert 'Riccati_special_minus2' in \
         classify_ode(2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2), f(x))
     raises(ValueError, lambda: classify_ode(x + f(x, y).diff(x).diff(
@@ -274,17 +282,18 @@ def test_classify_ode():
                         prep=True) == ans
 
     assert classify_ode(Eq(2*x**3*f(x).diff(x), 0), f(x)) == \
-        ('factorable', 'nth_algebraic', 'separable', '1st_linear',
-         'Bernoulli', '1st_power_series',
+        ('factorable', 'nth_algebraic', 'separable', '1st_exact',
+         '1st_linear', 'Bernoulli', '1st_power_series',
          'lie_group', 'nth_linear_euler_eq_homogeneous',
-         'nth_algebraic_Integral', 'separable_Integral',
+         'nth_algebraic_Integral', 'separable_Integral', '1st_exact_Integral',
          '1st_linear_Integral', 'Bernoulli_Integral')
 
 
     assert classify_ode(Eq(2*f(x)**3*f(x).diff(x), 0), f(x)) == \
-        ('factorable', 'nth_algebraic', 'separable', '1st_linear', 'Bernoulli',
-         '1st_power_series', 'lie_group', 'nth_algebraic_Integral',
-         'separable_Integral', '1st_linear_Integral', 'Bernoulli_Integral')
+        ('factorable', 'nth_algebraic', 'separable', '1st_exact', '1st_linear',
+         'Bernoulli', '1st_power_series', 'lie_group', 'nth_algebraic_Integral',
+         'separable_Integral', '1st_exact_Integral', '1st_linear_Integral',
+         'Bernoulli_Integral')
     # test issue 13864
     assert classify_ode(Eq(diff(f(x), x) - f(x)**x, 0), f(x)) == \
         ('1st_power_series', 'lie_group')
@@ -710,11 +719,11 @@ def test_undetermined_coefficients_match():
 def test_issue_4785():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
-    assert classify_ode(eq, f(x)) == ('1st_linear', 'almost_linear',
-        '1st_power_series', 'lie_group',
+    assert classify_ode(eq, f(x)) == ('1st_exact', '1st_linear',
+        'almost_linear', '1st_power_series', 'lie_group',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
-        '1st_linear_Integral', 'almost_linear_Integral',
+        '1st_exact_Integral', '1st_linear_Integral', 'almost_linear_Integral',
         'nth_linear_constant_coeff_variation_of_parameters_Integral')
     # issue 4864
     eq = (x**2 + f(x)**2)*f(x).diff(x) - 2*x*f(x)
