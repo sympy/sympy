@@ -435,7 +435,7 @@ class CoordSystem(Basic):
     @classmethod
     @cacheit
     def _indirect_transformation(cls, sys1, sys2):
-        # Find the transformation relation betweentwo indirectly connected
+        # Find the transformation relation between two indirectly connected
         # coordinate systems
         rel = sys1.relations
         path = cls._dijkstra(sys1, sys2)
