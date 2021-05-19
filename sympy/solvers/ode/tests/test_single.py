@@ -7,8 +7,8 @@ This File contains test functions for the individual hints used for solving ODEs
 
 Examples of each solver will be returned by _get_examples_ode_sol_name_of_solver.
 
-Examples should have a key 'XFAIL' which stores the list of hints if they are
-expected to fail for that hint.
+Examples should have a key 'XFAIL_raise' which stores the list of hints if they are
+expected to raise an error for that hint.
 
 Functions that are for internal use:
 
@@ -149,7 +149,8 @@ def _add_example_keys(func):
             temp={
                 'eq': solver['examples'][example]['eq'],
                 'sol': solver['examples'][example]['sol'],
-                'XFAIL': solver['examples'][example].get('XFAIL', []),
+                'XFAIL_raise': solver['examples'][example].get('XFAIL_raise', []),
+                'XFAIL_wrong': solver['examples'][example].get('XFAIL_wrong', []),
                 'func': solver['examples'][example].get('func',solver['func']),
                 'example_name': example,
                 'slow': solver['examples'][example].get('slow', False),
@@ -202,14 +203,16 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
     eq = ode_example['eq']
     expected_sol = ode_example['sol']
     example = ode_example['example_name']
-    xfail = our_hint in ode_example['XFAIL']
+    xfail_raise = our_hint in ode_example['XFAIL_raise']
+    xfail_wrong = our_hint in ode_example['XFAIL_wrong']
     func = ode_example['func']
     result = {'msg': '', 'xpass_msg': ''}
     simplify_flag=ode_example['simplify_flag']
     checkodesol_XFAIL = ode_example['checkodesol_XFAIL']
     dsolve_too_slow = ode_example['dsolve_too_slow']
     checkodesol_too_slow = ode_example['checkodesol_too_slow']
-    xpass = True
+    xpass_raise = True
+    xpass_wrong = True
     if solver_flag:
         if our_hint not in classify_ode(eq, func):
             message = hint_message.format(example=example, eq=eq, our_hint=our_hint)
@@ -232,10 +235,10 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
             if not solver_flag:
                 traceback.print_exc()
             result['msg'] = exception_msg.format(e=str(e), hint=our_hint, example=example, eq=eq)
-            if solver_flag and not xfail:
+            if solver_flag and not xfail_raise:
                 print(result['msg'])
                 raise
-            xpass = False
+            xpass_raise = False
 
         if solver_flag and dsolve_sol!=[]:
             expect_sol_check = False
@@ -253,7 +256,7 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
                     if sub_sol.has(Dummy):
                         expect_sol_check = not _test_dummy_sol(sub_sol, dsolve_sol)
 
-            if expect_sol_check:
+            if expect_sol_check and not xfail_wrong:
                 message = expected_sol_message.format(example=example, eq=eq, sol=expected_sol, dsolve_sol=dsolve_sol)
                 raise AssertionError(message)
 
@@ -265,7 +268,7 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
                 if not checkodesol_XFAIL:
                     if checkodesol(eq, dsolve_sol, func, solve_for_func=False) != expected_checkodesol:
                         result['unsolve_list'] = example
-                        xpass = False
+                        xpass_wrong = False
                         message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
                         if solver_flag:
                             message = checkodesol_msg.format(example=example, eq=eq)
@@ -273,8 +276,11 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
                         else:
                             result['msg'] = 'AssertionError: ' + message
 
-        if xpass and xfail:
-            result['xpass_msg'] = example + "is now passing for the hint" + our_hint
+        if xpass_raise and xfail_raise:
+            result['xpass_msg'] = example + "does not raise any error for the hint" + our_hint
+
+        if xpass_wrong and xfail_wrong:
+            result['xpass_msg'] = example + "now matches with expected solution for" + our_hint
     return result
 
 
@@ -283,7 +289,7 @@ def _test_all_examples_for_one_hint(our_hint, all_examples=[], runxfail=None):
         all_examples = _get_all_examples()
     match_list, unsolve_list, exception_list = [], [], []
     for ode_example in all_examples:
-        xfail = our_hint in ode_example['XFAIL']
+        xfail = our_hint in ode_example['XFAIL_raise']
         if runxfail and not xfail:
             continue
         if xfail:
@@ -636,7 +642,7 @@ def _get_examples_ode_sol_euler_homogeneous():
     'euler_hom_07': {
         'eq': sin(x)*x**2*f(x).diff(x, 2) + sin(x)*x*f(x).diff(x) + sin(x)*f(x),
         'sol': [Eq(f(x), C1*sin(log(x)) + C2*cos(log(x)))],
-        'XFAIL': ['2nd_power_series_regular','nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients']
+        'XFAIL_raise': ['2nd_power_series_regular','nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients']
     },
 
     'euler_hom_08': {
@@ -749,7 +755,7 @@ def _get_examples_ode_sol_bernoulli():
     'bernoulli_01': {
         'eq': Eq(x*f(x).diff(x) + f(x) - f(x)**2, 0),
         'sol': [Eq(f(x), 1/(C1*x + 1))],
-        'XFAIL': ['separable_reduced']
+        'XFAIL_raise': ['separable_reduced']
     },
 
     'bernoulli_02': {
@@ -810,7 +816,7 @@ def _get_examples_ode_sol_factorable():
     'fact_01': {
         'eq': f(x) + f(x)*f(x).diff(x),
         'sol': [Eq(f(x), 0), Eq(f(x), C1 - x)],
-        'XFAIL': ['separable', '1st_exact', '1st_linear', 'Bernoulli', '1st_homogeneous_coeff_best',
+        'XFAIL_raise': ['separable', '1st_exact', '1st_linear', 'Bernoulli', '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep', '1st_homogeneous_coeff_subs_dep_div_indep',
         'lie_group', 'nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
@@ -821,7 +827,7 @@ def _get_examples_ode_sol_factorable():
     'fact_02': {
         'eq': f(x)*(f(x).diff(x)+f(x)*x+2),
         'sol': [Eq(f(x), (C1 - sqrt(2)*sqrt(pi)*erfi(sqrt(2)*x/2))*exp(-x**2/2)), Eq(f(x), 0)],
-        'XFAIL': ['Bernoulli', '1st_linear', 'lie_group']
+        'XFAIL_raise': ['Bernoulli', '1st_linear', 'lie_group']
     },
 
     'fact_03': {
@@ -895,13 +901,13 @@ def _get_examples_ode_sol_factorable():
     'fact_12': {
         'eq': exp(f(x).diff(x))-f(x)**2,
         'sol': [Eq(NonElementaryIntegral(1/log(y**2), (y, f(x))), C1 + x)],
-        'XFAIL': ['lie_group'] #It shows not implemented error for lie_group.
+        'XFAIL_raise': ['lie_group'] #It shows not implemented error for lie_group.
     },
 
     'fact_13': {
         'eq': f(x).diff(x)**2 - f(x)**3,
         'sol': [Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))],
-        'XFAIL': ['lie_group'] #It shows not implemented error for lie_group.
+        'XFAIL_raise': ['lie_group'] #It shows not implemented error for lie_group.
     },
 
     'fact_14': {
@@ -1077,7 +1083,7 @@ def _get_examples_ode_sol_nth_algebraic():
     'algeb_05': {
         'eq': (1 - sin(f(x))) * f(x).diff(x),
         'sol': [Eq(f(x), C1)],
-        'XFAIL': ['separable']  #It raised exception.
+        'XFAIL_raise': ['separable']  #It raised exception.
     },
 
     'algeb_06': {
@@ -1108,7 +1114,7 @@ def _get_examples_ode_sol_nth_algebraic():
     'algeb_11': {
         'eq': f(x) + f(x)*f(x).diff(x),
         'sol': [Eq(f(x), 0), Eq(f(x), C1 - x)],
-        'XFAIL': ['separable', '1st_exact', '1st_linear', 'Bernoulli', '1st_homogeneous_coeff_best',
+        'XFAIL_raise': ['separable', '1st_exact', '1st_linear', 'Bernoulli', '1st_homogeneous_coeff_best',
          '1st_homogeneous_coeff_subs_indep_div_dep', '1st_homogeneous_coeff_subs_dep_div_indep',
          'lie_group', 'nth_linear_constant_coeff_undetermined_coefficients',
          'nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients',
@@ -1120,13 +1126,13 @@ def _get_examples_ode_sol_nth_algebraic():
     'algeb_12': {
         'eq': Derivative(x*f(x), x, x, x),
         'sol': [Eq(f(x), (C1 + C2*x + C3*x**2) / x)],
-        'XFAIL': ['nth_algebraic']  # It passes only when prep=False is set in dsolve.
+        'XFAIL_raise': ['nth_algebraic']  # It passes only when prep=False is set in dsolve.
     },
 
     'algeb_13': {
         'eq': Eq(Derivative(x*Derivative(f(x), x), x)/x, exp(x)),
         'sol': [Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))],
-        'XFAIL': ['nth_algebraic']  # It passes only when prep=False is set in dsolve.
+        'XFAIL_raise': ['nth_algebraic']  # It passes only when prep=False is set in dsolve.
     },
 
      # These are simple tests from the old ode module example 14-18
@@ -1683,7 +1689,7 @@ def _get_examples_ode_sol_separable():
     'separable_22': {
         'eq': f(x).diff(x) - exp(x + f(x)),
         'sol': [Eq(f(x), log(-1/(C1 + exp(x))))],
-        'XFAIL': ['lie_group'] #It shows 'NoneType' object is not subscriptable for lie_group.
+        'XFAIL_raise': ['lie_group'] #It shows 'NoneType' object is not subscriptable for lie_group.
     },
 
     # https://github.com/sympy/sympy/issues/7081
@@ -1741,7 +1747,7 @@ def _get_examples_ode_sol_1st_exact():
     '1st_exact_02': {
         'eq': (2*x*f(x) + 1)/f(x) + (f(x) - x)/f(x)**2*f(x).diff(x),
         'sol': [Eq(f(x), exp(C1 - x**2 + LambertW(-x*exp(-C1 + x**2))))],
-        'XFAIL': ['lie_group'], #It shows dsolve raises an exception: List index out of range for lie_group
+        'XFAIL_raise': ['lie_group'], #It shows dsolve raises an exception: List index out of range for lie_group
         'slow': True,
         'checkodesol_XFAIL':True
     },
@@ -1749,7 +1755,7 @@ def _get_examples_ode_sol_1st_exact():
     '1st_exact_03': {
         'eq': 2*x + f(x)*cos(x) + (2*f(x) + sin(x) - sin(f(x)))*f(x).diff(x),
         'sol': [Eq(f(x)*sin(x) + cos(f(x)) + x**2 + f(x)**2, C1)],
-        'XFAIL': ['lie_group'], #It goes into infinite loop for lie_group.
+        'XFAIL_raise': ['lie_group'], #It goes into infinite loop for lie_group.
         'slow': True,
     },
 
@@ -2060,7 +2066,7 @@ def _get_examples_ode_sol_2nd_nonlinear_autonomous_conserved():
             Eq(Integral(1/sqrt(C1 - 2*_u*asin(_u) - 2*sqrt(1 - _u**2)), (_u, f(x))), C2 - x)
         ],
         'simplify_flag': False,
-        'XFAIL': ['2nd_nonlinear_autonomous_conserved_Integral']
+        'XFAIL_raise': ['2nd_nonlinear_autonomous_conserved_Integral']
     }
     }
     }
@@ -2077,7 +2083,7 @@ def _get_examples_ode_sol_separable_reduced():
         'eq': x* df  + f(x)* (1 / (x**2*f(x) - 1)),
         'sol': [Eq(log(x**2*f(x))/3 + log(x**2*f(x) - Rational(3, 2))/6, C1 + log(x))],
         'simplify_flag': False,
-        'XFAIL': ['lie_group'], #It hangs.
+        'XFAIL_raise': ['lie_group'], #It hangs.
     },
 
     #Note: 'separable_reduced_02' is referred in 'separable_reduced_11'
@@ -2123,7 +2129,7 @@ def _get_examples_ode_sol_separable_reduced():
         'eq': Eq(f(x).diff(x) + (f(x)+3)*f(x)/(x*(f(x)+2)), 0),
         'sol': [Eq(-log(f(x) + 3)/3 - 2*log(f(x))/3, C1 + log(x))],
         'simplify_flag': False,
-        'XFAIL': ['lie_group'], #It hangs.
+        'XFAIL_raise': ['lie_group'], #It hangs.
     },
 
     'separable_reduced_09': {
@@ -2134,7 +2140,7 @@ def _get_examples_ode_sol_separable_reduced():
     'separable_reduced_10': {
         'eq': Eq(f(x).diff(x) + (f(x)**2+f(x))*f(x)/(x), 0),
         'sol': [Eq(- log(x) - log(f(x) + 1) + log(f(x)) + 1/f(x), C1)],
-        'XFAIL': ['lie_group'],#No algorithms are implemented to solve equation -C1 + x*(_y + 1)*exp(-1/_y)/_y
+        'XFAIL_raise': ['lie_group'],#No algorithms are implemented to solve equation -C1 + x*(_y + 1)*exp(-1/_y)/_y
 
     },
 
@@ -2207,13 +2213,13 @@ def _get_examples_ode_sol_lie_group():
     'lie_group_04': {
         'eq': f(x).diff(x) - (f(x) - x*log(x))**2/x**2 + log(x),
         'sol': [],
-        'XFAIL': ['lie_group'],
+        'XFAIL_raise': ['lie_group'],
     },
 
     'lie_group_05': {
         'eq': f(x).diff(x)**2,
         'sol': [Eq(f(x), C1)],
-        'XFAIL': ['factorable'],  #It raises Not Implemented error
+        'XFAIL_raise': ['factorable'],  #It raises Not Implemented error
     },
 
     'lie_group_06': {
@@ -2240,7 +2246,7 @@ def _get_examples_ode_sol_lie_group():
     'lie_group_10': {
         'eq': x**2*(f(x).diff(x)) - f(x) + x**2*exp(x - (1/x)),
         'sol': [Eq(f(x), -((C1 + exp(x))*exp(-1/x)))],
-        'XFAIL': ['factorable'], #It raises Recursion Error (maixmum depth exceeded)
+        'XFAIL_raise': ['factorable'], #It raises Recursion Error (maixmum depth exceeded)
     },
 
     'lie_group_11': {
