@@ -49,6 +49,9 @@ from their truth tables-
 Boolean functions
 -----------------
 
+.. autoclass:: sympy.logic.boolalg::Boolean
+   :members:
+
 .. autoclass:: sympy.logic.boolalg::BooleanTrue
    :members:
 
