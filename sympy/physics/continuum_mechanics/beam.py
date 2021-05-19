@@ -8,6 +8,7 @@ from sympy.solvers import linsolve
 from sympy.printing import sstr
 from sympy.functions import SingularityFunction, Piecewise, factorial
 from sympy.core import sympify
+from sympy.simplify.simplify import nsimplify
 from sympy.integrals import integrate
 from sympy.series import limit
 from sympy.plotting import plot, PlotGrid
@@ -115,7 +116,7 @@ class Beam:
             symbols for integration constants in cases where boundary conditions
             are not sufficient to solve them.
         """
-        self.length = length
+        self.length = nsimplify(length)
         self.elastic_modulus = elastic_modulus
         if isinstance(second_moment, GeometryEntity):
             self.cross_section = second_moment
@@ -381,7 +382,7 @@ class Beam:
         (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
             + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
         """
-        loc = sympify(loc)
+        loc = nsimplify(loc)
         self._applied_supports.append((loc, type))
         if type == "pin" or type == "roller":
             reaction_load = Symbol('R_'+str(loc))
@@ -454,14 +455,15 @@ class Beam:
 
         """
         x = self.variable
-        value = sympify(value)
-        start = sympify(start)
-        order = sympify(order)
+        value = nsimplify(value)
+        start = nsimplify(start)
+        order = nsimplify(order)
 
         self._applied_loads.append((value, start, order, end))
         self._load += value*SingularityFunction(x, start, order)
 
         if end:
+            end = nsimplify(end)
             # load has an end point within the length of the beam.
             self._handle_end(x, value, start, order, end, type="apply")
 
@@ -513,9 +515,9 @@ class Beam:
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1)
         """
         x = self.variable
-        value = sympify(value)
-        start = sympify(start)
-        order = sympify(order)
+        value = nsimplify(value)
+        start = nsimplify(start)
+        order = nsimplify(order)
 
         if (value, start, order, end) in self._applied_loads:
             self._load -= value*SingularityFunction(x, start, order)
@@ -525,6 +527,7 @@ class Beam:
             raise ValueError(msg)
 
         if end:
+            end = nsimplify(end)
             # load has an end point within the length of the beam.
             self._handle_end(x, value, start, order, end, type="remove")
 
@@ -2001,9 +2004,9 @@ class Beam3D(Beam):
             - ... so on.
         """
         x = self.variable
-        value = sympify(value)
-        start = sympify(start)
-        order = sympify(order)
+        value = nsimplify(value)
+        start = nsimplify(start)
+        order = nsimplify(order)
 
         if dir == "x":
             if not order == -1:
@@ -2039,9 +2042,9 @@ class Beam3D(Beam):
             - ... so on.
         """
         x = self.variable
-        value = sympify(value)
-        start = sympify(start)
-        order = sympify(order)
+        value = nsimplify(value)
+        start = nsimplify(start)
+        order = nsimplify(order)
 
         if dir == "x":
             if not order == -2:
@@ -2057,6 +2060,7 @@ class Beam3D(Beam):
             self._load_Singularity[0] += value*SingularityFunction(x, start, order)
 
     def apply_support(self, loc, type="fixed"):
+        loc = nsimplify(loc)
         if type == "pin" or type == "roller":
             reaction_load = Symbol('R_'+str(loc))
             self._reaction_loads[reaction_load] = reaction_load
