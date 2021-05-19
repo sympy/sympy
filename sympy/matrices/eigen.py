@@ -22,16 +22,6 @@ from .determinant import _find_reasonable_pivot
 from .utilities import _iszero
 
 
-def _eigenvals_triangular(M, multiple=False):
-    """A fast decision for eigenvalues of an upper or a lower triangular
-    matrix.
-    """
-    diagonal_entries = [M[i, i] for i in range(M.rows)]
-    if multiple:
-        return diagonal_entries
-    return dict(Counter(diagonal_entries))
-
-
 def _eigenvals_eigenvects_mpmath(M):
     norm2 = lambda v: mp.sqrt(sum(i**2 for i in v))
 
@@ -167,9 +157,6 @@ def _eigenvals(
     if not M.is_square:
         raise NonSquareMatrixError("{} must be a square matrix.".format(M))
 
-    if M.is_upper or M.is_lower:
-        return _eigenvals_triangular(M, multiple=multiple)
-
     if all(x.is_number for x in M) and M.has(Float):
         return _eigenvals_mpmath(M, multiple=multiple)
 
@@ -199,7 +186,7 @@ eigenvals_error_message = \
 
 def _eigenvals_list(
     M, error_when_incomplete=True, simplify=False, **flags):
-    iblocks = M.connected_components()
+    iblocks = M.strongly_connected_components()
     all_eigs = []
     for b in iblocks:
         block = M[b, b]
@@ -234,7 +221,7 @@ def _eigenvals_list(
 
 def _eigenvals_dict(
     M, error_when_incomplete=True, simplify=False, **flags):
-    iblocks = M.connected_components()
+    iblocks = M.strongly_connected_components()
     all_eigs = {}
     for b in iblocks:
         block = M[b, b]
