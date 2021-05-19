@@ -160,6 +160,11 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
 
     collect_const, collect_sqrt, rcollect
     """
+    _eval_collect = getattr(expr, '_eval_collect', None)
+    if _eval_collect is not None:
+        return _eval_collect(syms, func, evaluate,
+                             exact, distribute_order_term)
+
     from sympy.core.assumptions import assumptions
     from sympy.utilities.iterables import sift
     from sympy.core.symbol import Dummy, Wild

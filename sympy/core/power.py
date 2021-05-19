@@ -284,6 +284,10 @@ class Pow(Expr):
 
         # XXX: This should raise TypeError once deprecation period is over:
         if not (isinstance(b, Expr) and isinstance(e, Expr)):
+            obj = getattr(b,'_eval_power',None)
+            if obj is not None:
+                return obj(e)
+
             SymPyDeprecationWarning(
                 feature="Pow with non-Expr args",
                 useinstead="Expr args",

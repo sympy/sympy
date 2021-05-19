@@ -592,6 +592,11 @@ def test_sympy__core__containers__Tuple():
     assert _test_args(Tuple(x, y, z, 2))
 
 
+def test_sympy__equation__equation__Equation():
+    from sympy.equation.equation import Equation
+    assert _test_args(Equation(1,1))
+
+
 def test_sympy__core__expr__AtomicExpr():
     from sympy.core.expr import AtomicExpr
     assert _test_args(AtomicExpr())

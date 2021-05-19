@@ -454,6 +454,11 @@ class Function(Application, Expr):
             return UndefinedFunction(*args, **options)
 
         n = len(args)
+        from sympy.equation.equation import Equation
+        if (n > 0) and isinstance(args[0],Equation):
+            # simple override for Equation class.
+            return args[0].apply(cls, *args[1:], **options)
+
         if n not in cls.nargs:
             # XXX: exception message must be in exactly this format to
             # make it work with NumPy's functions like vectorize(). See,
