@@ -124,14 +124,14 @@ def test_SDM_mul():
 def test_SDM_matmul():
     A = SDM({0:{0:ZZ(2)}}, (2, 2), ZZ)
     B = SDM({0:{0:ZZ(4)}}, (2, 2), ZZ)
-    assert A.matmul(A) == B
+    assert A.matmul(A) == A*A == B
 
     C = SDM({0:{0:ZZ(2)}}, (2, 2), QQ)
     raises(DDMDomainError, lambda: A.matmul(C))
 
     A = SDM({0:{0:ZZ(1), 1:ZZ(2)}, 1:{0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
     B = SDM({0:{0:ZZ(7), 1:ZZ(10)}, 1:{0:ZZ(15), 1:ZZ(22)}}, (2, 2), ZZ)
-    assert A.matmul(A) == B
+    assert A.matmul(A) == A*A == B
 
     A22 = SDM({0:{0:ZZ(4)}}, (2, 2), ZZ)
     A32 = SDM({0:{0:ZZ(2)}}, (3, 2), ZZ)
@@ -148,33 +148,36 @@ def test_SDM_matmul():
 
     A = SDM({0: {0: ZZ(-1), 1: ZZ(1)}}, (1, 2), ZZ)
     B = SDM({0: {0: ZZ(-1)}, 1: {0: ZZ(-1)}}, (2, 1), ZZ)
-    assert A.matmul(B) == SDM({}, (1, 1), ZZ)
+    assert A.matmul(B) == A*B == SDM({}, (1, 1), ZZ)
 
 
 def test_SDM_add():
     A = SDM({0:{1:ZZ(1)}, 1:{0:ZZ(2), 1:ZZ(3)}}, (2, 2), ZZ)
     B = SDM({0:{0:ZZ(1)}, 1:{0:ZZ(-2), 1:ZZ(3)}}, (2, 2), ZZ)
     C = SDM({0:{0:ZZ(1), 1:ZZ(1)}, 1:{1:ZZ(6)}}, (2, 2), ZZ)
-    assert A.add(B) == C
+    assert A.add(B) == B.add(A) == A + B == B + A == C
 
     A = SDM({0:{1:ZZ(1)}}, (2, 2), ZZ)
     B = SDM({0:{0:ZZ(1)}, 1:{0:ZZ(-2), 1:ZZ(3)}}, (2, 2), ZZ)
     C = SDM({0:{0:ZZ(1), 1:ZZ(1)}, 1:{0:ZZ(-2), 1:ZZ(3)}}, (2, 2), ZZ)
-    assert A.add(B) == C
-    assert B.add(A) == C
+    assert A.add(B) == B.add(A) == A + B == B + A == C
+
+    raises(TypeError, lambda: A + [])
 
 
 def test_SDM_sub():
     A = SDM({0:{1:ZZ(1)}, 1:{0:ZZ(2), 1:ZZ(3)}}, (2, 2), ZZ)
     B = SDM({0:{0:ZZ(1)}, 1:{0:ZZ(-2), 1:ZZ(3)}}, (2, 2), ZZ)
     C = SDM({0:{0:ZZ(-1), 1:ZZ(1)}, 1:{0:ZZ(4)}}, (2, 2), ZZ)
-    assert A.sub(B) == C
+    assert A.sub(B) == A - B == C
+
+    raises(TypeError, lambda: A - [])
 
 
 def test_SDM_neg():
     A = SDM({0:{1:ZZ(1)}, 1:{0:ZZ(2), 1:ZZ(3)}}, (2, 2), ZZ)
     B = SDM({0:{1:ZZ(-1)}, 1:{0:ZZ(-2), 1:ZZ(-3)}}, (2, 2), ZZ)
-    assert A.neg() == B
+    assert A.neg() == -A == B
 
 
 def test_SDM_convert_to():
@@ -197,6 +200,22 @@ def test_SDM_hstack():
     assert SDM.hstack(A) == A
     assert SDM.hstack(A, A) == AA
     assert SDM.hstack(A, B) == AB
+
+
+def test_SDM_vstack():
+    A = SDM({0:{1:ZZ(1)}}, (2, 2), ZZ)
+    B = SDM({1:{1:ZZ(1)}}, (2, 2), ZZ)
+    AA = SDM({0:{1:ZZ(1)}, 2:{1:ZZ(1)}}, (4, 2), ZZ)
+    AB = SDM({0:{1:ZZ(1)}, 3:{1:ZZ(1)}}, (4, 2), ZZ)
+    assert SDM.vstack(A) == A
+    assert SDM.vstack(A, A) == AA
+    assert SDM.vstack(A, B) == AB
+
+
+def test_SDM_applyfunc():
+    A = SDM({0:{1:ZZ(1)}}, (2, 2), ZZ)
+    B = SDM({0:{1:ZZ(2)}}, (2, 2), ZZ)
+    assert A.applyfunc(lambda x: 2*x, ZZ) == B
 
 
 def test_SDM_inv():

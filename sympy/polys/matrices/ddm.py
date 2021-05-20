@@ -262,6 +262,25 @@ class DDM(list):
 
         return DDM(Anew, (rows, cols), A.domain)
 
+    def vstack(A, B):
+        Anew = list(A.copy())
+        rows, cols = A.shape
+        domain = A.domain
+
+        Brows, Bcols = B.shape
+        assert Bcols == cols
+        assert B.domain == domain
+
+        rows += Brows
+
+        Anew.extend(B.copy())
+
+        return DDM(Anew, (rows, cols), A.domain)
+
+    def applyfunc(self, func, domain):
+        elements = (list(map(func, row)) for row in self)
+        return DDM(elements, self.shape, domain)
+
     def rref(a):
         """Reduced-row echelon form of a and list of pivots"""
         b = a.copy()

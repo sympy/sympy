@@ -224,6 +224,21 @@ def test_DDM_hstack():
     assert Ah.domain == ZZ
     assert Ah == DDM([[ZZ(1), ZZ(2), ZZ(3), ZZ(4), ZZ(5)]], (1, 5), ZZ)
 
+def test_DDM_vstack():
+
+    A = DDM([[ZZ(1)], [ZZ(2)], [ZZ(3)]], (3, 1), ZZ)
+    B = DDM([[ZZ(4)], [ZZ(5)]], (2, 1), ZZ)
+    Ah = A.vstack(B)
+
+    assert Ah.shape == (5, 1)
+    assert Ah.domain == ZZ
+    assert Ah == DDM([[ZZ(1)], [ZZ(2)], [ZZ(3)], [ZZ(4)], [ZZ(5)]], (5, 1), ZZ)
+
+def test_DDM_applyfunc():
+    A = DDM([[ZZ(1), ZZ(2), ZZ(3)]], (1, 3), ZZ)
+    B = DDM([[ZZ(2), ZZ(4), ZZ(6)]], (1, 3), ZZ)
+    assert A.applyfunc(lambda x: 2*x, ZZ) == B
+
 def test_DDM_rref():
 
     A = DDM([], (0, 4), QQ)

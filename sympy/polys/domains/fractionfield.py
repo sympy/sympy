@@ -86,7 +86,12 @@ class FractionField(Field, CompositeDomain):
 
     def from_QQ(K1, a, K0):
         """Convert a Python ``Fraction`` object to ``dtype``. """
-        return K1(K1.domain.convert(a, K0))
+        dom = K1.domain
+        conv = dom.convert_from
+        if dom.is_ZZ:
+            return K1(conv(K0.numer(a), K0)) / K1(conv(K0.denom(a), K0))
+        else:
+            return K1(conv(a, K0))
 
     def from_QQ_python(K1, a, K0):
         """Convert a Python ``Fraction`` object to ``dtype``. """
@@ -125,6 +130,8 @@ class FractionField(Field, CompositeDomain):
 
     def from_PolynomialRing(K1, a, K0):
         """Convert a polynomial to ``dtype``. """
+        if a.is_ground:
+            return K1.convert_from(a.coeff(1), K0.domain)
         try:
             return K1.new(a.set_ring(K1.field.ring))
         except (CoercionFailed, GeneratorsError):
