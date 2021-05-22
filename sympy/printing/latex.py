@@ -1601,6 +1601,9 @@ class LatexPrinter(Printer):
         return "%s %s %s" % (self._print(expr.lhs),
                              charmap[expr.rel_op], self._print(expr.rhs))
 
+    def _print_SymbolicRelation(self, expr):
+        return self._print_Relational(expr)
+
     def _print_Piecewise(self, expr):
         ecpairs = [r"%s & \text{for}\: %s" % (self._print(e), self._print(c))
                    for e, c in expr.args[:-1]]

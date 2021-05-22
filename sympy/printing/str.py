@@ -762,6 +762,19 @@ class StrPrinter(Printer):
                            self._relationals.get(expr.rel_op) or expr.rel_op,
                            self.parenthesize(expr.rhs, precedence(expr)))
 
+    def _print_SymbolicRelation(self, expr):
+        charmap = {
+            "==": "Eqn",
+        }
+
+        if expr.rel_op in charmap:
+            return '%s(%s, %s)' % (charmap[expr.rel_op], self._print(expr.lhs),
+                                   self._print(expr.rhs))
+
+        return '%s %s %s' % (self.parenthesize(expr.lhs, precedence(expr)),
+                           self._relationals.get(expr.rel_op) or expr.rel_op,
+                           self.parenthesize(expr.rhs, precedence(expr)))
+
     def _print_ComplexRootOf(self, expr):
         return "CRootOf(%s, %d)" % (self._print_Add(expr.expr,  order='lex'),
                                     expr.index)

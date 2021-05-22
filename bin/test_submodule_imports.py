@@ -30,6 +30,7 @@ submodule_whitelist = [
     'deprecated',
     'discrete',
     'external',
+    'equation',
     'functions',
     'geometry',
     'integrals',

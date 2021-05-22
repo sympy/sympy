@@ -15,6 +15,7 @@ from sympy import sin, Q, cos, gamma, Tuple, Integral, Sum
 from sympy.functions.elementary.exponential import exp
 from sympy.testing.pytest import raises
 from sympy.core import I, pi
+from sympy.equation import Eqn
 
 b1 = Basic()
 b2 = Basic(b1)
@@ -140,6 +141,14 @@ def test_subs_with_unicode_symbols():
 
     replaced = expr.subs('var1', 'x')
     assert replaced.name == 'x'
+
+
+def test_subs_with_Eqn():
+    assert b21.subs(Eqn(b2, b1)) == Basic(b1, b1)
+    assert b21.subs(Eqn(b2, b21)) == Basic(b21, b1)
+    assert b3.subs(Eqn(b2, b1)) == b2
+
+    assert b21.subs([Eqn(b2, b1), Eqn(b1, b2)]) == Basic(b2, b2)
 
 
 def test_atoms():
