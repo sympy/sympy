@@ -13,6 +13,7 @@ from sympy.integrals.meijerint import _dummy
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
 from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.matrices.matrices import MatrixBase
 
 
@@ -1145,7 +1146,7 @@ class LaplaceTransform(IntegralTransform):
         return plane, cond
 
 
-def laplace_transform(f, t, s, **hints):
+def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     r"""
     Compute the Laplace Transform `F(s)` of `f(t)`,
 
@@ -1168,6 +1169,14 @@ def laplace_transform(f, t, s, **hints):
     :func:`sympy.integrals.transforms.IntegralTransform.doit`. If ``noconds=True``,
     only `F` will be returned (i.e. not ``cond``, and also not the plane ``a``).
 
+    .. deprecated:: 1.9
+        Legacy behavior for matrices where ``laplace_transform`` with
+        ``noconds=False`` (the default) returns a Matrix whose elements are
+        tuples. The behavior of ``laplace_transform`` for matrices will change
+        in a future release of SymPy to return a tuple of the transformed
+        Matrix and the convergence conditions for the matrix as a whole. Use
+        ``legacy_matrix=False`` to enable the new behavior.
+
     Examples
     ========
 
@@ -1181,13 +1190,29 @@ def laplace_transform(f, t, s, **hints):
 
     inverse_laplace_transform, mellin_transform, fourier_transform
     hankel_transform, inverse_hankel_transform
+
     """
 
     if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
-        elements_trans = [laplace_transform(fij, t, s, **hints) for fij in f]
-        elements, avals, conditions = zip(*elements_trans)
-        f_laplace = type(f)(*f.shape, elements)
-        return f_laplace, Max(*avals), And(*conditions)
+
+        conds = not hints.get('noconds', False)
+
+        if conds and legacy_matrix:
+            SymPyDeprecationWarning(
+                feature="laplace_transform of a Matrix with noconds=False (default)",
+                useinstead="the option legacy_matrix=False to get the new behaviour",
+                issue=21504,
+                deprecated_since_version="1.9"
+            ).warn()
+            return f.applyfunc(lambda fij: laplace_transform(fij, t, s, **hints))
+        else:
+            elements_trans = [laplace_transform(fij, t, s, **hints) for fij in f]
+            if conds:
+                elements, avals, conditions = zip(*elements_trans)
+                f_laplace = type(f)(*f.shape, elements)
+                return f_laplace, Max(*avals), And(*conditions)
+            else:
+                return type(f)(*f.shape, elements_trans)
 
     return LaplaceTransform(f, t, s).doit(**hints)
 
