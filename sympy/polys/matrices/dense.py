@@ -149,7 +149,6 @@ def ddm_idet(a, K):
         return K.one
     n = len(a[0])
 
-    is_field = K.is_Field
     exquo = K.exquo
     # uf keeps track of the sign change from row swaps
     uf = K.one
