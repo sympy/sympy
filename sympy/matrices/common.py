@@ -3190,11 +3190,11 @@ class MatrixKind(Kind):
     >>> from sympy import Matrix
     >>> from sympy.matrices import MatrixKind
     >>> from sympy.core.kind import NumberKind
-    >>> boolM = Matrix([True, False])
-    >>> isinstance(boolM.kind, MatrixKind)
+    >>> M = Matrix([1, 2])
+    >>> isinstance(M.kind, MatrixKind)
     True
-    >>> boolM.kind is MatrixKind(NumberKind)
-    False
+    >>> M.kind is MatrixKind(NumberKind)
+    True
 
     See Also
     ========
