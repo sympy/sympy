@@ -516,11 +516,10 @@ def test_laplace_transform():
     # What is this testing:
     Ne(1/s, 1) & (0 < cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1)
 
-    assert LT(Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]]), t, s) ==\
-        Matrix([
-            [(1/(s - 1), 1, s > 1), ((s + 1)**(-2), 0, True)],
-            [((s + 1)**(-2), 0, True), (1/(s - 1), 1, s > 1)]
-        ])
+    assert LT(Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]]), t, s) == (
+            Matrix([[    1/(s - 1), (s + 1)**(-2)],
+                    [(s + 1)**(-2),     1/(s - 1)]]),
+            1, s > 1)
 
 
 def test_issue_8368_7173():

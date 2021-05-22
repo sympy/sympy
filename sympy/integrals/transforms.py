@@ -7,6 +7,7 @@ from sympy.core.function import Function
 from sympy.core.relational import _canonical, Ge, Gt
 from sympy.core.numbers import oo
 from sympy.core.symbol import Dummy
+from sympy.functions.elementary.miscellaneous import Max
 from sympy.integrals import integrate, Integral
 from sympy.integrals.meijerint import _dummy
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
@@ -1181,8 +1182,13 @@ def laplace_transform(f, t, s, **hints):
     inverse_laplace_transform, mellin_transform, fourier_transform
     hankel_transform, inverse_hankel_transform
     """
+
     if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
-        return f.applyfunc(lambda fij: laplace_transform(fij, t, s, **hints))
+        elements_trans = [laplace_transform(fij, t, s, **hints) for fij in f]
+        elements, avals, conditions = zip(*elements_trans)
+        f_laplace = type(f)(*f.shape, elements)
+        return f_laplace, Max(*avals), And(*conditions)
+
     return LaplaceTransform(f, t, s).doit(**hints)
 
 
