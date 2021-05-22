@@ -320,7 +320,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
             if not all(issubclass(typ, Expr) for typ in types):
                 SymPyDeprecationWarning(
                     feature="non-Expr objects in a Matrix",
-                    useinstead="list of lists or some other data structure",
+                    useinstead="list of lists, TableForm or some other data structure",
                     issue=21497,
                     deprecated_since_version="1.9"
                 ).warn()
