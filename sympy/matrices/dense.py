@@ -5,7 +5,6 @@ from sympy.core import SympifyError, Add
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
-from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.elementary.trigonometric import cos, sin
