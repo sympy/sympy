@@ -30,7 +30,7 @@ list of lists:
     >>> ddm_idet([[0, 1], [-1, 0]], QQ)
     1
     >>> A
-    [[-1, 0], [0, 1]]
+    [[-1, 0], [0, -1]]
 
 Note that ddm_idet modifies the input matrix in-place. It is recommended to
 use the DDM.det method as a friendlier interface to this instead which takes
