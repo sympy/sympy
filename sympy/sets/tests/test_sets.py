@@ -457,7 +457,7 @@ def test_intersect1():
     assert Union(Interval(0, 5), FiniteSet('ham')).intersect(FiniteSet(2, 3, 4, 5, 6)) == \
         Intersection(FiniteSet(2, 3, 4, 5, 6), Union(FiniteSet('ham'), Interval(0, 5)))
     assert Intersection(FiniteSet(1, 2, 3), Interval(2, x), Interval(3, y)) == \
-        Intersection(FiniteSet(3), Interval(2, x), Interval(3, y), evaluate=False)
+        Intersection(FiniteSet(3), Interval(3, Min(x, y)), evaluate=False)
     assert Intersection(FiniteSet(1, 2), Interval(0, 3), Interval(x, y)) == \
         Intersection({1, 2}, Interval(x, y), evaluate=False)
     assert Intersection(FiniteSet(1, 2, 4), Interval(0, 3), Interval(x, y)) == \
@@ -822,7 +822,7 @@ def test_contains():
     assert Union(Interval(1, 2), Interval(3, 4)).contains(x) == \
         Or(And(S.One <= x, x <= 2), And(S(3) <= x, x <= 4))
     assert Intersection(Interval(1, x), Interval(2, 3)).contains(y) == \
-        And(y <= 3, y <= x, S.One <= y, S(2) <= y)
+        And(S(2) <= y, y<= Min(3,x))
 
     assert (S.Complexes).contains(S.ComplexInfinity) == S.false
 

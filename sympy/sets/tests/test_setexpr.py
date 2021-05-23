@@ -192,9 +192,7 @@ def test_SetExpr_Intersection():
     set2 = Interval(w, z)
     inter = Intersection(set1, set2)
     se = SetExpr(inter)
-    assert exp(se).set == Intersection(
-        ImageSet(Lambda(x, exp(x)), set1),
-        ImageSet(Lambda(x, exp(x)), set2))
+    assert exp(se).set == Interval(exp(Max(w, x)), exp(Min(y, z)))
     assert cos(se).set == ImageSet(Lambda(x, cos(x)), inter)
 
 
