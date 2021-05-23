@@ -5,7 +5,7 @@ from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
     AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice,
-    Q, Eqn,)
+    Q)
 from sympy.core import Expr, Mul
 from sympy.core.parameters import _exp_is_pow
 from sympy.external import import_module
@@ -585,10 +585,6 @@ def test_Relational():
     assert str(Rel(x, y, "!=")) == "Ne(x, y)"
     assert str(Eq(x, 1) | Eq(x, 2)) == "Eq(x, 1) | Eq(x, 2)"
     assert str(Ne(x, 1) & Ne(x, 2)) == "Ne(x, 1) & Ne(x, 2)"
-
-
-def test_SymbolicRelation():
-    assert str(Eqn(x, y)) == 'Eqn(x, y)'
 
 
 def test_AppliedBinaryRelation():

@@ -220,13 +220,11 @@ class PrettyPrinter(Printer):
 
     def _print_Relational(self, e):
         op = prettyForm(' ' + xsym(e.rel_op) + ' ')
+
         l = self._print(e.lhs)
         r = self._print(e.rhs)
         pform = prettyForm(*stringPict.next(l, op, r))
         return pform
-
-    def _print_SymbolicRelation(self, expr):
-        return self._print_Relational(expr)
 
     def _print_Not(self, e):
         from sympy import Equivalent, Implies

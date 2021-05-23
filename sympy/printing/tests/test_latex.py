@@ -21,8 +21,7 @@ from sympy import (
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
     stieltjes, mathieuc, mathieus, mathieucprime, mathieusprime,
-    UnevaluatedExpr, Quaternion, I, KroneckerProduct, LambertW,
-    Ne, Gt, Ge, Lt, Le, Eqn,)
+    UnevaluatedExpr, Quaternion, I, KroneckerProduct, LambertW)
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
@@ -2608,19 +2607,6 @@ def test_unit_printing():
 def test_issue_17092():
     x_star = Symbol('x^*')
     assert latex(Derivative(x_star, x_star,2)) == r'\frac{d^{2}}{d \left(x^{*}\right)^{2}} x^{*}'
-
-
-def test_Relational():
-    assert latex(Eq(x, y)) == "x = y"
-    assert latex(Ne(x, y)) == r"x \neq y"
-    assert latex(Lt(x, y)) == "x < y"
-    assert latex(Gt(x, y)) == "x > y"
-    assert latex(Le(x, y)) == r"x \leq y"
-    assert latex(Ge(x, y)) == r"x \geq y"
-
-
-def test_SymbolicRelation():
-    assert latex(Eqn(x, y)) == "x = y"
 
 
 def test_latex_decimal_separator():
