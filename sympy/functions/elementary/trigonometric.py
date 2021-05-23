@@ -1574,7 +1574,7 @@ class cot(TrigonometricFunction):
                 z = Symbol('dummy', real=True)
                 P = ((z + I)**coeff).expand()
                 return (re(P)/im(P)).subs([(z, cot(terms))])
-        return 1/tan(arg)
+        return cot(arg)  # XXX sec and csc return 1/cos and 1/sin
 
     def _eval_is_finite(self):
         arg = self.args[0]
