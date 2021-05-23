@@ -195,7 +195,7 @@ def test_quadratic_non_perfect_slow():
 def test_DN():
     # Most of the test cases were adapted from,
     # Solving the generalized Pell equation x**2 - D*y**2 = N, John P. Robertson, July 31, 2004.
-    # http://www.jpr2718.org/pell.pdf
+    # https://web.archive.org/web/20160323033111/http://www.jpr2718.org/ax2p.pdf
     # others are verified using Wolfram Alpha.
 
     # Covers cases where D <= 0 or D > 0 and D is a square or N = 0
