@@ -863,6 +863,8 @@ def test_call_2():
 
 
 def test_replace():
+    assert S(.5).replace(.5, S.Half) is S.Half
+
     f = log(sin(x)) + tan(sin(x**2))
 
     assert f.replace(sin, cos) == log(cos(x)) + tan(cos(x**2))

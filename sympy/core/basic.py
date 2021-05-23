@@ -1466,14 +1466,16 @@ class Basic(Printable, metaclass=ManagedProperties):
             if args is not None:
                 if args:
                     newargs = tuple([walk(a, F) for a in args])
-                    if args != newargs:
+                    if not all(_aresame(i, j)
+                            for i, j in zip(args, newargs)):
                         rv = rv.func(*newargs)
                         if simultaneous:
                             # if rv is something that was already
                             # matched (that was changed) then skip
                             # applying F again
                             for i, e in enumerate(args):
-                                if rv == e and e != newargs[i]:
+                                if _aresame(rv, e
+                                        ) and not _aresame(e, newargs[i]):
                                     return rv
                 rv = F(rv)
             return rv
@@ -1485,7 +1487,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             result = _query(expr)
             if result or result == {}:
                 v = _value(expr, result)
-                if v is not None and v != expr:
+                if v is not None and not _aresame(v, expr):
                     if map:
                         mapping[expr] = v
                     expr = v
