@@ -888,6 +888,16 @@ def _get_examples_ode_sol_1st_rational_riccati():
         "eq": x**4*Derivative(f(x), x) + x**2 - x*(2*f(x)**2 + Derivative(f(x), x)) + f(x),
         "sol": [Eq(f(x), 3*x**2/4 + (x**3 - 1)*(-2*x/(C1 + x**2) + 1/(2*x))/2 + 1/(4*x)), \
             Eq(f(x), 3*x**2/4 + (x**3 - 1)/(4*x) + 1/(4*x))]
+    },
+    "rational_riccati_21": {
+        "eq": Derivative(f(x), x) - a*f(x)**2 - b/x**2,
+        "sol": [Eq(f(x), (-x**(sqrt(-4*a*b + 1))*sqrt(-4*a*b + 1)/(C1 + x**(sqrt(-4*a*b + 1))) + sqrt(-4*a*b + 1)/2 -
+            S(1)/2)/(a*x)), Eq(f(x), Mul(-1, (1 - sqrt(-4*a*b + 1)), evaluate=False)/(2*a*x))]
+    },
+    "rational_riccati_22": {
+        "eq": Derivative(f(x), x) - f(x)**2 - b/x**2 - a*f(x)/x,
+        "sol": [Eq(f(x), (-a/2 - x**(sqrt(a**2 + 2*a - 4*b + 1))*sqrt(a**2 + 2*a - 4*b + 1)/(C1 + x**(sqrt(a**2 + 2*a -
+            4*b + 1))) + sqrt(a**2 + 2*a - 4*b + 1)/2 - S(1)/2)/x), Eq(f(x), (-a + sqrt(a**2 + 2*a - 4*b + 1) - 1)/(2*x))]
     }
     }
     }

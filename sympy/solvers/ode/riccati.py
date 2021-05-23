@@ -1,6 +1,6 @@
 r"""
-This module contains :py:meth:`~sympy.solvers.ode.riccati.RationalRiccati`,
-a solver class which gives rational solutions to first order Riccati ODEs.
+This module contains :py:meth:`~sympy.solvers.ode.riccati.solve_riccati`,
+a function which gives rational solutions to first order Riccati ODEs.
 A general first order Riccati ODE is given by
 
 .. math:: y' = b_0(x) + b_1(x)w + b_2(x)w^2
@@ -141,14 +141,11 @@ and append them to ``sol``, so that the solutions of the original equation
 are found using the solutions of the equation in its normal form.
 """
 
-from .single import SinglePatternODESolver
-
 from sympy.core import S
-from sympy.core.add import Add
 from sympy.core.function import Function
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
-from sympy.core.symbol import Symbol, Wild
+from sympy.core.symbol import Symbol
 from sympy.functions import sqrt
 from sympy.polys.polytools import cancel, degree
 from sympy.polys.polyroots import roots
@@ -156,345 +153,248 @@ from sympy.simplify.radsimp import numer, denom
 from sympy.series.limits import limit
 from sympy.solvers.solvers import solve
 
-class RationalRiccati(SinglePatternODESolver):
-    r"""
-    Gives all rational solutions to the first
-    order Riccati Differential Equation
+def find_poles(a, x):
+    # All roots of denominator are poles of a(x)
+    p = roots(denom(a), x)
 
-    .. math :: y' = b_0(x) + b_1(x) y + b_2(x) y^2
+    # Substitute 1/x for x and check if oo is a pole
+    a = cancel(a.subs(x, 1/x).together())
 
-    where `b_0`, `b_1` and `b_2` are rational functions of `x`
-    with `b_2 \ne 0` (`b_2 = 0` would make it a Bernoulli equation).
+    # Find the poles of a(1/x)
+    p_inv = roots(denom(a), x)
 
-    Examples
-    ========
+    # If 0 is a pole of a(1/x), oo is a pole of a(x)
+    if 0 in p_inv:
+        p.update({oo: p_inv[0]})
+    return p
 
-    >>> from sympy import Symbol, Function, dsolve, checkodesol
-    >>> f = Function('f')
-    >>> x = Symbol('x')
 
-    >>> eq = x**3*f(x).diff(x) - x**2*f(x) - f(x)**2
-    >>> sols = dsolve(eq, hint="1st_rational_riccati")
-    >>> sols
-    Eq(f(x), x**2*(-x/(C1 + x) + 1))
-    >>> checkodesol(eq, sols)
-    (True, 0)
+def val_at_inf(a, x):
+    numer, denom = a.as_numer_denom()
+    # Valuation of a rational function at oo = deg(denom) - deg(numer)
+    return degree(denom, x) - degree(numer, x)
 
-    >>> eq = -x**4*f(x)**2 + x**3*f(x).diff(x) + x**2*f(x) + 20
-    >>> sols = dsolve(eq, hint="1st_rational_riccati")
-    >>> sols
-    [Eq(f(x), (-9*x**8/(C1 + x**9) + 4/x)/x), Eq(f(x), 4/x**2)]
-    >>> checkodesol(eq, sols)
-    [(True, 0), (True, 0)]
 
-    >>> eq = x**3*f(x).diff(x) - x**2*(f(x) + f(x).diff(x)) + 2*x*f(x) - f(x)**2
-    >>> sols = dsolve(eq, hint="1st_rational_riccati")
-    >>> sols
-    Eq(f(x), x**2*(1 - (x - 1)/(C1 + x)))
-    >>> checkodesol(eq, sols)
-    (True, 0)
+def construct_c(a, x, poles, muls):
+    c = []
+    for pole, mul in zip(poles, muls):
+        c.append([])
 
-    References
-    ==========
+        # Case 3
+        if mul == 1:
+            # If multiplicity is 1, the coefficient to be added
+            # in the c-vector is 1 (no choice)
+            c[-1].extend([[1], [1]])
 
-    .. [1] Algorithm (Pg 78) - https://www3.risc.jku.at/publications/download/risc_5387/PhDThesisThieu.pdf
-    .. [2] Examples - https://www3.risc.jku.at/publications/download/risc_5197/RISCReport15-19.pdf
-    """
-    has_integral = False
-    hint = "1st_rational_riccati"
-    order = [1]
+        # Case 1
+        elif mul == 2:
+            # Find the coefficient of 1/(x - pole)**2 in the
+            # Laurent series expansion of a(x) about pole.
+            r = a.series(x, pole).coeff(x - pole, -2)
 
-    def _wilds(self, f, x, order):
-        b0 = Wild('b0', exclude=[f(x), f(x).diff(x)])
-        b1 = Wild('b1', exclude=[f(x), f(x).diff(x)])
-        b2 = Wild('b2', exclude=[f(x), f(x).diff(x)])
-        return (b0, b1, b2)
+            # If multiplicity is 2, the coefficient to be added
+            # in the c-vector is c = (1 +- sqrt(1 + 4*r))/2
+            c[-1].extend([[(1 + sqrt(1 + 4*r))/2], [(1 - sqrt(1 + 4*r))/2]])
 
-    def _equation(self, fx, x, order):
-        b0, b1, b2 = self.wilds()
-        return fx.diff(x) - b0 - b1*fx - b2*fx**2
-
-    def _matches(self):
-        eq = self.ode_problem.eq_expanded
-        f = self.ode_problem.func.func
-        x = self.ode_problem.sym
-        order = self.ode_problem.order
-
-        if order != 1:
-            return False
-
-        eq = eq.collect(f(x))
-        cf = eq.coeff(f(x).diff(x))
-
-        # There must be an f(x).diff(x) term.
-        # eq must be an Add object since we are using the expanded
-        # equation and it must have atleast 2 terms (b2 != 0)
-        if cf != 0 and isinstance(eq, Add):
-
-            # Divide all coefficients by the coefficient of f(x).diff(x)
-            # and add the terms again to get the same equation
-            eq = Add(*map(lambda x: cancel(x/cf), eq.args)).collect(f(x))
-
-            # Get the pattern for the Riccati equation
-            pattern = self._equation(f(x), x, order)
-
-            # Match the equation with the pattern
-            self._wilds_match = match = eq.match(pattern)
-
-            # If there is a match, verify it
-            if match is not None:
-                return self._verify(f(x))
-        return False
-
-    def _verify(self, fx):
-        b0, b1, b2 = self.wilds_match()
-        x = self.ode_problem.sym
-
-        # b0, b1 and b2 must all be rational functions of x, with b2 != 0
-        return all([b2 != 0, b0.is_rational_function(x), b1.is_rational_function(x), b2.is_rational_function(x)])
-
-    def solve_aux_eq(self, a, x, m, ybar):
-        p = Function('p')
-        # Eq (5.16) in Thesis - Pg 81
-        auxeq = numer((p(x).diff(x, 2) + 2*ybar*p(x).diff(x) + (ybar.diff(x) + ybar**2 - a)*p(x)).together())
-
-        # Assume that the solution is of the type
-        # p(x) = C0 + C1*x + ... + Cm*x**m
-        psyms = get_numbered_constants(auxeq, m)
-        if type(psyms) != tuple:
-            psyms = (psyms, )
-        psol = x**m
-        for i in range(m):
-            psol += psyms[i]*x**i
-        if m != 0:
-            # m is a non-zero integer. Find the constant terms using undetermined coefficients
-            return psol, solve(auxeq.subs(p(x), psol).doit().expand(), psyms, dict=True), True
+        # Case 2
         else:
-            # m ==0 . Check if 1 (x**0) is a solution to the auxiliary equation
-            cf = auxeq.subs(p(x), psol).doit().expand()
-            return S(1), cf, cf == 0
+            # Generate the coefficients using the recurrence
+            # relation mentioned in (5.14) in the thesis (Pg 80)
 
-    def compute_degree(self, x, poles, choice, c, d, N):
-        ybar = 0
-        m = S(d[choice[0]][-1])
+            # r_i = mul/2
+            ri = mul//2
 
-        # Calculate the first (nested) summation for ybar
-        # as given in Step 9 of the Thesis (Pg 82)
-        for i in range(len(poles)):
-            for j in range(len(c[i][choice[i + 1]])):
-                # If one of the poles is infinity and its coefficient is
-                # not zero, the given solution is invalid as there will be
-                # a c/(x - oo)^j term in ybar for some c and j
-                if poles[i] == oo and c[i][choice[i + 1]][j] != 0:
-                    return m, ybar, False
-                ybar += c[i][choice[i + 1]][j]/(x - poles[i])**(j+1)
-            m -= c[i][choice[i + 1]][0]
+            # Find the Laurent series about the pole
+            ser = a.series(x, pole)
 
-        # Calculate the second summation for ybar
-        for i in range(N+1):
-            ybar += d[choice[0]][i]*x**i
-        return m, ybar, True
+            # Start with an empty memo to store the coefficients
+            # This is for the plus case
+            temp = [0 for i in range(ri)]
 
-    def construct_d(self, a, x, val_inf):
-        ser = a.series(x, oo)
-        N = -val_inf//2
+            # Base Case
+            temp[ri-1] = sqrt(ser.coeff(x - pole, -mul))
 
-        # Case 4
-        if val_inf < 0:
-            temp = [0 for i in range(N+2)]
-            temp[N] = sqrt(ser.coeff(x, 2*N))
-            for s in range(N-1, -2, -1):
+            # Iterate backwards to find all coefficients
+            for s in range(ri-1, 0, -1):
                 sm = 0
-                for j in range(s+1, N):
-                    sm += temp[j]*temp[N+s-j]
-                if s != -1:
-                    temp[s] = (ser.coeff(x, N+s) - sm)/(2*temp[N])
+                for j in range(s+1, ri):
+                    sm += temp[j-1]*temp[ri+s-j-1]
+                if s!= 1:
+                    temp[s-1] = (ser.coeff(x - pole, -ri-s) - sm)/(2*temp[ri-1])
+
+            # Memo for the minus case
             temp1 = list(map(lambda x: -x, temp))
-            temp[-1] = (ser.coeff(x, N+s) - temp[N] - sm)/(2*temp[N])
-            temp1[-1] = (ser.coeff(x, N+s) - temp1[N] - sm)/(2*temp1[N])
-            d = [temp, temp1]
 
-        # Case 5
-        elif val_inf == 0:
-            # List to store coefficients for plus case
-            temp = [0, 0]
+            # Find the 0th coefficient in the recurrence
+            temp[0] = (ser.coeff(x - pole, -ri-s) - sm + ri*temp[ri-1])/(2*temp[ri-1])
+            temp1[0] = (ser.coeff(x - pole, -ri-s) - sm + ri*temp1[ri-1])/(2*temp1[ri-1])
 
-            # d_0  = sqrt(a_0)
-            temp[0] = sqrt(ser.coeff(x, 0))
+            # Add both the plus and minus cases' coefficients
+            c[-1].extend([temp, temp1])
+    return c
 
-            # d_(-1) = a_(-1)/(2*d_0)
-            temp[-1] = ser.coeff(x, -1)/(2*temp[0])
+def construct_d(a, x, val_inf):
+    ser = a.series(x, oo)
+    N = -val_inf//2
 
-            # Coefficients for the minus case are just the negative
-            # of the coefficients for the positive case. Append both.
-            d = [temp, list(map(lambda x: -x, temp))]
+    # Case 4
+    if val_inf < 0:
+        temp = [0 for i in range(N+2)]
+        temp[N] = sqrt(ser.coeff(x, 2*N))
+        for s in range(N-1, -2, -1):
+            sm = 0
+            for j in range(s+1, N):
+                sm += temp[j]*temp[N+s-j]
+            if s != -1:
+                temp[s] = (ser.coeff(x, N+s) - sm)/(2*temp[N])
+        temp1 = list(map(lambda x: -x, temp))
+        temp[-1] = (ser.coeff(x, N+s) - temp[N] - sm)/(2*temp[N])
+        temp1[-1] = (ser.coeff(x, N+s) - temp1[N] - sm)/(2*temp1[N])
+        d = [temp, temp1]
 
-        # Case 6
-        else:
-            # s_oo = lim x->0 1/x**2 * a(1/x) which is equivalent to
-            # s_oo = lim x->oo x**2 * a(x)
-            s_inf = limit(x**2*a, x, oo)
+    # Case 5
+    elif val_inf == 0:
+        # List to store coefficients for plus case
+        temp = [0, 0]
 
-            # d_(-1) = (1 +- sqrt(1 + 4*s_oo))/2
-            d = [[(1 + sqrt(1 + 4*s_inf))/2], [(1 - sqrt(1 + 4*s_inf))/2]]
-        return d
+        # d_0  = sqrt(a_0)
+        temp[0] = sqrt(ser.coeff(x, 0))
 
-    def construct_c(self, a, x, poles, muls):
-        c = []
-        for pole, mul in zip(poles, muls):
-            c.append([])
+        # d_(-1) = a_(-1)/(2*d_0)
+        temp[-1] = ser.coeff(x, -1)/(2*temp[0])
 
-            # Case 3
-            if mul == 1:
-                # If multiplicity is 1, the coefficient to be added
-                # in the c-vector is 1 (no choice)
-                c[-1].extend([[1], [1]])
+        # Coefficients for the minus case are just the negative
+        # of the coefficients for the positive case. Append both.
+        d = [temp, list(map(lambda x: -x, temp))]
 
-            # Case 1
-            elif mul == 2:
-                # Find the coefficient of 1/(x - pole)**2 in the
-                # Laurent series expansion of a(x) about pole.
-                r = a.series(x, pole).coeff(x - pole, -2)
+    # Case 6
+    else:
+        # s_oo = lim x->0 1/x**2 * a(1/x) which is equivalent to
+        # s_oo = lim x->oo x**2 * a(x)
+        s_inf = limit(x**2*a, x, oo)
 
-                # If multiplicity is 2, the coefficient to be added
-                # in the c-vector is c = (1 +- sqrt(1 + 4*r))/2
-                c[-1].extend([[(1 + sqrt(1 + 4*r))/2], [(1 - sqrt(1 + 4*r))/2]])
+        # d_(-1) = (1 +- sqrt(1 + 4*s_oo))/2
+        d = [[(1 + sqrt(1 + 4*s_inf))/2], [(1 - sqrt(1 + 4*s_inf))/2]]
+    return d
 
-            # Case 2
-            else:
-                # Generate the coefficients using the recurrence
-                # relation mentioned in (5.14) in the thesis (Pg 80)
 
-                # r_i = mul/2
-                ri = mul//2
+def compute_degree(x, poles, choice, c, d, N):
+    ybar = 0
+    m = S(d[choice[0]][-1])
 
-                # Find the Laurent series about the pole
-                ser = a.series(x, pole)
+    # Calculate the first (nested) summation for ybar
+    # as given in Step 9 of the Thesis (Pg 82)
+    for i in range(len(poles)):
+        for j in range(len(c[i][choice[i + 1]])):
+            # If one of the poles is infinity and its coefficient is
+            # not zero, the given solution is invalid as there will be
+            # a c/(x - oo)^j term in ybar for some c and j
+            if poles[i] == oo and c[i][choice[i + 1]][j] != 0:
+                return m, ybar, False
+            ybar += c[i][choice[i + 1]][j]/(x - poles[i])**(j+1)
+        m -= c[i][choice[i + 1]][0]
 
-                # Start with an empty memo to store the coefficients
-                # This is for the plus case
-                temp = [0 for i in range(ri)]
+    # Calculate the second summation for ybar
+    for i in range(N+1):
+        ybar += d[choice[0]][i]*x**i
+    return m, ybar, True
 
-                # Base Case
-                temp[ri-1] = sqrt(ser.coeff(x - pole, -mul))
 
-                # Iterate backwards to find all coefficients
-                for s in range(ri-1, 0, -1):
-                    sm = 0
-                    for j in range(s+1, ri):
-                        sm += temp[j-1]*temp[ri+s-j-1]
-                    if s!= 1:
-                        temp[s-1] = (ser.coeff(x - pole, -ri-s) - sm)/(2*temp[ri-1])
+def solve_aux_eq(a, x, m, ybar):
+    p = Function('p')
+    # Eq (5.16) in Thesis - Pg 81
+    auxeq = numer((p(x).diff(x, 2) + 2*ybar*p(x).diff(x) + (ybar.diff(x) + ybar**2 - a)*p(x)).together())
 
-                # Memo for the minus case
-                temp1 = list(map(lambda x: -x, temp))
+    # Assume that the solution is of the type
+    # p(x) = C0 + C1*x + ... + Cm*x**m
+    psyms = get_numbered_constants(auxeq, m)
+    if type(psyms) != tuple:
+        psyms = (psyms, )
+    psol = x**m
+    for i in range(m):
+        psol += psyms[i]*x**i
+    if m != 0:
+        # m is a non-zero integer. Find the constant terms using undetermined coefficients
+        return psol, solve(auxeq.subs(p(x), psol).doit().expand(), psyms, dict=True), True
+    else:
+        # m ==0 . Check if 1 (x**0) is a solution to the auxiliary equation
+        cf = auxeq.subs(p(x), psol).doit().expand()
+        return S(1), cf, cf == 0
 
-                # Find the 0th coefficient in the recurrence
-                temp[0] = (ser.coeff(x - pole, -ri-s) - sm + ri*temp[ri-1])/(2*temp[ri-1])
-                temp1[0] = (ser.coeff(x - pole, -ri-s) - sm + ri*temp1[ri-1])/(2*temp1[ri-1])
 
-                # Add both the plus and minus cases' coefficients
-                c[-1].extend([temp, temp1])
-        return c
+def solve_riccati(eq, fx, x, b0, b1, b2):
+    # Step 1 : Convert to Normal Form
+    a = -b0*b2 + b1**2/4 - b1.diff(x)/2 + 3*b2.diff(x)**2/(4*b2**2) + b1*b2.diff(x)/(2*b2) - b2.diff(x, 2)/(2*b2)
+    a_t = cancel(a.together())
 
-    def find_poles(self, a, x):
-        # All roots of denominator are poles of a(x)
-        p = roots(denom(a), x)
+    # Step 2
+    presol = []
 
-        # Substitute 1/x for x and check if oo is a pole
-        a = cancel(a.subs(x, 1/x).together())
+    # Step 3 : a(x) is 0
+    if a_t == 0:
+        presol.append(1/(x + get_numbered_constants(eq, 1)))
 
-        # Find the poles of a(1/x)
-        p_inv = roots(denom(a))
+    # Step 4 : a(x) is a non-zero constant
+    elif x not in a_t.free_symbols:
+        presol.extend([sqrt(a), -sqrt(a)])
 
-        # If 0 is a pole of a(1/x), oo is a pole of a(x)
-        if 0 in p_inv:
-            p.update({oo: p_inv[0]})
-        return p
+    # Step 5 : Find poles and valuation at infinity
+    poles = find_poles(a_t, x)
+    poles, muls = list(poles.keys()), list(poles.values())
+    val_inf = val_at_inf(a_t, x)
 
-    def val_at_inf(self, a, x):
-        numer, denom = a.as_numer_denom()
-        # Valuation of a rational function at oo = deg(denom) - deg(numer)
-        return degree(denom, x) - degree(numer, x)
+    if len(poles):
+        # Check necessary conditions (outlined in the module docstring)
+        if val_inf%2 != 0 or not all(map(lambda mul: (mul == 1 or (mul%2 == 0 and mul >= 2)), muls)):
+            raise ValueError("Rational Solution doesn't exist")
 
-    def _get_general_solution(self, *, simplify: bool = True):
-        # Step 0 :Match the equation
-        b0, b1, b2 = self.wilds_match()
-        fx = self.ode_problem.func
-        x = self.ode_problem.sym
+        # Step 6
+        # Construct c-vectors for each singular point
+        c = construct_c(a, x, poles, muls)
 
-        # Step 1 : Convert to Normal Form
-        a = -b0*b2 + b1**2/4 - b1.diff(x)/2 + 3*b2.diff(x)**2/(4*b2**2) + b1*b2.diff(x)/(2*b2) - b2.diff(x, 2)/(2*b2)
-        a_t = cancel(a.together())
+        # Construct d vectors for each singular point
+        d = construct_d(a, x, val_inf)
 
-        # Step 2
-        presol = []
+        # Step 7 : Iterate over all possible combinations and return solutions
+        for it in range(2**(len(poles) + 1)):
+            # For each possible combination, generate an array of 0's and 1's
+            # where 0 means pick 1st choice and 1 means pick the second choice.
+            choice = list(map(lambda x: int(x), bin(it)[2:].zfill(len(poles) + 1)))
 
-        # Step 3 : a(x) is 0
-        if a_t == 0:
-            presol.append(1/(x + self.ode_problem.get_numbered_constants(num=1)[0]))
+            # Step 8 and 9 : Compute m and ybar
+            m, ybar, exists = compute_degree(x, poles, choice, c, d, -val_inf//2)
 
-        # Step 4 : a(x) is a non-zero constant
-        elif x not in a_t.free_symbols:
-            presol.extend([sqrt(a), -sqrt(a)])
+            # Step 10 : Check if a valid solution exists. If yes, also check
+            # if m is a non-negative integer
+            if exists and S(m).is_nonnegative == True and S(m).is_integer == True:
 
-        # Step 5 : Find poles and valuation at infinity
-        poles = self.find_poles(a_t, x)
-        poles, muls = list(poles.keys()), list(poles.values())
-        val_inf = self.val_at_inf(a_t, x)
+                # Step 11 : Find polynomial solutions of degree m for the auxiliary equation
+                psol, coeffs, exists = solve_aux_eq(a, x, m, ybar)
 
-        if len(poles):
-            # Check necessary conditions (outlined in the module docstring)
-            if val_inf%2 != 0 or not all(map(lambda mul: (mul == 1 or (mul%2 == 0 and mul >= 2)), muls)):
-                raise ValueError("Rational Solution doesn't exist")
+                # Step 12 : If valid polynomial solution exists, append solution.
+                if exists:
+                    # m == 0 case
+                    if psol == 1 and coeffs == 0:
+                        # p(x) = 1, so p'(x)/p(x) term need not be added
+                        presol.append(ybar)
+                    # m is a positive integer and there are valid coefficients
+                    elif len(coeffs):
+                        # Substitute the valid coefficients to get p(x)
+                        psol = psol.subs(coeffs[0])
+                        # y(x) = ybar(x) + p'(x)/p(x)
+                        presol.append(ybar + psol.diff(x)/psol)
 
-            # Step 6
-            # Construct c-vectors for each singular point
-            c = self.construct_c(a, x, poles, muls)
-
-            # Construct d vectors for each singular point
-            d = self.construct_d(a, x, val_inf)
-
-            # Step 7 : Iterate over all possible combinations and return solutions
-            for it in range(2**(len(poles) + 1)):
-                # For each possible combination, generate an array of 0's and 1's
-                # where 0 means pick 1st choice and 1 means pick the second choice.
-                choice = list(map(lambda x: int(x), bin(it)[2:].zfill(len(poles) + 1)))
-
-                # Step 8 and 9 : Compute m and ybar
-                m, ybar, exists = self.compute_degree(x, poles, choice, c, d, -val_inf//2)
-
-                # Step 10 : Check if a valid solution exists. If yes, also check
-                # if m is a non-negative integer
-                if exists and S(m).is_nonnegative == True and S(m).is_integer == True:
-
-                    # Step 11 : Find polynomial solutions of degree m for the auxiliary equation
-                    psol, coeffs, exists = self.solve_aux_eq(a, x, m, ybar)
-
-                    # Step 12 : If valid polynomial solution exists, append solution.
-                    if exists:
-                        # m == 0 case
-                        if psol == 1 and coeffs == 0:
-                            # p(x) = 1, so p'(x)/p(x) term need not be added
-                            presol.append(ybar)
-                        # m is a positive integer and there are valid coefficients
-                        elif len(coeffs):
-                            # Substitute the valid coefficients to get p(x)
-                            psol = psol.subs(coeffs[0])
-                            # y(x) = ybar(x) + p'(x)/p(x)
-                            presol.append(ybar + psol.diff(x)/psol)
-
-                # If m is an expression with symbols, we generate a Piecewise solution where
-                # the solution will exist only if the expression is a nonnegative integer.
-                # NOTE: In this case, it seems like x**m + C1 is always a solution
-                # for the auxiliary equation. It is however NOT mentioned in the thesis.
-                elif len(m.free_symbols):
-                    C1 = Symbol('C1')
-                    psol = x**m + C1
-                    presol.append(ybar + psol.diff(x)/psol)
-        # Step 15 : Inverse transform the solutions of the equation in normal form
-        sol = list(map(lambda y: Eq(fx, -y/b2 - b2.diff(x)/(2*b2**2) - b1/(2*b2)), presol))
-        return sol
+            # If m is an expression with symbols, we generate a Piecewise solution where
+            # the solution will exist only if the expression is a nonnegative integer.
+            # NOTE: In this case, it seems like x**m + C1 is always a solution
+            # for the auxiliary equation. It is however NOT mentioned in the thesis.
+            elif len(m.free_symbols):
+                C1 = Symbol('C1')
+                psol = x**m + C1
+                presol.append(ybar + psol.diff(x)/psol)
+    # Step 15 : Inverse transform the solutions of the equation in normal form
+    sol = list(map(lambda y: Eq(fx, -y/b2 - b2.diff(x)/(2*b2**2) - b1/(2*b2)), presol))
+    return sol
 
 # Avoid circular import:
 from .ode import get_numbered_constants
