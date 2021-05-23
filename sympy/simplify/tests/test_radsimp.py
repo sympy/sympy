@@ -160,13 +160,12 @@ def test_radsimp_issue_3214():
 def test_rationalize():
     assert rationalize(sqrt(2) - 1) == (1 + sqrt(2), 1)
     assert rationalize(sqrt(2) + sqrt(3) + sqrt(5)) == \
-        (2*sqrt(6)*(-sqrt(5) + sqrt(2) + sqrt(3)), 24)
+        (-((6 - 2*sqrt(15))*(-sqrt(2) + sqrt(3) + sqrt(5))), 24)
     assert rationalize(5**Rational(3, 2) - 5**Rational(4, 3)) == \
         ((1 + sqrt(5))*(5**Rational(2, 3) + 5**Rational(5, 6) + 5), 100)
     assert rationalize(2*sqrt(5) - 1) == (1 + 2*sqrt(5), 19)
     assert rationalize(sqrt(3) - cbrt(2)) == \
-        ((2 + 3*sqrt(3))*(2**Rational(2, 3) + 2**Rational(1, 3)*sqrt(3) + 3),
-        23)
+        ((-sqrt(3) - 2**Rational(1, 3))*(-9 - 3*2**Rational(2, 3) - 2*2**Rational(1, 3)), 23)
     assert rationalize(
         2*5**Rational(5, 2) - 2*5**Rational(7, 3)
         - 10*5**Rational(3, 2) + 10*5**Rational(4, 3)

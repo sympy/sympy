@@ -1230,7 +1230,35 @@ def rationalize(denom):
     Examples
     ========
 
-    TODO
+    >>> from sympy import Symbol, sqrt, cbrt
+    >>> from sympy.simplify.radsimp import rationalize
+    >>> x = Symbol('x')
+    >>> y = Symbol('y')
+
+    Rationalizing algebraic numbers:
+
+    >>> numer, denom = rationalize(cbrt(2) + cbrt(3))
+    >>> numer
+    -6**(1/3) + 2**(2/3) + 3**(2/3)
+    >>> denom
+    5
+
+    Rationalizing algebraic functions:
+
+    >>> numer, denom = rationalize(cbrt(x) + cbrt(y))
+    >>> numer
+    x**(2/3) - x**(1/3)*y**(1/3) + y**(2/3)
+    >>> denom
+    x + y
+
+    Some algebraic functions are not rationalizable as multiplying any
+    conjugates can make its denominator zero.
+
+    >>> numer, denom = rationalize(x + sqrt(x**2))
+    >>> numer
+    1
+    >>> denom
+    x + sqrt(x**2)
 
     Notes
     =====
@@ -1244,11 +1272,8 @@ def rationalize(denom):
     rationalizing the numerator instead, which is often needed for
     computing limits involving square root functions.
 
-    Any unknown functions or constants encountered can be treated as
-    transcendental monomials which makes this program more universal.
-    And for rationalizing denominators, it is not also necessary to
-    reveal every algebraic relations among the terms, but only one
-    algebraic relation for a term, which simplifies the problem greatly.
+    Any unknown functions or constants encountered are treated as
+    transcendental.
 
     References
     ==========
@@ -1270,13 +1295,14 @@ def rationalize(denom):
         Any unknown functions are just considered transcendental.
         """
         if expr.is_Symbol:
-            return set()
+            return []
         elif expr.is_Integer or expr.is_Rational:
-            return set()
-        elif expr.is_Add:
-            return set.union(*(_search(arg) for arg in expr.args))
-        elif expr.is_Mul:
-            return set.union(*(_search(arg) for arg in expr.args))
+            return []
+        elif expr.is_Add or expr.is_Mul:
+            result = []
+            for arg in expr.args:
+                result += _search(arg)
+            return result
         elif expr.is_Pow:
             base, exp = expr.args
             if exp.is_Integer:
@@ -1285,9 +1311,9 @@ def rationalize(denom):
                 found = _search(base)
                 if found:
                     return found
-                return {expr}
-            return {expr}
-        return {expr}
+                return [expr]
+            return [expr]
+        return [expr]
 
     def _build_structure(expr):
         """Discover possible algebraic relations the expression have
@@ -1320,14 +1346,14 @@ def rationalize(denom):
             base, exp = origin.args
             s, t, d = gcdex(denom, dest ** exp.q - base ** exp.p, dest)
             if d != 1:
-                raise ValueError("The denominator may be zero")
+                continue
             new_numer, new_denom = s.as_numer_denom()
             numer *= new_numer
             denom = new_denom
         elif origin.is_algebraic:
             s, t, d = gcdex(denom, minpoly(origin, dest), dest)
             if d != 1:
-                raise ValueError("The denominator may be zero")
+                continue
             new_numer, new_denom = s.as_numer_denom()
             numer *= new_numer
             denom = new_denom
