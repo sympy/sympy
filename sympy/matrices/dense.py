@@ -15,6 +15,8 @@ from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
 from .decompositions import _cholesky, _LDLdecomposition
 from .solvers import _lower_triangular_solve, _upper_triangular_solve
 
@@ -312,10 +314,21 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         else:
             rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
             flat_list = list(flat_list) # create a shallow copy
+
+            types = set(map(type, flat_list))
+            if not all(issubclass(typ, Expr) for typ in types):
+                SymPyDeprecationWarning(
+                    feature="non-Expr objects in a Matrix",
+                    useinstead="list of lists, TableForm or some other data structure",
+                    issue=21497,
+                    deprecated_since_version="1.9"
+                ).warn()
+
         self = object.__new__(cls)
         self.rows = rows
         self.cols = cols
         self._mat = flat_list
+
         return self
 
     def __setitem__(self, key, value):
