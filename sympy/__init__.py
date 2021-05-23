@@ -152,8 +152,6 @@ from .discrete import (fft, ifft, ntt, intt, fwht, ifwht, mobius_transform,
         inverse_mobius_transform, convolution, covering_product,
         intersecting_product)
 
-from .equation import (Equation, Eqn,)
-
 from .simplify import (simplify, hypersimp, hypersimilar, logcombine,
         separatevars, posify, besselsimp, kroneckersimp, signsimp, bottom_up,
         nsimplify, FU, fu, sqrtdenest, cse, use, epath, EPath, hyperexpand,
@@ -377,9 +375,6 @@ __all__ = [
     'fft', 'ifft', 'ntt', 'intt', 'fwht', 'ifwht', 'mobius_transform',
     'inverse_mobius_transform', 'convolution', 'covering_product',
     'intersecting_product',
-
-    # sympy.equation
-    'Equation', 'Eqn',
 
     # sympy.simplify
     'simplify', 'hypersimp', 'hypersimilar', 'logcombine', 'separatevars',
