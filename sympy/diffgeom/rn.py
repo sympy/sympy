@@ -30,8 +30,8 @@ x, y = symbols('x y', real=True)
 r, theta = symbols('rho theta', nonnegative=True)
 
 relations_2d = {
-    ('rectangular', 'polar'): (sqrt(x**2 + y**2), atan2(y, x)),
-    ('polar', 'rectangular'): (r*cos(theta), r*sin(theta)),
+    ('rectangular', 'polar'): [(x, y), (sqrt(x**2 + y**2), atan2(y, x))],
+    ('polar', 'rectangular'): [(r, theta), (r*cos(theta), r*sin(theta))],
 }
 
 R2_r = CoordSystem('rectangular', R2_origin, (x, y), relations_2d)  # type: Any
@@ -74,18 +74,24 @@ x, y, z = symbols('x y z', real=True)
 rho, psi, r, theta, phi = symbols('rho psi r theta phi', nonnegative=True)
 
 relations_3d = {
-    ('rectangular', 'cylindrical'): (sqrt(x**2 + y**2), atan2(y, x), z),
-    ('cylindrical', 'rectangular'): (rho*cos(psi), rho*sin(psi), z),
-    ('rectangular', 'spherical'): (sqrt(x**2 + y**2 + z**2),
-                                   acos(z/sqrt(x**2 + y**2 + z**2)),
-                                   atan2(y, x)),
-    ('spherical', 'rectangular'): (r*sin(theta)*cos(phi),
-                                   r*sin(theta)*sin(phi),
-                                   r*cos(theta)),
-    ('cylindrical', 'spherical'): (sqrt(rho**2 + z**2),
-                                   acos(z/sqrt(rho**2 + z**2)),
-                                   psi),
-    ('spherical', 'cylindrical'): (r*sin(theta), phi, r*cos(theta)),
+    ('rectangular', 'cylindrical'): [(x, y, z),
+                                     (sqrt(x**2 + y**2), atan2(y, x), z)],
+    ('cylindrical', 'rectangular'): [(rho, psi, z),
+                                     (rho*cos(psi), rho*sin(psi), z)],
+    ('rectangular', 'spherical'): [(x, y, z),
+                                   (sqrt(x**2 + y**2 + z**2),
+                                    acos(z/sqrt(x**2 + y**2 + z**2)),
+                                    atan2(y, x))],
+    ('spherical', 'rectangular'): [(r, theta, phi),
+                                   (r*sin(theta)*cos(phi),
+                                    r*sin(theta)*sin(phi),
+                                    r*cos(theta))],
+    ('cylindrical', 'spherical'): [(rho, psi, z),
+                                   (sqrt(rho**2 + z**2),
+                                    acos(z/sqrt(rho**2 + z**2)),
+                                    psi)],
+    ('spherical', 'cylindrical'): [(r, theta, phi),
+                                   (r*sin(theta), phi, r*cos(theta))],
 }
 
 R3_r = CoordSystem('rectangular', R3_origin, (x, y, z), relations_3d)  # type: Any
