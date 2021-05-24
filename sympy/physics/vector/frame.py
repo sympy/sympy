@@ -600,6 +600,12 @@ class ReferenceFrame:
         angle : sympifiable
             Angle in radians by which it the frame is to be rotated.
 
+        Warns
+        ======
+
+        UserWarning
+            If frames are looped.
+
         Examples
         ========
 
@@ -677,6 +683,12 @@ class ReferenceFrame:
         dcm : Matrix, shape(3, 3)
             Direction cosine matrix that specifies the relative rotation
             between the two reference frames.
+
+        Warns
+        ======
+
+        UserWarning
+            If frames are looped.
 
         Examples
         ========
@@ -781,6 +793,12 @@ class ReferenceFrame:
             ``131``. There are 12 unique valid rotation orders (6 Euler and 6
             Tait-Bryan): zxz, xyx, yzy, zyz, xzx, yxy, xyz, yzx, zxy, xzy, zyx,
             and yxz.
+
+        Warns
+        ======
+
+        UserWarning
+            If frames are looped.
 
         Examples
         ========
@@ -892,6 +910,12 @@ class ReferenceFrame:
             vectors. The order can be specified by the strings ``'XZX'``,
             ``'131'``, or the integer ``131``. There are 12 unique valid
             rotation orders.
+
+        Warns
+        ======
+
+        UserWarning
+            If frames are looped.
 
         Examples
         ========
@@ -1015,6 +1039,12 @@ class ReferenceFrame:
             The four quaternion scalar numbers as defined above: ``q0``,
             ``q1``, ``q2``, ``q3``.
 
+        Warns
+        ======
+
+        UserWarning
+            If frames are looped.
+
         Examples
         ========
 
@@ -1120,6 +1150,12 @@ class ReferenceFrame:
             If applicable, the order of the successive of rotations. The string
             ``'123'`` and integer ``123`` are equivalent, for example. Required
             for ``'Body'`` and ``'Space'``.
+
+        Warns
+        ======
+
+        UserWarning
+            If frames are looped.
 
         """
 
