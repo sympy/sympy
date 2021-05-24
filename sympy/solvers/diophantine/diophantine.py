@@ -2349,6 +2349,7 @@ def PQa(P_0, Q_0, D):
 
     .. [1] Solving the generalized Pell equation x^2 - Dy^2 = N, John P.
         Robertson, July 31, 2004, Pages 4 - 8. https://web.archive.org/web/20160323033111/http://www.jpr2718.org/pell.pdf
+        """
     A_i_2 = B_i_1 = 0
     A_i_1 = B_i_2 = 1
 
