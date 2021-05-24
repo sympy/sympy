@@ -1358,7 +1358,114 @@ class AccumulationBounds(AtomicExpr):
                 if den!=1:
                     num_pow = self**num
                     return num_pow**(1 / den)
+
+            if isinstance(other, AccumBounds):
+                p = []
+                # there will be infinities if +/-eps is in self
+                # and negative integer exponents
+                if self.max == 0:
+                    # -eps present, so neg odd will introduce -oo and
+                    # negative even will introduce oo
+                    i = int(other.min)  # rounded toward 0
+                    if i < 0 and i in other:
+                        p.append((-1)**i*oo)  # -1 represents -eps
+                        i += 1
+                        if i < 0 and i in other:
+                            p.append(-p[0])
+                if len(p) == 2:
+                    return AccumBounds(-oo, oo)
+                if oo not in p and (
+                        is_ge(S.NegativeOne, other.min) and
+                        is_ge(S.Zero, self.min) and
+                        is_gt(self.max, S.Zero)):
+                    # + eps present so negative int will introduce oo
+                    i = int(other.min)
+                    if i < 0 and i in other:
+                        p.append(oo)
+                # continue with other cases
+                p = set(p)
+                if 0 in other:
+                    p.add(1)  # x**0 = 1
+                if 0 in self and is_gt(other.max, S.Zero):
+                    p.add(0)  # 0**pos == 0
+                b = set(self.args) - {0}  # already handled in prev line
+                ep = set(other.args)  # if base is nonneg, extremum only
+                en = set()  # else we need +/- odd/even ints
+                if is_ge(S.Zero, self.max):
+                    # negative bases require integer exponents of
+                    # odd or even parity, positive or negative
+                    # find two smallest ints in bounds
+                    i = int(other.min)
+                    if i not in other:
+                        i += 1
+                    if i in other:
+                        en.add(i)
+                        i += 1
+                        if i in other:
+                            en.add(i)
+                    # find two largest ints in bounds
+                    if i + 1 <= other.max:  # if not, there are no more to find
+                        i = int(other.max)
+                        if i not in other:
+                            i -= 1
+                        if i in other:
+                            en.add(i)
+                            i -= 1
+                            if i in other:
+                                en.add(i)
+                # compute candidate powers
+                p |= {i**j for i in b for j in
+                    (ep if is_ge(i, S.Zero) else en)}
+                if p:
+                    return self.func(min(p), max(p))
+                else:
+                    # there were no valid exponents so the results
+                    # would have had imaginary parts
+                    raise ValueError('Only real AccumulationBounds are supported')
+
             return AccumBounds(-oo, oo)
+
+        return NotImplemented
+
+    @_sympifyit('other', NotImplemented)
+    def __rpow__(self, other):
+        if other.is_Number:
+            if other is S.One:
+                return S.One
+            p = set()
+            if other.is_real:
+                if other < 0:
+                    i = int(self.min)
+                    if i not in self:
+                        i += 1
+                    if i in self:
+                        p.add(other**i)
+                        i += 1
+                        if i in self:
+                            p.add(other**i)
+                    i = int(self.max)
+                    if i in self:
+                        p.add(other**i)
+                        i -= 1
+                        if i in self:
+                            p.add(other**i)
+                elif other > 0:
+                    p.add(other**self.min)
+                    p.add(other**self.max)
+                else:
+                    try:
+                        if 0 in self:
+                            p.add(1)
+                    except TypeError:
+                        raise ValueError('sign of bounds unknown')
+                    if self.max > 0:
+                        p.add(0)
+            if p:
+                return self.func(min(p), max(p))
+            elif other == 0:
+                raise ZeroDivisionError
+            else:
+                raise ValueError('Only real AccumulationBounds are supported')
 
         return NotImplemented
 

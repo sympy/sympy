@@ -422,6 +422,7 @@ def test_AccumBounds_div():
     assert AccumBounds(-oo, 1)/oo == AccumBounds(-oo, 0)
     assert AccumBounds(-oo, 1)/(-oo) == AccumBounds(0, oo)
 
+
 def test_issue_18795():
     r = Symbol('r', real=True)
     a = AccumBounds(-1,1)
@@ -431,6 +432,7 @@ def test_issue_18795():
     assert b + tan(r) == AccumBounds(-oo, oo)
     assert (a + r)/a == AccumBounds(-oo, oo)*AccumBounds(r - 1, r + 1)
     assert (b + a)/a == AccumBounds(-oo, oo)
+
 
 def test_AccumBounds_func():
     assert (x**2 + 2*x + 1).subs(x, AccumBounds(-1, 1)) == AccumBounds(-1, 4)
@@ -496,6 +498,67 @@ def test_AccumBounds_pow():
 
     assert (tan(x)**sin(2*x)).subs(x, AccumBounds(0, pi/2)) == \
         Pow(AccumBounds(-oo, oo), AccumBounds(0, 1))
+
+
+def test_AccumBounds_as_exponent():
+    B = AccumBounds
+    # base = -1
+    assert (-1)**B(-2, -1) == B(-1, 1)  # even and odd
+    assert (-1)**B(-2.1, -1.9) == 1  # even
+    assert (-1)**B(-1, -1/2) == -1  # odd
+    raises(ValueError, lambda: (-1)**B(-.9, -.1))  # no ints
+    # base is 0
+    raises(ZeroDivisionError, lambda: 0**B(-2, -1))  # all neg
+    assert 0**B(-2, 0) == 1  # only 0
+    assert 0**B(-2, 1/2) == B(0, 1)  # 0 and pos
+    raises(ValueError, lambda: 0**AccumBounds(a, a + 1))
+    # base > 0
+    #   when base is 1 the type of bounds does not matter
+    assert 1**B(a, a + 1) == 1
+    #  otherwise we need to know if 0 is in the bounds
+    assert S.Half**B(-2, 2) == B(S(1)/4, 4)
+    assert 2**B(-2, 2) == B(S(1)/4, 4)
+
+    # negative bases must have a integer exponent
+    raises(ValueError, lambda: B(-2, -1)**B(.5, .6))
+    # only -2 present
+    assert B(-3, -2)**B(-2, -S(3)/2) == B(S(1)/9, S(1)/4)
+    # only -1 present
+    assert B(-3, -2)**B(-S(3)/2, -S(1)/2) == B(-S(1)/2, -S(1)/3)
+    # -2, -1
+    assert B(-3, -2)**B(-2, -1) == B(-S(1)/2, S(1)/4)
+    # -3, -2, -1
+    assert B(-3, -2)**B(-3, -S(1)/2) == B(-S(1)/2, S(1)/4)
+    # -4, -3, -2, -1
+    assert B(-3, -2)**B(-S(9)/2, -S(1)/2) == B(-S(1)/2, S(1)/4)
+
+    # -eps may introduce +/-oo depending on parity of exponent
+    # no -eps and integer exponents
+    raises(ValueError, lambda:
+        B(-1, -S(1)/2)**B(S(1)/4, S(1)/2))
+    # no negative integer exponents
+    assert B(-1, 0)**B(S(1)/4, S(1)/2) == 0
+    assert B(-1, 0)**B(-S(3)/2, 1) == B(-oo, 1)
+    # -1
+    assert B(-1, 0)**B(-S(3)/2, -S(1)/2) == B(-oo, -1)
+    # -2
+    assert B(-1, 0)**B(-S(5)/2, -S(3)/2) == B(1, oo)
+    # -1 and -2
+    assert B(-1, 0)**B(-S(5)/2, -S(1)/2) == B(-oo, oo)
+
+    # +eps may introduce +oo
+    # if there is a negative integer exponent
+    assert B(0, 1)**B(S(1)/2, 1) == B(0, 1)
+    assert B(0, 1)**B(0, 1) == B(0, 1)
+    assert B(0, 1)**B(-S(1)/2, 1) == B(0, 1)
+    # like -1
+    assert B(0, 1)**B(-S(3)/2, 1) == B(0, oo)
+    # or -2
+    assert B(0, 1)**B(-S(5)/2, -2) == B(1, oo)
+
+    # positive bases have positive bounds
+    assert B(2, 3)**B(-3, -2) == B(S(1)/27, S(1)/4)
+    assert B(2, 3)**B(-3, 2) == B(S(1)/27, 9)
 
 
 def test_comparison_AccumBounds():
