@@ -2050,24 +2050,24 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
     >>> _keep_coeff(S(-1), x + y, sign=True)
     -(x + y)
     """
-
     if not coeff.is_Number:
         if factors.is_Number:
             factors, coeff = coeff, factors
         else:
             return coeff*factors
+    if factors is S.One:
+        return coeff
     if coeff is S.One:
         return factors
     elif coeff is S.NegativeOne and not sign:
         return -factors
     elif factors.is_Add:
         if not clear and coeff.is_Rational and coeff.q != 1:
-            q = S(coeff.q)
-            for i in factors.args:
-                c, t = i.as_coeff_Mul()
-                r = c/q
-                if r == int(r):
-                    return coeff*factors
+            args = [i.as_coeff_Mul() for i in factors.args]
+            args = [(c*coeff, m) for c, m in args]
+            if any(c == int(c) for c, _ in args):
+                return Add._from_args([Mul._from_args(
+                    i[1:] if i[0] == 1 else i) for i in args])
         return Mul(coeff, factors, evaluate=False)
     elif factors.is_Mul:
         margs = list(factors.args)
@@ -2079,7 +2079,7 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
             margs.insert(0, coeff)
         return Mul._from_args(margs)
     else:
-        return coeff*factors
+        return Mul._from_args((coeff, factors))
 
 
 def expand_2arg(e):
