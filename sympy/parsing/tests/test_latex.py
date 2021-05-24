@@ -242,6 +242,7 @@ GOOD_PAIRS = [
     (r"\int x \, dx", Integral(x, x)),
     (r"\log_2 x", _log(x, 2)),
     (r"\log_a x", _log(x, a)),
+    (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0))))
 ]
 
 def test_parseable():
