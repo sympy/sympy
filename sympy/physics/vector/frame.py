@@ -604,7 +604,7 @@ class ReferenceFrame:
         ======
 
         UserWarning
-            If frames are looped.
+            If the orientation creates a kinematic loop.
 
         Examples
         ========
@@ -688,7 +688,7 @@ class ReferenceFrame:
         ======
 
         UserWarning
-            If frames are looped.
+            If the orientation creates a kinematic loop.
 
         Examples
         ========
@@ -798,7 +798,7 @@ class ReferenceFrame:
         ======
 
         UserWarning
-            If frames are looped.
+            If the orientation creates a kinematic loop.
 
         Examples
         ========
@@ -915,7 +915,7 @@ class ReferenceFrame:
         ======
 
         UserWarning
-            If frames are looped.
+            If the orientation creates a kinematic loop.
 
         Examples
         ========
@@ -1043,7 +1043,7 @@ class ReferenceFrame:
         ======
 
         UserWarning
-            If frames are looped.
+            If the orientation creates a kinematic loop.
 
         Examples
         ========
@@ -1155,7 +1155,7 @@ class ReferenceFrame:
         ======
 
         UserWarning
-            If frames are looped.
+            If the orientation creates a kinematic loop.
 
         """
 
