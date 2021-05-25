@@ -1360,10 +1360,19 @@ class AccumulationBounds(AtomicExpr):
                     return num_pow**(1 / den)
 
             if isinstance(other, AccumBounds):
+                # handle infinite bounds that introduce +/- infinity
+                if other.max is oo and is_lt(self.min, S.NegativeOne):
+                    return self.func(-oo, oo)
+                if other.min is -oo:
+                    if is_gt(self.min, S.NegativeOne) and is_le(self.min, S.Zero):
+                        return self.func(-oo, oo)
+                    if any(is_gt(i, S.NegativeOne) and is_lt(i, S.Zero)
+                            for i in self.args):
+                        return self.func(-oo, oo)
                 p = []
                 # there will be infinities if +/-eps is in self
                 # and negative integer exponents
-                if self.max == 0:
+                if self.max == 0 and other.min.is_finite:
                     # -eps present, so neg odd will introduce -oo and
                     # negative even will introduce oo
                     i = int(other.min)  # rounded toward 0
@@ -1374,7 +1383,7 @@ class AccumulationBounds(AtomicExpr):
                             p.append(-p[0])
                 if len(p) == 2:
                     return AccumBounds(-oo, oo)
-                if oo not in p and (
+                if other.min != -oo and oo not in p and (
                         is_ge(S.NegativeOne, other.min) and
                         is_ge(S.Zero, self.min) and
                         is_gt(self.max, S.Zero)):
@@ -1389,30 +1398,53 @@ class AccumulationBounds(AtomicExpr):
                 if 0 in self and is_gt(other.max, S.Zero):
                     p.add(0)  # 0**pos == 0
                 b = set(self.args) - {0}  # already handled in prev line
-                ep = set(other.args)  # if base is nonneg, extremum only
+                ep = set(other.args) - {-oo, oo}  # if base is nonneg, finite extremum only
                 en = set()  # else we need +/- odd/even ints
                 if is_ge(S.Zero, self.max):
                     # negative bases require integer exponents of
                     # odd or even parity, positive or negative
                     # find two smallest ints in bounds
-                    i = int(other.min)
-                    if i not in other:
-                        i += 1
-                    if i in other:
-                        en.add(i)
-                        i += 1
-                        if i in other:
-                            en.add(i)
-                    # find two largest ints in bounds
-                    if i + 1 <= other.max:  # if not, there are no more to find
-                        i = int(other.max)
+                    i = None
+                    if other.min != -oo:
+                        i = int(other.min)
                         if i not in other:
-                            i -= 1
+                            i += 1
                         if i in other:
                             en.add(i)
-                            i -= 1
+                            i += 1
                             if i in other:
                                 en.add(i)
+                    # find two largest ints in bounds
+                    if other.max != oo:
+                        if i is None or i + 1 <= other.max:  # if not, there are no more to find
+                            i = int(other.max)
+                            if i not in other:
+                                i -= 1
+                            if i in other:
+                                en.add(i)
+                                i -= 1
+                                if i in other:
+                                    en.add(i)
+                # consider infinite bounds that introduce other values
+                if other.max is oo:
+                    if -1 in self:
+                        p.update((-1, 1))
+                    elif 1 in self:
+                        p.add(1)
+                    if is_gt(self.max, S.One):
+                        p.add(oo)
+                    if is_gt(self.min, S.NegativeOne) and is_lt(self.max, S.One):
+                        p.add(0)
+                if other.min is -oo:
+                    if -1 in self:
+                        p.update((-1, 1))
+                    elif 1 in self:
+                        p.add(1)
+                    if is_lt(self.max, S.NegativeOne) or is_gt(self.min, S.One):
+                        p.add(0)
+                    if any(is_gt(i, S.Zero) and is_lt(i, S.One)
+                            for i in self.args):
+                        p.add(oo)
                 # compute candidate powers
                 p |= {i**j for i in b for j in
                     (ep if is_ge(i, S.Zero) else en)}
