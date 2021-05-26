@@ -35,6 +35,7 @@ from sympy.core.singleton import S
 from sympy.polys.constructor import construct_domain
 from sympy.polys.solvers import PolyNonlinearError
 
+from .domainmatrix import DomainMatrix
 from .sdm import (
     SDM,
     sdm_irref,
@@ -72,6 +73,13 @@ def _linsolve(eqs, syms):
     eqsdict, rhs = _linear_eq_to_dict(eqs, syms)
     Aaug = sympy_dict_to_dm(eqsdict, rhs, syms)
     K = Aaug.domain
+
+    # sdm_irref has issues with float matrices. This uses the Matrix.rref()
+    # method. When DomainMatrix.rref() can handle float matrices reasonably
+    # this should be removed...
+    if K.is_RealField:
+        Aaug_Matrix = DomainMatrix.from_rep(Aaug).to_Matrix().rref()[0]
+        Aaug = DomainMatrix.from_Matrix(Aaug_Matrix).to_field().to_sparse().rep
 
     # Compute reduced-row echelon form (RREF)
     Arref, pivots, nzcols = sdm_irref(Aaug)
