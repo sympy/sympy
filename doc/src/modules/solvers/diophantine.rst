@@ -324,7 +324,7 @@ References
 .. [3] Methods to solve Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0,[online],
     Available: http://www.alpertron.com.ar/METHODS.HTM
 .. [4] Solving the equation ax^2+ bxy + cy^2 + dx + ey + f= 0, [online],
-    Available: http://www.jpr2718.org/ax2p.pdf
+    Available: https://web.archive.org/web/20160323033111/http://www.jpr2718.org/ax2p.pdf
 
 User Functions
 --------------
