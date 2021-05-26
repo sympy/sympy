@@ -916,7 +916,6 @@ def test_issue_17292():
     # this is bigger than the issue: check that deep processing works
     assert simplify(5*abs((x**2 - 1)/(x - 1))) == 5*Abs(x + 1)
 
-
 def test_issue_19484():
     assert simplify(sign(x) * Abs(x)) == x
 
@@ -930,19 +929,6 @@ def test_issue_19484():
     e = x + sign(x + f(x)**3)
     assert simplify(Abs(x + f(x)**3) * e) == x*Abs(x + f(x)**3) + x + f(x)**3
 
-
 def test_issue_19161():
     polynomial = Poly('x**2').simplify()
     assert (polynomial-x**2).simplify() == 0
-
-
-def test_bottom_up():
-    from sympy.simplify.simplify import bottom_up
-    # if these break (via #20033 or similar) then revert the
-    # commit that introduced this test
-    assert S(2) == S(2.)
-    assert S(.5) == S.Half
-    def half(x):
-        return S.Half if x == .5 else x
-    assert bottom_up(x**.5, half).exp is not S.Half
-    assert bottom_up(x**.5, half, atoms=True).exp is S.Half
