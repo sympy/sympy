@@ -242,15 +242,14 @@ GOOD_PAIRS = [
     (r"\int x \, dx", Integral(x, x)),
     (r"\log_2 x", _log(x, 2)),
     (r"\log_a x", _log(x, a)),
-    ("5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0)))),
-    ("x - 2*(y + z)", _Add(x, _Mul(-2, y + z))),
+    (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0)))),
 ]
 
 
 def test_parseable():
     from sympy.parsing.latex import parse_latex
     for latex_str, sympy_expr in GOOD_PAIRS:
-        assert parse_latex(latex_str) == sympy_expr
+        assert parse_latex(latex_str) == sympy_expr, latex_str
 
 # These bad LaTeX strings should raise a LaTeXParsingError when parsed
 BAD_STRINGS = [
