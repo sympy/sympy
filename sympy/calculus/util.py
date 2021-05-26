@@ -1159,9 +1159,17 @@ class AccumulationBounds(AtomicExpr):
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
+        if self.args == (-oo, oo):
+            return self
         if isinstance(other, Expr):
             if isinstance(other, AccumBounds):
-                v = set((self.min*other).args + (self.max*other).args)
+                if other.args == (-oo, oo):
+                    return other
+                v = set()
+                for i in self.args:
+                    vi = other*i
+                    for i in vi.args or (vi,):
+                        v.add(i)
                 return AccumBounds(Min(*v), Max(*v))
             if other is S.Infinity:
                 if self.min.is_zero:
@@ -1175,8 +1183,6 @@ class AccumulationBounds(AtomicExpr):
                     return AccumBounds(0, oo)
             if other.is_extended_real:
                 if other.is_zero:
-                    if self == AccumBounds(-oo, oo):
-                        return AccumBounds(-oo, oo)
                     if self.max is S.Infinity:
                         return AccumBounds(0, oo)
                     if self.min is S.NegativeInfinity:

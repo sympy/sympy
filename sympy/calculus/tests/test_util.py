@@ -360,7 +360,12 @@ def test_AccumBounds_mul():
     assert 2*AccumBounds(1, 2) == AccumBounds(2, 4)
     assert AccumBounds(1, 2)*AccumBounds(2, 3) == AccumBounds(2, 6)
     assert AccumBounds(0, 2)*AccumBounds(2, oo) == AccumBounds(0, oo)
-
+    l, r = AccumBounds(-oo, oo), AccumBounds(-a, a)
+    assert l*r == AccumBounds(-oo, oo)
+    assert r*l == AccumBounds(-oo, oo)
+    l, r = AccumBounds(1, oo), AccumBounds(-3, -2)
+    assert l*r == AccumBounds(-oo, -2)
+    assert r*l == AccumBounds(-oo, -2)
     assert AccumBounds(1, 2)*0 == 0
     assert AccumBounds(1, oo)*0 == AccumBounds(0, oo)
     assert AccumBounds(-oo, 1)*0 == AccumBounds(-oo, 0)
