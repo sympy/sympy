@@ -546,6 +546,12 @@ def test_unevaluated_mul():
     eq = Mul(x + y, x + y, evaluate=False)
     assert cse(eq) == ([(x0, x + y)], [x0**2])
 
+
 def test_issue_18991():
     A = MatrixSymbol('A', 2, 2)
     assert signsimp(-A * A - A) == -A * A - A
+
+
+def test_unevaluated_Mul():
+    m = [Mul(1, 2, evaluate=False)]
+    assert cse(m) == ([], m)

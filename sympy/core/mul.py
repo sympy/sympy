@@ -2064,7 +2064,7 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
     elif factors.is_Add:
         if not clear and coeff.is_Rational and coeff.q != 1:
             args = [i.as_coeff_Mul() for i in factors.args]
-            args = [(c*coeff, m) for c, m in args]
+            args = [(_keep_coeff(c, coeff), m) for c, m in args]
             if any(c == int(c) for c, _ in args):
                 return Add._from_args([Mul._from_args(
                     i[1:] if i[0] == 1 else i) for i in args])
@@ -2079,8 +2079,10 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
             margs.insert(0, coeff)
         return Mul._from_args(margs)
     else:
-        return Mul._from_args((coeff, factors))
-
+        m = coeff*factors
+        if m.is_Number and not factors.is_Number:
+            m = Mul._from_args((coeff, factors))
+        return m
 
 def expand_2arg(e):
     from sympy.simplify.simplify import bottom_up
