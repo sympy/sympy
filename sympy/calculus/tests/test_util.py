@@ -359,6 +359,7 @@ def test_AccumBounds_mul():
     assert AccumBounds(1, 2)*2 == AccumBounds(2, 4)
     assert 2*AccumBounds(1, 2) == AccumBounds(2, 4)
     assert AccumBounds(1, 2)*AccumBounds(2, 3) == AccumBounds(2, 6)
+    assert AccumBounds(0, 2)*AccumBounds(2, oo) == AccumBounds(0, oo)
 
     assert AccumBounds(1, 2)*0 == 0
     assert AccumBounds(1, oo)*0 == AccumBounds(0, oo)

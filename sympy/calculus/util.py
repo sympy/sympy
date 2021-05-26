@@ -1161,14 +1161,8 @@ class AccumulationBounds(AtomicExpr):
     def __mul__(self, other):
         if isinstance(other, Expr):
             if isinstance(other, AccumBounds):
-                return AccumBounds(Min(Mul(self.min, other.min),
-                                       Mul(self.min, other.max),
-                                       Mul(self.max, other.min),
-                                       Mul(self.max, other.max)),
-                                   Max(Mul(self.min, other.min),
-                                       Mul(self.min, other.max),
-                                       Mul(self.max, other.min),
-                                       Mul(self.max, other.max)))
+                v = set((self.min*other).args + (self.max*other).args)
+                return AccumBounds(Min(*v), Max(*v))
             if other is S.Infinity:
                 if self.min.is_zero:
                     return AccumBounds(0, oo)
