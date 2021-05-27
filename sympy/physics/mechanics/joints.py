@@ -54,7 +54,7 @@ class Joint(ABC):
     >>> P = Body('P')
     >>> C = Body('B')
     >>> J1 = J('J1', P, C)
-    >>> J1.kde()
+    >>> J1.kdes()
     [-b(t) + Derivative(a(t), t)]
 
     """
@@ -74,7 +74,7 @@ class Joint(ABC):
 
         self._coordinates = self._generate_coordinates(coordinates)
         self._speeds = self._generate_speeds(speeds)
-        self._kde = self.apply_joint()
+        self._kdes = self.apply_joint()
 
     def __str__(self):
         return self._name
@@ -100,9 +100,9 @@ class Joint(ABC):
         """ List of speeds of Joint."""
         return self._speeds
 
-    def kde(self):
+    def kdes(self):
         """ KDE of Joint."""
-        return self._kde
+        return self._kdes
 
     @abstractmethod
     def _generate_coordinates(self, coordinates):
@@ -116,5 +116,6 @@ class Joint(ABC):
 
     @abstractmethod
     def apply_joint(self):
-        """ Apply the particular Joint."""
+        """ Apply the particular Joint by rotating frames, generating angluar and linear
+        velocities. Return kdes as list."""
         pass
