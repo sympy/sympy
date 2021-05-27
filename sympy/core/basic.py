@@ -1466,16 +1466,14 @@ class Basic(Printable, metaclass=ManagedProperties):
             if args is not None:
                 if args:
                     newargs = tuple([walk(a, F) for a in args])
-                    if not all(_aresame(i, j)
-                            for i, j in zip(args, newargs)):
+                    if args != newargs:
                         rv = rv.func(*newargs)
                         if simultaneous:
                             # if rv is something that was already
                             # matched (that was changed) then skip
                             # applying F again
                             for i, e in enumerate(args):
-                                if _aresame(rv, e
-                                        ) and not _aresame(e, newargs[i]):
+                                if rv == e and e != newargs[i]:
                                     return rv
                 rv = F(rv)
             return rv
@@ -1487,7 +1485,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             result = _query(expr)
             if result or result == {}:
                 v = _value(expr, result)
-                if v is not None and not _aresame(v, expr):
+                if v is not None and v != expr:
                     if map:
                         mapping[expr] = v
                     expr = v
@@ -1900,6 +1898,17 @@ def _aresame(a, b):
             else:
                 return False
     return True
+
+
+def _ne(a, b):
+    # use this as a second test after `a != b` if you want to make
+    # sure that things are truly equal, e.g.
+    # a, b = 0.5, S.Half
+    # a !=b or _ne(a, b) -> True
+    from .numbers import Number
+    # 0.5 == S.Half
+    if isinstance(a, Number) and isinstance(b, Number):
+        return a.__class__ != b.__class__
 
 
 def _atomic(e, recursive=False):

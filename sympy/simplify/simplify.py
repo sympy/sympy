@@ -1189,12 +1189,11 @@ def bottom_up(rv, F, atoms=False, nonbasic=False):
     bottom up. If ``atoms`` is True, apply ``F`` even if there are no args;
     if ``nonbasic`` is True, try to apply ``F`` to non-Basic objects.
     """
-    from sympy.core.basic import _aresame
     args = getattr(rv, 'args', None)
     if args is not None:
         if args:
             args = tuple([bottom_up(a, F, atoms, nonbasic) for a in args])
-            if not all(_aresame(i, j) for i, j in zip(args, rv.args)):
+            if args != rv.args:
                 rv = rv.func(*args)
             rv = F(rv)
         elif atoms:
