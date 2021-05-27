@@ -77,7 +77,7 @@ def _linsolve(eqs, syms):
     # sdm_irref has issues with float matrices. This uses the Matrix.rref()
     # method. When DomainMatrix.rref() can handle float matrices reasonably
     # this should be removed...
-    if K.is_RealField:
+    if K.is_RealField or K.is_ComplexField:
         Aaug_Matrix = DomainMatrix.from_rep(Aaug).to_Matrix().rref()[0]
         Aaug = DomainMatrix.from_Matrix(Aaug_Matrix).to_field().to_sparse().rep
 

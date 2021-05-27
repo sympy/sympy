@@ -48,7 +48,7 @@ def _construct_simple(coeffs, opt):
                         float_numbers.append(x)
                     if y.is_Float:
                         float_numbers.append(y)
-            if is_algebraic(coeff):
+            elif is_algebraic(coeff):
                 if floats:
                     # there are both algebraics and reals -> EX
                     return False
