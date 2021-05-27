@@ -2,7 +2,7 @@
 Joint (Docstrings)
 ==================
 
-.. module:: sympy.physics.mechanics.joint
+.. module:: sympy.physics.mechanics.joints
 
 Joint
 =====

@@ -1,4 +1,4 @@
-from sympy.physics.mechanics import Particle, RigidBody
+from sympy.physics.mechanics import Body
 from abc import ABC, abstractmethod
 
 class Joint(ABC):
@@ -64,11 +64,11 @@ class Joint(ABC):
             raise TypeError('Supply a valid name.')
         self._name = name
 
-        if not isinstance(parent, (Particle, RigidBody)):
+        if not isinstance(parent, Body):
             raise TypeError('Parent must be an instance of Particle/RigidBody.')
         self._parent = parent
 
-        if not isinstance(child, (Particle, RigidBody)):
+        if not isinstance(child, Body):
             raise TypeError('Parent must be an instance of Particle/RigidBody.')
         self._child = child
 
