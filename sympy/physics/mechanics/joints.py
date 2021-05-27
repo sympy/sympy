@@ -52,10 +52,14 @@ class Joint(ABC):
     ...         return [self._coordinates[0].diff(t) - self._speeds[0]]
 
     >>> P = Body('P')
-    >>> C = Body('B')
+    >>> C = Body('C')
     >>> J1 = J('J1', P, C)
     >>> J1.kdes()
     [-b(t) + Derivative(a(t), t)]
+    >>> J1.parent()
+    P
+    >>> J1.child()
+    C
 
     """
 
@@ -82,12 +86,10 @@ class Joint(ABC):
     def __repr__(self):
         return self.__str__()
 
-    @property
     def parent(self):
         """ Parent body of Joint."""
         return self._parent
 
-    @property
     def child(self):
         """ Child body of Joint."""
         return self._child
