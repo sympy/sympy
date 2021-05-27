@@ -455,9 +455,28 @@ class Function(Application, Expr):
 
         n = len(args)
         from sympy.equation.equation import Equation
-        if (n > 0) and isinstance(args[0],Equation):
-            # simple override for Equation class.
-            return args[0].apply(cls, *args[1:], **options)
+        neqns = 0
+        lhsargs = []
+        rhsargs = []
+        if (n > 0):
+            for i in range(n):
+                if not isinstance(args[i], Equation):
+                    lhsargs.append(args[i])
+                    rhsargs.append(args[i])
+                else:
+                    neqns += 1
+                    lhsargs.append(args[i].lhs)
+                    rhsargs.append(args[i].rhs)
+            if neqns > 1:
+                raise NotImplementedError('Function calls with more than one '
+                                          'Equation as a parameter are not '
+                                          'supported. You may be able to get '
+                                          'your desired outcome using .applyrhs'
+                                          ' and .applylhs.')
+            if neqns == 1:
+                lhs = super().__new__(cls, *lhsargs, **options)
+                rhs = super().__new__(cls, *rhsargs, **options)
+                return Equation(lhs,rhs)
 
         if n not in cls.nargs:
             # XXX: exception message must be in exactly this format to
