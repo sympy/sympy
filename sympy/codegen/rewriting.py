@@ -181,9 +181,10 @@ class _FuncMinusOne:
         self.func_m_1 = func_m_1
 
     def _try_func_m_1(self, expr):
-        protected, old_new =  expr.replace(self.func, lambda arg: Dummy(), map=True)
+        old_new = {}
+        protected = expr.replace(self.func, lambda arg: old_new.setdefault(arg, Dummy()))
         factored = protected.factor()
-        new_old = {v: k for k, v in old_new.items()}
+        new_old = {v: self.func(k) for k, v in old_new.items()}
         return factored.replace(_d - 1, lambda d: self.func_m_1(new_old[d].args[0])).xreplace(new_old)
 
     def __call__(self, e):
