@@ -1,3 +1,4 @@
+from sympy.physics.vector.functions import dynamicsymbols
 from sympy.physics.mechanics import Body
 from sympy.physics.vector import Vector
 from abc import ABC, abstractmethod
@@ -23,6 +24,14 @@ class Joint(ABC):
         Coordinates of joint.
     speeds : List
         Speeds of joint.
+    parent_load_point : Point
+        Point about which load is applied(masscenter)
+    child_load_point : Point
+        Point about which load is applied(masscenter)
+    child_axis : Vector
+        Axis of Child frame.
+    parent_axis : Vector
+        Axis of parent frame about which child would be oriented.
 
     Examples
     ========
@@ -64,8 +73,8 @@ class Joint(ABC):
 
     """
 
-    def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_pos=None, 
-        child_pos=None, parent_axis = None, child_axis=None):
+    def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_load_point=None, 
+        child_load_point=None, parent_axis = None, child_axis=None):
         if not isinstance(name, str):
             raise TypeError('Supply a valid name.')
         self._name = name
@@ -85,7 +94,8 @@ class Joint(ABC):
         self.child_axis = self._axis(child, child_axis)
         self.parent_axis = self._axis(parent, parent_axis)
 
-        self.parent_
+        self.parent_load_pos = self._generate_load_point(parent,parent_load_point)
+        self.child_load_pos = self._generate_load_point(parent, child_load_point)
 
         self._orient_frames()
 
@@ -132,6 +142,7 @@ class Joint(ABC):
 
     def _generate_kdes(self):
         kdes = []
+        t = dynamicsymbols._t
         for i in range(len(self._coordinates)):
             kdes.append(-self._coordinates[0].diff(t) + self._speeds[0])
     
@@ -143,4 +154,5 @@ class Joint(ABC):
             raise TypeError("Axis must be of type Vector. Example-> A.x wehere 'A' is ReferenceFrame.")
         return ax
         
-
+    def _generate_load_point(self, body, load_point):
+        if
