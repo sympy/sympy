@@ -76,6 +76,8 @@ from .dense import (
         ddm_ilu_split,
         ddm_ilu_solve,
         ddm_berk,
+        ddm_applyfunc,
+        ddm_applyfunc_nonzero,
         )
 
 
@@ -211,6 +213,56 @@ class DDM(list):
         if ashape != bshape:
             msg = "Shape mismatch: %s %s %s" % (a.shape, op, b.shape)
             raise DDMShapeError(msg)
+
+    def applyfunc(self, f, domain=None):
+        """Applies a function f to every element of a DDM.
+        If the function returns elements from a different :py:class:`~.Domain`
+        then the new domain should be given as the *domain* argument.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> from sympy import ZZ, QQ
+        >>> A = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> A.applyfunc(lambda x: 2 ** x)
+        [[2, 4], [8, 16]]
+
+        We can also specify the :py:class:`~.Domain` of the output
+
+        >>> A.applyfunc(lambda x: x/QQ(5), QQ)
+        [[1/5, 2/5], [3/5, 4/5]]
+
+        """
+        if domain is None:
+            domain = self.domain
+
+        Mf = ddm_applyfunc(self, f)
+        return DDM(Mf, self.shape, domain)
+
+    def applyfunc_nonzero(self, f, domain=None):
+        """Applies a function f to every non-zero element of a DDM.
+        If the function returns elements from a different :py:class:`~.Domain`
+        then the new domain should be given as the *domain* argument.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> from sympy import ZZ, QQ
+        >>> A = DDM([[ZZ(1), ZZ(0)], [ZZ(0), ZZ(3)]], (2, 2), ZZ)
+        >>> A.applyfunc_nonzero(lambda x: 2 ** x)
+        [[2, 0], [0, 8]]
+        >>> A.applyfunc_nonzero(lambda x: QQ(1)/x, QQ)
+        [[1, 0], [0, 1/3]]
+
+        """
+
+        if domain is None:
+            domain = self.domain
+
+        Mf = ddm_applyfunc_nonzero(self, f, domain)
+        return DDM(Mf, self.shape, domain)
 
     def add(a, b):
         """a + b"""

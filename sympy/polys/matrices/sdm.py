@@ -700,6 +700,54 @@ class SDM(dict):
         """
         return A.to_ddm().charpoly()
 
+    def applyfunc(self, f, domain=None):
+        """Returns SDM after applying function f to each element
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import ZZ
+        >>> A = SDM.zeros((2, 2), ZZ)
+        >>> A.applyfunc(lambda x: x + ZZ(4))
+        {0: {0: 4, 1: 4}, 1: {0: 4, 1: 4}}
+
+        If the function returns elements from a different :py:class:`~.Domain`
+        then the new domain should be given as the *domain* argument.
+
+        >>> from sympy import QQ
+        >>> A.applyfunc(lambda x: x + QQ(1, 2), QQ)
+        {0: {0: 1/2, 1: 1/2}, 1: {0: 1/2, 1: 1/2}}
+
+        """
+        if domain is None:
+            domain = self.domain
+
+        Mf = sdm_applyfunc(self, self.shape, f, domain)
+        return SDM(Mf, self.shape, domain)
+
+    def applyfunc_nonzero(self, f, domain=None):
+        """Returns SDM after applying function f to each non-zero element.
+        If the function returns elements from a different :py:class:`~.Domain`
+        then the new domain should be given as the *domain* argument.
+
+        This method is efficient for sparse matrices
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import ZZ, QQ
+        >>> A = SDM({0: {1 : ZZ(1)}, 1: {0: ZZ(3)}}, (2, 2), ZZ)
+        >>> A.applyfunc_nonzero(lambda x: QQ(1) + x/QQ(2), QQ)
+        {0: {1: 3/2}, 1: {0: 5/2}}
+
+        """
+        if domain is None:
+            domain = self.domain
+
+        Mf = unop_dict(self, f)
+        return SDM(Mf, self.shape, domain)
 
 def binop_dict(A, B, fab, fa, fb):
     Anz, Bnz = set(A), set(B)
@@ -749,7 +797,6 @@ def sdm_transpose(M):
             except KeyError:
                 MT[j] = {i: Mij}
     return MT
-
 
 def sdm_matmul(A, B):
     #
@@ -990,3 +1037,29 @@ def sdm_particular_from_rref(A, ncols, pivots):
         if Ain is not None:
             P[j] = Ain / A[i][j]
     return P
+
+
+def sdm_applyfunc(M, shape, f, domain):
+
+    fzero = f(domain.zero)
+    if not fzero:
+        return unop_dict(M, f)
+
+    nrows, ncols = shape
+
+    Mf = {i: {j: fzero for j in range(ncols)} for i in range(nrows)}
+
+    for i, Mi in M.items():
+        Mfi = Mf[i]
+        for j, Mij in Mi.items():
+            fMij = f(Mij)
+            if fMij:
+                Mfi[j] = fMij
+            else:
+                del Mfi[j]
+
+        if Mfi:
+           Mf[i] = Mfi
+        else:
+            del Mf[i]
+    return Mf

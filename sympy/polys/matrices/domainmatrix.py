@@ -666,6 +666,61 @@ class DomainMatrix:
             msg = "Format mismatch: %s %s %s" % (a.rep.fmt, op, b.rep.fmt)
             raise DDMFormatError(msg)
 
+    def applyfunc(self, f, domain=None):
+        """Applies a function f to every element of a DomainMatrix
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import ZZ
+        >>> A = DomainMatrix([[ZZ(1), ZZ(3)], [ZZ(2), ZZ(4)]], (2, 2), ZZ)
+        >>> f = lambda i: ZZ(2) ** i
+        >>> A.applyfunc(f)
+        DomainMatrix([[2, 8], [4, 16]], (2, 2), ZZ)
+
+        If the function returns elements from a different domain then the new domain should be given as the *domain* argument.
+
+        >>> from sympy import QQ
+        >>> f = lambda i: i/QQ(2)
+        >>> A.applyfunc(f, QQ)
+        DomainMatrix([[1/2, 3/2], [1, 2]], (2, 2), QQ)
+
+        See Also
+        ========
+
+        applyfunc_nonzero
+        """
+
+        if domain is None:
+            domain = self.domain
+
+        return self.from_rep(self.rep.applyfunc(f, domain))
+
+    def applyfunc_nonzero(self, f, domain=None):
+        """Applies a function f to every non-zero element of a DomainMatrix
+        and converts :py:class:`~.Domain` to domain. If the function returns elements
+        from a different domain then the new domain should be given as  *domain* argument
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import ZZ, QQ
+        >>> A = DomainMatrix({0: {1: ZZ(1)}, 1: {0: ZZ(3)}}, (2, 2), ZZ)
+        >>> A.applyfunc_nonzero(lambda x: x/QQ(2) + QQ(1),  QQ)
+        DomainMatrix({0: {1: 3/2}, 1: {0: 5/2}}, (2, 2), QQ)
+
+        See Also
+        ========
+
+        DomainMatrix.applyfunc
+        """
+        if domain is None:
+            domain = self.domain
+
+        return self.from_rep(self.rep.applyfunc_nonzero(f, domain))
+
     def add(A, B):
         r"""
         Adds two DomainMatrix matrices of the same Domain
