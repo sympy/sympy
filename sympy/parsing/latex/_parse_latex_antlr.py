@@ -164,11 +164,8 @@ def convert_unary(unary):
         return convert_unary(nested_unary)
     elif unary.SUB():
         numabs = convert_unary(nested_unary)
-        if numabs == 1:
-            # Use Integer(-1) instead of Mul(-1, 1)
-            return -numabs
-        else:
-            return sympy.Mul(-1, convert_unary(nested_unary), evaluate=False)
+        # Use Integer(-n) instead of Mul(-1, n)
+        return -numabs
     elif postfix:
         return convert_postfix_list(postfix)
 
