@@ -74,12 +74,11 @@ def _linsolve(eqs, syms):
     Aaug = sympy_dict_to_dm(eqsdict, rhs, syms)
     K = Aaug.domain
 
-    # sdm_irref has issues with float matrices. This uses the Matrix.rref()
-    # method. When DomainMatrix.rref() can handle float matrices reasonably
-    # this should be removed...
+    # sdm_irref has issues with float matrices. This uses the ddm_rref()
+    # function. When sdm_rref() can handle float matrices reasonably this
+    # should be removed...
     if K.is_RealField or K.is_ComplexField:
-        Aaug_Matrix = DomainMatrix.from_rep(Aaug).to_Matrix().rref()[0]
-        Aaug = DomainMatrix.from_Matrix(Aaug_Matrix).to_field().to_sparse().rep
+        Aaug = Aaug.to_ddm().rref()[0].to_sdm()
 
     # Compute reduced-row echelon form (RREF)
     Arref, pivots, nzcols = sdm_irref(Aaug)

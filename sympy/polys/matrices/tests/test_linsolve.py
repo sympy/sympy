@@ -59,6 +59,15 @@ def test__linsolve_float():
     assert all_close(sol_exact, sol_linsolve)
 
     eqs = [
+        0.4*x + 0.3*y + 0.6*z + 0.7,
+        0.4*x + 0.3*y + 0.9*z + 0.9,
+        0.7*x + 0.9*y,
+    ]
+    sol_exact = {x:-9/5, y:7/5, z:-2/3}
+    sol_linsolve = _linsolve(eqs, [x,y,z])
+    assert all_close(sol_exact, sol_linsolve)
+
+    eqs = [
         x*(0.7 + 0.6*I) + y*(0.4 + 0.7*I) + z*(0.9 + 0.1*I) + 0.5,
         0.2*I*x + 0.2*I*y + z*(0.9 + 0.2*I) + 0.1,
         x*(0.9 + 0.7*I) + y*(0.9 + 0.7*I) + z*(0.9 + 0.4*I) + 0.4,
