@@ -147,21 +147,27 @@ from sympy.core.numbers import oo
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.functions import sqrt
-from sympy.polys.polytools import cancel, degree
+from sympy.polys.polytools import Poly
 from sympy.polys.polyroots import roots
-from sympy.simplify.radsimp import numer, denom
+from sympy.simplify.radsimp import numer
 from sympy.series.limits import limit
-from sympy.solvers.solvers import solve
+from sympy.solvers.solvers import solve_undetermined_coeffs
 
-def find_poles(a, x):
+def find_poles(num, den, x):
     # All roots of denominator are poles of a(x)
-    p = roots(denom(a), x)
-
+    p = roots(den, x)
     # Substitute 1/x for x and check if oo is a pole
-    a = cancel(a.subs(x, 1/x).together())
+    if den.degree(x) > num.degree(x):
+        if num.expr != 0:
+            num = num.transform(Poly(1, x), Poly(x, x)) * x**(den.degree(x) - num.degree(x))
+            den = den.transform(Poly(1, x), Poly(x, x))
+    else:
+        num = num.transform(Poly(1, x), Poly(x, x))
+        den = den.transform(Poly(1, x), Poly(x, x)) * x**(num.degree(x) - den.degree(x))
+    num, den = num.cancel(den)[1:]
 
     # Find the poles of a(1/x)
-    p_inv = roots(denom(a), x)
+    p_inv = roots(den, x)
 
     # If 0 is a pole of a(1/x), oo is a pole of a(x)
     if 0 in p_inv:
@@ -169,10 +175,9 @@ def find_poles(a, x):
     return p
 
 
-def val_at_inf(a, x):
-    numer, denom = a.as_numer_denom()
+def val_at_inf(num, den, x):
     # Valuation of a rational function at oo = deg(denom) - deg(numer)
-    return degree(denom, x) - degree(numer, x)
+    return den.degree(x) - num.degree(x)
 
 
 def construct_c(a, x, poles, muls):
@@ -315,9 +320,9 @@ def solve_aux_eq(a, x, m, ybar):
         psol += psyms[i]*x**i
     if m != 0:
         # m is a non-zero integer. Find the constant terms using undetermined coefficients
-        return psol, solve(auxeq.subs(p(x), psol).doit().expand(), psyms, dict=True), True
+        return psol, solve_undetermined_coeffs(auxeq.subs(p(x), psol).doit().expand(), psyms, x), True
     else:
-        # m ==0 . Check if 1 (x**0) is a solution to the auxiliary equation
+        # m == 0 . Check if 1 (x**0) is a solution to the auxiliary equation
         cf = auxeq.subs(p(x), psol).doit().expand()
         return S(1), cf, cf == 0
 
@@ -325,23 +330,25 @@ def solve_aux_eq(a, x, m, ybar):
 def solve_riccati(eq, fx, x, b0, b1, b2):
     # Step 1 : Convert to Normal Form
     a = -b0*b2 + b1**2/4 - b1.diff(x)/2 + 3*b2.diff(x)**2/(4*b2**2) + b1*b2.diff(x)/(2*b2) - b2.diff(x, 2)/(2*b2)
-    a_t = cancel(a.together())
+    a_t = a.together()
+    num, den = map(lambda e: Poly(e, x), a_t.as_numer_denom())
+    num, den = num.cancel(den)[1:]
 
     # Step 2
     presol = []
 
     # Step 3 : a(x) is 0
-    if a_t == 0:
+    if num == 0:
         presol.append(1/(x + get_numbered_constants(eq, 1)))
 
     # Step 4 : a(x) is a non-zero constant
-    elif x not in a_t.free_symbols:
+    elif x not in num.free_symbols.union(den.free_symbols):
         presol.extend([sqrt(a), -sqrt(a)])
 
     # Step 5 : Find poles and valuation at infinity
-    poles = find_poles(a_t, x)
+    poles = find_poles(num, den, x)
     poles, muls = list(poles.keys()), list(poles.values())
-    val_inf = val_at_inf(a_t, x)
+    val_inf = val_at_inf(num, den, x)
 
     if len(poles):
         # Check necessary conditions (outlined in the module docstring)
@@ -380,7 +387,7 @@ def solve_riccati(eq, fx, x, b0, b1, b2):
                     # m is a positive integer and there are valid coefficients
                     elif len(coeffs):
                         # Substitute the valid coefficients to get p(x)
-                        psol = psol.subs(coeffs[0])
+                        psol = psol.subs(coeffs)
                         # y(x) = ybar(x) + p'(x)/p(x)
                         presol.append(ybar + psol.diff(x)/psol)
 
