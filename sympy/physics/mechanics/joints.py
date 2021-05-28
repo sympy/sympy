@@ -1,6 +1,6 @@
 from sympy.physics.vector.functions import dynamicsymbols
 from sympy.physics.mechanics import Body
-from sympy.physics.vector import Vector
+from sympy.physics.vector import Vector, Point
 from abc import ABC, abstractmethod
 
 class Joint(ABC):
@@ -98,6 +98,8 @@ class Joint(ABC):
         self.child_load_pos = self._generate_load_point(parent, child_load_point)
 
         self._orient_frames()
+        self._set_angular_velocity()
+        self._set_linear_velocity()
 
     def __str__(self):
         return self._name
@@ -139,6 +141,14 @@ class Joint(ABC):
     def _orient_frames(self):
         """Orient frames as per the joint"""
         pass
+    
+    @abstractmethod
+    def _set_angular_velocity(self):
+        pass
+
+    @abstractmethod
+    def _set_linear_velocity(self):
+        pass
 
     def _generate_kdes(self):
         kdes = []
@@ -155,4 +165,9 @@ class Joint(ABC):
         return ax
         
     def _generate_load_point(self, body, load_point):
-        if
+        if load_point is None:
+            return body.masscenter
+        if not isinstance(load_point, Point):
+            raise ValueError
+        return load_point
+        
