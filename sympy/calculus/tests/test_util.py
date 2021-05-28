@@ -5,13 +5,14 @@ from sympy.calculus.util import (function_range, continuous_domain, not_empty_in
                                  periodicity, lcim, AccumBounds, is_convex,
                                  stationary_points, minimum, maximum)
 from sympy.core import Add, Mul, Pow
+from sympy.core.expr import unchanged
 from sympy.sets.sets import (Interval, FiniteSet, EmptySet, Complement,
                             Union)
 from sympy.testing.pytest import raises, _both_exp_pow
 from sympy.abc import x
 
 a = Symbol('a', real=True)
-
+B = AccumBounds
 
 def test_function_range():
     x, y, a, b = symbols('x y a b')
@@ -449,14 +450,12 @@ def test_AccumBounds_pow():
     assert AccumBounds(-1, 1)**0 == 1
 
     assert AccumBounds(1, 2)**Rational(5, 2) == AccumBounds(1, 4*sqrt(2))
-    assert AccumBounds(-1, 2)**Rational(1, 3) == AccumBounds(-1, 2**Rational(1, 3))
     assert AccumBounds(0, 2)**S.Half == AccumBounds(0, sqrt(2))
 
-    assert AccumBounds(-4, 2)**Rational(2, 3) == AccumBounds(0, 2*2**Rational(1, 3))
-
-    assert AccumBounds(-1, 5)**S.Half == AccumBounds(0, sqrt(5))
-    assert AccumBounds(-oo, 2)**S.Half == AccumBounds(0, sqrt(2))
-    assert AccumBounds(-2, 3)**Rational(-1, 4) == AccumBounds(0, oo)
+    neg = Symbol('neg', negative=True)
+    unchanged(Pow, AccumBounds(neg, 1), S.Half)
+    nn = Symbol('nn', nonnegative=True)
+    assert AccumBound(nn, nn + 1)**S.Half == AccumBounds(sqrt(nn), sqrt(nn + 1))
 
     assert AccumBounds(1, 5)**(-2) == AccumBounds(Rational(1, 25), 1)
     assert AccumBounds(-1, 3)**(-2) == AccumBounds(0, oo)
@@ -465,17 +464,15 @@ def test_AccumBounds_pow():
     assert AccumBounds(-3, -2)**(-3) == AccumBounds(Rational(-1, 8), Rational(-1, 27))
     assert AccumBounds(-3, -2)**(-2) == AccumBounds(Rational(1, 9), Rational(1, 4))
     assert AccumBounds(0, oo)**S.Half == AccumBounds(0, oo)
-    assert AccumBounds(-oo, -1)**Rational(1, 3) == AccumBounds(-oo, -1)
-    assert AccumBounds(-2, 3)**(Rational(-1, 3)) == AccumBounds(-oo, oo)
     assert AccumBounds(-oo, 0)**(-2) == AccumBounds(0, oo)
     assert AccumBounds(-2, 0)**(-2) == AccumBounds(Rational(1, 4), oo)
 
     assert AccumBounds(Rational(1, 3), S.Half)**oo is S.Zero
     assert AccumBounds(0, S.Half)**oo is S.Zero
-    assert AccumBounds(S.Half, 1)**oo == AccumBounds(0, oo)
-    assert AccumBounds(0, 1)**oo == AccumBounds(0, oo)
+    assert AccumBounds(S.Half, 1)**oo == AccumBounds(0, 1)
+    assert AccumBounds(0, 1)**oo == AccumBounds(0, 1)
     assert AccumBounds(2, 3)**oo is oo
-    assert AccumBounds(1, 2)**oo == AccumBounds(0, oo)
+    assert AccumBounds(1, 2)**oo == AccumBounds(1, oo)
     assert AccumBounds(S.Half, 3)**oo == AccumBounds(0, oo)
     assert AccumBounds(Rational(-1, 3), Rational(-1, 4))**oo is S.Zero
     assert AccumBounds(-1, Rational(-1, 2))**oo == AccumBounds(-oo, oo)
@@ -490,7 +487,7 @@ def test_AccumBounds_pow():
     assert AccumBounds(-1, 2)**oo == AccumBounds(-oo, oo)
     assert AccumBounds(-2, S.Half)**oo == AccumBounds(-oo, oo)
 
-    assert AccumBounds(1, 2)**x == Pow(AccumBounds(1, 2), x)
+    assert AccumBounds(1, 2)**x == Pow(AccumBounds(1, 2), x, evaluate=False)
 
     assert AccumBounds(2, 3)**(-oo) is S.Zero
     assert AccumBounds(0, 2)**(-oo) == AccumBounds(0, oo)
@@ -500,18 +497,14 @@ def test_AccumBounds_pow():
         Pow(AccumBounds(-oo, oo), AccumBounds(0, 1))
 
 
-def test_AccumBounds_as_exponent():
+def test_AccumBounds_exponent():
     B = AccumBounds
-    # base = -1
-    assert (-1)**B(-2, -1) == B(-1, 1)  # even and odd
-    assert (-1)**B(-2.1, -1.9) == 1  # even
-    assert (-1)**B(-1, -1/2) == -1  # odd
-    raises(ValueError, lambda: (-1)**B(-.9, -.1))  # no ints
     # base is 0
-    raises(ZeroDivisionError, lambda: 0**B(-2, -1))  # all neg
-    assert 0**B(-2, 0) == 1  # only 0
-    assert 0**B(-2, 1/2) == B(0, 1)  # 0 and pos
-    raises(ValueError, lambda: 0**AccumBounds(a, a + 1))
+    z = 0**B(a, a + S.Half)
+    assert z.subs(a, 0) == B(0, 1)
+    assert z.subs(a, 1) == 0
+    p = z.subs(a, -1)
+    assert p.is_Pow and p.args == (0, AccumBounds(-1, -S.Half))
     # base > 0
     #   when base is 1 the type of bounds does not matter
     assert 1**B(a, a + 1) == 1
@@ -519,153 +512,36 @@ def test_AccumBounds_as_exponent():
     assert S.Half**B(-2, 2) == B(S(1)/4, 4)
     assert 2**B(-2, 2) == B(S(1)/4, 4)
 
-    # negative bases must have a integer exponent
-    raises(ValueError, lambda: B(-2, -1)**B(.5, .6))
-    # only -2 present
-    assert B(-3, -2)**B(-2, -S(3)/2) == B(S(1)/9, S(1)/4)
-    # only -1 present
-    assert B(-3, -2)**B(-S(3)/2, -S(1)/2) == B(-S(1)/2, -S(1)/3)
-    # -2, -1
-    assert B(-3, -2)**B(-2, -1) == B(-S(1)/2, S(1)/4)
-    # -3, -2, -1
-    assert B(-3, -2)**B(-3, -S(1)/2) == B(-S(1)/2, S(1)/4)
-    # -4, -3, -2, -1
-    assert B(-3, -2)**B(-S(9)/2, -S(1)/2) == B(-S(1)/2, S(1)/4)
-
-    # -eps may introduce +/-oo depending on parity of exponent
-    # no -eps and integer exponents
-    raises(ValueError, lambda:
-        B(-1, -S(1)/2)**B(S(1)/4, S(1)/2))
-    # no negative integer exponents
-    assert B(-1, 0)**B(S(1)/4, S(1)/2) == 0
-    assert B(-1, 0)**B(-S(3)/2, 1) == B(-oo, 1)
-    # -1
-    assert B(-1, 0)**B(-S(3)/2, -S(1)/2) == B(-oo, -1)
-    # -2
-    assert B(-1, 0)**B(-S(5)/2, -S(3)/2) == B(1, oo)
-    # -1 and -2
-    assert B(-1, 0)**B(-S(5)/2, -S(1)/2) == B(-oo, oo)
-
     # +eps may introduce +oo
     # if there is a negative integer exponent
     assert B(0, 1)**B(S(1)/2, 1) == B(0, 1)
     assert B(0, 1)**B(0, 1) == B(0, 1)
-    assert B(0, 1)**B(-S(1)/2, 1) == B(0, 1)
-    # like -1
-    assert B(0, 1)**B(-S(3)/2, 1) == B(0, oo)
-    # or -2
-    assert B(0, 1)**B(-S(5)/2, -2) == B(1, oo)
 
     # positive bases have positive bounds
     assert B(2, 3)**B(-3, -2) == B(S(1)/27, S(1)/4)
     assert B(2, 3)**B(-3, 2) == B(S(1)/27, 9)
 
-    # bounds involving infinities
-    assert B(-oo, -2)**B(1, oo) == B(-oo, oo)
-    assert B(-oo, -2)**B(-oo, -1) == B(-S(1)/2, S(1)/4)
-    assert B(-oo, -2)**B(-oo, oo) == B(-oo, oo)
-    assert B(-oo, -1)**B(1, oo) == B(-oo, oo)
-    assert B(-oo, -1)**B(-oo, -1) == B(-1, 1)
-    assert B(-oo, -1)**B(-oo, oo) == B(-oo, oo)
-    assert B(-oo, -S(1)/2)**B(1, oo) == B(-oo, oo)
-    assert B(-oo, -S(1)/2)**B(-oo, -1) == B(-oo, oo)
-    assert B(-oo, -S(1)/2)**B(-oo, oo) == B(-oo, oo)
-    assert B(-oo, 0)**B(1, oo) == B(-oo, oo)
-    assert B(-oo, 0)**B(-oo, -1) == B(-1, 1)
-    assert B(-oo, 0)**B(-oo, oo) == B(-oo, oo)
-    assert B(-oo, S(1)/2)**B(1, oo) == B(-oo, oo)
-    assert B(-oo, S(1)/2)**B(-oo, -1) == B(-1, oo)
-    assert B(-oo, S(1)/2)**B(-oo, oo) == B(-oo, oo)
-    assert B(-oo, 1)**B(1, oo) == B(-oo, oo)
-    assert B(-oo, 1)**B(-oo, -1) == B(-1, 1)
-    assert B(-oo, 1)**B(-oo, oo) == B(-oo, oo)
-    assert B(-oo, 2)**B(1, oo) == B(-oo, oo)
-    assert B(-oo, 2)**B(-oo, -1) == B(-1, 1)
-    assert B(-oo, 2)**B(-oo, oo) == B(-oo, oo)
-    assert B(-oo, oo)**B(1, oo) == B(-oo, oo)
-    assert B(-oo, oo)**B(-oo, -1) == B(-1, 1)
-    assert B(-oo, oo)**B(-oo, oo) == B(-oo, oo)
-    assert B(-2, -1)**B(1, oo) == B(-oo, oo)
-    assert B(-2, -1)**B(-oo, -1) == B(-1, 1)
-    assert B(-2, -1)**B(-oo, oo) == B(-oo, oo)
-    assert B(-2, -S(1)/2)**B(1, oo) == B(-oo, oo)
-    assert B(-2, -S(1)/2)**B(-oo, -1) == B(-oo, oo)
-    assert B(-2, -S(1)/2)**B(-oo, oo) == B(-oo, oo)
-    assert B(-2, 0)**B(1, oo) == B(-oo, oo)
-    assert B(-2, 0)**B(-oo, -1) == B(-1, 1)
-    assert B(-2, 0)**B(-oo, oo) == B(-oo, oo)
-    assert B(-2, S(1)/2)**B(1, oo) == B(-oo, oo)
-    assert B(-2, S(1)/2)**B(-oo, -1) == B(-1, oo)
-    assert B(-2, S(1)/2)**B(-oo, oo) == B(-oo, oo)
-    assert B(-2, 1)**B(1, oo) == B(-oo, oo)
-    assert B(-2, 1)**B(-oo, -1) == B(-1, 1)
-    assert B(-2, 1)**B(-oo, oo) == B(-oo, oo)
-    assert B(-2, 2)**B(1, oo) == B(-oo, oo)
-    assert B(-2, 2)**B(-oo, -1) == B(-1, 1)
-    assert B(-2, 2)**B(-oo, oo) == B(-oo, oo)
-    assert B(-2, oo)**B(1, oo) == B(-oo, oo)
-    assert B(-2, oo)**B(-oo, -1) == B(-1, 1)
-    assert B(-2, oo)**B(-oo, oo) == B(-oo, oo)
-    assert B(-1, -S(1)/2)**B(1, oo) == B(-1, 1)
-    assert B(-1, -S(1)/2)**B(-oo, -1) == B(-oo, oo)
-    assert B(-1, -S(1)/2)**B(-oo, oo) == B(-oo, oo)
-    assert B(-1, 0)**B(1, oo) == B(-1, 1)
-    assert B(-1, 0)**B(-oo, -1) == B(-1, 1)
-    assert B(-1, 0)**B(-oo, oo) == B(-1, 1)
-    assert B(-1, S(1)/2)**B(1, oo) == B(-1, 1)
-    assert B(-1, S(1)/2)**B(-oo, -1) == B(-1, oo)
-    assert B(-1, S(1)/2)**B(-oo, oo) == B(-1, oo)
-    assert B(-1, 1)**B(1, oo) == B(-1, 1)
-    assert B(-1, 1)**B(-oo, -1) == B(-1, 1)
-    assert B(-1, 1)**B(-oo, oo) == B(-1, 1)
-    assert B(-1, 2)**B(1, oo) == B(-1, oo)
-    assert B(-1, 2)**B(-oo, -1) == B(-1, 1)
-    assert B(-1, 2)**B(-oo, oo) == B(-1, oo)
-    assert B(-1, oo)**B(1, oo) == B(-1, oo)
-    assert B(-1, oo)**B(-oo, -1) == B(-1, 1)
-    assert B(-1, oo)**B(-oo, oo) == B(-1, oo)
-    assert B(-S(1)/2, 0)**B(1, oo) == B(-S(1)/2, S(1)/4)
-    assert B(-S(1)/2, 0)**B(-oo, -1) == B(-oo, oo)
-    assert B(-S(1)/2, 0)**B(-oo, oo) == B(-oo, oo)
-    assert B(-S(1)/2, S(1)/2)**B(1, oo) == B(0, S(1)/2)
-    assert B(-S(1)/2, S(1)/2)**B(-oo, -1) == B(-oo, oo)
-    assert B(-S(1)/2, S(1)/2)**B(-oo, oo) == B(-oo, oo)
-    assert B(-S(1)/2, 1)**B(1, oo) == B(0, 1)
-    assert B(-S(1)/2, 1)**B(-oo, -1) == B(-oo, oo)
-    assert B(-S(1)/2, 1)**B(-oo, oo) == B(-oo, oo)
-    assert B(-S(1)/2, 2)**B(1, oo) == B(0, oo)
-    assert B(-S(1)/2, 2)**B(-oo, -1) == B(-oo, oo)
-    assert B(-S(1)/2, 2)**B(-oo, oo) == B(-oo, oo)
-    assert B(-S(1)/2, oo)**B(1, oo) == B(0, oo)
-    assert B(-S(1)/2, oo)**B(-oo, -1) == B(-oo, oo)
-    assert B(-S(1)/2, oo)**B(-oo, oo) == B(-oo, oo)
+    # bounds generating imaginary parts unevaluated
+    unchanged(Pow, AccumBounds(-1, 1), AccumBounds(1, 2))
     assert B(0, S(1)/2)**B(1, oo) == B(0, S(1)/2)
-    assert B(0, S(1)/2)**B(-oo, -1) == B(-oo, oo)
-    assert B(0, S(1)/2)**B(-oo, oo) == B(-oo, oo)
     assert B(0, 1)**B(1, oo) == B(0, 1)
-    assert B(0, 1)**B(-oo, -1) == B(-oo, oo)
-    assert B(0, 1)**B(-oo, oo) == B(-oo, oo)
     assert B(0, 2)**B(1, oo) == B(0, oo)
-    assert B(0, 2)**B(-oo, -1) == B(-oo, oo)
-    assert B(0, 2)**B(-oo, oo) == B(-oo, oo)
     assert B(0, oo)**B(1, oo) == B(0, oo)
-    assert B(0, oo)**B(-oo, -1) == B(-oo, oo)
-    assert B(0, oo)**B(-oo, oo) == B(-oo, oo)
-    assert B(S(1)/2, 1)**B(1, oo) == B(S(1)/2, 1)
+    assert B(S(1)/2, 1)**B(1, oo) == B(0, 1)
     assert B(S(1)/2, 1)**B(-oo, -1) == B(1, oo)
-    assert B(S(1)/2, 1)**B(-oo, oo) == B(1, oo)
-    assert B(S(1)/2, 2)**B(1, oo) == B(S(1)/2, oo)
-    assert B(S(1)/2, 2)**B(-oo, -1) == B(S(1)/2, oo)
-    assert B(S(1)/2, 2)**B(-oo, oo) == B(1, oo)
-    assert B(S(1)/2, oo)**B(1, oo) == B(S(1)/2, oo)
+    assert B(S(1)/2, 1)**B(-oo, oo) == B(0, oo)
+    assert B(S(1)/2, 2)**B(1, oo) == B(0, oo)
+    assert B(S(1)/2, 2)**B(-oo, -1) == B(0, oo)
+    assert B(S(1)/2, 2)**B(-oo, oo) == B(0, oo)
+    assert B(S(1)/2, oo)**B(1, oo) == B(0, oo)
     assert B(S(1)/2, oo)**B(-oo, -1) == B(0, oo)
-    assert B(S(1)/2, oo)**B(-oo, oo) == B(1, oo)
+    assert B(S(1)/2, oo)**B(-oo, oo) == B(0, oo)
     assert B(1, 2)**B(1, oo) == B(1, oo)
-    assert B(1, 2)**B(-oo, -1) == B(S(1)/2, 1)
-    assert B(1, 2)**B(-oo, oo) == B(1, oo)
+    assert B(1, 2)**B(-oo, -1) == B(0, 1)
+    assert B(1, 2)**B(-oo, oo) == B(0, oo)
     assert B(1, oo)**B(1, oo) == B(1, oo)
     assert B(1, oo)**B(-oo, -1) == B(0, 1)
-    assert B(1, oo)**B(-oo, oo) == B(1, oo)
+    assert B(1, oo)**B(-oo, oo) == B(0, oo)
     assert B(2, oo)**B(1, oo) == B(2, oo)
     assert B(2, oo)**B(-oo, -1) == B(0, S(1)/2)
     assert B(2, oo)**B(-oo, oo) == B(0, oo)

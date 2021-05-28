@@ -894,22 +894,21 @@ class AccumulationBounds(AtomicExpr):
 
     `X * Y = \{ x*y \mid x \in X \cap y \in Y\}`
 
-    There is, however, no consensus on Interval division.
-
-    `X / Y = \{ z \mid \exists x \in X, y \in Y \mid y \neq 0, z = x/y\}`
-
-    Note: According to this definition the quotient of two AccumulationBounds
-    may not be a AccumulationBounds object but rather a union of
-    AccumulationBounds.
+    When an AccumBounds is raised to a negative power, if 0 is contained
+    between the bounds then an infinite range is returned, otherwise if an
+    endpoint is 0 then a semi-infinite range with consistent sign will be returned.
 
     Note
     ====
 
-    The main focus in the interval arithmetic is on the simplest way to
-    calculate upper and lower endpoints for the range of values of a
-    function in one or more variables. These barriers are not necessarily
-    the supremum or infimum, since the precise calculation of those values
-    can be difficult or impossible.
+    AccumBounds in expressions behave a lot like Intervals but the semantics
+    are not necessarily the same. Division (or exponentiation to a negative
+    integer power) could be handled with *intervals* by returning a union of the
+    results obtained after splitting the bounds between negatives and positives,
+    but that is not done with AccumBounds. In addition, bounds are assumed to
+    be independent of each other; if the same bound is used in more than
+    one place in an expression, the result may not be the supremum
+    or infimum of the expression (see below).
 
     Examples
     ========
@@ -936,21 +935,29 @@ class AccumulationBounds(AtomicExpr):
 
     `X^n = \{ x^n \mid x \in X\}`
 
-    otherwise
+    >>> AccumBounds(1, 4)**(S(1)/2)
+    AccumBounds(1, 2)
 
-    `X^n = \{ x^n \mid x \neq 0, x \in X\} \cup \{-\infty, \infty\}`
+    otherwise, an infinite or semi-infinite result is obtained:
 
-    Here for fractional `n`, the part of `X` resulting in a complex
-    AccumulationBounds object is neglected.
-
-    >>> AccumBounds(-1, 4)**(S(1)/2)
-    AccumBounds(0, 2)
-
-    >>> AccumBounds(1, 2)**2
-    AccumBounds(1, 4)
-
-    >>> AccumBounds(-1, oo)**(-1)
+    >>> 1/AccumBounds(-1, 1)
     AccumBounds(-oo, oo)
+    >>> 1/AccumBounds(0, 2)
+    AccumBounds(1/2, oo)
+    >>> 1/AccumBounds(-oo, 0)
+    AccumBounds(-oo, 0)
+
+    If the exponent is itself an AccumBounds or is not an integer then
+    unevaluated results will be returned unless the base values are
+    positive:
+
+    >>> AccumBounds(2, 3)**AccumBounds(-1, 2)
+    AccumBounds(1/3, 9)
+    >>> AccumBounds(-2, 3)**AccumBounds(-1, 2)
+    AccumBounds(-2, 3)**AccumBounds(-1, 2)
+
+    >>> AccumBounds(-2, -1)**(S(1)/2)
+    sqrt(AccumBounds(-2, -1))
 
     Note: `<a, b>^2` is not same as `<a, b>*<a, b>`
 
@@ -1223,9 +1230,9 @@ class AccumulationBounds(AtomicExpr):
                         if other.max.is_zero:
                             return AccumBounds(self.max / other.min, oo)
                         if other.max.is_extended_positive:
-                            # the actual answer is a Union of AccumBounds,
-                            # Union(AccumBounds(-oo, self.max/other.max),
-                            #       AccumBounds(self.max/other.min, oo))
+                            # if we were dealing with intervals we would return
+                            # Union(Interval(-oo, self.max/other.max),
+                            #       Interval(self.max/other.min, oo))
                             return AccumBounds(-oo, oo)
 
                     if other.min.is_zero and other.max.is_extended_positive:
@@ -1236,9 +1243,9 @@ class AccumulationBounds(AtomicExpr):
                         if other.max.is_zero:
                             return AccumBounds(-oo, self.min / other.min)
                         if other.max.is_extended_positive:
-                            # the actual answer is a Union of AccumBounds,
-                            # Union(AccumBounds(-oo, self.min/other.min),
-                            #       AccumBounds(self.min/other.max, oo))
+                            # if we were dealing with intervals we would return
+                            # Union(Interval(-oo, self.min/other.min),
+                            #       Interval(self.min/other.max, oo))
                             return AccumBounds(-oo, oo)
 
                     if other.min.is_zero and other.max.is_extended_positive:
@@ -1290,7 +1297,6 @@ class AccumulationBounds(AtomicExpr):
 
     @_sympifyit('other', NotImplemented)
     def __pow__(self, other):
-        from sympy.functions.elementary.miscellaneous import real_root
         if isinstance(other, Expr):
             if other is S.Infinity:
                 if self.min.is_extended_nonnegative:
@@ -1298,6 +1304,11 @@ class AccumulationBounds(AtomicExpr):
                         return S.Zero
                     if self.min > 1:
                         return S.Infinity
+                    # XXX is 1**oo to be considered oo or 1?
+                    if self.max == 1:
+                        return AccumBounds(0, 1)
+                    if self.min == 1:
+                        return AccumBounds(1, oo)
                     return AccumBounds(0, oo)
                 elif self.max.is_extended_negative:
                     if self.min > -1:
@@ -1313,21 +1324,21 @@ class AccumulationBounds(AtomicExpr):
                     return AccumBounds(-oo, oo)
 
             if other is S.NegativeInfinity:
-                return (1 / self)**oo
+                return (1/self)**oo
 
-            if other.is_extended_real and other.is_number:
+            if other.is_number:
                 if other.is_zero:
-                    return S.One
+                    return S.One  # x**0 = 1
 
                 if other.is_Integer:
                     if self.min.is_extended_positive:
                         return AccumBounds(
-                            Min(self.min ** other, self.max ** other),
-                            Max(self.min ** other, self.max ** other))
+                            Min(self.min**other, self.max**other),
+                            Max(self.min**other, self.max**other))
                     elif self.max.is_extended_negative:
                         return AccumBounds(
-                            Min(self.max ** other, self.min ** other),
-                            Max(self.max ** other, self.min ** other))
+                            Min(self.max**other, self.min**other),
+                            Max(self.max**other, self.min**other))
 
                     if other % 2 == 0:
                         if other.is_extended_negative:
@@ -1347,159 +1358,49 @@ class AccumulationBounds(AtomicExpr):
                             return AccumBounds(-oo, oo)
                         return AccumBounds(self.min**other, self.max**other)
 
-                num, den = other.as_numer_denom()
-                if num == S.One:
-                    if den % 2 == 0:
-                        if S.Zero in self:
-                            if self.min.is_extended_negative:
-                                return AccumBounds(0, real_root(self.max, den))
-                    return AccumBounds(real_root(self.min, den),
-                                       real_root(self.max, den))
-                if den!=1:
-                    num_pow = self**num
-                    return num_pow**(1 / den)
+                # non-integer exponent
+                # 0**neg or neg**frac yields complex
+                if self.min.is_extended_positive or (
+                        other.is_extended_nonnegative and
+                        self.min.is_extended_nonnegative):
+                    num, den = other.as_numer_denom()
+                    if num is S.One:
+                        return AccumBounds(*[i**(1/den) for i in self.args])
+
+                    elif den is not S.One:  # e.g. if other is not Float
+                        return (self**num)**(1/den)  # ok for non-negative base
 
             if isinstance(other, AccumBounds):
-                # handle infinite bounds that introduce +/- infinity
-                if other.max is oo and is_lt(self.min, S.NegativeOne):
-                    return self.func(-oo, oo)
-                if other.min is -oo:
-                    if is_gt(self.min, S.NegativeOne) and is_le(self.min, S.Zero):
-                        return self.func(-oo, oo)
-                    if any(is_gt(i, S.NegativeOne) and is_lt(i, S.Zero)
-                            for i in self.args):
-                        return self.func(-oo, oo)
-                p = []
-                # there will be infinities if +/-eps is in self
-                # and negative integer exponents
-                if self.max == 0 and other.min.is_finite:
-                    # -eps present, so neg odd will introduce -oo and
-                    # negative even will introduce oo
-                    i = int(other.min)  # rounded toward 0
-                    if i < 0 and i in other:
-                        p.append((-1)**i*oo)  # -1 represents -eps
-                        i += 1
-                        if i < 0 and i in other:
-                            p.append(-p[0])
-                if len(p) == 2:
-                    return AccumBounds(-oo, oo)
-                if other.min != -oo and oo not in p and (
-                        is_ge(S.NegativeOne, other.min) and
-                        is_ge(S.Zero, self.min) and
-                        is_gt(self.max, S.Zero)):
-                    # + eps present so negative int will introduce oo
-                    i = int(other.min)
-                    if i < 0 and i in other:
-                        p.append(oo)
-                # continue with other cases
-                p = set(p)
-                if 0 in other:
-                    p.add(1)  # x**0 = 1
-                if 0 in self and is_gt(other.max, S.Zero):
-                    p.add(0)  # 0**pos == 0
-                b = set(self.args) - {0}  # already handled in prev line
-                ep = set(other.args) - {-oo, oo}  # if base is nonneg, finite extremum only
-                en = set()  # else we need +/- odd/even ints
-                if is_ge(S.Zero, self.max):
-                    # negative bases require integer exponents of
-                    # odd or even parity, positive or negative
-                    # find two smallest ints in bounds
-                    i = None
-                    if other.min != -oo:
-                        i = int(other.min)
-                        if i not in other:
-                            i += 1
-                        if i in other:
-                            en.add(i)
-                            i += 1
-                            if i in other:
-                                en.add(i)
-                    # find two largest ints in bounds
-                    if other.max != oo:
-                        if i is None or i + 1 <= other.max:  # if not, there are no more to find
-                            i = int(other.max)
-                            if i not in other:
-                                i -= 1
-                            if i in other:
-                                en.add(i)
-                                i -= 1
-                                if i in other:
-                                    en.add(i)
-                # consider infinite bounds that introduce other values
-                if other.max is oo:
-                    if -1 in self:
-                        p.update((-1, 1))
-                    elif 1 in self:
-                        p.add(1)
-                    if is_gt(self.max, S.One):
-                        p.add(oo)
-                    if is_gt(self.min, S.NegativeOne) and is_lt(self.max, S.One):
-                        p.add(0)
-                if other.min is -oo:
-                    if -1 in self:
-                        p.update((-1, 1))
-                    elif 1 in self:
-                        p.add(1)
-                    if is_lt(self.max, S.NegativeOne) or is_gt(self.min, S.One):
-                        p.add(0)
-                    if any(is_gt(i, S.Zero) and is_lt(i, S.One)
-                            for i in self.args):
-                        p.add(oo)
-                # compute candidate powers
-                p |= {i**j for i in b for j in
-                    (ep if is_ge(i, S.Zero) else en)}
-                if p:
-                    return self.func(min(p), max(p))
-                else:
-                    # there were no valid exponents so the results
-                    # would have had imaginary parts
-                    raise ValueError('Only real AccumulationBounds are supported')
+                if (self.min.is_extended_positive or
+                        self.min.is_extended_nonnegative and
+                        other.min.is_extended_nonnegative):
+                    p = [self**i for i in other.args]
+                    if not any(i.is_Pow for i in p):
+                        a = [j for i in p for j in i.args or (i,)]
+                        return self.func(min(a), max(a))
 
-            return AccumBounds(-oo, oo)
+            return Pow(self, other, evaluate=False)
 
         return NotImplemented
 
     @_sympifyit('other', NotImplemented)
     def __rpow__(self, other):
-        if other.is_Number:
+        if other.is_real and other.is_extended_nonnegative and (
+                self.max - self.min).is_extended_positive:
             if other is S.One:
                 return S.One
-            p = set()
-            if other.is_real:
-                if other < 0:
-                    i = int(self.min)
-                    if i not in self:
-                        i += 1
-                    if i in self:
-                        p.add(other**i)
-                        i += 1
-                        if i in self:
-                            p.add(other**i)
-                    i = int(self.max)
-                    if i in self:
-                        p.add(other**i)
-                        i -= 1
-                        if i in self:
-                            p.add(other**i)
-                elif other > 0:
-                    p.add(other**self.min)
-                    p.add(other**self.max)
-                else:
-                    try:
-                        if 0 in self:
-                            p.add(1)
-                    except TypeError:
-                        raise ValueError('sign of bounds unknown')
-                    if self.max > 0:
-                        p.add(0)
-            if p:
-                return self.func(min(p), max(p))
-            elif other == 0:
-                raise ZeroDivisionError
-            else:
-                raise ValueError('Only real AccumulationBounds are supported')
+            if other.is_extended_positive:
+                a, b = [other**i for i in self.args]
+                if min(a, b) != a:
+                    a, b = b, a
+                return self.func(a, b)
+            if other.is_zero:
+                if self.min.is_zero:
+                    return self.func(0, 1)
+                if self.min.is_extended_positive:
+                    return S.Zero
 
-        return NotImplemented
+        return Pow(other, self, evaluate=False)
 
     def __abs__(self):
         if self.max.is_extended_negative:
