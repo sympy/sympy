@@ -51,6 +51,7 @@ from sympy.polys.polyclasses import DMP
 from sympy.polys.fields import field
 from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX
 from sympy.polys.domains.realfield import RealField
+from sympy.polys.domains.complexfield import ComplexField
 from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
@@ -387,6 +388,7 @@ def test_Poly__new__():
              modulus=65537, symmetric=False)
 
     assert isinstance(Poly(x**2 + x + 1.0).get_domain(), RealField)
+    assert isinstance(Poly(x**2 + x + I + 1.0).get_domain(), ComplexField)
 
 
 def test_Poly__args():
