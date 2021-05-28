@@ -442,7 +442,7 @@ class sign(Function):
     def _eval_rewrite_as_Heaviside(self, arg, **kwargs):
         from sympy.functions.special.delta_functions import Heaviside
         if arg.is_extended_real:
-            return Heaviside(arg, H0=S(1)/2) * 2 - 1
+            return Heaviside(arg) * 2 - 1
 
     def _eval_rewrite_as_Abs(self, arg, **kwargs):
         return Piecewise((0, Eq(arg, 0)), (arg / Abs(arg), True))
@@ -704,8 +704,10 @@ class Abs(Function):
 
 class arg(Function):
     """
-    Returns the argument (in radians) of a complex number. For a positive
-    number, the argument is always 0.
+    returns the argument (in radians) of a complex number.  The argument is
+    evaluated in consistent convention with atan2 where the branch-cut is
+    taken along the negative real axis and arg(z) is in the interval
+    (-pi,pi].  For a positive number, the argument is always 0.
 
     Examples
     ========

@@ -1,7 +1,7 @@
 """Tests for computational algebraic number field theory. """
 
 from sympy import (S, Rational, Symbol, Poly, sqrt, I, oo, Tuple, expand,
-    pi, cos, sin, exp, GoldenRatio, TribonacciConstant, cbrt)
+    pi, cos, sin, tan, exp, GoldenRatio, TribonacciConstant, cbrt)
 from sympy.solvers.solveset import nonlinsolve
 from sympy.geometry import Circle, intersection
 from sympy.testing.pytest import raises, slow
@@ -286,6 +286,23 @@ def test_minpoly_compose():
     ex = sqrt(1 + 2**Rational(1,3)) + sqrt(1 + 2**Rational(1,4)) + sqrt(2)
     mp = minimal_polynomial(ex, x)
     assert degree(mp) == 48 and mp.subs({x:0}) == -16630256576
+
+    ex = tan(pi/5, evaluate=False)
+    mp = minimal_polynomial(ex, x)
+    assert mp == x**4 - 10*x**2 + 5
+    assert mp.subs(x, tan(pi/5)).is_zero
+
+    ex = tan(pi/6, evaluate=False)
+    mp = minimal_polynomial(ex, x)
+    assert mp == 3*x**2 - 1
+    assert mp.subs(x, tan(pi/6)).is_zero
+
+    ex = tan(pi/10, evaluate=False)
+    mp = minimal_polynomial(ex, x)
+    assert mp == 5*x**4 - 10*x**2 + 1
+    assert mp.subs(x, tan(pi/10)).is_zero
+
+    raises(NotAlgebraic, lambda: minimal_polynomial(tan(pi*sqrt(2)), x))
 
 
 def test_minpoly_issue_7113():

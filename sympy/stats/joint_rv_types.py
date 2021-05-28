@@ -192,13 +192,13 @@ def MultivariateNormal(name, mu, sigma):
     >>> X = MultivariateNormal('X', [3, 4], [[2, 1], [1, 2]])
     >>> y, z = symbols('y z')
     >>> density(X)(y, z)
-    sqrt(3)*exp((3/2 - y/2)*(2*y/3 - z/3 - 2/3) + (2 - z/2)*(-y/3 + 2*z/3 - 5/3))/(6*pi)
+    sqrt(3)*exp(-y**2/3 + y*z/3 + 2*y/3 - z**2/3 + 5*z/3 - 13/3)/(6*pi)
     >>> density(X)(1, 2)
     sqrt(3)*exp(-4/3)/(6*pi)
     >>> marginal_distribution(X, X[1])(y)
-    exp((2 - y/2)*(y/2 - 2))/(2*sqrt(pi))
+    exp(-(y - 4)**2/4)/(2*sqrt(pi))
     >>> marginal_distribution(X, X[0])(y)
-    exp((3/2 - y/2)*(y/2 - 3/2))/(2*sqrt(pi))
+    exp(-(y - 3)**2/4)/(2*sqrt(pi))
 
     References
     ==========

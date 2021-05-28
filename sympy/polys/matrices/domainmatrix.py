@@ -550,8 +550,8 @@ class DomainMatrix:
         """
         from sympy.matrices.dense import MutableDenseMatrix
         elemlist = self.rep.to_list()
-        rows_sympy = [[self.domain.to_sympy(e) for e in row] for row in elemlist]
-        return MutableDenseMatrix(rows_sympy)
+        elements_sympy = [self.domain.to_sympy(e) for row in elemlist for e in row]
+        return MutableDenseMatrix(*self.shape, elements_sympy)
 
     def __repr__(self):
         return 'DomainMatrix(%s, %r, %r)' % (str(self.rep), self.shape, self.domain)
@@ -602,6 +602,15 @@ class DomainMatrix:
         """
         A, B = A.unify(B, fmt='dense')
         return A.from_rep(A.rep.hstack(B.rep))
+
+    def vstack(A, B):
+        A, B = A.unify(B, fmt='dense')
+        return A.from_rep(A.rep.vstack(B.rep))
+
+    def applyfunc(self, func, domain=None):
+        if domain is None:
+            domain = self.domain
+        return self.from_rep(self.rep.applyfunc(func, domain))
 
     def __add__(A, B):
         if not isinstance(B, DomainMatrix):
@@ -1017,6 +1026,8 @@ class DomainMatrix:
         DomainMatrix([[1, 1]], (1, 2), QQ)
 
         """
+        if not self.domain.is_Field:
+            raise ValueError('Not a field')
         return self.from_rep(self.rep.nullspace()[0])
 
     def inv(self):
@@ -1343,6 +1354,6 @@ class DomainMatrix:
         False
 
         """
-        if not isinstance(B, DomainMatrix):
+        if not isinstance(A, type(B)):
             return NotImplemented
-        return A.rep == B.rep
+        return A.domain == B.domain and A.rep == B.rep

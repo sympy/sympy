@@ -1414,7 +1414,7 @@ def test_issue_4950():
 
 
 def test_issue_4968():
-    assert integrate(sin(log(x**2))) == x*sin(2*log(x))/5 - 2*x*cos(2*log(x))/5
+    assert integrate(sin(log(x**2))) == x*sin(log(x**2))/5 - 2*x*cos(log(x**2))/5
 
 
 def test_singularities():
@@ -1656,9 +1656,9 @@ def test_issue_15494():
 
 def test_li_integral():
     y = Symbol('y')
-    assert Integral(li(y*x**2), x).doit() == Piecewise(
-            (x*li(x**2*y) - x*Ei(3*log(x) + 3*log(y)/2)/(sqrt(y)*sqrt(x**2)), Ne(y, 0)),
-            (0, True))
+    assert Integral(li(y*x**2), x).doit() == Piecewise((x*li(x**2*y) - \
+        x*Ei(3*log(x**2*y)/2)/sqrt(x**2*y),
+        Ne(y, 0)), (0, True))
 
 
 def test_issue_17473():

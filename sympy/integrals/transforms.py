@@ -7,11 +7,13 @@ from sympy.core.function import Function
 from sympy.core.relational import _canonical, Ge, Gt
 from sympy.core.numbers import oo
 from sympy.core.symbol import Dummy
+from sympy.functions.elementary.miscellaneous import Max
 from sympy.integrals import integrate, Integral
 from sympy.integrals.meijerint import _dummy
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
 from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.matrices.matrices import MatrixBase
 
 
@@ -893,11 +895,11 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
 
     >>> f = 1/(s**2 - 1)
     >>> inverse_mellin_transform(f, s, x, (-oo, -1))
-    x*(1 - 1/x**2)*Heaviside(x - 1)/2
+    x*(1 - 1/x**2)*Heaviside(x - 1, 1/2)/2
     >>> inverse_mellin_transform(f, s, x, (-1, 1))
-    -x*Heaviside(1 - x)/2 - Heaviside(x - 1)/(2*x)
+    -x*Heaviside(1 - x, 1/2)/2 - Heaviside(x - 1, 1/2)/(2*x)
     >>> inverse_mellin_transform(f, s, x, (1, oo))
-    (1/2 - x**2/2)*Heaviside(1 - x)/x
+    (1/2 - x**2/2)*Heaviside(1 - x, 1/2)/x
 
     See Also
     ========
@@ -1144,7 +1146,7 @@ class LaplaceTransform(IntegralTransform):
         return plane, cond
 
 
-def laplace_transform(f, t, s, **hints):
+def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     r"""
     Compute the Laplace Transform `F(s)` of `f(t)`,
 
@@ -1167,6 +1169,14 @@ def laplace_transform(f, t, s, **hints):
     :func:`sympy.integrals.transforms.IntegralTransform.doit`. If ``noconds=True``,
     only `F` will be returned (i.e. not ``cond``, and also not the plane ``a``).
 
+    .. deprecated:: 1.9
+        Legacy behavior for matrices where ``laplace_transform`` with
+        ``noconds=False`` (the default) returns a Matrix whose elements are
+        tuples. The behavior of ``laplace_transform`` for matrices will change
+        in a future release of SymPy to return a tuple of the transformed
+        Matrix and the convergence conditions for the matrix as a whole. Use
+        ``legacy_matrix=False`` to enable the new behavior.
+
     Examples
     ========
 
@@ -1180,9 +1190,30 @@ def laplace_transform(f, t, s, **hints):
 
     inverse_laplace_transform, mellin_transform, fourier_transform
     hankel_transform, inverse_hankel_transform
+
     """
+
     if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
-        return f.applyfunc(lambda fij: laplace_transform(fij, t, s, **hints))
+
+        conds = not hints.get('noconds', False)
+
+        if conds and legacy_matrix:
+            SymPyDeprecationWarning(
+                feature="laplace_transform of a Matrix with noconds=False (default)",
+                useinstead="the option legacy_matrix=False to get the new behaviour",
+                issue=21504,
+                deprecated_since_version="1.9"
+            ).warn()
+            return f.applyfunc(lambda fij: laplace_transform(fij, t, s, **hints))
+        else:
+            elements_trans = [laplace_transform(fij, t, s, **hints) for fij in f]
+            if conds:
+                elements, avals, conditions = zip(*elements_trans)
+                f_laplace = type(f)(*f.shape, elements)
+                return f_laplace, Max(*avals), And(*conditions)
+            else:
+                return type(f)(*f.shape, elements_trans)
+
     return LaplaceTransform(f, t, s).doit(**hints)
 
 
@@ -1234,17 +1265,17 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
 
     u = Dummy('u')
 
-    def simp_heaviside(arg):
+    def simp_heaviside(arg, H0=S.Half):
         a = arg.subs(exp(-t), u)
         if a.has(t):
-            return Heaviside(arg)
+            return Heaviside(arg,H0)
         rel = _solve_inequality(a > 0, u)
         if rel.lts == u:
             k = log(rel.gts)
-            return Heaviside(t + k)
+            return Heaviside(t + k,H0)
         else:
             k = log(rel.lts)
-            return Heaviside(-(t + k))
+            return Heaviside(-(t + k),H0)
     f = f.replace(Heaviside, simp_heaviside)
 
     def simp_exp(arg):
@@ -1328,7 +1359,7 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     >>> from sympy.abc import s, t
     >>> a = Symbol('a', positive=True)
     >>> inverse_laplace_transform(exp(-a*s)/s, s, t)
-    Heaviside(-a + t)
+    Heaviside(-a + t, 1/2)
 
     See Also
     ========

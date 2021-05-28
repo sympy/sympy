@@ -624,6 +624,31 @@ class tanh(HyperbolicFunction):
         denom = sinh(re)**2 + cos(im)**2
         return (sinh(re)*cosh(re)/denom, sin(im)*cos(im)/denom)
 
+    def _eval_expand_trig(self, **hints):
+        arg = self.args[0]
+        if arg.is_Add:
+            from sympy import symmetric_poly
+            n = len(arg.args)
+            TX = [tanh(x, evaluate=False)._eval_expand_trig()
+                for x in arg.args]
+            p = [0, 0]  # [den, num]
+            for i in range(n + 1):
+                p[i % 2] += symmetric_poly(i, TX)
+            return p[1]/p[0]
+        elif arg.is_Mul:
+            from sympy.functions.combinatorial.numbers import nC
+            coeff, terms = arg.as_coeff_Mul()
+            if coeff.is_Integer and coeff > 1:
+                n = []
+                d = []
+                T = tanh(terms)
+                for k in range(1, coeff + 1, 2):
+                    n.append(nC(range(coeff), k)*T**k)
+                for k in range(0, coeff + 1, 2):
+                    d.append(nC(range(coeff), k)*T**k)
+                return Add(*n)/Add(*d)
+        return tanh(arg)
+
     def _eval_rewrite_as_tractable(self, arg, limitvar=None, **kwargs):
         neg_exp, pos_exp = exp(-arg), exp(arg)
         return (pos_exp - neg_exp)/(pos_exp + neg_exp)

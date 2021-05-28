@@ -1382,8 +1382,8 @@ def _get_examples_ode_sol_nth_order_reducible():
 
     'reducible_11': {
         'eq': f(x).diff(x, 2) - f(x).diff(x)**3,
-        'sol': [Eq(f(x), C1 - sqrt(2)*(I*C2 + I*x)*sqrt(1/(C2 + x))),
-        Eq(f(x), C1 + sqrt(2)*(I*C2 + I*x)*sqrt(1/(C2 + x)))],
+        'sol': [Eq(f(x), C1 - sqrt(2)*sqrt(-1/(C2 + x))*(C2 + x)),
+        Eq(f(x), C1 + sqrt(2)*sqrt(-1/(C2 + x))*(C2 + x))],
         'slow': True,
     },
 
