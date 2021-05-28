@@ -35,7 +35,6 @@ from sympy.core.singleton import S
 from sympy.polys.constructor import construct_domain
 from sympy.polys.solvers import PolyNonlinearError
 
-from .domainmatrix import DomainMatrix
 from .sdm import (
     SDM,
     sdm_irref,
