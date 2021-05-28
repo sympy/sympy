@@ -1,4 +1,5 @@
 from sympy.physics.mechanics import Body
+from sympy.physics.vector import Vector
 from abc import ABC, abstractmethod
 
 class Joint(ABC):
@@ -63,7 +64,8 @@ class Joint(ABC):
 
     """
 
-    def __init__(self, name, parent, child, coordinates=None, speeds=None):
+    def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_pos=None, 
+        child_pos=None, parent_axis = None, child_axis=None):
         if not isinstance(name, str):
             raise TypeError('Supply a valid name.')
         self._name = name
@@ -78,7 +80,14 @@ class Joint(ABC):
 
         self._coordinates = self._generate_coordinates(coordinates)
         self._speeds = self._generate_speeds(speeds)
-        self._kdes = self.apply_joint()
+        self._kdes = self._generate_kdes()
+
+        self.child_axis = self._axis(child, child_axis)
+        self.parent_axis = self._axis(parent, parent_axis)
+
+        self.parent_
+
+        self._orient_frames()
 
     def __str__(self):
         return self._name
@@ -117,7 +126,21 @@ class Joint(ABC):
         pass
 
     @abstractmethod
-    def apply_joint(self):
-        """ Apply the particular Joint by rotating frames, generating angluar and linear
-        velocities. Return kdes as list."""
+    def _orient_frames(self):
+        """Orient frames as per the joint"""
         pass
+
+    def _generate_kdes(self):
+        kdes = []
+        for i in range(len(self._coordinates)):
+            kdes.append(-self._coordinates[0].diff(t) + self._speeds[0])
+    
+    def _axis(self, body, ax):
+        if ax is None:
+            ax = body.frame.x
+            return ax
+        if not isinstance(ax, Vector):
+            raise TypeError("Axis must be of type Vector. Example-> A.x wehere 'A' is ReferenceFrame.")
+        return ax
+        
+
