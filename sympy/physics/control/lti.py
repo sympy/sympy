@@ -148,8 +148,8 @@ class TransferFunction(Basic, EvalfMixin):
     def __new__(cls, num, den, var):
         num, den = _sympify(num), _sympify(den)
 
-        if not isinstance(var, Symbol):
-            raise TypeError("Variable input must be a Symbol.")
+        if not isinstance(var, Symbol) or var.is_real:
+            raise TypeError("Variable input must be a strictly complex symbol.")
         if den == 0:
             raise ValueError("TransferFunction can't have a zero denominator.")
 

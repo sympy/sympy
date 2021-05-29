@@ -1,4 +1,4 @@
-from sympy import symbols, Matrix, factor, Function, simplify, exp, pi, oo, I, \
+from sympy import symbols, Symbol, Matrix, factor, Function, simplify, exp, pi, oo, I, \
     Rational, sqrt, CRootOf
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.testing.pytest import raises
@@ -102,6 +102,12 @@ def test_TransferFunction_construction():
     raises(TypeError, lambda: TransferFunction(s**2 + 2*s - 1, s + 3, 3))
     raises(TypeError, lambda: TransferFunction(p + 1, 5 - p, 4))
     raises(TypeError, lambda: TransferFunction(3, 4, 8))
+
+    # Laplace space variable must be a strictly complex symbol
+    u, v = Symbol('u', real=True), Symbol('v', complex=True)
+    assert TransferFunction(v**3 + d, v*s**2 + v*s + a, v).var.is_complex
+    raises(TypeError, lambda: TransferFunction(u**2 + s - k**3, u*s**2 + k*p, u))
+    raises(TypeError, lambda: TransferFunction(u*s + a0, u*s**2 + b1*s + b0, u))
 
 
 def test_TransferFunction_functions():
