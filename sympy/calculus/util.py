@@ -898,17 +898,17 @@ class AccumulationBounds(AtomicExpr):
     between the bounds then an infinite range is returned, otherwise if an
     endpoint is 0 then a semi-infinite range with consistent sign will be returned.
 
-    Note
-    ====
-
-    AccumBounds in expressions behave a lot like Intervals but the semantics
-    are not necessarily the same. Division (or exponentiation to a negative
-    integer power) could be handled with *intervals* by returning a union of the
-    results obtained after splitting the bounds between negatives and positives,
-    but that is not done with AccumBounds. In addition, bounds are assumed to
-    be independent of each other; if the same bound is used in more than
-    one place in an expression, the result may not be the supremum
-    or infimum of the expression (see below).
+    AccumBounds in expressions behave a lot like Intervals but the
+    semantics are not necessarily the same. Division (or exponentiation
+    to a negative integer power) could be handled with *intervals* by
+    returning a union of the results obtained after splitting the
+    bounds between negatives and positives, but that is not done with
+    AccumBounds. In addition, bounds are assumed to be independent of
+    each other; if the same bound is used in more than one place in an
+    expression, the result may not be the supremum or infimum of the
+    expression (see below). Finally, when a boundary is ``1``,
+    exponentiation to the power of ``oo`` yields ``oo``, neither
+    ``1`` nor ``nan``.
 
     Examples
     ========
@@ -947,9 +947,16 @@ class AccumulationBounds(AtomicExpr):
     >>> 1/AccumBounds(-oo, 0)
     AccumBounds(-oo, 0)
 
-    If the exponent is itself an AccumBounds or is not an integer then
-    unevaluated results will be returned unless the base values are
-    positive:
+    A boundary of 1 will always generate an infinite result
+
+    >>> AccumBounds(1, 2)**oo
+    oo
+    >>> AccumBounds(0, 1)**oo
+    AccumBounds(0, oo)
+
+    If the exponent is itself an AccumulationBounds or is not an
+    integer then unevaluated results will be returned unless the base
+    values are positive:
 
     >>> AccumBounds(2, 3)**AccumBounds(-1, 2)
     AccumBounds(1/3, 9)
@@ -987,8 +994,9 @@ class AccumulationBounds(AtomicExpr):
     object. But it doesn't necessarily evaluate the AccumulationBounds for
     that expression.
 
-    Same expression can be evaluated to different values depending upon
-    the form it is used for substitution. For example:
+    The same expression can be evaluated to different values depending upon
+    the form it is used for substitution since each instance of an
+    AccumulationBounds is considered independent. For example:
 
     >>> (x**2 + 2*x + 1).subs(x, AccumBounds(-1, 1))
     AccumBounds(-1, 4)
