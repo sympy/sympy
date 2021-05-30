@@ -2599,16 +2599,8 @@ class Expr(Basic, EvalfMixin):
         result in an expression that does not appear to be a polynomial to
         become one.
 
-        >>> from sympy import sqrt, factor, cancel
+        >>> from sympy import cancel
         >>> y = Symbol('y', positive=True)
-        >>> a = sqrt(y**2 + 2*y + 1)
-        >>> a.is_polynomial(y)
-        False
-        >>> factor(a)
-        y + 1
-        >>> factor(a).is_polynomial(y)
-        True
-
         >>> b = (y**2 + 2*y + 1)/(y + 1)
         >>> b.is_polynomial(y)
         False
@@ -2674,14 +2666,14 @@ class Expr(Basic, EvalfMixin):
         result in an expression that does not appear to be a rational function
         to become one.
 
-        >>> from sympy import sqrt, factor
+        >>> from sympy import trigsimp, sin, cos
         >>> y = Symbol('y', positive=True)
-        >>> a = sqrt(y**2 + 2*y + 1)/y
+        >>> a = (x + x**2)/(x*sin(y)**2 + x*cos(y)**2)
         >>> a.is_rational_function(y)
         False
-        >>> factor(a)
-        (y + 1)/y
-        >>> factor(a).is_rational_function(y)
+        >>> trigsimp(a)
+        (x**2 + x)/x
+        >>> trigsimp(a).is_rational_function(y)
         True
 
         See also is_algebraic_expr().
@@ -2796,11 +2788,13 @@ class Expr(Basic, EvalfMixin):
         result in an expression that does not appear to be an algebraic
         expression to become one.
 
-        >>> from sympy import exp, factor
-        >>> a = sqrt(exp(x)**2 + 2*exp(x) + 1)/(exp(x) + 1)
+        >>> from sympy import exp, trigsimp, sin, cos
+        >>> a = (exp(x)*sin(x)**2 + exp(x)*cos(x)**2)/exp(x)
         >>> a.is_algebraic_expr(x)
         False
-        >>> factor(a).is_algebraic_expr()
+        >>> trigsimp(a)
+        1
+        >>> trigsimp(a).is_algebraic_expr()
         True
 
         See Also

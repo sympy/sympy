@@ -482,6 +482,7 @@ class Add(Expr, AssocOp):
         elif e.is_Number and abs(e) != 1:
             # handle the Float case: (2.0 + 4*x)**e -> 4**e*(0.5 + x)**e
             c, m = zip(*[i.as_coeff_Mul() for i in self.args])
+            b = self
             if any(i.is_Float for i in c):  # XXX should this always be done?
                 big = -1
                 for i in c:
@@ -493,6 +494,12 @@ class Add(Expr, AssocOp):
                     c = [sign(i) if i in bigs else i/big for i in c]
                     addpow = Add(*[c*m for c, m in zip(c, m)])**e
                     return big**e*addpow
+            elif (abs(e) - 1).is_negative and b.is_positive:
+                expr = b.factor()
+                if expr.is_Pow:
+                    bpow = expr.args[1] * e
+                    return expr.func(expr.args[0], bpow)
+
     @cacheit
     def _eval_derivative(self, s):
         return self.func(*[a.diff(s) for a in self.args])
@@ -978,12 +985,11 @@ class Add(Expr, AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x, cdir=0):
-        from sympy import Order
-        from .function import _mexpand
+        from sympy import expand_mul, Order
 
         old = self
 
-        expr = _mexpand(self)
+        expr = expand_mul(self)
         if not expr.is_Add:
             return expr.as_leading_term(x, cdir=cdir)
 
@@ -1005,7 +1011,7 @@ class Add(Expr, AssocOp):
         except TypeError:
             return expr
 
-        new_expr = new_expr.trigsimp().factor()
+        new_expr = new_expr.trigsimp().cancel()
         if not new_expr:
             # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)

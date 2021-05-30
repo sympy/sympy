@@ -112,7 +112,7 @@ def test_basic5():
 
 
 def test_issue_3885():
-    assert limit(x*y + x*z, z, 2) == x*(y + 2)
+    assert limit(x*y + x*z, z, 2) == x*y + 2*x
 
 
 def test_Limit():
@@ -441,7 +441,7 @@ def test_factorial():
 def test_issue_6560():
     e = (5*x**3/4 - x*Rational(3, 4) + (y*(3*x**2/2 - S.Half) +
                              35*x**4/8 - 15*x**2/4 + Rational(3, 8))/(2*(y + 1)))
-    assert limit(e, y, oo) == (x + 1)*(5*x**2 - 2*x - 1)/4
+    assert limit(e, y, oo) == 5*x**3/4 + 3*x**2/4 - 3*x/4 - Rational(1, 4)
 
 @XFAIL
 def test_issue_5172():
@@ -515,7 +515,7 @@ def test_branch_cuts():
 def test_issue_6364():
     a = Symbol('a')
     e = z/(1 - sqrt(1 + z)*sin(a)**2 - sqrt(1 - z)*cos(a)**2)
-    assert limit(e, z, 0) == -2/(2*sin(a)**2 - 1)
+    assert limit(e, z, 0) == 2/(2*cos(a)**2 - 1)
 
 
 def test_issue_4099():

@@ -450,7 +450,7 @@ def test_as_leading_term():
     f = 1 - x - x**2
     fi = (1 + sqrt(5))/2
     assert f.subs(x, y + 1/fi).as_leading_term(y) == \
-        -4*y*(20 + 9*sqrt(5))/(16*sqrt(5) + 36)
+        (-36*sqrt(5)*y - 80*y)/(16*sqrt(5) + 36)
 
 
 def test_leadterm2():
@@ -469,7 +469,7 @@ def test_as_leading_term2():
 
 def test_as_leading_term3():
     assert (2 + pi + x).as_leading_term(x) == 2 + pi
-    assert (2*x + pi*x + x**2).as_leading_term(x) == (2 + pi)*x
+    assert (2*x + pi*x + x**2).as_leading_term(x) == 2*x + pi*x
 
 
 def test_as_leading_term4():
