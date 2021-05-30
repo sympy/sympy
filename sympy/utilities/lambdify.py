@@ -6,6 +6,7 @@ lambda functions which can be used to calculate numerical values very fast.
 from typing import Any, Dict, Iterable
 
 import builtins
+import collections
 import inspect
 import keyword
 import textwrap
@@ -845,7 +846,8 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
-    funcstr = funcprinter.doprint(funcname, args, expr)
+    final_expr, stages = _RedundancySliter(expr).split_redundancy() # Delete redundancy.
+    funcstr = funcprinter.doprint(funcname, args, final_expr, *stages)
 
     # Collect the module imports from the code printers.
     imp_mod_lines = []
@@ -903,6 +905,97 @@ def _module_present(modname, modlist):
             return True
     return False
 
+class _RedundancySliter:
+    """
+    Groups the methods used to extract redundant patterns.
+    """
+    def __init__(self, expr):
+        """
+        expr: sympy.core.basic.Basic
+            This is the expression that we want to optimize.
+        """
+        self.stages = [] # The FIFO of intermediaite stapes.
+        self.sub_var_cmp = 0 # Counter in order to create new sympy variables.
+        self.forbidden_symbols = expr.free_symbols # Juste a protection.
+        self.final_expr = self._gather(variables=set(), expr=expr.copy())
+
+    def split_redundancy(self):
+        """
+        Find patterns that appear more than once in order to factor them.
+
+        :returns: The factorised expression and a list of 3_tuples.
+            final_expr, [(var, sub_expr, (var_to_delete,)), ...]
+        """
+        return self.final_expr, self.stages
+
+    def _gather(self, variables, expr):
+        """
+        Find recursively all the redondants patterns.
+        Start by isolating the patterns that appear the most times and then isolate the largest
+        of these patterns in order to minimize the steps of calculations.
+        """
+        from sympy.core.symbol import Symbol
+
+        if expr.is_number or expr.is_symbol: # If the expression can not be simplify.
+            return expr
+
+        complete_hist = self._hist_sub_expr(expr) # Exaustive histogram of childs.
+        if not complete_hist: # If their are nothind to symplify.
+            return expr
+
+        max_red = max(complete_hist.values())
+        if max_red == 1: # If the expressioin is not redondante.
+            return expr
+
+
+        dephs_expr = {self._len(expr): expr for expr in
+                    (expr for expr, red in complete_hist.items() if red == max_red)
+                } # Size of each candidates expressions.
+        sub_expr = dephs_expr[max(dephs_expr.keys())] # The patern to replace.
+        while True: # To append a verification.
+            self.sub_var_cmp += 1
+            sub_var = Symbol('subvar_{}'.format(self.sub_var_cmp)) # Intermediate var.
+            if sub_var not in self.forbidden_symbols:
+                break # We guarantee the uniqueness of this variable.
+        expr = expr.xreplace({sub_expr: sub_var}) # New symplify expression.
+
+        useless_vars = set(variables) - expr.free_symbols # Variables that we can delete.
+        self.stages.append([
+            sub_var,
+            sub_expr,
+            useless_vars])
+
+        variables = variables - useless_vars
+        variables.add(sub_var)
+
+        return self._gather(variables, expr)
+
+    def _hist_sub_expr(self, expr):
+        """
+        Compute the child histogram.
+
+        * Don't consider atomic node.
+
+        expr : sympy.core.basic.Basic
+            Top of syntaxical tree.
+        :returns: The dictionary witch for each childrens and descendents in general,
+            associate, each number of apparitions.
+        """
+        hist = collections.defaultdict(lambda: 0)
+        for child in expr.args:
+            if child.is_number or child.is_symbol:
+                continue
+            hist[child] += 1
+            for little_child, occur in self._hist_sub_expr(child).items():
+                hist[little_child] += occur
+        return hist
+
+    def _len(self, expr):
+        """
+        Find the number of nodes present in the sntaxic tree.
+        Lets you estimate the size of the expression.
+        """
+        return 1 + sum(self._len(child) for child in expr.args)
 
 def _get_namespace(m):
     """
@@ -1059,8 +1152,17 @@ class _EvaluatorPrinter:
         # Used to print the generated function arguments in a standard way
         self._argrepr = LambdaPrinter().doprint
 
-    def doprint(self, funcname, args, expr):
-        """Returns the function definition code as a string."""
+    def doprint(self, funcname, args, expr, *stages):
+        """
+        Returns the function definition code as a string.
+
+        :param stages: These are the intermediate calculation steps.
+            Represented as a tuple with 3 coordinates:
+            -The first indicates the number of the variable to be
+                substituted.
+            -The second element is the sub expression.
+            -The list of useless variable.
+        """
         from sympy import Dummy
 
         funcbody = []
@@ -1088,7 +1190,12 @@ class _EvaluatorPrinter:
 
         funcbody.extend(unpackings)
 
-        funcbody.append('return ({})'.format(self._exprrepr(expr)))
+        for var_name, sub_expr, useless_vars in stages:
+            funcbody.append('{} = {}'.format(var_name, self._exprrepr(sub_expr)))
+            if useless_vars:
+                funcbody.append('del {}'.format(', '.join(map(str, useless_vars))))
+
+        funcbody.append('return {}'.format(self._exprrepr(expr)))
 
         funclines = [funcsig]
         funclines.extend('    ' + line for line in funcbody)
