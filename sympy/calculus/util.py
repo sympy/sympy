@@ -1302,13 +1302,8 @@ class AccumulationBounds(AtomicExpr):
                 if self.min.is_extended_nonnegative:
                     if self.max < 1:
                         return S.Zero
-                    if self.min > 1:
+                    if self.min >= 1:
                         return S.Infinity
-                    # XXX is 1**oo to be considered oo or 1?
-                    if self.max == 1:
-                        return AccumBounds(0, 1)
-                    if self.min == 1:
-                        return AccumBounds(1, oo)
                     return AccumBounds(0, oo)
                 elif self.max.is_extended_negative:
                     if self.min > -1:

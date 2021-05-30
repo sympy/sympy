@@ -243,8 +243,8 @@ def test_series_AccumBounds():
     t2 = Mul(S.Half, Add(AccumBounds(-2, 2), sin(1)), 1/(-cos(1) + 1))
     assert limit(simplify(Sum(sin(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t2
 
-    assert limit(frac(x)**x, x, oo) == AccumBounds(0, 1)  # wolfram agrees
-    assert limit(((sin(x) + 1)/2)**x, x, oo) == AccumBounds(0, 1)  # wolfram says 0
+    assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)  # wolfram gives (0, 1)
+    assert limit(((sin(x) + 1)/2)**x, x, oo) == AccumBounds(0, oo)  # wolfram says 0
 
 
 @XFAIL

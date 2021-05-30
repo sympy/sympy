@@ -469,10 +469,10 @@ def test_AccumBounds_pow():
 
     assert B(Rational(1, 3), S.Half)**oo is S.Zero
     assert B(0, S.Half)**oo is S.Zero
-    assert B(S.Half, 1)**oo == B(0, 1)
-    assert B(0, 1)**oo == B(0, 1)
+    assert B(S.Half, 1)**oo == B(0, oo)
+    assert B(0, 1)**oo == B(0, oo)
     assert B(2, 3)**oo is oo
-    assert B(1, 2)**oo == B(1, oo)
+    assert B(1, 2)**oo is oo
     assert B(S.Half, 3)**oo == B(0, oo)
     assert B(Rational(-1, 3), Rational(-1, 4))**oo is S.Zero
     assert B(-1, Rational(-1, 2))**oo == B(-oo, oo)
@@ -523,10 +523,10 @@ def test_AccumBounds_exponent():
     # bounds generating imaginary parts unevaluated
     unchanged(Pow, B(-1, 1), B(1, 2))
     assert B(0, S(1)/2)**B(1, oo) == B(0, S(1)/2)
-    assert B(0, 1)**B(1, oo) == B(0, 1)
+    assert B(0, 1)**B(1, oo) == B(0, oo)
     assert B(0, 2)**B(1, oo) == B(0, oo)
     assert B(0, oo)**B(1, oo) == B(0, oo)
-    assert B(S(1)/2, 1)**B(1, oo) == B(0, 1)
+    assert B(S(1)/2, 1)**B(1, oo) == B(0, oo)
     assert B(S(1)/2, 1)**B(-oo, -1) == B(1, oo)
     assert B(S(1)/2, 1)**B(-oo, oo) == B(0, oo)
     assert B(S(1)/2, 2)**B(1, oo) == B(0, oo)
@@ -536,10 +536,10 @@ def test_AccumBounds_exponent():
     assert B(S(1)/2, oo)**B(-oo, -1) == B(0, oo)
     assert B(S(1)/2, oo)**B(-oo, oo) == B(0, oo)
     assert B(1, 2)**B(1, oo) == B(1, oo)
-    assert B(1, 2)**B(-oo, -1) == B(0, 1)
+    assert B(1, 2)**B(-oo, -1) == B(0, oo)
     assert B(1, 2)**B(-oo, oo) == B(0, oo)
     assert B(1, oo)**B(1, oo) == B(1, oo)
-    assert B(1, oo)**B(-oo, -1) == B(0, 1)
+    assert B(1, oo)**B(-oo, -1) == B(0, oo)
     assert B(1, oo)**B(-oo, oo) == B(0, oo)
     assert B(2, oo)**B(1, oo) == B(2, oo)
     assert B(2, oo)**B(-oo, -1) == B(0, S(1)/2)
