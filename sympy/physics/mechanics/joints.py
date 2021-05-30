@@ -170,4 +170,81 @@ class Joint(ABC):
         if not isinstance(load_point, Point):
             raise ValueError
         return load_point
-        
+
+
+"""
+Examples Using API
+
+1) Linear Mass-Spring-Damper with Gravity
+
+>>> x, v = me.dynamicsymbols('x v')
+>>> m, c, k, g, t = sm.symbols('m c k g t')
+>>> C = me.ReferenceFrame('C')
+>>> O = Point('O')
+>>> P.set_pos(O, x * ceiling.x) # Child Joint pos
+
+>>> forces = damping + stiffness + gravity #All forces on P
+
+>>> m = Body('m', P, m)
+>>> m.apply_force(forces)
+>>> ceiling = Body('M', O, C)
+>>> J = Specific_Joint(parent = ceiling, child = m, speeds = [v], coordinates=[x])
+>>> ans = JointsMethod(J) #Ceiling by default ground/root_body.
+
+
+2) chaos_pendulum
+
+>>> theta, phi, omega, alpha = me.dynamicsymbols('theta phi omega alpha')
+>>> N = ReferenceFrame('N')
+>>> A = ReferenceFrame('A')
+>>> B = ReferenceFrame('B')
+
+>>> No = Point('No')
+>>> Ao = Point('Ao')
+>>> Bo = Point('Bo')
+>>> Ao.set_pos(No, lA * A.z)
+>>> Bo.set_pos(No, lB * A.z)
+
+>>> IA = (me.inertia(A, IAxx, IAyy, IAzz), Ao)
+>>> IB = (me.inertia(B, IBxx, IByy, IBzz), Bo)
+
+>>> ceiling = Body('M', O, C)
+>>> rod = Body('rod', Ao, A, mA, IA)
+>>> rod.apply_forces( mA * g * N.z)
+>>> plate = Body('plate', Bo, B, mB, IB)
+>>> plate.apply_forces(mB * g * N.z)
+>>> J1 = Specific_joint(parent = ceiling, child = rod, speeds=[omega], coordinates = [theta])
+>>> J2 = Specific_joint(parent = rod, child = plate, coordinates=[phi], speed=[alpha])
+>>> ans = JointsMethod(J1, J2)
+
+
+3) Multi Degree of Freedom Holonomic System
+
+>>> N = ReferenceFrame('N')
+>>> B = ReferenceFrame('B')
+>>> C = RefernceFrame('C')
+
+>>> O = Point('O')
+>>> Pab = O.locatenew('P_{ab}', q1 * N.x)
+>>> Bo = Pab.locatenew('B_o', - 2 * l / 3 * B.y)
+>>> Pbc = Pab.locatenew('P_{bc}', -l * B.y)
+>>> Pc = Pbc.locatenew('P_c', -l * C.y)
+
+>>> Wall = Body('W', N, O)
+>>> block = Body('block', Pab, ma, N)
+>>> pendulum = RigidBody('pendulum', Bo, B, mb, (IB, Bo))
+>>> bob = Particle('bob', Pc, mc, C)
+
+>>> block.apply_force(Rab)
+>>> pendulum.apply_force(Rbo)
+>>> bob.apply_force(Rc)
+>>> pendulum.apply_torque(Tb)
+>>> bob.apply_torque(Tc)
+
+>>> J1 = SpecificJoint('J1', parent=Wall, child=block, speeds=[u1], coordinates=[q1])
+>>> J2 = SpecificJoint('J2', parent=block, child=pendulum, speeds=[u2], coordinates=[q2])
+>>> J3 = SpecificJoint('J3', parent=pendulum, child=bob, speeds=[u3], coordinates=[q3])
+
+>>> ans = JointsMethod(J1, J2, J3)
+
+"""
