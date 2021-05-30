@@ -80,6 +80,25 @@ def test__linsolve_float():
     sol_linsolve = _linsolve(eqs, [x,y,z])
     assert all_close(sol_exact, sol_linsolve)
 
+    # XXX: This system for x and y over RR(z) is problematic.
+    #
+    # eqs = [
+    #     x*(0.2*z + 0.9) + y*(0.5*z + 0.8) + 0.6,
+    #     0.1*x*z + y*(0.1*z + 0.6) + 0.9,
+    # ]
+    #
+    # linsolve(eqs, [x, y])
+    # The solution for x comes out as
+    #
+    #       -3.9e-5*z**2 - 3.6e-5*z - 8.67361737988404e-20
+    #  x =  ----------------------------------------------
+    #           3.0e-6*z**3 - 1.3e-5*z**2 - 5.4e-5*z
+    #
+    # The 8e-20 in the numerator should be zero which would allow z to cancel
+    # from top and bottom. It should be possible to avoid this somehow because
+    # the inverse of the matrix only has a quadratic factor (the determinant)
+    # in the denominator.
+
 
 def test__linsolve_deprecated():
     assert _linsolve([Eq(x**2, x**2+y)], [x, y]) == {x:x, y:S.Zero}
