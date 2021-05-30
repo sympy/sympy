@@ -459,6 +459,8 @@ def test_AccumBounds_pow():
 
     assert B(1, 5)**(-2) == B(Rational(1, 25), 1)
     assert B(-1, 3)**(-2) == B(0, oo)
+    assert B(0, 2)**(-3) == B(Rational(1, 8), oo)
+    assert B(-2, 0)**(-3) == B(-oo, -Rational(1, 8))
     assert B(0, 2)**(-2) == B(Rational(1, 4), oo)
     assert B(-1, 2)**(-3) == B(-oo, oo)
     assert B(-3, -2)**(-3) == B(Rational(-1, 8), Rational(-1, 27))
