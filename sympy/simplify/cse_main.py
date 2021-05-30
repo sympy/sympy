@@ -199,6 +199,8 @@ class FuncArgTracker:
         """
         from collections import defaultdict
         count_map = defaultdict(lambda: 0)
+        if not argset:
+            return count_map
 
         funcsets = [self.arg_to_funcset[arg] for arg in argset]
         # As an optimization below, we handle the largest funcset separately from

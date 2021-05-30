@@ -13,7 +13,7 @@ from sympy import (
     EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
     exp_polar, unpolarify, Function, expint, expand_mul, Rational,
     gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2)
-from sympy.testing.pytest import XFAIL, slow, skip, raises
+from sympy.testing.pytest import XFAIL, slow, skip, raises, warns_deprecated_sympy
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
 nu, beta, rho = symbols('nu beta rho')
@@ -516,11 +516,26 @@ def test_laplace_transform():
     # What is this testing:
     Ne(1/s, 1) & (0 < cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1)
 
-    assert LT(Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]]), t, s) ==\
-        Matrix([
-            [(1/(s - 1), 1, s > 1), ((s + 1)**(-2), 0, True)],
-            [((s + 1)**(-2), 0, True), (1/(s - 1), 1, s > 1)]
-        ])
+    Mt = Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]])
+    Ms = Matrix([[    1/(s - 1), (s + 1)**(-2)],
+                 [(s + 1)**(-2),     1/(s - 1)]])
+
+    # The default behaviour for Laplace tranform of a Matrix returns a Matrix
+    # of Tuples and is deprecated:
+    with warns_deprecated_sympy():
+        Ms_conds = Matrix([[(1/(s - 1), 1, s > 1), ((s + 1)**(-2), 0, True)],
+                           [((s + 1)**(-2), 0, True), (1/(s - 1), 1, s > 1)]])
+    with warns_deprecated_sympy():
+        assert LT(Mt, t, s) == Ms_conds
+
+    # The new behavior is to return a tuple of a Matrix and the convergence
+    # conditions for the matrix as a whole:
+    assert LT(Mt, t, s, legacy_matrix=False) == (Ms, 1, s > 1)
+
+    # With noconds=True the transformed matrix is returned without conditions
+    # either way:
+    assert LT(Mt, t, s, noconds=True) == Ms
+    assert LT(Mt, t, s, legacy_matrix=False, noconds=True) == Ms
 
 
 def test_issue_8368_7173():

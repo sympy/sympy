@@ -5,7 +5,6 @@ from sympy.core import SympifyError, Add
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
-from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -15,6 +14,8 @@ from sympy.matrices.matrices import MatrixBase
 from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
+
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .decompositions import _cholesky, _LDLdecomposition
 from .solvers import _lower_triangular_solve, _upper_triangular_solve
@@ -313,10 +314,21 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         else:
             rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
             flat_list = list(flat_list) # create a shallow copy
+
+            types = set(map(type, flat_list))
+            if not all(issubclass(typ, Expr) for typ in types):
+                SymPyDeprecationWarning(
+                    feature="non-Expr objects in a Matrix",
+                    useinstead="list of lists, TableForm or some other data structure",
+                    issue=21497,
+                    deprecated_since_version="1.9"
+                ).warn()
+
         self = object.__new__(cls)
         self.rows = rows
         self.cols = cols
         self._mat = flat_list
+
         return self
 
     def __setitem__(self, key, value):
@@ -1183,32 +1195,31 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     [70,  0,  0],
     [ 0,  0, 88]
     """
-    if c is None:
-        c = r
     # Note that ``Random()`` is equivalent to ``Random(None)``
     prng = prng or random.Random(seed)
 
-    if not symmetric:
-        m = Matrix._new(r, c, lambda i, j: prng.randint(min, max))
-        if percent == 100:
-            return m
-        z = int(r*c*(100 - percent) // 100)
-        m._mat[:z] = [S.Zero]*z
-        prng.shuffle(m._mat)
+    if c is None:
+        c = r
 
-        return m
-
-    # Symmetric case
-    if r != c:
+    if symmetric and r != c:
         raise ValueError('For symmetric matrices, r must equal c, but %i != %i' % (r, c))
-    m = zeros(r)
-    ij = [(i, j) for i in range(r) for j in range(i, r)]
+
+    ij = range(r * c)
     if percent != 100:
         ij = prng.sample(ij, int(len(ij)*percent // 100))
 
-    for i, j in ij:
-        value = prng.randint(min, max)
-        m[i, j] = m[j, i] = value
+    m = zeros(r, c)
+
+    if not symmetric:
+        for ijk in ij:
+            i, j = divmod(ijk, c)
+            m[i, j] = prng.randint(min, max)
+    else:
+        for ijk in ij:
+            i, j = divmod(ijk, c)
+            if i <= j:
+                m[i, j] = m[j, i] = prng.randint(min, max)
+
     return m
 
 

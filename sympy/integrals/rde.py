@@ -350,7 +350,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                         else:
                             if len(m) != 1:
                                 raise ValueError("Length of m should be 1")
-                            n = max(n, m[0])
+                            n = max(n, m[0].as_expr())
 
     elif case == 'exp':
         n = max(0, dc - max(db, da))

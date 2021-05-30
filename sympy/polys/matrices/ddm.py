@@ -30,7 +30,7 @@ list of lists:
     >>> ddm_idet([[0, 1], [-1, 0]], QQ)
     1
     >>> A
-    [[-1, 0], [0, 1]]
+    [[-1, 0], [0, -1]]
 
 Note that ddm_idet modifies the input matrix in-place. It is recommended to
 use the DDM.det method as a friendlier interface to this instead which takes
@@ -261,6 +261,25 @@ class DDM(list):
             Anew[i].extend(Bi)
 
         return DDM(Anew, (rows, cols), A.domain)
+
+    def vstack(A, B):
+        Anew = list(A.copy())
+        rows, cols = A.shape
+        domain = A.domain
+
+        Brows, Bcols = B.shape
+        assert Bcols == cols
+        assert B.domain == domain
+
+        rows += Brows
+
+        Anew.extend(B.copy())
+
+        return DDM(Anew, (rows, cols), A.domain)
+
+    def applyfunc(self, func, domain):
+        elements = (list(map(func, row)) for row in self)
+        return DDM(elements, self.shape, domain)
 
     def rref(a):
         """Reduced-row echelon form of a and list of pivots"""

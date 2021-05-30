@@ -653,6 +653,26 @@ class SDM(dict):
 
         return A.new(Anew, (rows, cols), A.domain)
 
+    def vstack(A, *B):
+        Anew = dict(A.copy())
+        rows, cols = A.shape
+        domain = A.domain
+
+        for Bk in B:
+            Bkrows, Bkcols = Bk.shape
+            assert Bkcols == cols
+            assert Bk.domain == domain
+
+            for i, Bki in Bk.items():
+                Anew[i + rows] = Bki
+            rows += Bkrows
+
+        return A.new(Anew, (rows, cols), A.domain)
+
+    def applyfunc(self, func, domain):
+        sdm = {i: {j: func(e) for j, e in row.items()} for i, row in self.items()}
+        return self.new(sdm, self.shape, domain)
+
     def charpoly(A):
         """
         Returns the coefficients of the characteristic polynomial

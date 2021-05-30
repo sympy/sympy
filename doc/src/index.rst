@@ -22,6 +22,7 @@ Contents:
 
    install.rst
    tutorial/index.rst
+   guides/index.rst
    gotchas.rst
    modules/index.rst
    special_topics/index.rst

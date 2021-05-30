@@ -1900,6 +1900,17 @@ def _aresame(a, b):
     return True
 
 
+def _ne(a, b):
+    # use this as a second test after `a != b` if you want to make
+    # sure that things are truly equal, e.g.
+    # a, b = 0.5, S.Half
+    # a !=b or _ne(a, b) -> True
+    from .numbers import Number
+    # 0.5 == S.Half
+    if isinstance(a, Number) and isinstance(b, Number):
+        return a.__class__ != b.__class__
+
+
 def _atomic(e, recursive=False):
     """Return atom-like quantities as far as substitution is
     concerned: Derivatives, Functions and Symbols. Don't

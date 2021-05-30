@@ -1004,7 +1004,7 @@ class MatrixBase(MatrixDeprecated,
                                 isinstance(x, MatrixSymbol) and \
                                 all(_.is_Integer for _ in x.shape):
                             return x.as_explicit()
-                        return x
+                        return cls._sympify(x)
                     dat = do(dat)
 
                 if dat == [] or dat == [[]]:
