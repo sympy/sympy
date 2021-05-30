@@ -311,200 +311,199 @@ def test_issue_19869():
 
 
 def test_AccumBounds():
-    assert AccumBounds(1, 2).args == (1, 2)
-    assert AccumBounds(1, 2).delta is S.One
-    assert AccumBounds(1, 2).mid == Rational(3, 2)
-    assert AccumBounds(1, 3).is_real == True
+    assert B(1, 2).args == (1, 2)
+    assert B(1, 2).delta is S.One
+    assert B(1, 2).mid == Rational(3, 2)
+    assert B(1, 3).is_real == True
 
-    assert AccumBounds(1, 1) is S.One
+    assert B(1, 1) is S.One
 
-    assert AccumBounds(1, 2) + 1 == AccumBounds(2, 3)
-    assert 1 + AccumBounds(1, 2) == AccumBounds(2, 3)
-    assert AccumBounds(1, 2) + AccumBounds(2, 3) == AccumBounds(3, 5)
+    assert B(1, 2) + 1 == B(2, 3)
+    assert 1 + B(1, 2) == B(2, 3)
+    assert B(1, 2) + B(2, 3) == B(3, 5)
 
-    assert -AccumBounds(1, 2) == AccumBounds(-2, -1)
+    assert -B(1, 2) == B(-2, -1)
 
-    assert AccumBounds(1, 2) - 1 == AccumBounds(0, 1)
-    assert 1 - AccumBounds(1, 2) == AccumBounds(-1, 0)
-    assert AccumBounds(2, 3) - AccumBounds(1, 2) == AccumBounds(0, 2)
+    assert B(1, 2) - 1 == B(0, 1)
+    assert 1 - B(1, 2) == B(-1, 0)
+    assert B(2, 3) - B(1, 2) == B(0, 2)
 
-    assert x + AccumBounds(1, 2) == Add(AccumBounds(1, 2), x)
-    assert a + AccumBounds(1, 2) == AccumBounds(1 + a, 2 + a)
-    assert AccumBounds(1, 2) - x == Add(AccumBounds(1, 2), -x)
+    assert x + B(1, 2) == Add(B(1, 2), x)
+    assert a + B(1, 2) == B(1 + a, 2 + a)
+    assert B(1, 2) - x == Add(B(1, 2), -x)
 
-    assert AccumBounds(-oo, 1) + oo == AccumBounds(-oo, oo)
-    assert AccumBounds(1, oo) + oo is oo
-    assert AccumBounds(1, oo) - oo == AccumBounds(-oo, oo)
-    assert (-oo - AccumBounds(-1, oo)) is -oo
-    assert AccumBounds(-oo, 1) - oo is -oo
+    assert B(-oo, 1) + oo == B(-oo, oo)
+    assert B(1, oo) + oo is oo
+    assert B(1, oo) - oo == B(-oo, oo)
+    assert (-oo - B(-1, oo)) is -oo
+    assert B(-oo, 1) - oo is -oo
 
-    assert AccumBounds(1, oo) - oo == AccumBounds(-oo, oo)
-    assert AccumBounds(-oo, 1) - (-oo) == AccumBounds(-oo, oo)
-    assert (oo - AccumBounds(1, oo)) == AccumBounds(-oo, oo)
-    assert (-oo - AccumBounds(1, oo)) is -oo
+    assert B(1, oo) - oo == B(-oo, oo)
+    assert B(-oo, 1) - (-oo) == B(-oo, oo)
+    assert (oo - B(1, oo)) == B(-oo, oo)
+    assert (-oo - B(1, oo)) is -oo
 
-    assert AccumBounds(1, 2)/2 == AccumBounds(S.Half, 1)
-    assert 2/AccumBounds(2, 3) == AccumBounds(Rational(2, 3), 1)
-    assert 1/AccumBounds(-1, 1) == AccumBounds(-oo, oo)
+    assert B(1, 2)/2 == B(S.Half, 1)
+    assert 2/B(2, 3) == B(Rational(2, 3), 1)
+    assert 1/B(-1, 1) == B(-oo, oo)
 
-    assert abs(AccumBounds(1, 2)) == AccumBounds(1, 2)
-    assert abs(AccumBounds(-2, -1)) == AccumBounds(1, 2)
-    assert abs(AccumBounds(-2, 1)) == AccumBounds(0, 2)
-    assert abs(AccumBounds(-1, 2)) == AccumBounds(0, 2)
+    assert abs(B(1, 2)) == B(1, 2)
+    assert abs(B(-2, -1)) == B(1, 2)
+    assert abs(B(-2, 1)) == B(0, 2)
+    assert abs(B(-1, 2)) == B(0, 2)
     c = Symbol('c')
-    raises(ValueError, lambda: AccumBounds(0, c))
-    raises(ValueError, lambda: AccumBounds(1, -1))
+    raises(ValueError, lambda: B(0, c))
+    raises(ValueError, lambda: B(1, -1))
 
 
 def test_AccumBounds_mul():
-    assert AccumBounds(1, 2)*2 == AccumBounds(2, 4)
-    assert 2*AccumBounds(1, 2) == AccumBounds(2, 4)
-    assert AccumBounds(1, 2)*AccumBounds(2, 3) == AccumBounds(2, 6)
-    assert AccumBounds(0, 2)*AccumBounds(2, oo) == AccumBounds(0, oo)
-    l, r = AccumBounds(-oo, oo), AccumBounds(-a, a)
-    assert l*r == AccumBounds(-oo, oo)
-    assert r*l == AccumBounds(-oo, oo)
-    l, r = AccumBounds(1, oo), AccumBounds(-3, -2)
-    assert l*r == AccumBounds(-oo, -2)
-    assert r*l == AccumBounds(-oo, -2)
-    assert AccumBounds(1, 2)*0 == 0
-    assert AccumBounds(1, oo)*0 == AccumBounds(0, oo)
-    assert AccumBounds(-oo, 1)*0 == AccumBounds(-oo, 0)
-    assert AccumBounds(-oo, oo)*0 == AccumBounds(-oo, oo)
+    assert B(1, 2)*2 == B(2, 4)
+    assert 2*B(1, 2) == B(2, 4)
+    assert B(1, 2)*B(2, 3) == B(2, 6)
+    assert B(0, 2)*B(2, oo) == B(0, oo)
+    l, r = B(-oo, oo), B(-a, a)
+    assert l*r == B(-oo, oo)
+    assert r*l == B(-oo, oo)
+    l, r = B(1, oo), B(-3, -2)
+    assert l*r == B(-oo, -2)
+    assert r*l == B(-oo, -2)
+    assert B(1, 2)*0 == 0
+    assert B(1, oo)*0 == B(0, oo)
+    assert B(-oo, 1)*0 == B(-oo, 0)
+    assert B(-oo, oo)*0 == B(-oo, oo)
 
-    assert AccumBounds(1, 2)*x == Mul(AccumBounds(1, 2), x, evaluate=False)
+    assert B(1, 2)*x == Mul(B(1, 2), x, evaluate=False)
 
-    assert AccumBounds(0, 2)*oo == AccumBounds(0, oo)
-    assert AccumBounds(-2, 0)*oo == AccumBounds(-oo, 0)
-    assert AccumBounds(0, 2)*(-oo) == AccumBounds(-oo, 0)
-    assert AccumBounds(-2, 0)*(-oo) == AccumBounds(0, oo)
-    assert AccumBounds(-1, 1)*oo == AccumBounds(-oo, oo)
-    assert AccumBounds(-1, 1)*(-oo) == AccumBounds(-oo, oo)
-    assert AccumBounds(-oo, oo)*oo == AccumBounds(-oo, oo)
+    assert B(0, 2)*oo == B(0, oo)
+    assert B(-2, 0)*oo == B(-oo, 0)
+    assert B(0, 2)*(-oo) == B(-oo, 0)
+    assert B(-2, 0)*(-oo) == B(0, oo)
+    assert B(-1, 1)*oo == B(-oo, oo)
+    assert B(-1, 1)*(-oo) == B(-oo, oo)
+    assert B(-oo, oo)*oo == B(-oo, oo)
 
 
 def test_AccumBounds_div():
-    assert AccumBounds(-1, 3)/AccumBounds(3, 4) == AccumBounds(Rational(-1, 3), 1)
-    assert AccumBounds(-2, 4)/AccumBounds(-3, 4) == AccumBounds(-oo, oo)
-    assert AccumBounds(-3, -2)/AccumBounds(-4, 0) == AccumBounds(S.Half, oo)
+    assert B(-1, 3)/B(3, 4) == B(Rational(-1, 3), 1)
+    assert B(-2, 4)/B(-3, 4) == B(-oo, oo)
+    assert B(-3, -2)/B(-4, 0) == B(S.Half, oo)
 
     # these two tests can have a better answer
-    # after Union of AccumBounds is improved
-    assert AccumBounds(-3, -2)/AccumBounds(-2, 1) == AccumBounds(-oo, oo)
-    assert AccumBounds(2, 3)/AccumBounds(-2, 2) == AccumBounds(-oo, oo)
+    # after Union of B is improved
+    assert B(-3, -2)/B(-2, 1) == B(-oo, oo)
+    assert B(2, 3)/B(-2, 2) == B(-oo, oo)
 
-    assert AccumBounds(-3, -2)/AccumBounds(0, 4) == AccumBounds(-oo, Rational(-1, 2))
-    assert AccumBounds(2, 4)/AccumBounds(-3, 0) == AccumBounds(-oo, Rational(-2, 3))
-    assert AccumBounds(2, 4)/AccumBounds(0, 3) == AccumBounds(Rational(2, 3), oo)
+    assert B(-3, -2)/B(0, 4) == B(-oo, Rational(-1, 2))
+    assert B(2, 4)/B(-3, 0) == B(-oo, Rational(-2, 3))
+    assert B(2, 4)/B(0, 3) == B(Rational(2, 3), oo)
 
-    assert AccumBounds(0, 1)/AccumBounds(0, 1) == AccumBounds(0, oo)
-    assert AccumBounds(-1, 0)/AccumBounds(0, 1) == AccumBounds(-oo, 0)
-    assert AccumBounds(-1, 2)/AccumBounds(-2, 2) == AccumBounds(-oo, oo)
+    assert B(0, 1)/B(0, 1) == B(0, oo)
+    assert B(-1, 0)/B(0, 1) == B(-oo, 0)
+    assert B(-1, 2)/B(-2, 2) == B(-oo, oo)
 
-    assert 1/AccumBounds(-1, 2) == AccumBounds(-oo, oo)
-    assert 1/AccumBounds(0, 2) == AccumBounds(S.Half, oo)
-    assert (-1)/AccumBounds(0, 2) == AccumBounds(-oo, Rational(-1, 2))
-    assert 1/AccumBounds(-oo, 0) == AccumBounds(-oo, 0)
-    assert 1/AccumBounds(-1, 0) == AccumBounds(-oo, -1)
-    assert (-2)/AccumBounds(-oo, 0) == AccumBounds(0, oo)
-    assert 1/AccumBounds(-oo, -1) == AccumBounds(-1, 0)
+    assert 1/B(-1, 2) == B(-oo, oo)
+    assert 1/B(0, 2) == B(S.Half, oo)
+    assert (-1)/B(0, 2) == B(-oo, Rational(-1, 2))
+    assert 1/B(-oo, 0) == B(-oo, 0)
+    assert 1/B(-1, 0) == B(-oo, -1)
+    assert (-2)/B(-oo, 0) == B(0, oo)
+    assert 1/B(-oo, -1) == B(-1, 0)
 
-    assert AccumBounds(1, 2)/a == Mul(AccumBounds(1, 2), 1/a, evaluate=False)
+    assert B(1, 2)/a == Mul(B(1, 2), 1/a, evaluate=False)
 
-    assert AccumBounds(1, 2)/0 == AccumBounds(1, 2)*zoo
-    assert AccumBounds(1, oo)/oo == AccumBounds(0, oo)
-    assert AccumBounds(1, oo)/(-oo) == AccumBounds(-oo, 0)
-    assert AccumBounds(-oo, -1)/oo == AccumBounds(-oo, 0)
-    assert AccumBounds(-oo, -1)/(-oo) == AccumBounds(0, oo)
-    assert AccumBounds(-oo, oo)/oo == AccumBounds(-oo, oo)
-    assert AccumBounds(-oo, oo)/(-oo) == AccumBounds(-oo, oo)
-    assert AccumBounds(-1, oo)/oo == AccumBounds(0, oo)
-    assert AccumBounds(-1, oo)/(-oo) == AccumBounds(-oo, 0)
-    assert AccumBounds(-oo, 1)/oo == AccumBounds(-oo, 0)
-    assert AccumBounds(-oo, 1)/(-oo) == AccumBounds(0, oo)
+    assert B(1, 2)/0 == B(1, 2)*zoo
+    assert B(1, oo)/oo == B(0, oo)
+    assert B(1, oo)/(-oo) == B(-oo, 0)
+    assert B(-oo, -1)/oo == B(-oo, 0)
+    assert B(-oo, -1)/(-oo) == B(0, oo)
+    assert B(-oo, oo)/oo == B(-oo, oo)
+    assert B(-oo, oo)/(-oo) == B(-oo, oo)
+    assert B(-1, oo)/oo == B(0, oo)
+    assert B(-1, oo)/(-oo) == B(-oo, 0)
+    assert B(-oo, 1)/oo == B(-oo, 0)
+    assert B(-oo, 1)/(-oo) == B(0, oo)
 
 
 def test_issue_18795():
     r = Symbol('r', real=True)
-    a = AccumBounds(-1,1)
-    c = AccumBounds(7, oo)
-    b = AccumBounds(-oo, oo)
-    assert c - tan(r) == AccumBounds(7-tan(r), oo)
-    assert b + tan(r) == AccumBounds(-oo, oo)
-    assert (a + r)/a == AccumBounds(-oo, oo)*AccumBounds(r - 1, r + 1)
-    assert (b + a)/a == AccumBounds(-oo, oo)
+    a = B(-1,1)
+    c = B(7, oo)
+    b = B(-oo, oo)
+    assert c - tan(r) == B(7-tan(r), oo)
+    assert b + tan(r) == B(-oo, oo)
+    assert (a + r)/a == B(-oo, oo)*B(r - 1, r + 1)
+    assert (b + a)/a == B(-oo, oo)
 
 
 def test_AccumBounds_func():
-    assert (x**2 + 2*x + 1).subs(x, AccumBounds(-1, 1)) == AccumBounds(-1, 4)
-    assert exp(AccumBounds(0, 1)) == AccumBounds(1, E)
-    assert exp(AccumBounds(-oo, oo)) == AccumBounds(0, oo)
-    assert log(AccumBounds(3, 6)) == AccumBounds(log(3), log(6))
+    assert (x**2 + 2*x + 1).subs(x, B(-1, 1)) == B(-1, 4)
+    assert exp(B(0, 1)) == B(1, E)
+    assert exp(B(-oo, oo)) == B(0, oo)
+    assert log(B(3, 6)) == B(log(3), log(6))
 
 
 def test_AccumBounds_pow():
-    assert AccumBounds(0, 2)**2 == AccumBounds(0, 4)
-    assert AccumBounds(-1, 1)**2 == AccumBounds(0, 1)
-    assert AccumBounds(1, 2)**2 == AccumBounds(1, 4)
-    assert AccumBounds(-1, 2)**3 == AccumBounds(-1, 8)
-    assert AccumBounds(-1, 1)**0 == 1
+    assert B(0, 2)**2 == B(0, 4)
+    assert B(-1, 1)**2 == B(0, 1)
+    assert B(1, 2)**2 == B(1, 4)
+    assert B(-1, 2)**3 == B(-1, 8)
+    assert B(-1, 1)**0 == 1
 
-    assert AccumBounds(1, 2)**Rational(5, 2) == AccumBounds(1, 4*sqrt(2))
-    assert AccumBounds(0, 2)**S.Half == AccumBounds(0, sqrt(2))
+    assert B(1, 2)**Rational(5, 2) == B(1, 4*sqrt(2))
+    assert B(0, 2)**S.Half == B(0, sqrt(2))
 
     neg = Symbol('neg', negative=True)
-    unchanged(Pow, AccumBounds(neg, 1), S.Half)
+    unchanged(Pow, B(neg, 1), S.Half)
     nn = Symbol('nn', nonnegative=True)
-    assert AccumBound(nn, nn + 1)**S.Half == AccumBounds(sqrt(nn), sqrt(nn + 1))
+    assert B(nn, nn + 1)**S.Half == B(sqrt(nn), sqrt(nn + 1))
 
-    assert AccumBounds(1, 5)**(-2) == AccumBounds(Rational(1, 25), 1)
-    assert AccumBounds(-1, 3)**(-2) == AccumBounds(0, oo)
-    assert AccumBounds(0, 2)**(-2) == AccumBounds(Rational(1, 4), oo)
-    assert AccumBounds(-1, 2)**(-3) == AccumBounds(-oo, oo)
-    assert AccumBounds(-3, -2)**(-3) == AccumBounds(Rational(-1, 8), Rational(-1, 27))
-    assert AccumBounds(-3, -2)**(-2) == AccumBounds(Rational(1, 9), Rational(1, 4))
-    assert AccumBounds(0, oo)**S.Half == AccumBounds(0, oo)
-    assert AccumBounds(-oo, 0)**(-2) == AccumBounds(0, oo)
-    assert AccumBounds(-2, 0)**(-2) == AccumBounds(Rational(1, 4), oo)
+    assert B(1, 5)**(-2) == B(Rational(1, 25), 1)
+    assert B(-1, 3)**(-2) == B(0, oo)
+    assert B(0, 2)**(-2) == B(Rational(1, 4), oo)
+    assert B(-1, 2)**(-3) == B(-oo, oo)
+    assert B(-3, -2)**(-3) == B(Rational(-1, 8), Rational(-1, 27))
+    assert B(-3, -2)**(-2) == B(Rational(1, 9), Rational(1, 4))
+    assert B(0, oo)**S.Half == B(0, oo)
+    assert B(-oo, 0)**(-2) == B(0, oo)
+    assert B(-2, 0)**(-2) == B(Rational(1, 4), oo)
 
-    assert AccumBounds(Rational(1, 3), S.Half)**oo is S.Zero
-    assert AccumBounds(0, S.Half)**oo is S.Zero
-    assert AccumBounds(S.Half, 1)**oo == AccumBounds(0, 1)
-    assert AccumBounds(0, 1)**oo == AccumBounds(0, 1)
-    assert AccumBounds(2, 3)**oo is oo
-    assert AccumBounds(1, 2)**oo == AccumBounds(1, oo)
-    assert AccumBounds(S.Half, 3)**oo == AccumBounds(0, oo)
-    assert AccumBounds(Rational(-1, 3), Rational(-1, 4))**oo is S.Zero
-    assert AccumBounds(-1, Rational(-1, 2))**oo == AccumBounds(-oo, oo)
-    assert AccumBounds(-3, -2)**oo == FiniteSet(-oo, oo)
-    assert AccumBounds(-2, -1)**oo == AccumBounds(-oo, oo)
-    assert AccumBounds(-2, Rational(-1, 2))**oo == AccumBounds(-oo, oo)
-    assert AccumBounds(Rational(-1, 2), S.Half)**oo is S.Zero
-    assert AccumBounds(Rational(-1, 2), 1)**oo == AccumBounds(0, oo)
-    assert AccumBounds(Rational(-2, 3), 2)**oo == AccumBounds(0, oo)
-    assert AccumBounds(-1, 1)**oo == AccumBounds(-oo, oo)
-    assert AccumBounds(-1, S.Half)**oo == AccumBounds(-oo, oo)
-    assert AccumBounds(-1, 2)**oo == AccumBounds(-oo, oo)
-    assert AccumBounds(-2, S.Half)**oo == AccumBounds(-oo, oo)
+    assert B(Rational(1, 3), S.Half)**oo is S.Zero
+    assert B(0, S.Half)**oo is S.Zero
+    assert B(S.Half, 1)**oo == B(0, 1)
+    assert B(0, 1)**oo == B(0, 1)
+    assert B(2, 3)**oo is oo
+    assert B(1, 2)**oo == B(1, oo)
+    assert B(S.Half, 3)**oo == B(0, oo)
+    assert B(Rational(-1, 3), Rational(-1, 4))**oo is S.Zero
+    assert B(-1, Rational(-1, 2))**oo == B(-oo, oo)
+    assert B(-3, -2)**oo == FiniteSet(-oo, oo)
+    assert B(-2, -1)**oo == B(-oo, oo)
+    assert B(-2, Rational(-1, 2))**oo == B(-oo, oo)
+    assert B(Rational(-1, 2), S.Half)**oo is S.Zero
+    assert B(Rational(-1, 2), 1)**oo == B(0, oo)
+    assert B(Rational(-2, 3), 2)**oo == B(0, oo)
+    assert B(-1, 1)**oo == B(-oo, oo)
+    assert B(-1, S.Half)**oo == B(-oo, oo)
+    assert B(-1, 2)**oo == B(-oo, oo)
+    assert B(-2, S.Half)**oo == B(-oo, oo)
 
-    assert AccumBounds(1, 2)**x == Pow(AccumBounds(1, 2), x, evaluate=False)
+    assert B(1, 2)**x == Pow(B(1, 2), x, evaluate=False)
 
-    assert AccumBounds(2, 3)**(-oo) is S.Zero
-    assert AccumBounds(0, 2)**(-oo) == AccumBounds(0, oo)
-    assert AccumBounds(-1, 2)**(-oo) == AccumBounds(-oo, oo)
+    assert B(2, 3)**(-oo) is S.Zero
+    assert B(0, 2)**(-oo) == B(0, oo)
+    assert B(-1, 2)**(-oo) == B(-oo, oo)
 
-    assert (tan(x)**sin(2*x)).subs(x, AccumBounds(0, pi/2)) == \
-        Pow(AccumBounds(-oo, oo), AccumBounds(0, 1))
+    assert (tan(x)**sin(2*x)).subs(x, B(0, pi/2)) == \
+        Pow(B(-oo, oo), B(0, 1))
 
 
 def test_AccumBounds_exponent():
-    B = AccumBounds
     # base is 0
     z = 0**B(a, a + S.Half)
     assert z.subs(a, 0) == B(0, 1)
     assert z.subs(a, 1) == 0
     p = z.subs(a, -1)
-    assert p.is_Pow and p.args == (0, AccumBounds(-1, -S.Half))
+    assert p.is_Pow and p.args == (0, B(-1, -S.Half))
     # base > 0
     #   when base is 1 the type of bounds does not matter
     assert 1**B(a, a + 1) == 1
@@ -522,7 +521,7 @@ def test_AccumBounds_exponent():
     assert B(2, 3)**B(-3, 2) == B(S(1)/27, 9)
 
     # bounds generating imaginary parts unevaluated
-    unchanged(Pow, AccumBounds(-1, 1), AccumBounds(1, 2))
+    unchanged(Pow, B(-1, 1), B(1, 2))
     assert B(0, S(1)/2)**B(1, oo) == B(0, S(1)/2)
     assert B(0, 1)**B(1, oo) == B(0, 1)
     assert B(0, 2)**B(1, oo) == B(0, oo)
@@ -548,70 +547,70 @@ def test_AccumBounds_exponent():
 
 
 def test_comparison_AccumBounds():
-    assert (AccumBounds(1, 3) < 4) == S.true
-    assert (AccumBounds(1, 3) < -1) == S.false
-    assert (AccumBounds(1, 3) < 2).rel_op == '<'
-    assert (AccumBounds(1, 3) <= 2).rel_op == '<='
+    assert (B(1, 3) < 4) == S.true
+    assert (B(1, 3) < -1) == S.false
+    assert (B(1, 3) < 2).rel_op == '<'
+    assert (B(1, 3) <= 2).rel_op == '<='
 
-    assert (AccumBounds(1, 3) > 4) == S.false
-    assert (AccumBounds(1, 3) > -1) == S.true
-    assert (AccumBounds(1, 3) > 2).rel_op == '>'
-    assert (AccumBounds(1, 3) >= 2).rel_op == '>='
+    assert (B(1, 3) > 4) == S.false
+    assert (B(1, 3) > -1) == S.true
+    assert (B(1, 3) > 2).rel_op == '>'
+    assert (B(1, 3) >= 2).rel_op == '>='
 
-    assert (AccumBounds(1, 3) < AccumBounds(4, 6)) == S.true
-    assert (AccumBounds(1, 3) < AccumBounds(2, 4)).rel_op == '<'
-    assert (AccumBounds(1, 3) < AccumBounds(-2, 0)) == S.false
+    assert (B(1, 3) < B(4, 6)) == S.true
+    assert (B(1, 3) < B(2, 4)).rel_op == '<'
+    assert (B(1, 3) < B(-2, 0)) == S.false
 
-    assert (AccumBounds(1, 3) <= AccumBounds(4, 6)) == S.true
-    assert (AccumBounds(1, 3) <= AccumBounds(-2, 0)) == S.false
+    assert (B(1, 3) <= B(4, 6)) == S.true
+    assert (B(1, 3) <= B(-2, 0)) == S.false
 
-    assert (AccumBounds(1, 3) > AccumBounds(4, 6)) == S.false
-    assert (AccumBounds(1, 3) > AccumBounds(-2, 0)) == S.true
+    assert (B(1, 3) > B(4, 6)) == S.false
+    assert (B(1, 3) > B(-2, 0)) == S.true
 
-    assert (AccumBounds(1, 3) >= AccumBounds(4, 6)) == S.false
-    assert (AccumBounds(1, 3) >= AccumBounds(-2, 0)) == S.true
+    assert (B(1, 3) >= B(4, 6)) == S.false
+    assert (B(1, 3) >= B(-2, 0)) == S.true
 
     # issue 13499
-    assert (cos(x) > 0).subs(x, oo) == (AccumBounds(-1, 1) > 0)
+    assert (cos(x) > 0).subs(x, oo) == (B(-1, 1) > 0)
 
     c = Symbol('c')
-    raises(TypeError, lambda: (AccumBounds(0, 1) < c))
-    raises(TypeError, lambda: (AccumBounds(0, 1) <= c))
-    raises(TypeError, lambda: (AccumBounds(0, 1) > c))
-    raises(TypeError, lambda: (AccumBounds(0, 1) >= c))
+    raises(TypeError, lambda: (B(0, 1) < c))
+    raises(TypeError, lambda: (B(0, 1) <= c))
+    raises(TypeError, lambda: (B(0, 1) > c))
+    raises(TypeError, lambda: (B(0, 1) >= c))
 
 
 def test_contains_AccumBounds():
-    assert (1 in AccumBounds(1, 2)) == S.true
-    raises(TypeError, lambda: a in AccumBounds(1, 2))
-    assert 0 in AccumBounds(-1, 0)
+    assert (1 in B(1, 2)) == S.true
+    raises(TypeError, lambda: a in B(1, 2))
+    assert 0 in B(-1, 0)
     raises(TypeError, lambda:
-        (cos(1)**2 + sin(1)**2 - 1) in AccumBounds(-1, 0))
-    assert (-oo in AccumBounds(1, oo)) == S.true
-    assert (oo in AccumBounds(-oo, 0)) == S.true
+        (cos(1)**2 + sin(1)**2 - 1) in B(-1, 0))
+    assert (-oo in B(1, oo)) == S.true
+    assert (oo in B(-oo, 0)) == S.true
 
     # issue 13159
-    assert Mul(0, AccumBounds(-1, 1)) == Mul(AccumBounds(-1, 1), 0) == 0
+    assert Mul(0, B(-1, 1)) == Mul(B(-1, 1), 0) == 0
     import itertools
-    for perm in itertools.permutations([0, AccumBounds(-1, 1), x]):
+    for perm in itertools.permutations([0, B(-1, 1), x]):
         assert Mul(*perm) == 0
 
 
 def test_intersection_AccumBounds():
-    assert AccumBounds(0, 3).intersection(AccumBounds(1, 2)) == AccumBounds(1, 2)
-    assert AccumBounds(0, 3).intersection(AccumBounds(1, 4)) == AccumBounds(1, 3)
-    assert AccumBounds(0, 3).intersection(AccumBounds(-1, 2)) == AccumBounds(0, 2)
-    assert AccumBounds(0, 3).intersection(AccumBounds(-1, 4)) == AccumBounds(0, 3)
-    assert AccumBounds(0, 1).intersection(AccumBounds(2, 3)) == S.EmptySet
-    raises(TypeError, lambda: AccumBounds(0, 3).intersection(1))
+    assert B(0, 3).intersection(B(1, 2)) == B(1, 2)
+    assert B(0, 3).intersection(B(1, 4)) == B(1, 3)
+    assert B(0, 3).intersection(B(-1, 2)) == B(0, 2)
+    assert B(0, 3).intersection(B(-1, 4)) == B(0, 3)
+    assert B(0, 1).intersection(B(2, 3)) == S.EmptySet
+    raises(TypeError, lambda: B(0, 3).intersection(1))
 
 
 def test_union_AccumBounds():
-    assert AccumBounds(0, 3).union(AccumBounds(1, 2)) == AccumBounds(0, 3)
-    assert AccumBounds(0, 3).union(AccumBounds(1, 4)) == AccumBounds(0, 4)
-    assert AccumBounds(0, 3).union(AccumBounds(-1, 2)) == AccumBounds(-1, 3)
-    assert AccumBounds(0, 3).union(AccumBounds(-1, 4)) == AccumBounds(-1, 4)
-    raises(TypeError, lambda: AccumBounds(0, 3).union(1))
+    assert B(0, 3).union(B(1, 2)) == B(0, 3)
+    assert B(0, 3).union(B(1, 4)) == B(0, 4)
+    assert B(0, 3).union(B(-1, 2)) == B(-1, 3)
+    assert B(0, 3).union(B(-1, 4)) == B(-1, 4)
+    raises(TypeError, lambda: B(0, 3).union(1))
 
 
 def test_issue_16469():
