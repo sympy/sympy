@@ -85,7 +85,7 @@ def ddm_imatmul(a, b, c):
             ai[j] = sum(map(mul, bi, cTj), ai[j])
 
 
-def ddm_irref(a):
+def ddm_irref(a, _partial_pivot=False):
     """a  <--  rref(a)"""
     # a is (m x n)
     m = len(a)
@@ -97,6 +97,15 @@ def ddm_irref(a):
     pivots = []
 
     for j in range(n):
+        # Proper pivoting should be used for all domains for performance
+        # reasons but it is only strictly needed for RR and CC (and possibly
+        # other domains like RR(x)). This path is used by DDM.rref() if the
+        # domain is RR or CC. It uses partial (row) pivoting based on the
+        # absolute value of the pivot candidates.
+        if _partial_pivot:
+            ip = max(range(i, m), key=lambda ip: abs(a[ip][j]))
+            a[i], a[ip] = a[ip], a[i]
+
         # pivot
         aij = a[i][j]
 

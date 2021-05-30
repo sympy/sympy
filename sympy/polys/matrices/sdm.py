@@ -904,6 +904,8 @@ def sdm_irref(A):
             Ajnz = set(Aj)
             for k in Ajnz - Ainz:
                 Ai[k] = - Aij * Aj[k]
+            Ai.pop(j)
+            Ainz.remove(j)
             for k in Ajnz & Ainz:
                 Aik = Ai[k] - Aij * Aj[k]
                 if Aik:
@@ -938,6 +940,8 @@ def sdm_irref(A):
             for l in Ainz - Aknz:
                 Ak[l] = - Akj * Ai[l]
                 nonzero_columns[l].add(k)
+            Ak.pop(j)
+            Aknz.remove(j)
             for l in Ainz & Aknz:
                 Akl = Ak[l] - Akj * Ai[l]
                 if Akl:
