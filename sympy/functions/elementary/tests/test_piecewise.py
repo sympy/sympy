@@ -233,37 +233,39 @@ def test_piecewise_integrate1ca():
     assert g.integrate((x, 1, -2)) == g1y.subs(y, -2)
     assert g.integrate((x, 0, 1)) == gy1.subs(y, 0)
     assert g.integrate((x, 1, 0)) == g1y.subs(y, 0)
-    # XXX Make test pass without simplify
-    assert g.integrate((x, 2, 1)) == gy1.subs(y, 2).simplify()
-    assert g.integrate((x, 1, 2)) == g1y.subs(y, 2).simplify()
-
+    # since xreplace is followed by doit with deep=False
+    # to Min/Max don't get resolved so doit is needed
+    assert g.integrate((x, 2, 1)) == gy1.subs(y, 2).doit()
+    assert g.integrate((x, 1, 2)) == g1y.subs(y, 2).doit()
     assert piecewise_fold(gy1.rewrite(Piecewise)) == \
         Piecewise(
-            (1, y <= -1),
-            (-y**2/2 - y + S.Half, y <= 0),
-            (y**2/2 - y + S.Half, y < 1),
+            (-y**2/2 - y + S.Half, (y >= -1) & (y <= 0)),
+            (y**2/2 - y + S.Half, (y >= -1) & (y < 1)),
+            (1, y <= 0),
+            (y**2 + 1, y < 1),
             (0, True))
     assert piecewise_fold(g1y.rewrite(Piecewise)) == \
         Piecewise(
-            (-1, y <= -1),
-            (y**2/2 + y - S.Half, y <= 0),
-            (-y**2/2 + y - S.Half, y < 1),
+            (y**2/2 + y - S.Half, (y >= -1) & (y <= 0)),
+            (-y**2/2 + y - S.Half, (y >= -1) & (y < 1)),
+            (-1, y <= 0),
+            (-y**2 - 1, y < 1),
             (0, True))
 
-    # g1y and gy1 should simplify if the condition that y < 1
+    # g1y and gy1 simplify if the condition that y < 1
     # is applied, e.g. Min(1, Max(-1, y)) --> Max(-1, y)
-    # XXX Make test pass without simplify
-    assert gy1.simplify() == Piecewise(
+    assert gy1.doit() == Piecewise(
         (
             -Min(1, Max(-1, y))**2/2 - Min(1, Max(-1, y)) +
             Min(1, Max(0, y))**2 + S.Half, y < 1),
         (0, True)
         )
-    assert g1y.simplify() == Piecewise(
+    assert g1y.doit() == Piecewise(
         (
             Min(1, Max(-1, y))**2/2 + Min(1, Max(-1, y)) -
             Min(1, Max(0, y))**2 - S.Half, y < 1),
         (0, True))
+
 
 @slow
 def test_piecewise_integrate1cb():
