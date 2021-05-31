@@ -1048,6 +1048,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     # d^3/dx^3(x y) = F(x)
     ode = SingleODEProblem(eq_orig, func, x, prep=prep)
     solvers = {
+        RationalRiccati: ('1st_rational_riccati',),
         NthAlgebraic: ('nth_algebraic',),
         FirstExact:('1st_exact',),
         FirstLinear: ('1st_linear',),
@@ -1056,7 +1057,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         Factorable: ('factorable',),
         RiccatiSpecial: ('Riccati_special_minus2',),
         SecondNonlinearAutonomousConserved: ('2nd_nonlinear_autonomous_conserved',),
-        RationalRiccati: ('1st_rational_riccati',),
     }
     for solvercls in solvers:
         solver = solvercls(ode)

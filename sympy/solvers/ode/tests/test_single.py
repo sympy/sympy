@@ -2875,6 +2875,7 @@ def _get_all_examples():
     _get_examples_ode_sol_riccati + \
     _get_examples_ode_sol_1st_linear + \
     _get_examples_ode_sol_1st_exact + \
+    _get_examples_ode_sol_1st_rational_riccati + \
     _get_examples_ode_sol_almost_linear + \
     _get_examples_ode_sol_nth_order_reducible + \
     _get_examples_ode_sol_nth_linear_undetermined_coefficients + \

@@ -152,19 +152,13 @@ from sympy.polys.polyroots import roots
 from sympy.simplify.radsimp import numer
 from sympy.series.limits import limit
 from sympy.solvers.solvers import solve_undetermined_coeffs
+from sympy.tensor.indexed import Indexed, IndexedBase
 
 def find_poles(num, den, x):
     # All roots of denominator are poles of a(x)
     p = roots(den, x)
     # Substitute 1/x for x and check if oo is a pole
-    if den.degree(x) > num.degree(x):
-        if num.expr != 0:
-            num = num.transform(Poly(1, x), Poly(x, x)) * x**(den.degree(x) - num.degree(x))
-            den = den.transform(Poly(1, x), Poly(x, x))
-    else:
-        num = num.transform(Poly(1, x), Poly(x, x))
-        den = den.transform(Poly(1, x), Poly(x, x)) * x**(num.degree(x) - den.degree(x))
-    num, den = num.cancel(den)[1:]
+    num, den = inverse_transform_poly(num, den, x)
 
     # Find the poles of a(1/x)
     p_inv = roots(den, x)
@@ -180,7 +174,28 @@ def val_at_inf(num, den, x):
     return den.degree(x) - num.degree(x)
 
 
-def construct_c(a, x, poles, muls):
+def inverse_transform_poly(num, den, x):
+    # Declare for reuse
+    one = Poly(1, x)
+    xpoly = Poly(x, x)
+
+    # Check if degree of numerator is same as denominator
+    pwr = den.degree(x) - num.degree(x)
+    if pwr >= 0:
+        # Denominator has greater degree. Substituting x with
+        # 1/x would make the extra power go to the numerator
+        if num.expr != 0:
+            num = num.transform(one, xpoly) * x**pwr
+            den = den.transform(one, xpoly)
+    else:
+        # Numerator has greater degree. Substituting x with
+        # 1/x would make the extra power go to the denominator
+        num = num.transform(one, xpoly)
+        den = den.transform(one, xpoly) * x**(-pwr)
+    return num.cancel(den, include=True)
+
+
+def construct_c(num, den, x, poles, muls):
     c = []
     for pole, mul in zip(poles, muls):
         c.append([])
@@ -195,7 +210,11 @@ def construct_c(a, x, poles, muls):
         elif mul == 2:
             # Find the coefficient of 1/(x - pole)**2 in the
             # Laurent series expansion of a(x) about pole.
-            r = a.series(x, pole).coeff(x - pole, -2)
+            if pole != oo:
+                sgn, num1, den1 = (num*(x - pole)**2).cancel(den)
+                r = (sgn*num1.subs(x, pole))/(den1.subs(x, pole))
+            else:
+                r = 0
 
             # If multiplicity is 2, the coefficient to be added
             # in the c-vector is c = (1 +- sqrt(1 + 4*r))/2
@@ -209,15 +228,15 @@ def construct_c(a, x, poles, muls):
             # r_i = mul/2
             ri = mul//2
 
-            # Find the Laurent series about the pole
-            ser = a.series(x, pole)
+            # Find the Laurent series coefficients about the pole
+            ser = rational_laurent_series(num, den, x, pole, mul, 6)
 
             # Start with an empty memo to store the coefficients
             # This is for the plus case
             temp = [0 for i in range(ri)]
 
             # Base Case
-            temp[ri-1] = sqrt(ser.coeff(x - pole, -mul))
+            temp[ri-1] = sqrt(ser[0])
 
             # Iterate backwards to find all coefficients
             for s in range(ri-1, 0, -1):
@@ -225,36 +244,37 @@ def construct_c(a, x, poles, muls):
                 for j in range(s+1, ri):
                     sm += temp[j-1]*temp[ri+s-j-1]
                 if s!= 1:
-                    temp[s-1] = (ser.coeff(x - pole, -ri-s) - sm)/(2*temp[ri-1])
+                    temp[s-1] = (ser[mul-ri-s] - sm)/(2*temp[ri-1])
 
             # Memo for the minus case
             temp1 = list(map(lambda x: -x, temp))
 
             # Find the 0th coefficient in the recurrence
-            temp[0] = (ser.coeff(x - pole, -ri-s) - sm + ri*temp[ri-1])/(2*temp[ri-1])
-            temp1[0] = (ser.coeff(x - pole, -ri-s) - sm + ri*temp1[ri-1])/(2*temp1[ri-1])
+            temp[0] = (ser[mul-ri-s] - sm + ri*temp[ri-1])/(2*temp[ri-1])
+            temp1[0] = (ser[mul-ri-s] - sm + ri*temp1[ri-1])/(2*temp1[ri-1])
 
             # Add both the plus and minus cases' coefficients
             c[-1].extend([temp, temp1])
     return c
 
-def construct_d(a, x, val_inf):
-    ser = a.series(x, oo)
+
+def construct_d(num, den, a, x, val_inf, mul):
     N = -val_inf//2
+    ser = rational_laurent_series(num, den, x, oo, mul, 1)
 
     # Case 4
     if val_inf < 0:
         temp = [0 for i in range(N+2)]
-        temp[N] = sqrt(ser.coeff(x, 2*N))
+        temp[N] = sqrt(ser[-mul - 1 + 2*N])
         for s in range(N-1, -2, -1):
             sm = 0
             for j in range(s+1, N):
                 sm += temp[j]*temp[N+s-j]
             if s != -1:
-                temp[s] = (ser.coeff(x, N+s) - sm)/(2*temp[N])
+                temp[s] = (ser[-mul - 1 + N+s] - sm)/(2*temp[N])
         temp1 = list(map(lambda x: -x, temp))
-        temp[-1] = (ser.coeff(x, N+s) - temp[N] - sm)/(2*temp[N])
-        temp1[-1] = (ser.coeff(x, N+s) - temp1[N] - sm)/(2*temp1[N])
+        temp[-1] = (ser[-mul - 1 + N+s] - temp[N] - sm)/(2*temp[N])
+        temp1[-1] = (ser[-mul - 1 + N+s] - temp1[N] - sm)/(2*temp1[N])
         d = [temp, temp1]
 
     # Case 5
@@ -263,10 +283,10 @@ def construct_d(a, x, val_inf):
         temp = [0, 0]
 
         # d_0  = sqrt(a_0)
-        temp[0] = sqrt(ser.coeff(x, 0))
+        temp[0] = sqrt(ser[-mul - 1])
 
         # d_(-1) = a_(-1)/(2*d_0)
-        temp[-1] = ser.coeff(x, -1)/(2*temp[0])
+        temp[-1] = ser[-mul - 2]/(2*temp[0])
 
         # Coefficients for the minus case are just the negative
         # of the coefficients for the positive case. Append both.
@@ -281,6 +301,42 @@ def construct_d(a, x, val_inf):
         # d_(-1) = (1 +- sqrt(1 + 4*s_oo))/2
         d = [[(1 + sqrt(1 + 4*s_inf))/2], [(1 - sqrt(1 + 4*s_inf))/2]]
     return d
+
+
+def rational_laurent_series(num, den, x, x0, mul, n):
+    m = Symbol('m')
+    one = Poly(1, x)
+    reverse = False
+    if x0 == oo:
+        num, den = inverse_transform_poly(num, den, x)
+        reverse = True
+        x0 = 0
+    if x0:
+        num = num.transform(Poly(x + x0, x), one)
+        den = den.transform(Poly(x + x0, x), one)
+        num, den = num.cancel(den, include=True)
+    num, den = (num*x**mul).cancel(den, include=True)
+
+    c = IndexedBase('c')
+    out, sums = S(0), S(0)
+    for pw, cf in den.as_dict().items():
+        pw = pw[0]
+        for i in range(pw, max(den.degree(x), num.degree(x) + 1)):
+            out += cf*c[i - pw]*x**i
+        sums += cf*c[m - pw]
+
+    if out:
+        coeffs = solve_undetermined_coeffs(Eq(num.expr, out), (out.atoms(Indexed)), x)
+        for i in range(len(coeffs), n + mul):
+            ai = solve_undetermined_coeffs(sums.subs(m, i).subs(coeffs), [c[i]], x)
+            if type(ai) == dict:
+                coeffs.update({c[i]: list(ai.values())[0]})
+        coeffs = list(coeffs.items())
+        coeffs.sort(key = lambda x: x[0].indices[0])
+        coeffs = list(map(lambda x: x[1], coeffs))
+    else:
+        coeffs = list(map(lambda x: x/den, num.as_dict().values()))
+    return coeffs[::-1] if reverse else coeffs
 
 
 def compute_degree(x, poles, choice, c, d, N):
@@ -332,7 +388,7 @@ def solve_riccati(eq, fx, x, b0, b1, b2):
     a = -b0*b2 + b1**2/4 - b1.diff(x)/2 + 3*b2.diff(x)**2/(4*b2**2) + b1*b2.diff(x)/(2*b2) - b2.diff(x, 2)/(2*b2)
     a_t = a.together()
     num, den = map(lambda e: Poly(e, x), a_t.as_numer_denom())
-    num, den = num.cancel(den)[1:]
+    num, den = num.cancel(den, include=True)
 
     # Step 2
     presol = []
@@ -347,6 +403,7 @@ def solve_riccati(eq, fx, x, b0, b1, b2):
 
     # Step 5 : Find poles and valuation at infinity
     poles = find_poles(num, den, x)
+    inf_mul = poles.get(oo, 0)
     poles, muls = list(poles.keys()), list(poles.values())
     val_inf = val_at_inf(num, den, x)
 
@@ -357,10 +414,10 @@ def solve_riccati(eq, fx, x, b0, b1, b2):
 
         # Step 6
         # Construct c-vectors for each singular point
-        c = construct_c(a, x, poles, muls)
+        c = construct_c(num, den, x, poles, muls)
 
         # Construct d vectors for each singular point
-        d = construct_d(a, x, val_inf)
+        d = construct_d(num, den, a, x, val_inf, inf_mul)
 
         # Step 7 : Iterate over all possible combinations and return solutions
         for it in range(2**(len(poles) + 1)):
@@ -402,6 +459,7 @@ def solve_riccati(eq, fx, x, b0, b1, b2):
     # Step 15 : Inverse transform the solutions of the equation in normal form
     sol = list(map(lambda y: Eq(fx, -y/b2 - b2.diff(x)/(2*b2**2) - b1/(2*b2)), presol))
     return sol
+
 
 # Avoid circular import:
 from .ode import get_numbered_constants
