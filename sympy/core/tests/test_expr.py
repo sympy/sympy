@@ -444,7 +444,8 @@ def test_as_leading_term():
     # https://github.com/sympy/sympy/issues/21177
     f = -3*x + (x + Rational(3, 2) - sqrt(3)*S.ImaginaryUnit/2)**2\
         - Rational(3, 2) + 3*sqrt(3)*S.ImaginaryUnit/2
-    assert f.as_leading_term(x) == -sqrt(3)*S.ImaginaryUnit*x
+    assert f.as_leading_term(x) == \
+        (3*x + 3*sqrt(3)*S.ImaginaryUnit*x)/(-3 + sqrt(3)*S.ImaginaryUnit)
 
     # https://github.com/sympy/sympy/issues/21245
     f = 1 - x - x**2

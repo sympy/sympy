@@ -943,3 +943,7 @@ def test_issue_20704():
 
 def test_issue_21038():
     assert limit(sin(pi*x)/(3*x - 12), x, 4) == pi/3
+
+def test_issue_21550():
+    r = (sqrt(5) - 1)/2
+    assert limit((x - r)/(x**2 + x - 1), x, r) == (-1 + sqrt(5))/(5 - sqrt(5))
