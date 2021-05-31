@@ -8,7 +8,7 @@ from sympy.core import Add, Mul, Pow
 from sympy.core.expr import unchanged
 from sympy.sets.sets import (Interval, FiniteSet, EmptySet, Complement,
                             Union)
-from sympy.testing.pytest import raises, _both_exp_pow
+from sympy.testing.pytest import raises, _both_exp_pow, XFAIL
 from sympy.abc import x
 
 a = Symbol('a', real=True)
@@ -354,6 +354,8 @@ def test_AccumBounds():
     c = Symbol('c')
     raises(ValueError, lambda: B(0, c))
     raises(ValueError, lambda: B(1, -1))
+    r = Symbol('r', real=True)
+    raises(ValueError, lambda: B(r, r - 1))
 
 
 def test_AccumBounds_mul():
@@ -442,6 +444,14 @@ def test_AccumBounds_func():
     assert log(B(3, 6)) == B(log(3), log(6))
 
 
+@XFAIL
+def test_AccumBounds_powf():
+    nn = Symbol('nn', nonnegative=True)
+    assert B(1 + nn, 2 + nn)**B(1, 2) == B(1 + nn, (2 + nn)**2)
+    i = Symbol('i', integer=True, negative=True)
+    assert B(1, 2)**i == B(2**i, 1)
+
+
 def test_AccumBounds_pow():
     assert B(0, 2)**2 == B(0, 4)
     assert B(-1, 1)**2 == B(0, 1)
@@ -456,6 +466,13 @@ def test_AccumBounds_pow():
     unchanged(Pow, B(neg, 1), S.Half)
     nn = Symbol('nn', nonnegative=True)
     assert B(nn, nn + 1)**S.Half == B(sqrt(nn), sqrt(nn + 1))
+    assert B(nn, nn + 1)**nn == B(nn**nn, (nn + 1)**nn)
+    unchanged(Pow, B(nn, nn + 1), x)
+    i = Symbol('i', integer=True)
+    unchanged(Pow, B(1, 2), i)
+    i = Symbol('i', integer=True, nonnegative=True)
+    assert B(1, 2)**i == B(1, 2**i)
+    assert B(0, 1)**i == B(0**i, 1)
 
     assert B(1, 5)**(-2) == B(Rational(1, 25), 1)
     assert B(-1, 3)**(-2) == B(0, oo)

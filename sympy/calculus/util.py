@@ -1029,14 +1029,17 @@ class AccumulationBounds(AtomicExpr):
         if not min.is_extended_real or not max.is_extended_real:
             raise ValueError("Only real AccumulationBounds are supported")
 
-        # Make sure that the created AccumBounds object will be valid.
-        if max.is_comparable and min.is_comparable:
-            if max < min:
-                raise ValueError(
-                    "Lower limit should be smaller than upper limit")
-
         if max == min:
             return max
+
+        # Make sure that the created AccumBounds object will be valid.
+        if max.is_number and min.is_number:
+            bad = max.is_comparable and min.is_comparable and max < min
+        else:
+            bad = (max - min).is_extended_negative
+        if bad:
+            raise ValueError(
+                "Lower limit should be smaller than upper limit")
 
         return Basic.__new__(cls, min, max)
 
@@ -1329,49 +1332,58 @@ class AccumulationBounds(AtomicExpr):
             if other is S.NegativeInfinity:
                 return (1/self)**oo
 
-            if other.is_number:
-                if other.is_zero:
-                    return S.One  # x**0 = 1
+            # generically true
+            if (self.max - self.min).is_nonnegative:
+                # well defined
+                if self.min.is_nonnegative:
+                    # no 0 to worry about
+                    if other.is_nonnegative:
+                        # no infinity to worry about
+                        return self.func(self.min**other, self.max**other)
 
-                if other.is_Integer:
-                    if self.min.is_extended_positive:
-                        return AccumBounds(
-                            Min(self.min**other, self.max**other),
-                            Max(self.min**other, self.max**other))
-                    elif self.max.is_extended_negative:
-                        return AccumBounds(
-                            Min(self.max**other, self.min**other),
-                            Max(self.max**other, self.min**other))
+            if other.is_zero:
+                return S.One  # x**0 = 1
 
-                    if other % 2 == 0:
-                        if other.is_extended_negative:
-                            if self.min.is_zero:
-                                return AccumBounds(self.max**other, oo)
-                            if self.max.is_zero:
-                                return AccumBounds(self.min**other, oo)
-                            return AccumBounds(0, oo)
-                        return AccumBounds(
-                            S.Zero, Max(self.min**other, self.max**other))
-                    else:
-                        if other.is_extended_negative:
-                            if self.min.is_zero:
-                                return AccumBounds(self.max**other, oo)
-                            if self.max.is_zero:
-                                return AccumBounds(-oo, self.min**other)
-                            return AccumBounds(-oo, oo)
-                        return AccumBounds(self.min**other, self.max**other)
+            if other.is_Integer or other.is_integer:
+                if self.min.is_extended_positive:
+                    return AccumBounds(
+                        Min(self.min**other, self.max**other),
+                        Max(self.min**other, self.max**other))
+                elif self.max.is_extended_negative:
+                    return AccumBounds(
+                        Min(self.max**other, self.min**other),
+                        Max(self.max**other, self.min**other))
 
-                # non-integer exponent
-                # 0**neg or neg**frac yields complex
-                if self.min.is_extended_positive or (
-                        other.is_extended_nonnegative and
-                        self.min.is_extended_nonnegative):
-                    num, den = other.as_numer_denom()
-                    if num is S.One:
-                        return AccumBounds(*[i**(1/den) for i in self.args])
+                if other % 2 == 0:
+                    if other.is_extended_negative:
+                        if self.min.is_zero:
+                            return AccumBounds(self.max**other, oo)
+                        if self.max.is_zero:
+                            return AccumBounds(self.min**other, oo)
+                        return AccumBounds(0, oo)
+                    return AccumBounds(
+                        S.Zero, Max(self.min**other, self.max**other))
+                elif other % 2 == 1:
+                    if other.is_extended_negative:
+                        if self.min.is_zero:
+                            return AccumBounds(self.max**other, oo)
+                        if self.max.is_zero:
+                            return AccumBounds(-oo, self.min**other)
+                        return AccumBounds(-oo, oo)
+                    return AccumBounds(self.min**other, self.max**other)
 
-                    elif den is not S.One:  # e.g. if other is not Float
-                        return (self**num)**(1/den)  # ok for non-negative base
+            # non-integer exponent
+            # 0**neg or neg**frac yields complex
+            if (other.is_number or other.is_rational) and (
+                    self.min.is_extended_nonnegative or (
+                    other.is_extended_nonnegative and
+                    self.min.is_extended_nonnegative)):
+                num, den = other.as_numer_denom()
+                if num is S.One:
+                    return AccumBounds(*[i**(1/den) for i in self.args])
+
+                elif den is not S.One:  # e.g. if other is not Float
+                    return (self**num)**(1/den)  # ok for non-negative base
 
             if isinstance(other, AccumBounds):
                 if (self.min.is_extended_positive or
@@ -1380,7 +1392,10 @@ class AccumulationBounds(AtomicExpr):
                     p = [self**i for i in other.args]
                     if not any(i.is_Pow for i in p):
                         a = [j for i in p for j in i.args or (i,)]
-                        return self.func(min(a), max(a))
+                        try:
+                            return self.func(min(a), max(a))
+                        except TypeError:  # can't sort
+                            pass
 
             return Pow(self, other, evaluate=False)
 
