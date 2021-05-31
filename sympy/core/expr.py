@@ -2418,11 +2418,15 @@ class Expr(Basic, EvalfMixin):
     @property
     def expr_free_symbols(self):
         """
-        Like ``free_symbols``, but returns the free symbols only if they are contained in an expression node.
+        Like ``free_symbols``, but returns the free symbols only if
+        they are contained in an expression node.
 
         Examples
         ========
 
+        >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
+        >>> import warnings
+        >>> warnings.simplefilter("ignore", SymPyDeprecationWarning)
         >>> from sympy.abc import x, y
         >>> (x + y).expr_free_symbols
         {x, y}
@@ -2437,6 +2441,10 @@ class Expr(Basic, EvalfMixin):
         >>> t.free_symbols
         {x, y}
         """
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(feature="expr_free_symbols method",
+                                issue=21494,
+                                deprecated_since_version="1.9").warn()
         return {j for i in self.args for j in i.expr_free_symbols}
 
     def could_extract_minus_sign(self):
@@ -3921,6 +3929,10 @@ class AtomicExpr(Atom, Expr):
 
     @property
     def expr_free_symbols(self):
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(feature="expr_free_symbols method",
+                                issue=21494,
+                                deprecated_since_version="1.9").warn()
         return {self}
 
 
