@@ -482,7 +482,6 @@ class Add(Expr, AssocOp):
         elif e.is_Number and abs(e) != 1:
             # handle the Float case: (2.0 + 4*x)**e -> 4**e*(0.5 + x)**e
             c, m = zip(*[i.as_coeff_Mul() for i in self.args])
-            b = self
             if any(i.is_Float for i in c):  # XXX should this always be done?
                 big = -1
                 for i in c:
@@ -494,11 +493,6 @@ class Add(Expr, AssocOp):
                     c = [sign(i) if i in bigs else i/big for i in c]
                     addpow = Add(*[c*m for c, m in zip(c, m)])**e
                     return big**e*addpow
-            elif (abs(e) - 1).is_negative and b.is_positive:
-                expr = b.factor()
-                if expr.is_Pow:
-                    bpow = expr.args[1] * e
-                    return expr.func(expr.args[0], bpow)
 
     @cacheit
     def _eval_derivative(self, s):
@@ -1011,8 +1005,11 @@ class Add(Expr, AssocOp):
         except TypeError:
             return expr
 
-        new_expr = new_expr.trigsimp().cancel()
-        if not new_expr:
+        is_zero = new_expr.is_zero
+        if is_zero is None:
+            new_expr = new_expr.trigsimp().cancel()
+            is_zero = new_expr.is_zero
+        if is_zero is True:
             # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
             n0 = min.getn()
