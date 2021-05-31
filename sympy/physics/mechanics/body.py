@@ -1,5 +1,6 @@
 from sympy.core.backend import Symbol
 from sympy.physics.vector import Point, Vector, ReferenceFrame
+from sympy.physics.vector.frame import _check_frame
 from sympy.physics.mechanics import RigidBody, Particle, inertia
 
 __all__ = ['Body']
@@ -188,13 +189,16 @@ class Body(RigidBody, Particle):  # type: ignore
 
         self.loads.append((point, vec))
 
-    def apply_torque(self, vec):
+    def apply_torque(self, vec, frame=None):
         """
         Adds a torque to the body.
 
         Parameters
         ==========
 
+        frame: ReferenceFrame
+            The frame about which torque is applied. Default value is Body's
+            frame.
         vec: Vector
             Defines the torque vector. Can be any vector w.r.t any frame or
             combinations of frame.
@@ -211,6 +215,9 @@ class Body(RigidBody, Particle):  # type: ignore
             >>> body.apply_torque(T * body.frame.z)
         """
 
+        if frame is None:
+            frame = self.frame
+        _check_frame(frame)
         if not isinstance(vec, Vector):
             raise TypeError("A Vector must be supplied to add torque.")
-        self.loads.append((self.frame, vec))
+        self.loads.append((frame, vec))

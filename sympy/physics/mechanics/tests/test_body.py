@@ -120,9 +120,14 @@ def test_body_add_force():
 
 def test_body_add_torque():
     body = Body('body')
+    a, b, c = symbols('a b c')
+    N = ReferenceFrame('N')
     torque_vector = body.frame.x
     body.apply_torque(torque_vector)
 
     assert len(body.loads) == 1
     assert body.loads[0] == (body.frame, torque_vector)
+    torq = a* N.x + b * N.y - c * N.z
+    body.apply_torque(torq, N)
+    assert body.loads == [(body.frame, body.frame.x), (N, a*N.x + b*N.y - c*N.z)]
     raises(TypeError, lambda: body.apply_torque(0))
