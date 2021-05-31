@@ -2102,6 +2102,7 @@ def test_ExprBuilder():
     eb.args.extend([x, x])
     assert eb.build() == x**2
 
+
 def test_non_string_equality():
     # Expressions should not compare equal to strings
     x = symbols('x')
@@ -2122,3 +2123,9 @@ def test_non_string_equality():
 
     assert (x == BadRepr()) is False
     assert (x != BadRepr()) is True
+
+
+def test_21494():
+    from sympy.testing.pytest import warns_deprecated_sympy
+    with warns_deprecated_sympy():
+        assert x.expr_free_symbols == {x}
