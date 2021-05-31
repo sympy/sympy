@@ -20,7 +20,7 @@ from sympy.core.compatibility import iterable
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.iterables import flatten, capture
-from sympy.testing.pytest import raises, XFAIL, skip, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
@@ -656,9 +656,11 @@ def test_creation():
         Matrix((1, 2))[3] = 5
 
     assert Matrix() == Matrix([]) == Matrix([[]]) == Matrix(0, 0, [])
-    # anything can go into a matrix (laplace_transform uses tuples)
-    assert Matrix([[[], ()]]).tolist() == [[[], ()]]
-    assert Matrix([[[], ()]]).T.tolist() == [[[]], [()]]
+    # anything used to be allowed in a matrix
+    with warns_deprecated_sympy():
+        assert Matrix([[[], ()]]).tolist() == [[[], ()]]
+    with warns_deprecated_sympy():
+        assert Matrix([[[], ()]]).T.tolist() == [[[]], [()]]
 
     a = Matrix([[x, 0], [0, 0]])
     m = a
@@ -708,7 +710,8 @@ def test_creation():
     [      1,       1],
     [A[0, 0], A[0, 1]],
     [A[1, 0], A[1, 1]]])
-    assert Matrix(dat, evaluate=False).tolist() == [[i] for i in dat]
+    with warns_deprecated_sympy():
+        assert Matrix(dat, evaluate=False).tolist() == [[i] for i in dat]
 
     # 0-dim tolerance
     assert Matrix([ones(2), ones(0)]) == Matrix([ones(2)])
@@ -2535,11 +2538,14 @@ def test_replace():
 def test_replace_map():
     from sympy import symbols, Function, Matrix
     F, G = symbols('F, G', cls=Function)
-    K = Matrix(2, 2, [(G(0), {F(0): G(0)}), (G(1), {F(1): G(1)}), (G(1), {F(1)\
-    : G(1)}), (G(2), {F(2): G(2)})])
+    with warns_deprecated_sympy():
+        K = Matrix(2, 2, [(G(0), {F(0): G(0)}), (G(1), {F(1): G(1)}),
+                          (G(1), {F(1): G(1)}), (G(2), {F(2): G(2)})])
     M = Matrix(2, 2, lambda i, j: F(i+j))
-    N = M.replace(F, G, True)
-    assert N == K
+    with warns_deprecated_sympy():
+        N = M.replace(F, G, True)
+    with warns_deprecated_sympy():
+        assert N == K
 
 def test_atoms():
     m = Matrix([[1, 2], [x, 1 - 1/x]])
@@ -2592,6 +2598,7 @@ def test_pinv():
         )
 
 
+@slow
 @XFAIL
 def test_pinv_rank_deficient_when_diagonalization_fails():
     # Test the four properties of the pseudoinverse for matrices when

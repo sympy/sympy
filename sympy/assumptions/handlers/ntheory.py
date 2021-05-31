@@ -69,7 +69,7 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return isprime(expr)
 
-@PrimePredicate.register_many(Rational, Infinity, NaN, NegativeInfinity, ImaginaryUnit)
+@PrimePredicate.register_many(Rational, Infinity, NegativeInfinity, ImaginaryUnit)
 def _(expr, assumptions):
     return False
 
@@ -80,6 +80,10 @@ def _(expr, assumptions):
 @PrimePredicate.register(NumberSymbol)
 def _(expr, assumptions):
     return _PrimePredicate_number(expr, assumptions)
+
+@PrimePredicate.register(NaN)
+def _(expr, assumptions):
+    return None
 
 
 # CompositePredicate
@@ -109,10 +113,6 @@ def _(expr, assumptions):
             return _integer
     else:
         return _positive
-
-@CompositePredicate.register(NaN)
-def _(expr, assumptions):
-    return False
 
 
 # EvenPredicate
@@ -219,7 +219,7 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return not bool(expr.p & 1)
 
-@EvenPredicate.register_many(Rational, Infinity, NaN, NegativeInfinity, ImaginaryUnit)
+@EvenPredicate.register_many(Rational, Infinity, NegativeInfinity, ImaginaryUnit)
 def _(expr, assumptions):
     return False
 
@@ -242,6 +242,10 @@ def _(expr, assumptions):
     if ask(Q.real(expr.args[0]), assumptions):
         return True
 
+@EvenPredicate.register(NaN)
+def _(expr, assumptions):
+    return None
+
 
 # OddPredicate
 
@@ -261,7 +265,3 @@ def _(expr, assumptions):
             return None
         return not _even
     return _integer
-
-@OddPredicate.register(NaN)
-def _(expr, assumptions):
-    return False

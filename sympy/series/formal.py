@@ -74,10 +74,10 @@ def rational_algorithm(f, x, k, order=4, full=False):
     >>> ra(1 / (1 - x), x, k)
     (1, 0, 0)
     >>> ra(log(1 + x), x, k)
-    (-(-1)**(-k)/k, 0, 1)
+    (-1/((-1)**k*k), 0, 1)
 
     >>> ra(atan(x), x, k, full=True)
-    ((-I*(-I)**(-k)/2 + I*I**(-k)/2)/k, 0, 1)
+    ((-I/(2*(-I)**k) + I/(2*I**k))/k, 0, 1)
 
     Notes
     =====

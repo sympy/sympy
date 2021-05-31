@@ -1206,11 +1206,8 @@ class Float(Number):
         return obj
 
     # mpz can't be pickled
-    def __getnewargs__(self):
-        return (mlib.to_pickable(self._mpf_),)
-
-    def __getstate__(self):
-        return {'_prec': self._prec}
+    def __getnewargs_ex__(self):
+        return ((mlib.to_pickable(self._mpf_),), {'precision': self._prec})
 
     def _hashable_content(self):
         return (self._mpf_, self._prec)
@@ -1976,9 +1973,11 @@ class Rational(Number):
                       use_rho=use_rho, use_pm1=use_pm1,
                       verbose=verbose).copy()
 
+    @property
     def numerator(self):
         return self.p
 
+    @property
     def denominator(self):
         return self.q
 
@@ -2665,6 +2664,7 @@ class One(IntegerConstant, metaclass=Singleton):
     .. [1] https://en.wikipedia.org/wiki/1_%28number%29
     """
     is_number = True
+    is_positive = True
 
     p = 1
     q = 1
@@ -3972,17 +3972,22 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
         I**3 mod 4 -> -I
         """
 
-        if isinstance(expt, Number):
-            if isinstance(expt, Integer):
-                expt = expt.p % 4
-                if expt == 0:
-                    return S.One
-                if expt == 1:
-                    return S.ImaginaryUnit
-                if expt == 2:
-                    return -S.One
+        if isinstance(expt, Integer):
+            expt = expt % 4
+            if expt == 0:
+                return S.One
+            elif expt == 1:
+                return S.ImaginaryUnit
+            elif expt == 2:
+                return S.NegativeOne
+            elif expt == 3:
                 return -S.ImaginaryUnit
-        return
+        if isinstance(expt, Rational):
+            i, r = divmod(expt, 2)
+            rv = Pow(S.ImaginaryUnit, r, evaluate=False)
+            if i % 2:
+                return Mul(S.NegativeOne, rv, evaluate=False)
+            return rv
 
     def as_base_exp(self):
         return S.NegativeOne, S.Half

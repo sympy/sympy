@@ -86,6 +86,11 @@ def test_DDM_zeros():
     assert ddmz.shape == (3, 4)
     assert ddmz.domain == QQ
 
+def test_DDM_ones():
+    ddmone = DDM.ones((2, 3), QQ)
+    assert list(ddmone) == [[QQ(1)] * 3] * 2
+    assert ddmone.shape == (2, 3)
+    assert ddmone.domain == QQ
 
 def test_DDM_eye():
     ddmz = DDM.eye(3, QQ)
@@ -103,6 +108,18 @@ def test_DDM_copy():
     assert (ddm1 == ddm2) is False
     ddm2[0][0] = QQ(-1)
     assert (ddm1 == ddm2) is True
+
+
+def test_DDM_transpose():
+    ddm = DDM([[QQ(1)], [QQ(2)]], (2, 1), QQ)
+    ddmT = DDM([[QQ(1), QQ(2)]], (1, 2), QQ)
+    assert ddm.transpose() == ddmT
+    ddm02 = DDM([], (0, 2), QQ)
+    ddm02T = DDM([[], []], (2, 0), QQ)
+    assert ddm02.transpose() == ddm02T
+    assert ddm02T.transpose() == ddm02
+    ddm0 = DDM([], (0, 0), QQ)
+    assert ddm0.transpose() == ddm0
 
 
 def test_DDM_add():
@@ -207,6 +224,21 @@ def test_DDM_hstack():
     assert Ah.domain == ZZ
     assert Ah == DDM([[ZZ(1), ZZ(2), ZZ(3), ZZ(4), ZZ(5)]], (1, 5), ZZ)
 
+def test_DDM_vstack():
+
+    A = DDM([[ZZ(1)], [ZZ(2)], [ZZ(3)]], (3, 1), ZZ)
+    B = DDM([[ZZ(4)], [ZZ(5)]], (2, 1), ZZ)
+    Ah = A.vstack(B)
+
+    assert Ah.shape == (5, 1)
+    assert Ah.domain == ZZ
+    assert Ah == DDM([[ZZ(1)], [ZZ(2)], [ZZ(3)], [ZZ(4)], [ZZ(5)]], (5, 1), ZZ)
+
+def test_DDM_applyfunc():
+    A = DDM([[ZZ(1), ZZ(2), ZZ(3)]], (1, 3), ZZ)
+    B = DDM([[ZZ(2), ZZ(4), ZZ(6)]], (1, 3), ZZ)
+    assert A.applyfunc(lambda x: 2*x, ZZ) == B
+
 def test_DDM_rref():
 
     A = DDM([], (0, 4), QQ)
@@ -243,6 +275,11 @@ def test_DDM_nullspace():
      Anull = DDM([[QQ(-1), QQ(1)]], (1, 2), QQ)
      nonpivots = [1]
      assert A.nullspace() == (Anull, nonpivots)
+
+
+def test_DDM_particular():
+    A = DDM([[QQ(1), QQ(0)]], (1, 2), QQ)
+    assert A.particular() == DDM.zeros((1, 1), QQ)
 
 
 def test_DDM_det():
@@ -365,3 +402,34 @@ def test_DDM_charpoly():
 
     A = DDM([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
     raises(DDMShapeError, lambda: A.charpoly())
+
+
+def test_DDM_getitem():
+    dm = DDM([
+        [ZZ(1), ZZ(2), ZZ(3)],
+        [ZZ(4), ZZ(5), ZZ(6)],
+        [ZZ(7), ZZ(8), ZZ(9)]], (3, 3), ZZ)
+
+    assert dm.getitem(1, 1) == ZZ(5)
+    assert dm.getitem(1, -2) == ZZ(5)
+    assert dm.getitem(-1, -3) == ZZ(7)
+
+    raises(IndexError, lambda: dm.getitem(3, 3))
+
+
+def test_DDM_extract_slice():
+    dm = DDM([
+        [ZZ(1), ZZ(2), ZZ(3)],
+        [ZZ(4), ZZ(5), ZZ(6)],
+        [ZZ(7), ZZ(8), ZZ(9)]], (3, 3), ZZ)
+
+    assert dm.extract_slice(slice(0, 3), slice(0, 3)) == dm
+    assert dm.extract_slice(slice(1, 3), slice(-2)) == DDM([[4], [7]], (2, 1), ZZ)
+    assert dm.extract_slice(slice(1, 3), slice(-2)) == DDM([[4], [7]], (2, 1), ZZ)
+    assert dm.extract_slice(slice(2, 3), slice(-2)) == DDM([[ZZ(7)]], (1, 1), ZZ)
+    assert dm.extract_slice(slice(0, 2), slice(-2)) == DDM([[1], [4]], (2, 1), ZZ)
+    assert dm.extract_slice(slice(-1), slice(-1)) == DDM([[1, 2], [4, 5]], (2, 2), ZZ)
+
+    assert dm.extract_slice(slice(2), slice(3, 4)) == DDM([[], []], (2, 0), ZZ)
+    assert dm.extract_slice(slice(3, 4), slice(2)) == DDM([], (0, 2), ZZ)
+    assert dm.extract_slice(slice(3, 4), slice(3, 4)) == DDM([], (0, 0), ZZ)

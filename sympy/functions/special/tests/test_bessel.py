@@ -218,6 +218,10 @@ def test_expand():
     for besselx in [bessely, besselk]:
         assert besselx(i, r).is_extended_real is None
 
+    for besselx in [besselj, bessely, besseli, besselk]:
+        assert expand_func(besselx(oo, x)) == besselx(oo, x, evaluate=False)
+        assert expand_func(besselx(-oo, x)) == besselx(-oo, x, evaluate=False)
+
 
 @slow
 def test_slow_expand():

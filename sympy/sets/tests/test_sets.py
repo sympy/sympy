@@ -1284,8 +1284,8 @@ def test_SymmetricDifference():
             == FiniteSet(5)
     assert FiniteSet(1, 2, 3, 4, 5) ^ FiniteSet(1, 2, 5, 6) == \
             FiniteSet(3, 4, 6)
-    assert Set(1, 2 , 3) ^ Set(2, 3, 4) == Union(Set(1, 2, 3) - Set(2, 3, 4), \
-            Set(2, 3, 4) - Set(1, 2, 3))
+    assert Set(S(1), S(2) , S(3)) ^ Set(S(2), S(3), S(4)) == Union(Set(S(1), S(2), S(3)) - Set(S(2), S(3), S(4)), \
+            Set(S(2), S(3), S(4)) - Set(S(1), S(2), S(3)))
     assert Interval(0, 4) ^ Interval(2, 5) == Union(Interval(0, 4) - \
             Interval(2, 5), Interval(2, 5) - Interval(0, 4))
 

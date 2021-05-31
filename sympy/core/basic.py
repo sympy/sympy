@@ -7,7 +7,6 @@ from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import iterable, ordered
-from .singleton import S
 from .kind import UndefinedKind
 from ._print_helpers import Printable
 
@@ -121,19 +120,17 @@ class Basic(Printable, metaclass=ManagedProperties):
     def copy(self):
         return self.func(*self.args)
 
-    def __reduce_ex__(self, proto):
-        """ Pickling support."""
-        return type(self), self.__getnewargs__(), self.__getstate__()
-
     def __getnewargs__(self):
         return self.args
 
     def __getstate__(self):
-        return {}
+        return None
 
-    def __setstate__(self, state):
-        for k, v in state.items():
-            setattr(self, k, v)
+    def __reduce_ex__(self, protocol):
+        if protocol < 2:
+            msg = "Only pickle protocol 2 or higher is supported by sympy"
+            raise NotImplementedError(msg)
+        return super().__reduce_ex__(protocol)
 
     def __hash__(self):
         # hash cannot be cached using cache_it because infinite recurrence
@@ -1903,6 +1900,17 @@ def _aresame(a, b):
     return True
 
 
+def _ne(a, b):
+    # use this as a second test after `a != b` if you want to make
+    # sure that things are truly equal, e.g.
+    # a, b = 0.5, S.Half
+    # a !=b or _ne(a, b) -> True
+    from .numbers import Number
+    # 0.5 == S.Half
+    if isinstance(a, Number) and isinstance(b, Number):
+        return a.__class__ != b.__class__
+
+
 def _atomic(e, recursive=False):
     """Return atom-like quantities as far as substitution is
     concerned: Derivatives, Functions and Symbols. Don't
@@ -2060,3 +2068,7 @@ def _make_find_query(query):
     elif isinstance(query, Basic):
         return lambda expr: expr.match(query) is not None
     return query
+
+
+# Delayed to avoid cyclic import
+from .singleton import S

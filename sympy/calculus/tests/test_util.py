@@ -1,6 +1,6 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    cot, sec, csc, Abs, symbols, I, re, simplify,
-                   expint, Rational)
+                   expint, Rational, Piecewise)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds, is_convex,
                                  stationary_points, minimum, maximum)
@@ -71,6 +71,8 @@ def test_continuous_domain():
     domain = continuous_domain(log(tan(x)**2 + 1), x, S.Reals)
     assert not domain.contains(3*pi/2)
     assert domain.contains(5)
+    d = Symbol('d', even=True, zero=False)
+    assert continuous_domain(x**(1/d), x, S.Reals) == Interval(0, oo)
 
 
 def test_not_empty_in():
@@ -171,6 +173,9 @@ def test_periodicity():
     assert periodicity((E**x)%3, x) is None
 
     assert periodicity(sin(expint(1, x))/expint(1, x), x) is None
+    # returning `None` for any Piecewise
+    p = Piecewise((0, x < -1), (x**2, x <= 1), (log(x), True))
+    assert periodicity(p, x) is None
 
 
 def test_periodicity_check():
@@ -298,6 +303,12 @@ def test_minimum():
     raises(ValueError, lambda : minimum(sin(x), S.One))
 
 
+def test_issue_19869():
+    t = symbols('t')
+    assert (maximum(sqrt(3)*(t - 1)/(3*sqrt(t**2 + 1)), t)
+        ) == sqrt(3)/3
+
+
 def test_AccumBounds():
     assert AccumBounds(1, 2).args == (1, 2)
     assert AccumBounds(1, 2).delta is S.One
@@ -348,7 +359,13 @@ def test_AccumBounds_mul():
     assert AccumBounds(1, 2)*2 == AccumBounds(2, 4)
     assert 2*AccumBounds(1, 2) == AccumBounds(2, 4)
     assert AccumBounds(1, 2)*AccumBounds(2, 3) == AccumBounds(2, 6)
-
+    assert AccumBounds(0, 2)*AccumBounds(2, oo) == AccumBounds(0, oo)
+    l, r = AccumBounds(-oo, oo), AccumBounds(-a, a)
+    assert l*r == AccumBounds(-oo, oo)
+    assert r*l == AccumBounds(-oo, oo)
+    l, r = AccumBounds(1, oo), AccumBounds(-3, -2)
+    assert l*r == AccumBounds(-oo, -2)
+    assert r*l == AccumBounds(-oo, -2)
     assert AccumBounds(1, 2)*0 == 0
     assert AccumBounds(1, oo)*0 == AccumBounds(0, oo)
     assert AccumBounds(-oo, 1)*0 == AccumBounds(-oo, 0)

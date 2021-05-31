@@ -30,7 +30,7 @@ list of lists:
     >>> ddm_idet([[0, 1], [-1, 0]], QQ)
     1
     >>> A
-    [[-1, 0], [0, 1]]
+    [[-1, 0], [0, -1]]
 
 Note that ddm_idet modifies the input matrix in-place. It is recommended to
 use the DDM.det method as a friendlier interface to this instead which takes
@@ -64,6 +64,7 @@ representation is friendlier.
 from .exceptions import DDMBadInputError, DDMShapeError, DDMDomainError
 
 from .dense import (
+        ddm_transpose,
         ddm_iadd,
         ddm_isub,
         ddm_ineg,
@@ -94,6 +95,15 @@ class DDM(list):
 
         if not (len(self) == m and all(len(row) == n for row in self)):
             raise DDMBadInputError("Inconsistent row-list/shape")
+
+    def getitem(self, i, j):
+        return self[i][j]
+
+    def extract_slice(self, slice1, slice2):
+        ddm = [row[slice2] for row in self[slice1]]
+        rows = len(ddm)
+        cols = len(ddm[0]) if ddm else len(range(self.shape[1])[slice2])
+        return DDM(ddm, (rows, cols), self.domain)
 
     def to_list(self):
         return list(self)
@@ -136,6 +146,13 @@ class DDM(list):
         return DDM(rowslist, shape, domain)
 
     @classmethod
+    def ones(cls, shape, domain):
+        one = domain.one
+        m, n = shape
+        rowlist = ([one] * n for _ in range(m))
+        return DDM(rowlist, shape, domain)
+
+    @classmethod
     def eye(cls, size, domain):
         one = domain.one
         ddm = cls.zeros((size, size), domain)
@@ -146,6 +163,14 @@ class DDM(list):
     def copy(self):
         copyrows = (row[:] for row in self)
         return DDM(copyrows, self.shape, self.domain)
+
+    def transpose(self):
+        rows, cols = self.shape
+        if rows:
+            ddmT = ddm_transpose(self)
+        else:
+            ddmT = [[]] * cols
+        return DDM(ddmT, (cols, rows), self.domain)
 
     def __add__(a, b):
         if not isinstance(b, DDM):
@@ -237,10 +262,31 @@ class DDM(list):
 
         return DDM(Anew, (rows, cols), A.domain)
 
+    def vstack(A, B):
+        Anew = list(A.copy())
+        rows, cols = A.shape
+        domain = A.domain
+
+        Brows, Bcols = B.shape
+        assert Bcols == cols
+        assert B.domain == domain
+
+        rows += Brows
+
+        Anew.extend(B.copy())
+
+        return DDM(Anew, (rows, cols), A.domain)
+
+    def applyfunc(self, func, domain):
+        elements = (list(map(func, row)) for row in self)
+        return DDM(elements, self.shape, domain)
+
     def rref(a):
         """Reduced-row echelon form of a and list of pivots"""
         b = a.copy()
-        pivots = ddm_irref(b)
+        K = a.domain
+        partial_pivot = K.is_RealField or K.is_ComplexField
+        pivots = ddm_irref(b, _partial_pivot=partial_pivot)
         return b, pivots
 
     def nullspace(a):
@@ -260,6 +306,9 @@ class DDM(list):
             basis.append(vec)
 
         return DDM(basis, (len(basis), cols), domain), nonpivots
+
+    def particular(a):
+        return a.to_sdm().particular().to_ddm()
 
     def det(a):
         """Determinant of a"""

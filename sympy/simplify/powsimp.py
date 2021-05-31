@@ -578,8 +578,20 @@ def powdenest(eq, force=False, polar=False):
     from sympy.simplify.simplify import posify
 
     if force:
-        eq, rep = posify(eq)
-        return powdenest(eq, force=False).xreplace(rep)
+        def _denest(b, e):
+            if not isinstance(b, (Pow, exp)):
+                return b.is_positive, Pow(b, e, evaluate=False)
+            return _denest(b.base, b.exp*e)
+        reps = []
+        for p in eq.atoms(Pow, exp):
+            if isinstance(p.base, (Pow, exp)):
+                ok, dp = _denest(*p.args)
+                if ok is not False:
+                    reps.append((p, dp))
+        if reps:
+            eq = eq.subs(reps)
+        eq, reps = posify(eq)
+        return powdenest(eq, force=False, polar=polar).xreplace(reps)
 
     if polar:
         eq, rep = polarify(eq)

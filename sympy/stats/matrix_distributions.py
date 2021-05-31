@@ -285,11 +285,11 @@ def MatrixGamma(symbol, alpha, beta, scale_matrix):
     >>> M = MatrixGamma('M', a, b, [[2, 1], [1, 2]])
     >>> X = MatrixSymbol('X', 2, 2)
     >>> density(M)(X).doit()
-    3**(-a)*b**(-2*a)*exp(Trace(Matrix([
+    exp(Trace(Matrix([
     [-2/3,  1/3],
-    [ 1/3, -2/3]])*X)/b)*Determinant(X)**(a - 3/2)/(sqrt(pi)*gamma(a)*gamma(a - 1/2))
+    [ 1/3, -2/3]])*X)/b)*Determinant(X)**(a - 3/2)/(3**a*sqrt(pi)*b**(2*a)*gamma(a)*gamma(a - 1/2))
     >>> density(M)([[1, 0], [0, 1]]).doit()
-    3**(-a)*b**(-2*a)*exp(-4/(3*b))/(sqrt(pi)*gamma(a)*gamma(a - 1/2))
+    exp(-4/(3*b))/(3**a*sqrt(pi)*b**(2*a)*gamma(a)*gamma(a - 1/2))
 
 
     References
@@ -369,11 +369,11 @@ def Wishart(symbol, n, scale_matrix):
     >>> W = Wishart('W', n, [[2, 1], [1, 2]])
     >>> X = MatrixSymbol('X', 2, 2)
     >>> density(W)(X).doit()
-    2**(-n)*3**(-n/2)*exp(Trace(Matrix([
+    exp(Trace(Matrix([
     [-1/3,  1/6],
-    [ 1/6, -1/3]])*X))*Determinant(X)**(n/2 - 3/2)/(sqrt(pi)*gamma(n/2)*gamma(n/2 - 1/2))
+    [ 1/6, -1/3]])*X))*Determinant(X)**(n/2 - 3/2)/(2**n*3**(n/2)*sqrt(pi)*gamma(n/2)*gamma(n/2 - 1/2))
     >>> density(W)([[1, 0], [0, 1]]).doit()
-    2**(-n)*3**(-n/2)*exp(-2/3)/(sqrt(pi)*gamma(n/2)*gamma(n/2 - 1/2))
+    exp(-2/3)/(2**n*3**(n/2)*sqrt(pi)*gamma(n/2)*gamma(n/2 - 1/2))
 
     References
     ==========
@@ -568,11 +568,11 @@ def MatrixStudentT(symbol, nu, location_matrix, scale_matrix_1, scale_matrix_2):
     >>> M = MatrixStudentT('M', v, [[1, 2]], [[1, 0], [0, 1]], [1])
     >>> X = MatrixSymbol('X', 1, 2)
     >>> density(M)(X)
-    pi**(-1.0)*gamma(v/2 + 1)*Determinant((Matrix([[-1, -2]]) + X)*(Matrix([
+    gamma(v/2 + 1)*Determinant((Matrix([[-1, -2]]) + X)*(Matrix([
     [-1],
-    [-2]]) + X.T) + Matrix([[1]]))**(-v/2 - 1)*Determinant(Matrix([[1]]))**(-1.0)*Determinant(Matrix([
+    [-2]]) + X.T) + Matrix([[1]]))**(-v/2 - 1)/(pi**1.0*gamma(v/2)*Determinant(Matrix([[1]]))**1.0*Determinant(Matrix([
     [1, 0],
-    [0, 1]]))**(-0.5)/gamma(v/2)
+    [0, 1]]))**0.5)
 
     References
     ==========

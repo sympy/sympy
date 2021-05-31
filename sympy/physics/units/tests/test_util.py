@@ -77,7 +77,7 @@ def test_convert_to_tuples_of_quantities():
     assert convert_to(2 * speed_of_light, [meter, second, kilogram]) == 2 * 299792458 * meter / second
     assert convert_to(G, [G, speed_of_light, planck]) == 1.0*G
 
-    assert NS(convert_to(meter, [G, speed_of_light, hbar]), n=7) == '6.187142e+34*gravitational_constant**0.5000000*hbar**0.5000000*speed_of_light**(-1.500000)'
+    assert NS(convert_to(meter, [G, speed_of_light, hbar]), n=7) == '6.187142e+34*gravitational_constant**0.5000000*hbar**0.5000000/speed_of_light**1.500000'
     assert NS(convert_to(planck_mass, kilogram), n=7) == '2.176434e-8*kilogram'
     assert NS(convert_to(planck_length, meter), n=7) == '1.616255e-35*meter'
     assert NS(convert_to(planck_time, second), n=6) == '5.39125e-44*second'

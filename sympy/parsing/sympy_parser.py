@@ -1062,8 +1062,8 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             sympy_class = self.operators[node.op.__class__]
             right = self.visit(node.right)
             left = self.visit(node.left)
-            if isinstance(node.left, ast.UnaryOp) and (isinstance(node.right, ast.UnaryOp) == 0) and sympy_class in ('Mul',):
-                left, right = right, left
+
+            rev = False
             if isinstance(node.op, ast.Sub):
                 right = ast.Call(
                     func=ast.Name(id='Mul', ctx=ast.Load()),
@@ -1072,10 +1072,10 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                     starargs=None,
                     kwargs=None
                 )
-            if isinstance(node.op, ast.Div):
+            elif isinstance(node.op, ast.Div):
                 if isinstance(node.left, ast.UnaryOp):
-                    if isinstance(node.right,ast.UnaryOp):
-                        left, right = right, left
+                    left, right = right, left
+                    rev = True
                     left = ast.Call(
                     func=ast.Name(id='Pow', ctx=ast.Load()),
                     args=[left, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
@@ -1092,6 +1092,8 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                     kwargs=None
                 )
 
+            if rev:  # undo reversal
+                left, right = right, left
             new_node = ast.Call(
                 func=ast.Name(id=sympy_class, ctx=ast.Load()),
                 args=[left, right],

@@ -460,7 +460,7 @@ class sin(TrigonometricFunction):
             cx = cos(x, evaluate=False)._eval_expand_trig()
             cy = cos(y, evaluate=False)._eval_expand_trig()
             return sx*cy + sy*cx
-        else:
+        elif arg.is_Mul:
             n, x = arg.as_coeff_Mul(rational=True)
             if n.is_Integer:  # n will be positive because of .eval
                 # canonicalization
@@ -918,7 +918,7 @@ class cos(TrigonometricFunction):
             cx = cos(x, evaluate=False)._eval_expand_trig()
             cy = cos(y, evaluate=False)._eval_expand_trig()
             return cx*cy - sx*sy
-        else:
+        elif arg.is_Mul:
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer:
                 return chebyshevt(coeff, cos(terms))
@@ -1202,7 +1202,7 @@ class tan(TrigonometricFunction):
                 p[1 - i % 2] += symmetric_poly(i, Y)*(-1)**((i % 4)//2)
             return (p[0]/p[1]).subs(list(zip(Y, TX)))
 
-        else:
+        elif arg.is_Mul:
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer and coeff > 1:
                 I = S.ImaginaryUnit
@@ -1565,14 +1565,14 @@ class cot(TrigonometricFunction):
             for i in range(n, -1, -1):
                 p[(n - i) % 2] += symmetric_poly(i, Y)*(-1)**(((n - i) % 4)//2)
             return (p[0]/p[1]).subs(list(zip(Y, CX)))
-        else:
+        elif arg.is_Mul:
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer and coeff > 1:
                 I = S.ImaginaryUnit
                 z = Symbol('dummy', real=True)
                 P = ((z + I)**coeff).expand()
                 return (re(P)/im(P)).subs([(z, cot(terms))])
-        return cot(arg)
+        return cot(arg)  # XXX sec and csc return 1/cos and 1/sin
 
     def _eval_is_finite(self):
         arg = self.args[0]

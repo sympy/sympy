@@ -1,4 +1,4 @@
-from sympy import Order, S, log, limit, lcm_list, im, re, Dummy
+from sympy import Order, S, log, limit, lcm_list, im, re, Dummy, Piecewise
 from sympy.core import Add, Mul, Pow
 from sympy.core.basic import Basic
 from sympy.core.compatibility import iterable
@@ -64,14 +64,13 @@ def continuous_domain(f, symbol, domain):
 
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
-    from sympy.solvers.solveset import _has_rational_power
     from sympy.calculus.singularities import singularities
 
     if domain.is_subset(S.Reals):
         constrained_interval = domain
         for atom in f.atoms(Pow):
-            predicate, denomin = _has_rational_power(atom, symbol)
-            if predicate and denomin == 2:
+            den = atom.exp.as_numer_denom()[1]
+            if den.is_even and den.is_nonzero:
                 constraint = solve_univariate_inequality(atom.base >= 0,
                                                          symbol).as_set()
                 constrained_interval = Intersection(constraint,
@@ -510,6 +509,9 @@ def periodicity(f, symbol, check=False):
         elif (a.is_polynomial(symbol) and degree(a, symbol) == 1 and
             symbol not in n.free_symbols):
                 period = Abs(n / a.diff(symbol))
+
+    elif isinstance(f, Piecewise):
+        pass  # not handling Piecewise yet as the return type is not favorable
 
     elif period is None:
         from sympy.solvers.decompogen import compogen
@@ -1157,16 +1159,18 @@ class AccumulationBounds(AtomicExpr):
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
+        if self.args == (-oo, oo):
+            return self
         if isinstance(other, Expr):
             if isinstance(other, AccumBounds):
-                return AccumBounds(Min(Mul(self.min, other.min),
-                                       Mul(self.min, other.max),
-                                       Mul(self.max, other.min),
-                                       Mul(self.max, other.max)),
-                                   Max(Mul(self.min, other.min),
-                                       Mul(self.min, other.max),
-                                       Mul(self.max, other.min),
-                                       Mul(self.max, other.max)))
+                if other.args == (-oo, oo):
+                    return other
+                v = set()
+                for i in self.args:
+                    vi = other*i
+                    for i in vi.args or (vi,):
+                        v.add(i)
+                return AccumBounds(Min(*v), Max(*v))
             if other is S.Infinity:
                 if self.min.is_zero:
                     return AccumBounds(0, oo)
@@ -1179,8 +1183,6 @@ class AccumulationBounds(AtomicExpr):
                     return AccumBounds(0, oo)
             if other.is_extended_real:
                 if other.is_zero:
-                    if self == AccumBounds(-oo, oo):
-                        return AccumBounds(-oo, oo)
                     if self.max is S.Infinity:
                         return AccumBounds(0, oo)
                     if self.min is S.NegativeInfinity:

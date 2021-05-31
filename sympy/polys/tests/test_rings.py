@@ -1397,3 +1397,9 @@ def test_PolyElement_factor_list():
     w = x**2 + x + 1
 
     assert f.factor_list() == (1, [(u, 1), (v, 2), (w, 1)])
+
+
+def test_issue_21410():
+    R, x = ring('x', FF(2))
+    p = x**6 + x**5 + x**4 + x**3 + 1
+    assert p._pow_multinomial(4) == x**24 + x**20 + x**16 + x**12 + 1

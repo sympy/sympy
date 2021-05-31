@@ -730,8 +730,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         if solution is None:
             return None
         else:
-            return candidate.subs(solution).subs(
-                list(zip(poly_coeffs, [S.Zero]*len(poly_coeffs))))
+            return candidate.xreplace(solution).xreplace(
+                dict(zip(poly_coeffs, [S.Zero]*len(poly_coeffs))))
 
     if not (F.free_symbols - set(V)):
         solution = _integrate('Q')
@@ -743,7 +743,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     if solution is not None:
         antideriv = solution.subs(rev_mapping)
-        antideriv = cancel(antideriv).expand(force=True)
+        antideriv = cancel(antideriv).expand()
 
         if antideriv.is_Add:
             antideriv = antideriv.as_independent(x)[1]

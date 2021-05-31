@@ -418,12 +418,12 @@ class exp(ExpBase, metaclass=ExpMeta):
         sympy.functions.elementary.complexes.re
         sympy.functions.elementary.complexes.im
         """
-        import sympy
+        from sympy.functions.elementary.trigonometric import cos, sin
         re, im = self.args[0].as_real_imag()
         if deep:
             re = re.expand(deep, **hints)
             im = im.expand(deep, **hints)
-        cos, sin = sympy.cos(im), sympy.sin(im)
+        cos, sin = cos(im), sin(im)
         return (exp(re)*cos, exp(re)*sin)
 
     def _eval_subs(self, old, new):
