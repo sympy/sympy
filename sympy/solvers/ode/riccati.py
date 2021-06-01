@@ -149,8 +149,12 @@ from sympy.functions import sqrt
 from sympy.polys.polytools import Poly
 from sympy.polys.polyroots import roots
 from sympy.series.limits import limit
-from sympy.solvers.solvers import solve_undetermined_coeffs
+from sympy.solvers.solveset import linsolve
 from sympy.tensor.indexed import Indexed, IndexedBase
+
+def linsolve_dict(eq, syms, var):
+    return {k:v for k, v in zip(syms, list(linsolve(eq, syms, var))[0])}
+
 
 def find_poles(num, den, x):
     # All roots of denominator are poles of a(x)
@@ -324,9 +328,9 @@ def rational_laurent_series(num, den, x, x0, mul, n):
         sums += cf*c[m - pw]
 
     if out:
-        coeffs = solve_undetermined_coeffs(Eq(num.expr, out), (out.atoms(Indexed)), x)
+        coeffs = linsolve_dict((num - out).all_coeffs(), list(out.atoms(Indexed)), x)
         for i in range(len(coeffs), n + mul):
-            ai = solve_undetermined_coeffs(sums.subs(m, i).subs(coeffs), [c[i]], x)
+            ai = linsolve_dict([sums.subs(m, i).subs(coeffs)], [c[i]], x)
             if type(ai) == dict:
                 coeffs.update({c[i]: list(ai.values())[0]})
         coeffs = list(coeffs.items())
@@ -379,7 +383,7 @@ def solve_aux_eq(numa, dena, numy, deny, x, m):
         auxeq += px.diff(x)*deny**2*dena
     if m != 0:
         # m is a non-zero integer. Find the constant terms using undetermined coefficients
-        return psol, solve_undetermined_coeffs(auxeq.expr, psyms, x), True
+        return psol, linsolve_dict(auxeq.all_coeffs(), psyms, x), True
     else:
         # m == 0 . Check if 1 (x**0) is a solution to the auxiliary equation
         return S(1), auxeq, auxeq == 0
