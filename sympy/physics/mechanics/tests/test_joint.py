@@ -1,8 +1,7 @@
 from sympy import Symbol, sin, cos, ImmutableMatrix as Matrix
 from sympy.physics.vector import Vector, cross
-from sympy.physics.mechanics import (dynamicsymbols, Body, Joint, PinJoint,
-                                     SlidingJoint, CylindricalJoint, PlanarJoint,
-                                     SphericalJoint)
+from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint
+from sympy.physics.mechanics.joint import Joint
 from sympy.utilities.pytest import raises
 
 

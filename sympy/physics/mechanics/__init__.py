@@ -25,8 +25,9 @@ __all__ = [
     'Body',
 
     'SymbolicSystem',
+
+    'PinJoint'
 ]
->>>>>>> d720d825a021d35733d3a26b38fea1642ac11a30
 
 from sympy.physics import vector
 
@@ -55,3 +56,5 @@ from .linearize import Linearizer
 from .body import Body
 
 from .system import SymbolicSystem
+
+from .joint import PinJoint

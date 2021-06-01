@@ -1,7 +1,6 @@
 from sympy.physics.mechanics.body import Body
-from sympy import acos, Symbol
+from sympy import acos
 from sympy.physics.vector import cross, Vector, dot, dynamicsymbols
-from sympy.physics.mechanics.functions import convert_tuple_to_vector
 from abc import ABC, abstractmethod
 
 __all__ = ['Joint', 'PinJoint', 'SlidingJoint', 'CylindricalJoint',
