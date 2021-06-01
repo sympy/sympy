@@ -532,6 +532,11 @@ def test_1st_rational_riccati():
     _ode_solver_test(_get_examples_ode_sol_1st_rational_riccati)
 
 
+@slow
+def test_slow_examples_1st_rational_riccati():
+    _ode_solver_test(_get_examples_ode_sol_1st_rational_riccati, run_slow_test=True)
+
+
 def test_Bernoulli():
     _ode_solver_test(_get_examples_ode_sol_bernoulli)
 
@@ -816,15 +821,16 @@ def _get_examples_ode_sol_1st_rational_riccati():
     },
     "rational_riccati_06": {
         "eq": Derivative(f(x), x) + (3*x**2 + 1)*f(x)**2/x + (6*x**2 - x + 3)*f(x)/(x*(x - 1)) + (3*x**2 - 2*x + 2)/(x*(x - 1)**2),
-        "sol": [Eq(f(x), (-x**2*(-6 + (3*x**2 + 1)/x**2)/Mul(2, (3*x**2 + 1), evaluate=False) - x*(-3/Mul(2, (x + sqrt(3)*I/3), \
+        "sol": [Eq(f(x), (x**2*(6 - (3*x**2 + 1)/x**2)/Mul(2, (3*x**2 + 1), evaluate=False) - x*(-3/Mul(2, (x + sqrt(3)*I/3), \
             evaluate=False) + 1/Mul(2, (x - sqrt(3)*I/3), evaluate=False) - 1/(x - 2*sqrt(3)*I/3)) - (6*x**2 - x + 3)/Mul(2, (x - 1), \
-            evaluate=False))/(3*x**2 + 1)), Eq(f(x), (-x**2*(-6 + (3*x**2 + 1)/x**2)/Mul(2, (3*x**2 + 1), evaluate=False) - \
+            evaluate=False))/(3*x**2 + 1)), Eq(f(x), (x**2*(6 - (3*x**2 + 1)/x**2)/Mul(2, (3*x**2 + 1), evaluate=False) - \
             x*(-1/(x + 2*sqrt(3)*I/3) + 1/Mul(2, (x + sqrt(3)*I/3), evaluate=False) - 3/Mul(2, (x - sqrt(3)*I/3), evaluate=False)) \
-            - (6*x**2 - x + 3)/Mul(2, (x - 1), evaluate=False))/(3*x**2 + 1)), Eq(f(x), (-x**2*(-6 + (3*x**2 + 1)/x**2)/Mul(2, \
+            - (6*x**2 - x + 3)/Mul(2, (x - 1), evaluate=False))/(3*x**2 + 1)), Eq(f(x), (x**2*(6 - (3*x**2 + 1)/x**2)/Mul(2, \
             (3*x**2 + 1), evaluate=False) - x*(Mul(-1, (3*x**2 + 1), evaluate=False)/(C1 + x**3 + x) + 1/Mul(2, (x + sqrt(3)*I/3), \
             evaluate=False) + 1/Mul(2, (x - sqrt(3)*I/3), evaluate=False)) - (6*x**2 - x + 3)/Mul(2, (x - 1), evaluate=False)) \
-            /(3*x**2 + 1)), Eq(f(x), (-x**2*(-6 + (3*x**2 + 1)/x**2)/(3*x**2 + 1) - x*(1/(x + sqrt(3)*I/3) + 1/(x - sqrt(3)*I/3)) \
-            - (6*x**2 - x + 3)/(x - 1))/Mul(2, (3*x**2 + 1), evaluate=False))]
+            /(3*x**2 + 1)), Eq(f(x), (x**2*(6 - (3*x**2 + 1)/x**2)/(3*x**2 + 1) - x*(1/(x + sqrt(3)*I/3) + 1/(x - sqrt(3)*I/3)) \
+            - (6*x**2 - x + 3)/(x - 1))/Mul(2, (3*x**2 + 1), evaluate=False))],
+        "slow": True
     },
     "rational_riccati_07": {
         "eq": f(x)**2 + Derivative(f(x), x) - 15/(4*x**2),
@@ -848,12 +854,12 @@ def _get_examples_ode_sol_1st_rational_riccati():
     },
     "rational_riccati_12": {
         "eq": a*f(x)**2 + c + x*Derivative(f(x), x),
-        "sol": [Eq(f(x), sqrt(-a*c)*(2*x**(2*sqrt(-a*c))/(C1 + x**(2*sqrt(-a*c))) - 1)/a), Eq(f(x), -sqrt(-a*c)/a)]
+        "sol": [Eq(f(x), sqrt(-a*c)*(2*x**(2*sqrt(-a*c))/(C1 + x**(2*sqrt(-a*c))) - 1)/a)]
     },
     "rational_riccati_13": {
         "eq": a*f(x)**2/x - b*f(x)/x - c/x + Derivative(f(x), x),
         "sol": [Eq(f(x), (b/2 + x**(sqrt(4*a*c + b**2))*sqrt(4*a*c + b**2)/(C1 + x**(sqrt(4*a*c + b**2))) - \
-            sqrt(4*a*c + b**2)/2)/a), Eq(f(x), (b - sqrt(4*a*c + b**2))/(2*a))]
+            sqrt(4*a*c + b**2)/2)/a)]
     },
     "rational_riccati_14": {
         "eq": f(x)**2 + Derivative(f(x), x) - f(x)/x,
@@ -870,7 +876,7 @@ def _get_examples_ode_sol_1st_rational_riccati():
     "rational_riccati_17": {
         "eq": a*f(x)**2 - b/x**2 + Derivative(f(x), x),
         "sol": [Eq(f(x), Mul(-1, (-x**(sqrt(4*a*b + 1))*sqrt(4*a*b + 1)/(C1 + x**(sqrt(4*a*b + 1))) + \
-            sqrt(4*a*b + 1)/2 - S(1)/2), evaluate=False)/(a*x)), Eq(f(x), (1 - sqrt(4*a*b + 1))/(2*a*x))]
+            sqrt(4*a*b + 1)/2 - S(1)/2), evaluate=False)/(a*x))]
     },
     "rational_riccati_18": {
         "eq": a*f(x)**2 + Derivative(f(x), x) + (b + c)/x**2,
@@ -892,12 +898,12 @@ def _get_examples_ode_sol_1st_rational_riccati():
     "rational_riccati_21": {
         "eq": Derivative(f(x), x) - a*f(x)**2 - b/x**2,
         "sol": [Eq(f(x), (-x**(sqrt(-4*a*b + 1))*sqrt(-4*a*b + 1)/(C1 + x**(sqrt(-4*a*b + 1))) + sqrt(-4*a*b + 1)/2 -
-            S(1)/2)/(a*x)), Eq(f(x), Mul(-1, (1 - sqrt(-4*a*b + 1)), evaluate=False)/(2*a*x))]
+            S(1)/2)/(a*x))]
     },
     "rational_riccati_22": {
         "eq": Derivative(f(x), x) - f(x)**2 - b/x**2 - a*f(x)/x,
         "sol": [Eq(f(x), (-a/2 - x**(sqrt(a**2 + 2*a - 4*b + 1))*sqrt(a**2 + 2*a - 4*b + 1)/(C1 + x**(sqrt(a**2 + 2*a -
-            4*b + 1))) + sqrt(a**2 + 2*a - 4*b + 1)/2 - S(1)/2)/x), Eq(f(x), (-a + sqrt(a**2 + 2*a - 4*b + 1) - 1)/(2*x))]
+            4*b + 1))) + sqrt(a**2 + 2*a - 4*b + 1)/2 - S(1)/2)/x)]
     }
     }
     }

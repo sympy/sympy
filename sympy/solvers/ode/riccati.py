@@ -142,14 +142,12 @@ are found using the solutions of the equation in its normal form.
 """
 
 from sympy.core import S
-from sympy.core.function import Function
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, symbols, Dummy
 from sympy.functions import sqrt
 from sympy.polys.polytools import Poly
 from sympy.polys.polyroots import roots
-from sympy.simplify.radsimp import numer
 from sympy.series.limits import limit
 from sympy.solvers.solvers import solve_undetermined_coeffs
 from sympy.tensor.indexed import Indexed, IndexedBase
@@ -351,36 +349,40 @@ def compute_degree(x, poles, choice, c, d, N):
             # not zero, the given solution is invalid as there will be
             # a c/(x - oo)^j term in ybar for some c and j
             if poles[i] == oo and c[i][choice[i + 1]][j] != 0:
-                return m, ybar, False
+                return m, ybar, ybar, ybar, False
             ybar += c[i][choice[i + 1]][j]/(x - poles[i])**(j+1)
         m -= c[i][choice[i + 1]][0]
 
     # Calculate the second summation for ybar
     for i in range(N+1):
         ybar += d[choice[0]][i]*x**i
-    return m, ybar, True
+    numy, deny = [Poly(e, x) for e in ybar.together().as_numer_denom()]
+    return m, ybar, numy, deny, True
 
 
-def solve_aux_eq(a, x, m, ybar):
-    p = Function('p')
-    # Eq (5.16) in Thesis - Pg 81
-    auxeq = numer((p(x).diff(x, 2) + 2*ybar*p(x).diff(x) + (ybar.diff(x) + ybar**2 - a)*p(x)).together())
-
+def solve_aux_eq(numa, dena, numy, deny, x, m):
     # Assume that the solution is of the type
     # p(x) = C0 + C1*x + ... + Cm*x**m
-    psyms = get_numbered_constants(auxeq, m)
+    psyms = symbols(f'C0:{m}', cls=Dummy)
     if type(psyms) != tuple:
         psyms = (psyms, )
-    psol = x**m
+    psol = Poly(x**m, x)
     for i in range(m):
-        psol += psyms[i]*x**i
+        psol += Poly(psyms[i]*x**i, x)
+
+    # Eq (5.16) in Thesis - Pg 81
+    auxeq = (dena*(numy.diff(x)*deny - numy*deny.diff(x) + numy**2) - numa*deny**2)*psol
+    if m >= 1:
+        px = psol.diff(x)
+        auxeq += 2*px*numy*deny*dena
+    if m >= 2:
+        auxeq += px.diff(x)*deny**2*dena
     if m != 0:
         # m is a non-zero integer. Find the constant terms using undetermined coefficients
-        return psol, solve_undetermined_coeffs(auxeq.subs(p(x), psol).doit().expand(), psyms, x), True
+        return psol, solve_undetermined_coeffs(auxeq.expr, psyms, x), True
     else:
         # m == 0 . Check if 1 (x**0) is a solution to the auxiliary equation
-        cf = auxeq.subs(p(x), psol).doit().expand()
-        return S(1), cf, cf == 0
+        return S(1), auxeq, auxeq == 0
 
 
 def solve_riccati(eq, fx, x, b0, b1, b2):
@@ -426,14 +428,14 @@ def solve_riccati(eq, fx, x, b0, b1, b2):
             choice = list(map(lambda x: int(x), bin(it)[2:].zfill(len(poles) + 1)))
 
             # Step 8 and 9 : Compute m and ybar
-            m, ybar, exists = compute_degree(x, poles, choice, c, d, -val_inf//2)
+            m, ybar, numy, deny, exists = compute_degree(x, poles, choice, c, d, -val_inf//2)
 
             # Step 10 : Check if a valid solution exists. If yes, also check
             # if m is a non-negative integer
             if exists and S(m).is_nonnegative == True and S(m).is_integer == True:
 
                 # Step 11 : Find polynomial solutions of degree m for the auxiliary equation
-                psol, coeffs, exists = solve_aux_eq(a, x, m, ybar)
+                psol, coeffs, exists = solve_aux_eq(num, den, numy, deny, x, m)
 
                 # Step 12 : If valid polynomial solution exists, append solution.
                 if exists:
@@ -457,7 +459,8 @@ def solve_riccati(eq, fx, x, b0, b1, b2):
                 psol = x**m + C1
                 presol.append(ybar + psol.diff(x)/psol)
     # Step 15 : Inverse transform the solutions of the equation in normal form
-    sol = list(map(lambda y: Eq(fx, -y/b2 - b2.diff(x)/(2*b2**2) - b1/(2*b2)), presol))
+    bp = - b2.diff(x)/(2*b2**2) - b1/(2*b2)
+    sol = [Eq(fx, -y/b2 + bp) for y in presol]
     return sol
 
 
