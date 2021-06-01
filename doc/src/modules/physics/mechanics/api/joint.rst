@@ -16,13 +16,6 @@ PinJoint
 .. autoclass:: PinJoint
    :members:
 
-
-PlanarJoint
-===========
-
-.. autoclass:: PlanarJoint
-   :members:
-
 SphericalJoint
 ==============
 
