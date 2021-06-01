@@ -17,12 +17,6 @@ PinJoint
    :members:
 
 
-CylindricalJoint
-================
-
-.. autoclass:: CylindricalJoint
-   :members:
-
 PlanarJoint
 ===========
 
