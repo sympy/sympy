@@ -1,11 +1,8 @@
 """Quantum mechanical angular momemtum."""
 
-from __future__ import print_function, division
-
 from sympy import (Add, binomial, cos, exp, Expr, factorial, I, Integer, Mul,
                    pi, Rational, S, sin, simplify, sqrt, Sum, symbols, sympify,
                    Tuple, Dummy)
-from sympy.core.compatibility import u, unicode, range
 from sympy.matrices import zeros
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.pretty.pretty_symbology import pretty_symbol
@@ -38,6 +35,8 @@ __all__ = [
     'JyBra',
     'JzKet',
     'JzBra',
+    'JzOp',
+    'J2Op',
     'JxKetCoupled',
     'JxBraCoupled',
     'JyKetCoupled',
@@ -64,7 +63,7 @@ def m_values(j):
 #-----------------------------------------------------------------------------
 
 
-class SpinOpBase(object):
+class SpinOpBase:
     """Base class for spin operators."""
 
     @classmethod
@@ -77,18 +76,18 @@ class SpinOpBase(object):
         return self.args[0]
 
     def _print_contents(self, printer, *args):
-        return '%s%s' % (unicode(self.name), self._coord)
+        return '%s%s' % (self.name, self._coord)
 
     def _print_contents_pretty(self, printer, *args):
-        a = stringPict(unicode(self.name))
+        a = stringPict(str(self.name))
         b = stringPict(self._coord)
         return self._print_subscript_pretty(a, b)
 
     def _print_contents_latex(self, printer, *args):
-        return r'%s_%s' % ((unicode(self.name), self._coord))
+        return r'%s_%s' % ((self.name, self._coord))
 
     def _represent_base(self, basis, **options):
-        j = options.get('j', Rational(1, 2))
+        j = options.get('j', S.Half)
         size, mvals = m_values(j)
         result = zeros(size, size)
         for p in range(size):
@@ -101,7 +100,7 @@ class SpinOpBase(object):
         state = ket.rewrite(self.basis)
         # If the state has only one term
         if isinstance(state, State):
-            ret = (hbar*state.m) * state
+            ret = (hbar*state.m)*state
         # state is a linear combination of states
         elif isinstance(state, Sum):
             ret = self._apply_operator_Sum(state, **options)
@@ -145,7 +144,7 @@ class SpinOpBase(object):
 
     # TODO: move this to qapply_Mul
     def _apply_operator_Sum(self, s, **options):
-        new_func = qapply(self * s.function)
+        new_func = qapply(self*s.function)
         if new_func == self*s.function:
             raise NotImplementedError
         return Sum(new_func, *s.limits)
@@ -199,7 +198,7 @@ class JplusOp(SpinOpBase, Operator):
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
 
-    def _eval_rewrite_as_xyz(self, *args):
+    def _eval_rewrite_as_xyz(self, *args, **kwargs):
         return JxOp(args[0]) + I*JyOp(args[0])
 
 
@@ -240,7 +239,7 @@ class JminusOp(SpinOpBase, Operator):
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
 
-    def _eval_rewrite_as_xyz(self, *args):
+    def _eval_rewrite_as_xyz(self, *args, **kwargs):
         return JxOp(args[0]) - I*JyOp(args[0])
 
 
@@ -275,7 +274,7 @@ class JxOp(SpinOpBase, HermitianOperator):
         jm = JminusOp(self.name)._represent_JzOp(basis, **options)
         return (jp + jm)/Integer(2)
 
-    def _eval_rewrite_as_plusminus(self, *args):
+    def _eval_rewrite_as_plusminus(self, *args, **kwargs):
         return (JplusOp(args[0]) + JminusOp(args[0]))/2
 
 
@@ -310,7 +309,7 @@ class JyOp(SpinOpBase, HermitianOperator):
         jm = JminusOp(self.name)._represent_JzOp(basis, **options)
         return (jp - jm)/(Integer(2)*I)
 
-    def _eval_rewrite_as_plusminus(self, *args):
+    def _eval_rewrite_as_plusminus(self, *args, **kwargs):
         return (JplusOp(args[0]) - JminusOp(args[0]))/(2*I)
 
 
@@ -403,20 +402,20 @@ class J2Op(SpinOpBase, HermitianOperator):
         return self._represent_base(basis, **options)
 
     def _print_contents_pretty(self, printer, *args):
-        a = prettyForm(unicode(self.name))
-        b = prettyForm(u('2'))
+        a = prettyForm(str(self.name))
+        b = prettyForm('2')
         return a**b
 
     def _print_contents_latex(self, printer, *args):
         return r'%s^2' % str(self.name)
 
-    def _eval_rewrite_as_xyz(self, *args):
+    def _eval_rewrite_as_xyz(self, *args, **kwargs):
         return JxOp(args[0])**2 + JyOp(args[0])**2 + JzOp(args[0])**2
 
-    def _eval_rewrite_as_plusminus(self, *args):
+    def _eval_rewrite_as_plusminus(self, *args, **kwargs):
         a = args[0]
         return JzOp(a)**2 + \
-            Rational(1, 2)*(JplusOp(a)*JminusOp(a) + JminusOp(a)*JplusOp(a))
+            S.Half*(JplusOp(a)*JminusOp(a) + JminusOp(a)*JplusOp(a))
 
 
 class Rotation(UnitaryOperator):
@@ -500,7 +499,7 @@ class Rotation(UnitaryOperator):
 
     def _print_operator_name_pretty(self, printer, *args):
         if printer._use_unicode:
-            return prettyForm(u('\N{SCRIPT CAPITAL R}') + u(' '))
+            return prettyForm('\N{SCRIPT CAPITAL R}' + ' ')
         else:
             return prettyForm("R ")
 
@@ -601,7 +600,7 @@ class Rotation(UnitaryOperator):
         return result
 
     def _represent_base(self, basis, **options):
-        j = sympify(options.get('j', Rational(1, 2)))
+        j = sympify(options.get('j', S.Half))
         # TODO: move evaluation up to represent function/implement elsewhere
         evaluate = sympify(options.get('doit'))
         size, mvals = m_values(j)
@@ -621,7 +620,7 @@ class Rotation(UnitaryOperator):
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
 
-    def _apply_operator_uncoupled(self, state, ket, **options):
+    def _apply_operator_uncoupled(self, state, ket, *, dummy=True, **options):
         a = self.alpha
         b = self.beta
         g = self.gamma
@@ -634,14 +633,14 @@ class Rotation(UnitaryOperator):
             for mp in sz:
                 r = Rotation.D(j, m, mp, a, b, g)
                 z = r.doit()
-                s.append(z * state(j, mp))
+                s.append(z*state(j, mp))
             return Add(*s)
         else:
-            if options.pop('dummy', True):
+            if dummy:
                 mp = Dummy('mp')
             else:
                 mp = symbols('mp')
-            return Sum(Rotation.D(j, m, mp, a, b, g) * state(j, mp), (mp, -j, j))
+            return Sum(Rotation.D(j, m, mp, a, b, g)*state(j, mp), (mp, -j, j))
 
     def _apply_operator_JxKet(self, ket, **options):
         return self._apply_operator_uncoupled(JxKet, ket, **options)
@@ -652,7 +651,7 @@ class Rotation(UnitaryOperator):
     def _apply_operator_JzKet(self, ket, **options):
         return self._apply_operator_uncoupled(JzKet, ket, **options)
 
-    def _apply_operator_coupled(self, state, ket, **options):
+    def _apply_operator_coupled(self, state, ket, *, dummy=True, **options):
         a = self.alpha
         b = self.beta
         g = self.gamma
@@ -667,14 +666,14 @@ class Rotation(UnitaryOperator):
             for mp in sz:
                 r = Rotation.D(j, m, mp, a, b, g)
                 z = r.doit()
-                s.append(z * state(j, mp, jn, coupling))
+                s.append(z*state(j, mp, jn, coupling))
             return Add(*s)
         else:
-            if options.pop('dummy', True):
+            if dummy:
                 mp = Dummy('mp')
             else:
                 mp = symbols('mp')
-            return Sum(Rotation.D(j, m, mp, a, b, g) * state(
+            return Sum(Rotation.D(j, m, mp, a, b, g)*state(
                 j, mp, jn, coupling), (mp, -j, j))
 
     def _apply_operator_JxKetCoupled(self, ket, **options):
@@ -687,21 +686,21 @@ class Rotation(UnitaryOperator):
         return self._apply_operator_coupled(JzKetCoupled, ket, **options)
 
 class WignerD(Expr):
-    """Wigner-D function
+    r"""Wigner-D function
 
     The Wigner D-function gives the matrix elements of the rotation
-    operator in the jm-representation. For the Euler angles `\\alpha`,
-    `\\beta`, `\gamma`, the D-function is defined such that:
+    operator in the jm-representation. For the Euler angles `\alpha`,
+    `\beta`, `\gamma`, the D-function is defined such that:
 
     .. math ::
-        <j,m| \mathcal{R}(\\alpha, \\beta, \gamma ) |j',m'> = \delta_{jj'} D(j, m, m', \\alpha, \\beta, \gamma)
+        <j,m| \mathcal{R}(\alpha, \beta, \gamma ) |j',m'> = \delta_{jj'} D(j, m, m', \alpha, \beta, \gamma)
 
     Where the rotation operator is as defined by the Rotation class [1]_.
 
     The Wigner D-function defined in this way gives:
 
     .. math ::
-        D(j, m, m', \\alpha, \\beta, \gamma) = e^{-i m \\alpha} d(j, m, m', \\beta) e^{-i m' \gamma}
+        D(j, m, m', \alpha, \beta, \gamma) = e^{-i m \alpha} d(j, m, m', \beta) e^{-i m' \gamma}
 
     Where d is the Wigner small-d function, which is given by Rotation.d.
 
@@ -710,7 +709,7 @@ class WignerD(Expr):
     Wigner D-function is:
 
     .. math ::
-        D(j, m, m', \\alpha, \\beta, \gamma) = e^{-i m \\alpha} d(j, m, m', \\beta) e^{-i m' \gamma}
+        D(j, m, m', \alpha, \beta, \gamma) = e^{-i m \alpha} d(j, m, m', \beta) e^{-i m' \gamma}
 
     Where d is the small-d function. The Wigner D-function is given by
     Rotation.D.
@@ -825,9 +824,9 @@ class WignerD(Expr):
         top = prettyForm(*top.left(' '))
         bot = prettyForm(*bot.left(' '))
         if pad > top.width():
-            top = prettyForm(*top.right(' ' * (pad - top.width())))
+            top = prettyForm(*top.right(' '*(pad - top.width())))
         if pad > bot.width():
-            bot = prettyForm(*bot.right(' ' * (pad - bot.width())))
+            bot = prettyForm(*bot.right(' '*(pad - bot.width())))
         if self.alpha == 0 and self.gamma == 0:
             args = printer._print(self.beta)
             s = stringPict('d' + ' '*pad)
@@ -857,6 +856,8 @@ class WignerD(Expr):
         alpha = sympify(self.alpha)
         beta = sympify(self.beta)
         gamma = sympify(self.gamma)
+        if alpha == 0 and beta == 0 and gamma == 0:
+            return KroneckerDelta(m, mp)
         if not j.is_number:
             raise ValueError(
                 'j parameter must be numerical to evaluate, got %s' % j)
@@ -867,25 +868,25 @@ class WignerD(Expr):
             for k in range(2*j + 1):
                 if k > j + mp or k > j - m or k < mp - m:
                     continue
-                r += (-S(1))**k * binomial(j + mp, k) * binomial(j - mp, k + m - mp)
-            r *= (-S(1))**(m - mp) / 2**j * sqrt(factorial(j + m) *
-                    factorial(j - m) / (factorial(j + mp) * factorial(j - mp)))
+                r += (S.NegativeOne)**k*binomial(j + mp, k)*binomial(j - mp, k + m - mp)
+            r *= (S.NegativeOne)**(m - mp) / 2**j*sqrt(factorial(j + m) *
+                    factorial(j - m) / (factorial(j + mp)*factorial(j - mp)))
         else:
             # Varshalovich Equation(5), Section 4.7.2, page 87, where we set
             # beta1=beta2=pi/2, and we get alpha=gamma=pi/2 and beta=phi+pi,
             # then we use the Eq. (1), Section 4.4. page 79, to simplify:
-            # d(j, m, mp, beta+pi) = (-1)**(j-mp) * d(j, m, -mp, beta)
+            # d(j, m, mp, beta+pi) = (-1)**(j-mp)*d(j, m, -mp, beta)
             # This happens to be almost the same as in Eq.(10), Section 4.16,
             # except that we need to substitute -mp for mp.
             size, mvals = m_values(j)
             for mpp in mvals:
-                r += Rotation.d(j, m, mpp, pi/2).doit() * (cos(-mpp*beta) + I*sin(-mpp*beta)) * \
+                r += Rotation.d(j, m, mpp, pi/2).doit()*(cos(-mpp*beta) + I*sin(-mpp*beta))*\
                     Rotation.d(j, mpp, -mp, pi/2).doit()
             # Empirical normalization factor so results match Varshalovich
             # Tables 4.3-4.12
             # Note that this exact normalization does not follow from the
             # above equations
-            r = r * I**(2*j - m - mp) * (-1)**(2*m)
+            r = r*I**(2*j - m - mp)*(-1)**(2*m)
             # Finally, simplify the whole expression
             r = simplify(r)
         r *= exp(-I*m*alpha)*exp(-I*mp*gamma)
@@ -950,7 +951,6 @@ class SpinState(State):
         gamma = sympify(options.get('gamma', 0))
         size, mvals = m_values(j)
         result = zeros(size, 1)
-        # TODO: Use KroneckerDelta if all Euler angles == 0
         # breaks finding angles on L930
         for p, mval in enumerate(mvals):
             if m.is_number:
@@ -990,7 +990,7 @@ class SpinState(State):
                 start = 0
             vect = represent(self, basis=basis, **options)
             result = Add(
-                *[vect[start + i] * evect(j, j - i, *args) for i in range(2*j + 1)])
+                *[vect[start + i]*evect(j, j - i, *args) for i in range(2*j + 1)])
             if isinstance(self, CoupledSpinState) and options.get('coupled') is False:
                 return uncouple(result)
             return result
@@ -1018,7 +1018,7 @@ class SpinState(State):
             else:
                 state = evect(j, mi, *args)
                 lt = Rotation.D(j, mi, self.m, *angles)
-                return Sum(lt * state, (mi, -j, j))
+                return Sum(lt*state, (mi, -j, j))
 
     def _eval_innerproduct_JxBra(self, bra, **hints):
         result = KroneckerDelta(self.j, bra.j)
@@ -1026,7 +1026,7 @@ class SpinState(State):
             result *= self._represent_JxOp(None)[bra.j - bra.m]
         else:
             result *= KroneckerDelta(
-                self.j, bra.j) * KroneckerDelta(self.m, bra.m)
+                self.j, bra.j)*KroneckerDelta(self.m, bra.m)
         return result
 
     def _eval_innerproduct_JyBra(self, bra, **hints):
@@ -1035,7 +1035,7 @@ class SpinState(State):
             result *= self._represent_JyOp(None)[bra.j - bra.m]
         else:
             result *= KroneckerDelta(
-                self.j, bra.j) * KroneckerDelta(self.m, bra.m)
+                self.j, bra.j)*KroneckerDelta(self.m, bra.m)
         return result
 
     def _eval_innerproduct_JzBra(self, bra, **hints):
@@ -1044,7 +1044,7 @@ class SpinState(State):
             result *= self._represent_JzOp(None)[bra.j - bra.m]
         else:
             result *= KroneckerDelta(
-                self.j, bra.j) * KroneckerDelta(self.m, bra.m)
+                self.j, bra.j)*KroneckerDelta(self.m, bra.m)
         return result
 
     def _eval_trace(self, bra, **hints):
@@ -1090,7 +1090,7 @@ class JxKet(SpinState, Ket):
         return self._represent_base(**options)
 
     def _represent_JyOp(self, basis, **options):
-        return self._represent_base(alpha=3*pi/2, **options)
+        return self._represent_base(alpha=pi*Rational(3, 2), **options)
 
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(beta=pi/2, **options)
@@ -1147,7 +1147,7 @@ class JyKet(SpinState, Ket):
         return self._represent_base(**options)
 
     def _represent_JzOp(self, basis, **options):
-        return self._represent_base(alpha=3*pi/2, beta=-pi/2, gamma=pi/2, **options)
+        return self._represent_base(alpha=pi*Rational(3, 2), beta=-pi/2, gamma=pi/2, **options)
 
 
 class JyBra(SpinState, Bra):
@@ -1276,7 +1276,7 @@ class JzKet(SpinState, Ket):
     ========
 
     JzKetCoupled: Coupled eigenstates
-    TensorProduct: Used to specify uncoupled states
+    sympy.physics.quantum.tensorproduct.TensorProduct: Used to specify uncoupled states
     uncouple: Uncouples states given coupling parameters
     couple: Couples uncoupled states
 
@@ -1294,10 +1294,10 @@ class JzKet(SpinState, Ket):
         return self._represent_JzOp(None, **options)
 
     def _represent_JxOp(self, basis, **options):
-        return self._represent_base(beta=3*pi/2, **options)
+        return self._represent_base(beta=pi*Rational(3, 2), **options)
 
     def _represent_JyOp(self, basis, **options):
-        return self._represent_base(alpha=3*pi/2, beta=pi/2, gamma=pi/2, **options)
+        return self._represent_base(alpha=pi*Rational(3, 2), beta=pi/2, gamma=pi/2, **options)
 
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(**options)
@@ -1383,9 +1383,9 @@ class CoupledSpinState(SpinState):
         if any(2*ji != int(2*ji) for ji in jn if ji.is_number):
             raise ValueError('All elements of jn must be integer or half-integer, got: %s' % jn)
         if any(n1 != int(n1) or n2 != int(n2) for (n1, n2, _) in jcoupling):
-            raise ValueError('Indicies in jcoupling must be integers')
+            raise ValueError('Indices in jcoupling must be integers')
         if any(n1 < 1 or n2 < 1 or n1 > len(jn) or n2 > len(jn) for (n1, n2, _) in jcoupling):
-            raise ValueError('Indicies must be between 1 and the number of coupled spin spaces')
+            raise ValueError('Indices must be between 1 and the number of coupled spin spaces')
         if any(2*ji != int(2*ji) for (_, _, ji) in jcoupling if ji.is_number):
             raise ValueError('All coupled j values in coupling scheme must be integer or half-integer')
         coupled_n, coupled_jn = _build_coupled(jcoupling, len(jn))
@@ -1439,15 +1439,16 @@ class CoupledSpinState(SpinState):
         )
 
     def _print_label_latex(self, printer, *args):
-        label = [self.j, self.m]
+        label = [
+            printer._print(self.j, *args),
+            printer._print(self.m, *args)
+        ]
         for i, ji in enumerate(self.jn, start=1):
-            label.append('j_{%d}=%s' % (i, printer._print(ji)) )
+            label.append('j_{%d}=%s' % (i, printer._print(ji, *args)) )
         for jn, (n1, n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
             n = ','.join(str(i) for i in sorted(n1 + n2))
-            label.append('j_{%s}=%s' % (n, printer._print(jn)) )
-        return self._print_sequence(
-            label, self._label_separator, printer, *args
-        )
+            label.append('j_{%s}=%s' % (n, printer._print(jn, *args)) )
+        return self._label_separator.join(label)
 
     @property
     def jn(self):
@@ -1538,7 +1539,7 @@ class JxKetCoupled(CoupledSpinState, Ket):
         return self._represent_coupled_base(**options)
 
     def _represent_JyOp(self, basis, **options):
-        return self._represent_coupled_base(alpha=3*pi/2, **options)
+        return self._represent_coupled_base(alpha=pi*Rational(3, 2), **options)
 
     def _represent_JzOp(self, basis, **options):
         return self._represent_coupled_base(beta=pi/2, **options)
@@ -1595,7 +1596,7 @@ class JyKetCoupled(CoupledSpinState, Ket):
         return self._represent_coupled_base(**options)
 
     def _represent_JzOp(self, basis, **options):
-        return self._represent_coupled_base(alpha=3*pi/2, beta=-pi/2, gamma=pi/2, **options)
+        return self._represent_coupled_base(alpha=pi*Rational(3, 2), beta=-pi/2, gamma=pi/2, **options)
 
 
 class JyBraCoupled(CoupledSpinState, Bra):
@@ -1620,7 +1621,7 @@ class JyBraCoupled(CoupledSpinState, Bra):
 
 
 class JzKetCoupled(CoupledSpinState, Ket):
-    """Coupled eigenket of Jz
+    r"""Coupled eigenket of Jz
 
     Spin state that is an eigenket of Jz which represents the coupling of
     separate spin spaces.
@@ -1633,8 +1634,8 @@ class JzKetCoupled(CoupledSpinState, Ket):
     The other required parameter in ``jn``, which is a tuple defining the `j_n`
     angular momentum quantum numbers of the product spaces. So for example, if
     a state represented the coupling of the product basis state
-    `|j_1,m_1\\rangle\\times|j_2,m_2\\rangle`, the ``jn`` for this state would be
-    ``(j1,j2)``.
+    `\left|j_1,m_1\right\rangle\times\left|j_2,m_2\right\rangle`, the ``jn``
+    for this state would be ``(j1,j2)``.
 
     The final option is ``jcoupling``, which is used to define how the spaces
     specified by ``jn`` are coupled, which includes both the order these spaces
@@ -1644,8 +1645,8 @@ class JzKetCoupled(CoupledSpinState, Ket):
     there are N coupled angular momentum spaces, that is ``jn`` has N elements,
     then there must be N-1 sublists. Each of these sublists making up the
     ``jcoupling`` parameter have length 3. The first two elements are the
-    indicies of the product spaces that are considered to be coupled together.
-    For example, if we want to couple `j_1` and `j_4`, the indicies would be 1
+    indices of the product spaces that are considered to be coupled together.
+    For example, if we want to couple `j_1` and `j_4`, the indices would be 1
     and 4. If a state has already been coupled, it is referenced by the
     smallest index that is coupled, so if `j_2` and `j_4` has already been
     coupled to some `j_{24}`, then this value can be coupled by referencing it
@@ -1748,10 +1749,10 @@ class JzKetCoupled(CoupledSpinState, Ket):
         return self._represent_JzOp(None, **options)
 
     def _represent_JxOp(self, basis, **options):
-        return self._represent_coupled_base(beta=3*pi/2, **options)
+        return self._represent_coupled_base(beta=pi*Rational(3, 2), **options)
 
     def _represent_JyOp(self, basis, **options):
-        return self._represent_coupled_base(alpha=3*pi/2, beta=pi/2, gamma=pi/2, **options)
+        return self._represent_coupled_base(alpha=pi*Rational(3, 2), beta=pi/2, gamma=pi/2, **options)
 
     def _represent_JzOp(self, basis, **options):
         return self._represent_coupled_base(**options)

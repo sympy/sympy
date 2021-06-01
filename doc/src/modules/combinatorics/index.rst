@@ -1,8 +1,8 @@
 .. _combinatiorics-docs:
 
-====================
-Combinatorics Module
-====================
+=============
+Combinatorics
+=============
 
 Contents
 ========
@@ -22,3 +22,5 @@ Contents
    group_constructs.rst
    testutil.rst
    tensor_can.rst
+   fp_groups.rst
+   pc_groups.rst

@@ -1,14 +1,12 @@
 """Implementation of :class:`RealField` class. """
 
-from __future__ import print_function, division
 
+from sympy.core.numbers import Float
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.mpelements import MPContext
-
-from sympy.polys.polyerrors import DomainError, CoercionFailed
-from sympy.core.numbers import Float
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
 @public
@@ -21,6 +19,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
 
     is_Exact = False
     is_Numerical = True
+    is_PID = False
 
     has_assoc_Ring = False
     has_assoc_Field = True
@@ -44,7 +43,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         return self._context.tolerance
 
     def __init__(self, prec=_default_precision, dps=None, tol=None):
-        context = MPContext(prec, dps, tol)
+        context = MPContext(prec, dps, tol, True)
         context._parent = self
         self._context = context
 
@@ -73,8 +72,14 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         else:
             raise CoercionFailed("expected real number, got %s" % expr)
 
+    def from_ZZ(self, element, base):
+        return self.dtype(element)
+
     def from_ZZ_python(self, element, base):
         return self.dtype(element)
+
+    def from_QQ(self, element, base):
+        return self.dtype(element.numerator) / element.denominator
 
     def from_QQ_python(self, element, base):
         return self.dtype(element.numerator) / element.denominator
@@ -84,6 +89,9 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
 
     def from_QQ_gmpy(self, element, base):
         return self.dtype(int(element.numerator)) / int(element.denominator)
+
+    def from_AlgebraicField(self, element, base):
+        return self.from_sympy(base.to_sympy(element).evalf(self.dps))
 
     def from_RealField(self, element, base):
         if self == base:
@@ -119,3 +127,6 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
     def almosteq(self, a, b, tolerance=None):
         """Check if ``a`` and ``b`` are almost equal. """
         return self._context.almosteq(a, b, tolerance)
+
+
+RR = RealField()

@@ -1,9 +1,9 @@
-from sympy import Add, Basic, symbols, Symbol
+from sympy import Add, Basic, symbols, Symbol, And, S
+from sympy.core.symbol import Str
 from sympy.unify.core import Compound, Variable
 from sympy.unify.usympy import (deconstruct, construct, unify, is_associative,
         is_commutative)
 from sympy.abc import x, y, z, n
-from sympy.utilities.pytest import XFAIL
 
 def test_deconstruct():
     expr     = Basic(1, 2, 3)
@@ -101,8 +101,8 @@ def test_matrix():
     X = MatrixSymbol('X', n, n)
     Y = MatrixSymbol('Y', 2, 2)
     Z = MatrixSymbol('Z', 2, 3)
-    assert list(unify(X, Y, {}, variables=[n, 'X'])) == [{'X': 'Y', n: 2}]
-    assert list(unify(X, Z, {}, variables=[n, 'X'])) == []
+    assert list(unify(X, Y, {}, variables=[n, Str('X')])) == [{Str('X'): Str('Y'), n: 2}]
+    assert list(unify(X, Z, {}, variables=[n, Str('X')])) == []
 
 def test_non_frankenAdds():
     # the is_commutative property used to fail because of Basic.__new__
@@ -124,17 +124,19 @@ def test_FiniteSet_commutivity():
 def test_FiniteSet_complex():
     from sympy import FiniteSet
     a, b, c, x, y, z = symbols('a,b,c,x,y,z')
-    expr = FiniteSet(Basic(1, x), y, Basic(x, z))
+    expr = FiniteSet(Basic(S(1), x), y, Basic(x, z))
     pattern = FiniteSet(a, Basic(x, b))
     variables = a, b
     expected = tuple([{b: 1, a: FiniteSet(y, Basic(x, z))},
-                      {b: z, a: FiniteSet(y, Basic(1, x))}])
+                      {b: z, a: FiniteSet(y, Basic(S(1), x))}])
     assert iterdicteq(unify(expr, pattern, variables=variables), expected)
 
-@XFAIL
+
 def test_and():
     variables = x, y
-    str(list(unify((x>0) & (z<3), pattern, variables=variables)))
+    expected = tuple([{x: z > 0, y: n < 3}])
+    assert iterdicteq(unify((z>0) & (n<3), And(x, y), variables=variables),
+                      expected)
 
 def test_Union():
     from sympy import Interval

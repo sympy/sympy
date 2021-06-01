@@ -1,6 +1,7 @@
-from sympy import sin, cos, symbols, pi, ImmutableMatrix as Matrix
-from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols
-
+from sympy import sin, cos, symbols, pi, Float, ImmutableMatrix as Matrix
+from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols, outer
+from sympy.physics.vector.dyadic import _check_dyadic
+from sympy.testing.pytest import raises
 
 Vector.simp = True
 A = ReferenceFrame('A')
@@ -59,6 +60,8 @@ def test_dyadic():
                                 d5.to_matrix(C)):
         assert (expected - actual).simplify() == 0
 
+    raises(TypeError, lambda: d1.applyfunc(0))
+
 
 def test_dyadic_simplify():
     x, y, z, k, n, m, w, f, s, A = symbols('x, y, z, k, n, m, w, f, s, A')
@@ -81,3 +84,38 @@ def test_dyadic_simplify():
     test4 = ((-4 * x * y**2 - 2 * y**3 - 2 * x**2 * y) / (x + y)**2) * dy
     test4 = test4.simplify()
     assert (N.x & test4 & N.x) == -2 * y
+
+
+def test_dyadic_subs():
+    N = ReferenceFrame('N')
+    s = symbols('s')
+    a = s*(N.x | N.x)
+    assert a.subs({s: 2}) == 2*(N.x | N.x)
+
+
+def test_check_dyadic():
+    raises(TypeError, lambda: _check_dyadic(0))
+
+
+def test_dyadic_evalf():
+    N = ReferenceFrame('N')
+    a = pi * (N.x | N.x)
+    assert a.evalf(3) == Float('3.1416', 3) * (N.x | N.x)
+    s = symbols('s')
+    a = 5 * s * pi* (N.x | N.x)
+    assert a.evalf(2) == Float('5', 2) * Float('3.1416', 2) * s * (N.x | N.x)
+    assert a.evalf(9, subs={s: 5.124}) == Float('80.48760378', 9) * (N.x | N.x)
+
+
+def test_dyadic_xreplace():
+    x, y, z = symbols('x y z')
+    N = ReferenceFrame('N')
+    D = outer(N.x, N.x)
+    v = x*y * D
+    assert v.xreplace({x : cos(x)}) == cos(x)*y * D
+    assert v.xreplace({x*y : pi}) == pi * D
+    v = (x*y)**z * D
+    assert v.xreplace({(x*y)**z : 1}) == D
+    assert v.xreplace({x:1, z:0}) == D
+    raises(TypeError, lambda: v.xreplace())
+    raises(TypeError, lambda: v.xreplace([x, y]))

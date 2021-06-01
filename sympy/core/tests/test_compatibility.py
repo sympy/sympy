@@ -1,6 +1,7 @@
-from sympy.core.compatibility import default_sort_key, as_int, ordered, iterable
+from sympy.core.compatibility import (default_sort_key, as_int, ordered,
+    iterable, NotIterable)
 from sympy.core.singleton import S
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.abc import x
 
@@ -9,20 +10,66 @@ def test_default_sort_key():
     func = lambda x: x
     assert sorted([func, x, func], key=default_sort_key) == [func, func, x]
 
+    class C:
+        def __repr__(self):
+            return 'x.y'
+    func = C()
+    assert sorted([x, func], key=default_sort_key) == [func, x]
+
 
 def test_as_int():
+    raises(ValueError, lambda : as_int(True))
     raises(ValueError, lambda : as_int(1.1))
     raises(ValueError, lambda : as_int([]))
     raises(ValueError, lambda : as_int(S.NaN))
     raises(ValueError, lambda : as_int(S.Infinity))
     raises(ValueError, lambda : as_int(S.NegativeInfinity))
     raises(ValueError, lambda : as_int(S.ComplexInfinity))
+    # for the following, limited precision makes int(arg) == arg
+    # but the int value is not necessarily what a user might have
+    # expected; Q.prime is more nuanced in its response for
+    # expressions which might be complex representations of an
+    # integer. This is not -- by design -- as_ints role.
+    raises(ValueError, lambda : as_int(1e23))
+    raises(ValueError, lambda : as_int(S('1.'+'0'*20+'1')))
+    assert as_int(True, strict=False) == 1
 
 
 def test_iterable():
     assert iterable(0) is False
     assert iterable(1) is False
     assert iterable(None) is False
+
+    class Test1(NotIterable):
+        pass
+
+    assert iterable(Test1()) is False
+
+    class Test2(NotIterable):
+        _iterable = True
+
+    assert iterable(Test2()) is True
+
+    class Test3:
+        pass
+
+    assert iterable(Test3()) is False
+
+    class Test4:
+        _iterable = True
+
+    assert iterable(Test4()) is True
+
+    class Test5:
+        def __iter__(self):
+            yield 1
+
+    assert iterable(Test5()) is True
+
+    class Test6(Test5):
+        _iterable = False
+
+    assert iterable(Test6()) is False
 
 
 def test_ordered():

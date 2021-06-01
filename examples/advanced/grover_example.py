@@ -12,12 +12,12 @@ from sympy.physics.quantum.grover import (OracleGate, superposition_basis,
 def demo_vgate_app(v):
     for i in range(2**v.nqubits):
         print('qapply(v*IntQubit(%i, %r))' % (i, v.nqubits))
-        pprint(qapply(v*IntQubit(i, v.nqubits)))
-        qapply(v*IntQubit(i, v.nqubits))
+        pprint(qapply(v*IntQubit(i, nqubits=v.nqubits)))
+        qapply(v*IntQubit(i, nqubits=v.nqubits))
 
 
 def black_box(qubits):
-    return True if qubits == IntQubit(1, qubits.nqubits) else False
+    return True if qubits == IntQubit(1, nqubits=qubits.nqubits) else False
 
 
 def main():

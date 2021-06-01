@@ -9,6 +9,7 @@ from sympy import (
     cos,
     expand,
     factor,
+    gammasimp,
     posify,
     radsimp,
     ratsimp,
@@ -21,7 +22,7 @@ from sympy import (
     I,
 )
 from sympy.abc import x, y, z
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 A, B, C = symbols("A B C", commutative=False)
 X = symbols("X", commutative=False, hermitian=True)
@@ -63,6 +64,10 @@ def test_collect():
 
 def test_combsimp():
     assert combsimp(A*B - B*A) == A*B - B*A
+
+
+def test_gammasimp():
+    assert gammasimp(A*B - B*A) == A*B - B*A
 
 
 def test_conjugate():

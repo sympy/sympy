@@ -3,13 +3,12 @@ from sympy.functions.special.spherical_harmonics import Ynm, Znm, Ynm_c
 
 
 def test_Ynm():
-    # http://en.wikipedia.org/wiki/Spherical_harmonics
+    # https://en.wikipedia.org/wiki/Spherical_harmonics
     th, ph = Symbol("theta", real=True), Symbol("phi", real=True)
     from sympy.abc import n,m
 
     assert Ynm(0, 0, th, ph).expand(func=True) == 1/(2*sqrt(pi))
     assert Ynm(1, -1, th, ph) == -exp(-2*I*ph)*Ynm(1, 1, th, ph)
-    assert Ynm(1, -1, th, ph).expand(func=True) == sqrt(6)*sin(th)*exp(-I*ph)/(4*sqrt(pi))
     assert Ynm(1, -1, th, ph).expand(func=True) == sqrt(6)*sin(th)*exp(-I*ph)/(4*sqrt(pi))
     assert Ynm(1, 0, th, ph).expand(func=True) == sqrt(3)*cos(th)/(2*sqrt(pi))
     assert Ynm(1, 1, th, ph).expand(func=True) == -sqrt(6)*sin(th)*exp(I*ph)/(4*sqrt(pi))
@@ -39,7 +38,7 @@ def test_Ynm_c():
 
 
 def test_Znm():
-    # http://en.wikipedia.org/wiki/Solid_harmonics#List_of_lowest_functions
+    # https://en.wikipedia.org/wiki/Solid_harmonics#List_of_lowest_functions
     th, ph = Symbol("theta", real=True), Symbol("phi", real=True)
 
     assert Znm(0, 0, th, ph) == Ynm(0, 0, th, ph)

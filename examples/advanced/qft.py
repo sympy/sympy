@@ -2,21 +2,21 @@
 
 """Quantum field theory example
 
-* http://en.wikipedia.org/wiki/Quantum_field_theory
+* https://en.wikipedia.org/wiki/Quantum_field_theory
 
 This particular example is a work in progress. Currently it calculates the
 scattering amplitude of the process:
 
     electron + positron -> photon -> electron + positron
 
-in QED (http://en.wikipedia.org/wiki/Quantum_electrodynamics). The aim
+in QED (https://en.wikipedia.org/wiki/Quantum_electrodynamics). The aim
 is to be able to do any kind of calculations in QED or standard model in
 SymPy, but that's a long journey.
 
 """
 
-from sympy import Basic, exp, Symbol, sin, Rational, I, Mul, Matrix, \
-    ones, sqrt, pprint, simplify, Eq, sympify
+from sympy import Basic, Symbol, Matrix, \
+    ones, sqrt, pprint, Eq, sympify
 
 from sympy.physics import msigma, mgamma
 

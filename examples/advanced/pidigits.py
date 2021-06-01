@@ -7,14 +7,13 @@ computation of the digits of pi.
 """
 
 from mpmath import libmp, pi
-from mpmath import functions as mpf_funs
 
 import math
-from time import clock
+from sympy.core.compatibility import clock
 import sys
 
 
-def display_fraction(digits, skip=0, colwidth=10, columns=5):
+def display_fraction(digits, *, skip=0, colwidth=10, columns=5):
     """Pretty printer for first n digits of a fraction"""
     perline = colwidth * columns
     printed = 0
@@ -24,7 +23,7 @@ def display_fraction(digits, skip=0, colwidth=10, columns=5):
             print(line[i*colwidth: (i + 1)*colwidth],)
         print(":", (linecount + 1)*perline)
         if (linecount + 1) % 10 == 0:
-            print
+            print()
         printed += colwidth*columns
     rem = (len(digits) - skip) % (colwidth * columns)
     if rem:
@@ -60,7 +59,7 @@ def calculateit(func, base, n, tofile):
         sys.stdout = tofile
     print("%i base-%i digits of pi:\n" % (n, base))
     print(intpart, ".\n")
-    display_fraction(d, skip, colwidth=10, columns=5)
+    display_fraction(d, skip=skip, colwidth=10, columns=5)
     if tofile:
         sys.stdout = out_
     print("\nFinished in %f seconds (%f calc, %f convert)" % \
@@ -70,9 +69,9 @@ def calculateit(func, base, n, tofile):
 def interactive():
     """Simple function to interact with user"""
     print("Compute digits of pi with SymPy\n")
-    base = input("Which base? (2-36, 10 for decimal) \n> ")
-    digits = input("How many digits? (enter a big number, say, 10000)\n> ")
-    tofile = raw_input("Output to file? (enter a filename, or just press enter\nto print directly to the screen) \n> ")
+    base = int(input("Which base? (2-36, 10 for decimal) \n> "))
+    digits = int(input("How many digits? (enter a big number, say, 10000)\n> "))
+    tofile = input("Output to file? (enter a filename, or just press enter\nto print directly to the screen) \n> ")
     if tofile:
         tofile = open(tofile, "w")
     calculateit(pi, base, digits, tofile)

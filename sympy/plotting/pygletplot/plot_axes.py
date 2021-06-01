@@ -1,30 +1,33 @@
-from __future__ import print_function, division
-
-from pyglet.gl import *
+import pyglet.gl as pgl
 from pyglet import font
 
-from plot_object import PlotObject
-from util import strided_range, billboard_matrix
-from util import get_direction_vectors
-from util import dot_product, vec_sub, vec_mag
 from sympy.core import S
-from sympy.core.compatibility import is_sequence, range
+from sympy.core.compatibility import is_sequence
+from sympy.plotting.pygletplot.plot_object import PlotObject
+from sympy.plotting.pygletplot.util import billboard_matrix, dot_product, \
+        get_direction_vectors, strided_range, vec_mag, vec_sub
 
 
 class PlotAxes(PlotObject):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args,
+            style='', none=None, frame=None, box=None, ordinate=None,
+            stride=0.25,
+            visible='', overlay='', colored='', label_axes='', label_ticks='',
+            tick_length=0.1,
+            font_face='Arial', font_size=28,
+            **kwargs):
         # initialize style parameter
-        style = kwargs.pop('style', '').lower()
+        style = style.lower()
 
         # allow alias kwargs to override style kwarg
-        if kwargs.pop('none', None) is not None:
+        if none is not None:
             style = 'none'
-        if kwargs.pop('frame', None) is not None:
+        if frame is not None:
             style = 'frame'
-        if kwargs.pop('box', None) is not None:
+        if box is not None:
             style = 'box'
-        if kwargs.pop('ordinate', None) is not None:
+        if ordinate is not None:
             style = 'ordinate'
 
         if style in ['', 'ordinate']:
@@ -37,7 +40,6 @@ class PlotAxes(PlotObject):
             raise ValueError(("Unrecognized axes style %s.") % (style))
 
         # initialize stride parameter
-        stride = kwargs.pop('stride', 0.25)
         try:
             stride = eval(stride)
         except TypeError:
@@ -48,7 +50,7 @@ class PlotAxes(PlotObject):
             self._stride = stride
         else:
             self._stride = [stride, stride, stride]
-        self._tick_length = float(kwargs.pop('tick_length', 0.1))
+        self._tick_length = float(tick_length)
 
         # setup bounding box and ticks
         self._origin = [0, 0, 0]
@@ -64,17 +66,15 @@ class PlotAxes(PlotObject):
             return default
 
         # initialize remaining parameters
-        self.visible = flexible_boolean(kwargs.pop('visible', ''), True)
-        self._overlay = flexible_boolean(kwargs.pop('overlay', ''), True)
-        self._colored = flexible_boolean(kwargs.pop('colored', ''), False)
-        self._label_axes = flexible_boolean(
-            kwargs.pop('label_axes', ''), False)
-        self._label_ticks = flexible_boolean(
-            kwargs.pop('label_ticks', ''), True)
+        self.visible = flexible_boolean(kwargs, True)
+        self._overlay = flexible_boolean(overlay, True)
+        self._colored = flexible_boolean(colored, False)
+        self._label_axes = flexible_boolean(label_axes, False)
+        self._label_ticks = flexible_boolean(label_ticks, True)
 
         # setup label font
-        self.font_face = kwargs.pop('font_face', 'Arial')
-        self.font_size = kwargs.pop('font_size', 28)
+        self.font_face = font_face
+        self.font_size = font_size
 
         # this is also used to reinit the
         # font on window close/reopen
@@ -89,11 +89,11 @@ class PlotAxes(PlotObject):
 
     def draw(self):
         if self._render_object:
-            glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_DEPTH_BUFFER_BIT)
+            pgl.glPushAttrib(pgl.GL_ENABLE_BIT | pgl.GL_POLYGON_BIT | pgl.GL_DEPTH_BUFFER_BIT)
             if self._overlay:
-                glDisable(GL_DEPTH_TEST)
+                pgl.glDisable(pgl.GL_DEPTH_TEST)
             self._render_object.draw()
-            glPopAttrib()
+            pgl.glPopAttrib()
 
     def adjust_bounds(self, child_bounds):
         b = self._bounding_box
@@ -101,8 +101,9 @@ class PlotAxes(PlotObject):
         for i in [0, 1, 2]:
             if abs(c[i][0]) is S.Infinity or abs(c[i][1]) is S.Infinity:
                 continue
-            b[i][0] = [min([b[i][0], c[i][0]]), c[i][0]][b[i][0] is None]
-            b[i][1] = [max([b[i][1], c[i][1]]), c[i][1]][b[i][1] is None]
+            b[i][0] = c[i][0] if b[i][0] is None else min([b[i][0], c[i][0]])
+            b[i][1] = c[i][1] if b[i][1] is None else max([b[i][1], c[i][1]])
+            self._bounding_box = b
             self._recalculate_axis_ticks(i)
 
     def _recalculate_axis_ticks(self, axis):
@@ -153,28 +154,28 @@ class PlotAxesBase(PlotObject):
                           valign=font.Text.BASELINE,
                           halign=font.Text.CENTER)
 
-        glPushMatrix()
-        glTranslatef(*position)
+        pgl.glPushMatrix()
+        pgl.glTranslatef(*position)
         billboard_matrix()
         scale_factor = 0.005 * scale
-        glScalef(scale_factor, scale_factor, scale_factor)
-        glColor4f(0, 0, 0, 0)
+        pgl.glScalef(scale_factor, scale_factor, scale_factor)
+        pgl.glColor4f(0, 0, 0, 0)
         label.draw()
-        glPopMatrix()
+        pgl.glPopMatrix()
 
     def draw_line(self, v, color):
         o = self._p._origin
-        glBegin(GL_LINES)
-        glColor3f(*color)
-        glVertex3f(v[0][0] + o[0], v[0][1] + o[1], v[0][2] + o[2])
-        glVertex3f(v[1][0] + o[0], v[1][1] + o[1], v[1][2] + o[2])
-        glEnd()
+        pgl.glBegin(pgl.GL_LINES)
+        pgl.glColor3f(*color)
+        pgl.glVertex3f(v[0][0] + o[0], v[0][1] + o[1], v[0][2] + o[2])
+        pgl.glVertex3f(v[1][0] + o[0], v[1][1] + o[1], v[1][2] + o[2])
+        pgl.glEnd()
 
 
 class PlotAxesOrdinate(PlotAxesBase):
 
     def __init__(self, parent_axes):
-        super(PlotAxesOrdinate, self).__init__(parent_axes)
+        super().__init__(parent_axes)
 
     def draw_axis(self, axis, color):
         ticks = self._p._axis_ticks[axis]
@@ -241,7 +242,7 @@ class PlotAxesOrdinate(PlotAxesBase):
 class PlotAxesFrame(PlotAxesBase):
 
     def __init__(self, parent_axes):
-        super(PlotAxesFrame, self).__init__(parent_axes)
+        super().__init__(parent_axes)
 
     def draw_background(self, color):
         pass

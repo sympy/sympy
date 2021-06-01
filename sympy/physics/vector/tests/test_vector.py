@@ -1,7 +1,7 @@
-from sympy import symbols, pi, sin, cos, ImmutableMatrix as Matrix
-from sympy.physics.vector import ReferenceFrame, Vector, \
-     dynamicsymbols, dot
+from sympy import symbols, pi, sin, cos, Float, ImmutableMatrix as Matrix
+from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols, dot
 from sympy.abc import x, y, z
+from sympy.testing.pytest import raises
 
 
 Vector.simp = True
@@ -12,6 +12,8 @@ def test_Vector():
     assert A.x != A.y
     assert A.y != A.z
     assert A.z != A.x
+
+    assert A.x + 0 == A.x
 
     v1 = x*A.x + y*A.y + z*A.z
     v2 = x**2*A.x + y**2*A.y + z**2*A.z
@@ -53,6 +55,13 @@ def test_Vector():
     assert Vector(0).separate() == {}
     assert v1.separate() == {A: v1}
     assert v5.separate() == {A: x*A.x + y*A.y, B: z*B.z}
+
+    #Test the free_symbols property
+    v6 = x*A.x + y*A.y + z*A.z
+    assert v6.free_symbols(A) == {x,y,z}
+
+    raises(TypeError, lambda: v3.applyfunc(v1))
+
 
 def test_Vector_diffs():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
@@ -121,6 +130,25 @@ def test_Vector_diffs():
     assert v4.diff(q3d, B) == B.x + q3 * N.x + N.y
 
 
+def test_vector_var_in_dcm():
+
+    N = ReferenceFrame('N')
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    u1, u2, u3, u4 = dynamicsymbols('u1 u2 u3 u4')
+
+    v = u1 * u2 * A.x + u3 * N.y + u4**2 * N.z
+
+    assert v.diff(u1, N, var_in_dcm=False) == u2 * A.x
+    assert v.diff(u1, A, var_in_dcm=False) == u2 * A.x
+    assert v.diff(u3, N, var_in_dcm=False) == N.y
+    assert v.diff(u3, A, var_in_dcm=False) == N.y
+    assert v.diff(u3, B, var_in_dcm=False) == N.y
+    assert v.diff(u4, N, var_in_dcm=False) == 2 * u4 * N.z
+
+    raises(ValueError, lambda: v.diff(u1, N))
+
+
 def test_vector_simplify():
     x, y, z, k, n, m, w, f, s, A = symbols('x, y, z, k, n, m, w, f, s, A')
     N = ReferenceFrame('N')
@@ -141,3 +169,23 @@ def test_vector_simplify():
     test4 = ((-4 * x * y**2 - 2 * y**3 - 2 * x**2 * y) / (x + y)**2) * N.x
     test4 = test4.simplify()
     assert (test4 & N.x) == -2 * y
+
+
+def test_vector_evalf():
+    a, b = symbols('a b')
+    v = pi * A.x
+    assert v.evalf(2) == Float('3.1416', 2) * A.x
+    v = pi * A.x + 5 * a * A.y - b * A.z
+    assert v.evalf(3) == Float('3.1416', 3) * A.x + Float('5', 3) * a * A.y - b * A.z
+    assert v.evalf(5, subs={a: 1.234, b:5.8973}) == Float('3.1415926536', 5) * A.x + Float('6.17', 5) * A.y - Float('5.8973', 5) * A.z
+
+
+def test_vector_xreplace():
+    x, y, z = symbols('x y z')
+    v = x**2 * A.x + x*y * A.y + x*y*z * A.z
+    assert v.xreplace({x : cos(x)}) == cos(x)**2 * A.x + y*cos(x) * A.y + y*z*cos(x) * A.z
+    assert v.xreplace({x*y : pi}) == x**2 * A.x + pi * A.y + x*y*z * A.z
+    assert v.xreplace({x*y*z : 1}) == x**2*A.x + x*y*A.y + A.z
+    assert v.xreplace({x:1, z:0}) == A.x + y * A.y
+    raises(TypeError, lambda: v.xreplace())
+    raises(TypeError, lambda: v.xreplace([x, y]))

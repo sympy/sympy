@@ -1,13 +1,11 @@
 """OO layer for several polynomial representations. """
 
-from __future__ import print_function, division
-
-from sympy.core.sympify import CantSympify
-
-from sympy.polys.polyutils import PicklableWithSlots
-from sympy.polys.polyerrors import CoercionFailed, NotReversible
 
 from sympy import oo
+from sympy.core.sympify import CantSympify
+from sympy.polys.polyerrors import CoercionFailed, NotReversible, NotInvertible
+from sympy.polys.polyutils import PicklableWithSlots
+
 
 class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """
@@ -99,6 +97,7 @@ from sympy.polys.densetools import (
     dmp_compose,
     dup_decompose,
     dup_shift,
+    dup_transform,
     dmp_lift)
 
 from sympy.polys.euclidtools import (
@@ -113,6 +112,7 @@ from sympy.polys.euclidtools import (
 
 from sympy.polys.sqfreetools import (
     dup_gff_list,
+    dmp_norm,
     dmp_sqf_p,
     dmp_sqf_norm,
     dmp_sqf_part,
@@ -144,7 +144,7 @@ def init_normal_DMP(rep, lev, dom):
 class DMP(PicklableWithSlots, CantSympify):
     """Dense Multivariate Polynomials over `K`. """
 
-    __slots__ = ['rep', 'lev', 'dom', 'ring']
+    __slots__ = ('rep', 'lev', 'dom', 'ring')
 
     def __init__(self, rep, dom, lev=None, ring=None):
         if lev is not None:
@@ -244,6 +244,23 @@ class DMP(PicklableWithSlots, CantSympify):
             rep[k] = f.dom.to_sympy(v)
 
         return rep
+
+    def to_list(f):
+        """Convert ``f`` to a list representation with native coefficients. """
+        return f.rep
+
+    def to_sympy_list(f):
+        """Convert ``f`` to a list representation with SymPy coefficients. """
+        def sympify_nested_list(rep):
+            out = []
+            for val in rep:
+                if isinstance(val, list):
+                    out.append(sympify_nested_list(val))
+                else:
+                    out.append(f.dom.to_sympy(val))
+            return out
+
+        return sympify_nested_list(f.rep)
 
     def to_tuple(f):
         """
@@ -721,6 +738,20 @@ class DMP(PicklableWithSlots, CantSympify):
         else:
             raise ValueError('univariate polynomial expected')
 
+    def transform(f, p, q):
+        """Evaluate functional transformation ``q**n * f(p/q)``."""
+        if f.lev:
+            raise ValueError('univariate polynomial expected')
+
+        lev, dom, per, P, Q = p.unify(q)
+        lev, dom, per, F, P = f.unify(per(P, dom, lev))
+        lev, dom, per, F, Q = per(F, dom, lev).unify(per(Q, dom, lev))
+
+        if not lev:
+            return per(dup_transform(F, P, Q, dom))
+        else:
+            raise ValueError('univariate polynomial expected')
+
     def sturm(f):
         """Computes the Sturm sequence of ``f``. """
         if not f.lev:
@@ -734,6 +765,11 @@ class DMP(PicklableWithSlots, CantSympify):
             return [ (f.per(g), k) for g, k in dup_gff_list(f.rep, f.dom) ]
         else:
             raise ValueError('univariate polynomial expected')
+
+    def norm(f):
+        """Computes ``Norm(f)``."""
+        r = dmp_norm(f.rep, f.lev, f.dom)
+        return f.per(r, dom=f.dom.dom)
 
     def sqf_norm(f):
         """Computes square-free norm of ``f``. """
@@ -923,7 +959,7 @@ class DMP(PicklableWithSlots, CantSympify):
                         pass
                 return NotImplemented
 
-    def __div__(f, g):
+    def __truediv__(f, g):
         if isinstance(g, DMP):
             return f.exquo(g)
         else:
@@ -939,7 +975,7 @@ class DMP(PicklableWithSlots, CantSympify):
                         pass
                 return NotImplemented
 
-    def __rdiv__(f, g):
+    def __rtruediv__(f, g):
         if isinstance(g, DMP):
             return g.exquo(f)
         elif f.ring is not None:
@@ -948,9 +984,6 @@ class DMP(PicklableWithSlots, CantSympify):
             except (CoercionFailed, NotImplementedError):
                 pass
         return NotImplemented
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def __rmul__(f, g):
         return f.__mul__(g)
@@ -985,11 +1018,11 @@ class DMP(PicklableWithSlots, CantSympify):
         return False
 
     def __ne__(f, g):
-        return not f.__eq__(g)
+        return not f == g
 
     def eq(f, g, strict=False):
         if not strict:
-            return f.__eq__(g)
+            return f == g
         else:
             return f._strict_eq(g)
 
@@ -1003,24 +1036,22 @@ class DMP(PicklableWithSlots, CantSympify):
 
     def __lt__(f, g):
         _, _, _, F, G = f.unify(g)
-        return F.__lt__(G)
+        return F < G
 
     def __le__(f, g):
         _, _, _, F, G = f.unify(g)
-        return F.__le__(G)
+        return F <= G
 
     def __gt__(f, g):
         _, _, _, F, G = f.unify(g)
-        return F.__gt__(G)
+        return F > G
 
     def __ge__(f, g):
         _, _, _, F, G = f.unify(g)
-        return F.__ge__(G)
+        return F >= G
 
-    def __nonzero__(f):
+    def __bool__(f):
         return not dmp_zero_p(f.rep, f.lev)
-
-    __bool__ = __nonzero__
 
 
 def init_normal_DMF(num, den, lev, dom):
@@ -1031,7 +1062,7 @@ def init_normal_DMF(num, den, lev, dom):
 class DMF(PicklableWithSlots, CantSympify):
     """Dense Multivariate Fractions over `K`. """
 
-    __slots__ = ['num', 'den', 'lev', 'dom', 'ring']
+    __slots__ = ('num', 'den', 'lev', 'dom', 'ring')
 
     def __init__(self, rep, dom, lev=None, ring=None):
         num, den, lev = self._parse(rep, dom, lev)
@@ -1282,8 +1313,11 @@ class DMF(PicklableWithSlots, CantSympify):
     def pow(f, n):
         """Raise ``f`` to a non-negative power ``n``. """
         if isinstance(n, int):
-            return f.per(dmp_pow(f.num, n, f.lev, f.dom),
-                         dmp_pow(f.den, n, f.lev, f.dom), cancel=False)
+            num, den = f.num, f.den
+            if n < 0:
+                num, den, n = den, num, -n
+            return f.per(dmp_pow(num, n, f.lev, f.dom),
+                         dmp_pow(den, n, f.lev, f.dom), cancel=False)
         else:
             raise TypeError("``int`` expected, got %s" % type(n))
 
@@ -1388,7 +1422,7 @@ class DMF(PicklableWithSlots, CantSympify):
     def __pow__(f, n):
         return f.pow(n)
 
-    def __div__(f, g):
+    def __truediv__(f, g):
         if isinstance(g, (DMP, DMF)):
             return f.quo(g)
 
@@ -1404,15 +1438,12 @@ class DMF(PicklableWithSlots, CantSympify):
                     pass
             return NotImplemented
 
-    def __rdiv__(self, g):
+    def __rtruediv__(self, g):
         r = self.invert(check=False)*g
         if self.ring and r not in self.ring:
             from sympy.polys.polyerrors import ExactQuotientFailed
             raise ExactQuotientFailed(g, self, self.ring)
         return r
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def __eq__(f, g):
         try:
@@ -1450,24 +1481,22 @@ class DMF(PicklableWithSlots, CantSympify):
 
     def __lt__(f, g):
         _, _, _, F, G = f.frac_unify(g)
-        return F.__lt__(G)
+        return F < G
 
     def __le__(f, g):
         _, _, _, F, G = f.frac_unify(g)
-        return F.__le__(G)
+        return F <= G
 
     def __gt__(f, g):
         _, _, _, F, G = f.frac_unify(g)
-        return F.__gt__(G)
+        return F > G
 
     def __ge__(f, g):
         _, _, _, F, G = f.frac_unify(g)
-        return F.__ge__(G)
+        return F >= G
 
-    def __nonzero__(f):
+    def __bool__(f):
         return not dmp_zero_p(f.num, f.lev)
-
-    __bool__ = __nonzero__
 
 
 def init_normal_ANP(rep, mod, dom):
@@ -1478,7 +1507,7 @@ def init_normal_ANP(rep, mod, dom):
 class ANP(PicklableWithSlots, CantSympify):
     """Dense Algebraic Number Polynomials over a field. """
 
-    __slots__ = ['rep', 'mod', 'dom']
+    __slots__ = ('rep', 'mod', 'dom')
 
     def __init__(self, rep, mod, dom):
         if type(rep) is dict:
@@ -1603,11 +1632,17 @@ class ANP(PicklableWithSlots, CantSympify):
 
     def div(f, g):
         dom, per, F, G, mod = f.unify(g)
-        return (per(dup_rem(dup_mul(F, dup_invert(G, mod, dom), dom), mod, dom)), self.zero(mod, dom))
+        return (per(dup_rem(dup_mul(F, dup_invert(G, mod, dom), dom), mod, dom)), f.zero(mod, dom))
 
     def rem(f, g):
-        dom, _, _, _, mod = f.unify(g)
-        return self.zero(mod, dom)
+        dom, _, _, G, mod = f.unify(g)
+
+        s, h = dup_half_gcdex(G, mod, dom)
+
+        if h == [dom.one]:
+            return f.zero(mod, dom)
+        else:
+            raise NotInvertible("zero divisor")
 
     def quo(f, g):
         dom, per, F, G, mod = f.unify(g)
@@ -1637,6 +1672,9 @@ class ANP(PicklableWithSlots, CantSympify):
     def is_ground(f):
         """Returns ``True`` if ``f`` is an element of the ground domain. """
         return not f.rep or len(f.rep) == 1
+
+    def __pos__(f):
+        return f
 
     def __neg__(f):
         return f.neg()
@@ -1686,7 +1724,7 @@ class ANP(PicklableWithSlots, CantSympify):
     def __mod__(f, g):
         return f.rem(g)
 
-    def __div__(f, g):
+    def __truediv__(f, g):
         if isinstance(g, ANP):
             return f.quo(g)
         else:
@@ -1694,8 +1732,6 @@ class ANP(PicklableWithSlots, CantSympify):
                 return f.quo(f.per(g))
             except (CoercionFailed, TypeError):
                 return NotImplemented
-
-    __truediv__ = __div__
 
     def __eq__(f, g):
         try:
@@ -1715,21 +1751,19 @@ class ANP(PicklableWithSlots, CantSympify):
 
     def __lt__(f, g):
         _, _, F, G, _ = f.unify(g)
-        return F.__lt__(G)
+        return F < G
 
     def __le__(f, g):
         _, _, F, G, _ = f.unify(g)
-        return F.__le__(G)
+        return F <= G
 
     def __gt__(f, g):
         _, _, F, G, _ = f.unify(g)
-        return F.__gt__(G)
+        return F > G
 
     def __ge__(f, g):
         _, _, F, G, _ = f.unify(g)
-        return F.__ge__(G)
+        return F >= G
 
-    def __nonzero__(f):
+    def __bool__(f):
         return bool(f.rep)
-
-    __bool__ = __nonzero__

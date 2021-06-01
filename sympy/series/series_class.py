@@ -3,12 +3,9 @@ Contains the base class for series
 Made using sequences in mind
 """
 
-from __future__ import print_function, division
-
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import integer_types
 
 
 class SeriesBase(Expr):
@@ -45,7 +42,7 @@ class SeriesBase(Expr):
         This method returns the symbols in the object, excluding those
         that take on a specific value (i.e. the dummy symbols).
         """
-        return (set(j for i in self.args for j in i.free_symbols)
+        return ({j for i in self.args for j in i.free_symbols}
                 .difference(self.variables))
 
     @cacheit
@@ -89,7 +86,7 @@ class SeriesBase(Expr):
             i += 1
 
     def __getitem__(self, index):
-        if isinstance(index, integer_types):
+        if isinstance(index, int):
             index = self._ith_point(index)
             return self.term(index)
         elif isinstance(index, slice):

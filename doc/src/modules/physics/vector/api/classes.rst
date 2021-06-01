@@ -6,6 +6,7 @@ CoordinateSym
 =============
 
 .. autoclass:: sympy.physics.vector.frame.CoordinateSym
+   :members:
 
 
 ReferenceFrame

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import Basic
 from sympy.functions import adjoint, conjugate
 from sympy.matrices.expressions.transpose import transpose
@@ -47,8 +45,8 @@ class Adjoint(MatrixExpr):
     def shape(self):
         return self.arg.shape[::-1]
 
-    def _entry(self, i, j):
-        return conjugate(self.arg._entry(j, i))
+    def _entry(self, i, j, **kwargs):
+        return conjugate(self.arg._entry(j, i, **kwargs))
 
     def _eval_adjoint(self):
         return self.arg
