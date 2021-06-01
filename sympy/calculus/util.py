@@ -4,7 +4,7 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import iterable
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import expand_mul
-from sympy.core.numbers import _sympifyit, oo
+from sympy.core.numbers import _sympifyit, oo, zoo
 from sympy.core.relational import is_le, is_lt, is_ge, is_gt
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import Min, Max
@@ -1320,8 +1320,8 @@ class AccumulationBounds(AtomicExpr):
                     if self.min > -1:
                         return S.Zero
                     if self.max < -1:
-                        return FiniteSet(-oo, oo)
-                    return AccumBounds(-oo, oo)
+                        return zoo
+                    return S.NaN
                 else:
                     if self.min > -1:
                         if self.max < 1:
