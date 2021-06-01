@@ -382,7 +382,7 @@ def test_series3():
 def test_bug4():
     w = Symbol("w")
     e = x/(w**4 + x**2*w**4 + 2*x*w**4)*w**4
-    assert e.nseries(w, n=2).removeO() in [x/(1 + 2*x + x**2),
+    assert e.nseries(w, n=2).removeO().expand() in [x/(1 + 2*x + x**2),
         1/(1 + x/2 + 1/x/2)/2, 1/x/(1 + 2/x + x**(-2))]
 
 
@@ -481,8 +481,8 @@ def test_issue_4441():
     assert f.series(x, 0, 5) == 1 - a*x + a**2*x**2 - a**3*x**3 + \
         a**4*x**4 + O(x**5)
     f = 1/(1 + (a + b)*x)
-    assert f.series(x, 0, 3) == 1 + x*(-a - b) + \
-        x**2*(a + b)**2 + O(x**3)
+    assert f.series(x, 0, 3) == 1 + x*(-a - b)\
+        + x**2*(a**2 + 2*a*b + b**2) + O(x**3)
 
 
 def test_issue_4329():

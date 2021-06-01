@@ -219,14 +219,12 @@ def test_issue_12791():
     expr = (-beta**2*varphi*sin(theta) + beta**2*cos(theta) + \
         beta*varphi*sin(theta) - beta*cos(theta) - beta + 1)/(beta*cos(theta) - 1)**2
 
-    sol = 0.5/(0.5*cos(theta) - 1)**2 - 0.25*cos(theta)/(0.5*cos(theta) - 1)**2 \
-        + (beta - 0.5)*(-0.5*varphi*sin(theta)*cos(theta)/((0.5*cos(theta) - 1) \
-        **2*(0.5*cos(theta) - 1.0)) - 1/(0.5*cos(theta) - 1)**2 + 0.5*cos(theta) \
-        **2/((0.5*cos(theta) - 1)**2*(0.5*cos(theta) - 1.0)) - 1.0*cos(theta) \
-        /((0.5*cos(theta) - 1)**2*(0.5*cos(theta) - 1.0))) + 0.25*varphi* \
-        sin(theta)/(0.5*cos(theta) - 1)**2 + O((beta - 0.5)**2, (beta, 0.5))
+    sol = 0.5/(0.5*cos(theta) - 1.0)**2 - 0.25*cos(theta)/(0.5*cos(theta)\
+        - 1.0)**2 + (beta - 0.5)*(-0.25*varphi*sin(2*theta) - 1.5*cos(theta)\
+        + 0.25*cos(2*theta) + 1.25)/(0.5*cos(theta) - 1.0)**3\
+        + 0.25*varphi*sin(theta)/(0.5*cos(theta) - 1.0)**2 + O((beta - 0.5)**2, (beta, 0.5))
 
-    assert expr.series(beta, 0.5, 2) == sol
+    assert expr.series(beta, 0.5, 2).trigsimp() == sol
 
 
 def test_issue_14885():
@@ -323,3 +321,19 @@ def test_issue_20551():
     expr = (exp(x)/x).series(x, n=None)
     terms = [ next(expr) for i in range(3) ]
     assert terms == [1/x, 1, x/2]
+
+
+def test_issue_20697():
+    p_0, p_1, p_2, p_3, b_0, b_1, b_2 = symbols('p_0 p_1 p_2 p_3 b_0 b_1 b_2')
+    Q = (p_0 + (p_1 + (p_2 + p_3/y)/y)/y)/(1 + ((p_3/(b_0*y) + (b_0*p_2\
+        - b_1*p_3)/b_0**2)/y + (b_0**2*p_1 - b_0*b_1*p_2 - p_3*(b_0*b_2\
+        - b_1**2))/b_0**3)/y)
+    assert Q.series(y, n=3) == b_2*y**2 + b_1*y + b_0 + O(y**3)
+
+
+def test_issue_21245():
+    fi = (1 + sqrt(5))/2
+    assert (1/(1 - x - x**2)).series(x, 1/fi, 1) == \
+        (36/(-36*sqrt(5) - 80) + 16*sqrt(5)/(-36*sqrt(5) - 80))/(x - 1/(S.Half\
+        + sqrt(5)/2)) - 1220*sqrt(5)/(-6100*sqrt(5) - 13640) - 2728\
+        /(-6100*sqrt(5) - 13640) + O(x - 2/(1 + sqrt(5)), (x, 2/(1 + sqrt(5))))
