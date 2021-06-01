@@ -928,6 +928,12 @@ class Series(Basic):
         """
         return self.doit().is_biproper
 
+    @property
+    def is_SISO(self):
+        if self._is_not_matrix:
+            return True
+        else:
+            return False
 
 class Parallel(Basic):
     """
