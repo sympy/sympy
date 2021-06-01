@@ -41,7 +41,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, \
-    Feedback, TransferFunctionMatrix
+    Feedback
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
@@ -2288,14 +2288,16 @@ def test_Parallel_printing():
         r'\left(\frac{- x + y}{x + y}\right) \left(\frac{x y^{2} - z}{- t^{3} + y^{3}}\right)'
 
 
-def test_TransferFunctionMatrix_printing():
-    tf1 = TransferFunction(p, p + x, p)
-    tf2 = TransferFunction(-s + p, p + s, p)
-    tf3 = TransferFunction(p, y**2 + 2*y + 3, p)
-    assert latex(TransferFunctionMatrix([tf1, tf2])) == \
-        '\\left[\\begin{matrix}\\frac{p}{p + x}\\\\\\frac{p - s}{p + s}\\end{matrix}\\right]'
-    assert latex(TransferFunctionMatrix([[tf1, tf2], [tf3, -tf1]])) == \
-        '\\left[\\begin{matrix}\\frac{p}{p + x} & \\frac{p - s}{p + s}\\\\\\frac{p}{y^{2} + 2 y + 3} & \\frac{\\left(-1\\right) p}{p + x}\\end{matrix}\\right]'
+# This test is commented out because Matrix(non-expr) is deprecated in SymPy 1.9 (See issue #21497)
+
+# def test_TransferFunctionMatrix_printing():
+#     tf1 = TransferFunction(p, p + x, p)
+#     tf2 = TransferFunction(-s + p, p + s, p)
+#     tf3 = TransferFunction(p, y**2 + 2*y + 3, p)
+#     assert latex(TransferFunctionMatrix([tf1, tf2])) == \
+#         '\\left[\\begin{matrix}\\frac{p}{p + x}\\\\\\frac{p - s}{p + s}\\end{matrix}\\right]'
+#     assert latex(TransferFunctionMatrix([[tf1, tf2], [tf3, -tf1]])) == \
+#         '\\left[\\begin{matrix}\\frac{p}{p + x} & \\frac{p - s}{p + s}\\\\\\frac{p}{y^{2} + 2 y + 3} & \\frac{\\left(-1\\right) p}{p + x}\\end{matrix}\\right]'
 
 
 def test_Feedback_printing():
