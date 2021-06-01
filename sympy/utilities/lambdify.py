@@ -930,7 +930,7 @@ def _cse_del(expr):
     >>> x1 = x0 * sin(x0)
     >>> x2 = x1 + sqrt(x1)
     >>> _cse_del(x2)
-    ([(x0, x + cos(x)), (x1, x0*sin(x0))], [{x}, {x0}], [sqrt(x1) + x1])
+    ([(x0, x + cos(x)), (x1, x0*sin(x0))], [{}, {x0}], [sqrt(x1) + x1])
     """
     from sympy import cse
     replacements, reduced_exprs = cse(expr)
@@ -940,12 +940,12 @@ def _cse_del(expr):
     free_symbols.reverse()
     symbols_cum = [set.union(*(pattern.free_symbols for pattern in reduced_exprs))]
     for free_symbol in free_symbols:
-        symbols_cum.insert(0, free_symbol | symbols_cum[-1])
+        symbols_cum.insert(0, free_symbol | symbols_cum[0])
 
     # Detection of useless symbols.
     useless_symbols = []
     current_symbols = set() # Buffers memory.
-    for (new_symb, _), following_symb in zip(replacements, symbols_cum):
+    for (new_symb, _), following_symb in zip(replacements, symbols_cum[1:]):
         current_symbols.add(new_symb)
         useless_symbols.append(current_symbols - following_symb) # The set of useless symbols.
         current_symbols -= useless_symbols[-1]
