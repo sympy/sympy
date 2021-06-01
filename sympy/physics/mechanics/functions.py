@@ -723,37 +723,3 @@ def _f_list_parser(fl, ref_frame):
         unzip = lambda l: list(zip(*l)) if l[0] else [(), ()]
         vel_list, f_list = unzip(list(flist_iter()))
     return vel_list, f_list
-
-
-def convert_tuple_to_vector(frame, val_tuple):
-    """
-    Converts a 3-Tuple to a vector in the frame provided by taking values of
-    the tuple as values of the vector along x, y and z unit vectors of the
-    frame respectively.
-
-    Parameters
-    ----------
-    frame: ReferenceFrame
-        Frame in which the vector will be defined.
-    val_tuple: 3-Tuple
-        Tuple containing the values to be converted to the vector.
-
-    Example
-    -------
-    >>> from sympy import symbols
-    >>> from sympy.physics.vector import ReferenceFrame
-    >>> from sympy.physics.mechanics.functions import convert_tuple_to_vector
-    >>> N = ReferenceFrame('N')
-    >>> a, b, c = symbols('a b c')
-    >>> convert_tuple_to_vector(N, (a, b, c))
-    a*N.x + b*N.y + c*N.z
-
-    """
-    if len(val_tuple) != 3:
-        raise TypeError('position tuple must be of length 3')
-    else:
-        unit_vectors = [frame.x, frame.y, frame.z]
-        vector = Vector(0)
-        for i in range(3):
-            vector += val_tuple[i] * unit_vectors[i]
-        return vector
