@@ -16,11 +16,6 @@ PinJoint
 .. autoclass:: PinJoint
    :members:
 
-SlidingJoint
-============
-
-.. autoclass:: SlidingJoint
-   :members:
 
 CylindricalJoint
 ================
