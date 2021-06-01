@@ -1659,7 +1659,7 @@ class Pow(Expr):
             else:
                 raise NotImplementedError()
         if not d.is_positive:
-            g = (b - f).simplify()/f
+            g = g.simplify()
             _, d = g.leadterm(x)
             if not d.is_positive:
                 raise NotImplementedError()
@@ -1696,7 +1696,7 @@ class Pow(Expr):
         if not (e.is_integer and e.is_positive and (e*d - n).is_nonpositive and
                 res == _mexpand(self)):
             res += O(x**n, x)
-        return res
+        return _mexpand(res)
 
     def _eval_as_leading_term(self, x, cdir=0):
         from ..series import Order

@@ -916,7 +916,7 @@ def _get_examples_ode_sol_factorable():
 
     'fact_16': {
         'eq': f(x).diff(x)**2 - f(x)**3,
-        'sol': [Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))]
+        'sol': [Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))],
     },
 
     # kamke ode 1.1
