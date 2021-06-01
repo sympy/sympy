@@ -49,8 +49,8 @@ Why Solveset?
   be solved.
 
 * ``solveset`` can return infinitely many solutions. For example solving for
-  `\sin{(x)} = 0` returns `\{2 n \pi | n \in \mathbb{Z}\} \cup \{2 n \pi + \pi | n \in \mathbb{Z}\}`,
-  whereas ``solve`` only returns `[0, \pi]`.
+  `\sin{(x)} = 0` returns `\{n \pi | n \in \mathbb{Z}\}`, whereas ``solve``
+  only returns `[0, \pi]`.
 
 * There is a clear code level and interface level separation between solvers
   for equations in the complex domain and the real domain. For example

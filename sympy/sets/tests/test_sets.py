@@ -3,13 +3,14 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix, Range, Add, symbols, zoo, Rational)
+    Matrix, Range, Add, symbols, Dummy, zoo, Rational)
 from mpmath import mpi
 
 from sympy.core.expr import unchanged
 from sympy.core.relational import Eq, Ne, Le, Lt, LessThan
 from sympy.logic import And, Or, Xor
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy.solvers.tests.test_solveset import dumeq
 
 from sympy.abc import x, y, z, m, n
 
@@ -1501,6 +1502,112 @@ def test_issue_16878b():
     # for Integers
     assert imageset(x, (x, x), S.Reals).is_subset(S.Reals**2) is True
 
+
+def test_Union_imageset_linear_expression():
+    img1 = ImageSet(Lambda(n, 4*n + 4), S.Integers)
+    img2 = ImageSet(Lambda(n, 4*n), S.Integers)
+    assert Union(img1, img2) == img2
+
+    img1 = ImageSet(Lambda(n, 30*n + 15), S.Integers)
+    img2 = ImageSet(Lambda(n, 30*n), S.Integers)
+    uni = ImageSet(Lambda(n, 15*n), S.Integers)
+    assert dumeq(Union(img1, img2), uni)
+
+    img1 = ImageSet(Lambda(n, n + 5), S.Integers)
+    img2 = ImageSet(Lambda(n, 3*n), S.Integers)
+    assert Union(img1, img2) == S.Integers
+
+    img1 = ImageSet(Lambda(n, 7*n + 6), S.Integers)
+    img2 = ImageSet(Lambda(n, 13*n + 5), S.Integers)
+    assert Union(img1, img2) == Union(img1, img2, evaluate=False)
+
+    img1 = ImageSet(Lambda(n, 3*n), S.Integers)
+    img2 = ImageSet(Lambda(n, 6*n), S.Integers)
+    assert Union(img1, img2) == img1
+    img2 = ImageSet(Lambda(n, 7*n), S.Integers)
+    assert Union(img1, img2) == Union(img1, img2, evaluate=False)
+
+    img1 = ImageSet(Lambda(n, n + S(1)/4 ), S.Integers)
+    img2 = ImageSet(Lambda(n, 5*n + S(5)/4 ), S.Integers)
+    # 5*pi*n + pi + pi/4 is contained in n*pi + pi/4
+    # img1 is superset of img2
+    assert Union(img1, img2) == img1
+    assert Union(img2, img1) == img1
+    img1 = ImageSet(Lambda(n, 2*n + S(1)/4 ), S.Integers)
+    assert Union(img1, img2) == Union(img1, img2, evaluate=False)
+
+
+def test_union_imageset():
+    n = Dummy('n')
+    img1 = ImageSet(Lambda(n, 2*n*pi), S.Integers)
+    assert Union(img1) == img1
+
+    assert Union(S.EmptySet, img1) == img1
+    assert Union(img1, S.EmptySet) == img1
+
+    img2 = ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)
+    assert dumeq(Union(img1, img2), ImageSet(Lambda(n, n * pi), S.Integers))
+
+    img2 = ImageSet(Lambda(n, 2*n*pi + pi), Interval(0, 10))
+    uni = Union(img1, img2, evaluate=False)
+    assert Union(img1, img2) == uni
+
+    img1 = ImageSet(Lambda(n, n*pi + pi/3), S.Integers)
+    img2 = ImageSet(Lambda(n, n*pi + pi/3 + 2*pi), S.Integers)
+    uni = ImageSet(Lambda(n, pi*n + pi/3), S.Integers)
+    assert Union(img1, img2) == uni
+
+    img1 = ImageSet(Lambda(n, 2*n*pi + pi/4), S.Integers)
+    img2 = ImageSet(Lambda(n, 2*n*pi + 5*pi/ 4), S.Integers)
+    union = ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
+    assert dumeq(Union(img1, img2), union)
+
+    img1 = ImageSet(Lambda(n, 2*n*pi - pi/3), S.Integers)
+    img2 = ImageSet(Lambda(n, 2*n*pi + 2*pi/3), S.Integers)
+    img3 = ImageSet(Lambda(n, 2*n*pi - 2*pi/3), S.Integers)
+    img4 = ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers)
+    img5 = ImageSet(Lambda(n, n*pi + pi/3), S.Integers)
+    img6 = ImageSet(Lambda(n, n*pi + 2*pi/3), S.Integers)
+    assert dumeq(Union(img1, img2, img3, img4), Union(img5, img6, evaluate=False))
+
+    img1 = ImageSet(Lambda(n, 4*n*pi + pi/4), S.Integers)
+    img2 = ImageSet(Lambda(n, 4*n*pi + 5*pi/4), S.Integers)
+    # no simplification
+    assert Union(img1, img2) == Union(img1, img2, evaluate=False)
+
+    img1 = ImageSet(Lambda(n, 4*n*pi + 3*pi), S.Integers)
+    img2 = ImageSet(Lambda(n, 4*n*pi), S.Integers)
+    assert Union(img1, img2) == Union(img1, img2, evaluate=False)
+
+    img1 = ImageSet(Lambda(n, 2*n*pi + pi/4), S.Integers)
+    img2 = ImageSet(Lambda(n, 4*n*pi + 5*pi/4), S.Integers)
+    assert Union(img1, img2) == Union(img1, img2, evaluate=False)
+
+    img1 = ImageSet(Lambda(n, 4*n*pi + 2*pi), S.Integers)
+    img2 = ImageSet(Lambda(n, 4*n*pi), S.Integers)
+    uni = ImageSet(Lambda(n, 2*n*pi), S.Integers)
+    assert dumeq(Union(img1, img2), uni)
+
+    img1 = ImageSet(Lambda(n, 12*n*pi + 6*pi), S.Integers)
+    img2 = ImageSet(Lambda(n, 12*n*pi), S.Integers)
+    uni = ImageSet(Lambda(n, 6*n*pi), S.Integers)
+    assert dumeq(Union(img1, img2), uni)
+
+    img1 = ImageSet(Lambda(n, 7*n*pi), S.Integers)
+    img2 = ImageSet(Lambda(n, 7*n*pi + 7*pi), S.Integers)
+    uni = ImageSet(Lambda(n, 7*n*pi), S.Integers)
+    assert Union(img1, img2) == uni
+
+    img1 = ImageSet(Lambda(n, n*pi + 2*pi/3), S.Integers)
+    img2 = ImageSet(Lambda(n, n*pi + pi/6), S.Integers)
+    img3 = ImageSet(Lambda(n, n*pi + pi/3), S.Integers)
+    img4 = ImageSet(Lambda(n, n*pi + 5 * pi/6), S.Integers)
+    uni1 = ImageSet(Lambda(n, pi*n/2 + pi/6), S.Integers)
+    uni2 = ImageSet(Lambda(n, pi*n/2 + pi/3), S.Integers)
+    assert dumeq(Union(img1, img2), uni1)
+    assert dumeq(Union(img3, img4), uni2)
+
+
 def test_DisjointUnion():
     assert DisjointUnion(FiniteSet(1, 2, 3), FiniteSet(1, 2, 3), FiniteSet(1, 2, 3)).rewrite(Union) == (FiniteSet(1, 2, 3) * FiniteSet(0, 1, 2))
     assert DisjointUnion(Interval(1, 3), Interval(2, 4)).rewrite(Union) == Union(Interval(1, 3) * FiniteSet(0), Interval(2, 4) * FiniteSet(1))
@@ -1518,16 +1625,19 @@ def test_DisjointUnion():
     z = Symbol("z")
     assert DisjointUnion(FiniteSet(x), FiniteSet(y, z)).rewrite(Union) == (FiniteSet(x) * FiniteSet(0)) + (FiniteSet(y, z) * FiniteSet(1))
 
+
 def test_DisjointUnion_is_empty():
     assert DisjointUnion(S.EmptySet).is_empty is True
     assert DisjointUnion(S.EmptySet, S.EmptySet).is_empty is True
     assert DisjointUnion(S.EmptySet, FiniteSet(1, 2, 3)).is_empty is False
+
 
 def test_DisjointUnion_is_iterable():
     assert DisjointUnion(S.Integers, S.Naturals, S.Rationals).is_iterable is True
     assert DisjointUnion(S.EmptySet, S.Reals).is_iterable is False
     assert DisjointUnion(FiniteSet(1, 2, 3), S.EmptySet, FiniteSet(x, y)).is_iterable is True
     assert DisjointUnion(S.EmptySet, S.EmptySet).is_iterable is False
+
 
 def test_DisjointUnion_contains():
     assert (0, 0) in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
@@ -1550,6 +1660,7 @@ def test_DisjointUnion_contains():
     assert (0.5, 1) in DisjointUnion(Interval(0, 1), Interval(0, 2))
     assert (1.5, 0) not in DisjointUnion(Interval(0, 1), Interval(0, 2))
     assert (1.5, 1) in DisjointUnion(Interval(0, 1), Interval(0, 2))
+
 
 def test_DisjointUnion_iter():
     D = DisjointUnion(FiniteSet(3, 5, 7, 9), FiniteSet(x, y, z))
@@ -1581,10 +1692,12 @@ def test_DisjointUnion_iter():
 
     raises(ValueError, lambda: iter(DisjointUnion(Interval(0, 1), S.EmptySet)))
 
+
 def test_DisjointUnion_len():
     assert len(DisjointUnion(FiniteSet(3, 5, 7, 9), FiniteSet(x, y, z))) == 7
     assert len(DisjointUnion(S.EmptySet, S.EmptySet, FiniteSet(x, y, z), S.EmptySet)) == 3
     raises(ValueError, lambda: len(DisjointUnion(Interval(0, 1), S.EmptySet)))
+
 
 def test_issue_20089():
     B = FiniteSet(FiniteSet(1, 2), FiniteSet(1))
@@ -1601,6 +1714,7 @@ def test_issue_20089():
     assert A.issubset(C)
     assert B.issubset(C)
 
+
 def test_issue_19378():
     a = FiniteSet(1, 2)
     b = ProductSet(a, a)
@@ -1612,10 +1726,12 @@ def test_issue_19378():
     assert Eq(a, c).simplify() is S.false
     assert Eq({1}, {x}).simplify() == Eq({1}, {x})
 
+
 def test_issue_20379():
     #https://github.com/sympy/sympy/issues/20379
     x = pi - 3.14159265358979
     assert FiniteSet(x).evalf(2) == FiniteSet(Float('3.23108914886517e-15', 2))
+
 
 def test_finiteset_simplify():
     S = FiniteSet(1, cos(1)**2 + sin(1)**2)
