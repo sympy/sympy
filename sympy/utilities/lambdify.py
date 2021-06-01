@@ -926,11 +926,12 @@ def _cse_del(expr):
     Examples
     ========
 
-    >>> x0 = x + cos(x)
-    >>> x1 = x0 * sin(x0)
-    >>> x2 = x1 + sqrt(x1)
-    >>> _cse_del(x2)
-    ([(x0, x + cos(x)), (x1, x0*sin(x0))], [{}, {x0}], sqrt(x1) + x1)
+    >>> from sympy.utilities.lambdify import _cse_del
+    >>> from sympy import sqrt, cos, sin, Symbol
+    >>> x = Symbol("x")
+    >>> expr = sqrt((x + cos(x))*sin(x + cos(x))) + (x + cos(x))*sin(x + cos(x))
+    >>> _cse_del(expr)
+    ([(x0, x + cos(x)), (x1, x0*sin(x0))], [set(), {x0}], sqrt(x1) + x1)
     """
     def get_free_symbols(expr):
         if hasattr(expr, "__iter__"):
@@ -938,9 +939,8 @@ def _cse_del(expr):
         return expr.free_symbols
 
     from sympy import cse
-    replacements, reduced_exprs = cse(expr)
-    if not hasattr(expr, "__iter__"): # If the expression is a sympy expr.
-        reduced_exprs = reduced_exprs.pop() # No raison to cast in a list!
+    replacements, reduced_exprs = cse([expr])
+    reduced_exprs = reduced_exprs.pop() # No raison to cast in a list!
 
     # Cumulate union of symbols.
     free_symbols = [pattern.free_symbols for _, pattern in replacements]
