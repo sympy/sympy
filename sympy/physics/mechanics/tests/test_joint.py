@@ -6,10 +6,10 @@ from sympy.physics.mechanics import (dynamicsymbols, Body, Joint, PinJoint,
 from sympy.utilities.pytest import raises
 
 
-def test_joint_abstract_class():
+def test_Joint():
     parent = Body('parent')
     child = Body('child')
-    raises(NotImplementedError, lambda: Joint('joint', parent, child))
+    raises(TypeError, lambda: Joint('J', parent, child))
 
 
 def test_pin_joint():

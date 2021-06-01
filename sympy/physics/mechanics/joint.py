@@ -1,78 +1,150 @@
+from sympy.physics.mechanics.body import Body
 from sympy import acos, Symbol
 from sympy.physics.vector import cross, Vector, dot, dynamicsymbols
 from sympy.physics.mechanics.functions import convert_tuple_to_vector
+from abc import ABC, abstractmethod
 
 __all__ = ['Joint', 'PinJoint', 'SlidingJoint', 'CylindricalJoint',
            'SphericalJoint', 'PlanarJoint']
 
 
-class Joint(object):
+class Joint(ABC):
     """Abstract Base class for all specific joints.
 
     A Joint connects two bodies (a parent and child) by adding different degrees
     of freedom to child with respect to parent.
     This is the base class for all specific joints and holds all common methods
     acting as an interface for all joints. Custom joint can be created by
-    creating a subclass of this class and overriding 'apply_joint()' method to
-    add the dynamics of the joint.
+    inheriting Joint class and defining all abstract functions.
 
     Parameters
-    ----------
-    name: String
-        Name of the joint which makes it unique. Should be different from other
-        joints.
-    parent: Body
-        Instance of Body class serving as the parent in the joint.
-    child: Body
-        Instance of Body class serving as the child in the joint.
-    parent_point_pos: 3 Tuple, Optional
+    ==========
+
+    name : string
+        The Joint's name which makes it unique.
+    parent : Body
+        The parent body of joint.
+    child : Body
+        The child body of joint.
+    coordinates: List, optional
+        Coordinates of joint.
+    speeds : List, optional
+        Speeds of joint.
+    parent_joint_pos : Vector, optional
         Defines the joint's point where the parent will be connected to child.
-        3 Tuple defines the values of x, y and z directions w.r.t parent's
-        frame. If it is not supplied, center of mass is added as default.
-    child_point_pos: 3 Tuple, Optional
+        Default value is masscenter of Parent Body.
+    child_joint_pos : Vector, optional
         Defines the joint's point where the child will be connected to parent.
-        3 Tuple defines the values of x, y and z directions w.r.t child's frame.
-        If it is not supplied, center of mass is added as default.
-    parent_axis: Vector, Optional
-        Defines the orientation as a vector which must be aligned with child's
-        axis before adding joint. If it is not passed, default is x axis in
-        parent's frame.
-    child_axis: Vector, Optional
-        Defines the orientation as a vector which must be aligned with parent's
-        axis before adding joint. If it is not passed, default is x axis in
-        child's frame.
+        Default value is masscenter of Child Body. 
+    parent_axis : Vector, optional
+        Axis of parent frame which would be be aligned with child's
+        axis. Default is x axis in parent's frame.
+    child_axis : Vector, optional
+        Axis of Child frame which would be be aligned with parent's
+        axis. Default is x axis in child's frame.
+
     """
 
-    def __init__(self, name, parent, child, parent_point_pos=None,
-                 child_point_pos=None):
-        self.name = name
-        self.parent = parent
-        self.child = child
-        self.coordinates = []
-        self.speeds = []
-        self.kds = []
+    def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None, 
+        child_joint_pos=None, parent_axis = None, child_axis=None):
 
-        if parent_point_pos is None:
-            parent_point_pos = (0, 0, 0)  # Parent's Center of mass
+        if not isinstance(name, str):
+            raise TypeError('Supply a valid name.')
+        self._name = name
 
-        if child_point_pos is None:
-            child_point_pos = (0, 0, 0)  # Child's Center of mass
+        if not isinstance(parent, Body):
+            raise TypeError('Parent must be an instance of Body.')
+        self._parent = parent
 
-        self._parent_joint_location = convert_tuple_to_vector(
-            parent.frame, parent_point_pos)
-        self._child_joint_location = convert_tuple_to_vector(
-            child.frame, child_point_pos)
+        if not isinstance(child, Body):
+            raise TypeError('Parent must be an instance of Body.')
+        self._child = child
 
-        self._locate_joint_point()
-        self.apply_joint()
+        self._coordinates = self._generate_coordinates(coordinates)
+        self._speeds = self._generate_speeds(speeds)
+        self._kdes = self._generate_kdes()
 
-    def _locate_joint_point(self):
-        self.parent_joint_point = self.parent.masscenter.locatenew(
-            self.name + '_parent_joint',
-            self._parent_joint_location)
-        self.child_joint_point = self.child.masscenter.locatenew(
-            self.name + '_child_joint',
-            self._child_joint_location)
+        self.child_axis = self._axis(child, child_axis)
+        self.parent_axis = self._axis(parent, parent_axis)
+
+        self.parent_joint = self._locate_joint_pos(parent,parent_joint_pos)
+        self.child_joint = self._locate_joint_pos(child, child_joint_pos)
+
+        self._orient_frames()
+        self._align_axes(self.parent_axis, self.child_axis)
+        self._set_angular_velocity()
+        self._set_linear_velocity()
+
+    def __str__(self):
+        return self._name
+
+    def __repr__(self):
+        return self.__str__()
+
+    def parent(self):
+        """ Parent body of Joint."""
+        return self._parent
+
+    def child(self):
+        """ Child body of Joint."""
+        return self._child
+
+    def coordinates(self):
+        """ List of Coordinates of Joint."""
+        return self._coordinates
+
+    def speeds(self):
+        """ List of speeds of Joint."""
+        return self._speeds
+
+    def kdes(self):
+        """ KDE of Joint."""
+        return self._kdes
+
+    @abstractmethod
+    def _generate_coordinates(self, coordinates):
+        """ Generate list of coordinates."""
+        pass
+
+    @abstractmethod
+    def _generate_speeds(self, speeds):
+        """ Generate list of speeds. """
+        pass
+
+    @abstractmethod
+    def _orient_frames(self):
+        """Orient frames as per the joint"""
+        pass
+
+    @abstractmethod
+    def _set_angular_velocity(self):
+        pass
+
+    @abstractmethod
+    def _set_linear_velocity(self):
+        pass
+
+    def _generate_kdes(self):
+        kdes = []
+        t = dynamicsymbols._t
+        for i in range(len(self._coordinates)):
+            kdes.append(-self._coordinates[0].diff(t) + self._speeds[0])
+
+    def _axis(self, body, ax):
+        if ax is None:
+            ax = body.frame.x
+            return ax
+        if not isinstance(ax, Vector):
+            raise TypeError("Axis must be of type Vector. Example-> A.x wehere 'A' is ReferenceFrame.")
+        return ax
+
+    def _locate_joint_pos(self, body, joint_pos):
+        if joint_pos is None:
+            joint_pos = Vector(0)
+        if not isinstance(joint_pos, Vector):
+            raise ValueError('Joint Position must be supplied as Vector.')
+        
+        return body.masscenter.locatenew(self.name + '_' + body.name + '_joint', joint_pos)
 
     def _align_axes(self, parent_axis, child_axis):
         """Rotates child_frame so that child_axis is aligned to parent_axis."""
@@ -84,12 +156,6 @@ class Joint(object):
             self.child.frame.orient(
                 self.parent.frame, 'Axis', [angle, axis])
 
-    def apply_joint(self):
-        """To create a custom joint, this method should add degrees of freedom
-        to the bodies in subclass of Joint"""
-        raise NotImplementedError("To define a custom pydy.Joint, you need to" +
-                                  " override apply_joint method in Joint's" +
-                                  " subclass.")
 
 
 class PinJoint(Joint):
