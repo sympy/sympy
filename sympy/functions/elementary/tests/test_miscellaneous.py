@@ -410,6 +410,10 @@ def test_issue_12638():
     assert Min(a, b, Max(a, b, c)) == Min(a, b)
     assert Min(a, b, Max(a, c)) == Min(a, b)
 
+def test_issue_21399():
+    from sympy.abc import a, b, c
+    assert Max(Min(a, b), Min(a, b, c)) == Min(a, b)
+
 
 def test_instantiation_evaluation():
     from sympy.abc import v, w, x, y, z

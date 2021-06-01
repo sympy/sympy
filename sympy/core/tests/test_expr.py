@@ -441,6 +441,19 @@ def test_as_leading_term():
 
     raises(ValueError, lambda: (x + 1).as_leading_term(1))
 
+    # https://github.com/sympy/sympy/issues/21177
+    f = -3*x + (x + Rational(3, 2) - sqrt(3)*S.ImaginaryUnit/2)**2\
+        - Rational(3, 2) + 3*sqrt(3)*S.ImaginaryUnit/2
+    assert f.as_leading_term(x) == \
+        (3*sqrt(3)*x - 3*S.ImaginaryUnit*x)/(sqrt(3) + 3*S.ImaginaryUnit)
+
+    # https://github.com/sympy/sympy/issues/21245
+    f = 1 - x - x**2
+    fi = (1 + sqrt(5))/2
+    assert f.subs(x, y + 1/fi).as_leading_term(y) == \
+        (-36*sqrt(5)*y - 80*y)/(16*sqrt(5) + 36)
+
+
 def test_leadterm2():
     assert (x*cos(1)*cos(1 + sin(1)) + sin(1 + sin(1))).leadterm(x) == \
            (sin(1 + sin(1)), 0)
@@ -457,7 +470,7 @@ def test_as_leading_term2():
 
 def test_as_leading_term3():
     assert (2 + pi + x).as_leading_term(x) == 2 + pi
-    assert (2*x + pi*x + x**2).as_leading_term(x) == (2 + pi)*x
+    assert (2*x + pi*x + x**2).as_leading_term(x) == 2*x + pi*x
 
 
 def test_as_leading_term4():
@@ -2102,6 +2115,7 @@ def test_ExprBuilder():
     eb.args.extend([x, x])
     assert eb.build() == x**2
 
+
 def test_non_string_equality():
     # Expressions should not compare equal to strings
     x = symbols('x')
@@ -2122,3 +2136,9 @@ def test_non_string_equality():
 
     assert (x == BadRepr()) is False
     assert (x != BadRepr()) is True
+
+
+def test_21494():
+    from sympy.testing.pytest import warns_deprecated_sympy
+    with warns_deprecated_sympy():
+        assert x.expr_free_symbols == {x}

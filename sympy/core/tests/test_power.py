@@ -333,7 +333,7 @@ def test_issue_6990():
     a = Symbol('a')
     b = Symbol('b')
     assert (sqrt(a + b*x + x**2)).series(x, 0, 3).removeO() == \
-        sqrt(a)*x**2*(1/(2*a) - b**2/(8*a**2)) + sqrt(a) + b*x/(2*sqrt(a))
+        sqrt(a) + x**2*(1/(2*sqrt(a)) - b**2/(8*a**(S(3)/2))) + b*x/(2*sqrt(a))
 
 
 def test_issue_6068():
