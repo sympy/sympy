@@ -1057,11 +1057,11 @@ class Liouville(SinglePatternODESolver):
 
     def _verify(self, fx):
         d, e, k = self.wilds_match()
-        y = Dummy('y')
+        self.y = Dummy('y')
         x = self.ode_problem.sym
-        self.g = simplify(e/d).subs(fx, y)
-        self.h = simplify(k/d).subs(fx, y)
-        if y in self.h.free_symbols or x in self.g.free_symbols:
+        self.g = simplify(e/d).subs(fx, self.y)
+        self.h = simplify(k/d).subs(fx, self.y)
+        if self.y in self.h.free_symbols or x in self.g.free_symbols:
             return False
         return True
 
@@ -1069,9 +1069,8 @@ class Liouville(SinglePatternODESolver):
         d, e, k = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
-        y = Dummy('y')
         C1, C2 = self.ode_problem.get_numbered_constants(num=2)
-        int = Integral(exp(Integral(self.g, y)), (y, None, fx))
+        int = Integral(exp(Integral(self.g, self.y)), (self.y, None, fx))
         gen_sol = Eq(int + C1*Integral(exp(-Integral(self.h, x)), x) + C2, 0)
 
         return [gen_sol]
