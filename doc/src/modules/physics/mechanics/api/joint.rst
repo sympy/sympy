@@ -15,9 +15,3 @@ PinJoint
 
 .. autoclass:: PinJoint
    :members:
-
-SphericalJoint
-==============
-
-.. autoclass:: SphericalJoint
-   :members:
