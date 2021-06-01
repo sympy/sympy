@@ -484,10 +484,22 @@ class Integral(AddWithLimits):
         if reps:
             undo = {v: k for k, v in reps.items()}
             did = self.xreplace(reps).doit(**hints)
+            igl = {}
+            if not isinstance(did, Integral):
+                # the default for doit is deep=False
+                # but integrals may have evaluated and
+                # contain objects that will simplify
+                # if their doit method is triggered
+                # so we mask off Integrals and apply doit
+                did = did.replace(
+                    lambda x: isinstance(x, Integral),
+                    lambda x: x.xreplace({x: igl.setdefault(x, Dummy())})
+                    ).doit()
+                igl = {v: k for k, v in igl.items()}
             if type(did) is tuple:  # when separate=True
-                did = tuple([i.xreplace(undo) for i in did])
+                did = tuple([i.xreplace(igl).xreplace(undo) for i in did])
             else:
-                did = did.xreplace(undo)
+                did = did.xreplace(igl).xreplace(undo)
             return did
 
         # continue with existing assumptions
