@@ -930,15 +930,22 @@ def _cse_del(expr):
     >>> x1 = x0 * sin(x0)
     >>> x2 = x1 + sqrt(x1)
     >>> _cse_del(x2)
-    ([(x0, x + cos(x)), (x1, x0*sin(x0))], [{}, {x0}], [sqrt(x1) + x1])
+    ([(x0, x + cos(x)), (x1, x0*sin(x0))], [{}, {x0}], sqrt(x1) + x1)
     """
+    def get_free_symbols(expr):
+        if hasattr(expr, "__iter__"):
+            return set.union(*map(get_free_symbols, expr))
+        return expr.free_symbols
+
     from sympy import cse
     replacements, reduced_exprs = cse(expr)
+    if not hasattr(expr, "__iter__"): # If the expression is a sympy expr.
+        reduced_exprs = reduced_exprs.pop() # No raison to cast in a list!
 
     # Cumulate union of symbols.
     free_symbols = [pattern.free_symbols for _, pattern in replacements]
     free_symbols.reverse()
-    symbols_cum = [set.union(*(pattern.free_symbols for pattern in reduced_exprs))]
+    symbols_cum = [get_free_symbols(reduced_exprs)]
     for free_symbol in free_symbols:
         symbols_cum.insert(0, free_symbol | symbols_cum[0])
 
