@@ -3,8 +3,7 @@ from sympy import acos
 from sympy.physics.vector import cross, Vector, dot, dynamicsymbols
 from abc import ABC, abstractmethod
 
-__all__ = ['Joint', 'PinJoint', 'SlidingJoint', 'CylindricalJoint',
-           'SphericalJoint', 'PlanarJoint']
+__all__ = ['Joint', 'PinJoint'] 
 
 
 class Joint(ABC):
@@ -25,9 +24,9 @@ class Joint(ABC):
         The parent body of joint.
     child : Body
         The child body of joint.
-    coordinates: List, optional
+    coordinates: List of dynamicsymbols/dynamicsymbol, optional
         Coordinates of joint.
-    speeds : List, optional
+    speeds : List of dynamicsymbols/dynamicsymbol, optional
         Speeds of joint.
     parent_joint_pos : Vector, optional
         Defines the joint's point where the parent will be connected to child.
@@ -63,14 +62,13 @@ class Joint(ABC):
         self._speeds = self._generate_speeds(speeds)
         self._kdes = self._generate_kdes()
 
-        self.child_axis = self._axis(child, child_axis)
-        self.parent_axis = self._axis(parent, parent_axis)
+        self._child_axis = self._axis(child, child_axis)
+        self._parent_axis = self._axis(parent, parent_axis)
 
-        self.parent_joint = self._locate_joint_pos(parent,parent_joint_pos)
-        self.child_joint = self._locate_joint_pos(child, child_joint_pos)
+        self._parent_joint = self._locate_joint_pos(parent,parent_joint_pos)
+        self._child_joint = self._locate_joint_pos(child, child_joint_pos)
 
         self._orient_frames()
-        self._align_axes(self.parent_axis, self.child_axis)
         self._set_angular_velocity()
         self._set_linear_velocity()
 
@@ -143,7 +141,7 @@ class Joint(ABC):
         if not isinstance(joint_pos, Vector):
             raise ValueError('Joint Position must be supplied as Vector.')
         
-        return body.masscenter.locatenew(self.name + '_' + body.name + '_joint', joint_pos)
+        return body.masscenter.locatenew(self._name + '_' + body.name + '_joint', joint_pos)
 
     def _align_axes(self, parent_axis, child_axis):
         """Rotates child_frame so that child_axis is aligned to parent_axis."""
@@ -164,107 +162,81 @@ class PinJoint(Joint):
     It is defined such that the child body rotates with respect to the parent body
     about the body fixed parent axis through the angle theta. The point of joint
     (pin joint) is defined by two points in each body which coincides together.
-    They are supplied as parent_point_pos and child_point_pos.
     In addition, the child's reference frame can be arbitrarily rotated a constant
     amount with respect to the parent axis by passing an axis in child body which
     must align with parent axis after the rotation.
 
     Parameters
-    ----------
-    name: String
-        Name of the joint which makes it unique. Should be different from other
-        joints.
-    parent: Body
-        Instance of Body class serving as the parent in the joint.
-    child: Body
-        Instance of Body class serving as the child in the joint.
-    parent_point_pos: 3 Tuple, Optional
-        Defines the pin joint's point where the parent will be connected to child.
-        3 Tuple defines the values of x, y and z directions w.r.t parent's
-        frame. If it is not supplied, center of mass is added as default.
-    child_point_pos: 3 Tuple, Optional
+    ==========
+
+    name : string
+        The Joint's name which makes it unique.
+    parent : Body
+        The parent body of joint.
+    child : Body
+        The child body of joint.
+    coordinates: dynamicsymbol, optional
+        Coordinates of joint.
+    speeds : dynamicsymbol, optional
+        Speeds of joint.
+    parent_joint_pos : Vector, optional
+        Defines the joint's point where the parent will be connected to child.
+        Default value is masscenter of Parent Body.
+    child_joint_pos : Vector, optional
         Defines the joint's point where the child will be connected to parent.
-        3 Tuple defines the values of x, y and z directions w.r.t child's frame.
-        If it is not supplied, center of mass is added as default.
-    parent_axis: Vector, Optional
-        Defines the orientation as a vector which must be aligned with child's
-        axis before adding joint. If it is not passed, default is x axis in
-        parent's frame.
-    child_axis: Vector, Optional
-        Defines the orientation as a vector which must be aligned with parent's
-        axis before adding joint. If it is not passed, default is x axis in
-        child's frame.
+        Default value is masscenter of Child Body. 
+    parent_axis : Vector, optional
+        Axis of parent frame which would be be aligned with child's
+        axis. Default is x axis in parent's frame.
+    child_axis : Vector, optional
+        Axis of Child frame which would be be aligned with parent's
+        axis. Default is x axis in child's frame.
 
     Examples
-    --------
+    =========
+
     Adding a Pin Joint which connects center of mass of parent to a point
     pointed by child.frame.x + child.frame.y w.r.t. child's center of mass.
-    Gravity is along y axis of parent.
 
     >>> from sympy import Symbol
     >>> from sympy.physics.mechanics import Body, PinJoint
     >>> parent = Body('parent')
     >>> child = Body('child')
-    >>> gravity = Symbol('gravity')
-    >>> l = Symbol('l')
-    >>> child.apply_force(child.mass * gravity * parent.frame.y, child.masscenter)
-    >>> pin_joint = PinJoint('pinjoint', parent, \
-                             child, child_point_pos=(l, l, 0))
-    >>> pin_joint.coordinates
-    [pinjoint_theta(t)]
-    >>> pin_joint.speeds
-    [pinjoint_omega(t)]
+    >>> P = PinJoint('P', parent, child)
+    >>> P.coordinates()
+    [P_theta(t)]
+    >>> P.speeds()
+    [P_omega(t)]
 
     """
-    def __init__(self, name, parent, child, parent_point_pos=None,
-                 child_point_pos=None, parent_axis=None, child_axis=None):
+    
+    def _generate_coordinates(self, coordinates):
+        if coordinates is None:
+            coordinates = []
+            theta = dynamicsymbols(self._name + '_theta')
+            coordinates.append(theta)
+            return coordinates
+        coordinates = list(coordinates)
+        return coordinates
 
-        parent_axes_str = {'X': parent.frame.x, 'Y': parent.frame.y,
-                           'Z': parent.frame.z}
-        child_axes_str = {'X': child.frame.x, 'Y': child.frame.y,
-                          'Z': child.frame.z}
+    def _generate_speeds(self, speeds):
+        if speeds is None:
+            speeds = []
+            omega = dynamicsymbols(self._name + '_omega')
+            speeds.append(omega)
+            return speeds
+        speeds = list(speeds)
+        return speeds
 
-        if parent_axis is None:
-            self.parent_axis = parent.frame.x
-        elif isinstance(parent_axis, tuple):
-            self.parent_axis = convert_tuple_to_vector(self.parent.frame, parent_axis)
-        elif isinstance(parent_axis, str) and parent_axis.upper() \
-                in parent_axes_str.keys():
-            self.parent_axis = parent_axes_str[parent_axis.upper()]
-        else:
-            raise TypeError("Parent Axis must either be one of 'X', 'Y', 'Z'" +
-                            " or a 3-Tuple.")
+    def _orient_frames(self):
+        self._child.frame.orient_axis(self._parent.frame, self._parent_axis, self._coordinates[0])
+        self._align_axes(self._parent_axis, self._child_axis)
 
-        if child_axis is None:
-            self.child_axis = child.frame.x
-        elif isinstance(child_axis, tuple):
-            self.child_axis = convert_tuple_to_vector(self.child.frame, child_axis)
-        elif isinstance(child_axis, str) and child_axis.upper() \
-                in child_axes_str.keys():
-            self.child_axis = child_axes_str[child_axis.upper()]
-        else:
-            raise TypeError("Child Axis must either be one of 'X', 'Y', 'Z'" +
-                            " or a 3 Tuple")
+    def _set_angular_velocity(self):
+        self._child.frame.set_ang_vel(self._parent.frame, self._speeds[0] * self._parent_axis)
 
-        super(PinJoint, self).__init__(name, parent, child, parent_point_pos,
-                                       child_point_pos)
-
-    def apply_joint(self):
-        theta = dynamicsymbols(self.name + '_theta')
-        thetad = dynamicsymbols(self.name + '_theta', 1)
-        omega = dynamicsymbols(self.name + '_omega')
-
-        self.coordinates.append(theta)
-        self.speeds.append(omega)
-        self.kds.append(thetad - omega)
-
-        self.child.frame.orient(self.parent.frame, 'Axis',
-                                [theta, self.parent_axis])
-        self.child.frame.set_ang_vel(self.parent.frame,
-                                     omega * self.parent_axis)
-        self._align_axes(self.parent_axis, self.child_axis)
-        self.parent_joint_point.set_vel(self.parent.frame, 0)
-        self.child_joint_point.set_vel(self.parent.frame, 0)
-        self.child_joint_point.set_pos(self.parent_joint_point, 0)
-        self.child.masscenter.v2pt_theory(self.parent.masscenter,
-                                          self.parent.frame, self.child.frame)
+    def _set_linear_velocity(self):
+        self._parent_joint.set_vel(self._parent.frame, 0)
+        self._child_joint.set_vel(self._parent.frame, 0)
+        self._child_joint.set_pos(self._parent_joint, 0)
+        self._child.masscenter.v2pt_theory(self._parent.masscenter, self._parent.frame, self._child.frame)
