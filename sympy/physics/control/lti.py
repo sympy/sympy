@@ -1550,11 +1550,14 @@ class TransferFunctionMatrix(Basic):
 
     Addition, subtraction, and multiplication of transfer function matrices can form
     unevaluated ``Series`` or ``Parallel`` objects.
-    For addition and subtraction:
-        All the transfer function matrices must have the same shape.
-    For multiplication (C = A * B):
-        The number of inputs of the first transfer function matrix (A) must be equal to the
-        number of outputs of the second transfer function matrix (B).
+
+    - For addition and subtraction:
+      All the transfer function matrices must have the same shape.
+
+    - For multiplication (C = A * B):
+      The number of inputs of the first transfer function matrix (A) must be equal to the
+      number of outputs of the second transfer function matrix (B).
+
     Also, use pretty-printing (``pprint``) to analyse better.
 
     >>> TFM7 = TransferFunctionMatrix([[tf5, -tf1, tf3], [-tf2, -tf5, -tf3]], (2, 3), s)
