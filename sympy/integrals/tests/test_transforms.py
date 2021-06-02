@@ -451,7 +451,7 @@ def test_inverse_mellin_transform():
 
 @slow
 def test_laplace_transform():
-    from sympy import fresnels, fresnelc
+    from sympy import fresnels, fresnelc, DiracDelta
     LT = laplace_transform
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
@@ -504,6 +504,28 @@ def test_laplace_transform():
         ((s - 1)/(s**2 - 2*s + 2), -oo),
         ((s - 1)/((s - 1)**2 + 1), -oo),
     ]
+
+    # DiracDelta function: standard cases
+    assert LT(DiracDelta(t), t, s) == (1, -oo, True)
+    assert LT(DiracDelta(a*t), t, s) == (1/a, -oo, True)
+    assert LT(DiracDelta(t/42), t, s) == (42, -oo, True)
+    assert LT(DiracDelta(t+42), t, s) == (0, -oo, True)
+    assert LT(DiracDelta(t)+DiracDelta(t-42), t, s) == \
+        (1 + exp(-42*s), -oo, True)
+    assert LT(DiracDelta(t)-a*exp(-a*t), t, s) == (-a/(a + s) + 1, 0, True)
+    assert LT(exp(-t)*(DiracDelta(t)+DiracDelta(t-42)), t, s) == \
+        (exp(-42*s - 42) + 1, -oo, True)
+    # Collection of cases that cannot be fully evaluated and/or would catch
+    # some common implementation errors
+    assert LT(DiracDelta(t**2), t, s) == LaplaceTransform(DiracDelta(t**2), t, s)
+    assert LT(DiracDelta(t**2 - 1), t, s) == (exp(-s)/2, -oo, True)
+    assert LT(DiracDelta(t*(1 - t)), t, s) == \
+        LaplaceTransform(DiracDelta(-t**2 + t), t, s)
+    assert LT((DiracDelta(t) + 1)*(DiracDelta(t - 1) + 1), t, s) == \
+        (LaplaceTransform(DiracDelta(t)*DiracDelta(t - 1), t, s) + \
+         1 + exp(-s) + 1/s, 0, True)
+    assert LT(DiracDelta(2*t - 2*exp(a)), t, s) == \
+        (exp(-s*exp(a))/2, -oo, True)
 
     # Fresnel functions
     assert laplace_transform(fresnels(t), t, s) == \
