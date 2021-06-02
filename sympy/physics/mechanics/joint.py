@@ -125,7 +125,8 @@ class Joint(ABC):
         kdes = []
         t = dynamicsymbols._t
         for i in range(len(self._coordinates)):
-            kdes.append(-self._coordinates[0].diff(t) + self._speeds[0])
+            kdes.append(-self._coordinates[i].diff(t) + self._speeds[i])
+        return kdes
 
     def _axis(self, body, ax):
         if ax is None:
@@ -150,8 +151,8 @@ class Joint(ABC):
         angle = acos(dot(parent_axis, child_axis)/(mag1 * mag2))
         axis = cross(child_axis, parent_axis)
         if axis != Vector(0):
-            self.child.frame.orient(
-                self.parent.frame, 'Axis', [angle, axis])
+            self._child.frame.orient(
+                self._parent.frame, 'Axis', [angle, axis])
 
 
 
@@ -209,28 +210,34 @@ class PinJoint(Joint):
     [P_omega(t)]
 
     """
-    
-    def _generate_coordinates(self, coordinates):
-        if coordinates is None:
-            coordinates = []
+
+    def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None, 
+        child_joint_pos=None, parent_axis = None, child_axis=None):
+
+        super().__init__(name, parent, child, coordinates, speeds, parent_joint_pos, child_joint_pos,
+            parent_axis, child_axis)
+
+    def _generate_coordinates(self, coordinate):
+        coordinates = []
+        if coordinate is None:
             theta = dynamicsymbols(self._name + '_theta')
             coordinates.append(theta)
             return coordinates
-        coordinates = list(coordinates)
+        coordinates.append(coordinate)
         return coordinates
 
-    def _generate_speeds(self, speeds):
-        if speeds is None:
-            speeds = []
+    def _generate_speeds(self, speed):
+        speeds = []
+        if speed is None:
             omega = dynamicsymbols(self._name + '_omega')
             speeds.append(omega)
             return speeds
-        speeds = list(speeds)
+        speeds.append(speed)
         return speeds
 
     def _orient_frames(self):
         self._child.frame.orient_axis(self._parent.frame, self._parent_axis, self._coordinates[0])
-        self._align_axes(self._parent_axis, self._child_axis)
+        #self._align_axes(self._parent_axis, self._child_axis)
 
     def _set_angular_velocity(self):
         self._child.frame.set_ang_vel(self._parent.frame, self._speeds[0] * self._parent_axis)
