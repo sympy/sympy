@@ -1,6 +1,5 @@
 from sympy.physics.mechanics.body import Body
-from sympy import acos
-from sympy.physics.vector import cross, Vector, dot, dynamicsymbols
+from sympy.physics.vector import Vector, dynamicsymbols
 from abc import ABC, abstractmethod
 
 __all__ = ['Joint', 'PinJoint']
@@ -186,7 +185,6 @@ class PinJoint(Joint):
     Adding a Pin Joint which connects center of mass of parent to a point
     pointed by child.frame.x + child.frame.y w.r.t. child's center of mass.
 
-    >>> from sympy import Symbol
     >>> from sympy.physics.mechanics import Body, PinJoint
     >>> parent = Body('parent')
     >>> child = Body('child')

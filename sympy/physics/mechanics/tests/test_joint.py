@@ -1,7 +1,7 @@
 from sympy.core.symbol import symbols
-from sympy import Symbol, sin, cos, Matrix
-from sympy.physics.vector import Vector, cross, ReferenceFrame, Point
-from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint, inertia
+from sympy import sin, cos, Matrix
+from sympy.physics.vector import Vector, ReferenceFrame, Point
+from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint
 from sympy.physics.mechanics.joint import Joint
 from sympy.testing.pytest import raises
 
