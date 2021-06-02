@@ -947,10 +947,10 @@ class AccumulationBounds(AtomicExpr):
     >>> 1/AccumBounds(-oo, 0)
     AccumBounds(-oo, 0)
 
-    A boundary of 1 will always generate an infinite result
+    A boundary of 1 will always generate all nonnegatives:
 
     >>> AccumBounds(1, 2)**oo
-    oo
+    AccumBounds(0, oo)
     >>> AccumBounds(0, 1)**oo
     AccumBounds(0, oo)
 
@@ -1313,7 +1313,7 @@ class AccumulationBounds(AtomicExpr):
                 if self.min.is_extended_nonnegative:
                     if self.max < 1:
                         return S.Zero
-                    if self.min >= 1:
+                    if self.min > 1:
                         return S.Infinity
                     return AccumBounds(0, oo)
                 elif self.max.is_extended_negative:

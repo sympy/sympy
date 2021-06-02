@@ -491,7 +491,7 @@ def test_AccumBounds_pow():
     assert B(S.Half, 1)**oo == B(0, oo)
     assert B(0, 1)**oo == B(0, oo)
     assert B(2, 3)**oo is oo
-    assert B(1, 2)**oo is oo
+    assert B(1, 2)**oo is B(0, oo)
     assert B(S.Half, 3)**oo == B(0, oo)
     assert B(Rational(-1, 3), Rational(-1, 4))**oo is S.Zero
     assert B(-1, Rational(-1, 2))**oo is S.NaN
