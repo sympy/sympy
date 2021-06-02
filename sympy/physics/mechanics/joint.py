@@ -3,7 +3,7 @@ from sympy import acos
 from sympy.physics.vector import cross, Vector, dot, dynamicsymbols
 from abc import ABC, abstractmethod
 
-__all__ = ['Joint', 'PinJoint'] 
+__all__ = ['Joint', 'PinJoint']
 
 
 class Joint(ABC):
@@ -44,7 +44,7 @@ class Joint(ABC):
     """
 
     def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None, 
-        child_joint_pos=None, parent_axis = None, child_axis=None):
+        child_joint_pos=None, parent_axis = None):
 
         if not isinstance(name, str):
             raise TypeError('Supply a valid name.')
@@ -62,7 +62,6 @@ class Joint(ABC):
         self._speeds = self._generate_speeds(speeds)
         self._kdes = self._generate_kdes()
 
-        self._child_axis = self._axis(child, child_axis)
         self._parent_axis = self._axis(parent, parent_axis)
 
         self._parent_joint = self._locate_joint_pos(parent,parent_joint_pos)
@@ -144,17 +143,6 @@ class Joint(ABC):
         
         return body.masscenter.locatenew(self._name + '_' + body.name + '_joint', joint_pos)
 
-    def _align_axes(self, parent_axis, child_axis):
-        """Rotates child_frame so that child_axis is aligned to parent_axis."""
-        mag1 = parent_axis.magnitude()
-        mag2 = child_axis.magnitude()
-        angle = acos(dot(parent_axis, child_axis)/(mag1 * mag2))
-        axis = cross(child_axis, parent_axis)
-        if axis != Vector(0):
-            self._child.frame.orient(
-                self._parent.frame, 'Axis', [angle, axis])
-
-
 
 class PinJoint(Joint):
     """
@@ -212,10 +200,10 @@ class PinJoint(Joint):
     """
 
     def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None, 
-        child_joint_pos=None, parent_axis = None, child_axis=None):
+        child_joint_pos=None, parent_axis = None):
 
         super().__init__(name, parent, child, coordinates, speeds, parent_joint_pos, child_joint_pos,
-            parent_axis, child_axis)
+            parent_axis)
 
     def _generate_coordinates(self, coordinate):
         coordinates = []
@@ -237,7 +225,6 @@ class PinJoint(Joint):
 
     def _orient_frames(self):
         self._child.frame.orient_axis(self._parent.frame, self._parent_axis, self._coordinates[0])
-        #self._align_axes(self._parent_axis, self._child_axis)
 
     def _set_angular_velocity(self):
         self._child.frame.set_ang_vel(self._parent.frame, self._speeds[0] * self._parent_axis)

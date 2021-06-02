@@ -25,7 +25,6 @@ def test_pinjoint():
     assert Pj.coordinates() == [theta]
     assert Pj.speeds() == [omega]
     assert Pj.kdes() == [omega - theta.diff(t)]
-    assert Pj._child_axis == C.frame.x
     assert Pj._parent_axis == P.frame.x
     assert Pj._child_joint.pos_from(C.masscenter) == Vector(0)
     assert Pj._parent_joint.pos_from(P.masscenter) == Vector(0)
@@ -33,9 +32,8 @@ def test_pinjoint():
 
     l, m = symbols('l m')
     J1 = PinJoint('J1', P, C, parent_joint_pos= l * P.frame.x, child_joint_pos= m * C.frame.y,
-        parent_axis = P.frame.z, child_axis = C.frame.z)
+        parent_axis = P.frame.z)
 
-    assert J1._child_axis == C.frame.z
     assert J1._parent_axis == P.frame.z
     assert J1._child_joint.pos_from(C.masscenter) == m * C.frame.y
     assert J1._parent_joint.pos_from(P.masscenter) == l * P.frame.x
