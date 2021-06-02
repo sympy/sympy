@@ -65,8 +65,8 @@ def test_pin_joint_double_pendulum():
     assert B.ang_vel_in(N) == u1 * N.z + u2 * A.z
 
     #Check kde
-    assert J1.kdes == [u1 - q1.diff(t)]
-    assert J1.kdes() == [u2 - q2.diff(t)]
+    assert J1.kdes() == [u1 - q1.diff(t)]
+    assert J2.kdes() == [u2 - q2.diff(t)]
 
     #Check Linear Velocity
     assert J1._parent_joint.vel(N) == 0
