@@ -1933,7 +1933,7 @@ class sinc(Function):
     * Differentiation
 
     >>> sinc(x).diff()
-    Piecewise(((x*cos(x) - sin(x))/x**2, Ne(x, 0)), (0, True))
+    cos(x)/x - sin(x)/x**2
 
     * Series Expansion
 
