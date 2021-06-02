@@ -1257,7 +1257,8 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
 @_noconds_(True)
 def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
     """ The backend function for inverse Laplace transforms. """
-    from sympy import exp, Heaviside, log, expand_complex, Integral, Piecewise
+    from sympy import exp, Heaviside, log, expand_complex, Integral,\
+        Piecewise, Add, expand_mul
     from sympy.integrals.meijerint import meijerint_inversion, _get_coeff_exp
     # There are two strategies we can try:
     # 1) Use inverse mellin transforms - related by a simple change of variables.
@@ -1276,6 +1277,14 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         e2 = args[1].args[0]
         return Heaviside(1/abs(coeff) - t**exponent)*e1 \
             + Heaviside(t**exponent - 1/abs(coeff))*e2
+    
+    if F.is_rational_function(s):
+        F = F.apart(s)
+        
+    if F.func is Add:
+        f = Add(*[_inverse_laplace_transform(X, s, t, plane, simplify)\
+                     for X in F.args])        
+        return _simplify(f.subs(t, t_), simplify), None
 
     try:
         f, cond = inverse_mellin_transform(F, s, exp(-t), (None, oo),
