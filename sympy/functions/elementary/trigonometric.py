@@ -1961,7 +1961,13 @@ class sinc(Function):
     def fdiff(self, argindex=1):
         x = self.args[0]
         if argindex == 1:
-            return Piecewise(((x*cos(x) - sin(x))/x**2, Ne(x, S.Zero)), (S.Zero, S.true))
+            # We would like to return the Piecewise here, but Piecewise.diff
+            # currently can't handle removable singularities, meaning things
+            # like sinc(x).diff(x, 2) give the wrong answer at x = 0. See
+            # https://github.com/sympy/sympy/issues/11402.
+            #
+            # return Piecewise(((x*cos(x) - sin(x))/x**2, Ne(x, S.Zero)), (S.Zero, S.true))
+            return cos(x)/x - sin(x)/x**2
         else:
             raise ArgumentIndexError(self, argindex)
 

@@ -3,7 +3,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
         conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn,
-        AccumBounds, Interval, ImageSet, Lambda, besselj, Add)
+        AccumBounds, Interval, ImageSet, Lambda, besselj, Add, limit)
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.core.relational import Ne, Eq
@@ -808,11 +808,20 @@ def test_sinc():
 
     assert sinc(-x) == sinc(x)
 
-    assert sinc(x).diff() == Piecewise(((x*cos(x) - sin(x)) / x**2, Ne(x, 0)), (0, True))
+    assert sinc(x).diff(x) == cos(x)/x - sin(x)/x**2
+    assert sinc(x).diff(x) == (sin(x)/x).diff(x)
+    assert sinc(x).diff(x, x) == (-sin(x) - 2*cos(x)/x + 2*sin(x)/x**2)/x
+    assert sinc(x).diff(x, x) == (sin(x)/x).diff(x, x)
+    assert limit(sinc(x).diff(x), x, 0) == 0
+    assert limit(sinc(x).diff(x, x), x, 0) == -S(1)/3
 
-    assert sinc(x).diff(x).equals(sinc(x).rewrite(sin).diff(x))
-
-    assert sinc(x).diff().subs(x, 0) is S.Zero
+    # https://github.com/sympy/sympy/issues/11402
+    #
+    # assert sinc(x).diff(x) == Piecewise(((x*cos(x) - sin(x)) / x**2, Ne(x, 0)), (0, True))
+    #
+    # assert sinc(x).diff(x).equals(sinc(x).rewrite(sin).diff(x))
+    #
+    # assert sinc(x).diff(x).subs(x, 0) is S.Zero
 
     assert sinc(x).series() == 1 - x**2/6 + x**4/120 + O(x**6)
 
