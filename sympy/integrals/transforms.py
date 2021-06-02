@@ -7,6 +7,7 @@ from sympy.core.function import Function
 from sympy.core.relational import _canonical, Ge, Gt
 from sympy.core.numbers import oo
 from sympy.core.symbol import Dummy
+from sympy.functions import DiracDelta
 from sympy.functions.elementary.miscellaneous import Max
 from sympy.integrals import integrate, Integral
 from sympy.integrals.meijerint import _dummy
@@ -15,6 +16,7 @@ from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.matrices.matrices import MatrixBase
+from sympy.polys.matrices.linsolve import _lin_eq2dict, PolyNonlinearError
 
 
 ##########################################################################
@@ -1005,14 +1007,39 @@ def _simplifyconds(expr, s, a):
     expr = repl(expr, Unequality, replue)
     return S(expr)
 
+def expand_dirac_delta(expr):
+    """
+    Expand an expression involving DiractDelta to get it as a linear
+    combination of DiracDelta functions.
+    """
+    return _lin_eq2dict(expr, expr.atoms(DiracDelta))
 
 @_noconds
 def _laplace_transform(f, t, s_, simplify=True):
     """ The backend function for Laplace transforms. """
     from sympy import (re, Max, exp, pi, Min, periodic_argument as arg_,
-                       arg, cos, Wild, symbols, polar_lift)
+                       arg, cos, Wild, symbols, polar_lift, Add)
     s = Dummy('s')
-    F = integrate(exp(-s*t) * f, (t, 0, oo))
+    a = Wild('a', exclude=[t])
+    deltazero = []
+    deltanonzero = []
+    try:
+        integratable, deltadict = expand_dirac_delta(f)
+    except PolyNonlinearError:
+        raise IntegralTransformError(
+        'Laplace', f, 'could not expand DiracDelta expressions')
+    for dirac_func, dirac_coeff in deltadict.items():
+        p = dirac_func.match(DiracDelta(a*t))
+        if p:
+            deltazero.append(dirac_coeff.subs(t,0)/p[a])
+        else:
+            if dirac_func.args[0].subs(t,0).is_zero:
+                raise IntegralTransformError('Laplace', f,\
+                                             'not implemented yet.')
+            else:
+                deltanonzero.append(dirac_func*dirac_coeff)
+    F = Add(integrate(exp(-s*t) * Add(integratable, *deltanonzero), (t, 0, oo)),
+            Add(*deltazero))
 
     if not F.has(Integral):
         return _simplify(F.subs(s, s_), simplify), -oo, S.true
@@ -1150,17 +1177,24 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     r"""
     Compute the Laplace Transform `F(s)` of `f(t)`,
 
-    .. math :: F(s) = \int_0^\infty e^{-st} f(t) \mathrm{d}t.
+    .. math :: F(s) = \int_{0^{-}}^\infty e^{-st} f(t) \mathrm{d}t.
 
     Explanation
     ===========
 
-    For all "sensible" functions, this converges absolutely in a
+    For all sensible functions, this converges absolutely in a
     half plane  `a < \operatorname{Re}(s)`.
 
-    This function returns ``(F, a, cond)``
-    where ``F`` is the Laplace transform of ``f``, `\operatorname{Re}(s) > a` is the half-plane
+    This function returns ``(F, a, cond)`` where ``F`` is the Laplace
+    transform of ``f``, `\operatorname{Re}(s) > a` is the half-plane
     of convergence, and ``cond`` are auxiliary convergence conditions.
+
+    The lower bound is `0^{-}`, meaning that this bound should be approached
+    from the lower side. This is only necessary if distributions are involved.
+    At present, it is only done if `f(t)` contains ``DiracDelta``, in which
+    case the Laplace transform is computed as
+
+    .. math :: F(s) = \lim_{\tau\to 0^{-}} \int_{\tau}^\infty e^{-st} f(t) \mathrm{d}t.
 
     If the integral cannot be computed in closed form, this function returns
     an unevaluated :class:`LaplaceTransform` object.
@@ -1182,8 +1216,11 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
 
     >>> from sympy.integrals import laplace_transform
     >>> from sympy.abc import t, s, a
+    >>> from sympy.functions import DiracDelta, exp
     >>> laplace_transform(t**a, t, s)
     (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
+    >>> laplace_transform(DiracDelta(t)-a*exp(-a*t),t,s)
+    (-a/(a + s) + 1, 0, Abs(arg(a)) <= pi/2)
 
     See Also
     ========
