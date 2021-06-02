@@ -934,16 +934,18 @@ def _cse_del(expr):
     ([(x0, x + cos(x)), (x1, x0*sin(x0))], [set(), {x0}], sqrt(x1) + x1)
     """
     def get_free_symbols(expr):
-        if hasattr(expr, "__iter__") and not isinstance(expr, str):
-            return set.union(*map(get_free_symbols, expr))
         try:
             return expr.free_symbols
         except AttributeError:
             return set()
+        if hasattr(expr, "__iter__") and not isinstance(expr, str):
+            return set.union(*map(get_free_symbols, expr))
+        return set()
 
     from sympy import cse
-    replacements, reduced_exprs = cse([expr])
-    reduced_exprs = reduced_exprs.pop() # No raison to cast in a list!
+    replacements, reduced_exprs = cse(expr)
+    if not hasattr(expr, "__iter__"): # If cse makes cast to a list because cse(x) == cse([x]).
+        reduced_exprs = reduced_exprs.pop() # We keep the homogeneity of the expression.
 
     # Cumulate union of symbols.
     free_symbols = [pattern.free_symbols for _, pattern in replacements]
