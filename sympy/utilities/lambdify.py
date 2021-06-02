@@ -934,9 +934,12 @@ def _cse_del(expr):
     ([(x0, x + cos(x)), (x1, x0*sin(x0))], [set(), {x0}], sqrt(x1) + x1)
     """
     def get_free_symbols(expr):
-        if hasattr(expr, "__iter__"):
+        if hasattr(expr, "__iter__") and not isinstance(expr, str):
             return set.union(*map(get_free_symbols, expr))
-        return expr.free_symbols
+        try:
+            return expr.free_symbols
+        except AttributeError:
+            return set()
 
     from sympy import cse
     replacements, reduced_exprs = cse([expr])
