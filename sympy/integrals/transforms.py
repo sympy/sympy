@@ -1283,7 +1283,7 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         
     if F.func is Add:
         f = Add(*[_inverse_laplace_transform(X, s, t, plane, simplify)\
-                     for X in F.args])        
+                     for X in F.args])
         return _simplify(f.subs(t, t_), simplify), None
 
     try:
@@ -1314,18 +1314,20 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
     def simp_heaviside(arg, H0=S.Half):
         a = arg.subs(exp(-t), u)
         if a.has(t):
-            return Heaviside(arg,H0)
+            return Heaviside(arg, H0)
         rel = _solve_inequality(a > 0, u)
         if rel.lts == u:
             k = log(rel.gts)
-            return Heaviside(t + k,H0)
+            return Heaviside(t + k, H0)
         else:
             k = log(rel.lts)
-            return Heaviside(-(t + k),H0)
+            return Heaviside(-(t + k), H0)
+        
     f = f.replace(Heaviside, simp_heaviside)
 
     def simp_exp(arg):
         return expand_complex(exp(arg))
+
     f = f.replace(exp, simp_exp)
 
     # TODO it would be nice to fix cosh and sinh ... simplify messes these
