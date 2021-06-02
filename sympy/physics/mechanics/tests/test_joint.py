@@ -66,9 +66,9 @@ def test_pin_joint_double_pendulum():
 
     #Check kde
     assert J1.kdes == [u1 - q1.diff(t)]
-    assert J1.kdes() == [u2 - q2.diff(t)] 
+    assert J1.kdes() == [u2 - q2.diff(t)]
 
-    #Check Linear Velocity 
+    #Check Linear Velocity
     assert J1._parent_joint.vel(N) == 0
     # Problem here
 
@@ -99,7 +99,7 @@ def test_pin_joint_chaos_pendulum():
     assert A.ang_vel_in(N) == omega * N.y
     assert A.ang_vel_in(B) == - alpha * A.z
     assert N.ang_vel_in(B) == - omega * N.y - alpha * A.z
-    
+
     #Check kde
     assert J1.kdes() == [omega - theta.diff(t)]
     assert J2.kdes() == [alpha - phi.diff(t)]

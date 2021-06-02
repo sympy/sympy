@@ -33,7 +33,7 @@ class Joint(ABC):
         Default value is masscenter of Parent Body.
     child_joint_pos : Vector, optional
         Defines the joint's point where the child will be connected to parent.
-        Default value is masscenter of Child Body. 
+        Default value is masscenter of Child Body.
     parent_axis : Vector, optional
         Axis of parent frame which would be be aligned with child's
         axis. Default is x axis in parent's frame.
@@ -43,7 +43,7 @@ class Joint(ABC):
 
     """
 
-    def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None, 
+    def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None,
         child_joint_pos=None, parent_axis = None):
 
         if not isinstance(name, str):
@@ -140,7 +140,6 @@ class Joint(ABC):
             joint_pos = Vector(0)
         if not isinstance(joint_pos, Vector):
             raise ValueError('Joint Position must be supplied as Vector.')
-        
         return body.masscenter.locatenew(self._name + '_' + body.name + '_joint', joint_pos)
 
 
@@ -173,7 +172,7 @@ class PinJoint(Joint):
         Default value is masscenter of Parent Body.
     child_joint_pos : Vector, optional
         Defines the joint's point where the child will be connected to parent.
-        Default value is masscenter of Child Body. 
+        Default value is masscenter of Child Body.
     parent_axis : Vector, optional
         Axis of parent frame which would be be aligned with child's
         axis. Default is x axis in parent's frame.
@@ -199,7 +198,7 @@ class PinJoint(Joint):
 
     """
 
-    def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None, 
+    def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None,
         child_joint_pos=None, parent_axis = None):
 
         super().__init__(name, parent, child, coordinates, speeds, parent_joint_pos, child_joint_pos,
