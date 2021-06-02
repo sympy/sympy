@@ -880,11 +880,8 @@ def _get_examples_ode_sol_1st_rational_riccati():
     },
     "rational_riccati_18": {
         "eq": a*f(x)**2 + Derivative(f(x), x) + (b + c)/x**2,
-        "sol": [Eq(f(x), Mul(-1, (-x**(sqrt(-4*a*(b + c) + 1)/2 + sqrt(-4*a*b - 4*a*c + 1)/2)*(sqrt(-4*a*(b + c) + 1) \
-            + sqrt(-4*a*b - 4*a*c + 1))/(C1 + x**(sqrt(-4*a*(b + c) + 1)/2 + sqrt(-4*a*b - 4*a*c + 1)/2)) + sqrt(-4*a*b \
-            - 4*a*c + 1) - 1), evaluate=False)/(2*a*x)), Eq(f(x), Mul(-1, (-x**(-sqrt(-4*a*(b + c) + 1)/2 + sqrt(-4*a*b \
-            - 4*a*c + 1)/2)*(-sqrt(-4*a*(b + c) + 1) + sqrt(-4*a*b - 4*a*c + 1))/(C1 + x**(-sqrt(-4*a*(b + c) + 1)/2 + \
-            sqrt(-4*a*b - 4*a*c + 1)/2)) + sqrt(-4*a*b - 4*a*c + 1) - 1), evaluate=False)/(2*a*x))]
+        "sol": [Eq(f(x), Mul(-1, -x**(sqrt(-4*a*b - 4*a*c + 1))*sqrt(-4*a*b - 4*a*c + 1)/(C1 +
+            x**(sqrt(-4*a*b - 4*a*c + 1))) + sqrt(-4*a*b - 4*a*c + 1)/2 - S(1)/2, evaluate=False)/(a*x))]
     },
     "rational_riccati_19": {
         "eq": 2*x**2*Derivative(f(x), x) - x*(4*f(x) + Derivative(f(x), x) - 4) + (f(x) - 1)*f(x),
@@ -904,6 +901,14 @@ def _get_examples_ode_sol_1st_rational_riccati():
         "eq": Derivative(f(x), x) - f(x)**2 - b/x**2 - a*f(x)/x,
         "sol": [Eq(f(x), (-a/2 - x**(sqrt(a**2 + 2*a - 4*b + 1))*sqrt(a**2 + 2*a - 4*b + 1)/(C1 + x**(sqrt(a**2 + 2*a -
             4*b + 1))) + sqrt(a**2 + 2*a - 4*b + 1)/2 - S(1)/2)/x)]
+    },
+    "rational_riccati_23": { # Regression Test: See https://github.com/sympy/sympy/pull/21459#issuecomment-852212302
+        "eq": Eq(Derivative(f(x), x), x*f(x)/(S(3)/2 - 2*x) + (x/2 - S(1)/3)*f(x)**2/(2*x/3 - S(1)/2) - S(5)/4 + (281*x**2 - 1260*x + 756)/(16*x**3 - 12*x**2)),
+        "sol": [Eq(f(x), (x + (4*x - 3)*(-1 + 1/(Mul(2, (x - S(2)/3), evaluate=False)) + 6/x) + (4*x - 3)*(Mul(4, (3*x - 2), evaluate=False)/(4*x - 3) - 3)/(
+            Mul(2, (3*x - 2), evaluate=False)))/(3*x - 2)), Eq(f(x), (x + (4*x - 3)*(Mul(-1, 13*x**12 + 70*x**11 + 385*x**10 + 1925*x**9 + 17325*x**8/2 +
+            34650*x**7 + 121275*x**6 + 363825*x**5 + 1819125*x**4/2 + 1819125*x**3 + 5457375*x**2/2 + 5457375*x/2 + S(5457375)/4, evaluate=False)/(x**13 + 35*x**12/6 + 35*x**11
+            + 385*x**10/2 + 1925*x**9/2 + 17325*x**8/4 + 17325*x**7 + 121275*x**6/2 + 363825*x**5/2 + 1819125*x**4/4 + 1819125*x**3/2 + 5457375*x**2/4 + 5457375*x/4
+            + S(5457375)/8) + 1 + 1/Mul(2, (x - S(2)/3), evaluate=False) + 6/x) + (4*x - 3)*(Mul(4, (3*x - 2), evaluate=False)/(4*x - 3) - 3)/(Mul(2, (3*x - 2), evaluate=False)))/(3*x - 2))]
     }
     }
     }

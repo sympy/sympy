@@ -146,14 +146,30 @@ from sympy.core.numbers import oo
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol, symbols, Dummy
 from sympy.functions import sqrt
+from sympy.functions.elementary.complexes import sign
+from sympy.polys.domains import ZZ
 from sympy.polys.polytools import Poly
 from sympy.polys.polyroots import roots
-from sympy.series.limits import limit
 from sympy.solvers.solveset import linsolve
 from sympy.tensor.indexed import Indexed, IndexedBase
 
+def riccati_normal(w, x, b1, b2):
+    # y(x) = -b2(x)*w(x) - b2'(x)/(2*b2(x)) - b1(x)/2
+    return -b2*w - b2.diff(x)/(2*b2) - b1/2
+
+
+def riccati_inverse_normal(y, x, b1, b2, bp=None):
+    if bp is None:
+        bp = -b2.diff(x)/(2*b2**2) - b1/(2*b2)
+    # w(x) = -y(x)/b2(x) - b2'(x)/(2*b2(x)^2) - b1(x)/(2*b2(x))
+    return -y/b2 + bp
+
+
 def linsolve_dict(eq, syms, var):
-    return {k:v for k, v in zip(syms, list(linsolve(eq, syms, var))[0])}
+    sol = linsolve(eq, syms, var)
+    if not sol:
+        return {}
+    return {k:v for k, v in zip(syms, list(sol)[0])}
 
 
 def find_poles(num, den, x):
@@ -176,6 +192,10 @@ def val_at_inf(num, den, x):
     return den.degree(x) - num.degree(x)
 
 
+def check_necessary_conds(val_inf, muls):
+    return val_inf%2 != 0 or not all([mul == 1 or (mul%2 == 0 and mul >= 2) for mul in muls])
+
+
 def inverse_transform_poly(num, den, x):
     # Declare for reuse
     one = Poly(1, x)
@@ -195,6 +215,16 @@ def inverse_transform_poly(num, den, x):
         num = num.transform(one, xpoly)
         den = den.transform(one, xpoly) * x**(-pwr)
     return num.cancel(den, include=True)
+
+
+def limit_at_inf(num, den, x):
+    pwr = num.degree(x) - den.degree(x)
+    if pwr > 0:
+        return oo*sign(num.LC()/den.LC())
+    elif pwr == 0:
+        return num.LC()/den.LC()
+    else:
+        return 0
 
 
 def construct_c(num, den, x, poles, muls):
@@ -260,7 +290,7 @@ def construct_c(num, den, x, poles, muls):
     return c
 
 
-def construct_d(num, den, a, x, val_inf, mul):
+def construct_d(num, den, x, val_inf, mul):
     N = -val_inf//2
     ser = rational_laurent_series(num, den, x, oo, mul, 1)
 
@@ -298,7 +328,7 @@ def construct_d(num, den, a, x, val_inf, mul):
     else:
         # s_oo = lim x->0 1/x**2 * a(1/x) which is equivalent to
         # s_oo = lim x->oo x**2 * a(x)
-        s_inf = limit(x**2*a, x, oo)
+        s_inf = limit_at_inf(Poly(x**2, x)*num, den, x)
 
         # d_(-1) = (1 +- sqrt(1 + 4*s_oo))/2
         d = [[(1 + sqrt(1 + 4*s_inf))/2], [(1 - sqrt(1 + 4*s_inf))/2]]
@@ -320,11 +350,12 @@ def rational_laurent_series(num, den, x, x0, mul, n):
     num, den = (num*x**mul).cancel(den, include=True)
 
     c = IndexedBase('c')
-    out, sums = S(0), S(0)
+    indices = [c[i] for i in range(max(den.degree(x), num.degree(x) + 1))]
+    out, sums = Poly(0, x, domain=ZZ[indices]), 0
     for pw, cf in den.as_dict().items():
         pw = pw[0]
         for i in range(pw, max(den.degree(x), num.degree(x) + 1)):
-            out += cf*c[i - pw]*x**i
+            out += Poly(cf*c[i - pw]*x**i, x, domain=ZZ[indices])
         sums += cf*c[m - pw]
 
     if out:
@@ -368,11 +399,11 @@ def solve_aux_eq(numa, dena, numy, deny, x, m):
     # Assume that the solution is of the type
     # p(x) = C0 + C1*x + ... + Cm*x**m
     psyms = symbols(f'C0:{m}', cls=Dummy)
-    if type(psyms) != tuple:
-        psyms = (psyms, )
-    psol = Poly(x**m, x)
-    for i in range(m):
-        psol += Poly(psyms[i]*x**i, x)
+    domain = ZZ[psyms]
+    psyms += (1, )
+    psol = 0
+    for i in range(m + 1):
+        psol += Poly(psyms[i]*x**i, x, domain=domain)
 
     # Eq (5.16) in Thesis - Pg 81
     auxeq = (dena*(numy.diff(x)*deny - numy*deny.diff(x) + numy**2) - numa*deny**2)*psol
@@ -415,7 +446,7 @@ def solve_riccati(eq, fx, x, b0, b1, b2):
 
     if len(poles):
         # Check necessary conditions (outlined in the module docstring)
-        if val_inf%2 != 0 or not all(map(lambda mul: (mul == 1 or (mul%2 == 0 and mul >= 2)), muls)):
+        if check_necessary_conds(val_inf, muls):
             raise ValueError("Rational Solution doesn't exist")
 
         # Step 6
@@ -423,7 +454,7 @@ def solve_riccati(eq, fx, x, b0, b1, b2):
         c = construct_c(num, den, x, poles, muls)
 
         # Construct d vectors for each singular point
-        d = construct_d(num, den, a, x, val_inf, inf_mul)
+        d = construct_d(num, den, x, val_inf, inf_mul)
 
         # Step 7 : Iterate over all possible combinations and return solutions
         for it in range(2**(len(poles) + 1)):
@@ -463,8 +494,8 @@ def solve_riccati(eq, fx, x, b0, b1, b2):
                 psol = x**m + C1
                 presol.append(ybar + psol.diff(x)/psol)
     # Step 15 : Inverse transform the solutions of the equation in normal form
-    bp = - b2.diff(x)/(2*b2**2) - b1/(2*b2)
-    sol = [Eq(fx, -y/b2 + bp) for y in presol]
+    bp = -b2.diff(x)/(2*b2**2) - b1/(2*b2)
+    sol = [Eq(fx, riccati_inverse_normal(y, x, b1, b2, bp)) for y in presol]
     return sol
 
 

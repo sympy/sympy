@@ -875,7 +875,7 @@ class RiccatiSpecial(SinglePatternODESolver):
     >>> f = Function('f')
     >>> y = f(x)
     >>> genform = a*y.diff(x) - (b*y**2 + c*y/x + d/x**2)
-    >>> sol = dsolve(genform, y)
+    >>> sol = dsolve(genform, y, hint="Riccati_special_minus2")
     >>> pprint(sol, wrap_line=False)
             /                                 /        __________________       \\
             |           __________________    |       /                2        ||
