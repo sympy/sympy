@@ -493,6 +493,7 @@ class Add(Expr, AssocOp):
                     c = [sign(i) if i in bigs else i/big for i in c]
                     addpow = Add(*[c*m for c, m in zip(c, m)])**e
                     return big**e*addpow
+
     @cacheit
     def _eval_derivative(self, s):
         return self.func(*[a.diff(s) for a in self.args])
@@ -1004,18 +1005,18 @@ class Add(Expr, AssocOp):
         except TypeError:
             return expr
 
-        new_expr=new_expr.together()
-        if new_expr.is_Add:
-            new_expr = new_expr.simplify()
-
-        if not new_expr:
+        is_zero = new_expr.is_zero
+        if is_zero is None:
+            new_expr = new_expr.trigsimp().cancel()
+            is_zero = new_expr.is_zero
+        if is_zero is True:
             # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
             n0 = min.getn()
             res = Order(1)
             incr = S.One
             while res.is_Order:
-                res = old._eval_nseries(x, n=n0+incr, logx=None, cdir=cdir).cancel().powsimp().trigsimp()
+                res = old._eval_nseries(x, n=n0+incr, logx=None, cdir=cdir).cancel().trigsimp()
                 incr *= 2
             return res.as_leading_term(x, cdir=cdir)
 

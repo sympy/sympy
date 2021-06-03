@@ -982,6 +982,102 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
         return [Eq(lhs, C2 + x), Eq(lhs, C2 - x)]
 
 
+class Liouville(SinglePatternODESolver):
+    r"""
+    Solves 2nd order Liouville differential equations.
+
+    The general form of a Liouville ODE is
+
+    .. math:: \frac{d^2 y}{dx^2} + g(y) \left(\!
+                \frac{dy}{dx}\!\right)^2 + h(x)
+                \frac{dy}{dx}\text{.}
+
+    The general solution is:
+
+        >>> from sympy import Function, dsolve, Eq, pprint, diff
+        >>> from sympy.abc import x
+        >>> f, g, h = map(Function, ['f', 'g', 'h'])
+        >>> genform = Eq(diff(f(x),x,x) + g(f(x))*diff(f(x),x)**2 +
+        ... h(x)*diff(f(x),x), 0)
+        >>> pprint(genform)
+                          2                    2
+                /d       \         d          d
+        g(f(x))*|--(f(x))|  + h(x)*--(f(x)) + ---(f(x)) = 0
+                \dx      /         dx           2
+                                              dx
+        >>> pprint(dsolve(genform, f(x), hint='Liouville_Integral'))
+                                          f(x)
+                  /                     /
+                 |                     |
+                 |     /               |     /
+                 |    |                |    |
+                 |  - | h(x) dx        |    | g(y) dy
+                 |    |                |    |
+                 |   /                 |   /
+        C1 + C2* | e            dx +   |  e           dy = 0
+                 |                     |
+                /                     /
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Eq, pprint
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(diff(f(x), x, x) + diff(f(x), x)**2/f(x) +
+    ... diff(f(x), x)/x, f(x), hint='Liouville'))
+               ________________           ________________
+    [f(x) = -\/ C1 + C2*log(x) , f(x) = \/ C1 + C2*log(x) ]
+
+    References
+    ==========
+
+    - Goldstein and Braun, "Advanced Methods for the Solution of Differential
+      Equations", pp. 98
+    - http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Liouville
+
+    # indirect doctest
+
+    """
+    hint = "Liouville"
+    has_integral = True
+    order = [2]
+
+    def _wilds(self, f, x, order):
+        d = Wild('d', exclude=[f(x).diff(x), f(x).diff(x, 2)])
+        e = Wild('e', exclude=[f(x).diff(x)])
+        k = Wild('k', exclude=[f(x).diff(x)])
+        return d, e, k
+
+    def _equation(self, fx, x, order):
+        # Liouville ODE in the form
+        # f(x).diff(x, 2) + g(f(x))*(f(x).diff(x))**2 + h(x)*f(x).diff(x)
+        # See Goldstein and Braun, "Advanced Methods for the Solution of
+        # Differential Equations", pg. 98
+        d, e, k = self.wilds()
+        return d*fx.diff(x, 2) + e*fx.diff(x)**2 + k*fx.diff(x)
+
+    def _verify(self, fx):
+        d, e, k = self.wilds_match()
+        self.y = Dummy('y')
+        x = self.ode_problem.sym
+        self.g = simplify(e/d).subs(fx, self.y)
+        self.h = simplify(k/d).subs(fx, self.y)
+        if self.y in self.h.free_symbols or x in self.g.free_symbols:
+            return False
+        return True
+
+    def _get_general_solution(self, *, simplify: bool = True):
+        d, e, k = self.wilds_match()
+        fx = self.ode_problem.func
+        x = self.ode_problem.sym
+        C1, C2 = self.ode_problem.get_numbered_constants(num=2)
+        int = Integral(exp(Integral(self.g, self.y)), (self.y, None, fx))
+        gen_sol = Eq(int + C1*Integral(exp(-Integral(self.h, x)), x) + C2, 0)
+
+        return [gen_sol]
+
+
 class RationalRiccati(SinglePatternODESolver):
     r"""
     Gives all rational solutions to the first

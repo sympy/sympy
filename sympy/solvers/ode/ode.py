@@ -992,7 +992,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     a = Wild('a', exclude=[f(x)])
     d = Wild('d', exclude=[df, f(x).diff(x, 2)])
     e = Wild('e', exclude=[df])
-    k = Wild('k', exclude=[df])
     n = Wild('n', exclude=[x, f(x), df])
     c1 = Wild('c1', exclude=[x])
     a3 = Wild('a3', exclude=[f(x), df, f(x).diff(x, 2)])
@@ -1057,6 +1056,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         Factorable: ('factorable',),
         RiccatiSpecial: ('Riccati_special_minus2',),
         SecondNonlinearAutonomousConserved: ('2nd_nonlinear_autonomous_conserved',),
+        Liouville: ('Liouville',)
     }
     for solvercls in solvers:
         solver = solvercls(ode)
@@ -1252,24 +1252,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
 
 
     elif order == 2:
-        # Liouville ODE in the form
-        # f(x).diff(x, 2) + g(f(x))*(f(x).diff(x))**2 + h(x)*f(x).diff(x)
-        # See Goldstein and Braun, "Advanced Methods for the Solution of
-        # Differential Equations", pg. 98
-
-        s = d*f(x).diff(x, 2) + e*df**2 + k*df
-        r = reduced_eq.collect(f(x).diff(x)).match(s)
-        if r and r[d] != 0:
-            y = Dummy('y')
-            g = simplify(r[e]/r[d]).subs(f(x), y)
-            h = simplify(r[k]/r[d]).subs(f(x), y)
-            if y in h.free_symbols or x in g.free_symbols:
-                pass
-            else:
-                r = {'g': g, 'h': h, 'y': y}
-                matching_hints["Liouville"] = r
-                matching_hints["Liouville_Integral"] = r
-
         # Homogeneous second order differential equation of the form
         # a3*f(x).diff(x, 2) + b3*f(x).diff(x) + c3
         # It has a definite power series solution at point x0 if, b3/a3 and c3/a3
@@ -3161,78 +3143,6 @@ def homogeneous_order(eq, *symbols):
     b, e = d.as_base_exp()
     if b == t:
         return e
-
-
-def ode_Liouville(eq, func, order, match):
-    r"""
-    Solves 2nd order Liouville differential equations.
-
-    The general form of a Liouville ODE is
-
-    .. math:: \frac{d^2 y}{dx^2} + g(y) \left(\!
-                \frac{dy}{dx}\!\right)^2 + h(x)
-                \frac{dy}{dx}\text{.}
-
-    The general solution is:
-
-        >>> from sympy import Function, dsolve, Eq, pprint, diff
-        >>> from sympy.abc import x
-        >>> f, g, h = map(Function, ['f', 'g', 'h'])
-        >>> genform = Eq(diff(f(x),x,x) + g(f(x))*diff(f(x),x)**2 +
-        ... h(x)*diff(f(x),x), 0)
-        >>> pprint(genform)
-                          2                    2
-                /d       \         d          d
-        g(f(x))*|--(f(x))|  + h(x)*--(f(x)) + ---(f(x)) = 0
-                \dx      /         dx           2
-                                              dx
-        >>> pprint(dsolve(genform, f(x), hint='Liouville_Integral'))
-                                          f(x)
-                  /                     /
-                 |                     |
-                 |     /               |     /
-                 |    |                |    |
-                 |  - | h(x) dx        |    | g(y) dy
-                 |    |                |    |
-                 |   /                 |   /
-        C1 + C2* | e            dx +   |  e           dy = 0
-                 |                     |
-                /                     /
-
-    Examples
-    ========
-
-    >>> from sympy import Function, dsolve, Eq, pprint
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> pprint(dsolve(diff(f(x), x, x) + diff(f(x), x)**2/f(x) +
-    ... diff(f(x), x)/x, f(x), hint='Liouville'))
-               ________________           ________________
-    [f(x) = -\/ C1 + C2*log(x) , f(x) = \/ C1 + C2*log(x) ]
-
-    References
-    ==========
-
-    - Goldstein and Braun, "Advanced Methods for the Solution of Differential
-      Equations", pp. 98
-    - http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Liouville
-
-    # indirect doctest
-
-    """
-    # Liouville ODE:
-    #  f(x).diff(x, 2) + g(f(x))*(f(x).diff(x, 2))**2 + h(x)*f(x).diff(x)
-    # See Goldstein and Braun, "Advanced Methods for the Solution of
-    # Differential Equations", pg. 98, as well as
-    # http://www.maplesoft.com/support/help/view.aspx?path=odeadvisor/Liouville
-    x = func.args[0]
-    f = func.func
-    r = match  # f(x).diff(x, 2) + g*f(x).diff(x)**2 + h*f(x).diff(x)
-    y = r['y']
-    C1, C2 = get_numbered_constants(eq, num=2)
-    int = Integral(exp(Integral(r['g'], y)), (y, None, f(x)))
-    sol = Eq(int + C1*Integral(exp(-Integral(r['h'], x)), x) + C2, 0)
-    return sol
 
 
 def ode_2nd_power_series_ordinary(eq, func, order, match):
@@ -6974,4 +6884,4 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 #This import is written at the bottom to avoid circular imports.
 from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
         Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
-        SecondNonlinearAutonomousConserved, FirstExact, RationalRiccati)
+        SecondNonlinearAutonomousConserved, FirstExact, Liouville, RationalRiccati)
