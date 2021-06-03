@@ -1,5 +1,5 @@
 from sympy.core.symbol import symbols
-from sympy import sin, cos, Matrix
+from sympy import sin, cos, Matrix, sqrt
 from sympy.physics.vector import Vector, ReferenceFrame, Point
 from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint
 from sympy.physics.mechanics.joint import Joint
@@ -38,6 +38,24 @@ def test_pinjoint():
     assert J1._child_joint.pos_from(C.masscenter) == m * C.frame.y
     assert J1._parent_joint.pos_from(P.masscenter) == l * P.frame.x
     assert J1._parent_joint.pos_from(J1._child_joint) == Vector(0)
+
+    #Check arbitrary axis
+    a, b, c = symbols('a b c')
+    theta = dynamicsymbols('J2_theta')
+    parent = Body('P')
+    child = Body('C')
+    J2 = PinJoint('J2', parent, child, parent_axis=a*parent.frame.x + b*parent.frame.y - c*parent.frame.z)
+    assert parent.frame.dcm(child.frame) == Matrix([[a**2/(a**2 + b**2 + c**2) + \
+        (-a**2/(a**2 + b**2 + c**2) + 1)*cos(theta), -a*b*cos(theta)/(a**2 + b**2 + c**2) + \
+        a*b/(a**2 + b**2 + c**2) + c*sin(theta)/sqrt(a**2 + b**2 + c**2), a*c*cos(theta)/(a**2 + b**2 + c**2) \
+        - a*c/(a**2 + b**2 + c**2) + b*sin(theta)/sqrt(a**2 + b**2 + c**2)], \
+        [-a*b*cos(theta)/(a**2 + b**2 + c**2) + a*b/(a**2 + b**2 + c**2) - \
+        c*sin(theta)/sqrt(a**2 + b**2 + c**2), b**2/(a**2 + b**2 + c**2) + \
+        (-b**2/(a**2 + b**2 + c**2) + 1)*cos(theta), -a*sin(theta)/sqrt(a**2 + b**2 + c**2) + \
+        b*c*cos(theta)/(a**2 + b**2 + c**2) - b*c/(a**2 + b**2 + c**2)], [a*c*cos(theta)/ \
+        (a**2 + b**2 + c**2) - a*c/(a**2 + b**2 + c**2) - b*sin(theta)/sqrt(a**2 + b**2 + c**2), \
+        a*sin(theta)/sqrt(a**2 + b**2 + c**2) + b*c*cos(theta)/(a**2 + b**2 + c**2) - \
+        b*c/(a**2 + b**2 + c**2), c**2/(a**2 + b**2 + c**2) + (-c**2/(a**2 + b**2 + c**2) + 1)*cos(theta)]])
 
 def test_pin_joint_double_pendulum():
     q1, q2 = dynamicsymbols('q1 q2')
