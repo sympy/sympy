@@ -1,6 +1,6 @@
 from sympy.core.symbol import symbols
 from sympy import sin, cos, Matrix, sqrt
-from sympy.physics.vector import Vector, ReferenceFrame, Point
+from sympy.physics.vector import Vector, ReferenceFrame
 from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint
 from sympy.physics.mechanics.joint import Joint
 from sympy.testing.pytest import raises
@@ -16,7 +16,9 @@ def test_Joint():
 def test_pinjoint():
     P = Body('P')
     C = Body('C')
-    Pj = PinJoint('J', P, C)
+    l = symbols('l')
+    dist = l * C.frame.x
+    Pj = PinJoint('J', P, C, dist)
     theta, omega = dynamicsymbols('J_theta, J_omega')
 
     assert Pj._name == 'J'
@@ -29,9 +31,10 @@ def test_pinjoint():
     assert Pj._child_joint.pos_from(C.masscenter) == Vector(0)
     assert Pj._parent_joint.pos_from(P.masscenter) == Vector(0)
     assert Pj._parent_joint.pos_from(Pj._child_joint) == Vector(0)
+    assert C.masscenter.pos_from(P.masscenter) == dist
 
     l, m = symbols('l m')
-    J1 = PinJoint('J1', P, C, parent_joint_pos= l * P.frame.x, child_joint_pos= m * C.frame.y,
+    J1 = PinJoint('J1', P, C, dist, parent_joint_pos= l * P.frame.x, child_joint_pos= m * C.frame.y,
         parent_axis = P.frame.z)
 
     assert J1._parent_axis == P.frame.z
@@ -44,7 +47,7 @@ def test_pinjoint():
     theta = dynamicsymbols('J2_theta')
     parent = Body('P')
     child = Body('C')
-    PinJoint('J2', parent, child, parent_axis=a*parent.frame.x + b*parent.frame.y - c*parent.frame.z)
+    PinJoint('J2', parent, child, l*child.frame.y, parent_axis=a*parent.frame.x + b*parent.frame.y - c*parent.frame.z)
     assert parent.frame.dcm(child.frame) == Matrix([[a**2/(a**2 + b**2 + c**2) + \
         (-a**2/(a**2 + b**2 + c**2) + 1)*cos(theta), -a*b*cos(theta)/(a**2 + b**2 + c**2) + \
         a*b/(a**2 + b**2 + c**2) + c*sin(theta)/sqrt(a**2 + b**2 + c**2), a*c*cos(theta)/(a**2 + b**2 + c**2) \
@@ -64,15 +67,12 @@ def test_pin_joint_double_pendulum():
     N = ReferenceFrame('N')
     A = ReferenceFrame('A')
     B = ReferenceFrame('B')
-    O = Point('O')
-    P = O.locatenew('P', l * A.x)
-    R = P.locatenew('R', l * B.x)
-    C = Body('C', O, frame=N) #ceiling
-    PartP = Body('P', P, frame=A, mass=m)
-    PartR = Body('R', R, frame=B, mass=m)
+    C = Body('C', frame=N) #ceiling
+    PartP = Body('P', frame=A, mass=m)
+    PartR = Body('R', frame=B, mass=m)
 
-    J1 = PinJoint('J1', C, PartP, speeds=u1, coordinates=q1, parent_axis=C.frame.z)
-    J2 = PinJoint('J2', PartP, PartR, speeds=u2, coordinates=q2, parent_axis=PartP.frame.z)
+    J1 = PinJoint('J1', C, PartP, l*A.x, speeds=u1, coordinates=q1, parent_axis=C.frame.z)
+    J2 = PinJoint('J2', PartP, PartR, l*B.x, speeds=u2, coordinates=q2, parent_axis=PartP.frame.z)
 
     #Check orientation
     assert N.dcm(A) == Matrix([[cos(q1), -sin(q1), 0], [sin(q1), cos(q1), 0], [0, 0, 1]])
@@ -99,17 +99,13 @@ def test_pin_joint_chaos_pendulum():
     N = ReferenceFrame('N')
     A = ReferenceFrame('A')
     B = ReferenceFrame('B')
-    No = Point('No')
-    Ao = Point('Ao')
-    Bo = Point('Bo')
     lA = (lB - h / 2) / 2
-    Ao.set_pos(No, lA * A.z)
-    Bo.set_pos(No, lB * A.z)
-    rod = Body('rod', Ao, mA, A)
-    plate = Body('plate', Bo, mB, B)
-    C = Body('C', No, frame=N)
-    J1 = PinJoint('J1', C, rod, coordinates=theta, speeds=omega, parent_axis=N.y)
-    J2 = PinJoint('J2',rod, plate, coordinates=phi, speeds=alpha, parent_axis=A.z)
+    lC = (lB/2 + h/4)
+    rod = Body('rod', frame=A, mass=mA)
+    plate = Body('plate', mass=mB, frame=B)
+    C = Body('C', frame=N)
+    J1 = PinJoint('J1', C, rod, lA*A.z, coordinates=theta, speeds=omega, parent_axis=N.y)
+    J2 = PinJoint('J2',rod, plate, lC*A.z, coordinates=phi, speeds=alpha, parent_axis=A.z)
 
     #Check orientation
     assert A.dcm(N) == Matrix([[cos(theta), 0, -sin(theta)], [0, 1, 0], [sin(theta), 0, cos(theta)]])

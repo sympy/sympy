@@ -23,6 +23,8 @@ class Joint(ABC):
         The parent body of joint.
     child : Body
         The child body of joint.
+    dist : Vector
+        The vector distance between parent's masscenter and child's masscenter.
     coordinates: List of dynamicsymbols/dynamicsymbol, optional
         Coordinates of joint.
     speeds : List of dynamicsymbols/dynamicsymbol, optional
@@ -42,7 +44,7 @@ class Joint(ABC):
 
     """
 
-    def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None,
+    def __init__(self, name, parent, child, dist, coordinates=None, speeds=None, parent_joint_pos=None,
         child_joint_pos=None, parent_axis = None):
 
         if not isinstance(name, str):
@@ -56,6 +58,11 @@ class Joint(ABC):
         if not isinstance(child, Body):
             raise TypeError('Parent must be an instance of Body.')
         self._child = child
+
+        if not isinstance(dist, Vector):
+            raise TypeError('Distance between masscenters should be a Vector.')
+
+        self._set_masscenter_pos(dist)
 
         self._coordinates = self._generate_coordinates(coordinates)
         self._speeds = self._generate_speeds(speeds)
@@ -141,6 +148,8 @@ class Joint(ABC):
             raise ValueError('Joint Position must be supplied as Vector.')
         return body.masscenter.locatenew(self._name + '_' + body.name + '_joint', joint_pos)
 
+    def _set_masscenter_pos(self, dist):
+        self._child.masscenter.set_pos(self._parent.masscenter, dist)
 
 class PinJoint(Joint):
     """
@@ -196,10 +205,10 @@ class PinJoint(Joint):
 
     """
 
-    def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None,
+    def __init__(self, name, parent, child, dist, coordinates=None, speeds=None, parent_joint_pos=None,
         child_joint_pos=None, parent_axis = None):
 
-        super().__init__(name, parent, child, coordinates, speeds, parent_joint_pos, child_joint_pos,
+        super().__init__(name, parent, child, dist, coordinates, speeds, parent_joint_pos, child_joint_pos,
             parent_axis)
 
     def _generate_coordinates(self, coordinate):
