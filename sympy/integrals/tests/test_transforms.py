@@ -583,29 +583,29 @@ def test_inverse_laplace_transform():
     def simp_hyp(expr):
         return factor_terms(expand_mul(expr)).rewrite(sin)
 
-    assert ILT(1 , s, t) == DiracDelta(t)
-    assert ILT(1/s , s, t) == Heaviside(t)
-    assert ILT(a/(a + s) , s, t) == a*exp(-a*t)*Heaviside(t)
-    assert ILT(s/(a + s) , s, t) == -a*exp(-a*t)*Heaviside(t) + DiracDelta(t)
-    assert ILT((a + s)**(-2) , s, t) == t*exp(-a*t)*Heaviside(t)
-    assert ILT((a + s)**(-5) , s, t) == t**4*exp(-a*t)*Heaviside(t)/24
-    assert ILT(a/(a**2 + s**2) , s, t) == sin(a*t)*Heaviside(t)
+    assert ILT(1, s, t) == DiracDelta(t)
+    assert ILT(1/s, s, t) == Heaviside(t)
+    assert ILT(a/(a + s), s, t) == a*exp(-a*t)*Heaviside(t)
+    assert ILT(s/(a + s), s, t) == -a*exp(-a*t)*Heaviside(t) + DiracDelta(t)
+    assert ILT((a + s)**(-2), s, t) == t*exp(-a*t)*Heaviside(t)
+    assert ILT((a + s)**(-5), s, t) == t**4*exp(-a*t)*Heaviside(t)/24
+    assert ILT(a/(a**2 + s**2), s, t) == sin(a*t)*Heaviside(t)
     assert ILT(s/(s**2 + a**2), s, t) == cos(a*t)*Heaviside(t)
-    assert ILT(b/(b**2 + (a + s)**2) , s, t) == exp(-a*t)*sin(b*t)*Heaviside(t)
-    assert ILT(b*s/(b**2 + (a + s)**2) , s, t) +\
+    assert ILT(b/(b**2 + (a + s)**2), s, t) == exp(-a*t)*sin(b*t)*Heaviside(t)
+    assert ILT(b*s/(b**2 + (a + s)**2), s, t) +\
         (a*sin(b*t) - b*cos(b*t))*exp(-a*t)*Heaviside(t) == 0
-    assert ILT(exp(-a*s)/s , s, t) == Heaviside(-a + t)
-    assert ILT(exp(-a*s)/(b + s) , s, t) == exp(b*(a - t))*Heaviside(-a + t)
-    assert ILT((b + s)/(a**2 + (b + s)**2) , s, t) == \
+    assert ILT(exp(-a*s)/s, s, t) == Heaviside(-a + t)
+    assert ILT(exp(-a*s)/(b + s), s, t) == exp(b*(a - t))*Heaviside(-a + t)
+    assert ILT((b + s)/(a**2 + (b + s)**2), s, t) == \
         exp(-b*t)*cos(a*t)*Heaviside(t)
-    assert ILT(exp(-a*s)/s**b , s, t) == \
+    assert ILT(exp(-a*s)/s**b, s, t) == \
         (-a + t)**(b - 1)*Heaviside(-a + t)/gamma(b)
-    assert ILT(exp(-a*s)/sqrt(s**2 + 1) , s, t) == \
+    assert ILT(exp(-a*s)/sqrt(s**2 + 1), s, t) == \
         Heaviside(-a + t)*besselj(0, a - t)
-    assert ILT(1/(s*sqrt(s + 1)) , s, t) == Heaviside(t)*erf(sqrt(t))
-    assert ILT(1/(s**2*(s**2 + 1)) , s, t) == (t - sin(t))*Heaviside(t)
-    assert ILT(s**2/(s**2 + 1) , s, t) == -sin(t)*Heaviside(t) + DiracDelta(t)
-    assert ILT(1 - 1/(s**2 + 1) , s, t) == -sin(t)*Heaviside(t) + DiracDelta(t)
+    assert ILT(1/(s*sqrt(s + 1)), s, t) == Heaviside(t)*erf(sqrt(t))
+    assert ILT(1/(s**2*(s**2 + 1)), s, t) == (t - sin(t))*Heaviside(t)
+    assert ILT(s**2/(s**2 + 1), s, t) == -sin(t)*Heaviside(t) + DiracDelta(t)
+    assert ILT(1 - 1/(s**2 + 1), s, t) == -sin(t)*Heaviside(t) + DiracDelta(t)
     assert ILT(1/s**2, s, t) == t*Heaviside(t)
     assert ILT(1/s**5, s, t) == t**4*Heaviside(t)/24
     assert simp_hyp(ILT(a/(s**2 - a**2), s, t)) == sinh(a*t)*Heaviside(t)
