@@ -1091,7 +1091,7 @@ class RationalRiccati(SinglePatternODESolver):
         b0, b1, b2 = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
-        return solve_riccati(self.ode_problem.eq, fx, x, b0, b1, b2)
+        return solve_riccati(fx, x, b0, b1, b2)
 
 # Avoid circular import:
 from .ode import dsolve

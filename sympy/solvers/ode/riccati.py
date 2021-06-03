@@ -144,14 +144,13 @@ are found using the solutions of the equation in its normal form.
 from sympy.core import S
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
-from sympy.core.symbol import Symbol, symbols, Dummy
+from sympy.core.symbol import symbols, Dummy
 from sympy.functions import sqrt
 from sympy.functions.elementary.complexes import sign
 from sympy.polys.domains import ZZ
 from sympy.polys.polytools import Poly
 from sympy.polys.polyroots import roots
 from sympy.solvers.solveset import linsolve
-from sympy.tensor.indexed import Indexed, IndexedBase
 
 def riccati_normal(w, x, b1, b2):
     # y(x) = -b2(x)*w(x) - b2'(x)/(2*b2(x)) - b1(x)/2
@@ -202,7 +201,7 @@ def inverse_transform_poly(num, den, x):
     xpoly = Poly(x, x)
 
     # Check if degree of numerator is same as denominator
-    pwr = den.degree(x) - num.degree(x)
+    pwr = val_at_inf(num, den, x)
     if pwr >= 0:
         # Denominator has greater degree. Substituting x with
         # 1/x would make the extra power go to the numerator
@@ -218,7 +217,7 @@ def inverse_transform_poly(num, den, x):
 
 
 def limit_at_inf(num, den, x):
-    pwr = num.degree(x) - den.degree(x)
+    pwr = -val_at_inf(num, den, x)
     if pwr > 0:
         return oo*sign(num.LC()/den.LC())
     elif pwr == 0:
@@ -243,7 +242,7 @@ def construct_c(num, den, x, poles, muls):
             # Find the coefficient of 1/(x - pole)**2 in the
             # Laurent series expansion of a(x) about pole.
             if pole != oo:
-                sgn, num1, den1 = (num*(x - pole)**2).cancel(den)
+                sgn, num1, den1 = (num*Poly((x - pole)**2, x, extension=True)).cancel(den)
                 r = (sgn*num1.subs(x, pole))/(den1.subs(x, pole))
             else:
                 r = 0
@@ -279,7 +278,7 @@ def construct_c(num, den, x, poles, muls):
                     temp[s-1] = (ser[mul-ri-s] - sm)/(2*temp[ri-1])
 
             # Memo for the minus case
-            temp1 = list(map(lambda x: -x, temp))
+            temp1 = [-x for x in temp]
 
             # Find the 0th coefficient in the recurrence
             temp[0] = (ser[mul-ri-s] - sm + ri*temp[ri-1])/(2*temp[ri-1])
@@ -304,7 +303,7 @@ def construct_d(num, den, x, val_inf, mul):
                 sm += temp[j]*temp[N+s-j]
             if s != -1:
                 temp[s] = (ser[-mul - 1 + N+s] - sm)/(2*temp[N])
-        temp1 = list(map(lambda x: -x, temp))
+        temp1 = [-x for x in temp]
         temp[-1] = (ser[-mul - 1 + N+s] - temp[N] - sm)/(2*temp[N])
         temp1[-1] = (ser[-mul - 1 + N+s] - temp1[N] - sm)/(2*temp1[N])
         d = [temp, temp1]
@@ -322,7 +321,7 @@ def construct_d(num, den, x, val_inf, mul):
 
         # Coefficients for the minus case are just the negative
         # of the coefficients for the positive case. Append both.
-        d = [temp, list(map(lambda x: -x, temp))]
+        d = [temp, [-x for x in temp]]
 
     # Case 6
     else:
@@ -336,7 +335,6 @@ def construct_d(num, den, x, val_inf, mul):
 
 
 def rational_laurent_series(num, den, x, x0, mul, n):
-    m = Symbol('m')
     one = Poly(1, x)
     reverse = False
     if x0 == oo:
@@ -349,24 +347,29 @@ def rational_laurent_series(num, den, x, x0, mul, n):
         num, den = num.cancel(den, include=True)
     num, den = (num*x**mul).cancel(den, include=True)
 
-    c = IndexedBase('c')
-    indices = [c[i] for i in range(max(den.degree(x), num.degree(x) + 1))]
-    out, sums = Poly(0, x, domain=ZZ[indices]), 0
+    coeff_max = max(den.degree(x), num.degree(x) + 1)
+    c = list(symbols(f'c:{coeff_max}', cls=Dummy))
+    out = Poly(0, x, domain=ZZ[c])
+    rcoeffs = []
+
     for pw, cf in den.as_dict().items():
         pw = pw[0]
-        for i in range(pw, max(den.degree(x), num.degree(x) + 1)):
-            out += Poly(cf*c[i - pw]*x**i, x, domain=ZZ[indices])
-        sums += cf*c[m - pw]
+        for i in range(pw, coeff_max):
+            out += Poly(cf*c[i - pw]*x**i, x, domain=ZZ[c])
+        rcoeffs.append((cf, -pw))
 
     if out:
-        coeffs = linsolve_dict((num - out).all_coeffs(), list(out.atoms(Indexed)), x)
-        for i in range(len(coeffs), n + mul):
-            ai = linsolve_dict([sums.subs(m, i).subs(coeffs)], [c[i]], x)
-            if type(ai) == dict:
-                coeffs.update({c[i]: list(ai.values())[0]})
-        coeffs = list(coeffs.items())
-        coeffs.sort(key = lambda x: x[0].indices[0])
-        coeffs = list(map(lambda x: x[1], coeffs))
+        sols = list(linsolve((num - out).all_coeffs(), c, x))
+        if len(sols):
+            c[:len(sols)] = sols[0]
+            for i in range(len(sols), n + mul):
+                sums = sum([cf*c[i - pw] for cf, pw in rcoeffs])
+                sol = list(linsolve([sums], [c[i]], x))
+                if len(sol):
+                    c[i] = sol[0][0]
+            coeffs = c
+        else:
+            coeffs = []
     else:
         coeffs = list(map(lambda x: x/den, num.as_dict().values()))
     return coeffs[::-1] if reverse else coeffs
@@ -391,7 +394,7 @@ def compute_degree(x, poles, choice, c, d, N):
     # Calculate the second summation for ybar
     for i in range(N+1):
         ybar += d[choice[0]][i]*x**i
-    numy, deny = [Poly(e, x) for e in ybar.together().as_numer_denom()]
+    numy, deny = [Poly(e, x, extension=True) for e in ybar.together().as_numer_denom()]
     return m, ybar, numy, deny, True
 
 
@@ -420,11 +423,11 @@ def solve_aux_eq(numa, dena, numy, deny, x, m):
         return S(1), auxeq, auxeq == 0
 
 
-def solve_riccati(eq, fx, x, b0, b1, b2):
+def solve_riccati(fx, x, b0, b1, b2):
     # Step 1 : Convert to Normal Form
     a = -b0*b2 + b1**2/4 - b1.diff(x)/2 + 3*b2.diff(x)**2/(4*b2**2) + b1*b2.diff(x)/(2*b2) - b2.diff(x, 2)/(2*b2)
     a_t = a.together()
-    num, den = map(lambda e: Poly(e, x), a_t.as_numer_denom())
+    num, den = [Poly(e, x, extension=True) for e in a_t.as_numer_denom()]
     num, den = num.cancel(den, include=True)
 
     # Step 2
@@ -432,7 +435,7 @@ def solve_riccati(eq, fx, x, b0, b1, b2):
 
     # Step 3 : a(x) is 0
     if num == 0:
-        presol.append(1/(x + get_numbered_constants(eq, 1)))
+        presol.append(1/(x + Dummy('C1')))
 
     # Step 4 : a(x) is a non-zero constant
     elif x not in num.free_symbols.union(den.free_symbols):
@@ -460,7 +463,7 @@ def solve_riccati(eq, fx, x, b0, b1, b2):
         for it in range(2**(len(poles) + 1)):
             # For each possible combination, generate an array of 0's and 1's
             # where 0 means pick 1st choice and 1 means pick the second choice.
-            choice = list(map(lambda x: int(x), bin(it)[2:].zfill(len(poles) + 1)))
+            choice = [int(x) for x in bin(it)[2:].zfill(len(poles) + 1)]
 
             # Step 8 and 9 : Compute m and ybar
             m, ybar, numy, deny, exists = compute_degree(x, poles, choice, c, d, -val_inf//2)
@@ -490,14 +493,10 @@ def solve_riccati(eq, fx, x, b0, b1, b2):
             # NOTE: In this case, it seems like x**m + C1 is always a solution
             # for the auxiliary equation. It is however NOT mentioned in the thesis.
             elif len(m.free_symbols):
-                C1 = Symbol('C1')
+                C1 = Dummy('C1')
                 psol = x**m + C1
                 presol.append(ybar + psol.diff(x)/psol)
     # Step 15 : Inverse transform the solutions of the equation in normal form
     bp = -b2.diff(x)/(2*b2**2) - b1/(2*b2)
     sol = [Eq(fx, riccati_inverse_normal(y, x, b1, b2, bp)) for y in presol]
     return sol
-
-
-# Avoid circular import:
-from .ode import get_numbered_constants
