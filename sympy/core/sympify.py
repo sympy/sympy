@@ -435,14 +435,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if iterable(a):
         try:
             return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
-                rational=rational) for x in a])
-        except TypeError:
-            # Not all iterables are rebuildable with their type.
-            pass
-    if isinstance(a, dict):
-        try:
-            return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
-                rational=rational) for x in a.items()])
+                rational=rational, evaluate=evaluate) for x in a])
         except TypeError:
             # Not all iterables are rebuildable with their type.
             pass
