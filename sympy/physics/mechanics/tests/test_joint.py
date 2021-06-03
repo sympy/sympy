@@ -44,7 +44,7 @@ def test_pinjoint():
     theta = dynamicsymbols('J2_theta')
     parent = Body('P')
     child = Body('C')
-    J2 = PinJoint('J2', parent, child, parent_axis=a*parent.frame.x + b*parent.frame.y - c*parent.frame.z)
+    PinJoint('J2', parent, child, parent_axis=a*parent.frame.x + b*parent.frame.y - c*parent.frame.z)
     assert parent.frame.dcm(child.frame) == Matrix([[a**2/(a**2 + b**2 + c**2) + \
         (-a**2/(a**2 + b**2 + c**2) + 1)*cos(theta), -a*b*cos(theta)/(a**2 + b**2 + c**2) + \
         a*b/(a**2 + b**2 + c**2) + c*sin(theta)/sqrt(a**2 + b**2 + c**2), a*c*cos(theta)/(a**2 + b**2 + c**2) \
