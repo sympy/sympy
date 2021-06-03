@@ -42,13 +42,16 @@ def test_pinjoint():
 def test_pin_joint_double_pendulum():
     q1, q2 = dynamicsymbols('q1 q2')
     u1, u2 = dynamicsymbols('u1 u2')
-    m = symbols('m')
+    m, l = symbols('m l')
     N = ReferenceFrame('N')
     A = ReferenceFrame('A')
     B = ReferenceFrame('B')
-    C = Body('C', frame=N) #ceiling
-    PartP = Body('P', frame=A, mass=m)
-    PartR = Body('R', frame=B, mass=m)
+    O = Point('O')
+    P = O.locatenew('P', l * A.x)
+    R = P.locatenew('R', l * B.x)
+    C = Body('C', O, frame=N) #ceiling
+    PartP = Body('P', P, frame=A, mass=m)
+    PartR = Body('R', R, frame=B, mass=m)
 
     J1 = PinJoint('J1', C, PartP, speeds=u1, coordinates=q1, parent_axis=C.frame.z)
     J2 = PinJoint('J2', PartP, PartR, speeds=u2, coordinates=q2, parent_axis=PartP.frame.z)
@@ -69,11 +72,11 @@ def test_pin_joint_double_pendulum():
     assert J2.kdes() == [u2 - q2.diff(t)]
 
     #Check Linear Velocity
-    assert J1._parent_joint.vel(N) == 0
-    # Problem here
+    assert PartP.masscenter.vel(N) == l*u1*A.y
+    assert PartR.masscenter.vel(A) == l*u2*B.y
 
 def test_pin_joint_chaos_pendulum():
-    mA, mB, lA, lB = symbols('mA, mB, lA, lB')
+    mA, mB, lA, lB, h = symbols('mA, mB, lA, lB, h')
     theta, phi, omega, alpha = dynamicsymbols('theta phi omega alpha')
     N = ReferenceFrame('N')
     A = ReferenceFrame('A')
@@ -81,6 +84,7 @@ def test_pin_joint_chaos_pendulum():
     No = Point('No')
     Ao = Point('Ao')
     Bo = Point('Bo')
+    lA = (lB - h / 2) / 2
     Ao.set_pos(No, lA * A.z)
     Bo.set_pos(No, lB * A.z)
     rod = Body('rod', Ao, mA, A)
@@ -105,6 +109,5 @@ def test_pin_joint_chaos_pendulum():
     assert J2.kdes() == [alpha - phi.diff(t)]
 
     #Check Linear Velocities
-    assert J1._parent_joint.vel(N) == 0
-    # Incorrect result in linear velocity
-    # J1._child_joint.vel(A)
+    assert rod.masscenter.vel(N) == (-h/4 + lB/2)*omega*A.x
+    assert plate.masscenter.vel(N) == lB*omega*A.x
