@@ -21,7 +21,7 @@ from sympy.core.mul import Mul
 from sympy.functions import exp, sqrt, tan, log
 from sympy.integrals import Integral
 from sympy.polys.polytools import cancel, factor
-from sympy.simplify import simplify
+from sympy.simplify import simplify, separatevars
 from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
 
@@ -708,7 +708,7 @@ class Bernoulli(SinglePatternODESolver):
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
-    :py:meth:`~sympy.solvers.ode.ode.ode_separable`).
+    :py:meth:`sympy.solvers.ode.single.Separable`).
 
     >>> pprint(dsolve(Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)), f(x),
     ... hint='separable_Integral'))
@@ -1073,6 +1073,99 @@ class Liouville(SinglePatternODESolver):
         int = Integral(exp(Integral(self.g, self.y)), (self.y, None, fx))
         gen_sol = Eq(int + C1*Integral(exp(-Integral(self.h, x)), x) + C2, 0)
 
+        return [gen_sol]
+
+
+class Separable(SinglePatternODESolver):
+    r"""
+    Solves separable 1st order differential equations.
+
+    This is any differential equation that can be written as `P(y)
+    \tfrac{dy}{dx} = Q(x)`.  The solution can then just be found by
+    rearranging terms and integrating: `\int P(y) \,dy = \int Q(x) \,dx`.
+    This hint uses :py:meth:`sympy.simplify.simplify.separatevars` as its back
+    end, so if a separable equation is not caught by this solver, it is most
+    likely the fault of that function.
+    :py:meth:`~sympy.simplify.simplify.separatevars` is
+    smart enough to do most expansion and factoring necessary to convert a
+    separable equation `F(x, y)` into the proper form `P(x)\cdot{}Q(y)`.  The
+    general solution is::
+
+        >>> from sympy import Function, dsolve, Eq, pprint
+        >>> from sympy.abc import x
+        >>> a, b, c, d, f = map(Function, ['a', 'b', 'c', 'd', 'f'])
+        >>> genform = Eq(a(x)*b(f(x))*f(x).diff(x), c(x)*d(f(x)))
+        >>> pprint(genform)
+                     d
+        a(x)*b(f(x))*--(f(x)) = c(x)*d(f(x))
+                     dx
+        >>> pprint(dsolve(genform, f(x), hint='separable_Integral'))
+             f(x)
+           /                  /
+          |                  |
+          |  b(y)            | c(x)
+          |  ---- dy = C1 +  | ---- dx
+          |  d(y)            | a(x)
+          |                  |
+         /                  /
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Eq
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(Eq(f(x)*f(x).diff(x) + x, 3*x*f(x)**2), f(x),
+    ... hint='separable', simplify=False))
+       /   2       \         2
+    log\3*f (x) - 1/        x
+    ---------------- = C1 + --
+           6                2
+
+    References
+    ==========
+
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 52
+
+    # indirect doctest
+
+    """
+    hint = "separable"
+    has_integral = True
+    order = [1]
+
+    def _wilds(self, f, x, order):
+        d = Wild('d', exclude=[f(x).diff(x), f(x).diff(x, 2)])
+        e = Wild('e', exclude=[f(x).diff(x)])
+        return d, e
+
+    def _equation(self, fx, x, order):
+        d, e = self.wilds()
+        return d + e*fx.diff(x)
+
+    def _verify(self, fx):
+        d, e = self.wilds_match()
+        self.y = Dummy('y')
+        x = self.ode_problem.sym
+        d = separatevars(d.subs(fx, self.y))
+        e = separatevars(e.subs(fx, self.y))
+        # m1[coeff]*m1[x]*m1[y] + m2[coeff]*m2[x]*m2[y]*y'
+        self.m1 = separatevars(d, dict=True, symbols=(x, self.y))
+        self.m2 = separatevars(e, dict=True, symbols=(x, self.y))
+        if self.m1 and self.m2:
+            # print("hello single.py")
+            return True
+        return False
+
+    def _get_general_solution(self, *, simplify: bool = True):
+        fx = self.ode_problem.func
+        x = self.ode_problem.sym
+        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
+        int = Integral(self.m2['coeff']*self.m2[self.y]/self.m1[self.y],
+        (self.y, None, fx))
+        gen_sol = Eq(int, Integral(-self.m1['coeff']*self.m1[x]/
+        self.m2[x], x) + C1)
         return [gen_sol]
 
 
