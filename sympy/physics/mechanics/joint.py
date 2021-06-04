@@ -8,6 +8,9 @@ __all__ = ['Joint', 'PinJoint']
 class Joint(ABC):
     """Abstract Base class for all specific joints.
 
+    Explanation
+    ===========
+
     A Joint connects two bodies (a parent and child) by adding different degrees
     of freedom to child with respect to parent.
     This is the base class for all specific joints and holds all common methods
@@ -45,7 +48,7 @@ class Joint(ABC):
     """
 
     def __init__(self, name, parent, child, dist, coordinates=None, speeds=None, parent_joint_pos=None,
-        child_joint_pos=None, parent_axis = None):
+        child_joint_pos=None, parent_axis=None):
 
         if not isinstance(name, str):
             raise TypeError('Supply a valid name.')
@@ -56,7 +59,7 @@ class Joint(ABC):
         self._parent = parent
 
         if not isinstance(child, Body):
-            raise TypeError('Parent must be an instance of Body.')
+            raise TypeError('Child must be an instance of Body.')
         self._child = child
 
         if not isinstance(dist, Vector):
@@ -92,7 +95,7 @@ class Joint(ABC):
         return self._child
 
     def coordinates(self):
-        """ List of Coordinates of Joint."""
+        """ List of coordinates of Joint."""
         return self._coordinates
 
     def speeds(self):
@@ -151,9 +154,12 @@ class Joint(ABC):
     def _set_masscenter_pos(self, dist):
         self._child.masscenter.set_pos(self._parent.masscenter, dist)
 
+
 class PinJoint(Joint):
-    """
-    Pin (Revolute) Joint.
+    """Pin (Revolute) Joint.
+
+    Explanation
+    ===========
 
     It is defined such that the child body rotates with respect to the parent body
     about the body fixed parent axis through the angle theta. The point of joint
@@ -171,6 +177,8 @@ class PinJoint(Joint):
         The parent body of joint.
     child : Body
         The child body of joint.
+    dist : Vector
+        The vector distance between parent's masscenter and child's masscenter.
     coordinates: dynamicsymbol, optional
         Coordinates of joint.
     speeds : dynamicsymbol, optional
@@ -197,7 +205,7 @@ class PinJoint(Joint):
     >>> from sympy.physics.mechanics import Body, PinJoint
     >>> parent = Body('parent')
     >>> child = Body('child')
-    >>> P = PinJoint('P', parent, child)
+    >>> P = PinJoint('P', parent, child, child.frame.x)
     >>> P.coordinates()
     [P_theta(t)]
     >>> P.speeds()
@@ -206,7 +214,7 @@ class PinJoint(Joint):
     """
 
     def __init__(self, name, parent, child, dist, coordinates=None, speeds=None, parent_joint_pos=None,
-        child_joint_pos=None, parent_axis = None):
+        child_joint_pos=None, parent_axis=None):
 
         super().__init__(name, parent, child, dist, coordinates, speeds, parent_joint_pos, child_joint_pos,
             parent_axis)
@@ -215,8 +223,7 @@ class PinJoint(Joint):
         coordinates = []
         if coordinate is None:
             theta = dynamicsymbols(self._name + '_theta')
-            coordinates.append(theta)
-            return coordinates
+            coordinate = theta
         coordinates.append(coordinate)
         return coordinates
 
@@ -224,8 +231,7 @@ class PinJoint(Joint):
         speeds = []
         if speed is None:
             omega = dynamicsymbols(self._name + '_omega')
-            speeds.append(omega)
-            return speeds
+            speed = omega
         speeds.append(speed)
         return speeds
 

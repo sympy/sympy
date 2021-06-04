@@ -1,11 +1,12 @@
-from sympy.core.symbol import symbols
 from sympy import sin, cos, Matrix, sqrt
-from sympy.physics.vector import Vector, ReferenceFrame
+from sympy.core.symbol import symbols
 from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint
 from sympy.physics.mechanics.joint import Joint
+from sympy.physics.vector import Vector, ReferenceFrame
 from sympy.testing.pytest import raises
 
 t = dynamicsymbols._t
+
 
 def test_Joint():
     parent = Body('parent')
@@ -16,11 +17,11 @@ def test_Joint():
 def test_pinjoint():
     P = Body('P')
     C = Body('C')
-    l = symbols('l')
+    l, m = symbols('l m')
     dist = l * C.frame.x
-    Pj = PinJoint('J', P, C, dist)
     theta, omega = dynamicsymbols('J_theta, J_omega')
 
+    Pj = PinJoint('J', P, C, dist)
     assert Pj._name == 'J'
     assert Pj.parent() == P
     assert Pj.child() == C
@@ -33,7 +34,6 @@ def test_pinjoint():
     assert Pj._parent_joint.pos_from(Pj._child_joint) == Vector(0)
     assert C.masscenter.pos_from(P.masscenter) == dist
 
-    l, m = symbols('l m')
     J1 = PinJoint('J1', P, C, dist, parent_joint_pos= l * P.frame.x, child_joint_pos= m * C.frame.y,
         parent_axis = P.frame.z)
 
