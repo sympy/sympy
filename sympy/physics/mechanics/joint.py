@@ -41,9 +41,6 @@ class Joint(ABC):
     parent_axis : Vector, optional
         Axis of parent frame which would be be aligned with child's
         axis. Default is x axis in parent's frame.
-    child_axis : Vector, optional
-        Axis of Child frame which would be be aligned with parent's
-        axis. Default is x axis in child's frame.
 
     """
 
@@ -192,15 +189,9 @@ class PinJoint(Joint):
     parent_axis : Vector, optional
         Axis of parent frame which would be be aligned with child's
         axis. Default is x axis in parent's frame.
-    child_axis : Vector, optional
-        Axis of Child frame which would be be aligned with parent's
-        axis. Default is x axis in child's frame.
 
     Examples
     =========
-
-    Adding a Pin Joint which connects center of mass of parent to a point
-    pointed by child.frame.x + child.frame.y w.r.t. child's center of mass.
 
     >>> from sympy.physics.mechanics import Body, PinJoint
     >>> parent = Body('parent')
