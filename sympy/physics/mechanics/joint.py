@@ -2,7 +2,7 @@ from sympy.physics.mechanics.body import Body
 from sympy.physics.vector import Vector, dynamicsymbols
 from abc import ABC, abstractmethod
 
-__all__ = ['Joint', 'PinJoint']
+__all__ = ['Joint', 'PinJoint', 'SlidingJoint']
 
 
 class Joint(ABC):
@@ -41,9 +41,6 @@ class Joint(ABC):
     parent_axis : Vector, optional
         Axis of parent frame which would be be aligned with child's
         axis. Default is x axis in parent's frame.
-    child_axis : Vector, optional
-        Axis of Child frame which would be be aligned with parent's
-        axis. Default is x axis in child's frame.
 
     """
 
@@ -192,15 +189,9 @@ class PinJoint(Joint):
     parent_axis : Vector, optional
         Axis of parent frame which would be be aligned with child's
         axis. Default is x axis in parent's frame.
-    child_axis : Vector, optional
-        Axis of Child frame which would be be aligned with parent's
-        axis. Default is x axis in child's frame.
 
     Examples
     =========
-
-    Adding a Pin Joint which connects center of mass of parent to a point
-    pointed by child.frame.x + child.frame.y w.r.t. child's center of mass.
 
     >>> from sympy.physics.mechanics import Body, PinJoint
     >>> parent = Body('parent')
@@ -246,3 +237,91 @@ class PinJoint(Joint):
         self._child_joint.set_vel(self._parent.frame, 0)
         self._child_joint.set_pos(self._parent_joint, 0)
         self._child.masscenter.v2pt_theory(self._parent.masscenter, self._parent.frame, self._child.frame)
+
+
+class SlidingJoint(Joint):
+    """Sliding (Prismatic) Joint.
+
+    Explanation
+    ===========
+
+    It is defined such that the child body translates with respect to the parent
+    body along the body fixed parent axis. The point of joint (sliding joint) is defined 
+    by two points in each body which coincides initially.
+    In addition, the child's reference frame can be arbitrarily rotated a
+    constant amount with respect to the parent axis by passing an axis in child
+    body which must align with parent axis after the rotation.
+
+    Parameters
+    ==========
+
+    name : string
+        The Joint's name which makes it unique.
+    parent : Body
+        The parent body of joint.
+    child : Body
+        The child body of joint.
+    dist : Vector
+        The vector distance between parent's masscenter and child's masscenter.
+    coordinates: dynamicsymbol, optional
+        Coordinates of joint.
+    speeds : dynamicsymbol, optional
+        Speeds of joint.
+    parent_joint_pos : Vector, optional
+        Defines the joint's point where the parent will be connected to child.
+        Default value is masscenter of Parent Body.
+    child_joint_pos : Vector, optional
+        Defines the joint's point where the child will be connected to parent.
+        Default value is masscenter of Child Body.
+    parent_axis : Vector, optional
+        Axis of parent frame which would be be aligned with child's
+        axis. Default is x axis in parent's frame.
+
+    Examples
+    =========
+
+    >>> from sympy.physics.mechanics import Body, SlidingJoint
+    >>> parent = Body('parent')
+    >>> child = Body('child')
+    >>> P = SlidingJoint('P', parent, child)
+    >>> P.coordinates()
+    [P_x(t)]
+    >>> P.speeds()
+    [P_v(t)]
+
+    """
+
+    def __init__(self, name, parent, child, dist=None, coordinates=None, speeds=None, parent_joint_pos=None,
+        child_joint_pos=None, parent_axis=None):
+
+        super().__init__(name, parent, child, dist, coordinates, speeds, parent_joint_pos, child_joint_pos,
+            parent_axis)
+
+    def _generate_coordinates(self, coordinate):
+        coordinates = []
+        if coordinate is None:
+            x = dynamicsymbols(self._name + '_x')
+            coordinate = x
+        coordinates.append(coordinate)
+        return coordinates
+
+    def _generate_speeds(self, speed):
+        speeds = []
+        if speed is None:
+            y = dynamicsymbols(self._name + '_v')
+            speed = y
+        speeds.append(speed)
+        return speeds
+
+    def _orient_frames(self):
+        self._child.frame.orient_axis(self._parent.frame, self._parent_axis, 0)
+
+    def _set_angular_velocity(self):
+        return
+
+    def _set_linear_velocity(self):
+        self._parent_joint.set_vel(self._parent.frame, 0)
+        self._child_joint.set_vel(self._child.frame, 0)
+        self._child_joint.set_pos(self._parent_joint, self._coordinates[0] * self._parent_axis)
+        self._child_joint.set_vel(self._parent.frame, self._coordinates[0] * self._parent_axis)
+        self._child.masscenter.set_vel(self._parent.frame, self._coordinates[0] * self._parent_axis)
