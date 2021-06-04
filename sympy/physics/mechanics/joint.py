@@ -26,7 +26,7 @@ class Joint(ABC):
         The parent body of joint.
     child : Body
         The child body of joint.
-    dist : Vector
+    dist : Vector, optional
         The vector distance between parent's masscenter and child's masscenter.
     coordinates: List of dynamicsymbols/dynamicsymbol, optional
         Coordinates of joint.
@@ -47,7 +47,7 @@ class Joint(ABC):
 
     """
 
-    def __init__(self, name, parent, child, dist, coordinates=None, speeds=None, parent_joint_pos=None,
+    def __init__(self, name, parent, child, dist=None, coordinates=None, speeds=None, parent_joint_pos=None,
         child_joint_pos=None, parent_axis=None):
 
         if not isinstance(name, str):
@@ -62,10 +62,10 @@ class Joint(ABC):
             raise TypeError('Child must be an instance of Body.')
         self._child = child
 
-        if not isinstance(dist, Vector):
-            raise TypeError('Distance between masscenters should be a Vector.')
-
-        self._set_masscenter_pos(dist)
+        if dist is not None:
+            if not isinstance(dist, Vector):
+                raise TypeError('Distance between masscenters should be a Vector.')
+            self._set_masscenter_pos(dist)
 
         self._coordinates = self._generate_coordinates(coordinates)
         self._speeds = self._generate_speeds(speeds)
