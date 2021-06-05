@@ -156,7 +156,8 @@ linear_coefficients
 
 separable_reduced
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_separable_reduced
+.. autofunction:: sympy.solvers.ode.single::SeparableReduced
+   :members:
 
 lie_group
 ^^^^^^^^^
