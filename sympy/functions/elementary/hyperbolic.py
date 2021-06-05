@@ -894,7 +894,6 @@ class coth(HyperbolicFunction):
             if coeff.is_Integer and coeff > 1:
                 c = coth(x, evaluate=False)
                 p = [[], []]
-                u = dict(evaluate=False)
                 for i in range(coeff, -1, -1):
                     p[(coeff - i) % 2].append(binomial(coeff, i)*c**i)
                 return Add(*p[0])/Add(*p[1])
