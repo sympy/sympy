@@ -880,31 +880,24 @@ class coth(HyperbolicFunction):
 
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
-        x = None
         if arg.is_Add:
             from sympy import symmetric_poly
+            CX = [coth(x, evaluate=False)._eval_expand_trig() for x in arg.args]
+            p = [[], []]
             n = len(arg.args)
-            CX = []
-            for x in arg.args:
-                cx = coth(x, evaluate=False)._eval_expand_trig()
-                CX.append(cx)
-
-            Yg = numbered_symbols('Y')
-            Y = [next(Yg) for i in range(n)]
-
-            p = [0, 0]
             for i in range(n, -1, -1):
-                p[(n - i) % 2] += symmetric_poly(i, Y)
-            return (p[0] / p[1]).subs(list(zip(Y, CX)))
+                p[(n - i) % 2].append(symmetric_poly(i, CX))
+            return Add(*p[0])/Add(*p[1])
         elif arg.is_Mul:
             from sympy import binomial
-            coeff, terms = arg.as_coeff_Mul(rational=True)
+            coeff, x = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer and coeff > 1:
-                z = Symbol('dummy', real=True)
-                p = [0, 0]
+                c = coth(x, evaluate=False)
+                p = [[], []]
+                u = dict(evaluate=False)
                 for i in range(coeff, -1, -1):
-                    p[(coeff - i) % 2] += binomial(coeff, i) * z ** i
-                return (p[0] / p[1]).subs([(z, coth(terms))])
+                    p[(coeff - i) % 2].append(binomial(coeff, i)*c**i)
+                return Add(*p[0])/Add(*p[1])
         return coth(arg)
 
 

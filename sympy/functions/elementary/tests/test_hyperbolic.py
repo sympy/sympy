@@ -327,10 +327,10 @@ def test_coth():
     x = Symbol('x', extended_real=True)
     assert coth(x).as_real_imag(deep=False) == (coth(x), 0)
 
-    assert expand_trig(coth(2*x)) == (coth(x)**2+1)/(2*coth(x))
-    assert expand_trig(coth(3*x)) == (coth(x)**3+3*coth(x))/(1+3*coth(x)**2)
+    assert expand_trig(coth(2*x)) == (coth(x)**2 + 1)/(2*coth(x))
+    assert expand_trig(coth(3*x)) == (coth(x)**3 + 3*coth(x))/(1 + 3*coth(x)**2)
 
-    assert expand_trig(coth(x+y)) == (1+coth(x)*coth(y))/(coth(x)+coth(y))
+    assert expand_trig(coth(x + y)) == (1 + coth(x)*coth(y))/(coth(x) + coth(y))
 
 
 def test_coth_series():
@@ -402,7 +402,7 @@ def test_csch():
 
     assert csch(n).is_real is True
 
-    assert expand_trig(csch(x+y)) == 1/(sinh(x)*cosh(y)+cosh(x)*sinh(y))
+    assert expand_trig(csch(x + y)) == 1/(sinh(x)*cosh(y) + cosh(x)*sinh(y))
 
 
 def test_csch_series():
@@ -472,7 +472,7 @@ def test_sech():
 
     assert sech(n).is_real is True
 
-    assert expand_trig(sech(x+y)) == 1/(cosh(x)*cosh(y)+sinh(x)*sinh(y))
+    assert expand_trig(sech(x + y)) == 1/(cosh(x)*cosh(y) + sinh(x)*sinh(y))
 
 
 def test_sech_series():
