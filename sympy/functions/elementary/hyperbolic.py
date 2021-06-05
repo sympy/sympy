@@ -9,9 +9,6 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.integers import floor
 
 from sympy.core.logic import fuzzy_or, fuzzy_and
-from sympy.utilities.iterables import numbered_symbols
-from sympy.core.symbol import Symbol
-
 
 def _rewrite_hyperbolics_as_exp(expr):
     expr = sympify(expr)
