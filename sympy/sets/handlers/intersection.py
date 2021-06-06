@@ -278,9 +278,8 @@ def intersection_sets(self, other): # noqa:F811
 
     if other == S.Reals:
         from sympy.core.function import expand_complex
-        from sympy.core.relational import Eq
         from sympy.solvers.solvers import denoms, solve_linear
-
+        from sympy.core.relational import Eq
         f = self.lamda.expr
         n = self.lamda.variables[0]
 
@@ -305,8 +304,6 @@ def intersection_sets(self, other): # noqa:F811
             return None
         else:
             # univarite imaginary part in same variable
-            from sympy.solvers.solvers import denoms, solve_linear
-            from sympy.core.relational import Eq
             x, xis = solve_linear(im, n)
             if x == n:
                 base_set -= FiniteSet(xis)
