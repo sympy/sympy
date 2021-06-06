@@ -23,7 +23,7 @@ from sympy.core.mul import Mul
 from sympy.functions import exp, sqrt, tan, log
 from sympy.integrals import Integral
 from sympy.polys.polytools import cancel, factor
-from sympy.simplify import simplify
+from sympy.simplify import simplify, separatevars
 from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
 
@@ -710,7 +710,7 @@ class Bernoulli(SinglePatternODESolver):
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
-    :py:meth:`~sympy.solvers.ode.ode.ode_separable`).
+    :py:meth:`sympy.solvers.ode.single.Separable`).
 
     >>> pprint(dsolve(Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)), f(x),
     ... hint='separable_Integral'))
@@ -921,6 +921,115 @@ class RiccatiSpecial(SinglePatternODESolver):
         return [gensol]
 
 
+class RationalRiccati(SinglePatternODESolver):
+    r"""
+    Gives all rational solutions to the first
+    order Riccati Differential Equation
+
+    .. math :: y' = b_0(x) + b_1(x) y + b_2(x) y^2
+
+    where `b_0`, `b_1` and `b_2` are rational functions of `x`
+    with `b_2 \ne 0` (`b_2 = 0` would make it a Bernoulli equation).
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Function, dsolve, checkodesol
+    >>> f = Function('f')
+    >>> x = Symbol('x')
+
+    >>> eq = f(x).diff(x) - x*f(x)**2
+    >>> sols = dsolve(eq, hint="1st_rational_riccati")
+    >>> sols
+    [Eq(f(x), -2/(C1 + x**2)), Eq(f(x), 0)]
+    >>> checkodesol(eq, sols)
+    [(True, 0), (True, 0)]
+
+    >>> eq = x**3*f(x).diff(x) - x**2*f(x) - f(x)**2
+    >>> sols = dsolve(eq, hint="1st_rational_riccati")
+    >>> sols
+    Eq(f(x), x**2*(-x/(C1 + x) + 1))
+    >>> checkodesol(eq, sols)
+    (True, 0)
+
+    >>> eq = -x**4*f(x)**2 + x**3*f(x).diff(x) + x**2*f(x) + 20
+    >>> sols = dsolve(eq, hint="1st_rational_riccati")
+    >>> sols
+    [Eq(f(x), (-9*x**8/(C1 + x**9) + 4/x)/x), Eq(f(x), 4/x**2)]
+    >>> checkodesol(eq, sols)
+    [(True, 0), (True, 0)]
+
+    >>> eq = x**3*f(x).diff(x) - x**2*(f(x) + f(x).diff(x)) + 2*x*f(x) - f(x)**2
+    >>> sols = dsolve(eq, hint="1st_rational_riccati")
+    >>> sols
+    Eq(f(x), x**2*(1 - (x - 1)/(C1 + x)))
+    >>> checkodesol(eq, sols)
+    (True, 0)
+
+    .. [1] Algorithm (Pg 78) - https://www3.risc.jku.at/publications/download/risc_5387/PhDThesisThieu.pdf
+    .. [2] Examples - https://www3.risc.jku.at/publications/download/risc_5197/RISCReport15-19.pdf
+    """
+    has_integral = False
+    hint = "1st_rational_riccati"
+    order = [1]
+
+    def _wilds(self, f, x, order):
+        b0 = Wild('b0', exclude=[f(x), f(x).diff(x)])
+        b1 = Wild('b1', exclude=[f(x), f(x).diff(x)])
+        b2 = Wild('b2', exclude=[f(x), f(x).diff(x)])
+        return (b0, b1, b2)
+
+    def _equation(self, fx, x, order):
+        b0, b1, b2 = self.wilds()
+        return fx.diff(x) - b0 - b1*fx - b2*fx**2
+
+    def _matches(self):
+        eq = self.ode_problem.eq_expanded
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        order = self.ode_problem.order
+
+        if order != 1:
+            return False
+
+        eq = eq.collect(f(x))
+        cf = eq.coeff(f(x).diff(x))
+
+        # There must be an f(x).diff(x) term.
+        # eq must be an Add object since we are using the expanded
+        # equation and it must have atleast 2 terms (b2 != 0)
+        if cf != 0 and isinstance(eq, Add):
+
+            # Divide all coefficients by the coefficient of f(x).diff(x)
+            # and add the terms again to get the same equation
+            eq = Add(*map(lambda x: cancel(x/cf), eq.args)).collect(f(x))
+
+            # Get the pattern for the Riccati equation
+            pattern = self._equation(f(x), x, order)
+
+            # Match the equation with the pattern
+            self._wilds_match = match = eq.match(pattern)
+
+            # If there is a match, verify it
+            if match is not None:
+                return self._verify(f(x))
+        return False
+
+    def _verify(self, fx):
+        b0, b1, b2 = self.wilds_match()
+        x = self.ode_problem.sym
+
+        # b0, b1 and b2 must all be rational functions of x, with b2 != 0
+        return all([b2 != 0, b0.is_rational_function(x), b1.is_rational_function(x), b2.is_rational_function(x)])
+
+    def _get_general_solution(self, *, simplify: bool = True):
+        # Match the equation
+        b0, b1, b2 = self.wilds_match()
+        fx = self.ode_problem.func
+        x = self.ode_problem.sym
+        return solve_riccati(fx, x, b0, b1, b2)
+
+
 class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
     r"""
     Gives solution for the autonomous second order nonlinear
@@ -1078,116 +1187,98 @@ class Liouville(SinglePatternODESolver):
         return [gen_sol]
 
 
-class RationalRiccati(SinglePatternODESolver):
+class Separable(SinglePatternODESolver):
     r"""
-    Gives all rational solutions to the first
-    order Riccati Differential Equation
+    Solves separable 1st order differential equations.
 
-    .. math :: y' = b_0(x) + b_1(x) y + b_2(x) y^2
+    This is any differential equation that can be written as `P(y)
+    \tfrac{dy}{dx} = Q(x)`.  The solution can then just be found by
+    rearranging terms and integrating: `\int P(y) \,dy = \int Q(x) \,dx`.
+    This hint uses :py:meth:`sympy.simplify.simplify.separatevars` as its back
+    end, so if a separable equation is not caught by this solver, it is most
+    likely the fault of that function.
+    :py:meth:`~sympy.simplify.simplify.separatevars` is
+    smart enough to do most expansion and factoring necessary to convert a
+    separable equation `F(x, y)` into the proper form `P(x)\cdot{}Q(y)`.  The
+    general solution is::
 
-    where `b_0`, `b_1` and `b_2` are rational functions of `x`
-    with `b_2 \ne 0` (`b_2 = 0` would make it a Bernoulli equation).
+        >>> from sympy import Function, dsolve, Eq, pprint
+        >>> from sympy.abc import x
+        >>> a, b, c, d, f = map(Function, ['a', 'b', 'c', 'd', 'f'])
+        >>> genform = Eq(a(x)*b(f(x))*f(x).diff(x), c(x)*d(f(x)))
+        >>> pprint(genform)
+                     d
+        a(x)*b(f(x))*--(f(x)) = c(x)*d(f(x))
+                     dx
+        >>> pprint(dsolve(genform, f(x), hint='separable_Integral'))
+             f(x)
+           /                  /
+          |                  |
+          |  b(y)            | c(x)
+          |  ---- dy = C1 +  | ---- dx
+          |  d(y)            | a(x)
+          |                  |
+         /                  /
 
     Examples
     ========
 
-    >>> from sympy import Symbol, Function, dsolve, checkodesol
+    >>> from sympy import Function, dsolve, Eq
+    >>> from sympy.abc import x
     >>> f = Function('f')
-    >>> x = Symbol('x')
-
-    >>> eq = f(x).diff(x) - x*f(x)**2
-    >>> sols = dsolve(eq, hint="1st_rational_riccati")
-    >>> sols
-    [Eq(f(x), -2/(C1 + x**2)), Eq(f(x), 0)]
-    >>> checkodesol(eq, sols)
-    [(True, 0), (True, 0)]
-
-    >>> eq = x**3*f(x).diff(x) - x**2*f(x) - f(x)**2
-    >>> sols = dsolve(eq, hint="1st_rational_riccati")
-    >>> sols
-    Eq(f(x), x**2*(-x/(C1 + x) + 1))
-    >>> checkodesol(eq, sols)
-    (True, 0)
-
-    >>> eq = -x**4*f(x)**2 + x**3*f(x).diff(x) + x**2*f(x) + 20
-    >>> sols = dsolve(eq, hint="1st_rational_riccati")
-    >>> sols
-    [Eq(f(x), (-9*x**8/(C1 + x**9) + 4/x)/x), Eq(f(x), 4/x**2)]
-    >>> checkodesol(eq, sols)
-    [(True, 0), (True, 0)]
-
-    >>> eq = x**3*f(x).diff(x) - x**2*(f(x) + f(x).diff(x)) + 2*x*f(x) - f(x)**2
-    >>> sols = dsolve(eq, hint="1st_rational_riccati")
-    >>> sols
-    Eq(f(x), x**2*(1 - (x - 1)/(C1 + x)))
-    >>> checkodesol(eq, sols)
-    (True, 0)
+    >>> pprint(dsolve(Eq(f(x)*f(x).diff(x) + x, 3*x*f(x)**2), f(x),
+    ... hint='separable', simplify=False))
+       /   2       \         2
+    log\3*f (x) - 1/        x
+    ---------------- = C1 + --
+           6                2
 
     References
     ==========
 
-    .. [1] Algorithm (Pg 78) - https://www3.risc.jku.at/publications/download/risc_5387/PhDThesisThieu.pdf
-    .. [2] Examples - https://www3.risc.jku.at/publications/download/risc_5197/RISCReport15-19.pdf
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 52
+
+    # indirect doctest
+
     """
-    has_integral = False
-    hint = "1st_rational_riccati"
+    hint = "separable"
+    has_integral = True
     order = [1]
 
     def _wilds(self, f, x, order):
-        b0 = Wild('b0', exclude=[f(x), f(x).diff(x)])
-        b1 = Wild('b1', exclude=[f(x), f(x).diff(x)])
-        b2 = Wild('b2', exclude=[f(x), f(x).diff(x)])
-        return (b0, b1, b2)
+        d = Wild('d', exclude=[f(x).diff(x), f(x).diff(x, 2)])
+        e = Wild('e', exclude=[f(x).diff(x)])
+        return d, e
 
     def _equation(self, fx, x, order):
-        b0, b1, b2 = self.wilds()
-        return fx.diff(x) - b0 - b1*fx - b2*fx**2
-
-    def _matches(self):
-        eq = self.ode_problem.eq_expanded
-        f = self.ode_problem.func.func
-        x = self.ode_problem.sym
-        order = self.ode_problem.order
-
-        if order != 1:
-            return False
-
-        eq = eq.collect(f(x))
-        cf = eq.coeff(f(x).diff(x))
-
-        # There must be an f(x).diff(x) term.
-        # eq must be an Add object since we are using the expanded
-        # equation and it must have atleast 2 terms (b2 != 0)
-        if cf != 0 and isinstance(eq, Add):
-
-            # Divide all coefficients by the coefficient of f(x).diff(x)
-            # and add the terms again to get the same equation
-            eq = Add(*map(lambda x: cancel(x/cf), eq.args)).collect(f(x))
-
-            # Get the pattern for the Riccati equation
-            pattern = self._equation(f(x), x, order)
-
-            # Match the equation with the pattern
-            self._wilds_match = match = eq.match(pattern)
-
-            # If there is a match, verify it
-            if match is not None:
-                return self._verify(f(x))
-        return False
+        d, e = self.wilds()
+        return d + e*fx.diff(x)
 
     def _verify(self, fx):
-        b0, b1, b2 = self.wilds_match()
+        d, e = self.wilds_match()
+        self.y = Dummy('y')
         x = self.ode_problem.sym
-
-        # b0, b1 and b2 must all be rational functions of x, with b2 != 0
-        return all([b2 != 0, b0.is_rational_function(x), b1.is_rational_function(x), b2.is_rational_function(x)])
+        d = separatevars(d.subs(fx, self.y))
+        e = separatevars(e.subs(fx, self.y))
+        # m1[coeff]*m1[x]*m1[y] + m2[coeff]*m2[x]*m2[y]*y'
+        self.m1 = separatevars(d, dict=True, symbols=(x, self.y))
+        self.m2 = separatevars(e, dict=True, symbols=(x, self.y))
+        if self.m1 and self.m2:
+            # print("hello single.py")
+            return True
+        return False
 
     def _get_general_solution(self, *, simplify: bool = True):
-        # Match the equation
-        b0, b1, b2 = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
-        return solve_riccati(fx, x, b0, b1, b2)
+        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
+        int = Integral(self.m2['coeff']*self.m2[self.y]/self.m1[self.y],
+        (self.y, None, fx))
+        gen_sol = Eq(int, Integral(-self.m1['coeff']*self.m1[x]/
+        self.m2[x], x) + C1)
+        return [gen_sol]
+
 
 # Avoid circular import:
 from .ode import dsolve

@@ -1056,7 +1056,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         Factorable: ('factorable',),
         RiccatiSpecial: ('Riccati_special_minus2',),
         SecondNonlinearAutonomousConserved: ('2nd_nonlinear_autonomous_conserved',),
-        Liouville: ('Liouville',)
+        Liouville: ('Liouville',),
+        Separable: ('separable',),
     }
     for solvercls in solvers:
         solver = solvercls(ode)
@@ -1124,19 +1125,14 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             r['d'] = d
             r['e'] = e
             r['y'] = y
+            # print(r)
             r[d] = num.subs(f(x), y)
             r[e] = den.subs(f(x), y)
+            # print(r,"new")
 
             ## Separable Case: y' == P(y)*Q(x)
             r[d] = separatevars(r[d])
             r[e] = separatevars(r[e])
-            # m1[coeff]*m1[x]*m1[y] + m2[coeff]*m2[x]*m2[y]*y'
-            m1 = separatevars(r[d], dict=True, symbols=(x, y))
-            m2 = separatevars(r[e], dict=True, symbols=(x, y))
-            if m1 and m2:
-                r1 = {'m1': m1, 'm2': m2, 'y': y}
-                matching_hints["separable"] = r1
-                matching_hints["separable_Integral"] = r1
 
             ## First order equation with homogeneous coefficients:
             # dy/dx == F(y/x) or dy/dx == F(x/y)
@@ -4228,7 +4224,7 @@ def ode_separable_reduced(eq, func, order, match):
 
     See Also
     ========
-    :meth:`sympy.solvers.ode.ode.ode_separable`
+    :meth:`sympy.solvers.ode.single.Separable`
 
     Examples
     ========
@@ -4928,60 +4924,6 @@ def _solve_variation_of_parameters(eq, func, order, match):
 
 
 def ode_separable(eq, func, order, match):
-    r"""
-    Solves separable 1st order differential equations.
-
-    This is any differential equation that can be written as `P(y)
-    \tfrac{dy}{dx} = Q(x)`.  The solution can then just be found by
-    rearranging terms and integrating: `\int P(y) \,dy = \int Q(x) \,dx`.
-    This hint uses :py:meth:`sympy.simplify.simplify.separatevars` as its back
-    end, so if a separable equation is not caught by this solver, it is most
-    likely the fault of that function.
-    :py:meth:`~sympy.simplify.simplify.separatevars` is
-    smart enough to do most expansion and factoring necessary to convert a
-    separable equation `F(x, y)` into the proper form `P(x)\cdot{}Q(y)`.  The
-    general solution is::
-
-        >>> from sympy import Function, dsolve, Eq, pprint
-        >>> from sympy.abc import x
-        >>> a, b, c, d, f = map(Function, ['a', 'b', 'c', 'd', 'f'])
-        >>> genform = Eq(a(x)*b(f(x))*f(x).diff(x), c(x)*d(f(x)))
-        >>> pprint(genform)
-                     d
-        a(x)*b(f(x))*--(f(x)) = c(x)*d(f(x))
-                     dx
-        >>> pprint(dsolve(genform, f(x), hint='separable_Integral'))
-             f(x)
-           /                  /
-          |                  |
-          |  b(y)            | c(x)
-          |  ---- dy = C1 +  | ---- dx
-          |  d(y)            | a(x)
-          |                  |
-         /                  /
-
-    Examples
-    ========
-
-    >>> from sympy import Function, dsolve, Eq
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> pprint(dsolve(Eq(f(x)*f(x).diff(x) + x, 3*x*f(x)**2), f(x),
-    ... hint='separable', simplify=False))
-       /   2       \         2
-    log\3*f (x) - 1/        x
-    ---------------- = C1 + --
-           6                2
-
-    References
-    ==========
-
-    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-      Dover 1963, pp. 52
-
-    # indirect doctest
-
-    """
     x = func.args[0]
     f = func.func
     C1 = get_numbered_constants(eq, num=1)
@@ -6882,6 +6824,6 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 
 
 #This import is written at the bottom to avoid circular imports.
-from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
+from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear, RationalRiccati
         Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
-        SecondNonlinearAutonomousConserved, FirstExact, Liouville, RationalRiccati)
+        SecondNonlinearAutonomousConserved, FirstExact, Liouville, Separable)

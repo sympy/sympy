@@ -142,7 +142,8 @@ nth_order_reducible
 
 separable
 ^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_separable
+.. autoclass:: sympy.solvers.ode.single::Separable
+   :members:
 
 almost_linear
 ^^^^^^^^^^^^^
