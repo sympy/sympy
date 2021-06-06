@@ -173,7 +173,7 @@ _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'tensorflow', ), python_version=(3,))
 def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
-             dummify=False):
+             dummify=False, optimize=True):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -333,6 +333,17 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         Set ``dummify=True`` to replace all arguments with dummy symbols
         (if ``args`` is not a string) - for example, to ensure that the
         arguments do not redefine any built-in names.
+
+    optimize : bool, optional
+        When the expression that we want to vectorialize is a large expression
+        that contains redundancy, it is possible to increase the speed and
+        reduce the size in RAM by setting this parameter to True.
+
+        However, the step of finding redundant paterns can be slow.
+        So, if the creation of the 'lambdify' function should be fast,
+        set this parameter to False. If, on the other hand, you want
+        the evaluation of the function returned by 'lambdify' to be
+        as efficient as possible, set this parameter to True.
 
 
     Examples
@@ -845,9 +856,12 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
-    replacements, useless_symbols, reduced_exprs = _cse_del(expr) # Delete redundancy.
-    funcstr = funcprinter.doprint(funcname, args, reduced_exprs,
-        replacements=replacements, useless_symbols=useless_symbols)
+    if optimize:
+        replacements, useless_symbols, reduced_exprs = _cse_del(expr) # Delete redundancy.
+        funcstr = funcprinter.doprint(funcname, args, reduced_exprs,
+            replacements=replacements, useless_symbols=useless_symbols)
+    else:
+        funcstr = funcprinter.doprint(funcname, args, expr)
 
     # Collect the module imports from the code printers.
     imp_mod_lines = []
@@ -905,6 +919,62 @@ def _module_present(modname, modlist):
             return True
     return False
 
+def _cse_homogeneous(exprs, **kwargs):
+    """
+    Same as ``cse`` but the reduced_exprs are expres in the same type as 'exprs'
+
+    Parameters
+    ==========
+
+    exprs : list of sympy expressions, or a single sympy expression
+        The expressions to reduce.
+    kwargs : The over argument of the ``cse`` function
+
+    Returns
+    =======
+
+    replacements : list of (Symbol, expression) pairs
+        All of the common subexpressions that were replaced. Subexpressions
+        earlier in this list might show up in subexpressions later in this
+        list.
+    reduced_exprs : list of sympy expressions
+        The reduced expressions with all of the replacements above.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.lambdify import _cse_homogeneous
+    >>> from sympy import Symbol, cos, Tuple
+    >>> x = Symbol("x")
+    >>> _cse_homogeneous("cos(x + 1)") # str
+    ([], 'cos(x + 1)')
+    >>> _cse_homogeneous(cos(x + 1)) # Basic
+    ([], cos(x + 1))
+    >>> _cse_homogeneous(1) # number
+    ([], 1)
+    >>> _cse_homogeneous(Tuple(1, x))
+    ([], (1, x))
+    >>> _cse_homogeneous([1, x])
+    ([], [1, x])
+    >>> _cse_homogeneous((1, x))
+    ([], (1, x))
+    >>> _cse_homogeneous({1, x})
+    ([], {1, x})
+    """
+    from sympy import cse, sympify, Matrix
+    from sympy.core.containers import Tuple
+
+    if isinstance(exprs, str):
+        replacements, (reduced_exprs,) = cse(sympify(exprs), **kwargs)
+        return replacements, repr(reduced_exprs)
+    if not iterable(exprs) or isinstance(exprs, (Tuple, Matrix)):
+        replacements, (reduced_exprs,) = cse(exprs, **kwargs)
+        return replacements, reduced_exprs
+    if isinstance(exprs, (list, tuple, set)):
+        replacements, reduced_exprs = cse(exprs, **kwargs)
+        return replacements, type(exprs)(reduced_exprs)
+    return cse(exprs, **kwargs)
+
 def _cse_del(expr):
     """
     Same as ``cse`` but append an information on the useless vars.
@@ -933,9 +1003,6 @@ def _cse_del(expr):
     >>> _cse_del(expr)
     ([(x0, x + cos(x)), (x1, x0*sin(x0))], [set(), {x0}], sqrt(x1) + x1)
     """
-    from sympy import cse
-    from sympy.core.compatibility import iterable
-
     def get_free_symbols(expr):
         try:
             return expr.free_symbols
@@ -944,9 +1011,7 @@ def _cse_del(expr):
                 return set.union(*map(get_free_symbols, expr))
         return set()
 
-    replacements, reduced_exprs = cse(expr)
-    if not hasattr(expr, "__iter__"): # If cse makes cast to a list because cse(x) == cse([x]).
-        reduced_exprs = reduced_exprs.pop() # We keep the homogeneity of the expression.
+    replacements, reduced_exprs = _cse_homogeneous(expr)
 
     # Cumulate union of symbols.
     free_symbols = [pattern.free_symbols for _, pattern in replacements]
