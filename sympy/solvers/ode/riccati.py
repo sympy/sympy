@@ -192,7 +192,7 @@ def val_at_inf(num, den, x):
 
 
 def check_necessary_conds(val_inf, muls):
-    return val_inf%2 != 0 or not all([mul == 1 or (mul%2 == 0 and mul >= 2) for mul in muls])
+    return (val_inf >= 2 or (val_inf <=0 and val_inf%2 == 0)) and all([mul == 1 or (mul%2 == 0 and mul >= 2) for mul in muls])
 
 
 def inverse_transform_poly(num, den, x):
@@ -449,7 +449,7 @@ def solve_riccati(fx, x, b0, b1, b2):
 
     if len(poles):
         # Check necessary conditions (outlined in the module docstring)
-        if check_necessary_conds(val_inf, muls):
+        if not check_necessary_conds(val_inf, muls):
             raise ValueError("Rational Solution doesn't exist")
 
         # Step 6
@@ -484,7 +484,7 @@ def solve_riccati(fx, x, b0, b1, b2):
                     # m is a positive integer and there are valid coefficients
                     elif len(coeffs):
                         # Substitute the valid coefficients to get p(x)
-                        psol = psol.subs(coeffs)
+                        psol = psol.xreplace(coeffs)
                         # y(x) = ybar(x) + p'(x)/p(x)
                         presol.append(ybar + psol.diff(x)/psol)
 

@@ -909,6 +909,29 @@ def _get_examples_ode_sol_1st_rational_riccati():
             34650*x**7 + 121275*x**6 + 363825*x**5 + 1819125*x**4/2 + 1819125*x**3 + 5457375*x**2/2 + 5457375*x/2 + S(5457375)/4, evaluate=False)/(x**13 + 35*x**12/6 + 35*x**11
             + 385*x**10/2 + 1925*x**9/2 + 17325*x**8/4 + 17325*x**7 + 121275*x**6/2 + 363825*x**5/2 + 1819125*x**4/4 + 1819125*x**3/2 + 5457375*x**2/4 + 5457375*x/4
             + S(5457375)/8) + 1 + 1/Mul(2, (x - S(2)/3), evaluate=False) + 6/x) + (4*x - 3)*(Mul(4, (3*x - 2), evaluate=False)/(4*x - 3) - 3)/(Mul(2, (3*x - 2), evaluate=False)))/(3*x - 2))]
+    },
+    "rational_riccati_24": {
+        "eq": Eq(Derivative(f(x), x), (1 - x)*f(x)/(x - 3) + (2 - 12*x)*f(x)**2/(2*x - 9) + (54924*x**3 - 405264*x**2 +
+            1084347*x - 1087533)/(8*x**4 - 132*x**3 + 810*x**2 - 2187*x + 2187) + 495),
+        "sol": [Eq(f(x), (2*x - 9)*(Mul(2, 3 - (6*x - 1)/(2*x - 9), evaluate=False)/(6*x - 1) + 109 - 1/(x - S(1)/6) - (x
+            - 1)/(x - 3) + 2/(x - 3) + 991/(x - S(9)/2) + 2262/(x - S(9)/2)**2)/Mul(4, (6*x - 1), evaluate=False)), Eq(f(x),
+            (2*x - 9)*(Mul(2, 3 - (6*x - 1)/(2*x - 9), evaluate=False)/(6*x - 1) + 109 - 1/(x - S(1)/6) - (x - 1)/(x - 3) +
+            2/(x - 3) + 991/(x - S(9)/2) + 2262/(x - S(9)/2)**2)/Mul(4, (6*x - 1), evaluate=False))],
+        "slow": True
+    },
+    "rational_riccati_25": {
+        "eq": Eq(Derivative(f(x), x), (-12*x**2 - 48*x - 15)/(24*x**3 - 40*x**2 + 8*x + 8) + 3*f(x)**2/(6*x + 2)),
+        "sol": [Eq(f(x), Mul(9, 2*x + S(2)/3, evaluate=False)*(-1/(x + S(1)/3) + 1/(x - 1))/16 + 1)]
+    },
+    "rational_riccati_26": {
+        "eq": Eq(Derivative(f(x), x), 2*x*f(x)**2/(9*x - 6) + (32 - 28*x)/(36*x**3 + 12*x**2 - 15*x - 6) - 4*f(x)/(9*x - 6)),
+        "sol": [Eq(f(x), ((3*x - 2)*(4/(x + S(1)/2) - 25/(x - S(2)/3) + 21/x)/28 + 1 + Mul(9, 3*x - 2, evaluate=False)*(2*x/(3*x - 2) -
+            S(2)/3)/(8*x))/x)]
+    },
+    "rational_riccati_27": {
+        "eq": Eq(Derivative(f(x), x), x*f(x) + 2*x + (3*x - 2)*f(x)**2/(4*x + 2) + (8*x**2 - 7*x + 26)/(16*x**3 - 24*x**2 + 8) - S(3)/2),
+        "sol": [Eq(f(x), (2*x + 1)*(Mul(2, -S(3)/2 + (3*x - 2)/(2*x + 1), evaluate=False)/(3*x - 2) - 3 + 3/(Mul(4, x + S(1)/2,
+            evaluate=False)) + 1/(x - S(2)/3) - 1/(Mul(2, x - 1, evaluate=False)))/(3*x - 2))]
     }
     }
     }
