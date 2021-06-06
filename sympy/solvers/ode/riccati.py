@@ -196,6 +196,10 @@ def check_necessary_conds(val_inf, muls):
 
 
 def inverse_transform_poly(num, den, x):
+    """
+    A function to make the substitution
+    x -> 1/x in Poly objects.
+    """
     # Declare for reuse
     one = Poly(1, x)
     xpoly = Poly(x, x)
