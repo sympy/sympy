@@ -1173,6 +1173,14 @@ class LambertW(Function):
         else:
             return s.is_algebraic
 
+    def _eval_as_leading_term(self, x, cdir=0):
+        if len(self.args) == 1:
+            arg0 = self.args[0]
+            arg = self.args[0].subs(x, 0).cancel()
+            if not arg.is_zero:
+                return self.func(arg)
+            return arg0.as_leading_term(x)
+
     def _eval_nseries(self, x, n, logx, cdir=0):
         if len(self.args) == 1:
             from sympy import Order, ceiling, expand_multinomial

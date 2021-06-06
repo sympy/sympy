@@ -236,21 +236,17 @@ class Limit(Expr):
                 newe = e.subs(z, -1/z)
             else:
                 newe = e.subs(z, z + z0)
-            try:
-                coeff, ex = newe.leadterm(z, cdir)
-            except (ValueError, NotImplementedError):
-                pass
+            coeff, ex = newe.leadterm(z, cdir)
+            if ex > 0:
+                return S.Zero
+            elif ex == 0:
+                return coeff
+            if str(dir) == "+" or not(int(ex) & 1):
+                return S.Infinity*sign(coeff)
+            elif str(dir) == "-":
+                return S.NegativeInfinity*sign(coeff)
             else:
-                if ex > 0:
-                    return S.Zero
-                elif ex == 0:
-                    return coeff
-                if str(dir) == "+" or not(int(ex) & 1):
-                    return S.Infinity*sign(coeff)
-                elif str(dir) == "-":
-                    return S.NegativeInfinity*sign(coeff)
-                else:
-                    return S.ComplexInfinity
+                return S.ComplexInfinity
 
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.

@@ -1009,7 +1009,7 @@ class Add(Expr, AssocOp):
         if is_zero is None:
             new_expr = new_expr.trigsimp().cancel()
             is_zero = new_expr.is_zero
-        if is_zero is True:
+        if is_zero is True and not Order(0, x).contains(min):
             # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
             n0 = min.getn()
