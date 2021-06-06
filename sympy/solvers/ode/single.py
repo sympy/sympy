@@ -9,12 +9,11 @@ if typing.TYPE_CHECKING:
 from typing import Dict, Type
 
 from typing import Iterator, List, Optional
-
-from sympy.core import S
+from sympy.core import Add, S, Pow
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, Function, expand, Subs
-from sympy.core.numbers import Float
+from sympy.core.numbers import Float, zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.core.mul import Mul
@@ -708,7 +707,7 @@ class Bernoulli(SinglePatternODESolver):
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
-    :py:meth:`sympy.solvers.ode.single.Separable`).
+    :py:meth:`~sympy.solvers.ode.single.Separable`).
 
     >>> pprint(dsolve(Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)), f(x),
     ... hint='separable_Integral'))
@@ -1154,19 +1153,162 @@ class Separable(SinglePatternODESolver):
         self.m1 = separatevars(d, dict=True, symbols=(x, self.y))
         self.m2 = separatevars(e, dict=True, symbols=(x, self.y))
         if self.m1 and self.m2:
-            # print("hello single.py")
             return True
         return False
 
-    def _get_general_solution(self, *, simplify: bool = True):
+    def _get_match_object(self):
         fx = self.ode_problem.func
         x = self.ode_problem.sym
+        return self.m1, self.m2, x, fx
+
+    def _get_general_solution(self, *, simplify: bool = True):
+        m1, m2, x, fx = self._get_match_object()
         (C1, ) = self.ode_problem.get_numbered_constants(num=1)
-        int = Integral(self.m2['coeff']*self.m2[self.y]/self.m1[self.y],
+        int = Integral(m2['coeff']*m2[self.y]/m1[self.y],
         (self.y, None, fx))
-        gen_sol = Eq(int, Integral(-self.m1['coeff']*self.m1[x]/
-        self.m2[x], x) + C1)
+        gen_sol = Eq(int, Integral(-m1['coeff']*m1[x]/
+        m2[x], x) + C1)
         return [gen_sol]
+
+
+class SeparableReduced(Separable):
+    r"""
+    Solves a differential equation that can be reduced to the separable form.
+
+    The general form of this equation is
+
+    .. math:: y' + (y/x) H(x^n y) = 0\text{}.
+
+    This can be solved by substituting `u(y) = x^n y`.  The equation then
+    reduces to the separable form `\frac{u'}{u (\mathrm{power} - H(u))} -
+    \frac{1}{x} = 0`.
+
+    The general solution is:
+
+        >>> from sympy import Function, dsolve, pprint
+        >>> from sympy.abc import x, n
+        >>> f, g = map(Function, ['f', 'g'])
+        >>> genform = f(x).diff(x) + (f(x)/x)*g(x**n*f(x))
+        >>> pprint(genform)
+                         / n     \
+        d          f(x)*g\x *f(x)/
+        --(f(x)) + ---------------
+        dx                x
+        >>> pprint(dsolve(genform, hint='separable_reduced'))
+         n
+        x *f(x)
+          /
+         |
+         |         1
+         |    ------------ dy = C1 + log(x)
+         |    y*(n - g(y))
+         |
+         /
+
+    See Also
+    ========
+    :meth:`sympy.solvers.ode.single.Separable`
+
+    Examples
+    ========
+
+    >>> from sympy import Function, pprint
+    >>> from sympy.solvers.ode.ode import dsolve
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> d = f(x).diff(x)
+    >>> eq = (x - x**2*f(x))*d - f(x)
+    >>> dsolve(eq, hint='separable_reduced')
+    [Eq(f(x), (1 - sqrt(C1*x**2 + 1))/x), Eq(f(x), (sqrt(C1*x**2 + 1) + 1)/x)]
+    >>> pprint(dsolve(eq, hint='separable_reduced'))
+                   ___________            ___________
+                  /     2                /     2
+            1 - \/  C1*x  + 1          \/  C1*x  + 1  + 1
+    [f(x) = ------------------, f(x) = ------------------]
+                    x                          x
+
+    References
+    ==========
+
+    - Joel Moses, "Symbolic Integration - The Stormy Decade", Communications
+      of the ACM, Volume 14, Number 8, August 1971, pp. 558
+    """
+    hint = "separable_reduced"
+    has_integral = True
+    order = [1]
+
+    def _degree(self, expr, x):
+        # Made this function to calculate the degree of
+        # x in an expression. If expr will be of form
+        # x**p*y, (wheare p can be variables/rationals) then it
+        # will return p.
+        for val in expr:
+            if val.has(x):
+                if isinstance(val, Pow) and val.as_base_exp()[0] == x:
+                    return (val.as_base_exp()[1])
+                elif val == x:
+                    return (val.as_base_exp()[1])
+                else:
+                    return self._degree(val.args, x)
+        return 0
+
+    def _powers(self, expr):
+        # this function will return all the different relative power of x w.r.t f(x).
+        # expr = x**p * f(x)**q then it will return {p/q}.
+        pows = set()
+        fx = self.ode_problem.func
+        x = self.ode_problem.sym
+        self.y = Dummy('y')
+        if isinstance(expr, Add):
+            exprs = expr.atoms(Add)
+        elif isinstance(expr, Mul):
+            exprs = expr.atoms(Mul)
+        elif isinstance(expr, Pow):
+            exprs = expr.atoms(Pow)
+        else:
+            exprs = {expr}
+
+        for arg in exprs:
+            if arg.has(x):
+                _, u = arg.as_independent(x, fx)
+                pow = self._degree((u.subs(fx, self.y), ), x)/self._degree((u.subs(fx, self.y), ), self.y)
+                pows.add(pow)
+        return pows
+
+    def _verify(self, fx):
+        num, den = self.wilds_match()
+        x = self.ode_problem.sym
+        factor = simplify(x/fx*num/den)
+        # Try representing factor in terms of x^n*y
+        # where n is lowest power of x in factor;
+        # first remove terms like sqrt(2)*3 from factor.atoms(Mul)
+        num, dem = factor.as_numer_denom()
+        num = expand(num)
+        dem = expand(dem)
+        pows = self._powers(num)
+        pows.update(self._powers(dem))
+        pows = list(pows)
+        if(len(pows)==1) and pows[0]!=zoo:
+            self.t = Dummy('t')
+            self.r2 = {'t': self.t}
+            num = num.subs(x**pows[0]*fx, self.t)
+            dem = dem.subs(x**pows[0]*fx, self.t)
+            test = num/dem
+            free = test.free_symbols
+            if len(free) == 1 and free.pop() == self.t:
+                self.r2.update({'power' : pows[0], 'u' : test})
+                return True
+            return False
+        return False
+
+    def _get_match_object(self):
+        fx = self.ode_problem.func
+        x = self.ode_problem.sym
+        u = self.r2['u'].subs(self.r2['t'], self.y)
+        ycoeff = 1/(self.y*(self.r2['power'] - u))
+        m1 = {self.y: 1, x: -1/x, 'coeff': 1}
+        m2 = {self.y: ycoeff, x: 1, 'coeff': 1}
+        return m1, m2, x, x**self.r2['power']*fx
 
 
 # Avoid circular import:
