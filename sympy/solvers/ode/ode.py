@@ -6824,6 +6824,6 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 
 
 #This import is written at the bottom to avoid circular imports.
-from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear, RationalRiccati
+from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear, RationalRiccati,
         Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
         SecondNonlinearAutonomousConserved, FirstExact, Liouville, Separable)
