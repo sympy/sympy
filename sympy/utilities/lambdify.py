@@ -173,7 +173,7 @@ _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'tensorflow', ), python_version=(3,))
 def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
-             dummify=False, optimize=True):
+             dummify=False, optimize=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -961,19 +961,26 @@ def _cse_homogeneous(exprs, **kwargs):
     >>> _cse_homogeneous({1, x})
     ([], {1, x})
     """
-    from sympy import cse, sympify, Matrix
-    from sympy.core.containers import Tuple
+    from sympy import cse, sympify
 
     if isinstance(exprs, str):
-        replacements, (reduced_exprs,) = cse(sympify(exprs), **kwargs)
+        replacements, reduced_exprs = _cse_homogeneous(sympify(exprs), **kwargs)
         return replacements, repr(reduced_exprs)
-    if not iterable(exprs) or isinstance(exprs, (Tuple, Matrix)):
-        replacements, (reduced_exprs,) = cse(exprs, **kwargs)
-        return replacements, reduced_exprs
     if isinstance(exprs, (list, tuple, set)):
         replacements, reduced_exprs = cse(exprs, **kwargs)
         return replacements, type(exprs)(reduced_exprs)
-    return cse(exprs, **kwargs)
+    if isinstance(exprs, dict):
+        keys = list(exprs.keys()) # In order to guarantee the order of the elements.
+        replacements, values = cse([exprs[k] for k in keys], **kwargs)
+        reduced_exprs = {k: v for k, v in zip(keys, values)}
+        return replacements, reduced_exprs
+
+    try:
+        replacements, (reduced_exprs,) = cse(exprs, **kwargs)
+    except TypeError: # For example 'mpf' objects
+        return [], exprs
+    else:
+        return replacements, reduced_exprs
 
 def _cse_del(expr):
     """
@@ -1217,11 +1224,11 @@ class _EvaluatorPrinter:
         funcbody.extend(unpackings)
 
         for useless_symbol, (var_name, sub_expr) in zip(useless_symbols, replacements):
-            funcbody.append('{} = {}'.format(var_name, self._exprrepr(sub_expr)))
+            funcbody.append('{} = ({})'.format(var_name, self._exprrepr(sub_expr)))
             if useless_symbol:
                 funcbody.append('del {}'.format(', '.join(map(str, useless_symbol))))
 
-        funcbody.append('return {}'.format(self._exprrepr(expr)))
+        funcbody.append('return ({})'.format(self._exprrepr(expr)))
 
         funclines = [funcsig]
         funclines.extend('    ' + line for line in funcbody)
