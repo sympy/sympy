@@ -304,7 +304,7 @@ def intersection_sets(self, other): # noqa:F811
             return None
         else:
             # univarite imaginary part in same variable
-            x, xis = solve_linear(im, n)
+            x, xis = solve_linear(n, im)
             if x == n:
                 base_set -= FiniteSet(xis)
             else:
