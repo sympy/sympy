@@ -932,6 +932,10 @@ def _get_examples_ode_sol_1st_rational_riccati():
         "eq": Eq(Derivative(f(x), x), x*f(x) + 2*x + (3*x - 2)*f(x)**2/(4*x + 2) + (8*x**2 - 7*x + 26)/(16*x**3 - 24*x**2 + 8) - S(3)/2),
         "sol": [Eq(f(x), (2*x + 1)*(Mul(2, -S(3)/2 + (3*x - 2)/(2*x + 1), evaluate=False)/(3*x - 2) - 3 + 3/(Mul(4, x + S(1)/2,
             evaluate=False)) + 1/(x - S(2)/3) - 1/(Mul(2, x - 1, evaluate=False)))/(3*x - 2))]
+    },
+    "rational_riccati_28": {
+        "eq": Eq(f(x).diff(x) + f(x)**2 - 2, 0),
+        "sol": [Eq(f(x), sqrt(2)), Eq(f(x), -sqrt(2))]
     }
     }
     }

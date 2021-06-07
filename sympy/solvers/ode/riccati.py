@@ -192,7 +192,7 @@ def val_at_inf(num, den, x):
 
 
 def check_necessary_conds(val_inf, muls):
-    return (val_inf >= 2 or (val_inf <=0 and val_inf%2 == 0)) and all([mul == 1 or (mul%2 == 0 and mul >= 2) for mul in muls])
+    return (val_inf >= 2 or (val_inf <= 0 and val_inf%2 == 0)) and all([mul == 1 or (mul%2 == 0 and mul >= 2) for mul in muls])
 
 
 def inverse_transform_poly(num, den, x):
@@ -233,6 +233,7 @@ def limit_at_inf(num, den, x):
 def construct_c(num, den, x, poles, muls):
     c = []
     for pole, mul in zip(poles, muls):
+        print(pole, mul)
         c.append([])
 
         # Case 3
@@ -345,7 +346,8 @@ def rational_laurent_series(num, den, x, x0, mul, n):
         num, den = inverse_transform_poly(num, den, x)
         reverse = True
         x0 = 0
-    if x0:
+    print(x0)
+    if x0 != 0:
         num = num.transform(Poly(x + x0, x), one)
         den = den.transform(Poly(x + x0, x), one)
         num, den = num.cancel(den, include=True)
@@ -362,21 +364,15 @@ def rational_laurent_series(num, den, x, x0, mul, n):
             out += Poly(cf*c[i - pw]*x**i, x, domain=ZZ[c])
         rcoeffs.append((cf, -pw))
 
-    if out:
-        sols = list(linsolve((num - out).all_coeffs(), c, x))
-        if len(sols):
-            c[:len(sols)] = sols[0]
-            for i in range(len(sols), n + mul):
-                sums = sum([cf*c[i - pw] for cf, pw in rcoeffs])
-                sol = list(linsolve([sums], [c[i]], x))
-                if len(sol):
-                    c[i] = sol[0][0]
-            coeffs = c
-        else:
-            coeffs = []
-    else:
-        coeffs = list(map(lambda x: x/den, num.as_dict().values()))
-    return coeffs[::-1] if reverse else coeffs
+    sols = list(linsolve((num - out).all_coeffs(), c, x))
+    if len(sols):
+        c[:len(sols)] = sols[0]
+        for i in range(len(sols), n + mul):
+            sums = sum([cf*c[i - pw] for cf, pw in rcoeffs])
+            sol = list(linsolve([sums], [c[i]], x))
+            if len(sol):
+                c[i] = sol[0][0]
+    return c[::-1] if reverse else c
 
 
 def compute_degree(x, poles, choice, c, d, N):
@@ -443,6 +439,7 @@ def solve_riccati(fx, x, b0, b1, b2):
 
     # Step 4 : a(x) is a non-zero constant
     elif x not in num.free_symbols.union(den.free_symbols):
+        print("here")
         presol.extend([sqrt(a), -sqrt(a)])
 
     # Step 5 : Find poles and valuation at infinity
@@ -450,6 +447,7 @@ def solve_riccati(fx, x, b0, b1, b2):
     inf_mul = poles.get(oo, 0)
     poles, muls = list(poles.keys()), list(poles.values())
     val_inf = val_at_inf(num, den, x)
+    print(poles)
 
     if len(poles):
         # Check necessary conditions (outlined in the module docstring)
