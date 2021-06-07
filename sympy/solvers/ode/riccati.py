@@ -233,7 +233,6 @@ def limit_at_inf(num, den, x):
 def construct_c(num, den, x, poles, muls):
     c = []
     for pole, mul in zip(poles, muls):
-        print(pole, mul)
         c.append([])
 
         # Case 3
@@ -346,7 +345,6 @@ def rational_laurent_series(num, den, x, x0, mul, n):
         num, den = inverse_transform_poly(num, den, x)
         reverse = True
         x0 = 0
-    print(x0)
     if x0 != 0:
         num = num.transform(Poly(x + x0, x), one)
         den = den.transform(Poly(x + x0, x), one)
@@ -439,7 +437,6 @@ def solve_riccati(fx, x, b0, b1, b2):
 
     # Step 4 : a(x) is a non-zero constant
     elif x not in num.free_symbols.union(den.free_symbols):
-        print("here")
         presol.extend([sqrt(a), -sqrt(a)])
 
     # Step 5 : Find poles and valuation at infinity
