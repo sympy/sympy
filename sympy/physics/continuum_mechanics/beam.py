@@ -2375,7 +2375,7 @@ class Beam3D(Beam):
             length = self.length
 
         return plot(bending_moment[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Bending Moment along %c direction'%dir,
-                xlabel=r'$\mathrm{%c}$'%dir, ylabel=r'$\mathrm{M[%c]}$'%dir, line_color=color)
+                xlabel=r'$\mathrm{%c}$'%dir, ylabel=r'$\mathrm{M(%c)}$'%dir, line_color=color)
 
     def plot_bending_moment(self, dir="all", subs=None):
 
