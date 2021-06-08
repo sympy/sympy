@@ -81,7 +81,7 @@ factorable
 
 1st_homogeneous_coeff_best
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_1st_homogeneous_coeff_best
+.. autofunction:: sympy.solvers.ode.single::HomogeneousCoeffBest
 
 1st_homogeneous_coeff_subs_dep_div_indep
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1564,18 +1564,18 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
                 f(x)
                   /
                  |
-                 |       -g(u2)
-                 |  ---------------- d(u2)
-                 |  u2*g(u2) + h(u2)
+                 |       -g(u1)
+                 |  ---------------- d(u1)
+                 |  u1*g(u1) + h(u1)
                  |
                 /
     <BLANKLINE>
     f(x) = C1*e
 
-    Where `u_2 g(u_2) + h(u_2) \ne 0` and `f(x) \ne 0`.
+    Where `u_1 g(u_1) + h(u_1) \ne 0` and `f(x) \ne 0`.
 
     See also the docstrings of
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_best` and
+    :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffBest` and
     :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep`.
 
     Examples
@@ -1650,5 +1650,66 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
         return [gen_sol]
 
 
+class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubsDepDivIndep):
+    r"""
+    Returns the best solution to an ODE from the two hints
+    ``1st_homogeneous_coeff_subs_dep_div_indep`` and
+    ``1st_homogeneous_coeff_subs_indep_div_dep``.
+
+    This is as determined by :py:meth:`~sympy.solvers.ode.ode.ode_sol_simplicity`.
+
+    See the
+    :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffSubsIndepDivDep`
+    and
+    :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep`
+    docstrings for more information on these hints.  Note that there is no
+    ``ode_1st_homogeneous_coeff_best_Integral`` hint.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, pprint
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
+    ... hint='1st_homogeneous_coeff_best', simplify=False))
+                             /    2    \
+                             | 3*x     |
+                          log|----- + 1|
+                             | 2       |
+                             \f (x)    /
+    log(f(x)) = log(C1) - --------------
+                                3
+
+    References
+    ==========
+
+    - https://en.wikipedia.org/wiki/Homogeneous_differential_equation
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 59
+
+    # indirect doctest
+
+    """
+    hint = "1st_homogeneous_coeff_best"
+    has_integral = False
+    order = [1]
+
+    def _verify(self, fx):
+        if HomogeneousCoeffSubsIndepDivDep._verify(self, fx) and HomogeneousCoeffSubsDepDivIndep._verify(self, fx):
+            return True
+        return False
+
+    def _get_general_solution(self, *, simplify: bool = True):
+        # There are two substitutions that solve the equation, u1=y/x and u2=x/y
+        # # They produce different integrals, so try them both and see which
+        # # one is easier
+        sol1 = HomogeneousCoeffSubsIndepDivDep._get_general_solution(self)
+        sol2 = HomogeneousCoeffSubsDepDivIndep._get_general_solution(self)
+        fx = self.ode_problem.func
+        return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, fx,
+            trysolving=not simplify))
+
+
 # Avoid circular import:
-from .ode import dsolve
+from .ode import dsolve, ode_sol_simplicity
