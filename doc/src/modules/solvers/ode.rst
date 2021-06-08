@@ -90,7 +90,8 @@ factorable
 
 1st_homogeneous_coeff_subs_indep_div_dep
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_1st_homogeneous_coeff_subs_indep_div_dep
+.. autofunction:: sympy.solvers.ode.single::HomogeneousCoeffSubsIndepDivDep
+   :members:
 
 1st_linear
 ^^^^^^^^^^
