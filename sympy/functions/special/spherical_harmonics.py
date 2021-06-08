@@ -179,7 +179,7 @@ class Ynm(Function):
     def _eval_rewrite_as_polynomial(self, n, m, theta, phi, **kwargs):
         # TODO: Make sure n \in N
         if Abs(m) > n:  # Assert |m| <= n otherwise we should return 0
-            return 0
+            return S.Zero
         return self.expand(func=True)
 
     def _eval_rewrite_as_sin(self, n, m, theta, phi, **kwargs):
@@ -190,7 +190,7 @@ class Ynm(Function):
         from sympy.simplify import simplify, trigsimp
         # TODO: Make sure n \in N
         if Abs(m) > n:  # Assert |m| <= n otherwise we should return 0
-            return 0
+            return S.Zero
         term = simplify(self.expand(func=True))
         # We can do this because of the range of theta
         term = term.xreplace({Abs(sin(theta)):sin(theta)})
