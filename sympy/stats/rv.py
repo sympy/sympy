@@ -1103,7 +1103,7 @@ def sample(expr, condition=None, size=(), library='scipy',
     >>> sample(N, size=(3,4), numsamples=2)
     [array([[ 0.07664441, -1.42557566,  3.66110395,  5.37576465],
        [ 0.4993775 ,  7.80504228, -0.22978144,  4.5228755 ],
-       [ 5.91415701,  6.85960422,  9.52447392,  0.63699082]]), 
+       [ 5.91415701,  6.85960422,  9.52447392,  0.63699082]]),
     array([[-1.89958054,  7.22563251,  1.74164548,  7.39832687],
        [ 3.6053125 ,  4.83748511,  4.77375537,  0.35377489],
        [ 5.31794739,  8.57816162,  2.16933622, -6.13675074]])]
@@ -1117,9 +1117,9 @@ def sample(expr, condition=None, size=(), library='scipy',
     >>> MN = Normal("MN", [3, 4], [[2, 1], [1, 2]]) # Joint Random Variable
     >>> samp_list = sample(MN, size=4)) # doctest: +SKIP
     >>> samp_list # doctest: +SKIP
-    [array([2.85768055, 3.38954165]), 
-     array([4.11163337, 4.3176591 ]), 
-     array([0.79115232, 1.63232916]), 
+    [array([2.85768055, 3.38954165]),
+     array([4.11163337, 4.3176591 ]),
+     array([0.79115232, 1.63232916]),
      array([4.01747268, 3.96716083])]
     >>> [tuple(sam) in MN.pspace.domain.set for sam in samp_list] # doctest: +SKIP
     [True, True, True, True]
@@ -1130,13 +1130,13 @@ def sample(expr, condition=None, size=(), library='scipy',
 
     sample: float/list/numpy.ndarray
         one sample or a collection of samples of the random expression
-        
+
         sample(X) --> returns float object
         sample(X, size=int) or sample(X, numsamples=int) --> returns list object
         sample(X, size=tuple) --> returns numpy.ndarray object
         sample(X, size=tuple, numsamples=int) --> returns list containing numpy.ndarray objects
         sample(X, size=int, numsamples=int) --> returns list containing numpy.ndarray objects
-        
+
 
     """
     ### TODO: Remove the user warnings in the future releases
@@ -1146,15 +1146,15 @@ def sample(expr, condition=None, size=(), library='scipy',
     ###warnings.warn(filldedent(message))
     iterator = sample_iter(expr, condition, size=size, library=library,
                                                         numsamples=numsamples, seed=seed)
-    
+
     if numsamples != 1:
-    	return [next(iterator) for i in range(numsamples)]
-    
+        return [next(iterator) for i in range(numsamples)]
+
     if type(size) == type(0):
-    	return list(next(iterator))
-    
+        return list(next(iterator))
+
     if type(size) in (type(()), type([])):
-    	return next(iterator)
+        return next(iterator)
 
 
 def quantile(expr, evaluate=True, **kwargs):
