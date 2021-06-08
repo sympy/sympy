@@ -112,7 +112,7 @@ def test_basic5():
 
 
 def test_issue_3885():
-    assert limit(x*y + x*z, z, 2) == x*(y + 2)
+    assert limit(x*y + x*z, z, 2) == x*y + 2*x
 
 
 def test_Limit():
@@ -229,7 +229,7 @@ def test_doit():
     assert l.doit() is oo
 
 
-def test_AccumBounds():
+def test_series_AccumBounds():
     assert limit(sin(k) - sin(k + 1), k, oo) == AccumBounds(-2, 2)
     assert limit(cos(k) - cos(k + 1) + 1, k, oo) == AccumBounds(-1, 3)
 
@@ -243,9 +243,8 @@ def test_AccumBounds():
     t2 = Mul(S.Half, Add(AccumBounds(-2, 2), sin(1)), 1/(-cos(1) + 1))
     assert limit(simplify(Sum(sin(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t2
 
-    assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)
-    assert limit(((sin(x) + 1)/2)**x, x, oo) == AccumBounds(0, oo)
-    # Possible improvement: AccumBounds(0, 1)
+    assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)  # wolfram gives (0, 1)
+    assert limit(((sin(x) + 1)/2)**x, x, oo) == AccumBounds(0, oo)  # wolfram says 0
 
 
 @XFAIL
@@ -422,7 +421,7 @@ def test_issue_5740():
 def test_issue_6366():
     n = Symbol('n', integer=True, positive=True)
     r = (n + 1)*x**(n + 1)/(x**(n + 1) - 1) - x/(x - 1)
-    assert limit(r, x, 1) == n/2
+    assert limit(r, x, 1).cancel() == n/2
 
 
 def test_factorial():
@@ -441,7 +440,7 @@ def test_factorial():
 def test_issue_6560():
     e = (5*x**3/4 - x*Rational(3, 4) + (y*(3*x**2/2 - S.Half) +
                              35*x**4/8 - 15*x**2/4 + Rational(3, 8))/(2*(y + 1)))
-    assert limit(e, y, oo) == (5*x**3 + 3*x**2 - 3*x - 1)/4
+    assert limit(e, y, oo) == 5*x**3/4 + 3*x**2/4 - 3*x/4 - Rational(1, 4)
 
 @XFAIL
 def test_issue_5172():
@@ -515,7 +514,7 @@ def test_branch_cuts():
 def test_issue_6364():
     a = Symbol('a')
     e = z/(1 - sqrt(1 + z)*sin(a)**2 - sqrt(1 - z)*cos(a)**2)
-    assert limit(e, z, 0).simplify() == 2/cos(2*a)
+    assert limit(e, z, 0) == 2/(2*cos(a)**2 - 1)
 
 
 def test_issue_4099():
@@ -639,7 +638,7 @@ def test_issue_12769():
         2*F0**(b + 1)*K**(2*b)*a*r*s0*(b**2 - 2*b + 1) - \
         2*F0**(b + 1)*K**(b + 1)*a**2*(b - 1))/((b - 1)*(b**2 - 2*b + 1))))*(b*r -  b - r + 1)
 
-    assert fx.subs(K, F0).cancel().together() == limit(fx, K, F0).together()
+    assert fx.subs(K, F0).factor(deep=True) == limit(fx, K, F0).factor(deep=True)
 
 
 def test_issue_13332():
@@ -893,7 +892,7 @@ def test_issue_19586():
 def test_issue_13715():
     n = Symbol('n')
     p = Symbol('p', zero=True)
-    assert limit(n + p, n, 0) == p
+    assert limit(n + p, n, 0) == 0
 
 
 def test_issue_15055():
@@ -943,3 +942,7 @@ def test_issue_20704():
 
 def test_issue_21038():
     assert limit(sin(pi*x)/(3*x - 12), x, 4) == pi/3
+
+def test_issue_21550():
+    r = (sqrt(5) - 1)/2
+    assert limit((x - r)/(x**2 + x - 1), x, r) == (-1 + sqrt(5))/(5 - sqrt(5))

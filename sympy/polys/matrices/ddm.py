@@ -30,7 +30,7 @@ list of lists:
     >>> ddm_idet([[0, 1], [-1, 0]], QQ)
     1
     >>> A
-    [[-1, 0], [0, 1]]
+    [[-1, 0], [0, -1]]
 
 Note that ddm_idet modifies the input matrix in-place. It is recommended to
 use the DDM.det method as a friendlier interface to this instead which takes
@@ -284,7 +284,9 @@ class DDM(list):
     def rref(a):
         """Reduced-row echelon form of a and list of pivots"""
         b = a.copy()
-        pivots = ddm_irref(b)
+        K = a.domain
+        partial_pivot = K.is_RealField or K.is_ComplexField
+        pivots = ddm_irref(b, _partial_pivot=partial_pivot)
         return b, pivots
 
     def nullspace(a):

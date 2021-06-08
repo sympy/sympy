@@ -1891,16 +1891,6 @@ def test_sympy__core__symbol__Wild():
 
 
 @SKIP("abstract class")
-def test_sympy__equation__equation__SymbolicRelation():
-    pass
-
-
-def test_sympy__equation__equation__Equation():
-    from sympy.equation import Equation
-    assert _test_args(Equation(1,1))
-
-
-@SKIP("abstract class")
 def test_sympy__functions__combinatorial__factorials__CombinatorialFunction():
     pass
 

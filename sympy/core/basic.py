@@ -509,6 +509,10 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @property
     def expr_free_symbols(self):
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(feature="expr_free_symbols method",
+                                issue=21494,
+                                deprecated_since_version="1.9").warn()
         return set()
 
     def as_dummy(self):
@@ -762,24 +766,17 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         Substitutes old for new in an expression after sympifying args.
 
-        This method is capable of complicated substitution by calling
-        ``self._eval_subs()`` method.
-
-        ``args`` is either:
-          - two arguments, e.g. ``foo.subs(old, new)``
-          - an ``Equation`` instance, e.g. ``foo.subs(Eqn(old, new))``
-          - one iterable argument, e.g. ``foo.subs(iterable)``. The iterable may be
-             o an iterable container with ``(old, new)`` pairs. In this case the
+        `args` is either:
+          - two arguments, e.g. foo.subs(old, new)
+          - one iterable argument, e.g. foo.subs(iterable). The iterable may be
+             o an iterable container with (old, new) pairs. In this case the
                replacements are processed in the order given with successive
                patterns possibly affecting replacements already made.
-             o an iterable container with ``Equation`` instance
-               instances, e.g. ``Eqn(old, new)``. This is processed as an
-               iterable container of ``(old, new)`` pairs.
              o a dict or set whose key/value items correspond to old/new pairs.
                In this case the old/new pairs will be sorted by op count and in
-               case of a tie, by number of args and the ``default_sort_key``.
-               The resulting sorted list is then processed as an iterable
-               container (see previous).
+               case of a tie, by number of args and the default_sort_key. The
+               resulting sorted list is then processed as an iterable container
+               (see previous).
 
         If the keyword ``simultaneous`` is True, the subexpressions will not be
         evaluated until all the substitutions have been made.
@@ -801,22 +798,10 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> (x + y).subs(reversed(reps))
         x**2 + 2
 
-        ``Equation`` instance is treated as a container of ``(old, new)`` pair.
-
-        >>> from sympy import Eqn
-        >>> eqn1, eqn2 = Eqn(x, pi), Eqn(y, 2)
-        >>> (1 + x*y).subs(eqn1)
-        pi*y + 1
-        >>> (1 + x*y).subs([eqn1, eqn2])
-        1 + 2*pi
-
-        Complicated substitution can be done. Here, ``x**4`` is identified as
-        the square of ``x**2`` and substituted.
-
         >>> (x**2 + x**4).subs(x**2, y)
         y**2 + y
 
-        To replace only the ``x**2`` but not the ``x**4``, use ``xreplace``:
+        To replace only the x**2 but not the x**4, use xreplace:
 
         >>> (x**2 + x**4).xreplace({x**2: y})
         x**4 + y
@@ -883,19 +868,16 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         See Also
         ========
-
         replace: replacement capable of doing wildcard-like matching,
                  parsing of match, and conditional replacements
         xreplace: exact node replacement in expr tree; also capable of
                   using matching rules
-        sympy.core.evalf.EvalfMixin.evalf: calculates the given formula
-                                           to a desired level of precision
+        sympy.core.evalf.EvalfMixin.evalf: calculates the given formula to a desired level of precision
 
         """
         from sympy.core.compatibility import _nodes, default_sort_key
         from sympy.core.containers import Dict
         from sympy.core.symbol import Dummy, Symbol
-        from sympy.equation import Equation
         from sympy.utilities.misc import filldedent
 
         unordered = False
@@ -906,8 +888,6 @@ class Basic(Printable, metaclass=ManagedProperties):
             elif isinstance(sequence, (Dict, Mapping)):
                 unordered = True
                 sequence = sequence.items()
-            elif isinstance(sequence, Equation):
-                sequence = [sequence.args]
             elif not iterable(sequence):
                 raise ValueError(filldedent("""
                    When a single argument is passed to subs
@@ -920,10 +900,6 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         sequence = list(sequence)
         for i, s in enumerate(sequence):
-            if isinstance(s, Equation):
-                # treat equation as a container
-                s = s.args
-
             if isinstance(s[0], str):
                 # when old is a string we prefer Symbol
                 s = Symbol(s[0]), s[1]
@@ -1926,6 +1902,17 @@ def _aresame(a, b):
             else:
                 return False
     return True
+
+
+def _ne(a, b):
+    # use this as a second test after `a != b` if you want to make
+    # sure that things are truly equal, e.g.
+    # a, b = 0.5, S.Half
+    # a !=b or _ne(a, b) -> True
+    from .numbers import Number
+    # 0.5 == S.Half
+    if isinstance(a, Number) and isinstance(b, Number):
+        return a.__class__ != b.__class__
 
 
 def _atomic(e, recursive=False):
