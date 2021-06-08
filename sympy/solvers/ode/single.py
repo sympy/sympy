@@ -1707,9 +1707,11 @@ class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubs
         sol1 = HomogeneousCoeffSubsIndepDivDep._get_general_solution(self)
         sol2 = HomogeneousCoeffSubsDepDivIndep._get_general_solution(self)
         fx = self.ode_problem.func
-        return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, fx,
-            trysolving=not simplify))
+        if simplify:
+            sol1 = odesimp(self.ode_problem.eq, *sol1, fx, "1st_homogeneous_coeff_subs_indep_div_dep")
+            sol2 = odesimp(self.ode_problem.eq, *sol2, fx, "1st_homogeneous_coeff_subs_dep_div_indep")
+        return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, fx, trysolving=not simplify))
 
 
 # Avoid circular import:
-from .ode import dsolve, ode_sol_simplicity
+from .ode import dsolve, ode_sol_simplicity, odesimp
