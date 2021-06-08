@@ -1057,6 +1057,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         Liouville: ('Liouville',),
         Separable: ('separable',),
         SeparableReduced: ('separable_reduced',),
+        HomogeneousCoeffSubsDepDivIndep: ('1st_homogeneous_coeff_subs_dep_div_indep',),
     }
     for solvercls in solvers:
         solver = solvercls(ode)
@@ -1138,14 +1139,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
                 orderb = homogeneous_order(r[e], x, y)
                 if ordera == orderb:
                     # u1=y/x and u2=x/y
-                    u1 = Dummy('u1')
                     u2 = Dummy('u2')
                     s = "1st_homogeneous_coeff_subs"
                     s1 = s + "_dep_div_indep"
                     s2 = s + "_indep_div_dep"
-                    if simplify((r[d] + u1*r[e]).subs({x: 1, y: u1})) != 0:
-                        matching_hints[s1] = r
-                        matching_hints[s1 + "_Integral"] = r
                     if simplify((r[e] + u2*r[d]).subs({x: u2, y: 1})) != 0:
                         matching_hints[s2] = r
                         matching_hints[s2 + "_Integral"] = r
@@ -2747,7 +2744,7 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     See the
     :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`
     and
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`
+    :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep`
     docstrings for more information on these hints.  Note that there is no
     ``ode_1st_homogeneous_coeff_best_Integral`` hint.
 
@@ -2794,82 +2791,6 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
 
 
 def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
-    r"""
-    Solves a 1st order differential equation with homogeneous coefficients
-    using the substitution `u_1 = \frac{\text{<dependent
-    variable>}}{\text{<independent variable>}}`.
-
-    This is a differential equation
-
-    .. math:: P(x, y) + Q(x, y) dy/dx = 0
-
-    such that `P` and `Q` are homogeneous and of the same order.  A function
-    `F(x, y)` is homogeneous of order `n` if `F(x t, y t) = t^n F(x, y)`.
-    Equivalently, `F(x, y)` can be rewritten as `G(y/x)` or `H(x/y)`.  See
-    also the docstring of :py:meth:`~sympy.solvers.ode.homogeneous_order`.
-
-    If the coefficients `P` and `Q` in the differential equation above are
-    homogeneous functions of the same order, then it can be shown that the
-    substitution `y = u_1 x` (i.e. `u_1 = y/x`) will turn the differential
-    equation into an equation separable in the variables `x` and `u`.  If
-    `h(u_1)` is the function that results from making the substitution `u_1 =
-    f(x)/x` on `P(x, f(x))` and `g(u_2)` is the function that results from the
-    substitution on `Q(x, f(x))` in the differential equation `P(x, f(x)) +
-    Q(x, f(x)) f'(x) = 0`, then the general solution is::
-
-        >>> from sympy import Function, dsolve, pprint
-        >>> from sympy.abc import x
-        >>> f, g, h = map(Function, ['f', 'g', 'h'])
-        >>> genform = g(f(x)/x) + h(f(x)/x)*f(x).diff(x)
-        >>> pprint(genform)
-         /f(x)\    /f(x)\ d
-        g|----| + h|----|*--(f(x))
-         \ x  /    \ x  / dx
-        >>> pprint(dsolve(genform, f(x),
-        ... hint='1st_homogeneous_coeff_subs_dep_div_indep_Integral'))
-                       f(x)
-                       ----
-                        x
-                         /
-                        |
-                        |       -h(u1)
-        log(x) = C1 +   |  ---------------- d(u1)
-                        |  u1*h(u1) + g(u1)
-                        |
-                       /
-
-    Where `u_1 h(u_1) + g(u_1) \ne 0` and `x \ne 0`.
-
-    See also the docstrings of
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_best` and
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`.
-
-    Examples
-    ========
-
-    >>> from sympy import Function, dsolve
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
-    ... hint='1st_homogeneous_coeff_subs_dep_div_indep', simplify=False))
-                          /          3   \
-                          |3*f(x)   f (x)|
-                       log|------ + -----|
-                          |  x         3 |
-                          \           x  /
-    log(x) = log(C1) - -------------------
-                                3
-
-    References
-    ==========
-
-    - https://en.wikipedia.org/wiki/Homogeneous_differential_equation
-    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-      Dover 1963, pp. 59
-
-    # indirect doctest
-
-    """
     x = func.args[0]
     f = func.func
     u = Dummy('u')
@@ -2937,7 +2858,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
 
     See also the docstrings of
     :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_best` and
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`.
+    :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep`.
 
     Examples
     ========
@@ -2999,7 +2920,7 @@ def homogeneous_order(eq, *symbols):
     or `H(y/x)`.  This fact is used to solve 1st order ordinary differential
     equations whose coefficients are homogeneous of the same order (see the
     docstrings of
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep` and
+    :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep` and
     :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`).
 
     Symbols can be functions, but every argument of the function must be a
@@ -4094,7 +4015,7 @@ def ode_linear_coefficients(eq, func, order, match):
     ========
     :meth:`sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_best`
     :meth:`sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`
-    :meth:`sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`
+    :meth:`sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep`
 
     Examples
     ========
@@ -6674,4 +6595,4 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 #This import is written at the bottom to avoid circular imports.
 from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
         Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
-        SecondNonlinearAutonomousConserved, FirstExact, Liouville, Separable, SeparableReduced)
+        SecondNonlinearAutonomousConserved, FirstExact, Liouville, Separable, SeparableReduced, HomogeneousCoeffSubsDepDivIndep)
