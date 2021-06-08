@@ -1096,7 +1096,7 @@ def sample(expr, condition=None, size=(), library='scipy',
     >>> [sam in N.pspace.domain.set for sam in samp_list] # doctest: +SKIP
     [True, True, True, True]
     >>> sample(N, numsamples=3)
-	[6.07745952932677, 8.024735984727329, 3.7581166319235315]
+    [6.07745952932677, 8.024735984727329, 3.7581166319235315]
 	>>> sample(N, size = (2,3))
 	array([[5.42519758, 6.40207856, 4.94991743],
        [1.85819627, 6.83403519, 1.9412172 ]])
