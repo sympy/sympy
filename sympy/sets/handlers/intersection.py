@@ -1,5 +1,5 @@
 from sympy import (S, Dummy, Lambda, symbols, Interval, Intersection, Set,
-                   EmptySet, FiniteSet, Union, ComplexRegion)
+                   EmptySet, FiniteSet, Union, ComplexRegion, Mul)
 from sympy.multipledispatch import dispatch
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
@@ -304,17 +304,19 @@ def intersection_sets(self, other): # noqa:F811
             return None
         else:
             # univarite imaginary part in same variable
-            x, xis = solve_linear(n, im)
-            if x == n:
+            x, xis = zip(*[solve_linear(i, 0) for i in Mul.make_args(im) if n in i.free_symbols])
+            if x and all(i == n for i in x):
                 base_set -= FiniteSet(xis)
             else:
                 base_set -= ConditionSet(n, Eq(im, 0), S.Integers)
         # exclude values that make denominators 0
         for i in denoms(f):
             if i.has(n):
-                x, xis = solve_linear(i, n)
-                if x == n:
-                    base_set -= FiniteSet(xis)
+                sol = list(zip(*[solve_linear(i, 0) for i in Mul.make_args(im) if n in i.free_symbols]))
+                if sol != []:
+                    x, xis = sol
+                    if x and all(i == n for i in x):
+                        base_set -= FiniteSet(xis)
                 else:
                     base_set -= ConditionSet(n, Eq(i, 0), S.Integers)
         return imageset(lam, base_set)
