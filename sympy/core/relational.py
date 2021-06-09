@@ -1,15 +1,18 @@
 from typing import Dict, Union, Type
-
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .basic import S, Atom
 from .compatibility import ordered
 from .basic import Basic
 from .evalf import EvalfMixin
 from .function import AppliedUndef
+from .mod import Mod
+from .mul import Mul
+from .numbers import Rational
+from .power import Pow
 from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
-from sympy.core.logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
+from sympy.core.logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.logic.boolalg import Boolean, BooleanAtom
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 __all__ = (
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
@@ -22,6 +25,9 @@ from sympy.multipledispatch import dispatch
 from .containers import Tuple
 from .symbol import Symbol
 
+
+SYMPY_DEBUG = 0
+pause = 0
 
 def _nontrivBool(side):
     return isinstance(side, Boolean) and \
@@ -1075,9 +1081,383 @@ def _n2(a, b):
             return dif
 
 
+# helpers for _eval_is_ge below
+def _invpow(p):
+    # invert a power and avoid evaluation
+    if p.is_Pow:
+        if p.exp == -1:
+            return p.base
+        return Pow(p.base, -p.exp, evaluate=False)
+    else:
+        return 1/p
+        # or should this be done?
+        from sympy import fraction
+        n, d = fraction(p)
+        if d is S.One:
+            return Pow(n, -1, evaluate=False)
+        if n.is_Number:
+            return d/n
+        return Mul(d, Pow(n, -1, evaluate=False), evaluate=False)
+
+# 0 <= x <= 1
+_small_pos = lambda x: fuzzy_and((
+    is_ge(x, S.Zero), is_ge(S.One, x)))
+
+# -1 <= x <= 0
+_small_neg = lambda x: fuzzy_and((
+    is_ge(x, S.NegativeOne), is_ge(S.Zero, x)))
+
+# b**e >= 1
+_big_ppow = lambda b, e: fuzzy_or((
+        fuzzy_and((b.is_zero, e.is_zero)),  # 1
+        fuzzy_and((Mod(e, 2) == 0, fuzzy_or((
+        is_ge(S.NegativeOne, b) and is_ge(e, S.Zero),
+        _small_neg(b) and is_ge(S.Zero, e))))),
+    _small_pos(b) and is_ge(S.Zero, e),
+    is_ge(b, S.One) and is_ge(e, S.Zero)))
+
+# 0 <= b**e <= 1
+_small_ppow = lambda b, e: fuzzy_or((
+        b.is_zero,  # 0 or 1
+        fuzzy_and((Mod(e, 2) == 0, fuzzy_or((
+        is_ge(S.NegativeOne, b) and is_ge(S.Zero, e),
+        _small_neg(b) and is_ge(e, S.Zero))))),
+    _small_pos(b) and is_ge(e, S.Zero),
+    is_ge(b, S.One) and is_ge(S.Zero, e)))
+
+# -1 <= b**e <= 0
+_small_npow = lambda b, e: fuzzy_or((
+    fuzzy_and((b.is_zero, fuzzy_not(e.is_zero))),  # 0
+    fuzzy_and((Mod(e, 2) == 1, fuzzy_or((
+    is_ge(S.NegativeOne, b) and is_ge(S.Zero, e),
+    _small_neg(b) and is_ge(e, S.Zero)))))))
+
+# b**e <= -1
+_big_npow = lambda b, e: fuzzy_and((Mod(e, 2) == 1, fuzzy_or((
+    is_ge(S.NegativeOne, b) and is_ge(e, S.Zero),
+    _small_neg(b) and is_ge(S.Zero, e)))))
+
+
+def _aslinear(e):
+    """return e as m, x, b where e = m*x + b
+
+    Examples
+    ========
+
+    >>> from sympy.core.relational import _aslinear as f
+    >>> from sympy.abc import x
+    >>> from sympy import S
+    >>> f(x)
+    (1, x, 0)
+    >>> f(2*x + 3)
+    (2, x, 3)
+    >>> f(S(1))
+    (1, 0, 1)
+    >>> f(S(0))
+    (1, 0, 0)
+    """
+    b, t = e.as_coeff_Add()
+    m, x = t.as_coeff_Mul()
+    return m, x, b
+
+def _trivial(l):
+    # replace trivial powers with specific value or None
+    # if the power is indeterminantly real; return l if it is not a power
+    if not isinstance(l, Pow):
+        return l
+    if l.exp.is_zero:
+        return S.One
+    if l.base.is_zero:
+        if l.exp.is_extended_positive:
+            return S.Zero
+        return  # 1 if 0**0
+    if l.base is S.One:
+        if l.exp.is_finite:
+            return S.One
+        return # nan if infinite
+    if not all(i.is_extended_real for i in l.args):
+        return
+    if l.base.is_extended_positive:
+        if l.exp.is_infinite:
+            if (l.base - 1).is_negative:
+                if l.exp.is_extended_positive:
+                    return S.Zero
+                if l.exp.is_extended_negative:
+                    return S.Infinity
+            if (l.base - 1).is_positive:
+                if l.exp.is_extended_positive:
+                    return S.Infinity
+                if l.exp.is_extended_negative:
+                    return S.Zero
+        if l.exp.is_finite:
+            return l
+    elif l.base.is_extended_nonnegative or l.base.is_extended_nonpositive:
+        if (
+                l.exp.is_extended_negative is False or
+                l.exp.is_extended_nonnegative is False):
+            return l
+        # could have 0**neg
+    elif l.base.is_extended_negative:
+        if (l.exp.is_integer and Mod(l.exp, 2) in (0, 1)):
+            return l
+    elif l.base.is_extended_nonnegative is None:
+        #assert None,(20.5)
+        return
+
+
+@dispatch(Pow, Rational) # type: ignore
+def _eval_is_ge(_p, r):  # :F811
+    b, e = _p.as_base_exp()
+    if _big_ppow(b, e) and is_ge(S.One, r):
+        return True
+    if _small_ppow(b, e) and is_ge(S.Zero, r):
+        return True
+    if _small_npow(b, e) and is_ge(S.NegativeOne, r):
+        return True
+
+
+@dispatch(Rational, Pow) # type: ignore
+def _eval_is_ge(r, _p):  # noqa:F811
+    b, e = _p.as_base_exp()
+    if r < 1 and r > 0:
+        return is_ge(_invpow(_p), 1/r)
+    if _small_ppow(b, e) and is_ge(r, S.One):
+        return True
+    if _small_npow(b, e) and is_ge(r, S.Zero):
+        return True
+    if _big_npow(b, e) and is_ge(r, S.NegativeOne):
+        return True
+
+
 @dispatch(Expr, Expr)
-def _eval_is_ge(lhs, rhs):
-    return None
+def _eval_is_ge(lhs, rhs):  # noqa:F811
+    from sympy.simplify.radsimp import fraction
+    hit = 0
+    for i in (lhs, rhs):
+        if not i.is_extended_real:
+            ilhs = _invpow(lhs)
+            irhs = _invpow(rhs)
+            if ilhs.is_extended_real and irhs.is_extended_real:
+                return is_ge(irhs, ilhs)
+            return
+        if i.is_Mul or i.is_Pow or i.is_Add:
+            hit += 1
+    if not hit:
+        return
+    ix = False  # keep track of whether L and R were exchanged
+    L, R = lhs, rhs
+    if L.is_Rational:
+        L, R = R, L
+        ix = ~ix
+    if L.is_number and R.is_number:
+        L, R = L - R, S.Zero
+    if not R:
+        if not L:
+            return True  # lhs == rhs already handled before getting here
+        if L.is_extended_negative:
+            return bool(ix)
+        elif L.is_extended_positive:
+            return bool(~ix)
+        elif L.is_extended_nonnegative:
+            return None if ix else True
+        elif L.is_extended_nonpositive:
+            return True if ix else None
+        if L.is_Add:
+            a, b = L.as_two_terms()
+            if a.is_Rational:
+                L = b
+                R = -a
+            else:
+                L = a
+                R = -b
+    # simplify wrt Rationals
+    m, l, b = _aslinear(L)
+    l = _trivial(l)
+    if l is None:
+        #assert None,(11)
+        return
+    mr, r, br = _aslinear(R)
+    r = _trivial(r)
+    if r is None:
+        #assert None,(10)
+        return
+    # make processing canonical
+    if l.is_Number and not r.is_Number:
+        l, r = r, l
+        m, mr = mr, m
+        b, br = br, b
+        ix = ~ix
+    if SYMPY_DEBUG:
+        print(lhs, rhs, '-trivial->', l, r)
+        if pause: input('press return to continue')
+
+    # work really hard to identify a power for comparison
+    if l.is_Pow and r == l.base:
+        r = Pow(r, 1, evaluate=False)
+    elif r.is_Pow and l == r.base:
+        l = Pow(l, 1, evaluate=False)
+    if l.is_Pow and r.is_Pow:
+        if l == r:  # m*x + b ~~ mr*x + br
+            if m == mr:
+                L, R = b - br, S.Zero
+                if ix:  # probably impossible at this point
+                    L, R = R, L
+                return L >= R
+            L = l
+            R = br - b
+            den = m - mr
+            if den < 0:
+                ix = ~ix
+            R /= den
+        elif b == br:
+            if l.base == r.base:
+                if is_ge(S.Zero, r):
+                    ix = ~ix
+                elif not is_ge(r, S.Zero):
+                    return  # hopefully impossible after passing entrance test
+                L = Pow(l.base, l.exp - r.exp, evaluate=False)
+                R = mr/m
+                if m < 0:
+                    ix = ~ix
+            elif m == mr and l.exp == r.exp:
+                lr = Pow(l.base/r.base, l.exp, evaluate=False)
+                def _base_like_pow(l):
+                    if l.is_nonpositive:
+                        if l.base.is_nonpositive:
+                            assert None,(9)
+                            return l.base
+                        assert l.base.is_nonnegative
+                        assert None,(8)
+                        return -l.base
+                    elif l.is_nonnegative:
+                        if l.base.is_nonnegative:
+                            return l.base
+                        assert l.base.is_nonpositive
+                        assert None,(7)
+                        return -l.base
+                ok = _base_like_pow(lr)
+                if ok:
+                    if is_ge(S.Zero, r):
+                        ix = ~ix
+                    if m < 0:
+                        assert None,(6)
+                        ix = ~ix
+                    L = ok
+                    R = S.One
+                else:
+                    rl = Pow(r.base/l.base, l.exp, evaluate=False)
+                    ok = _base_like_pow(rl)
+                    assert ok
+                    if is_ge(S.Zero, l):
+                        assert None,(5)
+                        ix = ~ix
+                    if mr < 0:
+                        assert None,(4)
+                        ix = ~ix
+                    L = ok
+                    R = S.One
+                    ix = ~ix
+                if l.exp.is_nonpositive:
+                    ix = ~ix
+    elif l.is_Pow:
+        L = l
+        R = mr/m*r + (br - b)/m
+        if m < 0:
+            ix = ~ix
+    elif r.is_Pow:
+        L = r
+        R = m/mr*l + (b - br)/mr
+        ix = ~ix
+        if mr < 0:
+            assert None,(3)
+            ix = ~ix
+    elif l == r:
+        den = m - mr
+        if den:
+            L = l
+        else:
+            L = S.Zero
+            den = S.One
+        R = (br - b)/den
+        if den < 0:
+            ix = ~ix
+    else:
+        L = l
+        R = mr/m*r + (br - b)/m
+        if m < 0:
+            ix = ~ix
+
+    if R.is_Number:
+        n, d = fraction(L)
+        if d is not S.One:
+            # bring denom to numerator on other side
+            # n/d ~ R -> n/R ~ d, watching for signs of R and d
+            if R != 0:
+                if R < 0:
+                    ix = ~ix
+                den = d
+                r = R
+            else:
+                #assert None,(2)
+                den = S.Zero
+                r = S.One
+            if is_ge(d, S.Zero):
+                L, R = n/r, den
+            elif is_le(d, S.Zero):
+                ix = ~ix
+                L, R = n/r, den
+
+    if ix:  # the sense of the comparison is reversed
+        L, R = R, L
+
+    if L.is_Number and R.is_Number:
+        return L >= R
+
+    # if we did more than change sign or switch sides, start again
+    # but guard against recursion error -- is there a better way?
+    def canonical(L, R):
+        return {_aslinear(L)[1], _aslinear(R)[1]}
+    if canonical(L, R) != canonical(lhs, rhs):
+        if SYMPY_DEBUG:
+            print('-wrangled to->',L, R)
+            if pause: input('<return>')
+        return is_ge(L, R)
+
+    # check for results based on regions
+    if not any(i in (L, R) for i in (-1, 0, 1)):
+        if is_ge(L, S.One):
+            if is_ge(S.NegativeOne, R):
+                return True
+            if is_ge(S.Zero, R):
+                return True
+            if is_ge(S.One, R):
+                return True
+        if is_ge(L, S.Zero):
+            if is_ge(S.NegativeOne, R):
+                return True
+            if is_ge(S.Zero, R):
+                return True
+        if is_ge(L, S.NegativeOne):
+            if is_ge(S.NegativeOne, R):
+                assert None,(1)
+                return True
+
+    # one more check for bases -- XXX can this be incorporated
+    # with the above?
+    if L.is_Pow or R.is_Pow:
+        b, e = L.as_base_exp()
+        B, E = R.as_base_exp()
+        # same exponent, b**e >= B**e
+        if e == E and is_ge(b, S.Zero):
+            if is_ge(e, S.Zero):
+                assert None,(0.5)
+                return is_ge(b, B)
+            if is_ge(S.Zero, e):
+                assert None,(0)
+                return is_ge(B, b)
+        # same base, b**e >= b**E
+        if b == B and is_ge(b, S.One):
+            return is_ge(e, E)
 
 
 @dispatch(Basic, Basic)

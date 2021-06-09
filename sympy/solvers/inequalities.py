@@ -960,7 +960,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     >>> reduce_inequalities(0 <= x + 3, [])
     (-3 <= x) & (x < oo)
 
-    >>> reduce_inequalities(0 <= x + y*2 - 1, [x])
+    >>> reduce_inequalities(0 <= x + 2*y - 1, [x])
     (x < oo) & (x >= 1 - 2*y)
     """
     if not iterable(inequalities):
