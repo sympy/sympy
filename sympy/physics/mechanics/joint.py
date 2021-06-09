@@ -1,5 +1,7 @@
+from sympy.physics.vector.frame import ReferenceFrame
+from sympy import acos
 from sympy.physics.mechanics.body import Body
-from sympy.physics.vector import Vector, dynamicsymbols
+from sympy.physics.vector import Vector, dynamicsymbols, dot, cross
 from abc import ABC, abstractmethod
 
 __all__ = ['Joint', 'PinJoint']
@@ -39,13 +41,16 @@ class Joint(ABC):
         Defines the joint's point where the child will be connected to parent.
         Default value is masscenter of Child Body.
     parent_axis : Vector, optional
-        Axis of parent frame which would be be aligned with child's
+        Axis of parent frame which would be aligned with child's
         axis. Default is x axis in parent's frame.
+    child_axis : Vector, optional
+        Axis of child frame which would be aligned with parent's
+        axis. Default is x axis in child's frame.
 
     """
 
     def __init__(self, name, parent, child, dist=None, coordinates=None, speeds=None, parent_joint_pos=None,
-        child_joint_pos=None, parent_axis=None):
+        child_joint_pos=None, parent_axis=None, child_axis=None):
 
         if not isinstance(name, str):
             raise TypeError('Supply a valid name.')
@@ -69,6 +74,7 @@ class Joint(ABC):
         self._kdes = self._generate_kdes()
 
         self._parent_axis = self._axis(parent, parent_axis)
+        self._child_axis = self._axis(child, child_axis)
 
         self._parent_joint = self._locate_joint_pos(parent,parent_joint_pos)
         self._child_joint = self._locate_joint_pos(child, child_joint_pos)
@@ -151,6 +157,15 @@ class Joint(ABC):
     def _set_masscenter_pos(self, dist):
         self._child.masscenter.set_pos(self._parent.masscenter, dist)
 
+    def _align_axis(self):
+        axis1 = self._parent_axis
+        axis2 = self._child_axis
+        angle = acos(dot(axis1, axis2)/(axis1.magnitude() * axis2.magnitude()))
+        if angle!=0:
+            I = ReferenceFrame('I')
+            I.orient_axis(self._parent.frame, axis1, angle)
+            self._child.frame.orient_axis(I, axis1, self._coordinates[0])
+
 
 class PinJoint(Joint):
     """Pin (Revolute) Joint.
@@ -189,6 +204,9 @@ class PinJoint(Joint):
     parent_axis : Vector, optional
         Axis of parent frame which would be be aligned with child's
         axis. Default is x axis in parent's frame.
+    child_axis : Vector, optional
+        Axis of child frame which would be aligned with parent's
+        axis. Default is x axis in child's frame.
 
     Examples
     =========
@@ -205,10 +223,10 @@ class PinJoint(Joint):
     """
 
     def __init__(self, name, parent, child, dist, coordinates=None, speeds=None, parent_joint_pos=None,
-        child_joint_pos=None, parent_axis=None):
+        child_joint_pos=None, parent_axis=None, child_axis=None):
 
         super().__init__(name, parent, child, dist, coordinates, speeds, parent_joint_pos, child_joint_pos,
-            parent_axis)
+            parent_axis, child_axis)
 
     def _generate_coordinates(self, coordinate):
         coordinates = []
@@ -228,6 +246,7 @@ class PinJoint(Joint):
 
     def _orient_frames(self):
         self._child.frame.orient_axis(self._parent.frame, self._parent_axis, self._coordinates[0])
+        self._align_axis()
 
     def _set_angular_velocity(self):
         self._child.frame.set_ang_vel(self._parent.frame, self._speeds[0] * self._parent_axis)
