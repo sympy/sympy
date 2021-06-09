@@ -1,7 +1,7 @@
 from sympy.physics.vector.frame import ReferenceFrame
 from sympy import acos
 from sympy.physics.mechanics.body import Body
-from sympy.physics.vector import Vector, dynamicsymbols, dot, cross
+from sympy.physics.vector import Vector, dynamicsymbols, dot
 from abc import ABC, abstractmethod
 
 __all__ = ['Joint', 'PinJoint']
@@ -13,8 +13,7 @@ class Joint(ABC):
     Explanation
     ===========
 
-    A Joint connects two bodies (a parent and child) by adding different degrees
-    of freedom to child with respect to parent.
+    A joint subtracts degrees of freedom from a body.
     This is the base class for all specific joints and holds all common methods
     acting as an interface for all joints. Custom joint can be created by
     inheriting Joint class and defining all abstract functions.

@@ -1,4 +1,4 @@
-from sympy import sin, cos, Matrix, sqrt, acos
+from sympy import sin, cos, Matrix
 from sympy.core.symbol import symbols
 from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint
 from sympy.physics.mechanics.joint import Joint
@@ -116,6 +116,6 @@ def test_pinjoint_arbitrary_axis():
     A = ReferenceFrame('A')
     P = Body('P', frame=N)
     C = Body('C', frame=A)
-    J = PinJoint('J', P, C, Vector(0), parent_axis=N.y)
+    PinJoint('J', P, C, Vector(0), parent_axis=N.y)
 
     assert A.dcm(N) == Matrix([[cos(theta), 0, -sin(theta)], [0, 1, 0], [sin(theta), 0, cos(theta)]])
