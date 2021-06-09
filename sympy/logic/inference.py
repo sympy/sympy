@@ -35,7 +35,7 @@ def literal_symbol(literal):
         raise ValueError("Argument must be a boolean literal.")
 
 
-def satisfiable(expr, algorithm=None, all_models=False):
+def satisfiable(expr, algorithm=None, all_models=False, minimal=False):
     """
     Check satisfiability of a propositional sentence.
     Returns a model when it succeeds.
@@ -88,6 +88,11 @@ def satisfiable(expr, algorithm=None, all_models=False):
             # is not installed
             algorithm = "dpll2"
 
+    if algorithm=="minisat22":
+        pysat = import_module('pysat')
+        if pysat is None:
+            algorithm = "dpll2"
+
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
         return dpll_satisfiable(expr)
@@ -97,6 +102,9 @@ def satisfiable(expr, algorithm=None, all_models=False):
     elif algorithm == "pycosat":
         from sympy.logic.algorithms.pycosat_wrapper import pycosat_satisfiable
         return pycosat_satisfiable(expr, all_models)
+    elif algorithm == "minisat22":
+        from sympy.logic.algorithms.minisat22_wrapper import minisat22_satisfiable
+        return minisat22_satisfiable(expr, all_models, minimal)
     raise NotImplementedError
 
 
