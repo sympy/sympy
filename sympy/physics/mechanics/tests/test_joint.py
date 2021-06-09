@@ -18,10 +18,9 @@ def test_pinjoint():
     P = Body('P')
     C = Body('C')
     l, m = symbols('l m')
-    dist = l * C.frame.x
     theta, omega = dynamicsymbols('J_theta, J_omega')
 
-    Pj = PinJoint('J', P, C, dist)
+    Pj = PinJoint('J', P, C )
     assert Pj._name == 'J'
     assert Pj.parent() == P
     assert Pj.child() == C
@@ -32,15 +31,18 @@ def test_pinjoint():
     assert Pj._child_joint.pos_from(C.masscenter) == Vector(0)
     assert Pj._parent_joint.pos_from(P.masscenter) == Vector(0)
     assert Pj._parent_joint.pos_from(Pj._child_joint) == Vector(0)
-    assert C.masscenter.pos_from(P.masscenter) == dist
+    assert C.masscenter.pos_from(P.masscenter) == Vector(0)
 
-    J1 = PinJoint('J1', P, C, dist, parent_joint_pos= l * P.frame.x, child_joint_pos= m * C.frame.y,
-        parent_axis = P.frame.z)
+    P1 = Body('P1')
+    C1 = Body('C1')
+    J1 = PinJoint('J1', P1, C1, parent_joint_pos= l * P1.frame.x, child_joint_pos= m * C1.frame.y,
+        parent_axis = P1.frame.z)
 
-    assert J1._parent_axis == P.frame.z
-    assert J1._child_joint.pos_from(C.masscenter) == m * C.frame.y
-    assert J1._parent_joint.pos_from(P.masscenter) == l * P.frame.x
+    assert J1._parent_axis == P1.frame.z
+    assert J1._child_joint.pos_from(C1.masscenter) == m * C1.frame.y
+    assert J1._parent_joint.pos_from(P1.masscenter) == l * P1.frame.x
     assert J1._parent_joint.pos_from(J1._child_joint) == Vector(0)
+    assert P1.masscenter.pos_from(C1.masscenter) == - l*P1.frame.x + m*C1.frame.y
 
 def test_pin_joint_double_pendulum():
     q1, q2 = dynamicsymbols('q1 q2')
@@ -53,9 +55,9 @@ def test_pin_joint_double_pendulum():
     PartP = Body('P', frame=A, mass=m)
     PartR = Body('R', frame=B, mass=m)
 
-    J1 = PinJoint('J1', C, PartP, l*A.x, speeds=u1, coordinates=q1, \
+    J1 = PinJoint('J1', C, PartP, speeds=u1, coordinates=q1, child_joint_pos=-l*A.x, \
         parent_axis=C.frame.z, child_axis=PartP.frame.z)
-    J2 = PinJoint('J2', PartP, PartR, l*B.x, speeds=u2, coordinates=q2, \
+    J2 = PinJoint('J2', PartP, PartR, speeds=u2, coordinates=q2, child_joint_pos=-l*B.x, \
         parent_axis=PartP.frame.z, child_axis=PartR.frame.z)
 
     #Check orientation
@@ -88,8 +90,10 @@ def test_pin_joint_chaos_pendulum():
     rod = Body('rod', frame=A, mass=mA)
     plate = Body('plate', mass=mB, frame=B)
     C = Body('C', frame=N)
-    J1 = PinJoint('J1', C, rod, lA*A.z, coordinates=theta, speeds=omega, parent_axis=N.y, child_axis=A.y)
-    J2 = PinJoint('J2',rod, plate, lC*A.z, coordinates=phi, speeds=alpha, parent_axis=A.z, child_axis=B.z)
+    J1 = PinJoint('J1', C, rod, coordinates=theta, speeds=omega, child_joint_pos=lA*A.z,\
+        parent_axis=N.y, child_axis=A.y)
+    J2 = PinJoint('J2',rod, plate, coordinates=phi, speeds=alpha, parent_joint_pos=lC*A.z,\
+        parent_axis=A.z, child_axis=B.z)
 
     #Check orientation
     assert A.dcm(N) == Matrix([[cos(theta), 0, -sin(theta)], [0, 1, 0], [sin(theta), 0, cos(theta)]])
@@ -106,9 +110,13 @@ def test_pin_joint_chaos_pendulum():
     assert J1.kdes() == [omega - theta.diff(t)]
     assert J2.kdes() == [alpha - phi.diff(t)]
 
+    #Check pos of masscenters
+    assert C.masscenter.pos_from(rod.masscenter) == lA*A.z
+    assert rod.masscenter.pos_from(plate.masscenter) == - lC * A.z
+
     #Check Linear Velocities
-    assert rod.masscenter.vel(N) == (-h/4 + lB/2)*omega*A.x
-    assert plate.masscenter.vel(N) == lB*omega*A.x
+    assert rod.masscenter.vel(N) == (h/4 - lB/2)*omega*A.x
+    assert plate.masscenter.vel(N) == ((h/4 - lB/2)*omega + (h/4 + lB/2)*omega)*A.x
 
 def test_pinjoint_arbitrary_axis():
     theta = dynamicsymbols('J_theta')
@@ -116,6 +124,6 @@ def test_pinjoint_arbitrary_axis():
     A = ReferenceFrame('A')
     P = Body('P', frame=N)
     C = Body('C', frame=A)
-    PinJoint('J', P, C, Vector(0), parent_axis=N.y)
+    PinJoint('J', P, C, parent_axis=N.y)
 
     assert A.dcm(N) == Matrix([[cos(theta), 0, -sin(theta)], [0, 1, 0], [sin(theta), 0, cos(theta)]])
