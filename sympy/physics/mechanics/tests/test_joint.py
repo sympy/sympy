@@ -1,8 +1,8 @@
-from sympy import sin, cos, Matrix
+from sympy import sin, cos, Matrix, acos
 from sympy.core.symbol import symbols
 from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint
 from sympy.physics.mechanics.joint import Joint
-from sympy.physics.vector import Vector, ReferenceFrame
+from sympy.physics.vector import Vector, ReferenceFrame, dot
 from sympy.testing.pytest import raises
 
 t = dynamicsymbols._t
@@ -126,4 +126,17 @@ def test_pinjoint_arbitrary_axis():
     C = Body('C', frame=A)
     PinJoint('J', P, C, parent_axis=N.y)
 
-    assert A.dcm(N) == Matrix([[cos(theta), 0, -sin(theta)], [0, 1, 0], [sin(theta), 0, cos(theta)]])
+    axis1 = N.y.normalize()
+    axis2 = A.x.normalize()
+    angle = acos(dot(axis2, axis1))
+
+    assert angle == 0 #Axis are aligned
+    assert A.dcm(N) == Matrix([[0, 1, 0], [-cos(theta), 0, sin(theta)], [sin(theta), 0, cos(theta)]])
+
+    PinJoint('J', P, C, parent_axis=N.y+N.x+N.z, child_axis=A.x-A.y)
+
+    axis1 = (N.y+N.x+N.z).normalize()
+    axis2 = (A.x - A.y).normalize()
+    angle = acos(dot(axis2, axis1))
+
+    assert angle.simplify() == 0 #Axis are aligned

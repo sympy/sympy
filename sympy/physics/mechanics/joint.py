@@ -1,7 +1,7 @@
 from sympy.physics.vector.frame import ReferenceFrame
 from sympy import acos
 from sympy.physics.mechanics.body import Body
-from sympy.physics.vector import Vector, dynamicsymbols, dot
+from sympy.physics.vector import Vector, dynamicsymbols, dot, cross
 from abc import ABC, abstractmethod
 
 __all__ = ['Joint', 'PinJoint']
@@ -146,14 +146,13 @@ class Joint(ABC):
             raise ValueError('Joint Position must be supplied as Vector.')
         return body.masscenter.locatenew(self._name + '_' + body.name + '_joint', joint_pos)
 
-    def _align_axis(self):
-        axis1 = self._parent_axis
-        axis2 = self._child_axis
-        angle = acos(dot(axis1, axis2)/(axis1.magnitude() * axis2.magnitude()))
-        if angle!=0:
-            I = ReferenceFrame('I')
-            I.orient_axis(self._parent.frame, axis1, angle)
-            self._child.frame.orient_axis(I, axis1, self._coordinates[0])
+    def _align_axis(self, parent, child):
+        # Returns the axis and angle between two axis(vectors).
+        axis1 = parent.normalize()
+        axis2 = child.normalize()
+        angle = acos(dot(axis2, axis1))
+        axis = cross(child, parent)
+        return angle, axis
 
 
 class PinJoint(Joint):
@@ -232,8 +231,15 @@ class PinJoint(Joint):
         return speeds
 
     def _orient_frames(self):
-        self._child.frame.orient_axis(self._parent.frame, self._parent_axis, self._coordinates[0])
-        self._align_axis()
+        self._child.frame.orient_axis(self._parent.frame, self._parent_axis, 0)
+        angle, axis = self._align_axis(self._parent_axis, self._child_axis)
+        if axis != Vector(0):
+            I = ReferenceFrame('I')
+            I.orient_axis(self._child.frame, self._child_axis, 0)
+            I.orient_axis(self._parent.frame, axis, angle)
+            self._child.frame.orient_axis(I, self._parent_axis, self._coordinates[0])
+        else:
+            self._child.frame.orient_axis(self._parent.frame, self._parent_axis, self._coordinates[0])
 
     def _set_angular_velocity(self):
         self._child.frame.set_ang_vel(self._parent.frame, self._speeds[0] * self._parent_axis)
