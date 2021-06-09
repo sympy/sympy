@@ -154,7 +154,7 @@ almost_linear
 
 linear_coefficients
 ^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_linear_coefficients
+.. autofunction:: sympy.solvers.ode.single::LinearCoefficients
 
 separable_reduced
 ^^^^^^^^^^^^^^^^^

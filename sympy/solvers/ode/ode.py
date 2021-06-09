@@ -1060,6 +1060,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         HomogeneousCoeffSubsDepDivIndep: ('1st_homogeneous_coeff_subs_dep_div_indep',),
         HomogeneousCoeffSubsIndepDivDep: ('1st_homogeneous_coeff_subs_indep_div_dep',),
         HomogeneousCoeffBest: ('1st_homogeneous_coeff_best',),
+        LinearCoefficients: ('linear_coefficients',),
     }
     for solvercls in solvers:
         solver = solvercls(ode)
@@ -1115,54 +1116,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         # Any first order ODE can be ideally solved by the Lie Group
         # method
         matching_hints["lie_group"] = r3
-
-        # This match is used for several cases below; we now collect on
-        # f(x) so the matching works.
-        r = collect(reduced_eq, df, exact=True).match(d + e*df)
-
-        if r:
-            # Using r[d] and r[e] without any modification for hints
-            # linear-coefficients and separable-reduced.
-            num, den = r[d], r[e]  # ODE = d/e + df
-            r['d'] = d
-            r['e'] = e
-            r['y'] = y
-            r[d] = num.subs(f(x), y)
-            r[e] = den.subs(f(x), y)
-
-            ## Separable Case: y' == P(y)*Q(x)
-            r[d] = separatevars(r[d])
-            r[e] = separatevars(r[e])
-
-            ## Linear coefficients of the form
-            # y'+ F((a*x + b*y + c)/(a'*x + b'y + c')) = 0
-            # that can be reduced to homogeneous form.
-            F = num/den
-            params = _linear_coeff_match(F, func)
-            if params:
-                xarg, yarg = params
-                u = Dummy('u')
-                t = Dummy('t')
-                # Dummy substitution for df and f(x).
-                dummy_eq = reduced_eq.subs(((df, t), (f(x), u)))
-                reps = ((x, x + xarg), (u, u + yarg), (t, df), (u, f(x)))
-                dummy_eq = simplify(dummy_eq.subs(reps))
-                # get the re-cast values for e and d
-                r2 = collect(expand(dummy_eq), [df, f(x)]).match(e*df + d)
-                if r2:
-                    orderd = homogeneous_order(r2[d], x, f(x))
-                    if orderd is not None:
-                        ordere = homogeneous_order(r2[e], x, f(x))
-                        if orderd == ordere:
-                            # Match arguments are passed in such a way that it
-                            # is coherent with the already existing homogeneous
-                            # functions.
-                            r2[d] = r2[d].subs(f(x), y)
-                            r2[e] = r2[e].subs(f(x), y)
-                            r2.update({'xarg': xarg, 'yarg': yarg,
-                                'd': d, 'e': e, 'y': y})
-                            matching_hints["linear_coefficients"] = r2
-                            matching_hints["linear_coefficients_Integral"] = r2
 
     elif order == 2:
         # Homogeneous second order differential equation of the form
@@ -2718,54 +2671,6 @@ def _handle_Integral(expr, func, hint):
     return sol
 
 
-def ode_1st_homogeneous_coeff_best(eq, func, order, match):
-    sol1 = ode_1st_homogeneous_coeff_subs_indep_div_dep(eq,
-    func, order, match)
-    sol2 = ode_1st_homogeneous_coeff_subs_dep_div_indep(eq,
-    func, order, match)
-    simplify = match.get('simplify', True)
-    if simplify:
-        # why is odesimp called here?  Should it be at the usual spot?
-        sol1 = odesimp(eq, sol1, func, "1st_homogeneous_coeff_subs_indep_div_dep")
-        sol2 = odesimp(eq, sol2, func, "1st_homogeneous_coeff_subs_dep_div_indep")
-    return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, func,
-        trysolving=not simplify))
-
-
-def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
-    x = func.args[0]
-    f = func.func
-    u = Dummy('u')
-    u1 = Dummy('u1')  # u1 == f(x)/x
-    r = match  # d+e*diff(f(x),x)
-    C1 = get_numbered_constants(eq, num=1)
-    xarg = match.get('xarg', 0)
-    yarg = match.get('yarg', 0)
-    int = Integral(
-        (-r[r['e']]/(r[r['d']] + u1*r[r['e']])).subs({x: 1, r['y']: u1}),
-        (u1, None, f(x)/x))
-    sol = logcombine(Eq(log(x), int + log(C1)), force=True)
-    sol = sol.subs(f(x), u).subs(((u, u - yarg), (x, x - xarg), (u, f(x))))
-    return sol
-
-
-def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
-    x = func.args[0]
-    f = func.func
-    u = Dummy('u')
-    u2 = Dummy('u2')  # u2 == x/f(x)
-    r = match  # d+e*diff(f(x),x)
-    C1 = get_numbered_constants(eq, num=1)
-    xarg = match.get('xarg', 0)  # If xarg present take xarg, else zero
-    yarg = match.get('yarg', 0)  # If yarg present take yarg, else zero
-    int = Integral(
-        simplify(
-            (-r[r['d']]/(r[r['e']] + u2*r[r['d']])).subs({x: u2, r['y']: 1})),
-        (u2, None, x/f(x)))
-    sol = logcombine(Eq(log(f(x)), int + log(C1)), force=True)
-    sol = sol.subs(f(x), u).subs(((u, u - yarg), (x, x - xarg), (u, f(x))))
-    return sol
-
 # XXX: Should this function maybe go somewhere else?
 
 
@@ -3771,140 +3676,6 @@ def ode_nth_linear_euler_eq_nonhomogeneous_variation_of_parameters(eq, func, ord
     r[-1] = r[-1]/r[ode_order(eq, f(x))]
     sol = _solve_variation_of_parameters(eq, func, order, match)
     return Eq(f(x), r['sol'].rhs + (sol.rhs - r['sol'].rhs)*r[ode_order(eq, f(x))])
-
-def _linear_coeff_match(expr, func):
-    r"""
-    Helper function to match hint ``linear_coefficients``.
-
-    Matches the expression to the form `(a_1 x + b_1 f(x) + c_1)/(a_2 x + b_2
-    f(x) + c_2)` where the following conditions hold:
-
-    1. `a_1`, `b_1`, `c_1`, `a_2`, `b_2`, `c_2` are Rationals;
-    2. `c_1` or `c_2` are not equal to zero;
-    3. `a_2 b_1 - a_1 b_2` is not equal to zero.
-
-    Return ``xarg``, ``yarg`` where
-
-    1. ``xarg`` = `(b_2 c_1 - b_1 c_2)/(a_2 b_1 - a_1 b_2)`
-    2. ``yarg`` = `(a_1 c_2 - a_2 c_1)/(a_2 b_1 - a_1 b_2)`
-
-
-    Examples
-    ========
-
-    >>> from sympy import Function
-    >>> from sympy.abc import x
-    >>> from sympy.solvers.ode.ode import _linear_coeff_match
-    >>> from sympy.functions.elementary.trigonometric import sin
-    >>> f = Function('f')
-    >>> _linear_coeff_match((
-    ... (-25*f(x) - 8*x + 62)/(4*f(x) + 11*x - 11)), f(x))
-    (1/9, 22/9)
-    >>> _linear_coeff_match(
-    ... sin((-5*f(x) - 8*x + 6)/(4*f(x) + x - 1)), f(x))
-    (19/27, 2/27)
-    >>> _linear_coeff_match(sin(f(x)/x), f(x))
-
-    """
-    f = func.func
-    x = func.args[0]
-    def abc(eq):
-        r'''
-        Internal function of _linear_coeff_match
-        that returns Rationals a, b, c
-        if eq is a*x + b*f(x) + c, else None.
-        '''
-        eq = _mexpand(eq)
-        c = eq.as_independent(x, f(x), as_Add=True)[0]
-        if not c.is_Rational:
-            return
-        a = eq.coeff(x)
-        if not a.is_Rational:
-            return
-        b = eq.coeff(f(x))
-        if not b.is_Rational:
-            return
-        if eq == a*x + b*f(x) + c:
-            return a, b, c
-
-    def match(arg):
-        r'''
-        Internal function of _linear_coeff_match that returns Rationals a1,
-        b1, c1, a2, b2, c2 and a2*b1 - a1*b2 of the expression (a1*x + b1*f(x)
-        + c1)/(a2*x + b2*f(x) + c2) if one of c1 or c2 and a2*b1 - a1*b2 is
-        non-zero, else None.
-        '''
-        n, d = arg.together().as_numer_denom()
-        m = abc(n)
-        if m is not None:
-            a1, b1, c1 = m
-            m = abc(d)
-            if m is not None:
-                a2, b2, c2 = m
-                d = a2*b1 - a1*b2
-                if (c1 or c2) and d:
-                    return a1, b1, c1, a2, b2, c2, d
-
-    m = [fi.args[0] for fi in expr.atoms(Function) if fi.func != f and
-         len(fi.args) == 1 and not fi.args[0].is_Function] or {expr}
-    m1 = match(m.pop())
-    if m1 and all(match(mi) == m1 for mi in m):
-        a1, b1, c1, a2, b2, c2, denom = m1
-        return (b2*c1 - b1*c2)/denom, (a1*c2 - a2*c1)/denom
-
-def ode_linear_coefficients(eq, func, order, match):
-    r"""
-    Solves a differential equation with linear coefficients.
-
-    The general form of a differential equation with linear coefficients is
-
-    .. math:: y' + F\left(\!\frac{a_1 x + b_1 y + c_1}{a_2 x + b_2 y +
-                c_2}\!\right) = 0\text{,}
-
-    where `a_1`, `b_1`, `c_1`, `a_2`, `b_2`, `c_2` are constants and `a_1 b_2
-    - a_2 b_1 \ne 0`.
-
-    This can be solved by substituting:
-
-    .. math:: x = x' + \frac{b_2 c_1 - b_1 c_2}{a_2 b_1 - a_1 b_2}
-
-              y = y' + \frac{a_1 c_2 - a_2 c_1}{a_2 b_1 - a_1
-                  b_2}\text{.}
-
-    This substitution reduces the equation to a homogeneous differential
-    equation.
-
-    See Also
-    ========
-    :meth:`sympy.solvers.ode.single.HomogeneousCoeffBest`
-    :meth:`sympy.solvers.ode.single.HomogeneousCoeffSubsIndepDivDep`
-    :meth:`sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep`
-
-    Examples
-    ========
-
-    >>> from sympy import Function, pprint
-    >>> from sympy.solvers.ode.ode import dsolve
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> df = f(x).diff(x)
-    >>> eq = (x + f(x) + 1)*df + (f(x) - 6*x + 1)
-    >>> dsolve(eq, hint='linear_coefficients')
-    [Eq(f(x), -x - sqrt(C1 + 7*x**2) - 1), Eq(f(x), -x + sqrt(C1 + 7*x**2) - 1)]
-    >>> pprint(dsolve(eq, hint='linear_coefficients'))
-                      ___________                     ___________
-                   /         2                     /         2
-    [f(x) = -x - \/  C1 + 7*x   - 1, f(x) = -x + \/  C1 + 7*x   - 1]
-
-
-    References
-    ==========
-
-    - Joel Moses, "Symbolic Integration - The Stormy Decade", Communications
-      of the ACM, Volume 14, Number 8, August 1971, pp. 558
-    """
-
-    return ode_1st_homogeneous_coeff_best(eq, func, order, match)
 
 
 def ode_1st_power_series(eq, func, order, match):
@@ -6458,4 +6229,6 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 #This import is written at the bottom to avoid circular imports.
 from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
         Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
-        SecondNonlinearAutonomousConserved, FirstExact, Liouville, Separable, SeparableReduced, HomogeneousCoeffSubsDepDivIndep, HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffBest)
+        SecondNonlinearAutonomousConserved, FirstExact, Liouville, Separable,
+        SeparableReduced, HomogeneousCoeffSubsDepDivIndep, HomogeneousCoeffSubsIndepDivDep,
+        HomogeneousCoeffBest, LinearCoefficients)
