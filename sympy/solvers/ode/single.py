@@ -1735,16 +1735,20 @@ class LinearCoefficients(HomogeneousCoeffBest):
 
         >>> from sympy import Function
         >>> from sympy.abc import x
-        >>> from sympy.solvers.ode.ode import _linear_coeff_match
+        >>> from sympy.solvers.ode.single import LinearCoefficients
         >>> from sympy.functions.elementary.trigonometric import sin
         >>> f = Function('f')
-        >>> _linear_coeff_match((
-        ... (-25*f(x) - 8*x + 62)/(4*f(x) + 11*x - 11)), f(x))
+        >>> eq = (-25*f(x) - 8*x + 62)/(4*f(x) + 11*x - 11)
+        >>> obj = LinearCoefficients(eq)
+        >>> obj._linear_coeff_match(eq, f(x))
         (1/9, 22/9)
-        >>> _linear_coeff_match(
-        ... sin((-5*f(x) - 8*x + 6)/(4*f(x) + x - 1)), f(x))
+        >>> eq = sin((-5*f(x) - 8*x + 6)/(4*f(x) + x - 1))
+        >>> obj = LinearCoefficients(eq)
+        >>> obj._linear_coeff_match(eq, f(x))
         (19/27, 2/27)
-        >>> _linear_coeff_match(sin(f(x)/x), f(x))
+        >>> eq = sin(f(x)/x)
+        >>> obj = LinearCoefficients(eq)
+        >>> obj._linear_coeff_match(eq, f(x))
 
         """
         f = func.func
