@@ -1081,47 +1081,50 @@ def sample(expr, condition=None, size=(), library='scipy',
 
     >>> from sympy.stats import Die, sample, Normal, Geometric
     >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6) # Finite Random Variable
-
-    >>> die_roll = sample(X + Y + Z) # doctest: +SKIP
+    >>> die_roll = sample(X + Y + Z)
     >>> die_roll # doctest: +SKIP
-    6
+    3
+
     >>> N = Normal('N', 3, 4) # Continuous Random Variable
-    >>> samp = sample(N) # doctest: +SKIP
-    >>> samp in N.pspace.domain.set # doctest: +SKIP
+    >>> samp = sample(N)
+    >>> samp in N.pspace.domain.set
     True
-    >>> samp = sample(N, N>0) # doctest: +SKIP
-    >>> samp > 0 # doctest: +SKIP
+    >>> samp = sample(N, N>0)
+    >>> samp > 0
     True
-    >>> samp_list = sample(N, size=4) # doctest: +SKIP
-    >>> [sam in N.pspace.domain.set for sam in samp_list] # doctest: +SKIP
+    >>> samp_list = sample(N, size=4) 
+    >>> [sam in N.pspace.domain.set for sam in samp_list]
     [True, True, True, True]
-    >>> sample(N, numsamples=3)
+
+    >>> sample(N, numsamples=3) # doctest: +SKIP
     [6.07745952932677, 8.024735984727329, 3.7581166319235315]
-    >>> sample(N, size = (2,3))
+
+    >>> sample(N, size = (2,3)) # doctest: +SKIP
     array([[5.42519758, 6.40207856, 4.94991743],
        [1.85819627, 6.83403519, 1.9412172 ]])
-    >>> sample(N, size=(3,4), numsamples=2)
+
+    >>> sample(N, size=(3,4), numsamples=2) # doctest: +SKIP
     [array([[ 0.07664441, -1.42557566,  3.66110395,  5.37576465],
        [ 0.4993775 ,  7.80504228, -0.22978144,  4.5228755 ],
        [ 5.91415701,  6.85960422,  9.52447392,  0.63699082]]),
     array([[-1.89958054,  7.22563251,  1.74164548,  7.39832687],
        [ 3.6053125 ,  4.83748511,  4.77375537,  0.35377489],
        [ 5.31794739,  8.57816162,  2.16933622, -6.13675074]])]
-    >>>
+
     >>> G = Geometric('G', 0.5) # Discrete Random Variable
-    >>> samp_list = next(sample(G, size=3)) # doctest: +SKIP
+    >>> samp_list = sample(G, size=3)
     >>> samp_list # doctest: +SKIP
     [1, 3, 2]
-    >>> [sam in G.pspace.domain.set for sam in samp_list] # doctest: +SKIP
+    >>> [sam in G.pspace.domain.set for sam in samp_list]
     [True, True, True]
     >>> MN = Normal("MN", [3, 4], [[2, 1], [1, 2]]) # Joint Random Variable
-    >>> samp_list = sample(MN, size=4)) # doctest: +SKIP
+    >>> samp_list = sample(MN, size=4)
     >>> samp_list # doctest: +SKIP
     [array([2.85768055, 3.38954165]),
      array([4.11163337, 4.3176591 ]),
      array([0.79115232, 1.63232916]),
      array([4.01747268, 3.96716083])]
-    >>> [tuple(sam) in MN.pspace.domain.set for sam in samp_list] # doctest: +SKIP
+    >>> [tuple(sam) in MN.pspace.domain.set for sam in samp_list]
     [True, True, True, True]
 
 
@@ -1139,11 +1142,7 @@ def sample(expr, condition=None, size=(), library='scipy',
 
 
     """
-    ### TODO: Remove the user warnings in the future releases
-    ###message = ("The return type of sample has been changed to return an "
-    ###              "iterator object since version 1.7. For more information see "
-    ###              "https://github.com/sympy/sympy/issues/19061")
-    ###warnings.warn(filldedent(message))
+
     iterator = sample_iter(expr, condition, size=size, library=library,
                                                         numsamples=numsamples, seed=seed)
 
