@@ -22,9 +22,7 @@ from sympy.integrals import Integral
 from sympy.polys.polytools import cancel, factor
 from sympy.simplify import collect, simplify, separatevars, logcombine
 from sympy.simplify.radsimp import fraction
-from sympy.core.sympify import sympify
 from sympy.utilities import numbered_symbols
-from sympy.series import Order
 from sympy.solvers.solvers import solve
 from sympy.solvers.deutils import ode_order, _preprocess
 
@@ -1714,7 +1712,7 @@ class LinearCoefficients(HomogeneousCoeffBest):
                     return True
                 return False
             return False
-    
+
     def _linear_coeff_match(self,expr, func):
         r"""
         Helper function to match hint ``linear_coefficients``.
