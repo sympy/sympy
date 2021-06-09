@@ -196,6 +196,12 @@ def test_floor():
     assert (floor(y) < n) == (y < n)
     assert (floor(y) > n) == (y >= n + 1)
 
+    # issue 21429
+    d = symbols('d', integer=True, positive=True)
+    assert floor(-1/d) == -1
+    d = symbols('d', integer=True, negative=True)
+    assert floor(1/d) == -1
+
 
 def test_ceiling():
 
@@ -380,6 +386,12 @@ def test_ceiling():
     assert (ceiling(y) >= n) == (y > n - 1)
     assert (ceiling(y) < n) == (y <= n - 1)
     assert (ceiling(y) > n) == (y > n)
+
+    # issue 21429
+    d = symbols('d', integer=True, positive=True)
+    assert ceiling(1/d) == 1
+    d = symbols('d', integer=True, negative=True)
+    assert ceiling(-1/d) == 1
 
 
 def test_frac():

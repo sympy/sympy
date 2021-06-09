@@ -21,9 +21,21 @@ class RoundFunction(Function):
     @classmethod
     def eval(cls, arg):
         from sympy import im
+        from sympy.core.relational import is_lt, is_le, is_gt, is_ge
         v = cls._eval_number(arg)
         if v is not None:
             return v
+
+        if cls is floor:
+            if arg.is_nonnegative and is_lt(arg, S.One):
+                return S.Zero
+            if arg.is_negative and is_ge(arg, S.NegativeOne):
+                return S.NegativeOne
+        elif cls is ceiling:
+            if arg.is_positive and is_le(arg, S.One):
+                return S.One
+            if arg.is_negative and is_gt(arg, S.NegativeOne):
+                return S.Zero
 
         if arg.is_integer or arg.is_finite is False:
             return arg
