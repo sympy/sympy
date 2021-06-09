@@ -1357,7 +1357,7 @@ class HomogeneousCoeffSubsDepDivIndep(SinglePatternODESolver):
     Where `u_1 h(u_1) + g(u_1) \ne 0` and `x \ne 0`.
 
     See also the docstrings of
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_best` and
+    :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffBest` and
     :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffSubsIndepDivDep`.
 
     Examples

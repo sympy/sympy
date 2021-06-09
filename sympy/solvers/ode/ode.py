@@ -2689,7 +2689,7 @@ def homogeneous_order(eq, *symbols):
     equations whose coefficients are homogeneous of the same order (see the
     docstrings of
     :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep` and
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`).
+    :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffSubsIndepDivDep`).
 
     Symbols can be functions, but every argument of the function must be a
     symbol, and the arguments of the function that appear in the expression
