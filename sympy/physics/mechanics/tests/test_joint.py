@@ -135,8 +135,15 @@ def test_pinjoint_arbitrary_axis():
 
     PinJoint('J', P, C, parent_axis=N.y+N.x+N.z, child_axis=A.x-A.y)
 
-    axis1 = (N.y+N.x+N.z).normalize()
+    axis1 = (N.y + N.x + N.z).normalize()
     axis2 = (A.x - A.y).normalize()
+    angle = acos(dot(axis2, axis1))
+
+    assert angle.simplify() == 0 #Axis are aligned
+
+    PinJoint('J', P, C, parent_axis=-N.y+N.x+N.z, child_axis=A.x+A.y+A.z)
+    axis1 = (-N.y + N.x + N.z).normalize()
+    axis2 = (A.x + A.y + A.z).normalize()
     angle = acos(dot(axis2, axis1))
 
     assert angle.simplify() == 0 #Axis are aligned
