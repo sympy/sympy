@@ -316,9 +316,9 @@ def intersection_sets(self, other): # noqa:F811
                 if sol != []:
                     x, xis = sol
                     if x and all(i == n for i in x):
-                        base_set &= FiniteSet(*xis)
+                        base_set -= FiniteSet(*xis)
                 else:
-                    base_set -= ConditionSet(n, Eq(i, 0), S.Integers)
+                    base_set -= ConditionSet(n, Eq(i, 0), base_set)
         return imageset(lam, base_set)
 
     elif isinstance(other, Interval):
