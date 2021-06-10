@@ -109,7 +109,7 @@ If there is more than one way to solve ODEs with your method, include a hint
 for each one, as well as a ``<hint>_best`` hint.  Your ``ode_<hint>_best()``
 function should choose the best using min with ``ode_sol_simplicity`` as the
 key argument.  See
-:py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffBest`, for example.
+:obj:`~sympy.solvers.ode.single.HomogeneousCoeffBest`, for example.
 The function that uses your method will be called ``ode_<hint>()``, so the
 hint must only use characters that are allowed in a Python function name
 (alphanumeric characters and the underscore '``_``' character).  Include a
@@ -2688,8 +2688,8 @@ def homogeneous_order(eq, *symbols):
     or `H(y/x)`.  This fact is used to solve 1st order ordinary differential
     equations whose coefficients are homogeneous of the same order (see the
     docstrings of
-    :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep` and
-    :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffSubsIndepDivDep`).
+    :obj:`~sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep` and
+    :obj:`~sympy.solvers.ode.single.HomogeneousCoeffSubsIndepDivDep`).
 
     Symbols can be functions, but every argument of the function must be a
     symbol, and the arguments of the function that appear in the expression

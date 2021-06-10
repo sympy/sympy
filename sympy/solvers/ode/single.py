@@ -598,7 +598,7 @@ class AlmostLinear(SinglePatternODESolver):
 
     See Also
     ========
-    :meth:`sympy.solvers.ode.single.FirstLinear`
+    :obj:`sympy.solvers.ode.single.FirstLinear`
 
     Examples
     ========
@@ -679,7 +679,7 @@ class Bernoulli(SinglePatternODESolver):
 
     The substitution `w = 1/y^{1-n}` will transform an equation of this form
     into one that is linear (see the docstring of
-    :py:meth:`~sympy.solvers.ode.single.FirstLinear`).  The general solution is::
+    :obj:`~sympy.solvers.ode.single.FirstLinear`).  The general solution is::
 
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x, n
@@ -706,7 +706,7 @@ class Bernoulli(SinglePatternODESolver):
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
-    :py:meth:`~sympy.solvers.ode.single.Separable`).
+    :obj:`~sympy.solvers.ode.single.Separable`).
 
     >>> pprint(dsolve(Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)), f(x),
     ... hint='separable_Integral'))
@@ -1206,7 +1206,7 @@ class SeparableReduced(Separable):
 
     See Also
     ========
-    :meth:`sympy.solvers.ode.single.Separable`
+    :obj:`sympy.solvers.ode.single.Separable`
 
     Examples
     ========
@@ -1357,8 +1357,8 @@ class HomogeneousCoeffSubsDepDivIndep(SinglePatternODESolver):
     Where `u_1 h(u_1) + g(u_1) \ne 0` and `x \ne 0`.
 
     See also the docstrings of
-    :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffBest` and
-    :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffSubsIndepDivDep`.
+    :obj:`~sympy.solvers.ode.single.HomogeneousCoeffBest` and
+    :obj:`~sympy.solvers.ode.single.HomogeneousCoeffSubsIndepDivDep`.
 
     Examples
     ========
@@ -1483,8 +1483,8 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
     Where `u_1 g(u_1) + h(u_1) \ne 0` and `f(x) \ne 0`.
 
     See also the docstrings of
-    :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffBest` and
-    :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep`.
+    :obj:`~sympy.solvers.ode.single.HomogeneousCoeffBest` and
+    :obj:`~sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep`.
 
     Examples
     ========
@@ -1567,9 +1567,9 @@ class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubs
     This is as determined by :py:meth:`~sympy.solvers.ode.ode.ode_sol_simplicity`.
 
     See the
-    :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffSubsIndepDivDep`
+    :obj:`~sympy.solvers.ode.single.HomogeneousCoeffSubsIndepDivDep`
     and
-    :py:meth:`~sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep`
+    :obj:`~sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep`
     docstrings for more information on these hints.  Note that there is no
     ``ode_1st_homogeneous_coeff_best_Integral`` hint.
 
@@ -1645,9 +1645,9 @@ class LinearCoefficients(HomogeneousCoeffBest):
 
     See Also
     ========
-    :meth:`sympy.solvers.ode.single.HomogeneousCoeffBest`
-    :meth:`sympy.solvers.ode.single.HomogeneousCoeffSubsIndepDivDep`
-    :meth:`sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep`
+    :obj:`sympy.solvers.ode.single.HomogeneousCoeffBest`
+    :obj:`sympy.solvers.ode.single.HomogeneousCoeffSubsIndepDivDep`
+    :obj:`sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep`
 
     Examples
     ========
