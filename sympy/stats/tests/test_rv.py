@@ -8,7 +8,7 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         BernoulliProcess, Variance, Expectation, Probability, Covariance, covariance)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, sample_iter, PSpace, is_random, RandomIndexedSymbol, RandomMatrixSymbol)
-from sympy.testing.pytest import raises, skip, XFAIL, ignore_warnings
+from sympy.testing.pytest import raises, skip, XFAIL
 from sympy.external import import_module
 from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution
