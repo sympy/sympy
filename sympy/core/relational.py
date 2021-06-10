@@ -1170,6 +1170,7 @@ def _trivial(l):
     if l.base.is_zero:
         if l.exp.is_extended_positive:
             return S.Zero
+        assert None, 14
         return  # 1 if 0**0
     if l.base is S.One:
         if l.exp.is_finite:
@@ -1186,8 +1187,10 @@ def _trivial(l):
                     return S.Infinity
             if (l.base - 1).is_positive:
                 if l.exp.is_extended_positive:
+                    assert None, 13
                     return S.Infinity
                 if l.exp.is_extended_negative:
+                    assert None, 12
                     return S.Zero
         if l.exp.is_finite:
             return l
@@ -1199,6 +1202,7 @@ def _trivial(l):
         # could have 0**neg
     elif l.base.is_extended_negative:
         if (l.exp.is_integer and Mod(l.exp, 2) in (0, 1)):
+            assert None, 11
             return l
     elif l.base.is_extended_nonnegative is None:
         #assert None,(20.5)
@@ -1292,10 +1296,21 @@ def _eval_is_ge(lhs, rhs):  # noqa:F811
         if pause: input('press return to continue')
 
     # work really hard to identify a power for comparison
-    if l.is_Pow and r == l.base:
-        r = Pow(r, 1, evaluate=False)
-    elif r.is_Pow and l == r.base:
-        l = Pow(l, 1, evaluate=False)
+    if l.is_Pow:
+        if r == l.base:
+            r = Pow(r, 1, evaluate=False)
+        elif R == l.base:
+            mr = S.One
+            br = S.Zero
+            r = Pow(R, 1, evaluate=False)
+    elif r.is_Pow:
+        if l == r.base:
+            l = Pow(l, 1, evaluate=False)
+        elif L == r.base:
+            assert None, (10)
+            m = S.One
+            b = S.Zero
+            l = Pow(L, 1, evaluate=False)
     if l.is_Pow and r.is_Pow:
         if l == r:  # m*x + b ~~ mr*x + br
             if m == mr:
@@ -1398,7 +1413,6 @@ def _eval_is_ge(lhs, rhs):  # noqa:F811
                 den = d
                 r = R
             else:
-                #assert None,(2)
                 den = S.Zero
                 r = S.One
             if is_ge(d, S.Zero):
@@ -1441,23 +1455,6 @@ def _eval_is_ge(lhs, rhs):  # noqa:F811
             if is_ge(S.NegativeOne, R):
                 assert None,(1)
                 return True
-
-    # one more check for bases -- XXX can this be incorporated
-    # with the above?
-    if L.is_Pow or R.is_Pow:
-        b, e = L.as_base_exp()
-        B, E = R.as_base_exp()
-        # same exponent, b**e >= B**e
-        if e == E and is_ge(b, S.Zero):
-            if is_ge(e, S.Zero):
-                assert None,(0.5)
-                return is_ge(b, B)
-            if is_ge(S.Zero, e):
-                assert None,(0)
-                return is_ge(B, b)
-        # same base, b**e >= b**E
-        if b == B and is_ge(b, S.One):
-            return is_ge(e, E)
 
 
 @dispatch(Basic, Basic)
