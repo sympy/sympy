@@ -173,7 +173,7 @@ _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'tensorflow', ), python_version=(3,))
 def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
-             dummify=False, optimize=False):
+             dummify=False, cse=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -334,7 +334,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         (if ``args`` is not a string) - for example, to ensure that the
         arguments do not redefine any built-in names.
 
-    optimize : bool, optional
+    cse : bool, optional
         When the expression that we want to vectorialize is a large expression
         that contains redundancy, it is possible to increase the speed and
         reduce the size in RAM by setting this parameter to True.
@@ -856,10 +856,10 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
-    if optimize:
-        replacements, useless_symbols, reduced_exprs = _cse_del(expr) # Delete redundancy.
+    if cse:
+        replacements, deletable_symbols, reduced_exprs = _cse_del(expr) # Delete redundancy.
         funcstr = funcprinter.doprint(funcname, args, reduced_exprs,
-            replacements=replacements, useless_symbols=useless_symbols)
+            replacements=replacements, deletable_symbols=deletable_symbols)
     else:
         funcstr = funcprinter.doprint(funcname, args, expr)
 
@@ -1028,14 +1028,14 @@ def _cse_del(expr):
         symbols_cum.insert(0, free_symbol | symbols_cum[0])
 
     # Detection of useless symbols.
-    useless_symbols = []
+    deletable_symbols = []
     current_symbols = set() # Buffers memory.
     for (new_symb, _), following_symb in zip(replacements, symbols_cum[1:]):
         current_symbols.add(new_symb)
-        useless_symbols.append(current_symbols - following_symb) # The set of useless symbols.
-        current_symbols -= useless_symbols[-1]
+        deletable_symbols.append(current_symbols - following_symb) # The set of useless symbols.
+        current_symbols -= deletable_symbols[-1]
 
-    return replacements, useless_symbols, reduced_exprs
+    return replacements, deletable_symbols, reduced_exprs
 
 def _get_namespace(m):
     """
@@ -1192,7 +1192,7 @@ class _EvaluatorPrinter:
         # Used to print the generated function arguments in a standard way
         self._argrepr = LambdaPrinter().doprint
 
-    def doprint(self, funcname, args, expr, *, useless_symbols=[], replacements=[]):
+    def doprint(self, funcname, args, expr, *, deletable_symbols=(), replacements=()):
         """
         Returns the function definition code as a string.
         """
@@ -1223,10 +1223,10 @@ class _EvaluatorPrinter:
 
         funcbody.extend(unpackings)
 
-        for useless_symbol, (var_name, sub_expr) in zip(useless_symbols, replacements):
+        for deletable_symbol, (var_name, sub_expr) in zip(deletable_symbols, replacements):
             funcbody.append('{} = ({})'.format(var_name, self._exprrepr(sub_expr)))
-            if useless_symbol:
-                funcbody.append('del {}'.format(', '.join(map(str, useless_symbol))))
+            if deletable_symbol:
+                funcbody.append('del {}'.format(', '.join(map(str, deletable_symbol))))
 
         funcbody.append('return ({})'.format(self._exprrepr(expr)))
 
