@@ -17,11 +17,11 @@ def test_sample_numpy():
     else:
         with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             for X in distribs_numpy:
-                samps = next(sample(X, size=size, library='numpy'))
+                samps = sample(X, size=size, library='numpy')
                 for sam in samps:
                     assert sam in X.pspace.domain.set
             raises(NotImplementedError,
-                   lambda: next(sample(Skellam('S', 1, 1), library='numpy')))
+                   lambda: sample(Skellam('S', 1, 1), library='numpy'))
     raises(NotImplementedError,
            lambda: Skellam('S', 1, 1).pspace.distribution.sample(library='tensorflow'))
 
@@ -47,11 +47,11 @@ def test_sample_scipy():
         skip('Scipy is not installed. Abort tests for _sample_scipy.')
     else:
         with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-            z_sample = list(sample(Zeta("G", 7), size=size, numsamples=numsamples))
+            z_sample = sample(Zeta("G", 7), size=size, numsamples=numsamples)
             assert len(z_sample) == numsamples
             for X in distribs_scipy:
-                samps = next(sample(X, size=size, library='scipy'))
-                samps2 = next(sample(X, size=(2, 2), library='scipy'))
+                samps = sample(X, size=size, library='scipy')
+                samps2 = sample(X, size=(2, 2), library='scipy')
                 for sam in samps:
                     assert sam in X.pspace.domain.set
                 for i in range(2):
@@ -72,11 +72,11 @@ def test_sample_pymc3():
     else:
         with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             for X in distribs_pymc3:
-                samps = next(sample(X, size=size, library='pymc3'))
+                samps = sample(X, size=size, library='pymc3')
                 for sam in samps:
                     assert sam in X.pspace.domain.set
             raises(NotImplementedError,
-                   lambda: next(sample(Skellam('S', 1, 1), library='pymc3')))
+                   lambda: sample(Skellam('S', 1, 1), library='pymc3'))
 
 @slow
 def test_sample_discrete():
@@ -85,8 +85,8 @@ def test_sample_discrete():
     if not scipy:
         skip('Scipy not installed. Abort tests')
     with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        assert next(sample(X)) in X.pspace.domain.set
-        samps = next(sample(X, size=2)) # This takes long time if ran without scipy
+        assert sample(X) in X.pspace.domain.set
+        samps = sample(X, size=2) # This takes long time if ran without scipy
         for samp in samps:
             assert samp in X.pspace.domain.set
 
@@ -96,9 +96,9 @@ def test_sample_discrete():
             imported_lib = import_module(lib)
             if imported_lib:
                 s0, s1, s2 = [], [], []
-                s0 = list(sample(X, numsamples=10, library=lib, seed=0))
-                s1 = list(sample(X, numsamples=10, library=lib, seed=0))
-                s2 = list(sample(X, numsamples=10, library=lib, seed=1))
+                s0 = sample(X, numsamples=10, library=lib, seed=0)
+                s1 = sample(X, numsamples=10, library=lib, seed=0)
+                s2 = sample(X, numsamples=10, library=lib, seed=1)
                 assert s0 == s1
                 assert s1 != s2
         except NotImplementedError:

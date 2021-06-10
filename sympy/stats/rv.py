@@ -26,6 +26,7 @@ from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.solvers.solveset import solveset
 from sympy.external import import_module
 from sympy.utilities.misc import filldedent
+from sympy.utilities.decorator import doctest_depends_on
 import warnings
 
 
@@ -1040,6 +1041,7 @@ def where(condition, given_condition=None, **kwargs):
     return pspace(condition).where(condition, **kwargs)
 
 
+@doctest_depends_on(modules=('scipy',))
 def sample(expr, condition=None, size=(), library='scipy',
            numsamples=1, seed=None, **kwargs):
     """

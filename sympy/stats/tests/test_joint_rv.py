@@ -255,11 +255,11 @@ def test_sample_numpy():
     else:
         with ignore_warnings(UserWarning):
             for X in distribs_numpy:
-                samps = next(sample(X, size=size, library='numpy'))
+                samps = sample(X, size=size, library='numpy')
                 for sam in samps:
                     assert tuple(sam) in X.pspace.distribution.set
             N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
-            raises(NotImplementedError, lambda: next(sample(N_c, library='numpy')))
+            raises(NotImplementedError, lambda: sample(N_c, library='numpy'))
 
 def test_sample_scipy():
     distribs_scipy = [
@@ -275,15 +275,15 @@ def test_sample_scipy():
     else:
         with ignore_warnings(UserWarning):
             for X in distribs_scipy:
-                samps = next(sample(X, size=size))
-                samps2 = next(sample(X, size=(2, 2)))
+                samps = sample(X, size=size)
+                samps2 = sample(X, size=(2, 2))
                 for sam in samps:
                     assert tuple(sam) in X.pspace.distribution.set
                 for i in range(2):
                     for j in range(2):
                         assert tuple(samps2[i][j]) in X.pspace.distribution.set
             N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
-            raises(NotImplementedError, lambda: next(sample(N_c)))
+            raises(NotImplementedError, lambda: sample(N_c))
 
 
 def test_sample_pymc3():
@@ -299,11 +299,11 @@ def test_sample_pymc3():
     else:
         with ignore_warnings(UserWarning):
             for X in distribs_pymc3:
-                samps = next(sample(X, size=size, library='pymc3'))
+                samps = sample(X, size=size, library='pymc3')
                 for sam in samps:
                     assert tuple(sam.flatten()) in X.pspace.distribution.set
             N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
-            raises(NotImplementedError, lambda: next(sample(N_c, library='pymc3')))
+            raises(NotImplementedError, lambda: sample(N_c, library='pymc3'))
 
 def test_sample_seed():
     x1, x2 = (Indexed('x', i) for i in (1, 2))
@@ -316,9 +316,9 @@ def test_sample_seed():
             imported_lib = import_module(lib)
             if imported_lib:
                 s0, s1, s2 = [], [], []
-                s0 = list(sample(X, numsamples=10, library=lib, seed=0))
-                s1 = list(sample(X, numsamples=10, library=lib, seed=0))
-                s2 = list(sample(X, numsamples=10, library=lib, seed=1))
+                s0 = sample(X, numsamples=10, library=lib, seed=0)
+                s1 = sample(X, numsamples=10, library=lib, seed=0)
+                s2 = sample(X, numsamples=10, library=lib, seed=1)
                 assert s0 == s1
                 assert s1 != s2
         except NotImplementedError:

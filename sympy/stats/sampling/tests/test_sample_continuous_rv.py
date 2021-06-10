@@ -23,11 +23,11 @@ def test_sample_numpy():
     else:
         with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             for X in distribs_numpy:
-                samps = next(sample(X, size=size, library='numpy'))
+                samps = sample(X, size=size, library='numpy')
                 for sam in samps:
                     assert sam in X.pspace.domain.set
             raises(NotImplementedError,
-                   lambda: next(sample(Chi("C", 1), library='numpy')))
+                   lambda: sample(Chi("C", 1), library='numpy'))
     raises(NotImplementedError,
            lambda: Chi("C", 1).pspace.distribution.sample(library='tensorflow'))
 
@@ -59,8 +59,8 @@ def test_sample_scipy():
             g_sample = list(sample(Gamma("G", 2, 7), size=size, numsamples=numsamples))
             assert len(g_sample) == numsamples
             for X in distribs_scipy:
-                samps = next(sample(X, size=size, library='scipy'))
-                samps2 = next(sample(X, size=(2, 2), library='scipy'))
+                samps = sample(X, size=size, library='scipy')
+                samps2 = sample(X, size=(2, 2), library='scipy')
                 for sam in samps:
                     assert sam in X.pspace.domain.set
                 for i in range(2):
@@ -88,11 +88,11 @@ def test_sample_pymc3():
     else:
         with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             for X in distribs_pymc3:
-                samps = next(sample(X, size=size, library='pymc3'))
+                samps = sample(X, size=size, library='pymc3')
                 for sam in samps:
                     assert sam in X.pspace.domain.set
             raises(NotImplementedError,
-                   lambda: next(sample(Chi("C", 1), library='pymc3')))
+                   lambda: sample(Chi("C", 1), library='pymc3'))
 
 
 def test_sampling_gamma_inverse():
@@ -101,7 +101,7 @@ def test_sampling_gamma_inverse():
         skip('Scipy not installed. Abort tests for sampling of gamma inverse.')
     X = GammaInverse("x", 1, 1)
     with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        assert next(sample(X)) in X.pspace.domain.set
+        assert sample(X) in X.pspace.domain.set
 
 
 def test_lognormal_sampling():
@@ -112,11 +112,11 @@ def test_lognormal_sampling():
     with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         for i in range(3):
             X = LogNormal('x', i, 1)
-            assert next(sample(X)) in X.pspace.domain.set
+            assert sample(X) in X.pspace.domain.set
 
     size = 5
     with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        samps = next(sample(X, size=size))
+        samps = sample(X, size=size)
         for samp in samps:
             assert samp in X.pspace.domain.set
 
@@ -127,7 +127,7 @@ def test_sampling_gaussian_inverse():
         skip('Scipy not installed. Abort tests for sampling of Gaussian inverse.')
     X = GaussianInverse("x", 1, 1)
     with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        assert next(sample(X, library='scipy')) in X.pspace.domain.set
+        assert sample(X, library='scipy') in X.pspace.domain.set
 
 
 def test_prefab_sampling():
@@ -149,8 +149,8 @@ def test_prefab_sampling():
     with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         for var in variables:
             for _ in range(niter):
-                assert next(sample(var)) in var.pspace.domain.set
-                samps = next(sample(var, size=size))
+                assert sample(var) in var.pspace.domain.set
+                samps = sample(var, size=size)
                 for samp in samps:
                     assert samp in var.pspace.domain.set
 
@@ -164,7 +164,7 @@ def test_sample_continuous():
     if not scipy:
         skip('Scipy is not installed. Abort tests')
     with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        assert next(sample(Z)) in Z.pspace.domain.set
+        assert sample(Z) in Z.pspace.domain.set
     sym, val = list(Z.pspace.sample().items())[0]
     assert sym == Z and val in Interval(0, oo)
 
@@ -174,9 +174,9 @@ def test_sample_continuous():
             imported_lib = import_module(lib)
             if imported_lib:
                 s0, s1, s2 = [], [], []
-                s0 = list(sample(Z, numsamples=10, library=lib, seed=0))
-                s1 = list(sample(Z, numsamples=10, library=lib, seed=0))
-                s2 = list(sample(Z, numsamples=10, library=lib, seed=1))
+                s0 = sample(Z, numsamples=10, library=lib, seed=0)
+                s1 = sample(Z, numsamples=10, library=lib, seed=0)
+                s2 = sample(Z, numsamples=10, library=lib, seed=1)
                 assert s0 == s1
                 assert s1 != s2
         except NotImplementedError:

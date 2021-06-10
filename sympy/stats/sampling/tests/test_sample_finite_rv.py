@@ -10,7 +10,7 @@ def test_given_sample():
     if not scipy:
         skip('Scipy is not installed. Abort tests')
     with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        assert next(sample(X, X > 5)) == 6
+        assert sample(X, X > 5) == 6
 
 def test_sample_numpy():
     distribs_numpy = [
@@ -23,11 +23,11 @@ def test_sample_numpy():
     else:
         with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             for X in distribs_numpy:
-                samps = next(sample(X, size=size, library='numpy'))
+                samps = sample(X, size=size, library='numpy')
                 for sam in samps:
                     assert sam in X.pspace.domain.set
             raises(NotImplementedError,
-                   lambda: next(sample(Die("D"), library='numpy')))
+                   lambda: sample(Die("D"), library='numpy'))
     raises(NotImplementedError,
            lambda: Die("D").pspace.sample(library='tensorflow'))
 
@@ -51,11 +51,11 @@ def test_sample_scipy():
         skip('Scipy not installed. Abort tests for _sample_scipy.')
     else:
         with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-            h_sample = list(sample(Hypergeometric("H", 1, 1, 1), size=size, numsamples=numsamples))
+            h_sample = sample(Hypergeometric("H", 1, 1, 1), size=size, numsamples=numsamples)
             assert len(h_sample) == numsamples
             for X in distribs_scipy:
-                samps = next(sample(X, size=size))
-                samps2 = next(sample(X, size=(2, 2)))
+                samps = sample(X, size=size)
+                samps2 = sample(X, size=(2, 2))
                 for sam in samps:
                     assert sam in X.pspace.domain.set
                 for i in range(2):
@@ -75,11 +75,11 @@ def test_sample_pymc3():
     else:
         with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             for X in distribs_pymc3:
-                samps = next(sample(X, size=size, library='pymc3'))
+                samps = sample(X, size=size, library='pymc3')
                 for sam in samps:
                     assert sam in X.pspace.domain.set
-            raises(NotImplementedError,
-                   lambda: next(sample(Die("D"), library='pymc3')))
+            raises(NotImplementedError, 
+                              lambda: (sample(Die("D"), library='pymc3')))
 
 
 def test_sample_seed():
@@ -90,9 +90,9 @@ def test_sample_seed():
         try:
             imported_lib = import_module(lib)
             if imported_lib:
-                s0 = list(sample(F, numsamples=10, library=lib, seed=0))
-                s1 = list(sample(F, numsamples=10, library=lib, seed=0))
-                s2 = list(sample(F, numsamples=10, library=lib, seed=1))
+                s0 = sample(F, numsamples=10, library=lib, seed=0)
+                s1 = sample(F, numsamples=10, library=lib, seed=0)
+                s2 = sample(F, numsamples=10, library=lib, seed=1)
                 assert s0 == s1
                 assert s1 != s2
         except NotImplementedError:
