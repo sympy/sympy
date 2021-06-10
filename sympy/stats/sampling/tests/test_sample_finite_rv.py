@@ -78,7 +78,7 @@ def test_sample_pymc3():
                 samps = sample(X, size=size, library='pymc3')
                 for sam in samps:
                     assert sam in X.pspace.domain.set
-            raises(NotImplementedError, 
+            raises(NotImplementedError,
                               lambda: (sample(Die("D"), library='pymc3')))
 
 
