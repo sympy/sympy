@@ -81,7 +81,7 @@ factorable
 
 1st_homogeneous_coeff_best
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.single::HomogeneousCoeffBest
+.. autoclass:: sympy.solvers.ode.single::HomogeneousCoeffBest
 
 1st_homogeneous_coeff_subs_dep_div_indep
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -154,11 +154,11 @@ almost_linear
 
 linear_coefficients
 ^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.single::LinearCoefficients
+.. autoclass:: sympy.solvers.ode.single::LinearCoefficients
 
 separable_reduced
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.single::SeparableReduced
+.. autoclass:: sympy.solvers.ode.single::SeparableReduced
 
 lie_group
 ^^^^^^^^^
