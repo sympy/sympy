@@ -658,6 +658,7 @@ def test_imageset_intersect_real():
     from sympy import I
     from sympy.abc import n
     assert imageset(Lambda(n, n + (n - 1)*(n + 1)*I), S.Integers).intersect(S.Reals) == FiniteSet(-1, 1)
+    assert imageset(Lambda(n, n + (n - 1)*(n + S.Half)*I), S.Integers).intersect(S.Reals) == FiniteSet(1)
     s = ImageSet(
         Lambda(n, -I*(I*(2*pi*n - pi/4) + log(Abs(sqrt(-I))))),
         S.Integers)
