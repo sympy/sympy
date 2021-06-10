@@ -1092,7 +1092,7 @@ def sample(expr, condition=None, size=(), library='scipy',
     >>> samp = sample(N, N>0)
     >>> samp > 0
     True
-    >>> samp_list = sample(N, size=4) 
+    >>> samp_list = sample(N, size=4)
     >>> [sam in N.pspace.domain.set for sam in samp_list]
     [True, True, True, True]
 

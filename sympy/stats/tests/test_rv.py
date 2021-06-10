@@ -192,9 +192,8 @@ def test_Sample():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests')
-    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        assert next(sample(X)) in [1, 2, 3, 4, 5, 6]
-        assert isinstance(next(sample(X + Y)), float)
+    assert sample(X) in [1, 2, 3, 4, 5, 6]
+    assert isinstance(sample(X + Y), float)
 
     assert P(X + Y > 0, Y < 0, numsamples=10).is_number
     assert E(X + Y, numsamples=10).is_number
@@ -209,6 +208,12 @@ def test_Sample():
 
     assert all(i in range(1, 7) for i in density(X, numsamples=10))
     assert all(i in range(4, 7) for i in density(X, X>3, numsamples=10))
+
+    #Test Issue #21563: Output of sample must be a float or list
+    assert str(type(sample(X))) == "<class 'numpy.int64'>"
+    assert str(type(sample(Y))) == "<class 'numpy.float64'>"
+    assert str(type(sample(X, size = 2))) == "<class 'list'>"
+
 
 
 @XFAIL
