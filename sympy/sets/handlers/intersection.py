@@ -306,7 +306,7 @@ def intersection_sets(self, other): # noqa:F811
             # univarite imaginary part in same variable
             x, xis = zip(*[solve_linear(i, 0) for i in Mul.make_args(im) if n in i.free_symbols])
             if x and all(i == n for i in x):
-                base_set -= FiniteSet(xis)
+                base_set = FiniteSet(*xis)
             else:
                 base_set -= ConditionSet(n, Eq(im, 0), S.Integers)
         # exclude values that make denominators 0
