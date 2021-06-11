@@ -697,7 +697,7 @@ class Vector(Printable, EvalfMixin):
 
     def angle_between(self, vec):
         """
-        Returns the angle between Vector 'vec' and self.
+        Returns the smallest angle between Vector 'vec' and self.
 
         Parameter
         =========
@@ -715,12 +715,15 @@ class Vector(Printable, EvalfMixin):
         >>> v1.angle_between(v2)
         pi/2
 
+        >>> v3 = A.x + A.y + A.z
+        >>> v1.angle_between(v3)
+        acos(sqrt(3)/3)
+
         """
 
-        from sympy.physics.vector.functions import dot
         vec1 = self.normalize()
         vec2 = vec.normalize()
-        angle = acos(dot(vec1, vec2))
+        angle = acos(vec1.dot(vec2))
         return angle
 
     def free_symbols(self, reference_frame):
