@@ -192,21 +192,6 @@ def test_vector_angle():
     assert v3.angle_between(v4) == 0
 
 
-def test_vector_unit_normal():
-    A = ReferenceFrame('A')
-    v1 = A.x + A.y
-    v2 = A.z
-    assert v2.unit_normal_from(v1) == sqrt(2)/2*A.x - sqrt(2)/2*A.y
-    B = ReferenceFrame('B')
-    B.orient_axis(A, A.x, pi)
-    v3 = A.x
-    v4 = B.x
-    v3.unit_normal_from(v4) == 0
-    v5 = A.x - A.y + A.z
-    v6 = B.z + A.y
-    assert v5.unit_normal_from(v6) == - sqrt(6)/6*A.y - sqrt(6)/6*A.z
-
-
 def test_vector_xreplace():
     x, y, z = symbols('x y z')
     v = x**2 * A.x + x*y * A.y + x*y*z * A.z
