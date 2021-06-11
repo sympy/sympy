@@ -175,7 +175,7 @@ _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'tensorflow', ), python_version=(3,))
 def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
-             dummify=False):
+             dummify=False, cse=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -335,6 +335,12 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         Set ``dummify=True`` to replace all arguments with dummy symbols
         (if ``args`` is not a string) - for example, to ensure that the
         arguments do not redefine any built-in names.
+
+    cse : bool or callable, optional
+        Whether or not common subexpression elimination should be performed on
+        the expressions. This can potentially improve performance of the generated
+        function. When ``True``, then ``sympy.simplify.cse`` is used, the user
+        may pass their own function matching the signature of said function.
 
 
     Examples
@@ -847,7 +853,15 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
-    funcstr = funcprinter.doprint(funcname, args, expr)
+
+    if cse is True:
+        from sympy.simplify.cse_main import cse
+
+    if cse:
+        cses, expr = cse(expr)
+    else:
+        cses = ()
+    funcstr = funcprinter.doprint(funcname, args, expr, cses=cses)
 
     # Collect the module imports from the code printers.
     imp_mod_lines = []
@@ -1061,7 +1075,7 @@ class _EvaluatorPrinter:
         # Used to print the generated function arguments in a standard way
         self._argrepr = LambdaPrinter().doprint
 
-    def doprint(self, funcname, args, expr):
+    def doprint(self, funcname, args, expr, *, cses=()):
         """Returns the function definition code as a string."""
         from sympy import Dummy
 
@@ -1089,7 +1103,7 @@ class _EvaluatorPrinter:
         funcbody.extend(self._print_funcargwrapping(funcargs))
 
         funcbody.extend(unpackings)
-
+        funcbody.extend(['{} = {}'.format(s, e) for s, e in cses])
         funcbody.append('return ({})'.format(self._exprrepr(expr)))
 
         funclines = [funcsig]

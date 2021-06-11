@@ -1406,3 +1406,30 @@ def test_cupy_dotproduct():
         f3(1, 2, 3) == \
         f4(1, 2, 3) == \
         cupy.array([14])
+
+
+def test_cse():
+    def dummy_cse(exprs):
+        return (), exprs
+
+    args = x, y, z
+    e1 = x + y + z
+    e2 = x + y - z
+    e3 = 2*x + 2*y - z
+    e4 = (x+y)**2 + (y+z)**2
+    exprs = [e1, e2, e3, e4]
+    num_args = (2., 3., 4.)
+
+    subs_dict = dict(zip(args, num_args))
+    ref = [e.subs(subs_dict).evalf() for e in exprs]
+    abstol, reltol = 1e-15, 1e-15
+
+    for cse in [False, True, dummy_cse]:
+        f1 = lambdify(args, exprs, cse=cse)
+        result = f1(*num_args)
+        for i, r in enumerate(ref):
+            abs_err = abs(result[i] - r)
+            if r == 0:
+                assert abs_err < abstol
+            else:
+                assert abs_err/abs(r) < reltol
