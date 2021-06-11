@@ -211,7 +211,7 @@ class PinJoint(Joint):
         >>> P.kdes()
         [P_omega(t) - Derivative(P_theta(t), t)]
 
-    This is an example of chaos pendulum where we will do all kinematics
+    This is an example of double pendulum where we will do all kinematics
     using PinJoints.
 
         >>> from sympy import symbols
@@ -251,6 +251,24 @@ class PinJoint(Joint):
         [omega(t) - Derivative(theta(t), t)]
         >>> J2.kdes()
         [alpha(t) - Derivative(phi(t), t)]
+        >>> rod.masscenter.vel(N)
+        (h/4 - lB/2)*omega(t)*A.x
+        >>> plate.masscenter.vel(N)
+        ((h/4 - lB/2)*omega(t) + (h/4 + lB/2)*omega(t))*A.x
+        >>> A.ang_vel_in(N)
+        omega(t)*N.y
+        >>> B.ang_vel_in(N)
+        omega(t)*N.y + alpha(t)*A.z
+        >>> A.dcm(N)
+        Matrix([
+        [cos(theta(t)), 0, -sin(theta(t))],
+        [            0, 1,              0],
+        [sin(theta(t)), 0,  cos(theta(t))]])
+        >>> B.dcm(N)
+        Matrix([
+        [ cos(phi(t))*cos(theta(t)), sin(phi(t)), -sin(theta(t))*cos(phi(t))],
+        [-sin(phi(t))*cos(theta(t)), cos(phi(t)),  sin(phi(t))*sin(theta(t))],
+        [             sin(theta(t)),           0,              cos(theta(t))]])
 
     This example can also be done in another way, i.e, without explicitly defining constants,
     dyamicsymbols, frames etc.
@@ -266,7 +284,24 @@ class PinJoint(Joint):
         [J1_omega(t) - Derivative(J1_theta(t), t)]
         >>> J2.kdes()
         [J2_omega(t) - Derivative(J2_theta(t), t)]
-
+        >>> rod.masscenter.vel(C.frame)
+        (h/4 - lB/2)*J1_omega(t)*rod_frame.x
+        >>> plate.masscenter.vel(C.frame)
+        ((h/4 - lB/2)*J1_omega(t) + (h/4 + lB/2)*J1_omega(t))*rod_frame.x
+        >>> rod.frame.ang_vel_in(C.frame)
+        J1_omega(t)*C_frame.y
+        >>> plate.frame.ang_vel_in(C.frame)
+        J2_omega(t)*rod_frame.z + J1_omega(t)*C_frame.y
+        >>> rod.frame.dcm(C.frame)
+        Matrix([
+        [cos(J1_theta(t)), 0, -sin(J1_theta(t))],
+        [               0, 1,                 0],
+        [sin(J1_theta(t)), 0,  cos(J1_theta(t))]])
+        >>> plate.frame.dcm(C.frame)
+        Matrix([
+        [ cos(J1_theta(t))*cos(J2_theta(t)), sin(J2_theta(t)), -sin(J1_theta(t))*cos(J2_theta(t))],
+        [-sin(J2_theta(t))*cos(J1_theta(t)), cos(J2_theta(t)),  sin(J1_theta(t))*sin(J2_theta(t))],
+        [                  sin(J1_theta(t)),                0,                   cos(J1_theta(t))]])
     """
 
     def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None,
