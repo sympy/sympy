@@ -1103,7 +1103,7 @@ class _EvaluatorPrinter:
         funcbody.extend(self._print_funcargwrapping(funcargs))
 
         funcbody.extend(unpackings)
-        funcbody.extend(['{} = {}'.format(s, e) for s, e in cses])
+        funcbody.extend(['{} = {}'.format(s, self._exprrepr(e)) for s, e in cses])
         funcbody.append('return ({})'.format(self._exprrepr(expr)))
 
         funclines = [funcsig]
