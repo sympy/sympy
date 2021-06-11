@@ -104,9 +104,9 @@ def test_TransferFunction_construction():
     assert tf18.args == (k_i/s + k_o*s + k_p, omega_o**2 + 2*omega_o*s + s**2, s)
 
     # ValueError when denominator is zero.
-    raises(ValueError, lambda: TransferFunction(4, 0, s))
-    raises(ValueError, lambda: TransferFunction(s, 0, s))
-    raises(ValueError, lambda: TransferFunction(0, 0, s))
+    raises(ZeroDivisionError, lambda: TransferFunction(4, 0, s))
+    raises(ZeroDivisionError, lambda: TransferFunction(s, 0, s))
+    raises(ZeroDivisionError, lambda: TransferFunction(0, 0, s))
 
     raises(TypeError, lambda: TransferFunction(Matrix([1, 2, 3]), s, s))
     raises(TypeError, lambda: TransferFunction(s**pi*exp(s), s, s))
