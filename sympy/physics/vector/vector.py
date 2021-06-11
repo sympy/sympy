@@ -723,6 +723,34 @@ class Vector(Printable, EvalfMixin):
         angle = acos(dot(vec1, vec2))
         return angle
 
+    def unit_normal_from(self, vec):
+        """
+        Returns a unit vector of the cross product of self and vec(vec x self).
+
+        Parameter
+        =========
+
+        vec : Vector
+            The Vector from which cross product is calculated.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> A = ReferenceFrame("A")
+        >>> v1 = A.x
+        >>> v2 = A.y
+        >>> v1.unit_normal_from(v2)
+        - A.z
+
+        """
+
+        from sympy.physics.vector.functions import cross
+        vec1 = self.normalize()
+        vec2 = vec.normalize()
+        unit_norm = cross(vec2, vec1)
+        return unit_norm
+
     def free_symbols(self, reference_frame):
         """
         Returns the free symbols in the measure numbers of the vector

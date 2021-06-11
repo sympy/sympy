@@ -1,4 +1,4 @@
-from sympy import symbols, pi, sin, cos, Float, ImmutableMatrix as Matrix
+from sympy import symbols, pi, sin, cos, Float, ImmutableMatrix as Matrix, sqrt
 from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols, dot
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
@@ -190,6 +190,21 @@ def test_vector_angle():
     v3 = A.x
     v4 = B.x
     assert v3.angle_between(v4) == 0
+
+
+def test_vector_unit_normal():
+    A = ReferenceFrame('A')
+    v1 = A.x + A.y
+    v2 = A.z
+    assert v2.unit_normal_from(v1) == sqrt(2)/2*A.x - sqrt(2)/2*A.y
+    B = ReferenceFrame('B')
+    B.orient_axis(A, A.x, pi)
+    v3 = A.x
+    v4 = B.x
+    v3.unit_normal_from(v4) == 0
+    v5 = A.x - A.y + A.z
+    v6 = B.z + A.y
+    assert v5.unit_normal_from(v6) == - sqrt(6)/6*A.y - sqrt(6)/6*A.z
 
 
 def test_vector_xreplace():
