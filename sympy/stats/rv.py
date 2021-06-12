@@ -27,6 +27,7 @@ from sympy.solvers.solveset import solveset
 from sympy.external import import_module
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 import warnings
 
 
@@ -1065,6 +1066,7 @@ def sample(expr, condition=None, size=(), library='scipy',
         by default is 'scipy'
     numsamples : int
         Number of samples, each with size as ``size``
+
     seed :
         An object to be used as seed by the given external library for sampling `expr`.
         Following is the list of possible types of object for the supported libraries,
@@ -1077,6 +1079,12 @@ def sample(expr, condition=None, size=(), library='scipy',
         related to the given library will be used.
         No modifications to environment's global seed settings
         are done by this argument.
+
+    .. versionchanged:: 1.7.
+        sample returns an iterator containing the samples instead of values.
+        
+    .. versionchanged:: 1.9.
+        sample returns values or array of values instead of an iterator and numsamples is deprecated.
 
     Examples
     ========
@@ -1137,10 +1145,8 @@ def sample(expr, condition=None, size=(), library='scipy',
         one sample or a collection of samples of the random expression
 
         sample(X) --> returns float object
-        sample(X, size=int) or sample(X, numsamples=int) --> returns list object
-        sample(X, size=tuple) --> returns numpy.ndarray object
-        sample(X, size=tuple, numsamples=int) --> returns list containing numpy.ndarray objects
-        sample(X, size=int, numsamples=int) --> returns list containing numpy.ndarray objects
+        sample(X, numsamples=int) --> returns list object
+        sample(X, size=int/tuple) --> returns numpy.ndarray object
 
 
     """
@@ -1149,13 +1155,20 @@ def sample(expr, condition=None, size=(), library='scipy',
                                                         numsamples=numsamples, seed=seed)
 
     if numsamples != 1:
+        SymPyDeprecationWarning(
+                 feature="numsamples parameter",
+                 issue=21563,
+                 deprecated_since_version="1.9").warn()
+        
+        if library == 'pymc3':
+            raise NotImplementedError("numsamples is not currently implemented for pymc3")
         return [next(iterator) for i in range(numsamples)]
 
-    if type(size) == type(0):
-        return list(next(iterator))
+    if library == 'pymc3' and size == ():
+        return next(iterator)[0]
 
-    if type(size) in (type(()), type([])):
-        return next(iterator)
+    return next(iterator)
+
 
 
 def quantile(expr, evaluate=True, **kwargs):
@@ -1330,6 +1343,7 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
         while faulty:
             d = ps.sample(size=(numsamples,) + ((size,) if isinstance(size, int) else size),
                           library=library, seed=seed) # a dictionary that maps RVs to values
+
             faulty = False
             count = 0
             while count < numsamples and not faulty:
@@ -1595,12 +1609,24 @@ class Distribution(Basic):
             else:
                 rand_state = seed
             samps = do_sample_numpy(self, size, rand_state)
+
         elif library == 'pymc3':
             from sympy.stats.sampling.sample_pymc3 import do_sample_pymc3
             import pymc3
+            #size accepts only int in case of pymc3
+            #see https://github.com/sympy/sympy/pull/21590#discussion_r649783860
+
+            size = list(size)[1:]
+            if size == []:
+                size=1
+            elif len(size) == 1:
+                size = size[0]
+            else:
+                raise TypeError("Invalid value for `size` in pymc3. Must be int")
             with pymc3.Model():
                 if do_sample_pymc3(self):
-                    samps = pymc3.sample(size, chains=1, progressbar=False, random_seed=seed)[:]['X']
+                	samps = [pymc3.sample(draws=size, chains=1, 
+                	                    progressbar=False, random_seed=seed)[:]['X']]
                 else:
                     samps = None
         else:
