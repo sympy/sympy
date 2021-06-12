@@ -1406,3 +1406,81 @@ def test_cupy_dotproduct():
         f3(1, 2, 3) == \
         f4(1, 2, 3) == \
         cupy.array([14])
+
+
+def test_cse():
+    def dummy_cse(exprs):
+        return (), exprs
+
+    class Case:
+        def __init__(self, *, args, exprs, num_args, requires_numpy=False):
+            self.args = args
+            self.exprs = exprs
+            self.num_args = num_args
+            subs_dict = dict(zip(self.args, self.num_args))
+            self.ref = [e.subs(subs_dict).evalf() for e in exprs]
+            self.requires_numpy = requires_numpy
+
+        def lambdify(self, *, cse):
+            return lambdify(self.args, self.exprs, cse=cse)
+
+        def assertAllClose(self, result, *, abstol=1e-15, reltol=1e-15):
+            if self.requires_numpy:
+                assert all(numpy.allclose(result[i], numpy.asarray(r, dtype=float),
+                                          rtol=reltol, atol=abstol)
+                           for i, r in enumerate(self.ref))
+                return
+
+            for i, r in enumerate(self.ref):
+                abs_err = abs(result[i] - r)
+                if r == 0:
+                    assert abs_err < abstol
+                else:
+                    assert abs_err/abs(r) < reltol
+
+    case1 = Case(
+        args=(x, y, z),
+        exprs=[
+            x + y + z,
+            x + y - z,
+            2*x + 2*y - z,
+            (x+y)**2 + (y+z)**2,
+        ],
+        num_args=(2., 3., 4.)
+    )
+    case2 = Case(
+        args=(x, y, z),
+        exprs=[
+            x + sympy.Heaviside(x),
+            y + sympy.Heaviside(x),
+            z + sympy.Heaviside(x, 1),
+            z/sympy.Heaviside(x, 1)
+        ],
+        num_args=(0., 3., 4.)
+    )
+    case3 = Case(
+        args=(x, y, z),
+        exprs=[
+            x + sinc(y),
+            y + sinc(y),
+            z - sinc(y)
+        ],
+        num_args=(0.1, 0.2, 0.3)
+    )
+    case4 = Case(
+        args=(x, y, z),
+        exprs=[
+            Matrix([[x, x*y], [sin(z) + 4, x**z]]),
+            x*y+sin(z)-x**z,
+            Matrix([x*x, sin(z), x**z])
+        ],
+        num_args=(1.,2.,3.),
+        requires_numpy=True
+    )
+    for case in [case1, case2, case3, case4]:
+        if not numpy and case.requires_numpy:
+            continue
+        for cse in [False, True, dummy_cse]:
+            f = case.lambdify(cse=cse)
+            result = f(*case.num_args)
+            case.assertAllClose(result)

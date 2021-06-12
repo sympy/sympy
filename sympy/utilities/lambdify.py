@@ -336,7 +336,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         (if ``args`` is not a string) - for example, to ensure that the
         arguments do not redefine any built-in names.
 
-    cse : bool, optional
+    cse : bool or callable, optional
         When the expression that we want to vectorialize is a large expression
         that contains redundancy, it is possible to increase the speed and
         reduce the size in RAM by setting this parameter to True.
@@ -346,6 +346,12 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         set this parameter to False. If, on the other hand, you want
         the evaluation of the function returned by 'lambdify' to be
         as efficient as possible, set this parameter to True.
+
+        Whether or not common subexpression elimination should be performed on
+        the expressions. This can potentially improve performance of the generated
+        function. When ``True``, then ``sympy.simplify.cse`` is used, the user
+        may pass their own function matching the signature of said function.
+
 
 
     Examples
@@ -858,12 +864,14 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
+
+    if cse is True:
+        from sympy.simplify.cse_main import cse
     if cse:
-        replacements, deletable_symbols, reduced_exprs = _cse_del(expr) # Delete redundancy.
-        funcstr = funcprinter.doprint(funcname, args, reduced_exprs,
-            replacements=replacements, deletable_symbols=deletable_symbols)
+        cses, expr = cse(expr)
     else:
-        funcstr = funcprinter.doprint(funcname, args, expr)
+        cses = ()
+    funcstr = funcprinter.doprint(funcname, args, expr, cses=cses)
 
     # Collect the module imports from the code printers.
     imp_mod_lines = []
@@ -1194,7 +1202,7 @@ class _EvaluatorPrinter:
         # Used to print the generated function arguments in a standard way
         self._argrepr = LambdaPrinter().doprint
 
-    def doprint(self, funcname, args, expr, *, deletable_symbols=(), replacements=()):
+    def doprint(self, funcname, args, expr, *, cses=()):
         """
         Returns the function definition code as a string.
         """
@@ -1225,10 +1233,7 @@ class _EvaluatorPrinter:
 
         funcbody.extend(unpackings)
 
-        for deletable_symbol, (var_name, sub_expr) in zip(deletable_symbols, replacements):
-            funcbody.append('{} = ({})'.format(var_name, self._exprrepr(sub_expr)))
-            if deletable_symbol:
-                funcbody.append('del {}'.format(', '.join(map(str, deletable_symbol))))
+        funcbody.extend(['{} = {}'.format(s, self._exprrepr(e)) for s, e in cses])
 
         funcbody.append('return ({})'.format(self._exprrepr(expr)))
 
