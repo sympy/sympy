@@ -446,6 +446,11 @@ def test_Piecewise():
     assert trigsimp(Piecewise((e1, e3 < e2), (e3, True))) == \
         Piecewise((e1, e3 < s2), (e3, True))
 
+
+def test_issue_21594():
+    assert simplify(exp(Rational(1,2)) + exp(Rational(-1,2))) == cosh(S.Half)*2
+
+
 def test_trigsimp_old():
     x, y = symbols('x,y')
 
