@@ -131,9 +131,8 @@ def test_local_dict_symbol_to_fcn():
     x = Symbol('x')
     d = {'foo': Function('bar')}
     assert parse_expr('foo(x)', local_dict=d) == d['foo'](x)
-    # XXX: bit odd, but would be error if parser left the Symbol
     d = {'foo': Symbol('baz')}
-    assert parse_expr('foo(x)', local_dict=d) == Function('baz')(x)
+    raises(TypeError, lambda: parse_expr('foo(x)', local_dict=d))
 
 
 def test_global_dict():
@@ -270,3 +269,11 @@ def test_python3_features():
     assert parse_expr('.[3_4]') == parse_expr('.[34]') == Rational(34, 99)
     assert parse_expr('.1[3_4]') == parse_expr('.1[34]') == Rational(133, 990)
     assert parse_expr('123_123.123_123[3_4]') == parse_expr('123123.123123[34]') == Rational(12189189189211, 99000000)
+
+
+def test_issue_19501():
+    x = Symbol('x')
+    eq = parse_expr('E**x(1+x)', local_dict={'x': x}, transformations=(
+        standard_transformations +
+        (implicit_multiplication_application,)))
+    assert eq.free_symbols == {x}

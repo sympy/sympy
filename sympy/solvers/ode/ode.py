@@ -991,7 +991,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     a = Wild('a', exclude=[f(x)])
     d = Wild('d', exclude=[df, f(x).diff(x, 2)])
     e = Wild('e', exclude=[df])
-    k = Wild('k', exclude=[df])
     n = Wild('n', exclude=[x, f(x), df])
     c1 = Wild('c1', exclude=[x])
     a3 = Wild('a3', exclude=[f(x), df, f(x).diff(x, 2)])
@@ -1055,6 +1054,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         Factorable: ('factorable',),
         RiccatiSpecial: ('Riccati_special_minus2',),
         SecondNonlinearAutonomousConserved: ('2nd_nonlinear_autonomous_conserved',),
+        Liouville: ('Liouville',),
+        Separable: ('separable',),
+        SeparableReduced: ('separable_reduced',),
     }
     for solvercls in solvers:
         solver = solvercls(ode)
@@ -1128,13 +1130,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             ## Separable Case: y' == P(y)*Q(x)
             r[d] = separatevars(r[d])
             r[e] = separatevars(r[e])
-            # m1[coeff]*m1[x]*m1[y] + m2[coeff]*m2[x]*m2[y]*y'
-            m1 = separatevars(r[d], dict=True, symbols=(x, y))
-            m2 = separatevars(r[e], dict=True, symbols=(x, y))
-            if m1 and m2:
-                r1 = {'m1': m1, 'm2': m2, 'y': y}
-                matching_hints["separable"] = r1
-                matching_hints["separable_Integral"] = r1
 
             ## First order equation with homogeneous coefficients:
             # dy/dx == F(y/x) or dy/dx == F(x/y)
@@ -1187,87 +1182,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
                             matching_hints["linear_coefficients"] = r2
                             matching_hints["linear_coefficients_Integral"] = r2
 
-            ## Equation of the form y' + (y/x)*H(x^n*y) = 0
-            # that can be reduced to separable form
-
-            factor = simplify(x/f(x)*num/den)
-
-            # Try representing factor in terms of x^n*y
-            # where n is lowest power of x in factor;
-            # first remove terms like sqrt(2)*3 from factor.atoms(Mul)
-            num, dem = factor.as_numer_denom()
-            num = expand(num)
-            dem = expand(dem)
-            def _degree(expr, x):
-                # Made this function to calculate the degree of
-                # x in an expression. If expr will be of form
-                # x**p*y, (wheare p can be variables/rationals) then it
-                # will return p.
-                for val in expr:
-                    if val.has(x):
-                        if isinstance(val, Pow) and val.as_base_exp()[0] == x:
-                            return (val.as_base_exp()[1])
-                        elif val == x:
-                            return (val.as_base_exp()[1])
-                        else:
-                            return _degree(val.args, x)
-                return 0
-
-            def _powers(expr):
-                # this function will return all the different relative power of x w.r.t f(x).
-                # expr = x**p * f(x)**q then it will return {p/q}.
-                pows = set()
-                if isinstance(expr, Add):
-                    exprs = expr.atoms(Add)
-                elif isinstance(expr, Mul):
-                    exprs = expr.atoms(Mul)
-                elif isinstance(expr, Pow):
-                    exprs = expr.atoms(Pow)
-                else:
-                    exprs = {expr}
-
-                for arg in exprs:
-                    if arg.has(x):
-                        _, u = arg.as_independent(x, f(x))
-                        pow = _degree((u.subs(f(x), y), ), x)/_degree((u.subs(f(x), y), ), y)
-                        pows.add(pow)
-                return pows
-
-            pows = _powers(num)
-            pows.update(_powers(dem))
-            pows = list(pows)
-            if(len(pows)==1) and pows[0]!=zoo:
-                t = Dummy('t')
-                r2 = {'t': t}
-                num = num.subs(x**pows[0]*f(x), t)
-                dem = dem.subs(x**pows[0]*f(x), t)
-                test = num/dem
-                free = test.free_symbols
-                if len(free) == 1 and free.pop() == t:
-                    r2.update({'power' : pows[0], 'u' : test})
-                    matching_hints['separable_reduced'] = r2
-                    matching_hints["separable_reduced_Integral"] = r2
-
-
     elif order == 2:
-        # Liouville ODE in the form
-        # f(x).diff(x, 2) + g(f(x))*(f(x).diff(x))**2 + h(x)*f(x).diff(x)
-        # See Goldstein and Braun, "Advanced Methods for the Solution of
-        # Differential Equations", pg. 98
-
-        s = d*f(x).diff(x, 2) + e*df**2 + k*df
-        r = reduced_eq.collect(f(x).diff(x)).match(s)
-        if r and r[d] != 0:
-            y = Dummy('y')
-            g = simplify(r[e]/r[d]).subs(f(x), y)
-            h = simplify(r[k]/r[d]).subs(f(x), y)
-            if y in h.free_symbols or x in g.free_symbols:
-                pass
-            else:
-                r = {'g': g, 'h': h, 'y': y}
-                matching_hints["Liouville"] = r
-                matching_hints["Liouville_Integral"] = r
-
         # Homogeneous second order differential equation of the form
         # a3*f(x).diff(x, 2) + b3*f(x).diff(x) + c3
         # It has a definite power series solution at point x0 if, b3/a3 and c3/a3
@@ -3161,78 +3076,6 @@ def homogeneous_order(eq, *symbols):
         return e
 
 
-def ode_Liouville(eq, func, order, match):
-    r"""
-    Solves 2nd order Liouville differential equations.
-
-    The general form of a Liouville ODE is
-
-    .. math:: \frac{d^2 y}{dx^2} + g(y) \left(\!
-                \frac{dy}{dx}\!\right)^2 + h(x)
-                \frac{dy}{dx}\text{.}
-
-    The general solution is:
-
-        >>> from sympy import Function, dsolve, Eq, pprint, diff
-        >>> from sympy.abc import x
-        >>> f, g, h = map(Function, ['f', 'g', 'h'])
-        >>> genform = Eq(diff(f(x),x,x) + g(f(x))*diff(f(x),x)**2 +
-        ... h(x)*diff(f(x),x), 0)
-        >>> pprint(genform)
-                          2                    2
-                /d       \         d          d
-        g(f(x))*|--(f(x))|  + h(x)*--(f(x)) + ---(f(x)) = 0
-                \dx      /         dx           2
-                                              dx
-        >>> pprint(dsolve(genform, f(x), hint='Liouville_Integral'))
-                                          f(x)
-                  /                     /
-                 |                     |
-                 |     /               |     /
-                 |    |                |    |
-                 |  - | h(x) dx        |    | g(y) dy
-                 |    |                |    |
-                 |   /                 |   /
-        C1 + C2* | e            dx +   |  e           dy = 0
-                 |                     |
-                /                     /
-
-    Examples
-    ========
-
-    >>> from sympy import Function, dsolve, Eq, pprint
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> pprint(dsolve(diff(f(x), x, x) + diff(f(x), x)**2/f(x) +
-    ... diff(f(x), x)/x, f(x), hint='Liouville'))
-               ________________           ________________
-    [f(x) = -\/ C1 + C2*log(x) , f(x) = \/ C1 + C2*log(x) ]
-
-    References
-    ==========
-
-    - Goldstein and Braun, "Advanced Methods for the Solution of Differential
-      Equations", pp. 98
-    - http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Liouville
-
-    # indirect doctest
-
-    """
-    # Liouville ODE:
-    #  f(x).diff(x, 2) + g(f(x))*(f(x).diff(x, 2))**2 + h(x)*f(x).diff(x)
-    # See Goldstein and Braun, "Advanced Methods for the Solution of
-    # Differential Equations", pg. 98, as well as
-    # http://www.maplesoft.com/support/help/view.aspx?path=odeadvisor/Liouville
-    x = func.args[0]
-    f = func.func
-    r = match  # f(x).diff(x, 2) + g*f(x).diff(x)**2 + h*f(x).diff(x)
-    y = r['y']
-    C1, C2 = get_numbered_constants(eq, num=2)
-    int = Integral(exp(Integral(r['g'], y)), (y, None, f(x)))
-    sol = Eq(int + C1*Integral(exp(-Integral(r['h'], x)), x) + C2, 0)
-    return sol
-
-
 def ode_2nd_power_series_ordinary(eq, func, order, match):
     r"""
     Gives a power series solution to a second order homogeneous differential
@@ -4280,82 +4123,6 @@ def ode_linear_coefficients(eq, func, order, match):
     return ode_1st_homogeneous_coeff_best(eq, func, order, match)
 
 
-def ode_separable_reduced(eq, func, order, match):
-    r"""
-    Solves a differential equation that can be reduced to the separable form.
-
-    The general form of this equation is
-
-    .. math:: y' + (y/x) H(x^n y) = 0\text{}.
-
-    This can be solved by substituting `u(y) = x^n y`.  The equation then
-    reduces to the separable form `\frac{u'}{u (\mathrm{power} - H(u))} -
-    \frac{1}{x} = 0`.
-
-    The general solution is:
-
-        >>> from sympy import Function, dsolve, pprint
-        >>> from sympy.abc import x, n
-        >>> f, g = map(Function, ['f', 'g'])
-        >>> genform = f(x).diff(x) + (f(x)/x)*g(x**n*f(x))
-        >>> pprint(genform)
-                         / n     \
-        d          f(x)*g\x *f(x)/
-        --(f(x)) + ---------------
-        dx                x
-        >>> pprint(dsolve(genform, hint='separable_reduced'))
-         n
-        x *f(x)
-          /
-         |
-         |         1
-         |    ------------ dy = C1 + log(x)
-         |    y*(n - g(y))
-         |
-         /
-
-    See Also
-    ========
-    :meth:`sympy.solvers.ode.ode.ode_separable`
-
-    Examples
-    ========
-
-    >>> from sympy import Function, pprint
-    >>> from sympy.solvers.ode.ode import dsolve
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> d = f(x).diff(x)
-    >>> eq = (x - x**2*f(x))*d - f(x)
-    >>> dsolve(eq, hint='separable_reduced')
-    [Eq(f(x), (1 - sqrt(C1*x**2 + 1))/x), Eq(f(x), (sqrt(C1*x**2 + 1) + 1)/x)]
-    >>> pprint(dsolve(eq, hint='separable_reduced'))
-                   ___________            ___________
-                  /     2                /     2
-            1 - \/  C1*x  + 1          \/  C1*x  + 1  + 1
-    [f(x) = ------------------, f(x) = ------------------]
-                    x                          x
-
-    References
-    ==========
-
-    - Joel Moses, "Symbolic Integration - The Stormy Decade", Communications
-      of the ACM, Volume 14, Number 8, August 1971, pp. 558
-    """
-
-    # Arguments are passed in a way so that they are coherent with the
-    # ode_separable function
-    x = func.args[0]
-    f = func.func
-    y = Dummy('y')
-    u = match['u'].subs(match['t'], y)
-    ycoeff = 1/(y*(match['power'] - u))
-    m1 = {y: 1, x: -1/x, 'coeff': 1}
-    m2 = {y: ycoeff, x: 1, 'coeff': 1}
-    r = {'m1': m1, 'm2': m2, 'y': y, 'hint': x**match['power']*f(x)}
-    return ode_separable(eq, func, order, r)
-
-
 def ode_1st_power_series(eq, func, order, match):
     r"""
     The power series solution is a method which gives the Taylor series expansion
@@ -5013,71 +4780,6 @@ def _solve_variation_of_parameters(eq, func, order, match):
         psol = simplify(psol)
         psol = trigsimp(psol, deep=True)
     return Eq(f(x), gsol.rhs + psol)
-
-
-def ode_separable(eq, func, order, match):
-    r"""
-    Solves separable 1st order differential equations.
-
-    This is any differential equation that can be written as `P(y)
-    \tfrac{dy}{dx} = Q(x)`.  The solution can then just be found by
-    rearranging terms and integrating: `\int P(y) \,dy = \int Q(x) \,dx`.
-    This hint uses :py:meth:`sympy.simplify.simplify.separatevars` as its back
-    end, so if a separable equation is not caught by this solver, it is most
-    likely the fault of that function.
-    :py:meth:`~sympy.simplify.simplify.separatevars` is
-    smart enough to do most expansion and factoring necessary to convert a
-    separable equation `F(x, y)` into the proper form `P(x)\cdot{}Q(y)`.  The
-    general solution is::
-
-        >>> from sympy import Function, dsolve, Eq, pprint
-        >>> from sympy.abc import x
-        >>> a, b, c, d, f = map(Function, ['a', 'b', 'c', 'd', 'f'])
-        >>> genform = Eq(a(x)*b(f(x))*f(x).diff(x), c(x)*d(f(x)))
-        >>> pprint(genform)
-                     d
-        a(x)*b(f(x))*--(f(x)) = c(x)*d(f(x))
-                     dx
-        >>> pprint(dsolve(genform, f(x), hint='separable_Integral'))
-             f(x)
-           /                  /
-          |                  |
-          |  b(y)            | c(x)
-          |  ---- dy = C1 +  | ---- dx
-          |  d(y)            | a(x)
-          |                  |
-         /                  /
-
-    Examples
-    ========
-
-    >>> from sympy import Function, dsolve, Eq
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> pprint(dsolve(Eq(f(x)*f(x).diff(x) + x, 3*x*f(x)**2), f(x),
-    ... hint='separable', simplify=False))
-       /   2       \         2
-    log\3*f (x) - 1/        x
-    ---------------- = C1 + --
-           6                2
-
-    References
-    ==========
-
-    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-      Dover 1963, pp. 52
-
-    # indirect doctest
-
-    """
-    x = func.args[0]
-    f = func.func
-    C1 = get_numbered_constants(eq, num=1)
-    r = match  # {'m1':m1, 'm2':m2, 'y':y}
-    u = r.get('hint', f(x))  # get u from separable_reduced else get f(x)
-    return Eq(Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
-        (r['y'], None, u)), Integral(-r['m1']['coeff']*r['m1'][x]/
-        r['m2'][x], x) + C1)
 
 
 def checkinfsol(eq, infinitesimals, func=None, order=None):
@@ -6972,4 +6674,4 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 #This import is written at the bottom to avoid circular imports.
 from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
         Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
-        SecondNonlinearAutonomousConserved, FirstExact)
+        SecondNonlinearAutonomousConserved, FirstExact, Liouville, Separable, SeparableReduced)

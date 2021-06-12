@@ -111,7 +111,8 @@ Bernoulli
 
 Liouville
 ^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_Liouville
+.. autoclass:: sympy.solvers.ode.single::Liouville
+   :members:
 
 Riccati_special_minus2
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -141,7 +142,8 @@ nth_order_reducible
 
 separable
 ^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_separable
+.. autoclass:: sympy.solvers.ode.single::Separable
+   :members:
 
 almost_linear
 ^^^^^^^^^^^^^
@@ -154,7 +156,7 @@ linear_coefficients
 
 separable_reduced
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_separable_reduced
+.. autofunction:: sympy.solvers.ode.single::SeparableReduced
 
 lie_group
 ^^^^^^^^^

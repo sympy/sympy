@@ -83,7 +83,9 @@ MPMATH_TRANSLATIONS = {
     "betainc_regularized": "betainc",
 }
 
-NUMPY_TRANSLATIONS = {}  # type: Dict[str, str]
+NUMPY_TRANSLATIONS = {
+    "Heaviside": "heaviside",
+    }  # type: Dict[str, str]
 SCIPY_TRANSLATIONS = {}  # type: Dict[str, str]
 CUPY_TRANSLATIONS = {}  # type: Dict[str, str]
 

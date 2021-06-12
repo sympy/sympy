@@ -590,7 +590,12 @@ class Piecewise(Function):
                 elif hi.is_Symbol:
                     pos = pos.xreplace({hi: lo + p}).xreplace({p: hi - lo})
                     neg = neg.xreplace({hi: lo - p}).xreplace({p: lo - hi})
-
+                # evaluate limits that may have unevaluate Min/Max
+                touch = lambda _: _.replace(
+                    lambda x: isinstance(x, (Min, Max)),
+                    lambda x: x.func(*x.args))
+                neg = touch(neg)
+                pos = touch(pos)
                 # assemble return expression; make the first condition be Lt
                 # b/c then the first expression will look the same whether
                 # the lo or hi limit is symbolic

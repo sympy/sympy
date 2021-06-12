@@ -1,5 +1,5 @@
 from sympy import (S, Dummy, Lambda, symbols, Interval, Intersection, Set,
-                   EmptySet, FiniteSet, Union, ComplexRegion)
+                   EmptySet, FiniteSet, Union, ComplexRegion, Mul)
 from sympy.multipledispatch import dispatch
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
@@ -277,9 +277,9 @@ def intersection_sets(self, other): # noqa:F811
                 return FiniteSet(*(fn.subs(n, s[0]) for s in solns))
 
     if other == S.Reals:
-        from sympy.solvers.solveset import solveset_real
         from sympy.core.function import expand_complex
-
+        from sympy.solvers.solvers import denoms, solve_linear
+        from sympy.core.relational import Eq
         f = self.lamda.expr
         n = self.lamda.variables[0]
 
@@ -293,7 +293,7 @@ def intersection_sets(self, other): # noqa:F811
         im = im.subs(n_, n)
         ifree = im.free_symbols
         lam = Lambda(n, re)
-        if not im:
+        if im.is_zero:
             # allow re-evaluation
             # of self in this case to make
             # the result canonical
@@ -304,7 +304,21 @@ def intersection_sets(self, other): # noqa:F811
             return None
         else:
             # univarite imaginary part in same variable
-            base_set = base_set.intersect(solveset_real(im, n))
+            x, xis = zip(*[solve_linear(i, 0) for i in Mul.make_args(im) if n in i.free_symbols])
+            if x and all(i == n for i in x):
+                base_set -= FiniteSet(xis)
+            else:
+                base_set -= ConditionSet(n, Eq(im, 0), S.Integers)
+        # exclude values that make denominators 0
+        for i in denoms(f):
+            if i.has(n):
+                sol = list(zip(*[solve_linear(i, 0) for i in Mul.make_args(im) if n in i.free_symbols]))
+                if sol != []:
+                    x, xis = sol
+                    if x and all(i == n for i in x):
+                        base_set -= FiniteSet(xis)
+                else:
+                    base_set -= ConditionSet(n, Eq(i, 0), S.Integers)
         return imageset(lam, base_set)
 
     elif isinstance(other, Interval):
