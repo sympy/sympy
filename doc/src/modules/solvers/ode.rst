@@ -78,10 +78,12 @@ factorable
 1st_exact
 ^^^^^^^^^
 .. autoclass:: sympy.solvers.ode.single.FirstExact
+   :members:
 
 1st_homogeneous_coeff_best
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.ode.single::HomogeneousCoeffBest
+   :members:
 
 1st_homogeneous_coeff_subs_dep_div_indep
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -155,10 +157,12 @@ almost_linear
 linear_coefficients
 ^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.ode.single::LinearCoefficients
+   :members:
 
 separable_reduced
 ^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.ode.single::SeparableReduced
+   :members:
 
 lie_group
 ^^^^^^^^^
