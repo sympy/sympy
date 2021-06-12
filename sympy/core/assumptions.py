@@ -385,6 +385,14 @@ def check_assumptions(expr, against=None, **assume):
     >>> check_assumptions(2*x + 1, x)
     True
 
+    To see if a number matches the assumptions of an expression, pass
+    the number as the first argument, else its specific assumptions
+    may not have a non-None value in the expression:
+
+    >>> check_assumptions(x, 3)
+    >>> check_assumptions(3, x)
+    True
+
     ``None`` is returned if ``check_assumptions()`` could not conclude.
 
     >>> check_assumptions(2*x - 1, x)
@@ -399,8 +407,8 @@ def check_assumptions(expr, against=None, **assume):
 
     """
     expr = sympify(expr)
-    if against:
-        if against is not None and assume:
+    if against is not None:
+        if assume:
             raise ValueError(
                 'Expecting `against` or `assume`, not both.')
         assume = assumptions(against)
