@@ -2428,18 +2428,23 @@ class Beam3D(Beam):
             [0]: cartesian line: 2*x**3 for x over (0.0, 20.0)
 
         """
-        Px = self._plot_bending_moment('x')
-        Py = self._plot_bending_moment('y')
-        Pz = self._plot_bending_moment('z')
+
+        dir = dir.lower()
         # For bending moment along x direction
         if dir == "x":
+            Px = self._plot_bending_moment('x')
             return Px.show()
         # For bending moment along y direction
         elif dir == "y":
+            Py = self._plot_bending_moment('y')
             return Py.show()
         # For bending moment along z direction
         elif dir == "z":
+            Pz = self._plot_bending_moment('z')
             return Pz.show()
         # For bending moment along all direction
         else:
+            Px = self._plot_bending_moment('x')
+            Py = self._plot_bending_moment('y')
+            Pz = self._plot_bending_moment('z')
             return PlotGrid(3, 1, Px, Py, Pz)
