@@ -1838,7 +1838,7 @@ class NthOrderReducible(SingleODESolver):
         # repeated integration e.g.:
         # `d^2/dx^2(y) + x*d/dx(y) = constant
         #f'(x) must be finite for this to work
-        eq = self.ode_problem.eq
+        eq = self.ode_problem.eq_preprocessed
         func = self.ode_problem.func
         x = self.ode_problem.sym
         r"""
