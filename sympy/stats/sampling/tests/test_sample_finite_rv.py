@@ -45,14 +45,11 @@ def test_sample_scipy():
     ]
 
     size = 3
-    numsamples = 5
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy not installed. Abort tests for _sample_scipy.')
     else:
         with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-            h_sample = sample(Hypergeometric("H", 1, 1, 1), size=size, numsamples=numsamples)
-            assert len(h_sample) == numsamples
             for X in distribs_scipy:
                 samps = sample(X, size=size)
                 samps2 = sample(X, size=(2, 2))
@@ -90,9 +87,9 @@ def test_sample_seed():
         try:
             imported_lib = import_module(lib)
             if imported_lib:
-                s0 = sample(F, numsamples=10, library=lib, seed=0)
-                s1 = sample(F, numsamples=10, library=lib, seed=0)
-                s2 = sample(F, numsamples=10, library=lib, seed=1)
+                s0 = sample(F, library=lib, seed=0)
+                s1 = sample(F, library=lib, seed=0)
+                s2 = sample(F, library=lib, seed=1)
                 assert s0 == s1
                 assert s1 != s2
         except NotImplementedError:

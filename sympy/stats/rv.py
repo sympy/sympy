@@ -1066,7 +1066,6 @@ def sample(expr, condition=None, size=(), library='scipy',
         by default is 'scipy'
     numsamples : int
         Number of samples, each with size as ``size``
-
     seed :
         An object to be used as seed by the given external library for sampling `expr`.
         Following is the list of possible types of object for the supported libraries,
@@ -1081,8 +1080,8 @@ def sample(expr, condition=None, size=(), library='scipy',
         are done by this argument.
 
     .. versionchanged:: 1.7.
-        sample returns an iterator containing the samples instead of values.
-        
+        sample returns an iterator containing the samples instead of value
+
     .. versionchanged:: 1.9.
         sample returns values or array of values instead of an iterator and numsamples is deprecated.
 
@@ -1159,7 +1158,7 @@ def sample(expr, condition=None, size=(), library='scipy',
                  feature="numsamples parameter",
                  issue=21563,
                  deprecated_since_version="1.9").warn()
-        
+
         if library == 'pymc3':
             raise NotImplementedError("numsamples is not currently implemented for pymc3")
         return [next(iterator) for i in range(numsamples)]
@@ -1308,6 +1307,7 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
     else:
         fn = lambdify(rvs, expr, modules=library, **kwargs)
 
+
     if condition is not None:
         given_fn = lambdify(rvs, condition, **kwargs)
 
@@ -1348,7 +1348,6 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
             count = 0
             while count < numsamples and not faulty:
                 args = [d[rv][count] for rv in rvs]
-
                 if condition is not None:  # Check that these values satisfy the condition
                     # TODO: Replace the try-except block with only given_fn(*args)
                     # once lambdify works with unevaluated SymPy objects.
@@ -1625,8 +1624,8 @@ class Distribution(Basic):
                 raise TypeError("Invalid value for `size` in pymc3. Must be int")
             with pymc3.Model():
                 if do_sample_pymc3(self):
-                	samps = [pymc3.sample(draws=size, chains=1, 
-                	                    progressbar=False, random_seed=seed)[:]['X']]
+                    samps = [pymc3.sample(draws=size, chains=1,
+                                          progressbar=False, random_seed=seed)[:]['X']]
                 else:
                     samps = None
         else:

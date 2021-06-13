@@ -233,9 +233,19 @@ class SampleJointPymc:
         if dist.__class__.__name__ not in dist_list:
             return None
 
+        #size accepts only int in case of pymc3
+        #see https://github.com/sympy/sympy/pull/21590#discussion_r649783860
+
+        draws = list(size)[1:]
+        if draws == []:
+            draws=1
+        elif len(draws) == 1:
+            draws = draws[0]
+        else:
+            raise TypeError("Invalid value for `size` in pymc3. Must be int")
         with pymc3.Model():
             pymc3_rv_map[dist.__class__.__name__](dist)
-            samples = pymc3.sample(size, chains=1, progressbar=False, random_seed=seed)[:]['X']
+            samples = pymc3.sample(draws=draws, chains=1, progressbar=False, random_seed=seed)[:]['X']
             if samples.shape[0:len(size)] != size:
                 samples = samples.reshape((size[0],) + samples.shape)
             return samples

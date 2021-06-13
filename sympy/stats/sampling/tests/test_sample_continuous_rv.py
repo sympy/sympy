@@ -50,14 +50,11 @@ def test_sample_scipy():
         Uniform("U", 0, 1)
     ]
     size = 3
-    numsamples = 5
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests for _sample_scipy.')
     else:
         with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-            g_sample = list(sample(Gamma("G", 2, 7), size=size, numsamples=numsamples))
-            assert len(g_sample) == numsamples
             for X in distribs_scipy:
                 samps = sample(X, size=size, library='scipy')
                 samps2 = sample(X, size=(2, 2), library='scipy')
@@ -174,9 +171,9 @@ def test_sample_continuous():
             imported_lib = import_module(lib)
             if imported_lib:
                 s0, s1, s2 = [], [], []
-                s0 = sample(Z, numsamples=10, library=lib, seed=0)
-                s1 = sample(Z, numsamples=10, library=lib, seed=0)
-                s2 = sample(Z, numsamples=10, library=lib, seed=1)
+                s0 = sample(Z, library=lib, seed=0)
+                s1 = sample(Z, library=lib, seed=0)
+                s2 = sample(Z, library=lib, seed=1)
                 assert s0 == s1
                 assert s1 != s2
         except NotImplementedError:

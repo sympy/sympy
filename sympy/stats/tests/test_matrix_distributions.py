@@ -171,10 +171,11 @@ def test_sample_seed():
             imported_lib = import_module(lib)
             if imported_lib:
                 s0, s1, s2 = [], [], []
-                s0 = sample(X, numsamples=10, library=lib, seed=0)
-                s1 = sample(X, numsamples=10, library=lib, seed=0)
-                s2 = sample(X, numsamples=10, library=lib, seed=1)
-                assert all((s0[i] == s1[i]).all() for i in range(10))
-                assert all((s1[i] != s2[i]).all() for i in range(10))
+                s0 = sample(X, library=lib, seed=0)
+                s1 = sample(X, library=lib, seed=0)
+                s2 = sample(X, library=lib, seed=1)
+                assert (s0 == s1).all()
+                assert (s1 != s2).all()
+
         except NotImplementedError:
             continue

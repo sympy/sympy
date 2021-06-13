@@ -316,9 +316,9 @@ def test_sample_seed():
             imported_lib = import_module(lib)
             if imported_lib:
                 s0, s1, s2 = [], [], []
-                s0 = sample(X, numsamples=10, library=lib, seed=0)
-                s1 = sample(X, numsamples=10, library=lib, seed=0)
-                s2 = sample(X, numsamples=10, library=lib, seed=1)
+                s0 = sample(X, library=lib, seed=0)
+                s1 = sample(X, library=lib, seed=0)
+                s2 = sample(X, library=lib, seed=1)
                 assert s0 == s1
                 assert s1 != s2
         except NotImplementedError:

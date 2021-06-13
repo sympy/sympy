@@ -212,7 +212,7 @@ def test_Sample():
     #Test Issue #21563: Output of sample must be a float or list
     assert str(type(sample(X))) == "<class 'numpy.int64'>"
     assert str(type(sample(Y))) == "<class 'numpy.float64'>"
-    assert str(type(sample(X, size = 2))) == "<class 'list'>"
+    assert str(type(sample(X, size = 2))) == "<class 'numpy.ndarray'>"
 
 
 
