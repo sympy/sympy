@@ -20,25 +20,47 @@ def _roots(poly, var):
 
 
 class TransferFunction(Basic, EvalfMixin):
-    """
+    r"""
     A class for representing LTI (Linear, time-invariant) systems that can be strictly described
-    by ratio of polynomials in the Laplace Transform complex variable. The arguments
+    by ratio of polynomials in the Laplace transform complex variable. The arguments
     are ``num``, ``den``, and ``var``, where ``num`` and ``den`` are numerator and
     denominator polynomials of the ``TransferFunction`` respectively, and the third argument is
     a complex variable of the Laplace transform used by these polynomials of the transfer function.
     ``num`` and ``den`` can be either polynomials or numbers, whereas ``var``
     has to be a Symbol.
 
+    The numerator of the transfer function is the Laplace transform of the input signal
+    (The signals are represented as functions of time) and similarly the denominator
+    of the transfer function is the Laplace transform of the output signal. It is also a convention
+    to denote the input and output signal's Laplace transform with capital alphabets like shown below.
+
+            $H(s) = \frac{Y(s)}{X(s)} = \frac{ \mathcal{L}\left\{y(t)\right\} }{ \mathcal{L}\left\{x(t)\right\} }$
+
+    Transfer function, $H$, is generally given as a rational function in $s$ as-
+
+            $H(s) =\ \frac{a_{n}s^{n}+a_{n-1}s^{n-1}+\dots+a_{1}s+a_{0}}{b_{m}s^{m}+b_{m-1}s^{m-1}+\dots+b_{1}s+b_{0}}$
+
+    For more info, refer -
+
+            https://en.wikipedia.org/wiki/Transfer_function
+
     Parameters
     ==========
 
     num : Expr, Number
-        The numerator polynomial of the transfer function.
-    den : Expr, Number
-        The denominator polynomial of the transfer function.
-    var : Symbol
+        The numerator polynomial of the transfer function. Users
+        can also pass the entire rational expression of the
+        transfer function, without explicitly passing the den
+        parameter. It will be adjusted accordingly.
+    den : Expr, Number, optional
+        The denominator polynomial of the transfer function. If
+        the entire tranfer function expression is passed as the
+        ``num`` param, then users can skip it.
+    var : Symbol, optional
         Complex variable of the Laplace transform used by the
-        polynomials of the transfer function.
+        polynomials of the transfer function. If the transfer
+        function expression passed has only one variable,
+        it will be considered as the value of ``var`` by default.
 
     Raises
     ======
@@ -47,8 +69,15 @@ class TransferFunction(Basic, EvalfMixin):
         When ``var`` is not a Symbol or when ``num`` or ``den`` is not
         a number or a polynomial. Also, when ``num`` or ``den`` has
         a time delay term.
-    ValueError
-        When ``den`` is zero.
+
+        When ``var`` is not defined explicitly in case the ``num`` and/or
+        ``den`` are/is Number(s) instead of symbolic expressions.
+
+        When there are multiple ``Symbol`` instances in the expression
+        passed and ``var`` is not passed manually.
+    ZeroDivisionError
+        When ``den`` passed is zero or denominator of the ``num`` param
+        is 0.
 
     Examples
     ========
@@ -67,14 +96,38 @@ class TransferFunction(Basic, EvalfMixin):
     >>> tf1.args
     (a + s, s**2 + s + 1, s)
 
+    ``TransferFunction`` instances can also be created simply by passing the rational
+    expression. SymPy will smartly create a ``TransferFunction`` object with the
+    properties of the expression.
+
+    >>> expr = (s + 5)/(3*s**2 + 2*s + 1)
+    >>> tf = TransferFunction(expr)
+    >>> tf
+    TransferFunction(s + 5, 3*s**2 + 2*s + 1, s)
+
+    In case of conflict between two or more variables in a expression, sympy will
+    raise a ``ValueError``.
+
+    >>> tf = TransferFunction(a + a*s, s**2 + s + 1)
+    Traceback (most recent call last):
+    ...
+    TypeError: Conflicting values found for positional argument `var` ({a, s}). Specify it manually.
+
+    This can be corrected by specifying the ``var`` parameter manually.
+
+    >>> tf = TransferFunction(a + a*s, s**2 + s + 1, s)
+    >>> tf
+    TransferFunction(a + a*s, s**2 + s + 1, s)
+
     Any complex variable can be used for ``var``.
 
-    >>> tf2 = TransferFunction(a*p**3 - a*p**2 + s*p, p + a**2, p)
+    >>> expr1 = (a*p**3 - a*p**2 + s*p)/(p + a**2)  # Expr with more than one variables
+    >>> tf2 = TransferFunction(expr, var=p)
     >>> tf2
     TransferFunction(a*p**3 - a*p**2 + p*s, a**2 + p, p)
     >>> tf3 = TransferFunction((p + 3)*(p - 1), (p - 1)*(p + 5), p)
     >>> tf3
-    TransferFunction((p - 1)*(p + 3), (p - 1)*(p + 5), p)
+    TransferFunction(p**2 + 2*p - 3, p**2 + 4*p - 5, p)
 
     To negate a transfer function the ``-`` operator can be prepended:
 
@@ -101,7 +154,7 @@ class TransferFunction(Basic, EvalfMixin):
 
     >>> tf7 = TransferFunction(s + a, s - a, s)
     >>> tf7**3
-    TransferFunction((a + s)**3, (-a + s)**3, s)
+    TransferFunction(a**3 + 3*a**2*s + 3*a*s**2 + s**3, -a**3 + 3*a**2*s - 3*a*s**2 + s**3, s)
     >>> tf7**0
     TransferFunction(1, 1, s)
     >>> tf8 = TransferFunction(p + 4, p - 3, p)
@@ -136,14 +189,14 @@ class TransferFunction(Basic, EvalfMixin):
     resultant transfer function using ``.doit()`` method or by ``.rewrite(TransferFunction)``.
 
     >>> ((tf9 + tf10) * tf12).doit()
-    TransferFunction((1 - s)*((-p + s)*(s**2 + s + 1) + (s + 1)*(s + 3)), (s + 3)*(s**2 + 4)*(s**2 + s + 1), s)
+    TransferFunction(p*s**3 - p - s**4 - s**3 - 3*s**2 + 2*s + 3, s**5 + 4*s**4 + 8*s**3 + 19*s**2 + 16*s + 12, s)
     >>> (tf9 * tf10 - tf11 * tf12).rewrite(TransferFunction)
-    TransferFunction(-(1 - s)*(s + 3)*(s**2 + s + 1)*(4*s**2 + 2*s - 4) + (-p + s)*(s - 1)*(s + 1)*(s**2 + 4), (s - 1)*(s + 3)*(s**2 + 4)*(s**2 + s + 1), s)
+    TransferFunction(-p*s**4 - 3*p*s**2 + 4*p + 4*s**6 + 15*s**5 + 2*s**4 - 13*s**3 - 14*s**2 - 6*s + 12, s**6 + 3*s**5 + 4*s**4 + 11*s**3 - 3*s**2 - 4*s - 12, s)
 
     See Also
     ========
 
-    Feedback, Series, Parallel
+    TransferFunctionMatrix, Feedback, Series, Parallel
 
     """
     def __new__(cls, num, den=1, var=None):
@@ -164,7 +217,7 @@ class TransferFunction(Basic, EvalfMixin):
             raise ZeroDivisionError("TransferFunction can't have a zero denominator.")
         num, den = Mul(num, Pow(den, -1, evaluate=False), evaluate=False).as_numer_denom()
         # TODO: expand(num) and expand(den) by default to preserve the pure poly/poly form of tf and change the unit tests accordingly
-        # num, den = expand(num), expand(den)
+        num, den = expand(num), expand(den)
 
         if (((isinstance(num, Expr) and not isinstance(num, ImmutableMatrix) and num.has(Symbol) and not num.has(exp)) or num.is_number) and
             ((isinstance(den, Expr) and not isinstance(num, ImmutableMatrix) and den.has(Symbol) and not den.has(exp)) or den.is_number)):
@@ -192,7 +245,7 @@ class TransferFunction(Basic, EvalfMixin):
         p*s + s**2 + 3
         >>> G2 = TransferFunction((p + 5)*(p - 3), (p - 3)*(p + 1), p)
         >>> G2.num
-        (p - 3)*(p + 5)
+        p**2 + 2*p - 15
 
         """
         return self._num
@@ -240,17 +293,17 @@ class TransferFunction(Basic, EvalfMixin):
 
     # TODO: Remove num_inputs, num_outputs and shape from TF
 
-    @property
-    def num_inputs(self):
-        return self._num_inputs
+    # @property
+    # def num_inputs(self):
+    #     return self._num_inputs
 
-    @property
-    def num_outputs(self):
-        return self._num_outputs
+    # @property
+    # def num_outputs(self):
+    #     return self._num_outputs
 
-    @property
-    def shape(self):
-        return self._num_outputs, self._num_inputs
+    # @property
+    # def shape(self):
+    #     return self._num_outputs, self._num_inputs
 
     # TODO: subs should return expr instead of TF
 
@@ -273,25 +326,25 @@ class TransferFunction(Basic, EvalfMixin):
 
     # TODO: Implement expand(tf) by default and remove it from here.
 
-    def expand(self):
-        """
-        Returns the transfer function with numerator and denominator
-        in expanded form.
+    # def expand(self):
+    #     """
+    #     Returns the transfer function with numerator and denominator
+    #     in expanded form.
 
-        Examples
-        ========
+    #     Examples
+    #     ========
 
-        >>> from sympy.abc import s, p, a, b
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> G1 = TransferFunction((a - s)**2, (s**2 + a)**2, s)
-        >>> G1.expand()
-        TransferFunction(a**2 - 2*a*s + s**2, a**2 + 2*a*s**2 + s**4, s)
-        >>> G2 = TransferFunction((p + 3*b)*(p - b), (p - b)*(p + 2*b), p)
-        >>> G2.expand()
-        TransferFunction(-3*b**2 + 2*b*p + p**2, -2*b**2 + b*p + p**2, p)
+    #     >>> from sympy.abc import s, p, a, b
+    #     >>> from sympy.physics.control.lti import TransferFunction
+    #     >>> G1 = TransferFunction((a - s)**2, (s**2 + a)**2, s)
+    #     >>> G1.expand()
+    #     TransferFunction(a**2 - 2*a*s + s**2, a**2 + 2*a*s**2 + s**4, s)
+    #     >>> G2 = TransferFunction((p + 3*b)*(p - b), (p - b)*(p + 2*b), p)
+    #     >>> G2.expand()
+    #     TransferFunction(-3*b**2 + 2*b*p + p**2, -2*b**2 + b*p + p**2, p)
 
-        """
-        return TransferFunction(expand(self.num), expand(self.den), self.var)
+    #     """
+    #     return TransferFunction(expand(self.num), expand(self.den), self.var)
 
     def dc_gain(self):
         """
@@ -565,6 +618,7 @@ class TransferFunction(Basic, EvalfMixin):
     def _to_expr(self):
         return Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
 
+
 class Series(Basic):
     """
     A class for representing product of transfer functions or transfer functions in a
@@ -695,15 +749,26 @@ class Series(Basic):
 
     @property
     def num_inputs(self):
-        return self._num_inputs
+        # If the Series is for TFMs, then return num_inputs of the first TFM arg as num_input for the series system
+        try:
+            return self.args[0].num_inputs
+        # If no such attribute is found, then its TF instead of TFM and num inputs for tf should be None
+        except AttributeError:
+            return None
 
     @property
     def num_outputs(self):
-        return self._num_outputs
+        try:
+            return self.args[len(self.args) - 1].num_outputs
+        except AttributeError:
+            return None
 
     @property
     def shape(self):
-        return self._num_outputs, self._num_inputs
+        try:
+            return self.args[len(self.args) - 1].num_outputs, self.args[0].num_inputs
+        finally:
+            return None
 
     # TODO: Implement Series().doit() for tfm. Matrix multiplication of ImmutableMatrices can be used
 
@@ -991,6 +1056,7 @@ class Series(Basic):
             return True
         else:
             return False
+
 
 class Parallel(Basic):
     """
@@ -1658,11 +1724,20 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
     TransferFunction, Series, Parallel, Feedback
 
     """
-    def __new__(cls, arg, var=None):
+    def __new__(cls, *arg, var=None):
         # if not (isinstance(arg, (list, tuple)) and
         #     (all(isinstance(i, (list, tuple)) for i in arg) or
         #     all(isinstance(i, (TransferFunction, Parallel, Series, Expr, int, float)) for i in arg))):
         #     raise TypeError("Unsupported type for argument of TransferFunctionMatrix.")
+
+        if len(arg) > 1:
+            def group(flat, size): return [flat[i:i+size] for i in range(0, len(flat), size)]
+            tfm_cols = arg[1]
+            flat_list = list(arg[2])
+            arg = group(flat_list, tfm_cols)
+
+        if isinstance(arg, tuple):
+            arg = arg[0]
 
         # Checking if the list is NOT nested and then converting to nested if not already
         if not any(isinstance(i, list) for i in arg):
@@ -1683,7 +1758,7 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
             if not isinstance(arg[0][0], (TransferFunction, Series, Parallel)):
                 var = TransferFunction(arg[0][0]).var
             else:
-                var = (arg[0][0]).var
+                var = arg[0][0].var
 
         if not isinstance(var, Symbol):
             raise TypeError("`var` must be a Symbol, not {}.".format(type(var)))
@@ -1701,7 +1776,6 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
         obj._var = arg[0][0].var
         obj._num_outputs, obj._num_inputs = obj.shape
-
         # if all(isinstance(i, (TransferFunction, Series, Parallel)) for i in arg):
         #     # TFM with 1st argument of the type - [tf1, tf2, tf3, ...] or (tf1, tf2, ...)
         #     if var: #shape and var:
@@ -1970,7 +2044,7 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
 
         """
 
-        # TODO: Implement todo() for TFM. For now, it returns itself.
+        # TODO: Implement doit() for TFM. For now, it returns itself.
 
 
         # if self.num_inputs == 1:
@@ -1998,8 +2072,13 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
     # TODO: converts <class 'sympy.physics.control.lti.TransferFunctionMatrix'> to
     # <class 'sympy.matrices.immutable.ImmutableDenseMatrix'> for easing the matrix operations.
 
-    def _to_Immutable_Matrix(self):
-        return ImmutableMatrix(self.args[0], self.args[1], list(self.args[2]))
+    def _to_Immutable_Matrix(self, expr=False):
+        _matrix = ImmutableMatrix(self.args[0], self.args[1], list(self.args[2]))
+        if not expr:
+            return _matrix
+        else:
+            return _matrix.applyfunc(lambda a: a._to_expr())
+
 
     @property
     def is_proper(self):
