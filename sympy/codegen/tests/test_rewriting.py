@@ -82,6 +82,14 @@ def test_expm1_opt():
     assert 3*expm1(2*x) == opt5
     assert opt5.rewrite(exp) == expr5
 
+    expr6 = (2*exp(x) + 1)/(exp(x) + 1) + 1
+    opt6 = optimize(expr6, [expm1_opt])
+    assert opt6.count_ops() < expr6.count_ops()
+
+    def ev(e):
+        return e.subs(x, 3).evalf()
+    assert abs(ev(expr6) - ev(opt6)) < 1e-15
+
 
 @XFAIL  # ideally this test should pass: need to improve `expm1_opt`
 def test_expm1_two_exp_terms():
