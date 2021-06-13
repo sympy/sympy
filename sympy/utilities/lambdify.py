@@ -337,15 +337,14 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         arguments do not redefine any built-in names.
 
     cse : bool or callable, optional
-        When the expression that we want to vectorialize is a large expression
-        that contains redundancy, it is possible to increase the speed and
-        reduce the size in RAM by setting this parameter to True.
+        When vectorializing a large expression as efficient as possible,
+        set this parameter to True.
+        Whether or not common subexpression elimination should be performed on
+        the expressions, This can potentially improve performance of the generated
 
         However, the step of finding redundant paterns can be slow.
         So, if the creation of the 'lambdify' function should be fast,
-        set this parameter to False. If, on the other hand, you want
-        the evaluation of the function returned by 'lambdify' to be
-        as efficient as possible, set this parameter to True.
+        set this parameter to False.
 
         Whether or not common subexpression elimination should be performed on
         the expressions. This can potentially improve performance of the generated
@@ -866,9 +865,9 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
     if cse is True:
-        from sympy.simplify.cse_main import cse
+        from sympy.simplify.cse_main import _cse_homogeneous
     if cse:
-        cses, expr = cse(expr)
+        cses, expr = _cse_homogeneous(expr, memory=True)
     else:
         cses = ()
     funcstr = funcprinter.doprint(funcname, args, expr, cses=cses)
@@ -928,124 +927,6 @@ def _module_present(modname, modlist):
         if hasattr(m, '__name__') and m.__name__ == modname:
             return True
     return False
-
-def _cse_homogeneous(exprs, **kwargs):
-    """
-    Same as ``cse`` but the reduced_exprs are expres in the same type as 'exprs'
-
-    Parameters
-    ==========
-
-    exprs : list of sympy expressions, or a single sympy expression
-        The expressions to reduce.
-    kwargs : The over argument of the ``cse`` function
-
-    Returns
-    =======
-
-    replacements : list of (Symbol, expression) pairs
-        All of the common subexpressions that were replaced. Subexpressions
-        earlier in this list might show up in subexpressions later in this
-        list.
-    reduced_exprs : list of sympy expressions
-        The reduced expressions with all of the replacements above.
-
-    Examples
-    ========
-
-    >>> from sympy.utilities.lambdify import _cse_homogeneous
-    >>> from sympy import Symbol, cos, Tuple
-    >>> x = Symbol("x")
-    >>> _cse_homogeneous("cos(x + 1)") # str
-    ([], 'cos(x + 1)')
-    >>> _cse_homogeneous(cos(x + 1)) # Basic
-    ([], cos(x + 1))
-    >>> _cse_homogeneous(1) # number
-    ([], 1)
-    >>> _cse_homogeneous(Tuple(1, x))
-    ([], (1, x))
-    >>> _cse_homogeneous([1, x])
-    ([], [1, x])
-    >>> _cse_homogeneous((1, x))
-    ([], (1, x))
-    >>> _cse_homogeneous({1, x})
-    ([], {1, x})
-    """
-    from sympy import cse, sympify
-
-    if isinstance(exprs, str):
-        replacements, reduced_exprs = _cse_homogeneous(sympify(exprs), **kwargs)
-        return replacements, repr(reduced_exprs)
-    if isinstance(exprs, (list, tuple, set)):
-        replacements, reduced_exprs = cse(exprs, **kwargs)
-        return replacements, type(exprs)(reduced_exprs)
-    if isinstance(exprs, dict):
-        keys = list(exprs.keys()) # In order to guarantee the order of the elements.
-        replacements, values = cse([exprs[k] for k in keys], **kwargs)
-        reduced_exprs = {k: v for k, v in zip(keys, values)}
-        return replacements, reduced_exprs
-
-    try:
-        replacements, (reduced_exprs,) = cse(exprs, **kwargs)
-    except TypeError: # For example 'mpf' objects
-        return [], exprs
-    else:
-        return replacements, reduced_exprs
-
-def _cse_del(expr):
-    """
-    Same as ``cse`` but append an information on the useless vars.
-
-    expr : sympy.core.basic.Basic
-        This is the expression that we want to optimize.
-
-    Returns
-    =======
-
-    replacements : list of (Symbol, expression) pairs
-        All of the common subexpressions that were replaced.
-    useless : list of set of Symbols
-        These are the symbols that no longer appear afterwards.
-        They can therefore be deleted while running in order to relieve the RAM.
-    reduced_exprs : list of sympy expressions
-        The reduced expressions with all of the replacements above.
-
-    Examples
-    ========
-
-    >>> from sympy.utilities.lambdify import _cse_del
-    >>> from sympy import sqrt, cos, sin, Symbol
-    >>> x = Symbol("x")
-    >>> expr = sqrt((x + cos(x))*sin(x + cos(x))) + (x + cos(x))*sin(x + cos(x))
-    >>> _cse_del(expr)
-    ([(x0, x + cos(x)), (x1, x0*sin(x0))], [set(), {x0}], sqrt(x1) + x1)
-    """
-    def get_free_symbols(expr):
-        try:
-            return expr.free_symbols
-        except AttributeError:
-            if iterable(expr):
-                return set.union(*map(get_free_symbols, expr))
-        return set()
-
-    replacements, reduced_exprs = _cse_homogeneous(expr)
-
-    # Cumulate union of symbols.
-    free_symbols = [pattern.free_symbols for _, pattern in replacements]
-    free_symbols.reverse()
-    symbols_cum = [get_free_symbols(reduced_exprs)]
-    for free_symbol in free_symbols:
-        symbols_cum.insert(0, free_symbol | symbols_cum[0])
-
-    # Detection of useless symbols.
-    deletable_symbols = []
-    current_symbols = set() # Buffers memory.
-    for (new_symb, _), following_symb in zip(replacements, symbols_cum[1:]):
-        current_symbols.add(new_symb)
-        deletable_symbols.append(current_symbols - following_symb) # The set of useless symbols.
-        current_symbols -= deletable_symbols[-1]
-
-    return replacements, deletable_symbols, reduced_exprs
 
 def _get_namespace(m):
     """
@@ -1235,7 +1116,10 @@ class _EvaluatorPrinter:
 
         funcbody.extend(['{} = {}'.format(s, self._exprrepr(e)) for s, e in cses])
 
-        funcbody.append('return ({})'.format(self._exprrepr(expr)))
+        str_expr = self._exprrepr(expr)
+        if '\n' in str_expr:
+            str_expr = '({})'.format(str_expr)
+        funcbody.append('return {}'.format(str_expr))
 
         funclines = [funcsig]
         funclines.extend('    ' + line for line in funcbody)

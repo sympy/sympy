@@ -86,6 +86,76 @@ def cse_separate(r, e):
     e = d[False]
     return [reps_toposort(r), e]
 
+
+def cse_minimize_memory(r, e):
+    """return tuples giving (a, b) where ``a`` is either
+        * a cse symbol,
+        * a symbol assigned to each of the original expressions, or
+        * None
+    The list of symbols assigned to original expressions is returned as the last tuple.
+
+    When the first element of a tuple is None, it indicates that the variables
+    given as a list as the second element of the tuple are not needed by any sub-expression.
+
+    Examples
+    ========
+
+    >>> from sympy import cse
+    >>> from sympy.simplify.cse_main import cse_minimize_memory
+    >>> from sympy.abc import x, y
+    >>> eqs = [(x + y - 1)**2, x, x + y, (x + y)/(2*x + 1) + (x + y - 1)**2, (2*x + 1)**(x + y)]
+    >>> defs, rvs = cse_minimize_memory(*cse(eqs))
+    >>> for i in defs:
+    ...   print(i)
+    ...
+    (x0, x + y)
+    (x1, (x0 - 1)**2)
+    (x2, 2*x + 1)
+    (_3, x0/x2 + x1)
+    (_4, x2**x0)
+    (x2, None)
+    (_0, x1)
+    (x1, None)
+    (_2, x0)
+    (x0, None)
+    (_1, x)
+    >>> print(rvs)
+    (_0, _1, _2, _3, _4)
+    """
+    from sympy import symbols
+
+    s, p = zip(*r)
+    esyms = symbols('_:%d' % len(e))
+    syms = list(esyms)
+    s = list(s)
+    ss = set(s)
+    p = list(p)
+    # sort e so those with most sub-expressions appear first
+    e = [(e[i], syms[i]) for i in range(len(e))]
+    e, syms = zip(*sorted(e,
+        key=lambda x: -sum([p[s.index(i)].count_ops() for i in x[0].free_symbols & ss])))
+    syms = list(syms)
+    p += e
+    in_use = ss
+    del ss
+    rv = []
+    i = len(p) - 1
+    useless = {}
+    while i >= 0:
+        _p = p.pop()
+        c = in_use & _p.free_symbols
+        if c:
+            rv.extend([(s, None) for s in sorted(c, key=str)]) # sorting for canonical results
+        if i >= len(r):
+            rv.append((syms.pop(), _p))
+        else:
+            rv.append((s[i], _p))
+        in_use -= c
+        i -= 1
+    rv.reverse()
+    return rv, esyms
+
+
 # ====end of cse postprocess idioms===========================
 
 
@@ -626,7 +696,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
 
 
 def cse(exprs, symbols=None, optimizations=None, postprocess=None,
-        order='canonical', ignore=()):
+        order='canonical', ignore=(), memory=False):
     """ Perform common subexpression elimination on an expression.
 
     Parameters
@@ -657,6 +727,9 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         concern, use the setting order='none'.
     ignore : iterable of Symbols
         Substitutions containing any Symbol from ``ignore`` will be ignored.
+    memory : boolean
+        Allows to activate the search for removable symbols.
+        Seealso ``cse_minimize_memory``.
 
     Returns
     =======
@@ -678,7 +751,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
 
     Note that currently, y + z will not get substituted if -y - z is used.
 
-     >>> cse(((w + x + y + z)*(w - y - z))/(w + x)**3)
+    >>> cse(((w + x + y + z)*(w - y - z))/(w + x)**3)
      ([(x0, w + x)], [(w - y - z)*(x0 + y + z)/x0**3])
 
     List of expressions with recursive substitutions:
@@ -702,6 +775,11 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     """
     from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
                                 SparseMatrix, ImmutableSparseMatrix)
+
+    if memory:
+        return cse_minimize_memory(*cse(exprs,
+            symbols=symbols, optimizations=optimizations,
+            postprocess=postprocess, order=order, ignore=ignore))
 
     if isinstance(exprs, (int, float)):
         exprs = sympify(exprs)
@@ -770,3 +848,67 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         return replacements, reduced_exprs
 
     return postprocess(replacements, reduced_exprs)
+
+
+def _cse_homogeneous(exprs, **kwargs):
+    """
+    Same as ``cse`` but the reduced_exprs are expres in the same type as 'exprs'
+
+    Parameters
+    ==========
+
+    exprs : list of sympy expressions, or a single SymPy expression
+        The expressions to reduce.
+    kwargs : additional arguments for the ``cse`` function
+
+    Returns
+    =======
+
+    replacements : list of (Symbol, expression) pairs
+        All of the common subexpressions that were replaced. Subexpressions
+        earlier in this list might show up in subexpressions later in this
+        list.
+    reduced_exprs : list of sympy expressions
+        The reduced expressions with all of the replacements above.
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.cse_main import _cse_homogeneous
+    >>> from sympy import Symbol, cos, Tuple
+    >>> x = Symbol("x")
+    >>> _cse_homogeneous("cos(x + 1)") # str
+    ([], 'cos(x + 1)')
+    >>> _cse_homogeneous(cos(x + 1)) # Basic
+    ([], cos(x + 1))
+    >>> _cse_homogeneous(1) # number
+    ([], 1)
+    >>> _cse_homogeneous(Tuple(1, x))
+    ([], (1, x))
+    >>> _cse_homogeneous([1, x])
+    ([], [1, x])
+    >>> _cse_homogeneous((1, x))
+    ([], (1, x))
+    >>> _cse_homogeneous({1, x})
+    ([], {1, x})
+    """
+    from sympy import sympify
+
+    if isinstance(exprs, str):
+        replacements, reduced_exprs = _cse_homogeneous(sympify(exprs), **kwargs)
+        return replacements, repr(reduced_exprs)
+    if isinstance(exprs, (list, tuple, set)):
+        replacements, reduced_exprs = cse(exprs, **kwargs)
+        return replacements, type(exprs)(reduced_exprs)
+    if isinstance(exprs, dict):
+        keys = list(exprs.keys()) # In order to guarantee the order of the elements.
+        replacements, values = cse([exprs[k] for k in keys], **kwargs)
+        reduced_exprs = {k: v for k, v in zip(keys, values)}
+        return replacements, reduced_exprs
+
+    try:
+        replacements, (reduced_exprs,) = cse(exprs, **kwargs)
+    except TypeError: # For example 'mpf' objects
+        return [], exprs
+    else:
+        return replacements, reduced_exprs
