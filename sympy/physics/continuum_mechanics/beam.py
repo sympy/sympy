@@ -2431,18 +2431,23 @@ class Beam3D(Beam):
 
 
         """
-        Px = self._plot_deflection('x')
-        Py = self._plot_deflection('y')
-        Pz = self._plot_deflection('z')
+
+        dir = dir.lower()
         # For deflection along x direction
         if dir == "x":
+            Px = self._plot_deflection('x')
             return Px.show()
         # For deflection along y direction
         elif dir == "y":
+            Py = self._plot_deflection('y')
             return Py.show()
         # For deflection along z direction
         elif dir == "z":
+            Pz = self._plot_deflection('z')
             return Pz.show()
         # For deflection along all direction
         else:
+            Px = self._plot_deflection('x')
+            Py = self._plot_deflection('y')
+            Pz = self._plot_deflection('z')
             return PlotGrid(3, 1, Px, Py, Pz)
