@@ -2432,18 +2432,23 @@ class Beam3D(Beam):
 
 
         """
-        Px = self._plot_slope('x')
-        Py = self._plot_slope('y')
-        Pz = self._plot_slope('z')
+
+        dir = dir.lower()
         # For Slope along x direction
         if dir == "x":
+            Px = self._plot_slope('x')
             return Px.show()
         # For Slope along y direction
         elif dir == "y":
+            Py = self._plot_slope('y')
             return Py.show()
         # For Slope along z direction
         elif dir == "z":
+            Pz = self._plot_slope('z')
             return Pz.show()
         # For Slope along all direction
         else:
+            Px = self._plot_slope('x')
+            Py = self._plot_slope('y')
+            Pz = self._plot_slope('z')
             return PlotGrid(3, 1, Px, Py, Pz)
