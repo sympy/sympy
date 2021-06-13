@@ -137,10 +137,9 @@ def cse_minimize_memory(r, e):
     syms = list(syms)
     p += e
     in_use = ss
-    del ss
+    # del ss # makes failing the quality code test.
     rv = []
     i = len(p) - 1
-    useless = {}
     while i >= 0:
         _p = p.pop()
         c = in_use & _p.free_symbols
