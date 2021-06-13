@@ -864,9 +864,8 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
-    if cse is True:
-        from sympy.simplify.cse_main import _cse_homogeneous
     if cse:
+        from sympy.simplify.cse_main import _cse_homogeneous
         cses, expr = _cse_homogeneous(expr, memory=True)
     else:
         cses = ()
