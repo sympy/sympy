@@ -1061,6 +1061,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         HomogeneousCoeffSubsIndepDivDep: ('1st_homogeneous_coeff_subs_indep_div_dep',),
         HomogeneousCoeffBest: ('1st_homogeneous_coeff_best',),
         LinearCoefficients: ('linear_coefficients',),
+        NthOrderReducible: ('nth_order_reducible',),
     }
     for solvercls in solvers:
         solver = solvercls(ode)
@@ -1183,14 +1184,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
 
 
     if order > 0:
-        # Any ODE that can be solved with a substitution and
-        # repeated integration e.g.:
-        # `d^2/dx^2(y) + x*d/dx(y) = constant
-        #f'(x) must be finite for this to work
-        r = _nth_order_reducible_match(reduced_eq, func)
-        if r:
-            matching_hints['nth_order_reducible'] = r
-
         # nth order linear ODE
         # a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y = F(x) = b
 
@@ -3159,80 +3152,6 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
             frobdict[numsyms[i]] = -num/(indicial.subs(d, m+i))
 
     return frobdict
-
-def _nth_order_reducible_match(eq, func):
-    r"""
-    Matches any differential equation that can be rewritten with a smaller
-    order. Only derivatives of ``func`` alone, wrt a single variable,
-    are considered, and only in them should ``func`` appear.
-    """
-    # ODE only handles functions of 1 variable so this affirms that state
-    assert len(func.args) == 1
-    x = func.args[0]
-    vc = [d.variable_count[0] for d in eq.atoms(Derivative)
-          if d.expr == func and len(d.variable_count) == 1]
-    ords = [c for v, c in vc if v == x]
-    if len(ords) < 2:
-        return
-    smallest = min(ords)
-    # make sure func does not appear outside of derivatives
-    D = Dummy()
-    if eq.subs(func.diff(x, smallest), D).has(func):
-        return
-    return {'n': smallest}
-
-def ode_nth_order_reducible(eq, func, order, match):
-    r"""
-    Solves ODEs that only involve derivatives of the dependent variable using
-    a substitution of the form `f^n(x) = g(x)`.
-
-    For example any second order ODE of the form `f''(x) = h(f'(x), x)` can be
-    transformed into a pair of 1st order ODEs `g'(x) = h(g(x), x)` and
-    `f'(x) = g(x)`. Usually the 1st order ODE for `g` is easier to solve. If
-    that gives an explicit solution for `g` then `f` is found simply by
-    integration.
-
-
-    Examples
-    ========
-
-    >>> from sympy import Function, dsolve, Eq
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> eq = Eq(x*f(x).diff(x)**2 + f(x).diff(x, 2), 0)
-    >>> dsolve(eq, f(x), hint='nth_order_reducible')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    Eq(f(x), C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
-
-    """
-    x = func.args[0]
-    f = func.func
-    n = match['n']
-    # get a unique function name for g
-    names = [a.name for a in eq.atoms(AppliedUndef)]
-    while True:
-        name = Dummy().name
-        if name not in names:
-            g = Function(name)
-            break
-    w = f(x).diff(x, n)
-    geq = eq.subs(w, g(x))
-    gsol = dsolve(geq, g(x))
-
-    if not isinstance(gsol, list):
-        gsol = [gsol]
-
-    # Might be multiple solutions to the reduced ODE:
-    fsol = []
-    for gsoli in gsol:
-        fsoli = dsolve(gsoli.subs(g(x), w), f(x))  # or do integration n times
-        fsol.append(fsoli)
-
-    if len(fsol) == 1:
-        fsol = fsol[0]
-
-    return fsol
-
 
 def _remove_redundant_solutions(eq, solns, order, var):
     r"""
@@ -6231,4 +6150,4 @@ from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
         Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
         SecondNonlinearAutonomousConserved, FirstExact, Liouville, Separable,
         SeparableReduced, HomogeneousCoeffSubsDepDivIndep, HomogeneousCoeffSubsIndepDivDep,
-        HomogeneousCoeffBest, LinearCoefficients)
+        HomogeneousCoeffBest, LinearCoefficients, NthOrderReducible)

@@ -142,7 +142,8 @@ nth_algebraic
 
 nth_order_reducible
 ^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_nth_order_reducible
+.. autoclass:: sympy.solvers.ode.ode::NthOrderReducible
+   :members:
 
 separable
 ^^^^^^^^^

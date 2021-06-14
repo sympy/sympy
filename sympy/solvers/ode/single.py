@@ -1309,6 +1309,7 @@ class SeparableReduced(Separable):
         m2 = {self.y: ycoeff, x: 1, 'coeff': 1}
         return m1, m2, x, x**self.r2['power']*fx
 
+
 class HomogeneousCoeffSubsDepDivIndep(SinglePatternODESolver):
     r"""
     Solves a 1st order differential equation with homogeneous coefficients
@@ -1803,6 +1804,89 @@ class LinearCoefficients(HomogeneousCoeffBest):
         self.u1 = Dummy('u1')
         u = Dummy('u')
         return [self.d, self.e, fx, x, u, self.u1, self.y, self.xarg, self.yarg]
+
+
+class NthOrderReducible(SingleODESolver):
+    r"""
+    Solves ODEs that only involve derivatives of the dependent variable using
+    a substitution of the form `f^n(x) = g(x)`.
+
+    For example any second order ODE of the form `f''(x) = h(f'(x), x)` can be
+    transformed into a pair of 1st order ODEs `g'(x) = h(g(x), x)` and
+    `f'(x) = g(x)`. Usually the 1st order ODE for `g` is easier to solve. If
+    that gives an explicit solution for `g` then `f` is found simply by
+    integration.
+
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Eq
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = Eq(x*f(x).diff(x)**2 + f(x).diff(x, 2), 0)
+    >>> dsolve(eq, f(x), hint='nth_order_reducible')
+    ... # doctest: +NORMALIZE_WHITESPACE
+    Eq(f(x), C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
+
+    """
+    hint = "nth_order_reducible"
+    has_integral = False
+
+    def _matches(self):
+        # Any ODE that can be solved with a substitution and
+        # repeated integration e.g.:
+        # `d^2/dx^2(y) + x*d/dx(y) = constant
+        #f'(x) must be finite for this to work
+        eq = self.ode_problem.eq_preprocessed
+        func = self.ode_problem.func
+        x = self.ode_problem.sym
+        r"""
+        Matches any differential equation that can be rewritten with a smaller
+        order. Only derivatives of ``func`` alone, wrt a single variable,
+        are considered, and only in them should ``func`` appear.
+        """
+        # ODE only handles functions of 1 variable so this affirms that state
+        assert len(func.args) == 1
+        vc = [d.variable_count[0] for d in eq.atoms(Derivative)
+            if d.expr == func and len(d.variable_count) == 1]
+        ords = [c for v, c in vc if v == x]
+        if len(ords) < 2:
+            return False
+        self.smallest = min(ords)
+        # make sure func does not appear outside of derivatives
+        D = Dummy()
+        if eq.subs(func.diff(x, self.smallest), D).has(func):
+            return False
+        return True
+
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        eq = self.ode_problem.eq
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        n = self.smallest
+        # get a unique function name for g
+        names = [a.name for a in eq.atoms(AppliedUndef)]
+        while True:
+            name = Dummy().name
+            if name not in names:
+                g = Function(name)
+                break
+        w = f(x).diff(x, n)
+        geq = eq.subs(w, g(x))
+        gsol = dsolve(geq, g(x))
+
+        if not isinstance(gsol, list):
+            gsol = [gsol]
+
+        # Might be multiple solutions to the reduced ODE:
+        fsol = []
+        for gsoli in gsol:
+            fsoli = dsolve(gsoli.subs(g(x), w), f(x))  # or do integration n times
+            fsol.append(fsoli)
+
+        return fsol
 
 
 # Avoid circular import:
