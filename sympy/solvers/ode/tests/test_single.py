@@ -501,7 +501,7 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
 
 
 def test_nth_order_reducible():
-    F = lambda obj: NthOrderReducible(SingleODEProblem(eq, f(x), x))._matches()
+    F = lambda eq: NthOrderReducible(SingleODEProblem(eq, f(x), x))._matches()
     D = Derivative
     assert F(D(y*f(x), x, y) + D(f(x), x)) == False
     assert F(D(y*f(y), y, y) + D(f(y), y)) == False
