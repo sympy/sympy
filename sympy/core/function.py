@@ -1706,7 +1706,7 @@ class Derivative(Expr):
         for var, count in self.variable_count:
             ret.update(count.free_symbols)
         return ret
-    
+
     @property
     def kind(self):
         return self.args[0].kind
