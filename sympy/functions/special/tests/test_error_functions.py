@@ -198,6 +198,11 @@ def test_erfi():
 
     assert conjugate(erfi(z)) == erfi(conjugate(z))
 
+    assert erfi(x).as_leading_term(x) == 2*x/sqrt(pi)
+    assert erfi(x*y).as_leading_term(y) == 2*x*y/sqrt(pi)
+    assert (erfi(x*y)/erfi(y)).as_leading_term(y) == x
+    assert erfi(1/x).as_leading_term(x) == erfi(1/x)
+
     assert erfi(z).rewrite('erf') == -I*erf(I*z)
     assert erfi(z).rewrite('erfc') == I*erfc(I*z) - I
     assert erfi(z).rewrite('fresnels') == (1 - I)*(fresnelc(z*(1 + I)/sqrt(pi)) -

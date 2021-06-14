@@ -613,6 +613,15 @@ class erfi(Function):
 
     as_real_imag = real_to_real_as_real_imag
 
+    def _eval_as_leading_term(self, x, cdir=0):
+        arg = self.args[0].as_leading_term(x)
+        arg0 = arg.subs(x, 0).cancel()
+
+        if x in arg.free_symbols and arg0.is_zero:
+            return 2*arg/sqrt(pi)
+        else:
+            return self.func(arg)
+
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
         point = args0[0]
