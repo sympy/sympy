@@ -212,24 +212,26 @@ class Limit(Expr):
         elif str(dir) == "-":
             cdir = -1
 
-        def remove_abs(expr):
+        def set_sign(expr):
             if not expr.args:
                 return expr
-            newargs = tuple(remove_abs(arg) for arg in expr.args)
+            newargs = tuple(set_sign(arg) for arg in expr.args)
             if newargs != expr.args:
                 expr = expr.func(*newargs)
-            if isinstance(expr, Abs):
+            abs_flag = isinstance(expr, Abs)
+            sign_flag = isinstance(expr, sign)
+            if abs_flag or sign_flag:
                 sig = limit(expr.args[0], z, z0, dir)
                 if sig.is_zero:
                     sig = limit(1/expr.args[0], z, z0, dir)
                 if sig.is_extended_real:
                     if (sig < 0) == True:
-                        return -expr.args[0]
+                        return -expr.args[0] if abs_flag else S.NegativeOne
                     elif (sig > 0) == True:
-                        return expr.args[0]
+                        return expr.args[0] if abs_flag else S.One
             return expr
 
-        e = remove_abs(e)
+        e = set_sign(e)
 
         if e.is_meromorphic(z, z0):
             if abs(z0) is S.Infinity:

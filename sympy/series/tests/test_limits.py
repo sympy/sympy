@@ -187,11 +187,14 @@ def test_atan():
     assert limit(atan(x) + sqrt(x + 1) - sqrt(x), x, oo) == pi/2
 
 
-def test_abs():
+def test_abs_sign():
     assert limit(abs(x), x, 0) == 0
     assert limit(abs(sin(x)), x, 0) == 0
     assert limit(abs(cos(x)), x, 0) == 1
     assert limit(abs(sin(x + 1)), x, 0) == sin(1)
+
+    # https://github.com/sympy/sympy/issues/21606
+    assert limit(cos(x)/sign(x), x, pi, '-') == -1
 
 
 def test_heuristic():
