@@ -1175,11 +1175,11 @@ class LambertW(Function):
 
     def _eval_as_leading_term(self, x, cdir=0):
         if len(self.args) == 1:
-            arg0 = self.args[0]
-            arg = self.args[0].subs(x, 0).cancel()
-            if not arg.is_zero:
-                return self.func(arg)
-            return arg0.as_leading_term(x)
+            arg = self.args[0]
+            arg0 = arg.subs(x, 0).cancel()
+            if not arg0.is_zero:
+                return self.func(arg0)
+            return arg.as_leading_term(x)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         if len(self.args) == 1:
