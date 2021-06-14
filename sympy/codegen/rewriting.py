@@ -59,6 +59,9 @@ class Optimization:
         self.cost_function = cost_function
         self.priority=priority
 
+    def cheapest(self, *args):
+        return sorted(args, key=self.cost_function)[0]
+
 
 class ReplaceOptim(Optimization):
     """ Rewriting optimization calling replace on expressions.
@@ -127,9 +130,7 @@ def optimize(expr, optimizations):
         if optim.cost_function is None:
             expr = new_expr
         else:
-            before, after = map(lambda x: optim.cost_function(x), (expr, new_expr))
-            if before > after:
-                expr = new_expr
+            expr = optim.cheapest(expr, new_expr)
     return expr
 
 
@@ -214,7 +215,9 @@ class FuncMinusOneOptim(ReplaceOptim):
     """
 
     def __init__(self, func, func_m_1, opportunistic=True):
-        super().__init__(lambda e: e.is_Add, self.replace_in_Add)
+        weight = 10  # <-- this is an arbitrary number (heuristic)
+        super().__init__(lambda e: e.is_Add, self.replace_in_Add,
+                         cost_function=lambda expr: expr.count_ops() - weight*expr.count(func_m_1))
         self.func = func
         self.func_m_1 = func_m_1
         self.opportunistic = opportunistic
@@ -230,7 +233,6 @@ class FuncMinusOneOptim(ReplaceOptim):
         numsum, terms_with_func, other_non_num_terms = self._group_Add_terms(e)
         if numsum == 0:
             return e
-
         substituted, untouched = [], []
         for with_func in terms_with_func:
             if with_func.is_Mul:
@@ -257,6 +259,11 @@ class FuncMinusOneOptim(ReplaceOptim):
             untouched.append(with_func)
 
         return e.func(numsum, *substituted, *untouched, *other_non_num_terms)
+
+    def __call__(self, expr):
+        alt1 = super().__call__(expr)
+        alt2 = super().__call__(expr.factor())
+        return self.cheapest(alt1, alt2)
 
 
 expm1_opt = FuncMinusOneOptim(exp, expm1)
