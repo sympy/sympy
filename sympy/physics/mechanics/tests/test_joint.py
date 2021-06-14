@@ -1,4 +1,4 @@
-from sympy import sin, cos, Matrix, acos
+from sympy import sin, cos, Matrix, acos, sqrt
 from sympy.core.symbol import symbols
 from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint
 from sympy.physics.mechanics.joint import Joint
@@ -119,12 +119,12 @@ def test_pin_joint_chaos_pendulum():
     assert plate.masscenter.vel(N) == ((h/4 - lB/2)*omega + (h/4 + lB/2)*omega)*A.x
 
 def test_pinjoint_arbitrary_axis():
-    theta = dynamicsymbols('J_theta')
+    theta, omega = dynamicsymbols('J_theta, J_omega')
     N = ReferenceFrame('N')
     A = ReferenceFrame('A')
     P = Body('P', frame=N)
     C = Body('C', frame=A)
-    PinJoint('J', P, C, parent_axis=N.y)
+    PinJoint('J', P, C, parent_axis=N.y, parent_joint_pos=N.z, child_joint_pos=A.z)
 
     axis1 = N.y.normalize()
     axis2 = A.x.normalize()
@@ -132,18 +132,27 @@ def test_pinjoint_arbitrary_axis():
 
     assert angle == 0 #Axis are aligned
     assert A.dcm(N) == Matrix([[0, 1, 0], [-cos(theta), 0, sin(theta)], [sin(theta), 0, cos(theta)]])
+    assert A.ang_vel_in(N) == omega * N.y
+    assert C.masscenter.vel(N) == omega * N.x + omega * A.y
+    assert C.masscenter.pos_from(P.masscenter) == N.z - A.z
 
-    PinJoint('J', P, C, parent_axis=N.y+N.x+N.z, child_axis=A.x-A.y)
+    PinJoint('J', P, C, parent_axis=N.y+N.x+N.z, child_axis=A.x-A.y, parent_joint_pos=N.z, child_joint_pos=A.z)
 
     axis1 = (N.y + N.x + N.z).normalize()
     axis2 = (A.x - A.y).normalize()
     angle = acos(dot(axis2, axis1))
 
     assert angle.simplify() == 0 #Axis are aligned
+    assert A.ang_vel_in(N) == omega*N.x + omega*N.y + omega*N.z
+    assert C.masscenter.vel(N) == omega*N.x - omega*N.y + sqrt(6)*(omega*A.x + omega*A.y)/2
+    assert C.masscenter.pos_from(P.masscenter) == N.z - A.z
 
-    PinJoint('J', P, C, parent_axis=-N.y+N.x+N.z, child_axis=A.x+A.y+A.z)
+    PinJoint('J', P, C, parent_axis=-N.y+N.x+N.z, child_axis=A.x+A.y+A.z, parent_joint_pos=N.z, child_joint_pos=A.z)
     axis1 = (-N.y + N.x + N.z).normalize()
     axis2 = (A.x + A.y + A.z).normalize()
     angle = acos(dot(axis2, axis1))
 
     assert angle.simplify() == 0 #Axis are aligned
+    assert A.ang_vel_in(N) == omega*N.x - omega*N.y + omega*N.z
+    assert C.masscenter.vel(N) == - omega*N.x - omega*N.y - omega*A.x + omega*A.y
+    assert C.masscenter.pos_from(P.masscenter) == N.z - A.z
