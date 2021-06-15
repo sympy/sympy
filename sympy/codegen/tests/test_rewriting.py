@@ -1,5 +1,7 @@
-from sympy import log, exp, cos, Symbol, Pow, sin, MatrixSymbol, sinc
+import tempfile
+from sympy import log, exp, cos, S, Symbol, Pow, sin, MatrixSymbol, sinc, pi
 from sympy.assumptions import assuming, Q
+from sympy.external import import_module
 from sympy.printing import ccode
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.cfunctions import log2, exp2, expm1, log1p
@@ -10,7 +12,11 @@ from sympy.codegen.rewriting import (
     create_expand_pow_optimization, matinv_opt, logaddexp_opt, logaddexp2_opt,
     optims_numpy, sinc_opts
 )
-from sympy.testing.pytest import XFAIL
+from sympy.testing.pytest import XFAIL, skip
+from sympy.utilities._compilation import compile_link_import_strings, has_c
+from sympy.utilities._compilation.util import may_xfail
+
+cython = import_module('cython')
 
 
 def test_log2_opt():
@@ -297,3 +303,57 @@ def test_optims_numpy_TODO():
         log(x*y)*sin(x*y)*log(x*y+1)/(log(2)*x*y): log2(x*y)*sinc(x*y)*log1p(x*y),
         exp(x*sin(y)/y) - 1: expm1(x*sinc(y))
     })
+
+
+
+@may_xfail
+def test_compiled_ccode_with_rewriting():
+    if not cython:
+        skip("cython not installed.")
+    if not has_c():
+        skip("No C compiler found.")
+
+    x = Symbol('x')
+    about_two = 2**(58/S(117))*3**(97/S(117))*5**(4/S(39))*7**(92/S(117))/S(30)*pi
+    expr = 2*exp(x) - about_two
+    xval = S(10)**-11
+    ref = expr.subs(x, xval).n(19) # 2.0418173913673213e-11
+
+    opt = optimize(2*exp(x) - about_two, [expm1_opt])
+    #no_opt = expr.subs(x, xval.evalf()).evalf()
+    #with_opt = opt.n(25).subs(x, 1e-11).evalf()
+    # >>> with_opt - ref, no_opt - ref
+    # (1.1536301877952077e-26, 1.6547074214222335e-18)
+
+    func_c = '''
+#include <math.h>
+
+double func_plain(double arg) {
+    return %(plain)s;
+}
+double func_rewritten(double arg) {
+    return %(rewritten)s;
+}
+''' % dict(plain=ccode(expr), rewritten=ccode(opt))
+
+    func_pyx = '''
+#cython: language_level=3
+cdef extern double func_plain(double)
+cdef extern double func_rewritten(double)
+def py_plain(x):
+    return func_plain(x)
+def py_rewritten(x):
+    return func_rewritten(x)
+'''
+    print(func_c) # DEBUG, DO-NOT-MERGE!!!
+
+    with tempfile.TemporaryDirectory() as folder:
+        mod, info = compile_link_import_strings(
+            [('func.c', func_c), ('_func.pyx', func_pyx)],
+            build_dir=folder,
+            compile_kwargs=dict(std='c99')
+        )
+        err_rewritten = abs(mod.py_rewritten(1e-11) - ref)
+        err_plain = abs(mod.py_rewritten(1e-11) - ref)
+        assert 1e-27 < err_rewritten < 1e-25
+        assert 1e-19 < err_plain < 1e-17
