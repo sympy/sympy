@@ -1,8 +1,12 @@
+from collections import defaultdict
+
 from mpmath.matrices.matrices import _matrix
 
 from sympy.core import Basic, Dict, Integer, Tuple
 from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter, _sympify
+from sympy.polys.domains import EXRAW
+from sympy.polys.matrices import DomainMatrix
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrices import MatrixBase
@@ -75,8 +79,21 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
             Tuple(*flat_list))
         obj._rows = rows
         obj._cols = cols
-        obj._mat = flat_list
+
+        elements_dod = defaultdict(dict)
+        for n, element in enumerate(flat_list):
+            if element != 0:
+                i, j = divmod(n, cols)
+                elements_dod[i][j] = element
+
+        obj._rep = DomainMatrix(elements_dod, (rows, cols), EXRAW)
+        obj._mat2 = flat_list
+
         return obj
+
+    @property
+    def _flat(self):
+        return [self._rep.rep.getitem(i, j) for i in range(self.rows) for j in range(self.cols)]
 
     def _entry(self, i, j, **kwargs):
         return DenseMatrix.__getitem__(self, (i, j))
@@ -87,7 +104,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
     def _eval_extract(self, rowsList, colsList):
         # self._mat is a Tuple.  It is slightly faster to index a
         # tuple over a Tuple, so grab the internal tuple directly
-        mat = self._mat
+        mat = self._flat
         cols = self.cols
         indices = (i * cols + j for i in rowsList for j in colsList)
         return self._new(len(rowsList), len(colsList),

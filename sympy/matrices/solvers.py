@@ -422,7 +422,7 @@ def _QRsolve(M, b):
 
         x.append(tmp / R[j, j])
 
-    return M._new([row._mat for row in reversed(x)])
+    return M._new([row._flat for row in reversed(x)])
 
 
 def _gauss_jordan_solve(M, B, freevar=False):
