@@ -548,9 +548,10 @@ def test_unevaluated_mul():
 
 def test_cse_minimize_memory():
     from sympy.simplify.cse_main import cse_minimize_memory
+    _0, _1, _2, _3, _4 = symbols('_:5')
     eqs = [(x + y - 1)**2, x,
-    x + y, (x + y)/(2*x + 1) + (x + y - 1)**2,
-    (2*x + 1)**(x + y)]
+        x + y, (x + y)/(2*x + 1) + (x + y - 1)**2,
+        (2*x + 1)**(x + y)]
     r, e = cse(eqs, postprocess=cse_minimize_memory)
     # this can change in keeping with the intention of the function
     assert r, e == ([
