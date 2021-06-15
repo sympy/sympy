@@ -1408,7 +1408,9 @@ def test_cupy_dotproduct():
         cupy.array([14])
 
 
-def test_cse():
+
+
+def test_lambdify_cse():
     def dummy_cse(exprs):
         return (), exprs
 
@@ -1438,49 +1440,57 @@ def test_cse():
                 else:
                     assert abs_err/abs(r) < reltol
 
-    case1 = Case(
-        args=(x, y, z),
-        exprs=[
-            x + y + z,
-            x + y - z,
-            2*x + 2*y - z,
-            (x+y)**2 + (y+z)**2,
-        ],
-        num_args=(2., 3., 4.)
-    )
-    case2 = Case(
-        args=(x, y, z),
-        exprs=[
+    cases = [
+        Case(
+            args=(x, y, z),
+            exprs=[
+             x + y + z,
+             x + y - z,
+             2*x + 2*y - z,
+             (x+y)**2 + (y+z)**2,
+            ],
+            num_args=(2., 3., 4.)
+        ),
+        Case(
+            args=(x, y, z),
+            exprs=[
             x + sympy.Heaviside(x),
             y + sympy.Heaviside(x),
             z + sympy.Heaviside(x, 1),
             z/sympy.Heaviside(x, 1)
-        ],
-        num_args=(0., 3., 4.)
-    )
-    case3 = Case(
-        args=(x, y, z),
-        exprs=[
+            ],
+            num_args=(0., 3., 4.)
+        ),
+        Case(
+            args=(x, y, z),
+            exprs=[
             x + sinc(y),
             y + sinc(y),
             z - sinc(y)
-        ],
-        num_args=(0.1, 0.2, 0.3)
-    )
-    case4 = Case(
-        args=(x, y, z),
-        exprs=[
-            Matrix([[x, x*y], [sin(z) + 4, x**z]]),
-            x*y+sin(z)-x**z,
-            Matrix([x*x, sin(z), x**z])
-        ],
-        num_args=(1.,2.,3.),
-        requires_numpy=True
-    )
-    for case in [case1, case2, case3, case4]:
+            ],
+            num_args=(0.1, 0.2, 0.3)
+        ),
+        Case(
+            args=(x, y, z),
+            exprs=[
+                Matrix([[x, x*y], [sin(z) + 4, x**z]]),
+                x*y+sin(z)-x**z,
+                Matrix([x*x, sin(z), x**z])
+            ],
+            num_args=(1.,2.,3.),
+            requires_numpy=True
+        ),
+        Case(
+            args=(x, y),
+            exprs=[(x + y - 1)**2, x, x + y,
+            (x + y)/(2*x + 1) + (x + y - 1)**2, (2*x + 1)**(x + y)],
+            num_args=(1,2)
+        )
+    ]
+    for case in cases:
         if not numpy and case.requires_numpy:
             continue
-        for cse in [False, True, dummy_cse]:
+        for cse in [False, True, None, dummy_cse]:
             f = case.lambdify(cse=cse)
             result = f(*case.num_args)
             case.assertAllClose(result)

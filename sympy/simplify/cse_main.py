@@ -88,14 +88,13 @@ def cse_separate(r, e):
 
 
 def cse_minimize_memory(r, e):
-    """return tuples giving (a, b) where ``a`` is either
-        * a cse symbol,
-        * a symbol assigned to each of the original expressions, or
-        * None
-    The list of symbols assigned to original expressions is returned as the last tuple.
+    """
+    Return tuples giving (a, b) where ``a`` is a symbol and b is
+    either an expression or None. The value of None is used when a
+    symbol is no longer needed for subsequent expressions.
 
-    When the first element of a tuple is None, it indicates that the variables
-    given as a list as the second element of the tuple are not needed by any sub-expression.
+    Use of such output can reduce the memory footprint of lambdified
+    expressions that contain large, repeated subexpressions.
 
     Examples
     ========
@@ -128,23 +127,22 @@ def cse_minimize_memory(r, e):
     esyms = symbols('_:%d' % len(e))
     syms = list(esyms)
     s = list(s)
-    ss = set(s)
+    in_use = set(s)
     p = list(p)
     # sort e so those with most sub-expressions appear first
     e = [(e[i], syms[i]) for i in range(len(e))]
     e, syms = zip(*sorted(e,
-        key=lambda x: -sum([p[s.index(i)].count_ops() for i in x[0].free_symbols & ss])))
+        key=lambda x: -sum([p[s.index(i)].count_ops()
+        for i in x[0].free_symbols & in_use])))
     syms = list(syms)
     p += e
-    in_use = ss
-    # del ss # makes failing the quality code test.
     rv = []
     i = len(p) - 1
     while i >= 0:
         _p = p.pop()
         c = in_use & _p.free_symbols
-        if c:
-            rv.extend([(s, None) for s in sorted(c, key=str)]) # sorting for canonical results
+        if c: # sorting for canonical results
+            rv.extend([(s, None) for s in sorted(c, key=str)])
         if i >= len(r):
             rv.append((syms.pop(), _p))
         else:
@@ -183,8 +181,8 @@ def preprocess_for_cse(expr, optimizations):
 
 
 def postprocess_for_cse(expr, optimizations):
-    """ Postprocess an expression after common subexpression elimination to
-    return the expression to canonical sympy form.
+    """Postprocess an expression after common subexpression elimination to
+    return the expression to canonical SymPy form.
 
     Parameters
     ==========
@@ -450,7 +448,6 @@ def match_common_args(func_class, funcs, opt_subs):
         arg_tracker.stop_arg_tracking(i)
 
 
-
 def opt_cse(exprs, order='canonical'):
     """Find optimization opportunities in Adds, Muls, Pows and negative
     coefficient Muls.
@@ -695,7 +692,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
 
 
 def cse(exprs, symbols=None, optimizations=None, postprocess=None,
-        order='canonical', ignore=(), memory=False):
+        order='canonical', ignore=(), asList=True):
     """ Perform common subexpression elimination on an expression.
 
     Parameters
@@ -726,9 +723,8 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         concern, use the setting order='none'.
     ignore : iterable of Symbols
         Substitutions containing any Symbol from ``ignore`` will be ignored.
-    memory : boolean
-        Allows to activate the search for removable symbols.
-        Seealso ``cse_minimize_memory``.
+    asList : bool, (default True)
+        Returns expression in list or else with same type as input (when False).
 
     Returns
     =======
@@ -775,10 +771,10 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
                                 SparseMatrix, ImmutableSparseMatrix)
 
-    if memory:
-        return cse_minimize_memory(*cse(exprs,
+    if not asList:
+        return _cse_homogeneous(exprs,
             symbols=symbols, optimizations=optimizations,
-            postprocess=postprocess, order=order, ignore=ignore))
+            postprocess=postprocess, order=order, ignore=ignore)
 
     if isinstance(exprs, (int, float)):
         exprs = sympify(exprs)
@@ -851,7 +847,8 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
 
 def _cse_homogeneous(exprs, **kwargs):
     """
-    Same as ``cse`` but the reduced_exprs are expres in the same type as 'exprs'
+    Same as ``cse`` but the ``reduced_exprs`` are returned
+    with the same type as ``exprs`` or a sympified version of the same.
 
     Parameters
     ==========
@@ -872,29 +869,32 @@ def _cse_homogeneous(exprs, **kwargs):
 
     Examples
     ========
-
     >>> from sympy.simplify.cse_main import _cse_homogeneous
-    >>> from sympy import Symbol, cos, Tuple
-    >>> x = Symbol("x")
-    >>> _cse_homogeneous("cos(x + 1)") # str
-    ([], 'cos(x + 1)')
-    >>> _cse_homogeneous(cos(x + 1)) # Basic
-    ([], cos(x + 1))
-    >>> _cse_homogeneous(1) # number
-    ([], 1)
-    >>> _cse_homogeneous(Tuple(1, x))
-    ([], (1, x))
-    >>> _cse_homogeneous([1, x])
-    ([], [1, x])
-    >>> _cse_homogeneous((1, x))
-    ([], (1, x))
-    >>> _cse_homogeneous({1, x})
-    ([], {1, x})
+    >>> from sympy import cos, Tuple
+    >>> from sympy.abc import x
+    >>> _cse_homogeneous('[cos(x), cos(x) + 1]')
+    ([(x0, cos(x))], '[x0, x0 + 1]')
+    >>> output = lambda x: type(_cse_homogeneous(x)[1])
+    >>> output(1)
+    <class 'sympy.core.numbers.One'>
+    >>> output('cos(x)')
+    <class 'str'>
+    >>> output(cos(x))
+    cos
+    >>> output(Tuple(1, x))
+    <class 'sympy.core.containers.Tuple'>
+    >>> output([1, x])
+    <class 'list'>
+    >>> output((1, x))
+    <class 'tuple'>
+    >>> output({1, x})
+    <class 'set'>
     """
     from sympy import sympify
 
     if isinstance(exprs, str):
-        replacements, reduced_exprs = _cse_homogeneous(sympify(exprs), **kwargs)
+        replacements, reduced_exprs = _cse_homogeneous(
+            sympify(exprs), **kwargs)
         return replacements, repr(reduced_exprs)
     if isinstance(exprs, (list, tuple, set)):
         replacements, reduced_exprs = cse(exprs, **kwargs)

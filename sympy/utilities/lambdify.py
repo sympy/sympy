@@ -336,21 +336,16 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         (if ``args`` is not a string) - for example, to ensure that the
         arguments do not redefine any built-in names.
 
-    cse : bool or callable, optional
-        When vectorializing a large expression as efficient as possible,
-        set this parameter to True.
-        Whether or not common subexpression elimination should be performed on
-        the expressions, This can potentially improve performance of the generated
-
-        However, the step of finding redundant paterns can be slow.
-        So, if the creation of the 'lambdify' function should be fast,
-        set this parameter to False.
+    cse : bool, None or callable, optional
+        Large expressions can be computed more efficiently when
+        common subexpressions are identified and precomputed before
+        being used multiple time. Finding the subexpressions will make
+        creation of the 'lambdify' function slower, however.
 
         Whether or not common subexpression elimination should be performed on
         the expressions. This can potentially improve performance of the generated
         function. When ``True``, then ``sympy.simplify.cse`` is used, the user
         may pass their own function matching the signature of said function.
-
 
 
     Examples
@@ -864,9 +859,10 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
-    if cse:
-        from sympy.simplify.cse_main import _cse_homogeneous
-        cses, expr = _cse_homogeneous(expr, memory=True)
+    if cse != False:
+        from sympy.simplify.cse_main import _cse_homogeneous, cse_minimize_memory
+        cses, expr = _cse_homogeneous(expr,
+            postprocess=None if cse else cse_minimize_memory)
     else:
         cses = ()
     funcstr = funcprinter.doprint(funcname, args, expr, cses=cses)
