@@ -89,7 +89,7 @@ def cse_separate(r, e):
 
 def cse_minimize_memory(r, e):
     """
-    Return tuples giving (a, b) where ``a`` is a symbol and b is
+    Return tuples giving (a, b) where ``a`` is a symbol and ``b`` is
     either an expression or None. The value of None is used when a
     symbol is no longer needed for subsequent expressions.
 
