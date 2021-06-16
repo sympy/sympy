@@ -853,8 +853,8 @@ def _cse_homogeneous(exprs, **kwargs):
     Parameters
     ==========
 
-    exprs : list of sympy expressions, or a single SymPy expression
-        The expressions to reduce.
+    exprs : an Expr, iterable of Expr or dictionary with Expr values
+        the expressions in which repeated subexpressions will be identified
     kwargs : additional arguments for the ``cse`` function
 
     Returns

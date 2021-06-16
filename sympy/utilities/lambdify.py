@@ -336,16 +336,14 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         (if ``args`` is not a string) - for example, to ensure that the
         arguments do not redefine any built-in names.
 
-    cse : bool, None or callable, optional
+    cse : bool, or callable, optional
         Large expressions can be computed more efficiently when
         common subexpressions are identified and precomputed before
         being used multiple time. Finding the subexpressions will make
         creation of the 'lambdify' function slower, however.
 
-        Whether or not common subexpression elimination should be performed on
-        the expressions. This can potentially improve performance of the generated
-        function. When ``True``, then ``sympy.simplify.cse`` is used, the user
-        may pass their own function matching the signature of said function.
+        When ``True``, the default ``sympy.simplify.cse`` is used, otherwise the user
+        may pass a function matching the signature ``cse``.
 
 
     Examples
@@ -860,9 +858,8 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
     if cse != False:
-        from sympy.simplify.cse_main import _cse_homogeneous, cse_minimize_memory
-        cses, expr = _cse_homogeneous(expr,
-            postprocess=None if cse else cse_minimize_memory)
+        from sympy.simplify.cse_main import _cse_homogeneous
+        cses, expr = _cse_homogeneous(expr)
     else:
         cses = ()
     funcstr = funcprinter.doprint(funcname, args, expr, cses=cses)

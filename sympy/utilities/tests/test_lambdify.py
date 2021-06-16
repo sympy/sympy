@@ -1408,11 +1408,13 @@ def test_cupy_dotproduct():
         cupy.array([14])
 
 
-
-
 def test_lambdify_cse():
     def dummy_cse(exprs):
         return (), exprs
+
+    def minmem(exprs):
+        from sympy.simplify.cse_main import cse_minimize_memory
+        return cse(expr, postprocess=cse_minimize_memory)
 
     class Case:
         def __init__(self, *, args, exprs, num_args, requires_numpy=False):
@@ -1490,7 +1492,7 @@ def test_lambdify_cse():
     for case in cases:
         if not numpy and case.requires_numpy:
             continue
-        for cse in [False, True, None, dummy_cse]:
+        for cse in [False, True, minmem, dummy_cse]:
             f = case.lambdify(cse=cse)
             result = f(*case.num_args)
             case.assertAllClose(result)
