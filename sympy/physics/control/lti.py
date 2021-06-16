@@ -1,4 +1,3 @@
-from decimal import DivisionByZero
 from sympy.matrices import ImmutableMatrix
 from sympy import Basic, Mul, Pow, degree, Symbol, expand, cancel, Expr, exp, roots, ShapeError
 from sympy.core.evalf import EvalfMixin
