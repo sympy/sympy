@@ -1,3 +1,4 @@
+from decimal import DivisionByZero
 from sympy.matrices import ImmutableMatrix
 from sympy import Basic, Mul, Pow, degree, Symbol, expand, cancel, Expr, exp, roots, ShapeError
 from sympy.core.evalf import EvalfMixin
@@ -29,9 +30,49 @@ class TransferFunction(Basic, EvalfMixin):
     ``num`` and ``den`` can be either polynomials or numbers, whereas ``var``
     has to be a Symbol.
 
-    The numerator of the transfer function is the Laplace transform of the input signal
+    Explanation
+    ===========
+
+    Generally, a dynamical system respresenting a physical system can be described in terms of Linear
+    Ordinary Differential Equations like -
+
+            $\small{b_{m}y^{\left(m\right)}+b_{m-1}y^{\left(m-1\right)}+\dots+b_{1}y^{\left(1\right)}+b_{0}y=
+            a_{n}x^{\left(n\right)}+a_{n-1}x^{\left(n-1\right)}+\dots+a_{1}x^{\left(1\right)}+a_{0}x}$
+
+    Here, $x$ is the input signal and $y$ is the output signal and superscript on both is the order of derivative
+    (not exponent). Derivative is taken with respect to the independent variable, $t$. Also, generally $m$ is greater
+    than $n$.
+
+    It is not feasible to analyse the properties of such systems in their native form therefore, we use
+    mathematical tools like Laplace transform to get a better perspective. Taking the Laplace transform
+    of both the sides in the equation (at zero initial conditions), we get -
+
+            $\small{\mathcal{L}[b_{m}y^{\left(m\right)}+b_{m-1}y^{\left(m-1\right)}+\dots+b_{1}y^{\left(1\right)}+b_{0}y]=
+            \mathcal{L}[a_{n}x^{\left(n\right)}+a_{n-1}x^{\left(n-1\right)}+\dots+a_{1}x^{\left(1\right)}+a_{0}x]}$
+
+    Using the linearity property of Laplace transform and also considering zero initial conditions
+    (i.e. $\small{y(0^{-}) = 0}$, $\small{y'(0^{-}) = 0}$ and so on), the equation
+    above gets translated to -
+
+            $\small{b_{m}\mathcal{L}[y^{\left(m\right)}]+\dots+b_{1}\mathcal{L}[y^{\left(1\right)}]+b_{0}\mathcal{L}[y]=
+            a_{n}\mathcal{L}[x^{\left(n\right)}]+\dots+a_{1}\mathcal{L}[x^{\left(1\right)}]+a_{0}\mathcal{L}[x]}$
+
+    Now, applying Derivative property of Laplace transform,
+
+            $\small{b_{m}s^{m}\mathcal{L}[y]+b_{m-1}s^{m-1}\mathcal{L}[y]+\dots+b_{1}s\mathcal{L}[y]+b_{0}\mathcal{L}[y]=
+            a_{n}s^{n}\mathcal{L}[x]+a_{n-1}s^{n-1}\mathcal{L}[x]+\dots+a_{1}s\mathcal{L}[x]+a_{0}\mathcal{L}[x]}$
+
+    Here, the superscript on $s$ is exponent. Note that the zero initial conditions assumption, mentioned above, is very important 
+    and cannot be ignored otherwise the dynamical system cannot be considered time-independent and the simplified equation above
+    cannot be reached.
+
+    Collecting $\mathcal{L}[y]$ and $\mathcal{L}[x]$ terms from both the sides and taking the ratio
+    $\frac{ \mathcal{L}\left\{y\right\} }{ \mathcal{L}\left\{x\right\} }$, we get the typical rational form of transfer
+    function.
+
+    The numerator of the transfer function is therefore, the Laplace transform of the output signal
     (The signals are represented as functions of time) and similarly the denominator
-    of the transfer function is the Laplace transform of the output signal. It is also a convention
+    of the transfer function is the Laplace transform of the input signal. It is also a convention
     to denote the input and output signal's Laplace transform with capital alphabets like shown below.
 
             $H(s) = \frac{Y(s)}{X(s)} = \frac{ \mathcal{L}\left\{y(t)\right\} }{ \mathcal{L}\left\{x(t)\right\} }$
@@ -40,44 +81,26 @@ class TransferFunction(Basic, EvalfMixin):
 
             $H(s) =\ \frac{a_{n}s^{n}+a_{n-1}s^{n-1}+\dots+a_{1}s+a_{0}}{b_{m}s^{m}+b_{m-1}s^{m-1}+\dots+b_{1}s+b_{0}}$
 
-    For more info, refer -
-
-            https://en.wikipedia.org/wiki/Transfer_function
-
     Parameters
     ==========
 
     num : Expr, Number
-        The numerator polynomial of the transfer function. Users
-        can also pass the entire rational expression of the
-        transfer function, without explicitly passing the den
-        parameter. It will be adjusted accordingly.
-    den : Expr, Number, optional
-        The denominator polynomial of the transfer function. If
-        the entire tranfer function expression is passed as the
-        ``num`` param, then users can skip it.
-    var : Symbol, optional
+        The numerator polynomial of the transfer function.
+    den : Expr, Number
+        The denominator polynomial of the transfer function.
+    var : Symbol
         Complex variable of the Laplace transform used by the
-        polynomials of the transfer function. If the transfer
-        function expression passed has only one variable,
-        it will be considered as the value of ``var`` by default.
+        polynomials of the transfer function.
 
     Raises
     ======
 
     TypeError
-        When ``var`` is not a Symbol or when ``num`` or ``den`` is not
-        a number or a polynomial. Also, when ``num`` or ``den`` has
-        a time delay term.
-
-        When ``var`` is not defined explicitly in case the ``num`` and/or
-        ``den`` are/is Number(s) instead of symbolic expressions.
-
-        When there are multiple ``Symbol`` instances in the expression
-        passed and ``var`` is not passed manually.
+        When ``var`` is not a Symbol or when ``num`` or ``den`` is not a 
+        number or a polynomial. Also, when ``num`` or ``den`` has a time 
+        delay term.
     ZeroDivisionError
-        When ``den`` passed is zero or denominator of the ``num`` param
-        is 0.
+        When ``den`` is zero.
 
     Examples
     ========
@@ -96,35 +119,8 @@ class TransferFunction(Basic, EvalfMixin):
     >>> tf1.args
     (a + s, s**2 + s + 1, s)
 
-    ``TransferFunction`` instances can also be created simply by passing the rational
-    expression. SymPy will smartly create a ``TransferFunction`` object with the
-    properties of the expression.
-
-    >>> expr = (s + 5)/(3*s**2 + 2*s + 1)
-    >>> tf = TransferFunction(expr)
-    >>> tf
-    TransferFunction(s + 5, 3*s**2 + 2*s + 1, s)
-
-    In case of conflict between two or more variables in a expression, sympy will
-    raise a ``ValueError``.
-
-    >>> tf = TransferFunction(a + a*s, s**2 + s + 1)
-    Traceback (most recent call last):
-    ...
-    TypeError: Conflicting values found for positional argument `var` ({a, s}). Specify it manually.
-
-    This can be corrected by specifying the ``var`` parameter manually.
-
-    >>> tf = TransferFunction(a + a*s, s**2 + s + 1, s)
-    >>> tf
-    TransferFunction(a + a*s, s**2 + s + 1, s)
-
     Any complex variable can be used for ``var``.
 
-    >>> expr1 = (a*p**3 - a*p**2 + s*p)/(p + a**2)  # Expr with more than one variables
-    >>> tf2 = TransferFunction(expr, var=p)
-    >>> tf2
-    TransferFunction(a*p**3 - a*p**2 + p*s, a**2 + p, p)
     >>> tf3 = TransferFunction((p + 3)*(p - 1), (p - 1)*(p + 5), p)
     >>> tf3
     TransferFunction(p**2 + 2*p - 3, p**2 + 4*p - 5, p)
@@ -198,26 +194,22 @@ class TransferFunction(Basic, EvalfMixin):
 
     TransferFunctionMatrix, Feedback, Series, Parallel
 
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Transfer_function
+    .. [2] https://en.wikipedia.org/wiki/Laplace_transform
+
     """
-    def __new__(cls, num, den=1, var=None):
-        if var is None:
-            _free_symbols = Mul(num, Pow(den, -1, evaluate=False), evaluate=False).free_symbols
-            _len_free_symbols = len(_free_symbols)
-            if _len_free_symbols == 1:
-                var = list(_free_symbols)[0]
-            elif _len_free_symbols == 0:
-                raise TypeError("Positional argument `var` not found in the TransferFunction defined. Specify it manually.")
-            else:
-                raise TypeError("Conflicting values found for positional argument `var` ({}). Specify it manually.".format(_free_symbols))
+    def __new__(cls, num, den, var):
+        num, den = _sympify(num), _sympify(den)
+        num, den = expand(num), expand(den)
 
         if not isinstance(var, Symbol):
             raise TypeError("Variable input must be a Symbol.")
-        num, den = _sympify(num), _sympify(den)
-        if den == 0 or num.has(ComplexInfinity):
+
+        if den == 0:
             raise ZeroDivisionError("TransferFunction can't have a zero denominator.")
-        num, den = Mul(num, Pow(den, -1, evaluate=False), evaluate=False).as_numer_denom()
-        # TODO: expand(num) and expand(den) by default to preserve the pure poly/poly form of tf and change the unit tests accordingly
-        num, den = expand(num), expand(den)
 
         if (((isinstance(num, Expr) and not isinstance(num, ImmutableMatrix) and num.has(Symbol) and not num.has(exp)) or num.is_number) and
             ((isinstance(den, Expr) and not isinstance(num, ImmutableMatrix) and den.has(Symbol) and not den.has(exp)) or den.is_number)):
@@ -227,8 +219,81 @@ class TransferFunction(Basic, EvalfMixin):
             obj._var = var
             obj._num_inputs, obj._num_outputs = 1, 1 # TODO: Remove _num_inputs and _num_outputs for TF and everywhere else except TFM
             return obj
+
         else:
             raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
+
+    @classmethod
+    def from_rational_expression(cls, expr, var=None):
+        r"""
+        Allows an alternative way for the users to instantiate a ``TransferFunction`` object. 
+        ``TransferFunction`` objects can be created simply by passing the rational expression. 
+        SymPy will smartly create a ``TransferFunction`` object with the properties of the 
+        expression.
+
+        Parameters
+        ==========
+        expr : Expr, Number
+            The rational expression representing the ``TransferFunction``.
+        var : Symbol, optional
+            Complex variable of the Laplace transform used by the
+            polynomials of the transfer function.
+
+        Raises
+        ======
+
+        ValueError
+            When ``expr`` is of type ``Number`` and optional parameter ``var``
+            is not passed.
+
+            Wen ``expr`` has more than one variables and optional parameter
+            ``var`` is not passed.
+        ZeroDivisionError
+            When denominator of ``expr`` is zero or it has ``ComplexInfinity``
+            in its numerator.
+
+        Examples
+        ========
+
+        >>> expr1 = (s + 5)/(3*s**2 + 2*s + 1)
+        >>> tf1 = TransferFunction.from_rational_expression(expr1)
+        >>> tf1
+        TransferFunction(s + 5, 3*s**2 + 2*s + 1, s)
+        >>> expr2 = (a*p**3 - a*p**2 + s*p)/(p + a**2)  # Expr with more than one variables
+        >>> tf2 = TransferFunction(expr2, p)
+        >>> tf2
+        TransferFunction(a*p**3 - a*p**2 + p*s, a**2 + p, p)
+
+        In case of conflict between two or more variables in a expression, SymPy will
+        raise a ``ValueError``, if ``var`` is not passed by the user.
+
+        >>> tf = TransferFunction.from_rational_expression((a + a*s)/(s**2 + s + 1))
+        Traceback (most recent call last):
+        ...
+        ValueError: Conflicting values found for positional argument `var` ({a, s}). Specify it manually.
+
+        This can be corrected by specifying the ``var`` parameter manually.
+
+        >>> tf = TransferFunction.from_rational_expression((a + a*s)/(s**2 + s + 1), s)
+        >>> tf
+        TransferFunction(a + a*s, s**2 + s + 1, s)
+
+        """
+        expr = _sympify(expr)
+        if var is None:
+            _free_symbols = expr.free_symbols
+            _len_free_symbols = len(_free_symbols)
+            if _len_free_symbols == 1:
+                var = list(_free_symbols)[0]
+            elif _len_free_symbols == 0:
+                raise ValueError("Positional argument `var` not found in the TransferFunction defined. Specify it manually.")
+            else:
+                raise ValueError("Conflicting values found for positional argument `var` ({}). Specify it manually.".format(_free_symbols))
+
+        _num, _den = expr.as_numer_denom()
+        if _den == 0 or _num.has(ComplexInfinity):
+            raise ZeroDivisionError("TransferFunction can't have a zero denominator.")
+        return cls(_num, _den, var)
 
     @property
     def num(self):
@@ -460,7 +525,7 @@ class TransferFunction(Basic, EvalfMixin):
             arg_list = list(other.args)
             return Parallel(self, *arg_list)
         else:
-            raise ValueError("TransferFunction cannot be added with {}.".
+            raise TypeError("TransferFunction cannot be added with {}.".
                 format(type(other)))
 
     def __radd__(self, other):
@@ -498,7 +563,7 @@ class TransferFunction(Basic, EvalfMixin):
             arg_list = list(other.args)
             return Series(self, *arg_list)
         elif other == -1:
-            return -self # Matrices compute -A internally by -1*element(A) for all element(A)
+            return -self  # Matrices compute -A internally by -1*element(A) for all element(A)
         else:
             raise ValueError("TransferFunction cannot be multiplied with {}."
                 .format(type(other)))
@@ -613,19 +678,50 @@ class TransferFunction(Basic, EvalfMixin):
         """
         return degree(self.num, self.var) == degree(self.den, self.var)
 
-    # TODO: to_expr() will convert TF to expr type. As Matrix addition/multiplication is only allowed for expr type.
+    # TODO: _to_expr() will convert TF to expr type. As Matrix addition/multiplication is only allowed for expr type.
 
     def _to_expr(self):
+        """
+        To convert TransferFunction type to SymPy Expr
+        """
         return Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
 
 
 class Series(Basic):
-    """
-    A class for representing product of transfer functions or transfer functions in a
-    series configuration.
+    r"""
+    A class for representing series configuration of SISO and MIMO transfer functions.
+
+    Parameters
+    ==========
+
+    args : TransferFunction, TransferFunctionMatrix, Series, Parallel
+        Systems in series configuration.
+    evaluate : Boolean, Keyword
+        When passed ``True``, returns the equivalent 
+        Series(*args).doit(). Set to ``False`` by default.
+
+    Raises
+    ======
+
+    ValueError
+        When no argument is passed.
+
+        ``var`` attribute is not same for every system.
+
+        ``num_outputs`` of the MIMO system is not equal to the
+        ``num_inputs`` of its adjacent MIMO system. (Matrix 
+        multiplication constraint, basically)
+    TypeError
+        Any of the passed ``*args`` has unsupported type
+
+        A combination of SISO and MIMO systems is
+        passed. There should be homogeneity in the
+        type of systems passed.
 
     Examples
     ========
+
+    SISO-System Examples -
 
     >>> from sympy.abc import s, p, a, b
     >>> from sympy.physics.control.lti import TransferFunction, Series, Parallel
@@ -657,16 +753,21 @@ class Series(Basic):
     >>> S4.doit()
     TransferFunction((s**3 - 2)*(-p**2*(-p + s) + (p + s)*(a*p**2 + b*s)), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
 
+    MIMO-System Examples-
+
     Notes
     =====
 
-    All the transfer functions should use the same complex variable
-    ``var`` of the Laplace transform.
+    All the transfer functions should use the same complex variable ``var`` of the Laplace transform.
+
+    ``Series(A, B)`` is not equivalent to ``A*B``. It is always in the reverse order, that is ``B*A``.
+    In, SISO systems, it hardly matters, but in MIMO systems, there can be issues due to non-commutative 
+    nature of Matrix Multiplication.
 
     See Also
     ========
 
-    Parallel, TransferFunction, Feedback
+    Parallel, Feedback
 
     """
 
@@ -1060,13 +1161,40 @@ class Series(Basic):
 
 class Parallel(Basic):
     """
-    A class for representing addition of transfer functions or transfer functions
-    in a parallel configuration.
+    A class for representing parallel configuration of SISO and MIMO transfer functions.
+
+    Parameters
+    ==========
+
+    args : TransferFunction, TransferFunctionMatrix, Series, Parallel
+        Systems in parallel arrangement
+    evaluate : Boolean, Keyword
+        When passed ``True``, returns the equivalent 
+        Parallel(*args).doit(). Set to ``False`` by default.
+
+    Raises
+    ======
+
+    ValueError
+        When no argument is passed.
+
+        ``var`` attribute is not same for every system.
+
+        All MIMO systems passed don't have same shape.
+    TypeError
+        Any of the passed ``*args`` has unsupported type
+
+        A combination of SISO and MIMO systems is
+        passed. There should be homogeneity in the
+        type of systems passed.
 
     Examples
     ========
 
+    SISO-System examples -
+
     >>> from sympy.abc import s, p, a, b
+    >>> from sympy.printing import pprint
     >>> from sympy.physics.control.lti import TransferFunction, Parallel, Series
     >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
     >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
@@ -1094,6 +1222,48 @@ class Parallel(Basic):
     >>> Parallel(tf2, Series(tf1, -tf3)).doit()
     TransferFunction(-p**2*(a*p**2 + b*s)*(s**4 + 5*s + 6) + (-p + s)*(p + s)*(s**3 - 2), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
 
+    MIMO-System example -
+
+    >>> expr_1 = 1/s
+    >>> expr_2 = s/(s**2-1)
+    >>> expr_3 = (2 + s)/(s**2 - 1)
+    >>> expr_4 = 5
+    >>> tfm_a = TransferFunctionMatrix([[expr_1, expr_2], [expr_3, expr_4]])
+    >>> tfm_b = TransferFunctionMatrix([[expr_2, expr_1], [expr_4, expr_3]])
+    >>> tfm_c = TransferFunctionMatrix([[expr_3, expr_4], [expr_1, expr_2]])
+    >>> Parallel(tfm_a, tfm_b, tfm_c)
+    Parallel(Matrix([
+    [           TransferFunction(1, s, s), TransferFunction(s, s**2 - 1, s)],
+    [TransferFunction(s + 2, s**2 - 1, s),        TransferFunction(5, 1, s)]]), Matrix([
+    [TransferFunction(s, s**2 - 1, s),            TransferFunction(1, s, s)],
+    [       TransferFunction(5, 1, s), TransferFunction(s + 2, s**2 - 1, s)]]), Matrix([
+    [TransferFunction(s + 2, s**2 - 1, s),        TransferFunction(5, 1, s)],
+    [           TransferFunction(1, s, s), TransferFunction(s, s**2 - 1, s)]]))
+    >>> pprint(_)  #  For Better Visualization
+    ⎡  1       s   ⎤   ⎡  s       1   ⎤   ⎡s + 2     5   ⎤
+    ⎢  ─     ──────⎥   ⎢──────    ─   ⎥   ⎢──────    ─   ⎥
+    ⎢  s      2    ⎥   ⎢ 2        s   ⎥   ⎢ 2        1   ⎥
+    ⎢        s  - 1⎥   ⎢s  - 1        ⎥   ⎢s  - 1        ⎥
+    ⎢              ⎥ + ⎢              ⎥ + ⎢              ⎥
+    ⎢s + 2     5   ⎥   ⎢  5     s + 2 ⎥   ⎢  1       s   ⎥
+    ⎢──────    ─   ⎥   ⎢  ─     ──────⎥   ⎢  ─     ──────⎥
+    ⎢ 2        1   ⎥   ⎢  1      2    ⎥   ⎢  s      2    ⎥
+    ⎣s  - 1        ⎦   ⎣        s  - 1⎦   ⎣        s  - 1⎦
+    >>> Parallel(tfm_a, tfm_b, tfm_c).doit()
+    Matrix([[TransferFunction(3*s**2 + 2*s - 1, s**3 - s, s), TransferFunction(5*s**3 + 2*s**2 - 5*s - 1, s**3 - s, s)], [TransferFunction(5*s**3 + 2*s**2 - 3*s - 1, s**3 - s, s), TransferFunction(5*s**2 + 2*s - 3, s**2 - 1, s)]])
+    >>> pprint(_)
+    ⎡      2                   3      2          ⎤
+    ⎢   3⋅s  + 2⋅s - 1      5⋅s  + 2⋅s  - 5⋅s - 1⎥
+    ⎢   ──────────────      ─────────────────────⎥
+    ⎢        3                       3           ⎥
+    ⎢       s  - s                  s  - s       ⎥
+    ⎢                                            ⎥
+    ⎢   3      2                  2              ⎥
+    ⎢5⋅s  + 2⋅s  - 3⋅s - 1     5⋅s  + 2⋅s - 3    ⎥
+    ⎢─────────────────────     ──────────────    ⎥
+    ⎢         3                     2            ⎥
+    ⎣        s  - s                s  - 1        ⎦
+
     Notes
     =====
 
@@ -1112,24 +1282,46 @@ class Parallel(Basic):
         if not all(isinstance(arg, (TransferFunction, TransferFunctionMatrix, Series, Parallel))
             for arg in args):
             raise TypeError("Unsupported type of argument(s) for Parallel.")
+        if not all(arg.var == args[0].var for arg in args):
+            raise ValueError("`var` attribute of each arg should be same")
 
-        obj = super(Parallel, cls).__new__(cls, *args)
-        obj._is_not_matrix = all(isinstance(arg.doit(), TransferFunction) for arg in args)
-        if not obj._is_not_matrix:
-            obj._num_inputs, obj._num_outputs = args[0].num_inputs, args[0].num_outputs
-            # All MIMO --> assert matching shapes..
-            if not all(arg.shape == args[0].shape for arg in args):
-                raise ShapeError("Dimensions of all TransferFunctionMatrix"
-                    " objects should match.")
+        def _instantiate_SISO_Parallel(*args):
+            obj = super(Parallel, cls).__new__(cls, *args)
+            obj._var = args[0].var
+            obj._is_SISO = True
+            obj._shape = None
+            obj._num_inputs, obj._num_outputs = None, None
+            return obj.doit() if evaluate else obj
+
+        def _instantiate_MIMO_Parallel(*args):
+            if not all(args[0].shape == arg.shape for arg in args):
+                raise ValueError("All MIMO arguments should have same shape.")
+            obj = super(Parallel, cls).__new__(cls, *args)
+            obj._var = args[0].var
+            obj._is_SISO = False
+            obj._shape = args[0].shape
+            obj._num_inputs, obj._num_outputs = args[0].shape
+            return obj.doit() if evaluate else obj
+
+        _num_SISO, _num_MIMO = 0, 0
+        for arg in args:
+            if isinstance(arg, TransferFunction):
+                _num_SISO += 1
+            elif isinstance(arg, TransferFunctionMatrix):
+                _num_MIMO += 1
+            elif arg.is_SISO:
+                _num_SISO += 1
+            else:
+                _num_MIMO += 1
+
+        if _num_MIMO == 0 or _num_SISO == 0:
+            if _num_MIMO == 0:
+                return _instantiate_SISO_Parallel(*args)
+            if _num_SISO == 0:
+                return _instantiate_MIMO_Parallel(*args)
         else:
-            obj._num_inputs, obj._num_outputs = 1, 1
-
-        tf = "transfer functions" if obj._is_not_matrix else "TransferFunctionMatrix objects"
-        obj._var = args[0].var
-        if not all(arg.var == obj._var for arg in args):
-            raise ValueError("All {0} should use the same complex"
-                " variable of the Laplace transform.".format(tf))
-        return obj.doit() if evaluate else obj
+            raise TypeError("Not a valid `Parallel` object. Either all the arguments should be" 
+                " SISO or MIMO, not a combination of both.")
 
     @property
     def var(self):
@@ -1153,6 +1345,10 @@ class Parallel(Basic):
         return self._var
 
     @property
+    def is_SISO(self):
+        return True if self._is_SISO else False
+
+    @property
     def num_inputs(self):
         return self._num_inputs
 
@@ -1162,7 +1358,7 @@ class Parallel(Basic):
 
     @property
     def shape(self):
-        return self._num_outputs, self._num_inputs
+        return self._shape
 
     def doit(self, **kwargs):
         """
@@ -1182,38 +1378,33 @@ class Parallel(Basic):
         TransferFunction((2 - s**3)*(-p + s) + (-a*p**2 - b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s)
 
         """
-        res = None
-        for arg in self.args:
-            arg = arg.doit()
-            if res is None:
-                res = arg
-            else:
-                if self._is_not_matrix:
-                    if res.den == arg.den:
-                        num_, den_ = res.num + arg.num, res.den
-                    else:
-                        num_, den_ = res.num * arg.den + res.den * arg.num, res.den * arg.den
-                    res = TransferFunction(num_, den_, self.var)
+        _args = list(self.args)
+        def _SISO_doit():
+            res = 0
+            for arg_index in range(len(_args)):
+                if not isinstance(_args[arg_index], TransferFunction):
+                    _args[arg_index] = _args[arg_index].doit()
 
-                # TODO: Implement Parallel().doit() for TFM
+                res += _args[arg_index]._to_expr()
+            return TransferFunction.from_rational_expression(res, self.var)
 
-                else:
-                    # if self.num_inputs == 1:
-                    #     a = [None] * self.num_outputs
-                    #     for x in range(self.num_outputs):
-                    #         a[x] = res.args[0][x] + arg.args[0][x]
-                    # else:
-                    #     a = [[None] * self.num_inputs for _ in range(self.num_outputs)]
-                    #     for row in range(self.num_outputs):
-                    #         for col in range(self.num_inputs):
-                    #             a[row][col] = res.args[0][row][col] + arg.args[0][row][col]
-                    # res = TransferFunctionMatrix(a, self.shape, self.var)
-                    pass
-        return res
+        def _MIMO_doit():
+            res = _args[0].doit()._to_Immutable_Matrix(expr=True)
+            for arg_index in range(len(_args) - 1):
+                if not isinstance(_args[arg_index + 1], TransferFunctionMatrix):
+                    _args[arg_index + 1] = _args[arg_index + 1].doit()
+
+                res += _args[arg_index + 1]._to_Immutable_Matrix(expr=True)
+            return TransferFunctionMatrix(*res.args, var=self.var)
+
+        if self.is_SISO:
+            return _SISO_doit()
+        else:
+            return _MIMO_doit()
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
         """ Parallel(tfm1, tfm2, Series(tfm3, tfm4, ...), ...) not allowed. """
-        if not self._is_not_matrix:
+        if not self.is_SISO:
             raise ValueError("Only transfer functions or a collection of transfer functions"
                 " is allowed in the arguments.")
 
@@ -1221,7 +1412,7 @@ class Parallel(Basic):
 
     def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
         """ Parallel(tf1, tf2, Series(tf3, tf4, ...), ...) not allowed. """
-        if self._is_not_matrix:
+        if self.is_SISO:
             raise ValueError("Only transfer function matrices or a collection of transfer function"
                 " matrices is allowed in the arguments.")
 
@@ -1229,39 +1420,14 @@ class Parallel(Basic):
 
     def __add__(self, other):
         if isinstance(other, (TransferFunction, Series, TransferFunctionMatrix)):
-            if isinstance(other, TransferFunctionMatrix):
-                if self._is_not_matrix:
-                    raise ValueError("Only transfer function matrices are allowed in the "
-                        "parallel configuration.")
-            if isinstance(other, Series):
-                if self._is_not_matrix != other._is_not_matrix:
-                    raise ValueError("Both Series and Parallel objects should either handle SISO or MIMO"
-                        " transfer function.")
-            if not self.shape == other.shape:
-                raise ShapeError("Shapes of operands are not compatible for addition.")
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
-
             arg_list = list(self.args)
             arg_list.append(other)
-
             return Parallel(*arg_list)
         elif isinstance(other, Parallel):
-            if self._is_not_matrix != other._is_not_matrix:
-                raise ValueError("Both Parallel objects should either handle SISO or MIMO"
-                    " transfer function.")
-            if not self.shape == other.shape:
-                raise ShapeError("Shapes of operands are not compatible for addition.")
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
-
             self_arg_list = list(self.args)
             other_arg_list = list(other.args)
             for elem in other_arg_list:
                 self_arg_list.append(elem)
-
             return Parallel(*self_arg_list)
         else:
             raise ValueError("This expression is invalid.")
@@ -1591,89 +1757,165 @@ class Feedback(Basic):
 
 
 class TransferFunctionMatrix(ImmutableMatrix, Basic):
-    """
+    r"""
     A class for representing the MIMO (multiple-input and multiple-output)
     generalization of the SISO (single-input and single-output) transfer function.
 
     It is a matrix of transfer functions (``TransferFunction`` objects).
-    The arguments are ``arg``, ``shape``, and ``var``, where only the first one
-    is the compulsory argument. ``arg`` can be a list/tuple, list of lists or even a
-    tuple of tuples, which holds the transfer functions. ``shape`` is a tuple which is
-    equal to ``(# of outputs of the system, # of inputs of the system)``, and ``var``
+    The arguments are ``arg`` and ``var``, where ``arg``
+    is the compulsory argument. ``arg`` is expected to be of the type list or list of lists 
+    which holds the transfer functions. ``var``
     is a complex variable (which has to be a ``Symbol``) of the Laplace transform
     used by all the transfer functions in the matrix.
+
+    Parameters
+    ==========
+
+    arg: List, Nested List
+        Users are expected to input a nested list of ``TransferFunction`` 
+        (or ``Expr``) objects like they input Numbers in a normal SymPy matrix.
+        In case a user inputs a List, it would be considered as a column matrix
+        and not row. So, its better to pass nested list to avoid such dilemma.
+    var: Symbol, keyword, optional
+        ``var`` is an optional keyword argument. If ``var`` is not passed explicitly
+        by the user then ``var`` of the first element is taken by default.
 
     Examples
     ========
 
+    ``pprint()`` can be used for better visualization of ``TransferFunctionMatrix`` objects.
+
     >>> from sympy.abc import s, p, a
+    >>> from sympy.printing import pprint
     >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix
-    >>> tf1 = TransferFunction(s + a, s**2 + s + 1, s)
-    >>> tf2 = TransferFunction(p**4 - 3*p + 2, s + p, s)
-    >>> tf3 = TransferFunction(3, s + 2, s)
-    >>> tf4 = TransferFunction(s - p, p**2 + 8, p)
-    >>> tf5 = TransferFunction(-a + p, 9*s - 9, s)
-    >>> TFM1 = TransferFunctionMatrix([tf1, tf2, tf3], (3, 1), s)
-    >>> TFM1
-    TransferFunctionMatrix([TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(3, s + 2, s)])
-    >>> TFM1.var
+    >>> tf_1 = TransferFunction(s + a, s**2 + s + 1, s)
+    >>> tf_2 = TransferFunction(p**4 - 3*p + 2, s + p, s)
+    >>> tf_3 = TransferFunction(3, s + 2, s)
+    >>> tf_4 = TransferFunction(-a + p, 9*s - 9, s)
+    >>> tfm_1 = TransferFunctionMatrix([tf_1, tf_2, tf_3])
+    >>> tfm_1
+    Matrix([[TransferFunction(a + s, s**2 + s + 1, s)], [TransferFunction(p**4 - 3*p + 2, p + s, s)], [TransferFunction(3, s + 2, s)]])
+    >>> tfm_1.var
     s
-    >>> TFM1.num_inputs
+    >>> tfm_1.num_inputs
     1
-    >>> TFM1.num_outputs
+    >>> tfm_1.num_outputs
     3
-    >>> TFM1.shape
+    >>> tfm_1.shape
     (3, 1)
-    >>> TFM1.args
-    ([TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(3, s + 2, s)],)
+    >>> tfm_1.args  # Structurally similar to ImmutableDenseMatrix().args
+    (3, 1, (TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(3, s + 2, s)))
+    >>> tfm_2 = TransferFunctionMatrix([[tf_1, -tf_3], [tf_2, -tf_1], [tf_3, -tf_2]])
+    >>> tfm_2
+    Matrix([[TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(-3, s + 2, s)], [TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(-a - s, s**2 + s + 1, s)], [TransferFunction(3, s + 2, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)]])
+    >>> pprint(tfm_2)  # pretty-printing for better visualization
+    ⎡   a + s           -3       ⎤
+    ⎢ ──────────       ─────     ⎥
+    ⎢  2               s + 2     ⎥
+    ⎢ s  + s + 1                 ⎥
+    ⎢                            ⎥
+    ⎢ 4                          ⎥
+    ⎢p  - 3⋅p + 2      -a - s    ⎥
+    ⎢────────────    ──────────  ⎥
+    ⎢   p + s         2          ⎥
+    ⎢                s  + s + 1  ⎥
+    ⎢                            ⎥
+    ⎢                 4          ⎥
+    ⎢     3        - p  + 3⋅p - 2⎥
+    ⎢   ─────      ──────────────⎥
+    ⎣   s + 2          p + s     ⎦
 
-    >>> # also valid when ``shape`` and ``var`` are not specified.
-    >>> TFM2 = TransferFunctionMatrix((tf1, tf2, tf3))
-    >>> TFM2
-    TransferFunctionMatrix((TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(3, s + 2, s)))
-    >>> TFM2.var
+    TransferFunctionMatrix can be transposed, if user wants to switch the input and output transfer functions
+
+    >>> tfm_2.transpose()
+    Matrix([[TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(3, s + 2, s)], [TransferFunction(-3, s + 2, s), TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)]])
+    >>> pprint(_)
+    ⎡             4                          ⎤
+    ⎢  a + s     p  - 3⋅p + 2        3       ⎥
+    ⎢──────────  ────────────      ─────     ⎥
+    ⎢ 2             p + s          s + 2     ⎥
+    ⎢s  + s + 1                              ⎥
+    ⎢                                        ⎥
+    ⎢                             4          ⎥
+    ⎢   -3          -a - s     - p  + 3⋅p - 2⎥
+    ⎢  ─────      ──────────   ──────────────⎥
+    ⎢  s + 2       2               p + s     ⎥
+    ⎣             s  + s + 1                 ⎦
+
+    TransferFunctionMatrix objects can also be instantiated by passing SymPy expressions
+
+    >>> expr_1 = 5/s
+    >>> expr_2 = 5*s/(2 + s**2)
+    >>> expr_3 = 5/((s)*(2 + s**2))
+    >>> expr_4 = 5
+    >>> tfm_3 = TransferFunctionMatrix([[expr_1, expr_2], [expr_3, expr_4]])  # SymPy will assume the var of the first element as the var for the system
+    >>> tfm_3
+    Matrix([[TransferFunction(5, s, s), TransferFunction(5*s, s**2 + 2, s)], [TransferFunction(5, s**3 + 2*s, s), TransferFunction(5, 1, s)]])
+    >>> pprint(tfm_3)
+    ⎡   5       5⋅s  ⎤
+    ⎢   ─      ──────⎥
+    ⎢   s       2    ⎥
+    ⎢          s  + 2⎥
+    ⎢                ⎥
+    ⎢   5        5   ⎥
+    ⎢────────    ─   ⎥
+    ⎢ 3          1   ⎥
+    ⎣s  + 2⋅s        ⎦
+    >>> tfm_3.var
     s
-    >>> TFM2.shape
-    (3, 1)
-    >>> TFM2.num_inputs
-    1
-    >>> TFM2.num_outputs
-    3
-    >>> TFM2.args
-    ((TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(3, s + 2, s)),)
-
-    Any complex variable can be used for ``var``.
-
-    >>> TFM3 = TransferFunctionMatrix([tf4], (1, 1), p)   # [[tf4]] and (tf4,) are also valid as the first arguments.
-    >>> TFM3
-    TransferFunctionMatrix([TransferFunction(-p + s, p**2 + 8, p)])
-    >>> TFM3.var
-    p
-    >>> TFM3.shape
-    (1, 1)
-
-    >>> TFM4 = TransferFunctionMatrix([[tf1, -tf3], [tf2, -tf1], [tf3, -tf2]], (3, 2), s)
-    >>> TFM4
-    TransferFunctionMatrix([[TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(-3, s + 2, s)], [TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(-a - s, s**2 + s + 1, s)], [TransferFunction(3, s + 2, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)]])
-    >>> TFM4.var
-    s
-    >>> TFM4.shape
-    (3, 2)
-    >>> TFM4.num_outputs
-    3
-    >>> TFM4.num_inputs
+    >>> tfm_3.shape
+    (2, 2)
+    >>> tfm_3.num_outputs
     2
-    >>> TFM4.args
-    ([[TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(-3, s + 2, s)], [TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(-a - s, s**2 + s + 1, s)], [TransferFunction(3, s + 2, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)]],)
+    >>> tfm_3.num_inputs
+    2
+    >>> tfm_3.args
+    (2, 2, (TransferFunction(5, s, s), TransferFunction(5*s, s**2 + 2, s), TransferFunction(5, s**3 + 2*s, s), TransferFunction(5, 1, s)))
 
-    To negate a transfer function matrix the ``-`` operator can be prepended:
+    To access the ``TransferFunction`` at any index in the ``TransferFunctionMatrix``, use the index notation.
 
-    >>> TFM5 = TransferFunctionMatrix((tf2, -tf1, tf3))
-    >>> -TFM5
-    TransferFunctionMatrix([TransferFunction(-p**4 + 3*p - 2, p + s, s), TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(-3, s + 2, s)])
-    >>> TFM6 = TransferFunctionMatrix([[tf1, tf2], [tf3, -tf1]], (2, 2), s)
-    >>> -TFM6
-    TransferFunctionMatrix([[TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)], [TransferFunction(-3, s + 2, s), TransferFunction(a + s, s**2 + s + 1, s)]])
+    >>> tfm_3[1, 0]  # gives the TransferFunction present at 2nd Row and 1st Col. Similar to that in Matrix classes
+    TransferFunction(5, s**3 + 2*s, s)
+    >>> tfm_3[0, 0]  # gives the TransferFunction present at 1st Row and 1st Col.
+    TransferFunction(5, s, s)
+    >>> tfm_3[:, 0]  # gives the first column
+    Matrix([[TransferFunction(5, s, s)], [TransferFunction(5, s**3 + 2*s, s)]])
+    >>> pprint(_)
+    ⎡   5    ⎤
+    ⎢   ─    ⎥
+    ⎢   s    ⎥
+    ⎢        ⎥
+    ⎢   5    ⎥
+    ⎢────────⎥
+    ⎢ 3      ⎥
+    ⎣s  + 2⋅s⎦
+    >>> tfm_3[0, :]  # gives the first row
+    Matrix([[TransferFunction(5, s, s), TransferFunction(5*s, s**2 + 2, s)]])
+    >>> pprint(_)
+    ⎡5   5⋅s  ⎤
+    ⎢─  ──────⎥
+    ⎢s   2    ⎥
+    ⎣   s  + 2⎦
+
+    To negate a transfer function matrix, ``-`` operator can be prepended:
+
+    >>> tfm_4 = TransferFunctionMatrix([tf_2, -tf_1, tf_3])  # Remember-Simple lists are column matrix
+    >>> -tfm_4
+    Matrix([[TransferFunction(-p**4 + 3*p - 2, p + s, s)], [TransferFunction(a + s, s**2 + s + 1, s)], [TransferFunction(-3, s + 2, s)]])
+    >>> tfm_5 = TransferFunctionMatrix([[tf_1, tf_2], [tf_3, -tf_1]])
+    >>> -tfm_5
+    Matrix([[TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)], [TransferFunction(-3, s + 2, s), TransferFunction(a + s, s**2 + s + 1, s)]])
+
+    ``subs()`` returns an ImmutableDenseMatrix object with the value substituted in the expression. This will not
+    mutate your original ``TransferFunctionMatrix``.
+
+    >>> from sympy import I
+    >>> tfm_3.subs({s: I})  #  substituting imaginary i (iota) to s
+    Matrix([[-5*I, 5*I], [-5*I, 5/1]])
+    >>> type(_)
+    <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
+    >>> type(tf_3)
+    <class 'sympy.physics.control.lti.TransferFunctionMatrix'>
 
     Addition, subtraction, and multiplication of transfer function matrices can form
     unevaluated ``Series`` or ``Parallel`` objects.
@@ -1685,38 +1927,30 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
       The number of inputs of the first transfer function matrix (A) must be equal to the
       number of outputs of the second transfer function matrix (B).
 
-    Also, use pretty-printing (``pprint``) to analyse better.
-
-    >>> TFM7 = TransferFunctionMatrix([[tf5, -tf1, tf3], [-tf2, -tf5, -tf3]], (2, 3), s)
-    >>> TFM8 = TransferFunctionMatrix([tf3, tf2, -tf1], (3, 1), s)
-    >>> TFM9 = TransferFunctionMatrix([-tf3], (1, 1), s)
-    >>> TFM10 = TransferFunctionMatrix((tf1, tf2, tf5))
-    >>> TFM11 = TransferFunctionMatrix([tf5, -tf1], (2, 1), s)
-    >>> TFM8 + TFM10
+    >>> tfm_6 = TransferFunctionMatrix([[tf_4, -tf_1, tf_3], [-tf_2, -tf_4, -tf_3]])
+    >>> tfm_7 = TransferFunctionMatrix([tf_3, tf_2, -tf_1])
+    >>> tfm_8 = TransferFunctionMatrix([-tf_3])
+    >>> tfm_9 = TransferFunctionMatrix([tf_1, tf_2, tf_4])
+    >>> tfm_10 = TransferFunctionMatrix([tf_4, -tf_1])
+    >>> tfm_7 + tfm_9
     Parallel(TransferFunctionMatrix([TransferFunction(3, s + 2, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(-a - s, s**2 + s + 1, s)]), TransferFunctionMatrix((TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(-a + p, 9*s - 9, s))))
-    >>> -TFM10 - TFM8
+    >>> -tfm_10 - tfm_8
     Parallel(TransferFunctionMatrix([TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(-p**4 + 3*p - 2, p + s, s), TransferFunction(a - p, 9*s - 9, s)]), TransferFunctionMatrix([TransferFunction(-3, s + 2, s), TransferFunction(-p**4 + 3*p - 2, p + s, s), TransferFunction(a + s, s**2 + s + 1, s)]))
-    >>> TFM7 * TFM8
+    >>> tfm_7 * tfm_8
     Series(TransferFunctionMatrix([[TransferFunction(-a + p, 9*s - 9, s), TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(3, s + 2, s)], [TransferFunction(-p**4 + 3*p - 2, p + s, s), TransferFunction(a - p, 9*s - 9, s), TransferFunction(-3, s + 2, s)]]), TransferFunctionMatrix([TransferFunction(3, s + 2, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(-a - s, s**2 + s + 1, s)]))
-    >>> TFM7 * TFM8 * TFM9
+    >>> tfm_7 * tfm_8 * tfm_9
     Series(TransferFunctionMatrix([[TransferFunction(-a + p, 9*s - 9, s), TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(3, s + 2, s)], [TransferFunction(-p**4 + 3*p - 2, p + s, s), TransferFunction(a - p, 9*s - 9, s), TransferFunction(-3, s + 2, s)]]), TransferFunctionMatrix([TransferFunction(3, s + 2, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(-a - s, s**2 + s + 1, s)]), TransferFunctionMatrix([TransferFunction(-3, s + 2, s)]))
-    >>> TFM10 + TFM8*TFM9
+    >>> tfm_10 + tfm_8*tfm_9
     Parallel(TransferFunctionMatrix((TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(-a + p, 9*s - 9, s))), Series(TransferFunctionMatrix([TransferFunction(3, s + 2, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(-a - s, s**2 + s + 1, s)]), TransferFunctionMatrix([TransferFunction(-3, s + 2, s)])))
 
     These unevaluated ``Series`` or ``Parallel`` objects can convert into the
     resultant transfer function matrix using ``.doit()`` method or by
     ``.rewrite(TransferFunctionMatrix)``.
 
-    >>> (-TFM8 + TFM10 + TFM8*TFM9).doit()
+    >>> (-tfm_8 + tfm_10 + tfm_8*tfm_9).doit()
     TransferFunctionMatrix([Parallel(TransferFunction(-3, s + 2, s), TransferFunction(a + s, s**2 + s + 1, s), Series(TransferFunction(3, s + 2, s), TransferFunction(-3, s + 2, s))), Parallel(TransferFunction(-p**4 + 3*p - 2, p + s, s), TransferFunction(p**4 - 3*p + 2, p + s, s), Series(TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(-3, s + 2, s))), Parallel(TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(-a + p, 9*s - 9, s), Series(TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(-3, s + 2, s)))])
-    >>> (-TFM7 * -TFM8 * -TFM9).rewrite(TransferFunctionMatrix)
+    >>> (-tfm_7 * -tfm_8 * -tfm_9).rewrite(TransferFunctionMatrix)
     TransferFunctionMatrix([Series(Parallel(Series(TransferFunction(a - p, 9*s - 9, s), TransferFunction(-3, s + 2, s)), Series(TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)), Series(TransferFunction(-3, s + 2, s), TransferFunction(a + s, s**2 + s + 1, s))), TransferFunction(3, s + 2, s)), Series(Parallel(Series(TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(-3, s + 2, s)), Series(TransferFunction(-a + p, 9*s - 9, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)), Series(TransferFunction(3, s + 2, s), TransferFunction(a + s, s**2 + s + 1, s))), TransferFunction(3, s + 2, s))])
-
-    And ``.doit().doit()`` on this resultant transfer function matrix will expand the internal ``Series``
-    or ``Parallel`` objects.
-
-    >>> (-TFM8 + TFM10 + TFM8*TFM9).doit().doit()
-    TransferFunctionMatrix([TransferFunction((s + 2)**2*(-3*s**2 - 3*s + (a + s)*(s + 2) - 3) - 9*(s + 2)*(s**2 + s + 1), (s + 2)**3*(s**2 + s + 1), s), TransferFunction((p + s)*(-3*p**4 + 9*p - 6), (p + s)**2*(s + 2), s), TransferFunction((3*a + 3*s)*(9*s - 9)*(s**2 + s + 1) + (s + 2)*((-a + p)*(s**2 + s + 1) + (a + s)*(9*s - 9))*(s**2 + s + 1), (s + 2)*(9*s - 9)*(s**2 + s + 1)**2, s)])
 
     See Also
     ========
@@ -1730,6 +1964,10 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
         #     all(isinstance(i, (TransferFunction, Parallel, Series, Expr, int, float)) for i in arg))):
         #     raise TypeError("Unsupported type for argument of TransferFunctionMatrix.")
 
+        if len(arg) == 0:
+            raise ValueError("Positional argument `arg` not passed.")
+
+        # Converting flat tuple to nested list.
         if len(arg) > 1:
             def group(flat, size): return [flat[i:i+size] for i in range(0, len(flat), size)]
             tfm_cols = arg[1]
@@ -1748,7 +1986,7 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
 
         if not all(isinstance(arg[row][col], (TransferFunction, Series, Parallel, Expr, int, float))
                 for col in range(len(arg[0])) for row in range(len(arg))):
-                raise TypeError("All the lists/tuples in the first argument of TransferFunctionMatrix"
+                raise TypeError("All the lists in the first argument of TransferFunctionMatrix"
                     " only support transfer functions, and Series/Parallel objects in them.")
         if not all(len(l) == len(arg[0]) for l in arg):
                 raise ValueError("Length of all the lists in the argument of"
@@ -1756,7 +1994,10 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
 
         if not var:
             if not isinstance(arg[0][0], (TransferFunction, Series, Parallel)):
-                var = TransferFunction(arg[0][0]).var
+                try:
+                    var = TransferFunction.from_rational_expression(arg[0][0]).var
+                except ValueError:
+                    raise ValueError("Input the parameter `var` explicitly for this TransferFunction.")
             else:
                 var = arg[0][0].var
 
@@ -1766,59 +2007,18 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
         for row_num in range(len(arg)):
             for col_num in range(len(arg[row_num])):
                 if not isinstance(arg[row_num][col_num], (TransferFunction, Series, Parallel)):
-                    arg[row_num][col_num] = TransferFunction(arg[row_num][col_num], var=var)
+                    arg[row_num][col_num] = TransferFunction.from_rational_expression(arg[row_num][col_num], var=var)
                 else:
                     if (arg[row_num][col_num]).var != var:
                         raise ValueError("Conflicting value(s) found for `var`. All TransferFunction instances in "
                             "TransferFunctionMatrix should use the same complex variable in Laplace domain.")
+                    if isinstance(arg[row_num][col_num], (Series, Parallel)) and not arg[row_num][col_num].is_SISO:
+                            raise TypeError("Only SISO type `Series`/`Parallel` are allowed in TransferFunctionMatrix")
 
 
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
         obj._var = arg[0][0].var
         obj._num_outputs, obj._num_inputs = obj.shape
-        # if all(isinstance(i, (TransferFunction, Series, Parallel)) for i in arg):
-        #     # TFM with 1st argument of the type - [tf1, tf2, tf3, ...] or (tf1, tf2, ...)
-        #     if var: #shape and var:
-        #         if not all(elem.var == var for elem in arg):
-        #             raise ValueError("All transfer functions should use the same complex"
-        #                 " variable (var) of the Laplace transform.")
-        #         # if not (shape[0] == len(arg) and shape[1] == 1):
-        #         #     raise ValueError("The provided Shape does not match the shape of the input."
-        #         #         " Shape must be equal to ({0}, {1}).".format(len(arg), 1))
-        #         # obj._num_outputs, obj._num_inputs, obj._var = shape[0], shape[1], var
-        #     else:
-        #         obj._var = arg[0].var
-        #         obj._num_outputs, obj._num_inputs = obj.shape
-        #         # obj._num_outputs, obj._num_inputs = (len(arg), 1)
-        #         if not all(elem.var == obj._var for elem in arg):
-        #             raise ValueError("All transfer functions should use the same complex"
-        #                 " variable of the Laplace transform.")
-        # else:
-        #     # TFM with 1st argument of the type - [[tf1, tf2, ...], [tf3, tf4, ...], ...]
-        #     # or ((tf1, tf2, ...), (tf3, tf4, ...), ...)
-        #     if not all(isinstance(arg[row][col], (TransferFunction, Series, Parallel))
-        #         for col in range(len(arg[0])) for row in range(len(arg))):
-        #         raise TypeError("All the lists/tuples in the first argument of TransferFunctionMatrix"
-        #             " only support transfer functions, and Series/Parallel objects in them.")
-        #     if not all(len(l) == len(arg[0]) for l in arg):
-        #         raise ValueError("Length of all the lists/tuples in the argument of"
-        #             " TransferFunctionMatrix should be equal.")
-        #     if var: #shape and var:
-        #         # if not (shape[0] == len(arg) and shape[1] == len(arg[0])):
-        #         #     raise ValueError("The provided Shape does not match the shape of the input."
-        #         #         " Shape must be equal to ({0}, {1}).".format(len(arg), len(arg[0])))
-        #         # if not all(arg[row][col].var == var
-        #         #     for col in range(shape[1]) for row in range(shape[0])):
-        #         #     raise ValueError("All transfer functions should use the same complex"
-        #         #         " variable (var) of the Laplace transform.")
-        #         # obj._num_outputs, obj._num_inputs, obj._var = shape[0], shape[1], var
-        #         pass
-        #     else:
-        #         obj._var, obj._num_outputs, obj._num_inputs = arg[0][0].var, len(arg), len(arg[0])
-        #         if not all(arg[row][col].var == obj._var
-        #             for col in range(len(arg[0])) for row in range(len(arg))):
-        #             raise ValueError("All transfer functions should use the same complex"
-        #                 " variable of the Laplace transform.")
         return obj
 
     @property
@@ -1892,11 +2092,11 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
         >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
         >>> tf3 = TransferFunction(a*s - 4, s**4 + 1, s)
         >>> S1, S2 = Series(tf1, -tf2), Series(tf2, tf3, -tf1)
-        >>> TFM1 = TransferFunctionMatrix([tf1, tf2, tf3])
-        >>> TFM1.num_outputs
+        >>> tfm1 = TransferFunctionMatrix([tf1, tf2, tf3])
+        >>> tfm1.num_outputs
         3
-        >>> TFM2 = TransferFunctionMatrix(((S1, S2), (-S2, -S1)))
-        >>> TFM2.num_outputs
+        >>> tfm2 = TransferFunctionMatrix(((S1, S2), (-S2, -S1)))
+        >>> tfm2.num_outputs
         2
 
         """
@@ -2044,8 +2244,17 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
 
         """
 
-        # TODO: Implement doit() for TFM. For now, it returns itself.
+        # TODO: Implement doit() for tfm. For now, it returns itself.
 
+        # Function to convert Series(*TransferFunction), Parallel(*TransferFunction) to TransferFunction
+        def _to_TransferFunction(arrangement):
+            if isinstance(arrangement, (Series, Parallel)):
+                return arrangement.doit()
+            else:
+                return arrangement
+
+        res = self.applyfunc(_to_TransferFunction)
+        return res
 
         # if self.num_inputs == 1:
         #     arg_matrix = list(self.args[0])
@@ -2060,7 +2269,9 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
         #         for col in range(self.num_inputs):
         #             arg_matrix[row][col] = arg_matrix[row][col].doit()
 
-        return self #TransferFunctionMatrix(arg_matrix)
+        # return TransferFunctionMatrix(arg_matrix)
+
+    # __neg__() is now inherited from ImmutableMatrix class
 
     # def __neg__(self):
     #     if self.num_inputs == 1:
@@ -2073,6 +2284,7 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
     # <class 'sympy.matrices.immutable.ImmutableDenseMatrix'> for easing the matrix operations.
 
     def _to_Immutable_Matrix(self, expr=False):
+        self = self.doit()
         _matrix = ImmutableMatrix(self.args[0], self.args[1], list(self.args[2]))
         if not expr:
             return _matrix
@@ -2096,11 +2308,11 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
         >>> tf2 = TransferFunction(p**2 - 4*p, p**3 + 3*p + 2, p)
         >>> tf3 = TransferFunction(a*p**2 + b*s, s - p, s)
         >>> tf4 = TransferFunction(1, p**2, p)
-        >>> TFM1 = TransferFunctionMatrix((-tf1, tf3), (2, 1), s)
-        >>> TFM1.is_proper
+        >>> tfm1 = TransferFunctionMatrix((-tf1, tf3), (2, 1), s)
+        >>> tfm1.is_proper
         False
-        >>> TFM2 = TransferFunctionMatrix([[tf2, tf4, -tf2], [-tf4, tf2, tf4]], (2, 3), p)
-        >>> TFM2.is_proper
+        >>> tfm2 = TransferFunctionMatrix([[tf2, tf4, -tf2], [-tf4, tf2, tf4]], (2, 3), p)
+        >>> tfm2.is_proper
         True
 
         """
@@ -2125,11 +2337,11 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
         >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
         >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
         >>> tf3 = TransferFunction(a, s**2 + b, s)
-        >>> TFM1 = TransferFunctionMatrix([-tf1, tf2, -tf3])
-        >>> TFM1.is_strictly_proper
+        >>> tfm1 = TransferFunctionMatrix([-tf1, tf2, -tf3])
+        >>> tfm1.is_strictly_proper
         False
-        >>> TFM2 = TransferFunctionMatrix([[tf2, tf3], [-tf3, -tf2]])
-        >>> TFM2.is_strictly_proper
+        >>> tfm2 = TransferFunctionMatrix([[tf2, tf3], [-tf3, -tf2]])
+        >>> tfm2.is_strictly_proper
         True
 
         """
@@ -2154,11 +2366,11 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
         >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
         >>> tf2 = TransferFunction(-b*p**4 - a*s**2, a - s**2, s)
         >>> tf3 = TransferFunction(s**2, s + a, s)
-        >>> TFM1 = TransferFunctionMatrix([tf1, -tf2])
-        >>> TFM1.is_biproper
+        >>> tfm1 = TransferFunctionMatrix([tf1, -tf2])
+        >>> tfm1.is_biproper
         True
-        >>> TFM2 = TransferFunctionMatrix(((tf1, tf2), (tf3, -tf2)))
-        >>> TFM2.is_biproper
+        >>> tfm2 = TransferFunctionMatrix(((tf1, tf2), (tf3, -tf2)))
+        >>> tfm2.is_biproper
         False
 
         """
