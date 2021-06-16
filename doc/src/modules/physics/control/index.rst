@@ -6,7 +6,7 @@ Control Module
 
 .. topic:: Abstract
 
-    Contains docstrings of Physics-Control module
+    Contains theory, docstrings and solved textbook problems of Physics-Control module
 
 
 .. toctree::
@@ -14,3 +14,4 @@ Control Module
 
     control.rst
     lti.rst
+    control_problems.rst
