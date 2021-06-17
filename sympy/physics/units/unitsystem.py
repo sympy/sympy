@@ -102,6 +102,12 @@ class UnitSystem(_QuantityMapper):
             return qsfm[unit]
         return super().get_quantity_scale_factor(unit)
 
+    def get_quantity_scale_offset(self, unit):
+        qsom = self.get_dimension_system()._quantity_scale_offsets
+        if unit in qsom:
+            return qsom[unit]
+        return super().get_quantity_scale_offset(unit)
+
     @staticmethod
     def get_unit_system(unit_system):
         if isinstance(unit_system, UnitSystem):

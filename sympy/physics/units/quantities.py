@@ -111,6 +111,15 @@ class Quantity(AtomicExpr):
         UnitSystem._quantity_scale_factors_global[self] = (scale_factor, reference_quantity)
         UnitSystem._quantity_dimensional_equivalence_map_global[self] = reference_quantity
 
+    def set_global_relative_scale_offset(self, scale_offset, reference_quantity):
+        """
+        Setting a scale offset that is valid across all unit system.
+        """
+        from sympy.physics.units import UnitSystem
+        scale_offset = sympify(scale_offset)
+        UnitSystem._quantity_scale_offsets_global[self] = (scale_offset, reference_quantity)
+        UnitSystem._quantity_dimensional_equivalence_map_global[self] = reference_quantity
+
     @property
     def name(self):
         return self._name
@@ -138,6 +147,15 @@ class Quantity(AtomicExpr):
         from sympy.physics.units import UnitSystem
         unit_system = UnitSystem.get_default_unit_system()
         return unit_system.get_quantity_scale_factor(self)
+
+    @property
+    def scale_offset(self):
+        """
+        Overall shift of the quantity as compared to the canonical units.
+        """
+        from sympy.physics.units import UnitSystem
+        unit_system = UnitSystem.get_default_unit_system()
+        return unit_system.get_quantity_scale_offset(self)
 
     def _eval_is_positive(self):
         return True
@@ -204,6 +222,10 @@ class Quantity(AtomicExpr):
         """
         from .util import convert_to
         return convert_to(self, other, unit_system)
+
+    def convert_temperature(self, other, unit_system="SI"):
+        from .util import convert_temperature
+        return convert_temperature(self, other, unit_system)
 
     @property
     def free_symbols(self):

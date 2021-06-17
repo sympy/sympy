@@ -26,12 +26,14 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 class _QuantityMapper:
 
     _quantity_scale_factors_global = {}  # type: tDict[Expr, Expr]
+    _quantity_scale_offsets_global = {}  # type: tDict[Expr, Expr]
     _quantity_dimensional_equivalence_map_global = {}  # type: tDict[Expr, Expr]
     _quantity_dimension_global = {}  # type: tDict[Expr, Expr]
 
     def __init__(self, *args, **kwargs):
         self._quantity_dimension_map = {}
         self._quantity_scale_factors = {}
+        self._quantity_scale_offsets = {}
 
     def set_quantity_dimension(self, unit, dimension):
         from sympy.physics.units import Quantity
@@ -61,6 +63,16 @@ class _QuantityMapper:
         )
         self._quantity_scale_factors[unit] = scale_factor
 
+    def set_quantity_scale_offset(self, unit, scale_offset):
+        from sympy.physics.units import Quantity
+        scale_offset = sympify(scale_offset)
+        # replace all quantities by their displacement to canonical units:
+        scale_offset = scale_offset.replace(
+            lambda x: isinstance(x, Quantity),
+            lambda x: self.get_quantity_scale_offset(x)
+        )
+        self._quantity_scale_offsets[unit] = scale_offset
+
     def get_quantity_dimension(self, unit):
         from sympy.physics.units import Quantity
         # First look-up the local dimension map, then the global one:
@@ -86,6 +98,14 @@ class _QuantityMapper:
             mul_factor, other_unit = self._quantity_scale_factors_global[unit]
             return mul_factor*self.get_quantity_scale_factor(other_unit)
         return S.One
+
+    def get_quantity_scale_offset(self, unit):
+        if unit in self._quantity_scale_offsets:
+            return self._quantity_scale_offsets[unit]
+        if unit in self._quantity_scale_offsets_global:
+            add_factor, other_unit = self._quantity_scale_offsets_global[unit]
+            return add_factor+self.get_quantity_scale_offset(other_unit)
+        return S.Zero
 
 
 class Dimension(Expr):

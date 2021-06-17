@@ -40,6 +40,37 @@ def _get_conversion_matrix_for_expr(expr, target_units, unit_system):
 
     return res_exponents
 
+def convert_temperature(expr, target_units, unit_system="SI"):
+    """
+    Converts temperatures to different temperature scales and units
+
+    Examples
+    ========
+
+    >>> from sympy.physics.units import kelvin, degrees_celsius, degrees_fahrenheit
+    >>> from sympy.physics.units import convert_temperature
+    >>> convert_temperature(100*degrees_celsius, degrees_fahrenheit)
+    212*degree_fahrenheit
+    >>> convert_temperature(373.15*kelvin, degrees_celsius)
+    100.0*degree_celsius
+    """
+    # How should 0 degrees be handled?
+    from sympy.physics.units import UnitSystem
+    unit_system = UnitSystem.get_unit_system(unit_system)
+
+    def to_kelvin(magnitude, source_units, unit_system):
+        source_units_scale_offset = unit_system.get_quantity_scale_offset(source_units)
+        source_units_scale_factor = unit_system.get_quantity_scale_factor(source_units)
+        return (magnitude * source_units_scale_factor + source_units_scale_offset) * Quantity("kelvin")
+
+    def from_kelvin(magnitude, target_units, unit_system):
+        target_units_scale_offset = unit_system.get_quantity_scale_offset(target_units)
+        target_units_scale_factor = unit_system.get_quantity_scale_factor(target_units)
+        return (magnitude - target_units_scale_offset)/target_units_scale_factor * target_units
+
+    source_magnitude, source_units = expr.as_coeff_Mul()
+    magnitude = to_kelvin(source_magnitude, source_units, unit_system).as_coeff_Mul()[0]
+    return from_kelvin(magnitude, target_units, unit_system)
 
 def convert_to(expr, target_units, unit_system="SI"):
     """
