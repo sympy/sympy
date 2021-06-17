@@ -78,6 +78,10 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
         obj._mat = flat_list
         return obj
 
+    @property
+    def _flat(self):
+        return list(self._mat)
+
     def _entry(self, i, j, **kwargs):
         return DenseMatrix.__getitem__(self, (i, j))
 
@@ -87,7 +91,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
     def _eval_extract(self, rowsList, colsList):
         # self._mat is a Tuple.  It is slightly faster to index a
         # tuple over a Tuple, so grab the internal tuple directly
-        mat = self._mat
+        mat = self._flat
         cols = self.cols
         indices = (i * cols + j for i in rowsList for j in colsList)
         return self._new(len(rowsList), len(colsList),

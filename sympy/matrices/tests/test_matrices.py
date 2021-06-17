@@ -39,7 +39,7 @@ def test_args():
         assert m.rows == 3 and type(m.rows) is int
         assert m.cols == 2 and type(m.cols) is int
         if not n % 2:
-            assert type(m._mat) in (list, tuple, Tuple)
+            assert type(m._flat) in (list, tuple, Tuple)
         else:
             assert type(m._smat) is dict
 
@@ -1619,7 +1619,7 @@ def test_jordan_form():
     m = Matrix([[Float('1.0', precision=110), Float('2.0', precision=110)],
                 [Float('3.14159265358979323846264338327', precision=110), Float('4.0', precision=110)]])
     P, J = m.jordan_form()
-    for term in J._mat:
+    for term in J._flat:
         if isinstance(term, Float):
             assert term._prec == 110
 
@@ -2041,8 +2041,8 @@ def test_matrix_norm():
     # Test Rows
     A = Matrix([[5, Rational(3, 2)]])
     assert A.norm() == Pow(25 + Rational(9, 4), S.Half)
-    assert A.norm(oo) == max(A._mat)
-    assert A.norm(-oo) == min(A._mat)
+    assert A.norm(oo) == max(A)
+    assert A.norm(-oo) == min(A)
 
     # Matrix Tests
     # Intuitive test

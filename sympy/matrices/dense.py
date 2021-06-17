@@ -56,9 +56,9 @@ class DenseMatrix(MatrixBase):
         if self_shape != other_shape:
             return False
         if isinstance(other, Matrix):
-            return _compare_sequence(self._mat,  other._mat)
+            return _compare_sequence(self._flat,  other._flat)
         elif isinstance(other, MatrixBase):
-            return _compare_sequence(self._mat, Matrix(other)._mat)
+            return _compare_sequence(self._flat, Matrix(other)._flat)
 
     def __getitem__(self, key):
         """Return portion of self defined by key. If the key involves a slice
@@ -125,8 +125,8 @@ class DenseMatrix(MatrixBase):
         else:
             # row-wise decomposition of matrix
             if isinstance(key, slice):
-                return self._mat[key]
-            return self._mat[a2idx(key)]
+                return self._flat[key]
+            return self._flat[a2idx(key)]
 
     def __setitem__(self, key, value):
         raise NotImplementedError()
@@ -134,11 +134,11 @@ class DenseMatrix(MatrixBase):
     def _eval_add(self, other):
         # we assume both arguments are dense matrices since
         # sparse matrices have a higher priority
-        mat = [a + b for a,b in zip(self._mat, other._mat)]
+        mat = [a + b for a,b in zip(self._flat, other._flat)]
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_extract(self, rowsList, colsList):
-        mat = self._mat
+        mat = self._flat
         cols = self.cols
         indices = (i * cols + j for i in rowsList for j in colsList)
         return self._new(len(rowsList), len(colsList),
@@ -153,8 +153,8 @@ class DenseMatrix(MatrixBase):
         # expected behavior is to produce an n x m matrix of zeros
         if self.cols != 0 and other.rows != 0:
             self_cols = self.cols
-            mat = self._mat
-            other_mat = other._mat
+            mat = self._flat
+            other_mat = other._flat
             for i in range(new_len):
                 row, col = i // other.cols, i % other.cols
                 row_indices = range(self_cols*row, self_cols*(row+1))
@@ -171,7 +171,7 @@ class DenseMatrix(MatrixBase):
         return classof(self, other)._new(self.rows, other.cols, new_mat, copy=False)
 
     def _eval_matrix_mul_elementwise(self, other):
-        mat = [a*b for a,b in zip(self._mat, other._mat)]
+        mat = [a*b for a,b in zip(self._flat, other._flat)]
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_inverse(self, **kwargs):
@@ -180,21 +180,21 @@ class DenseMatrix(MatrixBase):
                         try_block_diag=kwargs.get('try_block_diag', False))
 
     def _eval_scalar_mul(self, other):
-        mat = [other*a for a in self._mat]
+        mat = [other*a for a in self._flat]
         return self._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_scalar_rmul(self, other):
-        mat = [a*other for a in self._mat]
+        mat = [a*other for a in self._flat]
         return self._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_tolist(self):
-        mat = list(self._mat)
+        mat = list(self._flat)
         cols = self.cols
         return [mat[i*cols:(i + 1)*cols] for i in range(self.rows)]
 
     def _eval_todok(self):
         cols = self.cols
-        return {divmod(ij, cols): e for ij, e in enumerate(self._mat) if e}
+        return {divmod(ij, cols): e for ij, e in enumerate(self._flat) if e}
 
     def as_immutable(self):
         """Returns an Immutable version of this Matrix
@@ -330,6 +330,10 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         self._mat = flat_list
 
         return self
+
+    @property
+    def _flat(self):
+        return list(self._mat)
 
     def __setitem__(self, key, value):
         """

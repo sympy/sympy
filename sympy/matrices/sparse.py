@@ -491,6 +491,10 @@ class SparseMatrix(MatrixBase):
         in DenseMatrix use `_mat` directly to speed up operations."""
         return list(self)
 
+    @property
+    def _flat(self):
+        return list(self)
+
     def applyfunc(self, f):
         """Apply a function to each element of the matrix.
 
@@ -855,7 +859,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         A = A.copy()
         if not isinstance(B, SparseMatrix):
             k = 0
-            b = B._mat
+            b = B._flat
             for i in range(B.rows):
                 for j in range(B.cols):
                     v = b[k]
@@ -1030,7 +1034,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         A = A.copy()
         if not isinstance(B, SparseMatrix):
             k = 0
-            b = B._mat
+            b = B._flat
             for i in range(B.rows):
                 for j in range(B.cols):
                     v = b[k]
