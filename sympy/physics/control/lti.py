@@ -254,6 +254,8 @@ class TransferFunction(Basic, EvalfMixin):
         Examples
         ========
 
+        >>> from sympy.abc import s, p, a
+        >>> from sympy.physics.control.lti import TransferFunction
         >>> expr1 = (s + 5)/(3*s**2 + 2*s + 1)
         >>> tf1 = TransferFunction.from_rational_expression(expr1)
         >>> tf1
