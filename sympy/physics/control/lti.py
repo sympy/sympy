@@ -61,7 +61,7 @@ class TransferFunction(Basic, EvalfMixin):
             $\small{b_{m}s^{m}\mathcal{L}[y]+b_{m-1}s^{m-1}\mathcal{L}[y]+\dots+b_{1}s\mathcal{L}[y]+b_{0}\mathcal{L}[y]=
             a_{n}s^{n}\mathcal{L}[x]+a_{n-1}s^{n-1}\mathcal{L}[x]+\dots+a_{1}s\mathcal{L}[x]+a_{0}\mathcal{L}[x]}$
 
-    Here, the superscript on $s$ is exponent. Note that the zero initial conditions assumption, mentioned above, is very important 
+    Here, the superscript on $s$ is exponent. Note that the zero initial conditions assumption, mentioned above, is very important
     and cannot be ignored otherwise the dynamical system cannot be considered time-independent and the simplified equation above
     cannot be reached.
 
@@ -95,8 +95,8 @@ class TransferFunction(Basic, EvalfMixin):
     ======
 
     TypeError
-        When ``var`` is not a Symbol or when ``num`` or ``den`` is not a 
-        number or a polynomial. Also, when ``num`` or ``den`` has a time 
+        When ``var`` is not a Symbol or when ``num`` or ``den`` is not a
+        number or a polynomial. Also, when ``num`` or ``den`` has a time
         delay term.
     ZeroDivisionError
         When ``den`` is zero.
@@ -225,9 +225,9 @@ class TransferFunction(Basic, EvalfMixin):
     @classmethod
     def from_rational_expression(cls, expr, var=None):
         r"""
-        Allows an alternative way for the users to instantiate a ``TransferFunction`` object. 
-        ``TransferFunction`` objects can be created simply by passing the rational expression. 
-        SymPy will smartly create a ``TransferFunction`` object with the properties of the 
+        Allows an alternative way for the users to instantiate a ``TransferFunction`` object.
+        ``TransferFunction`` objects can be created simply by passing the rational expression.
+        SymPy will smartly create a ``TransferFunction`` object with the properties of the
         expression.
 
         Parameters
@@ -696,7 +696,7 @@ class Series(Basic):
     args : TransferFunction, TransferFunctionMatrix, Series, Parallel
         Systems in series configuration.
     evaluate : Boolean, Keyword
-        When passed ``True``, returns the equivalent 
+        When passed ``True``, returns the equivalent
         Series(*args).doit(). Set to ``False`` by default.
 
     Raises
@@ -708,7 +708,7 @@ class Series(Basic):
         ``var`` attribute is not same for every system.
 
         ``num_outputs`` of the MIMO system is not equal to the
-        ``num_inputs`` of its adjacent MIMO system. (Matrix 
+        ``num_inputs`` of its adjacent MIMO system. (Matrix
         multiplication constraint, basically)
     TypeError
         Any of the passed ``*args`` has unsupported type
@@ -760,7 +760,7 @@ class Series(Basic):
     All the transfer functions should use the same complex variable ``var`` of the Laplace transform.
 
     ``Series(A, B)`` is not equivalent to ``A*B``. It is always in the reverse order, that is ``B*A``.
-    In, SISO systems, it hardly matters, but in MIMO systems, there can be issues due to non-commutative 
+    In, SISO systems, it hardly matters, but in MIMO systems, there can be issues due to non-commutative
     nature of Matrix Multiplication.
 
     See Also
@@ -1159,7 +1159,7 @@ class Series(Basic):
 
 
 class Parallel(Basic):
-    """
+    r"""
     A class for representing parallel configuration of SISO and MIMO transfer functions.
 
     Parameters
@@ -1168,7 +1168,7 @@ class Parallel(Basic):
     args : TransferFunction, TransferFunctionMatrix, Series, Parallel
         Systems in parallel arrangement
     evaluate : Boolean, Keyword
-        When passed ``True``, returns the equivalent 
+        When passed ``True``, returns the equivalent
         Parallel(*args).doit(). Set to ``False`` by default.
 
     Raises
@@ -1238,30 +1238,30 @@ class Parallel(Basic):
     [       TransferFunction(5, 1, s), TransferFunction(s + 2, s**2 - 1, s)]]), Matrix([
     [TransferFunction(s + 2, s**2 - 1, s),        TransferFunction(5, 1, s)],
     [           TransferFunction(1, s, s), TransferFunction(s, s**2 - 1, s)]]))
-    >>> pprint(_)  #  For Better Visualization
-    ⎡  1       s   ⎤   ⎡  s       1   ⎤   ⎡s + 2     5   ⎤
-    ⎢  ─     ──────⎥   ⎢──────    ─   ⎥   ⎢──────    ─   ⎥
-    ⎢  s      2    ⎥   ⎢ 2        s   ⎥   ⎢ 2        1   ⎥
-    ⎢        s  - 1⎥   ⎢s  - 1        ⎥   ⎢s  - 1        ⎥
-    ⎢              ⎥ + ⎢              ⎥ + ⎢              ⎥
-    ⎢s + 2     5   ⎥   ⎢  5     s + 2 ⎥   ⎢  1       s   ⎥
-    ⎢──────    ─   ⎥   ⎢  ─     ──────⎥   ⎢  ─     ──────⎥
-    ⎢ 2        1   ⎥   ⎢  1      2    ⎥   ⎢  s      2    ⎥
-    ⎣s  - 1        ⎦   ⎣        s  - 1⎦   ⎣        s  - 1⎦
+    >>> pprint(_, use_unicode=False)  #  For Better Visualization
+    [  1       s   ]   [  s       1   ]   [s + 2     5   ]
+    [  -     ------]   [------    -   ]   [------    -   ]
+    [  s      2    ]   [ 2        s   ]   [ 2        1   ]
+    [        s  - 1]   [s  - 1        ]   [s  - 1        ]
+    [              ] + [              ] + [              ]
+    [s + 2     5   ]   [  5     s + 2 ]   [  1       s   ]
+    [------    -   ]   [  -     ------]   [  -     ------]
+    [ 2        1   ]   [  1      2    ]   [  s      2    ]
+    [s  - 1        ]   [        s  - 1]   [        s  - 1]
     >>> Parallel(tfm_a, tfm_b, tfm_c).doit()
     Matrix([[TransferFunction(3*s**2 + 2*s - 1, s**3 - s, s), TransferFunction(5*s**3 + 2*s**2 - 5*s - 1, s**3 - s, s)], [TransferFunction(5*s**3 + 2*s**2 - 3*s - 1, s**3 - s, s), TransferFunction(5*s**2 + 2*s - 3, s**2 - 1, s)]])
-    >>> pprint(_)
-    ⎡      2                   3      2          ⎤
-    ⎢   3⋅s  + 2⋅s - 1      5⋅s  + 2⋅s  - 5⋅s - 1⎥
-    ⎢   ──────────────      ─────────────────────⎥
-    ⎢        3                       3           ⎥
-    ⎢       s  - s                  s  - s       ⎥
-    ⎢                                            ⎥
-    ⎢   3      2                  2              ⎥
-    ⎢5⋅s  + 2⋅s  - 3⋅s - 1     5⋅s  + 2⋅s - 3    ⎥
-    ⎢─────────────────────     ──────────────    ⎥
-    ⎢         3                     2            ⎥
-    ⎣        s  - s                s  - 1        ⎦
+    >>> pprint(_, use_unicode=False)
+    [      2                   3      2          ]
+    [   3*s  + 2*s - 1      5*s  + 2*s  - 5*s - 1]
+    [   --------------      ---------------------]
+    [        3                       3           ]
+    [       s  - s                  s  - s       ]
+    [                                            ]
+    [   3      2                  2              ]
+    [5*s  + 2*s  - 3*s - 1     5*s  + 2*s - 3    ]
+    [---------------------     --------------    ]
+    [         3                     2            ]
+    [        s  - s                s  - 1        ]
 
     Notes
     =====
@@ -1319,7 +1319,7 @@ class Parallel(Basic):
             if _num_SISO == 0:
                 return _instantiate_MIMO_Parallel(*args)
         else:
-            raise TypeError("Not a valid `Parallel` object. Either all the arguments should be" 
+            raise TypeError("Not a valid `Parallel` object. Either all the arguments should be"
                 " SISO or MIMO, not a combination of both.")
 
     @property
@@ -1762,7 +1762,7 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
 
     It is a matrix of transfer functions (``TransferFunction`` objects).
     The arguments are ``arg`` and ``var``, where ``arg``
-    is the compulsory argument. ``arg`` is expected to be of the type list or list of lists 
+    is the compulsory argument. ``arg`` is expected to be of the type list or list of lists
     which holds the transfer functions. ``var``
     is a complex variable (which has to be a ``Symbol``) of the Laplace transform
     used by all the transfer functions in the matrix.
@@ -1771,7 +1771,7 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
     ==========
 
     arg: List, Nested List
-        Users are expected to input a nested list of ``TransferFunction`` 
+        Users are expected to input a nested list of ``TransferFunction``
         (or ``Expr``) objects like they input Numbers in a normal SymPy matrix.
         In case a user inputs a List, it would be considered as a column matrix
         and not row. So, its better to pass nested list to avoid such dilemma.
@@ -1807,39 +1807,39 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
     >>> tfm_2 = TransferFunctionMatrix([[tf_1, -tf_3], [tf_2, -tf_1], [tf_3, -tf_2]])
     >>> tfm_2
     Matrix([[TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(-3, s + 2, s)], [TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(-a - s, s**2 + s + 1, s)], [TransferFunction(3, s + 2, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)]])
-    >>> pprint(tfm_2)  # pretty-printing for better visualization
-    ⎡   a + s           -3       ⎤
-    ⎢ ──────────       ─────     ⎥
-    ⎢  2               s + 2     ⎥
-    ⎢ s  + s + 1                 ⎥
-    ⎢                            ⎥
-    ⎢ 4                          ⎥
-    ⎢p  - 3⋅p + 2      -a - s    ⎥
-    ⎢────────────    ──────────  ⎥
-    ⎢   p + s         2          ⎥
-    ⎢                s  + s + 1  ⎥
-    ⎢                            ⎥
-    ⎢                 4          ⎥
-    ⎢     3        - p  + 3⋅p - 2⎥
-    ⎢   ─────      ──────────────⎥
-    ⎣   s + 2          p + s     ⎦
+    >>> pprint(tfm_2, use_unicode=False)  # pretty-printing for better visualization
+    [   a + s           -3       ]
+    [ ----------       -----     ]
+    [  2               s + 2     ]
+    [ s  + s + 1                 ]
+    [                            ]
+    [ 4                          ]
+    [p  - 3*p + 2      -a - s    ]
+    [------------    ----------  ]
+    [   p + s         2          ]
+    [                s  + s + 1  ]
+    [                            ]
+    [                 4          ]
+    [     3        - p  + 3*p - 2]
+    [   -----      --------------]
+    [   s + 2          p + s     ]
 
     TransferFunctionMatrix can be transposed, if user wants to switch the input and output transfer functions
 
     >>> tfm_2.transpose()
     Matrix([[TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(3, s + 2, s)], [TransferFunction(-3, s + 2, s), TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)]])
-    >>> pprint(_)
-    ⎡             4                          ⎤
-    ⎢  a + s     p  - 3⋅p + 2        3       ⎥
-    ⎢──────────  ────────────      ─────     ⎥
-    ⎢ 2             p + s          s + 2     ⎥
-    ⎢s  + s + 1                              ⎥
-    ⎢                                        ⎥
-    ⎢                             4          ⎥
-    ⎢   -3          -a - s     - p  + 3⋅p - 2⎥
-    ⎢  ─────      ──────────   ──────────────⎥
-    ⎢  s + 2       2               p + s     ⎥
-    ⎣             s  + s + 1                 ⎦
+    >>> pprint(_, use_unicode=False)
+    [             4                          ]
+    [  a + s     p  - 3*p + 2        3       ]
+    [----------  ------------      -----     ]
+    [ 2             p + s          s + 2     ]
+    [s  + s + 1                              ]
+    [                                        ]
+    [                             4          ]
+    [   -3          -a - s     - p  + 3*p - 2]
+    [  -----      ----------   --------------]
+    [  s + 2       2               p + s     ]
+    [             s  + s + 1                 ]
 
     TransferFunctionMatrix objects can also be instantiated by passing SymPy expressions
 
@@ -1850,16 +1850,16 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
     >>> tfm_3 = TransferFunctionMatrix([[expr_1, expr_2], [expr_3, expr_4]])  # SymPy will assume the var of the first element as the var for the system
     >>> tfm_3
     Matrix([[TransferFunction(5, s, s), TransferFunction(5*s, s**2 + 2, s)], [TransferFunction(5, s**3 + 2*s, s), TransferFunction(5, 1, s)]])
-    >>> pprint(tfm_3)
-    ⎡   5       5⋅s  ⎤
-    ⎢   ─      ──────⎥
-    ⎢   s       2    ⎥
-    ⎢          s  + 2⎥
-    ⎢                ⎥
-    ⎢   5        5   ⎥
-    ⎢────────    ─   ⎥
-    ⎢ 3          1   ⎥
-    ⎣s  + 2⋅s        ⎦
+    >>> pprint(tfm_3, use_unicode=False)
+    [   5       5*s  ]
+    [   -      ------]
+    [   s       2    ]
+    [          s  + 2]
+    [                ]
+    [   5        5   ]
+    [--------    -   ]
+    [ 3          1   ]
+    [s  + 2*s        ]
     >>> tfm_3.var
     s
     >>> tfm_3.shape
@@ -1879,22 +1879,22 @@ class TransferFunctionMatrix(ImmutableMatrix, Basic):
     TransferFunction(5, s, s)
     >>> tfm_3[:, 0]  # gives the first column
     Matrix([[TransferFunction(5, s, s)], [TransferFunction(5, s**3 + 2*s, s)]])
-    >>> pprint(_)
-    ⎡   5    ⎤
-    ⎢   ─    ⎥
-    ⎢   s    ⎥
-    ⎢        ⎥
-    ⎢   5    ⎥
-    ⎢────────⎥
-    ⎢ 3      ⎥
-    ⎣s  + 2⋅s⎦
+    >>> pprint(_, use_unicode=False)
+    [   5    ]
+    [   -    ]
+    [   s    ]
+    [        ]
+    [   5    ]
+    [--------]
+    [ 3      ]
+    [s  + 2*s]
     >>> tfm_3[0, :]  # gives the first row
     Matrix([[TransferFunction(5, s, s), TransferFunction(5*s, s**2 + 2, s)]])
-    >>> pprint(_)
-    ⎡5   5⋅s  ⎤
-    ⎢─  ──────⎥
-    ⎢s   2    ⎥
-    ⎣   s  + 2⎦
+    >>> pprint(_, use_unicode=False)
+    [5   5*s  ]
+    [-  ------]
+    [s   2    ]
+    [   s  + 2]
 
     To negate a transfer function matrix, ``-`` operator can be prepended:
 
