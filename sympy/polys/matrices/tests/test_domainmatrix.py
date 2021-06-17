@@ -693,3 +693,21 @@ def test_DomainMatrix_getitem():
     assert dM[2:,2:] == DomainMatrix({0: {0: 1}, 2: {2: 1}}, (3, 3), ZZ)
     assert dM[3:,3:] == DomainMatrix({1: {1: 1}}, (2, 2), ZZ)
     assert dM[2:, 6:] == DomainMatrix({}, (3, 0), ZZ)
+
+
+def test_DomainMatrix_setitem():
+    dM = DomainMatrix({2: {2: ZZ(1)}, 4: {4: ZZ(1)}}, (5, 5), ZZ)
+    dM[2, 2] = ZZ(2)
+    assert dM == DomainMatrix({2: {2: ZZ(2)}, 4: {4: ZZ(1)}}, (5, 5), ZZ)
+    def setitem(i, j, val):
+        dM[i, j] = val
+    raises(TypeError, lambda: setitem(2, 2, QQ(1, 2)))
+    raises(NotImplementedError, lambda: setitem(slice(1, 2), 2, ZZ(1)))
+
+
+def test_DomainMatrix_pickling():
+    import pickle
+    dM = DomainMatrix({2: {2: ZZ(1)}, 4: {4: ZZ(1)}}, (5, 5), ZZ)
+    assert pickle.loads(pickle.dumps(dM)) == dM
+    dM = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    assert pickle.loads(pickle.dumps(dM)) == dM
