@@ -1067,6 +1067,7 @@ def sample(expr, condition=None, size=(), library='scipy',
     numsamples : int
         Number of samples, each with size as ``size``
         numsamples has been deprecated since v1.9
+        see https://github.com/sympy/sympy/pull/21590#discussion_r649227690.
     seed :
         An object to be used as seed by the given external library for sampling `expr`.
         Following is the list of possible types of object for the supported libraries,
@@ -1079,31 +1080,15 @@ def sample(expr, condition=None, size=(), library='scipy',
         related to the given library will be used.
         No modifications to environment's global seed settings
         are done by this argument.
+    
+    Returns
+    =======
 
-    DEPRECATION:
-    ============
-     numsamples has been deprecated since v1.9 and is provided for backwards compatibility.
-    see https://github.com/sympy/sympy/pull/21590#discussion_r649227690
+    sample: float/list/numpy.ndarray
+        one sample or a collection of samples of the random expression
 
-    Returns: sample(X, numsamples=int) --> returns list object
-        >>> from sympy.stats import Normal
-        >>> N = Normal('N', 3, 4) # Continuous Random Variable
-        >>> sample(N, numsamples=3) # doctest: +SKIP
-        [5.392867714967491, 1.9493292666994828, 2.8863113974450023]
-
-        >>> sample(N, size=(3,4), numsamples=2) # doctest: +SKIP
-        [array([[ 4.19169903,  2.74338881,  4.30844792,  9.41628965],
-                [ 2.83650055,  5.42198843,  0.51642064,  3.97519285],
-                [-1.47606917,  9.00455522,  1.79536243, -2.78439769]]),
-         array([[ 1.69755184,  4.47297553, -1.31848697, -5.42126013],
-                [ 4.61302763,  6.5933356 ,  5.68475338,  1.3121721 ],
-                [ 5.80380269,  1.82041482,  9.68054121,  0.94928246]])]
-
-    .. versionchanged:: 1.7.
-        sample returns an iterator containing the samples instead of value
-
-    .. versionchanged:: 1.9.
-        sample returns values or array of values instead of an iterator and numsamples is deprecated.
+        sample(X) returns float object
+        sample(X, size=int/tuple) returns numpy.ndarray object
 
     Examples
     ========
@@ -1113,7 +1098,6 @@ def sample(expr, condition=None, size=(), library='scipy',
     >>> die_roll = sample(X + Y + Z)
     >>> die_roll # doctest: +SKIP
     3
-
     >>> N = Normal('N', 3, 4) # Continuous Random Variable
     >>> samp = sample(N)
     >>> samp in N.pspace.domain.set
@@ -1124,11 +1108,9 @@ def sample(expr, condition=None, size=(), library='scipy',
     >>> samp_list = sample(N, size=4)
     >>> [sam in N.pspace.domain.set for sam in samp_list]
     [True, True, True, True]
-
     >>> sample(N, size = (2,3)) # doctest: +SKIP
     array([[5.42519758, 6.40207856, 4.94991743],
        [1.85819627, 6.83403519, 1.9412172 ]])
-
     >>> G = Geometric('G', 0.5) # Discrete Random Variable
     >>> samp_list = sample(G, size=3)
     >>> samp_list # doctest: +SKIP
@@ -1145,17 +1127,11 @@ def sample(expr, condition=None, size=(), library='scipy',
     >>> [tuple(sam) in MN.pspace.domain.set for sam in samp_list]
     [True, True, True, True]
 
+    .. versionchanged:: 1.7.0
+        sample returns an iterator containing the samples instead of value.
 
-    Returns
-    =======
-
-    sample: float/list/numpy.ndarray
-        one sample or a collection of samples of the random expression
-
-        sample(X) --> returns float object
-
-        sample(X, size=int/tuple) --> returns numpy.ndarray object
-
+    .. versionchanged:: 1.9.0
+        sample returns values or array of values instead of an iterator and numsamples is deprecated.
 
     """
 
