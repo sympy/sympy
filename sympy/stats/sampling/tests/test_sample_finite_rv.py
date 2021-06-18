@@ -2,15 +2,14 @@ from sympy import S, Rational
 from sympy.external import import_module
 from sympy.stats import Binomial, sample, Die, FiniteRV, DiscreteUniform, Bernoulli, BetaBinomial, Hypergeometric, \
     Rademacher
-from sympy.testing.pytest import skip, ignore_warnings, raises
+from sympy.testing.pytest import skip, raises
 
 def test_given_sample():
     X = Die('X', 6)
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests')
-    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        assert sample(X, X > 5) == 6
+    assert sample(X, X > 5) == 6
 
 def test_sample_numpy():
     distribs_numpy = [
@@ -21,13 +20,12 @@ def test_sample_numpy():
     if not numpy:
         skip('Numpy is not installed. Abort tests for _sample_numpy.')
     else:
-        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-            for X in distribs_numpy:
-                samps = sample(X, size=size, library='numpy')
-                for sam in samps:
-                    assert sam in X.pspace.domain.set
-            raises(NotImplementedError,
-                   lambda: sample(Die("D"), library='numpy'))
+        for X in distribs_numpy:
+            samps = sample(X, size=size, library='numpy')
+            for sam in samps:
+                assert sam in X.pspace.domain.set
+        raises(NotImplementedError,
+               lambda: sample(Die("D"), library='numpy'))
     raises(NotImplementedError,
            lambda: Die("D").pspace.sample(library='tensorflow'))
 
@@ -49,15 +47,14 @@ def test_sample_scipy():
     if not scipy:
         skip('Scipy not installed. Abort tests for _sample_scipy.')
     else:
-        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-            for X in distribs_scipy:
-                samps = sample(X, size=size)
-                samps2 = sample(X, size=(2, 2))
-                for sam in samps:
-                    assert sam in X.pspace.domain.set
-                for i in range(2):
-                    for j in range(2):
-                        assert samps2[i][j] in X.pspace.domain.set
+        for X in distribs_scipy:
+            samps = sample(X, size=size)
+            samps2 = sample(X, size=(2, 2))
+            for sam in samps:
+                assert sam in X.pspace.domain.set
+            for i in range(2):
+                for j in range(2):
+                    assert samps2[i][j] in X.pspace.domain.set
 
 
 def test_sample_pymc3():
@@ -70,13 +67,12 @@ def test_sample_pymc3():
     if not pymc3:
         skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
     else:
-        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-            for X in distribs_pymc3:
-                samps = sample(X, size=size, library='pymc3')
-                for sam in samps:
-                    assert sam in X.pspace.domain.set
-            raises(NotImplementedError,
-                              lambda: (sample(Die("D"), library='pymc3')))
+        for X in distribs_pymc3:
+            samps = sample(X, size=size, library='pymc3')
+            for sam in samps:
+                assert sam in X.pspace.domain.set
+        raises(NotImplementedError,
+                          lambda: (sample(Die("D"), library='pymc3')))
 
 
 def test_sample_seed():

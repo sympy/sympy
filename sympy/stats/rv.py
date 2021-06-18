@@ -1066,6 +1066,7 @@ def sample(expr, condition=None, size=(), library='scipy',
         by default is 'scipy'
     numsamples : int
         Number of samples, each with size as ``size``
+        numsamples has been deprecated since v1.9
     seed :
         An object to be used as seed by the given external library for sampling `expr`.
         Following is the list of possible types of object for the supported libraries,
@@ -1078,6 +1079,23 @@ def sample(expr, condition=None, size=(), library='scipy',
         related to the given library will be used.
         No modifications to environment's global seed settings
         are done by this argument.
+
+    DEPRECATION:
+    ============
+     numsamples has been deprecated since v1.9 and is provided for backwards compatibility.
+    see https://github.com/sympy/sympy/pull/21590#discussion_r649227690
+
+    Returns: sample(X, numsamples=int) --> returns list object
+        >>> sample(N, numsamples=3) # doctest: +SKIP
+        [6.07745952932677, 8.024735984727329, 3.7581166319235315]
+
+        >>> sample(N, size=(3,4), numsamples=2) # doctest: +SKIP
+        [array([[ 0.07664441, -1.42557566,  3.66110395,  5.37576465],
+                [ 0.4993775 ,  7.80504228, -0.22978144,  4.5228755 ],
+                [ 5.91415701,  6.85960422,  9.52447392,  0.63699082]]),
+         array([[-1.89958054,  7.22563251,  1.74164548,  7.39832687],
+                [ 3.6053125 ,  4.83748511,  4.77375537,  0.35377489],
+                [ 5.31794739,  8.57816162,  2.16933622, -6.13675074]])]
 
     .. versionchanged:: 1.7.
         sample returns an iterator containing the samples instead of value
@@ -1105,20 +1123,9 @@ def sample(expr, condition=None, size=(), library='scipy',
     >>> [sam in N.pspace.domain.set for sam in samp_list]
     [True, True, True, True]
 
-    >>> sample(N, numsamples=3) # doctest: +SKIP
-    [6.07745952932677, 8.024735984727329, 3.7581166319235315]
-
     >>> sample(N, size = (2,3)) # doctest: +SKIP
     array([[5.42519758, 6.40207856, 4.94991743],
        [1.85819627, 6.83403519, 1.9412172 ]])
-
-    >>> sample(N, size=(3,4), numsamples=2) # doctest: +SKIP
-    [array([[ 0.07664441, -1.42557566,  3.66110395,  5.37576465],
-       [ 0.4993775 ,  7.80504228, -0.22978144,  4.5228755 ],
-       [ 5.91415701,  6.85960422,  9.52447392,  0.63699082]]),
-    array([[-1.89958054,  7.22563251,  1.74164548,  7.39832687],
-       [ 3.6053125 ,  4.83748511,  4.77375537,  0.35377489],
-       [ 5.31794739,  8.57816162,  2.16933622, -6.13675074]])]
 
     >>> G = Geometric('G', 0.5) # Discrete Random Variable
     >>> samp_list = sample(G, size=3)
@@ -1144,7 +1151,7 @@ def sample(expr, condition=None, size=(), library='scipy',
         one sample or a collection of samples of the random expression
 
         sample(X) --> returns float object
-        sample(X, numsamples=int) --> returns list object
+
         sample(X, size=int/tuple) --> returns numpy.ndarray object
 
 
@@ -1163,11 +1170,7 @@ def sample(expr, condition=None, size=(), library='scipy',
             raise NotImplementedError("numsamples is not currently implemented for pymc3")
         return [next(iterator) for i in range(numsamples)]
 
-    if library == 'pymc3' and size == ():
-        return next(iterator)[0]
-
     return next(iterator)
-
 
 
 def quantile(expr, evaluate=True, **kwargs):
@@ -1600,6 +1603,7 @@ class Distribution(Basic):
 
             from sympy.stats.sampling.sample_scipy import do_sample_scipy
             samps = do_sample_scipy(self, size, seed)
+
         elif library == 'numpy':
             from sympy.stats.sampling.sample_numpy import do_sample_numpy
             import numpy
@@ -1615,19 +1619,22 @@ class Distribution(Basic):
             #size accepts only int in case of pymc3
             #see https://github.com/sympy/sympy/pull/21590#discussion_r649783860
 
-            size = list(size)[1:]
-            if size == []:
-                size=1
-            elif len(size) == 1:
-                size = size[0]
+            draws = list(size)[1:]
+            if draws == []:
+                draws=1
+            elif len(draws) == 1:
+                draws = draws[0]
             else:
                 raise TypeError("Invalid value for `size` in pymc3. Must be int")
             with pymc3.Model():
                 if do_sample_pymc3(self):
-                    samps = [pymc3.sample(draws=size, chains=1,
+                    samps = [pymc3.sample(draws=draws, chains=1,
                                           progressbar=False, random_seed=seed)[:]['X']]
+                    if size == (1,):
+                        samps=list(samps[0])
                 else:
                     samps = None
+
         else:
             raise NotImplementedError("Sampling from %s is not supported yet."
                                       % str(library))
