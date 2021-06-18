@@ -265,6 +265,8 @@ def construct_c(num, den, x, poles, muls):
 
             # Find the Laurent series coefficients about the pole
             ser = rational_laurent_series(num, den, x, pole, mul, 6)
+            if pole == oo:
+                ser = ser[::-1]
 
             # Start with an empty memo to store the coefficients
             # This is for the plus case
@@ -276,17 +278,20 @@ def construct_c(num, den, x, poles, muls):
             # Iterate backwards to find all coefficients
             for s in range(ri-1, 0, -1):
                 sm = 0
-                for j in range(s+1, ri):
-                    sm += temp[j-1]*temp[ri+s-j-1]
                 if s!= 1:
                     temp[s-1] = (ser[mul-ri-s] - sm)/(2*temp[ri-1])
+                    for j in range(s+1, ri):
+                        sm += temp[j-1]*temp[ri+s-j-1]
+                else:
+                    for j in range(s+1, ri):
+                        sm += temp[j-1]*temp[ri+s-j-1]
 
             # Memo for the minus case
             temp1 = [-x for x in temp]
 
             # Find the 0th coefficient in the recurrence
             temp[0] = (ser[mul-ri-s] - sm + ri*temp[ri-1])/(2*temp[ri-1])
-            temp1[0] = (ser[mul-ri-s] - sm + ri*temp1[ri-1])/(2*temp1[ri-1])
+            temp1[0] = (ser[mul-ri-s] - sm  + ri*temp[ri-1])/(2*temp1[ri-1])
 
             # Add both the plus and minus cases' coefficients
             c[-1].extend([temp, temp1])
@@ -370,12 +375,16 @@ def rational_laurent_series(num, den, x, x0, mul, n):
             sol = list(linsolve([sums], [c[i]], x))
             if len(sol):
                 c[i] = sol[0][0]
+    for i in range(len(c)):
+        if len(S(c[i]).atoms(Dummy)):
+            c = c[:i]
+            break
     return c[::-1] if reverse else c
 
 
 def compute_degree(x, poles, choice, c, d, N):
     ybar = 0
-    m = S(d[choice[0]][-1])
+    m = Poly(d[choice[0]][-1], x, extension=True)
 
     # Calculate the first (nested) summation for ybar
     # as given in Step 9 of the Thesis (Pg 82)
@@ -384,16 +393,16 @@ def compute_degree(x, poles, choice, c, d, N):
             # If one of the poles is infinity and its coefficient is
             # not zero, the given solution is invalid as there will be
             # a c/(x - oo)^j term in ybar for some c and j
-            if poles[i] == oo and c[i][choice[i + 1]][j] != 0:
-                return m, ybar, ybar, ybar, False
-            ybar += c[i][choice[i + 1]][j]/(x - poles[i])**(j+1)
-        m -= c[i][choice[i + 1]][0]
+            if poles[i] != oo:
+                # return m, ybar, ybar, ybar, False
+                ybar += c[i][choice[i + 1]][j]/(x - poles[i])**(j+1)
+        m -= Poly(c[i][choice[i + 1]][0], x, extension=True)
 
     # Calculate the second summation for ybar
     for i in range(N+1):
         ybar += d[choice[0]][i]*x**i
     numy, deny = [Poly(e, x, extension=True) for e in ybar.together().as_numer_denom()]
-    return m, ybar, numy, deny, True
+    return m.expr, ybar, numy, deny, True
 
 
 def solve_aux_eq(numa, dena, numy, deny, x, m):
@@ -444,7 +453,6 @@ def solve_riccati(fx, x, b0, b1, b2):
     inf_mul = poles.get(oo, 0)
     poles, muls = list(poles.keys()), list(poles.values())
     val_inf = val_at_inf(num, den, x)
-    print(poles)
 
     if len(poles):
         # Check necessary conditions (outlined in the module docstring)
@@ -469,7 +477,7 @@ def solve_riccati(fx, x, b0, b1, b2):
 
             # Step 10 : Check if a valid solution exists. If yes, also check
             # if m is a non-negative integer
-            if exists and S(m).is_nonnegative == True and S(m).is_integer == True:
+            if exists and m.is_nonnegative == True and m.is_integer == True:
 
                 # Step 11 : Find polynomial solutions of degree m for the auxiliary equation
                 psol, coeffs, exists = solve_aux_eq(num, den, numy, deny, x, m)
