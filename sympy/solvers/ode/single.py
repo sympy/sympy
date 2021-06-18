@@ -17,7 +17,7 @@ from sympy.core.numbers import Float, zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.core.mul import Mul
-from sympy.functions import exp, sqrt, tan, log, hyper
+from sympy.functions import exp, sqrt, tan, log
 from sympy.integrals import Integral
 from sympy.polys.polytools import cancel, factor
 from sympy.simplify import collect, simplify, separatevars, logcombine
@@ -25,7 +25,7 @@ from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
 from sympy.solvers.solvers import solve
 from sympy.solvers.deutils import ode_order, _preprocess
-from .hypergeometric import equivalence_hypergeometric, match_2nd_2F1_hypergeometric
+from .hypergeometric import equivalence_hypergeometric, match_2nd_2F1_hypergeometric, get_sol_2F1_hypergeometric, match_2nd_hypergeometric
 
 
 class ODEMatchError(NotImplementedError):
@@ -1896,25 +1896,10 @@ class Hypergeometric2nd(SingleODESolver):
     def _matches(self):
         eq = self.ode_problem.eq_preprocessed
         func = self.ode_problem.func
-        x = self.ode_problem.sym
-        df = func.diff(x)
-        a3 = Wild('a3', exclude=[func, func.diff(x), func.diff(x, 2)])
-        b3 = Wild('b3', exclude=[func, func.diff(x), func.diff(x, 2)])
-        c3 = Wild('c3', exclude=[func, func.diff(x), func.diff(x, 2)])
-        deq = a3*(func.diff(x, 2)) + b3*df + c3*func
-        r = collect(eq,
-            [func.diff(x, 2), func.diff(x), func]).match(deq)
+        r = match_2nd_hypergeometric(eq, func)
         self.match_object = None
         if r:
-            if not all([r[key].is_polynomial() for key in r]):
-                n, d = eq.as_numer_denom()
-                eq = expand(n)
-                r = collect(eq, [func.diff(x, 2), func.diff(x), func]).match(deq)
-
-        if r and r[a3]!=0:
-            A = cancel(r[b3]/r[a3])
-            B = cancel(r[c3]/r[a3])
-
+            A, B = r
             d = equivalence_hypergeometric(A, B, func)
             if d:
                 if d['type'] == "2F1":
@@ -1927,51 +1912,11 @@ class Hypergeometric2nd(SingleODESolver):
     def _get_general_solution(self, *, simplify_flag: bool = True):
         eq = self.ode_problem.eq
         func = self.ode_problem.func
-        x = self.ode_problem.sym
-        from sympy.simplify.hyperexpand import hyperexpand
-        from sympy import factor
-        C0, C1 = self.ode_problem.get_numbered_constants(num=2)
-        a = self.match_object['a']
-        b = self.match_object['b']
-        c = self.match_object['c']
-
-        A = self.match_object['A']
-        # B = match['B']
-
-        sol = None
         if self.match_object['type'] == "2F1":
-            if c.is_integer == False:
-                sol = C0*hyper([a, b], [c], x) + C1*hyper([a-c+1, b-c+1], [2-c], x)*x**(1-c)
-            elif c == 1:
-                y2 = Integral(exp(Integral((-(a+b+1)*x + c)/(x**2-x), x))/(hyperexpand(hyper([a, b], [c], x))**2), x)*hyper([a, b], [c], x)
-                sol = C0*hyper([a, b], [c], x) + C1*y2
-            elif (c-a-b).is_integer == False:
-                sol = C0*hyper([a, b], [1+a+b-c], 1-x) + C1*hyper([c-a, c-b], [1+c-a-b], 1-x)*(1-x)**(c-a-b)
-
+            sol = get_sol_2F1_hypergeometric(eq, func, self.match_object)
             if sol is None:
                 raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
                     + " the hypergeometric method")
-
-            # applying transformation in the solution
-            subs = self.match_object['mobius']
-            dtdx = simplify(1/(subs.diff(x)))
-            _B = ((a + b + 1)*x - c).subs(x, subs)*dtdx
-            _B = factor(_B + ((x**2 -x).subs(x, subs))*(dtdx.diff(x)*dtdx))
-            _A = factor((x**2 - x).subs(x, subs)*(dtdx**2))
-            e = exp(logcombine(Integral(cancel(_B/(2*_A)), x), force=True))
-            sol = sol.subs(x, self.match_object['mobius'])
-            sol = sol.subs(x, x**self.match_object['k'])
-            e = e.subs(x, x**self.match_object['k'])
-
-            if not A.is_zero:
-                e1 = Integral(A/2, x)
-                e1 = exp(logcombine(e1, force=True))
-                sol = cancel((e/e1)*x**((-self.match_object['k']+1)/2))*sol
-                sol = Eq(func, sol)
-                return sol
-
-            sol = cancel((e)*x**((-self.match_object['k']+1)/2))*sol
-            sol = Eq(func, sol)
 
         return [sol]
 
