@@ -1080,7 +1080,7 @@ def sample(expr, condition=None, size=(), library='scipy',
         related to the given library will be used.
         No modifications to environment's global seed settings
         are done by this argument.
-    
+
     Returns
     =======
 
