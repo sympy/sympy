@@ -1065,8 +1065,8 @@ def sample(expr, condition=None, size=(), library='scipy',
         Choose any of the available options to sample from as string,
         by default is 'scipy'
     numsamples : int
-        Number of samples, each with size as ``size``
-        numsamples has been deprecated since v1.9
+        Number of samples, each with size as ``size``.
+        numsamples has been deprecated since v1.9.
         see https://github.com/sympy/sympy/pull/21590#discussion_r649227690.
     seed :
         An object to be used as seed by the given external library for sampling `expr`.
@@ -1085,10 +1085,10 @@ def sample(expr, condition=None, size=(), library='scipy',
     =======
 
     sample: float/list/numpy.ndarray
-        one sample or a collection of samples of the random expression
+        one sample or a collection of samples of the random expression.
 
-        sample(X) returns float object
-        sample(X, size=int/tuple) returns numpy.ndarray object
+        - sample(X) returns float object.
+        - sample(X, size=int/tuple) returns numpy.ndarray object.
 
     Examples
     ========
