@@ -1086,6 +1086,7 @@ def sample(expr, condition=None, size=(), library='scipy',
     see https://github.com/sympy/sympy/pull/21590#discussion_r649227690
 
     Returns: sample(X, numsamples=int) --> returns list object
+        >>> from sympy.stats import Normal
         >>> N = Normal('N', 3, 4) # Continuous Random Variable
         >>> sample(N, numsamples=3) # doctest: +SKIP
         [5.392867714967491, 1.9493292666994828, 2.8863113974450023]
