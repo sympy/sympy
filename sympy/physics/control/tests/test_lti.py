@@ -1,5 +1,5 @@
 from sympy import symbols, Matrix, factor, Function, simplify, exp, pi, oo, I, \
-    Rational, sqrt, CRootOf
+    Rational, sqrt, CRootOf, sympify, Mul, Pow
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.testing.pytest import raises
 
@@ -28,8 +28,8 @@ def test_TransferFunction_construction():
 
     # no pole-zero cancellation on its own.
     tf4 = TransferFunction((s + 3)*(s - 1), (s - 1)*(s + 5), s)
-    assert tf4.den == (s - 1)*(s + 5)
-    assert tf4.args == ((s + 3)*(s - 1), (s - 1)*(s + 5), s)
+    assert tf4.den == s**2 + 4*s - 5
+    assert tf4.args == (s**2 + 2*s - 3, s**2 + 4*s - 5, s)
 
     tf4_ = TransferFunction(p + 2, p + 2, p)
     assert tf4_.args == (p + 2, p + 2, p)
@@ -91,10 +91,10 @@ def test_TransferFunction_construction():
     assert tf18.num == k_i/s + k_o*s + k_p
     assert tf18.args == (k_i/s + k_o*s + k_p, omega_o**2 + 2*omega_o*s + s**2, s)
 
-    # ValueError when denominator is zero.
-    raises(ValueError, lambda: TransferFunction(4, 0, s))
-    raises(ValueError, lambda: TransferFunction(s, 0, s))
-    raises(ValueError, lambda: TransferFunction(0, 0, s))
+    # ZeroDivisionError when denominator is zero.
+    raises(ZeroDivisionError, lambda: TransferFunction(4, 0, s))
+    raises(ZeroDivisionError, lambda: TransferFunction(s, 0, s))
+    raises(ZeroDivisionError, lambda: TransferFunction(0, 0, s))
 
     raises(TypeError, lambda: TransferFunction(Matrix([1, 2, 3]), s, s))
     raises(TypeError, lambda: TransferFunction(s**pi*exp(s), s, s))
@@ -114,22 +114,8 @@ def test_TransferFunction_functions():
     b = TransferFunction(p + 3, p + 5, p)
     assert tf1.simplify() == simplify(tf1) == b
 
-    # expand the numerator and the denominator.
     G1 = TransferFunction((1 - s)**2, (s**2 + 1)**2, s)
     G2 = TransferFunction(1, -3, p)
-    c = (a2*s**p + a1*s**s + a0*p**p)*(p**s + s**p)
-    d = (b0*s**s + b1*p**s)*(b2*s*p + p**p)
-    e = a0*p**p*p**s + a0*p**p*s**p + a1*p**s*s**s + a1*s**p*s**s + a2*p**s*s**p + a2*s**(2*p)
-    f = b0*b2*p*s*s**s + b0*p**p*s**s + b1*b2*p*p**s*s + b1*p**p*p**s
-    g = a1*a2*s*s**p + a1*p*s + a2*b1*p*s*s**p + b1*p**2*s
-    G3 = TransferFunction(c, d, s)
-    G4 = TransferFunction(a0*s**s - b0*p**p, (a1*s + b1*s*p)*(a2*s**p + p), p)
-
-    assert G1.expand() == TransferFunction(s**2 - 2*s + 1, s**4 + 2*s**2 + 1, s)
-    assert tf1.expand() == TransferFunction(p**2 + 2*p - 3, p**2 + 4*p - 5, p)
-    assert G2.expand() == G2
-    assert G3.expand() == TransferFunction(e, f, s)
-    assert G4.expand() == TransferFunction(a0*s**s - b0*p**p, g, p)
 
     # purely symbolic polynomials.
     p1 = a1*s + a0
@@ -263,6 +249,15 @@ def test_TransferFunction_functions():
     assert tf7.xreplace({s: k}) == TransferFunction(a0*k**p + a1*p**k, a2*p - k, k)
     assert tf7.subs(s, k) == TransferFunction(a0*s**p + a1*p**s, a2*p - s, s)
 
+    # Conversion to Expr with _to_expr()
+    tf8 = TransferFunction(a0*s**5 + 5*s**2 + 3, s**6 - 3, s)
+    tf9 = TransferFunction((5 + s), (5 + s)*(6 + s), s)
+    tf10 = TransferFunction(0, 1, s)
+    tf11 = TransferFunction(1, 1, s)
+    assert tf8._to_expr() == Mul((a0*s**5 + 5*s**2 + 3), Pow((s**6 - 3), -1, evaluate=False), evaluate=False)
+    assert tf9._to_expr() == Mul((s + 5), Pow((s**2 + 11*s + 30), -1, evaluate=False), evaluate=False)
+    assert tf10._to_expr() == Mul(sympify(0), Pow(simplify(1), -1, evaluate=False), evaluate=False)
+    assert tf11._to_expr() == Mul(sympify(1), Pow(simplify(1), -1, evaluate=False), evaluate=False)
 
 def test_TransferFunction_addition_and_subtraction():
     tf1 = TransferFunction(s + 6, s - 5, s)
@@ -277,12 +272,12 @@ def test_TransferFunction_addition_and_subtraction():
     assert tf1 + (tf2 + tf3) == Parallel(tf1, tf2, tf3)
 
     c = symbols("c", commutative=False)
-    raises(ValueError, lambda: tf1 + Matrix([1, 2, 3]))
-    raises(ValueError, lambda: tf2 + c)
+    raises(TypeError, lambda: tf1 + Matrix([1, 2, 3]))
+    raises(TypeError, lambda: tf2 + c)
     raises(ValueError, lambda: tf3 + tf4)
-    raises(ValueError, lambda: tf1 + (s - 1))
-    raises(ValueError, lambda: tf1 + 8)
-    raises(ValueError, lambda: (1 - p**3) + tf1)
+    raises(TypeError, lambda: tf1 + (s - 1))
+    raises(TypeError, lambda: tf1 + 8)
+    raises(TypeError, lambda: (1 - p**3) + tf1)
 
     # subtraction
     assert tf1 - tf2 == Parallel(tf1, -tf2)
@@ -290,12 +285,12 @@ def test_TransferFunction_addition_and_subtraction():
     assert -tf1 - tf3 == Parallel(-tf1, -tf3)
     assert tf1 - tf2 + tf3 == Parallel(tf1, -tf2, tf3)
 
-    raises(ValueError, lambda: tf1 - Matrix([1, 2, 3]))
+    raises(TypeError, lambda: tf1 - Matrix([1, 2, 3]))
     raises(ValueError, lambda: tf3 - tf4)
-    raises(ValueError, lambda: tf1 - (s - 1))
-    raises(ValueError, lambda: tf1 - 8)
-    raises(ValueError, lambda: (s + 5) - tf2)
-    raises(ValueError, lambda: (1 + p**4) - tf1)
+    raises(TypeError, lambda: tf1 - (s - 1))
+    raises(TypeError, lambda: tf1 - 8)
+    raises(TypeError, lambda: (s + 5) - tf2)
+    raises(TypeError, lambda: (1 + p**4) - tf1)
 
 
 def test_TransferFunction_multiplication_and_division():
@@ -318,24 +313,24 @@ def test_TransferFunction_multiplication_and_division():
     assert G1*G2*(G5 + G6) == Series(G1, G2, Parallel(G5, G6))
 
     c = symbols("c", commutative=False)
-    raises(ValueError, lambda: G3 * Matrix([1, 2, 3]))
-    raises(ValueError, lambda: G1 * c)
+    raises(TypeError, lambda: G3 * Matrix([1, 2, 3]))
+    raises(TypeError, lambda: G1 * c)
     raises(ValueError, lambda: G3 * G5)
-    raises(ValueError, lambda: G5 * (s - 1))
-    raises(ValueError, lambda: 9 * G5)
+    raises(TypeError, lambda: G5 * (s - 1))
+    raises(TypeError, lambda: 9 * G5)
 
-    raises(ValueError, lambda: G3 / Matrix([1, 2, 3]))
-    raises(ValueError, lambda: G6 / 0)
-    raises(ValueError, lambda: G3 / G5)
-    raises(ValueError, lambda: G5 / 2)
-    raises(ValueError, lambda: G5 / s**2)
-    raises(ValueError, lambda: (s - 4*s**2) / G2)
-    raises(ValueError, lambda: 0 / G4)
-    raises(ValueError, lambda: G5 / G6)
-    raises(ValueError, lambda: -G3 /G4)
-    raises(ValueError, lambda: G7 / (1 + G6))
-    raises(ValueError, lambda: G7 / (G5 * G6))
-    raises(ValueError, lambda: G7 / (G7 + (G5 + G6)))
+    raises(TypeError, lambda: G3 / Matrix([1, 2, 3]))
+    raises(TypeError, lambda: G6 / 0)
+    raises(TypeError, lambda: G3 / G5)
+    raises(TypeError, lambda: G5 / 2)
+    raises(TypeError, lambda: G5 / s**2)
+    raises(TypeError, lambda: (s - 4*s**2) / G2)
+    raises(TypeError, lambda: 0 / G4)
+    raises(TypeError, lambda: G5 / G6)
+    raises(TypeError, lambda: -G3 /G4)
+    raises(TypeError, lambda: G7 / (1 + G6))
+    raises(TypeError, lambda: G7 / (G5 * G6))
+    raises(TypeError, lambda: G7 / (G7 + (G5 + G6)))
 
 
 def test_TransferFunction_is_proper():
@@ -440,7 +435,7 @@ def test_Series_functions():
     assert -(tf1*tf2) == Series(TransferFunction(-1, 1, s), Series(tf1, tf2))
     raises(ValueError, lambda: tf1*tf2*tf4)
     raises(ValueError, lambda: tf1*(tf2 - tf4))
-    raises(ValueError, lambda: tf3*Matrix([1, 2, 3]))
+    raises(TypeError, lambda: tf3*Matrix([1, 2, 3]))
 
     # evaluate=True -> doit()
     assert Series(tf1, tf2, evaluate=True) == Series(tf1, tf2).doit() == \
@@ -550,7 +545,7 @@ def test_Parallel_functions():
     assert (tf1 + tf2 + tf5)*(tf3 + tf5) == Series(Parallel(tf1, tf2, tf5), Parallel(tf3, tf5))
     raises(ValueError, lambda: tf1 + tf2 + tf4)
     raises(ValueError, lambda: tf1 - tf2*tf4)
-    raises(ValueError, lambda: tf3 + Matrix([1, 2, 3]))
+    raises(TypeError, lambda: tf3 + Matrix([1, 2, 3]))
 
     # evaluate=True -> doit()
     assert Parallel(tf1, tf2, evaluate=True) == Parallel(tf1, tf2).doit() == \
