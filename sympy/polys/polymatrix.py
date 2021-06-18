@@ -138,7 +138,7 @@ class MutablePolyDenseMatrix:
 
     @classmethod
     def from_Matrix(cls, other, *gens, ring=None):
-        return cls(*other.shape, other._flat, *gens, ring=ring)
+        return cls(*other.shape, other[:], *gens, ring=ring)
 
     def set_gens(self, gens):
         return self.from_Matrix(self.to_Matrix(), gens)
