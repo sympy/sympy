@@ -86,6 +86,27 @@ class SDM(dict):
             else:
                 raise IndexError("index out of range")
 
+    def setitem(self, i, j, value):
+        m, n = self.shape
+        if not (-m <= i < m and -n <= j < n):
+            raise IndexError("index out of range")
+        i, j = i % m, j % n
+        if value:
+            try:
+                self[i][j] = value
+            except KeyError:
+                self[i] = {j: value}
+        else:
+            rowi = self.get(i, None)
+            if rowi is not None:
+                try:
+                    del rowi[j]
+                except KeyError:
+                    pass
+                else:
+                    if not rowi:
+                        del self[i]
+
     def extract_slice(self, slice1, slice2):
         m, n = self.shape
         ri = range(m)[slice1]

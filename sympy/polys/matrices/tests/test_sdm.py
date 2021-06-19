@@ -78,6 +78,49 @@ def test_SDM_to_ddm():
     assert A.to_ddm() == B
 
 
+def test_SDM_to_sdm():
+    A = SDM({0:{1: ZZ(1)}}, (2, 2), ZZ)
+    assert A.to_sdm() == A
+
+
+def test_SDM_getitem():
+    A = SDM({0:{1:ZZ(1)}}, (2, 2), ZZ)
+    assert A.getitem(0, 0) == ZZ.zero
+    assert A.getitem(0, 1) == ZZ.one
+    assert A.getitem(1, 0) == ZZ.zero
+    assert A.getitem(-2, -2) == ZZ.zero
+    assert A.getitem(-2, -1) == ZZ.one
+    assert A.getitem(-1, -2) == ZZ.zero
+    raises(IndexError, lambda: A.getitem(2, 0))
+    raises(IndexError, lambda: A.getitem(0, 2))
+
+
+def test_SDM_setitem():
+    A = SDM({0:{1:ZZ(1)}}, (2, 2), ZZ)
+    A.setitem(0, 0, ZZ(1))
+    assert A == SDM({0:{0:ZZ(1), 1:ZZ(1)}}, (2, 2), ZZ)
+    A.setitem(1, 0, ZZ(1))
+    assert A == SDM({0:{0:ZZ(1), 1:ZZ(1)}, 1:{0:ZZ(1)}}, (2, 2), ZZ)
+    A.setitem(1, 0, ZZ(0))
+    assert A == SDM({0:{0:ZZ(1), 1:ZZ(1)}}, (2, 2), ZZ)
+    # Repeat the above test so that this time the row is empty
+    A.setitem(1, 0, ZZ(0))
+    assert A == SDM({0:{0:ZZ(1), 1:ZZ(1)}}, (2, 2), ZZ)
+    A.setitem(0, 0, ZZ(0))
+    assert A == SDM({0:{1:ZZ(1)}}, (2, 2), ZZ)
+    # This time the row is there but column is empty
+    A.setitem(0, 0, ZZ(0))
+    assert A == SDM({0:{1:ZZ(1)}}, (2, 2), ZZ)
+    raises(IndexError, lambda: A.setitem(2, 0, ZZ(1)))
+    raises(IndexError, lambda: A.setitem(0, 2, ZZ(1)))
+
+
+def test_SDM_extract_slice():
+    A = SDM({0:{0:ZZ(1), 1:ZZ(2)}, 1:{0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
+    B = A.extract_slice(slice(1, 2), slice(1, 2))
+    assert B == SDM({0:{0:ZZ(4)}}, (1, 1), ZZ)
+
+
 def test_SDM_zeros():
     A = SDM.zeros((2, 2), ZZ)
     assert A.domain == ZZ
@@ -95,6 +138,11 @@ def test_SDM_eye():
     assert A.domain == ZZ
     assert A.shape == (2, 2)
     assert dict(A) == {0:{0:ZZ(1)}, 1:{1:ZZ(1)}}
+
+
+def test_SDM_diag():
+    A = SDM.diag([ZZ(1), ZZ(2)], ZZ, (2, 3))
+    assert A == SDM({0:{0:ZZ(1)}, 1:{1:ZZ(2)}}, (2, 3), ZZ)
 
 
 def test_SDM_transpose():

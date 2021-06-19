@@ -1238,6 +1238,7 @@ def test_assumptions_copy():
 
 
 def test_check_assumptions():
+    assert check_assumptions(1, 0) is False
     x = Symbol('x', positive=True)
     assert check_assumptions(1, x) is True
     assert check_assumptions(1, 1) is True

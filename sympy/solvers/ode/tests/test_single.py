@@ -42,7 +42,7 @@ from sympy.integrals.risch import NonElementaryIntegral
 from sympy.solvers.ode import classify_ode, dsolve
 from sympy.solvers.ode.ode import allhints, _remove_redundant_solutions
 from sympy.solvers.ode.single import (FirstLinear, ODEMatchError,
-    SingleODEProblem, SingleODESolver)
+    SingleODEProblem, SingleODESolver, NthOrderReducible)
 
 from sympy.solvers.ode.subscheck import checkodesol
 
@@ -501,17 +501,14 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
 
 
 def test_nth_order_reducible():
-    from sympy.solvers.ode.ode import _nth_order_reducible_match
-
-    F = lambda eq: _nth_order_reducible_match(eq, f(x))
+    F = lambda eq: NthOrderReducible(SingleODEProblem(eq, f(x), x))._matches()
     D = Derivative
-    assert F(D(y*f(x), x, y) + D(f(x), x)) is None
-    assert F(D(y*f(y), y, y) + D(f(y), y)) is None
-    assert F(f(x)*D(f(x), x) + D(f(x), x, 2)) is None
-    assert F(D(x*f(y), y, 2) + D(u*y*f(x), x, 3)) is None  # no simplification by design
-    assert F(D(f(y), y, 2) + D(f(y), y, 3) + D(f(x), x, 4)) is None
-    assert F(D(f(x), x, 2) + D(f(x), x, 3)) == dict(n=2)
-
+    assert F(D(y*f(x), x, y) + D(f(x), x)) == False
+    assert F(D(y*f(y), y, y) + D(f(y), y)) == False
+    assert F(f(x)*D(f(x), x) + D(f(x), x, 2))== False
+    assert F(D(x*f(y), y, 2) + D(u*y*f(x), x, 3)) == False  # no simplification by design
+    assert F(D(f(y), y, 2) + D(f(y), y, 3) + D(f(x), x, 4)) == False
+    assert F(D(f(x), x, 2) + D(f(x), x, 3)) == True
     _ode_solver_test(_get_examples_ode_sol_nth_order_reducible)
 
 
