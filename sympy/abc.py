@@ -98,10 +98,10 @@ _clash2 = {}
 while ns:
     _k, _ = ns.popitem()
     if _k in _greek:
-        _clash2[_k] = Symbol(_k)
+        _clash2[_k] = None
         _greek.remove(_k)
     elif _k in _latin:
-        _clash1[_k] = Symbol(_k)
+        _clash1[_k] = None
         _latin.remove(_k)
 _clash = {}
 _clash.update(_clash1)

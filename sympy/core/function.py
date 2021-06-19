@@ -1707,6 +1707,10 @@ class Derivative(Expr):
             ret.update(count.free_symbols)
         return ret
 
+    @property
+    def kind(self):
+        return self.args[0].kind
+
     def _eval_subs(self, old, new):
         # The substitution (old, new) cannot be done inside
         # Derivative(expr, vars) for a variety of reasons
