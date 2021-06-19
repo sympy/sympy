@@ -121,6 +121,44 @@ class SDM(dict):
 
         return self.new(sdm, (len(ri), len(ci)), self.domain)
 
+    def extract(self, rows, cols):
+        if not (self and rows and cols):
+            return self.zeros((len(rows), len(cols)), self.domain)
+
+        m, n = self.shape
+        if not (-m <= min(rows) <= max(rows) < m):
+            raise IndexError('Row index out of range')
+        if not (-n <= min(cols) <= max(cols) < n):
+            raise IndexError('Column index out of range')
+
+        # rows and cols can contain duplicates e.g. M[[1, 2, 2], [0, 1]]
+        # Build a map from row/col in self to list of rows/cols in output
+        rowmap = defaultdict(list)
+        colmap = defaultdict(list)
+        for i2, i1 in enumerate(rows):
+            rowmap[i1 % m].append(i2)
+        for j2, j1 in enumerate(cols):
+            colmap[j1 % n].append(j2)
+
+        # Used to efficiently skip zero rows/cols
+        rowset = set(rowmap)
+        colset = set(colmap)
+
+        sdm1 = self
+        sdm2 = {}
+        for i1 in rowset & set(sdm1):
+            row1 = sdm1[i1]
+            row2 = {}
+            for j1 in colset & set(row1):
+                row1_j1 = row1[j1]
+                for j2 in colmap[j1]:
+                    row2[j2] = row1_j1
+            if row2:
+                for i2 in rowmap[i1]:
+                    sdm2[i2] = row2.copy()
+
+        return self.new(sdm2, (len(rows), len(cols)), self.domain)
+
     def __str__(self):
         rowsstr = []
         for i, row in self.items():

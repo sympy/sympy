@@ -141,6 +141,9 @@ class DomainMatrix:
 
         return self.from_rep(self.rep.extract_slice(i, j))
 
+    def extract(self, rowslist, colslist):
+        return self.from_rep(self.rep.extract(rowslist, colslist))
+
     def __setitem__(self, key, value):
         i, j = key
         if not self.domain.of_type(value):
