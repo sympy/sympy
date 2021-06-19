@@ -1898,7 +1898,7 @@ class Hypergeometric2nd(SingleODESolver):
 
     .. math:: y'' + A(x) y' + B(x) y = 0\text{,}
 
-    where `A'/2 + A^2/4 - B`  is a rational function of x.
+    where `A` and `B` are rational functions.
 
     These kinds of differential equations have solution of non-Liouvillian form.
 
@@ -1908,13 +1908,17 @@ class Hypergeometric2nd(SingleODESolver):
 
     where {a, b, c} are arbitrary constants.
 
-    A note: Although the paper in reference describes an algorithm that should find all solutions
-    of the form of below equation for 2F1, 0F1 and 1F1 only the 2F1 case is implemented in
-    Sympy right now.
+    Notes
+    =====
+
+    The algorithm should find any solution of the form
 
     .. math:: y = P(x) _pF_q(..; ..;\frac{\alpha x^k + \beta}{\gamma x^k + \delta})\text{,}
 
-    where pFq is any of 2F1, 1F1 or 0F1.
+    where pFq is any of 2F1, 1F1 or 0F1 and `P` is an "arbitrary function".
+    Currently only the 2F1 case is implemented in SymPy but the other cases are
+    described in the paper and could be implemented in future (contributions
+    welcome!).
 
 
     Examples

@@ -1,9 +1,26 @@
 r'''
-This File contains all the matching and solution method for hypergeometric solver. Main reference
-for this algorithm is taken from  "Non-Liouvillian solutions for second order linear ODEs" by
-L. Chan, E.S. Cheb-Terrab. Although the paper describes an algorithm that should find all solutions
-with 2F1, 0F1 and 1F1,but Sympy only has 2F1 right now.
-The code could be extended to handle 0F1 and 1F1 as described in the paper.
+This module contains the implementation of the 2nd_hypergeometric hint for
+dsolve. This is an incomplete implementation of the algorithm described in [1].
+The algorithm solves 2nd order linear ODEs of the form
+
+.. math:: y'' + A(x) y' + B(x) y = 0\text{,}
+
+where `A` and `B` are rational functions. The algorithm should find any
+solution of the form
+
+.. math:: y = P(x) _pF_q(..; ..;\frac{\alpha x^k + \beta}{\gamma x^k + \delta})\text{,}
+
+where pFq is any of 2F1, 1F1 or 0F1 and `P` is an "arbitrary function".
+Currently only the 2F1 case is implemented in SymPy but the other cases are
+described in the paper and could be implemented in future (contributions
+welcome!).
+
+References
+==========
+
+.. [1] L. Chan, E.S. Cheb-Terrab, Non-Liouvillian solutions for second order
+       linear ODEs, (2004).
+       https://arxiv.org/abs/math-ph/0402063
 '''
 
 from sympy.core import S, Pow
@@ -40,6 +57,7 @@ def match_2nd_hypergeometric(eq, func):
         return [A, B]
     else:
         return []
+
 
 def equivalence_hypergeometric(A, B, func):
     # This method for finding the equivalence is only for 2F1 type.
@@ -204,6 +222,7 @@ def equivalence(max_num_pow, dem_pow):
             return "2F1"
 
     return None
+
 
 def get_sol_2F1_hypergeometric(eq, func, match_object):
     x = func.args[0]
