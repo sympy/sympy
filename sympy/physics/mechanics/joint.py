@@ -1,7 +1,6 @@
 from sympy.physics.vector.frame import ReferenceFrame
-from sympy import acos
 from sympy.physics.mechanics.body import Body
-from sympy.physics.vector import Vector, dynamicsymbols, dot, cross
+from sympy.physics.vector import Vector, dynamicsymbols, cross
 from abc import ABC, abstractmethod
 
 __all__ = ['Joint', 'PinJoint']
@@ -148,10 +147,8 @@ class Joint(ABC):
 
     def _align_axis(self, parent, child):
         # Returns the axis and angle between two axis(vectors).
-        axis1 = parent.normalize()
-        axis2 = child.normalize()
-        angle = acos(dot(axis2, axis1))
-        axis = cross(child, parent)
+        angle = parent.angle_between(child)
+        axis = cross(child, parent).normalize()
         return angle, axis
 
 

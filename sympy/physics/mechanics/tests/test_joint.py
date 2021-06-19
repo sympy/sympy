@@ -1,8 +1,8 @@
-from sympy import sin, cos, Matrix, acos, sqrt, pi
+from sympy import sin, cos, Matrix, sqrt, pi
 from sympy.core.symbol import symbols
 from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint
 from sympy.physics.mechanics.joint import Joint
-from sympy.physics.vector import Vector, ReferenceFrame, dot
+from sympy.physics.vector import Vector, ReferenceFrame
 from sympy.testing.pytest import raises
 
 t = dynamicsymbols._t
