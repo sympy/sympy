@@ -136,6 +136,11 @@ def test_SDM_extract():
     B = A.extract([0, 1, 0], [0, 0])
     assert B == SDM({}, (3, 2), ZZ)
 
+    A = SDM({0:{0:ZZ(1), 1:ZZ(2)}, 1:{0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
+    assert A.extract([], []) == SDM.zeros((0, 0), ZZ)
+    assert A.extract([1], []) == SDM.zeros((1, 0), ZZ)
+    assert A.extract([], [1]) == SDM.zeros((0, 1), ZZ)
+
     raises(IndexError, lambda: A.extract([2], [0]))
     raises(IndexError, lambda: A.extract([0], [2]))
     raises(IndexError, lambda: A.extract([-3], [0]))

@@ -715,6 +715,15 @@ def test_DomainMatrix_extract():
     assert dM1.extract([0, 1, 1], [0, 1, 1]) == dM3
     assert dM1.to_sparse().extract([0, 1, 1], [0, 1, 1]) == dM3.to_sparse()
 
+    empty = [
+        ([], [], (0, 0)),
+        ([1], [], (1, 0)),
+        ([], [1], (0, 1)),
+    ]
+    for rows, cols, size in empty:
+        assert dM1.extract(rows, cols) == DomainMatrix.zeros(size, ZZ).to_dense()
+        assert dM1.to_sparse().extract(rows, cols) == DomainMatrix.zeros(size, ZZ)
+
     dM = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     bad_indices = [([2], [0]), ([0], [2]), ([-3], [0]), ([0], [-3])]
     for rows, cols in bad_indices:

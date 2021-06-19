@@ -122,6 +122,9 @@ class SDM(dict):
         return self.new(sdm, (len(ri), len(ci)), self.domain)
 
     def extract(self, rows, cols):
+        if not (self and rows and cols):
+            return self.zeros((len(rows), len(cols)), self.domain)
+
         m, n = self.shape
         if not (-m <= min(rows) <= max(rows) < m):
             raise IndexError('Row index out of range')
