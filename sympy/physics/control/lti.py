@@ -31,7 +31,7 @@ class TransferFunction(Basic, EvalfMixin):
     Explanation
     ===========
 
-    Generally, a dynamical system respresenting a physical model can be described in terms of Linear
+    Generally, a dynamical system representing a physical model can be described in terms of Linear
     Ordinary Differential Equations like -
 
             $\small{b_{m}y^{\left(m\right)}+b_{m-1}y^{\left(m-1\right)}+\dots+b_{1}y^{\left(1\right)}+b_{0}y=
@@ -75,6 +75,9 @@ class TransferFunction(Basic, EvalfMixin):
 
             $H(s) = \frac{Y(s)}{X(s)} = \frac{ \mathcal{L}\left\{y(t)\right\} }{ \mathcal{L}\left\{x(t)\right\} }$
 
+    $s$, also known as complex frequency, is a complex variable in the the Laplace domain. It corresponds to the
+    equivalent variable $t$, in the time domain. Independent variable $t$ gets transformed to $s$ after Laplace
+    transform. To get back to the time domain from Laplace domain, Inverse-Laplace transform is used.
     Transfer function, $H$, is generally given as a rational function in $s$ as-
 
             $H(s) =\ \frac{a_{n}s^{n}+a_{n-1}s^{n-1}+\dots+a_{1}s+a_{0}}{b_{m}s^{m}+b_{m-1}s^{m-1}+\dots+b_{1}s+b_{0}}$
@@ -563,9 +566,7 @@ class TransferFunction(Basic, EvalfMixin):
         return degree(self.num, self.var) == degree(self.den, self.var)
 
     def _to_expr(self):
-        """
-        To convert TransferFunction type to SymPy Expr
-        """
+        """To convert TransferFunction type to SymPy Expr"""
         return Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
 
 
