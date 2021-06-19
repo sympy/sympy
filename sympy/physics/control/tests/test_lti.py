@@ -1,5 +1,5 @@
 from sympy import symbols, Matrix, factor, Function, simplify, exp, pi, oo, I, \
-    Rational, sqrt, CRootOf, sympify, Mul, Pow
+    Rational, sqrt, CRootOf, S, Mul, Pow
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.testing.pytest import raises
 
@@ -256,8 +256,8 @@ def test_TransferFunction_functions():
     tf11 = TransferFunction(1, 1, s)
     assert tf8._to_expr() == Mul((a0*s**5 + 5*s**2 + 3), Pow((s**6 - 3), -1, evaluate=False), evaluate=False)
     assert tf9._to_expr() == Mul((s + 5), Pow((s**2 + 11*s + 30), -1, evaluate=False), evaluate=False)
-    assert tf10._to_expr() == Mul(sympify(0), Pow(simplify(1), -1, evaluate=False), evaluate=False)
-    assert tf11._to_expr() == Mul(sympify(1), Pow(simplify(1), -1, evaluate=False), evaluate=False)
+    assert tf10._to_expr() == Mul(S(0), Pow(1, -1, evaluate=False), evaluate=False)
+    assert tf11._to_expr() == Mul(S(1), Pow(1, -1, evaluate=False), evaluate=False)
 
 def test_TransferFunction_addition_and_subtraction():
     tf1 = TransferFunction(s + 6, s - 5, s)
