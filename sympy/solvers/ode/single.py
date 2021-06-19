@@ -1890,6 +1890,48 @@ class NthOrderReducible(SingleODESolver):
 
 
 class Hypergeometric2nd(SingleODESolver):
+    r"""
+    Solves 2nd order linear differential equations.
+
+    It computes special function solutions which can be expressed using the
+    2F1, 1F1 or 0F1 hypergeometric functions.
+
+    .. math:: y'' + A(x) y' + B(x) y = 0\text{,}
+
+    where `A'/2 + A^2/4 - B`  is a rational function of x.
+
+    These kinds of differential equations have solution of non-Liouvillian form.
+
+    Given linear ODE can be obtained from 2F1 given by
+
+    .. math:: (x^2 - x) y'' + ((a + b + 1) x - c) y' + b a y = 0\text{,}
+
+    where {a, b, c} are arbitrary constants.
+
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Eq, pprint
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = (x*x - x)*f(x).diff(x,2) + (5*x - 1)*f(x).diff(x) + 4*f(x)
+    >>> pprint(dsolve(eq, f(x), '2nd_hypergeometric'))
+                                        _   
+           /        /           4  \\  |_  /-1, -1 |  \
+           |C1 + C2*|log(x) + -----||* |   |       | x|
+           \        \         x + 1// 2  1 \  1    |  /
+    f(x) = --------------------------------------------
+                                    3                  
+                             (x - 1)                   
+
+
+    References
+    ==========
+
+    - "Non-Liouvillian solutions for second order linear ODEs" by L. Chan, E.S. Cheb-Terrab
+
+    """
     hint = "2nd_hypergeometric"
     has_integral = True
 
