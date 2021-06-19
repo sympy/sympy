@@ -1917,13 +1917,13 @@ class Hypergeometric2nd(SingleODESolver):
     >>> f = Function('f')
     >>> eq = (x*x - x)*f(x).diff(x,2) + (5*x - 1)*f(x).diff(x) + 4*f(x)
     >>> pprint(dsolve(eq, f(x), '2nd_hypergeometric'))
-                                        _   
+                                        _
            /        /           4  \\  |_  /-1, -1 |  \
            |C1 + C2*|log(x) + -----||* |   |       | x|
            \        \         x + 1// 2  1 \  1    |  /
     f(x) = --------------------------------------------
-                                    3                  
-                             (x - 1)                   
+                                    3
+                             (x - 1)
 
 
     References
