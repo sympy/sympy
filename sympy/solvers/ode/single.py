@@ -1018,7 +1018,7 @@ class RationalRiccati(SinglePatternODESolver):
         # b0, b1 and b2 must all be rational functions of x, with b2 != 0
         return all([b2 != 0, b0.is_rational_function(x), b1.is_rational_function(x), b2.is_rational_function(x)])
 
-    def _get_general_solution(self, *, simplify: bool = True):
+    def _get_general_solution(self, *, simplify_flag: bool = True):
         # Match the equation
         b0, b1, b2 = self.wilds_match()
         fx = self.ode_problem.func
