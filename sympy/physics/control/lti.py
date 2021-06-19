@@ -75,10 +75,10 @@ class TransferFunction(Basic, EvalfMixin):
 
             $H(s) = \frac{Y(s)}{X(s)} = \frac{ \mathcal{L}\left\{y(t)\right\} }{ \mathcal{L}\left\{x(t)\right\} }$
 
-    $s$, also known as complex frequency, is a complex variable in the the Laplace domain. It corresponds to the
-    equivalent variable $t$, in the time domain. Independent variable $t$ gets transformed to $s$ after Laplace
-    transform. To get back to the time domain from Laplace domain, Inverse-Laplace transform is used.
-    Transfer function, $H$, is generally given as a rational function in $s$ as-
+    $s$, also known as complex frequency, is a complex variable in the Laplace domain. It corresponds to the
+    equivalent variable $t$, in the time domain. Transfer functions are sometimes also referred as Laplace
+    transform of the system's impulse response. Transfer function, $H$, is generally given as a rational
+    function in $s$ as-
 
             $H(s) =\ \frac{a_{n}s^{n}+a_{n-1}s^{n-1}+\dots+a_{1}s+a_{0}}{b_{m}s^{m}+b_{m-1}s^{m-1}+\dots+b_{1}s+b_{0}}$
 
