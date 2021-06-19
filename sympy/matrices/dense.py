@@ -141,11 +141,7 @@ class DenseMatrix(MatrixBase):
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_extract(self, rowsList, colsList):
-        mat = self._flat
-        cols = self.cols
-        indices = (i * cols + j for i in rowsList for j in colsList)
-        return self._new(len(rowsList), len(colsList),
-                         list(mat[i] for i in indices), copy=False)
+        return self._fromrep(self._rep.extract(rowsList, colsList))
 
     def _eval_matrix_mul(self, other):
         other_len = other.rows*other.cols
@@ -340,6 +336,13 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         self._mat2 = flat_list
 
         return self
+
+    @classmethod
+    def _fromrep(cls, rep):
+        obj = super().__new__(cls)
+        obj.rows, obj.cols = rep.shape
+        obj._rep = rep
+        return obj
 
     @property
     def _flat(self):
