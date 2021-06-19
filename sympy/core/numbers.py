@@ -3768,7 +3768,7 @@ class TribonacciConstant(NumberSymbol, metaclass=Singleton):
         return r"\text{TribonacciConstant}"
 
     def __int__(self):
-        return 2
+        return 1
 
     def _eval_evalf(self, prec):
         rv = self._eval_expand_func(function=True)._eval_evalf(prec + 4)
