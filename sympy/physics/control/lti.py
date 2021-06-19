@@ -121,73 +121,76 @@ class TransferFunction(Basic, EvalfMixin):
 
     Any complex variable can be used for ``var``.
 
-    >>> tf2 = TransferFunction((p + 3)*(p - 1), (p - 1)*(p + 5), p)
+    >>> tf2 = TransferFunction(a*p**3 - a*p**2 + s*p, p + a**2, p)
     >>> tf2
-    TransferFunction(p**2 + 2*p - 3, p**2 + 4*p - 5, p)
+    TransferFunction(a*p**3 - a*p**2 + p*s, a**2 + p, p)
+    >>> tf3 = TransferFunction((p + 3)*(p - 1), (p - 1)*(p + 5), p)
+    >>> tf3
+    TransferFunction((p - 1)*(p + 3), (p - 1)*(p + 5), p)
 
     To negate a transfer function the ``-`` operator can be prepended:
 
-    >>> tf3 = TransferFunction(-a + s, p**2 + s, p)
-    >>> -tf3
-    TransferFunction(a - s, p**2 + s, p)
-    >>> tf4 = TransferFunction(s**4 - 2*s**3 + 5*s + 4, s + 4, s)
+    >>> tf4 = TransferFunction(-a + s, p**2 + s, p)
     >>> -tf4
+    TransferFunction(a - s, p**2 + s, p)
+    >>> tf5 = TransferFunction(s**4 - 2*s**3 + 5*s + 4, s + 4, s)
+    >>> -tf5
     TransferFunction(-s**4 + 2*s**3 - 5*s - 4, s + 4, s)
 
     You can use a Float or an Integer (or other constants) as numerator and denominator:
 
-    >>> tf5 = TransferFunction(1/2, 4, s)
-    >>> tf5.num
+    >>> tf6 = TransferFunction(1/2, 4, s)
+    >>> tf6.num
     0.500000000000000
-    >>> tf5.den
+    >>> tf6.den
     4
-    >>> tf5.var
+    >>> tf6.var
     s
-    >>> tf5.args
+    >>> tf6.args
     (0.5, 4, s)
 
     You can take the integer power of a transfer function using the ``**`` operator:
 
-    >>> tf6 = TransferFunction(s + a, s - a, s)
-    >>> tf6**3
-    TransferFunction(a**3 + 3*a**2*s + 3*a*s**2 + s**3, -a**3 + 3*a**2*s - 3*a*s**2 + s**3, s)
-    >>> tf6**0
+    >>> tf7 = TransferFunction(s + a, s - a, s)
+    >>> tf7**3
+    TransferFunction((a + s)**3, (-a + s)**3, s)
+    >>> tf7**0
     TransferFunction(1, 1, s)
-    >>> tf7 = TransferFunction(p + 4, p - 3, p)
-    >>> tf7**-1
+    >>> tf8 = TransferFunction(p + 4, p - 3, p)
+    >>> tf8**-1
     TransferFunction(p - 3, p + 4, p)
 
     Addition, subtraction, and multiplication of transfer functions can form
     unevaluated ``Series`` or ``Parallel`` objects.
 
-    >>> tf8 = TransferFunction(s + 1, s**2 + s + 1, s)
-    >>> tf9 = TransferFunction(s - p, s + 3, s)
-    >>> tf10 = TransferFunction(4*s**2 + 2*s - 4, s - 1, s)
-    >>> tf11 = TransferFunction(1 - s, s**2 + 4, s)
-    >>> tf8 + tf9
+    >>> tf9 = TransferFunction(s + 1, s**2 + s + 1, s)
+    >>> tf10 = TransferFunction(s - p, s + 3, s)
+    >>> tf11 = TransferFunction(4*s**2 + 2*s - 4, s - 1, s)
+    >>> tf12 = TransferFunction(1 - s, s**2 + 4, s)
+    >>> tf9 + tf10
     Parallel(TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(-p + s, s + 3, s))
-    >>> tf9 - tf10
+    >>> tf10 - tf11
     Parallel(TransferFunction(-p + s, s + 3, s), TransferFunction(-4*s**2 - 2*s + 4, s - 1, s))
-    >>> tf8 * tf9
+    >>> tf9 * tf10
     Series(TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(-p + s, s + 3, s))
-    >>> tf9 - (tf8 + tf11)
+    >>> tf10 - (tf9 + tf12)
     Parallel(TransferFunction(-p + s, s + 3, s), TransferFunction(-s - 1, s**2 + s + 1, s), TransferFunction(s - 1, s**2 + 4, s))
-    >>> tf9 - (tf8 * tf11)
+    >>> tf10 - (tf9 * tf12)
     Parallel(TransferFunction(-p + s, s + 3, s), Series(TransferFunction(-1, 1, s), Series(TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(1 - s, s**2 + 4, s))))
-    >>> tf10 * tf9 * tf8
+    >>> tf11 * tf10 * tf9
     Series(TransferFunction(4*s**2 + 2*s - 4, s - 1, s), TransferFunction(-p + s, s + 3, s), TransferFunction(s + 1, s**2 + s + 1, s))
-    >>> tf8 * tf10 + tf9 * tf11
+    >>> tf9 * tf11 + tf10 * tf12
     Parallel(Series(TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(4*s**2 + 2*s - 4, s - 1, s)), Series(TransferFunction(-p + s, s + 3, s), TransferFunction(1 - s, s**2 + 4, s)))
-    >>> (tf8 + tf11) * (tf9 + tf10)
+    >>> (tf9 + tf12) * (tf10 + tf11)
     Series(Parallel(TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(1 - s, s**2 + 4, s)), Parallel(TransferFunction(-p + s, s + 3, s), TransferFunction(4*s**2 + 2*s - 4, s - 1, s)))
 
     These unevaluated ``Series`` or ``Parallel`` objects can convert into the
     resultant transfer function using ``.doit()`` method or by ``.rewrite(TransferFunction)``.
 
-    >>> ((tf8 + tf9) * tf11).doit()
-    TransferFunction(p*s**3 - p - s**4 - s**3 - 3*s**2 + 2*s + 3, s**5 + 4*s**4 + 8*s**3 + 19*s**2 + 16*s + 12, s)
-    >>> (tf8 * tf9 - tf10 * tf11).rewrite(TransferFunction)
-    TransferFunction(-p*s**4 - 3*p*s**2 + 4*p + 4*s**6 + 15*s**5 + 2*s**4 - 13*s**3 - 14*s**2 - 6*s + 12, s**6 + 3*s**5 + 4*s**4 + 11*s**3 - 3*s**2 - 4*s - 12, s)
+    >>> ((tf9 + tf10) * tf12).doit()
+    TransferFunction((1 - s)*((-p + s)*(s**2 + s + 1) + (s + 1)*(s + 3)), (s + 3)*(s**2 + 4)*(s**2 + s + 1), s)
+    >>> (tf9 * tf10 - tf11 * tf12).rewrite(TransferFunction)
+    TransferFunction(-(1 - s)*(s + 3)*(s**2 + s + 1)*(4*s**2 + 2*s - 4) + (-p + s)*(s - 1)*(s + 1)*(s**2 + 4), (s - 1)*(s + 3)*(s**2 + 4)*(s**2 + s + 1), s)
 
     See Also
     ========
@@ -203,7 +206,6 @@ class TransferFunction(Basic, EvalfMixin):
     """
     def __new__(cls, num, den, var):
         num, den = _sympify(num), _sympify(den)
-        num, den = expand(num), expand(den)
 
         if not isinstance(var, Symbol):
             raise TypeError("Variable input must be a Symbol.")
@@ -237,7 +239,7 @@ class TransferFunction(Basic, EvalfMixin):
         p*s + s**2 + 3
         >>> G2 = TransferFunction((p + 5)*(p - 3), (p - 3)*(p + 1), p)
         >>> G2.num
-        p**2 + 2*p - 15
+        (p - 3)*(p + 5)
 
         """
         return self._num
@@ -299,6 +301,26 @@ class TransferFunction(Basic, EvalfMixin):
         tf = cancel(Mul(self.num, 1/self.den, evaluate=False), expand=False).as_numer_denom()
         num_, den_ = tf[0], tf[1]
         return TransferFunction(num_, den_, self.var)
+
+    def expand(self):
+        """
+        Returns the transfer function with numerator and denominator
+        in expanded form.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> G1 = TransferFunction((a - s)**2, (s**2 + a)**2, s)
+        >>> G1.expand()
+        TransferFunction(a**2 - 2*a*s + s**2, a**2 + 2*a*s**2 + s**4, s)
+        >>> G2 = TransferFunction((p + 3*b)*(p - b), (p - b)*(p + 2*b), p)
+        >>> G2.expand()
+        TransferFunction(-3*b**2 + 2*b*p + p**2, -2*b**2 + b*p + p**2, p)
+
+        """
+        return TransferFunction(expand(self.num), expand(self.den), self.var)
 
     def dc_gain(self):
         """
@@ -603,10 +625,10 @@ class Series(Basic):
 
     >>> S3 = Series(tf1, tf2, -tf3)
     >>> S3.doit()
-    TransferFunction(-a*p**4*s**3 + 2*a*p**4 - b*p**2*s**4 + 2*b*p**2*s, -p**2*s**4 - 5*p**2*s - 6*p**2 + s**6 + 5*s**3 + 6*s**2, s)
+    TransferFunction(-p**2*(s**3 - 2)*(a*p**2 + b*s), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
     >>> S4 = Series(tf2, Parallel(tf1, -tf3))
     >>> S4.doit()
-    TransferFunction(a*p**3*s**3 - 2*a*p**3 + a*p**2*s**4 - 2*a*p**2*s + b*p*s**4 - 2*b*p*s + b*s**5 - 2*b*s**2 + p**3*s**3 - 2*p**3 - p**2*s**4 + 2*p**2*s, -p**2*s**4 - 5*p**2*s - 6*p**2 + s**6 + 5*s**3 + 6*s**2, s)
+    TransferFunction((s**3 - 2)*(-p**2*(-p + s) + (p + s)*(a*p**2 + b*s)), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
 
     Notes
     =====
@@ -670,9 +692,9 @@ class Series(Basic):
         >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
         >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
         >>> Series(tf2, tf1).doit()
-        TransferFunction(a*p**2*s**3 - 2*a*p**2 + b*s**4 - 2*b*s, -p*s**4 - 5*p*s - 6*p + s**5 + 5*s**2 + 6*s, s)
+        TransferFunction((s**3 - 2)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s)
         >>> Series(-tf1, -tf2).doit()
-        TransferFunction(a*p**2*s**3 - 2*a*p**2 + b*s**4 - 2*b*s, -p*s**4 - 5*p*s - 6*p + s**5 + 5*s**2 + 6*s, s)
+        TransferFunction((2 - s**3)*(-a*p**2 - b*s), (-p + s)*(s**4 + 5*s + 6), s)
 
         """
         res = None
@@ -877,9 +899,9 @@ class Parallel(Basic):
     You can get the resultant transfer function by using ``.doit()`` method:
 
     >>> Parallel(tf1, tf2, -tf3).doit()
-    TransferFunction(a*p**3*s**4 + 5*a*p**3*s + 6*a*p**3 + a*p**2*s**5 + 5*a*p**2*s**2 + 6*a*p**2*s + b*p*s**5 + 5*b*p*s**2 + 6*b*p*s + b*s**6 + 5*b*s**3 + 6*b*s**2 + p**3*s**4 + 5*p**3*s + 6*p**3 - p**2*s**5 - p**2*s**3 - 5*p**2*s**2 - 6*p**2*s + 2*p**2 + s**5 - 2*s**2, -p**2*s**4 - 5*p**2*s - 6*p**2 + s**6 + 5*s**3 + 6*s**2, s)
+    TransferFunction(-p**2*(-p + s)*(s**4 + 5*s + 6) + (p + s)*((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6)), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
     >>> Parallel(tf2, Series(tf1, -tf3)).doit()
-    TransferFunction(-a*p**4*s**4 - 5*a*p**4*s - 6*a*p**4 - b*p**2*s**5 - 5*b*p**2*s**2 - 6*b*p**2*s - p**2*s**3 + 2*p**2 + s**5 - 2*s**2, -p**2*s**4 - 5*p**2*s - 6*p**2 + s**6 + 5*s**3 + 6*s**2, s)
+    TransferFunction(-p**2*(a*p**2 + b*s)*(s**4 + 5*s + 6) + (-p + s)*(p + s)*(s**3 - 2), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
 
     Notes
     =====
@@ -943,9 +965,9 @@ class Parallel(Basic):
         >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
         >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
         >>> Parallel(tf2, tf1).doit()
-        TransferFunction(a*p**2*s**4 + 5*a*p**2*s + 6*a*p**2 + b*s**5 + 5*b*s**2 + 6*b*s - p*s**3 + 2*p + s**4 - 2*s, -p*s**4 - 5*p*s - 6*p + s**5 + 5*s**2 + 6*s, s)
+        TransferFunction((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s)
         >>> Parallel(-tf1, -tf2).doit()
-        TransferFunction(-a*p**2*s**4 - 5*a*p**2*s - 6*a*p**2 - b*s**5 - 5*b*s**2 - 6*b*s + p*s**3 - 2*p - s**4 + 2*s, -p*s**4 - 5*p*s - 6*p + s**5 + 5*s**2 + 6*s, s)
+        TransferFunction((2 - s**3)*(-p + s) + (-a*p**2 - b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s)
 
         """
         res = None
@@ -1153,12 +1175,12 @@ class Feedback(Basic):
     interconnection using ``.doit()`` method.
 
     >>> F1.doit()
-    TransferFunction(3*s**5 + 16*s**4 - 60*s**3 - 149*s**2 + 176*s - 42, 16*s**5 - 56*s**4 - 111*s**3 + 504*s**2 - 398*s + 88, s)
+    TransferFunction((s + 7)*(s**2 - 4*s + 2)*(3*s**2 + 7*s - 3), ((s + 7)*(s**2 - 4*s + 2) + (5*s - 10)*(3*s**2 + 7*s - 3))*(s**2 - 4*s + 2), s)
     >>> G = TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s)
     >>> C = TransferFunction(5*s + 10, s + 10, s)
     >>> F2 = Feedback(G*C, TransferFunction(1, 1, s))
     >>> F2.doit()
-    TransferFunction(10*s**6 + 165*s**5 + 825*s**4 + 2005*s**3 + 2735*s**2 + 1880*s + 300, 11*s**6 + 189*s**5 + 1015*s**4 + 2617*s**3 + 3984*s**2 + 3260*s + 1200, s)
+    TransferFunction((s + 10)*(5*s + 10)*(s**2 + 2*s + 3)*(2*s**2 + 5*s + 1), (s + 10)*((s + 10)*(s**2 + 2*s + 3) + (5*s + 10)*(2*s**2 + 5*s + 1))*(s**2 + 2*s + 3), s)
 
     To negate a ``Feedback`` object, the ``-`` operator can be prepended:
 
@@ -1281,11 +1303,11 @@ class Feedback(Basic):
         >>> controller = TransferFunction(5*s - 10, s + 7, s)
         >>> F1 = Feedback(plant, controller)
         >>> F1.doit()
-        TransferFunction(3*s**5 + 16*s**4 - 60*s**3 - 149*s**2 + 176*s - 42, 16*s**5 - 56*s**4 - 111*s**3 + 504*s**2 - 398*s + 88, s)
+        TransferFunction((s + 7)*(s**2 - 4*s + 2)*(3*s**2 + 7*s - 3), ((s + 7)*(s**2 - 4*s + 2) + (5*s - 10)*(3*s**2 + 7*s - 3))*(s**2 - 4*s + 2), s)
         >>> G = TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s)
         >>> F2 = Feedback(G, TransferFunction(1, 1, s))
         >>> F2.doit()
-        TransferFunction(2*s**4 + 9*s**3 + 17*s**2 + 17*s + 3, 3*s**4 + 13*s**3 + 27*s**2 + 29*s + 12, s)
+        TransferFunction((s**2 + 2*s + 3)*(2*s**2 + 5*s + 1), (s**2 + 2*s + 3)*(3*s**2 + 7*s + 4), s)
 
         """
         arg_list = list(self.num.args) if isinstance(self.num, Series) else [self.num]

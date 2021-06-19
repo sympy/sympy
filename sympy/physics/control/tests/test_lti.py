@@ -28,8 +28,8 @@ def test_TransferFunction_construction():
 
     # no pole-zero cancellation on its own.
     tf4 = TransferFunction((s + 3)*(s - 1), (s - 1)*(s + 5), s)
-    assert tf4.den == s**2 + 4*s - 5
-    assert tf4.args == (s**2 + 2*s - 3, s**2 + 4*s - 5, s)
+    assert tf4.den == (s - 1)*(s + 5)
+    assert tf4.args == ((s + 3)*(s - 1), (s - 1)*(s + 5), s)
 
     tf4_ = TransferFunction(p + 2, p + 2, p)
     assert tf4_.args == (p + 2, p + 2, p)
@@ -114,8 +114,22 @@ def test_TransferFunction_functions():
     b = TransferFunction(p + 3, p + 5, p)
     assert tf1.simplify() == simplify(tf1) == b
 
+    # expand the numerator and the denominator.
     G1 = TransferFunction((1 - s)**2, (s**2 + 1)**2, s)
     G2 = TransferFunction(1, -3, p)
+    c = (a2*s**p + a1*s**s + a0*p**p)*(p**s + s**p)
+    d = (b0*s**s + b1*p**s)*(b2*s*p + p**p)
+    e = a0*p**p*p**s + a0*p**p*s**p + a1*p**s*s**s + a1*s**p*s**s + a2*p**s*s**p + a2*s**(2*p)
+    f = b0*b2*p*s*s**s + b0*p**p*s**s + b1*b2*p*p**s*s + b1*p**p*p**s
+    g = a1*a2*s*s**p + a1*p*s + a2*b1*p*s*s**p + b1*p**2*s
+    G3 = TransferFunction(c, d, s)
+    G4 = TransferFunction(a0*s**s - b0*p**p, (a1*s + b1*s*p)*(a2*s**p + p), p)
+
+    assert G1.expand() == TransferFunction(s**2 - 2*s + 1, s**4 + 2*s**2 + 1, s)
+    assert tf1.expand() == TransferFunction(p**2 + 2*p - 3, p**2 + 4*p - 5, p)
+    assert G2.expand() == G2
+    assert G3.expand() == TransferFunction(e, f, s)
+    assert G4.expand() == TransferFunction(a0*s**s - b0*p**p, g, p)
 
     # purely symbolic polynomials.
     p1 = a1*s + a0
@@ -255,7 +269,7 @@ def test_TransferFunction_functions():
     tf10 = TransferFunction(0, 1, s)
     tf11 = TransferFunction(1, 1, s)
     assert tf8._to_expr() == Mul((a0*s**5 + 5*s**2 + 3), Pow((s**6 - 3), -1, evaluate=False), evaluate=False)
-    assert tf9._to_expr() == Mul((s + 5), Pow((s**2 + 11*s + 30), -1, evaluate=False), evaluate=False)
+    assert tf9._to_expr() == Mul((s + 5), Pow((5 + s)*(6 + s), -1, evaluate=False), evaluate=False)
     assert tf10._to_expr() == Mul(S(0), Pow(1, -1, evaluate=False), evaluate=False)
     assert tf11._to_expr() == Mul(S(1), Pow(1, -1, evaluate=False), evaluate=False)
 
