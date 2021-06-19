@@ -1246,13 +1246,25 @@ def test_int():
     a = Rational(9, 10)
     assert int(a) == int(-a) == 0
     assert 1/(-1)**Rational(2, 3) == -(-1)**Rational(1, 3)
-    assert int(pi) == 3
-    assert int(E) == 2
-    assert int(GoldenRatio) == 1
-    assert int(TribonacciConstant) == 2
     # issue 10368
     a = Rational(32442016954, 78058255275)
     assert type(int(a)) is type(int(-a)) is int
+
+
+def test_int_NumberSymbols():
+    assert int(Catalan) == 0
+    assert int(EulerGamma) == 0
+    assert int(pi) == 3
+    assert int(E) == 2
+    assert int(GoldenRatio) == 1
+    assert int(TribonacciConstant) == 1
+    for i in [Catalan, E, EulerGamma, GoldenRatio, TribonacciConstant, pi]:
+        a, b = i.approximation_interval(Integer)
+        ia = int(i)
+        assert ia == a
+        assert isinstance(ia, int)
+        assert b = a + 1
+        assert a.is_Integer and b.is_Integer
 
 
 def test_real_bug():
@@ -1718,11 +1730,6 @@ def test_Float_eq():
     assert 2 == Float(2)  # as per Python
     # but in a computation...
     assert t**2 != t**2.0
-
-
-def test_int_NumberSymbols():
-    assert [int(i) for i in [pi, EulerGamma, E, GoldenRatio, Catalan]] == \
-        [3, 0, 2, 1, 0]
 
 
 def test_issue_6640():
