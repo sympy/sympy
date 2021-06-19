@@ -1908,6 +1908,14 @@ class Hypergeometric2nd(SingleODESolver):
 
     where {a, b, c} are arbitrary constants.
 
+    A note: Although the paper in reference describes an algorithm that should find all solutions
+    of the form of below equation for 2F1, 0F1 and 1F1 only the 2F1 case is implemented in
+    Sympy right now.
+
+    .. math:: y = P(x) _pF_q(..; ..;\frac{\alpha x^k + \beta}{\gamma x^k + \delta})\text{,}
+
+    where pFq is any of 2F1, 1F1 or 0F1.
+
 
     Examples
     ========

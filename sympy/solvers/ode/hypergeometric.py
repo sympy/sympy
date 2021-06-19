@@ -1,3 +1,11 @@
+r'''
+This File contains all the matching and solution method for hypergeometric solver. Main reference
+for this algorithm is taken from  "Non-Liouvillian solutions for second order linear ODEs" by
+L. Chan, E.S. Cheb-Terrab. Although the paper describes an algorithm that should find all solutions
+with 2F1, 0F1 and 1F1,but Sympy only has 2F1 right now.
+The code could be extended to handle 0F1 and 1F1 as described in the paper.
+'''
+
 from sympy.core import S, Pow
 from sympy.core.function import expand
 from sympy.core.relational import Eq
