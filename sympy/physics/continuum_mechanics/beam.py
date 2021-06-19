@@ -2345,10 +2345,9 @@ class Beam3D(Beam):
         else:
             return PlotGrid(3, 1, Px, Py, Pz)
 
+    def _plot_bending_moment(self, dir, subs=None):
 
-    def _plot_slope(self, dir, subs=None):
-
-        slope = self.slope()
+        bending_moment = self.bending_moment()
 
         if dir == 'x':
             dir_num = 0
@@ -2365,7 +2364,7 @@ class Beam3D(Beam):
         if subs is None:
             subs = {}
 
-        for sym in slope[dir_num].atoms(Symbol):
+        for sym in bending_moment[dir_num].atoms(Symbol):
             if sym == self.variable:
                 continue
             if sym not in subs:
@@ -2375,9 +2374,8 @@ class Beam3D(Beam):
         else:
             length = self.length
 
-
-        return plot(slope[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Slope along %c direction'%dir,
-                xlabel=r'$\mathrm{%c}$'%dir, ylabel=r'$\mathrm{\theta(%c)}$'%dir, line_color=color)
+        return plot(bending_moment[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Bending Moment along %c direction'%dir,
+                xlabel=r'$\mathrm{%c}$'%dir, ylabel=r'$\mathrm{M(%c)}$'%dir, line_color=color)
 
     def plot_bending_moment(self, dir="all", subs=None):
 
@@ -2450,6 +2448,39 @@ class Beam3D(Beam):
             Py = self._plot_bending_moment('y')
             Pz = self._plot_bending_moment('z')
             return PlotGrid(3, 1, Px, Py, Pz)
+
+    def _plot_slope(self, dir, subs=None):
+
+        slope = self.slope()
+
+        if dir == 'x':
+            dir_num = 0
+            color = 'r'
+
+        elif dir == 'y':
+            dir_num = 1
+            color = 'g'
+
+        elif dir == 'z':
+            dir_num = 2
+            color = 'b'
+
+        if subs is None:
+            subs = {}
+
+        for sym in slope[dir_num].atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
+        else:
+            length = self.length
+
+
+        return plot(slope[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Slope along %c direction'%dir,
+                xlabel=r'$\mathrm{%c}$'%dir, ylabel=r'$\mathrm{\theta(%c)}$'%dir, line_color=color)
 
     def plot_slope(self, dir="all", subs=None):
 
