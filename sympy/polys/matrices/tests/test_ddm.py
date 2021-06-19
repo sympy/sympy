@@ -433,3 +433,20 @@ def test_DDM_extract_slice():
     assert dm.extract_slice(slice(2), slice(3, 4)) == DDM([[], []], (2, 0), ZZ)
     assert dm.extract_slice(slice(3, 4), slice(2)) == DDM([], (0, 2), ZZ)
     assert dm.extract_slice(slice(3, 4), slice(3, 4)) == DDM([], (0, 0), ZZ)
+
+
+def test_DDM_extract():
+    dm1 = DDM([
+        [ZZ(1), ZZ(2), ZZ(3)],
+        [ZZ(4), ZZ(5), ZZ(6)],
+        [ZZ(7), ZZ(8), ZZ(9)]], (3, 3), ZZ)
+    dm2 = DDM([
+        [ZZ(6), ZZ(4)],
+        [ZZ(3), ZZ(1)]], (2, 2), ZZ)
+    assert dm1.extract([1, 0], [2, 0]) == dm2
+    assert dm1.extract([-2, 0], [-1, 0]) == dm2
+
+    raises(IndexError, lambda: dm2.extract([2], [0]))
+    raises(IndexError, lambda: dm2.extract([0], [2]))
+    raises(IndexError, lambda: dm2.extract([-3], [0]))
+    raises(IndexError, lambda: dm2.extract([0], [-3]))
