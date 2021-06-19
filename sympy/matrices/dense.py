@@ -138,7 +138,7 @@ class DenseMatrix(MatrixBase):
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_extract(self, rowsList, colsList):
-        mat = self._flat
+        mat = self._mat
         cols = self.cols
         indices = (i * cols + j for i in rowsList for j in colsList)
         return self._new(len(rowsList), len(colsList),
