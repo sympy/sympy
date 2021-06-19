@@ -1912,7 +1912,7 @@ class Hypergeometric2nd(SingleODESolver):
     Examples
     ========
 
-    >>> from sympy import Function, dsolve, Eq, pprint
+    >>> from sympy import Function, dsolve, pprint
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> eq = (x*x - x)*f(x).diff(x,2) + (5*x - 1)*f(x).diff(x) + 4*f(x)
