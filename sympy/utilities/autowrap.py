@@ -8,13 +8,33 @@ python.
 This module provides a common interface for different external backends, such
 as f2py, fwrap, Cython, SWIG(?) etc. (Currently only f2py and Cython are
 implemented) The goal is to provide access to compiled binaries of acceptable
-performance with a one-button user interface, i.e.
+performance with a one-button user interface, e.g.,
 
     >>> from sympy.abc import x,y
-    >>> expr = ((x - y)**(25)).expand()
-    >>> binary_callable = autowrap(expr)
-    >>> binary_callable(1, 2)
+    >>> expr = (x - y)**25
+    >>> flat = expr.expand()
+    >>> binary_callable = autowrap(flat)
+    >>> binary_callable(2, 3)
     -1.0
+
+Although a SymPy user might primarily be interested in working with
+mathematical expressions and not about the details of wrapping tools
+in order to evaluate expressions numerically which are expensive to
+calculate, the user cannot do so without some understanding of the
+limits in the target language. For example, the expanded expression
+contains large coefficients which result in loss of precision when
+computing the expression:
+
+    >>> binary_callable(3, 2)
+    0.0
+    >>> binary_callable(4, 5), binary_callable(5, 4)
+    (-22925376.0, 25165824.0)
+
+Wrapping the unexpanded expression gives the expected behavior:
+
+    >>> e = autowrap(expr)
+    >>> e(4, 5), e(5, 4)
+    (-1.0, 1.0)
 
 The callable returned from autowrap() is a binary python function, not a
 SymPy object.  If it is desired to use the compiled function in symbolic
@@ -29,11 +49,6 @@ lambdify().
     y + 2*f(x, y)
     >>> (2*f(x, y) + y).evalf(2, subs={x: 1, y:2})
     0.e-110
-
-The idea is that a SymPy user will primarily be interested in working with
-mathematical expressions, and should not have to learn details about wrapping
-tools in order to evaluate expressions numerically, even if they are
-computationally expensive.
 
 When is this useful?
 
