@@ -99,7 +99,7 @@ class TransferFunction(Basic, EvalfMixin):
     TypeError
         When ``var`` is not a Symbol or when ``num`` or ``den`` is not a
         number or a polynomial.
-    ZeroDivisionError
+    ValueError
         When ``den`` is zero.
 
     Examples
@@ -209,7 +209,7 @@ class TransferFunction(Basic, EvalfMixin):
             raise TypeError("Variable input must be a Symbol.")
 
         if den == 0:
-            raise ZeroDivisionError("TransferFunction can't have a zero denominator.")
+            raise ValueError("TransferFunction can't have a zero denominator.")
 
         if (((isinstance(num, Expr) and num.has(Symbol) and not num.has(exp)) or num.is_number) and
             ((isinstance(den, Expr) and den.has(Symbol) and not den.has(exp)) or den.is_number)):
@@ -414,7 +414,7 @@ class TransferFunction(Basic, EvalfMixin):
             arg_list = list(other.args)
             return Parallel(self, *arg_list)
         else:
-            raise TypeError("TransferFunction cannot be added with {}.".
+            raise ValueError("TransferFunction cannot be added with {}.".
                 format(type(other)))
 
     def __radd__(self, other):
@@ -433,7 +433,7 @@ class TransferFunction(Basic, EvalfMixin):
             arg_list = [-i for i in list(other.args)]
             return Parallel(self, *arg_list)
         else:
-            raise TypeError("{} cannot be subtracted from a TransferFunction."
+            raise ValueError("{} cannot be subtracted from a TransferFunction."
                 .format(type(other)))
 
     def __rsub__(self, other):
@@ -452,7 +452,7 @@ class TransferFunction(Basic, EvalfMixin):
             arg_list = list(other.args)
             return Series(self, *arg_list)
         else:
-            raise TypeError("TransferFunction cannot be multiplied with {}."
+            raise ValueError("TransferFunction cannot be multiplied with {}."
                 .format(type(other)))
 
     __rmul__ = __mul__
@@ -480,7 +480,7 @@ class TransferFunction(Basic, EvalfMixin):
             else:
                 return Feedback(self, Series(*other_arg_list))
         else:
-            raise TypeError("TransferFunction cannot be divided by {}.".
+            raise ValueError("TransferFunction cannot be divided by {}.".
                 format(type(other)))
 
     __rtruediv__ = __truediv__
