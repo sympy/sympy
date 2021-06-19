@@ -1263,7 +1263,7 @@ def test_int_NumberSymbols():
         ia = int(i)
         assert ia == a
         assert isinstance(ia, int)
-        assert b = a + 1
+        assert b == a + 1
         assert a.is_Integer and b.is_Integer
 
 
