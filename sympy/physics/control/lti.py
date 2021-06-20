@@ -1,7 +1,7 @@
 from sympy import Basic, Mul, Pow, degree, Symbol, expand, cancel, Expr, exp, roots
 from sympy.core.evalf import EvalfMixin
 from sympy.core.logic import fuzzy_and
-from sympy.core.numbers import Integer
+from sympy.core.numbers import Integer, ComplexInfinity
 from sympy.core.sympify import sympify, _sympify
 from sympy.polys import Poly, rootof
 from sympy.series import limit
@@ -223,6 +223,80 @@ class TransferFunction(Basic, EvalfMixin):
 
         else:
             raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
+
+    @classmethod
+    def from_rational_expression(cls, expr, var=None):
+        r"""
+        Allows an alternative way for the users to instantiate a ``TransferFunction`` object.
+        ``TransferFunction`` objects can be created simply by passing the rational expression.
+        SymPy will smartly create a ``TransferFunction`` object with the properties of the
+        expression.
+
+        Parameters
+        ==========
+        expr : Expr, Number
+            The rational expression representing the ``TransferFunction``.
+        var : Symbol, optional
+            Complex variable of the Laplace transform used by the
+            polynomials of the transfer function.
+
+        Raises
+        ======
+
+        ValueError
+            When ``expr`` is of type ``Number`` and optional parameter ``var``
+            is not passed.
+
+            Wen ``expr`` has more than one variables and optional parameter
+            ``var`` is not passed.
+        ZeroDivisionError
+            When denominator of ``expr`` is zero or it has ``ComplexInfinity``
+            in its numerator.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> expr1 = (s + 5)/(3*s**2 + 2*s + 1)
+        >>> tf1 = TransferFunction.from_rational_expression(expr1)
+        >>> tf1
+        TransferFunction(s + 5, 3*s**2 + 2*s + 1, s)
+        >>> expr2 = (a*p**3 - a*p**2 + s*p)/(p + a**2)  # Expr with more than one variables
+        >>> tf2 = TransferFunction.from_rational_expression(expr2, p)
+        >>> tf2
+        TransferFunction(a*p**3 - a*p**2 + p*s, a**2 + p, p)
+
+        In case of conflict between two or more variables in a expression, SymPy will
+        raise a ``ValueError``, if ``var`` is not passed by the user.
+
+        >>> tf = TransferFunction.from_rational_expression((a + a*s)/(s**2 + s + 1))
+        Traceback (most recent call last):
+        ...
+        ValueError: Conflicting values found for positional argument `var` ({a, s}). Specify it manually.
+
+        This can be corrected by specifying the ``var`` parameter manually.
+
+        >>> tf = TransferFunction.from_rational_expression((a + a*s)/(s**2 + s + 1), s)
+        >>> tf
+        TransferFunction(a*s + a, s**2 + s + 1, s)
+
+        """
+        expr = _sympify(expr)
+        if var is None:
+            _free_symbols = expr.free_symbols
+            _len_free_symbols = len(_free_symbols)
+            if _len_free_symbols == 1:
+                var = list(_free_symbols)[0]
+            elif _len_free_symbols == 0:
+                raise ValueError("Positional argument `var` not found in the TransferFunction defined. Specify it manually.")
+            else:
+                raise ValueError("Conflicting values found for positional argument `var` ({}). Specify it manually.".format(_free_symbols))
+
+        _num, _den = expr.as_numer_denom()
+        if _den == 0 or _num.has(ComplexInfinity):
+            raise ZeroDivisionError("TransferFunction can't have a zero denominator.")
+        return cls(_num, _den, var)
 
     @property
     def num(self):
@@ -587,8 +661,30 @@ class TransferFunction(Basic, EvalfMixin):
         """
         return degree(self.num, self.var) == degree(self.den, self.var)
 
-    def _to_expr(self):
-        """To convert TransferFunction type to SymPy Expr"""
+    def to_expr(self):
+        """
+        To convert ``TransferFunction`` object to SymPy Expr.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy.core.expr import Expr
+        >>> tf1 = TransferFunction(s, a*s**2 + 1, s)
+        >>> tf1.to_expr()
+        s/(a*s**2 + 1)
+        >>> isinstance(_, Expr)
+        True
+        >>> tf2 = TransferFunction(1, (p + 3*b)*(b - p), p)
+        >>> tf2.to_expr()
+        1/((b - p)*(3*b + p))
+        >>> tf3 = TransferFunction((s - 2)*(s - 3), (s - 1)*(s - 2)*(s - 3), s)
+        >>> tf3.to_expr()
+        ((s - 3)*(s - 2))/(((s - 3)*(s - 2)*(s - 1)))
+
+        """
+
         return Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
 
 

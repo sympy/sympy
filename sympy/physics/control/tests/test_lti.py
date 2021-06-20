@@ -105,6 +105,26 @@ def test_TransferFunction_construction():
 
 
 def test_TransferFunction_functions():
+    # classmethod from_rational_expression
+    expr_1 = Mul(0, Pow(s, -1, evaluate=False), evaluate=False)
+    expr_2 = s/0
+    expr_3 = (p*s**2 + 5*s)/(s + 1)**3
+    expr_4 = 6
+    expr_5 = ((2 + 3*s)*(5 + 2*s))/((9 + 3*s)*(5 + 2*s**2))
+    expr_6 = (9*s**4 + 4*s**2 + 8)/((s + 1)*(s + 9))
+
+    assert TransferFunction.from_rational_expression(expr_1) == TransferFunction(0, s, s)
+    raises(ZeroDivisionError, lambda: TransferFunction.from_rational_expression(expr_2))
+    raises(ValueError, lambda: TransferFunction.from_rational_expression(expr_3))
+    assert TransferFunction.from_rational_expression(expr_3, s) == TransferFunction((p*s**2 + 5*s), (s + 1)**3, s)
+    assert TransferFunction.from_rational_expression(expr_3, p) == TransferFunction((p*s**2 + 5*s), (s + 1)**3, p)
+    raises(ValueError, lambda: TransferFunction.from_rational_expression(expr_4))
+    assert TransferFunction.from_rational_expression(expr_4, s) == TransferFunction(6, 1, s)
+    assert TransferFunction.from_rational_expression(expr_5, s) == \
+        TransferFunction((2 + 3*s)*(5 + 2*s), (9 + 3*s)*(5 + 2*s**2), s)
+    assert TransferFunction.from_rational_expression(expr_6, s) == \
+        TransferFunction((9*s**4 + 4*s**2 + 8), (s + 1)*(s + 9), s)
+
     # explicitly cancel poles and zeros.
     tf0 = TransferFunction(s**5 + s**3 + s, s - s**2, s)
     a = TransferFunction(-(s**4 + s**2 + 1), s - 1, s)
@@ -268,10 +288,10 @@ def test_TransferFunction_functions():
     tf9 = TransferFunction((5 + s), (5 + s)*(6 + s), s)
     tf10 = TransferFunction(0, 1, s)
     tf11 = TransferFunction(1, 1, s)
-    assert tf8._to_expr() == Mul((a0*s**5 + 5*s**2 + 3), Pow((s**6 - 3), -1, evaluate=False), evaluate=False)
-    assert tf9._to_expr() == Mul((s + 5), Pow((5 + s)*(6 + s), -1, evaluate=False), evaluate=False)
-    assert tf10._to_expr() == Mul(S(0), Pow(1, -1, evaluate=False), evaluate=False)
-    assert tf11._to_expr() == Mul(S(1), Pow(1, -1, evaluate=False), evaluate=False)
+    assert tf8.to_expr() == Mul((a0*s**5 + 5*s**2 + 3), Pow((s**6 - 3), -1, evaluate=False), evaluate=False)
+    assert tf9.to_expr() == Mul((s + 5), Pow((5 + s)*(6 + s), -1, evaluate=False), evaluate=False)
+    assert tf10.to_expr() == Mul(S(0), Pow(1, -1, evaluate=False), evaluate=False)
+    assert tf11.to_expr() == Mul(S(1), Pow(1, -1, evaluate=False), evaluate=False)
 
 def test_TransferFunction_addition_and_subtraction():
     tf1 = TransferFunction(s + 6, s - 5, s)
