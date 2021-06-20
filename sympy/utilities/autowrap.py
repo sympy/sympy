@@ -18,9 +18,9 @@ performance with a one-button user interface, e.g.,
     -1.0
 
 Although a SymPy user might primarily be interested in working with
-mathematical expressions and not about the details of wrapping tools
-in order to evaluate expressions numerically which are expensive to
-calculate, the user cannot do so without some understanding of the
+mathematical expressions and not in the details of wrapping tools
+needed to evaluate such expressions efficiently in numerical form,
+the user cannot do so without some understanding of the
 limits in the target language. For example, the expanded expression
 contains large coefficients which result in loss of precision when
 computing the expression:
