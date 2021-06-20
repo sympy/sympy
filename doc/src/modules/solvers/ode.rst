@@ -169,6 +169,11 @@ lie_group
 ^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode::ode_lie_group
 
+2nd_hypergeometric
+^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.ode.single::Hypergeometric2nd
+   :members:
+
 1st_power_series
 ^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode::ode_1st_power_series
