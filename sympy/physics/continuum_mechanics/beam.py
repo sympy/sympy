@@ -2275,7 +2275,7 @@ class Beam3D(Beam):
             length = self.length
 
         return plot(shear_force[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Shear Force along %c direction'%dir,
-                xlabel=r'$\mathrm{%c}$'%dir, ylabel=r'$\mathrm{V(%c)}$'%dir, line_color=color)
+                xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{V(%c)}$'%dir, line_color=color)
 
     def plot_shear_force(self, dir="all", subs=None):
 
@@ -2380,7 +2380,7 @@ class Beam3D(Beam):
             length = self.length
 
         return plot(bending_moment[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Bending Moment along %c direction'%dir,
-                xlabel=r'$\mathrm{%c}$'%dir, ylabel=r'$\mathrm{M(%c)}$'%dir, line_color=color)
+                xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{M(%c)}$'%dir, line_color=color)
 
     def plot_bending_moment(self, dir="all", subs=None):
 
@@ -2485,7 +2485,7 @@ class Beam3D(Beam):
 
 
         return plot(slope[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Slope along %c direction'%dir,
-                xlabel=r'$\mathrm{%c}$'%dir, ylabel=r'$\mathrm{\theta(%c)}$'%dir, line_color=color)
+                xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{\theta(%c)}$'%dir, line_color=color)
 
     def plot_slope(self, dir="all", subs=None):
 
@@ -2592,7 +2592,7 @@ class Beam3D(Beam):
 
 
         return plot(deflection[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Deflection along %c direction'%dir,
-                xlabel=r'$\mathrm{%c}$'%dir, ylabel=r'$\mathrm{\delta(%c)}$'%dir, line_color=color)
+                xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{\delta(%c)}$'%dir, line_color=color)
 
     def plot_deflection(self, dir="all", subs=None):
 
