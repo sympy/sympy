@@ -68,17 +68,17 @@ class TransferFunction(Basic, EvalfMixin):
     $\frac{ \mathcal{L}\left\{y\right\} }{ \mathcal{L}\left\{x\right\} }$, we get the typical rational form of transfer
     function.
 
-    The numerator of the transfer function is therefore, the Laplace transform of the output signal
-    (The signals are represented as functions of time) and similarly the denominator
+    The numerator of the transfer function is, therefore, the Laplace transform of the output signal
+    (The signals are represented as functions of time) and similarly, the denominator
     of the transfer function is the Laplace transform of the input signal. It is also a convention
     to denote the input and output signal's Laplace transform with capital alphabets like shown below.
 
             $H(s) = \frac{Y(s)}{X(s)} = \frac{ \mathcal{L}\left\{y(t)\right\} }{ \mathcal{L}\left\{x(t)\right\} }$
 
     $s$, also known as complex frequency, is a complex variable in the Laplace domain. It corresponds to the
-    equivalent variable $t$, in the time domain. Transfer functions are sometimes also referred as Laplace
-    transform of the system's impulse response. Transfer function, $H$, is generally given as a rational
-    function in $s$ as-
+    equivalent variable $t$, in the time domain. Transfer functions are sometimes also referred to as the Laplace
+    transform of the system's impulse response. Transfer function, $H$, is represented as a rational
+    function in $s$ like,
 
             $H(s) =\ \frac{a_{n}s^{n}+a_{n-1}s^{n-1}+\dots+a_{1}s+a_{0}}{b_{m}s^{m}+b_{m-1}s^{m-1}+\dots+b_{1}s+b_{0}}$
 
