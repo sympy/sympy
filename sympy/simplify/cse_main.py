@@ -121,6 +121,9 @@ def cse_minimize_memory(r, e):
     >>> print(rvs)
     (_0, _1, _2, _3, _4)
     """
+    if not r:
+        return r, e
+
     from sympy import symbols
 
     s, p = zip(*r)
@@ -692,7 +695,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
 
 
 def cse(exprs, symbols=None, optimizations=None, postprocess=None,
-        order='canonical', ignore=(), asList=True):
+        order='canonical', ignore=(), as_list=True):
     """ Perform common subexpression elimination on an expression.
 
     Parameters
@@ -723,7 +726,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         concern, use the setting order='none'.
     ignore : iterable of Symbols
         Substitutions containing any Symbol from ``ignore`` will be ignored.
-    asList : bool, (default True)
+    as_list : bool, (default True)
         Returns expression in list or else with same type as input (when False).
 
     Returns
@@ -771,7 +774,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
                                 SparseMatrix, ImmutableSparseMatrix)
 
-    if not asList:
+    if not as_list:
         return _cse_homogeneous(exprs,
             symbols=symbols, optimizations=optimizations,
             postprocess=postprocess, order=order, ignore=ignore)
@@ -869,12 +872,10 @@ def _cse_homogeneous(exprs, **kwargs):
 
     Examples
     ========
-    >>> from sympy.simplify.cse_main import _cse_homogeneous
-    >>> from sympy import cos, Tuple
+    >>> from sympy.simplify.cse_main import cse
+    >>> from sympy import cos, Tuple, Matrix
     >>> from sympy.abc import x
-    >>> _cse_homogeneous('[cos(x), cos(x) + 1]')
-    ([(x0, cos(x))], '[x0, x0 + 1]')
-    >>> output = lambda x: type(_cse_homogeneous(x)[1])
+    >>> output = lambda x: type(cse(x, as_list=False)[1])
     >>> output(1)
     <class 'sympy.core.numbers.One'>
     >>> output('cos(x)')
@@ -883,6 +884,8 @@ def _cse_homogeneous(exprs, **kwargs):
     cos
     >>> output(Tuple(1, x))
     <class 'sympy.core.containers.Tuple'>
+    >>> output(Matrix([[1,0], [0,1]]))
+    <class 'sympy.matrices.dense.MutableDenseMatrix'>
     >>> output([1, x])
     <class 'list'>
     >>> output((1, x))
@@ -890,9 +893,8 @@ def _cse_homogeneous(exprs, **kwargs):
     >>> output({1, x})
     <class 'set'>
     """
-    from sympy import sympify
-
     if isinstance(exprs, str):
+        from sympy import sympify
         replacements, reduced_exprs = _cse_homogeneous(
             sympify(exprs), **kwargs)
         return replacements, repr(reduced_exprs)
@@ -902,7 +904,7 @@ def _cse_homogeneous(exprs, **kwargs):
     if isinstance(exprs, dict):
         keys = list(exprs.keys()) # In order to guarantee the order of the elements.
         replacements, values = cse([exprs[k] for k in keys], **kwargs)
-        reduced_exprs = {k: v for k, v in zip(keys, values)}
+        reduced_exprs = dict(zip(keys, values))
         return replacements, reduced_exprs
 
     try:

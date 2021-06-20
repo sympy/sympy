@@ -173,9 +173,9 @@ def _import(module, reload=False):
 # linecache.
 _lambdify_generated_counter = 1
 
-@doctest_depends_on(modules=('numpy', 'tensorflow', ), python_version=(3,))
+@doctest_depends_on(modules=('numpy', 'tensorflow',), python_version=(3,))
 def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
-             dummify=False, cse=False):
+             dummify=False, cse=True):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -858,11 +858,11 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
     if cse != False:
-        from sympy.simplify.cse_main import _cse_homogeneous
-        cses, expr = _cse_homogeneous(expr)
+        from sympy.simplify.cse_main import cse, cse_minimize_memory
+        cses, _expr = cse(expr, as_list=False, postprocess=cse_minimize_memory)
     else:
-        cses = ()
-    funcstr = funcprinter.doprint(funcname, args, expr, cses=cses)
+        cses, _expr = (), expr
+    funcstr = funcprinter.doprint(funcname, args, _expr, cses=cses)
 
     # Collect the module imports from the code printers.
     imp_mod_lines = []
