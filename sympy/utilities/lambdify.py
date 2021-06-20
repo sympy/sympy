@@ -175,7 +175,7 @@ _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'tensorflow',), python_version=(3,))
 def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
-             dummify=False, cse=True):
+             dummify=False, cse=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -342,8 +342,8 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         being used multiple time. Finding the subexpressions will make
         creation of the 'lambdify' function slower, however.
 
-        When ``True``, the default ``sympy.simplify.cse`` is used, otherwise the user
-        may pass a function matching the signature ``cse``.
+        When ``True``, ``sympy.simplify.cse`` is used, otherwise (the default)
+        the user may pass a function matching the signature ``cse``.
 
 
     Examples
