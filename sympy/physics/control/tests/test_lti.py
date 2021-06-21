@@ -1,4 +1,4 @@
-from sympy import symbols, Matrix, factor, Function, simplify, exp, pi, oo, I, \
+from sympy import symbols, Matrix, factor, Function, simplify, exp, oo, I, \
     Rational, sqrt, CRootOf, S, Mul, Pow, Add
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.testing.pytest import raises
