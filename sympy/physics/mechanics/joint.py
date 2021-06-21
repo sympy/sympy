@@ -352,7 +352,7 @@ class SlidingJoint(Joint):
     ===========
 
     It is defined such that the child body translates with respect to the parent
-    body along the body fixed parent axis. The point of joint (sliding joint) is defined 
+    body along the body fixed parent axis. The point of joint (sliding joint) is defined
     by two points in each body which coincides initially.
     In addition, the child's reference frame can be arbitrarily rotated a
     constant amount with respect to the parent axis by passing an axis in child
