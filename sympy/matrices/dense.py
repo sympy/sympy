@@ -6,11 +6,13 @@ from sympy.core import SympifyError, Add
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
+from sympy.core.numbers import Rational, Integer
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.polys.domains import EXRAW
+from sympy.polys.domains import ZZ, QQ, EXRAW
 from sympy.polys.matrices import DomainMatrix
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.matrices.common import \
     a2idx, classof, ShapeError
 from sympy.matrices.matrices import MatrixBase
@@ -103,7 +105,8 @@ class DenseMatrix(MatrixBase):
             i, j = key
             try:
                 i, j = self.key2ij(key)
-                return self._rep.rep.getitem(i, j)
+                rep = self._rep.rep
+                return rep.domain.to_sympy(rep.getitem(i, j))
             except (TypeError, IndexError):
                 if (isinstance(i, Expr) and not i.is_number) or (isinstance(j, Expr) and not j.is_number):
                     if ((j < 0) is True) or ((j >= self.shape[1]) is True) or\
@@ -314,25 +317,42 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
             rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
             flat_list = list(flat_list) # create a shallow copy
 
-            types = set(map(type, flat_list))
-            if not all(issubclass(typ, Expr) for typ in types):
-                SymPyDeprecationWarning(
-                    feature="non-Expr objects in a Matrix",
-                    useinstead="list of lists, TableForm or some other data structure",
-                    issue=21497,
-                    deprecated_since_version="1.9"
-                ).warn()
+        types = set(map(type, flat_list))
+        if not all(issubclass(typ, Expr) for typ in types):
+            SymPyDeprecationWarning(
+                feature="non-Expr objects in a Matrix",
+                useinstead="list of lists, TableForm or some other data structure",
+                issue=21497,
+                deprecated_since_version="1.9"
+            ).warn()
+
+        if all(issubclass(typ, Rational) for typ in types):
+            if all(issubclass(typ, Integer) for typ in types):
+                domain = ZZ
+            else:
+                domain = QQ
+        else:
+            domain = EXRAW
 
         elements_dod = defaultdict(dict)
+        from_sympy = domain.from_sympy
         for n, element in enumerate(flat_list):
             if element != 0:
                 i, j = divmod(n, cols)
                 elements_dod[i][j] = element
 
+        if domain != EXRAW:
+            # XXX: In some deprecated cases the elements may not be Expr.
+            # We avoid calling EXRAW.from_sympy because it checks that the
+            # argument actually is Expr and raises otherwise.
+            from_sympy = domain.from_sympy
+            elements_dod = {i: {j: from_sympy(e) for j, e in row.items()}
+                                        for i, row in elements_dod.items()}
+
         self = object.__new__(cls)
         self.rows = rows
         self.cols = cols
-        self._rep = DomainMatrix(elements_dod, (rows, cols), EXRAW)
+        self._rep = DomainMatrix(elements_dod, (rows, cols), domain)
         self._mat2 = flat_list
 
         return self
@@ -346,7 +366,14 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
     @property
     def _flat(self):
-        return [self._rep.rep.getitem(i, j) for i in range(self.rows) for j in range(self.cols)]
+        rep = self._rep.rep
+        getitem = rep.getitem
+        domain = rep.domain
+        elements = [getitem(i, j) for i in range(self.rows) for j in range(self.cols)]
+        if domain != EXRAW:
+            to_sympy = domain.to_sympy
+            elements = [to_sympy(e) for e in elements]
+        return elements
 
     def __setitem__(self, key, value):
         """
@@ -391,7 +418,39 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         rv = self._setitem(key, value)
         if rv is not None:
             i, j, value = rv
-            self._rep[i, j] = value
+
+            rep = self._rep
+            domain = rep.domain
+
+            if domain != EXRAW:
+                try:
+                    value = domain.from_sympy(value)
+                except CoercionFailed:
+                    # XXX: The domain can only be ZZ, QQ or EXRAW
+                    # If we get here then either domain is ZZ and value is a
+                    # Rational or we need to go to EXRAW. We need to be careful
+                    # to avoid calling from_sympy for EXRAW because in some
+                    # deprecated cases value is not an instance of Expr and
+                    # EXRAW.from_sympy would raise.
+                    if value.is_Rational:
+                        domain = QQ
+                        value = domain.from_sympy(value)
+                    else:
+                        domain = EXRAW
+                    # XXX: This converts the domain for all elements in the
+                    # matrix just because one element has been modified.
+                    self._rep = rep = rep.convert_to(domain)
+
+            if domain == EXRAW and not isinstance(value, Expr):
+                SymPyDeprecationWarning(
+                    feature="non-Expr objects in a Matrix",
+                    useinstead="list of lists, TableForm or some other data structure",
+                    issue=21497,
+                    deprecated_since_version="1.9"
+                ).warn()
+
+            # Actually set the element!
+            rep.rep.setitem(i, j, value)
 
     def as_mutable(self):
         return self.copy()
