@@ -1,6 +1,7 @@
 import random
 from functools import reduce
 from collections import defaultdict
+from operator import index
 
 from sympy.core import SympifyError, Add
 from sympy.core.basic import Basic
@@ -128,11 +129,32 @@ class DenseMatrix(MatrixBase):
                 else:
                     j = [j]
                 return self.extract(i, j)
+
         else:
-            # row-wise decomposition of matrix
-            if isinstance(key, slice):
-                return self._flat[key]
-            return self._flat[a2idx(key)]
+            # Index/slice like a flattened list
+            rows, cols = self.shape
+
+            # Raise the appropriate exception:
+            if not rows * cols:
+                return [][key]
+
+            rep = self._rep.rep
+            domain = rep.domain
+            is_slice = isinstance(key, slice)
+
+            if is_slice:
+                values = [rep.getitem(*divmod(n, cols)) for n in range(rows * cols)[key]]
+            else:
+                values = [rep.getitem(*divmod(index(key), cols))]
+
+            if domain != EXRAW:
+                to_sympy = domain.to_sympy
+                values = [to_sympy(val) for val in values]
+
+            if is_slice:
+                return values
+            else:
+                return values[0]
 
     def __setitem__(self, key, value):
         raise NotImplementedError()
