@@ -165,30 +165,7 @@ class DenseMatrix(MatrixBase):
         return self._fromrep(self._rep.extract(rowsList, colsList))
 
     def _eval_matrix_mul(self, other):
-        other_len = other.rows*other.cols
-        new_len = self.rows*other.cols
-        new_mat = [self.zero]*new_len
-
-        # if we multiply an n x 0 with a 0 x m, the
-        # expected behavior is to produce an n x m matrix of zeros
-        if self.cols != 0 and other.rows != 0:
-            self_cols = self.cols
-            mat = self._flat
-            other_mat = other._flat
-            for i in range(new_len):
-                row, col = i // other.cols, i % other.cols
-                row_indices = range(self_cols*row, self_cols*(row+1))
-                col_indices = range(col, other_len, other.cols)
-                vec = [mat[a]*other_mat[b] for a, b in zip(row_indices, col_indices)]
-                try:
-                    new_mat[i] = Add(*vec)
-                except (TypeError, SympifyError):
-                    # Some matrices don't work with `sum` or `Add`
-                    # They don't work with `sum` because `sum` tries to add `0`
-                    # Fall back to a safe way to multiply if the `Add` fails.
-                    new_mat[i] = reduce(lambda a, b: a + b, vec)
-
-        return classof(self, other)._new(self.rows, other.cols, new_mat, copy=False)
+        return classof(self, other)._fromrep(self._rep * other._rep)
 
     def _eval_matrix_mul_elementwise(self, other):
         mat = [a*b for a,b in zip(self._flat, other._flat)]
