@@ -425,7 +425,7 @@ class SlidingJoint(Joint):
     We can check the kinematics now.
 
     >>> P.masscenter.vel(C)
-    x(t)*C.x
+    v(t)*C.x
     >>> J.kdes()
     [v(t) - Derivative(x(t), t)]
 
@@ -469,5 +469,5 @@ class SlidingJoint(Joint):
         self._parent_joint.set_vel(self._parent.frame, 0)
         self._child_joint.set_vel(self._child.frame, 0)
         self._child_joint.set_pos(self._parent_joint, self._coordinates[0] * self._parent_axis)
-        self._child_joint.set_vel(self._parent.frame, self._coordinates[0] * self._parent_axis)
-        self._child.masscenter.set_vel(self._parent.frame, self._coordinates[0] * self._parent_axis)
+        self._child_joint.set_vel(self._parent.frame, self._speeds[0] * self._parent_axis)
+        self._child.masscenter.set_vel(self._parent.frame, self._speeds[0] * self._parent_axis)
