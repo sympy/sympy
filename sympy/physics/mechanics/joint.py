@@ -422,6 +422,12 @@ class SlidingJoint(Joint):
 
     def _orient_frames(self):
         self._child.frame.orient_axis(self._parent.frame, self._parent_axis, 0)
+        angle, axis = self._align_axis(self._parent_axis, self._child_axis)
+        if axis != Vector(0):
+            I = ReferenceFrame('I')
+            I.orient_axis(self._child.frame, self._child_axis, 0)
+            I.orient_axis(self._parent.frame, axis, angle)
+            self._child.frame.orient_axis(I, self._parent_axis, 0)
 
     def _set_angular_velocity(self):
         return
