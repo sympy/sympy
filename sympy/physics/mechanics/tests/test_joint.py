@@ -130,7 +130,7 @@ def test_slidingjoint():
     P = Body('P')
     C = Body('C')
     x, v = dynamicsymbols('S_x, S_v')
-    S = SlidingJoint('S', P, C, C.frame.x)
+    S = SlidingJoint('S', P, C)
     assert S._name == 'S'
     assert S.parent() == P
     assert S.child() == C
@@ -138,7 +138,6 @@ def test_slidingjoint():
     assert S.speeds() == [v]
     assert S.kdes() == [v - x.diff(t)]
     assert S._parent_axis == P.frame.x
-    assert C.masscenter.pos_from(P.masscenter) == 1 * C.frame.x
     assert S._child_joint.pos_from(C.masscenter) == Vector(0)
     assert S._parent_joint.pos_from(P.masscenter) == Vector(0)
     assert S._parent_joint.pos_from(S._child_joint) == - x * P.frame.x

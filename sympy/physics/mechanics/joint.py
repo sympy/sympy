@@ -261,8 +261,6 @@ class SlidingJoint(Joint):
         The parent body of joint.
     child : Body
         The child body of joint.
-    dist : Vector
-        The vector distance between parent's masscenter and child's masscenter.
     coordinates: dynamicsymbol, optional
         Coordinates of joint.
     speeds : dynamicsymbol, optional
@@ -276,6 +274,9 @@ class SlidingJoint(Joint):
     parent_axis : Vector, optional
         Axis of parent frame which would be be aligned with child's
         axis. Default is x axis in parent's frame.
+    child_axis : Vector, optional
+        Axis of child frame which would be aligned with parent's
+        axis. Default is x axis in child's frame.
 
     Examples
     =========
@@ -291,11 +292,11 @@ class SlidingJoint(Joint):
 
     """
 
-    def __init__(self, name, parent, child, dist=None, coordinates=None, speeds=None, parent_joint_pos=None,
-        child_joint_pos=None, parent_axis=None):
+    def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None,
+        child_joint_pos=None, parent_axis=None, child_axis=None):
 
-        super().__init__(name, parent, child, dist, coordinates, speeds, parent_joint_pos, child_joint_pos,
-            parent_axis)
+        super().__init__(name, parent, child, coordinates, speeds, parent_joint_pos, child_joint_pos,
+            parent_axis, child_axis)
 
     def _generate_coordinates(self, coordinate):
         coordinates = []
