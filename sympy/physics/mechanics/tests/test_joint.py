@@ -191,6 +191,7 @@ def test_slidingjoint():
     assert S.speeds() == [v]
     assert S.kdes() == [v - x.diff(t)]
     assert S._parent_axis == P.frame.x
+    assert S._child_axis == C.frame.x
     assert S._child_joint.pos_from(C.masscenter) == Vector(0)
     assert S._parent_joint.pos_from(P.masscenter) == Vector(0)
     assert S._parent_joint.pos_from(S._child_joint) == - x * P.frame.x
@@ -203,8 +204,3 @@ def test_slidingjoint():
     assert S._child_joint.pos_from(C.masscenter) == m * C.frame.y
     assert S._parent_joint.pos_from(P.masscenter) == l * P.frame.x
     assert S._parent_joint.pos_from(S._child_joint) == - x * P.frame.z
-
-    #Check arbitrary axis
-    a, b, c = symbols('a b c')
-    S = SlidingJoint('S', P, C, parent_axis = a*P.frame.x + b*P.frame.y - c*P.frame.z)
-    assert P.frame.dcm(C.frame) == Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
