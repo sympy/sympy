@@ -1,4 +1,4 @@
-from sympy import Basic, Mul, Pow, degree, Symbol, expand, cancel, Expr, exp, roots
+from sympy import Basic, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots
 from sympy.core.evalf import EvalfMixin
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, ComplexInfinity
