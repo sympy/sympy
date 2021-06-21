@@ -117,6 +117,21 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
 
         return obj
 
+    @classmethod
+    def _fromrep(cls, rep):
+        rows, cols = rep.shape
+        to_sympy = rep.domain.to_sympy
+        flat_list = [to_sympy(rep.rep.getitem(i, j)) for i in range(rows) for j in range(cols)]
+        obj = Basic.__new__(cls,
+            Integer(rows),
+            Integer(cols),
+            Tuple(*flat_list))
+        obj._rows = rows
+        obj._cols = cols
+        obj._rep = rep
+        obj._mat2 = flat_list
+        return obj
+
     @property
     def _flat(self):
         rep = self._rep.rep

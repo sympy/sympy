@@ -159,10 +159,7 @@ class DenseMatrix(MatrixBase):
         raise NotImplementedError()
 
     def _eval_add(self, other):
-        # we assume both arguments are dense matrices since
-        # sparse matrices have a higher priority
-        mat = [a + b for a,b in zip(self._flat, other._flat)]
-        return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
+        return classof(self, other)._fromrep(self._rep + other._rep)
 
     def _eval_extract(self, rowsList, colsList):
         return self._fromrep(self._rep.extract(rowsList, colsList))
