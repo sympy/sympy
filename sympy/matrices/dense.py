@@ -1,7 +1,7 @@
 import random
 from functools import reduce
 from collections import defaultdict
-from operator import index
+from operator import index as index_
 
 from sympy.core import SympifyError, Add
 from sympy.core.basic import Basic
@@ -14,8 +14,7 @@ from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.polys.domains import ZZ, QQ, EXRAW
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.polyerrors import CoercionFailed
-from sympy.matrices.common import \
-    a2idx, classof, ShapeError
+from sympy.matrices.common import classof, ShapeError
 from sympy.matrices.matrices import MatrixBase
 from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
@@ -145,7 +144,7 @@ class DenseMatrix(MatrixBase):
             if is_slice:
                 values = [rep.getitem(*divmod(n, cols)) for n in range(rows * cols)[key]]
             else:
-                values = [rep.getitem(*divmod(index(key), cols))]
+                values = [rep.getitem(*divmod(index_(key), cols))]
 
             if domain != EXRAW:
                 to_sympy = domain.to_sympy
