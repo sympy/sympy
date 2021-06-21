@@ -213,8 +213,8 @@ class TransferFunction(Basic, EvalfMixin):
         if den == 0:
             raise ValueError("TransferFunction can't have a zero denominator.")
 
-        if (((isinstance(num, Expr) and num.has(Symbol) and not num.has(exp)) or num.is_number) and
-            ((isinstance(den, Expr) and den.has(Symbol) and not den.has(exp)) or den.is_number)):
+        if (((isinstance(num, Expr) and num.has(Symbol)) or num.is_number) and
+            ((isinstance(den, Expr) and den.has(Symbol)) or den.is_number)):
             obj = super(TransferFunction, cls).__new__(cls, num, den, var)
             obj._num = num
             obj._den = den
@@ -227,13 +227,11 @@ class TransferFunction(Basic, EvalfMixin):
     @classmethod
     def from_rational_expression(cls, expr, var=None):
         r"""
-        Allows an alternative way for the users to instantiate a ``TransferFunction`` object.
-        ``TransferFunction`` objects can be created simply by passing the rational expression.
-        SymPy will smartly create a ``TransferFunction`` object with the properties of the
-        expression.
+        Creates a new ``TransferFunction`` efficiently from a rational expression.
 
         Parameters
         ==========
+
         expr : Expr, Number
             The rational expression representing the ``TransferFunction``.
         var : Symbol, optional
@@ -247,7 +245,7 @@ class TransferFunction(Basic, EvalfMixin):
             When ``expr`` is of type ``Number`` and optional parameter ``var``
             is not passed.
 
-            Wen ``expr`` has more than one variables and optional parameter
+            When ``expr`` has more than one variables and an optional parameter
             ``var`` is not passed.
         ZeroDivisionError
             When denominator of ``expr`` is zero or it has ``ComplexInfinity``
@@ -663,7 +661,7 @@ class TransferFunction(Basic, EvalfMixin):
 
     def to_expr(self):
         """
-        To convert ``TransferFunction`` object to SymPy Expr.
+        Converts a ``TransferFunction`` object to SymPy Expr.
 
         Examples
         ========

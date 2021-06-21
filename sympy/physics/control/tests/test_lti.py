@@ -1,9 +1,9 @@
 from sympy import symbols, Matrix, factor, Function, simplify, exp, pi, oo, I, \
-    Rational, sqrt, CRootOf, S, Mul, Pow
+    Rational, sqrt, CRootOf, S, Mul, Pow, Add
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.testing.pytest import raises
 
-a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2 = symbols('a, x, b, s, g, d, p, k, a0:3, b0:3')
+a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2, tau = symbols('a, x, b, s, g, d, p, k, a0:3, b0:3, tau')
 
 
 def test_TransferFunction_construction():
@@ -97,7 +97,6 @@ def test_TransferFunction_construction():
     raises(ValueError, lambda: TransferFunction(0, 0, s))
 
     raises(TypeError, lambda: TransferFunction(Matrix([1, 2, 3]), s, s))
-    raises(TypeError, lambda: TransferFunction(s**pi*exp(s), s, s))
 
     raises(TypeError, lambda: TransferFunction(s**2 + 2*s - 1, s + 3, 3))
     raises(TypeError, lambda: TransferFunction(p + 1, 5 - p, 4))
@@ -112,6 +111,12 @@ def test_TransferFunction_functions():
     expr_4 = 6
     expr_5 = ((2 + 3*s)*(5 + 2*s))/((9 + 3*s)*(5 + 2*s**2))
     expr_6 = (9*s**4 + 4*s**2 + 8)/((s + 1)*(s + 9))
+    tf = TransferFunction(s + 1, s**2 + 2, s)
+    delay = exp(-s/tau)
+    expr_7 = delay*tf.to_expr()
+    H1 = TransferFunction.from_rational_expression(expr_7, s)
+    H2 = TransferFunction(s + 1, (s**2 + 2)*exp(s/tau), s)
+    expr_8 = Add(2,  3*s/(s**2 + 1), evaluate=False)
 
     assert TransferFunction.from_rational_expression(expr_1) == TransferFunction(0, s, s)
     raises(ZeroDivisionError, lambda: TransferFunction.from_rational_expression(expr_2))
@@ -124,6 +129,9 @@ def test_TransferFunction_functions():
         TransferFunction((2 + 3*s)*(5 + 2*s), (9 + 3*s)*(5 + 2*s**2), s)
     assert TransferFunction.from_rational_expression(expr_6, s) == \
         TransferFunction((9*s**4 + 4*s**2 + 8), (s + 1)*(s + 9), s)
+    assert H1 == H2
+    assert TransferFunction.from_rational_expression(expr_8, s) == \
+        TransferFunction(2*s**2 + 3*s + 2, s**2 + 1, s)
 
     # explicitly cancel poles and zeros.
     tf0 = TransferFunction(s**5 + s**3 + s, s - s**2, s)
@@ -283,7 +291,7 @@ def test_TransferFunction_functions():
     assert tf7.xreplace({s: k}) == TransferFunction(a0*k**p + a1*p**k, a2*p - k, k)
     assert tf7.subs(s, k) == TransferFunction(a0*s**p + a1*p**s, a2*p - s, s)
 
-    # Conversion to Expr with _to_expr()
+    # Conversion to Expr with to_expr()
     tf8 = TransferFunction(a0*s**5 + 5*s**2 + 3, s**6 - 3, s)
     tf9 = TransferFunction((5 + s), (5 + s)*(6 + s), s)
     tf10 = TransferFunction(0, 1, s)
