@@ -369,7 +369,7 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
     Notes
     ======
 
-    See note in :py:class`sympy.logic.boolalg.BooleanTrue`
+    See the notes section in :py:class:`sympy.logic.boolalg.BooleanTrue`
 
     Examples
     ========
