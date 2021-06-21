@@ -279,6 +279,12 @@ class TransferFunction(Basic, EvalfMixin):
         >>> tf
         TransferFunction(a*s + a, s**2 + s + 1, s)
 
+        ``var`` also need to be specified when ``expr`` is a ``Number``
+
+        >>> tf3 = TransferFunction.from_rational_expression(10, s)
+        >>> tf3
+        TransferFunction(10, 1, s)
+
         """
         expr = _sympify(expr)
         if var is None:
