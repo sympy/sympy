@@ -229,7 +229,7 @@ class erf(Function):
     def _eval_rewrite_as_erfi(self, z, **kwargs):
         return -I*erfi(I*z)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -428,7 +428,7 @@ class erfc(Function):
     def _eval_expand_func(self, **hints):
         return self.rewrite(erf)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -613,7 +613,7 @@ class erfi(Function):
 
     as_real_imag = real_to_real_as_real_imag
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0].as_leading_term(x)
         arg0 = arg.subs(x, 0).cancel()
 

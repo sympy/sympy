@@ -512,7 +512,7 @@ class exp(ExpBase, metaclass=ExpMeta):
             l.append(g.removeO())
         return Add(*l)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import Order
         arg = self.args[0]
         if arg.is_Add:
@@ -1038,7 +1038,7 @@ class log(Function):
             res -= 2*I*S.Pi
         return res + Order(x**n, x)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import I, im
         arg = self.args[0].together()
         x0 = arg.subs(x, 0)
@@ -1173,7 +1173,7 @@ class LambertW(Function):
         else:
             return s.is_algebraic
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         if len(self.args) == 1:
             arg = self.args[0]
             arg0 = arg.subs(x, 0).cancel()

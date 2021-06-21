@@ -1705,7 +1705,7 @@ class Pow(Expr):
             res += O(x**n, x)
         return _mexpand(res)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from ..series import Order
         from sympy import exp, I, im, log
         e = self.exp
