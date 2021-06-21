@@ -387,6 +387,9 @@ class SlidingJoint(Joint):
     Examples
     =========
 
+    This is minimal working example where parent body and child body is
+    connected via SlidingJoint through their masscenters.
+
     >>> from sympy.physics.mechanics import Body, SlidingJoint
     >>> parent = Body('parent')
     >>> child = Body('child')
@@ -395,6 +398,36 @@ class SlidingJoint(Joint):
     [P_x(t)]
     >>> P.speeds()
     [P_v(t)]
+
+    This is an example of linear mass spring damper where we will do all kinematics
+    using SlidingJoints.
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.mechanics import SlidingJoint, Body
+    >>> from sympy.physics.vector import dynamicsymbols, ReferenceFrame
+
+    Declaring the mass, frame, speeds, coordinates etc isn't necessary as `Body` and
+    `SlidingJoint` can declare it themselves. But we would be declaring them for better understanding.
+
+    >>> x, v = dynamicsymbols('x v')
+    >>> m = symbols('m')
+    >>> C = ReferenceFrame('C')
+
+    Declaring the bodies.
+
+    >>> Ceiling = Body('Ceiling', frame=C)
+    >>> P = Body('P', frame=C, mass=m)
+
+    Bodies are connected through their masscenters.
+
+    >>> J = SlidingJoint('J', Ceiling, P, coordinates=x, speeds=v)
+
+    We can check the kinematics now.
+
+    >>> P.masscenter.vel(C)
+    x(t)*C.x
+    >>> J.kdes()
+    [v(t) - Derivative(x(t), t)]
 
     """
 
