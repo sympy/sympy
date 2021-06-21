@@ -839,7 +839,7 @@ We can also declare a symbol to be *noncommutative* e.g.:
 
 Note here that since ``x`` and ``y`` are both noncommutative ``x`` and ``y``
 do not commute so ``x*y != y*x``. On the other hand since ``z`` is commutative
-``x`` and ``z`` commute and ``x*z == z*x`` even though ``z`` is
+``x`` and ``z`` commute and ``x*z == z*x`` even though ``x`` is
 noncommutative.
 
 The interpretation of what a vanilla symbol represents is unclear but the
