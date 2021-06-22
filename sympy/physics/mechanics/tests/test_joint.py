@@ -171,6 +171,7 @@ def test_pinjoint_arbitrary_axis():
     assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y)/sqrt(2)
     assert C.masscenter.vel(N).simplify() == (omega * A.z)/sqrt(2)
     assert C.masscenter.pos_from(P.masscenter) == N.x - A.x
+    assert C.masscenter.vel(N).express(N).simplify() == - sqrt(2)*omega*sin(theta)/2*N.y + sqrt(2)*omega*cos(theta)/2*N.z
 
     N, A, P, C = generate_body()
     PinJoint('J', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y-A.z)
@@ -182,3 +183,4 @@ def test_pinjoint_arbitrary_axis():
     assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y - omega*A.z)/sqrt(3)
     assert C.masscenter.vel(N).simplify() == (omega * A.y + omega * A.z)/sqrt(3)
     assert C.masscenter.pos_from(P.masscenter) == N.x - A.x
+    assert C.masscenter.vel(N).express(N).simplify() == sqrt(6)*omega*cos(theta + pi/4)/3*N.y + sqrt(6)*omega*sin(theta + pi/4)/3*N.z
