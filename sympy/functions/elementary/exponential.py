@@ -1039,12 +1039,12 @@ class log(Function):
         return res + Order(x**n, x)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import I, im, PoleError
+        from sympy import I, im
         arg0 = self.args[0].together()
         arg = arg0.as_leading_term(x, cdir=cdir)
         x0 = arg0.subs(x, 0)
         if x0 is S.NaN and logx is None:
-            raise PoleError()
+            x0 = arg.limit(x, 0)
         if x0 == 1:
             return (arg0 - S.One).as_leading_term(x)
         if cdir != 0:

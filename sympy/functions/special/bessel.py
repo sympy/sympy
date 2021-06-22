@@ -222,7 +222,7 @@ class besselj(BesselBase):
         if x in arg.free_symbols:
             return arg**nu
         else:
-            return self.func(nu, z.subs(x, 0).cancel())
+            return self.func(nu, z.subs(x, 0))
 
     def _eval_is_extended_real(self):
         nu, z = self.args

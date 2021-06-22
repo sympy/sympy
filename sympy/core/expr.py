@@ -3001,11 +3001,7 @@ class Expr(Basic, EvalfMixin):
             # log._eval_as_leading_term to raise, which will not be handled by
             # the current series code. Instead of raising, just returning
             # log(arg) is sufficient to find the series expansion.
-            if logx is None:
-                d = Dummy('logx')
-                s1 = self._eval_nseries(x, n=n, logx=d, cdir=cdir).subs(d, log(x))
-            else:
-                s1 = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
+            s1 = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             o = s1.getO() or S.Zero
             if o:
                 # make sure the requested order is returned

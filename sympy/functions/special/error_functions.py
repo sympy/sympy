@@ -615,7 +615,7 @@ class erfi(Function):
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0].as_leading_term(x)
-        arg0 = arg.subs(x, 0).cancel()
+        arg0 = arg.subs(x, 0)
 
         if x in arg.free_symbols and arg0.is_zero:
             return 2*arg/sqrt(pi)
