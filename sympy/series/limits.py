@@ -270,7 +270,12 @@ class Limit(Expr):
                 newe = e.subs(z, z + z0)
             try:
                 coeff, ex = newe.leadterm(z, cdir=cdir)
-            except (ValueError, NotImplementedError, PoleError):
+            except (ValueError, NotImplementedError, PoleError, AttributeError):
+                # The NotImplementedError catching may be removed after leading
+                # term methods are defined for some special functions (_eis
+                # and Ci)
+                # AttributeError may be removed one TupleArg leading term
+                # is handled
                 pass
             else:
                 if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
