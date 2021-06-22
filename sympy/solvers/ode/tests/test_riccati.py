@@ -35,8 +35,6 @@ def find_riccati_ode(ratfunc, x, yf):
     q0 = ratsimp(yp - q1*y - q2*y**2)
     eq = Eq(yf.diff(), q0 + q1*yf + q2*yf**2)
     sol = Eq(yf, y)
-    print(eq)
-    print(sol)
     assert checkodesol(eq, sol) == (True, 0)
     return eq, q0, q1, q2
 

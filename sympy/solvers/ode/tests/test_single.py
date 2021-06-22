@@ -801,7 +801,7 @@ def _get_examples_ode_sol_1st_rational_riccati():
     },
     "rational_riccati_02": {
         "eq": f(x)**2 + Derivative(f(x), x) - (4*x**6 - 8*x**5 + 12*x**4 + 4*x**3 + 7*x**2 - 20*x + 4)/(4*x**4),
-        "sol": [Eq(f(x), x + 2*x/(x**2 - 1) - 1 - 3/(2*x) + x**(-2))]
+        "sol": [Eq(f(x), x - 1 - 7/(2*x) + Mul(2, 2*x**2 - 1, evaluate=False)/(x*(x**2 - 1)) + x**(-2))]
     },
     "rational_riccati_03": {
         "eq": -x*f(x)**2 + Derivative(f(x), x) - 2*f(x)/x,
@@ -933,6 +933,76 @@ def _get_examples_ode_sol_1st_rational_riccati():
     "rational_riccati_28": {
         "eq": Eq(f(x).diff(x) + f(x)**2 - 2, 0),
         "sol": [Eq(f(x), sqrt(2)), Eq(f(x), -sqrt(2))]
+    },
+    "rational_riccati_29": {
+        "eq": Eq(Derivative(f(x), x), 8*x**3/729 - 8*x**2/243 + 4*x/9 + (S(2)/3 - 2*x/9)*f(x)**2 - S(4)/9 + 2/(3*x + 3) + \
+            (2*x - 1)*f(x)/(-x - 1)),
+        "sol": [Eq(f(x), Mul(9, -8*x**2/81 + 8*x/27 - 2 + (2*x - 1)/(x + 1) + 3/(x + 1) + 1/(x - 3) + 1/(3 - x), \
+            evaluate=False)/Mul(4, (3 - x), evaluate=False))]
+    },
+    "rational_riccati_30": {
+        "eq": Eq(Derivative(f(x), x), 2*x**3 + 4*x**2 - 7*x + (S(3)/2 - x/2)*f(x)**2 + (3*x - S(3)/2)*f(x) - 11),
+        "sol": [Eq(f(x), (2*x**2 - 4*x - 6 + 1/(x - 3) + 1/(3 - x))/(3 - x))]
+    },
+    "rational_riccati_31": {
+        "eq": Eq(Derivative(f(x), x), -9*x**3/8 + 3*x**2 + x/2 + (x/2 - S(2)/3)*f(x)**2 - S(1)/3 - 5/(6*x - 2) + \
+            (-2*x - 1)*f(x)/(S(1)/3 - x)),
+        "sol": [Eq(f(x), (-9*x**2 + 18*x + 4 + 10/(x - S(1)/3) + 6/(x - S(4)/3))/Mul(2, (3*x - 4), evaluate=False) - 9/(3*x - \
+            4)**2 - Mul(3, 2*x + 1, evaluate=False)/((x - S(4)/3)*(3*x - 1)))]
+    },
+    "rational_riccati_32": {
+        "eq": Eq(Derivative(f(x), x), -x**3/24 - x**2/8 - x/2 + (2*x/3 - S(2)/3)*f(x)**2 - S(11)/6 - 15/(4*x - 4) + (2*x + \
+            3)*f(x)/(x - 1)),
+        "sol": [Eq(f(x), (x**2/4 + x/4 + 1 - Mul(3, 2*x + 3, evaluate=False)/(Mul(4, x - 1, evaluate=False)) + 15/(Mul(4, x \
+            - 1, evaluate=False)))/(x - 1))]
+    },
+    "rational_riccati_33": {
+        "eq": Eq(Derivative(f(x), x), 2*x**3/81 + x/18 - x*f(x)/(1 - x) + (S(3)/2 - x/2)*f(x)**2 + S(1)/6 + 5/(9*x - 9)),
+        "sol": [Eq(f(x), (2*x**2/9 - x/3 - x/(x - 1) + 1/(x - 1) + 1/(x - 3) + 1/(3 - x))/(3 - x))]
+    },
+    "rational_riccati_34": {
+        "eq": Eq(Derivative(f(x), x), (-x**6 + 15*x**4 - 40*x**3 + 45*x**2 - 24*x + 4)/(x**12 - 12*x**11 + 66*x**10 - 220*x**9 + \
+            495*x**8 - 792*x**7 + 924*x**6 - 792*x**5 + 495*x**4 - 220*x**3 + 66*x**2 - 12*x + 1) + f(x)**2 + f(x)),
+        "sol": [Eq(f(x), 1/(x - 1)**6)]
+    },
+    "rational_riccati_35": {
+        "eq": Eq(Derivative(f(x), x), x**3/4 - x**2/12 - 5*x/9 + (-6*x - 2)*f(x)/(9*x - 3) + (-x - 1)*f(x)**2 - S(7)/18 \
+            + 2/(27*x - 9)),
+        "sol": [Eq(f(x), (9*x**2 + 3*x - 12 + Mul(6, 3*x + 1, evaluate=False)/(3*x - 1) + 9/(x + 1) - 4/(x - S(1)/3) + \
+            9/(-x - 1))/(Mul(18, -x - 1, evaluate=False)))]
+    },
+    "rational_riccati_36": {
+        "eq": Eq(Derivative(f(x), x), -3*x**3/4 - 3*x**2/4 - 3*x/4 + 3*x*f(x)/(2*x + 6) + (3*x - 1)*f(x)**2 + S(85)/36 - 21/(4*x + 12)),
+        "sol": [Eq(f(x), (18*x**2 + 6*x - 9*x/(x + 3) + 5 - 18/(3*x - 1) - 27/(x + 3) + 6/(x - S(1)/3))/(Mul(12, 3*x - 1, evaluate=False)))]
+    },
+    "rational_riccati_37": {
+        "eq": Eq(Derivative(f(x), x), 2*x**3/3 + 8*x**2/3 + 10*x/3 + (-3*x/2 - 3)*f(x)**2 - f(x)/x - 2/(3*x)),
+        "sol": [Eq(f(x), (x**2 + 3*x + 2 + 1/(Mul(2, x + 2, evaluate=False)) - 1/(2*x))/(-3*x/2 - 3) + 3/(4*(-3*x/2 - 3)**2) + 1/(3*x*(-x \
+            - 2))), Eq(f(x), (x**2 + 3*x + 2 + 1/(Mul(2, x + 2, evaluate=False)) - 1/(2*x))/(-3*x/2 - 3) + 3/(4*(-3*x/2 - 3)**2) + \
+            1/(3*x*(-x - 2)))]
+    },
+    "rational_riccati_38": {
+        "eq": Eq(Derivative(f(x), x), 18*x**3 + 18*x**2 + (-x/2 - S(1)/2)*f(x)**2 + 6),
+        "sol": [Eq(f(x), (-6*x**2 - 6*x + 1/(x + 1) + 1/(-x - 1))/(-x - 1))]
+    },
+    "rational_riccati_39": {
+        "eq": Eq(Derivative(f(x), x), -3*x**3/4 + 15*x/2 + (x/3 - S(4)/3)*f(x)**2 + 9 + (1 - x)*f(x)/x + 3/x),
+        "sol": [Eq(f(x), (-3*x**2/2 + 3*x + S(21)/2 + Mul(3, x - 1, evaluate=False)/(2*x) + 3/(2*x))/(x - 4))]
+    },
+    "rational_riccati_40": {
+        "eq": Eq(Derivative(f(x), x), x**3/4 - 9*x**2/8 + 7*x/4 + (2 - 4*x)*f(x)**2 - S(3)/4 + 1/(2*x - 6) + (x - 1)*f(x)/(x - 3)),
+        "sol": [Eq(f(x), (2*x**2 - 5*x + 3 + 1/(x - S(1)/2) - (x - 1)/(x - 3) + 2/(x - 3) + 2/(1 - 2*x))/(Mul(4, 1 - 2*x,\
+            evaluate=False)))]
+    },
+    "rational_riccati_41": {
+        "eq": Eq(Derivative(f(x), x), x**3/27 - 4*x**2/27 + 37*x/54 + (S(2)/3 - x/3)*f(x)**2 + (-9*x - 2)*f(x)/(6*x + 12) - S(61)/54 + \
+            8/(3*x + 6)),
+        "sol": [Eq(f(x), (-x**2/3 + x - S(35)/12 + (9*x + 2)/(Mul(4, x + 2, evaluate=False)) + 4/(x + 2) + 3/(Mul(2, x - 2, evaluate=\
+            False)) + 3/(Mul(2, 2 - x, evaluate=False)))/(2 - x))]
+    },
+    "rational_riccati_42": {
+        "eq": Eq(Derivative(f(x), x), -f(x)**2 - 2/(x**3 - x**2)),
+        "sol": [Eq(f(x), 1/(x - 1) - 1/x), Eq(f(x), 1/(x - 1) - 1/x)]
     }
     }
     }

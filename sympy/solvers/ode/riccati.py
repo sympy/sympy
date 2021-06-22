@@ -245,11 +245,8 @@ def construct_c(num, den, x, poles, muls):
         elif mul == 2:
             # Find the coefficient of 1/(x - pole)**2 in the
             # Laurent series expansion of a(x) about pole.
-            if pole != oo:
-                sgn, num1, den1 = (num*Poly((x - pole)**2, x, extension=True)).cancel(den)
-                r = (sgn*num1.subs(x, pole))/(den1.subs(x, pole))
-            else:
-                r = 0
+            sgn, num1, den1 = (num*Poly((x - pole)**2, x, extension=True)).cancel(den)
+            r = (sgn*num1.subs(x, pole))/(den1.subs(x, pole))
 
             # If multiplicity is 2, the coefficient to be added
             # in the c-vector is c = (1 +- sqrt(1 + 4*r))/2
@@ -265,8 +262,6 @@ def construct_c(num, den, x, poles, muls):
 
             # Find the Laurent series coefficients about the pole
             ser = rational_laurent_series(num, den, x, pole, mul, 6)
-            if pole == oo:
-                ser = ser[::-1]
 
             # Start with an empty memo to store the coefficients
             # This is for the plus case
@@ -278,20 +273,17 @@ def construct_c(num, den, x, poles, muls):
             # Iterate backwards to find all coefficients
             for s in range(ri-1, 0, -1):
                 sm = 0
+                for j in range(s+1, ri):
+                    sm += temp[j-1]*temp[ri+s-j-1]
                 if s!= 1:
                     temp[s-1] = (ser[mul-ri-s] - sm)/(2*temp[ri-1])
-                    for j in range(s+1, ri):
-                        sm += temp[j-1]*temp[ri+s-j-1]
-                else:
-                    for j in range(s+1, ri):
-                        sm += temp[j-1]*temp[ri+s-j-1]
 
             # Memo for the minus case
             temp1 = [-x for x in temp]
 
             # Find the 0th coefficient in the recurrence
-            temp[0] = (ser[mul-ri-s] - sm + ri*temp[ri-1])/(2*temp[ri-1])
-            temp1[0] = (ser[mul-ri-s] - sm  + ri*temp[ri-1])/(2*temp1[ri-1])
+            temp[0] = (ser[mul-ri-s] - sm - ri*temp[ri-1])/(2*temp[ri-1])
+            temp1[0] = (ser[mul-ri-s] - sm  - ri*temp[ri-1])/(2*temp1[ri-1])
 
             # Add both the plus and minus cases' coefficients
             c[-1].extend([temp, temp1])
@@ -313,8 +305,10 @@ def construct_d(num, den, x, val_inf, mul):
             if s != -1:
                 temp[s] = (ser[-mul - 1 + N+s] - sm)/(2*temp[N])
         temp1 = [-x for x in temp]
-        temp[-1] = (ser[-mul - 1 + N+s] - temp[N] - sm)/(2*temp[N])
-        temp1[-1] = (ser[-mul - 1 + N+s] - temp1[N] - sm)/(2*temp1[N])
+        # The third equation in Eq 5.15 of the thesis is WRONG!
+        # d_N must be replaced with N*d_N in that equation.
+        temp[-1] = (ser[-mul - 1 + N+s] - N*temp[N] - sm)/(2*temp[N])
+        temp1[-1] = (ser[-mul - 1 + N+s] - N*temp1[N] - sm)/(2*temp1[N])
         d = [temp, temp1]
 
     # Case 5
@@ -450,7 +444,10 @@ def solve_riccati(fx, x, b0, b1, b2):
 
     # Step 5 : Find poles and valuation at infinity
     poles = find_poles(num, den, x)
+    # If a(x) has a pole at infinity, get its multiplicity
     inf_mul = poles.get(oo, 0)
+    # Remove oo from the set of finite poles
+    poles.pop(oo, None)
     poles, muls = list(poles.keys()), list(poles.values())
     val_inf = val_at_inf(num, den, x)
 
