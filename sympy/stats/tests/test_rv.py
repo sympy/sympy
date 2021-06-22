@@ -209,10 +209,13 @@ def test_Sample():
     assert all(i in range(1, 7) for i in density(X, numsamples=10))
     assert all(i in range(4, 7) for i in density(X, X>3, numsamples=10))
 
+    numpy = import_module('numpy')
+    if not numpy:
+        skip('Numpy is not installed. Abort tests')
     #Test Issue #21563: Output of sample must be a float or list
-    assert str(type(sample(X))) == "<class 'numpy.int64'>"
-    assert str(type(sample(Y))) == "<class 'numpy.float64'>"
-    assert str(type(sample(X, size = 2))) == "<class 'numpy.ndarray'>"
+    assert isinstance(sample(X), numpy.int64)
+    assert isinstance(sample(Y), numpy.float64)
+    assert isinstance(sample(X, size=2), numpy.ndarray)
 
 
 
