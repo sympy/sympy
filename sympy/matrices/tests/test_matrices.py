@@ -2544,8 +2544,7 @@ def test_replace_map():
     M = Matrix(2, 2, lambda i, j: F(i+j))
     with warns_deprecated_sympy():
         N = M.replace(F, G, True)
-    with warns_deprecated_sympy():
-        assert N == K
+    assert N == K
 
 def test_atoms():
     m = Matrix([[1, 2], [x, 1 - 1/x]])

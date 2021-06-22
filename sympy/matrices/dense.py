@@ -49,6 +49,8 @@ class DenseMatrix(MatrixBase):
     _class_priority = 4
 
     def __eq__(self, other):
+        if isinstance(other, DenseMatrix):
+            return self._rep.unify_eq(other._rep)
         try:
             other = _sympify(other)
         except SympifyError:
@@ -63,6 +65,40 @@ class DenseMatrix(MatrixBase):
             return _compare_sequence(self._flat,  other._flat)
         elif isinstance(other, MatrixBase):
             return _compare_sequence(self._flat, Matrix(other)._flat)
+
+    def _unify_element_sympy(self, element):
+        rep = self._rep
+        domain = rep.domain
+        element = _sympify(element)
+
+        if domain != EXRAW:
+            try:
+                element = domain.from_sympy(element)
+            except CoercionFailed:
+                # XXX: The domain can only be ZZ, QQ or EXRAW
+                # If we get here then either domain is ZZ and value is a
+                # Rational or we need to go to EXRAW. We need to be careful
+                # to avoid calling from_sympy for EXRAW because in some
+                # deprecated cases value is not an instance of Expr and
+                # EXRAW.from_sympy would raise.
+                if element.is_Rational:
+                    domain = QQ
+                    element = domain.from_sympy(element)
+                else:
+                    domain = EXRAW
+                # XXX: This converts the domain for all elements in the
+                # matrix just because one element has been modified.
+                rep = rep.convert_to(domain)
+
+        if domain == EXRAW and not isinstance(element, Expr):
+            SymPyDeprecationWarning(
+                feature="non-Expr objects in a Matrix",
+                useinstead="list of lists, TableForm or some other data structure",
+                issue=21497,
+                deprecated_since_version="1.9"
+            ).warn()
+
+        return rep, element
 
     def __getitem__(self, key):
         """Return portion of self defined by key. If the key involves a slice
@@ -176,29 +212,36 @@ class DenseMatrix(MatrixBase):
                         try_block_diag=kwargs.get('try_block_diag', False))
 
     def _eval_scalar_mul(self, other):
-        mat = [other*a for a in self._flat]
-        return self._new(self.rows, self.cols, mat, copy=False)
+        rep, other = self._unify_element_sympy(other)
+        return self._fromrep(rep.scalarmul(other))
 
     def _eval_scalar_rmul(self, other):
-        mat = [a*other for a in self._flat]
-        return self._new(self.rows, self.cols, mat, copy=False)
+        rep, other = self._unify_element_sympy(other)
+        return self._fromrep(rep.rscalarmul(other))
 
     def _eval_tolist(self):
-        mat = list(self._flat)
-        cols = self.cols
-        return [mat[i*cols:(i + 1)*cols] for i in range(self.rows)]
+        rep = self._rep.rep.convert_to(EXRAW)
+        return list(rep.to_ddm())
 
     def _eval_todok(self):
-        cols = self.cols
-        return {divmod(ij, cols): e for ij, e in enumerate(self._flat) if e}
+        rep = self._rep.rep.convert_to(EXRAW)
+        return {(i, j): value for i, row in rep.items() for j, value in row.items()}
+
+    @classmethod
+    def _eval_zeros(cls, rows, cols):
+        rep = DomainMatrix.zeros((rows, cols), ZZ)
+        return cls._fromrep(rep)
+
+    @classmethod
+    def _eval_eye(cls, rows, cols):
+        rep = DomainMatrix.eye((rows, cols), ZZ)
+        return cls._fromrep(rep)
 
     def as_immutable(self):
         """Returns an Immutable version of this Matrix
         """
         from .immutable import ImmutableDenseMatrix as cls
-        if self.rows and self.cols:
-            return cls._new(self.tolist())
-        return cls._new(self.rows, self.cols, [])
+        return cls._fromrep(self._rep.copy())
 
     def as_mutable(self):
         """Returns a mutable version of this matrix
@@ -412,39 +455,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         rv = self._setitem(key, value)
         if rv is not None:
             i, j, value = rv
-
-            rep = self._rep
-            domain = rep.domain
-
-            if domain != EXRAW:
-                try:
-                    value = domain.from_sympy(value)
-                except CoercionFailed:
-                    # XXX: The domain can only be ZZ, QQ or EXRAW
-                    # If we get here then either domain is ZZ and value is a
-                    # Rational or we need to go to EXRAW. We need to be careful
-                    # to avoid calling from_sympy for EXRAW because in some
-                    # deprecated cases value is not an instance of Expr and
-                    # EXRAW.from_sympy would raise.
-                    if value.is_Rational:
-                        domain = QQ
-                        value = domain.from_sympy(value)
-                    else:
-                        domain = EXRAW
-                    # XXX: This converts the domain for all elements in the
-                    # matrix just because one element has been modified.
-                    self._rep = rep = rep.convert_to(domain)
-
-            if domain == EXRAW and not isinstance(value, Expr):
-                SymPyDeprecationWarning(
-                    feature="non-Expr objects in a Matrix",
-                    useinstead="list of lists, TableForm or some other data structure",
-                    issue=21497,
-                    deprecated_since_version="1.9"
-                ).warn()
-
-            # Actually set the element!
-            rep.rep.setitem(i, j, value)
+            self._rep, value = self._unify_element_sympy(value)
+            self._rep.rep.setitem(i, j, value)
 
     def as_mutable(self):
         return self.copy()
@@ -630,10 +642,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         col_op
 
         """
-        i0 = i*self.cols
-        ri = self._flat[i0: i0 + self.cols]
         for j in range(self.cols):
-            self[i, j] = f(ri[j], j)
+            self[i, j] = f(self[i, j], j)
 
     def row_swap(self, i, j):
         """Swap the two given rows of the matrix in-place.
@@ -698,14 +708,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         col_op
 
         """
-        i0 = i*self.cols
-        k0 = k*self.cols
-
-        ri = self._flat[i0: i0 + self.cols]
-        rk = self._flat[k0: k0 + self.cols]
-
         for j in range(self.cols):
-            self[i, j] = f(ri[j], rk[j])
+            self[i, j] = f(self[i, j], self[k, j])
 
     is_zero = False
 
