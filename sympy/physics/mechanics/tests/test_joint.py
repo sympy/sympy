@@ -153,6 +153,7 @@ def test_pinjoint_arbitrary_axis():
     assert C.masscenter.vel(N) == omega*A.z
     assert C.masscenter.pos_from(P.masscenter) == -A.x
     assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == cos(theta)*N.y + sin(theta)*N.z
+    assert C.masscenter.vel(N).angle_between(A.x) == pi/2
 
     #Similar to previous case but wrt parent body
     N, A, P, C = generate_body()
@@ -180,6 +181,7 @@ def test_pinjoint_arbitrary_axis():
     assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == \
         (1 - sqrt(2)/2)*N.x + sqrt(2)*cos(theta)/2*N.y + sqrt(2)*sin(theta)/2*N.z
     assert C.masscenter.vel(N).express(N).simplify() == - sqrt(2)*omega*sin(theta)/2*N.y + sqrt(2)*omega*cos(theta)/2*N.z
+    assert C.masscenter.vel(N).angle_between(A.x) == pi/2
 
     N, A, P, C = generate_body()
     PinJoint('J', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y-A.z)
@@ -195,3 +197,4 @@ def test_pinjoint_arbitrary_axis():
     assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == \
         (1 - sqrt(3)/3)*N.x + sqrt(6)*sin(theta + pi/4)/3*N.y - sqrt(6)*cos(theta + pi/4)/3*N.z
     assert C.masscenter.vel(N).express(N).simplify() == sqrt(6)*omega*cos(theta + pi/4)/3*N.y + sqrt(6)*omega*sin(theta + pi/4)/3*N.z
+    assert C.masscenter.vel(N).angle_between(A.x) == pi/2
