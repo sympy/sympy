@@ -9,24 +9,23 @@ if typing.TYPE_CHECKING:
 from typing import Dict, Type
 
 from typing import Iterator, List, Optional
-
-from sympy.core import S
+from sympy.core import Add, S, Pow
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
-from sympy.core.function import AppliedUndef, Derivative, Function, expand, Subs
-from sympy.core.numbers import Float
+from sympy.core.function import AppliedUndef, Derivative, Function, expand, Subs, _mexpand
+from sympy.core.numbers import Float, zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.core.mul import Mul
 from sympy.functions import exp, sqrt, tan, log
 from sympy.integrals import Integral
 from sympy.polys.polytools import cancel, factor
-from sympy.simplify import simplify, separatevars
+from sympy.simplify import collect, simplify, separatevars, logcombine
 from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
-
 from sympy.solvers.solvers import solve
 from sympy.solvers.deutils import ode_order, _preprocess
+from .hypergeometric import equivalence_hypergeometric, match_2nd_2F1_hypergeometric, get_sol_2F1_hypergeometric, match_2nd_hypergeometric
 
 
 class ODEMatchError(NotImplementedError):
@@ -221,13 +220,13 @@ class SingleODESolver:
         if not self.matches():
             msg = "%s solver can not solve:\n%s"
             raise ODEMatchError(msg % (self.hint, self.ode_problem.eq))
-        return self._get_general_solution()
+        return self._get_general_solution(simplify_flag=simplify)
 
     def _matches(self) -> bool:
         msg = "Subclasses of SingleODESolver should implement matches."
         raise NotImplementedError(msg)
 
-    def _get_general_solution(self, *, simplify: bool = True) -> List[Equality]:
+    def _get_general_solution(self, *, simplify_flag: bool = True) -> List[Equality]:
         msg = "Subclasses of SingleODESolver should implement get_general_solution."
         raise NotImplementedError(msg)
 
@@ -353,7 +352,7 @@ class NthAlgebraic(SingleODESolver):
         self.solutions = solns
         return len(solns) != 0
 
-    def _get_general_solution(self, *, simplify: bool = True):
+    def _get_general_solution(self, *, simplify_flag: bool = True):
         return self.solutions
 
     # This needs to produce an invertible function but the inverse depends
@@ -495,7 +494,7 @@ class FirstExact(SinglePatternODESolver):
             self._wilds_match[Q] = n.subs(y, fx)
             return True
 
-    def _get_general_solution(self, *, simplify: bool = True):
+    def _get_general_solution(self, *, simplify_flag: bool = True):
         m, n = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
@@ -574,7 +573,7 @@ class FirstLinear(SinglePatternODESolver):
         P, Q = self.wilds()
         return fx.diff(x) + P*fx - Q
 
-    def _get_general_solution(self, *, simplify: bool = True):
+    def _get_general_solution(self, *, simplify_flag: bool = True):
         P, Q = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
@@ -600,7 +599,7 @@ class AlmostLinear(SinglePatternODESolver):
 
     See Also
     ========
-    :meth:`sympy.solvers.ode.single.FirstLinear`
+    :obj:`sympy.solvers.ode.single.FirstLinear`
 
     Examples
     ========
@@ -662,7 +661,7 @@ class AlmostLinear(SinglePatternODESolver):
 
         return False
 
-    def _get_general_solution(self, *, simplify: bool = True):
+    def _get_general_solution(self, *, simplify_flag: bool = True):
         x = self.ode_problem.sym
         (C1,)  = self.ode_problem.get_numbered_constants(num=1)
         gensol = Eq(self.ly, ((C1 + Integral((self.cx/self.ax)*exp(Integral(self.bx/self.ax, x)),x))
@@ -681,7 +680,7 @@ class Bernoulli(SinglePatternODESolver):
 
     The substitution `w = 1/y^{1-n}` will transform an equation of this form
     into one that is linear (see the docstring of
-    :py:meth:`~sympy.solvers.ode.single.FirstLinear`).  The general solution is::
+    :obj:`~sympy.solvers.ode.single.FirstLinear`).  The general solution is::
 
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x, n
@@ -708,7 +707,7 @@ class Bernoulli(SinglePatternODESolver):
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
-    :py:meth:`sympy.solvers.ode.single.Separable`).
+    :obj:`~sympy.solvers.ode.single.Separable`).
 
     >>> pprint(dsolve(Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)), f(x),
     ... hint='separable_Integral'))
@@ -760,7 +759,7 @@ class Bernoulli(SinglePatternODESolver):
         P, Q, n = self.wilds()
         return fx.diff(x) + P*fx - Q*fx**n
 
-    def _get_general_solution(self, *, simplify: bool = True):
+    def _get_general_solution(self, *, simplify_flag: bool = True):
         P, Q, n = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
@@ -832,7 +831,7 @@ class Factorable(SingleODESolver):
         return False
 
 
-    def _get_general_solution(self, *, simplify: bool = True):
+    def _get_general_solution(self, *, simplify_flag: bool = True):
         func = self.ode_problem.func.func
         x = self.ode_problem.sym
         eqns = self.eqs
@@ -908,7 +907,7 @@ class RiccatiSpecial(SinglePatternODESolver):
         a, b, c, d = self.wilds()
         return a*fx.diff(x) + b*fx**2 + c*fx/x + d/x**2
 
-    def _get_general_solution(self, *, simplify: bool = True):
+    def _get_general_solution(self, *, simplify_flag: bool = True):
         a, b, c, d = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
@@ -968,7 +967,7 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
     def _verify(self, fx):
         return self.ode_problem.is_autonomous
 
-    def _get_general_solution(self, *, simplify: bool = True):
+    def _get_general_solution(self, *, simplify_flag: bool = True):
         g = self.wilds_match()[0]
         fx = self.ode_problem.func
         x = self.ode_problem.sym
@@ -1065,7 +1064,7 @@ class Liouville(SinglePatternODESolver):
             return False
         return True
 
-    def _get_general_solution(self, *, simplify: bool = True):
+    def _get_general_solution(self, *, simplify_flag: bool = True):
         d, e, k = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
@@ -1154,20 +1153,827 @@ class Separable(SinglePatternODESolver):
         self.m1 = separatevars(d, dict=True, symbols=(x, self.y))
         self.m2 = separatevars(e, dict=True, symbols=(x, self.y))
         if self.m1 and self.m2:
-            # print("hello single.py")
             return True
         return False
 
-    def _get_general_solution(self, *, simplify: bool = True):
+    def _get_match_object(self):
         fx = self.ode_problem.func
         x = self.ode_problem.sym
+        return self.m1, self.m2, x, fx
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        m1, m2, x, fx = self._get_match_object()
         (C1, ) = self.ode_problem.get_numbered_constants(num=1)
-        int = Integral(self.m2['coeff']*self.m2[self.y]/self.m1[self.y],
+        int = Integral(m2['coeff']*m2[self.y]/m1[self.y],
         (self.y, None, fx))
-        gen_sol = Eq(int, Integral(-self.m1['coeff']*self.m1[x]/
-        self.m2[x], x) + C1)
+        gen_sol = Eq(int, Integral(-m1['coeff']*m1[x]/
+        m2[x], x) + C1)
         return [gen_sol]
 
 
+class SeparableReduced(Separable):
+    r"""
+    Solves a differential equation that can be reduced to the separable form.
+
+    The general form of this equation is
+
+    .. math:: y' + (y/x) H(x^n y) = 0\text{}.
+
+    This can be solved by substituting `u(y) = x^n y`.  The equation then
+    reduces to the separable form `\frac{u'}{u (\mathrm{power} - H(u))} -
+    \frac{1}{x} = 0`.
+
+    The general solution is:
+
+        >>> from sympy import Function, dsolve, pprint
+        >>> from sympy.abc import x, n
+        >>> f, g = map(Function, ['f', 'g'])
+        >>> genform = f(x).diff(x) + (f(x)/x)*g(x**n*f(x))
+        >>> pprint(genform)
+                         / n     \
+        d          f(x)*g\x *f(x)/
+        --(f(x)) + ---------------
+        dx                x
+        >>> pprint(dsolve(genform, hint='separable_reduced'))
+         n
+        x *f(x)
+          /
+         |
+         |         1
+         |    ------------ dy = C1 + log(x)
+         |    y*(n - g(y))
+         |
+         /
+
+    See Also
+    ========
+    :obj:`sympy.solvers.ode.single.Separable`
+
+    Examples
+    ========
+
+    >>> from sympy import Function, pprint
+    >>> from sympy.solvers.ode.ode import dsolve
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> d = f(x).diff(x)
+    >>> eq = (x - x**2*f(x))*d - f(x)
+    >>> dsolve(eq, hint='separable_reduced')
+    [Eq(f(x), (1 - sqrt(C1*x**2 + 1))/x), Eq(f(x), (sqrt(C1*x**2 + 1) + 1)/x)]
+    >>> pprint(dsolve(eq, hint='separable_reduced'))
+                   ___________            ___________
+                  /     2                /     2
+            1 - \/  C1*x  + 1          \/  C1*x  + 1  + 1
+    [f(x) = ------------------, f(x) = ------------------]
+                    x                          x
+
+    References
+    ==========
+
+    - Joel Moses, "Symbolic Integration - The Stormy Decade", Communications
+      of the ACM, Volume 14, Number 8, August 1971, pp. 558
+    """
+    hint = "separable_reduced"
+    has_integral = True
+    order = [1]
+
+    def _degree(self, expr, x):
+        # Made this function to calculate the degree of
+        # x in an expression. If expr will be of form
+        # x**p*y, (wheare p can be variables/rationals) then it
+        # will return p.
+        for val in expr:
+            if val.has(x):
+                if isinstance(val, Pow) and val.as_base_exp()[0] == x:
+                    return (val.as_base_exp()[1])
+                elif val == x:
+                    return (val.as_base_exp()[1])
+                else:
+                    return self._degree(val.args, x)
+        return 0
+
+    def _powers(self, expr):
+        # this function will return all the different relative power of x w.r.t f(x).
+        # expr = x**p * f(x)**q then it will return {p/q}.
+        pows = set()
+        fx = self.ode_problem.func
+        x = self.ode_problem.sym
+        self.y = Dummy('y')
+        if isinstance(expr, Add):
+            exprs = expr.atoms(Add)
+        elif isinstance(expr, Mul):
+            exprs = expr.atoms(Mul)
+        elif isinstance(expr, Pow):
+            exprs = expr.atoms(Pow)
+        else:
+            exprs = {expr}
+
+        for arg in exprs:
+            if arg.has(x):
+                _, u = arg.as_independent(x, fx)
+                pow = self._degree((u.subs(fx, self.y), ), x)/self._degree((u.subs(fx, self.y), ), self.y)
+                pows.add(pow)
+        return pows
+
+    def _verify(self, fx):
+        num, den = self.wilds_match()
+        x = self.ode_problem.sym
+        factor = simplify(x/fx*num/den)
+        # Try representing factor in terms of x^n*y
+        # where n is lowest power of x in factor;
+        # first remove terms like sqrt(2)*3 from factor.atoms(Mul)
+        num, dem = factor.as_numer_denom()
+        num = expand(num)
+        dem = expand(dem)
+        pows = self._powers(num)
+        pows.update(self._powers(dem))
+        pows = list(pows)
+        if(len(pows)==1) and pows[0]!=zoo:
+            self.t = Dummy('t')
+            self.r2 = {'t': self.t}
+            num = num.subs(x**pows[0]*fx, self.t)
+            dem = dem.subs(x**pows[0]*fx, self.t)
+            test = num/dem
+            free = test.free_symbols
+            if len(free) == 1 and free.pop() == self.t:
+                self.r2.update({'power' : pows[0], 'u' : test})
+                return True
+            return False
+        return False
+
+    def _get_match_object(self):
+        fx = self.ode_problem.func
+        x = self.ode_problem.sym
+        u = self.r2['u'].subs(self.r2['t'], self.y)
+        ycoeff = 1/(self.y*(self.r2['power'] - u))
+        m1 = {self.y: 1, x: -1/x, 'coeff': 1}
+        m2 = {self.y: ycoeff, x: 1, 'coeff': 1}
+        return m1, m2, x, x**self.r2['power']*fx
+
+
+class HomogeneousCoeffSubsDepDivIndep(SinglePatternODESolver):
+    r"""
+    Solves a 1st order differential equation with homogeneous coefficients
+    using the substitution `u_1 = \frac{\text{<dependent
+    variable>}}{\text{<independent variable>}}`.
+
+    This is a differential equation
+
+    .. math:: P(x, y) + Q(x, y) dy/dx = 0
+
+    such that `P` and `Q` are homogeneous and of the same order.  A function
+    `F(x, y)` is homogeneous of order `n` if `F(x t, y t) = t^n F(x, y)`.
+    Equivalently, `F(x, y)` can be rewritten as `G(y/x)` or `H(x/y)`.  See
+    also the docstring of :py:meth:`~sympy.solvers.ode.homogeneous_order`.
+
+    If the coefficients `P` and `Q` in the differential equation above are
+    homogeneous functions of the same order, then it can be shown that the
+    substitution `y = u_1 x` (i.e. `u_1 = y/x`) will turn the differential
+    equation into an equation separable in the variables `x` and `u`.  If
+    `h(u_1)` is the function that results from making the substitution `u_1 =
+    f(x)/x` on `P(x, f(x))` and `g(u_2)` is the function that results from the
+    substitution on `Q(x, f(x))` in the differential equation `P(x, f(x)) +
+    Q(x, f(x)) f'(x) = 0`, then the general solution is::
+
+        >>> from sympy import Function, dsolve, pprint
+        >>> from sympy.abc import x
+        >>> f, g, h = map(Function, ['f', 'g', 'h'])
+        >>> genform = g(f(x)/x) + h(f(x)/x)*f(x).diff(x)
+        >>> pprint(genform)
+         /f(x)\    /f(x)\ d
+        g|----| + h|----|*--(f(x))
+         \ x  /    \ x  / dx
+        >>> pprint(dsolve(genform, f(x),
+        ... hint='1st_homogeneous_coeff_subs_dep_div_indep_Integral'))
+                       f(x)
+                       ----
+                        x
+                         /
+                        |
+                        |       -h(u1)
+        log(x) = C1 +   |  ---------------- d(u1)
+                        |  u1*h(u1) + g(u1)
+                        |
+                       /
+
+    Where `u_1 h(u_1) + g(u_1) \ne 0` and `x \ne 0`.
+
+    See also the docstrings of
+    :obj:`~sympy.solvers.ode.single.HomogeneousCoeffBest` and
+    :obj:`~sympy.solvers.ode.single.HomogeneousCoeffSubsIndepDivDep`.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
+    ... hint='1st_homogeneous_coeff_subs_dep_div_indep', simplify=False))
+                          /          3   \
+                          |3*f(x)   f (x)|
+                       log|------ + -----|
+                          |  x         3 |
+                          \           x  /
+    log(x) = log(C1) - -------------------
+                                3
+
+    References
+    ==========
+
+    - https://en.wikipedia.org/wiki/Homogeneous_differential_equation
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 59
+
+    # indirect doctest
+
+    """
+    hint = "1st_homogeneous_coeff_subs_dep_div_indep"
+    has_integral = True
+    order = [1]
+
+    def _wilds(self, f, x, order):
+        d = Wild('d', exclude=[f(x).diff(x), f(x).diff(x, 2)])
+        e = Wild('e', exclude=[f(x).diff(x)])
+        return d, e
+
+    def _equation(self, fx, x, order):
+        d, e = self.wilds()
+        return d + e*fx.diff(x)
+
+    def _verify(self, fx):
+        self.d, self.e = self.wilds_match()
+        self.y = Dummy('y')
+        x = self.ode_problem.sym
+        self.d = separatevars(self.d.subs(fx, self.y))
+        self.e = separatevars(self.e.subs(fx, self.y))
+        ordera = homogeneous_order(self.d, x, self.y)
+        orderb = homogeneous_order(self.e, x, self.y)
+        if ordera == orderb and ordera is not None:
+            self.u = Dummy('u')
+            if simplify((self.d + self.u*self.e).subs({x: 1, self.y: self.u})) != 0:
+                return True
+            return False
+        return False
+
+    def _get_match_object(self):
+        fx = self.ode_problem.func
+        x = self.ode_problem.sym
+        self.u1 = Dummy('u1')
+        xarg = 0
+        yarg = 0
+        return [self.d, self.e, fx, x, self.u, self.u1, self.y, xarg, yarg]
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        d, e, fx, x, u, u1, y, xarg, yarg = self._get_match_object()
+        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
+        int = Integral(
+            (-e/(d + u1*e)).subs({x: 1, y: u1}),
+            (u1, None, fx/x))
+        sol = logcombine(Eq(log(x), int + log(C1)), force=True)
+        gen_sol = sol.subs(fx, u).subs(((u, u - yarg), (x, x - xarg), (u, fx)))
+        return [gen_sol]
+
+
+class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
+    r"""
+    Solves a 1st order differential equation with homogeneous coefficients
+    using the substitution `u_2 = \frac{\text{<independent
+    variable>}}{\text{<dependent variable>}}`.
+
+    This is a differential equation
+
+    .. math:: P(x, y) + Q(x, y) dy/dx = 0
+
+    such that `P` and `Q` are homogeneous and of the same order.  A function
+    `F(x, y)` is homogeneous of order `n` if `F(x t, y t) = t^n F(x, y)`.
+    Equivalently, `F(x, y)` can be rewritten as `G(y/x)` or `H(x/y)`.  See
+    also the docstring of :py:meth:`~sympy.solvers.ode.homogeneous_order`.
+
+    If the coefficients `P` and `Q` in the differential equation above are
+    homogeneous functions of the same order, then it can be shown that the
+    substitution `x = u_2 y` (i.e. `u_2 = x/y`) will turn the differential
+    equation into an equation separable in the variables `y` and `u_2`.  If
+    `h(u_2)` is the function that results from making the substitution `u_2 =
+    x/f(x)` on `P(x, f(x))` and `g(u_2)` is the function that results from the
+    substitution on `Q(x, f(x))` in the differential equation `P(x, f(x)) +
+    Q(x, f(x)) f'(x) = 0`, then the general solution is:
+
+    >>> from sympy import Function, dsolve, pprint
+    >>> from sympy.abc import x
+    >>> f, g, h = map(Function, ['f', 'g', 'h'])
+    >>> genform = g(x/f(x)) + h(x/f(x))*f(x).diff(x)
+    >>> pprint(genform)
+     / x  \    / x  \ d
+    g|----| + h|----|*--(f(x))
+     \f(x)/    \f(x)/ dx
+    >>> pprint(dsolve(genform, f(x),
+    ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral'))
+                 x
+                ----
+                f(x)
+                  /
+                 |
+                 |       -g(u1)
+                 |  ---------------- d(u1)
+                 |  u1*g(u1) + h(u1)
+                 |
+                /
+    <BLANKLINE>
+    f(x) = C1*e
+
+    Where `u_1 g(u_1) + h(u_1) \ne 0` and `f(x) \ne 0`.
+
+    See also the docstrings of
+    :obj:`~sympy.solvers.ode.single.HomogeneousCoeffBest` and
+    :obj:`~sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep`.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, pprint, dsolve
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
+    ... hint='1st_homogeneous_coeff_subs_indep_div_dep',
+    ... simplify=False))
+                             /    2    \
+                             | 3*x     |
+                          log|----- + 1|
+                             | 2       |
+                             \f (x)    /
+    log(f(x)) = log(C1) - --------------
+                                3
+
+    References
+    ==========
+
+    - https://en.wikipedia.org/wiki/Homogeneous_differential_equation
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 59
+
+    # indirect doctest
+
+    """
+    hint = "1st_homogeneous_coeff_subs_indep_div_dep"
+    has_integral = True
+    order = [1]
+
+    def _wilds(self, f, x, order):
+        d = Wild('d', exclude=[f(x).diff(x), f(x).diff(x, 2)])
+        e = Wild('e', exclude=[f(x).diff(x)])
+        return d, e
+
+    def _equation(self, fx, x, order):
+        d, e = self.wilds()
+        return d + e*fx.diff(x)
+
+    def _verify(self, fx):
+        self.d, self.e = self.wilds_match()
+        self.y = Dummy('y')
+        x = self.ode_problem.sym
+        self.d = separatevars(self.d.subs(fx, self.y))
+        self.e = separatevars(self.e.subs(fx, self.y))
+        ordera = homogeneous_order(self.d, x, self.y)
+        orderb = homogeneous_order(self.e, x, self.y)
+        if ordera == orderb and ordera is not None:
+            self.u = Dummy('u')
+            if simplify((self.e + self.u*self.d).subs({x: self.u, self.y: 1})) != 0:
+                return True
+            return False
+        return False
+
+    def _get_match_object(self):
+        fx = self.ode_problem.func
+        x = self.ode_problem.sym
+        self.u1 = Dummy('u1')
+        xarg = 0
+        yarg = 0
+        return [self.d, self.e, fx, x, self.u, self.u1, self.y, xarg, yarg]
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        d, e, fx, x, u, u1, y, xarg, yarg = self._get_match_object()
+        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
+        int = Integral(simplify((-d/(e + u1*d)).subs({x: u1, y: 1})),(u1, None, x/fx))
+        sol = logcombine(Eq(log(fx), int + log(C1)), force=True)
+        gen_sol = sol.subs(fx, u).subs(((u, u - yarg), (x, x - xarg), (u, fx)))
+        return [gen_sol]
+
+
+class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubsDepDivIndep):
+    r"""
+    Returns the best solution to an ODE from the two hints
+    ``1st_homogeneous_coeff_subs_dep_div_indep`` and
+    ``1st_homogeneous_coeff_subs_indep_div_dep``.
+
+    This is as determined by :py:meth:`~sympy.solvers.ode.ode.ode_sol_simplicity`.
+
+    See the
+    :obj:`~sympy.solvers.ode.single.HomogeneousCoeffSubsIndepDivDep`
+    and
+    :obj:`~sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep`
+    docstrings for more information on these hints.  Note that there is no
+    ``ode_1st_homogeneous_coeff_best_Integral`` hint.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, pprint
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
+    ... hint='1st_homogeneous_coeff_best', simplify=False))
+                             /    2    \
+                             | 3*x     |
+                          log|----- + 1|
+                             | 2       |
+                             \f (x)    /
+    log(f(x)) = log(C1) - --------------
+                                3
+
+    References
+    ==========
+
+    - https://en.wikipedia.org/wiki/Homogeneous_differential_equation
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 59
+
+    # indirect doctest
+
+    """
+    hint = "1st_homogeneous_coeff_best"
+    has_integral = False
+    order = [1]
+
+    def _verify(self, fx):
+        if HomogeneousCoeffSubsIndepDivDep._verify(self, fx) and HomogeneousCoeffSubsDepDivIndep._verify(self, fx):
+            return True
+        return False
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        # There are two substitutions that solve the equation, u1=y/x and u2=x/y
+        # # They produce different integrals, so try them both and see which
+        # # one is easier
+        sol1 = HomogeneousCoeffSubsIndepDivDep._get_general_solution(self)
+        sol2 = HomogeneousCoeffSubsDepDivIndep._get_general_solution(self)
+        fx = self.ode_problem.func
+        if simplify_flag:
+            sol1 = odesimp(self.ode_problem.eq, *sol1, fx, "1st_homogeneous_coeff_subs_indep_div_dep")
+            sol2 = odesimp(self.ode_problem.eq, *sol2, fx, "1st_homogeneous_coeff_subs_dep_div_indep")
+        return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, fx, trysolving=not simplify))
+
+
+class LinearCoefficients(HomogeneousCoeffBest):
+    r"""
+    Solves a differential equation with linear coefficients.
+
+    The general form of a differential equation with linear coefficients is
+
+    .. math:: y' + F\left(\!\frac{a_1 x + b_1 y + c_1}{a_2 x + b_2 y +
+                c_2}\!\right) = 0\text{,}
+
+    where `a_1`, `b_1`, `c_1`, `a_2`, `b_2`, `c_2` are constants and `a_1 b_2
+    - a_2 b_1 \ne 0`.
+
+    This can be solved by substituting:
+
+    .. math:: x = x' + \frac{b_2 c_1 - b_1 c_2}{a_2 b_1 - a_1 b_2}
+
+              y = y' + \frac{a_1 c_2 - a_2 c_1}{a_2 b_1 - a_1
+                  b_2}\text{.}
+
+    This substitution reduces the equation to a homogeneous differential
+    equation.
+
+    See Also
+    ========
+    :obj:`sympy.solvers.ode.single.HomogeneousCoeffBest`
+    :obj:`sympy.solvers.ode.single.HomogeneousCoeffSubsIndepDivDep`
+    :obj:`sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep`
+
+    Examples
+    ========
+
+    >>> from sympy import Function, pprint
+    >>> from sympy.solvers.ode.ode import dsolve
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> df = f(x).diff(x)
+    >>> eq = (x + f(x) + 1)*df + (f(x) - 6*x + 1)
+    >>> dsolve(eq, hint='linear_coefficients')
+    [Eq(f(x), -x - sqrt(C1 + 7*x**2) - 1), Eq(f(x), -x + sqrt(C1 + 7*x**2) - 1)]
+    >>> pprint(dsolve(eq, hint='linear_coefficients'))
+                      ___________                     ___________
+                   /         2                     /         2
+    [f(x) = -x - \/  C1 + 7*x   - 1, f(x) = -x + \/  C1 + 7*x   - 1]
+
+
+    References
+    ==========
+
+    - Joel Moses, "Symbolic Integration - The Stormy Decade", Communications
+      of the ACM, Volume 14, Number 8, August 1971, pp. 558
+    """
+    hint = "linear_coefficients"
+    has_integral = True
+    order = [1]
+
+    def _wilds(self, f, x, order):
+        d = Wild('d', exclude=[f(x).diff(x), f(x).diff(x, 2)])
+        e = Wild('e', exclude=[f(x).diff(x)])
+        return d, e
+
+    def _equation(self, fx, x, order):
+        d, e = self.wilds()
+        return d + e*fx.diff(x)
+
+    def _verify(self, fx):
+        self.d, self.e = self.wilds_match()
+        a, b = self.wilds()
+        F = self.d/self.e
+        x = self.ode_problem.sym
+        params = self._linear_coeff_match(F, fx)
+        if params:
+            self.xarg, self.yarg = params
+            u = Dummy('u')
+            t = Dummy('t')
+            self.y = Dummy('y')
+            # Dummy substitution for df and f(x).
+            dummy_eq = self.ode_problem.eq.subs(((fx.diff(x), t), (fx, u)))
+            reps = ((x, x + self.xarg), (u, u + self.yarg), (t, fx.diff(x)), (u, fx))
+            dummy_eq = simplify(dummy_eq.subs(reps))
+            # get the re-cast values for e and d
+            r2 = collect(expand(dummy_eq), [fx.diff(x), fx]).match(a*fx.diff(x) + b)
+            if r2:
+                self.d, self.e = r2[b], r2[a]
+                orderd = homogeneous_order(self.d, x, fx)
+                ordere = homogeneous_order(self.e, x, fx)
+                if orderd == ordere and orderd is not None:
+                    self.d = self.d.subs(fx, self.y)
+                    self.e = self.e.subs(fx, self.y)
+                    return True
+                return False
+            return False
+
+    def _linear_coeff_match(self,expr, func):
+        r"""
+        Helper function to match hint ``linear_coefficients``.
+
+        Matches the expression to the form `(a_1 x + b_1 f(x) + c_1)/(a_2 x + b_2
+        f(x) + c_2)` where the following conditions hold:
+
+        1. `a_1`, `b_1`, `c_1`, `a_2`, `b_2`, `c_2` are Rationals;
+        2. `c_1` or `c_2` are not equal to zero;
+        3. `a_2 b_1 - a_1 b_2` is not equal to zero.
+
+        Return ``xarg``, ``yarg`` where
+
+        1. ``xarg`` = `(b_2 c_1 - b_1 c_2)/(a_2 b_1 - a_1 b_2)`
+        2. ``yarg`` = `(a_1 c_2 - a_2 c_1)/(a_2 b_1 - a_1 b_2)`
+
+
+        Examples
+        ========
+
+        >>> from sympy import Function
+        >>> from sympy.abc import x
+        >>> from sympy.solvers.ode.single import LinearCoefficients
+        >>> from sympy.functions.elementary.trigonometric import sin
+        >>> f = Function('f')
+        >>> eq = (-25*f(x) - 8*x + 62)/(4*f(x) + 11*x - 11)
+        >>> obj = LinearCoefficients(eq)
+        >>> obj._linear_coeff_match(eq, f(x))
+        (1/9, 22/9)
+        >>> eq = sin((-5*f(x) - 8*x + 6)/(4*f(x) + x - 1))
+        >>> obj = LinearCoefficients(eq)
+        >>> obj._linear_coeff_match(eq, f(x))
+        (19/27, 2/27)
+        >>> eq = sin(f(x)/x)
+        >>> obj = LinearCoefficients(eq)
+        >>> obj._linear_coeff_match(eq, f(x))
+
+        """
+        f = func.func
+        x = func.args[0]
+        def abc(eq):
+            r'''
+            Internal function of _linear_coeff_match
+            that returns Rationals a, b, c
+            if eq is a*x + b*f(x) + c, else None.
+            '''
+            eq = _mexpand(eq)
+            c = eq.as_independent(x, f(x), as_Add=True)[0]
+            if not c.is_Rational:
+                return
+            a = eq.coeff(x)
+            if not a.is_Rational:
+                return
+            b = eq.coeff(f(x))
+            if not b.is_Rational:
+                return
+            if eq == a*x + b*f(x) + c:
+                return a, b, c
+
+        def match(arg):
+            r'''
+            Internal function of _linear_coeff_match that returns Rationals a1,
+            b1, c1, a2, b2, c2 and a2*b1 - a1*b2 of the expression (a1*x + b1*f(x)
+            + c1)/(a2*x + b2*f(x) + c2) if one of c1 or c2 and a2*b1 - a1*b2 is
+            non-zero, else None.
+            '''
+            n, d = arg.together().as_numer_denom()
+            m = abc(n)
+            if m is not None:
+                a1, b1, c1 = m
+                m = abc(d)
+                if m is not None:
+                    a2, b2, c2 = m
+                    d = a2*b1 - a1*b2
+                    if (c1 or c2) and d:
+                        return a1, b1, c1, a2, b2, c2, d
+
+        m = [fi.args[0] for fi in expr.atoms(Function) if fi.func != f and
+            len(fi.args) == 1 and not fi.args[0].is_Function] or {expr}
+        m1 = match(m.pop())
+        if m1 and all(match(mi) == m1 for mi in m):
+            a1, b1, c1, a2, b2, c2, denom = m1
+            return (b2*c1 - b1*c2)/denom, (a1*c2 - a2*c1)/denom
+
+    def _get_match_object(self):
+        fx = self.ode_problem.func
+        x = self.ode_problem.sym
+        self.u1 = Dummy('u1')
+        u = Dummy('u')
+        return [self.d, self.e, fx, x, u, self.u1, self.y, self.xarg, self.yarg]
+
+
+class NthOrderReducible(SingleODESolver):
+    r"""
+    Solves ODEs that only involve derivatives of the dependent variable using
+    a substitution of the form `f^n(x) = g(x)`.
+
+    For example any second order ODE of the form `f''(x) = h(f'(x), x)` can be
+    transformed into a pair of 1st order ODEs `g'(x) = h(g(x), x)` and
+    `f'(x) = g(x)`. Usually the 1st order ODE for `g` is easier to solve. If
+    that gives an explicit solution for `g` then `f` is found simply by
+    integration.
+
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Eq
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = Eq(x*f(x).diff(x)**2 + f(x).diff(x, 2), 0)
+    >>> dsolve(eq, f(x), hint='nth_order_reducible')
+    ... # doctest: +NORMALIZE_WHITESPACE
+    Eq(f(x), C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
+
+    """
+    hint = "nth_order_reducible"
+    has_integral = False
+
+    def _matches(self):
+        # Any ODE that can be solved with a substitution and
+        # repeated integration e.g.:
+        # `d^2/dx^2(y) + x*d/dx(y) = constant
+        #f'(x) must be finite for this to work
+        eq = self.ode_problem.eq_preprocessed
+        func = self.ode_problem.func
+        x = self.ode_problem.sym
+        r"""
+        Matches any differential equation that can be rewritten with a smaller
+        order. Only derivatives of ``func`` alone, wrt a single variable,
+        are considered, and only in them should ``func`` appear.
+        """
+        # ODE only handles functions of 1 variable so this affirms that state
+        assert len(func.args) == 1
+        vc = [d.variable_count[0] for d in eq.atoms(Derivative)
+            if d.expr == func and len(d.variable_count) == 1]
+        ords = [c for v, c in vc if v == x]
+        if len(ords) < 2:
+            return False
+        self.smallest = min(ords)
+        # make sure func does not appear outside of derivatives
+        D = Dummy()
+        if eq.subs(func.diff(x, self.smallest), D).has(func):
+            return False
+        return True
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        eq = self.ode_problem.eq
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        n = self.smallest
+        # get a unique function name for g
+        names = [a.name for a in eq.atoms(AppliedUndef)]
+        while True:
+            name = Dummy().name
+            if name not in names:
+                g = Function(name)
+                break
+        w = f(x).diff(x, n)
+        geq = eq.subs(w, g(x))
+        gsol = dsolve(geq, g(x))
+
+        if not isinstance(gsol, list):
+            gsol = [gsol]
+
+        # Might be multiple solutions to the reduced ODE:
+        fsol = []
+        for gsoli in gsol:
+            fsoli = dsolve(gsoli.subs(g(x), w), f(x))  # or do integration n times
+            fsol.append(fsoli)
+
+        return fsol
+
+
+class Hypergeometric2nd(SingleODESolver):
+    r"""
+    Solves 2nd order linear differential equations.
+
+    It computes special function solutions which can be expressed using the
+    2F1, 1F1 or 0F1 hypergeometric functions.
+
+    .. math:: y'' + A(x) y' + B(x) y = 0\text{,}
+
+    where `A` and `B` are rational functions.
+
+    These kinds of differential equations have solution of non-Liouvillian form.
+
+    Given linear ODE can be obtained from 2F1 given by
+
+    .. math:: (x^2 - x) y'' + ((a + b + 1) x - c) y' + b a y = 0\text{,}
+
+    where {a, b, c} are arbitrary constants.
+
+    Notes
+    =====
+
+    The algorithm should find any solution of the form
+
+    .. math:: y = P(x) _pF_q(..; ..;\frac{\alpha x^k + \beta}{\gamma x^k + \delta})\text{,}
+
+    where pFq is any of 2F1, 1F1 or 0F1 and `P` is an "arbitrary function".
+    Currently only the 2F1 case is implemented in SymPy but the other cases are
+    described in the paper and could be implemented in future (contributions
+    welcome!).
+
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, pprint
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = (x*x - x)*f(x).diff(x,2) + (5*x - 1)*f(x).diff(x) + 4*f(x)
+    >>> pprint(dsolve(eq, f(x), '2nd_hypergeometric'))
+                                        _
+           /        /           4  \\  |_  /-1, -1 |  \
+           |C1 + C2*|log(x) + -----||* |   |       | x|
+           \        \         x + 1// 2  1 \  1    |  /
+    f(x) = --------------------------------------------
+                                    3
+                             (x - 1)
+
+
+    References
+    ==========
+
+    - "Non-Liouvillian solutions for second order linear ODEs" by L. Chan, E.S. Cheb-Terrab
+
+    """
+    hint = "2nd_hypergeometric"
+    has_integral = True
+
+    def _matches(self):
+        eq = self.ode_problem.eq_preprocessed
+        func = self.ode_problem.func
+        r = match_2nd_hypergeometric(eq, func)
+        self.match_object = None
+        if r:
+            A, B = r
+            d = equivalence_hypergeometric(A, B, func)
+            if d:
+                if d['type'] == "2F1":
+                    self.match_object = match_2nd_2F1_hypergeometric(d['I0'], d['k'], d['sing_point'], func)
+                    if self.match_object is not None:
+                        self.match_object.update({'A':A, 'B':B})
+            # We can extend it for 1F1 and 0F1 type also.
+        return self.match_object is not None
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        eq = self.ode_problem.eq
+        func = self.ode_problem.func
+        if self.match_object['type'] == "2F1":
+            sol = get_sol_2F1_hypergeometric(eq, func, self.match_object)
+            if sol is None:
+                raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
+                    + " the hypergeometric method")
+
+        return [sol]
+
+
 # Avoid circular import:
-from .ode import dsolve
+from .ode import dsolve, ode_sol_simplicity, odesimp, homogeneous_order

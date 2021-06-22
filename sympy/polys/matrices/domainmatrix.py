@@ -112,6 +112,16 @@ class DomainMatrix:
 
         return cls.from_rep(rep)
 
+    def __getnewargs__(self):
+        rep = self.rep
+        if isinstance(rep, DDM):
+            arg = list(rep)
+        elif isinstance(rep, SDM):
+            arg = dict(rep)
+        else:
+            raise RuntimeError # pragma: no cover
+        return arg, self.shape, self.domain
+
     def __getitem__(self, key):
         i, j = key
         m, n = self.shape
@@ -130,6 +140,18 @@ class DomainMatrix:
             j = slice(j, j+1)
 
         return self.from_rep(self.rep.extract_slice(i, j))
+
+    def extract(self, rowslist, colslist):
+        return self.from_rep(self.rep.extract(rowslist, colslist))
+
+    def __setitem__(self, key, value):
+        i, j = key
+        if not self.domain.of_type(value):
+            raise TypeError
+        if isinstance(i, int) and isinstance(j, int):
+            self.rep.setitem(i, j, value)
+        else:
+            raise NotImplementedError
 
     @classmethod
     def from_rep(cls, rep):

@@ -109,7 +109,7 @@ If there is more than one way to solve ODEs with your method, include a hint
 for each one, as well as a ``<hint>_best`` hint.  Your ``ode_<hint>_best()``
 function should choose the best using min with ``ode_sol_simplicity`` as the
 key argument.  See
-:py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_best`, for example.
+:obj:`~sympy.solvers.ode.single.HomogeneousCoeffBest`, for example.
 The function that uses your method will be called ``ode_<hint>()``, so the
 hint must only use characters that are allowed in a Python function name
 (alphanumeric characters and the underscore '``_``' character).  Include a
@@ -232,8 +232,6 @@ of those tests will surely fail.
 from collections import defaultdict
 from itertools import islice
 
-from sympy.functions import hyper
-
 from sympy.core import Add, S, Mul, Pow, oo, Rational
 from sympy.core.compatibility import ordered, iterable
 from sympy.core.containers import Tuple
@@ -254,14 +252,12 @@ from sympy.functions import cos, cosh, exp, im, log, re, sin, sinh, sqrt, \
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian
-from sympy.polys import (Poly, RootOf, rootof, terms_gcd,
-                         PolynomialError, lcm, roots, gcd)
+from sympy.polys import (Poly, RootOf, rootof, terms_gcd, PolynomialError, lcm, roots)
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import (collect, logcombine, powsimp,  # type: ignore
     separatevars, simplify, trigsimp, posify, cse)
-from sympy.simplify.powsimp import powdenest
 from sympy.simplify.radsimp import collect_const
 from sympy.solvers import checksol, solve
 from sympy.solvers.pde import pdsolve
@@ -1056,6 +1052,13 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         SecondNonlinearAutonomousConserved: ('2nd_nonlinear_autonomous_conserved',),
         Liouville: ('Liouville',),
         Separable: ('separable',),
+        SeparableReduced: ('separable_reduced',),
+        HomogeneousCoeffSubsDepDivIndep: ('1st_homogeneous_coeff_subs_dep_div_indep',),
+        HomogeneousCoeffSubsIndepDivDep: ('1st_homogeneous_coeff_subs_indep_div_dep',),
+        HomogeneousCoeffBest: ('1st_homogeneous_coeff_best',),
+        LinearCoefficients: ('linear_coefficients',),
+        NthOrderReducible: ('nth_order_reducible',),
+        Hypergeometric2nd: ('2nd_hypergeometric',),
     }
     for solvercls in solvers:
         solver = solvercls(ode)
@@ -1112,139 +1115,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         # method
         matching_hints["lie_group"] = r3
 
-        # This match is used for several cases below; we now collect on
-        # f(x) so the matching works.
-        r = collect(reduced_eq, df, exact=True).match(d + e*df)
-
-        if r:
-            # Using r[d] and r[e] without any modification for hints
-            # linear-coefficients and separable-reduced.
-            num, den = r[d], r[e]  # ODE = d/e + df
-            r['d'] = d
-            r['e'] = e
-            r['y'] = y
-            # print(r)
-            r[d] = num.subs(f(x), y)
-            r[e] = den.subs(f(x), y)
-            # print(r,"new")
-
-            ## Separable Case: y' == P(y)*Q(x)
-            r[d] = separatevars(r[d])
-            r[e] = separatevars(r[e])
-
-            ## First order equation with homogeneous coefficients:
-            # dy/dx == F(y/x) or dy/dx == F(x/y)
-            ordera = homogeneous_order(r[d], x, y)
-            if ordera is not None:
-                orderb = homogeneous_order(r[e], x, y)
-                if ordera == orderb:
-                    # u1=y/x and u2=x/y
-                    u1 = Dummy('u1')
-                    u2 = Dummy('u2')
-                    s = "1st_homogeneous_coeff_subs"
-                    s1 = s + "_dep_div_indep"
-                    s2 = s + "_indep_div_dep"
-                    if simplify((r[d] + u1*r[e]).subs({x: 1, y: u1})) != 0:
-                        matching_hints[s1] = r
-                        matching_hints[s1 + "_Integral"] = r
-                    if simplify((r[e] + u2*r[d]).subs({x: u2, y: 1})) != 0:
-                        matching_hints[s2] = r
-                        matching_hints[s2 + "_Integral"] = r
-                    if s1 in matching_hints and s2 in matching_hints:
-                        matching_hints["1st_homogeneous_coeff_best"] = r
-
-            ## Linear coefficients of the form
-            # y'+ F((a*x + b*y + c)/(a'*x + b'y + c')) = 0
-            # that can be reduced to homogeneous form.
-            F = num/den
-            params = _linear_coeff_match(F, func)
-            if params:
-                xarg, yarg = params
-                u = Dummy('u')
-                t = Dummy('t')
-                # Dummy substitution for df and f(x).
-                dummy_eq = reduced_eq.subs(((df, t), (f(x), u)))
-                reps = ((x, x + xarg), (u, u + yarg), (t, df), (u, f(x)))
-                dummy_eq = simplify(dummy_eq.subs(reps))
-                # get the re-cast values for e and d
-                r2 = collect(expand(dummy_eq), [df, f(x)]).match(e*df + d)
-                if r2:
-                    orderd = homogeneous_order(r2[d], x, f(x))
-                    if orderd is not None:
-                        ordere = homogeneous_order(r2[e], x, f(x))
-                        if orderd == ordere:
-                            # Match arguments are passed in such a way that it
-                            # is coherent with the already existing homogeneous
-                            # functions.
-                            r2[d] = r2[d].subs(f(x), y)
-                            r2[e] = r2[e].subs(f(x), y)
-                            r2.update({'xarg': xarg, 'yarg': yarg,
-                                'd': d, 'e': e, 'y': y})
-                            matching_hints["linear_coefficients"] = r2
-                            matching_hints["linear_coefficients_Integral"] = r2
-
-            ## Equation of the form y' + (y/x)*H(x^n*y) = 0
-            # that can be reduced to separable form
-
-            factor = simplify(x/f(x)*num/den)
-
-            # Try representing factor in terms of x^n*y
-            # where n is lowest power of x in factor;
-            # first remove terms like sqrt(2)*3 from factor.atoms(Mul)
-            num, dem = factor.as_numer_denom()
-            num = expand(num)
-            dem = expand(dem)
-            def _degree(expr, x):
-                # Made this function to calculate the degree of
-                # x in an expression. If expr will be of form
-                # x**p*y, (wheare p can be variables/rationals) then it
-                # will return p.
-                for val in expr:
-                    if val.has(x):
-                        if isinstance(val, Pow) and val.as_base_exp()[0] == x:
-                            return (val.as_base_exp()[1])
-                        elif val == x:
-                            return (val.as_base_exp()[1])
-                        else:
-                            return _degree(val.args, x)
-                return 0
-
-            def _powers(expr):
-                # this function will return all the different relative power of x w.r.t f(x).
-                # expr = x**p * f(x)**q then it will return {p/q}.
-                pows = set()
-                if isinstance(expr, Add):
-                    exprs = expr.atoms(Add)
-                elif isinstance(expr, Mul):
-                    exprs = expr.atoms(Mul)
-                elif isinstance(expr, Pow):
-                    exprs = expr.atoms(Pow)
-                else:
-                    exprs = {expr}
-
-                for arg in exprs:
-                    if arg.has(x):
-                        _, u = arg.as_independent(x, f(x))
-                        pow = _degree((u.subs(f(x), y), ), x)/_degree((u.subs(f(x), y), ), y)
-                        pows.add(pow)
-                return pows
-
-            pows = _powers(num)
-            pows.update(_powers(dem))
-            pows = list(pows)
-            if(len(pows)==1) and pows[0]!=zoo:
-                t = Dummy('t')
-                r2 = {'t': t}
-                num = num.subs(x**pows[0]*f(x), t)
-                dem = dem.subs(x**pows[0]*f(x), t)
-                test = num/dem
-                free = test.free_symbols
-                if len(free) == 1 and free.pop() == t:
-                    r2.update({'power' : pows[0], 'u' : test})
-                    matching_hints['separable_reduced'] = r2
-                    matching_hints["separable_reduced_Integral"] = r2
-
-
     elif order == 2:
         # Homogeneous second order differential equation of the form
         # a3*f(x).diff(x, 2) + b3*f(x).diff(x) + c3
@@ -1284,13 +1154,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
                     if not check.has(oo, NaN, zoo, -oo):
                         coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                         matching_hints["2nd_power_series_regular"] = coeff_dict
-                        # For Hypergeometric solutions.
-                _r = {}
-                _r.update(r)
-                rn = match_2nd_hypergeometric(_r, func)
-                if rn:
-                    matching_hints["2nd_hypergeometric"] = rn
-                    matching_hints["2nd_hypergeometric_Integral"] = rn
+
             # If the ODE has regular singular point at x0 and is of the form
             # Eq((x)**2*Derivative(y(x), x, x) + x*Derivative(y(x), x) +
             # (a4**2*x**(2*p)-n**2)*y(x) thus Bessel's equation
@@ -1311,14 +1175,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
 
 
     if order > 0:
-        # Any ODE that can be solved with a substitution and
-        # repeated integration e.g.:
-        # `d^2/dx^2(y) + x*d/dx(y) = constant
-        #f'(x) must be finite for this to work
-        r = _nth_order_reducible_match(reduced_eq, func)
-        if r:
-            matching_hints['nth_order_reducible'] = r
-
         # nth order linear ODE
         # a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y = F(x) = b
 
@@ -1408,246 +1264,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     else:
         return tuple(retlist)
 
-def equivalence(max_num_pow, dem_pow):
-    # this function is made for checking the equivalence with 2F1 type of equation.
-    # max_num_pow is the value of maximum power of x in numerator
-    # and dem_pow is list of powers of different factor of form (a*x b).
-    # reference from table 1 in paper - "Non-Liouvillian solutions for second order
-    # linear ODEs" by L. Chan, E.S. Cheb-Terrab.
-    # We can extend it for 1F1 and 0F1 type also.
-
-    if max_num_pow == 2:
-        if dem_pow in [[2, 2], [2, 2, 2]]:
-            return "2F1"
-    elif max_num_pow == 1:
-        if dem_pow in [[1, 2, 2], [2, 2, 2], [1, 2], [2, 2]]:
-            return "2F1"
-    elif max_num_pow == 0:
-        if dem_pow in [[1, 1, 2], [2, 2], [1 ,2, 2], [1, 1], [2], [1, 2], [2, 2]]:
-            return "2F1"
-
-    return None
-
-def equivalence_hypergeometric(A, B, func):
-
-    from sympy import factor
-
-    # This method for finding the equivalence is only for 2F1 type.
-    # We can extend it for 1F1 and 0F1 type also.
-    x = func.args[0]
-
-    # making given equation in normal form
-    I1 = factor(cancel(A.diff(x)/2 + A**2/4 - B))
-
-    # computing shifted invariant(J1) of the equation
-    J1 = factor(cancel(x**2*I1 + S(1)/4))
-    num, dem = J1.as_numer_denom()
-    num = powdenest(expand(num))
-    dem = powdenest(expand(dem))
-    pow_num = set()
-    pow_dem = set()
-    # this function will compute the different powers of variable(x) in J1.
-    # then it will help in finding value of k. k is power of x such that we can express
-    # J1 = x**k * J0(x**k) then all the powers in J0 become integers.
-    def _power_counting(num):
-        _pow = {0}
-        for val in num:
-            if val.has(x):
-                if isinstance(val, Pow) and val.as_base_exp()[0] == x:
-                    _pow.add(val.as_base_exp()[1])
-                elif val == x:
-                    _pow.add(val.as_base_exp()[1])
-                else:
-                    _pow.update(_power_counting(val.args))
-        return _pow
-
-    pow_num = _power_counting((num, ))
-    pow_dem = _power_counting((dem, ))
-    pow_dem.update(pow_num)
-
-    _pow = pow_dem
-    k = gcd(_pow)
-
-    # computing I0 of the given equation
-    I0 = powdenest(simplify(factor(((J1/k**2) - S(1)/4)/((x**k)**2))), force=True)
-    I0 = factor(cancel(powdenest(I0.subs(x, x**(S(1)/k)), force=True)))
-    num, dem = I0.as_numer_denom()
-
-    max_num_pow = max(_power_counting((num, )))
-    dem_args = dem.args
-    sing_point = []
-    dem_pow = []
-    # calculating singular point of I0.
-    for arg in dem_args:
-        if arg.has(x):
-            if isinstance(arg, Pow):
-                # (x-a)**n
-                dem_pow.append(arg.as_base_exp()[1])
-                sing_point.append(list(roots(arg.as_base_exp()[0], x).keys())[0])
-            else:
-                # (x-a) type
-                dem_pow.append(arg.as_base_exp()[1])
-                sing_point.append(list(roots(arg, x).keys())[0])
-
-    dem_pow.sort()
-    # checking if equivalence is exists or not.
-
-    if equivalence(max_num_pow, dem_pow) == "2F1":
-        return {'I0':I0, 'k':k, 'sing_point':sing_point, 'type':"2F1"}
-    else:
-        return None
-
-def ode_2nd_hypergeometric(eq, func, order, match):
-
-    from sympy.simplify.hyperexpand import hyperexpand
-    from sympy import factor
-    x = func.args[0]
-    C0, C1 = get_numbered_constants(eq, num=2)
-    a = match['a']
-    b = match['b']
-    c = match['c']
-
-    A = match['A']
-    # B = match['B']
-
-    sol = None
-    if match['type'] == "2F1":
-        if c.is_integer == False:
-            sol = C0*hyper([a, b], [c], x) + C1*hyper([a-c+1, b-c+1], [2-c], x)*x**(1-c)
-        elif c == 1:
-            y2 = Integral(exp(Integral((-(a+b+1)*x + c)/(x**2-x), x))/(hyperexpand(hyper([a, b], [c], x))**2), x)*hyper([a, b], [c], x)
-            sol = C0*hyper([a, b], [c], x) + C1*y2
-        elif (c-a-b).is_integer == False:
-            sol = C0*hyper([a, b], [1+a+b-c], 1-x) + C1*hyper([c-a, c-b], [1+c-a-b], 1-x)*(1-x)**(c-a-b)
-
-        if sol is None:
-            raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
-                + " the hypergeometric method")
-
-        # applying transformation in the solution
-        subs = match['mobius']
-        dtdx = simplify(1/(subs.diff(x)))
-        _B = ((a + b + 1)*x - c).subs(x, subs)*dtdx
-        _B = factor(_B + ((x**2 -x).subs(x, subs))*(dtdx.diff(x)*dtdx))
-        _A = factor((x**2 - x).subs(x, subs)*(dtdx**2))
-        e = exp(logcombine(Integral(cancel(_B/(2*_A)), x), force=True))
-        sol = sol.subs(x, match['mobius'])
-        sol = sol.subs(x, x**match['k'])
-        e = e.subs(x, x**match['k'])
-
-        if not A.is_zero:
-            e1 = Integral(A/2, x)
-            e1 = exp(logcombine(e1, force=True))
-            sol = cancel((e/e1)*x**((-match['k']+1)/2))*sol
-            sol = Eq(func, sol)
-            return sol
-
-        sol = cancel((e)*x**((-match['k']+1)/2))*sol
-        sol = Eq(func, sol)
-
-    return sol
-
-def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
-
-    from sympy import factor
-    x = func.args[0]
-    a = Wild("a")
-    b = Wild("b")
-    c = Wild("c")
-    t = Wild("t")
-    s = Wild("s")
-    r = Wild("r")
-    alpha = Wild("alpha")
-    beta = Wild("beta")
-    gamma = Wild("gamma")
-    delta = Wild("delta")
-
-    rn = {'type':None}
-    # I0 of the standerd 2F1 equation.
-    I0 = ((a-b+1)*(a-b-1)*x**2 + 2*((1-a-b)*c + 2*a*b)*x + c*(c-2))/(4*x**2*(x-1)**2)
-    if sing_point != [0, 1]:
-        # If singular point is [0, 1] then we have standerd equation.
-        eqs = []
-        sing_eqs = [-beta/alpha, -delta/gamma, (delta-beta)/(alpha-gamma)]
-        # making equations for the finding the mobius transformation
-        for i in range(3):
-            if i<len(sing_point):
-                eqs.append(Eq(sing_eqs[i], sing_point[i]))
-            else:
-                eqs.append(Eq(1/sing_eqs[i], 0))
-        # solving above equations for the mobius transformation
-        _beta = -alpha*sing_point[0]
-        _delta = -gamma*sing_point[1]
-        _gamma = alpha
-        if len(sing_point) == 3:
-            _gamma = (_beta + sing_point[2]*alpha)/(sing_point[2] - sing_point[1])
-        mob = (alpha*x + beta)/(gamma*x + delta)
-        mob = mob.subs(beta, _beta)
-        mob = mob.subs(delta, _delta)
-        mob = mob.subs(gamma, _gamma)
-        mob = cancel(mob)
-        t = (beta - delta*x)/(gamma*x - alpha)
-        t = cancel(((t.subs(beta, _beta)).subs(delta, _delta)).subs(gamma, _gamma))
-    else:
-        mob = x
-        t = x
-
-    # applying mobius transformation in I to make it into I0.
-    I = I.subs(x, t)
-    I = I*(t.diff(x))**2
-    I = factor(I)
-    dict_I = {x**2:0, x:0, 1:0}
-    I0_num, I0_dem = I0.as_numer_denom()
-    # collecting coeff of (x**2, x), of the standerd equation.
-    # substituting (a-b) = s, (a+b) = r
-    dict_I0 = {x**2:s**2 - 1, x:(2*(1-r)*c + (r+s)*(r-s)), 1:c*(c-2)}
-    # collecting coeff of (x**2, x) from I0 of the given equation.
-    dict_I.update(collect(expand(cancel(I*I0_dem)), [x**2, x], evaluate=False))
-    eqs = []
-    # We are comparing the coeff of powers of different x, for finding the values of
-    # parameters of standerd equation.
-    for key in [x**2, x, 1]:
-        eqs.append(Eq(dict_I[key], dict_I0[key]))
-
-    # We can have many possible roots for the equation.
-    # I am selecting the root on the basis that when we have
-    # standard equation eq = x*(x-1)*f(x).diff(x, 2) + ((a+b+1)*x-c)*f(x).diff(x) + a*b*f(x)
-    # then root should be a, b, c.
-
-    _c = 1 - factor(sqrt(1+eqs[2].lhs))
-    if not _c.has(Symbol):
-        _c = min(list(roots(eqs[2], c)))
-    _s = factor(sqrt(eqs[0].lhs + 1))
-    _r = _c - factor(sqrt(_c**2 + _s**2 + eqs[1].lhs - 2*_c))
-    _a = (_r + _s)/2
-    _b = (_r - _s)/2
-
-    rn = {'a':simplify(_a), 'b':simplify(_b), 'c':simplify(_c), 'k':k, 'mobius':mob, 'type':"2F1"}
-
-    return rn
-
-
-def match_2nd_hypergeometric(r, func):
-
-    x = func.args[0]
-    a3 = Wild('a3', exclude=[func, func.diff(x), func.diff(x, 2)])
-    b3 = Wild('b3', exclude=[func, func.diff(x), func.diff(x, 2)])
-    c3 = Wild('c3', exclude=[func, func.diff(x), func.diff(x, 2)])
-
-    A = cancel(r[b3]/r[a3])
-    B = cancel(r[c3]/r[a3])
-
-    d = equivalence_hypergeometric(A, B, func)
-    rn = None
-    if d:
-        if d['type'] == "2F1":
-            rn = match_2nd_2F1_hypergeometric(d['I0'], d['k'], d['sing_point'], func)
-            if rn is not None:
-                rn.update({'A':A, 'B':B})
-
-   # We can extend it for 1F1 and 0F1 type also.
-
-    return rn
 
 def match_2nd_linear_bessel(r, func):
 
@@ -2178,13 +1794,13 @@ def odesimp(ode, eq, func, hint):
                              /
                             |
                             |   /        1   \
-                            |  -|u2 + -------|
+                            |  -|u1 + -------|
                             |   |        /1 \|
                             |   |     sin|--||
-                            |   \        \u2//
-    log(f(x)) = log(C1) +   |  ---------------- d(u2)
+                            |   \        \u1//
+    log(f(x)) = log(C1) +   |  ---------------- d(u1)
                             |          2
-                            |        u2
+                            |        u1
                             |
                            /
 
@@ -2799,252 +2415,6 @@ def _handle_Integral(expr, func, hint):
     return sol
 
 
-def ode_1st_homogeneous_coeff_best(eq, func, order, match):
-    r"""
-    Returns the best solution to an ODE from the two hints
-    ``1st_homogeneous_coeff_subs_dep_div_indep`` and
-    ``1st_homogeneous_coeff_subs_indep_div_dep``.
-
-    This is as determined by :py:meth:`~sympy.solvers.ode.ode.ode_sol_simplicity`.
-
-    See the
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`
-    and
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`
-    docstrings for more information on these hints.  Note that there is no
-    ``ode_1st_homogeneous_coeff_best_Integral`` hint.
-
-    Examples
-    ========
-
-    >>> from sympy import Function, dsolve, pprint
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
-    ... hint='1st_homogeneous_coeff_best', simplify=False))
-                             /    2    \
-                             | 3*x     |
-                          log|----- + 1|
-                             | 2       |
-                             \f (x)    /
-    log(f(x)) = log(C1) - --------------
-                                3
-
-    References
-    ==========
-
-    - https://en.wikipedia.org/wiki/Homogeneous_differential_equation
-    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-      Dover 1963, pp. 59
-
-    # indirect doctest
-
-    """
-    # There are two substitutions that solve the equation, u1=y/x and u2=x/y
-    # They produce different integrals, so try them both and see which
-    # one is easier.
-    sol1 = ode_1st_homogeneous_coeff_subs_indep_div_dep(eq,
-    func, order, match)
-    sol2 = ode_1st_homogeneous_coeff_subs_dep_div_indep(eq,
-    func, order, match)
-    simplify = match.get('simplify', True)
-    if simplify:
-        # why is odesimp called here?  Should it be at the usual spot?
-        sol1 = odesimp(eq, sol1, func, "1st_homogeneous_coeff_subs_indep_div_dep")
-        sol2 = odesimp(eq, sol2, func, "1st_homogeneous_coeff_subs_dep_div_indep")
-    return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, func,
-        trysolving=not simplify))
-
-
-def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
-    r"""
-    Solves a 1st order differential equation with homogeneous coefficients
-    using the substitution `u_1 = \frac{\text{<dependent
-    variable>}}{\text{<independent variable>}}`.
-
-    This is a differential equation
-
-    .. math:: P(x, y) + Q(x, y) dy/dx = 0
-
-    such that `P` and `Q` are homogeneous and of the same order.  A function
-    `F(x, y)` is homogeneous of order `n` if `F(x t, y t) = t^n F(x, y)`.
-    Equivalently, `F(x, y)` can be rewritten as `G(y/x)` or `H(x/y)`.  See
-    also the docstring of :py:meth:`~sympy.solvers.ode.homogeneous_order`.
-
-    If the coefficients `P` and `Q` in the differential equation above are
-    homogeneous functions of the same order, then it can be shown that the
-    substitution `y = u_1 x` (i.e. `u_1 = y/x`) will turn the differential
-    equation into an equation separable in the variables `x` and `u`.  If
-    `h(u_1)` is the function that results from making the substitution `u_1 =
-    f(x)/x` on `P(x, f(x))` and `g(u_2)` is the function that results from the
-    substitution on `Q(x, f(x))` in the differential equation `P(x, f(x)) +
-    Q(x, f(x)) f'(x) = 0`, then the general solution is::
-
-        >>> from sympy import Function, dsolve, pprint
-        >>> from sympy.abc import x
-        >>> f, g, h = map(Function, ['f', 'g', 'h'])
-        >>> genform = g(f(x)/x) + h(f(x)/x)*f(x).diff(x)
-        >>> pprint(genform)
-         /f(x)\    /f(x)\ d
-        g|----| + h|----|*--(f(x))
-         \ x  /    \ x  / dx
-        >>> pprint(dsolve(genform, f(x),
-        ... hint='1st_homogeneous_coeff_subs_dep_div_indep_Integral'))
-                       f(x)
-                       ----
-                        x
-                         /
-                        |
-                        |       -h(u1)
-        log(x) = C1 +   |  ---------------- d(u1)
-                        |  u1*h(u1) + g(u1)
-                        |
-                       /
-
-    Where `u_1 h(u_1) + g(u_1) \ne 0` and `x \ne 0`.
-
-    See also the docstrings of
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_best` and
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`.
-
-    Examples
-    ========
-
-    >>> from sympy import Function, dsolve
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
-    ... hint='1st_homogeneous_coeff_subs_dep_div_indep', simplify=False))
-                          /          3   \
-                          |3*f(x)   f (x)|
-                       log|------ + -----|
-                          |  x         3 |
-                          \           x  /
-    log(x) = log(C1) - -------------------
-                                3
-
-    References
-    ==========
-
-    - https://en.wikipedia.org/wiki/Homogeneous_differential_equation
-    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-      Dover 1963, pp. 59
-
-    # indirect doctest
-
-    """
-    x = func.args[0]
-    f = func.func
-    u = Dummy('u')
-    u1 = Dummy('u1')  # u1 == f(x)/x
-    r = match  # d+e*diff(f(x),x)
-    C1 = get_numbered_constants(eq, num=1)
-    xarg = match.get('xarg', 0)
-    yarg = match.get('yarg', 0)
-    int = Integral(
-        (-r[r['e']]/(r[r['d']] + u1*r[r['e']])).subs({x: 1, r['y']: u1}),
-        (u1, None, f(x)/x))
-    sol = logcombine(Eq(log(x), int + log(C1)), force=True)
-    sol = sol.subs(f(x), u).subs(((u, u - yarg), (x, x - xarg), (u, f(x))))
-    return sol
-
-
-def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
-    r"""
-    Solves a 1st order differential equation with homogeneous coefficients
-    using the substitution `u_2 = \frac{\text{<independent
-    variable>}}{\text{<dependent variable>}}`.
-
-    This is a differential equation
-
-    .. math:: P(x, y) + Q(x, y) dy/dx = 0
-
-    such that `P` and `Q` are homogeneous and of the same order.  A function
-    `F(x, y)` is homogeneous of order `n` if `F(x t, y t) = t^n F(x, y)`.
-    Equivalently, `F(x, y)` can be rewritten as `G(y/x)` or `H(x/y)`.  See
-    also the docstring of :py:meth:`~sympy.solvers.ode.homogeneous_order`.
-
-    If the coefficients `P` and `Q` in the differential equation above are
-    homogeneous functions of the same order, then it can be shown that the
-    substitution `x = u_2 y` (i.e. `u_2 = x/y`) will turn the differential
-    equation into an equation separable in the variables `y` and `u_2`.  If
-    `h(u_2)` is the function that results from making the substitution `u_2 =
-    x/f(x)` on `P(x, f(x))` and `g(u_2)` is the function that results from the
-    substitution on `Q(x, f(x))` in the differential equation `P(x, f(x)) +
-    Q(x, f(x)) f'(x) = 0`, then the general solution is:
-
-    >>> from sympy import Function, dsolve, pprint
-    >>> from sympy.abc import x
-    >>> f, g, h = map(Function, ['f', 'g', 'h'])
-    >>> genform = g(x/f(x)) + h(x/f(x))*f(x).diff(x)
-    >>> pprint(genform)
-     / x  \    / x  \ d
-    g|----| + h|----|*--(f(x))
-     \f(x)/    \f(x)/ dx
-    >>> pprint(dsolve(genform, f(x),
-    ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral'))
-                 x
-                ----
-                f(x)
-                  /
-                 |
-                 |       -g(u2)
-                 |  ---------------- d(u2)
-                 |  u2*g(u2) + h(u2)
-                 |
-                /
-    <BLANKLINE>
-    f(x) = C1*e
-
-    Where `u_2 g(u_2) + h(u_2) \ne 0` and `f(x) \ne 0`.
-
-    See also the docstrings of
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_best` and
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`.
-
-    Examples
-    ========
-
-    >>> from sympy import Function, pprint, dsolve
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
-    ... hint='1st_homogeneous_coeff_subs_indep_div_dep',
-    ... simplify=False))
-                             /    2    \
-                             | 3*x     |
-                          log|----- + 1|
-                             | 2       |
-                             \f (x)    /
-    log(f(x)) = log(C1) - --------------
-                                3
-
-    References
-    ==========
-
-    - https://en.wikipedia.org/wiki/Homogeneous_differential_equation
-    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-      Dover 1963, pp. 59
-
-    # indirect doctest
-
-    """
-    x = func.args[0]
-    f = func.func
-    u = Dummy('u')
-    u2 = Dummy('u2')  # u2 == x/f(x)
-    r = match  # d+e*diff(f(x),x)
-    C1 = get_numbered_constants(eq, num=1)
-    xarg = match.get('xarg', 0)  # If xarg present take xarg, else zero
-    yarg = match.get('yarg', 0)  # If yarg present take yarg, else zero
-    int = Integral(
-        simplify(
-            (-r[r['d']]/(r[r['e']] + u2*r[r['d']])).subs({x: u2, r['y']: 1})),
-        (u2, None, x/f(x)))
-    sol = logcombine(Eq(log(f(x)), int + log(C1)), force=True)
-    sol = sol.subs(f(x), u).subs(((u, u - yarg), (x, x - xarg), (u, f(x))))
-    return sol
-
 # XXX: Should this function maybe go somewhere else?
 
 
@@ -3062,8 +2432,8 @@ def homogeneous_order(eq, *symbols):
     or `H(y/x)`.  This fact is used to solve 1st order ordinary differential
     equations whose coefficients are homogeneous of the same order (see the
     docstrings of
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep` and
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`).
+    :obj:`~sympy.solvers.ode.single.HomogeneousCoeffSubsDepDivIndep` and
+    :obj:`~sympy.solvers.ode.single.HomogeneousCoeffSubsIndepDivDep`).
 
     Symbols can be functions, but every argument of the function must be a
     symbol, and the arguments of the function that appear in the expression
@@ -3534,80 +2904,6 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
 
     return frobdict
 
-def _nth_order_reducible_match(eq, func):
-    r"""
-    Matches any differential equation that can be rewritten with a smaller
-    order. Only derivatives of ``func`` alone, wrt a single variable,
-    are considered, and only in them should ``func`` appear.
-    """
-    # ODE only handles functions of 1 variable so this affirms that state
-    assert len(func.args) == 1
-    x = func.args[0]
-    vc = [d.variable_count[0] for d in eq.atoms(Derivative)
-          if d.expr == func and len(d.variable_count) == 1]
-    ords = [c for v, c in vc if v == x]
-    if len(ords) < 2:
-        return
-    smallest = min(ords)
-    # make sure func does not appear outside of derivatives
-    D = Dummy()
-    if eq.subs(func.diff(x, smallest), D).has(func):
-        return
-    return {'n': smallest}
-
-def ode_nth_order_reducible(eq, func, order, match):
-    r"""
-    Solves ODEs that only involve derivatives of the dependent variable using
-    a substitution of the form `f^n(x) = g(x)`.
-
-    For example any second order ODE of the form `f''(x) = h(f'(x), x)` can be
-    transformed into a pair of 1st order ODEs `g'(x) = h(g(x), x)` and
-    `f'(x) = g(x)`. Usually the 1st order ODE for `g` is easier to solve. If
-    that gives an explicit solution for `g` then `f` is found simply by
-    integration.
-
-
-    Examples
-    ========
-
-    >>> from sympy import Function, dsolve, Eq
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> eq = Eq(x*f(x).diff(x)**2 + f(x).diff(x, 2), 0)
-    >>> dsolve(eq, f(x), hint='nth_order_reducible')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    Eq(f(x), C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
-
-    """
-    x = func.args[0]
-    f = func.func
-    n = match['n']
-    # get a unique function name for g
-    names = [a.name for a in eq.atoms(AppliedUndef)]
-    while True:
-        name = Dummy().name
-        if name not in names:
-            g = Function(name)
-            break
-    w = f(x).diff(x, n)
-    geq = eq.subs(w, g(x))
-    gsol = dsolve(geq, g(x))
-
-    if not isinstance(gsol, list):
-        gsol = [gsol]
-
-    # Might be multiple solutions to the reduced ODE:
-    fsol = []
-    for gsoli in gsol:
-        fsoli = dsolve(gsoli.subs(g(x), w), f(x))  # or do integration n times
-        fsol.append(fsoli)
-
-    if len(fsol) == 1:
-        fsol = fsol[0]
-
-    return fsol
-
-
 def _remove_redundant_solutions(eq, solns, order, var):
     r"""
     Remove redundant solutions from the set of solutions.
@@ -4050,216 +3346,6 @@ def ode_nth_linear_euler_eq_nonhomogeneous_variation_of_parameters(eq, func, ord
     r[-1] = r[-1]/r[ode_order(eq, f(x))]
     sol = _solve_variation_of_parameters(eq, func, order, match)
     return Eq(f(x), r['sol'].rhs + (sol.rhs - r['sol'].rhs)*r[ode_order(eq, f(x))])
-
-def _linear_coeff_match(expr, func):
-    r"""
-    Helper function to match hint ``linear_coefficients``.
-
-    Matches the expression to the form `(a_1 x + b_1 f(x) + c_1)/(a_2 x + b_2
-    f(x) + c_2)` where the following conditions hold:
-
-    1. `a_1`, `b_1`, `c_1`, `a_2`, `b_2`, `c_2` are Rationals;
-    2. `c_1` or `c_2` are not equal to zero;
-    3. `a_2 b_1 - a_1 b_2` is not equal to zero.
-
-    Return ``xarg``, ``yarg`` where
-
-    1. ``xarg`` = `(b_2 c_1 - b_1 c_2)/(a_2 b_1 - a_1 b_2)`
-    2. ``yarg`` = `(a_1 c_2 - a_2 c_1)/(a_2 b_1 - a_1 b_2)`
-
-
-    Examples
-    ========
-
-    >>> from sympy import Function
-    >>> from sympy.abc import x
-    >>> from sympy.solvers.ode.ode import _linear_coeff_match
-    >>> from sympy.functions.elementary.trigonometric import sin
-    >>> f = Function('f')
-    >>> _linear_coeff_match((
-    ... (-25*f(x) - 8*x + 62)/(4*f(x) + 11*x - 11)), f(x))
-    (1/9, 22/9)
-    >>> _linear_coeff_match(
-    ... sin((-5*f(x) - 8*x + 6)/(4*f(x) + x - 1)), f(x))
-    (19/27, 2/27)
-    >>> _linear_coeff_match(sin(f(x)/x), f(x))
-
-    """
-    f = func.func
-    x = func.args[0]
-    def abc(eq):
-        r'''
-        Internal function of _linear_coeff_match
-        that returns Rationals a, b, c
-        if eq is a*x + b*f(x) + c, else None.
-        '''
-        eq = _mexpand(eq)
-        c = eq.as_independent(x, f(x), as_Add=True)[0]
-        if not c.is_Rational:
-            return
-        a = eq.coeff(x)
-        if not a.is_Rational:
-            return
-        b = eq.coeff(f(x))
-        if not b.is_Rational:
-            return
-        if eq == a*x + b*f(x) + c:
-            return a, b, c
-
-    def match(arg):
-        r'''
-        Internal function of _linear_coeff_match that returns Rationals a1,
-        b1, c1, a2, b2, c2 and a2*b1 - a1*b2 of the expression (a1*x + b1*f(x)
-        + c1)/(a2*x + b2*f(x) + c2) if one of c1 or c2 and a2*b1 - a1*b2 is
-        non-zero, else None.
-        '''
-        n, d = arg.together().as_numer_denom()
-        m = abc(n)
-        if m is not None:
-            a1, b1, c1 = m
-            m = abc(d)
-            if m is not None:
-                a2, b2, c2 = m
-                d = a2*b1 - a1*b2
-                if (c1 or c2) and d:
-                    return a1, b1, c1, a2, b2, c2, d
-
-    m = [fi.args[0] for fi in expr.atoms(Function) if fi.func != f and
-         len(fi.args) == 1 and not fi.args[0].is_Function] or {expr}
-    m1 = match(m.pop())
-    if m1 and all(match(mi) == m1 for mi in m):
-        a1, b1, c1, a2, b2, c2, denom = m1
-        return (b2*c1 - b1*c2)/denom, (a1*c2 - a2*c1)/denom
-
-def ode_linear_coefficients(eq, func, order, match):
-    r"""
-    Solves a differential equation with linear coefficients.
-
-    The general form of a differential equation with linear coefficients is
-
-    .. math:: y' + F\left(\!\frac{a_1 x + b_1 y + c_1}{a_2 x + b_2 y +
-                c_2}\!\right) = 0\text{,}
-
-    where `a_1`, `b_1`, `c_1`, `a_2`, `b_2`, `c_2` are constants and `a_1 b_2
-    - a_2 b_1 \ne 0`.
-
-    This can be solved by substituting:
-
-    .. math:: x = x' + \frac{b_2 c_1 - b_1 c_2}{a_2 b_1 - a_1 b_2}
-
-              y = y' + \frac{a_1 c_2 - a_2 c_1}{a_2 b_1 - a_1
-                  b_2}\text{.}
-
-    This substitution reduces the equation to a homogeneous differential
-    equation.
-
-    See Also
-    ========
-    :meth:`sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_best`
-    :meth:`sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`
-    :meth:`sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`
-
-    Examples
-    ========
-
-    >>> from sympy import Function, pprint
-    >>> from sympy.solvers.ode.ode import dsolve
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> df = f(x).diff(x)
-    >>> eq = (x + f(x) + 1)*df + (f(x) - 6*x + 1)
-    >>> dsolve(eq, hint='linear_coefficients')
-    [Eq(f(x), -x - sqrt(C1 + 7*x**2) - 1), Eq(f(x), -x + sqrt(C1 + 7*x**2) - 1)]
-    >>> pprint(dsolve(eq, hint='linear_coefficients'))
-                      ___________                     ___________
-                   /         2                     /         2
-    [f(x) = -x - \/  C1 + 7*x   - 1, f(x) = -x + \/  C1 + 7*x   - 1]
-
-
-    References
-    ==========
-
-    - Joel Moses, "Symbolic Integration - The Stormy Decade", Communications
-      of the ACM, Volume 14, Number 8, August 1971, pp. 558
-    """
-
-    return ode_1st_homogeneous_coeff_best(eq, func, order, match)
-
-
-def ode_separable_reduced(eq, func, order, match):
-    r"""
-    Solves a differential equation that can be reduced to the separable form.
-
-    The general form of this equation is
-
-    .. math:: y' + (y/x) H(x^n y) = 0\text{}.
-
-    This can be solved by substituting `u(y) = x^n y`.  The equation then
-    reduces to the separable form `\frac{u'}{u (\mathrm{power} - H(u))} -
-    \frac{1}{x} = 0`.
-
-    The general solution is:
-
-        >>> from sympy import Function, dsolve, pprint
-        >>> from sympy.abc import x, n
-        >>> f, g = map(Function, ['f', 'g'])
-        >>> genform = f(x).diff(x) + (f(x)/x)*g(x**n*f(x))
-        >>> pprint(genform)
-                         / n     \
-        d          f(x)*g\x *f(x)/
-        --(f(x)) + ---------------
-        dx                x
-        >>> pprint(dsolve(genform, hint='separable_reduced'))
-         n
-        x *f(x)
-          /
-         |
-         |         1
-         |    ------------ dy = C1 + log(x)
-         |    y*(n - g(y))
-         |
-         /
-
-    See Also
-    ========
-    :meth:`sympy.solvers.ode.single.Separable`
-
-    Examples
-    ========
-
-    >>> from sympy import Function, pprint
-    >>> from sympy.solvers.ode.ode import dsolve
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> d = f(x).diff(x)
-    >>> eq = (x - x**2*f(x))*d - f(x)
-    >>> dsolve(eq, hint='separable_reduced')
-    [Eq(f(x), (1 - sqrt(C1*x**2 + 1))/x), Eq(f(x), (sqrt(C1*x**2 + 1) + 1)/x)]
-    >>> pprint(dsolve(eq, hint='separable_reduced'))
-                   ___________            ___________
-                  /     2                /     2
-            1 - \/  C1*x  + 1          \/  C1*x  + 1  + 1
-    [f(x) = ------------------, f(x) = ------------------]
-                    x                          x
-
-    References
-    ==========
-
-    - Joel Moses, "Symbolic Integration - The Stormy Decade", Communications
-      of the ACM, Volume 14, Number 8, August 1971, pp. 558
-    """
-
-    # Arguments are passed in a way so that they are coherent with the
-    # ode_separable function
-    x = func.args[0]
-    f = func.func
-    y = Dummy('y')
-    u = match['u'].subs(match['t'], y)
-    ycoeff = 1/(y*(match['power'] - u))
-    m1 = {y: 1, x: -1/x, 'coeff': 1}
-    m2 = {y: ycoeff, x: 1, 'coeff': 1}
-    r = {'m1': m1, 'm2': m2, 'y': y, 'hint': x**match['power']*f(x)}
-    return ode_separable(eq, func, order, r)
 
 
 def ode_1st_power_series(eq, func, order, match):
@@ -4919,17 +4005,6 @@ def _solve_variation_of_parameters(eq, func, order, match):
         psol = simplify(psol)
         psol = trigsimp(psol, deep=True)
     return Eq(f(x), gsol.rhs + psol)
-
-
-def ode_separable(eq, func, order, match):
-    x = func.args[0]
-    f = func.func
-    C1 = get_numbered_constants(eq, num=1)
-    r = match  # {'m1':m1, 'm2':m2, 'y':y}
-    u = r.get('hint', f(x))  # get u from separable_reduced else get f(x)
-    return Eq(Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
-        (r['y'], None, u)), Integral(-r['m1']['coeff']*r['m1'][x]/
-        r['m2'][x], x) + C1)
 
 
 def checkinfsol(eq, infinitesimals, func=None, order=None):
@@ -6824,4 +5899,6 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 #This import is written at the bottom to avoid circular imports.
 from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
         Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
-        SecondNonlinearAutonomousConserved, FirstExact, Liouville, Separable)
+        SecondNonlinearAutonomousConserved, FirstExact, Liouville, Separable,
+        SeparableReduced, HomogeneousCoeffSubsDepDivIndep, HomogeneousCoeffSubsIndepDivDep,
+        HomogeneousCoeffBest, LinearCoefficients, NthOrderReducible, Hypergeometric2nd)
