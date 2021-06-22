@@ -146,6 +146,7 @@ def test_pinjoint_arbitrary_axis():
     assert A.y.angle_between(N.x) == 0 #Axis are aligned
     assert A.dcm(N) == Matrix([[0, -cos(theta), -sin(theta)], [1, 0, 0], [0, -sin(theta), cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.x
+    assert A.ang_vel_in(N).express(A) == omega * A.y
     assert C.masscenter.vel(N) == omega*A.z
     assert C.masscenter.pos_from(P.masscenter) == -A.x
 
@@ -156,6 +157,7 @@ def test_pinjoint_arbitrary_axis():
     assert N.y.angle_between(A.x) == 0 #Axis are aligned
     assert A.dcm(N) == Matrix([[0, 1, 0], [-cos(theta), 0, sin(theta)], [sin(theta), 0, cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.y
+    assert A.ang_vel_in(N).express(A) == omega* A.x
     assert C.masscenter.vel(N).simplify() == - omega*N.z
     assert C.masscenter.pos_from(P.masscenter) == N.x
 
@@ -166,6 +168,7 @@ def test_pinjoint_arbitrary_axis():
     assert A.dcm(N).simplify() == Matrix([[sqrt(2)/2, -sqrt(2)*cos(theta)/2, -sqrt(2)*sin(theta)/2], \
         [sqrt(2)/2, sqrt(2)*cos(theta)/2, sqrt(2)*sin(theta)/2], [0, -sin(theta), cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.x
+    assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y)/sqrt(2)
     assert C.masscenter.vel(N).simplify() == (omega * A.z)/sqrt(2)
     assert C.masscenter.pos_from(P.masscenter) == N.x - A.x
 
@@ -176,5 +179,6 @@ def test_pinjoint_arbitrary_axis():
         [sqrt(3)/3, sqrt(6)*cos(theta + pi/12)/3, sqrt(6)*sin(theta + pi/12)/3], \
         [-sqrt(3)/3, sqrt(6)*cos(theta + 5*pi/12)/3, sqrt(6)*sin(theta + 5*pi/12)/3]])
     assert A.ang_vel_in(N) == omega*N.x
+    assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y - omega*A.z)/sqrt(3)
     assert C.masscenter.vel(N).simplify() == (omega * A.y + omega * A.z)/sqrt(3)
     assert C.masscenter.pos_from(P.masscenter) == N.x - A.x
