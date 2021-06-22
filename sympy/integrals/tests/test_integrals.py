@@ -1507,6 +1507,7 @@ def test_issue_14782_slow():
     assert integrate(f, [x, 0, 1]) == S.One / 3 - pi / 16
 
 
+@XFAIL
 def test_issue_12081():
     f = x**(Rational(-3, 2))*exp(-x)
     assert integrate(f, [x, 0, oo]) is oo
