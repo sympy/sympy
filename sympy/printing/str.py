@@ -850,6 +850,9 @@ class StrPrinter(Printer):
             return "%s" % expr.abbrev
         return "%s" % expr.name
 
+    def _print_MagnitudeQuantity(self, expr):
+        return "%s %s" %(expr.magnitude, expr.units)
+
     def _print_Quaternion(self, expr):
         s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True) for i in expr.args]
         a = [s[0]] + [i+"*"+j for i, j in zip(s[1:], "ijk")]

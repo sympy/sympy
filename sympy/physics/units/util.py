@@ -9,7 +9,7 @@ from sympy.core.compatibility import ordered
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.physics.units.dimensions import Dimension
 from sympy.physics.units.prefixes import Prefix
-from sympy.physics.units.quantities import Quantity
+from sympy.physics.units.quantities import Quantity, MagnitudeQuantity
 from sympy.utilities.iterables import sift
 
 
@@ -40,35 +40,42 @@ def _get_conversion_matrix_for_expr(expr, target_units, unit_system):
 
     return res_exponents
 
-def convert_temperature(magnitude, source_units, target_units, unit_system="SI"):
+def convert_temperature(temperature, target_units, unit_system="SI"):
     """
-    Converts temperatures to different temperature scales and units
+    Converts ``temperature`` to different temperature scales and units
+
+    ``temperature`` must be a MagnitudeQuantity
 
     Examples
     ========
 
     >>> from sympy.physics.units import kelvin, degrees_celsius, degrees_fahrenheit
-    >>> from sympy.physics.units import convert_temperature
-    >>> convert_temperature(100, degrees_celsius, degrees_fahrenheit)
-    (212, degree_fahrenheit)
-    >>> convert_temperature(373.15, kelvin, degrees_celsius)
-    (100.0, degree_celsius)
+    >>> from sympy.physics.units import MagnitudeQuantity, convert_temperature
+    >>> convert_temperature(MagnitudeQuantity(100, degrees_celsius), degrees_fahrenheit)
+    212 degree_fahrenheit
+    >>> convert_temperature(MagnitudeQuantity(373.15, kelvin), degrees_celsius)
+    100.0 degree_celsius
     """
 
     from sympy.physics.units import UnitSystem
     unit_system = UnitSystem.get_unit_system(unit_system)
 
+    magnitude = temperature.magnitude
+    source_units = temperature.units
+
     def to_kelvin(magnitude, source_units, unit_system):
         source_units_scale_offset = unit_system.get_quantity_scale_offset(source_units)
         source_units_scale_factor = unit_system.get_quantity_scale_factor(source_units)
-        return (magnitude * source_units_scale_factor + source_units_scale_offset, Quantity("kelvin"))
+        kelvin_magnitude = magnitude * source_units_scale_factor + source_units_scale_offset
+        return MagnitudeQuantity(kelvin_magnitude, Quantity("kelvin"))
 
     def from_kelvin(magnitude, target_units, unit_system):
         target_units_scale_offset = unit_system.get_quantity_scale_offset(target_units)
         target_units_scale_factor = unit_system.get_quantity_scale_factor(target_units)
-        return ((magnitude - target_units_scale_offset)/target_units_scale_factor, target_units)
+        target_magnitude = (magnitude - target_units_scale_offset)/target_units_scale_factor
+        return MagnitudeQuantity(target_magnitude, target_units)
 
-    kelvin_magnitude = to_kelvin(magnitude, source_units, unit_system)[0]
+    kelvin_magnitude = to_kelvin(magnitude, source_units, unit_system).magnitude
     return from_kelvin(kelvin_magnitude, target_units, unit_system)
 
 def convert_to(expr, target_units, unit_system="SI"):

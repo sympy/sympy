@@ -223,11 +223,39 @@ class Quantity(AtomicExpr):
         from .util import convert_to
         return convert_to(self, other, unit_system)
 
-    def convert_temperature(self, other, unit_system="SI"):
-        from .util import convert_temperature
-        return convert_temperature(self, other, unit_system)
-
     @property
     def free_symbols(self):
         """Return free symbols from quantity."""
         return set()
+
+class MagnitudeQuantity(AtomicExpr):
+    """
+    Physical quantity as the product of a numerical value and a unit of measure
+    """
+    def __new__(cls, magnitude, units):
+
+        magnitude = sympify(magnitude)
+
+        if not isinstance(units, Quantity):
+            units = Quantity(str(units))
+
+        obj = AtomicExpr.__new__(cls, magnitude, units)
+        obj._magnitude = magnitude
+        obj._units = units
+        return obj
+
+    @property
+    def magnitude(self):
+        return self._magnitude
+
+    @property
+    def units(self):
+        return self._units
+
+    def _latex(self, printer):
+        return "%s %s" %(printer._print(self.magnitude), printer._print(self.units))
+
+    def convert_temperature(self, other, unit_system="SI"):
+        """Converts temperatures to different temperature scales and units"""
+        from .util import convert_temperature
+        return convert_temperature(self, other, unit_system)
