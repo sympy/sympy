@@ -133,6 +133,7 @@ def test_pinjoint_arbitrary_axis():
     PinJoint('J', P, C, child_axis=-A.x)
 
     assert -A.x.angle_between(N.x) == 0
+    assert -A.x.express(N) == -N.x
     assert A.dcm(N) == Matrix([[1, 0, 0], [0, cos(theta), sin(theta)], [0, -sin(theta), cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.x
     assert C.masscenter.pos_from(P.masscenter) == 0
@@ -144,6 +145,7 @@ def test_pinjoint_arbitrary_axis():
     PinJoint('J', P, C, child_axis=A.y, child_joint_pos=A.x)
 
     assert A.y.angle_between(N.x) == 0 #Axis are aligned
+    assert A.y.express(N) == N.x
     assert A.dcm(N) == Matrix([[0, -cos(theta), -sin(theta)], [1, 0, 0], [0, -sin(theta), cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.x
     assert A.ang_vel_in(N).express(A) == omega * A.y
@@ -155,6 +157,7 @@ def test_pinjoint_arbitrary_axis():
     PinJoint('J', P, C, parent_axis=N.y, parent_joint_pos=N.x)
 
     assert N.y.angle_between(A.x) == 0 #Axis are aligned
+    assert N.y.express(A) ==  A.x
     assert A.dcm(N) == Matrix([[0, 1, 0], [-cos(theta), 0, sin(theta)], [sin(theta), 0, cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.y
     assert A.ang_vel_in(N).express(A) == omega* A.x
@@ -165,6 +168,7 @@ def test_pinjoint_arbitrary_axis():
     N, A, P, C = generate_body()
     PinJoint('J', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y)
     assert N.x.angle_between(A.x + A.y).simplify() == 0 #Axis are aligned
+    assert (A.x + A.y).express(N).simplify() == sqrt(2)*N.x
     assert A.dcm(N).simplify() == Matrix([[sqrt(2)/2, -sqrt(2)*cos(theta)/2, -sqrt(2)*sin(theta)/2], \
         [sqrt(2)/2, sqrt(2)*cos(theta)/2, sqrt(2)*sin(theta)/2], [0, -sin(theta), cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.x
@@ -176,6 +180,7 @@ def test_pinjoint_arbitrary_axis():
     N, A, P, C = generate_body()
     PinJoint('J', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y-A.z)
     assert N.x.angle_between(A.x + A.y - A.z).simplify() == 0 #Axis are aligned
+    assert (A.x + A.y - A.z).express(N).simplify() == sqrt(3)*N.x
     assert A.dcm(N).simplify() == Matrix([[sqrt(3)/3, -sqrt(6)*sin(theta + pi/4)/3, sqrt(6)*cos(theta + pi/4)/3], \
         [sqrt(3)/3, sqrt(6)*cos(theta + pi/12)/3, sqrt(6)*sin(theta + pi/12)/3], \
         [-sqrt(3)/3, sqrt(6)*cos(theta + 5*pi/12)/3, sqrt(6)*sin(theta + 5*pi/12)/3]])
