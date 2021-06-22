@@ -1,9 +1,8 @@
 import random
-from functools import reduce
 from collections import defaultdict
 from operator import index as index_
 
-from sympy.core import SympifyError, Add
+from sympy.core import SympifyError
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
