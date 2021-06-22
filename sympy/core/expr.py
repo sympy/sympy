@@ -2939,7 +2939,7 @@ class Expr(Basic, EvalfMixin):
             If "x0" is an infinity object
 
         """
-        from sympy import collect, Dummy, Order, Rational, Symbol, ceiling, log
+        from sympy import collect, Dummy, Order, Rational, Symbol, ceiling
         if x is None:
             syms = self.free_symbols
             if not syms:
