@@ -4,6 +4,7 @@ from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, besselk, gamma, I
                    Intersection, Matrix, symbols, Product, IndexedBase)
 from sympy.matrices import ImmutableMatrix, MatrixSymbol
 from sympy.matrices.expressions.determinant import det
+from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.stats.joint_rv import JointDistribution, JointPSpace, MarginalDistribution
 from sympy.stats.rv import _value_check, random_symbols
 
@@ -146,11 +147,14 @@ class MultivariateNormalDistribution(JointDistribution):
     def pdf(self, *args):
         mu, sigma = self.mu, self.sigma
         k = mu.shape[0]
-        args = ImmutableMatrix(args)
+        if len(args) == 1 and args[0].is_Matrix:
+            args = args[0]
+        else:
+            args = ImmutableMatrix(args)
         x = args - mu
-        return  S.One/sqrt((2*pi)**(k)*det(sigma))*exp(
-            Rational(-1, 2)*x.transpose()*(sigma.inv()*\
-                x))[0]
+        density = S.One/sqrt((2*pi)**(k)*det(sigma))*exp(
+            Rational(-1, 2)*x.transpose()*(sigma.inv()*x))
+        return MatrixElement(density, 0, 0)
 
     def _marginal_distribution(self, indices, sym):
         sym = ImmutableMatrix([Indexed(sym, i) for i in indices])

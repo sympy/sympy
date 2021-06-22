@@ -1,6 +1,6 @@
 from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplify,
                    Rational, factorial, gamma, Piecewise, Eq, Product, Interval,
-                   IndexedBase, RisingFactorial, polar_lift, ProductSet, Range)
+                   IndexedBase, RisingFactorial, polar_lift, ProductSet, Range, eye)
 from sympy.core.numbers import comp
 from sympy.integrals.integrals import integrate
 from sympy.matrices import Matrix, MatrixSymbol
@@ -45,6 +45,31 @@ def test_Normal():
     # Below tests should work after issue #17267 is resolved
     # assert E(X) == mu
     # assert variance(X) == sigma
+
+    # test symbolic multivariate normal densities
+    n = 3
+
+    Sg = MatrixSymbol('Sg', n, n)
+    mu = MatrixSymbol('mu', n, 1)
+    obs = MatrixSymbol('obs', n, 1)
+
+    X = MultivariateNormal('X', mu, Sg)
+    density_X = density(X)
+
+    eval_a = density_X(obs)
+    eval_b = density_X(0, 0, 0).subs({Sg: eye(3), mu: Matrix([0, 0, 0])}).doit()
+
+    assert eval_b == sqrt(2)/(4*pi**Rational(3/2))
+
+    n = symbols('n', natural=True)
+
+    Sg = MatrixSymbol('Sg', n, n)
+    mu = MatrixSymbol('mu', n, 1)
+    obs = MatrixSymbol('obs', n, 1)
+
+    X = MultivariateNormal('X', mu, Sg)
+    density_X_at_obs = density(X)(obs)
+
 
 def test_MultivariateTDist():
     t1 = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
