@@ -2667,3 +2667,104 @@ class Beam3D(Beam):
             Py = self._plot_deflection('y')
             Pz = self._plot_deflection('z')
             return PlotGrid(3, 1, Px, Py, Pz)
+
+    def plot_loading_results(self, dir=None, subs=None):
+
+        """
+
+        Returns a subplot of Shear Force, Bending Moment,
+        Slope and Deflection of the Beam object along the direction specified.
+
+        Parameters
+        ==========
+
+        dir : string
+               Direction along which plots are required.
+               It is necessary to specify the direction for this function.
+        subs : dictionary
+               Python dictionary containing Symbols as key and their
+               corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 20 meters. It it supported by rollers
+        at of its end. A linear load having slope equal to 12 is applied
+        along y-axis. A constant distributed load of magnitude 15 N is
+        applied from start till its end along z-axis.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+            >>> from sympy import symbols
+            >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+            >>> b = Beam3D(20, 40, 21, 100, 25, x)
+            >>> b.apply_load(15, start=0, order=0, dir="z")
+            >>> b.apply_load(12*x, start=0, order=0, dir="y")
+            >>> b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+            >>> R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+            >>> b.apply_load(R1, start=0, order=-1, dir="z")
+            >>> b.apply_load(R2, start=20, order=-1, dir="z")
+            >>> b.apply_load(R3, start=0, order=-1, dir="y")
+            >>> b.apply_load(R4, start=20, order=-1, dir="y")
+            >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
+            >>> b.solve_slope_deflection()
+            >>> b.plot_loading_results('y')
+            PlotGrid object containing:
+            Plot[0]:Plot object containing:
+            [0]: cartesian line: -6*x**2 for x over (0.0, 20.0)
+            Plot[1]:Plot object containing:
+            [0]: cartesian line: -15*x**2/2 for x over (0.0, 20.0)
+            Plot[2]:Plot object containing:
+            [0]: cartesian line: -x**3/1600 + 3*x**2/160 - x/8 for x over (0.0, 20.0)
+            Plot[3]:Plot object containing:
+            [0]: cartesian line: x**5/40000 - 4013*x**3/90300 + 26*x**2/43 + 1520*x/903 for x over (0.0, 20.0)
+
+        """
+
+        if dir == None:
+            raise ValueError('Direction was not passed.')
+
+        dir = dir.lower();
+        deflection = self.deflection()
+
+        if dir == 'x':
+            dir_num = 0
+
+        elif dir == 'y':
+            dir_num = 1
+
+        elif dir == 'z':
+            dir_num = 2
+
+        if subs is None:
+            subs = {}
+
+        for sym in deflection[dir_num].atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
+        else:
+            length = self.length
+
+        variable = self.variable
+
+        ax1 = plot(self.shear_force()[dir_num].subs(subs), (variable, 0, length),
+                   title='Shear Force along %c direction'%dir, xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{V(%c)}$'%dir,
+                   line_color='g', show=False)
+        ax2 = plot(self.bending_moment()[dir_num].subs(subs), (variable, 0, length),
+                   title='Bending Moment along %c direction'%dir, xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{M(%c)}$'%dir,
+                   line_color='b', show=False)
+        ax3 = plot(self.slope()[dir_num].subs(subs), (variable, 0, length),
+                   title='Slope along %c direction'%dir, xlabel=r'$\mathrm{X}$', ylabel=r'$\theta(%c)$'%dir,
+                   line_color='m', show=False)
+        ax4 = plot(self.deflection()[dir_num].subs(subs), (variable, 0, length),
+                   title='Deflection along %c direction'%dir, xlabel=r'$\mathrm{X}$', ylabel=r'$\delta(%c)$'%dir,
+                   line_color='r', show=False)
+
+        return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
