@@ -693,3 +693,57 @@ def test_DomainMatrix_getitem():
     assert dM[2:,2:] == DomainMatrix({0: {0: 1}, 2: {2: 1}}, (3, 3), ZZ)
     assert dM[3:,3:] == DomainMatrix({1: {1: 1}}, (2, 2), ZZ)
     assert dM[2:, 6:] == DomainMatrix({}, (3, 0), ZZ)
+
+
+def test_DomainMatrix_extract():
+    dM1 = DomainMatrix([
+        [ZZ(1), ZZ(2), ZZ(3)],
+        [ZZ(4), ZZ(5), ZZ(6)],
+        [ZZ(7), ZZ(8), ZZ(9)]], (3, 3), ZZ)
+    dM2 = DomainMatrix([
+        [ZZ(1), ZZ(3)],
+        [ZZ(7), ZZ(9)]], (2, 2), ZZ)
+    assert dM1.extract([0, 2], [0, 2]) == dM2
+    assert dM1.to_sparse().extract([0, 2], [0, 2]) == dM2.to_sparse()
+    assert dM1.extract([0, -1], [0, -1]) == dM2
+    assert dM1.to_sparse().extract([0, -1], [0, -1]) == dM2.to_sparse()
+
+    dM3 = DomainMatrix([
+        [ZZ(1), ZZ(2), ZZ(2)],
+        [ZZ(4), ZZ(5), ZZ(5)],
+        [ZZ(4), ZZ(5), ZZ(5)]], (3, 3), ZZ)
+    assert dM1.extract([0, 1, 1], [0, 1, 1]) == dM3
+    assert dM1.to_sparse().extract([0, 1, 1], [0, 1, 1]) == dM3.to_sparse()
+
+    empty = [
+        ([], [], (0, 0)),
+        ([1], [], (1, 0)),
+        ([], [1], (0, 1)),
+    ]
+    for rows, cols, size in empty:
+        assert dM1.extract(rows, cols) == DomainMatrix.zeros(size, ZZ).to_dense()
+        assert dM1.to_sparse().extract(rows, cols) == DomainMatrix.zeros(size, ZZ)
+
+    dM = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    bad_indices = [([2], [0]), ([0], [2]), ([-3], [0]), ([0], [-3])]
+    for rows, cols in bad_indices:
+        raises(IndexError, lambda: dM.extract(rows, cols))
+        raises(IndexError, lambda: dM.to_sparse().extract(rows, cols))
+
+
+def test_DomainMatrix_setitem():
+    dM = DomainMatrix({2: {2: ZZ(1)}, 4: {4: ZZ(1)}}, (5, 5), ZZ)
+    dM[2, 2] = ZZ(2)
+    assert dM == DomainMatrix({2: {2: ZZ(2)}, 4: {4: ZZ(1)}}, (5, 5), ZZ)
+    def setitem(i, j, val):
+        dM[i, j] = val
+    raises(TypeError, lambda: setitem(2, 2, QQ(1, 2)))
+    raises(NotImplementedError, lambda: setitem(slice(1, 2), 2, ZZ(1)))
+
+
+def test_DomainMatrix_pickling():
+    import pickle
+    dM = DomainMatrix({2: {2: ZZ(1)}, 4: {4: ZZ(1)}}, (5, 5), ZZ)
+    assert pickle.loads(pickle.dumps(dM)) == dM
+    dM = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    assert pickle.loads(pickle.dumps(dM)) == dM

@@ -464,6 +464,8 @@ def test_Abs():
     # issue 19627
     f = Function('f', positive=True)
     assert sqrt(f(x)**2) == f(x)
+    # issue 21625
+    assert unchanged(Abs, S("im(acos(-i + acosh(-g + i)))"))
 
 
 def test_Abs_rewrite():

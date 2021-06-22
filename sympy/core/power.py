@@ -789,7 +789,14 @@ class Pow(Expr):
         return self.base.is_polar
 
     def _eval_subs(self, old, new):
-        from sympy import exp, log, Symbol
+        from sympy import exp, log, Symbol, AccumBounds
+
+        if isinstance(self.exp, AccumBounds):
+            b = self.base.subs(old, new)
+            e = self.exp.subs(old, new)
+            if isinstance(e, AccumBounds):
+                return e.__rpow__(b)
+            return self.func(b, e)
 
         def _check(ct1, ct2, old):
             """Return (bool, pow, remainder_pow) where, if bool is True, then the
@@ -1659,7 +1666,7 @@ class Pow(Expr):
             else:
                 raise NotImplementedError()
         if not d.is_positive:
-            g = (b - f).simplify()/f
+            g = g.simplify()
             _, d = g.leadterm(x)
             if not d.is_positive:
                 raise NotImplementedError()
@@ -1696,7 +1703,7 @@ class Pow(Expr):
         if not (e.is_integer and e.is_positive and (e*d - n).is_nonpositive and
                 res == _mexpand(self)):
             res += O(x**n, x)
-        return res
+        return _mexpand(res)
 
     def _eval_as_leading_term(self, x, cdir=0):
         from ..series import Order

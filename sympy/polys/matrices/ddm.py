@@ -105,6 +105,13 @@ class DDM(list):
         cols = len(ddm[0]) if ddm else len(range(self.shape[1])[slice2])
         return DDM(ddm, (rows, cols), self.domain)
 
+    def extract(self, rows, cols):
+        ddm = []
+        for i in rows:
+            rowi = self[i]
+            ddm.append([rowi[j] for j in cols])
+        return DDM(ddm, (len(rows), len(cols)), self.domain)
+
     def to_list(self):
         return list(self)
 

@@ -5,7 +5,7 @@ __all__ = [
     'ComplexField', 'AlgebraicField', 'PolynomialRing', 'FractionField',
     'ExpressionDomain', 'PythonRational',
 
-    'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR', 'CC', 'EX',
+    'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR', 'CC', 'EX', 'EXRAW',
 ]
 
 from .domain import Domain
@@ -19,6 +19,7 @@ from .complexfield import ComplexField, CC
 from .polynomialring import PolynomialRing
 from .fractionfield import FractionField
 from .expressiondomain import ExpressionDomain, EX
+from .expressionrawdomain import EXRAW
 from .pythonrational import PythonRational
 
 

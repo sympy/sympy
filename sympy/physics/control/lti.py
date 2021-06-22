@@ -1,4 +1,3 @@
-from sympy.matrices import ImmutableMatrix
 from sympy import Basic, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots
 from sympy.core.evalf import EvalfMixin
 from sympy.core.logic import fuzzy_and
@@ -7,6 +6,7 @@ from sympy.core.sympify import sympify, _sympify
 from sympy.polys import Poly, rootof
 from sympy.series import limit
 from sympy.core.containers import Tuple
+from sympy.matrices import ImmutableMatrix
 
 __all__ = ['TransferFunction', 'Series', 'Parallel', 'Feedback', 'TransferFunctionMatrix']
 

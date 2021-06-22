@@ -607,6 +607,8 @@ class Abs(Function):
             arg2 = -S.ImaginaryUnit * arg
             if arg2.is_extended_nonnegative:
                 return arg2
+        if arg.is_extended_real:
+            return
         # reject result if all new conjugates are just wrappers around
         # an expression that was already in the arg
         conj = signsimp(arg.conjugate(), evaluate=False)

@@ -78,18 +78,22 @@ factorable
 1st_exact
 ^^^^^^^^^
 .. autoclass:: sympy.solvers.ode.single.FirstExact
+   :members:
 
 1st_homogeneous_coeff_best
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_1st_homogeneous_coeff_best
+.. autoclass:: sympy.solvers.ode.single::HomogeneousCoeffBest
+   :members:
 
 1st_homogeneous_coeff_subs_dep_div_indep
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_1st_homogeneous_coeff_subs_dep_div_indep
+.. autoclass:: sympy.solvers.ode.single::HomogeneousCoeffSubsDepDivIndep
+   :members:
 
 1st_homogeneous_coeff_subs_indep_div_dep
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_1st_homogeneous_coeff_subs_indep_div_dep
+.. autoclass:: sympy.solvers.ode.single::HomogeneousCoeffSubsIndepDivDep
+   :members:
 
 1st_linear
 ^^^^^^^^^^
@@ -111,7 +115,8 @@ Bernoulli
 
 Liouville
 ^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_Liouville
+.. autoclass:: sympy.solvers.ode.single::Liouville
+   :members:
 
 Riccati_special_minus2
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -137,11 +142,13 @@ nth_algebraic
 
 nth_order_reducible
 ^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_nth_order_reducible
+.. autoclass:: sympy.solvers.ode.ode::NthOrderReducible
+   :members:
 
 separable
 ^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_separable
+.. autoclass:: sympy.solvers.ode.single::Separable
+   :members:
 
 almost_linear
 ^^^^^^^^^^^^^
@@ -150,15 +157,22 @@ almost_linear
 
 linear_coefficients
 ^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_linear_coefficients
+.. autoclass:: sympy.solvers.ode.single::LinearCoefficients
+   :members:
 
 separable_reduced
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_separable_reduced
+.. autoclass:: sympy.solvers.ode.single::SeparableReduced
+   :members:
 
 lie_group
 ^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode::ode_lie_group
+
+2nd_hypergeometric
+^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.ode.single::Hypergeometric2nd
+   :members:
 
 1st_power_series
 ^^^^^^^^^^^^^^^^
