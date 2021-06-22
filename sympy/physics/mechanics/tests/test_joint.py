@@ -137,6 +137,7 @@ def test_pinjoint_arbitrary_axis():
     assert A.dcm(N) == Matrix([[1, 0, 0], [0, cos(theta), sin(theta)], [0, -sin(theta), cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.x
     assert C.masscenter.pos_from(P.masscenter) == 0
+    assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == 0
     assert C.masscenter.vel(N) == 0
 
     #When axes are different and parent joint is at masscenter but child joint is at a unit vector from
@@ -151,6 +152,7 @@ def test_pinjoint_arbitrary_axis():
     assert A.ang_vel_in(N).express(A) == omega * A.y
     assert C.masscenter.vel(N) == omega*A.z
     assert C.masscenter.pos_from(P.masscenter) == -A.x
+    assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == cos(theta)*N.y + sin(theta)*N.z
 
     #Similar to previous case but wrt parent body
     N, A, P, C = generate_body()
@@ -175,6 +177,8 @@ def test_pinjoint_arbitrary_axis():
     assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y)/sqrt(2)
     assert C.masscenter.vel(N).simplify() == (omega * A.z)/sqrt(2)
     assert C.masscenter.pos_from(P.masscenter) == N.x - A.x
+    assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == \
+        (1 - sqrt(2)/2)*N.x + sqrt(2)*cos(theta)/2*N.y + sqrt(2)*sin(theta)/2*N.z
     assert C.masscenter.vel(N).express(N).simplify() == - sqrt(2)*omega*sin(theta)/2*N.y + sqrt(2)*omega*cos(theta)/2*N.z
 
     N, A, P, C = generate_body()
@@ -188,4 +192,6 @@ def test_pinjoint_arbitrary_axis():
     assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y - omega*A.z)/sqrt(3)
     assert C.masscenter.vel(N).simplify() == (omega * A.y + omega * A.z)/sqrt(3)
     assert C.masscenter.pos_from(P.masscenter) == N.x - A.x
+    assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == \
+        (1 - sqrt(3)/3)*N.x + sqrt(6)*sin(theta + pi/4)/3*N.y - sqrt(6)*cos(theta + pi/4)/3*N.z
     assert C.masscenter.vel(N).express(N).simplify() == sqrt(6)*omega*cos(theta + pi/4)/3*N.y + sqrt(6)*omega*sin(theta + pi/4)/3*N.z
