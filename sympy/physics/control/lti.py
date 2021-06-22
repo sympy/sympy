@@ -1483,7 +1483,7 @@ class TransferFunctionMatrix(Basic):
     3
     >>> tfm_1.shape
     (3, 1)
-    >>> tfm_1.args  # Structurally similar to ImmutableDenseMatrix().args
+    >>> tfm_1.args
     (((TransferFunction(a + s, s**2 + s + 1, s),), (TransferFunction(p**4 - 3*p + 2, p + s, s),), (TransferFunction(3, s + 2, s),)),)
     >>> tfm_2 = TransferFunctionMatrix([[tf_1, -tf_3], [tf_2, -tf_1], [tf_3, -tf_2]])
     >>> tfm_2
@@ -1508,7 +1508,7 @@ class TransferFunctionMatrix(Basic):
     TransferFunctionMatrix can be transposed, if user wants to switch the input and output transfer functions
 
     >>> tfm_2.transpose()
-    Matrix([[TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(3, s + 2, s)], [TransferFunction(-3, s + 2, s), TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)]])
+    TransferFunctionMatrix(((TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(3, s + 2, s)), (TransferFunction(-3, s + 2, s), TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(-p**4 + 3*p - 2, p + s, s))))
     >>> pprint(_, use_unicode=False)
     [             4                          ]
     [  a + s     p  - 3*p + 2        3       ]
@@ -1528,19 +1528,19 @@ class TransferFunctionMatrix(Basic):
     >>> tf_6 = TransferFunction(5*s, (2 + s**2), s)
     >>> tf_7 = TransferFunction(5, (s*(2 + s**2)), s)
     >>> tf_8 = TransferFunction(5, 1, s)
-    >>> tfm_3 = TransferFunctionMatrix([[tf_1, tf_2], [tf_3, tf_4]])  # SymPy will assume the var of the first element as the var for the system
+    >>> tfm_3 = TransferFunctionMatrix([[tf_5, tf_6], [tf_7, tf_8]])  # SymPy will assume the var of the first element as the var for the system
     >>> tfm_3
-    Matrix([[TransferFunction(5, s, s), TransferFunction(5*s, s**2 + 2, s)], [TransferFunction(5, s**3 + 2*s, s), TransferFunction(5, 1, s)]])
+    TransferFunctionMatrix(((TransferFunction(5, s, s), TransferFunction(5*s, s**2 + 2, s)), (TransferFunction(5, s*(s**2 + 2), s), TransferFunction(5, 1, s))))
     >>> pprint(tfm_3, use_unicode=False)
-    [   5       5*s  ]
-    [   -      ------]
-    [   s       2    ]
-    [          s  + 2]
-    [                ]
-    [   5        5   ]
-    [--------    -   ]
-    [ 3          1   ]
-    [s  + 2*s        ]
+    [    5        5*s  ]
+    [    -       ------]
+    [    s        2    ]
+    [            s  + 2]
+    [                  ]
+    [    5         5   ]
+    [----------    -   ]
+    [  / 2    \    1   ]
+    [s*\s  + 2/        ]
     >>> tfm_3.var
     s
     >>> tfm_3.shape
@@ -1550,27 +1550,27 @@ class TransferFunctionMatrix(Basic):
     >>> tfm_3.num_inputs
     2
     >>> tfm_3.args
-    (2, 2, (TransferFunction(5, s, s), TransferFunction(5*s, s**2 + 2, s), TransferFunction(5, s**3 + 2*s, s), TransferFunction(5, 1, s)))
+    (((TransferFunction(5, s, s), TransferFunction(5*s, s**2 + 2, s)), (TransferFunction(5, s*(s**2 + 2), s), TransferFunction(5, 1, s))),)
 
     To access the ``TransferFunction`` at any index in the ``TransferFunctionMatrix``, use the index notation.
 
     >>> tfm_3[1, 0]  # gives the TransferFunction present at 2nd Row and 1st Col. Similar to that in Matrix classes
-    TransferFunction(5, s**3 + 2*s, s)
+    TransferFunction(5, s*(s**2 + 2), s)
     >>> tfm_3[0, 0]  # gives the TransferFunction present at 1st Row and 1st Col.
     TransferFunction(5, s, s)
     >>> tfm_3[:, 0]  # gives the first column
-    Matrix([[TransferFunction(5, s, s)], [TransferFunction(5, s**3 + 2*s, s)]])
+    TransferFunctionMatrix(((TransferFunction(5, s, s),), (TransferFunction(5, s*(s**2 + 2), s),)))
     >>> pprint(_, use_unicode=False)
-    [   5    ]
-    [   -    ]
-    [   s    ]
-    [        ]
-    [   5    ]
-    [--------]
-    [ 3      ]
-    [s  + 2*s]
+    [    5     ]
+    [    -     ]
+    [    s     ]
+    [          ]
+    [    5     ]
+    [----------]
+    [  / 2    \]
+    [s*\s  + 2/]
     >>> tfm_3[0, :]  # gives the first row
-    Matrix([[TransferFunction(5, s, s), TransferFunction(5*s, s**2 + 2, s)]])
+    TransferFunctionMatrix(((TransferFunction(5, s, s), TransferFunction(5*s, s**2 + 2, s)),))
     >>> pprint(_, use_unicode=False)
     [5   5*s  ]
     [-  ------]
@@ -1579,23 +1579,21 @@ class TransferFunctionMatrix(Basic):
 
     To negate a transfer function matrix, ``-`` operator can be prepended:
 
-    >>> tfm_4 = TransferFunctionMatrix([tf_2, -tf_1, tf_3])  # Remember-Simple lists are column matrix
+    >>> tfm_4 = TransferFunctionMatrix([[tf_2], [-tf_1], [tf_3]])  # Remember-Simple lists are column matrix
     >>> -tfm_4
-    Matrix([[TransferFunction(-p**4 + 3*p - 2, p + s, s)], [TransferFunction(a + s, s**2 + s + 1, s)], [TransferFunction(-3, s + 2, s)]])
+    TransferFunctionMatrix(((TransferFunction(-p**4 + 3*p - 2, p + s, s),), (TransferFunction(a + s, s**2 + s + 1, s),), (TransferFunction(-3, s + 2, s),)))
     >>> tfm_5 = TransferFunctionMatrix([[tf_1, tf_2], [tf_3, -tf_1]])
     >>> -tfm_5
-    Matrix([[TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)], [TransferFunction(-3, s + 2, s), TransferFunction(a + s, s**2 + s + 1, s)]])
+    TransferFunctionMatrix(((TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)), (TransferFunction(-3, s + 2, s), TransferFunction(a + s, s**2 + s + 1, s))))
 
     ``subs()`` returns an ImmutableDenseMatrix object with the value substituted in the expression. This will not
     mutate your original ``TransferFunctionMatrix``.
 
     >>> from sympy import I
     >>> tfm_3.subs({s: I})  #  substituting imaginary i (iota) to s
-    Matrix([[-5*I, 5*I], [-5*I, 5/1]])
-    >>> type(_)
-    <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
-    >>> type(tfm_3)
-    <class 'sympy.physics.control.lti.TransferFunctionMatrix'>
+    Matrix([
+    [-5*I, 5*I],
+    [-5*I, 5/1]])
 
     See Also
     ========
@@ -1743,11 +1741,8 @@ class TransferFunctionMatrix(Basic):
         return self._num_outputs, self._num_inputs
 
     def __neg__(self):
-        if self.num_inputs == 1:
-            neg_args = [-col for col in self.args[0]]
-        else:
-            neg_args = [[-col for col in row] for row in self.args[0]]
-        return TransferFunctionMatrix(neg_args)
+        neg = -self._expr_mat
+        return _to_TFM(neg, self.var)
     
     def __getitem__(self, key):
         trunc = self._expr_mat.__getitem__(key)
@@ -1759,3 +1754,6 @@ class TransferFunctionMatrix(Basic):
     def transpose(self):
         transposed_mat = self._expr_mat.transpose()
         return _to_TFM(transposed_mat, self.var)
+    
+    def subs(self, dict):
+        return self._expr_mat.subs(dict)
