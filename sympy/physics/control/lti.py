@@ -1,8 +1,8 @@
 from sympy.matrices import ImmutableMatrix
-from sympy import Basic, Mul, Pow, degree, Symbol, expand, cancel, Expr, exp, roots, ShapeError
+from sympy import Basic, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots
 from sympy.core.evalf import EvalfMixin
 from sympy.core.logic import fuzzy_and
-from sympy.core.numbers import Integer
+from sympy.core.numbers import Integer, ComplexInfinity
 from sympy.core.sympify import sympify, _sympify
 from sympy.polys import Poly, rootof
 from sympy.series import limit
@@ -21,14 +21,68 @@ def _roots(poly, var):
 
 
 class TransferFunction(Basic, EvalfMixin):
-    """
+    r"""
     A class for representing LTI (Linear, time-invariant) systems that can be strictly described
-    by ratio of polynomials in the Laplace Transform complex variable. The arguments
+    by ratio of polynomials in the Laplace transform complex variable. The arguments
     are ``num``, ``den``, and ``var``, where ``num`` and ``den`` are numerator and
     denominator polynomials of the ``TransferFunction`` respectively, and the third argument is
     a complex variable of the Laplace transform used by these polynomials of the transfer function.
     ``num`` and ``den`` can be either polynomials or numbers, whereas ``var``
     has to be a Symbol.
+
+    Explanation
+    ===========
+
+    Generally, a dynamical system representing a physical model can be described in terms of Linear
+    Ordinary Differential Equations like -
+
+            $\small{b_{m}y^{\left(m\right)}+b_{m-1}y^{\left(m-1\right)}+\dots+b_{1}y^{\left(1\right)}+b_{0}y=
+            a_{n}x^{\left(n\right)}+a_{n-1}x^{\left(n-1\right)}+\dots+a_{1}x^{\left(1\right)}+a_{0}x}$
+
+    Here, $x$ is the input signal and $y$ is the output signal and superscript on both is the order of derivative
+    (not exponent). Derivative is taken with respect to the independent variable, $t$. Also, generally $m$ is greater
+    than $n$.
+
+    It is not feasible to analyse the properties of such systems in their native form therefore, we use
+    mathematical tools like Laplace transform to get a better perspective. Taking the Laplace transform
+    of both the sides in the equation (at zero initial conditions), we get -
+
+            $\small{\mathcal{L}[b_{m}y^{\left(m\right)}+b_{m-1}y^{\left(m-1\right)}+\dots+b_{1}y^{\left(1\right)}+b_{0}y]=
+            \mathcal{L}[a_{n}x^{\left(n\right)}+a_{n-1}x^{\left(n-1\right)}+\dots+a_{1}x^{\left(1\right)}+a_{0}x]}$
+
+    Using the linearity property of Laplace transform and also considering zero initial conditions
+    (i.e. $\small{y(0^{-}) = 0}$, $\small{y'(0^{-}) = 0}$ and so on), the equation
+    above gets translated to -
+
+            $\small{b_{m}\mathcal{L}[y^{\left(m\right)}]+\dots+b_{1}\mathcal{L}[y^{\left(1\right)}]+b_{0}\mathcal{L}[y]=
+            a_{n}\mathcal{L}[x^{\left(n\right)}]+\dots+a_{1}\mathcal{L}[x^{\left(1\right)}]+a_{0}\mathcal{L}[x]}$
+
+    Now, applying Derivative property of Laplace transform,
+
+            $\small{b_{m}s^{m}\mathcal{L}[y]+\dots+b_{1}s\mathcal{L}[y]+b_{0}\mathcal{L}[y]=
+            a_{n}s^{n}\mathcal{L}[x]+\dots+a_{1}s\mathcal{L}[x]+a_{0}\mathcal{L}[x]}$
+
+    Here, the superscript on $s$ is **exponent**. Note that the zero initial conditions assumption, mentioned above, is very important
+    and cannot be ignored otherwise the dynamical system cannot be considered time-independent and the simplified equation above
+    cannot be reached.
+
+    Collecting $\mathcal{L}[y]$ and $\mathcal{L}[x]$ terms from both the sides and taking the ratio
+    $\frac{ \mathcal{L}\left\{y\right\} }{ \mathcal{L}\left\{x\right\} }$, we get the typical rational form of transfer
+    function.
+
+    The numerator of the transfer function is, therefore, the Laplace transform of the output signal
+    (The signals are represented as functions of time) and similarly, the denominator
+    of the transfer function is the Laplace transform of the input signal. It is also a convention
+    to denote the input and output signal's Laplace transform with capital alphabets like shown below.
+
+            $H(s) = \frac{Y(s)}{X(s)} = \frac{ \mathcal{L}\left\{y(t)\right\} }{ \mathcal{L}\left\{x(t)\right\} }$
+
+    $s$, also known as complex frequency, is a complex variable in the Laplace domain. It corresponds to the
+    equivalent variable $t$, in the time domain. Transfer functions are sometimes also referred to as the Laplace
+    transform of the system's impulse response. Transfer function, $H$, is represented as a rational
+    function in $s$ like,
+
+            $H(s) =\ \frac{a_{n}s^{n}+a_{n-1}s^{n-1}+\dots+a_{1}s+a_{0}}{b_{m}s^{m}+b_{m-1}s^{m-1}+\dots+b_{1}s+b_{0}}$
 
     Parameters
     ==========
@@ -45,9 +99,8 @@ class TransferFunction(Basic, EvalfMixin):
     ======
 
     TypeError
-        When ``var`` is not a Symbol or when ``num`` or ``den`` is not
-        a number or a polynomial. Also, when ``num`` or ``den`` has
-        a time delay term.
+        When ``var`` is not a Symbol or when ``num`` or ``den`` is not a
+        number or a polynomial.
     ValueError
         When ``den`` is zero.
 
@@ -146,24 +199,110 @@ class TransferFunction(Basic, EvalfMixin):
 
     Feedback, Series, Parallel
 
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Transfer_function
+    .. [2] https://en.wikipedia.org/wiki/Laplace_transform
+
     """
     def __new__(cls, num, den, var):
         num, den = _sympify(num), _sympify(den)
 
         if not isinstance(var, Symbol):
             raise TypeError("Variable input must be a Symbol.")
+
         if den == 0:
             raise ValueError("TransferFunction can't have a zero denominator.")
 
-        if (((isinstance(num, Expr) and num.has(Symbol) and not num.has(exp)) or num.is_number) and
-            ((isinstance(den, Expr) and den.has(Symbol) and not den.has(exp)) or den.is_number)):
-                obj = super().__new__(cls, num, den, var)
-                obj._num = num
-                obj._den = den
-                obj._var = var
-                return obj
+        if (((isinstance(num, Expr) and num.has(Symbol)) or num.is_number) and
+            ((isinstance(den, Expr) and den.has(Symbol)) or den.is_number)):
+            obj = super(TransferFunction, cls).__new__(cls, num, den, var)
+            obj._num = num
+            obj._den = den
+            obj._var = var
+            return obj
+
         else:
             raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
+
+    @classmethod
+    def from_rational_expression(cls, expr, var=None):
+        r"""
+        Creates a new ``TransferFunction`` efficiently from a rational expression.
+
+        Parameters
+        ==========
+
+        expr : Expr, Number
+            The rational expression representing the ``TransferFunction``.
+        var : Symbol, optional
+            Complex variable of the Laplace transform used by the
+            polynomials of the transfer function.
+
+        Raises
+        ======
+
+        ValueError
+            When ``expr`` is of type ``Number`` and optional parameter ``var``
+            is not passed.
+
+            When ``expr`` has more than one variables and an optional parameter
+            ``var`` is not passed.
+        ZeroDivisionError
+            When denominator of ``expr`` is zero or it has ``ComplexInfinity``
+            in its numerator.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> expr1 = (s + 5)/(3*s**2 + 2*s + 1)
+        >>> tf1 = TransferFunction.from_rational_expression(expr1)
+        >>> tf1
+        TransferFunction(s + 5, 3*s**2 + 2*s + 1, s)
+        >>> expr2 = (a*p**3 - a*p**2 + s*p)/(p + a**2)  # Expr with more than one variables
+        >>> tf2 = TransferFunction.from_rational_expression(expr2, p)
+        >>> tf2
+        TransferFunction(a*p**3 - a*p**2 + p*s, a**2 + p, p)
+
+        In case of conflict between two or more variables in a expression, SymPy will
+        raise a ``ValueError``, if ``var`` is not passed by the user.
+
+        >>> tf = TransferFunction.from_rational_expression((a + a*s)/(s**2 + s + 1))
+        Traceback (most recent call last):
+        ...
+        ValueError: Conflicting values found for positional argument `var` ({a, s}). Specify it manually.
+
+        This can be corrected by specifying the ``var`` parameter manually.
+
+        >>> tf = TransferFunction.from_rational_expression((a + a*s)/(s**2 + s + 1), s)
+        >>> tf
+        TransferFunction(a*s + a, s**2 + s + 1, s)
+
+        ``var`` also need to be specified when ``expr`` is a ``Number``
+
+        >>> tf3 = TransferFunction.from_rational_expression(10, s)
+        >>> tf3
+        TransferFunction(10, 1, s)
+
+        """
+        expr = _sympify(expr)
+        if var is None:
+            _free_symbols = expr.free_symbols
+            _len_free_symbols = len(_free_symbols)
+            if _len_free_symbols == 1:
+                var = list(_free_symbols)[0]
+            elif _len_free_symbols == 0:
+                raise ValueError("Positional argument `var` not found in the TransferFunction defined. Specify it manually.")
+            else:
+                raise ValueError("Conflicting values found for positional argument `var` ({}). Specify it manually.".format(_free_symbols))
+
+        _num, _den = expr.as_numer_denom()
+        if _den == 0 or _num.has(ComplexInfinity):
+            raise ZeroDivisionError("TransferFunction can't have a zero denominator.")
+        return cls(_num, _den, var)
 
     @property
     def num(self):
@@ -527,9 +666,31 @@ class TransferFunction(Basic, EvalfMixin):
 
         """
         return degree(self.num, self.var) == degree(self.den, self.var)
-    
-    def _to_expr(self):
-        """To convert TransferFunction type to SymPy Expr"""
+
+    def to_expr(self):
+        """
+        Converts a ``TransferFunction`` object to SymPy Expr.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy.core.expr import Expr
+        >>> tf1 = TransferFunction(s, a*s**2 + 1, s)
+        >>> tf1.to_expr()
+        s/(a*s**2 + 1)
+        >>> isinstance(_, Expr)
+        True
+        >>> tf2 = TransferFunction(1, (p + 3*b)*(b - p), p)
+        >>> tf2.to_expr()
+        1/((b - p)*(3*b + p))
+        >>> tf3 = TransferFunction((s - 2)*(s - 3), (s - 1)*(s - 2)*(s - 3), s)
+        >>> tf3.to_expr()
+        ((s - 3)*(s - 2))/(((s - 3)*(s - 2)*(s - 1)))
+
+        """
+
         return Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
 
 
@@ -1265,90 +1426,176 @@ class Feedback(Basic):
         return Feedback(-self.num, self.den)
 
 
+def _to_TFM(mat, var):
+    """Private method to convert ImmutableMatrix to TransferFunctionMatrix efficiently"""
+    def group(flat, size): return [flat[i:i+size] for i in range(0, len(flat), size)]
+    tfm_cols = mat.args[1]
+    flat_list = list(mat.args[2])
+    flat_list = [TransferFunction.from_rational_expression(elem, var) for elem in flat_list]
+    arg = group(flat_list, tfm_cols)
+    return TransferFunctionMatrix(arg)
+
+
 class TransferFunctionMatrix(Basic):
-    """
+    r"""
     A class for representing the MIMO (multiple-input and multiple-output)
     generalization of the SISO (single-input and single-output) transfer function.
 
     It is a matrix of transfer functions (``TransferFunction`` objects).
-    The arguments are ``arg``, ``shape``, and ``var``, where only the first one
-    is the compulsory argument. ``arg`` can be a list/tuple, list of lists or even a
-    tuple of tuples, which holds the transfer functions. ``shape`` is a tuple which is
-    equal to ``(# of outputs of the system, # of inputs of the system)``, and ``var``
+    The arguments are ``arg`` and ``var``, where ``arg``
+    is the compulsory argument. ``arg`` is expected to be of the type list or list of lists
+    which holds the transfer functions. ``var``
     is a complex variable (which has to be a ``Symbol``) of the Laplace transform
     used by all the transfer functions in the matrix.
+
+    Parameters
+    ==========
+
+    arg: List, Nested List
+        Users are expected to input a nested list of ``TransferFunction``
+        (or ``Expr``) objects like they input Numbers in a normal SymPy matrix.
+        In case a user inputs a List, it would be considered as a column matrix
+        and not row. So, its better to pass nested list to avoid such dilemma.
+    var: Symbol, keyword, optional
+        ``var`` is an optional keyword argument. If ``var`` is not passed explicitly
+        by the user then ``var`` of the first element is taken by default.
 
     Examples
     ========
 
+    ``pprint()`` can be used for better visualization of ``TransferFunctionMatrix`` objects.
+
     >>> from sympy.abc import s, p, a
+    >>> from sympy.printing import pprint
     >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix
-    >>> tf1 = TransferFunction(s + a, s**2 + s + 1, s)
-    >>> tf2 = TransferFunction(p**4 - 3*p + 2, s + p, s)
-    >>> tf3 = TransferFunction(3, s + 2, s)
-    >>> tf4 = TransferFunction(s - p, p**2 + 8, p)
-    >>> tf5 = TransferFunction(-a + p, 9*s - 9, s)
-    >>> TFM1 = TransferFunctionMatrix([tf1, tf2, tf3], (3, 1), s)
-    >>> TFM1
-    TransferFunctionMatrix([TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(3, s + 2, s)])
-    >>> TFM1.var
+    >>> tf_1 = TransferFunction(s + a, s**2 + s + 1, s)
+    >>> tf_2 = TransferFunction(p**4 - 3*p + 2, s + p, s)
+    >>> tf_3 = TransferFunction(3, s + 2, s)
+    >>> tf_4 = TransferFunction(-a + p, 9*s - 9, s)
+    >>> tfm_1 = TransferFunctionMatrix([[tf_1], [tf_2], [tf_3]])
+    >>> tfm_1
+    TransferFunctionMatrix(((TransferFunction(a + s, s**2 + s + 1, s),), (TransferFunction(p**4 - 3*p + 2, p + s, s),), (TransferFunction(3, s + 2, s),)))
+    >>> tfm_1.var
     s
-    >>> TFM1.num_inputs
+    >>> tfm_1.num_inputs
     1
-    >>> TFM1.num_outputs
+    >>> tfm_1.num_outputs
     3
-    >>> TFM1.shape
+    >>> tfm_1.shape
     (3, 1)
-    >>> TFM1.args
-    ([TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(3, s + 2, s)],)
+    >>> tfm_1.args  # Structurally similar to ImmutableDenseMatrix().args
+    (((TransferFunction(a + s, s**2 + s + 1, s),), (TransferFunction(p**4 - 3*p + 2, p + s, s),), (TransferFunction(3, s + 2, s),)),)
+    >>> tfm_2 = TransferFunctionMatrix([[tf_1, -tf_3], [tf_2, -tf_1], [tf_3, -tf_2]])
+    >>> tfm_2
+    TransferFunctionMatrix(((TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(-3, s + 2, s)), (TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(-a - s, s**2 + s + 1, s)), (TransferFunction(3, s + 2, s), TransferFunction(-p**4 + 3*p - 2, p + s, s))))
+    >>> pprint(tfm_2, use_unicode=False)  # pretty-printing for better visualization
+    [   a + s           -3       ]
+    [ ----------       -----     ]
+    [  2               s + 2     ]
+    [ s  + s + 1                 ]
+    [                            ]
+    [ 4                          ]
+    [p  - 3*p + 2      -a - s    ]
+    [------------    ----------  ]
+    [   p + s         2          ]
+    [                s  + s + 1  ]
+    [                            ]
+    [                 4          ]
+    [     3        - p  + 3*p - 2]
+    [   -----      --------------]
+    [   s + 2          p + s     ]
 
-    >>> # also valid when ``shape`` and ``var`` are not specified.
-    >>> TFM2 = TransferFunctionMatrix((tf1, tf2, tf3))
-    >>> TFM2
-    TransferFunctionMatrix((TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(3, s + 2, s)))
-    >>> TFM2.var
+    TransferFunctionMatrix can be transposed, if user wants to switch the input and output transfer functions
+
+    >>> tfm_2.transpose()
+    Matrix([[TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(3, s + 2, s)], [TransferFunction(-3, s + 2, s), TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)]])
+    >>> pprint(_, use_unicode=False)
+    [             4                          ]
+    [  a + s     p  - 3*p + 2        3       ]
+    [----------  ------------      -----     ]
+    [ 2             p + s          s + 2     ]
+    [s  + s + 1                              ]
+    [                                        ]
+    [                             4          ]
+    [   -3          -a - s     - p  + 3*p - 2]
+    [  -----      ----------   --------------]
+    [  s + 2       2               p + s     ]
+    [             s  + s + 1                 ]
+
+    TransferFunctionMatrix objects can also be instantiated by passing SymPy expressions
+
+    >>> tf_5 = TransferFunction(5, s, s)
+    >>> tf_6 = TransferFunction(5*s, (2 + s**2), s)
+    >>> tf_7 = TransferFunction(5, (s*(2 + s**2)), s)
+    >>> tf_8 = TransferFunction(5, 1, s)
+    >>> tfm_3 = TransferFunctionMatrix([[tf_1, tf_2], [tf_3, tf_4]])  # SymPy will assume the var of the first element as the var for the system
+    >>> tfm_3
+    Matrix([[TransferFunction(5, s, s), TransferFunction(5*s, s**2 + 2, s)], [TransferFunction(5, s**3 + 2*s, s), TransferFunction(5, 1, s)]])
+    >>> pprint(tfm_3, use_unicode=False)
+    [   5       5*s  ]
+    [   -      ------]
+    [   s       2    ]
+    [          s  + 2]
+    [                ]
+    [   5        5   ]
+    [--------    -   ]
+    [ 3          1   ]
+    [s  + 2*s        ]
+    >>> tfm_3.var
     s
-    >>> TFM2.shape
-    (3, 1)
-    >>> TFM2.num_inputs
-    1
-    >>> TFM2.num_outputs
-    3
-    >>> TFM2.args
-    ((TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(3, s + 2, s)),)
-
-    Any complex variable can be used for ``var``.
-
-    >>> TFM3 = TransferFunctionMatrix([tf4], (1, 1), p)   # [[tf4]] and (tf4,) are also valid as the first arguments.
-    >>> TFM3
-    TransferFunctionMatrix([TransferFunction(-p + s, p**2 + 8, p)])
-    >>> TFM3.var
-    p
-    >>> TFM3.shape
-    (1, 1)
-
-    >>> TFM4 = TransferFunctionMatrix([[tf1, -tf3], [tf2, -tf1], [tf3, -tf2]], (3, 2), s)
-    >>> TFM4
-    TransferFunctionMatrix([[TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(-3, s + 2, s)], [TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(-a - s, s**2 + s + 1, s)], [TransferFunction(3, s + 2, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)]])
-    >>> TFM4.var
-    s
-    >>> TFM4.shape
-    (3, 2)
-    >>> TFM4.num_outputs
-    3
-    >>> TFM4.num_inputs
+    >>> tfm_3.shape
+    (2, 2)
+    >>> tfm_3.num_outputs
     2
-    >>> TFM4.args
-    ([[TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(-3, s + 2, s)], [TransferFunction(p**4 - 3*p + 2, p + s, s), TransferFunction(-a - s, s**2 + s + 1, s)], [TransferFunction(3, s + 2, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)]],)
+    >>> tfm_3.num_inputs
+    2
+    >>> tfm_3.args
+    (2, 2, (TransferFunction(5, s, s), TransferFunction(5*s, s**2 + 2, s), TransferFunction(5, s**3 + 2*s, s), TransferFunction(5, 1, s)))
 
-    To negate a transfer function matrix the ``-`` operator can be prepended:
+    To access the ``TransferFunction`` at any index in the ``TransferFunctionMatrix``, use the index notation.
 
-    >>> TFM5 = TransferFunctionMatrix((tf2, -tf1, tf3))
-    >>> -TFM5
-    TransferFunctionMatrix([TransferFunction(-p**4 + 3*p - 2, p + s, s), TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(-3, s + 2, s)])
-    >>> TFM6 = TransferFunctionMatrix([[tf1, tf2], [tf3, -tf1]], (2, 2), s)
-    >>> -TFM6
-    TransferFunctionMatrix([[TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)], [TransferFunction(-3, s + 2, s), TransferFunction(a + s, s**2 + s + 1, s)]])
+    >>> tfm_3[1, 0]  # gives the TransferFunction present at 2nd Row and 1st Col. Similar to that in Matrix classes
+    TransferFunction(5, s**3 + 2*s, s)
+    >>> tfm_3[0, 0]  # gives the TransferFunction present at 1st Row and 1st Col.
+    TransferFunction(5, s, s)
+    >>> tfm_3[:, 0]  # gives the first column
+    Matrix([[TransferFunction(5, s, s)], [TransferFunction(5, s**3 + 2*s, s)]])
+    >>> pprint(_, use_unicode=False)
+    [   5    ]
+    [   -    ]
+    [   s    ]
+    [        ]
+    [   5    ]
+    [--------]
+    [ 3      ]
+    [s  + 2*s]
+    >>> tfm_3[0, :]  # gives the first row
+    Matrix([[TransferFunction(5, s, s), TransferFunction(5*s, s**2 + 2, s)]])
+    >>> pprint(_, use_unicode=False)
+    [5   5*s  ]
+    [-  ------]
+    [s   2    ]
+    [   s  + 2]
+
+    To negate a transfer function matrix, ``-`` operator can be prepended:
+
+    >>> tfm_4 = TransferFunctionMatrix([tf_2, -tf_1, tf_3])  # Remember-Simple lists are column matrix
+    >>> -tfm_4
+    Matrix([[TransferFunction(-p**4 + 3*p - 2, p + s, s)], [TransferFunction(a + s, s**2 + s + 1, s)], [TransferFunction(-3, s + 2, s)]])
+    >>> tfm_5 = TransferFunctionMatrix([[tf_1, tf_2], [tf_3, -tf_1]])
+    >>> -tfm_5
+    Matrix([[TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)], [TransferFunction(-3, s + 2, s), TransferFunction(a + s, s**2 + s + 1, s)]])
+
+    ``subs()`` returns an ImmutableDenseMatrix object with the value substituted in the expression. This will not
+    mutate your original ``TransferFunctionMatrix``.
+
+    >>> from sympy import I
+    >>> tfm_3.subs({s: I})  #  substituting imaginary i (iota) to s
+    Matrix([[-5*I, 5*I], [-5*I, 5/1]])
+    >>> type(_)
+    <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
+    >>> type(tfm_3)
+    <class 'sympy.physics.control.lti.TransferFunctionMatrix'>
 
     See Also
     ========
@@ -1371,9 +1618,9 @@ class TransferFunctionMatrix(Basic):
                             "TransferFunctionMatrix should use the same complex variable in Laplace domain.")
 
                 if isinstance(arg[row][col], TransferFunction):
-                    temp.append(arg[row][col]._to_expr())
+                    temp.append(arg[row][col].to_expr())
                 else:
-                    temp.append(arg[row][col].doit()._to_expr())
+                    temp.append(arg[row][col].doit().to_expr())
             expr_mat_arg.append(temp)
                 
 
@@ -1408,13 +1655,13 @@ class TransferFunctionMatrix(Basic):
         >>> G4 = TransferFunction(s + 1, s**2 + s + 1, s)
         >>> S1 = Series(G1, G2)
         >>> S2 = Series(-G3, Parallel(G2, -G1))
-        >>> tfm1 = TransferFunctionMatrix([G1, G2, G3], (3, 1), p)
+        >>> tfm1 = TransferFunctionMatrix([[G1], [G2], [G3]])
         >>> tfm1.var
         p
-        >>> tfm2 = TransferFunctionMatrix(((-S1, -S2), (S1, S2)), (2, 2), p)
+        >>> tfm2 = TransferFunctionMatrix([[-S1, -S2], [S1, S2]])
         >>> tfm2.var
         p
-        >>> tfm3 = TransferFunctionMatrix([[G4]], (1, 1), s)
+        >>> tfm3 = TransferFunctionMatrix([[G4]])
         >>> tfm3.var
         s
 
@@ -1434,7 +1681,7 @@ class TransferFunctionMatrix(Basic):
         >>> G1 = TransferFunction(s + 3, s**2 - 3, s)
         >>> G2 = TransferFunction(4, s**2, s)
         >>> G3 = TransferFunction(p**2 + s**2, p - 3, s)
-        >>> tfm1 = TransferFunctionMatrix((G1, G2), (2, 1), s)
+        >>> tfm1 = TransferFunctionMatrix([[G1], [G2]])
         >>> tfm1.num_inputs
         1
         >>> tfm2 = TransferFunctionMatrix([[G2, -G1, G3], [-G2, -G1, -G3]])
@@ -1458,10 +1705,10 @@ class TransferFunctionMatrix(Basic):
         >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
         >>> tf3 = TransferFunction(a*s - 4, s**4 + 1, s)
         >>> S1, S2 = Series(tf1, -tf2), Series(tf2, tf3, -tf1)
-        >>> TFM1 = TransferFunctionMatrix([tf1, tf2, tf3])
+        >>> TFM1 = TransferFunctionMatrix([[tf1], [tf2], [tf3]])
         >>> TFM1.num_outputs
         3
-        >>> TFM2 = TransferFunctionMatrix(((S1, S2), (-S2, -S1)))
+        >>> TFM2 = TransferFunctionMatrix([[S1, S2], [-S2, -S1]])
         >>> TFM2.num_outputs
         2
 
@@ -1485,58 +1732,15 @@ class TransferFunctionMatrix(Basic):
         >>> tf1 = TransferFunction(p**2 - 1, s**4 + s**3 - p, p)
         >>> tf2 = TransferFunction(1 - p, p**2 - 3*p + 7, p)
         >>> tf3 = TransferFunction(3, 4, p)
-        >>> tfm1 = TransferFunctionMatrix([[tf1, -tf2]], (1, 2), p)
+        >>> tfm1 = TransferFunctionMatrix([[tf1, -tf2]])
         >>> tfm1.shape
         (1, 2)
-        >>> tfm2 = TransferFunctionMatrix(((-tf2, tf3), (tf1, -tf1)))
+        >>> tfm2 = TransferFunctionMatrix([[-tf2, tf3], [tf1, -tf1]])
         >>> tfm2.shape
         (2, 2)
 
         """
         return self._num_outputs, self._num_inputs
-
-    def doit(self, **kwargs):
-        """
-        Returns the resultant transfer function matrix obtained after evaluating
-        the transfer functions in series or parallel configurations (if any present)
-        for all entries in a transfer function matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p, a, b
-        >>> from sympy.physics.control.lti import TransferFunction, Series, Parallel, TransferFunctionMatrix
-        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
-        >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
-        >>> tf3 = TransferFunction(a*s - 4, s**4 + 1, s)
-        >>> S1, S2 = Series(tf1, -tf2), Series(tf2, tf3, -tf1)
-        >>> P1, P2 = Parallel(tf2, -tf3), Parallel(-tf1, tf3, -tf2)
-        >>> # doit() converts S1, S2, P1, P2 into their resultant transfer functions inside a transfer function matrix.
-        >>> tfm1 = TransferFunctionMatrix([S1, S2, -P1])
-        >>> tfm1.doit()
-        TransferFunctionMatrix([TransferFunction((2 - s**3)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s), TransferFunction((s**3 - 2)*(-a*p**2 - b*s)*(a*s - 4), (-p + s)*(s**4 + 1)*(s**4 + 5*s + 6), s), TransferFunction(-(s**3 - 2)*(s**4 + 1) - (-a*s + 4)*(s**4 + 5*s + 6), (s**4 + 1)*(s**4 + 5*s + 6), s)])
-        >>> tfm2 = TransferFunctionMatrix([[tf1, -tf3, -P2]], (1, 3), s)
-        >>> tfm2.doit()
-        TransferFunctionMatrix([[TransferFunction(a*p**2 + b*s, -p + s, s), TransferFunction(-a*s + 4, s**4 + 1, s), TransferFunction(-(2 - s**3)*(-p + s)*(s**4 + 1) - ((-p + s)*(a*s - 4) + (s**4 + 1)*(-a*p**2 - b*s))*(s**4 + 5*s + 6), (-p + s)*(s**4 + 1)*(s**4 + 5*s + 6), s)]])
-        >>> tfm3 = TransferFunctionMatrix(((tf2, P1, P2), (S1, S2, -tf3)), (2, 3), s)
-        >>> tfm3.doit()
-        TransferFunctionMatrix([[TransferFunction(s**3 - 2, s**4 + 5*s + 6, s), TransferFunction((s**3 - 2)*(s**4 + 1) + (-a*s + 4)*(s**4 + 5*s + 6), (s**4 + 1)*(s**4 + 5*s + 6), s), TransferFunction((2 - s**3)*(-p + s)*(s**4 + 1) + ((-p + s)*(a*s - 4) + (s**4 + 1)*(-a*p**2 - b*s))*(s**4 + 5*s + 6), (-p + s)*(s**4 + 1)*(s**4 + 5*s + 6), s)], [TransferFunction((2 - s**3)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s), TransferFunction((s**3 - 2)*(-a*p**2 - b*s)*(a*s - 4), (-p + s)*(s**4 + 1)*(s**4 + 5*s + 6), s), TransferFunction(-a*s + 4, s**4 + 1, s)]])
-
-        """
-        if self.num_inputs == 1:
-            arg_matrix = list(self.args[0])
-            for row in range(self.num_outputs):
-                arg_matrix[row] = arg_matrix[row].doit()
-        else:
-            arg_matrix = []
-            for row in range(self.num_outputs):
-                arg_matrix.append(list(self.args[0][row]))
-
-            for row in range(self.num_outputs):
-                for col in range(self.num_inputs):
-                    arg_matrix[row][col] = arg_matrix[row][col].doit()
-
-        return TransferFunctionMatrix(arg_matrix)
 
     def __neg__(self):
         if self.num_inputs == 1:
@@ -1544,3 +1748,14 @@ class TransferFunctionMatrix(Basic):
         else:
             neg_args = [[-col for col in row] for row in self.args[0]]
         return TransferFunctionMatrix(neg_args)
+    
+    def __getitem__(self, key):
+        trunc = self._expr_mat.__getitem__(key)
+        if isinstance(trunc, ImmutableMatrix):
+            return _to_TFM(trunc, self.var)
+        else:
+            return TransferFunction.from_rational_expression(trunc, self.var)
+
+    def transpose(self):
+        transposed_mat = self._expr_mat.transpose()
+        return _to_TFM(transposed_mat, self.var)

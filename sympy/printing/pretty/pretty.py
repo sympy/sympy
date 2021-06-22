@@ -1027,8 +1027,7 @@ class PrettyPrinter(Printer):
         return self._print(num)/self._print(den)
 
     def _print_TransferFunctionMatrix(self, expr):
-        from sympy.matrices import Matrix
-        return self._print(Matrix(expr.args[0]))
+        return self._print(expr._expr_mat)
 
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
