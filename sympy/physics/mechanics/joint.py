@@ -310,7 +310,7 @@ class PinJoint(Joint):
     def _generate_coordinates(self, coordinate):
         coordinates = []
         if coordinate is None:
-            theta = dynamicsymbols(self._name + '_theta')
+            theta = dynamicsymbols(self._name + '_theta', positive=True)
             coordinate = theta
         coordinates.append(coordinate)
         return coordinates
@@ -318,7 +318,7 @@ class PinJoint(Joint):
     def _generate_speeds(self, speed):
         speeds = []
         if speed is None:
-            omega = dynamicsymbols(self._name + '_omega')
+            omega = dynamicsymbols(self._name + '_omega', positive=True)
             speed = omega
         speeds.append(speed)
         return speeds
