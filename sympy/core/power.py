@@ -1625,7 +1625,7 @@ class Pow(Expr):
         if not (m.is_zero or e.is_number and e.is_real):
             return exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
 
-        f = b.as_leading_term(x)
+        f = b.as_leading_term(x, logx=logx)
         g = (b/f - S.One).cancel()
         maxpow = n - m*e
 
@@ -1713,8 +1713,8 @@ class Pow(Expr):
         if self.base is S.Exp1:
             arg = self.exp
             if arg.is_Add:
-                return Mul(*[(S.Exp1**f).as_leading_term(x) for f in arg.args])
-            arg_1 = arg.as_leading_term(x)
+                return Mul(*[(S.Exp1**f).as_leading_term(x, logx=logx) for f in arg.args])
+            arg_1 = arg.as_leading_term(x, logx=logx)
             if Order(x, x).contains(arg_1):
                 return S.One
             if Order(1, x).contains(arg_1):
@@ -1730,9 +1730,9 @@ class Pow(Expr):
             ####################################################
             return S.Exp1**arg
         elif e.has(x):
-            return exp(e * log(b)).as_leading_term(x, cdir=cdir)
+            return exp(e * log(b)).as_leading_term(x, logx=logx, cdir=cdir)
         else:
-            f = b.as_leading_term(x, cdir=cdir)
+            f = b.as_leading_term(x, logx=logx, cdir=cdir)
             if (not e.is_integer and f.is_constant() and f.is_real
                 and f.is_negative and im((b - f).dir(x, cdir)) < 0):
                 return self.func(f, e) * exp(-2 * e * S.Pi * I)

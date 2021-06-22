@@ -186,7 +186,7 @@ class Limit(Expr):
         hints : optional keyword arguments
             To be passed to ``doit`` methods; only used if deep is True.
         """
-        from sympy import Abs, exp, log, sign
+        from sympy import Abs, exp, log, sign, floor, ceiling, binomial
         from sympy.calculus.util import AccumBounds
 
         e, z, z0, dir = self.args
@@ -205,6 +205,12 @@ class Limit(Expr):
 
         if not e.has(z):
             return e
+
+        if z0 is S.NaN:
+            return S.NaN
+
+        if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
+            return self
 
         cdir = 0
         if str(dir) == "+":
@@ -238,17 +244,57 @@ class Limit(Expr):
                 newe = e.subs(z, -1/z)
             else:
                 newe = e.subs(z, z + z0)
-            coeff, ex = newe.leadterm(z, cdir)
-            if ex > 0:
-                return S.Zero
-            elif ex == 0:
-                return coeff
-            if str(dir) == "+" or not(int(ex) & 1):
-                return S.Infinity*sign(coeff)
-            elif str(dir) == "-":
-                return S.NegativeInfinity*sign(coeff)
+            try:
+                coeff, ex = newe.leadterm(z, cdir=cdir)
+            except ValueError:
+                pass
             else:
-                return S.ComplexInfinity
+                if ex > 0:
+                    return S.Zero
+                elif ex == 0:
+                    return coeff
+                if str(dir) == "+" or not(int(ex) & 1):
+                    return S.Infinity*sign(coeff)
+                elif str(dir) == "-":
+                    return S.NegativeInfinity*sign(coeff)
+                else:
+                    return S.ComplexInfinity
+
+        # is_meromorphic does not capture all meromorphic functions, and such
+        # functions may have a leading term computation which can help find the
+        # limit without entering gruntz
+        if not e.has(floor, ceiling, factorial, binomial):
+            if abs(z0) is S.Infinity:
+                newe = e.subs(z, 1/z)
+            else:
+                newe = e.subs(z, z + z0)
+            try:
+                coeff, ex = newe.leadterm(z, cdir=cdir)
+            except (ValueError, NotImplementedError, PoleError):
+                pass
+            else:
+                if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+                    return self
+                if not coeff.has(z):
+                    if ex.is_positive:
+                        return S.Zero
+                    elif ex == 0:
+                        return coeff
+                    elif ex.is_negative:
+                        if ex.is_integer:
+                            if str(dir) == "-":
+                                return S.Infinity*sign(coeff)
+                            elif str(dir) == "+":
+                                return S.NegativeInfinity*sign(coeff)
+                            else:
+                                return S.ComplexInfinity
+                        else:
+                            if str(dir) == "+":
+                                return S.Infinity
+                            elif str(dir) == "-":
+                                return S.NegativeInfinity*S.NegativeOne**(S.One + ex)
+                            else:
+                                return S.ComplexInfinity
 
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.

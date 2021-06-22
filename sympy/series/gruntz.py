@@ -532,7 +532,7 @@ def mrv_leadterm(e, x):
     w = Dummy("w", real=True, positive=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
-    return series.leadterm(w)
+    return series.leadterm(w, logx=logw)
 
 
 def build_expression_tree(Omega, rewrites):

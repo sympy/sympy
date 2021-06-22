@@ -36,7 +36,7 @@ def test_basic1():
     assert limit((1 + x)**(1 + sqrt(2)), x, 0) == 1
     assert limit((1 + x)**oo, x, 0) == Limit((x + 1)**oo, x, 0)
     assert limit((1 + x)**oo, x, 0, dir='-') == Limit((x + 1)**oo, x, 0, dir='-')
-    assert limit((1 + x + y)**oo, x, 0, dir='-') == Limit((x + y + 1)**oo, x, 0, dir='-')
+    assert limit((1 + x + y)**oo, x, 0, dir='-') == Limit((1 + x + y)**oo, x, 0, dir='-')
     assert limit(y/x/log(x), x, 0) == -oo*sign(y)
     assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
     assert limit(gamma(1/x + 3), x, oo) == 2
@@ -74,7 +74,7 @@ def test_basic1():
     assert limit(1/sqrt(x), x, 0, dir='-') == (-oo)*I
     assert limit(x**2, x, 0, dir='-') == 0
     assert limit(sqrt(x), x, 0, dir='-') == 0
-    assert limit(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))
+    assert limit(x**-pi, x, 0, dir='-') == -oo*(-1)**(1 - pi)
     assert limit((1 + cos(x))**oo, x, 0) == Limit((cos(x) + 1)**oo, x, 0)
 
 
@@ -381,13 +381,10 @@ def test_newissue():
 
 
 def test_extended_real_line():
-    assert limit(x - oo, x, oo) is -oo
-    assert limit(oo - x, x, -oo) is oo
-    assert limit(x**2/(x - 5) - oo, x, oo) is -oo
-    assert limit(1/(x + sin(x)) - oo, x, 0) is -oo
-    assert limit(oo/x, x, oo) is oo
-    assert limit(x - oo + 1/x, x, oo) is -oo
-    assert limit(x - oo + 1/x, x, 0) is -oo
+    assert limit(x - oo, x, oo) == Limit(x - oo, x, oo)
+    assert limit(1/(x + sin(x)) - oo, x, 0) == Limit(1/(x + sin(x)) - oo, x, 0)
+    assert limit(oo/x, x, oo) == Limit(oo/x, x, oo)
+    assert limit(x - oo + 1/x, x, oo) == Limit(x - oo + 1/x, x, oo)
 
 
 @XFAIL
@@ -517,7 +514,7 @@ def test_branch_cuts():
 def test_issue_6364():
     a = Symbol('a')
     e = z/(1 - sqrt(1 + z)*sin(a)**2 - sqrt(1 - z)*cos(a)**2)
-    assert limit(e, z, 0) == 2/(2*cos(a)**2 - 1)
+    assert limit(e, z, 0) == 1/(cos(a)**2 - S.Half)
 
 
 def test_issue_4099():
@@ -680,7 +677,7 @@ def test_issue_13416():
 
 
 def test_issue_13462():
-    assert limit(n**2*(2*n*(-(1 - 1/(2*n))**x + 1) - x - (-x**2/4 + x/4)/n), n, oo) == x*(x - 2)*(x - 1)/24
+    assert limit(n**2*(2*n*(-(1 - 1/(2*n))**x + 1) - x - (-x**2/4 + x/4)/n), n, oo) == x**3/24 - x**2/8 + x/12
 
 
 def test_issue_13750():
@@ -729,7 +726,7 @@ def test_issue_15282():
 
 
 def test_issue_15984():
-    assert limit((-x + log(exp(x) + 1))/x, x, oo, dir='-').doit() == 0
+    assert limit((-x + log(exp(x) + 1))/x, x, oo, dir='-') == 0
 
 
 def test_issue_13571():
@@ -737,7 +734,7 @@ def test_issue_13571():
 
 
 def test_issue_13575():
-    assert limit(acos(erfi(x)), x, 1).cancel() == acos(-I*erf(I))
+    assert limit(acos(erfi(x)), x, 1) == acos(erfi(S.One))
 
 
 def test_issue_17325():
@@ -771,7 +768,7 @@ def test_issue_14590():
 
 def test_issue_14393():
     a, b = symbols('a b')
-    assert limit((x**b - y**b)/(x**a - y**a), x, y) == b*y**(-a)*y**b/a
+    assert limit((x**b - y**b)/(x**a - y**a), x, y) == b*y**(-a + b)/a
 
 
 def test_issue_14556():
@@ -815,7 +812,8 @@ def test_issue_17671():
 
 def test_issue_17751():
     a, b, c, x = symbols('a b c x', positive=True)
-    assert limit((a + 1)*x - sqrt((a + 1)**2*x**2 + b*x + c), x, oo) == -b/(2*a + 2)
+    assert limit((a + 1)*x - sqrt((a + 1)**2*x**2 + b*x + c), x, oo) == \
+            (-a*b - b)/(2*a**2 + 4*a + 2)
 
 
 def test_issue_17792():
@@ -895,7 +893,7 @@ def test_issue_19586():
 def test_issue_13715():
     n = Symbol('n')
     p = Symbol('p', zero=True)
-    assert limit(n + p, n, 0) == p
+    assert limit(n + p, n, 0) == 0
 
 
 def test_issue_15055():

@@ -806,7 +806,7 @@ class Function(Application, Expr):
         See, for example, cos._eval_as_leading_term.
         """
         from sympy import Order
-        args = [a.as_leading_term(x) for a in self.args]
+        args = [a.as_leading_term(x, logx=logx) for a in self.args]
         o = Order(1, x)
         if any(x in a.free_symbols and o.contains(a) for a in args):
             # Whereas x and any finite number are contained in O(1, x),

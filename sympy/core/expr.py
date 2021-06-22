@@ -1018,7 +1018,9 @@ class Expr(Basic, EvalfMixin):
             minexp += S.One
             arg = arg.diff(x)
             coeff = arg.subs(x, 0)
-            if coeff in (S.NaN, S.ComplexInfinity):
+            if coeff is S.NaN:
+                raise ValueError()
+            if coeff is S.ComplexInfinity:
                 try:
                     coeff, _ = arg.leadterm(x)
                     if coeff.has(log(x)):
@@ -2937,7 +2939,7 @@ class Expr(Basic, EvalfMixin):
             If "x0" is an infinity object
 
         """
-        from sympy import collect, Dummy, Order, Rational, Symbol, ceiling
+        from sympy import collect, Dummy, Order, Rational, Symbol, ceiling, log
         if x is None:
             syms = self.free_symbols
             if not syms:
@@ -2995,7 +2997,15 @@ class Expr(Basic, EvalfMixin):
                 return rv.subs(xpos, x)
 
         if n is not None:  # nseries handling
-            s1 = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
+            # XXX This is a hack-ish solution. Not passing logx parameter causes
+            # log._eval_as_leading_term to raise, which will not be handled by
+            # the current series code. Instead of raising, just returning
+            # log(arg) is sufficient to find the series expansion.
+            if logx is None:
+                d = Dummy('logx')
+                s1 = self._eval_nseries(x, n=n, logx=d, cdir=cdir).subs(d, log(x))
+            else:
+                s1 = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             o = s1.getO() or S.Zero
             if o:
                 # make sure the requested order is returned

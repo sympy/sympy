@@ -484,7 +484,7 @@ class exp(ExpBase, metaclass=ExpMeta):
         t = Dummy("t")
         nterms = n
         try:
-            cf = Order(arg.as_leading_term(x), x).getn()
+            cf = Order(arg.as_leading_term(x, logx=logx), x).getn()
         except NotImplementedError:
             cf = 0
         if cf and cf > 0:
@@ -516,8 +516,8 @@ class exp(ExpBase, metaclass=ExpMeta):
         from sympy import Order
         arg = self.args[0]
         if arg.is_Add:
-            return Mul(*[exp(f).as_leading_term(x) for f in arg.args])
-        arg_1 = arg.as_leading_term(x)
+            return Mul(*[exp(f).as_leading_term(x, logx=logx) for f in arg.args])
+        arg_1 = arg.as_leading_term(x, logx=logx)
         if Order(x, x).contains(arg_1):
             return S.One
         if Order(1, x).contains(arg_1):
@@ -1039,16 +1039,19 @@ class log(Function):
         return res + Order(x**n, x)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import I, im
-        arg = self.args[0].together()
-        x0 = arg.subs(x, 0)
+        from sympy import I, im, PoleError
+        arg0 = self.args[0].together()
+        arg = arg0.as_leading_term(x, cdir=cdir)
+        x0 = arg0.subs(x, 0)
+        if x0 is S.NaN and logx is None:
+            raise PoleError()
         if x0 == 1:
-            return (arg - S.One).as_leading_term(x)
+            return (arg0 - S.One).as_leading_term(x)
         if cdir != 0:
-            cdir = self.args[0].dir(x, cdir)
+            cdir = arg0.dir(x, cdir)
         if x0.is_real and x0.is_negative and im(cdir) < 0:
-            return self.func(x0) -2*I*S.Pi
-        return self.func(arg.as_leading_term(x))
+            return self.func(x0) - 2*I*S.Pi
+        return self.func(arg)
 
 
 class LambertW(Function):

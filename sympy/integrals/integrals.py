@@ -1139,7 +1139,7 @@ class Integral(AddWithLimits):
 
         return Add(*parts)
 
-    def _eval_lseries(self, x, logx, cdir=0):
+    def _eval_lseries(self, x, logx=None, cdir=0):
         expr = self.as_dummy()
         symb = x
         for l in expr.limits:
@@ -1149,7 +1149,7 @@ class Integral(AddWithLimits):
         for term in expr.function.lseries(symb, logx):
             yield integrate(term, *expr.limits)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx=None, cdir=0):
         expr = self.as_dummy()
         symb = x
         for l in expr.limits:
@@ -1157,7 +1157,7 @@ class Integral(AddWithLimits):
                 symb = l[0]
                 break
         terms, order = expr.function.nseries(
-            x=symb, n=n, logx=logx).as_coeff_add(Order)
+            x=symb, n=n).as_coeff_add(Order)
         order = [o.subs(symb, x) for o in order]
         return integrate(terms, *expr.limits) + Add(*order)*x
 

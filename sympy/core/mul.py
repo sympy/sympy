@@ -1880,7 +1880,7 @@ class Mul(Expr, AssocOp):
 
         try:
             for t in self.args:
-                coeff, exp = t.leadterm(x)
+                coeff, exp = t.leadterm(x, logx=logx)
                 if not coeff.has(x):
                     ords.append((t, exp))
                 else:
@@ -1930,7 +1930,7 @@ class Mul(Expr, AssocOp):
         return res
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        return self.func(*[t.as_leading_term(x, cdir=cdir) for t in self.args])
+        return self.func(*[t.as_leading_term(x, logx=logx, cdir=cdir) for t in self.args])
 
     def _eval_conjugate(self):
         return self.func(*[t.conjugate() for t in self.args])
