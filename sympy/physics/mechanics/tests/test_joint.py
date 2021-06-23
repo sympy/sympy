@@ -207,3 +207,22 @@ def test_pinjoint_arbitrary_axis():
         (1 - sqrt(3)/3)*N.x + sqrt(6)*sin(theta + pi/4)/3*N.y - sqrt(6)*cos(theta + pi/4)/3*N.z
     assert C.masscenter.vel(N).express(N).simplify() == sqrt(6)*omega*cos(theta + pi/4)/3*N.y + sqrt(6)*omega*sin(theta + pi/4)/3*N.z
     assert C.masscenter.vel(N).angle_between(A.x) == pi/2
+
+    N, A, P, C = generate_body()
+    m, n = symbols('m n', positive=True)
+    PinJoint('J', P, C, parent_joint_pos=m*N.x, child_joint_pos=n*A.x, child_axis=A.x+A.y-A.z, parent_axis=N.x-N.y+N.z)
+    assert (N.x-N.y+N.z).angle_between(A.x+A.y-A.z).simplify() == 0 #Axis are aligned
+    assert (A.x-A.y+A.z).express(N).simplify() == \
+        (-4*cos(theta)/3 - 1/3)*N.x + (1/3 - 4*sin(theta + pi/6)/3)*N.y + (4*cos(theta + pi/3)/3 - 1/3)*N.z
+    assert A.ang_vel_in(N) == omega*N.x - omega*N.y + omega*N.z
+    assert A.ang_vel_in(N).express(A).simplify() == omega*A.x + omega*A.y - omega*A.z
+    assert A.ang_vel_in(N).magnitude() == sqrt(3)*omega
+    assert A.ang_vel_in(N).angle_between(A.x+A.y-A.z).simplify() == 0
+    assert C.masscenter.vel(N).simplify() == m*omega*N.y + m*omega*N.z + n*omega*A.y + n*omega*A.z
+    assert C.masscenter.pos_from(P.masscenter) == m*N.x - n*A.x
+    assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == \
+        (m + n*(2*cos(theta) - 1)/3)*N.x + n*(2*sin(theta + pi/6) + 1)/3*N.y - n*(2*cos(theta + pi/3) + 1)/3*N.z
+    assert C.masscenter.vel(N).express(N).simplify() == \
+        - 2*sqrt(3)*n*omega*sin(theta)/3*N.x + (3*m + 2*sqrt(3)*n*cos(theta + pi/6))*omega/3*N.y + \
+        (3*m + 2*sqrt(3)*n*sin(theta + pi/3))*omega/3*N.z
+    assert C.masscenter.vel(N).angle_between(m*N.x - n*A.x).simplify() == pi/2
