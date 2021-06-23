@@ -110,7 +110,6 @@ class SingleODEProblem:
     def eq_high_order_free(self) -> Expr:
         a = Wild('a', exclude=[self.func])
         c1 = Wild('c1', exclude=[self.sym])
-        self.eq = expand(self.eq)
         # Precondition to try remove f(x) from highest order derivative
         reduced_eq = None
         if self.eq.is_Add:
