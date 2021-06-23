@@ -1,12 +1,13 @@
-from sympy import symbols, factor, Function, simplify, exp, pi, oo, I, \
-    ShapeError, Rational, sqrt, CRootOf
+from sympy import symbols, factor, Function, simplify, exp, oo, I, \
+    S, Mul, Pow, Add, Rational, sqrt, CRootOf
 from sympy.matrices import Matrix
 from sympy.physics.control import TransferFunction, Series, Parallel, \
     Feedback, TransferFunctionMatrix
+from sympy.core.containers import Tuple
 from sympy.testing.pytest import raises
 
-a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2, zeta, wn = symbols('a, x, b, s, g, d, p, k,\
-    a0:3, b0:3, zeta, wn')
+a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2, tau, zeta, wn = symbols('a, x, b, s, g, d, p, k,\
+    a0:3, b0:3, tau, zeta, wn')
 TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
 TF2 = TransferFunction(k, 1, s)
 TF3 = TransferFunction(a2*p - s, a2*s + p, s)
@@ -312,7 +313,6 @@ def test_TransferFunction_addition_and_subtraction():
     tf2 = TransferFunction(s + 3, s + 1, s)
     tf3 = TransferFunction(s + 1, s**2 + s + 1, s)
     tf4 = TransferFunction(p, 2 - p, p)
-    tfm1 = TransferFunctionMatrix([[tf1, tf2, tf3]])
 
     # addition
     assert tf1 + tf2 == Parallel(tf1, tf2)
@@ -419,49 +419,41 @@ def test_TransferFunction_is_biproper():
 
 
 def test_Series_construction():
+    zeta, wn = symbols('zeta, wn')
     tf = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
     tf2 = TransferFunction(a2*p - s, a2*s + p, s)
     tf3 = TransferFunction(a0*p + p**a1 - s, p, p)
     tf4 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
-    tf5 = TransferFunction(a1*p, p + a0, p)
     inp = Function('X_d')(s)
     out = Function('X')(s)
 
-    # SISO transfer function in the arguments.
     s0 = Series(tf, tf2)
     assert s0.args == (tf, tf2)
     assert s0.var == s
-    assert s0.shape == (s0.num_outputs, s0.num_inputs) == (1, 1)
 
     s1 = Series(Parallel(tf, -tf2), tf2)
     assert s1.args == (Parallel(tf, -tf2), tf2)
     assert s1.var == s
-    assert s1.shape == (s1.num_outputs, s1.num_inputs) == (1, 1)
 
     tf3_ = TransferFunction(inp, 1, s)
     tf4_ = TransferFunction(-out, 1, s)
     s2 = Series(tf, Parallel(tf3_, tf4_), tf2)
     assert s2.args == (tf, Parallel(tf3_, tf4_), tf2)
-    assert s2.shape == (s2.num_outputs, s2.num_inputs) == (1, 1)
 
     s3 = Series(tf, tf2, tf4)
     assert s3.args == (tf, tf2, tf4)
-    assert s3.shape == (s3.num_outputs, s3.num_inputs) == (1, 1)
 
     s4 = Series(tf3_, tf4_)
     assert s4.args == (tf3_, tf4_)
     assert s4.var == s
-    assert s4.shape == (s4.num_outputs, s4.num_inputs) == (1, 1)
 
     s6 = Series(tf2, tf4, Parallel(tf2, -tf), tf4)
     assert s6.args == (tf2, tf4, Parallel(tf2, -tf), tf4)
-    assert s6.shape == (s6.num_outputs, s6.num_inputs) == (1, 1)
 
     s7 = Series(tf, tf2)
     assert s0 == s7
     assert not s0 == s2
 
-    raises(ValueError, lambda: Series())
     raises(ValueError, lambda: Series(tf, tf3))
     raises(ValueError, lambda: Series(tf, tf2, tf3, tf4))
     raises(ValueError, lambda: Series(-tf3, tf2))
@@ -470,105 +462,96 @@ def test_Series_construction():
     raises(TypeError, lambda: Series(tf3, Matrix([1, 2, 3, 4])))
 
 
-
 def test_Series_functions():
+    zeta, wn = symbols('zeta, wn')
+    tf1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    tf2 = TransferFunction(k, 1, s)
+    tf3 = TransferFunction(a2*p - s, a2*s + p, s)
     tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
 
-    assert TF1*TF2*TF3 == Series(TF1, TF2, TF3)
-    assert TF1*(TF2 + TF3) == Series(TF1, Parallel(TF2, TF3))
-    assert TF1*TF2 + tf5 == Parallel(Series(TF1, TF2), tf5)
-    assert TF1*TF2 - tf5 == Parallel(Series(TF1, TF2), -tf5)
-    assert TF1*TF2 + TF3 + tf5 == Parallel(Series(TF1, TF2), TF3, tf5)
-    assert TF1*TF2 - TF3 - tf5 == Parallel(Series(TF1, TF2), -TF3, -tf5)
-    assert TF1*TF2 - TF3 + tf5 == Parallel(Series(TF1, TF2), -TF3, tf5)
-    assert TF1*TF2 + TF3*tf5 == Parallel(Series(TF1, TF2), Series(TF3, tf5))
-    assert TF2*TF3*(TF2 - TF1)*TF3 == Series(TF2, TF3, Parallel(TF2, -TF1), TF3)
-    assert TF1*TF2 - TF3*tf5 == Parallel(Series(TF1, TF2), Series(TransferFunction(-1, 1, s), Series(TF3, tf5)))
-    assert -TF1*TF2 == Series(-TF1, TF2)
-    assert -(TF1*TF2) == Series(TransferFunction(-1, 1, s), Series(TF1, TF2))
-    raises(ValueError, lambda: TF1*TF2*tf4)
-    raises(ValueError, lambda: TF1*(TF2 - tf4))
-    raises(ValueError, lambda: TF3*Matrix([1, 2, 3]))
+    assert tf1*tf2*tf3 == Series(tf1, tf2, tf3)
+    assert tf1*(tf2 + tf3) == Series(tf1, Parallel(tf2, tf3))
+    assert tf1*tf2 + tf5 == Parallel(Series(tf1, tf2), tf5)
+    assert tf1*tf2 - tf5 == Parallel(Series(tf1, tf2), -tf5)
+    assert tf1*tf2 + tf3 + tf5 == Parallel(Series(tf1, tf2), tf3, tf5)
+    assert tf1*tf2 - tf3 - tf5 == Parallel(Series(tf1, tf2), -tf3, -tf5)
+    assert tf1*tf2 - tf3 + tf5 == Parallel(Series(tf1, tf2), -tf3, tf5)
+    assert tf1*tf2 + tf3*tf5 == Parallel(Series(tf1, tf2), Series(tf3, tf5))
+    assert tf1*tf2 - tf3*tf5 == Parallel(Series(tf1, tf2), Series(TransferFunction(-1, 1, s), Series(tf3, tf5)))
+    assert tf2*tf3*(tf2 - tf1)*tf3 == Series(tf2, tf3, Parallel(tf2, -tf1), tf3)
+    assert -tf1*tf2 == Series(-tf1, tf2)
+    assert -(tf1*tf2) == Series(TransferFunction(-1, 1, s), Series(tf1, tf2))
+    raises(ValueError, lambda: tf1*tf2*tf4)
+    raises(ValueError, lambda: tf1*(tf2 - tf4))
+    raises(ValueError, lambda: tf3*Matrix([1, 2, 3]))
 
-    # SISO transfer function in the arguments.
     # evaluate=True -> doit()
-    assert Series(TF1, TF2, evaluate=True) == Series(TF1, TF2).doit() == \
+    assert Series(tf1, tf2, evaluate=True) == Series(tf1, tf2).doit() == \
         TransferFunction(k, s**2 + 2*s*wn*zeta + wn**2, s)
-    assert Series(TF1, TF2, Parallel(TF1, -TF3), evaluate=True) == Series(TF1, TF2, Parallel(TF1, -TF3)).doit() == \
+    assert Series(tf1, tf2, Parallel(tf1, -tf3), evaluate=True) == Series(tf1, tf2, Parallel(tf1, -tf3)).doit() == \
         TransferFunction(k*(a2*s + p + (-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2)), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)**2, s)
-    assert Series(TF2, TF1, -TF3, evaluate=True) == Series(TF2, TF1, -TF3).doit() == \
+    assert Series(tf2, tf1, -tf3, evaluate=True) == Series(tf2, tf1, -tf3).doit() == \
         TransferFunction(k*(-a2*p + s), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
-    assert not Series(TF1, -TF2, evaluate=False) == Series(TF1, -TF2).doit()
+    assert not Series(tf1, -tf2, evaluate=False) == Series(tf1, -tf2).doit()
 
-    assert Series(Parallel(TF1, TF2), Parallel(TF2, -TF3)).doit() == \
+    assert Series(Parallel(tf1, tf2), Parallel(tf2, -tf3)).doit() == \
         TransferFunction((k*(s**2 + 2*s*wn*zeta + wn**2) + 1)*(-a2*p + k*(a2*s + p) + s), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
-    assert Series(-TF1, -TF2, -TF3).doit() == \
+    assert Series(-tf1, -tf2, -tf3).doit() == \
         TransferFunction(k*(-a2*p + s), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
-    assert -Series(TF1, TF2, TF3).doit() == \
+    assert -Series(tf1, tf2, tf3).doit() == \
         TransferFunction(-k*(a2*p - s), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
-    assert Series(TF2, TF3, Parallel(TF2, -TF1), TF3).doit() == \
+    assert Series(tf2, tf3, Parallel(tf2, -tf1), tf3).doit() == \
         TransferFunction(k*(a2*p - s)**2*(k*(s**2 + 2*s*wn*zeta + wn**2) - 1), (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2), s)
 
-    assert Series(TF1, TF2).rewrite(TransferFunction) == TransferFunction(k, s**2 + 2*s*wn*zeta + wn**2, s)
-    assert Series(TF2, TF1, -TF3).rewrite(TransferFunction) == \
+    assert Series(tf1, tf2).rewrite(TransferFunction) == TransferFunction(k, s**2 + 2*s*wn*zeta + wn**2, s)
+    assert Series(tf2, tf1, -tf3).rewrite(TransferFunction) == \
         TransferFunction(k*(-a2*p + s), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
-    raises(ValueError, lambda: Series(TF1, TF2).rewrite(TransferFunctionMatrix))
-    raises(ValueError, lambda: Series(TF2, TF1, -TF3).rewrite(TransferFunctionMatrix))
 
-    S1 = Series(Parallel(TF1, TF2), Parallel(TF2, -TF3))
+    S1 = Series(Parallel(tf1, tf2), Parallel(tf2, -tf3))
     assert S1.is_proper
     assert not S1.is_strictly_proper
     assert S1.is_biproper
 
-    S2 = Series(TF1, TF2, TF3)
+    S2 = Series(tf1, tf2, tf3)
     assert S2.is_proper
     assert S2.is_strictly_proper
     assert not S2.is_biproper
 
-    S3 = Series(TF1, -TF2, Parallel(TF1, -TF3))
+    S3 = Series(tf1, -tf2, Parallel(tf1, -tf3))
     assert S3.is_proper
     assert S3.is_strictly_proper
     assert not S3.is_biproper
 
+
 def test_Parallel_construction():
+    zeta, wn = symbols('zeta, wn')
     tf = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
     tf2 = TransferFunction(a2*p - s, a2*s + p, s)
     tf3 = TransferFunction(a0*p + p**a1 - s, p, p)
     tf4 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
-    tf5 = TransferFunction(p, a0 - p, p)
     inp = Function('X_d')(s)
     out = Function('X')(s)
 
-    # SISO transfer function in the arguments.
     p0 = Parallel(tf, tf2)
     assert p0.args == (tf, tf2)
     assert p0.var == s
-    assert p0._is_not_matrix
-    assert p0.shape == (p0.num_outputs, p0.num_inputs) == (1, 1)
 
     p1 = Parallel(Series(tf, -tf2), tf2)
     assert p1.args == (Series(tf, -tf2), tf2)
     assert p1.var == s
-    assert p1._is_not_matrix
-    assert p1.shape == (p1.num_outputs, p1.num_inputs) == (1, 1)
 
     tf3_ = TransferFunction(inp, 1, s)
     tf4_ = TransferFunction(-out, 1, s)
     p2 = Parallel(tf, Series(tf3_, -tf4_), tf2)
     assert p2.args == (tf, Series(tf3_, -tf4_), tf2)
-    assert p2._is_not_matrix
-    assert p2.shape == (p2.num_outputs, p2.num_inputs) == (1, 1)
 
     p3 = Parallel(tf, tf2, tf4)
     assert p3.args == (tf, tf2, tf4)
-    assert p3._is_not_matrix
-    assert p3.shape == (p3.num_outputs, p3.num_inputs) == (1, 1)
 
     p4 = Parallel(tf3_, tf4_)
     assert p4.args == (tf3_, tf4_)
     assert p4.var == s
-    assert p4.shape == (p4.num_outputs, p4.num_inputs) == (1, 1)
 
     p5 = Parallel(tf, tf2)
     assert p0 == p5
@@ -576,14 +559,10 @@ def test_Parallel_construction():
 
     p6 = Parallel(tf2, tf4, Series(tf2, -tf4))
     assert p6.args == (tf2, tf4, Series(tf2, -tf4))
-    assert p6.shape == (p6.num_outputs, p6.num_inputs) == (1, 1)
 
     p7 = Parallel(tf2, tf4, Series(tf2, -tf), tf4)
     assert p7.args == (tf2, tf4, Series(tf2, -tf), tf4)
-    assert p7._is_not_matrix
-    assert p7.shape == (p7.num_outputs, p7.num_inputs) == (1, 1)
 
-    raises(ValueError, lambda: Parallel())
     raises(ValueError, lambda: Parallel(tf, tf3))
     raises(ValueError, lambda: Parallel(tf, tf2, tf3, tf4))
     raises(ValueError, lambda: Parallel(-tf3, tf4))
@@ -593,92 +572,99 @@ def test_Parallel_construction():
 
 
 def test_Parallel_functions():
+    zeta, wn = symbols('zeta, wn')
+    tf1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    tf2 = TransferFunction(k, 1, s)
+    tf3 = TransferFunction(a2*p - s, a2*s + p, s)
     tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
 
-    assert TF1 + TF2 + TF3 == Parallel(TF1, TF2, TF3)
-    assert TF1 + TF2 + TF3 + tf5 == Parallel(TF1, TF2, TF3, tf5)
-    assert TF1 + TF2 - TF3 - tf5 == Parallel(TF1, TF2, -TF3, -tf5)
-    assert TF1 + TF2*TF3 == Parallel(TF1, Series(TF2, TF3))
-    assert TF1 - TF2*TF3 == Parallel(TF1, -Series(TF2,TF3))
-    assert -TF1 - TF2 == Parallel(-TF1, -TF2)
-    assert -(TF1 + TF2) == Series(TransferFunction(-1, 1, s), Parallel(TF1, TF2))
-    assert (TF2 + TF3)*TF1 == Series(Parallel(TF2, TF3), TF1)
-    assert (TF1 + TF2)*(TF3*tf5) == Series(Parallel(TF1, TF2), TF3, tf5)
-    assert -(TF2 + TF3)*-tf5 == Series(TransferFunction(-1, 1, s), Parallel(TF2, TF3), -tf5)
-    assert TF2 + TF3 + TF2*TF1 + tf5 == Parallel(TF2, TF3, Series(TF2, TF1), tf5)
-    assert TF2 + TF3 + TF2*TF1 - TF3 == Parallel(TF2, TF3, Series(TF2, TF1), -TF3)
-    assert (TF1 + TF2 + tf5)*(TF3 + tf5) == Series(Parallel(TF1, TF2, tf5), Parallel(TF3, tf5))
-    raises(ValueError, lambda: TF1 + TF2 + tf4)
-    raises(ValueError, lambda: TF1 - TF2*tf4)
-    raises(ValueError, lambda: TF3 + Matrix([1, 2, 3]))
+    assert tf1 + tf2 + tf3 == Parallel(tf1, tf2, tf3)
+    assert tf1 + tf2 + tf3 + tf5 == Parallel(tf1, tf2, tf3, tf5)
+    assert tf1 + tf2 - tf3 - tf5 == Parallel(tf1, tf2, -tf3, -tf5)
+    assert tf1 + tf2*tf3 == Parallel(tf1, Series(tf2, tf3))
+    assert tf1 - tf2*tf3 == Parallel(tf1, -Series(tf2,tf3))
+    assert -tf1 - tf2 == Parallel(-tf1, -tf2)
+    assert -(tf1 + tf2) == Series(TransferFunction(-1, 1, s), Parallel(tf1, tf2))
+    assert (tf2 + tf3)*tf1 == Series(Parallel(tf2, tf3), tf1)
+    assert (tf1 + tf2)*(tf3*tf5) == Series(Parallel(tf1, tf2), tf3, tf5)
+    assert -(tf2 + tf3)*-tf5 == Series(TransferFunction(-1, 1, s), Parallel(tf2, tf3), -tf5)
+    assert tf2 + tf3 + tf2*tf1 + tf5 == Parallel(tf2, tf3, Series(tf2, tf1), tf5)
+    assert tf2 + tf3 + tf2*tf1 - tf3 == Parallel(tf2, tf3, Series(tf2, tf1), -tf3)
+    assert (tf1 + tf2 + tf5)*(tf3 + tf5) == Series(Parallel(tf1, tf2, tf5), Parallel(tf3, tf5))
+    raises(ValueError, lambda: tf1 + tf2 + tf4)
+    raises(ValueError, lambda: tf1 - tf2*tf4)
+    raises(ValueError, lambda: tf3 + Matrix([1, 2, 3]))
 
     # evaluate=True -> doit()
-    assert Parallel(TF1, TF2, evaluate=True) == Parallel(TF1, TF2).doit() == \
+    assert Parallel(tf1, tf2, evaluate=True) == Parallel(tf1, tf2).doit() == \
         TransferFunction(k*(s**2 + 2*s*wn*zeta + wn**2) + 1, s**2 + 2*s*wn*zeta + wn**2, s)
-    assert Parallel(TF1, TF2, Series(-TF1, TF3), evaluate=True) == \
-        Parallel(TF1, TF2, Series(-TF1, TF3)).doit()== TransferFunction((-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2) + \
+    assert Parallel(tf1, tf2, Series(-tf1, tf3), evaluate=True) == \
+        Parallel(tf1, tf2, Series(-tf1, tf3)).doit()== TransferFunction((-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2) + \
         (a2*s + p)*(k*(s**2 + 2*s*wn*zeta + wn**2) + 1)*(s**2 + 2*s*wn*zeta + wn**2), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)**2, s)
-    assert Parallel(TF2, TF1, -TF3, evaluate=True) == Parallel(TF2, TF1, -TF3).doit() == \
+    assert Parallel(tf2, tf1, -tf3, evaluate=True) == Parallel(tf2, tf1, -tf3).doit() == \
         TransferFunction(-(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*s + p)*(k*(s**2 + 2*s*wn*zeta + wn**2) + 1), \
         (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
-    assert not Parallel(TF1, -TF2, evaluate=False) == Parallel(TF1, -TF2).doit()
+    assert not Parallel(tf1, -tf2, evaluate=False) == Parallel(tf1, -tf2).doit()
 
-    assert Parallel(Series(TF1, TF2), Series(TF2, TF3)).doit() == \
+    assert Parallel(Series(tf1, tf2), Series(tf2, tf3)).doit() == \
         TransferFunction(k*(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) + k*(a2*s + p), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
-    assert Parallel(-TF1, -TF2, -TF3).doit() == \
+    assert Parallel(-tf1, -tf2, -tf3).doit() == \
         TransferFunction(-(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) + \
         (a2*s + p)*(-k*(s**2 + 2*s*wn*zeta + wn**2) - 1), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
-    assert -Parallel(TF1, TF2, TF3).doit() == \
+    assert -Parallel(tf1, tf2, tf3).doit() == \
         TransferFunction(-((a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*s + p)*(k*(s**2 + 2*s*wn*zeta + wn**2) + 1)),
         (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
-    assert Parallel(TF2, TF3, Series(TF2, -TF1), TF3).doit() == \
+    assert Parallel(tf2, tf3, Series(tf2, -tf1), tf3).doit() == \
         TransferFunction((a2*p - s)*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*s + p)*(-k*(a2*s + p) + \
         (s**2 + 2*s*wn*zeta + wn**2)*(a2*p + k*(a2*s + p) - s)), (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2), s)
 
-    assert Parallel(TF1, TF2).rewrite(TransferFunction) == \
+    assert Parallel(tf1, tf2).rewrite(TransferFunction) == \
         TransferFunction(k*(s**2 + 2*s*wn*zeta + wn**2) + 1, s**2 + 2*s*wn*zeta + wn**2, s)
-    assert Parallel(TF2, TF1, -TF3).rewrite(TransferFunction) == \
+    assert Parallel(tf2, tf1, -tf3).rewrite(TransferFunction) == \
         TransferFunction(-(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*s + p)*(k*(s**2 + 2*s*wn*zeta + wn**2) + 1), \
         (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
-    raises(ValueError, lambda:  Parallel(TF1, TF2).rewrite(TransferFunctionMatrix))
 
-    P1 = Parallel(Series(TF1, TF2), Series(TF2, TF3))
+    P1 = Parallel(Series(tf1, tf2), Series(tf2, tf3))
     assert P1.is_proper
     assert not P1.is_strictly_proper
     assert P1.is_biproper
 
-    P2 = Parallel(TF1, -TF2, -TF3)
+    P2 = Parallel(tf1, -tf2, -tf3)
     assert P2.is_proper
     assert not P2.is_strictly_proper
     assert P2.is_biproper
 
-    P3 = Parallel(TF1, -TF2, Series(TF1, TF3))
+    P3 = Parallel(tf1, -tf2, Series(tf1, tf3))
     assert P3.is_proper
     assert not P3.is_strictly_proper
     assert P3.is_biproper
 
 
 def test_Feedback_construction():
+    zeta, wn = symbols('zeta, wn')
+    tf1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    tf2 = TransferFunction(k, 1, s)
+    tf3 = TransferFunction(a2*p - s, a2*s + p, s)
     tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
     tf6 = TransferFunction(s - p, p + s, p)
 
-    f1 = Feedback(TransferFunction(1, 1, s), TF1*TF2*TF3)
-    assert f1.args == (TransferFunction(1, 1, s), Series(TF1, TF2, TF3))
+    f1 = Feedback(TransferFunction(1, 1, s), tf1*tf2*tf3)
+    assert f1.args == (TransferFunction(1, 1, s), Series(tf1, tf2, tf3))
     assert f1.num == TransferFunction(1, 1, s)
-    assert f1.den == Series(TF1, TF2, TF3)
+    assert f1.den == Series(tf1, tf2, tf3)
     assert f1.var == s
 
-    f2 = Feedback(TF1, TF2*TF3)
-    assert f2.args == (TF1, Series(TF2, TF3))
-    assert f2.num == TF1
-    assert f2.den == Series(TF2, TF3)
+    f2 = Feedback(tf1, tf2*tf3)
+    assert f2.args == (tf1, Series(tf2, tf3))
+    assert f2.num == tf1
+    assert f2.den == Series(tf2, tf3)
     assert f2.var == s
 
-    f3 = Feedback(TF1*TF2, tf5)
-    assert f3.args == (Series(TF1, TF2), tf5)
-    assert f3.num == Series(TF1, TF2)
+    f3 = Feedback(tf1*tf2, tf5)
+    assert f3.args == (Series(tf1, tf2), tf5)
+    assert f3.num == Series(tf1, tf2)
 
     f4 = Feedback(tf4, tf6)
     assert f4.args == (tf4, tf6)
@@ -698,40 +684,44 @@ def test_Feedback_construction():
     assert f7.num == Series(TransferFunction(-1, 1, p), Series(tf4, tf6))
 
     # denominator can't be a Parallel instance
-    raises(TypeError, lambda: Feedback(TF1, TF2 + TF3))
-    raises(TypeError, lambda: Feedback(TF1, Matrix([1, 2, 3])))
+    raises(TypeError, lambda: Feedback(tf1, tf2 + tf3))
+    raises(TypeError, lambda: Feedback(tf1, Matrix([1, 2, 3])))
     raises(TypeError, lambda: Feedback(TransferFunction(1, 1, s), s - 1))
     raises(TypeError, lambda: Feedback(1, 1))
     raises(ValueError, lambda: Feedback(TransferFunction(1, 1, s), TransferFunction(1, 1, s)))
-    raises(ValueError, lambda: Feedback(TF2, tf4*tf5))
+    raises(ValueError, lambda: Feedback(tf2, tf4*tf5))
 
 
 def test_Feedback_functions():
+    zeta, wn = symbols('zeta, wn')
     tf = TransferFunction(1, 1, s)
+    tf1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    tf2 = TransferFunction(k, 1, s)
+    tf3 = TransferFunction(a2*p - s, a2*s + p, s)
     tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
     tf6 = TransferFunction(s - p, p + s, p)
 
-    assert tf / (tf + TF1) == Feedback(tf, TF1)
-    assert tf / (tf + TF1*TF2*TF3) == Feedback(tf, TF1*TF2*TF3)
-    assert TF1 / (tf + TF1*TF2*TF3) == Feedback(TF1, TF2*TF3)
-    assert (TF1*TF2) / (tf + TF1*TF2) == Feedback(TF1*TF2, tf)
-    assert (TF1*TF2) / (tf + TF1*TF2*tf5) == Feedback(TF1*TF2, tf5)
-    assert (TF1*TF2) / (tf + TF1*TF2*tf5*TF3) in (Feedback(TF1*TF2, tf5*TF3), Feedback(TF1*TF2, TF3*tf5))
+    assert tf / (tf + tf1) == Feedback(tf, tf1)
+    assert tf / (tf + tf1*tf2*tf3) == Feedback(tf, tf1*tf2*tf3)
+    assert tf1 / (tf + tf1*tf2*tf3) == Feedback(tf1, tf2*tf3)
+    assert (tf1*tf2) / (tf + tf1*tf2) == Feedback(tf1*tf2, tf)
+    assert (tf1*tf2) / (tf + tf1*tf2*tf5) == Feedback(tf1*tf2, tf5)
+    assert (tf1*tf2) / (tf + tf1*tf2*tf5*tf3) in (Feedback(tf1*tf2, tf5*tf3), Feedback(tf1*tf2, tf3*tf5))
     assert tf4 / (TransferFunction(1, 1, p) + tf4*tf6) == Feedback(tf4, tf6)
     assert tf5 / (tf + tf5) == Feedback(tf5, tf)
 
-    raises(ValueError, lambda: TF1*TF2*TF3 / (1 + TF1*TF2*TF3))
-    raises(ValueError, lambda: TF1*TF2*TF3 / TF3*tf5)
-    raises(ValueError, lambda: TF2*TF3 / (tf + TF2*TF3*tf4))
+    raises(ValueError, lambda: tf1*tf2*tf3 / (1 + tf1*tf2*tf3))
+    raises(ValueError, lambda: tf1*tf2*tf3 / tf3*tf5)
+    raises(ValueError, lambda: tf2*tf3 / (tf + tf2*tf3*tf4))
 
-    assert Feedback(tf, TF1*TF2*TF3).doit() == \
+    assert Feedback(tf, tf1*tf2*tf3).doit() == \
         TransferFunction((a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), k*(a2*p - s) + \
         (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
-    assert Feedback(TF1, TF2*TF3).doit() == \
+    assert Feedback(tf1, tf2*tf3).doit() == \
         TransferFunction((a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), (k*(a2*p - s) + \
         (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2))*(s**2 + 2*s*wn*zeta + wn**2), s)
-    assert Feedback(TF1*TF2, tf5).doit() == \
+    assert Feedback(tf1*tf2, tf5).doit() == \
         TransferFunction(k*(a0 + s)*(s**2 + 2*s*wn*zeta + wn**2), (k*(-a0 + a1*s**2 + a2*s) + \
         (a0 + s)*(s**2 + 2*s*wn*zeta + wn**2))*(s**2 + 2*s*wn*zeta + wn**2), s)
     assert Feedback(tf4, tf6).doit() == \
@@ -739,7 +729,7 @@ def test_Feedback_functions():
     assert -Feedback(tf4*tf6, TransferFunction(1, 1, p)).doit() == \
         TransferFunction(-p*(-p + s)*(p + s)*(a0*p + p**a1 - s), p*(p + s)*(p*(p + s) + (-p + s)*(a0*p + p**a1 - s)), p)
 
-    assert Feedback(TF1, TF2*tf5).rewrite(TransferFunction) == \
+    assert Feedback(tf1, tf2*tf5).rewrite(TransferFunction) == \
         TransferFunction((a0 + s)*(s**2 + 2*s*wn*zeta + wn**2), (k*(-a0 + a1*s**2 + a2*s) + \
         (a0 + s)*(s**2 + 2*s*wn*zeta + wn**2))*(s**2 + 2*s*wn*zeta + wn**2), s)
     assert Feedback(TransferFunction(1, 1, p), tf4).rewrite(TransferFunction) == \
@@ -754,245 +744,79 @@ def test_TransferFunctionMatrix_construction():
 
     tfm1 = TransferFunctionMatrix([[TF1], [TF2]])
     assert tfm1.shape == (tfm1.num_outputs, tfm1.num_inputs) == (2, 1)
-    assert tfm1.args == ([TF1, TF2],)
+    assert tfm1.args == Tuple(Tuple(Tuple(TF1), Tuple(TF2)))
     assert tfm1.var == s
 
-    tfm1_ = TransferFunctionMatrix((TF2, TF1, TF3), (3, 1), s)
+    tfm1_ = TransferFunctionMatrix([[TF2], [TF1], [TF3]])
     assert tfm1_.shape == (tfm1_.num_outputs, tfm1_.num_inputs) == (3, 1)
-    assert tfm1_.args == ((TF2, TF1, TF3),)
+    assert tfm1_.args == Tuple(Tuple(Tuple(TF2), Tuple(TF1), Tuple(TF3)))
     assert tfm1_.var == s
 
-    tfm2 = TransferFunctionMatrix([-TF1, TF2])
+    tfm2 = TransferFunctionMatrix([[-TF1], [TF2]])
     assert tfm2.shape == (tfm2.num_outputs, tfm2.num_inputs) == (2, 1)
-    assert tfm2.args == ([-TF1, TF2],)
+    assert tfm2.args == Tuple(Tuple(Tuple(-TF1), Tuple(TF2)))
     assert tfm2.var == s
 
-    tfm2_ = TransferFunctionMatrix((-TF1, TF2), (2, 1), s)
-    assert tfm2_.shape == (tfm2_.num_outputs, tfm2_.num_inputs) == (2, 1)
-    assert tfm2_.args == ((-TF1, TF2),)
-    assert tfm2_.var == s
-
-    tfm3 = TransferFunctionMatrix([tf7])
+    tfm3 = TransferFunctionMatrix([[tf7]])
     assert tfm3.shape == (tfm3.num_outputs, tfm3.num_inputs) == (1, 1)
     assert tfm3.var == p
-    assert tfm3.args == ([tf7],)
+    assert tfm3.args == Tuple(Tuple(Tuple(tf7)))
 
-    tfm3_ = TransferFunctionMatrix((-TF3,), (1, 1), s)
+    tfm3_ = TransferFunctionMatrix([[-TF3]])
     assert tfm3_.shape == (tfm3_.num_outputs, tfm3_.num_inputs) == (1, 1)
-    assert tfm3_.args == ((-TF3,),)
+    assert tfm3_.args == Tuple(Tuple(Tuple(-TF3)))
+    assert tfm3_.var == s
 
-    tfm4 = TransferFunctionMatrix([TF3, tf5, tf6])
+    tfm4 = TransferFunctionMatrix([[TF3], [tf5], [tf6]])
     assert tfm4.shape == (tfm4.num_outputs, tfm4.num_inputs) == (3, 1)
-    assert tfm4.args == ([TF3, tf5, tf6],)
+    assert tfm4.args == Tuple(Tuple(Tuple(TF3), Tuple(tf5), Tuple(tf6)))
     assert tfm4.var == s
-
-    tfm4_ = TransferFunctionMatrix((TF3, tf5, tf6))
-    assert tfm4_.shape == (tfm4_.num_outputs, tfm4_.num_inputs) == (3, 1)
-    assert tfm4_.args == ((TF3, tf5, tf6),)
 
     tfm5 = TransferFunctionMatrix([[TF1, -TF2], [TF3, tf5]])
     assert tfm5.shape == (tfm5.num_outputs, tfm5.num_inputs) == (2, 2)
-    assert tfm5.args == ([[TF1, -TF2], [TF3, tf5]],)
+    assert tfm5.args == Tuple(Tuple(Tuple(TF1, -TF2), Tuple(TF3, tf5)))
+    assert tfm5.var == s
 
-    tfm5_ = TransferFunctionMatrix(((TF1, -TF2), (TF3, tf5)), (2, 2), s)
-    assert tfm5_.shape == (tfm5_.num_outputs, tfm5_.num_inputs) == (2, 2)
-    assert tfm5_.args == (((TF1, -TF2), (TF3, tf5)),)
-    assert tfm5_.var == s
-
-    tfm6 = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, tf6, -tf6]], (2, 3), s)
+    tfm6 = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, tf6, -tf6]])
     assert tfm6.shape == (tfm6.num_outputs, tfm6.num_inputs) == (2, 3)
-    assert tfm6.args == ([[TF1, TF2, TF3], [tf5, tf6, -tf6]],)
-
-    tfm6_ = TransferFunctionMatrix(((TF1, TF2, TF3), (tf5, tf6, -tf6)))
-    assert tfm6_.shape == (tfm6_.num_outputs, tfm6_.num_inputs) == (2, 3)
-    assert tfm6_.args == (((TF1, TF2, TF3), (tf5, tf6, -tf6)),)
+    assert tfm6.args == Tuple(Tuple(Tuple(TF1, TF2, TF3), Tuple(tf5, tf6, -tf6)))
+    assert tfm6.var == s
 
     tfm7 = TransferFunctionMatrix([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]])
     assert tfm7.shape == (tfm7.num_outputs, tfm7.num_inputs) == (3, 2)
-    assert tfm7.args == ([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]],)
-
-    tfm7_ = TransferFunctionMatrix(((TF1, TF2), (TF3, -tf5), (-tf5, TF2)))
-    assert tfm7_.shape == (tfm7_.num_outputs, tfm7_.num_inputs) == (3, 2)
-    assert tfm7_.args == (((TF1, TF2), (TF3, -tf5), (-tf5, TF2)),)
+    assert tfm7.args == Tuple(Tuple(Tuple(TF1, TF2), Tuple(TF3, -tf5), Tuple(-tf5, TF2)))
+    assert tfm7.var == s
 
     # all transfer functions will use the same complex variable. tf4 uses 'p'.
-    raises(ValueError, lambda: TransferFunctionMatrix([TF1, TF2, tf4]))
-    raises(ValueError, lambda: TransferFunctionMatrix((TF1, TF2, tf4), (3, 1), s))
+    raises(ValueError, lambda: TransferFunctionMatrix([[TF1], [TF2], [tf4]]))
     raises(ValueError, lambda: TransferFunctionMatrix([[TF1, tf4], [TF3, tf5]]))
-    raises(ValueError, lambda: TransferFunctionMatrix(((TF1, tf4), (TF3, tf5))))
-
-    # var provided should be the same complex variable used by all transfer functions.
-    raises(ValueError, lambda: TransferFunctionMatrix(((TF1, TF2), (TF3, tf5)), (2, 2), p))
-    raises(ValueError, lambda: TransferFunctionMatrix([[TF1, TF2], [TF3, tf5]], (2, 2), p))
 
     # length of all the lists/tuples in the first arg of TFM should be equal.
     raises(ValueError, lambda: TransferFunctionMatrix([[TF1], [TF3, tf5]]))
-    raises(ValueError, lambda: TransferFunctionMatrix(((TF1,), (TF3, tf5))))
+    raises(ValueError, lambda: TransferFunctionMatrix([[TF1, TF3], [tf5]]))
 
     # lists/tuples only support transfer functions in them.
     raises(TypeError, lambda: TransferFunctionMatrix([[TF1, TF2], [TF3, Matrix([1, 2])]]))
-    raises(TypeError, lambda: TransferFunctionMatrix(((TF1, TF2), (TF3, Matrix([1, 2]))), (2, 2), s))
-
-    # Shape provided should be equal to (len(args[0]), 1)
-    raises(ValueError, lambda: TransferFunctionMatrix((-TF2, -TF1), (4, 1), s))
-    # Shape provided should be equal to (len(args[0]), len(args[0][0]))
-    raises(ValueError, lambda: TransferFunctionMatrix(((TF1, TF2), (TF3, tf5)), (3, 4), s))
+    raises(TypeError, lambda: TransferFunctionMatrix([[TF1, Matrix([1, 2])], [TF3, TF2]]))
 
 
 def test_TransferFunctionMatrix_functions():
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
-    tf6 = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
 
-    tfm1 = TransferFunctionMatrix([TF1, TF2])
-    assert -tfm1 == TransferFunctionMatrix([-TF1, -TF2])
+    tfm1 = TransferFunctionMatrix([[TF1], [TF2]])
+    assert -tfm1 == TransferFunctionMatrix([[-TF1], [-TF2]])
 
-    tfm1_ = TransferFunctionMatrix((-TF1, TF2))
-    assert -tfm1_ == TransferFunctionMatrix([TF1, -TF2])
+    tfm1_ = TransferFunctionMatrix([[-TF1], [TF2]])
+    assert -tfm1_ == TransferFunctionMatrix([[TF1], [-TF2]])
 
     tfm2 = TransferFunctionMatrix([[TF1, -TF2], [TF3, tf5]])
     assert -tfm2 == TransferFunctionMatrix([[-TF1, TF2], [-TF3, -tf5]])
 
-    tfm2_ = TransferFunctionMatrix(((TF1, -TF2), (TF3, tf5)), (2, 2), s)
+    tfm2_ = TransferFunctionMatrix([[TF1, -TF2], [TF3, tf5]])
     assert -tfm2_ == TransferFunctionMatrix([[-TF1, TF2], [-TF3, -tf5]])
 
     tfm3 = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, -TF1, -TF3]])
     assert -tfm3 == TransferFunctionMatrix([[-TF1, -TF2, -TF3], [-tf5, TF1, TF3]])
 
-    tfm3_ = TransferFunctionMatrix(((TF1, TF2, TF3), (tf5, -TF1, -TF3)), (2, 3), s)
+    tfm3_ = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, -TF1, -TF3]])
     assert -tfm3_ == TransferFunctionMatrix([[-TF1, -TF2, -TF3], [-tf5, TF1, TF3]])
-
-    tfm4 = TransferFunctionMatrix([TF1, TF2, TF3])
-    assert tfm4.is_proper
-    assert not tfm4.is_strictly_proper
-    assert not tfm4.is_biproper
-
-    tfm4_ = TransferFunctionMatrix((TF1, TF2, TF3))
-    assert tfm4_.is_proper
-    assert not tfm4_.is_strictly_proper
-    assert not tfm4_.is_biproper
-
-    tfm5 = TransferFunctionMatrix([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]])
-    assert not tfm5.is_proper
-    assert not tfm5.is_strictly_proper
-    assert not tfm5.is_biproper
-
-    tfm5_ = TransferFunctionMatrix(((TF1, TF2), (TF3, -tf5), (-tf5, TF2)), (3, 2), s)
-    assert not tfm5_.is_proper
-    assert not tfm5_.is_strictly_proper
-    assert not tfm5_.is_biproper
-
-    tfm6 = TransferFunctionMatrix([[TF1, TF2], [TF3, -TF3]])
-    assert tfm6.is_proper
-    assert not tfm6.is_strictly_proper
-    assert not tfm6.is_biproper
-
-    tfm6_ = TransferFunctionMatrix(((TF1, TF2), (TF3, -TF3)))
-    assert tfm6_.is_proper
-    assert not tfm6_.is_strictly_proper
-    assert not tfm6_.is_biproper
-
-    tfm7 = TransferFunctionMatrix([-TF1, -tf6])
-    assert not tfm7.is_proper
-    assert not tfm7.is_strictly_proper
-    assert not tfm7.is_biproper
-
-
-def test_TransferFunctionMatrix_addition_and_subtraction():
-    tf = TransferFunction(a0*p, a1*p**2 + a2*p - a0, p)
-    tf_ = TransferFunction(p**3 + a1, p - a2, p)
-
-    tfm1 = TransferFunctionMatrix([TF1, TF2])
-    tfm2 = TransferFunctionMatrix([-TF2, -TF1])
-    tfm3 = TransferFunctionMatrix([TF1, TF1])
-    tfm4 = TransferFunctionMatrix([tf])
-    tfm5 = TransferFunctionMatrix([TF2, TF1, TF3])
-    tfm6 = TransferFunctionMatrix([-TF1, TF2, -TF3])
-    tfm7 = TransferFunctionMatrix([TF2])
-    tfm8 = TransferFunctionMatrix([tf, tf_])
-
-    # addition & subtraction.
-    assert tfm1 + tfm2 == Parallel(tfm1, tfm2)
-    assert tfm3 + tfm1 == Parallel(tfm3, tfm1)
-    assert tfm1 - tfm2 == Parallel(tfm1, -tfm2)
-    assert tfm3 - tfm1 == Parallel(tfm3, -tfm1)
-    assert tfm2 + (tfm3 + tfm1) == Parallel(tfm2, tfm3, tfm1)
-    assert tfm2 + (tfm1 - tfm3) == Parallel(tfm2, tfm1, -tfm3)
-    assert tfm1 + tfm3 + tfm2 == Parallel(tfm1, tfm3, tfm2)
-    assert tfm1 - tfm2 - tfm3 == Parallel(tfm1, -tfm2, -tfm3)
-    assert tfm1 + tfm3*tfm7 == Parallel(tfm1, Series(tfm3, tfm7))
-    assert tfm7 - tfm3*tfm7 == Parallel(tfm7, -Series(tfm3, tfm7))
-
-    c = symbols("c", commutative=False)
-    # Operation with a matrix not supported (for now).
-    raises(ValueError, lambda: tfm1 + Matrix([1, 2, 3]))
-    raises(ValueError, lambda: tfm1 - Matrix([1, 2, 3]))
-
-    # shape should be equal.
-    raises(ValueError, lambda: tfm3 + tfm4)
-    raises(ValueError, lambda: tfm3 - tfm4)
-
-    # Operation with a constant, expression or a symbol not allowed.
-    raises(ValueError, lambda: tfm2 + c)
-    raises(ValueError, lambda: tfm2 - c)
-    raises(ValueError, lambda: tfm1 + (s - 1))
-    raises(ValueError, lambda: tfm1 - (s - 1))
-    raises(ValueError, lambda: (s + 5) - tfm2)
-    raises(ValueError, lambda: tfm1 + 8)
-    raises(ValueError, lambda: tfm1 - 8)
-    raises(ValueError, lambda: (1 - p**3) + tfm1)
-    raises(ValueError, lambda: (1 + p**4) - tfm1)
-
-    # Parallel object should have all TFM as arguments.
-    raises(ValueError, lambda: tfm1 + (TF1 + TF2))
-    raises(ValueError, lambda: tfm2 - (TF2 + TF1))
-
-    # Series object should have all TFM as arguments.
-    raises(ValueError, lambda: tfm1 + TF1*TF2)
-    raises(ValueError, lambda: tfm1 - TF1*TF2)
-
-    # tfm2 has (2, 1) shape while (tfm5 +/- tfm6) has (3, 1) shape.
-    raises(ShapeError, lambda: tfm1 + (tfm5 + tfm6))
-    raises(ShapeError, lambda: tfm1 - (tfm6 - tfm5))
-    # Both TFM should use the same complex variable.
-    raises(ValueError, lambda: tfm1 + tfm8)
-    # Both Parallel object and TFM should have the same shape for addition.
-    raises(ShapeError, lambda: (tfm5 + tfm6) + tfm1)
-
-
-def test_TransferFunctionMatrix_multiplication():
-    tf = TransferFunction(a0*s**2, a1*s + a2, s)
-    tf_ = TransferFunction(a0*p**2, a1 - p, p)
-    tfm = TransferFunctionMatrix([tf_, -tf_], (2, 1), p)
-    tfm1 = TransferFunctionMatrix([[TF1, TF2], [TF3, tf]])
-    tfm2 = TransferFunctionMatrix([[-TF3, -tf], [TF2, TF1]])
-    tfm3 = TransferFunctionMatrix([TF1, TF2, TF3])
-    tfm5 = TransferFunctionMatrix((-TF2, -TF3))
-
-    assert tfm1*tfm2 == Series(tfm1, tfm2)
-    assert -tfm2*tfm1 == Series(-tfm2, tfm1)
-    assert tfm1*(tfm2*tfm5) == Series(tfm1, tfm2, tfm5)
-    assert -tfm2*(-tfm1*-tfm5) == Series(-tfm2, -tfm1, -tfm5)
-    assert tfm1*(tfm2 + (-tfm1)) == Series(tfm1, Parallel(tfm2, -tfm1))
-    assert tfm2*(-tfm1 - tfm2) == Series(tfm2, Parallel(-tfm1, -tfm2))
-
-    raises(ValueError, lambda: tfm1 * TF2)
-
-    # Only TFMs are allowed in the parallel/series configurations.
-    raises(ValueError, lambda: tfm2 * Parallel(TF1, -TF2))
-    raises(ValueError, lambda: tfm2 * Series(tf, TF2))
-
-    # Multiplication of TFM with a Matrix not allowed (for now).
-    raises(ValueError, lambda: tfm2 * Matrix([1, 2, 3]))
-
-    # Operation with a constant, Symbol or expression also not supported.
-    raises(ValueError, lambda: tfm2 * a0)
-    raises(ValueError, lambda: 9 * tfm3)
-    raises(ValueError, lambda: tfm2 * (s - 1))
-
-    # tfm2 has (2, 2) shape while tfm3 has (3, 1) shape.
-    # No. of inputs of the first TFM must be equal to
-    # the no. of outputs of the second TFM.
-    raises(ValueError, lambda: tfm2 * tfm3)
-
-    # Both TFM should use the same complex variable.
-    raises(ValueError, lambda: tfm1 * tfm)

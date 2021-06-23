@@ -1601,7 +1601,7 @@ class TransferFunctionMatrix(Basic):
     TransferFunction, Series, Parallel, Feedback
 
     """
-    def __new__(cls, arg): 
+    def __new__(cls, arg):
 
         expr_mat_arg = []
         var = arg[0][0].var
@@ -1620,12 +1620,12 @@ class TransferFunctionMatrix(Basic):
                 else:
                     temp.append(arg[row][col].doit().to_expr())
             expr_mat_arg.append(temp)
-                
 
-        if isinstance(arg, (tuple, list, Tuple)):
+
+        if isinstance(arg, (list, Tuple)):
             # Making nested Tuple (sympy.core.containers.Tuple) from nested list or nested python tuple
             arg = Tuple(*(Tuple(*r, sympify=False) for r in arg), sympify=False)
-        
+
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
         obj._expr_mat = ImmutableMatrix(expr_mat_arg)
         obj._var = arg[0][0].var
@@ -1743,7 +1743,7 @@ class TransferFunctionMatrix(Basic):
     def __neg__(self):
         neg = -self._expr_mat
         return _to_TFM(neg, self.var)
-    
+
     def __getitem__(self, key):
         trunc = self._expr_mat.__getitem__(key)
         if isinstance(trunc, ImmutableMatrix):
@@ -1754,6 +1754,6 @@ class TransferFunctionMatrix(Basic):
     def transpose(self):
         transposed_mat = self._expr_mat.transpose()
         return _to_TFM(transposed_mat, self.var)
-    
+
     def subs(self, dict):
         return self._expr_mat.subs(dict)
