@@ -106,22 +106,14 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
             elements_dod = {i: {j: from_sympy(e) for j, e in row.items()}
                                         for i, row in elements_dod.items()}
 
-        obj = Basic.__new__(cls,
-            Integer(rows),
-            Integer(cols),
-            Tuple(*flat_list))
-        obj._rows = rows
-        obj._cols = cols
-        obj._rep = DomainMatrix(elements_dod, (rows, cols), domain)
-        obj._mat2 = flat_list
+        rep = DomainMatrix(elements_dod, (rows, cols), domain)
 
-        return obj
+        return cls._fromrep(rep)
 
     @classmethod
     def _fromrep(cls, rep):
         rows, cols = rep.shape
-        to_sympy = rep.domain.to_sympy
-        flat_list = rep.rep.convert_to(EXRAW).to_list_flat()
+        flat_list = rep.to_sympy().to_list_flat()
         obj = Basic.__new__(cls,
             Integer(rows),
             Integer(cols),
@@ -129,19 +121,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
         obj._rows = rows
         obj._cols = cols
         obj._rep = rep
-        obj._mat2 = flat_list
         return obj
-
-    @property
-    def _flat(self):
-        rep = self._rep.rep
-        getitem = rep.getitem
-        domain = rep.domain
-        elements = [getitem(i, j) for i in range(self.rows) for j in range(self.cols)]
-        if domain != EXRAW:
-            to_sympy = domain.to_sympy
-            elements = [to_sympy(e) for e in elements]
-        return elements
 
     def _entry(self, i, j, **kwargs):
         return DenseMatrix.__getitem__(self, (i, j))

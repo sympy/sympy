@@ -65,6 +65,10 @@ class DenseMatrix(MatrixBase):
         elif isinstance(other, MatrixBase):
             return _compare_sequence(self._flat, Matrix(other)._flat)
 
+    @property
+    def _flat(self):
+        return self._rep.to_sympy().to_list_flat()
+
     def _unify_element_sympy(self, element):
         rep = self._rep
         domain = rep.domain
@@ -216,11 +220,10 @@ class DenseMatrix(MatrixBase):
         return self._fromrep(rep.rscalarmul(other))
 
     def _eval_tolist(self):
-        rep = self._rep.rep.convert_to(EXRAW)
-        return list(rep.to_ddm())
+        return self._rep.to_sympy().to_list()
 
     def _eval_todok(self):
-        rep = self._rep.rep.convert_to(EXRAW)
+        rep = self._rep.to_sympy().rep
         return {(i, j): value for i, row in rep.items() for j, value in row.items()}
 
     @classmethod
@@ -386,7 +389,6 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         self.rows = rows
         self.cols = cols
         self._rep = DomainMatrix(elements_dod, (rows, cols), domain)
-        self._mat2 = flat_list
 
         return self
 
@@ -396,14 +398,6 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         obj.rows, obj.cols = rep.shape
         obj._rep = rep
         return obj
-
-    @property
-    def _flat(self):
-        rep = self._rep
-        domain = rep.domain
-        if domain != EXRAW:
-            rep = rep.convert_to(EXRAW)
-        return rep.rep.to_list_flat()
 
     def __setitem__(self, key, value):
         """
