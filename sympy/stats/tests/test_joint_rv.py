@@ -1,9 +1,11 @@
 from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplify,
                    Rational, factorial, gamma, Piecewise, Eq, Product, Interval,
-                   IndexedBase, RisingFactorial, polar_lift, ProductSet, Range, eye)
+                   IndexedBase, RisingFactorial, polar_lift, ProductSet, Range, eye,
+                   Determinant)
 from sympy.core.numbers import comp
 from sympy.integrals.integrals import integrate
 from sympy.matrices import Matrix, MatrixSymbol
+from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.stats import density, median, marginal_distribution, Normal, Laplace, E, sample
 from sympy.stats.joint_rv_types import (JointRV, MultivariateNormalDistribution,
                 JointDistributionHandmade, MultivariateT, NormalGamma,
@@ -56,9 +58,11 @@ def test_Normal():
     X = MultivariateNormal('X', mu, Sg)
     density_X = density(X)
 
-    eval_a = density_X(obs)
+    eval_a = density_X(obs).subs({Sg: eye(3),
+        mu: Matrix([0, 0, 0]), obs: Matrix([0, 0, 0])}).doit()
     eval_b = density_X(0, 0, 0).subs({Sg: eye(3), mu: Matrix([0, 0, 0])}).doit()
 
+    assert eval_a == sqrt(2)/(4*pi**Rational(3/2))
     assert eval_b == sqrt(2)/(4*pi**Rational(3/2))
 
     n = symbols('n', natural=True)
@@ -70,6 +74,11 @@ def test_Normal():
     X = MultivariateNormal('X', mu, Sg)
     density_X_at_obs = density(X)(obs)
 
+    expected_density = MatrixElement(
+        (exp(((S(1)/2)*mu.T - (S(1)/2)*obs.T)*Sg**(-1)*(-mu + obs)) / \
+         sqrt((2*pi)**n*Determinant(Sg))), 0, 0)
+
+    assert density_X_at_obs == expected_density
 
 def test_MultivariateTDist():
     t1 = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
