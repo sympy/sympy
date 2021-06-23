@@ -28,7 +28,8 @@ from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerP
 from sympy.matrices.expressions import hadamard_power
 
 from sympy.physics import mechanics
-from sympy.physics.control.lti import TransferFunction, Feedback, TransferFunctionMatrix
+from sympy.physics.control.lti import (TransferFunction, Feedback, TransferFunctionMatrix,
+    Series, Parallel)
 from sympy.physics.units import joule, degree
 from sympy.printing.pretty import pprint, pretty as xpretty
 from sympy.printing.pretty.pretty_symbology import center_accent, is_combining
@@ -2372,6 +2373,79 @@ def test_pretty_TransferFunction():
     assert upretty(tf2) == "2⋅s + 1\n───────\n 3 - p "
     tf3 = TransferFunction(p, p + 1, p)
     assert upretty(tf3) == "  p  \n─────\np + 1"
+
+
+def test_pretty_Series():
+    tf1 = TransferFunction(x + y, x - 2*y, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(x**2 + y, y - x, y)
+    expected1 = \
+"""\
+          ⎛ 2    ⎞\n\
+⎛ x + y ⎞ ⎜x  + y⎟\n\
+⎜───────⎟⋅⎜──────⎟\n\
+⎝x - 2⋅y⎠ ⎝-x + y⎠\
+"""
+    expected2 = \
+"""\
+⎛-x + y⎞ ⎛ -x - y⎞\n\
+⎜──────⎟⋅⎜───────⎟\n\
+⎝x + y ⎠ ⎝x - 2⋅y⎠\
+"""
+    expected3 = \
+"""\
+⎛ 2    ⎞                            \n\
+⎜x  + y⎟ ⎛ x + y ⎞ ⎛ -x - y   x - y⎞\n\
+⎜──────⎟⋅⎜───────⎟⋅⎜─────── + ─────⎟\n\
+⎝-x + y⎠ ⎝x - 2⋅y⎠ ⎝x - 2⋅y   x + y⎠\
+"""
+    expected4 = \
+"""\
+                  ⎛         2    ⎞\n\
+⎛ x + y    x - y⎞ ⎜x - y   x  + y⎟\n\
+⎜─────── + ─────⎟⋅⎜───── + ──────⎟\n\
+⎝x - 2⋅y   x + y⎠ ⎝x + y   -x + y⎠\
+"""
+    assert upretty(Series(tf1, tf3)) == expected1
+    assert upretty(Series(-tf2, -tf1)) == expected2
+    assert upretty(Series(tf3, tf1, Parallel(-tf1, tf2))) == expected3
+    assert upretty(Series(Parallel(tf1, tf2), Parallel(tf2, tf3))) == expected4
+
+
+def test_pretty_Parallel():
+    tf1 = TransferFunction(x + y, x - 2*y, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(x**2 + y, y - x, y)
+    expected1 = \
+"""\
+ x + y    x - y\n\
+─────── + ─────\n\
+x - 2⋅y   x + y\
+"""
+    expected2 = \
+"""\
+-x + y    -x - y\n\
+────── + ───────\n\
+x + y    x - 2⋅y\
+"""
+    expected3 = \
+"""\
+ 2                                  \n\
+x  + y    x + y    ⎛ -x - y⎞ ⎛x - y⎞\n\
+────── + ─────── + ⎜───────⎟⋅⎜─────⎟\n\
+-x + y   x - 2⋅y   ⎝x - 2⋅y⎠ ⎝x + y⎠\
+"""
+    expected4 = \
+"""\
+                            ⎛ 2    ⎞\n\
+⎛ x + y ⎞ ⎛x - y⎞   ⎛x - y⎞ ⎜x  + y⎟\n\
+⎜───────⎟⋅⎜─────⎟ + ⎜─────⎟⋅⎜──────⎟\n\
+⎝x - 2⋅y⎠ ⎝x + y⎠   ⎝x + y⎠ ⎝-x + y⎠\
+"""
+    assert upretty(Parallel(tf1, tf2)) == expected1
+    assert upretty(Parallel(-tf2, -tf1)) == expected2
+    assert upretty(Parallel(tf3, tf1, Series(-tf1, tf2))) == expected3
+    assert upretty(Parallel(Series(tf1, tf2), Series(tf2, tf3))) == expected4
 
 
 def test_pretty_Feedback():

@@ -1442,23 +1442,15 @@ class TransferFunctionMatrix(Basic):
     generalization of the SISO (single-input and single-output) transfer function.
 
     It is a matrix of transfer functions (``TransferFunction`` objects).
-    The arguments are ``arg`` and ``var``, where ``arg``
-    is the compulsory argument. ``arg`` is expected to be of the type list or list of lists
-    which holds the transfer functions. ``var``
-    is a complex variable (which has to be a ``Symbol``) of the Laplace transform
-    used by all the transfer functions in the matrix.
+    There is only one argument, ``arg`` which is also the compulsory argument.
+    ``arg`` is expected to be strictly of the type list of lists
+    which holds the transfer functions.
 
     Parameters
     ==========
 
-    arg: List, Nested List
-        Users are expected to input a nested list of ``TransferFunction``
-        (or ``Expr``) objects like they input Numbers in a normal SymPy matrix.
-        In case a user inputs a List, it would be considered as a column matrix
-        and not row. So, its better to pass nested list to avoid such dilemma.
-    var: Symbol, keyword, optional
-        ``var`` is an optional keyword argument. If ``var`` is not passed explicitly
-        by the user then ``var`` of the first element is taken by default.
+    arg: Nested ``List`` (strictly).
+        Users are expected to input a nested list of ``TransferFunction`` objects.
 
     Examples
     ========
@@ -1522,13 +1514,11 @@ class TransferFunctionMatrix(Basic):
     [  s + 2       2               p + s     ]
     [             s  + s + 1                 ]
 
-    TransferFunctionMatrix objects can also be instantiated by passing SymPy expressions
-
     >>> tf_5 = TransferFunction(5, s, s)
     >>> tf_6 = TransferFunction(5*s, (2 + s**2), s)
     >>> tf_7 = TransferFunction(5, (s*(2 + s**2)), s)
     >>> tf_8 = TransferFunction(5, 1, s)
-    >>> tfm_3 = TransferFunctionMatrix([[tf_5, tf_6], [tf_7, tf_8]])  # SymPy will assume the var of the first element as the var for the system
+    >>> tfm_3 = TransferFunctionMatrix([[tf_5, tf_6], [tf_7, tf_8]])
     >>> tfm_3
     TransferFunctionMatrix(((TransferFunction(5, s, s), TransferFunction(5*s, s**2 + 2, s)), (TransferFunction(5, s*(s**2 + 2), s), TransferFunction(5, 1, s))))
     >>> pprint(tfm_3, use_unicode=False)
@@ -1579,7 +1569,7 @@ class TransferFunctionMatrix(Basic):
 
     To negate a transfer function matrix, ``-`` operator can be prepended:
 
-    >>> tfm_4 = TransferFunctionMatrix([[tf_2], [-tf_1], [tf_3]])  # Remember-Simple lists are column matrix
+    >>> tfm_4 = TransferFunctionMatrix([[tf_2], [-tf_1], [tf_3]])
     >>> -tfm_4
     TransferFunctionMatrix(((TransferFunction(-p**4 + 3*p - 2, p + s, s),), (TransferFunction(a + s, s**2 + s + 1, s),), (TransferFunction(-3, s + 2, s),)))
     >>> tfm_5 = TransferFunctionMatrix([[tf_1, tf_2], [tf_3, -tf_1]])
