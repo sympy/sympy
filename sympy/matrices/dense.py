@@ -72,23 +72,20 @@ class DenseMatrix(MatrixBase):
         element = _sympify(element)
 
         if domain != EXRAW:
-            try:
-                element = domain.from_sympy(element)
-            except CoercionFailed:
-                # XXX: The domain can only be ZZ, QQ or EXRAW
-                # If we get here then either domain is ZZ and value is a
-                # Rational or we need to go to EXRAW. We need to be careful
-                # to avoid calling from_sympy for EXRAW because in some
-                # deprecated cases value is not an instance of Expr and
-                # EXRAW.from_sympy would raise.
-                if element.is_Rational:
-                    domain = QQ
-                    element = domain.from_sympy(element)
-                else:
-                    domain = EXRAW
-                # XXX: This converts the domain for all elements in the
-                # matrix just because one element has been modified.
-                rep = rep.convert_to(domain)
+            # The domain can only be ZZ, QQ or EXRAW
+            if element.is_Integer:
+                new_domain = domain
+            elif element.is_Rational:
+                new_domain = QQ
+            else:
+                new_domain = EXRAW
+
+            # XXX: This converts the domain for all elements in the
+            # matrix just because one element has been modified.
+            if new_domain != domain:
+                rep = rep.convert_to(new_domain)
+
+            element = new_domain.from_sympy(element)
 
         if domain == EXRAW and not isinstance(element, Expr):
             SymPyDeprecationWarning(
