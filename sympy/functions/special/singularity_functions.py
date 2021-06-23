@@ -210,5 +210,19 @@ class SingularityFunction(Function):
         if n.is_nonnegative:
             return (x - a)**n*Heaviside(x - a)
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        x = self.args[0]
+        a = self.args[1]
+        n = self.args[2]
+        x_arg = x.free_sympols.pop()
+        shift = (x - a).subs(x_arg, 0)
+        if n < 0:
+            if shift == 0:
+                return S.One
+            return S.Zero
+        if shift >= 0:
+            return shift**n
+        return S.Zero
+
     _eval_rewrite_as_DiracDelta = _eval_rewrite_as_Heaviside
     _eval_rewrite_as_HeavisideDiracDelta = _eval_rewrite_as_Heaviside
