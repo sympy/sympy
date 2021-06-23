@@ -12,7 +12,6 @@ from sympy.core.sympify import sympify, _sympify
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.polys.domains import ZZ, QQ, EXRAW
 from sympy.polys.matrices import DomainMatrix
-from sympy.polys.polyerrors import CoercionFailed
 from sympy.matrices.common import classof, ShapeError
 from sympy.matrices.matrices import MatrixBase
 from sympy.simplify.simplify import simplify as _simplify
