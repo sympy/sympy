@@ -2997,10 +2997,6 @@ class Expr(Basic, EvalfMixin):
                 return rv.subs(xpos, x)
 
         if n is not None:  # nseries handling
-            # XXX This is a hack-ish solution. Not passing logx parameter causes
-            # log._eval_as_leading_term to raise, which will not be handled by
-            # the current series code. Instead of raising, just returning
-            # log(arg) is sufficient to find the series expansion.
             s1 = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             o = s1.getO() or S.Zero
             if o:
