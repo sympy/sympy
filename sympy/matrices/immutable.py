@@ -121,7 +121,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
     def _fromrep(cls, rep):
         rows, cols = rep.shape
         to_sympy = rep.domain.to_sympy
-        flat_list = [to_sympy(rep.rep.getitem(i, j)) for i in range(rows) for j in range(cols)]
+        flat_list = rep.rep.convert_to(EXRAW).to_list_flat()
         obj = Basic.__new__(cls,
             Integer(rows),
             Integer(cols),

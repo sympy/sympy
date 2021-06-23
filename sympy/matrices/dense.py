@@ -399,14 +399,11 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
     @property
     def _flat(self):
-        rep = self._rep.rep
-        getitem = rep.getitem
+        rep = self._rep
         domain = rep.domain
-        elements = [getitem(i, j) for i in range(self.rows) for j in range(self.cols)]
         if domain != EXRAW:
-            to_sympy = domain.to_sympy
-            elements = [to_sympy(e) for e in elements]
-        return elements
+            rep = rep.convert_to(EXRAW)
+        return rep.rep.to_list_flat()
 
     def __setitem__(self, key, value):
         """
