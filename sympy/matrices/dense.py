@@ -100,6 +100,43 @@ class DenseMatrix(MatrixBase):
 
         return rep, element
 
+    @classmethod
+    def _flat_list_to_DomainMatrix(cls, rows, cols, flat_list):
+
+        types = set(map(type, flat_list))
+        if not all(issubclass(typ, Expr) for typ in types):
+            SymPyDeprecationWarning(
+                feature="non-Expr objects in a Matrix",
+                useinstead="list of lists, TableForm or some other data structure",
+                issue=21497,
+                deprecated_since_version="1.9"
+            ).warn()
+
+        if all(issubclass(typ, Rational) for typ in types):
+            if all(issubclass(typ, Integer) for typ in types):
+                domain = ZZ
+            else:
+                domain = QQ
+        else:
+            domain = EXRAW
+
+        elements_dod = defaultdict(dict)
+        for n, element in enumerate(flat_list):
+            if element != 0:
+                i, j = divmod(n, cols)
+                elements_dod[i][j] = element
+
+        if domain != EXRAW:
+            # XXX: In some deprecated cases the elements may not be Expr.
+            # We avoid calling EXRAW.from_sympy because it checks that the
+            # argument actually is Expr and raises otherwise.
+            from_sympy = domain.from_sympy
+            elements_dod = {i: {j: from_sympy(e) for j, e in row.items()}
+                                        for i, row in elements_dod.items()}
+
+        rep = DomainMatrix(elements_dod, (rows, cols), domain)
+        return rep
+
     def __getitem__(self, key):
         """Return portion of self defined by key. If the key involves a slice
         then a list will be returned (if key is a single slice) or a matrix
@@ -140,8 +177,7 @@ class DenseMatrix(MatrixBase):
             i, j = key
             try:
                 i, j = self.key2ij(key)
-                rep = self._rep.rep
-                return rep.domain.to_sympy(rep.getitem(i, j))
+                return self._rep.getitem_sympy(i, j)
             except (TypeError, IndexError):
                 if (isinstance(i, Expr) and not i.is_number) or (isinstance(j, Expr) and not j.is_number):
                     if ((j < 0) is True) or ((j >= self.shape[1]) is True) or\
@@ -223,8 +259,7 @@ class DenseMatrix(MatrixBase):
         return self._rep.to_sympy().to_list()
 
     def _eval_todok(self):
-        rep = self._rep.to_sympy().rep
-        return {(i, j): value for i, row in rep.items() for j, value in row.items()}
+        return self._rep.to_sympy().to_dok()
 
     @classmethod
     def _eval_zeros(cls, rows, cols):
@@ -353,44 +388,9 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
             rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
             flat_list = list(flat_list) # create a shallow copy
 
-        types = set(map(type, flat_list))
-        if not all(issubclass(typ, Expr) for typ in types):
-            SymPyDeprecationWarning(
-                feature="non-Expr objects in a Matrix",
-                useinstead="list of lists, TableForm or some other data structure",
-                issue=21497,
-                deprecated_since_version="1.9"
-            ).warn()
+        rep = cls._flat_list_to_DomainMatrix(rows, cols, flat_list)
 
-        if all(issubclass(typ, Rational) for typ in types):
-            if all(issubclass(typ, Integer) for typ in types):
-                domain = ZZ
-            else:
-                domain = QQ
-        else:
-            domain = EXRAW
-
-        elements_dod = defaultdict(dict)
-        from_sympy = domain.from_sympy
-        for n, element in enumerate(flat_list):
-            if element != 0:
-                i, j = divmod(n, cols)
-                elements_dod[i][j] = element
-
-        if domain != EXRAW:
-            # XXX: In some deprecated cases the elements may not be Expr.
-            # We avoid calling EXRAW.from_sympy because it checks that the
-            # argument actually is Expr and raises otherwise.
-            from_sympy = domain.from_sympy
-            elements_dod = {i: {j: from_sympy(e) for j, e in row.items()}
-                                        for i, row in elements_dod.items()}
-
-        self = object.__new__(cls)
-        self.rows = rows
-        self.cols = cols
-        self._rep = DomainMatrix(elements_dod, (rows, cols), domain)
-
-        return self
+        return cls._fromrep(rep)
 
     @classmethod
     def _fromrep(cls, rep):

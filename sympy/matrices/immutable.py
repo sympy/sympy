@@ -1,19 +1,14 @@
-from collections import defaultdict
-
 from mpmath.matrices.matrices import _matrix
 
-from sympy.core import Basic, Dict, Expr, Tuple
-from sympy.core.numbers import Integer, Rational
+from sympy.core import Basic, Dict, Tuple
+from sympy.core.numbers import Integer
 from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter, _sympify
-from sympy.polys.domains import ZZ, QQ, EXRAW
-from sympy.polys.matrices import DomainMatrix
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.sparse import SparseMatrix
 from sympy.multipledispatch import dispatch
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 def sympify_matrix(arg):
@@ -74,39 +69,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
             rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
             flat_list = list(flat_list) # create a shallow copy
 
-        types = set(map(type, flat_list))
-        if not all(issubclass(typ, Expr) for typ in types):
-            SymPyDeprecationWarning(
-                feature="non-Expr objects in a Matrix",
-                useinstead="list of lists, TableForm or some other data structure",
-                issue=21497,
-                deprecated_since_version="1.9"
-            ).warn()
-
-        if all(issubclass(typ, Rational) for typ in types):
-            if all(issubclass(typ, Integer) for typ in types):
-                domain = ZZ
-            else:
-                domain = QQ
-        else:
-            domain = EXRAW
-
-        elements_dod = defaultdict(dict)
-        from_sympy = domain.from_sympy
-        for n, element in enumerate(flat_list):
-            if element != 0:
-                i, j = divmod(n, cols)
-                elements_dod[i][j] = element
-
-        if domain != EXRAW:
-            # XXX: In some deprecated cases the elements may not be Expr.
-            # We avoid calling EXRAW.from_sympy because it checks that the
-            # argument actually is Expr and raises otherwise.
-            from_sympy = domain.from_sympy
-            elements_dod = {i: {j: from_sympy(e) for j, e in row.items()}
-                                        for i, row in elements_dod.items()}
-
-        rep = DomainMatrix(elements_dod, (rows, cols), domain)
+        rep = cls._flat_list_to_DomainMatrix(rows, cols, flat_list)
 
         return cls._fromrep(rep)
 
