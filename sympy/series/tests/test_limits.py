@@ -940,6 +940,10 @@ def test_issue_7535():
     assert -oo*(1/sin(oo)) == AccumBounds(-oo, oo)
 
 
+def test_issue_20365():
+    assert limit(((x + 1)**(1/x) - E)/x, x, 0) == -E/2
+
+
 def test_issue_20704():
     assert limit(x*(Abs(1/x + y) - Abs(y - 1/x))/2, x, 0) == 0
 
