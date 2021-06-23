@@ -125,15 +125,18 @@ Riccati_special_minus2
 
 nth_linear_constant_coeff_homogeneous
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_nth_linear_constant_coeff_homogeneous
+.. autoclass:: sympy.solvers.ode.single::NthConstCoeffHomogen
+   :members:
 
 nth_linear_constant_coeff_undetermined_coefficients
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_nth_linear_constant_coeff_undetermined_coefficients
+.. autoclass:: sympy.solvers.ode.single::NthConstCoeffUndet
+   :members:
 
 nth_linear_constant_coeff_variation_of_parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_nth_linear_constant_coeff_variation_of_parameters
+.. autoclass:: sympy.solvers.ode.single::NthConstCoeffVar
+   :members:
 
 nth_algebraic
 ^^^^^^^^^^^^^

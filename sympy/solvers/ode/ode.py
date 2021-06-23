@@ -1059,6 +1059,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         LinearCoefficients: ('linear_coefficients',),
         NthOrderReducible: ('nth_order_reducible',),
         Hypergeometric2nd: ('2nd_hypergeometric',),
+        NthConstCoeffHomogen: ('nth_linear_constant_coeff_homogeneous',),
+        NthConstCoeffVar: ('nth_linear_constant_coeff_variation_of_parameters',),
+        NthConstCoeffUndet: ('nth_linear_constant_coeff_undetermined_coefficients',),
     }
     for solvercls in solvers:
         solver = solvercls(ode)
@@ -1179,25 +1182,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         # a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y = F(x) = b
 
         r = _nth_linear_match(reduced_eq, func, order)
-
-        # Constant coefficient case (a_i is constant for all i)
-        if r and not any(r[i].has(x) for i in r if i >= 0):
-            # Inhomogeneous case: F(x) is not identically 0
-            if r[-1]:
-                eq_homogeneous = Add(eq,-r[-1])
-                undetcoeff = _undetermined_coefficients_match(r[-1], x, func, eq_homogeneous)
-                s = "nth_linear_constant_coeff_variation_of_parameters"
-                matching_hints[s] = r
-                matching_hints[s + "_Integral"] = r
-                if undetcoeff['test']:
-                    r['trialset'] = undetcoeff['trialset']
-                    matching_hints[
-                        "nth_linear_constant_coeff_undetermined_coefficients"
-                            ] = r
-
-            # Homogeneous case: F(x) is identically 0
-            else:
-                matching_hints["nth_linear_constant_coeff_homogeneous"] = r
 
         # nth order Euler equation a_n*x**n*y^(n) + ... + a_1*x*y' + a_0*y = F(x)
         #In case of Homogeneous euler equation F(x) = 0
@@ -1845,42 +1829,6 @@ def odesimp(ode, eq, func, hint):
     if eq.lhs == func and not eq.rhs.has(func):
         # The solution is already solved
         eq = [eq]
-
-        # special simplification of the rhs
-        if hint.startswith("nth_linear_constant_coeff"):
-            # Collect terms to make the solution look nice.
-            # This is also necessary for constantsimp to remove unnecessary
-            # terms from the particular solution from variation of parameters
-            #
-            # Collect is not behaving reliably here.  The results for
-            # some linear constant-coefficient equations with repeated
-            # roots do not properly simplify all constants sometimes.
-            # 'collectterms' gives different orders sometimes, and results
-            # differ in collect based on that order.  The
-            # sort-reverse trick fixes things, but may fail in the
-            # future. In addition, collect is splitting exponentials with
-            # rational powers for no reason.  We have to do a match
-            # to fix this using Wilds.
-            #
-            # XXX: This global collectterms hack should be removed.
-            global collectterms
-            collectterms.sort(key=default_sort_key)
-            collectterms.reverse()
-            assert len(eq) == 1 and eq[0].lhs == f(x)
-            sol = eq[0].rhs
-            sol = expand_mul(sol)
-            for i, reroot, imroot in collectterms:
-                sol = collect(sol, x**i*exp(reroot*x)*sin(abs(imroot)*x))
-                sol = collect(sol, x**i*exp(reroot*x)*cos(imroot*x))
-            for i, reroot, imroot in collectterms:
-                sol = collect(sol, x**i*exp(reroot*x))
-            del collectterms
-
-            # Collect is splitting exponentials with rational powers for
-            # no reason.  We call powsimp to fix.
-            sol = powsimp(sol)
-
-            eq[0] = Eq(f(x), sol)
 
     else:
         # The solution is not solved, so try to solve it
@@ -3874,82 +3822,6 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
     return retdict
 
 
-def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match):
-    r"""
-    Solves an `n`\th order linear differential equation with constant
-    coefficients using the method of variation of parameters.
-
-    This method works on any differential equations of the form
-
-    .. math:: f^{(n)}(x) + a_{n-1} f^{(n-1)}(x) + \cdots + a_1 f'(x) + a_0
-                f(x) = P(x)\text{.}
-
-    This method works by assuming that the particular solution takes the form
-
-    .. math:: \sum_{x=1}^{n} c_i(x) y_i(x)\text{,}
-
-    where `y_i` is the `i`\th solution to the homogeneous equation.  The
-    solution is then solved using Wronskian's and Cramer's Rule.  The
-    particular solution is given by
-
-    .. math:: \sum_{x=1}^n \left( \int \frac{W_i(x)}{W(x)} \,dx
-                \right) y_i(x) \text{,}
-
-    where `W(x)` is the Wronskian of the fundamental system (the system of `n`
-    linearly independent solutions to the homogeneous equation), and `W_i(x)`
-    is the Wronskian of the fundamental system with the `i`\th column replaced
-    with `[0, 0, \cdots, 0, P(x)]`.
-
-    This method is general enough to solve any `n`\th order inhomogeneous
-    linear differential equation with constant coefficients, but sometimes
-    SymPy cannot simplify the Wronskian well enough to integrate it.  If this
-    method hangs, try using the
-    ``nth_linear_constant_coeff_variation_of_parameters_Integral`` hint and
-    simplifying the integrals manually.  Also, prefer using
-    ``nth_linear_constant_coeff_undetermined_coefficients`` when it
-    applies, because it doesn't use integration, making it faster and more
-    reliable.
-
-    Warning, using simplify=False with
-    'nth_linear_constant_coeff_variation_of_parameters' in
-    :py:meth:`~sympy.solvers.ode.dsolve` may cause it to hang, because it will
-    not attempt to simplify the Wronskian before integrating.  It is
-    recommended that you only use simplify=False with
-    'nth_linear_constant_coeff_variation_of_parameters_Integral' for this
-    method, especially if the solution to the homogeneous equation has
-    trigonometric functions in it.
-
-    Examples
-    ========
-
-    >>> from sympy import Function, dsolve, pprint, exp, log
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> pprint(dsolve(f(x).diff(x, 3) - 3*f(x).diff(x, 2) +
-    ... 3*f(x).diff(x) - f(x) - exp(x)*log(x), f(x),
-    ... hint='nth_linear_constant_coeff_variation_of_parameters'))
-           /       /       /     x*log(x)   11*x\\\  x
-    f(x) = |C1 + x*|C2 + x*|C3 + -------- - ----|||*e
-           \       \       \        6        36 ///
-
-    References
-    ==========
-
-    - https://en.wikipedia.org/wiki/Variation_of_parameters
-    - http://planetmath.org/VariationOfParameters
-    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-      Dover 1963, pp. 233
-
-    # indirect doctest
-
-    """
-
-    gensol = ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
-        returns='both')
-    match.update(gensol)
-    return _solve_variation_of_parameters(eq, func, order, match)
-
-
 def _solve_variation_of_parameters(eq, func, order, match):
     r"""
     Helper function for the method of variation of parameters and nonhomogeneous euler eq.
@@ -5901,4 +5773,5 @@ from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
         Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
         SecondNonlinearAutonomousConserved, FirstExact, Liouville, Separable,
         SeparableReduced, HomogeneousCoeffSubsDepDivIndep, HomogeneousCoeffSubsIndepDivDep,
-        HomogeneousCoeffBest, LinearCoefficients, NthOrderReducible, Hypergeometric2nd)
+        HomogeneousCoeffBest, LinearCoefficients, NthOrderReducible, Hypergeometric2nd,
+        NthConstCoeffHomogen, NthConstCoeffVar, NthConstCoeffUndet)
