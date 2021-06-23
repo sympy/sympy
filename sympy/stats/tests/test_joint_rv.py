@@ -75,8 +75,8 @@ def test_Normal():
     density_X_at_obs = density(X)(obs)
 
     expected_density = MatrixElement(
-        (exp(((S(1)/2)*mu.T - (S(1)/2)*obs.T)*Sg**(-1)*(-mu + obs)) / \
-         sqrt((2*pi)**n*Determinant(Sg))), 0, 0)
+        exp((S(1)/2) * (mu.T - obs.T) * Sg**(-1) * (-mu + obs)) / \
+        sqrt((2*pi)**n * Determinant(Sg)), 0, 0)
 
     assert density_X_at_obs == expected_density
 
