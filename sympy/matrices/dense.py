@@ -6,13 +6,14 @@ from sympy.core import SympifyError
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
+from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.core.numbers import Rational, Integer
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.polys.domains import ZZ, QQ, EXRAW
 from sympy.polys.matrices import DomainMatrix
-from sympy.matrices.common import classof, ShapeError
+from sympy.matrices.common import classof, ShapeError, MatrixKind
 from sympy.matrices.matrices import MatrixBase
 from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
@@ -68,6 +69,23 @@ class DenseMatrix(MatrixBase):
     @property
     def _flat(self):
         return self._rep.to_sympy().to_list_flat()
+
+    @property
+    def kind(self):
+        domain = self._rep.domain
+        if domain in (ZZ, QQ):
+            element_kind = NumberKind
+        elif domain == EXRAW:
+            kinds = set(e.kind for e in self.todok().values())
+            if not kinds:
+                element_kind = NumberKind
+            elif len(kinds) == 1:
+                [element_kind] = NumberKind
+            else:
+                element_kind = UndefinedKind
+        else:
+            raise RuntimeError("Domain should only be ZZ, QQ or EXRAW")
+        return MatrixKind(element_kind)
 
     def _unify_element_sympy(self, element):
         rep = self._rep
@@ -239,8 +257,8 @@ class DenseMatrix(MatrixBase):
         return classof(self, other)._fromrep(self._rep * other._rep)
 
     def _eval_matrix_mul_elementwise(self, other):
-        mat = [a*b for a,b in zip(self._flat, other._flat)]
-        return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
+        rep = self._rep.mul_elementwise(other._rep)
+        return classof(self, other)._fromrep(rep)
 
     def _eval_inverse(self, **kwargs):
         return self.inv(method=kwargs.get('method', 'GE'),
@@ -669,9 +687,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
         sympy.simplify.simplify.simplify
         """
-        for i in range(self.rows):
-            for j in range(self.cols):
-                self[i, j] = _simplify(self[i, j], **kwargs)
+        for (i, j), element in self.todok().items():
+            self[i, j] = _simplify(element, **kwargs)
 
     def zip_row_op(self, i, k, f):
         """In-place operation on row ``i`` using two-arg functor whose args are

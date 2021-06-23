@@ -92,15 +92,6 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of {}".format(self.__class__))
 
-    def _eval_extract(self, rowsList, colsList):
-        # self._mat is a Tuple.  It is slightly faster to index a
-        # tuple over a Tuple, so grab the internal tuple directly
-        mat = self._flat
-        cols = self.cols
-        indices = (i * cols + j for i in rowsList for j in colsList)
-        return self._new(len(rowsList), len(colsList),
-                         Tuple(*(mat[i] for i in indices), sympify=False), copy=False)
-
     @property
     def cols(self):
         return self._cols
