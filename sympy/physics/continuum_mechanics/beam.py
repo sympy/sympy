@@ -2724,7 +2724,7 @@ class Beam3D(Beam):
 
         """
 
-        if dir == None:
+        if not dir:
             raise ValueError('Direction was not passed.')
 
         dir = dir.lower();
