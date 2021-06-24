@@ -1059,9 +1059,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         LinearCoefficients: ('linear_coefficients',),
         NthOrderReducible: ('nth_order_reducible',),
         Hypergeometric2nd: ('2nd_hypergeometric',),
-        NthConstCoeffHomogen: ('nth_linear_constant_coeff_homogeneous',),
-        NthConstCoeffVar: ('nth_linear_constant_coeff_variation_of_parameters',),
-        NthConstCoeffUndet: ('nth_linear_constant_coeff_undetermined_coefficients',),
+        NthLinearConstantCoeffHomogeneous: ('nth_linear_constant_coeff_homogeneous',),
+        NthLinearConstantCoeffVariationOfParameters: ('nth_linear_constant_coeff_variation_of_parameters',),
+        NthLinearConstantCoeffUndeterminedCoefficients: ('nth_linear_constant_coeff_undetermined_coefficients',),
     }
     for solvercls in solvers:
         solver = solvercls(ode)
@@ -5774,4 +5774,4 @@ from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
         SecondNonlinearAutonomousConserved, FirstExact, Liouville, Separable,
         SeparableReduced, HomogeneousCoeffSubsDepDivIndep, HomogeneousCoeffSubsIndepDivDep,
         HomogeneousCoeffBest, LinearCoefficients, NthOrderReducible, Hypergeometric2nd,
-        NthConstCoeffHomogen, NthConstCoeffVar, NthConstCoeffUndet)
+        NthLinearConstantCoeffHomogeneous, NthLinearConstantCoeffVariationOfParameters, NthLinearConstantCoeffUndeterminedCoefficients)

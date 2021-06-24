@@ -29,6 +29,8 @@ from sympy.solvers.solvers import solve
 from sympy.matrices import wronskian
 from sympy.solvers.deutils import ode_order, _preprocess
 from .subscheck import sub_func_doit
+from sympy.polys.matrices.linsolve import _lin_eq2dict
+from sympy.polys.solvers import PolyNonlinearError
 from .hypergeometric import equivalence_hypergeometric, match_2nd_2F1_hypergeometric, get_sol_2F1_hypergeometric, match_2nd_hypergeometric
 
 
@@ -180,34 +182,38 @@ class SingleODEProblem:
 
         >>> from sympy import Function, cos, sin
         >>> from sympy.abc import x
-        >>> from sympy.solvers.ode.ode import _nth_linear_match
+        >>> from sympy.solvers.ode.single import SingleODEProblem
         >>> f = Function('f')
-        >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
-        ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
-        ... sin(x), f(x), 3)
+        >>> eq = f(x).diff(x, 3) + 2*f(x).diff(x) + \
+        ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) - \
+        ... sin(x)
+        >>> obj = SingleODEProblem(eq, f(x), x)
+        >>> obj.get_linear_coefficients(eq, f(x), 3)
         {-1: x - sin(x), 0: -1, 1: cos(x) + 2, 2: x, 3: 1}
-        >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
-        ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
-        ... sin(f(x)), f(x), 3) == None
+        >>> eq = f(x).diff(x, 3) + 2*f(x).diff(x) + \
+        ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) - \
+        ... sin(f(x))
+        >>> obj = SingleODEProblem(eq, f(x), x)
+        >>> obj.get_linear_coefficients(eq, f(x), 3) == None
         True
 
         """
+        f = func.func
         x = func.args[0]
-        one_x = {x}
-        terms = {i: S.Zero for i in range(-1, order + 1)}
-        for i in Add.make_args(eq):
-            if not i.has(func):
-                terms[-1] += i
-            else:
-                c, f = i.as_independent(func)
-                if (isinstance(f, Derivative)
-                        and set(f.variables) == one_x
-                        and f.args[0] == func):
-                    terms[f.derivative_count] += c
-                elif f == func:
-                    terms[len(f.args[1:])] += c
-                else:
-                    return None
+        symset = set()
+        for i in range(order+1):
+            symset.add(f(x).diff(x,i))
+        try:
+            rhs,lhs_terms = _lin_eq2dict(eq, symset)
+        except PolyNonlinearError:
+            return None
+        
+        if rhs.has(func) or any(lhs_terms[i].has(func) for i in lhs_terms):
+            return None
+        terms = {}
+        for i in range(order+1):
+            terms[i] = lhs_terms.get(f(x).diff(x,i), S.Zero)
+        terms[-1] = rhs
         return terms
 
     # TODO: Add methods that can be used by many ODE solvers:
@@ -2044,7 +2050,7 @@ class Hypergeometric2nd(SingleODESolver):
         return [sol]
 
 
-class NthConstCoeffHomogen(SingleODESolver):
+class NthLinearConstantCoeffHomogeneous(SingleODESolver):
     r"""
     Solves an `n`\th order linear homogeneous differential equation with
     constant coefficients.
@@ -2217,7 +2223,7 @@ class NthConstCoeffHomogen(SingleODESolver):
         return gsol
 
 
-class NthConstCoeffVar(SingleODESolver):
+class NthLinearConstantCoeffVariationOfParameters(SingleODESolver):
     r"""
     Solves an `n`\th order linear differential equation with constant
     coefficients using the method of variation of parameters.
@@ -2308,7 +2314,7 @@ class NthConstCoeffVar(SingleODESolver):
         Helper function for the method of variation of parameters and nonhomogeneous euler eq.
 
         See the
-        :py:meth:`~sympy.solvers.ode.single.NthConstCoeffVar`
+        :py:meth:`~sympy.solvers.ode.single.NthLinearConstantCoeffVariationOfParameters`
         docstring for more information on this method.
 
         The parameter ``match`` should be a dictionary that has the following
@@ -2361,7 +2367,7 @@ class NthConstCoeffVar(SingleODESolver):
         eq = self.ode_problem.eq_high_order_free
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
-        homogen_instance = NthConstCoeffHomogen(SingleODEProblem(eq, f(x), x))
+        homogen_instance = NthLinearConstantCoeffHomogeneous(SingleODEProblem(eq, f(x), x))
         gensols, collectterms = homogen_instance._get_sols(self.r)
         # A generator of constants
         constants = self.ode_problem.get_numbered_constants(num=len(gensols))
@@ -2374,7 +2380,7 @@ class NthConstCoeffVar(SingleODESolver):
         return gsol
 
 
-class NthConstCoeffUndet(SingleODESolver):
+class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
     r"""
     Solves an `n`\th order linear differential equation with constant
     coefficients using the method of undetermined coefficients.
@@ -2612,7 +2618,7 @@ class NthConstCoeffUndet(SingleODESolver):
         Helper function for the method of undetermined coefficients.
 
         See the
-        :py:meth:`~sympy.solvers.ode.single.NthConstCoeffUndet`
+        :py:meth:`~sympy.solvers.ode.single.NthLinearConstantCoeffUndeterminedCoefficients`
         docstring for more information on this method.
 
         The parameter ``match`` should be a dictionary that has the following
@@ -2680,7 +2686,7 @@ class NthConstCoeffUndet(SingleODESolver):
         eq = self.ode_problem.eq_high_order_free
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
-        homogen_instance = NthConstCoeffHomogen(SingleODEProblem(eq, f(x), x))
+        homogen_instance = NthLinearConstantCoeffHomogeneous(SingleODEProblem(eq, f(x), x))
         gensols, collectterms = homogen_instance._get_sols(self.r)
         # A generator of constants
         constants = self.ode_problem.get_numbered_constants(num=len(gensols))
