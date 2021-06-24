@@ -147,6 +147,7 @@ are found using the solutions of the equation in its normal form.
 
 from itertools import product
 from sympy.core import S
+from sympy.core.add import Add
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
 from sympy.core.symbol import symbols, Dummy
@@ -169,11 +170,45 @@ def riccati_inverse_normal(y, x, b1, b2, bp=None):
     return -y/b2 + bp
 
 
-def linsolve_dict(eq, syms, var):
-    sol = linsolve(eq, syms, var)
+def riccati_reduced(eq, f, x):
+    match, funcs = match_riccati(eq, f, x)
+    b0, b1, b2 = funcs
+    a = -b0*b2 + b1**2/4 - b1.diff(x)/2 + 3*b2.diff(x)**2/(4*b2**2) + b1*b2.diff(x)/(2*b2) - \
+        b2.diff(x, 2)/(2*b2)
+    return f(x).diff(x) + f(x)**2 - a
+
+def linsolve_dict(eq, syms):
+    sol = linsolve(eq, syms)
     if not sol:
         return {}
     return {k:v for k, v in zip(syms, list(sol)[0])}
+
+
+def match_riccati(eq, f, x):
+    # Group terms based on f(x)
+    eq = eq.collect(f(x))
+    cf = eq.coeff(f(x).diff(x))
+
+    # There must be an f(x).diff(x) term.
+    # eq must be an Add object since we are using the expanded
+    # equation and it must have atleast 2 terms (b2 != 0)
+    if cf != 0 and isinstance(eq, Add):
+
+        # Divide all coefficients by the coefficient of f(x).diff(x)
+        # and add the terms again to get the same equation
+        eq = Add(*map(lambda x: (x/cf).cancel(), eq.args)).collect(f(x))
+
+        # Match the equation with the pattern
+        b1 = -eq.coeff(f(x))
+        b2 = -eq.coeff(f(x)**2)
+        b0 = (f(x).diff(x) - b1*f(x) - b2*f(x)**2 - eq).expand()
+
+        # If b_0(x) contains f(x), it is not a Riccati ODE
+        if len(b0.atoms(f)) or not all([b2 != 0, b0.is_rational_function(x), \
+            b1.is_rational_function(x), b2.is_rational_function(x)]):
+            return False, []
+        return True, [b0, b1, b2]
+    return False, []
 
 
 def find_poles(num, den, x):
@@ -190,7 +225,7 @@ def val_at_inf(num, den, x):
 def check_necessary_conds(val_inf, muls):
     """
     The necessary conditions for a rational solution
-    to exist are as follows - 
+    to exist are as follows -
 
     i) Every pole of a(x) must be either a simple pole
     or a multiple pole of even order.
@@ -431,7 +466,7 @@ def solve_aux_eq(numa, dena, numy, deny, x, m):
         auxeq += px.diff(x)*deny**2*dena
     if m != 0:
         # m is a non-zero integer. Find the constant terms using undetermined coefficients
-        return psol, linsolve_dict(auxeq.all_coeffs(), psyms, x), True
+        return psol, linsolve_dict(auxeq.all_coeffs(), psyms), True
     else:
         # m == 0 . Check if 1 (x**0) is a solution to the auxiliary equation
         return S(1), auxeq, auxeq == 0
@@ -439,7 +474,8 @@ def solve_aux_eq(numa, dena, numy, deny, x, m):
 
 def solve_riccati(fx, x, b0, b1, b2):
     # Step 1 : Convert to Normal Form
-    a = -b0*b2 + b1**2/4 - b1.diff(x)/2 + 3*b2.diff(x)**2/(4*b2**2) + b1*b2.diff(x)/(2*b2) - b2.diff(x, 2)/(2*b2)
+    a = -b0*b2 + b1**2/4 - b1.diff(x)/2 + 3*b2.diff(x)**2/(4*b2**2) + b1*b2.diff(x)/(2*b2) - \
+        b2.diff(x, 2)/(2*b2)
     a_t = a.together()
     num, den = [Poly(e, x, extension=True) for e in a_t.as_numer_denom()]
     num, den = num.cancel(den, include=True)
@@ -510,5 +546,5 @@ def solve_riccati(fx, x, b0, b1, b2):
                 presol.append(ybar + psol.diff(x)/psol)
     # Step 15 : Inverse transform the solutions of the equation in normal form
     bp = -b2.diff(x)/(2*b2**2) - b1/(2*b2)
-    sol = [Eq(fx, riccati_inverse_normal(y, x, b1, b2, bp)) for y in presol]
+    sol = [Eq(fx, riccati_inverse_normal(y, x, b1, b2, bp).cancel(extension=True)) for y in presol]
     return sol

@@ -8,7 +8,7 @@ if typing.TYPE_CHECKING:
     from typing import ClassVar
 from typing import Dict, Type, Iterator, List, Optional
 
-from .riccati import solve_riccati
+from .riccati import match_riccati, solve_riccati
 from sympy.core import Add, S, Pow
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
@@ -944,21 +944,21 @@ class RationalRiccati(SinglePatternODESolver):
     >>> eq = x**3*f(x).diff(x) - x**2*f(x) - f(x)**2
     >>> sols = dsolve(eq, hint="1st_rational_riccati")
     >>> sols
-    Eq(f(x), x**2*(-x/(C1 + x) + 1))
+    Eq(f(x), C1*x**2/(C1 + x))
     >>> checkodesol(eq, sols)
     (True, 0)
 
     >>> eq = -x**4*f(x)**2 + x**3*f(x).diff(x) + x**2*f(x) + 20
     >>> sols = dsolve(eq, hint="1st_rational_riccati")
     >>> sols
-    [Eq(f(x), (-9*x**8/(C1 + x**9) + 4/x)/x), Eq(f(x), 4/x**2)]
+    [Eq(f(x), (4*C1 - 5*x**9)/(x**2*(C1 + x**9))), Eq(f(x), 4/x**2)]
     >>> checkodesol(eq, sols)
     [(True, 0), (True, 0)]
 
     >>> eq = x**3*f(x).diff(x) - x**2*(f(x) + f(x).diff(x)) + 2*x*f(x) - f(x)**2
     >>> sols = dsolve(eq, hint="1st_rational_riccati")
     >>> sols
-    Eq(f(x), x**2*(1 - (x - 1)/(C1 + x)))
+    Eq(f(x), x**2*(C1 + 1)/(C1 + x))
     >>> checkodesol(eq, sols)
     (True, 0)
 
@@ -988,35 +988,13 @@ class RationalRiccati(SinglePatternODESolver):
         if order != 1:
             return False
 
-        eq = eq.collect(f(x))
-        cf = eq.coeff(f(x).diff(x))
-
-        # There must be an f(x).diff(x) term.
-        # eq must be an Add object since we are using the expanded
-        # equation and it must have atleast 2 terms (b2 != 0)
-        if cf != 0 and isinstance(eq, Add):
-
-            # Divide all coefficients by the coefficient of f(x).diff(x)
-            # and add the terms again to get the same equation
-            eq = Add(*map(lambda x: cancel(x/cf), eq.args)).collect(f(x))
-
-            # Get the pattern for the Riccati equation
-            pattern = self._equation(f(x), x, order)
-
-            # Match the equation with the pattern
-            self._wilds_match = match = eq.match(pattern)
-
-            # If there is a match, verify it
-            if match is not None:
-                return self._verify(f(x))
-        return False
-
-    def _verify(self, fx):
-        b0, b1, b2 = self.wilds_match()
-        x = self.ode_problem.sym
-
-        # b0, b1 and b2 must all be rational functions of x, with b2 != 0
-        return all([b2 != 0, b0.is_rational_function(x), b1.is_rational_function(x), b2.is_rational_function(x)])
+        match, funcs = match_riccati(eq, f, x)
+        if not match:
+            return False
+        _b0, _b1, _b2 = funcs
+        b0, b1, b2 = self.wilds()
+        self._wilds_match = match = {b0: _b0, b1: _b1, b2: _b2}
+        return True
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         # Match the equation
