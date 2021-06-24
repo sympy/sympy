@@ -4,7 +4,7 @@ Module for the SDM class.
 
 """
 
-from operator import add, neg, pos, sub
+from operator import add, neg, pos, sub, mul
 from collections import defaultdict
 
 from .exceptions import DDMBadInputError, DDMDomainError, DDMShapeError
@@ -302,6 +302,18 @@ class SDM(dict):
                 ddm[i][j] = e
         return ddm
 
+    def to_list_flat(M):
+        m, n = M.shape
+        zero = M.domain.zero
+        flat = [zero] * (m * n)
+        for i, row in M.items():
+            for j, e in row.items():
+                flat[i*n + j] = e
+        return flat
+
+    def to_dok(M):
+        return {(i, j): e for i, row in M.items() for j, e in row.items()}
+
     def to_ddm(M):
         """
         Convert a :py:class:`~.SDM` object to a :py:class:`~.DDM` object
@@ -353,7 +365,7 @@ class SDM(dict):
         return cls(sdm, shape, domain)
 
     @classmethod
-    def eye(cls, size, domain):
+    def eye(cls, shape, domain):
         """
 
         Returns a identity :py:class:`~.SDM` matrix of dimensions
@@ -364,14 +376,15 @@ class SDM(dict):
 
         >>> from sympy.polys.matrices.sdm import SDM
         >>> from sympy import QQ
-        >>> I = SDM.eye(2, QQ)
+        >>> I = SDM.eye((2, 2), QQ)
         >>> I
         {0: {0: 1}, 1: {1: 1}}
 
         """
+        rows, cols = shape
         one = domain.one
-        sdm = {i: {i: one} for i in range(size)}
-        return cls(sdm, (size, size), domain)
+        sdm = {i: {i: one} for i in range(min(rows, cols))}
+        return cls(sdm, shape, domain)
 
     @classmethod
     def diag(cls, diagonal, domain, shape):
@@ -420,7 +433,7 @@ class SDM(dict):
 
     def __rmul__(a, b):
         if b in a.domain:
-            return a.mul(b)
+            return a.rmul(b)
         else:
             return NotImplemented
 
@@ -481,6 +494,20 @@ class SDM(dict):
 
         """
         Csdm = unop_dict(A, lambda aij: aij*b)
+        return A.new(Csdm, A.shape, A.domain)
+
+    def rmul(A, b):
+        Csdm = unop_dict(A, lambda aij: b*aij)
+        return A.new(Csdm, A.shape, A.domain)
+
+    def mul_elementwise(A, B):
+        if A.domain != B.domain:
+            raise DDMDomainError
+        if A.shape != B.shape:
+            raise DDMShapeError
+        zero = A.domain.zero
+        fzero = lambda e: zero
+        Csdm = binop_dict(A, B, mul, fzero, fzero)
         return A.new(Csdm, A.shape, A.domain)
 
     def add(A, B):
@@ -763,26 +790,46 @@ class SDM(dict):
 def binop_dict(A, B, fab, fa, fb):
     Anz, Bnz = set(A), set(B)
     C = {}
+
     for i in Anz & Bnz:
         Ai, Bi = A[i], B[i]
         Ci = {}
         Anzi, Bnzi = set(Ai), set(Bi)
         for j in Anzi & Bnzi:
-            elem = fab(Ai[j], Bi[j])
-            if elem:
-                Ci[j] = elem
+            Cij = fab(Ai[j], Bi[j])
+            if Cij:
+                Ci[j] = Cij
         for j in Anzi - Bnzi:
-            Ci[j] = fa(Ai[j])
+            Cij = fa(Ai[j])
+            if Cij:
+                Ci[j] = Cij
         for j in Bnzi - Anzi:
-            Ci[j] = fb(Bi[j])
+            Cij = fb(Bi[j])
+            if Cij:
+                Ci[j] = Cij
         if Ci:
             C[i] = Ci
+
     for i in Anz - Bnz:
         Ai = A[i]
-        C[i] = {j: fa(Aij) for j, Aij in Ai.items()}
+        Ci = {}
+        for j, Aij in Ai.items():
+            Cij = fa(Aij)
+            if Cij:
+                Ci[j] = Cij
+        if Ci:
+            C[i] = Ci
+
     for i in Bnz - Anz:
         Bi = B[i]
-        C[i] = {j: fb(Bij) for j, Bij in Bi.items()}
+        Ci = {}
+        for j, Bij in Bi.items():
+            Cij = fb(Bij)
+            if Cij:
+                Ci[j] = Cij
+        if Ci:
+            C[i] = Ci
+
     return C
 
 

@@ -1115,7 +1115,7 @@ def test_EX_EXRAW():
 
     assert EXRAW.from_sympy(S.One) is S.One
     assert EXRAW.to_sympy(EXRAW.one) is S.One
-    raises(TypeError, lambda: EXRAW.from_sympy([]))
+    raises(CoercionFailed, lambda: EXRAW.from_sympy([]))
 
     assert EXRAW.get_field() == EXRAW
 

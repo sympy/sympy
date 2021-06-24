@@ -64,6 +64,16 @@ def test_SDM_to_list():
     assert A.to_list() == [[], []]
 
 
+def test_SDM_to_list_flat():
+    A = SDM({0:{1: ZZ(1)}}, (2, 2), ZZ)
+    assert A.to_list_flat() == [ZZ(0), ZZ(1), ZZ(0), ZZ(0)]
+
+
+def test_SDM_to_dok():
+    A = SDM({0:{1: ZZ(1)}}, (2, 2), ZZ)
+    assert A.to_dok() == {(0, 1): ZZ(1)}
+
+
 def test_SDM_from_ddm():
     A = DDM([[ZZ(1), ZZ(0)], [ZZ(1), ZZ(0)]], (2, 2), ZZ)
     B = SDM.from_ddm(A)
@@ -160,7 +170,7 @@ def test_SDM_ones():
     assert dict(A) == {0:{0:QQ(1), 1:QQ(1)}}
 
 def test_SDM_eye():
-    A = SDM.eye(2, ZZ)
+    A = SDM.eye((2, 2), ZZ)
     assert A.domain == ZZ
     assert A.shape == (2, 2)
     assert dict(A) == {0:{0:ZZ(1)}, 1:{1:ZZ(1)}}
@@ -193,6 +203,20 @@ def test_SDM_mul():
 
     raises(TypeError, lambda: A*QQ(1, 2))
     raises(TypeError, lambda: QQ(1, 2)*A)
+
+
+def test_SDM_mul_elementwise():
+    A = SDM({0:{0:ZZ(2), 1:ZZ(2)}}, (2, 2), ZZ)
+    B = SDM({0:{0:ZZ(4)}, 1:{0:ZZ(3)}}, (2, 2), ZZ)
+    C = SDM({0:{0:ZZ(8)}}, (2, 2), ZZ)
+    assert A.mul_elementwise(B) == C
+    assert B.mul_elementwise(A) == C
+
+    Aq = A.convert_to(QQ)
+    A1 = SDM({0:{0:ZZ(1)}}, (1, 1), ZZ)
+
+    raises(DDMDomainError, lambda: Aq.mul_elementwise(B))
+    raises(DDMShapeError, lambda: A1.mul_elementwise(B))
 
 
 def test_SDM_matmul():
