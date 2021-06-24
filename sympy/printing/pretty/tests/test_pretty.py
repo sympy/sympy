@@ -2612,10 +2612,24 @@ def test_pretty_TransferFunctionMatrix():
 ⎢──────────────   ─────      ───    ⎥\n\
 ⎣    y + 5        x - y       2     ⎦\
 """
+    expected5 = \
+"""\
+⎡ (x - y)⋅(x + y)    x + y       y     ⎤\n\
+⎢─────────────────  ───────  ──────────⎥\n\
+⎢(x - 2⋅y)⋅(x + y)  x - 2⋅y   2        ⎥\n\
+⎢                            x  + x + 1⎥\n\
+⎢                                      ⎥\n\
+⎢     2 - 2⋅y        x + y      -2     ⎥\n\
+⎢    ─────────      ───────     ───    ⎥\n\
+⎣    2⋅x - 2⋅y      x - 2⋅y      2     ⎦\
+"""
+
     assert upretty(TransferFunctionMatrix([[tf1], [tf2]])) == expected1
     assert upretty(TransferFunctionMatrix([[tf1], [tf2], [-tf3]])) == expected2
     assert upretty(TransferFunctionMatrix([[tf1, tf2], [tf3, tf4], [tf5, tf6]])) == expected3
     assert upretty(TransferFunctionMatrix([[tf2, tf1, tf4], [-tf3, -tf5, -tf6]])) == expected4
+    assert upretty(TransferFunctionMatrix([[Series(tf2, tf1), tf1, tf4], [Parallel(tf6, tf5), tf1, -tf6]])) == \
+        expected5
 
 
 def test_pretty_order():

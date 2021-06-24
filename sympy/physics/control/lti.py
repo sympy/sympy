@@ -1,11 +1,11 @@
 from sympy import Basic, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots
+from sympy.core.containers import Tuple
 from sympy.core.evalf import EvalfMixin
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, ComplexInfinity
 from sympy.core.sympify import sympify, _sympify
 from sympy.polys import Poly, rootof
 from sympy.series import limit
-from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix
 
 __all__ = ['TransferFunction', 'Series', 'Parallel', 'Feedback', 'TransferFunctionMatrix']
@@ -1576,14 +1576,60 @@ class TransferFunctionMatrix(Basic):
     >>> -tfm_5
     TransferFunctionMatrix(((TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(-p**4 + 3*p - 2, p + s, s)), (TransferFunction(-3, s + 2, s), TransferFunction(a + s, s**2 + s + 1, s))))
 
-    ``subs()`` returns an ImmutableDenseMatrix object with the value substituted in the expression. This will not
+    ``subs()`` returns the ``TransferFunctionMatrix`` object with the value substituted in the expression. This will not
     mutate your original ``TransferFunctionMatrix``.
 
-    >>> from sympy import I
-    >>> tfm_3.subs({s: I})  #  substituting imaginary i (iota) to s
-    Matrix([
-    [-5*I, 5*I],
-    [-5*I, 5/1]])
+    >>> tfm_2.subs(p, 2)  #  substituting p everywhere in tfm_2 with 2.
+    TransferFunctionMatrix(((TransferFunction(a + s, s**2 + s + 1, s), TransferFunction(-3, s + 2, s)), (TransferFunction(12, s + 2, s), TransferFunction(-a - s, s**2 + s + 1, s)), (TransferFunction(3, s + 2, s), TransferFunction(-12, s + 2, s))))
+    >>> pprint(_, use_unicode=False)
+    [  a + s        -3     ]
+    [----------    -----   ]
+    [ 2            s + 2   ]
+    [s  + s + 1            ]
+    [                      ]
+    [    12        -a - s  ]
+    [  -----     ----------]
+    [  s + 2      2        ]
+    [            s  + s + 1]
+    [                      ]
+    [    3          -12    ]
+    [  -----       -----   ]
+    [  s + 2       s + 2   ]
+    >>> pprint(tfm_2, use_unicode=False) # State of tfm_2 is unchanged after substitution
+    [   a + s           -3       ]
+    [ ----------       -----     ]
+    [  2               s + 2     ]
+    [ s  + s + 1                 ]
+    [                            ]
+    [ 4                          ]
+    [p  - 3*p + 2      -a - s    ]
+    [------------    ----------  ]
+    [   p + s         2          ]
+    [                s  + s + 1  ]
+    [                            ]
+    [                 4          ]
+    [     3        - p  + 3*p - 2]
+    [   -----      --------------]
+    [   s + 2          p + s     ]
+
+    ``subs()`` also supports multiple substitutions.
+
+    >>> tfm_2.subs({p: 2, a: 1})  # substituting p with 2 and a with 1
+    TransferFunctionMatrix(((TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(-3, s + 2, s)), (TransferFunction(12, s + 2, s), TransferFunction(-s - 1, s**2 + s + 1, s)), (TransferFunction(3, s + 2, s), TransferFunction(-12, s + 2, s))))
+    >>> pprint(_, use_unicode=False)
+    [  s + 1        -3     ]
+    [----------    -----   ]
+    [ 2            s + 2   ]
+    [s  + s + 1            ]
+    [                      ]
+    [    12        -s - 1  ]
+    [  -----     ----------]
+    [  s + 2      2        ]
+    [            s  + s + 1]
+    [                      ]
+    [    3          -12    ]
+    [  -----       -----   ]
+    [  s + 2       s + 2   ]
 
     See Also
     ========
@@ -1618,8 +1664,6 @@ class TransferFunctionMatrix(Basic):
 
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
         obj._expr_mat = ImmutableMatrix(expr_mat_arg)
-        obj._var = arg[0][0].var
-        obj._num_outputs, obj._num_inputs = obj._expr_mat.shape
         return obj
 
     @property
@@ -1627,10 +1671,6 @@ class TransferFunctionMatrix(Basic):
         """
         Returns the complex variable used by all the transfer functions or
         ``Series``/``Parallel`` objects in a transfer function matrix.
-
-        If explicitly provided as the third argument of ``TransferFunctionMatrix``, then returns
-        the same, else, ``TransferFunctionMatrix`` automatically looks up the ``var`` used by
-        transfer functions inside the list/tuple provided as the first argument and returns that.
 
         Examples
         ========
@@ -1654,7 +1694,7 @@ class TransferFunctionMatrix(Basic):
         s
 
         """
-        return self._var
+        return self.args[0][0][0].var
 
     @property
     def num_inputs(self):
@@ -1677,7 +1717,7 @@ class TransferFunctionMatrix(Basic):
         3
 
         """
-        return self._num_inputs
+        return self._expr_mat.shape[1]
 
     @property
     def num_outputs(self):
@@ -1701,16 +1741,12 @@ class TransferFunctionMatrix(Basic):
         2
 
         """
-        return self._num_outputs
+        return self._expr_mat.shape[0]
 
     @property
     def shape(self):
         """
         Returns the shape of the transfer function matrix, that is, ``(# of outputs, # of inputs)``.
-
-        If explicitly provided as the second argument of ``TransferFunctionMatrix``, then returns the same,
-        else, ``TransferFunctionMatrix`` automatically looks up the shape from the list/tuple provided as
-        the first argument and returns that.
 
         Examples
         ========
@@ -1728,7 +1764,7 @@ class TransferFunctionMatrix(Basic):
         (2, 2)
 
         """
-        return self._num_outputs, self._num_inputs
+        return self._expr_mat.shape
 
     def __neg__(self):
         neg = -self._expr_mat
@@ -1744,6 +1780,3 @@ class TransferFunctionMatrix(Basic):
     def transpose(self):
         transposed_mat = self._expr_mat.transpose()
         return _to_TFM(transposed_mat, self.var)
-
-    def subs(self, dict):
-        return self._expr_mat.subs(dict)
