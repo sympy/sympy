@@ -910,10 +910,10 @@ def _get_examples_ode_sol_1st_rational_riccati():
     "rational_riccati_24": {
         "eq": Eq(Derivative(f(x), x), (1 - x)*f(x)/(x - 3) + (2 - 12*x)*f(x)**2/(2*x - 9) + (54924*x**3 - 405264*x**2 +
             1084347*x - 1087533)/(8*x**4 - 132*x**3 + 810*x**2 - 2187*x + 2187) + 495),
-        "sol": [Eq(f(x), (2*x - 9)*(Mul(2, 3 - (6*x - 1)/(2*x - 9), evaluate=False)/(6*x - 1) + 109 - 1/(x - S(1)/6) - (x
-            - 1)/(x - 3) + 2/(x - 3) + 991/(x - S(9)/2) + 2262/(x - S(9)/2)**2)/Mul(4, (6*x - 1), evaluate=False)), Eq(f(x),
-            (2*x - 9)*(Mul(2, 3 - (6*x - 1)/(2*x - 9), evaluate=False)/(6*x - 1) + 109 - 1/(x - S(1)/6) - (x - 1)/(x - 3) +
-            2/(x - 3) + 991/(x - S(9)/2) + 2262/(x - S(9)/2)**2)/Mul(4, (6*x - 1), evaluate=False))],
+        "sol": [Eq(f(x), (2*x - 9)*(Mul(2, 3 - (6*x - 1)/(2*x - 9), evaluate=False)/(6*x - 1) + Mul(2, 2*x - 9, evaluate=False)/(x**2 - 9*x + S(81)/4)  + 109 - \
+            1/(x - S(1)/6) - (x - 1)/(x - 3) + 2/(x - 3) + 987/(x - S(9)/2) + 2262/(x - S(9)/2)**2)/Mul(4, (6*x - 1), evaluate=False)), Eq(f(x), (2*x - 9)*( \
+            Mul(2, 3 - (6*x - 1)/(2*x - 9), evaluate=False)/(6*x - 1) + Mul(2, 2*x - 9, evaluate=False)/(x**2 - 9*x + S(81)/4) + 109 - 1/(x - S(1)/6) - (x - \
+            1)/(x - 3) + 2/(x - 3) + 987/(x - S(9)/2) + 2262/(x - S(9)/2)**2)/Mul(4, (6*x - 1), evaluate=False))],
         "slow": True
     },
     "rational_riccati_25": {

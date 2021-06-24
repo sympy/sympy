@@ -1,11 +1,12 @@
 r"""
 This module contains :py:meth:`~sympy.solvers.ode.riccati.solve_riccati`,
-a function which gives rational solutions to first order Riccati ODEs.
-A general first order Riccati ODE is given by
+a function which gives all rational particular solutions to first order
+Riccati ODEs. A general first order Riccati ODE is given by -
 
 .. math:: y' = b_0(x) + b_1(x)w + b_2(x)w^2
 
-where `b_0, b_1` and `b_2` can be arbitrary functions of `x` with `b_2 \ne 0`.
+where `b_0, b_1` and `b_2` can be arbitrary rational functions of `x`
+with `b_2 \ne 0`.
 
 Background
 ==========
@@ -29,11 +30,12 @@ the original Riccati equation.
 Algorithm
 =========
 
-The algorithm implemented here was presented in a Ph.D thesis by
-N. Thieu Vo. The entire thesis can be found here -
+The algorithm implemented here is presented in the Ph.D thesis
+"Rational and Algebraic Solutions of First-Order Algebraic ODEs"
+by N. Thieu Vo. The entire thesis can be found here -
 https://www3.risc.jku.at/publications/download/risc_5387/PhDThesisThieu.pdf
 
-We have only implemented the Rational Riccati solver (Pg 78 in Thesis).
+We have only implemented the Rational Riccati solver (Pg 78-82 in Thesis).
 Before we proceed towards the implementation of the algorithm, a
 few definitions to understand -
 
@@ -103,6 +105,10 @@ Step 5 : Find the poles and their multiplicities of `a(x)` using
 ``find_poles``. Let the number of poles be `n`. Also find the
 valuation of `a(x)` at `\infty` using ``val_at_inf``.
 
+Note: Although the algorithm considers `\infty` in the set of
+poles, we WILL NOT consider it in this implementation. The
+reason for this is explained in Step 6.
+
 Step 6 : Find `n` c-vectors (one for each pole) and 1 d-vector using
 ``construct_c`` and ``construct_d``. Now, determine all the ``2**(n + 1)``
 combinations of choosing between 2 choices for each of the `n` c-vectors
@@ -110,11 +116,9 @@ and 1 d-vector.
 
 For each of these above combinations, do
 
-Step 8 : Compute `m` in ``compute_degree``
+Step 8 : Compute `m` in ``compute_m_ybar``
 
-Step 9 : In ``compute_degree``, compute ybar as well. If ybar contains any
-term like `\frac{c_{ij}}{(x - oo)^j}` where `c_{ij}` is non-zero, discard
-this solution.
+Step 9 : In ``compute_m_ybar``, compute ybar as well.
 
 Step 10 : If `m` is a non-negative integer -
 
@@ -141,6 +145,7 @@ and append them to ``sol``, so that the solutions of the original equation
 are found using the solutions of the equation in its normal form.
 """
 
+from itertools import product
 from sympy.core import S
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
@@ -174,15 +179,6 @@ def linsolve_dict(eq, syms, var):
 def find_poles(num, den, x):
     # All roots of denominator are poles of a(x)
     p = roots(den, x)
-    # Substitute 1/x for x and check if oo is a pole
-    num, den = inverse_transform_poly(num, den, x)
-
-    # Find the poles of a(1/x)
-    p_inv = roots(den, x)
-
-    # If 0 is a pole of a(1/x), oo is a pole of a(x)
-    if 0 in p_inv:
-        p.update({oo: p_inv[0]})
     return p
 
 
@@ -192,7 +188,22 @@ def val_at_inf(num, den, x):
 
 
 def check_necessary_conds(val_inf, muls):
-    return (val_inf >= 2 or (val_inf <= 0 and val_inf%2 == 0)) and all([mul == 1 or (mul%2 == 0 and mul >= 2) for mul in muls])
+    """
+    The necessary conditions for a rational solution
+    to exist are as follows - 
+
+    i) Every pole of a(x) must be either a simple pole
+    or a multiple pole of even order.
+
+    ii) The valuation of a(x) at infinity must be even
+    or be greater than or equal to 2.
+
+    Here, a simple pole is a pole with multiplicity 1
+    and a multiple pole is a pole with multiplicity
+    greater than 1.
+    """
+    return (val_inf >= 2 or (val_inf <= 0 and val_inf%2 == 0)) and \
+        all([mul == 1 or (mul%2 == 0 and mul >= 2) for mul in muls])
 
 
 def inverse_transform_poly(num, den, x):
@@ -290,8 +301,10 @@ def construct_c(num, den, x, poles, muls):
     return c
 
 
-def construct_d(num, den, x, val_inf, mul):
+def construct_d(num, den, x, val_inf):
     N = -val_inf//2
+    # Multiplicity of oo as a pole
+    mul = -val_inf if val_inf < 0 else 0
     ser = rational_laurent_series(num, den, x, oo, mul, 1)
 
     # Case 4
@@ -376,7 +389,7 @@ def rational_laurent_series(num, den, x, x0, mul, n):
     return c[::-1] if reverse else c
 
 
-def compute_degree(x, poles, choice, c, d, N):
+def compute_m_ybar(x, poles, choice, c, d, N):
     ybar = 0
     m = Poly(d[choice[0]][-1], x, extension=True)
 
@@ -444,10 +457,6 @@ def solve_riccati(fx, x, b0, b1, b2):
 
     # Step 5 : Find poles and valuation at infinity
     poles = find_poles(num, den, x)
-    # If a(x) has a pole at infinity, get its multiplicity
-    inf_mul = poles.get(oo, 0)
-    # Remove oo from the set of finite poles
-    poles.pop(oo, None)
     poles, muls = list(poles.keys()), list(poles.values())
     val_inf = val_at_inf(num, den, x)
 
@@ -461,16 +470,15 @@ def solve_riccati(fx, x, b0, b1, b2):
         c = construct_c(num, den, x, poles, muls)
 
         # Construct d vectors for each singular point
-        d = construct_d(num, den, x, val_inf, inf_mul)
+        d = construct_d(num, den, x, val_inf)
 
         # Step 7 : Iterate over all possible combinations and return solutions
-        for it in range(2**(len(poles) + 1)):
-            # For each possible combination, generate an array of 0's and 1's
-            # where 0 means pick 1st choice and 1 means pick the second choice.
-            choice = [int(x) for x in bin(it)[2:].zfill(len(poles) + 1)]
-
+        # For each possible combination, generate an array of 0's and 1's
+        # where 0 means pick 1st choice and 1 means pick the second choice.
+        choices = product(range(2), repeat=len(poles) + 1)
+        for choice in choices:
             # Step 8 and 9 : Compute m and ybar
-            m, ybar, numy, deny, exists = compute_degree(x, poles, choice, c, d, -val_inf//2)
+            m, ybar, numy, deny, exists = compute_m_ybar(x, poles, choice, c, d, -val_inf//2)
 
             # Step 10 : Check if a valid solution exists. If yes, also check
             # if m is a non-negative integer
