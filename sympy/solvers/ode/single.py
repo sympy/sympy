@@ -207,7 +207,7 @@ class SingleODEProblem:
             rhs,lhs_terms = _lin_eq2dict(eq, symset)
         except PolyNonlinearError:
             return None
-        
+
         if rhs.has(func) or any(lhs_terms[i].has(func) for i in lhs_terms):
             return None
         terms = {}
