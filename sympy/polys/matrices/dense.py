@@ -73,6 +73,12 @@ def ddm_ineg(a):
 def ddm_imul(a, b):
     for ai in a:
         for j, aij in enumerate(ai):
+            ai[j] = aij * b
+
+
+def ddm_irmul(a, b):
+    for ai in a:
+        for j, aij in enumerate(ai):
             ai[j] = b * aij
 
 

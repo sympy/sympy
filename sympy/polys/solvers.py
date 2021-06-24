@@ -5,6 +5,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import connected_components
 
 from sympy.core.sympify import sympify
+from sympy.core.numbers import Integer, Rational
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.polys.domains import ZZ, QQ
 
@@ -47,9 +48,12 @@ class RawMatrix(MutableDenseMatrix):
                 elif hasattr(val, 'parent'):
                     K = val.parent()
                     val_sympy = K.to_sympy(val)
-                elif isinstance(val, int):
+                elif isinstance(val, (int, Integer)):
                     K = ZZ
                     val_sympy = sympify(val)
+                elif isinstance(val, Rational):
+                    K = QQ
+                    val_sympy = val
                 else:
                     for K in ZZ, QQ:
                         if K.of_type(val):
