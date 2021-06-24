@@ -1,4 +1,4 @@
-from sympy import sin, cos, Matrix, sqrt, pi
+from sympy import sin, cos, Matrix, sqrt, pi, expand_mul
 from sympy.core.symbol import symbols
 from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint
 from sympy.physics.mechanics.joint import Joint
@@ -152,7 +152,7 @@ def test_pinjoint_arbitrary_axis():
     assert A.ang_vel_in(N) == omega*N.x
     assert A.ang_vel_in(N).express(A) == omega * A.y
     assert A.ang_vel_in(N).magnitude() == omega
-    assert A.ang_vel_in(N).angle_between(A.y).simplify() == 0
+    assert expand_mul(A.ang_vel_in(N).angle_between(A.y)) == 0
     assert C.masscenter.vel(N) == omega*A.z
     assert C.masscenter.pos_from(P.masscenter) == -A.x
     assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == cos(theta)*N.y + sin(theta)*N.z
@@ -168,21 +168,21 @@ def test_pinjoint_arbitrary_axis():
     assert A.ang_vel_in(N) == omega*N.y
     assert A.ang_vel_in(N).express(A) == omega* A.x
     assert A.ang_vel_in(N).magnitude() == omega
-    assert A.ang_vel_in(N).angle_between(A.x).simplify() == 0
+    assert expand_mul(A.ang_vel_in(N).angle_between(A.x)) == 0
     assert C.masscenter.vel(N).simplify() == - omega*N.z
     assert C.masscenter.pos_from(P.masscenter) == N.x
 
     #Both joint pos id defined but different axes
     N, A, P, C = generate_body()
     PinJoint('J', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y)
-    assert N.x.angle_between(A.x + A.y).simplify() == 0 #Axis are aligned
+    assert expand_mul(N.x.angle_between(A.x + A.y)) == 0 #Axis are aligned
     assert (A.x + A.y).express(N).simplify() == sqrt(2)*N.x
     assert A.dcm(N).simplify() == Matrix([[sqrt(2)/2, -sqrt(2)*cos(theta)/2, -sqrt(2)*sin(theta)/2], \
         [sqrt(2)/2, sqrt(2)*cos(theta)/2, sqrt(2)*sin(theta)/2], [0, -sin(theta), cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.x
     assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y)/sqrt(2)
     assert A.ang_vel_in(N).magnitude() == omega
-    assert A.ang_vel_in(N).angle_between(A.x + A.y).simplify() == 0
+    assert expand_mul(A.ang_vel_in(N).angle_between(A.x + A.y)) == 0
     assert C.masscenter.vel(N).simplify() == (omega * A.z)/sqrt(2)
     assert C.masscenter.pos_from(P.masscenter) == N.x - A.x
     assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == \
@@ -192,7 +192,7 @@ def test_pinjoint_arbitrary_axis():
 
     N, A, P, C = generate_body()
     PinJoint('J', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y-A.z)
-    assert N.x.angle_between(A.x + A.y - A.z).simplify() == 0 #Axis are aligned
+    assert expand_mul(N.x.angle_between(A.x + A.y - A.z)) == 0 #Axis are aligned
     assert (A.x + A.y - A.z).express(N).simplify() == sqrt(3)*N.x
     assert A.dcm(N).simplify() == Matrix([[sqrt(3)/3, -sqrt(6)*sin(theta + pi/4)/3, sqrt(6)*cos(theta + pi/4)/3], \
         [sqrt(3)/3, sqrt(6)*cos(theta + pi/12)/3, sqrt(6)*sin(theta + pi/12)/3], \
@@ -200,7 +200,7 @@ def test_pinjoint_arbitrary_axis():
     assert A.ang_vel_in(N) == omega*N.x
     assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y - omega*A.z)/sqrt(3)
     assert A.ang_vel_in(N).magnitude() == omega
-    assert A.ang_vel_in(N).angle_between(A.x + A.y-A.z).simplify() == 0
+    assert expand_mul(A.ang_vel_in(N).angle_between(A.x + A.y-A.z)) == 0
     assert C.masscenter.vel(N).simplify() == (omega * A.y + omega * A.z)/sqrt(3)
     assert C.masscenter.pos_from(P.masscenter) == N.x - A.x
     assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == \
@@ -211,13 +211,13 @@ def test_pinjoint_arbitrary_axis():
     N, A, P, C = generate_body()
     m, n = symbols('m n', positive=True)
     PinJoint('J', P, C, parent_joint_pos=m*N.x, child_joint_pos=n*A.x, child_axis=A.x+A.y-A.z, parent_axis=N.x-N.y+N.z)
-    assert (N.x-N.y+N.z).angle_between(A.x+A.y-A.z).simplify() == 0 #Axis are aligned
+    assert expand_mul((N.x-N.y+N.z).angle_between(A.x+A.y-A.z)) == 0 #Axis are aligned
     assert (A.x-A.y+A.z).express(N).simplify() == \
         (-4*cos(theta)/3 - 1/3)*N.x + (1/3 - 4*sin(theta + pi/6)/3)*N.y + (4*cos(theta + pi/3)/3 - 1/3)*N.z
     assert A.ang_vel_in(N) == omega*N.x - omega*N.y + omega*N.z
     assert A.ang_vel_in(N).express(A).simplify() == omega*A.x + omega*A.y - omega*A.z
     assert A.ang_vel_in(N).magnitude() == sqrt(3)*omega
-    assert A.ang_vel_in(N).angle_between(A.x+A.y-A.z).simplify() == 0
+    assert expand_mul(A.ang_vel_in(N).angle_between(A.x+A.y-A.z)) == 0
     assert C.masscenter.vel(N).simplify() == m*omega*N.y + m*omega*N.z + n*omega*A.y + n*omega*A.z
     assert C.masscenter.pos_from(P.masscenter) == m*N.x - n*A.x
     assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == \
@@ -225,4 +225,4 @@ def test_pinjoint_arbitrary_axis():
     assert C.masscenter.vel(N).express(N).simplify() == \
         - 2*sqrt(3)*n*omega*sin(theta)/3*N.x + (3*m + 2*sqrt(3)*n*cos(theta + pi/6))*omega/3*N.y + \
         (3*m + 2*sqrt(3)*n*sin(theta + pi/3))*omega/3*N.z
-    assert C.masscenter.vel(N).angle_between(m*N.x - n*A.x).simplify() == pi/2
+    assert expand_mul(C.masscenter.vel(N).angle_between(m*N.x - n*A.x)) == pi/2
