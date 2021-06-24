@@ -6,14 +6,10 @@ from sympy.core import SympifyError, Add
 from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
-from sympy.core.numbers import Integer, Rational
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 from sympy.functions import Abs
-from sympy.polys.domains import ZZ, QQ, EXRAW
-from sympy.polys.matrices import DomainMatrix
 from sympy.utilities.iterables import uniq
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .common import a2idx
 from .dense import Matrix
@@ -724,40 +720,12 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         obj = super().__new__(cls)
         rows, cols, smat = cls._handle_creation_inputs(*args, **kwargs)
 
-        types = set(map(type, smat.values()))
-        if not all(issubclass(typ, Expr) for typ in types):
-            SymPyDeprecationWarning(
-                feature="non-Expr objects in a Matrix",
-                useinstead="list of lists, TableForm or some other data structure",
-                issue=21497,
-                deprecated_since_version="1.9"
-            ).warn()
-
-        if all(issubclass(typ, Rational) for typ in types):
-            if all(issubclass(typ, Integer) for typ in types):
-                domain = ZZ
-            else:
-                domain = QQ
-        else:
-            domain = EXRAW
-
-        elements_dod = defaultdict(dict)
-        for (i, j), element in smat.items():
-            if element != 0:
-                elements_dod[i][j] = element
-
-        if domain != EXRAW:
-            # XXX: In some deprecated cases the elements may not be Expr.
-            # We avoid calling EXRAW.from_sympy because it checks that the
-            # argument actually is Expr and raises otherwise.
-            from_sympy = domain.from_sympy
-            elements_dod = {i: {j: from_sympy(e) for j, e in row.items()}
-                                        for i, row in elements_dod.items()}
+        rep = cls._smat_to_DomainMatrix(rows, cols, smat)
 
         obj.rows = rows
         obj.cols = cols
         obj._smat = smat
-        obj._rep = DomainMatrix(elements_dod, (rows, cols), domain)
+        obj._rep = rep
         return obj
 
     def __setitem__(self, key, value):

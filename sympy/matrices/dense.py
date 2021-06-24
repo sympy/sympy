@@ -1,5 +1,4 @@
 import random
-from collections import defaultdict
 from operator import index as index_
 
 from sympy.core import SympifyError
@@ -7,7 +6,6 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
 from sympy.core.kind import NumberKind, UndefinedKind
-from sympy.core.numbers import Rational, Integer
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -18,8 +16,6 @@ from sympy.matrices.matrices import MatrixBase
 from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
-
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .decompositions import _cholesky, _LDLdecomposition
 from .solvers import _lower_triangular_solve, _upper_triangular_solve
@@ -86,74 +82,6 @@ class DenseMatrix(MatrixBase):
         else:
             raise RuntimeError("Domain should only be ZZ, QQ or EXRAW")
         return MatrixKind(element_kind)
-
-    def _unify_element_sympy(self, element):
-        rep = self._rep
-        domain = rep.domain
-        element = _sympify(element)
-
-        if domain != EXRAW:
-            # The domain can only be ZZ, QQ or EXRAW
-            if element.is_Integer:
-                new_domain = domain
-            elif element.is_Rational:
-                new_domain = QQ
-            else:
-                new_domain = EXRAW
-
-            # XXX: This converts the domain for all elements in the
-            # matrix just because one element has been modified.
-            if new_domain != domain:
-                rep = rep.convert_to(new_domain)
-
-            element = new_domain.from_sympy(element)
-
-        if domain == EXRAW and not isinstance(element, Expr):
-            SymPyDeprecationWarning(
-                feature="non-Expr objects in a Matrix",
-                useinstead="list of lists, TableForm or some other data structure",
-                issue=21497,
-                deprecated_since_version="1.9"
-            ).warn()
-
-        return rep, element
-
-    @classmethod
-    def _flat_list_to_DomainMatrix(cls, rows, cols, flat_list):
-
-        types = set(map(type, flat_list))
-        if not all(issubclass(typ, Expr) for typ in types):
-            SymPyDeprecationWarning(
-                feature="non-Expr objects in a Matrix",
-                useinstead="list of lists, TableForm or some other data structure",
-                issue=21497,
-                deprecated_since_version="1.9"
-            ).warn()
-
-        if all(issubclass(typ, Rational) for typ in types):
-            if all(issubclass(typ, Integer) for typ in types):
-                domain = ZZ
-            else:
-                domain = QQ
-        else:
-            domain = EXRAW
-
-        elements_dod = defaultdict(dict)
-        for n, element in enumerate(flat_list):
-            if element != 0:
-                i, j = divmod(n, cols)
-                elements_dod[i][j] = element
-
-        if domain != EXRAW:
-            # XXX: In some deprecated cases the elements may not be Expr.
-            # We avoid calling EXRAW.from_sympy because it checks that the
-            # argument actually is Expr and raises otherwise.
-            from_sympy = domain.from_sympy
-            elements_dod = {i: {j: from_sympy(e) for j, e in row.items()}
-                                        for i, row in elements_dod.items()}
-
-        rep = DomainMatrix(elements_dod, (rows, cols), domain)
-        return rep
 
     def __getitem__(self, key):
         """Return portion of self defined by key. If the key involves a slice
@@ -266,11 +194,11 @@ class DenseMatrix(MatrixBase):
                         try_block_diag=kwargs.get('try_block_diag', False))
 
     def _eval_scalar_mul(self, other):
-        rep, other = self._unify_element_sympy(other)
+        rep, other = self._unify_element_sympy(self._rep, other)
         return self._fromrep(rep.scalarmul(other))
 
     def _eval_scalar_rmul(self, other):
-        rep, other = self._unify_element_sympy(other)
+        rep, other = self._unify_element_sympy(self._rep, other)
         return self._fromrep(rep.rscalarmul(other))
 
     def _eval_tolist(self):
@@ -460,7 +388,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         rv = self._setitem(key, value)
         if rv is not None:
             i, j, value = rv
-            self._rep, value = self._unify_element_sympy(value)
+            self._rep, value = self._unify_element_sympy(self._rep, value)
             self._rep.rep.setitem(i, j, value)
 
     def as_mutable(self):

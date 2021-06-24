@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import mpmath as mp
 
 from sympy.core.add import Add
@@ -8,6 +10,7 @@ from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
 from sympy.core.kind import _NumberKind, NumberKind, UndefinedKind
 from sympy.core.mul import Mul
+from sympy.core.numbers import Integer, Rational
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, uniquely_named_symbol
@@ -17,6 +20,8 @@ from sympy.functions import exp, factorial, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import cancel
+from sympy.polys.domains import ZZ, QQ, EXRAW
+from sympy.polys.matrices import DomainMatrix
 from sympy.printing import sstr
 from sympy.printing.defaults import Printable
 from sympy.simplify import simplify as _simplify
@@ -1125,6 +1130,86 @@ class MatrixBase(MatrixDeprecated,
                 or lists of values.'''))
 
         return rows, cols, flat_list
+
+    @classmethod
+    def _unify_element_sympy(cls, rep, element):
+        domain = rep.domain
+        element = _sympify(element)
+
+        if domain != EXRAW:
+            # The domain can only be ZZ, QQ or EXRAW
+            if element.is_Integer:
+                new_domain = domain
+            elif element.is_Rational:
+                new_domain = QQ
+            else:
+                new_domain = EXRAW
+
+            # XXX: This converts the domain for all elements in the matrix
+            # which can be slow. This happens e.g. if __setitem__ changes one
+            # element to something that does not fit in the domain
+            if new_domain != domain:
+                rep = rep.convert_to(new_domain)
+
+            element = new_domain.from_sympy(element)
+
+        if domain == EXRAW and not isinstance(element, Expr):
+            SymPyDeprecationWarning(
+                feature="non-Expr objects in a Matrix",
+                useinstead="list of lists, TableForm or some other data structure",
+                issue=21497,
+                deprecated_since_version="1.9"
+            ).warn()
+
+        return rep, element
+
+    @classmethod
+    def _dod_to_DomainMatrix(cls, rows, cols, dod, types):
+
+        if not all(issubclass(typ, Expr) for typ in types):
+            SymPyDeprecationWarning(
+                feature="non-Expr objects in a Matrix",
+                useinstead="list of lists, TableForm or some other data structure",
+                issue=21497,
+                deprecated_since_version="1.9"
+            ).warn()
+
+        rep = DomainMatrix(dod, (rows, cols), EXRAW)
+
+        if all(issubclass(typ, Rational) for typ in types):
+            if all(issubclass(typ, Integer) for typ in types):
+                rep = rep.convert_to(ZZ)
+            else:
+                rep = rep.convert_to(QQ)
+
+        return rep
+
+    @classmethod
+    def _flat_list_to_DomainMatrix(cls, rows, cols, flat_list):
+
+        elements_dod = defaultdict(dict)
+        for n, element in enumerate(flat_list):
+            if element != 0:
+                i, j = divmod(n, cols)
+                elements_dod[i][j] = element
+
+        types = set(map(type, flat_list))
+
+        rep = cls._dod_to_DomainMatrix(rows, cols, elements_dod, types)
+        return rep
+
+    @classmethod
+    def _smat_to_DomainMatrix(cls, rows, cols, smat):
+
+        elements_dod = defaultdict(dict)
+        for (i, j), element in smat.items():
+            if element != 0:
+                elements_dod[i][j] = element
+
+        types = set(map(type, smat.values()))
+
+        rep = cls._dod_to_DomainMatrix(rows, cols, elements_dod, types)
+        return rep
 
     def _setitem(self, key, value):
         """Helper to set value at location given by key.
