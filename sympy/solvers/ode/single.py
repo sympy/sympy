@@ -120,7 +120,7 @@ class SingleODEProblem:
                     den = self.func**r[c1]
                     reduced_eq = Add(*[arg/den for arg in self.eq.args])
         if not reduced_eq:
-            reduced_eq = self.eq
+            reduced_eq = expand(self.eq)
         return reduced_eq
 
     @cached_property
@@ -2321,7 +2321,7 @@ class NthConstCoeffVar(SingleODESolver):
         The general solution.
 
         """
-        eq = self.ode_problem.eq_high_order_free
+        eq = self.ode_problem.eq
         f = self.ode_problem.func.func
         order = self.ode_problem.order
         x = self.ode_problem.sym
@@ -2629,7 +2629,7 @@ class NthConstCoeffUndet(SingleODESolver):
         ``_undetermined_coefficients_match()['trialset']``.
 
         """
-        eq = self.ode_problem.eq_high_order_free
+        eq = self.ode_problem.eq
         x = self.ode_problem.sym
         f = self.ode_problem.func.func
         order = self.ode_problem.order
