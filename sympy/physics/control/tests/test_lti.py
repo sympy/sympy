@@ -1,6 +1,6 @@
 from sympy import symbols, factor, Function, simplify, exp, oo, I, \
     S, Mul, Pow, Add, Rational, sqrt, CRootOf
-from sympy.matrices import Matrix
+from sympy.matrices import ImmutableMatrix, Matrix
 from sympy.physics.control import TransferFunction, Series, Parallel, \
     Feedback, TransferFunctionMatrix
 from sympy.core.containers import Tuple
@@ -802,6 +802,28 @@ def test_TransferFunctionMatrix_construction():
 
 def test_TransferFunctionMatrix_functions():
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
+    # TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    # TF2 = TransferFunction(k, 1, s)
+    # TF3 = TransferFunction(a2*p - s, a2*s + p, s)
+
+    #  Classmethod (from_matrix)
+
+    mat_1 = ImmutableMatrix([
+        [s*(s + 1)*(s - 3)/(s**4 + 1), 2],
+        [p, p*(s + 1)/(s*(s**1 + 1))]
+        ])
+    mat_2 = ImmutableMatrix([[(2*s + 1)/(s**2 - 9)]])
+    mat_3 = ImmutableMatrix([[1, 2], [3, 4]])
+    assert TransferFunctionMatrix.from_matrix(mat_1, s) == \
+        TransferFunctionMatrix([[TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s), TransferFunction(2, 1, s)],
+        [TransferFunction(p, 1, s), TransferFunction(p, s, s)]])
+    assert TransferFunctionMatrix.from_matrix(mat_2, s) == \
+        TransferFunctionMatrix([[TransferFunction(2*s + 1, s**2 - 9, s)]])
+    assert TransferFunctionMatrix.from_matrix(mat_3, p) == \
+        TransferFunctionMatrix([[TransferFunction(1, 1, p), TransferFunction(2, 1, p)],
+        [TransferFunction(3, 1, p), TransferFunction(4, 1, p)]])
+
+    #  Negating a TFM
 
     tfm1 = TransferFunctionMatrix([[TF1], [TF2]])
     assert -tfm1 == TransferFunctionMatrix([[-TF1], [-TF2]])
