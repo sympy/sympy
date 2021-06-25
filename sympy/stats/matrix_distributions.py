@@ -6,6 +6,7 @@ from sympy.matrices import (ImmutableMatrix, Inverse, Trace, Determinant,
 from sympy.stats.rv import (_value_check, RandomMatrixSymbol, NamedArgsMixin, PSpace,
                             _symbol_converter, MatrixDomain, Distribution)
 from sympy.external import import_module
+from sympy.testing.pytest import ignore_warnings
 
 
 ################################################################################
@@ -166,9 +167,12 @@ class SampleMatrixPymc:
             draws = draws[0]
         else:
             raise TypeError("Invalid value for `size` in pymc3. Must be int")
-        with pymc3.Model():
-            pymc3_rv_map[dist.__class__.__name__](dist)
-            return [pymc3.sample(draws=draws, chains=1, progressbar=False, random_seed=seed)['X']]
+        import logging
+        logging.getLogger("pymc3").setLevel(logging.ERROR)
+        with ignore_warnings(UserWarning):
+            with pymc3.Model():
+                pymc3_rv_map[dist.__class__.__name__](dist)
+                return [pymc3.sample(draws=draws, chains=1, progressbar=False, random_seed=seed, return_inferencedata=False)['X']]
 
 _get_sample_class_matrixrv = {
     'scipy': SampleMatrixScipy,

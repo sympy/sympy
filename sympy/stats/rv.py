@@ -28,6 +28,7 @@ from sympy.external import import_module
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.testing.pytest import ignore_warnings
 import warnings
 
 
@@ -1087,7 +1088,7 @@ def sample(expr, condition=None, size=(), library='scipy',
     sample: float/list/numpy.ndarray
         one sample or a collection of samples of the random expression.
 
-        - sample(X) returns float object.
+        - sample(X) returns float/numpy.float64/numpy.int64 object.
         - sample(X, size=int/tuple) returns numpy.ndarray object.
 
     Examples
@@ -1144,8 +1145,6 @@ def sample(expr, condition=None, size=(), library='scipy',
                  issue=21563,
                  deprecated_since_version="1.9").warn()
 
-        if library == 'pymc3':
-            raise NotImplementedError("numsamples is not currently implemented for pymc3")
         return [next(iterator) for i in range(numsamples)]
 
     return next(iterator)
@@ -1296,12 +1295,19 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
         count = 0
         np = import_module('numpy')
         if np:
-            rand_state = np.random.default_rng(seed=seed)
+            rand_state = np.random.default_rng(seed=seed) if library != "pymc3" else seed
         else:
             rand_state = None
+        if library == "pymc3":
+            _size = (1,)+((size,) if isinstance(size, int) else size)
+        else:
+            _size = size
         while count < numsamples:
-            d = ps.sample(size=size, library=library, seed=rand_state)  # a dictionary that maps RVs to values
-            args = [d[rv] for rv in rvs]
+            d = ps.sample(size=_size, library=library, seed=rand_state)  # a dictionary that maps RVs to values
+            if library == "pymc3":
+                args = [d[rv][0] for rv in rvs]
+            else:
+                args = [d[rv] for rv in rvs]
 
             if condition is not None:  # Check that these values satisfy the condition
                 # TODO: Replace the try-except block with only given_fn(*args)
@@ -1589,11 +1595,10 @@ class Distribution(Basic):
                 rand_state = numpy.random.default_rng(seed=seed)
             else:
                 rand_state = seed
-            samps = do_sample_numpy(self, size, rand_state)
-
+            _size = None if size == () else size
+            samps = do_sample_numpy(self, _size, rand_state)
         elif library == 'pymc3':
             from sympy.stats.sampling.sample_pymc3 import do_sample_pymc3
-            import pymc3
             #size accepts only int in case of pymc3
             #see https://github.com/sympy/sympy/pull/21590#discussion_r649783860
 
@@ -1604,14 +1609,20 @@ class Distribution(Basic):
                 draws = draws[0]
             else:
                 raise TypeError("Invalid value for `size` in pymc3. Must be int")
-            with pymc3.Model():
-                if do_sample_pymc3(self):
-                    samps = [pymc3.sample(draws=draws, chains=1,
-                                          progressbar=False, random_seed=seed)[:]['X']]
-                    if size == (1,):
-                        samps=list(samps[0])
-                else:
-                    samps = None
+            import logging
+            logging.getLogger("pymc3").setLevel(logging.ERROR)
+            with ignore_warnings(UserWarning):
+                import pymc3
+                with pymc3.Model():
+                    if do_sample_pymc3(self):
+                        samps = [pymc3.sample(draws=draws, chains=1,
+                                    progressbar=False, random_seed=seed, return_inferencedata=False)[:]['X'] for i in range(size[0])]
+                        if size[0] == 1 and draws == 1: #if numsamples=1 and size=()
+                            samps = samps[0]
+                        elif size[0] != 1 and draws == 1: #if numsamples=int and size=()
+                            samps = [sam[0] for sam in samps]
+                    else:
+                        samps = None
 
         else:
             raise NotImplementedError("Sampling from %s is not supported yet."

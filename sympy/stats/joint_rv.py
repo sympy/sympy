@@ -25,6 +25,7 @@ from sympy.stats.rv import (ProductPSpace, NamedArgsMixin, Distribution,
                             SingleDomain, _symbol_converter)
 from sympy.utilities.misc import filldedent
 from sympy.external import import_module
+from sympy.testing.pytest import ignore_warnings
 
 # __all__ = ['marginal_distribution']
 
@@ -243,9 +244,12 @@ class SampleJointPymc:
             draws = draws[0]
         else:
             raise TypeError("Invalid value for `size` in pymc3. Must be int")
-        with pymc3.Model():
-            pymc3_rv_map[dist.__class__.__name__](dist)
-            samples = pymc3.sample(draws=draws, chains=1, progressbar=False, random_seed=seed)[:]['X']
+        import logging
+        logging.getLogger("pymc3").setLevel(logging.ERROR)
+        with ignore_warnings(UserWarning):
+            with pymc3.Model():
+                pymc3_rv_map[dist.__class__.__name__](dist)
+                samples = pymc3.sample(draws=draws, chains=1, progressbar=False, random_seed=seed, return_inferencedata=False)[:]['X']
             if samples.shape[0:len(size)] != size:
                 samples = samples.reshape((size[0],) + samples.shape)
             return samples
