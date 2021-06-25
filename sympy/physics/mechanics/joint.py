@@ -299,6 +299,13 @@ class PinJoint(Joint):
         [ cos(J1_theta(t))*cos(J2_theta(t)), sin(J2_theta(t)), -sin(J1_theta(t))*cos(J2_theta(t))],
         [-sin(J2_theta(t))*cos(J1_theta(t)), cos(J2_theta(t)),  sin(J1_theta(t))*sin(J2_theta(t))],
         [                  sin(J1_theta(t)),                0,                   cos(J1_theta(t))]])
+
+    Notes
+    ======
+
+    All symbols and dynamicsymbols used with `Joints` should be used with correct
+    assumption, i.e. positive=True else it may give incorrect results in some cases.
+
     """
 
     def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None,
