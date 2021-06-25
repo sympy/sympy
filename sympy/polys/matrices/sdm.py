@@ -880,22 +880,17 @@ def sdm_matmul(A, B, K, m, o):
     C = {}
     B_knz = set(B)
     for i, Ai in A.items():
-        Ci = {}
+        Ci_list = defaultdict(list)
         Ai_knz = set(Ai)
         for k in Ai_knz & B_knz:
             Aik = Ai[k]
             for j, Bkj in B[k].items():
-                Cij = Ci.get(j, None)
-                if Cij is not None:
-                    Cij = Cij + Aik * Bkj
-                    if Cij:
-                        Ci[j] = Cij
-                    else:
-                        Ci.pop(j)
-                else:
-                    Cij = Aik * Bkj
-                    if Cij:
-                        Ci[j] = Cij
+                Ci_list[j].append(Aik * Bkj)
+        Ci = {}
+        for j, Cij_list in Ci_list.items():
+            Cij = sum(Cij_list)
+            if Cij:
+                Ci[j] = Cij
         if Ci:
             C[i] = Ci
     return C

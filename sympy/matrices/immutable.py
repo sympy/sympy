@@ -80,7 +80,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
         obj = Basic.__new__(cls,
             Integer(rows),
             Integer(cols),
-            Tuple(*flat_list))
+            Tuple(*flat_list, sympify=False))
         obj._rows = rows
         obj._cols = cols
         obj._rep = rep
