@@ -200,19 +200,15 @@ class SingleODEProblem:
         """
         f = func.func
         x = func.args[0]
-        symset = set()
-        for i in range(order+1):
-            symset.add(f(x).diff(x,i))
+        symset = {Derivative(f(x), x, i) for i in range(order+1)}
         try:
             rhs,lhs_terms = _lin_eq2dict(eq, symset)
         except PolyNonlinearError:
             return None
 
-        if rhs.has(func) or any(lhs_terms[i].has(func) for i in lhs_terms):
+        if rhs.has(func) or any(c.has(func) for c in lhs_terms.values()):
             return None
-        terms = {}
-        for i in range(order+1):
-            terms[i] = lhs_terms.get(f(x).diff(x,i), S.Zero)
+        terms = {i: lhs_terms.get(f(x).diff(x, i), S.Zero) for i in range(order+1)}
         terms[-1] = rhs
         return terms
 
