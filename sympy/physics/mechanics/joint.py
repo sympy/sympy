@@ -335,7 +335,7 @@ class PinJoint(Joint):
             self._child.frame.orient_axis(self._parent.frame, self._parent_axis, self._coordinates[0])
 
     def _set_angular_velocity(self):
-        self._child.frame.set_ang_vel(self._parent.frame, self._speeds[0] * self._parent_axis)
+        self._child.frame.set_ang_vel(self._parent.frame, self._speeds[0] * self._parent_axis.normalize())
 
     def _set_linear_velocity(self):
         self._parent_joint.set_vel(self._parent.frame, 0)
