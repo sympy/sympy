@@ -306,7 +306,7 @@ def test_TransferFunction_functions():
     assert tf8.to_expr() == Mul((a0*s**5 + 5*s**2 + 3), Pow((s**6 - 3), -1, evaluate=False), evaluate=False)
     assert tf9.to_expr() == Mul((s + 5), Pow((5 + s)*(6 + s), -1, evaluate=False), evaluate=False)
     assert tf10.to_expr() == Mul(S(0), Pow(1, -1, evaluate=False), evaluate=False)
-    assert tf11.to_expr() == Mul(S(1), Pow(1, -1, evaluate=False), evaluate=False)
+    assert tf11.to_expr() == Pow(1, -1, evaluate=False)
 
 def test_TransferFunction_addition_and_subtraction():
     tf1 = TransferFunction(s + 6, s - 5, s)

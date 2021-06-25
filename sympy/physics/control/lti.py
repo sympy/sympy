@@ -691,7 +691,10 @@ class TransferFunction(Basic, EvalfMixin):
 
         """
 
-        return Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
+        if self.num != 1:
+            return Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
+        else:
+            return Pow(self.den, -1, evaluate=False)
 
 
 class Series(Basic):
@@ -1665,6 +1668,73 @@ class TransferFunctionMatrix(Basic):
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
         obj._expr_mat = ImmutableMatrix(expr_mat_arg)
         return obj
+
+    @classmethod
+    def from_matrix(cls, matrix, var):
+        """
+        Creates a new ``TransferFunctionMatrix`` efficiently from a SymPy Matrix of ``Expr`` objects.
+
+        Parameters
+        ==========
+
+        matrix : ``ImmutableMatrix`` having ``Expr``/``Number`` elements.
+        var : Symbol
+            Complex variable of the Laplace transform which will be used by the
+            all the ``TransferFunction`` objects in the ``TransferFunctionMatrix``
+            object.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a
+        >>> from sympy.physics.control.lti import TransferFunctionMatrix
+        >>> from sympy.matrices import ImmutableMatrix
+        >>> from sympy.printing import pprint
+        >>> expr1 = (s + 5)/(3*s**2 + 2*s + 1)
+        >>> expr2 = 1/s
+        >>> expr3 = 1/s**2
+        >>> expr4 = 1/(s + 1)
+        >>> mat_1 = ImmutableMatrix([[expr1, expr2], [expr3, expr4]])
+        >>> mat_1
+        Matrix([
+        [(s + 5)/(3*s**2 + 2*s + 1),       1/s],
+        [                   s**(-2), 1/(s + 1)]])
+        >>> tfm_1 = TransferFunctionMatrix.from_matrix(mat_1, s)
+        >>> tfm_1
+        TransferFunctionMatrix(((TransferFunction(s + 5, 3*s**2 + 2*s + 1, s), TransferFunction(1, s, s)), (TransferFunction(1, s**2, s), TransferFunction(1, s + 1, s))))
+        >>> pprint(tfm_1, use_unicode=False)
+        [    s + 5         1  ]
+        [--------------    -  ]
+        [   2              s  ]
+        [3*s  + 2*s + 1       ]
+        [                     ]
+        [      1           1  ]
+        [      --        -----]
+        [       2        s + 1]
+        [      s              ]
+        >>> expr_5 = 10
+        >>> expr_6 = 1/(s*(s - 1))
+        >>> expr_7 = p/(s - 1)
+        >>> expr_8 = a/(a*s + p)
+        >>> mat_2 = ImmutableMatrix([[expr_5, expr_6], [expr_7, expr_8]])
+        >>> mat_2
+        Matrix([
+        [       10, 1/(s*(s - 1))],
+        [p/(s - 1),   a/(a*s + p)]])
+        >>> tfm_2 = TransferFunctionMatrix.from_matrix(mat_2, s)
+        >>> tfm_2
+        TransferFunctionMatrix(((TransferFunction(10, 1, s), TransferFunction(1, s*(s - 1), s)), (TransferFunction(p, s - 1, s), TransferFunction(a, a*s + p, s))))
+        >>> pprint(tfm_2, use_unicode=False)
+        [ 10        1    ]
+        [ --    ---------]
+        [ 1     s*(s - 1)]
+        [                ]
+        [  p        a    ]
+        [-----   ------- ]
+        [s - 1   a*s + p ]
+
+        """
+        return _to_TFM(matrix, var)
 
     @property
     def var(self):
