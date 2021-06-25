@@ -2614,14 +2614,14 @@ def test_pretty_TransferFunctionMatrix():
 """
     expected5 = \
 """\
-⎡ (x - y)⋅(x + y)    x + y       y     ⎤\n\
-⎢─────────────────  ───────  ──────────⎥\n\
-⎢(x - 2⋅y)⋅(x + y)  x - 2⋅y   2        ⎥\n\
-⎢                            x  + x + 1⎥\n\
-⎢                                      ⎥\n\
-⎢     2 - 2⋅y        x + y      -2     ⎥\n\
-⎢    ─────────      ───────     ───    ⎥\n\
-⎣    2⋅x - 2⋅y      x - 2⋅y      2     ⎦\
+⎡ x + y  x - y   x + y       y     ⎤\n\
+⎢───────⋅─────  ───────  ──────────⎥\n\
+⎢x - 2⋅y x + y  x - 2⋅y   2        ⎥\n\
+⎢                        x  + x + 1⎥\n\
+⎢                                  ⎥\n\
+⎢  1 - x   2     x + y      -2     ⎥\n\
+⎢  ───── + ─    ───────     ───    ⎥\n\
+⎣  x - y   2    x - 2⋅y      2     ⎦\
 """
 
     assert upretty(TransferFunctionMatrix([[tf1], [tf2]])) == expected1

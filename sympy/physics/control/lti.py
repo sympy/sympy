@@ -1,4 +1,4 @@
-from sympy import Basic, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots
+from sympy import Basic, Add, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots
 from sympy.core.containers import Tuple
 from sympy.core.evalf import EvalfMixin
 from sympy.core.logic import fuzzy_and
@@ -896,6 +896,15 @@ class Series(Basic):
     def __neg__(self):
         return Series(TransferFunction(-1, 1, self.var), self)
 
+    def _to_expr(self):
+        temp = []
+        for arg in self.args:
+            if isinstance(arg, TransferFunction):
+                temp.append(arg.to_expr())
+            else:
+                temp.append(arg._to_expr())
+        return Mul(*temp, evaluate=False)
+
     @property
     def is_proper(self):
         """
@@ -1150,6 +1159,15 @@ class Parallel(Basic):
 
     def __neg__(self):
         return Series(TransferFunction(-1, 1, self.var), self)
+
+    def _to_expr(self):
+        temp = []
+        for arg in self.args:
+            if isinstance(arg, TransferFunction):
+                temp.append(arg.to_expr())
+            else:
+                temp.append(arg._to_expr())
+        return Add(*temp, evaluate=False)
 
     @property
     def is_proper(self):
@@ -1657,7 +1675,7 @@ class TransferFunctionMatrix(Basic):
                 if isinstance(arg[row][col], TransferFunction):
                     temp.append(arg[row][col].to_expr())
                 else:
-                    temp.append(arg[row][col].doit().to_expr())
+                    temp.append(arg[row][col]._to_expr())
             expr_mat_arg.append(temp)
 
 
