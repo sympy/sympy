@@ -4,7 +4,7 @@ from collections.abc import Hashable
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, Poly, Pow, PurePoly, Rational,
-    S, Symbol, cos, exp, log, oo, pi, signsimp, simplify, sin,
+    S, Symbol, cos, exp, log, nan, oo, pi, signsimp, simplify, sin,
     sqrt, symbols, sympify, trigsimp, tan, sstr, diff, Function, expand, FiniteSet)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
@@ -187,6 +187,12 @@ def test_multiplication():
         assert c[0, 1] == 2*5
         assert c[1, 0] == 3*5
         assert c[1, 1] == 0
+
+    M = Matrix([[oo, 0], [0, oo]])
+    assert M ** 2 == M
+
+    M = Matrix([[oo, oo], [0, 0]])
+    assert M ** 2 == Matrix([[nan, nan], [nan, nan]])
 
 
 def test_power():

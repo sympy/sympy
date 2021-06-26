@@ -4,7 +4,7 @@ Tests for the basic functionality of the SDM class.
 
 from itertools import product
 
-from sympy.core.numbers import oo
+from sympy import S
 from sympy.core.compatibility import HAS_GMPY
 from sympy.testing.pytest import raises
 
@@ -262,7 +262,7 @@ def test_matmul_exraw():
                 result[i] = row
         return SDM(result, (2, 2), EXRAW)
 
-    values = [-oo, -1, 0, 1, oo]
+    values = [S.NegativeInfinity, S.NegativeOne, S.Zero, S.One, S.Infinity]
     for a, b, c, d in product(*[values]*4):
         Ad = dm({0: {0:a, 1:b}, 1: {0:c, 1:d}})
         Ad2 = dm({0: {0:a*a + b*c, 1:a*b + b*d}, 1:{0:c*a + d*c, 1: c*b + d*d}})
