@@ -646,9 +646,9 @@ class ReferenceFrame:
         from sympy.physics.vector.functions import dynamicsymbols
         _check_frame(parent)
 
+        axis = _check_vector(axis)
         amount = sympify(angle)
         theta = amount
-        axis = _check_vector(axis)
         parent_orient_axis = []
 
         if not axis.dt(parent) == 0:
