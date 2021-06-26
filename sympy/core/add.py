@@ -1016,7 +1016,7 @@ class Add(Expr, AssocOp):
             res = Order(1)
             incr = S.One
             while res.is_Order:
-                res = old._eval_nseries(x, n=n0+incr, logx=None, cdir=cdir).cancel().trigsimp()
+                res = old._eval_nseries(x, n=n0+incr, logx=None, cdir=cdir).cancel().powsimp().trigsimp()
                 incr *= 2
             return res.as_leading_term(x, logx=logx, cdir=cdir)
 

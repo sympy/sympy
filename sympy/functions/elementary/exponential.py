@@ -3,7 +3,7 @@ from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.function import (
     Function, ArgumentIndexError, _coeff_isneg,
-    expand_mul, FunctionClass)
+    expand_mul, FunctionClass, PoleError)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Rational
@@ -473,13 +473,15 @@ class exp(ExpBase, metaclass=ExpMeta):
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import ceiling, limit, oo, Order, powsimp, Wild, expand_complex
+        from sympy import ceiling, limit, Order, powsimp, Wild, expand_complex
         arg = self.exp
         arg_series = arg._eval_nseries(x, n=n, logx=logx)
         if arg_series.is_Order:
             return 1 + arg_series
         arg0 = limit(arg_series.removeO(), x, 0)
-        if arg0 in [-oo, oo]:
+        if arg0 is S.NegativeInfinity:
+            return Order(x**n, x)
+        if arg0 is S.Infinity:
             return self
         t = Dummy("t")
         nterms = n
@@ -514,24 +516,12 @@ class exp(ExpBase, metaclass=ExpMeta):
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import Order
-        arg = self.args[0]
-        if arg.is_Add:
-            return Mul(*[exp(f).as_leading_term(x, logx=logx) for f in arg.args])
-        arg_1 = arg.as_leading_term(x, logx=logx)
-        if Order(x, x).contains(arg_1):
+        arg = self.args[0].cancel().as_leading_term(x, logx=logx)
+        if Order(x, x).contains(arg):
             return S.One
-        if Order(1, x).contains(arg_1):
-            return exp(arg_1)
-        ####################################################
-        # The correct result here should be 'None'.        #
-        # Indeed arg in not bounded as x tends to 0.       #
-        # Consequently the series expansion does not admit #
-        # the leading term.                                #
-        # For compatibility reasons, the return value here #
-        # is the original function, i.e. exp(arg),         #
-        # instead of None.                                 #
-        ####################################################
-        return exp(arg)
+        if Order(1, x).contains(arg):
+            return exp(arg)
+        raise PoleError("Cannot expand %s around 0" % (self))
 
     def _eval_rewrite_as_sin(self, arg, **kwargs):
         from sympy import sin

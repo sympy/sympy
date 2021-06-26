@@ -445,13 +445,13 @@ def test_as_leading_term():
     f = -3*x + (x + Rational(3, 2) - sqrt(3)*S.ImaginaryUnit/2)**2\
         - Rational(3, 2) + 3*sqrt(3)*S.ImaginaryUnit/2
     assert f.as_leading_term(x) == \
-        (3*sqrt(3)*x - 3*S.ImaginaryUnit*x)/(sqrt(3) + 3*S.ImaginaryUnit)
+        (12*sqrt(3)*x - 12*S.ImaginaryUnit*x)/(4*sqrt(3) + 12*S.ImaginaryUnit)
 
     # https://github.com/sympy/sympy/issues/21245
     f = 1 - x - x**2
     fi = (1 + sqrt(5))/2
     assert f.subs(x, y + 1/fi).as_leading_term(y) == \
-        (-36*sqrt(5)*y - 80*y)/(16*sqrt(5) + 36)
+        (-576*sqrt(5)*y - 1280*y)/(256*sqrt(5) + 576)
 
 
 def test_leadterm2():

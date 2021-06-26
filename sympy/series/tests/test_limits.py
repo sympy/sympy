@@ -258,7 +258,6 @@ def test_doit2():
     assert l.doit(deep=False) == l
 
 
-@XFAIL
 def test_issue_2929():
     assert limit((x * exp(x))/(exp(x) - 1), x, -oo) == 0
 
@@ -815,8 +814,7 @@ def test_issue_17671():
 
 def test_issue_17751():
     a, b, c, x = symbols('a b c x', positive=True)
-    assert limit((a + 1)*x - sqrt((a + 1)**2*x**2 + b*x + c), x, oo) == \
-            (-a*b - b)/(2*a**2 + 4*a + 2)
+    assert limit((a + 1)*x - sqrt((a + 1)**2*x**2 + b*x + c), x, oo) == -b/(2*a + 2)
 
 
 def test_issue_17792():
@@ -953,4 +951,4 @@ def test_issue_21038():
 
 def test_issue_21550():
     r = (sqrt(5) - 1)/2
-    assert limit((x - r)/(x**2 + x - 1), x, r) == (-1 + sqrt(5))/(5 - sqrt(5))
+    assert limit((x - r)/(x**2 + x - 1), x, r) == sqrt(5)/5

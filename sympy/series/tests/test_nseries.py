@@ -482,7 +482,7 @@ def test_issue_4441():
         a**4*x**4 + O(x**5)
     f = 1/(1 + (a + b)*x)
     assert f.series(x, 0, 3) == 1 + x*(-a - b)\
-        + x**2*(a**2 + 2*a*b + b**2) + O(x**3)
+        + x**2*(a + b)**2 + O(x**3)
 
 
 def test_issue_4329():

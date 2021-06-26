@@ -168,11 +168,11 @@ def test_multivar_0():
     assert Order(x*y*z).expr == x*y*z
     assert Order(x/y).expr == x/y
     assert Order(x*exp(1/y)).expr == x*exp(1/y)
-    assert Order(exp(x)*exp(1/y)).expr == exp(1/y)
+    assert Order(exp(x)*exp(1/y)).expr == exp(x)*exp(1/y)
 
 
 def test_multivar_0a():
-    assert Order(exp(1/x)*exp(1/y)).expr == exp(1/x + 1/y)
+    assert Order(exp(1/x)*exp(1/y)).expr == exp(1/x)*exp(1/y)
 
 
 def test_multivar_1():

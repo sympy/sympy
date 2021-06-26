@@ -1859,7 +1859,7 @@ class Mul(Expr, AssocOp):
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        from sympy import degree, Mul, Order, ceiling, powsimp, PolynomialError
+        from sympy import degree, Mul, Order, ceiling, powsimp, PolynomialError, PoleError
         from itertools import product
 
         def coeff_exp(term, x):
@@ -1897,7 +1897,7 @@ class Mul(Expr, AssocOp):
                         n -= n1 - ns    # reduce n
                 facs.append(s.removeO())
 
-        except (ValueError, NotImplementedError, TypeError, AttributeError):
+        except (ValueError, NotImplementedError, TypeError, AttributeError, PoleError):
             facs = [t.nseries(x, n=n, logx=logx, cdir=cdir) for t in self.args]
             res = powsimp(self.func(*facs).expand(), combine='exp', deep=True)
             if res.has(Order):
@@ -1914,9 +1914,22 @@ class Mul(Expr, AssocOp):
             if power < n:
                 res += Mul(*coeffs)*(x**power)
 
+        def max_degree(e, x):
+            if e is x:
+                return S.One
+            if e.is_Atom:
+                return S.Zero
+            if e.is_Add:
+                return max(max_degree(a, x) for a in e.args)
+            if e.is_Mul:
+                return Add(*[max_degree(a, x) for a in e.args])
+            if e.is_Pow:
+                return max_degree(e.base, x)*e.exp
+            return S.Zero
+
         if self.is_polynomial(x):
             try:
-                if degree(self, x) != degree(res, x):
+                if max_degree(self, x) >= n or degree(self, x) != degree(res, x):
                     res += Order(x**n, x)
             except PolynomialError:
                 pass

@@ -328,12 +328,12 @@ def test_issue_20697():
     Q = (p_0 + (p_1 + (p_2 + p_3/y)/y)/y)/(1 + ((p_3/(b_0*y) + (b_0*p_2\
         - b_1*p_3)/b_0**2)/y + (b_0**2*p_1 - b_0*b_1*p_2 - p_3*(b_0*b_2\
         - b_1**2))/b_0**3)/y)
-    assert Q.series(y, n=3) == b_2*y**2 + b_1*y + b_0 + O(y**3)
+    assert Q.series(y, n=3).ratsimp() == b_2*y**2 + b_1*y + b_0 + O(y**3)
 
 
 def test_issue_21245():
     fi = (1 + sqrt(5))/2
-    assert (1/(1 - x - x**2)).series(x, 1/fi, 1) == \
-        (36/(-36*sqrt(5) - 80) + 16*sqrt(5)/(-36*sqrt(5) - 80))/(x - 1/(S.Half\
-        + sqrt(5)/2)) - 1220*sqrt(5)/(-6100*sqrt(5) - 13640) - 2728\
-        /(-6100*sqrt(5) - 13640) + O(x - 2/(1 + sqrt(5)), (x, 2/(1 + sqrt(5))))
+    assert (1/(1 - x - x**2)).series(x, 1/fi, 1).factor() == \
+        (-6964*sqrt(5) - 15572 + 2440*sqrt(5)*x + 5456*x\
+        + O((x - 2/(1 + sqrt(5)))**2, (x, 2/(1 + sqrt(5)))))/((1 + sqrt(5))**2\
+        *(20 + 9*sqrt(5))**2*(x + sqrt(5)*x - 2))

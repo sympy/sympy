@@ -2393,6 +2393,13 @@ class fresnels(FresnelIntegral):
         return (pi*z**Rational(9, 4) / (sqrt(2)*(z**2)**Rational(3, 4)*(-z)**Rational(3, 4))
                 * meijerg([], [1], [Rational(3, 4)], [Rational(1, 4), 0], -pi**2*z**4/16))
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0].as_leading_term(x).subs(x, 0)
+        if arg.is_zero:
+            return pi*arg**3/6
+        if arg in (S.ComplexInfinity, S.Infinity, S.NegativeInfinity):
+            return -S.Half if cdir == 1 else S.Half
+
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
         point = args0[0]
@@ -2533,6 +2540,13 @@ class fresnelc(FresnelIntegral):
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
         return (pi*z**Rational(3, 4) / (sqrt(2)*root(z**2, 4)*root(-z, 4))
                 * meijerg([], [1], [Rational(1, 4)], [Rational(3, 4), 0], -pi**2*z**4/16))
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0].as_leading_term(x).subs(x, 0)
+        if arg.is_zero:
+            return arg
+        if arg in (S.ComplexInfinity, S.Infinity, S.NegativeInfinity):
+            return -S.Half if cdir == 1 else S.Half
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order

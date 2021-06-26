@@ -185,15 +185,19 @@ class Order(Expr):
             if point[0] is S.Infinity:
                 s = {k: 1/Dummy() for k in variables}
                 rs = {1/v: 1/k for k, v in s.items()}
+                ps = [S.Zero for p in point]
             elif point[0] is S.NegativeInfinity:
                 s = {k: -1/Dummy() for k in variables}
                 rs = {-1/v: -1/k for k, v in s.items()}
+                ps = [S.Zero for p in point]
             elif point[0] is not S.Zero:
                 s = {k: Dummy() + point[0] for k in variables}
                 rs = {v - point[0]: k - point[0] for k, v in s.items()}
+                ps = [S.Zero for p in point]
             else:
                 s = ()
                 rs = ()
+                ps = list(point)
 
             expr = expr.subs(s)
 
@@ -221,7 +225,37 @@ class Order(Expr):
                     expr = Add(*[f.expr for (e, f) in lst])
 
                 elif expr:
-                    expr = expr.as_leading_term(*args)
+                    from sympy import PoleError, Function
+                    try:
+                        expr = expr.as_leading_term(*args)
+                    except PoleError:
+                        if isinstance(expr, Function) or\
+                                all(isinstance(arg, Function) for arg in expr.args):
+                            # It is not possible to simplify an expression
+                            # containing only functions (which raise error on
+                            # call to leading term) further
+                            pass
+                        else:
+                            orders = []
+                            pts = tuple(zip(args, ps))
+                            for arg in expr.args:
+                                try:
+                                    lt = arg.as_leading_term(*args)
+                                except PoleError:
+                                    lt = arg
+                                if lt not in args:
+                                    order = Order(lt)
+                                else:
+                                    order = Order(lt, *pts)
+                                orders.append(order)
+                            if expr.is_Add:
+                                new_expr = Order(Add(*orders), *pts)
+                                if new_expr.is_Add:
+                                    new_expr = Order(Add(*[a.expr for a in new_expr.args]), *pts)
+                            elif expr.is_Mul:
+                                expr = Mul(*[a.expr for a in orders])
+                            elif expr.is_Pow:
+                                expr = orders[0].expr**orders[1].expr
                     expr = expr.as_independent(*args, as_Add=False)[1]
 
                     expr = expand_power_base(expr)

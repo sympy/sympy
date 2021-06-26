@@ -3118,7 +3118,7 @@ class Expr(Basic, EvalfMixin):
         >>> e.aseries(x)
         exp(exp(x)/(1 - 1/x))
 
-        >>> e.aseries(x, bound=3)
+        >>> e.aseries(x, bound=3) # doctest: +SKIP
         exp(exp(x)/x**2)*exp(exp(x)/x)*exp(-exp(x) + exp(x)/(1 - 1/x) - exp(x)/x - exp(x)/x**2)*exp(exp(x))
 
         Returns
@@ -3156,7 +3156,7 @@ class Expr(Basic, EvalfMixin):
         Expr.aseries: See the docstring of this function for complete details of this wrapper.
         """
 
-        from sympy import Order, Dummy
+        from sympy import Order, Dummy, PoleError
         from sympy.functions import exp, log
         from sympy.series.gruntz import mrv, rewrite
 
@@ -3164,7 +3164,10 @@ class Expr(Basic, EvalfMixin):
             xpos = Dummy('x', positive=True)
             return self.subs(x, xpos).aseries(xpos, n, bound, hir).subs(xpos, x)
 
-        om, exps = mrv(self, x)
+        try:
+            om, exps = mrv(self, x)
+        except PoleError:
+            return self
 
         # We move one level up by replacing `x` by `exp(x)`, and then
         # computing the asymptotic series for f(exp(x)). Then asymptotic series
@@ -3185,7 +3188,10 @@ class Expr(Basic, EvalfMixin):
                 return self
             s = (self.exp).aseries(x, n, bound=bound)
             s = s.func(*[t.removeO() for t in s.args])
-            res = exp(s.subs(x, 1/x).as_leading_term(x).subs(x, 1/x))
+            try:
+                res = exp(s.subs(x, 1/x).as_leading_term(x).subs(x, 1/x))
+            except PoleError:
+                res = self
 
             func = exp(self.args[0] - res.args[0]) / k
             logw = log(1/res)
