@@ -1,9 +1,9 @@
-from sympy import symbols, factor, Function, simplify, exp, oo, I, \
-    S, Mul, Pow, Add, Rational, sqrt, CRootOf
-from sympy.matrices import ImmutableMatrix, Matrix
-from sympy.physics.control import TransferFunction, Series, Parallel, \
-    Feedback, TransferFunctionMatrix
+from sympy import (symbols, factor, Function, simplify, exp, oo, I,
+    S, Mul, Pow, Add, Rational, sqrt, CRootOf)
 from sympy.core.containers import Tuple
+from sympy.matrices import ImmutableMatrix, Matrix
+from sympy.physics.control import (TransferFunction, Series, Parallel,
+    Feedback, TransferFunctionMatrix)
 from sympy.testing.pytest import raises
 
 a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2, tau, zeta, wn = symbols('a, x, b, s, g, d, p, k,\
@@ -802,9 +802,6 @@ def test_TransferFunctionMatrix_construction():
 
 def test_TransferFunctionMatrix_functions():
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
-    # TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
-    # TF2 = TransferFunction(k, 1, s)
-    # TF3 = TransferFunction(a2*p - s, a2*s + p, s)
 
     #  Classmethod (from_matrix)
 
@@ -814,14 +811,75 @@ def test_TransferFunctionMatrix_functions():
         ])
     mat_2 = ImmutableMatrix([[(2*s + 1)/(s**2 - 9)]])
     mat_3 = ImmutableMatrix([[1, 2], [3, 4]])
-    assert TransferFunctionMatrix.from_matrix(mat_1, s) == \
+    assert TransferFunctionMatrix.from_Matrix(mat_1, s) == \
         TransferFunctionMatrix([[TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s), TransferFunction(2, 1, s)],
         [TransferFunction(p, 1, s), TransferFunction(p, s, s)]])
-    assert TransferFunctionMatrix.from_matrix(mat_2, s) == \
+    assert TransferFunctionMatrix.from_Matrix(mat_2, s) == \
         TransferFunctionMatrix([[TransferFunction(2*s + 1, s**2 - 9, s)]])
-    assert TransferFunctionMatrix.from_matrix(mat_3, p) == \
+    assert TransferFunctionMatrix.from_Matrix(mat_3, p) == \
         TransferFunctionMatrix([[TransferFunction(1, 1, p), TransferFunction(2, 1, p)],
         [TransferFunction(3, 1, p), TransferFunction(4, 1, p)]])
+
+    #  is_IO_coupled
+
+    tf_0 = TransferFunction(0, 1, s)  #  Representing 0
+    tf_1 = TransferFunction(1, 1, s)
+    tf_2 = TransferFunction(1, s, s)
+    tf_3 = TransferFunction(1, (s - 1), s)
+    tf_4 = TransferFunction(s - 1, 3*s**2 - 4, s)
+
+    tfm_1 = TransferFunctionMatrix([
+    [tf_1, tf_0, tf_0, tf_0],
+    [tf_0, tf_2, tf_0, tf_0],
+    [tf_0, tf_0, tf_3, tf_0],
+    [tf_0, tf_0, tf_0, tf_4],
+    ])
+    tfm_2 = TransferFunctionMatrix([
+    [tf_0, tf_2, tf_0, tf_0],
+    [tf_1, tf_0, tf_0, tf_0],
+    [tf_0, tf_0, tf_4, tf_0],
+    [tf_0, tf_0, tf_0, tf_3],
+    ])
+    tfm_3 = TransferFunctionMatrix([
+    [tf_0, tf_0, tf_0, tf_0],
+    [tf_0, tf_0, tf_0, tf_0],
+    [tf_0, tf_0, tf_0, tf_0],
+    [tf_0, tf_0, tf_0, tf_0],
+    ])
+    tfm_4 = TransferFunctionMatrix([
+    [tf_0, tf_1, tf_0, tf_0],
+    [tf_0, tf_0, tf_2, tf_0],
+    [tf_0, tf_0, tf_0, tf_0],
+    [tf_0, tf_0, tf_0, tf_0],
+    ])
+    tfm_5 = TransferFunctionMatrix([
+    [tf_1, tf_2, tf_3, tf_4],
+    [tf_0, tf_0, tf_0, tf_0],
+    [tf_0, tf_0, tf_0, tf_0],
+    [tf_0, tf_0, tf_0, tf_0],
+    ])
+    tfm_6 = TransferFunctionMatrix([
+    [tf_1, tf_0, tf_0, tf_0],
+    [tf_0, tf_0, tf_3, tf_0],
+    [tf_2, tf_0, tf_0, tf_0],
+    [tf_0, tf_0, tf_0, tf_4],
+    ])
+    tfm_7 = TransferFunctionMatrix([
+    [tf_1, tf_0],
+    [tf_0, tf_0],
+    [tf_0, tf_2],
+    [tf_0, tf_0],
+    ])
+    tfm_8 = TransferFunctionMatrix([[tf_1]])
+
+    assert tfm_1.is_IO_coupled == False
+    assert tfm_2.is_IO_coupled == False
+    assert tfm_3.is_IO_coupled == False
+    assert tfm_4.is_IO_coupled == False
+    assert tfm_5.is_IO_coupled == True
+    assert tfm_6.is_IO_coupled == True
+    assert tfm_7.is_IO_coupled == False
+    assert tfm_8.is_IO_coupled == False
 
     #  Negating a TFM
 

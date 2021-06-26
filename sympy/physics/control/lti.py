@@ -1,4 +1,4 @@
-from sympy import Basic, Add, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots
+from sympy import Basic, Add, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots, S
 from sympy.core.containers import Tuple
 from sympy.core.evalf import EvalfMixin
 from sympy.core.logic import fuzzy_and
@@ -1462,16 +1462,17 @@ class TransferFunctionMatrix(Basic):
     A class for representing the MIMO (multiple-input and multiple-output)
     generalization of the SISO (single-input and single-output) transfer function.
 
-    It is a matrix of transfer functions (``TransferFunction`` objects).
+    It is a matrix of transfer functions (``TransferFunction``, SISO-``Series`` or SISO-``Parallel``).
     There is only one argument, ``arg`` which is also the compulsory argument.
     ``arg`` is expected to be strictly of the type list of lists
-    which holds the transfer functions.
+    which holds the transfer functions or reducible to transfer functions.
 
     Parameters
     ==========
 
     arg: Nested ``List`` (strictly).
-        Users are expected to input a nested list of ``TransferFunction`` objects.
+        Users are expected to input a nested list of ``TransferFunction``, ``Series``
+        and/or ``Parallel`` objects.
 
     Examples
     ========
@@ -1688,7 +1689,7 @@ class TransferFunctionMatrix(Basic):
         return obj
 
     @classmethod
-    def from_matrix(cls, matrix, var):
+    def from_Matrix(cls, matrix, var):
         """
         Creates a new ``TransferFunctionMatrix`` efficiently from a SymPy Matrix of ``Expr`` objects.
 
@@ -1698,8 +1699,7 @@ class TransferFunctionMatrix(Basic):
         matrix : ``ImmutableMatrix`` having ``Expr``/``Number`` elements.
         var : Symbol
             Complex variable of the Laplace transform which will be used by the
-            all the ``TransferFunction`` objects in the ``TransferFunctionMatrix``
-            object.
+            all the ``TransferFunction`` objects in the ``TransferFunctionMatrix``.
 
         Examples
         ========
@@ -1708,16 +1708,16 @@ class TransferFunctionMatrix(Basic):
         >>> from sympy.physics.control.lti import TransferFunctionMatrix
         >>> from sympy.matrices import ImmutableMatrix
         >>> from sympy.printing import pprint
-        >>> expr1 = (s + 5)/(3*s**2 + 2*s + 1)
-        >>> expr2 = 1/s
-        >>> expr3 = 1/s**2
-        >>> expr4 = 1/(s + 1)
-        >>> mat_1 = ImmutableMatrix([[expr1, expr2], [expr3, expr4]])
+        >>> expr_1 = (s + 5)/(3*s**2 + 2*s + 1)
+        >>> expr_2 = 1/s
+        >>> expr_3 = 1/s**2
+        >>> expr_4 = 1/(s + 1)
+        >>> mat_1 = ImmutableMatrix([[expr_1, expr_2], [expr_3, expr_4]])
         >>> mat_1
         Matrix([
         [(s + 5)/(3*s**2 + 2*s + 1),       1/s],
         [                   s**(-2), 1/(s + 1)]])
-        >>> tfm_1 = TransferFunctionMatrix.from_matrix(mat_1, s)
+        >>> tfm_1 = TransferFunctionMatrix.from_Matrix(mat_1, s)
         >>> tfm_1
         TransferFunctionMatrix(((TransferFunction(s + 5, 3*s**2 + 2*s + 1, s), TransferFunction(1, s, s)), (TransferFunction(1, s**2, s), TransferFunction(1, s + 1, s))))
         >>> pprint(tfm_1, use_unicode=False)
@@ -1739,7 +1739,7 @@ class TransferFunctionMatrix(Basic):
         Matrix([
         [       10, 1/(s*(s - 1))],
         [p/(s - 1),   a/(a*s + p)]])
-        >>> tfm_2 = TransferFunctionMatrix.from_matrix(mat_2, s)
+        >>> tfm_2 = TransferFunctionMatrix.from_Matrix(mat_2, s)
         >>> tfm_2
         TransferFunctionMatrix(((TransferFunction(10, 1, s), TransferFunction(1, s*(s - 1), s)), (TransferFunction(p, s - 1, s), TransferFunction(a, a*s + p, s))))
         >>> pprint(tfm_2, use_unicode=False)
@@ -1853,6 +1853,69 @@ class TransferFunctionMatrix(Basic):
 
         """
         return self._expr_mat.shape
+
+    @property
+    def is_IO_coupled(self):
+        """
+        Returns whether the given ``TransferFunctionMatrix`` is IO-coupled or not.
+        A MIMO system is IO-coupled when each input affects many outputs.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix
+        >>> from sympy.printing import pprint
+        >>> tf_1 = TransferFunction(1, 1, s)
+        >>> tf_2 = TransferFunction(2, 1, s)
+        >>> tf_3 = TransferFunction(1 + s, 1, s)
+        >>> tf_4 = TransferFunction(0, 1, s)
+        >>> tfm_1 = TransferFunctionMatrix([[tf_1, tf_1], [tf_2, tf_3]]) # each input layer affects each output layer
+        >>> tfm_2 = TransferFunctionMatrix([[tf_3, tf_4], [tf_4, tf_1]]) # each input layer only affects its corresponding output layer
+        >>> pprint(tfm_1, use_unicode=False)
+        [1    1  ]
+        [-    -  ]
+        [1    1  ]
+        [        ]
+        [2  s + 1]
+        [-  -----]
+        [1    1  ]
+        >>> pprint(tfm_2, use_unicode=False)
+        [s + 1  0]
+        [-----  -]
+        [  1    1]
+        [        ]
+        [  0    1]
+        [  -    -]
+        [  1    1]
+        >>> tfm_1.is_IO_coupled
+        True
+        >>> tfm_2.is_IO_coupled
+        False
+
+        """
+        flag = False
+        row_elem = 0
+        index_list = []
+        mat = self._expr_mat
+        for i in range(self.num_outputs):
+            for j in range(self.num_inputs):
+                if mat[i, j].as_numer_denom()[0] != S(0):
+                    if j not in index_list:
+                        index_list.append(j)
+                    else:
+                        flag = True
+                        break
+                    row_elem += 1
+                    if row_elem > 1:
+                        flag = True
+                        break
+            if flag:
+                break
+            else:
+                row_elem = 0
+
+        return True if flag else False
 
     def __neg__(self):
         neg = -self._expr_mat
