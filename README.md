@@ -22,7 +22,7 @@ files in the sympy repository unless stated otherwise.
 Our mailing list is at
 <https://groups.google.com/forum/?fromgroups#!forum/sympy>.
 
-We have community chat at [Gitter](https://gitter.im/sympy/sympy). Feel
+We have a community chat at [Gitter](https://gitter.im/sympy/sympy). Feel
 free to ask us anything there. We have a very welcoming and helpful
 community.
 
@@ -181,7 +181,7 @@ git with:
 
 WARNING: The above commands will all clear changes you may have made,
 and you will lose them forever. Be sure to check things with `git
-status`, `git diff`, `git clean -Xn` and `git clean -n` before doing any
+status`, `git diff`, `git clean -Xn` , and `git clean -n` before doing any
 of those.
 
 ## Bugs
@@ -198,12 +198,12 @@ on Stack Overflow using the [sympy](https://stackoverflow.com/questions/tagged/s
 SymPy was started by Ondřej Čertík in 2005, he wrote some code during
 the summer, then he wrote some more code during summer 2006. In February
 2007, Fabian Pedregosa joined the project and helped fixed many things,
-contributed documentation and made it alive again. 5 students (Mateusz
+contributed documentation, and made it alive again. 5 students (Mateusz
 Paprocki, Brian Jorgensen, Jason Gedge, Robert Schwarz, and Chris Wu)
 improved SymPy incredibly during summer 2007 as part of the Google
 Summer of Code. Pearu Peterson joined the development during the summer
 2007 and he has made SymPy much more competitive by rewriting the core
-from scratch, that has made it from 10x to 100x faster. Jurjen N.E. Bos
+from scratch, which has made it from 10x to 100x faster. Jurjen N.E. Bos
 has contributed pretty-printing and other patches. Fredrik Johansson has
 written mpmath and contributed a lot of patches.
 
@@ -270,7 +270,7 @@ A BibTeX entry for LaTeX users is
 ```
 
 SymPy is BSD licensed, so you are free to use it whatever you like, be
-it academic, commercial, creating forks or derivatives, as long as you
+it academic, commercial, creating forks, or derivatives, as long as you
 copy the BSD statement if you redistribute it (see the LICENSE file for
 details). That said, although not required by the SymPy license, if it
 is convenient for you, please cite SymPy when using it in your work and
