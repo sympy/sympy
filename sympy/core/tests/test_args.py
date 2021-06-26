@@ -4163,9 +4163,10 @@ def test_sympy__physics__units__quantities__Quantity():
     assert _test_args(Quantity("dam"))
 
 
-def test_sympy__physics__units__quantities__MagnitudeQuantity():
-    from sympy.physics.units.quantities import MagnitudeQuantity
-    assert _test_args(MagnitudeQuantity(0, "kelvin"))
+def test_sympy__physics__units__quantities__Offset():
+    from sympy.physics.units.quantities import Offset
+    from sympy.physics.units import degrees_celsius
+    assert _test_args(Offset(0, degrees_celsius))
 
 
 def test_sympy__physics__units__prefixes__Prefix():

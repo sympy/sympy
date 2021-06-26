@@ -32,7 +32,7 @@ from .dimensions import Dimension, DimensionSystem
 from .unitsystem import UnitSystem
 from .util import convert_to
 from .util import convert_temperature
-from .quantities import Quantity, MagnitudeQuantity
+from .quantities import Quantity, Offset
 
 from .definitions.dimension_definitions import (
     amount_of_substance, acceleration, action,
@@ -274,7 +274,7 @@ __all__ = [
     'convert_to',
     'convert_temperature',
     'Quantity',
-    'MagnitudeQuantity',
+    'Offset',
 
     'amount_of_substance', 'acceleration', 'action',
     'capacitance', 'charge', 'conductance', 'current', 'energy',

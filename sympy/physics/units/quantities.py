@@ -228,16 +228,34 @@ class Quantity(AtomicExpr):
         """Return free symbols from quantity."""
         return set()
 
-class MagnitudeQuantity(AtomicExpr):
+class Offset(AtomicExpr):
     """
-    Physical quantity as the product of a numerical value and a unit of measure
+    Class to represent a temperature offset quantity as
+    the product of a numerical value and a temperature scale
+
+    Examples
+    ========
+
+    >>> from sympy.physics.units import oC, oF
+    >>> from sympy.physics.units import Offset
+    >>> Offset(0, oC)
+    Offset(0, degree_celsius)
+    >>> Offset(0, oC)(oF)
+    Offset(32, degree_fahrenheit)
+    >>> Offset(0, oC).doit().n()
+    273.15*kelvin
     """
+
     def __new__(cls, magnitude, units):
 
         magnitude = sympify(magnitude)
 
         if not isinstance(units, Quantity):
-            units = Quantity(str(units))
+            raise TypeError("Offset units must be a Quantity")
+
+        from sympy.physics.units import temperature
+        if units.dimension is not temperature:
+            raise ValueError("Offset units must be a temperature")
 
         obj = AtomicExpr.__new__(cls, magnitude, units)
         obj._magnitude = magnitude
@@ -255,7 +273,13 @@ class MagnitudeQuantity(AtomicExpr):
     def _latex(self, printer):
         return "%s %s" %(printer._print(self.magnitude), printer._print(self.units))
 
-    def convert_temperature(self, other, unit_system="SI"):
-        """Converts temperatures to different temperature scales and units"""
+    def __call__(self, other):
+        """Converts temperatures to different temperature scales"""
         from .util import convert_temperature
-        return convert_temperature(self, other, unit_system)
+        return convert_temperature(self, other, unit_system="SI")
+
+    def doit(self):
+        """Converts temperatures to the kelvin absolute temperature unit"""
+        from sympy.physics.units import kelvin
+        kelvin_temp = self.__call__(kelvin)
+        return kelvin_temp.magnitude * kelvin_temp.units
