@@ -1,10 +1,11 @@
-from sympy import (S, Symbol, Rational, Poly, Eq, ratsimp, checkodesol, sqrt,
-    oo, I)
+from sympy import (S, Symbol, Function, Rational, Poly, Eq, ratsimp,
+    checkodesol, sqrt, oo, I, Mul)
 from random import randint
 from sympy.solvers.ode.riccati import (riccati_normal, riccati_inverse_normal,
-    inverse_transform_poly, find_poles, limit_at_inf, check_necessary_conds,
-    val_at_inf)
+    riccati_reduced, inverse_transform_poly, find_poles, limit_at_inf,
+    check_necessary_conds, val_at_inf)
 
+f = Function('f')
 x = Symbol('x')
 
 # These are the functions used to generate the tests
@@ -38,6 +39,8 @@ def find_riccati_ode(ratfunc, x, yf):
     assert checkodesol(eq, sol) == (True, 0)
     return eq, q0, q1, q2
 
+
+# Testing functions start
 
 def test_riccati_transformation():
     """
@@ -129,61 +132,125 @@ def test_riccati_transformation():
         assert w == riccati_inverse_normal(riccati_normal(w, x, b1, b2), x, b1, b2).cancel()
 
 
+def test_riccati_reduced():
+    tests = [
+    (
+        f(x).diff(x) - x**2 - x*f(x) - x*f(x)**2,
+        f(x).diff(x) + f(x)**2 + x**3 - x**2/4 - 3/(4*x**2)
+    ),
+    (
+        f(x).diff(x) - 1/x + (x**2 - x)*f(x)/3 + f(x)**2/(x**2 - 2),
+        -3*x**2/(x**2 - 2)**2 - 2*x*(1 - x**2/2)*(-x**2/3 + x/3)/(\
+        x**2 - 2)**2 - x/3 - Mul(2, 1 - x**2/2, evaluate=False)*\
+        (4*x**2/(x**2 - 2) - 1)/(x**2 - 2)**2 - (-x**2/3 + x/3\
+        )**2/4 + f(x)**2 + f(x).diff(x) + S(1)/6 - 1/(x*(x**2 - 2))
+    ),
+    (
+        6*x/(2*x + 9) + f(x).diff(x) - (x + 1)*f(x)**2/x,
+        -3*x**2*(1/x + (-x - 1)/x**2)**2/(4*(-x - 1)**2) + Mul(6, \
+        -x - 1, evaluate=False)/(2*x + 9) + f(x)**2 + f(x).diff(x) \
+        - (-1 + (x + 1)/x)/(x*(-x - 1))
+    ),
+    (
+        -(S(3)/2 - 3*x)*f(x)/(-x - 3) + f(x).diff(x) - (2 - 3*x)/(\
+        6*x) - f(x)**2/x,
+        -(3 - 6*x)**2/(4*(2*x + 6)**2) + (3 - 6*x)/(2*x + 6)**2 \
+        + f(x)**2 + f(x).diff(x) + 3/(2*x + 6) - (S(1)/2 - 1/(3*x))\
+        /x - (3 - 6*x)/(2*x*(2*x + 6)) + 1/(4*x**2)
+    ),
+    (
+        -x*f(x)**2 + f(x).diff(x) + 1 - (x - S(1)/2)*f(x)/(x - S(2)/3),
+        -x - (3 - 6*x)**2/(4*(6*x - 4)**2) + Mul(3, 3 - 6*x, evaluate=\
+        False)/(6*x - 4)**2 + f(x)**2 + f(x).diff(x) + 3/(6*x - 4) + \
+        (3 - 6*x)/(2*x*(6*x - 4)) - 3/(4*x**2)
+    ),
+    (
+        f(x)**2 + f(x).diff(x) - (x - 1)*f(x)/(-x - S(1)/2),
+        -(2*x - 2)**2/(4*(2*x + 1)**2) + (2*x - 2)/(2*x + 1)**2 + \
+        f(x)**2 + f(x).diff(x) - 1/(2*x + 1)
+    ),
+    (
+        f(x).diff(x) - f(x)**2/x,
+        f(x)**2 + f(x).diff(x) + 1/(4*x**2)
+    ),
+    (
+        -(3 - 4*x)/(2*x + 9) - (-3*x/2 - S(1)/2)*f(x)/(x - 2) + \
+        f(x).diff(x) - (x - 1)*f(x)**2/x,
+        -3*x**2*(1/x + (1 - x)/x**2)**2/(4*(1 - x)**2) - x*(1/x + \
+        (1 - x)/x**2)*(3*x + 1)/(Mul(2, 1 - x, evaluate=False)*\
+        (2*x - 4)) + f(x)**2 + f(x).diff(x) - 3/(Mul(2, 2*x - 4,\
+        evaluate=False)) - (3*x + 1)**2/(4*(2*x - 4)**2) + (3*x \
+        + 1)/(2*x - 4)**2 - (-1 + (x - 1)/x)/(x*(1 - x)) + (1 - \
+        x)*(4*x/(2*x + 9) - 3/(2*x + 9))/x
+    ),
+    (
+        x*f(x)/(3*(x + 1)) - (4*x**2 - 9)/(6*(x**2 - x + 1)) + \
+        f(x).diff(x) - 3*(4*x - 1)*f(x)**2/(4*(x + 3)),
+        -x**2/(4*(3*x + 3)**2) + 3*x/(2*(3*x + 3)**2) - x*(4*x \
+        + 12)*(Mul(4, 3 - 12*x, evaluate=False)/(4*x + 12)**2 + \
+        12/(4*x + 12))/(Mul(2, 3 - 12*x, evaluate=False)*(3*x + \
+        3)) - Mul(3, -2 + (4*x - 1)/(Mul(2, x + 3, evaluate=False)), evaluate=False)\
+        *(4*x + 12)/(Mul(2, 3 - 12*x, evaluate=False)*(x + 3)**2)\
+        + (3 - 12*x)*(-4*x**2/(6*x**2 - 6*x + 6) + 9/(6*x**2 - \
+        6*x + 6))/(4*x + 12) + f(x)**2 + f(x).diff(x) - 1/(Mul(2,\
+        3*x + 3, evaluate=False)) - 3*(4*x + 12)**2*(Mul(4, 3 - 12*x, evaluate=False)\
+        /(4*x + 12)**2 + 12/(4*x + 12))**2/(4*(3 - 12*x)**2)
+    ),
+    (
+        -3*(-x**2 - x + 1)/(x**2 + 6*x + 1) + f(x).diff(x) + f(x)**2/x,
+        f(x)**2 + f(x).diff(x) + (3*x**2/(x**2 + 6*x + 1) + 3*x/(x**2 \
+        + 6*x + 1) - 3/(x**2 + 6*x + 1))/x + 1/(4*x**2)
+    )
+    ]
+    for eq, normal_eq in tests:
+        assert normal_eq == riccati_reduced(eq, f, x)
+
+
 def test_poles():
     tests = [
     (
-        Poly(3, x),
         Poly(3*x**2 - x, x),
         {0: 1, S(1)/3: 1}
     ),
     (
-        Poly(6*x - x**3, x),
         Poly((2 - x)**2*(2*x - 1)**2, x),
         {2: 2, S(1)/2: 2}
     ),
     (
-        Poly(x, x),
         Poly(x**2 - x - 1, x),
         {(1 + sqrt(5))/2: 1, (1 - sqrt(5))/2: 1}
     ),
     (
-        Poly(x**3 + 1, x),
         Poly(x + 2, x),
         {-2: 1}
     ),
     (
-        Poly(x**5 + x**3 + 4, x),
         Poly(x**4 + 3*x**3 - 3*x**2 + 3*x - 4, x),
         {I: 1, -I: 1, 1: 1, -4: 1}
     ),
     (
-        Poly(1, x),
         Poly(x**5 - 4*x**4 + 4*x**3 + x**2 - 4*x + 4, x),
         {2: 2, -1: 1, (1 - sqrt(3)*I)/2: 1, (1 + sqrt(3)*I)/2: 1}
     ),
     (
-        Poly(x**3 + 4*x**2 - x + 12, x),
         Poly(x**3 + 12*x**2 + 39*x + 28, x),
         {-1: 1, -4: 1, -7: 1}
     ),
     (
-        Poly(5*x**5 + 4*x**4 + 4*x**3 + 2*x**2 + x + 7, x),
         Poly(x**4 + 6*x**3 + 11*x**2 + 6*x + 1, x),
         {-S(3)/2 - sqrt(5)/2: 2, -S(3)/2 + sqrt(5)/2: 2}
     ),
     (
-        Poly(x**2 - x + 1, x),
         Poly(x**5 + 5*x**4 + 10*x**3 + 10*x**2 + 3*x + 1, x),
         {}
     ),
     (
-        Poly(5*x**5 - 4*x**4 - 3*x**3 - 3*x**2 - 4, x),
         Poly(2*x**7 + 6*x**6 + 11*x**5 - 12*x**4 - 28*x**3 + 6*x**2 + 15*x, x),
         {1: 2, -1: 2, -S(3)/2 - sqrt(21)*I/2: 1, -S(3)/2 + sqrt(21)*I/2: 1, 0: 1}
     )]
 
-    for num, den, poles in tests:
-        assert find_poles(num, den, x) == poles
+    for den, poles in tests:
+        assert find_poles(den, x) == poles
 
 
 def test_val_at_inf():

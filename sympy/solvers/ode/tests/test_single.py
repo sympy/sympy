@@ -912,7 +912,8 @@ def _get_examples_ode_sol_1st_rational_riccati():
         "eq": Eq(Derivative(f(x), x), (1 - x)*f(x)/(x - 3) + (2 - 12*x)*f(x)**2/(2*x - 9) + \
             (54924*x**3 - 405264*x**2 + 1084347*x - 1087533)/(8*x**4 - 132*x**3 + 810*x**2 - \
             2187*x + 2187) + 495),
-        "sol": [[Eq(f(x), 6*(3*x + 1)/(2*x - 9)), Eq(f(x), 6*(3*x + 1)/(2*x - 9))]],
+        "sol": [Eq(f(x), Mul(6, 3*x + 1, evaluate=False)/(2*x - 9)), Eq(f(x), Mul(6, 3*x + \
+            1, evaluate=False)/(2*x - 9))],
         "slow": True
     },
     "rational_riccati_25": {

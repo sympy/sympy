@@ -44,7 +44,7 @@ few definitions to understand -
     to the difference between the degree of the denominator and the
     numerator of `p(x)`.
 
-    Note: A general definition of valuation of a rational function
+    NOTE: A general definition of valuation of a rational function
     at any value of `x` can be found in Pg 63 of the thesis, but
     is not of any interest for this algorithm.
 
@@ -82,6 +82,26 @@ a. Every pole of `a(x)` must be either a simple pole or a multiple pole
 of even order.
 b. The valuation of `a(x)` at `\infty` must be even or be `\ge` 2.
 
+This algorithm finds all possible rational solutions for the Riccati ODE.
+If no rational solutions are found, it means that no rational solutions
+exist.
+
+Solution
+========
+
+With these definitions, we can state a general form for the solution of
+the equation. `y(x)` must have the form -
+
+.. math:: y(x) = \sum_{i=1}^{n} \sum_{j=1}^{r_i} \frac{c_{ij}}{(x - x_i)^j} + \sum_{i=1}^{m} \frac{1}{x - \chi_i} + \sum_{i=0}^{N} d_i x^i
+
+where `x_1, x_2, ..., x_n` are non-movable poles of `a(x)`,
+`\chi_1, \chi_2, ..., \chi_m` are movable poles of `a(x)`, and the values
+of `N, n, r_1, r_2, ..., r_n` can be determined from `a(x)`. The
+coefficient vectors `(d_0, d_1, ..., d_N)` and `(c_{i1}, c_{i2}, ..., c_{i r_i})`
+can be determined from `a(x)`. We will have 2 choices each of these vectors
+and part of the procedure is figuring out which of the 2 should be used
+to get the solution correctly.
+
 Implementation
 ==============
 
@@ -105,14 +125,20 @@ Step 5 : Find the poles and their multiplicities of `a(x)` using
 ``find_poles``. Let the number of poles be `n`. Also find the
 valuation of `a(x)` at `\infty` using ``val_at_inf``.
 
-Note: Although the algorithm considers `\infty` in the set of
-poles, we WILL NOT consider it in this implementation. The
-reason for this is explained in Step 6.
+NOTE: Although the algorithm considers `\infty` as a pole, it is
+not mentioned if it a part of the set of finite poles. `\infty`
+is NOT a part of the set of finite poles. If a pole exists at
+`\infty`, we use its multiplicty to find the laurent series of
+`a(x)` about `\infty`.
 
 Step 6 : Find `n` c-vectors (one for each pole) and 1 d-vector using
 ``construct_c`` and ``construct_d``. Now, determine all the ``2**(n + 1)``
 combinations of choosing between 2 choices for each of the `n` c-vectors
 and 1 d-vector.
+
+NOTE: The equation for `d_{-1}` in Case 4 (Pg 80) has a printinig
+mistake. The term `- d_N` must be replaced with `-N d_N`. The same
+has been explained in the code as well.
 
 For each of these above combinations, do
 
@@ -172,6 +198,8 @@ def riccati_inverse_normal(y, x, b1, b2, bp=None):
 
 def riccati_reduced(eq, f, x):
     match, funcs = match_riccati(eq, f, x)
+    if not match:
+        return False
     b0, b1, b2 = funcs
     a = -b0*b2 + b1**2/4 - b1.diff(x)/2 + 3*b2.diff(x)**2/(4*b2**2) + b1*b2.diff(x)/(2*b2) - \
         b2.diff(x, 2)/(2*b2)
@@ -211,7 +239,7 @@ def match_riccati(eq, f, x):
     return False, []
 
 
-def find_poles(num, den, x):
+def find_poles(den, x):
     # All roots of denominator are poles of a(x)
     p = roots(den, x)
     return p
@@ -276,6 +304,59 @@ def limit_at_inf(num, den, x):
         return 0
 
 
+def construct_c_case_1(num, den, x, pole):
+    # Find the coefficient of 1/(x - pole)**2 in the
+    # Laurent series expansion of a(x) about pole.
+    sgn, num1, den1 = (num*Poly((x - pole)**2, x, extension=True)).cancel(den)
+    r = (sgn*num1.subs(x, pole))/(den1.subs(x, pole))
+
+    # If multiplicity is 2, the coefficient to be added
+    # in the c-vector is c = (1 +- sqrt(1 + 4*r))/2
+    return [[(1 + sqrt(1 + 4*r))/2], [(1 - sqrt(1 + 4*r))/2]]
+
+
+def construct_c_case_2(num, den, x, pole, mul):
+    # Generate the coefficients using the recurrence
+    # relation mentioned in (5.14) in the thesis (Pg 80)
+
+    # r_i = mul/2
+    ri = mul//2
+
+    # Find the Laurent series coefficients about the pole
+    ser = rational_laurent_series(num, den, x, pole, mul, 6)
+
+    # Start with an empty memo to store the coefficients
+    # This is for the plus case
+    cplus = [0 for i in range(ri)]
+
+    # Base Case
+    cplus[ri-1] = sqrt(ser[0])
+
+    # Iterate backwards to find all coefficients
+    for s in range(ri-1, 0, -1):
+        sm = 0
+        for j in range(s+1, ri):
+            sm += cplus[j-1]*cplus[ri+s-j-1]
+        if s!= 1:
+            cplus[s-1] = (ser[mul-ri-s] - sm)/(2*cplus[ri-1])
+
+    # Memo for the minus case
+    cminus = [-x for x in cplus]
+
+    # Find the 0th coefficient in the recurrence
+    cplus[0] = (ser[mul-ri-s] - sm - ri*cplus[ri-1])/(2*cplus[ri-1])
+    cminus[0] = (ser[mul-ri-s] - sm  - ri*cplus[ri-1])/(2*cminus[ri-1])
+
+    # Add both the plus and minus cases' coefficients
+    return [cplus, cminus]
+
+
+def construct_c_case_3():
+    # If multiplicity is 1, the coefficient to be added
+    # in the c-vector is 1 (no choice)
+    return [[1], [1]]
+
+
 def construct_c(num, den, x, poles, muls):
     c = []
     for pole, mul in zip(poles, muls):
@@ -283,57 +364,65 @@ def construct_c(num, den, x, poles, muls):
 
         # Case 3
         if mul == 1:
-            # If multiplicity is 1, the coefficient to be added
-            # in the c-vector is 1 (no choice)
-            c[-1].extend([[1], [1]])
+            # Add the coefficients from Case 3
+            c[-1].extend(construct_c_case_3())
 
         # Case 1
         elif mul == 2:
-            # Find the coefficient of 1/(x - pole)**2 in the
-            # Laurent series expansion of a(x) about pole.
-            sgn, num1, den1 = (num*Poly((x - pole)**2, x, extension=True)).cancel(den)
-            r = (sgn*num1.subs(x, pole))/(den1.subs(x, pole))
-
-            # If multiplicity is 2, the coefficient to be added
-            # in the c-vector is c = (1 +- sqrt(1 + 4*r))/2
-            c[-1].extend([[(1 + sqrt(1 + 4*r))/2], [(1 - sqrt(1 + 4*r))/2]])
+            # Add the coefficients from Case 1
+            c[-1].extend(construct_c_case_1(num, den, x, pole))
 
         # Case 2
         else:
-            # Generate the coefficients using the recurrence
-            # relation mentioned in (5.14) in the thesis (Pg 80)
+            # Add the coefficients from Case 2
+            c[-1].extend(construct_c_case_2(num, den, x, pole, mul))
 
-            # r_i = mul/2
-            ri = mul//2
-
-            # Find the Laurent series coefficients about the pole
-            ser = rational_laurent_series(num, den, x, pole, mul, 6)
-
-            # Start with an empty memo to store the coefficients
-            # This is for the plus case
-            temp = [0 for i in range(ri)]
-
-            # Base Case
-            temp[ri-1] = sqrt(ser[0])
-
-            # Iterate backwards to find all coefficients
-            for s in range(ri-1, 0, -1):
-                sm = 0
-                for j in range(s+1, ri):
-                    sm += temp[j-1]*temp[ri+s-j-1]
-                if s!= 1:
-                    temp[s-1] = (ser[mul-ri-s] - sm)/(2*temp[ri-1])
-
-            # Memo for the minus case
-            temp1 = [-x for x in temp]
-
-            # Find the 0th coefficient in the recurrence
-            temp[0] = (ser[mul-ri-s] - sm - ri*temp[ri-1])/(2*temp[ri-1])
-            temp1[0] = (ser[mul-ri-s] - sm  - ri*temp[ri-1])/(2*temp1[ri-1])
-
-            # Add both the plus and minus cases' coefficients
-            c[-1].extend([temp, temp1])
     return c
+
+
+def construct_d_case_4(ser, N, mul):
+    dplus = [0 for i in range(N+2)]
+    dplus[N] = sqrt(ser[-mul - 1 + 2*N])
+    for s in range(N-1, -2, -1):
+        sm = 0
+        for j in range(s+1, N):
+            sm += dplus[j]*dplus[N+s-j]
+        if s != -1:
+            dplus[s] = (ser[-mul - 1 + N+s] - sm)/(2*dplus[N])
+    dminus = [-x for x in dplus]
+
+    # The third equation in Eq 5.15 of the thesis is WRONG!
+    # d_N must be replaced with N*d_N in that equation.
+    dplus[-1] = (ser[-mul - 1 + N+s] - N*dplus[N] - sm)/(2*dplus[N])
+    dminus[-1] = (ser[-mul - 1 + N+s] - N*dminus[N] - sm)/(2*dminus[N])
+
+    return [dplus, dminus]
+
+
+def construct_d_case_5(ser, mul):
+    # List to store coefficients for plus case
+    dplus = [0, 0]
+
+    # d_0  = sqrt(a_0)
+    dplus[0] = sqrt(ser[-mul - 1])
+
+    # d_(-1) = a_(-1)/(2*d_0)
+    dplus[-1] = ser[-mul - 2]/(2*dplus[0])
+
+    # Coefficients for the minus case are just the negative
+    # of the coefficients for the positive case.
+    dminus = [-x for x in dplus]
+
+    return [dplus, dminus]
+
+
+def construct_d_case_6(num, den, x):
+    # s_oo = lim x->0 1/x**2 * a(1/x) which is equivalent to
+    # s_oo = lim x->oo x**2 * a(x)
+    s_inf = limit_at_inf(Poly(x**2, x)*num, den, x)
+
+    # d_(-1) = (1 +- sqrt(1 + 4*s_oo))/2
+    return [[(1 + sqrt(1 + 4*s_inf))/2], [(1 - sqrt(1 + 4*s_inf))/2]]
 
 
 def construct_d(num, den, x, val_inf):
@@ -344,44 +433,16 @@ def construct_d(num, den, x, val_inf):
 
     # Case 4
     if val_inf < 0:
-        temp = [0 for i in range(N+2)]
-        temp[N] = sqrt(ser[-mul - 1 + 2*N])
-        for s in range(N-1, -2, -1):
-            sm = 0
-            for j in range(s+1, N):
-                sm += temp[j]*temp[N+s-j]
-            if s != -1:
-                temp[s] = (ser[-mul - 1 + N+s] - sm)/(2*temp[N])
-        temp1 = [-x for x in temp]
-        # The third equation in Eq 5.15 of the thesis is WRONG!
-        # d_N must be replaced with N*d_N in that equation.
-        temp[-1] = (ser[-mul - 1 + N+s] - N*temp[N] - sm)/(2*temp[N])
-        temp1[-1] = (ser[-mul - 1 + N+s] - N*temp1[N] - sm)/(2*temp1[N])
-        d = [temp, temp1]
+        d = construct_d_case_4(ser, N, mul)
 
     # Case 5
     elif val_inf == 0:
-        # List to store coefficients for plus case
-        temp = [0, 0]
-
-        # d_0  = sqrt(a_0)
-        temp[0] = sqrt(ser[-mul - 1])
-
-        # d_(-1) = a_(-1)/(2*d_0)
-        temp[-1] = ser[-mul - 2]/(2*temp[0])
-
-        # Coefficients for the minus case are just the negative
-        # of the coefficients for the positive case. Append both.
-        d = [temp, [-x for x in temp]]
+        d = construct_d_case_5(ser, mul)
 
     # Case 6
     else:
-        # s_oo = lim x->0 1/x**2 * a(1/x) which is equivalent to
-        # s_oo = lim x->oo x**2 * a(x)
-        s_inf = limit_at_inf(Poly(x**2, x)*num, den, x)
+        d = construct_d_case_6(num, den, x)
 
-        # d_(-1) = (1 +- sqrt(1 + 4*s_oo))/2
-        d = [[(1 + sqrt(1 + 4*s_inf))/2], [(1 - sqrt(1 + 4*s_inf))/2]]
     return d
 
 
@@ -492,7 +553,7 @@ def solve_riccati(fx, x, b0, b1, b2):
         presol.extend([sqrt(a), -sqrt(a)])
 
     # Step 5 : Find poles and valuation at infinity
-    poles = find_poles(num, den, x)
+    poles = find_poles(den, x)
     poles, muls = list(poles.keys()), list(poles.values())
     val_inf = val_at_inf(num, den, x)
 
