@@ -946,8 +946,13 @@ def test_issue_20704():
     assert limit(x*(Abs(1/x + y) - Abs(y - 1/x))/2, x, 0) == 0
 
 
+def test_issue_21031():
+    assert limit(((1 + x)**(1/x) - (1 + 2*x)**(1/(2*x)))/asin(x), x, 0) == E/2
+
+
 def test_issue_21038():
     assert limit(sin(pi*x)/(3*x - 12), x, 4) == pi/3
+
 
 def test_issue_21550():
     r = (sqrt(5) - 1)/2

@@ -44,7 +44,7 @@ def test_principal_value():
     raises(ValueError, lambda: Integral(g).principal_value())
 
     l = 1 / ((x ** 3) - 1)
-    assert Integral(l, (x, -oo, oo)).principal_value() == -sqrt(3)*pi/3
+    assert Integral(l, (x, -oo, oo)).principal_value().together() == -sqrt(3)*pi/3
     raises(ValueError, lambda: Integral(l, (x, -oo, 1)).principal_value())
 
     d = 1 / (x ** 2 - 1)

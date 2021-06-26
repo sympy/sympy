@@ -487,8 +487,13 @@ def calculate_series(e, x, logx=None):
     This is a place that fails most often, so it is in its own function.
     """
     from sympy.polys import cancel
+    from sympy.simplify import bottom_up
 
     for t in e.lseries(x, logx=logx):
+        # bottom_up function is required for a specific case - when e is
+        # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p). No current simplification
+        # methods reduce this to 0 while not expanding polynomials.
+        t = bottom_up(t, lambda w: getattr(w, 'normal', lambda: w)())
         t = cancel(t, expand=False).factor()
 
         if t.has(exp) and t.has(log):
@@ -543,7 +548,7 @@ def mrv_leadterm(e, x):
             base = f.as_base_exp()[0].as_coeff_exponent(w)
             ex = f.as_base_exp()[1]
             lt = (base[0]**ex, base[1]*ex)
-    return lt
+    return (lt[0].subs(log(w), logw), lt[1])
 
 
 def build_expression_tree(Omega, rewrites):

@@ -487,7 +487,7 @@ class exp(ExpBase, metaclass=ExpMeta):
         nterms = n
         try:
             cf = Order(arg.as_leading_term(x, logx=logx), x).getn()
-        except NotImplementedError:
+        except (NotImplementedError, PoleError):
             cf = 0
         if cf and cf > 0:
             nterms = ceiling(n/cf)
