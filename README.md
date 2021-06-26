@@ -181,7 +181,7 @@ git with:
 
 WARNING: The above commands will all clear changes you may have made,
 and you will lose them forever. Be sure to check things with `git
-status`, `git diff`, `git clean -Xn` , and `git clean -n` before doing any
+status`, `git diff`, `git clean -Xn`, and `git clean -n` before doing any
 of those.
 
 ## Bugs
