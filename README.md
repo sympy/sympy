@@ -270,7 +270,7 @@ A BibTeX entry for LaTeX users is
 ```
 
 SymPy is BSD licensed, so you are free to use it whatever you like, be
-it academic, commercial, creating forks, or derivatives, as long as you
+it academic, commercial, creating forks or derivatives, as long as you
 copy the BSD statement if you redistribute it (see the LICENSE file for
 details). That said, although not required by the SymPy license, if it
 is convenient for you, please cite SymPy when using it in your work and
