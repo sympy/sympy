@@ -57,9 +57,7 @@ class DenseMatrix(MatrixBase):
             return False
         if self_shape != other_shape:
             return False
-        if isinstance(other, Matrix):
-            return _compare_sequence(self._flat,  other._flat)
-        elif isinstance(other, MatrixBase):
+        if isinstance(other, MatrixBase):
             return _compare_sequence(self._flat, Matrix(other)._flat)
 
     @property
@@ -73,13 +71,11 @@ class DenseMatrix(MatrixBase):
             element_kind = NumberKind
         elif domain == EXRAW:
             kinds = set(e.kind for e in self.todok().values())
-            if not kinds:
-                element_kind = NumberKind
-            elif len(kinds) == 1:
-                [element_kind] = NumberKind
+            if len(kinds) == 1:
+                [element_kind] = kinds
             else:
                 element_kind = UndefinedKind
-        else:
+        else: # pragma: no cover
             raise RuntimeError("Domain should only be ZZ, QQ or EXRAW")
         return MatrixKind(element_kind)
 

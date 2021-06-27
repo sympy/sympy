@@ -1150,8 +1150,10 @@ class MatrixBase(MatrixDeprecated,
             # element to something that does not fit in the domain
             if new_domain != domain:
                 rep = rep.convert_to(new_domain)
+                domain = new_domain
 
-            element = new_domain.from_sympy(element)
+            if domain != EXRAW:
+                element = new_domain.from_sympy(element)
 
         if domain == EXRAW and not isinstance(element, Expr):
             SymPyDeprecationWarning(

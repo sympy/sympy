@@ -667,6 +667,9 @@ def test_creation():
         assert Matrix([[[1], (2,)]]).tolist() == [[[1], (2,)]]
     with warns_deprecated_sympy():
         assert Matrix([[[1], (2,)]]).T.tolist() == [[[1]], [(2,)]]
+    M = Matrix([[0]])
+    with warns_deprecated_sympy():
+        M[0, 0] = S.EmptySet
 
     a = Matrix([[x, 0], [0, 0]])
     m = a
@@ -1250,6 +1253,9 @@ def test_zeros_ones_fill():
     assert ones(2) == ones(2, 2)
     assert zeros(2, 3) == Matrix(2, 3, [0]*6)
     assert ones(2, 3) == Matrix(2, 3, [1]*6)
+
+    a.fill(0)
+    assert a == zeros(n, m)
 
 
 def test_empty_zeros():
