@@ -1854,49 +1854,6 @@ class TransferFunctionMatrix(Basic):
         """
         return self._expr_mat.shape
 
-    @property
-    def is_IO_coupled(self):
-        """
-        Returns whether the given ``TransferFunctionMatrix`` is IO-coupled or not.
-        A MIMO system is IO-coupled when each input affects many outputs.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s
-        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix
-        >>> from sympy.printing import pprint
-        >>> tf_1 = TransferFunction(1, 1, s)
-        >>> tf_2 = TransferFunction(2, 1, s)
-        >>> tf_3 = TransferFunction(1 + s, 1, s)
-        >>> tf_4 = TransferFunction(0, 1, s)
-        >>> tfm_1 = TransferFunctionMatrix([[tf_1, tf_1], [tf_2, tf_3]]) # each input layer affects each output layer
-        >>> tfm_2 = TransferFunctionMatrix([[tf_3, tf_4], [tf_4, tf_1]]) # each input layer only affects its corresponding output layer
-        >>> pprint(tfm_1, use_unicode=False)
-        [1    1  ]
-        [-    -  ]
-        [1    1  ]
-        [        ]
-        [2  s + 1]
-        [-  -----]
-        [1    1  ]
-        >>> pprint(tfm_2, use_unicode=False)
-        [s + 1  0]
-        [-----  -]
-        [  1    1]
-        [        ]
-        [  0    1]
-        [  -    -]
-        [  1    1]
-        >>> tfm_1.is_IO_coupled
-        True
-        >>> tfm_2.is_IO_coupled
-        False
-
-        """
-        mat = self._expr_mat.applyfunc(lambda a: a.as_numer_denom()[0])
-        return not mat.is_diagonal()
-
     def __neg__(self):
         neg = -self._expr_mat
         return _to_TFM(neg, self.var)
