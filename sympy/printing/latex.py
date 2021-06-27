@@ -1109,6 +1109,9 @@ class LatexPrinter(Printer):
         tex = r"e^{%s}" % self._print(expr.args[0])
         return self._do_exponent(tex, exp)
 
+    def _print_Exp1(self, expr, exp=None):
+        return "e"
+
     def _print_elliptic_k(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
         if exp is not None:
@@ -1156,6 +1159,18 @@ class LatexPrinter(Printer):
             return r"\operatorname{B}^{%s}%s" % (exp, tex)
         else:
             return r"\operatorname{B}%s" % tex
+
+    def _print_betainc(self, expr, exp=None, operator='B'):
+        largs = [self._print(arg) for arg in expr.args]
+        tex = r"\left(%s, %s\right)" % (largs[0], largs[1])
+
+        if exp is not None:
+            return r"\operatorname{%s}_{(%s, %s)}^{%s}%s" % (operator, largs[2], largs[3], exp, tex)
+        else:
+            return r"\operatorname{%s}_{(%s, %s)}%s" % (operator, largs[2], largs[3], tex)
+
+    def _print_betainc_regularized(self, expr, exp=None):
+        return self._print_betainc(expr, exp, operator='I')
 
     def _print_uppergamma(self, expr, exp=None):
         tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
@@ -1877,6 +1892,12 @@ class LatexPrinter(Printer):
                 self.parenthesize(expr.expr, PRECEDENCE["Mul"], False)
             )
 
+    def _print_ArraySymbol(self, expr):
+        return self._print(expr.name)
+
+    def _print_ArrayElement(self, expr):
+        return "{{%s}_{%s}}" % (expr.name, ", ".join([f"{self._print(i)}" for i in expr.indices]))
+
     def _print_UniversalSet(self, expr):
         return r"\mathbb{U}"
 
@@ -1947,10 +1968,12 @@ class LatexPrinter(Printer):
             tex = r"\left(%s\right)^{%s}" % (tex, exp)
         return tex
 
-    def _print_SingularityFunction(self, expr):
+    def _print_SingularityFunction(self, expr, exp=None):
         shift = self._print(expr.args[0] - expr.args[1])
         power = self._print(expr.args[2])
         tex = r"{\left\langle %s \right\rangle}^{%s}" % (shift, power)
+        if exp is not None:
+            tex = r"{\left({\langle %s \rangle}^{%s}\right)}^{%s}" % (shift, power, exp)
         return tex
 
     def _print_Heaviside(self, expr, exp=None):
@@ -2179,15 +2202,15 @@ class LatexPrinter(Printer):
         sig = s.lamda.signature
         xys = ((self._print(x), self._print(y)) for x, y in zip(sig, s.base_sets))
         xinys = r" , ".join(r"%s \in %s" % xy for xy in xys)
-        return r"\left\{%s\; |\; %s\right\}" % (self._print(expr), xinys)
+        return r"\left\{%s\; \middle|\; %s\right\}" % (self._print(expr), xinys)
 
     def _print_ConditionSet(self, s):
         vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
         if s.base_set is S.UniversalSet:
-            return r"\left\{%s \mid %s \right\}" % \
+            return r"\left\{%s\; \middle|\; %s \right\}" % \
                 (vars_print, self._print(s.condition))
 
-        return r"\left\{%s \mid %s \in %s \wedge %s \right\}" % (
+        return r"\left\{%s\; \middle|\; %s \in %s \wedge %s \right\}" % (
             vars_print,
             vars_print,
             self._print(s.base_set),
@@ -2195,7 +2218,7 @@ class LatexPrinter(Printer):
 
     def _print_ComplexRegion(self, s):
         vars_print = ', '.join([self._print(var) for var in s.variables])
-        return r"\left\{%s\; |\; %s \in %s \right\}" % (
+        return r"\left\{%s\; \middle|\; %s \in %s \right\}" % (
             self._print(s.expr),
             vars_print,
             self._print(s.sets))
@@ -2669,6 +2692,16 @@ class LatexPrinter(Printer):
 
     def _print_mpq(self, expr):
         return str(expr)
+
+    def _print_Predicate(self, expr):
+        return str(expr)
+
+    def _print_AppliedPredicate(self, expr):
+        pred = expr.function
+        args = expr.arguments
+        pred_latex = self._print(pred)
+        args_latex = ', '.join([self._print(a) for a in args])
+        return '%s(%s)' % (pred_latex, args_latex)
 
     def emptyPrinter(self, expr):
         # default to just printing as monospace, like would normally be shown

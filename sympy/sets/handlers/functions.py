@@ -1,4 +1,4 @@
-from sympy import Set, symbols, exp, log, S, Wild, Dummy, oo
+from sympy import Set, symbols, exp, log, S, Wild, Dummy, oo, Float
 from sympy.core import Expr, Add
 from sympy.core.function import Lambda, _coeff_isneg, FunctionClass
 from sympy.logic.boolalg import true
@@ -192,7 +192,9 @@ def _set_function(f, self): # noqa:F811
     a = Wild('a', exclude=[n])
     b = Wild('b', exclude=[n])
     match = expr.match(a*n + b)
-    if match and match[a]:
+    if match and match[a] and (
+            not match[a].atoms(Float) and
+            not match[b].atoms(Float)):
         # canonical shift
         a, b = match[a], match[b]
         if a in [1, -1]:

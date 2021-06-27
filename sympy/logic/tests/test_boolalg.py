@@ -1,4 +1,5 @@
 from sympy.assumptions.ask import Q
+from sympy.assumptions.refine import refine
 from sympy.core.numbers import oo
 from sympy.core.relational import Equality, Eq, Ne
 from sympy.core.singleton import S
@@ -16,7 +17,8 @@ from sympy.logic.boolalg import (
     to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
     BooleanAtom, is_literal, term_to_integer, integer_to_term,
     truth_table, as_Boolean, to_anf, is_anf, distribute_xor_over_and,
-    anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial)
+    anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial,
+    _check_pair, _convert_to_varsSOP, _convert_to_varsPOS, Exclusive,)
 from sympy.assumptions.cnf import CNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
@@ -225,6 +227,13 @@ def test_Equivalent():
     assert Equivalent(Equality(A, B), Equality(B, A)) is true
 
 
+def test_Exclusive():
+    assert Exclusive(False, False, False) is true
+    assert Exclusive(True, False, False) is true
+    assert Exclusive(True, True, False) is false
+    assert Exclusive(True, True, True) is false
+
+
 def test_equals():
     assert Not(Or(A, B)).equals(And(Not(A), Not(B))) is True
     assert Equivalent(A, B).equals((A >> B) & (B >> A)) is True
@@ -252,14 +261,14 @@ def test_simplification():
     dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]
     assert (
         SOPform([w, x, y, z], minterms, dontcares) ==
-        Or(And(Not(w), z), And(y, z)))
+        Or(And(y, z), And(Not(w), Not(x))))
     assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
 
     minterms = [1, 3, 7, 11, 15]
     dontcares = [0, 2, 5]
     assert (
         SOPform([w, x, y, z], minterms, dontcares) ==
-        Or(And(Not(w), z), And(y, z)))
+        Or(And(y, z), And(Not(w), Not(x))))
     assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
 
     minterms = [1, [0, 0, 1, 1], 7, [1, 0, 1, 1],
@@ -267,14 +276,14 @@ def test_simplification():
     dontcares = [0, [0, 0, 1, 0], 5]
     assert (
         SOPform([w, x, y, z], minterms, dontcares) ==
-        Or(And(Not(w), z), And(y, z)))
+        Or(And(y, z), And(Not(w), Not(x))))
     assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
 
     minterms = [1, {y: 1, z: 1}]
     dontcares = [0, [0, 0, 1, 0], 5]
     assert (
         SOPform([w, x, y, z], minterms, dontcares) ==
-        Or(And(Not(w), z), And(y, z)))
+        Or(And(y, z), And(Not(w), Not(x))))
     assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
 
 
@@ -989,9 +998,9 @@ def test_binary_symbols():
     assert x.binary_symbols == {x}
     assert And(x, Eq(y, False), Eq(z, 1)).binary_symbols == {x, y}
     assert Q.prime(x).binary_symbols == set()
-    assert Q.is_true(x < 1).binary_symbols == set()
+    assert Q.lt(x, 1).binary_symbols == set()
     assert Q.is_true(x).binary_symbols == {x}
-    assert Q.is_true(Eq(x, True)).binary_symbols == {x}
+    assert Q.eq(x, True).binary_symbols == {x}
     assert Q.prime(x).binary_symbols == set()
 
 
@@ -1191,3 +1200,55 @@ def test_bool_monomial():
     x, y = symbols('x,y')
     assert bool_monomial(1, [x, y]) == y
     assert bool_monomial([1, 1], [x, y]) == And(x, y)
+
+
+def test_check_pair():
+    assert _check_pair([0, 1, 0], [0, 1, 1]) == 2
+    assert _check_pair([0, 1, 0], [1, 1, 1]) == -1
+
+
+def test_convert_to_varsSOP():
+    assert _convert_to_varsSOP([0, 1, 0], [x, y, z]) ==  And(Not(x), y, Not(z))
+    assert _convert_to_varsSOP([3, 1, 0], [x, y, z]) ==  And(y, Not(z))
+
+
+def test_convert_to_varsPOS():
+    assert _convert_to_varsPOS([0, 1, 0], [x, y, z]) == Or(x, Not(y), z)
+    assert _convert_to_varsPOS([3, 1, 0], [x, y, z]) ==  Or(Not(y), z)
+
+
+def test_refine():
+    # relational
+    assert not refine(x < 0, ~(x < 0))
+    assert refine(x < 0, (x < 0))
+    assert refine(x < 0, (0 > x)) is S.true
+    assert refine(x < 0, (y < 0)) == (x < 0)
+    assert not refine(x <= 0, ~(x <= 0))
+    assert refine(x <= 0,  (x <= 0))
+    assert refine(x <= 0,  (0 >= x)) is S.true
+    assert refine(x <= 0,  (y <= 0)) == (x <= 0)
+    assert not refine(x > 0, ~(x > 0))
+    assert refine(x > 0,  (x > 0))
+    assert refine(x > 0,  (0 < x)) is S.true
+    assert refine(x > 0,  (y > 0)) == (x > 0)
+    assert not refine(x >= 0, ~(x >= 0))
+    assert refine(x >= 0,  (x >= 0))
+    assert refine(x >= 0,  (0 <= x)) is S.true
+    assert refine(x >= 0,  (y >= 0)) == (x >= 0)
+    assert not refine(Eq(x, 0), ~(Eq(x, 0)))
+    assert refine(Eq(x, 0),  (Eq(x, 0)))
+    assert refine(Eq(x, 0),  (Eq(0, x))) is S.true
+    assert refine(Eq(x, 0),  (Eq(y, 0))) == Eq(x, 0)
+    assert not refine(Ne(x, 0), ~(Ne(x, 0)))
+    assert refine(Ne(x, 0), (Ne(0, x))) is S.true
+    assert refine(Ne(x, 0),  (Ne(x, 0)))
+    assert refine(Ne(x, 0),  (Ne(y, 0))) == (Ne(x, 0))
+
+    # boolean functions
+    assert refine(And(x > 0, y > 0), (x > 0)) == (y > 0)
+    assert refine(And(x > 0, y > 0), (x > 0) & (y > 0)) is S.true
+
+    # predicates
+    assert refine(Q.positive(x), Q.positive(x)) is S.true
+    assert refine(Q.positive(x), Q.negative(x)) is S.false
+    assert refine(Q.positive(x), Q.real(x)) == Q.positive(x)

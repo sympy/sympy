@@ -1,6 +1,6 @@
 from sympy import (Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh,
     sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, cot, Integer,
-    PoleError, floor, ceiling, asin, symbols, limit, Piecewise, Eq, sign,
+    PoleError, floor, ceiling, asin, symbols, limit, sign, cbrt,
     Derivative, S)
 from sympy.abc import x, y, z
 
@@ -36,6 +36,11 @@ def test_pow_0():
 
 def test_pow_1():
     assert ((1 + x)**2).nseries(x, n=5) == x**2 + 2*x + 1
+
+    # https://github.com/sympy/sympy/issues/21075
+    assert ((sqrt(x) + 1)**2).nseries(x) == 2*sqrt(x) + x + 1
+    assert ((sqrt(x) + cbrt(x))**2).nseries(x) == 2*x**Rational(5, 6)\
+        + x**Rational(2, 3) + x
 
 
 def test_geometric_1():
@@ -377,7 +382,7 @@ def test_series3():
 def test_bug4():
     w = Symbol("w")
     e = x/(w**4 + x**2*w**4 + 2*x*w**4)*w**4
-    assert e.nseries(w, n=2).removeO() in [x/(1 + 2*x + x**2),
+    assert e.nseries(w, n=2).removeO().expand() in [x/(1 + 2*x + x**2),
         1/(1 + x/2 + 1/x/2)/2, 1/x/(1 + 2/x + x**(-2))]
 
 
@@ -450,8 +455,7 @@ def test_abs():
     assert abs(x + 1).nseries(x, n=4) == x + 1
     assert abs(sin(x)).nseries(x, n=4) == x - Rational(1, 6)*x**3 + O(x**4)
     assert abs(sin(-x)).nseries(x, n=4) == x - Rational(1, 6)*x**3 + O(x**4)
-    assert abs(x - a).nseries(x, 1) == Piecewise((x - 1, Eq(1 - a, 0)),
-                                                ((x - a)*sign(1 - a), True))
+    assert abs(x - a).nseries(x, 1) == -a*sign(1 - a) + (x - 1)*sign(1 - a) + sign(1 - a)
 
 
 def test_dir():
@@ -477,8 +481,8 @@ def test_issue_4441():
     assert f.series(x, 0, 5) == 1 - a*x + a**2*x**2 - a**3*x**3 + \
         a**4*x**4 + O(x**5)
     f = 1/(1 + (a + b)*x)
-    assert f.series(x, 0, 3) == 1 + x*(-a - b) + \
-        x**2*(a + b)**2 + O(x**3)
+    assert f.series(x, 0, 3) == 1 + x*(-a - b)\
+        + x**2*(a**2 + 2*a*b + b**2) + O(x**3)
 
 
 def test_issue_4329():

@@ -11,7 +11,7 @@ from sympy import (
 from sympy.core.mul import _keep_coeff
 from sympy.core.expr import unchanged
 from sympy.simplify.simplify import nthroot, inversecombine
-from sympy.testing.pytest import XFAIL, slow
+from sympy.testing.pytest import XFAIL, slow, _both_exp_pow
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i
 
@@ -157,6 +157,7 @@ def test_simplify_other():
     assert simplify(2**(2 + x)/4) == 2**x
 
 
+@_both_exp_pow
 def test_simplify_complex():
     cosAsExp = cos(x)._eval_rewrite_as_exp(x)
     tanAsExp = tan(x)._eval_rewrite_as_exp(x)
@@ -200,6 +201,7 @@ def test_simplify_rational():
     assert simplify(expr, rational = True) == 2**(x+y)
     assert simplify(expr, rational = None) == 2.0**(x+y)
     assert simplify(expr, rational = False) == expr
+    assert simplify('0.9 - 0.8 - 0.1', rational = True) == 0
 
 
 def test_simplify_issue_1308():
@@ -246,6 +248,7 @@ def test_nthroot1():
     assert nthroot(p, 5) == q
 
 
+@_both_exp_pow
 def test_separatevars():
     x, y, z, n = symbols('x,y,z,n')
     assert separatevars(2*n*x*z + 2*x*y*z) == 2*x*z*(n + y)
@@ -734,11 +737,25 @@ def test_issue_9324_simplify():
     assert simplify(e) == e
 
 
+def test_issue_9817_simplify():
+    # simplify on trace of substituted explicit quadratic form of matrix
+    # expressions (a scalar) should return without errors (AttributeError)
+    # See issue #9817 and #9190 for the original bug more discussion on this
+    from sympy.matrices.expressions import Identity, trace
+    v = MatrixSymbol('v', 3, 1)
+    A = MatrixSymbol('A', 3, 3)
+    x = Matrix([i + 1 for i in range(3)])
+    X = Identity(3)
+    quadratic = v.T * A * v
+    assert simplify((trace(quadratic.as_explicit())).xreplace({v:x, A:X})) == 14
+
+
 def test_issue_13474():
     x = Symbol('x')
     assert simplify(x + csch(sinc(1))) == x + csch(sinc(1))
 
 
+@_both_exp_pow
 def test_simplify_function_inverse():
     # "inverse" attribute does not guarantee that f(g(x)) is x
     # so this simplification should not happen automatically.
@@ -760,6 +777,7 @@ def test_simplify_function_inverse():
     assert simplify(2*asin(sin(3*x)), inverse=True) == 6*x
     assert simplify(log(exp(x))) == log(exp(x))
     assert simplify(log(exp(x)), inverse=True) == x
+    assert simplify(exp(log(x)), inverse=True) == x
     assert simplify(log(exp(x), 2), inverse=True) == x/log(2)
     assert simplify(log(exp(x), 2, evaluate=False), inverse=True) == x/log(2)
 

@@ -548,7 +548,12 @@ class Function(Application, Expr):
                     return None
             return getattr(mpmath, fname)
 
-        func = _get_mpmath_func(self.func.__name__)
+        _eval_mpmath = getattr(self, '_eval_mpmath', None)
+        if _eval_mpmath is None:
+            func = _get_mpmath_func(self.func.__name__)
+            args = self.args
+        else:
+            func, args = _eval_mpmath()
 
         # Fall-back evaluation
         if func is None:
@@ -566,7 +571,7 @@ class Function(Application, Expr):
         # XXX + 5 is a guess, it is similar to what is used in evalf.py. Should
         #     we be more intelligent about it?
         try:
-            args = [arg._to_mpmath(prec + 5) for arg in self.args]
+            args = [arg._to_mpmath(prec + 5) for arg in args]
             def bad(m):
                 from mpmath import mpf, mpc
                 # the precision of an mpf value is the last element
@@ -1702,6 +1707,10 @@ class Derivative(Expr):
             ret.update(count.free_symbols)
         return ret
 
+    @property
+    def kind(self):
+        return self.args[0].kind
+
     def _eval_subs(self, old, new):
         # The substitution (old, new) cannot be done inside
         # Derivative(expr, vars) for a variety of reasons
@@ -2095,6 +2104,10 @@ class Lambda(Expr):
         """Return ``True`` if this ``Lambda`` is an identity function. """
         return self.signature == self.expr
 
+    def _eval_evalf(self, prec):
+        from sympy.core.evalf import prec_to_dps
+        return self.func(self.args[0], self.args[1].evalf(n=prec_to_dps(prec)))
+
 
 class Subs(Expr):
     """
@@ -2276,9 +2289,11 @@ class Subs(Expr):
                 # do Subs that aren't related to differentiation
                 undone2 = []
                 D = Dummy()
+                arg = e.args[0]
                 for vi, pi in undone:
                     if D not in e.xreplace({vi: D}).free_symbols:
-                        e = e.subs(vi, pi)
+                        if arg.has(vi):
+                            e = e.subs(vi, pi)
                     else:
                         undone2.append((vi, pi))
                 undone = undone2
@@ -2338,6 +2353,10 @@ class Subs(Expr):
 
     @property
     def expr_free_symbols(self):
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(feature="expr_free_symbols method",
+                                issue=21494,
+                                deprecated_since_version="1.9").warn()
         return (self.expr.expr_free_symbols - set(self.variables) |
             set(self.point.expr_free_symbols))
 
@@ -2383,17 +2402,29 @@ class Subs(Expr):
 
     def _eval_derivative(self, s):
         # Apply the chain rule of the derivative on the substitution variables:
-        val = Add.fromiter(p.diff(s) * Subs(self.expr.diff(v), self.variables, self.point).doit() for v, p in zip(self.variables, self.point))
+        f = self.expr
+        vp = V, P = self.variables, self.point
+        val = Add.fromiter(p.diff(s)*Subs(f.diff(v), *vp).doit()
+            for v, p in zip(V, P))
 
-        # Check if there are free symbols in `self.expr`:
-        # First get the `expr_free_symbols`, which returns the free symbols
-        # that are directly contained in an expression node (i.e. stop
-        # searching if the node isn't an expression). At this point turn the
-        # expressions into `free_symbols` and check if there are common free
-        # symbols in `self.expr` and the deriving factor.
-        fs1 = {j for i in self.expr_free_symbols for j in i.free_symbols}
-        if len(fs1 & s.free_symbols) > 0:
-            val += Subs(self.expr.diff(s), self.variables, self.point).doit()
+        # these are all the free symbols in the expr
+        efree = f.free_symbols
+        # some symbols like IndexedBase include themselves and args
+        # as free symbols
+        compound = {i for i in efree if len(i.free_symbols) > 1}
+        # hide them and see what independent free symbols remain
+        dums = {Dummy() for i in compound}
+        masked = f.xreplace(dict(zip(compound, dums)))
+        ifree = masked.free_symbols - dums
+        # include the compound symbols
+        free = ifree | compound
+        # remove the variables already handled
+        free -= set(V)
+        # add back any free symbols of remaining compound symbols
+        free |= {i for j in free & compound for i in j.free_symbols}
+        # if symbols of s are in free then there is more to do
+        if free & s.free_symbols:
+            val += Subs(f.diff(s), self.variables, self.point).doit()
         return val
 
     def _eval_nseries(self, x, n, logx, cdir=0):
@@ -3145,6 +3176,7 @@ def count_ops(expr, visual=False):
         DIV = Symbol('DIV')
         SUB = Symbol('SUB')
         ADD = Symbol('ADD')
+        EXP = Symbol('EXP')
         while args:
             a = args.pop()
 
@@ -3198,6 +3230,13 @@ def count_ops(expr, visual=False):
                 ops.append(DIV)
                 args.append(a.base)  # won't be -Mul but could be Add
                 continue
+            if a == S.Exp1:
+                ops.append(EXP)
+                continue
+            if a.is_Pow and a.base == S.Exp1:
+                ops.append(EXP)
+                args.append(a.exp)
+                continue
             if a.is_Mul or isinstance(a, LatticeOp):
                 o = Symbol(a.func.__name__.upper())
                 # count the args
@@ -3240,7 +3279,7 @@ def count_ops(expr, visual=False):
                 a = args.pop()
 
                 if a.args:
-                    o = Symbol(a.func.__name__.upper())
+                    o = Symbol(type(a).__name__.upper())
                     if a.is_Boolean:
                         ops.append(o*(len(a.args)-1))
                     else:

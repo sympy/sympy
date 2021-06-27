@@ -36,7 +36,7 @@ tfn = defaultdict(lambda: None, {
 
 
 @sympify_method_args
-class Set(Basic):
+class Set(Basic, EvalfMixin):
     """
     The base class for any kind of set.
 
@@ -326,6 +326,7 @@ class Set(Basic):
         False
         """
         other = sympify(other, strict=True)
+
         c = self._contains(other)
         if isinstance(c, Contains):
             return c
@@ -648,6 +649,9 @@ class Set(Basic):
     def _measure(self):
         raise NotImplementedError("(%s)._measure" % self)
 
+    def _eval_evalf(self, prec):
+        return self.func(*[arg.evalf(n=prec_to_dps(prec)) for arg in self.args])
+
     @sympify_return([('other', 'Set')], NotImplemented)
     def __add__(self, other):
         return self.union(other)
@@ -866,7 +870,7 @@ class ProductSet(Set):
         return all([bool(s) for s in self.sets])
 
 
-class Interval(Set, EvalfMixin):
+class Interval(Set):
     """
     Represents a real interval as a Set.
 
@@ -967,23 +971,6 @@ class Interval(Set, EvalfMixin):
         """
         return self._args[0]
 
-    _inf = left = start
-
-    @classmethod
-    def open(cls, a, b):
-        """Return an interval including neither boundary."""
-        return cls(a, b, True, True)
-
-    @classmethod
-    def Lopen(cls, a, b):
-        """Return an interval not including the left boundary."""
-        return cls(a, b, True, False)
-
-    @classmethod
-    def Ropen(cls, a, b):
-        """Return an interval not including the right boundary."""
-        return cls(a, b, False, True)
-
     @property
     def end(self):
         """
@@ -1000,8 +987,6 @@ class Interval(Set, EvalfMixin):
 
         """
         return self._args[1]
-
-    _sup = right = end
 
     @property
     def left_open(self):
@@ -1036,6 +1021,37 @@ class Interval(Set, EvalfMixin):
 
         """
         return self._args[3]
+
+    @classmethod
+    def open(cls, a, b):
+        """Return an interval including neither boundary."""
+        return cls(a, b, True, True)
+
+    @classmethod
+    def Lopen(cls, a, b):
+        """Return an interval not including the left boundary."""
+        return cls(a, b, True, False)
+
+    @classmethod
+    def Ropen(cls, a, b):
+        """Return an interval not including the right boundary."""
+        return cls(a, b, False, True)
+
+    @property
+    def _inf(self):
+        return self.start
+
+    @property
+    def _sup(self):
+        return self.end
+
+    @property
+    def left(self):
+        return self.start
+
+    @property
+    def right(self):
+        return self.end
 
     @property
     def is_empty(self):
@@ -1133,7 +1149,7 @@ class Interval(Set, EvalfMixin):
             return false
 
 
-class Union(Set, LatticeOp, EvalfMixin):
+class Union(Set, LatticeOp):
     """
     Represents a union of sets as a :class:`Set`.
 
@@ -1280,27 +1296,19 @@ class Union(Set, LatticeOp, EvalfMixin):
 
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
-        if all(isinstance(i, (FiniteSet, Interval)) for i in self.args):
-            if len(self.args) == 2:
-                a, b = self.args
-                if (a.sup == b.inf and a.inf is S.NegativeInfinity
-                        and b.sup is S.Infinity):
-                    return And(Ne(symbol, a.sup), symbol < b.sup, symbol > a.inf)
-            return Or(*[set.as_relational(symbol) for set in self.args])
-        raise NotImplementedError('relational of Union with non-Intervals')
+        if (len(self.args) == 2 and
+                all(isinstance(i, Interval) for i in self.args)):
+            # optimization to give 3 args as (x > 1) & (x < 5) & Ne(x, 3)
+            # instead of as 4, ((1 <= x) & (x < 3)) | ((x <= 5) & (3 < x))
+            a, b = self.args
+            if (a.sup == b.inf and
+                    not any(a.sup in i for i in self.args)):
+                return And(Ne(symbol, a.sup), symbol < b.sup, symbol > a.inf)
+        return Or(*[i.as_relational(symbol) for i in self.args])
 
     @property
     def is_iterable(self):
         return all(arg.is_iterable for arg in self.args)
-
-    def _eval_evalf(self, prec):
-        try:
-            return Union(*(set._eval_evalf(prec) for set in self.args))
-        except (TypeError, ValueError, NotImplementedError):
-            import sys
-            raise (TypeError("Not all sets are evalf-able"),
-                   None,
-                   sys.exc_info()[2])
 
     def __iter__(self):
         return roundrobin(*(iter(arg) for arg in self.args))
@@ -1526,7 +1534,7 @@ class Intersection(Set, LatticeOp):
         return And(*[set.as_relational(symbol) for set in self.args])
 
 
-class Complement(Set, EvalfMixin):
+class Complement(Set):
     r"""Represents the set difference or relative complement of a set with
     another set.
 
@@ -1731,7 +1739,7 @@ class UniversalSet(Set, metaclass=Singleton):
         return S.EmptySet
 
 
-class FiniteSet(Set, EvalfMixin):
+class FiniteSet(Set):
     """
     Represents a finite set of discrete numbers.
 
@@ -1906,6 +1914,10 @@ class FiniteSet(Set, EvalfMixin):
 
     def _eval_evalf(self, prec):
         return FiniteSet(*[elem.evalf(n=prec_to_dps(prec)) for elem in self])
+
+    def _eval_simplify(self, **kwargs):
+        from sympy.simplify import simplify
+        return FiniteSet(*[simplify(elem, **kwargs) for elem in self])
 
     @property
     def _sorted_args(self):

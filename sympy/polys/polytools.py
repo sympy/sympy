@@ -91,8 +91,10 @@ class Poly(Basic):
     """
     Generic class for representing and operating on polynomial expressions.
 
+    See :ref:`polys-docs` for general documentation.
+
     Poly is a subclass of Basic rather than Expr but instances can be
-    converted to Expr with the ``as_expr`` method.
+    converted to Expr with the :py:meth:`~.Poly.as_expr` method.
 
     Examples
     ========
@@ -384,7 +386,25 @@ class Poly(Basic):
 
     @property
     def domain(self):
-        """Get the ground domain of ``self``. """
+        """Get the ground domain of a :py:class:`~.Poly`
+
+        Returns
+        =======
+
+        :py:class:`~.Domain`:
+            Ground domain of the :py:class:`~.Poly`.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, Symbol
+        >>> x = Symbol('x')
+        >>> p = Poly(x**2 + x)
+        >>> p
+        Poly(x**2 + x, x, domain='ZZ')
+        >>> p.domain
+        ZZ
+        """
         return self.get_domain()
 
     @property
@@ -2582,10 +2602,10 @@ class Poly(Basic):
         >>> Poly(1 + x, x).revert(1)
         Poly(1, x, domain='ZZ')
 
-        >>> Poly(x**2 - 1, x).revert(1)
+        >>> Poly(x**2 - 2, x).revert(2)
         Traceback (most recent call last):
         ...
-        NotReversible: only unity is reversible in a ring
+        NotReversible: only units are reversible in a ring
 
         >>> Poly(1/x, x).revert(1)
         Traceback (most recent call last):
@@ -5926,7 +5946,7 @@ def _symbolic_factor_list(expr, opt, method):
         if arg.is_Number or (isinstance(arg, Expr) and pure_complex(arg)):
             coeff *= arg
             continue
-        elif arg.is_Pow:
+        elif arg.is_Pow and arg.base != S.Exp1:
             base, exp = arg.args
             if base.is_Number and exp.is_Number:
                 coeff *= arg
@@ -6098,7 +6118,7 @@ def to_rational_coeffs(f):
         f1 = f1 or f1.monic()
         coeffs = f1.all_coeffs()[1:]
         coeffs = [simplify(coeffx) for coeffx in coeffs]
-        if coeffs[-2]:
+        if len(coeffs) > 1 and coeffs[-2]:
             rescale1_x = simplify(coeffs[-2]/coeffs[-1])
             coeffs1 = []
             for i in range(len(coeffs)):
@@ -6125,22 +6145,16 @@ def to_rational_coeffs(f):
         ``alpha`` is the translating factor, and ``f`` is the shifted
         polynomial; else ``alpha`` is ``None``.
         """
-        from sympy.core.add import Add
         if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
             return None, f
         n = f.degree()
         f1 = f1 or f1.monic()
         coeffs = f1.all_coeffs()[1:]
         c = simplify(coeffs[0])
-        if c and not c.is_rational:
-            func = Add
-            if c.is_Add:
-                args = c.args
-                func = c.func
-            else:
-                args = [c]
-            c1, c2 = sift(args, lambda z: z.is_rational, binary=True)
-            alpha = -func(*c2)/n
+        if c.is_Add and not c.is_rational:
+            rat, nonrat = sift(c.args,
+                lambda z: z.is_rational is True, binary=True)
+            alpha = -c.func(*nonrat)/n
             f2 = f1.shift(alpha)
             return alpha, f2
         return None

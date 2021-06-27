@@ -10,8 +10,6 @@ from sympy.functions.elementary.integers import floor
 
 from sympy.core.logic import fuzzy_or, fuzzy_and
 
-
-
 def _rewrite_hyperbolics_as_exp(expr):
     expr = sympify(expr)
     return expr.xreplace({h: h.rewrite(exp)
@@ -624,6 +622,31 @@ class tanh(HyperbolicFunction):
         denom = sinh(re)**2 + cos(im)**2
         return (sinh(re)*cosh(re)/denom, sin(im)*cos(im)/denom)
 
+    def _eval_expand_trig(self, **hints):
+        arg = self.args[0]
+        if arg.is_Add:
+            from sympy import symmetric_poly
+            n = len(arg.args)
+            TX = [tanh(x, evaluate=False)._eval_expand_trig()
+                for x in arg.args]
+            p = [0, 0]  # [den, num]
+            for i in range(n + 1):
+                p[i % 2] += symmetric_poly(i, TX)
+            return p[1]/p[0]
+        elif arg.is_Mul:
+            from sympy.functions.combinatorial.numbers import nC
+            coeff, terms = arg.as_coeff_Mul()
+            if coeff.is_Integer and coeff > 1:
+                n = []
+                d = []
+                T = tanh(terms)
+                for k in range(1, coeff + 1, 2):
+                    n.append(nC(range(coeff), k)*T**k)
+                for k in range(0, coeff + 1, 2):
+                    d.append(nC(range(coeff), k)*T**k)
+                return Add(*n)/Add(*d)
+        return tanh(arg)
+
     def _eval_rewrite_as_tractable(self, arg, limitvar=None, **kwargs):
         neg_exp, pos_exp = exp(-arg), exp(arg)
         return (pos_exp - neg_exp)/(pos_exp + neg_exp)
@@ -852,6 +875,27 @@ class coth(HyperbolicFunction):
         else:
             return self.func(arg)
 
+    def _eval_expand_trig(self, **hints):
+        arg = self.args[0]
+        if arg.is_Add:
+            from sympy import symmetric_poly
+            CX = [coth(x, evaluate=False)._eval_expand_trig() for x in arg.args]
+            p = [[], []]
+            n = len(arg.args)
+            for i in range(n, -1, -1):
+                p[(n - i) % 2].append(symmetric_poly(i, CX))
+            return Add(*p[0])/Add(*p[1])
+        elif arg.is_Mul:
+            from sympy import binomial
+            coeff, x = arg.as_coeff_Mul(rational=True)
+            if coeff.is_Integer and coeff > 1:
+                c = coth(x, evaluate=False)
+                p = [[], []]
+                for i in range(coeff, -1, -1):
+                    p[(coeff - i) % 2].append(binomial(coeff, i)*c**i)
+                return Add(*p[0])/Add(*p[1])
+        return coth(arg)
+
 
 class ReciprocalHyperbolicFunction(HyperbolicFunction):
     """Base class for reciprocal functions of hyperbolic functions. """
@@ -913,6 +957,9 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
     def _eval_expand_complex(self, deep=True, **hints):
         re_part, im_part = self.as_real_imag(deep=True, **hints)
         return re_part + S.ImaginaryUnit*im_part
+
+    def _eval_expand_trig(self, **hints):
+        return self._calculate_reciprocal("_eval_expand_trig", **hints)
 
     def _eval_as_leading_term(self, x, cdir=0):
         return (1/self._reciprocal_of(self.args[0]))._eval_as_leading_term(x)

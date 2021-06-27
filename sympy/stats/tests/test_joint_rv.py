@@ -32,7 +32,7 @@ def test_Normal():
     raises(ValueError, lambda: marginal_distribution(m))
     assert integrate(density(m)(x, y), (x, -oo, oo), (y, -oo, oo)).evalf() == 1
     N = Normal('N', [1, 2], [[x, 0], [0, y]])
-    assert density(N)(0, 0) == exp(-2/y - 1/(2*x))/(2*pi*sqrt(x*y))
+    assert density(N)(0, 0) == exp(-((4*x + y)/(2*x*y)))/(2*pi*sqrt(x*y))
 
     raises (ValueError, lambda: Normal('M', [1, 2], [[1, 1], [1, -1]]))
     # symbolic
@@ -98,8 +98,8 @@ def test_GeneralizedMultivariateLogGammaDistribution():
     assert str(density(G)(y_1, y_2, y_3, y_4)) == den
     marg = ("5*2**(2/3)*5**(1/3)*exp(4*y_1)*exp(-exp(y_1))*Integral(exp(-exp(4*G[3])"
             "/4)*exp(16*G[3])*Integral(exp(-exp(3*G[2])/3)*exp(12*G[2])*Integral(exp("
-            "-exp(2*G[1])/2)*exp(8*G[1])*Sum((-1/4)**n*24**(-n)*(-4 + 2**(2/3)*5**(1/3"
-            "))**n*exp(n*y_1)*exp(2*n*G[1])*exp(3*n*G[2])*exp(4*n*G[3])/(gamma(n + 1)"
+            "-exp(2*G[1])/2)*exp(8*G[1])*Sum((-1/4)**n*(-4 + 2**(2/3)*5**(1/3"
+            "))**n*exp(n*y_1)*exp(2*n*G[1])*exp(3*n*G[2])*exp(4*n*G[3])/(24**n*gamma(n + 1)"
             "*gamma(n + 4)**3), (n, 0, oo)), (G[1], -oo, oo)), (G[2], -oo, oo)), (G[3]"
             ", -oo, oo))/5308416")
     assert str(marginal_distribution(G, G[0])(y_1)) == marg
@@ -304,3 +304,22 @@ def test_sample_pymc3():
                     assert tuple(sam.flatten()) in X.pspace.distribution.set
             N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
             raises(NotImplementedError, lambda: next(sample(N_c, library='pymc3')))
+
+def test_sample_seed():
+    x1, x2 = (Indexed('x', i) for i in (1, 2))
+    pdf = exp(-x1**2/2 + x1 - x2**2/2 - S.Half)/(2*pi)
+    X = JointRV('x', pdf)
+
+    libraries = ['scipy', 'numpy', 'pymc3']
+    for lib in libraries:
+        try:
+            imported_lib = import_module(lib)
+            if imported_lib:
+                s0, s1, s2 = [], [], []
+                s0 = list(sample(X, numsamples=10, library=lib, seed=0))
+                s1 = list(sample(X, numsamples=10, library=lib, seed=0))
+                s2 = list(sample(X, numsamples=10, library=lib, seed=1))
+                assert s0 == s1
+                assert s1 != s2
+        except NotImplementedError:
+            continue

@@ -10,7 +10,7 @@ from sympy import (
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
     DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
     digamma, RisingFactorial, besselj, bessely, besseli, besselk, S, beta,
-    fresnelc, fresnels)
+    betainc, betainc_regularized, fresnelc, fresnels)
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.scipy_nodes import cosm1
@@ -20,7 +20,7 @@ from sympy.functions.special.polynomials import \
     assoc_legendre, assoc_laguerre, jacobi
 from sympy.matrices import Matrix, MatrixSymbol, SparseMatrix
 from sympy.printing.lambdarepr import LambdaPrinter
-from sympy.printing.pycode import NumPyPrinter
+from sympy.printing.numpy import NumPyPrinter
 from sympy.utilities.lambdify import implemented_function, lambdastr
 from sympy.testing.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
@@ -36,6 +36,7 @@ numpy = import_module('numpy')
 scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
+cupy = import_module('cupy')
 
 if tensorflow:
     # Hide Tensorflow warnings
@@ -1255,10 +1256,23 @@ def test_issue_17898():
     f_ = lambdify([x], sympy.LambertW(x,-1), modules='scipy')
     assert f_(0.1) == mpmath.lambertw(0.1, -1)
 
+def test_issue_13167_21411():
+    if not numpy:
+        skip("numpy not installed")
+    f1 = lambdify(x, sympy.Heaviside(x))
+    f2 = lambdify(x, sympy.Heaviside(x, 1))
+    res1 = f1([-1, 0, 1])
+    res2 = f2([-1, 0, 1])
+    assert Abs(res1[0]).n() < 1e-15        # First functionality: only one argument passed
+    assert Abs(res1[1] - 1/2).n() < 1e-15
+    assert Abs(res1[2] - 1).n() < 1e-15
+    assert Abs(res2[0]).n() < 1e-15        # Second functionality: two arguments passed
+    assert Abs(res2[1] - 1).n() < 1e-15
+    assert Abs(res2[2] - 1).n() < 1e-15
+
 def test_single_e():
     f = lambdify(x, E)
     assert f(23) == exp(1.0)
-
 
 def test_issue_16536():
     if not scipy:
@@ -1303,6 +1317,24 @@ def test_beta_math():
 
     assert abs(beta(1.3, 2.3) - F(1.3, 2.3)) <= 1e-10
 
+def test_betainc_scipy():
+    if not scipy:
+        skip("scipy not installed")
+
+    f = betainc(w, x, y, z)
+    F = lambdify((w, x, y, z), f, modules='scipy')
+
+    assert abs(betainc(1.4, 3.1, 0.1, 0.5) - F(1.4, 3.1, 0.1, 0.5)) <= 1e-10
+
+def test_betainc_regularized_scipy():
+    if not scipy:
+        skip("scipy not installed")
+
+    f = betainc_regularized(w, x, y, z)
+    F = lambdify((w, x, y, z), f, modules='scipy')
+
+    assert abs(betainc_regularized(0.2, 3.5, 0.1, 1) - F(0.2, 3.5, 0.1, 1)) <= 1e-10
+
 
 def test_numpy_special_math():
     if not numpy:
@@ -1335,3 +1367,42 @@ def test_scipy_special_math():
 
     cm1 = lambdify((x,), cosm1(x), modules='scipy')
     assert abs(cm1(1e-20) + 5e-41) < 1e-200
+
+
+def test_cupy_array_arg():
+    if not cupy:
+        skip("CuPy not installed")
+
+    f = lambdify([[x, y]], x*x + y, 'cupy')
+    result = f(cupy.array([2.0, 1.0]))
+    assert result == 5
+    assert "cupy" in str(type(result))
+
+
+def test_cupy_array_arg_using_numpy():
+    # numpy functions can be run on cupy arrays
+    # unclear if we can "officialy" support this,
+    # depends on numpy __array_function__ support
+    if not cupy:
+        skip("CuPy not installed")
+
+    f = lambdify([[x, y]], x*x + y, 'numpy')
+    result = f(cupy.array([2.0, 1.0]))
+    assert result == 5
+    assert "cupy" in str(type(result))
+
+def test_cupy_dotproduct():
+    if not cupy:
+        skip("CuPy not installed")
+
+    A = Matrix([x, y, z])
+    f1 = lambdify([x, y, z], DotProduct(A, A), modules='cupy')
+    f2 = lambdify([x, y, z], DotProduct(A, A.T), modules='cupy')
+    f3 = lambdify([x, y, z], DotProduct(A.T, A), modules='cupy')
+    f4 = lambdify([x, y, z], DotProduct(A, A.T), modules='cupy')
+
+    assert f1(1, 2, 3) == \
+        f2(1, 2, 3) == \
+        f3(1, 2, 3) == \
+        f4(1, 2, 3) == \
+        cupy.array([14])

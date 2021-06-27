@@ -24,6 +24,10 @@ jobs:
       - run: pip install mpmath flake8
       - run: bin/test quality
       - run: flake8 sympy
+        # compileall is used to detect invalid escapes like '\e'
+      - run: python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/
+        # test all modules are listed in setup.py
+      - run: bin/test_setup.py
 
   # -------------------- Doctests latest Python -------------------- #
 
@@ -82,13 +86,17 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.8
-      - run: release/aptinstall.sh
+      - run: sudo apt install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev
+      - run: python -m pip install --upgrade pip
+      - run: pip install mpmath gmpy2 matplotlib numpy scipy aesara ipython \
+                         symengine cython llvmlite wurlitzer \
+                         autowrap numexpr 'antlr4-python3-runtime==4.7.*'
       # Test external imports
-      - run: release/venv_main/bin/python bin/test_external_imports.py
-      - run: release/venv_main/bin/python bin/test_submodule_imports.py
-      - run: release/venv_main/bin/python bin/test_executable.py
-      # Test modules for specific dependencies
-      - run: release/venv_main/bin/python bin/test_optional_dependencies.py
+      - run: bin/test_external_imports.py
+      - run: bin/test_submodule_imports.py
+      - run: bin/test_executable.py
+      # Test modules with specific dependencies
+      - run: bin/test_optional_dependencies.py
 
   # -------------------- Slow test split 1/2 ----------------------- #
 
@@ -128,7 +136,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: ['3.6', '3.7', '3.8', 'pypy-3.6']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -146,7 +154,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: ['3.6', '3.7', '3.8', 'pypy-3.6']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -164,7 +172,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: ['3.6', '3.7', '3.8', 'pypy-3.6']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -202,5 +210,4 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 2.7
-      - run: pip install mpmath
       - run: bin/test_py2_import.py

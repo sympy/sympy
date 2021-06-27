@@ -1414,7 +1414,7 @@ def test_issue_4950():
 
 
 def test_issue_4968():
-    assert integrate(sin(log(x**2))) == x*sin(2*log(x))/5 - 2*x*cos(2*log(x))/5
+    assert integrate(sin(log(x**2))) == x*sin(log(x**2))/5 - 2*x*cos(log(x**2))/5
 
 
 def test_singularities():
@@ -1604,11 +1604,15 @@ def test_integrate_with_complex_constants():
     K = Symbol('K', real=True, positive=True)
     x = Symbol('x', real=True)
     m = Symbol('m', real=True)
+    t = Symbol('t', real=True)
     assert integrate(exp(-I*K*x**2+m*x), x) == sqrt(I)*sqrt(pi)*exp(-I*m**2
                     /(4*K))*erfi((-2*I*K*x + m)/(2*sqrt(K)*sqrt(-I)))/(2*sqrt(K))
-    assert integrate(1/(1 + I*x**2), x) == -sqrt(I)*log(x - sqrt(I))/2 +\
-        sqrt(I)*log(x + sqrt(I))/2
+    assert integrate(1/(1 + I*x**2), x) == (-I*(sqrt(-I)*log(x - I*sqrt(-I))/2
+            - sqrt(-I)*log(x + I*sqrt(-I))/2))
     assert integrate(exp(-I*x**2), x) == sqrt(pi)*erf(sqrt(I)*x)/(2*sqrt(I))
+
+    assert integrate((1/(exp(I*t)-2)), t) == -t/2 - I*log(exp(I*t) - 2)/2
+    assert integrate((1/(exp(I*t)-2)), (t, 0, 2*pi)) == -pi
 
 
 def test_issue_14241():
@@ -1652,9 +1656,9 @@ def test_issue_15494():
 
 def test_li_integral():
     y = Symbol('y')
-    assert Integral(li(y*x**2), x).doit() == Piecewise(
-            (x*li(x**2*y) - x*Ei(3*log(x) + 3*log(y)/2)/(sqrt(y)*sqrt(x**2)), Ne(y, 0)),
-            (0, True))
+    assert Integral(li(y*x**2), x).doit() == Piecewise((x*li(x**2*y) - \
+        x*Ei(3*log(x**2*y)/2)/sqrt(x**2*y),
+        Ne(y, 0)), (0, True))
 
 
 def test_issue_17473():
@@ -1704,3 +1708,15 @@ def test_issue_4231():
 def test_issue_17841():
     f = diff(1/(x**2+x+I), x)
     assert integrate(f, x) == 1/(x**2 + x + I)
+
+
+def test_issue_21034():
+    x = Symbol('x', real=True, nonzero=True)
+    f1 = x*(-x**4/asin(5)**4 - x*sinh(x + log(asin(5))) + 5)
+    f2 = (x + cosh(cos(4)))/(x*(x + 1/(12*x)))
+
+    assert integrate(f1, x) == \
+        -x**6/(6*asin(5)**4) - x**2*cosh(x + log(asin(5))) + 5*x**2/2 + 2*x*sinh(x + log(asin(5))) - 2*cosh(x + log(asin(5)))
+
+    assert integrate(f2, x) == \
+        log(x**2 + S(1)/12)/2 + 2*sqrt(3)*cosh(cos(4))*atan(2*sqrt(3)*x)

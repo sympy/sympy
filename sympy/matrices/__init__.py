@@ -3,7 +3,7 @@
 Includes functions for fast creating matrices like zero, one/eye, random
 matrix, etc.
 """
-from .common import ShapeError, NonSquareMatrixError
+from .common import ShapeError, NonSquareMatrixError, MatrixKind
 from .dense import (
     GramSchmidt, casoratian, diag, eye, hessian, jordan_cell,
     list2numpy, matrix2numpy, matrix_multiply_elementwise, ones,
@@ -33,7 +33,7 @@ from .expressions import (
 from .utilities import dotprodsimp
 
 __all__ = [
-    'ShapeError', 'NonSquareMatrixError',
+    'ShapeError', 'NonSquareMatrixError', 'MatrixKind',
 
     'GramSchmidt', 'casoratian', 'diag', 'eye', 'hessian', 'jordan_cell',
     'list2numpy', 'matrix2numpy', 'matrix_multiply_elementwise', 'ones',

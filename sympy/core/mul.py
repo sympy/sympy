@@ -10,7 +10,7 @@ from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
 from .expr import Expr
 from .parameters import global_parameters
-
+from .kind import KindDispatcher
 
 
 # internal marker to indicate:
@@ -86,12 +86,80 @@ def _unevaluated_Mul(*args):
 
 
 class Mul(Expr, AssocOp):
+    """
+    Expression representing multiplication operation for algebraic field.
 
+    Every argument of ``Mul()`` must be ``Expr``. Infix operator ``*``
+    on most scalar objects in SymPy calls this class.
+
+    Another use of ``Mul()`` is to represent the structure of abstract
+    multiplication so that its arguments can be substituted to return
+    different class. Refer to examples section for this.
+
+    ``Mul()`` evaluates the argument unless ``evaluate=False`` is passed.
+    The evaluation logic includes:
+
+    1. Flattening
+        ``Mul(x, Mul(y, z))`` -> ``Mul(x, y, z)``
+
+    2. Identity removing
+        ``Mul(x, 1, y)`` -> ``Mul(x, y)``
+
+    3. Exponent collecting by ``.as_base_exp()``
+        ``Mul(x, x**2)`` -> ``Pow(x, 3)``
+
+    4. Term sorting
+        ``Mul(y, x, 2)`` -> ``Mul(2, x, y)``
+
+    Since multiplication can be vector space operation, arguments may
+    have the different :obj:`sympy.core.kind.Kind()`. Kind of the
+    resulting object is automatically inferred.
+
+    Examples
+    ========
+
+    >>> from sympy import Mul
+    >>> from sympy.abc import x, y
+    >>> Mul(x, 1)
+    x
+    >>> Mul(x, x)
+    x**2
+
+    If ``evaluate=False`` is passed, result is not evaluated.
+
+    >>> Mul(1, 2, evaluate=False)
+    1*2
+    >>> Mul(x, x, evaluate=False)
+    x*x
+
+    ``Mul()`` also represents the general structure of multiplication
+    operation.
+
+    >>> from sympy import MatrixSymbol
+    >>> A = MatrixSymbol('A', 2,2)
+    >>> expr = Mul(x,y).subs({y:A})
+    >>> expr
+    x*A
+    >>> type(expr)
+    <class 'sympy.matrices.expressions.matmul.MatMul'>
+
+    See Also
+    ========
+
+    MatMul
+
+    """
     __slots__ = ()
 
     is_Mul = True
 
     _args_type = Expr
+    _kind_dispatcher = KindDispatcher("Mul_kind_dispatcher", commutative=True)
+
+    @property
+    def kind(self):
+        arg_kinds = (a.kind for a in self.args)
+        return self._kind_dispatcher(*arg_kinds)
 
     def __neg__(self):
         c, args = self.as_coeff_mul()
@@ -869,9 +937,9 @@ class Mul(Expr, AssocOp):
         if d.is_Mul:
             n, d = [i._eval_expand_mul(**hints) if i.is_Mul else i
                 for i in (n, d)]
-            expr = n/d
-            if not expr.is_Mul:
-                return expr
+        expr = n/d
+        if not expr.is_Mul:
+            return expr
 
         plain, sums, rewrite = [], [], False
         for factor in expr.args:
@@ -1129,6 +1197,7 @@ class Mul(Expr, AssocOp):
         like oo/oo return 1 (instead of a nan) and ``I`` behaves like
         a symbol instead of sqrt(-1).
         """
+        from sympy.simplify.simplify import signsimp
         from .symbol import Dummy
         if lhs == rhs:
             return S.One
@@ -1159,7 +1228,7 @@ class Mul(Expr, AssocOp):
             if len(b) != blen:
                 lhs = Mul(*[k**v for k, v in a.items()]).xreplace(i_)
                 rhs = Mul(*[k**v for k, v in b.items()]).xreplace(i_)
-        return lhs/rhs
+        return signsimp(lhs/rhs)
 
     def as_powers_dict(self):
         d = defaultdict(int)
@@ -1835,7 +1904,7 @@ class Mul(Expr, AssocOp):
                 res += Order(x**n, x)
             return res
 
-        res = 0
+        res = S.Zero
         ords2 = [Add.make_args(factor) for factor in facs]
 
         for fac in product(*ords2):
@@ -1927,6 +1996,7 @@ class Mul(Expr, AssocOp):
 
 mul = AssocOpDispatcher('mul')
 
+
 def prod(a, start=1):
     """Return product of elements of a. Start with int 1 so if only
        ints are included then an int result is returned.
@@ -1980,24 +2050,24 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
     >>> _keep_coeff(S(-1), x + y, sign=True)
     -(x + y)
     """
-
     if not coeff.is_Number:
         if factors.is_Number:
             factors, coeff = coeff, factors
         else:
             return coeff*factors
+    if factors is S.One:
+        return coeff
     if coeff is S.One:
         return factors
     elif coeff is S.NegativeOne and not sign:
         return -factors
     elif factors.is_Add:
         if not clear and coeff.is_Rational and coeff.q != 1:
-            q = S(coeff.q)
-            for i in factors.args:
-                c, t = i.as_coeff_Mul()
-                r = c/q
-                if r == int(r):
-                    return coeff*factors
+            args = [i.as_coeff_Mul() for i in factors.args]
+            args = [(_keep_coeff(c, coeff), m) for c, m in args]
+            if any(c == int(c) for c, _ in args):
+                return Add._from_args([Mul._from_args(
+                    i[1:] if i[0] == 1 else i) for i in args])
         return Mul(coeff, factors, evaluate=False)
     elif factors.is_Mul:
         margs = list(factors.args)
@@ -2009,8 +2079,10 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
             margs.insert(0, coeff)
         return Mul._from_args(margs)
     else:
-        return coeff*factors
-
+        m = coeff*factors
+        if m.is_Number and not factors.is_Number:
+            m = Mul._from_args((coeff, factors))
+        return m
 
 def expand_2arg(e):
     from sympy.simplify.simplify import bottom_up

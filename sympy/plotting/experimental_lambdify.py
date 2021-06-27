@@ -117,7 +117,7 @@ class vectorized_lambdify:
         self.lambda_func_2 = experimental_lambdify(
             args, expr, use_python_cmath=True)
         self.vector_func_2 = self.np.vectorize(
-            self.lambda_func_2, otypes=[self.np.complex])
+            self.lambda_func_2, otypes=[complex])
 
         self.vector_func = self.vector_func_1
         self.failure = False
@@ -126,7 +126,7 @@ class vectorized_lambdify:
         np = self.np
 
         try:
-            temp_args = (np.array(a, dtype=np.complex) for a in args)
+            temp_args = (np.array(a, dtype=complex) for a in args)
             results = self.vector_func(*temp_args)
             results = np.ma.masked_where(
                 np.abs(results.imag) > 1e-7 * np.abs(results),
@@ -176,8 +176,8 @@ class lambdify:
             if abs(result.imag) > 1e-7 * abs(result):
                 return None
             return result.real
-        except (ZeroDivisionError, TypeError) as e:
-            if isinstance(e, ZeroDivisionError):
+        except (ZeroDivisionError, OverflowError, TypeError) as e:
+            if isinstance(e, ZeroDivisionError) or isinstance(e, OverflowError):
                 return None
 
             if self.failure:

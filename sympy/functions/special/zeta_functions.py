@@ -76,7 +76,7 @@ class lerchphi(Function):
     reduces to a sum of Hurwitz zeta functions:
 
     >>> expand_func(lerchphi(-1, s, a))
-    2**(-s)*zeta(s, a/2) - 2**(-s)*zeta(s, a/2 + 1/2)
+    zeta(s, a/2)/2**s - zeta(s, a/2 + 1/2)/2**s
 
     If $a=1$, the Lerch transcendent reduces to the polylogarithm:
 
@@ -580,6 +580,44 @@ class dirichlet_eta(Function):
     def _eval_rewrite_as_zeta(self, s, **kwargs):
         return (1 - 2**(1 - s)) * zeta(s)
 
+
+class riemann_xi(Function):
+    r"""
+    Riemann Xi function.
+
+    Examples
+    ========
+
+    The Riemann Xi function is closely related to the Riemann zeta function.
+    The zeros of Riemann Xi function are precisely the non-trivial zeros
+    of the zeta function.
+
+    >>> from sympy import riemann_xi, zeta
+    >>> from sympy.abc import s
+    >>> riemann_xi(s).rewrite(zeta)
+    s*(s - 1)*gamma(s/2)*zeta(s)/(2*pi**(s/2))
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Riemann_Xi_function
+
+    """
+
+
+    @classmethod
+    def eval(cls, s):
+        from sympy import gamma
+        z = zeta(s)
+        if s is S.Zero or s is S.One:
+            return S.Half
+
+        if not isinstance(z, zeta):
+            return s*(s - 1)*gamma(s/2)*z/(2*pi**(s/2))
+
+    def _eval_rewrite_as_zeta(self, s, **kwargs):
+        from sympy import gamma
+        return s*(s - 1)*gamma(s/2)*zeta(s)/(2*pi**(s/2))
 
 class stieltjes(Function):
     r"""

@@ -4,12 +4,9 @@ from sympy import symbols, Symbol, Rational, sqrt, Poly
 from sympy.matrices import Matrix, eye, ones
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
-from sympy.matrices.matrices import MatrixDeterminant
-from sympy.matrices.common import NonSquareMatrixError, _MinimalMatrix,  _CastableMatrix
+from sympy.matrices.common import NonSquareMatrixError
 from sympy.functions.combinatorial.factorials import factorial, subfactorial
 
-class DeterminantOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixDeterminant):
-    pass
 
 def test_determinant():
 
@@ -24,6 +21,7 @@ def test_determinant():
     M = Matrix(( (-3,  2),
                  ( 8, -5) ))
 
+    assert M.det(method="domain-ge") == -1
     assert M.det(method="bareiss") == -1
     assert M.det(method="berkowitz") == -1
     assert M.det(method="lu") == -1
@@ -31,6 +29,7 @@ def test_determinant():
     M = Matrix(( (x,   1),
                  (y, 2*y) ))
 
+    assert M.det(method="domain-ge") == 2*x*y - y
     assert M.det(method="bareiss") == 2*x*y - y
     assert M.det(method="berkowitz") == 2*x*y - y
     assert M.det(method="lu") == 2*x*y - y
@@ -39,6 +38,7 @@ def test_determinant():
                  (1, 2, 3),
                  (1, 3, 6) ))
 
+    assert M.det(method="domain-ge") == 1
     assert M.det(method="bareiss") == 1
     assert M.det(method="berkowitz") == 1
     assert M.det(method="lu") == 1
@@ -48,6 +48,7 @@ def test_determinant():
                  ( 0, -2,  5, 0),
                  ( 5,  0,  3, 4) ))
 
+    assert M.det(method="domain-ge") == -289
     assert M.det(method="bareiss") == -289
     assert M.det(method="berkowitz") == -289
     assert M.det(method="lu") == -289
@@ -57,6 +58,7 @@ def test_determinant():
                  ( 9, 10, 11, 12),
                  (13, 14, 15, 16) ))
 
+    assert M.det(method="domain-ge") == 0
     assert M.det(method="bareiss") == 0
     assert M.det(method="berkowitz") == 0
     assert M.det(method="lu") == 0
@@ -67,6 +69,7 @@ def test_determinant():
                  (0, 0, 0, 3, 2),
                  (2, 0, 0, 0, 3) ))
 
+    assert M.det(method="domain-ge") == 275
     assert M.det(method="bareiss") == 275
     assert M.det(method="berkowitz") == 275
     assert M.det(method="lu") == 275
@@ -76,6 +79,7 @@ def test_determinant():
                  ( 0, -2,  5, 0),
                  ( 5,  0,  3, 4) ))
 
+    assert M.det(method="domain-ge") == 60
     assert M.det(method="bareiss") == 60
     assert M.det(method="berkowitz") == 60
     assert M.det(method="lu") == 60
@@ -85,6 +89,7 @@ def test_determinant():
                  ( 9, 10, 11, 0),
                  (13, 14, 15, 16) ))
 
+    assert M.det(method="domain-ge") == 0
     assert M.det(method="bareiss") == 0
     assert M.det(method="berkowitz") == 0
     assert M.det(method="lu") == 0
@@ -95,6 +100,7 @@ def test_determinant():
                  (0, 0, 0, 3, 2),
                  (0, 0, 0, 0, 3) ))
 
+    assert M.det(method="domain-ge") == 243
     assert M.det(method="bareiss") == 243
     assert M.det(method="berkowitz") == 243
     assert M.det(method="lu") == 243
@@ -105,6 +111,7 @@ def test_determinant():
                  (3, 2, -1,  1,  8),
                  (1, 1,  1,  0,  6) ))
 
+    assert M.det(method="domain-ge") == -55
     assert M.det(method="bareiss") == -55
     assert M.det(method="berkowitz") == -55
     assert M.det(method="lu") == -55
@@ -115,6 +122,7 @@ def test_determinant():
                  ( 1,  2,  3, -2,  5),
                  ( 1,  2,  3,  4, -1) ))
 
+    assert M.det(method="domain-ge") == 11664
     assert M.det(method="bareiss") == 11664
     assert M.det(method="berkowitz") == 11664
     assert M.det(method="lu") == 11664
@@ -125,6 +133,7 @@ def test_determinant():
                  (-3, -2,  4, 5, 3),
                  ( 1,  0,  0, 0, 1) ))
 
+    assert M.det(method="domain-ge") == 123
     assert M.det(method="bareiss") == 123
     assert M.det(method="berkowitz") == 123
     assert M.det(method="lu") == 123
@@ -133,6 +142,7 @@ def test_determinant():
                  (1, 0, 0),
                  (y, z, x) ))
 
+    assert M.det(method="domain-ge") == z**2 - x*y
     assert M.det(method="bareiss") == z**2 - x*y
     assert M.det(method="berkowitz") == z**2 - x*y
     assert M.det(method="lu") == z**2 - x*y
@@ -238,13 +248,13 @@ def test_legacy_det():
     assert M.det(method="LU") == 123
 
 def eye_Determinant(n):
-    return DeterminantOnlyMatrix(n, n, lambda i, j: int(i == j))
+    return Matrix(n, n, lambda i, j: int(i == j))
 
 def zeros_Determinant(n):
-    return DeterminantOnlyMatrix(n, n, lambda i, j: 0)
+    return Matrix(n, n, lambda i, j: 0)
 
 def test_det():
-    a = DeterminantOnlyMatrix(2, 3, [1, 2, 3, 4, 5, 6])
+    a = Matrix(2, 3, [1, 2, 3, 4, 5, 6])
     raises(NonSquareMatrixError, lambda: a.det())
 
     z = zeros_Determinant(2)
@@ -253,16 +263,16 @@ def test_det():
     assert ey.det() == 1
 
     x = Symbol('x')
-    a = DeterminantOnlyMatrix(0, 0, [])
-    b = DeterminantOnlyMatrix(1, 1, [5])
-    c = DeterminantOnlyMatrix(2, 2, [1, 2, 3, 4])
-    d = DeterminantOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 8])
-    e = DeterminantOnlyMatrix(4, 4,
+    a = Matrix(0, 0, [])
+    b = Matrix(1, 1, [5])
+    c = Matrix(2, 2, [1, 2, 3, 4])
+    d = Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 8])
+    e = Matrix(4, 4,
         [x, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
     from sympy.abc import i, j, k, l, m, n
-    f = DeterminantOnlyMatrix(3, 3, [i, l, m, 0, j, n, 0, 0, k])
-    g = DeterminantOnlyMatrix(3, 3, [i, 0, 0, l, j, 0, m, n, k])
-    h = DeterminantOnlyMatrix(3, 3, [x**3, 0, 0, i, x**-1, 0, j, k, x**-2])
+    f = Matrix(3, 3, [i, l, m, 0, j, n, 0, 0, k])
+    g = Matrix(3, 3, [i, 0, 0, l, j, 0, m, n, k])
+    h = Matrix(3, 3, [x**3, 0, 0, i, x**-1, 0, j, k, x**-2])
     # the method keyword for `det` doesn't kick in until 4x4 matrices,
     # so there is no need to test all methods on smaller ones
 
@@ -271,6 +281,7 @@ def test_det():
     assert c.det() == -2
     assert d.det() == 3
     assert e.det() == 4*x - 24
+    assert e.det(method="domain-ge") == 4*x - 24
     assert e.det(method='bareiss') == 4*x - 24
     assert e.det(method='berkowitz') == 4*x - 24
     assert f.det() == i*j*k
@@ -291,7 +302,7 @@ def test_permanent():
 
 def test_adjugate():
     x = Symbol('x')
-    e = DeterminantOnlyMatrix(4, 4,
+    e = Matrix(4, 4,
         [x, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
 
     adj = Matrix([
@@ -303,7 +314,7 @@ def test_adjugate():
     assert e.adjugate(method='bareiss') == adj
     assert e.adjugate(method='berkowitz') == adj
 
-    a = DeterminantOnlyMatrix(2, 3, [1, 2, 3, 4, 5, 6])
+    a = Matrix(2, 3, [1, 2, 3, 4, 5, 6])
     raises(NonSquareMatrixError, lambda: a.adjugate())
 
 def test_util():
@@ -327,7 +338,7 @@ def test_util():
 
 def test_cofactor_and_minors():
     x = Symbol('x')
-    e = DeterminantOnlyMatrix(4, 4,
+    e = Matrix(4, 4,
         [x, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
 
     m = Matrix([
@@ -356,11 +367,11 @@ def test_cofactor_and_minors():
     raises(ValueError, lambda: e.minor(4, 5))
     raises(ValueError, lambda: e.minor_submatrix(4, 5))
 
-    a = DeterminantOnlyMatrix(2, 3, [1, 2, 3, 4, 5, 6])
+    a = Matrix(2, 3, [1, 2, 3, 4, 5, 6])
     assert a.minor_submatrix(0, 0) == Matrix([[5, 6]])
 
     raises(ValueError, lambda:
-        DeterminantOnlyMatrix(0, 0, []).minor_submatrix(0, 0))
+        Matrix(0, 0, []).minor_submatrix(0, 0))
     raises(NonSquareMatrixError, lambda: a.cofactor(0, 0))
     raises(NonSquareMatrixError, lambda: a.minor(0, 0))
     raises(NonSquareMatrixError, lambda: a.cofactor_matrix())
@@ -371,17 +382,17 @@ def test_charpoly():
 
     from sympy.abc import a,b,c
 
-    m = DeterminantOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
+    m = Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
 
     assert eye_Determinant(3).charpoly(x) == Poly((x - 1)**3, x)
     assert eye_Determinant(3).charpoly(y) == Poly((y - 1)**3, y)
     assert m.charpoly() == Poly(x**3 - 15*x**2 - 18*x, x)
     raises(NonSquareMatrixError, lambda: Matrix([[1], [2]]).charpoly())
-    n = DeterminantOnlyMatrix(4, 4, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    n = Matrix(4, 4, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     assert n.charpoly() == Poly(x**4, x)
 
-    n = DeterminantOnlyMatrix(4, 4, [45, 0, 0, 0, 0, 23, 0, 0, 0, 0, 87, 0, 0, 0, 0, 12])
+    n = Matrix(4, 4, [45, 0, 0, 0, 0, 23, 0, 0, 0, 0, 87, 0, 0, 0, 0, 12])
     assert n.charpoly() == Poly(x**4 - 167*x**3 + 8811*x**2 - 173457*x + 1080540, x)
 
-    n = DeterminantOnlyMatrix(3, 3, [x, 0, 0, a, y, 0, b, c, z])
+    n = Matrix(3, 3, [x, 0, 0, a, y, 0, b, c, z])
     assert n.charpoly() == Poly(t**3 - (x+y+z)*t**2 + t*(x*y+y*z+x*z) - x*y*z , t)

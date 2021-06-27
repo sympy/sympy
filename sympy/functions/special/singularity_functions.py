@@ -65,11 +65,11 @@ class SingularityFunction(Function):
 
     >>> expr = SingularityFunction(x, 4, 5) + SingularityFunction(x, -3, -1) - SingularityFunction(x, 0, -2)
     >>> expr.rewrite(Heaviside)
-    (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
+    (x - 4)**5*Heaviside(x - 4, 1/2) + DiracDelta(x + 3) - DiracDelta(x, 1)
     >>> expr.rewrite(DiracDelta)
-    (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
+    (x - 4)**5*Heaviside(x - 4, 1/2) + DiracDelta(x + 3) - DiracDelta(x, 1)
     >>> expr.rewrite('HeavisideDiracDelta')
-    (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
+    (x - 4)**5*Heaviside(x - 4, 1/2) + DiracDelta(x + 3) - DiracDelta(x, 1)
 
     See Also
     ========

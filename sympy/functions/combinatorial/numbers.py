@@ -743,8 +743,7 @@ class harmonic(Function):
     >>> H = harmonic(25/S(7))
     >>> He = simplify(expand_func(H).doit())
     >>> He
-    log(sin(pi/7)**(-2*cos(pi/7))*sin(2*pi/7)**(2*cos(16*pi/7))*cos(pi/14)**(-2*sin(pi/14))/14)
-    + pi*tan(pi/14)/2 + 30247/9900
+    log(sin(2*pi/7)**(2*cos(16*pi/7))/(14*sin(pi/7)**(2*cos(pi/7))*cos(pi/14)**(2*sin(pi/14)))) + pi*tan(pi/14)/2 + 30247/9900
     >>> He.n(40)
     1.983697455232980674869851942390639915940
     >>> harmonic(25/S(7)).n(40)
@@ -2044,3 +2043,137 @@ def nT(n, k=None):
     for discard in m.enum_range(n[_M], k-1, k):
         tot += 1
     return tot
+
+
+#-----------------------------------------------------------------------------#
+#                                                                             #
+#                          Motzkin numbers                                    #
+#                                                                             #
+#-----------------------------------------------------------------------------#
+
+
+class motzkin(Function):
+    """
+    The nth Motzkin number is the number
+    of ways of drawing non-intersecting chords
+    between n points on a circle (not necessarily touching
+    every point by a chord). The Motzkin numbers are named
+    after Theodore Motzkin and have diverse applications
+    in geometry, combinatorics and number theory.
+
+    Motzkin numbers are the integer sequence defined by the
+    initial terms `M_0 = 1`, `M_1 = 1` and the two-term recurrence relation
+    `M_n = \frac{2*n + 1}{n + 2} * M_{n-1} + \frac{3n - 3}{n + 2} * M_{n-2}`.
+
+
+    Examples
+    ========
+
+    >>> from sympy import motzkin
+
+    >>> motzkin.is_motzkin(5)
+    False
+    >>> motzkin.find_motzkin_numbers_in_range(2,300)
+    [2, 4, 9, 21, 51, 127]
+    >>> motzkin.find_motzkin_numbers_in_range(2,900)
+    [2, 4, 9, 21, 51, 127, 323, 835]
+    >>> motzkin.find_first_n_motzkins(10)
+    [1, 1, 2, 4, 9, 21, 51, 127, 323, 835]
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Motzkin_number
+    .. [2] https://mathworld.wolfram.com/MotzkinNumber.html
+
+    """
+
+    @staticmethod
+    def is_motzkin(n):
+        try:
+            n = as_int(n)
+        except ValueError:
+            return False
+        if n > 0:
+             if n == 1 or n == 2:
+                return True
+
+             tn1 = 1
+             tn = 2
+             i = 3
+             while tn < n:
+                 a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
+                 i += 1
+                 tn1 = tn
+                 tn = a
+
+             if tn == n:
+                 return True
+             else:
+                 return False
+
+        else:
+            return False
+
+    @staticmethod
+    def find_motzkin_numbers_in_range(x, y):
+        if 0 <= x <= y:
+            motzkins = list()
+            if x <= 1 <= y:
+                motzkins.append(1)
+            tn1 = 1
+            tn = 2
+            i = 3
+            while tn <= y:
+                if tn >= x:
+                    motzkins.append(tn)
+                a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
+                i += 1
+                tn1 = tn
+                tn = int(a)
+
+            return motzkins
+
+        else:
+            raise ValueError('The provided range is not valid. This condition should satisfy x <= y')
+
+    @staticmethod
+    def find_first_n_motzkins(n):
+        try:
+            n = as_int(n)
+        except ValueError:
+            raise ValueError('The provided number must be a positive integer')
+        if n < 0:
+            raise ValueError('The provided number must be a positive integer')
+        motzkins = list()
+        if n >= 0:
+            motzkins.append(1)
+        if n >= 1:
+            motzkins.append(1)
+        tn1 = 1
+        tn = 2
+        i = 3
+        while i <= n:
+            motzkins.append(tn)
+            a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
+            i += 1
+            tn1 = tn
+            tn = int(a)
+
+        return motzkins
+
+    @staticmethod
+    @recurrence_memo([S.One, S.One])
+    def _motzkin(n, prev):
+        return ((2*n + 1)*prev[-1] + (3*n - 3)*prev[-2]) // (n + 2)
+
+    @classmethod
+    def eval(cls, n):
+        try:
+            n = as_int(n)
+        except ValueError:
+            raise ValueError('The provided number must be a positive integer')
+        if n < 0:
+            raise ValueError('The provided number must be a positive integer')
+        return Integer(cls._motzkin(n - 1))

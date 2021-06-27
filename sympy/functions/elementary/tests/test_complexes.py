@@ -7,7 +7,7 @@ from sympy import (
     FunctionMatrix, Lambda, Derivative, Eq)
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
 
 
 def N_equals(a, b):
@@ -461,6 +461,11 @@ def test_Abs():
 
     # coverage
     assert unchanged(Abs, Symbol('x', real=True)**y)
+    # issue 19627
+    f = Function('f', positive=True)
+    assert sqrt(f(x)**2) == f(x)
+    # issue 21625
+    assert unchanged(Abs, S("im(acos(-i + acosh(-g + i)))"))
 
 
 def test_Abs_rewrite():
@@ -588,6 +593,11 @@ def test_arg():
     assert arg(exp_polar(5 - 3*pi*I/4)) == pi*Rational(-3, 4)
     f = Function('f')
     assert not arg(f(0) + I*f(1)).atoms(re)
+
+    x = Symbol('x')
+    p = Function('p', extended_positive=True)
+    assert arg(p(x)) == 0
+    assert arg((3 + I)*p(x)) == arg(3  + I)
 
     p = Symbol('p', positive=True)
     assert arg(p) == 0
@@ -725,6 +735,7 @@ def test_transpose():
     assert transpose(-x) == -transpose(x)
 
 
+@_both_exp_pow
 def test_polarify():
     from sympy import polar_lift, polarify
     x = Symbol('x')
@@ -965,6 +976,8 @@ def test_zero_assumptions():
     assert re(nzni).is_zero is False
     assert im(nzni).is_zero is None
 
+
+@_both_exp_pow
 def test_issue_15893():
     f = Function('f', real=True)
     x = Symbol('x', real=True)

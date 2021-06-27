@@ -174,7 +174,7 @@ def vector_integrate(field, *region):
     >>> from sympy.vector import ImplicitRegion
     >>> c2 = ImplicitRegion((x, y), (x - 2)**2 + (y - 1)**2 - 9)
     >>> vector_integrate(1, c2)
-    12*pi
+    6*pi
 
     Integral of fields with respect to base scalars:
 
