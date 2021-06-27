@@ -341,6 +341,9 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         obj._rep = rep
         return obj
 
+    def copy(self):
+        return self._fromrep(self._rep.copy())
+
     def __setitem__(self, key, value):
         """
 

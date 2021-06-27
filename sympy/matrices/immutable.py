@@ -86,6 +86,9 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
         obj._rep = rep
         return obj
 
+    def copy(self):
+        return self
+
     def _entry(self, i, j, **kwargs):
         return DenseMatrix.__getitem__(self, (i, j))
 
