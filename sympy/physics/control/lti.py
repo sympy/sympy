@@ -1,4 +1,4 @@
-from sympy import Basic, Add, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots, S
+from sympy import Basic, Add, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots
 from sympy.core.containers import Tuple
 from sympy.core.evalf import EvalfMixin
 from sympy.core.logic import fuzzy_and
@@ -1894,28 +1894,8 @@ class TransferFunctionMatrix(Basic):
         False
 
         """
-        flag = False
-        row_elem = 0
-        index_list = []
-        mat = self._expr_mat
-        for i in range(self.num_outputs):
-            for j in range(self.num_inputs):
-                if mat[i, j].as_numer_denom()[0] != S(0):
-                    if j not in index_list:
-                        index_list.append(j)
-                    else:
-                        flag = True
-                        break
-                    row_elem += 1
-                    if row_elem > 1:
-                        flag = True
-                        break
-            if flag:
-                break
-            else:
-                row_elem = 0
-
-        return True if flag else False
+        mat = self._expr_mat.applyfunc(lambda a: a.as_numer_denom()[0])
+        return not mat.is_diagonal()
 
     def __neg__(self):
         neg = -self._expr_mat

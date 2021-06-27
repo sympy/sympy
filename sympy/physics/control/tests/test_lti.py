@@ -835,51 +835,37 @@ def test_TransferFunctionMatrix_functions():
     [tf_0, tf_0, tf_0, tf_4],
     ])
     tfm_2 = TransferFunctionMatrix([
-    [tf_0, tf_2, tf_0, tf_0],
-    [tf_1, tf_0, tf_0, tf_0],
-    [tf_0, tf_0, tf_4, tf_0],
-    [tf_0, tf_0, tf_0, tf_3],
+    [tf_0, tf_0, tf_0, tf_0],
+    [tf_0, tf_0, tf_0, tf_0],
+    [tf_0, tf_0, tf_0, tf_0],
+    [tf_0, tf_0, tf_0, tf_0],
     ])
     tfm_3 = TransferFunctionMatrix([
-    [tf_0, tf_0, tf_0, tf_0],
-    [tf_0, tf_0, tf_0, tf_0],
-    [tf_0, tf_0, tf_0, tf_0],
-    [tf_0, tf_0, tf_0, tf_0],
-    ])
-    tfm_4 = TransferFunctionMatrix([
-    [tf_0, tf_1, tf_0, tf_0],
-    [tf_0, tf_0, tf_2, tf_0],
-    [tf_0, tf_0, tf_0, tf_0],
-    [tf_0, tf_0, tf_0, tf_0],
-    ])
-    tfm_5 = TransferFunctionMatrix([
     [tf_1, tf_2, tf_3, tf_4],
     [tf_0, tf_0, tf_0, tf_0],
     [tf_0, tf_0, tf_0, tf_0],
     [tf_0, tf_0, tf_0, tf_0],
     ])
-    tfm_6 = TransferFunctionMatrix([
+    tfm_4 = TransferFunctionMatrix([
     [tf_1, tf_0, tf_0, tf_0],
     [tf_0, tf_0, tf_3, tf_0],
     [tf_2, tf_0, tf_0, tf_0],
     [tf_0, tf_0, tf_0, tf_4],
     ])
-    tfm_7 = TransferFunctionMatrix([
+    tfm_5 = TransferFunctionMatrix([
     [tf_1, tf_0],
-    [tf_0, tf_0],
     [tf_0, tf_2],
     [tf_0, tf_0],
+    [tf_0, tf_0],
     ])
-    tfm_8 = TransferFunctionMatrix([[tf_1]])
+    tfm_6 = TransferFunctionMatrix([[tf_1]])
 
     assert tfm_1.is_IO_coupled == False
     assert tfm_2.is_IO_coupled == False
-    assert tfm_3.is_IO_coupled == False
-    assert tfm_4.is_IO_coupled == False
-    assert tfm_5.is_IO_coupled == True
-    assert tfm_6.is_IO_coupled == True
-    assert tfm_7.is_IO_coupled == False
-    assert tfm_8.is_IO_coupled == False
+    assert tfm_3.is_IO_coupled == True
+    assert tfm_4.is_IO_coupled == True
+    assert tfm_5.is_IO_coupled == False
+    assert tfm_6.is_IO_coupled == False
 
     #  Negating a TFM
 
