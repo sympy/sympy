@@ -281,7 +281,7 @@ def test_slidingjoint_arbitrary_axis():
     assert A.dcm(N) == Matrix([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
     assert C.masscenter.vel(N) == v*N.x
     assert C.masscenter.pos_from(P.masscenter) == x*N.x - A.x
-    assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == x*N.x + N.y 
+    assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == x*N.x + N.y
 
     #Similar to previous case but wrt parent body
     N, A, P, C = _generate_body()
