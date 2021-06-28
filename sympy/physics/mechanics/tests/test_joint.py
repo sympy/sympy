@@ -231,7 +231,7 @@ def test_pinjoint_arbitrary_axis():
 def test_slidingjoint():
     P = Body('P')
     C = Body('C')
-    x, v = dynamicsymbols('S_x, S_v')
+    x, v = dynamicsymbols('S_x, S_v', positive=True)
     S = SlidingJoint('S', P, C)
     assert S._name == 'S'
     assert S.parent() == P
@@ -258,3 +258,69 @@ def test_slidingjoint():
     assert P.masscenter.pos_from(C.masscenter) == - x * P.frame.x
     assert C.masscenter.vel(P.frame) == v * P.frame.z
 
+def test_slidingjoint_arbitrary_axis():
+    x, v = dynamicsymbols('S_x, S_v', positive=True)
+
+    N, A, P, C = generate_body()
+    SlidingJoint('S', P, C, child_axis=-A.x)
+
+    assert -A.x.angle_between(N.x) == 0
+    assert -A.x.express(N) == -N.x
+    assert A.dcm(N) == Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    assert C.masscenter.pos_from(P.masscenter) == x * N.x
+    assert C.masscenter.pos_from(P.masscenter).express(A).simplify() == x * A.x
+    assert C.masscenter.vel(N) == v * N.x
+
+    #When axes are different and parent joint is at masscenter but child joint is at a unit vector from
+    #child masscenter.
+    N, A, P, C = generate_body()
+    SlidingJoint('S', P, C, child_axis=A.y, child_joint_pos=A.x)
+
+    assert A.y.angle_between(N.x) == 0 #Axis are aligned
+    assert A.y.express(N) == N.x
+    assert A.dcm(N) == Matrix([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
+    assert C.masscenter.vel(N) == v*N.x
+    assert C.masscenter.pos_from(P.masscenter) == x*N.x - A.x
+    assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == x*N.x + N.y 
+
+    #Similar to previous case but wrt parent body
+    N, A, P, C = generate_body()
+    SlidingJoint('S', P, C, parent_axis=N.y, parent_joint_pos=N.x)
+
+    assert N.y.angle_between(A.x) == 0 #Axis are aligned
+    assert N.y.express(A) ==  A.x
+    assert A.dcm(N) == Matrix([[0, 1, 0], [-1, 0, 0], [0, 0, 1]])
+    assert C.masscenter.vel(N).simplify() == v * N.y
+    assert C.masscenter.pos_from(P.masscenter) == N.x + x*N.y
+
+    #Both joint pos id defined but different axes
+    N, A, P, C = generate_body()
+    SlidingJoint('S', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y)
+    assert expand_mul(N.x.angle_between(A.x + A.y)) == 0 #Axis are aligned
+    assert (A.x + A.y).express(N).simplify() == sqrt(2)*N.x
+    assert A.dcm(N).simplify() == Matrix([[sqrt(2)/2, -sqrt(2)/2, 0], [sqrt(2)/2, sqrt(2)/2, 0], [0, 0, 1]])
+    assert C.masscenter.vel(N).simplify() == v*N.x
+    assert C.masscenter.pos_from(P.masscenter) == (x + 1)*N.x - A.x
+    assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == (x - sqrt(2)/2 + 1)*N.x + sqrt(2)/2*N.y
+    assert C.masscenter.vel(N).express(A).simplify() == v * (A.x + A.y)/sqrt(2)
+
+    N, A, P, C = generate_body()
+    SlidingJoint('S', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y-A.z)
+    assert expand_mul(N.x.angle_between(A.x + A.y - A.z)) == 0 #Axis are aligned
+    assert (A.x + A.y - A.z).express(N).simplify() == sqrt(3)*N.x
+    assert C.masscenter.vel(N).simplify() == v*N.x
+    assert C.masscenter.pos_from(P.masscenter) == (x + 1)*N.x - A.x 
+    assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == \
+        (x - sqrt(3)/3 + 1)*N.x + sqrt(3)/3*N.y - sqrt(3)/3*N.z
+    assert C.masscenter.vel(N).express(A).simplify() == sqrt(3)*v/3*A.x + sqrt(3)*v/3*A.y - sqrt(3)*v/3*A.z
+
+    N, A, P, C = generate_body()
+    m, n = symbols('m n', positive=True)
+    SlidingJoint('S', P, C, parent_joint_pos=m*N.x, child_joint_pos=n*A.x, child_axis=A.x+A.y-A.z, parent_axis=N.x-N.y+N.z)
+    assert expand_mul((N.x-N.y+N.z).angle_between(A.x+A.y-A.z)) == 0 #Axis are aligned
+    assert (A.x-A.y+A.z).express(N).simplify() == - 5/3*N.x - 1/3*N.y + 1/3*N.z
+    assert C.masscenter.vel(N).simplify() == v*N.x - v*N.y + v*N.z
+    assert C.masscenter.pos_from(P.masscenter) == (m + x)*N.x - x*N.y + x*N.z - n*A.x
+    assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == \
+        (m + n/3 + x)*N.x + (2*n/3 - x)*N.y + (-2*n/3 + x)*N.z
+    assert C.masscenter.vel(N).express(A).simplify() == v*A.x + v*A.y - v*A.z
