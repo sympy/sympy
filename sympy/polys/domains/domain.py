@@ -602,6 +602,9 @@ class Domain:
         """
         raise NotImplementedError
 
+    def sum(self, args):
+        return sum(args)
+
     def from_FF(K1, a, K0):
         """Convert ``ModularInteger(int)`` to ``dtype``. """
         return None

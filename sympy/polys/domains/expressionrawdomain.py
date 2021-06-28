@@ -1,7 +1,7 @@
 """Implementation of :class:`ExpressionRawDomain` class. """
 
 
-from sympy.core import Expr, S, sympify
+from sympy.core import Expr, S, sympify, Add
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
@@ -49,6 +49,9 @@ class ExpressionRawDomain(Field, CharacteristicZero, SimpleDomain):
     def get_field(self):
         """Returns a field associated with ``self``. """
         return self
+
+    def sum(self, items):
+        return Add(*items)
 
 
 EXRAW = ExpressionRawDomain()

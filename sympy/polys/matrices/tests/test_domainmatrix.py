@@ -7,8 +7,7 @@ from sympy.functions import sqrt
 from sympy.matrices.common import (NonInvertibleMatrixError,
     NonSquareMatrixError, ShapeError)
 from sympy.matrices.dense import Matrix
-from sympy.polys import ZZ, QQ
-
+from sympy.polys.domains import ZZ, QQ, EXRAW
 
 from sympy.polys.matrices.domainmatrix import DomainMatrix, DomainScalar
 from sympy.polys.matrices.exceptions import (DDMBadInputError, DDMDomainError,
@@ -162,6 +161,11 @@ def test_DomainMatrix_convert_to():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     Aq = A.convert_to(QQ)
     assert Aq == DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(4)]], (2, 2), QQ)
+
+
+def test_DomainMatrix_to_sympy():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    assert A.to_sympy() == A.convert_to(EXRAW)
 
 
 def test_DomainMatrix_to_field():
