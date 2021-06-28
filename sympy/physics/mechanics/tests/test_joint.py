@@ -1,6 +1,6 @@
 from sympy import sin, cos, Matrix, sqrt, pi, expand_mul
 from sympy.core.symbol import symbols
-from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint
+from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint, SlidingJoint
 from sympy.physics.mechanics.joint import Joint
 from sympy.physics.vector import Vector, ReferenceFrame
 from sympy.testing.pytest import raises
@@ -226,3 +226,33 @@ def test_pinjoint_arbitrary_axis():
         -2*n*omega*sin(theta)/3*N.x + (sqrt(3)*m + 2*n*cos(theta + pi/6))*omega/3*N.y + \
         (sqrt(3)*m + 2*n*sin(theta + pi/3))*omega/3*N.z
     assert expand_mul(C.masscenter.vel(N).angle_between(m*N.x - n*A.x)) == pi/2
+
+def test_slidingjoint():
+    P = Body('P')
+    C = Body('C')
+    x, v = dynamicsymbols('S_x, S_v')
+    S = SlidingJoint('S', P, C)
+    assert S._name == 'S'
+    assert S.parent() == P
+    assert S.child() == C
+    assert S.coordinates() == [x]
+    assert S.speeds() == [v]
+    assert S.kdes() == [v - x.diff(t)]
+    assert S._parent_axis == P.frame.x
+    assert S._child_axis == C.frame.x
+    assert S._child_joint.pos_from(C.masscenter) == Vector(0)
+    assert S._parent_joint.pos_from(P.masscenter) == Vector(0)
+    assert S._parent_joint.pos_from(S._child_joint) == - x * P.frame.x
+    assert P.masscenter.pos_from(C.masscenter) == - x * P.frame.x
+    assert C.masscenter.vel(P.frame) == v * P.frame.x
+
+    l, m = symbols('l m')
+    S = SlidingJoint('S', P, C, parent_joint_pos= l * P.frame.x, child_joint_pos= m * C.frame.y,
+        parent_axis = P.frame.z)
+
+    assert S._parent_axis == P.frame.z
+    assert S._child_joint.pos_from(C.masscenter) == m * C.frame.y
+    assert S._parent_joint.pos_from(P.masscenter) == l * P.frame.x
+    assert S._parent_joint.pos_from(S._child_joint) == - x * P.frame.z
+    assert P.masscenter.pos_from(C.masscenter) == - x * P.frame.x
+    assert C.masscenter.vel(P.frame) == v * P.frame.z
