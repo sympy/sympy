@@ -309,7 +309,7 @@ def test_slidingjoint_arbitrary_axis():
     assert N.x.angle_between(A.x + A.y - A.z) == 0 #Axis are aligned
     assert (A.x + A.y - A.z).express(N) == sqrt(3)*N.x
     assert C.masscenter.vel(N) == v*N.x
-    assert C.masscenter.pos_from(P.masscenter) == (x + 1)*N.x - A.x 
+    assert C.masscenter.pos_from(P.masscenter) == (x + 1)*N.x - A.x
     assert C.masscenter.pos_from(P.masscenter).express(N) == \
         (x - sqrt(3)/3 + 1)*N.x + sqrt(3)/3*N.y - sqrt(3)/3*N.z
     assert C.masscenter.vel(N).express(A) == sqrt(3)*v/3*A.x + sqrt(3)*v/3*A.y - sqrt(3)*v/3*A.z
