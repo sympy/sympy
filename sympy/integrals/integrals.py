@@ -1157,7 +1157,7 @@ class Integral(AddWithLimits):
                 symb = l[0]
                 break
         terms, order = expr.function.nseries(
-            x=symb, n=n).as_coeff_add(Order)
+            x=symb, n=n, logx=logx).as_coeff_add(Order)
         order = [o.subs(symb, x) for o in order]
         return integrate(terms, *expr.limits) + Add(*order)*x
 
