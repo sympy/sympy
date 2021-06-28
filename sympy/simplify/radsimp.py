@@ -32,7 +32,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     will be searched for in the expression's terms.
 
     The input expression is not expanded by :func:`collect`, so user is
-    expected to provide an expression is an appropriate form. This makes
+    expected to provide an expression in an appropriate form. This makes
     :func:`collect` more predictable as there is no magic happening behind the
     scenes. However, it is important to note, that powers of products are
     converted to products of powers using the :func:`~.expand_power_base`
