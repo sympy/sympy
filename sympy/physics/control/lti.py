@@ -1670,6 +1670,34 @@ class TransferFunctionMatrix(Basic):
     [    -3*a + 3*p     27*s + (-a + p)*(s + 2) - 27]
     [-----------------  ----------------------------]
     [(s + 2)*(9*s - 9)       (s + 2)*(9*s - 9)      ]
+    >>> tf_9 = TransferFunction(1, s, s)
+    >>> tf_10 = TransferFunction(1, s**2, s)
+    >>> tfm_7 = TransferFunctionMatrix([[Series(tf_9, tf_10), tf_9], [tf_10, Parallel(tf_9, tf_10)]])
+    >>> tfm_7
+    TransferFunctionMatrix(((Series(TransferFunction(1, s, s), TransferFunction(1, s**2, s)), TransferFunction(1, s, s)), (TransferFunction(1, s**2, s), Parallel(TransferFunction(1, s, s), TransferFunction(1, s**2, s)))))
+    >>> pprint(tfm_7, use_unicode=False)
+    [ 1      1   ]
+    [----    -   ]
+    [   2    s   ]
+    [s*s         ]
+    [            ]
+    [ 1    1    1]
+    [ --   -- + -]
+    [  2    2   s]
+    [ s    s     ]
+    >>> tfm_7.doit()
+    TransferFunctionMatrix(((TransferFunction(1, s**3, s), TransferFunction(1, s, s)), (TransferFunction(1, s**2, s), TransferFunction(s**2 + s, s**3, s))))
+    >>> pprint(_, use_unicode=False)
+    [1     1   ]
+    [--    -   ]
+    [ 3    s   ]
+    [s         ]
+    [          ]
+    [     2    ]
+    [1   s  + s]
+    [--  ------]
+    [ 2     3  ]
+    [s     s   ]
 
     See Also
     ========
@@ -1888,57 +1916,6 @@ class TransferFunctionMatrix(Basic):
         transposed_mat = self._expr_mat.transpose()
         return _to_TFM(transposed_mat, self.var)
 
-    def doit(self):
-        """
-        Returns the equivalent ``TransferFunctionMatrix`` with each ``Series`` and ``Parallel``
-        element rewritten as ``TransferFunction``.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s
-        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix, Series, Parallel
-        >>> from sympy.printing import pprint
-        >>> tf_1 = TransferFunction(1, s, s)
-        >>> tf_2 = TransferFunction(1, s**2, s)
-        >>> tfm_1 = TransferFunctionMatrix([[Series(tf_1, tf_2), tf_1], [tf_2, Parallel(tf_1, tf_2)]])
-        >>> tfm_1
-        TransferFunctionMatrix(((Series(TransferFunction(1, s, s), TransferFunction(1, s**2, s)), TransferFunction(1, s, s)), (TransferFunction(1, s**2, s), Parallel(TransferFunction(1, s, s), TransferFunction(1, s**2, s)))))
-        >>> pprint(tfm_1, use_unicode=False)
-        [ 1      1   ]
-        [----    -   ]
-        [   2    s   ]
-        [s*s         ]
-        [            ]
-        [ 1    1    1]
-        [ --   -- + -]
-        [  2    2   s]
-        [ s    s     ]
-        >>> tfm_1.doit()
-        TransferFunctionMatrix(((TransferFunction(1, s**3, s), TransferFunction(1, s, s)), (TransferFunction(1, s**2, s), TransferFunction(s**2 + s, s**3, s))))
-        >>> pprint(_, use_unicode=False)
-        [1     1   ]
-        [--    -   ]
-        [ 3    s   ]
-        [s         ]
-        [          ]
-        [     2    ]
-        [1   s  + s]
-        [--  ------]
-        [ 2     3  ]
-        [s     s   ]
-
-        """
-        doit_arg = []
-        for i in self.args[0]:
-            temp = []
-            for j in i:
-                if not isinstance(j, TransferFunction):
-                    j = j.doit()
-                temp.append(j)
-            doit_arg.append(temp)
-        return TransferFunctionMatrix(doit_arg)
-
     def elem_poles(self):
         """
         Returns the poles of each element of the ``TransferFunctionMatrix``.
@@ -1960,6 +1937,11 @@ class TransferFunctionMatrix(Basic):
         TransferFunctionMatrix(((TransferFunction(3, s + 1, s), TransferFunction(s + 6, (s + 1)*(s + 2), s)), (TransferFunction(s + 3, s**2 + 3*s + 2, s), TransferFunction(s + 2, s**2 + 5*s - 10, s))))
         >>> tfm_1.elem_poles()
         [[[-1], [-2, -1]], [[-2, -1], [-5/2 + sqrt(65)/2, -sqrt(65)/2 - 5/2]]]
+
+        See Also
+        ========
+
+        elem_zeros
 
         """
         poles_list = []
@@ -1994,6 +1976,12 @@ class TransferFunctionMatrix(Basic):
         TransferFunctionMatrix(((TransferFunction(3, s + 1, s), TransferFunction(s + 6, (s + 1)*(s + 2), s)), (TransferFunction(s + 3, s**2 + 3*s + 2, s), TransferFunction(s**2 - 9*s + 20, s**2 + 5*s - 10, s))))
         >>> tfm_1.elem_zeros()
         [[[], [-6]], [[-3], [4, 5]]]
+
+        See Also
+        ========
+
+        elem_poles
+
         """
         zeros_list = []
         for i in self.args[0]:

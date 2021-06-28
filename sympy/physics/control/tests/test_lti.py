@@ -825,17 +825,5 @@ def test_TransferFunctionMatrix_functions():
     tfm1 = TransferFunctionMatrix([[TF1], [TF2]])
     assert -tfm1 == TransferFunctionMatrix([[-TF1], [-TF2]])
 
-    tfm1_ = TransferFunctionMatrix([[-TF1], [TF2]])
-    assert -tfm1_ == TransferFunctionMatrix([[TF1], [-TF2]])
-
-    tfm2 = TransferFunctionMatrix([[TF1, -TF2], [TF3, tf5]])
-    assert -tfm2 == TransferFunctionMatrix([[-TF1, TF2], [-TF3, -tf5]])
-
-    tfm2_ = TransferFunctionMatrix([[TF1, -TF2], [TF3, tf5]])
-    assert -tfm2_ == TransferFunctionMatrix([[-TF1, TF2], [-TF3, -tf5]])
-
-    tfm3 = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, -TF1, -TF3]])
-    assert -tfm3 == TransferFunctionMatrix([[-TF1, -TF2, -TF3], [-tf5, TF1, TF3]])
-
-    tfm3_ = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, -TF1, -TF3]])
-    assert -tfm3_ == TransferFunctionMatrix([[-TF1, -TF2, -TF3], [-tf5, TF1, TF3]])
+    tfm2 = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, -TF1, -TF3]])
+    assert -tfm2 == TransferFunctionMatrix([[-TF1, -TF2, -TF3], [-tf5, TF1, TF3]])
