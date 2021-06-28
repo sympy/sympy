@@ -1868,3 +1868,122 @@ class TransferFunctionMatrix(Basic):
     def transpose(self):
         transposed_mat = self._expr_mat.transpose()
         return _to_TFM(transposed_mat, self.var)
+
+    def doit(self):
+        """
+        Returns the equivalent ``TransferFunctionMatrix`` with each ``Series`` and ``Parallel``
+        element rewritten as ``TransferFunction``.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix, Series, Parallel
+        >>> from sympy.printing import pprint
+        >>> tf_1 = TransferFunction(1, s, s)
+        >>> tf_2 = TransferFunction(1, s**2, s)
+        >>> tfm_1 = TransferFunctionMatrix([[Series(tf_1, tf_2), tf_1], [tf_2, Parallel(tf_1, tf_2)]])
+        >>> tfm_1
+        TransferFunctionMatrix(((Series(TransferFunction(1, s, s), TransferFunction(1, s**2, s)), TransferFunction(1, s, s)), (TransferFunction(1, s**2, s), Parallel(TransferFunction(1, s, s), TransferFunction(1, s**2, s)))))
+        >>> pprint(tfm_1, use_unicode=False)
+        [ 1      1   ]
+        [----    -   ]
+        [   2    s   ]
+        [s*s         ]
+        [            ]
+        [ 1    1    1]
+        [ --   -- + -]
+        [  2    2   s]
+        [ s    s     ]
+        >>> tfm_1.doit()
+        TransferFunctionMatrix(((TransferFunction(1, s**3, s), TransferFunction(1, s, s)), (TransferFunction(1, s**2, s), TransferFunction(s**2 + s, s**3, s))))
+        >>> pprint(_, use_unicode=False)
+        [1     1   ]
+        [--    -   ]
+        [ 3    s   ]
+        [s         ]
+        [          ]
+        [     2    ]
+        [1   s  + s]
+        [--  ------]
+        [ 2     3  ]
+        [s     s   ]
+
+        """
+        doit_arg = []
+        for i in self.args[0]:
+            temp = []
+            for j in i:
+                if not isinstance(j, TransferFunction):
+                    j = j.doit()
+                temp.append(j)
+            doit_arg.append(temp)
+            temp = []
+        return TransferFunctionMatrix(doit_arg)
+
+    def elem_poles(self):
+        """
+        Returns the poles of each element of the ``TransferFunctionMatrix``.
+
+        .. note::
+            Actual poles of a MIMO system are NOT the poles of individual elements.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix
+        >>> tf_1 = TransferFunction(3, (s + 1), s)
+        >>> tf_2 = TransferFunction(s + 6, (s + 1)*(s + 2), s)
+        >>> tf_3 = TransferFunction(s + 3, s**2 + 3*s + 2, s)
+        >>> tf_4 = TransferFunction(s + 2, s**2 + 5*s - 10, s)
+        >>> tfm_1 = TransferFunctionMatrix([[tf_1, tf_2], [tf_3, tf_4]])
+        >>> tfm_1
+        TransferFunctionMatrix(((TransferFunction(3, s + 1, s), TransferFunction(s + 6, (s + 1)*(s + 2), s)), (TransferFunction(s + 3, s**2 + 3*s + 2, s), TransferFunction(s + 2, s**2 + 5*s - 10, s))))
+        >>> tfm_1.elem_poles()
+        [[[-1], [-2, -1]], [[-2, -1], [-5/2 + sqrt(65)/2, -sqrt(65)/2 - 5/2]]]
+
+        """
+        poles_list = []
+        for i in self.args[0]:
+            temp = []
+            for j in i:
+                if not isinstance(j, TransferFunction):
+                    j = j.doit()
+                temp.append(j.poles())
+            poles_list.append(temp)
+            temp = []
+        return poles_list
+
+    def elem_zeros(self):
+        """
+        Returns the zeros of each element of the ``TransferFunctionMatrix``.
+
+        .. note::
+            Actual zeros of a MIMO system are NOT the zeros of individual elements.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix
+        >>> tf_1 = TransferFunction(3, (s + 1), s)
+        >>> tf_2 = TransferFunction(s + 6, (s + 1)*(s + 2), s)
+        >>> tf_3 = TransferFunction(s + 3, s**2 + 3*s + 2, s)
+        >>> tf_4 = TransferFunction(s**2 - 9*s + 20, s**2 + 5*s - 10, s)
+        >>> tfm_1 = TransferFunctionMatrix([[tf_1, tf_2], [tf_3, tf_4]])
+        >>> tfm_1
+        TransferFunctionMatrix(((TransferFunction(3, s + 1, s), TransferFunction(s + 6, (s + 1)*(s + 2), s)), (TransferFunction(s + 3, s**2 + 3*s + 2, s), TransferFunction(s**2 - 9*s + 20, s**2 + 5*s - 10, s))))
+        >>> tfm_1.elem_zeros()
+        [[[], [-6]], [[-3], [4, 5]]]
+        """
+        zeros_list = []
+        for i in self.args[0]:
+            temp = []
+            for j in i:
+                if not isinstance(j, TransferFunction):
+                    j = j.doit()
+                temp.append(j.zeros())
+            zeros_list.append(temp)
+            temp = []
+        return zeros_list
