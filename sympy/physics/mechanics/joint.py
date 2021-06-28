@@ -437,6 +437,12 @@ class SlidingJoint(Joint):
     >>> J.kdes()
     [v(t) - Derivative(x(t), t)]
 
+    Notes
+    ======
+
+    All symbols and dynamicsymbols used with `Joints` should be used with correct
+    assumption, i.e. positive=True else it may give incorrect results in some cases.
+
     """
 
     def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None,
