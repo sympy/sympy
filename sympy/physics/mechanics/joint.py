@@ -448,7 +448,7 @@ class SlidingJoint(Joint):
     def _generate_coordinates(self, coordinate):
         coordinates = []
         if coordinate is None:
-            x = dynamicsymbols(self._name + '_x')
+            x = dynamicsymbols(self._name + '_x', positive=True)
             coordinate = x
         coordinates.append(coordinate)
         return coordinates
@@ -456,7 +456,7 @@ class SlidingJoint(Joint):
     def _generate_speeds(self, speed):
         speeds = []
         if speed is None:
-            y = dynamicsymbols(self._name + '_v')
+            y = dynamicsymbols(self._name + '_v', positive=True)
             speed = y
         speeds.append(speed)
         return speeds
