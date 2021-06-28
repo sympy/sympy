@@ -252,10 +252,8 @@ class SparseMatrix(MatrixBase):
             return False
         if self_shape != other_shape:
             return False
-        if isinstance(other, SparseMatrix):
-            return self._smat == other._smat
-        elif isinstance(other, MatrixBase):
-            return self._smat == MutableSparseMatrix(other)._smat
+        if isinstance(other, MatrixBase):
+            return self._rep.unify_eq(other._rep)
 
     def __getitem__(self, key):
 
@@ -263,7 +261,7 @@ class SparseMatrix(MatrixBase):
             i, j = key
             try:
                 i, j = self.key2ij(key)
-                return self._smat.get((i, j), S.Zero)
+                return self._rep.getitem_sympy(i, j)
             except (TypeError, IndexError):
                 if isinstance(i, slice):
                     i = range(self.rows)[i]
@@ -295,11 +293,11 @@ class SparseMatrix(MatrixBase):
             L = []
             for i in range(lo, hi):
                 m, n = divmod(i, self.cols)
-                L.append(self._smat.get((m, n), S.Zero))
+                L.append(self[m, n])
             return L
 
         i, j = divmod(a2idx(key, len(self)), self.cols)
-        return self._smat.get((i, j), S.Zero)
+        return self._rep.getitem_sympy(i, j)
 
     def __setitem__(self, key, value):
         raise NotImplementedError()
@@ -318,13 +316,7 @@ class SparseMatrix(MatrixBase):
         if not isinstance(other, SparseMatrix):
             return self + self._new(other)
 
-        smat = {}
-        zero = self._sympify(0)
-        for key in set().union(self._smat.keys(), other._smat.keys()):
-            sum = self._smat.get(key, zero) + other._smat.get(key, zero)
-            if sum != 0:
-                smat[key] = sum
-        return self._new(self.rows, self.cols, smat)
+        return self._fromrep(self._rep + other._rep)
 
     def _eval_col_insert(self, icol, other):
         if not isinstance(other, SparseMatrix):
@@ -343,39 +335,10 @@ class SparseMatrix(MatrixBase):
         return self._new(self.rows, self.cols + other.cols, new_smat)
 
     def _eval_conjugate(self):
-        smat = {key: val.conjugate() for key,val in self._smat.items()}
-        return self._new(self.rows, self.cols, smat)
+        return self.applyfunc(lambda e: e.conjugate())
 
     def _eval_extract(self, rowsList, colsList):
-        urow = list(uniq(rowsList))
-        ucol = list(uniq(colsList))
-        smat = {}
-        if len(urow)*len(ucol) < len(self._smat):
-            # there are fewer elements requested than there are elements in the matrix
-            for i, r in enumerate(urow):
-                for j, c in enumerate(ucol):
-                    smat[i, j] = self._smat.get((r, c), 0)
-        else:
-            # most of the request will be zeros so check all of self's entries,
-            # keeping only the ones that are desired
-            for rk, ck in self._smat:
-                if rk in urow and ck in ucol:
-                    smat[urow.index(rk), ucol.index(ck)] = self._smat[rk, ck]
-
-        rv = self._new(len(urow), len(ucol), smat)
-        # rv is nominally correct but there might be rows/cols
-        # which require duplication
-        if len(rowsList) != len(urow):
-            for i, r in enumerate(rowsList):
-                i_previous = rowsList.index(r)
-                if i_previous != i:
-                    rv = rv.row_insert(i, rv.row(i_previous))
-        if len(colsList) != len(ucol):
-            for i, c in enumerate(colsList):
-                i_previous = colsList.index(c)
-                if i_previous != i:
-                    rv = rv.col_insert(i, rv.col(i_previous))
-        return rv
+        return self._fromrep(self._rep.extract(rowsList, colsList))
 
     @classmethod
     def _eval_eye(cls, rows, cols):
@@ -387,14 +350,14 @@ class SparseMatrix(MatrixBase):
         # has the pattern.  If _smat is full length,
         # the matrix has no zeros.
         zhas = S.Zero.has(*patterns)
-        if len(self._smat) == self.rows*self.cols:
+        if len(self.todok()) == self.rows*self.cols:
             zhas = False
-        return any(self[key].has(*patterns) for key in self._smat) or zhas
+        return zhas or any(value.has(*patterns) for value in self.todok().values())
 
     def _eval_is_Identity(self):
         if not all(self[i, i] == 1 for i in range(self.rows)):
             return False
-        return len(self._smat) == self.rows
+        return len(self.todok()) == self.rows
 
     def _eval_is_symmetric(self, simpfunc):
         diff = (self - self.T).applyfunc(simpfunc)
@@ -402,36 +365,7 @@ class SparseMatrix(MatrixBase):
 
     def _eval_matrix_mul(self, other):
         """Fast multiplication exploiting the sparsity of the matrix."""
-
-        if not isinstance(other, SparseMatrix):
-            other = self._new(other)
-
-        # if we made it here, we're both sparse matrices
-        # create quick lookups for rows and cols
-        row_lookup = defaultdict(dict)
-        for (i,j), val in self._smat.items():
-            row_lookup[i][j] = val
-        col_lookup = defaultdict(dict)
-        for (i,j), val in other._smat.items():
-            col_lookup[j][i] = val
-
-        smat = {}
-        for row in row_lookup.keys():
-            for col in col_lookup.keys():
-                # find the common indices of non-zero entries.
-                # these are the only things that need to be multiplied.
-                indices = set(col_lookup[col].keys()) & set(row_lookup[row].keys())
-                if indices:
-                    vec = [row_lookup[row][k]*col_lookup[col][k] for k in indices]
-                    try:
-                        smat[row, col] = Add(*vec)
-                    except (TypeError, SympifyError):
-                        # Some matrices don't work with `sum` or `Add`
-                        # They don't work with `sum` because `sum` tries to add `0`
-                        # Fall back to a safe way to multiply if the `Add` fails.
-                        smat[row, col] = reduce(lambda a, b: a + b, vec)
-
-        return self._new(self.rows, other.cols, smat)
+        return self._fromrep(self._rep * other._rep)
 
     def _eval_row_insert(self, irow, other):
         if not isinstance(other, SparseMatrix):
@@ -456,7 +390,7 @@ class SparseMatrix(MatrixBase):
         return self.applyfunc(lambda x: other*x)
 
     def _eval_todok(self):
-        return self._smat.copy()
+        return self._rep.to_sympy().to_dok()
 
     def _eval_transpose(self):
         """Returns the transposed SparseMatrix of this SparseMatrix.
@@ -475,11 +409,10 @@ class SparseMatrix(MatrixBase):
         [1, 3],
         [2, 4]])
         """
-        smat = {(j,i): val for (i,j),val in self._smat.items()}
-        return self._new(self.cols, self.rows, smat)
+        return self._fromrep(self._rep.transpose())
 
     def _eval_values(self):
-        return [v for k,v in self._smat.items() if not v.is_zero]
+        return list(self.todok().values())
 
     @classmethod
     def _eval_zeros(cls, rows, cols):
@@ -516,14 +449,16 @@ class SparseMatrix(MatrixBase):
         if not callable(f):
             raise TypeError("`f` must be callable.")
 
-        out = self.copy()
-        for k, v in self._smat.items():
+        # XXX: This only applies the function to the nonzero elements of the
+        # matrix so is inconsistent with DenseMatrix.applyfunc e.g.
+        #   zeros(2, 2).applyfunc(lambda x: x + 1)
+        dok = {}
+        for k, v in self.todok().items():
             fv = f(v)
-            if fv:
-                out._smat[k] = fv
-            else:
-                out._smat.pop(k, None)
-        return out
+            if fv != 0:
+                dok[k] = fv
+
+        return self._new(self.rows, self.cols, dok)
 
     def as_immutable(self):
         """Returns an Immutable version of this Matrix."""
@@ -567,14 +502,14 @@ class SparseMatrix(MatrixBase):
         sympy.matrices.sparse.MutableSparseMatrix.col_op
         sympy.matrices.sparse.SparseMatrix.row_list
         """
-        return [tuple(k + (self[k],)) for k in sorted(list(self._smat.keys()), key=lambda k: list(reversed(k)))]
+        return [tuple(k + (self[k],)) for k in sorted(list(self.todok().keys()), key=lambda k: list(reversed(k)))]
 
     def copy(self):
-        return self._new(self.rows, self.cols, self._smat)
+        return self._fromrep(self._rep.copy())
 
     def nnz(self):
         """Returns the number of non-zero elements in Matrix."""
-        return len(self._smat)
+        return len(self.todok())
 
     def row_list(self):
         """Returns a row-sorted list of non-zero elements of the matrix.
@@ -597,7 +532,7 @@ class SparseMatrix(MatrixBase):
         sympy.matrices.sparse.SparseMatrix.col_list
         """
         return [tuple(k + (self[k],)) for k in
-            sorted(list(self._smat.keys()), key=lambda k: list(k))]
+            sorted(self.todok().keys(), key=lambda k: list(k))]
 
     def scalar_multiply(self, scalar):
         "Scalar element-wise multiplication"
@@ -717,14 +652,18 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
 
     @classmethod
     def _new(cls, *args, **kwargs):
-        obj = super().__new__(cls)
         rows, cols, smat = cls._handle_creation_inputs(*args, **kwargs)
 
         rep = cls._smat_to_DomainMatrix(rows, cols, smat)
 
+        return cls._fromrep(rep)
+
+    @classmethod
+    def _fromrep(cls, rep):
+        obj = super().__new__(cls)
+        rows, cols = rep.shape
         obj.rows = rows
         obj.cols = cols
-        obj._smat = smat
         obj._rep = rep
         return obj
 
@@ -780,10 +719,8 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         rv = self._setitem(key, value)
         if rv is not None:
             i, j, value = rv
-            if value:
-                self._smat[i, j] = value
-            elif (i, j) in self._smat:
-                del self._smat[i, j]
+            self._rep, value = self._unify_element_sympy(self._rep, value)
+            self._rep.rep.setitem(i, j, value)
 
     def as_mutable(self):
         return self.copy()
@@ -792,26 +729,30 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
 
     def _eval_col_del(self, k):
         newD = {}
-        for i, j in self._smat:
+        smat = self.todok()
+        for i, j in smat:
             if j == k:
                 pass
             elif j > k:
-                newD[i, j - 1] = self._smat[i, j]
+                newD[i, j - 1] = smat[i, j]
             else:
-                newD[i, j] = self._smat[i, j]
-        self._smat = newD
+                newD[i, j] = smat[i, j]
+        rep = self._smat_to_DomainMatrix(self.rows, self.cols - 1, newD)
+        self._rep = rep
         self.cols -= 1
 
     def _eval_row_del(self, k):
         newD = {}
-        for i, j in self._smat:
+        smat = self.todok()
+        for i, j in smat:
             if i == k:
                 pass
             elif i > k:
-                newD[i - 1, j] = self._smat[i, j]
+                newD[i - 1, j] = smat[i, j]
             else:
-                newD[i, j] = self._smat[i, j]
-        self._smat = newD
+                newD[i, j] = smat[i, j]
+        rep = self._smat_to_DomainMatrix(self.rows - 1, self.cols, newD)
+        self._rep = rep
         self.rows -= 1
 
     def col_join(self, other):
@@ -860,7 +801,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         A, B = self, other
         if not A.cols == B.cols:
             raise ShapeError()
-        A = A.copy()
+        Asmat = A.todok()
         if not isinstance(B, SparseMatrix):
             k = 0
             b = B._flat
@@ -868,13 +809,12 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
                 for j in range(B.cols):
                     v = b[k]
                     if v:
-                        A._smat[i + A.rows, j] = v
+                        Asmat[i + A.rows, j] = v
                     k += 1
         else:
-            for (i, j), v in B._smat.items():
-                A._smat[i + A.rows, j] = v
-        A.rows += B.rows
-        return A
+            for (i, j), v in B.todok().items():
+                Asmat[i + A.rows, j] = v
+        return A._new(A.rows + B.rows, A.cols, Asmat)
 
     def col_op(self, j, f):
         """In-place operation on col j using two-arg functor whose args are
@@ -920,15 +860,15 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         temp = []
         for ii, jj, v in rows:
             if jj == i:
-                self._smat.pop((ii, jj))
+                self[ii, jj] = S.Zero
                 temp.append((ii, v))
             elif jj == j:
-                self._smat.pop((ii, jj))
-                self._smat[ii, i] = v
+                self[ii, jj] = S.Zero
+                self[ii, i] = v
             elif jj > j:
                 break
         for k, v in temp:
-            self._smat[k, j] = v
+            self[k, j] = v
 
     def copyin_list(self, key, value):
         if not is_sequence(value):
@@ -952,12 +892,12 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
             if (rhi - rlo)*(chi - clo) < len(self):
                 for i in range(rlo, rhi):
                     for j in range(clo, chi):
-                        self._smat.pop((i, j), None)
+                        self[i, j] = S.Zero
             else:
                 for i, j, v in self.row_list():
                     if rlo <= i < rhi and clo <= j < chi:
-                        self._smat.pop((i, j), None)
-            for k, v in value._smat.items():
+                        self[i, j] = S.Zero
+            for k, v in value.todok().items():
                 i, j = k
                 self[i + rlo, j + clo] = value[i, j]
 
@@ -1035,7 +975,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         A, B = self, other
         if not A.rows == B.rows:
             raise ShapeError()
-        A = A.copy()
+        Asmat = A.todok()
         if not isinstance(B, SparseMatrix):
             k = 0
             b = B._flat
@@ -1043,13 +983,12 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
                 for j in range(B.cols):
                     v = b[k]
                     if v:
-                        A._smat[i, j + A.cols] = v
+                        Asmat[i, j + A.cols] = v
                     k += 1
         else:
-            for (i, j), v in B._smat.items():
-                A._smat[i, j + A.cols] = v
-        A.cols += B.cols
-        return A
+            for (i, j), v in B.todok().items():
+                Asmat[i, j + A.cols] = v
+        return A._new(A.rows, A.cols + B.cols, Asmat)
 
     def row_op(self, i, f):
         """In-place operation on row ``i`` using two-arg functor whose args are
@@ -1075,12 +1014,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
 
         """
         for j in range(self.cols):
-            v = self._smat.get((i, j), S.Zero)
-            fv = f(v, j)
-            if fv:
-                self._smat[i, j] = fv
-            elif v:
-                self._smat.pop((i, j))
+            self[i, j] = f(self[i, j], j)
 
     def row_swap(self, i, j):
         """Swap, in place, columns i and j.

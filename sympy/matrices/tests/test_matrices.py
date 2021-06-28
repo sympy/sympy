@@ -41,7 +41,7 @@ def test_args():
         if not n % 2:
             assert type(m._flat) in (list, tuple, Tuple)
         else:
-            assert type(m._smat) is dict
+            assert type(m.todok()) is dict
 
 
 def test_division():

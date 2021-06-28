@@ -155,10 +155,19 @@ class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):  # type:ignore
     @classmethod
     def _new(cls, *args, **kwargs):
         rows, cols, smat = cls._handle_creation_inputs(*args, **kwargs)
+
+        rep = cls._smat_to_DomainMatrix(rows, cols, smat)
+
+        return cls._fromrep(rep)
+
+    @classmethod
+    def _fromrep(cls, rep):
+        rows, cols = rep.shape
+        smat = rep.to_sympy().to_dok()
         obj = Basic.__new__(cls, Integer(rows), Integer(cols), Dict(smat))
         obj._rows = rows
         obj._cols = cols
-        obj._smat = smat
+        obj._rep = rep
         return obj
 
     def __setitem__(self, *args):

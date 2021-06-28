@@ -69,7 +69,7 @@ def test_sparse_matrix():
         (2, 0),
         (5, 0)
     ))
-    assert a._smat == {(0, 0): 2, (1, 0): 5}
+    assert a.todok() == {(0, 0): 2, (1, 0): 5}
 
     # test_multiplication
     a = SparseMatrix((
@@ -278,7 +278,7 @@ def test_sparse_matrix():
                               (0, 0, 0, 0),
                               (0, 0, 1, 0),
                               (0, 0, 0, 1)])
-    assert len(m._smat) == 2
+    assert len(m.todok()) == 2
     m[:2, :2] = sparse_eye(2)
     assert m == sparse_eye(4)
     m[:, 0] = SparseMatrix(4, 1, (1, 2, 3, 4))
@@ -528,7 +528,7 @@ def test_add():
         SparseMatrix(((1, 1), (1, 1)))
     a = SparseMatrix(100, 100, lambda i, j: int(j != 0 and i % j == 0))
     b = SparseMatrix(100, 100, lambda i, j: int(i != 0 and j % i == 0))
-    assert (len(a._smat) + len(b._smat) - len((a + b)._smat) > 0)
+    assert (len(a.todok()) + len(b.todok()) - len((a + b).todok()) > 0)
 
 
 def test_errors():
@@ -555,9 +555,9 @@ def test_len():
 
 def test_sparse_zeros_sparse_eye():
     assert SparseMatrix.eye(3) == eye(3, cls=SparseMatrix)
-    assert len(SparseMatrix.eye(3)._smat) == 3
+    assert len(SparseMatrix.eye(3).todok()) == 3
     assert SparseMatrix.zeros(3) == zeros(3, cls=SparseMatrix)
-    assert len(SparseMatrix.zeros(3)._smat) == 0
+    assert len(SparseMatrix.zeros(3).todok()) == 0
 
 
 def test_copyin():
