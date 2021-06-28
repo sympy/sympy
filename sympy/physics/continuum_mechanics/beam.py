@@ -2715,17 +2715,6 @@ class Beam3D(Beam):
         """
 
         dir = dir.lower();
-        deflection = self.deflection()
-
-        if dir == 'x':
-            dir_num = 0
-
-        elif dir == 'y':
-            dir_num = 1
-
-        elif dir == 'z':
-            dir_num = 2
-
         if subs is None:
             subs = {}
 
