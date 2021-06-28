@@ -1,15 +1,12 @@
-from collections import defaultdict
 from collections.abc import Callable
-from functools import reduce
 
-from sympy.core import SympifyError, Add
+from sympy.core import SympifyError
 from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 from sympy.functions import Abs
-from sympy.utilities.iterables import uniq
 
 from .common import a2idx
 from .dense import Matrix
@@ -323,13 +320,13 @@ class SparseMatrix(MatrixBase):
             other = MutableSparseMatrix(other)
         new_smat = {}
         # make room for the new rows
-        for key, val in self._smat.items():
+        for key, val in self.todok().items():
             row, col = key
             if col >= icol:
                 col += other.cols
             new_smat[row, col] = val
         # add other's keys
-        for key, val in other._smat.items():
+        for key, val in other.todok().items():
             row, col = key
             new_smat[row, col + icol] = val
         return self._new(self.rows, self.cols + other.cols, new_smat)
@@ -372,13 +369,13 @@ class SparseMatrix(MatrixBase):
             other = MutableSparseMatrix(other)
         new_smat = {}
         # make room for the new rows
-        for key, val in self._smat.items():
+        for key, val in self.todok().items():
             row, col = key
             if row >= irow:
                 row += other.rows
             new_smat[row, col] = val
         # add other's keys
-        for key, val in other._smat.items():
+        for key, val in other.todok().items():
             row, col = key
             new_smat[row + irow, col] = val
         return self._new(self.rows + other.rows, self.cols, new_smat)
@@ -833,12 +830,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         [ 0, 0, 2]])
         """
         for i in range(self.rows):
-            v = self._smat.get((i, j), S.Zero)
-            fv = f(v, i)
-            if fv:
-                self._smat[i, j] = fv
-            elif v:
-                self._smat.pop((i, j))
+            self[i, j] = f(self[i, j], i)
 
     def col_swap(self, i, j):
         """Swap, in place, columns i and j.
@@ -926,12 +918,9 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         [1, 1, 1],
         [1, 1, 1]])
         """
-        if not value:
-            self._smat = {}
-        else:
-            v = self._sympify(value)
-            self._smat = {(i, j): v
-                for i in range(self.rows) for j in range(self.cols)}
+        for i in range(self.rows):
+            for j in range(self.cols):
+                self[i, j] = value
 
     def row_join(self, other):
         """Returns B appended after A (column-wise augmenting)::
@@ -1036,15 +1025,15 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         temp = []
         for ii, jj, v in rows:
             if ii == i:
-                self._smat.pop((ii, jj))
+                self[ii, jj] = S.Zero
                 temp.append((jj, v))
             elif ii == j:
-                self._smat.pop((ii, jj))
-                self._smat[i, jj] = v
+                self[ii, jj] = S.Zero
+                self[i, jj] = v
             elif ii > j:
                 break
         for k, v in temp:
-            self._smat[j, k] = v
+            self[j, k] = v
 
     def zip_row_op(self, i, k, f):
         """In-place operation on row ``i`` using two-arg functor whose args are

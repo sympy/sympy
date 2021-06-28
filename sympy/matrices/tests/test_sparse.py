@@ -157,6 +157,11 @@ def test_sparse_matrix():
         [0, 1, 0],
         [1, 0, 0],
         [2, 0, 1]])
+    S.row_swap(0, 1)
+    assert S == SparseMatrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [2, 0, 1]])
 
     a = SparseMatrix(1, 2, [1, 2])
     b = a.copy()
@@ -408,8 +413,41 @@ def test_sparse_matrix():
         [0,     1]
     ])
 
+    # row insert
+    assert a.row_insert(2, sparse_eye(2)) == SparseMatrix([
+        [1, 2 + I],
+        [3,     4],
+        [1,     0],
+        [0,     1]
+    ])
+
+    # col insert
+    assert a.col_insert(2, SparseMatrix.zeros(2, 1)) == SparseMatrix([
+        [1, 2 + I, 0],
+        [3,     4, 0],
+    ])
+
     # symmetric
     assert not a.is_symmetric(simplify=False)
+
+    # col op
+    M = SparseMatrix.eye(3)*2
+    M[1, 0] = -1
+    M.col_op(1, lambda v, i: v + 2*M[i, 0])
+    assert M == SparseMatrix([
+        [ 2, 4, 0],
+        [-1, 0, 0],
+        [ 0, 0, 2]
+    ])
+
+    # fill
+    M = SparseMatrix.eye(3)
+    M.fill(2)
+    assert M == SparseMatrix([
+        [2, 2, 2],
+        [2, 2, 2],
+        [2, 2, 2],
+    ])
 
     # test_cofactor
     assert sparse_eye(3) == sparse_eye(3).cofactor_matrix()
