@@ -8,6 +8,13 @@ from sympy.testing.pytest import raises
 t = dynamicsymbols._t
 
 
+def generate_body():
+    N = ReferenceFrame('N')
+    A = ReferenceFrame('A')
+    P = Body('P', frame=N)
+    C = Body('C', frame=A)
+    return N, A, P, C
+
 def test_Joint():
     parent = Body('parent')
     child = Body('child')
@@ -119,12 +126,6 @@ def test_pin_joint_chaos_pendulum():
     assert plate.masscenter.vel(N) == ((h/4 - lB/2)*omega + (h/4 + lB/2)*omega)*A.x
 
 def test_pinjoint_arbitrary_axis():
-    def generate_body():
-        N = ReferenceFrame('N')
-        A = ReferenceFrame('A')
-        P = Body('P', frame=N)
-        C = Body('C', frame=A)
-        return N, A, P, C
 
     theta, omega = dynamicsymbols('J_theta, J_omega', positive=True)
 
@@ -256,3 +257,4 @@ def test_slidingjoint():
     assert S._parent_joint.pos_from(S._child_joint) == - x * P.frame.z
     assert P.masscenter.pos_from(C.masscenter) == - x * P.frame.x
     assert C.masscenter.vel(P.frame) == v * P.frame.z
+
