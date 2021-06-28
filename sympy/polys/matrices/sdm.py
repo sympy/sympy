@@ -476,7 +476,7 @@ class SDM(dict):
         n2, o = B.shape
         if n != n2:
             raise DDMShapeError
-        C = sdm_matmul(A, B)
+        C = sdm_matmul(A, B, A.domain, m, o)
         return A.new(C, (m, o), A.domain)
 
     def mul(A, b):
@@ -857,7 +857,7 @@ def sdm_transpose(M):
     return MT
 
 
-def sdm_matmul(A, B):
+def sdm_matmul(A, B, K, m, o):
     #
     # Should be fast if A and B are very sparse.
     # Consider e.g. A = B = eye(1000).
@@ -874,6 +874,9 @@ def sdm_matmul(A, B):
     # Aik and Bk are both nonzero. In Python the intersection of two sets
     # of int can be computed very efficiently.
     #
+    if K.is_EXRAW:
+        return sdm_matmul_exraw(A, B, K, m, o)
+
     C = {}
     B_knz = set(B)
     for i, Ai in A.items():
@@ -895,6 +898,68 @@ def sdm_matmul(A, B):
                         Ci[j] = Cij
         if Ci:
             C[i] = Ci
+    return C
+
+
+def sdm_matmul_exraw(A, B, K, m, o):
+    #
+    # Like sdm_matmul above except that:
+    #
+    # - Handles cases like 0*oo -> nan (sdm_matmul skips multipication by zero)
+    # - Uses K.sum (Add(*items)) for efficient addition of Expr
+    #
+    zero = K.zero
+    C = {}
+    B_knz = set(B)
+    for i, Ai in A.items():
+        Ci_list = defaultdict(list)
+        Ai_knz = set(Ai)
+
+        # Nonzero row/column pair
+        for k in Ai_knz & B_knz:
+            Aik = Ai[k]
+            if zero * Aik == zero:
+                # This is the main inner loop:
+                for j, Bkj in B[k].items():
+                    Ci_list[j].append(Aik * Bkj)
+            else:
+                for j in range(o):
+                    Ci_list[j].append(Aik * B[k].get(j, zero))
+
+        # Zero row in B, check for infinities in A
+        for k in Ai_knz - B_knz:
+            zAik = zero * Ai[k]
+            if zAik != zero:
+                for j in range(o):
+                    Ci_list[j].append(zAik)
+
+        # Add terms using K.sum (Add(*terms)) for efficiency
+        Ci = {}
+        for j, Cij_list in Ci_list.items():
+            Cij = K.sum(Cij_list)
+            if Cij:
+                Ci[j] = Cij
+        if Ci:
+            C[i] = Ci
+
+    # Find all infinities in B
+    for k, Bk in B.items():
+        for j, Bkj in Bk.items():
+            if zero * Bkj != zero:
+                for i in range(m):
+                    Aik = A.get(i, {}).get(k, zero)
+                    # If Aik is not zero then this was handled above
+                    if Aik == zero:
+                        Ci = C.get(i, {})
+                        Cij = Ci.get(j, zero) + Aik * Bkj
+                        if Cij != zero:
+                            Ci[j] = Cij
+                        else:  # pragma: no cover
+                            # Not sure how we could get here but let's raise an
+                            # exception just in case.
+                            raise RuntimeError
+                        C[i] = Ci
+
     return C
 
 

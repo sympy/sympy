@@ -2,10 +2,13 @@
 Tests for the basic functionality of the SDM class.
 """
 
+from itertools import product
+
+from sympy.core.numbers import oo
 from sympy.core.compatibility import HAS_GMPY
 from sympy.testing.pytest import raises
 
-from sympy import QQ, ZZ
+from sympy.polys.domains import QQ, ZZ, EXRAW
 from sympy.polys.matrices.sdm import SDM
 from sympy.polys.matrices.ddm import DDM
 from sympy.polys.matrices.exceptions import (DDMBadInputError, DDMDomainError,
@@ -247,6 +250,23 @@ def test_SDM_matmul():
     A = SDM({0: {0: ZZ(-1), 1: ZZ(1)}}, (1, 2), ZZ)
     B = SDM({0: {0: ZZ(-1)}, 1: {0: ZZ(-1)}}, (2, 1), ZZ)
     assert A.matmul(B) == A*B == SDM({}, (1, 1), ZZ)
+
+
+def test_matmul_exraw():
+
+    def dm(d):
+        result = {}
+        for i, row in d.items():
+            row = {j:val for j, val in row.items() if val}
+            if row:
+                result[i] = row
+        return SDM(result, (2, 2), EXRAW)
+
+    values = [-oo, -1, 0, 1, oo]
+    for a, b, c, d in product(*[values]*4):
+        Ad = dm({0: {0:a, 1:b}, 1: {0:c, 1:d}})
+        Ad2 = dm({0: {0:a*a + b*c, 1:a*b + b*d}, 1:{0:c*a + d*c, 1: c*b + d*d}})
+        assert Ad * Ad == Ad2
 
 
 def test_SDM_add():
