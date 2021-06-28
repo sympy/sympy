@@ -234,7 +234,7 @@ class MCodePrinter(CodePrinter):
             self.doprint((pos[0]+1, pos[1]+1)), self.doprint(val))
 
         def print_data():
-            items = sorted(expr._smat.items(), key=default_sort_key)
+            items = sorted(expr.todok().items(), key=default_sort_key)
             return '{' + \
                 ', '.join(print_rule(k, v) for k, v in items) + \
                 '}'
