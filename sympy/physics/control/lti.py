@@ -1449,7 +1449,8 @@ class Feedback(Basic):
 
 def _to_TFM(mat, var):
     """Private method to convert ImmutableMatrix to TransferFunctionMatrix efficiently"""
-    def group(flat, size): return [flat[i:i+size] for i in range(0, len(flat), size)]
+    def group(flat, size):
+        return [flat[i:i+size] for i in range(0, len(flat), size)]
     tfm_cols = mat.args[1]
     flat_list = list(mat.args[2])
     flat_list = [TransferFunction.from_rational_expression(elem, var) for elem in flat_list]
@@ -1481,7 +1482,7 @@ class TransferFunctionMatrix(Basic):
 
     >>> from sympy.abc import s, p, a
     >>> from sympy.printing import pprint
-    >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix
+    >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix, Series, Parallel
     >>> tf_1 = TransferFunction(s + a, s**2 + s + 1, s)
     >>> tf_2 = TransferFunction(p**4 - 3*p + 2, s + p, s)
     >>> tf_3 = TransferFunction(3, s + 2, s)
@@ -1653,6 +1654,23 @@ class TransferFunctionMatrix(Basic):
     [  -----       -----   ]
     [  s + 2       s + 2   ]
 
+    Users can reduce the ``Series`` and ``Parallel`` elements of the matrix to ``TransferFunction`` by using
+    ``doit()``.
+
+    >>> tfm_6 = TransferFunctionMatrix([[Series(tf_3, tf_4), Parallel(tf_3, tf_4)]])
+    >>> tfm_6
+    TransferFunctionMatrix(((Series(TransferFunction(3, s + 2, s), TransferFunction(-a + p, 9*s - 9, s)), Parallel(TransferFunction(3, s + 2, s), TransferFunction(-a + p, 9*s - 9, s))),))
+    >>> pprint(tfm_6, use_unicode=False)
+    [ -a + p   3     -a + p     3  ]
+    [-------*-----  ------- + -----]
+    [9*s - 9 s + 2  9*s - 9   s + 2]
+    >>> tfm_6.doit()
+    TransferFunctionMatrix(((TransferFunction(-3*a + 3*p, (s + 2)*(9*s - 9), s), TransferFunction(27*s + (-a + p)*(s + 2) - 27, (s + 2)*(9*s - 9), s)),))
+    >>> pprint(_, use_unicode=False)
+    [    -3*a + 3*p     27*s + (-a + p)*(s + 2) - 27]
+    [-----------------  ----------------------------]
+    [(s + 2)*(9*s - 9)       (s + 2)*(9*s - 9)      ]
+
     See Also
     ========
 
@@ -1663,20 +1681,21 @@ class TransferFunctionMatrix(Basic):
 
         expr_mat_arg = []
         var = arg[0][0].var
-        for row in range(len(arg)):
+        for row_index, row in enumerate(arg):
             temp = []
-            for col in range(len(arg[row])):
-                if not isinstance(arg[row][col], (TransferFunction, Series, Parallel)):
-                    raise TypeError("Incompatible type found as the element of TransferFunctionMatrix")
+            for col_index, element in enumerate(row):
+                if not isinstance(element, (TransferFunction, Series, Parallel)):
+                    raise TypeError("Incompatible type found as the element of "
+                    f"TransferFunctionMatrix at index {(row_index, col_index)}.")
 
-                if var != arg[row][col].var:
+                if var != element.var:
                     raise ValueError("Conflicting value(s) found for `var`. All TransferFunction instances in "
                             "TransferFunctionMatrix should use the same complex variable in Laplace domain.")
 
-                if isinstance(arg[row][col], TransferFunction):
-                    temp.append(arg[row][col].to_expr())
+                if isinstance(element, TransferFunction):
+                    temp.append(element.to_expr())
                 else:
-                    temp.append(arg[row][col]._to_expr())
+                    temp.append(element._to_expr())
             expr_mat_arg.append(temp)
 
 
@@ -1862,10 +1881,10 @@ class TransferFunctionMatrix(Basic):
         trunc = self._expr_mat.__getitem__(key)
         if isinstance(trunc, ImmutableMatrix):
             return _to_TFM(trunc, self.var)
-        else:
-            return TransferFunction.from_rational_expression(trunc, self.var)
+        return TransferFunction.from_rational_expression(trunc, self.var)
 
     def transpose(self):
+        """Returns the transpose of the ``TransferFunctionMatrix`` (switched input and output layers)."""
         transposed_mat = self._expr_mat.transpose()
         return _to_TFM(transposed_mat, self.var)
 
@@ -1918,7 +1937,6 @@ class TransferFunctionMatrix(Basic):
                     j = j.doit()
                 temp.append(j)
             doit_arg.append(temp)
-            temp = []
         return TransferFunctionMatrix(doit_arg)
 
     def elem_poles(self):
