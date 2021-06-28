@@ -1012,7 +1012,6 @@ def reduce_inequalities(inequalities, symbols=[]):
     return rv.xreplace({v: k for k, v in recast.items()})
 
 
-
 def pivot(M, i, j):
     p = M[i, j]
     MM = Matrix.zeros(M.rows, M.cols)
