@@ -896,13 +896,11 @@ class Series(Basic):
     def __neg__(self):
         return Series(TransferFunction(-1, 1, self.var), self)
 
-    def _to_expr(self):
+    def to_expr(self):
+        """Returns the equivalent ``Expr`` object."""
         temp = []
         for arg in self.args:
-            if isinstance(arg, TransferFunction):
-                temp.append(arg.to_expr())
-            else:
-                temp.append(arg._to_expr())
+            temp.append(arg.to_expr())
         return Mul(*temp, evaluate=False)
 
     @property
@@ -1160,13 +1158,11 @@ class Parallel(Basic):
     def __neg__(self):
         return Series(TransferFunction(-1, 1, self.var), self)
 
-    def _to_expr(self):
+    def to_expr(self):
+        """Returns the equivalent ``Expr`` object."""
         temp = []
         for arg in self.args:
-            if isinstance(arg, TransferFunction):
-                temp.append(arg.to_expr())
-            else:
-                temp.append(arg._to_expr())
+            temp.append(arg.to_expr())
         return Add(*temp, evaluate=False)
 
     @property
@@ -1449,12 +1445,8 @@ class Feedback(Basic):
 
 def _to_TFM(mat, var):
     """Private method to convert ImmutableMatrix to TransferFunctionMatrix efficiently"""
-    def group(flat, size):
-        return [flat[i:i+size] for i in range(0, len(flat), size)]
-    tfm_cols = mat.args[1]
-    flat_list = list(mat.args[2])
-    flat_list = [TransferFunction.from_rational_expression(elem, var) for elem in flat_list]
-    arg = group(flat_list, tfm_cols)
+    to_tf = lambda expr: TransferFunction.from_rational_expression(expr, var)
+    arg = [[to_tf(expr) for expr in row] for row in mat.tolist()]
     return TransferFunctionMatrix(arg)
 
 
@@ -1720,10 +1712,7 @@ class TransferFunctionMatrix(Basic):
                     raise ValueError("Conflicting value(s) found for `var`. All TransferFunction instances in "
                             "TransferFunctionMatrix should use the same complex variable in Laplace domain.")
 
-                if isinstance(element, TransferFunction):
-                    temp.append(element.to_expr())
-                else:
-                    temp.append(element._to_expr())
+                temp.append(element.to_expr())
             expr_mat_arg.append(temp)
 
 
@@ -1751,52 +1740,24 @@ class TransferFunctionMatrix(Basic):
         Examples
         ========
 
-        >>> from sympy.abc import s, p, a
+        >>> from sympy.abc import s
         >>> from sympy.physics.control.lti import TransferFunctionMatrix
-        >>> from sympy.matrices import ImmutableMatrix
+        >>> from sympy.matrices import Matrix
         >>> from sympy.printing import pprint
-        >>> expr_1 = (s + 5)/(3*s**2 + 2*s + 1)
-        >>> expr_2 = 1/s
-        >>> expr_3 = 1/s**2
-        >>> expr_4 = 1/(s + 1)
-        >>> mat_1 = ImmutableMatrix([[expr_1, expr_2], [expr_3, expr_4]])
-        >>> mat_1
-        Matrix([
-        [(s + 5)/(3*s**2 + 2*s + 1),       1/s],
-        [                   s**(-2), 1/(s + 1)]])
-        >>> tfm_1 = TransferFunctionMatrix.from_Matrix(mat_1, s)
-        >>> tfm_1
-        TransferFunctionMatrix(((TransferFunction(s + 5, 3*s**2 + 2*s + 1, s), TransferFunction(1, s, s)), (TransferFunction(1, s**2, s), TransferFunction(1, s + 1, s))))
-        >>> pprint(tfm_1, use_unicode=False)
-        [    s + 5         1  ]
-        [--------------    -  ]
-        [   2              s  ]
-        [3*s  + 2*s + 1       ]
-        [                     ]
-        [      1           1  ]
-        [      --        -----]
-        [       2        s + 1]
-        [      s              ]
-        >>> expr_5 = 10
-        >>> expr_6 = 1/(s*(s - 1))
-        >>> expr_7 = p/(s - 1)
-        >>> expr_8 = a/(a*s + p)
-        >>> mat_2 = ImmutableMatrix([[expr_5, expr_6], [expr_7, expr_8]])
-        >>> mat_2
-        Matrix([
-        [       10, 1/(s*(s - 1))],
-        [p/(s - 1),   a/(a*s + p)]])
-        >>> tfm_2 = TransferFunctionMatrix.from_Matrix(mat_2, s)
-        >>> tfm_2
-        TransferFunctionMatrix(((TransferFunction(10, 1, s), TransferFunction(1, s*(s - 1), s)), (TransferFunction(p, s - 1, s), TransferFunction(a, a*s + p, s))))
-        >>> pprint(tfm_2, use_unicode=False)
-        [ 10        1    ]
-        [ --    ---------]
-        [ 1     s*(s - 1)]
-        [                ]
-        [  p        a    ]
-        [-----   ------- ]
-        [s - 1   a*s + p ]
+        >>> M = Matrix([[s, 1/s], [1/(s+1), s]])
+        >>> M_tf = TransferFunctionMatrix.from_Matrix(M, s)
+        >>> pprint(M_tf, use_unicode=False)
+        [  s    1]
+        [  -    -]
+        [  1    s]
+        [        ]
+        [  1    s]
+        [-----  -]
+        [s + 1  1]
+        >>> M_tf.elem_poles()
+        [[[], [0]], [[-1], []]]
+        >>> M_tf.elem_zeros()
+        [[[0], []], [[], [0]]]
 
         """
         return _to_TFM(matrix, var)
@@ -1844,12 +1805,14 @@ class TransferFunctionMatrix(Basic):
         >>> G1 = TransferFunction(s + 3, s**2 - 3, s)
         >>> G2 = TransferFunction(4, s**2, s)
         >>> G3 = TransferFunction(p**2 + s**2, p - 3, s)
-        >>> tfm1 = TransferFunctionMatrix([[G1], [G2]])
-        >>> tfm1.num_inputs
-        1
-        >>> tfm2 = TransferFunctionMatrix([[G2, -G1, G3], [-G2, -G1, -G3]])
-        >>> tfm2.num_inputs
+        >>> tfm_1 = TransferFunctionMatrix([[G2, -G1, G3], [-G2, -G1, -G3]])
+        >>> tfm_1.num_inputs
         3
+
+        See Also
+        ========
+
+        num_outputs
 
         """
         return self._expr_mat.shape[1]
@@ -1862,18 +1825,20 @@ class TransferFunctionMatrix(Basic):
         Examples
         ========
 
-        >>> from sympy.abc import s, p, a, b
-        >>> from sympy.physics.control.lti import TransferFunction, Series, TransferFunctionMatrix
-        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
-        >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
-        >>> tf3 = TransferFunction(a*s - 4, s**4 + 1, s)
-        >>> S1, S2 = Series(tf1, -tf2), Series(tf2, tf3, -tf1)
-        >>> TFM1 = TransferFunctionMatrix([[tf1], [tf2], [tf3]])
-        >>> TFM1.num_outputs
-        3
-        >>> TFM2 = TransferFunctionMatrix([[S1, S2], [-S2, -S1]])
-        >>> TFM2.num_outputs
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunctionMatrix
+        >>> from sympy.matrices import Matrix
+        >>> M_1 = Matrix([[s], [1/s]])
+        >>> TFM = TransferFunctionMatrix.from_Matrix(M_1, s)
+        >>> print(TFM)
+        TransferFunctionMatrix(((TransferFunction(s, 1, s),), (TransferFunction(1, s, s),)))
+        >>> TFM.num_outputs
         2
+
+        See Also
+        ========
+
+        num_inputs
 
         """
         return self._expr_mat.shape[0]

@@ -739,48 +739,16 @@ def test_Feedback_functions():
 def test_TransferFunctionMatrix_construction():
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
     tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
-    tf6 = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
-    tf7 = TransferFunction(p, a0, p)
-
-    tfm1 = TransferFunctionMatrix([[TF1], [TF2]])
-    assert tfm1.shape == (tfm1.num_outputs, tfm1.num_inputs) == (2, 1)
-    assert tfm1.args == Tuple(Tuple(Tuple(TF1), Tuple(TF2)))
-    assert tfm1.var == s
-
-    tfm1_ = TransferFunctionMatrix([[TF2], [TF1], [TF3]])
-    assert tfm1_.shape == (tfm1_.num_outputs, tfm1_.num_inputs) == (3, 1)
-    assert tfm1_.args == Tuple(Tuple(Tuple(TF2), Tuple(TF1), Tuple(TF3)))
-    assert tfm1_.var == s
-
-    tfm2 = TransferFunctionMatrix([[-TF1], [TF2]])
-    assert tfm2.shape == (tfm2.num_outputs, tfm2.num_inputs) == (2, 1)
-    assert tfm2.args == Tuple(Tuple(Tuple(-TF1), Tuple(TF2)))
-    assert tfm2.var == s
-
-    tfm3 = TransferFunctionMatrix([[tf7]])
-    assert tfm3.shape == (tfm3.num_outputs, tfm3.num_inputs) == (1, 1)
-    assert tfm3.var == p
-    assert tfm3.args == Tuple(Tuple(Tuple(tf7)))
 
     tfm3_ = TransferFunctionMatrix([[-TF3]])
     assert tfm3_.shape == (tfm3_.num_outputs, tfm3_.num_inputs) == (1, 1)
     assert tfm3_.args == Tuple(Tuple(Tuple(-TF3)))
     assert tfm3_.var == s
 
-    tfm4 = TransferFunctionMatrix([[TF3], [tf5], [tf6]])
-    assert tfm4.shape == (tfm4.num_outputs, tfm4.num_inputs) == (3, 1)
-    assert tfm4.args == Tuple(Tuple(Tuple(TF3), Tuple(tf5), Tuple(tf6)))
-    assert tfm4.var == s
-
     tfm5 = TransferFunctionMatrix([[TF1, -TF2], [TF3, tf5]])
     assert tfm5.shape == (tfm5.num_outputs, tfm5.num_inputs) == (2, 2)
     assert tfm5.args == Tuple(Tuple(Tuple(TF1, -TF2), Tuple(TF3, tf5)))
     assert tfm5.var == s
-
-    tfm6 = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, tf6, -tf6]])
-    assert tfm6.shape == (tfm6.num_outputs, tfm6.num_inputs) == (2, 3)
-    assert tfm6.args == Tuple(Tuple(Tuple(TF1, TF2, TF3), Tuple(tf5, tf6, -tf6)))
-    assert tfm6.var == s
 
     tfm7 = TransferFunctionMatrix([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]])
     assert tfm7.shape == (tfm7.num_outputs, tfm7.num_inputs) == (3, 2)
