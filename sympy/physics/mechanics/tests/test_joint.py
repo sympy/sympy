@@ -8,7 +8,7 @@ from sympy.testing.pytest import raises
 t = dynamicsymbols._t
 
 
-def generate_body():
+def _generate_body():
     N = ReferenceFrame('N')
     A = ReferenceFrame('A')
     P = Body('P', frame=N)
@@ -130,7 +130,7 @@ def test_pinjoint_arbitrary_axis():
     theta, omega = dynamicsymbols('J_theta, J_omega', positive=True)
 
     #When the bodies are attached though masscenters but axess are opposite.
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     PinJoint('J', P, C, child_axis=-A.x)
 
     assert -A.x.angle_between(N.x) == 0
@@ -144,7 +144,7 @@ def test_pinjoint_arbitrary_axis():
 
     #When axes are different and parent joint is at masscenter but child joint is at a unit vector from
     #child masscenter.
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     PinJoint('J', P, C, child_axis=A.y, child_joint_pos=A.x)
 
     assert A.y.angle_between(N.x) == 0 #Axis are aligned
@@ -160,7 +160,7 @@ def test_pinjoint_arbitrary_axis():
     assert C.masscenter.vel(N).angle_between(A.x) == pi/2
 
     #Similar to previous case but wrt parent body
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     PinJoint('J', P, C, parent_axis=N.y, parent_joint_pos=N.x)
 
     assert N.y.angle_between(A.x) == 0 #Axis are aligned
@@ -174,7 +174,7 @@ def test_pinjoint_arbitrary_axis():
     assert C.masscenter.pos_from(P.masscenter) == N.x
 
     #Both joint pos id defined but different axes
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     PinJoint('J', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y)
     assert expand_mul(N.x.angle_between(A.x + A.y)) == 0 #Axis are aligned
     assert (A.x + A.y).express(N).simplify() == sqrt(2)*N.x
@@ -191,7 +191,7 @@ def test_pinjoint_arbitrary_axis():
     assert C.masscenter.vel(N).express(N).simplify() == - sqrt(2)*omega*sin(theta)/2*N.y + sqrt(2)*omega*cos(theta)/2*N.z
     assert C.masscenter.vel(N).angle_between(A.x) == pi/2
 
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     PinJoint('J', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y-A.z)
     assert expand_mul(N.x.angle_between(A.x + A.y - A.z)) == 0 #Axis are aligned
     assert (A.x + A.y - A.z).express(N).simplify() == sqrt(3)*N.x
@@ -209,7 +209,7 @@ def test_pinjoint_arbitrary_axis():
     assert C.masscenter.vel(N).express(N).simplify() == sqrt(6)*omega*cos(theta + pi/4)/3*N.y + sqrt(6)*omega*sin(theta + pi/4)/3*N.z
     assert C.masscenter.vel(N).angle_between(A.x) == pi/2
 
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     m, n = symbols('m n', positive=True)
     PinJoint('J', P, C, parent_joint_pos=m*N.x, child_joint_pos=n*A.x, child_axis=A.x+A.y-A.z, parent_axis=N.x-N.y+N.z)
     assert expand_mul((N.x-N.y+N.z).angle_between(A.x+A.y-A.z)) == 0 #Axis are aligned
@@ -261,7 +261,7 @@ def test_slidingjoint():
 def test_slidingjoint_arbitrary_axis():
     x, v = dynamicsymbols('S_x, S_v', positive=True)
 
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     SlidingJoint('S', P, C, child_axis=-A.x)
 
     assert -A.x.angle_between(N.x) == 0
@@ -273,7 +273,7 @@ def test_slidingjoint_arbitrary_axis():
 
     #When axes are different and parent joint is at masscenter but child joint is at a unit vector from
     #child masscenter.
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     SlidingJoint('S', P, C, child_axis=A.y, child_joint_pos=A.x)
 
     assert A.y.angle_between(N.x) == 0 #Axis are aligned
@@ -284,7 +284,7 @@ def test_slidingjoint_arbitrary_axis():
     assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == x*N.x + N.y 
 
     #Similar to previous case but wrt parent body
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     SlidingJoint('S', P, C, parent_axis=N.y, parent_joint_pos=N.x)
 
     assert N.y.angle_between(A.x) == 0 #Axis are aligned
@@ -294,7 +294,7 @@ def test_slidingjoint_arbitrary_axis():
     assert C.masscenter.pos_from(P.masscenter) == N.x + x*N.y
 
     #Both joint pos id defined but different axes
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     SlidingJoint('S', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y)
     assert N.x.angle_between(A.x + A.y) == 0 #Axis are aligned
     assert (A.x + A.y).express(N) == sqrt(2)*N.x
@@ -304,7 +304,7 @@ def test_slidingjoint_arbitrary_axis():
     assert C.masscenter.pos_from(P.masscenter).express(N) == (x - sqrt(2)/2 + 1)*N.x + sqrt(2)/2*N.y
     assert C.masscenter.vel(N).express(A) == v * (A.x + A.y)/sqrt(2)
 
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     SlidingJoint('S', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y-A.z)
     assert N.x.angle_between(A.x + A.y - A.z) == 0 #Axis are aligned
     assert (A.x + A.y - A.z).express(N) == sqrt(3)*N.x
@@ -314,7 +314,7 @@ def test_slidingjoint_arbitrary_axis():
         (x - sqrt(3)/3 + 1)*N.x + sqrt(3)/3*N.y - sqrt(3)/3*N.z
     assert C.masscenter.vel(N).express(A) == sqrt(3)*v/3*A.x + sqrt(3)*v/3*A.y - sqrt(3)*v/3*A.z
 
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     m, n = symbols('m n', positive=True)
     SlidingJoint('S', P, C, parent_joint_pos=m*N.x, child_joint_pos=n*A.x, child_axis=A.x+A.y-A.z, parent_axis=N.x-N.y+N.z)
     assert (N.x-N.y+N.z).angle_between(A.x+A.y-A.z) == 0 #Axis are aligned
