@@ -2265,9 +2265,7 @@ class Beam3D(Beam):
             subs = {}
 
         for sym in shear_force[dir_num].atoms(Symbol):
-            if sym == self.variable:
-                continue
-            if sym not in subs:
+            if sym != self.variable and sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
         if self.length in subs:
             length = subs[self.length]
@@ -2327,27 +2325,26 @@ class Beam3D(Beam):
             Plot[2]:Plot object containing:
             [0]: cartesian line: -15*x for x over (0.0, 20.0)
 
-
         """
 
         dir = dir.lower()
         # For shear force along x direction
         if dir == "x":
-            Px = self._plot_shear_force('x')
+            Px = self._plot_shear_force('x', subs)
             return Px.show()
         # For shear force along y direction
         elif dir == "y":
-            Py = self._plot_shear_force('y')
+            Py = self._plot_shear_force('y', subs)
             return Py.show()
         # For shear force along z direction
         elif dir == "z":
-            Pz = self._plot_shear_force('z')
+            Pz = self._plot_shear_force('z', subs)
             return Pz.show()
         # For shear force along all direction
         else:
-            Px = self._plot_shear_force('x')
-            Py = self._plot_shear_force('y')
-            Pz = self._plot_shear_force('z')
+            Px = self._plot_shear_force('x', subs)
+            Py = self._plot_shear_force('y', subs)
+            Pz = self._plot_shear_force('z', subs)
             return PlotGrid(3, 1, Px, Py, Pz)
 
     def _plot_bending_moment(self, dir, subs=None):
@@ -2356,23 +2353,21 @@ class Beam3D(Beam):
 
         if dir == 'x':
             dir_num = 0
-            color = 'r'
+            color = 'g'
 
         elif dir == 'y':
             dir_num = 1
-            color = 'g'
+            color = 'c'
 
         elif dir == 'z':
             dir_num = 2
-            color = 'b'
+            color = 'm'
 
         if subs is None:
             subs = {}
 
         for sym in bending_moment[dir_num].atoms(Symbol):
-            if sym == self.variable:
-                continue
-            if sym not in subs:
+            if sym != self.variable and sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
         if self.length in subs:
             length = subs[self.length]
@@ -2437,21 +2432,21 @@ class Beam3D(Beam):
         dir = dir.lower()
         # For bending moment along x direction
         if dir == "x":
-            Px = self._plot_bending_moment('x')
+            Px = self._plot_bending_moment('x', subs)
             return Px.show()
         # For bending moment along y direction
         elif dir == "y":
-            Py = self._plot_bending_moment('y')
+            Py = self._plot_bending_moment('y', subs)
             return Py.show()
         # For bending moment along z direction
         elif dir == "z":
-            Pz = self._plot_bending_moment('z')
+            Pz = self._plot_bending_moment('z', subs)
             return Pz.show()
         # For bending moment along all direction
         else:
-            Px = self._plot_bending_moment('x')
-            Py = self._plot_bending_moment('y')
-            Pz = self._plot_bending_moment('z')
+            Px = self._plot_bending_moment('x', subs)
+            Py = self._plot_bending_moment('y', subs)
+            Pz = self._plot_bending_moment('z', subs)
             return PlotGrid(3, 1, Px, Py, Pz)
 
     def _plot_slope(self, dir, subs=None):
@@ -2460,23 +2455,21 @@ class Beam3D(Beam):
 
         if dir == 'x':
             dir_num = 0
-            color = 'r'
+            color = 'b'
 
         elif dir == 'y':
             dir_num = 1
-            color = 'g'
+            color = 'm'
 
         elif dir == 'z':
             dir_num = 2
-            color = 'b'
+            color = 'g'
 
         if subs is None:
             subs = {}
 
         for sym in slope[dir_num].atoms(Symbol):
-            if sym == self.variable:
-                continue
-            if sym not in subs:
+            if sym != self.variable and sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
         if self.length in subs:
             length = subs[self.length]
@@ -2538,27 +2531,26 @@ class Beam3D(Beam):
             Plot[2]:Plot object containing:
             [0]: cartesian line: x**4/8000 - 19*x**2/172 + 52*x/43 for x over (0.0, 20.0)
 
-
         """
 
         dir = dir.lower()
         # For Slope along x direction
         if dir == "x":
-            Px = self._plot_slope('x')
+            Px = self._plot_slope('x', subs)
             return Px.show()
         # For Slope along y direction
         elif dir == "y":
-            Py = self._plot_slope('y')
+            Py = self._plot_slope('y', subs)
             return Py.show()
         # For Slope along z direction
         elif dir == "z":
-            Pz = self._plot_slope('z')
+            Pz = self._plot_slope('z', subs)
             return Pz.show()
         # For Slope along all direction
         else:
-            Px = self._plot_slope('x')
-            Py = self._plot_slope('y')
-            Pz = self._plot_slope('z')
+            Px = self._plot_slope('x', subs)
+            Py = self._plot_slope('y', subs)
+            Pz = self._plot_slope('z', subs)
             return PlotGrid(3, 1, Px, Py, Pz)
 
     def _plot_deflection(self, dir, subs=None):
@@ -2567,29 +2559,26 @@ class Beam3D(Beam):
 
         if dir == 'x':
             dir_num = 0
-            color = 'r'
+            color = 'm'
 
         elif dir == 'y':
             dir_num = 1
-            color = 'g'
+            color = 'r'
 
         elif dir == 'z':
             dir_num = 2
-            color = 'b'
+            color = 'c'
 
         if subs is None:
             subs = {}
 
         for sym in deflection[dir_num].atoms(Symbol):
-            if sym == self.variable:
-                continue
-            if sym not in subs:
+            if sym != self.variable and sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
         if self.length in subs:
             length = subs[self.length]
         else:
             length = self.length
-
 
         return plot(deflection[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Deflection along %c direction'%dir,
                 xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{\delta(%c)}$'%dir, line_color=color)
@@ -2651,24 +2640,24 @@ class Beam3D(Beam):
         dir = dir.lower()
         # For deflection along x direction
         if dir == "x":
-            Px = self._plot_deflection('x')
+            Px = self._plot_deflection('x', subs)
             return Px.show()
         # For deflection along y direction
         elif dir == "y":
-            Py = self._plot_deflection('y')
+            Py = self._plot_deflection('y', subs)
             return Py.show()
         # For deflection along z direction
         elif dir == "z":
-            Pz = self._plot_deflection('z')
+            Pz = self._plot_deflection('z', subs)
             return Pz.show()
         # For deflection along all direction
         else:
-            Px = self._plot_deflection('x')
-            Py = self._plot_deflection('y')
-            Pz = self._plot_deflection('z')
+            Px = self._plot_deflection('x', subs)
+            Py = self._plot_deflection('y', subs)
+            Pz = self._plot_deflection('z', subs)
             return PlotGrid(3, 1, Px, Py, Pz)
 
-    def plot_loading_results(self, dir=None, subs=None):
+    def plot_loading_results(self, dir='x', subs=None):
 
         """
 
@@ -2678,9 +2667,9 @@ class Beam3D(Beam):
         Parameters
         ==========
 
-        dir : string
+        dir : string (default : "x")
                Direction along which plots are required.
-               It is necessary to specify the direction for this function.
+               If no direction is specified, plots along x-axis are displayed.
         subs : dictionary
                Python dictionary containing Symbols as key and their
                corresponding values.
@@ -2700,7 +2689,8 @@ class Beam3D(Beam):
             >>> from sympy.physics.continuum_mechanics.beam import Beam3D
             >>> from sympy import symbols
             >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
-            >>> b = Beam3D(20, 40, 21, 100, 25, x)
+            >>> b = Beam3D(20, E, G, I, A, x)
+            >>> subs = {E:40, G:21, I:100, A:25}
             >>> b.apply_load(15, start=0, order=0, dir="z")
             >>> b.apply_load(12*x, start=0, order=0, dir="y")
             >>> b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
@@ -2711,7 +2701,7 @@ class Beam3D(Beam):
             >>> b.apply_load(R4, start=20, order=-1, dir="y")
             >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
             >>> b.solve_slope_deflection()
-            >>> b.plot_loading_results('y')
+            >>> b.plot_loading_results('y',subs)
             PlotGrid object containing:
             Plot[0]:Plot object containing:
             [0]: cartesian line: -6*x**2 for x over (0.0, 20.0)
@@ -2723,9 +2713,6 @@ class Beam3D(Beam):
             [0]: cartesian line: x**5/40000 - 4013*x**3/90300 + 26*x**2/43 + 1520*x/903 for x over (0.0, 20.0)
 
         """
-
-        if not dir:
-            raise ValueError('Direction was not passed.')
 
         dir = dir.lower();
         deflection = self.deflection()
@@ -2742,29 +2729,9 @@ class Beam3D(Beam):
         if subs is None:
             subs = {}
 
-        for sym in deflection[dir_num].atoms(Symbol):
-            if sym == self.variable:
-                continue
-            if sym not in subs:
-                raise ValueError('Value of %s was not passed.' %sym)
-        if self.length in subs:
-            length = subs[self.length]
-        else:
-            length = self.length
-
-        variable = self.variable
-
-        ax1 = plot(self.shear_force()[dir_num].subs(subs), (variable, 0, length),
-                   title='Shear Force along %c direction'%dir, xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{V(%c)}$'%dir,
-                   line_color='g', show=False)
-        ax2 = plot(self.bending_moment()[dir_num].subs(subs), (variable, 0, length),
-                   title='Bending Moment along %c direction'%dir, xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{M(%c)}$'%dir,
-                   line_color='b', show=False)
-        ax3 = plot(self.slope()[dir_num].subs(subs), (variable, 0, length),
-                   title='Slope along %c direction'%dir, xlabel=r'$\mathrm{X}$', ylabel=r'$\theta(%c)$'%dir,
-                   line_color='m', show=False)
-        ax4 = plot(self.deflection()[dir_num].subs(subs), (variable, 0, length),
-                   title='Deflection along %c direction'%dir, xlabel=r'$\mathrm{X}$', ylabel=r'$\delta(%c)$'%dir,
-                   line_color='r', show=False)
+        ax1 = self._plot_shear_force(dir, subs)
+        ax2 = self._plot_bending_moment(dir, subs)
+        ax3 = self._plot_slope(dir, subs)
+        ax4 = self._plot_deflection(dir, subs)
 
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
