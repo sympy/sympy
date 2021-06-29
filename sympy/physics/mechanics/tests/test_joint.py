@@ -231,7 +231,7 @@ def test_pinjoint_arbitrary_axis():
 def test_slidingjoint():
     P = Body('P')
     C = Body('C')
-    x, v = dynamicsymbols('S_x, S_v', positive=True)
+    x, v = dynamicsymbols('S_x, S_v', real=True)
     S = SlidingJoint('S', P, C)
     assert S._name == 'S'
     assert S.parent() == P
@@ -259,7 +259,7 @@ def test_slidingjoint():
     assert C.masscenter.vel(P.frame) == v * P.frame.z
 
 def test_slidingjoint_arbitrary_axis():
-    x, v = dynamicsymbols('S_x, S_v', positive=True)
+    x, v = dynamicsymbols('S_x, S_v', real=True)
 
     N, A, P, C = _generate_body()
     SlidingJoint('S', P, C, child_axis=-A.x)
@@ -315,7 +315,7 @@ def test_slidingjoint_arbitrary_axis():
     assert C.masscenter.vel(N).express(A) == sqrt(3)*v/3*A.x + sqrt(3)*v/3*A.y - sqrt(3)*v/3*A.z
 
     N, A, P, C = _generate_body()
-    m, n = symbols('m n', positive=True)
+    m, n = symbols('m n')
     SlidingJoint('S', P, C, parent_joint_pos=m*N.x, child_joint_pos=n*A.x, child_axis=A.x+A.y-A.z, parent_axis=N.x-N.y+N.z)
     assert (N.x-N.y+N.z).angle_between(A.x+A.y-A.z) == 0 #Axis are aligned
     assert (A.x-A.y+A.z).express(N) == - 5/3*N.x - 1/3*N.y + 1/3*N.z

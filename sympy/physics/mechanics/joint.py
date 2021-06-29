@@ -440,8 +440,9 @@ class SlidingJoint(Joint):
     Notes
     ======
 
-    All symbols and dynamicsymbols used with `Joints` should be used with correct
-    assumption, i.e. positive=True else it may give incorrect results in some cases.
+    All dynamicsymbols used in `Joints` are `real ` by default. It is adviced to use
+    `real=True` assumption when passing dynamicsymbols to `Joints` else it may give
+    incorrect result in some cases.
 
     """
 
@@ -454,7 +455,7 @@ class SlidingJoint(Joint):
     def _generate_coordinates(self, coordinate):
         coordinates = []
         if coordinate is None:
-            x = dynamicsymbols(self._name + '_x', positive=True)
+            x = dynamicsymbols(self._name + '_x', real=True)
             coordinate = x
         coordinates.append(coordinate)
         return coordinates
@@ -462,7 +463,7 @@ class SlidingJoint(Joint):
     def _generate_speeds(self, speed):
         speeds = []
         if speed is None:
-            y = dynamicsymbols(self._name + '_v', positive=True)
+            y = dynamicsymbols(self._name + '_v', real=True)
             speed = y
         speeds.append(speed)
         return speeds
