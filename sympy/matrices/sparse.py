@@ -340,7 +340,7 @@ class SparseMatrix(RepMatrix):
 
         See Also
         ========
-        sympy.matrices.sparse.MutableSparseMatrix.col_op
+
         sympy.matrices.sparse.SparseMatrix.row_list
         """
         return [tuple(k + (self[k],)) for k in sorted(list(self.todok().keys()), key=lambda k: list(reversed(k)))]
@@ -366,7 +366,7 @@ class SparseMatrix(RepMatrix):
 
         See Also
         ========
-        sympy.matrices.sparse.MutableSparseMatrix.row_op
+
         sympy.matrices.sparse.SparseMatrix.col_list
         """
         return [tuple(k + (self[k],)) for k in
