@@ -346,7 +346,7 @@ class Product(ExprWithIntLimits):
                     p = self._eval_product(t, (k, a, n))
 
                     if p is not None:
-                        exclude.append(p)
+                        exclude.extend(Mul.make_args(p))
                     else:
                         include.append(t)
 
@@ -354,9 +354,11 @@ class Product(ExprWithIntLimits):
                     return None
                 else:
                     arg = term._new_rawargs(*include)
-                    A = Mul(*exclude)
                     B = self.func(arg, (k, a, n)).doit()
-                    return without_k**(n - a + 1)*A * B
+                    args = [without_k**(n - a + 1), B] + exclude
+                    if not any(i.is_zero for i in args) or all(
+                            i.is_infinite is False for i in args):
+                        return Mul(*args)
             else:
                 # Just a single term
                 p = self._eval_product(with_k[0], (k, a, n))

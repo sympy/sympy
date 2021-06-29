@@ -292,16 +292,12 @@ class Pow(Expr):
             ).warn()
 
         if evaluate:
-            if b is S.Zero and e is S.NegativeInfinity:
-                return S.ComplexInfinity
             if e is S.ComplexInfinity:
                 return S.NaN
             if e is S.Zero:
                 return S.One
             elif e is S.One:
                 return b
-            elif e == -1 and not b:
-                return S.ComplexInfinity
             elif e.__class__.__name__ == "AccumulationBounds":
                 if b == S.Exp1:
                     from sympy import AccumBounds
@@ -313,12 +309,8 @@ class Pow(Expr):
                     b = -b
                 elif e.is_odd:
                     return -Pow(-b, e)
-            if S.NaN in (b, e):  # XXX S.NaN**x -> S.NaN under assumption that x != 0
+            if e is S.NaN:
                 return S.NaN
-            elif b is S.One:
-                if abs(e).is_infinite:
-                    return S.NaN
-                return S.One
             else:
                 # recognize base as E
                 if not e.is_Atom and b is not S.Exp1 and not isinstance(b, exp_polar):
@@ -593,6 +585,8 @@ class Pow(Expr):
             elif self.exp.is_nonnegative:
                 return False
             elif self.exp.is_infinite and self.exp.is_extended_real:
+                if (1 - self.base).is_zero:
+                    return False
                 if (1 - abs(self.base)).is_extended_positive:
                     return self.exp.is_extended_positive
                 elif (1 - abs(self.base)).is_extended_negative:
@@ -917,8 +911,8 @@ class Pow(Expr):
     def as_base_exp(self):
         """Return base and exp of self.
 
-        Explnation
-        ==========
+        Explanation
+        ===========
 
         If base is 1/Integer, then return Integer, -exp. If this extra
         processing is not needed, the base and exp properties will

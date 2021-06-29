@@ -659,6 +659,8 @@ def test_Infinity():
     assert 3*oo + 2 is oo
     assert S.Half**oo == 0
     assert S.Half**(-oo) is oo
+    assert pi**oo is oo
+    assert pi**-oo == 0
     assert -oo*3 is -oo
     assert oo + oo is oo
     assert -oo + oo*(-5) is -oo
@@ -1069,7 +1071,7 @@ def test_isqrt():
 def test_powers_Integer():
     """Test Integer._eval_power"""
     # check infinity
-    assert S.One ** S.Infinity is S.NaN
+    assert S.One ** S.Infinity is S.One
     assert S.NegativeOne** S.Infinity is S.NaN
     assert S(2) ** S.Infinity is S.Infinity
     assert S(-2)** S.Infinity == S.Infinity + S.Infinity * S.ImaginaryUnit
@@ -1705,7 +1707,9 @@ def test_zoo():
     assert zoo**zoo is S.NaN
     assert zoo**0 is S.One
     assert zoo**2 is zoo
-    assert 1/zoo is S.Zero
+    e = 1/zoo
+    assert e is not S.Zero
+    assert e == 0.0
 
     assert Mul.flatten([S.NegativeOne, oo, S(0)]) == ([S.NaN], [], None)
 
@@ -1961,9 +1965,13 @@ def test_issue_10063():
 def test_issue_10020():
     assert oo**I is S.NaN
     assert oo**(1 + I) is S.ComplexInfinity
-    assert oo**(-1 + I) is S.Zero
+    e = oo**(-1 + I)
+    assert e is not S.Zero
+    assert e == 0.0
     assert (-oo)**I is S.NaN
-    assert (-oo)**(-1 + I) is S.Zero
+    e = (-oo)**(-1 + I)
+    assert e is not S.Zero
+    assert e == 0.0
     assert oo**t == Pow(oo, t, evaluate=False)
     assert (-oo)**t == Pow(-oo, t, evaluate=False)
 
@@ -2165,3 +2173,8 @@ def test_abc():
 
 def test_floordiv():
     assert S(2)//S.Half == 4
+
+
+def test_zero_negation():
+    a = Float(0)
+    assert -a is not S.Zero and a == 0

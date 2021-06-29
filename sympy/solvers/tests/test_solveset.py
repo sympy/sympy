@@ -2391,8 +2391,7 @@ def test_exponential_symbols():
         ConditionSet(w, Eq(w**w, 0), Interval.open(0, oo)))
     assert solveset(x**y - 1, y, S.Reals) == FiniteSet(0)
     assert solveset(exp(x/y)*exp(-z/y) - 2, y, S.Reals) == \
-    Complement(ConditionSet(y, Eq(im(x)/y, 0) & Eq(im(z)/y, 0), \
-    Complement(Intersection(FiniteSet((x - z)/log(2)), S.Reals), FiniteSet(0))), FiniteSet(0))
+    Complement(FiniteSet((x - z)/log(2)), FiniteSet(0, 0.0))
     assert solveset(exp(xr/y)*exp(-zr/y) - 2, y, S.Reals) == \
         Complement(FiniteSet((xr - zr)/log(2)), FiniteSet(0))
 

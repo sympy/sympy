@@ -237,8 +237,6 @@ def test_power_rewrite_exp():
     assert expr.rewrite(exp).expand() == 15625*exp(7*I*log(5))
 
     assert Pow(123, 789, evaluate=False).rewrite(exp) == 123**789
-    assert (1**I).rewrite(exp) == 1**I
-    assert (0**I).rewrite(exp) == 0**I
 
     expr = (-2)**(2 + 5*I)
     assert expr.rewrite(exp) == exp((2 + 5*I)*(log(2) + I*pi))
@@ -262,6 +260,7 @@ def test_power_rewrite_exp():
 def test_zero():
     x = Symbol('x')
     y = Symbol('y')
+    assert 0**I is S.NaN
     assert 0**x != 0
     assert 0**(2*x) == 0**x
     assert 0**(1.0*x) == 0**x
@@ -270,10 +269,24 @@ def test_zero():
     assert 0**(x - 2) != S.Infinity**(2 - x)
     assert 0**(2*x*y) == 0**(x*y)
     assert 0**(-2*x*y) == S.ComplexInfinity**(x*y)
+    assert Float(0)**2 is not S.Zero
+    assert Float(0)**2 == 0.0
+    assert Float(0)**-2 is zoo
+    assert Float(0)**oo is not S.Zero
+    assert Float(0)**oo == 0.0
 
     #Test issue 19572
     assert 0 ** -oo is zoo
     assert power(0, -oo) is zoo
+    assert Float(0)**-oo is zoo
+
+
+def test_oo():
+    assert 1/oo is not S.Zero
+    assert 1/oo == 0.0
+    assert oo**-oo is not S.Zero
+    assert oo**-oo == 0.0
+
 
 def test_pow_as_base_exp():
     x = Symbol('x')
@@ -404,13 +417,17 @@ def test_issue_7638():
     assert sqrt((1 + I*r)**6) != (1 + I*r)**3
 
 
-def test_issue_8582():
-    assert 1**oo is nan
-    assert 1**(-oo) is nan
+def test_one_pow():
+    # issue 8582
+    assert 1**oo is S.One
+    assert 1**(-oo) is S.One
     assert 1**zoo is nan
     assert 1**(oo + I) is nan
     assert 1**(1 + I*oo) is nan
     assert 1**(oo + I*oo) is nan
+    assert 1**I is S.One
+    assert 1**Symbol('', extended_real=False) is nan
+    assert 1**Symbol('', extended_real=False, infinite=False) is S.One
 
 
 def test_issue_8650():
@@ -528,6 +545,7 @@ def test_issue_2993():
     # is done improperly
     assert seq == tru
 
+
 def test_issue_17450():
     assert (erf(cosh(1)**7)**I).is_real is None
     assert (erf(cosh(1)**7)**I).is_imaginary is False
@@ -554,8 +572,10 @@ def test_issue_14815():
 
 
 def test_issue_18509():
-    assert unchanged(Mul, oo, 1/pi**oo)
+    assert 2**oo / pi**oo is S.NaN
     assert (1/pi**oo).is_extended_positive == False
+    # since we don't use evaluation in _eval_power
+    assert unchanged(Pow, 2/pi, oo)
 
 
 def test_issue_18762():
@@ -593,3 +613,18 @@ def test_powers_of_I():
         1, sqrt(I), I, sqrt(I)**3, -1, -sqrt(I), -I, -sqrt(I)**3,
         1, sqrt(I), I, sqrt(I)**3, -1]
     assert sqrt(I)**(S(9)/2) == -I**(S(1)/4)
+
+
+def test_indeterminant_forms():
+    x = symbols('x')
+    assert ((1 + 1/x)**x).subs(x, oo) is S.NaN
+    assert (x**oo).subs(x, 1) is S.One
+    assert (1**x).subs(x, oo) is S.One
+    # by making 1/oo -> 0.0 with 0.0**oo -> nan
+    # this freshman limit does not evaluate
+    assert ((1 + 1/x)**x).subs(x, oo)
+
+
+def test_Number_to_oo():
+    assert 2**oo is S.Infinity
+    assert pi**oo is S.Infinity

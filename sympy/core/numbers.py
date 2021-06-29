@@ -763,7 +763,7 @@ class Number(AtomicExpr):
             if other is S.NaN:
                 return S.NaN
             elif other is S.Infinity or other is S.NegativeInfinity:
-                return S.Zero
+                return Float(0)
         return AtomicExpr.__truediv__(self, other)
 
     def __eq__(self, other):
@@ -1283,6 +1283,8 @@ class Float(Number):
         return self._mpf_ != fzero
 
     def __neg__(self):
+        if not self:
+            return self
         return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
 
     @_sympifyit('other', NotImplemented)
@@ -1345,10 +1347,10 @@ class Float(Number):
                   -> p**r*(sin(Pi*r) + cos(Pi*r)*I)
         """
         if self == 0:
-            if expt.is_positive:
-                return S.Zero
-            if expt.is_negative:
-                return S.Infinity
+            if expt.is_extended_positive:
+                return Float(0)
+            if expt.is_extended_negative:
+                return S.ComplexInfinity
         if isinstance(expt, Number):
             if isinstance(expt, Integer):
                 prec = self._prec
@@ -1810,8 +1812,8 @@ class Rational(Number):
                     return S.Infinity
                 if self.p < -self.q:
                     # (-3/2)**oo -> oo + I*oo
-                    return S.Infinity + S.Infinity*S.ImaginaryUnit
-                return S.Zero
+                    return S.Infinity + S.Infinity*S.ImaginaryUnit  # XXX just zoo?
+                return Float(0)
             if isinstance(expt, Integer):
                 # (4/3)**2 -> 4**2 / 3**2
                 return Rational(self.p**expt.p, self.q**expt.p, 1)
@@ -2689,9 +2691,9 @@ class Zero(IntegerConstant, metaclass=Singleton):
         return S.Zero
 
     def _eval_power(self, expt):
-        if expt.is_positive:
+        if expt.is_extended_positive:
             return self
-        if expt.is_negative:
+        if expt.is_extended_negative:
             return S.ComplexInfinity
         if expt.is_extended_real is False:
             return S.NaN
@@ -2753,6 +2755,8 @@ class One(IntegerConstant, metaclass=Singleton):
         return S.NegativeOne
 
     def _eval_power(self, expt):
+        if expt.is_extended_real is False and expt.is_infinite is not False:
+            return S.NaN
         return self
 
     def _eval_order(self, *symbols):
@@ -3004,7 +3008,7 @@ class Infinity(Number, metaclass=Singleton):
         if expt.is_extended_positive:
             return S.Infinity
         if expt.is_extended_negative:
-            return S.Zero
+            return Float(0)
         if expt is S.NaN:
             return S.NaN
         if expt is S.ComplexInfinity:
@@ -3014,7 +3018,7 @@ class Infinity(Number, metaclass=Singleton):
             if expt_real.is_positive:
                 return S.ComplexInfinity
             if expt_real.is_negative:
-                return S.Zero
+                return Float(0)
             if expt_real.is_zero:
                 return S.NaN
 
@@ -3181,7 +3185,11 @@ class NegativeInfinity(Number, metaclass=Singleton):
                 else:
                     return S.Infinity
 
-            return S.NegativeOne**expt*S.Infinity**expt
+            inf_part = S.Infinity**expt
+            s_part = S.NegativeOne**expt
+            if inf_part == 0 and s_part.is_finite:
+                return inf_part
+            return s_part*inf_part
 
     def _as_mpf_val(self, prec):
         return mlib.fninf
@@ -3312,6 +3320,10 @@ class NaN(Number, metaclass=Singleton):
     def __truediv__(self, other):
         return self
 
+    def _eval_power(self, expt):
+        # XXX S.NaN**x -> S.NaN under assumption that x != 0
+        return self
+
     def floor(self):
         return self
 
@@ -3422,7 +3434,7 @@ class ComplexInfinity(AtomicExpr, metaclass=Singleton):
                 if expt.is_positive:
                     return S.ComplexInfinity
                 else:
-                    return S.Zero
+                    return Float(0)
 
     def _sage_(self):
         import sage.all as sage
@@ -3456,6 +3468,13 @@ class NumberSymbol(AtomicExpr):
     def _eval_evalf(self, prec):
         return Float._new(self._as_mpf_val(prec), prec)
 
+    def _eval_power(self, e):
+        if self.is_positive and e is S.NegativeInfinity:
+            e = -e
+            self = 1/self
+        if e is S.Infinity:
+            return Float(0) if self < 1 else S.Infinity
+
     def __eq__(self, other):
         try:
             other = _sympify(other)
@@ -3487,6 +3506,7 @@ class NumberSymbol(AtomicExpr):
 
     def __hash__(self):
         return super().__hash__()
+
 
 class Exp1(NumberSymbol, metaclass=Singleton):
     r"""The `e` constant.
