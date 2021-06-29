@@ -237,38 +237,6 @@ class SparseMatrix(RepMatrix):
                         iszerofunc=kwargs.get('iszerofunc', _iszero),
                         try_block_diag=kwargs.get('try_block_diag', False))
 
-    def _eval_col_insert(self, icol, other):
-        if not isinstance(other, SparseMatrix):
-            other = MutableSparseMatrix(other)
-        new_smat = {}
-        # make room for the new rows
-        for key, val in self.todok().items():
-            row, col = key
-            if col >= icol:
-                col += other.cols
-            new_smat[row, col] = val
-        # add other's keys
-        for key, val in other.todok().items():
-            row, col = key
-            new_smat[row, col + icol] = val
-        return self._new(self.rows, self.cols + other.cols, new_smat)
-
-    def _eval_row_insert(self, irow, other):
-        if not isinstance(other, SparseMatrix):
-            other = MutableSparseMatrix(other)
-        new_smat = {}
-        # make room for the new rows
-        for key, val in self.todok().items():
-            row, col = key
-            if row >= irow:
-                row += other.rows
-            new_smat[row, col] = val
-        # add other's keys
-        for key, val in other.todok().items():
-            row, col = key
-            new_smat[row + irow, col] = val
-        return self._new(self.rows + other.rows, self.cols, new_smat)
-
     def applyfunc(self, f):
         """Apply a function to each element of the matrix.
 

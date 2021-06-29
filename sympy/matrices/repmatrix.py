@@ -280,6 +280,14 @@ class MutableRepMatrix(RepMatrix):
         self._rep = DomainMatrix.vstack(self._rep[:row,:], self._rep[row+1:, :])
         self.rows -= 1
 
+    def _eval_col_insert(self, col, other):
+        other = self._new(other)
+        return self.hstack(self[:,:col], other, self[:,col:])
+
+    def _eval_row_insert(self, row, other):
+        other = self._new(other)
+        return self.vstack(self[:row,:], other, self[row:,:])
+
     def col_op(self, j, f):
         """In-place operation on col j using two-arg functor whose args are
         interpreted as (self[i, j], i).
