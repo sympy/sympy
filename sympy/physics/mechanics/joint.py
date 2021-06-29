@@ -136,6 +136,8 @@ class Joint(ABC):
             return ax
         if not isinstance(ax, Vector):
             raise TypeError("Axis must be of type Vector. Example-> A.x wehere 'A' is ReferenceFrame.")
+        if not ax.dt(body.frame) == 0:
+            raise ValueError('Axis cannot be time-varying.')
         return ax
 
     def _locate_joint_pos(self, body, joint_pos):
@@ -143,6 +145,8 @@ class Joint(ABC):
             joint_pos = Vector(0)
         if not isinstance(joint_pos, Vector):
             raise ValueError('Joint Position must be supplied as Vector.')
+        if not joint_pos.dt(body.frame) == 0:
+            raise ValueError('Position Vector cannot be time-varying.')
         return body.masscenter.locatenew(self._name + '_' + body.name + '_joint', joint_pos)
 
     def _align_axis(self, parent, child):
