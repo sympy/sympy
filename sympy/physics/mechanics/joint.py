@@ -206,11 +206,11 @@ class PinJoint(Joint):
         >>> child = Body('child')
         >>> P = PinJoint('P', parent, child)
         >>> P.coordinates()
-        [P_theta(t)]
+        [theta_P(t)]
         >>> P.speeds()
-        [P_omega(t)]
+        [omega_P(t)]
         >>> P.kdes()
-        [P_omega(t) - Derivative(P_theta(t), t)]
+        [omega_P(t) - Derivative(theta_P(t), t)]
 
     This is an example of double pendulum where we will do all kinematics
     using PinJoints.
@@ -282,27 +282,27 @@ class PinJoint(Joint):
         >>> J1 = PinJoint('J1', C, rod, child_joint_pos=lA, parent_axis=C.frame.y, child_axis=rod.frame.y)
         >>> J2 = PinJoint('J2', rod, plate, parent_joint_pos=lC, parent_axis=rod.frame.z, child_axis=plate.frame.z)
         >>> J1.kdes()
-        [J1_omega(t) - Derivative(J1_theta(t), t)]
+        [omega_J1(t) - Derivative(theta_J1(t), t)]
         >>> J2.kdes()
-        [J2_omega(t) - Derivative(J2_theta(t), t)]
+        [omega_J2(t) - Derivative(theta_J2(t), t)]
         >>> rod.masscenter.vel(C.frame)
-        (h/4 - lB/2)*J1_omega(t)*rod_frame.x
+        (h/4 - lB/2)*omega_J1(t)*rod_frame.x
         >>> plate.masscenter.vel(C.frame)
-        ((h/4 - lB/2)*J1_omega(t) + (h/4 + lB/2)*J1_omega(t))*rod_frame.x
+        ((h/4 - lB/2)*omega_J1(t) + (h/4 + lB/2)*omega_J1(t))*rod_frame.x
         >>> rod.frame.ang_vel_in(C.frame)
-        J1_omega(t)*C_frame.y
+        omega_J1(t)*C_frame.y
         >>> plate.frame.ang_vel_in(C.frame)
-        J2_omega(t)*rod_frame.z + J1_omega(t)*C_frame.y
+        omega_J2(t)*rod_frame.z + omega_J1(t)*C_frame.y
         >>> rod.frame.dcm(C.frame)
         Matrix([
-        [cos(J1_theta(t)), 0, -sin(J1_theta(t))],
+        [cos(theta_J1(t)), 0, -sin(theta_J1(t))],
         [               0, 1,                 0],
-        [sin(J1_theta(t)), 0,  cos(J1_theta(t))]])
+        [sin(theta_J1(t)), 0,  cos(theta_J1(t))]])
         >>> plate.frame.dcm(C.frame)
         Matrix([
-        [ cos(J1_theta(t))*cos(J2_theta(t)), sin(J2_theta(t)), -sin(J1_theta(t))*cos(J2_theta(t))],
-        [-sin(J2_theta(t))*cos(J1_theta(t)), cos(J2_theta(t)),  sin(J1_theta(t))*sin(J2_theta(t))],
-        [                  sin(J1_theta(t)),                0,                   cos(J1_theta(t))]])
+        [ cos(theta_J1(t))*cos(theta_J2(t)), sin(theta_J2(t)), -sin(theta_J1(t))*cos(theta_J2(t))],
+        [-sin(theta_J2(t))*cos(theta_J1(t)), cos(theta_J2(t)),  sin(theta_J1(t))*sin(theta_J2(t))],
+        [                  sin(theta_J1(t)),                0,                   cos(theta_J1(t))]])
 
     Notes
     ======
@@ -322,7 +322,7 @@ class PinJoint(Joint):
     def _generate_coordinates(self, coordinate):
         coordinates = []
         if coordinate is None:
-            theta = dynamicsymbols(self._name + '_theta', real=True)
+            theta = dynamicsymbols('theta' + '_' + self._name, real=True)
             coordinate = theta
         coordinates.append(coordinate)
         return coordinates
@@ -330,7 +330,7 @@ class PinJoint(Joint):
     def _generate_speeds(self, speed):
         speeds = []
         if speed is None:
-            omega = dynamicsymbols(self._name + '_omega', real=True)
+            omega = dynamicsymbols('omega' + '_' + self._name, real=True)
             speed = omega
         speeds.append(speed)
         return speeds

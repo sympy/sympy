@@ -18,7 +18,7 @@ def test_pinjoint():
     P = Body('P')
     C = Body('C')
     l, m = symbols('l m')
-    theta, omega = dynamicsymbols('J_theta, J_omega', real=True)
+    theta, omega = dynamicsymbols('theta_J, omega_J', real=True)
 
     Pj = PinJoint('J', P, C )
     assert Pj._name == 'J'
@@ -126,7 +126,7 @@ def test_pinjoint_arbitrary_axis():
         C = Body('C', frame=A)
         return N, A, P, C
 
-    theta, omega = dynamicsymbols('J_theta, J_omega', real=True)
+    theta, omega = dynamicsymbols('theta_J, omega_J', real=True)
 
     #When the bodies are attached though masscenters but axess are opposite.
     N, A, P, C = generate_body()
