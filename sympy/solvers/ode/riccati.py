@@ -183,6 +183,7 @@ from sympy.polys.domains import ZZ
 from sympy.polys.polytools import Poly
 from sympy.polys.polyroots import roots
 from sympy.solvers.solveset import linsolve
+from sympy.tensor.indexed import IndexedBase, Indexed
 
 def riccati_normal(w, x, b1, b2):
     # y(x) = -b2(x)*w(x) - b2'(x)/(2*b2(x)) - b1(x)/2
@@ -307,8 +308,8 @@ def limit_at_inf(num, den, x):
 def construct_c_case_1(num, den, x, pole):
     # Find the coefficient of 1/(x - pole)**2 in the
     # Laurent series expansion of a(x) about pole.
-    sgn, num1, den1 = (num*Poly((x - pole)**2, x, extension=True)).cancel(den)
-    r = (sgn*num1.subs(x, pole))/(den1.subs(x, pole))
+    num1, den1 = (num*Poly((x - pole)**2, x, extension=True)).cancel(den, include=True)
+    r = (num1.subs(x, pole))/(den1.subs(x, pole))
 
     # If multiplicity is 2, the coefficient to be added
     # in the c-vector is c = (1 +- sqrt(1 + 4*r))/2
@@ -333,6 +334,8 @@ def construct_c_case_2(num, den, x, pole, mul):
     cplus[ri-1] = sqrt(ser[0])
 
     # Iterate backwards to find all coefficients
+    s = ri - 1
+    sm = 0
     for s in range(ri-1, 0, -1):
         sm = 0
         for j in range(s+1, ri):
@@ -399,15 +402,15 @@ def construct_d_case_4(ser, N, mul):
     return [dplus, dminus]
 
 
-def construct_d_case_5(ser, mul):
+def construct_d_case_5(ser):
     # List to store coefficients for plus case
     dplus = [0, 0]
 
     # d_0  = sqrt(a_0)
-    dplus[0] = sqrt(ser[-mul - 1])
+    dplus[0] = sqrt(ser[-1])
 
     # d_(-1) = a_(-1)/(2*d_0)
-    dplus[-1] = ser[-mul - 2]/(2*dplus[0])
+    dplus[-1] = ser[-2]/(2*dplus[0])
 
     # Coefficients for the minus case are just the negative
     # of the coefficients for the positive case.
@@ -437,7 +440,7 @@ def construct_d(num, den, x, val_inf):
 
     # Case 5
     elif val_inf == 0:
-        d = construct_d_case_5(ser, mul)
+        d = construct_d_case_5(ser)
 
     # Case 6
     else:
@@ -447,43 +450,43 @@ def construct_d(num, den, x, val_inf):
 
 
 def rational_laurent_series(num, den, x, x0, mul, n):
-    one = Poly(1, x)
+    m = symbols('m')
+    one = Poly(1, x, extension=True)
     reverse = False
     if x0 == oo:
         num, den = inverse_transform_poly(num, den, x)
         reverse = True
-        x0 = 0
-    if x0 != 0:
-        num = num.transform(Poly(x + x0, x), one)
-        den = den.transform(Poly(x + x0, x), one)
+        x0 = S(0)
+    if x0:
+        num = num.transform(Poly(x + x0, x, extension=True), one)
+        den = den.transform(Poly(x + x0, x, extension=True), one)
         num, den = num.cancel(den, include=True)
     num, den = (num*x**mul).cancel(den, include=True)
 
+    c = IndexedBase('c')
     coeff_max = max(den.degree(x), num.degree(x) + 1)
-    c = list(symbols(f'c:{coeff_max}', cls=Dummy))
-    out = Poly(0, x, domain=ZZ[c])
-    rcoeffs = []
-
+    indices = [c[i] for i in range(-mul, max(n, coeff_max))]
+    out, sums = Poly(0, x, domain=ZZ[indices]), 0
     for pw, cf in den.as_dict().items():
         pw = pw[0]
         for i in range(pw, coeff_max):
-            out += Poly(cf*c[i - pw]*x**i, x, domain=ZZ[c])
-        rcoeffs.append((cf, -pw))
+            out += Poly(cf*c[i - pw]*x**i, x, domain=ZZ[indices + [S(x0)]])
+        sums += cf*c[m - pw]
 
-    sols = list(linsolve((num - out).all_coeffs(), c, x))
-    if len(sols):
-        c[:len(sols)] = sols[0]
-        for i in range(len(sols), n + mul):
-            sums = sum([cf*c[i - pw] for cf, pw in rcoeffs])
-            sol = list(linsolve([sums], [c[i]], x))
-            if len(sol):
-                c[i] = sol[0][0]
-    for i in range(len(c)):
-        if len(S(c[i]).atoms(Dummy)):
-            c = c[:i]
-            break
-    return c[::-1] if reverse else c
-
+    if out:
+        coeffs = linsolve_dict((num - out).all_coeffs(), list(out.atoms(Indexed)))
+        for i in range(len(coeffs), n + mul):
+            ai = linsolve_dict([sums.subs(m, i).subs(coeffs)], [c[i]])
+            if len(ai) > 0:
+                coeffs.update({c[i]: list(ai.values())[0]})
+        coeffs = list(coeffs.items())
+        coeffs.sort(key = lambda x: x[0].indices[0])
+        coeffs = list(map(lambda x: x[1], coeffs))
+    else:
+        coeffs = list(map(lambda x: x/den, num.as_dict().values()))
+    if reverse:
+        coeffs = coeffs[::-1]
+    return coeffs[: n + mul + 1]
 
 def compute_m_ybar(x, poles, choice, c, d, N):
     ybar = 0
@@ -493,12 +496,7 @@ def compute_m_ybar(x, poles, choice, c, d, N):
     # as given in Step 9 of the Thesis (Pg 82)
     for i in range(len(poles)):
         for j in range(len(c[i][choice[i + 1]])):
-            # If one of the poles is infinity and its coefficient is
-            # not zero, the given solution is invalid as there will be
-            # a c/(x - oo)^j term in ybar for some c and j
-            if poles[i] != oo:
-                # return m, ybar, ybar, ybar, False
-                ybar += c[i][choice[i + 1]][j]/(x - poles[i])**(j+1)
+            ybar += c[i][choice[i + 1]][j]/(x - poles[i])**(j+1)
         m -= Poly(c[i][choice[i + 1]][0], x, extension=True)
 
     # Calculate the second summation for ybar
