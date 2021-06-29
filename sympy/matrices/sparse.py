@@ -3,7 +3,6 @@ from collections.abc import Callable
 from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.containers import Dict
 from sympy.core.singleton import S
-from sympy.functions import Abs
 
 from .dense import Matrix
 from .matrices import MatrixBase, ShapeError
@@ -240,9 +239,6 @@ class SparseMatrix(RepMatrix):
                         iszerofunc=kwargs.get('iszerofunc', _iszero),
                         try_block_diag=kwargs.get('try_block_diag', False))
 
-    def _eval_Abs(self):
-        return self.applyfunc(lambda x: Abs(x))
-
     def _eval_col_insert(self, icol, other):
         if not isinstance(other, SparseMatrix):
             other = MutableSparseMatrix(other)
@@ -258,18 +254,6 @@ class SparseMatrix(RepMatrix):
             row, col = key
             new_smat[row, col + icol] = val
         return self._new(self.rows, self.cols + other.cols, new_smat)
-
-    def _eval_conjugate(self):
-        return self.applyfunc(lambda e: e.conjugate())
-
-    def _eval_has(self, *patterns):
-        # if the matrix has any zeros, see if S.Zero
-        # has the pattern.  If _smat is full length,
-        # the matrix has no zeros.
-        zhas = S.Zero.has(*patterns)
-        if len(self.todok()) == self.rows*self.cols:
-            zhas = False
-        return zhas or any(value.has(*patterns) for value in self.todok().values())
 
     def _eval_is_Identity(self):
         if not all(self[i, i] == 1 for i in range(self.rows)):
@@ -396,9 +380,6 @@ class SparseMatrix(RepMatrix):
         sympy.matrices.sparse.SparseMatrix.row_list
         """
         return [tuple(k + (self[k],)) for k in sorted(list(self.todok().keys()), key=lambda k: list(reversed(k)))]
-
-    def copy(self):
-        return self._fromrep(self._rep.copy())
 
     def nnz(self):
         """Returns the number of non-zero elements in Matrix."""

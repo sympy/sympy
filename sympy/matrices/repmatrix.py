@@ -6,6 +6,7 @@ from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.core.sympify import _sympify, SympifyError
 from sympy.polys.domains import ZZ, QQ, EXRAW
 from sympy.polys.matrices import DomainMatrix
+from sympy.core.singleton import S
 
 from .common import classof
 from .matrices import MatrixBase, MatrixKind
@@ -38,6 +39,9 @@ class RepMatrix(MatrixBase):
     def _eval_values(self):
         return list(self.todok().values())
 
+    def copy(self):
+        return self._fromrep(self._rep.copy())
+
     @property
     def kind(self):
         domain = self._rep.domain
@@ -52,6 +56,15 @@ class RepMatrix(MatrixBase):
         else: # pragma: no cover
             raise RuntimeError("Domain should only be ZZ, QQ or EXRAW")
         return MatrixKind(element_kind)
+
+    def _eval_has(self, *patterns):
+        # if the matrix has any zeros, see if S.Zero
+        # has the pattern.  If _smat is full length,
+        # the matrix has no zeros.
+        zhas = False
+        if len(self.todok()) != self.rows*self.cols:
+            zhas = S.Zero.has(*patterns)
+        return zhas or any(value.has(*patterns) for value in self.values())
 
     def _eval_extract(self, rowsList, colsList):
         return self._fromrep(self._rep.extract(rowsList, colsList))
@@ -86,6 +99,17 @@ class RepMatrix(MatrixBase):
     def _eval_scalar_rmul(self, other):
         rep, other = self._unify_element_sympy(self._rep, other)
         return self._fromrep(rep.rscalarmul(other))
+
+    def _eval_Abs(self):
+        return self._fromrep(self._rep.applyfunc(abs))
+
+    def _eval_conjugate(self):
+        rep = self._rep
+        domain = rep.domain
+        if domain in (ZZ, QQ):
+            return self.copy()
+        else:
+            return self._fromrep(rep.applyfunc(lambda e: e.conjugate()))
 
     def equals(self, other, failing_expression=False):
         """Applies ``equals`` to corresponding elements of the matrices,
