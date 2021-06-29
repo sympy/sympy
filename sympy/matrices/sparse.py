@@ -3,7 +3,7 @@ from collections.abc import Callable
 from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.containers import Dict
 
-from .matrices import MatrixBase, ShapeError
+from .matrices import MatrixBase
 from .repmatrix import MutableRepMatrix, RepMatrix
 
 from .utilities import _iszero
