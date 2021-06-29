@@ -401,9 +401,9 @@ class SlidingJoint(Joint):
     >>> child = Body('child')
     >>> P = SlidingJoint('P', parent, child)
     >>> P.coordinates()
-    [P_x(t)]
+    [x_P(t)]
     >>> P.speeds()
-    [P_v(t)]
+    [v_P(t)]
 
     This is an example of linear mass spring damper where we will do all kinematics
     using SlidingJoints.
@@ -455,7 +455,7 @@ class SlidingJoint(Joint):
     def _generate_coordinates(self, coordinate):
         coordinates = []
         if coordinate is None:
-            x = dynamicsymbols(self._name + '_x', real=True)
+            x = dynamicsymbols('x' + '_' + self._name, real=True)
             coordinate = x
         coordinates.append(coordinate)
         return coordinates
@@ -463,7 +463,7 @@ class SlidingJoint(Joint):
     def _generate_speeds(self, speed):
         speeds = []
         if speed is None:
-            y = dynamicsymbols(self._name + '_v', real=True)
+            y = dynamicsymbols('v' + '_' + self._name, real=True)
             speed = y
         speeds.append(speed)
         return speeds

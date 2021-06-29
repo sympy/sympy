@@ -231,7 +231,7 @@ def test_pinjoint_arbitrary_axis():
 def test_slidingjoint():
     P = Body('P')
     C = Body('C')
-    x, v = dynamicsymbols('S_x, S_v', real=True)
+    x, v = dynamicsymbols('x_S, v_S', real=True)
     S = SlidingJoint('S', P, C)
     assert S._name == 'S'
     assert S.parent() == P
@@ -259,7 +259,7 @@ def test_slidingjoint():
     assert C.masscenter.vel(P.frame) == v * P.frame.z
 
 def test_slidingjoint_arbitrary_axis():
-    x, v = dynamicsymbols('S_x, S_v', real=True)
+    x, v = dynamicsymbols('x_S, v_S', real=True)
 
     N, A, P, C = _generate_body()
     SlidingJoint('S', P, C, child_axis=-A.x)
