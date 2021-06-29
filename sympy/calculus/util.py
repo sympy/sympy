@@ -1287,27 +1287,44 @@ class AccumulationBounds(AtomicExpr):
             if other.is_extended_real:
                 if other.is_zero:
                     return S.Zero
-                if (self.min.is_extended_nonpositive and self.max.is_extended_nonnegative):
+                if (self.min.is_extended_nonpositive and
+                        self.max.is_extended_nonnegative):
                     if self.min.is_zero:
+                        invM = 1/self.max if not self.max.is_infinite else 0
                         if other.is_extended_positive:
-                            return AccumBounds(Mul(other, 1 / self.max), oo)
+                            return AccumBounds(Mul(other, invM), oo)
                         if other.is_extended_negative:
-                            return AccumBounds(-oo, Mul(other, 1 / self.max))
+                            return AccumBounds(-oo, Mul(other, invM))
                     if self.max.is_zero:
+                        invM = 1/self.min if not self.min.is_infinite else 0
                         if other.is_extended_positive:
-                            return AccumBounds(-oo, Mul(other, 1 / self.min))
+                            return AccumBounds(-oo, Mul(other, invM))
                         if other.is_extended_negative:
-                            return AccumBounds(Mul(other, 1 / self.min), oo)
+                            return AccumBounds(Mul(other, invM), oo)
                     return AccumBounds(-oo, oo)
                 else:
-                    return AccumBounds(Min(other / self.min, other / self.max),
-                                       Max(other / self.min, other / self.max))
+                    args = [other/i if not i.is_infinite
+                        else 0 for i in self.args]
+                    if args[0] > args[1]:
+                        args = args[::-1]
+                    return AccumBounds(*args)
             return Mul(other, 1 / self, evaluate=False)
         else:
             return NotImplemented
 
     @_sympifyit('other', NotImplemented)
     def __pow__(self, other):
+        def _pow(e, *a):
+            def p(b, e):
+                if b.is_Float or e.is_Float:
+                    return b**e
+                rv = b**e
+                if rv.is_Float:
+                    assert rv == int(rv)
+                    return int(rv)
+                return rv
+            rv = [p(i, e) for i in a]
+            return rv[0] if len(a) == 1 else rv
         if isinstance(other, Expr):
             if other is S.Infinity:
                 if self.min.is_extended_nonnegative:
@@ -1339,38 +1356,41 @@ class AccumulationBounds(AtomicExpr):
                     # no 0 to worry about
                     if other.is_nonnegative:
                         # no infinity to worry about
-                        return self.func(self.min**other, self.max**other)
+                        return self.func(
+                            _pow(other, self.min),
+                            _pow(other, self.max))
 
             if other.is_zero:
                 return S.One  # x**0 = 1
 
             if other.is_Integer or other.is_integer:
+                args = _pow(other, self.min, self.max)
                 if self.min.is_extended_positive:
                     return AccumBounds(
-                        Min(self.min**other, self.max**other),
-                        Max(self.min**other, self.max**other))
+                        Min(*args),
+                        Max(*args))
                 elif self.max.is_extended_negative:
                     return AccumBounds(
-                        Min(self.max**other, self.min**other),
-                        Max(self.max**other, self.min**other))
+                        Min(*args),
+                        Max(*args))
 
                 if other % 2 == 0:
                     if other.is_extended_negative:
                         if self.min.is_zero:
-                            return AccumBounds(self.max**other, oo)
+                            return AccumBounds(_pow(other, self.max), oo)
                         if self.max.is_zero:
-                            return AccumBounds(self.min**other, oo)
+                            return AccumBounds(_pow(other, self.min), oo)
                         return AccumBounds(0, oo)
                     return AccumBounds(
-                        S.Zero, Max(self.min**other, self.max**other))
+                        S.Zero, Max(*_pow(other, self.min, self.max)))
                 elif other % 2 == 1:
                     if other.is_extended_negative:
                         if self.min.is_zero:
-                            return AccumBounds(self.max**other, oo)
+                            return AccumBounds(_pow(other, self.max), oo)
                         if self.max.is_zero:
-                            return AccumBounds(-oo, self.min**other)
+                            return AccumBounds(-oo, _pow(other, self.min))
                         return AccumBounds(-oo, oo)
-                    return AccumBounds(self.min**other, self.max**other)
+                    return AccumBounds(*_pow(other, self.min, self.max))
 
             # non-integer exponent
             # 0**neg or neg**frac yields complex
@@ -1380,16 +1400,16 @@ class AccumulationBounds(AtomicExpr):
                     self.min.is_extended_nonnegative)):
                 num, den = other.as_numer_denom()
                 if num is S.One:
-                    return AccumBounds(*[i**(1/den) for i in self.args])
+                    return AccumBounds(*_pow(1/den, *self.args))
 
                 elif den is not S.One:  # e.g. if other is not Float
-                    return (self**num)**(1/den)  # ok for non-negative base
+                    return _pow(1/den, self**num)  # ok for non-negative base
 
             if isinstance(other, AccumBounds):
                 if (self.min.is_extended_positive or
                         self.min.is_extended_nonnegative and
                         other.min.is_extended_nonnegative):
-                    p = [self**i for i in other.args]
+                    p = [_pow(i, self) for i in other.args]
                     if not any(i.is_Pow for i in p):
                         a = [j for i in p for j in i.args or (i,)]
                         try:
