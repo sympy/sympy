@@ -3,10 +3,8 @@ import random
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence
 from sympy.core.symbol import Symbol
-from sympy.core.sympify import sympify, _sympify
+from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.polys.domains import EXRAW
-from sympy.polys.matrices import DomainMatrix
 from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -118,22 +116,6 @@ class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
         obj._rep = rep
         return obj
 
-    def fill(self, value):
-        """Fill the matrix with the scalar value.
-
-        See Also
-        ========
-
-        zeros
-        ones
-        """
-        value = _sympify(value)
-        if not value:
-            self._rep = DomainMatrix.zeros(self.shape, EXRAW)
-        else:
-            elements_dod = {i: {j: value for j in range(self.cols)} for i in range(self.rows)}
-            self._rep = DomainMatrix(elements_dod, self.shape, EXRAW)
-
     def simplify(self, **kwargs):
         """Applies simplify to the elements of a matrix in place.
 
@@ -146,31 +128,6 @@ class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
         """
         for (i, j), element in self.todok().items():
             self[i, j] = _simplify(element, **kwargs)
-
-    def zip_row_op(self, i, k, f):
-        """In-place operation on row ``i`` using two-arg functor whose args are
-        interpreted as ``(self[i, j], self[k, j])``.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import eye
-        >>> M = eye(3)
-        >>> M.zip_row_op(1, 0, lambda v, u: v + 2*u); M
-        Matrix([
-        [1, 0, 0],
-        [2, 1, 0],
-        [0, 0, 1]])
-
-        See Also
-        ========
-        row
-        row_op
-        col_op
-
-        """
-        for j in range(self.cols):
-            self[i, j] = f(self[i, j], self[k, j])
 
     is_zero = False
 

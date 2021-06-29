@@ -568,35 +568,6 @@ class MutableSparseMatrix(SparseMatrix, MutableRepMatrix):
                 Asmat[i + A.rows, j] = v
         return A._new(A.rows + B.rows, A.cols, Asmat)
 
-    def fill(self, value):
-        """Fill self with the given value.
-
-        Notes
-        =====
-
-        Unless many values are going to be deleted (i.e. set to zero)
-        this will create a matrix that is slower than a dense matrix in
-        operations.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> M = SparseMatrix.zeros(3); M
-        Matrix([
-        [0, 0, 0],
-        [0, 0, 0],
-        [0, 0, 0]])
-        >>> M.fill(1); M
-        Matrix([
-        [1, 1, 1],
-        [1, 1, 1],
-        [1, 1, 1]])
-        """
-        for i in range(self.rows):
-            for j in range(self.cols):
-                self[i, j] = value
-
     def row_join(self, other):
         """Returns B appended after A (column-wise augmenting)::
 
@@ -653,30 +624,5 @@ class MutableSparseMatrix(SparseMatrix, MutableRepMatrix):
             for (i, j), v in B.todok().items():
                 Asmat[i, j + A.cols] = v
         return A._new(A.rows, A.cols + B.cols, Asmat)
-
-    def zip_row_op(self, i, k, f):
-        """In-place operation on row ``i`` using two-arg functor whose args are
-        interpreted as ``(self[i, j], self[k, j])``.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> M = SparseMatrix.eye(3)*2
-        >>> M[0, 1] = -1
-        >>> M.zip_row_op(1, 0, lambda v, u: v + 2*u); M
-        Matrix([
-        [2, -1, 0],
-        [4,  0, 0],
-        [0,  0, 2]])
-
-        See Also
-        ========
-        row
-        row_op
-        col_op
-
-        """
-        self.row_op(i, lambda v, j: f(v, self[k, j]))
 
     is_zero = False

@@ -346,6 +346,31 @@ class MutableRepMatrix(RepMatrix):
         for k in range(0, self.cols):
             self[i, k], self[j, k] = self[j, k], self[i, k]
 
+    def zip_row_op(self, i, k, f):
+        """In-place operation on row ``i`` using two-arg functor whose args are
+        interpreted as ``(self[i, j], self[k, j])``.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import eye
+        >>> M = eye(3)
+        >>> M.zip_row_op(1, 0, lambda v, u: v + 2*u); M
+        Matrix([
+        [1, 0, 0],
+        [2, 1, 0],
+        [0, 0, 1]])
+
+        See Also
+        ========
+        row
+        row_op
+        col_op
+
+        """
+        for j in range(self.cols):
+            self[i, j] = f(self[i, j], self[k, j])
+
     def copyin_list(self, key, value):
         """Copy in elements from a list.
 
@@ -430,6 +455,44 @@ class MutableRepMatrix(RepMatrix):
         for i in range(value.rows):
             for j in range(value.cols):
                 self[i + rlo, j + clo] = value[i, j]
+
+    def fill(self, value):
+        """Fill self with the given value.
+
+        Notes
+        =====
+
+        Unless many values are going to be deleted (i.e. set to zero)
+        this will create a matrix that is slower than a dense matrix in
+        operations.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> M = SparseMatrix.zeros(3); M
+        Matrix([
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]])
+        >>> M.fill(1); M
+        Matrix([
+        [1, 1, 1],
+        [1, 1, 1],
+        [1, 1, 1]])
+
+        See Also
+        ========
+
+        zeros
+        ones
+        """
+        value = _sympify(value)
+        if not value:
+            self._rep = DomainMatrix.zeros(self.shape, EXRAW)
+        else:
+            elements_dod = {i: {j: value for j in range(self.cols)} for i in range(self.rows)}
+            self._rep = DomainMatrix(elements_dod, self.shape, EXRAW)
 
 
 def _getitem_RepMatrix(self, key):
