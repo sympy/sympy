@@ -95,6 +95,12 @@ class RepMatrix(MatrixBase):
         """
         return self._fromrep(self._rep.transpose())
 
+    def _eval_col_join(self, other):
+        return self._fromrep(self._rep.vstack(other._rep))
+
+    def _eval_row_join(self, other):
+        return self._fromrep(self._rep.hstack(other._rep))
+
     def _eval_extract(self, rowsList, colsList):
         return self._fromrep(self._rep.extract(rowsList, colsList))
 
