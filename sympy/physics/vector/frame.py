@@ -646,6 +646,10 @@ class ReferenceFrame:
         from sympy.physics.vector.functions import dynamicsymbols
         _check_frame(parent)
 
+        if not isinstance(axis, Vector) and isinstance(angle, Vector):
+            raise TypeError('The order of arguments is incorrect.' +\
+                ' The arguments are orient_axis(frame, axis, angle)')
+
         axis = _check_vector(axis)
         amount = sympify(angle)
         theta = amount
