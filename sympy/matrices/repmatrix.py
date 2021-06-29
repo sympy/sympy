@@ -4,12 +4,13 @@ from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
 from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.core.sympify import _sympify, SympifyError
+from sympy.core.singleton import S
 from sympy.polys.domains import ZZ, QQ, EXRAW
 from sympy.polys.matrices import DomainMatrix
-from sympy.core.singleton import S
+from sympy.utilities.misc import filldedent
 
 from .common import classof
-from .matrices import MatrixBase, MatrixKind
+from .matrices import MatrixBase, MatrixKind, ShapeError
 
 
 class RepMatrix(MatrixBase):
@@ -344,6 +345,91 @@ class MutableRepMatrix(RepMatrix):
         """
         for k in range(0, self.cols):
             self[i, k], self[j, k] = self[j, k], self[i, k]
+
+    def copyin_list(self, key, value):
+        """Copy in elements from a list.
+
+        Parameters
+        ==========
+
+        key : slice
+            The section of this matrix to replace.
+        value : iterable
+            The iterable to copy values from.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import eye
+        >>> I = eye(3)
+        >>> I[:2, 0] = [1, 2] # col
+        >>> I
+        Matrix([
+        [1, 0, 0],
+        [2, 1, 0],
+        [0, 0, 1]])
+        >>> I[1, :2] = [[3, 4]]
+        >>> I
+        Matrix([
+        [1, 0, 0],
+        [3, 4, 0],
+        [0, 0, 1]])
+
+        See Also
+        ========
+
+        copyin_matrix
+        """
+        if not is_sequence(value):
+            raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
+        return self.copyin_matrix(key, type(self)(value))
+
+    def copyin_matrix(self, key, value):
+        """Copy in values from a matrix into the given bounds.
+
+        Parameters
+        ==========
+
+        key : slice
+            The section of this matrix to replace.
+        value : Matrix
+            The matrix to copy values from.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix, eye
+        >>> M = Matrix([[0, 1], [2, 3], [4, 5]])
+        >>> I = eye(3)
+        >>> I[:3, :2] = M
+        >>> I
+        Matrix([
+        [0, 1, 0],
+        [2, 3, 0],
+        [4, 5, 1]])
+        >>> I[0, 1] = M
+        >>> I
+        Matrix([
+        [0, 0, 1],
+        [2, 2, 3],
+        [4, 4, 5]])
+
+        See Also
+        ========
+
+        copyin_list
+        """
+        rlo, rhi, clo, chi = self.key2bounds(key)
+        shape = value.shape
+        dr, dc = rhi - rlo, chi - clo
+        if shape != (dr, dc):
+            raise ShapeError(filldedent("The Matrix `value` doesn't have the "
+                                        "same dimensions "
+                                        "as the in sub-Matrix given by `key`."))
+
+        for i in range(value.rows):
+            for j in range(value.cols):
+                self[i + rlo, j + clo] = value[i, j]
 
 
 def _getitem_RepMatrix(self, key):

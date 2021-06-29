@@ -2,9 +2,7 @@ from collections.abc import Callable
 
 from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.containers import Dict
-from sympy.core.singleton import S
 
-from .dense import Matrix
 from .matrices import MatrixBase, ShapeError
 from .repmatrix import MutableRepMatrix, RepMatrix
 
@@ -569,37 +567,6 @@ class MutableSparseMatrix(SparseMatrix, MutableRepMatrix):
             for (i, j), v in B.todok().items():
                 Asmat[i + A.rows, j] = v
         return A._new(A.rows + B.rows, A.cols, Asmat)
-
-    def copyin_list(self, key, value):
-        if not is_sequence(value):
-            raise TypeError("`value` must be of type list or tuple.")
-        self.copyin_matrix(key, Matrix(value))
-
-    def copyin_matrix(self, key, value):
-        # include this here because it's not part of BaseMatrix
-        rlo, rhi, clo, chi = self.key2bounds(key)
-        shape = value.shape
-        dr, dc = rhi - rlo, chi - clo
-        if shape != (dr, dc):
-            raise ShapeError(
-                "The Matrix `value` doesn't have the same dimensions "
-                "as the in sub-Matrix given by `key`.")
-        if not isinstance(value, SparseMatrix):
-            for i in range(value.rows):
-                for j in range(value.cols):
-                    self[i + rlo, j + clo] = value[i, j]
-        else:
-            if (rhi - rlo)*(chi - clo) < len(self):
-                for i in range(rlo, rhi):
-                    for j in range(clo, chi):
-                        self[i, j] = S.Zero
-            else:
-                for i, j, v in self.row_list():
-                    if rlo <= i < rhi and clo <= j < chi:
-                        self[i, j] = S.Zero
-            for k, v in value.todok().items():
-                i, j = k
-                self[i + rlo, j + clo] = value[i, j]
 
     def fill(self, value):
         """Fill self with the given value.

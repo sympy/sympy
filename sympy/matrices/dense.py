@@ -9,7 +9,6 @@ from sympy.polys.domains import EXRAW
 from sympy.polys.matrices import DomainMatrix
 from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
-from sympy.utilities.misc import filldedent
 
 from .common import ShapeError
 from .decompositions import _cholesky, _LDLdecomposition
@@ -118,91 +117,6 @@ class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
         obj.rows, obj.cols = rep.shape
         obj._rep = rep
         return obj
-
-    def copyin_list(self, key, value):
-        """Copy in elements from a list.
-
-        Parameters
-        ==========
-
-        key : slice
-            The section of this matrix to replace.
-        value : iterable
-            The iterable to copy values from.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import eye
-        >>> I = eye(3)
-        >>> I[:2, 0] = [1, 2] # col
-        >>> I
-        Matrix([
-        [1, 0, 0],
-        [2, 1, 0],
-        [0, 0, 1]])
-        >>> I[1, :2] = [[3, 4]]
-        >>> I
-        Matrix([
-        [1, 0, 0],
-        [3, 4, 0],
-        [0, 0, 1]])
-
-        See Also
-        ========
-
-        copyin_matrix
-        """
-        if not is_sequence(value):
-            raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
-        return self.copyin_matrix(key, Matrix(value))
-
-    def copyin_matrix(self, key, value):
-        """Copy in values from a matrix into the given bounds.
-
-        Parameters
-        ==========
-
-        key : slice
-            The section of this matrix to replace.
-        value : Matrix
-            The matrix to copy values from.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, eye
-        >>> M = Matrix([[0, 1], [2, 3], [4, 5]])
-        >>> I = eye(3)
-        >>> I[:3, :2] = M
-        >>> I
-        Matrix([
-        [0, 1, 0],
-        [2, 3, 0],
-        [4, 5, 1]])
-        >>> I[0, 1] = M
-        >>> I
-        Matrix([
-        [0, 0, 1],
-        [2, 2, 3],
-        [4, 4, 5]])
-
-        See Also
-        ========
-
-        copyin_list
-        """
-        rlo, rhi, clo, chi = self.key2bounds(key)
-        shape = value.shape
-        dr, dc = rhi - rlo, chi - clo
-        if shape != (dr, dc):
-            raise ShapeError(filldedent("The Matrix `value` doesn't have the "
-                                        "same dimensions "
-                                        "as the in sub-Matrix given by `key`."))
-
-        for i in range(value.rows):
-            for j in range(value.cols):
-                self[i + rlo, j + clo] = value[i, j]
 
     def fill(self, value):
         """Fill the matrix with the scalar value.
