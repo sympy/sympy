@@ -1,10 +1,11 @@
 """Implementation of :class:`ExpressionRawDomain` class. """
 
 
-from sympy.core import Expr, S, sympify
+from sympy.core import Expr, S, sympify, Add
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
 
@@ -38,7 +39,7 @@ class ExpressionRawDomain(Field, CharacteristicZero, SimpleDomain):
     def from_sympy(self, a):
         """Convert SymPy's expression to ``dtype``. """
         if not isinstance(a, Expr):
-            raise TypeError(f"Expecting an Expr instance but found: {type(a).__name__}")
+            raise CoercionFailed(f"Expecting an Expr instance but found: {type(a).__name__}")
         return a
 
     def convert_from(self, a, K):
@@ -48,6 +49,9 @@ class ExpressionRawDomain(Field, CharacteristicZero, SimpleDomain):
     def get_field(self):
         """Returns a field associated with ``self``. """
         return self
+
+    def sum(self, items):
+        return Add(*items)
 
 
 EXRAW = ExpressionRawDomain()

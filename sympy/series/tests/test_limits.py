@@ -957,3 +957,8 @@ def test_issue_21038():
 def test_issue_21550():
     r = (sqrt(5) - 1)/2
     assert limit((x - r)/(x**2 + x - 1), x, r) == sqrt(5)/5
+
+
+def test_issue_21661():
+    out = limit((x**(x + 1) * (log(x) + 1) + 1) / x, x, 11)
+    assert out == S(3138428376722)/11 + 285311670611*log(11)

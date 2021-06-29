@@ -4,7 +4,7 @@ Module for the SDM class.
 
 """
 
-from operator import add, neg, pos, sub
+from operator import add, neg, pos, sub, mul
 from collections import defaultdict
 
 from .exceptions import DDMBadInputError, DDMDomainError, DDMShapeError
@@ -302,6 +302,18 @@ class SDM(dict):
                 ddm[i][j] = e
         return ddm
 
+    def to_list_flat(M):
+        m, n = M.shape
+        zero = M.domain.zero
+        flat = [zero] * (m * n)
+        for i, row in M.items():
+            for j, e in row.items():
+                flat[i*n + j] = e
+        return flat
+
+    def to_dok(M):
+        return {(i, j): e for i, row in M.items() for j, e in row.items()}
+
     def to_ddm(M):
         """
         Convert a :py:class:`~.SDM` object to a :py:class:`~.DDM` object
@@ -353,7 +365,7 @@ class SDM(dict):
         return cls(sdm, shape, domain)
 
     @classmethod
-    def eye(cls, size, domain):
+    def eye(cls, shape, domain):
         """
 
         Returns a identity :py:class:`~.SDM` matrix of dimensions
@@ -364,14 +376,15 @@ class SDM(dict):
 
         >>> from sympy.polys.matrices.sdm import SDM
         >>> from sympy import QQ
-        >>> I = SDM.eye(2, QQ)
+        >>> I = SDM.eye((2, 2), QQ)
         >>> I
         {0: {0: 1}, 1: {1: 1}}
 
         """
+        rows, cols = shape
         one = domain.one
-        sdm = {i: {i: one} for i in range(size)}
-        return cls(sdm, (size, size), domain)
+        sdm = {i: {i: one} for i in range(min(rows, cols))}
+        return cls(sdm, shape, domain)
 
     @classmethod
     def diag(cls, diagonal, domain, shape):
@@ -420,7 +433,7 @@ class SDM(dict):
 
     def __rmul__(a, b):
         if b in a.domain:
-            return a.mul(b)
+            return a.rmul(b)
         else:
             return NotImplemented
 
@@ -463,7 +476,7 @@ class SDM(dict):
         n2, o = B.shape
         if n != n2:
             raise DDMShapeError
-        C = sdm_matmul(A, B)
+        C = sdm_matmul(A, B, A.domain, m, o)
         return A.new(C, (m, o), A.domain)
 
     def mul(A, b):
@@ -481,6 +494,20 @@ class SDM(dict):
 
         """
         Csdm = unop_dict(A, lambda aij: aij*b)
+        return A.new(Csdm, A.shape, A.domain)
+
+    def rmul(A, b):
+        Csdm = unop_dict(A, lambda aij: b*aij)
+        return A.new(Csdm, A.shape, A.domain)
+
+    def mul_elementwise(A, B):
+        if A.domain != B.domain:
+            raise DDMDomainError
+        if A.shape != B.shape:
+            raise DDMShapeError
+        zero = A.domain.zero
+        fzero = lambda e: zero
+        Csdm = binop_dict(A, B, mul, fzero, fzero)
         return A.new(Csdm, A.shape, A.domain)
 
     def add(A, B):
@@ -763,26 +790,46 @@ class SDM(dict):
 def binop_dict(A, B, fab, fa, fb):
     Anz, Bnz = set(A), set(B)
     C = {}
+
     for i in Anz & Bnz:
         Ai, Bi = A[i], B[i]
         Ci = {}
         Anzi, Bnzi = set(Ai), set(Bi)
         for j in Anzi & Bnzi:
-            elem = fab(Ai[j], Bi[j])
-            if elem:
-                Ci[j] = elem
+            Cij = fab(Ai[j], Bi[j])
+            if Cij:
+                Ci[j] = Cij
         for j in Anzi - Bnzi:
-            Ci[j] = fa(Ai[j])
+            Cij = fa(Ai[j])
+            if Cij:
+                Ci[j] = Cij
         for j in Bnzi - Anzi:
-            Ci[j] = fb(Bi[j])
+            Cij = fb(Bi[j])
+            if Cij:
+                Ci[j] = Cij
         if Ci:
             C[i] = Ci
+
     for i in Anz - Bnz:
         Ai = A[i]
-        C[i] = {j: fa(Aij) for j, Aij in Ai.items()}
+        Ci = {}
+        for j, Aij in Ai.items():
+            Cij = fa(Aij)
+            if Cij:
+                Ci[j] = Cij
+        if Ci:
+            C[i] = Ci
+
     for i in Bnz - Anz:
         Bi = B[i]
-        C[i] = {j: fb(Bij) for j, Bij in Bi.items()}
+        Ci = {}
+        for j, Bij in Bi.items():
+            Cij = fb(Bij)
+            if Cij:
+                Ci[j] = Cij
+        if Ci:
+            C[i] = Ci
+
     return C
 
 
@@ -810,7 +857,7 @@ def sdm_transpose(M):
     return MT
 
 
-def sdm_matmul(A, B):
+def sdm_matmul(A, B, K, m, o):
     #
     # Should be fast if A and B are very sparse.
     # Consider e.g. A = B = eye(1000).
@@ -827,6 +874,9 @@ def sdm_matmul(A, B):
     # Aik and Bk are both nonzero. In Python the intersection of two sets
     # of int can be computed very efficiently.
     #
+    if K.is_EXRAW:
+        return sdm_matmul_exraw(A, B, K, m, o)
+
     C = {}
     B_knz = set(B)
     for i, Ai in A.items():
@@ -848,6 +898,68 @@ def sdm_matmul(A, B):
                         Ci[j] = Cij
         if Ci:
             C[i] = Ci
+    return C
+
+
+def sdm_matmul_exraw(A, B, K, m, o):
+    #
+    # Like sdm_matmul above except that:
+    #
+    # - Handles cases like 0*oo -> nan (sdm_matmul skips multipication by zero)
+    # - Uses K.sum (Add(*items)) for efficient addition of Expr
+    #
+    zero = K.zero
+    C = {}
+    B_knz = set(B)
+    for i, Ai in A.items():
+        Ci_list = defaultdict(list)
+        Ai_knz = set(Ai)
+
+        # Nonzero row/column pair
+        for k in Ai_knz & B_knz:
+            Aik = Ai[k]
+            if zero * Aik == zero:
+                # This is the main inner loop:
+                for j, Bkj in B[k].items():
+                    Ci_list[j].append(Aik * Bkj)
+            else:
+                for j in range(o):
+                    Ci_list[j].append(Aik * B[k].get(j, zero))
+
+        # Zero row in B, check for infinities in A
+        for k in Ai_knz - B_knz:
+            zAik = zero * Ai[k]
+            if zAik != zero:
+                for j in range(o):
+                    Ci_list[j].append(zAik)
+
+        # Add terms using K.sum (Add(*terms)) for efficiency
+        Ci = {}
+        for j, Cij_list in Ci_list.items():
+            Cij = K.sum(Cij_list)
+            if Cij:
+                Ci[j] = Cij
+        if Ci:
+            C[i] = Ci
+
+    # Find all infinities in B
+    for k, Bk in B.items():
+        for j, Bkj in Bk.items():
+            if zero * Bkj != zero:
+                for i in range(m):
+                    Aik = A.get(i, {}).get(k, zero)
+                    # If Aik is not zero then this was handled above
+                    if Aik == zero:
+                        Ci = C.get(i, {})
+                        Cij = Ci.get(j, zero) + Aik * Bkj
+                        if Cij != zero:
+                            Ci[j] = Cij
+                        else:  # pragma: no cover
+                            # Not sure how we could get here but let's raise an
+                            # exception just in case.
+                            raise RuntimeError
+                        C[i] = Ci
+
     return C
 
 
