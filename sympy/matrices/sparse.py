@@ -235,9 +235,6 @@ class SparseMatrix(RepMatrix):
 
             return rows, cols, smat
 
-    def __setitem__(self, key, value):
-        raise NotImplementedError()
-
     def _eval_inverse(self, **kwargs):
         return self.inv(method=kwargs.get('method', 'LDL'),
                         iszerofunc=kwargs.get('iszerofunc', _iszero),

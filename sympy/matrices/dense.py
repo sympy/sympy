@@ -30,9 +30,6 @@ class DenseMatrix(RepMatrix):
     _op_priority = 10.01
     _class_priority = 4
 
-    def __setitem__(self, key, value):
-        raise NotImplementedError()
-
     def _eval_inverse(self, **kwargs):
         return self.inv(method=kwargs.get('method', 'GE'),
                         iszerofunc=kwargs.get('iszerofunc', _iszero),
