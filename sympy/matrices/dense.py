@@ -89,32 +89,6 @@ def _force_mutable(x):
 
 class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
 
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
-
-    @classmethod
-    def _new(cls, *args, copy=True, **kwargs):
-        if copy is False:
-            # The input was rows, cols, [list].
-            # It should be used directly without creating a copy.
-            if len(args) != 3:
-                raise TypeError("'copy=False' requires a matrix be initialized as rows,cols,[list]")
-            rows, cols, flat_list = args
-        else:
-            rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
-            flat_list = list(flat_list) # create a shallow copy
-
-        rep = cls._flat_list_to_DomainMatrix(rows, cols, flat_list)
-
-        return cls._fromrep(rep)
-
-    @classmethod
-    def _fromrep(cls, rep):
-        obj = super().__new__(cls)
-        obj.rows, obj.cols = rep.shape
-        obj._rep = rep
-        return obj
-
     def simplify(self, **kwargs):
         """Applies simplify to the elements of a matrix in place.
 

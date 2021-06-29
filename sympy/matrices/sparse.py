@@ -485,8 +485,6 @@ class SparseMatrix(RepMatrix):
 
 
 class MutableSparseMatrix(SparseMatrix, MutableRepMatrix):
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
 
     @classmethod
     def _new(cls, *args, **kwargs):
@@ -495,12 +493,3 @@ class MutableSparseMatrix(SparseMatrix, MutableRepMatrix):
         rep = cls._smat_to_DomainMatrix(rows, cols, smat)
 
         return cls._fromrep(rep)
-
-    @classmethod
-    def _fromrep(cls, rep):
-        obj = super().__new__(cls)
-        rows, cols = rep.shape
-        obj.rows = rows
-        obj.cols = cols
-        obj._rep = rep
-        return obj
