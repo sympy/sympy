@@ -14,7 +14,7 @@ from sympy.utilities.misc import filldedent
 from .common import ShapeError
 from .decompositions import _cholesky, _LDLdecomposition
 from .matrices import MatrixBase
-from .repmatrix import RepMatrix
+from .repmatrix import MutableRepMatrix, RepMatrix
 from .solvers import _lower_triangular_solve, _upper_triangular_solve
 
 
@@ -90,7 +90,7 @@ def _force_mutable(x):
     return x
 
 
-class MutableDenseMatrix(DenseMatrix):
+class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
     __hash__ = None  # type: ignore
 
     def __new__(cls, *args, **kwargs):
@@ -121,52 +121,6 @@ class MutableDenseMatrix(DenseMatrix):
 
     def copy(self):
         return self._fromrep(self._rep.copy())
-
-    def __setitem__(self, key, value):
-        """
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix, I, zeros, ones
-        >>> m = Matrix(((1, 2+I), (3, 4)))
-        >>> m
-        Matrix([
-        [1, 2 + I],
-        [3,     4]])
-        >>> m[1, 0] = 9
-        >>> m
-        Matrix([
-        [1, 2 + I],
-        [9,     4]])
-        >>> m[1, 0] = [[0, 1]]
-
-        To replace row r you assign to position r*m where m
-        is the number of columns:
-
-        >>> M = zeros(4)
-        >>> m = M.cols
-        >>> M[3*m] = ones(1, m)*2; M
-        Matrix([
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [2, 2, 2, 2]])
-
-        And to replace column c you can assign to position c:
-
-        >>> M[2] = ones(m, 1)*4; M
-        Matrix([
-        [0, 0, 4, 0],
-        [0, 0, 4, 0],
-        [0, 0, 4, 0],
-        [2, 2, 4, 2]])
-        """
-        rv = self._setitem(key, value)
-        if rv is not None:
-            i, j, value = rv
-            self._rep, value = self._unify_element_sympy(self._rep, value)
-            self._rep.rep.setitem(i, j, value)
 
     def as_mutable(self):
         return self.copy()

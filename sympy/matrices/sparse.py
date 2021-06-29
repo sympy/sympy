@@ -6,7 +6,7 @@ from sympy.core.singleton import S
 
 from .dense import Matrix
 from .matrices import MatrixBase, ShapeError
-from .repmatrix import RepMatrix
+from .repmatrix import MutableRepMatrix, RepMatrix
 
 from .utilities import _iszero
 
@@ -486,7 +486,7 @@ class SparseMatrix(RepMatrix):
     upper_triangular_solve.__doc__          = upper_triangular_solve.__doc__
 
 
-class MutableSparseMatrix(SparseMatrix):
+class MutableSparseMatrix(SparseMatrix, MutableRepMatrix):
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 
@@ -506,61 +506,6 @@ class MutableSparseMatrix(SparseMatrix):
         obj.cols = cols
         obj._rep = rep
         return obj
-
-    def __setitem__(self, key, value):
-        """Assign value to position designated by key.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix, ones
-        >>> M = SparseMatrix(2, 2, {})
-        >>> M[1] = 1; M
-        Matrix([
-        [0, 1],
-        [0, 0]])
-        >>> M[1, 1] = 2; M
-        Matrix([
-        [0, 1],
-        [0, 2]])
-        >>> M = SparseMatrix(2, 2, {})
-        >>> M[:, 1] = [1, 1]; M
-        Matrix([
-        [0, 1],
-        [0, 1]])
-        >>> M = SparseMatrix(2, 2, {})
-        >>> M[1, :] = [[1, 1]]; M
-        Matrix([
-        [0, 0],
-        [1, 1]])
-
-
-        To replace row r you assign to position r*m where m
-        is the number of columns:
-
-        >>> M = SparseMatrix(4, 4, {})
-        >>> m = M.cols
-        >>> M[3*m] = ones(1, m)*2; M
-        Matrix([
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [2, 2, 2, 2]])
-
-        And to replace column c you can assign to position c:
-
-        >>> M[2] = ones(m, 1)*4; M
-        Matrix([
-        [0, 0, 4, 0],
-        [0, 0, 4, 0],
-        [0, 0, 4, 0],
-        [2, 2, 4, 2]])
-        """
-        rv = self._setitem(key, value)
-        if rv is not None:
-            i, j, value = rv
-            self._rep, value = self._unify_element_sympy(self._rep, value)
-            self._rep.rep.setitem(i, j, value)
 
     def as_mutable(self):
         return self.copy()

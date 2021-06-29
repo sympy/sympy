@@ -181,6 +181,55 @@ class RepMatrix(MatrixBase):
         return rv
 
 
+class MutableRepMatrix(RepMatrix):
+
+    def __setitem__(self, key, value):
+        """
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, I, zeros, ones
+        >>> m = Matrix(((1, 2+I), (3, 4)))
+        >>> m
+        Matrix([
+        [1, 2 + I],
+        [3,     4]])
+        >>> m[1, 0] = 9
+        >>> m
+        Matrix([
+        [1, 2 + I],
+        [9,     4]])
+        >>> m[1, 0] = [[0, 1]]
+
+        To replace row r you assign to position r*m where m
+        is the number of columns:
+
+        >>> M = zeros(4)
+        >>> m = M.cols
+        >>> M[3*m] = ones(1, m)*2; M
+        Matrix([
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [2, 2, 2, 2]])
+
+        And to replace column c you can assign to position c:
+
+        >>> M[2] = ones(m, 1)*4; M
+        Matrix([
+        [0, 0, 4, 0],
+        [0, 0, 4, 0],
+        [0, 0, 4, 0],
+        [2, 2, 4, 2]])
+        """
+        rv = self._setitem(key, value)
+        if rv is not None:
+            i, j, value = rv
+            self._rep, value = self._unify_element_sympy(self._rep, value)
+            self._rep.rep.setitem(i, j, value)
+
+
 def _getitem_RepMatrix(self, key):
     """Return portion of self defined by key. If the key involves a slice
     then a list will be returned (if key is a single slice) or a matrix
