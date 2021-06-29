@@ -4,17 +4,16 @@ from operator import index as index_
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
-from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.polys.domains import ZZ, QQ, EXRAW
+from sympy.polys.domains import ZZ, EXRAW
 from sympy.polys.matrices import DomainMatrix
 from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
 
-from .common import classof, ShapeError, MatrixKind
+from .common import classof, ShapeError
 from .decompositions import _cholesky, _LDLdecomposition
 from .matrices import MatrixBase
 from .repmatrix import RepMatrix
@@ -32,21 +31,6 @@ class DenseMatrix(RepMatrix):
 
     _op_priority = 10.01
     _class_priority = 4
-
-    @property
-    def kind(self):
-        domain = self._rep.domain
-        if domain in (ZZ, QQ):
-            element_kind = NumberKind
-        elif domain == EXRAW:
-            kinds = set(e.kind for e in self.todok().values())
-            if len(kinds) == 1:
-                [element_kind] = kinds
-            else:
-                element_kind = UndefinedKind
-        else: # pragma: no cover
-            raise RuntimeError("Domain should only be ZZ, QQ or EXRAW")
-        return MatrixKind(element_kind)
 
     def __getitem__(self, key):
         """Return portion of self defined by key. If the key involves a slice
@@ -168,9 +152,6 @@ class DenseMatrix(RepMatrix):
 
     def _eval_tolist(self):
         return self._rep.to_sympy().to_list()
-
-    def _eval_todok(self):
-        return self._rep.to_sympy().to_dok()
 
     @classmethod
     def _eval_zeros(cls, rows, cols):

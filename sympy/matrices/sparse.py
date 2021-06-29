@@ -371,9 +371,6 @@ class SparseMatrix(RepMatrix):
     def _eval_scalar_rmul(self, other):
         return self.applyfunc(lambda x: other*x)
 
-    def _eval_todok(self):
-        return self._rep.to_sympy().to_dok()
-
     def _eval_transpose(self):
         """Returns the transposed SparseMatrix of this SparseMatrix.
 
@@ -392,9 +389,6 @@ class SparseMatrix(RepMatrix):
         [2, 4]])
         """
         return self._fromrep(self._rep.transpose())
-
-    def _eval_values(self):
-        return list(self.todok().values())
 
     @classmethod
     def _eval_zeros(cls, rows, cols):
