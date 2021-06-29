@@ -1,7 +1,6 @@
 import random
 from operator import index as index_
 
-from sympy.core import SympifyError
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
@@ -11,13 +10,14 @@ from sympy.core.sympify import sympify, _sympify
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.polys.domains import ZZ, QQ, EXRAW
 from sympy.polys.matrices import DomainMatrix
-from sympy.matrices.common import classof, ShapeError, MatrixKind
-from sympy.matrices.matrices import MatrixBase
 from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
 
+from .common import classof, ShapeError, MatrixKind
 from .decompositions import _cholesky, _LDLdecomposition
+from .matrices import MatrixBase
+from .repmatrix import RepMatrix
 from .solvers import _lower_triangular_solve, _upper_triangular_solve
 
 
@@ -26,43 +26,12 @@ def _iszero(x):
     return x.is_zero
 
 
-def _compare_sequence(a, b):
-    """Compares the elements of a list/tuple `a`
-    and a list/tuple `b`.  `_compare_sequence((1,2), [1, 2])`
-    is True, whereas `(1,2) == [1, 2]` is False"""
-    if type(a) is type(b):
-        # if they are the same type, compare directly
-        return a == b
-    # there is no overhead for calling `tuple` on a
-    # tuple
-    return tuple(a) == tuple(b)
-
-class DenseMatrix(MatrixBase):
+class DenseMatrix(RepMatrix):
 
     is_MatrixExpr = False  # type: bool
 
     _op_priority = 10.01
     _class_priority = 4
-
-    def __eq__(self, other):
-        if isinstance(other, DenseMatrix):
-            return self._rep.unify_eq(other._rep)
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            return NotImplemented
-        self_shape = getattr(self, 'shape', None)
-        other_shape = getattr(other, 'shape', None)
-        if None in (self_shape, other_shape):
-            return False
-        if self_shape != other_shape:
-            return False
-        if isinstance(other, MatrixBase):
-            return _compare_sequence(self._flat, Matrix(other)._flat)
-
-    @property
-    def _flat(self):
-        return self._rep.to_sympy().to_list_flat()
 
     @property
     def kind(self):
@@ -312,7 +281,7 @@ def _force_mutable(x):
     return x
 
 
-class MutableDenseMatrix(DenseMatrix, MatrixBase):
+class MutableDenseMatrix(DenseMatrix):
     __hash__ = None  # type: ignore
 
     def __new__(cls, *args, **kwargs):

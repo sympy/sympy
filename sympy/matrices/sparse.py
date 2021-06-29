@@ -1,16 +1,15 @@
 from collections.abc import Callable
 
-from sympy.core import SympifyError
 from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
-from sympy.core.sympify import _sympify
 from sympy.functions import Abs
 
 from .common import a2idx
 from .dense import Matrix
 from .matrices import MatrixBase, ShapeError
+from .repmatrix import RepMatrix
 
 from .utilities import _iszero
 
@@ -22,7 +21,7 @@ from .solvers import (
     _lower_triangular_solve_sparse, _upper_triangular_solve_sparse)
 
 
-class SparseMatrix(MatrixBase):
+class SparseMatrix(RepMatrix):
     """
     A sparse matrix (a matrix with a large number of zero elements).
 
@@ -238,20 +237,6 @@ class SparseMatrix(MatrixBase):
 
             return rows, cols, smat
 
-    def __eq__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            return NotImplemented
-        self_shape = getattr(self, 'shape', None)
-        other_shape = getattr(other, 'shape', None)
-        if None in (self_shape, other_shape):
-            return False
-        if self_shape != other_shape:
-            return False
-        if isinstance(other, MatrixBase):
-            return self._rep.unify_eq(other._rep)
-
     def __getitem__(self, key):
 
         if isinstance(key, tuple):
@@ -419,10 +404,6 @@ class SparseMatrix(MatrixBase):
     def _mat(self):
         """Return a list of matrix elements.  Some routines
         in DenseMatrix use `_mat` directly to speed up operations."""
-        return list(self)
-
-    @property
-    def _flat(self):
         return list(self)
 
     def applyfunc(self, f):
@@ -643,7 +624,7 @@ class SparseMatrix(MatrixBase):
     upper_triangular_solve.__doc__          = upper_triangular_solve.__doc__
 
 
-class MutableSparseMatrix(SparseMatrix, MatrixBase):
+class MutableSparseMatrix(SparseMatrix):
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 
