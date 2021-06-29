@@ -87,6 +87,47 @@ class RepMatrix(MatrixBase):
         rep, other = self._unify_element_sympy(self._rep, other)
         return self._fromrep(rep.rscalarmul(other))
 
+    def equals(self, other, failing_expression=False):
+        """Applies ``equals`` to corresponding elements of the matrices,
+        trying to prove that the elements are equivalent, returning True
+        if they are, False if any pair is not, and None (or the first
+        failing expression if failing_expression is True) if it cannot
+        be decided if the expressions are equivalent or not. This is, in
+        general, an expensive operation.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> from sympy.abc import x
+        >>> A = Matrix([x*(x - 1), 0])
+        >>> B = Matrix([x**2 - x, 0])
+        >>> A == B
+        False
+        >>> A.simplify() == B.simplify()
+        True
+        >>> A.equals(B)
+        True
+        >>> A.equals(2)
+        False
+
+        See Also
+        ========
+        sympy.core.expr.Expr.equals
+        """
+        if self.shape != getattr(other, 'shape', None):
+            return False
+
+        rv = True
+        for i in range(self.rows):
+            for j in range(self.cols):
+                ans = self[i, j].equals(other[i, j], failing_expression)
+                if ans is False:
+                    return False
+                elif ans is not True and rv is True:
+                    rv = ans
+        return rv
+
 
 def _getitem_RepMatrix(self, key):
     """Return portion of self defined by key. If the key involves a slice
