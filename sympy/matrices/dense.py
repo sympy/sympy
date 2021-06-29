@@ -5,13 +5,13 @@ from sympy.core.compatibility import is_sequence
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.polys.domains import ZZ, EXRAW
+from sympy.polys.domains import EXRAW
 from sympy.polys.matrices import DomainMatrix
 from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
 
-from .common import classof, ShapeError
+from .common import ShapeError
 from .decompositions import _cholesky, _LDLdecomposition
 from .matrices import MatrixBase
 from .repmatrix import RepMatrix
@@ -37,27 +37,6 @@ class DenseMatrix(RepMatrix):
         return self.inv(method=kwargs.get('method', 'GE'),
                         iszerofunc=kwargs.get('iszerofunc', _iszero),
                         try_block_diag=kwargs.get('try_block_diag', False))
-
-    def _eval_scalar_mul(self, other):
-        rep, other = self._unify_element_sympy(self._rep, other)
-        return self._fromrep(rep.scalarmul(other))
-
-    def _eval_scalar_rmul(self, other):
-        rep, other = self._unify_element_sympy(self._rep, other)
-        return self._fromrep(rep.rscalarmul(other))
-
-    def _eval_tolist(self):
-        return self._rep.to_sympy().to_list()
-
-    @classmethod
-    def _eval_zeros(cls, rows, cols):
-        rep = DomainMatrix.zeros((rows, cols), ZZ)
-        return cls._fromrep(rep)
-
-    @classmethod
-    def _eval_eye(cls, rows, cols):
-        rep = DomainMatrix.eye((rows, cols), ZZ)
-        return cls._fromrep(rep)
 
     def as_immutable(self):
         """Returns an Immutable version of this Matrix

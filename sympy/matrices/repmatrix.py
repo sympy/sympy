@@ -5,6 +5,7 @@ from sympy.core.expr import Expr
 from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.core.sympify import _sympify, SympifyError
 from sympy.polys.domains import ZZ, QQ, EXRAW
+from sympy.polys.matrices import DomainMatrix
 
 from .common import classof
 from .matrices import MatrixBase, MatrixKind
@@ -27,6 +28,9 @@ class RepMatrix(MatrixBase):
     @property
     def _flat(self):
         return self._rep.to_sympy().to_list_flat()
+
+    def _eval_tolist(self):
+        return self._rep.to_sympy().to_list()
 
     def _eval_todok(self):
         return self._rep.to_sympy().to_dok()
@@ -141,6 +145,16 @@ class RepMatrix(MatrixBase):
             else:
                 return values[0]
 
+    @classmethod
+    def _eval_zeros(cls, rows, cols):
+        rep = DomainMatrix.zeros((rows, cols), ZZ)
+        return cls._fromrep(rep)
+
+    @classmethod
+    def _eval_eye(cls, rows, cols):
+        rep = DomainMatrix.eye((rows, cols), ZZ)
+        return cls._fromrep(rep)
+
     def _eval_add(self, other):
         return classof(self, other)._fromrep(self._rep + other._rep)
 
@@ -150,3 +164,11 @@ class RepMatrix(MatrixBase):
     def _eval_matrix_mul_elementwise(self, other):
         rep = self._rep.mul_elementwise(other._rep)
         return classof(self, other)._fromrep(rep)
+
+    def _eval_scalar_mul(self, other):
+        rep, other = self._unify_element_sympy(self._rep, other)
+        return self._fromrep(rep.scalarmul(other))
+
+    def _eval_scalar_rmul(self, other):
+        rep, other = self._unify_element_sympy(self._rep, other)
+        return self._fromrep(rep.rscalarmul(other))

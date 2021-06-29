@@ -265,11 +265,6 @@ class SparseMatrix(RepMatrix):
     def _eval_conjugate(self):
         return self.applyfunc(lambda e: e.conjugate())
 
-    @classmethod
-    def _eval_eye(cls, rows, cols):
-        entries = {(i,i): S.One for i in range(min(rows, cols))}
-        return cls._new(rows, cols, entries)
-
     def _eval_has(self, *patterns):
         # if the matrix has any zeros, see if S.Zero
         # has the pattern.  If _smat is full length,
@@ -304,12 +299,6 @@ class SparseMatrix(RepMatrix):
             new_smat[row + irow, col] = val
         return self._new(self.rows + other.rows, self.cols, new_smat)
 
-    def _eval_scalar_mul(self, other):
-        return self.applyfunc(lambda x: x*other)
-
-    def _eval_scalar_rmul(self, other):
-        return self.applyfunc(lambda x: other*x)
-
     def _eval_transpose(self):
         """Returns the transposed SparseMatrix of this SparseMatrix.
 
@@ -328,10 +317,6 @@ class SparseMatrix(RepMatrix):
         [2, 4]])
         """
         return self._fromrep(self._rep.transpose())
-
-    @classmethod
-    def _eval_zeros(cls, rows, cols):
-        return cls._new(rows, cols, {})
 
     @property
     def _mat(self):
