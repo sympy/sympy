@@ -196,7 +196,6 @@ def test_classify_ode():
          '1st_homogeneous_coeff_subs_dep_div_indep',
          '1st_power_series',
          'lie_group',
-        #  'nth_linear_constant_coeff_homogeneous',
          'nth_linear_euler_eq_homogeneous',
          'nth_algebraic_Integral',
          'separable_Integral',

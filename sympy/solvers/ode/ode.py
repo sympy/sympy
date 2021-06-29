@@ -5774,4 +5774,5 @@ from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
         SecondNonlinearAutonomousConserved, FirstExact, Liouville, Separable,
         SeparableReduced, HomogeneousCoeffSubsDepDivIndep, HomogeneousCoeffSubsIndepDivDep,
         HomogeneousCoeffBest, LinearCoefficients, NthOrderReducible, Hypergeometric2nd,
-        NthLinearConstantCoeffHomogeneous, NthLinearConstantCoeffVariationOfParameters, NthLinearConstantCoeffUndeterminedCoefficients)
+        NthLinearConstantCoeffHomogeneous, NthLinearConstantCoeffVariationOfParameters,
+        NthLinearConstantCoeffUndeterminedCoefficients)

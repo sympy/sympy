@@ -31,7 +31,8 @@ from sympy.solvers.deutils import ode_order, _preprocess
 from .subscheck import sub_func_doit
 from sympy.polys.matrices.linsolve import _lin_eq2dict
 from sympy.polys.solvers import PolyNonlinearError
-from .hypergeometric import equivalence_hypergeometric, match_2nd_2F1_hypergeometric, get_sol_2F1_hypergeometric, match_2nd_hypergeometric
+from .hypergeometric import equivalence_hypergeometric, match_2nd_2F1_hypergeometric, \
+    get_sol_2F1_hypergeometric, match_2nd_hypergeometric
 
 
 class ODEMatchError(NotImplementedError):
@@ -202,7 +203,7 @@ class SingleODEProblem:
         x = func.args[0]
         symset = {Derivative(f(x), x, i) for i in range(order+1)}
         try:
-            rhs,lhs_terms = _lin_eq2dict(eq, symset)
+            rhs, lhs_terms = _lin_eq2dict(eq, symset)
         except PolyNonlinearError:
             return None
 
@@ -2190,6 +2191,8 @@ class NthLinearConstantCoeffHomogeneous(SingleODESolver):
                     collectterms = [(i, reroot, imroot)] + collectterms
         return gensols, collectterms
 
+    # Ideally these kind of simplification functions shouldn't be part of solvers.
+    # odesimp should be improved to handle these kind of specific simplifications.
     def _get_simplified_sol(self, sol, collectterms):
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
