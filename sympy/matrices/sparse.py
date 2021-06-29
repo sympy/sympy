@@ -255,15 +255,6 @@ class SparseMatrix(RepMatrix):
             new_smat[row, col + icol] = val
         return self._new(self.rows, self.cols + other.cols, new_smat)
 
-    def _eval_is_Identity(self):
-        if not all(self[i, i] == 1 for i in range(self.rows)):
-            return False
-        return len(self.todok()) == self.rows
-
-    def _eval_is_symmetric(self, simpfunc):
-        diff = (self - self.T).applyfunc(simpfunc)
-        return len(diff.values()) == 0
-
     def _eval_row_insert(self, irow, other):
         if not isinstance(other, SparseMatrix):
             other = MutableSparseMatrix(other)
@@ -279,25 +270,6 @@ class SparseMatrix(RepMatrix):
             row, col = key
             new_smat[row + irow, col] = val
         return self._new(self.rows + other.rows, self.cols, new_smat)
-
-    def _eval_transpose(self):
-        """Returns the transposed SparseMatrix of this SparseMatrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> a = SparseMatrix(((1, 2), (3, 4)))
-        >>> a
-        Matrix([
-        [1, 2],
-        [3, 4]])
-        >>> a.T
-        Matrix([
-        [1, 3],
-        [2, 4]])
-        """
-        return self._fromrep(self._rep.transpose())
 
     @property
     def _mat(self):
