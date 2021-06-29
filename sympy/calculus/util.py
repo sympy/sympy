@@ -945,24 +945,14 @@ class AccumulationBounds(AtomicExpr):
     >>> 1/AccumBounds(0, 2)
     AccumBounds(1/2, oo)
     >>> 1/AccumBounds(-oo, 0)
-    AccumBounds(-oo, 0.0)
+    AccumBounds(-oo, 0)
 
-    A boundary of 1.0 will always generate all nonnegatives since
-    the 1.0 represents a number with some uncertainty so it is
-    always rounded in a direction to keep the returned bounds as
-    generous as possible:
-
-    >>> AccumBounds(1.0, 2)**oo
-    AccumBounds(0, oo)
-    >>> AccumBounds(0, 1.0)**oo
-    AccumBounds(0, oo)
-
-    A boundary of 1 will be assumed as exact:
+    A boundary of 1 will always generate all nonnegatives:
 
     >>> AccumBounds(1, 2)**oo
-    AccumBounds(1, oo)
+    AccumBounds(0, oo)
     >>> AccumBounds(0, 1)**oo
-    AccumBounds(0, 1)
+    AccumBounds(0, oo)
 
     If the exponent is itself an AccumulationBounds or is not an
     integer then unevaluated results will be returned unless the base
@@ -1325,10 +1315,6 @@ class AccumulationBounds(AtomicExpr):
                         return S.Zero
                     if self.min > 1:
                         return S.Infinity
-                    if self.max is S.One:
-                        return AccumBounds(0, 1)
-                    if self.min is S.One:
-                        return AccumBounds(1, oo)
                     return AccumBounds(0, oo)
                 elif self.max.is_extended_negative:
                     if self.min > -1:
@@ -1336,21 +1322,11 @@ class AccumulationBounds(AtomicExpr):
                     if self.max < -1:
                         return zoo
                     return S.NaN
-                else:  # min < 0 < max
+                else:
                     if self.min > -1:
                         if self.max < 1:
                             return S.Zero
-                        if self.max is S.One:
-                            return AccumBounds(0, 1)
                         return AccumBounds(0, oo)
-                    if self.min is S.NegativeOne:
-                        if self.max < 1:
-                            return AccumBounds(-1, 1)
-                        if self.max is S.One:
-                            return AccumBounds(-1, 1)
-                        return AccumBounds(-1, oo)
-                    if self.max is S.One:
-                        return AccumBounds(-oo, 1)
                     return AccumBounds(-oo, oo)
 
             if other is S.NegativeInfinity:
