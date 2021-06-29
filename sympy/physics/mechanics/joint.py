@@ -303,8 +303,9 @@ class PinJoint(Joint):
     Notes
     ======
 
-    All symbols and dynamicsymbols used with `Joints` should be used with correct
-    assumption, i.e. positive=True else it may give incorrect results in some cases.
+    All dynamicsymbols used in `Joints` are `real ` by default. It is adviced to use
+    `real=True` assumption when passing dynamicsymbols to `Joints` else it may give
+    incorrect result in some cases.
 
     """
 
@@ -317,7 +318,7 @@ class PinJoint(Joint):
     def _generate_coordinates(self, coordinate):
         coordinates = []
         if coordinate is None:
-            theta = dynamicsymbols(self._name + '_theta', positive=True)
+            theta = dynamicsymbols(self._name + '_theta', real=True)
             coordinate = theta
         coordinates.append(coordinate)
         return coordinates
@@ -325,7 +326,7 @@ class PinJoint(Joint):
     def _generate_speeds(self, speed):
         speeds = []
         if speed is None:
-            omega = dynamicsymbols(self._name + '_omega', positive=True)
+            omega = dynamicsymbols(self._name + '_omega', real=True)
             speed = omega
         speeds.append(speed)
         return speeds
