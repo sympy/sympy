@@ -2,11 +2,9 @@ from collections.abc import Callable
 
 from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.containers import Dict
-from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.functions import Abs
 
-from .common import a2idx
 from .dense import Matrix
 from .matrices import MatrixBase, ShapeError
 from .repmatrix import RepMatrix
@@ -236,50 +234,6 @@ class SparseMatrix(RepMatrix):
                         smat[i, j] = value
 
             return rows, cols, smat
-
-    def __getitem__(self, key):
-
-        if isinstance(key, tuple):
-            i, j = key
-            try:
-                i, j = self.key2ij(key)
-                return self._rep.getitem_sympy(i, j)
-            except (TypeError, IndexError):
-                if isinstance(i, slice):
-                    i = range(self.rows)[i]
-                elif is_sequence(i):
-                    pass
-                elif isinstance(i, Expr) and not i.is_number:
-                    from sympy.matrices.expressions.matexpr import MatrixElement
-                    return MatrixElement(self, i, j)
-                else:
-                    if i >= self.rows:
-                        raise IndexError('Row index out of bounds')
-                    i = [i]
-                if isinstance(j, slice):
-                    j = range(self.cols)[j]
-                elif is_sequence(j):
-                    pass
-                elif isinstance(j, Expr) and not j.is_number:
-                    from sympy.matrices.expressions.matexpr import MatrixElement
-                    return MatrixElement(self, i, j)
-                else:
-                    if j >= self.cols:
-                        raise IndexError('Col index out of bounds')
-                    j = [j]
-                return self.extract(i, j)
-
-        # check for single arg, like M[:] or M[3]
-        if isinstance(key, slice):
-            lo, hi = key.indices(len(self))[:2]
-            L = []
-            for i in range(lo, hi):
-                m, n = divmod(i, self.cols)
-                L.append(self[m, n])
-            return L
-
-        i, j = divmod(a2idx(key, len(self)), self.cols)
-        return self._rep.getitem_sympy(i, j)
 
     def __setitem__(self, key, value):
         raise NotImplementedError()
