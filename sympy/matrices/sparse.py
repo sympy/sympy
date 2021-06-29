@@ -271,12 +271,6 @@ class SparseMatrix(RepMatrix):
             new_smat[row + irow, col] = val
         return self._new(self.rows + other.rows, self.cols, new_smat)
 
-    @property
-    def _mat(self):
-        """Return a list of matrix elements.  Some routines
-        in DenseMatrix use `_mat` directly to speed up operations."""
-        return list(self)
-
     def applyfunc(self, f):
         """Apply a function to each element of the matrix.
 
