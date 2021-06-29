@@ -454,6 +454,8 @@ def test_orient_axis():
     A = ReferenceFrame('A')
     B = ReferenceFrame('B')
     assert A.orient_axis(B,-B.x, 1) == A.orient_axis(B, B.x, -1)
+    raises(TypeError, lambda: A.orient_axis(B, 1, -B.x))
+    raises(TypeError, lambda: A.orient_axis(B, 1, 1))
 
 def test_orient_body():
     A = ReferenceFrame('A')
