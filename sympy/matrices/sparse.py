@@ -570,55 +570,6 @@ class MutableSparseMatrix(SparseMatrix, MutableRepMatrix):
                 Asmat[i + A.rows, j] = v
         return A._new(A.rows + B.rows, A.cols, Asmat)
 
-    def col_op(self, j, f):
-        """In-place operation on col j using two-arg functor whose args are
-        interpreted as (self[i, j], i) for i in range(self.rows).
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> M = SparseMatrix.eye(3)*2
-        >>> M[1, 0] = -1
-        >>> M.col_op(1, lambda v, i: v + 2*M[i, 0]); M
-        Matrix([
-        [ 2, 4, 0],
-        [-1, 0, 0],
-        [ 0, 0, 2]])
-        """
-        for i in range(self.rows):
-            self[i, j] = f(self[i, j], i)
-
-    def col_swap(self, i, j):
-        """Swap, in place, columns i and j.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> S = SparseMatrix.eye(3); S[2, 1] = 2
-        >>> S.col_swap(1, 0); S
-        Matrix([
-        [0, 1, 0],
-        [1, 0, 0],
-        [2, 0, 1]])
-        """
-        if i > j:
-            i, j = j, i
-        rows = self.col_list()
-        temp = []
-        for ii, jj, v in rows:
-            if jj == i:
-                self[ii, jj] = S.Zero
-                temp.append((ii, v))
-            elif jj == j:
-                self[ii, jj] = S.Zero
-                self[ii, i] = v
-            elif jj > j:
-                break
-        for k, v in temp:
-            self[k, j] = v
-
     def copyin_list(self, key, value):
         if not is_sequence(value):
             raise TypeError("`value` must be of type list or tuple.")
@@ -735,62 +686,6 @@ class MutableSparseMatrix(SparseMatrix, MutableRepMatrix):
             for (i, j), v in B.todok().items():
                 Asmat[i, j + A.cols] = v
         return A._new(A.rows, A.cols + B.cols, Asmat)
-
-    def row_op(self, i, f):
-        """In-place operation on row ``i`` using two-arg functor whose args are
-        interpreted as ``(self[i, j], j)``.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> M = SparseMatrix.eye(3)*2
-        >>> M[0, 1] = -1
-        >>> M.row_op(1, lambda v, j: v + 2*M[0, j]); M
-        Matrix([
-        [2, -1, 0],
-        [4,  0, 0],
-        [0,  0, 2]])
-
-        See Also
-        ========
-        row
-        zip_row_op
-        col_op
-
-        """
-        for j in range(self.cols):
-            self[i, j] = f(self[i, j], j)
-
-    def row_swap(self, i, j):
-        """Swap, in place, columns i and j.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> S = SparseMatrix.eye(3); S[2, 1] = 2
-        >>> S.row_swap(1, 0); S
-        Matrix([
-        [0, 1, 0],
-        [1, 0, 0],
-        [0, 2, 1]])
-        """
-        if i > j:
-            i, j = j, i
-        rows = self.row_list()
-        temp = []
-        for ii, jj, v in rows:
-            if ii == i:
-                self[ii, jj] = S.Zero
-                temp.append((jj, v))
-            elif ii == j:
-                self[ii, jj] = S.Zero
-                self[i, jj] = v
-            elif ii > j:
-                break
-        for k, v in temp:
-            self[j, k] = v
 
     def zip_row_op(self, i, k, f):
         """In-place operation on row ``i`` using two-arg functor whose args are

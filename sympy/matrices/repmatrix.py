@@ -243,6 +243,108 @@ class MutableRepMatrix(RepMatrix):
         self._rep = DomainMatrix.vstack(self._rep[:row,:], self._rep[row+1:, :])
         self.rows -= 1
 
+    def col_op(self, j, f):
+        """In-place operation on col j using two-arg functor whose args are
+        interpreted as (self[i, j], i).
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import eye
+        >>> M = eye(3)
+        >>> M.col_op(1, lambda v, i: v + 2*M[i, 0]); M
+        Matrix([
+        [1, 2, 0],
+        [0, 1, 0],
+        [0, 0, 1]])
+
+        See Also
+        ========
+        col
+        row_op
+        """
+        for i in range(self.rows):
+            self[i, j] = f(self[i, j], i)
+
+    def col_swap(self, i, j):
+        """Swap the two given columns of the matrix in-place.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> M = Matrix([[1, 0], [1, 0]])
+        >>> M
+        Matrix([
+        [1, 0],
+        [1, 0]])
+        >>> M.col_swap(0, 1)
+        >>> M
+        Matrix([
+        [0, 1],
+        [0, 1]])
+
+        See Also
+        ========
+
+        col
+        row_swap
+        """
+        for k in range(0, self.rows):
+            self[k, i], self[k, j] = self[k, j], self[k, i]
+
+    def row_op(self, i, f):
+        """In-place operation on row ``i`` using two-arg functor whose args are
+        interpreted as ``(self[i, j], j)``.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import eye
+        >>> M = eye(3)
+        >>> M.row_op(1, lambda v, j: v + 2*M[0, j]); M
+        Matrix([
+        [1, 0, 0],
+        [2, 1, 0],
+        [0, 0, 1]])
+
+        See Also
+        ========
+        row
+        zip_row_op
+        col_op
+
+        """
+        for j in range(self.cols):
+            self[i, j] = f(self[i, j], j)
+
+    def row_swap(self, i, j):
+        """Swap the two given rows of the matrix in-place.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> M = Matrix([[0, 1], [1, 0]])
+        >>> M
+        Matrix([
+        [0, 1],
+        [1, 0]])
+        >>> M.row_swap(0, 1)
+        >>> M
+        Matrix([
+        [1, 0],
+        [0, 1]])
+
+        See Also
+        ========
+
+        row
+        col_swap
+        """
+        for k in range(0, self.cols):
+            self[i, k], self[j, k] = self[j, k], self[i, k]
+
 
 def _getitem_RepMatrix(self, key):
     """Return portion of self defined by key. If the key involves a slice
