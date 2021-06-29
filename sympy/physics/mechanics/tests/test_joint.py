@@ -1,4 +1,4 @@
-from sympy import sin, cos, Matrix, sqrt, pi, expand_mul, Abs, acos
+from sympy import sin, cos, Matrix, sqrt, pi, expand_mul, Abs, acos, S
 from sympy.core.symbol import symbols
 from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint
 from sympy.physics.mechanics.joint import Joint
@@ -214,6 +214,10 @@ def test_pinjoint_arbitrary_axis():
     assert expand_mul((N.x-N.y+N.z).angle_between(A.x+A.y-A.z)) == 0 #Axis are aligned
     assert (A.x-A.y+A.z).express(N).simplify() == \
         (-4*cos(theta)/3 - 1/3)*N.x + (1/3 - 4*sin(theta + pi/6)/3)*N.y + (4*cos(theta + pi/3)/3 - 1/3)*N.z
+    assert A.dcm(N).simplify() == Matrix([[S(1)/3 - 2*cos(theta)/3, -2*sin(theta + pi/6)/3 - S(1)/3, \
+        2*cos(theta + pi/3)/3 + S(1)/3], [2*cos(theta + pi/3)/3 + S(1)/3, 2*cos(theta)/3 - S(1)/3, \
+        2*sin(theta + pi/6)/3 + S(1)/3], [-2*sin(theta + pi/6)/3 - S(1)/3, 2*cos(theta + pi/3)/3 + S(1)/3, \
+        2*cos(theta)/3 - S(1)/3]])
     assert A.ang_vel_in(N) == (omega*N.x - omega*N.y + omega*N.z)/sqrt(3)
     assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y - omega*A.z)/sqrt(3)
     assert A.ang_vel_in(N).magnitude() == Abs(omega)
