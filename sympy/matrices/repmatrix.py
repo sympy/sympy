@@ -190,6 +190,8 @@ class RepMatrix(MatrixBase):
 
 class MutableRepMatrix(RepMatrix):
 
+    __hash__ = None
+
     is_zero = False
 
     def copy(self):

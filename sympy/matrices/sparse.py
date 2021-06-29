@@ -504,5 +504,3 @@ class MutableSparseMatrix(SparseMatrix, MutableRepMatrix):
         obj.cols = cols
         obj._rep = rep
         return obj
-
-    __hash__ = None  # type: ignore
