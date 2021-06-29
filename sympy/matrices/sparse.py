@@ -507,38 +507,7 @@ class MutableSparseMatrix(SparseMatrix, MutableRepMatrix):
         obj._rep = rep
         return obj
 
-    def as_mutable(self):
-        return self.copy()
-
     __hash__ = None  # type: ignore
-
-    def _eval_col_del(self, k):
-        newD = {}
-        smat = self.todok()
-        for i, j in smat:
-            if j == k:
-                pass
-            elif j > k:
-                newD[i, j - 1] = smat[i, j]
-            else:
-                newD[i, j] = smat[i, j]
-        rep = self._smat_to_DomainMatrix(self.rows, self.cols - 1, newD)
-        self._rep = rep
-        self.cols -= 1
-
-    def _eval_row_del(self, k):
-        newD = {}
-        smat = self.todok()
-        for i, j in smat:
-            if i == k:
-                pass
-            elif i > k:
-                newD[i - 1, j] = smat[i, j]
-            else:
-                newD[i, j] = smat[i, j]
-        rep = self._smat_to_DomainMatrix(self.rows - 1, self.cols, newD)
-        self._rep = rep
-        self.rows -= 1
 
     def col_join(self, other):
         """Returns B augmented beneath A (row-wise joining)::

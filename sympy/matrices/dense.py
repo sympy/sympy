@@ -119,20 +119,6 @@ class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
         obj._rep = rep
         return obj
 
-    def copy(self):
-        return self._fromrep(self._rep.copy())
-
-    def as_mutable(self):
-        return self.copy()
-
-    def _eval_col_del(self, col):
-        self._rep = DomainMatrix.hstack(self._rep[:,:col], self._rep[:,col+1:])
-        self.cols -= 1
-
-    def _eval_row_del(self, row):
-        self._rep = DomainMatrix.vstack(self._rep[:row,:], self._rep[row+1:, :])
-        self.rows -= 1
-
     def col_op(self, j, f):
         """In-place operation on col j using two-arg functor whose args are
         interpreted as (self[i, j], i).

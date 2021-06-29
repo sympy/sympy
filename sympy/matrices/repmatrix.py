@@ -183,6 +183,12 @@ class RepMatrix(MatrixBase):
 
 class MutableRepMatrix(RepMatrix):
 
+    def copy(self):
+        return self._fromrep(self._rep.copy())
+
+    def as_mutable(self):
+        return self.copy()
+
     def __setitem__(self, key, value):
         """
 
@@ -228,6 +234,14 @@ class MutableRepMatrix(RepMatrix):
             i, j, value = rv
             self._rep, value = self._unify_element_sympy(self._rep, value)
             self._rep.rep.setitem(i, j, value)
+
+    def _eval_col_del(self, col):
+        self._rep = DomainMatrix.hstack(self._rep[:,:col], self._rep[:,col+1:])
+        self.cols -= 1
+
+    def _eval_row_del(self, row):
+        self._rep = DomainMatrix.vstack(self._rep[:row,:], self._rep[row+1:, :])
+        self.rows -= 1
 
 
 def _getitem_RepMatrix(self, key):
