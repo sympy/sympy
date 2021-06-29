@@ -129,8 +129,6 @@ class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
         for (i, j), element in self.todok().items():
             self[i, j] = _simplify(element, **kwargs)
 
-    is_zero = False
-
 
 MutableMatrix = Matrix = MutableDenseMatrix
 

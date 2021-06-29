@@ -184,6 +184,8 @@ class RepMatrix(MatrixBase):
 
 class MutableRepMatrix(RepMatrix):
 
+    is_zero = False
+
     def copy(self):
         return self._fromrep(self._rep.copy())
 

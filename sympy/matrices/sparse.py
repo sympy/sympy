@@ -624,5 +624,3 @@ class MutableSparseMatrix(SparseMatrix, MutableRepMatrix):
             for (i, j), v in B.todok().items():
                 Asmat[i, j + A.cols] = v
         return A._new(A.rows, A.cols + B.cols, Asmat)
-
-    is_zero = False
