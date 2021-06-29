@@ -948,5 +948,5 @@ def test_issue_21550():
     assert limit((x - r)/(x**2 + x - 1), x, r) == (-1 + sqrt(5))/(5 - sqrt(5))
 
 def test_issue_21661():
-    out = limit((x**(x+1) * (log(x) + 1) + 1) / x, x, 11)
-    assert out.is_Add and set(out.args) == {S(3138428376722)/11, 285311670611*log(11)}
+    out = limit((x**(x + 1) * (log(x) + 1) + 1) / x, x, 11)
+    assert out == S(3138428376722)/11 + 285311670611*log(11)
