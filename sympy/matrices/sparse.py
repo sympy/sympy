@@ -246,14 +246,6 @@ class SparseMatrix(RepMatrix):
     def _eval_Abs(self):
         return self.applyfunc(lambda x: Abs(x))
 
-    def _eval_add(self, other):
-        """If `other` is a SparseMatrix, add efficiently. Otherwise,
-        do standard addition."""
-        if not isinstance(other, SparseMatrix):
-            return self + self._new(other)
-
-        return self._fromrep(self._rep + other._rep)
-
     def _eval_col_insert(self, icol, other):
         if not isinstance(other, SparseMatrix):
             other = MutableSparseMatrix(other)
@@ -272,9 +264,6 @@ class SparseMatrix(RepMatrix):
 
     def _eval_conjugate(self):
         return self.applyfunc(lambda e: e.conjugate())
-
-    def _eval_extract(self, rowsList, colsList):
-        return self._fromrep(self._rep.extract(rowsList, colsList))
 
     @classmethod
     def _eval_eye(cls, rows, cols):
@@ -298,10 +287,6 @@ class SparseMatrix(RepMatrix):
     def _eval_is_symmetric(self, simpfunc):
         diff = (self - self.T).applyfunc(simpfunc)
         return len(diff.values()) == 0
-
-    def _eval_matrix_mul(self, other):
-        """Fast multiplication exploiting the sparsity of the matrix."""
-        return self._fromrep(self._rep * other._rep)
 
     def _eval_row_insert(self, irow, other):
         if not isinstance(other, SparseMatrix):

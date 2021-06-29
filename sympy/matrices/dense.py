@@ -33,19 +33,6 @@ class DenseMatrix(RepMatrix):
     def __setitem__(self, key, value):
         raise NotImplementedError()
 
-    def _eval_add(self, other):
-        return classof(self, other)._fromrep(self._rep + other._rep)
-
-    def _eval_extract(self, rowsList, colsList):
-        return self._fromrep(self._rep.extract(rowsList, colsList))
-
-    def _eval_matrix_mul(self, other):
-        return classof(self, other)._fromrep(self._rep * other._rep)
-
-    def _eval_matrix_mul_elementwise(self, other):
-        rep = self._rep.mul_elementwise(other._rep)
-        return classof(self, other)._fromrep(rep)
-
     def _eval_inverse(self, **kwargs):
         return self.inv(method=kwargs.get('method', 'GE'),
                         iszerofunc=kwargs.get('iszerofunc', _iszero),

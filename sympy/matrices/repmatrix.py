@@ -6,6 +6,7 @@ from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.core.sympify import _sympify, SympifyError
 from sympy.polys.domains import ZZ, QQ, EXRAW
 
+from .common import classof
 from .matrices import MatrixBase, MatrixKind
 
 
@@ -47,6 +48,9 @@ class RepMatrix(MatrixBase):
         else: # pragma: no cover
             raise RuntimeError("Domain should only be ZZ, QQ or EXRAW")
         return MatrixKind(element_kind)
+
+    def _eval_extract(self, rowsList, colsList):
+        return self._fromrep(self._rep.extract(rowsList, colsList))
 
     def __getitem__(self, key):
         """Return portion of self defined by key. If the key involves a slice
@@ -136,3 +140,13 @@ class RepMatrix(MatrixBase):
                 return values
             else:
                 return values[0]
+
+    def _eval_add(self, other):
+        return classof(self, other)._fromrep(self._rep + other._rep)
+
+    def _eval_matrix_mul(self, other):
+        return classof(self, other)._fromrep(self._rep * other._rep)
+
+    def _eval_matrix_mul_elementwise(self, other):
+        rep = self._rep.mul_elementwise(other._rep)
+        return classof(self, other)._fromrep(rep)
