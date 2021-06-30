@@ -16,6 +16,13 @@ class Joint(ABC):
     This is the base class for all specific joints and holds all common methods
     acting as an interface for all joints. Custom joint can be created by
     inheriting Joint class and defining all abstract functions.
+    Abstract methods are:
+
+    - ``'_generate_coordinates'``
+    - ``'_generate_speeds'``
+    - ``'_orient_frames'``
+    - ``'_set_angular_velocity'``
+    - ``'_set_linar_velocity'``
 
     Parameters
     ==========
