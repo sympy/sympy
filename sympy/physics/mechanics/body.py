@@ -214,3 +214,37 @@ class Body(RigidBody, Particle):  # type: ignore
         if not isinstance(vec, Vector):
             raise TypeError("A Vector must be supplied to add torque.")
         self.loads.append((self.frame, vec))
+
+    def vel(self, body=None):
+        """
+        Returns the velocity of self's masscenter wrt body's refernceframe or
+        self's referenceframe.
+
+        Parameters
+        ==========
+
+        body: Body, optional
+            The body about which the velocity is needed to be calculated.
+            If body is self by default.
+
+        Example
+        =======
+
+        >>> from sympy.physics.mechanics import Body, ReferenceFrame
+        >>> A = Body('A')
+        >>> A.masscenter.set_vel(A.frame, 5*A.frame.x)
+        >>> A.vel()
+        5*A_frame.x
+
+        >>> N = ReferenceFrame('N')
+        >>> B = Body('B', frame=N)
+        >>> A.masscenter.set_vel(N, 5*N.x)
+        >>> A.vel(B)
+        5*N.x
+
+        """
+
+        if body is None:
+            body = self
+        frame = body.frame        
+        return self.masscenter.vel(frame)
