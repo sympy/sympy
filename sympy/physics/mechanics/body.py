@@ -246,7 +246,7 @@ class Body(RigidBody, Particle):  # type: ignore
 
         if body is None:
             body = self
-        frame = body.frame      
+        frame = body.frame
         return self.masscenter.vel(frame)
 
     def ang_vel_in(self, body):
