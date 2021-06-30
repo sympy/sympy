@@ -647,8 +647,7 @@ class ReferenceFrame:
         _check_frame(parent)
 
         if not isinstance(axis, Vector) and isinstance(angle, Vector):
-            raise TypeError('The order of arguments is incorrect.' +\
-                ' The arguments are orient_axis(frame, axis, angle)')
+            axis, angle = angle, axis
 
         axis = _check_vector(axis)
         amount = sympify(angle)
