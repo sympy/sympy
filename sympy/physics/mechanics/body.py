@@ -217,7 +217,7 @@ class Body(RigidBody, Particle):  # type: ignore
 
     def vel(self, body=None):
         """
-        Returns the velocity of self's masscenter wrt body's refernceframe or
+        Returns the velocity of self's masscenter wrt body's referenceframe or
         self's referenceframe.
 
         Parameters
@@ -246,5 +246,32 @@ class Body(RigidBody, Particle):  # type: ignore
 
         if body is None:
             body = self
-        frame = body.frame        
+        frame = body.frame      
         return self.masscenter.vel(frame)
+
+    def ang_vel_in(self, body):
+        """
+        Returns the angular velocity of self's frame wrt body's referenceframe or
+        self's referenceframe.
+
+        Parameters
+        ==========
+
+        body: Body
+            The body about which the angluar velocity is needed to be calculated.
+            If body is self by default.
+
+        Example
+        =======
+
+        >>> from sympy.physics.mechanics import Body, ReferenceFrame
+        >>> A = Body('A')
+        >>> N = ReferenceFrame('N')
+        >>> B = Body('B', frame=N)
+        >>> A.frame.set_ang_vel(N, 5*N.x)
+        >>> A.ang_vel_in(B)
+        5*N.x
+
+        """
+
+        return self.frame.ang_vel_in(body.frame)

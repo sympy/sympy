@@ -133,5 +133,13 @@ def test_body_vel():
     assert A.vel() == 10*A.frame.y
     N = ReferenceFrame('N')
     B = Body('B', frame=N)
-    A.masscenter.set_vel(N, A.z)
-    assert A.vel(B) == A.z
+    A.masscenter.set_vel(N, A.frame.z)
+    assert A.vel(B) == A.frame.z
+
+def test_body_ang_vel():
+    A = Body('A')
+    N = ReferenceFrame('N')
+    B = Body('B', frame=N)
+    A.frame.set_ang_vel(N, N.y)
+    assert A.ang_vel_in(B) == N.y
+    assert B.ang_vel_in(A) == -N.y
