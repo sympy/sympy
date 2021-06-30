@@ -202,111 +202,35 @@ class PinJoint(Joint):
     Examples
     =========
 
-    This is minimal working example where parent body and child body is
-    connected via ``PinJoint`` at their masscenters.
-
-        >>> from sympy.physics.mechanics import Body, PinJoint
-        >>> parent = Body('parent')
-        >>> child = Body('child')
-        >>> P = PinJoint('P', parent, child)
-        >>> P.coordinates()
-        [theta_P(t)]
-        >>> P.speeds()
-        [omega_P(t)]
-        >>> P.kdes()
-        [omega_P(t) - Derivative(theta_P(t), t)]
-
-    This is an example of double pendulum where we will do all kinematics
+    This is an example of simple double pendulum where we will do all the kinematics
     using PinJoints.
 
-        >>> from sympy import symbols
-        >>> from sympy.physics.mechanics import PinJoint, Body
-        >>> from sympy.physics.vector import dynamicsymbols, ReferenceFrame
-
-    Declaring the mass, frame, speeds, coordinates etc isn't necessary as `Body` and
-    `PinJoint` can declare it themselves. But we would be declaring them for better understanding.
-
-        >>> mA, mB, lA, lB, h = symbols('mA, mB, lA, lB, h')
-        >>> theta, phi, omega, alpha = dynamicsymbols('theta phi omega alpha')
-        >>> N = ReferenceFrame('N')
-        >>> A = ReferenceFrame('A')
-        >>> B = ReferenceFrame('B')
-
-    Declaring the bodies.
-
-        >>> rod = Body('rod', frame=A, mass=mA)
-        >>> plate = Body('plate', mass=mB, frame=B)
-        >>> C = Body('C', frame=N) #Ceiling
-
-    Declaring the joint position wrt rod's masscenter, other bodies are connected through their
-    masscenters.
-
-        >>> lA = (lB - h / 2) / 2 * A.z
-        >>> lC = (lB/2 + h/4) * A.z
-
-    Rod's y axis is aligned to ceiling's(C) y axis.
-    Rod's z axis is aligned to plate's z axis.
-
-        >>> J1 = PinJoint('J1', C, rod, coordinates=theta, speeds=omega, child_joint_pos=lA, parent_axis=N.y, child_axis=A.y)
-        >>> J2 = PinJoint('J2', rod, plate, coordinates=phi, speeds=alpha, parent_joint_pos=lC, parent_axis=A.z, child_axis=B.z)
-
-    We can check the kinematics now.
-
-        >>> J1.kdes()
-        [omega(t) - Derivative(theta(t), t)]
-        >>> J2.kdes()
-        [alpha(t) - Derivative(phi(t), t)]
-        >>> rod.masscenter.vel(N)
-        (h/4 - lB/2)*omega(t)*A.x
-        >>> plate.masscenter.vel(N)
-        ((h/4 - lB/2)*omega(t) + (h/4 + lB/2)*omega(t))*A.x
-        >>> A.ang_vel_in(N)
-        omega(t)*N.y
-        >>> B.ang_vel_in(N)
-        omega(t)*N.y + alpha(t)*A.z
-        >>> A.dcm(N)
-        Matrix([
-        [cos(theta(t)), 0, -sin(theta(t))],
-        [            0, 1,              0],
-        [sin(theta(t)), 0,  cos(theta(t))]])
-        >>> B.dcm(N)
-        Matrix([
-        [ cos(phi(t))*cos(theta(t)), sin(phi(t)), -sin(theta(t))*cos(phi(t))],
-        [-sin(phi(t))*cos(theta(t)), cos(phi(t)),  sin(phi(t))*sin(theta(t))],
-        [             sin(theta(t)),           0,              cos(theta(t))]])
-
-    This example can also be done in another way, i.e, without explicitly defining constants,
-    dyamicsymbols, frames etc.
-
-        >>> rod = Body('rod')
-        >>> plate = Body('plate')
-        >>> C = Body('C') #Ceiling
-        >>> lA = (lB - h / 2) / 2 * rod.frame.z
-        >>> lC = (lB/2 + h/4) * rod.frame.z
-        >>> J1 = PinJoint('J1', C, rod, child_joint_pos=lA, parent_axis=C.frame.y, child_axis=rod.frame.y)
-        >>> J2 = PinJoint('J2', rod, plate, parent_joint_pos=lC, parent_axis=rod.frame.z, child_axis=plate.frame.z)
-        >>> J1.kdes()
-        [omega_J1(t) - Derivative(theta_J1(t), t)]
-        >>> J2.kdes()
-        [omega_J2(t) - Derivative(theta_J2(t), t)]
-        >>> rod.masscenter.vel(C.frame)
-        (h/4 - lB/2)*omega_J1(t)*rod_frame.x
-        >>> plate.masscenter.vel(C.frame)
-        ((h/4 - lB/2)*omega_J1(t) + (h/4 + lB/2)*omega_J1(t))*rod_frame.x
-        >>> rod.frame.ang_vel_in(C.frame)
-        omega_J1(t)*C_frame.y
-        >>> plate.frame.ang_vel_in(C.frame)
-        omega_J2(t)*rod_frame.z + omega_J1(t)*C_frame.y
-        >>> rod.frame.dcm(C.frame)
-        Matrix([
-        [cos(theta_J1(t)), 0, -sin(theta_J1(t))],
-        [               0, 1,                 0],
-        [sin(theta_J1(t)), 0,  cos(theta_J1(t))]])
-        >>> plate.frame.dcm(C.frame)
-        Matrix([
-        [ cos(theta_J1(t))*cos(theta_J2(t)), sin(theta_J2(t)), -sin(theta_J1(t))*cos(theta_J2(t))],
-        [-sin(theta_J2(t))*cos(theta_J1(t)), cos(theta_J2(t)),  sin(theta_J1(t))*sin(theta_J2(t))],
-        [                  sin(theta_J1(t)),                0,                   cos(theta_J1(t))]])
+    >>> from sympy.physics.mechanics import PinJoint, Body
+    >>> from sympy import symbols
+    >>> l1, l2 = symbols('l1 l2')
+    >>> ceiling = Body('C')
+    >>> upper_bob = Body('U')
+    >>> lower_bob = Body('L')
+    >>> ceiling_joint = PinJoint('P1', ceiling, upper_bob, child_joint_pos=l1*upper_bob.frame.x,parent_axis=ceiling.frame.z, child_axis=upper_bob.frame.z)
+    >>> pendulum_joint = PinJoint('P2', upper_bob, lower_bob, child_joint_pos=l2*lower_bob.frame.x, parent_axis=upper_bob.frame.z, child_axis=lower_bob.frame.z)
+    >>> upper_bob.masscenter.vel(ceiling.frame)
+    - l1*omega_P1(t)*U_frame.y
+    >>> lower_bob.masscenter.vel(ceiling.frame)
+    - l1*omega_P1(t)*U_frame.y - l2*(omega_P1(t) + omega_P2(t))*L_frame.y
+    >>> upper_bob.frame.ang_vel_in(ceiling.frame)
+    omega_P1(t)*C_frame.z
+    >>> lower_bob.frame.ang_vel_in(ceiling.frame)
+    omega_P1(t)*C_frame.z + omega_P2(t)*U_frame.z
+    >>> upper_bob.frame.dcm(ceiling.frame)
+    Matrix([
+    [ cos(theta_P1(t)), sin(theta_P1(t)), 0],
+    [-sin(theta_P1(t)), cos(theta_P1(t)), 0],
+    [                0,                0, 1]])
+    >>> lower_bob.frame.dcm(upper_bob.frame)
+    Matrix([
+    [ cos(theta_P2(t)), sin(theta_P2(t)), 0],
+    [-sin(theta_P2(t)), cos(theta_P2(t)), 0],
+    [                0,                0, 1]])
 
     Notes
     ======
