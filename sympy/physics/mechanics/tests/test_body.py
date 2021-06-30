@@ -127,14 +127,12 @@ def test_body_add_torque():
     assert body.loads[0] == (body.frame, torque_vector)
     raises(TypeError, lambda: body.apply_torque(0))
 
-def test_body_vel():
+def test_body_masscenter_vel():
     A = Body('A')
-    A.masscenter.set_vel(A.frame, 10*A.frame.y)
-    assert A.vel() == 10*A.frame.y
     N = ReferenceFrame('N')
     B = Body('B', frame=N)
     A.masscenter.set_vel(N, A.frame.z)
-    assert A.vel(B) == A.frame.z
+    assert A.masscenter_vel(B) == A.frame.z
 
 def test_body_ang_vel():
     A = Body('A')
