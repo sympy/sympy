@@ -1711,15 +1711,15 @@ class Pow(Expr):
         return res
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from ..series import Order
         from sympy import exp, I, im, log, PoleError
         e = self.exp
         b = self.base
         if self.base is S.Exp1:
             arg = e.as_leading_term(x, logx=logx)
-            if Order(x, x).contains(arg):
+            arg0 = arg.subs(x, 0)
+            if arg0.is_zero:
                 return S.One
-            if Order(1, x).contains(arg):
+            elif not arg0.is_infinite:
                 return S.Exp1**arg
             raise PoleError("Cannot expand %s around 0" % (self))
         elif e.has(x):

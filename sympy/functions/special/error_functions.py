@@ -230,13 +230,14 @@ class erf(Function):
         return -I*erfi(I*z)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
         arg = self.args[0].as_leading_term(x)
+        arg0 = self.subs(x, 0)
 
-        if x in arg.free_symbols and Order(1, x).contains(arg):
+        if x in arg.free_symbols and arg0.is_zero:
             return 2*arg/sqrt(pi)
-        else:
-            return self.func(arg)
+        elif arg0.is_finite:
+            return self.func(arg0)
+        return -S.One if cdir == -1 else S.One
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
@@ -429,13 +430,13 @@ class erfc(Function):
         return self.rewrite(erf)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
-        arg = self.args[0].as_leading_term(x)
+        arg0 = self.args[0].as_leading_term(x).subs(x, 0)
 
-        if x in arg.free_symbols and Order(1, x).contains(arg):
+        if arg0.is_zero:
             return S.One
-        else:
-            return self.func(arg)
+        elif arg0.is_infinite:
+            return 2 if cdir == -1 else S.Zero
+        return self.func(arg0)
 
     as_real_imag = real_to_real_as_real_imag
 
@@ -619,8 +620,9 @@ class erfi(Function):
 
         if x in arg.free_symbols and arg0.is_zero:
             return 2*arg/sqrt(pi)
-        else:
-            return self.func(arg)
+        elif arg0.is_finite:
+            return self.func(arg0)
+        return arg/(sqrt(-arg**2))
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
@@ -2394,11 +2396,14 @@ class fresnels(FresnelIntegral):
                 * meijerg([], [1], [Rational(3, 4)], [Rational(1, 4), 0], -pi**2*z**4/16))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        arg = self.args[0].as_leading_term(x).subs(x, 0)
-        if arg.is_zero:
+        arg = self.args[0].as_leading_term(x)
+        arg0 = arg.subs(x, 0)
+
+        if arg0.is_zero:
             return pi*arg**3/6
-        if arg in (S.ComplexInfinity, S.Infinity, S.NegativeInfinity):
-            return -S.Half if cdir == 1 else S.Half
+        elif arg0.is_finite:
+            return self.func(arg0)
+        return -S.Half if cdir == 1 else S.Half
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
@@ -2542,11 +2547,14 @@ class fresnelc(FresnelIntegral):
                 * meijerg([], [1], [Rational(1, 4)], [Rational(3, 4), 0], -pi**2*z**4/16))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        arg = self.args[0].as_leading_term(x).subs(x, 0)
-        if arg.is_zero:
+        arg = self.args[0].as_leading_term(x)
+        arg0 = arg.subs(x, 0)
+
+        if arg0.is_zero:
             return arg
-        if arg in (S.ComplexInfinity, S.Infinity, S.NegativeInfinity):
-            return -S.Half if cdir == 1 else S.Half
+        elif arg0.is_finite:
+            return self.func(arg0)
+        return -S.Half if cdir == 1 else S.Half
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order

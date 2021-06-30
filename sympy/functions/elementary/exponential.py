@@ -515,11 +515,11 @@ class exp(ExpBase, metaclass=ExpMeta):
         return Add(*l)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
         arg = self.args[0].cancel().as_leading_term(x, logx=logx)
-        if Order(x, x).contains(arg):
+        arg0 = arg.subs(x, 0)
+        if arg0.is_zero:
             return S.One
-        if Order(1, x).contains(arg):
+        elif not arg0.is_infinite:
             return exp(arg)
         raise PoleError("Cannot expand %s around 0" % (self))
 

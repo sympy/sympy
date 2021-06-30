@@ -202,6 +202,7 @@ class gamma(Function):
         return sage.gamma(self.args[0]._sage_())
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy import PoleError
         arg = self.args[0]
         x0 = arg.subs(x, 0)
 
@@ -209,18 +210,9 @@ class gamma(Function):
             n = -x0
             res = (-1)**n/self.func(n + 1)
             return res/(arg + n).as_leading_term(x)
-        elif x0.is_finite:
+        elif not x0.is_infinite:
             return self.func(x0)
-        ####################################################
-        # The correct result here should be 'None'.        #
-        # Indeed arg in not bounded as x tends to 0.       #
-        # Consequently the series expansion does not admit #
-        # the leading term.                                #
-        # For compatibility reasons, the return value here #
-        # is the original function, i.e. gamma(arg),       #
-        # instead of None.                                 #
-        ####################################################
-        return self.func(arg)
+        raise PoleError()
 
 
 ###############################################################################

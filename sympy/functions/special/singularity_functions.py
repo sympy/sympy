@@ -211,9 +211,7 @@ class SingularityFunction(Function):
             return (x - a)**n*Heaviside(x - a)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        z = self.args[0]
-        a = self.args[1]
-        n = self.args[2]
+        z, a, n = self.args
         shift = (z - a).subs(x, 0)
         if n < 0:
             return S.Zero
@@ -224,9 +222,7 @@ class SingularityFunction(Function):
         return S.Zero
 
     def _eval_nseries(self, x, n, logx=None, cdir=0):
-        z = self.args[0]
-        a = self.args[1]
-        n = self.args[2]
+        z, a, n = self.args
         shift = (z - a).subs(x, 0)
         if n < 0:
             return S.Zero
