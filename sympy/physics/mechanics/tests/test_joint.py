@@ -78,6 +78,7 @@ def test_pin_joint_double_pendulum():
     #Check Linear Velocity
     assert PartP.masscenter.vel(N) == l*u1*A.y
     assert PartR.masscenter.vel(A) == l*u2*B.y
+    assert PartR.masscenter.vel(N) == l*u1*A.y + l*(u1 + u2)*B.y
 
 def test_pin_joint_chaos_pendulum():
     mA, mB, lA, lB, h = symbols('mA, mB, lA, lB, h')
