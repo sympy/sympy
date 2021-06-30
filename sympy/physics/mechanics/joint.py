@@ -81,11 +81,11 @@ class Joint(ABC):
         return self.__str__()
 
     def parent(self):
-        """ Parent body of Joint."""
+        """Parent body of Joint."""
         return self._parent
 
     def child(self):
-        """ Child body of Joint."""
+        """Child body of Joint."""
         return self._child
 
     def coordinates(self):
@@ -97,22 +97,22 @@ class Joint(ABC):
         return self._speeds
 
     def kdes(self):
-        """ KDE of Joint."""
+        """Kinematical differential equations of the joint."""
         return self._kdes
 
     @abstractmethod
     def _generate_coordinates(self, coordinates):
-        """ Generate list of coordinates."""
+        """List generalized coordinates of the joint."""
         pass
 
     @abstractmethod
     def _generate_speeds(self, speeds):
-        """ Generate list of speeds. """
+        """List generalized speeds of the joint."""
         pass
 
     @abstractmethod
     def _orient_frames(self):
-        """Orient frames as per the joint"""
+        """Orient frames as per the joint."""
         pass
 
     @abstractmethod
@@ -135,9 +135,9 @@ class Joint(ABC):
             ax = body.frame.x
             return ax
         if not isinstance(ax, Vector):
-            raise TypeError("Axis must be of type Vector. Example-> A.x wehere 'A' is ReferenceFrame.")
+            raise TypeError("Axis must be of type Vector.")
         if not ax.dt(body.frame) == 0:
-            raise ValueError('Axis cannot be time-varying.')
+            raise ValueError('Axis cannot be time-varying when viewed from the associated body.')
         return ax
 
     def _locate_joint_pos(self, body, joint_pos):
@@ -146,7 +146,7 @@ class Joint(ABC):
         if not isinstance(joint_pos, Vector):
             raise ValueError('Joint Position must be supplied as Vector.')
         if not joint_pos.dt(body.frame) == 0:
-            raise ValueError('Position Vector cannot be time-varying.')
+            raise ValueError('Position Vector cannot be time-varying when viewed from the associated body.')
         return body.masscenter.locatenew(self._name + '_' + body.name + '_joint', joint_pos)
 
     def _align_axis(self, parent, child):
@@ -162,31 +162,28 @@ class PinJoint(Joint):
     Explanation
     ===========
 
-    It is defined such that the child body rotates with respect to the parent body
-    about the body fixed parent axis through the angle theta. The point of joint
-    (pin joint) is defined by two points in each body which coincides together.
-    In addition, the child's reference frame can be arbitrarily rotated a constant
-    amount with respect to the parent axis by passing an axis in child body which
-    must align with parent axis after the rotation.
+    It is defined such that the pin joint axis is ``body fixed`` in both child and parent.
+    The location of the joint is defined relative to the mass center of each body which
+    coincides together.
 
     Parameters
     ==========
 
     name : string
-        The Joint's name which makes it unique.
+        The joint's name which makes it unique.
     parent : Body
         The parent body of joint.
     child : Body
         The child body of joint.
-    coordinates: dynamicsymbol, optional
+    coordinate: dynamicsymbol, optional
         Coordinates of joint.
-    speeds : dynamicsymbol, optional
+    speed : dynamicsymbol, optional
         Speeds of joint.
     parent_joint_pos : Vector, optional
-        Defines the joint's point where the parent will be connected to child.
+        Locates the joint relative to the parent's mass center in the parent body.
         Default value is masscenter of Parent Body.
     child_joint_pos : Vector, optional
-        Defines the joint's point where the child will be connected to parent.
+        locates the joint relative to the child's mass center in the child body.
         Default value is masscenter of Child Body.
     parent_axis : Vector, optional
         Axis of parent frame which would be be aligned with child's
@@ -199,7 +196,7 @@ class PinJoint(Joint):
     =========
 
     This is minimal working example where parent body and child body is
-    connected via PinJoint through their masscenters.
+    connected via ``PinJoint`` at their masscenters.
 
         >>> from sympy.physics.mechanics import Body, PinJoint
         >>> parent = Body('parent')
