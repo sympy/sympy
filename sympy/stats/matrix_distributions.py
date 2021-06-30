@@ -169,10 +169,9 @@ class SampleMatrixPymc:
             raise TypeError("Invalid value for `size` in pymc3. Must be int")
         import logging
         logging.getLogger("pymc3").setLevel(logging.ERROR)
-        with ignore_warnings(UserWarning):
-            with pymc3.Model():
-                pymc3_rv_map[dist.__class__.__name__](dist)
-                return [pymc3.sample(draws=draws, chains=1, progressbar=False, random_seed=seed, return_inferencedata=False)['X']]
+        with pymc3.Model():
+            pymc3_rv_map[dist.__class__.__name__](dist)
+            return [pymc3.sample(draws=draws, chains=1, progressbar=False, random_seed=seed, return_inferencedata=False, compute_convergence_checks=False)['X']]
 
 _get_sample_class_matrixrv = {
     'scipy': SampleMatrixScipy,

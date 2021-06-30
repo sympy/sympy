@@ -1611,18 +1611,17 @@ class Distribution(Basic):
                 raise TypeError("Invalid value for `size` in pymc3. Must be int")
             import logging
             logging.getLogger("pymc3").setLevel(logging.ERROR)
-            with ignore_warnings(UserWarning):
-                import pymc3
-                with pymc3.Model():
-                    if do_sample_pymc3(self):
-                        samps = [pymc3.sample(draws=draws, chains=1,
-                                    progressbar=False, random_seed=seed, return_inferencedata=False)[:]['X'] for i in range(size[0])]
-                        if size[0] == 1 and draws == 1: #if numsamples=1 and size=()
-                            samps = samps[0]
-                        elif size[0] != 1 and draws == 1: #if numsamples=int and size=()
-                            samps = [sam[0] for sam in samps]
-                    else:
-                        samps = None
+            import pymc3
+            with pymc3.Model():
+                if do_sample_pymc3(self):
+                    samps = [pymc3.sample(draws=draws, chains=1, compute_convergence_checks=False,
+                                progressbar=False, random_seed=seed, return_inferencedata=False)[:]['X'] for i in range(size[0])]
+                    if size[0] == 1 and draws == 1: #if numsamples=1 and size=()
+                        samps = samps[0]
+                    elif size[0] != 1 and draws == 1: #if numsamples=int and size=()
+                        samps = [sam[0] for sam in samps]
+                else:
+                    samps = None
 
         else:
             raise NotImplementedError("Sampling from %s is not supported yet."

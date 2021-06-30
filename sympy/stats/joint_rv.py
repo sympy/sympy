@@ -246,13 +246,12 @@ class SampleJointPymc:
             raise TypeError("Invalid value for `size` in pymc3. Must be int")
         import logging
         logging.getLogger("pymc3").setLevel(logging.ERROR)
-        with ignore_warnings(UserWarning):
-            with pymc3.Model():
-                pymc3_rv_map[dist.__class__.__name__](dist)
-                samples = pymc3.sample(draws=draws, chains=1, progressbar=False, random_seed=seed, return_inferencedata=False)[:]['X']
-            if samples.shape[0:len(size)] != size:
-                samples = samples.reshape((size[0],) + samples.shape)
-            return samples
+        with pymc3.Model():
+            pymc3_rv_map[dist.__class__.__name__](dist)
+            samples = pymc3.sample(draws=draws, chains=1, progressbar=False, random_seed=seed, return_inferencedata=False, compute_convergence_checks=False)[:]['X']
+        if samples.shape[0:len(size)] != size:
+            samples = samples.reshape((size[0],) + samples.shape)
+        return samples
 
 
 _get_sample_class_jrv = {
