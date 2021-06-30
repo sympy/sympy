@@ -2563,9 +2563,9 @@ def _get_examples_ode_sol_nth_linear_constant_coeff_homogeneous():
     'lin_const_coeff_hom_37': {
         'eq': f(x).diff(x, 10) - 2*f(x).diff(x, 6) + 2*f(x).diff(x, 5)
         + f(x).diff(x, 2) - 2*f(x).diff(x, 1) + f(x),
-        'sol': [Eq(f(x), (C1 + C2*x)*exp(x*r21) + (C10*sin(x*im(r24)) + C7*x*sin(x*im(r24)) + (
-        C8 + C9*x)*cos(x*im(r24)))*exp(x*re(r24)) + (C3*x*sin(x*im(r22)) + C6*sin(x*im(r22)
-        ) + (C4 + C5*x)*cos(x*im(r22)))*exp(x*re(r22)))],
+        'sol': [Eq(f(x), (C1 + C2*x)*exp(x*r21) + (-((C3 + C4*x)*sin(x*im(r22)))
+        + (C5 + C6*x)*cos(x*im(r22)))*exp(x*re(r22)) + (-((C7 + C8*x)*sin(x*im(r24)))
+        + (C10*x + C9)*cos(x*im(r24)))*exp(x*re(r24)))],
         'checkodesol_XFAIL':True, #It Hangs
     },
 
