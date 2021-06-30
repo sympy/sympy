@@ -7,10 +7,11 @@ from sympy.solvers.ode import (classify_ode,
     homogeneous_order, dsolve)
 
 from sympy.solvers.ode.subscheck import checkodesol
-from sympy.solvers.ode.ode import (_undetermined_coefficients_match, classify_sysode,
+from sympy.solvers.ode.ode import (classify_sysode,
     constant_renumber, constantsimp, get_numbered_constants, solve_ics)
 
-from sympy.solvers.ode.single import LinearCoefficients
+from sympy.solvers.ode.single import LinearCoefficients, SingleODEProblem, \
+    NthLinearConstantCoeffUndeterminedCoefficients
 from sympy.solvers.deutils import ode_order
 from sympy.testing.pytest import XFAIL, raises, slow
 
@@ -604,114 +605,115 @@ def test_collect_respecting_exponentials():
 
 
 def test_undetermined_coefficients_match():
-    assert _undetermined_coefficients_match(g(x), x) == {'test': False}
-    assert _undetermined_coefficients_match(sin(2*x + sqrt(5)), x) == \
+    F = lambda eq: NthLinearConstantCoeffUndeterminedCoefficients(SingleODEProblem(eq, f(x), x))._undetermined_coefficients_match(eq,x)
+    assert F(f(x)) == {'test': False}
+    assert F(sin(2*x + sqrt(5))) == \
         {'test': True, 'trialset':
             {cos(2*x + sqrt(5)), sin(2*x + sqrt(5))}}
-    assert _undetermined_coefficients_match(sin(x)*cos(x), x) == \
+    assert F(sin(x)*cos(x)) == \
         {'test': False}
     s = {cos(x), x*cos(x), x**2*cos(x), x**2*sin(x), x*sin(x), sin(x)}
-    assert _undetermined_coefficients_match(sin(x)*(x**2 + x + 1), x) == \
+    assert F(sin(x)*(x**2 + x + 1)) == \
         {'test': True, 'trialset': s}
-    assert _undetermined_coefficients_match(
-        sin(x)*x**2 + sin(x)*x + sin(x), x) == {'test': True, 'trialset': s}
-    assert _undetermined_coefficients_match(
-        exp(2*x)*sin(x)*(x**2 + x + 1), x
+    assert F(
+        sin(x)*x**2 + sin(x)*x + sin(x)) == {'test': True, 'trialset': s}
+    assert F(
+        exp(2*x)*sin(x)*(x**2 + x + 1)
     ) == {
         'test': True, 'trialset': {exp(2*x)*sin(x), x**2*exp(2*x)*sin(x),
         cos(x)*exp(2*x), x**2*cos(x)*exp(2*x), x*cos(x)*exp(2*x),
         x*exp(2*x)*sin(x)}}
-    assert _undetermined_coefficients_match(1/sin(x), x) == {'test': False}
-    assert _undetermined_coefficients_match(log(x), x) == {'test': False}
-    assert _undetermined_coefficients_match(2**(x)*(x**2 + x + 1), x) == \
+    assert F(1/sin(x)) == {'test': False}
+    assert F(log(x)) == {'test': False}
+    assert F(2**(x)*(x**2 + x + 1)) == \
         {'test': True, 'trialset': {2**x, x*2**x, x**2*2**x}}
-    assert _undetermined_coefficients_match(x**y, x) == {'test': False}
-    assert _undetermined_coefficients_match(exp(x)*exp(2*x + 1), x) == \
+    assert F(x**y) == {'test': False}
+    assert F(exp(x)*exp(2*x + 1)) == \
         {'test': True, 'trialset': {exp(1 + 3*x)}}
-    assert _undetermined_coefficients_match(sin(x)*(x**2 + x + 1), x) == \
+    assert F(sin(x)*(x**2 + x + 1)) == \
         {'test': True, 'trialset': {x*cos(x), x*sin(x), x**2*cos(x),
         x**2*sin(x), cos(x), sin(x)}}
-    assert _undetermined_coefficients_match(sin(x)*(x + sin(x)), x) == \
+    assert F(sin(x)*(x + sin(x))) == \
         {'test': False}
-    assert _undetermined_coefficients_match(sin(x)*(x + sin(2*x)), x) == \
+    assert F(sin(x)*(x + sin(2*x))) == \
         {'test': False}
-    assert _undetermined_coefficients_match(sin(x)*tan(x), x) == \
+    assert F(sin(x)*tan(x)) == \
         {'test': False}
-    assert _undetermined_coefficients_match(
-        x**2*sin(x)*exp(x) + x*sin(x) + x, x
+    assert F(
+        x**2*sin(x)*exp(x) + x*sin(x) + x
     ) == {
         'test': True, 'trialset': {x**2*cos(x)*exp(x), x, cos(x), S.One,
         exp(x)*sin(x), sin(x), x*exp(x)*sin(x), x*cos(x), x*cos(x)*exp(x),
         x*sin(x), cos(x)*exp(x), x**2*exp(x)*sin(x)}}
-    assert _undetermined_coefficients_match(4*x*sin(x - 2), x) == {
+    assert F(4*x*sin(x - 2)) == {
         'trialset': {x*cos(x - 2), x*sin(x - 2), cos(x - 2), sin(x - 2)},
         'test': True,
     }
-    assert _undetermined_coefficients_match(2**x*x, x) == \
+    assert F(2**x*x) == \
         {'test': True, 'trialset': {2**x, x*2**x}}
-    assert _undetermined_coefficients_match(2**x*exp(2*x), x) == \
+    assert F(2**x*exp(2*x)) == \
         {'test': True, 'trialset': {2**x*exp(2*x)}}
-    assert _undetermined_coefficients_match(exp(-x)/x, x) == \
+    assert F(exp(-x)/x) == \
         {'test': False}
     # Below are from Ordinary Differential Equations,
     #                Tenenbaum and Pollard, pg. 231
-    assert _undetermined_coefficients_match(S(4), x) == \
+    assert F(S(4)) == \
         {'test': True, 'trialset': {S.One}}
-    assert _undetermined_coefficients_match(12*exp(x), x) == \
+    assert F(12*exp(x)) == \
         {'test': True, 'trialset': {exp(x)}}
-    assert _undetermined_coefficients_match(exp(I*x), x) == \
+    assert F(exp(I*x)) == \
         {'test': True, 'trialset': {exp(I*x)}}
-    assert _undetermined_coefficients_match(sin(x), x) == \
+    assert F(sin(x)) == \
         {'test': True, 'trialset': {cos(x), sin(x)}}
-    assert _undetermined_coefficients_match(cos(x), x) == \
+    assert F(cos(x)) == \
         {'test': True, 'trialset': {cos(x), sin(x)}}
-    assert _undetermined_coefficients_match(8 + 6*exp(x) + 2*sin(x), x) == \
+    assert F(8 + 6*exp(x) + 2*sin(x)) == \
         {'test': True, 'trialset': {S.One, cos(x), sin(x), exp(x)}}
-    assert _undetermined_coefficients_match(x**2, x) == \
+    assert F(x**2) == \
         {'test': True, 'trialset': {S.One, x, x**2}}
-    assert _undetermined_coefficients_match(9*x*exp(x) + exp(-x), x) == \
+    assert F(9*x*exp(x) + exp(-x)) == \
         {'test': True, 'trialset': {x*exp(x), exp(x), exp(-x)}}
-    assert _undetermined_coefficients_match(2*exp(2*x)*sin(x), x) == \
+    assert F(2*exp(2*x)*sin(x)) == \
         {'test': True, 'trialset': {exp(2*x)*sin(x), cos(x)*exp(2*x)}}
-    assert _undetermined_coefficients_match(x - sin(x), x) == \
+    assert F(x - sin(x)) == \
         {'test': True, 'trialset': {S.One, x, cos(x), sin(x)}}
-    assert _undetermined_coefficients_match(x**2 + 2*x, x) == \
+    assert F(x**2 + 2*x) == \
         {'test': True, 'trialset': {S.One, x, x**2}}
-    assert _undetermined_coefficients_match(4*x*sin(x), x) == \
+    assert F(4*x*sin(x)) == \
         {'test': True, 'trialset': {x*cos(x), x*sin(x), cos(x), sin(x)}}
-    assert _undetermined_coefficients_match(x*sin(2*x), x) == \
+    assert F(x*sin(2*x)) == \
         {'test': True, 'trialset':
             {x*cos(2*x), x*sin(2*x), cos(2*x), sin(2*x)}}
-    assert _undetermined_coefficients_match(x**2*exp(-x), x) == \
+    assert F(x**2*exp(-x)) == \
         {'test': True, 'trialset': {x*exp(-x), x**2*exp(-x), exp(-x)}}
-    assert _undetermined_coefficients_match(2*exp(-x) - x**2*exp(-x), x) == \
+    assert F(2*exp(-x) - x**2*exp(-x)) == \
         {'test': True, 'trialset': {x*exp(-x), x**2*exp(-x), exp(-x)}}
-    assert _undetermined_coefficients_match(exp(-2*x) + x**2, x) == \
+    assert F(exp(-2*x) + x**2) == \
         {'test': True, 'trialset': {S.One, x, x**2, exp(-2*x)}}
-    assert _undetermined_coefficients_match(x*exp(-x), x) == \
+    assert F(x*exp(-x)) == \
         {'test': True, 'trialset': {x*exp(-x), exp(-x)}}
-    assert _undetermined_coefficients_match(x + exp(2*x), x) == \
+    assert F(x + exp(2*x)) == \
         {'test': True, 'trialset': {S.One, x, exp(2*x)}}
-    assert _undetermined_coefficients_match(sin(x) + exp(-x), x) == \
+    assert F(sin(x) + exp(-x)) == \
         {'test': True, 'trialset': {cos(x), sin(x), exp(-x)}}
-    assert _undetermined_coefficients_match(exp(x), x) == \
+    assert F(exp(x)) == \
         {'test': True, 'trialset': {exp(x)}}
     # converted from sin(x)**2
-    assert _undetermined_coefficients_match(S.Half - cos(2*x)/2, x) == \
+    assert F(S.Half - cos(2*x)/2) == \
         {'test': True, 'trialset': {S.One, cos(2*x), sin(2*x)}}
     # converted from exp(2*x)*sin(x)**2
-    assert _undetermined_coefficients_match(
-        exp(2*x)*(S.Half + cos(2*x)/2), x
+    assert F(
+        exp(2*x)*(S.Half + cos(2*x)/2)
     ) == {
         'test': True, 'trialset': {exp(2*x)*sin(2*x), cos(2*x)*exp(2*x),
         exp(2*x)}}
-    assert _undetermined_coefficients_match(2*x + sin(x) + cos(x), x) == \
+    assert F(2*x + sin(x) + cos(x)) == \
         {'test': True, 'trialset': {S.One, x, cos(x), sin(x)}}
     # converted from sin(2*x)*sin(x)
-    assert _undetermined_coefficients_match(cos(x)/2 - cos(3*x)/2, x) == \
+    assert F(cos(x)/2 - cos(3*x)/2) == \
         {'test': True, 'trialset': {cos(x), cos(3*x), sin(x), sin(3*x)}}
-    assert _undetermined_coefficients_match(cos(x**2), x) == {'test': False}
-    assert _undetermined_coefficients_match(2**(x**2), x) == {'test': False}
+    assert F(cos(x**2)) == {'test': False}
+    assert F(2**(x**2)) == {'test': False}
 
 
 def test_issue_4785():

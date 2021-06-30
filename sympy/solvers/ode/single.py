@@ -12,7 +12,7 @@ from typing import Iterator, List, Optional
 from sympy.core import Add, S, Pow
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
-from sympy.core.function import AppliedUndef, Derivative, Function, expand, Subs, _mexpand, expand_mul
+from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, _mexpand, expand_mul
 from sympy.core.numbers import Float, zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
@@ -20,9 +20,9 @@ from sympy.core.mul import Mul
 from sympy.functions import exp, tan, cos, cosh, im, log, re, sin, sinh, sqrt, \
     atan2, conjugate
 from sympy.integrals import Integral
-from sympy.polys import (Poly, rootof, roots)
-from sympy.polys.polytools import cancel, factor
-from sympy.simplify import collect, simplify, separatevars, logcombine, powsimp, trigsimp
+from sympy.polys import (Poly, RootOf, rootof, roots)
+from sympy.polys.polytools import cancel, factor, degree
+from sympy.simplify import collect, simplify, separatevars, logcombine, powsimp, posify, trigsimp
 from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols, default_sort_key
 from sympy.solvers.solvers import solve
@@ -2207,7 +2207,7 @@ class NthLinearConstantCoeffHomogeneous(SingleODESolver):
         for i, reroot, imroot in collectterms:
             sol = collect(sol, x**i*exp(reroot*x))
         sol = powsimp(sol)
-        return [Eq(f(x), sol)]
+        return Eq(f(x), sol)
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         fx = self.ode_problem.func
@@ -2219,7 +2219,7 @@ class NthLinearConstantCoeffHomogeneous(SingleODESolver):
         if simplify_flag:
             gsol = self._get_simplified_sol(gsol, collectterms)
 
-        return gsol
+        return [gsol]
 
 
 class NthLinearConstantCoeffVariationOfParameters(SingleODESolver):
@@ -2376,7 +2376,7 @@ class NthLinearConstantCoeffVariationOfParameters(SingleODESolver):
         gsol = self._solve_variation_of_parameters(self.r)
         if simplify_flag:
             gsol = homogen_instance._get_simplified_sol([gsol], collectterms)
-        return gsol
+        return [gsol]
 
 
 class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
@@ -2482,12 +2482,17 @@ class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
         Examples
         ========
 
-        >>> from sympy import log, exp
-        >>> from sympy.solvers.ode.ode import _undetermined_coefficients_match
+        >>> from sympy import log, exp, Function
+        >>> from sympy.solvers.ode.single import NthLinearConstantCoeffUndeterminedCoefficients,SingleODEProblem
         >>> from sympy.abc import x
-        >>> _undetermined_coefficients_match(9*x*exp(x) + exp(-x), x)
+        >>> f = Function('f')
+        >>> eq = 9*x*exp(x) + exp(-x)
+        >>> obj = NthLinearConstantCoeffUndeterminedCoefficients(SingleODEProblem(eq,f(x),x))
+        >>> obj._undetermined_coefficients_match(eq,x)
         {'test': True, 'trialset': {x*exp(x), exp(-x), exp(x)}}
-        >>> _undetermined_coefficients_match(log(x), x)
+        >>> eq = log(x)
+        >>> obj = NthLinearConstantCoeffUndeterminedCoefficients(SingleODEProblem(eq,f(x),x))
+        >>> obj._undetermined_coefficients_match(eq,x)
         {'test': False}
 
         """
@@ -2695,7 +2700,381 @@ class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
         gsol = self._solve_undetermined_coefficients(self.r)
         if simplify_flag:
             gsol = homogen_instance._get_simplified_sol([gsol], collectterms)
-        return gsol
+        return [gsol]
+
+
+class NthLinearEulerEqHomogeneous(SingleODESolver):
+    r"""
+    Solves an `n`\th order linear homogeneous variable-coefficient
+    Cauchy-Euler equidimensional ordinary differential equation.
+
+    This is an equation with form `0 = a_0 f(x) + a_1 x f'(x) + a_2 x^2 f''(x)
+    \cdots`.
+
+    These equations can be solved in a general manner, by substituting
+    solutions of the form `f(x) = x^r`, and deriving a characteristic equation
+    for `r`.  When there are repeated roots, we include extra terms of the
+    form `C_{r k} \ln^k(x) x^r`, where `C_{r k}` is an arbitrary integration
+    constant, `r` is a root of the characteristic equation, and `k` ranges
+    over the multiplicity of `r`.  In the cases where the roots are complex,
+    solutions of the form `C_1 x^a \sin(b \log(x)) + C_2 x^a \cos(b \log(x))`
+    are returned, based on expansions with Euler's formula.  The general
+    solution is the sum of the terms found.  If SymPy cannot find exact roots
+    to the characteristic equation, a
+    :py:obj:`~.ComplexRootOf` instance will be returned
+    instead.
+
+    >>> from sympy import Function, dsolve
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> dsolve(4*x**2*f(x).diff(x, 2) + f(x), f(x),
+    ... hint='nth_linear_euler_eq_homogeneous')
+    ... # doctest: +NORMALIZE_WHITESPACE
+    Eq(f(x), sqrt(x)*(C1 + C2*log(x)))
+
+    Note that because this method does not involve integration, there is no
+    ``nth_linear_euler_eq_homogeneous_Integral`` hint.
+
+    The following is for internal use:
+
+    - ``returns = 'sol'`` returns the solution to the ODE.
+    - ``returns = 'list'`` returns a list of linearly independent solutions,
+      corresponding to the fundamental solution set, for use with non
+      homogeneous solution methods like variation of parameters and
+      undetermined coefficients.  Note that, though the solutions should be
+      linearly independent, this function does not explicitly check that.  You
+      can do ``assert simplify(wronskian(sollist)) != 0`` to check for linear
+      independence.  Also, ``assert len(sollist) == order`` will need to pass.
+    - ``returns = 'both'``, return a dictionary ``{'sol': <solution to ODE>,
+      'list': <list of linearly independent solutions>}``.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, pprint
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = f(x).diff(x, 2)*x**2 - 4*f(x).diff(x)*x + 6*f(x)
+    >>> pprint(dsolve(eq, f(x),
+    ... hint='nth_linear_euler_eq_homogeneous'))
+            2
+    f(x) = x *(C1 + C2*x)
+
+    References
+    ==========
+
+    - https://en.wikipedia.org/wiki/Cauchy%E2%80%93Euler_equation
+    - C. Bender & S. Orszag, "Advanced Mathematical Methods for Scientists and
+      Engineers", Springer 1999, pp. 12
+
+    # indirect doctest
+
+    """
+    hint = "nth_linear_euler_eq_homogeneous"
+    has_integral = False
+
+    def _matches(self):
+        eq = self.ode_problem.eq_preprocessed
+        f = self.ode_problem.func.func
+        order = self.ode_problem.order
+        x = self.ode_problem.sym
+        match = self.ode_problem.get_linear_coefficients(eq, f(x), order)
+        self.r = None
+        does_match = False
+
+        if order and match:
+            coeff = match[order]
+            factor = x**order / coeff
+            self.r = {i: factor*match[i] for i in match}
+        if self.r and not any(not self._test_term(self.r[i], i) for i in
+                self.r if i >= 0):
+            if not self.r[-1]:
+                does_match = True
+
+        return does_match
+
+    def _test_term(self,coeff, order):
+        r"""
+        Linear Euler ODEs have the form  K*x**order*diff(y(x),x,order) = F(x),
+        where K is independent of x and y(x), order>= 0.
+        So we need to check that for each term, coeff == K*x**order from
+        some K.  We have a few cases, since coeff may have several
+        different types.
+        """
+        x = self.ode_problem.sym
+        f = self.ode_problem.func.func
+        if order < 0:
+            raise ValueError("order should be greater than 0")
+        if coeff == 0:
+            return True
+        if order == 0:
+            if x in coeff.free_symbols:
+                return False
+            return True
+        if coeff.is_Mul:
+            if coeff.has(f(x)):
+                return False
+            return x**order in coeff.args
+        elif coeff.is_Pow:
+            return coeff.as_base_exp() == (x, order)
+        elif order == 1:
+            return x == coeff
+        return False
+
+    def _get_sols(self,r):
+        x = self.ode_problem.sym
+        f = self.ode_problem.func.func
+
+        # First, set up characteristic equation.
+        chareq, symbol = S.Zero, Dummy('x')
+
+        for i in r.keys():
+            if not isinstance(i, str) and i >= 0:
+                chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
+
+        chareq = Poly(chareq, symbol)
+        chareqroots = [rootof(chareq, k) for k in range(chareq.degree())]
+        collectterms = []
+
+        # A generator of constants
+        constants = self.ode_problem.get_numbered_constants(num=chareq.degree()*2)
+        constants.reverse()
+
+        # Create a dict root: multiplicity or charroots
+        charroots = defaultdict(int)
+        for root in chareqroots:
+            charroots[root] += 1
+        self.gsol = S.Zero
+        ln = log
+        for root, multiplicity in charroots.items():
+            for i in range(multiplicity):
+                if isinstance(root, RootOf):
+                    self.gsol += (x**root) * constants.pop()
+                    if multiplicity != 1:
+                        raise ValueError("Value should be 1")
+                    collectterms = [(0, root, 0)] + collectterms
+                elif root.is_real:
+                    self.gsol += ln(x)**i*(x**root) * constants.pop()
+                    collectterms = [(i, root, 0)] + collectterms
+                else:
+                    reroot = re(root)
+                    imroot = im(root)
+                    self.gsol += ln(x)**i * (x**reroot) * (
+                        constants.pop() * sin(abs(imroot)*ln(x))
+                        + constants.pop() * cos(imroot*ln(x)))
+                    collectterms = [(i, reroot, imroot)] + collectterms
+
+        self.gsol = Eq(f(x), self.gsol)
+
+        gensols = []
+        # Keep track of when to use sin or cos for nonzero imroot
+        for i, reroot, imroot in collectterms:
+            if imroot == 0:
+                gensols.append(ln(x)**i*x**reroot)
+            else:
+                sin_form = ln(x)**i*x**reroot*sin(abs(imroot)*ln(x))
+                if sin_form in gensols:
+                    cos_form = ln(x)**i*x**reroot*cos(imroot*ln(x))
+                    gensols.append(cos_form)
+                else:
+                    gensols.append(sin_form)
+        return gensols
+
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        self._get_sols(self.r)
+        return [self.gsol]
+
+
+class NthLinearEulerEqNonhomogeneousVariationOfParameters(SingleODESolver):
+    r"""
+    Solves an `n`\th order linear non homogeneous Cauchy-Euler equidimensional
+    ordinary differential equation using variation of parameters.
+
+    This is an equation with form `g(x) = a_0 f(x) + a_1 x f'(x) + a_2 x^2 f''(x)
+    \cdots`.
+
+    This method works by assuming that the particular solution takes the form
+
+    .. math:: \sum_{x=1}^{n} c_i(x) y_i(x) {a_n} {x^n} \text{,}
+
+    where `y_i` is the `i`\th solution to the homogeneous equation.  The
+    solution is then solved using Wronskian's and Cramer's Rule.  The
+    particular solution is given by multiplying eq given below with `a_n x^{n}`
+
+    .. math:: \sum_{x=1}^n \left( \int \frac{W_i(x)}{W(x)} \,dx
+                \right) y_i(x) \text{,}
+
+    where `W(x)` is the Wronskian of the fundamental system (the system of `n`
+    linearly independent solutions to the homogeneous equation), and `W_i(x)`
+    is the Wronskian of the fundamental system with the `i`\th column replaced
+    with `[0, 0, \cdots, 0, \frac{x^{- n}}{a_n} g{\left(x \right)}]`.
+
+    This method is general enough to solve any `n`\th order inhomogeneous
+    linear differential equation, but sometimes SymPy cannot simplify the
+    Wronskian well enough to integrate it.  If this method hangs, try using the
+    ``nth_linear_constant_coeff_variation_of_parameters_Integral`` hint and
+    simplifying the integrals manually.  Also, prefer using
+    ``nth_linear_constant_coeff_undetermined_coefficients`` when it
+    applies, because it doesn't use integration, making it faster and more
+    reliable.
+
+    Warning, using simplify=False with
+    'nth_linear_constant_coeff_variation_of_parameters' in
+    :py:meth:`~sympy.solvers.ode.dsolve` may cause it to hang, because it will
+    not attempt to simplify the Wronskian before integrating.  It is
+    recommended that you only use simplify=False with
+    'nth_linear_constant_coeff_variation_of_parameters_Integral' for this
+    method, especially if the solution to the homogeneous equation has
+    trigonometric functions in it.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Derivative
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - x**4
+    >>> dsolve(eq, f(x),
+    ... hint='nth_linear_euler_eq_nonhomogeneous_variation_of_parameters').expand()
+    Eq(f(x), C1*x + C2*x**2 + x**4/6)
+
+    """
+    hint = "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters"
+    has_integral = True
+
+    def _matches(self):
+        eq = self.ode_problem.eq_preprocessed
+        f = self.ode_problem.func.func
+        order = self.ode_problem.order
+        x = self.ode_problem.sym
+        self.euler_homogen_instance = NthLinearEulerEqHomogeneous(SingleODEProblem(eq, f(x), x))
+        match = self.ode_problem.get_linear_coefficients(eq, f(x), order)
+        self.r = None
+        does_match = False
+
+        if order and match:
+            coeff = match[order]
+            factor = x**order / coeff
+            self.r = {i: factor*match[i] for i in match}
+        if self.r and not any(not self.euler_homogen_instance._test_term(self.r[i], i) for i in
+                self.r if i >= 0):
+            if self.r[-1]:
+                does_match = True
+
+        return does_match
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        eq = self.ode_problem.eq_high_order_free
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        order = self.ode_problem.order
+        var_of_param_instance = NthLinearConstantCoeffVariationOfParameters(SingleODEProblem(eq, f(x), x))
+        gensols = self.euler_homogen_instance._get_sols(self.r)
+        gsol = self.euler_homogen_instance.gsol
+        self.r.update({'list': gensols, 'sol': gsol, 'simpliy_flag': simplify_flag})
+        self.r[-1] = self.r[-1]/self.r[order]
+        sol = var_of_param_instance._solve_variation_of_parameters(self.r)
+
+        return [Eq(f(x), gsol.rhs + (sol.rhs - gsol.rhs)*self.r[order])]
+
+
+class NthLinearEulerEqNonhomogeneousUndeterminedCoefficients(SingleODESolver):
+    r"""
+    Solves an `n`\th order linear non homogeneous Cauchy-Euler equidimensional
+    ordinary differential equation using undetermined coefficients.
+
+    This is an equation with form `g(x) = a_0 f(x) + a_1 x f'(x) + a_2 x^2 f''(x)
+    \cdots`.
+
+    These equations can be solved in a general manner, by substituting
+    solutions of the form `x = exp(t)`, and deriving a characteristic equation
+    of form `g(exp(t)) = b_0 f(t) + b_1 f'(t) + b_2 f''(t) \cdots` which can
+    be then solved by nth_linear_constant_coeff_undetermined_coefficients if
+    g(exp(t)) has finite number of linearly independent derivatives.
+
+    Functions that fit this requirement are finite sums functions of the form
+    `a x^i e^{b x} \sin(c x + d)` or `a x^i e^{b x} \cos(c x + d)`, where `i`
+    is a non-negative integer and `a`, `b`, `c`, and `d` are constants.  For
+    example any polynomial in `x`, functions like `x^2 e^{2 x}`, `x \sin(x)`,
+    and `e^x \cos(x)` can all be used.  Products of `\sin`'s and `\cos`'s have
+    a finite number of derivatives, because they can be expanded into `\sin(a
+    x)` and `\cos(b x)` terms.  However, SymPy currently cannot do that
+    expansion, so you will need to manually rewrite the expression in terms of
+    the above to use this method.  So, for example, you will need to manually
+    convert `\sin^2(x)` into `(1 + \cos(2 x))/2` to properly apply the method
+    of undetermined coefficients on it.
+
+    After replacement of x by exp(t), this method works by creating a trial function
+    from the expression and all of its linear independent derivatives and
+    substituting them into the original ODE.  The coefficients for each term
+    will be a system of linear equations, which are be solved for and
+    substituted, giving the solution. If any of the trial functions are linearly
+    dependent on the solution to the homogeneous equation, they are multiplied
+    by sufficient `x` to make them linearly independent.
+
+    Examples
+    ========
+
+    >>> from sympy import dsolve, Function, Derivative, log
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - log(x)
+    >>> dsolve(eq, f(x),
+    ... hint='nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients').expand()
+    Eq(f(x), C1*x + C2*x**2 + log(x)/2 + 3/4)
+
+    """
+    hint = "nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients"
+    has_integral = False
+
+    def _matches(self):
+        eq = self.ode_problem.eq_high_order_free
+        f = self.ode_problem.func.func
+        order = self.ode_problem.order
+        x = self.ode_problem.sym
+        self.euler_homogen_instance = NthLinearEulerEqHomogeneous(SingleODEProblem(eq, f(x), x))
+        match = self.ode_problem.get_linear_coefficients(eq, f(x), order)
+        self.const_undet_instance = NthLinearConstantCoeffUndeterminedCoefficients(SingleODEProblem(eq, f(x), x))
+        self.r = None
+        does_match = False
+
+        if order and match:
+            coeff = match[order]
+            factor = x**order / coeff
+            self.r = {i: factor*match[i] for i in match}
+        if self.r and not any(not self.euler_homogen_instance._test_term(self.r[i], i) for i in
+                self.r if i >= 0):
+            if self.r[-1]:
+                e, re = posify(self.r[-1].subs(x, exp(x)))
+                undetcoeff = self.const_undet_instance._undetermined_coefficients_match(e.subs(re), x)
+                if undetcoeff['test']:
+                    self.r['trialset'] = undetcoeff['trialset']
+                    does_match = True
+        return does_match
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        chareq, eq, symbol = S.Zero, S.Zero, Dummy('x')
+        for i in self.r.keys():
+            if not isinstance(i, str) and i >= 0:
+                chareq += (self.r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
+
+        for i in range(1,degree(Poly(chareq, symbol))+1):
+            eq += chareq.coeff(symbol**i)*diff(f(x), x, i)
+
+        if chareq.as_coeff_add(symbol)[0]:
+            eq += chareq.as_coeff_add(symbol)[0]*f(x)
+        e, re = posify(self.r[-1].subs(x, exp(x)))
+        eq += e.subs(re)
+
+        self.const_undet_instance = NthLinearConstantCoeffUndeterminedCoefficients(SingleODEProblem(eq, f(x), x))
+        sol = self.const_undet_instance.get_general_solution(simplify = simplify_flag)[0]
+        sol = sol.subs(x, log(x))
+        sol = sol.subs(f(log(x)), f(x)).expand()
+
+        return [sol]
 
 
 # Avoid circular import:
