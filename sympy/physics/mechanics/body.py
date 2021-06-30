@@ -223,7 +223,7 @@ class Body(RigidBody, Particle):  # type: ignore
         Parameters
         ==========
 
-        body: Body
+        body: Body/ReferenceFrame
             The body about which the velocity is needed to be calculated.
             If body is self by default.
 
@@ -236,10 +236,15 @@ class Body(RigidBody, Particle):  # type: ignore
         >>> A.masscenter.set_vel(B.frame, 5*B.frame.x)
         >>> A.masscenter_vel(B)
         5*B_frame.x
+        >>> A.masscenter_vel(B.frame)
+        5*B_frame.x
 
         """
 
-        frame = body.frame
+        if isinstance(body,  ReferenceFrame):
+            frame=body
+        elif isinstance(body, Body):
+            frame = body.frame
         return self.masscenter.vel(frame)
 
     def ang_vel_in(self, body):
@@ -264,10 +269,16 @@ class Body(RigidBody, Particle):  # type: ignore
         >>> A.frame.set_ang_vel(N, 5*N.x)
         >>> A.ang_vel_in(B)
         5*N.x
+        >>> A.ang_vel_in(N)
+        5*N.x
 
         """
 
-        return self.frame.ang_vel_in(body.frame)
+        if isinstance(body,  ReferenceFrame):
+            frame=body
+        elif isinstance(body, Body):
+            frame = body.frame
+        return self.frame.ang_vel_in(frame)
 
     def dcm(self, body):
         """
@@ -293,7 +304,16 @@ class Body(RigidBody, Particle):  # type: ignore
         [1,       0,      0],
         [0,  cos(5), sin(5)],
         [0, -sin(5), cos(5)]])
+        >>> A.dcm(B.frame)
+        Matrix([
+        [1,       0,      0],
+        [0,  cos(5), sin(5)],
+        [0, -sin(5), cos(5)]])
 
         """
 
-        return self.frame.dcm(body.frame)
+        if isinstance(body,  ReferenceFrame):
+            frame=body
+        elif isinstance(body, Body):
+            frame = body.frame
+        return self.frame.dcm(frame)
