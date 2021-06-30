@@ -266,9 +266,11 @@ class Limit(Expr):
         if not e.has(floor, ceiling, factorial, binomial):
             if abs(z0) is S.Infinity:
                 newe = e.subs(z, 1/z)
+                cdir = -cdir
             else:
                 newe = e.subs(z, z + z0)
             try:
+                # cdir changes sign as oo- should become 0+
                 coeff, ex = newe.leadterm(z, cdir=cdir)
             except (ValueError, NotImplementedError, PoleError, AttributeError):
                 # The NotImplementedError catching may be removed after leading

@@ -231,12 +231,14 @@ class erf(Function):
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0].as_leading_term(x)
-        arg0 = self.subs(x, 0)
+        arg0 = arg.subs(x, 0)
 
         if x in arg.free_symbols and arg0.is_zero:
             return 2*arg/sqrt(pi)
         elif arg0.is_finite:
             return self.func(arg0)
+        elif arg0 is S.ComplexInfinity:
+            return self.func(arg)
         return -S.One if cdir == -1 else S.One
 
     def _eval_aseries(self, n, args0, x, logx):
@@ -430,13 +432,16 @@ class erfc(Function):
         return self.rewrite(erf)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        arg0 = self.args[0].as_leading_term(x).subs(x, 0)
+        arg = self.args[0].as_leading_term(x)
+        arg0 = arg.subs(x, 0)
 
         if arg0.is_zero:
             return S.One
-        elif arg0.is_infinite:
-            return 2 if cdir == -1 else S.Zero
-        return self.func(arg0)
+        elif arg0.is_finite:
+            return self.func(arg0)
+        elif arg0 is S.ComplexInfinity:
+            return self.func(arg)
+        return 2 if cdir == -1 else S.Zero
 
     as_real_imag = real_to_real_as_real_imag
 
@@ -622,7 +627,7 @@ class erfi(Function):
             return 2*arg/sqrt(pi)
         elif arg0.is_finite:
             return self.func(arg0)
-        return arg/(sqrt(-arg**2))
+        return self.func(arg)
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
@@ -2403,7 +2408,7 @@ class fresnels(FresnelIntegral):
             return pi*arg**3/6
         elif arg0.is_finite:
             return self.func(arg0)
-        return -S.Half if cdir == 1 else S.Half
+        return -S.Half if cdir == -1 else S.Half
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
@@ -2554,7 +2559,7 @@ class fresnelc(FresnelIntegral):
             return arg
         elif arg0.is_finite:
             return self.func(arg0)
-        return -S.Half if cdir == 1 else S.Half
+        return -S.Half if cdir == -1 else S.Half
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
