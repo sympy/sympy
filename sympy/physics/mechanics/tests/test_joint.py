@@ -90,15 +90,15 @@ def test_pin_joint_chaos_pendulum():
     rod = Body('rod', frame=A, mass=mA)
     plate = Body('plate', mass=mB, frame=B)
     C = Body('C', frame=N)
-    J1 = PinJoint('J1', C, rod, coordinates=theta, speeds=omega, child_joint_pos=lA*A.z,\
+    J1 = PinJoint('J1', C, rod, coordinates=theta, speeds=omega, child_joint_pos=lA*A.z,
         parent_axis=N.y, child_axis=A.y)
-    J2 = PinJoint('J2',rod, plate, coordinates=phi, speeds=alpha, parent_joint_pos=lC*A.z,\
+    J2 = PinJoint('J2',rod, plate, coordinates=phi, speeds=alpha, parent_joint_pos=lC*A.z,
         parent_axis=A.z, child_axis=B.z)
 
     #Check orientation
     assert A.dcm(N) == Matrix([[cos(theta), 0, -sin(theta)], [0, 1, 0], [sin(theta), 0, cos(theta)]])
     assert A.dcm(B) == Matrix([[cos(phi), -sin(phi), 0], [sin(phi), cos(phi), 0], [0, 0, 1]])
-    assert B.dcm(N) == Matrix([[cos(phi)*cos(theta), sin(phi), -sin(theta)*cos(phi)], \
+    assert B.dcm(N) == Matrix([[cos(phi)*cos(theta), sin(phi), -sin(theta)*cos(phi)],
         [-sin(phi)*cos(theta), cos(phi), sin(phi)*sin(theta)], [sin(theta), 0, cos(theta)]])
 
     #Check Angular Velocity
@@ -177,7 +177,7 @@ def test_pinjoint_arbitrary_axis():
     PinJoint('J', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y)
     assert expand_mul(N.x.angle_between(A.x + A.y)) == 0 #Axis are aligned
     assert (A.x + A.y).express(N).simplify() == sqrt(2)*N.x
-    assert A.dcm(N).simplify() == Matrix([[sqrt(2)/2, -sqrt(2)*cos(theta)/2, -sqrt(2)*sin(theta)/2], \
+    assert A.dcm(N).simplify() == Matrix([[sqrt(2)/2, -sqrt(2)*cos(theta)/2, -sqrt(2)*sin(theta)/2],
         [sqrt(2)/2, sqrt(2)*cos(theta)/2, sqrt(2)*sin(theta)/2], [0, -sin(theta), cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.x
     assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y)/sqrt(2)
@@ -194,8 +194,8 @@ def test_pinjoint_arbitrary_axis():
     PinJoint('J', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y-A.z)
     assert expand_mul(N.x.angle_between(A.x + A.y - A.z)) == 0 #Axis are aligned
     assert (A.x + A.y - A.z).express(N).simplify() == sqrt(3)*N.x
-    assert A.dcm(N).simplify() == Matrix([[sqrt(3)/3, -sqrt(6)*sin(theta + pi/4)/3, sqrt(6)*cos(theta + pi/4)/3], \
-        [sqrt(3)/3, sqrt(6)*cos(theta + pi/12)/3, sqrt(6)*sin(theta + pi/12)/3], \
+    assert A.dcm(N).simplify() == Matrix([[sqrt(3)/3, -sqrt(6)*sin(theta + pi/4)/3, sqrt(6)*cos(theta + pi/4)/3],
+        [sqrt(3)/3, sqrt(6)*cos(theta + pi/12)/3, sqrt(6)*sin(theta + pi/12)/3],
         [-sqrt(3)/3, sqrt(6)*cos(theta + 5*pi/12)/3, sqrt(6)*sin(theta + 5*pi/12)/3]])
     assert A.ang_vel_in(N) == omega*N.x
     assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y - omega*A.z)/sqrt(3)
@@ -214,9 +214,9 @@ def test_pinjoint_arbitrary_axis():
     assert expand_mul((N.x-N.y+N.z).angle_between(A.x+A.y-A.z)) == 0 #Axis are aligned
     assert (A.x-A.y+A.z).express(N).simplify() == \
         (-4*cos(theta)/3 - 1/3)*N.x + (1/3 - 4*sin(theta + pi/6)/3)*N.y + (4*cos(theta + pi/3)/3 - 1/3)*N.z
-    assert A.dcm(N).simplify() == Matrix([[S(1)/3 - 2*cos(theta)/3, -2*sin(theta + pi/6)/3 - S(1)/3, \
-        2*cos(theta + pi/3)/3 + S(1)/3], [2*cos(theta + pi/3)/3 + S(1)/3, 2*cos(theta)/3 - S(1)/3, \
-        2*sin(theta + pi/6)/3 + S(1)/3], [-2*sin(theta + pi/6)/3 - S(1)/3, 2*cos(theta + pi/3)/3 + S(1)/3, \
+    assert A.dcm(N).simplify() == Matrix([[S(1)/3 - 2*cos(theta)/3, -2*sin(theta + pi/6)/3 - S(1)/3,
+        2*cos(theta + pi/3)/3 + S(1)/3], [2*cos(theta + pi/3)/3 + S(1)/3, 2*cos(theta)/3 - S(1)/3,
+        2*sin(theta + pi/6)/3 + S(1)/3], [-2*sin(theta + pi/6)/3 - S(1)/3, 2*cos(theta + pi/3)/3 + S(1)/3,
         2*cos(theta)/3 - S(1)/3]])
     assert A.ang_vel_in(N) == (omega*N.x - omega*N.y + omega*N.z)/sqrt(3)
     assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y - omega*A.z)/sqrt(3)
