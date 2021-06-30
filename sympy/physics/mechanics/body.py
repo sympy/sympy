@@ -275,3 +275,32 @@ class Body(RigidBody, Particle):  # type: ignore
         """
 
         return self.frame.ang_vel_in(body.frame)
+
+    def dcm(self, body):
+        """
+        Returns the direction cosine matrix relative to the provided body's
+        reference frame.
+
+        Parameters
+        ==========
+
+        body: Body
+            The body's reference frame which the direction cosine matrix of this body's frame
+            is formed relative to.
+
+        Example
+        =======
+
+        >>> from sympy.physics.mechanics import Body
+        >>> A = Body('A')
+        >>> B = Body('B')
+        >>> A.frame.orient_axis(B.frame, B.frame.x, 5)
+        >>> A.dcm(B)
+        Matrix([
+        [1,       0,      0],
+        [0,  cos(5), sin(5)],
+        [0, -sin(5), cos(5)]])
+
+        """
+
+        return self.frame.dcm(body.frame)

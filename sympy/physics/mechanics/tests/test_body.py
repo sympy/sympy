@@ -1,4 +1,4 @@
-from sympy.core.backend import Symbol, symbols
+from sympy.core.backend import Symbol, symbols, sin, cos, Matrix
 from sympy.physics.vector import Point, ReferenceFrame
 from sympy.physics.mechanics import inertia, Body
 from sympy.testing.pytest import raises
@@ -143,3 +143,9 @@ def test_body_ang_vel():
     A.frame.set_ang_vel(N, N.y)
     assert A.ang_vel_in(B) == N.y
     assert B.ang_vel_in(A) == -N.y
+
+def test_body_dcm():
+    A = Body('A')
+    B = Body('B')
+    A.frame.orient_axis(B.frame, B.frame.z, 10)
+    assert A.dcm(B) == Matrix([[cos(10), sin(10), 0], [-sin(10), cos(10), 0], [0, 0, 1]])
