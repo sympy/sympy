@@ -82,18 +82,18 @@ class Joint(ABC):
                  parent_joint_pos=None, child_joint_pos=None, parent_axis=None,
                  child_axis=None):
 
-        self.name = name
-        self.parent = parent
-        self.child = child
+        self._name = name
+        self._parent = parent
+        self._child = child
 
-        self.coordinates = coordinates
-        self.speeds = speeds
+        self._coordinates = self._generate_coordinates(coordinates)
+        self._speeds = self._generate_speeds(speeds)
 
-        self.parent_axis = parent_axis
-        self.child_axis = child_axis
+        self._parent_axis = self._axis(parent, parent_axis)
+        self._child_axis = self._axis(child, child_axis)
 
-        self.parent_joint = parent_joint_pos
-        self.child_joint = child_joint_pos
+        self._parent_joint = self._locate_joint_pos(parent, parent_joint_pos)
+        self._child_joint = self._locate_joint_pos(child, child_joint_pos)
 
         self._orient_frames()
         self._set_angular_velocity()
@@ -109,87 +109,45 @@ class Joint(ABC):
     def name(self):
         return self._name
 
-    @name.setter
-    def name(self, value):
-        if not isinstance(value, str):
-            raise TypeError('Supply a valid name.')
-        self._name = value
-
     @property
     def parent(self):
         """Parent body of Joint."""
         return self._parent
-
-    @parent.setter
-    def parent(self, value):
-        if not isinstance(value, Body):
-            raise TypeError('Parent must be an instance of Body.')
-        self._parent = value
 
     @property
     def child(self):
         """Child body of Joint."""
         return self._child
 
-    @child.setter
-    def child(self, value):
-        if not isinstance(value, Body):
-            raise TypeError('Child must be an instance of Body.')
-        self._child = value
-
     @property
     def coordinates(self):
         """List generalized coordinates of the joint."""
         return self._coordinates
-
-    @coordinates.setter
-    def coordinates(self, value):
-        self._coordinates = self._generate_coordinates(value)
 
     @property
     def speeds(self):
         """List generalized coordinates of the joint.."""
         return self._speeds
 
-    @speeds.setter
-    def speeds(self, value):
-        self._speeds = self._generate_speeds(value)
-
     @property
     def parent_axis(self):
         """The axis of parent frame."""
         return self._parent_axis
-
-    @parent_axis.setter
-    def parent_axis(self, value):
-        self._parent_axis = self._axis(self.parent, value)
 
     @property
     def child_axis(self):
         """The axis of child frame."""
         return self._child_axis
 
-    @child_axis.setter
-    def child_axis(self, value):
-        self._child_axis = self._axis(self.child, value)
-
     @property
     def parent_joint(self):
         """The joint's point where parent body is connected to the joint."""
         return self._parent_joint
 
-    @parent_joint.setter
-    def parent_joint(self, value):
-        self._parent_joint = self._locate_joint_pos(self.parent, value)
-
     @property
     def child_joint(self):
         """The joint's point where child body is connected to the joint."""
         return self._child_joint
-
-    @child_joint.setter
-    def child_joint(self, value):
-        self._child_joint = self._locate_joint_pos(self.child, value)
 
     @abstractmethod
     def _generate_coordinates(self, coordinates):
