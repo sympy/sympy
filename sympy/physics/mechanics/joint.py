@@ -55,27 +55,18 @@ class Joint(ABC):
     def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None,
         child_joint_pos=None, parent_axis=None, child_axis=None):
 
-        if not isinstance(name, str):
-            raise TypeError('Supply a valid name.')
-        self._name = name
+        self.name = name
+        self.parent = parent
+        self.child = child
 
-        if not isinstance(parent, Body):
-            raise TypeError('Parent must be an instance of Body.')
-        self._parent = parent
+        self.coordinates = coordinates
+        self.speeds = speeds
 
-        if not isinstance(child, Body):
-            raise TypeError('Child must be an instance of Body.')
-        self._child = child
+        self.parent_axis = parent_axis
+        self.child_axis = child_axis
 
-        self._coordinates = self._generate_coordinates(coordinates)
-        self._speeds = self._generate_speeds(speeds)
-        self._kdes = self._generate_kdes()
-
-        self._parent_axis = self._axis(parent, parent_axis)
-        self._child_axis = self._axis(child, child_axis)
-
-        self._parent_joint = self._locate_joint_pos(parent,parent_joint_pos)
-        self._child_joint = self._locate_joint_pos(child, child_joint_pos)
+        self.parent_joint = parent_joint_pos
+        self.child_joint = child_joint_pos
 
         self._orient_frames()
         self._set_angular_velocity()
@@ -87,25 +78,87 @@ class Joint(ABC):
     def __repr__(self):
         return self.__str__()
 
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        if not isinstance(value, str):
+            raise TypeError('Supply a valid name.')
+        self._name=value
+
+    @property
     def parent(self):
         """Parent body of Joint."""
         return self._parent
 
+    @parent.setter
+    def parent(self, value):
+        if not isinstance(value, Body):
+            raise TypeError('Parent must be an instance of Body.')
+        self._parent = value
+
+    @property
     def child(self):
         """Child body of Joint."""
         return self._child
 
+    @child.setter
+    def child(self, value):
+        if not isinstance(value, Body):
+            raise TypeError('Child must be an instance of Body.')
+        self._child = value
+
+    @property
     def coordinates(self):
         """ List of coordinates of Joint."""
         return self._coordinates
 
+    @coordinates.setter
+    def coordinates(self, value):
+        self._coordinates = self._generate_coordinates(value)
+
+    @property
     def speeds(self):
         """ List of speeds of Joint."""
         return self._speeds
 
-    def kdes(self):
-        """Kinematical differential equations of the joint."""
-        return self._kdes
+    @speeds.setter
+    def speeds(self, value):
+        self._speeds = self._generate_speeds(value)
+
+    @property
+    def parent_axis(self):
+        return self._parent_axis
+
+    @parent_axis.setter
+    def parent_axis(self, value):
+        self._parent_axis = self._axis(self.parent, value)
+
+    @property
+    def child_axis(self):
+        return self._child_axis
+
+    @child_axis.setter
+    def child_axis(self, value):
+        self._child_axis = self._axis(self.child, value)
+
+    @property
+    def parent_joint(self):
+        return self._parent_joint
+
+    @parent_joint.setter
+    def parent_joint(self, value):
+        self._parent_joint = self._locate_joint_pos(self.parent, value)
+
+    @property
+    def child_joint(self):
+        return self._child_joint
+
+    @child_joint.setter
+    def child_joint(self, value):
+        self._child_joint = self._locate_joint_pos(self.child, value)
 
     @abstractmethod
     def _generate_coordinates(self, coordinates):
@@ -130,11 +183,11 @@ class Joint(ABC):
     def _set_linear_velocity(self):
         pass
 
-    def _generate_kdes(self):
+    def kdes(self):
         kdes = []
         t = dynamicsymbols._t
-        for i in range(len(self._coordinates)):
-            kdes.append(-self._coordinates[i].diff(t) + self._speeds[i])
+        for i in range(len(self.coordinates)):
+            kdes.append(-self.coordinates[i].diff(t) + self.speeds[i])
         return kdes
 
     def _axis(self, body, ax):
@@ -264,21 +317,21 @@ class PinJoint(Joint):
         return speeds
 
     def _orient_frames(self):
-        self._child.frame.orient_axis(self._parent.frame, self._parent_axis, 0)
-        angle, axis = self._align_axis(self._parent_axis, self._child_axis)
+        self.child.frame.orient_axis(self.parent.frame, self.parent_axis, 0)
+        angle, axis = self._align_axis(self.parent_axis, self.child_axis)
         if axis != Vector(0):
             I = ReferenceFrame('I')
-            I.orient_axis(self._child.frame, self._child_axis, 0)
-            I.orient_axis(self._parent.frame, axis, angle)
-            self._child.frame.orient_axis(I, self._parent_axis, self._coordinates[0])
+            I.orient_axis(self.child.frame, self.child_axis, 0)
+            I.orient_axis(self.parent.frame, axis, angle)
+            self.child.frame.orient_axis(I, self.parent_axis, self.coordinates[0])
         else:
-            self._child.frame.orient_axis(self._parent.frame, self._parent_axis, self._coordinates[0])
+            self.child.frame.orient_axis(self.parent.frame, self.parent_axis, self.coordinates[0])
 
     def _set_angular_velocity(self):
-        self._child.frame.set_ang_vel(self._parent.frame, self._speeds[0] * self._parent_axis.normalize())
+        self.child.frame.set_ang_vel(self.parent.frame, self.speeds[0] * self.parent_axis.normalize())
 
     def _set_linear_velocity(self):
-        self._parent_joint.set_vel(self._parent.frame, 0)
-        self._child_joint.set_vel(self._parent.frame, 0)
-        self._child_joint.set_pos(self._parent_joint, 0)
-        self._child.masscenter.v2pt_theory(self._parent.masscenter, self._parent.frame, self._child.frame)
+        self.parent_joint.set_vel(self.parent.frame, 0)
+        self.child_joint.set_vel(self.parent.frame, 0)
+        self.child_joint.set_pos(self.parent_joint, 0)
+        self.child.masscenter.v2pt_theory(self.parent.masscenter, self.parent.frame, self.child.frame)

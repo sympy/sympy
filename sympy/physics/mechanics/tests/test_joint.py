@@ -21,16 +21,16 @@ def test_pinjoint():
     theta, omega = dynamicsymbols('theta_J, omega_J', real=True)
 
     Pj = PinJoint('J', P, C )
-    assert Pj._name == 'J'
-    assert Pj.parent() == P
-    assert Pj.child() == C
-    assert Pj.coordinates() == [theta]
-    assert Pj.speeds() == [omega]
+    assert Pj.name == 'J'
+    assert Pj.parent == P
+    assert Pj.child == C
+    assert Pj.coordinates == [theta]
+    assert Pj.speeds == [omega]
     assert Pj.kdes() == [omega - theta.diff(t)]
-    assert Pj._parent_axis == P.frame.x
-    assert Pj._child_joint.pos_from(C.masscenter) == Vector(0)
-    assert Pj._parent_joint.pos_from(P.masscenter) == Vector(0)
-    assert Pj._parent_joint.pos_from(Pj._child_joint) == Vector(0)
+    assert Pj.parent_axis == P.frame.x
+    assert Pj.child_joint.pos_from(C.masscenter) == Vector(0)
+    assert Pj.parent_joint.pos_from(P.masscenter) == Vector(0)
+    assert Pj.parent_joint.pos_from(Pj._child_joint) == Vector(0)
     assert C.masscenter.pos_from(P.masscenter) == Vector(0)
 
     P1 = Body('P1')
