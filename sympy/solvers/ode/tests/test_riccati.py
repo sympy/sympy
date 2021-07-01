@@ -1,11 +1,13 @@
 from random import randint
 from sympy import (S, symbols, Function, Rational, Poly, Eq, ratsimp,
-    checkodesol, sqrt, oo, I, pi, Mul, sin, exp, log, tanh)
+    checkodesol, sqrt, Dummy, oo, I, pi, Mul, sin, exp, log, tanh)
+from sympy.testing.pytest import slow
 from sympy.solvers.ode.riccati import (riccati_normal, riccati_inverse_normal,
     riccati_reduced, match_riccati, inverse_transform_poly, find_poles,
     limit_at_inf, check_necessary_conds, val_at_inf, construct_c_case_1,
     construct_c_case_2, construct_c_case_3, construct_d_case_4,
-    construct_d_case_5, construct_d_case_6, rational_laurent_series)
+    construct_d_case_5, construct_d_case_6, rational_laurent_series,
+    solve_riccati)
 
 f = Function('f')
 x = symbols('x')
@@ -202,8 +204,8 @@ def test_riccati_reduced():
         12/(4*x + 12))/(Mul(2, 3 - 12*x, evaluate=False)*(3*x + \
         3)) - Mul(3, -2 + (4*x - 1)/(Mul(2, x + 3, evaluate=\
         False)), evaluate=False)*(4*x + 12)/(Mul(2, 3 - 12*x, \
-        evaluate=False)*(x + 3)**2) + (3 - 12*x)*(-4*x**2/( \
-        6*x**2 - 6*x + 6) + 9/(6*x**2 - 6*x + 6))/(4*x + 12) \
+        evaluate=False)*(x + 3)**2) + (3 - 12*x)*(-2*x**2/( \
+        3*x**2 - 3*x + 3) + 3/(2*x**2 - 2*x + 2))/(4*x + 12) \
         + f(x)**2 + f(x).diff(x) - 1/(Mul(2, 3*x + 3, evaluate \
         =False)) - 3*(4*x + 12)**2*(Mul(4, 3 - 12*x, evaluate= \
         False)/(4*x + 12)**2 + 12/(4*x + 12))**2/(4*(3 - 12*x)**2)
@@ -213,8 +215,7 @@ def test_riccati_reduced():
 
         f(x)**2 + f(x).diff(x) + (3*x**2/(x**2 + 6*x + 1) + 3*x/(x**2 \
         + 6*x + 1) - 3/(x**2 + 6*x + 1))/x + 1/(4*x**2)
-    )
-    ]
+    )]
     for eq, normal_eq in tests:
         assert normal_eq == riccati_reduced(eq, f, x)
 
@@ -229,10 +230,10 @@ def test_match_riccati():
 
         True,
 
-        405*x**3/(243*x**4 - 945*x**3 + 846*x**2 + 180*x - 72) - \
-        882*x**2/(243*x**4 - 945*x**3 + 846*x**2 + 180*x - 72) - \
-        78*x/(243*x**4 - 945*x**3 + 846*x**2 + 180*x - 72) + 2 + \
-        92/(243*x**4 - 945*x**3 + 846*x**2 + 180*x - 72),
+        45*x**3/(27*x**4 - 105*x**3 + 94*x**2 + 20*x - 8) - 98*x**2/ \
+        (27*x**4 - 105*x**3 + 94*x**2 + 20*x - 8) - 26*x/(81*x**4 - \
+        315*x**3 + 282*x**2 + 60*x - 24) + 2 + 92/(243*x**4 - 945*x**3 \
+        + 846*x**2 + 180*x - 72),
 
         Mul(-1, 2 - 6*x, evaluate=False)/(9*x - 2),
 
@@ -245,8 +246,8 @@ def test_match_riccati():
 
         True,
 
-        265*x**2/(324*x**3 + 216*x**2) - 4*x/27 + 423*x/(324*x**3 \
-        + 216*x**2) + S(10)/27 + 162/(324*x**3 + 216*x**2),
+        -4*x/27 + S(10)/27 + 3/(6*x**3 + 4*x**2) + 47/(36*x**2 \
+        + 24*x) + 265/(324*x + 216),
 
         Mul(-1, -2*x - 3, evaluate=False)/(9*x + 6),
 
@@ -260,13 +261,13 @@ def test_match_riccati():
 
         True,
 
-        304*x**5/(36*x**6 - 216*x**5 + 477*x**4 - 567*x**3 + 360*x**2 \
-        - 108*x) - 745*x**4/(36*x**6 - 216*x**5 + 477*x**4 - 567*x**3 \
-        + 360*x**2 - 108*x) + 631*x**3/(36*x**6 - 216*x**5 + 477*x**4 \
-        - 567*x**3 + 360*x**2 - 108*x) - 876*x**2/(36*x**6 - 216*x**5 \
-        + 477*x**4 - 567*x**3 + 360*x**2 - 108*x) + 198*x/(36*x**6 - \
-        216*x**5 + 477*x**4 - 567*x**3 + 360*x**2 - 108*x) + S(17)/9 - 108 \
-        /(36*x**6 - 216*x**5 + 477*x**4 - 567*x**3 + 360*x**2 - 108*x),
+        304*x**4/(36*x**5 - 216*x**4 + 477*x**3 - 567*x**2 + 360*x - \
+        108) - 745*x**3/(36*x**5 - 216*x**4 + 477*x**3 - 567*x**2 + \
+        360*x - 108) + 631*x**2/(36*x**5 - 216*x**4 + 477*x**3 - 567* \
+        x**2 + 360*x - 108) - 292*x/(12*x**5 - 72*x**4 + 159*x**3 - \
+        189*x**2 + 120*x - 36) + S(17)/9 - 12/(4*x**6 - 24*x**5 + \
+        53*x**4 - 63*x**3 + 40*x**2 - 12*x) + 22/(4*x**5 - 24*x**4 \
+        + 53*x**3 - 63*x**2 + 40*x - 12),
 
         Mul(-1, 3 - 2*x, evaluate=False)/(x - 3),
 
@@ -299,8 +300,7 @@ def test_match_riccati():
         f(x).diff(x)*f(x)**2 + (x**2 - 1)/(x**3 + 1)*f(x) + 1/(2*x \
         + 3) + f(x)**2,
         False, 0, 0, 0
-    )
-    ]
+    )]
     for eq, res, b0, b1, b2 in tests:
         match, funcs = match_riccati(eq, f, x)
         assert match == res
@@ -350,7 +350,6 @@ def test_poles():
         Poly(2*x**7 + 6*x**6 + 11*x**5 - 12*x**4 - 28*x**3 + 6*x**2 + 15*x, x),
         {1: 2, -1: 2, -S(3)/2 - sqrt(21)*I/2: 1, -S(3)/2 + sqrt(21)*I/2: 1, 0: 1}
     )]
-
     for den, poles in tests:
         assert find_poles(den, x) == poles
 
@@ -532,13 +531,13 @@ def test_construct_c_case_2():
         Poly(1, x, extension=True),
         Poly((x - 1)**2*(x - 2), x, extension=True),
         1, 2,
-        [[-I*(-1 - I)/2], [I*(-1 + I*(-1 - I)/2)/2]]
+        [[-I*(-1 - I)/2], [I*(-1 + I)/2]]
     ),
     (
         Poly(3*x**5 - 12*x**4 - 7*x**3 + 1, x, extension=True),
         Poly((3*x - 1)**2*(x + 2)**2, x, extension=True),
         S(1)/3, 2,
-        [[-S(89)/98], [-S(103)/28]]
+        [[-S(89)/98], [-S(9)/98]]
     ),
     # Testing poles with multiplicity 4
     (
@@ -546,14 +545,14 @@ def test_construct_c_case_2():
         Poly((x - 2)**4*(x + 5)**2, x, extension=True),
         2, 4,
         [[7*sqrt(3)*(S(60)/343 - 4*sqrt(3)/7)/12, 2*sqrt(3)/7], \
-        [-7*sqrt(3)*(S(60)/343 - 4*sqrt(3)/7)/12, -2*sqrt(3)/7]]
+        [-7*sqrt(3)*(S(60)/343 + 4*sqrt(3)/7)/12, -2*sqrt(3)/7]]
     ),
     (
         Poly(3*x**5 + x**4 + 3, x, extension=True),
         Poly((4*x + 1)**4*(x + 2), x, extension=True),
         -S(1)/4, 4,
         [[128*sqrt(439)*(-sqrt(439)/128 - S(55)/14336)/439, sqrt(439)/256], \
-        [-128*sqrt(439)*(-sqrt(439)/128 - S(55)/14336)/439, -sqrt(439)/256]]
+        [-128*sqrt(439)*(sqrt(439)/128 - S(55)/14336)/439, -sqrt(439)/256]]
     ),
     # Testing poles with multiplicity 6
     (
@@ -561,18 +560,17 @@ def test_construct_c_case_2():
         Poly((3*x - 1)**6*(x**2 + 1), x, extension=True),
         S(1)/3, 6,
         [[27*sqrt(66)*(-sqrt(66)/54 - S(131)/267300)/22, -2*sqrt(66)/1485, sqrt(66)/162], \
-        [-27*sqrt(66)*(-sqrt(66)/54 - S(131)/267300)/22, 2*sqrt(66)/1485, -sqrt(66)/162]]
+        [-27*sqrt(66)*(sqrt(66)/54 - S(131)/267300)/22, 2*sqrt(66)/1485, -sqrt(66)/162]]
     ),
     (
         Poly(x**2 + 12, x, extension=True),
         Poly((x - sqrt(2))**6, x, extension=True),
         sqrt(2), 6,
         [[sqrt(14)*(S(6)/7 - 3*sqrt(14))/28, sqrt(7)/7, sqrt(14)], \
-        [-sqrt(14)*(S(6)/7 - 3*sqrt(14))/28, -sqrt(7)/7, -sqrt(14)]]
+        [-sqrt(14)*(S(6)/7 + 3*sqrt(14))/28, -sqrt(7)/7, -sqrt(14)]]
     )]
     for num, den, pole, mul, c in tests:
         assert construct_c_case_2(num, den, x, pole, mul) == c
-
 
 def test_construct_c_case_3():
     assert construct_c_case_3() == [[1], [1]]
@@ -585,25 +583,23 @@ def test_construct_d_case_4():
         Poly(-x**5 - 2*x**4 + 4*x**3 + 2*x + 5, x, extension=True),
         Poly(9*x**3 - 2*x**2 + 10*x - 2, x, extension=True),
         2,
-        [[1193*sqrt(374)/90882, sqrt(374)/27, 27*sqrt(374)*(-sqrt(374)/27 \
-        -S(2843831)/7361442)/748], [-1193*sqrt(374)/90882, -sqrt(374)/27, \
-        -27*sqrt(374)*(-S(2843831)/7361442 + sqrt(374)/27)/748]]
+        [[10*I/27, I/3, -3*I*(S(158)/243 - I/3)/2], \
+        [-10*I/27, -I/3, 3*I*(S(158)/243 + I/3)/2]]
     ),
     (
         Poly(-x**6 + 9*x**5 + 5*x**4 + 6*x**3 + 5*x**2 + 6*x + 7, x, extension=True),
         Poly(x**4 + 3*x**3 + 12*x**2 - x + 7, x, extension=True),
         2,
-        [[-249*sqrt(82)*I/82, sqrt(82)*I, -sqrt(82)*I*(S(12227)/82 - sqrt(82)*I)/164], \
-        [249*sqrt(82)*I/82, -sqrt(82)*I, sqrt(82)*I*(S(12227)/82 + sqrt(82)*I)/164]]
+        [[-6*I, I, -I*(17 - I)/2], [6*I, -I, I*(17 + I)/2]]
     ),
     # Tests with multiplicity at oo = 4
     (
         Poly(-2*x**6 - x**5 - x**4 - 2*x**3 - x**2 - 3*x - 3, x, extension=True),
         Poly(3*x**2 + 10*x + 7, x, extension=True),
         4,
-        [[15481*sqrt(17)/20808, -137*sqrt(17)/306, sqrt(17)/3, 3*sqrt(17)*( \
-        -S(9345037)/561816 - 2*sqrt(17)/3)/34], [-15481*sqrt(17)/20808, 137*sqrt \
-        (17)/306, -sqrt(17)/3, -3*sqrt(17)*(-S(9345037)/561816 + 2*sqrt(17)/3)/34]]
+        [[269*sqrt(6)*I/288, -17*sqrt(6)*I/36, sqrt(6)*I/3, -sqrt(6)*I*(S(16969)/2592 \
+        - 2*sqrt(6)*I/3)/4], [-269*sqrt(6)*I/288, 17*sqrt(6)*I/36, -sqrt(6)*I/3, \
+        sqrt(6)*I*(S(16969)/2592 + 2*sqrt(6)*I/3)/4]]
     ),
     (
         Poly(-3*x**5 - 3*x**4 - 3*x**3 - x**2 - 1, x, extension=True),
@@ -637,18 +633,17 @@ def test_construct_d_case_5():
     (
         Poly(2*x**3 + x**2 + x - 2, x, extension=True),
         Poly(9*x**3 + 5*x**2 + 2*x - 1, x, extension=True),
-        [[5*sqrt(2)/27, -382*sqrt(2)/1215], [-5*sqrt(2)/27, 382*sqrt(2)/1215]]
+        [[sqrt(2)/3, -sqrt(2)/108], [-sqrt(2)/3, sqrt(2)/108]]
     ),
     (
         Poly(3*x**5 + x**4 - x**3 + x**2 - 2*x - 2, x, domain='ZZ'),
         Poly(9*x**5 + 7*x**4 + 3*x**3 + 2*x**2 + 5*x + 7, x, domain='ZZ'),
-        [[sqrt(27798)*I/243, 2914*sqrt(27798)*I/10132371], [-sqrt(27798)*I/243, \
-        -2914*sqrt(27798)*I/10132371]]
+        [[sqrt(3)/3, -2*sqrt(3)/27], [-sqrt(3)/3, 2*sqrt(3)/27]]
     ),
     (
         Poly(x**2 - x + 1, x, domain='ZZ'),
         Poly(3*x**2 + 7*x + 3, x, domain='ZZ'),
-        [[sqrt(10)*I/3, -7*sqrt(10)*I/18], [-sqrt(10)*I/3, 7*sqrt(10)*I/18]]
+        [[sqrt(3)/3, -5*sqrt(3)/9], [-sqrt(3)/3, 5*sqrt(3)/9]]
     )]
     for num, den, d in tests:
         # Multiplicity of oo is 0
@@ -685,31 +680,31 @@ def test_rational_laurent_series():
         Poly(x**2 - 3*x + 9, x, extension=True),
         Poly(x**2 - x, x, extension=True),
         S(1), 1, 6,
-        [7, -8, 9, -9, 9, -9, 9]
+        {-1: 9, 1: 7, 0: -8, -2: -9, -3: 9, -4: -9, -5: 9}
     ),
     # Laurent series about multiple pole (Multiplicty > 1)
     (
         Poly(64*x**3 - 1728*x + 1216, x, extension=True),
         Poly(64*x**4 - 80*x**3 - 831*x**2 + 1809*x - 972, x, extension=True),
         S(9)/8, 2, 3,
-        [S(1019)/984, S(209149)/75645, S(32177152)/46521675, S(11947565056)/28610830125, \
-        S(3751586234368)/17595660526875]
+        {0: S(32177152)/46521675, 2: S(1019)/984, -1: S(11947565056)/28610830125, \
+        1: S(209149)/75645, -2: S(3751586234368)/17595660526875}
     ),
     (
         Poly(1, x, extension=True),
         Poly(x**5 + (-4*sqrt(2) - 1)*x**4 + (4*sqrt(2) + 12)*x**3 + (-12 - 8*sqrt(2))*x**2 \
         + (4 + 8*sqrt(2))*x - 4, x, extension=True),
         sqrt(2), 4, 6,
-        [1 + sqrt(2), -3 - 2*sqrt(2), 7 + 5*sqrt(2), -17 - 12*sqrt(2), 41 + 29*sqrt(2), \
-        -99 - 70*sqrt(2), 239 + 169*sqrt(2), -577 - 408*sqrt(2), 1393 + 985*sqrt(2), \
-        -3363 - 2378*sqrt(2)]
+        {4: 1 + sqrt(2), 3: -3 - 2*sqrt(2), 2: 7 + 5*sqrt(2), 1: -17 - 12*sqrt(2), 0: 41 + \
+        29*sqrt(2), -1: -99 - 70*sqrt(2), -2: 239 + 169*sqrt(2), -3: -577 - 408*sqrt(2), \
+        -4: 1393 + 985*sqrt(2), -5: -3363 - 2378*sqrt(2)}
     ),
     # Laurent series about oo
     (
         Poly(x**5 - 4*x**3 + 6*x**2 + 10*x - 13, x, extension=True),
         Poly(x**2 - 5, x, extension=True),
         oo, 3, 6,
-        [375, 85, 75, 17, 15, 6, 1, 0, 1]
+        {3: 1, 1: 1, -2: 17, 2: 0, 0: 6, -1: 15, -3: 75, -4: 85, -5: 375}
     ),
     # Laurent series at x0 where x0 is not a pole of the function
     # Using multiplicity as 0 (as x0 will not be a pole)
@@ -717,16 +712,246 @@ def test_rational_laurent_series():
         Poly(3*x**3 + 6*x**2 - 2*x + 5, x, extension=True),
         Poly(9*x**4 - x**3 - 3*x**2 + 4*x + 4, x, extension=True),
         pi, 0, 1,
-        [(-2*pi + 5 + 6*pi**2 + 3*pi**3)/(-pi**3 - 3*pi**2 + 4 + 4*pi + 9*pi**4), \
-        (-108*pi**5 - 27*pi**6 - 160*pi**3 - 28 + 78*pi + 69*pi**2 + 51*pi**4)/ \
-        (-18*pi**7 - 53*pi**6 - 32*pi**3 - 8*pi**2 + 16 + 32*pi + 73*pi**4 + \
-        78*pi**5 + 81*pi**8)]
+        {-2: (-891*pi**7 - 3075*pi**5 - 3435*pi**4 - 693*pi**2 - 48*pi + \
+        268 + 1498*pi**3 + 3597*pi**6 + 243*pi**9 + 1458*pi**8)/(-243*pi**11 \
+        - 702*pi**10 - 879*pi**7 - 159*pi**6 - 272*pi**3 + 64 + 48*pi**2 + \
+        192*pi + 300*pi**4 + 996*pi**5 + 990*pi**8 + 1133*pi**9 + 729*pi**12), \
+        0: (-2*pi + 5 + 6*pi**2 + 3*pi**3)/(-pi**3 - 3*pi**2 + 4 + 4*pi + \
+        9*pi**4), -3: (-17496*pi**11 - 2187*pi**12 - 66312*pi**9 - 43174*pi**6 \
+        - 20619*pi**4 - 30868*pi**3 - 1136 - 112*pi + 7480*pi**2 + 37492*pi**5 \
+        + 89140*pi**7 + 81699*pi**8 + 13122*pi**10)/(-2916*pi**15 - 8262*pi**14 \
+        - 16080*pi**11 - 1798*pi**10 - 9888*pi**7 - 1536*pi**3 + 256 + 1024*pi + \
+        768*pi**2 + 352*pi**4 + 7680*pi**5 + 3152*pi**6 + 2625*pi**8 + 20252*pi**9 \
+        + 11827*pi**12 + 14544*pi**13 + 6561*pi**16), -1: (-108*pi**5 - 27*pi**6 \
+        - 160*pi**3 - 28 + 78*pi + 69*pi**2 + 51*pi**4)/(-18*pi**7 - 53*pi**6 - \
+        32*pi**3 - 8*pi**2 + 16 + 32*pi + 73*pi**4 + 78*pi**5 + 81*pi**8)}
     ),
     (
         Poly(-7*x**2 + 2*x - 4, x, extension=True),
         Poly(7*x**5 + 9*x**4 + 8*x**3 + 3*x**2 + 6*x + 9, x, extension=True),
         oo, 0, 6,
-        [-S(71)/49, S(11)/7, -S(1), 0, 0, 0]
+        {0: 0, -2: 0, -5: -S(71)/49, -1: 0, -3: -1, -4: S(11)/7}
     )]
     for num, den, x0, mul, n, ser in tests:
         assert ser == rational_laurent_series(num, den, x, x0, mul, n)
+
+
+def check_dummy_sol(eq, solse, dummy_sym):
+    if isinstance(eq, Eq):
+        eq = eq.lhs - eq.rhs
+    _, funcs = match_riccati(eq, f, x)
+    if not len(funcs):
+        print(eq)
+    sols = solve_riccati(f(x), x, *funcs)
+    C1 = Dummy('C1')
+    sols = [sol.subs(C1, dummy_sym) for sol in sols]
+    assert all([x[0] for x in checkodesol(eq, sols)])
+    try:
+        assert all([s1.dummy_eq(s2, dummy_sym) for s1, s2 in zip(sols, solse)])
+    except:
+        print()
+        print(sols)
+        print(solse)
+        print()
+        raise ValueError("Error!")
+
+def test_solve_riccati():
+    C0 = Dummy('C0')
+    # Type: 1st Order Rational Riccati, dy/dx = a + b*y + c*y**2,
+    # a, b, c are rational functions of x
+
+    tests = [
+    (
+        x**2 - (2*x + 1/x)*f(x) + f(x)**2 + f(x).diff(x),
+        [Eq(f(x), (C0*x + x**3 + 2*x)/(C0 + x**2)), Eq(f(x), x)]
+    ),
+    (
+        f(x)**2 + f(x).diff(x) - (4*x**6 - 8*x**5 + 12*x**4 + 4*x**3 + \
+            7*x**2 - 20*x + 4)/(4*x**4),
+        [Eq(f(x), (2*x**5 - 2*x**4 - x**3 + 4*x**2 + 3*x - 2)/(2*x**4 \
+            - 2*x**2))]
+    ),
+    (
+        -x*f(x)**2 + f(x).diff(x) - 2*f(x)/x,
+        [Eq(f(x), -4*x**2/(C0 + x**4)), Eq(f(x), 0)]
+    ),
+    (
+        -f(x)**2 + f(x).diff(x) + (15*x**2 - 20*x + 7)/((x - 1)**2*(2*x \
+            - 1)**2),
+        [Eq(f(x), (9*C0*x - 6*C0 - 15*x**5 + 60*x**4 - 94*x**3 + 72*x**2 - 30*x \
+            + 6)/(6*C0*x**2 - 9*C0*x + 3*C0 + 6*x**6 - 29*x**5 + 57*x**4 - 58*x**3 + \
+            30*x**2 - 6*x)), Eq(f(x), (3*x - 2)/(2*x**2 - 3*x + 1))]
+    ),
+    (
+        9*x**2/4 - f(x)**2 + f(x).diff(x) - S(21)/2,
+        [Eq(f(x), 3*x/2 - (3*x**2 - 1)/(x*(x**2 - 1)))]
+    ),
+    (
+        f(x)**2 + f(x).diff(x) - 15/(4*x**2),
+        [Eq(f(x), (-3*C0 + 5*x**4)/(2*C0*x + 2*x**5)), Eq(f(x), -3/(2*x))]
+    ),
+    (
+        3*f(x)**2 + f(x).diff(x) - 2/x**2,
+        [Eq(f(x), (-2*C0 + 3*x**5)/(3*C0*x + 3*x**6)), Eq(f(x), -2/(3*x))]
+    ),
+    (
+        f(x).diff(x) - 2*I*(f(x)**2 + 1)/x,
+        [Eq(f(x), (-I*C0 + I*x**4)/(C0 + x**4)), Eq(f(x), -I)]
+    ),
+    (
+        f(x).diff(x) - f(x)**2/x + 1/x,
+        [Eq(f(x), (C0 - x**2)/(C0 + x**2)), Eq(f(x), 1)]
+    ),
+    (
+        f(x)**2 + f(x).diff(x) - f(x)/x,
+        [Eq(f(x), 2*x/(C0 + x**2)), Eq(f(x), 0)]
+    ),
+    (
+        -x**2 - (2*x + 1/x)*f(x) - f(x)**2 + f(x).diff(x),
+        [Eq(f(x), (-C0*x - x**3 - 2*x)/(C0 + x**2)), Eq(f(x), -x)]
+    ),
+    (
+        f(x)**2 + f(x).diff(x) + 4*f(x)/x + 2/x**2,
+        [Eq(f(x), (-2*C0 - x)/(C0*x + x**2))]
+    ),
+    (
+        2*x**2*f(x).diff(x) - x*(4*f(x) + f(x).diff(x) - 4) + (f(x) - 1)*f(x),
+        [Eq(f(x), (C0 + 2*x**2)/(C0 + x))]
+    ),
+    (
+        x**4*f(x).diff(x) + x**2 - x*(2*f(x)**2 + f(x).diff(x)) + f(x),
+        [Eq(f(x), (C0*x**2 + x)/(C0 + x**2)), Eq(f(x), x**2)]
+    ),
+    ( # Regression Test: See https://github.com/sympy/sympy/pull/21459#issuecomment-852212302
+        Eq(f(x).diff(x), x*f(x)/(S(3)/2 - 2*x) + (x/2 - S(1)/3)*f(x)**2/\
+            (2*x/3 - S(1)/2) - S(5)/4 + (281*x**2 - 1260*x + 756)/(16*x**3 - 12*x**2)),
+        [Eq(f(x), (9 - x)/x), Eq(f(x), (40*x**14 + 28*x**13 + 420*x**12 + 2940*x**11 + \
+            18480*x**10 + 103950*x**9 + 519750*x**8 + 2286900*x**7 + 8731800*x**6 + 28378350*\
+            x**5 + 76403250*x**4 + 163721250*x**3 + 261954000*x**2 + 278326125*x + 147349125)/\
+            ((24*x**14 + 140*x**13 + 840*x**12 + 4620*x**11 + 23100*x**10 + 103950*x**9 + \
+            415800*x**8 + 1455300*x**7 + 4365900*x**6 + 10914750*x**5 + 21829500*x**4 + 32744250\
+            *x**3 + 32744250*x**2 + 16372125*x)))]
+    ),
+    (
+        Eq(f(x).diff(x), (-12*x**2 - 48*x - 15)/(24*x**3 - 40*x**2 + 8*x + 8) \
+            + 3*f(x)**2/(6*x + 2)),
+        [Eq(f(x), (2*x + 1)/(2*x - 2))]
+    ),
+    (
+        Eq(f(x).diff(x), 2*x*f(x)**2/(9*x - 6) + (32 - 28*x)/(36*x**3 + \
+            12*x**2 - 15*x - 6) - 4*f(x)/(9*x - 6)),
+        [Eq(f(x), 2/(2*x + 1))]
+    ),
+    (
+        Eq(f(x).diff(x), x*f(x) + 2*x + (3*x - 2)*f(x)**2/(4*x + 2) + \
+            (8*x**2 - 7*x + 26)/(16*x**3 - 24*x**2 + 8) - S(3)/2),
+        [Eq(f(x), (1 - 4*x)/(2*x - 2))]
+    ),
+    (
+        Eq(f(x).diff(x) + f(x)**2 - 2, 0),
+        [Eq(f(x), sqrt(2)), Eq(f(x), -sqrt(2))]
+    ),
+    (
+        Eq(f(x).diff(x), 8*x**3/729 - 8*x**2/243 + 4*x/9 + (S(2)/3 - 2*x/9)*\
+            f(x)**2 - S(4)/9 + 2/(3*x + 3) + (2*x - 1)*f(x)/(-x - 1)),
+        [Eq(f(x), 2*x/9)]
+    ),
+    (
+        Eq(f(x).diff(x), 2*x**3 + 4*x**2 - 7*x + (S(3)/2 - x/2)*f(x)**2 + \
+            (3*x - S(3)/2)*f(x) - 11),
+        [Eq(f(x), -2*x - 2)]
+    ),
+    (
+        Eq(f(x).diff(x), -9*x**3/8 + 3*x**2 + x/2 + (x/2 - S(2)/3)*f(x)**2 \
+            - S(1)/3 - 5/(6*x - 2) + (-2*x - 1)*f(x)/(S(1)/3 - x)),
+        [Eq(f(x), 1 - 3*x/2)]
+    ),
+    (
+        Eq(f(x).diff(x), -x**3/24 - x**2/8 - x/2 + (2*x/3 - S(2)/3)*f(x)**2 \
+            - S(11)/6 - 15/(4*x - 4) + (2*x + 3)*f(x)/(x - 1)),
+        [Eq(f(x), x/4 + S(1)/2)]
+    ),
+    (
+        Eq(f(x).diff(x), 2*x**3/81 + x/18 - x*f(x)/(1 - x) + (S(3)/2 - x/2)*\
+            f(x)**2 + S(1)/6 + 5/(9*x - 9)),
+        [Eq(f(x), -2*x/9 - S(1)/3)]
+    ),
+    (
+        Eq(f(x).diff(x), (-x**6 + 15*x**4 - 40*x**3 + 45*x**2 - 24*x + 4)/\
+            (x**12 - 12*x**11 + 66*x**10 - 220*x**9 + 495*x**8 - 792*x**7 + 924*x**6 - \
+            792*x**5 + 495*x**4 - 220*x**3 + 66*x**2 - 12*x + 1) + f(x)**2 + f(x)),
+        [Eq(f(x), 1/(x**6 - 6*x**5 + 15*x**4 - 20*x**3 + 15*x**2 - 6*x + 1))]
+    ),
+    (
+        Eq(f(x).diff(x), x**3/4 - x**2/12 - 5*x/9 + (-6*x - 2)*f(x)/(9*x \
+            - 3) + (-x - 1)*f(x)**2 - S(7)/18 + 2/(27*x - 9)),
+        [Eq(f(x), S(1)/3 - x/2)]
+    ),
+    (
+        Eq(f(x).diff(x), -3*x**3/4 - 3*x**2/4 - 3*x/4 + 3*x*f(x)/(2*x + \
+            6) + (3*x - 1)*f(x)**2 + S(85)/36 - 21/(4*x + 12)),
+        [Eq(f(x), x/2 + S(1)/3)]
+    ),
+    (
+        Eq(f(x).diff(x), 2*x**3/3 + 8*x**2/3 + 10*x/3 + (-3*x/2 - 3)*\
+            f(x)**2 - f(x)/x - 2/(3*x)),
+        [Eq(f(x), -2*x/3 - S(2)/3), Eq(f(x), -2*x/3 - S(2)/3)]
+    ),
+    (
+        Eq(f(x).diff(x), 18*x**3 + 18*x**2 + (-x/2 - S(1)/2)*f(x)**2 + 6),
+        [Eq(f(x), 6*x)]
+    ),
+    (
+        Eq(f(x).diff(x), -3*x**3/4 + 15*x/2 + (x/3 - S(4)/3)*f(x)**2 \
+            + 9 + (1 - x)*f(x)/x + 3/x),
+        [Eq(f(x), -3*x/2 - 3)]
+    ),
+    (
+        Eq(f(x).diff(x), x**3/4 - 9*x**2/8 + 7*x/4 + (2 - 4*x)*f(x)**2\
+            - S(3)/4 + 1/(2*x - 6) + (x - 1)*f(x)/(x - 3)),
+        [Eq(f(x), S(1)/2 - x/4)]
+    ),
+    (
+        Eq(f(x).diff(x), x**3/27 - 4*x**2/27 + 37*x/54 + (S(2)/3 - x/3)\
+            *f(x)**2 + (-9*x - 2)*f(x)/(6*x + 12) - S(61)/54 + 8/(3*x + 6)),
+        [Eq(f(x), x/3 - S(1)/3)]
+    ),
+    (
+        Eq(f(x).diff(x), -f(x)**2 - 2/(x**3 - x**2)),
+        [Eq(f(x), 1/(x**2 - x))]
+    )]
+    for eq, sol in tests:
+        check_dummy_sol(eq, sol, C0)
+
+@slow
+def test_solve_riccati_slow():
+    C0 = Dummy('C0')
+    tests = [
+    (
+        Eq(f(x).diff(x), (1 - x)*f(x)/(x - 3) + (2 - 12*x)*f(x)**2/(2*x - 9) + \
+            (54924*x**3 - 405264*x**2 + 1084347*x - 1087533)/(8*x**4 - 132*x**3 + 810*x**2 - \
+            2187*x + 2187) + 495),
+        [Eq(f(x), Mul(6, 3*x + 1, evaluate=False)/(2*x - 9)), Eq(f(x), Mul(6, 3*x + \
+            1, evaluate=False)/(2*x - 9))],
+    ),
+    (
+        f(x).diff(x) + (3*x**2 + 1)*f(x)**2/x + (6*x**2 - x + 3)*f(x)/(x*(x \
+            - 1)) + (3*x**2 - 2*x + 2)/(x*(x - 1)**2),
+        [Eq(f(x), (-C0 - x**3 + x**2 - 2*x)/(C0*x - C0 + x**4 - x**3 + x**2 - x)), \
+            Eq(f(x), -1/(x - 1))],
+    ),
+    (
+        f(x).diff(x) + (3*x**2 + 1)*f(x)**2/x + (6*x**2 - x + 3)*f(x)/(x*(x \
+        - 1)) + (3*x**2 - 2*x + 2)/(x*(x - 1)**2),
+        [Eq(f(x), (-C0 - x**3 + x**2 - 2*x)/(C0*x - C0 + x**4 - x**3 + x**2 - x)), \
+            Eq(f(x), -1/(x - 1))]
+    ),
+    (
+        Eq(f(x).diff(x), (1 - x)*f(x)/(x - 3) + (2 - 12*x)*f(x)**2/(2*x - 9) + \
+        (54924*x**3 - 405264*x**2 + 1084347*x - 1087533)/(8*x**4 - 132*x**3 + 810*x**2 - \
+        2187*x + 2187) + 495),
+        [Eq(f(x), Mul(6, 3*x + 1, evaluate=False)/(2*x - 9)), Eq(f(x), Mul(6, 3*x + \
+        1, evaluate=False)/(2*x - 9))]
+    )]
+    for eq, sol in tests:
+        check_dummy_sol(eq, sol, C0)
