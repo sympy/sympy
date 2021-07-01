@@ -217,15 +217,14 @@ class Body(RigidBody, Particle):  # type: ignore
 
     def masscenter_vel(self, body):
         """
-        Returns the velocity of self's masscenter wrt body's referenceframe or
-        self's referenceframe.
+        Returns the velocity of the mass center with respect to the provided
+        rigid body or reference frame.
 
         Parameters
         ==========
 
-        body: Body/ReferenceFrame
-            The body about which the velocity is needed to be calculated.
-            If body is self by default.
+        body: Body or ReferenceFrame
+            The rigid body or reference frame to calculate the velocity in.
 
         Example
         =======
@@ -249,15 +248,14 @@ class Body(RigidBody, Particle):  # type: ignore
 
     def ang_vel_in(self, body):
         """
-        Returns the angular velocity of self's frame wrt body's referenceframe or
-        self's referenceframe.
+        Returns this body's angular velocity with respect to the provided
+        rigid body or reference frame.
 
         Parameters
         ==========
 
-        body: Body
-            The body about which the angluar velocity is needed to be calculated.
-            If body is self by default.
+        body: Body or ReferenceFrame
+            The rigid body or reference frame to calculate the angular velocity in.
 
         Example
         =======
@@ -282,15 +280,14 @@ class Body(RigidBody, Particle):  # type: ignore
 
     def dcm(self, body):
         """
-        Returns the direction cosine matrix relative to the provided body's
-        reference frame.
+        Returns the direction cosine matrix of this body relative to the
+        provided rigid body or reference frame.
 
         Parameters
         ==========
 
-        body: Body
-            The body's reference frame which the direction cosine matrix of this body's frame
-            is formed relative to.
+        body: Body or ReferenceFrame
+            The rigid body or reference frame to calculate the dcm.
 
         Example
         =======
