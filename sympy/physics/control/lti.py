@@ -1740,8 +1740,7 @@ class TransferFunctionMatrix(Basic):
 
         >>> from sympy.abc import s
         >>> from sympy.physics.control.lti import TransferFunctionMatrix
-        >>> from sympy.matrices import Matrix
-        >>> from sympy.printing import pprint
+        >>> from sympy import Matrix, pprint
         >>> M = Matrix([[s, 1/s], [1/(s+1), s]])
         >>> M_tf = TransferFunctionMatrix.from_Matrix(M, s)
         >>> pprint(M_tf, use_unicode=False)
