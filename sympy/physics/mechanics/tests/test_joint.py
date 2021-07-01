@@ -1,4 +1,4 @@
-from sympy import sin, cos, Matrix, sqrt, pi, expand_mul, Abs, acos, S
+from sympy import sin, cos, Matrix, sqrt, pi, expand_mul, S
 from sympy.core.symbol import symbols
 from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint
 from sympy.physics.mechanics.joint import Joint

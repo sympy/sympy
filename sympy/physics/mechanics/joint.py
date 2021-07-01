@@ -95,7 +95,7 @@ class Joint(ABC):
         self._set_linear_velocity()
 
     def __str__(self):
-        return self._name
+        return self.name
 
     def __repr__(self):
         return self.__str__()
@@ -354,6 +354,9 @@ class PinJoint(Joint):
 
         super().__init__(name, parent, child, coordinates, speeds, parent_joint_pos, child_joint_pos,
             parent_axis, child_axis)
+
+    def __str__(self):
+        return f'PinJoint: {self.name}  parent: {self.parent}  child: {self.child}'
 
     def _generate_coordinates(self, coordinate):
         coordinates = []
