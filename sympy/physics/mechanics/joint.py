@@ -50,6 +50,28 @@ class Joint(ABC):
         Axis of child frame which would be aligned with parent's
         axis. Default is x axis in child's frame.
 
+    Attributes
+    ==========
+
+    name : string
+        The joint's name.
+    parent : Body
+        The joint's parent body.
+    child : Body
+        The joint's child body.
+    coordinates : list
+        List generalized coordinates of the joint.
+    speeds : list
+        List generalized speeds of the joint.
+    parent_joint : Point
+        The joint's point where parent body is connected to the joint.
+    child_joint : Point
+        The joint's point where child body is connected to the joint.
+    parent_axis : Vector
+        The axis of parent frame.
+    child_axis : Vector
+        The axis of child frame.
+
     """
 
     def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None,
@@ -112,7 +134,7 @@ class Joint(ABC):
 
     @property
     def coordinates(self):
-        """ List of coordinates of Joint."""
+        """List generalized coordinates of the joint."""
         return self._coordinates
 
     @coordinates.setter
@@ -121,7 +143,7 @@ class Joint(ABC):
 
     @property
     def speeds(self):
-        """ List of speeds of Joint."""
+        """List generalized coordinates of the joint.."""
         return self._speeds
 
     @speeds.setter
@@ -130,6 +152,7 @@ class Joint(ABC):
 
     @property
     def parent_axis(self):
+        """The axis of parent frame."""
         return self._parent_axis
 
     @parent_axis.setter
@@ -138,6 +161,7 @@ class Joint(ABC):
 
     @property
     def child_axis(self):
+        """The axis of child frame."""
         return self._child_axis
 
     @child_axis.setter
@@ -146,6 +170,7 @@ class Joint(ABC):
 
     @property
     def parent_joint(self):
+        """The joint's point where parent body is connected to the joint."""
         return self._parent_joint
 
     @parent_joint.setter
@@ -154,6 +179,7 @@ class Joint(ABC):
 
     @property
     def child_joint(self):
+        """The joint's point where child body is connected to the joint."""
         return self._child_joint
 
     @child_joint.setter
@@ -162,12 +188,12 @@ class Joint(ABC):
 
     @abstractmethod
     def _generate_coordinates(self, coordinates):
-        """List generalized coordinates of the joint."""
+        """Generate list generalized coordinates of the joint."""
         pass
 
     @abstractmethod
     def _generate_speeds(self, speeds):
-        """List generalized speeds of the joint."""
+        """Generate list generalized speeds of the joint."""
         pass
 
     @abstractmethod
@@ -184,6 +210,20 @@ class Joint(ABC):
         pass
 
     def kdes(self):
+        """List generalized kinematical differential equations of the joint.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import PinJoint, Body
+        >>> A = Body('A')
+        >>> B = Body('B')
+        >>> P = PinJoint('P', A, B)
+        >>> P.kdes()
+        [omega_P(t) - Derivative(theta_P(t), t)]
+
+        """
+
         kdes = []
         t = dynamicsymbols._t
         for i in range(len(self.coordinates)):
@@ -251,6 +291,28 @@ class PinJoint(Joint):
     child_axis : Vector, optional
         Axis of child frame which would be aligned with parent's
         axis. Default is x axis in child's frame.
+
+    Attributes
+    ==========
+
+    name : string
+        The joint's name.
+    parent : Body
+        The joint's parent body.
+    child : Body
+        The joint's child body.
+    coordinates : list
+        List generalized coordinates of the joint.
+    speeds : list
+        List generalized speeds of the joint.
+    parent_joint : Point
+        The joint's point where parent body is connected to the joint.
+    child_joint : Point
+        The joint's point where child body is connected to the joint.
+    parent_axis : Vector
+        The axis of parent frame.
+    child_axis : Vector
+        The axis of child frame.
 
     Examples
     =========
