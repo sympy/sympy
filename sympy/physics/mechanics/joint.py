@@ -387,6 +387,28 @@ class SlidingJoint(Joint):
         Axis of child frame which would be aligned with parent's
         axis. Default is x axis in child's frame.
 
+    Attributes
+    ==========
+
+    name : string
+        The joint's name.
+    parent : Body
+        The joint's parent body.
+    child : Body
+        The joint's child body.
+    coordinate : dynamicsymbol, optional
+        Coordinate of the joint.
+    speed : dynamicsymbol, optional
+        Speed of the joint.
+    parent_joint : Point
+        The joint's point where parent body is connected to the joint.
+    child_joint : Point
+        The joint's point where child body is connected to the joint.
+    parent_axis : Vector
+        The axis of parent frame.
+    child_axis : Vector
+        The axis of child frame.
+
     Examples
     =========
 
@@ -421,28 +443,6 @@ class SlidingJoint(Joint):
     v(t)*N.x
     >>> J.kdes()
     [v(t) - Derivative(x(t), t)]
-
-    Attributes
-    ==========
-
-    name : string
-        The joint's name.
-    parent : Body
-        The joint's parent body.
-    child : Body
-        The joint's child body.
-    coordinate : dynamicsymbol, optional
-        Coordinate of the joint.
-    speed : dynamicsymbol, optional
-        Speed of the joint.
-    parent_joint : Point
-        The joint's point where parent body is connected to the joint.
-    child_joint : Point
-        The joint's point where child body is connected to the joint.
-    parent_axis : Vector
-        The axis of parent frame.
-    child_axis : Vector
-        The axis of child frame.
 
     """
 
