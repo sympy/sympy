@@ -7,6 +7,7 @@ from sympy.core.sympify import converter as sympify_converter, _sympify
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.repmatrix import RepMatrix
 from sympy.matrices.sparse import SparseMatrix
 from sympy.multipledispatch import dispatch
 
@@ -26,8 +27,47 @@ def sympify_mpmath_matrix(arg):
 sympify_converter[_matrix] = sympify_mpmath_matrix
 
 
+class ImmutableRepMatrix(RepMatrix, MatrixExpr):
 
-class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
+    def __new__(cls, *args, **kwargs):
+        return cls._new(*args, **kwargs)
+
+    __hash__ = MatrixExpr.__hash__
+
+    def copy(self):
+        return self
+
+    @property
+    def cols(self):
+        return self._cols
+
+    @property
+    def rows(self):
+        return self._rows
+
+    @property
+    def shape(self):
+        return self._rows, self._cols
+
+    def as_immutable(self):
+        return self
+
+    def _entry(self, i, j, **kwargs):
+        return self[i, j]
+
+    def __setitem__(self, *args):
+        raise TypeError("Cannot set values of {}".format(self.__class__))
+
+    def is_diagonalizable(self, reals_only=False, **kwargs):
+        return super().is_diagonalizable(
+            reals_only=reals_only, **kwargs)
+
+    is_diagonalizable.__doc__ = SparseMatrix.is_diagonalizable.__doc__
+    is_diagonalizable = cacheit(is_diagonalizable)
+
+
+
+class ImmutableDenseMatrix(DenseMatrix, ImmutableRepMatrix):  # type: ignore
     """Create an immutable version of a matrix.
 
     Examples
@@ -51,11 +91,6 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
     _iterable = True
     _class_priority = 8
     _op_priority = 10.001
-
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
-
-    __hash__ = MatrixExpr.__hash__
 
     @classmethod
     def _new(cls, *args, **kwargs):
@@ -86,43 +121,12 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
         obj._rep = rep
         return obj
 
-    def copy(self):
-        return self
-
-    def _entry(self, i, j, **kwargs):
-        return DenseMatrix.__getitem__(self, (i, j))
-
-    def __setitem__(self, *args):
-        raise TypeError("Cannot set values of {}".format(self.__class__))
-
-    @property
-    def cols(self):
-        return self._cols
-
-    @property
-    def rows(self):
-        return self._rows
-
-    @property
-    def shape(self):
-        return self._rows, self._cols
-
-    def as_immutable(self):
-        return self
-
-    def is_diagonalizable(self, reals_only=False, **kwargs):
-        return super().is_diagonalizable(
-            reals_only=reals_only, **kwargs)
-
-    is_diagonalizable.__doc__ = DenseMatrix.is_diagonalizable.__doc__
-    is_diagonalizable = cacheit(is_diagonalizable)
-
 
 # make sure ImmutableDenseMatrix is aliased as ImmutableMatrix
 ImmutableMatrix = ImmutableDenseMatrix
 
 
-class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):  # type:ignore
+class ImmutableSparseMatrix(SparseMatrix, ImmutableRepMatrix):  # type:ignore
     """Create an immutable version of a sparse matrix.
 
     Examples
@@ -147,11 +151,6 @@ class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):  # type:ignore
     is_Matrix = True
     _class_priority = 9
 
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
-
-    __hash__ = MatrixExpr.__hash__
-
     @classmethod
     def _new(cls, *args, **kwargs):
         rows, cols, smat = cls._handle_creation_inputs(*args, **kwargs)
@@ -169,34 +168,6 @@ class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):  # type:ignore
         obj._cols = cols
         obj._rep = rep
         return obj
-
-    def __setitem__(self, *args):
-        raise TypeError("Cannot set values of ImmutableSparseMatrix")
-
-    def _entry(self, i, j, **kwargs):
-        return SparseMatrix.__getitem__(self, (i, j))
-
-    @property
-    def cols(self):
-        return self._cols
-
-    @property
-    def rows(self):
-        return self._rows
-
-    @property
-    def shape(self):
-        return self._rows, self._cols
-
-    def as_immutable(self):
-        return self
-
-    def is_diagonalizable(self, reals_only=False, **kwargs):
-        return super().is_diagonalizable(
-            reals_only=reals_only, **kwargs)
-
-    is_diagonalizable.__doc__ = SparseMatrix.is_diagonalizable.__doc__
-    is_diagonalizable = cacheit(is_diagonalizable)
 
 
 @dispatch(ImmutableDenseMatrix, ImmutableDenseMatrix)
