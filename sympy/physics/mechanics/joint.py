@@ -84,8 +84,16 @@ class Joint(ABC):
                  parent_joint_pos=None, child_joint_pos=None, parent_axis=None,
                  child_axis=None):
 
+        if not isinstance(name, str):
+            raise TypeError('Supply a valid name.')
         self._name = name
+
+        if not isinstance(parent, Body):
+            raise TypeError('Parent must be an instance of Body.')
         self._parent = parent
+
+        if not isinstance(child, Body):
+            raise TypeError('Parent must be an instance of Body.')
         self._child = child
 
         self._coordinates = self._generate_coordinates(coordinates)
