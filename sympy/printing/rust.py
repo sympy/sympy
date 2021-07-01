@@ -231,7 +231,8 @@ class RustCodePrinter(CodePrinter):
         'inline': False,
     }  # type: Dict[str, Any]
 
-    def __init__(self, settings={}):
+    def __init__(self, settings=None):
+        settings = settings or {}
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})

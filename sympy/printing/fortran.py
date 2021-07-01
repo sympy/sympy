@@ -120,8 +120,7 @@ class FCodePrinter(CodePrinter):
     }
 
     def __init__(self, settings=None):
-        if not settings:
-            settings = {}
+        settings = settings or {}
         self.mangled_symbols = {}         # Dict showing mapping of all words
         self.used_name = []
         self.type_aliases = dict(chain(self.type_aliases.items(),

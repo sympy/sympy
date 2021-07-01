@@ -213,9 +213,9 @@ def test_output_arg_mixed_unordered():
         "fn foo(x: f64) -> (f64, f64, f64, f64) {\n"
         "    let out1 = (2*x).cos();\n"
         "    let y = x.sin();\n"
-        "    let out3 = x.cos();\n"
+        "    let out2 = x.cos();\n"
         "    let a = (2*x).sin();\n"
-        "    (out1, y, out3, a)\n"
+        "    (out1, y, out2, a)\n"
         "}\n"
     )
     assert source == expected

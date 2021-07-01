@@ -1,8 +1,10 @@
 from io import StringIO
 
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
-from sympy import erf, Integral, Symbol
-from sympy import Equality
+from sympy import erf, Integral, Symbol, Idx
+from sympy import Equality, Range, IndexedBase
+from sympy.codegen import For, Assignment, While
+from sympy.codegen.ast import AddAugmentedAssignment
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.utilities.codegen import (
     codegen, make_routine, CCodeGen, C89CodeGen, C99CodeGen, InputArgument,
@@ -97,9 +99,9 @@ def test_simple_c_code():
         "#include \"file.h\"\n"
         "#include <math.h>\n"
         "double test(double x, double y, double z) {\n"
-        "   double test_result;\n"
-        "   test_result = z*(x + y);\n"
-        "   return test_result;\n"
+        "   double out1;\n"
+        "   out1 = z*(x + y);\n"
+        "   return out1;\n"
         "}\n"
     )
     assert source == expected
@@ -115,9 +117,9 @@ def test_c_code_reserved_words():
         "#include \"file.h\"\n"
         "#include <math.h>\n"
         "double test(double if_, double typedef_, double while_) {\n"
-        "   double test_result;\n"
-        "   test_result = while_*(if_ + typedef_);\n"
-        "   return test_result;\n"
+        "   double out1;\n"
+        "   out1 = while_*(if_ + typedef_);\n"
+        "   return out1;\n"
         "}\n"
     )
     assert source == expected
@@ -131,10 +133,10 @@ def test_numbersymbol_c_code():
         "#include \"file.h\"\n"
         "#include <math.h>\n"
         "double test() {\n"
-        "   double test_result;\n"
+        "   double out1;\n"
         "   double const Catalan = %s;\n"
-        "   test_result = pow(M_PI, Catalan);\n"
-        "   return test_result;\n"
+        "   out1 = pow(M_PI, Catalan);\n"
+        "   return out1;\n"
         "}\n"
     ) % Catalan.evalf(17)
     assert source == expected
@@ -150,9 +152,9 @@ def test_c_code_argument_order():
         "#include \"file.h\"\n"
         "#include <math.h>\n"
         "double test(double z, double x, double y) {\n"
-        "   double test_result;\n"
-        "   test_result = x + y;\n"
-        "   return test_result;\n"
+        "   double out1;\n"
+        "   out1 = x + y;\n"
+        "   return out1;\n"
         "}\n"
     )
     assert source == expected
@@ -181,9 +183,9 @@ def test_simple_c_codegen():
         "#include \"file.h\"\n"
         "#include <math.h>\n"
         "double test(double x, double y, double z) {\n"
-        "   double test_result;\n"
-        "   test_result = z*(x + y);\n"
-        "   return test_result;\n"
+        "   double out1;\n"
+        "   out1 = z*(x + y);\n"
+        "   return out1;\n"
         "}\n"),
         ("file.h",
         "#ifndef PROJECT__FILE__H\n"
@@ -237,21 +239,21 @@ def test_ansi_math1_codegen():
     assert result[0][0] == "file.c"
     assert result[0][1] == (
         '#include "file.h"\n#include <math.h>\n'
-        'double test_fabs(double x) {\n   double test_fabs_result;\n   test_fabs_result = fabs(x);\n   return test_fabs_result;\n}\n'
-        'double test_acos(double x) {\n   double test_acos_result;\n   test_acos_result = acos(x);\n   return test_acos_result;\n}\n'
-        'double test_asin(double x) {\n   double test_asin_result;\n   test_asin_result = asin(x);\n   return test_asin_result;\n}\n'
-        'double test_atan(double x) {\n   double test_atan_result;\n   test_atan_result = atan(x);\n   return test_atan_result;\n}\n'
-        'double test_ceil(double x) {\n   double test_ceil_result;\n   test_ceil_result = ceil(x);\n   return test_ceil_result;\n}\n'
-        'double test_cos(double x) {\n   double test_cos_result;\n   test_cos_result = cos(x);\n   return test_cos_result;\n}\n'
-        'double test_cosh(double x) {\n   double test_cosh_result;\n   test_cosh_result = cosh(x);\n   return test_cosh_result;\n}\n'
-        'double test_floor(double x) {\n   double test_floor_result;\n   test_floor_result = floor(x);\n   return test_floor_result;\n}\n'
-        'double test_log(double x) {\n   double test_log_result;\n   test_log_result = log(x);\n   return test_log_result;\n}\n'
-        'double test_ln(double x) {\n   double test_ln_result;\n   test_ln_result = log(x);\n   return test_ln_result;\n}\n'
-        'double test_sin(double x) {\n   double test_sin_result;\n   test_sin_result = sin(x);\n   return test_sin_result;\n}\n'
-        'double test_sinh(double x) {\n   double test_sinh_result;\n   test_sinh_result = sinh(x);\n   return test_sinh_result;\n}\n'
-        'double test_sqrt(double x) {\n   double test_sqrt_result;\n   test_sqrt_result = sqrt(x);\n   return test_sqrt_result;\n}\n'
-        'double test_tan(double x) {\n   double test_tan_result;\n   test_tan_result = tan(x);\n   return test_tan_result;\n}\n'
-        'double test_tanh(double x) {\n   double test_tanh_result;\n   test_tanh_result = tanh(x);\n   return test_tanh_result;\n}\n'
+        'double test_fabs(double x) {\n   double out1;\n   out1 = fabs(x);\n   return out1;\n}\n'
+        'double test_acos(double x) {\n   double out1;\n   out1 = acos(x);\n   return out1;\n}\n'
+        'double test_asin(double x) {\n   double out1;\n   out1 = asin(x);\n   return out1;\n}\n'
+        'double test_atan(double x) {\n   double out1;\n   out1 = atan(x);\n   return out1;\n}\n'
+        'double test_ceil(double x) {\n   double out1;\n   out1 = ceil(x);\n   return out1;\n}\n'
+        'double test_cos(double x) {\n   double out1;\n   out1 = cos(x);\n   return out1;\n}\n'
+        'double test_cosh(double x) {\n   double out1;\n   out1 = cosh(x);\n   return out1;\n}\n'
+        'double test_floor(double x) {\n   double out1;\n   out1 = floor(x);\n   return out1;\n}\n'
+        'double test_log(double x) {\n   double out1;\n   out1 = log(x);\n   return out1;\n}\n'
+        'double test_ln(double x) {\n   double out1;\n   out1 = log(x);\n   return out1;\n}\n'
+        'double test_sin(double x) {\n   double out1;\n   out1 = sin(x);\n   return out1;\n}\n'
+        'double test_sinh(double x) {\n   double out1;\n   out1 = sinh(x);\n   return out1;\n}\n'
+        'double test_sqrt(double x) {\n   double out1;\n   out1 = sqrt(x);\n   return out1;\n}\n'
+        'double test_tan(double x) {\n   double out1;\n   out1 = tan(x);\n   return out1;\n}\n'
+        'double test_tanh(double x) {\n   double out1;\n   out1 = tanh(x);\n   return out1;\n}\n'
     )
     assert result[1][0] == "file.h"
     assert result[1][1] == (
@@ -279,8 +281,8 @@ def test_ansi_math2_codegen():
     assert result[0][0] == "file.c"
     assert result[0][1] == (
         '#include "file.h"\n#include <math.h>\n'
-        'double test_atan2(double x, double y) {\n   double test_atan2_result;\n   test_atan2_result = atan2(x, y);\n   return test_atan2_result;\n}\n'
-        'double test_pow(double x, double y) {\n   double test_pow_result;\n   test_pow_result = pow(x, y);\n   return test_pow_result;\n}\n'
+        'double test_atan2(double x, double y) {\n   double out1;\n   out1 = atan2(x, y);\n   return out1;\n}\n'
+        'double test_pow(double x, double y) {\n   double out1;\n   out1 = pow(x, y);\n   return out1;\n}\n'
     )
     assert result[1][0] == "file.h"
     assert result[1][1] == (
@@ -303,8 +305,8 @@ def test_complicated_codegen():
     assert result[0][1] == (
         '#include "file.h"\n#include <math.h>\n'
         'double test1(double x, double y, double z) {\n'
-        '   double test1_result;\n'
-        '   test1_result = '
+        '   double out1;\n'
+        '   out1 = '
         'pow(sin(x), 7) + '
         '7*pow(sin(x), 6)*cos(y) + '
         '7*pow(sin(x), 6)*tan(z) + '
@@ -341,12 +343,12 @@ def test_complicated_codegen():
         '21*pow(cos(y), 2)*pow(tan(z), 5) + '
         '7*cos(y)*pow(tan(z), 6) + '
         'pow(tan(z), 7);\n'
-        '   return test1_result;\n'
+        '   return out1;\n'
         '}\n'
         'double test2(double x, double y, double z) {\n'
-        '   double test2_result;\n'
-        '   test2_result = cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))));\n'
-        '   return test2_result;\n'
+        '   double out1;\n'
+        '   out1 = cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))));\n'
+        '   return out1;\n'
         '}\n'
     )
     assert result[1][0] == "file.h"
@@ -407,7 +409,18 @@ def test_dummy_loops_c():
     x = IndexedBase('x')
     y = IndexedBase('y')
     i = Idx(i, m)
-    expected = (
+    expected_c89 = (
+        '#include "file.h"\n'
+        '#include <math.h>\n'
+        'void test_dummies(int m_%(mno)i, double *x, double *y) {\n'
+        '   int i_%(ino)i;\n'
+        '   for (i_%(ino)i=0; i_%(ino)i<m_%(mno)i; i_%(ino)i++){\n'
+        '      y[i_%(ino)i] = x[i_%(ino)i];\n'
+        '   }\n'
+        '}\n'
+    ) % {'ino': i.label.dummy_index, 'mno': m.dummy_index}
+
+    expected_c99 = (
         '#include "file.h"\n'
         '#include <math.h>\n'
         'void test_dummies(int m_%(mno)i, double *x, double *y) {\n'
@@ -419,10 +432,10 @@ def test_dummy_loops_c():
     r = make_routine('test_dummies', Eq(y[i], x[i]))
     c89 = C89CodeGen()
     c99 = C99CodeGen()
+    code = get_string(c89.dump_c, [r])
+    assert code == expected_c89
     code = get_string(c99.dump_c, [r])
-    assert code == expected
-    with raises(NotImplementedError):
-        get_string(c89.dump_c, [r])
+    assert code == expected_c99
 
 def test_partial_loops_c():
     # check that loop boundaries are determined by Idx, and array strides
@@ -467,6 +480,94 @@ def test_partial_loops_c():
         '#endif\n'
     )
 
+def test_nested_for_c():
+    x = MatrixSymbol('x', 5, 5)
+    y = MatrixSymbol('y', 5, 5)
+    i = Idx('i', 5)
+    j = Idx('j', 5)
+    expr = For(i, Range(0, 5),
+              [For(j, Range(0, 5),
+                   [Assignment(y[i, j], 2*x[i, j])])]
+           )
+    name_expr = ("test", [expr])
+
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'void test(double *x, double *y) {\n'
+        '   for (int i=0; i<5; i++){\n'
+        '      for (int j=0; j<5; j++){\n'
+        '         y[5*i + j] = 2*x[5*i + j];\n'
+        '      }\n'
+        '   }\n'
+        '}\n'
+    )
+
+    result = codegen(name_expr, "c", "test", header=False, empty=False)
+    source = result[0][1]
+    assert source == expected
+
+def test_for_while_c():
+    x = MatrixSymbol('x', 5, 5)
+    y = MatrixSymbol('y', 5, 5)
+    i = Idx('i', 5)
+    j = symbols('j', integer=True)
+    expr = For(i, Range(0, 5),
+               [Assignment(j, 0),
+                While(j<5,
+                     [Assignment(y[i, j], 2*x[i, j]),
+                      AddAugmentedAssignment(j, 1)])]
+           )
+    name_expr = ("test", [expr])
+
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'void test(double *x, double *y) {\n'
+        '   for (int i=0; i<5; i++){\n'
+        '      j = 0;\n'
+        '      while (j < 5) {\n'
+        '         y[j + 5*i] = 2*x[j + 5*i];\n'
+        '         j += 1;\n'
+        '      }\n'
+        '   }\n'
+        '}\n'
+    )
+
+    result = codegen(name_expr, "c", "test", header=False, empty=False)
+    source = result[0][1]
+    assert source == expected
+
+def test_settings_contract_c():
+    nx, ny = symbols('nx ny', integer=True)
+    i = Idx('i', nx)
+    j = Idx('j', ny)
+    A = IndexedBase('A')
+    x = IndexedBase('x')
+    y = IndexedBase('y')
+    settings = {"contract": False}
+
+    expr = For(i, Range(nx),
+              [For(j, Range(ny),
+                  [Assignment(y[i], A[i, j]*x[j])])]
+           )
+    name_expr = ("test", [expr])
+
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'void test(double *A, int nx, int ny, double *x, double *y) {\n'
+        '   for (int i=0; i<nx; i++){\n'
+        '      for (int j=0; j<ny; j++){\n'
+        '         y[i] = A[ny*i + j]*x[j];\n'
+        '      }\n'
+        '   }\n'
+        '}\n'
+    )
+
+    result = codegen(name_expr, "c", "test", header=False, empty=False, settings=settings)
+    source = result[0][1]
+    assert source == expected
 
 def test_output_arg_c():
     from sympy import sin, cos, Equality
@@ -479,10 +580,10 @@ def test_output_arg_c():
         '#include "test.h"\n'
         '#include <math.h>\n'
         'double foo(double x, double *y) {\n'
+        '   double out1;\n'
         '   (*y) = sin(x);\n'
-        '   double foo_result;\n'
-        '   foo_result = cos(x);\n'
-        '   return foo_result;\n'
+        '   out1 = cos(x);\n'
+        '   return out1;\n'
         '}\n'
     )
     assert result[0][1] == expected
@@ -499,10 +600,10 @@ def test_output_arg_c_reserved_words():
         '#include "test.h"\n'
         '#include <math.h>\n'
         'double foo(double if_, double *while_) {\n'
+        '   double out1;\n'
         '   (*while_) = sin(if_);\n'
-        '   double foo_result;\n'
-        '   foo_result = cos(if_);\n'
-        '   return foo_result;\n'
+        '   out1 = cos(if_);\n'
+        '   return out1;\n'
         '}\n'
     )
     assert result[0][1] == expected
@@ -560,10 +661,10 @@ def test_ccode_results_named_ordered():
         '#include "test.h"\n'
         '#include <math.h>\n'
         'void test(double x, double *C, double z, double y, double *A, double *B) {\n'
-        '   (*C) = z*(x + y);\n'
         '   A[0] = 1;\n'
         '   A[1] = 2;\n'
         '   A[2] = x;\n'
+        '   (*C) = z*(x + y);\n'
         '   (*B) = 2*x;\n'
         '}\n'
     )
@@ -573,6 +674,55 @@ def test_ccode_results_named_ordered():
     source = result[0][1]
     assert source == expected
 
+def test_ccode_results_named_ordered_1():
+    x, y, z = symbols('x,y,z')
+    B, C = symbols('B,C')
+    A = MatrixSymbol('A', 1, 3)
+    expr1 = Equality(A, Matrix([[1, 2, x]]))
+    expr2 = Equality(B, 2*x)
+    expr3 = Equality(C, B*(x + y)*z)
+    name_expr = ("test", [expr1, expr2, expr3])
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'void test(double x, double *C, double z, double y, double *A, double *B) {\n'
+        '   A[0] = 1;\n'
+        '   A[1] = 2;\n'
+        '   A[2] = x;\n'
+        '   (*B) = 2*x;\n'
+        '   (*C) = (*B)*z*(x + y);\n'
+        '}\n'
+    )
+
+    result = codegen(name_expr, "c", "test", header=False, empty=False,
+                     argument_sequence=(x, C, z, y, A, B))
+    source = result[0][1]
+    assert source == expected
+
+def test_ccode_results_named_ordered_2():
+    x, y, z = symbols('x,y,z')
+    B, C = symbols('B,C')
+    A = MatrixSymbol('A', 1, 3)
+    expr1 = Equality(A, Matrix([[1, 2, x]]))
+    expr2 = Equality(C, A[0]*(x + y)*z)
+    expr3 = Equality(B, 2*x)
+    name_expr = ("test", [expr1, expr2, expr3])
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'void test(double x, double *C, double z, double y, double *A, double *B) {\n'
+        '   A[0] = 1;\n'
+        '   A[1] = 2;\n'
+        '   A[2] = x;\n'
+        '   (*C) = z*(x + y)*A[0];\n'
+        '   (*B) = 2*x;\n'
+        '}\n'
+    )
+
+    result = codegen(name_expr, "c", "test", header=False, empty=False,
+                     argument_sequence=(x, C, z, y, A, B))
+    source = result[0][1]
+    assert source == expected
 
 def test_ccode_matrixsymbol_slice():
     A = MatrixSymbol('A', 5, 3)
@@ -635,9 +785,9 @@ def test_ccode_unused_array_arg():
         '#include "test.h"\n'
         '#include <math.h>\n'
         'double test(double *x) {\n'
-        '   double test_result;\n'
-        '   test_result = 1.0;\n'
-        '   return test_result;\n'
+        '   double out1;\n'
+        '   out1 = 1.0;\n'
+        '   return out1;\n'
         '}\n'
     )
     assert source == expected
@@ -1380,24 +1530,19 @@ def test_fcode_matrix_output():
     result = codegen(name_expr, "f95", "test", header=False, empty=False)
     source = result[0][1]
     expected = (
-        "REAL*8 function test(x, y, z, out_%(hash)s)\n"
+        "REAL*8 function test(x, y, z, out2)\n"
         "implicit none\n"
         "REAL*8, intent(in) :: x\n"
         "REAL*8, intent(in) :: y\n"
         "REAL*8, intent(in) :: z\n"
-        "REAL*8, intent(out), dimension(1:2, 1:2) :: out_%(hash)s\n"
-        "out_%(hash)s(1, 1) = x\n"
-        "out_%(hash)s(2, 1) = z\n"
-        "out_%(hash)s(1, 2) = y\n"
-        "out_%(hash)s(2, 2) = 16\n"
+        "REAL*8, intent(out), dimension(1:2, 1:2) :: out2\n"
+        "out2(1, 1) = x\n"
+        "out2(2, 1) = z\n"
+        "out2(1, 2) = y\n"
+        "out2(2, 2) = 16\n"
         "test = x + y\n"
         "end function\n"
     )
-    # look for the magic number
-    a = source.splitlines()[5]
-    b = a.split('_')
-    out = b[1]
-    expected = expected % {'hash': out}
     assert source == expected
 
 
@@ -1468,19 +1613,15 @@ def test_fcode_matrixsymbol_slice_autoname():
     result = codegen(name_expr, "f95", "test", header=False, empty=False)
     source = result[0][1]
     expected = (
-        "subroutine test(A, out_%(hash)s)\n"
+        "subroutine test(A, out1)\n"
         "implicit none\n"
         "REAL*8, intent(in), dimension(1:2, 1:3) :: A\n"
-        "REAL*8, intent(out), dimension(1:2, 1:1) :: out_%(hash)s\n"
-        "out_%(hash)s(1, 1) = A(1, 2)\n"
-        "out_%(hash)s(2, 1) = A(2, 2)\n"
+        "REAL*8, intent(out), dimension(1:2, 1:1) :: out1\n"
+        "out1(1, 1) = A(1, 2)\n"
+        "out1(2, 1) = A(2, 2)\n"
         "end subroutine\n"
     )
     # look for the magic number
-    a = source.splitlines()[3]
-    b = a.split('_')
-    out = b[1]
-    expected = expected % {'hash': out}
     assert source == expected
 
 
@@ -1502,9 +1643,9 @@ def test_global_vars():
         '#include "f.h"\n'
         '#include <math.h>\n'
         'double f(double x, double y) {\n'
-        '   double f_result;\n'
-        '   f_result = x*y + z;\n'
-        '   return f_result;\n'
+        '   double out1;\n'
+        '   out1 = x*y + z;\n'
+        '   return out1;\n'
         '}\n'
     )
     result = codegen(('f', x*y+z), "C", header=False, empty=False,
@@ -1529,9 +1670,9 @@ def test_custom_codegen():
         '#include "expr.h"\n'
         '#include "fastexp.h"\n'
         'double expr(double x, double y) {\n'
-        '   double expr_result;\n'
-        '   expr_result = fastexp(x + y);\n'
-        '   return expr_result;\n'
+        '   double out1;\n'
+        '   out1 = fastexp(x + y);\n'
+        '   return out1;\n'
         '}\n'
     )
 
@@ -1548,9 +1689,9 @@ def test_custom_codegen():
         '#include <math.h>\n'
         '#include "fastexp.h"\n'
         'double expr(double x, double y) {\n'
-        '   double expr_result;\n'
-        '   expr_result = fastexp(x + y);\n'
-        '   return expr_result;\n'
+        '   double out1;\n'
+        '   out1 = fastexp(x + y);\n'
+        '   return out1;\n'
         '}\n'
     )
 
@@ -1573,9 +1714,9 @@ def test_c_with_printer():
         "#include \"file.h\"\n"
         "#include <math.h>\n"
         "double test(double x) {\n"
-        "   double test_result;\n"
-        "   test_result = fastpow(x, 3);\n"
-        "   return test_result;\n"
+        "   double out1;\n"
+        "   out1 = fastpow(x, 3);\n"
+        "   return out1;\n"
         "}\n"),
         ("file.h",
         "#ifndef PROJECT__FILE__H\n"

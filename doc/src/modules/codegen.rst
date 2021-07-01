@@ -224,9 +224,9 @@ For instance::
     #include "test.h"
     #include <math.h>
     double volume(double breadth, double height, double length) {
-       double volume_result;
-       volume_result = breadth*height*length;
-       return volume_result;
+       double out1;
+       out1 = breadth*height*length;
+       return out1;
     }
     >>> print(h_name)
     test.h

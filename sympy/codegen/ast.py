@@ -156,6 +156,8 @@ def _mk_Tuple(args):
     args = [String(arg) if isinstance(arg, str) else arg for arg in args]
     return Tuple(*args)
 
+class WithBody:
+    pass
 
 class Token(Basic):
     """ Base class for the AST types.
@@ -802,7 +804,7 @@ class CodeBlock(Basic):
         return self.topological_sort(new_assignments + new_block)
 
 
-class For(Token):
+class For(Token, WithBody):
     """Represents a 'for-loop' in the code.
 
     Expressions are of the form:
@@ -1602,7 +1604,7 @@ class Declaration(Token):
     _construct_variable = Variable
 
 
-class While(Token):
+class While(Token, WithBody):
     """ Represents a 'for-loop' in the code.
 
     Expressions are of the form:
