@@ -740,20 +740,13 @@ def check_dummy_sol(eq, solse, dummy_sym):
     if isinstance(eq, Eq):
         eq = eq.lhs - eq.rhs
     _, funcs = match_riccati(eq, f, x)
-    if not len(funcs):
-        print(eq)
+
     sols = solve_riccati(f(x), x, *funcs)
     C1 = Dummy('C1')
     sols = [sol.subs(C1, dummy_sym) for sol in sols]
+
     assert all([x[0] for x in checkodesol(eq, sols)])
-    try:
-        assert all([s1.dummy_eq(s2, dummy_sym) for s1, s2 in zip(sols, solse)])
-    except:
-        print()
-        print(sols)
-        print(solse)
-        print()
-        raise ValueError("Error!")
+    assert all([s1.dummy_eq(s2, dummy_sym) for s1, s2 in zip(sols, solse)])
 
 def test_solve_riccati():
     C0 = Dummy('C0')

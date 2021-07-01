@@ -453,10 +453,8 @@ def construct_d(num, den, x, val_inf):
 def rational_laurent_series(num, den, x, x0, mul, n):
     m = symbols('m')
     one = Poly(1, x, extension=True)
-    reverse = False
     if x0 == oo:
         num, den = inverse_transform_poly(num, den, x)
-        reverse = True
         x0 = S(0)
     if x0:
         num = num.transform(Poly(x + x0, x, extension=True), one)
