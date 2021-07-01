@@ -898,10 +898,7 @@ class Series(Basic):
 
     def to_expr(self):
         """Returns the equivalent ``Expr`` object."""
-        temp = []
-        for arg in self.args:
-            temp.append(arg.to_expr())
-        return Mul(*temp, evaluate=False)
+        return Mul(*(arg.to_expr() for arg in self.args), evaluate=False)
 
     @property
     def is_proper(self):
@@ -1160,10 +1157,7 @@ class Parallel(Basic):
 
     def to_expr(self):
         """Returns the equivalent ``Expr`` object."""
-        temp = []
-        for arg in self.args:
-            temp.append(arg.to_expr())
-        return Add(*temp, evaluate=False)
+        return Add(*(arg.to_expr() for arg in self.args), evaluate=False)
 
     @property
     def is_proper(self):
@@ -1700,7 +1694,11 @@ class TransferFunctionMatrix(Basic):
     def __new__(cls, arg):
 
         expr_mat_arg = []
-        var = arg[0][0].var
+        try:
+            var = arg[0][0].var
+        except TypeError:
+            raise ValueError("`arg` param in TransferFunctionMatrix should "
+            "strictly be a nested list containing TransferFunction objects.")
         for row_index, row in enumerate(arg):
             temp = []
             for col_index, element in enumerate(row):
@@ -1909,16 +1907,7 @@ class TransferFunctionMatrix(Basic):
         elem_zeros
 
         """
-        poles_list = []
-        for i in self.args[0]:
-            temp = []
-            for j in i:
-                if not isinstance(j, TransferFunction):
-                    j = j.doit()
-                temp.append(j.poles())
-            poles_list.append(temp)
-            temp = []
-        return poles_list
+        return [[element.poles() for element in row] for row in self.doit().args[0]]
 
     def elem_zeros(self):
         """
@@ -1948,13 +1937,8 @@ class TransferFunctionMatrix(Basic):
         elem_poles
 
         """
-        zeros_list = []
-        for i in self.args[0]:
-            temp = []
-            for j in i:
-                if not isinstance(j, TransferFunction):
-                    j = j.doit()
-                temp.append(j.zeros())
-            zeros_list.append(temp)
-            temp = []
-        return zeros_list
+        return [[element.zeros() for element in row] for row in self.doit().args[0]]
+
+    def _flat(self):
+        """Returns flattened list of args in TransferFunctionMatrix"""
+        return [elem for tup in self.args[0] for elem in tup]

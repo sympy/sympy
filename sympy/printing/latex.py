@@ -2483,7 +2483,8 @@ class LatexPrinter(Printer):
         return r"\frac{%s}{%s}" % (numer, denom)
 
     def _print_TransferFunctionMatrix(self, expr):
-        return self._print(expr._expr_mat)
+        mat = self._print(expr._expr_mat)
+        return r"%s_\tau" % mat
 
     def _print_NamedMorphism(self, morphism):
         pretty_name = self._print(Symbol(morphism.name))
