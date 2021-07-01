@@ -360,9 +360,6 @@ class SlidingJoint(Joint):
     It is defined such that the child body translates with respect to the parent
     body along the body fixed parent axis. The point of joint (sliding joint) is defined
     by two points in each body which coincides initially.
-    In addition, the child's reference frame can be arbitrarily rotated a
-    constant amount with respect to the parent axis by passing an axis in child
-    body which must align with parent axis after the rotation.
 
     Parameters
     ==========
@@ -392,18 +389,6 @@ class SlidingJoint(Joint):
 
     Examples
     =========
-
-    This is minimal working example where parent body and child body is
-    connected via SlidingJoint through their masscenters.
-
-    >>> from sympy.physics.mechanics import Body, SlidingJoint
-    >>> parent = Body('parent')
-    >>> child = Body('child')
-    >>> P = SlidingJoint('P', parent, child)
-    >>> P.coordinates()
-    [x_P(t)]
-    >>> P.speeds()
-    [v_P(t)]
 
     This is an example of linear mass spring damper where we will do all kinematics
     using SlidingJoints.
@@ -437,12 +422,27 @@ class SlidingJoint(Joint):
     >>> J.kdes()
     [v(t) - Derivative(x(t), t)]
 
-    Notes
-    ======
+    Attributes
+    ==========
 
-    All dynamicsymbols used in `Joints` are `real ` by default. It is adviced to use
-    `real=True` assumption when passing dynamicsymbols to `Joints` else it may give
-    incorrect result in some cases.
+    name : string
+        The joint's name.
+    parent : Body
+        The joint's parent body.
+    child : Body
+        The joint's child body.
+    coordinate : dynamicsymbol, optional
+        Coordinate of the joint.
+    speed : dynamicsymbol, optional
+        Speed of the joint.
+    parent_joint : Point
+        The joint's point where parent body is connected to the joint.
+    child_joint : Point
+        The joint's point where child body is connected to the joint.
+    parent_axis : Vector
+        The axis of parent frame.
+    child_axis : Vector
+        The axis of child frame.
 
     """
 
@@ -455,7 +455,7 @@ class SlidingJoint(Joint):
     def _generate_coordinates(self, coordinate):
         coordinates = []
         if coordinate is None:
-            x = dynamicsymbols('x' + '_' + self._name, real=True)
+            x = dynamicsymbols('x' + '_' + self._name)
             coordinate = x
         coordinates.append(coordinate)
         return coordinates
@@ -463,7 +463,7 @@ class SlidingJoint(Joint):
     def _generate_speeds(self, speed):
         speeds = []
         if speed is None:
-            y = dynamicsymbols('v' + '_' + self._name, real=True)
+            y = dynamicsymbols('v' + '_' + self._name)
             speed = y
         speeds.append(speed)
         return speeds
