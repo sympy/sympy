@@ -192,7 +192,7 @@ def MultivariateNormal(name, mu, sigma):
     ========
 
     >>> from sympy.stats import MultivariateNormal, density, marginal_distribution
-    >>> from sympy import symbols
+    >>> from sympy import symbols, MatrixSymbol
     >>> X = MultivariateNormal('X', [3, 4], [[2, 1], [1, 2]])
     >>> y, z = symbols('y z')
     >>> density(X)(y, z)
@@ -203,6 +203,14 @@ def MultivariateNormal(name, mu, sigma):
     exp(-(y - 4)**2/4)/(2*sqrt(pi))
     >>> marginal_distribution(X, X[0])(y)
     exp(-(y - 3)**2/4)/(2*sqrt(pi))
+    >>> # symbolic parameters
+    >>> n = symbols('n', natural=True)
+    >>> Sg = MatrixSymbol('Sg', n, n)
+    >>> mu = MatrixSymbol('mu', n, 1)
+    >>> obs = MatrixSymbol('obs', n, 1)
+    >>> X = MultivariateNormal('X', mu, Sg)
+    >>> density(X)(obs)
+    (exp(((1/2)*mu.T - (1/2)*obs.T)*Sg**(-1)*(-mu + obs))/sqrt((2*pi)**n*Determinant(Sg)))[0, 0]
 
     References
     ==========
