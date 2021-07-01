@@ -10,7 +10,7 @@ from sympy.stats.joint_rv_types import (JointRV, MultivariateNormalDistribution,
                 GeneralizedMultivariateLogGammaOmega as GMVLGO, MultivariateBeta,
                 GeneralizedMultivariateLogGamma as GMVLG, MultivariateEwens,
                 Multinomial, NegativeMultinomial, MultivariateNormal,
-                MultivariateLaplace)
+                MultivariateLaplace, NormalInverseGamma)
 from sympy.testing.pytest import raises, XFAIL, ignore_warnings, skip
 from sympy.external import import_module
 
@@ -76,6 +76,16 @@ def test_NormalGamma():
         3*sqrt(10)*gamma(Rational(7, 4))/(10*sqrt(pi)*gamma(Rational(5, 4)))
     assert marginal_distribution(ng, y)(1) == exp(Rational(-1, 4))/128
     assert marginal_distribution(ng,[0,1])(x) == x**2*exp(-x/4)/128
+
+def test_NormalInverseGamma():
+    ng = NormalInverseGamma('G', 1, 2, 3, 4)
+    assert density(ng)(1, 1) == 32.0*exp(-4)/sqrt(pi)
+    assert density(ng)(7, 2) == 1.0*sqrt(2)*exp(-20)/sqrt(pi)
+    assert ng.pspace.distribution.set == ProductSet(S.Reals, Interval(0, oo))
+    raises(ValueError, lambda: NormalInverseGamma('G', 1, 2, 3, -1))
+    raises(ValueError, lambda: NormalInverseGamma('G', 1, 2, -3, 1))
+    raises(ValueError, lambda: NormalInverseGamma('G', 1, -2, 3, 1))
+
 
 def test_GeneralizedMultivariateLogGammaDistribution():
     h = S.Half

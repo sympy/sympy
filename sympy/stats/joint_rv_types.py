@@ -18,7 +18,8 @@ __all__ = ['JointRV',
 'MultivariateEwens',
 'MultivariateT',
 'NegativeMultinomial',
-'NormalGamma'
+'NormalGamma',
+'NormalInverseGammaDistribution'
 ]
 
 def multivariate_rv(cls, sym, *args):
@@ -432,6 +433,76 @@ def NormalGamma(sym, mu, lamda, alpha, beta):
 
     """
     return multivariate_rv(NormalGammaDistribution, sym, mu, lamda, alpha, beta)
+
+#-------------------------------------------------------------------------------
+# Multivariate Normal Inverse Gamma distribution ---------------------------------------
+
+class NormalInverseGammaDistribution(JointDistribution):
+
+    _argnames = ('mu', 'lamda', 'alpha', 'beta')
+    is_Continuous = True
+
+    @staticmethod
+    def check(mu, lamda, alpha, beta):
+        _value_check(mu.is_real, "Location must be real.")
+        _value_check(lamda.is_positive, "Lambda must be positive")
+        _value_check(alpha.is_positive, "alpha must be positive")
+        _value_check(beta.is_positive, "beta must be positive")
+
+    @property
+    def set(self):
+        return S.Reals*Interval(0, S.Infinity)
+
+    def pdf(self, x, sigma2):
+        beta, alpha, lamda = self.beta, self.alpha, self.lamda
+        mu = self.mu
+
+        return beta**alpha*sqrt(lamda)/(gamma(alpha)*sqrt(S(2)*pi*sigma2))*\
+        (1/sigma2)**(alpha + S.One)*exp(-(2*beta + lamda*(x - mu)**2)/(S(2)*sigma2))
+
+def NormalInverseGamma(sym, mu, lamda, alpha, beta):
+    """
+    Creates a bivariate joint random variable with multivariate Normal inverse gamma
+    distribution.
+
+    Parameters
+    ==========
+
+    sym: A symbol/str
+        For identifying the random variable.
+    mu: A real number
+        The mean of the normal distribution
+    lamda: A positive integer
+        Parameter of joint distribution
+    alpha: A positive integer
+        Parameter of joint distribution
+    beta: A positive integer
+        Parameter of joint distribution
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density, NormalInverseGamma
+    >>> from sympy import symbols
+
+    >>> X = NormalInverseGamma('x', 0, 1, 2, 3)
+    >>> y, z = symbols('y z')
+
+    >>> density(X)(y, z)
+    9*sqrt(2)*exp((-y**2 - 6)/(2*z))/(2*sqrt(pi)*z**(7/2))
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Normal-inverse-gamma_distribution
+
+    """
+    return multivariate_rv(NormalInverseGammaDistribution, sym, mu, lamda, alpha, beta)
 
 #-------------------------------------------------------------------------------
 # Multivariate Beta/Dirichlet distribution -------------------------------------
