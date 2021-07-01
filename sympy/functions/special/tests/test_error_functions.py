@@ -48,7 +48,7 @@ def test_erf():
     assert erf(x).as_leading_term(x) == 2*x/sqrt(pi)
     assert erf(x*y).as_leading_term(y) == 2*x*y/sqrt(pi)
     assert (erf(x*y)/erf(y)).as_leading_term(y) == x
-    assert erf(1/x).as_leading_term(x) == erf(1/x)
+    assert erf(1/x).as_leading_term(x) == S.One
 
     assert erf(z).rewrite('uppergamma') == sqrt(z**2)*(1 - erfc(sqrt(z**2)))/z
     assert erf(z).rewrite('erfc') == S.One - erfc(z)
@@ -133,7 +133,7 @@ def test_erfc():
     assert conjugate(erfc(z)) == erfc(conjugate(z))
 
     assert erfc(x).as_leading_term(x) is S.One
-    assert erfc(1/x).as_leading_term(x) == erfc(1/x)
+    assert erfc(1/x).as_leading_term(x) == S.Zero
 
     assert erfc(z).rewrite('erf') == 1 - erf(z)
     assert erfc(z).rewrite('erfi') == 1 + I*erfi(I*z)

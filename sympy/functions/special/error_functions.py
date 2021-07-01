@@ -233,12 +233,12 @@ class erf(Function):
         arg = self.args[0].as_leading_term(x)
         arg0 = arg.subs(x, 0)
 
+        if arg0 is S.ComplexInfinity:
+            arg0 = arg.limit(x, 0)
         if x in arg.free_symbols and arg0.is_zero:
             return 2*arg/sqrt(pi)
-        elif arg0.is_finite:
+        elif arg0.is_number:
             return self.func(arg0)
-        elif arg0 is S.ComplexInfinity:
-            return self.func(arg)
         return -S.One if cdir == -1 else S.One
 
     def _eval_aseries(self, n, args0, x, logx):
@@ -435,12 +435,12 @@ class erfc(Function):
         arg = self.args[0].as_leading_term(x)
         arg0 = arg.subs(x, 0)
 
+        if arg0 is S.ComplexInfinity:
+            arg0 = arg.limit(x, 0)
         if arg0.is_zero:
             return S.One
-        elif arg0.is_finite:
+        elif arg0.is_number:
             return self.func(arg0)
-        elif arg0 is S.ComplexInfinity:
-            return self.func(arg)
         return 2 if cdir == -1 else S.Zero
 
     as_real_imag = real_to_real_as_real_imag
