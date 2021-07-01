@@ -756,7 +756,7 @@ def test_solve_riccati():
     tests = [
     (
         x**2 - (2*x + 1/x)*f(x) + f(x)**2 + f(x).diff(x),
-        [Eq(f(x), (C0*x + x**3 + 2*x)/(C0 + x**2)), Eq(f(x), x)]
+        [Eq(f(x), x), Eq(f(x), (C0*x + x**3 + 2*x)/(C0 + x**2))]
     ),
     (
         f(x)**2 + f(x).diff(x) - (4*x**6 - 8*x**5 + 12*x**4 + 4*x**3 + \
@@ -766,14 +766,14 @@ def test_solve_riccati():
     ),
     (
         -x*f(x)**2 + f(x).diff(x) - 2*f(x)/x,
-        [Eq(f(x), -4*x**2/(C0 + x**4)), Eq(f(x), 0)]
+        [Eq(f(x), 0), Eq(f(x), -4*x**2/(C0 + x**4))]
     ),
     (
         -f(x)**2 + f(x).diff(x) + (15*x**2 - 20*x + 7)/((x - 1)**2*(2*x \
             - 1)**2),
-        [Eq(f(x), (9*C0*x - 6*C0 - 15*x**5 + 60*x**4 - 94*x**3 + 72*x**2 - 30*x \
-            + 6)/(6*C0*x**2 - 9*C0*x + 3*C0 + 6*x**6 - 29*x**5 + 57*x**4 - 58*x**3 + \
-            30*x**2 - 6*x)), Eq(f(x), (3*x - 2)/(2*x**2 - 3*x + 1))]
+        [Eq(f(x), (3*x - 2)/(2*x**2 - 3*x + 1)), Eq(f(x), (9*C0*x - 6*C0 \
+        - 15*x**5 + 60*x**4 - 94*x**3 + 72*x**2 - 30*x + 6)/(6*C0*x**2 - \
+        9*C0*x + 3*C0 + 6*x**6 - 29*x**5 + 57*x**4 - 58*x**3 + 30*x**2 - 6*x))]
     ),
     (
         9*x**2/4 - f(x)**2 + f(x).diff(x) - S(21)/2,
@@ -781,27 +781,27 @@ def test_solve_riccati():
     ),
     (
         f(x)**2 + f(x).diff(x) - 15/(4*x**2),
-        [Eq(f(x), (-3*C0 + 5*x**4)/(2*C0*x + 2*x**5)), Eq(f(x), -3/(2*x))]
+        [Eq(f(x), -3/(2*x)), Eq(f(x), (-3*C0 + 5*x**4)/(2*C0*x + 2*x**5))]
     ),
     (
         3*f(x)**2 + f(x).diff(x) - 2/x**2,
-        [Eq(f(x), (-2*C0 + 3*x**5)/(3*C0*x + 3*x**6)), Eq(f(x), -2/(3*x))]
+        [Eq(f(x), -2/(3*x)), Eq(f(x), (-2*C0 + 3*x**5)/(3*C0*x + 3*x**6))]
     ),
     (
         f(x).diff(x) - 2*I*(f(x)**2 + 1)/x,
-        [Eq(f(x), (-I*C0 + I*x**4)/(C0 + x**4)), Eq(f(x), -I)]
+        [Eq(f(x), -I), Eq(f(x), (-I*C0 + I*x**4)/(C0 + x**4))]
     ),
     (
         f(x).diff(x) - f(x)**2/x + 1/x,
-        [Eq(f(x), (C0 - x**2)/(C0 + x**2)), Eq(f(x), 1)]
+        [Eq(f(x), 1), Eq(f(x), (C0 - x**2)/(C0 + x**2))]
     ),
     (
         f(x)**2 + f(x).diff(x) - f(x)/x,
-        [Eq(f(x), 2*x/(C0 + x**2)), Eq(f(x), 0)]
+        [Eq(f(x), 0), Eq(f(x), 2*x/(C0 + x**2))]
     ),
     (
         -x**2 - (2*x + 1/x)*f(x) - f(x)**2 + f(x).diff(x),
-        [Eq(f(x), (-C0*x - x**3 - 2*x)/(C0 + x**2)), Eq(f(x), -x)]
+        [Eq(f(x), -x), Eq(f(x), (-C0*x - x**3 - 2*x)/(C0 + x**2))]
     ),
     (
         f(x)**2 + f(x).diff(x) + 4*f(x)/x + 2/x**2,
@@ -813,7 +813,7 @@ def test_solve_riccati():
     ),
     (
         x**4*f(x).diff(x) + x**2 - x*(2*f(x)**2 + f(x).diff(x)) + f(x),
-        [Eq(f(x), (C0*x**2 + x)/(C0 + x**2)), Eq(f(x), x**2)]
+        [Eq(f(x), x**2), Eq(f(x), (C0*x**2 + x)/(C0 + x**2))]
     ),
     ( # Regression Test: See https://github.com/sympy/sympy/pull/21459#issuecomment-852212302
         Eq(f(x).diff(x), x*f(x)/(S(3)/2 - 2*x) + (x/2 - S(1)/3)*f(x)**2/\

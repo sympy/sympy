@@ -496,8 +496,7 @@ def compute_m_ybar(x, poles, choice, c, d, N):
     # Calculate the second summation for ybar
     for i in range(N+1):
         ybar += d[choice[0]][i]*x**i
-    numy, deny = [Poly(e, x, extension=True) for e in ybar.together().as_numer_denom()]
-    return m.expr, ybar, numy, deny, True
+    return (m.expr, ybar)
 
 
 def solve_aux_eq(numa, dena, numy, deny, x, m):
@@ -583,13 +582,16 @@ def solve_riccati(fx, x, b0, b1, b2):
         # For each possible combination, generate an array of 0's and 1's
         # where 0 means pick 1st choice and 1 means pick the second choice.
         choices = product(range(2), repeat=len(poles) + 1)
+        m_ybars = set()
         for choice in choices:
             # Step 8 and 9 : Compute m and ybar
-            m, ybar, numy, deny, exists = compute_m_ybar(x, poles, choice, c, d, -val_inf//2)
+            m_ybars.add(compute_m_ybar(x, poles, choice, c, d, -val_inf//2))
 
+        for m, ybar in sorted(m_ybars, key=lambda x: x[0]):
+            numy, deny = [Poly(e, x, extension=True) for e in ybar.together().as_numer_denom()]
             # Step 10 : Check if a valid solution exists. If yes, also check
             # if m is a non-negative integer
-            if exists and m.is_nonnegative == True and m.is_integer == True:
+            if m.is_nonnegative == True and m.is_integer == True:
 
                 # Step 11 : Find polynomial solutions of degree m for the auxiliary equation
                 psol, coeffs, exists = solve_aux_eq(num, den, numy, deny, x, m)
@@ -607,14 +609,6 @@ def solve_riccati(fx, x, b0, b1, b2):
                         # y(x) = ybar(x) + p'(x)/p(x)
                         presol.append(ybar + psol.diff(x)/psol)
 
-            # If m is an expression with symbols, we generate a Piecewise solution where
-            # the solution will exist only if the expression is a nonnegative integer.
-            # NOTE: In this case, it seems like x**m + C1 is always a solution
-            # for the auxiliary equation. It is however NOT mentioned in the thesis.
-            elif len(m.free_symbols):
-                C1 = Dummy('C1')
-                psol = x**m + C1
-                presol.append(ybar + psol.diff(x)/psol)
     # Step 15 : Inverse transform the solutions of the equation in normal form
     bp = -b2.diff(x)/(2*b2**2) - b1/(2*b2)
     sol = [Eq(fx, riccati_inverse_normal(y, x, b1, b2, bp).cancel(extension=True)) for y in presol]
