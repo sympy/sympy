@@ -351,7 +351,7 @@ class PinJoint(Joint):
     ``l1`` and the joint axis will be about the Z axis for each body.
 
     >>> ceiling_joint = PinJoint('P1', ceiling, upper_bob,
-    ... child_joint_pos=l1*upper_bob.frame.x,
+    ... child_joint_pos=-l1*upper_bob.frame.x,
     ... parent_axis=ceiling.frame.z,
     ... child_axis=upper_bob.frame.z)
 
@@ -359,7 +359,7 @@ class PinJoint(Joint):
     of ``l2`` and the joint axis will also be about the Z axis for each body.
 
     >>> pendulum_joint = PinJoint('P2', upper_bob, lower_bob,
-    ... child_joint_pos=l2*lower_bob.frame.x,
+    ... child_joint_pos=-l2*lower_bob.frame.x,
     ... parent_axis=upper_bob.frame.z,
     ... child_axis=lower_bob.frame.z)
 
@@ -381,7 +381,7 @@ class PinJoint(Joint):
     The position of the lower bob's masscenter is found with:
 
     >>> lower_bob.masscenter.pos_from(ceiling.masscenter)
-    - l1*U_frame.x - l2*L_frame.x
+    l1*U_frame.x + l2*L_frame.x
 
     The angular velocities of the two pendulum links can be computed with
     respect to the ceiling.
@@ -395,9 +395,9 @@ class PinJoint(Joint):
     with respect to the ceiling.
 
     >>> upper_bob.masscenter.vel(ceiling.frame)
-    - l1*omega_P1(t)*U_frame.y
+    l1*omega_P1(t)*U_frame.y
     >>> lower_bob.masscenter.vel(ceiling.frame)
-    - l1*omega_P1(t)*U_frame.y - l2*(omega_P1(t) + omega_P2(t))*L_frame.y
+    l1*omega_P1(t)*U_frame.y + l2*(omega_P1(t) + omega_P2(t))*L_frame.y
 
     """
 
