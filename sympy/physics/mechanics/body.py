@@ -214,3 +214,103 @@ class Body(RigidBody, Particle):  # type: ignore
         if not isinstance(vec, Vector):
             raise TypeError("A Vector must be supplied to add torque.")
         self.loads.append((self.frame, vec))
+
+    def masscenter_vel(self, body):
+        """
+        Returns the velocity of the mass center with respect to the provided
+        rigid body or reference frame.
+
+        Parameters
+        ==========
+
+        body: Body or ReferenceFrame
+            The rigid body or reference frame to calculate the velocity in.
+
+        Example
+        =======
+
+        >>> from sympy.physics.mechanics import Body
+        >>> A = Body('A')
+        >>> B = Body('B')
+        >>> A.masscenter.set_vel(B.frame, 5*B.frame.x)
+        >>> A.masscenter_vel(B)
+        5*B_frame.x
+        >>> A.masscenter_vel(B.frame)
+        5*B_frame.x
+
+        """
+
+        if isinstance(body,  ReferenceFrame):
+            frame=body
+        elif isinstance(body, Body):
+            frame = body.frame
+        return self.masscenter.vel(frame)
+
+    def ang_vel_in(self, body):
+        """
+        Returns this body's angular velocity with respect to the provided
+        rigid body or reference frame.
+
+        Parameters
+        ==========
+
+        body: Body or ReferenceFrame
+            The rigid body or reference frame to calculate the angular velocity in.
+
+        Example
+        =======
+
+        >>> from sympy.physics.mechanics import Body, ReferenceFrame
+        >>> A = Body('A')
+        >>> N = ReferenceFrame('N')
+        >>> B = Body('B', frame=N)
+        >>> A.frame.set_ang_vel(N, 5*N.x)
+        >>> A.ang_vel_in(B)
+        5*N.x
+        >>> A.ang_vel_in(N)
+        5*N.x
+
+        """
+
+        if isinstance(body,  ReferenceFrame):
+            frame=body
+        elif isinstance(body, Body):
+            frame = body.frame
+        return self.frame.ang_vel_in(frame)
+
+    def dcm(self, body):
+        """
+        Returns the direction cosine matrix of this body relative to the
+        provided rigid body or reference frame.
+
+        Parameters
+        ==========
+
+        body: Body or ReferenceFrame
+            The rigid body or reference frame to calculate the dcm.
+
+        Example
+        =======
+
+        >>> from sympy.physics.mechanics import Body
+        >>> A = Body('A')
+        >>> B = Body('B')
+        >>> A.frame.orient_axis(B.frame, B.frame.x, 5)
+        >>> A.dcm(B)
+        Matrix([
+        [1,       0,      0],
+        [0,  cos(5), sin(5)],
+        [0, -sin(5), cos(5)]])
+        >>> A.dcm(B.frame)
+        Matrix([
+        [1,       0,      0],
+        [0,  cos(5), sin(5)],
+        [0, -sin(5), cos(5)]])
+
+        """
+
+        if isinstance(body,  ReferenceFrame):
+            frame=body
+        elif isinstance(body, Body):
+            frame = body.frame
+        return self.frame.dcm(frame)

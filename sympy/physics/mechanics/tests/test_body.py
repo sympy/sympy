@@ -1,4 +1,4 @@
-from sympy.core.backend import Symbol, symbols
+from sympy.core.backend import Symbol, symbols, sin, cos, Matrix
 from sympy.physics.vector import Point, ReferenceFrame
 from sympy.physics.mechanics import inertia, Body
 from sympy.testing.pytest import raises
@@ -126,3 +126,27 @@ def test_body_add_torque():
     assert len(body.loads) == 1
     assert body.loads[0] == (body.frame, torque_vector)
     raises(TypeError, lambda: body.apply_torque(0))
+
+def test_body_masscenter_vel():
+    A = Body('A')
+    N = ReferenceFrame('N')
+    B = Body('B', frame=N)
+    A.masscenter.set_vel(N, N.z)
+    assert A.masscenter_vel(B) == N.z
+    assert A.masscenter_vel(N) == N.z
+
+def test_body_ang_vel():
+    A = Body('A')
+    N = ReferenceFrame('N')
+    B = Body('B', frame=N)
+    A.frame.set_ang_vel(N, N.y)
+    assert A.ang_vel_in(B) == N.y
+    assert B.ang_vel_in(A) == -N.y
+    assert A.ang_vel_in(N) == N.y
+
+def test_body_dcm():
+    A = Body('A')
+    B = Body('B')
+    A.frame.orient_axis(B.frame, B.frame.z, 10)
+    assert A.dcm(B) == Matrix([[cos(10), sin(10), 0], [-sin(10), cos(10), 0], [0, 0, 1]])
+    assert A.dcm(B.frame) == Matrix([[cos(10), sin(10), 0], [-sin(10), cos(10), 0], [0, 0, 1]])
