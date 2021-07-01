@@ -75,6 +75,8 @@ class Joint(ABC):
         The axis fixed in the parent frame that represents the joint.
     child_axis : Vector
         The axis fixed in the child frame that represents the joint.
+    kdes : list
+        Kinematical differential equations of the joint.
 
     """
 
@@ -88,6 +90,7 @@ class Joint(ABC):
 
         self._coordinates = self._generate_coordinates(coordinates)
         self._speeds = self._generate_speeds(speeds)
+        self._kdes = self._generate_kdes()
 
         self._parent_axis = self._axis(parent, parent_axis)
         self._child_axis = self._axis(child, child_axis)
@@ -128,6 +131,11 @@ class Joint(ABC):
     def speeds(self):
         """List generalized coordinates of the joint.."""
         return self._speeds
+
+    @property
+    def kdes(self):
+        """Kinematical differential equations of the joint."""
+        return self._kdes
 
     @property
     def parent_axis(self):
@@ -172,21 +180,7 @@ class Joint(ABC):
     def _set_linear_velocity(self):
         pass
 
-    def kdes(self):
-        """Returns a list of the joint's kinematical differential equations.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import PinJoint, Body
-        >>> A = Body('A')
-        >>> B = Body('B')
-        >>> P = PinJoint('P', A, B)
-        >>> P.kdes()
-        [omega_P(t) - Derivative(theta_P(t), t)]
-
-        """
-
+    def _generate_kdes(self):
         kdes = []
         t = dynamicsymbols._t
         for i in range(len(self.coordinates)):
@@ -283,6 +277,8 @@ class PinJoint(Joint):
         The axis fixed in the parent frame that represents the joint.
     child_axis : Vector
         The axis fixed in the child frame that represents the joint.
+    kdes : list
+        Kinematical differential equations of the joint.
 
     Examples
     =========

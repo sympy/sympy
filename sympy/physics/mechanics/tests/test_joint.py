@@ -26,7 +26,7 @@ def test_pinjoint():
     assert Pj.child == C
     assert Pj.coordinates == [theta]
     assert Pj.speeds == [omega]
-    assert Pj.kdes() == [omega - theta.diff(t)]
+    assert Pj.kdes == [omega - theta.diff(t)]
     assert Pj.parent_axis == P.frame.x
     assert Pj.child_joint.pos_from(C.masscenter) == Vector(0)
     assert Pj.parent_joint.pos_from(P.masscenter) == Vector(0)
@@ -79,8 +79,8 @@ def test_pin_joint_double_pendulum():
     assert B.ang_vel_in(N) == u1 * N.z + u2 * A.z
 
     # Check kde
-    assert J1.kdes() == [u1 - q1.diff(t)]
-    assert J2.kdes() == [u2 - q2.diff(t)]
+    assert J1.kdes == [u1 - q1.diff(t)]
+    assert J2.kdes == [u2 - q2.diff(t)]
 
     # Check Linear Velocity
     assert PartP.masscenter.vel(N) == l*u1*A.y
@@ -122,8 +122,8 @@ def test_pin_joint_chaos_pendulum():
     assert N.ang_vel_in(B) == -omega*N.y - alpha*A.z
 
     # Check kde
-    assert J1.kdes() == [omega - theta.diff(t)]
-    assert J2.kdes() == [alpha - phi.diff(t)]
+    assert J1.kdes == [omega - theta.diff(t)]
+    assert J2.kdes == [alpha - phi.diff(t)]
 
     # Check pos of masscenters
     assert C.masscenter.pos_from(rod.masscenter) == lA*A.z
