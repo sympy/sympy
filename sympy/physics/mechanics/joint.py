@@ -347,13 +347,6 @@ class PinJoint(Joint):
     [-sin(theta_P2(t)), cos(theta_P2(t)), 0],
     [                0,                0, 1]])
 
-    Notes
-    ======
-
-    All dynamicsymbols used in `Joints` are `real ` by default. It is adviced to use
-    `real=True` assumption when passing dynamicsymbols to `Joints` else it may give
-    incorrect result in some cases.
-
     """
 
     def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None,
@@ -365,7 +358,7 @@ class PinJoint(Joint):
     def _generate_coordinates(self, coordinate):
         coordinates = []
         if coordinate is None:
-            theta = dynamicsymbols('theta' + '_' + self._name, real=True)
+            theta = dynamicsymbols('theta' + '_' + self._name)
             coordinate = theta
         coordinates.append(coordinate)
         return coordinates
@@ -373,7 +366,7 @@ class PinJoint(Joint):
     def _generate_speeds(self, speed):
         speeds = []
         if speed is None:
-            omega = dynamicsymbols('omega' + '_' + self._name, real=True)
+            omega = dynamicsymbols('omega' + '_' + self._name)
             speed = omega
         speeds.append(speed)
         return speeds
