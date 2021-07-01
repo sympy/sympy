@@ -20,7 +20,7 @@ def test_pinjoint():
     l, m = symbols('l m')
     theta, omega = dynamicsymbols('theta_J, omega_J')
 
-    Pj = PinJoint('J', P, C )
+    Pj = PinJoint('J', P, C)
     assert Pj.name == 'J'
     assert Pj.parent == P
     assert Pj.child == C
@@ -35,14 +35,16 @@ def test_pinjoint():
 
     P1 = Body('P1')
     C1 = Body('C1')
-    J1 = PinJoint('J1', P1, C1, parent_joint_pos= l * P1.frame.x, child_joint_pos= m * C1.frame.y,
-        parent_axis = P1.frame.z)
+    J1 = PinJoint('J1', P1, C1, parent_joint_pos=l*P1.frame.x,
+                  child_joint_pos=m*C1.frame.y, parent_axis=P1.frame.z)
 
     assert J1._parent_axis == P1.frame.z
     assert J1._child_joint.pos_from(C1.masscenter) == m * C1.frame.y
     assert J1._parent_joint.pos_from(P1.masscenter) == l * P1.frame.x
     assert J1._parent_joint.pos_from(J1._child_joint) == Vector(0)
-    assert P1.masscenter.pos_from(C1.masscenter) == - l*P1.frame.x + m*C1.frame.y
+    assert (P1.masscenter.pos_from(C1.masscenter) ==
+            -l*P1.frame.x + m*C1.frame.y)
+
 
 def test_pin_joint_double_pendulum():
     q1, q2 = dynamicsymbols('q1 q2')
@@ -51,34 +53,40 @@ def test_pin_joint_double_pendulum():
     N = ReferenceFrame('N')
     A = ReferenceFrame('A')
     B = ReferenceFrame('B')
-    C = Body('C', frame=N) #ceiling
+    C = Body('C', frame=N)  # ceiling
     PartP = Body('P', frame=A, mass=m)
     PartR = Body('R', frame=B, mass=m)
 
-    J1 = PinJoint('J1', C, PartP, speeds=u1, coordinates=q1, child_joint_pos=-l*A.x, \
-        parent_axis=C.frame.z, child_axis=PartP.frame.z)
-    J2 = PinJoint('J2', PartP, PartR, speeds=u2, coordinates=q2, child_joint_pos=-l*B.x, \
-        parent_axis=PartP.frame.z, child_axis=PartR.frame.z)
+    J1 = PinJoint('J1', C, PartP, speeds=u1, coordinates=q1,
+                  child_joint_pos=-l*A.x, parent_axis=C.frame.z,
+                  child_axis=PartP.frame.z)
+    J2 = PinJoint('J2', PartP, PartR, speeds=u2, coordinates=q2,
+                  child_joint_pos=-l*B.x, parent_axis=PartP.frame.z,
+                  child_axis=PartR.frame.z)
 
-    #Check orientation
-    assert N.dcm(A) == Matrix([[cos(q1), -sin(q1), 0], [sin(q1), cos(q1), 0], [0, 0, 1]])
-    assert A.dcm(B) == Matrix([[cos(q2), -sin(q2), 0], [sin(q2), cos(q2), 0], [0, 0, 1]])
-    assert N.dcm(B).simplify() == Matrix([[cos(q1 + q2), -sin(q1 + q2), 0], \
-        [sin(q1 + q2), cos(q1 + q2), 0], [0, 0, 1]])
+    # Check orientation
+    assert N.dcm(A) == Matrix([[cos(q1), -sin(q1), 0],
+                               [sin(q1), cos(q1), 0], [0, 0, 1]])
+    assert A.dcm(B) == Matrix([[cos(q2), -sin(q2), 0],
+                               [sin(q2), cos(q2), 0], [0, 0, 1]])
+    assert N.dcm(B).simplify() == Matrix([[cos(q1 + q2), -sin(q1 + q2), 0],
+                                          [sin(q1 + q2), cos(q1 + q2), 0],
+                                          [0, 0, 1]])
 
-    #Check Angular Velocity
+    # Check Angular Velocity
     assert A.ang_vel_in(N) == u1 * N.z
     assert B.ang_vel_in(A) == u2 * A.z
     assert B.ang_vel_in(N) == u1 * N.z + u2 * A.z
 
-    #Check kde
+    # Check kde
     assert J1.kdes() == [u1 - q1.diff(t)]
     assert J2.kdes() == [u2 - q2.diff(t)]
 
-    #Check Linear Velocity
+    # Check Linear Velocity
     assert PartP.masscenter.vel(N) == l*u1*A.y
     assert PartR.masscenter.vel(A) == l*u2*B.y
     assert PartR.masscenter.vel(N) == l*u1*A.y + l*(u1 + u2)*B.y
+
 
 def test_pin_joint_chaos_pendulum():
     mA, mB, lA, lB, h = symbols('mA, mB, lA, lB, h')
@@ -91,33 +99,41 @@ def test_pin_joint_chaos_pendulum():
     rod = Body('rod', frame=A, mass=mA)
     plate = Body('plate', mass=mB, frame=B)
     C = Body('C', frame=N)
-    J1 = PinJoint('J1', C, rod, coordinates=theta, speeds=omega, child_joint_pos=lA*A.z,
-        parent_axis=N.y, child_axis=A.y)
-    J2 = PinJoint('J2',rod, plate, coordinates=phi, speeds=alpha, parent_joint_pos=lC*A.z,
-        parent_axis=A.z, child_axis=B.z)
+    J1 = PinJoint('J1', C, rod, coordinates=theta, speeds=omega,
+                  child_joint_pos=lA*A.z, parent_axis=N.y, child_axis=A.y)
+    J2 = PinJoint('J2', rod, plate, coordinates=phi, speeds=alpha,
+                  parent_joint_pos=lC*A.z, parent_axis=A.z, child_axis=B.z)
 
-    #Check orientation
-    assert A.dcm(N) == Matrix([[cos(theta), 0, -sin(theta)], [0, 1, 0], [sin(theta), 0, cos(theta)]])
-    assert A.dcm(B) == Matrix([[cos(phi), -sin(phi), 0], [sin(phi), cos(phi), 0], [0, 0, 1]])
-    assert B.dcm(N) == Matrix([[cos(phi)*cos(theta), sin(phi), -sin(theta)*cos(phi)],
-        [-sin(phi)*cos(theta), cos(phi), sin(phi)*sin(theta)], [sin(theta), 0, cos(theta)]])
+    # Check orientation
+    assert A.dcm(N) == Matrix([[cos(theta), 0, -sin(theta)],
+                               [0, 1, 0],
+                               [sin(theta), 0, cos(theta)]])
+    assert A.dcm(B) == Matrix([[cos(phi), -sin(phi), 0],
+                               [sin(phi), cos(phi), 0],
+                               [0, 0, 1]])
+    assert B.dcm(N) == Matrix([
+        [cos(phi)*cos(theta), sin(phi), -sin(theta)*cos(phi)],
+        [-sin(phi)*cos(theta), cos(phi), sin(phi)*sin(theta)],
+        [sin(theta), 0, cos(theta)]])
 
-    #Check Angular Velocity
-    assert A.ang_vel_in(N) == omega * N.y
-    assert A.ang_vel_in(B) == - alpha * A.z
-    assert N.ang_vel_in(B) == - omega * N.y - alpha * A.z
+    # Check Angular Velocity
+    assert A.ang_vel_in(N) == omega*N.y
+    assert A.ang_vel_in(B) == -alpha*A.z
+    assert N.ang_vel_in(B) == -omega*N.y - alpha*A.z
 
-    #Check kde
+    # Check kde
     assert J1.kdes() == [omega - theta.diff(t)]
     assert J2.kdes() == [alpha - phi.diff(t)]
 
-    #Check pos of masscenters
+    # Check pos of masscenters
     assert C.masscenter.pos_from(rod.masscenter) == lA*A.z
     assert rod.masscenter.pos_from(plate.masscenter) == - lC * A.z
 
-    #Check Linear Velocities
+    # Check Linear Velocities
     assert rod.masscenter.vel(N) == (h/4 - lB/2)*omega*A.x
-    assert plate.masscenter.vel(N) == ((h/4 - lB/2)*omega + (h/4 + lB/2)*omega)*A.x
+    assert plate.masscenter.vel(N) == ((h/4 - lB/2)*omega +
+                                       (h/4 + lB/2)*omega)*A.x
+
 
 def test_pinjoint_arbitrary_axis():
     def generate_body():
@@ -129,105 +145,142 @@ def test_pinjoint_arbitrary_axis():
 
     theta, omega = dynamicsymbols('theta_J, omega_J')
 
-    #When the bodies are attached though masscenters but axess are opposite.
+    # When the bodies are attached though masscenters but axess are opposite.
     N, A, P, C = generate_body()
     PinJoint('J', P, C, child_axis=-A.x)
 
     assert -A.x.angle_between(N.x) == 0
     assert -A.x.express(N) == -N.x
-    assert A.dcm(N) == Matrix([[1, 0, 0], [0, cos(theta), sin(theta)], [0, -sin(theta), cos(theta)]])
+    assert A.dcm(N) == Matrix([[1, 0, 0],
+                               [0, cos(theta), sin(theta)],
+                               [0, -sin(theta), cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.x
     assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
     assert C.masscenter.pos_from(P.masscenter) == 0
     assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == 0
     assert C.masscenter.vel(N) == 0
 
-    #When axes are different and parent joint is at masscenter but child joint is at a unit vector from
-    #child masscenter.
+    # When axes are different and parent joint is at masscenter but child joint
+    # is at a unit vector from child masscenter.
     N, A, P, C = generate_body()
     PinJoint('J', P, C, child_axis=A.y, child_joint_pos=A.x)
 
-    assert A.y.angle_between(N.x) == 0 #Axis are aligned
+    assert A.y.angle_between(N.x) == 0  # Axis are aligned
     assert A.y.express(N) == N.x
-    assert A.dcm(N) == Matrix([[0, -cos(theta), -sin(theta)], [1, 0, 0], [0, -sin(theta), cos(theta)]])
+    assert A.dcm(N) == Matrix([[0, -cos(theta), -sin(theta)],
+                               [1, 0, 0],
+                               [0, -sin(theta), cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.x
     assert A.ang_vel_in(N).express(A) == omega * A.y
     assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
-    assert expand_mul(A.ang_vel_in(N).angle_between(A.y)).xreplace({omega: 1}) == 0
+    angle = A.ang_vel_in(N).angle_between(A.y)
+    assert expand_mul(angle).xreplace({omega: 1}) == 0
     assert C.masscenter.vel(N) == omega*A.z
     assert C.masscenter.pos_from(P.masscenter) == -A.x
-    assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == cos(theta)*N.y + sin(theta)*N.z
+    assert (C.masscenter.pos_from(P.masscenter).express(N).simplify() ==
+            cos(theta)*N.y + sin(theta)*N.z)
     assert C.masscenter.vel(N).angle_between(A.x) == pi/2
 
-    #Similar to previous case but wrt parent body
+    # Similar to previous case but wrt parent body
     N, A, P, C = generate_body()
     PinJoint('J', P, C, parent_axis=N.y, parent_joint_pos=N.x)
 
-    assert N.y.angle_between(A.x) == 0 #Axis are aligned
-    assert N.y.express(A) ==  A.x
-    assert A.dcm(N) == Matrix([[0, 1, 0], [-cos(theta), 0, sin(theta)], [sin(theta), 0, cos(theta)]])
+    assert N.y.angle_between(A.x) == 0  # Axis are aligned
+    assert N.y.express(A) == A.x
+    assert A.dcm(N) == Matrix([[0, 1, 0],
+                               [-cos(theta), 0, sin(theta)],
+                               [sin(theta), 0, cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.y
-    assert A.ang_vel_in(N).express(A) == omega* A.x
+    assert A.ang_vel_in(N).express(A) == omega*A.x
     assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
-    assert expand_mul(A.ang_vel_in(N).angle_between(A.x)).xreplace({omega: 1}) == 0
+    angle = A.ang_vel_in(N).angle_between(A.x)
+    assert expand_mul(angle).xreplace({omega: 1}) == 0
     assert C.masscenter.vel(N).simplify() == - omega*N.z
     assert C.masscenter.pos_from(P.masscenter) == N.x
 
-    #Both joint pos id defined but different axes
+    # Both joint pos id defined but different axes
     N, A, P, C = generate_body()
-    PinJoint('J', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y)
-    assert expand_mul(N.x.angle_between(A.x + A.y)) == 0 #Axis are aligned
+    PinJoint('J', P, C, parent_joint_pos=N.x, child_joint_pos=A.x,
+             child_axis=A.x+A.y)
+    assert expand_mul(N.x.angle_between(A.x + A.y)) == 0  # Axis are aligned
     assert (A.x + A.y).express(N).simplify() == sqrt(2)*N.x
-    assert A.dcm(N).simplify() == Matrix([[sqrt(2)/2, -sqrt(2)*cos(theta)/2, -sqrt(2)*sin(theta)/2],
-        [sqrt(2)/2, sqrt(2)*cos(theta)/2, sqrt(2)*sin(theta)/2], [0, -sin(theta), cos(theta)]])
+    assert A.dcm(N).simplify() == Matrix([
+        [sqrt(2)/2, -sqrt(2)*cos(theta)/2, -sqrt(2)*sin(theta)/2],
+        [sqrt(2)/2, sqrt(2)*cos(theta)/2, sqrt(2)*sin(theta)/2],
+        [0, -sin(theta), cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.x
-    assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y)/sqrt(2)
+    assert (A.ang_vel_in(N).express(A).simplify() ==
+            (omega*A.x + omega*A.y)/sqrt(2))
     assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
-    assert expand_mul(A.ang_vel_in(N).angle_between(A.x + A.y)).xreplace({omega: 1}) == 0
+    angle = A.ang_vel_in(N).angle_between(A.x + A.y)
+    assert expand_mul(angle).xreplace({omega: 1}) == 0
     assert C.masscenter.vel(N).simplify() == (omega * A.z)/sqrt(2)
     assert C.masscenter.pos_from(P.masscenter) == N.x - A.x
-    assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == \
-        (1 - sqrt(2)/2)*N.x + sqrt(2)*cos(theta)/2*N.y + sqrt(2)*sin(theta)/2*N.z
-    assert C.masscenter.vel(N).express(N).simplify() == - sqrt(2)*omega*sin(theta)/2*N.y + sqrt(2)*omega*cos(theta)/2*N.z
+    assert (C.masscenter.pos_from(P.masscenter).express(N).simplify() ==
+            (1 - sqrt(2)/2)*N.x + sqrt(2)*cos(theta)/2*N.y +
+            sqrt(2)*sin(theta)/2*N.z)
+    assert (C.masscenter.vel(N).express(N).simplify() ==
+            -sqrt(2)*omega*sin(theta)/2*N.y + sqrt(2)*omega*cos(theta)/2*N.z)
     assert C.masscenter.vel(N).angle_between(A.x) == pi/2
 
     N, A, P, C = generate_body()
-    PinJoint('J', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y-A.z)
-    assert expand_mul(N.x.angle_between(A.x + A.y - A.z)) == 0 #Axis are aligned
+    PinJoint('J', P, C, parent_joint_pos=N.x, child_joint_pos=A.x,
+             child_axis=A.x+A.y-A.z)
+    assert expand_mul(N.x.angle_between(A.x + A.y - A.z)) == 0  # Axis aligned
     assert (A.x + A.y - A.z).express(N).simplify() == sqrt(3)*N.x
-    assert A.dcm(N).simplify() == Matrix([[sqrt(3)/3, -sqrt(6)*sin(theta + pi/4)/3, sqrt(6)*cos(theta + pi/4)/3],
-        [sqrt(3)/3, sqrt(6)*cos(theta + pi/12)/3, sqrt(6)*sin(theta + pi/12)/3],
-        [-sqrt(3)/3, sqrt(6)*cos(theta + 5*pi/12)/3, sqrt(6)*sin(theta + 5*pi/12)/3]])
+    assert A.dcm(N).simplify() == Matrix([
+        [sqrt(3)/3, -sqrt(6)*sin(theta + pi/4)/3,
+         sqrt(6)*cos(theta + pi/4)/3],
+        [sqrt(3)/3, sqrt(6)*cos(theta + pi/12)/3,
+         sqrt(6)*sin(theta + pi/12)/3],
+        [-sqrt(3)/3, sqrt(6)*cos(theta + 5*pi/12)/3,
+         sqrt(6)*sin(theta + 5*pi/12)/3]])
     assert A.ang_vel_in(N) == omega*N.x
-    assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y - omega*A.z)/sqrt(3)
+    assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y -
+                                                     omega*A.z)/sqrt(3)
     assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
-    assert expand_mul(A.ang_vel_in(N).angle_between(A.x + A.y-A.z)).xreplace({omega: 1}) == 0
-    assert C.masscenter.vel(N).simplify() == (omega * A.y + omega * A.z)/sqrt(3)
+    angle = A.ang_vel_in(N).angle_between(A.x + A.y-A.z)
+    assert expand_mul(angle).xreplace({omega: 1}) == 0
+    assert C.masscenter.vel(N).simplify() == (omega*A.y + omega*A.z)/sqrt(3)
     assert C.masscenter.pos_from(P.masscenter) == N.x - A.x
-    assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == \
-        (1 - sqrt(3)/3)*N.x + sqrt(6)*sin(theta + pi/4)/3*N.y - sqrt(6)*cos(theta + pi/4)/3*N.z
-    assert C.masscenter.vel(N).express(N).simplify() == sqrt(6)*omega*cos(theta + pi/4)/3*N.y + sqrt(6)*omega*sin(theta + pi/4)/3*N.z
+    assert (C.masscenter.pos_from(P.masscenter).express(N).simplify() ==
+            (1 - sqrt(3)/3)*N.x + sqrt(6)*sin(theta + pi/4)/3*N.y -
+            sqrt(6)*cos(theta + pi/4)/3*N.z)
+    assert (C.masscenter.vel(N).express(N).simplify() ==
+            sqrt(6)*omega*cos(theta + pi/4)/3*N.y +
+            sqrt(6)*omega*sin(theta + pi/4)/3*N.z)
     assert C.masscenter.vel(N).angle_between(A.x) == pi/2
 
     N, A, P, C = generate_body()
     m, n = symbols('m n')
-    PinJoint('J', P, C, parent_joint_pos=m*N.x, child_joint_pos=n*A.x, child_axis=A.x+A.y-A.z, parent_axis=N.x-N.y+N.z)
-    assert expand_mul((N.x-N.y+N.z).angle_between(A.x+A.y-A.z)) == 0 #Axis are aligned
-    assert (A.x-A.y+A.z).express(N).simplify() == \
-        (-4*cos(theta)/3 - 1/3)*N.x + (1/3 - 4*sin(theta + pi/6)/3)*N.y + (4*cos(theta + pi/3)/3 - 1/3)*N.z
-    assert A.dcm(N).simplify() == Matrix([[S(1)/3 - 2*cos(theta)/3, -2*sin(theta + pi/6)/3 - S(1)/3,
-        2*cos(theta + pi/3)/3 + S(1)/3], [2*cos(theta + pi/3)/3 + S(1)/3, 2*cos(theta)/3 - S(1)/3,
-        2*sin(theta + pi/6)/3 + S(1)/3], [-2*sin(theta + pi/6)/3 - S(1)/3, 2*cos(theta + pi/3)/3 + S(1)/3,
-        2*cos(theta)/3 - S(1)/3]])
+    PinJoint('J', P, C, parent_joint_pos=m*N.x, child_joint_pos=n*A.x,
+             child_axis=A.x+A.y-A.z, parent_axis=N.x-N.y+N.z)
+    angle = (N.x-N.y+N.z).angle_between(A.x+A.y-A.z)
+    assert expand_mul(angle) == 0  # Axis are aligned
+    assert ((A.x-A.y+A.z).express(N).simplify() ==
+            (-4*cos(theta)/3 - 1/3)*N.x + (1/3 - 4*sin(theta + pi/6)/3)*N.y +
+            (4*cos(theta + pi/3)/3 - 1/3)*N.z)
+    assert A.dcm(N).simplify() == Matrix([
+        [S(1)/3 - 2*cos(theta)/3, -2*sin(theta + pi/6)/3 - S(1)/3,
+         2*cos(theta + pi/3)/3 + S(1)/3],
+        [2*cos(theta + pi/3)/3 + S(1)/3, 2*cos(theta)/3 - S(1)/3,
+         2*sin(theta + pi/6)/3 + S(1)/3],
+        [-2*sin(theta + pi/6)/3 - S(1)/3, 2*cos(theta + pi/3)/3 + S(1)/3,
+         2*cos(theta)/3 - S(1)/3]])
     assert A.ang_vel_in(N) == (omega*N.x - omega*N.y + omega*N.z)/sqrt(3)
-    assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y - omega*A.z)/sqrt(3)
+    assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y -
+                                                     omega*A.z)/sqrt(3)
     assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
-    assert expand_mul(A.ang_vel_in(N).angle_between(A.x+A.y-A.z)).xreplace({omega: 1}) == 0
-    assert C.masscenter.vel(N).simplify() == (m*omega*N.y + m*omega*N.z + n*omega*A.y + n*omega*A.z)/sqrt(3)
+    angle = A.ang_vel_in(N).angle_between(A.x+A.y-A.z)
+    assert expand_mul(angle).xreplace({omega: 1}) == 0
+    assert (C.masscenter.vel(N).simplify() ==
+            (m*omega*N.y + m*omega*N.z + n*omega*A.y + n*omega*A.z)/sqrt(3))
     assert C.masscenter.pos_from(P.masscenter) == m*N.x - n*A.x
-    assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == \
-        (m + n*(2*cos(theta) - 1)/3)*N.x + n*(2*sin(theta + pi/6) + 1)/3*N.y - n*(2*cos(theta + pi/3) + 1)/3*N.z
-    assert C.masscenter.vel(N).express(N).simplify() == \
-        -2*n*omega*sin(theta)/3*N.x + (sqrt(3)*m + 2*n*cos(theta + pi/6))*omega/3*N.y + \
-        (sqrt(3)*m + 2*n*sin(theta + pi/3))*omega/3*N.z
+    assert (C.masscenter.pos_from(P.masscenter).express(N).simplify() ==
+            (m + n*(2*cos(theta) - 1)/3)*N.x + n*(2*sin(theta + pi/6) +
+            1)/3*N.y - n*(2*cos(theta + pi/3) + 1)/3*N.z)
+    assert (C.masscenter.vel(N).express(N).simplify() ==
+            -2*n*omega*sin(theta)/3*N.x + (sqrt(3)*m +
+                                           2*n*cos(theta + pi/6))*omega/3*N.y
+            + (sqrt(3)*m + 2*n*sin(theta + pi/3))*omega/3*N.z)
     assert expand_mul(C.masscenter.vel(N).angle_between(m*N.x - n*A.x)) == pi/2
