@@ -32,6 +32,7 @@ def test_pinjoint():
     assert Pj.parent_joint.pos_from(P.masscenter) == Vector(0)
     assert Pj.parent_joint.pos_from(Pj._child_joint) == Vector(0)
     assert C.masscenter.pos_from(P.masscenter) == Vector(0)
+    assert Pj.__str__() == 'PinJoint: J  parent: P  child: C'
 
     P1 = Body('P1')
     C1 = Body('C1')
