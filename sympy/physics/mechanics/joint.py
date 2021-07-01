@@ -6,6 +6,8 @@ from sympy.physics.mechanics.body import Body
 from sympy.physics.vector import Vector, dynamicsymbols, cross
 from sympy.physics.vector.frame import ReferenceFrame
 
+import warnings
+
 __all__ = ['Joint', 'PinJoint']
 
 
@@ -433,15 +435,18 @@ class PinJoint(Joint):
         self.child.frame.orient_axis(self.parent.frame, self.parent_axis, 0)
         angle, axis = self._alignment_rotation(self.parent_axis,
                                                self.child_axis)
-        if axis != Vector(0):
-            int_frame = ReferenceFrame('int_frame')
-            int_frame.orient_axis(self.child.frame, self.child_axis, 0)
-            int_frame.orient_axis(self.parent.frame, axis, angle)
-            self.child.frame.orient_axis(int_frame, self.parent_axis,
-                                         self.coordinates[0])
-        else:
-            self.child.frame.orient_axis(self.parent.frame, self.parent_axis,
-                                         self.coordinates[0])
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=UserWarning)
+            if axis != Vector(0):
+
+                int_frame = ReferenceFrame('int_frame')
+                int_frame.orient_axis(self.child.frame, self.child_axis, 0)
+                int_frame.orient_axis(self.parent.frame, axis, angle)
+                self.child.frame.orient_axis(int_frame, self.parent_axis,
+                                            self.coordinates[0])
+            else:
+                self.child.frame.orient_axis(self.parent.frame, self.parent_axis,
+                                            self.coordinates[0])
 
     def _set_angular_velocity(self):
         self.child.frame.set_ang_vel(self.parent.frame, self.speeds[0] *
