@@ -484,9 +484,9 @@ class TransferFunction(Basic, EvalfMixin):
         ========
 
         >>> from sympy.abc import s, p, a
-        >>> from sympy.core.symbol import symbols
-        >>> q, r = symbols('q, r', negative=True)
+        >>> from sympy import symbols
         >>> from sympy.physics.control.lti import TransferFunction
+        >>> q, r = symbols('q, r', negative=True)
         >>> tf1 = TransferFunction((1 - s)**2, (s + 1)**2, s)
         >>> tf1.is_stable()
         True
@@ -676,7 +676,7 @@ class TransferFunction(Basic, EvalfMixin):
 
         >>> from sympy.abc import s, p, a, b
         >>> from sympy.physics.control.lti import TransferFunction
-        >>> from sympy.core.expr import Expr
+        >>> from sympy import Expr
         >>> tf1 = TransferFunction(s, a*s**2 + 1, s)
         >>> tf1.to_expr()
         s/(a*s**2 + 1)
@@ -1467,7 +1467,7 @@ class TransferFunctionMatrix(Basic):
     ``pprint()`` can be used for better visualization of ``TransferFunctionMatrix`` objects.
 
     >>> from sympy.abc import s, p, a
-    >>> from sympy.printing import pprint
+    >>> from sympy import pprint
     >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix, Series, Parallel
     >>> tf_1 = TransferFunction(s + a, s**2 + s + 1, s)
     >>> tf_2 = TransferFunction(p**4 - 3*p + 2, s + p, s)
@@ -1824,7 +1824,7 @@ class TransferFunctionMatrix(Basic):
 
         >>> from sympy.abc import s
         >>> from sympy.physics.control.lti import TransferFunctionMatrix
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> M_1 = Matrix([[s], [1/s]])
         >>> TFM = TransferFunctionMatrix.from_Matrix(M_1, s)
         >>> print(TFM)
