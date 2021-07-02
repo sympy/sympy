@@ -25,7 +25,6 @@ from sympy.stats.rv import (ProductPSpace, NamedArgsMixin, Distribution,
                             SingleDomain, _symbol_converter)
 from sympy.utilities.misc import filldedent
 from sympy.external import import_module
-from sympy.testing.pytest import ignore_warnings
 
 # __all__ = ['marginal_distribution']
 

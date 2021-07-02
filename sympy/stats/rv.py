@@ -28,7 +28,6 @@ from sympy.external import import_module
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.testing.pytest import ignore_warnings
 import warnings
 
 

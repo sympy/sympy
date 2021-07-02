@@ -6,7 +6,6 @@ from sympy.matrices import (ImmutableMatrix, Inverse, Trace, Determinant,
 from sympy.stats.rv import (_value_check, RandomMatrixSymbol, NamedArgsMixin, PSpace,
                             _symbol_converter, MatrixDomain, Distribution)
 from sympy.external import import_module
-from sympy.testing.pytest import ignore_warnings
 
 
 ################################################################################
