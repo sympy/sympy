@@ -1,4 +1,4 @@
-.. _how_to_guide:
+.. _explanation:
 
 =====================
  Explanation

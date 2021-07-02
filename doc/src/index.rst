@@ -27,7 +27,7 @@ This is the central page for all of SymPy’s documentation.
 
 ..  rst-class:: column
 
-:ref:`Get started <getting-started>`
+:ref:`Get started <getting_started>`
 -------------------------------------------------------
 
 An introduction to SymPy for developers and detailed tutorials.
@@ -36,7 +36,7 @@ An introduction to SymPy for developers and detailed tutorials.
 
 ..  rst-class:: column
 
-:ref:`How-to <how-to-guides>`
+:ref:`How-to <how_to_guide>`
 -------------------------------------------------------
 
 Covers step-by-step intructions on how to do different key developer tasks.
