@@ -2997,6 +2997,11 @@ def test_sympy__matrices__expressions__matexpr__MatrixBase():
     pass
 
 
+@SKIP("abstract class")
+def test_sympy__matrices__immutable__ImmutableRepMatrix():
+    pass
+
+
 def test_sympy__matrices__immutable__ImmutableDenseMatrix():
     from sympy.matrices.immutable import ImmutableDenseMatrix
     m = ImmutableDenseMatrix([[1, 2], [3, 4]])
