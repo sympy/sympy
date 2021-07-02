@@ -1,12 +1,12 @@
 # Makefile for Sphinx documentation
 #
-PYTHON       = python
+PYTHON       = python3.8
 RST2HTML     = rst2html
 
 # You can set these variables from the command line.
 SPHINXOPTS   =
 SPHINXVER    = 0.5
-SPHINXBUILD  = PYTHONPATH=..:$(PYTHONPATH) sphinx-build
+SPHINXBUILD  = PYTHONPATH=/usr/local/bin/python3.8 sphinx-build
 PAPER        =
 
 SVGFILES = $(wildcard src/modules/physics/vector/*.svg) $(wildcard src/modules/physics/mechanics/examples/*.svg) $(wildcard src/modules/vector/*.svg)

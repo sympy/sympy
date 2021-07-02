@@ -14,20 +14,64 @@ If you are new to SymPy, start with the :ref:`Tutorial <tutorial>`.
 
 This is the central page for all of SymPy's documentation.
 
+Welcome to SymPy’s documentation!
+===================================
 
-Contents:
+A PDF version of these docs can be found `here <https://github.com/sympy/sympy/releases>`_.
+
+`SymPy <https://www.sympy.org/en/index.html>`_ is a Python library for symbolic mathematics. If you are new to SymPy, start with the `Tutorial <https://docs.sympy.org/latest/tutorial/index.html#tutorial>`_.
+
+This is the central page for all of SymPy’s documentation.
+
+===========================
+
+..  rst-class:: column
+
+:ref:`Get started <getting-started>`
+-------------------------------------------------------
+
+An introduction to SymPy for developers and detailed tutorials.
+
+
+
+..  rst-class:: column
+
+:ref:`How-to <how-to-guides>`
+-------------------------------------------------------
+
+Covers step-by-step intructions on how to do different key developer tasks.
+
+
+..  rst-class:: column clearfix
+
+:ref:`Explanation <explanation>`
+-------------------------------------------------------
+
+Clarification and discussion of common pitfalls and advanced topics.
+
+
+..  rst-class:: column
+
+:ref:`Reference <reference>`
+-------------------------------------------------------
+
+Discusses and details the internal and public modules
+
+
+..  rst-class:: clearfix row custom-headings
+
+
+:ref:`Contributing <contributing>`
+-------------------------------------------------------
+
+Covers instructions for SymPy contributors.
+
 
 .. toctree::
-   :maxdepth: 2
+    :hidden:
 
-   install.rst
-   tutorial/index.rst
-   guides/index.rst
-   gotchas.rst
-   modules/index.rst
-   special_topics/index.rst
-   wiki.rst
-   outreach.rst
-   aboutus.rst
-   citing.rst
-   documentation-style-guide.rst
+    getting-started/index
+    explanation/index
+    reference/index
+    how-to-guide/index
+    contributing/index
