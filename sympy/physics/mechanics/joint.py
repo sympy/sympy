@@ -246,7 +246,7 @@ class Joint(ABC):
                     return parent_frame.x
                 return parent_frame.z
             return parent_frame.x
-            
+
 
 class PinJoint(Joint):
     """Pin (Revolute) Joint.

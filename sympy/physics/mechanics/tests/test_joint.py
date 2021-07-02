@@ -152,8 +152,8 @@ def test_pinjoint_arbitrary_axis():
 
     assert -A.x.angle_between(N.x) == -pi
     assert -A.x.express(N) == N.x
-    assert A.dcm(N) == Matrix([[-1, 0, 0], 
-                            [0, -cos(theta), -sin(theta)], 
+    assert A.dcm(N) == Matrix([[-1, 0, 0],
+                            [0, -cos(theta), -sin(theta)],
                             [0, -sin(theta), cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.x
     assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
