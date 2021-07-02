@@ -2238,8 +2238,8 @@ class NthLinearConstantCoeffVariationOfParameters(SingleODESolver):
         homogen_sol = Eq(f(x), homogen_sol)
         homogen_sol = _solve_variation_of_parameters(eq, f(x), roots, homogen_sol, order, self.r, simplify_flag)
         if simplify_flag:
-            gsol = _get_simplified_sol([homogen_sol], f(x), collectterms)
-        return [gsol]
+            homogen_sol = _get_simplified_sol([homogen_sol], f(x), collectterms)
+        return [homogen_sol]
 
 
 class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
