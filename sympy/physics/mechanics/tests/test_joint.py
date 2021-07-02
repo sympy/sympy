@@ -28,9 +28,9 @@ def test_pinjoint():
     assert Pj.speeds == [omega]
     assert Pj.kdes == [omega - theta.diff(t)]
     assert Pj.parent_axis == P.frame.x
-    assert Pj.child_joint.pos_from(C.masscenter) == Vector(0)
-    assert Pj.parent_joint.pos_from(P.masscenter) == Vector(0)
-    assert Pj.parent_joint.pos_from(Pj._child_joint) == Vector(0)
+    assert Pj.child_point.pos_from(C.masscenter) == Vector(0)
+    assert Pj.parent_point.pos_from(P.masscenter) == Vector(0)
+    assert Pj.parent_point.pos_from(Pj._child_point) == Vector(0)
     assert C.masscenter.pos_from(P.masscenter) == Vector(0)
     assert Pj.__str__() == 'PinJoint: J  parent: P  child: C'
 
@@ -40,9 +40,9 @@ def test_pinjoint():
                   child_joint_pos=m*C1.frame.y, parent_axis=P1.frame.z)
 
     assert J1._parent_axis == P1.frame.z
-    assert J1._child_joint.pos_from(C1.masscenter) == m * C1.frame.y
-    assert J1._parent_joint.pos_from(P1.masscenter) == l * P1.frame.x
-    assert J1._parent_joint.pos_from(J1._child_joint) == Vector(0)
+    assert J1._child_point.pos_from(C1.masscenter) == m * C1.frame.y
+    assert J1._parent_point.pos_from(P1.masscenter) == l * P1.frame.x
+    assert J1._parent_point.pos_from(J1._child_point) == Vector(0)
     assert (P1.masscenter.pos_from(C1.masscenter) ==
             -l*P1.frame.x + m*C1.frame.y)
 

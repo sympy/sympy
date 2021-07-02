@@ -69,9 +69,9 @@ class Joint(ABC):
         List of the joint's generalized coordinates.
     speeds : list
         List of the joint's generalized speeds.
-    parent_joint : Point
+    parent_point : Point
         The point fixed in the parent body that represents the joint.
-    child_joint : Point
+    child_point : Point
         The point fixed in the child body that represents the joint.
     parent_axis : Vector
         The axis fixed in the parent frame that represents the joint.
@@ -105,8 +105,8 @@ class Joint(ABC):
         self._parent_axis = self._axis(parent, parent_axis)
         self._child_axis = self._axis(child, child_axis)
 
-        self._parent_joint = self._locate_joint_pos(parent, parent_joint_pos)
-        self._child_joint = self._locate_joint_pos(child, child_joint_pos)
+        self._parent_point = self._locate_joint_pos(parent, parent_joint_pos)
+        self._child_point = self._locate_joint_pos(child, child_joint_pos)
 
         self._orient_frames()
         self._set_angular_velocity()
@@ -158,14 +158,14 @@ class Joint(ABC):
         return self._child_axis
 
     @property
-    def parent_joint(self):
+    def parent_point(self):
         """The joint's point where parent body is connected to the joint."""
-        return self._parent_joint
+        return self._parent_point
 
     @property
-    def child_joint(self):
+    def child_point(self):
         """The joint's point where child body is connected to the joint."""
-        return self._child_joint
+        return self._child_point
 
     @abstractmethod
     def _generate_coordinates(self, coordinates):
@@ -279,9 +279,9 @@ class PinJoint(Joint):
         List of the joint's generalized coordinates.
     speeds : list
         List of the joint's generalized speeds.
-    parent_joint : Point
+    parent_point : Point
         The point fixed in the parent body that represents the joint.
-    child_joint : Point
+    child_point : Point
         The point fixed in the child body that represents the joint.
     parent_axis : Vector
         The axis fixed in the parent frame that represents the joint.
@@ -312,9 +312,9 @@ class PinJoint(Joint):
     P
     >>> joint.child
     C
-    >>> joint.parent_joint
+    >>> joint.parent_point
     PC_P_joint
-    >>> joint.child_joint
+    >>> joint.child_point
     PC_C_joint
     >>> joint.parent_axis
     P_frame.x
@@ -331,7 +331,7 @@ class PinJoint(Joint):
     [1,                 0,                0],
     [0,  cos(theta_PC(t)), sin(theta_PC(t))],
     [0, -sin(theta_PC(t)), cos(theta_PC(t))]])
-    >>> joint.child_joint.pos_from(joint.parent_joint)
+    >>> joint.child_point.pos_from(joint.parent_point)
     0
 
     To further demonstrate the use of the pin joint, the kinematics of simple
@@ -453,8 +453,8 @@ class PinJoint(Joint):
                                      self.parent_axis.normalize())
 
     def _set_linear_velocity(self):
-        self.parent_joint.set_vel(self.parent.frame, 0)
-        self.child_joint.set_vel(self.parent.frame, 0)
-        self.child_joint.set_pos(self.parent_joint, 0)
+        self.parent_point.set_vel(self.parent.frame, 0)
+        self.child_point.set_vel(self.parent.frame, 0)
+        self.child_point.set_pos(self.parent_point, 0)
         self.child.masscenter.v2pt_theory(self.parent.masscenter,
                                           self.parent.frame, self.child.frame)
