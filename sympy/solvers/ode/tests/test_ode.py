@@ -10,8 +10,8 @@ from sympy.solvers.ode.subscheck import checkodesol
 from sympy.solvers.ode.ode import (classify_sysode,
     constant_renumber, constantsimp, get_numbered_constants, solve_ics)
 
-from sympy.solvers.ode.single import LinearCoefficients, SingleODEProblem, \
-    NthLinearConstantCoeffUndeterminedCoefficients
+from sympy.solvers.ode.euler_nonhomogen_helpers import _undetermined_coefficients_match
+from sympy.solvers.ode.single import LinearCoefficients
 from sympy.solvers.deutils import ode_order
 from sympy.testing.pytest import XFAIL, raises, slow
 
@@ -605,12 +605,6 @@ def test_collect_respecting_exponentials():
 
 
 def test_undetermined_coefficients_match():
-
-    def _undetermined_coefficients_match(eq, x):
-        problem = SingleODEProblem(eq, f(x), x)
-        solver = NthLinearConstantCoeffUndeterminedCoefficients(problem)
-        return solver. _undetermined_coefficients_match(eq, x)
-
     assert _undetermined_coefficients_match(g(x), x) == {'test': False}
     assert _undetermined_coefficients_match(sin(2*x + sqrt(5)), x) == \
         {'test': True, 'trialset':
