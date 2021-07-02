@@ -1504,7 +1504,7 @@ class TransferFunctionMatrix(Basic):
     [                 4          ]
     [     3        - p  + 3*p - 2]
     [   -----      --------------]
-    [   s + 2          p + s     ]
+    [   s + 2          p + s     ]{t}
 
     TransferFunctionMatrix can be transposed, if user wants to switch the input and output transfer functions
 
@@ -1521,7 +1521,7 @@ class TransferFunctionMatrix(Basic):
     [   -3          -a - s     - p  + 3*p - 2]
     [  -----      ----------   --------------]
     [  s + 2       2               p + s     ]
-    [             s  + s + 1                 ]
+    [             s  + s + 1                 ]{t}
 
     >>> tf_5 = TransferFunction(5, s, s)
     >>> tf_6 = TransferFunction(5*s, (2 + s**2), s)
@@ -1539,7 +1539,7 @@ class TransferFunctionMatrix(Basic):
     [    5         5   ]
     [----------    -   ]
     [  / 2    \    1   ]
-    [s*\s  + 2/        ]
+    [s*\s  + 2/        ]{t}
     >>> tfm_3.var
     s
     >>> tfm_3.shape
@@ -1567,14 +1567,14 @@ class TransferFunctionMatrix(Basic):
     [    5     ]
     [----------]
     [  / 2    \]
-    [s*\s  + 2/]
+    [s*\s  + 2/]{t}
     >>> tfm_3[0, :]  # gives the first row
     TransferFunctionMatrix(((TransferFunction(5, s, s), TransferFunction(5*s, s**2 + 2, s)),))
     >>> pprint(_, use_unicode=False)
     [5   5*s  ]
     [-  ------]
     [s   2    ]
-    [   s  + 2]
+    [   s  + 2]{t}
 
     To negate a transfer function matrix, ``-`` operator can be prepended:
 
@@ -1603,7 +1603,7 @@ class TransferFunctionMatrix(Basic):
     [                      ]
     [    3          -12    ]
     [  -----       -----   ]
-    [  s + 2       s + 2   ]
+    [  s + 2       s + 2   ]{t}
     >>> pprint(tfm_2, use_unicode=False) # State of tfm_2 is unchanged after substitution
     [   a + s           -3       ]
     [ ----------       -----     ]
@@ -1619,7 +1619,7 @@ class TransferFunctionMatrix(Basic):
     [                 4          ]
     [     3        - p  + 3*p - 2]
     [   -----      --------------]
-    [   s + 2          p + s     ]
+    [   s + 2          p + s     ]{t}
 
     ``subs()`` also supports multiple substitutions.
 
@@ -1638,7 +1638,7 @@ class TransferFunctionMatrix(Basic):
     [                      ]
     [    3          -12    ]
     [  -----       -----   ]
-    [  s + 2       s + 2   ]
+    [  s + 2       s + 2   ]{t}
 
     Users can reduce the ``Series`` and ``Parallel`` elements of the matrix to ``TransferFunction`` by using
     ``doit()``.
@@ -1649,13 +1649,13 @@ class TransferFunctionMatrix(Basic):
     >>> pprint(tfm_6, use_unicode=False)
     [ -a + p   3     -a + p     3  ]
     [-------*-----  ------- + -----]
-    [9*s - 9 s + 2  9*s - 9   s + 2]
+    [9*s - 9 s + 2  9*s - 9   s + 2]{t}
     >>> tfm_6.doit()
     TransferFunctionMatrix(((TransferFunction(-3*a + 3*p, (s + 2)*(9*s - 9), s), TransferFunction(27*s + (-a + p)*(s + 2) - 27, (s + 2)*(9*s - 9), s)),))
     >>> pprint(_, use_unicode=False)
     [    -3*a + 3*p     27*s + (-a + p)*(s + 2) - 27]
     [-----------------  ----------------------------]
-    [(s + 2)*(9*s - 9)       (s + 2)*(9*s - 9)      ]
+    [(s + 2)*(9*s - 9)       (s + 2)*(9*s - 9)      ]{t}
     >>> tf_9 = TransferFunction(1, s, s)
     >>> tf_10 = TransferFunction(1, s**2, s)
     >>> tfm_7 = TransferFunctionMatrix([[Series(tf_9, tf_10), tf_9], [tf_10, Parallel(tf_9, tf_10)]])
@@ -1670,7 +1670,7 @@ class TransferFunctionMatrix(Basic):
     [ 1    1    1]
     [ --   -- + -]
     [  2    2   s]
-    [ s    s     ]
+    [ s    s     ]{t}
     >>> tfm_7.doit()
     TransferFunctionMatrix(((TransferFunction(1, s**3, s), TransferFunction(1, s, s)), (TransferFunction(1, s**2, s), TransferFunction(s**2 + s, s**3, s))))
     >>> pprint(_, use_unicode=False)
@@ -1683,7 +1683,7 @@ class TransferFunctionMatrix(Basic):
     [1   s  + s]
     [--  ------]
     [ 2     3  ]
-    [s     s   ]
+    [s     s   ]{t}
 
     See Also
     ========
@@ -1750,7 +1750,7 @@ class TransferFunctionMatrix(Basic):
         [        ]
         [  1    s]
         [-----  -]
-        [s + 1  1]
+        [s + 1  1]{t}
         >>> M_tf.elem_poles()
         [[[], [0]], [[-1], []]]
         >>> M_tf.elem_zeros()
