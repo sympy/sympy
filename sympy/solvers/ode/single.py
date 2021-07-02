@@ -459,7 +459,7 @@ class FirstExact(SinglePatternODESolver):
     A 1st order differential equation is called exact if it is the total
     differential of a function. That is, the differential equation
 
-    .. math:: P(x, y) \,\partial{}x + Q(x, y) \,\partial{}y = 0
+    .. math:: P(x, y) \, \partial{}x + Q(x, y) \, \partial{}y = 0
 
     is exact if there is some function `F(x, y)` such that `P(x, y) =
     \partial{}F/\partial{}x` and `Q(x, y) = \partial{}F/\partial{}y`.  It can
@@ -468,7 +468,7 @@ class FirstExact(SinglePatternODESolver):
     Then, the solution will be as given below::
 
         >>> from sympy import Function, Eq, Integral, symbols, pprint
-        >>> x, y, t, x0, y0, C1= symbols('x,y,t,x0,y0,C1')
+        >>> x, y, t, x0, y0, C1= symbols('x, y, t, x0, y0, C1')
         >>> P, Q, F= map(Function, ['P', 'Q', 'F'])
         >>> pprint(Eq(Eq(F(x, y), Integral(P(t, y), (t, x0, x)) +
         ... Integral(Q(x0, t), (t, y0, y))), C1))
@@ -570,7 +570,7 @@ class FirstExact(SinglePatternODESolver):
         m, n = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
-        (C1,) = self.ode_problem.get_numbered_constants(num=1)
+        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
         y = Dummy('y')
 
         m = m.subs(fx, y)
@@ -590,7 +590,7 @@ class FirstLinear(SinglePatternODESolver):
     .. math:: dy/dx + P(x) y = Q(x)\text{.}
 
     These kinds of differential equations can be solved in a general way.  The
-    integrating factor `e^{\int P(x) \,dx}` will turn the equation into a
+    integrating factor `e^{\int P(x) \, dx}` will turn the equation into a
     separable equation.  The general solution is::
 
         >>> from sympy import Function, dsolve, Eq, pprint, diff, sin
@@ -649,8 +649,8 @@ class FirstLinear(SinglePatternODESolver):
         P, Q = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
-        (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(fx, ((C1 + Integral(Q*exp(Integral(P, x)),x))
+        (C1, )  = self.ode_problem.get_numbered_constants(num=1)
+        gensol = Eq(fx, ((C1 + Integral(Q*exp(Integral(P, x)), x))
             * exp(-Integral(P, x))))
         return [gensol]
 
@@ -735,8 +735,8 @@ class AlmostLinear(SinglePatternODESolver):
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         x = self.ode_problem.sym
-        (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(self.ly, ((C1 + Integral((self.cx/self.ax)*exp(Integral(self.bx/self.ax, x)),x))
+        (C1, )  = self.ode_problem.get_numbered_constants(num=1)
+        gensol = Eq(self.ly, ((C1 + Integral((self.cx/self.ax)*exp(Integral(self.bx/self.ax, x)), x))
                 * exp(-Integral(self.bx/self.ax, x))))
 
         return [gensol]
@@ -835,10 +835,10 @@ class Bernoulli(SinglePatternODESolver):
         P, Q, n = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
-        (C1,) = self.ode_problem.get_numbered_constants(num=1)
+        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
         if n==1:
             gensol = Eq(log(fx), (
-            C1 + Integral((-P + Q),x)
+            C1 + Integral((-P + Q), x)
         ))
         else:
             gensol = Eq(fx**(1-n), (
@@ -885,7 +885,7 @@ class Factorable(SingleODESolver):
         factors = Mul.make_args(factor(eq))
         roots = [fac.as_base_exp() for fac in factors if len(fac.args)!=0]
         if len(roots)>1 or roots[0][1]>1:
-            for base,expo in roots:
+            for base, expo in roots:
                 if base.has(f(x)):
                     self.eqs.append(base)
             if len(self.eqs)>0:
@@ -983,7 +983,7 @@ class RiccatiSpecial(SinglePatternODESolver):
         a, b, c, d = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
-        (C1,) = self.ode_problem.get_numbered_constants(num=1)
+        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
         mu = sqrt(4*d*b - (a - c)**2)
 
         gensol = Eq(fx, (a - c - mu*tan(mu/(2*a)*log(x) + C1))/(2*b*x))
@@ -1030,7 +1030,7 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
 
     def _wilds(self, f, x, order):
         fy = Wild('fy', exclude=[0, f(x).diff(x), f(x).diff(x, 2)])
-        return (fy,)
+        return (fy, )
 
     def _equation(self, fx, x, order):
         fy = self.wilds()[0]
@@ -1066,8 +1066,8 @@ class Liouville(SinglePatternODESolver):
         >>> from sympy import Function, dsolve, Eq, pprint, diff
         >>> from sympy.abc import x
         >>> f, g, h = map(Function, ['f', 'g', 'h'])
-        >>> genform = Eq(diff(f(x),x,x) + g(f(x))*diff(f(x),x)**2 +
-        ... h(x)*diff(f(x),x), 0)
+        >>> genform = Eq(diff(f(x), x, x) + g(f(x))*diff(f(x), x)**2 +
+        ... h(x)*diff(f(x), x), 0)
         >>> pprint(genform)
                           2                    2
                 /d       \         d          d
@@ -1153,7 +1153,7 @@ class Separable(SinglePatternODESolver):
 
     This is any differential equation that can be written as `P(y)
     \tfrac{dy}{dx} = Q(x)`.  The solution can then just be found by
-    rearranging terms and integrating: `\int P(y) \,dy = \int Q(x) \,dx`.
+    rearranging terms and integrating: `\int P(y) \, dy = \int Q(x) \, dx`.
     This hint uses :py:meth:`sympy.simplify.simplify.separatevars` as its back
     end, so if a separable equation is not caught by this solver, it is most
     likely the fault of that function.
@@ -1626,7 +1626,7 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
     def _get_general_solution(self, *, simplify_flag: bool = True):
         d, e, fx, x, u, u1, y, xarg, yarg = self._get_match_object()
         (C1, ) = self.ode_problem.get_numbered_constants(num=1)
-        int = Integral(simplify((-d/(e + u1*d)).subs({x: u1, y: 1})),(u1, None, x/fx))
+        int = Integral(simplify((-d/(e + u1*d)).subs({x: u1, y: 1})), (u1, None, x/fx))
         sol = logcombine(Eq(log(fx), int + log(C1)), force=True)
         gen_sol = sol.subs(fx, u).subs(((u, u - yarg), (x, x - xarg), (u, fx)))
         return [gen_sol]
@@ -1702,7 +1702,7 @@ class LinearCoefficients(HomogeneousCoeffBest):
     The general form of a differential equation with linear coefficients is
 
     .. math:: y' + F\left(\!\frac{a_1 x + b_1 y + c_1}{a_2 x + b_2 y +
-                c_2}\!\right) = 0\text{,}
+                c_2}\!\right) = 0\text{, }
 
     where `a_1`, `b_1`, `c_1`, `a_2`, `b_2`, `c_2` are constants and `a_1 b_2
     - a_2 b_1 \ne 0`.
@@ -1787,7 +1787,7 @@ class LinearCoefficients(HomogeneousCoeffBest):
                 return False
             return False
 
-    def _linear_coeff_match(self,expr, func):
+    def _linear_coeff_match(self, expr, func):
         r"""
         Helper function to match hint ``linear_coefficients``.
 
@@ -1968,7 +1968,7 @@ class Hypergeometric2nd(SingleODESolver):
     It computes special function solutions which can be expressed using the
     2F1, 1F1 or 0F1 hypergeometric functions.
 
-    .. math:: y'' + A(x) y' + B(x) y = 0\text{,}
+    .. math:: y'' + A(x) y' + B(x) y = 0\text{, }
 
     where `A` and `B` are rational functions.
 
@@ -1976,7 +1976,7 @@ class Hypergeometric2nd(SingleODESolver):
 
     Given linear ODE can be obtained from 2F1 given by
 
-    .. math:: (x^2 - x) y'' + ((a + b + 1) x - c) y' + b a y = 0\text{,}
+    .. math:: (x^2 - x) y'' + ((a + b + 1) x - c) y' + b a y = 0\text{, }
 
     where {a, b, c} are arbitrary constants.
 
@@ -1985,7 +1985,7 @@ class Hypergeometric2nd(SingleODESolver):
 
     The algorithm should find any solution of the form
 
-    .. math:: y = P(x) _pF_q(..; ..;\frac{\alpha x^k + \beta}{\gamma x^k + \delta})\text{,}
+    .. math:: y = P(x) _pF_q(..; ..;\frac{\alpha x^k + \beta}{\gamma x^k + \delta})\text{, }
 
     where pFq is any of 2F1, 1F1 or 0F1 and `P` is an "arbitrary function".
     Currently only the 2F1 case is implemented in SymPy but the other cases are
@@ -1999,7 +1999,7 @@ class Hypergeometric2nd(SingleODESolver):
     >>> from sympy import Function, dsolve, pprint
     >>> from sympy.abc import x
     >>> f = Function('f')
-    >>> eq = (x*x - x)*f(x).diff(x,2) + (5*x - 1)*f(x).diff(x) + 4*f(x)
+    >>> eq = (x*x - x)*f(x).diff(x, 2) + (5*x - 1)*f(x).diff(x) + 4*f(x)
     >>> pprint(dsolve(eq, f(x), '2nd_hypergeometric'))
                                         _
            /        /           4  \\  |_  /-1, -1 |  \
@@ -2059,7 +2059,7 @@ class NthLinearConstantCoeffHomogeneous(SingleODESolver):
 
     These equations can be solved in a general manner, by taking the roots of
     the characteristic equation `a_n m^n + a_{n-1} m^{n-1} + \cdots + a_1 m +
-    a_0 = 0`.  The solution will then be the sum of `C_n x^i e^{r x}` terms,
+    a_0 = 0`. The solution will then be the sum of `C_n x^i e^{r x}` terms,
     for each where `C_n` is an arbitrary constant, `r` is a root of the
     characteristic equation and `i` is one of each from 0 to the multiplicity
     of the root - 1 (for example, a root 3 of multiplicity 2 would create the
@@ -2127,7 +2127,7 @@ class NthLinearConstantCoeffHomogeneous(SingleODESolver):
                 return False
         return False
 
-    def _get_sols(self,r):
+    def _get_sols(self, r):
         x = self.ode_problem.sym
         order = self.ode_problem.order
         # First, set up characteristic equation.
@@ -2234,14 +2234,14 @@ class NthLinearConstantCoeffVariationOfParameters(SingleODESolver):
 
     This method works by assuming that the particular solution takes the form
 
-    .. math:: \sum_{x=1}^{n} c_i(x) y_i(x)\text{,}
+    .. math:: \sum_{x=1}^{n} c_i(x) y_i(x)\text{, }
 
     where `y_i` is the `i`\th solution to the homogeneous equation.  The
     solution is then solved using Wronskian's and Cramer's Rule.  The
     particular solution is given by
 
-    .. math:: \sum_{x=1}^n \left( \int \frac{W_i(x)}{W(x)} \,dx
-                \right) y_i(x) \text{,}
+    .. math:: \sum_{x=1}^n \left( \int \frac{W_i(x)}{W(x)} \, dx
+                \right) y_i(x) \text{, }
 
     where `W(x)` is the Wronskian of the fundamental system (the system of `n`
     linearly independent solutions to the homogeneous equation), and `W_i(x)`
@@ -2308,7 +2308,7 @@ class NthLinearConstantCoeffVariationOfParameters(SingleODESolver):
                 return False
         return False
 
-    def _solve_variation_of_parameters(self,match_object):
+    def _solve_variation_of_parameters(self, match_object):
         r"""
         Helper function for the method of variation of parameters and nonhomogeneous euler eq.
 
@@ -2387,7 +2387,7 @@ class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
     This method works on differential equations of the form
 
     .. math:: a_n f^{(n)}(x) + a_{n-1} f^{(n-1)}(x) + \cdots + a_1 f'(x)
-                + a_0 f(x) = P(x)\text{,}
+                + a_0 f(x) = P(x)\text{, }
 
     where `P(x)` is a function that has a finite number of linearly
     independent derivatives.
@@ -2448,14 +2448,14 @@ class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
         does_match = False
         if order and self.r and not any(self.r[i].has(x) for i in self.r if i >= 0):
             if self.r[-1]:
-                eq_homogeneous = Add(eq,-self.r[-1])
+                eq_homogeneous = Add(eq, -self.r[-1])
                 undetcoeff = self._undetermined_coefficients_match(self.r[-1], x, func, eq_homogeneous)
                 if undetcoeff['test']:
                     self.r['trialset'] = undetcoeff['trialset']
                     does_match = True
         return does_match
 
-    def _undetermined_coefficients_match(self,expr, x, func=None, eq_homogeneous=S.Zero):
+    def _undetermined_coefficients_match(self, expr, x, func=None, eq_homogeneous=S.Zero):
         r"""
         Returns a trial function match if undetermined coefficients can be applied
         to ``expr``, and ``None`` otherwise.
@@ -2483,16 +2483,17 @@ class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
         ========
 
         >>> from sympy import log, exp, Function
-        >>> from sympy.solvers.ode.single import NthLinearConstantCoeffUndeterminedCoefficients,SingleODEProblem
+        >>> from sympy.solvers.ode.single import (NthLinearConstantCoeffUndeterminedCoefficients,
+        ... SingleODEProblem)
         >>> from sympy.abc import x
         >>> f = Function('f')
         >>> eq = 9*x*exp(x) + exp(-x)
-        >>> obj = NthLinearConstantCoeffUndeterminedCoefficients(SingleODEProblem(eq,f(x),x))
-        >>> obj._undetermined_coefficients_match(eq,x)
+        >>> obj = NthLinearConstantCoeffUndeterminedCoefficients(SingleODEProblem(eq, f(x), x))
+        >>> obj._undetermined_coefficients_match(eq, x)
         {'test': True, 'trialset': {x*exp(x), exp(-x), exp(x)}}
         >>> eq = log(x)
-        >>> obj = NthLinearConstantCoeffUndeterminedCoefficients(SingleODEProblem(eq,f(x),x))
-        >>> obj._undetermined_coefficients_match(eq,x)
+        >>> obj = NthLinearConstantCoeffUndeterminedCoefficients(SingleODEProblem(eq, f(x), x))
+        >>> obj._undetermined_coefficients_match(eq, x)
         {'test': False}
 
         """
@@ -2608,7 +2609,7 @@ class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
             # homogeneous equation).
             temp_set = set()
             for i in Add.make_args(expr):
-                act = _get_trial_set(i,x)
+                act = _get_trial_set(i, x)
                 if eq_homogeneous is not S.Zero:
                     while any(is_homogeneous_solution(ts) for ts in act):
                         act = {x*ts for ts in act}
@@ -2617,7 +2618,7 @@ class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
             retdict['trialset'] = temp_set
         return retdict
 
-    def _solve_undetermined_coefficients(self,match):
+    def _solve_undetermined_coefficients(self, match):
         r"""
         Helper function for the method of undetermined coefficients.
 
@@ -2632,7 +2633,7 @@ class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
         A list of solutions to the homogeneous equation.
 
         ``sol``
-        The general solution,.
+        The general solution.
 
         ``trialset``
         The set of trial functions as returned by
@@ -2793,9 +2794,9 @@ class NthLinearEulerEqHomogeneous(SingleODESolver):
 
         return does_match
 
-    def _test_term(self,coeff, order):
+    def _test_term(self, coeff, order):
         r"""
-        Linear Euler ODEs have the form  K*x**order*diff(y(x),x,order) = F(x),
+        Linear Euler ODEs have the form  K*x**order*diff(y(x), x, order) = F(x),
         where K is independent of x and y(x), order>= 0.
         So we need to check that for each term, coeff == K*x**order from
         some K.  We have a few cases, since coeff may have several
@@ -2821,15 +2822,15 @@ class NthLinearEulerEqHomogeneous(SingleODESolver):
             return x == coeff
         return False
 
-    def _get_sols(self,r):
+    def _get_sols(self, r):
         x = self.ode_problem.sym
         f = self.ode_problem.func.func
 
         # First, set up characteristic equation.
         chareq, symbol = S.Zero, Dummy('x')
 
-        for i in r.keys():
-            if not isinstance(i, str) and i >= 0:
+        for i in r:
+            if i >= 0:
                 chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
         chareq = Poly(chareq, symbol)
@@ -2880,7 +2881,6 @@ class NthLinearEulerEqHomogeneous(SingleODESolver):
                     gensols.append(sin_form)
         return gensols
 
-
     def _get_general_solution(self, *, simplify_flag: bool = True):
         self._get_sols(self.r)
         return [self.gsol]
@@ -2896,14 +2896,14 @@ class NthLinearEulerEqNonhomogeneousVariationOfParameters(SingleODESolver):
 
     This method works by assuming that the particular solution takes the form
 
-    .. math:: \sum_{x=1}^{n} c_i(x) y_i(x) {a_n} {x^n} \text{,}
+    .. math:: \sum_{x=1}^{n} c_i(x) y_i(x) {a_n} {x^n} \text{, }
 
     where `y_i` is the `i`\th solution to the homogeneous equation.  The
     solution is then solved using Wronskian's and Cramer's Rule.  The
     particular solution is given by multiplying eq given below with `a_n x^{n}`
 
-    .. math:: \sum_{x=1}^n \left( \int \frac{W_i(x)}{W(x)} \,dx
-                \right) y_i(x) \text{,}
+    .. math:: \sum_{x=1}^n \left( \int \frac{W_i(x)}{W(x)} \, dx
+                \right) y_i(x) \text{, }
 
     where `W(x)` is the Wronskian of the fundamental system (the system of `n`
     linearly independent solutions to the homogeneous equation), and `W_i(x)`
@@ -3049,7 +3049,6 @@ class NthLinearEulerEqNonhomogeneousUndeterminedCoefficients(SingleODESolver):
                 e, re = posify(self.r[-1].subs(x, exp(x)))
                 undetcoeff = self.const_undet_instance._undetermined_coefficients_match(e.subs(re), x)
                 if undetcoeff['test']:
-                    self.r['trialset'] = undetcoeff['trialset']
                     does_match = True
         return does_match
 
@@ -3061,7 +3060,7 @@ class NthLinearEulerEqNonhomogeneousUndeterminedCoefficients(SingleODESolver):
             if not isinstance(i, str) and i >= 0:
                 chareq += (self.r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
-        for i in range(1,degree(Poly(chareq, symbol))+1):
+        for i in range(1, degree(Poly(chareq, symbol))+1):
             eq += chareq.coeff(symbol**i)*diff(f(x), x, i)
 
         if chareq.as_coeff_add(symbol)[0]:
