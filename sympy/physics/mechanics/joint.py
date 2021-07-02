@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 
+from sympy import pi
 from sympy.physics.mechanics.body import Body
 from sympy.physics.vector import Vector, dynamicsymbols, cross
 from sympy.physics.vector.frame import ReferenceFrame
@@ -227,6 +228,25 @@ class Joint(ABC):
         axis = cross(child, parent).normalize()
         return angle, axis
 
+    def _generate_vector(self):
+        parent_frame = self.parent.frame
+        components = self.parent_axis.to_matrix(parent_frame)
+        x, y, z = components[0], components[1], components[2]
+
+        if x != 0:
+            if y!=0:
+                if z!=0:
+                    return parent_frame.x
+                return parent_frame.z
+            return parent_frame.y
+
+        if x == 0:
+            if y!=0:
+                if z!=0:
+                    return parent_frame.x
+                return parent_frame.z
+            return parent_frame.x
+            
 
 class PinJoint(Joint):
     """Pin (Revolute) Joint.
@@ -435,9 +455,21 @@ class PinJoint(Joint):
         self.child.frame.orient_axis(self.parent.frame, self.parent_axis, 0)
         angle, axis = self._alignment_rotation(self.parent_axis,
                                                self.child_axis)
+
+        odd_multiple_pi = False
+
+        if angle%pi == 0:
+            if (angle/pi).is_odd:
+                odd_multiple_pi = True
+
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)
-            if axis != Vector(0):
+
+            if axis != Vector(0) or odd_multiple_pi:
+
+                if odd_multiple_pi:
+                    axis = cross(self.parent_axis,
+                                self._generate_vector())
 
                 int_frame = ReferenceFrame('int_frame')
                 int_frame.orient_axis(self.child.frame, self.child_axis, 0)

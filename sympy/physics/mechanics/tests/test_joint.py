@@ -150,11 +150,11 @@ def test_pinjoint_arbitrary_axis():
     N, A, P, C = generate_body()
     PinJoint('J', P, C, child_axis=-A.x)
 
-    assert -A.x.angle_between(N.x) == 0
-    assert -A.x.express(N) == -N.x
-    assert A.dcm(N) == Matrix([[1, 0, 0],
-                               [0, cos(theta), sin(theta)],
-                               [0, -sin(theta), cos(theta)]])
+    assert -A.x.angle_between(N.x) == -pi
+    assert -A.x.express(N) == N.x
+    assert A.dcm(N) == Matrix([[-1, 0, 0], 
+                            [0, -cos(theta), -sin(theta)], 
+                            [0, -sin(theta), cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.x
     assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
     assert C.masscenter.pos_from(P.masscenter) == 0
