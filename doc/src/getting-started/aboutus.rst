@@ -4,7 +4,7 @@ About
 SymPy Development Team
 ----------------------
 
-.. literalinclude:: ../../AUTHORS
+.. literalinclude:: ../../../AUTHORS
 
 
 You can find a brief history of SymPy in the `README <https://github.com/sympy/sympy/blob/master/README.md>`_.
@@ -76,4 +76,4 @@ Unless stated otherwise, all files in the SymPy project, SymPy's webpage (and
 wiki), all images and all documentation including this User's Guide are licensed
 using the new BSD license:
 
-.. literalinclude:: ../../LICENSE
+.. literalinclude:: ../../../LICENSE

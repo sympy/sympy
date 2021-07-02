@@ -8,7 +8,6 @@
    :maxdepth: 2
 
    about.rst
-   sympy-vs-other-libs/index.rst
    aboutus.rst
    outreach.rst
    citing.rst
