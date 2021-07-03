@@ -15,7 +15,6 @@ from .subscheck import sub_func_doit
 from sympy.solvers.ode.ode import get_numbered_constants
 
 
-
 def _test_term(coeff, func, order):
     r"""
     Linear Euler ODEs have the form  K*x**order*diff(y(x), x, order) = F(x),
@@ -104,6 +103,7 @@ def _get_euler_characterstic_eq_sols(eq, func, match_obj):
                 gensols.append(sin_form)
     return gsol, gensols
 
+
 def _solve_variation_of_parameters(eq, func, roots, homogen_sol, order, match_obj, simplify_flag=True):
     r"""
     Helper function for the method of variation of parameters and nonhomogeneous euler eq.
@@ -154,7 +154,8 @@ def _solve_variation_of_parameters(eq, func, roots, homogen_sol, order, match_ob
         psol = trigsimp(psol, deep=True)
     return Eq(f(x), homogen_sol.rhs + psol)
 
-def _get_const_characterstic_eq_sols(r, func, order):
+
+def _get_const_characteristic_eq_sols(r, func, order):
     x = func.args[0]
     # First, set up characteristic equation.
     chareq, symbol = S.Zero, Dummy('x')
