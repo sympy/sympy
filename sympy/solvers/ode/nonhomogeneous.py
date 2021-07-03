@@ -175,7 +175,7 @@ def _solve_variation_of_parameters(eq, func, roots, homogen_sol, order, match_ob
 
 def _get_const_characteristic_eq_sols(r, func, order):
     r"""
-    It returns the roots of characteristic equation of constant coefficient
+    Returns the roots of characteristic equation of constant coefficient
     linear ODE and list of collectterms which is later on used by simplification
     to use collect on solution.
 
@@ -250,7 +250,7 @@ def _get_const_characteristic_eq_sols(r, func, order):
 # odesimp should be improved to handle these kind of specific simplifications.
 def _get_simplified_sol(sol, func, collectterms):
     r"""
-    It is a helper function which collects the solution on
+    Helper function which collects the solution on
     collectterms. Ideally this should be handled by odesimp.It is used
     only when the simplify is set to True in dsolve.
 
