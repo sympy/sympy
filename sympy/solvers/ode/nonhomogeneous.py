@@ -7,30 +7,6 @@ and nth_linear_euler_eq_nonhomogeneous_variation_of_parameters.
 All the functions in this file are used by more than one solvers so, instead of creating
 instances in other classes for using them it is better to keep it here as separate helpers.
 
-Functions that are for internal use:
-
-1) _test_term(coeff, func, order) - It takes coefficient of partiular term, function and
-    order to which it is associated. It returns whether given term matches with linear euler ODEs.
-
-2) _get_euler_characteristic_eq_sols(eq, func, match_obj) - It returns the solution of homogeneous
-    part of the linear euler ODE and the list of roots of characteristic equation
-
-3) _solve_variation_of_parameters(eq, func, roots, homogen_sol, order, match_obj, simplify_flag=True)-
-  Helper function for the method of variation of parameters and nonhomogeneous euler eq.
-
-4) _get_const_characteristic_eq_sols(r, func, order) - It returns the roots of characteristic equation
-    of constant coefficient linear ODE and list of collectterms which is later on used by simplification
-    to use collect on solution.
-
-5) _get_simplified_sol(sol, func, collectterms) - It is a helper function which collects the solution on
-    collectterms. Ideally this should be handled by odesimp.
-
-6) _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero) - It returns a trial function
-    match if undetermined coefficients can be applied to ``expr``, and ``None`` otherwise.
-
-7) _solve_undetermined_coefficients(eq, func, order, match, trialset) - Helper function for the method of
-    undetermined coefficients.
-
 """
 from collections import defaultdict
 from sympy.core import Add, S
@@ -80,8 +56,11 @@ def _test_term(coeff, func, order):
 
 def _get_euler_characteristic_eq_sols(eq, func, match_obj):
     r"""
-    It returns the solution of homogeneous part of the linear euler ODE and
+    Returns the solution of homogeneous part of the linear euler ODE and
     the list of roots of characteristic equation.
+
+    The parameter ``match_obj`` is a dict of order:coeff terms, where order is the order
+    of the derivative on each term, and coeff is the coefficient of that derivative.
 
     """
     x = func.args[0]
@@ -151,7 +130,7 @@ def _solve_variation_of_parameters(eq, func, roots, homogen_sol, order, match_ob
     :py:meth:`~sympy.solvers.ode.single.NthLinearConstantCoeffVariationOfParameters`
     docstring for more information on this method.
 
-    The parameter are ``match`` should be a dictionary that has the following
+    The parameter are ``match_obj`` should be a dictionary that has the following
     keys:
 
     ``list``
@@ -199,6 +178,10 @@ def _get_const_characteristic_eq_sols(r, func, order):
     It returns the roots of characteristic equation of constant coefficient
     linear ODE and list of collectterms which is later on used by simplification
     to use collect on solution.
+
+    The parameter `r` is a dict of order:coeff terms, where order is the order of the
+    derivative on each term, and coeff is the coefficient of that derivative.
+
     """
     x = func.args[0]
     # First, set up characteristic equation.
@@ -270,6 +253,10 @@ def _get_simplified_sol(sol, func, collectterms):
     It is a helper function which collects the solution on
     collectterms. Ideally this should be handled by odesimp.It is used
     only when the simplify is set to True in dsolve.
+
+    The parameter ``collectterms`` is a list of tuple (i, reroot, imroot) where `i` is
+    the multiplicity of the root, reroot is real part and imroot being the imaginary part.
+
     """
     f = func.func
     x = func.args[0]
@@ -452,6 +439,9 @@ def _solve_undetermined_coefficients(eq, func, order, match, trialset):
     :py:meth:`~sympy.solvers.ode.single.NthLinearConstantCoeffUndeterminedCoefficients`
     docstring for more information on this method.
 
+    The parameter ``trialset`` is the set of trial functions as returned by
+    ``_undetermined_coefficients_match()['trialset']``.
+
     The parameter ``match`` should be a dictionary that has the following
     keys:
 
@@ -460,10 +450,6 @@ def _solve_undetermined_coefficients(eq, func, order, match, trialset):
 
     ``sol``
     The general solution.
-
-    ``trialset``
-    The set of trial functions as returned by
-    ``_undetermined_coefficients_match()['trialset']``.
 
     """
     r = match
