@@ -525,6 +525,10 @@ def test_Riccati_special_minus2():
     _ode_solver_test(_get_examples_ode_sol_riccati)
 
 
+def test_1st_rational_riccati():
+    _ode_solver_test(_get_examples_ode_sol_1st_rational_riccati)
+
+
 def test_Bernoulli():
     _ode_solver_test(_get_examples_ode_sol_bernoulli)
 
@@ -775,6 +779,90 @@ def _get_examples_ode_sol_riccati():
     },
     },
     }
+
+
+@_add_example_keys
+def _get_examples_ode_sol_1st_rational_riccati():
+    # Type: 1st Order Rational Riccati, dy/dx = a + b*y + c*y**2,
+    # a, b, c are rational functions of x
+    return {
+            'hint': "1st_rational_riccati",
+            'func': f(x),
+            'examples':{
+    "rational_riccati_01": {
+        "eq": x**2 - (2*x + 1/x)*f(x) + f(x)**2 + Derivative(f(x), x),
+        "sol": [Eq(f(x), x*(C1 + x**2 + 1)/(C1 + x**2 - 1))]
+    },
+    "rational_riccati_02": {
+        "eq": -x*f(x)**2 + Derivative(f(x), x) - 2*f(x)/x,
+        "sol": [Eq(f(x), -4*x**2/(C1 + x**4))]
+    },
+    "rational_riccati_03": {
+        "eq": -f(x)**2 + Derivative(f(x), x) + (15*x**2 - 20*x + 7)/((x - 1)**2*(2*x \
+            - 1)**2),
+        "sol": [Eq(f(x), (9*C1*x - 6*C1 - 15*x**5 + 60*x**4 - 94*x**3 + 72*x**2 - \
+            33*x + 8)/(6*C1*x**2 - 9*C1*x + 3*C1 + 6*x**6 - 29*x**5 + 57*x**4 - \
+            58*x**3 + 28*x**2 - 3*x - 1))]
+    },
+    "rational_riccati_04": {
+        "eq": Derivative(f(x), x) + (3*x**2 + 1)*f(x)**2/x + (6*x**2 - x + 3)*f(x)/(x*(x \
+            - 1)) + (3*x**2 - 2*x + 2)/(x*(x - 1)**2),
+        "sol": [Eq(f(x), (-C1 - x**3 + x**2 - 2*x + 1)/(C1*x - C1 + x**4 - x**3 + x**2 - \
+            2*x + 1))],
+    },
+    "rational_riccati_05": {
+        "eq": f(x)**2 + Derivative(f(x), x) - 15/(4*x**2),
+        "sol": [Eq(f(x), (-3*C1 + 5*x**4 + 3)/(2*x*(C1 + x**4 - 1)))]
+    },
+    "rational_riccati_06": {
+        "eq": 3*f(x)**2 + Derivative(f(x), x) - 2/x**2,
+        "sol": [Eq(f(x), (-2*C1 + 3*x**5 + 2)/(3*x*(C1 + x**5 - 1)))]
+    },
+    "rational_riccati_07": {
+        "eq": Derivative(f(x), x) - 2*I*(f(x)**2 + 1)/x,
+        "sol": [Eq(f(x), (-I*C1 + I*x**4 + I)/(C1 + x**4 - 1))]
+    },
+    "rational_riccati_08": {
+        "eq": Derivative(f(x), x) - f(x)**2/x + 1/x,
+        "sol": [Eq(f(x), (C1 - x**2)/(C1 + x**2))]
+    },
+    "rational_riccati_09": {
+        "eq": f(x)**2 + Derivative(f(x), x) - f(x)/x,
+        "sol": [Eq(f(x), 2*x/(C1 + x**2))]
+    },
+    "rational_riccati_10": {
+        "eq": -x**2 - (2*x + 1/x)*f(x) - f(x)**2 + Derivative(f(x), x),
+        "sol": [Eq(f(x), x*(-C1 - x**2 - 1)/(C1 + x**2 - 1))]
+    },
+    "rational_riccati_11": {
+        "eq": f(x)**2 + Derivative(f(x), x) + 4*f(x)/x + 2/x**2,
+        "sol": [Eq(f(x), (-2*C1 - x)/(x*(C1 + x)))]
+    },
+    "rational_riccati_12": {
+        "eq": 2*x**2*Derivative(f(x), x) - x*(4*f(x) + Derivative(f(x), x) - 4) + (f(x) - 1)*f(x),
+        "sol": [Eq(f(x), (C1 + 2*x**2)/(C1 + x))]
+    },
+    "rational_riccati_13": {
+        "eq": x**4*Derivative(f(x), x) + x**2 - x*(2*f(x)**2 + Derivative(f(x), x)) + f(x),
+        "sol": [Eq(f(x), x*(C1*x - x + 1)/(C1 + x**2 - 1))]
+    },
+    "rational_riccati_14": { # Regression Test: See https://github.com/sympy/sympy/pull/21459#issuecomment-852212302
+        "eq": Eq(Derivative(f(x), x), x*f(x)/(S(3)/2 - 2*x) + (x/2 - S(1)/3)*f(x)**2/\
+            (2*x/3 - S(1)/2) - S(5)/4 + (281*x**2 - 1260*x + 756)/(16*x**3 - 12*x**2)),
+        "sol": [Eq(f(x), (40*x**14 + 28*x**13 + 420*x**12 + 2940*x**11 + 18480*x**10 + \
+            103950*x**9 + 519750*x**8 + 2286900*x**7 + 8731800*x**6 + 28378350*x**5 + \
+            76403250*x**4 + 163721250*x**3 + 261954000*x**2 + x*exp(2*x) + 278326125*x \
+            - 9*exp(2*x) + 147349125)/(x*(24*x**13 + 140*x**12 + 840*x**11 + 4620*x**10 \
+            + 23100*x**9 + 103950*x**8 + 415800*x**7 + 1455300*x**6 + 4365900*x**5 + \
+            10914750*x**4 + 21829500*x**3 + 32744250*x**2 + 32744250*x - exp(2*x) + 16372125)))]
+    },
+    "rational_riccati_15": {
+        "eq": Eq(f(x).diff(x) + f(x)**2 - 2, 0),
+        "sol": [Eq(f(x), sqrt(2)*(exp(2*sqrt(2)*x) + 1)/(exp(2*sqrt(2)*x) - 1))]
+    }
+    }
+    }
+
 
 
 @_add_example_keys
@@ -2754,6 +2842,7 @@ def _get_all_examples():
     _get_examples_ode_sol_nth_linear_undetermined_coefficients + \
     _get_examples_ode_sol_liouville + \
     _get_examples_ode_sol_separable + \
+    _get_examples_ode_sol_1st_rational_riccati + \
     _get_examples_ode_sol_nth_linear_var_of_parameters + \
     _get_examples_ode_sol_2nd_linear_bessel + \
     _get_examples_ode_sol_2nd_2F1_hypergeometric + \

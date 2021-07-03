@@ -937,9 +937,9 @@ class RationalRiccati(SinglePatternODESolver):
     >>> eq = f(x).diff(x) - x*f(x)**2
     >>> sols = dsolve(eq, hint="1st_rational_riccati")
     >>> sols
-    [Eq(f(x), -2/(C1 + x**2)), Eq(f(x), 0)]
+    Eq(f(x), -2/(C1 + x**2))
     >>> checkodesol(eq, sols)
-    [(True, 0), (True, 0)]
+    (True, 0)
 
     >>> eq = x**3*f(x).diff(x) - x**2*f(x) - f(x)**2
     >>> sols = dsolve(eq, hint="1st_rational_riccati")
@@ -951,9 +951,9 @@ class RationalRiccati(SinglePatternODESolver):
     >>> eq = -x**4*f(x)**2 + x**3*f(x).diff(x) + x**2*f(x) + 20
     >>> sols = dsolve(eq, hint="1st_rational_riccati")
     >>> sols
-    [Eq(f(x), (4*C1 - 5*x**9)/(x**2*(C1 + x**9))), Eq(f(x), 4/x**2)]
+    Eq(f(x), (4*C1 - 5*x**9 - 4)/(x**2*(C1 + x**9 - 1)))
     >>> checkodesol(eq, sols)
-    [(True, 0), (True, 0)]
+    (True, 0)
 
     >>> eq = x**3*f(x).diff(x) - x**2*(f(x) + f(x).diff(x)) + 2*x*f(x) - f(x)**2
     >>> sols = dsolve(eq, hint="1st_rational_riccati")
@@ -1001,7 +1001,7 @@ class RationalRiccati(SinglePatternODESolver):
         b0, b1, b2 = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
-        return solve_riccati(fx, x, b0, b1, b2)
+        return solve_riccati(fx, x, b0, b1, b2, gensol=True)
 
 
 class SecondNonlinearAutonomousConserved(SinglePatternODESolver):

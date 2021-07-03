@@ -178,8 +178,9 @@ from sympy.core.numbers import oo
 from sympy.core.function import count_ops
 from sympy.core.relational import Eq
 from sympy.core.symbol import symbols, Symbol, Dummy
-from sympy.functions import sqrt
+from sympy.functions import sqrt, exp
 from sympy.functions.elementary.complexes import sign
+from sympy.integrals.integrals import Integral
 from sympy.polys.domains import ZZ
 from sympy.polys.polytools import Poly
 from sympy.polys.polyroots import roots
@@ -542,7 +543,32 @@ def remove_redundant_sols(sol1, sol2, x):
                 return sol1
 
 
-def solve_riccati(fx, x, b0, b1, b2):
+def get_gen_sol_from_part_sol(part_sols, a, x):
+    if len(part_sols) == 0:
+        return []
+
+    elif len(part_sols) == 1:
+        y1 = part_sols[0]
+        z = exp(Integral(2*y1, x)) * Integral(exp(-Integral(2*y1, x)) * a, x)
+        z = z.doit()
+        if a == 0 or z == 0:
+            return y1
+        return y1 + 1/z
+
+    elif len(part_sols) == 2:
+        y1, y2 = part_sols
+        u = exp(Integral(y2 - y1, x)).doit()
+        if u == 1:
+            return y2
+        return (y2*u - y1)/(u - 1)
+
+    else:
+        y1, y2, y3 = part_sols[:3]
+        C1 = Dummy('C1')
+        return (C1 + 1)*y2*(y1 - y3)/(C1*y1 + y2 - (C1 + 1)*y3)
+
+
+def solve_riccati(fx, x, b0, b1, b2, gensol=False):
     # Step 1 : Convert to Normal Form
     a = -b0*b2 + b1**2/4 - b1.diff(x)/2 + 3*b2.diff(x)**2/(4*b2**2) + b1*b2.diff(x)/(2*b2) - \
         b2.diff(x, 2)/(2*b2)
@@ -611,12 +637,15 @@ def solve_riccati(fx, x, b0, b1, b2):
 
     # Step 15 : Inverse transform the solutions of the equation in normal form
     bp = -b2.diff(x)/(2*b2**2) - b1/(2*b2)
-    sol = [Eq(fx, riccati_inverse_normal(y, x, b1, b2, bp).cancel(extension=True)) for y in presol]
     remove = set()
-    for i in range(len(sol)):
-        for j in range(i+1, len(sol)):
-            rem = remove_redundant_sols(sol[i].rhs, sol[j].rhs, x)
+    for i in range(len(presol)):
+        for j in range(i+1, len(presol)):
+            rem = remove_redundant_sols(presol[i], presol[j], x)
             if rem is not None:
-                remove.add(Eq(fx, rem))
-    return [x for x in sol if x not in remove]
-    return sol
+                remove.add(rem)
+    sols = [x for x in presol if x not in remove]
+    if gensol:
+        sols = [get_gen_sol_from_part_sol(sols, a, x)]
+    if len(presol):
+        presol = [Eq(fx, riccati_inverse_normal(y, x, b1, b2, bp).cancel(extension=True)) for y in sols]
+    return presol
