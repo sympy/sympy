@@ -150,3 +150,10 @@ def test_body_dcm():
     A.frame.orient_axis(B.frame, B.frame.z, 10)
     assert A.dcm(B) == Matrix([[cos(10), sin(10), 0], [-sin(10), cos(10), 0], [0, 0, 1]])
     assert A.dcm(B.frame) == Matrix([[cos(10), sin(10), 0], [-sin(10), cos(10), 0], [0, 0, 1]])
+
+def test_body_axis():
+    N = ReferenceFrame('N')
+    B = Body('B', frame=N)
+    assert B.x == N.x
+    assert B.y == N.y
+    assert B.z == N.z
