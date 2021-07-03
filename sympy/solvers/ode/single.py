@@ -29,7 +29,7 @@ from sympy.polys.matrices.linsolve import _lin_eq2dict
 from sympy.polys.solvers import PolyNonlinearError
 from .hypergeometric import equivalence_hypergeometric, match_2nd_2F1_hypergeometric, \
     get_sol_2F1_hypergeometric, match_2nd_hypergeometric
-from .nonhomogeneous import _get_euler_characterstic_eq_sols, _get_const_characteristic_eq_sols, \
+from .nonhomogeneous import _get_euler_characteristic_eq_sols, _get_const_characteristic_eq_sols, \
     _solve_undetermined_coefficients, _solve_variation_of_parameters, _test_term, _undetermined_coefficients_match, \
         _get_simplified_sol
 
@@ -2427,7 +2427,7 @@ class NthLinearEulerEqHomogeneous(SingleODESolver):
     def _get_general_solution(self, *, simplify_flag: bool = True):
         fx = self.ode_problem.func
         eq = self.ode_problem.eq
-        homogen_sol = _get_euler_characterstic_eq_sols(eq, fx, self.r)[0]
+        homogen_sol = _get_euler_characteristic_eq_sols(eq, fx, self.r)[0]
         return [homogen_sol]
 
 
@@ -2513,7 +2513,7 @@ class NthLinearEulerEqNonhomogeneousVariationOfParameters(SingleODESolver):
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
         order = self.ode_problem.order
-        homogen_sol, roots = _get_euler_characterstic_eq_sols(eq, f(x), self.r)
+        homogen_sol, roots = _get_euler_characteristic_eq_sols(eq, f(x), self.r)
         self.r[-1] = self.r[-1]/self.r[order]
         sol = _solve_variation_of_parameters(eq, f(x), roots, homogen_sol, order, self.r, simplify_flag)
 

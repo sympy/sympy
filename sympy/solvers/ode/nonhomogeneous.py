@@ -1,3 +1,37 @@
+r"""
+This File contains helper functions for nth_linear_constant_coeff_undetermined_coefficients,
+nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients,
+nth_linear_constant_coeff_variation_of_parameters,
+and nth_linear_euler_eq_nonhomogeneous_variation_of_parameters.
+
+All the functions in this file are used by more than one solvers so, instead of creating
+instances in other classes for using them it is better to keep it here as separate helpers.
+
+Functions that are for internal use:
+
+1) _test_term(coeff, func, order) - It takes coefficient of partiular term, function and
+    order to which it is associated. It returns whether given term matches with linear euler ODEs.
+
+2) _get_euler_characteristic_eq_sols(eq, func, match_obj) - It returns the solution of homogeneous
+    part of the linear euler ODE and the list of roots of characteristic equation
+
+3) _solve_variation_of_parameters(eq, func, roots, homogen_sol, order, match_obj, simplify_flag=True)-
+  Helper function for the method of variation of parameters and nonhomogeneous euler eq.
+
+4) _get_const_characteristic_eq_sols(r, func, order) - It returns the roots of characteristic equation
+    of constant coefficient linear ODE and list of collectterms which is later on used by simplification
+    to use collect on solution.
+
+5) _get_simplified_sol(sol, func, collectterms) - It is a helper function which collects the solution on
+    collectterms. Ideally this should be handled by odesimp.
+
+6) _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero) - It returns a trial function
+    match if undetermined coefficients can be applied to ``expr``, and ``None`` otherwise.
+
+7) _solve_undetermined_coefficients(eq, func, order, match, trialset) - Helper function for the method of
+    undetermined coefficients.
+
+"""
 from collections import defaultdict
 from sympy.core import Add, S
 from sympy.core.function import  diff, expand, _mexpand, expand_mul
@@ -44,7 +78,12 @@ def _test_term(coeff, func, order):
     return False
 
 
-def _get_euler_characterstic_eq_sols(eq, func, match_obj):
+def _get_euler_characteristic_eq_sols(eq, func, match_obj):
+    r"""
+    It returns the solution of homogeneous part of the linear euler ODE and
+    the list of roots of characteristic equation.
+
+    """
     x = func.args[0]
     f = func.func
 
@@ -156,6 +195,11 @@ def _solve_variation_of_parameters(eq, func, roots, homogen_sol, order, match_ob
 
 
 def _get_const_characteristic_eq_sols(r, func, order):
+    r"""
+    It returns the roots of characteristic equation of constant coefficient
+    linear ODE and list of collectterms which is later on used by simplification
+    to use collect on solution.
+    """
     x = func.args[0]
     # First, set up characteristic equation.
     chareq, symbol = S.Zero, Dummy('x')
@@ -222,6 +266,11 @@ def _get_const_characteristic_eq_sols(r, func, order):
 # Ideally these kind of simplification functions shouldn't be part of solvers.
 # odesimp should be improved to handle these kind of specific simplifications.
 def _get_simplified_sol(sol, func, collectterms):
+    r"""
+    It is a helper function which collects the solution on
+    collectterms. Ideally this should be handled by odesimp.It is used
+    only when the simplify is set to True in dsolve.
+    """
     f = func.func
     x = func.args[0]
     collectterms.sort(key=default_sort_key)
