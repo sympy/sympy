@@ -8,6 +8,14 @@ from sympy.testing.pytest import raises
 t = dynamicsymbols._t
 
 
+def _generate_body():
+    N = ReferenceFrame('N')
+    A = ReferenceFrame('A')
+    P = Body('P', frame=N)
+    C = Body('C', frame=A)
+    return N, A, P, C
+
+
 def test_Joint():
     parent = Body('parent')
     child = Body('child')
@@ -137,17 +145,10 @@ def test_pin_joint_chaos_pendulum():
 
 
 def test_pinjoint_arbitrary_axis():
-    def generate_body():
-        N = ReferenceFrame('N')
-        A = ReferenceFrame('A')
-        P = Body('P', frame=N)
-        C = Body('C', frame=A)
-        return N, A, P, C
-
     theta, omega = dynamicsymbols('theta_J, omega_J')
 
     # When the bodies are attached though masscenters but axess are opposite.
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     PinJoint('J', P, C, child_axis=-A.x)
 
     assert -A.x.angle_between(N.x) == -pi
@@ -163,7 +164,7 @@ def test_pinjoint_arbitrary_axis():
 
     # When axes are different and parent joint is at masscenter but child joint
     # is at a unit vector from child masscenter.
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     PinJoint('J', P, C, child_axis=A.y, child_joint_pos=A.x)
 
     assert A.y.angle_between(N.x) == 0  # Axis are aligned
@@ -183,7 +184,7 @@ def test_pinjoint_arbitrary_axis():
     assert C.masscenter.vel(N).angle_between(A.x) == pi/2
 
     # Similar to previous case but wrt parent body
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     PinJoint('J', P, C, parent_axis=N.y, parent_joint_pos=N.x)
 
     assert N.y.angle_between(A.x) == 0  # Axis are aligned
@@ -200,7 +201,7 @@ def test_pinjoint_arbitrary_axis():
     assert C.masscenter.pos_from(P.masscenter) == N.x
 
     # Both joint pos id defined but different axes
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     PinJoint('J', P, C, parent_joint_pos=N.x, child_joint_pos=A.x,
              child_axis=A.x+A.y)
     assert expand_mul(N.x.angle_between(A.x + A.y)) == 0  # Axis are aligned
@@ -224,7 +225,7 @@ def test_pinjoint_arbitrary_axis():
             -sqrt(2)*omega*sin(theta)/2*N.y + sqrt(2)*omega*cos(theta)/2*N.z)
     assert C.masscenter.vel(N).angle_between(A.x) == pi/2
 
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     PinJoint('J', P, C, parent_joint_pos=N.x, child_joint_pos=A.x,
              child_axis=A.x+A.y-A.z)
     assert expand_mul(N.x.angle_between(A.x + A.y - A.z)) == 0  # Axis aligned
@@ -252,7 +253,7 @@ def test_pinjoint_arbitrary_axis():
             sqrt(6)*omega*sin(theta + pi/4)/3*N.z)
     assert C.masscenter.vel(N).angle_between(A.x) == pi/2
 
-    N, A, P, C = generate_body()
+    N, A, P, C = _generate_body()
     m, n = symbols('m n')
     PinJoint('J', P, C, parent_joint_pos=m*N.x, child_joint_pos=n*A.x,
              child_axis=A.x+A.y-A.z, parent_axis=N.x-N.y+N.z)
@@ -285,3 +286,33 @@ def test_pinjoint_arbitrary_axis():
                                            2*n*cos(theta + pi/6))*omega/3*N.y
             + (sqrt(3)*m + 2*n*sin(theta + pi/3))*omega/3*N.z)
     assert expand_mul(C.masscenter.vel(N).angle_between(m*N.x - n*A.x)) == pi/2
+
+def test_pinjoint_pi():
+    _, _, P, C = _generate_body()
+    J = PinJoint('J', P, C, child_axis=-C.frame.x)
+    assert J._generate_vector() == P.frame.y
+
+    _, _, P, C = _generate_body()
+    J = PinJoint('J', P, C, parent_axis=P.frame.y, child_axis=-C.frame.y)
+    assert J._generate_vector() == P.frame.z
+
+    _, _, P, C = _generate_body()
+    J = PinJoint('J', P, C, parent_axis=P.frame.z, child_axis=-C.frame.z)
+    assert J._generate_vector() == P.frame.x
+
+    _, _, P, C = _generate_body()
+    J = PinJoint('J', P, C, parent_axis=P.frame.x+P.frame.y, child_axis=-C.frame.y-C.frame.x)
+    assert J._generate_vector() == P.frame.z
+
+    _, _, P, C = _generate_body()
+    J = PinJoint('J', P, C, parent_axis=P.frame.y+P.frame.z, child_axis=-C.frame.y-C.frame.z)
+    assert J._generate_vector() == P.frame.x
+
+    _, _, P, C = _generate_body()
+    J = PinJoint('J', P, C, parent_axis=P.frame.x+P.frame.z, child_axis=-C.frame.z-C.frame.x)
+    assert J._generate_vector() == P.frame.y
+
+    _, _, P, C = _generate_body()
+    J = PinJoint('J', P, C, parent_axis=P.frame.x+P.frame.y+P.frame.z,
+                child_axis=-C.frame.x-C.frame.y-C.frame.z)
+    assert J._generate_vector() == P.frame.x
