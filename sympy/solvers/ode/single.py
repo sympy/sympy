@@ -29,7 +29,7 @@ from sympy.polys.matrices.linsolve import _lin_eq2dict
 from sympy.polys.solvers import PolyNonlinearError
 from .hypergeometric import equivalence_hypergeometric, match_2nd_2F1_hypergeometric, \
     get_sol_2F1_hypergeometric, match_2nd_hypergeometric
-from .euler_nonhomogen_helpers import _get_euler_characterstic_eq_sols, _get_const_characterstic_eq_sols, \
+from .nonhomogeneous import _get_euler_characterstic_eq_sols, _get_const_characterstic_eq_sols, \
     _solve_undetermined_coefficients, _solve_variation_of_parameters, _test_term, _undetermined_coefficients_match, \
         _get_simplified_sol
 

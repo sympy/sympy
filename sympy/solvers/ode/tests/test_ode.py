@@ -10,7 +10,7 @@ from sympy.solvers.ode.subscheck import checkodesol
 from sympy.solvers.ode.ode import (classify_sysode,
     constant_renumber, constantsimp, get_numbered_constants, solve_ics)
 
-from sympy.solvers.ode.euler_nonhomogen_helpers import _undetermined_coefficients_match
+from sympy.solvers.ode.nonhomogeneous import _undetermined_coefficients_match
 from sympy.solvers.ode.single import LinearCoefficients
 from sympy.solvers.deutils import ode_order
 from sympy.testing.pytest import XFAIL, raises, slow

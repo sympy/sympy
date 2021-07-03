@@ -265,7 +265,7 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
     ========
 
     >>> from sympy import log, exp
-    >>> from sympy.solvers.ode.euler_nonhomogen_helpers import _undetermined_coefficients_match
+    >>> from sympy.solvers.ode.nonhomogeneous import _undetermined_coefficients_match
     >>> from sympy.abc import x
     >>> _undetermined_coefficients_match(9*x*exp(x) + exp(-x), x)
     {'test': True, 'trialset': {x*exp(x), exp(-x), exp(x)}}
