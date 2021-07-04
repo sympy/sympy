@@ -464,3 +464,8 @@ def test_issue_17256():
     r1 = s1.xreplace({x:a})
     r2 = s2.xreplace({x:a})
     assert r1 == r2
+
+def test_issue_21623():
+    from sympy import MatrixSymbol, gcd_terms
+    M = MatrixSymbol('X', 2, 2)
+    assert gcd_terms(M[0,0], 1) == M[0,0]
