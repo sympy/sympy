@@ -138,6 +138,21 @@ nth_linear_constant_coeff_variation_of_parameters
 .. autoclass:: sympy.solvers.ode.single::NthLinearConstantCoeffVariationOfParameters
    :members:
 
+nth_linear_euler_eq_homogeneous
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.ode.single::NthLinearEulerEqHomogeneous
+   :members:
+
+nth_linear_euler_eq_nonhomogeneous_variation_of_parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.ode.single::NthLinearEulerEqNonhomogeneousVariationOfParameters
+   :members:
+
+nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.ode.single::NthLinearEulerEqNonhomogeneousUndeterminedCoefficients
+   :members:
+
 nth_algebraic
 ^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.ode.single::NthAlgebraic
@@ -317,7 +332,5 @@ Internal functions
 ^^^^^^^^^^^^^^^^^^
 
 These functions are not intended for end-user use.
-
-.. autofunction:: sympy.solvers.ode.ode::_undetermined_coefficients_match
 
 .. autofunction:: sympy.solvers.ode.ode::_handle_Integral

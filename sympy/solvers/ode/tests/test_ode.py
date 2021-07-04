@@ -7,9 +7,10 @@ from sympy.solvers.ode import (classify_ode,
     homogeneous_order, dsolve)
 
 from sympy.solvers.ode.subscheck import checkodesol
-from sympy.solvers.ode.ode import (_undetermined_coefficients_match, classify_sysode,
+from sympy.solvers.ode.ode import (classify_sysode,
     constant_renumber, constantsimp, get_numbered_constants, solve_ics)
 
+from sympy.solvers.ode.nonhomogeneous import _undetermined_coefficients_match
 from sympy.solvers.ode.single import LinearCoefficients
 from sympy.solvers.deutils import ode_order
 from sympy.testing.pytest import XFAIL, raises, slow
@@ -712,7 +713,6 @@ def test_undetermined_coefficients_match():
         {'test': True, 'trialset': {cos(x), cos(3*x), sin(x), sin(3*x)}}
     assert _undetermined_coefficients_match(cos(x**2), x) == {'test': False}
     assert _undetermined_coefficients_match(2**(x**2), x) == {'test': False}
-
 
 def test_issue_4785():
     from sympy.abc import A

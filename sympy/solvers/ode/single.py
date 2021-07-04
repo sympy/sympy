@@ -3,7 +3,6 @@
 #
 
 import typing
-from collections import defaultdict
 if typing.TYPE_CHECKING:
     from typing import ClassVar
 from typing import Dict, Type
@@ -12,27 +11,27 @@ from typing import Iterator, List, Optional
 from sympy.core import Add, S, Pow
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
-from sympy.core.function import AppliedUndef, Derivative, Function, expand, Subs, _mexpand, expand_mul
+from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, _mexpand
 from sympy.core.numbers import Float, zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.core.mul import Mul
-from sympy.functions import exp, tan, cos, cosh, im, log, re, sin, sinh, sqrt, \
-    atan2, conjugate
+from sympy.functions import exp, tan, log, sqrt
 from sympy.integrals import Integral
-from sympy.polys import (Poly, rootof, roots)
-from sympy.polys.polytools import cancel, factor
-from sympy.simplify import collect, simplify, separatevars, logcombine, powsimp, trigsimp
+from sympy.polys import Poly
+from sympy.polys.polytools import cancel, factor, degree
+from sympy.simplify import collect, simplify, separatevars, logcombine, posify
 from sympy.simplify.radsimp import fraction
-from sympy.utilities import numbered_symbols, default_sort_key
+from sympy.utilities import numbered_symbols
 from sympy.solvers.solvers import solve
-from sympy.matrices import wronskian
 from sympy.solvers.deutils import ode_order, _preprocess
-from .subscheck import sub_func_doit
 from sympy.polys.matrices.linsolve import _lin_eq2dict
 from sympy.polys.solvers import PolyNonlinearError
 from .hypergeometric import equivalence_hypergeometric, match_2nd_2F1_hypergeometric, \
     get_sol_2F1_hypergeometric, match_2nd_hypergeometric
+from .nonhomogeneous import _get_euler_characteristic_eq_sols, _get_const_characteristic_eq_sols, \
+    _solve_undetermined_coefficients, _solve_variation_of_parameters, _test_term, _undetermined_coefficients_match, \
+        _get_simplified_sol
 
 
 class ODEMatchError(NotImplementedError):
@@ -650,7 +649,7 @@ class FirstLinear(SinglePatternODESolver):
         fx = self.ode_problem.func
         x = self.ode_problem.sym
         (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(fx, ((C1 + Integral(Q*exp(Integral(P, x)),x))
+        gensol = Eq(fx, ((C1 + Integral(Q*exp(Integral(P, x)), x))
             * exp(-Integral(P, x))))
         return [gensol]
 
@@ -736,7 +735,7 @@ class AlmostLinear(SinglePatternODESolver):
     def _get_general_solution(self, *, simplify_flag: bool = True):
         x = self.ode_problem.sym
         (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(self.ly, ((C1 + Integral((self.cx/self.ax)*exp(Integral(self.bx/self.ax, x)),x))
+        gensol = Eq(self.ly, ((C1 + Integral((self.cx/self.ax)*exp(Integral(self.bx/self.ax, x)), x))
                 * exp(-Integral(self.bx/self.ax, x))))
 
         return [gensol]
@@ -838,7 +837,7 @@ class Bernoulli(SinglePatternODESolver):
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
         if n==1:
             gensol = Eq(log(fx), (
-            C1 + Integral((-P + Q),x)
+            C1 + Integral((-P + Q), x)
         ))
         else:
             gensol = Eq(fx**(1-n), (
@@ -885,7 +884,7 @@ class Factorable(SingleODESolver):
         factors = Mul.make_args(factor(eq))
         roots = [fac.as_base_exp() for fac in factors if len(fac.args)!=0]
         if len(roots)>1 or roots[0][1]>1:
-            for base,expo in roots:
+            for base, expo in roots:
                 if base.has(f(x)):
                     self.eqs.append(base)
             if len(self.eqs)>0:
@@ -1030,7 +1029,7 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
 
     def _wilds(self, f, x, order):
         fy = Wild('fy', exclude=[0, f(x).diff(x), f(x).diff(x, 2)])
-        return (fy,)
+        return (fy, )
 
     def _equation(self, fx, x, order):
         fy = self.wilds()[0]
@@ -1235,7 +1234,7 @@ class Separable(SinglePatternODESolver):
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         m1, m2, x, fx = self._get_match_object()
-        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
+        (C1,) = self.ode_problem.get_numbered_constants(num=1)
         int = Integral(m2['coeff']*m2[self.y]/m1[self.y],
         (self.y, None, fx))
         gen_sol = Eq(int, Integral(-m1['coeff']*m1[x]/
@@ -1498,7 +1497,7 @@ class HomogeneousCoeffSubsDepDivIndep(SinglePatternODESolver):
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         d, e, fx, x, u, u1, y, xarg, yarg = self._get_match_object()
-        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
+        (C1,) = self.ode_problem.get_numbered_constants(num=1)
         int = Integral(
             (-e/(d + u1*e)).subs({x: 1, y: u1}),
             (u1, None, fx/x))
@@ -1625,8 +1624,8 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         d, e, fx, x, u, u1, y, xarg, yarg = self._get_match_object()
-        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
-        int = Integral(simplify((-d/(e + u1*d)).subs({x: u1, y: 1})),(u1, None, x/fx))
+        (C1,) = self.ode_problem.get_numbered_constants(num=1)
+        int = Integral(simplify((-d/(e + u1*d)).subs({x: u1, y: 1})), (u1, None, x/fx))
         sol = logcombine(Eq(log(fx), int + log(C1)), force=True)
         gen_sol = sol.subs(fx, u).subs(((u, u - yarg), (x, x - xarg), (u, fx)))
         return [gen_sol]
@@ -1787,7 +1786,7 @@ class LinearCoefficients(HomogeneousCoeffBest):
                 return False
             return False
 
-    def _linear_coeff_match(self,expr, func):
+    def _linear_coeff_match(self, expr, func):
         r"""
         Helper function to match hint ``linear_coefficients``.
 
@@ -2127,99 +2126,18 @@ class NthLinearConstantCoeffHomogeneous(SingleODESolver):
                 return False
         return False
 
-    def _get_sols(self,r):
-        x = self.ode_problem.sym
-        order = self.ode_problem.order
-        # First, set up characteristic equation.
-        chareq, symbol = S.Zero, Dummy('x')
-
-        for i in r.keys():
-            if type(i) == str or i < 0:
-                pass
-            else:
-                chareq += r[i]*symbol**i
-
-        chareq = Poly(chareq, symbol)
-        # Can't just call roots because it doesn't return rootof for unsolveable
-        # polynomials.
-        chareqroots = roots(chareq, multiple=True)
-        if len(chareqroots) != order:
-            chareqroots = [rootof(chareq, k) for k in range(chareq.degree())]
-
-        chareq_is_complex = not all([i.is_real for i in chareq.all_coeffs()])
-
-        # Create a dict root: multiplicity or charroots
-        charroots = defaultdict(int)
-        for root in chareqroots:
-            charroots[root] += 1
-        # We need to keep track of terms so we can run collect() at the end.
-        # This is necessary for constantsimp to work properly.
-        collectterms = []
-        gensols = []
-        conjugate_roots = [] # used to prevent double-use of conjugate roots
-        # Loop over roots in theorder provided by roots/rootof...
-        for root in chareqroots:
-            # but don't repoeat multiple roots.
-            if root not in charroots:
-                continue
-            multiplicity = charroots.pop(root)
-            for i in range(multiplicity):
-                if chareq_is_complex:
-                    gensols.append(x**i*exp(root*x))
-                    collectterms = [(i, root, 0)] + collectterms
-                    continue
-                reroot = re(root)
-                imroot = im(root)
-                if imroot.has(atan2) and reroot.has(atan2):
-                    # Remove this condition when re and im stop returning
-                    # circular atan2 usages.
-                    gensols.append(x**i*exp(root*x))
-                    collectterms = [(i, root, 0)] + collectterms
-                else:
-                    if root in conjugate_roots:
-                        collectterms = [(i, reroot, imroot)] + collectterms
-                        continue
-                    if imroot == 0:
-                        gensols.append(x**i*exp(reroot*x))
-                        collectterms = [(i, reroot, 0)] + collectterms
-                        continue
-                    conjugate_roots.append(conjugate(root))
-                    gensols.append(x**i*exp(reroot*x) * sin(abs(imroot) * x))
-                    gensols.append(x**i*exp(reroot*x) * cos(    imroot  * x))
-
-                    # This ordering is important
-                    collectterms = [(i, reroot, imroot)] + collectterms
-        return gensols, collectterms
-
-    # Ideally these kind of simplification functions shouldn't be part of solvers.
-    # odesimp should be improved to handle these kind of specific simplifications.
-    def _get_simplified_sol(self, sol, collectterms):
-        f = self.ode_problem.func.func
-        x = self.ode_problem.sym
-        collectterms.sort(key=default_sort_key)
-        collectterms.reverse()
-        assert len(sol) == 1 and sol[0].lhs == f(x)
-        sol = sol[0].rhs
-        sol = expand_mul(sol)
-        for i, reroot, imroot in collectterms:
-            sol = collect(sol, x**i*exp(reroot*x)*sin(abs(imroot)*x))
-            sol = collect(sol, x**i*exp(reroot*x)*cos(imroot*x))
-        for i, reroot, imroot in collectterms:
-            sol = collect(sol, x**i*exp(reroot*x))
-        sol = powsimp(sol)
-        return [Eq(f(x), sol)]
-
     def _get_general_solution(self, *, simplify_flag: bool = True):
         fx = self.ode_problem.func
-        gensols, collectterms = self._get_sols(self.r)
+        order = self.ode_problem.order
+        roots, collectterms = _get_const_characteristic_eq_sols(self.r, fx, order)
         # A generator of constants
-        constants = self.ode_problem.get_numbered_constants(num=len(gensols))
-        gsol = Add(*[i*j for (i, j) in zip(constants, gensols)])
-        gsol = [Eq(fx, gsol)]
+        constants = self.ode_problem.get_numbered_constants(num=len(roots))
+        gsol = Add(*[i*j for (i, j) in zip(constants, roots)])
+        gsol = Eq(fx, gsol)
         if simplify_flag:
-            gsol = self._get_simplified_sol(gsol, collectterms)
+            gsol = _get_simplified_sol([gsol], fx, collectterms)
 
-        return gsol
+        return [gsol]
 
 
 class NthLinearConstantCoeffVariationOfParameters(SingleODESolver):
@@ -2308,75 +2226,20 @@ class NthLinearConstantCoeffVariationOfParameters(SingleODESolver):
                 return False
         return False
 
-    def _solve_variation_of_parameters(self,match_object):
-        r"""
-        Helper function for the method of variation of parameters and nonhomogeneous euler eq.
-
-        See the
-        :py:meth:`~sympy.solvers.ode.single.NthLinearConstantCoeffVariationOfParameters`
-        docstring for more information on this method.
-
-        The parameter ``match`` should be a dictionary that has the following
-        keys:
-
-        ``list``
-        A list of solutions to the homogeneous equation.
-
-        ``sol``
-        The general solution.
-
-        """
-        eq = self.ode_problem.eq
-        f = self.ode_problem.func.func
-        order = self.ode_problem.order
-        x = self.ode_problem.sym
-        r = match_object
-        psol = 0
-        gensols = r['list']
-        gsol = r['sol']
-        wr = wronskian(gensols, x)
-
-        if r.get('simplify_flag', True):
-            wr = simplify(wr)  # We need much better simplification for
-                            # some ODEs. See issue 4662, for example.
-            # To reduce commonly occurring sin(x)**2 + cos(x)**2 to 1
-            wr = trigsimp(wr, deep=True, recursive=True)
-        if not wr:
-            # The wronskian will be 0 iff the solutions are not linearly
-            # independent.
-            raise NotImplementedError("Cannot find " + str(order) +
-            " solutions to the homogeneous equation necessary to apply " +
-            "variation of parameters to " + str(eq) + " (Wronskian == 0)")
-        if len(gensols) != order:
-            raise NotImplementedError("Cannot find " + str(order) +
-            " solutions to the homogeneous equation necessary to apply " +
-            "variation of parameters to " +
-            str(eq) + " (number of terms != order)")
-        negoneterm = (-1)**(order)
-        for i in gensols:
-            psol += negoneterm*Integral(wronskian([sol for sol in gensols if sol != i], x)*r[-1]/wr, x)*i/r[order]
-            negoneterm *= -1
-
-        if r.get('simplify_flag', True):
-            psol = simplify(psol)
-            psol = trigsimp(psol, deep=True)
-        return Eq(f(x), gsol.rhs + psol)
-
     def _get_general_solution(self, *, simplify_flag: bool = True):
         eq = self.ode_problem.eq_high_order_free
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
-        homogen_instance = NthLinearConstantCoeffHomogeneous(SingleODEProblem(eq, f(x), x))
-        gensols, collectterms = homogen_instance._get_sols(self.r)
+        order = self.ode_problem.order
+        roots, collectterms = _get_const_characteristic_eq_sols(self.r, f(x), order)
         # A generator of constants
-        constants = self.ode_problem.get_numbered_constants(num=len(gensols))
-        gsol = Add(*[i*j for (i, j) in zip(constants, gensols)])
-        gsol = Eq(f(x), gsol)
-        self.r.update({'list': gensols, 'sol': gsol, 'simpliy_flag': simplify_flag})
-        gsol = self._solve_variation_of_parameters(self.r)
+        constants = self.ode_problem.get_numbered_constants(num=len(roots))
+        homogen_sol = Add(*[i*j for (i, j) in zip(constants, roots)])
+        homogen_sol = Eq(f(x), homogen_sol)
+        homogen_sol = _solve_variation_of_parameters(eq, f(x), roots, homogen_sol, order, self.r, simplify_flag)
         if simplify_flag:
-            gsol = homogen_instance._get_simplified_sol([gsol], collectterms)
-        return gsol
+            homogen_sol = _get_simplified_sol([homogen_sol], f(x), collectterms)
+        return [homogen_sol]
 
 
 class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
@@ -2448,254 +2311,308 @@ class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
         does_match = False
         if order and self.r and not any(self.r[i].has(x) for i in self.r if i >= 0):
             if self.r[-1]:
-                eq_homogeneous = Add(eq,-self.r[-1])
-                undetcoeff = self._undetermined_coefficients_match(self.r[-1], x, func, eq_homogeneous)
+                eq_homogeneous = Add(eq, -self.r[-1])
+                undetcoeff = _undetermined_coefficients_match(self.r[-1], x, func, eq_homogeneous)
                 if undetcoeff['test']:
-                    self.r['trialset'] = undetcoeff['trialset']
+                    self.trialset = undetcoeff['trialset']
                     does_match = True
         return does_match
 
-    def _undetermined_coefficients_match(self,expr, x, func=None, eq_homogeneous=S.Zero):
-        r"""
-        Returns a trial function match if undetermined coefficients can be applied
-        to ``expr``, and ``None`` otherwise.
-
-        A trial expression can be found for an expression for use with the method
-        of undetermined coefficients if the expression is an
-        additive/multiplicative combination of constants, polynomials in `x` (the
-        independent variable of expr), `\sin(a x + b)`, `\cos(a x + b)`, and
-        `e^{a x}` terms (in other words, it has a finite number of linearly
-        independent derivatives).
-
-        Note that you may still need to multiply each term returned here by
-        sufficient `x` to make it linearly independent with the solutions to the
-        homogeneous equation.
-
-        This is intended for internal use by ``undetermined_coefficients`` hints.
-
-        SymPy currently has no way to convert `\sin^n(x) \cos^m(y)` into a sum of
-        only `\sin(a x)` and `\cos(b x)` terms, so these are not implemented.  So,
-        for example, you will need to manually convert `\sin^2(x)` into `[1 +
-        \cos(2 x)]/2` to properly apply the method of undetermined coefficients on
-        it.
-
-        Examples
-        ========
-
-        >>> from sympy import log, exp
-        >>> from sympy.solvers.ode.ode import _undetermined_coefficients_match
-        >>> from sympy.abc import x
-        >>> _undetermined_coefficients_match(9*x*exp(x) + exp(-x), x)
-        {'test': True, 'trialset': {x*exp(x), exp(-x), exp(x)}}
-        >>> _undetermined_coefficients_match(log(x), x)
-        {'test': False}
-
-        """
-        x = self.ode_problem.sym
-        a = Wild('a', exclude=[x])
-        b = Wild('b', exclude=[x])
-        expr = powsimp(expr, combine='exp')  # exp(x)*exp(2*x + 1) => exp(3*x + 1)
-        retdict = {}
-
-        def _test_term(expr, x):
-            r"""
-            Test if ``expr`` fits the proper form for undetermined coefficients.
-            """
-            if not expr.has(x):
-                return True
-            elif expr.is_Add:
-                return all(_test_term(i, x) for i in expr.args)
-            elif expr.is_Mul:
-                if expr.has(sin, cos):
-                    foundtrig = False
-                    # Make sure that there is only one trig function in the args.
-                    # See the docstring.
-                    for i in expr.args:
-                        if i.has(sin, cos):
-                            if foundtrig:
-                                return False
-                            else:
-                                foundtrig = True
-                return all(_test_term(i, x) for i in expr.args)
-            elif expr.is_Function:
-                if expr.func in (sin, cos, exp, sinh, cosh):
-                    if expr.args[0].match(a*x + b):
-                        return True
-                    else:
-                        return False
-                else:
-                    return False
-            elif expr.is_Pow and expr.base.is_Symbol and expr.exp.is_Integer and \
-                    expr.exp >= 0:
-                return True
-            elif expr.is_Pow and expr.base.is_number:
-                if expr.exp.match(a*x + b):
-                    return True
-                else:
-                    return False
-            elif expr.is_Symbol or expr.is_number:
-                return True
-            else:
-                return False
-
-        def _get_trial_set(expr, x, exprs=set()):
-            r"""
-            Returns a set of trial terms for undetermined coefficients.
-
-            The idea behind undetermined coefficients is that the terms expression
-            repeat themselves after a finite number of derivatives, except for the
-            coefficients (they are linearly dependent).  So if we collect these,
-            we should have the terms of our trial function.
-            """
-            def _remove_coefficient(expr, x):
-                r"""
-                Returns the expression without a coefficient.
-
-                Similar to expr.as_independent(x)[1], except it only works
-                multiplicatively.
-                """
-                term = S.One
-                if expr.is_Mul:
-                    for i in expr.args:
-                        if i.has(x):
-                            term *= i
-                elif expr.has(x):
-                    term = expr
-                return term
-
-            expr = expand_mul(expr)
-            if expr.is_Add:
-                for term in expr.args:
-                    if _remove_coefficient(term, x) in exprs:
-                        pass
-                    else:
-                        exprs.add(_remove_coefficient(term, x))
-                        exprs = exprs.union(_get_trial_set(term, x, exprs))
-            else:
-                term = _remove_coefficient(expr, x)
-                tmpset = exprs.union({term})
-                oldset = set()
-                while tmpset != oldset:
-                    # If you get stuck in this loop, then _test_term is probably
-                    # broken
-                    oldset = tmpset.copy()
-                    expr = expr.diff(x)
-                    term = _remove_coefficient(expr, x)
-                    if term.is_Add:
-                        tmpset = tmpset.union(_get_trial_set(term, x, tmpset))
-                    else:
-                        tmpset.add(term)
-                exprs = tmpset
-            return exprs
-
-        def is_homogeneous_solution(term):
-            r""" This function checks whether the given trialset contains any root
-                of homogenous equation"""
-            return expand(sub_func_doit(eq_homogeneous, func, term)).is_zero
-
-        retdict['test'] = _test_term(expr, x)
-        if retdict['test']:
-            # Try to generate a list of trial solutions that will have the
-            # undetermined coefficients. Note that if any of these are not linearly
-            # independent with any of the solutions to the homogeneous equation,
-            # then they will need to be multiplied by sufficient x to make them so.
-            # This function DOES NOT do that (it doesn't even look at the
-            # homogeneous equation).
-            temp_set = set()
-            for i in Add.make_args(expr):
-                act = _get_trial_set(i,x)
-                if eq_homogeneous is not S.Zero:
-                    while any(is_homogeneous_solution(ts) for ts in act):
-                        act = {x*ts for ts in act}
-                temp_set = temp_set.union(act)
-
-            retdict['trialset'] = temp_set
-        return retdict
-
-    def _solve_undetermined_coefficients(self,match):
-        r"""
-        Helper function for the method of undetermined coefficients.
-
-        See the
-        :py:meth:`~sympy.solvers.ode.single.NthLinearConstantCoeffUndeterminedCoefficients`
-        docstring for more information on this method.
-
-        The parameter ``match`` should be a dictionary that has the following
-        keys:
-
-        ``list``
-        A list of solutions to the homogeneous equation.
-
-        ``sol``
-        The general solution,.
-
-        ``trialset``
-        The set of trial functions as returned by
-        ``_undetermined_coefficients_match()['trialset']``.
-
-        """
+    def _get_general_solution(self, *, simplify_flag: bool = True):
         eq = self.ode_problem.eq
+        f = self.ode_problem.func.func
         x = self.ode_problem.sym
+        order = self.ode_problem.order
+        roots, collectterms = _get_const_characteristic_eq_sols(self.r, f(x), order)
+        # A generator of constants
+        constants = self.ode_problem.get_numbered_constants(num=len(roots))
+        homogen_sol = Add(*[i*j for (i, j) in zip(constants, roots)])
+        homogen_sol = Eq(f(x), homogen_sol)
+        self.r.update({'list': roots, 'sol': homogen_sol, 'simpliy_flag': simplify_flag})
+        gsol = _solve_undetermined_coefficients(eq, f(x), order, self.r, self.trialset)
+        if simplify_flag:
+            gsol = _get_simplified_sol([gsol], f(x), collectterms)
+        return [gsol]
+
+
+class NthLinearEulerEqHomogeneous(SingleODESolver):
+    r"""
+    Solves an `n`\th order linear homogeneous variable-coefficient
+    Cauchy-Euler equidimensional ordinary differential equation.
+
+    This is an equation with form `0 = a_0 f(x) + a_1 x f'(x) + a_2 x^2 f''(x)
+    \cdots`.
+
+    These equations can be solved in a general manner, by substituting
+    solutions of the form `f(x) = x^r`, and deriving a characteristic equation
+    for `r`.  When there are repeated roots, we include extra terms of the
+    form `C_{r k} \ln^k(x) x^r`, where `C_{r k}` is an arbitrary integration
+    constant, `r` is a root of the characteristic equation, and `k` ranges
+    over the multiplicity of `r`.  In the cases where the roots are complex,
+    solutions of the form `C_1 x^a \sin(b \log(x)) + C_2 x^a \cos(b \log(x))`
+    are returned, based on expansions with Euler's formula.  The general
+    solution is the sum of the terms found.  If SymPy cannot find exact roots
+    to the characteristic equation, a
+    :py:obj:`~.ComplexRootOf` instance will be returned
+    instead.
+
+    >>> from sympy import Function, dsolve
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> dsolve(4*x**2*f(x).diff(x, 2) + f(x), f(x),
+    ... hint='nth_linear_euler_eq_homogeneous')
+    ... # doctest: +NORMALIZE_WHITESPACE
+    Eq(f(x), sqrt(x)*(C1 + C2*log(x)))
+
+    Note that because this method does not involve integration, there is no
+    ``nth_linear_euler_eq_homogeneous_Integral`` hint.
+
+    The following is for internal use:
+
+    - ``returns = 'sol'`` returns the solution to the ODE.
+    - ``returns = 'list'`` returns a list of linearly independent solutions,
+      corresponding to the fundamental solution set, for use with non
+      homogeneous solution methods like variation of parameters and
+      undetermined coefficients.  Note that, though the solutions should be
+      linearly independent, this function does not explicitly check that.  You
+      can do ``assert simplify(wronskian(sollist)) != 0`` to check for linear
+      independence.  Also, ``assert len(sollist) == order`` will need to pass.
+    - ``returns = 'both'``, return a dictionary ``{'sol': <solution to ODE>,
+      'list': <list of linearly independent solutions>}``.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, pprint
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = f(x).diff(x, 2)*x**2 - 4*f(x).diff(x)*x + 6*f(x)
+    >>> pprint(dsolve(eq, f(x),
+    ... hint='nth_linear_euler_eq_homogeneous'))
+            2
+    f(x) = x *(C1 + C2*x)
+
+    References
+    ==========
+
+    - https://en.wikipedia.org/wiki/Cauchy%E2%80%93Euler_equation
+    - C. Bender & S. Orszag, "Advanced Mathematical Methods for Scientists and
+      Engineers", Springer 1999, pp. 12
+
+    # indirect doctest
+
+    """
+    hint = "nth_linear_euler_eq_homogeneous"
+    has_integral = False
+
+    def _matches(self):
+        eq = self.ode_problem.eq_preprocessed
         f = self.ode_problem.func.func
         order = self.ode_problem.order
-        r = match
-        coeffs = numbered_symbols('a', cls=Dummy)
-        coefflist = []
-        gensols = r['list']
-        gsol = r['sol']
-        trialset = r['trialset']
-        if len(gensols) != order:
-            raise NotImplementedError("Cannot find " + str(order) +
-            " solutions to the homogeneous equation necessary to apply" +
-            " undetermined coefficients to " + str(eq) +
-            " (number of terms != order)")
+        x = self.ode_problem.sym
+        match = self.ode_problem.get_linear_coefficients(eq, f(x), order)
+        self.r = None
+        does_match = False
 
-        trialfunc = 0
-        for i in trialset:
-            c = next(coeffs)
-            coefflist.append(c)
-            trialfunc += c*i
-
-        eqs = sub_func_doit(eq, f(x), trialfunc)
-
-        coeffsdict = dict(list(zip(trialset, [0]*(len(trialset) + 1))))
-
-        eqs = _mexpand(eqs)
-
-        for i in Add.make_args(eqs):
-            s = separatevars(i, dict=True, symbols=[x])
-            if coeffsdict.get(s[x]):
-                coeffsdict[s[x]] += s['coeff']
-            else:
-                coeffsdict[s[x]] = s['coeff']
-
-        coeffvals = solve(list(coeffsdict.values()), coefflist)
-
-        if not coeffvals:
-            raise NotImplementedError(
-                "Could not solve `%s` using the "
-                "method of undetermined coefficients "
-                "(unable to solve for coefficients)." % eq)
-
-        psol = trialfunc.subs(coeffvals)
-
-        return Eq(f(x), gsol.rhs + psol)
+        if order and match:
+            coeff = match[order]
+            factor = x**order / coeff
+            self.r = {i: factor*match[i] for i in match}
+        if self.r and not any(not _test_term(self.r[i], f(x), i) for i in
+                self.r if i >= 0):
+            if not self.r[-1]:
+                does_match = True
+        return does_match
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
-        eq = self.ode_problem.eq_high_order_free
+        fx = self.ode_problem.func
+        eq = self.ode_problem.eq
+        homogen_sol = _get_euler_characteristic_eq_sols(eq, fx, self.r)[0]
+        return [homogen_sol]
+
+
+class NthLinearEulerEqNonhomogeneousVariationOfParameters(SingleODESolver):
+    r"""
+    Solves an `n`\th order linear non homogeneous Cauchy-Euler equidimensional
+    ordinary differential equation using variation of parameters.
+
+    This is an equation with form `g(x) = a_0 f(x) + a_1 x f'(x) + a_2 x^2 f''(x)
+    \cdots`.
+
+    This method works by assuming that the particular solution takes the form
+
+    .. math:: \sum_{x=1}^{n} c_i(x) y_i(x) {a_n} {x^n} \text{, }
+
+    where `y_i` is the `i`\th solution to the homogeneous equation.  The
+    solution is then solved using Wronskian's and Cramer's Rule.  The
+    particular solution is given by multiplying eq given below with `a_n x^{n}`
+
+    .. math:: \sum_{x=1}^n \left( \int \frac{W_i(x)}{W(x)} \, dx
+                \right) y_i(x) \text{, }
+
+    where `W(x)` is the Wronskian of the fundamental system (the system of `n`
+    linearly independent solutions to the homogeneous equation), and `W_i(x)`
+    is the Wronskian of the fundamental system with the `i`\th column replaced
+    with `[0, 0, \cdots, 0, \frac{x^{- n}}{a_n} g{\left(x \right)}]`.
+
+    This method is general enough to solve any `n`\th order inhomogeneous
+    linear differential equation, but sometimes SymPy cannot simplify the
+    Wronskian well enough to integrate it.  If this method hangs, try using the
+    ``nth_linear_constant_coeff_variation_of_parameters_Integral`` hint and
+    simplifying the integrals manually.  Also, prefer using
+    ``nth_linear_constant_coeff_undetermined_coefficients`` when it
+    applies, because it doesn't use integration, making it faster and more
+    reliable.
+
+    Warning, using simplify=False with
+    'nth_linear_constant_coeff_variation_of_parameters' in
+    :py:meth:`~sympy.solvers.ode.dsolve` may cause it to hang, because it will
+    not attempt to simplify the Wronskian before integrating.  It is
+    recommended that you only use simplify=False with
+    'nth_linear_constant_coeff_variation_of_parameters_Integral' for this
+    method, especially if the solution to the homogeneous equation has
+    trigonometric functions in it.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Derivative
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - x**4
+    >>> dsolve(eq, f(x),
+    ... hint='nth_linear_euler_eq_nonhomogeneous_variation_of_parameters').expand()
+    Eq(f(x), C1*x + C2*x**2 + x**4/6)
+
+    """
+    hint = "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters"
+    has_integral = True
+
+    def _matches(self):
+        eq = self.ode_problem.eq_preprocessed
+        f = self.ode_problem.func.func
+        order = self.ode_problem.order
+        x = self.ode_problem.sym
+        match = self.ode_problem.get_linear_coefficients(eq, f(x), order)
+        self.r = None
+        does_match = False
+
+        if order and match:
+            coeff = match[order]
+            factor = x**order / coeff
+            self.r = {i: factor*match[i] for i in match}
+        if self.r and not any(not _test_term(self.r[i], f(x), i) for i in
+                self.r if i >= 0):
+            if self.r[-1]:
+                does_match = True
+
+        return does_match
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        eq = self.ode_problem.eq
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
-        homogen_instance = NthLinearConstantCoeffHomogeneous(SingleODEProblem(eq, f(x), x))
-        gensols, collectterms = homogen_instance._get_sols(self.r)
-        # A generator of constants
-        constants = self.ode_problem.get_numbered_constants(num=len(gensols))
-        gsol = Add(*[i*j for (i, j) in zip(constants, gensols)])
-        gsol = Eq(f(x), gsol)
-        self.r.update({'list': gensols, 'sol': gsol, 'simpliy_flag': simplify_flag})
-        gsol = self._solve_undetermined_coefficients(self.r)
-        if simplify_flag:
-            gsol = homogen_instance._get_simplified_sol([gsol], collectterms)
-        return gsol
+        order = self.ode_problem.order
+        homogen_sol, roots = _get_euler_characteristic_eq_sols(eq, f(x), self.r)
+        self.r[-1] = self.r[-1]/self.r[order]
+        sol = _solve_variation_of_parameters(eq, f(x), roots, homogen_sol, order, self.r, simplify_flag)
+
+        return [Eq(f(x), homogen_sol.rhs + (sol.rhs - homogen_sol.rhs)*self.r[order])]
+
+
+class NthLinearEulerEqNonhomogeneousUndeterminedCoefficients(SingleODESolver):
+    r"""
+    Solves an `n`\th order linear non homogeneous Cauchy-Euler equidimensional
+    ordinary differential equation using undetermined coefficients.
+
+    This is an equation with form `g(x) = a_0 f(x) + a_1 x f'(x) + a_2 x^2 f''(x)
+    \cdots`.
+
+    These equations can be solved in a general manner, by substituting
+    solutions of the form `x = exp(t)`, and deriving a characteristic equation
+    of form `g(exp(t)) = b_0 f(t) + b_1 f'(t) + b_2 f''(t) \cdots` which can
+    be then solved by nth_linear_constant_coeff_undetermined_coefficients if
+    g(exp(t)) has finite number of linearly independent derivatives.
+
+    Functions that fit this requirement are finite sums functions of the form
+    `a x^i e^{b x} \sin(c x + d)` or `a x^i e^{b x} \cos(c x + d)`, where `i`
+    is a non-negative integer and `a`, `b`, `c`, and `d` are constants.  For
+    example any polynomial in `x`, functions like `x^2 e^{2 x}`, `x \sin(x)`,
+    and `e^x \cos(x)` can all be used.  Products of `\sin`'s and `\cos`'s have
+    a finite number of derivatives, because they can be expanded into `\sin(a
+    x)` and `\cos(b x)` terms.  However, SymPy currently cannot do that
+    expansion, so you will need to manually rewrite the expression in terms of
+    the above to use this method.  So, for example, you will need to manually
+    convert `\sin^2(x)` into `(1 + \cos(2 x))/2` to properly apply the method
+    of undetermined coefficients on it.
+
+    After replacement of x by exp(t), this method works by creating a trial function
+    from the expression and all of its linear independent derivatives and
+    substituting them into the original ODE.  The coefficients for each term
+    will be a system of linear equations, which are be solved for and
+    substituted, giving the solution. If any of the trial functions are linearly
+    dependent on the solution to the homogeneous equation, they are multiplied
+    by sufficient `x` to make them linearly independent.
+
+    Examples
+    ========
+
+    >>> from sympy import dsolve, Function, Derivative, log
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - log(x)
+    >>> dsolve(eq, f(x),
+    ... hint='nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients').expand()
+    Eq(f(x), C1*x + C2*x**2 + log(x)/2 + 3/4)
+
+    """
+    hint = "nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients"
+    has_integral = False
+
+    def _matches(self):
+        eq = self.ode_problem.eq_high_order_free
+        f = self.ode_problem.func.func
+        order = self.ode_problem.order
+        x = self.ode_problem.sym
+        match = self.ode_problem.get_linear_coefficients(eq, f(x), order)
+        self.r = None
+        does_match = False
+
+        if order and match:
+            coeff = match[order]
+            factor = x**order / coeff
+            self.r = {i: factor*match[i] for i in match}
+        if self.r and not any(not _test_term(self.r[i], f(x), i) for i in
+                self.r if i >= 0):
+            if self.r[-1]:
+                e, re = posify(self.r[-1].subs(x, exp(x)))
+                undetcoeff = _undetermined_coefficients_match(e.subs(re), x)
+                if undetcoeff['test']:
+                    does_match = True
+        return does_match
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        chareq, eq, symbol = S.Zero, S.Zero, Dummy('x')
+        for i in self.r.keys():
+            if i >= 0:
+                chareq += (self.r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
+
+        for i in range(1, degree(Poly(chareq, symbol))+1):
+            eq += chareq.coeff(symbol**i)*diff(f(x), x, i)
+
+        if chareq.as_coeff_add(symbol)[0]:
+            eq += chareq.as_coeff_add(symbol)[0]*f(x)
+        e, re = posify(self.r[-1].subs(x, exp(x)))
+        eq += e.subs(re)
+
+        self.const_undet_instance = NthLinearConstantCoeffUndeterminedCoefficients(SingleODEProblem(eq, f(x), x))
+        sol = self.const_undet_instance.get_general_solution(simplify = simplify_flag)[0]
+        sol = sol.subs(x, log(x))
+        sol = sol.subs(f(log(x)), f(x)).expand()
+
+        return [sol]
 
 
 # Avoid circular import:
