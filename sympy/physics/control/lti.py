@@ -722,7 +722,7 @@ class Series(Basic):
         Systems in series configuration.
     evaluate : Boolean, Keyword
         When passed ``True``, returns the equivalent
-        Series(*args).doit(). Set to ``False`` by default.
+        ``Series(*args).doit()``. Set to ``False`` by default.
 
     Raises
     ======
@@ -1075,7 +1075,7 @@ class Parallel(Basic):
         Systems in parallel arrangement
     evaluate : Boolean, Keyword
         When passed ``True``, returns the equivalent
-        Parallel(*args).doit(). Set to ``False`` by default.
+        ``Parallel(*args).doit()``. Set to ``False`` by default.
 
     Raises
     ======
