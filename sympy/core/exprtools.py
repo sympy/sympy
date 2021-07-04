@@ -1101,6 +1101,8 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
         # don't treat internal args like terms of an Add
         if not isinstance(a, Expr):
             if isinstance(a, Basic):
+                if not a.args:
+                    return a
                 return a.func(*[handle(i) for i in a.args])
             return type(a)([handle(i) for i in a])
         return gcd_terms(a, isprimitive, clear, fraction)
