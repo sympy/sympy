@@ -146,8 +146,7 @@ class SparseMatrix(RepMatrix):
 
             elif isinstance(args[2], (dict, Dict)):
                 def update(i, j, v):
-                    # update self._smat and make sure there are
-                    # no collisions
+                    # update smat and make sure there are no collisions
                     if v:
                         if (i, j) in smat and v != smat[i, j]:
                             raise ValueError(
@@ -342,15 +341,7 @@ class SparseMatrix(RepMatrix):
 
     def scalar_multiply(self, scalar):
         "Scalar element-wise multiplication"
-        M = self.zeros(*self.shape)
-        if scalar:
-            for i in self._smat:
-                v = scalar*self._smat[i]
-                if v:
-                    M._smat[i] = v
-                else:
-                    M._smat.pop(i, None)
-        return M
+        return scalar * self
 
     def solve_least_squares(self, rhs, method='LDL'):
         """Return the least-square fit to the data.

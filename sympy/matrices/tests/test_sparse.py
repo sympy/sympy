@@ -544,6 +544,10 @@ def test_sparse_matrix():
     assert SparseMatrix.eye(2).nnz() == 2
 
 
+def test_scalar_multiply():
+    assert SparseMatrix([[1, 2]]).scalar_multiply(3) == SparseMatrix([[3, 6]])
+
+
 def test_transpose():
     assert SparseMatrix(((1, 2), (3, 4))).transpose() == \
         SparseMatrix(((1, 3), (2, 4)))
