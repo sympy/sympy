@@ -7,6 +7,7 @@ from sympy.core.sympify import sympify, _sympify
 from sympy.polys import Poly, rootof
 from sympy.series import limit
 from sympy.matrices import ImmutableMatrix
+from sympy.matrices.expressions import MatMul, MatAdd
 
 __all__ = ['TransferFunction', 'Series', 'Parallel', 'Feedback', 'TransferFunctionMatrix']
 
@@ -221,6 +222,7 @@ class TransferFunction(Basic, EvalfMixin):
             obj._num = num
             obj._den = den
             obj._var = var
+            obj.is_SISO = True
             return obj
 
         else:
@@ -697,13 +699,53 @@ class TransferFunction(Basic, EvalfMixin):
             return Pow(self.den, -1, evaluate=False)
 
 
+def _mat_mul_compatible(*args):
+    """To check whether shapes are compatible for matrix mul."""
+    compatible = True
+    for i, arg in enumerate(args, start=1):
+        try:
+            if arg.num_outputs != args[i].num_inputs:
+                compatible = False
+        except IndexError:
+            return compatible
+    return compatible
+
+
 class Series(Basic):
-    """
-    A class for representing product of transfer functions or transfer functions in a
-    series configuration.
+    r"""
+    A class for representing series configuration of SISO and MIMO transfer functions.
+
+    Parameters
+    ==========
+
+    args : TransferFunction, TransferFunctionMatrix, Series, Parallel
+        Systems in series configuration.
+    evaluate : Boolean, Keyword
+        When passed ``True``, returns the equivalent
+        Series(*args).doit(). Set to ``False`` by default.
+
+    Raises
+    ======
+
+    ValueError
+        When no argument is passed.
+
+        ``var`` attribute is not same for every system.
+
+        ``num_outputs`` of the MIMO system is not equal to the
+        ``num_inputs`` of its adjacent MIMO system. (Matrix
+        multiplication constraint, basically)
+    TypeError
+        Any of the passed ``*args`` has unsupported type
+
+        A combination of SISO and MIMO systems is
+        passed. There should be homogeneity in the
+        type of systems passed.
 
     Examples
     ========
+
+    SISO-System Examples -
 
     >>> from sympy.abc import s, p, a, b
     >>> from sympy.physics.control.lti import TransferFunction, Series, Parallel
@@ -738,8 +780,11 @@ class Series(Basic):
     Notes
     =====
 
-    All the transfer functions should use the same complex variable
-    ``var`` of the Laplace transform.
+    All the transfer functions should use the same complex variable ``var`` of the Laplace transform.
+
+    ``Series(A, B)`` is not equivalent to ``A*B``. It is always in the reverse order, that is ``B*A``.
+    In, SISO systems, it hardly matters, but in MIMO systems, there can be issues due to non-commutative
+    nature of Matrix Multiplication.
 
     See Also
     ========
@@ -748,20 +793,29 @@ class Series(Basic):
 
     """
     def __new__(cls, *args, evaluate=False):
-        if not all(isinstance(arg, (TransferFunction, Parallel, Series)) for arg in args):
-            raise TypeError("Unsupported type of argument(s) for Series.")
+        try:
+            type_set = {arg.is_SISO for arg in args}
+            if len(type_set) != 1:
+                raise TypeError("Invalid system. `args` passed contain SISO as well "
+                    "as MIMO elements.")
+            var_set = {arg.var for arg in args}
+            if len(var_set) != 1:
+                raise ValueError("All transfer functions should use the same complex variable"
+                    f" of the Laplace transform. {len(var_set)} different values found.")
+        except AttributeError:
+            raise TypeError("Unsupported type of argument passed.")
 
-        obj = super().__new__(cls, *args)
-        obj._var = None
-        for arg in args:
-            if obj._var is None:
-                obj._var = arg.var
-            elif obj._var != arg.var:
-                raise ValueError("All transfer functions should use the same complex"
-                    " variable of the Laplace transform.")
-        if evaluate:
-            return obj.doit()
-        return obj
+        if list(type_set)[0]:
+            obj = super().__new__(cls, *args)
+            obj.is_SISO = True
+        elif _mat_mul_compatible(*args):
+            obj = super().__new__(cls, *args)
+            obj.is_SISO = False
+        else:
+            raise ValueError("Number of input signals do not match the number"
+                " of output signals for some args.")
+
+        return obj.doit() if evaluate else obj
 
     @property
     def var(self):
@@ -782,7 +836,30 @@ class Series(Basic):
         p
 
         """
-        return self._var
+        return self.args[0].var
+
+    @property
+    def num_inputs(self):
+        # If the Series is for TFMs, then return num_inputs of the first TFM arg as num_input for the series system
+        try:
+            return self.args[0].num_inputs
+        # If no such attribute is found, then its TF instead of TFM and num inputs for tf should be None
+        except AttributeError:
+            return None
+
+    @property
+    def num_outputs(self):
+        try:
+            return self.args[-1].num_outputs
+        except AttributeError:
+            return None
+
+    @property
+    def shape(self):
+        try:
+            return self.args[-1].num_outputs, self.args[0].num_inputs
+        except AttributeError:
+            return None
 
     def doit(self, **kwargs):
         """
@@ -802,16 +879,27 @@ class Series(Basic):
         TransferFunction((2 - s**3)*(-a*p**2 - b*s), (-p + s)*(s**4 + 5*s + 6), s)
 
         """
-        res = None
-        for arg in self.args:
-            arg = arg.doit()
-            if res is None:
-                res = arg
-            else:
-                num_ = arg.num * res.num
-                den_ = arg.den * res.den
-                res = TransferFunction(num_, den_, self.var)
-        return res
+        def _SISO_doit():
+            res = None
+            for arg in self.args:
+                arg = arg.doit()
+                if res is None:
+                    res = arg
+                else:
+                    num_ = arg.num * res.num
+                    den_ = arg.den * res.den
+                    res = TransferFunction(num_, den_, self.var)
+            return res
+
+        def _MIMO_doit():
+            _arg = (arg.doit()._expr_mat for arg in reversed(self.args))
+            res = MatMul(*_arg, evaluate=True)
+            return TransferFunctionMatrix.from_Matrix(res, self.var)
+
+        if self.is_SISO:
+            return _SISO_doit()
+        else:
+            return _MIMO_doit()
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
         return self.doit()
@@ -977,15 +1065,42 @@ class Series(Basic):
 
 
 class Parallel(Basic):
-    """
-    A class for representing addition of transfer functions or transfer functions
-    in a parallel configuration.
+    r"""
+    A class for representing parallel configuration of SISO and MIMO transfer functions.
+
+    Parameters
+    ==========
+
+    args : TransferFunction, TransferFunctionMatrix, Series, Parallel
+        Systems in parallel arrangement
+    evaluate : Boolean, Keyword
+        When passed ``True``, returns the equivalent
+        Parallel(*args).doit(). Set to ``False`` by default.
+
+    Raises
+    ======
+
+    ValueError
+        When no argument is passed.
+
+        ``var`` attribute is not same for every system.
+
+        All MIMO systems passed don't have same shape.
+    TypeError
+        Any of the passed ``*args`` has unsupported type
+
+        A combination of SISO and MIMO systems is
+        passed. There should be homogeneity in the
+        type of systems passed.
 
     Examples
     ========
 
+    SISO-System examples -
+
     >>> from sympy.abc import s, p, a, b
-    >>> from sympy.physics.control.lti import TransferFunction, Parallel, Series
+    >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix, Parallel, Series
+    >>> from sympy import Matrix
     >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
     >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
     >>> tf3 = TransferFunction(p**2, p + s, s)
@@ -1012,6 +1127,18 @@ class Parallel(Basic):
     >>> Parallel(tf2, Series(tf1, -tf3)).doit()
     TransferFunction(-p**2*(a*p**2 + b*s)*(s**4 + 5*s + 6) + (-p + s)*(p + s)*(s**3 - 2), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
 
+    MIMO-System example -
+
+    >>> expr_1 = 1/s
+    >>> expr_2 = s/(s**2-1)
+    >>> expr_3 = (2 + s)/(s**2 - 1)
+    >>> expr_4 = 5
+    >>> tfm_a = TransferFunctionMatrix.from_Matrix(Matrix([[expr_1, expr_2], [expr_3, expr_4]]), s)
+    >>> tfm_b = TransferFunctionMatrix.from_Matrix(Matrix([[expr_2, expr_1], [expr_4, expr_3]]), s)
+    >>> tfm_c = TransferFunctionMatrix.from_Matrix(Matrix([[expr_3, expr_4], [expr_1, expr_2]]), s)
+    >>> Parallel(tfm_a, tfm_b, tfm_c)
+    Parallel(TransferFunctionMatrix(((TransferFunction(1, s, s), TransferFunction(s, s**2 - 1, s)), (TransferFunction(s + 2, s**2 - 1, s), TransferFunction(5, 1, s)))), TransferFunctionMatrix(((TransferFunction(s, s**2 - 1, s), TransferFunction(1, s, s)), (TransferFunction(5, 1, s), TransferFunction(s + 2, s**2 - 1, s)))), TransferFunctionMatrix(((TransferFunction(s + 2, s**2 - 1, s), TransferFunction(5, 1, s)), (TransferFunction(1, s, s), TransferFunction(s, s**2 - 1, s)))))
+
     Notes
     =====
 
@@ -1025,20 +1152,28 @@ class Parallel(Basic):
 
     """
     def __new__(cls, *args, evaluate=False):
-        if not all(isinstance(arg, (TransferFunction, Series, Parallel)) for arg in args):
-            raise TypeError("Unsupported type of argument(s) for Parallel.")
+        try:
+            type_set = {arg.is_SISO for arg in args}
+            if len(type_set) != 1:
+                raise TypeError("Invalid system. `args` passed contain SISO as well "
+                    "as MIMO elements.")
+            var_set = {arg.var for arg in args}
+            if len(var_set) != 1:
+                raise ValueError("All transfer functions should use the same complex variable"
+                    f" of the Laplace transform. {len(var_set)} different values found.")
+        except AttributeError:
+            raise TypeError("Unsupported type of argument passed.")
 
-        obj = super().__new__(cls, *args)
-        obj._var = None
-        for arg in args:
-            if obj._var is None:
-                obj._var = arg.var
-            elif obj._var != arg.var:
-                raise ValueError("All transfer functions should use the same complex"
-                    " variable of the Laplace transform.")
-        if evaluate:
-            return obj.doit()
-        return obj
+        if list(type_set)[0]:
+            obj = super().__new__(cls, *args)
+            obj.is_SISO = True
+        elif all(arg.shape == args[0].shape for arg in args):
+            obj = super().__new__(cls, *args)
+            obj.is_SISO = False
+        else:
+            raise TypeError("Shape of all the args is not equal.")
+
+        return obj.doit() if evaluate else obj
 
     @property
     def var(self):
@@ -1059,7 +1194,28 @@ class Parallel(Basic):
         p
 
         """
-        return self._var
+        return self.args[0].var
+
+    @property
+    def num_inputs(self):
+        try:
+            return self.args[0].num_inputs
+        except AttributeError:
+            return None
+
+    @property
+    def num_outputs(self):
+        try:
+            return self.args[0].num_outputs
+        except AttributeError:
+            return None
+
+    @property
+    def shape(self):
+        try:
+            return self.args[0].shape
+        except AttributeError:
+            return None
 
     def doit(self, **kwargs):
         """
@@ -1079,16 +1235,28 @@ class Parallel(Basic):
         TransferFunction((2 - s**3)*(-p + s) + (-a*p**2 - b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s)
 
         """
-        res = None
-        for arg in self.args:
-            arg = arg.doit()
-            if res is None:
-                res = arg
-            else:
-                num_ = res.num * arg.den + res.den * arg.num
-                den_ = res.den * arg.den
-                res = TransferFunction(num_, den_, self.var)
-        return res
+
+        def _SISO_doit():
+            res = None
+            for arg in self.args:
+                arg = arg.doit()
+                if res is None:
+                    res = arg
+                else:
+                    num_ = res.num * arg.den + res.den * arg.num
+                    den_ = res.den * arg.den
+                    res = TransferFunction(num_, den_, self.var)
+            return res
+
+        def _MIMO_doit():
+            _arg = (arg.doit()._expr_mat for arg in self.args)
+            res = MatAdd(*_arg, evaluate=True)
+            return TransferFunctionMatrix.from_Matrix(res, self.var)
+
+        if self.is_SISO:
+            return _SISO_doit()
+        else:
+            return _MIMO_doit()
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
         return self.doit()
@@ -1702,9 +1870,13 @@ class TransferFunctionMatrix(Basic):
         for row_index, row in enumerate(arg):
             temp = []
             for col_index, element in enumerate(row):
-                if not isinstance(element, (TransferFunction, Series, Parallel)):
+                try:
+                    if not element.is_SISO:
+                        raise TypeError("MIMO Series/Parallel object found as the element of "
+                        f"TransferFunctionMatrix at index {(row_index, col_index)}.")
+                except AttributeError:
                     raise TypeError("Incompatible type found as the element of "
-                    f"TransferFunctionMatrix at index {(row_index, col_index)}.")
+                        f"TransferFunctionMatrix at index {(row_index, col_index)}.")
 
                 if var != element.var:
                     raise ValueError("Conflicting value(s) found for `var`. All TransferFunction instances in "
@@ -1720,6 +1892,7 @@ class TransferFunctionMatrix(Basic):
 
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
         obj._expr_mat = ImmutableMatrix(expr_mat_arg)
+        obj.is_SISO = False
         return obj
 
     @classmethod
