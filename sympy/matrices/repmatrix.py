@@ -113,8 +113,7 @@ class RepMatrix(MatrixBase):
         rep = cls._dod_to_DomainMatrix(rows, cols, elements_dod, types)
         return rep
 
-    @property
-    def _flat(self):
+    def flat(self):
         return self._rep.to_sympy().to_list_flat()
 
     def _eval_tolist(self):

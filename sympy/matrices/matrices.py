@@ -782,12 +782,15 @@ class MatrixBase(MatrixDeprecated,
 
     @property
     def kind(self):
-        elem_kinds = set(e.kind for e in self._flat)
+        elem_kinds = set(e.kind for e in self.flat())
         if len(elem_kinds) == 1:
             elemkind, = elem_kinds
         else:
             elemkind = UndefinedKind
         return MatrixKind(elemkind)
+
+    def flat(self):
+        return [self[i, j] for i in range(self.rows) for j in range(self.cols)]
 
     def __array__(self, dtype=object):
         from .dense import matrix2numpy
@@ -970,11 +973,11 @@ class MatrixBase(MatrixDeprecated,
 
             # Matrix(Matrix(...))
             elif isinstance(args[0], MatrixBase):
-                return args[0].rows, args[0].cols, args[0]._flat
+                return args[0].rows, args[0].cols, args[0].flat()
 
             # Matrix(MatrixSymbol('X', 2, 2))
             elif isinstance(args[0], Basic) and args[0].is_Matrix:
-                return args[0].rows, args[0].cols, args[0].as_explicit()._flat
+                return args[0].rows, args[0].cols, args[0].as_explicit().flat()
 
             elif isinstance(args[0], mp.matrix):
                 M = args[0]
@@ -1239,7 +1242,7 @@ class MatrixBase(MatrixDeprecated,
         [3, 4]])
 
         """
-        return self._new(self.rows, self.cols, self._flat)
+        return self._new(self.rows, self.cols, self.flat())
 
     def cross(self, b):
         r"""

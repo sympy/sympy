@@ -1060,7 +1060,7 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
 
     if has_floats:
         try:
-            max_prec = max(term._prec for term in M._flat if isinstance(term, Float))
+            max_prec = max(term._prec for term in M.values() if isinstance(term, Float))
         except ValueError:
             # if no term in the matrix is explicitly a Float calling max()
             # will throw a error so setting max_prec to default value of 53
