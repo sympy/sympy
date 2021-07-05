@@ -106,7 +106,8 @@ factorable
 
 2nd_linear_bessel
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_2nd_linear_bessel
+.. autoclass:: sympy.solvers.ode.single::LinearBessel2nd
+   :members:
 
 Bernoulli
 ^^^^^^^^^
