@@ -137,9 +137,6 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
             raise ValueError('Ray undergoes total internal reflection')
         return asin(n1*sin(angle_of_incidence)/n2)
 
-    if angle_of_incidence and not 0 <= angle_of_incidence < pi*0.5:
-        raise ValueError
-
     # Treat the incident as ray below
     # A flag to check whether to return Ray3D or not
     return_ray = False
