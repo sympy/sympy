@@ -615,7 +615,7 @@ class PrismaticJoint(Joint):
     using SlidingJoints.
 
     >>> from sympy import symbols
-    >>> from sympy.physics.mechanics import SlidingJoint, Body
+    >>> from sympy.physics.mechanics import PrismaticJoint, Body
     >>> from sympy.physics.vector import dynamicsymbols, ReferenceFrame
 
     Declaring the mass, frame, speeds, coordinates etc isn't necessary as `Body` and
@@ -632,7 +632,7 @@ class PrismaticJoint(Joint):
 
     Bodies are connected through their masscenters.
 
-    >>> J = SlidingJoint('J', C, P, coordinates=x, speeds=v)
+    >>> J = PrismaticJoint('J', C, P, coordinates=x, speeds=v)
 
     We can check the kinematics now.
 
