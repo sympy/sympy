@@ -978,18 +978,18 @@ class Add(Expr, AssocOp):
             im_part.append(im)
         return (self.func(*re_part), self.func(*im_part))
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import expand_mul, Order
 
         old = self
 
-        expr = expand_mul(self)
+        expr = expand_mul(old)
         if not expr.is_Add:
-            return expr.as_leading_term(x, cdir=cdir)
+            return expr.as_leading_term(x, logx=logx, cdir=cdir)
 
         infinite = [t for t in expr.args if t.is_infinite]
 
-        leading_terms = [t.as_leading_term(x, cdir=cdir) for t in expr.args]
+        leading_terms = [t.as_leading_term(x, logx=logx, cdir=cdir) for t in expr.args]
 
         min, new_expr = Order(0), 0
 
@@ -1016,9 +1016,9 @@ class Add(Expr, AssocOp):
             res = Order(1)
             incr = S.One
             while res.is_Order:
-                res = old._eval_nseries(x, n=n0+incr, logx=None, cdir=cdir).cancel().trigsimp()
+                res = old._eval_nseries(x, n=n0+incr, logx=None, cdir=cdir).cancel().powsimp().trigsimp()
                 incr *= 2
-            return res.as_leading_term(x, cdir=cdir)
+            return res.as_leading_term(x, logx=logx, cdir=cdir)
 
         elif new_expr is S.NaN:
             return old.func._from_args(infinite)

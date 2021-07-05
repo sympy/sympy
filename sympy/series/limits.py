@@ -186,7 +186,7 @@ class Limit(Expr):
         hints : optional keyword arguments
             To be passed to ``doit`` methods; only used if deep is True.
         """
-        from sympy import Abs, exp, log, sign
+        from sympy import Abs, exp, log, sign, floor, ceiling, binomial
         from sympy.calculus.util import AccumBounds
 
         e, z, z0, dir = self.args
@@ -206,30 +206,38 @@ class Limit(Expr):
         if not e.has(z):
             return e
 
+        if z0 is S.NaN:
+            return S.NaN
+
+        if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
+            return self
+
         cdir = 0
         if str(dir) == "+":
             cdir = 1
         elif str(dir) == "-":
             cdir = -1
 
-        def remove_abs(expr):
+        def set_signs(expr):
             if not expr.args:
                 return expr
-            newargs = tuple(remove_abs(arg) for arg in expr.args)
+            newargs = tuple(set_signs(arg) for arg in expr.args)
             if newargs != expr.args:
                 expr = expr.func(*newargs)
-            if isinstance(expr, Abs):
+            abs_flag = isinstance(expr, Abs)
+            sign_flag = isinstance(expr, sign)
+            if abs_flag or sign_flag:
                 sig = limit(expr.args[0], z, z0, dir)
                 if sig.is_zero:
                     sig = limit(1/expr.args[0], z, z0, dir)
                 if sig.is_extended_real:
                     if (sig < 0) == True:
-                        return -expr.args[0]
+                        return -expr.args[0] if abs_flag else S.NegativeOne
                     elif (sig > 0) == True:
-                        return expr.args[0]
+                        return expr.args[0] if abs_flag else S.One
             return expr
 
-        e = remove_abs(e)
+        e = set_signs(e)
 
         if e.is_meromorphic(z, z0):
             if abs(z0) is S.Infinity:
@@ -237,8 +245,8 @@ class Limit(Expr):
             else:
                 newe = e.subs(z, z + z0)
             try:
-                coeff, ex = newe.leadterm(z, cdir)
-            except (ValueError, NotImplementedError):
+                coeff, ex = newe.leadterm(z, cdir=cdir)
+            except ValueError:
                 pass
             else:
                 if ex > 0:
@@ -251,6 +259,49 @@ class Limit(Expr):
                     return S.NegativeInfinity*sign(coeff)
                 else:
                     return S.ComplexInfinity
+
+        # is_meromorphic does not capture all meromorphic functions, and such
+        # functions may have a leading term computation which can help find the
+        # limit without entering gruntz
+        if not e.has(floor, ceiling, factorial, binomial):
+            if abs(z0) is S.Infinity:
+                newe = e.subs(z, 1/z)
+                cdir = -cdir
+            else:
+                newe = e.subs(z, z + z0)
+            try:
+                # cdir changes sign as oo- should become 0+
+                coeff, ex = newe.leadterm(z, cdir=cdir)
+            except (ValueError, NotImplementedError, PoleError, AttributeError):
+                # The NotImplementedError catching may be removed after leading
+                # term methods are defined for some special functions (_eis
+                # and Ci)
+                # AttributeError may be removed one TupleArg leading term
+                # is handled
+                pass
+            else:
+                if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+                    return self
+                if not coeff.has(z):
+                    if ex.is_positive:
+                        return S.Zero
+                    elif ex == 0:
+                        return coeff
+                    elif ex.is_negative:
+                        if ex.is_integer:
+                            if str(dir) == "-":
+                                return S.Infinity*sign(coeff)
+                            elif str(dir) == "+":
+                                return S.NegativeInfinity*sign(coeff)
+                            else:
+                                return S.ComplexInfinity
+                        else:
+                            if str(dir) == "+":
+                                return S.Infinity*sign(coeff)
+                            elif str(dir) == "-":
+                                return S.NegativeInfinity*sign(coeff)*S.NegativeOne**(S.One + ex)
+                            else:
+                                return S.ComplexInfinity
 
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.

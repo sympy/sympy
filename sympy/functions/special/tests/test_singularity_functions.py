@@ -1,7 +1,7 @@
 from sympy import (
     nan, pi, symbols, DiracDelta, Symbol, diff,
     Piecewise, I, Eq, Derivative, oo, SingularityFunction, Heaviside,
-    Float
+    Float, O
 )
 
 from sympy.core.expr import unchanged
@@ -56,6 +56,32 @@ def test_eval():
     raises(ValueError, lambda: SingularityFunction(x, a, I))
     raises(ValueError, lambda: SingularityFunction(2*I, I, n))
     raises(ValueError, lambda: SingularityFunction(x, a, -3))
+
+
+def test_leading_term():
+    l = Symbol('l', positive=True)
+    assert SingularityFunction(x, 3, 2).as_leading_term(x) == 0
+    assert SingularityFunction(x, -2, 1).as_leading_term(x) == 2
+    assert SingularityFunction(x, 0, 0).as_leading_term(x) == 1
+    assert SingularityFunction(x, 0, 0).as_leading_term(x, cdir=-1) == 0
+    assert SingularityFunction(x, 0, -1).as_leading_term(x) == 0
+    assert SingularityFunction(x, 0, -2).as_leading_term(x) == 0
+    assert (SingularityFunction(x + l, 0, 1)/2\
+        - SingularityFunction(x + l, l/2, 1)\
+        + SingularityFunction(x + l, l, 1)/2).as_leading_term(x) == -x/2
+
+
+def test_series():
+    l = Symbol('l', positive=True)
+    assert SingularityFunction(x, -3, 2).series(x) == x**2 + 6*x + 9
+    assert SingularityFunction(x, -2, 1).series(x) == x + 2
+    assert SingularityFunction(x, 0, 0).series(x) == 1
+    assert SingularityFunction(x, 0, 0).series(x, dir='-') == 0
+    assert SingularityFunction(x, 0, -1).series(x) == 0
+    assert SingularityFunction(x, 0, -2).series(x) == 0
+    assert (SingularityFunction(x + l, 0, 1)/2\
+        - SingularityFunction(x + l, l/2, 1)\
+        + SingularityFunction(x + l, l, 1)/2).nseries(x) == -x/2 + O(x**6)
 
 
 def test_rewrite():

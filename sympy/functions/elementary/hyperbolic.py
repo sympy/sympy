@@ -229,7 +229,7 @@ class sinh(HyperbolicFunction):
         coth_half = coth(S.Half*arg)
         return 2*coth_half/(coth_half**2 - 1)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -415,7 +415,7 @@ class cosh(HyperbolicFunction):
         coth_half = coth(S.Half*arg)**2
         return (coth_half + 1)/(coth_half - 1)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -664,7 +664,7 @@ class tanh(HyperbolicFunction):
     def _eval_rewrite_as_coth(self, arg, **kwargs):
         return 1/coth(arg)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -866,7 +866,7 @@ class coth(HyperbolicFunction):
         if self.args[0].is_extended_real:
             return self.args[0].is_negative
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -961,7 +961,7 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
     def _eval_expand_trig(self, **hints):
         return self._calculate_reciprocal("_eval_expand_trig", **hints)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         return (1/self._reciprocal_of(self.args[0]))._eval_as_leading_term(x)
 
     def _eval_is_extended_real(self):
@@ -1193,7 +1193,7 @@ class asinh(InverseHyperbolicFunction):
                 F = factorial(k)
                 return (-1)**k * R / F * x**n / n
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -1342,7 +1342,7 @@ class acosh(InverseHyperbolicFunction):
                 F = factorial(k)
                 return -R / F * S.ImaginaryUnit * x**n / n
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -1446,7 +1446,7 @@ class atanh(InverseHyperbolicFunction):
             x = sympify(x)
             return x**n / n
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -1543,7 +1543,7 @@ class acoth(InverseHyperbolicFunction):
             x = sympify(x)
             return x**n / n
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 

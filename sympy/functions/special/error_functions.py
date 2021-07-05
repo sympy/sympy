@@ -229,14 +229,16 @@ class erf(Function):
     def _eval_rewrite_as_erfi(self, z, **kwargs):
         return -I*erfi(I*z)
 
-    def _eval_as_leading_term(self, x, cdir=0):
-        from sympy import Order
-        arg = self.args[0].as_leading_term(x)
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
+        arg0 = arg.subs(x, 0)
 
-        if x in arg.free_symbols and Order(1, x).contains(arg):
+        if arg0 is S.ComplexInfinity:
+            arg0 = arg.limit(x, 0, dir='-' if cdir == -1 else '+')
+        if x in arg.free_symbols and arg0.is_zero:
             return 2*arg/sqrt(pi)
         else:
-            return self.func(arg)
+            return self.func(arg0)
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
@@ -428,14 +430,16 @@ class erfc(Function):
     def _eval_expand_func(self, **hints):
         return self.rewrite(erf)
 
-    def _eval_as_leading_term(self, x, cdir=0):
-        from sympy import Order
-        arg = self.args[0].as_leading_term(x)
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
+        arg0 = arg.subs(x, 0)
 
-        if x in arg.free_symbols and Order(1, x).contains(arg):
+        if arg0 is S.ComplexInfinity:
+            arg0 = arg.limit(x, 0, dir='-' if cdir == -1 else '+')
+        if arg0.is_zero:
             return S.One
         else:
-            return self.func(arg)
+            return self.func(arg0)
 
     as_real_imag = real_to_real_as_real_imag
 
@@ -612,6 +616,16 @@ class erfi(Function):
         return self.rewrite(erf)
 
     as_real_imag = real_to_real_as_real_imag
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
+        arg0 = arg.subs(x, 0)
+
+        if x in arg.free_symbols and arg0.is_zero:
+            return 2*arg/sqrt(pi)
+        elif arg0.is_finite:
+            return self.func(arg0)
+        return self.func(arg)
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
@@ -2384,6 +2398,17 @@ class fresnels(FresnelIntegral):
         return (pi*z**Rational(9, 4) / (sqrt(2)*(z**2)**Rational(3, 4)*(-z)**Rational(3, 4))
                 * meijerg([], [1], [Rational(3, 4)], [Rational(1, 4), 0], -pi**2*z**4/16))
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
+        arg0 = arg.subs(x, 0)
+
+        if arg0 is S.ComplexInfinity:
+            arg0 = arg.limit(x, 0, dir='-' if cdir == -1 else '+')
+        if x in arg.free_symbols and arg0.is_zero:
+            return pi*arg**3/6
+        else:
+            return self.func(arg0)
+
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
         point = args0[0]
@@ -2524,6 +2549,17 @@ class fresnelc(FresnelIntegral):
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
         return (pi*z**Rational(3, 4) / (sqrt(2)*root(z**2, 4)*root(-z, 4))
                 * meijerg([], [1], [Rational(1, 4)], [Rational(3, 4), 0], -pi**2*z**4/16))
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
+        arg0 = arg.subs(x, 0)
+
+        if arg0 is S.ComplexInfinity:
+            arg0 = arg.limit(x, 0, dir='-' if cdir == -1 else '+')
+        if x in arg.free_symbols and arg0.is_zero:
+            return arg
+        else:
+            return self.func(arg0)
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
