@@ -445,9 +445,6 @@ class UndefinedPredicate(Predicate):
                     continue
                 if _res is None:
                     _res = res
-                elif res is None:
-                    # since first resolutor was conclusive, we keep that value
-                    res = _res
                 else:
                     # only check consistency if both resolutors have concluded
                     if _res != res:
