@@ -16,7 +16,7 @@ from sympy.core.numbers import Float, zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.core.mul import Mul
-from sympy.functions import exp, tan, log, sqrt, besselj, bessely
+from sympy.functions import exp, tan, log, sqrt, besselj, bessely, cbrt, airyai, airybi
 from sympy.integrals import Integral
 from sympy.polys import Poly
 from sympy.polys.polytools import cancel, factor, degree
@@ -2647,7 +2647,6 @@ class LinearBessel2nd(SingleODESolver):
     https://www.math24.net/bessel-differential-equation/
 
     """
-
     hint = "2nd_linear_bessel"
     has_integral = False
 
@@ -2733,8 +2732,78 @@ class LinearBessel2nd(SingleODESolver):
         b4 = self.rn['b4']
         n = sqrt(n**2 + Rational(1, 4)*(c4 - 1)**2)
         (C0, C1) = self.ode_problem.get_numbered_constants(num=2)
-        return Eq(f(x), ((x**(Rational(1-c4,2)))*(C0*besselj(n/d4,a4*x**d4/d4)
-            + C1*bessely(n/d4,a4*x**d4/d4))).subs(x, x-b4))
+        return [Eq(f(x), ((x**(Rational(1-c4,2)))*(C0*besselj(n/d4,a4*x**d4/d4)
+            + C1*bessely(n/d4,a4*x**d4/d4))).subs(x, x-b4))]
+
+
+class LinearAiry2nd(SingleODESolver):
+    r"""
+    Gives solution of the Airy differential equation
+
+    .. math :: \frac{d^2y}{dx^2} + (a + b x) y(x) = 0
+
+    in terms of Airy special functions airyai and airybi.
+
+    Examples
+    ========
+
+    >>> from sympy import dsolve, Function
+    >>> from sympy.abc import x
+    >>> f = Function("f")
+    >>> eq = f(x).diff(x, 2) - x*f(x)
+    >>> dsolve(eq)
+    Eq(f(x), C1*airyai(x) + C2*airybi(x))
+    """
+    hint = "2nd_linear_airy"
+    has_integral = False
+
+    def _matches(self):
+        eq = self.ode_problem.eq_high_order_free
+        f = self.ode_problem.func
+        order = self.ode_problem.order
+        x = self.ode_problem.sym
+        df = f.diff(x)
+        a3 = Wild('a3', exclude=[f, df, f.diff(x, 2)])
+        b3 = Wild('b3', exclude=[f, df, f.diff(x, 2)])
+        c3 = Wild('c3', exclude=[f, df, f.diff(x, 2)])
+        a4 = Wild('a4', exclude=[x,f,df])
+        b4 = Wild('b4', exclude=[x,f,df])
+        does_match = False
+        deq = a3*(f.diff(x, 2)) + b3*df + c3*f
+        r = collect(eq,
+            [f.diff(x, 2), df, f]).match(deq)
+        if r:
+            if not all([r[key].is_polynomial() for key in r]):
+                n, d = eq.as_numer_denom()
+                eq = expand(n)
+                r = collect(eq,
+                    [f.diff(x, 2), f.diff(x), f]).match(deq)
+        if order==2 and r and r[a3] != 0:
+            p = cancel(r[b3]/r[a3])  # Used below
+            q = cancel(r[c3]/r[a3])
+            if p.is_zero:
+                self.rn = q.match(a4+b4*x)
+                if self.rn and self.rn[b4] != 0:
+                    self.rn = {'b':self.rn[a4],'m':self.rn[b4]}
+                    does_match = True
+        return does_match
+
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        (C0, C1) = self.ode_problem.get_numbered_constants(num=2)
+        b = self.rn['b']
+        m = self.rn['m']
+        if m.is_positive:
+            arg = - b/cbrt(m)**2 - cbrt(m)*x
+        elif m.is_negative:
+            arg = - b/cbrt(-m)**2 + cbrt(-m)*x
+        else:
+            arg = - b/cbrt(-m)**2 + cbrt(-m)*x
+
+        return [Eq(f(x), C0*airyai(arg) + C1*airybi(arg))]
+
 
 
 # Avoid circular import:

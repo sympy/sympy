@@ -102,7 +102,8 @@ factorable
 
 2nd_linear_airy
 ^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_2nd_linear_airy
+.. autoclass:: sympy.solvers.ode.single::LinearAiry2nd
+   :members:
 
 2nd_linear_bessel
 ^^^^^^^^^^^^^^^^^

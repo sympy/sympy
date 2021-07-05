@@ -244,8 +244,7 @@ from sympy.core.sympify import sympify
 
 from sympy.logic.boolalg import (BooleanAtom, BooleanTrue,
                                 BooleanFalse)
-from sympy.functions import exp, log, sqrt, \
-    cbrt, airyai, airybi
+from sympy.functions import exp, log, sqrt
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.polys import (Poly, terms_gcd, PolynomialError, lcm)
@@ -1060,6 +1059,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         NthLinearEulerEqNonhomogeneousVariationOfParameters: ('nth_linear_euler_eq_nonhomogeneous_variation_of_parameters',),
         NthLinearEulerEqNonhomogeneousUndeterminedCoefficients: ('nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients',),
         LinearBessel2nd: ('2nd_linear_bessel',),
+        LinearAiry2nd: ('2nd_linear_airy',),
     }
     for solvercls in solvers:
         solver = solvercls(ode)
@@ -1155,17 +1155,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
                     if not check.has(oo, NaN, zoo, -oo):
                         coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                         matching_hints["2nd_power_series_regular"] = coeff_dict
-
-            # If the ODE is ordinary and is of the form of Airy's Equation
-            # Eq(x**2*Derivative(y(x),x,x)-(ax+b)*y(x))
-
-            if p.is_zero:
-                a4 = Wild('a4', exclude=[x,f(x),df])
-                b4 = Wild('b4', exclude=[x,f(x),df])
-                rn = q.match(a4+b4*x)
-                if rn and rn[b4] != 0:
-                    rn = {'b':rn[a4],'m':rn[b4]}
-                    matching_hints["2nd_linear_airy"] = rn
 
 
     # Order keys based on allhints.
@@ -2467,38 +2456,6 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
                 x - x0)**fact)
     series = collect(expand_mul(series), [C0, C1]) + Order(x**terms)
     return Eq(f(x), series)
-
-
-def ode_2nd_linear_airy(eq, func, order, match):
-    r"""
-    Gives solution of the Airy differential equation
-
-    .. math :: \frac{d^2y}{dx^2} + (a + b x) y(x) = 0
-
-    in terms of Airy special functions airyai and airybi.
-
-    Examples
-    ========
-
-    >>> from sympy import dsolve, Function
-    >>> from sympy.abc import x
-    >>> f = Function("f")
-    >>> eq = f(x).diff(x, 2) - x*f(x)
-    >>> dsolve(eq)
-    Eq(f(x), C1*airyai(x) + C2*airybi(x))
-    """
-    x = func.args[0]
-    f = func.func
-    C0, C1 = get_numbered_constants(eq, num=2)
-    b = match['b']
-    m = match['m']
-    if m.is_positive:
-        arg = - b/cbrt(m)**2 - cbrt(m)*x
-    elif m.is_negative:
-        arg = - b/cbrt(-m)**2 + cbrt(-m)*x
-    else:
-        arg = - b/cbrt(-m)**2 + cbrt(-m)*x
-    return Eq(f(x), C0*airyai(arg) + C1*airybi(arg))
 
 
 def ode_2nd_power_series_regular(eq, func, order, match):
@@ -4816,4 +4773,4 @@ from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
         NthLinearConstantCoeffHomogeneous, NthLinearConstantCoeffVariationOfParameters,
         NthLinearConstantCoeffUndeterminedCoefficients, NthLinearEulerEqHomogeneous,
         NthLinearEulerEqNonhomogeneousVariationOfParameters,
-        NthLinearEulerEqNonhomogeneousUndeterminedCoefficients, LinearBessel2nd)
+        NthLinearEulerEqNonhomogeneousUndeterminedCoefficients, LinearBessel2nd, LinearAiry2nd)
