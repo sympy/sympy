@@ -269,7 +269,7 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
     except ValueError:
         angle_of_total_internal_reflection_onset = None
 
-    if angle_of_total_internal_reflection_onset == None or\
+    if angle_of_total_internal_reflection_onset is None or\
     angle_of_total_internal_reflection_onset > angle_of_incidence:
         R_s = -sin(angle_of_incidence - angle_of_refraction)\
                 /sin(angle_of_incidence + angle_of_refraction)
