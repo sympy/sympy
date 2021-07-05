@@ -65,7 +65,7 @@ class CompilerRunner:
 
     def __init__(self, sources, out, flags=None, run_linker=True, compiler=None, cwd='.',
                  include_dirs=None, libraries=None, library_dirs=None, std=None, define=None,
-                 undef=None, strict_aliasing=None, preferred_vendor=None, **kwargs):
+                 undef=None, strict_aliasing=None, preferred_vendor=None, linkline=None, **kwargs):
         if isinstance(sources, str):
             raise ValueError("Expected argument sources to be a list of strings.")
         self.sources = list(sources)
@@ -99,7 +99,7 @@ class CompilerRunner:
             self.flags.append(self.std_formater[
                 self.compiler_name](self.std))
 
-        self.linkline = []
+        self.linkline = linkline or []
 
         if strict_aliasing is not None:
             nsa_re = re.compile("no-strict-aliasing$")

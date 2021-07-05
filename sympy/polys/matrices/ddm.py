@@ -69,6 +69,7 @@ from .dense import (
         ddm_isub,
         ddm_ineg,
         ddm_imul,
+        ddm_irmul,
         ddm_imatmul,
         ddm_irref,
         ddm_idet,
@@ -105,8 +106,24 @@ class DDM(list):
         cols = len(ddm[0]) if ddm else len(range(self.shape[1])[slice2])
         return DDM(ddm, (rows, cols), self.domain)
 
+    def extract(self, rows, cols):
+        ddm = []
+        for i in rows:
+            rowi = self[i]
+            ddm.append([rowi[j] for j in cols])
+        return DDM(ddm, (len(rows), len(cols)), self.domain)
+
     def to_list(self):
         return list(self)
+
+    def to_list_flat(self):
+        flat = []
+        for row in self:
+            flat.extend(row)
+        return flat
+
+    def to_dok(self):
+        return {(i, j): e for i, row in enumerate(self) for j, e in enumerate(row)}
 
     def to_ddm(self):
         return self
@@ -237,6 +254,11 @@ class DDM(list):
         ddm_imul(c, b)
         return c
 
+    def rmul(a, b):
+        c = a.copy()
+        ddm_irmul(c, b)
+        return c
+
     def matmul(a, b):
         """a @ b (matrix product)"""
         m, o = a.shape
@@ -245,6 +267,12 @@ class DDM(list):
         c = a.zeros((m, n), a.domain)
         ddm_imatmul(c, a, b)
         return c
+
+    def mul_elementwise(a, b):
+        assert a.shape == b.shape
+        assert a.domain == b.domain
+        c = [[aij * bij for aij, bij in zip(ai, bi)] for ai, bi in zip(a, b)]
+        return DDM(c, a.shape, a.domain)
 
     def hstack(A, B):
         Anew = list(A.copy())

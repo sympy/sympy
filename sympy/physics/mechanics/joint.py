@@ -1,52 +1,91 @@
-from sympy.physics.vector.frame import ReferenceFrame
+# coding=utf-8
+
+from abc import ABC, abstractmethod
+
+from sympy import pi
 from sympy.physics.mechanics.body import Body
 from sympy.physics.vector import Vector, dynamicsymbols, cross
-from abc import ABC, abstractmethod
+from sympy.physics.vector.frame import ReferenceFrame
+
+import warnings
 
 __all__ = ['Joint', 'PinJoint']
 
 
 class Joint(ABC):
-    """Abstract Base class for all specific joints.
+    """Abstract base class for all specific joints.
 
     Explanation
     ===========
 
-    A joint subtracts degrees of freedom from a body.
-    This is the base class for all specific joints and holds all common methods
-    acting as an interface for all joints. Custom joint can be created by
-    inheriting Joint class and defining all abstract functions.
+    A joint subtracts degrees of freedom from a body. This is the base class
+    for all specific joints and holds all common methods acting as an interface
+    for all joints. Custom joint can be created by inheriting Joint class and
+    defining all abstract functions.
+
+    The abstract methods are:
+
+    - ``_generate_coordinates``
+    - ``_generate_speeds``
+    - ``_orient_frames``
+    - ``_set_angular_velocity``
+    - ``_set_linar_velocity``
 
     Parameters
     ==========
 
     name : string
-        The Joint's name which makes it unique.
+        A unique name for the joint.
     parent : Body
         The parent body of joint.
     child : Body
         The child body of joint.
-    coordinates: List of dynamicsymbols/dynamicsymbol, optional
-        Coordinates of joint.
-    speeds : List of dynamicsymbols/dynamicsymbol, optional
-        Speeds of joint.
+    coordinates: List of dynamicsymbols, optional
+        Generalized coordinates of the joint.
+    speeds : List of dynamicsymbols, optional
+        Generalized speeds of joint.
     parent_joint_pos : Vector, optional
-        Defines the joint's point where the parent will be connected to child.
-        Default value is masscenter of Parent Body.
+        Vector from the parent body's mass center to the point where the parent
+        and child are connected. The default value is the zero vector.
     child_joint_pos : Vector, optional
-        Defines the joint's point where the child will be connected to parent.
-        Default value is masscenter of Child Body.
+        Vector from the parent body's mass center to the point where the parent
+        and child are connected. The default value is the zero vector.
     parent_axis : Vector, optional
-        Axis of parent frame which would be aligned with child's
-        axis. Default is x axis in parent's frame.
+        Axis fixed in the parent body which aligns with an axis fixed in the
+        child body. The default is x axis in parent's reference frame.
     child_axis : Vector, optional
-        Axis of child frame which would be aligned with parent's
-        axis. Default is x axis in child's frame.
+        Axis fixed in the child body which aligns with an axis fixed in the
+        parent body. The default is x axis in child's reference frame.
+
+    Attributes
+    ==========
+
+    name : string
+        The joint's name.
+    parent : Body
+        The joint's parent body.
+    child : Body
+        The joint's child body.
+    coordinates : list
+        List of the joint's generalized coordinates.
+    speeds : list
+        List of the joint's generalized speeds.
+    parent_point : Point
+        The point fixed in the parent body that represents the joint.
+    child_point : Point
+        The point fixed in the child body that represents the joint.
+    parent_axis : Vector
+        The axis fixed in the parent frame that represents the joint.
+    child_axis : Vector
+        The axis fixed in the child frame that represents the joint.
+    kdes : list
+        Kinematical differential equations of the joint.
 
     """
 
-    def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None,
-        child_joint_pos=None, parent_axis=None, child_axis=None):
+    def __init__(self, name, parent, child, coordinates=None, speeds=None,
+                 parent_joint_pos=None, child_joint_pos=None, parent_axis=None,
+                 child_axis=None):
 
         if not isinstance(name, str):
             raise TypeError('Supply a valid name.')
@@ -57,7 +96,7 @@ class Joint(ABC):
         self._parent = parent
 
         if not isinstance(child, Body):
-            raise TypeError('Child must be an instance of Body.')
+            raise TypeError('Parent must be an instance of Body.')
         self._child = child
 
         self._coordinates = self._generate_coordinates(coordinates)
@@ -67,52 +106,81 @@ class Joint(ABC):
         self._parent_axis = self._axis(parent, parent_axis)
         self._child_axis = self._axis(child, child_axis)
 
-        self._parent_joint = self._locate_joint_pos(parent,parent_joint_pos)
-        self._child_joint = self._locate_joint_pos(child, child_joint_pos)
+        self._parent_point = self._locate_joint_pos(parent, parent_joint_pos)
+        self._child_point = self._locate_joint_pos(child, child_joint_pos)
 
         self._orient_frames()
         self._set_angular_velocity()
         self._set_linear_velocity()
 
     def __str__(self):
-        return self._name
+        return self.name
 
     def __repr__(self):
         return self.__str__()
 
+    @property
+    def name(self):
+        return self._name
+
+    @property
     def parent(self):
-        """ Parent body of Joint."""
+        """Parent body of Joint."""
         return self._parent
 
+    @property
     def child(self):
-        """ Child body of Joint."""
+        """Child body of Joint."""
         return self._child
 
+    @property
     def coordinates(self):
-        """ List of coordinates of Joint."""
+        """List generalized coordinates of the joint."""
         return self._coordinates
 
+    @property
     def speeds(self):
-        """ List of speeds of Joint."""
+        """List generalized coordinates of the joint.."""
         return self._speeds
 
+    @property
     def kdes(self):
-        """ KDE of Joint."""
+        """Kinematical differential equations of the joint."""
         return self._kdes
+
+    @property
+    def parent_axis(self):
+        """The axis of parent frame."""
+        return self._parent_axis
+
+    @property
+    def child_axis(self):
+        """The axis of child frame."""
+        return self._child_axis
+
+    @property
+    def parent_point(self):
+        """The joint's point where parent body is connected to the joint."""
+        return self._parent_point
+
+    @property
+    def child_point(self):
+        """The joint's point where child body is connected to the joint."""
+        return self._child_point
 
     @abstractmethod
     def _generate_coordinates(self, coordinates):
-        """ Generate list of coordinates."""
+        """Generate list generalized coordinates of the joint."""
         pass
 
     @abstractmethod
     def _generate_speeds(self, speeds):
-        """ Generate list of speeds. """
+        """Generate list generalized speeds of the joint."""
         pass
 
     @abstractmethod
     def _orient_frames(self):
-        """Orient frames as per the joint"""
+        """Orient frames as per the joint."""
         pass
 
     @abstractmethod
@@ -126,8 +194,8 @@ class Joint(ABC):
     def _generate_kdes(self):
         kdes = []
         t = dynamicsymbols._t
-        for i in range(len(self._coordinates)):
-            kdes.append(-self._coordinates[i].diff(t) + self._speeds[i])
+        for i in range(len(self.coordinates)):
+            kdes.append(-self.coordinates[i].diff(t) + self.speeds[i])
         return kdes
 
     def _axis(self, body, ax):
@@ -135,7 +203,11 @@ class Joint(ABC):
             ax = body.frame.x
             return ax
         if not isinstance(ax, Vector):
-            raise TypeError("Axis must be of type Vector. Example-> A.x wehere 'A' is ReferenceFrame.")
+            raise TypeError("Axis must be of type Vector.")
+        if not ax.dt(body.frame) == 0:
+            msg = ('Axis cannot be time-varying when viewed from the '
+                   'associated body.')
+            raise ValueError(msg)
         return ax
 
     def _locate_joint_pos(self, body, joint_pos):
@@ -143,13 +215,37 @@ class Joint(ABC):
             joint_pos = Vector(0)
         if not isinstance(joint_pos, Vector):
             raise ValueError('Joint Position must be supplied as Vector.')
-        return body.masscenter.locatenew(self._name + '_' + body.name + '_joint', joint_pos)
+        if not joint_pos.dt(body.frame) == 0:
+            msg = ('Position Vector cannot be time-varying when viewed from '
+                   'the associated body.')
+            raise ValueError(msg)
+        point_name = self._name + '_' + body.name + '_joint'
+        return body.masscenter.locatenew(point_name, joint_pos)
 
-    def _align_axis(self, parent, child):
+    def _alignment_rotation(self, parent, child):
         # Returns the axis and angle between two axis(vectors).
         angle = parent.angle_between(child)
         axis = cross(child, parent).normalize()
         return angle, axis
+
+    def _generate_vector(self):
+        parent_frame = self.parent.frame
+        components = self.parent_axis.to_matrix(parent_frame)
+        x, y, z = components[0], components[1], components[2]
+
+        if x != 0:
+            if y!=0:
+                if z!=0:
+                    return parent_frame.x
+                return parent_frame.z
+            return parent_frame.y
+
+        if x == 0:
+            if y!=0:
+                if z!=0:
+                    return parent_frame.x
+                return parent_frame.z
+            return parent_frame.x
 
 
 class PinJoint(Joint):
@@ -158,166 +254,244 @@ class PinJoint(Joint):
     Explanation
     ===========
 
-    It is defined such that the child body rotates with respect to the parent body
-    about the body fixed parent axis through the angle theta. The point of joint
-    (pin joint) is defined by two points in each body which coincides together.
-    In addition, the child's reference frame can be arbitrarily rotated a constant
-    amount with respect to the parent axis by passing an axis in child body which
-    must align with parent axis after the rotation.
+    A pin joint is defined such that the joint rotation axis is fixed in both
+    the child and parent and the location of the joint is relative to the mass
+    center of each body. The child rotates an angle, θ, from the parent about
+    the rotation axis and has a simple angular speed, ω, relative to the
+    parent. The direction cosine matrix between the child and parent is formed
+    using a simple rotation about an axis that is normal to both ``child_axis``
+    and ``parent_axis``, see the Notes section for a detailed explanation of
+    this.
 
     Parameters
     ==========
 
     name : string
-        The Joint's name which makes it unique.
+        A unique name for the joint.
     parent : Body
         The parent body of joint.
     child : Body
         The child body of joint.
-    coordinates: dynamicsymbol, optional
-        Coordinates of joint.
-    speeds : dynamicsymbol, optional
-        Speeds of joint.
+    coordinates: List of dynamicsymbols, optional
+        Generalized coordinates of the joint.
+    speeds : List of dynamicsymbols, optional
+        Generalized speeds of joint.
     parent_joint_pos : Vector, optional
-        Defines the joint's point where the parent will be connected to child.
-        Default value is masscenter of Parent Body.
+        Vector from the parent body's mass center to the point where the parent
+        and child are connected. The default value is the zero vector.
     child_joint_pos : Vector, optional
-        Defines the joint's point where the child will be connected to parent.
-        Default value is masscenter of Child Body.
+        Vector from the parent body's mass center to the point where the parent
+        and child are connected. The default value is the zero vector.
     parent_axis : Vector, optional
-        Axis of parent frame which would be be aligned with child's
-        axis. Default is x axis in parent's frame.
+        Axis fixed in the parent body which aligns with an axis fixed in the
+        child body. The default is x axis in parent's reference frame.
     child_axis : Vector, optional
-        Axis of child frame which would be aligned with parent's
-        axis. Default is x axis in child's frame.
+        Axis fixed in the child body which aligns with an axis fixed in the
+        parent body. The default is x axis in child's reference frame.
+
+    Attributes
+    ==========
+
+    name : string
+        The joint's name.
+    parent : Body
+        The joint's parent body.
+    child : Body
+        The joint's child body.
+    coordinates : list
+        List of the joint's generalized coordinates.
+    speeds : list
+        List of the joint's generalized speeds.
+    parent_point : Point
+        The point fixed in the parent body that represents the joint.
+    child_point : Point
+        The point fixed in the child body that represents the joint.
+    parent_axis : Vector
+        The axis fixed in the parent frame that represents the joint.
+    child_axis : Vector
+        The axis fixed in the child frame that represents the joint.
+    kdes : list
+        Kinematical differential equations of the joint.
 
     Examples
     =========
 
-    This is minimal working example where parent body and child body is
-    connected via PinJoint through their masscenters.
+    A single pin joint is created from two bodies and has the following basic
+    attributes:
 
-        >>> from sympy.physics.mechanics import Body, PinJoint
-        >>> parent = Body('parent')
-        >>> child = Body('child')
-        >>> P = PinJoint('P', parent, child)
-        >>> P.coordinates()
-        [P_theta(t)]
-        >>> P.speeds()
-        [P_omega(t)]
-        >>> P.kdes()
-        [P_omega(t) - Derivative(P_theta(t), t)]
+    >>> from sympy.physics.mechanics import Body, PinJoint
+    >>> parent = Body('P')
+    >>> parent
+    P
+    >>> child = Body('C')
+    >>> child
+    C
+    >>> joint = PinJoint('PC', parent, child)
+    >>> joint
+    PinJoint: PC  parent: P  child: C
+    >>> joint.name
+    'PC'
+    >>> joint.parent
+    P
+    >>> joint.child
+    C
+    >>> joint.parent_point
+    PC_P_joint
+    >>> joint.child_point
+    PC_C_joint
+    >>> joint.parent_axis
+    P_frame.x
+    >>> joint.child_axis
+    C_frame.x
+    >>> joint.coordinates
+    [theta_PC(t)]
+    >>> joint.speeds
+    [omega_PC(t)]
+    >>> joint.child.frame.ang_vel_in(joint.parent.frame)
+    omega_PC(t)*P_frame.x
+    >>> joint.child.frame.dcm(joint.parent.frame)
+    Matrix([
+    [1,                 0,                0],
+    [0,  cos(theta_PC(t)), sin(theta_PC(t))],
+    [0, -sin(theta_PC(t)), cos(theta_PC(t))]])
+    >>> joint.child_point.pos_from(joint.parent_point)
+    0
 
-    This is an example of double pendulum where we will do all kinematics
-    using PinJoints.
+    To further demonstrate the use of the pin joint, the kinematics of simple
+    double pendulum that rotates about the Z axis of each connected body can be
+    created as follows.
 
-        >>> from sympy import symbols
-        >>> from sympy.physics.mechanics import PinJoint, Body
-        >>> from sympy.physics.vector import dynamicsymbols, ReferenceFrame
+    >>> from sympy import symbols, trigsimp
+    >>> from sympy.physics.mechanics import Body, PinJoint
+    >>> l1, l2 = symbols('l1 l2')
 
-    Declaring the mass, frame, speeds, coordinates etc isn't necessary as `Body` and
-    `PinJoint` can declare it themselves. But we would be declaring them for better understanding.
+    First create bodies to represent the fixed ceiling and one to represent
+    each pendulum bob.
 
-        >>> mA, mB, lA, lB, h = symbols('mA, mB, lA, lB, h')
-        >>> theta, phi, omega, alpha = dynamicsymbols('theta phi omega alpha')
-        >>> N = ReferenceFrame('N')
-        >>> A = ReferenceFrame('A')
-        >>> B = ReferenceFrame('B')
+    >>> ceiling = Body('C')
+    >>> upper_bob = Body('U')
+    >>> lower_bob = Body('L')
 
-    Declaring the bodies.
+    The first joint will connect the upper bob to the ceiling by a distance of
+    ``l1`` and the joint axis will be about the Z axis for each body.
 
-        >>> rod = Body('rod', frame=A, mass=mA)
-        >>> plate = Body('plate', mass=mB, frame=B)
-        >>> C = Body('C', frame=N) #Ceiling
+    >>> ceiling_joint = PinJoint('P1', ceiling, upper_bob,
+    ... child_joint_pos=-l1*upper_bob.frame.x,
+    ... parent_axis=ceiling.frame.z,
+    ... child_axis=upper_bob.frame.z)
 
-    Declaring the joint position wrt rod's masscenter, other bodies are connected through their
-    masscenters.
+    The second joint will connect the lower bob to the upper bob by a distance
+    of ``l2`` and the joint axis will also be about the Z axis for each body.
 
-        >>> lA = (lB - h / 2) / 2 * A.z
-        >>> lC = (lB/2 + h/4) * A.z
+    >>> pendulum_joint = PinJoint('P2', upper_bob, lower_bob,
+    ... child_joint_pos=-l2*lower_bob.frame.x,
+    ... parent_axis=upper_bob.frame.z,
+    ... child_axis=lower_bob.frame.z)
 
-    Rod's y axis is aligned to ceiling's(C) y axis.
-    Rod's z axis is aligned to plate's z axis.
+    Once the joints are established the kinematics of the connected bodies can
+    be accessed. First the direction cosine matrices of pendulum link relative
+    to the ceiling are found:
 
-        >>> J1 = PinJoint('J1', C, rod, coordinates=theta, speeds=omega, child_joint_pos=lA, parent_axis=N.y, child_axis=A.y)
-        >>> J2 = PinJoint('J2', rod, plate, coordinates=phi, speeds=alpha, parent_joint_pos=lC, parent_axis=A.z, child_axis=B.z)
+    >>> upper_bob.frame.dcm(ceiling.frame)
+    Matrix([
+    [ cos(theta_P1(t)), sin(theta_P1(t)), 0],
+    [-sin(theta_P1(t)), cos(theta_P1(t)), 0],
+    [                0,                0, 1]])
+    >>> trigsimp(lower_bob.frame.dcm(ceiling.frame))
+    Matrix([
+    [ cos(theta_P1(t) + theta_P2(t)), sin(theta_P1(t) + theta_P2(t)), 0],
+    [-sin(theta_P1(t) + theta_P2(t)), cos(theta_P1(t) + theta_P2(t)), 0],
+    [                              0,                              0, 1]])
 
-    We can check the kinematics now.
+    The position of the lower bob's masscenter is found with:
 
-        >>> J1.kdes()
-        [omega(t) - Derivative(theta(t), t)]
-        >>> J2.kdes()
-        [alpha(t) - Derivative(phi(t), t)]
-        >>> rod.masscenter.vel(N)
-        (h/4 - lB/2)*omega(t)*A.x
-        >>> plate.masscenter.vel(N)
-        ((h/4 - lB/2)*omega(t) + (h/4 + lB/2)*omega(t))*A.x
-        >>> A.ang_vel_in(N)
-        omega(t)*N.y
-        >>> B.ang_vel_in(N)
-        omega(t)*N.y + alpha(t)*A.z
-        >>> A.dcm(N)
-        Matrix([
-        [cos(theta(t)), 0, -sin(theta(t))],
-        [            0, 1,              0],
-        [sin(theta(t)), 0,  cos(theta(t))]])
-        >>> B.dcm(N)
-        Matrix([
-        [ cos(phi(t))*cos(theta(t)), sin(phi(t)), -sin(theta(t))*cos(phi(t))],
-        [-sin(phi(t))*cos(theta(t)), cos(phi(t)),  sin(phi(t))*sin(theta(t))],
-        [             sin(theta(t)),           0,              cos(theta(t))]])
+    >>> lower_bob.masscenter.pos_from(ceiling.masscenter)
+    l1*U_frame.x + l2*L_frame.x
 
-    This example can also be done in another way, i.e, without explicitly defining constants,
-    dyamicsymbols, frames etc.
+    The angular velocities of the two pendulum links can be computed with
+    respect to the ceiling.
 
-        >>> rod = Body('rod')
-        >>> plate = Body('plate')
-        >>> C = Body('C') #Ceiling
-        >>> lA = (lB - h / 2) / 2 * rod.frame.z
-        >>> lC = (lB/2 + h/4) * rod.frame.z
-        >>> J1 = PinJoint('J1', C, rod, child_joint_pos=lA, parent_axis=C.frame.y, child_axis=rod.frame.y)
-        >>> J2 = PinJoint('J2', rod, plate, parent_joint_pos=lC, parent_axis=rod.frame.z, child_axis=plate.frame.z)
-        >>> J1.kdes()
-        [J1_omega(t) - Derivative(J1_theta(t), t)]
-        >>> J2.kdes()
-        [J2_omega(t) - Derivative(J2_theta(t), t)]
-        >>> rod.masscenter.vel(C.frame)
-        (h/4 - lB/2)*J1_omega(t)*rod_frame.x
-        >>> plate.masscenter.vel(C.frame)
-        ((h/4 - lB/2)*J1_omega(t) + (h/4 + lB/2)*J1_omega(t))*rod_frame.x
-        >>> rod.frame.ang_vel_in(C.frame)
-        J1_omega(t)*C_frame.y
-        >>> plate.frame.ang_vel_in(C.frame)
-        J2_omega(t)*rod_frame.z + J1_omega(t)*C_frame.y
-        >>> rod.frame.dcm(C.frame)
-        Matrix([
-        [cos(J1_theta(t)), 0, -sin(J1_theta(t))],
-        [               0, 1,                 0],
-        [sin(J1_theta(t)), 0,  cos(J1_theta(t))]])
-        >>> plate.frame.dcm(C.frame)
-        Matrix([
-        [ cos(J1_theta(t))*cos(J2_theta(t)), sin(J2_theta(t)), -sin(J1_theta(t))*cos(J2_theta(t))],
-        [-sin(J2_theta(t))*cos(J1_theta(t)), cos(J2_theta(t)),  sin(J1_theta(t))*sin(J2_theta(t))],
-        [                  sin(J1_theta(t)),                0,                   cos(J1_theta(t))]])
+    >>> upper_bob.frame.ang_vel_in(ceiling.frame)
+    omega_P1(t)*C_frame.z
+    >>> lower_bob.frame.ang_vel_in(ceiling.frame)
+    omega_P1(t)*C_frame.z + omega_P2(t)*U_frame.z
+
+    And finally, the linear velocities of the two pendulum bobs can be computed
+    with respect to the ceiling.
+
+    >>> upper_bob.masscenter.vel(ceiling.frame)
+    l1*omega_P1(t)*U_frame.y
+    >>> lower_bob.masscenter.vel(ceiling.frame)
+    l1*omega_P1(t)*U_frame.y + l2*(omega_P1(t) + omega_P2(t))*L_frame.y
 
     Notes
-    ======
+    =====
 
-    All symbols and dynamicsymbols used with `Joints` should be used with correct
-    assumption, i.e. positive=True else it may give incorrect results in some cases.
+    The direction cosine matrix between the child and parent is formed using a
+    simple rotation about an axis that is normal to both ``child_axis`` and
+    ``parent_axis``. In general, the normal axis is formed by crossing the
+    ``child_axis`` into the ``parent_axis`` except if the child and parent axes
+    are in exactly opposite directions. In that case, the vector normal to the
+    ``child_axis`` and ``parent_axis`` is formed by crossing the ``child_axis``
+    into an arbitrary vector in the parent reference frame to find a suitable
+    vector normal to the child and parent axes. The arbitrary axis is chosen
+    using the rules in the following table where ``C`` is the child reference
+    frame and ``P`` is the parent reference frame:
+
+    .. list-table::
+       :header-rows: 1
+
+       * - ``child_axis``
+         - ``parent_axis``
+         - ``arbitrary_axis``
+         - ``rotation_axis``
+       * - ``-C.x``
+         - ``P.x``
+         - ``P.y``
+         - ``P.z``
+       * - ``-C.y``
+         - ``P.y``
+         - ``P.z``
+         - ``P.x``
+       * - ``-C.z``
+         - ``P.z``
+         - ``P.x``
+         - ``P.y``
+       * - ``-C.x-C.y``
+         - ``P.x+P.y``
+         - ``P.z``
+         - ``(P.x+P.y) × P.z``
+       * - ``-C.y-C.z``
+         - ``P.y+P.z``
+         - ``P.x``
+         - ``(P.y+P.z) × P.x``
+       * - ``-C.x-C.z``
+         - ``P.x+P.z``
+         - ``P.y``
+         - ``(P.x+P.z) × P.y``
+       * - ``-C.x-C.y-C.z``
+         - ``P.x+P.y+P.z``
+         - ``P.x``
+         - ``(P.x+P.y+P.z) × P.x``
 
     """
 
-    def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None,
-        child_joint_pos=None, parent_axis=None, child_axis=None):
+    def __init__(self, name, parent, child, coordinates=None, speeds=None,
+                 parent_joint_pos=None, child_joint_pos=None, parent_axis=None,
+                 child_axis=None):
 
-        super().__init__(name, parent, child, coordinates, speeds, parent_joint_pos, child_joint_pos,
-            parent_axis, child_axis)
+        super().__init__(name, parent, child, coordinates, speeds,
+                         parent_joint_pos, child_joint_pos, parent_axis,
+                         child_axis)
+
+    def __str__(self):
+        return (f'PinJoint: {self.name}  parent: {self.parent}  '
+                f'child: {self.child}')
 
     def _generate_coordinates(self, coordinate):
         coordinates = []
         if coordinate is None:
-            theta = dynamicsymbols(self._name + '_theta', positive=True)
+            theta = dynamicsymbols('theta' + '_' + self._name)
             coordinate = theta
         coordinates.append(coordinate)
         return coordinates
@@ -325,30 +499,50 @@ class PinJoint(Joint):
     def _generate_speeds(self, speed):
         speeds = []
         if speed is None:
-            omega = dynamicsymbols(self._name + '_omega', positive=True)
+            omega = dynamicsymbols('omega' + '_' + self._name)
             speed = omega
         speeds.append(speed)
         return speeds
 
     def _orient_frames(self):
-        self._child.frame.orient_axis(self._parent.frame, self._parent_axis, 0)
-        angle, axis = self._align_axis(self._parent_axis, self._child_axis)
-        if axis != Vector(0):
-            I = ReferenceFrame('I')
-            I.orient_axis(self._child.frame, self._child_axis, 0)
-            I.orient_axis(self._parent.frame, axis, angle)
-            self._child.frame.orient_axis(I, self._parent_axis, self._coordinates[0])
-        else:
-            self._child.frame.orient_axis(self._parent.frame, self._parent_axis, self._coordinates[0])
+        self.child.frame.orient_axis(self.parent.frame, self.parent_axis, 0)
+        angle, axis = self._alignment_rotation(self.parent_axis,
+                                               self.child_axis)
+
+        odd_multiple_pi = False
+
+        if angle%pi == 0:
+            if (angle/pi).is_odd:
+                odd_multiple_pi = True
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=UserWarning)
+
+            if axis != Vector(0) or odd_multiple_pi:
+
+                if odd_multiple_pi:
+                    axis = cross(self.parent_axis,
+                                self._generate_vector())
+
+                int_frame = ReferenceFrame('int_frame')
+                int_frame.orient_axis(self.child.frame, self.child_axis, 0)
+                int_frame.orient_axis(self.parent.frame, axis, angle)
+                self.child.frame.orient_axis(int_frame, self.parent_axis,
+                                            self.coordinates[0])
+            else:
+                self.child.frame.orient_axis(self.parent.frame, self.parent_axis,
+                                            self.coordinates[0])
 
     def _set_angular_velocity(self):
-        self._child.frame.set_ang_vel(self._parent.frame, self._speeds[0] * self._parent_axis.normalize())
+        self.child.frame.set_ang_vel(self.parent.frame, self.speeds[0] *
+                                     self.parent_axis.normalize())
 
     def _set_linear_velocity(self):
-        self._parent_joint.set_vel(self._parent.frame, 0)
-        self._child_joint.set_vel(self._parent.frame, 0)
-        self._child_joint.set_pos(self._parent_joint, 0)
-        self._child.masscenter.v2pt_theory(self._parent.masscenter, self._parent.frame, self._child.frame)
+        self.parent_point.set_vel(self.parent.frame, 0)
+        self.child_point.set_vel(self.parent.frame, 0)
+        self.child_point.set_pos(self.parent_point, 0)
+        self.child.masscenter.v2pt_theory(self.parent.masscenter,
+                                          self.parent.frame, self.child.frame)
 
 
 class SlidingJoint(Joint):

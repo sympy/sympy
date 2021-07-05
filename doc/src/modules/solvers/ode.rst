@@ -78,18 +78,22 @@ factorable
 1st_exact
 ^^^^^^^^^
 .. autoclass:: sympy.solvers.ode.single.FirstExact
+   :members:
 
 1st_homogeneous_coeff_best
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_1st_homogeneous_coeff_best
+.. autoclass:: sympy.solvers.ode.single::HomogeneousCoeffBest
+   :members:
 
 1st_homogeneous_coeff_subs_dep_div_indep
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_1st_homogeneous_coeff_subs_dep_div_indep
+.. autoclass:: sympy.solvers.ode.single::HomogeneousCoeffSubsDepDivIndep
+   :members:
 
 1st_homogeneous_coeff_subs_indep_div_dep
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_1st_homogeneous_coeff_subs_indep_div_dep
+.. autoclass:: sympy.solvers.ode.single::HomogeneousCoeffSubsIndepDivDep
+   :members:
 
 1st_linear
 ^^^^^^^^^^
@@ -121,15 +125,33 @@ Riccati_special_minus2
 
 nth_linear_constant_coeff_homogeneous
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_nth_linear_constant_coeff_homogeneous
+.. autoclass:: sympy.solvers.ode.single::NthLinearConstantCoeffHomogeneous
+   :members:
 
 nth_linear_constant_coeff_undetermined_coefficients
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_nth_linear_constant_coeff_undetermined_coefficients
+.. autoclass:: sympy.solvers.ode.single::NthLinearConstantCoeffUndeterminedCoefficients
+   :members:
 
 nth_linear_constant_coeff_variation_of_parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_nth_linear_constant_coeff_variation_of_parameters
+.. autoclass:: sympy.solvers.ode.single::NthLinearConstantCoeffVariationOfParameters
+   :members:
+
+nth_linear_euler_eq_homogeneous
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.ode.single::NthLinearEulerEqHomogeneous
+   :members:
+
+nth_linear_euler_eq_nonhomogeneous_variation_of_parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.ode.single::NthLinearEulerEqNonhomogeneousVariationOfParameters
+   :members:
+
+nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.ode.single::NthLinearEulerEqNonhomogeneousUndeterminedCoefficients
+   :members:
 
 nth_algebraic
 ^^^^^^^^^^^^^
@@ -138,7 +160,8 @@ nth_algebraic
 
 nth_order_reducible
 ^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_nth_order_reducible
+.. autoclass:: sympy.solvers.ode.ode::NthOrderReducible
+   :members:
 
 separable
 ^^^^^^^^^
@@ -152,15 +175,22 @@ almost_linear
 
 linear_coefficients
 ^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_linear_coefficients
+.. autoclass:: sympy.solvers.ode.single::LinearCoefficients
+   :members:
 
 separable_reduced
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.single::SeparableReduced
+.. autoclass:: sympy.solvers.ode.single::SeparableReduced
+   :members:
 
 lie_group
 ^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode::ode_lie_group
+
+2nd_hypergeometric
+^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.ode.single::Hypergeometric2nd
+   :members:
 
 1st_power_series
 ^^^^^^^^^^^^^^^^
@@ -302,7 +332,5 @@ Internal functions
 ^^^^^^^^^^^^^^^^^^
 
 These functions are not intended for end-user use.
-
-.. autofunction:: sympy.solvers.ode.ode::_undetermined_coefficients_match
 
 .. autofunction:: sympy.solvers.ode.ode::_handle_Integral

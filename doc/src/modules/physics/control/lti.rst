@@ -18,3 +18,6 @@ lti
 
 .. autoclass:: Feedback
    :members:
+
+.. autoclass:: TransferFunctionMatrix
+   :members:

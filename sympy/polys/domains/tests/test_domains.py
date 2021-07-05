@@ -6,7 +6,7 @@ from sympy.abc import x, y, z
 from sympy.utilities.iterables import cartes
 from sympy.core.compatibility import HAS_GMPY
 
-from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, ZZ_gmpy,
+from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, EXRAW, ZZ_gmpy,
     ZZ_python, QQ_gmpy, QQ_python)
 from sympy.polys.domains.algebraicfield import AlgebraicField
 from sympy.polys.domains.gaussiandomains import ZZ_I, QQ_I
@@ -1096,6 +1096,31 @@ def test_gaussian_domains():
             q2 = G(S(3)/2, S(5)/3)
             assert G.numer(q2) == ZZ_I(9, 10)
             assert G.denom(q2) == ZZ_I(6)
+
+
+def test_EX_EXRAW():
+    assert EXRAW.zero is S.Zero
+    assert EXRAW.one is S.One
+
+    assert EX(1) == EX.Expression(1)
+    assert EX(1).ex is S.One
+    assert EXRAW(1) is S.One
+
+    # EX has cancelling but EXRAW does not
+    assert 2*EX((x + y*x)/x) == EX(2 + 2*y) != 2*((x + y*x)/x)
+    assert 2*EXRAW((x + y*x)/x) == 2*((x + y*x)/x) != (1 + y)
+
+    assert EXRAW.convert_from(EX(1), EX) is EXRAW.one
+    assert EX.convert_from(EXRAW(1), EXRAW) == EX.one
+
+    assert EXRAW.from_sympy(S.One) is S.One
+    assert EXRAW.to_sympy(EXRAW.one) is S.One
+    raises(CoercionFailed, lambda: EXRAW.from_sympy([]))
+
+    assert EXRAW.get_field() == EXRAW
+
+    assert EXRAW.unify(EX) == EXRAW
+    assert EX.unify(EXRAW) == EXRAW
 
 
 def test_canonical_unit():
