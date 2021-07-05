@@ -260,6 +260,33 @@ class PinJoint(Joint):
     the rotation axis and has a simple angular speed, ω, relative to the
     parent.
 
+    If the smallest angle between the ``parent_axis`` and the ``child_axis`` is pi,
+    then the the child body is first rotated at an angle pi, about an axis perpendicular
+    to parent_axis to align the axes.
+
+    Rotation_vector is the cross product of parent_axis and an auto-generated
+    arbitrary axis.
+
+    Considering the parent frame to be ``N``:
+
+    +--------------+---------+----------------+
+    | parent_axis           | arbitrary axis |
+    +==============+=========+================+
+    | a*N.x                 | N.y            |
+    +--------------+---------+----------------+
+    | a*N.y                 | N.z            |
+    +--------------+---------+----------------+
+    | a*N.z                 | N.x            |
+    +--------------+---------+----------------+
+    | a*N.x + b*N.y         | N.z            |
+    +--------------+---------+----------------+
+    | a*N.y + b*N.z         | N.x            |
+    +--------------+---------+----------------+
+    | a*N.z + b*N.x         | N.y            |
+    +--------------+---------+----------------+
+    | a*N.x + b*N.y + c*N.z | N.x            |
+    +--------------+---------+----------------+
+
     Parameters
     ==========
 
