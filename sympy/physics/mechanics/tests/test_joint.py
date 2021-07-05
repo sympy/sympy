@@ -339,6 +339,7 @@ def test_slidingjoint():
     assert C.masscenter.vel(P.frame) == v * P.frame.x
     assert P.ang_vel_in(C) == 0
     assert C.ang_vel_in(P) == 0
+    assert S.__str__() == 'PrismaticJoint: J  parent: P  child: C'
 
     l, m = symbols('l m')
     S = PrismaticJoint('S', P, C, parent_joint_pos= l * P.frame.x,

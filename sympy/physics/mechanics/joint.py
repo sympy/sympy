@@ -614,37 +614,90 @@ class PrismaticJoint(Joint):
     Examples
     =========
 
-    This is an example of linear mass spring damper where we will do all kinematics
-    using SlidingJoints.
+    A single prismatic joint is created from two bodies and has the following basic
+    attributes:
 
-    >>> from sympy import symbols
+    >>> from sympy.physics.mechanics import Body, PrismaticJoint
+    >>> parent = Body('P')
+    >>> parent
+    P
+    >>> child = Body('C')
+    >>> child
+    C
+    >>> joint = PrismaticJoint('PC', parent, child)
+    >>> joint
+    PrismaticJoint: PC  parent: P  child: C
+    >>> joint.name
+    'PC'
+    >>> joint.parent
+    P
+    >>> joint.child
+    C
+    >>> joint.parent_point
+    PC_P_joint
+    >>> joint.child_point
+    PC_C_joint
+    >>> joint.parent_axis
+    P_frame.x
+    >>> joint.child_axis
+    C_frame.x
+    >>> joint.coordinates
+    [x_PC(t)]
+    >>> joint.speeds
+    [v_PC(t)]
+    >>> joint.child.frame.ang_vel_in(joint.parent.frame)
+    0
+    >>> joint.child.frame.dcm(joint.parent.frame)
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
+    >>> joint.child_point.pos_from(joint.parent_point)
+    x_PC(t)*P_frame.x
+
+    To further demonstrate the use of the prismatic joint, the kinematics of linear mass
+    spring damper that translates about the X axis of each connected body can be
+    created as follows.
+
     >>> from sympy.physics.mechanics import PrismaticJoint, Body
-    >>> from sympy.physics.vector import dynamicsymbols, ReferenceFrame
 
-    Declaring the mass, frame, speeds, coordinates etc isn't necessary as `Body` and
-    `SlidingJoint` can declare it themselves. But we would be declaring them for better understanding.
+    First create bodies to represent the fixed ceiling and one to represent
+    a particle.
 
-    >>> x, v = dynamicsymbols('x v')
-    >>> m = symbols('m')
-    >>> N = ReferenceFrame('N')
+    >>> ceiling = Body('C')
+    >>> Part = Body('P')
 
-    Declaring the bodies.
+    The joint will connect the particle to the ceiling by a and the
+    joint axis will be about the x axis for each body.
 
-    >>> C = Body('C', frame=N)
-    >>> P = Body('P', frame=N, mass=m)
+    >>> J = PrismaticJoint('J', ceiling, Part)
 
-    Bodies are connected through their masscenters.
+    Once the joint is established the kinematics of the connected bodies can
+    be accessed. First the direction cosine matrices of Part relative
+    to the ceiling are found:
 
-    >>> J = PrismaticJoint('J', C, P, coordinates=x, speeds=v)
+    >>> Part.dcm(ceiling)
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
 
-    We can check the kinematics now.
+    The position of the lower bob's masscenter is found with:
 
-    >>> P.masscenter.pos_from(C.masscenter)
-    x(t)*N.x
-    >>> P.masscenter.vel(N)
-    v(t)*N.x
-    >>> J.kdes()
-    [v(t) - Derivative(x(t), t)]
+    >>> Part.masscenter.pos_from(ceiling.masscenter)
+    x_J(t)*C_frame.x
+
+    The angular velocities of the two pendulum links can be computed with
+    respect to the ceiling.
+
+    >>> Part.ang_vel_in(ceiling)
+    0
+
+    And finally, the linear velocities of the two pendulum bobs can be computed
+    with respect to the ceiling.
+
+    >>> Part.masscenter_vel(ceiling)
+    v_J(t)*C_frame.x
 
     Notes
     =====
@@ -703,6 +756,10 @@ class PrismaticJoint(Joint):
 
         super().__init__(name, parent, child, coordinates, speeds, parent_joint_pos,
                         child_joint_pos, parent_axis, child_axis)
+
+    def __str__(self):
+        return (f'PrismaticJoint: {self.name}  parent: {self.parent}  '
+                f'child: {self.child}')
 
     def _generate_coordinates(self, coordinate):
         coordinates = []
