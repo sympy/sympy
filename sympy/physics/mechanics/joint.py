@@ -553,33 +553,36 @@ class PrismaticJoint(Joint):
 
     It is defined such that the child body translates with respect to the parent
     body along the body fixed parent axis. The point of joint (sliding joint) is defined
-    by two points in each body which coincides initially.
+    by two points in each body which coincides initially. The direction cosine matrix between 
+    the child and parent is formed using a simple rotation about an axis that is normal to
+    both ``child_axis`` and ``parent_axis``, see the Notes section for a detailed explanation of
+    this.
 
     Parameters
     ==========
 
     name : string
-        The Joint's name which makes it unique.
+        A unique name for the joint.
     parent : Body
         The parent body of joint.
     child : Body
         The child body of joint.
-    coordinates: dynamicsymbol, optional
-        Coordinates of joint.
-    speeds : dynamicsymbol, optional
-        Speeds of joint.
+    coordinates: List of dynamicsymbols, optional
+        Generalized coordinates of the joint.
+    speeds : List of dynamicsymbols, optional
+        Generalized speeds of joint.
     parent_joint_pos : Vector, optional
-        Defines the joint's point where the parent will be connected to child.
-        Default value is masscenter of Parent Body.
+        Vector from the parent body's mass center to the point where the parent
+        and child are connected. The default value is the zero vector.
     child_joint_pos : Vector, optional
-        Defines the joint's point where the child will be connected to parent.
-        Default value is masscenter of Child Body.
+        Vector from the parent body's mass center to the point where the parent
+        and child are connected. The default value is the zero vector.
     parent_axis : Vector, optional
-        Axis of parent frame which would be be aligned with child's
-        axis. Default is x axis in parent's frame.
+        Axis fixed in the parent body which aligns with an axis fixed in the
+        child body. The default is x axis in parent's reference frame.
     child_axis : Vector, optional
-        Axis of child frame which would be aligned with parent's
-        axis. Default is x axis in child's frame.
+        Axis fixed in the child body which aligns with an axis fixed in the
+        parent body. The default is x axis in child's reference frame.
 
     Attributes
     ==========
@@ -590,18 +593,20 @@ class PrismaticJoint(Joint):
         The joint's parent body.
     child : Body
         The joint's child body.
-    coordinate : dynamicsymbol, optional
-        Coordinate of the joint.
-    speed : dynamicsymbol, optional
-        Speed of the joint.
+    coordinates : list
+        List of the joint's generalized coordinates.
+    speeds : list
+        List of the joint's generalized speeds.
     parent_point : Point
         The point fixed in the parent body that represents the joint.
     child_point : Point
         The point fixed in the child body that represents the joint.
     parent_axis : Vector
-        The axis of parent frame.
+        The axis fixed in the parent frame that represents the joint.
     child_axis : Vector
-        The axis of child frame.
+        The axis fixed in the child frame that represents the joint.
+    kdes : list
+        Kinematical differential equations of the joint.
 
     Examples
     =========
@@ -637,6 +642,56 @@ class PrismaticJoint(Joint):
     v(t)*N.x
     >>> J.kdes()
     [v(t) - Derivative(x(t), t)]
+
+    Notes
+    =====
+
+    The direction cosine matrix between the child and parent is formed using a
+    simple rotation about an axis that is normal to both ``child_axis`` and
+    ``parent_axis``. In general, the normal axis is formed by crossing the
+    ``child_axis`` into the ``parent_axis`` except if the child and parent axes
+    are in exactly opposite directions. In that case, the vector normal to the
+    ``child_axis`` and ``parent_axis`` is formed by crossing the ``child_axis``
+    into an arbitrary vector in the parent reference frame to find a suitable
+    vector normal to the child and parent axes. The arbitrary axis is chosen
+    using the rules in the following table where ``C`` is the child reference
+    frame and ``P`` is the parent reference frame:
+
+    .. list-table::
+       :header-rows: 1
+
+       * - ``child_axis``
+         - ``parent_axis``
+         - ``arbitrary_axis``
+         - ``rotation_axis``
+       * - ``-C.x``
+         - ``P.x``
+         - ``P.y``
+         - ``P.z``
+       * - ``-C.y``
+         - ``P.y``
+         - ``P.z``
+         - ``P.x``
+       * - ``-C.z``
+         - ``P.z``
+         - ``P.x``
+         - ``P.y``
+       * - ``-C.x-C.y``
+         - ``P.x+P.y``
+         - ``P.z``
+         - ``(P.x+P.y) × P.z``
+       * - ``-C.y-C.z``
+         - ``P.y+P.z``
+         - ``P.x``
+         - ``(P.y+P.z) × P.x``
+       * - ``-C.x-C.z``
+         - ``P.x+P.z``
+         - ``P.y``
+         - ``(P.x+P.z) × P.y``
+       * - ``-C.x-C.y-C.z``
+         - ``P.x+P.y+P.z``
+         - ``P.x``
+         - ``(P.x+P.y+P.z) × P.x``
 
     """
 
