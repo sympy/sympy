@@ -313,7 +313,6 @@ def mrv(e, x):
     elif e.is_Derivative:
         raise NotImplementedError("MRV set computation for derviatives"
                                   " not implemented yet.")
-        return mrv(e.args[0], x)
     raise NotImplementedError(
         "Don't know how to calculate the mrv of '%s'" % e)
 
