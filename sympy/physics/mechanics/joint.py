@@ -258,34 +258,10 @@ class PinJoint(Joint):
     the child and parent and the location of the joint is relative to the mass
     center of each body. The child rotates an angle, θ, from the parent about
     the rotation axis and has a simple angular speed, ω, relative to the
-    parent.
-
-    If the smallest angle between the ``parent_axis`` and the ``child_axis`` is pi,
-    then the the child body is first rotated at an angle pi, about an axis perpendicular
-    to parent_axis to align the axes.
-
-    Rotation_vector is the cross product of parent_axis and an auto-generated
-    arbitrary axis.
-
-    Considering the parent frame to be ``N``:
-
-    +-----------------------+----------------+
-    | parent_axis           | arbitrary axis |
-    +=======================+================+
-    | a*N.x                 | N.y            |
-    +-----------------------+----------------+
-    | a*N.y                 | N.z            |
-    +-----------------------+----------------+
-    | a*N.z                 | N.x            |
-    +-----------------------+----------------+
-    | a*N.x + b*N.y         | N.z            |
-    +-----------------------+----------------+
-    | a*N.y + b*N.z         | N.x            |
-    +-----------------------+----------------+
-    | a*N.z + b*N.x         | N.y            |
-    +-----------------------+----------------+
-    | a*N.x + b*N.y + c*N.z | N.x            |
-    +-----------------------+----------------+
+    parent. The direction cosine matrix between the child and parent is formed
+    using a simple rotation about an axis that is normal to both ``child_axis``
+    and ``parent_axis``, see the Notes section for a detailed explanation of
+    this.
 
     Parameters
     ==========
@@ -447,6 +423,56 @@ class PinJoint(Joint):
     l1*omega_P1(t)*U_frame.y
     >>> lower_bob.masscenter.vel(ceiling.frame)
     l1*omega_P1(t)*U_frame.y + l2*(omega_P1(t) + omega_P2(t))*L_frame.y
+
+    Notes
+    =====
+
+    The direction cosine matrix between the child and parent is formed using a
+    simple rotation about an axis that is normal to both ``child_axis`` and
+    ``parent_axis``. In general, the normal axis is formed by crossing the
+    ``child_axis`` into the ``parent_axis`` except if the child and parent axes
+    are in exactly opposite directions. In that case, the vector normal to the
+    ``child_axis`` and ``parent_axis`` is formed by crossing the ``child_axis``
+    into an arbitrary vector in the parent reference frame to find a suitable
+    vector normal to the child and parent axes. The arbitrary axis is chosen
+    using the rules in the following table where ``C`` is the child reference
+    frame and ``P`` is the parent reference frame:
+
+    .. list-table::
+       :header-rows: 1
+
+       * - ``child_axis``
+         - ``parent_axis``
+         - ``arbitrary_axis``
+         - ``rotation_axis``
+       * - ``-C.x``
+         - ``P.x``
+         - ``P.y``
+         - ``P.z``
+       * - ``-C.y``
+         - ``P.y``
+         - ``P.z``
+         - ``P.x``
+       * - ``-C.z``
+         - ``P.z``
+         - ``P.x``
+         - ``P.y``
+       * - ``-C.x-C.y``
+         - ``P.x+P.y``
+         - ``P.z``
+         - ``(P.x+P.y) × P.z``
+       * - ``-C.y-C.z``
+         - ``P.y+P.z``
+         - ``P.x``
+         - ``(P.y+P.z) × P.x``
+       * - ``-C.x-C.z``
+         - ``P.x+P.z``
+         - ``P.y``
+         - ``(P.x+P.z) × P.y``
+       * - ``-C.x-C.y-C.z``
+         - ``P.x+P.y+P.z``
+         - ``P.x``
+         - ``(P.x+P.y+P.z) × P.x``
 
     """
 
