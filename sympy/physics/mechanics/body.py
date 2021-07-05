@@ -136,6 +136,21 @@ class Body(RigidBody, Particle):  # type: ignore
         else:
             RigidBody.__init__(self, name, masscenter, frame, _mass, _inertia)
 
+    @property
+    def x(self):
+        """The basis Vector for the Body, in the x direction. """
+        return self.frame.x
+
+    @property
+    def y(self):
+        """The basis Vector for the Body, in the y direction. """
+        return self.frame.y
+
+    @property
+    def z(self):
+        """The basis Vector for the Body, in the z direction. """
+        return self.frame.z
+
     def apply_force(self, vec, point=None):
         """
         Adds a force to a point (center of mass by default) on the body.
