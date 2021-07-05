@@ -1,6 +1,6 @@
 from sympy import sin, cos, Matrix, sqrt, pi, expand_mul, S
 from sympy.core.symbol import symbols
-from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint, SlidingJoint
+from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint, PrismaticJoint
 from sympy.physics.mechanics.joint import Joint
 from sympy.physics.vector import Vector, ReferenceFrame
 from sympy.testing.pytest import raises
@@ -323,29 +323,29 @@ def test_slidingjoint():
     P = Body('P')
     C = Body('C')
     x, v = dynamicsymbols('x_S, v_S')
-    S = SlidingJoint('S', P, C)
+    S = PrismaticJoint('S', P, C)
     assert S._name == 'S'
-    assert S.parent() == P
-    assert S.child() == C
-    assert S.coordinates() == [x]
-    assert S.speeds() == [v]
-    assert S.kdes() == [v - x.diff(t)]
-    assert S._parent_axis == P.frame.x
-    assert S._child_axis == C.frame.x
-    assert S._child_joint.pos_from(C.masscenter) == Vector(0)
-    assert S._parent_joint.pos_from(P.masscenter) == Vector(0)
-    assert S._parent_joint.pos_from(S._child_joint) == - x * P.frame.x
+    assert S.parent == P
+    assert S.child == C
+    assert S.coordinates == [x]
+    assert S.speeds == [v]
+    assert S.kdes == [v - x.diff(t)]
+    assert S.parent_axis == P.frame.x
+    assert S.child_axis == C.frame.x
+    assert S.child_point.pos_from(C.masscenter) == Vector(0)
+    assert S.parent_point.pos_from(P.masscenter) == Vector(0)
+    assert S.parent_point.pos_from(S.child_point) == - x * P.frame.x
     assert P.masscenter.pos_from(C.masscenter) == - x * P.frame.x
     assert C.masscenter.vel(P.frame) == v * P.frame.x
 
     l, m = symbols('l m')
-    S = SlidingJoint('S', P, C, parent_joint_pos= l * P.frame.x, child_joint_pos= m * C.frame.y,
+    S = PrismaticJoint('S', P, C, parent_joint_pos= l * P.frame.x, child_joint_pos= m * C.frame.y,
         parent_axis = P.frame.z)
 
-    assert S._parent_axis == P.frame.z
-    assert S._child_joint.pos_from(C.masscenter) == m * C.frame.y
-    assert S._parent_joint.pos_from(P.masscenter) == l * P.frame.x
-    assert S._parent_joint.pos_from(S._child_joint) == - x * P.frame.z
+    assert S.parent_axis == P.frame.z
+    assert S.child_point.pos_from(C.masscenter) == m * C.frame.y
+    assert S.parent_point.pos_from(P.masscenter) == l * P.frame.x
+    assert S.parent_point.pos_from(S.child_point) == - x * P.frame.z
     assert P.masscenter.pos_from(C.masscenter) == - x * P.frame.x
     assert C.masscenter.vel(P.frame) == v * P.frame.z
 
@@ -354,7 +354,7 @@ def test_slidingjoint_arbitrary_axis():
     x, v = dynamicsymbols('x_S, v_S')
 
     N, A, P, C = _generate_body()
-    SlidingJoint('S', P, C, child_axis=-A.x)
+    PrismaticJoint('S', P, C, child_axis=-A.x)
 
     assert -A.x.angle_between(N.x) == 0
     assert -A.x.express(N) == -N.x
@@ -366,7 +366,7 @@ def test_slidingjoint_arbitrary_axis():
     #When axes are different and parent joint is at masscenter but child joint is at a unit vector from
     #child masscenter.
     N, A, P, C = _generate_body()
-    SlidingJoint('S', P, C, child_axis=A.y, child_joint_pos=A.x)
+    PrismaticJoint('S', P, C, child_axis=A.y, child_joint_pos=A.x)
 
     assert A.y.angle_between(N.x) == 0 #Axis are aligned
     assert A.y.express(N) == N.x
@@ -377,7 +377,7 @@ def test_slidingjoint_arbitrary_axis():
 
     #Similar to previous case but wrt parent body
     N, A, P, C = _generate_body()
-    SlidingJoint('S', P, C, parent_axis=N.y, parent_joint_pos=N.x)
+    PrismaticJoint('S', P, C, parent_axis=N.y, parent_joint_pos=N.x)
 
     assert N.y.angle_between(A.x) == 0 #Axis are aligned
     assert N.y.express(A) ==  A.x
@@ -387,7 +387,7 @@ def test_slidingjoint_arbitrary_axis():
 
     #Both joint pos id defined but different axes
     N, A, P, C = _generate_body()
-    SlidingJoint('S', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y)
+    PrismaticJoint('S', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y)
     assert N.x.angle_between(A.x + A.y) == 0 #Axis are aligned
     assert (A.x + A.y).express(N) == sqrt(2)*N.x
     assert A.dcm(N) == Matrix([[sqrt(2)/2, -sqrt(2)/2, 0], [sqrt(2)/2, sqrt(2)/2, 0], [0, 0, 1]])
@@ -397,7 +397,7 @@ def test_slidingjoint_arbitrary_axis():
     assert C.masscenter.vel(N).express(A) == v * (A.x + A.y)/sqrt(2)
 
     N, A, P, C = _generate_body()
-    SlidingJoint('S', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y-A.z)
+    PrismaticJoint('S', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y-A.z)
     assert N.x.angle_between(A.x + A.y - A.z) == 0 #Axis are aligned
     assert (A.x + A.y - A.z).express(N) == sqrt(3)*N.x
     assert C.masscenter.vel(N) == v*N.x
@@ -408,7 +408,8 @@ def test_slidingjoint_arbitrary_axis():
 
     N, A, P, C = _generate_body()
     m, n = symbols('m n')
-    SlidingJoint('S', P, C, parent_joint_pos=m*N.x, child_joint_pos=n*A.x, child_axis=A.x+A.y-A.z, parent_axis=N.x-N.y+N.z)
+    PrismaticJoint('S', P, C, parent_joint_pos=m*N.x, child_joint_pos=n*A.x,
+                    child_axis=A.x+A.y-A.z, parent_axis=N.x-N.y+N.z)
     assert (N.x-N.y+N.z).angle_between(A.x+A.y-A.z) == 0 #Axis are aligned
     assert (A.x-A.y+A.z).express(N) == - 5/3*N.x - 1/3*N.y + 1/3*N.z
     assert C.masscenter.vel(N) == v*N.x - v*N.y + v*N.z

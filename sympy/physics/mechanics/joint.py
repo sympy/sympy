@@ -545,8 +545,8 @@ class PinJoint(Joint):
                                           self.parent.frame, self.child.frame)
 
 
-class SlidingJoint(Joint):
-    """Sliding (Prismatic) Joint.
+class PrismaticJoint(Joint):
+    """Prismatic Joint.
 
     Explanation
     ===========
@@ -594,10 +594,10 @@ class SlidingJoint(Joint):
         Coordinate of the joint.
     speed : dynamicsymbol, optional
         Speed of the joint.
-    parent_joint : Point
-        The joint's point where parent body is connected to the joint.
-    child_joint : Point
-        The joint's point where child body is connected to the joint.
+    parent_point : Point
+        The point fixed in the parent body that represents the joint.
+    child_point : Point
+        The point fixed in the child body that represents the joint.
     parent_axis : Vector
         The axis of parent frame.
     child_axis : Vector
@@ -643,8 +643,8 @@ class SlidingJoint(Joint):
     def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None,
         child_joint_pos=None, parent_axis=None, child_axis=None):
 
-        super().__init__(name, parent, child, coordinates, speeds, parent_joint_pos, child_joint_pos,
-            parent_axis, child_axis)
+        super().__init__(name, parent, child, coordinates, speeds, parent_joint_pos,
+                        child_joint_pos, parent_axis, child_axis)
 
     def _generate_coordinates(self, coordinate):
         coordinates = []
@@ -663,17 +663,17 @@ class SlidingJoint(Joint):
         return speeds
 
     def _orient_frames(self):
-        self._child.frame.orient_axis(self._parent.frame, self._parent_axis, 0)
-        angle, axis = self._align_axis(self._parent_axis, self._child_axis)
+        self.child.frame.orient_axis(self.parent.frame, self.parent_axis, 0)
+        angle, axis = self._alignment_rotation(self.parent_axis, self.child_axis)
         if axis != Vector(0):
-            self._child.frame.orient_axis(self._parent.frame, axis, angle)
+            self.child.frame.orient_axis(self.parent.frame, axis, angle)
 
     def _set_angular_velocity(self):
         return
 
     def _set_linear_velocity(self):
-        self._parent_joint.set_vel(self._parent.frame, 0)
-        self._child_joint.set_vel(self._child.frame, 0)
-        self._child_joint.set_pos(self._parent_joint, self._coordinates[0] * self._parent_axis)
-        self._child_joint.set_vel(self._parent.frame, self._speeds[0] * self._parent_axis)
-        self._child.masscenter.set_vel(self._parent.frame, self._speeds[0] * self._parent_axis)
+        self.parent_point.set_vel(self.parent.frame, 0)
+        self.child_point.set_vel(self.child.frame, 0)
+        self.child_point.set_pos(self.parent_point, self.coordinates[0] * self.parent_axis)
+        self.child_point.set_vel(self.parent.frame, self.speeds[0] * self.parent_axis)
+        self.child.masscenter.set_vel(self.parent.frame, self.speeds[0] * self.parent_axis)

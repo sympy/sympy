@@ -57,4 +57,4 @@ from .body import Body
 
 from .system import SymbolicSystem
 
-from .joint import PinJoint, SlidingJoint
+from .joint import PinJoint, PrismaticJoint

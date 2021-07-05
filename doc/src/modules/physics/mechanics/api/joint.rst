@@ -16,8 +16,8 @@ PinJoint
 .. autoclass:: PinJoint
    :members:
 
-SlidingJoint
+PrismaticJoint
 ============
 
-.. autoclass:: SlidingJoint
+.. autoclass:: PrismaticJoint
    :members:
