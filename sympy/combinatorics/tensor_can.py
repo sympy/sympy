@@ -1092,7 +1092,7 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
     if not base and list_free_indices.count([]) < 2:
         n = len(list_free_indices)
         size = gens[0].size
-        size = n * (gens[0].size - 2) + 2
+        size = n * (size - 2) + 2
         return size, [], [_af_new(list(range(size)))]
 
     # if any(list_free_indices) one needs to compute the pointwise
