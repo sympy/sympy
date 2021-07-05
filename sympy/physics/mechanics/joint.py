@@ -9,7 +9,7 @@ from sympy.physics.vector.frame import ReferenceFrame
 
 import warnings
 
-__all__ = ['Joint', 'PinJoint']
+__all__ = ['Joint', 'PinJoint', 'PrismaticJoint']
 
 
 class Joint(ABC):
