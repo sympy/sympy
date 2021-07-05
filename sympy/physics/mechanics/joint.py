@@ -299,9 +299,9 @@ class PinJoint(Joint):
         The parent body of joint.
     child : Body
         The child body of joint.
-    coordinates: List of dynamicsymbols, optional
+    coordinates: dynamicsymbol, optional
         Generalized coordinates of the joint.
-    speeds : List of dynamicsymbols, optional
+    speeds : dynamicsymbol, optional
         Generalized speeds of joint.
     parent_joint_pos : Vector, optional
         Vector from the parent body's mass center to the point where the parent
@@ -570,9 +570,9 @@ class PrismaticJoint(Joint):
         The parent body of joint.
     child : Body
         The child body of joint.
-    coordinates: List of dynamicsymbols, optional
+    coordinates: dynamicsymbol, optional
         Generalized coordinates of the joint.
-    speeds : List of dynamicsymbols, optional
+    speeds : dynamicsymbol, optional
         Generalized speeds of joint.
     parent_joint_pos : Vector, optional
         Vector from the parent body's mass center to the point where the parent
