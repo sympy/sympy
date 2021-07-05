@@ -310,10 +310,10 @@ def test_issue_3501():
     a = Symbol("a")
     e = x**(-2)*(x*sin(a + x) - x*sin(a))
     assert e.nseries(x, n=6) == cos(a) - sin(a)*x/2 - cos(a)*x**2/6 + \
-        sin(a)*x**3/24 + O(x**4)
+        x**3*sin(a)/24 + x**4*cos(a)/120 - x**5*sin(a)/720 + O(x**6)
     e = x**(-2)*(x*cos(a + x) - x*cos(a))
     assert e.nseries(x, n=6) == -sin(a) - cos(a)*x/2 + sin(a)*x**2/6 + \
-        cos(a)*x**3/24 + O(x**4)
+        cos(a)*x**3/24 - x**4*sin(a)/120 - x**5*cos(a)/720 + O(x**6)
 
 
 def test_issue_3502():
@@ -392,8 +392,8 @@ def test_bug5():
     e = (-log(w) + log(1 + w*log(x)))**(-2)*w**(-2)*((-log(w) +
         log(1 + x*w))*(-log(w) + log(1 + w*log(x)))*w - x*(-log(w) +
         log(1 + w*log(x)))*w)
-    assert e.nseries(w, n=2, logx=l) == x/w/l + 1/w + O(1, w)
-    assert e.nseries(w, n=3, logx=l) == x/w/l + 1/w - x/l + 1/l*log(x) \
+    assert e.nseries(w, n=0, logx=l) == x/w/l + 1/w + O(1, w)
+    assert e.nseries(w, n=1, logx=l) == x/w/l + 1/w - x/l + 1/l*log(x) \
         + x*log(x)/l**2 + O(w)
 
 

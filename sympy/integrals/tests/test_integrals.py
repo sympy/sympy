@@ -13,7 +13,7 @@ from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
-from sympy.testing.pytest import (raises, slow, skip, ON_TRAVIS, XFAIL,
+from sympy.testing.pytest import (raises, slow, skip, ON_TRAVIS,
     warns_deprecated_sympy)
 from sympy.testing.randtest import verify_numerically
 
@@ -1507,7 +1507,6 @@ def test_issue_14782_slow():
     assert integrate(f, [x, 0, 1]) == S.One / 3 - pi / 16
 
 
-@XFAIL
 def test_issue_12081():
     f = x**(Rational(-3, 2))*exp(-x)
     assert integrate(f, [x, 0, oo]) is oo

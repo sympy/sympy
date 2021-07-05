@@ -187,7 +187,7 @@ def test_atan():
     assert limit(atan(x) + sqrt(x + 1) - sqrt(x), x, oo) == pi/2
 
 
-def test_abs_sign():
+def test_set_signs():
     assert limit(abs(x), x, 0) == 0
     assert limit(abs(sin(x)), x, 0) == 0
     assert limit(abs(cos(x)), x, 0) == 1

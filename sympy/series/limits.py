@@ -218,10 +218,10 @@ class Limit(Expr):
         elif str(dir) == "-":
             cdir = -1
 
-        def set_sign(expr):
+        def set_signs(expr):
             if not expr.args:
                 return expr
-            newargs = tuple(set_sign(arg) for arg in expr.args)
+            newargs = tuple(set_signs(arg) for arg in expr.args)
             if newargs != expr.args:
                 expr = expr.func(*newargs)
             abs_flag = isinstance(expr, Abs)
@@ -237,7 +237,7 @@ class Limit(Expr):
                         return expr.args[0] if abs_flag else S.One
             return expr
 
-        e = set_sign(e)
+        e = set_signs(e)
 
         if e.is_meromorphic(z, z0):
             if abs(z0) is S.Infinity:
@@ -297,9 +297,9 @@ class Limit(Expr):
                                 return S.ComplexInfinity
                         else:
                             if str(dir) == "+":
-                                return S.Infinity
+                                return S.Infinity*sign(coeff)
                             elif str(dir) == "-":
-                                return S.NegativeInfinity*S.NegativeOne**(S.One + ex)
+                                return S.NegativeInfinity*sign(coeff)*S.NegativeOne**(S.One + ex)
                             else:
                                 return S.ComplexInfinity
 

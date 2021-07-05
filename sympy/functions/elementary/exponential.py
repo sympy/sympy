@@ -517,10 +517,10 @@ class exp(ExpBase, metaclass=ExpMeta):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0].cancel().as_leading_term(x, logx=logx)
         arg0 = arg.subs(x, 0)
-        if arg0.is_zero:
-            return S.One
-        elif not arg0.is_infinite:
-            return exp(arg)
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0)
+        if arg0.is_infinite is False:
+            return exp(arg0)
         raise PoleError("Cannot expand %s around 0" % (self))
 
     def _eval_rewrite_as_sin(self, arg, **kwargs):

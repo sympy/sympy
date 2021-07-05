@@ -1898,7 +1898,10 @@ class Mul(Expr, AssocOp):
                 facs.append(s.removeO())
 
         except (ValueError, NotImplementedError, TypeError, AttributeError, PoleError):
-            facs = [t.nseries(x, n=n, logx=logx, cdir=cdir) for t in self.args]
+            n0 = sympify(sum(t[1] for t in ords if t[1].is_number))
+            if n0.is_nonnegative:
+                n0 = S.Zero
+            facs = [t.nseries(x, n=ceiling(n-n0), logx=logx, cdir=cdir) for t in self.args]
             res = powsimp(self.func(*facs).expand(), combine='exp', deep=True)
             if res.has(Order):
                 res += Order(x**n, x)

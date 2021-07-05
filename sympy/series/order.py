@@ -192,7 +192,7 @@ class Order(Expr):
                 ps = [S.Zero for p in point]
             elif point[0] is not S.Zero:
                 s = {k: Dummy() + point[0] for k in variables}
-                rs = {v - point[0]: k - point[0] for k, v in s.items()}
+                rs = {(v - point[0]).together(): k - point[0] for k, v in s.items()}
                 ps = [S.Zero for p in point]
             else:
                 s = ()
@@ -252,6 +252,7 @@ class Order(Expr):
                                 new_expr = Order(Add(*orders), *pts)
                                 if new_expr.is_Add:
                                     new_expr = Order(Add(*[a.expr for a in new_expr.args]), *pts)
+                                expr = new_expr.expr
                             elif expr.is_Mul:
                                 expr = Mul(*[a.expr for a in orders])
                             elif expr.is_Pow:

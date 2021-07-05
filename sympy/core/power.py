@@ -1717,10 +1717,10 @@ class Pow(Expr):
         if self.base is S.Exp1:
             arg = e.as_leading_term(x, logx=logx)
             arg0 = arg.subs(x, 0)
-            if arg0.is_zero:
-                return S.One
-            elif not arg0.is_infinite:
-                return S.Exp1**arg
+            if arg0 is S.NaN:
+                arg0 = arg.limit(x, 0)
+            if arg0.is_infinite is False:
+                return S.Exp1**arg0
             raise PoleError("Cannot expand %s around 0" % (self))
         elif e.has(x):
             lt = exp(e * log(b))

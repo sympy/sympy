@@ -983,7 +983,7 @@ class Add(Expr, AssocOp):
 
         old = self
 
-        expr = expand_mul(self)
+        expr = expand_mul(old)
         if not expr.is_Add:
             return expr.as_leading_term(x, logx=logx, cdir=cdir)
 
