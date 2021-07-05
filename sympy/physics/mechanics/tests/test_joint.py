@@ -353,6 +353,20 @@ def test_slidingjoint():
     assert C.ang_vel_in(P) == 0
     assert P.ang_vel_in(C) == 0
 
+    P = Body('P')
+    C = Body('C')
+    l, m = symbols('l m')
+    S = PrismaticJoint('S', P, C, parent_joint_pos= l * P.frame.z,
+                    child_joint_pos= m * C.frame.x, parent_axis = P.frame.z)
+    assert S.parent_axis == P.frame.z
+    assert S.child_point.pos_from(C.masscenter) == m * C.frame.x
+    assert S.parent_point.pos_from(P.masscenter) == l * P.frame.z
+    assert S.parent_point.pos_from(S.child_point) == - x * P.frame.z
+    assert P.masscenter.pos_from(C.masscenter) == (-l - x)*P.frame.z + m*C.frame.x
+    assert C.masscenter.vel(P.frame) == v * P.frame.z
+    assert C.ang_vel_in(P) == 0
+    assert P.ang_vel_in(C) == 0
+
 
 def test_slidingjoint_arbitrary_axis():
     x, v = dynamicsymbols('x_S, v_S')
