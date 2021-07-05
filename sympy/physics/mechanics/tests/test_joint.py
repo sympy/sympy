@@ -337,10 +337,11 @@ def test_slidingjoint():
     assert S.parent_point.pos_from(S.child_point) == - x * P.frame.x
     assert P.masscenter.pos_from(C.masscenter) == - x * P.frame.x
     assert C.masscenter.vel(P.frame) == v * P.frame.x
+    assert P.ang_vel_in(C) == 0
 
     l, m = symbols('l m')
-    S = PrismaticJoint('S', P, C, parent_joint_pos= l * P.frame.x, child_joint_pos= m * C.frame.y,
-        parent_axis = P.frame.z)
+    S = PrismaticJoint('S', P, C, parent_joint_pos= l * P.frame.x,
+                    child_joint_pos= m * C.frame.y, parent_axis = P.frame.z)
 
     assert S.parent_axis == P.frame.z
     assert S.child_point.pos_from(C.masscenter) == m * C.frame.y
@@ -348,6 +349,7 @@ def test_slidingjoint():
     assert S.parent_point.pos_from(S.child_point) == - x * P.frame.z
     assert P.masscenter.pos_from(C.masscenter) == - x * P.frame.x
     assert C.masscenter.vel(P.frame) == v * P.frame.z
+    assert C.ang_vel_in(P) == 0
 
 
 def test_slidingjoint_arbitrary_axis():
@@ -362,6 +364,7 @@ def test_slidingjoint_arbitrary_axis():
     assert C.masscenter.pos_from(P.masscenter) == x * N.x
     assert C.masscenter.pos_from(P.masscenter).express(A).simplify() == x * A.x
     assert C.masscenter.vel(N) == v * N.x
+    assert A.ang_vel_in(N) == 0
 
     #When axes are different and parent joint is at masscenter but child joint is at a unit vector from
     #child masscenter.
@@ -374,6 +377,7 @@ def test_slidingjoint_arbitrary_axis():
     assert C.masscenter.vel(N) == v*N.x
     assert C.masscenter.pos_from(P.masscenter) == x*N.x - A.x
     assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == x*N.x + N.y
+    assert A.ang_vel_in(N) == 0
 
     #Similar to previous case but wrt parent body
     N, A, P, C = _generate_body()
@@ -384,6 +388,7 @@ def test_slidingjoint_arbitrary_axis():
     assert A.dcm(N) == Matrix([[0, 1, 0], [-1, 0, 0], [0, 0, 1]])
     assert C.masscenter.vel(N) == v * N.y
     assert C.masscenter.pos_from(P.masscenter) == N.x + x*N.y
+    assert A.ang_vel_in(N) == 0
 
     #Both joint pos id defined but different axes
     N, A, P, C = _generate_body()
@@ -395,6 +400,7 @@ def test_slidingjoint_arbitrary_axis():
     assert C.masscenter.pos_from(P.masscenter) == (x + 1)*N.x - A.x
     assert C.masscenter.pos_from(P.masscenter).express(N) == (x - sqrt(2)/2 + 1)*N.x + sqrt(2)/2*N.y
     assert C.masscenter.vel(N).express(A) == v * (A.x + A.y)/sqrt(2)
+    assert A.ang_vel_in(N) == 0
 
     N, A, P, C = _generate_body()
     PrismaticJoint('S', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y-A.z)
@@ -405,6 +411,7 @@ def test_slidingjoint_arbitrary_axis():
     assert C.masscenter.pos_from(P.masscenter).express(N) == \
         (x - sqrt(3)/3 + 1)*N.x + sqrt(3)/3*N.y - sqrt(3)/3*N.z
     assert C.masscenter.vel(N).express(A) == sqrt(3)*v/3*A.x + sqrt(3)*v/3*A.y - sqrt(3)*v/3*A.z
+    assert A.ang_vel_in(N) == 0
 
     N, A, P, C = _generate_body()
     m, n = symbols('m n')
@@ -417,3 +424,4 @@ def test_slidingjoint_arbitrary_axis():
     assert C.masscenter.pos_from(P.masscenter).express(N) == \
         (m + n/3 + x)*N.x + (2*n/3 - x)*N.y + (-2*n/3 + x)*N.z
     assert C.masscenter.vel(N).express(A) == v*A.x + v*A.y - v*A.z
+    assert A.ang_vel_in(N) == 0

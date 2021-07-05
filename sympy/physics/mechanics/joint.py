@@ -724,7 +724,7 @@ class PrismaticJoint(Joint):
             self.child.frame.orient_axis(self.parent.frame, axis, angle)
 
     def _set_angular_velocity(self):
-        return
+        self.child.frame.set_ang_vel(self.parent.frame, 0)
 
     def _set_linear_velocity(self):
         self.parent_point.set_vel(self.parent.frame, 0)
