@@ -324,7 +324,7 @@ def test_slidingjoint():
     C = Body('C')
     x, v = dynamicsymbols('x_S, v_S')
     S = PrismaticJoint('S', P, C)
-    assert S._name == 'S'
+    assert S.name == 'S'
     assert S.parent == P
     assert S.child == C
     assert S.coordinates == [x]
