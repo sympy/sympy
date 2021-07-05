@@ -247,6 +247,33 @@ class Joint(ABC):
                 return parent_frame.z
             return parent_frame.x
 
+    def _set_orientation(self):
+        #Helper method for `orient_axis()`
+        self.child.frame.orient_axis(self.parent.frame, self.parent_axis, 0)
+        angle, axis = self._alignment_rotation(self.parent_axis,
+                                                self.child_axis)
+
+        odd_multiple_pi = False
+
+        if angle%pi == 0:
+            if (angle/pi) == 1:
+                odd_multiple_pi = True
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=UserWarning)
+
+            if axis != Vector(0) or odd_multiple_pi:
+
+                if odd_multiple_pi:
+                    axis = cross(self.parent_axis,
+                                self._generate_vector())
+
+                int_frame = ReferenceFrame('int_frame')
+                int_frame.orient_axis(self.child.frame, self.child_axis, 0)
+                int_frame.orient_axis(self.parent.frame, axis, angle)
+                return int_frame
+        return self.parent.frame
+
 
 class PinJoint(Joint):
     """Pin (Revolute) Joint.
@@ -505,33 +532,9 @@ class PinJoint(Joint):
         return speeds
 
     def _orient_frames(self):
-        self.child.frame.orient_axis(self.parent.frame, self.parent_axis, 0)
-        angle, axis = self._alignment_rotation(self.parent_axis,
-                                               self.child_axis)
-
-        odd_multiple_pi = False
-
-        if angle%pi == 0:
-            if (angle/pi).is_odd:
-                odd_multiple_pi = True
-
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=UserWarning)
-
-            if axis != Vector(0) or odd_multiple_pi:
-
-                if odd_multiple_pi:
-                    axis = cross(self.parent_axis,
-                                self._generate_vector())
-
-                int_frame = ReferenceFrame('int_frame')
-                int_frame.orient_axis(self.child.frame, self.child_axis, 0)
-                int_frame.orient_axis(self.parent.frame, axis, angle)
-                self.child.frame.orient_axis(int_frame, self.parent_axis,
-                                            self.coordinates[0])
-            else:
-                self.child.frame.orient_axis(self.parent.frame, self.parent_axis,
-                                            self.coordinates[0])
+        frame = self._set_orientation()
+        self.child.frame.orient_axis(frame, self.parent_axis,
+                                    self.coordinates[0])
 
     def _set_angular_velocity(self):
         self.child.frame.set_ang_vel(self.parent.frame, self.speeds[0] *
@@ -718,10 +721,8 @@ class PrismaticJoint(Joint):
         return speeds
 
     def _orient_frames(self):
-        self.child.frame.orient_axis(self.parent.frame, self.parent_axis, 0)
-        angle, axis = self._alignment_rotation(self.parent_axis, self.child_axis)
-        if axis != Vector(0):
-            self.child.frame.orient_axis(self.parent.frame, axis, angle)
+        frame = self._set_orientation()
+        self.child.frame.orient_axis(frame, self.parent_axis, 0)
 
     def _set_angular_velocity(self):
         self.child.frame.set_ang_vel(self.parent.frame, 0)

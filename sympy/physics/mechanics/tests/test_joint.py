@@ -358,11 +358,11 @@ def test_slidingjoint_arbitrary_axis():
     N, A, P, C = _generate_body()
     PrismaticJoint('S', P, C, child_axis=-A.x)
 
-    assert -A.x.angle_between(N.x) == 0
-    assert -A.x.express(N) == -N.x
-    assert A.dcm(N) == Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    assert -A.x.angle_between(N.x) == -pi
+    assert -A.x.express(N) == N.x
+    assert A.dcm(N) == Matrix([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
     assert C.masscenter.pos_from(P.masscenter) == x * N.x
-    assert C.masscenter.pos_from(P.masscenter).express(A).simplify() == x * A.x
+    assert C.masscenter.pos_from(P.masscenter).express(A).simplify() == -x * A.x
     assert C.masscenter.vel(N) == v * N.x
     assert A.ang_vel_in(N) == 0
 
