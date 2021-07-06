@@ -2731,9 +2731,9 @@ class LinearBessel2nd(SingleODESolver):
         d4 = self.rn['d4']
         b4 = self.rn['b4']
         n = sqrt(n**2 + Rational(1, 4)*(c4 - 1)**2)
-        (C0, C1) = self.ode_problem.get_numbered_constants(num=2)
-        return [Eq(f(x), ((x**(Rational(1-c4,2)))*(C0*besselj(n/d4,a4*x**d4/d4)
-            + C1*bessely(n/d4,a4*x**d4/d4))).subs(x, x-b4))]
+        (C1, C2) = self.ode_problem.get_numbered_constants(num=2)
+        return [Eq(f(x), ((x**(Rational(1-c4,2)))*(C1*besselj(n/d4,a4*x**d4/d4)
+            + C2*bessely(n/d4,a4*x**d4/d4))).subs(x, x-b4))]
 
 
 class LinearAiry2nd(SingleODESolver):
@@ -2763,36 +2763,22 @@ class LinearAiry2nd(SingleODESolver):
         order = self.ode_problem.order
         x = self.ode_problem.sym
         df = f.diff(x)
-        a3 = Wild('a3', exclude=[f, df, f.diff(x, 2)])
-        b3 = Wild('b3', exclude=[f, df, f.diff(x, 2)])
-        c3 = Wild('c3', exclude=[f, df, f.diff(x, 2)])
         a4 = Wild('a4', exclude=[x,f,df])
         b4 = Wild('b4', exclude=[x,f,df])
+        match = self.ode_problem.get_linear_coefficients(eq, f, order)
         does_match = False
-        deq = a3*(f.diff(x, 2)) + b3*df + c3*f
-        r = collect(eq,
-            [f.diff(x, 2), df, f]).match(deq)
-        if r:
-            if not all([r[key].is_polynomial() for key in r]):
-                n, d = eq.as_numer_denom()
-                eq = expand(n)
-                r = collect(eq,
-                    [f.diff(x, 2), f.diff(x), f]).match(deq)
-        if order==2 and r and r[a3] != 0:
-            p = cancel(r[b3]/r[a3])  # Used below
-            q = cancel(r[c3]/r[a3])
-            if p.is_zero:
-                self.rn = q.match(a4+b4*x)
+        if order == 2 and match and match[2] != 0:
+            if match[1].is_zero:
+                self.rn = cancel(match[0]/match[2]).match(a4+b4*x)
                 if self.rn and self.rn[b4] != 0:
                     self.rn = {'b':self.rn[a4],'m':self.rn[b4]}
                     does_match = True
         return does_match
 
-
     def _get_general_solution(self, *, simplify_flag: bool = True):
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
-        (C0, C1) = self.ode_problem.get_numbered_constants(num=2)
+        (C1, C2) = self.ode_problem.get_numbered_constants(num=2)
         b = self.rn['b']
         m = self.rn['m']
         if m.is_positive:
@@ -2802,7 +2788,7 @@ class LinearAiry2nd(SingleODESolver):
         else:
             arg = - b/cbrt(-m)**2 + cbrt(-m)*x
 
-        return [Eq(f(x), C0*airyai(arg) + C1*airybi(arg))]
+        return [Eq(f(x), C1*airyai(arg) + C2*airybi(arg))]
 
 
 
