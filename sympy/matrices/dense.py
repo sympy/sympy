@@ -7,6 +7,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .common import ShapeError
 from .decompositions import _cholesky, _LDLdecomposition
@@ -26,6 +27,17 @@ class DenseMatrix(RepMatrix):
 
     _op_priority = 10.01
     _class_priority = 4
+
+    @property
+    def _mat(self):
+
+        SymPyDeprecationWarning(
+            feature="The private _mat attribute of Matrix",
+            useinstead="the .flat() method",
+            issue=21715,
+            deprecated_since_version="1.9").warn()
+
+        return self.flat()
 
     def _eval_inverse(self, **kwargs):
         return self.inv(method=kwargs.get('method', 'GE'),

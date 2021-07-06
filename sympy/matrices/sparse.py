@@ -2,6 +2,7 @@ from collections.abc import Callable
 
 from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.containers import Dict
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .matrices import MatrixBase
 from .repmatrix import MutableRepMatrix, RepMatrix
@@ -230,6 +231,17 @@ class SparseMatrix(RepMatrix):
                         smat[i, j] = value
 
             return rows, cols, smat
+
+    @property
+    def _smat(self):
+
+        SymPyDeprecationWarning(
+            feature="The private _smat attribute of SparseMatrix",
+            useinstead="the .todok() method",
+            issue=21715,
+            deprecated_since_version="1.9").warn()
+
+        return self.todok()
 
     def _eval_inverse(self, **kwargs):
         return self.inv(method=kwargs.get('method', 'LDL'),

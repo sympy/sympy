@@ -44,6 +44,19 @@ def test_args():
             assert type(m.todok()) is dict
 
 
+def test_deprecated_mat_smat():
+    for cls in Matrix, ImmutableMatrix:
+        m = cls.zeros(3, 2)
+        with warns_deprecated_sympy():
+            mat = m._mat
+        assert mat == m.flat()
+    for cls in SparseMatrix, ImmutableSparseMatrix:
+        m = cls.zeros(3, 2)
+        with warns_deprecated_sympy():
+            smat = m._smat
+        assert smat == m.todok()
+
+
 def test_division():
     v = Matrix(1, 2, [x, y])
     assert v/z == Matrix(1, 2, [x/z, y/z])
