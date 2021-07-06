@@ -549,7 +549,7 @@ class PinJoint(Joint):
 
 
 class PrismaticJoint(Joint):
-    """Prismatic Joint.
+    """Prismatic (Sliding) Joint.
 
     Explanation
     ===========
