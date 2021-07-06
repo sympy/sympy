@@ -745,7 +745,8 @@ class Series(Basic):
     SISO-System Examples -
 
     >>> from sympy.abc import s, p, a, b
-    >>> from sympy.physics.control.lti import TransferFunction, Series, Parallel
+    >>> from sympy.physics.control.lti import TransferFunction, Series, Parallel, TransferFunctionMatrix
+    >>> from sympy import Matrix, pprint
     >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
     >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
     >>> tf3 = TransferFunction(p**2, p + s, s)
@@ -773,6 +774,39 @@ class Series(Basic):
     >>> S4 = Series(tf2, Parallel(tf1, -tf3))
     >>> S4.doit()
     TransferFunction((s**3 - 2)*(-p**2*(-p + s) + (p + s)*(a*p**2 + b*s)), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
+
+    SISO-System Examples -
+
+    >>> mat_a = Matrix([[5*s], [5]])  # 2 Outputs 1 Input
+    >>> mat_b = Matrix([[5, 1/(6*s**2)]])  # 1 Output 2 Inputs
+    >>> mat_c = Matrix([[1, s], [5/s, 1]])  # 2 Outputs 2 Inputs
+    >>> tfm_a = TransferFunctionMatrix.from_Matrix(mat_a, s)
+    >>> tfm_b = TransferFunctionMatrix.from_Matrix(mat_b, s)
+    >>> tfm_c = TransferFunctionMatrix.from_Matrix(mat_c, s)
+    >>> Series(tfm_c, tfm_b, tfm_a)
+    Series(TransferFunctionMatrix(((TransferFunction(1, 1, s), TransferFunction(s, 1, s)), (TransferFunction(5, s, s), TransferFunction(1, 1, s)))), TransferFunctionMatrix(((TransferFunction(5, 1, s), TransferFunction(1, 6*s**2, s)),)), TransferFunctionMatrix(((TransferFunction(5*s, 1, s),), (TransferFunction(5, 1, s),))))
+    >>> pprint(_, use_unicode=False)  #  For Better Visualization
+    [5*s]                 [1  s]
+    [---]                 [-  -]
+    [ 1 ]                 [1  1]
+    [   ]    [5   1  ]    [    ]
+    [ 5 ]    [-  ----]    [5  1]
+    [ - ]    [1     2]    [-  -]
+    [ 1 ]{t}*[   6*s ]{t}*[s  1]{t}
+    >>> Series(tfm_c, tfm_b, tfm_a).doit()
+    TransferFunctionMatrix(((TransferFunction(25*(6*s**3 + 1), 6*s**2, s), TransferFunction(5*(30*s**3 + 1), 6*s, s)), (TransferFunction(25*(6*s**3 + 1), 6*s**3, s), TransferFunction(5*(30*s**3 + 1), 6*s**2, s))))
+    >>> pprint(_, use_unicode=False)  # (2 Inputs -A-> 2 Outputs) -> (2 Inputs -B-> 1 Output) -> (1 Input -C-> 2 Outputs) is equivalent to (2 Inputs -Series Equivalent-> 2 Outputs). 
+    [   /   3    \    /    3    \]
+    [25*\6*s  + 1/  5*\30*s  + 1/]
+    [-------------  -------------]
+    [        2           6*s     ]
+    [     6*s                    ]
+    [                            ]
+    [   /   3    \    /    3    \]
+    [25*\6*s  + 1/  5*\30*s  + 1/]
+    [-------------  -------------]
+    [        3              2    ]
+    [     6*s            6*s     ]{t}
 
     Notes
     =====
@@ -1104,7 +1138,7 @@ class Parallel(Basic):
 
     >>> from sympy.abc import s, p, a, b
     >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix, Parallel, Series
-    >>> from sympy import Matrix
+    >>> from sympy import Matrix, pprint
     >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
     >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
     >>> tf3 = TransferFunction(p**2, p + s, s)
@@ -1142,6 +1176,30 @@ class Parallel(Basic):
     >>> tfm_c = TransferFunctionMatrix.from_Matrix(Matrix([[expr_3, expr_4], [expr_1, expr_2]]), s)
     >>> Parallel(tfm_a, tfm_b, tfm_c)
     Parallel(TransferFunctionMatrix(((TransferFunction(1, s, s), TransferFunction(s, s**2 - 1, s)), (TransferFunction(s + 2, s**2 - 1, s), TransferFunction(5, 1, s)))), TransferFunctionMatrix(((TransferFunction(s, s**2 - 1, s), TransferFunction(1, s, s)), (TransferFunction(5, 1, s), TransferFunction(s + 2, s**2 - 1, s)))), TransferFunctionMatrix(((TransferFunction(s + 2, s**2 - 1, s), TransferFunction(5, 1, s)), (TransferFunction(1, s, s), TransferFunction(s, s**2 - 1, s)))))
+    >>> pprint(_, use_unicode=False)  #  For Better Visualization
+    [  1       s   ]      [  s       1   ]      [s + 2     5   ]
+    [  -     ------]      [------    -   ]      [------    -   ]
+    [  s      2    ]      [ 2        s   ]      [ 2        1   ]
+    [        s  - 1]      [s  - 1        ]      [s  - 1        ]
+    [              ]      [              ]      [              ]
+    [s + 2     5   ]      [  5     s + 2 ]      [  1       s   ]
+    [------    -   ]      [  -     ------]      [  -     ------]
+    [ 2        1   ]      [  1      2    ]      [  s      2    ]
+    [s  - 1        ]{t} + [        s  - 1]{t} + [        s  - 1]{t}
+    >>> Parallel(tfm_a, tfm_b, tfm_c).doit()
+    TransferFunctionMatrix(((TransferFunction(s**2 + s*(2*s + 2) - 1, s*(s**2 - 1), s), TransferFunction(2*s**2 + 5*s*(s**2 - 1) - 1, s*(s**2 - 1), s)), (TransferFunction(s**2 + s*(s + 2) + 5*s*(s**2 - 1) - 1, s*(s**2 - 1), s), TransferFunction(5*s**2 + 2*s - 3, s**2 - 1, s))))
+    >>> pprint(_, use_unicode=False)
+    [       2                              2       / 2    \    ]
+    [      s  + s*(2*s + 2) - 1         2*s  + 5*s*\s  - 1/ - 1]
+    [      --------------------         -----------------------]
+    [             / 2    \                       / 2    \      ]
+    [           s*\s  - 1/                     s*\s  - 1/      ]
+    [                                                          ]
+    [ 2                   / 2    \             2               ]
+    [s  + s*(s + 2) + 5*s*\s  - 1/ - 1      5*s  + 2*s - 3     ]
+    [---------------------------------      --------------     ]
+    [              / 2    \                      2             ]
+    [            s*\s  - 1/                     s  - 1         ]{t}
 
     Notes
     =====
@@ -1860,6 +1918,110 @@ class TransferFunctionMatrix(Basic):
     [--  ------]
     [ 2     3  ]
     [s     s   ]{t}
+
+    Addition, subtraction, and multiplication of transfer function matrices can form
+    unevaluated ``Series`` or ``Parallel`` objects.
+    For addition and subtraction:
+        All the transfer function matrices must have the same shape.
+    For multiplication (C = A * B):
+        The number of inputs of the first transfer function matrix (A) must be equal to the
+        number of outputs of the second transfer function matrix (B).
+    Also, use pretty-printing (``pprint``) to analyse better.
+
+    >>> tfm_8 = TransferFunctionMatrix([[tf_3], [tf_2], [-tf_1]])
+    >>> tfm_9 = TransferFunctionMatrix([[-tf_3]])
+    >>> tfm_10 = TransferFunctionMatrix([[tf_1], [tf_2], [tf_4]])
+    >>> tfm_11 = TransferFunctionMatrix([[tf_4], [-tf_1]])
+    >>> tfm_12 = TransferFunctionMatrix([[tf_4, -tf_1, tf_3], [-tf_2, -tf_4, -tf_3]])
+    >>> tfm_8 + tfm_10
+    Parallel(TransferFunctionMatrix(((TransferFunction(3, s + 2, s),), (TransferFunction(p**4 - 3*p + 2, p + s, s),), (TransferFunction(-a - s, s**2 + s + 1, s),))), TransferFunctionMatrix(((TransferFunction(a + s, s**2 + s + 1, s),), (TransferFunction(p**4 - 3*p + 2, p + s, s),), (TransferFunction(-a + p, 9*s - 9, s),))))
+    >>> pprint(_, use_unicode=False)
+    [     3      ]      [   a + s    ]
+    [   -----    ]      [ ---------- ]
+    [   s + 2    ]      [  2         ]
+    [            ]      [ s  + s + 1 ]
+    [ 4          ]      [            ]
+    [p  - 3*p + 2]      [ 4          ]
+    [------------]      [p  - 3*p + 2]
+    [   p + s    ]      [------------]
+    [            ]      [   p + s    ]
+    [   -a - s   ]      [            ]
+    [ ---------- ]      [   -a + p   ]
+    [  2         ]      [  -------   ]
+    [ s  + s + 1 ]{t} + [  9*s - 9   ]{t}
+    >>> -tfm_10 - tfm_8
+    Parallel(TransferFunctionMatrix(((TransferFunction(-a - s, s**2 + s + 1, s),), (TransferFunction(-p**4 + 3*p - 2, p + s, s),), (TransferFunction(a - p, 9*s - 9, s),))), TransferFunctionMatrix(((TransferFunction(-3, s + 2, s),), (TransferFunction(-p**4 + 3*p - 2, p + s, s),), (TransferFunction(a + s, s**2 + s + 1, s),))))
+    >>> pprint(_, use_unicode=False)
+    [    -a - s    ]      [     -3       ]
+    [  ----------  ]      [    -----     ]
+    [   2          ]      [    s + 2     ]
+    [  s  + s + 1  ]      [              ]
+    [              ]      [   4          ]
+    [   4          ]      [- p  + 3*p - 2]
+    [- p  + 3*p - 2]      [--------------]
+    [--------------]      [    p + s     ]
+    [    p + s     ]      [              ]
+    [              ]      [    a + s     ]
+    [    a - p     ]      [  ----------  ]
+    [   -------    ]      [   2          ]
+    [   9*s - 9    ]{t} + [  s  + s + 1  ]{t}
+    >>> tfm_12 * tfm_8
+    Series(TransferFunctionMatrix(((TransferFunction(3, s + 2, s),), (TransferFunction(p**4 - 3*p + 2, p + s, s),), (TransferFunction(-a - s, s**2 + s + 1, s),))), TransferFunctionMatrix(((TransferFunction(-a + p, 9*s - 9, s), TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(3, s + 2, s)), (TransferFunction(-p**4 + 3*p - 2, p + s, s), TransferFunction(a - p, 9*s - 9, s), TransferFunction(-3, s + 2, s)))))
+    >>> pprint(_, use_unicode=False)
+                                           [     3      ]
+                                           [   -----    ]
+                                           [   s + 2    ]
+                                           [            ]
+    [    -a + p        -a - s      3  ]    [ 4          ]
+    [   -------      ----------  -----]    [p  - 3*p + 2]
+    [   9*s - 9       2          s + 2]    [------------]
+    [                s  + s + 1       ]    [   p + s    ]
+    [                                 ]    [            ]
+    [   4                             ]    [   -a - s   ]
+    [- p  + 3*p - 2    a - p      -3  ]    [ ---------- ]
+    [--------------   -------    -----]    [  2         ]
+    [    p + s        9*s - 9    s + 2]{t}*[ s  + s + 1 ]{t}
+    >>> tfm_12 * tfm_8 * tfm_9
+    Series(TransferFunctionMatrix(((TransferFunction(-3, s + 2, s),),)), TransferFunctionMatrix(((TransferFunction(3, s + 2, s),), (TransferFunction(p**4 - 3*p + 2, p + s, s),), (TransferFunction(-a - s, s**2 + s + 1, s),))), TransferFunctionMatrix(((TransferFunction(-a + p, 9*s - 9, s), TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(3, s + 2, s)), (TransferFunction(-p**4 + 3*p - 2, p + s, s), TransferFunction(a - p, 9*s - 9, s), TransferFunction(-3, s + 2, s)))))
+    >>> pprint(_, use_unicode=False)
+                                            [     3      ]
+                                           [   -----    ]
+                                           [   s + 2    ]
+                                           [            ]
+    [    -a + p        -a - s      3  ]    [ 4          ]
+    [   -------      ----------  -----]    [p  - 3*p + 2]
+    [   9*s - 9       2          s + 2]    [------------]
+    [                s  + s + 1       ]    [   p + s    ]
+    [                                 ]    [            ]
+    [   4                             ]    [   -a - s   ]
+    [- p  + 3*p - 2    a - p      -3  ]    [ ---------- ]    [ -3  ]
+    [--------------   -------    -----]    [  2         ]    [-----]
+    [    p + s        9*s - 9    s + 2]{t}*[ s  + s + 1 ]{t}*[s + 2]{t}
+    >>> tfm_10 + tfm_8*tfm_9
+    Parallel(TransferFunctionMatrix(((TransferFunction(a + s, s**2 + s + 1, s),), (TransferFunction(p**4 - 3*p + 2, p + s, s),), (TransferFunction(-a + p, 9*s - 9, s),))), Series(TransferFunctionMatrix(((TransferFunction(-3, s + 2, s),),)), TransferFunctionMatrix(((TransferFunction(3, s + 2, s),), (TransferFunction(p**4 - 3*p + 2, p + s, s),), (TransferFunction(-a - s, s**2 + s + 1, s),)))))
+    >>> pprint(_, use_unicode=False)
+    [   a + s    ]      [     3      ]
+    [ ---------- ]      [   -----    ]
+    [  2         ]      [   s + 2    ]
+    [ s  + s + 1 ]      [            ]
+    [            ]      [ 4          ]
+    [ 4          ]      [p  - 3*p + 2]
+    [p  - 3*p + 2]      [------------]
+    [------------]      [   p + s    ]
+    [   p + s    ]      [            ]
+    [            ]      [   -a - s   ]
+    [   -a + p   ]      [ ---------- ]    [ -3  ]
+    [  -------   ]      [  2         ]    [-----]
+    [  9*s - 9   ]{t} + [ s  + s + 1 ]{t}*[s + 2]{t}
+
+    These unevaluated ``Series`` or ``Parallel`` objects can convert into the
+    resultant transfer function matrix using ``.doit()`` method or by
+    ``.rewrite(TransferFunctionMatrix)``.
+
+    >>> (-tfm_8 + tfm_10 + tfm_8*tfm_9).doit()
+    TransferFunctionMatrix(((TransferFunction((a + s)*(s + 2)**3 - 3*(s + 2)**2*(s**2 + s + 1) - 9*(s + 2)*(s**2 + s + 1), (s + 2)**3*(s**2 + s + 1), s),), (TransferFunction((p + s)*(-3*p**4 + 9*p - 6), (p + s)**2*(s + 2), s),), (TransferFunction((-a + p)*(s + 2)*(s**2 + s + 1)**2 + (a + s)*(s + 2)*(9*s - 9)*(s**2 + s + 1) + (3*a + 3*s)*(9*s - 9)*(s**2 + s + 1), (s + 2)*(9*s - 9)*(s**2 + s + 1)**2, s),)))
+    >>> (-tfm_12 * -tfm_8 * -tfm_9).rewrite(TransferFunctionMatrix)
+    TransferFunctionMatrix(((TransferFunction(3*(-3*a + 3*p)*(p + s)*(s + 2)*(s**2 + s + 1)**2 + 3*(-3*a - 3*s)*(p + s)*(s + 2)*(9*s - 9)*(s**2 + s + 1) + 3*(a + s)*(s + 2)**2*(9*s - 9)*(-p**4 + 3*p - 2)*(s**2 + s + 1), (p + s)*(s + 2)**3*(9*s - 9)*(s**2 + s + 1)**2, s),), (TransferFunction(3*(-a + p)*(p + s)*(s + 2)**2*(-p**4 + 3*p - 2)*(s**2 + s + 1) + 3*(3*a + 3*s)*(p + s)**2*(s + 2)*(9*s - 9) + 3*(p + s)*(s + 2)*(9*s - 9)*(-3*p**4 + 9*p - 6)*(s**2 + s + 1), (p + s)**2*(s + 2)**3*(9*s - 9)*(s**2 + s + 1), s),)))
 
     See Also
     ========
