@@ -17,7 +17,7 @@ PinJoint
    :members:
 
 PrismaticJoint
-============
+==============
 
 .. autoclass:: PrismaticJoint
    :members:
