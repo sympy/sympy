@@ -81,6 +81,56 @@ class Joint(ABC):
     kdes : list
         Kinematical differential equations of the joint.
 
+    Notes
+    =====
+
+    The direction cosine matrix between the child and parent is formed using a
+    simple rotation about an axis that is normal to both ``child_axis`` and
+    ``parent_axis``. In general, the normal axis is formed by crossing the
+    ``child_axis`` into the ``parent_axis`` except if the child and parent axes
+    are in exactly opposite directions. In that case, the vector normal to the
+    ``child_axis`` and ``parent_axis`` is formed by crossing the ``child_axis``
+    into an arbitrary vector in the parent reference frame to find a suitable
+    vector normal to the child and parent axes. The arbitrary axis is chosen
+    using the rules in the following table where ``C`` is the child reference
+    frame and ``P`` is the parent reference frame:
+
+    .. list-table::
+       :header-rows: 1
+
+       * - ``child_axis``
+         - ``parent_axis``
+         - ``arbitrary_axis``
+         - ``rotation_axis``
+       * - ``-C.x``
+         - ``P.x``
+         - ``P.z``
+         - ``P.z``
+       * - ``-C.y``
+         - ``P.y``
+         - ``P.x``
+         - ``P.x``
+       * - ``-C.z``
+         - ``P.z``
+         - ``P.y``
+         - ``P.y``
+       * - ``-C.x-C.y``
+         - ``P.x+P.y``
+         - ``P.z``
+         - ``P.z``
+       * - ``-C.y-C.z``
+         - ``P.y+P.z``
+         - ``P.x``
+         - ``P.x``
+       * - ``-C.x-C.z``
+         - ``P.x+P.z``
+         - ``P.y``
+         - ``P.y``
+       * - ``-C.x-C.y-C.z``
+         - ``P.x+P.y+P.z``
+         - ``P.x``
+         - ``(P.x+P.y+P.z) × P.x``
+
     """
 
     def __init__(self, name, parent, child, coordinates=None, speeds=None,
@@ -236,7 +286,8 @@ class Joint(ABC):
         if x != 0:
             if y!=0:
                 if z!=0:
-                    return parent_frame.x
+                    return cross(self.parent_axis,
+                                parent_frame.x)
                 return parent_frame.z
             return parent_frame.y
 
@@ -451,56 +502,6 @@ class PinJoint(Joint):
     >>> lower_bob.masscenter.vel(ceiling.frame)
     l1*omega_P1(t)*U_frame.y + l2*(omega_P1(t) + omega_P2(t))*L_frame.y
 
-    Notes
-    =====
-
-    The direction cosine matrix between the child and parent is formed using a
-    simple rotation about an axis that is normal to both ``child_axis`` and
-    ``parent_axis``. In general, the normal axis is formed by crossing the
-    ``child_axis`` into the ``parent_axis`` except if the child and parent axes
-    are in exactly opposite directions. In that case, the vector normal to the
-    ``child_axis`` and ``parent_axis`` is formed by crossing the ``child_axis``
-    into an arbitrary vector in the parent reference frame to find a suitable
-    vector normal to the child and parent axes. The arbitrary axis is chosen
-    using the rules in the following table where ``C`` is the child reference
-    frame and ``P`` is the parent reference frame:
-
-    .. list-table::
-       :header-rows: 1
-
-       * - ``child_axis``
-         - ``parent_axis``
-         - ``arbitrary_axis``
-         - ``rotation_axis``
-       * - ``-C.x``
-         - ``P.x``
-         - ``P.y``
-         - ``P.z``
-       * - ``-C.y``
-         - ``P.y``
-         - ``P.z``
-         - ``P.x``
-       * - ``-C.z``
-         - ``P.z``
-         - ``P.x``
-         - ``P.y``
-       * - ``-C.x-C.y``
-         - ``P.x+P.y``
-         - ``P.z``
-         - ``(P.x+P.y) × P.z``
-       * - ``-C.y-C.z``
-         - ``P.y+P.z``
-         - ``P.x``
-         - ``(P.y+P.z) × P.x``
-       * - ``-C.x-C.z``
-         - ``P.x+P.z``
-         - ``P.y``
-         - ``(P.x+P.z) × P.y``
-       * - ``-C.x-C.y-C.z``
-         - ``P.x+P.y+P.z``
-         - ``P.x``
-         - ``(P.x+P.y+P.z) × P.x``
-
     """
 
     def __init__(self, name, parent, child, coordinates=None, speeds=None,
@@ -698,56 +699,6 @@ class PrismaticJoint(Joint):
 
     >>> Part.masscenter_vel(ceiling)
     v_J(t)*C_frame.x
-
-    Notes
-    =====
-
-    The direction cosine matrix between the child and parent is formed using a
-    simple rotation about an axis that is normal to both ``child_axis`` and
-    ``parent_axis``. In general, the normal axis is formed by crossing the
-    ``child_axis`` into the ``parent_axis`` except if the child and parent axes
-    are in exactly opposite directions. In that case, the vector normal to the
-    ``child_axis`` and ``parent_axis`` is formed by crossing the ``child_axis``
-    into an arbitrary vector in the parent reference frame to find a suitable
-    vector normal to the child and parent axes. The arbitrary axis is chosen
-    using the rules in the following table where ``C`` is the child reference
-    frame and ``P`` is the parent reference frame:
-
-    .. list-table::
-       :header-rows: 1
-
-       * - ``child_axis``
-         - ``parent_axis``
-         - ``arbitrary_axis``
-         - ``rotation_axis``
-       * - ``-C.x``
-         - ``P.x``
-         - ``P.y``
-         - ``P.z``
-       * - ``-C.y``
-         - ``P.y``
-         - ``P.z``
-         - ``P.x``
-       * - ``-C.z``
-         - ``P.z``
-         - ``P.x``
-         - ``P.y``
-       * - ``-C.x-C.y``
-         - ``P.x+P.y``
-         - ``P.z``
-         - ``(P.x+P.y) × P.z``
-       * - ``-C.y-C.z``
-         - ``P.y+P.z``
-         - ``P.x``
-         - ``(P.y+P.z) × P.x``
-       * - ``-C.x-C.z``
-         - ``P.x+P.z``
-         - ``P.y``
-         - ``(P.x+P.z) × P.y``
-       * - ``-C.x-C.y-C.z``
-         - ``P.x+P.y+P.z``
-         - ``P.x``
-         - ``(P.x+P.y+P.z) × P.x``
 
     """
 

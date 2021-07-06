@@ -316,7 +316,7 @@ def test_pinjoint_pi():
     _, _, P, C = _generate_body()
     J = PinJoint('J', P, C, parent_axis=P.frame.x+P.frame.y+P.frame.z,
                 child_axis=-C.frame.x-C.frame.y-C.frame.z)
-    assert J._generate_vector() == P.frame.x
+    assert J._generate_vector() == P.frame.y - P.frame.z
 
 
 def test_slidingjoint():
