@@ -795,7 +795,7 @@ class Series(Basic):
     [ 1 ]{t}*[   6*s ]{t}*[s  1]{t}
     >>> Series(tfm_c, tfm_b, tfm_a).doit()
     TransferFunctionMatrix(((TransferFunction(25*(6*s**3 + 1), 6*s**2, s), TransferFunction(5*(30*s**3 + 1), 6*s, s)), (TransferFunction(25*(6*s**3 + 1), 6*s**3, s), TransferFunction(5*(30*s**3 + 1), 6*s**2, s))))
-    >>> pprint(_, use_unicode=False)  # (2 Inputs -A-> 2 Outputs) -> (2 Inputs -B-> 1 Output) -> (1 Input -C-> 2 Outputs) is equivalent to (2 Inputs -Series Equivalent-> 2 Outputs). 
+    >>> pprint(_, use_unicode=False)  # (2 Inputs -A-> 2 Outputs) -> (2 Inputs -B-> 1 Output) -> (1 Input -C-> 2 Outputs) is equivalent to (2 Inputs -Series Equivalent-> 2 Outputs).
     [   /   3    \    /    3    \]
     [25*\6*s  + 1/  5*\30*s  + 1/]
     [-------------  -------------]
@@ -1346,7 +1346,7 @@ class Parallel(Basic):
 
         self_arg_list = list(self.args)
         return Parallel(*self_arg_list, other)
-    
+
     __radd__ = __add__
 
     def __sub__(self, other):
@@ -1921,11 +1921,14 @@ class TransferFunctionMatrix(Basic):
 
     Addition, subtraction, and multiplication of transfer function matrices can form
     unevaluated ``Series`` or ``Parallel`` objects.
-    For addition and subtraction:
-        All the transfer function matrices must have the same shape.
-    For multiplication (C = A * B):
-        The number of inputs of the first transfer function matrix (A) must be equal to the
-        number of outputs of the second transfer function matrix (B).
+
+    - For addition and subtraction:
+      All the transfer function matrices must have the same shape.
+
+    - For multiplication (C = A * B):
+      The number of inputs of the first transfer function matrix (A) must be equal to the
+      number of outputs of the second transfer function matrix (B).
+
     Also, use pretty-printing (``pprint``) to analyse better.
 
     >>> tfm_8 = TransferFunctionMatrix([[tf_3], [tf_2], [-tf_1]])
