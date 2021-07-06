@@ -131,6 +131,7 @@ class Beam:
         self._support_as_loads = []
         self._applied_loads = []
         self._reaction_loads = {}
+        self._ild_reactions = {}
         self._composite_type = None
         self._hinge_position = None
 
@@ -1560,6 +1561,62 @@ class Beam:
                    line_color='r', show=False)
 
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
+
+    def solve_for_ild_reactions(self, val, *reactions):
+        """
+
+        Determines the Influence Line Diagram equations for reaction forces under the effect
+        of a moving load and returns a dictionary."
+
+
+        Parameters
+        ==========
+        val : Integer
+            Magnitude of moving load
+        reactions :
+            The reaction forces applied on the beam.
+
+        """
+        x = self.variable
+        l = self.length
+        C3 = Symbol('C3')
+        C4 = Symbol('C4')
+        X = symbols('X')
+
+        shear_curve = limit(self.shear_force(), x, l) + val
+        moment_curve = limit(self.bending_moment(), x, l) + val*(l-X)
+
+        slope_eqs = []
+        deflection_eqs = []
+
+        slope_curve = integrate(self.bending_moment(), x) + C3
+        for position, value in self._boundary_conditions['slope']:
+            eqs = slope_curve.subs(x, position) - value
+            slope_eqs.append(eqs)
+
+        deflection_curve = integrate(slope_curve, x) + C4
+        for position, value in self._boundary_conditions['deflection']:
+            eqs = deflection_curve.subs(x, position) - value
+            deflection_eqs.append(eqs)
+
+        solution = list((linsolve([shear_curve, moment_curve] + slope_eqs
+                            + deflection_eqs, (C3, C4) + reactions).args)[0])
+        solution = solution[2:]
+        # Determining the equations and solving them.
+        self._ild_reactions = dict(zip(reactions, solution))
+        return self._ild_reactions
+
+    def plot_ild_reactions(self):
+        """
+
+        Plots the Influence Line Diagram of Reaction Forces
+        under the effect of a moving load.
+
+        """
+        X = symbols('X')
+        for i in self._ild_reactions:
+                plot(self._ild_reactions[i], (X, 0, self._length), title='I.L.D. for Reactions',
+                xlabel=X, ylabel=i, line_color='blue')
 
 
     @doctest_depends_on(modules=('numpy',))
