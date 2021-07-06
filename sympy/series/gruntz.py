@@ -520,7 +520,6 @@ def mrv_leadterm(e, x):
     if x in Omega:
         # move the whole omega up (exponentiate each term):
         Omega_up = moveup2(Omega, x)
-        e_up = moveup([e], x)[0]
         exps_up = moveup([exps], x)[0]
         # NOTE: there is no need to move this down!
         Omega = Omega_up
