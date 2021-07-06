@@ -15,6 +15,7 @@ __all__ = [
     'inertia', 'inertia_of_point_mass', 'linear_momentum', 'angular_momentum',
     'kinetic_energy', 'potential_energy', 'Lagrangian', 'mechanics_printing',
     'mprint', 'msprint', 'mpprint', 'mlatex', 'msubs', 'find_dynamicsymbols',
+    'Force', 'Torque',
 
     'Particle',
 
@@ -45,7 +46,7 @@ from .rigidbody import RigidBody
 from .functions import (inertia, inertia_of_point_mass, linear_momentum,
         angular_momentum, kinetic_energy, potential_energy, Lagrangian,
         mechanics_printing, mprint, msprint, mpprint, mlatex, msubs,
-        find_dynamicsymbols)
+        find_dynamicsymbols, Force, Torque)
 
 from .particle import Particle
 

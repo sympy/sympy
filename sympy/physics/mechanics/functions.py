@@ -723,3 +723,118 @@ def _f_list_parser(fl, ref_frame):
         unzip = lambda l: list(zip(*l)) if l[0] else [(), ()]
         vel_list, f_list = unzip(list(flist_iter()))
     return vel_list, f_list
+
+def Force(force, body1, body2=None, point1=None, point2=None):
+    """Add force to the body(s).
+
+    Explanation
+    ===========
+
+    Force functions applies the force on body1 or equal and
+    oppposite forces on body1 and body2 if both are given.
+    The force applied on body2 is taken opposite of body1,
+    i.e, -force.
+
+    Parameters
+    ==========
+
+    force: Vector
+        The force to be applied.
+    body1: Body
+        First body on which force is to be applied.
+    body2: Body, optional
+        Second body on which equal and opposite force
+        is to be applied.
+    point1: Point, optional
+        The point on body1 on which force is applied.
+        By default masscenter of body1.
+    point2 : Point, optional
+        The point on body2 on which equal and opposite
+        force is appliead. By default masscenter of
+        body2.
+
+    Example
+    =======
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.mechanics import Body, Force
+    >>> m, g = symbols('m g')
+    >>> B1 = Body('B1')
+    >>> B2 = Body('B2')
+    >>> force1 = m*g*B1.z
+    >>> Force(force1, B1) #Applying force on B1's masscenter
+    >>> B1.loads
+    [(B1_masscenter, g*m*B1_frame.z)]
+
+    >>> force2 = m*B2.x
+    >>> Force(force2, B1, B2) #Equal and opposite force on B1 & B2
+    >>> B1.loads
+    [(B1_masscenter, g*m*B1_frame.z), (B1_masscenter, m*B2_frame.x)]
+    >>> B2.loads
+    [(B2_masscenter, - m*B2_frame.x)]
+
+    """
+
+    from sympy.physics.mechanics.body import Body #Circular import
+
+    if not isinstance(body1, Body):
+        raise TypeError('body1 must be of type Body.')
+    body1.apply_force(force, point1)
+    if body2 is not None:
+        if not isinstance(body2, Body):
+            raise TypeError('body2 must be of type Body.')
+        body2.apply_force(-force, point2)
+
+def Torque(torque, body1, body2=None):
+    """Add torque to the body(s).
+
+    Explanation
+    ===========
+
+    Torque functions applies the torque on body1 or equal and
+    oppposite torquess on body1 and body2 if both are given.
+    The torque applied on body2 is taken opposite of body1,
+    i.e, -torque.
+
+    Parameters
+    ==========
+
+    torque: Vector
+        The torque to be applied.
+    body1: Body
+        First body on which torque is to be applied.
+    body2: Body, optional
+        Second body on which equal and opposite torque
+        is to be applied.
+
+    Example
+    =======
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.mechanics import Body, Torque
+    >>> t1, t2 = symbols('t1 t2')
+    >>> B1 = Body('B1')
+    >>> B2 = Body('B2')
+    >>> torque1 = t1*B1.z
+    >>> Torque(torque1, B1) #Applying torque on B1
+    >>> B1.loads
+    [(B1_frame, t1*B1_frame.z)]
+
+    >>> torque2 = t2*B2.z
+    >>> Torque(torque2, B1, B2) #Equal and opposite torque on B1 & B2
+    >>> B1.loads
+    [(B1_frame, t1*B1_frame.z), (B1_frame, t2*B2_frame.z)]
+    >>> B2.loads
+    [(B2_frame, - t2*B2_frame.z)]
+
+    """
+
+    from sympy.physics.mechanics.body import Body #Circular import
+
+    if not isinstance(body1, Body):
+        raise TypeError('body1 must be of type Body.')
+    body1.apply_torque(torque)
+    if body2 is not None:
+        if not isinstance(body2, Body):
+            raise TypeError('body2 must be of type Body.')
+        body2.apply_torque(-torque)
