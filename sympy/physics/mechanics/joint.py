@@ -578,7 +578,7 @@ class PrismaticJoint(Joint):
         Vector from the parent body's mass center to the point where the parent
         and child are connected. The default value is the zero vector.
     child_joint_pos : Vector, optional
-        Vector from the parent body's mass center to the point where the parent
+        Vector from the child body's mass center to the point where the parent
         and child are connected. The default value is the zero vector.
     parent_axis : Vector, optional
         Axis fixed in the parent body which aligns with an axis fixed in the
