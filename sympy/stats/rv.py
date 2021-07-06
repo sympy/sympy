@@ -1297,16 +1297,10 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
             rand_state = np.random.default_rng(seed=seed) if library != "pymc3" else seed
         else:
             rand_state = None
-        if library == "pymc3":
-            _size = (1,)+((size,) if isinstance(size, int) else size)
-        else:
-            _size = size
+        _size = (1,)+((size,) if isinstance(size, int) else size)
         while count < numsamples:
             d = ps.sample(size=_size, library=library, seed=rand_state)  # a dictionary that maps RVs to values
-            if library == "pymc3":
-                args = [d[rv][0] for rv in rvs]
-            else:
-                args = [d[rv] for rv in rvs]
+            args = [d[rv][0] for rv in rvs]
 
             if condition is not None:  # Check that these values satisfy the condition
                 # TODO: Replace the try-except block with only given_fn(*args)
@@ -1615,9 +1609,9 @@ class Distribution(Basic):
                 if do_sample_pymc3(self):
                     samps = [pymc3.sample(draws=draws, chains=1, compute_convergence_checks=False,
                                 progressbar=False, random_seed=seed, return_inferencedata=False)[:]['X'] for i in range(size[0])]
-                    if size[0] == 1 and draws == 1: #if numsamples=1 and size=()
+                    if size == (1,): #if numsamples=1 and size=()
                         samps = samps[0]
-                    elif size[0] != 1 and draws == 1: #if numsamples=int and size=()
+                    elif size[1:] == (): #if numsamples=int and size=()
                         samps = [sam[0] for sam in samps]
                 else:
                     samps = None
