@@ -701,14 +701,11 @@ class TransferFunction(Basic, EvalfMixin):
 
 def _mat_mul_compatible(*args):
     """To check whether shapes are compatible for matrix mul."""
-    compatible = True
-    for i, arg in enumerate(args, start=1):
-        try:
-            if arg.num_outputs != args[i].num_inputs:
-                compatible = False
-        except IndexError:
-            return compatible
-    return compatible
+    return all(
+        arg.num_outputs == args[i].num_inputs
+        for i, arg in enumerate(args, start=1)
+        if i < len(args)
+    )
 
 
 class Series(Basic):
@@ -902,68 +899,56 @@ class Series(Basic):
             return _MIMO_doit()
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
+        if not self.is_SISO:
+            raise ValueError("Only transfer functions or a collection of transfer functions"
+                " is allowed in the arguments.")
+        return self.doit()
+
+    def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
+        if self.is_SISO:
+            raise ValueError("Only transfer function matrices or a collection of transfer function"
+                " matrices is allowed in the arguments.")
         return self.doit()
 
     def __add__(self, other):
-        if isinstance(other, (TransferFunction, Series)):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+        try:
+            if self.is_SISO != other.is_SISO:
+                raise TypeError("Cannot add SISO and MIMO systems together.")
+        except AttributeError:
+            raise ValueError(f"Cannot add Series type with {type(other)}.")
 
-            return Parallel(self, other)
-        elif isinstance(other, Parallel):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+        if isinstance(other, Parallel):
             arg_list = list(other.args)
-
             return Parallel(self, *arg_list)
-        else:
-            raise ValueError("This transfer function expression is invalid.")
+
+        return Parallel(self, other)
 
     __radd__ = __add__
 
     def __sub__(self, other):
-        if isinstance(other, (TransferFunction, Series)):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
-
-            return Parallel(self, -other)
-        elif isinstance(other, Parallel):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
-            arg_list = [-i for i in list(other.args)]
-
-            return Parallel(self, *arg_list)
-        else:
-            raise ValueError("This transfer function expression is invalid.")
+        return self + (-other)
 
     def __rsub__(self, other):
         return -self + other
 
     def __mul__(self, other):
-        if isinstance(other, (TransferFunction, Parallel)):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
-            arg_list = list(self.args)
+        try:
+            if self.is_SISO != other.is_SISO:
+                raise TypeError("Cannot multiply SISO and MIMO systems together.")
+        except AttributeError:
+            raise ValueError(f"Cannot multiply Series type with {type(other)}.")
 
-            return Series(*arg_list, other)
-        elif isinstance(other, Series):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+        if isinstance(other, Series):
             self_arg_list = list(self.args)
             other_arg_list = list(other.args)
+            return Series(*self_arg_list, *other_arg_list) if self.is_SISO else \
+                Series(*other_arg_list, *self_arg_list)  # A*B = Series(B, A) for MIMO
 
-            return Series(*self_arg_list, *other_arg_list)
-        else:
-            raise ValueError("This transfer function expression is invalid.")
+        arg_list = list(self.args)
+        return Series(*arg_list, other) if self.is_SISO else Series(other, *arg_list)
 
     def __truediv__(self, other):
-        if (isinstance(other, Parallel) and len(other.args) == 2
+        if (isinstance(other, Parallel) and len(other.args) == 2 and self.is_SISO and other.is_SISO
             and isinstance(other.args[0], TransferFunction) and isinstance(other.args[1], Series)):
 
             if not self.var == other.var:
@@ -982,11 +967,18 @@ class Series(Basic):
             raise ValueError("This transfer function expression is invalid.")
 
     def __neg__(self):
-        return Series(TransferFunction(-1, 1, self.var), self)
+        if self.is_SISO:
+            return Series(TransferFunction(-1, 1, self.var), self)
+        arg_list = list(self.args)
+        arg_list[0] = -arg_list[0]
+        return Series(*arg_list)
 
     def to_expr(self):
         """Returns the equivalent ``Expr`` object."""
-        return Mul(*(arg.to_expr() for arg in self.args), evaluate=False)
+        if self.is_SISO:
+            return Mul(*(arg.to_expr() for arg in self.args), evaluate=False)
+        else:
+            TypeError("`to_expr` method is only valid for SISO Series.")
 
     @property
     def is_proper(self):
@@ -994,6 +986,10 @@ class Series(Basic):
         Returns True if degree of the numerator polynomial of the resultant transfer
         function is less than or equal to degree of the denominator polynomial of
         the same, else False.
+
+        .. note::
+            ``is_proper`` is defined only for SISO ``Series`` configuration.
+            ``Series(*args).is_proper`` for MIMO ``*args`` will return ``None``.
 
         Examples
         ========
@@ -1011,7 +1007,7 @@ class Series(Basic):
         True
 
         """
-        return self.doit().is_proper
+        return self.doit().is_proper if self.is_SISO else None
 
     @property
     def is_strictly_proper(self):
@@ -1019,6 +1015,10 @@ class Series(Basic):
         Returns True if degree of the numerator polynomial of the resultant transfer
         function is strictly less than degree of the denominator polynomial of
         the same, else False.
+
+        .. note::
+            ``is_strictly_proper`` is defined only for SISO ``Series`` configuration.
+            ``Series(*args).is_strictly_proper`` for MIMO ``*args`` will return ``None``.
 
         Examples
         ========
@@ -1036,7 +1036,7 @@ class Series(Basic):
         True
 
         """
-        return self.doit().is_strictly_proper
+        return self.doit().is_strictly_proper if self.is_SISO else None
 
     @property
     def is_biproper(self):
@@ -1044,6 +1044,10 @@ class Series(Basic):
         Returns True if degree of the numerator polynomial of the resultant transfer
         function is equal to degree of the denominator polynomial of
         the same, else False.
+
+        .. note::
+            ``is_biproper`` is defined only for SISO ``Series`` configuration.
+            ``Series(*args).is_biproper`` for MIMO ``*args`` will return ``None``.
 
         Examples
         ========
@@ -1061,7 +1065,7 @@ class Series(Basic):
         True
 
         """
-        return self.doit().is_biproper
+        return self.doit().is_biproper if self.is_SISO else None
 
 
 class Parallel(Basic):
@@ -1259,73 +1263,65 @@ class Parallel(Basic):
             return _MIMO_doit()
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
+        if not self.is_SISO:
+            raise ValueError("Only transfer functions or a collection of transfer functions"
+                " is allowed in the arguments.")
+        return self.doit()
+
+    def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
+        if self.is_SISO:
+            raise ValueError("Only transfer function matrices or a collection of transfer function"
+                " matrices is allowed in the arguments.")
         return self.doit()
 
     def __add__(self, other):
-        if isinstance(other, (TransferFunction, Series)):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
-            arg_list = list(self.args)
-            arg_list.append(other)
+        try:
+            if self.is_SISO != other.is_SISO:
+                TypeError("Cannot add a SISO system with a MIMO one.")
+        except AttributeError:
+            raise TypeError(f"Cannot add Parallel with {type(other)}")
 
-            return Parallel(*arg_list)
-        elif isinstance(other, Parallel):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+        if isinstance(other, Parallel):
             self_arg_list = list(self.args)
             other_arg_list = list(other.args)
-            for elem in other_arg_list:
-                self_arg_list.append(elem)
+            return Parallel(*self_arg_list, *other_arg_list)
 
-            return Parallel(*self_arg_list)
-        else:
-            raise ValueError("This transfer function expression is invalid.")
+        self_arg_list = list(self.args)
+        return Parallel(*self_arg_list, other)
+    
+    __radd__ = __add__
 
     def __sub__(self, other):
-        if isinstance(other, (TransferFunction, Series)):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
-            arg_list = list(self.args)
-            arg_list.append(-other)
+        return self + (-other)
 
-            return Parallel(*arg_list)
-        elif isinstance(other, Parallel):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
-            self_arg_list = list(self.args)
-            other_arg_list = list(other.args)
-            for elem in other_arg_list:
-                self_arg_list.append(-elem)
-
-            return Parallel(*self_arg_list)
-        else:
-            raise ValueError("This transfer function expression is invalid.")
+    def __rsub__(self, other):
+        return -self + other
 
     def __mul__(self, other):
-        if isinstance(other, (TransferFunction, Parallel)):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
-            return Series(self, other)
-        elif isinstance(other, Series):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+        try:
+            if self.is_SISO != other.is_SISO:
+                TypeError("Cannot multiply a SISO system with a MIMO one.")
+        except AttributeError:
+            raise TypeError(f"Cannot multiply Parallel with {type(other)}")
+
+        if isinstance(other, Series):
             arg_list = list(other.args)
-            return Series(self, *arg_list)
-        else:
-            raise ValueError("This transfer function expression is invalid.")
+            return Series(self, *arg_list) if self.is_SISO else Series(*arg_list, self)
+
+        return Series(self, other) if self.is_SISO else Series(other, self)
 
     def __neg__(self):
-        return Series(TransferFunction(-1, 1, self.var), self)
+        if self.is_SISO:
+            return Series(TransferFunction(-1, 1, self.var), self)
+        arg_list = [-arg for arg in list(self.args)]
+        return Parallel(*arg_list)
 
     def to_expr(self):
         """Returns the equivalent ``Expr`` object."""
-        return Add(*(arg.to_expr() for arg in self.args), evaluate=False)
+        if self.is_SISO:
+            return Add(*(arg.to_expr() for arg in self.args), evaluate=False)
+        else:
+            TypeError("`to_expr` method is only valid for SISO Parallel.")
 
     @property
     def is_proper(self):
@@ -1333,6 +1329,10 @@ class Parallel(Basic):
         Returns True if degree of the numerator polynomial of the resultant transfer
         function is less than or equal to degree of the denominator polynomial of
         the same, else False.
+
+        .. note::
+            ``is_proper`` is defined only for SISO ``Parallel`` configuration.
+            ``Parallel(*args).is_proper`` for MIMO ``*args`` will return ``None``.
 
         Examples
         ========
@@ -1350,7 +1350,7 @@ class Parallel(Basic):
         True
 
         """
-        return self.doit().is_proper
+        return self.doit().is_proper if self.is_SISO else None
 
     @property
     def is_strictly_proper(self):
@@ -1358,6 +1358,10 @@ class Parallel(Basic):
         Returns True if degree of the numerator polynomial of the resultant transfer
         function is strictly less than degree of the denominator polynomial of
         the same, else False.
+
+        .. note::
+            ``is_strictly_proper`` is defined only for SISO ``Parallel`` configuration.
+            ``Parallel(*args).is_strictly_proper`` for MIMO ``*args`` will return ``None``.
 
         Examples
         ========
@@ -1375,7 +1379,7 @@ class Parallel(Basic):
         True
 
         """
-        return self.doit().is_strictly_proper
+        return self.doit().is_strictly_proper if self.is_SISO else None
 
     @property
     def is_biproper(self):
@@ -1383,6 +1387,10 @@ class Parallel(Basic):
         Returns True if degree of the numerator polynomial of the resultant transfer
         function is equal to degree of the denominator polynomial of
         the same, else False.
+
+        .. note::
+            ``is_biproper`` is defined only for SISO ``Parallel`` configuration.
+            ``Parallel(*args).is_biproper`` for MIMO ``*args`` will return ``None``.
 
         Examples
         ========
@@ -1400,7 +1408,7 @@ class Parallel(Basic):
         False
 
         """
-        return self.doit().is_biproper
+        return self.doit().is_biproper if self.is_SISO else None
 
 
 class Feedback(Basic):
@@ -2039,6 +2047,33 @@ class TransferFunctionMatrix(Basic):
     def __neg__(self):
         neg = -self._expr_mat
         return _to_TFM(neg, self.var)
+
+    def __add__(self, other):
+        try:
+            if other.is_SISO:
+                raise ValueError("Cannot add SISO system with a MIMO one.")
+        except AttributeError:
+            raise ValueError(f"Cannot add TransferFunctionMatrix with {type(other)}")
+
+        if not isinstance(other, Parallel):
+            return Parallel(self, other)
+        other_arg_list = list(other.args)
+        return Parallel(self, *other_arg_list)
+
+    def __sub__(self, other):
+        return self + (-other)
+
+    def __mul__(self, other):
+        try:
+            if other.is_SISO:
+                raise ValueError("Cannot multiply SISO system with a MIMO one.")
+        except AttributeError:
+            raise ValueError(f"Cannot multiply TransferFunctionMatrix with {type(other)}")
+
+        if not isinstance(other, Series):
+            return Series(other, self)
+        other_arg_list = list(other.args)
+        return Series(*other_arg_list, self)
 
     def __getitem__(self, key):
         trunc = self._expr_mat.__getitem__(key)

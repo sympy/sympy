@@ -2449,7 +2449,7 @@ class LatexPrinter(Printer):
         args = list(expr.args)
         parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
                                              False)
-        return ' '.join(map(parens, args))
+        return '+'.join(map(parens, args))
 
     def _print_Feedback(self, expr):
         from sympy.physics.control import TransferFunction, Parallel, Series

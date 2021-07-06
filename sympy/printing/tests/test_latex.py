@@ -2283,9 +2283,9 @@ def test_Parallel_printing():
     tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
     tf2 = TransferFunction(x - y, x + y, y)
     assert latex(Parallel(tf1, tf2)) == \
-        r'\left(\frac{x y^{2} - z}{- t^{3} + y^{3}}\right) \left(\frac{x - y}{x + y}\right)'
+        r'\left(\frac{x y^{2} - z}{- t^{3} + y^{3}}\right)+\left(\frac{x - y}{x + y}\right)'
     assert latex(Parallel(-tf2, tf1)) == \
-        r'\left(\frac{- x + y}{x + y}\right) \left(\frac{x y^{2} - z}{- t^{3} + y^{3}}\right)'
+        r'\left(\frac{- x + y}{x + y}\right)+\left(\frac{x y^{2} - z}{- t^{3} + y^{3}}\right)'
 
 
 def test_TransferFunctionMatrix_printing():
@@ -2302,9 +2302,9 @@ def test_Feedback_printing():
     tf1 = TransferFunction(p, p + x, p)
     tf2 = TransferFunction(-s + p, p + s, p)
     assert latex(Feedback(tf1, tf2)) == \
-        r'\frac{\frac{p}{p + x}}{\left(1 \cdot 1^{-1}\right) \left(\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)\right)}'
+        r'\frac{\frac{p}{p + x}}{\left(1 \cdot 1^{-1}\right)+\left(\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)\right)}'
     assert latex(Feedback(tf1*tf2, TransferFunction(1, 1, p))) == \
-        r'\frac{\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}{\left(1 \cdot 1^{-1}\right) \left(\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)\right)}'
+        r'\frac{\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}{\left(1 \cdot 1^{-1}\right)+\left(\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)\right)}'
 
 
 def test_Quaternion_latex_printing():
