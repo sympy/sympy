@@ -523,7 +523,6 @@ def mrv_leadterm(e, x):
         e_up = moveup([e], x)[0]
         exps_up = moveup([exps], x)[0]
         # NOTE: there is no need to move this down!
-        e = e_up
         Omega = Omega_up
         exps = exps_up
     #

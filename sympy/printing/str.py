@@ -941,7 +941,6 @@ class StrPrinter(Printer):
 
     def _print_AppliedBinaryRelation(self, expr):
         rel, args = expr.function, expr.arguments
-        lhs, rhs = args
         return '%s(%s, %s)' % (self._print(rel),
                                self._print(expr.lhs),
                                self._print(expr.rhs))

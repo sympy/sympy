@@ -3336,8 +3336,6 @@ def unrad(eq, *syms, **flags):
         newsyms.update(syms & r.free_symbols)
     if newsyms != syms:
         syms = newsyms
-        gens = [g for g in gens if g.free_symbols & syms]
-
     # get terms together that have common generators
     drad = dict(list(zip(rads, list(range(len(rads))))))
     rterms = {(): []}

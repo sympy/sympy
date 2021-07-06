@@ -26,8 +26,6 @@ class GenericPoly(PicklableWithSlots):
     def _perify_factors(per, result, include):
         if include:
             coeff, factors = result
-        else:
-            coeff = result
 
         factors = [ (per(g), k) for g, k in factors ]
 

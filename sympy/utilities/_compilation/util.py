@@ -113,7 +113,6 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
         dst = os.path.join(dest_dir, dest_fname)
     else:
         dest_dir = os.path.dirname(dst)
-        dest_fname = os.path.basename(dst)
 
     if not os.path.exists(dest_dir):
         if create_dest_dirs:
