@@ -724,13 +724,13 @@ def _f_list_parser(fl, ref_frame):
         vel_list, f_list = unzip(list(flist_iter()))
     return vel_list, f_list
 
-def Force(force, body1, body2=None, point1=None, point2=None):
+def apply_force(force, body1, body2=None, point1=None, point2=None):
     """Add force to the body(s).
 
     Explanation
     ===========
 
-    Force functions applies the force on body1 or equal and
+    apply_force functions applies the force on body1 or equal and
     oppposite forces on body1 and body2 if both are given.
     The force applied on body2 is taken opposite of body1,
     i.e, -force.
@@ -757,17 +757,17 @@ def Force(force, body1, body2=None, point1=None, point2=None):
     =======
 
     >>> from sympy import symbols
-    >>> from sympy.physics.mechanics import Body, Force
+    >>> from sympy.physics.mechanics import Body, apply_force
     >>> m, g = symbols('m g')
     >>> B1 = Body('B1')
     >>> B2 = Body('B2')
     >>> force1 = m*g*B1.z
-    >>> Force(force1, B1) #Applying force on B1's masscenter
+    >>> apply_force(force1, B1) #Applying force on B1's masscenter
     >>> B1.loads
     [(B1_masscenter, g*m*B1_frame.z)]
 
     >>> force2 = m*B2.x
-    >>> Force(force2, B1, B2) #Equal and opposite force on B1 & B2
+    >>> apply_force(force2, B1, B2) #Equal and opposite force on B1 & B2
     >>> B1.loads
     [(B1_masscenter, g*m*B1_frame.z), (B1_masscenter, m*B2_frame.x)]
     >>> B2.loads
@@ -785,13 +785,13 @@ def Force(force, body1, body2=None, point1=None, point2=None):
             raise TypeError('body2 must be of type Body.')
         body2.apply_force(-force, point2)
 
-def Torque(torque, body1, body2=None):
+def apply_torque(torque, body1, body2=None):
     """Add torque to the body(s).
 
     Explanation
     ===========
 
-    Torque functions applies the torque on body1 or equal and
+    apply_torque functions applies the torque on body1 or equal and
     oppposite torquess on body1 and body2 if both are given.
     The torque applied on body2 is taken opposite of body1,
     i.e, -torque.
@@ -811,17 +811,17 @@ def Torque(torque, body1, body2=None):
     =======
 
     >>> from sympy import symbols
-    >>> from sympy.physics.mechanics import Body, Torque
+    >>> from sympy.physics.mechanics import Body, apply_torque
     >>> t1, t2 = symbols('t1 t2')
     >>> B1 = Body('B1')
     >>> B2 = Body('B2')
     >>> torque1 = t1*B1.z
-    >>> Torque(torque1, B1) #Applying torque on B1
+    >>> apply_torque(torque1, B1) #Applying torque on B1
     >>> B1.loads
     [(B1_frame, t1*B1_frame.z)]
 
     >>> torque2 = t2*B2.z
-    >>> Torque(torque2, B1, B2) #Equal and opposite torque on B1 & B2
+    >>> apply_torque(torque2, B1, B2) #Equal and opposite torque on B1 & B2
     >>> B1.loads
     [(B1_frame, t1*B1_frame.z), (B1_frame, t2*B2_frame.z)]
     >>> B2.loads
