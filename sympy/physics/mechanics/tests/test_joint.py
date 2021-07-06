@@ -320,8 +320,7 @@ def test_pinjoint_pi():
 
 
 def test_slidingjoint():
-    P = Body('P')
-    C = Body('C')
+    _, _, P, C = _generate_body()
     x, v = dynamicsymbols('x_S, v_S')
     S = PrismaticJoint('S', P, C)
     assert S.name == 'S'
@@ -339,8 +338,9 @@ def test_slidingjoint():
     assert C.masscenter.vel(P.frame) == v * P.frame.x
     assert P.ang_vel_in(C) == 0
     assert C.ang_vel_in(P) == 0
-    assert S.__str__() == 'PrismaticJoint: J  parent: P  child: C'
+    assert S.__str__() == 'PrismaticJoint: S  parent: P  child: C'
 
+    N, A, P, C = _generate_body()
     l, m = symbols('l m')
     S = PrismaticJoint('S', P, C, parent_joint_pos= l * P.frame.x,
                     child_joint_pos= m * C.frame.y, parent_axis = P.frame.z)
@@ -349,14 +349,12 @@ def test_slidingjoint():
     assert S.child_point.pos_from(C.masscenter) == m * C.frame.y
     assert S.parent_point.pos_from(P.masscenter) == l * P.frame.x
     assert S.parent_point.pos_from(S.child_point) == - x * P.frame.z
-    assert P.masscenter.pos_from(C.masscenter) == - x * P.frame.x
+    assert P.masscenter.pos_from(C.masscenter) == - l*N.x - x*N.z + m*A.y
     assert C.masscenter.vel(P.frame) == v * P.frame.z
     assert C.ang_vel_in(P) == 0
     assert P.ang_vel_in(C) == 0
 
-    P = Body('P')
-    C = Body('C')
-    l, m = symbols('l m')
+    _, _, P, C = _generate_body()
     S = PrismaticJoint('S', P, C, parent_joint_pos= l * P.frame.z,
                     child_joint_pos= m * C.frame.x, parent_axis = P.frame.z)
     assert S.parent_axis == P.frame.z
