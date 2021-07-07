@@ -100,7 +100,7 @@ class Body(RigidBody, Particle):  # type: ignore
                  central_inertia=None):
 
         self.name = name
-        self.loads = []
+        self._loads = []
 
         if frame is None:
             frame = ReferenceFrame(name + '_frame')
@@ -135,6 +135,10 @@ class Body(RigidBody, Particle):  # type: ignore
             Particle.__init__(self, name, masscenter, _mass)
         else:
             RigidBody.__init__(self, name, masscenter, frame, _mass, _inertia)
+
+    @property
+    def loads(self):
+        return self._loads
 
     @property
     def x(self):
@@ -201,7 +205,7 @@ class Body(RigidBody, Particle):  # type: ignore
         if not isinstance(vec, Vector):
             raise TypeError("A Vector must be supplied to apply force.")
 
-        self.loads.append((point, vec))
+        self._loads.append((point, vec))
 
     def apply_torque(self, vec):
         """
@@ -228,7 +232,7 @@ class Body(RigidBody, Particle):  # type: ignore
 
         if not isinstance(vec, Vector):
             raise TypeError("A Vector must be supplied to add torque.")
-        self.loads.append((self.frame, vec))
+        self._loads.append((self.frame, vec))
 
     def masscenter_vel(self, body):
         """
