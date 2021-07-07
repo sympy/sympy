@@ -178,3 +178,15 @@ def test_clear_load():
     assert B.loads == [(P, force)]
     B.clear_load()
     assert B.loads == []
+
+def test_remove_load():
+    P1 = Point('P1')
+    P2 = Point('P2')
+    B = Body('B')
+    f1 = B.x
+    f2 = B.y
+    B.apply_force(f1, P1)
+    B.apply_force(f2, P2)
+    B.loads == [(P1, f1), (P2, f2)]
+    B.remove_load(P2)
+    B.loads == [(P1, f1)]

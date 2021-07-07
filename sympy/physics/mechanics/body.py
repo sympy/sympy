@@ -209,6 +209,7 @@ class Body(RigidBody, Particle):  # type: ignore
             if point in load:
                 vec += load[1]
                 self._loads.remove(load)
+                break
 
         self._loads.append((point, vec))
 
@@ -259,6 +260,45 @@ class Body(RigidBody, Particle):  # type: ignore
         """
 
         self._loads = []
+
+    def remove_load(self, about):
+        """
+        Remove load about a point or frame.
+
+        Parameters
+        ==========
+
+        about : Point or ReferenceFrame
+            The point about which force is applied or
+            the frame about which torque is applied.
+
+        Example
+        =======
+
+        >>> from sympy.physics.mechanics import Body, Point
+        >>> B = Body('B')
+        >>> P = Point('P')
+        >>> f1 = B.x
+        >>> f2 = B.y
+        >>> B.apply_force(f1)
+        >>> B.apply_force(f2, P)
+        >>> B.loads
+        [(B_masscenter, B_frame.x), (P, B_frame.y)]
+
+        >>> B.remove_load(P)
+        >>> B.loads
+        [(B_masscenter, B_frame.x)]
+
+        """
+
+        if not isinstance(about, ReferenceFrame):
+            if not isinstance(about, Point):
+                raise TypeError('Load is applied about Point or ReferenceFrame.')
+
+        for load in self._loads:
+            if about in load:
+                self._loads.remove(load)
+                break
 
     def masscenter_vel(self, body):
         """
