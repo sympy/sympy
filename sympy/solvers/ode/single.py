@@ -1962,7 +1962,7 @@ class NthOrderReducible(SingleODESolver):
         return fsol
 
 
-class Hypergeometric2nd(SingleODESolver):
+class SecondHypergeometric(SingleODESolver):
     r"""
     Solves 2nd order linear differential equations.
 

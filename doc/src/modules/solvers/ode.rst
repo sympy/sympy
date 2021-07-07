@@ -191,7 +191,7 @@ lie_group
 
 2nd_hypergeometric
 ^^^^^^^^^^^^^^^^^^
-.. autoclass:: sympy.solvers.ode.single::Hypergeometric2nd
+.. autoclass:: sympy.solvers.ode.single::SecondHypergeometric
    :members:
 
 1st_power_series
