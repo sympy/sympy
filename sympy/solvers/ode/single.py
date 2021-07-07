@@ -899,8 +899,10 @@ class Factorable(SingleODESolver):
                     return False
                 return fraction(factor(self.eqs[0]))[0]-eq!=0
             return True
-        return False
-
+        for i in factors:
+            if i.has(f(x)):
+                self.eqs.append(i)
+        return len(self.eqs)>0 and len(factors)>1
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         func = self.ode_problem.func.func
