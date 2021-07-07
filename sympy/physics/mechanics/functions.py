@@ -767,9 +767,10 @@ def apply_force(force, body1, body2=None, point1=None, point2=None):
     [(B1_masscenter, g*m*B1_frame.z)]
 
     >>> force2 = m*B2.x
+    >>> B1.clear_load()
     >>> apply_force(force2, B1, B2) #Equal and opposite force on B1 & B2
     >>> B1.loads
-    [(B1_masscenter, g*m*B1_frame.z), (B1_masscenter, m*B2_frame.x)]
+    [(B1_masscenter, m*B2_frame.x)]
     >>> B2.loads
     [(B2_masscenter, - m*B2_frame.x)]
 
