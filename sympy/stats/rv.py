@@ -19,7 +19,7 @@ from typing import Tuple as tTuple
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify, Or,
                    Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-                   DiracDelta, Mul, Indexed, MatrixSymbol, Function)
+                   DiracDelta, Mul, Indexed, MatrixSymbol, Function, prod)
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
@@ -1065,9 +1065,9 @@ def sample(expr, condition=None, size=(), library='scipy',
         Choose any of the available options to sample from as string,
         by default is 'scipy'
     numsamples : int
-        Number of samples, each with size as ``size``.
-        numsamples has been deprecated since v1.9.
-        see https://github.com/sympy/sympy/pull/21590#discussion_r649227690.
+        Number of samples, each with size as ``size``. The ``numsamples`` parameter is
+        deprecated and is only provided for compatibility with v1.8. Use a list comprehension
+        or an additional dimension in ``size`` instead.
     seed :
         An object to be used as seed by the given external library for sampling `expr`.
         Following is the list of possible types of object for the supported libraries,
@@ -1128,7 +1128,7 @@ def sample(expr, condition=None, size=(), library='scipy',
     [True, True, True, True]
 
     .. versionchanged:: 1.7.0
-        sample returns an iterator containing the samples instead of value.
+        sample used to return an iterator containing the samples instead of value.
 
     .. versionchanged:: 1.9.0
         sample returns values or array of values instead of an iterator and numsamples is deprecated.
@@ -1142,7 +1142,8 @@ def sample(expr, condition=None, size=(), library='scipy',
         SymPyDeprecationWarning(
                  feature="numsamples parameter",
                  issue=21563,
-                 deprecated_since_version="1.9").warn()
+                 deprecated_since_version="1.9",
+                 useinstead="a list comprehension or an additional dimension in ``size``").warn()
 
         return [next(iterator) for i in range(numsamples)]
 
@@ -1292,14 +1293,9 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
 
     def return_generator_infinite():
         count = 0
-        np = import_module('numpy')
-        if np:
-            rand_state = np.random.default_rng(seed=seed) if library != "pymc3" else seed
-        else:
-            rand_state = None
         _size = (1,)+((size,) if isinstance(size, int) else size)
         while count < numsamples:
-            d = ps.sample(size=_size, library=library, seed=rand_state)  # a dictionary that maps RVs to values
+            d = ps.sample(size=_size, library=library, seed=seed)  # a dictionary that maps RVs to values
             args = [d[rv][0] for rv in rvs]
 
             if condition is not None:  # Check that these values satisfy the condition
@@ -1579,7 +1575,12 @@ class Distribution(Basic):
             # I will remove all these comments if everything is ok.
 
             from sympy.stats.sampling.sample_scipy import do_sample_scipy
-            samps = do_sample_scipy(self, size, seed)
+            import numpy
+            if seed is None or isinstance(seed, int):
+                rand_state = numpy.random.default_rng(seed=seed)
+            else:
+                rand_state = seed
+            samps = do_sample_scipy(self, size, rand_state)
 
         elif library == 'numpy':
             from sympy.stats.sampling.sample_numpy import do_sample_numpy
@@ -1592,27 +1593,14 @@ class Distribution(Basic):
             samps = do_sample_numpy(self, _size, rand_state)
         elif library == 'pymc3':
             from sympy.stats.sampling.sample_pymc3 import do_sample_pymc3
-            #size accepts only int in case of pymc3
-            #see https://github.com/sympy/sympy/pull/21590#discussion_r649783860
-
-            draws = list(size)[1:]
-            if draws == []:
-                draws=1
-            elif len(draws) == 1:
-                draws = draws[0]
-            else:
-                raise TypeError("Invalid value for `size` in pymc3. Must be int")
             import logging
             logging.getLogger("pymc3").setLevel(logging.ERROR)
             import pymc3
             with pymc3.Model():
                 if do_sample_pymc3(self):
-                    samps = [pymc3.sample(draws=draws, chains=1, compute_convergence_checks=False,
-                                progressbar=False, random_seed=seed, return_inferencedata=False)[:]['X'] for i in range(size[0])]
-                    if size == (1,): #if numsamples=1 and size=()
-                        samps = samps[0]
-                    elif size[1:] == (): #if numsamples=int and size=()
-                        samps = [sam[0] for sam in samps]
+                    samps = pymc3.sample(draws=prod(size), chains=1, compute_convergence_checks=False,
+                            progressbar=False, random_seed=seed, return_inferencedata=False)[:]['X']
+                    samps = samps.reshape(size)
                 else:
                     samps = None
 

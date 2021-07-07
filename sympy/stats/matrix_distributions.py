@@ -1,4 +1,4 @@
-from sympy import S, Basic, exp, multigamma, pi
+from sympy import S, Basic, exp, multigamma, pi, prod
 from sympy.core.sympify import sympify, _sympify
 from sympy.matrices import (ImmutableMatrix, Inverse, Trace, Determinant,
                             MatrixSymbol, MatrixBase, Transpose, MatrixSet,
@@ -84,20 +84,22 @@ class SampleMatrixScipy:
                 colcov=matrix2numpy(dist.scale_matrix_2, float), size=size, random_state=rand_state)
         }
 
+        sample_shape = {
+            'WishartDistribution': lambda dist: dist.scale_matrix.shape,
+            'MatrixNormalDistribution' : lambda dist: dist.location_matrix.shape
+        }
+
         dist_list = scipy_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        samples = []
         if seed is None or isinstance(seed, int):
             rand_state = numpy.random.default_rng(seed=seed)
         else:
             rand_state = seed
-        for _ in range(size[0]):
-            samp = scipy_rv_map[dist.__class__.__name__](dist, size[1] if len(size) > 1 else 1, rand_state)
-            samples.append(samp)
-        return samples
+        samp = scipy_rv_map[dist.__class__.__name__](dist, prod(size), rand_state)
+        return samp.reshape(size + sample_shape[dist.__class__.__name__](dist))
 
 
 class SampleMatrixNumpy:
@@ -114,21 +116,21 @@ class SampleMatrixNumpy:
         numpy_rv_map = {
         }
 
+        sample_shape = {
+        }
+
         dist_list = numpy_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        samples = []
         import numpy
         if seed is None or isinstance(seed, int):
             rand_state = numpy.random.default_rng(seed=seed)
         else:
             rand_state = seed
-        for _ in range(size[0]):
-            samp = numpy_rv_map[dist.__class__.__name__](dist, size[1], rand_state)
-            samples.append(samp)
-        return samples
+        samp = numpy_rv_map[dist.__class__.__name__](dist, prod(size), rand_state)
+        return samp.reshape(size + sample_shape[dist.__class__.__name__](dist))
 
 
 class SampleMatrixPymc:
@@ -152,25 +154,21 @@ class SampleMatrixPymc:
                 nu=int(dist.n), S=matrix2numpy(dist.scale_matrix, float))
         }
 
+        sample_shape = {
+            'WishartDistribution': lambda dist: dist.scale_matrix.shape,
+            'MatrixNormalDistribution' : lambda dist: dist.location_matrix.shape
+        }
+
         dist_list = pymc3_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
-        #size accepts only int in case of pymc3
-        #see https://github.com/sympy/sympy/pull/21590#discussion_r649783860
-
-        draws = list(size)[1:]
-        if draws == []:
-            draws=1
-        elif len(draws) == 1:
-            draws = draws[0]
-        else:
-            raise TypeError("Invalid value for `size` in pymc3. Must be int")
         import logging
         logging.getLogger("pymc3").setLevel(logging.ERROR)
         with pymc3.Model():
             pymc3_rv_map[dist.__class__.__name__](dist)
-            return [pymc3.sample(draws=draws, chains=1, progressbar=False, random_seed=seed, return_inferencedata=False, compute_convergence_checks=False)['X']]
+            samps = pymc3.sample(draws=prod(size), chains=1, progressbar=False, random_seed=seed, return_inferencedata=False, compute_convergence_checks=False)['X']
+        return samps.reshape(size + sample_shape[dist.__class__.__name__](dist))
 
 _get_sample_class_matrixrv = {
     'scipy': SampleMatrixScipy,

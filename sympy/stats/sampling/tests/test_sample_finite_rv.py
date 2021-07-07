@@ -85,7 +85,7 @@ def test_sample_seed():
             if imported_lib:
                 s0 = sample(F, library=lib, seed=0)
                 s1 = sample(F, library=lib, seed=0)
-                s2 = sample(F, library=lib, seed=1)
+                s2 = sample(F, library=lib, seed=2)
                 assert s0 == s1
                 assert s1 != s2
         except NotImplementedError:
