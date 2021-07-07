@@ -625,7 +625,7 @@ def test_construct_d_case_4():
     )]
     for num, den, mul, d in tests:
         ser = rational_laurent_series(num, den, x, oo, mul, 1)
-        assert construct_d_case_4(ser, mul//2, mul) == d
+        assert construct_d_case_4(ser, mul//2) == d
 
 
 def test_construct_d_case_5():
@@ -924,27 +924,13 @@ def test_solve_riccati_slow():
         Eq(f(x).diff(x), (1 - x)*f(x)/(x - 3) + (2 - 12*x)*f(x)**2/(2*x - 9) + \
             (54924*x**3 - 405264*x**2 + 1084347*x - 1087533)/(8*x**4 - 132*x**3 + 810*x**2 - \
             2187*x + 2187) + 495),
-        [Eq(f(x), Mul(6, 3*x + 1, evaluate=False)/(2*x - 9)), Eq(f(x), Mul(6, 3*x + \
-            1, evaluate=False)/(2*x - 9))],
+        [Eq(f(x), (18*x + 6)/(2*x - 9))]
     ),
     (
         f(x).diff(x) + (3*x**2 + 1)*f(x)**2/x + (6*x**2 - x + 3)*f(x)/(x*(x \
             - 1)) + (3*x**2 - 2*x + 2)/(x*(x - 1)**2),
-        [Eq(f(x), (-C0 - x**3 + x**2 - 2*x)/(C0*x - C0 + x**4 - x**3 + x**2 - x)), \
-            Eq(f(x), -1/(x - 1))],
-    ),
-    (
-        f(x).diff(x) + (3*x**2 + 1)*f(x)**2/x + (6*x**2 - x + 3)*f(x)/(x*(x \
-        - 1)) + (3*x**2 - 2*x + 2)/(x*(x - 1)**2),
-        [Eq(f(x), (-C0 - x**3 + x**2 - 2*x)/(C0*x - C0 + x**4 - x**3 + x**2 - x)), \
-            Eq(f(x), -1/(x - 1))]
-    ),
-    (
-        Eq(f(x).diff(x), (1 - x)*f(x)/(x - 3) + (2 - 12*x)*f(x)**2/(2*x - 9) + \
-        (54924*x**3 - 405264*x**2 + 1084347*x - 1087533)/(8*x**4 - 132*x**3 + 810*x**2 - \
-        2187*x + 2187) + 495),
-        [Eq(f(x), Mul(6, 3*x + 1, evaluate=False)/(2*x - 9)), Eq(f(x), Mul(6, 3*x + \
-        1, evaluate=False)/(2*x - 9))]
+        [Eq(f(x), -1/(x - 1)), Eq(f(x), (-C0 - x**3 + x**2 - 2*x)/(C0*x - C0 + x**4 - x**3 \
+            + x**2 - x))],
     )]
     for eq, sol in tests:
         check_dummy_sol(eq, sol, C0)

@@ -934,36 +934,21 @@ class RationalRiccati(SinglePatternODESolver):
     >>> f = Function('f')
     >>> x = Symbol('x')
 
-    >>> eq = f(x).diff(x) - x*f(x)**2
-    >>> sols = dsolve(eq, hint="1st_rational_riccati")
-    >>> sols
-    Eq(f(x), -2/(C1 + x**2))
-    >>> checkodesol(eq, sols)
-    (True, 0)
-
-    >>> eq = x**3*f(x).diff(x) - x**2*f(x) - f(x)**2
-    >>> sols = dsolve(eq, hint="1st_rational_riccati")
-    >>> sols
-    Eq(f(x), C1*x**2/(C1 + x))
-    >>> checkodesol(eq, sols)
-    (True, 0)
-
     >>> eq = -x**4*f(x)**2 + x**3*f(x).diff(x) + x**2*f(x) + 20
-    >>> sols = dsolve(eq, hint="1st_rational_riccati")
-    >>> sols
+    >>> sol = dsolve(eq, hint="1st_rational_riccati")
+    >>> sol
     Eq(f(x), (4*C1 - 5*x**9 - 4)/(x**2*(C1 + x**9 - 1)))
-    >>> checkodesol(eq, sols)
+    >>> checkodesol(eq, sol)
     (True, 0)
 
-    >>> eq = x**3*f(x).diff(x) - x**2*(f(x) + f(x).diff(x)) + 2*x*f(x) - f(x)**2
-    >>> sols = dsolve(eq, hint="1st_rational_riccati")
-    >>> sols
-    Eq(f(x), x**2*(C1 + 1)/(C1 + x))
-    >>> checkodesol(eq, sols)
-    (True, 0)
+    .. [1] Riccati ODE -  https://en.wikipedia.org/wiki/Riccati_equation
 
-    .. [1] Algorithm (Pg 78) - https://www3.risc.jku.at/publications/download/risc_5387/PhDThesisThieu.pdf
-    .. [2] Examples - https://www3.risc.jku.at/publications/download/risc_5197/RISCReport15-19.pdf
+    .. [2] N. Thieu Vo - Rational and Algebraic Solutions of First-Order Algebraic ODEs,
+    Algorithm 11 (Pg 78) - https://www3.risc.jku.at/publications/download/risc_5387/PhDThesisThieu.pdf
+
+    .. [3] Examples taken from: Georg Grasegger, N. Thieu Vo, Franz Winkler -
+    Statistical Investigation of First-Order Algebraic ODEs and their Rational General Solutions
+    https://www3.risc.jku.at/publications/download/risc_5197/RISCReport15-19.pdf
     """
     has_integral = False
     hint = "1st_rational_riccati"
