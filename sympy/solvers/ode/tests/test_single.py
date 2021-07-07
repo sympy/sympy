@@ -941,6 +941,11 @@ def _get_examples_ode_sol_factorable():
         'eq': Derivative(f(x), x)**2 - x**3,
         'sol': [Eq(f(x), C1 - 2*x*sqrt(x**3)/5), Eq(f(x), C1 + 2*x*sqrt(x**3)/5)],
     },
+
+    'fact_20': {
+        'eq': x*f(x).diff(x, 2) - x*f(x),
+        'sol': [Eq(f(x), C1*exp(-x) + C2*exp(x))],
+    },
     }
     }
 
