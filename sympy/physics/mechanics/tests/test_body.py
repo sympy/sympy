@@ -168,3 +168,13 @@ def test_apply_force_multiple_one_point():
     assert B.loads == [(P, f1)]
     B.apply_force(f2, P)
     assert B.loads == [(P, f1+f2)]
+
+def test_clear_load():
+    a = symbols('a')
+    P = Point('P')
+    B = Body('B')
+    force = a*B.z
+    B.apply_force(force, P)
+    assert B.loads == [(P, force)]
+    B.clear_load()
+    assert B.loads == []
