@@ -5,9 +5,11 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      inertia, inertia_of_point_mass,
                                      kinetic_energy, linear_momentum,
                                      outer, potential_energy, msubs,
-                                     find_dynamicsymbols, Lagrangian)
+                                     find_dynamicsymbols, Lagrangian,
+                                     Body)
 
-from sympy.physics.mechanics.functions import gravity, center_of_mass
+from sympy.physics.mechanics.functions import (gravity, center_of_mass,
+                                        apply_force, apply_torque)
 from sympy.physics.vector.vector import Vector
 from sympy.testing.pytest import raises
 
@@ -250,3 +252,52 @@ def test_center_of_mass():
     point_o.set_pos(p1.point, center_of_mass(p1.point, p1, p2, p3, p4, b))
     expr = 5/(m + mb + 6)*a.x + (m + mb + 3)/(m + mb + 6)*a.y + mb/(m + mb + 6)*a.z
     assert point_o.pos_from(p1.point)-expr == 0
+
+def test_apply_torque():
+    t = symbols('t')
+    q = dynamicsymbols('q')
+    B1 = Body('B1')
+    B2 = Body('B2')
+    N = ReferenceFrame('N')
+    torque = t*q*N.x
+
+    apply_torque(torque, B1, B2) #Applying equal and opposite torque
+    assert B1.loads == [(B1.frame, torque)]
+    assert B2.loads == [(B2.frame, -torque)]
+
+    torque2 = t*N.y
+    apply_torque(torque2, B1)
+    assert B1.loads == [(B1.frame, torque+torque2)]
+
+def test_apply_force():
+    f, g = symbols('f g')
+    q, x, v1, v2 = dynamicsymbols('q x v1 v2')
+    P1 = Point('P1')
+    P2 = Point('P2')
+    B1 = Body('B1')
+    B2 = Body('B2')
+    N = ReferenceFrame('N')
+
+    P1.set_vel(B1.frame, v1*B1.x)
+    P2.set_vel(B2.frame, v2*B2.x)
+    force = f*q*N.z # time varying force
+
+    apply_force(force, B1, B2, P1, P2) #applying equal and opposite force on moving points
+    assert B1.loads == [(P1, force)]
+    assert B2.loads == [(P2, -force)]
+
+    g1 = B1.mass*g*N.y
+    g2 = B2.mass*g*N.y
+
+    apply_force(g1, B1) #applying gravity on B1 masscenter
+    apply_force(g2, B2) #applying gravity on B2 masscenter
+
+    assert B1.loads == [(P1,force), (B1.masscenter, g1)]
+    assert B2.loads == [(P2, -force), (B2.masscenter, g2)]
+
+    force2 = x*N.x
+
+    apply_force(force2, B1, B2) #Applying time varying force on masscenter
+
+    assert B1.loads == [(P1, force), (B1.masscenter, force2+g1)]
+    assert B2.loads == [(P2, -force), (B2.masscenter, -force2+g2)]

@@ -238,6 +238,11 @@ class Body(RigidBody, Particle):  # type: ignore
 
         if not isinstance(vec, Vector):
             raise TypeError("A Vector must be supplied to add torque.")
+        for load in self._loads:
+            if self.frame in load:
+                vec += load[1]
+                self._loads.remove(load)
+                break
         self._loads.append((self.frame, vec))
 
     def clear_load(self):

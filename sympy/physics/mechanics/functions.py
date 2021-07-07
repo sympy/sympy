@@ -824,7 +824,7 @@ def apply_torque(torque, body1, body2=None):
     >>> torque2 = t2*B2.z
     >>> apply_torque(torque2, B1, B2) #Equal and opposite torque on B1 & B2
     >>> B1.loads
-    [(B1_frame, t1*B1_frame.z), (B1_frame, t2*B2_frame.z)]
+    [(B1_frame, t1*B1_frame.z + t2*B2_frame.z)]
     >>> B2.loads
     [(B2_frame, - t2*B2_frame.z)]
 
