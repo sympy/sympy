@@ -205,6 +205,11 @@ class Body(RigidBody, Particle):  # type: ignore
         if not isinstance(vec, Vector):
             raise TypeError("A Vector must be supplied to apply force.")
 
+        for load in self._loads:
+            if point in load:
+                vec += load[1]
+                self._loads.remove(load)
+
         self._loads.append((point, vec))
 
     def apply_torque(self, vec):
