@@ -1,5 +1,4 @@
 from sympy.external import import_module
-import os
 
 cin = import_module('clang.cindex', import_kwargs = {'fromlist': ['cindex']})
 
@@ -52,8 +51,8 @@ if cin:
     from sympy.core import Add, Mod, Mul, Pow, Rel
     from sympy.logic.boolalg import And, as_Boolean, Not, Or
     from sympy import Symbol, sympify, true, false
+    import os
     import sys
-    import tempfile
 
     class BaseParser:
         """Base Class for the C parser"""
@@ -114,19 +113,29 @@ if cin:
                 }
             }
 
-        def parse(self, filenames, flags):
+        def traverse_translation_unit(self):
+            for child in self.tu.cursor.get_children():
+                if child.kind == cin.CursorKind.VAR_DECL:
+                    self._py_nodes.append(self.transform(child))
+                elif (child.kind == cin.CursorKind.FUNCTION_DECL):
+                    self._py_nodes.append(self.transform(child))
+                else:
+                    pass
+            return self._py_nodes
+
+        def parse(self, filename, flags):
             """Function to parse a file with C source code
 
             It takes the filename as an attribute and creates a Clang AST
             Translation Unit parsing the file.
             Then the transformation function is called on the transaltion unit,
-            whose reults are collected into a list which is returned by the
+            whose results are collected into a list which is returned by the
             function.
 
             Parameters
             ==========
 
-            filenames : string
+            filename : string
                 Path to the C file to be parsed
 
             flags: list
@@ -139,26 +148,54 @@ if cin:
                 A list of sympy AST nodes
 
             """
-            filename = os.path.abspath(filenames)
+            filename = os.path.abspath(filename)
             self.tu = self.index.parse(
                 filename,
                 args=flags,
                 options=cin.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD
             )
-            for child in self.tu.cursor.get_children():
-                if child.kind == cin.CursorKind.VAR_DECL:
-                    self._py_nodes.append(self.transform(child))
-                elif (child.kind == cin.CursorKind.FUNCTION_DECL):
-                    self._py_nodes.append(self.transform(child))
-                else:
-                    pass
-            return self._py_nodes
 
-        def parse_str(self, source, flags):
+            return self.traverse_translation_unit()
+
+        def parse_cpp_str(self, source, flags):
+            """Function to parse a string with C++ source code
+
+            It takes the source code as an attribute and calls Clang to create
+            a Clang AST Translation Unit parsing the source code.
+            Then the transformation function is called on the transaltion unit,
+            whose reults are collected into a list which is returned by the
+            function.
+
+            Parameters
+            ==========
+
+            source : string
+                Path to the C++ file to be parsed
+
+            flags: list
+                Arguments to be passed to Clang while parsing the C++ code
+
+            Returns
+            =======
+
+            py_nodes: list
+                A list of sympy AST nodes
+
+            """
+            self.tu = self.index.parse(
+                'temp.cpp',
+                args=flags,
+                unsaved_files = [('temp.cpp', source)],
+                options=cin.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD
+            )
+
+            return self.traverse_translation_unit()
+
+        def parse_c_str(self, source, flags):
             """Function to parse a string with C source code
 
-            It takes the source code as an attribute, stores it in a temporary
-            file and creates a Clang AST Translation Unit parsing the file.
+            It takes the source code as an attribute and calls Clang to create
+            a Clang AST Translation Unit parsing the source code.
             Then the transformation function is called on the transaltion unit,
             whose reults are collected into a list which is returned by the
             function.
@@ -179,35 +216,20 @@ if cin:
                 A list of sympy AST nodes
 
             """
-            file = tempfile.NamedTemporaryFile(mode = 'w+', suffix = '.cpp')
-            file.write(source)
-            file.seek(0)
             self.tu = self.index.parse(
-                file.name,
+                'test.c',
                 args=flags,
+                unsaved_files = [('test.c', source)],
                 options=cin.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD
             )
-            file.close()
-            for child in self.tu.cursor.get_children():
-                if child.kind == cin.CursorKind.VAR_DECL:
-                    self._py_nodes.append(self.transform(child))
-                elif (child.kind == cin.CursorKind.FUNCTION_DECL):
-                    self._py_nodes.append(self.transform(child))
-                else:
-                    pass
-            return self._py_nodes
+
+            return self.traverse_translation_unit()
 
         def transform(self, node):
             """Transformation Function for Clang AST nodes
 
             It determines the kind of node and calls the respective
             transformation function for that node.
-
-            Raises
-            ======
-
-            NotImplementedError : if the transformation for the provided node
-            is not implemented
 
             """
             try:
@@ -223,8 +245,7 @@ if cin:
                 )
                 handler = None
             if handler:
-                result = handler(node)
-                return result
+                return handler(node)
 
         def transform_var_decl(self, node):
             """Transformation Function for Variable Declaration
@@ -1064,8 +1085,7 @@ if cin:
 else:
     class CCodeConverter():  # type: ignore
         def __init__(self, *args, **kwargs):
-            raise ImportError("Module not Installed")
-
+            raise ImportError("Clang is not installed, cannot parse C code")
 
 def parse_c(source):
     """Function for converting a C source code
@@ -1075,7 +1095,6 @@ def parse_c(source):
 
     Returns
     =======
-
     src : list
         List of Python expression strings
 
@@ -1084,5 +1103,24 @@ def parse_c(source):
     if os.path.exists(source):
         src = converter.parse(source, flags = [])
     else:
-        src = converter.parse_str(source, flags = [])
+        src = converter.parse_c_str(source, flags = [])
+    return src
+
+def parse_cpp(source):
+    """Function for converting a C source code
+
+    The function reads the source code present in the given file and parses it
+    to give out SymPy Expressions
+
+    Returns
+    =======
+    src : list
+        List of Python expression strings
+
+    """
+    converter = CCodeConverter()
+    if os.path.exists(source):
+        src = converter.parse(source, flags = [])
+    else:
+        src = converter.parse_cpp_str(source, flags = [])
     return src
