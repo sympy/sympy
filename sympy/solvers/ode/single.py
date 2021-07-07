@@ -2617,17 +2617,17 @@ class NthLinearEulerEqNonhomogeneousUndeterminedCoefficients(SingleODESolver):
         return [sol]
 
 
-class LinearBessel2nd(SingleODESolver):
+class SecondLinearBessel(SingleODESolver):
     r"""
     Gives solution of the Bessel differential equation
 
     .. math :: x^2 \frac{d^2y}{dx^2} + x \frac{dy}{dx} y(x) + (x^2-n^2) y(x)
 
-    if n is integer then the solution is of the form Eq(f(x), C0 besselj(n,x)
-    + C1 bessely(n,x)) as both the solutions are linearly independent else if
-    n is a fraction then the solution is of the form Eq(f(x), C0 besselj(n,x)
-    + C1 besselj(-n,x)) which can also transform into Eq(f(x), C0 besselj(n,x)
-    + C1 bessely(n,x)).
+    if `n` is integer then the solution is of the form ``Eq(f(x), C0 besselj(n,x)
+    + C1 bessely(n,x))`` as both the solutions are linearly independent else if
+    `n` is a fraction then the solution is of the form ``Eq(f(x), C0 besselj(n,x)
+    + C1 besselj(-n,x))`` which can also transform into ``Eq(f(x), C0 besselj(n,x)
+    + C1 bessely(n,x))``.
 
     Examples
     ========
@@ -2738,7 +2738,7 @@ class LinearBessel2nd(SingleODESolver):
             + C2*bessely(n/d4,a4*x**d4/d4))).subs(x, x-b4))]
 
 
-class LinearAiry2nd(SingleODESolver):
+class SecondLinearAiry(SingleODESolver):
     r"""
     Gives solution of the Airy differential equation
 

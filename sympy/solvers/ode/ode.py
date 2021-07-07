@@ -1058,8 +1058,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         NthLinearEulerEqHomogeneous: ('nth_linear_euler_eq_homogeneous',),
         NthLinearEulerEqNonhomogeneousVariationOfParameters: ('nth_linear_euler_eq_nonhomogeneous_variation_of_parameters',),
         NthLinearEulerEqNonhomogeneousUndeterminedCoefficients: ('nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients',),
-        LinearBessel2nd: ('2nd_linear_bessel',),
-        LinearAiry2nd: ('2nd_linear_airy',),
+        SecondLinearBessel: ('2nd_linear_bessel',),
+        SecondLinearAiry: ('2nd_linear_airy',),
     }
     for solvercls in solvers:
         solver = solvercls(ode)
@@ -4773,4 +4773,4 @@ from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
         NthLinearConstantCoeffHomogeneous, NthLinearConstantCoeffVariationOfParameters,
         NthLinearConstantCoeffUndeterminedCoefficients, NthLinearEulerEqHomogeneous,
         NthLinearEulerEqNonhomogeneousVariationOfParameters,
-        NthLinearEulerEqNonhomogeneousUndeterminedCoefficients, LinearBessel2nd, LinearAiry2nd)
+        NthLinearEulerEqNonhomogeneousUndeterminedCoefficients, SecondLinearBessel, SecondLinearAiry)
