@@ -1141,7 +1141,7 @@ def sample(expr, condition=None, size=(), library='scipy',
     if numsamples != 1:
         SymPyDeprecationWarning(
                  feature="numsamples parameter",
-                 issue=21563,
+                 issue=21723,
                  deprecated_since_version="1.9",
                  useinstead="a list comprehension or an additional dimension in ``size``").warn()
 
