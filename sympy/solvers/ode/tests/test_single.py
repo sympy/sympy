@@ -521,6 +521,11 @@ def test_factorable():
     _ode_solver_test(_get_examples_ode_sol_factorable)
 
 
+@slow
+def test_slow_examples_factorable():
+    _ode_solver_test(_get_examples_ode_sol_factorable, run_slow_test=True)
+
+
 def test_Riccati_special_minus2():
     _ode_solver_test(_get_examples_ode_sol_riccati)
 
@@ -842,7 +847,8 @@ def _get_examples_ode_sol_factorable():
             Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 + x)) - 1))),
             Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 - x)) - 1))),
             Eq(f(x), C1)
-        ]
+        ],
+        'slow': True,
     },
 
     'fact_07': {
@@ -874,7 +880,8 @@ def _get_examples_ode_sol_factorable():
         'sol': [
             Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x)),
             Eq(f(x), C1*besselj(sqrt(3), x) + C2*bessely(sqrt(3), x))
-        ]
+        ],
+        'slow': True,
     },
 
     'fact_11': {
@@ -934,6 +941,11 @@ def _get_examples_ode_sol_factorable():
     'fact_19': {
         'eq': Derivative(f(x), x)**2 - x**3,
         'sol': [Eq(f(x), C1 - 2*x*sqrt(x**3)/5), Eq(f(x), C1 + 2*x*sqrt(x**3)/5)],
+    },
+
+    'fact_20': {
+        'eq': x*f(x).diff(x, 2) - x*f(x),
+        'sol': [Eq(f(x), C1*exp(-x) + C2*exp(x))],
     },
     }
     }
