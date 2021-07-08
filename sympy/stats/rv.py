@@ -204,7 +204,7 @@ class PSpace(Basic):
     def compute_density(self, expr):
         raise NotImplementedError()
 
-    def sample(self):
+    def sample(self, size=(), library='scipy', seed=None):
         raise NotImplementedError()
 
     def probability(self, condition):

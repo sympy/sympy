@@ -212,7 +212,7 @@ def test_Sample():
     numpy = import_module('numpy')
     if not numpy:
         skip('Numpy is not installed. Abort tests')
-    #Test Issue #21563: Output of sample must be a float or list
+    #Test Issue #21563: Output of sample must be a float or array
     assert isinstance(sample(X), numpy.int64)
     assert isinstance(sample(Y), numpy.float64)
     assert isinstance(sample(X, size=2), numpy.ndarray)

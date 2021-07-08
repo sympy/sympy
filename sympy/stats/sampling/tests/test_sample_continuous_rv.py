@@ -162,10 +162,10 @@ def test_sample_continuous():
             imported_lib = import_module(lib)
             if imported_lib:
                 s0, s1, s2 = [], [], []
-                s0 = sample(Z, library=lib, seed=0)
-                s1 = sample(Z, library=lib, seed=0)
-                s2 = sample(Z, library=lib, seed=1)
-                assert s0 == s1
-                assert s1 != s2
+                s0 = sample(Z, size=10, library=lib, seed=0)
+                s1 = sample(Z, size=10, library=lib, seed=0)
+                s2 = sample(Z, size=10, library=lib, seed=1)
+                assert all(s0 == s1)
+                assert all(s1 != s2)
         except NotImplementedError:
             continue
