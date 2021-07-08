@@ -32,6 +32,7 @@ from .hypergeometric import equivalence_hypergeometric, match_2nd_2F1_hypergeome
 from .nonhomogeneous import _get_euler_characteristic_eq_sols, _get_const_characteristic_eq_sols, \
     _solve_undetermined_coefficients, _solve_variation_of_parameters, _test_term, _undetermined_coefficients_match, \
         _get_simplified_sol
+from .lie_group import _ode_lie_group
 
 
 class ODEMatchError(NotImplementedError):
@@ -90,7 +91,7 @@ class SingleODEProblem:
     _eq_preprocessed = None  # type: Expr
     _eq_high_order_free = None
 
-    def __init__(self, eq, func, sym, prep=True):
+    def __init__(self, eq, func, sym, prep=True, **kwargs):
         assert isinstance(eq, Expr)
         assert isinstance(func, AppliedUndef)
         assert isinstance(sym, Symbol)
@@ -99,6 +100,7 @@ class SingleODEProblem:
         self.func = func
         self.sym = sym
         self.prep = prep
+        self.params = kwargs
 
     @cached_property
     def order(self) -> int:
@@ -2792,6 +2794,109 @@ class SecondLinearAiry(SingleODESolver):
 
         return [Eq(f(x), C1*airyai(arg) + C2*airybi(arg))]
 
+
+class LieGroup(SingleODESolver):
+    r"""
+    This hint implements the Lie group method of solving first order differential
+    equations. The aim is to convert the given differential equation from the
+    given coordinate system into another coordinate system where it becomes
+    invariant under the one-parameter Lie group of translations. The converted
+    ODE can be easily solved by quadrature. It makes use of the
+    :py:meth:`sympy.solvers.ode.infinitesimals` function which returns the
+    infinitesimals of the transformation.
+
+    The coordinates `r` and `s` can be found by solving the following Partial
+    Differential Equations.
+
+    .. math :: \xi\frac{\partial r}{\partial x} + \eta\frac{\partial r}{\partial y}
+                  = 0
+
+    .. math :: \xi\frac{\partial s}{\partial x} + \eta\frac{\partial s}{\partial y}
+                  = 1
+
+    The differential equation becomes separable in the new coordinate system
+
+    .. math :: \frac{ds}{dr} = \frac{\frac{\partial s}{\partial x} +
+                 h(x, y)\frac{\partial s}{\partial y}}{
+                 \frac{\partial r}{\partial x} + h(x, y)\frac{\partial r}{\partial y}}
+
+    After finding the solution by integration, it is then converted back to the original
+    coordinate system by substituting `r` and `s` in terms of `x` and `y` again.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, exp, pprint
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(f(x).diff(x) + 2*x*f(x) - x*exp(-x**2), f(x),
+    ... hint='lie_group'))
+           /      2\    2
+           |     x |  -x
+    f(x) = |C1 + --|*e
+           \     2 /
+
+
+    References
+    ==========
+
+    - Solving differential equations by Symmetry Groups,
+      John Starrett, pp. 1 - pp. 14
+
+    """
+    hint = "lie_group"
+    has_integral = False
+
+    def _has_additional_params(self):
+        return 'xi' in self.ode_problem.params and 'eta' in self.ode_problem.params
+
+    def _matches(self):
+        eq = self.ode_problem.eq
+        f = self.ode_problem.func.func
+        order = self.ode_problem.order
+        x = self.ode_problem.sym
+        df = f(x).diff(x)
+        y = Dummy('y')
+        d = Wild('d', exclude=[df, f(x).diff(x, 2)])
+        e = Wild('e', exclude=[df])
+        does_match = False
+        if self._has_additional_params() and order == 1:
+            xi = self.ode_problem.params['xi']
+            eta = self.ode_problem.params['eta']
+            self.r3 = {'xi': xi, 'eta': eta}
+            r = collect(eq, df, exact=True).match(d + e * df)
+            if r:
+                r['d'] = d
+                r['e'] = e
+                r['y'] = y
+                r[d] = r[d].subs(f(x), y)
+                r[e] = r[e].subs(f(x), y)
+                self.r3.update(r)
+            does_match = True
+        return does_match
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        eq = self.ode_problem.eq
+        x = self.ode_problem.sym
+        func = self.ode_problem.func
+        order = self.ode_problem.order
+        df = func.diff(x)
+
+        try:
+            eqsol = solve(eq, df)
+        except NotImplementedError:
+            eqsol = []
+
+        desols = []
+        for s in eqsol:
+            sol = _ode_lie_group(s, func, order, match=self.r3)
+            if sol:
+                desols.extend(sol)
+
+        if desols == []:
+            raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
+                + " the lie group method")
+        return desols
 
 
 # Avoid circular import:
