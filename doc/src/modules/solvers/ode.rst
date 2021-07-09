@@ -102,12 +102,12 @@ factorable
 
 2nd_linear_airy
 ^^^^^^^^^^^^^^^
-.. autoclass:: sympy.solvers.ode.single::LinearAiry2nd
+.. autoclass:: sympy.solvers.ode.single::SecondLinearAiry
    :members:
 
 2nd_linear_bessel
 ^^^^^^^^^^^^^^^^^
-.. autoclass:: sympy.solvers.ode.single::LinearBessel2nd
+.. autoclass:: sympy.solvers.ode.single::SecondLinearBessel
    :members:
 
 Bernoulli
@@ -192,7 +192,7 @@ lie_group
 
 2nd_hypergeometric
 ^^^^^^^^^^^^^^^^^^
-.. autoclass:: sympy.solvers.ode.single::Hypergeometric2nd
+.. autoclass:: sympy.solvers.ode.single::SecondHypergeometric
    :members:
 
 1st_power_series
