@@ -100,35 +100,27 @@ class Joint(ABC):
 
        * - ``child_axis``
          - ``parent_axis``
-         - ``arbitrary_axis``
          - ``rotation_axis``
        * - ``-C.x``
          - ``P.x``
          - ``P.z``
-         - ``P.z``
        * - ``-C.y``
          - ``P.y``
-         - ``P.x``
          - ``P.x``
        * - ``-C.z``
          - ``P.z``
          - ``P.y``
-         - ``P.y``
        * - ``-C.x-C.y``
          - ``P.x+P.y``
-         - ``P.z``
          - ``P.z``
        * - ``-C.y-C.z``
          - ``P.y+P.z``
          - ``P.x``
-         - ``P.x``
        * - ``-C.x-C.z``
          - ``P.x+P.z``
          - ``P.y``
-         - ``P.y``
        * - ``-C.x-C.y-C.z``
          - ``P.x+P.y+P.z``
-         - ``P.x``
          - ``(P.x+P.y+P.z) × P.x``
 
     """
