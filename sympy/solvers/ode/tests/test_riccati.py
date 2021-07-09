@@ -1,6 +1,6 @@
 from random import randint
 from sympy import (S, symbols, Function, Rational, Poly, Eq, ratsimp,
-    checkodesol, sqrt, Dummy, oo, I, pi, Mul, sin, exp, log, tanh)
+    checkodesol, sqrt, Dummy, oo, I, Mul, sin, exp, log, tanh)
 from sympy.testing.pytest import slow
 from sympy.solvers.ode.riccati import (riccati_normal, riccati_inverse_normal,
     riccati_reduced, match_riccati, inverse_transform_poly, find_poles,
@@ -680,7 +680,7 @@ def test_rational_laurent_series():
         Poly(x**2 - 3*x + 9, x, extension=True),
         Poly(x**2 - x, x, extension=True),
         S(1), 1, 6,
-        {-1: 9, 1: 7, 0: -8, -2: -9, -3: 9, -4: -9, -5: 9}
+        {1: 7, 0: -8, -1: 9, -2: -9, -3: 9, -4: -9}
     ),
     # Laurent series about multiple pole (Multiplicty > 1)
     (
@@ -688,43 +688,32 @@ def test_rational_laurent_series():
         Poly(64*x**4 - 80*x**3 - 831*x**2 + 1809*x - 972, x, extension=True),
         S(9)/8, 2, 3,
         {0: S(32177152)/46521675, 2: S(1019)/984, -1: S(11947565056)/28610830125, \
-        1: S(209149)/75645, -2: S(3751586234368)/17595660526875}
+        1: S(209149)/75645}
     ),
     (
         Poly(1, x, extension=True),
         Poly(x**5 + (-4*sqrt(2) - 1)*x**4 + (4*sqrt(2) + 12)*x**3 + (-12 - 8*sqrt(2))*x**2 \
         + (4 + 8*sqrt(2))*x - 4, x, extension=True),
         sqrt(2), 4, 6,
-        {4: 1 + sqrt(2), 3: -3 - 2*sqrt(2), 2: 7 + 5*sqrt(2), 1: -17 - 12*sqrt(2), 0: 41 + \
-        29*sqrt(2), -1: -99 - 70*sqrt(2), -2: 239 + 169*sqrt(2), -3: -577 - 408*sqrt(2), \
-        -4: 1393 + 985*sqrt(2), -5: -3363 - 2378*sqrt(2)}
+        {4: 1 + sqrt(2), 3: -3 - 2*sqrt(2), 2: Mul(-1, -3 - 2*sqrt(2), evaluate=False)/(-1 \
+        + sqrt(2)), 1: (-3 - 2*sqrt(2))/(-1 + sqrt(2))**2, 0: Mul(-1, -3 - 2*sqrt(2), evaluate=False \
+        )/(-1 + sqrt(2))**3, -1: (-3 - 2*sqrt(2))/(-1 + sqrt(2))**4}
     ),
     # Laurent series about oo
     (
         Poly(x**5 - 4*x**3 + 6*x**2 + 10*x - 13, x, extension=True),
         Poly(x**2 - 5, x, extension=True),
         oo, 3, 6,
-        {3: 1, 1: 1, -2: 17, 2: 0, 0: 6, -1: 15, -3: 75, -4: 85, -5: 375}
+        {3: 1, 2: 0, 1: 1, 0: 6, -1: 15, -2: 17}
     ),
     # Laurent series at x0 where x0 is not a pole of the function
     # Using multiplicity as 0 (as x0 will not be a pole)
     (
         Poly(3*x**3 + 6*x**2 - 2*x + 5, x, extension=True),
         Poly(9*x**4 - x**3 - 3*x**2 + 4*x + 4, x, extension=True),
-        pi, 0, 1,
-        {-2: (-891*pi**7 - 3075*pi**5 - 3435*pi**4 - 693*pi**2 - 48*pi + \
-        268 + 1498*pi**3 + 3597*pi**6 + 243*pi**9 + 1458*pi**8)/(-243*pi**11 \
-        - 702*pi**10 - 879*pi**7 - 159*pi**6 - 272*pi**3 + 64 + 48*pi**2 + \
-        192*pi + 300*pi**4 + 996*pi**5 + 990*pi**8 + 1133*pi**9 + 729*pi**12), \
-        0: (-2*pi + 5 + 6*pi**2 + 3*pi**3)/(-pi**3 - 3*pi**2 + 4 + 4*pi + \
-        9*pi**4), -3: (-17496*pi**11 - 2187*pi**12 - 66312*pi**9 - 43174*pi**6 \
-        - 20619*pi**4 - 30868*pi**3 - 1136 - 112*pi + 7480*pi**2 + 37492*pi**5 \
-        + 89140*pi**7 + 81699*pi**8 + 13122*pi**10)/(-2916*pi**15 - 8262*pi**14 \
-        - 16080*pi**11 - 1798*pi**10 - 9888*pi**7 - 1536*pi**3 + 256 + 1024*pi + \
-        768*pi**2 + 352*pi**4 + 7680*pi**5 + 3152*pi**6 + 2625*pi**8 + 20252*pi**9 \
-        + 11827*pi**12 + 14544*pi**13 + 6561*pi**16), -1: (-108*pi**5 - 27*pi**6 \
-        - 160*pi**3 - 28 + 78*pi + 69*pi**2 + 51*pi**4)/(-18*pi**7 - 53*pi**6 - \
-        32*pi**3 - 8*pi**2 + 16 + 32*pi + 73*pi**4 + 78*pi**5 + 81*pi**8)}
+        S(2)/5, 0, 1,
+        {0: S(3345)/3304, -1: S(399325)/2729104, -2: S(3926413375)/4508479808, \
+        -3: S(-5000852751875)/1862002160704, -4: S(-6683640101653125)/6152055138966016}
     ),
     (
         Poly(-7*x**2 + 2*x - 4, x, extension=True),
@@ -888,7 +877,7 @@ def test_solve_riccati():
     (
         Eq(f(x).diff(x), 2*x**3/3 + 8*x**2/3 + 10*x/3 + (-3*x/2 - 3)*\
             f(x)**2 - f(x)/x - 2/(3*x)),
-        [Eq(f(x), -2*x/3 - S(2)/3), Eq(f(x), -2*x/3 - S(2)/3)]
+        [Eq(f(x), -2*x/3 - S(2)/3)]
     ),
     (
         Eq(f(x).diff(x), 18*x**3 + 18*x**2 + (-x/2 - S(1)/2)*f(x)**2 + 6),

@@ -6,7 +6,11 @@ Riccati ODEs. A general first order Riccati ODE is given by -
 .. math:: y' = b_0(x) + b_1(x)w + b_2(x)w^2
 
 where `b_0, b_1` and `b_2` can be arbitrary rational functions of `x`
-with `b_2 \ne 0`.
+with `b_2 \ne 0`. When `b_2 = 0`, the equation is not a Riccati ODE
+anymore and becomes a Linear ODE. Similarly, when `b_0 = 0`, the equation
+is a Bernoulli ODE. The algorithm presented below can find rational
+solution(s) to all ODEs with `b_2 \ne 0` that have a rational solution,
+or prove that no rational solution exists for the equation.
 
 Background
 ==========
@@ -185,7 +189,6 @@ from sympy.polys.domains import ZZ
 from sympy.polys.polytools import Poly
 from sympy.polys.polyroots import roots
 from sympy.solvers.solveset import linsolve
-from sympy.tensor.indexed import IndexedBase, Indexed
 
 def riccati_normal(w, x, b1, b2):
     # y(x) = -b2(x)*w(x) - b2'(x)/(2*b2(x)) - b1(x)/2
@@ -473,60 +476,122 @@ def construct_d(num, den, x, val_inf):
     return d
 
 
-def rational_laurent_series(num, den, x, x0, mul, n):
-    # Basic Idea for this function is explained here:
-    # https://github.com/sympy/sympy/pull/21459#issuecomment-850500922
+def rational_laurent_series(num, den, x, r, m, n):
+    r"""
+    The function computes the Laurent series coefficients
+    for the rational function `\frac{num(x)}{den(x)}` at
+    `x = r` whose order is `m` upto the `n^{\mathrm{th}}`
+    term.
 
-    # Variable for symbolic index
-    m = symbols('m')
+    This docstring explains how Laurent series coefficients
+    for rational functions about any point can be computed.
+
+    Let's say we want to compute the Laurent series of a
+    rational function `f(x)` about `x_0`. Since `f(x)` is
+    rational, we can represent it as -
+
+    .. math:: f(x) = \frac{P(x)}{Q(x)}
+
+    We have to follow these steps to find the coefficients -
+
+    1. Substitute `x + x_0` in place of `x`. If `x_0`
+    is a pole of `f(x)`, multiply the expression by `x^m`
+    where `m` is the multiplicity of `x_0`. Denote the
+    the resulting expression as g(x). We do this substitution
+    so that we can now find the Laurent series of g(x) about
+    `x = 0`.
+
+    2. We can then assume that the Laurent series of `g(x)`
+    takes the following form -
+
+    .. math:: g(x) = \frac{num(x)}{den(x)} = \Sum_{m = 0}^{\infty} a_m x^m
+
+    where `a_m` denotes the Laurent series coefficients.
+
+    3. Multiply the denominator to the RHS of the equation
+    and form a recurrence relation for the coefficients `a_m`.
+
+    Example
+    =======
+
+    Find the Laurent series of
+
+    .. math:: f(x) = \frac{1 + x}{4 - x^2}
+
+    about `x = -2`.
+
+    >>> from sympy.abc import x
+    >>> from sympy import roots
+    >>> f = (1 + x)/(4 - x**2)
+    >>> r = roots(f.as_numer_denom()[1], x)
+    >>> r
+    {-2: 1, 2: 1}
+
+    Since `x_0` is a pole of `f(x)`, we need to
+    know its multiplicity.
+
+    >>> x0 = -2
+    >>> m = r[x0]
+
+    Substitute and multiply by `x^m`.
+
+    >>> g = f.subs(x, x + x0).cancel()
+    >>> num, den = (g*x**m).cancel().as_numer_denom()
+    >>> num
+    1 - x
+    >>> den
+    x - 4
+
+    Form the equation to find the recurrence relation
+
+    ..math :: 1 - x = (x - 4) \Sum_{x = 0}^{\infty} a[i] x^i
+
+    Multiplying this out and rearranging the indices of the
+    sums, we get -
+
+    ..math :: 1 - x = -4 a_0 + (a_0 - 4 a_1) x + \Sum_{x = 2}^{\infty} (a[i-1] - 4*a[i]) x^i
+
+    Find the base case coefficients and then the recurrence
+    relation. Solving for these, we get -
+
+    ..math:: a_0 = -\frac{1}{4}, a_1 = {3}{16}, a_m = \frac{a_{m-1}}{4}
+    """
     one = Poly(1, x, extension=True)
 
-    if x0 == oo:
+    if r == oo:
         # Series at x = oo is equal to first transforming
         # the function from x -> 1/x and finding the
         # series at x = 0
         num, den = inverse_transform_poly(num, den, x)
-        x0 = S(0)
+        r = S(0)
 
-    if x0:
+    if r:
         # For an expansion about a non-zero point, a
-        # transformation from x -> x + x0 must be made
-        num = num.transform(Poly(x + x0, x, extension=True), one)
-        den = den.transform(Poly(x + x0, x, extension=True), one)
+        # transformation from x -> x + r must be made
+        num = num.transform(Poly(x + r, x, extension=True), one)
+        den = den.transform(Poly(x + r, x, extension=True), one)
         num, den = num.cancel(den, include=True)
 
     # Remove the pole from the denominator if the series
     # expansion is about one of the poles
-    num, den = (num*x**mul).cancel(den, include=True)
+    num, den = (num*x**m).cancel(den, include=True)
 
-    # IndexedBase object to represent recurrence relation
-    # for the Laurent series coefficients
-    c = IndexedBase('c')
-    coeff_max = max(den.degree(x), num.degree(x) + 1)
-    # All coefficient values that must be found
-    indices = [c[i] for i in range(-mul, max(n, coeff_max))]
-    out, sums = Poly(0, x, domain=ZZ[indices + [S(x0)]]), 0
+    # Equate coefficients for the first terms (base case)
+    maxdegree = 1 + max(num.degree(), den.degree())
+    syms = symbols(f'a:{maxdegree}', cls=Dummy)
+    diff = num - den * Poly(syms[::-1], x)
+    coeff_diffs = diff.all_coeffs()[::-1][:maxdegree]
+    (coeffs, ) = linsolve(coeff_diffs, syms)
 
-    # For each term in the denominator, add a term in
-    # the recurrence relation
-    for pw, cf in den.as_dict().items():
-        pw = pw[0]
-        for i in range(pw, coeff_max):
-            out += Poly(cf*c[i - pw]*x**i, x, domain=ZZ[indices + [S(x0)]])
-        sums += cf*c[m - pw]
-
-    # If the recurrence relation is a valid expression,
-    # find the base case coefficients and use these
-    # to find values of other coefficients
-    if out:
-        coeffs = linsolve_dict((num - out).all_coeffs(), list(out.atoms(Indexed)))
-        for i in range(len(coeffs), n + mul):
-            ai = linsolve_dict([sums.subs(m, i).subs(coeffs)], [c[i]])
-            if len(ai) > 0:
-                coeffs.update({c[i]: list(ai.values())[0]})
-        coeffs = list(coeffs.items())
-        coeffs = {mul - k.indices[0]: v for k, v in coeffs}
-    return coeffs
+    # Use the recursion relation for the rest
+    recursion = den.all_coeffs()[::-1]
+    div, rec_rhs = recursion[0], recursion[1:]
+    series = list(coeffs)
+    while len(series) < n:
+        next_coeff = sum(c*series[-1-n] for n, c in enumerate(rec_rhs)) / div
+        series.append(-next_coeff)
+    series = {m - i: val for i, val in enumerate(series)}
+    return series
 
 def compute_m_ybar(x, poles, choice, c, d, N):
     ybar = 0
@@ -543,12 +608,6 @@ def compute_m_ybar(x, poles, choice, c, d, N):
     for i in range(N+1):
         ybar += d[choice[0]][i]*x**i
     return (m.expr, ybar)
-
-
-# def rational_laurent_series_rootsum(num, den, x):
-#     pass
-#     y = symbols('y')
-#     coeff = lambda r, n: (num*diff((1/den).subs(x, x + r) * x, x, n) / factorial(n)).cancel(extension=True).subs(x, y)
 
 
 def solve_aux_eq(numa, dena, numy, deny, x, m):
