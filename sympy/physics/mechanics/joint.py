@@ -543,7 +543,7 @@ class PrismaticJoint(Joint):
 
     It is defined such that the child body translates with respect to the parent
     body along the body fixed parent axis. The location of the joint is defined
-    by two points in each body which coincides initially. The direction cosine matrix between
+    by two points in each body which coincides when the generalized coordinate is zero. The direction cosine matrix between
     the child and parent is formed using a simple rotation about an axis that is normal to
     both ``child_axis`` and ``parent_axis``, see the Notes section for a detailed explanation of
     this.
