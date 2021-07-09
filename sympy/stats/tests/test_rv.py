@@ -8,7 +8,7 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         BernoulliProcess, Variance, Expectation, Probability, Covariance, covariance)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, sample_iter, PSpace, is_random, RandomIndexedSymbol, RandomMatrixSymbol)
-from sympy.testing.pytest import raises, skip, XFAIL, ignore_warnings
+from sympy.testing.pytest import raises, skip, XFAIL
 from sympy.external import import_module
 from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution
@@ -192,9 +192,8 @@ def test_Sample():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests')
-    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        assert next(sample(X)) in [1, 2, 3, 4, 5, 6]
-        assert isinstance(next(sample(X + Y)), float)
+    assert sample(X) in [1, 2, 3, 4, 5, 6]
+    assert isinstance(sample(X + Y), float)
 
     assert P(X + Y > 0, Y < 0, numsamples=10).is_number
     assert E(X + Y, numsamples=10).is_number
@@ -209,6 +208,15 @@ def test_Sample():
 
     assert all(i in range(1, 7) for i in density(X, numsamples=10))
     assert all(i in range(4, 7) for i in density(X, X>3, numsamples=10))
+
+    numpy = import_module('numpy')
+    if not numpy:
+        skip('Numpy is not installed. Abort tests')
+    #Test Issue #21563: Output of sample must be a float or array
+    assert isinstance(sample(X), numpy.int64)
+    assert isinstance(sample(Y), numpy.float64)
+    assert isinstance(sample(X, size=2), numpy.ndarray)
+
 
 
 @XFAIL
