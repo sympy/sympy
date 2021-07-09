@@ -288,15 +288,16 @@ class Joint(ABC):
                 if z!=0:
                     return cross(self.parent_axis,
                                 parent_frame.x)
-                return parent_frame.z
-            return parent_frame.y
+            if z!=0:
+                return parent_frame.y
+            return parent_frame.z
 
         if x == 0:
             if y!=0:
                 if z!=0:
                     return parent_frame.x
-                return parent_frame.z
-            return parent_frame.x
+                return parent_frame.x
+            return parent_frame.y
 
     def _set_orientation(self):
         #Helper method for `orient_axis()`
@@ -304,20 +305,13 @@ class Joint(ABC):
         angle, axis = self._alignment_rotation(self.parent_axis,
                                                 self.child_axis)
 
-        odd_multiple_pi = False
-
-        if angle%pi == 0:
-            if (angle/pi) == 1:
-                odd_multiple_pi = True
-
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)
 
-            if axis != Vector(0) or odd_multiple_pi:
+            if axis != Vector(0) or angle == pi:
 
-                if odd_multiple_pi:
-                    axis = cross(self.parent_axis,
-                                self._generate_vector())
+                if angle == pi:
+                    axis = self._generate_vector()
 
                 int_frame = ReferenceFrame('int_frame')
                 int_frame.orient_axis(self.child.frame, self.child_axis, 0)

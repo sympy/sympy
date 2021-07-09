@@ -291,15 +291,15 @@ def test_pinjoint_arbitrary_axis():
 def test_pinjoint_pi():
     _, _, P, C = _generate_body()
     J = PinJoint('J', P, C, child_axis=-C.frame.x)
-    assert J._generate_vector() == P.frame.y
-
-    _, _, P, C = _generate_body()
-    J = PinJoint('J', P, C, parent_axis=P.frame.y, child_axis=-C.frame.y)
     assert J._generate_vector() == P.frame.z
 
     _, _, P, C = _generate_body()
-    J = PinJoint('J', P, C, parent_axis=P.frame.z, child_axis=-C.frame.z)
+    J = PinJoint('J', P, C, parent_axis=P.frame.y, child_axis=-C.frame.y)
     assert J._generate_vector() == P.frame.x
+
+    _, _, P, C = _generate_body()
+    J = PinJoint('J', P, C, parent_axis=P.frame.z, child_axis=-C.frame.z)
+    assert J._generate_vector() == P.frame.y
 
     _, _, P, C = _generate_body()
     J = PinJoint('J', P, C, parent_axis=P.frame.x+P.frame.y, child_axis=-C.frame.y-C.frame.x)
