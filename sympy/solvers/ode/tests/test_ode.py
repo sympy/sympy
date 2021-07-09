@@ -7,9 +7,10 @@ from sympy.solvers.ode import (classify_ode,
     homogeneous_order, dsolve)
 
 from sympy.solvers.ode.subscheck import checkodesol
-from sympy.solvers.ode.ode import (_undetermined_coefficients_match, classify_sysode,
+from sympy.solvers.ode.ode import (classify_sysode,
     constant_renumber, constantsimp, get_numbered_constants, solve_ics)
 
+from sympy.solvers.ode.nonhomogeneous import _undetermined_coefficients_match
 from sympy.solvers.ode.single import LinearCoefficients
 from sympy.solvers.deutils import ode_order
 from sympy.testing.pytest import XFAIL, raises, slow
@@ -196,7 +197,6 @@ def test_classify_ode():
          '1st_homogeneous_coeff_subs_dep_div_indep',
          '1st_power_series',
          'lie_group',
-         'nth_linear_constant_coeff_homogeneous',
          'nth_linear_euler_eq_homogeneous',
          'nth_algebraic_Integral',
          'separable_Integral',
@@ -714,7 +714,6 @@ def test_undetermined_coefficients_match():
     assert _undetermined_coefficients_match(cos(x**2), x) == {'test': False}
     assert _undetermined_coefficients_match(2**(x**2), x) == {'test': False}
 
-
 def test_issue_4785():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
@@ -889,9 +888,11 @@ def test_2nd_power_series_ordinary():
     assert checkodesol(eq, sol) == (True, 0)
 
     eq = (1 + x**2)*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) -2*f(x)
-    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert classify_ode(eq) == ('2nd_hypergeometric', '2nd_hypergeometric_Integral',
+    '2nd_power_series_ordinary')
+
     sol = Eq(f(x), C2*(-x**4/3 + x**2 + 1) + C1*x + O(x**6))
-    assert dsolve(eq) == sol
+    assert dsolve(eq, hint='2nd_power_series_ordinary') == sol
     assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) + x*(f(x).diff(x)) + f(x)

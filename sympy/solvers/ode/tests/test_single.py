@@ -521,6 +521,11 @@ def test_factorable():
     _ode_solver_test(_get_examples_ode_sol_factorable)
 
 
+@slow
+def test_slow_examples_factorable():
+    _ode_solver_test(_get_examples_ode_sol_factorable, run_slow_test=True)
+
+
 def test_Riccati_special_minus2():
     _ode_solver_test(_get_examples_ode_sol_riccati)
 
@@ -930,7 +935,8 @@ def _get_examples_ode_sol_factorable():
             Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 + x)) - 1))),
             Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 - x)) - 1))),
             Eq(f(x), C1)
-        ]
+        ],
+        'slow': True,
     },
 
     'fact_07': {
@@ -962,7 +968,8 @@ def _get_examples_ode_sol_factorable():
         'sol': [
             Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x)),
             Eq(f(x), C1*besselj(sqrt(3), x) + C2*bessely(sqrt(3), x))
-        ]
+        ],
+        'slow': True,
     },
 
     'fact_11': {
@@ -1022,6 +1029,11 @@ def _get_examples_ode_sol_factorable():
     'fact_19': {
         'eq': Derivative(f(x), x)**2 - x**3,
         'sol': [Eq(f(x), C1 - 2*x*sqrt(x**3)/5), Eq(f(x), C1 + 2*x*sqrt(x**3)/5)],
+    },
+
+    'fact_20': {
+        'eq': x*f(x).diff(x, 2) - x*f(x),
+        'sol': [Eq(f(x), C1*exp(-x) + C2*exp(x))],
     },
     }
     }
@@ -2651,9 +2663,9 @@ def _get_examples_ode_sol_nth_linear_constant_coeff_homogeneous():
     'lin_const_coeff_hom_37': {
         'eq': f(x).diff(x, 10) - 2*f(x).diff(x, 6) + 2*f(x).diff(x, 5)
         + f(x).diff(x, 2) - 2*f(x).diff(x, 1) + f(x),
-        'sol': [Eq(f(x), (C1 + C2*x)*exp(x*r21) + (C10*sin(x*im(r24)) + C7*x*sin(x*im(r24)) + (
-        C8 + C9*x)*cos(x*im(r24)))*exp(x*re(r24)) + (C3*x*sin(x*im(r22)) + C6*sin(x*im(r22)
-        ) + (C4 + C5*x)*cos(x*im(r22)))*exp(x*re(r22)))],
+        'sol': [Eq(f(x), (C1 + C2*x)*exp(x*r21) + (-((C3 + C4*x)*sin(x*im(r22)))
+        + (C5 + C6*x)*cos(x*im(r22)))*exp(x*re(r22)) + (-((C7 + C8*x)*sin(x*im(r24)))
+        + (C10*x + C9)*cos(x*im(r24)))*exp(x*re(r24)))],
         'checkodesol_XFAIL':True, #It Hangs
     },
 

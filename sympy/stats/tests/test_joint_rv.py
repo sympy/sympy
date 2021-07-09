@@ -11,7 +11,7 @@ from sympy.stats.joint_rv_types import (JointRV, MultivariateNormalDistribution,
                 GeneralizedMultivariateLogGamma as GMVLG, MultivariateEwens,
                 Multinomial, NegativeMultinomial, MultivariateNormal,
                 MultivariateLaplace)
-from sympy.testing.pytest import raises, XFAIL, ignore_warnings, skip
+from sympy.testing.pytest import raises, XFAIL, skip
 from sympy.external import import_module
 
 x, y, z, a, b = symbols('x y z a b')
@@ -253,13 +253,12 @@ def test_sample_numpy():
     if not numpy:
         skip('Numpy is not installed. Abort tests for _sample_numpy.')
     else:
-        with ignore_warnings(UserWarning):
-            for X in distribs_numpy:
-                samps = next(sample(X, size=size, library='numpy'))
-                for sam in samps:
-                    assert tuple(sam) in X.pspace.distribution.set
-            N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
-            raises(NotImplementedError, lambda: next(sample(N_c, library='numpy')))
+        for X in distribs_numpy:
+            samps = sample(X, size=size, library='numpy')
+            for sam in samps:
+                assert tuple(sam) in X.pspace.distribution.set
+        N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
+        raises(NotImplementedError, lambda: sample(N_c, library='numpy'))
 
 def test_sample_scipy():
     distribs_scipy = [
@@ -273,17 +272,16 @@ def test_sample_scipy():
     if not scipy:
         skip('Scipy not installed. Abort tests for _sample_scipy.')
     else:
-        with ignore_warnings(UserWarning):
-            for X in distribs_scipy:
-                samps = next(sample(X, size=size))
-                samps2 = next(sample(X, size=(2, 2)))
-                for sam in samps:
-                    assert tuple(sam) in X.pspace.distribution.set
-                for i in range(2):
-                    for j in range(2):
-                        assert tuple(samps2[i][j]) in X.pspace.distribution.set
-            N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
-            raises(NotImplementedError, lambda: next(sample(N_c)))
+        for X in distribs_scipy:
+            samps = sample(X, size=size)
+            samps2 = sample(X, size=(2, 2))
+            for sam in samps:
+                assert tuple(sam) in X.pspace.distribution.set
+            for i in range(2):
+                for j in range(2):
+                    assert tuple(samps2[i][j]) in X.pspace.distribution.set
+        N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
+        raises(NotImplementedError, lambda: sample(N_c))
 
 
 def test_sample_pymc3():
@@ -297,13 +295,12 @@ def test_sample_pymc3():
     if not pymc3:
         skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
     else:
-        with ignore_warnings(UserWarning):
-            for X in distribs_pymc3:
-                samps = next(sample(X, size=size, library='pymc3'))
-                for sam in samps:
-                    assert tuple(sam.flatten()) in X.pspace.distribution.set
-            N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
-            raises(NotImplementedError, lambda: next(sample(N_c, library='pymc3')))
+        for X in distribs_pymc3:
+            samps = sample(X, size=size, library='pymc3')
+            for sam in samps:
+                assert tuple(sam.flatten()) in X.pspace.distribution.set
+        N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
+        raises(NotImplementedError, lambda: sample(N_c, library='pymc3'))
 
 def test_sample_seed():
     x1, x2 = (Indexed('x', i) for i in (1, 2))
@@ -316,10 +313,10 @@ def test_sample_seed():
             imported_lib = import_module(lib)
             if imported_lib:
                 s0, s1, s2 = [], [], []
-                s0 = list(sample(X, numsamples=10, library=lib, seed=0))
-                s1 = list(sample(X, numsamples=10, library=lib, seed=0))
-                s2 = list(sample(X, numsamples=10, library=lib, seed=1))
-                assert s0 == s1
-                assert s1 != s2
+                s0 = sample(X, size=10, library=lib, seed=0)
+                s1 = sample(X, size=10, library=lib, seed=0)
+                s2 = sample(X, size=10, library=lib, seed=1)
+                assert all(s0 == s1)
+                assert all(s1 != s2)
         except NotImplementedError:
             continue

@@ -294,7 +294,7 @@ def test_nseries():
     assert cbrt(I*x - 1)._eval_nseries(x, 4, None, -1) == (-1)**(S(1)/3)*exp(-2*I*pi/3) - \
     (-1)**(S(5)/6)*x*exp(-2*I*pi/3)/3 + (-1)**(S(1)/3)*x**2*exp(-2*I*pi/3)/9 + \
     5*(-1)**(S(5)/6)*x**3*exp(-2*I*pi/3)/81 + O(x**4)
-    assert (1 / (exp(-1/x) + 1/x))._eval_nseries(x, 2, None) == -x**2*exp(-1/x) + x
+    assert (1 / (exp(-1/x) + 1/x))._eval_nseries(x, 2, None) == x + O(x**2)
 
 
 def test_issue_6100_12942_4473():
@@ -333,7 +333,7 @@ def test_issue_6990():
     a = Symbol('a')
     b = Symbol('b')
     assert (sqrt(a + b*x + x**2)).series(x, 0, 3).removeO() == \
-        sqrt(a) + x**2*(1/(2*sqrt(a)) - b**2/(8*a**(S(3)/2))) + b*x/(2*sqrt(a))
+        sqrt(a)*x**2*(1/(2*a) - b**2/(8*a**2)) + sqrt(a) + b*x/(2*sqrt(a))
 
 
 def test_issue_6068():

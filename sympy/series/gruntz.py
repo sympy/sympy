@@ -119,7 +119,7 @@ debug this function to figure out the exact problem.
 from functools import reduce
 
 from sympy import cacheit
-from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul
+from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul, PoleError
 
 from sympy.functions import log, exp
 from sympy.series.order import Order
@@ -487,14 +487,19 @@ def calculate_series(e, x, logx=None):
     This is a place that fails most often, so it is in its own function.
     """
     from sympy.polys import cancel
+    from sympy.simplify import bottom_up
 
     for t in e.lseries(x, logx=logx):
-        t = cancel(t)
+        # bottom_up function is required for a specific case - when e is
+        # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p). No current simplification
+        # methods reduce this to 0 while not expanding polynomials.
+        t = bottom_up(t, lambda w: getattr(w, 'normal', lambda: w)())
+        t = cancel(t, expand=False).factor()
 
         if t.has(exp) and t.has(log):
             t = powdenest(t)
 
-        if t.simplify():
+        if not t.is_zero:
             break
 
     return t
@@ -532,7 +537,18 @@ def mrv_leadterm(e, x):
     w = Dummy("w", real=True, positive=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
-    return series.leadterm(w)
+    try:
+        lt = series.leadterm(w, logx=logw)
+    except (ValueError, PoleError):
+        lt = f.as_coeff_exponent(w)
+        # as_coeff_exponent won't always split in required form. It may simply
+        # return (f, 0) when a better form may be obtained. Example (-x)**(-pi)
+        # can be written as (-1**(-pi), -pi) which as_coeff_exponent does not return
+        if lt[0].has(w):
+            base = f.as_base_exp()[0].as_coeff_exponent(w)
+            ex = f.as_base_exp()[1]
+            lt = (base[0]**ex, base[1]*ex)
+    return (lt[0].subs(log(w), logw), lt[1])
 
 
 def build_expression_tree(Omega, rewrites):

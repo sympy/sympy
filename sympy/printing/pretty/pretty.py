@@ -1013,6 +1013,13 @@ class PrettyPrinter(Printer):
 
         return self._print(num)/self._print(den)
 
+    def _print_TransferFunctionMatrix(self, expr):
+        mat = self._print(expr._expr_mat)
+        mat.baseline = mat.height() - 1
+        subscript = greek_unicode['tau'] if self._use_unicode else r'{t}'
+        mat = prettyForm(*mat.right(subscript))
+        return mat
+
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
 

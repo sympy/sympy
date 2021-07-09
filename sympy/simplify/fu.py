@@ -254,8 +254,8 @@ def TR4(rv):
 
         a=  0   pi/6        pi/4        pi/3        pi/2
     ----------------------------------------------------
-    cos(a)  0   1/2         sqrt(2)/2   sqrt(3)/2   1
-    sin(a)  1   sqrt(3)/2   sqrt(2)/2   1/2         0
+    sin(a)  0   1/2         sqrt(2)/2   sqrt(3)/2   1
+    cos(a)  1   sqrt(3)/2   sqrt(2)/2   1/2         0
     tan(a)  0   sqt(3)/3    1           sqrt(3)     --
 
     Examples
