@@ -151,7 +151,7 @@ def test_pinjoint_arbitrary_axis():
     N, A, P, C = _generate_body()
     PinJoint('J', P, C, child_axis=-A.x)
 
-    assert -A.x.angle_between(N.x) == -pi
+    assert (-A.x).angle_between(N.x) == 0
     assert -A.x.express(N) == N.x
     assert A.dcm(N) == Matrix([[-1, 0, 0],
                             [0, -cos(theta), -sin(theta)],
@@ -373,7 +373,7 @@ def test_slidingjoint_arbitrary_axis():
     N, A, P, C = _generate_body()
     PrismaticJoint('S', P, C, child_axis=-A.x)
 
-    assert -A.x.angle_between(N.x) == -pi
+    assert (-A.x).angle_between(N.x) == 0
     assert -A.x.express(N) == N.x
     assert A.dcm(N) == Matrix([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
     assert C.masscenter.pos_from(P.masscenter) == x * N.x
