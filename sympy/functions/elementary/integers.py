@@ -132,11 +132,21 @@ class floor(RoundFunction):
             return arg.approximation_interval(Integer)[0]
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        arg = self.args[0]
+        arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
-        if arg0.is_finite:
-            return self._eval_nseries(x, n=1, logx=None, cdir=cdir)
-        return arg.as_leading_term(x)
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if cdir == -1 else '+')
+        r = self._eval_nseries(x, n=1, logx=None, cdir=cdir)
+        if r.is_finite:
+            if r == arg0:
+                direction = (arg - arg0).leadterm(x, cdir=cdir)[0]
+                if direction.is_positive and cdir != -1:
+                    return r
+                else:
+                    return r - 1
+            else:
+                return r
+        return arg
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.args[0]
@@ -149,8 +159,8 @@ class floor(RoundFunction):
             return s + o
         r = self.subs(x, 0)
         if arg0 == r:
-            direction = (arg - arg0).leadterm(x)[0]
-            if direction.is_positive:
+            direction = (arg - arg0).leadterm(x, cdir=cdir)[0]
+            if direction.is_positive and cdir != -1:
                 return r
             else:
                 return r - 1
@@ -281,11 +291,21 @@ class ceiling(RoundFunction):
             return arg.approximation_interval(Integer)[1]
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        arg = self.args[0]
+        arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
-        if arg0.is_finite:
-            return self._eval_nseries(x, n=1, logx=None, cdir=cdir)
-        return arg.as_leading_term(x)
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if cdir == -1 else '+')
+        r = self._eval_nseries(x, n=1, logx=None, cdir=cdir)
+        if r.is_finite:
+            if r == arg0:
+                direction = (arg - arg0).leadterm(x, cdir=cdir)[0]
+                if direction.is_positive and cdir != -1:
+                    return r + 1
+                else:
+                    return r
+            else:
+                return r
+        return arg
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.args[0]
@@ -298,8 +318,8 @@ class ceiling(RoundFunction):
             return s + o
         r = self.subs(x, 0)
         if arg0 == r:
-            direction = (arg - arg0).leadterm(x)[0]
-            if direction.is_positive:
+            direction = (arg - arg0).leadterm(x, cdir=cdir)[0]
+            if direction.is_positive and cdir != -1:
                 return r + 1
             else:
                 return r

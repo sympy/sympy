@@ -263,7 +263,7 @@ class Limit(Expr):
         # is_meromorphic does not capture all meromorphic functions, and such
         # functions may have a leading term computation which can help find the
         # limit without entering gruntz
-        if not e.has(floor, ceiling, factorial, binomial):
+        if not e.has(factorial, binomial):
             if abs(z0) is S.Infinity:
                 newe = e.subs(z, 1/z)
                 cdir = -cdir
