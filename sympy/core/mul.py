@@ -1914,7 +1914,7 @@ class Mul(Expr, AssocOp):
             ords3 = [coeff_exp(term, x) for term in fac]
             coeffs, powers = zip(*ords3)
             power = sum(powers)
-            if power < n:
+            if (power - n).is_negative:
                 res += Mul(*coeffs)*(x**power)
 
         def max_degree(e, x):

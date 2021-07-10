@@ -212,6 +212,9 @@ class Limit(Expr):
         if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
             return self
 
+        if e.is_Order:
+            return Order(limit(e.expr, z, z0), *e.args[1:])
+
         cdir = 0
         if str(dir) == "+":
             cdir = 1
@@ -265,6 +268,8 @@ class Limit(Expr):
         # limit without entering gruntz
         if not e.has(factorial, binomial):
             if abs(z0) is S.Infinity:
+                if e.is_Mul:
+                    e = factor_terms(e)
                 newe = e.subs(z, 1/z)
                 cdir = -cdir
             else:
@@ -310,31 +315,7 @@ class Limit(Expr):
         if z0.is_extended_positive:
             e = e.rewrite(factorial, gamma)
 
-        if e.is_Mul and abs(z0) is S.Infinity:
-            e = factor_terms(e)
-            u = Dummy('u', positive=True)
-            if z0 is S.NegativeInfinity:
-                inve = e.subs(z, -1/u)
-            else:
-                inve = e.subs(z, 1/u)
-            try:
-                f = inve.as_leading_term(u).gammasimp()
-                if f.is_meromorphic(u, S.Zero):
-                    r = limit(f, u, S.Zero, "+")
-                    if isinstance(r, Limit):
-                        return self
-                    else:
-                        return r
-            except (ValueError, NotImplementedError, PoleError):
-                pass
-
-        if e.is_Order:
-            return Order(limit(e.expr, z, z0), *e.args[1:])
-
         if e.is_Pow:
-            if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
-                return self
-
             b1, e1 = e.base, e.exp
             f1 = e1*log(b1)
             if f1.is_meromorphic(z, z0):
@@ -344,27 +325,15 @@ class Limit(Expr):
             ex_lim = limit(e1, z, z0)
             base_lim = limit(b1, z, z0)
 
-            if base_lim is S.One:
-                if ex_lim in (S.Infinity, S.NegativeInfinity):
+            if ex_lim in (S.Infinity, S.NegativeInfinity):
+                if base_lim is S.One:
                     res = limit(e1*(b1 - 1), z, z0)
                     return exp(res)
-                elif ex_lim.is_real:
-                    return S.One
-
-            if base_lim in (S.Zero, S.Infinity, S.NegativeInfinity) and ex_lim is S.Zero:
-                res = limit(f1, z, z0)
-                return exp(res)
-
-            if base_lim is S.NegativeInfinity:
-                if ex_lim is S.NegativeInfinity:
-                    return S.Zero
-                if ex_lim is S.Infinity:
-                    return S.ComplexInfinity
-
-            if not isinstance(base_lim, AccumBounds) and not isinstance(ex_lim, AccumBounds):
-                res = base_lim**ex_lim
-                if res is not S.ComplexInfinity and not res.is_Pow:
-                    return res
+                elif base_lim is S.NegativeInfinity:
+                    if ex_lim is S.NegativeInfinity:
+                        return S.Zero
+                    else:
+                        return S.ComplexInfinity
 
         l = None
 
