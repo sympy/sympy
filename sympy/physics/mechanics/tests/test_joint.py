@@ -411,7 +411,7 @@ def test_slidingjoint_arbitrary_axis():
     assert A.ang_vel_in(N) == 0
     assert N.ang_vel_in(A) == 0
 
-    #Both joint pos id defined but different axes
+    #Both joint pos is defined but different axes
     N, A, P, C = _generate_body()
     PrismaticJoint('S', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y)
     assert N.x.angle_between(A.x + A.y) == 0 #Axis are aligned

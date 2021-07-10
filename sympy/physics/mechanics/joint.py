@@ -642,9 +642,8 @@ class PrismaticJoint(Joint):
     >>> joint.child_point.pos_from(joint.parent_point)
     x_PC(t)*P_frame.x
 
-    To further demonstrate the use of the prismatic joint, the kinematics of linear mass
-    spring damper that translates about the X axis of each connected body can be
-    created as follows.
+    To further demonstrate the use of the prismatic joint, the kinematics of n-link
+    pendulum(n=2) about the X axis of each connected body can be created as follows.
 
     >>> from sympy.physics.mechanics import PrismaticJoint, Body
 
@@ -652,39 +651,60 @@ class PrismaticJoint(Joint):
     a particle.
 
     >>> ceiling = Body('C')
-    >>> Part = Body('P')
+    >>> Part1 = Body('P1')
+    >>> Part2 = Body('P2')
 
-    The joint will connect the particle to the ceiling by a and the
-    joint axis will be about the x axis for each body.
+    The first joint will connect the particle to the ceiling and the
+    joint axis will be about the X axis for each body.
 
-    >>> J = PrismaticJoint('J', ceiling, Part)
+    >>> J1 = PrismaticJoint('J1', ceiling, Part1)
+
+    The second joint will connect the second particle to the first particle
+    and the joint axis will also be about the X axis for each body.
+
+    >>> J2 = PrismaticJoint('J1', Part1, Part2)
 
     Once the joint is established the kinematics of the connected bodies can
     be accessed. First the direction cosine matrices of Part relative
     to the ceiling are found:
 
-    >>> Part.dcm(ceiling)
+    >>> Part1.dcm(ceiling)
     Matrix([
     [1, 0, 0],
     [0, 1, 0],
     [0, 0, 1]])
 
-    The position of the lower bob's masscenter is found with:
+    >>> Part2.dcm(ceiling)
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
 
-    >>> Part.masscenter.pos_from(ceiling.masscenter)
-    x_J(t)*C_frame.x
+    The position of the particles' masscenter is found with:
 
-    The angular velocities of the two pendulum links can be computed with
+    >>> Part1.masscenter.pos_from(ceiling.masscenter)
+    x_J1(t)*C_frame.x
+
+    >>> Part2.masscenter.pos_from(ceiling.masscenter)
+    x_J1(t)*C_frame.x + x_J1(t)*P1_frame.x
+
+    The angular velocities of the two particle links can be computed with
     respect to the ceiling.
 
-    >>> Part.ang_vel_in(ceiling)
+    >>> Part1.ang_vel_in(ceiling)
     0
 
-    And finally, the linear velocities of the two pendulum bobs can be computed
+    >>> Part2.ang_vel_in(ceiling)
+    0
+
+    And finally, the linear velocities of the two particles can be computed
     with respect to the ceiling.
 
-    >>> Part.masscenter_vel(ceiling)
-    v_J(t)*C_frame.x
+    >>> Part1.masscenter_vel(ceiling)
+    v_J1(t)*C_frame.x
+
+    >>> Part2.masscenter_vel(ceiling)
+    v_J1(t)*C_frame.x + Derivative(x_J1(t), t)*P1_frame.x
 
     """
 
