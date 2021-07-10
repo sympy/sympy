@@ -303,6 +303,7 @@ def test_apply_force():
     assert B2.loads == [(P2, -force), (B2.masscenter, -force2+g2)]
 
 def test_apply_loads_on_multi_degree_freedom_holonomic_system():
+    """Example based on: https://pydy.readthedocs.io/en/latest/examples/multidof-holonomic.html"""
     W = Body('W') #Wall
     B = Body('B') #Block
     P = Body('P') #Pendulum
