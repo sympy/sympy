@@ -759,20 +759,32 @@ def apply_force(force, body1, body2=None, point1=None, point2=None):
     >>> from sympy import symbols
     >>> from sympy.physics.mechanics import Body, apply_force
     >>> m, g = symbols('m g')
+    >>> B = Body('B')
+    >>> force1 = m*g*B.z
+    >>> apply_force(force1, B) #Applying force on B1's masscenter
+    >>> B.loads
+    [(B_masscenter, g*m*B_frame.z)]
+
+    To further demonstrate the use of ``apply_force`` function,
+    consider two bodies connected through a spring.
+
+    >>> from sympy.physics.mechanics import apply_force, body, dynamicsymbols, ReferenceFrame
+    >>> N = ReferenceFrame('N') #Newtonion Frame
+    >>> x = dynamicsymbols('x')
     >>> B1 = Body('B1')
     >>> B2 = Body('B2')
-    >>> force1 = m*g*B1.z
-    >>> apply_force(force1, B1) #Applying force on B1's masscenter
-    >>> B1.loads
-    [(B1_masscenter, g*m*B1_frame.z)]
+    >>> spring_force = x*N.x
 
-    >>> force2 = m*B2.x
-    >>> B1.clear_load()
-    >>> apply_force(force2, B1, B2) #Equal and opposite force on B1 & B2
+    Now let's apply equal and opposite spring force to the masscenter of the bodies.
+
+    >>> apply_force(spring_force, B1, B2)
+
+    We can check the loads(forces) applied to bodies now.
+
     >>> B1.loads
-    [(B1_masscenter, m*B2_frame.x)]
+    [(B1_masscenter, x(t)*N.x)]
     >>> B2.loads
-    [(B2_masscenter, - m*B2_frame.x)]
+    [(B2_masscenter, - x(t)*N.x)]
 
     """
 
