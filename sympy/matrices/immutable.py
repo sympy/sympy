@@ -28,6 +28,16 @@ sympify_converter[_matrix] = sympify_mpmath_matrix
 
 
 class ImmutableRepMatrix(RepMatrix, MatrixExpr):
+    """Immutable matrix based on RepMatrix
+
+    Uses DomainMAtrix as the internal representation.
+    """
+
+    #
+    # This is a subclass of RepMatrix that adds/overrides some methods to make
+    # the instances Basic and immutable. ImmutableRepMatrix is a superclass for
+    # both ImmutableDenseMatrix and ImmutableSparseMatrix.
+    #
 
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)

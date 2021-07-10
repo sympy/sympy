@@ -18,6 +18,32 @@ from .matrices import MatrixBase, MatrixKind, ShapeError
 
 
 class RepMatrix(MatrixBase):
+    """Matrix implementation based on DomainMatrix as an internal representation.
+
+    The RepMatrix class is a superclass for Matrix, ImmutableMatrix,
+    SparseMatrix and ImmutableSparseMatrix which are the main usable matrix
+    classes in SymPy. Most methods on this class are simply forwarded to
+    DomainMatrix.
+    """
+
+    #
+    # MatrixBase is the common superclass for all of the usable explicit matrix
+    # classes in SymPy. The idea is that MatrixBase is an abstract class though
+    # and that subclasses will implement the lower-level methods.
+    #
+    # RepMatrix is a subclass of MatrixBase that uses DomainMatrix as an
+    # internal representation and delegates lower-level methods to
+    # DomainMatrix. All of SymPy's standard explicit matrix classes subclass
+    # RepMatrix and so use DomainMatrix internally.
+    #
+    # A RepMatrix uses an internal DomainMatrix with the domain set to ZZ, QQ
+    # or EXRAW. The EXRAW domain is equivalent to the previous implementation
+    # of Matrix that used Expr for the elements. The ZZ and QQ domains are used
+    # when applicable just because they are compatible with the previous
+    # implementation but are much more efficient. Other domains such as QQ[x]
+    # are not used because they differ from Expr in some way (e.g. automatic
+    # expansion of powers and products).
+    #
 
     def __eq__(self, other):
         # Skip sympify for mutable matrices...
@@ -274,6 +300,13 @@ class RepMatrix(MatrixBase):
 
 
 class MutableRepMatrix(RepMatrix):
+    """Mutable matrix based on DomainMatrix as the internal representation"""
+
+    #
+    # MutableRepMatrix is a subclass of RepMatrix that adds/overrides methods
+    # to make the instances mutable. MutableRepMatrix is a superclass for both
+    # MutableDenseMatrix and MutableSparseMatrix.
+    #
 
     __hash__ = None
 

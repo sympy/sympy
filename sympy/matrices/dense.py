@@ -22,6 +22,13 @@ def _iszero(x):
 
 
 class DenseMatrix(RepMatrix):
+    """Matrix implementation based on DomainMatrix as the internal representation"""
+
+    #
+    # DenseMatrix is a superclass for both MutableDenseMatrix and
+    # ImmutableDenseMatrix. Methods shared by both classes but not for the
+    # Sparse classes should be implemented here.
+    #
 
     is_MatrixExpr = False  # type: bool
 
