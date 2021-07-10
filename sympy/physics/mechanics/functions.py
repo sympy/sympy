@@ -786,6 +786,13 @@ def apply_force(force, body1, body2=None, point1=None, point2=None):
     >>> B2.loads
     [(B2_masscenter, - x(t)*N_frame.x)]
 
+    Notes
+    =====
+
+    If a new force is applied to a body on a point which already has some
+    force applied on it, then the new force is added to the already applied
+    force on that point.
+
     """
 
     from sympy.physics.mechanics.body import Body #Circular import

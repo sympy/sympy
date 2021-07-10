@@ -195,6 +195,13 @@ class Body(RigidBody, Particle):  # type: ignore
             ...                                   body.frame.y)
             >>> body.apply_force(body.mass * g * body.frame.x, point)
 
+        Notes
+        =====
+
+        If a new force is applied to a body on a point which already has some
+        force applied on it, then the new force is added to the already applied
+        force on that point.
+
         """
 
         if not isinstance(point, Point):
