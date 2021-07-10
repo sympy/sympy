@@ -509,18 +509,12 @@ class PinJoint(Joint):
         angle, axis = self._alignment_rotation(self.parent_axis,
                                                self.child_axis)
 
-        odd_multiple_pi = False
-
-        if angle%pi == 0:
-            if (angle/pi).is_odd:
-                odd_multiple_pi = True
-
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)
 
-            if axis != Vector(0) or odd_multiple_pi:
+            if axis != Vector(0) or angle == pi:
 
-                if odd_multiple_pi:
+                if angle == pi:
                     axis = cross(self.parent_axis,
                                 self._generate_vector())
 
