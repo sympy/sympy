@@ -861,6 +861,12 @@ def apply_torque(torque, body1, body2=None):
     >>> B2.loads
     [(B2_frame, - v(t)*N_frame.y)]
 
+    Notes
+    =====
+
+    If a new torque is applied on body which already has some torque applied on it,
+    then the new torque is added to the previous torque about the body's frame.
+
     """
 
     from sympy.physics.mechanics.body import Body #Circular import

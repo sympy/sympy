@@ -241,6 +241,13 @@ class Body(RigidBody, Particle):  # type: ignore
             >>> body = Body('body')
             >>> T = Symbol('T')
             >>> body.apply_torque(T * body.frame.z)
+
+        Notes
+        =====
+
+        If a new torque is applied on body which already has some torque applied on it,
+        then the new torque is added to the previous torque about the body's frame.
+
         """
 
         if not isinstance(vec, Vector):
