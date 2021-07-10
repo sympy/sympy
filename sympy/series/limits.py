@@ -1,6 +1,5 @@
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
-from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
@@ -186,8 +185,7 @@ class Limit(Expr):
         hints : optional keyword arguments
             To be passed to ``doit`` methods; only used if deep is True.
         """
-        from sympy import Abs, exp, log, sign, floor, ceiling, binomial
-        from sympy.calculus.util import AccumBounds
+        from sympy import Abs, exp, log, sign, binomial
 
         e, z, z0, dir = self.args
 
