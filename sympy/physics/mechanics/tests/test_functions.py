@@ -301,3 +301,27 @@ def test_apply_force():
 
     assert B1.loads == [(P1, force), (B1.masscenter, force2+g1)]
     assert B2.loads == [(P2, -force), (B2.masscenter, -force2+g2)]
+
+def test_apply_loads_on_multi_degree_freedom_holonomic_system():
+    W = Body('W') #Wall
+    B = Body('B') #Block
+    P = Body('P') #Pendulum
+    b = Body('b') #bob
+    q1, q2 = dynamicsymbols('q1 q2') #generalized coordinates
+    k, c, g, kT = symbols('k c g kT') #constants
+    F, T = dynamicsymbols('F T') #Specified forces
+
+    #Applying forces
+    B.apply_force(F*W.x)
+    apply_force(k*q1*W.x, W, B) #Spring force
+    apply_force(c*q1.diff()*W.x, W, B) #dampner
+    P.apply_force(P.mass*g*W.y)
+    b.apply_force(b.mass*g*W.y)
+
+    #Applying torques
+    apply_torque(kT*q3*W.z, P, b)
+    P.apply_torque(T*W.z)
+
+    assert B.loads == [(B.masscenter, (F - k*q1 - c*q1.diff())*W.x)]
+    assert P.loads == [(P.masscenter, P.mass*g*W.y), (P.frame, (T + kT*q3)*W.z)]
+    assert b.loads == [(b.masscenter, b.mass*g*W.y), (b.frame, -kT*q3*W.z)]
