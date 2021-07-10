@@ -768,8 +768,8 @@ def apply_force(force, body1, body2=None, point1=None, point2=None):
     To further demonstrate the use of ``apply_force`` function,
     consider two bodies connected through a spring.
 
-    >>> from sympy.physics.mechanics import apply_force, body, dynamicsymbols, ReferenceFrame
-    >>> N = ReferenceFrame('N') #Newtonion Frame
+    >>> from sympy.physics.mechanics import apply_force, body, dynamicsymbols
+    >>> N = Body('N') #Newtonion Frame
     >>> x = dynamicsymbols('x')
     >>> B1 = Body('B1')
     >>> B2 = Body('B2')
@@ -782,9 +782,9 @@ def apply_force(force, body1, body2=None, point1=None, point2=None):
     We can check the loads(forces) applied to bodies now.
 
     >>> B1.loads
-    [(B1_masscenter, x(t)*N.x)]
+    [(B1_masscenter, x(t)*N_frame.x)]
     >>> B2.loads
-    [(B2_masscenter, - x(t)*N.x)]
+    [(B2_masscenter, - x(t)*N_frame.x)]
 
     """
 
@@ -825,20 +825,34 @@ def apply_torque(torque, body1, body2=None):
 
     >>> from sympy import symbols
     >>> from sympy.physics.mechanics import Body, apply_torque
-    >>> t1, t2 = symbols('t1 t2')
+    >>> t = symbols('t')
+    >>> B = Body('B')
+    >>> torque1 = t*B.z
+    >>> apply_torque(torque1, B)
+    >>> B.loads
+    [(B_frame, t*B_frame.z)]
+
+    To further demonstrate the use of ``apply_torque`` function,
+    let us consider two bodies such that a torque `T` is acting on
+    one body, and `-T` on the other.
+
+    >>> from sympy.physics.mechanics import Body, apply_torque, dynamicsymbols
+    >>> N = Body('N') #Newtonion frame
     >>> B1 = Body('B1')
     >>> B2 = Body('B2')
-    >>> torque1 = t1*B1.z
-    >>> apply_torque(torque1, B1) #Applying torque on B1
-    >>> B1.loads
-    [(B1_frame, t1*B1_frame.z)]
+    >>> v = dynamicsymbols('v')
+    >>> T = v*N.y #Torque
 
-    >>> torque2 = t2*B2.z
-    >>> apply_torque(torque2, B1, B2) #Equal and opposite torque on B1 & B2
+    Now let's apply equal and opposite torque to the bodies.
+
+    >>> apply_torque(T, B1, B2)
+
+    We can check the loads(torquess) applied to bodies now.
+
     >>> B1.loads
-    [(B1_frame, t1*B1_frame.z + t2*B2_frame.z)]
+    [(B1_frame, v(t)*N_frame.y)]
     >>> B2.loads
-    [(B2_frame, - t2*B2_frame.z)]
+    [(B2_frame, - v(t)*N_frame.y)]
 
     """
 
