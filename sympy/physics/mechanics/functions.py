@@ -768,7 +768,7 @@ def apply_force(force, body1, body2=None, point1=None, point2=None):
     To further demonstrate the use of ``apply_force`` function,
     consider two bodies connected through a spring.
 
-    >>> from sympy.physics.mechanics import apply_force, body, dynamicsymbols
+    >>> from sympy.physics.mechanics import apply_force, Body, dynamicsymbols
     >>> N = Body('N') #Newtonion Frame
     >>> x = dynamicsymbols('x')
     >>> B1 = Body('B1')
