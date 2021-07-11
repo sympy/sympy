@@ -204,7 +204,7 @@ def MultivariateNormal(name, mu, sigma):
     >>> marginal_distribution(X, X[0])(y)
     exp(-(y - 3)**2/4)/(2*sqrt(pi))
 
-    The example below shows it is also possible to use
+    The example below shows that it is also possible to use
     symbolic parameters to define the MultivariateNormal class.
 
     >>> n = symbols('n', natural=True)
@@ -213,7 +213,7 @@ def MultivariateNormal(name, mu, sigma):
     >>> obs = MatrixSymbol('obs', n, 1)
     >>> X = MultivariateNormal('X', mu, Sg)
 
-    The density of a multivariate normal can also be
+    The density of a multivariate normal can be
     calculated using a matrix argument, as shown below.
 
     >>> density(X)(obs)
