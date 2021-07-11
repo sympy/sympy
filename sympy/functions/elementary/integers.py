@@ -137,7 +137,7 @@ class floor(RoundFunction):
         if arg0 is S.NaN:
             arg0 = arg.limit(x, 0, dir='-' if cdir == -1 else '+')
         r = self._eval_nseries(x, n=1, logx=None, cdir=cdir)
-        if r.is_finite:
+        if arg0.is_finite:
             if r == arg0:
                 direction = (arg - arg0).leadterm(x, cdir=cdir)[0]
                 if direction.is_positive and cdir != -1:
@@ -296,7 +296,7 @@ class ceiling(RoundFunction):
         if arg0 is S.NaN:
             arg0 = arg.limit(x, 0, dir='-' if cdir == -1 else '+')
         r = self._eval_nseries(x, n=1, logx=None, cdir=cdir)
-        if r.is_finite:
+        if arg0.is_finite:
             if r == arg0:
                 direction = (arg - arg0).leadterm(x, cdir=cdir)[0]
                 if direction.is_positive and cdir != -1:

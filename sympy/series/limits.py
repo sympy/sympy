@@ -323,15 +323,17 @@ class Limit(Expr):
             ex_lim = limit(e1, z, z0)
             base_lim = limit(b1, z, z0)
 
-            if ex_lim in (S.Infinity, S.NegativeInfinity):
-                if base_lim is S.One:
+            if base_lim is S.One:
+                if ex_lim in (S.Infinity, S.NegativeInfinity):
                     res = limit(e1*(b1 - 1), z, z0)
                     return exp(res)
-                elif base_lim is S.NegativeInfinity:
-                    if ex_lim is S.NegativeInfinity:
-                        return S.Zero
-                    else:
-                        return S.ComplexInfinity
+                elif ex_lim.is_real:
+                    return S.One
+            elif base_lim is S.NegativeInfinity:
+                if ex_lim is S.NegativeInfinity:
+                    return S.Zero
+                elif ex_lim is S.Infinity:
+                    return S.ComplexInfinity
 
         l = None
 

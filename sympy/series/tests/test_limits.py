@@ -1,7 +1,7 @@
 from itertools import product as cartes
 
 from sympy import (
-    limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,, sinh
+    limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling, sinh,
     atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I, E, besselj,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
     binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
