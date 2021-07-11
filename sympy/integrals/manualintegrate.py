@@ -334,7 +334,6 @@ def alternatives(*rules):
     return _alternatives
 
 def constant_rule(integral):
-    integrand, symbol = integral
     return ConstantRule(integral.integrand, *integral)
 
 def power_rule(integral):

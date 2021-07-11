@@ -313,7 +313,6 @@ def mrv(e, x):
     elif e.is_Derivative:
         raise NotImplementedError("MRV set computation for derviatives"
                                   " not implemented yet.")
-        return mrv(e.args[0], x)
     raise NotImplementedError(
         "Don't know how to calculate the mrv of '%s'" % e)
 
@@ -521,10 +520,8 @@ def mrv_leadterm(e, x):
     if x in Omega:
         # move the whole omega up (exponentiate each term):
         Omega_up = moveup2(Omega, x)
-        e_up = moveup([e], x)[0]
         exps_up = moveup([exps], x)[0]
         # NOTE: there is no need to move this down!
-        e = e_up
         Omega = Omega_up
         exps = exps_up
     #

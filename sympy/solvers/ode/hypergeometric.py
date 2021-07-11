@@ -72,8 +72,6 @@ def equivalence_hypergeometric(A, B, func):
     num, dem = J1.as_numer_denom()
     num = powdenest(expand(num))
     dem = powdenest(expand(dem))
-    pow_num = set()
-    pow_dem = set()
     # this function will compute the different powers of variable(x) in J1.
     # then it will help in finding value of k. k is power of x such that we can express
     # J1 = x**k * J0(x**k) then all the powers in J0 become integers.
@@ -138,8 +136,6 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
     beta = Wild("beta")
     gamma = Wild("gamma")
     delta = Wild("delta")
-
-    rn = {'type':None}
     # I0 of the standerd 2F1 equation.
     I0 = ((a-b+1)*(a-b-1)*x**2 + 2*((1-a-b)*c + 2*a*b)*x + c*(c-2))/(4*x**2*(x-1)**2)
     if sing_point != [0, 1]:

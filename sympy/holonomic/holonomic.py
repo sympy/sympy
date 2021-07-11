@@ -1210,8 +1210,6 @@ class HolonomicFunction:
         coeffs[0] = S.One
         system = [coeffs]
         homogeneous = Matrix([[S.Zero for i in range(a)]]).transpose()
-        sol = S.Zero
-
         while True:
             coeffs_next = [p.diff(self.x) for p in coeffs]
             for i in range(a - 1):

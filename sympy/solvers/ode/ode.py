@@ -3036,7 +3036,6 @@ def _ode_lie_group( s, func, order, match):
     y = match.pop('y', None)
     if y:
         h = -simplify(match[match['d']]/match[match['e']])
-        y = y
     else:
         y = Dummy("y")
         h = s.subs(func, y)

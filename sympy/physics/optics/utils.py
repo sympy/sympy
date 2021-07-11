@@ -137,9 +137,6 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
             raise ValueError('Ray undergoes total internal reflection')
         return asin(n1*sin(angle_of_incidence)/n2)
 
-    if angle_of_incidence and not 0 <= angle_of_incidence < pi*0.5:
-        raise ValueError
-
     # Treat the incident as ray below
     # A flag to check whether to return Ray3D or not
     return_ray = False
@@ -272,7 +269,7 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
     except ValueError:
         angle_of_total_internal_reflection_onset = None
 
-    if angle_of_total_internal_reflection_onset == None or\
+    if angle_of_total_internal_reflection_onset is None or\
     angle_of_total_internal_reflection_onset > angle_of_incidence:
         R_s = -sin(angle_of_incidence - angle_of_refraction)\
                 /sin(angle_of_incidence + angle_of_refraction)

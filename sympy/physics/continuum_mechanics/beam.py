@@ -1541,11 +1541,8 @@ class Beam:
                 continue
             if sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
-        if self.length in subs:
-            length = subs[self.length]
-        else:
-            length = self.length
-
+        if length in subs:
+            length = subs[length]
         ax1 = plot(self.shear_force().subs(subs), (variable, 0, length),
                    title="Shear Force", xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V}$',
                    line_color='g', show=False)

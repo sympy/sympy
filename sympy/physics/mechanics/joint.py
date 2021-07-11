@@ -239,8 +239,7 @@ class Joint(ABC):
                     return parent_frame.x
                 return parent_frame.z
             return parent_frame.y
-
-        if x == 0:
+        else:
             if y!=0:
                 if z!=0:
                     return parent_frame.x
