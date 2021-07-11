@@ -230,13 +230,17 @@ class sinh(HyperbolicFunction):
         return 2*coth_half/(coth_half**2 - 1)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
-        arg = self.args[0].as_leading_term(x)
+        arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
+        arg0 = arg.subs(x, 0)
 
-        if x in arg.free_symbols and Order(1, x).contains(arg):
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if cdir == -1 else '+')
+        if arg0.is_zero:
             return arg
+        elif arg0.is_finite:
+            return self.func(arg0)
         else:
-            return self.func(arg)
+            return self
 
     def _eval_is_real(self):
         arg = self.args[0]
@@ -416,13 +420,17 @@ class cosh(HyperbolicFunction):
         return (coth_half + 1)/(coth_half - 1)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
-        arg = self.args[0].as_leading_term(x)
+        arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
+        arg0 = arg.subs(x, 0)
 
-        if x in arg.free_symbols and Order(1, x).contains(arg):
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if cdir == -1 else '+')
+        if arg0.is_zero:
             return S.One
+        elif arg0.is_finite:
+            return self.func(arg0)
         else:
-            return self.func(arg)
+            return self
 
     def _eval_is_real(self):
         arg = self.args[0]

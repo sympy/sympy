@@ -1,7 +1,7 @@
 from itertools import product as cartes
 
 from sympy import (
-    limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
+    limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,, sinh
     atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I, E, besselj,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
     binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
@@ -952,6 +952,10 @@ def test_issue_21031():
 
 def test_issue_21038():
     assert limit(sin(pi*x)/(3*x - 12), x, 4) == pi/3
+
+
+def test_issue_21530():
+    assert limit(sinh(n + 1)/sinh(n), n, oo) == E
 
 
 def test_issue_21550():
