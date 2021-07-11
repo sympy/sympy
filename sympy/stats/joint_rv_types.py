@@ -4,6 +4,7 @@ from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, besselk, gamma, I
                    Intersection, Matrix, symbols, Product, IndexedBase)
 from sympy.matrices import ImmutableMatrix, MatrixSymbol
 from sympy.matrices.expressions.determinant import det
+from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.stats.joint_rv import JointDistribution, JointPSpace, MarginalDistribution
 from sympy.stats.rv import _value_check, random_symbols
 
@@ -146,11 +147,14 @@ class MultivariateNormalDistribution(JointDistribution):
     def pdf(self, *args):
         mu, sigma = self.mu, self.sigma
         k = mu.shape[0]
-        args = ImmutableMatrix(args)
+        if len(args) == 1 and args[0].is_Matrix:
+            args = args[0]
+        else:
+            args = ImmutableMatrix(args)
         x = args - mu
-        return  S.One/sqrt((2*pi)**(k)*det(sigma))*exp(
-            Rational(-1, 2)*x.transpose()*(sigma.inv()*\
-                x))[0]
+        density = S.One/sqrt((2*pi)**(k)*det(sigma))*exp(
+            Rational(-1, 2)*x.transpose()*(sigma.inv()*x))
+        return MatrixElement(density, 0, 0)
 
     def _marginal_distribution(self, indices, sym):
         sym = ImmutableMatrix([Indexed(sym, i) for i in indices])
@@ -188,7 +192,7 @@ def MultivariateNormal(name, mu, sigma):
     ========
 
     >>> from sympy.stats import MultivariateNormal, density, marginal_distribution
-    >>> from sympy import symbols
+    >>> from sympy import symbols, MatrixSymbol
     >>> X = MultivariateNormal('X', [3, 4], [[2, 1], [1, 2]])
     >>> y, z = symbols('y z')
     >>> density(X)(y, z)
@@ -199,6 +203,21 @@ def MultivariateNormal(name, mu, sigma):
     exp(-(y - 4)**2/4)/(2*sqrt(pi))
     >>> marginal_distribution(X, X[0])(y)
     exp(-(y - 3)**2/4)/(2*sqrt(pi))
+
+    The example below shows that it is also possible to use
+    symbolic parameters to define the MultivariateNormal class.
+
+    >>> n = symbols('n', natural=True)
+    >>> Sg = MatrixSymbol('Sg', n, n)
+    >>> mu = MatrixSymbol('mu', n, 1)
+    >>> obs = MatrixSymbol('obs', n, 1)
+    >>> X = MultivariateNormal('X', mu, Sg)
+
+    The density of a multivariate normal can be
+    calculated using a matrix argument, as shown below.
+
+    >>> density(X)(obs)
+    (exp(((1/2)*mu.T - (1/2)*obs.T)*Sg**(-1)*(-mu + obs))/sqrt((2*pi)**n*Determinant(Sg)))[0, 0]
 
     References
     ==========
