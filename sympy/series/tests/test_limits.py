@@ -2,7 +2,7 @@ from itertools import product as cartes
 
 from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
-    atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I, E,
+    atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I, E, besselj,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
     binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
     acos, erf, erfc, erfi, LambertW, factorial, digamma, uppergamma,
@@ -962,3 +962,13 @@ def test_issue_21550():
 def test_issue_21661():
     out = limit((x**(x + 1) * (log(x) + 1) + 1) / x, x, 11)
     assert out == S(3138428376722)/11 + 285311670611*log(11)
+
+
+def test_issue_21701():
+    assert limit((besselj(z, x)/x**z).subs(z, 7), x, 0) == S(1)/645120
+
+
+def test_issue_21721():
+    a = Symbol('a', real=True)
+    I = integrate(1/(pi*(1 + (x - a)**2)), x)
+    assert I.limit(x, oo) == S.Half
