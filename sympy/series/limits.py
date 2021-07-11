@@ -276,9 +276,7 @@ class Limit(Expr):
                 # cdir changes sign as oo- should become 0+
                 coeff, ex = newe.leadterm(z, cdir=cdir)
             except (ValueError, NotImplementedError, PoleError, AttributeError):
-                # The NotImplementedError catching may be removed after leading
-                # term methods are defined for some special functions (_eis
-                # and Ci)
+                # The NotImplementedError catching is for custom functions
                 # AttributeError may be removed one TupleArg leading term
                 # is handled
                 pass
@@ -292,7 +290,7 @@ class Limit(Expr):
                         return coeff
                     elif ex.is_negative:
                         if ex.is_integer:
-                            if str(dir) == "-":
+                            if str(dir) == "-" or ex.is_even:
                                 return S.Infinity*sign(coeff)
                             elif str(dir) == "+":
                                 return S.NegativeInfinity*sign(coeff)

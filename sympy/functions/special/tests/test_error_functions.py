@@ -485,7 +485,7 @@ def test__eis():
         == Ei(z).diff(z)
 
     assert _eis(z).series(z, n=3) == EulerGamma + log(z) + z*(-log(z) - \
-        EulerGamma + 1) + z**2*(log(z)/2 - Rational(3, 4) + EulerGamma/2) + O(z**3*log(z))
+        EulerGamma + 1) + z**2*(log(z)/2 - Rational(3, 4) + EulerGamma/2) + O(z**3)
     raises(ArgumentIndexError, lambda: _eis(z).fdiff(2))
 
 

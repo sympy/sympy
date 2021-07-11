@@ -9,7 +9,6 @@ from sympy import (
     Ei, EulerGamma, asin, atanh, acot, acoth, asec, acsc, cbrt, besselk)
 
 from sympy.calculus.util import AccumBounds
-from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
@@ -240,10 +239,10 @@ def test_series_AccumBounds():
     assert limit(sin(k) - sin(k)*cos(k), k, oo) == AccumBounds(-2, 2)
 
     # test for issue #9934
-    t1 = Mul(S.Half, 1/(-1 + cos(1)), Add(AccumBounds(-3, 1), cos(1)))
+    t1 = Mul(AccumBounds(-S(3)/2 + cos(1)/2, cos(1)/2 + S.Half), 1/(-1 + cos(1)))
     assert limit(simplify(Sum(cos(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t1
 
-    t2 = Mul(S.Half, Add(AccumBounds(-2, 2), sin(1))*1/(-cos(1) + 1))
+    t2 = Mul(AccumBounds(-1 + sin(1)/2, sin(1)/2 + 1), 1/(1 - cos(1)))
     assert limit(simplify(Sum(sin(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t2
 
     assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)  # wolfram gives (0, 1)

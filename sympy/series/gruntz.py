@@ -123,6 +123,7 @@ from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul, PoleError
 
 from sympy.functions import log, exp
 from sympy.series.order import Order
+from sympy.simplify import logcombine
 from sympy.simplify.powsimp import powsimp, powdenest
 
 from sympy.utilities.misc import debug_decorator as debug
@@ -391,6 +392,7 @@ def sign(e, x):
         return 0
 
     elif not e.has(x):
+        e = logcombine(e)
         return _sign(e)
     elif e == x:
         return 1
