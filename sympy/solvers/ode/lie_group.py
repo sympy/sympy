@@ -1,3 +1,9 @@
+r"""
+This module contains the implementation of the lie_group hint for
+dsolve. Ideally any first order differential equation can be solved by lie_group.
+It contains various helper functions which apply different heuristics on the given equation
+and returns the solution.
+"""
 from itertools import islice
 
 from sympy.core import Add, S, Mul, Pow
