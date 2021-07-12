@@ -187,7 +187,8 @@ separable_reduced
 
 lie_group
 ^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::ode_lie_group
+.. autoclass:: sympy.solvers.ode.ode::LieGroup
+   :members:
 
 2nd_hypergeometric
 ^^^^^^^^^^^^^^^^^^
@@ -214,39 +215,39 @@ implemented for the various heuristics.
 
 abaco1_simple
 ^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::lie_heuristic_abaco1_simple
+.. autofunction:: sympy.solvers.ode.lie_group::lie_heuristic_abaco1_simple
 
 abaco1_product
 ^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::lie_heuristic_abaco1_product
+.. autofunction:: sympy.solvers.ode.lie_group::lie_heuristic_abaco1_product
 
 bivariate
 ^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::lie_heuristic_bivariate
+.. autofunction:: sympy.solvers.ode.lie_group::lie_heuristic_bivariate
 
 chi
 ^^^
-.. autofunction:: sympy.solvers.ode.ode::lie_heuristic_chi
+.. autofunction:: sympy.solvers.ode.lie_group::lie_heuristic_chi
 
 abaco2_similar
 ^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::lie_heuristic_abaco2_similar
+.. autofunction:: sympy.solvers.ode.lie_group::lie_heuristic_abaco2_similar
 
 function_sum
 ^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::lie_heuristic_function_sum
+.. autofunction:: sympy.solvers.ode.lie_group::lie_heuristic_function_sum
 
 abaco2_unique_unknown
 ^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::lie_heuristic_abaco2_unique_unknown
+.. autofunction:: sympy.solvers.ode.lie_group::lie_heuristic_abaco2_unique_unknown
 
 abaco2_unique_general
 ^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::lie_heuristic_abaco2_unique_general
+.. autofunction:: sympy.solvers.ode.lie_group::lie_heuristic_abaco2_unique_general
 
 linear
 ^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::lie_heuristic_linear
+.. autofunction:: sympy.solvers.ode.lie_group::lie_heuristic_linear
 
 System of ODEs
 --------------
