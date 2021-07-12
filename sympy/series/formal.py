@@ -1244,8 +1244,6 @@ class FormalPowerSeries(SeriesBase):
 
         """
 
-        if x is None:
-            x = self.x
         if n is None:
             return iter(self)
 
@@ -1347,8 +1345,6 @@ class FormalPowerSeries(SeriesBase):
 
         """
 
-        if x is None:
-            x = self.x
         if n is None:
             return iter(self)
 
@@ -1423,8 +1419,6 @@ class FormalPowerSeries(SeriesBase):
 
         """
 
-        if x is None:
-            x = self.x
         if n is None:
             return iter(self)
 

@@ -1770,14 +1770,6 @@ def partitions(n, m=None, k=None, size=False):
         m = n
     else:
         m = min(m, n)
-
-    if n == 0:
-        if size:
-            yield 1, {0: 1}
-        else:
-            yield {0: 1}
-        return
-
     k = min(k or n, n)
 
     n, m, k = as_int(n), as_int(m), as_int(k)

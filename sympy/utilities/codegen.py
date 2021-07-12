@@ -605,8 +605,6 @@ class CodeGen:
                 # pack the simplified expressions back up with their left hand sides
                 expr = [Equality(e.lhs, rhs) for e, rhs in zip(expr, simplified)]
             else:
-                rhs = [expr]
-
                 if isinstance(expr, Equality):
                     common, simplified = cse(expr.rhs) #, ignore=in_out_args)
                     expr = Equality(expr.lhs, simplified[0])

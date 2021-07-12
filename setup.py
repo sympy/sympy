@@ -187,7 +187,6 @@ class audit(Command):
         pass
 
     def run(self):
-        import os
         try:
             import pyflakes.scripts.pyflakes as flakes
         except ImportError:

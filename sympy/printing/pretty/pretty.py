@@ -446,7 +446,6 @@ class PrettyPrinter(Printer):
         firstterm = True
         s = None
         for lim in integral.limits:
-            x = lim[0]
             # Create bar based on the height of the argument
             h = arg.height()
             H = h + 2

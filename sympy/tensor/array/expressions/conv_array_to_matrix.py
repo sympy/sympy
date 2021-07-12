@@ -234,7 +234,7 @@ def _(expr: ArrayTensorProduct):
                 newargs.append(arg)
                 pending = k
                 prev_i = i
-            elif pending != k:
+            else:
                 pending = k
                 prev_i = i
                 newargs.append(arg)
