@@ -1,8 +1,21 @@
 r"""
-This module contains the implementation of the lie_group hint for
-dsolve. Ideally any first order differential equation can be solved by lie_group.
-It contains various helper functions which apply different heuristics on the given equation
-and returns the solution.
+This module contains the implementation of the internal helper functions for the lie_group hint for
+dsolve. These helper functions apply different heuristics on the given equation
+and return the solution. These functions are used by :py:meth:`sympy.solvers.ode.single.LieGroup`
+
+References
+=========
+
+- `abaco1_simple`, `function_sum` and `chi`  are referenced from E.S Cheb-Terrab, L.G.S Duarte
+and L.A,C.P da Mota, Computer Algebra Solving of First Order ODEs Using
+Symmetry Methods, pp. 7 - pp. 8
+
+- `abaco1_product`, `abaco2_similar`, `abaco2_unique_unknown`, `linear`  and `abaco2_unique_general`
+are referenced from E.S. Cheb-Terrab, A.D. Roche, Symmetries and First Order
+ODE Patterns, pp. 7 - pp. 12
+
+- `bivariate` from Lie Groups and Differential Equations pp. 327 - pp. 329
+
 """
 from itertools import islice
 
