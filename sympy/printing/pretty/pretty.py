@@ -978,20 +978,30 @@ class PrettyPrinter(Printer):
         pretty_args = []
         for i, a in enumerate(reversed(args)):
             if (isinstance(a, Parallel) and len(expr.args) > 1):
-                pretty_args.append(prettyForm(*self._print(a).parens()))
+                expression = self._print(a)
+                expression.baseline = expression.height()//2
+                pretty_args.append(prettyForm(*expression.parens()))
             else:
-                pretty_args.append(self._print(a))
+                expression = self._print(a)
+                expression.baseline = expression.height()//2
+                pretty_args.append(expression)
         return prettyForm.__mul__(*pretty_args)
 
     def _print_Parallel(self, expr):
+        from sympy.physics.control.lti import TransferFunctionMatrix
         s = None
         for item in expr.args:
             pform = self._print(item)
             if s is None:
                 s = pform     # First element
             else:
+                s = prettyForm(*stringPict.next(s))
+                s.baseline = s.height()//2
                 s = prettyForm(*stringPict.next(s, ' + '))
+                if isinstance(item, TransferFunctionMatrix):
+                    s.baseline = s.height() - 1
                 s = prettyForm(*stringPict.next(s, pform))
+            # s.baseline = s.height()//2
         return s
 
     def _print_Feedback(self, expr):

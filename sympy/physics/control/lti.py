@@ -20,8 +20,42 @@ def _roots(poly, var):
         r = [rootof(poly, var, k) for k in range(n)]
     return r
 
+class LTICommon:
+    """A common class for all the Linear Time-Invariant Dynamical Systems."""
+    # Users should not directly interact with this class.
+    def __new__(cls, system, **kwargs):
+        if cls is LTICommon:
+            raise NotImplementedError('The LTICommon class is not meant to be used directly.')
+        obj = super(LTICommon, cls).__new__(cls)
+        obj.__var = system.var
+        obj.__num_inputs = getattr(system, 'num_inputs', None)
+        obj.__num_outputs = getattr(system, 'num_outputs', None)
+        return obj
 
-class TransferFunction(Basic, EvalfMixin):
+    @property
+    def is_SISO(self):
+        """Returns `True` if the passed LTI system is SISO else returns False."""
+        return self._is_SISO
+
+    def _to_expr(self):
+        """Returns the equivalent ``Expr`` object."""
+        if not self.is_SISO:
+            raise TypeError("`to_expr` method is only valid for SISO Systems.")
+
+        if isinstance(self, Series):
+            return Mul(*(arg.to_expr() for arg in self.args), evaluate=False)
+        elif isinstance(self, Parallel):
+            return Add(*(arg.to_expr() for arg in self.args), evaluate=False)
+        elif isinstance(self, TransferFunction):
+            if self.num != 1:
+                return Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
+            else:
+                return Pow(self.den, -1, evaluate=False)
+        else:
+            return ValueError("Cannot convert this  LTI system to expr.")
+
+
+class TransferFunction(Basic, EvalfMixin, LTICommon):
     r"""
     A class for representing LTI (Linear, time-invariant) systems that can be strictly described
     by ratio of polynomials in the Laplace transform complex variable. The arguments
@@ -222,7 +256,7 @@ class TransferFunction(Basic, EvalfMixin):
             obj._num = num
             obj._den = den
             obj._var = var
-            obj.is_SISO = True
+            obj._is_SISO = True
             return obj
 
         else:
@@ -692,11 +726,7 @@ class TransferFunction(Basic, EvalfMixin):
         ((s - 3)*(s - 2))/(((s - 3)*(s - 2)*(s - 1)))
 
         """
-
-        if self.num != 1:
-            return Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
-        else:
-            return Pow(self.den, -1, evaluate=False)
+        return self._to_expr()
 
 
 def _mat_mul_compatible(*args):
@@ -708,7 +738,7 @@ def _mat_mul_compatible(*args):
     )
 
 
-class Series(Basic):
+class Series(Basic, LTICommon):
     r"""
     A class for representing series configuration of SISO and MIMO transfer functions.
 
@@ -775,7 +805,7 @@ class Series(Basic):
     >>> S4.doit()
     TransferFunction((s**3 - 2)*(-p**2*(-p + s) + (p + s)*(a*p**2 + b*s)), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
 
-    SISO-System Examples -
+    MIMO-System Examples -
 
     >>> mat_a = Matrix([[5*s], [5]])  # 2 Outputs 1 Input
     >>> mat_b = Matrix([[5, 1/(6*s**2)]])  # 1 Output 2 Inputs
@@ -787,12 +817,12 @@ class Series(Basic):
     Series(TransferFunctionMatrix(((TransferFunction(1, 1, s), TransferFunction(s, 1, s)), (TransferFunction(5, s, s), TransferFunction(1, 1, s)))), TransferFunctionMatrix(((TransferFunction(5, 1, s), TransferFunction(1, 6*s**2, s)),)), TransferFunctionMatrix(((TransferFunction(5*s, 1, s),), (TransferFunction(5, 1, s),))))
     >>> pprint(_, use_unicode=False)  #  For Better Visualization
     [5*s]                 [1  s]
-    [---]                 [-  -]
-    [ 1 ]                 [1  1]
-    [   ]    [5   1  ]    [    ]
-    [ 5 ]    [-  ----]    [5  1]
-    [ - ]    [1     2]    [-  -]
-    [ 1 ]{t}*[   6*s ]{t}*[s  1]{t}
+    [---]    [5   1  ]    [-  -]
+    [ 1 ]    [-  ----]    [1  1]
+    [   ]   *[1     2]   *[    ]
+    [ 5 ]    [   6*s ]{t} [5  1]
+    [ - ]                 [-  -]
+    [ 1 ]{t}              [s  1]{t}
     >>> Series(tfm_c, tfm_b, tfm_a).doit()
     TransferFunctionMatrix(((TransferFunction(25*(6*s**3 + 1), 6*s**2, s), TransferFunction(5*(30*s**3 + 1), 6*s, s)), (TransferFunction(25*(6*s**3 + 1), 6*s**3, s), TransferFunction(5*(30*s**3 + 1), 6*s**2, s))))
     >>> pprint(_, use_unicode=False)  # (2 Inputs -A-> 2 Outputs) -> (2 Inputs -B-> 1 Output) -> (1 Input -C-> 2 Outputs) is equivalent to (2 Inputs -Series Equivalent-> 2 Outputs).
@@ -824,6 +854,9 @@ class Series(Basic):
 
     """
     def __new__(cls, *args, evaluate=False):
+        if args is None:
+            raise ValueError("Atleast 1 argument must be passed.")
+
         try:
             type_set = {arg.is_SISO for arg in args}
             if len(type_set) != 1:
@@ -838,10 +871,10 @@ class Series(Basic):
 
         if list(type_set)[0]:
             obj = super().__new__(cls, *args)
-            obj.is_SISO = True
+            obj._is_SISO = True
         elif _mat_mul_compatible(*args):
             obj = super().__new__(cls, *args)
-            obj.is_SISO = False
+            obj._is_SISO = False
         else:
             raise ValueError("Number of input signals do not match the number"
                 " of output signals for some args.")
@@ -871,26 +904,17 @@ class Series(Basic):
 
     @property
     def num_inputs(self):
-        # If the Series is for TFMs, then return num_inputs of the first TFM arg as num_input for the series system
-        try:
-            return self.args[0].num_inputs
-        # If no such attribute is found, then its TF instead of TFM and num inputs for tf should be None
-        except AttributeError:
-            return None
+        return getattr(self.args[0], "num_inputs", None)
 
     @property
     def num_outputs(self):
-        try:
-            return self.args[-1].num_outputs
-        except AttributeError:
-            return None
+        return getattr(self.args[-1], "num_outputs", None)
 
     @property
     def shape(self):
-        try:
+        if not self.is_SISO:
             return self.args[-1].num_outputs, self.args[0].num_inputs
-        except AttributeError:
-            return None
+        return None
 
     def doit(self, **kwargs):
         """
@@ -1009,10 +1033,7 @@ class Series(Basic):
 
     def to_expr(self):
         """Returns the equivalent ``Expr`` object."""
-        if self.is_SISO:
-            return Mul(*(arg.to_expr() for arg in self.args), evaluate=False)
-        else:
-            TypeError("`to_expr` method is only valid for SISO Series.")
+        return self._to_expr()
 
     @property
     def is_proper(self):
@@ -1102,7 +1123,7 @@ class Series(Basic):
         return self.doit().is_biproper if self.is_SISO else None
 
 
-class Parallel(Basic):
+class Parallel(Basic, LTICommon):
     r"""
     A class for representing parallel configuration of SISO and MIMO transfer functions.
 
@@ -1181,11 +1202,11 @@ class Parallel(Basic):
     [  -     ------]      [------    -   ]      [------    -   ]
     [  s      2    ]      [ 2        s   ]      [ 2        1   ]
     [        s  - 1]      [s  - 1        ]      [s  - 1        ]
-    [              ]      [              ]      [              ]
+    [              ]    + [              ]    + [              ]
     [s + 2     5   ]      [  5     s + 2 ]      [  1       s   ]
     [------    -   ]      [  -     ------]      [  -     ------]
     [ 2        1   ]      [  1      2    ]      [  s      2    ]
-    [s  - 1        ]{t} + [        s  - 1]{t} + [        s  - 1]{t}
+    [s  - 1        ]{t}   [        s  - 1]{t}   [        s  - 1]{t}
     >>> Parallel(tfm_a, tfm_b, tfm_c).doit()
     TransferFunctionMatrix(((TransferFunction(s**2 + s*(2*s + 2) - 1, s*(s**2 - 1), s), TransferFunction(2*s**2 + 5*s*(s**2 - 1) - 1, s*(s**2 - 1), s)), (TransferFunction(s**2 + s*(s + 2) + 5*s*(s**2 - 1) - 1, s*(s**2 - 1), s), TransferFunction(5*s**2 + 2*s - 3, s**2 - 1, s))))
     >>> pprint(_, use_unicode=False)
@@ -1214,6 +1235,9 @@ class Parallel(Basic):
 
     """
     def __new__(cls, *args, evaluate=False):
+        if args is None:
+            raise ValueError("Atleast 1 argument must be passed.")
+
         try:
             type_set = {arg.is_SISO for arg in args}
             if len(type_set) != 1:
@@ -1228,10 +1252,10 @@ class Parallel(Basic):
 
         if list(type_set)[0]:
             obj = super().__new__(cls, *args)
-            obj.is_SISO = True
+            obj._is_SISO = True
         elif all(arg.shape == args[0].shape for arg in args):
             obj = super().__new__(cls, *args)
-            obj.is_SISO = False
+            obj._is_SISO = False
         else:
             raise TypeError("Shape of all the args is not equal.")
 
@@ -1260,24 +1284,17 @@ class Parallel(Basic):
 
     @property
     def num_inputs(self):
-        try:
-            return self.args[0].num_inputs
-        except AttributeError:
-            return None
+        return getattr(self.args[0], "num_inputs", None)
 
     @property
     def num_outputs(self):
-        try:
-            return self.args[0].num_outputs
-        except AttributeError:
-            return None
+        return getattr(self.args[0], "num_outputs", None)
 
     @property
     def shape(self):
-        try:
-            return self.args[0].shape
-        except AttributeError:
-            return None
+        if not self.is_SISO:
+            return self.args[0].num_outputs, self.args[0].num_inputs
+        return None
 
     def doit(self, **kwargs):
         """
@@ -1376,10 +1393,7 @@ class Parallel(Basic):
 
     def to_expr(self):
         """Returns the equivalent ``Expr`` object."""
-        if self.is_SISO:
-            return Add(*(arg.to_expr() for arg in self.args), evaluate=False)
-        else:
-            TypeError("`to_expr` method is only valid for SISO Parallel.")
+        return self._to_expr()
 
     @property
     def is_proper(self):
@@ -1678,7 +1692,7 @@ def _to_TFM(mat, var):
     return TransferFunctionMatrix(arg)
 
 
-class TransferFunctionMatrix(Basic):
+class TransferFunctionMatrix(Basic, LTICommon):
     r"""
     A class for representing the MIMO (multiple-input and multiple-output)
     generalization of the SISO (single-input and single-output) transfer function.
@@ -1945,13 +1959,13 @@ class TransferFunctionMatrix(Basic):
     [            ]      [ s  + s + 1 ]
     [ 4          ]      [            ]
     [p  - 3*p + 2]      [ 4          ]
-    [------------]      [p  - 3*p + 2]
+    [------------]    + [p  - 3*p + 2]
     [   p + s    ]      [------------]
     [            ]      [   p + s    ]
     [   -a - s   ]      [            ]
     [ ---------- ]      [   -a + p   ]
     [  2         ]      [  -------   ]
-    [ s  + s + 1 ]{t} + [  9*s - 9   ]{t}
+    [ s  + s + 1 ]{t}   [  9*s - 9   ]{t}
     >>> -tfm_10 - tfm_8
     Parallel(TransferFunctionMatrix(((TransferFunction(-a - s, s**2 + s + 1, s),), (TransferFunction(-p**4 + 3*p - 2, p + s, s),), (TransferFunction(a - p, 9*s - 9, s),))), TransferFunctionMatrix(((TransferFunction(-3, s + 2, s),), (TransferFunction(-p**4 + 3*p - 2, p + s, s),), (TransferFunction(a + s, s**2 + s + 1, s),))))
     >>> pprint(_, use_unicode=False)
@@ -1961,45 +1975,45 @@ class TransferFunctionMatrix(Basic):
     [  s  + s + 1  ]      [              ]
     [              ]      [   4          ]
     [   4          ]      [- p  + 3*p - 2]
-    [- p  + 3*p - 2]      [--------------]
+    [- p  + 3*p - 2]    + [--------------]
     [--------------]      [    p + s     ]
     [    p + s     ]      [              ]
     [              ]      [    a + s     ]
     [    a - p     ]      [  ----------  ]
     [   -------    ]      [   2          ]
-    [   9*s - 9    ]{t} + [  s  + s + 1  ]{t}
+    [   9*s - 9    ]{t}   [  s  + s + 1  ]{t}
     >>> tfm_12 * tfm_8
     Series(TransferFunctionMatrix(((TransferFunction(3, s + 2, s),), (TransferFunction(p**4 - 3*p + 2, p + s, s),), (TransferFunction(-a - s, s**2 + s + 1, s),))), TransferFunctionMatrix(((TransferFunction(-a + p, 9*s - 9, s), TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(3, s + 2, s)), (TransferFunction(-p**4 + 3*p - 2, p + s, s), TransferFunction(a - p, 9*s - 9, s), TransferFunction(-3, s + 2, s)))))
     >>> pprint(_, use_unicode=False)
                                            [     3      ]
                                            [   -----    ]
-                                           [   s + 2    ]
-                                           [            ]
-    [    -a + p        -a - s      3  ]    [ 4          ]
-    [   -------      ----------  -----]    [p  - 3*p + 2]
-    [   9*s - 9       2          s + 2]    [------------]
-    [                s  + s + 1       ]    [   p + s    ]
-    [                                 ]    [            ]
-    [   4                             ]    [   -a - s   ]
-    [- p  + 3*p - 2    a - p      -3  ]    [ ---------- ]
-    [--------------   -------    -----]    [  2         ]
-    [    p + s        9*s - 9    s + 2]{t}*[ s  + s + 1 ]{t}
+    [    -a + p        -a - s      3  ]    [   s + 2    ]
+    [   -------      ----------  -----]    [            ]
+    [   9*s - 9       2          s + 2]    [ 4          ]
+    [                s  + s + 1       ]    [p  - 3*p + 2]
+    [                                 ]   *[------------]
+    [   4                             ]    [   p + s    ]
+    [- p  + 3*p - 2    a - p      -3  ]    [            ]
+    [--------------   -------    -----]    [   -a - s   ]
+    [    p + s        9*s - 9    s + 2]{t} [ ---------- ]
+                                           [  2         ]
+                                           [ s  + s + 1 ]{t}
     >>> tfm_12 * tfm_8 * tfm_9
     Series(TransferFunctionMatrix(((TransferFunction(-3, s + 2, s),),)), TransferFunctionMatrix(((TransferFunction(3, s + 2, s),), (TransferFunction(p**4 - 3*p + 2, p + s, s),), (TransferFunction(-a - s, s**2 + s + 1, s),))), TransferFunctionMatrix(((TransferFunction(-a + p, 9*s - 9, s), TransferFunction(-a - s, s**2 + s + 1, s), TransferFunction(3, s + 2, s)), (TransferFunction(-p**4 + 3*p - 2, p + s, s), TransferFunction(a - p, 9*s - 9, s), TransferFunction(-3, s + 2, s)))))
     >>> pprint(_, use_unicode=False)
-                                            [     3      ]
+                                           [     3      ]
                                            [   -----    ]
-                                           [   s + 2    ]
-                                           [            ]
-    [    -a + p        -a - s      3  ]    [ 4          ]
-    [   -------      ----------  -----]    [p  - 3*p + 2]
-    [   9*s - 9       2          s + 2]    [------------]
-    [                s  + s + 1       ]    [   p + s    ]
-    [                                 ]    [            ]
-    [   4                             ]    [   -a - s   ]
-    [- p  + 3*p - 2    a - p      -3  ]    [ ---------- ]    [ -3  ]
-    [--------------   -------    -----]    [  2         ]    [-----]
-    [    p + s        9*s - 9    s + 2]{t}*[ s  + s + 1 ]{t}*[s + 2]{t}
+    [    -a + p        -a - s      3  ]    [   s + 2    ]
+    [   -------      ----------  -----]    [            ]
+    [   9*s - 9       2          s + 2]    [ 4          ]
+    [                s  + s + 1       ]    [p  - 3*p + 2]    [ -3  ]
+    [                                 ]   *[------------]   *[-----]
+    [   4                             ]    [   p + s    ]    [s + 2]{t}
+    [- p  + 3*p - 2    a - p      -3  ]    [            ]
+    [--------------   -------    -----]    [   -a - s   ]
+    [    p + s        9*s - 9    s + 2]{t} [ ---------- ]
+                                           [  2         ]
+                                           [ s  + s + 1 ]{t}
     >>> tfm_10 + tfm_8*tfm_9
     Parallel(TransferFunctionMatrix(((TransferFunction(a + s, s**2 + s + 1, s),), (TransferFunction(p**4 - 3*p + 2, p + s, s),), (TransferFunction(-a + p, 9*s - 9, s),))), Series(TransferFunctionMatrix(((TransferFunction(-3, s + 2, s),),)), TransferFunctionMatrix(((TransferFunction(3, s + 2, s),), (TransferFunction(p**4 - 3*p + 2, p + s, s),), (TransferFunction(-a - s, s**2 + s + 1, s),)))))
     >>> pprint(_, use_unicode=False)
@@ -2008,14 +2022,14 @@ class TransferFunctionMatrix(Basic):
     [  2         ]      [   s + 2    ]
     [ s  + s + 1 ]      [            ]
     [            ]      [ 4          ]
-    [ 4          ]      [p  - 3*p + 2]
-    [p  - 3*p + 2]      [------------]
-    [------------]      [   p + s    ]
+    [ 4          ]      [p  - 3*p + 2]    [ -3  ]
+    [p  - 3*p + 2]    + [------------]   *[-----]
+    [------------]      [   p + s    ]    [s + 2]{t}
     [   p + s    ]      [            ]
     [            ]      [   -a - s   ]
-    [   -a + p   ]      [ ---------- ]    [ -3  ]
-    [  -------   ]      [  2         ]    [-----]
-    [  9*s - 9   ]{t} + [ s  + s + 1 ]{t}*[s + 2]{t}
+    [   -a + p   ]      [ ---------- ]
+    [  -------   ]      [  2         ]
+    [  9*s - 9   ]{t}   [ s  + s + 1 ]{t}
 
     These unevaluated ``Series`` or ``Parallel`` objects can convert into the
     resultant transfer function matrix using ``.doit()`` method or by
@@ -2043,13 +2057,13 @@ class TransferFunctionMatrix(Basic):
         for row_index, row in enumerate(arg):
             temp = []
             for col_index, element in enumerate(row):
-                try:
-                    if not element.is_SISO:
-                        raise TypeError("MIMO Series/Parallel object found as the element of "
-                        f"TransferFunctionMatrix at index {(row_index, col_index)}.")
-                except AttributeError:
+                if not isinstance(element, LTICommon):
                     raise TypeError("Incompatible type found as the element of "
-                        f"TransferFunctionMatrix at index {(row_index, col_index)}.")
+                        "TransferFunctionMatrix.")
+
+                if not element.is_SISO:
+                        raise TypeError("MIMO Series/Parallel object found as the element of "
+                        "TransferFunctionMatrix. Each element is expected to be a SISO LTI system.")
 
                 if var != element.var:
                     raise ValueError("Conflicting value(s) found for `var`. All TransferFunction instances in "
@@ -2058,14 +2072,13 @@ class TransferFunctionMatrix(Basic):
                 temp.append(element.to_expr())
             expr_mat_arg.append(temp)
 
-
         if isinstance(arg, (list, Tuple)):
             # Making nested Tuple (sympy.core.containers.Tuple) from nested list or nested python tuple
             arg = Tuple(*(Tuple(*r, sympify=False) for r in arg), sympify=False)
 
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
         obj._expr_mat = ImmutableMatrix(expr_mat_arg)
-        obj.is_SISO = False
+        obj._is_SISO = False
         return obj
 
     @classmethod
