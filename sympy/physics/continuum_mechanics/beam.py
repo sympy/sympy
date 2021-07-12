@@ -1565,9 +1565,8 @@ class Beam:
     def solve_for_ild_reactions(self, val, *reactions):
         """
 
-        Determines the Influence Line Diagram equations for reaction forces under the effect
-        of a moving load and returns a dictionary."
-
+        Determines the Influence Line Diagram equations for reaction
+        forces under the effect of a moving load and returns a dictionary.
 
         Parameters
         ==========
@@ -1576,15 +1575,42 @@ class Beam:
         reactions :
             The reaction forces applied on the beam.
 
+        Examples
+        ========
+
+        There is a beam of length 10 feet. There are two simple supports
+        below the beam, one at the starting point and another at the ending
+        point of the beam. Calculate the I.L.D. equations for reaction forces
+        under the effect of a moving load of magnitude 1kN.
+
+        .. image:: ildreaction.png
+           :align: center
+
+        Using the sign convention of downwards forces being positive.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy import symbols
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> E, I = symbols('E, I')
+            >>> R_0, R_10 = symbols('R_0, R_10')
+            >>> b = Beam(10, E, I)
+            >>> b.apply_support(0, 'roller')
+            >>> b.apply_support(10, 'roller')
+            >>> b.solve_for_ild_reactions(1,R_0,R_10)
+            {R_0: x/10 - 1, R_10: -x/10}
+
         """
         x = self.variable
         l = self.length
         C3 = Symbol('C3')
         C4 = Symbol('C4')
-        X = symbols('X')
 
-        shear_curve = limit(self.shear_force(), x, l) + val
-        moment_curve = limit(self.bending_moment(), x, l) + val*(l-X)
+        shear_curve = limit(self.shear_force(), x, l) - val
+        moment_curve = limit(self.bending_moment(), x, l) - val*(l-x)
 
         slope_eqs = []
         deflection_eqs = []
@@ -1610,14 +1636,55 @@ class Beam:
         """
 
         Plots the Influence Line Diagram of Reaction Forces
-        under the effect of a moving load.
+        under the effect of a moving load. This function
+        should be called after calling solve_for_ild_reactions().
+
+        Examples
+        ========
+
+        There is a beam of length 10 meters. A point load of magnitude 5KN
+        is also applied from top of the beam, at a distance of 4 meters
+        from the starting point. There are two simple supports below the
+        beam, located at the starting point and at a distance of 7 meters
+        from the starting point. Plot the I.L.D. equations for reactions
+        at both support points under the effect of a moving load
+        of magnitude 1kN.
+
+        Using the sign convention of downwards forces being positive.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy import symbols
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> E, I = symbols('E, I')
+            >>> R_0, R_7 = symbols('R_0, R_7')
+            >>> b = Beam(10, E, I)
+            >>> b.apply_support(0, 'roller')
+            >>> b.apply_support(7, 'roller')
+            >>> b.apply_load(5,4,-1)
+            >>> b.solve_for_ild_reactions(1,R_0,R_7)
+            {R_0: x/7 - 22/7, R_7: -x/7 - 20/7}
+            >>> b.plot_ild_reactions()
+            PlotGrid object containing:
+            Plot[0]:Plot object containing:
+            [0]: cartesian line: x/7 - 22/7 for x over (0.0, 10.0)
+            Plot[1]:Plot object containing:
+            [0]: cartesian line: -x/7 - 20/7 for x over (0.0, 10.0)
 
         """
-        X = symbols('X')
-        for i in self._ild_reactions:
-                plot(self._ild_reactions[i], (X, 0, self._length), title='I.L.D. for Reactions',
-                xlabel=X, ylabel=i, line_color='blue')
+        if not self._ild_reactions:
+            raise KeyError("solve_for_ild_reactions() not called")
 
+        x = self.variable
+        p = []
+        for i in self._ild_reactions:
+            p.append(plot(self._ild_reactions[i], (x, 0, self._length), title='I.L.D. for Reactions',
+            xlabel=x, ylabel=i, line_color='blue', show=False))
+
+        return PlotGrid(len(p), 1, *p)
 
     @doctest_depends_on(modules=('numpy',))
     def draw(self, pictorial=True):
