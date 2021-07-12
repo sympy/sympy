@@ -3,8 +3,8 @@ from sympy import (S, symbols, Function, Rational, Poly, Eq, ratsimp,
     checkodesol, sqrt, Dummy, oo, I, Mul, sin, exp, log, tanh)
 from sympy.testing.pytest import slow
 from sympy.solvers.ode.riccati import (riccati_normal, riccati_inverse_normal,
-    riccati_reduced, match_riccati, inverse_transform_poly, find_poles,
-    limit_at_inf, check_necessary_conds, val_at_inf, construct_c_case_1,
+    riccati_reduced, match_riccati, inverse_transform_poly, limit_at_inf,
+    check_necessary_conds, val_at_inf, construct_c_case_1,
     construct_c_case_2, construct_c_case_3, construct_d_case_4,
     construct_d_case_5, construct_d_case_6, rational_laurent_series,
     solve_riccati)
@@ -47,6 +47,18 @@ def find_riccati_ode(ratfunc, x, yf):
 # Testing functions start
 
 def test_riccati_transformation():
+    """
+    This function tests the transformation of the
+    solution of a Riccati ODE to the solution of
+    its corresponding normal Riccati ODE.
+
+    Each test case 4 values -
+
+    1. w - The solution to be transformed
+    2. b1 - The coefficient of f(x) in the ODE.
+    3. b2 - The coefficient of f(x)**2 in the ODE.
+    4. y - The solution to the normal Riccati ODE.
+    """
     tests = [
     (
         x/(x - 1),
@@ -55,24 +67,10 @@ def test_riccati_transformation():
         -x**2/(x - 1) - x*(x**2/3 + S(7)/3)/2 - 1/(2*x)
     ),
     (
-        (-2*x**2 - 2*x - 1)/(4*x),
-        (2*x + 1)/(x - 2),
-        -1/(x + 2),
-        Mul(-1, -x/2 - 1, evaluate=False)/(x + 2)**2 - (2*x + 1)/(Mul(2, x - 2, evaluate=False)) \
-        + (-2*x**2 - 2*x - 1)/(4*x*(x + 2))
-    ),
-    (
         (2*x + 3)/(2*x + 2),
         (3 - 3*x)/(x + 1),
         5*x,
         -5*x*(2*x + 3)/(2*x + 2) - (3 - 3*x)/(Mul(2, x + 1, evaluate=False)) - 1/(2*x)
-    ),
-    (
-        (-2*x - 1)/(2*x**2 + 2*x - 2),
-        -2/x,
-        (-x - 1)/(4*x),
-        -2*x*(-1/(4*x) - (-x - 1)/(4*x**2))/(-x - 1) - (-2*x - 1)*(-x - 1)/(4*x*(2*x**2 + 2*x \
-        - 2)) + 1/x
     ),
     (
         -1/(2*x**2 - 1),
@@ -87,27 +85,43 @@ def test_riccati_transformation():
         x**3/(6*x - 9),
         -x**4/(6*x - 9) - (8*x - 12)/(Mul(2, 12*x + 9, evaluate=False)) - (6*x - 9)*(-6*x**3/(6*x \
         - 9)**2 + 3*x**2/(6*x - 9))/(2*x**3)
-    ),
-    (
-        -7*x**3 + 4*x + 9,
-        (x - 1)/x,
-        5*x - 1/(x - 1),
-        Mul(-1, 5 + (x - 1)**(-2), evaluate=False)/(10*x - 2/(x - 1)) + (-5*x + 1/(x - 1))*\
-        (-7*x**3 + 4*x + 9) - (x - 1)/(2*x)
-    ),
-    (
-        -6/(x**2 - 2*x + 1),
-        (x + 12)/((x + 1)*(x - 3)),
-        2*x + 5,
-        Mul(-6, -2*x - 5, evaluate=False)/(x**2 - 2*x + 1) - 2/(4*x + 10) - (x + 12)/(\
-        Mul(2, x - 3, evaluate=False)*(x + 1))
     )]
     for w, b1, b2, y in tests:
         assert y == riccati_normal(w, x, b1, b2)
         assert w == riccati_inverse_normal(y, x, b1, b2).cancel()
 
+    # Test bp paramter in riccati_inverse_normal
+    tests = [
+    (
+        (-2*x - 1)/(2*x**2 + 2*x - 2),
+        -2/x,
+        (-x - 1)/(4*x),
+        8*x**2*(1/(4*x) + (-x - 1)/(4*x**2))/(-x - 1)**2 + 4/(-x - 1),
+        -2*x*(-1/(4*x) - (-x - 1)/(4*x**2))/(-x - 1) - (-2*x - 1)*(-x - 1)/(4*x*(2*x**2 + 2*x \
+        - 2)) + 1/x
+    ),
+    (
+        3/(2*x**2),
+        -2/x,
+        (-x - 1)/(4*x),
+        8*x**2*(1/(4*x) + (-x - 1)/(4*x**2))/(-x - 1)**2 + 4/(-x - 1),
+        -2*x*(-1/(4*x) - (-x - 1)/(4*x**2))/(-x - 1) + 1/x - Mul(3, -x - 1, evaluate=False)/(8*x**3)
+    )]
+    for w, b1, b2, bp, y in tests:
+        assert y == riccati_normal(w, x, b1, b2)
+        assert w == riccati_inverse_normal(y, x, b1, b2, bp).cancel()
+
 
 def test_riccati_reduced():
+    """
+    This function tests the transformation of a
+    Riccati ODE to its normal Riccati ODE.
+
+    Each test case 2 values -
+
+    1. eq - A Riccati ODE.
+    2. normal_eq - The normal Riccati ODE of eq.
+    """
     tests = [
     (
         f(x).diff(x) - x**2 - x*f(x) - x*f(x)**2,
@@ -115,34 +129,11 @@ def test_riccati_reduced():
         f(x).diff(x) + f(x)**2 + x**3 - x**2/4 - 3/(4*x**2)
     ),
     (
-        f(x).diff(x) - 1/x + (x**2 - x)*f(x)/3 + f(x)**2/(x**2 - 2),
-
-        -3*x**2/(x**2 - 2)**2 - 2*x*(1 - x**2/2)*(-x**2/3 + x/3)/( \
-        x**2 - 2)**2 - x/3 - Mul(2, 1 - x**2/2, evaluate=False)* \
-        (4*x**2/(x**2 - 2) - 1)/(x**2 - 2)**2 - (-x**2/3 + x/3 \
-        )**2/4 + f(x)**2 + f(x).diff(x) + S(1)/6 - 1/(x*(x**2 - 2))
-    ),
-    (
         6*x/(2*x + 9) + f(x).diff(x) - (x + 1)*f(x)**2/x,
 
         -3*x**2*(1/x + (-x - 1)/x**2)**2/(4*(-x - 1)**2) + Mul(6, \
         -x - 1, evaluate=False)/(2*x + 9) + f(x)**2 + f(x).diff(x) \
         - (-1 + (x + 1)/x)/(x*(-x - 1))
-    ),
-    (
-        -(S(3)/2 - 3*x)*f(x)/(-x - 3) + f(x).diff(x) - (2 - 3*x)/( \
-        6*x) - f(x)**2/x,
-
-        -(3 - 6*x)**2/(4*(2*x + 6)**2) + (3 - 6*x)/(2*x + 6)**2 \
-        + f(x)**2 + f(x).diff(x) + 3/(2*x + 6) - (S(1)/2 - 1/(3*x)) \
-        /x - (3 - 6*x)/(2*x*(2*x + 6)) + 1/(4*x**2)
-    ),
-    (
-        -x*f(x)**2 + f(x).diff(x) + 1 - (x - S(1)/2)*f(x)/(x - S(2)/3),
-
-        -x - (3 - 6*x)**2/(4*(6*x - 4)**2) + Mul(3, 3 - 6*x, evaluate= \
-        False)/(6*x - 4)**2 + f(x)**2 + f(x).diff(x) + 3/(6*x - 4) + \
-        (3 - 6*x)/(2*x*(6*x - 4)) - 3/(4*x**2)
     ),
     (
         f(x)**2 + f(x).diff(x) - (x - 1)*f(x)/(-x - S(1)/2),
@@ -156,42 +147,37 @@ def test_riccati_reduced():
         f(x)**2 + f(x).diff(x) + 1/(4*x**2)
     ),
     (
-        -(3 - 4*x)/(2*x + 9) - (-3*x/2 - S(1)/2)*f(x)/(x - 2) + \
-        f(x).diff(x) - (x - 1)*f(x)**2/x,
-
-        -3*x**2*(1/x + (1 - x)/x**2)**2/(4*(1 - x)**2) - x*(1/x + \
-        (1 - x)/x**2)*(3*x + 1)/(Mul(2, 1 - x, evaluate=False)* \
-        (2*x - 4)) + f(x)**2 + f(x).diff(x) - 3/(Mul(2, 2*x - 4, \
-        evaluate=False)) - (3*x + 1)**2/(4*(2*x - 4)**2) + (3*x \
-        + 1)/(2*x - 4)**2 - (-1 + (x - 1)/x)/(x*(1 - x)) + (1 - \
-        x)*(4*x/(2*x + 9) - 3/(2*x + 9))/x
-    ),
-    (
-        x*f(x)/(3*(x + 1)) - (4*x**2 - 9)/(6*(x**2 - x + 1)) + \
-        f(x).diff(x) - 3*(4*x - 1)*f(x)**2/(4*(x + 3)),
-
-        -x**2/(4*(3*x + 3)**2) + 3*x/(2*(3*x + 3)**2) - x*(4*x \
-        + 12)*(Mul(4, 3 - 12*x, evaluate=False)/(4*x + 12)**2 + \
-        12/(4*x + 12))/(Mul(2, 3 - 12*x, evaluate=False)*(3*x + \
-        3)) - Mul(3, -2 + (4*x - 1)/(Mul(2, x + 3, evaluate=\
-        False)), evaluate=False)*(4*x + 12)/(Mul(2, 3 - 12*x, \
-        evaluate=False)*(x + 3)**2) + (3 - 12*x)*(-2*x**2/( \
-        3*x**2 - 3*x + 3) + 3/(2*x**2 - 2*x + 2))/(4*x + 12) \
-        + f(x)**2 + f(x).diff(x) - 1/(Mul(2, 3*x + 3, evaluate \
-        =False)) - 3*(4*x + 12)**2*(Mul(4, 3 - 12*x, evaluate= \
-        False)/(4*x + 12)**2 + 12/(4*x + 12))**2/(4*(3 - 12*x)**2)
-    ),
-    (
         -3*(-x**2 - x + 1)/(x**2 + 6*x + 1) + f(x).diff(x) + f(x)**2/x,
 
         f(x)**2 + f(x).diff(x) + (3*x**2/(x**2 + 6*x + 1) + 3*x/(x**2 \
         + 6*x + 1) - 3/(x**2 + 6*x + 1))/x + 1/(4*x**2)
+    ),
+    (
+        6*x/(2*x + 9) + f(x).diff(x) - (x + 1)*f(x)/x,
+
+        False
+    ),
+    (
+        f(x)*f(x).diff(x) - 1/x + f(x)/3 + f(x)**2/(x**2 - 2),
+
+        False
     )]
     for eq, normal_eq in tests:
         assert normal_eq == riccati_reduced(eq, f, x)
 
 
 def test_match_riccati():
+    """
+    This function tests if an ODE is Riccati or not.
+
+    Each test case has 5 values -
+
+    1. eq - The Riccati ODE.
+    2. match - Boolean indicating if eq is a Riccati ODE.
+    3. b0 -
+    4. b1 - Coefficient of f(x) in eq.
+    5. b2 - Coefficient of f(x)**2 in eq.
+    """
     tests = [
     # Test Rational Riccati ODEs
     (
@@ -279,53 +265,17 @@ def test_match_riccati():
             assert [b0, b1, b2] == funcs
 
 
-def test_poles():
-    tests = [
-    (
-        Poly(3*x**2 - x, x),
-        {0: 1, S(1)/3: 1}
-    ),
-    (
-        Poly((2 - x)**2*(2*x - 1)**2, x),
-        {2: 2, S(1)/2: 2}
-    ),
-    (
-        Poly(x**2 - x - 1, x),
-        {(1 + sqrt(5))/2: 1, (1 - sqrt(5))/2: 1}
-    ),
-    (
-        Poly(x + 2, x),
-        {-2: 1}
-    ),
-    (
-        Poly(x**4 + 3*x**3 - 3*x**2 + 3*x - 4, x),
-        {I: 1, -I: 1, 1: 1, -4: 1}
-    ),
-    (
-        Poly(x**5 - 4*x**4 + 4*x**3 + x**2 - 4*x + 4, x),
-        {2: 2, -1: 1, (1 - sqrt(3)*I)/2: 1, (1 + sqrt(3)*I)/2: 1}
-    ),
-    (
-        Poly(x**3 + 12*x**2 + 39*x + 28, x),
-        {-1: 1, -4: 1, -7: 1}
-    ),
-    (
-        Poly(x**4 + 6*x**3 + 11*x**2 + 6*x + 1, x),
-        {-S(3)/2 - sqrt(5)/2: 2, -S(3)/2 + sqrt(5)/2: 2}
-    ),
-    (
-        Poly(x**5 + 5*x**4 + 10*x**3 + 10*x**2 + 3*x + 1, x),
-        {}
-    ),
-    (
-        Poly(2*x**7 + 6*x**6 + 11*x**5 - 12*x**4 - 28*x**3 + 6*x**2 + 15*x, x),
-        {1: 2, -1: 2, -S(3)/2 - sqrt(21)*I/2: 1, -S(3)/2 + sqrt(21)*I/2: 1, 0: 1}
-    )]
-    for den, poles in tests:
-        assert find_poles(den, x) == poles
-
-
 def test_val_at_inf():
+    """
+    This function tests the valuation of rational
+    function at oo.
+
+    Each test case has 3 values -
+
+    1. num - Numerator of rational function.
+    2. den - Denominator of rational function.
+    3. val_inf - Valuation of rational function at oo
+    """
     tests = [
     (
         Poly(12*x**8 - 12*x**7 - 11*x**6 + 8*x**5 + 3*x**4 - x**3 + x**2 - 11*x, x),
@@ -333,9 +283,9 @@ def test_val_at_inf():
          -6
     ),
     (
-        Poly(-8*x**4 + 14*x**3 + 10*x**2 + 3*x - 11, x),
+        Poly(1, x),
         Poly(-9*x**4 + 3*x**3 + 15*x**2 - 6*x - 14, x),
-         0
+         4
     ),
     (
         Poly(-6*x**3 - 8*x**2 + 8*x - 6, x),
@@ -343,34 +293,9 @@ def test_val_at_inf():
          0
     ),
     (
-        Poly(15*x**3 - 5*x**2 - 6*x - 2, x),
-        Poly(9*x**5 + 12*x**4 + 7*x**3 + 11*x**2 - 2*x - 9, x),
-         2
-    ),
-    (
         Poly(10*x**3 + 8*x**2 - 13*x + 6, x),
         Poly(-13*x**10 - x**9 + 5*x**8 + 7*x**7 + 10*x**6 + 6*x**5 - 7*x**4 + 11*x**3 - 8*x**2 + 5*x + 13, x),
          7
-    ),
-    (
-        Poly(-15*x - 15, x),
-        Poly(15*x**3 - 13*x**2 - 4*x + 2, x),
-         2
-    ),
-    (
-        Poly(-9*x**8 - 9*x**7 + 11*x**6 - 11*x**5 + 9*x**4 + 7*x**3 - 8*x**2 - 5*x - 12, x),
-        Poly(9*x**10 + 4*x**9 + 12*x**8 - 8*x**7 - 3*x**6 - 14*x**5 + 8*x**4 - 15*x**3 + 4*x**2 + 9*x + 1, x),
-         2
-    ),
-    (
-        Poly(13*x - 9, x),
-        Poly(-8*x**4 + 5*x**3 - 4*x**2 - 14*x + 4, x),
-         3
-    ),
-    (
-        Poly(12*x**7 - 7*x**6 + 9*x**5 + 6*x**4 - 14*x**3 + 15*x**2 - x + 8, x),
-        Poly(11*x**10 + 2*x**9 + x**8 - 3*x**7 - 12*x**6 - 10*x**5 - 15*x**4 - 14*x**3 - 5*x**2 + 15*x + 15, x),
-         3
     ),
     (
         Poly(5*x**6 + 9*x**5 - 11*x**4 - 9*x**3 + x**2 - 4*x + 4, x),
@@ -382,6 +307,10 @@ def test_val_at_inf():
 
 
 def test_necessary_conds():
+    """
+    This function tests the necessary conditions for
+    a Riccati ODE to have a rational particular solution.
+    """
     # Valuation at Infinity is an odd negative integer
     assert check_necessary_conds(-3, [1, 2, 4]) == False
     # Valuation at Infinity is a positive integer lesser than 2
@@ -393,29 +322,21 @@ def test_necessary_conds():
 
 
 def test_inverse_transform_poly():
+    """
+    This function tests the substitution x -> 1/x
+    in rational functions represented using Poly.
+    """
     fns = [
-    (30*x**6 - 12*x**5 + 15*x**4 - 15*x**2 + 10*x + 60)/(3*x**10 - 45*x**9 + 15*x**5 + 15*x**4 - 5*x**3 \
-    + 15*x**2 + 45*x - 15),
-
     (15*x**3 - 8*x**2 - 2*x - 6)/(18*x + 6),
-
-    (-75*x**6 + 12*x**5 - 80*x**4 + 15*x**3 - 75*x**2 + 120*x + 120)/(80*x**9 - 48*x**8 - 40*x**6 - \
-    80*x**5 - 100*x**4 - 60*x**2 + 60*x + 60),
-
-    (-40*x**4 + 180*x**3 - 60*x**2 + 60*x + 150)/(30*x**6 - 40*x**5 - 20*x**4 - 120*x**3 - 45*x - 48),
-    (30*x**9 - 60*x**8 - 40*x**7 - 60*x**6 + 15*x**5 - 240*x**4 + 300*x**3 + 180*x**2 + 30*x - 90)/( \
-    60*x**10 - 120*x**9 - 60*x**8 - 240*x**7 - 48*x**6 + 60*x**5 + 30*x**4 + 150*x**3 + 30*x**2 - 60*x),
-    (24*x**10 + 20*x**7 - 48*x**5 - 45*x**4 - 60*x**3 + 60*x**2 + 60*x + 20)/(30*x**5 - 45*x**4 - 48*x**3
-    - 24*x**2 + 30*x),
 
     (180*x**5 + 40*x**4 + 80*x**3 + 30*x**2 - 60*x - 80)/(180*x**3 - 150*x**2 + 75*x + 12),
 
-    (-180*x**9 - 40*x**8 + 120*x**7 - 20*x**6 - 75*x**5 + 60*x**4 + 15*x**3 - 20*x**2 - 90*x + 15)/( \
-    60*x**7 - 60*x**6 - 120*x**4 - 48*x**3 - 120*x**2 + 12*x + 100),
-
     (-15*x**5 - 36*x**4 + 75*x**3 - 60*x**2 - 80*x - 60)/(80*x**4 + 60*x**3 + 60*x**2 + 60*x - 80),
 
-    (60*x**7 + 24*x**6 - 15*x**5 - 20*x**4 + 30*x**2 + 100*x - 60)/(240*x**2 - 20*x - 30)
+    (60*x**7 + 24*x**6 - 15*x**5 - 20*x**4 + 30*x**2 + 100*x - 60)/(240*x**2 - 20*x - 30),
+
+    (30*x**6 - 12*x**5 + 15*x**4 - 15*x**2 + 10*x + 60)/(3*x**10 - 45*x**9 + 15*x**5 + 15*x**4 - 5*x**3 \
+    + 15*x**2 + 45*x - 15)
     ]
     for f in fns:
         num, den = [Poly(e, x) for e in f.as_numer_denom()]
@@ -424,6 +345,16 @@ def test_inverse_transform_poly():
 
 
 def test_limit_at_inf():
+    """
+    This function tests the limit at oo of a
+    rational function.
+
+    Each test case has 3 values -
+
+    1. num - Numerator of rational function.
+    2. den - Denominator of rational function.
+    3. limit_at_inf - Limit of rational function at oo
+    """
     tests = [
     (
         Poly(-12*x**2 + 20*x + 32, x),
@@ -477,6 +408,18 @@ def test_limit_at_inf():
 
 
 def test_construct_c_case_1():
+    """
+    This function tests the Case 1 in the step
+    to calculate coefficients of c-vectors.
+
+    Each test case has 4 values -
+
+    1. num - Numerator of the rational function a(x).
+    2. den - Denominator of the rational function a(x).
+    3. pole - Pole of a(x) for which c-vector is being
+       calculated.
+    4. c - The c-vector for the pole.
+    """
     tests = [
     (
         Poly(-3*x**3 + 3*x**2 + 4*x - 5, x, extension=True),
@@ -503,6 +446,19 @@ def test_construct_c_case_1():
 
 
 def test_construct_c_case_2():
+    """
+    This function tests the Case 2 in the step
+    to calculate coefficients of c-vectors.
+
+    Each test case has 5 values -
+
+    1. num - Numerator of the rational function a(x).
+    2. den - Denominator of the rational function a(x).
+    3. pole - Pole of a(x) for which c-vector is being
+       calculated.
+    4. mul - The multiplicity of the pole.
+    5. c - The c-vector for the pole.
+    """
     tests = [
     # Testing poles with multiplicity 2
     (
@@ -551,10 +507,25 @@ def test_construct_c_case_2():
         assert construct_c_case_2(num, den, x, pole, mul) == c
 
 def test_construct_c_case_3():
+    """
+    This function tests the Case 3 in the step
+    to calculate coefficients of c-vectors.
+    """
     assert construct_c_case_3() == [[1], [1]]
 
 
 def test_construct_d_case_4():
+    """
+    This function tests the Case 4 in the step
+    to calculate coefficients of the d-vector.
+
+    Each test case has 4 values -
+
+    1. num - Numerator of the rational function a(x).
+    2. den - Denominator of the rational function a(x).
+    3. mul - Multiplicity of oo as a pole.
+    4. d - The d-vector.
+    """
     tests = [
     # Tests with multiplicity at oo = 2
     (
@@ -607,6 +578,16 @@ def test_construct_d_case_4():
 
 
 def test_construct_d_case_5():
+    """
+    This function tests the Case 5 in the step
+    to calculate coefficients of the d-vector.
+
+    Each test case has 3 values -
+
+    1. num - Numerator of the rational function a(x).
+    2. den - Denominator of the rational function a(x).
+    3. d - The d-vector.
+    """
     tests = [
     (
         Poly(2*x**3 + x**2 + x - 2, x, extension=True),
@@ -630,6 +611,16 @@ def test_construct_d_case_5():
 
 
 def test_construct_d_case_6():
+    """
+    This function tests the Case 6 in the step
+    to calculate coefficients of the d-vector.
+
+    Each test case has 3 values -
+
+    1. num - Numerator of the rational function a(x).
+    2. den - Denominator of the rational function a(x).
+    3. d - The d-vector.
+    """
     tests = [
     (
         Poly(-2*x**2 - 5, x, domain='ZZ'),
@@ -652,6 +643,21 @@ def test_construct_d_case_6():
 
 
 def test_rational_laurent_series():
+    """
+    This function tests the computation of coefficients
+    of Laurent series of a rational function.
+
+    Each test case has 5 values -
+
+    1. num - Numerator of the rational function.
+    2. den - Denominator of the rational function.
+    3. x0 - Point about which Laurent series is to
+       be calculated.
+    4. mul - Multiplicity of x0 if x0 is a pole of
+       the rational function (0 otherwise).
+    5. n - Number of terms upto which the series
+       is to be calcuated.
+    """
     tests = [
     # Laurent series about simple pole (Multiplicity = 1)
     (
@@ -704,6 +710,11 @@ def test_rational_laurent_series():
 
 
 def check_dummy_sol(eq, solse, dummy_sym):
+    """
+    Helper function to check if actual solution
+    matches expected solution if actual solution
+    contains dummy symbols.
+    """
     if isinstance(eq, Eq):
         eq = eq.lhs - eq.rhs
     _, funcs = match_riccati(eq, f, x)
@@ -716,6 +727,15 @@ def check_dummy_sol(eq, solse, dummy_sym):
     assert all([s1.dummy_eq(s2, dummy_sym) for s1, s2 in zip(sols, solse)])
 
 def test_solve_riccati():
+    """
+    This function tests the computation of rational
+    particular solutions for a Riccati ODE.
+
+    Each test case has 2 values -
+
+    1. eq - Riccati ODE to be solved.
+    2. sol - Expected solution to the equation.
+    """
     C0 = Dummy('C0')
     # Type: 1st Order Rational Riccati, dy/dx = a + b*y + c*y**2,
     # a, b, c are rational functions of x
@@ -843,6 +863,12 @@ def test_solve_riccati():
         [Eq(f(x), 1/(x**6 - 6*x**5 + 15*x**4 - 20*x**3 + 15*x**2 - 6*x + 1))]
     ),
     (
+        f(x).diff(x) + (3*x**2 + 1)*f(x)**2/x + (6*x**2 - x + 3)*f(x)/(x*(x \
+            - 1)) + (3*x**2 - 2*x + 2)/(x*(x - 1)**2),
+        [Eq(f(x), -1/(x - 1)), Eq(f(x), (-C0 - x**3 + x**2 - 2*x)/(C0*x - C0 + x**4 - x**3 \
+            + x**2 - x))],
+    ),
+    (
         Eq(f(x).diff(x), x**3/4 - x**2/12 - 5*x/9 + (-6*x - 2)*f(x)/(9*x \
             - 3) + (-x - 1)*f(x)**2 - S(7)/18 + 2/(27*x - 9)),
         [Eq(f(x), S(1)/3 - x/2)]
@@ -885,6 +911,15 @@ def test_solve_riccati():
 
 @slow
 def test_solve_riccati_slow():
+    """
+    This function tests the computation of rational
+    particular solutions for a Riccati ODE.
+
+    Each test case has 2 values -
+
+    1. eq - Riccati ODE to be solved.
+    2. sol - Expected solution to the equation.
+    """
     C0 = Dummy('C0')
     tests = [
     (
@@ -892,12 +927,6 @@ def test_solve_riccati_slow():
             (54924*x**3 - 405264*x**2 + 1084347*x - 1087533)/(8*x**4 - 132*x**3 + 810*x**2 - \
             2187*x + 2187) + 495),
         [Eq(f(x), (18*x + 6)/(2*x - 9))]
-    ),
-    (
-        f(x).diff(x) + (3*x**2 + 1)*f(x)**2/x + (6*x**2 - x + 3)*f(x)/(x*(x \
-            - 1)) + (3*x**2 - 2*x + 2)/(x*(x - 1)**2),
-        [Eq(f(x), -1/(x - 1)), Eq(f(x), (-C0 - x**3 + x**2 - 2*x)/(C0*x - C0 + x**4 - x**3 \
-            + x**2 - x))],
     )]
     for eq, sol in tests:
         check_dummy_sol(eq, sol, C0)

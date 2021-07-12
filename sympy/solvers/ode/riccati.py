@@ -90,6 +90,14 @@ This algorithm finds all possible rational solutions for the Riccati ODE.
 If no rational solutions are found, it means that no rational solutions
 exist.
 
+Equations with symbols cannot be solved by this algorithm due to various
+reasons. Firstly, when using symbols, differential symbols could take the
+same value and this would affect the multiplicity of poles if symbols are
+present here. Secondly, an integer bound is required to calculate a polynomial
+solution to an auxiliary differential equation, which in turn gives the
+particular solution for the original ODE. If symbols are present, we
+cannot determine if an expression is an integer or not.
+
 Solution
 ========
 
@@ -109,6 +117,12 @@ to get the solution correctly.
 Implementation
 ==============
 
+In this implementatin, we use ``Poly`` to represent a rational function
+rather than using ``Expr`` since ``Poly`` is much faster. Since we cannot
+represent rational functions directly using ``Poly``, we instead represent
+a rational function with 2 ``Poly`` objects - one for its numerator and
+the other for its denominator.
+
 The code is written to match the steps given in the thesis (Pg 82)
 
 Step 0 : Match the equation -
@@ -118,16 +132,16 @@ an error
 Step 1 : Transform the equation to its normal form as explained in the
 theory section.
 
-Step 2 : Initialize 2 empty set of solutions, ``sol`` and ``presol``.
+Step 2 : Initialize an empty set of solutions, ``sol``.
 
-Step 3 : If `a(x) = 0`, append `\frac{1}/{(x - C1)}` to ``presol``.
+Step 3 : If `a(x) = 0`, append `\frac{1}/{(x - C1)}` to ``sol``.
 
 Step 4 : If `a(x)` is a rational non-zero number, append `\pm \sqrt{a}`
-to ``presol``.
+to ``sol``.
 
-Step 5 : Find the poles and their multiplicities of `a(x)` using
-``find_poles``. Let the number of poles be `n`. Also find the
-valuation of `a(x)` at `\infty` using ``val_at_inf``.
+Step 5 : Find the poles and their multiplicities of `a(x)`. Let
+the number of poles be `n`. Also find the valuation of `a(x)` at
+`\infty` using ``val_at_inf``.
 
 NOTE: Although the algorithm considers `\infty` as a pole, it is
 not mentioned if it a part of the set of finite poles. `\infty`
@@ -146,9 +160,13 @@ has been explained in the code as well.
 
 For each of these above combinations, do
 
-Step 8 : Compute `m` in ``compute_m_ybar``
+Step 8 : Compute `m` in ``compute_m_ybar``. `m` is the degree bound of
+the polynomial solution we must find for the auxiliary equation.
 
-Step 9 : In ``compute_m_ybar``, compute ybar as well.
+Step 9 : In ``compute_m_ybar``, compute ybar as well where ``ybar`` is
+one part of y(x) -
+
+.. math:: \overline{y}(x) = \sum_{i=1}^{n} \sum_{j=1}^{r_i} \frac{c_{ij}}{(x - x_i)^j} + \sum_{i=0}^{N} d_i x^i
 
 Step 10 : If `m` is a non-negative integer -
 
@@ -159,21 +177,18 @@ There are 2 cases possible -
     a. `m` is a non-negative integer: We can solve for the coefficients
     in `p(x)` using Undetermined Coefficients.
 
-    b. `m` is an expression: In this case, we may not be able to determine
-    if it is possible for `m` to be a non-negative integer. However, the
-    solution to the auxiliary equation always seems to be x**m + C1 (where
-    C1 is an arbitrary constant). This has been confirmed by testing many
-    examples. NOTE that this is NOT mentioned in the thesis and is an
-    assumption made by me. If any failing test cases are found, this case
-    must be removed.
+    b. `m` is not a non-negative integer: In this case, we cannot find
+    a polynomial solution to the auxiliary equation, and hence, we ignore
+    this value of `m`.
 
 Step 12 : For each `p(x)` that exists, append `ybar + \frac{p'(x)}{p(x)}`
-to ``presol``.
+to ``sol``.
 
-Step 13 : For each solution in ``presol``, apply an inverse transformation
-and append them to ``sol``, so that the solutions of the original equation
-are found using the solutions of the equation in its normal form.
+Step 13 : For each solution in ``sol``, apply an inverse transformation,
+so that the solutions of the original equation are found using the
+solutions of the equation in its normal form.
 """
+
 
 from itertools import product
 from sympy.core import S
@@ -190,12 +205,31 @@ from sympy.polys.polytools import Poly
 from sympy.polys.polyroots import roots
 from sympy.solvers.solveset import linsolve
 
+
 def riccati_normal(w, x, b1, b2):
-    # y(x) = -b2(x)*w(x) - b2'(x)/(2*b2(x)) - b1(x)/2
+    """
+    Transforming the solution of a Riccati ODE
+
+    w'(x) = b0 + b1*w(x) + b2*w(x)^2 ... (1)
+
+    to the solution of its corresponding normal
+    Riccati ODE
+
+    y'(x) + y(x)^2 = a(x)            ... (2)
+
+    If w(x) is the solution to (1), then the
+    solution to (2) is
+
+    y(x) = -b2(x)*w(x) - b2'(x)/(2*b2(x)) - b1(x)/2
+    """
     return -b2*w - b2.diff(x)/(2*b2) - b1/2
 
 
 def riccati_inverse_normal(y, x, b1, b2, bp=None):
+    """
+    Inverse transforming the solution to the normal
+    Riccati ODE to get the solution to the Riccati ODE.
+    """
     # bp is the expression which is independent of the solution
     # and hence, it need not be computed again
     if bp is None:
@@ -205,6 +239,10 @@ def riccati_inverse_normal(y, x, b1, b2, bp=None):
 
 
 def riccati_reduced(eq, f, x):
+    """
+    Convert a Riccati ODE into its corresponding
+    normal Riccati ODE.
+    """
     match, funcs = match_riccati(eq, f, x)
     # If equation is not a Riccati ODE, exit
     if not match:
@@ -217,6 +255,9 @@ def riccati_reduced(eq, f, x):
     return f(x).diff(x) + f(x)**2 - a
 
 def linsolve_dict(eq, syms):
+    """
+    Get the output of linsolve as a dict
+    """
     # Convert tuple type return value of linsolve
     # to a dictionary for ease of use
     sol = linsolve(eq, syms)
@@ -226,7 +267,12 @@ def linsolve_dict(eq, syms):
 
 
 def match_riccati(eq, f, x):
+    """
+    A function that matches if an equation
+    """
     # Group terms based on f(x)
+    if isinstance(eq, Eq):
+        eq = eq.lhs - eq.rhs
     eq = eq.expand().collect(f(x))
     cf = eq.coeff(f(x).diff(x))
 
@@ -237,7 +283,7 @@ def match_riccati(eq, f, x):
 
         # Divide all coefficients by the coefficient of f(x).diff(x)
         # and add the terms again to get the same equation
-        eq = Add(*map(lambda x: (x/cf).cancel(), eq.args)).collect(f(x))
+        eq = Add(*((x/cf).cancel() for x in eq.args)).collect(f(x))
 
         # Match the equation with the pattern
         b1 = -eq.coeff(f(x))
@@ -250,12 +296,6 @@ def match_riccati(eq, f, x):
             return False, []
         return True, [b0, b1, b2]
     return False, []
-
-
-def find_poles(den, x):
-    # All roots of denominator are poles of a(x)
-    p = roots(den, x)
-    return p
 
 
 def val_at_inf(num, den, x):
@@ -285,7 +325,9 @@ def check_necessary_conds(val_inf, muls):
 def inverse_transform_poly(num, den, x):
     """
     A function to make the substitution
-    x -> 1/x in Poly objects.
+    x -> 1/x in a rational function that
+    is represented using Poly objects for
+    numerator and denominator.
     """
     # Declare for reuse
     one = Poly(1, x)
@@ -308,6 +350,10 @@ def inverse_transform_poly(num, den, x):
 
 
 def limit_at_inf(num, den, x):
+    """
+    Find the limit of a rational function
+    at oo
+    """
     # pwr = degree(num) - degree(den)
     pwr = -val_at_inf(num, den, x)
     # Numerator has a greater degree than denominator
@@ -381,6 +427,10 @@ def construct_c_case_3():
 
 
 def construct_c(num, den, x, poles, muls):
+    """
+    Helper function to calculate the coefficients
+    in the c-vector for each pole.
+    """
     c = []
     for pole, mul in zip(poles, muls):
         c.append([])
@@ -456,6 +506,11 @@ def construct_d_case_6(num, den, x):
 
 
 def construct_d(num, den, x, val_inf):
+    """
+    Helper function to calculate the coefficients
+    in the d-vector based on the valuation of the
+    function at oo.
+    """
     N = -val_inf//2
     # Multiplicity of oo as a pole
     mul = -val_inf if val_inf < 0 else 0
@@ -570,7 +625,6 @@ def rational_laurent_series(num, den, x, r, m, n):
         # transformation from x -> x + r must be made
         num = num.transform(Poly(x + r, x, extension=True), one)
         den = den.transform(Poly(x + r, x, extension=True), one)
-        num, den = num.cancel(den, include=True)
 
     # Remove the pole from the denominator if the series
     # expansion is about one of the poles
@@ -594,6 +648,16 @@ def rational_laurent_series(num, den, x, r, m, n):
     return series
 
 def compute_m_ybar(x, poles, choice, c, d, N):
+    """
+    Helper function to calculate -
+
+    1. m - The degree bound for the polynomial
+    solution that must be found for the auxiliary
+    differential equation.
+
+    2. ybar - Part of the solution which can be
+    computed using the poles, c and d vectors.
+    """
     ybar = 0
     m = Poly(d[choice[0]][-1], x, extension=True)
 
@@ -611,22 +675,23 @@ def compute_m_ybar(x, poles, choice, c, d, N):
 
 
 def solve_aux_eq(numa, dena, numy, deny, x, m):
+    """
+    Helper function to find a polynomial solution
+    of degree m for the auxiliary differential
+    equation.
+    """
     # Assume that the solution is of the type
-    # p(x) = C0 + C1*x + ... + Cm*x**m
+    # p(x) = C_0 + C_1*x + ... + C_{m-1}*x**(m-1) + x**m
     psyms = symbols(f'C0:{m}', cls=Dummy)
-    domain = ZZ[psyms]
-    psyms += (1, )
-    psol = 0
-    for i in range(m + 1):
-        psol += Poly(psyms[i]*x**i, x, domain=domain)
+    psol = Poly((psyms + (1,))[::-1], x, domain=ZZ[psyms])
 
     # Eq (5.16) in Thesis - Pg 81
     auxeq = (dena*(numy.diff(x)*deny - numy*deny.diff(x) + numy**2) - numa*deny**2)*psol
     if m >= 1:
         px = psol.diff(x)
-        auxeq += 2*px*numy*deny*dena
+        auxeq += px*(2*numy*deny*dena)
     if m >= 2:
-        auxeq += px.diff(x)*deny**2*dena
+        auxeq += px.diff(x)*(deny**2*dena)
     if m != 0:
         # m is a non-zero integer. Find the constant terms using undetermined coefficients
         return psol, linsolve_dict(auxeq.all_coeffs(), psyms), True
@@ -636,6 +701,10 @@ def solve_aux_eq(numa, dena, numy, deny, x, m):
 
 
 def remove_redundant_sols(sol1, sol2, x):
+    """
+    Helper function to remove redundant
+    solutions to the differential equation.
+    """
     # If y1 and y2 are redundant solutions, there is
     # some value of the arbitrary constant for which
     # they will be equal
@@ -663,13 +732,20 @@ def remove_redundant_sols(sol1, sol2, x):
 
 
 def get_gen_sol_from_part_sol(part_sols, a, x):
-    # There are 3 cases to find the general solution
-    # from the particular solutions for a Riccati ODE
-    # depending on the number of particular solution(s)
-    # we have - 1, 2 or 3.
-    # For more information, see Section 6 of
-    # "Methods of Solution of the Riccati Differential Equation"
-    # by D. R. Haaheim and F. M. Stein
+    """"
+    Helper function which computes the general
+    solution for a Riccati ODE from its particular
+    solutions.
+
+    There are 3 cases to find the general solution
+    from the particular solutions for a Riccati ODE
+    depending on the number of particular solution(s)
+    we have - 1, 2 or 3.
+
+    For more information, see Section 6 of
+    "Methods of Solution of the Riccati Differential Equation"
+    by D. R. Haaheim and F. M. Stein
+    """
 
     # If no particular solutions are found, a general
     # solution cannot be found
@@ -677,17 +753,21 @@ def get_gen_sol_from_part_sol(part_sols, a, x):
         return []
 
     # In case of a single particular solution, the general
-    # solution can be found by solving a Bernoulli ODE
+    # solution can be found by using the substitution
+    # y = y1 + 1/z and solving a Bernoulli ODE to find z.
     elif len(part_sols) == 1:
         y1 = part_sols[0]
-        z = exp(Integral(2*y1, x)) * Integral(exp(-Integral(2*y1, x)) * a, x)
+        i = exp(Integral(2*y1, x))
+        z = i * Integral(exp(a/i, x))
         z = z.doit()
         if a == 0 or z == 0:
             return y1
         return y1 + 1/z
 
     # In case of 2 particular solutions, the general solution
-    # can be found by solving a separable equation
+    # can be found by solving a separable equation. This is
+    # the most common case, i.e. most Riccati ODEs have 2
+    # rational particular solutions.
     elif len(part_sols) == 2:
         y1, y2 = part_sols
         u = exp(Integral(y2 - y1, x)).doit()
@@ -704,6 +784,11 @@ def get_gen_sol_from_part_sol(part_sols, a, x):
 
 
 def solve_riccati(fx, x, b0, b1, b2, gensol=False):
+    """
+    The main function that gives particular/general
+    solutions to Riccati ODEs that have atleast 1
+    rational particular solution.
+    """
     # Step 1 : Convert to Normal Form
     a = -b0*b2 + b1**2/4 - b1.diff(x)/2 + 3*b2.diff(x)**2/(4*b2**2) + b1*b2.diff(x)/(2*b2) - \
         b2.diff(x, 2)/(2*b2)
@@ -723,7 +808,7 @@ def solve_riccati(fx, x, b0, b1, b2, gensol=False):
         presol.extend([sqrt(a), -sqrt(a)])
 
     # Step 5 : Find poles and valuation at infinity
-    poles = find_poles(den, x)
+    poles = roots(den, x)
     poles, muls = list(poles.keys()), list(poles.values())
     val_inf = val_at_inf(num, den, x)
 
