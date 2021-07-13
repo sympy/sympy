@@ -20,42 +20,22 @@ def _roots(poly, var):
         r = [rootof(poly, var, k) for k in range(n)]
     return r
 
-class LTICommon:
+
+class LinearTimeInvariant(Basic, EvalfMixin):
     """A common class for all the Linear Time-Invariant Dynamical Systems."""
     # Users should not directly interact with this class.
-    def __new__(cls, system, **kwargs):
-        if cls is LTICommon:
+    def __new__(cls, *system, **kwargs):
+        if cls is LinearTimeInvariant:
             raise NotImplementedError('The LTICommon class is not meant to be used directly.')
-        obj = super(LTICommon, cls).__new__(cls)
-        obj.__var = system.var
-        obj.__num_inputs = getattr(system, 'num_inputs', None)
-        obj.__num_outputs = getattr(system, 'num_outputs', None)
-        return obj
+        return super(LinearTimeInvariant, cls).__new__(cls, *system, **kwargs)
 
     @property
     def is_SISO(self):
         """Returns `True` if the passed LTI system is SISO else returns False."""
         return self._is_SISO
 
-    def _to_expr(self):
-        """Returns the equivalent ``Expr`` object."""
-        if not self.is_SISO:
-            raise TypeError("`to_expr` method is only valid for SISO Systems.")
 
-        if isinstance(self, Series):
-            return Mul(*(arg.to_expr() for arg in self.args), evaluate=False)
-        elif isinstance(self, Parallel):
-            return Add(*(arg.to_expr() for arg in self.args), evaluate=False)
-        elif isinstance(self, TransferFunction):
-            if self.num != 1:
-                return Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
-            else:
-                return Pow(self.den, -1, evaluate=False)
-        else:
-            return ValueError("Cannot convert this  LTI system to expr.")
-
-
-class TransferFunction(Basic, EvalfMixin, LTICommon):
+class TransferFunction(LinearTimeInvariant):
     r"""
     A class for representing LTI (Linear, time-invariant) systems that can be strictly described
     by ratio of polynomials in the Laplace transform complex variable. The arguments
@@ -726,7 +706,11 @@ class TransferFunction(Basic, EvalfMixin, LTICommon):
         ((s - 3)*(s - 2))/(((s - 3)*(s - 2)*(s - 1)))
 
         """
-        return self._to_expr()
+
+        if self.num != 1:
+            return Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
+        else:
+            return Pow(self.den, -1, evaluate=False)
 
 
 def _mat_mul_compatible(*args):
@@ -738,7 +722,7 @@ def _mat_mul_compatible(*args):
     )
 
 
-class Series(Basic, LTICommon):
+class Series(LinearTimeInvariant):
     r"""
     A class for representing series configuration of SISO and MIMO transfer functions.
 
@@ -854,7 +838,7 @@ class Series(Basic, LTICommon):
 
     """
     def __new__(cls, *args, evaluate=False):
-        if args is None:
+        if len(args) == 0:
             raise ValueError("Atleast 1 argument must be passed.")
 
         try:
@@ -935,16 +919,9 @@ class Series(Basic, LTICommon):
 
         """
         def _SISO_doit():
-            res = None
-            for arg in self.args:
-                arg = arg.doit()
-                if res is None:
-                    res = arg
-                else:
-                    num_ = arg.num * res.num
-                    den_ = arg.den * res.den
-                    res = TransferFunction(num_, den_, self.var)
-            return res
+            _arg = (arg.doit().to_expr() for arg in self.args)
+            res = Mul(*_arg, evaluate=True)
+            return TransferFunction.from_rational_expression(res, self.var)
 
         def _MIMO_doit():
             _arg = (arg.doit()._expr_mat for arg in reversed(self.args))
@@ -1033,7 +1010,9 @@ class Series(Basic, LTICommon):
 
     def to_expr(self):
         """Returns the equivalent ``Expr`` object."""
-        return self._to_expr()
+        if not self.is_SISO:
+            raise ValueError("`to_expr` is only valid for SISO systems.")
+        return Mul(*(arg.to_expr() for arg in self.args), evaluate=False)
 
     @property
     def is_proper(self):
@@ -1123,7 +1102,7 @@ class Series(Basic, LTICommon):
         return self.doit().is_biproper if self.is_SISO else None
 
 
-class Parallel(Basic, LTICommon):
+class Parallel(LinearTimeInvariant):
     r"""
     A class for representing parallel configuration of SISO and MIMO transfer functions.
 
@@ -1182,7 +1161,7 @@ class Parallel(Basic, LTICommon):
     You can get the resultant transfer function by using ``.doit()`` method:
 
     >>> Parallel(tf1, tf2, -tf3).doit()
-    TransferFunction(-p**2*(-p + s)*(s**4 + 5*s + 6) + (p + s)*((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6)), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
+    TransferFunction(-p**2*(-p + s)*(s**4 + 5*s + 6) + (-p + s)*(p + s)*(s**3 - 2) + (p + s)*(a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
     >>> Parallel(tf2, Series(tf1, -tf3)).doit()
     TransferFunction(-p**2*(a*p**2 + b*s)*(s**4 + 5*s + 6) + (-p + s)*(p + s)*(s**3 - 2), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
 
@@ -1235,7 +1214,7 @@ class Parallel(Basic, LTICommon):
 
     """
     def __new__(cls, *args, evaluate=False):
-        if args is None:
+        if len(args) == 0:
             raise ValueError("Atleast 1 argument must be passed.")
 
         try:
@@ -1316,16 +1295,9 @@ class Parallel(Basic, LTICommon):
         """
 
         def _SISO_doit():
-            res = None
-            for arg in self.args:
-                arg = arg.doit()
-                if res is None:
-                    res = arg
-                else:
-                    num_ = res.num * arg.den + res.den * arg.num
-                    den_ = res.den * arg.den
-                    res = TransferFunction(num_, den_, self.var)
-            return res
+            _arg = (arg.doit().to_expr() for arg in self.args)
+            res = Add(*_arg, evaluate=True)
+            return TransferFunction.from_rational_expression(res, self.var)
 
         def _MIMO_doit():
             _arg = (arg.doit()._expr_mat for arg in self.args)
@@ -1393,7 +1365,9 @@ class Parallel(Basic, LTICommon):
 
     def to_expr(self):
         """Returns the equivalent ``Expr`` object."""
-        return self._to_expr()
+        if not self.is_SISO:
+            raise ValueError("`to_expr` is only valid for SISO systems.")
+        return Add(*(arg.to_expr() for arg in self.args), evaluate=False)
 
     @property
     def is_proper(self):
@@ -1692,7 +1666,7 @@ def _to_TFM(mat, var):
     return TransferFunctionMatrix(arg)
 
 
-class TransferFunctionMatrix(Basic, LTICommon):
+class TransferFunctionMatrix(LinearTimeInvariant):
     r"""
     A class for representing the MIMO (multiple-input and multiple-output)
     generalization of the SISO (single-input and single-output) transfer function.
@@ -2057,7 +2031,7 @@ class TransferFunctionMatrix(Basic, LTICommon):
         for row_index, row in enumerate(arg):
             temp = []
             for col_index, element in enumerate(row):
-                if not isinstance(element, LTICommon):
+                if not isinstance(element, LinearTimeInvariant):
                     raise TypeError("Incompatible type found as the element of "
                         "TransferFunctionMatrix.")
 
