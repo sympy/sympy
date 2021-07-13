@@ -485,7 +485,9 @@ class sin(TrigonometricFunction):
         if n.is_integer:
             lt = (arg - n*S.Pi).as_leading_term(x)
             return ((-1)**n)*lt
-        if x0.is_infinite:
+        if x0 is S.ComplexInfinity:
+            x0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
+        if x0 in [S.Infinity, S.NegativeInfinity]:
             return AccumBounds(-1, 1)
         return self.func(x0) if x0.is_finite else self
 
@@ -939,7 +941,9 @@ class cos(TrigonometricFunction):
         if n.is_integer:
             lt = (arg - n*S.Pi + S.Pi/2).as_leading_term(x)
             return ((-1)**n)*lt
-        if x0.is_infinite:
+        if x0 is S.ComplexInfinity:
+            x0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
+        if x0 in [S.Infinity, S.NegativeInfinity]:
             return AccumBounds(-1, 1)
         return self.func(x0) if x0.is_finite else self
 

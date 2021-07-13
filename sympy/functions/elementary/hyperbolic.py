@@ -234,7 +234,7 @@ class sinh(HyperbolicFunction):
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.NaN:
-            arg0 = arg.limit(x, 0, dir='-' if cdir == -1 else '+')
+            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
         if arg0.is_zero:
             return arg
         elif arg0.is_finite:
@@ -424,7 +424,7 @@ class cosh(HyperbolicFunction):
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.NaN:
-            arg0 = arg.limit(x, 0, dir='-' if cdir == -1 else '+')
+            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
         if arg0.is_zero:
             return S.One
         elif arg0.is_finite:
