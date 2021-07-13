@@ -1,15 +1,12 @@
+from matchpy import Pattern, Substitution, ManyToOneReplacer, ReplacementRule, ManyToOneMatcher, CustomConstraint
+from multiset import Multiset
 from sympy import symbols, cos, sin, S, Eq, Equality, sqrt, Ne
-from sympy.external import import_module
-from sympy.testing.pytest import skip
 from sympy.utilities.matchpy_connector import WildDot, WildPlus, WildStar, Replacer
-
-matchpy = import_module("matchpy")
 
 x, y, z = symbols("x y z")
 
 
 def _get_first_match(expr, pattern):
-    from matchpy import ManyToOneMatcher, Pattern
 
     matcher = ManyToOneMatcher()
     matcher.add(Pattern(pattern))
@@ -17,12 +14,6 @@ def _get_first_match(expr, pattern):
 
 
 def test_matchpy_connector():
-    if matchpy is None:
-        skip("matchpy not installed")
-
-    from multiset import Multiset
-    from matchpy import Pattern, Substitution
-
     w_ = WildDot("w_")
     w__ = WildPlus("w__")
     w___ = WildStar("w___")
@@ -47,12 +38,6 @@ def test_matchpy_connector():
 
 
 def test_matchpy_optional():
-    if matchpy is None:
-        skip("matchpy not installed")
-
-    from matchpy import Pattern, Substitution
-    from matchpy import ManyToOneReplacer, ReplacementRule
-
     p = WildDot("p", optional=1)
     q = WildDot("q", optional=0)
 
@@ -87,8 +72,6 @@ def test_matchpy_optional():
 
 
 def test_replacer():
-    if matchpy is None:
-        skip("matchpy not installed")
 
     x1_ = WildDot("x1_")
     x2_ = WildDot("x2_")
@@ -98,9 +81,9 @@ def test_replacer():
     c_ = WildDot("c_", optional=S.Zero)
 
     replacer = Replacer(common_constraints=[
-        matchpy.CustomConstraint(lambda a_: not a_.has(x)),
-        matchpy.CustomConstraint(lambda b_: not b_.has(x)),
-        matchpy.CustomConstraint(lambda c_: not c_.has(x)),
+        CustomConstraint(lambda a_: not a_.has(x)),
+        CustomConstraint(lambda b_: not b_.has(x)),
+        CustomConstraint(lambda c_: not c_.has(x)),
     ])
 
     # Rewrite the equation into implicit form, unless it's already solved:

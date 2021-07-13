@@ -1,14 +1,4 @@
-import sys
-from sympy.external import import_module
-matchpy = import_module("matchpy")
-
-if not matchpy:
-    #bin/test will not execute any tests now
-    disabled = True
-
-if sys.version_info[:2] < (3, 6):
-    disabled = True
-
+from sympy.testing.pytest import XFAIL
 from sympy.integrals.rubi.parsetools.parse import (rubi_rule_parser,
     get_default_values, add_wildcards, parse_freeq, seperate_freeq,
     get_free_symbols, divide_constraint, generate_sympy_from_parsed,
@@ -20,6 +10,7 @@ from sympy import sympify
 
 a, b, c, d, e, j, m, n, p, q, x, Pq, Pqq = symbols('a b c d e j m n p q x Pq Pqq')
 
+@XFAIL
 def test_rubi_rule_parser():
     header = '''
 from matchpy import Operation, CommutativeOperation
@@ -33,9 +24,6 @@ from matchpy import Operation, CommutativeOperation
     from sympy.integrals.rubi.constraints import cons1
 
     pattern1 = Pattern(Integral(x_**WC('m', S(1)), x_), cons1)
-    def replacement1(m, x):
-        rubi.append(1)
-        return x**(m + S(1))/(m + S(1))
     rule1 = ReplacementRule(pattern1, replacement1)
     return [rule1, ]
 '''
@@ -85,12 +73,12 @@ def test_setWC():
 def test_replaceWith():
     s = sympify('Module(List(Set(r, Numerator(Rt(a/b, n))), Set(s, Denominator(Rt(a/b, n))), k, u), CompoundExpression(Set(u, Integral((r - s*x*cos(Pi*(2*k - 1)/n))/(r**2 - 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x)), Dist(2*r/(a*n), _Sum(u, List(k, 1, n/2 - 1/2)), x) + r*Integral(1/(r + s*x), x)/(a*n)))')
     symbols = ['x', 'a', 'n', 'b']
-    assert replaceWith(s, symbols, 1) == ("    def With1(x, a, n, b):\n        r = Numerator(Rt(a/b, n))\n        s = Denominator(Rt(a/b, n))\n        k = Symbol('k')\n        u = Symbol('u')\n        u = Integral((r - s*x*cos(Pi*(S(2)*k + S(-1))/n))/(r**S(2) - S(2)*r*s*x*cos(Pi*(S(2)*k + S(-1))/n) + s**S(2)*x**S(2)), x)\n        u = Integral((r - s*x*cos(Pi*(2*k - 1)/n))/(r**2 - 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x)\n        rubi.append(1)\n        return Dist(S(2)*r/(a*n), _Sum(u, List(k, S(1), n/S(2) + S(-1)/2)), x) + r*Integral(S(1)/(r + s*x), x)/(a*n)", ' ', None)
+    assert replaceWith(s, symbols, 1) == ("\n\n\ndef With1(x, a, n, b):\n    r = Numerator(Rt(a/b, n))\n    s = Denominator(Rt(a/b, n))\n    k = Symbol('k')\n    u = Symbol('u')\n    u = Integral((r - s*x*cos(Pi*(S(2)*k + S(-1))/n))/(r**S(2) - S(2)*r*s*x*cos(Pi*(S(2)*k + S(-1))/n) + s**S(2)*x**S(2)), x)\n    u = Integral((r - s*x*cos(Pi*(2*k - 1)/n))/(r**2 - 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x)\n    return Dist(S(2)*r/(a*n), _Sum(u, List(k, S(1), n/S(2) + S(-1)/2)), x) + r*Integral(S(1)/(r + s*x), x)/(a*n)", ' ', None)
 
 def test_generate_sympy_from_parsed():
     s = ['Int', ['Power', ['Plus', ['Pattern', 'a', ['Blank']], ['Times', ['Optional', ['Pattern', 'b', ['Blank']]], ['Power', ['Pattern', 'x', ['Blank']], ['Pattern', 'n', ['Blank']]]]], '-1'], ['Pattern', 'x', ['Blank', 'Symbol']]]
     assert generate_sympy_from_parsed(s, wild=True) == 'Int(Pow(Add(Pattern(a, Blank), Mul(Optional(Pattern(b, Blank)), Pow(Pattern(x, Blank), Pattern(n, Blank)))), S(-1)), Pattern(x, Blank(Symbol)))'
-    assert generate_sympy_from_parsed(s ,replace_Int=True) == 'Integral(Pow(Add(Pattern(a, Blank), Mul(Optional(Pattern(b, Blank)), Pow(Pattern(x, Blank), Pattern(n, Blank)))), S(-1)), Pattern(x, Blank(Symbol)))'
+    assert generate_sympy_from_parsed(s, replace_Int=True) == 'Integral(Pow(Add(Pattern(a, Blank), Mul(Optional(Pattern(b, Blank)), Pow(Pattern(x, Blank), Pattern(n, Blank)))), S(-1)), Pattern(x, Blank(Symbol)))'
     s = ['And', ['FreeQ', ['List', 'a', 'b'], 'x'], ['PositiveIntegerQ', ['Times', ['Plus', 'n', '-3'], ['Power', '2', '-1']]], ['PosQ', ['Times', 'a', ['Power', 'b', '-1']]]]
     assert generate_sympy_from_parsed(s) == 'And(FreeQ(List(a, b), x), PositiveIntegerQ(Mul(Add(n, S(-3)), Pow(S(2), S(-1)))), PosQ(Mul(a, Pow(b, S(-1)))))'
 
