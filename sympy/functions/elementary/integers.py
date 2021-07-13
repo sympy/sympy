@@ -132,21 +132,23 @@ class floor(RoundFunction):
             return arg.approximation_interval(Integer)[0]
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
+        arg = self.args[0]
         arg0 = arg.subs(x, 0)
-        if arg0 is S.NaN:
-            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
-        r = self._eval_nseries(x, n=1, logx=None, cdir=cdir)
+        r = self.subs(x, 0)
         if arg0.is_finite:
-            if r == arg0:
-                direction = (arg - arg0).leadterm(x, cdir=cdir)[0]
-                if direction.is_positive and arg.dir(x, cdir) != -1:
-                    return r
+            if arg0 == r:
+                if cdir == 0:
+                    ndirl = arg.dir(x, cdir=-1)
+                    ndir = arg.dir(x, cdir=1)
+                    if ndir != ndirl:
+                        raise ValueError("Two sided limit of %s around 0"
+                                    "does not exist" % self)
                 else:
-                    return r - 1
+                    ndir = arg.dir(x, cdir=cdir)
+                return r - 1 if ndir.is_negative else r
             else:
                 return r
-        return arg
+        return arg.as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.args[0]
@@ -159,11 +161,8 @@ class floor(RoundFunction):
             return s + o
         r = self.subs(x, 0)
         if arg0 == r:
-            direction = (arg - arg0).leadterm(x, cdir=cdir)[0]
-            if direction.is_positive and cdir != -1:
-                return r
-            else:
-                return r - 1
+            ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
+            return r - 1 if ndir.is_negative else r
         else:
             return r
 
@@ -291,21 +290,23 @@ class ceiling(RoundFunction):
             return arg.approximation_interval(Integer)[1]
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
+        arg = self.args[0]
         arg0 = arg.subs(x, 0)
-        if arg0 is S.NaN:
-            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
-        r = self._eval_nseries(x, n=1, logx=None, cdir=cdir)
+        r = self.subs(x, 0)
         if arg0.is_finite:
-            if r == arg0:
-                direction = (arg - arg0).leadterm(x, cdir=cdir)[0]
-                if direction.is_positive and arg.dir(x, cdir) != -1:
-                    return r + 1
+            if arg0 == r:
+                if cdir == 0:
+                    ndirl = arg.dir(x, cdir=-1)
+                    ndir = arg.dir(x, cdir=1)
+                    if ndir != ndirl:
+                        raise ValueError("Two sided limit of %s around 0"
+                                    "does not exist" % self)
                 else:
-                    return r
+                    ndir = arg.dir(x, cdir=cdir)
+                return r if ndir.is_negative else r + 1
             else:
                 return r
-        return arg
+        return arg.as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.args[0]
@@ -314,15 +315,12 @@ class ceiling(RoundFunction):
             from sympy.calculus.util import AccumBounds
             from sympy.series.order import Order
             s = arg._eval_nseries(x, n, logx, cdir)
-            o = Order(1, (x, 0)) if n <= 0  else AccumBounds(0, 1)
+            o = Order(1, (x, 0)) if n <= 0 else AccumBounds(0, 1)
             return s + o
         r = self.subs(x, 0)
         if arg0 == r:
-            direction = (arg - arg0).leadterm(x, cdir=cdir)[0]
-            if direction.is_positive and cdir != -1:
-                return r + 1
-            else:
-                return r
+            ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
+            return r if ndir.is_negative else r + 1
         else:
             return r
 
