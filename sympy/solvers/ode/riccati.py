@@ -90,13 +90,20 @@ This algorithm finds all possible rational solutions for the Riccati ODE.
 If no rational solutions are found, it means that no rational solutions
 exist.
 
-Equations with symbols cannot be solved by this algorithm due to various
-reasons. Firstly, when using symbols, differential symbols could take the
-same value and this would affect the multiplicity of poles if symbols are
-present here. Secondly, an integer bound is required to calculate a polynomial
-solution to an auxiliary differential equation, which in turn gives the
-particular solution for the original ODE. If symbols are present, we
-cannot determine if an expression is an integer or not.
+The algorithm works for Riccati ODEs where the coefficients are rational
+functions in the independent variable `x` with rational number coefficients
+i.e. in `Q(x)`. The coefficients in the rational function cannot be floats,
+irrational numbers, symbols or any other kind of expression. The reasons
+for this are -
+
+1. When using symbols, different symbols could take the same value and this
+would affect the multiplicity of poles if symbols are present here.
+
+2. An integer degree bound is required to calculate a polynomial solution
+to an auxiliary differential equation, which in turn gives the particular
+solution for the original ODE. If symbols/floats/irrational numbers are
+present, we cannot determine if the expression for the degree bound is an
+integer or not.
 
 Solution
 ========
@@ -758,7 +765,7 @@ def get_gen_sol_from_part_sol(part_sols, a, x):
     elif len(part_sols) == 1:
         y1 = part_sols[0]
         i = exp(Integral(2*y1, x))
-        z = i * Integral(exp(a/i, x))
+        z = i * Integral(a/i, x)
         z = z.doit()
         if a == 0 or z == 0:
             return y1

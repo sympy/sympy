@@ -993,8 +993,8 @@ class RiccatiSpecial(SinglePatternODESolver):
 
 class RationalRiccati(SinglePatternODESolver):
     r"""
-    Gives all rational solutions to the first
-    order Riccati Differential Equation
+    Gives general solutions to the first order Riccati differential
+    equations that have atleast one rational particular solution.
 
     .. math :: y' = b_0(x) + b_1(x) y + b_2(x) y^2
 
