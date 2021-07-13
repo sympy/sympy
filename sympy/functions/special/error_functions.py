@@ -2452,7 +2452,7 @@ class fresnels(FresnelIntegral):
 
         if arg0 is S.ComplexInfinity:
             arg0 = arg.limit(x, 0, dir='-' if cdir == -1 else '+')
-        if x in arg.free_symbols and arg0.is_zero:
+        if arg0.is_zero:
             return pi*arg**3/6
         else:
             return self.func(arg0)
