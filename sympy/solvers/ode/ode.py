@@ -1017,42 +1017,54 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     # Any ODE that can be solved with a combination of algebra and
     # integrals e.g.:
     # d^3/dx^3(x y) = F(x)
+    solver_map = {
+        'factorable': Factorable,
+        'nth_algebraic': NthAlgebraic,
+        'separable': Separable,
+        '1st_exact': FirstExact,
+        '1st_linear': FirstLinear,
+        'Bernoulli': Bernoulli,
+        'Riccati_special_minus2': RiccatiSpecial,
+        '1st_homogeneous_coeff_best': HomogeneousCoeffBest,
+        '1st_homogeneous_coeff_subs_indep_div_dep': HomogeneousCoeffSubsIndepDivDep,
+        '1st_homogeneous_coeff_subs_dep_div_indep': HomogeneousCoeffSubsDepDivIndep,
+        'almost_linear': AlmostLinear,
+        'linear_coefficients': LinearCoefficients,
+        'separable_reduced': SeparableReduced,
+        'lie_group': LieGroup,
+        'nth_linear_constant_coeff_homogeneous': NthLinearConstantCoeffHomogeneous,
+        'nth_linear_euler_eq_homogeneous': NthLinearEulerEqHomogeneous,
+        'nth_linear_constant_coeff_undetermined_coefficients': NthLinearConstantCoeffUndeterminedCoefficients,
+        'nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients': NthLinearEulerEqNonhomogeneousUndeterminedCoefficients,
+        'nth_linear_constant_coeff_variation_of_parameters': NthLinearConstantCoeffVariationOfParameters,
+        'nth_linear_euler_eq_nonhomogeneous_variation_of_parameters': NthLinearEulerEqNonhomogeneousVariationOfParameters,
+        'Liouville': Liouville,
+        '2nd_linear_airy': SecondLinearAiry,
+        '2nd_linear_bessel': SecondLinearBessel,
+        '2nd_hypergeometric': SecondHypergeometric,
+        'nth_order_reducible': NthOrderReducible,
+        '2nd_nonlinear_autonomous_conserved': SecondNonlinearAutonomousConserved,
+        }
+
     ode = SingleODEProblem(eq_orig, func, x, prep=prep, xi=xi, eta=eta)
-    solvers = {
-        NthAlgebraic: ('nth_algebraic',),
-        FirstExact:('1st_exact',),
-        FirstLinear: ('1st_linear',),
-        AlmostLinear: ('almost_linear',),
-        Bernoulli: ('Bernoulli',),
-        Factorable: ('factorable',),
-        RiccatiSpecial: ('Riccati_special_minus2',),
-        SecondNonlinearAutonomousConserved: ('2nd_nonlinear_autonomous_conserved',),
-        Liouville: ('Liouville',),
-        Separable: ('separable',),
-        SeparableReduced: ('separable_reduced',),
-        HomogeneousCoeffSubsDepDivIndep: ('1st_homogeneous_coeff_subs_dep_div_indep',),
-        HomogeneousCoeffSubsIndepDivDep: ('1st_homogeneous_coeff_subs_indep_div_dep',),
-        HomogeneousCoeffBest: ('1st_homogeneous_coeff_best',),
-        LinearCoefficients: ('linear_coefficients',),
-        NthOrderReducible: ('nth_order_reducible',),
-        SecondHypergeometric: ('2nd_hypergeometric',),
-        NthLinearConstantCoeffHomogeneous: ('nth_linear_constant_coeff_homogeneous',),
-        NthLinearConstantCoeffVariationOfParameters: ('nth_linear_constant_coeff_variation_of_parameters',),
-        NthLinearConstantCoeffUndeterminedCoefficients: ('nth_linear_constant_coeff_undetermined_coefficients',),
-        NthLinearEulerEqHomogeneous: ('nth_linear_euler_eq_homogeneous',),
-        NthLinearEulerEqNonhomogeneousVariationOfParameters: ('nth_linear_euler_eq_nonhomogeneous_variation_of_parameters',),
-        NthLinearEulerEqNonhomogeneousUndeterminedCoefficients: ('nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients',),
-        SecondLinearBessel: ('2nd_linear_bessel',),
-        SecondLinearAiry: ('2nd_linear_airy',),
-        LieGroup: ('lie_group',),
-    }
-    for solvercls in solvers:
-        solver = solvercls(ode)
+    user_hint = kwargs.get('hint','default')
+    if user_hint.endswith('_Integral'):
+        user_hint = user_hint[:-len('_Integral')]
+
+    if user_hint not in ['default', 'all', 'all_Integral', 'best'] and user_hint in solver_map:
+        solver = solver_map[user_hint](ode)
         if solver.matches():
-            for hints in solvers[solvercls]:
-                matching_hints[hints] = solver
-                if solvercls.has_integral:
-                    matching_hints[hints + "_Integral"] = solver
+            matching_hints[user_hint] = solver
+            if solver_map[user_hint].has_integral:
+                matching_hints[user_hint + "_Integral"] = solver
+    else:
+        for hint in solver_map:
+            solver = solver_map[hint](ode)
+            if solver.matches():
+                matching_hints[hint] = solver
+                if solver_map[hint].has_integral:
+                    matching_hints[hint + "_Integral"] = solver
+
     eq = expand(eq)
     # Precondition to try remove f(x) from highest order derivative
     reduced_eq = None
