@@ -1014,43 +1014,16 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             else:
                 raise ValueError("Enter boundary conditions of the form ics={f(point): value, f(x).diff(x, order).subs(x, point): value}")
 
-    # Any ODE that can be solved with a combination of algebra and
-    # integrals e.g.:
-    # d^3/dx^3(x y) = F(x)
-    solver_map = {
-        'factorable': Factorable,
-        'nth_algebraic': NthAlgebraic,
-        'separable': Separable,
-        '1st_exact': FirstExact,
-        '1st_linear': FirstLinear,
-        'Bernoulli': Bernoulli,
-        'Riccati_special_minus2': RiccatiSpecial,
-        '1st_homogeneous_coeff_best': HomogeneousCoeffBest,
-        '1st_homogeneous_coeff_subs_indep_div_dep': HomogeneousCoeffSubsIndepDivDep,
-        '1st_homogeneous_coeff_subs_dep_div_indep': HomogeneousCoeffSubsDepDivIndep,
-        'almost_linear': AlmostLinear,
-        'linear_coefficients': LinearCoefficients,
-        'separable_reduced': SeparableReduced,
-        'lie_group': LieGroup,
-        'nth_linear_constant_coeff_homogeneous': NthLinearConstantCoeffHomogeneous,
-        'nth_linear_euler_eq_homogeneous': NthLinearEulerEqHomogeneous,
-        'nth_linear_constant_coeff_undetermined_coefficients': NthLinearConstantCoeffUndeterminedCoefficients,
-        'nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients': NthLinearEulerEqNonhomogeneousUndeterminedCoefficients,
-        'nth_linear_constant_coeff_variation_of_parameters': NthLinearConstantCoeffVariationOfParameters,
-        'nth_linear_euler_eq_nonhomogeneous_variation_of_parameters': NthLinearEulerEqNonhomogeneousVariationOfParameters,
-        'Liouville': Liouville,
-        '2nd_linear_airy': SecondLinearAiry,
-        '2nd_linear_bessel': SecondLinearBessel,
-        '2nd_hypergeometric': SecondHypergeometric,
-        'nth_order_reducible': NthOrderReducible,
-        '2nd_nonlinear_autonomous_conserved': SecondNonlinearAutonomousConserved,
-        }
-
     ode = SingleODEProblem(eq_orig, func, x, prep=prep, xi=xi, eta=eta)
     user_hint = kwargs.get('hint','default')
+    # Used when dsolve is called without an explicit hint.
+    # We exit early to return the first valid match
+    early_exit = (user_hint=='default')
     if user_hint.endswith('_Integral'):
         user_hint = user_hint[:-len('_Integral')]
 
+    # An explicit hint has been given to dsolve
+    # Skip matching code for other hints
     if user_hint not in ['default', 'all', 'all_Integral', 'best'] and user_hint in solver_map:
         solver = solver_map[user_hint](ode)
         if solver.matches():
@@ -1064,6 +1037,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
                 matching_hints[hint] = solver
                 if solver_map[hint].has_integral:
                     matching_hints[hint + "_Integral"] = solver
+                if dict and early_exit:
+                    break
 
     eq = expand(eq)
     # Precondition to try remove f(x) from highest order derivative
@@ -3601,4 +3576,5 @@ from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
         NthLinearConstantCoeffHomogeneous, NthLinearConstantCoeffVariationOfParameters,
         NthLinearConstantCoeffUndeterminedCoefficients, NthLinearEulerEqHomogeneous,
         NthLinearEulerEqNonhomogeneousVariationOfParameters, LieGroup,
-        NthLinearEulerEqNonhomogeneousUndeterminedCoefficients, SecondLinearBessel, SecondLinearAiry)
+        NthLinearEulerEqNonhomogeneousUndeterminedCoefficients, SecondLinearBessel, SecondLinearAiry,
+        solver_map)

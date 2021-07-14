@@ -2899,5 +2899,34 @@ class LieGroup(SingleODESolver):
         return desols
 
 
+solver_map = {
+    'factorable': Factorable,
+    'nth_algebraic': NthAlgebraic,
+    'separable': Separable,
+    '1st_exact': FirstExact,
+    '1st_linear': FirstLinear,
+    'Bernoulli': Bernoulli,
+    'Riccati_special_minus2': RiccatiSpecial,
+    '1st_homogeneous_coeff_best': HomogeneousCoeffBest,
+    '1st_homogeneous_coeff_subs_indep_div_dep': HomogeneousCoeffSubsIndepDivDep,
+    '1st_homogeneous_coeff_subs_dep_div_indep': HomogeneousCoeffSubsDepDivIndep,
+    'almost_linear': AlmostLinear,
+    'linear_coefficients': LinearCoefficients,
+    'separable_reduced': SeparableReduced,
+    'lie_group': LieGroup,
+    'nth_linear_constant_coeff_homogeneous': NthLinearConstantCoeffHomogeneous,
+    'nth_linear_euler_eq_homogeneous': NthLinearEulerEqHomogeneous,
+    'nth_linear_constant_coeff_undetermined_coefficients': NthLinearConstantCoeffUndeterminedCoefficients,
+    'nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients': NthLinearEulerEqNonhomogeneousUndeterminedCoefficients,
+    'nth_linear_constant_coeff_variation_of_parameters': NthLinearConstantCoeffVariationOfParameters,
+    'nth_linear_euler_eq_nonhomogeneous_variation_of_parameters': NthLinearEulerEqNonhomogeneousVariationOfParameters,
+    'Liouville': Liouville,
+    '2nd_linear_airy': SecondLinearAiry,
+    '2nd_linear_bessel': SecondLinearBessel,
+    '2nd_hypergeometric': SecondHypergeometric,
+    'nth_order_reducible': NthOrderReducible,
+    '2nd_nonlinear_autonomous_conserved': SecondNonlinearAutonomousConserved,
+    }
+
 # Avoid circular import:
 from .ode import dsolve, ode_sol_simplicity, odesimp, homogeneous_order
