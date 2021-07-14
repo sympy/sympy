@@ -600,30 +600,31 @@ def test_Parallel_functions():
     assert Parallel(tf1, tf2, evaluate=True) == Parallel(tf1, tf2).doit() == \
         TransferFunction(k*(s**2 + 2*s*wn*zeta + wn**2) + 1, s**2 + 2*s*wn*zeta + wn**2, s)
     assert Parallel(tf1, tf2, Series(-tf1, tf3), evaluate=True) == \
-        Parallel(tf1, tf2, Series(-tf1, tf3)).doit()== TransferFunction((-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2) + \
-        (a2*s + p)*(k*(s**2 + 2*s*wn*zeta + wn**2) + 1)*(s**2 + 2*s*wn*zeta + wn**2), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)**2, s)
+        Parallel(tf1, tf2, Series(-tf1, tf3)).doit() == TransferFunction(k*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)**2 + \
+            (-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), (a2*s + p)*(s**2 + \
+                2*s*wn*zeta + wn**2)**2, s)
     assert Parallel(tf2, tf1, -tf3, evaluate=True) == Parallel(tf2, tf1, -tf3).doit() == \
-        TransferFunction(-(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*s + p)*(k*(s**2 + 2*s*wn*zeta + wn**2) + 1), \
-        (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+        TransferFunction(a2*s + k*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) + p + (-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2) \
+            , (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
     assert not Parallel(tf1, -tf2, evaluate=False) == Parallel(tf1, -tf2).doit()
 
     assert Parallel(Series(tf1, tf2), Series(tf2, tf3)).doit() == \
         TransferFunction(k*(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) + k*(a2*s + p), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
     assert Parallel(-tf1, -tf2, -tf3).doit() == \
-        TransferFunction(-(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) + \
-        (a2*s + p)*(-k*(s**2 + 2*s*wn*zeta + wn**2) - 1), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+        TransferFunction(-a2*s - k*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) - p + (-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2), \
+            (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
     assert -Parallel(tf1, tf2, tf3).doit() == \
-        TransferFunction(-((a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*s + p)*(k*(s**2 + 2*s*wn*zeta + wn**2) + 1)),
-        (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+        TransferFunction(-a2*s - k*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) - p - (a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2), \
+            (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
     assert Parallel(tf2, tf3, Series(tf2, -tf1), tf3).doit() == \
-        TransferFunction((a2*p - s)*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*s + p)*(-k*(a2*s + p) + \
-        (s**2 + 2*s*wn*zeta + wn**2)*(a2*p + k*(a2*s + p) - s)), (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2), s)
+        TransferFunction(k*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) - k*(a2*s + p) + (2*a2*p - 2*s)*(s**2 + 2*s*wn*zeta \
+            + wn**2), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
 
     assert Parallel(tf1, tf2).rewrite(TransferFunction) == \
         TransferFunction(k*(s**2 + 2*s*wn*zeta + wn**2) + 1, s**2 + 2*s*wn*zeta + wn**2, s)
     assert Parallel(tf2, tf1, -tf3).rewrite(TransferFunction) == \
-        TransferFunction(-(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*s + p)*(k*(s**2 + 2*s*wn*zeta + wn**2) + 1), \
-        (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+        TransferFunction(a2*s + k*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) + p + (-a2*p + s)*(s**2 + 2*s*wn*zeta + \
+             wn**2), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
 
     P1 = Parallel(Series(tf1, tf2), Series(tf2, tf3))
     assert P1.is_proper
@@ -839,8 +840,7 @@ def test_TransferFunctionMatrix_functions():
     H_4 = TransferFunctionMatrix([[Parallel(TransferFunction(s**3 - 3, 4*s**4 - s**2 - 2*s + 5, s), TransferFunction(4 - s**3, 4*s**4 - s**2 - 2*s + 5, s))]])
 
     assert H_3.doit() == TransferFunctionMatrix([[TransferFunction(s**2 - 2*s + 5, s*(s**3 - 3), s)]])
-    assert H_4.doit() == TransferFunctionMatrix([[TransferFunction((4 - s**3)*(4*s**4 - s**2 - 2*s + 5) + (s**3 - 3)*(4*s**4 - s**2 - 2*s + 5),
-        (4*s**4 - s**2 - 2*s + 5)**2, s)]])
+    assert H_4.doit() == TransferFunctionMatrix([[TransferFunction(1, 4*s**4 - s**2 - 2*s + 5, s)]])
 
     # _flat()
 

@@ -1296,8 +1296,8 @@ class Parallel(LinearTimeInvariant):
 
         def _SISO_doit():
             _arg = (arg.doit().to_expr() for arg in self.args)
-            res = Add(*_arg, evaluate=True)
-            return TransferFunction.from_rational_expression(res, self.var)
+            res = Add(*_arg).as_numer_denom()
+            return TransferFunction(*res, self.var)
 
         def _MIMO_doit():
             _arg = (arg.doit()._expr_mat for arg in self.args)
