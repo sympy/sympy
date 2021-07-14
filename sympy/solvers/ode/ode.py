@@ -3565,16 +3565,3 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
     sol2 = dsolve(diff(fv(t), t) - (v*(a*F3 - c*F1)).subs(u, x_y).subs(w, z_y).subs(v, fv(t))).rhs
     sol3 = dsolve(diff(fw(t), t) - (w*(b*F1 - a*F2)).subs(u, x_z).subs(v, y_z).subs(w, fw(t))).rhs
     return [sol1, sol2, sol3]
-
-
-#This import is written at the bottom to avoid circular imports.
-from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
-        Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
-        SecondNonlinearAutonomousConserved, FirstExact, Liouville, Separable,
-        SeparableReduced, HomogeneousCoeffSubsDepDivIndep, HomogeneousCoeffSubsIndepDivDep,
-        HomogeneousCoeffBest, LinearCoefficients, NthOrderReducible, SecondHypergeometric,
-        NthLinearConstantCoeffHomogeneous, NthLinearConstantCoeffVariationOfParameters,
-        NthLinearConstantCoeffUndeterminedCoefficients, NthLinearEulerEqHomogeneous,
-        NthLinearEulerEqNonhomogeneousVariationOfParameters, LieGroup,
-        NthLinearEulerEqNonhomogeneousUndeterminedCoefficients, SecondLinearBessel, SecondLinearAiry,
-        solver_map)
