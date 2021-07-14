@@ -215,19 +215,20 @@ from sympy.solvers.solveset import linsolve
 
 def riccati_normal(w, x, b1, b2):
     """
-    Transforming the solution of a Riccati ODE
+    Given a solution `w(x)` to the equation
 
-    w'(x) = b0 + b1*w(x) + b2*w(x)^2 ... (1)
+    .. math:: w'(x) = b_0(x) + b_1(x)*w(x) + b_2(x)*w(x)^2
 
-    to the solution of its corresponding normal
+    and rational function coefficients `b_1(x)` and
+    `b_2(x)`, this function transforms the solution to
+    give a solution `y(x)` for its corresponding normal
     Riccati ODE
 
-    y'(x) + y(x)^2 = a(x)            ... (2)
+    .. math:: y'(x) + y(x)^2 = a(x)
 
-    If w(x) is the solution to (1), then the
-    solution to (2) is
+    using the transformation
 
-    y(x) = -b2(x)*w(x) - b2'(x)/(2*b2(x)) - b1(x)/2
+    .. math:: y(x) = -b_2(x)*w(x) - b'_2(x)/(2*b_2(x)) - b_1(x)/2
     """
     return -b2*w - b2.diff(x)/(2*b2) - b1/2
 
@@ -541,20 +542,27 @@ def construct_d(num, den, x, val_inf):
 def rational_laurent_series(num, den, x, r, m, n):
     r"""
     The function computes the Laurent series coefficients
-    for the rational function `\frac{num(x)}{den(x)}` at
-    `x = r` whose order is `m` upto the `n^{\mathrm{th}}`
-    term.
+    of a rational function.
 
-    This docstring explains how Laurent series coefficients
-    for rational functions about any point can be computed.
+    Parameters
+    ==========
 
-    Let's say we want to compute the Laurent series of a
-    rational function `f(x)` about `x_0`. Since `f(x)` is
-    rational, we can represent it as -
+    num: A Poly object that is the numerator of `f(x)`.
+    den: A Poly object that is the denominator of `f(x)`.
+    x: The variable of expansion of the series.
+    r: The point of expansion of the series.
+    m: Multiplicity of r if r is a pole of `f(x)`. Should
+    be zero otherwise.
+    n: Order of the term upto which the series is expanded.
 
-    .. math:: f(x) = \frac{P(x)}{Q(x)}
+    Returns
+    =======
 
-    We have to follow these steps to find the coefficients -
+    series: A dictionary that has power of the term as key
+    and coefficient of that term as value.
+
+    Below is a basic outline of how the Laurent series of a
+    rational function `f(x)` about `x_0` is being calculated -
 
     1. Substitute `x + x_0` in place of `x`. If `x_0`
     is a pole of `f(x)`, multiply the expression by `x^m`
@@ -572,51 +580,6 @@ def rational_laurent_series(num, den, x, r, m, n):
 
     3. Multiply the denominator to the RHS of the equation
     and form a recurrence relation for the coefficients `a_m`.
-
-    Example
-    =======
-
-    Find the Laurent series of
-
-    .. math:: f(x) = \frac{1 + x}{4 - x^2}
-
-    about `x = -2`.
-
-    >>> from sympy.abc import x
-    >>> from sympy import roots
-    >>> f = (1 + x)/(4 - x**2)
-    >>> r = roots(f.as_numer_denom()[1], x)
-    >>> r
-    {-2: 1, 2: 1}
-
-    Since `x_0` is a pole of `f(x)`, we need to
-    know its multiplicity.
-
-    >>> x0 = -2
-    >>> m = r[x0]
-
-    Substitute and multiply by `x^m`.
-
-    >>> g = f.subs(x, x + x0).cancel()
-    >>> num, den = (g*x**m).cancel().as_numer_denom()
-    >>> num
-    1 - x
-    >>> den
-    x - 4
-
-    Form the equation to find the recurrence relation
-
-    ..math :: 1 - x = (x - 4) \Sum_{x = 0}^{\infty} a[i] x^i
-
-    Multiplying this out and rearranging the indices of the
-    sums, we get -
-
-    ..math :: 1 - x = -4 a_0 + (a_0 - 4 a_1) x + \Sum_{x = 2}^{\infty} (a[i-1] - 4*a[i]) x^i
-
-    Find the base case coefficients and then the recurrence
-    relation. Solving for these, we get -
-
-    ..math:: a_0 = -\frac{1}{4}, a_1 = {3}{16}, a_m = \frac{a_{m-1}}{4}
     """
     one = Poly(1, x, extension=True)
 
@@ -834,13 +797,20 @@ def solve_riccati(fx, x, b0, b1, b2, gensol=False):
         # Step 7 : Iterate over all possible combinations and return solutions
         # For each possible combination, generate an array of 0's and 1's
         # where 0 means pick 1st choice and 1 means pick the second choice.
-        choices = product(range(2), repeat=len(poles) + 1)
-        m_ybars = set()
-        for choice in choices:
-            # Step 8 and 9 : Compute m and ybar
-            m_ybars.add(compute_m_ybar(x, poles, choice, c, d, -val_inf//2))
 
-        for m, ybar in sorted(m_ybars, key=lambda x: x[0]):
+        # NOTE: We could exit from the loop if we find 3 particular solutions,
+        # but it is not implemented here as -
+        #   a. Finding 3 particular solutions is very rare. Most of the time,
+        #      only 2 particular solutions are found.
+        #   b. In case we exit after finding 3 particular solutions, it might
+        #      happen that 1 or 2 of them are redundant solutions. So, instead of
+        #      spending some more time in computing the particular solutions,
+        #      we will end up computing the general solution from a single
+        #      particular solution which is usually slower than computing the
+        #      general solution from 2 or 3 particular solutions.
+        choices = product(range(2), repeat=len(poles) + 1)
+        for choice in choices:
+            m, ybar = compute_m_ybar(x, poles, choice, c, d, -val_inf//2)
             numy, deny = [Poly(e, x, extension=True) for e in ybar.together().as_numer_denom()]
             # Step 10 : Check if a valid solution exists. If yes, also check
             # if m is a non-negative integer

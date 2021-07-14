@@ -1019,10 +1019,6 @@ class RationalRiccati(SinglePatternODESolver):
 
     .. [2] N. Thieu Vo - Rational and Algebraic Solutions of First-Order Algebraic ODEs,
     Algorithm 11 (Pg 78) - https://www3.risc.jku.at/publications/download/risc_5387/PhDThesisThieu.pdf
-
-    .. [3] Examples taken from: Georg Grasegger, N. Thieu Vo, Franz Winkler -
-    Statistical Investigation of First-Order Algebraic ODEs and their Rational General Solutions
-    https://www3.risc.jku.at/publications/download/risc_5197/RISCReport15-19.pdf
     """
     has_integral = False
     hint = "1st_rational_riccati"
