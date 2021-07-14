@@ -2269,6 +2269,22 @@ def test_Series_printing():
     assert latex(Series(-tf2, tf1)) == \
         r'\left(\frac{- x + y}{x + y}\right) \left(\frac{x y^{2} - z}{- t^{3} + y^{3}}\right)'
 
+    M_1 = Matrix([[5/s], [5/(2*s)]])
+    T_1 = TransferFunctionMatrix.from_Matrix(M_1, s)
+    M_2 = Matrix([[5, 6*s**3]])
+    T_2 = TransferFunctionMatrix.from_Matrix(M_2, s)
+    # Brackets
+    assert latex(T_1*(T_2 + T_2)) == \
+        r'\left[\begin{matrix}\frac{5}{s}\\\frac{5}{2 s}\end{matrix}\right]_\tau\cdot\left(\left[\begin{matrix}\frac{5}{1} &' \
+        r' \frac{6 s^{3}}{1}\end{matrix}\right]_\tau+\left[\begin{matrix}\frac{5}{1} & \frac{6 s^{3}}{1}\end{matrix}\right]_\tau\right)' \
+            == latex(Series(Parallel(T_2, T_2), T_1))
+    # No Brackets
+    M_3 = Matrix([[5, 6], [6, 5/s]])
+    T_3 = TransferFunctionMatrix.from_Matrix(M_3, s)
+    assert latex(T_1*T_2 + T_3) == r'\left[\begin{matrix}\frac{5}{s}\\\frac{5}{2 s}\end{matrix}\right]_\tau\cdot\left[\begin{matrix}' \
+        r'\frac{5}{1} & \frac{6 s^{3}}{1}\end{matrix}\right]_\tau+\left[\begin{matrix}\frac{5}{1} & \frac{6}{1}\\\frac{6}{1} & ' \
+            r'\frac{5}{s}\end{matrix}\right]_\tau' == latex(Parallel(Series(T_2, T_1), T_3))
+
 
 def test_TransferFunction_printing():
     tf1 = TransferFunction(x - 1, x + 1, x)
@@ -2286,6 +2302,17 @@ def test_Parallel_printing():
         r'\frac{x y^{2} - z}{- t^{3} + y^{3}}+\frac{x - y}{x + y}'
     assert latex(Parallel(-tf2, tf1)) == \
         r'\frac{- x + y}{x + y}+\frac{x y^{2} - z}{- t^{3} + y^{3}}'
+
+    M_1 = Matrix([[5, 6], [6, 5/s]])
+    T_1 = TransferFunctionMatrix.from_Matrix(M_1, s)
+    M_2 = Matrix([[5/s, 6], [6, 5/(s - 1)]])
+    T_2 = TransferFunctionMatrix.from_Matrix(M_2, s)
+    M_3 = Matrix([[6, 5/(s*(s - 1))], [5, 6]])
+    T_3 = TransferFunctionMatrix.from_Matrix(M_3, s)
+    assert latex(T_1 + T_2 + T_3) == r'\left[\begin{matrix}\frac{5}{1} & \frac{6}{1}\\\frac{6}{1} & \frac{5}{s}\end{matrix}\right]' \
+        r'_\tau+\left[\begin{matrix}\frac{5}{s} & \frac{6}{1}\\\frac{6}{1} & \frac{5}{s - 1}\end{matrix}\right]_\tau+\left[\begin{matrix}' \
+            r'\frac{6}{1} & \frac{5}{s \left(s - 1\right)}\\\frac{5}{1} & \frac{6}{1}\end{matrix}\right]_\tau' \
+                == latex(Parallel(T_1, T_2, T_3)) == latex(Parallel(T_1, Parallel(T_2, T_3))) == latex(Parallel(Parallel(T_1, T_2), T_3))
 
 
 def test_TransferFunctionMatrix_printing():
