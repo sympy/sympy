@@ -48,6 +48,10 @@ class VofSVD(Factorization):
     def predicates(self):
         return (Q.orthogonal,)
 
+class PofPolar(Factorization):
+    predicates = Q.nonnegative,
+class UofPolar(Factorization):
+    predicates = Q.orthogonal,
 
 def lu(expr):
     return LofLU(expr), UofLU(expr)
@@ -60,3 +64,6 @@ def eig(expr):
 
 def svd(expr):
     return UofSVD(expr), SofSVD(expr), VofSVD(expr)
+
+def up(expr):
+    return UofPolar(expr), PofPolar(expr)
