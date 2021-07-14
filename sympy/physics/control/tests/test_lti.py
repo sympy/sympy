@@ -462,6 +462,49 @@ def test_Series_construction():
     raises(TypeError, lambda: Series(tf3, Matrix([1, 2, 3, 4])))
 
 
+def test_MIMO_Series_construction():
+    tf_1 = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
+    tf_2 = TransferFunction(a2*p - s, a2*s + p, s)
+    tf_3 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+
+    tfm_1 = TransferFunctionMatrix([[tf_1, tf_2, tf_3], [-tf_3, -tf_2, tf_1]])
+    tfm_2 = TransferFunctionMatrix([[-tf_2], [-tf_2], [-tf_3]])
+    tfm_3 = TransferFunctionMatrix([[-tf_3]])
+    tfm_4 = TransferFunctionMatrix([[TF3], [TF2], [-TF1]])
+    tfm_5 = TransferFunctionMatrix.from_Matrix(Matrix([1/p]), p)
+
+    s8 = Series(tfm_2, tfm_1)
+    assert s8.args == (tfm_2, tfm_1)
+    assert s8.var == s
+    assert s8.shape == (s8.num_outputs, s8.num_inputs) == (2, 1)
+
+    s9 = Series(tfm_3, tfm_2, tfm_1)
+    assert s9.args == (tfm_3, tfm_2, tfm_1)
+    assert s9.var == s
+    assert s9.shape == (s9.num_outputs, s9.num_inputs) == (2, 1)
+
+    s11 = Series(tfm_3, Parallel(-tfm_2, -tfm_4), tfm_1)
+    assert s11.args == (tfm_3, Parallel(-tfm_2, -tfm_4), tfm_1)
+    assert s11.shape == (s11.num_outputs, s11.num_inputs) == (2, 1)
+
+    # arg cannot be empty tuple.
+    raises(ValueError, lambda: Series())
+
+    # arg cannot contain SISO as well as MIMO systems.
+    raises(TypeError, lambda: Series(tfm_1, tf_1))
+
+    # for all the adjascent transfer function matrices:
+    # no. of inputs of first TFM must be equal to the no. of outputs of the second TFM.
+    raises(ValueError, lambda: Series(tfm_1, tfm_2, -tfm_1))
+
+    # all the TFMs must use the same complex variable.
+    raises(ValueError, lambda: Series(tfm_3, tfm_5))
+
+    # Number or expression not allowed in the arguments.
+    raises(TypeError, lambda: Series(2, tfm_2, tfm_3))
+    raises(TypeError, lambda: Series(s**2 + p*s, -tfm_2, tfm_3))
+
+
 def test_Series_functions():
     zeta, wn = symbols('zeta, wn')
     tf1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
@@ -522,6 +565,55 @@ def test_Series_functions():
     assert S3.is_proper
     assert S3.is_strictly_proper
     assert not S3.is_biproper
+
+
+def test_MIMO_Series_functions():
+    tfm1 = TransferFunctionMatrix([[TF1, TF2, TF3], [-TF3, -TF2, TF1]])
+    tfm2 = TransferFunctionMatrix([[-TF1], [-TF2], [-TF3]])
+    tfm3 = TransferFunctionMatrix([[-TF1]])
+    tfm4 = TransferFunctionMatrix([[-TF2, -TF3], [-TF1, TF2]])
+    tfm5 = TransferFunctionMatrix([[TF2, -TF2], [-TF3, -TF2]])
+    tfm6 = TransferFunctionMatrix([[-TF3], [TF1]])
+    tfm7 = TransferFunctionMatrix([[TF1], [-TF2]])
+
+    assert tfm1*tfm2 + tfm6 == Parallel(Series(tfm2, tfm1), tfm6)
+    assert tfm1*tfm2 + tfm7 + tfm6 == Parallel(Series(tfm2, tfm1), tfm7, tfm6)
+    assert tfm1*tfm2 - tfm6 - tfm7 == Parallel(Series(tfm2, tfm1), -tfm6, -tfm7)
+    assert tfm4*tfm5 + (tfm4 - tfm5) == Parallel(Series(tfm5, tfm4), tfm4, -tfm5)
+    assert tfm4*-tfm6 + (-tfm4*tfm6) == Parallel(Series(-tfm6, tfm4), Series(tfm6, -tfm4))
+
+    raises(TypeError, lambda: tfm1*tfm2 + TF1)
+    raises(ValueError, lambda: tfm1*tfm2 + a0)
+    raises(ValueError, lambda: tfm4*tfm6 - (s - 1))
+    raises(ValueError, lambda: tfm4*-tfm6 - 8)
+    raises(ValueError, lambda: (-1 + p**5) + tfm1*tfm2)
+
+    # Shape criteria.
+
+    raises(TypeError, lambda: -tfm1*tfm2 + tfm4)
+    raises(TypeError, lambda: tfm1*tfm2 - tfm4 + tfm5)
+    raises(TypeError, lambda: tfm1*tfm2 - tfm4*tfm5)
+
+    assert tfm1*tfm2*-tfm3 == Series(-tfm3, tfm2, tfm1)
+    assert (tfm1*-tfm2)*tfm3 == Series(tfm3, -tfm2, tfm1)
+
+    # Multiplication of a Series object with a SISO TF not allowed.
+
+    raises(TypeError, lambda: tfm4*tfm5*TF1)
+    raises(ValueError, lambda: tfm4*tfm5*a1)
+    raises(ValueError, lambda: tfm4*-tfm5*(s - 2))
+    raises(ValueError, lambda: tfm5*tfm4*9)
+    raises(TypeError, lambda: (-p**3 + 1)*tfm5*tfm4)
+
+    # Transfer function matrix in the arguments.
+    assert Series(tfm2, tfm1, evaluate=True) == Series(tfm2, tfm1).doit() == \
+        TransferFunctionMatrix(((TransferFunction(-k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (-a2*p + s)*(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2)**2 - \
+            (a2*s + p)**2, (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2, s),), (TransferFunction(k**2, 1, s),)))
+
+    # calling doit() once will not expand the internal Series and Parallel objects.
+    assert Series(-tfm3, -tfm2, tfm1, evaluate=True) == Series(-tfm3, -tfm2, tfm1).doit() == \
+        TransferFunctionMatrix(((TransferFunction(k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (a2*p - s)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (a2*s + p)**2, \
+            (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**3, s),), (TransferFunction(-k**2*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)**2, s),)))
 
 
 def test_Parallel_construction():
