@@ -612,11 +612,12 @@ def test_MIMO_Series_functions():
     # calling doit() will expand the internal Series and Parallel objects.
     assert Series(-tfm3, -tfm2, tfm1, evaluate=True) == Series(-tfm3, -tfm2, tfm1).doit() == \
         TransferFunctionMatrix(((TransferFunction(k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (a2*p - s)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (a2*s + p)**2, \
-            (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**3, s),), (TransferFunction(-k**2*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)**2, s),)))
+            (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**3, s),), (TransferFunction(-k**2*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)**2, s),))) \
+                == Series(-tfm3, -tfm2, tfm1).rewrite(TransferFunctionMatrix)
     assert Series(Parallel(tfm4, tfm5), tfm5, evaluate=True) == Series(Parallel(tfm4, tfm5), tfm5).doit() == \
         TransferFunctionMatrix(((TransferFunction(-k*(-a2*s - p + (-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2)), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s), TransferFunction(k*(-a2*p - \
             k*(a2*s + p) + s), a2*s + p, s)), (TransferFunction(-k*(-a2*s - p + (-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2)), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s), \
-                TransferFunction((-a2*p + s)*(-a2*p - k*(a2*s + p) + s), (a2*s + p)**2, s))))
+                TransferFunction((-a2*p + s)*(-a2*p - k*(a2*s + p) + s), (a2*s + p)**2, s)))) == Series(Parallel(tfm4, tfm5), tfm5).rewrite(TransferFunctionMatrix)
 
 
 def test_Parallel_construction():
