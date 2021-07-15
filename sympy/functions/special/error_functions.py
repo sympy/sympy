@@ -1199,6 +1199,13 @@ class Ei(Function):
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return exp(z) * _eis(z)
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        x0 = self.args[0].limit(x, 0)
+        if x0.is_zero:
+            f = self._eval_rewrite_as_Si(*self.args)
+            return f._eval_as_leading_term(x, logx=logx, cdir=cdir)
+        return super()._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
     def _eval_nseries(self, x, n, logx, cdir=0):
         x0 = self.args[0].limit(x, 0)
         if x0.is_zero:
@@ -2003,6 +2010,19 @@ class Ci(TrigonometricIntegral):
     def _eval_rewrite_as_expint(self, z, **kwargs):
         return -(E1(polar_lift(I)*z) + E1(polar_lift(-I)*z))/2
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
+        arg0 = arg.subs(x, 0)
+
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+        if arg0.is_zero:
+            return S.EulerGamma
+        elif arg0.is_finite:
+            return self.func(arg0)
+        else:
+            return self
+
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
         point = args0[0]
@@ -2117,6 +2137,21 @@ class Shi(TrigonometricIntegral):
         if z.is_zero:
             return True
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0].as_leading_term(x)
+        arg0 = arg.subs(x, 0)
+
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+        if arg0.is_zero:
+            return arg
+        elif not arg0.is_infinite:
+            return self.func(arg0)
+        elif arg0.is_infinite:
+            return -pi*S.ImaginiryUnit/2
+        else:
+            return self
+
     def _sage_(self):
         import sage.all as sage
         return sage.sinh_integral(self.args[0]._sage_())
@@ -2219,6 +2254,19 @@ class Chi(TrigonometricIntegral):
     def _eval_rewrite_as_expint(self, z, **kwargs):
         from sympy import exp_polar
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
+        arg0 = arg.subs(x, 0)
+
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+        if arg0.is_zero:
+            return S.EulerGamma
+        elif arg0.is_finite:
+            return self.func(arg0)
+        else:
+            return self
 
     def _sage_(self):
         import sage.all as sage
@@ -2403,8 +2451,8 @@ class fresnels(FresnelIntegral):
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.ComplexInfinity:
-            arg0 = arg.limit(x, 0, dir='-' if cdir == -1 else '+')
-        if x in arg.free_symbols and arg0.is_zero:
+            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+        if arg0.is_zero:
             return pi*arg**3/6
         else:
             return self.func(arg0)
@@ -2555,7 +2603,7 @@ class fresnelc(FresnelIntegral):
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.ComplexInfinity:
-            arg0 = arg.limit(x, 0, dir='-' if cdir == -1 else '+')
+            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
         if x in arg.free_symbols and arg0.is_zero:
             return arg
         else:
@@ -2674,6 +2722,13 @@ class _eis(Function):
 
     def _eval_rewrite_as_intractable(self, z, **kwargs):
         return exp(-z)*Ei(z)
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        x0 = self.args[0].limit(x, 0)
+        if x0.is_zero:
+            f = self._eval_rewrite_as_intractable(*self.args)
+            return f._eval_as_leading_term(x, logx=logx, cdir=cdir)
+        return super()._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         x0 = self.args[0].limit(x, 0)

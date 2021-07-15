@@ -1,6 +1,5 @@
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
-from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
@@ -186,8 +185,7 @@ class Limit(Expr):
         hints : optional keyword arguments
             To be passed to ``doit`` methods; only used if deep is True.
         """
-        from sympy import Abs, exp, log, sign, floor, ceiling, binomial
-        from sympy.calculus.util import AccumBounds
+        from sympy import Abs, exp, log, sign, binomial
 
         e, z, z0, dir = self.args
 
@@ -211,6 +209,9 @@ class Limit(Expr):
 
         if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
             return self
+
+        if e.is_Order:
+            return Order(limit(e.expr, z, z0), *e.args[1:])
 
         cdir = 0
         if str(dir) == "+":
@@ -263,8 +264,10 @@ class Limit(Expr):
         # is_meromorphic does not capture all meromorphic functions, and such
         # functions may have a leading term computation which can help find the
         # limit without entering gruntz
-        if not e.has(floor, ceiling, factorial, binomial):
+        if not e.has(factorial, binomial):
             if abs(z0) is S.Infinity:
+                if e.is_Mul:
+                    e = factor_terms(e)
                 newe = e.subs(z, 1/z)
                 cdir = -cdir
             else:
@@ -273,9 +276,7 @@ class Limit(Expr):
                 # cdir changes sign as oo- should become 0+
                 coeff, ex = newe.leadterm(z, cdir=cdir)
             except (ValueError, NotImplementedError, PoleError, AttributeError):
-                # The NotImplementedError catching may be removed after leading
-                # term methods are defined for some special functions (_eis
-                # and Ci)
+                # The NotImplementedError catching is for custom functions
                 # AttributeError may be removed one TupleArg leading term
                 # is handled
                 pass
@@ -289,7 +290,7 @@ class Limit(Expr):
                         return coeff
                     elif ex.is_negative:
                         if ex.is_integer:
-                            if str(dir) == "-":
+                            if str(dir) == "-" or ex.is_even:
                                 return S.Infinity*sign(coeff)
                             elif str(dir) == "+":
                                 return S.NegativeInfinity*sign(coeff)
@@ -310,31 +311,7 @@ class Limit(Expr):
         if z0.is_extended_positive:
             e = e.rewrite(factorial, gamma)
 
-        if e.is_Mul and abs(z0) is S.Infinity:
-            e = factor_terms(e)
-            u = Dummy('u', positive=True)
-            if z0 is S.NegativeInfinity:
-                inve = e.subs(z, -1/u)
-            else:
-                inve = e.subs(z, 1/u)
-            try:
-                f = inve.as_leading_term(u).gammasimp()
-                if f.is_meromorphic(u, S.Zero):
-                    r = limit(f, u, S.Zero, "+")
-                    if isinstance(r, Limit):
-                        return self
-                    else:
-                        return r
-            except (ValueError, NotImplementedError, PoleError):
-                pass
-
-        if e.is_Order:
-            return Order(limit(e.expr, z, z0), *e.args[1:])
-
         if e.is_Pow:
-            if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
-                return self
-
             b1, e1 = e.base, e.exp
             f1 = e1*log(b1)
             if f1.is_meromorphic(z, z0):
@@ -350,21 +327,11 @@ class Limit(Expr):
                     return exp(res)
                 elif ex_lim.is_real:
                     return S.One
-
-            if base_lim in (S.Zero, S.Infinity, S.NegativeInfinity) and ex_lim is S.Zero:
-                res = limit(f1, z, z0)
-                return exp(res)
-
-            if base_lim is S.NegativeInfinity:
+            elif base_lim is S.NegativeInfinity:
                 if ex_lim is S.NegativeInfinity:
                     return S.Zero
-                if ex_lim is S.Infinity:
+                elif ex_lim is S.Infinity:
                     return S.ComplexInfinity
-
-            if not isinstance(base_lim, AccumBounds) and not isinstance(ex_lim, AccumBounds):
-                res = base_lim**ex_lim
-                if res is not S.ComplexInfinity and not res.is_Pow:
-                    return res
 
         l = None
 

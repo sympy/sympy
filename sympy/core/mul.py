@@ -1863,18 +1863,13 @@ class Mul(Expr, AssocOp):
         from itertools import product
 
         def coeff_exp(term, x):
-            coeff, exp = S.One, S.Zero
-            for factor in Mul.make_args(term):
-                if factor.has(x):
-                    base, exp = factor.as_base_exp()
-                    if base != x:
-                        try:
-                            return term.leadterm(x)
-                        except ValueError:
-                            return term, S.Zero
-                else:
-                    coeff *= factor
-            return coeff, exp
+            lt = term.as_coeff_exponent(x)
+            if lt[0].has(x):
+                try:
+                    lt = term.leadterm(x)
+                except ValueError:
+                    return term, S.Zero
+            return lt
 
         ords = []
 
@@ -1914,7 +1909,7 @@ class Mul(Expr, AssocOp):
             ords3 = [coeff_exp(term, x) for term in fac]
             coeffs, powers = zip(*ords3)
             power = sum(powers)
-            if power < n:
+            if (power - n).is_negative:
                 res += Mul(*coeffs)*(x**power)
 
         def max_degree(e, x):

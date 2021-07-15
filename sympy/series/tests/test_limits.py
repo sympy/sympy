@@ -1,15 +1,14 @@
 from itertools import product as cartes
 
 from sympy import (
-    limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
-    atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I, E,
+    limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling, sinh,
+    atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I, E, besselj,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
     binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
     acos, erf, erfc, erfi, LambertW, factorial, digamma, uppergamma,
     Ei, EulerGamma, asin, atanh, acot, acoth, asec, acsc, cbrt, besselk)
 
 from sympy.calculus.util import AccumBounds
-from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
@@ -240,10 +239,10 @@ def test_series_AccumBounds():
     assert limit(sin(k) - sin(k)*cos(k), k, oo) == AccumBounds(-2, 2)
 
     # test for issue #9934
-    t1 = Mul(S.Half, 1/(-1 + cos(1)), Add(AccumBounds(-3, 1), cos(1)))
+    t1 = Mul(AccumBounds(-S(3)/2 + cos(1)/2, cos(1)/2 + S.Half), 1/(-1 + cos(1)))
     assert limit(simplify(Sum(cos(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t1
 
-    t2 = Mul(S.Half, Add(AccumBounds(-2, 2), sin(1)), 1/(-cos(1) + 1))
+    t2 = Mul(AccumBounds(-1 + sin(1)/2, sin(1)/2 + 1), 1/(1 - cos(1)))
     assert limit(simplify(Sum(sin(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t2
 
     assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)  # wolfram gives (0, 1)
@@ -954,6 +953,10 @@ def test_issue_21038():
     assert limit(sin(pi*x)/(3*x - 12), x, 4) == pi/3
 
 
+def test_issue_21530():
+    assert limit(sinh(n + 1)/sinh(n), n, oo) == E
+
+
 def test_issue_21550():
     r = (sqrt(5) - 1)/2
     assert limit((x - r)/(x**2 + x - 1), x, r) == sqrt(5)/5
@@ -962,3 +965,13 @@ def test_issue_21550():
 def test_issue_21661():
     out = limit((x**(x + 1) * (log(x) + 1) + 1) / x, x, 11)
     assert out == S(3138428376722)/11 + 285311670611*log(11)
+
+
+def test_issue_21701():
+    assert limit((besselj(z, x)/x**z).subs(z, 7), x, 0) == S(1)/645120
+
+
+def test_issue_21721():
+    a = Symbol('a', real=True)
+    I = integrate(1/(pi*(1 + (x - a)**2)), x)
+    assert I.limit(x, oo) == S.Half

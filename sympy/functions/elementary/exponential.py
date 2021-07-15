@@ -978,7 +978,7 @@ class log(Function):
         try:
             a, b = arg.leadterm(x)
             s = arg.nseries(x, n=n+b, logx=logx)
-        except (ValueError, NotImplementedError):
+        except (ValueError, NotImplementedError, PoleError):
             s = arg.nseries(x, n=n, logx=logx)
             while s.is_Order:
                 n += 1
@@ -1035,6 +1035,8 @@ class log(Function):
         x0 = arg0.subs(x, 0)
         if x0 is S.NaN and logx is None:
             x0 = arg.limit(x, 0)
+        if x0 in (S.NegativeInfinity, S.Infinity):
+            raise PoleError("Cannot expand %s around 0" % (self))
         if x0 == 1:
             return (arg0 - S.One).as_leading_term(x)
         if cdir != 0:

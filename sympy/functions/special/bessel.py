@@ -218,9 +218,9 @@ class besselj(BesselBase):
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         nu, z = self.args
-        arg = (z/2).as_leading_term(x)
+        arg = z.as_leading_term(x)
         if x in arg.free_symbols:
-            return arg**nu
+            return arg**nu/(2**nu*gamma(nu + 1))
         else:
             return self.func(nu, z.subs(x, 0))
 
