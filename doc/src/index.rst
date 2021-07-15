@@ -24,6 +24,12 @@ This is the central page for all of SymPy's documentation.
 
 An introduction to SymPy for developers and detailed tutorials.
 
+..  rst-class:: column
+
+:ref:`Tutorials <tutorial>`
+-------------------------------------------------------
+
+A collection of SymPy tutorials.
 
 
 ..  rst-class:: column
