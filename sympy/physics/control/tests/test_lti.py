@@ -419,7 +419,6 @@ def test_TransferFunction_is_biproper():
 
 
 def test_Series_construction():
-    zeta, wn = symbols('zeta, wn')
     tf = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
     tf2 = TransferFunction(a2*p - s, a2*s + p, s)
     tf3 = TransferFunction(a0*p + p**a1 - s, p, p)
@@ -503,10 +502,10 @@ def test_MIMO_Series_construction():
     # Number or expression not allowed in the arguments.
     raises(TypeError, lambda: Series(2, tfm_2, tfm_3))
     raises(TypeError, lambda: Series(s**2 + p*s, -tfm_2, tfm_3))
+    raises(TypeError, lambda: Series(Matrix([1/p]), tfm_3))
 
 
 def test_Series_functions():
-    zeta, wn = symbols('zeta, wn')
     tf1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
     tf2 = TransferFunction(k, 1, s)
     tf3 = TransferFunction(a2*p - s, a2*s + p, s)
@@ -583,10 +582,10 @@ def test_MIMO_Series_functions():
     assert tfm4*-tfm6 + (-tfm4*tfm6) == Parallel(Series(-tfm6, tfm4), Series(tfm6, -tfm4))
 
     raises(TypeError, lambda: tfm1*tfm2 + TF1)
-    raises(ValueError, lambda: tfm1*tfm2 + a0)
-    raises(ValueError, lambda: tfm4*tfm6 - (s - 1))
-    raises(ValueError, lambda: tfm4*-tfm6 - 8)
-    raises(ValueError, lambda: (-1 + p**5) + tfm1*tfm2)
+    raises(TypeError, lambda: tfm1*tfm2 + a0)
+    raises(TypeError, lambda: tfm4*tfm6 - (s - 1))
+    raises(TypeError, lambda: tfm4*-tfm6 - 8)
+    raises(TypeError, lambda: (-1 + p**5) + tfm1*tfm2)
 
     # Shape criteria.
 
@@ -600,9 +599,9 @@ def test_MIMO_Series_functions():
     # Multiplication of a Series object with a SISO TF not allowed.
 
     raises(TypeError, lambda: tfm4*tfm5*TF1)
-    raises(ValueError, lambda: tfm4*tfm5*a1)
-    raises(ValueError, lambda: tfm4*-tfm5*(s - 2))
-    raises(ValueError, lambda: tfm5*tfm4*9)
+    raises(TypeError, lambda: tfm4*tfm5*a1)
+    raises(TypeError, lambda: tfm4*-tfm5*(s - 2))
+    raises(TypeError, lambda: tfm5*tfm4*9)
     raises(TypeError, lambda: (-p**3 + 1)*tfm5*tfm4)
 
     # Transfer function matrix in the arguments.
@@ -610,14 +609,17 @@ def test_MIMO_Series_functions():
         TransferFunctionMatrix(((TransferFunction(-k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (-a2*p + s)*(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2)**2 - \
             (a2*s + p)**2, (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2, s),), (TransferFunction(k**2, 1, s),)))
 
-    # calling doit() once will not expand the internal Series and Parallel objects.
+    # calling doit() will expand the internal Series and Parallel objects.
     assert Series(-tfm3, -tfm2, tfm1, evaluate=True) == Series(-tfm3, -tfm2, tfm1).doit() == \
         TransferFunctionMatrix(((TransferFunction(k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (a2*p - s)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (a2*s + p)**2, \
             (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**3, s),), (TransferFunction(-k**2*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)**2, s),)))
+    assert Series(Parallel(tfm4, tfm5), tfm5, evaluate=True) == Series(Parallel(tfm4, tfm5), tfm5).doit() == \
+        TransferFunctionMatrix(((TransferFunction(-k*(-a2*s - p + (-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2)), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s), TransferFunction(k*(-a2*p - \
+            k*(a2*s + p) + s), a2*s + p, s)), (TransferFunction(-k*(-a2*s - p + (-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2)), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s), \
+                TransferFunction((-a2*p + s)*(-a2*p - k*(a2*s + p) + s), (a2*s + p)**2, s))))
 
 
 def test_Parallel_construction():
-    zeta, wn = symbols('zeta, wn')
     tf = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
     tf2 = TransferFunction(a2*p - s, a2*s + p, s)
     tf3 = TransferFunction(a0*p + p**a1 - s, p, p)
@@ -664,7 +666,6 @@ def test_Parallel_construction():
 
 
 def test_Parallel_functions():
-    zeta, wn = symbols('zeta, wn')
     tf1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
     tf2 = TransferFunction(k, 1, s)
     tf3 = TransferFunction(a2*p - s, a2*s + p, s)
@@ -735,7 +736,6 @@ def test_Parallel_functions():
 
 
 def test_Feedback_construction():
-    zeta, wn = symbols('zeta, wn')
     tf1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
     tf2 = TransferFunction(k, 1, s)
     tf3 = TransferFunction(a2*p - s, a2*s + p, s)
@@ -786,7 +786,6 @@ def test_Feedback_construction():
 
 
 def test_Feedback_functions():
-    zeta, wn = symbols('zeta, wn')
     tf = TransferFunction(1, 1, s)
     tf1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
     tf2 = TransferFunction(k, 1, s)
@@ -804,7 +803,7 @@ def test_Feedback_functions():
     assert tf4 / (TransferFunction(1, 1, p) + tf4*tf6) == Feedback(tf4, tf6)
     assert tf5 / (tf + tf5) == Feedback(tf5, tf)
 
-    raises(ValueError, lambda: tf1*tf2*tf3 / (1 + tf1*tf2*tf3))
+    raises(TypeError, lambda: tf1*tf2*tf3 / (1 + tf1*tf2*tf3))
     raises(ValueError, lambda: tf1*tf2*tf3 / tf3*tf5)
     raises(ValueError, lambda: tf2*tf3 / (tf + tf2*tf3*tf4))
 

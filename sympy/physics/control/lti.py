@@ -715,11 +715,7 @@ class TransferFunction(LinearTimeInvariant):
 
 def _mat_mul_compatible(*args):
     """To check whether shapes are compatible for matrix mul."""
-    return all(
-        arg.num_outputs == args[i].num_inputs
-        for i, arg in enumerate(args, start=1)
-        if i < len(args)
-    )
+    return all(args[i].num_outputs == args[i+1].num_inputs for i in range(len(args)-1))
 
 
 class Series(LinearTimeInvariant):
@@ -841,17 +837,17 @@ class Series(LinearTimeInvariant):
         if len(args) == 0:
             raise ValueError("Atleast 1 argument must be passed.")
 
-        try:
-            type_set = {arg.is_SISO for arg in args}
-            if len(type_set) != 1:
-                raise TypeError("Invalid system. `args` passed contain SISO as well "
-                    "as MIMO elements.")
-            var_set = {arg.var for arg in args}
-            if len(var_set) != 1:
-                raise ValueError("All transfer functions should use the same complex variable"
-                    f" of the Laplace transform. {len(var_set)} different values found.")
-        except AttributeError:
-            raise TypeError("Unsupported type of argument passed.")
+        if not all(isinstance(arg, LinearTimeInvariant) for arg in args):
+            raise TypeError("All arguments must be of type LinearTimeInvariant.")
+
+        type_set = {arg.is_SISO for arg in args}
+        if len(type_set) != 1:
+            raise TypeError("Invalid system. `args` passed contain SISO as well "
+                "as MIMO elements.")
+        var_set = {arg.var for arg in args}
+        if len(var_set) != 1:
+            raise ValueError("All transfer functions should use the same complex variable"
+                f" of the Laplace transform. {len(var_set)} different values found.")
 
         if list(type_set)[0]:
             obj = super().__new__(cls, *args)
@@ -888,11 +884,11 @@ class Series(LinearTimeInvariant):
 
     @property
     def num_inputs(self):
-        return getattr(self.args[0], "num_inputs", None)
+        return None if self.is_SISO else self.args[0].num_inputs
 
     @property
     def num_outputs(self):
-        return getattr(self.args[-1], "num_outputs", None)
+        return None if self.is_SISO else self.args[-1].num_outputs
 
     @property
     def shape(self):
@@ -946,11 +942,11 @@ class Series(LinearTimeInvariant):
         return self.doit()
 
     def __add__(self, other):
-        try:
-            if self.is_SISO != other.is_SISO:
-                raise TypeError("Cannot add SISO and MIMO systems together.")
-        except AttributeError:
-            raise ValueError(f"Cannot add Series type with {type(other)}.")
+        if not isinstance(other, LinearTimeInvariant):
+             return NotImplemented
+
+        if self.is_SISO != other.is_SISO:
+            raise TypeError("Cannot add SISO and MIMO systems together.")
 
         if isinstance(other, Parallel):
             arg_list = list(other.args)
@@ -967,11 +963,11 @@ class Series(LinearTimeInvariant):
         return -self + other
 
     def __mul__(self, other):
-        try:
-            if self.is_SISO != other.is_SISO:
-                raise TypeError("Cannot multiply SISO and MIMO systems together.")
-        except AttributeError:
-            raise ValueError(f"Cannot multiply Series type with {type(other)}.")
+        if not isinstance(other, LinearTimeInvariant):
+             return NotImplemented
+
+        if self.is_SISO != other.is_SISO:
+            raise TypeError("Cannot multiply SISO and MIMO systems together.")
 
         if isinstance(other, Series):
             self_arg_list = list(self.args)
@@ -1217,17 +1213,17 @@ class Parallel(LinearTimeInvariant):
         if len(args) == 0:
             raise ValueError("Atleast 1 argument must be passed.")
 
-        try:
-            type_set = {arg.is_SISO for arg in args}
-            if len(type_set) != 1:
-                raise TypeError("Invalid system. `args` passed contain SISO as well "
-                    "as MIMO elements.")
-            var_set = {arg.var for arg in args}
-            if len(var_set) != 1:
-                raise ValueError("All transfer functions should use the same complex variable"
-                    f" of the Laplace transform. {len(var_set)} different values found.")
-        except AttributeError:
-            raise TypeError("Unsupported type of argument passed.")
+        if not all(isinstance(arg, LinearTimeInvariant) for arg in args):
+            raise TypeError("All arguments must be of type LinearTimeInvariant.")
+
+        type_set = {arg.is_SISO for arg in args}
+        if len(type_set) != 1:
+            raise TypeError("Invalid system. `args` passed contain SISO as well "
+                "as MIMO elements.")
+        var_set = {arg.var for arg in args}
+        if len(var_set) != 1:
+            raise ValueError("All transfer functions should use the same complex variable"
+                f" of the Laplace transform. {len(var_set)} different values found.")
 
         if list(type_set)[0]:
             obj = super().__new__(cls, *args)
@@ -1263,11 +1259,11 @@ class Parallel(LinearTimeInvariant):
 
     @property
     def num_inputs(self):
-        return getattr(self.args[0], "num_inputs", None)
+        return None if self.is_SISO else self.args[0].num_inputs
 
     @property
     def num_outputs(self):
-        return getattr(self.args[0], "num_outputs", None)
+        return None if self.is_SISO else self.args[0].num_outputs
 
     @property
     def shape(self):
@@ -1322,11 +1318,11 @@ class Parallel(LinearTimeInvariant):
         return self.doit()
 
     def __add__(self, other):
-        try:
-            if self.is_SISO != other.is_SISO:
-                TypeError("Cannot add a SISO system with a MIMO one.")
-        except AttributeError:
-            raise TypeError(f"Cannot add Parallel with {type(other)}")
+        if not isinstance(other, LinearTimeInvariant):
+             return NotImplemented
+
+        if self.is_SISO != other.is_SISO:
+            raise TypeError("Cannot add SISO and MIMO systems together.")
 
         if isinstance(other, Parallel):
             self_arg_list = list(self.args)
@@ -1345,11 +1341,11 @@ class Parallel(LinearTimeInvariant):
         return -self + other
 
     def __mul__(self, other):
-        try:
-            if self.is_SISO != other.is_SISO:
-                TypeError("Cannot multiply a SISO system with a MIMO one.")
-        except AttributeError:
-            raise TypeError(f"Cannot multiply Parallel with {type(other)}")
+        if not isinstance(other, LinearTimeInvariant):
+             return NotImplemented
+
+        if self.is_SISO != other.is_SISO:
+            raise TypeError("Cannot multiply SISO and MIMO systems together.")
 
         if isinstance(other, Series):
             arg_list = list(other.args)
@@ -2201,11 +2197,11 @@ class TransferFunctionMatrix(LinearTimeInvariant):
         return _to_TFM(neg, self.var)
 
     def __add__(self, other):
-        try:
-            if other.is_SISO:
-                raise ValueError("Cannot add SISO system with a MIMO one.")
-        except AttributeError:
-            raise ValueError(f"Cannot add TransferFunctionMatrix with {type(other)}")
+        if not isinstance(other, LinearTimeInvariant):
+             return NotImplemented
+
+        if self.is_SISO != other.is_SISO:
+            raise TypeError("Cannot add SISO and MIMO systems together.")
 
         if not isinstance(other, Parallel):
             return Parallel(self, other)
@@ -2216,11 +2212,11 @@ class TransferFunctionMatrix(LinearTimeInvariant):
         return self + (-other)
 
     def __mul__(self, other):
-        try:
-            if other.is_SISO:
-                raise ValueError("Cannot multiply SISO system with a MIMO one.")
-        except AttributeError:
-            raise ValueError(f"Cannot multiply TransferFunctionMatrix with {type(other)}")
+        if not isinstance(other, LinearTimeInvariant):
+             return NotImplemented
+
+        if self.is_SISO != other.is_SISO:
+            raise TypeError("Cannot multiply SISO and MIMO systems together.")
 
         if not isinstance(other, Series):
             return Series(other, self)
