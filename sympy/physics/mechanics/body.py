@@ -365,16 +365,18 @@ class Body(RigidBody, Particle):  # type: ignore
 
         self._loads = []
 
-    def remove_load(self, about):
+    def remove_load(self, about=None):
         """
         Remove load about a point or frame.
 
         Parameters
         ==========
 
-        about : Point or ReferenceFrame
-            The point about which force is applied or
-            the frame about which torque is applied.
+        about : Point, optional
+            The point about which force is applied,
+            and is to be removed.
+            If about is None, then the torque about 
+            self's frame is removed.
 
         Example
         =======
@@ -395,9 +397,11 @@ class Body(RigidBody, Particle):  # type: ignore
 
         """
 
-        if not isinstance(about, ReferenceFrame):
+        if about is not None:
             if not isinstance(about, Point):
                 raise TypeError('Load is applied about Point or ReferenceFrame.')
+        else:
+            about = self.frame
 
         for load in self._loads:
             if about in load:

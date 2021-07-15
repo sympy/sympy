@@ -239,6 +239,10 @@ def test_remove_load():
     B.loads == [(P1, f1), (P2, f2)]
     B.remove_load(P2)
     B.loads == [(P1, f1)]
+    B.apply_torque(f1.cross(f2))
+    B.loads == [(P1, f1), (B.frame, f1.cross(f2))]
+    B.remove_load()
+    B.loads == [(P1, f1)]
 
 def test_apply_loads_on_multi_degree_freedom_holonomic_system():
     """Example based on: https://pydy.readthedocs.io/en/latest/examples/multidof-holonomic.html"""
