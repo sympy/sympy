@@ -176,7 +176,7 @@ def test_clear_load():
     force = a*B.z
     B.apply_force(force, P)
     assert B.loads == [(P, force)]
-    B.clear_load()
+    B.clear_loads()
     assert B.loads == []
 
 def test_remove_load():

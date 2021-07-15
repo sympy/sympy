@@ -259,7 +259,7 @@ class Body(RigidBody, Particle):  # type: ignore
                 break
         self._loads.append((self.frame, vec))
 
-    def clear_load(self):
+    def clear_loads(self):
         """
         Clears the Body's loads list.
 
@@ -272,7 +272,7 @@ class Body(RigidBody, Particle):  # type: ignore
         >>> B.apply_force(force)
         >>> B.loads
         [(B_masscenter, B_frame.x + B_frame.y)]
-        >>> B.clear_load()
+        >>> B.clear_loads()
         >>> B.loads
         []
 
