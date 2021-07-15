@@ -1720,3 +1720,12 @@ def test_issue_21034():
 
     assert integrate(f2, x) == \
         log(x**2 + S(1)/12)/2 + 2*sqrt(3)*cosh(cos(4))*atan(2*sqrt(3)*x)
+
+
+def test_issue_21741():
+    x,y,z,t = symbols('x y z t', positive=True)
+    #Both integrals are exactly the same.
+    assert integrate(E ** ((-2*I*pi*(z*x+t*y))/((500*(Rational(1,10**9))))), z).simplify() == \
+        (I*E**(-4000000*I*pi*(t*y+x*z)))/(4000000*pi*x).simplify()
+    assert integrate((E ** (-4000000*I*pi*(z*x+t*y))), z).simplify() == \
+        (I*E**(-4000000*I*pi*(t*y+x*z)))/(4000000*pi*x).simplify()
