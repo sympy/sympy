@@ -101,7 +101,7 @@ factorable
    :members:
 
 1st_rational_riccati
-^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.ode.single::RationalRiccati
    :members:
 
