@@ -162,7 +162,7 @@ nth_algebraic
 
 nth_order_reducible
 ^^^^^^^^^^^^^^^^^^^
-.. autoclass:: sympy.solvers.ode.ode::NthOrderReducible
+.. autoclass:: sympy.solvers.ode.single::NthOrderReducible
    :members:
 
 separable
@@ -187,7 +187,7 @@ separable_reduced
 
 lie_group
 ^^^^^^^^^
-.. autoclass:: sympy.solvers.ode.ode::LieGroup
+.. autoclass:: sympy.solvers.ode.single::LieGroup
    :members:
 
 2nd_hypergeometric

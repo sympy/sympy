@@ -605,10 +605,11 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             x0=x0, n=n, **kwargs)
         eq = hints.pop('eq', eq)
         all_ = hints.pop('all', False)
+        print(all_)
         if all_:
             retdict = {}
             failed_hints = {}
-            gethints = classify_ode(eq, dict=True)
+            gethints = classify_ode(eq, dict=True,hint='all')
             orderedhints = gethints['ordered_hints']
             for hint in hints:
                 try:
@@ -1021,24 +1022,20 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     early_exit = (user_hint=='default')
     if user_hint.endswith('_Integral'):
         user_hint = user_hint[:-len('_Integral')]
-
+    user_map = solver_map
     # An explicit hint has been given to dsolve
     # Skip matching code for other hints
     if user_hint not in ['default', 'all', 'all_Integral', 'best'] and user_hint in solver_map:
-        solver = solver_map[user_hint](ode)
+        user_map = {user_hint: solver_map[user_hint]}
+
+    for hint in user_map:
+        solver = user_map[hint](ode)
         if solver.matches():
-            matching_hints[user_hint] = solver
-            if solver_map[user_hint].has_integral:
-                matching_hints[user_hint + "_Integral"] = solver
-    else:
-        for hint in solver_map:
-            solver = solver_map[hint](ode)
-            if solver.matches():
-                matching_hints[hint] = solver
-                if solver_map[hint].has_integral:
-                    matching_hints[hint + "_Integral"] = solver
-                if dict and early_exit:
-                    break
+            matching_hints[hint] = solver
+            if user_map[hint].has_integral:
+                matching_hints[hint + "_Integral"] = solver
+            if dict and early_exit:
+                break
 
     eq = expand(eq)
     # Precondition to try remove f(x) from highest order derivative
