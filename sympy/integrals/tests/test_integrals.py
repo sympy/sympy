@@ -402,6 +402,15 @@ def test_issue_13749():
 def test_issue_18133():
     assert integrate(exp(x)/(1 + x)**2, x) == NonElementaryIntegral(exp(x)/(x + 1)**2, x)
 
+def test_issue_21741():
+    from sympy import Float
+    def check_elements(q1, q2):
+        assert type(q1) is type(q2)
+        assert q1 == q2
+    a = Float('3999999.9999999995', precision=53)
+    b = Float('2.5000000000000004e-7', precision=53)
+    r = Piecewise((b*I*exp(-a*I*pi*t*y)*exp(-a*I*pi*x*z)/(pi*x), Ne(1.0*pi*x*exp(a*I*pi*t*y), 0)), (z*exp(-a*I*pi*t*y), True))
+    check_elements(integrate(E**((-2*I*pi*(z*x+t*y))/(500*(10**(-9)))),z),r)
 
 def test_matrices():
     M = Matrix(2, 2, lambda i, j: (i + j + 1)*sin((i + j + 1)*x))
