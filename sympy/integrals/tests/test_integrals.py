@@ -5,7 +5,8 @@ from sympy import (
     integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol, summation,
-    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper
+    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper,
+    Float
 )
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.complexes import periodic_argument
@@ -401,6 +402,16 @@ def test_issue_13749():
 
 def test_issue_18133():
     assert integrate(exp(x)/(1 + x)**2, x) == NonElementaryIntegral(exp(x)/(x + 1)**2, x)
+
+
+def test_issue_21741():
+    a = Float('3999999.9999999995', precision=53)
+    b = Float('2.5000000000000004e-7', precision=53)
+    r = Piecewise((b*I*exp(-a*I*pi*t*y)*exp(-a*I*pi*x*z)/(pi*x),
+                   Ne(1.0*pi*x*exp(a*I*pi*t*y), 0)),
+                  (z*exp(-a*I*pi*t*y), True))
+    fun = E**((-2*I*pi*(z*x+t*y))/(500*10**(-9)))
+    assert integrate(fun, z) == r
 
 
 def test_matrices():
