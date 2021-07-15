@@ -2178,3 +2178,9 @@ def test_floordiv():
 def test_zero_negation():
     a = Float(0)
     assert -a is not S.Zero and a == 0
+
+
+def test_null_difference():
+    for i in 0., 1.:
+        assert i - Integer(i) == Float(0)
+        assert -i + Integer(i) == Float(0)

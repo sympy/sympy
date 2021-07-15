@@ -728,10 +728,14 @@ class Number(AtomicExpr):
         if isinstance(other, Number) and global_parameters.evaluate:
             if other is S.NaN:
                 return S.NaN
-            elif other is S.Infinity:
+            if other is S.Infinity:
                 return S.NegativeInfinity
-            elif other is S.NegativeInfinity:
+            if other is S.NegativeInfinity:
                 return S.Infinity
+            if self == other:
+                if self.is_Float or other.is_Float:
+                    return Float(0)
+                return S.Zero
         return AtomicExpr.__sub__(self, other)
 
     @_sympifyit('other', NotImplemented)
