@@ -5,8 +5,7 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      inertia, inertia_of_point_mass,
                                      kinetic_energy, linear_momentum,
                                      outer, potential_energy, msubs,
-                                     find_dynamicsymbols, Lagrangian,
-                                     Body)
+                                     find_dynamicsymbols, Lagrangian)
 
 from sympy.physics.mechanics.functions import gravity, center_of_mass
 from sympy.physics.vector.vector import Vector

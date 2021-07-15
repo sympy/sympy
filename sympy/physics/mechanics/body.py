@@ -305,7 +305,7 @@ class Body(RigidBody, Particle):  # type: ignore
         To further demonstrate the use, let us consider two bodies such that
         a torque `T` is acting on one body, and `-T` on the other.
 
-        >>> from sympy.physics.mechanics import Body, apply_torque, dynamicsymbols
+        >>> from sympy.physics.mechanics import Body, dynamicsymbols
         >>> N = Body('N') #Newtonion frame
         >>> B1 = Body('B1')
         >>> B2 = Body('B2')
