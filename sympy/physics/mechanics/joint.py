@@ -705,7 +705,7 @@ class PrismaticJoint(Joint):
     v_J1(t)*W_frame.x
 
     >>> Part2.masscenter.vel(wall.frame)
-    v_J1(t)*W_frame.x + Derivative(x_J2(t), t)*P1_frame.x
+    v_J1(t)*W_frame.x + v_J2(t)*P1_frame.x
 
     """
 
