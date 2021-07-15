@@ -208,7 +208,10 @@ class Pow(Expr):
     |              |         | where the base is assumed to be positive.     |
     +--------------+---------+-----------------------------------------------+
     | 0**oo        | 0       | Because for all complex numbers z near        |
-    |              |         | 0, z**oo -> 0                                 |
+    | 0.0**oo      |         | 0, z**oo -> 0                                 |
+    +--------------+---------+-----------------------------------------------+
+    | 0.0**e with  | 0.0     | 0, z**oo -> 0                                 |
+    | 0 < e < oo   |         |                                               |
     +--------------+---------+-----------------------------------------------+
     | 0**-oo       | zoo     | This is not strictly true, as 0**oo may be    |
     |              |         | oscillating between positive and negative     |

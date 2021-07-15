@@ -272,8 +272,7 @@ def test_zero():
     assert Float(0)**2 is not S.Zero
     assert Float(0)**2 == 0.0
     assert Float(0)**-2 is zoo
-    assert Float(0)**oo is not S.Zero
-    assert Float(0)**oo == 0.0
+    assert Float(0)**oo is S.Zero
 
     #Test issue 19572
     assert 0 ** -oo is zoo

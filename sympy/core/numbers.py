@@ -1350,14 +1350,16 @@ class Float(Number):
         (-p)**r -> exp(r*log(-p)) -> exp(r*(log(p) + I*Pi)) ->
                   -> p**r*(sin(Pi*r) + cos(Pi*r)*I)
         """
-        if self == 1:
+        if self == 1.0:
             if (expt.is_extended_real is False and
                     expt.is_infinite is not False):
                 return S.NaN
             if expt.is_finite:
                 return self
-        if self == 0:
+        if self == 0.0:
             if expt.is_extended_positive:
+                if expt.is_positive:
+                    return self
                 return S.Zero
             if expt.is_extended_negative:
                 return S.ComplexInfinity
