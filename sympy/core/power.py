@@ -244,30 +244,6 @@ class Pow(Expr):
     | b = +/-oo    |         | limit is 0.                                   |
     +--------------+---------+-----------------------------------------------+
 
-    These are an affirmation of the above table:
-
-    >>> from sympy.abc import z
-    >>> from sympy import oo, S, zoo, I
-    >>> assert z**0 is S.One
-    >>> assert z**1 == z
-    >>> assert all(S.One**i is S.One for i in (z, -oo, oo, 1.0))
-    >>> assert str(oo**-1) == '0.0'
-    >>> assert S(-1)**-1 is S.NegativeOne
-    >>> assert (-1)**oo is (-1)**-oo is S.NaN
-    >>> assert S.Zero**-1 is zoo
-    >>> assert str(0**oo) == '0'
-    >>> assert str(0.0**oo) == '0'
-    >>> assert 0**-oo is zoo
-    >>> assert all(b**e is S.NaN for b in (-1.0, 1.0) for e in (oo, -oo))
-    >>> assert str(zoo**-1) == '0.0'
-    >>> assert z**zoo is S.NaN
-    >>> assert oo**oo is oo
-    >>> assert str(oo**-oo) == '0.0'
-    >>> assert all((-oo)**e is S.NaN for e in (-oo, oo))
-    >>> assert all(b**I is S.NaN for b in (-oo, oo))
-    >>> assert all((b**(1 + I)).simplify() is zoo for b in (-oo, oo))
-    >>> assert all(str(b**(-1+I)) == '0.0' for b in (-oo, oo))
-
     Because symbolic computations are more flexible that floating point
     calculations and we prefer to never return an incorrect answer,
     we choose not to conform to all IEEE 754 conventions.  This helps
