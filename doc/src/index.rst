@@ -5,6 +5,7 @@
    contain the root `toctree` directive.
 
 Welcome to SymPy's documentation!
+
 =================================
 
 A PDF version of these docs can be found `here <https://github.com/sympy/sympy/releases>`_.
@@ -14,6 +15,52 @@ If you are new to SymPy, start with the :ref:`Tutorial <tutorial>`.
 
 This is the central page for all of SymPy's documentation.
 
+==================================================================
+
+..  rst-class:: column
+
+:ref:`Getting started <getting_started>`
+-------------------------------------------------------
+
+An introduction to SymPy for developers and detailed tutorials.
+
+
+
+..  rst-class:: column
+
+:ref:`How-to Guides <how_to_guide>`
+-------------------------------------------------------
+
+Covers step-by-step intructions on how to do different key developer tasks.
+
+
+..  rst-class:: column clearfix
+
+:ref:`Explanation <explanation>`
+-------------------------------------------------------
+
+Clarification and discussion of common pitfalls and advanced topics.
+
+
+..  rst-class:: column
+
+:ref:`Reference <reference>`
+-------------------------------------------------------
+
+Discusses and details the internal and public modules
+
+
+..  rst-class:: clearfix row custom-headings
+
+=================================
+
+
+:ref:`Contributing <contributing>`
+-------------------------------------------------------
+
+Covers instructions for SymPy contributors.
+
+..  rst-class:: clearfix row custom-headings
 
 Contents:
 
@@ -31,3 +78,9 @@ Contents:
    aboutus.rst
    citing.rst
    documentation-style-guide.rst
+   getting_started/index.rst
+   explanation/index.rst
+   reference/index.rst
+   how_to_guide/index.rst
+   contributing/index.rst
+

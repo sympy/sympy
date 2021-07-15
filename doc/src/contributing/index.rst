@@ -1,0 +1,5 @@
+.. _contributing:
+
+==============
+ Contributing
+==============
