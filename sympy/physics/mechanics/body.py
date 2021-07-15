@@ -375,7 +375,7 @@ class Body(RigidBody, Particle):  # type: ignore
         about : Point, optional
             The point about which force is applied,
             and is to be removed.
-            If about is None, then the torque about 
+            If about is None, then the torque about
             self's frame is removed.
 
         Example
