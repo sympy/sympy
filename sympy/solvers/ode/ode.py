@@ -605,7 +605,6 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             x0=x0, n=n, **kwargs)
         eq = hints.pop('eq', eq)
         all_ = hints.pop('all', False)
-        print(all_)
         if all_:
             retdict = {}
             failed_hints = {}
