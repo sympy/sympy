@@ -868,7 +868,10 @@ def test_issue_7971():
     z = Integral(x, (x, 1, 1))
     assert z != 0
     assert simplify(z) is S.Zero
-
+    # 21740
+    assert simplify(S.Zero) is S.Zero
+    z = simplify(Float(0))
+    assert z == Float(0) and type(z) is Float
 
 @slow
 def test_issue_17141_slow():

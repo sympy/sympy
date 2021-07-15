@@ -1356,15 +1356,13 @@ class AccumulationBounds(AtomicExpr):
                     # no 0 to worry about
                     if other.is_nonnegative:
                         # no infinity to worry about
-                        return self.func(
-                            _pow(other, self.min),
-                            _pow(other, self.max))
+                        return self.func(*_pow(other, *self.args))
 
             if other.is_zero:
                 return S.One  # x**0 = 1
 
             if other.is_Integer or other.is_integer:
-                args = _pow(other, self.min, self.max)
+                args = _pow(other, *self.args)
                 if self.min.is_extended_positive:
                     return AccumBounds(
                         Min(*args),
@@ -1382,7 +1380,7 @@ class AccumulationBounds(AtomicExpr):
                             return AccumBounds(_pow(other, self.min), oo)
                         return AccumBounds(0, oo)
                     return AccumBounds(
-                        S.Zero, Max(*_pow(other, self.min, self.max)))
+                        S.Zero, Max(*_pow(other, *self.args)))
                 elif other % 2 == 1:
                     if other.is_extended_negative:
                         if self.min.is_zero:
@@ -1390,7 +1388,7 @@ class AccumulationBounds(AtomicExpr):
                         if self.max.is_zero:
                             return AccumBounds(-oo, _pow(other, self.min))
                         return AccumBounds(-oo, oo)
-                    return AccumBounds(*_pow(other, self.min, self.max))
+                    return AccumBounds(*_pow(other, *self.args))
 
             # non-integer exponent
             # 0**neg or neg**frac yields complex

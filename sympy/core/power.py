@@ -193,20 +193,22 @@ class Pow(Expr):
     +--------------+---------+-----------------------------------------------+
     | z**1         | z       |                                               |
     +--------------+---------+-----------------------------------------------+
-    | (-oo)**(-1)  | 0       |                                               |
+    | 1**z         | 1       | because 1 is considered exact                 |
+    +--------------+---------+-----------------------------------------------+
+    | oo**-1       | 0.0     |                                               |
+    | (-oo)**-1    |         |                                               |
     +--------------+---------+-----------------------------------------------+
     | (-1)**-1     | -1      |                                               |
+    +--------------+---------+-----------------------------------------------+
+    | (-1)**oo     | nan     | Because of oscillations in the limit.         |
+    | (-1)**-oo    |         |                                               |
     +--------------+---------+-----------------------------------------------+
     | S.Zero**-1   | zoo     | This is not strictly true, as 0**-1 may be    |
     |              |         | undefined, but is convenient in some contexts |
     |              |         | where the base is assumed to be positive.     |
     +--------------+---------+-----------------------------------------------+
-    | 1**-1        | 1       |                                               |
-    +--------------+---------+-----------------------------------------------+
-    | oo**-1       | 0       |                                               |
-    +--------------+---------+-----------------------------------------------+
     | 0**oo        | 0       | Because for all complex numbers z near        |
-    |              |         | 0, z**oo -> 0.                                |
+    |              |         | 0, z**oo -> 0                                 |
     +--------------+---------+-----------------------------------------------+
     | 0**-oo       | zoo     | This is not strictly true, as 0**oo may be    |
     |              |         | oscillating between positive and negative     |
@@ -214,18 +216,17 @@ class Pow(Expr):
     |              |         | It is convenient, however, when the base      |
     |              |         | is positive.                                  |
     +--------------+---------+-----------------------------------------------+
-    | 1**oo        | nan     | Because there are various cases where         |
-    | 1**-oo       |         | lim(x(t),t)=1, lim(y(t),t)=oo (or -oo),       |
-    |              |         | but lim( x(t)**y(t), t) != 1.  See [3].       |
+    | b**e with    | nan     | Because there are various cases where         |
+    | b = +/-1.0   |         | lim(x(t),t)=1, lim(y(t),t)=oo (or -oo),       |
+    | e = +/-oo    |         | but lim(x(t)**y(t), t) != 1.  See [3].        |
+    +--------------+---------+-----------------------------------------------+
+    | zoo**-1      | 0.0     |                                               |
     +--------------+---------+-----------------------------------------------+
     | b**zoo       | nan     | Because b**z has no limit as z -> zoo         |
     +--------------+---------+-----------------------------------------------+
-    | (-1)**oo     | nan     | Because of oscillations in the limit.         |
-    | (-1)**(-oo)  |         |                                               |
-    +--------------+---------+-----------------------------------------------+
     | oo**oo       | oo      |                                               |
     +--------------+---------+-----------------------------------------------+
-    | oo**-oo      | 0       |                                               |
+    | oo**-oo      | 0.0     |                                               |
     +--------------+---------+-----------------------------------------------+
     | (-oo)**oo    | nan     |                                               |
     | (-oo)**-oo   |         |                                               |
@@ -235,13 +236,37 @@ class Pow(Expr):
     |              |         | oo. If e is I, then the limit does not exist  |
     |              |         | and nan is used to indicate that.             |
     +--------------+---------+-----------------------------------------------+
-    | oo**(1+I)    | zoo     | If the real part of e is positive, then the   |
-    | (-oo)**(1+I) |         | limit of abs(x**e) is oo. So the limit value  |
-    |              |         | is zoo.                                       |
+    | b**(1+I) and | zoo     | If the real part of e is positive, then the   |
+    | b = +/-oo    |         | limit of abs(x**e) is oo. So the limit value  |
+    |              |         | is zoo. (-oo)**(1+I) simplifies to zoo.       |
     +--------------+---------+-----------------------------------------------+
-    | oo**(-1+I)   | 0       | If the real part of e is negative, then the   |
-    | -oo**(-1+I)  |         | limit is 0.                                   |
+    | b**(-1+I) and| 0.0     | If the real part of e is negative, then the   |
+    | b = +/-oo    |         | limit is 0.                                   |
     +--------------+---------+-----------------------------------------------+
+
+    These are an affirmation of the above table:
+
+    >>> from sympy.abc import z
+    >>> from sympy import oo, S, zoo, I
+    >>> assert z**0 is S.One
+    >>> assert z**1 == z
+    >>> assert all(S.One**i is S.One for i in (z, -oo, oo, 1.0))
+    >>> assert str(oo**-1) == '0.0'
+    >>> assert S(-1)**-1 is S.NegativeOne
+    >>> assert (-1)**oo is (-1)**-oo is S.NaN
+    >>> assert S.Zero**-1 is zoo
+    >>> assert str(0**oo) == '0'
+    >>> assert str(0.0**oo) == '0'
+    >>> assert 0**-oo is zoo
+    >>> assert all(b**e is S.NaN for b in (-1.0, 1.0) for e in (oo, -oo))
+    >>> assert str(zoo**-1) == '0.0'
+    >>> assert z**zoo is S.NaN
+    >>> assert oo**oo is oo
+    >>> assert str(oo**-oo) == '0.0'
+    >>> assert all((-oo)**e is S.NaN for e in (-oo, oo))
+    >>> assert all(b**I is S.NaN for b in (-oo, oo))
+    >>> assert all((b**(1 + I)).simplify() is zoo for b in (-oo, oo))
+    >>> assert all(str(b**(-1+I)) == '0.0' for b in (-oo, oo))
 
     Because symbolic computations are more flexible that floating point
     calculations and we prefer to never return an incorrect answer,

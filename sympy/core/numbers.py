@@ -1348,7 +1348,7 @@ class Float(Number):
         """
         if self == 0:
             if expt.is_extended_positive:
-                return Float(0)
+                return S.Zero
             if expt.is_extended_negative:
                 return S.ComplexInfinity
         if isinstance(expt, Number):
