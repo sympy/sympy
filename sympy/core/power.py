@@ -294,7 +294,7 @@ class Pow(Expr):
 
         if evaluate:
             if e is S.ComplexInfinity:
-                return S.NaN
+                return b if b is S.One else S.NaN
             if e is S.Zero:
                 return S.One
             elif e is S.One:

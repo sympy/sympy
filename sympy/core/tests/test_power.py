@@ -418,16 +418,17 @@ def test_issue_7638():
 
 
 def test_one_pow():
-    # issue 8582
-    assert 1**oo is S.One
-    assert 1**(-oo) is S.One
-    assert 1**zoo is nan
-    assert 1**(oo + I) is nan
-    assert 1**(1 + I*oo) is nan
-    assert 1**(oo + I*oo) is nan
-    assert 1**I is S.One
-    assert 1**Symbol('', extended_real=False) is nan
-    assert 1**Symbol('', extended_real=False, infinite=False) is S.One
+    # issue 8582, 21740
+    er1 = Symbol('er1', extended_real=False)
+    er2 = Symbol('er2', extended_real=False, infinte=False)
+    e = (-oo, oo, zoo, oo + I, 1 + I*oo, oo + I*oo, I, er1, er2)
+    for i in e:
+        assert 1**i is S.One, (i, 1**i)
+    for i in e:
+        if i.is_finite:
+            assert 1.0**i == 1.0, (i, 1.**i)
+        else:
+            assert 1.0**i is S.NaN, (i, 1.**i)
 
 
 def test_issue_8650():

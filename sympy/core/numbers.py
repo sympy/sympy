@@ -1346,6 +1346,12 @@ class Float(Number):
         (-p)**r -> exp(r*log(-p)) -> exp(r*(log(p) + I*Pi)) ->
                   -> p**r*(sin(Pi*r) + cos(Pi*r)*I)
         """
+        if self == 1:
+            if (expt.is_extended_real is False and
+                    expt.is_infinite is not False):
+                return S.NaN
+            if expt.is_finite:
+                return self
         if self == 0:
             if expt.is_extended_positive:
                 return S.Zero
@@ -2755,8 +2761,6 @@ class One(IntegerConstant, metaclass=Singleton):
         return S.NegativeOne
 
     def _eval_power(self, expt):
-        if expt.is_extended_real is False and expt.is_infinite is not False:
-            return S.NaN
         return self
 
     def _eval_order(self, *symbols):
