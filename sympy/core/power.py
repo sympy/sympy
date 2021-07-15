@@ -195,10 +195,8 @@ class Pow(Expr):
     +--------------+---------+-----------------------------------------------+
     | 1**z         | 1       | because 1 is considered exact                 |
     +--------------+---------+-----------------------------------------------+
-    | oo**-1       | 0.0     |                                               |
-    | (-oo)**-1    |         |                                               |
-    +--------------+---------+-----------------------------------------------+
-    | (-1)**-1     | -1      |                                               |
+    | oo**-1       | 0.0     | guards against using oo to make               |
+    | (-oo)**-1    |         | conclusions best made with limits             |
     +--------------+---------+-----------------------------------------------+
     | (-1)**oo     | nan     | Because of oscillations in the limit.         |
     | (-1)**-oo    |         |                                               |
@@ -210,8 +208,8 @@ class Pow(Expr):
     | 0**oo        | 0       | Because for all complex numbers z near        |
     | 0.0**oo      |         | 0, z**oo -> 0                                 |
     +--------------+---------+-----------------------------------------------+
-    | 0.0**e with  | 0.0     | 0, z**oo -> 0                                 |
-    | 0 < e < oo   |         |                                               |
+    | 0.0**e with  | 0.0     | a finite exponent does not remove             |
+    | 0 < e < oo   |         | any difference from 0 represented by 0.0      |
     +--------------+---------+-----------------------------------------------+
     | 0**-oo       | zoo     | This is not strictly true, as 0**oo may be    |
     |              |         | oscillating between positive and negative     |
@@ -247,7 +245,7 @@ class Pow(Expr):
     | b = +/-oo    |         | limit is 0.                                   |
     +--------------+---------+-----------------------------------------------+
 
-    Because symbolic computations are more flexible that floating point
+    Because symbolic computations are more flexible than floating point
     calculations and we prefer to never return an incorrect answer,
     we choose not to conform to all IEEE 754 conventions.  This helps
     us avoid extra test-case code in the calculation of limits.
