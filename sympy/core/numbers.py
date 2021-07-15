@@ -2422,6 +2422,76 @@ class Integer(Rational):
     def __rfloordiv__(self, other):
         return Integer(Integer(other).p // self.p)
 
+    # These bitwise operations (__lshift__, __rlshift__, ..., __invert__) are defined
+    # for Integer only and not for general sympy expressions. This is to achieve
+    # compatibility with the numbers.Integral ABC which only defines these operations
+    # among instances of numbers.Integral. Therefore, these methods check explicitly for
+    # integer types rather than using sympify because they should not accept arbitrary
+    # symbolic expressions and there is no symbolic analogue of numbers.Integral's
+    # bitwise operations.
+    def __lshift__(self, other):
+        if isinstance(other, (int, Integer, numbers.Integral)):
+            return Integer(self.p << int(other))
+        else:
+            return NotImplemented
+
+    def __rlshift__(self, other):
+        if isinstance(other, (int, numbers.Integral)):
+            return Integer(int(other) << self.p)
+        else:
+            return NotImplemented
+
+    def __rshift__(self, other):
+        if isinstance(other, (int, Integer, numbers.Integral)):
+            return Integer(self.p >> int(other))
+        else:
+            return NotImplemented
+
+    def __rrshift__(self, other):
+        if isinstance(other, (int, numbers.Integral)):
+            return Integer(int(other) >> self.p)
+        else:
+            return NotImplemented
+
+    def __and__(self, other):
+        if isinstance(other, (int, Integer, numbers.Integral)):
+            return Integer(self.p & int(other))
+        else:
+            return NotImplemented
+
+    def __rand__(self, other):
+        if isinstance(other, (int, numbers.Integral)):
+            return Integer(int(other) & self.p)
+        else:
+            return NotImplemented
+
+    def __xor__(self, other):
+        if isinstance(other, (int, Integer, numbers.Integral)):
+            return Integer(self.p ^ int(other))
+        else:
+            return NotImplemented
+
+    def __rxor__(self, other):
+        if isinstance(other, (int, numbers.Integral)):
+            return Integer(int(other) ^ self.p)
+        else:
+            return NotImplemented
+
+    def __or__(self, other):
+        if isinstance(other, (int, Integer, numbers.Integral)):
+            return Integer(self.p | int(other))
+        else:
+            return NotImplemented
+
+    def __ror__(self, other):
+        if isinstance(other, (int, numbers.Integral)):
+            return Integer(int(other) | self.p)
+        else:
+            return NotImplemented
+
+    def __invert__(self):
+        return Integer(~self.p)
+
 # Add sympify converters
 converter[int] = Integer
 
@@ -4054,6 +4124,6 @@ def _register_classes():
     numbers.Number.register(Number)
     numbers.Real.register(Float)
     numbers.Rational.register(Rational)
-    numbers.Rational.register(Integer)
+    numbers.Integral.register(Integer)
 
 _register_classes()

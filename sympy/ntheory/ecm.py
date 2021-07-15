@@ -209,8 +209,6 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     k = 1
     for p in sieve.primerange(1, B1 + 1):
         k *= pow(p, integer_log(B1, p)[0])
-    g = 1
-
     while(curve <= max_curve):
         curve += 1
 

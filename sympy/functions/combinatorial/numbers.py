@@ -2146,9 +2146,7 @@ class motzkin(Function):
             raise ValueError('The provided number must be a positive integer')
         if n < 0:
             raise ValueError('The provided number must be a positive integer')
-        motzkins = list()
-        if n >= 0:
-            motzkins.append(1)
+        motzkins = [1]
         if n >= 1:
             motzkins.append(1)
         tn1 = 1

@@ -34,6 +34,18 @@ def test_bessel_twoinputs():
         raises(TypeError, lambda: f(1, 2, 3))
 
 
+def test_besselj_leading_term():
+    assert besselj(0, x).as_leading_term(x) == 1
+    assert besselj(1, sin(x)).as_leading_term(x) == x/2
+    assert besselj(1, 2*sqrt(x)).as_leading_term(x) == sqrt(x)
+
+
+def test_bessely_leading_term():
+    assert bessely(0, x).as_leading_term(x) == (2*log(x) - 2*log(2))/pi
+    assert bessely(1, sin(x)).as_leading_term(x) == (x*log(x) - x*log(2))/pi
+    assert bessely(1, 2*sqrt(x)).as_leading_term(x) == sqrt(x)*log(x)/pi
+
+
 def test_besselj_series():
     assert besselj(0, x).series(x) == 1 - x**2/4 + x**4/64 + O(x**6)
     assert besselj(0, x**(1.1)).series(x) == 1 + x**4.4/64 - x**2.2/4 + O(x**6)

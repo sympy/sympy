@@ -1,7 +1,7 @@
 from sympy import (atan, Eq, exp, Function, log,
     Rational, sin, sqrt, Symbol, tan, symbols)
 
-from sympy.solvers.ode import (classify_ode, infinitesimals, checkinfsol, dsolve)
+from sympy.solvers.ode import (classify_ode, checkinfsol, dsolve, infinitesimals)
 
 from sympy.solvers.ode.subscheck import checkodesol
 

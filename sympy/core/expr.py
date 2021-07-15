@@ -1018,7 +1018,9 @@ class Expr(Basic, EvalfMixin):
             minexp += S.One
             arg = arg.diff(x)
             coeff = arg.subs(x, 0)
-            if coeff in (S.NaN, S.ComplexInfinity):
+            if coeff is S.NaN:
+                raise ValueError()
+            if coeff is S.ComplexInfinity:
                 try:
                     coeff, _ = arg.leadterm(x)
                     if coeff.has(log(x)):
@@ -3116,7 +3118,7 @@ class Expr(Basic, EvalfMixin):
         >>> e.aseries(x)
         exp(exp(x)/(1 - 1/x))
 
-        >>> e.aseries(x, bound=3)
+        >>> e.aseries(x, bound=3) # doctest: +SKIP
         exp(exp(x)/x**2)*exp(exp(x)/x)*exp(-exp(x) + exp(x)/(1 - 1/x) - exp(x)/x - exp(x)/x**2)*exp(exp(x))
 
         Returns
@@ -3154,7 +3156,7 @@ class Expr(Basic, EvalfMixin):
         Expr.aseries: See the docstring of this function for complete details of this wrapper.
         """
 
-        from sympy import Order, Dummy
+        from sympy import Order, Dummy, PoleError
         from sympy.functions import exp, log
         from sympy.series.gruntz import mrv, rewrite
 
@@ -3162,7 +3164,10 @@ class Expr(Basic, EvalfMixin):
             xpos = Dummy('x', positive=True)
             return self.subs(x, xpos).aseries(xpos, n, bound, hir).subs(xpos, x)
 
-        om, exps = mrv(self, x)
+        try:
+            om, exps = mrv(self, x)
+        except PoleError:
+            return self
 
         # We move one level up by replacing `x` by `exp(x)`, and then
         # computing the asymptotic series for f(exp(x)). Then asymptotic series
@@ -3183,7 +3188,10 @@ class Expr(Basic, EvalfMixin):
                 return self
             s = (self.exp).aseries(x, n, bound=bound)
             s = s.func(*[t.removeO() for t in s.args])
-            res = exp(s.subs(x, 1/x).as_leading_term(x).subs(x, 1/x))
+            try:
+                res = exp(s.subs(x, 1/x).as_leading_term(x).subs(x, 1/x))
+            except PoleError:
+                res = self
 
             func = exp(self.args[0] - res.args[0]) / k
             logw = log(1/res)
@@ -3393,7 +3401,7 @@ class Expr(Basic, EvalfMixin):
         return s.as_leading_term(x)
 
     @cacheit
-    def as_leading_term(self, *symbols, cdir=0):
+    def as_leading_term(self, *symbols, logx=None, cdir=0):
         """
         Returns the leading (nonzero) term of the series expansion of self.
 
@@ -3414,7 +3422,7 @@ class Expr(Basic, EvalfMixin):
         if len(symbols) > 1:
             c = self
             for x in symbols:
-                c = c.as_leading_term(x, cdir=cdir)
+                c = c.as_leading_term(x, logx=logx, cdir=cdir)
             return c
         elif not symbols:
             return self
@@ -3423,12 +3431,12 @@ class Expr(Basic, EvalfMixin):
             raise ValueError('expecting a Symbol but got %s' % x)
         if x not in self.free_symbols:
             return self
-        obj = self._eval_as_leading_term(x, cdir=cdir)
+        obj = self._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if obj is not None:
             return powsimp(obj, deep=True, combine='exp')
         raise NotImplementedError('as_leading_term(%s, %s)' % (self, x))
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         return self
 
     def as_coeff_exponent(self, x):
@@ -3443,7 +3451,7 @@ class Expr(Basic, EvalfMixin):
                 return c, e
         return s, S.Zero
 
-    def leadterm(self, x, cdir=0):
+    def leadterm(self, x, logx=None, cdir=0):
         """
         Returns the leading term a*x**b as a tuple (a, b).
 
@@ -3458,7 +3466,7 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy import Dummy, log
-        l = self.as_leading_term(x, cdir=cdir)
+        l = self.as_leading_term(x, logx=logx, cdir=cdir)
         d = Dummy('logx')
         if l.has(log(x)):
             l = l.subs(log(x), d)

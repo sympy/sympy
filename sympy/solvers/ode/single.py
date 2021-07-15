@@ -8,7 +8,7 @@ if typing.TYPE_CHECKING:
 from typing import Dict, Type
 
 from typing import Iterator, List, Optional
-from sympy.core import Add, S, Pow
+from sympy.core import Add, S, Pow, Rational
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, _mexpand
@@ -16,7 +16,7 @@ from sympy.core.numbers import Float, zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.core.mul import Mul
-from sympy.functions import exp, tan, log, sqrt
+from sympy.functions import exp, tan, log, sqrt, besselj, bessely, cbrt, airyai, airybi
 from sympy.integrals import Integral
 from sympy.polys import Poly
 from sympy.polys.polytools import cancel, factor, degree
@@ -32,6 +32,7 @@ from .hypergeometric import equivalence_hypergeometric, match_2nd_2F1_hypergeome
 from .nonhomogeneous import _get_euler_characteristic_eq_sols, _get_const_characteristic_eq_sols, \
     _solve_undetermined_coefficients, _solve_variation_of_parameters, _test_term, _undetermined_coefficients_match, \
         _get_simplified_sol
+from .lie_group import _ode_lie_group
 
 
 class ODEMatchError(NotImplementedError):
@@ -90,7 +91,7 @@ class SingleODEProblem:
     _eq_preprocessed = None  # type: Expr
     _eq_high_order_free = None
 
-    def __init__(self, eq, func, sym, prep=True):
+    def __init__(self, eq, func, sym, prep=True, **kwargs):
         assert isinstance(eq, Expr)
         assert isinstance(func, AppliedUndef)
         assert isinstance(sym, Symbol)
@@ -99,6 +100,7 @@ class SingleODEProblem:
         self.func = func
         self.sym = sym
         self.prep = prep
+        self.params = kwargs
 
     @cached_property
     def order(self) -> int:
@@ -899,8 +901,10 @@ class Factorable(SingleODESolver):
                     return False
                 return fraction(factor(self.eqs[0]))[0]-eq!=0
             return True
-        return False
-
+        for i in factors:
+            if i.has(f(x)):
+                self.eqs.append(i)
+        return len(self.eqs)>0 and len(factors)>1
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         func = self.ode_problem.func.func
@@ -1960,7 +1964,7 @@ class NthOrderReducible(SingleODESolver):
         return fsol
 
 
-class Hypergeometric2nd(SingleODESolver):
+class SecondHypergeometric(SingleODESolver):
     r"""
     Solves 2nd order linear differential equations.
 
@@ -2613,6 +2617,286 @@ class NthLinearEulerEqNonhomogeneousUndeterminedCoefficients(SingleODESolver):
         sol = sol.subs(f(log(x)), f(x)).expand()
 
         return [sol]
+
+
+class SecondLinearBessel(SingleODESolver):
+    r"""
+    Gives solution of the Bessel differential equation
+
+    .. math :: x^2 \frac{d^2y}{dx^2} + x \frac{dy}{dx} y(x) + (x^2-n^2) y(x)
+
+    if `n` is integer then the solution is of the form ``Eq(f(x), C0 besselj(n,x)
+    + C1 bessely(n,x))`` as both the solutions are linearly independent else if
+    `n` is a fraction then the solution is of the form ``Eq(f(x), C0 besselj(n,x)
+    + C1 besselj(-n,x))`` which can also transform into ``Eq(f(x), C0 besselj(n,x)
+    + C1 bessely(n,x))``.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x
+    >>> from sympy import Symbol
+    >>> v = Symbol('v', positive=True)
+    >>> from sympy.solvers.ode import dsolve
+    >>> from sympy import Function
+    >>> f = Function('f')
+    >>> y = f(x)
+    >>> genform = x**2*y.diff(x, 2) + x*y.diff(x) + (x**2 - v**2)*y
+    >>> dsolve(genform)
+    Eq(f(x), C1*besselj(v, x) + C2*bessely(v, x))
+
+    References
+    ==========
+
+    https://www.math24.net/bessel-differential-equation/
+
+    """
+    hint = "2nd_linear_bessel"
+    has_integral = False
+
+    def _matches(self):
+        eq = self.ode_problem.eq_high_order_free
+        f = self.ode_problem.func
+        order = self.ode_problem.order
+        x = self.ode_problem.sym
+        df = f.diff(x)
+        a = Wild('a', exclude=[f,df])
+        b = Wild('b', exclude=[x, f,df])
+        a4 = Wild('a4', exclude=[x,f,df])
+        b4 = Wild('b4', exclude=[x,f,df])
+        c4 = Wild('c4', exclude=[x,f,df])
+        d4 = Wild('d4', exclude=[x,f,df])
+        a3 = Wild('a3', exclude=[f, df, f.diff(x, 2)])
+        b3 = Wild('b3', exclude=[f, df, f.diff(x, 2)])
+        c3 = Wild('c3', exclude=[f, df, f.diff(x, 2)])
+        deq = a3*(f.diff(x, 2)) + b3*df + c3*f
+        r = collect(eq,
+            [f.diff(x, 2), df, f]).match(deq)
+        if order == 2 and r:
+            if not all([r[key].is_polynomial() for key in r]):
+                n, d = eq.as_numer_denom()
+                eq = expand(n)
+                r = collect(eq,
+                    [f.diff(x, 2), df, f]).match(deq)
+
+        if r and r[a3] != 0:
+            # leading coeff of f(x).diff(x, 2)
+            coeff = factor(r[a3]).match(a4*(x-b)**b4)
+
+            if coeff:
+            # if coeff[b4] = 0 means constant coefficient
+                if coeff[b4] == 0:
+                    return False
+                point = coeff[b]
+            else:
+                return False
+
+            if point:
+                r[a3] = simplify(r[a3].subs(x, x+point))
+                r[b3] = simplify(r[b3].subs(x, x+point))
+                r[c3] = simplify(r[c3].subs(x, x+point))
+
+            # making a3 in the form of x**2
+            r[a3] = cancel(r[a3]/(coeff[a4]*(x)**(-2+coeff[b4])))
+            r[b3] = cancel(r[b3]/(coeff[a4]*(x)**(-2+coeff[b4])))
+            r[c3] = cancel(r[c3]/(coeff[a4]*(x)**(-2+coeff[b4])))
+            # checking if b3 is of form c*(x-b)
+            coeff1 = factor(r[b3]).match(a4*(x))
+            if coeff1 is None:
+                return False
+            # c3 maybe of very complex form so I am simply checking (a - b) form
+            # if yes later I will match with the standerd form of bessel in a and b
+            # a, b are wild variable defined above.
+            _coeff2 = r[c3].match(a - b)
+            if _coeff2 is None:
+                return False
+            # matching with standerd form for c3
+            coeff2 = factor(_coeff2[a]).match(c4**2*(x)**(2*a4))
+            if coeff2 is None:
+                return False
+
+            if _coeff2[b] == 0:
+                coeff2[d4] = 0
+            else:
+                coeff2[d4] = factor(_coeff2[b]).match(d4**2)[d4]
+
+            self.rn = {'n':coeff2[d4], 'a4':coeff2[c4], 'd4':coeff2[a4]}
+            self.rn['c4'] = coeff1[a4]
+            self.rn['b4'] = point
+            return True
+        return False
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        n = self.rn['n']
+        a4 = self.rn['a4']
+        c4 = self.rn['c4']
+        d4 = self.rn['d4']
+        b4 = self.rn['b4']
+        n = sqrt(n**2 + Rational(1, 4)*(c4 - 1)**2)
+        (C1, C2) = self.ode_problem.get_numbered_constants(num=2)
+        return [Eq(f(x), ((x**(Rational(1-c4,2)))*(C1*besselj(n/d4,a4*x**d4/d4)
+            + C2*bessely(n/d4,a4*x**d4/d4))).subs(x, x-b4))]
+
+
+class SecondLinearAiry(SingleODESolver):
+    r"""
+    Gives solution of the Airy differential equation
+
+    .. math :: \frac{d^2y}{dx^2} + (a + b x) y(x) = 0
+
+    in terms of Airy special functions airyai and airybi.
+
+    Examples
+    ========
+
+    >>> from sympy import dsolve, Function
+    >>> from sympy.abc import x
+    >>> f = Function("f")
+    >>> eq = f(x).diff(x, 2) - x*f(x)
+    >>> dsolve(eq)
+    Eq(f(x), C1*airyai(x) + C2*airybi(x))
+    """
+    hint = "2nd_linear_airy"
+    has_integral = False
+
+    def _matches(self):
+        eq = self.ode_problem.eq_high_order_free
+        f = self.ode_problem.func
+        order = self.ode_problem.order
+        x = self.ode_problem.sym
+        df = f.diff(x)
+        a4 = Wild('a4', exclude=[x,f,df])
+        b4 = Wild('b4', exclude=[x,f,df])
+        match = self.ode_problem.get_linear_coefficients(eq, f, order)
+        does_match = False
+        if order == 2 and match and match[2] != 0:
+            if match[1].is_zero:
+                self.rn = cancel(match[0]/match[2]).match(a4+b4*x)
+                if self.rn and self.rn[b4] != 0:
+                    self.rn = {'b':self.rn[a4],'m':self.rn[b4]}
+                    does_match = True
+        return does_match
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        (C1, C2) = self.ode_problem.get_numbered_constants(num=2)
+        b = self.rn['b']
+        m = self.rn['m']
+        if m.is_positive:
+            arg = - b/cbrt(m)**2 - cbrt(m)*x
+        elif m.is_negative:
+            arg = - b/cbrt(-m)**2 + cbrt(-m)*x
+        else:
+            arg = - b/cbrt(-m)**2 + cbrt(-m)*x
+
+        return [Eq(f(x), C1*airyai(arg) + C2*airybi(arg))]
+
+
+class LieGroup(SingleODESolver):
+    r"""
+    This hint implements the Lie group method of solving first order differential
+    equations. The aim is to convert the given differential equation from the
+    given coordinate system into another coordinate system where it becomes
+    invariant under the one-parameter Lie group of translations. The converted
+    ODE can be easily solved by quadrature. It makes use of the
+    :py:meth:`sympy.solvers.ode.infinitesimals` function which returns the
+    infinitesimals of the transformation.
+
+    The coordinates `r` and `s` can be found by solving the following Partial
+    Differential Equations.
+
+    .. math :: \xi\frac{\partial r}{\partial x} + \eta\frac{\partial r}{\partial y}
+                  = 0
+
+    .. math :: \xi\frac{\partial s}{\partial x} + \eta\frac{\partial s}{\partial y}
+                  = 1
+
+    The differential equation becomes separable in the new coordinate system
+
+    .. math :: \frac{ds}{dr} = \frac{\frac{\partial s}{\partial x} +
+                 h(x, y)\frac{\partial s}{\partial y}}{
+                 \frac{\partial r}{\partial x} + h(x, y)\frac{\partial r}{\partial y}}
+
+    After finding the solution by integration, it is then converted back to the original
+    coordinate system by substituting `r` and `s` in terms of `x` and `y` again.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, exp, pprint
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(f(x).diff(x) + 2*x*f(x) - x*exp(-x**2), f(x),
+    ... hint='lie_group'))
+           /      2\    2
+           |     x |  -x
+    f(x) = |C1 + --|*e
+           \     2 /
+
+
+    References
+    ==========
+
+    - Solving differential equations by Symmetry Groups,
+      John Starrett, pp. 1 - pp. 14
+
+    """
+    hint = "lie_group"
+    has_integral = False
+
+    def _has_additional_params(self):
+        return 'xi' in self.ode_problem.params and 'eta' in self.ode_problem.params
+
+    def _matches(self):
+        eq = self.ode_problem.eq
+        f = self.ode_problem.func.func
+        order = self.ode_problem.order
+        x = self.ode_problem.sym
+        df = f(x).diff(x)
+        y = Dummy('y')
+        d = Wild('d', exclude=[df, f(x).diff(x, 2)])
+        e = Wild('e', exclude=[df])
+        does_match = False
+        if self._has_additional_params() and order == 1:
+            xi = self.ode_problem.params['xi']
+            eta = self.ode_problem.params['eta']
+            self.r3 = {'xi': xi, 'eta': eta}
+            r = collect(eq, df, exact=True).match(d + e * df)
+            if r:
+                r['d'] = d
+                r['e'] = e
+                r['y'] = y
+                r[d] = r[d].subs(f(x), y)
+                r[e] = r[e].subs(f(x), y)
+                self.r3.update(r)
+            does_match = True
+        return does_match
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        eq = self.ode_problem.eq
+        x = self.ode_problem.sym
+        func = self.ode_problem.func
+        order = self.ode_problem.order
+        df = func.diff(x)
+
+        try:
+            eqsol = solve(eq, df)
+        except NotImplementedError:
+            eqsol = []
+
+        desols = []
+        for s in eqsol:
+            sol = _ode_lie_group(s, func, order, match=self.r3)
+            if sol:
+                desols.extend(sol)
+
+        if desols == []:
+            raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
+                + " the lie group method")
+        return desols
 
 
 # Avoid circular import:

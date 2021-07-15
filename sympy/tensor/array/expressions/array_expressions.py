@@ -964,7 +964,6 @@ class ArrayContraction(_CodegenArrayAbstract):
                 arg2, pos2 = new_sequence[i+1]
                 if arg1 == arg2:
                     raise NotImplementedError
-                    continue
                 abspos1 = reverse_mapping[arg1, pos1]
                 abspos2 = reverse_mapping[arg2, pos2]
                 new_contraction_indices.append((abspos1, abspos2))
