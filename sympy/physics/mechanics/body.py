@@ -178,7 +178,7 @@ class Body(RigidBody, Particle):  # type: ignore
             is to be applied.
         point2 : Point, optional
             The point on other body on which equal and opposite
-            force is appliead. By default masscenter of other body.
+            force is applied. By default masscenter of other body.
 
         Example
         =======
@@ -256,27 +256,72 @@ class Body(RigidBody, Particle):  # type: ignore
 
         self._loads.append((point1, force))
 
-    def apply_torque(self, vec):
-        """
-        Adds a torque to the body.
+    def apply_torque(self, torque, other=None):
+        """Add torque to the body(s).
+
+        Explanation
+        ===========
+
+        Applies the torque on self or equal and oppposite torquess on
+        self and other body if both are given.
+        The torque applied on other body is taken opposite of self,
+        i.e, -torque.
 
         Parameters
         ==========
 
-        vec: Vector
-            Defines the torque vector. Can be any vector w.r.t any frame or
-            combinations of frame.
+        torque: Vector
+            The torque to be applied.
+        other: Body, optional
+            Second body on which equal and opposite torque
+            is to be applied.
 
         Example
         =======
 
-        This example adds a simple torque around the body's z axis. ::
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import Body, dynamicsymbols
+        >>> t = symbols('t')
+        >>> B = Body('B')
+        >>> torque1 = t*B.z
+        >>> B.apply_torque(torque1)
+        >>> B.loads
+        [(B_frame, t*B_frame.z)]
 
-            >>> from sympy import Symbol
-            >>> from sympy.physics.mechanics import Body
-            >>> body = Body('body')
-            >>> T = Symbol('T')
-            >>> body.apply_torque(T * body.frame.z)
+        We can also remove some part of torque from the body by
+        adding the opposite torque to the body.
+
+        >>> t1, t2 = dynamicsymbols('t1 t2')
+        >>> B.apply_torque(t1*B.x + t2*B.y)
+        >>> B.loads
+        [(B_frame, t1(t)*B_frame.x + t2(t)*B_frame.y + t*B_frame.z)]
+
+        Let's remove t1 from Body B.
+
+        >>> B.apply_torque(-t1*B.x)
+        >>> B.loads
+        [(B_frame, t2(t)*B_frame.y + t*B_frame.z)]
+
+        To further demonstrate the use, let us consider two bodies such that
+        a torque `T` is acting on one body, and `-T` on the other.
+
+        >>> from sympy.physics.mechanics import Body, apply_torque, dynamicsymbols
+        >>> N = Body('N') #Newtonion frame
+        >>> B1 = Body('B1')
+        >>> B2 = Body('B2')
+        >>> v = dynamicsymbols('v')
+        >>> T = v*N.y #Torque
+
+        Now let's apply equal and opposite torque to the bodies.
+
+        >>> B1.apply_torque(T, B2)
+
+        We can check the loads(torquess) applied to bodies now.
+
+        >>> B1.loads
+        [(B1_frame, v(t)*N_frame.y)]
+        >>> B2.loads
+        [(B2_frame, - v(t)*N_frame.y)]
 
         Notes
         =====
@@ -286,14 +331,18 @@ class Body(RigidBody, Particle):  # type: ignore
 
         """
 
-        if not isinstance(vec, Vector):
+        if not isinstance(torque, Vector):
             raise TypeError("A Vector must be supplied to add torque.")
+
+        if other is not None:
+            other.apply_torque(-torque)
+
         for load in self._loads:
             if self.frame in load:
-                vec += load[1]
+                torque += load[1]
                 self._loads.remove(load)
                 break
-        self._loads.append((self.frame, vec))
+        self._loads.append((self.frame, torque))
 
     def clear_loads(self):
         """

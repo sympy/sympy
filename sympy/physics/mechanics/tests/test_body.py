@@ -202,6 +202,22 @@ def test_apply_force():
     assert B1.loads == [(P1, force), (B1.masscenter, force2+g1)]
     assert B2.loads == [(P2, -force), (B2.masscenter, -force2+g2)]
 
+def test_apply_torque():
+    t = symbols('t')
+    q = dynamicsymbols('q')
+    B1 = Body('B1')
+    B2 = Body('B2')
+    N = ReferenceFrame('N')
+    torque = t*q*N.x
+
+    B1.apply_torque(torque, B2) #Applying equal and opposite torque
+    assert B1.loads == [(B1.frame, torque)]
+    assert B2.loads == [(B2.frame, -torque)]
+
+    torque2 = t*N.y
+    B1.apply_torque(torque2)
+    assert B1.loads == [(B1.frame, torque+torque2)]
+
 def test_clear_load():
     a = symbols('a')
     P = Point('P')
