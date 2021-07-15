@@ -1804,11 +1804,13 @@ def test_Catalan_EulerGamma_prec():
     assert f._prec == 20
     assert n._as_mpf_val(20) == f._mpf_
 
+
 def test_Catalan_rewrite():
     k = Dummy('k', integer=True, nonnegative=True)
     assert Catalan.rewrite(Sum).dummy_eq(
             Sum((-1)**k/(2*k + 1)**2, (k, 0, oo)))
     assert Catalan.rewrite() == Catalan
+
 
 def test_bool_eq():
     assert 0 == False
@@ -1872,9 +1874,11 @@ def test_issue_6349():
     assert Float('23000', '')._prec == 20
     assert Float('-23000', '')._prec == 20
 
+
 def test_mpf_norm():
     assert mpf_norm((1, 0, 1, 0), 10) == mpf('0')._mpf_
     assert Float._new((1, 0, 1, 0), 10)._mpf_ == mpf('0')._mpf_
+
 
 def test_latex():
     assert latex(pi) == r"\pi"
@@ -2081,11 +2085,13 @@ def test_comparisons_with_unknown_type():
         raises(TypeError, lambda: n >= bar)
         raises(TypeError, lambda: bar <= n)
 
+
 def test_NumberSymbol_comparison():
     from sympy.core.tests.test_relational import rel_check
     rpi = Rational('905502432259640373/288230376151711744')
     fpi = Float(float(pi))
     assert rel_check(rpi, fpi)
+
 
 def test_Integer_precision():
     # Make sure Integer inputs for keyword args work
@@ -2093,6 +2099,7 @@ def test_Integer_precision():
     assert Float('1.0', precision=Integer(15))._prec == 15
     assert type(Float('1.0', precision=Integer(15))._prec) == int
     assert sympify(srepr(Float('1.0', precision=15))) == Float('1.0', precision=15)
+
 
 def test_numpy_to_float():
     from sympy.testing.pytest import skip
@@ -2120,16 +2127,19 @@ def test_numpy_to_float():
     raises(TypeError, lambda: Float(np.complex64(1+2j)))
     raises(TypeError, lambda: Float(np.complex128(1+2j)))
 
+
 def test_Integer_ceiling_floor():
     a = Integer(4)
 
     assert a.floor() == a
     assert a.ceiling() == a
 
+
 def test_ComplexInfinity():
     assert zoo.floor() is zoo
     assert zoo.ceiling() is zoo
     assert zoo**zoo is S.NaN
+
 
 def test_Infinity_floor_ceiling_power():
     assert oo.floor() is oo
@@ -2137,9 +2147,11 @@ def test_Infinity_floor_ceiling_power():
     assert oo**S.NaN is S.NaN
     assert oo**zoo is S.NaN
 
+
 def test_One_power():
     assert S.One**12 is S.One
     assert S.NegativeOne**S.NaN is S.NaN
+
 
 def test_NegativeInfinity():
     assert (-oo).floor() is -oo
@@ -2147,12 +2159,14 @@ def test_NegativeInfinity():
     assert (-oo)**11 is -oo
     assert (-oo)**12 is oo
 
+
 def test_issue_6133():
     raises(TypeError, lambda: (-oo < None))
     raises(TypeError, lambda: (S(-2) < None))
     raises(TypeError, lambda: (oo < None))
     raises(TypeError, lambda: (oo > None))
     raises(TypeError, lambda: (S(2) < None))
+
 
 def test_abc():
     x = numbers.Float(5)
@@ -2170,6 +2184,7 @@ def test_abc():
     assert(isinstance(z, nums.Rational))
     assert(isinstance(z, numbers.Rational))
     assert(isinstance(z, nums.Integral))
+
 
 def test_floordiv():
     assert S(2)//S.Half == 4
