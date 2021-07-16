@@ -666,6 +666,59 @@ def test_Parallel_construction():
     raises(TypeError, lambda: Parallel(tf3, Matrix([1, 2, 3, 4])))
 
 
+def test_MIMO_Parallel_construction():
+    tfm1 = TransferFunctionMatrix([[TF1], [TF2], [TF3]])
+    tfm2 = TransferFunctionMatrix([[-TF3], [TF2], [TF1]])
+    tfm3 = TransferFunctionMatrix([[TF1]])
+    tfm4 = TransferFunctionMatrix([[TF2], [TF1], [TF3]])
+    tfm5 = TransferFunctionMatrix([[TF1, TF2], [TF2, TF1]])
+    tfm6 = TransferFunctionMatrix([[TF2, TF1], [TF1, TF2]])
+    tfm7 = TransferFunctionMatrix.from_Matrix(Matrix([[1/p]]), p)
+
+    p8 = Parallel(tfm1, tfm2)
+    assert p8.args == (tfm1, tfm2)
+    assert p8.var == s
+    assert p8.shape == (p8.num_outputs, p8.num_inputs) == (3, 1)
+
+    p9 = Parallel(Series(tfm3, tfm1), tfm2)
+    assert p9.args == (Series(tfm3, tfm1), tfm2)
+    assert p9.var == s
+    assert p9.shape == (p9.num_outputs, p9.num_inputs) == (3, 1)
+
+    p10 = Parallel(tfm1, Series(tfm3, tfm4), tfm2)
+    assert p10.args == (tfm1, Series(tfm3, tfm4), tfm2)
+    assert p10.var == s
+    assert p10.shape == (p10.num_outputs, p10.num_inputs) == (3, 1)
+
+    p11 = Parallel(tfm2, tfm1, tfm4)
+    assert p11.args == (tfm2, tfm1, tfm4)
+    assert p11.shape == (p11.num_outputs, p11.num_inputs) == (3, 1)
+
+    p12 = Parallel(tfm6, tfm5)
+    assert p12.args == (tfm6, tfm5)
+    assert p12.shape == (p12.num_outputs, p12.num_inputs) == (2, 2)
+
+    p13 = Parallel(tfm2, tfm4, Series(-tfm3, tfm4), -tfm4)
+    assert p13.args == (tfm2, tfm4, Series(-tfm3, tfm4), -tfm4)
+    assert p13.shape == (p13.num_outputs, p13.num_inputs) == (3, 1)
+
+    # arg cannot be empty tuple.
+    raises(TypeError, lambda: Parallel(()))
+
+    # arg cannot contain SISO as well as MIMO systems.
+    raises(TypeError, lambda: Parallel(tfm1, tfm2, TF1))
+
+    # all TFMs must have same shapes.
+    raises(TypeError, lambda: Parallel(tfm1, tfm3, tfm4))
+
+    # all TFMs must be using the same complex variable.
+    raises(ValueError, lambda: Parallel(tfm3, tfm7))
+
+    # Number or expression not allowed in the arguments.
+    raises(TypeError, lambda: Parallel(2, tfm1, tfm4))
+    raises(TypeError, lambda: Parallel(s**2 + p*s, -tfm4, tfm2))
+
+
 def test_Parallel_functions():
     tf1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
     tf2 = TransferFunction(k, 1, s)
@@ -734,6 +787,60 @@ def test_Parallel_functions():
     assert P3.is_proper
     assert not P3.is_strictly_proper
     assert P3.is_biproper
+
+
+def test_MIMO_Parallel_functions():
+    tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
+    tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
+
+    tfm1 = TransferFunctionMatrix([[TF1], [TF2], [TF3]])
+    tfm2 = TransferFunctionMatrix([[-TF2], [tf5], [-TF1]])
+    tfm3 = TransferFunctionMatrix([[tf5], [-tf5], [TF2]])
+    tfm4 = TransferFunctionMatrix([[TF2, -tf5], [TF1, tf5]])
+    tfm5 = TransferFunctionMatrix([[TF1, TF2], [TF3, -tf5]])
+    tfm6 = TransferFunctionMatrix([[-TF2]])
+    tfm7 = TransferFunctionMatrix([[tf4], [-tf4], [tf4]])
+
+    assert tfm1 + tfm2 + tfm3 == Parallel(tfm1, tfm2, tfm3)
+    assert tfm2 - tfm1 - tfm3 == Parallel(tfm2, -tfm1, -tfm3)
+    assert tfm2 - tfm3 + (-tfm1*tfm6*-tfm6) == Parallel(tfm2, -tfm3, Series(-tfm6, tfm6, -tfm1))
+    assert tfm1 + tfm1 - (-tfm1*tfm6) == Parallel(tfm1, tfm1, -Series(tfm6, -tfm1))
+    assert tfm2 - tfm3 - tfm1 + tfm2 == Parallel(tfm2, -tfm3, -tfm1, tfm2)
+    assert tfm1 + tfm2 - tfm3 - tfm1 == Parallel(tfm1, tfm2, -tfm3, -tfm1)
+    raises(TypeError, lambda: tfm1 + tfm2 + TF2)
+    raises(TypeError, lambda: tfm1 - tfm2 - a1)
+    raises(TypeError, lambda: tfm2 - tfm3 - (s - 1))
+    raises(TypeError, lambda: -tfm3 - tfm2 - 9)
+    raises(TypeError, lambda: (1 - p**3) - tfm3 - tfm2)
+    # All TFMs must use the same complex var. tfm7 uses 'p'.
+    raises(ValueError, lambda: tfm3 - tfm2 - tfm7)
+    raises(ValueError, lambda: tfm2 - tfm1 + tfm7)
+    # (tfm1 +/- tfm2) has (3, 1) shape while tfm4 has (2, 2) shape.
+    raises(TypeError, lambda: tfm1 + tfm2 + tfm4)
+    raises(TypeError, lambda: (tfm1 - tfm2) - tfm4)
+
+    assert (tfm1 + tfm2)*tfm6 == Series(tfm6, Parallel(tfm1, tfm2))
+    assert (tfm2 - tfm3)*tfm6*-tfm6 == Series(-tfm6, tfm6, Parallel(tfm2, -tfm3))
+    assert (tfm2 - tfm1 - tfm3)*(tfm6 + tfm6) == Series(Parallel(tfm6, tfm6), Parallel(tfm2, -tfm1, -tfm3))
+    raises(TypeError, lambda: (tfm4 + tfm5)*TF1)
+    raises(TypeError, lambda: (tfm2 - tfm3)*a2)
+    raises(TypeError, lambda: (tfm3 + tfm2)*(s - 6))
+    raises(TypeError, lambda: (tfm1 + tfm2 + tfm3)*0)
+    raises(TypeError, lambda: (1 - p**3)*(tfm1 + tfm3))
+
+    # (tfm3 - tfm2) has (3, 1) shape while tfm4*tfm5 has (2, 2) shape.
+    raises(ValueError, lambda: (tfm3 - tfm2)*tfm4*tfm5)
+    # (tfm1 - tfm2) has (3, 1) shape while tfm5 has (2, 2) shape.
+    raises(ValueError, lambda: (tfm1 - tfm2)*tfm5)
+
+    # TFM in the arguments.
+    assert Parallel(tfm1, tfm2, evaluate=True) == Parallel(tfm1, tfm2).doit() == Parallel(tfm1, tfm2).rewrite(TransferFunctionMatrix) == \
+        TransferFunctionMatrix(((TransferFunction(-k*(s**2 + 2*s*wn*zeta + wn**2) + 1, s**2 + 2*s*wn*zeta + wn**2, s),), \
+            (TransferFunction(-a0 + a1*s**2 + a2*s + k*(a0 + s), a0 + s, s),), (TransferFunction(-a2*s - p + (a2*p - s)* \
+                (s**2 + 2*s*wn*zeta + wn**2), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s),)))
+
+    raises(ValueError, lambda: Parallel(tfm4, Series(-tfm4, tfm5)).rewrite(TransferFunction))
+    raises(ValueError, lambda: Parallel(Series(tfm4, tfm5), Series(-tfm5, tfm4)).rewrite(TransferFunction))
 
 
 def test_Feedback_construction():
