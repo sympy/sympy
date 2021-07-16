@@ -1015,8 +1015,10 @@ class RationalRiccati(SinglePatternODESolver):
     >>> checkodesol(eq, sol)
     (True, 0)
 
-    .. [1] Riccati ODE -  https://en.wikipedia.org/wiki/Riccati_equation
+    References
+    ==========
 
+    .. [1] Riccati ODE -  https://en.wikipedia.org/wiki/Riccati_equation
     .. [2] N. Thieu Vo - Rational and Algebraic Solutions of First-Order Algebraic ODEs,
     Algorithm 11 (Pg 78) - https://www3.risc.jku.at/publications/download/risc_5387/PhDThesisThieu.pdf
     """

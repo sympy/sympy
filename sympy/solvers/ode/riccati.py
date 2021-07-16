@@ -200,7 +200,7 @@ solutions of the equation in its normal form.
 from itertools import product
 from sympy.core import S
 from sympy.core.add import Add
-from sympy.core.numbers import oo
+from sympy.core.numbers import oo, Float
 from sympy.core.function import count_ops
 from sympy.core.relational import Eq
 from sympy.core.symbol import symbols, Symbol, Dummy
@@ -297,6 +297,10 @@ def match_riccati(eq, f, x):
         b1 = -eq.coeff(f(x))
         b2 = -eq.coeff(f(x)**2)
         b0 = (f(x).diff(x) - b1*f(x) - b2*f(x)**2 - eq).expand()
+
+        # Check if coefficients are not symbols and floats
+        if len((b0 + b1 + b2).atoms(Symbol)) > 1 or len((b0 + b1 + b2).atoms(Float)):
+            return False, []
 
         # If b_0(x) contains f(x), it is not a Riccati ODE
         if len(b0.atoms(f)) or not all([b2 != 0, b0.is_rational_function(x), \
