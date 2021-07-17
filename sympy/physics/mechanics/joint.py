@@ -88,10 +88,7 @@ class Joint(ABC):
     simple rotation about an axis that is normal to both ``child_axis`` and
     ``parent_axis``. In general, the normal axis is formed by crossing the
     ``child_axis`` into the ``parent_axis`` except if the child and parent axes
-    are in exactly opposite directions. In that case, the vector normal to the
-    ``child_axis`` and ``parent_axis`` is formed by crossing the ``child_axis``
-    into an arbitrary vector in the parent reference frame to find a suitable
-    vector normal to the child and parent axes. The arbitrary axis is chosen
+    are in exactly opposite directions. In that case the rotation vector is chosen
     using the rules in the following table where ``C`` is the child reference
     frame and ``P`` is the parent reference frame:
 
