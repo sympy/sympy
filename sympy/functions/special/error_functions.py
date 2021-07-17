@@ -242,14 +242,23 @@ class erf(Function):
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
+        from sympy import ceiling
         point = args0[0]
 
         if point in [S.Infinity, S.NegativeInfinity]:
             z = self.args[0]
 
-            s = [(-1)**k * factorial2(2*k - 1) / (z**(2*k + 1) * 2**k)
-                    for k in range(0, n)] + [Order(1/z**n, x)]
-            return S.One - (exp(-z**2)/sqrt(pi)) * Add(*s)
+            try:
+                _, ex = z.leadterm(x)
+            except (ValueError, NotImplementedError):
+                return self
+
+            ex = -ex # as x->1/x for aseries
+            if ex.is_positive:
+                newn = ceiling(n/ex)
+                s = [(-1)**k * factorial2(2*k - 1) / (z**(2*k + 1) * 2**k)
+                        for k in range(0, newn)] + [Order(1/z**newn, x)]
+                return S.One - (exp(-z**2)/sqrt(pi)) * Add(*s)
 
         return super(erf, self)._eval_aseries(n, args0, x, logx)
 
@@ -2015,7 +2024,7 @@ class Ci(TrigonometricIntegral):
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.NaN:
-            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+            arg0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
         if arg0.is_zero:
             return S.EulerGamma
         elif arg0.is_finite:
@@ -2142,7 +2151,7 @@ class Shi(TrigonometricIntegral):
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.NaN:
-            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+            arg0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
         if arg0.is_zero:
             return arg
         elif not arg0.is_infinite:
@@ -2260,7 +2269,7 @@ class Chi(TrigonometricIntegral):
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.NaN:
-            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+            arg0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
         if arg0.is_zero:
             return S.EulerGamma
         elif arg0.is_finite:
@@ -2451,7 +2460,7 @@ class fresnels(FresnelIntegral):
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.ComplexInfinity:
-            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+            arg0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
         if arg0.is_zero:
             return pi*arg**3/6
         else:
@@ -2603,7 +2612,7 @@ class fresnelc(FresnelIntegral):
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.ComplexInfinity:
-            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+            arg0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
         if x in arg.free_symbols and arg0.is_zero:
             return arg
         else:
