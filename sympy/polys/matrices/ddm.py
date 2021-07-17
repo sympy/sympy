@@ -275,6 +275,23 @@ class DDM(list):
         return DDM(c, a.shape, a.domain)
 
     def hstack(A, *B):
+        """Horizontally stacks :py:class:`~.DDM` matrices.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import DDM
+
+        >>> A = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> B = DDM([[ZZ(5), ZZ(6)], [ZZ(7), ZZ(8)]], (2, 2), ZZ)
+        >>> A.hstack(B)
+        [[1, 2, 5, 6], [3, 4, 7, 8]]
+
+        >>> C = DDM([[ZZ(9), ZZ(10)], [ZZ(11), ZZ(12)]], (2, 2), ZZ)
+        >>> A.hstack(B, C)
+        [[1, 2, 5, 6, 9, 10], [3, 4, 7, 8, 11, 12]]
+        """
         Anew = list(A.copy())
         rows, cols = A.shape
         domain = A.domain
@@ -292,6 +309,23 @@ class DDM(list):
         return DDM(Anew, (rows, cols), A.domain)
 
     def vstack(A, *B):
+        """Vertically stacks :py:class:`~.DDM` matrices.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import DDM
+
+        >>> A = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> B = DDM([[ZZ(5), ZZ(6)], [ZZ(7), ZZ(8)]], (2, 2), ZZ)
+        >>> A.vstack(B)
+        [[1, 2], [3, 4], [5, 6], [7, 8]]
+
+        >>> C = DDM([[ZZ(9), ZZ(10)], [ZZ(11), ZZ(12)]], (2, 2), ZZ)
+        >>> A.vstack(B, C)
+        [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]
+        """
         Anew = list(A.copy())
         rows, cols = A.shape
         domain = A.domain
