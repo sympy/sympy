@@ -608,7 +608,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         if all_:
             retdict = {}
             failed_hints = {}
-            gethints = classify_ode(eq, dict=True,hint='all')
+            gethints = classify_ode(eq, dict=True, hint='all')
             orderedhints = gethints['ordered_hints']
             for hint in hints:
                 try:
@@ -1034,7 +1034,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             if user_map[hint].has_integral:
                 matching_hints[hint + "_Integral"] = solver
             if dict and early_exit:
-                break
+                matching_hints["default"] = hint
+                return matching_hints
 
     eq = expand(eq)
     # Precondition to try remove f(x) from highest order derivative
