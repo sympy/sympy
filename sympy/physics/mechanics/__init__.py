@@ -26,7 +26,9 @@ __all__ = [
 
     'SymbolicSystem',
 
-    'PinJoint'
+    'PinJoint',
+
+    'JointsMethod'
 ]
 
 from sympy.physics import vector
@@ -58,3 +60,5 @@ from .body import Body
 from .system import SymbolicSystem
 
 from .joint import PinJoint
+
+from .jointsmethod import JointsMethod
