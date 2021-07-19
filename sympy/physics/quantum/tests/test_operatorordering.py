@@ -7,10 +7,8 @@ from sympy.physics.quantum.operatorordering import (normal_order,
 
 def test_normal_order():
     a = BosonOp('a')
-    b = BosonOp('b')
 
     c = FermionOp('c')
-    d = FermionOp('d')
 
     assert normal_order(a * Dagger(a)) == Dagger(a) * a
     assert normal_order(Dagger(a) * a) == Dagger(a) * a
@@ -23,10 +21,8 @@ def test_normal_order():
 
 def test_normal_ordered_form():
     a = BosonOp('a')
-    b = BosonOp('b')
 
     c = FermionOp('c')
-    d = FermionOp('d')
 
     assert normal_ordered_form(Dagger(a) * a) == Dagger(a) * a
     assert normal_ordered_form(a * Dagger(a)) == 1 + Dagger(a) * a

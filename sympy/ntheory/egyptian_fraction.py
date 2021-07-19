@@ -1,9 +1,7 @@
-from __future__ import print_function, division
-
+from sympy import Integer, Rational, Tuple
 import sympy.polys
-from sympy import Integer
-from sympy.core.compatibility import range
-from fractions import gcd
+
+from math import gcd
 
 
 def egyptian_fraction(r, algorithm="Greedy"):
@@ -14,8 +12,8 @@ def egyptian_fraction(r, algorithm="Greedy"):
     Parameters
     ==========
 
-    r : Rational
-        a positive rational number.
+    r : Rational or (p, q)
+        a positive rational number, ``p/q``.
     algorithm : { "Greedy", "Graham Jewett", "Takenouchi", "Golomb" }, optional
         Denotes the algorithm to be used (the default is "Greedy").
 
@@ -26,13 +24,13 @@ def egyptian_fraction(r, algorithm="Greedy"):
     >>> from sympy.ntheory.egyptian_fraction import egyptian_fraction
     >>> egyptian_fraction(Rational(3, 7))
     [3, 11, 231]
-    >>> egyptian_fraction(Rational(3, 7), "Graham Jewett")
+    >>> egyptian_fraction((3, 7), "Graham Jewett")
     [7, 8, 9, 56, 57, 72, 3192]
-    >>> egyptian_fraction(Rational(3, 7), "Takenouchi")
+    >>> egyptian_fraction((3, 7), "Takenouchi")
     [4, 7, 28]
-    >>> egyptian_fraction(Rational(3, 7), "Golomb")
+    >>> egyptian_fraction((3, 7), "Golomb")
     [3, 15, 35]
-    >>> egyptian_fraction(Rational(11, 5), "Golomb")
+    >>> egyptian_fraction((11, 5), "Golomb")
     [1, 2, 3, 4, 9, 234, 1118, 2580]
 
     See Also
@@ -97,38 +95,54 @@ def egyptian_fraction(r, algorithm="Greedy"):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Egyptian_fraction
+    .. [1] https://en.wikipedia.org/wiki/Egyptian_fraction
     .. [2] https://en.wikipedia.org/wiki/Greedy_algorithm_for_Egyptian_fractions
-    .. [3] http://www.ics.uci.edu/~eppstein/numth/egypt/conflict.html
+    .. [3] https://www.ics.uci.edu/~eppstein/numth/egypt/conflict.html
     .. [4] http://ami.ektf.hu/uploads/papers/finalpdf/AMI_42_from129to134.pdf
 
     """
 
+    if not isinstance(r, Rational):
+        if isinstance(r, (Tuple, tuple)) and len(r) == 2:
+            r = Rational(*r)
+        else:
+            raise ValueError("Value must be a Rational or tuple of ints")
     if r <= 0:
         raise ValueError("Value must be positive")
+
+    # common cases that all methods agree on
+    x, y = r.as_numer_denom()
+    if y == 1 and x == 2:
+        return [Integer(i) for i in [1, 2, 3, 6]]
+    if x == y + 1:
+        return [Integer(1), y]
 
     prefix, rem = egypt_harmonic(r)
     if rem == 0:
         return prefix
-    x, y = rem.as_numer_denom()
+    # work in python ints
+    x, y = rem.p, rem.q
+    # assert x < y and gcd(x, y) = 1
 
     if algorithm == "Greedy":
-        return prefix + egypt_greedy(x, y)
+        postfix = egypt_greedy(x, y)
     elif algorithm == "Graham Jewett":
-        return prefix + egypt_graham_jewett(x, y)
+        postfix = egypt_graham_jewett(x, y)
     elif algorithm == "Takenouchi":
-        return prefix + egypt_takenouchi(x, y)
+        postfix = egypt_takenouchi(x, y)
     elif algorithm == "Golomb":
-        return prefix + egypt_golomb(x, y)
+        postfix = egypt_golomb(x, y)
     else:
         raise ValueError("Entered invalid algorithm")
+    return prefix + [Integer(i) for i in postfix]
 
 
 def egypt_greedy(x, y):
+    # assumes gcd(x, y) == 1
     if x == 1:
         return [y]
     else:
-        a = (-y) % (x)
+        a = (-y) % x
         b = y*(y//x + 1)
         c = gcd(a, b)
         if c > 1:
@@ -139,6 +153,7 @@ def egypt_greedy(x, y):
 
 
 def egypt_graham_jewett(x, y):
+    # assumes gcd(x, y) == 1
     l = [y] * x
 
     # l is now a list of integers whose reciprocals sum to x/y.
@@ -160,6 +175,15 @@ def egypt_graham_jewett(x, y):
 
 
 def egypt_takenouchi(x, y):
+    # assumes gcd(x, y) == 1
+    # special cases for 3/y
+    if x == 3:
+        if y % 2 == 0:
+            return [y//2, y]
+        i = (y - 1)//2
+        j = i + 1
+        k = j + i
+        return [j, k, j*k]
     l = [y] * x
     while len(l) != len(set(l)):
         l.sort()
@@ -176,15 +200,17 @@ def egypt_takenouchi(x, y):
 
 
 def egypt_golomb(x, y):
+    # assumes x < y and gcd(x, y) == 1
     if x == 1:
         return [y]
     xp = sympy.polys.ZZ.invert(int(x), int(y))
-    rv = [Integer(xp*y)]
+    rv = [xp*y]
     rv.extend(egypt_golomb((x*xp - 1)//y, xp))
     return sorted(rv)
 
 
 def egypt_harmonic(r):
+    # assumes r is Rational
     rv = []
     d = Integer(1)
     acc = Integer(0)

@@ -1,12 +1,10 @@
-from __future__ import print_function, division
-
-from pyglet.gl import *
-from plot_mode import PlotMode
-from threading import Thread, Event, RLock
-from color_scheme import ColorScheme
+import pyglet.gl as pgl
 from sympy.core import S
 from sympy.core.compatibility import is_sequence
+from sympy.plotting.pygletplot.color_scheme import ColorScheme
+from sympy.plotting.pygletplot.plot_mode import PlotMode
 from time import sleep
+from threading import Thread, Event, RLock
 import warnings
 
 
@@ -131,15 +129,15 @@ class PlotModeBase(PlotMode):
         raise NotImplementedError()
 
     ## Base member functions
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, bounds_callback=None, **kwargs):
         self.verts = []
         self.cverts = []
-        self.bounds = [[S.Infinity, -S.Infinity, 0],
-                       [S.Infinity, -S.Infinity, 0],
-                       [S.Infinity, -S.Infinity, 0]]
-        self.cbounds = [[S.Infinity, -S.Infinity, 0],
-                        [S.Infinity, -S.Infinity, 0],
-                        [S.Infinity, -S.Infinity, 0]]
+        self.bounds = [[S.Infinity, S.NegativeInfinity, 0],
+                       [S.Infinity, S.NegativeInfinity, 0],
+                       [S.Infinity, S.NegativeInfinity, 0]]
+        self.cbounds = [[S.Infinity, S.NegativeInfinity, 0],
+                        [S.Infinity, S.NegativeInfinity, 0],
+                        [S.Infinity, S.NegativeInfinity, 0]]
 
         self._draw_lock = RLock()
 
@@ -163,7 +161,7 @@ class PlotModeBase(PlotMode):
         self.use_lambda_eval = self.options.pop('use_sympy_eval', None) is None
         self.style = self.options.pop('style', '')
         self.color = self.options.pop('color', 'rainbow')
-        self.bounds_callback = kwargs.pop('bounds_callback', None)
+        self.bounds_callback = bounds_callback
 
         self._on_calculate()
 
@@ -202,10 +200,10 @@ class PlotModeBase(PlotMode):
             del self._draw_solid[1]  # leave marker element
 
     def _create_display_list(self, function):
-        dl = glGenLists(1)
-        glNewList(dl, GL_COMPILE)
+        dl = pgl.glGenLists(1)
+        pgl.glNewList(dl, pgl.GL_COMPILE)
         function()
-        glEndList()
+        pgl.glEndList()
         return dl
 
     def _render_stack_top(self, render_stack):
@@ -217,25 +215,25 @@ class PlotModeBase(PlotMode):
             render_stack[-1] = (dl, top)
             return dl  # display newly added list
         elif len(top) == 2:
-            if GL_TRUE == glIsList(top[0]):
+            if pgl.GL_TRUE == pgl.glIsList(top[0]):
                 return top[0]  # display stored list
             dl = self._create_display_list(top[1])
             render_stack[-1] = (dl, top[1])
             return dl  # display regenerated list
 
     def _draw_solid_display_list(self, dl):
-        glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-        glCallList(dl)
-        glPopAttrib()
+        pgl.glPushAttrib(pgl.GL_ENABLE_BIT | pgl.GL_POLYGON_BIT)
+        pgl.glPolygonMode(pgl.GL_FRONT_AND_BACK, pgl.GL_FILL)
+        pgl.glCallList(dl)
+        pgl.glPopAttrib()
 
     def _draw_wireframe_display_list(self, dl):
-        glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-        glEnable(GL_POLYGON_OFFSET_LINE)
-        glPolygonOffset(-0.005, -50.0)
-        glCallList(dl)
-        glPopAttrib()
+        pgl.glPushAttrib(pgl.GL_ENABLE_BIT | pgl.GL_POLYGON_BIT)
+        pgl.glPolygonMode(pgl.GL_FRONT_AND_BACK, pgl.GL_LINE)
+        pgl.glEnable(pgl.GL_POLYGON_OFFSET_LINE)
+        pgl.glPolygonOffset(-0.005, -50.0)
+        pgl.glCallList(dl)
+        pgl.glPopAttrib()
 
     @synchronized
     def draw(self):
@@ -249,12 +247,12 @@ class PlotModeBase(PlotMode):
         # Draw solid component if style includes solid
         if style & 2:
             dl = self._render_stack_top(self._draw_solid)
-            if dl > 0 and GL_TRUE == glIsList(dl):
+            if dl > 0 and pgl.GL_TRUE == pgl.glIsList(dl):
                 self._draw_solid_display_list(dl)
         # Draw wireframe component if style includes wireframe
         if style & 1:
             dl = self._render_stack_top(self._draw_wireframe)
-            if dl > 0 and GL_TRUE == glIsList(dl):
+            if dl > 0 and pgl.GL_TRUE == pgl.glIsList(dl):
                 self._draw_wireframe_display_list(dl)
         for f in self.postdraw:
             if callable(f):
@@ -347,8 +345,8 @@ class PlotModeBase(PlotMode):
             self._on_change_color(v)
             self._color = v
         except Exception as e:
-            raise RuntimeError(("Color change failed. "
-                                "Reason: %s" % (str(e))))
+            raise RuntimeError("Color change failed. "
+                                "Reason: %s" % (str(e)))
 
     style = property(_get_style, _set_style)
     color = property(_get_color, _set_color)
@@ -375,6 +373,6 @@ class PlotModeBase(PlotMode):
              ('color', str(self.color)),
              ('style', str(self.style))]
 
-        o = "'%s'" % (("; ".join("%s=%s" % (k, v)
-                                for k, v in d if v != 'None')))
+        o = "'%s'" % ("; ".join("%s=%s" % (k, v)
+                                for k, v in d if v != 'None'))
         return ", ".join([f, i, o])

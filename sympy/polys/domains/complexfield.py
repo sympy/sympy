@@ -1,15 +1,13 @@
 """Implementation of :class:`ComplexField` class. """
 
-from __future__ import print_function, division
 
 from sympy.core.numbers import Float, I
-from sympy.utilities import public
-
-from sympy.polys.domains.field import Field
-from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
+from sympy.polys.domains.field import Field
 from sympy.polys.domains.mpelements import MPContext
+from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.polyerrors import DomainError, CoercionFailed
+from sympy.utilities import public
 
 @public
 class ComplexField(Field, CharacteristicZero, SimpleDomain):
@@ -44,7 +42,7 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
         return self._context.tolerance
 
     def __init__(self, prec=_default_precision, dps=None, tol=None):
-        context = MPContext(prec, dps, tol)
+        context = MPContext(prec, dps, tol, False)
         context._parent = self
         self._context = context
 
@@ -74,6 +72,12 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
         else:
             raise CoercionFailed("expected complex number, got %s" % expr)
 
+    def from_ZZ(self, element, base):
+        return self.dtype(element)
+
+    def from_QQ(self, element, base):
+        return self.dtype(int(element.numerator)) / int(element.denominator)
+
     def from_ZZ_python(self, element, base):
         return self.dtype(element)
 
@@ -85,6 +89,18 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
 
     def from_QQ_gmpy(self, element, base):
         return self.dtype(int(element.numerator)) / int(element.denominator)
+
+    def from_GaussianIntegerRing(self, element, base):
+        return self.dtype(int(element.x), int(element.y))
+
+    def from_GaussianRationalField(self, element, base):
+        x = element.x
+        y = element.y
+        return (self.dtype(int(x.numerator)) / int(x.denominator) +
+                self.dtype(0, int(y.numerator)) / int(y.denominator))
+
+    def from_AlgebraicField(self, element, base):
+        return self.from_sympy(base.to_sympy(element).evalf(self.dps))
 
     def from_RealField(self, element, base):
         return self.dtype(element)
@@ -103,6 +119,22 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
         """Returns an exact domain associated with ``self``. """
         raise DomainError("there is no exact domain associated with %s" % self)
 
+    def is_negative(self, element):
+        """Returns ``False`` for any ``ComplexElement``. """
+        return False
+
+    def is_positive(self, element):
+        """Returns ``False`` for any ``ComplexElement``. """
+        return False
+
+    def is_nonnegative(self, element):
+        """Returns ``False`` for any ``ComplexElement``. """
+        return False
+
+    def is_nonpositive(self, element):
+        """Returns ``False`` for any ``ComplexElement``. """
+        return False
+
     def gcd(self, a, b):
         """Returns GCD of ``a`` and ``b``. """
         return self.one
@@ -114,3 +146,6 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
     def almosteq(self, a, b, tolerance=None):
         """Check if ``a`` and ``b`` are almost equal. """
         return self._context.almosteq(a, b, tolerance)
+
+
+CC = ComplexField()

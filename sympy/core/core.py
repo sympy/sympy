@@ -1,5 +1,4 @@
 """ The core's core. """
-from __future__ import print_function, division
 
 # used for canonical ordering of symbolic sequences
 # via __cmp__ method:
@@ -43,7 +42,7 @@ ordering_of_classes = [
 ]
 
 
-class Registry(object):
+class Registry:
     """
     Base class for registry objects.
 
@@ -51,9 +50,9 @@ class Registry(object):
     classes behave singletonically: all their instances share the same state,
     which is stored in the class object.
 
-    All subclasses should set `__slots__ = []`.
+    All subclasses should set `__slots__ = ()`.
     """
-    __slots__ = []
+    __slots__ = ()
 
     def __setattr__(self, name, obj):
         setattr(self.__class__, name, obj)
@@ -69,6 +68,7 @@ class BasicMeta(type):
 
     def __init__(cls, *args, **kws):
         all_classes.add(cls)
+        cls.__sympy__ = property(lambda self: True)
 
     def __cmp__(cls, other):
         # If the other object is not a Basic subclass, then we are not equal to

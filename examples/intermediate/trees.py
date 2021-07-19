@@ -9,7 +9,7 @@ and paste in the sequence returned by this script:
 
 1, 1, 1, 1, 2, 3, 6, 11, 23, 47, 106
 
-and it will shows you the A000055
+and it will show you the A000055
 """
 
 from sympy import Symbol, Poly

@@ -1,17 +1,52 @@
-from __future__ import print_function, division
-from sympy.core.compatibility import range
 from .vector import Vector, _check_vector
 from .frame import _check_frame
+from warnings import warn
 
 __all__ = ['Point']
 
 
-class Point(object):
+class Point:
     """This object represents a point in a dynamic system.
 
     It stores the: position, velocity, and acceleration of a point.
     The position is a vector defined as the vector distance from a parent
     point to this point.
+
+    Parameters
+    ==========
+
+    name : string
+        The display name of the Point
+
+    Examples
+    ========
+
+    >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+    >>> from sympy.physics.vector import init_vprinting
+    >>> init_vprinting(pretty_print=False)
+    >>> N = ReferenceFrame('N')
+    >>> O = Point('O')
+    >>> P = Point('P')
+    >>> u1, u2, u3 = dynamicsymbols('u1 u2 u3')
+    >>> O.set_vel(N, u1 * N.x + u2 * N.y + u3 * N.z)
+    >>> O.acc(N)
+    u1'*N.x + u2'*N.y + u3'*N.z
+
+    symbols() can be used to create multiple Points in a single step, for example:
+
+    >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+    >>> from sympy.physics.vector import init_vprinting
+    >>> init_vprinting(pretty_print=False)
+    >>> from sympy import symbols
+    >>> N = ReferenceFrame('N')
+    >>> u1, u2 = dynamicsymbols('u1 u2')
+    >>> A, B = symbols('A B', cls=Point)
+    >>> type(A)
+    <class 'sympy.physics.vector.point.Point'>
+    >>> A.set_vel(N, u1 * N.x + u2 * N.y)
+    >>> B.set_vel(N, u2 * N.x + u1 * N.y)
+    >>> A.acc(N) - B.acc(N)
+    (u1' - u2')*N.x + (-u1' + u2')*N.y
 
     """
 
@@ -33,7 +68,32 @@ class Point(object):
             raise TypeError('A Point must be supplied')
 
     def _pdict_list(self, other, num):
-        """Creates a list from self to other using _dcm_dict. """
+        """Returns a list of points that gives the shortest path with respect
+        to position, velocity, or acceleration from this point to the provided
+        point.
+
+        Parameters
+        ==========
+        other : Point
+            A point that may be related to this point by position, velocity, or
+            acceleration.
+        num : integer
+            0 for searching the position tree, 1 for searching the velocity
+            tree, and 2 for searching the acceleration tree.
+
+        Returns
+        =======
+        list of Points
+            A sequence of points from self to other.
+
+        Notes
+        =====
+
+        It isn't clear if num = 1 or num = 2 actually works because the keys to
+        ``_vel_dict`` and ``_acc_dict`` are :class:`ReferenceFrame` objects which
+        do not have the ``_pdlist`` attribute.
+
+        """
         outlist = [[self]]
         oldlist = [[]]
         while outlist != oldlist:
@@ -79,7 +139,9 @@ class Point(object):
         ========
 
         >>> from sympy.physics.vector import Point, ReferenceFrame
-        >>> from sympy.physics.vector import Vector, dynamicsymbols
+        >>> from sympy.physics.vector import dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> q = dynamicsymbols('q')
         >>> q2 = dynamicsymbols('q2')
         >>> qd = dynamicsymbols('q', 1)
@@ -133,6 +195,8 @@ class Point(object):
         ========
 
         >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
         >>> N = ReferenceFrame('N')
@@ -249,10 +313,10 @@ class Point(object):
         Parameters
         ==========
 
-        value : Vector
-            The vector value of this point's acceleration in the frame
         frame : ReferenceFrame
             The frame in which this point's acceleration is defined
+        value : Vector
+            The vector value of this point's acceleration in the frame
 
         Examples
         ========
@@ -278,10 +342,10 @@ class Point(object):
         Parameters
         ==========
 
+        otherpoint : Point
+            The other point which this point's location is defined relative to
         value : Vector
             The vector which defines the location of this point
-        point : Point
-            The other point which this point's location is defined relative to
 
         Examples
         ========
@@ -309,10 +373,10 @@ class Point(object):
         Parameters
         ==========
 
-        value : Vector
-            The vector value of this point's velocity in the frame
         frame : ReferenceFrame
             The frame in which this point's velocity is defined
+        value : Vector
+            The vector value of this point's velocity in the frame
 
         Examples
         ========
@@ -346,7 +410,7 @@ class Point(object):
         ==========
 
         otherpoint : Point
-            The first point of the 2-point theory (O)
+            The first point of the 1-point theory (O)
         outframe : ReferenceFrame
             The frame we want this point's velocity defined in (N)
         interframe : ReferenceFrame
@@ -356,7 +420,9 @@ class Point(object):
         ========
 
         >>> from sympy.physics.vector import Point, ReferenceFrame
-        >>> from sympy.physics.vector import Vector, dynamicsymbols
+        >>> from sympy.physics.vector import dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> q = dynamicsymbols('q')
         >>> q2 = dynamicsymbols('q2')
         >>> qd = dynamicsymbols('q', 1)
@@ -407,6 +473,8 @@ class Point(object):
         ========
 
         >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
         >>> N = ReferenceFrame('N')
@@ -440,17 +508,114 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.vector import Point, ReferenceFrame
+        >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
         >>> p1.set_vel(N, 10 * N.x)
         >>> p1.vel(N)
         10*N.x
 
+        Velocities will be automatically calculated if possible, otherwise a ``ValueError`` will be returned. If it is possible to calculate multiple different velocities from the relative points, the points defined most directly relative to this point will be used. In the case of inconsistent relative positions of points, incorrect velocities may be returned. It is up to the user to define prior relative positions and velocities of points in a self-consistent way.
+
+        >>> p = Point('p')
+        >>> q = dynamicsymbols('q')
+        >>> p.set_vel(N, 10 * N.x)
+        >>> p2 = Point('p2')
+        >>> p2.set_pos(p, q*N.x)
+        >>> p2.vel(N)
+        (Derivative(q(t), t) + 10)*N.x
+
         """
 
         _check_frame(frame)
         if not (frame in self._vel_dict):
-            raise ValueError('Velocity of point ' + self.name + ' has not been'
+            valid_neighbor_found = False
+            is_cyclic = False
+            visited = []
+            queue = [self]
+            candidate_neighbor = []
+            while queue: #BFS to find nearest point
+                node = queue.pop(0)
+                if node not in visited:
+                    visited.append(node)
+                    for neighbor, neighbor_pos in node._pos_dict.items():
+                        if neighbor in visited:
+                            continue
+                        try:
+                            neighbor_pos.express(frame) #Checks if pos vector is valid
+                        except ValueError:
+                            continue
+                        if neighbor in queue:
+                            is_cyclic = True
+                        try :
+                            neighbor_velocity = neighbor._vel_dict[frame] #Checks if point has its vel defined in req frame
+                        except KeyError:
+                            queue.append(neighbor)
+                            continue
+                        candidate_neighbor.append(neighbor)
+                        if not valid_neighbor_found:
+                            vel = None
+                            for f in self.pos_from(neighbor).args:
+                                if f[1] in self._vel_dict.keys():
+                                    if self._vel_dict[f[1]] != 0:
+                                        vel = self._vel_dict[f[1]]
+                                        break
+                            if vel is None:
+                                vel = self.pos_from(neighbor).dt(frame)
+                            self.set_vel(frame, vel + neighbor_velocity)
+                            valid_neighbor_found = True
+            if is_cyclic:
+                warn('Kinematic loops are defined among the positions of points. This is likely not desired and may cause errors in your calculations.')
+            if len(candidate_neighbor) > 1:
+                warn('Velocity automatically calculated based on point ' +
+                    candidate_neighbor[0].name + ' but it is also possible from points(s):' +
+                    str(candidate_neighbor[1:]) + '. Velocities from these points are not necessarily the same. This may cause errors in your calculations.')
+            if valid_neighbor_found:
+                return self._vel_dict[frame]
+            else:
+                raise ValueError('Velocity of point ' + self.name + ' has not been'
                              ' defined in ReferenceFrame ' + frame.name)
+
         return self._vel_dict[frame]
+
+    def partial_velocity(self, frame, *gen_speeds):
+        """Returns the partial velocities of the linear velocity vector of this
+        point in the given frame with respect to one or more provided
+        generalized speeds.
+
+        Parameters
+        ==========
+        frame : ReferenceFrame
+            The frame with which the velocity is defined in.
+        gen_speeds : functions of time
+            The generalized speeds.
+
+        Returns
+        =======
+        partial_velocities : tuple of Vector
+            The partial velocity vectors corresponding to the provided
+            generalized speeds.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.vector import ReferenceFrame, Point
+        >>> from sympy.physics.vector import dynamicsymbols
+        >>> N = ReferenceFrame('N')
+        >>> A = ReferenceFrame('A')
+        >>> p = Point('p')
+        >>> u1, u2 = dynamicsymbols('u1, u2')
+        >>> p.set_vel(N, u1 * N.x + u2 * A.y)
+        >>> p.partial_velocity(N, u1)
+        N.x
+        >>> p.partial_velocity(N, u1, u2)
+        (N.x, A.y)
+
+        """
+        partials = [self.vel(frame).diff(speed, frame, var_in_dcm=False) for
+                    speed in gen_speeds]
+
+        if len(partials) == 1:
+            return partials[0]
+        else:
+            return tuple(partials)

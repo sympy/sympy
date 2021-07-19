@@ -1,22 +1,17 @@
 """Implementation of :class:`PolynomialRing` class. """
 
-from __future__ import print_function, division
 
-from sympy.polys.domains.ring import Ring
-from sympy.polys.domains.compositedomain import CompositeDomain
+from sympy.core.compatibility import iterable
+from sympy.polys.agca.modules import FreeModulePolyRing
 from sympy.polys.domains.characteristiczero import CharacteristicZero
+from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.old_fractionfield import FractionField
-
+from sympy.polys.domains.ring import Ring
+from sympy.polys.orderings import monomial_key, build_product_order
 from sympy.polys.polyclasses import DMP, DMF
 from sympy.polys.polyerrors import (GeneratorsNeeded, PolynomialError,
         CoercionFailed, ExactQuotientFailed, NotReversible)
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
-
-from sympy.polys.orderings import monomial_key, build_product_order
-
-from sympy.polys.agca.modules import FreeModulePolyRing
-
-from sympy.core.compatibility import iterable, range
 from sympy.utilities import public
 
 # XXX why does this derive from CharacteristicZero???
@@ -66,38 +61,62 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
                      self.gens, self.order))
 
     def __eq__(self, other):
-        """Returns `True` if two domains are equivalent. """
+        """Returns ``True`` if two domains are equivalent. """
         return isinstance(other, PolynomialRingBase) and \
             self.dtype == other.dtype and self.dom == other.dom and \
             self.gens == other.gens and self.order == other.order
 
+    def from_ZZ(K1, a, K0):
+        """Convert a Python ``int`` object to ``dtype``. """
+        return K1(K1.dom.convert(a, K0))
+
     def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
+        """Convert a Python ``int`` object to ``dtype``. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_QQ(K1, a, K0):
+        """Convert a Python ``Fraction`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_QQ_python(K1, a, K0):
-        """Convert a Python `Fraction` object to `dtype`. """
+        """Convert a Python ``Fraction`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_ZZ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpz` object to `dtype`. """
+        """Convert a GMPY ``mpz`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_QQ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpq` object to `dtype`. """
+        """Convert a GMPY ``mpq`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_RealField(K1, a, K0):
-        """Convert a mpmath `mpf` object to `dtype`. """
+        """Convert a mpmath ``mpf`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_AlgebraicField(K1, a, K0):
-        """Convert a `ANP` object to `dtype`. """
+        """Convert a ``ANP`` object to ``dtype``. """
         if K1.dom == K0:
             return K1(a)
 
+    def from_PolynomialRing(K1, a, K0):
+        """Convert a ``PolyElement`` object to ``dtype``. """
+        if K1.gens == K0.symbols:
+            if K1.dom == K0.dom:
+                return K1(dict(a))  # set the correct ring
+            else:
+                convert_dom = lambda c: K1.dom.convert_from(c, K0.dom)
+                return K1({m: convert_dom(c) for m, c in a.items()})
+        else:
+            monoms, coeffs = _dict_reorder(a.to_dict(), K0.symbols, K1.gens)
+
+            if K1.dom != K0.dom:
+                coeffs = [ K1.dom.convert(c, K0.dom) for c in coeffs ]
+
+            return K1(dict(zip(monoms, coeffs)))
+
     def from_GlobalPolynomialRing(K1, a, K0):
-        """Convert a `DMP` object to `dtype`. """
+        """Convert a ``DMP`` object to ``dtype``. """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
                 return K1(a.rep)  # set the correct ring
@@ -112,15 +131,15 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
             return K1(dict(zip(monoms, coeffs)))
 
     def get_field(self):
-        """Returns a field associated with `self`. """
+        """Returns a field associated with ``self``. """
         return FractionField(self.dom, *self.gens)
 
     def poly_ring(self, *gens):
-        """Returns a polynomial ring, i.e. `K[X]`. """
+        """Returns a polynomial ring, i.e. ``K[X]``. """
         raise NotImplementedError('nested domains not allowed')
 
     def frac_field(self, *gens):
-        """Returns a fraction field, i.e. `K(X)`. """
+        """Returns a fraction field, i.e. ``K(X)``. """
         raise NotImplementedError('nested domains not allowed')
 
     def revert(self, a):
@@ -130,19 +149,19 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
             raise NotReversible('%s is not a unit' % a)
 
     def gcdex(self, a, b):
-        """Extended GCD of `a` and `b`. """
+        """Extended GCD of ``a`` and ``b``. """
         return a.gcdex(b)
 
     def gcd(self, a, b):
-        """Returns GCD of `a` and `b`. """
+        """Returns GCD of ``a`` and ``b``. """
         return a.gcd(b)
 
     def lcm(self, a, b):
-        """Returns LCM of `a` and `b`. """
+        """Returns LCM of ``a`` and ``b``. """
         return a.lcm(b)
 
     def factorial(self, a):
-        """Returns factorial of `a`. """
+        """Returns factorial of ``a``. """
         return self.dtype(self.dom.factorial(a))
 
     def _vector_to_sdm(self, v, order):
@@ -169,6 +188,9 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
 
         Convert a sparse distributed module into a list of length ``n``.
 
+        Examples
+        ========
+
         >>> from sympy import QQ, ilex
         >>> from sympy.abc import x, y
         >>> R = QQ.old_poly_ring(x, y, order=ilex)
@@ -183,6 +205,9 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
     def free_module(self, rank):
         """
         Generate a free module of rank ``rank`` over ``self``.
+
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
@@ -235,11 +260,11 @@ class GlobalPolynomialRing(PolynomialRingBase):
             return K1.from_GlobalPolynomialRing(a.numer(), K0)
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """Convert ``a`` to a SymPy object. """
         return basic_from_dict(a.to_sympy_dict(), *self.gens)
 
     def from_sympy(self, a):
-        """Convert SymPy's expression to `dtype`. """
+        """Convert SymPy's expression to ``dtype``. """
         try:
             rep, _ = dict_from_basic(a, gens=self.gens)
         except PolynomialError:
@@ -251,23 +276,26 @@ class GlobalPolynomialRing(PolynomialRingBase):
         return self(rep)
 
     def is_positive(self, a):
-        """Returns True if `LC(a)` is positive. """
+        """Returns True if ``LC(a)`` is positive. """
         return self.dom.is_positive(a.LC())
 
     def is_negative(self, a):
-        """Returns True if `LC(a)` is negative. """
+        """Returns True if ``LC(a)`` is negative. """
         return self.dom.is_negative(a.LC())
 
     def is_nonpositive(self, a):
-        """Returns True if `LC(a)` is non-positive. """
+        """Returns True if ``LC(a)`` is non-positive. """
         return self.dom.is_nonpositive(a.LC())
 
     def is_nonnegative(self, a):
-        """Returns True if `LC(a)` is non-negative. """
+        """Returns True if ``LC(a)`` is non-negative. """
         return self.dom.is_nonnegative(a.LC())
 
     def _vector_to_sdm(self, v, order):
         """
+        Examples
+        ========
+
         >>> from sympy import lex, QQ
         >>> from sympy.abc import x, y
         >>> R = QQ.old_poly_ring(x, y)
@@ -285,7 +313,7 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
     dtype = DMF
 
     def new(self, a):
-        """Construct an element of `self` domain from `a`. """
+        """Construct an element of ``self`` domain from ``a``. """
         res = self.dtype(a, self.dom, len(self.gens) - 1, ring=self)
 
         # make sure res is actually in our ring
@@ -307,12 +335,12 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
         return K1((dmf.num, dmf.den))
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """Convert ``a`` to a SymPy object. """
         return (basic_from_dict(a.numer().to_sympy_dict(), *self.gens) /
                 basic_from_dict(a.denom().to_sympy_dict(), *self.gens))
 
     def from_sympy(self, a):
-        """Convert SymPy's expression to `dtype`. """
+        """Convert SymPy's expression to ``dtype``. """
         p, q = a.as_numer_denom()
 
         num, _ = dict_from_basic(p, gens=self.gens)
@@ -332,6 +360,9 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
 
         Note that the vector is multiplied by a unit first to make all entries
         polynomials.
+
+        Examples
+        ========
 
         >>> from sympy import ilex, QQ
         >>> from sympy.abc import x, y
@@ -355,17 +386,17 @@ def PolynomialRing(dom, *gens, **opts):
     Create a generalized multivariate polynomial ring.
 
     A generalized polynomial ring is defined by a ground field `K`, a set
-    of generators (typically `x_1, \dots, x_n`) and a monomial order `<`.
+    of generators (typically `x_1, \ldots, x_n`) and a monomial order `<`.
     The monomial order can be global, local or mixed. In any case it induces
     a total ordering on the monomials, and there exists for every (non-zero)
-    polynomial `f \in K[x_1, \dots, x_n]` a well-defined "leading monomial"
+    polynomial `f \in K[x_1, \ldots, x_n]` a well-defined "leading monomial"
     `LM(f) = LM(f, >)`. One can then define a multiplicative subset
-    `S = S_> = \{f \in K[x_1, \dots, x_n] | LM(f) = 1\}`. The generalized
+    `S = S_> = \{f \in K[x_1, \ldots, x_n] | LM(f) = 1\}`. The generalized
     polynomial ring corresponding to the monomial order is
-    `R = S^{-1}K[x_1, \dots, x_n]`.
+    `R = S^{-1}K[x_1, \ldots, x_n]`.
 
     If `>` is a so-called global order, that is `1` is the smallest monomial,
-    then we just have `S = K` and `R = K[x_1, \dots, x_n]`.
+    then we just have `S = K` and `R = K[x_1, \ldots, x_n]`.
 
     Examples
     ========

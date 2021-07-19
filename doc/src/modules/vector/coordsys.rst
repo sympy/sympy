@@ -2,40 +2,40 @@
 More about Coordinate Systems
 =============================
 
-We will now look at how we can initialize new coordinate systems in 
-:mod:`sympy.vector`, positioned and oriented in user-defined
+We will now look at how we can initialize new coordinate systems in
+:mod:`sympy.vector`, transformed in user-defined
 ways with respect to already-existing systems.
 
 Locating new systems
 ====================
 
-We already know that the ``origin`` property of a 
-``CoordSysCartesian`` corresponds to the ``Point`` instance
+We already know that the ``origin`` property of a
+``CoordSys3D`` corresponds to the ``Point`` instance
 denoting its origin reference point.
 
 Consider a coordinate system :math:`N`. Suppose we want to define
-a new system :math:`M`, whose origin is located at 
+a new system :math:`M`, whose origin is located at
 :math:`\mathbf{3\hat{i} + 4\hat{j} + 5\hat{k}}` from :math:`N`'s origin.
-In other words, the coordinates of :math:`M`'s origin from N's perspective 
-happen to be :math:`(3, 4, 5)`. Moreover, this would also mean that 
-the coordinates of :math:`N`'s origin with respect to :math:`M` 
+In other words, the coordinates of :math:`M`'s origin from N's perspective
+happen to be :math:`(3, 4, 5)`. Moreover, this would also mean that
+the coordinates of :math:`N`'s origin with respect to :math:`M`
 would be :math:`(-3, -4, -5)`.
 
-This can be achieved programatically as follows -
+This can be achieved programmatically as follows -
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> N = CoordSysCartesian('N')
+  >>> from sympy.vector import CoordSys3D
+  >>> N = CoordSys3D('N')
   >>> M = N.locate_new('M', 3*N.i + 4*N.j + 5*N.k)
   >>> M.position_wrt(N)
   3*N.i + 4*N.j + 5*N.k
   >>> N.origin.express_coordinates(M)
   (-3, -4, -5)
 
-It is worth noting that :math:`M`'s orientation is the same as that of 
-:math:`N`. This means that the rotation matrix of :math: `N` with respect 
+It is worth noting that :math:`M`'s orientation is the same as that of
+:math:`N`. This means that the rotation matrix of :math: `N` with respect
 to :math:`M`, and also vice versa, is equal to the identity matrix of
 dimensions 3x3.
-The ``locate_new`` method initializes a ``CoordSysCartesian`` that
+The ``locate_new`` method initializes a ``CoordSys3D`` that
 is only translated in space, not re-oriented, relative to the 'parent'
 system.
 
@@ -43,15 +43,15 @@ Orienting new systems
 =====================
 
 Similar to 'locating' new systems, :mod:`sympy.vector` also allows for
-initialization of new ``CoordSysCartesian`` instances that are oriented
+initialization of new ``CoordSys3D`` instances that are oriented
 in user-defined ways with respect to existing systems.
 
 Suppose you have a coordinate system :math:`A`.
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> A = CoordSysCartesian('A')
+  >>> from sympy.vector import CoordSys3D
+  >>> A = CoordSys3D('A')
 
-You want to initialize a new coordinate system :math:`B`, that is rotated with 
+You want to initialize a new coordinate system :math:`B`, that is rotated with
 respect to :math:`A`'s Z-axis by an angle :math:`\theta`.
 
   >>> from sympy import Symbol
@@ -66,18 +66,18 @@ The orientation is shown in the diagram below:
 
 There are two ways to achieve this.
 
-Using a method of CoordSysCartesian directly
---------------------------------------------
+Using a method of CoordSys3D directly
+-------------------------------------
 
 This is the easiest, cleanest, and hence the recommended way of doing
 it.
 
   >>> B = A.orient_new_axis('B', theta, A.k)
 
-This initialzes :math:`B` with the required orientation information with
+This initializes :math:`B` with the required orientation information with
 respect to :math:`A`.
 
-``CoordSysCartesian`` provides the following direct orientation methods
+``CoordSys3D`` provides the following direct orientation methods
 in its API-
 
 1. ``orient_new_axis``
@@ -88,14 +88,14 @@ in its API-
 
 4. ``orient_new_quaternion``
 
-Please look at the ``CoordSysCartesian`` class API given in the docs
-of this module, to know their functionality and required arguments 
+Please look at the ``CoordSys3D`` class API given in the docs
+of this module, to know their functionality and required arguments
 in detail.
 
 Using Orienter(s) and the orient_new method
 -------------------------------------------
 
-You would first have to initialize an ``AxisOrienter`` instance for 
+You would first have to initialize an ``AxisOrienter`` instance for
 storing the rotation information.
 
   >>> from sympy.vector import AxisOrienter
@@ -107,7 +107,7 @@ And then apply it using the ``orient_new`` method, to obtain :math:`B`.
 
 ``orient_new`` also lets you orient new systems using multiple
 ``Orienter`` instances, provided in an iterable. The rotations/orientations
-are applied to the new system in the order the ``Orienter`` instances 
+are applied to the new system in the order the ``Orienter`` instances
 appear in the iterable.
 
   >>> from sympy.vector import BodyOrienter
@@ -136,7 +136,7 @@ coincides with the origin of the 'parent' system.
   >>> B.position_wrt(A)
   0
 
-To compute the rotation matrix of any coordinate system with respect 
+To compute the rotation matrix of any coordinate system with respect
 to another one, use the ``rotation_matrix`` method.
 
   >>> B = A.orient_new_axis('B', a, A.k)
@@ -150,7 +150,7 @@ to another one, use the ``rotation_matrix`` method.
   [1, 0, 0],
   [0, 1, 0],
   [0, 0, 1]])
-  
+
 
 Orienting AND Locating new systems
 ==================================
@@ -178,6 +178,29 @@ location of the new systems.
 
 More on the ``express`` function in a bit.
 
+Transforming new system
+=======================
+
+The most general way of creating user-defined system is to use
+``transformation`` parameter in ``CoordSys3D``. Here we can define
+any transformation equations. If we are interested in some typical
+curvilinear coordinate system different that Cartesian, we can also
+use some predefined ones. It could be also possible to translate or
+rotate system by setting appropriate transformation equations.
+
+  >>> from sympy.vector import CoordSys3D
+  >>> from sympy import sin, cos
+  >>> A = CoordSys3D('A', transformation='spherical')
+  >>> B = CoordSys3D('A', transformation=lambda x,y,z: (x*sin(y), x*cos(y), z))
+
+
+In ``CoordSys3D`` is also dedicated method, ``create_new`` which works
+similarly to methods like ``locate_new``, ``orient_new_axis`` etc.
+
+  >>> from sympy.vector import CoordSys3D
+  >>> A = CoordSys3D('A')
+  >>> B = A.create_new('B', transformation='spherical')
+
 Expression of quantities in different coordinate systems
 ========================================================
 
@@ -193,12 +216,12 @@ in different coordinate systems using the ``express`` function.
 
 For purposes of this section, assume the following initializations-
 
-  >>> from sympy.vector import CoordSysCartesian, express
+  >>> from sympy.vector import CoordSys3D, express
   >>> from sympy.abc import a, b, c
-  >>> N = CoordSysCartesian('N')
+  >>> N = CoordSys3D('N')
   >>> M = N.orient_new_axis('M', a, N.k)
 
-``Vector`` instances can be expressed in user defined systems using 
+``Vector`` instances can be expressed in user defined systems using
 ``express``.
 
   >>> v1 = N.i + N.j + N.k
@@ -206,13 +229,13 @@ For purposes of this section, assume the following initializations-
   (sin(a) + cos(a))*M.i + (-sin(a) + cos(a))*M.j + M.k
   >>> v2 = N.i + M.j
   >>> express(v2, N)
-  (-sin(a) + 1)*N.i + (cos(a))*N.j
+  (1 - sin(a))*N.i + (cos(a))*N.j
 
 Apart from ``Vector`` instances, ``express`` also supports
 reexpression of scalars (general SymPy ``Expr``) and
 ``Dyadic`` objects.
 
-``express`` also accepts a second coordinate system 
+``express`` also accepts a second coordinate system
 for re-expressing ``Dyadic`` instances.
 
   >>> d = 2*(M.i | N.j) + 3* (M.j | N.k)
@@ -224,15 +247,15 @@ for re-expressing ``Dyadic`` instances.
 Coordinate Variables
 --------------------
 
-The location of a coordinate system's origin does not affect the 
+The location of a coordinate system's origin does not affect the
 re-expression of ``BaseVector`` instances. However, it does affect
 the way ``BaseScalar`` instances are expressed in different systems.
 
-``BaseScalar`` instances, are coordinate 'symbols' meant to denote the 
-variables used in the definition of vector/scalar fields in 
+``BaseScalar`` instances, are coordinate 'symbols' meant to denote the
+variables used in the definition of vector/scalar fields in
 :mod:`sympy.vector`.
 
-For example, consider the scalar field 
+For example, consider the scalar field
 :math:`\mathbf{{T}_{N}(x, y, z) = x + y + z}` defined in system :math:`N`.
 Thus, at a point with coordinates :math:`(a, b, c)`, the value of the
 field would be :math:`a + b + c`. Now consider system :math:`R`, whose
@@ -240,14 +263,14 @@ origin is located at :math:`(1, 2, 3)` with respect to :math:`N` (no
 change of orientation).
 A point with coordinates :math:`(a, b, c)` in :math:`R` has coordinates
 :math:`(a + 1, b + 2, c + 3)` in :math:`N`.
-Therefore, the expression for :math:`\mathbf{{T}_{N}}` in :math:`R` becomes 
+Therefore, the expression for :math:`\mathbf{{T}_{N}}` in :math:`R` becomes
 :math:`\mathbf{{T}_{R}}(x, y, z) = x + y + z + 6`.
 
 Coordinate variables, if present in a vector/scalar/dyadic expression,
 can also be re-expressed in a given coordinate system, by setting the
 ``variables`` keyword argument of ``express`` to ``True``.
 
-The above mentioned example, done programatically, would look like 
+The above mentioned example, done programmatically, would look like
 this -
 
   >>> R = N.locate_new('R', N.i + 2*N.j + 3*N.k)
@@ -258,8 +281,8 @@ this -
 Other expression-dependent methods
 ----------------------------------
 
-The ``to_matrix`` method of ``Vector`` and 
-``express_coordinates`` method of ``Point`` also return 
+The ``to_matrix`` method of ``Vector`` and
+``express_coordinates`` method of ``Point`` also return
 different results depending on the coordinate system being provided.
 
   >>> P = R.origin.locate_new('P', a*R.i + b*R.j + c*R.k)

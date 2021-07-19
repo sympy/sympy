@@ -66,8 +66,11 @@ principal_branch
 sympy.functions.elementary.trigonometric
 ========================================
 
-Trionometric Functions
-======================
+
+.. _trionometric functions:
+
+Trigonometric Functions
+========================
 
 sin
 ---
@@ -241,6 +244,12 @@ asech
 .. autoclass:: sympy.functions.elementary.hyperbolic.asech
    :members:
 
+acsch
+-----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.acsch
+   :members:
+
 sympy.functions.elementary.integers
 ===================================
 
@@ -262,12 +271,14 @@ RoundFunction
 -------------
 
 .. autoclass:: sympy.functions.elementary.integers.RoundFunction
+   :members:
 
 
 frac
 ----
 
 .. autoclass:: sympy.functions.elementary.integers.frac
+   :members:
 
 sympy.functions.elementary.exponential
 ======================================
@@ -291,6 +302,13 @@ log
    :members:
 
 
+exp_polar
+---------
+
+.. autoclass:: sympy.functions.elementary.exponential.exp_polar
+   :members:
+
+
 sympy.functions.elementary.piecewise
 ====================================
 
@@ -306,6 +324,8 @@ Piecewise
 
 .. autoclass:: sympy.functions.elementary.piecewise.Piecewise
    :members:
+
+   .. automethod:: sympy.functions.elementary.piecewise.Piecewise._eval_integral
 
 .. autofunction:: sympy.functions.elementary.piecewise.piecewise_fold
 
@@ -342,3 +362,15 @@ sqrt
 ----
 
 .. autofunction:: sympy.functions.elementary.miscellaneous.sqrt
+
+
+cbrt
+----
+
+.. autofunction:: sympy.functions.elementary.miscellaneous.cbrt
+
+
+real_root
+---------
+
+.. autofunction:: sympy.functions.elementary.miscellaneous.real_root

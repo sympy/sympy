@@ -1,5 +1,6 @@
-Differential Geometry Module
-============================
+=====================
+Differential Geometry
+=====================
 
 .. module:: sympy.diffgeom
 
@@ -15,6 +16,9 @@ Base Class Reference
    :members:
 
 .. autoclass:: CoordSystem
+   :members:
+
+.. autoclass:: CoordinateSymbol
    :members:
 
 .. autoclass:: Point

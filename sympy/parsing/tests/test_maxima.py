@@ -14,10 +14,12 @@ def test_parser():
 
 def test_injection():
     parse_maxima('c: x+1', globals=globals())
-    assert c == x + 1
+    # c created by parse_maxima
+    assert c == x + 1 # noqa:F821
 
     parse_maxima('g: sqrt(81)', globals=globals())
-    assert g == 9
+    # g created by parse_maxima
+    assert g == 9 # noqa:F821
 
 
 def test_maxima_functions():
@@ -28,7 +30,7 @@ def test_maxima_functions():
         -1 + 2*cos(x)**2 + 2*cos(x)*sin(x)
     assert parse_maxima('solve(x^2-4,x)') == [-2, 2]
     assert parse_maxima('limit((1+1/x)^x,x,inf)') == E
-    assert parse_maxima('limit(sqrt(-x)/x,x,0,minus)') == -oo
+    assert parse_maxima('limit(sqrt(-x)/x,x,0,minus)') is -oo
     assert parse_maxima('diff(x^x, x)') == x**x*(1 + log(x))
     assert parse_maxima('sum(k, k, 1, n)', name_dict=dict(
         n=Symbol('n', integer=True),

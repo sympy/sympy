@@ -1,4 +1,4 @@
-from sympy import symbols
+from sympy.core.backend import symbols
 from sympy.physics.mechanics import dynamicsymbols
 from sympy.physics.mechanics import ReferenceFrame, Point, Particle
 from sympy.physics.mechanics import LagrangesMethod, Lagrangian
@@ -10,9 +10,9 @@ def test_lagrange_2forces():
     ### Equations for two damped springs in serie with two forces
 
     ### generalized coordinates
-    qs = q1, q2 = dynamicsymbols('q1, q2')
+    q1, q2 = dynamicsymbols('q1, q2')
     ### generalized speeds
-    qds = q1d, q2d = dynamicsymbols('q1, q2', 1)
+    q1d, q2d = dynamicsymbols('q1, q2', 1)
 
     ### Mass, spring strength, friction coefficient
     m, k, nu = symbols('m, k, nu')
@@ -27,10 +27,10 @@ def test_lagrange_2forces():
     P2.set_vel(N, q2d * N.x)
 
     pP1 = Particle('pP1', P1, m)
-    pP1.set_potential_energy(k * q1**2 / 2)
+    pP1.potential_energy = k * q1**2 / 2
 
     pP2 = Particle('pP2', P2, m)
-    pP2.set_potential_energy(k * (q1 - q2)**2 / 2)
+    pP2.potential_energy = k * (q1 - q2)**2 / 2
 
     #### Friction forces
     forcelist = [(P1, - nu * q1d * N.x),

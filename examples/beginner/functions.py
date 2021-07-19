@@ -2,28 +2,26 @@
 
 """Functions example
 
-Demonstrates sympy defined functions.
+Demonstrates functions defined in SymPy.
 """
 
-import sympy
-from sympy import pprint
-
+from sympy import pprint, Symbol, log, exp
 
 def main():
-    a = sympy.Symbol('a')
-    b = sympy.Symbol('b')
-    e = sympy.log((a + b)**5)
+    a = Symbol('a')
+    b = Symbol('b')
+    e = log((a + b)**5)
     print()
     pprint(e)
     print('\n')
 
-    e = sympy.exp(e)
+    e = exp(e)
     pprint(e)
     print('\n')
 
-    e = sympy.log(sympy.exp((a + b)**5))
+    e = log(exp((a + b)**5))
     pprint(e)
-    print
+    print()
 
 if __name__ == "__main__":
     main()

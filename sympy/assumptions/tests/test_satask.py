@@ -1,8 +1,10 @@
-from sympy.assumptions.satask import satask
+from sympy import (S, symbols, Q, assuming, Implies, MatrixSymbol, I, pi, Abs,
+    Eq, Gt)
+from sympy.assumptions.cnf import CNF, Literal
+from sympy.assumptions.satask import (satask, extract_predargs,
+    get_relevant_clsfacts)
 
-from sympy import symbols, Q, assuming, Implies, MatrixSymbol, I, pi, Rational
-
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 
 x, y, z = symbols('x y z')
@@ -82,8 +84,8 @@ def test_invertible():
     A = MatrixSymbol('A', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     assert satask(Q.invertible(A*B), Q.invertible(A) & Q.invertible(B)) is True
-    assert satask(Q.invertible(A), Q.invertible(A*B))
-    assert satask(Q.invertible(A) & Q.invertible(B), Q.invertible(A*B))
+    assert satask(Q.invertible(A), Q.invertible(A*B)) is True
+    assert satask(Q.invertible(A) & Q.invertible(B), Q.invertible(A*B)) is True
 
 
 def test_prime():
@@ -164,7 +166,7 @@ def test_rational_irrational():
         Q.rational(z)) is True
 
 
-def test_even():
+def test_even_satask():
     assert satask(Q.even(2)) is True
     assert satask(Q.even(3)) is False
 
@@ -181,7 +183,7 @@ def test_even():
     assert satask(Q.even(x), Q.even(abs(x))) is None # x could be complex
 
 
-def test_odd():
+def test_odd_satask():
     assert satask(Q.odd(2)) is False
     assert satask(Q.odd(3)) is True
 
@@ -200,7 +202,7 @@ def test_odd():
 
 def test_integer():
     assert satask(Q.integer(1)) is True
-    assert satask(Q.integer(Rational(1, 2))) is False
+    assert satask(Q.integer(S.Half)) is False
 
     assert satask(Q.integer(x + y), Q.integer(x) & Q.integer(y)) is True
     assert satask(Q.integer(x + y), Q.integer(x)) is None
@@ -262,3 +264,108 @@ def test_pos_neg():
     assert satask(Q.negative(x + y), Q.negative(x) & Q.negative(y)) is True
     assert satask(Q.positive(x + y), Q.negative(x) & Q.negative(y)) is False
     assert satask(Q.negative(x + y), Q.positive(x) & Q.positive(y)) is False
+
+
+def test_pow_pos_neg():
+    assert satask(Q.nonnegative(x**2), Q.positive(x)) is True
+    assert satask(Q.nonpositive(x**2), Q.positive(x)) is False
+    assert satask(Q.positive(x**2), Q.positive(x)) is True
+    assert satask(Q.negative(x**2), Q.positive(x)) is False
+    assert satask(Q.real(x**2), Q.positive(x)) is True
+
+    assert satask(Q.nonnegative(x**2), Q.negative(x)) is True
+    assert satask(Q.nonpositive(x**2), Q.negative(x)) is False
+    assert satask(Q.positive(x**2), Q.negative(x)) is True
+    assert satask(Q.negative(x**2), Q.negative(x)) is False
+    assert satask(Q.real(x**2), Q.negative(x)) is True
+
+    assert satask(Q.nonnegative(x**2), Q.nonnegative(x)) is True
+    assert satask(Q.nonpositive(x**2), Q.nonnegative(x)) is None
+    assert satask(Q.positive(x**2), Q.nonnegative(x)) is None
+    assert satask(Q.negative(x**2), Q.nonnegative(x)) is False
+    assert satask(Q.real(x**2), Q.nonnegative(x)) is True
+
+    assert satask(Q.nonnegative(x**2), Q.nonpositive(x)) is True
+    assert satask(Q.nonpositive(x**2), Q.nonpositive(x)) is None
+    assert satask(Q.positive(x**2), Q.nonpositive(x)) is None
+    assert satask(Q.negative(x**2), Q.nonpositive(x)) is False
+    assert satask(Q.real(x**2), Q.nonpositive(x)) is True
+
+    assert satask(Q.nonnegative(x**3), Q.positive(x)) is True
+    assert satask(Q.nonpositive(x**3), Q.positive(x)) is False
+    assert satask(Q.positive(x**3), Q.positive(x)) is True
+    assert satask(Q.negative(x**3), Q.positive(x)) is False
+    assert satask(Q.real(x**3), Q.positive(x)) is True
+
+    assert satask(Q.nonnegative(x**3), Q.negative(x)) is False
+    assert satask(Q.nonpositive(x**3), Q.negative(x)) is True
+    assert satask(Q.positive(x**3), Q.negative(x)) is False
+    assert satask(Q.negative(x**3), Q.negative(x)) is True
+    assert satask(Q.real(x**3), Q.negative(x)) is True
+
+    assert satask(Q.nonnegative(x**3), Q.nonnegative(x)) is True
+    assert satask(Q.nonpositive(x**3), Q.nonnegative(x)) is None
+    assert satask(Q.positive(x**3), Q.nonnegative(x)) is None
+    assert satask(Q.negative(x**3), Q.nonnegative(x)) is False
+    assert satask(Q.real(x**3), Q.nonnegative(x)) is True
+
+    assert satask(Q.nonnegative(x**3), Q.nonpositive(x)) is None
+    assert satask(Q.nonpositive(x**3), Q.nonpositive(x)) is True
+    assert satask(Q.positive(x**3), Q.nonpositive(x)) is False
+    assert satask(Q.negative(x**3), Q.nonpositive(x)) is None
+    assert satask(Q.real(x**3), Q.nonpositive(x)) is True
+
+    # If x is zero, x**negative is not real.
+    assert satask(Q.nonnegative(x**-2), Q.nonpositive(x)) is None
+    assert satask(Q.nonpositive(x**-2), Q.nonpositive(x)) is None
+    assert satask(Q.positive(x**-2), Q.nonpositive(x)) is None
+    assert satask(Q.negative(x**-2), Q.nonpositive(x)) is None
+    assert satask(Q.real(x**-2), Q.nonpositive(x)) is None
+
+    # We could deduce things for negative powers if x is nonzero, but it
+    # isn't implemented yet.
+
+
+def test_prime_composite():
+    assert satask(Q.prime(x), Q.composite(x)) is False
+    assert satask(Q.composite(x), Q.prime(x)) is False
+    assert satask(Q.composite(x), ~Q.prime(x)) is None
+    assert satask(Q.prime(x), ~Q.composite(x)) is None
+    # since 1 is neither prime nor composite the following should hold
+    assert satask(Q.prime(x), Q.integer(x) & Q.positive(x) & ~Q.composite(x)) is None
+    assert satask(Q.prime(2)) is True
+    assert satask(Q.prime(4)) is False
+    assert satask(Q.prime(1)) is False
+    assert satask(Q.composite(1)) is False
+
+
+def test_extract_predargs():
+    props = CNF.from_prop(Q.zero(Abs(x*y)) & Q.zero(x*y))
+    assump = CNF.from_prop(Q.zero(x))
+    context = CNF.from_prop(Q.zero(y))
+    assert extract_predargs(props) == {Abs(x*y), x*y}
+    assert extract_predargs(props, assump) == {Abs(x*y), x*y, x}
+    assert extract_predargs(props, assump, context) == {Abs(x*y), x*y, x, y}
+
+    props = CNF.from_prop(Eq(x, y))
+    assump = CNF.from_prop(Gt(y, z))
+    assert extract_predargs(props, assump) == {x, y, z}
+
+
+def test_get_relevant_clsfacts():
+    exprs = {Abs(x*y)}
+    exprs, facts = get_relevant_clsfacts(exprs)
+    assert exprs == {x*y}
+    assert facts.clauses == \
+        {frozenset({Literal(Q.odd(Abs(x*y)), False), Literal(Q.odd(x*y), True)}),
+        frozenset({Literal(Q.zero(Abs(x*y)), False), Literal(Q.zero(x*y), True)}),
+        frozenset({Literal(Q.even(Abs(x*y)), False), Literal(Q.even(x*y), True)}),
+        frozenset({Literal(Q.zero(Abs(x*y)), True), Literal(Q.zero(x*y), False)}),
+        frozenset({Literal(Q.even(Abs(x*y)), False),
+                    Literal(Q.odd(Abs(x*y)), False),
+                    Literal(Q.odd(x*y), True)}),
+        frozenset({Literal(Q.even(Abs(x*y)), False),
+                    Literal(Q.even(x*y), True),
+                    Literal(Q.odd(Abs(x*y)), False)}),
+        frozenset({Literal(Q.positive(Abs(x*y)), False),
+                    Literal(Q.zero(Abs(x*y)), False)})}

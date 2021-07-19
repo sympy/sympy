@@ -3,6 +3,14 @@ from sympy.physics.optics.gaussopt import RayTransferMatrix, FreeSpace,\
     GeometricRay, BeamParameter, waist2rayleigh, rayleigh2waist, geometric_conj_ab,\
     geometric_conj_af, geometric_conj_bf, gaussian_conj, conjugate_gauss_beams
 
+__all__ = [
+    'RayTransferMatrix', 'FreeSpace', 'FlatRefraction', 'CurvedRefraction',
+    'FlatMirror', 'CurvedMirror', 'ThinLens', 'GeometricRay', 'BeamParameter',
+    'waist2rayleigh', 'rayleigh2waist', 'geometric_conj_ab',
+    'geometric_conj_af', 'geometric_conj_bf', 'gaussian_conj',
+    'conjugate_gauss_beams',
+]
+
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 

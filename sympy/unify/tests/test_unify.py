@@ -37,7 +37,6 @@ def test_ops():
 def test_associative():
     c1 = C('Add', (1,2,3))
     c2 = C('Add', (x,y))
-    result = list(unify(c1, c2, {}))
     assert tuple(unify(c1, c2, {})) == ({x: 1, y: C('Add', (2, 3))},
                                          {x: C('Add', (1, 2)), y: 3})
 
@@ -51,17 +50,17 @@ def test_commutative():
 
 def _test_combinations_assoc():
     assert set(allcombinations((1,2,3), (a,b), True)) == \
-        set(((((1, 2), (3,)), (a, b)), (((1,), (2, 3)), (a, b))))
+        {(((1, 2), (3,)), (a, b)), (((1,), (2, 3)), (a, b))}
 
 def _test_combinations_comm():
     assert set(allcombinations((1,2,3), (a,b), None)) == \
-        set(((((1,), (2, 3)), ('a', 'b')), (((2,), (3, 1)), ('a', 'b')),
+        {(((1,), (2, 3)), ('a', 'b')), (((2,), (3, 1)), ('a', 'b')),
              (((3,), (1, 2)), ('a', 'b')), (((1, 2), (3,)), ('a', 'b')),
-             (((2, 3), (1,)), ('a', 'b')), (((3, 1), (2,)), ('a', 'b'))))
+             (((2, 3), (1,)), ('a', 'b')), (((3, 1), (2,)), ('a', 'b'))}
 
 def test_allcombinations():
     assert set(allcombinations((1,2), (1,2), 'commutative')) ==\
-        set(((((1,),(2,)), ((1,),(2,))), (((1,),(2,)), ((2,),(1,)))))
+        {(((1,),(2,)), ((1,),(2,))), (((1,),(2,)), ((2,),(1,)))}
 
 
 def test_commutativity():

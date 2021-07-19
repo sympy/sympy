@@ -1,7 +1,7 @@
 """Tools for polynomial factorization routines in characteristic zero. """
 
 from sympy.polys.rings import ring, xring
-from sympy.polys.domains import FF, ZZ, QQ, RR, EX
+from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX
 
 from sympy.polys import polyconfig as config
 from sympy.polys.polyerrors import DomainError
@@ -9,9 +9,8 @@ from sympy.polys.polyclasses import ANP
 from sympy.polys.specialpolys import f_polys, w_polys
 
 from sympy import nextprime, sin, sqrt, I
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises, XFAIL
 
-from sympy.core.compatibility import range
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = f_polys()
 w_1, w_2 = w_polys()
@@ -28,7 +27,8 @@ def test_dmp_trial_division():
 
 def test_dup_zz_mignotte_bound():
     R, x = ring("x", ZZ)
-    assert R.dup_zz_mignotte_bound(2*x**2 + 3*x + 4) == 32
+    assert R.dup_zz_mignotte_bound(2*x**2 + 3*x + 4) == 6
+    assert R.dup_zz_mignotte_bound(x**3 + 14*x**2 + 56*x + 64) == 152
 
 
 def test_dmp_zz_mignotte_bound():
@@ -291,6 +291,18 @@ def test_dmp_zz_wang():
 
     assert R.dmp_zz_wang_lead_coeffs(w_1, T, cs, E, H, A) == (w_1, H, LC)
 
+    factors = R.dmp_zz_wang_hensel_lifting(w_1, H, LC, A, p)
+    assert R.dmp_expand(factors) == w_1
+
+
+@XFAIL
+def test_dmp_zz_wang_fail():
+    R, x,y,z = ring("x,y,z", ZZ)
+    UV, _x = ring("x", ZZ)
+
+    p = ZZ(nextprime(R.dmp_zz_mignotte_bound(w_1)))
+    assert p == 6291469
+
     H_1 = [44*x**2 + 42*x + 1, 126*x**2 - 9*x + 28, 187*x**2 - 23]
     H_2 = [-4*x**2*y - 12*x**2 - 3*x*y + 1, -9*x**2*y - 9*x - 2*y, x**2*y**2 - 9*x**2 + y - 9]
     H_3 = [-4*x**2*y - 12*x**2 - 3*x*y + 1, -9*x**2*y - 9*x - 2*y, x**2*y**2 - 9*x**2 + y - 9]
@@ -299,17 +311,13 @@ def test_dmp_zz_wang():
     c_2 = 9*x**5*y**4 + 12*x**5*y**3 - 45*x**5*y**2 - 108*x**5*y - 324*x**5 + 18*x**4*y**3 - 216*x**4*y**2 - 810*x**4*y + 2*x**3*y**4 + 9*x**3*y**3 - 252*x**3*y**2 - 288*x**3*y - 945*x**3 - 30*x**2*y**2 - 414*x**2*y + 2*x*y**3 - 54*x*y**2 - 3*x*y + 81*x + 12*y
     c_3 = -36*x**4*y**2 - 108*x**4*y - 27*x**3*y**2 - 36*x**3*y - 108*x**3 - 8*x**2*y**2 - 42*x**2*y - 6*x*y**2 + 9*x + 2*y
 
-    # TODO
-    #assert R.dmp_zz_diophantine(H_1, c_1, [], 5, p) == [-3*x, -2, 1]
-    #assert R.dmp_zz_diophantine(H_2, c_2, [ZZ(-14)], 5, p) == [-x*y, -3*x, -6]
-    #assert R.dmp_zz_diophantine(H_3, c_3, [ZZ(-14)], 5, p) == [0, 0, -1]
-
-    factors = R.dmp_zz_wang_hensel_lifting(w_1, H, LC, A, p)
-    assert R.dmp_expand(factors) == w_1
+    assert R.dmp_zz_diophantine(H_1, c_1, [], 5, p) == [-3*x, -2, 1]
+    assert R.dmp_zz_diophantine(H_2, c_2, [ZZ(-14)], 5, p) == [-x*y, -3*x, -6]
+    assert R.dmp_zz_diophantine(H_3, c_3, [ZZ(-14)], 5, p) == [0, 0, -1]
 
 
 def test_issue_6355():
-    # This tests a bug in the Wang algorithm that occured only with a very
+    # This tests a bug in the Wang algorithm that occurred only with a very
     # specific set of random numbers.
     random_sequence = [-1, -1, 0, 0, 0, 0, -1, -1, 0, -1, 3, -1, 3, 3, 3, 3, -1, 3]
 
@@ -393,6 +401,90 @@ def test_dmp_zz_factor():
         (-12, [(y, 1),
                (x**2 - y, 6),
                (x**4 + 6*x**2*y + y**2, 1)])
+
+
+def test_dup_qq_i_factor():
+    R, x = ring("x", QQ_I)
+    i = QQ_I(0, 1)
+
+    assert R.dup_qq_i_factor(x**2 - 2) == (QQ_I(1, 0), [(x**2 - 2, 1)])
+
+    assert R.dup_qq_i_factor(x**2 - 1) == (QQ_I(1, 0), [(x - 1, 1), (x + 1, 1)])
+
+    assert R.dup_qq_i_factor(x**2 + 1) == (QQ_I(1, 0), [(x - i, 1), (x + i, 1)])
+
+    assert R.dup_qq_i_factor(x**2/4 + 1) == \
+            (QQ_I(QQ(1, 4), 0), [(x - 2*i, 1), (x + 2*i, 1)])
+
+    assert R.dup_qq_i_factor(x**2 + 4) == \
+            (QQ_I(1, 0), [(x - 2*i, 1), (x + 2*i, 1)])
+
+    assert R.dup_qq_i_factor(x**2 + 2*x + 1) == \
+            (QQ_I(1, 0), [(x + 1, 2)])
+
+    assert R.dup_qq_i_factor(x**2 + 2*i*x - 1) == \
+            (QQ_I(1, 0), [(x + i, 2)])
+
+    f = 8192*x**2 + x*(22656 + 175232*i) - 921416 + 242313*i
+
+    assert R.dup_qq_i_factor(f) == \
+            (QQ_I(8192, 0), [(x + QQ_I(QQ(177, 128), QQ(1369, 128)), 2)])
+
+
+def test_dmp_qq_i_factor():
+    R, x, y = ring("x, y", QQ_I)
+    i = QQ_I(0, 1)
+
+    assert R.dmp_qq_i_factor(x**2 + 2*y**2) == \
+            (QQ_I(1, 0), [(x**2 + 2*y**2, 1)])
+
+    assert R.dmp_qq_i_factor(x**2 + y**2) == \
+            (QQ_I(1, 0), [(x - i*y, 1), (x + i*y, 1)])
+
+    assert R.dmp_qq_i_factor(x**2 + y**2/4) == \
+            (QQ_I(1, 0), [(x - i*y/2, 1), (x + i*y/2, 1)])
+
+    assert R.dmp_qq_i_factor(4*x**2 + y**2) == \
+            (QQ_I(4, 0), [(x - i*y/2, 1), (x + i*y/2, 1)])
+
+
+def test_dup_zz_i_factor():
+    R, x = ring("x", ZZ_I)
+    i = ZZ_I(0, 1)
+
+    assert R.dup_zz_i_factor(x**2 - 2) == (ZZ_I(1, 0), [(x**2 - 2, 1)])
+
+    assert R.dup_zz_i_factor(x**2 - 1) == (ZZ_I(1, 0), [(x - 1, 1), (x + 1, 1)])
+
+    assert R.dup_zz_i_factor(x**2 + 1) == (ZZ_I(1, 0), [(x - i, 1), (x + i, 1)])
+
+    assert R.dup_zz_i_factor(x**2 + 4) == \
+            (ZZ_I(1, 0), [(x - 2*i, 1), (x + 2*i, 1)])
+
+    assert R.dup_zz_i_factor(x**2 + 2*x + 1) == \
+            (ZZ_I(1, 0), [(x + 1, 2)])
+
+    assert R.dup_zz_i_factor(x**2 + 2*i*x - 1) == \
+            (ZZ_I(1, 0), [(x + i, 2)])
+
+    f = 8192*x**2 + x*(22656 + 175232*i) - 921416 + 242313*i
+
+    assert R.dup_zz_i_factor(f) == \
+            (ZZ_I(0, 1), [((64 - 64*i)*x + (773 + 596*i), 2)])
+
+
+def test_dmp_zz_i_factor():
+    R, x, y = ring("x, y", ZZ_I)
+    i = ZZ_I(0, 1)
+
+    assert R.dmp_zz_i_factor(x**2 + 2*y**2) == \
+            (ZZ_I(1, 0), [(x**2 + 2*y**2, 1)])
+
+    assert R.dmp_zz_i_factor(x**2 + y**2) == \
+            (ZZ_I(1, 0), [(x - i*y, 1), (x + i*y, 1)])
+
+    assert R.dmp_zz_i_factor(4*x**2 + y**2) == \
+            (ZZ_I(1, 0), [(2*x - i*y, 1), (2*x + i*y, 1)])
 
 
 def test_dup_ext_factor():
@@ -528,7 +620,10 @@ def test_dup_factor_list():
 
     f = 6.7225336055071*x**2 - 10.6463972754741*x - 0.33469524022264
     coeff, factors = R.dup_factor_list(f)
-    assert coeff == RR(1.0) and len(factors) == 1 and factors[0][0].almosteq(f, 1e-10) and factors[0][1] == 1
+    assert coeff == RR(10.6463972754741)
+    assert len(factors) == 1
+    assert factors[0][0].max_norm() == RR(1.0)
+    assert factors[0][1] == 1
 
     Rt, t = ring("t", ZZ)
     R, x = ring("x", Rt)
@@ -628,12 +723,15 @@ def test_dmp_factor_list():
     f = 2.0*x**2 - 8.0*y**2
 
     assert R.dmp_factor_list(f) == \
-        (RR(2.0), [(1.0*x - 2.0*y, 1),
-                   (1.0*x + 2.0*y, 1)])
+        (RR(8.0), [(0.5*x - y, 1),
+                   (0.5*x + y, 1)])
 
     f = 6.7225336055071*x**2*y**2 - 10.6463972754741*x*y - 0.33469524022264
     coeff, factors = R.dmp_factor_list(f)
-    assert coeff == RR(1.0) and len(factors) == 1 and factors[0][0].almosteq(f, 1e-10) and factors[0][1] == 1
+    assert coeff == RR(10.6463972754741)
+    assert len(factors) == 1
+    assert factors[0][0].max_norm() == RR(1.0)
+    assert factors[0][1] == 1
 
     Rt, t = ring("t", ZZ)
     R, x, y = ring("x,y", Rt)

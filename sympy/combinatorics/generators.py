@@ -1,10 +1,7 @@
-from __future__ import print_function, division
-
 from sympy.combinatorics.permutations import Permutation
-from sympy.utilities.iterables import variations, rotate_left
 from sympy.core.symbol import symbols
 from sympy.matrices import Matrix
-from sympy.core.compatibility import range
+from sympy.utilities.iterables import variations, rotate_left
 
 
 def symmetric(n):
@@ -14,12 +11,9 @@ def symmetric(n):
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import symmetric
     >>> list(symmetric(3))
-    [Permutation(2), Permutation(1, 2), Permutation(2)(0, 1),
-     Permutation(0, 1, 2), Permutation(0, 2, 1), Permutation(0, 2)]
+    [(2), (1 2), (2)(0 1), (0 1 2), (0 2 1), (0 2)]
     """
     for perm in variations(list(range(n)), n):
         yield Permutation(perm)
@@ -32,15 +26,14 @@ def cyclic(n):
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import cyclic
     >>> list(cyclic(5))
-    [Permutation(4), Permutation(0, 1, 2, 3, 4), Permutation(0, 2, 4, 1, 3),
-     Permutation(0, 3, 1, 4, 2), Permutation(0, 4, 3, 2, 1)]
+    [(4), (0 1 2 3 4), (0 2 4 1 3),
+     (0 3 1 4 2), (0 4 3 2 1)]
 
     See Also
     ========
+
     dihedral
     """
     gen = list(range(n))
@@ -56,11 +49,9 @@ def alternating(n):
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import alternating
     >>> list(alternating(3))
-    [Permutation(2), Permutation(0, 1, 2), Permutation(0, 2, 1)]
+    [(2), (0 1 2), (0 2 1)]
     """
     for perm in variations(list(range(n)), n):
         p = Permutation(perm)
@@ -79,15 +70,13 @@ def dihedral(n):
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import dihedral
     >>> list(dihedral(3))
-    [Permutation(2), Permutation(0, 2), Permutation(0, 1, 2),
-     Permutation(1, 2), Permutation(0, 2, 1), Permutation(2)(0, 1)]
+    [(2), (0 2), (0 1 2), (1 2), (0 2 1), (2)(0 1)]
 
     See Also
     ========
+
     cyclic
     """
     if n == 1:
@@ -186,9 +175,9 @@ def rubik(n):
                 cw(F)
             i += 1
             temp = getr(L, i)
-            setr(L, i, list((getu(D, i))))
+            setr(L, i, list(getu(D, i)))
             setu(D, i, list(reversed(getl(R, i))))
-            setl(R, i, list((getd(U, i))))
+            setl(R, i, list(getd(U, i)))
             setd(U, i, list(reversed(temp)))
             i -= 1
 

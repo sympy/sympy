@@ -1,7 +1,8 @@
 """Tests for useful utilities for higher level polynomial classes. """
 
-from sympy import S, Integer, sin, cos, sqrt, symbols, pi, Eq, Integral, exp
-from sympy.utilities.pytest import raises
+from sympy import (S, Integer, sin, cos, sqrt, symbols, pi,
+    Eq, Integral, exp, Mul)
+from sympy.testing.pytest import raises
 
 from sympy.polys.polyutils import (
     _nsort,
@@ -13,10 +14,7 @@ from sympy.polys.polyutils import (
     dict_from_expr,
 )
 
-from sympy.polys.polyerrors import (
-    GeneratorsNeeded,
-    PolynomialError,
-)
+from sympy.polys.polyerrors import PolynomialError
 
 from sympy.polys.domains import ZZ
 
@@ -47,6 +45,9 @@ def test__nsort():
     assert len(_nsort(r, separated=True)[0]) == 0
     b, c, a = exp(-1000), exp(-999), exp(-1001)
     assert _nsort((b, c, a)) == [a, b, c]
+    # issue 12560
+    a = cos(1)**2 + sin(1)**2 - 1
+    assert _nsort([a]) == [a]
 
 
 def test__sort_gens():
@@ -229,7 +230,7 @@ def test__dict_from_expr_if_gens():
 
 
 def test__dict_from_expr_no_gens():
-    raises(GeneratorsNeeded, lambda: dict_from_expr(Integer(17)))
+    assert dict_from_expr(Integer(17)) == ({(): Integer(17)}, ())
 
     assert dict_from_expr(x) == ({(1,): Integer(1)}, (x,))
     assert dict_from_expr(y) == ({(1,): Integer(1)}, (y,))
@@ -239,7 +240,7 @@ def test__dict_from_expr_no_gens():
         x + y) == ({(1, 0): Integer(1), (0, 1): Integer(1)}, (x, y))
 
     assert dict_from_expr(sqrt(2)) == ({(1,): Integer(1)}, (sqrt(2),))
-    raises(GeneratorsNeeded, lambda: dict_from_expr(sqrt(2), greedy=False))
+    assert dict_from_expr(sqrt(2), greedy=False) == ({(): sqrt(2)}, ())
 
     assert dict_from_expr(x*y, domain=ZZ[x]) == ({(1,): x}, (y,))
     assert dict_from_expr(x*y, domain=ZZ[y]) == ({(1,): y}, (x,))
@@ -269,6 +270,8 @@ def test__parallel_dict_from_expr_no_gens():
     assert parallel_dict_from_expr([x*y, 2*z, Integer(3)]) == \
         ([{(1, 1, 0): Integer(
             1)}, {(0, 0, 1): Integer(2)}, {(0, 0, 0): Integer(3)}], (x, y, z))
+    assert parallel_dict_from_expr((Mul(x, x**2, evaluate=False),)) == \
+        ([{(3,): 1}], (x,))
 
 
 def test_parallel_dict_from_expr():
@@ -282,3 +285,4 @@ def test_dict_from_expr():
     assert dict_from_expr(Eq(x, 1)) == \
         ({(0,): -Integer(1), (1,): Integer(1)}, (x,))
     raises(PolynomialError, lambda: dict_from_expr(A*B - B*A))
+    raises(PolynomialError, lambda: dict_from_expr(S.true))

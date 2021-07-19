@@ -4,6 +4,11 @@
 Polynomials Manipulation Module Reference
 =========================================
 
+.. automodule:: sympy.polys
+
+See :ref:`polys-docs` for an index of documentation for the polys module and
+:ref:`polys-basics` for an introductory explanation.
+
 Basic polynomial manipulation functions
 =======================================
 
@@ -31,8 +36,6 @@ Basic polynomial manipulation functions
 .. autofunction:: subresultants
 .. autofunction:: resultant
 .. autofunction:: discriminant
-.. autofunction:: sympy.polys.dispersion.dispersion
-.. autofunction:: sympy.polys.dispersion.dispersionset
 .. autofunction:: terms_gcd
 .. autofunction:: cofactors
 .. autofunction:: gcd
@@ -113,6 +116,7 @@ Monomials encoded as tuples
 .. currentmodule:: sympy.polys.monomials
 
 .. autoclass:: Monomial
+   :members:
 .. autofunction:: itermonomials
 .. autofunction:: monomial_count
 
@@ -121,17 +125,28 @@ Orderings of monomials
 
 .. currentmodule:: sympy.polys.orderings
 
+.. autoclass:: MonomialOrder
+   :members:
 .. autoclass:: LexOrder
+   :members:
 .. autoclass:: GradedLexOrder
+   :members:
 .. autoclass:: ReversedGradedLexOrder
+   :members:
 
 Formal manipulation of roots of polynomials
 ===========================================
 
 .. currentmodule:: sympy.polys.rootoftools
 
+.. autofunction:: rootof
 .. autoclass:: RootOf
+   :members:
+.. autoclass:: ComplexRootOf
+   :members:
+   :private-members:
 .. autoclass:: RootSum
+   :members:
 
 Symbolic root-finding algorithms
 ================================
@@ -163,6 +178,7 @@ Orthogonal polynomials
 .. autofunction:: jacobi_poly
 .. autofunction:: legendre_poly
 .. autofunction:: laguerre_poly
+.. autofunction:: spherical_bessel_fn
 
 Manipulation of rational functions
 ==================================
