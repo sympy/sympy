@@ -10,7 +10,7 @@ def test_jointsmethod():
     theta, omega = dynamicsymbols('theta_P1, omega_P1')
     P.apply_force(g*P.y)
     method = JointsMethod(P, Pin)
-    assert method.root_body == P
+    assert method.frame == P.frame
     assert method.bodylist == [C, P]
     assert method.loadlist == [(P.masscenter, g*P.frame.y)]
     assert method.q == [theta]
