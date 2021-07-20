@@ -26,7 +26,7 @@ __all__ = [
 
     'SymbolicSystem',
 
-    'PinJoint'
+    'PinJoint', 'PrismaticJoint'
 ]
 
 from sympy.physics import vector
@@ -57,4 +57,4 @@ from .body import Body
 
 from .system import SymbolicSystem
 
-from .joint import PinJoint
+from .joint import PinJoint, PrismaticJoint
