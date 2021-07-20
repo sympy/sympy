@@ -24,10 +24,6 @@ class JointsMethod(object):
     forcelist : iterable
         Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
         describing the forces on the system.
-    auxiliary_eqs : Matrix
-        If applicable, the set of auxiliary Kane's
-        equations used to solve for non-contributing
-        forces.
     mass_matrix : Matrix
         The system's mass matrix
     forcing : Matrix
@@ -99,10 +95,6 @@ class JointsMethod(object):
     @property
     def forcing(self):
         return self._kane.forcing
-
-    @property
-    def auxiliary_eqs(self):
-        return self._kane.auxiliary_eqs
 
     @property
     def kane(self):
