@@ -1015,7 +1015,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
                 raise ValueError("Enter boundary conditions of the form ics={f(point): value, f(x).diff(x, order).subs(x, point): value}")
 
     ode = SingleODEProblem(eq_orig, func, x, prep=prep, xi=xi, eta=eta)
-    user_hint = kwargs.get('hint','default')
+    user_hint = kwargs.get('hint', 'default')
     # Used when dsolve is called without an explicit hint.
     # We exit early to return the first valid match
     early_exit = (user_hint=='default')

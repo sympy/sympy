@@ -298,6 +298,11 @@ def test_classify_ode():
         ('1st_power_series', 'lie_group')
     assert isinstance(classify_ode(Eq(f(x), 5), f(x), dict=True), dict)
 
+    #This is for new behavior of classify_ode when called internally with default, It should
+    # return the first hint which matches therefore, 'ordered_hints' key will not be there.
+    assert classify_ode(Eq(f(x).diff(x), 0), f(x),dict=True).get('ordered_hints') == None
+    assert classify_ode(Eq(f(x).diff(x), 0), f(x),dict=True).get('default') == 'nth_algebraic'
+
 
 def test_classify_ode_ics():
     # Dummy
