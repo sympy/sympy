@@ -742,6 +742,6 @@ class PrismaticJoint(Joint):
     def _set_linear_velocity(self):
         self.parent_point.set_vel(self.parent.frame, 0)
         self.child_point.set_vel(self.child.frame, 0)
-        self.child_point.set_pos(self.parent_point, self.coordinates[0] * self.parent_axis)
-        self.child_point.set_vel(self.parent.frame, self.speeds[0] * self.parent_axis)
-        self.child.masscenter.set_vel(self.parent.frame, self.speeds[0] * self.parent_axis)
+        self.child_point.set_pos(self.parent_point, self.coordinates[0] * self.parent_axis.normalize())
+        self.child_point.set_vel(self.parent.frame, self.speeds[0] * self.parent_axis.normalize())
+        self.child.masscenter.set_vel(self.parent.frame, self.speeds[0] * self.parent_axis.normalize())
