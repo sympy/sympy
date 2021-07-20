@@ -6,12 +6,6 @@ __all__ = ['JointsMethod']
 class JointsMethod(object):
     """Method for formulating the equations of motion using a set of interconnected bodies with joints.
 
-    Explanation
-    ===========
-
-    A joints method object is used to form the equations of
-    motion of a system created with joints.
-
     Parameters
     ==========
 
