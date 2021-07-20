@@ -374,7 +374,7 @@ class Body(RigidBody, Particle):  # type: ignore
         Parameters
         ==========
 
-        about : Point, optional
+        about : Point or ReferenceFrame, optional
             The point about which force is applied,
             and is to be removed.
             If about is None, then the torque about
