@@ -130,6 +130,7 @@ class Beam:
         self._applied_supports = []
         self._support_as_loads = []
         self._applied_loads = []
+        self._applied_supports = []
         self._reaction_loads = {}
         self._composite_type = None
         self._hinge_position = None
@@ -381,15 +382,18 @@ class Beam:
         (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
             + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
         """
+        self._applied_supports.append((loc, type))
+
         loc = sympify(loc)
         self._applied_supports.append((loc, type))
+
         if type == "pin" or type == "roller":
-            reaction_load = Symbol('R_'+str(loc))
+            reaction_load = Symbol('R_'+ str(loc))
             self.apply_load(reaction_load, loc, -1)
             self.bc_deflection.append((loc, 0))
         else:
-            reaction_load = Symbol('R_'+str(loc))
-            reaction_moment = Symbol('M_'+str(loc))
+            reaction_load = Symbol('R_'+ str(loc))
+            reaction_moment = Symbol('M_'+ str(loc))
             self.apply_load(reaction_load, loc, -1)
             self.apply_load(reaction_moment, loc, -2)
             self.bc_deflection.append((loc, 0))
@@ -397,6 +401,71 @@ class Beam:
             self._support_as_loads.append((reaction_moment, loc, -2, None))
 
         self._support_as_loads.append((reaction_load, loc, -1, None))
+
+
+    def remove_support(self, loc, type="fixed"):
+        """
+        This method removes a particular support on the beam
+        Raises a ValueError if the support passed as an argument is not present
+        on the beam.
+
+        Parameters
+        ==========
+
+        loc : Sympifiable
+              Location of the support to be removed.
+        type : String
+               The type of beam support that is being removed.
+               - pin type
+               - roller type
+               - fixed type
+
+        Exmaples
+        =======
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols, Symbol
+        >>> E,I = symbols('E I')
+        >>> b = Beam(8, E, I)
+        >>> b.apply_support(1, "pin")
+        >>> b.apply_support(8, "roller")
+        >>> b.apply_load(10, 0, 0, end=2)
+        >>> b.apply_load(20, 5, -1)
+        >>> b.apply_load(8, 7.5, -1)
+        >>> R_1, R_8 = symbols('R_1, R_8')
+        >>> b.solve_for_reaction_loads(R_1, R_8)
+        >>> b.reaction_loads
+        {R_1: -29.1428571428571, R_8: -18.8571428571429}
+        >>> b.remove_support(8, "roller")
+        >>> b.apply_support(7, "roller")
+        >>> R_7 = Symbol('R_7')
+        >>> b.solve_for_reaction_loads(R_1, R_7)
+        >>> b.reaction_loads
+        {R_1: -26.0, R_7: -22.0}
+        """
+        # resubstituting self._load with Reaction variable in case solved value of
+        # reaction load has been substituted in the load equation
+        res = dict((value, reaction) for reaction, value in self._reaction_loads.items())
+        self._load = self._load.subs(res)
+
+        if (loc, type) in self._applied_supports:
+            if type == "pin" or type == "roller":
+                reaction_load = Symbol('R_' + str(loc))
+                self.remove_load(reaction_load, loc, -1)
+                self.bc_deflection.remove((loc, 0))
+            else:
+                reaction_load = Symbol('R_'+ str(loc))
+                reaction_moment = Symbol('M_'+ str(loc))
+                self.remove_load(reaction_load, loc, -1)
+                self.remove_load(reaction_moment, loc, -2)
+                self.bc_deflection.remove((loc, 0))
+                self.bc_slope.remove((loc, 0))
+
+            self._applied_supports.remove((loc, type))
+
+        else:
+            msg = "No such support exists on the beam"
+            raise ValueError(msg)
 
     def apply_load(self, value, start, order, end=None):
         """

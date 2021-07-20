@@ -486,6 +486,37 @@ def test_apply_support():
     assert b.reaction_loads == {R_0: P/2, R_L: P/2, M_0: -L*P/8, M_L: L*P/8}
 
 
+def test_remove_support():
+    E = Symbol('E')
+    I = Symbol('I')
+
+    b = Beam(50, E, I)
+    b.apply_support(5, "pin")
+    b.apply_support(40, "roller")
+    b.apply_load(-8, 0, -1)
+    b.apply_load(120, 30, -2)
+    b.remove_support(5, "pin")
+    b.apply_support(10, "roller")
+    R_10, R_40 = symbols('R_10, R_40')
+    b.solve_for_reaction_loads(R_10, R_40)
+    assert b.load == -8*SingularityFunction(x, 0, -1) + 20*SingularityFunction(x, 10, -1)/3 \
+    + 120*SingularityFunction(x, 30, -2) + 4*SingularityFunction(x, 40, -1)/3
+
+    raises(ValueError, lambda: b.remove_support(20, "fixed"))
+
+    b = Beam(10, E, I)
+    b.apply_support(0, "fixed")
+    b.apply_support(10, "fixed")
+    b.remove_support(10, "fixed")
+    b.apply_load(20, 5, -1)
+    M_0, R_0 = symbols('M_0, R_0')
+    b.solve_for_reaction_loads(R_0, M_0)
+    assert b.slope() == (100*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2)
+            + 10*SingularityFunction(x, 5, 2))/(E*I)
+    assert b.deflection() == (50*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 0, 3)/3
+            + 10*SingularityFunction(x, 5, 3)/3)/(E*I)
+
+
 def test_max_shear_force():
     E = Symbol('E')
     I = Symbol('I')
