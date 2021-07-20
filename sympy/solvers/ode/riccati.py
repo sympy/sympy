@@ -276,7 +276,22 @@ def linsolve_dict(eq, syms):
 
 def match_riccati(eq, f, x):
     """
-    A function that matches if an equation
+    A function that matches and returns the coefficients
+    if an equation is a Riccati ODE
+
+    Parameters
+    ==========
+
+    eq: Equation to be matched
+    f: Dependent variable
+    x: Independent variable
+
+    Returns
+    =======
+
+    match: True if equation is a Riccati ODE, False otherwise
+    funcs: [b0, b1, b2] if match is True, [] otherwise. Here,
+    b0, b1 and b2 are rational functions which match the equation.
     """
     # Group terms based on f(x)
     if isinstance(eq, Eq):
@@ -297,16 +312,17 @@ def match_riccati(eq, f, x):
         b1 = -eq.coeff(f(x))
         b2 = -eq.coeff(f(x)**2)
         b0 = (f(x).diff(x) - b1*f(x) - b2*f(x)**2 - eq).expand()
+        funcs = [b0, b1, b2]
 
         # Check if coefficients are not symbols and floats
-        if len((b0 + b1 + b2).atoms(Symbol)) > 1 or len((b0 + b1 + b2).atoms(Float)):
+        if any([len(x.atoms(Symbol)) > 1 or len(x.atoms(Float)) for x in [b0, b1, b2]]):
             return False, []
 
         # If b_0(x) contains f(x), it is not a Riccati ODE
         if len(b0.atoms(f)) or not all([b2 != 0, b0.is_rational_function(x), \
             b1.is_rational_function(x), b2.is_rational_function(x)]):
             return False, []
-        return True, [b0, b1, b2]
+        return True, funcs
     return False, []
 
 
@@ -391,7 +407,9 @@ def construct_c_case_1(num, den, x, pole):
 
     # If multiplicity is 2, the coefficient to be added
     # in the c-vector is c = (1 +- sqrt(1 + 4*r))/2
-    return [[(1 + sqrt(1 + 4*r))/2], [(1 - sqrt(1 + 4*r))/2]]
+    if r != -S(1)/4:
+        return [[(1 + sqrt(1 + 4*r))/2], [(1 - sqrt(1 + 4*r))/2]]
+    return [[S(1)/2]]
 
 
 def construct_c_case_2(num, den, x, pole, mul):
@@ -417,25 +435,27 @@ def construct_c_case_2(num, den, x, pole, mul):
     for s in range(ri-1, 0, -1):
         sm = 0
         for j in range(s+1, ri):
-            sm += cplus[j - 1]*cplus[ri + s - j -1]
+            sm += cplus[j-1]*cplus[ri+s-j-1]
         if s!= 1:
-            cplus[s-1] = (ser[ri + s] - sm)/(2*cplus[ri - 1])
+            cplus[s-1] = (ser[ri+s] - sm)/(2*cplus[ri-1])
 
     # Memo for the minus case
     cminus = [-x for x in cplus]
 
     # Find the 0th coefficient in the recurrence
-    cplus[0] = (ser[ri + s] - sm - ri*cplus[ri - 1])/(2*cplus[ri - 1])
-    cminus[0] = (ser[ri + s] - sm  - ri*cminus[ri - 1])/(2*cminus[ri - 1])
+    cplus[0] = (ser[ri+s] - sm - ri*cplus[ri-1])/(2*cplus[ri-1])
+    cminus[0] = (ser[ri+s] - sm  - ri*cminus[ri-1])/(2*cminus[ri-1])
 
     # Add both the plus and minus cases' coefficients
-    return [cplus, cminus]
+    if cplus != cminus:
+        return [cplus, cminus]
+    return cplus
 
 
 def construct_c_case_3():
     # If multiplicity is 1, the coefficient to be added
     # in the c-vector is 1 (no choice)
-    return [[1], [1]]
+    return [[1]]
 
 
 def construct_c(num, den, x, poles, muls):
@@ -488,7 +508,9 @@ def construct_d_case_4(ser, N):
     dplus[-1] = (ser[N+s] - N*dplus[N] - sm)/(2*dplus[N])
     dminus[-1] = (ser[N+s] - N*dminus[N] - sm)/(2*dminus[N])
 
-    return [dplus, dminus]
+    if dplus != dminus:
+        return [dplus, dminus]
+    return dplus
 
 
 def construct_d_case_5(ser):
@@ -505,7 +527,9 @@ def construct_d_case_5(ser):
     # of the coefficients for the positive case.
     dminus = [-x for x in dplus]
 
-    return [dplus, dminus]
+    if dplus != dminus:
+        return [dplus, dminus]
+    return dplus
 
 
 def construct_d_case_6(num, den, x):
@@ -514,7 +538,9 @@ def construct_d_case_6(num, den, x):
     s_inf = limit_at_inf(Poly(x**2, x)*num, den, x)
 
     # d_(-1) = (1 +- sqrt(1 + 4*s_oo))/2
-    return [[(1 + sqrt(1 + 4*s_inf))/2], [(1 - sqrt(1 + 4*s_inf))/2]]
+    if s_inf != -S(1)/4:
+        return [[(1 + sqrt(1 + 4*s_inf))/2], [(1 - sqrt(1 + 4*s_inf))/2]]
+    return [[S(1)/2]]
 
 
 def construct_d(num, den, x, val_inf):
@@ -616,12 +642,12 @@ def rational_laurent_series(num, den, x, r, m, n):
     div, rec_rhs = recursion[0], recursion[1:]
     series = list(coeffs)
     while len(series) < n:
-        next_coeff = sum(c*series[-1-n] for n, c in enumerate(rec_rhs)) / div
+        next_coeff = Add(*(c*series[-1-n] for n, c in enumerate(rec_rhs))) / div
         series.append(-next_coeff)
     series = {m - i: val for i, val in enumerate(series)}
     return series
 
-def compute_m_ybar(x, poles, choice, c, d, N):
+def compute_m_ybar(x, poles, choice, N):
     """
     Helper function to calculate -
 
@@ -633,18 +659,18 @@ def compute_m_ybar(x, poles, choice, c, d, N):
     computed using the poles, c and d vectors.
     """
     ybar = 0
-    m = Poly(d[choice[0]][-1], x, extension=True)
+    m = Poly(choice[-1][-1], x, extension=True)
 
     # Calculate the first (nested) summation for ybar
     # as given in Step 9 of the Thesis (Pg 82)
     for i in range(len(poles)):
-        for j in range(len(c[i][choice[i + 1]])):
-            ybar += c[i][choice[i + 1]][j]/(x - poles[i])**(j+1)
-        m -= Poly(c[i][choice[i + 1]][0], x, extension=True)
+        for j in range(len(choice[i])):
+            ybar += choice[i][j]/(x - poles[i])**(j+1)
+        m -= Poly(choice[i][0], x, extension=True)
 
     # Calculate the second summation for ybar
     for i in range(N+1):
-        ybar += d[choice[0]][i]*x**i
+        ybar += choice[-1][i]*x**i
     return (m.expr, ybar)
 
 
@@ -657,7 +683,8 @@ def solve_aux_eq(numa, dena, numy, deny, x, m):
     # Assume that the solution is of the type
     # p(x) = C_0 + C_1*x + ... + C_{m-1}*x**(m-1) + x**m
     psyms = symbols(f'C0:{m}', cls=Dummy)
-    psol = Poly((psyms + (1,))[::-1], x, domain=ZZ[psyms])
+    K = ZZ[psyms]
+    psol = Poly(K.gens, x, domain=K) + Poly(x**m, x, domain=K)
 
     # Eq (5.16) in Thesis - Pg 81
     auxeq = (dena*(numy.diff(x)*deny - numy*deny.diff(x) + numy**2) - numa*deny**2)*psol
@@ -744,7 +771,13 @@ def get_gen_sol_from_part_sol(part_sols, a, x):
     # rational particular solutions.
     elif len(part_sols) == 2:
         y1, y2 = part_sols
-        u = exp(Integral(y2 - y1, x)).doit()
+        # One of them already has a constant
+        if len(y1.atoms(Dummy)) + len(y2.atoms(Dummy)) > 0:
+            u = exp(Integral(y2 - y1, x)).doit()
+        # Introduce a constant
+        else:
+            C1 = Dummy('C1')
+            u = C1*exp(Integral(y2 - y1, x)).doit()
         if u == 1:
             return y2
         return (y2*u - y1)/(u - 1)
@@ -812,9 +845,10 @@ def solve_riccati(fx, x, b0, b1, b2, gensol=False):
         #      we will end up computing the general solution from a single
         #      particular solution which is usually slower than computing the
         #      general solution from 2 or 3 particular solutions.
-        choices = product(range(2), repeat=len(poles) + 1)
+        c.append(d)
+        choices = product(*c)
         for choice in choices:
-            m, ybar = compute_m_ybar(x, poles, choice, c, d, -val_inf//2)
+            m, ybar = compute_m_ybar(x, poles, choice, -val_inf//2)
             numy, deny = [Poly(e, x, extension=True) for e in ybar.together().as_numer_denom()]
             # Step 10 : Check if a valid solution exists. If yes, also check
             # if m is a non-negative integer

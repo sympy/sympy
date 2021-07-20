@@ -93,7 +93,7 @@ def test_riccati_transformation():
         assert y == riccati_normal(w, x, b1, b2)
         assert w == riccati_inverse_normal(y, x, b1, b2).cancel()
 
-    # Test bp paramter in riccati_inverse_normal
+    # Test bp parameter in riccati_inverse_normal
     tests = [
     (
         (-2*x - 1)/(2*x**2 + 2*x - 2),
@@ -280,25 +280,28 @@ def test_val_at_inf():
     3. val_inf - Valuation of rational function at oo
     """
     tests = [
+    # degree(denom) > degree(numer)
     (
-        Poly(12*x**8 - 12*x**7 - 11*x**6 + 8*x**5 + 3*x**4 - x**3 + x**2 - 11*x, x),
-        Poly(-14*x**2 + x, x),
-         -6
+        Poly(10*x**3 + 8*x**2 - 13*x + 6, x),
+        Poly(-13*x**10 - x**9 + 5*x**8 + 7*x**7 + 10*x**6 + 6*x**5 - 7*x**4 + 11*x**3 - 8*x**2 + 5*x + 13, x),
+         7
     ),
     (
         Poly(1, x),
         Poly(-9*x**4 + 3*x**3 + 15*x**2 - 6*x - 14, x),
          4
     ),
+    # degree(denom) == degree(numer)
     (
         Poly(-6*x**3 - 8*x**2 + 8*x - 6, x),
         Poly(-5*x**3 + 12*x**2 - 6*x - 9, x),
          0
     ),
+    # degree(denom) < degree(numer)
     (
-        Poly(10*x**3 + 8*x**2 - 13*x + 6, x),
-        Poly(-13*x**10 - x**9 + 5*x**8 + 7*x**7 + 10*x**6 + 6*x**5 - 7*x**4 + 11*x**3 - 8*x**2 + 5*x + 13, x),
-         7
+        Poly(12*x**8 - 12*x**7 - 11*x**6 + 8*x**5 + 3*x**4 - x**3 + x**2 - 11*x, x),
+        Poly(-14*x**2 + x, x),
+         -6
     ),
     (
         Poly(5*x**6 + 9*x**5 - 11*x**4 - 9*x**3 + x**2 - 4*x + 4, x),
@@ -359,38 +362,26 @@ def test_limit_at_inf():
     3. limit_at_inf - Limit of rational function at oo
     """
     tests = [
+    # deg(denom) > deg(numer)
     (
         Poly(-12*x**2 + 20*x + 32, x),
         Poly(32*x**3 + 72*x**2 + 3*x - 32, x),
         0
     ),
-    (
-        Poly(25200*x**3 - 252*x**2 - 2205*x - 12600, x),
-        Poly(840*x**9 - 630*x**8 + 280*x**7 + 1080*x**6 - 4032*x**5 - 10080*x**4 - \
-        1400*x**3 + 4200*x**2 - 1575*x + 4410, x),
-        0
-    ),
-    (
-        Poly(12*x**5 - 840*x**3 - 140*x**2 + 840*x - 1260, x),
-        Poly(2940*x**6 - 700*x**5 - 1890*x**4 + 7560*x**3 + 720*x**2 - 1134*x + 2205, x),
-        0
-    ),
+    # deg(denom) < deg(numer)
     (
         Poly(1260*x**4 - 1260*x**3 - 700*x**2 - 1260*x + 1400, x),
         Poly(6300*x**3 - 1575*x**2 + 756*x - 540, x),
         oo
     ),
-    (
-        Poly(20*x**2 - 45*x + 105, x),
-        Poly(30*x + 24, x),
-        oo
-    ),
+    # deg(denom) < deg(numer), one of the leading coefficients is negative
     (
         Poly(-735*x**8 - 1400*x**7 + 1680*x**6 - 315*x**5 - 600*x**4 + 840*x**3 - 525*x**2 \
         + 630*x + 3780, x),
         Poly(1008*x**7 - 2940*x**6 - 84*x**5 + 2940*x**4 - 420*x**3 + 1512*x**2 + 105*x + 168, x),
         -oo
     ),
+    # deg(denom) == deg(numer)
     (
         Poly(105*x**7 - 960*x**6 + 60*x**5 + 60*x**4 - 80*x**3 + 45*x**2 + 120*x + 15, x),
         Poly(735*x**7 + 525*x**6 + 720*x**5 + 720*x**4 - 8400*x**3 - 2520*x**2 + 2800*x + 280, x),
@@ -400,11 +391,6 @@ def test_limit_at_inf():
         Poly(288*x**4 - 450*x**3 + 280*x**2 - 900*x - 90, x),
         Poly(607*x**4 + 840*x**3 - 1050*x**2 + 420*x + 420, x),
         S(288)/607
-    ),
-    (
-        Poly(630*x**7 + 945*x**6 - 1890*x**5 + 756*x**4 + 1120*x**3 - 1620*x**2 + 420*x - 180, x),
-        Poly(509*x**7 - 252*x**6 + 1470*x**5 + 3150*x**4 + 1764*x**3 - 1680*x**2 - 1134*x + 12600, x),
-        S(630)/509
     )]
     for num, den, lim in tests:
         assert limit_at_inf(num, den, x) == lim
@@ -515,7 +501,7 @@ def test_construct_c_case_3():
     This function tests the Case 3 in the step
     to calculate coefficients of c-vectors.
     """
-    assert construct_c_case_3() == [[1], [1]]
+    assert construct_c_case_3() == [[1]]
 
 
 def test_construct_d_case_4():
@@ -752,20 +738,36 @@ def test_solve_riccati():
     # a, b, c are rational functions of x
 
     tests = [
+    # a(x) is a constant
+    (
+        Eq(f(x).diff(x) + f(x)**2 - 2, 0),
+        [Eq(f(x), sqrt(2)), Eq(f(x), -sqrt(2))]
+    ),
+    # a(x) is a constant
+    (
+        f(x)**2 + f(x).diff(x) + 4*f(x)/x + 2/x**2,
+        [Eq(f(x), (-2*C0 - x)/(C0*x + x**2))]
+    ),
+    # a(x) is a constant
+    (
+        2*x**2*f(x).diff(x) - x*(4*f(x) + f(x).diff(x) - 4) + (f(x) - 1)*f(x),
+        [Eq(f(x), (C0 + 2*x**2)/(C0 + x))]
+    ),
+    # Pole with multiplicity 1
+    (
+        Eq(f(x).diff(x), -f(x)**2 - 2/(x**3 - x**2)),
+        [Eq(f(x), 1/(x**2 - x))]
+    ),
+    # One pole of multiplicity 2
     (
         x**2 - (2*x + 1/x)*f(x) + f(x)**2 + f(x).diff(x),
         [Eq(f(x), (C0*x + x**3 + 2*x)/(C0 + x**2)), Eq(f(x), x)]
     ),
     (
-        f(x)**2 + f(x).diff(x) - (4*x**6 - 8*x**5 + 12*x**4 + 4*x**3 + \
-            7*x**2 - 20*x + 4)/(4*x**4),
-        [Eq(f(x), (2*x**5 - 2*x**4 - x**3 + 4*x**2 + 3*x - 2)/(2*x**4 \
-            - 2*x**2))]
+        x**4*f(x).diff(x) + x**2 - x*(2*f(x)**2 + f(x).diff(x)) + f(x),
+        [Eq(f(x), (C0*x**2 + x)/(C0 + x**2)), Eq(f(x), x**2)]
     ),
-    (
-        -x*f(x)**2 + f(x).diff(x) - 2*f(x)/x,
-        [Eq(f(x), -4*x**2/(C0 + x**4)), Eq(f(x), 0)]
-    ),
+    # Multiple poles of multiplicity 2
     (
         -f(x)**2 + f(x).diff(x) + (15*x**2 - 20*x + 7)/((x - 1)**2*(2*x \
             - 1)**2),
@@ -774,47 +776,48 @@ def test_solve_riccati():
         57*x**4 - 58*x**3 + 30*x**2 - 6*x)), Eq(f(x), (3*x - 2)/(2*x**2 \
         - 3*x + 1))]
     ),
+    # Regression: Poles with even multiplicity > 2 fixed
     (
-        9*x**2/4 - f(x)**2 + f(x).diff(x) - S(21)/2,
-        [Eq(f(x), 3*x/2 - (3*x**2 - 1)/(x*(x**2 - 1)))]
+        f(x)**2 + f(x).diff(x) - (4*x**6 - 8*x**5 + 12*x**4 + 4*x**3 + \
+            7*x**2 - 20*x + 4)/(4*x**4),
+        [Eq(f(x), (2*x**5 - 2*x**4 - x**3 + 4*x**2 + 3*x - 2)/(2*x**4 \
+            - 2*x**2))]
     ),
+    # Regression: Poles with even multiplicity > 2 fixed
     (
-        f(x)**2 + f(x).diff(x) - 15/(4*x**2),
-        [Eq(f(x), (-3*C0 + 5*x**4)/(2*C0*x + 2*x**5)), Eq(f(x), -3/(2*x))]
+        Eq(f(x).diff(x), (-x**6 + 15*x**4 - 40*x**3 + 45*x**2 - 24*x + 4)/\
+            (x**12 - 12*x**11 + 66*x**10 - 220*x**9 + 495*x**8 - 792*x**7 + 924*x**6 - \
+            792*x**5 + 495*x**4 - 220*x**3 + 66*x**2 - 12*x + 1) + f(x)**2 + f(x)),
+        [Eq(f(x), 1/(x**6 - 6*x**5 + 15*x**4 - 20*x**3 + 15*x**2 - 6*x + 1))]
     ),
+    # More than 2 poles with multiplicity 2
+    # Regression: Fixed mistake in necessary conditions
     (
-        3*f(x)**2 + f(x).diff(x) - 2/x**2,
-        [Eq(f(x), (-2*C0 + 3*x**5)/(3*C0*x + 3*x**6)), Eq(f(x), -2/(3*x))]
+        Eq(f(x).diff(x), x*f(x) + 2*x + (3*x - 2)*f(x)**2/(4*x + 2) + \
+            (8*x**2 - 7*x + 26)/(16*x**3 - 24*x**2 + 8) - S(3)/2),
+        [Eq(f(x), (1 - 4*x)/(2*x - 2))]
     ),
+    # Regression: Fixed mistake in necessary conditions
+    (
+        Eq(f(x).diff(x), (-12*x**2 - 48*x - 15)/(24*x**3 - 40*x**2 + 8*x + 8) \
+            + 3*f(x)**2/(6*x + 2)),
+        [Eq(f(x), (2*x + 1)/(2*x - 2))]
+    ),
+    # Imaginary poles
+    (
+        f(x).diff(x) + (3*x**2 + 1)*f(x)**2/x + (6*x**2 - x + 3)*f(x)/(x*(x \
+            - 1)) + (3*x**2 - 2*x + 2)/(x*(x - 1)**2),
+        [Eq(f(x), (-C0 - x**3 + x**2 - 2*x)/(C0*x - C0 + x**4 - x**3 + x**2 \
+            - x)), Eq(f(x), -1/(x - 1))],
+    ),
+    # Imaginary coefficients in equation
     (
         f(x).diff(x) - 2*I*(f(x)**2 + 1)/x,
         [Eq(f(x), (-I*C0 + I*x**4)/(C0 + x**4)), Eq(f(x), -I)]
     ),
+    # Regression: linsolve returning empty solution
+    # Large value of m (> 10)
     (
-        f(x).diff(x) - f(x)**2/x + 1/x,
-        [Eq(f(x), (C0 - x**2)/(C0 + x**2)), Eq(f(x), 1)]
-    ),
-    (
-        f(x)**2 + f(x).diff(x) - f(x)/x,
-        [Eq(f(x), 2*x/(C0 + x**2)), Eq(f(x), 0)]
-    ),
-    (
-        -x**2 - (2*x + 1/x)*f(x) - f(x)**2 + f(x).diff(x),
-        [Eq(f(x), (-C0*x - x**3 - 2*x)/(C0 + x**2)), Eq(f(x), -x)]
-    ),
-    (
-        f(x)**2 + f(x).diff(x) + 4*f(x)/x + 2/x**2,
-        [Eq(f(x), (-2*C0 - x)/(C0*x + x**2))]
-    ),
-    (
-        2*x**2*f(x).diff(x) - x*(4*f(x) + f(x).diff(x) - 4) + (f(x) - 1)*f(x),
-        [Eq(f(x), (C0 + 2*x**2)/(C0 + x))]
-    ),
-    (
-        x**4*f(x).diff(x) + x**2 - x*(2*f(x)**2 + f(x).diff(x)) + f(x),
-        [Eq(f(x), (C0*x**2 + x)/(C0 + x**2)), Eq(f(x), x**2)]
-    ),
-    ( # Regression Test: See https://github.com/sympy/sympy/pull/21459#issuecomment-852212302
         Eq(f(x).diff(x), x*f(x)/(S(3)/2 - 2*x) + (x/2 - S(1)/3)*f(x)**2/\
             (2*x/3 - S(1)/2) - S(5)/4 + (281*x**2 - 1260*x + 756)/(16*x**3 - 12*x**2)),
         [Eq(f(x), (9 - x)/x), Eq(f(x), (40*x**14 + 28*x**13 + 420*x**12 + 2940*x**11 + \
@@ -824,99 +827,16 @@ def test_solve_riccati():
             415800*x**8 + 1455300*x**7 + 4365900*x**6 + 10914750*x**5 + 21829500*x**4 + 32744250\
             *x**3 + 32744250*x**2 + 16372125*x)))]
     ),
-    (
-        Eq(f(x).diff(x), (-12*x**2 - 48*x - 15)/(24*x**3 - 40*x**2 + 8*x + 8) \
-            + 3*f(x)**2/(6*x + 2)),
-        [Eq(f(x), (2*x + 1)/(2*x - 2))]
-    ),
-    (
-        Eq(f(x).diff(x), 2*x*f(x)**2/(9*x - 6) + (32 - 28*x)/(36*x**3 + \
-            12*x**2 - 15*x - 6) - 4*f(x)/(9*x - 6)),
-        [Eq(f(x), 2/(2*x + 1))]
-    ),
-    (
-        Eq(f(x).diff(x), x*f(x) + 2*x + (3*x - 2)*f(x)**2/(4*x + 2) + \
-            (8*x**2 - 7*x + 26)/(16*x**3 - 24*x**2 + 8) - S(3)/2),
-        [Eq(f(x), (1 - 4*x)/(2*x - 2))]
-    ),
-    (
-        Eq(f(x).diff(x) + f(x)**2 - 2, 0),
-        [Eq(f(x), sqrt(2)), Eq(f(x), -sqrt(2))]
-    ),
-    (
-        Eq(f(x).diff(x), 8*x**3/729 - 8*x**2/243 + 4*x/9 + (S(2)/3 - 2*x/9)*\
-            f(x)**2 - S(4)/9 + 2/(3*x + 3) + (2*x - 1)*f(x)/(-x - 1)),
-        [Eq(f(x), 2*x/9)]
-    ),
-    (
-        Eq(f(x).diff(x), 2*x**3 + 4*x**2 - 7*x + (S(3)/2 - x/2)*f(x)**2 + \
-            (3*x - S(3)/2)*f(x) - 11),
-        [Eq(f(x), -2*x - 2)]
-    ),
-    (
-        Eq(f(x).diff(x), -9*x**3/8 + 3*x**2 + x/2 + (x/2 - S(2)/3)*f(x)**2 \
-            - S(1)/3 - 5/(6*x - 2) + (-2*x - 1)*f(x)/(S(1)/3 - x)),
-        [Eq(f(x), 1 - 3*x/2)]
-    ),
-    (
-        Eq(f(x).diff(x), -x**3/24 - x**2/8 - x/2 + (2*x/3 - S(2)/3)*f(x)**2 \
-            - S(11)/6 - 15/(4*x - 4) + (2*x + 3)*f(x)/(x - 1)),
-        [Eq(f(x), x/4 + S(1)/2)]
-    ),
-    (
-        Eq(f(x).diff(x), 2*x**3/81 + x/18 - x*f(x)/(1 - x) + (S(3)/2 - x/2)*\
-            f(x)**2 + S(1)/6 + 5/(9*x - 9)),
-        [Eq(f(x), -2*x/9 - S(1)/3)]
-    ),
-    (
-        Eq(f(x).diff(x), (-x**6 + 15*x**4 - 40*x**3 + 45*x**2 - 24*x + 4)/\
-            (x**12 - 12*x**11 + 66*x**10 - 220*x**9 + 495*x**8 - 792*x**7 + 924*x**6 - \
-            792*x**5 + 495*x**4 - 220*x**3 + 66*x**2 - 12*x + 1) + f(x)**2 + f(x)),
-        [Eq(f(x), 1/(x**6 - 6*x**5 + 15*x**4 - 20*x**3 + 15*x**2 - 6*x + 1))]
-    ),
-    (
-        f(x).diff(x) + (3*x**2 + 1)*f(x)**2/x + (6*x**2 - x + 3)*f(x)/(x*(x \
-            - 1)) + (3*x**2 - 2*x + 2)/(x*(x - 1)**2),
-        [Eq(f(x), (-C0 - x**3 + x**2 - 2*x)/(C0*x - C0 + x**4 - x**3 + x**2 \
-            - x)), Eq(f(x), -1/(x - 1))],
-    ),
-    (
-        Eq(f(x).diff(x), x**3/4 - x**2/12 - 5*x/9 + (-6*x - 2)*f(x)/(9*x \
-            - 3) + (-x - 1)*f(x)**2 - S(7)/18 + 2/(27*x - 9)),
-        [Eq(f(x), S(1)/3 - x/2)]
-    ),
-    (
-        Eq(f(x).diff(x), -3*x**3/4 - 3*x**2/4 - 3*x/4 + 3*x*f(x)/(2*x + \
-            6) + (3*x - 1)*f(x)**2 + S(85)/36 - 21/(4*x + 12)),
-        [Eq(f(x), x/2 + S(1)/3)]
-    ),
-    (
-        Eq(f(x).diff(x), 2*x**3/3 + 8*x**2/3 + 10*x/3 + (-3*x/2 - 3)*\
-            f(x)**2 - f(x)/x - 2/(3*x)),
-        [Eq(f(x), -2*x/3 - S(2)/3)]
-    ),
+    # Regression: Fixed bug due to a typo in paper
     (
         Eq(f(x).diff(x), 18*x**3 + 18*x**2 + (-x/2 - S(1)/2)*f(x)**2 + 6),
         [Eq(f(x), 6*x)]
     ),
+    # Regression: Fixed bug due to a typo in paper
     (
         Eq(f(x).diff(x), -3*x**3/4 + 15*x/2 + (x/3 - S(4)/3)*f(x)**2 \
             + 9 + (1 - x)*f(x)/x + 3/x),
         [Eq(f(x), -3*x/2 - 3)]
-    ),
-    (
-        Eq(f(x).diff(x), x**3/4 - 9*x**2/8 + 7*x/4 + (2 - 4*x)*f(x)**2\
-            - S(3)/4 + 1/(2*x - 6) + (x - 1)*f(x)/(x - 3)),
-        [Eq(f(x), S(1)/2 - x/4)]
-    ),
-    (
-        Eq(f(x).diff(x), x**3/27 - 4*x**2/27 + 37*x/54 + (S(2)/3 - x/3)\
-            *f(x)**2 + (-9*x - 2)*f(x)/(6*x + 12) - S(61)/54 + 8/(3*x + 6)),
-        [Eq(f(x), x/3 - S(1)/3)]
-    ),
-    (
-        Eq(f(x).diff(x), -f(x)**2 - 2/(x**3 - x**2)),
-        [Eq(f(x), 1/(x**2 - x))]
     )]
     for eq, sol in tests:
         check_dummy_sol(eq, sol, C0)
@@ -935,6 +855,7 @@ def test_solve_riccati_slow():
     """
     C0 = Dummy('C0')
     tests = [
+    # Very large values of m (989 and 991)
     (
         Eq(f(x).diff(x), (1 - x)*f(x)/(x - 3) + (2 - 12*x)*f(x)**2/(2*x - 9) + \
             (54924*x**3 - 405264*x**2 + 1084347*x - 1087533)/(8*x**4 - 132*x**3 + 810*x**2 - \

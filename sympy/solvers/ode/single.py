@@ -961,9 +961,9 @@ class RiccatiSpecial(SinglePatternODESolver):
     References
     ==========
 
-    1. http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
-    2. http://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
-       http://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
+    - http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
+    - http://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
+      http://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
     """
     hint = "Riccati_special_minus2"
     has_integral = False
@@ -1018,9 +1018,9 @@ class RationalRiccati(SinglePatternODESolver):
     References
     ==========
 
-    .. [1] Riccati ODE -  https://en.wikipedia.org/wiki/Riccati_equation
-    .. [2] N. Thieu Vo - Rational and Algebraic Solutions of First-Order Algebraic ODEs,
-    Algorithm 11 (Pg 78) - https://www3.risc.jku.at/publications/download/risc_5387/PhDThesisThieu.pdf
+    - Riccati ODE:  https://en.wikipedia.org/wiki/Riccati_equation
+    - N. Thieu Vo - Rational and Algebraic Solutions of First-Order Algebraic ODEs:
+      Algorithm 11, pp. 78 - https://www3.risc.jku.at/publications/download/risc_5387/PhDThesisThieu.pdf
     """
     has_integral = False
     hint = "1st_rational_riccati"
@@ -1093,7 +1093,7 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
     References
     ==========
 
-    http://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
+    - http://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
     """
     hint = "2nd_nonlinear_autonomous_conserved"
     has_integral = True
