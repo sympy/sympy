@@ -1,5 +1,5 @@
 from sympy.core.backend import Symbol, symbols, sin, cos, Matrix
-from sympy.physics.vector import Point, ReferenceFrame
+from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
 from sympy.physics.mechanics import inertia, Body
 from sympy.testing.pytest import raises
 
@@ -157,3 +157,115 @@ def test_body_axis():
     assert B.x == N.x
     assert B.y == N.y
     assert B.z == N.z
+
+def test_apply_force_multiple_one_point():
+    a, b = symbols('a b')
+    P = Point('P')
+    B = Body('B')
+    f1 = a*B.x
+    f2 = b*B.y
+    B.apply_force(f1, P)
+    assert B.loads == [(P, f1)]
+    B.apply_force(f2, P)
+    assert B.loads == [(P, f1+f2)]
+
+def test_apply_force():
+    f, g = symbols('f g')
+    q, x, v1, v2 = dynamicsymbols('q x v1 v2')
+    P1 = Point('P1')
+    P2 = Point('P2')
+    B1 = Body('B1')
+    B2 = Body('B2')
+    N = ReferenceFrame('N')
+
+    P1.set_vel(B1.frame, v1*B1.x)
+    P2.set_vel(B2.frame, v2*B2.x)
+    force = f*q*N.z # time varying force
+
+    B1.apply_force(force, P1, B2, P2) #applying equal and opposite force on moving points
+    assert B1.loads == [(P1, force)]
+    assert B2.loads == [(P2, -force)]
+
+    g1 = B1.mass*g*N.y
+    g2 = B2.mass*g*N.y
+
+    B1.apply_force(g1) #applying gravity on B1 masscenter
+    B2.apply_force(g2) #applying gravity on B2 masscenter
+
+    assert B1.loads == [(P1,force), (B1.masscenter, g1)]
+    assert B2.loads == [(P2, -force), (B2.masscenter, g2)]
+
+    force2 = x*N.x
+
+    B1.apply_force(force2, reaction_body=B2) #Applying time varying force on masscenter
+
+    assert B1.loads == [(P1, force), (B1.masscenter, force2+g1)]
+    assert B2.loads == [(P2, -force), (B2.masscenter, -force2+g2)]
+
+def test_apply_torque():
+    t = symbols('t')
+    q = dynamicsymbols('q')
+    B1 = Body('B1')
+    B2 = Body('B2')
+    N = ReferenceFrame('N')
+    torque = t*q*N.x
+
+    B1.apply_torque(torque, B2) #Applying equal and opposite torque
+    assert B1.loads == [(B1.frame, torque)]
+    assert B2.loads == [(B2.frame, -torque)]
+
+    torque2 = t*N.y
+    B1.apply_torque(torque2)
+    assert B1.loads == [(B1.frame, torque+torque2)]
+
+def test_clear_load():
+    a = symbols('a')
+    P = Point('P')
+    B = Body('B')
+    force = a*B.z
+    B.apply_force(force, P)
+    assert B.loads == [(P, force)]
+    B.clear_loads()
+    assert B.loads == []
+
+def test_remove_load():
+    P1 = Point('P1')
+    P2 = Point('P2')
+    B = Body('B')
+    f1 = B.x
+    f2 = B.y
+    B.apply_force(f1, P1)
+    B.apply_force(f2, P2)
+    B.loads == [(P1, f1), (P2, f2)]
+    B.remove_load(P2)
+    B.loads == [(P1, f1)]
+    B.apply_torque(f1.cross(f2))
+    B.loads == [(P1, f1), (B.frame, f1.cross(f2))]
+    B.remove_load()
+    B.loads == [(P1, f1)]
+
+def test_apply_loads_on_multi_degree_freedom_holonomic_system():
+    """Example based on: https://pydy.readthedocs.io/en/latest/examples/multidof-holonomic.html"""
+    W = Body('W') #Wall
+    B = Body('B') #Block
+    P = Body('P') #Pendulum
+    b = Body('b') #bob
+    q1, q2 = dynamicsymbols('q1 q2') #generalized coordinates
+    k, c, g, kT = symbols('k c g kT') #constants
+    F, T = dynamicsymbols('F T') #Specified forces
+
+    #Applying forces
+    B.apply_force(F*W.x)
+    W.apply_force(k*q1*W.x, reaction_body=B) #Spring force
+    W.apply_force(c*q1.diff()*W.x, reaction_body=B) #dampner
+    P.apply_force(P.mass*g*W.y)
+    b.apply_force(b.mass*g*W.y)
+
+    #Applying torques
+    P.apply_torque(kT*q2*W.z, reaction_body=b)
+    P.apply_torque(T*W.z)
+
+    assert B.loads == [(B.masscenter, (F - k*q1 - c*q1.diff())*W.x)]
+    assert P.loads == [(P.masscenter, P.mass*g*W.y), (P.frame, (T + kT*q2)*W.z)]
+    assert b.loads == [(b.masscenter, b.mass*g*W.y), (b.frame, -kT*q2*W.z)]
+    assert W.loads == [(W.masscenter, (c*q1.diff() + k*q1)*W.x)]
