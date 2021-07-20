@@ -16,10 +16,8 @@ def test_jointsmethod():
     assert method.q == [theta]
     assert method.u == [omega]
     assert method.kdes == [omega - theta.diff()]
-    fr, frstar = method.kanes_equations()
+    fr, frstar = method.form_eoms()
     assert fr == Matrix([[0]])
     assert frstar == Matrix([[-C_ixx*omega.diff()]])
     assert method.forcing_full == Matrix([[omega], [0]])
     assert method.mass_matrix_full == Matrix([[1, 0], [0, C_ixx]])
-    assert method.fr == fr
-    assert method.frstar == frstar

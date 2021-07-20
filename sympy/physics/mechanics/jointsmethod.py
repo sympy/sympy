@@ -32,8 +32,8 @@ class JointsMethod(object):
         The "mass matrix" for the u's and q's
     forcing_full : Matrix
         The "forcing vector" for the u's and q's
-    kane : KanesMethod
-        Kane's method object used.
+    method : KanesMethod or Lagrange's method
+        Method's object.
 
     """
 
@@ -49,8 +49,6 @@ class JointsMethod(object):
         self._q = self._generate_q()
         self._u = self._generate_u()
         self._kdes = self._generate_kdes()
-        self._kane = KanesMethod(self.frame, q_ind=self.q,
-                                u_ind=self.u, kd_eqs=self.kdes)
 
     @property
     def bodylist(self):
@@ -74,31 +72,23 @@ class JointsMethod(object):
 
     @property
     def forcing_full(self):
-        return self._kane.forcing_full
+        return self.method.forcing_full
 
     @property
     def mass_matrix_full(self):
-        return self._kane.mass_matrix_full
-
-    @property
-    def fr(self):
-        return self._fr
-
-    @property
-    def frstar(self):
-        return self._frstar
+        return self.method.mass_matrix_full
 
     @property
     def mass_matrix(self):
-        return self._kane.mass_matrix
+        return self.method.mass_matrix
 
     @property
     def forcing(self):
-        return self._kane.forcing
+        return self.method.forcing
 
     @property
-    def kane(self):
-        return self._kane
+    def method(self):
+        return self._method
 
     def _generate_bodylist(self):
         bodies = []
@@ -133,45 +123,33 @@ class JointsMethod(object):
             kd_ind.extend(joint.kdes)
         return kd_ind
 
-    def rhs(self, inv_method=None):
-        """Returns the system's equations of motion in first order form. The
-        output is the right hand side of::
+    def _form_kanes_equations(self):
+        self._method = KanesMethod(self.frame, q_ind=self.q,
+                                u_ind=self.u, kd_eqs=self.kdes)
+        if self.loadlist == []:
+           fr, frstar = self.method.kanes_equations(self.bodylist)
+           return fr, frstar
+        fr, frstar = self.method.kanes_equations(self.bodylist, self.loadlist)
+        return fr, frstar
 
-           x' = |q'| =: f(q, u, r, p, t)
-                |u'|
+    def _form_lagranges_equations(self):
+        pass
 
-        The right hand side is what is needed by most numerical ODE
-        integrators.
+    def form_eoms(self, method='kane'):
+        """ Method to form system's equation of motions.
 
         Parameters
         ==========
 
-        inv_method : str
-            The specific sympy inverse matrix calculation method to use. For a
-            list of valid methods, see
-            :meth:`~sympy.matrices.matrices.MatrixBase.inv`
+        method : String
+            - `kane` : Form equations of motions using kane's method. Default method.
+            - `lagrange` : Form equations of motions using lagrange's method.
 
         """
 
-        return self._kane.rhs(inv_method)
-
-    def kanes_equations(self):
-        """ Method to form Kane's equations, Fr + Fr* = 0.
-
-        Explanation
-        ===========
-
-        Returns (Fr, Fr*). In the case where auxiliary generalized speeds are
-        present (say, s auxiliary speeds, o generalized speeds, and m motion
-        constraints) the length of the returned vectors will be o - m + s in
-        length. The first o - m equations will be the constrained Kane's
-        equations, then the s auxiliary Kane's equations. These auxiliary
-        equations can be accessed with the auxiliary_eqs().
-
-        """
-
-        if self.loadlist == []:
-           self._fr, self._frstar = self._kane.kanes_equations(self.bodylist)
-           return self.fr, self.frstar
-        self._fr, self._frstar = self._kane.kanes_equations(self.bodylist, self.loadlist)
-        return self.fr, self.frstar
+        if method == 'kane':
+            (fr, frstar) = self._form_kanes_equations()
+            return fr, frstar
+        if method == 'lagrange':
+            lagr_eqns = self._form_lagranges_equations()
+            return lagr_eqns
