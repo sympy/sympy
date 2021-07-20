@@ -17,7 +17,7 @@ class JointsMethod(object):
 
     body : Body or ReferenceFrame
         The inertial(Newtonion) frame.
-    joints : Joint
+    *joints : Joint
         The joints in the system
 
     Attributes
