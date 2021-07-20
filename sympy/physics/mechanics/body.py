@@ -155,7 +155,7 @@ class Body(RigidBody, Particle):  # type: ignore
         """The basis Vector for the Body, in the z direction. """
         return self.frame.z
 
-    def apply_force(self, force, point1=None, other=None, point2=None):
+    def apply_force(self, force, point=None, reaction_body=None, reaction_point=None):
         """Add force to the body(s).
 
         Explanation
@@ -170,13 +170,13 @@ class Body(RigidBody, Particle):  # type: ignore
 
         force: Vector
             The force to be applied.
-        point1: Point, optional
+        point: Point, optional
             The point on self on which force is applied.
             By default self's masscenter.
-        other: Body, optional
+        reaction_body: Body, optional
             Second body on which equal and opposite force
             is to be applied.
-        point2 : Point, optional
+        reaction_point : Point, optional
             The point on other body on which equal and opposite
             force is applied. By default masscenter of other body.
 
@@ -217,16 +217,18 @@ class Body(RigidBody, Particle):  # type: ignore
         >>> B2 = Body('B2')
         >>> spring_force = x*N.x
 
-        Now let's apply equal and opposite spring force to the masscenter of the bodies.
+        Now let's apply equal and opposite spring force to the bodies.
 
-        >>> B1.apply_force(spring_force, other=B2)
+        >>> P1 = Point('P1')
+        >>> P2 = Point('P2')
+        >>> B1.apply_force(spring_force, point=P1, reaction_body=B2, reaction_point=P2)
 
         We can check the loads(forces) applied to bodies now.
 
         >>> B1.loads
-        [(B1_masscenter, x(t)*N_frame.x)]
+        [(P1, x(t)*N_frame.x)]
         >>> B2.loads
-        [(B2_masscenter, - x(t)*N_frame.x)]
+        [(P2, - x(t)*N_frame.x)]
 
         Notes
         =====
@@ -237,26 +239,26 @@ class Body(RigidBody, Particle):  # type: ignore
 
         """
 
-        if not isinstance(point1, Point):
-            if point1 is None:
-                point1 = self.masscenter  # masscenter
+        if not isinstance(point, Point):
+            if point is None:
+                point = self.masscenter  # masscenter
             else:
                 raise TypeError("Force must be applied to a point on the body.")
         if not isinstance(force, Vector):
             raise TypeError("Force must be a vector.")
 
-        if other is not None:
-            other.apply_force(-force, point1=point2)
+        if reaction_body is not None:
+            reaction_body.apply_force(-force, point=reaction_point)
 
         for load in self._loads:
-            if point1 in load:
+            if point in load:
                 force += load[1]
                 self._loads.remove(load)
                 break
 
-        self._loads.append((point1, force))
+        self._loads.append((point, force))
 
-    def apply_torque(self, torque, other=None):
+    def apply_torque(self, torque, reaction_body=None):
         """Add torque to the body(s).
 
         Explanation
@@ -272,7 +274,7 @@ class Body(RigidBody, Particle):  # type: ignore
 
         torque: Vector
             The torque to be applied.
-        other: Body, optional
+        reaction_body: Body, optional
             Second body on which equal and opposite torque
             is to be applied.
 
@@ -334,8 +336,8 @@ class Body(RigidBody, Particle):  # type: ignore
         if not isinstance(torque, Vector):
             raise TypeError("A Vector must be supplied to add torque.")
 
-        if other is not None:
-            other.apply_torque(-torque)
+        if reaction_body is not None:
+            reaction_body.apply_torque(-torque)
 
         for load in self._loads:
             if self.frame in load:

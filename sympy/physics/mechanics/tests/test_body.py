@@ -197,7 +197,7 @@ def test_apply_force():
 
     force2 = x*N.x
 
-    B1.apply_force(force2, other=B2) #Applying time varying force on masscenter
+    B1.apply_force(force2, reaction_body=B2) #Applying time varying force on masscenter
 
     assert B1.loads == [(P1, force), (B1.masscenter, force2+g1)]
     assert B2.loads == [(P2, -force), (B2.masscenter, -force2+g2)]
@@ -256,13 +256,13 @@ def test_apply_loads_on_multi_degree_freedom_holonomic_system():
 
     #Applying forces
     B.apply_force(F*W.x)
-    W.apply_force(k*q1*W.x, other=B) #Spring force
-    W.apply_force(c*q1.diff()*W.x, other=B) #dampner
+    W.apply_force(k*q1*W.x, reaction_body=B) #Spring force
+    W.apply_force(c*q1.diff()*W.x, reaction_body=B) #dampner
     P.apply_force(P.mass*g*W.y)
     b.apply_force(b.mass*g*W.y)
 
     #Applying torques
-    P.apply_torque(kT*q2*W.z, other=b)
+    P.apply_torque(kT*q2*W.z, reaction_body=b)
     P.apply_torque(T*W.z)
 
     assert B.loads == [(B.masscenter, (F - k*q1 - c*q1.diff())*W.x)]
