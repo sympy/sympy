@@ -318,7 +318,7 @@ class Body(RigidBody, Particle):  # type: ignore
 
         >>> B1.apply_torque(T, B2)
 
-        We can check the loads(torquess) applied to bodies now.
+        We can check the loads (torques) applied to bodies now.
 
         >>> B1.loads
         [(B1_frame, v(t)*N_frame.y)]
