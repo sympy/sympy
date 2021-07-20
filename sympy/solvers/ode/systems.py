@@ -1489,9 +1489,7 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
             match['commutative_antiderivative'] = antiderivative
 
         return match
-
-    if is_higher_order:
-
+    else:
         match['type_of_equation'] = "type0"
 
         if is_second_order:
@@ -1525,9 +1523,6 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
         match['is_higher_order'] = is_higher_order
 
         return match
-
-    return None
-
 
 def _preprocess_eqs(eqs):
     processed_eqs = []

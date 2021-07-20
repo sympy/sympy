@@ -1410,7 +1410,7 @@ def is_eq(lhs, rhs, assumptions=None):
         # Compare e.g. zoo with 1+I*oo by comparing args
         arglhs = arg(lhs)
         argrhs = arg(rhs)
-        # Guard against Eq(nan, nan) -> Falsesymp
+        # Guard against Eq(nan, nan) -> False
         if not (arglhs == S.NaN and argrhs == S.NaN):
             return fuzzy_bool(is_eq(arglhs, argrhs, assumptions))
 

@@ -321,6 +321,7 @@ class Domain:
     is_PolynomialRing = is_Poly = False
     is_FractionField = is_Frac = False
     is_SymbolicDomain = is_EX = False
+    is_SymbolicRawDomain = is_EXRAW = False
     is_FiniteExtension = False
 
     is_Exact = True
@@ -601,6 +602,9 @@ class Domain:
         """
         raise NotImplementedError
 
+    def sum(self, args):
+        return sum(args)
+
     def from_FF(K1, a, K0):
         """Convert ``ModularInteger(int)`` to ``dtype``. """
         return None
@@ -658,6 +662,10 @@ class Domain:
         """Convert a ``EX`` object to ``dtype``. """
         return K1.from_sympy(a.ex)
 
+    def from_ExpressionRawDomain(K1, a, K0):
+        """Convert a ``EX`` object to ``dtype``. """
+        return K1.from_sympy(a)
+
     def from_GlobalPolynomialRing(K1, a, K0):
         """Convert a polynomial to ``dtype``. """
         if a.degree() <= 0:
@@ -694,6 +702,11 @@ class Domain:
 
         if K0 == K1:
             return K0
+
+        if K0.is_EXRAW:
+            return K0
+        if K1.is_EXRAW:
+            return K1
 
         if K0.is_EX:
             return K0

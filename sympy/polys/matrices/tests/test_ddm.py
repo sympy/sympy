@@ -214,15 +214,43 @@ def test_DDM_matmul():
     raises(DDMShapeError, lambda: Z05 @ Z40)
     raises(DDMShapeError, lambda: Z05.matmul(Z40))
 
-def test_DDM_hstack():
 
+def test_DDM_hstack():
     A = DDM([[ZZ(1), ZZ(2), ZZ(3)]], (1, 3), ZZ)
     B = DDM([[ZZ(4), ZZ(5)]], (1, 2), ZZ)
-    Ah = A.hstack(B)
+    C = DDM([[ZZ(6)]], (1, 1), ZZ)
 
+    Ah = A.hstack(B)
     assert Ah.shape == (1, 5)
     assert Ah.domain == ZZ
     assert Ah == DDM([[ZZ(1), ZZ(2), ZZ(3), ZZ(4), ZZ(5)]], (1, 5), ZZ)
+
+    Ah = A.hstack(B, C)
+    assert Ah.shape == (1, 6)
+    assert Ah.domain == ZZ
+    assert Ah == DDM([[ZZ(1), ZZ(2), ZZ(3), ZZ(4), ZZ(5), ZZ(6)]], (1, 6), ZZ)
+
+
+def test_DDM_vstack():
+    A = DDM([[ZZ(1)], [ZZ(2)], [ZZ(3)]], (3, 1), ZZ)
+    B = DDM([[ZZ(4)], [ZZ(5)]], (2, 1), ZZ)
+    C = DDM([[ZZ(6)]], (1, 1), ZZ)
+
+    Ah = A.vstack(B)
+    assert Ah.shape == (5, 1)
+    assert Ah.domain == ZZ
+    assert Ah == DDM([[ZZ(1)], [ZZ(2)], [ZZ(3)], [ZZ(4)], [ZZ(5)]], (5, 1), ZZ)
+
+    Ah = A.vstack(B, C)
+    assert Ah.shape == (6, 1)
+    assert Ah.domain == ZZ
+    assert Ah == DDM([[ZZ(1)], [ZZ(2)], [ZZ(3)], [ZZ(4)], [ZZ(5)], [ZZ(6)]], (6, 1), ZZ)
+
+
+def test_DDM_applyfunc():
+    A = DDM([[ZZ(1), ZZ(2), ZZ(3)]], (1, 3), ZZ)
+    B = DDM([[ZZ(2), ZZ(4), ZZ(6)]], (1, 3), ZZ)
+    assert A.applyfunc(lambda x: 2*x, ZZ) == B
 
 def test_DDM_rref():
 
@@ -418,3 +446,24 @@ def test_DDM_extract_slice():
     assert dm.extract_slice(slice(2), slice(3, 4)) == DDM([[], []], (2, 0), ZZ)
     assert dm.extract_slice(slice(3, 4), slice(2)) == DDM([], (0, 2), ZZ)
     assert dm.extract_slice(slice(3, 4), slice(3, 4)) == DDM([], (0, 0), ZZ)
+
+
+def test_DDM_extract():
+    dm1 = DDM([
+        [ZZ(1), ZZ(2), ZZ(3)],
+        [ZZ(4), ZZ(5), ZZ(6)],
+        [ZZ(7), ZZ(8), ZZ(9)]], (3, 3), ZZ)
+    dm2 = DDM([
+        [ZZ(6), ZZ(4)],
+        [ZZ(3), ZZ(1)]], (2, 2), ZZ)
+    assert dm1.extract([1, 0], [2, 0]) == dm2
+    assert dm1.extract([-2, 0], [-1, 0]) == dm2
+
+    assert dm1.extract([], []) == DDM.zeros((0, 0), ZZ)
+    assert dm1.extract([1], []) == DDM.zeros((1, 0), ZZ)
+    assert dm1.extract([], [1]) == DDM.zeros((0, 1), ZZ)
+
+    raises(IndexError, lambda: dm2.extract([2], [0]))
+    raises(IndexError, lambda: dm2.extract([0], [2]))
+    raises(IndexError, lambda: dm2.extract([-3], [0]))
+    raises(IndexError, lambda: dm2.extract([0], [-3]))

@@ -1859,28 +1859,23 @@ class Mul(Expr, AssocOp):
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        from sympy import degree, Mul, Order, ceiling, powsimp, PolynomialError
+        from sympy import degree, Mul, Order, ceiling, powsimp, PolynomialError, PoleError
         from itertools import product
 
         def coeff_exp(term, x):
-            coeff, exp = S.One, S.Zero
-            for factor in Mul.make_args(term):
-                if factor.has(x):
-                    base, exp = factor.as_base_exp()
-                    if base != x:
-                        try:
-                            return term.leadterm(x)
-                        except ValueError:
-                            return term, S.Zero
-                else:
-                    coeff *= factor
-            return coeff, exp
+            lt = term.as_coeff_exponent(x)
+            if lt[0].has(x):
+                try:
+                    lt = term.leadterm(x)
+                except ValueError:
+                    return term, S.Zero
+            return lt
 
         ords = []
 
         try:
             for t in self.args:
-                coeff, exp = t.leadterm(x)
+                coeff, exp = t.leadterm(x, logx=logx)
                 if not coeff.has(x):
                     ords.append((t, exp))
                 else:
@@ -1897,8 +1892,11 @@ class Mul(Expr, AssocOp):
                         n -= n1 - ns    # reduce n
                 facs.append(s.removeO())
 
-        except (ValueError, NotImplementedError, TypeError, AttributeError):
-            facs = [t.nseries(x, n=n, logx=logx, cdir=cdir) for t in self.args]
+        except (ValueError, NotImplementedError, TypeError, AttributeError, PoleError):
+            n0 = sympify(sum(t[1] for t in ords if t[1].is_number))
+            if n0.is_nonnegative:
+                n0 = S.Zero
+            facs = [t.nseries(x, n=ceiling(n-n0), logx=logx, cdir=cdir) for t in self.args]
             res = powsimp(self.func(*facs).expand(), combine='exp', deep=True)
             if res.has(Order):
                 res += Order(x**n, x)
@@ -1911,12 +1909,25 @@ class Mul(Expr, AssocOp):
             ords3 = [coeff_exp(term, x) for term in fac]
             coeffs, powers = zip(*ords3)
             power = sum(powers)
-            if power < n:
+            if (power - n).is_negative:
                 res += Mul(*coeffs)*(x**power)
+
+        def max_degree(e, x):
+            if e is x:
+                return S.One
+            if e.is_Atom:
+                return S.Zero
+            if e.is_Add:
+                return max(max_degree(a, x) for a in e.args)
+            if e.is_Mul:
+                return Add(*[max_degree(a, x) for a in e.args])
+            if e.is_Pow:
+                return max_degree(e.base, x)*e.exp
+            return S.Zero
 
         if self.is_polynomial(x):
             try:
-                if degree(self, x) != degree(res, x):
+                if max_degree(self, x) >= n or degree(self, x) != degree(res, x):
                     res += Order(x**n, x)
             except PolynomialError:
                 pass
@@ -1929,8 +1940,8 @@ class Mul(Expr, AssocOp):
                 break
         return res
 
-    def _eval_as_leading_term(self, x, cdir=0):
-        return self.func(*[t.as_leading_term(x, cdir=cdir) for t in self.args])
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        return self.func(*[t.as_leading_term(x, logx=logx, cdir=cdir) for t in self.args])
 
     def _eval_conjugate(self):
         return self.func(*[t.conjugate() for t in self.args])
@@ -2050,24 +2061,24 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
     >>> _keep_coeff(S(-1), x + y, sign=True)
     -(x + y)
     """
-
     if not coeff.is_Number:
         if factors.is_Number:
             factors, coeff = coeff, factors
         else:
             return coeff*factors
+    if factors is S.One:
+        return coeff
     if coeff is S.One:
         return factors
     elif coeff is S.NegativeOne and not sign:
         return -factors
     elif factors.is_Add:
         if not clear and coeff.is_Rational and coeff.q != 1:
-            q = S(coeff.q)
-            for i in factors.args:
-                c, t = i.as_coeff_Mul()
-                r = c/q
-                if r == int(r):
-                    return coeff*factors
+            args = [i.as_coeff_Mul() for i in factors.args]
+            args = [(_keep_coeff(c, coeff), m) for c, m in args]
+            if any(c == int(c) for c, _ in args):
+                return Add._from_args([Mul._from_args(
+                    i[1:] if i[0] == 1 else i) for i in args])
         return Mul(coeff, factors, evaluate=False)
     elif factors.is_Mul:
         margs = list(factors.args)
@@ -2079,8 +2090,10 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
             margs.insert(0, coeff)
         return Mul._from_args(margs)
     else:
-        return coeff*factors
-
+        m = coeff*factors
+        if m.is_Number and not factors.is_Number:
+            m = Mul._from_args((coeff, factors))
+        return m
 
 def expand_2arg(e):
     from sympy.simplify.simplify import bottom_up

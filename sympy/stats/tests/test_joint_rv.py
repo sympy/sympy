@@ -1,9 +1,11 @@
 from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplify,
                    Rational, factorial, gamma, Piecewise, Eq, Product, Interval,
-                   IndexedBase, RisingFactorial, polar_lift, ProductSet, Range)
+                   IndexedBase, RisingFactorial, polar_lift, ProductSet, Range, eye,
+                   Determinant)
 from sympy.core.numbers import comp
 from sympy.integrals.integrals import integrate
 from sympy.matrices import Matrix, MatrixSymbol
+from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.stats import density, median, marginal_distribution, Normal, Laplace, E, sample
 from sympy.stats.joint_rv_types import (JointRV, MultivariateNormalDistribution,
                 JointDistributionHandmade, MultivariateT, NormalGamma,
@@ -11,7 +13,7 @@ from sympy.stats.joint_rv_types import (JointRV, MultivariateNormalDistribution,
                 GeneralizedMultivariateLogGamma as GMVLG, MultivariateEwens,
                 Multinomial, NegativeMultinomial, MultivariateNormal,
                 MultivariateLaplace)
-from sympy.testing.pytest import raises, XFAIL, ignore_warnings, skip
+from sympy.testing.pytest import raises, XFAIL, skip
 from sympy.external import import_module
 
 x, y, z, a, b = symbols('x y z a b')
@@ -32,7 +34,7 @@ def test_Normal():
     raises(ValueError, lambda: marginal_distribution(m))
     assert integrate(density(m)(x, y), (x, -oo, oo), (y, -oo, oo)).evalf() == 1
     N = Normal('N', [1, 2], [[x, 0], [0, y]])
-    assert density(N)(0, 0) == exp(-2/y - 1/(2*x))/(2*pi*sqrt(x*y))
+    assert density(N)(0, 0) == exp(-((4*x + y)/(2*x*y)))/(2*pi*sqrt(x*y))
 
     raises (ValueError, lambda: Normal('M', [1, 2], [[1, 1], [1, -1]]))
     # symbolic
@@ -45,6 +47,38 @@ def test_Normal():
     # Below tests should work after issue #17267 is resolved
     # assert E(X) == mu
     # assert variance(X) == sigma
+
+    # test symbolic multivariate normal densities
+    n = 3
+
+    Sg = MatrixSymbol('Sg', n, n)
+    mu = MatrixSymbol('mu', n, 1)
+    obs = MatrixSymbol('obs', n, 1)
+
+    X = MultivariateNormal('X', mu, Sg)
+    density_X = density(X)
+
+    eval_a = density_X(obs).subs({Sg: eye(3),
+        mu: Matrix([0, 0, 0]), obs: Matrix([0, 0, 0])}).doit()
+    eval_b = density_X(0, 0, 0).subs({Sg: eye(3), mu: Matrix([0, 0, 0])}).doit()
+
+    assert eval_a == sqrt(2)/(4*pi**Rational(3/2))
+    assert eval_b == sqrt(2)/(4*pi**Rational(3/2))
+
+    n = symbols('n', natural=True)
+
+    Sg = MatrixSymbol('Sg', n, n)
+    mu = MatrixSymbol('mu', n, 1)
+    obs = MatrixSymbol('obs', n, 1)
+
+    X = MultivariateNormal('X', mu, Sg)
+    density_X_at_obs = density(X)(obs)
+
+    expected_density = MatrixElement(
+        exp((S(1)/2) * (mu.T - obs.T) * Sg**(-1) * (-mu + obs)) / \
+        sqrt((2*pi)**n * Determinant(Sg)), 0, 0)
+
+    assert density_X_at_obs == expected_density
 
 def test_MultivariateTDist():
     t1 = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
@@ -253,13 +287,12 @@ def test_sample_numpy():
     if not numpy:
         skip('Numpy is not installed. Abort tests for _sample_numpy.')
     else:
-        with ignore_warnings(UserWarning):
-            for X in distribs_numpy:
-                samps = next(sample(X, size=size, library='numpy'))
-                for sam in samps:
-                    assert tuple(sam) in X.pspace.distribution.set
-            N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
-            raises(NotImplementedError, lambda: next(sample(N_c, library='numpy')))
+        for X in distribs_numpy:
+            samps = sample(X, size=size, library='numpy')
+            for sam in samps:
+                assert tuple(sam) in X.pspace.distribution.set
+        N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
+        raises(NotImplementedError, lambda: sample(N_c, library='numpy'))
 
 def test_sample_scipy():
     distribs_scipy = [
@@ -273,17 +306,16 @@ def test_sample_scipy():
     if not scipy:
         skip('Scipy not installed. Abort tests for _sample_scipy.')
     else:
-        with ignore_warnings(UserWarning):
-            for X in distribs_scipy:
-                samps = next(sample(X, size=size))
-                samps2 = next(sample(X, size=(2, 2)))
-                for sam in samps:
-                    assert tuple(sam) in X.pspace.distribution.set
-                for i in range(2):
-                    for j in range(2):
-                        assert tuple(samps2[i][j]) in X.pspace.distribution.set
-            N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
-            raises(NotImplementedError, lambda: next(sample(N_c)))
+        for X in distribs_scipy:
+            samps = sample(X, size=size)
+            samps2 = sample(X, size=(2, 2))
+            for sam in samps:
+                assert tuple(sam) in X.pspace.distribution.set
+            for i in range(2):
+                for j in range(2):
+                    assert tuple(samps2[i][j]) in X.pspace.distribution.set
+        N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
+        raises(NotImplementedError, lambda: sample(N_c))
 
 
 def test_sample_pymc3():
@@ -297,13 +329,12 @@ def test_sample_pymc3():
     if not pymc3:
         skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
     else:
-        with ignore_warnings(UserWarning):
-            for X in distribs_pymc3:
-                samps = next(sample(X, size=size, library='pymc3'))
-                for sam in samps:
-                    assert tuple(sam.flatten()) in X.pspace.distribution.set
-            N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
-            raises(NotImplementedError, lambda: next(sample(N_c, library='pymc3')))
+        for X in distribs_pymc3:
+            samps = sample(X, size=size, library='pymc3')
+            for sam in samps:
+                assert tuple(sam.flatten()) in X.pspace.distribution.set
+        N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
+        raises(NotImplementedError, lambda: sample(N_c, library='pymc3'))
 
 def test_sample_seed():
     x1, x2 = (Indexed('x', i) for i in (1, 2))
@@ -316,10 +347,10 @@ def test_sample_seed():
             imported_lib = import_module(lib)
             if imported_lib:
                 s0, s1, s2 = [], [], []
-                s0 = list(sample(X, numsamples=10, library=lib, seed=0))
-                s1 = list(sample(X, numsamples=10, library=lib, seed=0))
-                s2 = list(sample(X, numsamples=10, library=lib, seed=1))
-                assert s0 == s1
-                assert s1 != s2
+                s0 = sample(X, size=10, library=lib, seed=0)
+                s1 = sample(X, size=10, library=lib, seed=0)
+                s2 = sample(X, size=10, library=lib, seed=1)
+                assert all(s0 == s1)
+                assert all(s1 != s2)
         except NotImplementedError:
             continue

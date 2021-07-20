@@ -7,12 +7,16 @@ from sympy.core.function import Function
 from sympy.core.relational import _canonical, Ge, Gt
 from sympy.core.numbers import oo
 from sympy.core.symbol import Dummy
+from sympy.functions import DiracDelta
+from sympy.functions.elementary.miscellaneous import Max
 from sympy.integrals import integrate, Integral
 from sympy.integrals.meijerint import _dummy
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
 from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.matrices.matrices import MatrixBase
+from sympy.polys.matrices.linsolve import _lin_eq2dict, PolyNonlinearError
 
 
 ##########################################################################
@@ -1003,14 +1007,39 @@ def _simplifyconds(expr, s, a):
     expr = repl(expr, Unequality, replue)
     return S(expr)
 
+def expand_dirac_delta(expr):
+    """
+    Expand an expression involving DiractDelta to get it as a linear
+    combination of DiracDelta functions.
+    """
+    return _lin_eq2dict(expr, expr.atoms(DiracDelta))
 
 @_noconds
 def _laplace_transform(f, t, s_, simplify=True):
     """ The backend function for Laplace transforms. """
     from sympy import (re, Max, exp, pi, Min, periodic_argument as arg_,
-                       arg, cos, Wild, symbols, polar_lift)
+                       arg, cos, Wild, symbols, polar_lift, Add)
     s = Dummy('s')
-    F = integrate(exp(-s*t) * f, (t, 0, oo))
+    a = Wild('a', exclude=[t])
+    deltazero = []
+    deltanonzero = []
+    try:
+        integratable, deltadict = expand_dirac_delta(f)
+    except PolyNonlinearError:
+        raise IntegralTransformError(
+        'Laplace', f, 'could not expand DiracDelta expressions')
+    for dirac_func, dirac_coeff in deltadict.items():
+        p = dirac_func.match(DiracDelta(a*t))
+        if p:
+            deltazero.append(dirac_coeff.subs(t,0)/p[a])
+        else:
+            if dirac_func.args[0].subs(t,0).is_zero:
+                raise IntegralTransformError('Laplace', f,\
+                                             'not implemented yet.')
+            else:
+                deltanonzero.append(dirac_func*dirac_coeff)
+    F = Add(integrate(exp(-s*t) * Add(integratable, *deltanonzero), (t, 0, oo)),
+            Add(*deltazero))
 
     if not F.has(Integral):
         return _simplify(F.subs(s, s_), simplify), -oo, S.true
@@ -1144,21 +1173,28 @@ class LaplaceTransform(IntegralTransform):
         return plane, cond
 
 
-def laplace_transform(f, t, s, **hints):
+def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     r"""
     Compute the Laplace Transform `F(s)` of `f(t)`,
 
-    .. math :: F(s) = \int_0^\infty e^{-st} f(t) \mathrm{d}t.
+    .. math :: F(s) = \int_{0^{-}}^\infty e^{-st} f(t) \mathrm{d}t.
 
     Explanation
     ===========
 
-    For all "sensible" functions, this converges absolutely in a
+    For all sensible functions, this converges absolutely in a
     half plane  `a < \operatorname{Re}(s)`.
 
-    This function returns ``(F, a, cond)``
-    where ``F`` is the Laplace transform of ``f``, `\operatorname{Re}(s) > a` is the half-plane
+    This function returns ``(F, a, cond)`` where ``F`` is the Laplace
+    transform of ``f``, `\operatorname{Re}(s) > a` is the half-plane
     of convergence, and ``cond`` are auxiliary convergence conditions.
+
+    The lower bound is `0^{-}`, meaning that this bound should be approached
+    from the lower side. This is only necessary if distributions are involved.
+    At present, it is only done if `f(t)` contains ``DiracDelta``, in which
+    case the Laplace transform is computed as
+
+    .. math :: F(s) = \lim_{\tau\to 0^{-}} \int_{\tau}^\infty e^{-st} f(t) \mathrm{d}t.
 
     If the integral cannot be computed in closed form, this function returns
     an unevaluated :class:`LaplaceTransform` object.
@@ -1167,29 +1203,62 @@ def laplace_transform(f, t, s, **hints):
     :func:`sympy.integrals.transforms.IntegralTransform.doit`. If ``noconds=True``,
     only `F` will be returned (i.e. not ``cond``, and also not the plane ``a``).
 
+    .. deprecated:: 1.9
+        Legacy behavior for matrices where ``laplace_transform`` with
+        ``noconds=False`` (the default) returns a Matrix whose elements are
+        tuples. The behavior of ``laplace_transform`` for matrices will change
+        in a future release of SymPy to return a tuple of the transformed
+        Matrix and the convergence conditions for the matrix as a whole. Use
+        ``legacy_matrix=False`` to enable the new behavior.
+
     Examples
     ========
 
     >>> from sympy.integrals import laplace_transform
     >>> from sympy.abc import t, s, a
+    >>> from sympy.functions import DiracDelta, exp
     >>> laplace_transform(t**a, t, s)
     (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
+    >>> laplace_transform(DiracDelta(t)-a*exp(-a*t),t,s)
+    (-a/(a + s) + 1, 0, Abs(arg(a)) <= pi/2)
 
     See Also
     ========
 
     inverse_laplace_transform, mellin_transform, fourier_transform
     hankel_transform, inverse_hankel_transform
+
     """
+
     if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
-        return f.applyfunc(lambda fij: laplace_transform(fij, t, s, **hints))
+
+        conds = not hints.get('noconds', False)
+
+        if conds and legacy_matrix:
+            SymPyDeprecationWarning(
+                feature="laplace_transform of a Matrix with noconds=False (default)",
+                useinstead="the option legacy_matrix=False to get the new behaviour",
+                issue=21504,
+                deprecated_since_version="1.9"
+            ).warn()
+            return f.applyfunc(lambda fij: laplace_transform(fij, t, s, **hints))
+        else:
+            elements_trans = [laplace_transform(fij, t, s, **hints) for fij in f]
+            if conds:
+                elements, avals, conditions = zip(*elements_trans)
+                f_laplace = type(f)(*f.shape, elements)
+                return f_laplace, Max(*avals), And(*conditions)
+            else:
+                return type(f)(*f.shape, elements_trans)
+
     return LaplaceTransform(f, t, s).doit(**hints)
 
 
 @_noconds_(True)
 def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
     """ The backend function for inverse Laplace transforms. """
-    from sympy import exp, Heaviside, log, expand_complex, Integral, Piecewise
+    from sympy import exp, Heaviside, log, expand_complex, Integral,\
+        Piecewise, Add
     from sympy.integrals.meijerint import meijerint_inversion, _get_coeff_exp
     # There are two strategies we can try:
     # 1) Use inverse mellin transforms - related by a simple change of variables.
@@ -1208,6 +1277,14 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         e2 = args[1].args[0]
         return Heaviside(1/abs(coeff) - t**exponent)*e1 \
             + Heaviside(t**exponent - 1/abs(coeff))*e2
+
+    if F.is_rational_function(s):
+        F = F.apart(s)
+
+    if F.is_Add:
+        f = Add(*[_inverse_laplace_transform(X, s, t, plane, simplify)\
+                     for X in F.args])
+        return _simplify(f.subs(t, t_), simplify), True
 
     try:
         f, cond = inverse_mellin_transform(F, s, exp(-t), (None, oo),
@@ -1237,18 +1314,20 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
     def simp_heaviside(arg, H0=S.Half):
         a = arg.subs(exp(-t), u)
         if a.has(t):
-            return Heaviside(arg,H0)
+            return Heaviside(arg, H0)
         rel = _solve_inequality(a > 0, u)
         if rel.lts == u:
             k = log(rel.gts)
-            return Heaviside(t + k,H0)
+            return Heaviside(t + k, H0)
         else:
             k = log(rel.lts)
-            return Heaviside(-(t + k),H0)
+            return Heaviside(-(t + k), H0)
+
     f = f.replace(Heaviside, simp_heaviside)
 
     def simp_exp(arg):
         return expand_complex(exp(arg))
+
     f = f.replace(exp, simp_exp)
 
     # TODO it would be nice to fix cosh and sinh ... simplify messes these

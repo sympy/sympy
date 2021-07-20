@@ -789,7 +789,14 @@ class Pow(Expr):
         return self.base.is_polar
 
     def _eval_subs(self, old, new):
-        from sympy import exp, log, Symbol
+        from sympy import exp, log, Symbol, AccumBounds
+
+        if isinstance(self.exp, AccumBounds):
+            b = self.base.subs(old, new)
+            e = self.exp.subs(old, new)
+            if isinstance(e, AccumBounds):
+                return e.__rpow__(b)
+            return self.func(b, e)
 
         def _check(ct1, ct2, old):
             """Return (bool, pow, remainder_pow) where, if bool is True, then the
@@ -1577,7 +1584,9 @@ class Pow(Expr):
             if e_series.is_Order:
                 return 1 + e_series
             e0 = limit(e_series.removeO(), x, 0)
-            if e0 in (-S.NegativeInfinity, S.Infinity):
+            if e0 is S.NegativeInfinity:
+                return Order(x**n, x)
+            if e0 is S.Infinity:
                 return self
             t = e_series - e0
             exp_series = term = exp(e0)
@@ -1606,7 +1615,7 @@ class Pow(Expr):
             if b.has(polygamma, EulerGamma) and logx is not None:
                 raise ValueError()
             _, m = b.leadterm(x)
-        except (ValueError, NotImplementedError):
+        except (ValueError, NotImplementedError, PoleError):
             b = b._eval_nseries(x, n=max(2, n), logx=logx, cdir=cdir).removeO()
             if b.has(nan, zoo):
                 raise NotImplementedError()
@@ -1618,15 +1627,18 @@ class Pow(Expr):
         if not (m.is_zero or e.is_number and e.is_real):
             return exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
 
-        f = b.as_leading_term(x)
-        g = (b/f - S.One).cancel()
+        f = b.as_leading_term(x, logx=logx)
+        g = (b/f - S.One).cancel(expand=False)
         maxpow = n - m*e
 
         if maxpow.is_negative:
             return O(x**(m*e), x)
 
         if g.is_zero:
-            return f**e
+            r = f**e
+            if r != self:
+                r += Order(x**n, x)
+            return r
 
         def coeff_exp(term, x):
             coeff, exp = S.One, S.Zero
@@ -1659,7 +1671,7 @@ class Pow(Expr):
             else:
                 raise NotImplementedError()
         if not d.is_positive:
-            g = (b - f).simplify()/f
+            g = g.simplify()
             _, d = g.leadterm(x)
             if not d.is_positive:
                 raise NotImplementedError()
@@ -1698,34 +1710,27 @@ class Pow(Expr):
             res += O(x**n, x)
         return res
 
-    def _eval_as_leading_term(self, x, cdir=0):
-        from ..series import Order
-        from sympy import exp, I, im, log
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy import exp, I, im, log, PoleError
         e = self.exp
         b = self.base
         if self.base is S.Exp1:
-            arg = self.exp
-            if arg.is_Add:
-                return Mul(*[(S.Exp1**f).as_leading_term(x) for f in arg.args])
-            arg_1 = arg.as_leading_term(x)
-            if Order(x, x).contains(arg_1):
-                return S.One
-            if Order(1, x).contains(arg_1):
-                return S.Exp1**arg_1
-            ####################################################
-            # The correct result here should be 'None'.        #
-            # Indeed arg in not bounded as x tends to 0.       #
-            # Consequently the series expansion does not admit #
-            # the leading term.                                #
-            # For compatibility reasons, the return value here #
-            # is the original function, i.e. exp(arg),         #
-            # instead of None.                                 #
-            ####################################################
-            return S.Exp1**arg
+            arg = e.as_leading_term(x, logx=logx)
+            arg0 = arg.subs(x, 0)
+            if arg0 is S.NaN:
+                arg0 = arg.limit(x, 0)
+            if arg0.is_infinite is False:
+                return S.Exp1**arg0
+            raise PoleError("Cannot expand %s around 0" % (self))
         elif e.has(x):
-            return exp(e * log(b)).as_leading_term(x, cdir=cdir)
+            lt = exp(e * log(b))
+            try:
+                lt = lt.as_leading_term(x, logx=logx, cdir=cdir)
+            except PoleError:
+                pass
+            return lt
         else:
-            f = b.as_leading_term(x, cdir=cdir)
+            f = b.as_leading_term(x, logx=logx, cdir=cdir)
             if (not e.is_integer and f.is_constant() and f.is_real
                 and f.is_negative and im((b - f).dir(x, cdir)) < 0):
                 return self.func(f, e) * exp(-2 * e * S.Pi * I)

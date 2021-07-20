@@ -2482,6 +2482,10 @@ class LatexPrinter(Printer):
         denom = self._print(den)
         return r"\frac{%s}{%s}" % (numer, denom)
 
+    def _print_TransferFunctionMatrix(self, expr):
+        mat = self._print(expr._expr_mat)
+        return r"%s_\tau" % mat
+
     def _print_NamedMorphism(self, morphism):
         pretty_name = self._print(Symbol(morphism.name))
         pretty_morphism = self._print_Morphism(morphism)

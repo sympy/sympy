@@ -22,7 +22,7 @@ from .sdm import SDM
 
 from .domainscalar import DomainScalar
 
-from sympy.polys.domains import ZZ
+from sympy.polys.domains import ZZ, EXRAW
 
 class DomainMatrix:
     r"""
@@ -112,6 +112,16 @@ class DomainMatrix:
 
         return cls.from_rep(rep)
 
+    def __getnewargs__(self):
+        rep = self.rep
+        if isinstance(rep, DDM):
+            arg = list(rep)
+        elif isinstance(rep, SDM):
+            arg = dict(rep)
+        else:
+            raise RuntimeError # pragma: no cover
+        return arg, self.shape, self.domain
+
     def __getitem__(self, key):
         i, j = key
         m, n = self.shape
@@ -130,6 +140,21 @@ class DomainMatrix:
             j = slice(j, j+1)
 
         return self.from_rep(self.rep.extract_slice(i, j))
+
+    def getitem_sympy(self, i, j):
+        return self.domain.to_sympy(self.rep.getitem(i, j))
+
+    def extract(self, rowslist, colslist):
+        return self.from_rep(self.rep.extract(rowslist, colslist))
+
+    def __setitem__(self, key, value):
+        i, j = key
+        if not self.domain.of_type(value):
+            raise TypeError
+        if isinstance(i, int) and isinstance(j, int):
+            self.rep.setitem(i, j, value)
+        else:
+            raise NotImplementedError
 
     @classmethod
     def from_rep(cls, rep):
@@ -332,6 +357,9 @@ class DomainMatrix:
         K, items_K = construct_domain(items_sympy, **kwargs)
         return K, items_K
 
+    def copy(self):
+        return self.from_rep(self.rep.copy())
+
     def convert_to(self, K):
         r"""
         Change the domain of DomainMatrix to desired domain or field
@@ -361,6 +389,9 @@ class DomainMatrix:
 
         """
         return self.from_rep(self.rep.convert_to(K))
+
+    def to_sympy(self):
+        return self.convert_to(EXRAW)
 
     def to_field(self):
         r"""
@@ -550,8 +581,17 @@ class DomainMatrix:
         """
         from sympy.matrices.dense import MutableDenseMatrix
         elemlist = self.rep.to_list()
-        rows_sympy = [[self.domain.to_sympy(e) for e in row] for row in elemlist]
-        return MutableDenseMatrix(rows_sympy)
+        elements_sympy = [self.domain.to_sympy(e) for row in elemlist for e in row]
+        return MutableDenseMatrix(*self.shape, elements_sympy)
+
+    def to_list(self):
+        return self.rep.to_list()
+
+    def to_list_flat(self):
+        return self.rep.to_list_flat()
+
+    def to_dok(self):
+        return self.rep.to_dok()
 
     def __repr__(self):
         return 'DomainMatrix(%s, %r, %r)' % (str(self.rep), self.shape, self.domain)
@@ -603,6 +643,15 @@ class DomainMatrix:
         A, B = A.unify(B, fmt='dense')
         return A.from_rep(A.rep.hstack(B.rep))
 
+    def vstack(A, B):
+        A, B = A.unify(B, fmt='dense')
+        return A.from_rep(A.rep.vstack(B.rep))
+
+    def applyfunc(self, func, domain=None):
+        if domain is None:
+            domain = self.domain
+        return self.from_rep(self.rep.applyfunc(func, domain))
+
     def __add__(A, B):
         if not isinstance(B, DomainMatrix):
             return NotImplemented
@@ -624,19 +673,19 @@ class DomainMatrix:
             A, B = A.unify(B, fmt='dense')
             return A.matmul(B)
         elif B in A.domain:
-            return A.from_rep(A.rep * B)
+            return A.scalarmul(B)
         elif isinstance(B, DomainScalar):
             A, B = A.unify(B)
-            return A.scalarmul(B)
+            return A.scalarmul(B.element)
         else:
             return NotImplemented
 
     def __rmul__(A, B):
         if B in A.domain:
-            return A.from_rep(A.rep * B)
+            return A.rscalarmul(B)
         elif isinstance(B, DomainScalar):
             A, B = A.unify(B)
-            return A.scalarmul(B)
+            return A.rscalarmul(B.element)
         else:
             return NotImplemented
 
@@ -830,6 +879,9 @@ class DomainMatrix:
         """
         return A.from_rep(A.rep.mul(b))
 
+    def rmul(A, b):
+        return A.from_rep(A.rep.rmul(b))
+
     def matmul(A, B):
         r"""
         Performs matrix multiplication of two DomainMatrix matrices
@@ -871,14 +923,25 @@ class DomainMatrix:
         A._check('*', B, A.shape[1], B.shape[0])
         return A.from_rep(A.rep.matmul(B.rep))
 
-    def scalarmul(A, lamda):
-        if lamda.element == lamda.domain.zero:
-            m, n = A.shape
-            return DomainMatrix([[lamda.domain.zero]*n]*m, (m, n), A.domain)
-        if lamda.element == lamda.domain.one:
-            return A
+    def _scalarmul(A, lamda, reverse):
+        if lamda == A.domain.zero:
+            return DomainMatrix.zeros(A.shape, A.domain)
+        elif lamda == A.domain.one:
+            return A.copy()
+        elif reverse:
+            return A.rmul(lamda)
+        else:
+            return A.mul(lamda)
 
-        return A.mul(lamda.element)
+    def scalarmul(A, lamda):
+        return A._scalarmul(lamda, reverse=False)
+
+    def rscalarmul(A, lamda):
+        return A._scalarmul(lamda, reverse=True)
+
+    def mul_elementwise(A, B):
+        assert A.domain == B.domain
+        return A.from_rep(A.rep.mul_elementwise(B.rep))
 
     def __truediv__(A, lamda):
         """ Method for Scalar Divison"""
@@ -1017,6 +1080,8 @@ class DomainMatrix:
         DomainMatrix([[1, 1]], (1, 2), QQ)
 
         """
+        if not self.domain.is_Field:
+            raise ValueError('Not a field')
         return self.from_rep(self.rep.nullspace()[0])
 
     def inv(self):
@@ -1240,7 +1305,7 @@ class DomainMatrix:
         return self.rep.charpoly()
 
     @classmethod
-    def eye(cls, n, domain):
+    def eye(cls, shape, domain):
         r"""
         Return identity matrix of size n
 
@@ -1253,7 +1318,9 @@ class DomainMatrix:
         DomainMatrix({0: {0: 1}, 1: {1: 1}, 2: {2: 1}}, (3, 3), QQ)
 
         """
-        return cls.from_rep(SDM.eye(n, domain))
+        if isinstance(shape, int):
+            shape = (shape, shape)
+        return cls.from_rep(SDM.eye(shape, domain))
 
     @classmethod
     def diag(cls, diagonal, domain, shape=None):
@@ -1343,6 +1410,13 @@ class DomainMatrix:
         False
 
         """
-        if not isinstance(B, DomainMatrix):
+        if not isinstance(A, type(B)):
             return NotImplemented
-        return A.rep == B.rep
+        return A.domain == B.domain and A.rep == B.rep
+
+    def unify_eq(A, B):
+        if A.shape != B.shape:
+            return False
+        if A.domain != B.domain:
+            A, B = A.unify(B)
+        return A == B

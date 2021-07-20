@@ -26,5 +26,4 @@ Contents
     quantum/index.rst
     optics/index.rst
     control/index.rst
-    units/index.rst
     continuum_mechanics/index.rst

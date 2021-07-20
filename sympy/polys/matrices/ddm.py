@@ -30,7 +30,7 @@ list of lists:
     >>> ddm_idet([[0, 1], [-1, 0]], QQ)
     1
     >>> A
-    [[-1, 0], [0, 1]]
+    [[-1, 0], [0, -1]]
 
 Note that ddm_idet modifies the input matrix in-place. It is recommended to
 use the DDM.det method as a friendlier interface to this instead which takes
@@ -69,6 +69,7 @@ from .dense import (
         ddm_isub,
         ddm_ineg,
         ddm_imul,
+        ddm_irmul,
         ddm_imatmul,
         ddm_irref,
         ddm_idet,
@@ -105,8 +106,24 @@ class DDM(list):
         cols = len(ddm[0]) if ddm else len(range(self.shape[1])[slice2])
         return DDM(ddm, (rows, cols), self.domain)
 
+    def extract(self, rows, cols):
+        ddm = []
+        for i in rows:
+            rowi = self[i]
+            ddm.append([rowi[j] for j in cols])
+        return DDM(ddm, (len(rows), len(cols)), self.domain)
+
     def to_list(self):
         return list(self)
+
+    def to_list_flat(self):
+        flat = []
+        for row in self:
+            flat.extend(row)
+        return flat
+
+    def to_dok(self):
+        return {(i, j): e for i, row in enumerate(self) for j, e in enumerate(row)}
 
     def to_ddm(self):
         return self
@@ -237,6 +254,11 @@ class DDM(list):
         ddm_imul(c, b)
         return c
 
+    def rmul(a, b):
+        c = a.copy()
+        ddm_irmul(c, b)
+        return c
+
     def matmul(a, b):
         """a @ b (matrix product)"""
         m, o = a.shape
@@ -246,26 +268,55 @@ class DDM(list):
         ddm_imatmul(c, a, b)
         return c
 
-    def hstack(A, B):
+    def mul_elementwise(a, b):
+        assert a.shape == b.shape
+        assert a.domain == b.domain
+        c = [[aij * bij for aij, bij in zip(ai, bi)] for ai, bi in zip(a, b)]
+        return DDM(c, a.shape, a.domain)
+
+    def hstack(A, *B):
         Anew = list(A.copy())
         rows, cols = A.shape
         domain = A.domain
 
-        Brows, Bcols = B.shape
-        assert Brows == rows
-        assert B.domain == domain
+        for Bk in B:
+            Bkrows, Bkcols = Bk.shape
+            assert Bkrows == rows
+            assert Bk.domain == domain
 
-        cols += Bcols
+            cols += Bkcols
 
-        for i, Bi in enumerate(B):
-            Anew[i].extend(Bi)
+            for i, Bki in enumerate(Bk):
+                Anew[i].extend(Bki)
 
         return DDM(Anew, (rows, cols), A.domain)
+
+    def vstack(A, *B):
+        Anew = list(A.copy())
+        rows, cols = A.shape
+        domain = A.domain
+
+        for Bk in B:
+            Bkrows, Bkcols = Bk.shape
+            assert Bkcols == cols
+            assert Bk.domain == domain
+
+            rows += Bkrows
+
+            Anew.extend(Bk.copy())
+
+        return DDM(Anew, (rows, cols), A.domain)
+
+    def applyfunc(self, func, domain):
+        elements = (list(map(func, row)) for row in self)
+        return DDM(elements, self.shape, domain)
 
     def rref(a):
         """Reduced-row echelon form of a and list of pivots"""
         b = a.copy()
-        pivots = ddm_irref(b)
+        K = a.domain
+        partial_pivot = K.is_RealField or K.is_ComplexField
+        pivots = ddm_irref(b, _partial_pivot=partial_pivot)
         return b, pivots
 
     def nullspace(a):

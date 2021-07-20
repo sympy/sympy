@@ -64,7 +64,7 @@ from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma, sign,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Lambda, Basic, lowergamma, erf, erfc, erfi, erfinv, I, asin,
                    hyper, uppergamma, sinh, Ne, expint, Rational, integrate)
-from sympy.matrices import MatrixBase, MatrixExpr
+from sympy.matrices import MatrixBase
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDistribution
 from sympy.stats.rv import _value_check, is_random
 
@@ -3202,12 +3202,13 @@ def Normal(name, mean, std):
 
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
     >>> pprint(density(m)(y, z), use_unicode=False)
-           /1   y\ /2*y   z\   /    z\ /  y   2*z    \
-           |- - -|*|--- - -| + |1 - -|*|- - + --- - 1|
-      ___  \2   2/ \ 3    3/   \    2/ \  3    3     /
+              2          2
+             y    y*z   z
+           - -- + --- - -- + z - 1
+      ___    3     3    3
     \/ 3 *e
-    --------------------------------------------------
-                           6*pi
+    ------------------------------
+                 6*pi
 
     >>> marginal_distribution(m, m[0])(1)
      1/(2*sqrt(pi))
@@ -3221,8 +3222,8 @@ def Normal(name, mean, std):
 
     """
 
-    if isinstance(mean, (list, MatrixBase, MatrixExpr)) and\
-        isinstance(std, (list, MatrixBase, MatrixExpr)):
+    if isinstance(mean, list) or getattr(mean, 'is_Matrix', False) and\
+        isinstance(std, list) or getattr(std, 'is_Matrix', False):
         from sympy.stats.joint_rv_types import MultivariateNormal
         return MultivariateNormal(name, mean, std)
     return rv(name, NormalDistribution, (mean, std))

@@ -12,9 +12,10 @@ def test_smith_normal():
     assert smith_normal_form(m) == smf
 
     x = Symbol('x')
-    m = Matrix([[Poly(x-1), Poly(1, x),Poly(-1,x)],
-                [0, Poly(x), Poly(-1,x)],
-                [Poly(0,x),Poly(-1,x),Poly(x)]])
+    with warns_deprecated_sympy():
+        m = Matrix([[Poly(x-1), Poly(1, x),Poly(-1,x)],
+                    [0, Poly(x), Poly(-1,x)],
+                    [Poly(0,x),Poly(-1,x),Poly(x)]])
     invs = 1, x - 1, x**2 - 1
     assert invariant_factors(m, domain=QQ[x]) == invs
 

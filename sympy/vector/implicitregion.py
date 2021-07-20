@@ -401,8 +401,6 @@ class ImplicitRegion(Basic):
             # For degree 2 curves, either a regular point or a singular point can be used.
             if reg_point is not None:
                 # Using point provided by the user as regular point
-                if isinstance(point, Point):
-                    point = point.args
                 point = reg_point
             else:
                 if len(self.singular_points()) != 0:

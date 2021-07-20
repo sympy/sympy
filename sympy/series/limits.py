@@ -1,6 +1,5 @@
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
-from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
@@ -186,8 +185,7 @@ class Limit(Expr):
         hints : optional keyword arguments
             To be passed to ``doit`` methods; only used if deep is True.
         """
-        from sympy import Abs, exp, log, sign
-        from sympy.calculus.util import AccumBounds
+        from sympy import Abs, exp, log, sign, binomial
 
         e, z, z0, dir = self.args
 
@@ -206,30 +204,41 @@ class Limit(Expr):
         if not e.has(z):
             return e
 
+        if z0 is S.NaN:
+            return S.NaN
+
+        if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
+            return self
+
+        if e.is_Order:
+            return Order(limit(e.expr, z, z0), *e.args[1:])
+
         cdir = 0
         if str(dir) == "+":
             cdir = 1
         elif str(dir) == "-":
             cdir = -1
 
-        def remove_abs(expr):
+        def set_signs(expr):
             if not expr.args:
                 return expr
-            newargs = tuple(remove_abs(arg) for arg in expr.args)
+            newargs = tuple(set_signs(arg) for arg in expr.args)
             if newargs != expr.args:
                 expr = expr.func(*newargs)
-            if isinstance(expr, Abs):
+            abs_flag = isinstance(expr, Abs)
+            sign_flag = isinstance(expr, sign)
+            if abs_flag or sign_flag:
                 sig = limit(expr.args[0], z, z0, dir)
                 if sig.is_zero:
                     sig = limit(1/expr.args[0], z, z0, dir)
                 if sig.is_extended_real:
                     if (sig < 0) == True:
-                        return -expr.args[0]
+                        return -expr.args[0] if abs_flag else S.NegativeOne
                     elif (sig > 0) == True:
-                        return expr.args[0]
+                        return expr.args[0] if abs_flag else S.One
             return expr
 
-        e = remove_abs(e)
+        e = set_signs(e)
 
         if e.is_meromorphic(z, z0):
             if abs(z0) is S.Infinity:
@@ -237,8 +246,8 @@ class Limit(Expr):
             else:
                 newe = e.subs(z, z + z0)
             try:
-                coeff, ex = newe.leadterm(z, cdir)
-            except (ValueError, NotImplementedError):
+                coeff, ex = newe.leadterm(z, cdir=cdir)
+            except ValueError:
                 pass
             else:
                 if ex > 0:
@@ -252,6 +261,49 @@ class Limit(Expr):
                 else:
                     return S.ComplexInfinity
 
+        # is_meromorphic does not capture all meromorphic functions, and such
+        # functions may have a leading term computation which can help find the
+        # limit without entering gruntz
+        if not e.has(factorial, binomial):
+            if abs(z0) is S.Infinity:
+                if e.is_Mul:
+                    e = factor_terms(e)
+                newe = e.subs(z, 1/z)
+                cdir = -cdir
+            else:
+                newe = e.subs(z, z + z0)
+            try:
+                # cdir changes sign as oo- should become 0+
+                coeff, ex = newe.leadterm(z, cdir=cdir)
+            except (ValueError, NotImplementedError, PoleError, AttributeError):
+                # The NotImplementedError catching is for custom functions
+                # AttributeError may be removed one TupleArg leading term
+                # is handled
+                pass
+            else:
+                if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+                    return self
+                if not coeff.has(z):
+                    if ex.is_positive:
+                        return S.Zero
+                    elif ex == 0:
+                        return coeff
+                    elif ex.is_negative:
+                        if ex.is_integer:
+                            if str(dir) == "-" or ex.is_even:
+                                return S.Infinity*sign(coeff)
+                            elif str(dir) == "+":
+                                return S.NegativeInfinity*sign(coeff)
+                            else:
+                                return S.ComplexInfinity
+                        else:
+                            if str(dir) == "+":
+                                return S.Infinity*sign(coeff)
+                            elif str(dir) == "-":
+                                return S.NegativeInfinity*sign(coeff)*S.NegativeOne**(S.One + ex)
+                            else:
+                                return S.ComplexInfinity
+
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
         # factorial is defined to be zero for negative inputs (which
@@ -259,31 +311,7 @@ class Limit(Expr):
         if z0.is_extended_positive:
             e = e.rewrite(factorial, gamma)
 
-        if e.is_Mul and abs(z0) is S.Infinity:
-            e = factor_terms(e)
-            u = Dummy('u', positive=True)
-            if z0 is S.NegativeInfinity:
-                inve = e.subs(z, -1/u)
-            else:
-                inve = e.subs(z, 1/u)
-            try:
-                f = inve.as_leading_term(u).gammasimp()
-                if f.is_meromorphic(u, S.Zero):
-                    r = limit(f, u, S.Zero, "+")
-                    if isinstance(r, Limit):
-                        return self
-                    else:
-                        return r
-            except (ValueError, NotImplementedError, PoleError):
-                pass
-
-        if e.is_Order:
-            return Order(limit(e.expr, z, z0), *e.args[1:])
-
         if e.is_Pow:
-            if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
-                return self
-
             b1, e1 = e.base, e.exp
             f1 = e1*log(b1)
             if f1.is_meromorphic(z, z0):
@@ -299,21 +327,11 @@ class Limit(Expr):
                     return exp(res)
                 elif ex_lim.is_real:
                     return S.One
-
-            if base_lim in (S.Zero, S.Infinity, S.NegativeInfinity) and ex_lim is S.Zero:
-                res = limit(f1, z, z0)
-                return exp(res)
-
-            if base_lim is S.NegativeInfinity:
+            elif base_lim is S.NegativeInfinity:
                 if ex_lim is S.NegativeInfinity:
                     return S.Zero
-                if ex_lim is S.Infinity:
+                elif ex_lim is S.Infinity:
                     return S.ComplexInfinity
-
-            if not isinstance(base_lim, AccumBounds) and not isinstance(ex_lim, AccumBounds):
-                res = base_lim**ex_lim
-                if res is not S.ComplexInfinity and not res.is_Pow:
-                    return res
 
         l = None
 

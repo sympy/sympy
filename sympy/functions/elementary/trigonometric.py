@@ -460,7 +460,7 @@ class sin(TrigonometricFunction):
             cx = cos(x, evaluate=False)._eval_expand_trig()
             cy = cos(y, evaluate=False)._eval_expand_trig()
             return sx*cy + sy*cx
-        else:
+        elif arg.is_Mul:
             n, x = arg.as_coeff_Mul(rational=True)
             if n.is_Integer:  # n will be positive because of .eval
                 # canonicalization
@@ -477,13 +477,18 @@ class sin(TrigonometricFunction):
                     return self.rewrite(sqrt)
         return sin(arg)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.util import AccumBounds
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         n = x0/S.Pi
         if n.is_integer:
             lt = (arg - n*S.Pi).as_leading_term(x)
             return ((-1)**n)*lt
+        if x0 is S.ComplexInfinity:
+            x0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
+        if x0 in [S.Infinity, S.NegativeInfinity]:
+            return AccumBounds(-1, 1)
         return self.func(x0) if x0.is_finite else self
 
     def _eval_is_extended_real(self):
@@ -918,7 +923,7 @@ class cos(TrigonometricFunction):
             cx = cos(x, evaluate=False)._eval_expand_trig()
             cy = cos(y, evaluate=False)._eval_expand_trig()
             return cx*cy - sx*sy
-        else:
+        elif arg.is_Mul:
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer:
                 return chebyshevt(coeff, cos(terms))
@@ -928,16 +933,19 @@ class cos(TrigonometricFunction):
                     return self.rewrite(sqrt)
         return cos(arg)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.util import AccumBounds
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         n = (x0 + S.Pi/2)/S.Pi
         if n.is_integer:
             lt = (arg - n*S.Pi + S.Pi/2).as_leading_term(x)
             return ((-1)**n)*lt
-        if not x0.is_finite:
-            return self
-        return self.func(x0)
+        if x0 is S.ComplexInfinity:
+            x0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
+        if x0 in [S.Infinity, S.NegativeInfinity]:
+            return AccumBounds(-1, 1)
+        return self.func(x0) if x0.is_finite else self
 
     def _eval_is_extended_real(self):
         if self.args[0].is_extended_real:
@@ -1202,7 +1210,7 @@ class tan(TrigonometricFunction):
                 p[1 - i % 2] += symmetric_poly(i, Y)*(-1)**((i % 4)//2)
             return (p[0]/p[1]).subs(list(zip(Y, TX)))
 
-        else:
+        elif arg.is_Mul:
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer and coeff > 1:
                 I = S.ImaginaryUnit
@@ -1252,16 +1260,14 @@ class tan(TrigonometricFunction):
             return None
         return y
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0]
-        x0 = arg.subs(x, 0)
-        n = x0/S.Pi
+        x0 = arg.subs(x, 0).cancel()
+        n = 2*x0/S.Pi
         if n.is_integer:
-            lt = (arg - n*S.Pi).as_leading_term(x)
+            lt = (arg - n*S.Pi/2).as_leading_term(x)
             return lt if n.is_even else -1/lt
-        if not x0.is_finite:
-            return self
-        return self.func(x0)
+        return self.func(x0) if x0.is_finite else self
 
     def _eval_is_extended_real(self):
         # FIXME: currently tan(pi/2) return zoo
@@ -1536,14 +1542,14 @@ class cot(TrigonometricFunction):
             return None
         return y
 
-    def _eval_as_leading_term(self, x, cdir=0):
-        from sympy import Order
-        arg = self.args[0].as_leading_term(x)
-
-        if x in arg.free_symbols and Order(1, x).contains(arg):
-            return 1/arg
-        else:
-            return self.func(arg)
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0]
+        x0 = arg.subs(x, 0).cancel()
+        n = 2*x0/S.Pi
+        if n.is_integer:
+            lt = (arg - n*S.Pi/2).as_leading_term(x)
+            return 1/lt if n.is_even else -lt
+        return self.func(x0) if x0.is_finite else self
 
     def _eval_is_extended_real(self):
         return self.args[0].is_extended_real
@@ -1567,14 +1573,14 @@ class cot(TrigonometricFunction):
             for i in range(n, -1, -1):
                 p[(n - i) % 2] += symmetric_poly(i, Y)*(-1)**(((n - i) % 4)//2)
             return (p[0]/p[1]).subs(list(zip(Y, CX)))
-        else:
+        elif arg.is_Mul:
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer and coeff > 1:
                 I = S.ImaginaryUnit
                 z = Symbol('dummy', real=True)
                 P = ((z + I)**coeff).expand()
                 return (re(P)/im(P)).subs([(z, cot(terms))])
-        return cot(arg)
+        return cot(arg)  # XXX sec and csc return 1/cos and 1/sin
 
     def _eval_is_finite(self):
         arg = self.args[0]
@@ -1711,7 +1717,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     def _eval_is_extended_real(self):
         return self._reciprocal_of(self.args[0])._eval_is_extended_real()
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         return (1/self._reciprocal_of(self.args[0]))._eval_as_leading_term(x)
 
     def _eval_is_finite(self):
@@ -1807,7 +1813,7 @@ class sec(ReciprocalTrigonometricFunction):
             k = n//2
             return (-1)**k*euler(2*k)/factorial(2*k)*x**(2*k)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         n = (x0 + S.Pi/2)/S.Pi
@@ -1933,7 +1939,7 @@ class sinc(Function):
     * Differentiation
 
     >>> sinc(x).diff()
-    Piecewise(((x*cos(x) - sin(x))/x**2, Ne(x, 0)), (0, True))
+    cos(x)/x - sin(x)/x**2
 
     * Series Expansion
 
@@ -1961,7 +1967,13 @@ class sinc(Function):
     def fdiff(self, argindex=1):
         x = self.args[0]
         if argindex == 1:
-            return Piecewise(((x*cos(x) - sin(x))/x**2, Ne(x, S.Zero)), (S.Zero, S.true))
+            # We would like to return the Piecewise here, but Piecewise.diff
+            # currently can't handle removable singularities, meaning things
+            # like sinc(x).diff(x, 2) give the wrong answer at x = 0. See
+            # https://github.com/sympy/sympy/issues/11402.
+            #
+            # return Piecewise(((x*cos(x) - sin(x))/x**2, Ne(x, S.Zero)), (S.Zero, S.true))
+            return cos(x)/x - sin(x)/x**2
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -2216,7 +2228,7 @@ class asin(InverseTrigonometricFunction):
                 F = factorial(k)
                 return R/F*x**n/n
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import I, im, log
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
@@ -2419,7 +2431,7 @@ class acos(InverseTrigonometricFunction):
                 F = factorial(k)
                 return -R/F*x**n/n
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import I, im, log
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
@@ -2641,7 +2653,7 @@ class atan(InverseTrigonometricFunction):
             x = sympify(x)
             return (-1)**((n - 1)//2)*x**n/n
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import im, re
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
@@ -2838,7 +2850,7 @@ class acot(InverseTrigonometricFunction):
             x = sympify(x)
             return (-1)**((n + 1)//2)*x**n/n
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import im, re
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
@@ -3016,7 +3028,7 @@ class asec(InverseTrigonometricFunction):
         """
         return sec
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import I, im, log
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
@@ -3188,7 +3200,7 @@ class acsc(InverseTrigonometricFunction):
         """
         return csc
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import I, im, log
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()

@@ -446,7 +446,6 @@ class PrettyPrinter(Printer):
         firstterm = True
         s = None
         for lim in integral.limits:
-            x = lim[0]
             # Create bar based on the height of the argument
             h = arg.height()
             H = h + 2
@@ -1012,6 +1011,13 @@ class PrettyPrinter(Printer):
                 den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
 
         return self._print(num)/self._print(den)
+
+    def _print_TransferFunctionMatrix(self, expr):
+        mat = self._print(expr._expr_mat)
+        mat.baseline = mat.height() - 1
+        subscript = greek_unicode['tau'] if self._use_unicode else r'{t}'
+        mat = prettyForm(*mat.right(subscript))
+        return mat
 
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector

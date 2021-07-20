@@ -193,8 +193,9 @@ class CoordSystem(Basic):
 
     relations : dict, optional
         Key is a tuple of two strings, who are the names of the systems where
-        the coordinates transform from and transform to. Value is a tuple of
-        transformed coordinates.
+        the coordinates transform from and transform to.
+        Value is a tuple of the symbols before transformation and a tuple of
+        the expressions after transformation.
 
     Examples
     ========
@@ -209,8 +210,8 @@ class CoordSystem(Basic):
     >>> x, y = symbols('x y', real=True)
     >>> r, theta = symbols('r theta', nonnegative=True)
     >>> relation_dict = {
-    ... ('Car2D', 'Pol'): (sqrt(x**2 + y**2), atan2(y, x)),
-    ... ('Pol', 'Car2D'): (r*cos(theta), r*sin(theta))
+    ... ('Car2D', 'Pol'): [(x, y), (sqrt(x**2 + y**2), atan2(y, x))],
+    ... ('Pol', 'Car2D'): [(r, theta), (r*cos(theta), r*sin(theta))]
     ... }
     >>> Car2D = CoordSystem('Car2D', p, (x, y), relation_dict)
     >>> Pol = CoordSystem('Pol', p, (r, theta), relation_dict)
@@ -314,8 +315,12 @@ class CoordSystem(Basic):
             if not isinstance(s2, Str):
                 s2 = Str(s2)
             key = Tuple(s1, s2)
+
+            # Old version used Lambda as a value.
             if isinstance(v, Lambda):
-                v = tuple(v(*symbols))
+                v = (tuple(v.signature), tuple(v.expr))
+            else:
+                v = (tuple(v[0]), tuple(v[1]))
             rel_temp[key] = v
         relations = Dict(rel_temp)
 
@@ -396,48 +401,66 @@ class CoordSystem(Basic):
         if self == sys:
             expr = Matrix(self.symbols)
         elif key in self.relations:
-            expr = Matrix(self.relations[key])
+            expr = Matrix(self.relations[key][1])
         elif key[::-1] in self.relations:
-            expr = Matrix(self._inverse_transformations(sys, self))
+            expr = Matrix(self._inverse_transformation(sys, self))
         else:
-            expr = Matrix(self._indirect_transformations(self, sys))
+            expr = Matrix(self._indirect_transformation(self, sys))
         return Lambda(signature, expr)
 
     @staticmethod
-    def _inverse_transformation(sys1, sys2):
+    def _solve_inverse(sym1, sym2, exprs, sys1_name, sys2_name):
+        ret = solve(
+            [t[0] - t[1] for t in zip(sym2, exprs)],
+            list(sym1), dict=True)
+
+        if len(ret) == 0:
+            temp = "Cannot solve inverse relation from {} to {}."
+            raise NotImplementedError(temp.format(sys1_name, sys2_name))
+        elif len(ret) > 1:
+            temp = "Obtained multiple inverse relation from {} to {}."
+            raise ValueError(temp.format(sys1_name, sys2_name))
+
+        return ret[0]
+
+    @classmethod
+    def _inverse_transformation(cls, sys1, sys2):
         # Find the transformation relation from sys2 to sys1
-        forward_transform = sys1.transform(sys2)
-        forward_syms, forward_results = forward_transform.args
-
-        inv_syms = [i.as_dummy() for i in forward_syms]
-        inv_results = solve(
-            [t[0] - t[1] for t in zip(inv_syms, forward_results)],
-            list(forward_syms), dict=True)[0]
-        inv_results = [inv_results[s] for s in forward_syms]
-
-        signature = tuple(inv_syms)
-        expr = Matrix(inv_results)
-        return Lambda(signature, expr)
+        forward = sys1.transform(sys2)
+        inv_results = cls._solve_inverse(sys1.symbols, sys2.symbols, forward,
+                                         sys1.name, sys2.name)
+        signature = tuple(sys1.symbols)
+        return [inv_results[s] for s in signature]
 
     @classmethod
     @cacheit
     def _indirect_transformation(cls, sys1, sys2):
-        # Find the transformation relation between two indirectly connected coordinate systems
+        # Find the transformation relation between two indirectly connected
+        # coordinate systems
+        rel = sys1.relations
         path = cls._dijkstra(sys1, sys2)
-        Lambdas = []
-        for i in range(len(path) - 1):
-            s1, s2 = path[i], path[i + 1]
-            Lambdas.append(s1.transformation(s2))
-        syms = Lambdas[-1].signature
-        expr = syms
-        for l in reversed(Lambdas):
-            expr = l(*expr)
-        return Lambda(syms, expr)
+
+        transforms = []
+        for s1, s2 in zip(path, path[1:]):
+            if (s1, s2) in rel:
+                transforms.append(rel[(s1, s2)])
+            else:
+                sym2, inv_exprs = rel[(s2, s1)]
+                sym1 = tuple(Dummy() for i in sym2)
+                ret = cls._solve_inverse(sym2, sym1, inv_exprs, s2, s1)
+                ret = tuple(ret[s] for s in sym2)
+                transforms.append((sym1, ret))
+        syms = sys1.args[2]
+        exprs = syms
+        for newsyms, newexprs in transforms:
+            exprs = tuple(e.subs(zip(newsyms, exprs)) for e in newexprs)
+        return exprs
 
     @staticmethod
     def _dijkstra(sys1, sys2):
         # Use Dijkstra algorithm to find the shortest path between two indirectly-connected
         # coordinate systems
+        # return value is the list of the names of the systems.
         relations = sys1.relations
         graph = {}
         for s1, s2 in relations.keys():
@@ -461,7 +484,7 @@ class CoordSystem(Basic):
                     path_dict[newsys][1] = [i for i in path_dict[sys][1]]
                     path_dict[newsys][1].append(sys)
 
-        visit(sys1)
+        visit(sys1.name)
 
         while True:
             min_distance = max(path_dict.values(), key=lambda x:x[0])[0]
@@ -474,10 +497,10 @@ class CoordSystem(Basic):
                 break
             visit(newsys)
 
-        result = path_dict[sys2][1]
-        result.append(sys2)
+        result = path_dict[sys2.name][1]
+        result.append(sys2.name)
 
-        if result == [sys2]:
+        if result == [sys2.name]:
             raise KeyError("Two coordinate systems are not connected.")
         return result
 
@@ -1836,7 +1859,6 @@ def dummyfy(args, exprs):
     reps = dict(zip(args, d_args))
     d_exprs = Matrix([_sympify(expr).subs(reps) for expr in exprs])
     return d_args, d_exprs
-
 
 ###############################################################################
 # Helpers

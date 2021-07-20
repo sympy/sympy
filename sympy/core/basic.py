@@ -509,6 +509,10 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @property
     def expr_free_symbols(self):
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(feature="expr_free_symbols method",
+                                issue=21494,
+                                deprecated_since_version="1.9").warn()
         return set()
 
     def as_dummy(self):
@@ -1923,6 +1927,17 @@ def _aresame(a, b):
             else:
                 return False
     return True
+
+
+def _ne(a, b):
+    # use this as a second test after `a != b` if you want to make
+    # sure that things are truly equal, e.g.
+    # a, b = 0.5, S.Half
+    # a !=b or _ne(a, b) -> True
+    from .numbers import Number
+    # 0.5 == S.Half
+    if isinstance(a, Number) and isinstance(b, Number):
+        return a.__class__ != b.__class__
 
 
 def _atomic(e, recursive=False):

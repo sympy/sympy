@@ -3,9 +3,10 @@
 from sympy import I, S, sqrt, sin, oo, Poly, Float, Integer, Rational, pi
 from sympy.abc import x, y, z
 
+from sympy.utilities.iterables import cartes
 from sympy.core.compatibility import HAS_GMPY
 
-from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, ZZ_gmpy,
+from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, EXRAW, ZZ_gmpy,
     ZZ_python, QQ_gmpy, QQ_python)
 from sympy.polys.domains.algebraicfield import AlgebraicField
 from sympy.polys.domains.gaussiandomains import ZZ_I, QQ_I
@@ -603,12 +604,22 @@ def test_Domain_convert():
 
     assert QQ.convert(10e-52) == QQ(1684996666696915, 1684996666696914987166688442938726917102321526408785780068975640576)
 
-    R, x = ring("x", ZZ)
-    assert ZZ.convert(x - x) == 0
-    assert ZZ.convert(x - x, R.to_domain()) == 0
+    R, xr = ring("x", ZZ)
+    assert ZZ.convert(xr - xr) == 0
+    assert ZZ.convert(xr - xr, R.to_domain()) == 0
 
     assert CC.convert(ZZ_I(1, 2)) == CC(1, 2)
     assert CC.convert(QQ_I(1, 2)) == CC(1, 2)
+
+    K1 = QQ.frac_field(x)
+    K2 = ZZ.frac_field(x)
+    K3 = QQ[x]
+    K4 = ZZ[x]
+    Ks = [K1, K2, K3, K4]
+    for Ka, Kb in cartes(Ks, Ks):
+        assert Ka.convert_from(Kb.from_sympy(x), Kb) == Ka.from_sympy(x)
+
+    assert K2.convert_from(QQ(1, 2), QQ) == K2(QQ(1, 2))
 
 
 def test_GlobalPolynomialRing_convert():
@@ -1085,6 +1096,31 @@ def test_gaussian_domains():
             q2 = G(S(3)/2, S(5)/3)
             assert G.numer(q2) == ZZ_I(9, 10)
             assert G.denom(q2) == ZZ_I(6)
+
+
+def test_EX_EXRAW():
+    assert EXRAW.zero is S.Zero
+    assert EXRAW.one is S.One
+
+    assert EX(1) == EX.Expression(1)
+    assert EX(1).ex is S.One
+    assert EXRAW(1) is S.One
+
+    # EX has cancelling but EXRAW does not
+    assert 2*EX((x + y*x)/x) == EX(2 + 2*y) != 2*((x + y*x)/x)
+    assert 2*EXRAW((x + y*x)/x) == 2*((x + y*x)/x) != (1 + y)
+
+    assert EXRAW.convert_from(EX(1), EX) is EXRAW.one
+    assert EX.convert_from(EXRAW(1), EXRAW) == EX.one
+
+    assert EXRAW.from_sympy(S.One) is S.One
+    assert EXRAW.to_sympy(EXRAW.one) is S.One
+    raises(CoercionFailed, lambda: EXRAW.from_sympy([]))
+
+    assert EXRAW.get_field() == EXRAW
+
+    assert EXRAW.unify(EX) == EXRAW
+    assert EX.unify(EXRAW) == EXRAW
 
 
 def test_canonical_unit():
