@@ -1,4 +1,7 @@
+from sympy.core.symbol import Symbol
 from sympy.external import import_module
+from sympy.integrals.transforms import inverse_laplace_transform
+from sympy.plotting import plot
 
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
@@ -33,3 +36,13 @@ def pole_zero(transfer_function, **kwargs):
     plt.axvline(0, color='black')
     plt.show()
     return
+
+def step_response(system, **kwargs):
+    r"""
+    Return the unit step response of a continuous-time system.
+    """
+    x = Symbol("x")
+    expr = system.to_expr()/(system.var)
+    y = inverse_laplace_transform(expr, system.var, x)
+    return plot(y, (x, 0, 6), show=True, title="Unit Step Response", \
+        xlabel="Time (Seconds)", ylabel="Amplitude")
