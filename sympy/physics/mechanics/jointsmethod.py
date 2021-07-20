@@ -35,6 +35,30 @@ class JointsMethod(object):
     method : KanesMethod or Lagrange's method
         Method's object.
 
+    Examples
+    ========
+
+    This is a simple example for a one degree of freedom translational
+    spring-mass-damper.
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.mechanics import Body, JointsMethod, PrismaticJoint
+    >>> from sympy.physics.vector import dynamicsymbols
+    >>> c, k = symbols('c k')
+    >>> q, u = dynamicsymbols('q u')
+    >>> W = Body('W')
+    >>> B = Body('B')
+    >>> J = PrismaticJoint('J', W, B, coordinates=q, speeds=u)
+    >>> W.apply_force(c*u*W.x, reaction_body=B)
+    >>> W.apply_force(k*q*W.x, reaction_body=B)
+    >>> method = JointsMethod(W, J)
+    >>> (fr, frstar) = method.form_eoms()
+    >>> MM = method.mass_matrix
+    >>> forcing = method.forcing
+    >>> rhs = MM.inv() * forcing
+    >>> rhs
+    Matrix([[(-c*u(t) - k*q(t))/B_mass]])
+
     """
 
     def __init__(self, body, *joints):
