@@ -33,4 +33,3 @@ def pole_zero(transfer_function, **kwargs):
     plt.axvline(0, color='black')
     plt.show()
     return
-
