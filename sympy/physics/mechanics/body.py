@@ -100,7 +100,7 @@ class Body(RigidBody, Particle):  # type: ignore
                  central_inertia=None):
 
         self.name = name
-        self.loads = []
+        self._loads = []
 
         if frame is None:
             frame = ReferenceFrame(name + '_frame')
@@ -137,6 +137,10 @@ class Body(RigidBody, Particle):  # type: ignore
             RigidBody.__init__(self, name, masscenter, frame, _mass, _inertia)
 
     @property
+    def loads(self):
+        return self._loads
+
+    @property
     def x(self):
         """The basis Vector for the Body, in the x direction. """
         return self.frame.x
@@ -151,45 +155,87 @@ class Body(RigidBody, Particle):  # type: ignore
         """The basis Vector for the Body, in the z direction. """
         return self.frame.z
 
-    def apply_force(self, vec, point=None):
-        """
-        Adds a force to a point (center of mass by default) on the body.
+    def apply_force(self, force, point=None, reaction_body=None, reaction_point=None):
+        """Add force to the body(s).
+
+        Explanation
+        ===========
+
+        Applies the force on self or equal and oppposite forces on
+        self and other body if both are given on the desried point on the bodies.
+        The force applied on other body is taken opposite of self, i.e, -force.
 
         Parameters
         ==========
 
-        vec: Vector
-            Defines the force vector. Can be any vector w.r.t any frame or
-            combinations of frames.
+        force: Vector
+            The force to be applied.
         point: Point, optional
-            Defines the point on which the force is applied. Default is the
-            Body's center of mass.
+            The point on self on which force is applied.
+            By default self's masscenter.
+        reaction_body: Body, optional
+            Second body on which equal and opposite force
+            is to be applied.
+        reaction_point : Point, optional
+            The point on other body on which equal and opposite
+            force is applied. By default masscenter of other body.
 
         Example
         =======
 
-        The first example applies a gravitational force in the x direction of
-        Body's frame to the body's center of mass. ::
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import Body, Point, dynamicsymbols
+        >>> m, g = symbols('m g')
+        >>> B = Body('B')
+        >>> force1 = m*g*B.z
+        >>> B.apply_force(force1) #Applying force on B's masscenter
+        >>> B.loads
+        [(B_masscenter, g*m*B_frame.z)]
 
-            >>> from sympy import Symbol
-            >>> from sympy.physics.mechanics import Body
-            >>> body = Body('body')
-            >>> g = Symbol('g')
-            >>> body.apply_force(body.mass * g * body.frame.x)
+        We can also remove some part of force from any point on the body by
+        adding the opposite force to the body on that point.
 
-        To apply force to any other point than center of mass, pass that point
-        as well. This example applies a gravitational force to a point a
-        distance l from the body's center of mass in the y direction. The
-        force is again applied in the x direction. ::
+        >>> f1, f2 = dynamicsymbols('f1 f2')
+        >>> P = Point('P') #Considering point P on body B
+        >>> B.apply_force(f1*B.x + f2*B.y, P)
+        >>> B.loads
+        [(B_masscenter, g*m*B_frame.z), (P, f1(t)*B_frame.x + f2(t)*B_frame.y)]
 
-            >>> from sympy import Symbol
-            >>> from sympy.physics.mechanics import Body
-            >>> body = Body('body')
-            >>> g = Symbol('g')
-            >>> l = Symbol('l')
-            >>> point = body.masscenter.locatenew('force_point', l *
-            ...                                   body.frame.y)
-            >>> body.apply_force(body.mass * g * body.frame.x, point)
+        Let's remove f1 from point P on body B.
+
+        >>> B.apply_force(-f1*B.x, P)
+        >>> B.loads
+        [(B_masscenter, g*m*B_frame.z), (P, f2(t)*B_frame.y)]
+
+        To further demonstrate the use of ``apply_force`` attribute,
+        consider two bodies connected through a spring.
+
+        >>> from sympy.physics.mechanics import Body, dynamicsymbols
+        >>> N = Body('N') #Newtonion Frame
+        >>> x = dynamicsymbols('x')
+        >>> B1 = Body('B1')
+        >>> B2 = Body('B2')
+        >>> spring_force = x*N.x
+
+        Now let's apply equal and opposite spring force to the bodies.
+
+        >>> P1 = Point('P1')
+        >>> P2 = Point('P2')
+        >>> B1.apply_force(spring_force, point=P1, reaction_body=B2, reaction_point=P2)
+
+        We can check the loads(forces) applied to bodies now.
+
+        >>> B1.loads
+        [(P1, x(t)*N_frame.x)]
+        >>> B2.loads
+        [(P2, - x(t)*N_frame.x)]
+
+        Notes
+        =====
+
+        If a new force is applied to a body on a point which already has some
+        force applied on it, then the new force is added to the already applied
+        force on that point.
 
         """
 
@@ -197,38 +243,172 @@ class Body(RigidBody, Particle):  # type: ignore
             if point is None:
                 point = self.masscenter  # masscenter
             else:
-                raise TypeError("A Point must be supplied to apply force to.")
-        if not isinstance(vec, Vector):
-            raise TypeError("A Vector must be supplied to apply force.")
+                raise TypeError("Force must be applied to a point on the body.")
+        if not isinstance(force, Vector):
+            raise TypeError("Force must be a vector.")
 
-        self.loads.append((point, vec))
+        if reaction_body is not None:
+            reaction_body.apply_force(-force, point=reaction_point)
 
-    def apply_torque(self, vec):
-        """
-        Adds a torque to the body.
+        for load in self._loads:
+            if point in load:
+                force += load[1]
+                self._loads.remove(load)
+                break
+
+        self._loads.append((point, force))
+
+    def apply_torque(self, torque, reaction_body=None):
+        """Add torque to the body(s).
+
+        Explanation
+        ===========
+
+        Applies the torque on self or equal and oppposite torquess on
+        self and other body if both are given.
+        The torque applied on other body is taken opposite of self,
+        i.e, -torque.
 
         Parameters
         ==========
 
-        vec: Vector
-            Defines the torque vector. Can be any vector w.r.t any frame or
-            combinations of frame.
+        torque: Vector
+            The torque to be applied.
+        reaction_body: Body, optional
+            Second body on which equal and opposite torque
+            is to be applied.
 
         Example
         =======
 
-        This example adds a simple torque around the body's z axis. ::
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import Body, dynamicsymbols
+        >>> t = symbols('t')
+        >>> B = Body('B')
+        >>> torque1 = t*B.z
+        >>> B.apply_torque(torque1)
+        >>> B.loads
+        [(B_frame, t*B_frame.z)]
 
-            >>> from sympy import Symbol
-            >>> from sympy.physics.mechanics import Body
-            >>> body = Body('body')
-            >>> T = Symbol('T')
-            >>> body.apply_torque(T * body.frame.z)
+        We can also remove some part of torque from the body by
+        adding the opposite torque to the body.
+
+        >>> t1, t2 = dynamicsymbols('t1 t2')
+        >>> B.apply_torque(t1*B.x + t2*B.y)
+        >>> B.loads
+        [(B_frame, t1(t)*B_frame.x + t2(t)*B_frame.y + t*B_frame.z)]
+
+        Let's remove t1 from Body B.
+
+        >>> B.apply_torque(-t1*B.x)
+        >>> B.loads
+        [(B_frame, t2(t)*B_frame.y + t*B_frame.z)]
+
+        To further demonstrate the use, let us consider two bodies such that
+        a torque `T` is acting on one body, and `-T` on the other.
+
+        >>> from sympy.physics.mechanics import Body, dynamicsymbols
+        >>> N = Body('N') #Newtonion frame
+        >>> B1 = Body('B1')
+        >>> B2 = Body('B2')
+        >>> v = dynamicsymbols('v')
+        >>> T = v*N.y #Torque
+
+        Now let's apply equal and opposite torque to the bodies.
+
+        >>> B1.apply_torque(T, B2)
+
+        We can check the loads (torques) applied to bodies now.
+
+        >>> B1.loads
+        [(B1_frame, v(t)*N_frame.y)]
+        >>> B2.loads
+        [(B2_frame, - v(t)*N_frame.y)]
+
+        Notes
+        =====
+
+        If a new torque is applied on body which already has some torque applied on it,
+        then the new torque is added to the previous torque about the body's frame.
+
         """
 
-        if not isinstance(vec, Vector):
+        if not isinstance(torque, Vector):
             raise TypeError("A Vector must be supplied to add torque.")
-        self.loads.append((self.frame, vec))
+
+        if reaction_body is not None:
+            reaction_body.apply_torque(-torque)
+
+        for load in self._loads:
+            if self.frame in load:
+                torque += load[1]
+                self._loads.remove(load)
+                break
+        self._loads.append((self.frame, torque))
+
+    def clear_loads(self):
+        """
+        Clears the Body's loads list.
+
+        Example
+        =======
+
+        >>> from sympy.physics.mechanics import Body
+        >>> B = Body('B')
+        >>> force = B.x + B.y
+        >>> B.apply_force(force)
+        >>> B.loads
+        [(B_masscenter, B_frame.x + B_frame.y)]
+        >>> B.clear_loads()
+        >>> B.loads
+        []
+
+        """
+
+        self._loads = []
+
+    def remove_load(self, about=None):
+        """
+        Remove load about a point or frame.
+
+        Parameters
+        ==========
+
+        about : Point or ReferenceFrame, optional
+            The point about which force is applied,
+            and is to be removed.
+            If about is None, then the torque about
+            self's frame is removed.
+
+        Example
+        =======
+
+        >>> from sympy.physics.mechanics import Body, Point
+        >>> B = Body('B')
+        >>> P = Point('P')
+        >>> f1 = B.x
+        >>> f2 = B.y
+        >>> B.apply_force(f1)
+        >>> B.apply_force(f2, P)
+        >>> B.loads
+        [(B_masscenter, B_frame.x), (P, B_frame.y)]
+
+        >>> B.remove_load(P)
+        >>> B.loads
+        [(B_masscenter, B_frame.x)]
+
+        """
+
+        if about is not None:
+            if not isinstance(about, Point):
+                raise TypeError('Load is applied about Point or ReferenceFrame.')
+        else:
+            about = self.frame
+
+        for load in self._loads:
+            if about in load:
+                self._loads.remove(load)
+                break
 
     def masscenter_vel(self, body):
         """
