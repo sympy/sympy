@@ -4,7 +4,7 @@ __all__ = ['JointsMethod']
 
 
 class JointsMethod(object):
-    """ Joints Method
+    """Method for formulating the equations of motion using a set of interconnected bodies with joints.
 
     Explanation
     ===========
