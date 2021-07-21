@@ -27,6 +27,7 @@ jobs:
       - name: Download benchmarks
         uses: dawidd6/action-download-artifact@v2
         with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: runtests.yml
           workflow_conclusion: success
           name: pr_number
@@ -47,6 +48,7 @@ jobs:
         if: ${{ steps.pr_number_reader.outputs.content != '' }}
         uses: dawidd6/action-download-artifact@v2
         with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: runtests.yml
           workflow_conclusion: success
           name: benchmarks
