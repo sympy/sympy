@@ -1,7 +1,9 @@
+from sympy import I, log, sqrt
 from sympy.core.symbol import Symbol
 from sympy.external import import_module
+from sympy.functions import arg
 from sympy.integrals.transforms import inverse_laplace_transform
-from sympy.plotting import plot, PlotGrid
+from sympy.plotting import PlotGrid, plot
 
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
@@ -79,9 +81,6 @@ def bode_plot(system, initial_exp=-5, final_exp=5, show=True, **kwargs):
     r"""
     Plot a Bode plot of a continuous-time system.
     """
-    from sympy import I, log, sqrt
-    from sympy.functions import arg
-
     expr = system.to_expr()
     w = Symbol("w", real=True)
     w_expr = expr.subs({system.var: I*w})
