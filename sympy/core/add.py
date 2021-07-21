@@ -979,9 +979,12 @@ class Add(Expr, AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import expand_mul, Order
+        from sympy import expand_mul, Order, Piecewise, piecewise_fold
 
         old = self
+
+        if old.has(Piecewise):
+            old = piecewise_fold(old)
 
         expr = expand_mul(old)
         if not expr.is_Add:
@@ -1009,7 +1012,7 @@ class Add(Expr, AssocOp):
         if is_zero is None:
             new_expr = new_expr.trigsimp().cancel()
             is_zero = new_expr.is_zero
-        if is_zero is True:
+        if is_zero is True and min.expr != 0:
             # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
             n0 = min.getn()

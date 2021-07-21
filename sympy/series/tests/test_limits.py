@@ -4,7 +4,7 @@ from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling, sinh,
     atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I, E, besselj,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
-    binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
+    binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels, real_root,
     acos, erf, erfc, erfi, LambertW, factorial, digamma, uppergamma,
     Ei, EulerGamma, asin, atanh, acot, acoth, asec, acsc, cbrt, besselk)
 
@@ -99,6 +99,26 @@ def test_basic4():
     assert limit(2*x**8 + y*x**(-3), x, -2) == 512 - y/8
     assert limit(sqrt(x + 1) - sqrt(x), x, oo) == 0
     assert integrate(1/(x**3 + 1), (x, 0, oo)) == 2*pi*sqrt(3)/9
+
+
+def test_log():
+    # https://github.com/sympy/sympy/issues/21598
+    a, b, c = symbols('a b c', positive=True)
+    A = log(a/b) - (log(a) - log(b))
+    assert A.limit(a, oo) == 0
+    assert (A * c).limit(a, oo) == 0
+
+    tau, x = symbols('tau x', positive=True)
+    # The value of manualintegrate in the issue
+    expr = tau**2*((tau - 1)*(tau + 1)*log(x + 1)/(tau**2 + 1)**2 + 1/((tau**2\
+            + 1)*(x + 1)) - (-2*tau*atan(x/tau) + (tau**2/2 - 1/2)*log(tau**2\
+            + x**2))/(tau**2 + 1)**2)
+    assert limit(expr, x, oo) == pi*tau**3/(tau**2 + 1)**2
+
+
+def test_piecewise():
+    # https://github.com/sympy/sympy/issues/18363
+    assert limit((real_root(x - 6, 3) + 2)/(x + 2), x, -2, '+') == Rational(1, 12)
 
 
 def test_basic5():
