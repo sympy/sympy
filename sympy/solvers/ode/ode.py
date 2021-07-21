@@ -280,6 +280,7 @@ allhints = (
     "1st_exact",
     "1st_linear",
     "Bernoulli",
+    "1st_rational_riccati",
     "Riccati_special_minus2",
     "1st_homogeneous_coeff_best",
     "1st_homogeneous_coeff_subs_indep_div_dep",

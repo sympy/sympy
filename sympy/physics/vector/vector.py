@@ -678,7 +678,17 @@ class Vector(Printable, EvalfMixin):
         return Vector(d)
 
     def magnitude(self):
-        """Returns the magnitude (Euclidean norm) of self."""
+        """Returns the magnitude (Euclidean norm) of self.
+
+        Warnings
+        ========
+
+        Python ignores the leading negative sign so that might
+        give wrong results.
+        ``-A.x.magnitude()`` would be treated as ``-(A.x.magnitude())``,
+        instead of ``(-A.x).magnitude()``.
+
+        """
         return sqrt(self & self)
 
     def normalize(self):
@@ -718,6 +728,14 @@ class Vector(Printable, EvalfMixin):
         >>> v3 = A.x + A.y + A.z
         >>> v1.angle_between(v3)
         acos(sqrt(3)/3)
+
+        Warnings
+        ========
+
+        Python ignores the leading negative sign so that might
+        give wrong results.
+        ``-A.x.angle_between()`` would be treated as ``-(A.x.angle_between())``,
+        instead of ``(-A.x).angle_between()``.
 
         """
 

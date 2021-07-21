@@ -9,7 +9,7 @@ from sympy.physics.vector.frame import ReferenceFrame
 
 import warnings
 
-__all__ = ['Joint', 'PinJoint']
+__all__ = ['Joint', 'PinJoint', 'PrismaticJoint']
 
 
 class Joint(ABC):
@@ -80,6 +80,45 @@ class Joint(ABC):
         The axis fixed in the child frame that represents the joint.
     kdes : list
         Kinematical differential equations of the joint.
+
+    Notes
+    =====
+
+    The direction cosine matrix between the child and parent is formed using a
+    simple rotation about an axis that is normal to both ``child_axis`` and
+    ``parent_axis``. In general, the normal axis is formed by crossing the
+    ``child_axis`` into the ``parent_axis`` except if the child and parent axes
+    are in exactly opposite directions. In that case the rotation vector is chosen
+    using the rules in the following table where ``C`` is the child reference
+    frame and ``P`` is the parent reference frame:
+
+    .. list-table::
+       :header-rows: 1
+
+       * - ``child_axis``
+         - ``parent_axis``
+         - ``rotation_axis``
+       * - ``-C.x``
+         - ``P.x``
+         - ``P.z``
+       * - ``-C.y``
+         - ``P.y``
+         - ``P.x``
+       * - ``-C.z``
+         - ``P.z``
+         - ``P.y``
+       * - ``-C.x-C.y``
+         - ``P.x+P.y``
+         - ``P.z``
+       * - ``-C.y-C.z``
+         - ``P.y+P.z``
+         - ``P.x``
+       * - ``-C.x-C.z``
+         - ``P.x+P.z``
+         - ``P.y``
+       * - ``-C.x-C.y-C.z``
+         - ``P.x+P.y+P.z``
+         - ``(P.x+P.y+P.z) × P.x``
 
     """
 
@@ -236,15 +275,38 @@ class Joint(ABC):
         if x != 0:
             if y!=0:
                 if z!=0:
-                    return parent_frame.x
-                return parent_frame.z
-            return parent_frame.y
-        else:
+                    return cross(self.parent_axis,
+                                parent_frame.x)
+            if z!=0:
+                return parent_frame.y
+            return parent_frame.z
+
+        if x == 0:
             if y!=0:
                 if z!=0:
                     return parent_frame.x
-                return parent_frame.z
-            return parent_frame.x
+                return parent_frame.x
+            return parent_frame.y
+
+    def _set_orientation(self):
+        #Helper method for `orient_axis()`
+        self.child.frame.orient_axis(self.parent.frame, self.parent_axis, 0)
+        angle, axis = self._alignment_rotation(self.parent_axis,
+                                                self.child_axis)
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=UserWarning)
+
+            if axis != Vector(0) or angle == pi:
+
+                if angle == pi:
+                    axis = self._generate_vector()
+
+                int_frame = ReferenceFrame('int_frame')
+                int_frame.orient_axis(self.child.frame, self.child_axis, 0)
+                int_frame.orient_axis(self.parent.frame, axis, angle)
+                return int_frame
+        return self.parent.frame
 
 
 class PinJoint(Joint):
@@ -271,9 +333,9 @@ class PinJoint(Joint):
         The parent body of joint.
     child : Body
         The child body of joint.
-    coordinates: List of dynamicsymbols, optional
+    coordinates: dynamicsymbol, optional
         Generalized coordinates of the joint.
-    speeds : List of dynamicsymbols, optional
+    speeds : dynamicsymbol, optional
         Generalized speeds of joint.
     parent_joint_pos : Vector, optional
         Vector from the parent body's mass center to the point where the parent
@@ -423,56 +485,6 @@ class PinJoint(Joint):
     >>> lower_bob.masscenter.vel(ceiling.frame)
     l1*omega_P1(t)*U_frame.y + l2*(omega_P1(t) + omega_P2(t))*L_frame.y
 
-    Notes
-    =====
-
-    The direction cosine matrix between the child and parent is formed using a
-    simple rotation about an axis that is normal to both ``child_axis`` and
-    ``parent_axis``. In general, the normal axis is formed by crossing the
-    ``child_axis`` into the ``parent_axis`` except if the child and parent axes
-    are in exactly opposite directions. In that case, the vector normal to the
-    ``child_axis`` and ``parent_axis`` is formed by crossing the ``child_axis``
-    into an arbitrary vector in the parent reference frame to find a suitable
-    vector normal to the child and parent axes. The arbitrary axis is chosen
-    using the rules in the following table where ``C`` is the child reference
-    frame and ``P`` is the parent reference frame:
-
-    .. list-table::
-       :header-rows: 1
-
-       * - ``child_axis``
-         - ``parent_axis``
-         - ``arbitrary_axis``
-         - ``rotation_axis``
-       * - ``-C.x``
-         - ``P.x``
-         - ``P.y``
-         - ``P.z``
-       * - ``-C.y``
-         - ``P.y``
-         - ``P.z``
-         - ``P.x``
-       * - ``-C.z``
-         - ``P.z``
-         - ``P.x``
-         - ``P.y``
-       * - ``-C.x-C.y``
-         - ``P.x+P.y``
-         - ``P.z``
-         - ``(P.x+P.y) × P.z``
-       * - ``-C.y-C.z``
-         - ``P.y+P.z``
-         - ``P.x``
-         - ``(P.y+P.z) × P.x``
-       * - ``-C.x-C.z``
-         - ``P.x+P.z``
-         - ``P.y``
-         - ``(P.x+P.z) × P.y``
-       * - ``-C.x-C.y-C.z``
-         - ``P.x+P.y+P.z``
-         - ``P.x``
-         - ``(P.x+P.y+P.z) × P.x``
-
     """
 
     def __init__(self, name, parent, child, coordinates=None, speeds=None,
@@ -504,27 +516,9 @@ class PinJoint(Joint):
         return speeds
 
     def _orient_frames(self):
-        self.child.frame.orient_axis(self.parent.frame, self.parent_axis, 0)
-        angle, axis = self._alignment_rotation(self.parent_axis,
-                                               self.child_axis)
-
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=UserWarning)
-
-            if axis != Vector(0) or angle == pi:
-
-                if angle == pi:
-                    axis = cross(self.parent_axis,
-                                self._generate_vector())
-
-                int_frame = ReferenceFrame('int_frame')
-                int_frame.orient_axis(self.child.frame, self.child_axis, 0)
-                int_frame.orient_axis(self.parent.frame, axis, angle)
-                self.child.frame.orient_axis(int_frame, self.parent_axis,
-                                            self.coordinates[0])
-            else:
-                self.child.frame.orient_axis(self.parent.frame, self.parent_axis,
-                                            self.coordinates[0])
+        frame = self._set_orientation()
+        self.child.frame.orient_axis(frame, self.parent_axis,
+                                    self.coordinates[0])
 
     def _set_angular_velocity(self):
         self.child.frame.set_ang_vel(self.parent.frame, self.speeds[0] *
@@ -536,3 +530,218 @@ class PinJoint(Joint):
         self.child_point.set_pos(self.parent_point, 0)
         self.child.masscenter.v2pt_theory(self.parent.masscenter,
                                           self.parent.frame, self.child.frame)
+
+
+class PrismaticJoint(Joint):
+    """Prismatic (Sliding) Joint.
+
+    Explanation
+    ===========
+
+    It is defined such that the child body translates with respect to the parent
+    body along the body fixed parent axis. The location of the joint is defined
+    by two points in each body which coincides when the generalized coordinate is zero. The direction cosine matrix between
+    the child and parent is formed using a simple rotation about an axis that is normal to
+    both ``child_axis`` and ``parent_axis``, see the Notes section for a detailed explanation of
+    this.
+
+    Parameters
+    ==========
+
+    name : string
+        A unique name for the joint.
+    parent : Body
+        The parent body of joint.
+    child : Body
+        The child body of joint.
+    coordinates: dynamicsymbol, optional
+        Generalized coordinates of the joint.
+    speeds : dynamicsymbol, optional
+        Generalized speeds of joint.
+    parent_joint_pos : Vector, optional
+        Vector from the parent body's mass center to the point where the parent
+        and child are connected. The default value is the zero vector.
+    child_joint_pos : Vector, optional
+        Vector from the child body's mass center to the point where the parent
+        and child are connected. The default value is the zero vector.
+    parent_axis : Vector, optional
+        Axis fixed in the parent body which aligns with an axis fixed in the
+        child body. The default is x axis in parent's reference frame.
+    child_axis : Vector, optional
+        Axis fixed in the child body which aligns with an axis fixed in the
+        parent body. The default is x axis in child's reference frame.
+
+    Attributes
+    ==========
+
+    name : string
+        The joint's name.
+    parent : Body
+        The joint's parent body.
+    child : Body
+        The joint's child body.
+    coordinates : list
+        List of the joint's generalized coordinates.
+    speeds : list
+        List of the joint's generalized speeds.
+    parent_point : Point
+        The point fixed in the parent body that represents the joint.
+    child_point : Point
+        The point fixed in the child body that represents the joint.
+    parent_axis : Vector
+        The axis fixed in the parent frame that represents the joint.
+    child_axis : Vector
+        The axis fixed in the child frame that represents the joint.
+    kdes : list
+        Kinematical differential equations of the joint.
+
+    Examples
+    =========
+
+    A single prismatic joint is created from two bodies and has the following basic
+    attributes:
+
+    >>> from sympy.physics.mechanics import Body, PrismaticJoint
+    >>> parent = Body('P')
+    >>> parent
+    P
+    >>> child = Body('C')
+    >>> child
+    C
+    >>> joint = PrismaticJoint('PC', parent, child)
+    >>> joint
+    PrismaticJoint: PC  parent: P  child: C
+    >>> joint.name
+    'PC'
+    >>> joint.parent
+    P
+    >>> joint.child
+    C
+    >>> joint.parent_point
+    PC_P_joint
+    >>> joint.child_point
+    PC_C_joint
+    >>> joint.parent_axis
+    P_frame.x
+    >>> joint.child_axis
+    C_frame.x
+    >>> joint.coordinates
+    [x_PC(t)]
+    >>> joint.speeds
+    [v_PC(t)]
+    >>> joint.child.frame.ang_vel_in(joint.parent.frame)
+    0
+    >>> joint.child.frame.dcm(joint.parent.frame)
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
+    >>> joint.child_point.pos_from(joint.parent_point)
+    x_PC(t)*P_frame.x
+
+    To further demonstrate the use of the prismatic joint, the kinematics of
+    two masses sliding, one moving relative to a fixed body and the other relative to the
+    moving body. about the X axis of each connected body can be created as follows.
+
+    >>> from sympy.physics.mechanics import PrismaticJoint, Body
+
+    First create bodies to represent the fixed ceiling and one to represent
+    a particle.
+
+    >>> wall = Body('W')
+    >>> Part1 = Body('P1')
+    >>> Part2 = Body('P2')
+
+    The first joint will connect the particle to the ceiling and the
+    joint axis will be about the X axis for each body.
+
+    >>> J1 = PrismaticJoint('J1', wall, Part1)
+
+    The second joint will connect the second particle to the first particle
+    and the joint axis will also be about the X axis for each body.
+
+    >>> J2 = PrismaticJoint('J2', Part1, Part2)
+
+    Once the joint is established the kinematics of the connected bodies can
+    be accessed. First the direction cosine matrices of Part relative
+    to the ceiling are found:
+
+    >>> Part1.dcm(wall)
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
+
+    >>> Part2.dcm(wall)
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
+
+    The position of the particles' masscenter is found with:
+
+    >>> Part1.masscenter.pos_from(wall.masscenter)
+    x_J1(t)*W_frame.x
+
+    >>> Part2.masscenter.pos_from(wall.masscenter)
+    x_J1(t)*W_frame.x + x_J2(t)*P1_frame.x
+
+    The angular velocities of the two particle links can be computed with
+    respect to the ceiling.
+
+    >>> Part1.ang_vel_in(wall)
+    0
+
+    >>> Part2.ang_vel_in(wall)
+    0
+
+    And finally, the linear velocities of the two particles can be computed
+    with respect to the ceiling.
+
+    >>> Part1.masscenter_vel(wall)
+    v_J1(t)*W_frame.x
+
+    >>> Part2.masscenter.vel(wall.frame)
+    v_J1(t)*W_frame.x + v_J2(t)*P1_frame.x
+
+    """
+
+    def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None,
+        child_joint_pos=None, parent_axis=None, child_axis=None):
+
+        super().__init__(name, parent, child, coordinates, speeds, parent_joint_pos,
+                        child_joint_pos, parent_axis, child_axis)
+
+    def __str__(self):
+        return (f'PrismaticJoint: {self.name}  parent: {self.parent}  '
+                f'child: {self.child}')
+
+    def _generate_coordinates(self, coordinate):
+        coordinates = []
+        if coordinate is None:
+            x = dynamicsymbols('x' + '_' + self._name)
+            coordinate = x
+        coordinates.append(coordinate)
+        return coordinates
+
+    def _generate_speeds(self, speed):
+        speeds = []
+        if speed is None:
+            y = dynamicsymbols('v' + '_' + self._name)
+            speed = y
+        speeds.append(speed)
+        return speeds
+
+    def _orient_frames(self):
+        frame = self._set_orientation()
+        self.child.frame.orient_axis(frame, self.parent_axis, 0)
+
+    def _set_angular_velocity(self):
+        self.child.frame.set_ang_vel(self.parent.frame, 0)
+
+    def _set_linear_velocity(self):
+        self.parent_point.set_vel(self.parent.frame, 0)
+        self.child_point.set_vel(self.child.frame, 0)
+        self.child_point.set_pos(self.parent_point, self.coordinates[0] * self.parent_axis.normalize())
+        self.child_point.set_vel(self.parent.frame, self.speeds[0] * self.parent_axis.normalize())
+        self.child.masscenter.set_vel(self.parent.frame, self.speeds[0] * self.parent_axis.normalize())

@@ -1019,7 +1019,7 @@ class Expr(Basic, EvalfMixin):
             arg = arg.diff(x)
             coeff = arg.subs(x, 0)
             if coeff is S.NaN:
-                raise ValueError()
+                coeff = arg.limit(x, 0)
             if coeff is S.ComplexInfinity:
                 try:
                     coeff, _ = arg.leadterm(x)

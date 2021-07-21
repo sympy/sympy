@@ -274,34 +274,36 @@ class DDM(list):
         c = [[aij * bij for aij, bij in zip(ai, bi)] for ai, bi in zip(a, b)]
         return DDM(c, a.shape, a.domain)
 
-    def hstack(A, B):
+    def hstack(A, *B):
         Anew = list(A.copy())
         rows, cols = A.shape
         domain = A.domain
 
-        Brows, Bcols = B.shape
-        assert Brows == rows
-        assert B.domain == domain
+        for Bk in B:
+            Bkrows, Bkcols = Bk.shape
+            assert Bkrows == rows
+            assert Bk.domain == domain
 
-        cols += Bcols
+            cols += Bkcols
 
-        for i, Bi in enumerate(B):
-            Anew[i].extend(Bi)
+            for i, Bki in enumerate(Bk):
+                Anew[i].extend(Bki)
 
         return DDM(Anew, (rows, cols), A.domain)
 
-    def vstack(A, B):
+    def vstack(A, *B):
         Anew = list(A.copy())
         rows, cols = A.shape
         domain = A.domain
 
-        Brows, Bcols = B.shape
-        assert Bcols == cols
-        assert B.domain == domain
+        for Bk in B:
+            Bkrows, Bkcols = Bk.shape
+            assert Bkcols == cols
+            assert Bk.domain == domain
 
-        rows += Brows
+            rows += Bkrows
 
-        Anew.extend(B.copy())
+            Anew.extend(Bk.copy())
 
         return DDM(Anew, (rows, cols), A.domain)
 

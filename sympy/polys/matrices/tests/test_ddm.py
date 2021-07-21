@@ -214,25 +214,38 @@ def test_DDM_matmul():
     raises(DDMShapeError, lambda: Z05 @ Z40)
     raises(DDMShapeError, lambda: Z05.matmul(Z40))
 
-def test_DDM_hstack():
 
+def test_DDM_hstack():
     A = DDM([[ZZ(1), ZZ(2), ZZ(3)]], (1, 3), ZZ)
     B = DDM([[ZZ(4), ZZ(5)]], (1, 2), ZZ)
-    Ah = A.hstack(B)
+    C = DDM([[ZZ(6)]], (1, 1), ZZ)
 
+    Ah = A.hstack(B)
     assert Ah.shape == (1, 5)
     assert Ah.domain == ZZ
     assert Ah == DDM([[ZZ(1), ZZ(2), ZZ(3), ZZ(4), ZZ(5)]], (1, 5), ZZ)
 
-def test_DDM_vstack():
+    Ah = A.hstack(B, C)
+    assert Ah.shape == (1, 6)
+    assert Ah.domain == ZZ
+    assert Ah == DDM([[ZZ(1), ZZ(2), ZZ(3), ZZ(4), ZZ(5), ZZ(6)]], (1, 6), ZZ)
 
+
+def test_DDM_vstack():
     A = DDM([[ZZ(1)], [ZZ(2)], [ZZ(3)]], (3, 1), ZZ)
     B = DDM([[ZZ(4)], [ZZ(5)]], (2, 1), ZZ)
-    Ah = A.vstack(B)
+    C = DDM([[ZZ(6)]], (1, 1), ZZ)
 
+    Ah = A.vstack(B)
     assert Ah.shape == (5, 1)
     assert Ah.domain == ZZ
     assert Ah == DDM([[ZZ(1)], [ZZ(2)], [ZZ(3)], [ZZ(4)], [ZZ(5)]], (5, 1), ZZ)
+
+    Ah = A.vstack(B, C)
+    assert Ah.shape == (6, 1)
+    assert Ah.domain == ZZ
+    assert Ah == DDM([[ZZ(1)], [ZZ(2)], [ZZ(3)], [ZZ(4)], [ZZ(5)], [ZZ(6)]], (6, 1), ZZ)
+
 
 def test_DDM_applyfunc():
     A = DDM([[ZZ(1), ZZ(2), ZZ(3)]], (1, 3), ZZ)
