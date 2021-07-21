@@ -53,11 +53,13 @@ class JointsMethod(object):
     >>> W.apply_force(k*q*W.x, reaction_body=B)
     >>> method = JointsMethod(W, J)
     >>> (fr, frstar) = method.form_eoms()
-    >>> MM = method.mass_matrix
-    >>> forcing = method.forcing
-    >>> rhs = MM.LUSolve(forcing)
+    >>> MM = method.mass_matrix_full
+    >>> forcing = method.forcing_full
+    >>> rhs = MM.inv() * forcing
     >>> rhs
-    Matrix([[(-c*u(t) - k*q(t))/B_mass]])
+    Matrix([
+    [                     u(t)],
+    [(-c*u(t) - k*q(t))/B_mass]])
 
     Notes
     =====
