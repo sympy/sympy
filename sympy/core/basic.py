@@ -1760,6 +1760,17 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> MySin(x).rewrite(sqrt)
         sqrt(1 - cos(x)**2)
 
+        Defining ``_eval_rewrite_as_[...]()`` method is supported for backwards
+        compatibility reason. This may be removed in the future and using it is
+        discouraged.
+
+        >>> class MySin(Expr):
+        ...     def _eval_rewrite_as_cos(self, *args, **hints):
+        ...         x, = args
+        ...         return cos(pi/2 - x, evaluate=False)
+        >>> MySin(x).rewrite(cos)
+        cos(-x + pi/2)
+
         """
         if not args:
             return self
@@ -1769,7 +1780,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         pattern = args[:-1]
         rule = args[-1]
 
-        # support old design
+        # support old design by _eval_rewrite_as_[...] method
         if isinstance(rule, str):
             method = "_eval_rewrite_as_%s" % rule
         elif hasattr(rule, "__name__"):
@@ -1777,6 +1788,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             clsname = rule.__name__
             method = "_eval_rewrite_as_%s" % clsname
         else:
+            # rule is instance
             clsname = rule.__class__.__name__
             method = "_eval_rewrite_as_%s" % clsname
 
