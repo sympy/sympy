@@ -2977,6 +2977,7 @@ solver_map = {
     '1st_linear': FirstLinear,
     'Bernoulli': Bernoulli,
     'Riccati_special_minus2': RiccatiSpecial,
+    '1st_rational_riccati': RationalRiccati,
     '1st_homogeneous_coeff_best': HomogeneousCoeffBest,
     '1st_homogeneous_coeff_subs_indep_div_dep': HomogeneousCoeffSubsIndepDivDep,
     '1st_homogeneous_coeff_subs_dep_div_indep': HomogeneousCoeffSubsDepDivIndep,
