@@ -50,7 +50,7 @@ def step_response(system, show_input=False, colour='r', show=True, grid=True, up
     expr = system.to_expr()/(system.var)
     y = inverse_laplace_transform(expr, system.var, x)
     return plot(y, (x, 0, upper_limit), show=show, title="Unit Step Response", \
-        xlabel="Time (Seconds)", ylabel="Amplitude")
+        xlabel="Time (s)", ylabel="Amplitude")
 
 
 def impulse_response(system, show_input=False, colour='r', show=True, grid=True, upper_limit=6, **kwargs):
@@ -74,7 +74,7 @@ def ramp_response(system, slope=1, show_input=False, colour='r', show=True, grid
     expr = (slope*system.to_expr())/((system.var)**2)
     y = inverse_laplace_transform(expr, system.var, x)
     return plot(y, (x, 0, upper_limit), show=show, title="Ramp Response", \
-        xlabel="Time (Seconds)", ylabel="Amplitude")
+        xlabel="Time (s)", ylabel="Amplitude")
 
 
 def bode_plot(system, initial_exp=-5, final_exp=5, show=True, **kwargs):
