@@ -55,9 +55,15 @@ class JointsMethod(object):
     >>> (fr, frstar) = method.form_eoms()
     >>> MM = method.mass_matrix
     >>> forcing = method.forcing
-    >>> rhs = MM.inv() * forcing
+    >>> rhs = MM.LUSolve(forcing)
     >>> rhs
     Matrix([[(-c*u(t) - k*q(t))/B_mass]])
+
+    Notes
+    =====
+
+    ``JointsMethod`` currently only works with systems that do not have any
+    configuration or motion constraints.
 
     """
 
@@ -168,6 +174,12 @@ class JointsMethod(object):
         method : String
             - `kane` : Form equations of motions using kane's method. Default method.
             - `lagrange` : Form equations of motions using lagrange's method.
+
+        Notes
+        =====
+
+        ``form_eoms`` function currently works only with method=kanes
+        argument, i.e, only with KanesMethod.
 
         """
 
