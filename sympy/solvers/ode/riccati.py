@@ -604,7 +604,7 @@ def rational_laurent_series(num, den, x, r, m, n):
     2. We can then assume that the Laurent series of `g(x)`
     takes the following form -
 
-    .. math:: g(x) = \frac{num(x)}{den(x)} = \Sum_{m = 0}^{\infty} a_m x^m
+    .. math:: g(x) = \frac{num(x)}{den(x)} = \sum_{m = 0}^{\infty} a_m x^m
 
     where `a_m` denotes the Laurent series coefficients.
 
