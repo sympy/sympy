@@ -328,9 +328,9 @@ class KanesMethod:
         # components of rigid bodies. The inner most list is the list of
         # partial velocities.
         def get_partial_velocity(body):
-            if isinstance(body, RigidBody):
+            if isinstance(body, RigidBody) and body.is_rigidbody:
                 vlist = [body.masscenter.vel(N), body.frame.ang_vel_in(N)]
-            elif isinstance(body, Particle):
+            elif isinstance(body, Particle) and body.is_particle:
                 vlist = [body.point.vel(N),]
             else:
                 raise TypeError('The body list may only contain either '
@@ -347,7 +347,7 @@ class KanesMethod:
         zero_uaux = lambda expr: msubs(expr, uaux_zero)
         zero_udot_uaux = lambda expr: msubs(msubs(expr, udot_zero), uaux_zero)
         for i, body in enumerate(bl):
-            if isinstance(body, RigidBody):
+            if isinstance(body, RigidBody) and body.is_rigidbody:
                 M = zero_uaux(body.mass)
                 I = zero_uaux(body.central_inertia)
                 vel = zero_uaux(body.masscenter.vel(N))

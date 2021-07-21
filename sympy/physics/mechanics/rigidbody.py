@@ -61,6 +61,7 @@ class RigidBody:
         self.frame = frame
         self.inertia = inertia
         self.potential_energy = 0
+        self.is_rigidbody = True
 
     def __str__(self):
         return self._name

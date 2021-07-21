@@ -101,6 +101,8 @@ class Body(RigidBody, Particle):  # type: ignore
 
         self.name = name
         self._loads = []
+        self.is_rigidbody = None
+        self.is_particle = None
 
         if frame is None:
             frame = ReferenceFrame(name + '_frame')
@@ -133,8 +135,12 @@ class Body(RigidBody, Particle):  # type: ignore
             self.frame = frame
             self.masscenter = masscenter
             Particle.__init__(self, name, masscenter, _mass)
+            self.is_rigidbody = False
+            self.is_particle = True
         else:
             RigidBody.__init__(self, name, masscenter, frame, _mass, _inertia)
+            self.is_rigidbody = True
+            self.is_particle = False
 
     @property
     def loads(self):

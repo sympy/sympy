@@ -49,6 +49,7 @@ class Particle:
         self.mass = mass
         self.point = point
         self.potential_energy = 0
+        self.is_particle = True
 
     def __str__(self):
         return self._name
