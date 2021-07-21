@@ -29,8 +29,8 @@ def pole_zero(transfer_function, pole_colour='r', zero_colour='b', grid=True, **
     x_zeros = list(map(lambda x: x[0], zero_points))
     y_zeros = list(map(lambda x: x[1], zero_points))
 
-    plt.plot(x_poles, y_poles, 'x', mfc='none', markersize=15)
-    plt.plot(x_zeros, y_zeros, 'o', markersize=10)
+    plt.plot(x_poles, y_poles, 'x', mfc='none', markersize=10)
+    plt.plot(x_zeros, y_zeros, 'o', markersize=7)
     plt.xlabel('Real')
     plt.ylabel('Imaginary')
     plt.title('Poles and Zeros')
@@ -42,18 +42,18 @@ def pole_zero(transfer_function, pole_colour='r', zero_colour='b', grid=True, **
     return
 
 
-def step_response(system, show_input=True, colour='r', show=True, grid=True, upper_limit=6, **kwargs):
+def step_response(system, show_input=False, colour='r', show=True, grid=True, upper_limit=6, **kwargs):
     r"""
     Return the unit step response of a continuous-time system.
     """
     x = Symbol("x")
     expr = system.to_expr()/(system.var)
     y = inverse_laplace_transform(expr, system.var, x)
-    return plot(y, (x, 0, 6), show=True, title="Unit Step Response", \
+    return plot(y, (x, 0, upper_limit), show=show, title="Unit Step Response", \
         xlabel="Time (Seconds)", ylabel="Amplitude")
 
 
-def impulse_response(system, show_input=True, colour='r', show=True, grid=True, upper_limit=6, **kwargs):
+def impulse_response(system, show_input=False, colour='r', show=True, grid=True, upper_limit=6, **kwargs):
     r"""
     Return the unit impulse response (Input is the Dirac-Delta Function) of a
     continuous-time system.
@@ -62,10 +62,10 @@ def impulse_response(system, show_input=True, colour='r', show=True, grid=True, 
     expr = system.to_expr()
     y = inverse_laplace_transform(expr, system.var, x)
     return plot(y, (x, 0, 6), show=True, title="Impulse Response", \
-        xlabel="Time (Seconds)", ylabel="Amplitude")
+        xlabel="Time (s)", ylabel="Amplitude")
 
 
-def ramp_response(system, slope=1, show_input=True, colour='r', show=True, grid=True, upper_limit=6, **kwargs):
+def ramp_response(system, slope=1, show_input=False, colour='r', show=True, grid=True, upper_limit=6, **kwargs):
     r"""
     Return the unit impulse response (Input is the Dirac-Delta Function) of a
     continuous-time system.
