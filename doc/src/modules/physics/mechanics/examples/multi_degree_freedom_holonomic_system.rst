@@ -68,7 +68,7 @@ a rotational linear spring acts on C relative to B
 
 specified torque T acts on compound_pend and block.
 
-specified force F acts on block
+specified force F acts on block. ::
 
     >>> F, T = dynamicsymbols('F, T')
     >>> block.apply_force(F*block.x)
