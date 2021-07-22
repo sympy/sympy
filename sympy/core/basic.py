@@ -1809,8 +1809,9 @@ class Basic(Printable, metaclass=ManagedProperties):
             else:
                 args = expr.args
             if pattern is None or isinstance(expr, pattern):
-                if hasattr(expr, method):
-                    rewritten = getattr(expr, method)(*args, **hints)
+                meth = getattr(expr, method, None)
+                if meth is not None:
+                    rewritten = meth(*args, **hints)
                 else:
                     rewritten = expr._eval_rewrite(rule, args, **hints)
                 if rewritten is not None:
