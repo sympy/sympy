@@ -1798,8 +1798,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             pattern = tuple(p for p in pattern if self.has(p))
             if not pattern:
                 return self
-        else:
-            pattern = None
+        # hereafter, empty pattern is interpreted as all pattern.
 
         def _rewrite(expr, pattern, rule, method, **hints):
             deep = hints.pop('deep', True)
@@ -1808,7 +1807,7 @@ class Basic(Printable, metaclass=ManagedProperties):
                         if isinstance(a, Basic) else a for a in expr.args]
             else:
                 args = expr.args
-            if pattern is None or isinstance(expr, pattern):
+            if not pattern or any(isinstance(expr, p) for p in pattern):
                 meth = getattr(expr, method, None)
                 if meth is not None:
                     rewritten = meth(*args, **hints)
