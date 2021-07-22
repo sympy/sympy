@@ -609,7 +609,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         if all_:
             retdict = {}
             failed_hints = {}
-            gethints = classify_ode(eq, dict=True)
+            gethints = classify_ode(eq, dict=True, hint='all')
             orderedhints = gethints['ordered_hints']
             for hint in hints:
                 try:
@@ -1015,46 +1015,29 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             else:
                 raise ValueError("Enter boundary conditions of the form ics={f(point): value, f(x).diff(x, order).subs(x, point): value}")
 
-    # Any ODE that can be solved with a combination of algebra and
-    # integrals e.g.:
-    # d^3/dx^3(x y) = F(x)
     ode = SingleODEProblem(eq_orig, func, x, prep=prep, xi=xi, eta=eta)
-    solvers = {
-        RationalRiccati: ('1st_rational_riccati',),
-        NthAlgebraic: ('nth_algebraic',),
-        FirstExact:('1st_exact',),
-        FirstLinear: ('1st_linear',),
-        AlmostLinear: ('almost_linear',),
-        Bernoulli: ('Bernoulli',),
-        Factorable: ('factorable',),
-        RiccatiSpecial: ('Riccati_special_minus2',),
-        SecondNonlinearAutonomousConserved: ('2nd_nonlinear_autonomous_conserved',),
-        Liouville: ('Liouville',),
-        Separable: ('separable',),
-        SeparableReduced: ('separable_reduced',),
-        HomogeneousCoeffSubsDepDivIndep: ('1st_homogeneous_coeff_subs_dep_div_indep',),
-        HomogeneousCoeffSubsIndepDivDep: ('1st_homogeneous_coeff_subs_indep_div_dep',),
-        HomogeneousCoeffBest: ('1st_homogeneous_coeff_best',),
-        LinearCoefficients: ('linear_coefficients',),
-        NthOrderReducible: ('nth_order_reducible',),
-        SecondHypergeometric: ('2nd_hypergeometric',),
-        NthLinearConstantCoeffHomogeneous: ('nth_linear_constant_coeff_homogeneous',),
-        NthLinearConstantCoeffVariationOfParameters: ('nth_linear_constant_coeff_variation_of_parameters',),
-        NthLinearConstantCoeffUndeterminedCoefficients: ('nth_linear_constant_coeff_undetermined_coefficients',),
-        NthLinearEulerEqHomogeneous: ('nth_linear_euler_eq_homogeneous',),
-        NthLinearEulerEqNonhomogeneousVariationOfParameters: ('nth_linear_euler_eq_nonhomogeneous_variation_of_parameters',),
-        NthLinearEulerEqNonhomogeneousUndeterminedCoefficients: ('nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients',),
-        SecondLinearBessel: ('2nd_linear_bessel',),
-        SecondLinearAiry: ('2nd_linear_airy',),
-        LieGroup: ('lie_group',),
-    }
-    for solvercls in solvers:
-        solver = solvercls(ode)
+    user_hint = kwargs.get('hint', 'default')
+    # Used when dsolve is called without an explicit hint.
+    # We exit early to return the first valid match
+    early_exit = (user_hint=='default')
+    if user_hint.endswith('_Integral'):
+        user_hint = user_hint[:-len('_Integral')]
+    user_map = solver_map
+    # An explicit hint has been given to dsolve
+    # Skip matching code for other hints
+    if user_hint not in ['default', 'all', 'all_Integral', 'best'] and user_hint in solver_map:
+        user_map = {user_hint: solver_map[user_hint]}
+
+    for hint in user_map:
+        solver = user_map[hint](ode)
         if solver.matches():
-            for hints in solvers[solvercls]:
-                matching_hints[hints] = solver
-                if solvercls.has_integral:
-                    matching_hints[hints + "_Integral"] = solver
+            matching_hints[hint] = solver
+            if user_map[hint].has_integral:
+                matching_hints[hint + "_Integral"] = solver
+            if dict and early_exit:
+                matching_hints["default"] = hint
+                return matching_hints
+
     eq = expand(eq)
     # Precondition to try remove f(x) from highest order derivative
     reduced_eq = None
@@ -3583,12 +3566,4 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 
 
 #This import is written at the bottom to avoid circular imports.
-from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear, RationalRiccati,
-        Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
-        SecondNonlinearAutonomousConserved, FirstExact, Liouville, Separable,
-        SeparableReduced, HomogeneousCoeffSubsDepDivIndep, HomogeneousCoeffSubsIndepDivDep,
-        HomogeneousCoeffBest, LinearCoefficients, NthOrderReducible, SecondHypergeometric,
-        NthLinearConstantCoeffHomogeneous, NthLinearConstantCoeffVariationOfParameters,
-        NthLinearConstantCoeffUndeterminedCoefficients, NthLinearEulerEqHomogeneous,
-        NthLinearEulerEqNonhomogeneousVariationOfParameters, LieGroup,
-        NthLinearEulerEqNonhomogeneousUndeterminedCoefficients, SecondLinearBessel, SecondLinearAiry)
+from .single import SingleODEProblem, SingleODESolver, solver_map
