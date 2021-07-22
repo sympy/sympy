@@ -742,7 +742,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     Examples
     ========
 
-    >>> from sympy import cse, SparseMatrix, cos
+    >>> from sympy import cse, SparseMatrix
     >>> from sympy.abc import x, y, z, w
     >>> cse(((w + x + y + z)*(w + y + z))/(w + x)**3)
     ([(x0, y + z), (x1, w + x)], [(w + x0)*(x0 + x1)/x1**3])
