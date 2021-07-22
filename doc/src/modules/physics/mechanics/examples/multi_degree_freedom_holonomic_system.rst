@@ -7,7 +7,7 @@ In this example we demonstrate the use of the functionality provided in
 system that includes both particles and rigid bodies with contributing forces and torques,
 some of which are specified forces and torques.
 
-The system will be modeled using JointsMethod. First we need to create the ``dynamicsymbols``
+The system will be modeled using ``JointsMethod``. First we need to create the ``dynamicsymbols``
 needed to describe the system
 
 Generalized coordinates:
