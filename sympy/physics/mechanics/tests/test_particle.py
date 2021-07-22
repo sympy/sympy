@@ -42,6 +42,7 @@ def test_particle():
     assert p.kinetic_energy(
         N) in [m2*(v1**2 + v2**2 + v3**2)/2,
         m2 * v1**2 / 2 + m2 * v2**2 / 2 + m2 * v3**2 / 2]
+    assert p.is_particle
 
 
 def test_parallel_axis():
