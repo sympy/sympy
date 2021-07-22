@@ -770,12 +770,13 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     >>> cse([y**2*(x + 1), 3*y**2*(x + 1)], ignore=(y,))
     ([(x0, x + 1)], [x0*y**2, 3*x0*y**2])
 
-    >>> output = lambda x, as_list: type(cse(x, as_list=as_list)[1])
-    >>> output(cos(x), as_list=False)
-    cos
-    >>> output(cos(x), as_list=True)
-    <class 'list'>
-    >>>
+    The default return value for the reduced expression(s) is a list, even if there is only
+    one expression. The `as_list` flag preserves the type of the input in the output:
+
+    >>> cse(x)
+    ([], [x])
+    >>> cse(x, as_list=False)
+    ([], x)
     """
     from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
                                 SparseMatrix, ImmutableSparseMatrix)
