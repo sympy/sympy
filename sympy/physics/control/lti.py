@@ -905,13 +905,17 @@ class Series(LinearTimeInvariant):
         ========
 
         >>> from sympy.abc import s, p, a, b
-        >>> from sympy.physics.control.lti import TransferFunction, Series
+        >>> from sympy.physics.control.lti import TransferFunction, Series, TransferFunctionMatrix
         >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
         >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
         >>> Series(tf2, tf1).doit()
         TransferFunction((s**3 - 2)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s)
         >>> Series(-tf1, -tf2).doit()
         TransferFunction((2 - s**3)*(-a*p**2 - b*s), (-p + s)*(s**4 + 5*s + 6), s)
+        >>> tfm1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf2]])
+        >>> tfm2 = TransferFunctionMatrix([[tf2, tf1], [tf1, tf1]])
+        >>> Series(tfm2, tfm1).doit()  # MIMO System
+        TransferFunctionMatrix(((TransferFunction(2*(s**3 - 2)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s), TransferFunction((-p + s)**2*(s**3 - 2)*(a*p**2 + b*s) + (-p + s)*(a*p**2 + b*s)**2*(s**4 + 5*s + 6), (-p + s)**3*(s**4 + 5*s + 6), s)), (TransferFunction((-p + s)*(s**3 - 2)**2*(s**4 + 5*s + 6) + (s**3 - 2)*(a*p**2 + b*s)*(s**4 + 5*s + 6)**2, (-p + s)*(s**4 + 5*s + 6)**3, s), TransferFunction(2*(s**3 - 2)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s))))
 
         """
         def _SISO_doit():
@@ -1280,13 +1284,17 @@ class Parallel(LinearTimeInvariant):
         ========
 
         >>> from sympy.abc import s, p, a, b
-        >>> from sympy.physics.control.lti import TransferFunction, Parallel
+        >>> from sympy.physics.control.lti import TransferFunction, Parallel, TransferFunctionMatrix
         >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
         >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
         >>> Parallel(tf2, tf1).doit()
         TransferFunction((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s)
         >>> Parallel(-tf1, -tf2).doit()
         TransferFunction((2 - s**3)*(-p + s) + (-a*p**2 - b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s)
+        >>> tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+        >>> tfm_2 = TransferFunctionMatrix([[tf2, tf1], [tf1, tf2]])
+        >>> Parallel(tfm_1, tfm_2).doit()  # MIMO System
+        TransferFunctionMatrix(((TransferFunction((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s), TransferFunction((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s)), (TransferFunction((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s), TransferFunction((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s))))
 
         """
 
