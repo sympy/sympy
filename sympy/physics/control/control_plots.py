@@ -4,33 +4,47 @@ from sympy.external import import_module
 from sympy.functions import arg
 from sympy.integrals.transforms import inverse_laplace_transform
 from sympy.plotting import PlotGrid, plot
+from sympy.polys.polytools import Poly
 
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
         catch=(RuntimeError,))
 
+numpy = import_module('numpy')
+
 if matplotlib:
     plt = matplotlib.pyplot
+else:
+    raise ImportError("Matplotlib is required for plotting (as an external dependency).")
+
+if numpy:
+    np = numpy  # Matplotlib already has numpy as a compulsory dependency. No need to install it separately.
+else:
+    raise ImportError("NumPy is required for this function.")
 
 
-def pole_zero(transfer_function, pole_colour='r', zero_colour='b', grid=True, **kwargs):
+def pole_zero(system, pole_colour='r', zero_colour='b', grid=True, show=True, **kwargs):
     r"""
     Returns the Pole-Zero plot (also known as PZ Plot or PZ Map) of a system.
     """
-    poles = transfer_function.poles()
-    zeros = transfer_function.zeros()
+    system = system.doit()  # Get the equivalent TransferFunction object.
 
-    pole_points = [pole.as_real_imag() for pole in poles]
-    zero_points = [zero.as_real_imag() for zero in zeros]
+    num_poly = Poly(system.num, system.var).all_coeffs()
+    den_poly = Poly(system.den, system.var).all_coeffs()
 
-    x_poles = list(map(lambda x: x[0], pole_points))
-    y_poles = list(map(lambda x: x[1], pole_points))
+    num_poly = np.array(num_poly, dtype=np.float64)
+    den_poly = np.array(den_poly, dtype=np.float64)
 
-    x_zeros = list(map(lambda x: x[0], zero_points))
-    y_zeros = list(map(lambda x: x[1], zero_points))
+    zeros, poles = _find_roots(num_poly, den_poly)
 
-    plt.plot(x_poles, y_poles, 'x', mfc='none', markersize=10)
-    plt.plot(x_zeros, y_zeros, 'o', markersize=7)
+    zero_real = np.real(zeros)
+    zero_imag = np.imag(zeros)
+
+    pole_real = np.real(poles)
+    pole_imag = np.imag(poles)
+
+    plt.plot(pole_real, pole_imag, 'x', mfc='none', markersize=10)
+    plt.plot(zero_real, zero_imag, 'o', markersize=7)
     plt.xlabel('Real')
     plt.ylabel('Imaginary')
     plt.title('Poles and Zeros')
@@ -38,8 +52,10 @@ def pole_zero(transfer_function, pole_colour='r', zero_colour='b', grid=True, **
         plt.grid()
     plt.axhline(0, color='black')
     plt.axvline(0, color='black')
-    plt.show()
-    return
+    if show:
+        plt.show()
+        return
+    return plt
 
 
 def step_response(system, show_input=False, colour='r', show=True, grid=True, upper_limit=6, **kwargs):
@@ -97,3 +113,52 @@ def bode_plot(system, initial_exp=-5, final_exp=5, show=True, **kwargs):
         xlabel="Frequency (Hz) [Log Scale]", ylabel="Phase (rad)", show=False)
 
     return PlotGrid(2, 1, mag_plot, phase_plot, show=show)
+
+
+def _find_roots(num, den, k=None):
+    """Private method to find roots efficiently."""
+    if k is not None:
+        num_roots = max(len(np.roots(den)), len(np.roots(num)))
+        roots = []
+        for gain in k:
+            individual_roots = np.roots(np.polyadd(den, (gain*num)))
+            if len(individual_roots) == num_roots:
+                individual_roots.sort()
+                roots.append(individual_roots)
+
+        return np.vstack(roots)
+
+    num_roots = np.roots(num)
+    den_roots = np.roots(den)
+
+    return num_roots, den_roots
+
+
+def root_locus(system, k_max=400.0, num=10000, show=True, grid=False, **kwargs):
+    """
+    Generates a root locus plot of a continuous-time system.
+    """
+    system = system.doit()
+
+    k = np.linspace(0.0, float(k_max), num=num)
+
+    num_poly = Poly(system.num, system.var).all_coeffs()
+    den_poly = Poly(system.den, system.var).all_coeffs()
+
+    num_poly = np.array(num_poly, dtype=np.float64)
+    den_poly = np.array(den_poly, dtype=np.float64)
+
+    roots = _find_roots(num_poly, den_poly, k)
+
+    real = np.real(roots)
+    imag = np.imag(roots)
+
+    pz = pole_zero(system, show=False, grid=grid)
+
+    pz.title('Root Loci')
+    pz.plot(real, imag)
+
+    if show:
+        pz.show()
+        return
+    return pz
