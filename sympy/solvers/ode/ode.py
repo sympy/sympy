@@ -280,6 +280,7 @@ allhints = (
     "1st_exact",
     "1st_linear",
     "Bernoulli",
+    "1st_rational_riccati",
     "Riccati_special_minus2",
     "1st_homogeneous_coeff_best",
     "1st_homogeneous_coeff_subs_indep_div_dep",
@@ -1019,6 +1020,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     # d^3/dx^3(x y) = F(x)
     ode = SingleODEProblem(eq_orig, func, x, prep=prep, xi=xi, eta=eta)
     solvers = {
+        RationalRiccati: ('1st_rational_riccati',),
         NthAlgebraic: ('nth_algebraic',),
         FirstExact:('1st_exact',),
         FirstLinear: ('1st_linear',),
@@ -3581,7 +3583,7 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 
 
 #This import is written at the bottom to avoid circular imports.
-from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
+from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear, RationalRiccati,
         Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
         SecondNonlinearAutonomousConserved, FirstExact, Liouville, Separable,
         SeparableReduced, HomogeneousCoeffSubsDepDivIndep, HomogeneousCoeffSubsIndepDivDep,
