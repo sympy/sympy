@@ -10,21 +10,21 @@ some of which are specified forces and torques.
 The system will be modeled using ``JointsMethod``. First we need to create the ``dynamicsymbols``
 needed to describe the system.
 
-Generalized coordinates:
+Generalized coordinates-
 
-`q1`: Lateral distance of block from wall.
+`q1` Lateral distance of block from wall.
 
-`q2`: Angle of the compound pendulum from vertical.
+`q2` Angle of the compound pendulum from vertical.
 
-`q3`: Angle of the simple pendulum from the compound pendulum.
+`q3` Angle of the simple pendulum from the compound pendulum.
 
-Generalized speeds:
+Generalized speeds-
 
-`u1`=q˙1: Lateral speed of block.
+`u1`=q˙1 Lateral speed of block.
 
 `u2`=Nv¯Bo⋅b^x
 
-`u3`=q˙3: Angular speed of C relative to B.
+`u3`=q˙3 Angular speed of C relative to B.
 
 We also create some ``symbols`` to represent the length and
 mass of the pendulum, as well as gravity and others. ::
