@@ -14,13 +14,9 @@ numpy = import_module('numpy')
 
 if matplotlib:
     plt = matplotlib.pyplot
-else:
-    raise ImportError("Matplotlib is required for plotting (as an external dependency).")
 
 if numpy:
     np = numpy  # Matplotlib already has numpy as a compulsory dependency. No need to install it separately.
-else:
-    raise ImportError("NumPy is required for this function.")
 
 
 def pole_zero(system, pole_colour='r', zero_colour='b', grid=True, show=True, **kwargs):
