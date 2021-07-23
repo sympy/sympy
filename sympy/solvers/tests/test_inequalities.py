@@ -4,12 +4,13 @@ from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo, I,
                    Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
                    Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs,
                    Piecewise, Rational)
+from sympy.matrices.dense import Matrix
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
                                         solve_univariate_inequality as isolve,
                                         reduce_abs_inequality,
-                                        _solve_inequality)
+                                        _solve_inequality, linear_programming)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
@@ -475,3 +476,20 @@ def test__pt():
     assert _pt(x, oo) == _pt(oo, x) == x + 1
     assert _pt(x, -oo) == _pt(-oo, x) == x - 1
     raises(ValueError, lambda: _pt(Dummy('i', infinite=True), S.One))
+
+
+def test_linear_programming():
+    A = Matrix([[0, 1, 2], [-1, 0, -3], [2, 1, 7]])
+    B = Matrix([3, -2, 5])
+    C = Matrix([[-1, -1, -5]])
+    D = Matrix([0])
+    optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
+    assert optimum == -2
+    A = Matrix([[1, -1, 2], [-1, 2, -3], [2, 1, -7]])
+    B = Matrix([3, -2, -5])
+    C = Matrix([[-1, -1, -5]])
+    optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
+    assert optimum == Rational(-25, 7)
+    B = Matrix([-4, 8, 10])
+    optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
+    assert optimum == -4
