@@ -1800,30 +1800,29 @@ class Basic(Printable, metaclass=ManagedProperties):
                 return self
         # hereafter, empty pattern is interpreted as all pattern.
 
-        def _rewrite(expr, pattern, rule, method, **hints):
-            deep = hints.pop('deep', True)
-            if deep:
-                args = [_rewrite(a, pattern, rule, method, **hints)
-                        if isinstance(a, Basic) else a for a in expr.args]
-            else:
-                args = expr.args
-            if not pattern or any(isinstance(expr, p) for p in pattern):
-                meth = getattr(expr, method, None)
-                if meth is not None:
-                    rewritten = meth(*args, **hints)
-                else:
-                    rewritten = expr._eval_rewrite(rule, args, **hints)
-                if rewritten is not None:
-                    return rewritten
-            if not args:
-                return expr
-            return expr.func(*args)
+        return self._rewrite(pattern, rule, method, **hints)
 
-        return _rewrite(self, pattern, rule, method, **hints)
+    def _rewrite(self, pattern, rule, method, **hints):
+        deep = hints.pop('deep', True)
+        if deep:
+            args = [a._rewrite(pattern, rule, method, **hints)
+                    if isinstance(a, Basic) else a for a in self.args]
+        else:
+            args = self.args
+        if not pattern or any(isinstance(self, p) for p in pattern):
+            meth = getattr(self, method, None)
+            if meth is not None:
+                rewritten = meth(*args, **hints)
+            else:
+                rewritten = self._eval_rewrite(rule, args, **hints)
+            if rewritten is not None:
+                return rewritten
+        if not args:
+            return self
+        return self.func(*args)
 
     def _eval_rewrite(self, rule, args, **hints):
         return None
-
 
     _constructor_postprocessor_mapping = {}  # type: ignore
 
