@@ -1806,7 +1806,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         deep = hints.pop('deep', True)
         if deep:
             args = [a._rewrite(pattern, rule, method, **hints)
-                    if isinstance(a, Basic) else a for a in self.args]
+                    for a in self.args]
         else:
             args = self.args
         if not pattern or any(isinstance(self, p) for p in pattern):
