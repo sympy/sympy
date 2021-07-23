@@ -1,10 +1,11 @@
 """Tools for solving inequalities and systems of inequalities. """
-from sympy import Matrix
+# from sympy.matrices.
 
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Eq, Ge, Lt
+from sympy.matrices.dense import Matrix
 from sympy.sets import Interval
 from sympy.sets.sets import FiniteSet, Union, EmptySet, Intersection
 from sympy.core.singleton import S
@@ -1012,7 +1013,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     return rv.xreplace({v: k for k, v in recast.items()})
 
 
-def pivot(M, i, j):
+def _pivot(M, i, j):
     p = M[i, j]
     MM = Matrix.zeros(M.rows, M.cols)
     for ii in range(M.rows):
@@ -1028,9 +1029,11 @@ def pivot(M, i, j):
     return MM
 
 
-# Simplex method with randomized pivoting
-# http://web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
-def simplex(M, R, S):
+def _simplex(M, R, S):
+    """
+    Simplex method with randomized pivoting
+    http://web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
+    """
     while True:
         B = M[:-1, -1]
         A = M[:-1, :-1]
@@ -1059,7 +1062,7 @@ def simplex(M, R, S):
             random.shuffle(piv_rows)
             _, i0 = piv_rows[0]
 
-            M = pivot(M, i0, j0)
+            M = _pivot(M, i0, j0)
             R[j0], S[i0] = S[i0], R[j0]
         else:
             for k in range(B.rows):
@@ -1087,13 +1090,35 @@ def simplex(M, R, S):
             random.shuffle(piv_rows)
             _, i0 = piv_rows[0]
 
-            M = pivot(M, i0, j0)
+            M = _pivot(M, i0, j0)
             R[j0], S[i0] = S[i0], R[j0]
 
 
 # Maximize Cx + D constrained with Ax <= B and x >= 0
 # Minimize y^{T}B constrained with y^{T}A >= C^{T} and y >= 0
 def linear_programming(A, B, C, D):
+    """
+    When x is a column vector of variables, y is a column vector of dual variables,
+    and when the objective is either:
+
+    *) Maximizing Cx constrained to Ax <= B and x >= 0.
+    *) Minimizing y^{T}B constrained to y^{T}A >= C^{T} and y >= 0.
+
+    Thw method s eturns a triplet of solutions optimum, argmax, argmax_dual where
+    optimum is the optimum solution, argmax is x and argmax_dual is y.
+
+    Examples
+    ========
+
+    >>> A = Matrix([[0, 1, 2], [-1, 0, -3], [2, 1, 7]])
+    >>> B = Matrix([3, -2, 5])
+    >>> C = Matrix([[1, 1, 5]])
+    >>> D = Matrix([0])
+    >>> linear_programming(A, B, C, D)
+    (11/3, [0, 1/3, 2/3], [0, 2/3, 1])
+
+
+    """
     M = Matrix([[A, B], [-C, D]])
     r_orig = ['x_{}'.format(j) for j in range(M.cols - 1)]
     s_orig = ['y_{}'.format(i) for i in range(M.rows - 1)]
@@ -1101,7 +1126,7 @@ def linear_programming(A, B, C, D):
     r = r_orig.copy()
     s = s_orig.copy()
 
-    M, r, s = simplex(M, r, s)
+    M, r, s = _simplex(M, r, s)
 
     argmax = []
     argmin_dual = []
