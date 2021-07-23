@@ -604,31 +604,14 @@ class Moment(Expr):
         c = _sympify(c)
         if condition is not None:
             condition = _sympify(condition)
-        return Expr.__new__(cls, X, n, c, condition)
+            return super().__new__(cls, X, n, c, condition)
+        else:
+            return super().__new__(cls, X, n, c)
 
     def doit(self, **hints):
         if not is_random(self.args[0]):
             return self.args[0]
         return self.rewrite(Expectation).doit(**hints)
-
-    def _rewrite(self, pattern, rule, method, **hints):
-        deep = hints.pop('deep', True)
-        if deep:
-            args = [a._rewrite(pattern, rule, method, **hints)
-                    if isinstance(a, Basic) else a for a in self.args]
-        else:
-            args = self.args
-        if not pattern or any(isinstance(self, p) for p in pattern):
-            meth = getattr(self, method, None)
-            if meth is not None:
-                rewritten = meth(*args, **hints)
-            else:
-                rewritten = self._eval_rewrite(rule, args, **hints)
-            if rewritten is not None:
-                return rewritten
-        if not args:
-            return self
-        return self.func(*args)
 
     def _eval_rewrite_as_Expectation(self, X, n, c=0, condition=None, **kwargs):
         return Expectation((X - c)**n, condition)
@@ -680,31 +663,14 @@ class CentralMoment(Expr):
         n = _sympify(n)
         if condition is not None:
             condition = _sympify(condition)
-        return Expr.__new__(cls, X, n, condition)
+            return super().__new__(cls, X, n, condition)
+        else:
+            return super().__new__(cls, X, n)
 
     def doit(self, **hints):
         if not is_random(self.args[0]):
             return self.args[0]
         return self.rewrite(Expectation).doit(**hints)
-
-    def _rewrite(self, pattern, rule, method, **hints):
-        deep = hints.pop('deep', True)
-        if deep:
-            args = [a._rewrite(pattern, rule, method, **hints)
-                    if isinstance(a, Basic) else a for a in self.args]
-        else:
-            args = self.args
-        if not pattern or any(isinstance(self, p) for p in pattern):
-            meth = getattr(self, method, None)
-            if meth is not None:
-                rewritten = meth(*args, **hints)
-            else:
-                rewritten = self._eval_rewrite(rule, args, **hints)
-            if rewritten is not None:
-                return rewritten
-        if not args:
-            return self
-        return self.func(*args)
 
     def _eval_rewrite_as_Expectation(self, X, n, condition=None, **kwargs):
         mu = Expectation(X, condition, **kwargs)
