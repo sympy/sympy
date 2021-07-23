@@ -35,7 +35,7 @@ def test_complete_double_pendulum():
     pendulum_joint = PinJoint('P2', upper_bob, lower_bob,child_joint_pos=-l2*lower_bob.frame.x,
         parent_axis=upper_bob.frame.z,child_axis=lower_bob.frame.z)
     method = JointsMethod(ceiling, ceiling_joint, pendulum_joint)
-    (fr, frstar) = method.form_eoms()
+    method.form_eoms()
     mm = method.mass_matrix_full
     fo = method.forcing_full
     qudots = mm.inv() * fo
