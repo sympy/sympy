@@ -5,7 +5,10 @@ Multi Degree of Freedom Holonomic System
 In this example we demonstrate the use of the functionality provided in
 :mod:`sympy.physics.mechanics` for deriving the equations of motion (EOM) of a holonomic
 system that includes both particles and rigid bodies with contributing forces and torques,
-some of which are specified forces and torques.
+some of which are specified forces and torques. The system is shown below:
+
+.. image:: multidof-holonomic.*
+   :align: center
 
 The system will be modeled using ``JointsMethod``. First we need to create the ``dynamicsymbols``
 needed to describe the system.
