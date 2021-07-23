@@ -1,6 +1,6 @@
 import itertools
 
-from sympy import (Expr, Add, Mul, S, Integral, Eq, Sum, Symbol,
+from sympy import (Basic, Expr, Add, Mul, S, Integral, Eq, Sum, Symbol,
                     expand as _expand, Not)
 from sympy.core.compatibility import default_sort_key
 from sympy.core.parameters import global_parameters
