@@ -149,6 +149,9 @@ class Limit(Expr):
         elif z0 is S.NegativeInfinity:
             dir = "+"
 
+        if(z0.has(z)):
+            raise NotImplementedError("Limits approaching a variable point are"
+                    " not supported (%s -> %s)" % (z, z0))
         if isinstance(dir, str):
             dir = Symbol(dir)
         elif not isinstance(dir, Symbol):
@@ -170,6 +173,25 @@ class Limit(Expr):
         isyms.difference_update(self.args[1].free_symbols)
         isyms.update(self.args[2].free_symbols)
         return isyms
+
+
+    def pow_heuristics(self):
+        from sympy import exp, log
+        expr, z, z0, _ = self.args
+        b, e = expr.base, expr.exp
+        if not b.has(z):
+            res = limit(e*log(b), z, z0)
+            return exp(res)
+
+        ex_lim = limit(e, z, z0)
+        base_lim = limit(b, z, z0)
+
+        if base_lim is S.One:
+            if ex_lim in (S.Infinity, S.NegativeInfinity):
+                res = limit(e*(b - 1), z, z0)
+                return exp(res)
+        if base_lim is S.NegativeInfinity and ex_lim is S.Infinity:
+            return S.ComplexInfinity
 
 
     def doit(self, **hints):
@@ -261,48 +283,48 @@ class Limit(Expr):
                 else:
                     return S.ComplexInfinity
 
-        # is_meromorphic does not capture all meromorphic functions, and such
-        # functions may have a leading term computation which can help find the
-        # limit without entering gruntz
-        if not e.has(factorial, binomial):
-            if abs(z0) is S.Infinity:
-                if e.is_Mul:
-                    e = factor_terms(e)
-                newe = e.subs(z, 1/z)
-                cdir = -cdir
-            else:
-                newe = e.subs(z, z + z0)
-            try:
-                # cdir changes sign as oo- should become 0+
-                coeff, ex = newe.leadterm(z, cdir=cdir)
-            except (ValueError, NotImplementedError, PoleError, AttributeError):
-                # The NotImplementedError catching is for custom functions
-                # AttributeError may be removed one TupleArg leading term
-                # is handled
-                pass
-            else:
-                if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
-                    return self
-                if not coeff.has(z):
-                    if ex.is_positive:
-                        return S.Zero
-                    elif ex == 0:
-                        return coeff
-                    elif ex.is_negative:
-                        if ex.is_integer:
-                            if str(dir) == "-" or ex.is_even:
-                                return S.Infinity*sign(coeff)
-                            elif str(dir) == "+":
-                                return S.NegativeInfinity*sign(coeff)
-                            else:
-                                return S.ComplexInfinity
+        if abs(z0) is S.Infinity:
+            # if e.is_Mul:
+            e = factor_terms(e)
+            newe = e.subs(z, 1/z)
+            cdir = -cdir
+        else:
+            newe = e.subs(z, z + z0)
+        try:
+            # cdir changes sign as oo- should become 0+
+            coeff, ex = newe.leadterm(z, cdir=cdir)
+        except (ValueError, NotImplementedError, PoleError):
+            # The NotImplementedError catching is for custom functions
+            # AttributeError may be removed one TupleArg leading term
+            # is handled
+            if e.is_Pow:
+                r = self.pow_heuristics()
+                if r is not None:
+                    return r
+            pass
+        else:
+            if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+                return self
+            if not coeff.has(z):
+                if ex.is_positive:
+                    return S.Zero
+                elif ex == 0:
+                    return coeff
+                elif ex.is_negative:
+                    if ex.is_integer:
+                        if str(dir) == "-" or ex.is_even:
+                            return S.Infinity*sign(coeff)
+                        elif str(dir) == "+":
+                            return S.NegativeInfinity*sign(coeff)
                         else:
-                            if str(dir) == "+":
-                                return S.Infinity*sign(coeff)
-                            elif str(dir) == "-":
-                                return S.NegativeInfinity*sign(coeff)*S.NegativeOne**(S.One + ex)
-                            else:
-                                return S.ComplexInfinity
+                            return S.ComplexInfinity
+                    else:
+                        if str(dir) == "+":
+                            return S.Infinity*sign(coeff)
+                        elif str(dir) == "-":
+                            return S.NegativeInfinity*sign(coeff)*S.NegativeOne**(S.One + ex)
+                        else:
+                            return S.ComplexInfinity
 
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
@@ -311,27 +333,6 @@ class Limit(Expr):
         if z0.is_extended_positive:
             e = e.rewrite(factorial, gamma)
 
-        if e.is_Pow:
-            b1, e1 = e.base, e.exp
-            f1 = e1*log(b1)
-            if f1.is_meromorphic(z, z0):
-                res = limit(f1, z, z0)
-                return exp(res)
-
-            ex_lim = limit(e1, z, z0)
-            base_lim = limit(b1, z, z0)
-
-            if base_lim is S.One:
-                if ex_lim in (S.Infinity, S.NegativeInfinity):
-                    res = limit(e1*(b1 - 1), z, z0)
-                    return exp(res)
-                elif ex_lim.is_real:
-                    return S.One
-            elif base_lim is S.NegativeInfinity:
-                if ex_lim is S.NegativeInfinity:
-                    return S.Zero
-                elif ex_lim is S.Infinity:
-                    return S.ComplexInfinity
 
         l = None
 
