@@ -207,7 +207,7 @@ class Limit(Expr):
         hints : optional keyword arguments
             To be passed to ``doit`` methods; only used if deep is True.
         """
-        from sympy import Abs, exp, log, sign, binomial
+        from sympy import Abs, sign
 
         e, z, z0, dir = self.args
 
