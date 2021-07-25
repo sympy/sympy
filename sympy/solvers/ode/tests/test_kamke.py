@@ -13,7 +13,7 @@ import _thread
 import time
 
 from sympy import (symbols, S, Function, Eq, dsolve, checkodesol,
-    Abs, sqrt, cos, exp, log, sin, tan, Derivative)
+    classify_ode, latex, Abs, sqrt, cos, exp, log, sin, tan, Derivative)
 
 
 class TimeOutError(Exception):
@@ -33,7 +33,7 @@ def time_limit(seconds, msg=''):
         # Cancel timer if process finishes in time
         timer.cancel()
 
-A, B, a, a0, a1, a2, a3, a4, alpha, b, b0, b1, b2, b3, b4, bbeta, c, d, ggamma, k, m, n, nu, x = symbols('A, B, a, a0, a1, a2, a3, a4, alpha, b, b0, b1, b2, b3, b4, bbeta, c, d, ggamma, k, m, n, nu, x')
+A, B, a, a0, a1, a2, a3, a4, alpha, b, b0, b1, b2, b3, b4, beta, c, d, gamma, k, m, n, nu, x = symbols('A, B, a, a0, a1, a2, a3, a4, alpha, b, b0, b1, b2, b3, b4, beta, c, d, gamma, k, m, n, nu, x')
 R1, R2, f, f0, f1, f2, f3, g, g0, g1, h, phi, tg, y = symbols('R1, R2, f, f0, f1, f2, f3, g, g0, g1, h, phi, tg, y', cls=Function)
 
 class Kamke:
@@ -116,7 +116,7 @@ class Kamke:
         "kamke_1.75": exp(x) - exp(x - y(x)) + Derivative(y(x), x),
         "kamke_1.76": -a*cos(y(x)) + b + Derivative(y(x), x),
         "kamke_1.77": -cos(a*y(x) + b*x) + Derivative(y(x), x),
-        "kamke_1.78": a*sin(alpha*y(x) + bbeta*x) + b + Derivative(y(x), x),
+        "kamke_1.78": a*sin(alpha*y(x) + beta*x) + b + Derivative(y(x), x),
         "kamke_1.79": f(x)*cos(a*y(x)) + g(x)*sin(a*y(x)) + h(x) + Derivative(y(x), x),
         "kamke_1.80": (1 - Derivative(f(x), x))*cos(y(x)) + f(x)*sin(y(x)) - Derivative(f(x), x) + Derivative(y(x), x) - 1,
         "kamke_1.81": 2*tan(x)*tan(y(x)) + Derivative(y(x), x) - 1,
@@ -137,7 +137,7 @@ class Kamke:
         "kamke_1.96": x*Derivative(y(x), x) - y(x)**2 + 1,
         "kamke_1.97": a*y(x)**2 + b*x**2 + x*Derivative(y(x), x) - y(x),
         "kamke_1.98": a*y(x)**2 - b*y(x) + c*x**(2*b) + x*Derivative(y(x), x),
-        "kamke_1.99": a*y(x)**2 - b*y(x) - c*x**bbeta + x*Derivative(y(x), x),
+        "kamke_1.99": a*y(x)**2 - b*y(x) - c*x**beta + x*Derivative(y(x), x),
         "kamke_1.100": a + x*y(x)**2 + x*Derivative(y(x), x),
         "kamke_1.101": x*y(x)**2 + x*Derivative(y(x), x) - y(x),
         "kamke_1.102": -a*x**3 + x*y(x)**2 + x*Derivative(y(x), x) - y(x),
@@ -145,7 +145,7 @@ class Kamke:
         "kamke_1.104": a*x*y(x)**2 + b*x + x*Derivative(y(x), x) + 2*y(x),
         "kamke_1.105": a*x*y(x)**2 + b*y(x) + c*x + d + x*Derivative(y(x), x),
         "kamke_1.106": x*Derivative(y(x), x) + x**a*y(x)**2 + x**b + (a - b)*y(x)/2,
-        "kamke_1.107": a*x**alpha*y(x)**2 + b*y(x) - c*x**bbeta + x*Derivative(y(x), x),
+        "kamke_1.107": a*x**alpha*y(x)**2 + b*y(x) - c*x**beta + x*Derivative(y(x), x),
         "kamke_1.108": x*Derivative(y(x), x) - y(x)**2*log(x) + y(x),
         "kamke_1.109": x*Derivative(y(x), x) - (2*y(x)*log(x) - 1)*y(x),
         "kamke_1.110": x*Derivative(y(x), x) + (-x**2 + y(x)**2)*f(x),
@@ -269,7 +269,7 @@ class Kamke:
         "kamke_1.228": -8*x + (11*x + 4*y(x) - 11)*Derivative(y(x), x) - 25*y(x) + 62,
         "kamke_1.229": 2*x + (-5*x + 12*y(x) - 8)*Derivative(y(x), x) - 5*y(x) + 3,
         "kamke_1.230": a*y(x)*Derivative(y(x), x) + b*y(x)**2 + f(x),
-        "kamke_1.231": alpha*y(x) + bbeta*x + ggamma + (a*y(x) + b*x + c)*Derivative(y(x), x),
+        "kamke_1.231": alpha*y(x) + beta*x + gamma + (a*y(x) + b*x + c)*Derivative(y(x), x),
         "kamke_1.232": x**2 + x*y(x)*Derivative(y(x), x) + y(x)**2,
         "kamke_1.233": a*x**3*cos(x) + x*y(x)*Derivative(y(x), x) - y(x)**2,
         "kamke_1.234": x**3 - 2*x**2 + x*y(x)*Derivative(y(x), x) + x*y(x) - y(x)**2,
@@ -287,8 +287,8 @@ class Kamke:
         "kamke_1.246": x*(2*x + 3*y(x))*Derivative(y(x), x) + 3*(x + y(x))**2,
         "kamke_1.247": -7*x**2 + x*y(x) - 9*x + (3*x + 2)*(-2*x + y(x) - 1)*Derivative(y(x), x) - y(x)**2 - 3,
         "kamke_1.248": 2*x*y(x) + 2*x + (x**2 + 6*x*y(x) + 3)*Derivative(y(x), x) + 3*y(x)**2,
-        "kamke_1.249": alpha*y(x)**3 + bbeta*y(x)**2 + (a*x*y(x) + b*x**n)*Derivative(y(x), x),
-        "kamke_1.250": A*x*y(x) - B*g(x)**2 + alpha*x + bbeta*y(x) + ggamma + (A*x**2 + B*x*y(x) + a*x + b*y(x) + c)*Derivative(y(x), x),
+        "kamke_1.249": alpha*y(x)**3 + beta*y(x)**2 + (a*x*y(x) + b*x**n)*Derivative(y(x), x),
+        "kamke_1.250": A*x*y(x) - B*g(x)**2 + alpha*x + beta*y(x) + gamma + (A*x**2 + B*x*y(x) + a*x + b*y(x) + c)*Derivative(y(x), x),
         "kamke_1.251": x*y(x)**2 + (x**2*y(x) - 1)*Derivative(y(x), x) - 1,
         "kamke_1.252": -x*y(x)**2 + (x**2*y(x) - 1)*Derivative(y(x), x) + 1,
         "kamke_1.253": 8*x*y(x)**2 + (x**2*y(x) - 1)*Derivative(y(x), x) - 8,
@@ -329,8 +329,8 @@ class Kamke:
         "kamke_1.288": -3*x*y(x)**2 + x + (-3*x**2*y(x) + 6*y(x)**2 + 1)*Derivative(y(x), x),
         "kamke_1.289": a + 2*x*y(x) + (-x + 6*y(x))**2*Derivative(y(x), x) - 6*y(x)**2,
         "kamke_1.290": b*y(x)**2 + 2*c*x*y(x) + d*x**2 + (a*y(x)**2 + 2*b*x*y(x) + c*x**2)*Derivative(y(x), x),
-        "kamke_1.291": a*(alpha*x + bbeta*y(x))**2 - alpha*(a*x + b*y(x)) + (b*(alpha*x + bbeta*y(x))**2 - bbeta*(a*x + b*y(x)))*Derivative(y(x), x),
-        "kamke_1.292": (a*y(x) + b*x + c)**2*Derivative(y(x), x) + (alpha*y(x) + bbeta*x + ggamma)**2,
+        "kamke_1.291": a*(alpha*x + beta*y(x))**2 - alpha*(a*x + b*y(x)) + (b*(alpha*x + beta*y(x))**2 - beta*(a*x + b*y(x)))*Derivative(y(x), x),
+        "kamke_1.292": (a*y(x) + b*x + c)**2*Derivative(y(x), x) + (alpha*y(x) + beta*x + gamma)**2,
         "kamke_1.293": x*(-3*x + y(x)**2)*Derivative(y(x), x) - 5*x*y(x) + 2*y(x)**3,
         "kamke_1.294": x*(-a + x**2 + y(x)**2)*Derivative(y(x), x) - (a + x**2 + y(x)**2)*y(x),
         "kamke_1.295": x**2*y(x) + x*(-x**2 + x*y(x) + y(x)**2)*Derivative(y(x), x) + x*y(x)**2 - y(x)**3,
@@ -341,73 +341,140 @@ class Kamke:
         "kamke_1.300": 6*x*y(x)**2*Derivative(y(x), x) + x + 2*y(x)**3
     }
 
+    def create_report(self, example, eq, sol, time, classify_output):
+        html_template = f"""<!DOCTYPE html>
+        <html>
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width">
+        <title>{example.capitalize().replace("_", " ")}</title>
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script id="MathJax-script" async
+                src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+        </script>
+        <style>
+        body {{
+            font-size: 1.2em;
+        }}
+        .MathJax {{
+            font-size: 1.6em !important;
+        }}
+        </style>
+        </head>
+        <body>
+        <p>
+        <h2>{example.capitalize().replace("_", " ")}</h2>
+        <h4>Equation</h4>
+            \({eq}\) <br>
+        <h4>Solution</h4>
+            \({sol}\) <br>
+        <h4>Time Taken</h4>
+            {time} seconds <br>
+        <h4>Matching Hints</h4>
+            <ul>
+            {classify_output}
+            </ul> <br>
+        </p>
+        </body>
+        </html>
+        """
+        f = open(f"{example}.html", "w")
+        f.write(html_template)
+        f.close()
+
     def get_example(self, example):
         return self.eqs[example]
 
-    def test_example(self, example, hint="default", verify=True, dsolve_timelim=10, checkodesol_timelim=10, log=False):
+    def test_example(self, example, hint="default", verify=True, dsolve_time=10, checkodesol_time=10, single=False, report=True):
         start = time.time()
         eq = self.get_example(example)
         sol = None
-        output = example + " "
+        # Status index
+        status = 0
+        status_messages = ["solved", "dsolve failed", "checkodesol failed"]
+        error_message = ""
 
         try:
             # Try to find the solution to the equation
-            with time_limit(dsolve_timelim):
+            with time_limit(dsolve_time):
                 sol = dsolve(eq, y(x), hint)
                 if isinstance(sol, Eq):
                     sol = [sol]
+
         except (TimeOutError, ValueError, NotImplementedError, TypeError):
             # Solution not found / timeout
-            output += "dsolve failed"
+            status = 1
 
         # If a solution is found
         if sol is not None and verify:
             try:
                 # Try to verify if the solution is correct
                 assert len(sol)
-                with time_limit(checkodesol_timelim):
+                with time_limit(checkodesol_time):
                     checks = checkodesol(eq, sol, y(x))
                 assert any([x[0] for x in checks])
-                output += "solved"
-            except AssertionError:
+
+            except AssertionError as e:
                 # Wrong solution
-                output += "dsolve failed"
-            except (TimeOutError, ValueError, NotImplementedError, TypeError):
+                status = 1
+                error_message += e.message
+
+            except (TimeOutError, ValueError, NotImplementedError, TypeError) as e:
                 # Checkodesol unable to verify / timeout
-                output += "checkodesol failed"
-        output += f" in {time.time() - start} seconds\n"
-        returns = sol
-        if log:
-            returns = [sol, output]
-        return returns
+                status = 2
+                error_message += e.message
+
+        elapsed = time.time() - start
+        log = f"{example} {status_messages[status]} in {elapsed} seconds\n"
+        classify_output = ""
+        for hint in classify_ode(eq):
+            classify_output += f"<li>{hint}</li>\n"
+        if sol is None:
+            log += error_message
+            self.create_report(example, latex(eq), error_message, elapsed, classify_output)
+        else:
+            log += f"Equation: {eq}\nSolution: {sol}\n"
+            self.create_report(example, latex(eq), latex(sol), elapsed, classify_output)
+        if single:
+            print(log)
+        return [log, status]
 
 
-    def test_all_examples(self, hint="default", verify=True, dsolve_timelim=10, checkodesol_timelim=10, report_path=None):
-        if report_path is None:
-            report_path = "test_report.txt"
-
+    def test_all_examples(self, hint="default", verify=True, dsolve_time=10, checkodesol_time=10):
         start = time.time()
         # Counts for result
-        solved = 0
-        check_slow = 0
-        fail = 0
+        counts = [0, 0, 0]
 
-        with open(report_path, "w") as output_file:
-            for example in self.eqs:
-                # Process is not terminating despite using
-                # time limit. Checkodesol is too slow for
-                # these cases. This should be fixed.
-                if example in ["kamke_1.14", "kamke_1.24", "kamke_1.31", "kamke_1.47", \
-                "kamke_1.48", "kamke_1.94", "kamke_1.113", "kamke_1.205"]:
-                    continue
+        for example in self.eqs:
+            # Process is not terminating despite using
+            # time limit. Checkodesol is too slow for
+            # these cases. This should be fixed.
+            if example in ["kamke_1.14", "kamke_1.24", "kamke_1.31", "kamke_1.47", \
+            "kamke_1.48", "kamke_1.94", "kamke_1.113", "kamke_1.205"]:
+                continue
 
-                sol, output = self.test_example(example, hint, verify, dsolve_timelim, checkodesol_timelim, log=True)
-                output_file.write(output)
-                output_file.flush()
+            output, status = self.test_example(example, hint, verify, dsolve_time, checkodesol_time)
+            counts[status] += 1
+            print(output)
 
-            # Summary
-            output_file.write("Total time taken" + str(time.time() - start))
-            output_file.write("No. of ODEs solved:" + str(solved))
-            output_file.write("No. of ODEs failed:" + str(fail))
-            output_file.write("No. of ODEs solved, but not checked:" + str(check_slow))
-            output_file.close()
+        # Summary
+        print("Total time taken:", time.time() - start)
+        print("No. of ODEs solved:", counts[0])
+        print("No. of ODEs failed:", counts[1])
+        print("No. of ODEs solved, but not checked:", counts[2])
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-e", "--example", help="Name of the example in the format kamke_{chapter_no}.{problem_no}\nSpecify all to test all examples", default="all")
+    parser.add_argument("--hint", help="Hint to be used to solve the ODEs", default="default")
+    parser.add_argument("--verify", help="Verify the solution from dsolve using checkodesol", action="store_true")
+    parser.add_argument("--dsolve_time", help="Timeout duration (in seconds) for dsolve", type=int, default=10)
+    parser.add_argument("--checkodesol_time", help="Timeout duration (in seconds) for checkodesol", type=int, default=10)
+
+    args = parser.parse_args()
+    kamke = Kamke()
+    if args.example == "all":
+        kamke.test_all_examples(args.hint, args.verify, args.dsolve_time, args.checkodesol_time)
+    else:
+        kamke.test_example(args.example, args.hint, args.verify, args.dsolve_time, args.checkodesol_time, single=True)
