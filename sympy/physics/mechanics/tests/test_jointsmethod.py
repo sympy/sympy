@@ -12,7 +12,7 @@ def test_jointsmethod():
     method = JointsMethod(P, Pin)
     assert method.frame == P.frame
     assert method.bodylist == [C, P]
-    assert method.loadlist == [(P.masscenter, g*P.frame.y)]
+    assert method.forcelist == [(P.masscenter, g*P.frame.y)]
     assert method.q == [theta]
     assert method.u == [omega]
     assert method.kdes == [omega - theta.diff()]

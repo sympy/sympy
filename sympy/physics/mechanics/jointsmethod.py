@@ -1,4 +1,4 @@
-from sympy.physics.mechanics import Body, Lagrangian
+from sympy.physics.mechanics import Body, Lagrangian, KanesMethod
 
 __all__ = ['JointsMethod']
 
@@ -87,7 +87,7 @@ class JointsMethod(object):
         return self._bodylist
 
     @property
-    def loadlist(self):
+    def forcelist(self):
         return self._loadlist
 
     @property
@@ -155,18 +155,6 @@ class JointsMethod(object):
             kd_ind.extend(joint.kdes)
         return kd_ind
 
-    def _form_kanes_equations(self):
-        self._method = KanesMethod(self.frame, q_ind=self.q,
-                                u_ind=self.u, kd_eqs=self.kdes)
-        if self.loadlist == []:
-           fr, frstar = self.method.kanes_equations(self.bodylist)
-           return fr, frstar
-        fr, frstar = self.method.kanes_equations(self.bodylist, self.loadlist)
-        return fr, frstar
-
-    def _form_lagranges_equations(self):
-        pass
-
     def form_eoms(self, method=KanesMethod):
         """ Method to form system's equation of motions.
 
@@ -186,8 +174,8 @@ class JointsMethod(object):
         try: #KanesMethod or similar
             self._method = method(self.frame, q_ind=self.q, u_ind=self.u, kd_eqs=self.kdes,
                                     forcelist=self.forcelist, bodies=self.bodylist)
-        except: #LagrangesMethod or similar
-            L = Lagrangian(self.frame, self.bodylist)
+        except TypeError: #LagrangesMethod or similar
+            L = Lagrangian(self.frame, *self.bodylist)
             self._method = method(L, self.q, self.forcelist, self.bodylist, self.frame)
         soln = self.method._form_eoms()
         return soln
