@@ -183,7 +183,7 @@ class JointsMethod(object):
 
         """
 
-        self._method = method(self.frame, q_ind=self.q,
-                            u_ind=self.u, kd_eqs=self.kdes)
-        soln = self.method._form_eoms(self.bodylist, self.loadlist)
+        self._method = method(self.frame, q_ind=self.q, u_ind=self.u, kd_eqs=self.kdes,
+                                forcelist=self.forcelist, bodies=self.bodylist)
+        soln = self.method._form_eoms()
         return soln
