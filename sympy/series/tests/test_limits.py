@@ -5,7 +5,7 @@ from sympy import (
     atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I, E, besselj,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
     binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels, real_root,
-    acos, erf, erfc, erfi, LambertW, factorial, digamma, uppergamma,
+    acos, erf, erfc, erfi, LambertW, factorial, digamma, uppergamma, re,
     Ei, EulerGamma, asin, atanh, acot, acoth, asec, acsc, cbrt, besselk)
 
 from sympy.calculus.util import AccumBounds
@@ -993,3 +993,9 @@ def test_issue_21721():
     a = Symbol('a', real=True)
     I = integrate(1/(pi*(1 + (x - a)**2)), x)
     assert I.limit(x, oo) == S.Half
+
+
+def test_issue_21756():
+    term = (1 - exp(-2*I*pi*z))/(1 - exp(-2*I*pi*z/5))
+    assert term.limit(z, 0) == 5
+    assert re(term).limit(z, 0) == 5

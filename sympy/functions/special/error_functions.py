@@ -2456,6 +2456,7 @@ class fresnels(FresnelIntegral):
                 * meijerg([], [1], [Rational(3, 4)], [Rational(1, 4), 0], -pi**2*z**4/16))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
@@ -2463,6 +2464,9 @@ class fresnels(FresnelIntegral):
             arg0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
         if arg0.is_zero:
             return pi*arg**3/6
+        elif arg0 in [S.Infinity, S.NegativeInfinity]:
+            s = 1 if arg0 is S.Infinity else -1
+            return s*S.Half + Order(x, x)
         else:
             return self.func(arg0)
 
@@ -2608,13 +2612,17 @@ class fresnelc(FresnelIntegral):
                 * meijerg([], [1], [Rational(1, 4)], [Rational(3, 4), 0], -pi**2*z**4/16))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy import Order
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.ComplexInfinity:
             arg0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
-        if x in arg.free_symbols and arg0.is_zero:
+        if arg0.is_zero:
             return arg
+        elif arg0 in [S.Infinity, S.NegativeInfinity]:
+            s = 1 if arg0 is S.Infinity else -1
+            return s*S.Half + Order(x, x)
         else:
             return self.func(arg0)
 
