@@ -219,6 +219,16 @@ class hyper(TupleParametersBase):
         return Piecewise((Sum(coeff * z**n / factorial(n), (n, 0, oo)),
                          self.convergence_statement), (self, True))
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[2]
+        x0 = arg.subs(x, 0)
+        if x0 is S.NaN:
+            x0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
+
+        if x0 is S.Zero:
+            return S.One
+        return super()._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
     def _eval_nseries(self, x, n, logx, cdir=0):
 
         from sympy.functions import factorial, RisingFactorial
@@ -690,6 +700,10 @@ class meijerg(TupleParametersBase):
             v = mpmath.meijerg(ap, bq, z, r)
 
         return Expr._from_mpmath(v, prec)
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy import hyperexpand
+        return hyperexpand(self).as_leading_term(x, logx=logx, cdir=cdir)
 
     def integrand(self, s):
         """ Get the defining integrand D(s). """
