@@ -1033,8 +1033,8 @@ class log(Function):
         arg0 = self.args[0].together()
         arg = arg0.as_leading_term(x, cdir=cdir)
         x0 = arg0.subs(x, 0)
-        if x0 is S.NaN and logx is None:
-            x0 = arg.limit(x, 0)
+        if (x0 is S.NaN and logx is None):
+            x0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
         if x0 in (S.NegativeInfinity, S.Infinity):
             raise PoleError("Cannot expand %s around 0" % (self))
         if x0 == 1:

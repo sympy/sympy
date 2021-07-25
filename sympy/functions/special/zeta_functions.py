@@ -1,5 +1,6 @@
 """ Riemann zeta and related function. """
 
+from sympy import Add
 from sympy.core import Function, S, sympify, pi, I
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
@@ -351,6 +352,38 @@ class polylog(Function):
         z = self.args[1]
         if z.is_zero:
             return True
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy import ceiling, Order
+        nu, z = self.args
+
+        z0 = z.subs(x, 0)
+        if z0 is S.NaN:
+            z0 = z.limit(x, 0, dir='-' if cdir < 0 else '+')
+
+        if z0.is_zero:
+            # In case of powers less than 1, number of terms need to be computed
+            # separately to avoid repeated callings of _eval_nseries with wrong n
+            try:
+                _, exp = z.leadterm(x)
+            except (ValueError, NotImplementedError):
+                return self
+
+            if exp.is_positive:
+                newn = ceiling(n/exp)
+                o = Order(x**n, x)
+                r = z._eval_nseries(x, n, logx, cdir).removeO()
+                if r is S.Zero:
+                    return o
+
+                term = r
+                s = [term]
+                for k in range(2, newn):
+                    term *= r
+                    s.append(term/k**nu)
+                return Add(*s) + o
+
+        return super(polylog, self)._eval_nseries(x, n, logx, cdir)
 
 ###############################################################################
 ###################### HURWITZ GENERALIZED ZETA FUNCTION ######################
