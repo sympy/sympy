@@ -159,7 +159,7 @@ class CG(Wigner3j):
     coefficients are defined as [1]_:
 
     .. math ::
-        C^{j_1,m_1}_{j_2,m_2,j_3,m_3} = \left\langle j_1,m_1;j_2,m_2 | j_3,m_3\right\rangle
+        C^{j_3,m_3}_{j_1,m_1,j_2,m_2} = \left\langle j_1,m_1;j_2,m_2 | j_3,m_3\right\rangle
 
     Parameters
     ==========
