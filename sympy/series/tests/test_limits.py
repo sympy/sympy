@@ -975,3 +975,7 @@ def test_issue_21721():
     a = Symbol('a', real=True)
     I = integrate(1/(pi*(1 + (x - a)**2)), x)
     assert I.limit(x, oo) == S.Half
+
+def test_issue_21415():
+    exp = (x-1)*cos(1/(x-1))
+    assert exp.limit(x,1) == exp.expand().limit(x,1)
