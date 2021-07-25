@@ -164,11 +164,6 @@ class JointsMethod(object):
         method : Class
             Class name of method.
 
-        Notes
-        =====
-
-        ``form_eoms`` function currently works only with KanesMethod.
-
         """
 
         try: #KanesMethod or similar
