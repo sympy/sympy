@@ -1,4 +1,4 @@
-from sympy.core.backend import Symbol
+from sympy.core.backend import Symbol, sympify
 from sympy.physics.vector import Point, Vector, ReferenceFrame
 from sympy.physics.mechanics import RigidBody, Particle, inertia
 
@@ -160,6 +160,20 @@ class Body(RigidBody, Particle):  # type: ignore
     def z(self):
         """The basis Vector for the Body, in the z direction. """
         return self.frame.z
+
+    def kinetic_energy(self, frame):
+        """Kinetic energy of the body."""
+        if self.is_particle:
+            return (self.mass / sympify(2) * self.masscenter_vel(frame) &
+                self.masscenter_vel(frame))
+
+        rotational_KE = (self.frame.ang_vel_in(frame) & (self.central_inertia &
+                self.frame.ang_vel_in(frame)) / sympify(2))
+
+        translational_KE = (self.mass * (self.masscenter.vel(frame) &
+            self.masscenter.vel(frame)) / sympify(2))
+
+        return rotational_KE + translational_KE
 
     def apply_force(self, force, point=None, reaction_body=None, reaction_point=None):
         """Add force to the body(s).
