@@ -1,5 +1,7 @@
+from sympy.physics.mechanics.functions import Lagrangian
 from sympy import symbols, Matrix, cos, sin, expand
-from sympy.physics.mechanics import PinJoint, JointsMethod, Body, KanesMethod, PrismaticJoint
+from sympy.physics.mechanics import PinJoint, JointsMethod, Body, KanesMethod,
+                                    PrismaticJoint, LagrangesMethod
 from sympy.physics.vector import dynamicsymbols
 
 def test_jointsmethod():
@@ -62,3 +64,16 @@ def test_two_dof_joints():
     assert expand(rhs[0]) == expand((-k1 * q1 - c1 * u1 + k2 * q2 + c2 * u2)/m)
     assert expand(rhs[1]) == expand((k1 * q1 + c1 * u1 - 2 * k2 * q2 - 2 *
                                     c2 * u2) / m)
+
+def test_simple_pedulum():
+    l, m, g = symbols('l m g')
+    C = Body('C')
+    b = Body('b', mass=m)
+    q, u = dynamicsymbols('q u')
+    P = PinJoint('P', C, b, speeds=u, coordinates=q, child_joint_pos = -l*b.x,
+                    parent_axis=C.z)
+    b.potential_energy = - m * g * l * cos(q)
+    method = JointsMethod(C, b)
+    method.form_eoms(LagrangesMethod)
+    rhs = method.rhs()
+    assert rhs[1] == -g*sin(q)/l
