@@ -3,6 +3,7 @@ from sympy import solve_linear_system_LU
 from sympy.utilities import default_sort_key
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
+from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
@@ -13,7 +14,7 @@ from sympy.utilities.iterables import iterable
 __all__ = ['KanesMethod']
 
 
-class KanesMethod:
+class KanesMethod(_Methods):
     """Kane's method object.
 
     Explanation
