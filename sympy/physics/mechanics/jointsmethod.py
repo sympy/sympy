@@ -174,3 +174,17 @@ class JointsMethod(object):
             self._method = method(L, self.q, self.forcelist, self.bodylist, self.frame)
         soln = self.method._form_eoms()
         return soln
+
+    def rhs(self, inv_method=None):
+        """Returns equations that can be solved numerically.
+
+        Parameters
+        ==========
+
+        inv_method : str
+            The specific sympy inverse matrix calculation method to use. For a
+            list of valid methods, see
+            :meth:`~sympy.matrices.matrices.MatrixBase.inv`
+        """
+
+        return self.method.rhs(inv_method=inv_method)
