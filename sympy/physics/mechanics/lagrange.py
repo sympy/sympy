@@ -226,6 +226,9 @@ class LagrangesMethod(_Methods):
         self.eom = without_lam - self._term3
         return self.eom
 
+    def _form_eoms(self):
+        self.form_lagranges_equations()
+
     @property
     def mass_matrix(self):
         """Returns the mass matrix, which is augmented by the Lagrange

@@ -34,3 +34,6 @@ class _Methods(ABC):
     @abstractmethod
     def forcing_full(self):
         pass
+
+    def _form_eoms(self):
+        raise NotImplementedError("Subclasses must implement this.")
