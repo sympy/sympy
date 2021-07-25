@@ -1111,17 +1111,5 @@ class binomial(CombinatorialFunction):
                 return  False
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        n, k = self.args
-        if x in n.free_symbols:
-            n0 = n.subs(x, 0)
-            if n0 is S.ComplexInfinity:
-                n0 = n.limit(x, 0, dir='-' if cdir < 0 else '+')
-            if not n0.is_infinite:
-                return self.func(n0, k)
-        if x in k.free_symbols:
-            k0 = k.subs(x, 0)
-            if k0 is S.ComplexInfinity:
-                k0 = k.limit(x, 0, dir='-' if cdir < 0 else '+')
-            if not k0.is_infinite:
-                return self.func(n, k0)
-        raise PoleError("Cannot expand %s around 0" % (self))
+        from sympy import gamma
+        return self.rewrite(gamma)._eval_as_leading_term(x, logx=logx, cdir=cdir)

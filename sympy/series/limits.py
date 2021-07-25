@@ -284,16 +284,16 @@ class Limit(Expr):
                     return S.ComplexInfinity
 
         if abs(z0) is S.Infinity:
-            # if e.is_Mul:
-            e = factor_terms(e)
+            if e.is_Mul:
+                e = factor_terms(e)
             newe = e.subs(z, 1/z)
+            # cdir changes sign as oo- should become 0+
             cdir = -cdir
         else:
             newe = e.subs(z, z + z0)
         try:
-            # cdir changes sign as oo- should become 0+
             coeff, ex = newe.leadterm(z, cdir=cdir)
-        except (ValueError, NotImplementedError, PoleError):
+        except (ValueError, NotImplementedError, PoleError, AttributeError):
             # The NotImplementedError catching is for custom functions
             # AttributeError may be removed one TupleArg leading term
             # is handled
@@ -301,7 +301,6 @@ class Limit(Expr):
                 r = self.pow_heuristics()
                 if r is not None:
                     return r
-            pass
         else:
             if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
                 return self
