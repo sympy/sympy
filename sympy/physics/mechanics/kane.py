@@ -118,7 +118,7 @@ class KanesMethod(_Methods):
     def __init__(self, frame, q_ind, u_ind, kd_eqs=None, q_dependent=None,
             configuration_constraints=None, u_dependent=None,
             velocity_constraints=None, acceleration_constraints=None,
-            u_auxiliary=None):
+            u_auxiliary=None, bodies=None, forcelist=None):
 
         """Please read the online documentation. """
         if not q_ind:
@@ -132,8 +132,8 @@ class KanesMethod(_Methods):
         self._fr = None
         self._frstar = None
 
-        self._forcelist = None
-        self._bodylist = None
+        self._forcelist = forcelist
+        self._bodylist = bodies
 
         self._initialize_vectors(q_ind, q_dependent, u_ind, u_dependent,
                 u_auxiliary)
