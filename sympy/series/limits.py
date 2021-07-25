@@ -293,10 +293,8 @@ class Limit(Expr):
             newe = e.subs(z, z + z0)
         try:
             coeff, ex = newe.leadterm(z, cdir=cdir)
-        except (ValueError, NotImplementedError, PoleError, AttributeError):
+        except (ValueError, NotImplementedError, PoleError):
             # The NotImplementedError catching is for custom functions
-            # AttributeError may be removed one TupleArg leading term
-            # is handled
             if e.is_Pow:
                 r = self.pow_heuristics()
                 if r is not None:
@@ -331,7 +329,6 @@ class Limit(Expr):
         # differs from gamma) so only rewrite for positive z0.
         if z0.is_extended_positive:
             e = e.rewrite(factorial, gamma)
-
 
         l = None
 
