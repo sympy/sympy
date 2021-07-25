@@ -1,4 +1,3 @@
-from sympy.physics.mechanics.functions import Lagrangian
 from sympy import symbols, Matrix, cos, sin, expand
 from sympy.physics.mechanics import (PinJoint, JointsMethod, Body, KanesMethod,
                                     PrismaticJoint, LagrangesMethod)
