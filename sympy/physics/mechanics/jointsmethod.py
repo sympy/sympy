@@ -167,27 +167,23 @@ class JointsMethod(object):
     def _form_lagranges_equations(self):
         pass
 
-    def form_eoms(self, method='kane'):
+    def form_eoms(self, method=KanesMethod):
         """ Method to form system's equation of motions.
 
         Parameters
         ==========
 
-        method : String
-            - `kane` : Form equations of motions using kane's method. Default method.
-            - `lagrange` : Form equations of motions using lagrange's method.
+        method : Class
+            Class name of method.
 
         Notes
         =====
 
-        ``form_eoms`` function currently works only with method=kanes
-        argument, i.e, only with KanesMethod.
+        ``form_eoms`` function currently works only with KanesMethod.
 
         """
 
-        if method == 'kane':
-            (fr, frstar) = self._form_kanes_equations()
-            return fr, frstar
-        if method == 'lagrange':
-            lagr_eqns = self._form_lagranges_equations()
-            return lagr_eqns
+        self._method = method(self.frame, q_ind=self.q,
+                            u_ind=self.u, kd_eqs=self.kdes)
+        soln = self.method._form_eoms(self.bodylist, self.loadlist)
+        return soln

@@ -530,6 +530,8 @@ class KanesMethod:
             Must be either a non-empty iterable of tuples or None which corresponds
             to a system with no constraints.
         """
+        if loads = []: # If jointsmethod passes empty loads list then make it None.
+            loads = None
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
                     'kinematic differential equations to use this method.')
