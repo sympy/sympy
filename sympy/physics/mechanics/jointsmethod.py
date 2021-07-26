@@ -82,6 +82,8 @@ class JointsMethod(object):
         self._u = self._generate_u()
         self._kdes = self._generate_kdes()
 
+        self._method = None
+
     @property
     def bodylist(self):
         return self._bodylist
@@ -156,7 +158,7 @@ class JointsMethod(object):
         return kd_ind
 
     def form_eoms(self, method=KanesMethod):
-        """ Method to form system's equation of motions.
+        """Method to form system's equation of motions.
 
         Parameters
         ==========

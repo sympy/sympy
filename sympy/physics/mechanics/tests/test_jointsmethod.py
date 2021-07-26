@@ -70,7 +70,7 @@ def test_simple_pedulum():
     b = Body('b', mass=m)
     q, u = dynamicsymbols('q u')
     P = PinJoint('P', C, b, speeds=u, coordinates=q, child_joint_pos = -l*b.x,
-                    parent_axis=C.z)
+                    parent_axis=C.z, child_axis=b.z)
     b.potential_energy = - m * g * l * cos(q)
     method = JointsMethod(C, P)
     method.form_eoms(LagrangesMethod)
