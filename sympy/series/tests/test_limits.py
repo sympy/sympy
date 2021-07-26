@@ -995,6 +995,11 @@ def test_issue_21721():
     assert I.limit(x, oo) == S.Half
 
 
+def test_issue_21415():
+    exp = (x-1)*cos(1/(x-1))
+    assert exp.limit(x,1) == exp.expand().limit(x,1)
+
+
 def test_issue_21756():
     term = (1 - exp(-2*I*pi*z))/(1 - exp(-2*I*pi*z/5))
     assert term.limit(z, 0) == 5
