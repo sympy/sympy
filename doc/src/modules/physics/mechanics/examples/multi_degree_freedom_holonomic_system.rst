@@ -10,24 +10,12 @@ some of which are specified forces and torques. The system is shown below:
 .. image:: multidof-holonomic.*
    :align: center
 
-The system will be modeled using ``JointsMethod``. First we need to create the ``dynamicsymbols``
-needed to describe the system.
-
-Generalized coordinates-
-
-`q1` Lateral distance of block from wall.
-
-`q2` Angle of the compound pendulum from vertical.
-
-`q3` Angle of the simple pendulum from the compound pendulum.
-
-Generalized speeds-
-
-`u1`=q˙1 Lateral speed of block.
-
-`u2`=Nv¯Bo⋅b^x
-
-`u3`=q˙3 Angular speed of C relative to B.
+The system will be modeled using ``JointsMethod``. First we need to create the
+``dynamicsymbols`` needed to describe the system as shown in the above diagram.
+In this case, the generalized coordinates `q1` represent lateral distance of block from wall,
+`q2` represents ngle of the compound pendulum from vertical, `q3` represents angle of the simple
+pendulum from the compound pendulum. The generalized speeds `u1` represents lateral speed of block,
+`u2` represents lateral speed of compound pendulum and `u3` represents angular speed of C relative to B.
 
 We also create some ``symbols`` to represent the length and
 mass of the pendulum, as well as gravity and others. ::
@@ -59,19 +47,9 @@ kinematics. ::
 
     >>> joints = (slider, rev1, rev2)
 
-Now we can apply loads(forces and torques) to the bodies.
-
-Loads:
-
-gravity acts on all bodies.
-
-a linear spring and damper act on block and wall
-
-a rotational linear spring acts on C relative to B
-
-specified torque T acts on compound_pend and block.
-
-specified force F acts on block. ::
+Now we can apply loads(forces and torques) to the bodies, gravity acts on all bodies,
+a linear spring and damper act on block and wall, a rotational linear spring acts on C relative to B
+specified torque T acts on compound_pend and block, specified force F acts on block. ::
 
     >>> F, T = dynamicsymbols('F, T')
     >>> block.apply_force(F*block.x)
