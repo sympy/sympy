@@ -3,6 +3,10 @@ from sympy.physics.mechanics import (PinJoint, JointsMethod, Body, KanesMethod,
                                     PrismaticJoint, LagrangesMethod)
 from sympy.physics.vector import dynamicsymbols
 
+
+t = dynamicsymbols._t
+
+
 def test_jointsmethod():
     P = Body('P')
     C = Body('C')
@@ -68,8 +72,8 @@ def test_simple_pedulum():
     l, m, g = symbols('l m g')
     C = Body('C')
     b = Body('b', mass=m)
-    q, u = dynamicsymbols('q u')
-    P = PinJoint('P', C, b, speeds=u, coordinates=q, child_joint_pos = -l*b.x,
+    q = dynamicsymbols('q')
+    P = PinJoint('P', C, b, speeds=q.diff(t), coordinates=q, child_joint_pos = -l*b.x,
                     parent_axis=C.z, child_axis=b.z)
     b.potential_energy = - m * g * l * cos(q)
     method = JointsMethod(C, P)
