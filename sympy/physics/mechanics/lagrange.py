@@ -227,7 +227,7 @@ class LagrangesMethod(_Methods):
         return self.eom
 
     def _form_eoms(self):
-        self.form_lagranges_equations()
+        return self.form_lagranges_equations()
 
     @property
     def mass_matrix(self):
