@@ -52,10 +52,10 @@ class JointsMethod(object):
     >>> W.apply_force(c*u*W.x, reaction_body=B)
     >>> W.apply_force(k*q*W.x, reaction_body=B)
     >>> method = JointsMethod(W, J)
-    >>> (fr, frstar) = method.form_eoms()
+    >>> method.form_eoms()
     >>> MM = method.mass_matrix_full
     >>> forcing = method.forcing_full
-    >>> rhs = MM.inv() * forcing
+    >>> rhs = MM.LUsolve(forcing)
     >>> rhs
     Matrix([
     [                     u(t)],

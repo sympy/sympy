@@ -43,7 +43,7 @@ def test_complete_double_pendulum():
     method.form_eoms()
     mm = method.mass_matrix_full
     fo = method.forcing_full
-    qudots = mm.inv() * fo
+    qudots = mm.LUsolve(fo)
     qudots.simplify()
     qudots == Matrix([[o1], [o2], [(l2*(-(o1 + o2)**2 + o1**2) - (l1*cos(t2) + l2)*o1**2)*sin(t2)/(l1*(cos(t2)**2 - 2))], [(l2*(l1*cos(t2) + l2)*((o1 + o2)**2 - o1**2) + (2*l1**2 + 2*l1*l2*cos(t2) + l2**2)*o1**2)*sin(t2)/(l1*l2*(cos(t2)**2 - 2))]])
 
@@ -63,7 +63,7 @@ def test_two_dof_joints():
     method.form_eoms()
     MM = method.mass_matrix
     forcing = method.forcing
-    rhs = MM.inv() * forcing
+    rhs = MM.LUsolve(forcing)
     assert expand(rhs[0]) == expand((-k1 * q1 - c1 * u1 + k2 * q2 + c2 * u2)/m)
     assert expand(rhs[1]) == expand((k1 * q1 + c1 * u1 - 2 * k2 * q2 - 2 *
                                     c2 * u2) / m)
