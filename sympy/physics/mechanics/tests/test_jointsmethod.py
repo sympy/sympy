@@ -16,7 +16,7 @@ def test_jointsmethod():
     P.apply_force(g*P.y)
     method = JointsMethod(P, Pin)
     assert method.frame == P.frame
-    assert method.bodylist == [C, P]
+    assert method.bodies == [C, P]
     assert method.forcelist == [(P.masscenter, g*P.frame.y)]
     assert method.q == [theta]
     assert method.u == [omega]

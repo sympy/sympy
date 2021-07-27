@@ -1,9 +1,10 @@
 from sympy.physics.mechanics import Body, Lagrangian, KanesMethod
+from sympy.physics.mechanics.method import _Methods
 
 __all__ = ['JointsMethod']
 
 
-class JointsMethod(object):
+class JointsMethod(_Methods):
     """Method for formulating the equations of motion using a set of interconnected bodies with joints.
 
     Parameters
@@ -19,7 +20,7 @@ class JointsMethod(object):
 
     q, u : Matrix
         Matrices of the generalized coordinates and speeds
-    bodylist : iterable
+    bodies : iterable
         Iterable of Body objects in the system.
     forcelist : iterable
         Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
@@ -85,7 +86,7 @@ class JointsMethod(object):
         self._method = None
 
     @property
-    def bodylist(self):
+    def bodies(self):
         return self._bodylist
 
     @property
