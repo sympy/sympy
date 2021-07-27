@@ -531,7 +531,7 @@ class KanesMethod(_Methods):
             Must be either a non-empty iterable of tuples or None which corresponds
             to a system with no constraints.
         """
-        if bodies = None:
+        if bodies is None:
             bodies = self.bodylist
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
