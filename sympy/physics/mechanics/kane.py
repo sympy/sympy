@@ -506,7 +506,7 @@ class KanesMethod(_Methods):
         result = linearizer.linearize(**kwargs)
         return result + (linearizer.r,)
 
-    def kanes_equations(self, bodies, loads=None):
+    def kanes_equations(self, bodies=None, loads=None):
         """ Method to form Kane's equations, Fr + Fr* = 0.
 
         Explanation
@@ -531,6 +531,8 @@ class KanesMethod(_Methods):
             Must be either a non-empty iterable of tuples or None which corresponds
             to a system with no constraints.
         """
+        if bodies = None:
+            bodies = self.bodylist
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
                     'kinematic differential equations to use this method.')
@@ -655,3 +657,7 @@ class KanesMethod(_Methods):
     @property
     def forcelist(self):
         return self._forcelist
+
+    @property
+    def bodies(self):
+        return self._bodylist

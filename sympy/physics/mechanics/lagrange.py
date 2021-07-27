@@ -470,7 +470,3 @@ class LagrangesMethod(_Methods):
     @property
     def forcelist(self):
         return self._forcelist
-
-    @property
-    def bodylist(self):
-        return self._bodies

@@ -12,7 +12,7 @@ class _Methods(ABC):
         pass
 
     @abstractmethod
-    def bodylist(self):
+    def bodies(self):
         pass
 
     @abstractmethod
