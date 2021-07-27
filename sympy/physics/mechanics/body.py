@@ -162,7 +162,61 @@ class Body(RigidBody, Particle):  # type: ignore
         return self.frame.z
 
     def kinetic_energy(self, frame):
-        """Kinetic energy of the body."""
+        """Kinetic energy of the body.
+
+        Explanation
+        ===========
+
+        The kinetic energy, T, of a Body(particle), P, is given by
+
+        'T = 1/2 m v^2'
+
+        where m is the mass of body P, and v is the velocity of the
+        particle in the supplied ReferenceFrame.
+
+        The kinetic energy, T, of a Body(rigid body), B, is given by
+
+        'T = 1/2 (I omega^2 + m v^2)'
+
+        where I and m are the central inertia dyadic and mass of body B,
+        respectively, omega is the body's angular velocity and v is the
+        velocity of the body's mass center in the supplied ReferenceFrame.
+
+        Parameters
+        ==========
+
+        frame : ReferenceFrame
+            The Body's angular velocity and the velocity of it's mass
+            center are typically defined with respect to an inertial frame but
+            any relevant frame in which the velocities are known can be supplied.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Body, ReferenceFrame, outer
+        >>> from sympy import symbols
+        >>> m, v, r, omega = symbols('m v r omega')
+        >>> N = ReferenceFrame('N')
+        >>> O = Point('O')
+        >>> P = Body('P', masscenter=O, mass=m)
+        >>> P.masscenter.set_vel(N, v * N.y)
+        >>> P.kinetic_energy(N)
+        m*v**2/2
+
+        >>> N = ReferenceFrame('N')
+        >>> b = ReferenceFrame('b')
+        >>> b.set_ang_vel(N, omega * b.x)
+        >>> P = Point('P')
+        >>> P.set_vel(N, v * N.x)
+        >>> I = outer (b.x, b.x)
+        >>> inertia_tuple = (I, P)
+        >>> B = Body('B', masscenter=P, frame=b, mass=m, central_inertia=inertia_tuple)
+        >>> B.kinetic_energy(N)
+        m*v**2/2 + omega**2/2
+
+        """
+        if isinstance(frame, Body):
+            frame = Body.frame
         if self.is_particle:
             return (self.mass / sympify(2) * self.masscenter_vel(frame) &
                 self.masscenter_vel(frame))
