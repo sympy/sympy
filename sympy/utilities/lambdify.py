@@ -857,9 +857,11 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
-    if cse != False:
-        from sympy.simplify.cse_main import cse, cse_minimize_memory
-        cses, _expr = cse(expr, as_list=False, postprocess=cse_minimize_memory)
+    if cse == True:
+        from sympy.simplify.cse_main import cse
+        cses, _expr = cse(expr, as_list=False)
+    elif cse != False:
+        cses, _expr = cse(expr)
     else:
         cses, _expr = (), expr
     funcstr = funcprinter.doprint(funcname, args, _expr, cses=cses)
