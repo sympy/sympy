@@ -806,7 +806,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     del temp
 
     if optimizations is None:
-        optimizations = list()
+        optimizations = []
     elif optimizations == 'basic':
         optimizations = basic_optimizations
 
