@@ -971,6 +971,13 @@ def test_issue_21038():
     assert limit(sin(pi*x)/(3*x - 12), x, 4) == pi/3
 
 
+def test_issue_20578():
+    expr = abs(x) * sin(1/x)
+    assert limit(expr,x,0,'+') == 0
+    assert limit(expr,x,0,'-') == 0
+    assert limit(expr,x,0,'+-') == 0
+
+
 def test_issue_21530():
     assert limit(sinh(n + 1)/sinh(n), n, oo) == E
 
