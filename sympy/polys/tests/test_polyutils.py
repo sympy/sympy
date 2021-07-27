@@ -1,7 +1,7 @@
 """Tests for useful utilities for higher level polynomial classes. """
 
 from sympy import (S, Integer, sin, cos, sqrt, symbols, pi,
-    Eq, Integral, exp, Mul)
+    Eq, Integral, exp, Mul, Poly, Symbol)
 from sympy.testing.pytest import raises
 
 from sympy.polys.polyutils import (
@@ -286,3 +286,7 @@ def test_dict_from_expr():
         ({(0,): -Integer(1), (1,): Integer(1)}, (x,))
     raises(PolynomialError, lambda: dict_from_expr(A*B - B*A))
     raises(PolynomialError, lambda: dict_from_expr(S.true))
+
+
+def test_issue_19353():
+    assert Poly(Symbol('\n1'))
