@@ -695,7 +695,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
 
 
 def cse(exprs, symbols=None, optimizations=None, postprocess=None,
-        order='canonical', ignore=(), as_list=True):
+        order='canonical', ignore=(), list=True):
     """ Perform common subexpression elimination on an expression.
 
     Parameters
@@ -726,7 +726,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         concern, use the setting order='none'.
     ignore : iterable of Symbols
         Substitutions containing any Symbol from ``ignore`` will be ignored.
-    as_list : bool, (default True)
+    list : bool, (default True)
         Returns expression in list or else with same type as input (when False).
 
     Returns
@@ -771,17 +771,17 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     ([(x0, x + 1)], [x0*y**2, 3*x0*y**2])
 
     The default return value for the reduced expression(s) is a list, even if there is only
-    one expression. The `as_list` flag preserves the type of the input in the output:
+    one expression. The `list` flag preserves the type of the input in the output:
 
     >>> cse(x)
     ([], [x])
-    >>> cse(x, as_list=False)
+    >>> cse(x, list=False)
     ([], x)
     """
     from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
                                 SparseMatrix, ImmutableSparseMatrix)
 
-    if not as_list:
+    if not list:
         return _cse_homogeneous(exprs,
             symbols=symbols, optimizations=optimizations,
             postprocess=postprocess, order=order, ignore=ignore)
@@ -879,10 +879,11 @@ def _cse_homogeneous(exprs, **kwargs):
 
     Examples
     ========
+
     >>> from sympy.simplify.cse_main import cse
     >>> from sympy import cos, Tuple, Matrix
     >>> from sympy.abc import x
-    >>> output = lambda x: type(cse(x, as_list=False)[1])
+    >>> output = lambda x: type(cse(x, list=False)[1])
     >>> output(1)
     <class 'sympy.core.numbers.One'>
     >>> output('cos(x)')

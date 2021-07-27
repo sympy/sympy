@@ -561,8 +561,8 @@ def test_cse_minimize_memory():
     r.reverse()
     assert eqs == [i.subs(r) for i in e]
 
-def test_cse_as_list():
-    _cse = lambda x: cse(x, as_list=False)
+def test_cse_list():
+    _cse = lambda x: cse(x, list=False)
     assert _cse(x) == ([], x)
     assert _cse('x') == ([], 'x')
     it = [x]

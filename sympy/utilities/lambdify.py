@@ -343,7 +343,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         creation of the 'lambdify' function slower, however.
 
         When ``True``, ``sympy.simplify.cse`` is used, otherwise (the default)
-        the user may pass a function matching the signature ``cse``.
+        the user may pass a function matching the ``cse`` signature.
 
 
     Examples
@@ -859,7 +859,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
 
     if cse == True:
         from sympy.simplify.cse_main import cse
-        cses, _expr = cse(expr, as_list=False)
+        cses, _expr = cse(expr, list=False)
     elif callable(cse):
         cses, _expr = cse(expr)
     else:
