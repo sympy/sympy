@@ -4,6 +4,7 @@ from sympy import Add
 from sympy.core import Function, S, sympify, pi, I
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
+from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import log, exp_polar
 from sympy.functions.elementary.miscellaneous import sqrt
 
@@ -359,7 +360,7 @@ class polylog(Function):
 
         z0 = z.subs(x, 0)
         if z0 is S.NaN:
-            z0 = z.limit(x, 0, dir='-' if cdir < 0 else '+')
+            z0 = z.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
 
         if z0.is_zero:
             # In case of powers less than 1, number of terms need to be computed

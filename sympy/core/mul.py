@@ -1881,10 +1881,10 @@ class Mul(Expr, AssocOp):
                 else:
                     raise ValueError
 
-            n0 = sum(t[1] for t in ords)
+            n0 = sum(t[1] for t in ords if t[1].is_number)
             facs = []
             for t, m in ords:
-                n1 = ceiling(n - n0 + m)
+                n1 = ceiling(n - n0 + (m if m.is_number else 0))
                 s = t.nseries(x, n=n1, logx=logx, cdir=cdir)
                 ns = s.getn()
                 if ns is not None:

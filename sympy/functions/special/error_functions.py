@@ -5,6 +5,7 @@ from sympy.core import Add, S, sympify, cacheit, pi, I, Rational
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial, factorial2, RisingFactorial
+from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.exponential import exp, log
@@ -2024,7 +2025,7 @@ class Ci(TrigonometricIntegral):
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.NaN:
-            arg0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
         if arg0.is_zero:
             return S.EulerGamma
         elif arg0.is_finite:
@@ -2151,7 +2152,7 @@ class Shi(TrigonometricIntegral):
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.NaN:
-            arg0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
         if arg0.is_zero:
             return arg
         elif not arg0.is_infinite:
@@ -2269,7 +2270,7 @@ class Chi(TrigonometricIntegral):
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.NaN:
-            arg0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
         if arg0.is_zero:
             return S.EulerGamma
         elif arg0.is_finite:
@@ -2461,7 +2462,7 @@ class fresnels(FresnelIntegral):
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.ComplexInfinity:
-            arg0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
         if arg0.is_zero:
             return pi*arg**3/6
         elif arg0 in [S.Infinity, S.NegativeInfinity]:
@@ -2617,7 +2618,7 @@ class fresnelc(FresnelIntegral):
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.ComplexInfinity:
-            arg0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
         if arg0.is_zero:
             return arg
         elif arg0 in [S.Infinity, S.NegativeInfinity]:

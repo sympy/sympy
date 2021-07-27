@@ -1629,6 +1629,8 @@ class Pow(Expr):
 
         f = b.as_leading_term(x, logx=logx)
         g = (b/f - S.One).cancel(expand=False)
+        if not m.is_number:
+            raise NotImplementedError()
         maxpow = n - m*e
 
         if maxpow.is_negative:
@@ -1695,7 +1697,7 @@ class Pow(Expr):
             k += S.One
 
         if (not e.is_integer and m.is_zero and f.is_real
-            and f.is_negative and im((b - f).dir(x, cdir)) < 0):
+            and f.is_negative and im((b - f).dir(x, cdir)).is_negative):
             inco, inex = coeff_exp(f**e*exp(-2*e*S.Pi*I), x)
         else:
             inco, inex = coeff_exp(f**e, x)
@@ -1732,7 +1734,7 @@ class Pow(Expr):
         else:
             f = b.as_leading_term(x, logx=logx, cdir=cdir)
             if (not e.is_integer and f.is_constant() and f.is_real
-                and f.is_negative and im((b - f).dir(x, cdir)) < 0):
+                and f.is_negative and im((b - f).dir(x, cdir)).is_negative):
                 return self.func(f, e) * exp(-2 * e * S.Pi * I)
             return self.func(f, e)
 

@@ -478,6 +478,7 @@ class sin(TrigonometricFunction):
         return sin(arg)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy import re
         from sympy.calculus.util import AccumBounds
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
@@ -486,7 +487,7 @@ class sin(TrigonometricFunction):
             lt = (arg - n*S.Pi).as_leading_term(x)
             return ((-1)**n)*lt
         if x0 is S.ComplexInfinity:
-            x0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
+            x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
         if x0 in [S.Infinity, S.NegativeInfinity]:
             return AccumBounds(-1, 1)
         return self.func(x0) if x0.is_finite else self
@@ -934,6 +935,7 @@ class cos(TrigonometricFunction):
         return cos(arg)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy import re
         from sympy.calculus.util import AccumBounds
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
@@ -942,7 +944,7 @@ class cos(TrigonometricFunction):
             lt = (arg - n*S.Pi + S.Pi/2).as_leading_term(x)
             return ((-1)**n)*lt
         if x0 is S.ComplexInfinity:
-            x0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
+            x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
         if x0 in [S.Infinity, S.NegativeInfinity]:
             return AccumBounds(-1, 1)
         return self.func(x0) if x0.is_finite else self
