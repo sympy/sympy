@@ -301,7 +301,7 @@ def test_classify_ode():
     #This is for new behavior of classify_ode when called internally with default, It should
     # return the first hint which matches therefore, 'ordered_hints' key will not be there.
     assert sorted(classify_ode(Eq(f(x).diff(x), 0), f(x), dict=True).keys()) == \
-        ['default', 'nth_algebraic', 'nth_algebraic_Integral', 'order']
+        ['default', 'order', 'separable', 'separable_Integral']
     a = classify_ode(2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x), dict=True, hint='Bernoulli')
     assert sorted(a.keys()) == ['Bernoulli', 'Bernoulli_Integral', 'default', 'order', 'ordered_hints']
 

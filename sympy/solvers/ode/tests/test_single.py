@@ -1014,7 +1014,7 @@ def _get_examples_ode_sol_factorable():
     # This is from issue: https://github.com/sympy/sympy/issues/9446
     'fact_18':{
         'eq': Eq(f(2 * x), sin(Derivative(f(x)))),
-        'sol': [Eq(f(x), C1 + pi*x - Integral(asin(f(2*x)), x)), Eq(f(x), C1 + Integral(asin(f(2*x)), x))],
+        'sol': [Eq(f(x), C1 + Integral(pi - asin(f(2*x)), x)), Eq(f(x), C1 + Integral(asin(f(2*x)), x))],
         'checkodesol_XFAIL':True
     },
 
