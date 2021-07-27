@@ -136,7 +136,7 @@ class JointsMethod(_Methods):
 
     def _generate_loadlist(self):
         load_list = []
-        for body in self.bodylist:
+        for body in self.bodies:
             load_list.extend(body.loads)
         return load_list
 
@@ -197,10 +197,10 @@ class JointsMethod(_Methods):
 
         if issubclass(method, KanesMethod): #KanesMethod or similar
             self._method = method(self.frame, q_ind=self.q, u_ind=self.u, kd_eqs=self.kdes,
-                                    forcelist=self.forcelist, bodies=self.bodylist)
+                                    forcelist=self.forcelist, bodies=self.bodies)
         if issubclass(method, LagrangesMethod): #LagrangesMethod or similar
-            L = Lagrangian(self.frame, *self.bodylist)
-            self._method = method(L, self.q, self.forcelist, self.bodylist, self.frame)
+            L = Lagrangian(self.frame, *self.bodies)
+            self._method = method(L, self.q, self.forcelist, self.bodies, self.frame)
         soln = self.method._form_eoms()
         return soln
 
