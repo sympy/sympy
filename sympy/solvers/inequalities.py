@@ -18,7 +18,6 @@ from sympy.polys.polyutils import _nsort
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
 import random
-from typing import List
 
 
 def solve_poly_inequality(poly, rel):
@@ -1014,7 +1013,6 @@ def reduce_inequalities(inequalities, symbols=[]):
 
 
 def _pivot(M, i, j):
-    p = M[i, j]
     MM = Matrix.zeros(M.rows, M.cols)
     for ii in range(M.rows):
         for jj in range(M.cols):
