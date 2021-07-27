@@ -860,7 +860,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
     if cse == True:
         from sympy.simplify.cse_main import cse
         cses, _expr = cse(expr, as_list=False)
-    elif cse:  # assume callable
+    elif callable(cse):
         cses, _expr = cse(expr)
     else:
         cses, _expr = (), expr
