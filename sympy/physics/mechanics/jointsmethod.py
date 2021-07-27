@@ -1,4 +1,4 @@
-from sympy.physics.mechanics import Body, Lagrangian, KanesMethod
+from sympy.physics.mechanics import Body, Lagrangian, KanesMethod, LagrangesMethod
 from sympy.physics.mechanics.method import _Methods
 
 __all__ = ['JointsMethod']
@@ -169,10 +169,10 @@ class JointsMethod(_Methods):
 
         """
 
-        try: #KanesMethod or similar
+        if issubclass(method, KanesMethod): #KanesMethod or similar
             self._method = method(self.frame, q_ind=self.q, u_ind=self.u, kd_eqs=self.kdes,
                                     forcelist=self.forcelist, bodies=self.bodylist)
-        except TypeError: #LagrangesMethod or similar
+        if issubclass(method, LagrangesMethod): #LagrangesMethod or similar
             L = Lagrangian(self.frame, *self.bodylist)
             self._method = method(L, self.q, self.forcelist, self.bodylist, self.frame)
         soln = self.method._form_eoms()
