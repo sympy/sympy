@@ -31,7 +31,7 @@ class KanesMethod(_Methods):
 
     q, u : Matrix
         Matrices of the generalized coordinates and speeds
-    bodylist : iterable
+    bodies : iterable
         Iterable of Point and RigidBody objects in the system.
     forcelist : iterable
         Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
@@ -532,7 +532,7 @@ class KanesMethod(_Methods):
             to a system with no constraints.
         """
         if bodies is None:
-            bodies = self.bodylist
+            bodies = self.bodies
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
                     'kinematic differential equations to use this method.')
