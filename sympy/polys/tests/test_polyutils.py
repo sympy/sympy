@@ -1,7 +1,7 @@
 """Tests for useful utilities for higher level polynomial classes. """
 
 from sympy import (S, Integer, sin, cos, sqrt, symbols, pi,
-    Eq, Integral, exp, Mul, Poly, Symbol)
+    Eq, Integral, exp, Mul, Poly, Symbol, Matrix, Trace, simplify, Rational)
 from sympy.testing.pytest import raises
 
 from sympy.polys.polyutils import (
@@ -289,4 +289,6 @@ def test_dict_from_expr():
 
 
 def test_issue_19353():
+    m = Matrix([[30, 2], [3, 4]])
     assert Poly(Symbol('\n1'))
+    assert simplify(1/Trace(m)) == Rational('1/34')
