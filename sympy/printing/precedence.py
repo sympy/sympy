@@ -156,8 +156,6 @@ PRECEDENCE_TRADITIONAL['Complement'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['SymmetricDifference'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['ProductSet'] = PRECEDENCE['Xor']
 
-PRECEDENCE_TRADITIONAL["CG"] = PRECEDENCE["Pow"] - 1
-
 
 def precedence_traditional(item):
     """Returns the precedence of a given object according to the

@@ -10,6 +10,7 @@ from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.wigner import clebsch_gordan, wigner_3j, wigner_6j, wigner_9j
+from sympy.printing.precedence import PRECEDENCE
 
 __all__ = [
     'CG',
@@ -202,6 +203,7 @@ class CG(Wigner3j):
         in P.A. Zyla *et al.* (Particle Data Group), Prog. Theor. Exp. Phys.
         2020, 083C01 (2020).
     """
+    precedence = PRECEDENCE["Pow"] - 1
 
     def doit(self, **hints):
         if self.is_symbolic:
