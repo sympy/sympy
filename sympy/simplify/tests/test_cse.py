@@ -546,13 +546,13 @@ def test_unevaluated_mul():
     eq = Mul(x + y, x + y, evaluate=False)
     assert cse(eq) == ([(x0, x + y)], [x0**2])
 
-def test_cse_minimize_memory():
-    from sympy.simplify.cse_main import cse_minimize_memory
+def test_cse_release_variables():
+    from sympy.simplify.cse_main import cse_release_variables
     _0, _1, _2, _3, _4 = symbols('_:5')
     eqs = [(x + y - 1)**2, x,
         x + y, (x + y)/(2*x + 1) + (x + y - 1)**2,
         (2*x + 1)**(x + y)]
-    r, e = cse(eqs, postprocess=cse_minimize_memory)
+    r, e = cse(eqs, postprocess=cse_release_variables)
     # this can change in keeping with the intention of the function
     assert r, e == ([
     (x0, x + y), (x1, (x0 - 1)**2), (x2, 2*x + 1),

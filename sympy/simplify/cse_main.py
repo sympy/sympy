@@ -87,7 +87,7 @@ def cse_separate(r, e):
     return [reps_toposort(r), e]
 
 
-def cse_minimize_memory(r, e):
+def cse_release_variables(r, e):
     """
     Return tuples giving ``(a, b)`` where ``a`` is a symbol and ``b`` is
     either an expression or None. The value of None is used when a
@@ -100,10 +100,10 @@ def cse_minimize_memory(r, e):
     ========
 
     >>> from sympy import cse
-    >>> from sympy.simplify.cse_main import cse_minimize_memory
+    >>> from sympy.simplify.cse_main import cse_release_variables
     >>> from sympy.abc import x, y
     >>> eqs = [(x + y - 1)**2, x, x + y, (x + y)/(2*x + 1) + (x + y - 1)**2, (2*x + 1)**(x + y)]
-    >>> defs, rvs = cse_minimize_memory(*cse(eqs))
+    >>> defs, rvs = cse_release_variables(*cse(eqs))
     >>> for i in defs:
     ...   print(i)
     ...

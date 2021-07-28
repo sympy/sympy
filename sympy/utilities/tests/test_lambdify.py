@@ -1413,8 +1413,8 @@ def test_lambdify_cse():
         return (), exprs
 
     def minmem(exprs):
-        from sympy.simplify.cse_main import cse_minimize_memory, cse
-        return cse(exprs, postprocess=cse_minimize_memory)
+        from sympy.simplify.cse_main import cse_release_variables, cse
+        return cse(exprs, postprocess=cse_release_variables)
 
     class Case:
         def __init__(self, *, args, exprs, num_args, requires_numpy=False):
