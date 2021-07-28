@@ -31,7 +31,7 @@ class JointsMethod(_Methods):
         The system's forcing vector
     mass_matrix_full : Matrix
         The "mass matrix" for the u's and q's
-    forcing_full : Matrix
+    forcing_full : Matrix, shape(2*n, 1)
         The "forcing vector" for the u's and q's
     method : KanesMethod or Lagrange's method
         Method's object.
