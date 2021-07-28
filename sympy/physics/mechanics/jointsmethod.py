@@ -29,7 +29,7 @@ class JointsMethod(_Methods):
         The system's mass matrix
     forcing : Matrix
         The system's forcing vector
-    mass_matrix_full : Matrix
+    mass_matrix_full : Matrix, shape(2*n, 2*n)
         The "mass matrix" for the u's and q's
     forcing_full : Matrix, shape(2*n, 1)
         The "forcing vector" for the u's and q's
