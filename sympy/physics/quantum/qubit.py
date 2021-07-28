@@ -798,7 +798,6 @@ def measure_all_oneshot(qubit, format='sympy'):
         import random
         me = str(qubit)
         state = []
-        prob=[]
         while('|'in me or '>' in me or 'I' in me):
             if ('|'in me or '>' in me):
                 start = me.find('|')
