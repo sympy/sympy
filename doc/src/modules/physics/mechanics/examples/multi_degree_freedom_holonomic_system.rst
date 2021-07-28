@@ -12,10 +12,10 @@ some of which are specified forces and torques. The system is shown below:
 
 The system will be modeled using ``JointsMethod``. First we need to create the
 ``dynamicsymbols`` needed to describe the system as shown in the above diagram.
-In this case, the generalized coordinates `q1` represent lateral distance of block from wall,
-`q2` represents ngle of the compound pendulum from vertical, `q3` represents angle of the simple
-pendulum from the compound pendulum. The generalized speeds `u1` represents lateral speed of block,
-`u2` represents lateral speed of compound pendulum and `u3` represents angular speed of C relative to B.
+In this case, the generalized coordinates :math:`q_1` represent lateral distance of block from wall,
+:math:`q_2` represents ngle of the compound pendulum from vertical, :math:`q_3`  represents angle of the simple
+pendulum from the compound pendulum. The generalized speeds :math:`u_1` represents lateral speed of block,
+:math:`u_2` represents lateral speed of compound pendulum and :math:`u_3` represents angular speed of C relative to B.
 
 We also create some ``symbols`` to represent the length and
 mass of the pendulum, as well as gravity and others. ::
@@ -65,14 +65,7 @@ With the problem setup, the equations of motion can be generated using the
 ``JointsMethod`` class with KanesMethod in backend. ::
 
     >>> method = JointsMethod(wall, slider, rev1, rev2)
-    >>> method.form_eoms()
-    (Matrix([
-    [                                                               -c*u1(t) - k*q1(t) + F(t)],
-    [                                   -2*g*l*mb*sin(q2(t))/3 - 2*g*l*mc*sin(q2(t))/3 + T(t)],
-    [-g*l*mc*(sin(q2(t))*cos(q3(t)) + sin(q3(t))*cos(q2(t))) - g*l*mc*sin(q2(t))/3 + kT*q3(t)]]), Matrix([
-    [2*l*mb*u2(t)**2*sin(q2(t))/3 - l*mc*(-sin(q2(t))*cos(q3(t)) - sin(q3(t))*cos(q2(t)))*(u2(t) + u3(t))*u3(t) - mc*(l*(-sin(q2(t))*sin(q3(t)) + cos(q2(t))*cos(q3(t))) + l*cos(q2(t))/3)*Derivative(u3(t), t) + mc*(2*l*u2(t)/3 + l*u3(t)/3)*u2(t)*sin(q2(t)) - (2*l*mb*cos(q2(t))/3 + 2*l*mc*cos(q2(t))/3)*Derivative(u2(t), t) - (ma + mb + mc)*Derivative(u1(t), t)],
-    [                                                                                                                               2*l**2*mc*(u2(t) + u3(t))*u3(t)*sin(q3(t))/3 - mc*(2*l**2*cos(q3(t))/3 + 2*l**2/9)*Derivative(u3(t), t) - (2*l*mb*cos(q2(t))/3 + 2*l*mc*cos(q2(t))/3)*Derivative(u1(t), t) - (IBzz + 4*l**2*mb/9 + 4*l**2*mc/9)*Derivative(u2(t), t)],
-    [                                                l**2*mc*(u2(t) + u3(t))*u3(t)*sin(q3(t))/3 - l*mc*(2*l*u2(t)/3 + l*u3(t)/3)*u2(t)*sin(q3(t)) - mc*(l*(-sin(q2(t))*sin(q3(t)) + cos(q2(t))*cos(q3(t))) + l*cos(q2(t))/3)*Derivative(u1(t), t) - mc*(2*l**2*cos(q3(t))/3 + 2*l**2/9)*Derivative(u2(t), t) - mc*(2*l**2*cos(q3(t))/3 + 10*l**2/9)*Derivative(u3(t), t)]]))
+    >>> fr, frstar = method.form_eoms()
 
     >>> method.mass_matrix_full
     Matrix([
