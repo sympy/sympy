@@ -27,7 +27,7 @@ class JointsMethod(_Methods):
         describing the forces on the system.
     mass_matrix : Matrix, shape(n, n)
         The system's mass matrix
-    forcing : Matrix
+    forcing : Matrix, shape(n, 1)
         The system's forcing vector
     mass_matrix_full : Matrix, shape(2*n, 2*n)
         The "mass matrix" for the u's and q's
