@@ -21,8 +21,8 @@ def test_one_dof():
     pa = Particle('pa', P, m)
     BL = [pa]
 
-    KM = KanesMethod(N, [q], [u], kd, bodies=BL, forcelist=FL)
-    KM.kanes_equations()
+    KM = KanesMethod(N, [q], [u], kd)
+    KM.kanes_equations(BL, FL)
 
     assert KM.bodies == BL
 

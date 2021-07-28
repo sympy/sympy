@@ -533,8 +533,11 @@ class KanesMethod(_Methods):
         """
         if bodies is None:
             bodies = self.bodies
-        if  loads is None and self._forcelist is not None and self._forcelist != []:
-            loads = self._forcelist
+        if loads == []:
+            loads = None
+        if  loads is None and self._forcelist is not None:
+            if self._forcelist != []:
+                loads = self._forcelist
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
                     'kinematic differential equations to use this method.')
