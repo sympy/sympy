@@ -50,8 +50,8 @@ class JointsMethod(_Methods):
     >>> Wall = Body('W')
     >>> Body = Body('B')
     >>> J = PrismaticJoint('J', Wall, Body, coordinates=x, speeds=v)
-    >>> Wall.apply_force(c*u*Wall.x, reaction_body=Body)
-    >>> W.apply_force(k*q*Wall.x, reaction_body=Body)
+    >>> Wall.apply_force(c*v*Wall.x, reaction_body=Body)
+    >>> Wall.apply_force(k*x*Wall.x, reaction_body=Body)
     >>> method = JointsMethod(Wall, J)
     >>> method.form_eoms()
     (Matrix([[-c*v(t) - k*x(t)]]), Matrix([[-B_mass*Derivative(v(t), t)]]))
@@ -60,7 +60,7 @@ class JointsMethod(_Methods):
     >>> rhs = M.LUsolve(F)
     >>> rhs
     Matrix([
-    [                     x(t)],
+    [                     v(t)],
     [(-c*v(t) - k*x(t))/B_mass]])
 
     Notes
@@ -174,27 +174,27 @@ class JointsMethod(_Methods):
         This is a simple example for a one degree of freedom translational
         spring-mass-damper.
 
+        >>> from sympy import S, symbols
         >>> from sympy.physics.mechanics import LagrangesMethod, dynamicsymbols, Body
         >>> from sympy.physics.mechanics import PrismaticJoint, JointsMethod
-        >>> from sympy import symbols
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
         >>> m, k, b = symbols('m k b')
-        >>> B = Body('B')
-        >>> P = Body('P', mass=m)
-        >>> P.potential_energy = k * q**2 / 2.0
-        >>> J = PrismaticJoint('J', B, P, coordinates=q, speeds=qd)
-        >>> B.apply_force(b * qd * B.x, reaction_body=P)
-        >>> method = JointsMethod(B, J)
+        >>> Wall = Body('W')
+        >>> Part = Body('P', mass=m)
+        >>> Part.potential_energy = k * q**2 / S(2)
+        >>> J = PrismaticJoint('J', Wall, Part, coordinates=q, speeds=qd)
+        >>> Wall.apply_force(b * qd * Wall.x, reaction_body=Part)
+        >>> method = JointsMethod(Wall, J)
         >>> method.form_eoms(LagrangesMethod)
-        Matrix([[b*Derivative(q(t), t) + 1.0*k*q(t) + m*Derivative(q(t), (t, 2))]])
+        Matrix([[b*Derivative(q(t), t) + k*q(t) + m*Derivative(q(t), (t, 2))]])
 
         We can also solve for the states using the 'rhs' method.
 
         >>> method.rhs()
         Matrix([
-        [                    Derivative(q(t), t)],
-        [(-b*Derivative(q(t), t) - 1.0*k*q(t))/m]])
+        [                Derivative(q(t), t)],
+        [(-b*Derivative(q(t), t) - k*q(t))/m]])
 
         """
 
