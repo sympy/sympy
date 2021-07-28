@@ -9,7 +9,7 @@ Todo:
 
 import math
 
-from sympy import Integer, log, Mul, Add, Pow, conjugate
+from sympy import Integer, log, Mul, Add, Pow
 from sympy.core.basic import sympify
 from sympy.core.compatibility import SYMPY_INTS
 from sympy.matrices import Matrix, zeros
@@ -765,7 +765,7 @@ def _get_possible_outcomes(m, bits):
     return output_matrices
 
 
-def measure_all_oneshot(qubit, format='sympy'):
+def measure_all_oneshot(qubit):
     """Perform a oneshot ensemble measurement on all qubits.
 
     A oneshot measurement is equivalent to performing a measurement on a
@@ -790,20 +790,19 @@ def measure_all_oneshot(qubit, format='sympy'):
         The qubit that the system collapsed to upon measurement.
     """
     import random
-    m = qubit_to_matrix(qubit)
-
-    if format == 'sympy':
-        m = m.normalized()
-        random_number = random.random()
-        total = 0
-        result = 0
-        for i in m:
-            total += i*i.conjugate()
-            if total > random_number:
-                break
-            result += 1
-        return Qubit(IntQubit(result, int(math.log(max(m.shape), 2) + .1)))
-    else:
-        raise NotImplementedError(
-            "This function can't handle non-sympy matrix formats yet"
-        )
+    me = str(qubit)
+    state = []
+    prob=[]
+    while('|'in me or '>' in me or 'I' in me):
+        if ('|'in me or '>' in me):
+            start = me.find('|')
+            end = me.find('>')
+            newstring = '1'
+            state.append(me[start+1:end])
+            me = me[:start] + newstring + me[end+1:]
+        else:
+            starti = me.find('I')
+            newstringi = 'sqrt(-1)'
+            me = me[:starti] + newstringi + me[starti+1:]
+    random_number = random.randrange(len(state))
+    return '|{}>'.format(state[random_number])
