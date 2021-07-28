@@ -152,7 +152,7 @@ def _set_function(f, self): # noqa:F811
         n = self.size
     except ValueError:
         n = None
-    if n == 0:        
+    if n == 0:
         return S.EmptySet
     if not isinstance(f.expr, Expr):
         return
