@@ -9,7 +9,7 @@ Todo:
 
 import math
 
-from sympy import Integer, log, Mul, Add, Pow, conjugate
+from sympy import Integer, log, Mul, Add, Pow, conjugate, sqrt
 from sympy.core.basic import sympify
 from sympy.core.compatibility import SYMPY_INTS
 from sympy.matrices import Matrix, zeros
@@ -530,7 +530,7 @@ def qubit_to_matrix(qubit, format='sympy'):
 #-----------------------------------------------------------------------------
 
 
-def measure_all(qubit, format='sympy', normalize=True):
+def measure_all(qubit):
     """Perform an ensemble measurement of all qubits.
 
     Parameters
@@ -562,28 +562,33 @@ def measure_all(qubit, format='sympy', normalize=True):
         H(0)*H(1)*|00>
         >>> q = qapply(c)
         >>> measure_all(q)
-        [(|00>, 1/4), (|01>, 1/4), (|10>, 1/4), (|11>, 1/4)]
+        |00>/2 + |01>/2 + |10>/2 + |11>/2
+        [{'00': 0.25}, {'01': 0.25}, {'10': 0.25}, {'11': 0.25}]
     """
-    m = qubit_to_matrix(qubit, format)
-
-    if format == 'sympy':
-        results = []
-
-        if normalize:
-            m = m.normalized()
-
-        size = max(m.shape)  # Max of shape to account for bra or ket
-        nqubits = int(math.log(size)/math.log(2))
-        for i in range(size):
-            if m[i] != 0.0:
-                results.append(
-                    (Qubit(IntQubit(i, nqubits=nqubits)), m[i]*conjugate(m[i]))
-                )
-        return results
-    else:
-        raise NotImplementedError(
-            "This function can't handle non-sympy matrix formats yet"
-        )
+    print(qubit)
+    me = str(qubit)
+    state = []
+    prob=[]
+    while('|'in me or '>' in me or 'I' in me):
+        if ('|'in me or '>' in me):
+            start = me.find('|')
+            end = me.find('>')
+            newstring = '1'
+            state.append(me[start+1:end])
+            me = me[:start] + newstring + me[end+1:]
+        else:
+            starti = me.find('I')
+            newstringi = 'sqrt(-1)'
+            me = me[:starti] + newstringi + me[starti+1:]
+    me = me.split()
+    while('-'in me or '+' in me):
+        if('-' in me):
+            me.remove('-')
+        elif('+' in me):
+            me.remove('+')
+    for i in range(len(state)):
+        prob.append({state[i]:eval(me[i])*eval(me[i])})
+    return prob
 
 
 def measure_partial(qubit, bits, format='sympy', normalize=True):
