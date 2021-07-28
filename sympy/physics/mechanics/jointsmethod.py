@@ -10,8 +10,8 @@ class JointsMethod(_Methods):
     Parameters
     ==========
 
-    body : Body or ReferenceFrame
-        The inertial(Newtonion) frame.
+    newtonion : Body or ReferenceFrame
+        The newtonion(inertial) frame.
     *joints : Joint
         The joints in the system
 
@@ -71,11 +71,11 @@ class JointsMethod(_Methods):
 
     """
 
-    def __init__(self, body, *joints):
-        if isinstance(body, Body):
-            self.frame = body.frame
+    def __init__(self, newtonion, *joints):
+        if isinstance(newtonion, Body):
+            self.frame = newtonion.frame
         else:
-            self.frame = body
+            self.frame = newtonion
 
         self._joints = joints
         self._bodylist = self._generate_bodylist()

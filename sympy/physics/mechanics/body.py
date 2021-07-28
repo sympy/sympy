@@ -185,7 +185,7 @@ class Body(RigidBody, Particle):  # type: ignore
         Parameters
         ==========
 
-        frame : ReferenceFrame
+        frame : ReferenceFrame or Body
             The Body's angular velocity and the velocity of it's mass
             center are typically defined with respect to an inertial frame but
             any relevant frame in which the velocities are known can be supplied.
