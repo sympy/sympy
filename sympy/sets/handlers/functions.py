@@ -148,11 +148,15 @@ def _set_function(f, x): # noqa:F811
 @dispatch(FunctionUnion, Range)  # type: ignore # noqa:F811
 def _set_function(f, self): # noqa:F811
     from sympy.core.function import expand_mul
-    if not self:
+    try:
+        n = self.size
+    except ValueError:
+        n = None
+    if n == 0:        
         return S.EmptySet
     if not isinstance(f.expr, Expr):
         return
-    if self.size == 1:
+    if n == 1:
         return FiniteSet(f(self[0]))
     if f is S.IdentityFunction:
         return self

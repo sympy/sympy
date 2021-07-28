@@ -1621,3 +1621,6 @@ def test_issue_20379():
 def test_finiteset_simplify():
     S = FiniteSet(1, cos(1)**2 + sin(1)**2)
     assert S.simplify() == {1}
+
+def test_issue_18400():
+    assert imageset(lambda x: x*2, Range(n))
