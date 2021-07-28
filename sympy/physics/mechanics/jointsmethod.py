@@ -46,22 +46,22 @@ class JointsMethod(_Methods):
     >>> from sympy.physics.mechanics import Body, JointsMethod, PrismaticJoint
     >>> from sympy.physics.vector import dynamicsymbols
     >>> c, k = symbols('c k')
-    >>> q, u = dynamicsymbols('q u')
-    >>> W = Body('W')
-    >>> B = Body('B')
-    >>> J = PrismaticJoint('J', W, B, coordinates=q, speeds=u)
-    >>> W.apply_force(c*u*W.x, reaction_body=B)
-    >>> W.apply_force(k*q*W.x, reaction_body=B)
-    >>> method = JointsMethod(W, J)
+    >>> x, v = dynamicsymbols('x v')
+    >>> Wall = Body('W')
+    >>> Body = Body('B')
+    >>> J = PrismaticJoint('J', Wall, Body, coordinates=x, speeds=v)
+    >>> Wall.apply_force(c*u*Wall.x, reaction_body=Body)
+    >>> W.apply_force(k*q*Wall.x, reaction_body=Body)
+    >>> method = JointsMethod(Wall, J)
     >>> method.form_eoms()
-    (Matrix([[-c*u(t) - k*q(t)]]), Matrix([[-B_mass*Derivative(u(t), t)]]))
-    >>> MM = method.mass_matrix_full
-    >>> forcing = method.forcing_full
-    >>> rhs = MM.LUsolve(forcing)
+    (Matrix([[-c*v(t) - k*x(t)]]), Matrix([[-B_mass*Derivative(v(t), t)]]))
+    >>> M = method.mass_matrix_full
+    >>> F = method.forcing_full
+    >>> rhs = M.LUsolve(F)
     >>> rhs
     Matrix([
-    [                     u(t)],
-    [(-c*u(t) - k*q(t))/B_mass]])
+    [                     x(t)],
+    [(-c*v(t) - k*x(t))/B_mass]])
 
     Notes
     =====
