@@ -18,20 +18,20 @@ class JointsMethod(_Methods):
     Attributes
     ==========
 
-    q, u : Matrix
+    q, u : Matrix, shape(n, 1)
         Matrices of the generalized coordinates and speeds
     bodies : iterable
         Iterable of Body objects in the system.
     forcelist : iterable
         Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
         describing the forces on the system.
-    mass_matrix : Matrix
+    mass_matrix : Matrix, shape(n, n)
         The system's mass matrix
-    forcing : Matrix
+    forcing : Matrix, shape(n, 1)
         The system's forcing vector
-    mass_matrix_full : Matrix
+    mass_matrix_full : Matrix, shape(2*n, 2*n)
         The "mass matrix" for the u's and q's
-    forcing_full : Matrix
+    forcing_full : Matrix, shape(2*n, 1)
         The "forcing vector" for the u's and q's
     method : KanesMethod or Lagrange's method
         Method's object.
