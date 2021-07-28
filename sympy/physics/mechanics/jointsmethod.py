@@ -18,7 +18,7 @@ class JointsMethod(_Methods):
     Attributes
     ==========
 
-    q, u : Matrix
+    q, u : Matrix, shape(n, 1)
         Matrices of the generalized coordinates and speeds
     bodies : iterable
         Iterable of Body objects in the system.
