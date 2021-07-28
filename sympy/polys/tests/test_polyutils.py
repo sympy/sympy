@@ -1,7 +1,7 @@
 """Tests for useful utilities for higher level polynomial classes. """
 
 from sympy import (S, Integer, sin, cos, sqrt, symbols, pi,
-    Eq, Integral, exp, Mul, Poly, Symbol, Matrix, Trace, simplify, Rational)
+    Eq, Integral, exp, Mul, Symbol)
 from sympy.testing.pytest import raises
 
 from sympy.polys.polyutils import (
@@ -98,6 +98,11 @@ def test__sort_gens():
     assert _sort_gens([x, p, q], wrt='x', sort='q > p') == (x, q, p)
     assert _sort_gens([x, p, q], wrt='p', sort='q > x') == (p, q, x)
     assert _sort_gens([x, p, q], wrt='q', sort='p > x') == (q, p, x)
+
+    # https://github.com/sympy/sympy/issues/19353
+    n1 = Symbol('\n1')
+    assert _sort_gens([n1]) == (n1,)
+    assert _sort_gens([x, n1]) == (x, n1)
 
     X = symbols('x0,x1,x2,x10,x11,x12,x20,x21,x22')
 
@@ -286,9 +291,3 @@ def test_dict_from_expr():
         ({(0,): -Integer(1), (1,): Integer(1)}, (x,))
     raises(PolynomialError, lambda: dict_from_expr(A*B - B*A))
     raises(PolynomialError, lambda: dict_from_expr(S.true))
-
-
-def test_issue_19353():
-    m = Matrix([[30, 2], [3, 4]])
-    assert Poly(Symbol('\n1'))
-    assert simplify(1/Trace(m)) == Rational('1/34')
