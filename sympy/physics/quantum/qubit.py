@@ -530,7 +530,7 @@ def qubit_to_matrix(qubit, format='sympy'):
 #-----------------------------------------------------------------------------
 
 
-def measure_all(qubit):
+def measure_all(qubit, format='sympy'):
     """Perform an ensemble measurement of all qubits.
 
     Parameters
@@ -565,30 +565,35 @@ def measure_all(qubit):
         |00>/2 + |01>/2 + |10>/2 + |11>/2
         [{'00': 0.25}, {'01': 0.25}, {'10': 0.25}, {'11': 0.25}]
     """
-    print(qubit)
-    me = str(qubit)
-    state = []
-    prob=[]
-    while('|'in me or '>' in me or 'I' in me):
-        if ('|'in me or '>' in me):
-            start = me.find('|')
-            end = me.find('>')
-            newstring = '1'
-            state.append(me[start+1:end])
-            me = me[:start] + newstring + me[end+1:]
-        else:
-            starti = me.find('I')
-            newstringi = 'sqrt(-1)'
-            me = me[:starti] + newstringi + me[starti+1:]
-    me = me.split()
-    while('-'in me or '+' in me):
-        if('-' in me):
-            me.remove('-')
-        elif('+' in me):
-            me.remove('+')
-    for i in range(len(state)):
-        prob.append({state[i]:eval(me[i])*eval(me[i])})
-    return prob
+    if format == 'sympy':
+        print(qubit)
+        me = str(qubit)
+        state = []
+        prob=[]
+        while('|'in me or '>' in me or 'I' in me):
+            if ('|'in me or '>' in me):
+                start = me.find('|')
+                end = me.find('>')
+                newstring = '1'
+                state.append(me[start+1:end])
+                me = me[:start] + newstring + me[end+1:]
+            else:
+                starti = me.find('I')
+                newstringi = 'sqrt(-1)'
+                me = me[:starti] + newstringi + me[starti+1:]
+        me = me.split()
+        while('-'in me or '+' in me):
+            if('-' in me):
+                me.remove('-')
+            elif('+' in me):
+                me.remove('+')
+        for i in range(len(state)):
+            prob.append({state[i]:eval(me[i])*eval(me[i])})
+        return prob
+    else:
+        raise NotImplementedError(
+            "This function can't handle non-sympy matrix formats yet"
+        )
 
 
 def measure_partial(qubit, bits, format='sympy', normalize=True):
@@ -765,7 +770,7 @@ def _get_possible_outcomes(m, bits):
     return output_matrices
 
 
-def measure_all_oneshot(qubit):
+def measure_all_oneshot(qubit, format='sympy'):
     """Perform a oneshot ensemble measurement on all qubits.
 
     A oneshot measurement is equivalent to performing a measurement on a
@@ -789,19 +794,25 @@ def measure_all_oneshot(qubit):
     result : Qubit
         The qubit that the system collapsed to upon measurement.
     """
-    import random
-    me = str(qubit)
-    state = []
-    while('|'in me or '>' in me or 'I' in me):
-        if ('|'in me or '>' in me):
-            start = me.find('|')
-            end = me.find('>')
-            newstring = '1'
-            state.append(me[start+1:end])
-            me = me[:start] + newstring + me[end+1:]
-        else:
-            starti = me.find('I')
-            newstringi = 'sqrt(-1)'
-            me = me[:starti] + newstringi + me[starti+1:]
-    random_number = random.randrange(len(state))
-    return '|{}>'.format(state[random_number])
+    if format == 'sympy':
+        import random
+        me = str(qubit)
+        state = []
+        prob=[]
+        while('|'in me or '>' in me or 'I' in me):
+            if ('|'in me or '>' in me):
+                start = me.find('|')
+                end = me.find('>')
+                newstring = '1'
+                state.append(me[start+1:end])
+                me = me[:start] + newstring + me[end+1:]
+            else:
+                starti = me.find('I')
+                newstringi = 'sqrt(-1)'
+                me = me[:starti] + newstringi + me[starti+1:]
+        random_number = random.randrange(len(state))
+        return '|{}>'.format(state[random_number])
+    else:
+        raise NotImplementedError(
+            "This function can't handle non-sympy matrix formats yet"
+        )
