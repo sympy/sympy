@@ -21,7 +21,8 @@ We also create some ``symbols`` to represent the length and
 mass of the pendulum, as well as gravity and others. ::
 
     >>> from sympy import zeros, symbols
-    >>> from sympy.physics.mechanics import *
+    >>> from sympy.physics.mechanics import Body, PinJoint, PrismaticJoint, JointsMethod, inertia
+    >>> from sympy.physics.mechanics import dynamicsymbols 
     >>> q1, q2, q3, u1, u2, u3 = dynamicsymbols('q1, q2, q3, u1, u2, u3')
     >>> l, k, c, g, kT = symbols('l, k, c, g, kT')
     >>> ma, mb, mc, IBzz= symbols('ma, mb, mc, IBzz')
