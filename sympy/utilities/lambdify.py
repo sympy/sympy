@@ -173,9 +173,9 @@ def _import(module, reload=False):
 # linecache.
 _lambdify_generated_counter = 1
 
-@doctest_depends_on(modules=('numpy', 'tensorflow', ), python_version=(3,))
+@doctest_depends_on(modules=('numpy', 'tensorflow',), python_version=(3,))
 def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
-             dummify=False):
+             dummify=False, cse=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -335,6 +335,15 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         Set ``dummify=True`` to replace all arguments with dummy symbols
         (if ``args`` is not a string) - for example, to ensure that the
         arguments do not redefine any built-in names.
+
+    cse : bool, or callable, optional
+        Large expressions can be computed more efficiently when
+        common subexpressions are identified and precomputed before
+        being used multiple time. Finding the subexpressions will make
+        creation of the 'lambdify' function slower, however.
+
+        When ``True``, ``sympy.simplify.cse`` is used, otherwise (the default)
+        the user may pass a function matching the ``cse`` signature.
 
 
     Examples
@@ -847,7 +856,15 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
-    funcstr = funcprinter.doprint(funcname, args, expr)
+
+    if cse == True:
+        from sympy.simplify.cse_main import cse
+        cses, _expr = cse(expr, list=False)
+    elif callable(cse):
+        cses, _expr = cse(expr)
+    else:
+        cses, _expr = (), expr
+    funcstr = funcprinter.doprint(funcname, args, _expr, cses=cses)
 
     # Collect the module imports from the code printers.
     imp_mod_lines = []
@@ -904,7 +921,6 @@ def _module_present(modname, modlist):
         if hasattr(m, '__name__') and m.__name__ == modname:
             return True
     return False
-
 
 def _get_namespace(m):
     """
@@ -1061,8 +1077,10 @@ class _EvaluatorPrinter:
         # Used to print the generated function arguments in a standard way
         self._argrepr = LambdaPrinter().doprint
 
-    def doprint(self, funcname, args, expr):
-        """Returns the function definition code as a string."""
+    def doprint(self, funcname, args, expr, *, cses=()):
+        """
+        Returns the function definition code as a string.
+        """
         from sympy import Dummy
 
         funcbody = []
@@ -1090,7 +1108,12 @@ class _EvaluatorPrinter:
 
         funcbody.extend(unpackings)
 
-        funcbody.append('return ({})'.format(self._exprrepr(expr)))
+        funcbody.extend(['{} = {}'.format(s, self._exprrepr(e)) for s, e in cses])
+
+        str_expr = self._exprrepr(expr)
+        if '\n' in str_expr:
+            str_expr = '({})'.format(str_expr)
+        funcbody.append('return {}'.format(str_expr))
 
         funclines = [funcsig]
         funclines.extend('    ' + line for line in funcbody)
