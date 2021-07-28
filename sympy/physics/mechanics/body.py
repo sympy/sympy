@@ -193,7 +193,7 @@ class Body(RigidBody, Particle):  # type: ignore
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import Body, ReferenceFrame, outer
+        >>> from sympy.physics.mechanics import Body, ReferenceFrame, Point
         >>> from sympy import symbols
         >>> m, v, r, omega = symbols('m v r omega')
         >>> N = ReferenceFrame('N')
@@ -208,11 +208,9 @@ class Body(RigidBody, Particle):  # type: ignore
         >>> b.set_ang_vel(N, omega * b.x)
         >>> P = Point('P')
         >>> P.set_vel(N, v * N.x)
-        >>> I = outer (b.x, b.x)
-        >>> inertia_tuple = (I, P)
-        >>> B = Body('B', masscenter=P, frame=b, mass=m, central_inertia=inertia_tuple)
+        >>> B = Body('B', masscenter=P, frame=b)
         >>> B.kinetic_energy(N)
-        m*v**2/2 + omega**2/2
+        B_ixx*omega**2/2 + B_mass*v**2/2
 
         """
         if isinstance(frame, Body):

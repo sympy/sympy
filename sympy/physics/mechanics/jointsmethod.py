@@ -54,6 +54,7 @@ class JointsMethod(_Methods):
     >>> W.apply_force(k*q*W.x, reaction_body=B)
     >>> method = JointsMethod(W, J)
     >>> method.form_eoms()
+    (Matrix([[-c*u(t) - k*q(t)]]), Matrix([[-B_mass*Derivative(u(t), t)]]))
     >>> MM = method.mass_matrix_full
     >>> forcing = method.forcing_full
     >>> rhs = MM.LUsolve(forcing)
@@ -191,7 +192,9 @@ class JointsMethod(_Methods):
         We can also solve for the states using the 'rhs' method.
 
         >>> method.rhs()
-        Matrix([[Derivative(q(t), t)], [(-b*Derivative(q(t), t) - 1.0*k*q(t))/m]])
+        Matrix([
+        [                    Derivative(q(t), t)],
+        [(-b*Derivative(q(t), t) - 1.0*k*q(t))/m]])
 
         """
 
