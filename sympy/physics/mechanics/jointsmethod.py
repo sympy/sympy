@@ -25,7 +25,7 @@ class JointsMethod(_Methods):
     forcelist : iterable
         Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
         describing the forces on the system.
-    mass_matrix : Matrix
+    mass_matrix : Matrix, shape(n, n)
         The system's mass matrix
     forcing : Matrix
         The system's forcing vector
