@@ -1,0 +1,107 @@
+# ------------------------------------------------------------------ #
+#                                                                    #
+#           SymPy CI script to comment on a PR                       #
+#                                                                    #
+#   Runs after the main tests are complete and reports results.      #
+#                                                                    #
+# ------------------------------------------------------------------ #
+
+name: Report CI results to PR
+
+on:
+  workflow_run:
+    # test is the name given for the workflow in runtests.yml
+    workflows: ["test"]
+    types: [completed]
+
+jobs:
+  comment-on-pr:
+    runs-on: ubuntu-latest
+    # Only run if the tests passed:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+
+        # The previous workflow stored the issue number for the PR. We need it
+        # here to be able to comment on the PR
+
+      - name: Download benchmarks
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: runtests.yml
+          workflow_conclusion: success
+          name: pr_number
+
+      - name: Read the PR number
+        id: pr_number_reader
+        uses: juliangruber/read-file-action@v1.0.0
+        with:
+          path: pr_number.txt
+
+        # This may be running after a push with no associated PR in which case
+        # the PR number variable is empty. All further steps will be skipped in
+        # that case.
+
+        # Retrieve benchmark results
+
+      - name: Download benchmarks
+        if: ${{ steps.pr_number_reader.outputs.content != '' }}
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: runtests.yml
+          workflow_conclusion: success
+          name: benchmarks
+
+      - name: Read benchmark output 1
+        if: ${{ steps.pr_number_reader.outputs.content != '' }}
+        id: pr_vs_master_changed
+        uses: juliangruber/read-file-action@v1.0.0
+        with:
+          path: pr_vs_master_changed.txt
+
+      - name: Read benchmark output 2
+        if: ${{ steps.pr_number_reader.outputs.content != '' }}
+        id: master_vs_release_changed
+        uses: juliangruber/read-file-action@v1.0.0
+        with:
+          path: master_vs_release_changed.txt
+
+        # The two steps below should create a new comment or update the
+        # existing comment (edit-mode: replace). Note that the opening line of
+        # the comment body is matched by body-includes so if that does not
+        # match then a new comment will always be created.
+
+      - name: Find Comment
+        if: ${{ steps.pr_number_reader.outputs.content != '' }}
+        uses: peter-evans/find-comment@v1
+        id: fc
+        with:
+          issue-number: ${{ steps.pr_number_reader.outputs.content }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Benchmark results from GitHub Actions
+
+      - name: Create or update comment
+        if: ${{ steps.pr_number_reader.outputs.content != '' }}
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ steps.pr_number_reader.outputs.content }}
+          body: |
+            Benchmark results from GitHub Actions
+
+            Lower numbers are good, higher numbers are bad. A ratio less than 1
+            means a speed up and greater than 1 means a slowdown. Green lines
+            beginning with `+` are slowdowns (the PR is slower then master or
+            master is slower than the previous release). Red lines beginning
+            with `-` are speedups.
+
+            Significantly changed benchmark results (PR vs master)
+            ```diff
+            ${{ steps.pr_vs_master_changed.outputs.content }}
+            ```
+            Significantly changed benchmark results (master vs previous release)
+            ```diff
+            ${{ steps.master_vs_release_changed.outputs.content }}
+            ```
+            Full benchmark results can be found as artifacts in GitHub Actions
+            (click on checks at the top of the PR).
+          edit-mode: replace

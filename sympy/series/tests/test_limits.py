@@ -4,8 +4,8 @@ from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling, sinh,
     atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I, E, besselj,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
-    binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
-    acos, erf, erfc, erfi, LambertW, factorial, digamma, uppergamma,
+    binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels, real_root,
+    acos, erf, erfc, erfi, LambertW, factorial, digamma, uppergamma, re,
     Ei, EulerGamma, asin, atanh, acot, acoth, asec, acsc, cbrt, besselk)
 
 from sympy.calculus.util import AccumBounds
@@ -99,6 +99,26 @@ def test_basic4():
     assert limit(2*x**8 + y*x**(-3), x, -2) == 512 - y/8
     assert limit(sqrt(x + 1) - sqrt(x), x, oo) == 0
     assert integrate(1/(x**3 + 1), (x, 0, oo)) == 2*pi*sqrt(3)/9
+
+
+def test_log():
+    # https://github.com/sympy/sympy/issues/21598
+    a, b, c = symbols('a b c', positive=True)
+    A = log(a/b) - (log(a) - log(b))
+    assert A.limit(a, oo) == 0
+    assert (A * c).limit(a, oo) == 0
+
+    tau, x = symbols('tau x', positive=True)
+    # The value of manualintegrate in the issue
+    expr = tau**2*((tau - 1)*(tau + 1)*log(x + 1)/(tau**2 + 1)**2 + 1/((tau**2\
+            + 1)*(x + 1)) - (-2*tau*atan(x/tau) + (tau**2/2 - 1/2)*log(tau**2\
+            + x**2))/(tau**2 + 1)**2)
+    assert limit(expr, x, oo) == pi*tau**3/(tau**2 + 1)**2
+
+
+def test_piecewise():
+    # https://github.com/sympy/sympy/issues/18363
+    assert limit((real_root(x - 6, 3) + 2)/(x + 2), x, -2, '+') == Rational(1, 12)
 
 
 def test_basic5():
@@ -434,8 +454,6 @@ def test_factorial():
     # https://en.wikipedia.org/wiki/Stirling's_approximation
     assert limit(f/(sqrt(2*pi*x)*(x/E)**x), x, oo) == 1
     assert limit(f, x, -oo) == factorial(-oo)
-    assert limit(f, x, x**2) == factorial(x**2)
-    assert limit(f, x, -x**2) == factorial(-x**2)
 
 
 def test_issue_6560():
@@ -953,6 +971,13 @@ def test_issue_21038():
     assert limit(sin(pi*x)/(3*x - 12), x, 4) == pi/3
 
 
+def test_issue_20578():
+    expr = abs(x) * sin(1/x)
+    assert limit(expr,x,0,'+') == 0
+    assert limit(expr,x,0,'-') == 0
+    assert limit(expr,x,0,'+-') == 0
+
+
 def test_issue_21530():
     assert limit(sinh(n + 1)/sinh(n), n, oo) == E
 
@@ -975,3 +1000,15 @@ def test_issue_21721():
     a = Symbol('a', real=True)
     I = integrate(1/(pi*(1 + (x - a)**2)), x)
     assert I.limit(x, oo) == S.Half
+
+
+def test_issue_21756():
+    term = (1 - exp(-2*I*pi*z))/(1 - exp(-2*I*pi*z/5))
+    assert term.limit(z, 0) == 5
+    assert re(term).limit(z, 0) == 5
+
+
+def test_issue_21415():
+    exp = (x-1)*cos(1/(x-1))
+    assert exp.limit(x,1) == 0
+    assert exp.expand().limit(x,1) == 0

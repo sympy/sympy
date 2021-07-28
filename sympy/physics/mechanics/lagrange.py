@@ -1,5 +1,6 @@
 from sympy.core.backend import diff, zeros, Matrix, eye, sympify
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
+from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.functions import (find_dynamicsymbols, msubs,
                                                _f_list_parser)
 from sympy.physics.mechanics.linearize import Linearizer
@@ -9,7 +10,7 @@ from sympy.utilities.iterables import iterable
 __all__ = ['LagrangesMethod']
 
 
-class LagrangesMethod:
+class LagrangesMethod(_Methods):
     """Lagrange's method object.
 
     Explanation
@@ -224,6 +225,9 @@ class LagrangesMethod:
         # Form the EOM
         self.eom = without_lam - self._term3
         return self.eom
+
+    def _form_eoms(self):
+        return self.form_lagranges_equations()
 
     @property
     def mass_matrix(self):

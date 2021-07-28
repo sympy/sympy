@@ -1109,3 +1109,7 @@ class binomial(CombinatorialFunction):
                 return True
             elif k.is_even is False:
                 return  False
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy import gamma
+        return self.rewrite(gamma)._eval_as_leading_term(x, logx=logx, cdir=cdir)
