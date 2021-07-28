@@ -1,16 +1,16 @@
 from collections import defaultdict
 from functools import cmp_to_key, reduce
-from operator import attrgetter
 from .basic import Basic
 from .compatibility import is_sequence
 from .parameters import global_parameters
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
+from .sympify import _sympify as _sympify_
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
-from .kind import UndefinedKind
+from .kind import KindDispatcher
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
@@ -155,6 +155,19 @@ class Add(Expr, AssocOp):
     is_Add = True
 
     _args_type = Expr
+    _kind_dispatcher = KindDispatcher("Add_kind_dispatcher", commutative=True)
+
+    @cacheit
+    def __new__(cls, *args, evaluate=None, _sympify=True):
+        if _sympify:
+            args = list(map(_sympify_, args))
+
+        if not args:
+            return S.Zero
+
+        arg_kinds = (a.kind for a in args)
+        kind = cls._kind_dispatcher(*arg_kinds)
+        return kind.add(cls, args, evaluate)
 
     @classmethod
     def flatten(cls, seq):
@@ -373,19 +386,6 @@ class Add(Expr, AssocOp):
     def class_key(cls):
         """Nice order of classes"""
         return 3, 1, cls.__name__
-
-    @property
-    def kind(self):
-        k = attrgetter('kind')
-        kinds = map(k, self.args)
-        kinds = frozenset(kinds)
-        if len(kinds) != 1:
-            # Since addition is group operator, kind must be same.
-            # We know that this is unexpected signature, so return this.
-            result = UndefinedKind
-        else:
-            result, = kinds
-        return result
 
     def as_coefficients_dict(a):
         """Return a dictionary mapping terms to their Rational coefficient.
@@ -1235,6 +1235,7 @@ class Add(Expr, AssocOp):
         return Add(*[-i for i in self.args])
 
 add = AssocOpDispatcher('add')
+
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

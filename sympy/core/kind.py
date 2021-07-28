@@ -27,7 +27,8 @@ This module defines basic kinds for core objects. Other kinds such as
 
 from collections import defaultdict
 
-from sympy.core.cache import cacheit
+from .cache import cacheit
+from .parameters import global_parameters
 from sympy.multipledispatch.dispatcher import (Dispatcher,
     ambiguity_warn, ambiguity_register_error_ignore_dup,
     str_signature, RaiseNotImplementedError)
@@ -72,6 +73,10 @@ class Kind(object, metaclass=KindMeta):
     return the same object.
 
     """
+
+    evaluate = global_parameters.evaluate
+    commutative = None
+
     def __new__(cls, *args):
         if args in cls._inst:
             inst = cls._inst[args]
@@ -79,6 +84,61 @@ class Kind(object, metaclass=KindMeta):
             inst = super().__new__(cls)
             cls._inst[args] = inst
         return inst
+
+    ### Add
+
+    def add(self, addcls, args, evaluate=None, **kwargs):
+        if evaluate is None:
+            evaluate = self.evaluate
+
+        # type checking
+        typ = self._args_type
+        if typ is not None:
+            from sympy.core.relational import Relational
+            if any(isinstance(arg, Relational) for arg in args):
+                raise TypeError("Relational can not be used in %s" % addcls.__name__)
+
+            # This should raise TypeError once deprecation period is over:
+            if not all(isinstance(arg, typ) for arg in args):
+                from sympy.utilities.exceptions import SymPyDeprecationWarning
+                SymPyDeprecationWarning(
+                    feature="Add/Mul with non-%s args" % typ,
+                    useinstead="%s args" % typ,
+                    issue=19445,
+                    deprecated_since_version="1.7"
+                ).warn()
+
+        # argument preprocessing
+        args = self._add_preprocess(args, **kwargs)
+
+        # unevaluated generation
+        if not evaluate:
+            return addcls._from_args(args, self.commutative)
+
+        # evaluated generation
+        return self._eval_add(addcls, args)
+
+    def _add_preprocess(self, args):
+        return args
+
+    def _eval_add(self, addcls, args):
+        identity = S.Zero
+
+        args = [a for a in args if a is not identity]
+
+        if not args:
+            return identity
+        elif len(args) == 1:
+            return args[0]
+
+        c_part, nc_part, order_symbols = addcls.flatten(args)
+        is_commutative = not nc_part
+        obj = addcls._from_args(c_part + nc_part, is_commutative)
+
+        if order_symbols is not None:
+            from sympy import Order
+            return Order(obj, *order_symbols)
+        return obj
 
 
 class _UndefinedKind(Kind):
@@ -153,6 +213,9 @@ class _NumberKind(Kind):
     without any free symbol.
 
     """
+
+    commutative = True
+
     def __new__(cls):
         return super().__new__(cls)
 
@@ -385,3 +448,6 @@ class KindDispatcher:
             docs.append(s)
 
         return '\n\n'.join(docs)
+
+
+from .singleton import S

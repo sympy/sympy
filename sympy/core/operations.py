@@ -108,6 +108,11 @@ class AssocOp(Basic):
         obj.is_commutative = is_commutative
         return obj
 
+    @property
+    def kind(self):
+        arg_kinds = (a.kind for a in self.args)
+        return self._kind_dispatcher(*arg_kinds)
+
     def _new_rawargs(self, *args, reeval=True, **kwargs):
         """Create new instance of own class with args exactly as provided by
         caller but returning the self class identity if args is empty.

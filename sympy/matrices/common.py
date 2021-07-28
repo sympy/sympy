@@ -12,7 +12,7 @@ from functools import reduce
 from sympy.core.logic import FuzzyBool
 from sympy.assumptions.refine import refine
 from sympy.core import SympifyError, Add
-from sympy.core.basic import Atom
+from sympy.core.basic import Atom, Basic
 from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.decorators import call_highest_priority
 from sympy.core.kind import Kind, NumberKind
@@ -3202,6 +3202,12 @@ class MatrixKind(Kind):
     shape : Function to return the shape of objects with ``MatrixKind``.
 
     """
+
+    evaluate = False
+    commutative = False
+
+    _args_type = Basic
+
     def __new__(cls, element_kind=NumberKind):
         obj = super().__new__(cls, element_kind)
         obj.element_kind = element_kind
