@@ -1023,11 +1023,14 @@ class Add(Expr, AssocOp):
         if is_zero is True:
             # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
-            n0 = min.getn()
+            try:
+                n0 = min.getn()
+            except NotImplementedError:
+                n0 = 1
             res = Order(1)
             incr = S.One
             while res.is_Order:
-                res = old._eval_nseries(x, n=n0+incr, logx=None, cdir=cdir).cancel().powsimp().trigsimp()
+                res = old._eval_nseries(x, n=n0+incr, logx=logx, cdir=cdir).cancel().powsimp().trigsimp()
                 incr *= 2
             return res.as_leading_term(x, logx=logx, cdir=cdir)
 
