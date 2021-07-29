@@ -263,13 +263,11 @@ class FpGroup(DefaultPrinting):
             return True
         # Abelianisation test: check is the abelianisation is infinite
         abelian_rels = []
-        from sympy.polys.solvers import RawMatrix as Matrix
-        from sympy.polys.domains import ZZ
         from sympy.matrices.normalforms import invariant_factors
+        from sympy.matrices import Matrix
         for rel in self.relators:
             abelian_rels.append([rel.exponent_sum(g) for g in self.generators])
-        m = Matrix(abelian_rels)
-        setattr(m, "ring", ZZ)
+        m = Matrix(Matrix(abelian_rels))
         if 0 in invariant_factors(m):
             return True
         else:

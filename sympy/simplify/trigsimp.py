@@ -550,13 +550,13 @@ def exptrigsimp(expr):
         rvd = rv.as_powers_dict()
         newd = rvd.copy()
 
-        def signlog(expr, sign=1):
+        def signlog(expr, sign=S.One):
             if expr is S.Exp1:
-                return sign, 1
+                return sign, S.One
             elif isinstance(expr, exp) or (expr.is_Pow and expr.base == S.Exp1):
                 return sign, expr.exp
-            elif sign == 1:
-                return signlog(-expr, sign=-1)
+            elif sign is S.One:
+                return signlog(-expr, sign=-S.One)
             else:
                 return None, None
 

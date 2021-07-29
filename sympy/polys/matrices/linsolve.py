@@ -73,11 +73,17 @@ def _linsolve(eqs, syms):
     Aaug = sympy_dict_to_dm(eqsdict, rhs, syms)
     K = Aaug.domain
 
+    # sdm_irref has issues with float matrices. This uses the ddm_rref()
+    # function. When sdm_rref() can handle float matrices reasonably this
+    # should be removed...
+    if K.is_RealField or K.is_ComplexField:
+        Aaug = Aaug.to_ddm().rref()[0].to_sdm()
+
     # Compute reduced-row echelon form (RREF)
     Arref, pivots, nzcols = sdm_irref(Aaug)
 
     # No solution:
-    if pivots[-1] == nsyms:
+    if pivots and pivots[-1] == nsyms:
         return None
 
     # Particular solution for non-homogeneous system:
@@ -121,7 +127,8 @@ def sympy_dict_to_dm(eqs_coeffs, eqs_rhs, syms):
         eqdict = {sym2index[s]: elem_map[c] for s, c in eq.items()}
         if rhs:
             eqdict[nsyms] = - elem_map[rhs]
-        eqsdict.append(eqdict)
+        if eqdict:
+            eqsdict.append(eqdict)
     sdm_aug = SDM(enumerate(eqsdict), (neqs, nsyms+1), K)
     return sdm_aug
 

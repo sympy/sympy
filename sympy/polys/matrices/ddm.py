@@ -30,7 +30,7 @@ list of lists:
     >>> ddm_idet([[0, 1], [-1, 0]], QQ)
     1
     >>> A
-    [[-1, 0], [0, 1]]
+    [[-1, 0], [0, -1]]
 
 Note that ddm_idet modifies the input matrix in-place. It is recommended to
 use the DDM.det method as a friendlier interface to this instead which takes
@@ -64,10 +64,12 @@ representation is friendlier.
 from .exceptions import DDMBadInputError, DDMShapeError, DDMDomainError
 
 from .dense import (
+        ddm_transpose,
         ddm_iadd,
         ddm_isub,
         ddm_ineg,
         ddm_imul,
+        ddm_irmul,
         ddm_imatmul,
         ddm_irref,
         ddm_idet,
@@ -84,6 +86,9 @@ class DDM(list):
     This is a list subclass and is a wrapper for a list of lists that supports
     basic matrix arithmetic +, -, *, **.
     """
+
+    fmt = 'dense'
+
     def __init__(self, rowslist, shape, domain):
         super().__init__(rowslist)
         self.shape = self.rows, self.cols = m, n = shape
@@ -92,9 +97,54 @@ class DDM(list):
         if not (len(self) == m and all(len(row) == n for row in self)):
             raise DDMBadInputError("Inconsistent row-list/shape")
 
+    def getitem(self, i, j):
+        return self[i][j]
+
+    def extract_slice(self, slice1, slice2):
+        ddm = [row[slice2] for row in self[slice1]]
+        rows = len(ddm)
+        cols = len(ddm[0]) if ddm else len(range(self.shape[1])[slice2])
+        return DDM(ddm, (rows, cols), self.domain)
+
+    def extract(self, rows, cols):
+        ddm = []
+        for i in rows:
+            rowi = self[i]
+            ddm.append([rowi[j] for j in cols])
+        return DDM(ddm, (len(rows), len(cols)), self.domain)
+
+    def to_list(self):
+        return list(self)
+
+    def to_list_flat(self):
+        flat = []
+        for row in self:
+            flat.extend(row)
+        return flat
+
+    def to_dok(self):
+        return {(i, j): e for i, row in enumerate(self) for j, e in enumerate(row)}
+
+    def to_ddm(self):
+        return self
+
+    def to_sdm(self):
+        return SDM.from_list(self, self.shape, self.domain)
+
+    def convert_to(self, K):
+        Kold = self.domain
+        if K == Kold:
+            return self.copy()
+        rows = ([K.convert_from(e, Kold) for e in row] for row in self)
+        return DDM(rows, self.shape, K)
+
     def __str__(self):
+        rowsstr = ['[%s]' % ', '.join(map(str, row)) for row in self]
+        return '[%s]' % ', '.join(rowsstr)
+
+    def __repr__(self):
         cls = type(self).__name__
-        rows = list.__str__(self)
+        rows = list.__repr__(self)
         return '%s(%s, %s, %s)' % (cls, rows, self.shape, self.domain)
 
     def __eq__(self, other):
@@ -113,6 +163,13 @@ class DDM(list):
         return DDM(rowslist, shape, domain)
 
     @classmethod
+    def ones(cls, shape, domain):
+        one = domain.one
+        m, n = shape
+        rowlist = ([one] * n for _ in range(m))
+        return DDM(rowlist, shape, domain)
+
+    @classmethod
     def eye(cls, size, domain):
         one = domain.one
         ddm = cls.zeros((size, size), domain)
@@ -123,6 +180,14 @@ class DDM(list):
     def copy(self):
         copyrows = (row[:] for row in self)
         return DDM(copyrows, self.shape, self.domain)
+
+    def transpose(self):
+        rows, cols = self.shape
+        if rows:
+            ddmT = ddm_transpose(self)
+        else:
+            ddmT = [[]] * cols
+        return DDM(ddmT, (cols, rows), self.domain)
 
     def __add__(a, b):
         if not isinstance(b, DDM):
@@ -189,6 +254,11 @@ class DDM(list):
         ddm_imul(c, b)
         return c
 
+    def rmul(a, b):
+        c = a.copy()
+        ddm_irmul(c, b)
+        return c
+
     def matmul(a, b):
         """a @ b (matrix product)"""
         m, o = a.shape
@@ -198,10 +268,89 @@ class DDM(list):
         ddm_imatmul(c, a, b)
         return c
 
+    def mul_elementwise(a, b):
+        assert a.shape == b.shape
+        assert a.domain == b.domain
+        c = [[aij * bij for aij, bij in zip(ai, bi)] for ai, bi in zip(a, b)]
+        return DDM(c, a.shape, a.domain)
+
+    def hstack(A, *B):
+        """Horizontally stacks :py:class:`~.DDM` matrices.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import DDM
+
+        >>> A = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> B = DDM([[ZZ(5), ZZ(6)], [ZZ(7), ZZ(8)]], (2, 2), ZZ)
+        >>> A.hstack(B)
+        [[1, 2, 5, 6], [3, 4, 7, 8]]
+
+        >>> C = DDM([[ZZ(9), ZZ(10)], [ZZ(11), ZZ(12)]], (2, 2), ZZ)
+        >>> A.hstack(B, C)
+        [[1, 2, 5, 6, 9, 10], [3, 4, 7, 8, 11, 12]]
+        """
+        Anew = list(A.copy())
+        rows, cols = A.shape
+        domain = A.domain
+
+        for Bk in B:
+            Bkrows, Bkcols = Bk.shape
+            assert Bkrows == rows
+            assert Bk.domain == domain
+
+            cols += Bkcols
+
+            for i, Bki in enumerate(Bk):
+                Anew[i].extend(Bki)
+
+        return DDM(Anew, (rows, cols), A.domain)
+
+    def vstack(A, *B):
+        """Vertically stacks :py:class:`~.DDM` matrices.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import DDM
+
+        >>> A = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> B = DDM([[ZZ(5), ZZ(6)], [ZZ(7), ZZ(8)]], (2, 2), ZZ)
+        >>> A.vstack(B)
+        [[1, 2], [3, 4], [5, 6], [7, 8]]
+
+        >>> C = DDM([[ZZ(9), ZZ(10)], [ZZ(11), ZZ(12)]], (2, 2), ZZ)
+        >>> A.vstack(B, C)
+        [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]
+        """
+        Anew = list(A.copy())
+        rows, cols = A.shape
+        domain = A.domain
+
+        for Bk in B:
+            Bkrows, Bkcols = Bk.shape
+            assert Bkcols == cols
+            assert Bk.domain == domain
+
+            rows += Bkrows
+
+            Anew.extend(Bk.copy())
+
+        return DDM(Anew, (rows, cols), A.domain)
+
+    def applyfunc(self, func, domain):
+        elements = (list(map(func, row)) for row in self)
+        return DDM(elements, self.shape, domain)
+
     def rref(a):
         """Reduced-row echelon form of a and list of pivots"""
         b = a.copy()
-        pivots = ddm_irref(b)
+        K = a.domain
+        partial_pivot = K.is_RealField or K.is_ComplexField
+        pivots = ddm_irref(b, _partial_pivot=partial_pivot)
         return b, pivots
 
     def nullspace(a):
@@ -210,15 +359,20 @@ class DDM(list):
         domain = a.domain
 
         basis = []
+        nonpivots = []
         for i in range(cols):
             if i in pivots:
                 continue
+            nonpivots.append(i)
             vec = [domain.one if i == j else domain.zero for j in range(cols)]
             for ii, jj in enumerate(pivots):
                 vec[jj] -= rref[ii][i]
             basis.append(vec)
 
-        return DDM(basis, (len(basis), cols), domain)
+        return DDM(basis, (len(basis), cols), domain), nonpivots
+
+    def particular(a):
+        return a.to_sdm().particular().to_ddm()
 
     def det(a):
         """Determinant of a"""
@@ -271,3 +425,6 @@ class DDM(list):
         vec = ddm_berk(a, K)
         coeffs = [vec[i][0] for i in range(n+1)]
         return coeffs
+
+
+from .sdm import SDM

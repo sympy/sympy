@@ -94,7 +94,8 @@ class MatPow(MatrixExpr):
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.core.expr import ExprBuilder
-        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import ArrayContraction
+        from ...tensor.array.expressions.array_expressions import ArrayTensorProduct
         from .matmul import MatMul
         from .inverse import Inverse
         exp = self.exp
@@ -102,10 +103,10 @@ class MatPow(MatrixExpr):
             lr = self.base._eval_derivative_matrix_lines(x)
             for i in lr:
                 subexpr = ExprBuilder(
-                    CodegenArrayContraction,
+                    ArrayContraction,
                     [
                         ExprBuilder(
-                            CodegenArrayTensorProduct,
+                            ArrayTensorProduct,
                             [
                                 Identity(1),
                                 i._lines[0],
@@ -116,7 +117,7 @@ class MatPow(MatrixExpr):
                         ),
                         (0, 3, 4), (5, 7, 8)
                     ],
-                    validator=CodegenArrayContraction._validate
+                    validator=ArrayContraction._validate
                 )
                 i._first_pointer_parent = subexpr.args[0].args
                 i._first_pointer_index = 0

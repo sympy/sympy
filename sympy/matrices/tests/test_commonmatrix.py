@@ -125,6 +125,10 @@ def test_tolist():
     m = ShapingOnlyMatrix(3, 4, flat_lst)
     assert m.tolist() == lst
 
+def test_todod():
+    m = ShapingOnlyMatrix(3, 2, [[S.One, 0], [0, S.Half], [x, 0]])
+    dict = {0: {0: S.One}, 1: {1: S.Half}, 2: {0: x}}
+    assert m.todod() == dict
 
 def test_row_col_del():
     e = ShapingOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
@@ -556,6 +560,10 @@ def test_simplify():
     M = OperationsOnlyMatrix([[eq]])
     assert M.simplify() == Matrix([[eq]])
     assert M.simplify(ratio=oo) == Matrix([[eq.simplify(ratio=oo)]])
+
+    # https://github.com/sympy/sympy/issues/19353
+    m = Matrix([[30, 2], [3, 4]])
+    assert (1/(m.trace())).simplify() == Rational(1, 34)
 
 
 def test_subs():

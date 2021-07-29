@@ -1,9 +1,16 @@
-from sympy import symbols, Matrix, factor, Function, simplify, exp, pi, oo, I, \
-    Rational, sqrt, CRootOf
-from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
+from sympy import (symbols, factor, Function, simplify, exp, oo, I,
+    S, Mul, Pow, Add, Rational, sqrt, CRootOf)
+from sympy.core.containers import Tuple
+from sympy.matrices import ImmutableMatrix, Matrix
+from sympy.physics.control import (TransferFunction, Series, Parallel,
+    Feedback, TransferFunctionMatrix)
 from sympy.testing.pytest import raises
 
-a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2 = symbols('a, x, b, s, g, d, p, k, a0:3, b0:3')
+a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2, tau, zeta, wn = symbols('a, x, b, s, g, d, p, k,\
+    a0:3, b0:3, tau, zeta, wn')
+TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+TF2 = TransferFunction(k, 1, s)
+TF3 = TransferFunction(a2*p - s, a2*s + p, s)
 
 
 def test_TransferFunction_construction():
@@ -97,7 +104,6 @@ def test_TransferFunction_construction():
     raises(ValueError, lambda: TransferFunction(0, 0, s))
 
     raises(TypeError, lambda: TransferFunction(Matrix([1, 2, 3]), s, s))
-    raises(TypeError, lambda: TransferFunction(s**pi*exp(s), s, s))
 
     raises(TypeError, lambda: TransferFunction(s**2 + 2*s - 1, s + 3, 3))
     raises(TypeError, lambda: TransferFunction(p + 1, 5 - p, 4))
@@ -105,6 +111,35 @@ def test_TransferFunction_construction():
 
 
 def test_TransferFunction_functions():
+    # classmethod from_rational_expression
+    expr_1 = Mul(0, Pow(s, -1, evaluate=False), evaluate=False)
+    expr_2 = s/0
+    expr_3 = (p*s**2 + 5*s)/(s + 1)**3
+    expr_4 = 6
+    expr_5 = ((2 + 3*s)*(5 + 2*s))/((9 + 3*s)*(5 + 2*s**2))
+    expr_6 = (9*s**4 + 4*s**2 + 8)/((s + 1)*(s + 9))
+    tf = TransferFunction(s + 1, s**2 + 2, s)
+    delay = exp(-s/tau)
+    expr_7 = delay*tf.to_expr()
+    H1 = TransferFunction.from_rational_expression(expr_7, s)
+    H2 = TransferFunction(s + 1, (s**2 + 2)*exp(s/tau), s)
+    expr_8 = Add(2,  3*s/(s**2 + 1), evaluate=False)
+
+    assert TransferFunction.from_rational_expression(expr_1) == TransferFunction(0, s, s)
+    raises(ZeroDivisionError, lambda: TransferFunction.from_rational_expression(expr_2))
+    raises(ValueError, lambda: TransferFunction.from_rational_expression(expr_3))
+    assert TransferFunction.from_rational_expression(expr_3, s) == TransferFunction((p*s**2 + 5*s), (s + 1)**3, s)
+    assert TransferFunction.from_rational_expression(expr_3, p) == TransferFunction((p*s**2 + 5*s), (s + 1)**3, p)
+    raises(ValueError, lambda: TransferFunction.from_rational_expression(expr_4))
+    assert TransferFunction.from_rational_expression(expr_4, s) == TransferFunction(6, 1, s)
+    assert TransferFunction.from_rational_expression(expr_5, s) == \
+        TransferFunction((2 + 3*s)*(5 + 2*s), (9 + 3*s)*(5 + 2*s**2), s)
+    assert TransferFunction.from_rational_expression(expr_6, s) == \
+        TransferFunction((9*s**4 + 4*s**2 + 8), (s + 1)*(s + 9), s)
+    assert H1 == H2
+    assert TransferFunction.from_rational_expression(expr_8, s) == \
+        TransferFunction(2*s**2 + 3*s + 2, s**2 + 1, s)
+
     # explicitly cancel poles and zeros.
     tf0 = TransferFunction(s**5 + s**3 + s, s - s**2, s)
     a = TransferFunction(-(s**4 + s**2 + 1), s - 1, s)
@@ -263,6 +298,15 @@ def test_TransferFunction_functions():
     assert tf7.xreplace({s: k}) == TransferFunction(a0*k**p + a1*p**k, a2*p - k, k)
     assert tf7.subs(s, k) == TransferFunction(a0*s**p + a1*p**s, a2*p - s, s)
 
+    # Conversion to Expr with to_expr()
+    tf8 = TransferFunction(a0*s**5 + 5*s**2 + 3, s**6 - 3, s)
+    tf9 = TransferFunction((5 + s), (5 + s)*(6 + s), s)
+    tf10 = TransferFunction(0, 1, s)
+    tf11 = TransferFunction(1, 1, s)
+    assert tf8.to_expr() == Mul((a0*s**5 + 5*s**2 + 3), Pow((s**6 - 3), -1, evaluate=False), evaluate=False)
+    assert tf9.to_expr() == Mul((s + 5), Pow((5 + s)*(6 + s), -1, evaluate=False), evaluate=False)
+    assert tf10.to_expr() == Mul(S(0), Pow(1, -1, evaluate=False), evaluate=False)
+    assert tf11.to_expr() == Pow(1, -1, evaluate=False)
 
 def test_TransferFunction_addition_and_subtraction():
     tf1 = TransferFunction(s + 6, s - 5, s)
@@ -690,3 +734,117 @@ def test_Feedback_functions():
         (a0 + s)*(s**2 + 2*s*wn*zeta + wn**2))*(s**2 + 2*s*wn*zeta + wn**2), s)
     assert Feedback(TransferFunction(1, 1, p), tf4).rewrite(TransferFunction) == \
         TransferFunction(p, a0*p + p + p**a1 - s, p)
+
+
+def test_TransferFunctionMatrix_construction():
+    tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
+    tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
+
+    tfm3_ = TransferFunctionMatrix([[-TF3]])
+    assert tfm3_.shape == (tfm3_.num_outputs, tfm3_.num_inputs) == (1, 1)
+    assert tfm3_.args == Tuple(Tuple(Tuple(-TF3)))
+    assert tfm3_.var == s
+
+    tfm5 = TransferFunctionMatrix([[TF1, -TF2], [TF3, tf5]])
+    assert tfm5.shape == (tfm5.num_outputs, tfm5.num_inputs) == (2, 2)
+    assert tfm5.args == Tuple(Tuple(Tuple(TF1, -TF2), Tuple(TF3, tf5)))
+    assert tfm5.var == s
+
+    tfm7 = TransferFunctionMatrix([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]])
+    assert tfm7.shape == (tfm7.num_outputs, tfm7.num_inputs) == (3, 2)
+    assert tfm7.args == Tuple(Tuple(Tuple(TF1, TF2), Tuple(TF3, -tf5), Tuple(-tf5, TF2)))
+    assert tfm7.var == s
+
+    # all transfer functions will use the same complex variable. tf4 uses 'p'.
+    raises(ValueError, lambda: TransferFunctionMatrix([[TF1], [TF2], [tf4]]))
+    raises(ValueError, lambda: TransferFunctionMatrix([[TF1, tf4], [TF3, tf5]]))
+
+    # length of all the lists in the TFM should be equal.
+    raises(ValueError, lambda: TransferFunctionMatrix([[TF1], [TF3, tf5]]))
+    raises(ValueError, lambda: TransferFunctionMatrix([[TF1, TF3], [tf5]]))
+
+    # lists should only support transfer functions in them.
+    raises(TypeError, lambda: TransferFunctionMatrix([[TF1, TF2], [TF3, Matrix([1, 2])]]))
+    raises(TypeError, lambda: TransferFunctionMatrix([[TF1, Matrix([1, 2])], [TF3, TF2]]))
+
+    # `arg` should strictly be nested list of TransferFunction
+    raises(ValueError, lambda: TransferFunctionMatrix([TF1, TF2, tf5]))
+    raises(ValueError, lambda: TransferFunctionMatrix([TF1]))
+
+def test_TransferFunctionMatrix_functions():
+    tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
+
+    #  Classmethod (from_matrix)
+
+    mat_1 = ImmutableMatrix([
+        [s*(s + 1)*(s - 3)/(s**4 + 1), 2],
+        [p, p*(s + 1)/(s*(s**1 + 1))]
+        ])
+    mat_2 = ImmutableMatrix([[(2*s + 1)/(s**2 - 9)]])
+    mat_3 = ImmutableMatrix([[1, 2], [3, 4]])
+    assert TransferFunctionMatrix.from_Matrix(mat_1, s) == \
+        TransferFunctionMatrix([[TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s), TransferFunction(2, 1, s)],
+        [TransferFunction(p, 1, s), TransferFunction(p, s, s)]])
+    assert TransferFunctionMatrix.from_Matrix(mat_2, s) == \
+        TransferFunctionMatrix([[TransferFunction(2*s + 1, s**2 - 9, s)]])
+    assert TransferFunctionMatrix.from_Matrix(mat_3, p) == \
+        TransferFunctionMatrix([[TransferFunction(1, 1, p), TransferFunction(2, 1, p)],
+        [TransferFunction(3, 1, p), TransferFunction(4, 1, p)]])
+
+    #  Negating a TFM
+
+    tfm1 = TransferFunctionMatrix([[TF1], [TF2]])
+    assert -tfm1 == TransferFunctionMatrix([[-TF1], [-TF2]])
+
+    tfm2 = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, -TF1, -TF3]])
+    assert -tfm2 == TransferFunctionMatrix([[-TF1, -TF2, -TF3], [-tf5, TF1, TF3]])
+
+    # subs()
+
+    H_1 = TransferFunctionMatrix.from_Matrix(mat_1, s)
+    H_2 = TransferFunctionMatrix([[TransferFunction(a*p*s, k*s**2, s), TransferFunction(p*s, k*(s**2 - a), s)]])
+    assert H_1.subs(p, 1) == TransferFunctionMatrix([[TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s), TransferFunction(2, 1, s)], [TransferFunction(1, 1, s), TransferFunction(1, s, s)]])
+    assert H_1.subs({p: 1}) == TransferFunctionMatrix([[TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s), TransferFunction(2, 1, s)], [TransferFunction(1, 1, s), TransferFunction(1, s, s)]])
+    assert H_1.subs({p: 1, s: 1}) == TransferFunctionMatrix([[TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s), TransferFunction(2, 1, s)], [TransferFunction(1, 1, s), TransferFunction(1, s, s)]]) # This should ignore `s` as it is `var`
+    assert H_2.subs(p, 2) == TransferFunctionMatrix([[TransferFunction(2*a*s, k*s**2, s), TransferFunction(2*s, k*(-a + s**2), s)]])
+    assert H_2.subs(k, 1) == TransferFunctionMatrix([[TransferFunction(a*p*s, s**2, s), TransferFunction(p*s, -a + s**2, s)]])
+    assert H_2.subs(a, 0) == TransferFunctionMatrix([[TransferFunction(0, k*s**2, s), TransferFunction(p*s, k*s**2, s)]])
+    assert H_2.subs({p: 1, k: 1, a: a0}) == TransferFunctionMatrix([[TransferFunction(a0*s, s**2, s), TransferFunction(s, -a0 + s**2, s)]])
+
+    # transpose()
+
+    assert H_1.transpose() == TransferFunctionMatrix([[TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s), TransferFunction(p, 1, s)], [TransferFunction(2, 1, s), TransferFunction(p, s, s)]])
+    assert H_2.transpose() == TransferFunctionMatrix([[TransferFunction(a*p*s, k*s**2, s)], [TransferFunction(p*s, k*(-a + s**2), s)]])
+    assert H_1.transpose().transpose() == H_1
+    assert H_2.transpose().transpose() == H_2
+
+    # elem_poles()
+
+    assert H_1.elem_poles() == [[[-sqrt(2)/2 - sqrt(2)*I/2, -sqrt(2)/2 + sqrt(2)*I/2, sqrt(2)/2 - sqrt(2)*I/2, sqrt(2)/2 + sqrt(2)*I/2], []],
+        [[], [0]]]
+    assert H_2.elem_poles() == [[[0, 0], [sqrt(a), -sqrt(a)]]]
+    assert tfm2.elem_poles() == [[[wn*(-zeta + sqrt((zeta - 1)*(zeta + 1))), wn*(-zeta - sqrt((zeta - 1)*(zeta + 1)))], [], [-p/a2]],
+        [[-a0], [wn*(-zeta + sqrt((zeta - 1)*(zeta + 1))), wn*(-zeta - sqrt((zeta - 1)*(zeta + 1)))], [-p/a2]]]
+
+    # elem_zeros()
+
+    assert H_1.elem_zeros() == [[[-1, 0, 3], []], [[], []]]
+    assert H_2.elem_zeros() == [[[0], [0]]]
+    assert tfm2.elem_zeros() == [[[], [], [a2*p]],
+        [[-a2/(2*a1) - sqrt(4*a0*a1 + a2**2)/(2*a1), -a2/(2*a1) + sqrt(4*a0*a1 + a2**2)/(2*a1)], [], [a2*p]]]
+
+    # doit()
+
+    H_3 = TransferFunctionMatrix([[Series(TransferFunction(1, s**3 - 3, s), TransferFunction(s**2 - 2*s + 5, 1, s), TransferFunction(1, s, s))]])
+    H_4 = TransferFunctionMatrix([[Parallel(TransferFunction(s**3 - 3, 4*s**4 - s**2 - 2*s + 5, s), TransferFunction(4 - s**3, 4*s**4 - s**2 - 2*s + 5, s))]])
+
+    assert H_3.doit() == TransferFunctionMatrix([[TransferFunction(s**2 - 2*s + 5, s*(s**3 - 3), s)]])
+    assert H_4.doit() == TransferFunctionMatrix([[TransferFunction((4 - s**3)*(4*s**4 - s**2 - 2*s + 5) + (s**3 - 3)*(4*s**4 - s**2 - 2*s + 5),
+        (4*s**4 - s**2 - 2*s + 5)**2, s)]])
+
+    # _flat()
+
+    assert H_1._flat() == [TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s), TransferFunction(2, 1, s), TransferFunction(p, 1, s), TransferFunction(p, s, s)]
+    assert H_2._flat() == [TransferFunction(a*p*s, k*s**2, s), TransferFunction(p*s, k*(-a + s**2), s)]
+    assert H_3._flat() == [Series(TransferFunction(1, s**3 - 3, s), TransferFunction(s**2 - 2*s + 5, 1, s), TransferFunction(1, s, s))]
+    assert H_4._flat() == [Parallel(TransferFunction(s**3 - 3, 4*s**4 - s**2 - 2*s + 5, s), TransferFunction(4 - s**3, 4*s**4 - s**2 - 2*s + 5, s))]

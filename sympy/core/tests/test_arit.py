@@ -8,6 +8,7 @@ from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
 from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy.testing.randtest import verify_numerically
+from sympy.functions.elementary.trigonometric import asin
 
 
 a, c, x, y, z = symbols('a,c,x,y,z')
@@ -1745,7 +1746,6 @@ def test_issue_5460():
 
 
 def test_product_irrational():
-    from sympy import I, pi
     assert (I*pi).is_irrational is False
     # The following used to be deduced from the above bug:
     assert (I*pi).is_positive is False
@@ -1911,6 +1911,16 @@ def test_Mod():
     # rewrite
     assert Mod(x, y).rewrite(floor) == x - y*floor(x/y)
     assert ((x - Mod(x, y))/y).rewrite(floor) == floor(x/y)
+
+    # issue 21373
+    from sympy.functions.elementary.trigonometric import sinh
+    from sympy.functions.elementary.piecewise import Piecewise
+
+    x_r, y_r = symbols('x_r y_r', real=True)
+    (Piecewise((x_r, y_r > x_r), (y_r, True)) / z) % 1
+    expr = exp(sinh(Piecewise((x_r, y_r > x_r), (y_r, True)) / z))
+    expr.subs({1: 1.0})
+    sinh(Piecewise((x_r, y_r > x_r), (y_r, True)) * z ** -1.0).is_zero
 
 
 def test_Mod_Pow():
@@ -2321,3 +2331,8 @@ def test_issue_18507():
 def test_issue_17130():
     e = Add(b, -b, I, -I, evaluate=False)
     assert e.is_zero is None # ideally this would be True
+
+
+def test_issue_21034():
+    e = -I*log((re(asin(5)) + I*im(asin(5)))/sqrt(re(asin(5))**2 + im(asin(5))**2))/pi
+    assert e.round(2)

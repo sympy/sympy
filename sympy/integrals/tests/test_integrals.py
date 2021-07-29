@@ -5,7 +5,8 @@ from sympy import (
     integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol, summation,
-    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper
+    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper,
+    Float
 )
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.complexes import periodic_argument
@@ -44,7 +45,7 @@ def test_principal_value():
     raises(ValueError, lambda: Integral(g).principal_value())
 
     l = 1 / ((x ** 3) - 1)
-    assert Integral(l, (x, -oo, oo)).principal_value() == -sqrt(3)*pi/3
+    assert Integral(l, (x, -oo, oo)).principal_value().together() == -sqrt(3)*pi/3
     raises(ValueError, lambda: Integral(l, (x, -oo, 1)).principal_value())
 
     d = 1 / (x ** 2 - 1)
@@ -401,6 +402,16 @@ def test_issue_13749():
 
 def test_issue_18133():
     assert integrate(exp(x)/(1 + x)**2, x) == NonElementaryIntegral(exp(x)/(x + 1)**2, x)
+
+
+def test_issue_21741():
+    a = Float('3999999.9999999995', precision=53)
+    b = Float('2.5000000000000004e-7', precision=53)
+    r = Piecewise((b*I*exp(-a*I*pi*t*y)*exp(-a*I*pi*x*z)/(pi*x),
+                   Ne(1.0*pi*x*exp(a*I*pi*t*y), 0)),
+                  (z*exp(-a*I*pi*t*y), True))
+    fun = E**((-2*I*pi*(z*x+t*y))/(500*10**(-9)))
+    assert integrate(fun, z) == r
 
 
 def test_matrices():
@@ -1414,7 +1425,7 @@ def test_issue_4950():
 
 
 def test_issue_4968():
-    assert integrate(sin(log(x**2))) == x*sin(2*log(x))/5 - 2*x*cos(2*log(x))/5
+    assert integrate(sin(log(x**2))) == x*sin(log(x**2))/5 - 2*x*cos(log(x**2))/5
 
 
 def test_singularities():
@@ -1604,11 +1615,15 @@ def test_integrate_with_complex_constants():
     K = Symbol('K', real=True, positive=True)
     x = Symbol('x', real=True)
     m = Symbol('m', real=True)
+    t = Symbol('t', real=True)
     assert integrate(exp(-I*K*x**2+m*x), x) == sqrt(I)*sqrt(pi)*exp(-I*m**2
                     /(4*K))*erfi((-2*I*K*x + m)/(2*sqrt(K)*sqrt(-I)))/(2*sqrt(K))
-    assert integrate(1/(1 + I*x**2), x) == -sqrt(I)*log(x - sqrt(I))/2 +\
-        sqrt(I)*log(x + sqrt(I))/2
+    assert integrate(1/(1 + I*x**2), x) == (-I*(sqrt(-I)*log(x - I*sqrt(-I))/2
+            - sqrt(-I)*log(x + I*sqrt(-I))/2))
     assert integrate(exp(-I*x**2), x) == sqrt(pi)*erf(sqrt(I)*x)/(2*sqrt(I))
+
+    assert integrate((1/(exp(I*t)-2)), t) == -t/2 - I*log(exp(I*t) - 2)/2
+    assert integrate((1/(exp(I*t)-2)), (t, 0, 2*pi)) == -pi
 
 
 def test_issue_14241():
@@ -1652,9 +1667,9 @@ def test_issue_15494():
 
 def test_li_integral():
     y = Symbol('y')
-    assert Integral(li(y*x**2), x).doit() == Piecewise(
-            (x*li(x**2*y) - x*Ei(3*log(x) + 3*log(y)/2)/(sqrt(y)*sqrt(x**2)), Ne(y, 0)),
-            (0, True))
+    assert Integral(li(y*x**2), x).doit() == Piecewise((x*li(x**2*y) - \
+        x*Ei(3*log(x**2*y)/2)/sqrt(x**2*y),
+        Ne(y, 0)), (0, True))
 
 
 def test_issue_17473():
@@ -1704,3 +1719,15 @@ def test_issue_4231():
 def test_issue_17841():
     f = diff(1/(x**2+x+I), x)
     assert integrate(f, x) == 1/(x**2 + x + I)
+
+
+def test_issue_21034():
+    x = Symbol('x', real=True, nonzero=True)
+    f1 = x*(-x**4/asin(5)**4 - x*sinh(x + log(asin(5))) + 5)
+    f2 = (x + cosh(cos(4)))/(x*(x + 1/(12*x)))
+
+    assert integrate(f1, x) == \
+        -x**6/(6*asin(5)**4) - x**2*cosh(x + log(asin(5))) + 5*x**2/2 + 2*x*sinh(x + log(asin(5))) - 2*cosh(x + log(asin(5)))
+
+    assert integrate(f2, x) == \
+        log(x**2 + S(1)/12)/2 + 2*sqrt(3)*cosh(cos(4))*atan(2*sqrt(3)*x)

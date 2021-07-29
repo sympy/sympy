@@ -22,16 +22,6 @@ from .determinant import _find_reasonable_pivot
 from .utilities import _iszero
 
 
-def _eigenvals_triangular(M, multiple=False):
-    """A fast decision for eigenvalues of an upper or a lower triangular
-    matrix.
-    """
-    diagonal_entries = [M[i, i] for i in range(M.rows)]
-    if multiple:
-        return diagonal_entries
-    return dict(Counter(diagonal_entries))
-
-
 def _eigenvals_eigenvects_mpmath(M):
     norm2 = lambda v: mp.sqrt(sum(i**2 for i in v))
 
@@ -78,7 +68,7 @@ def _eigenvects_mpmath(M):
     return result
 
 
-# This functions is a candidate for caching if it gets implemented for matrices.
+# This function is a candidate for caching if it gets implemented for matrices.
 def _eigenvals(
     M, error_when_incomplete=True, *, simplify=False, multiple=False,
     rational=False, **flags):
@@ -167,9 +157,6 @@ def _eigenvals(
     if not M.is_square:
         raise NonSquareMatrixError("{} must be a square matrix.".format(M))
 
-    if M.is_upper or M.is_lower:
-        return _eigenvals_triangular(M, multiple=multiple)
-
     if all(x.is_number for x in M) and M.has(Float):
         return _eigenvals_mpmath(M, multiple=multiple)
 
@@ -186,9 +173,20 @@ def _eigenvals(
         **flags)
 
 
+eigenvals_error_message = \
+"It is not always possible to express the eigenvalues of a matrix " + \
+"of size 5x5 or higher in radicals. " + \
+"We have CRootOf, but domains other than the rationals are not " + \
+"currently supported. " + \
+"If there are no symbols in the matrix, " + \
+"it should still be possible to compute numeric approximations " + \
+"of the eigenvalues using " + \
+"M.evalf().eigenvals() or M.charpoly().nroots()."
+
+
 def _eigenvals_list(
     M, error_when_incomplete=True, simplify=False, **flags):
-    iblocks = M.connected_components()
+    iblocks = M.strongly_connected_components()
     all_eigs = []
     for b in iblocks:
         block = M[b, b]
@@ -208,7 +206,7 @@ def _eigenvals_list(
                 eigs = [CRootOf(f, x, idx) for idx in range(degree)]
             except NotImplementedError:
                 if error_when_incomplete:
-                    raise MatrixError
+                    raise MatrixError(eigenvals_error_message)
                 else:
                     eigs = []
 
@@ -223,7 +221,7 @@ def _eigenvals_list(
 
 def _eigenvals_dict(
     M, error_when_incomplete=True, simplify=False, **flags):
-    iblocks = M.connected_components()
+    iblocks = M.strongly_connected_components()
     all_eigs = {}
     for b in iblocks:
         block = M[b, b]
@@ -243,7 +241,7 @@ def _eigenvals_dict(
                 eigs = {CRootOf(f, x, idx): 1 for idx in range(degree)}
             except NotImplementedError:
                 if error_when_incomplete:
-                    raise MatrixError
+                    raise MatrixError(eigenvals_error_message)
                 else:
                     eigs = {}
 
@@ -277,6 +275,8 @@ def _eigenspace(M, eigenval, iszerofunc=_iszero, simplify=False):
 
 def _eigenvects_DOM(M, **kwargs):
     DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    DOM = DOM.to_dense()
+
     if DOM.domain != EX:
         rational, algebraic = dom_eigenvects(DOM)
         eigenvects = dom_eigenvects_to_sympy(

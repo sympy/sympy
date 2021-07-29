@@ -180,8 +180,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     names that are defined in abc).
 
     >>> from sympy.abc import _clash1
-    >>> _clash1
-    {'E': E, 'I': I, 'N': N, 'O': O, 'Q': Q, 'S': S}
+    >>> set(_clash1)
+    {'E', 'I', 'N', 'O', 'Q', 'S'}
     >>> sympify('I & Q', _clash1)
     I & Q
 
@@ -435,14 +435,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if iterable(a):
         try:
             return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
-                rational=rational) for x in a])
-        except TypeError:
-            # Not all iterables are rebuildable with their type.
-            pass
-    if isinstance(a, dict):
-        try:
-            return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
-                rational=rational) for x in a.items()])
+                rational=rational, evaluate=evaluate) for x in a])
         except TypeError:
             # Not all iterables are rebuildable with their type.
             pass

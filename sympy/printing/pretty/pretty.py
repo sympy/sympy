@@ -446,7 +446,6 @@ class PrettyPrinter(Printer):
         firstterm = True
         s = None
         for lim in integral.limits:
-            x = lim[0]
             # Create bar based on the height of the argument
             h = arg.height()
             H = h + 2
@@ -1013,6 +1012,13 @@ class PrettyPrinter(Printer):
 
         return self._print(num)/self._print(den)
 
+    def _print_TransferFunctionMatrix(self, expr):
+        mat = self._print(expr._expr_mat)
+        mat.baseline = mat.height() - 1
+        subscript = greek_unicode['tau'] if self._use_unicode else r'{t}'
+        mat = prettyForm(*mat.right(subscript))
+        return mat
+
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
 
@@ -1573,7 +1579,12 @@ class PrettyPrinter(Printer):
 
     def _print_Heaviside(self, e):
         func_name = greek_unicode['theta'] if self._use_unicode else 'Heaviside'
-        return self._print_Function(e, func_name=func_name)
+        if e.args[1]==1/2:
+            pform = prettyForm(*self._print(e.args[0]).parens())
+            pform = prettyForm(*pform.left(func_name))
+            return pform
+        else:
+            return self._print_Function(e, func_name=func_name)
 
     def _print_fresnels(self, e):
         return self._print_Function(e, func_name="S")
@@ -2234,26 +2245,25 @@ class PrettyPrinter(Printer):
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False, ifascii_nougly=True):
-        s = None
         try:
+            pforms = []
             for item in seq:
                 pform = self._print(item)
-
                 if parenthesize(item):
                     pform = prettyForm(*pform.parens())
-                if s is None:
-                    # first element
-                    s = pform
-                else:
-                    # XXX: Under the tests from #15686 this raises:
-                    # AttributeError: 'Fake' object has no attribute 'baseline'
-                    # This is caught below but that is not the right way to
-                    # fix it.
-                    s = prettyForm(*stringPict.next(s, delimiter))
-                    s = prettyForm(*stringPict.next(s, pform))
+                if pforms:
+                    pforms.append(delimiter)
+                pforms.append(pform)
 
-            if s is None:
+            if not pforms:
                 s = stringPict('')
+            else:
+                s = prettyForm(*stringPict.next(*pforms))
+
+                # XXX: Under the tests from #15686 the above raises:
+                # AttributeError: 'Fake' object has no attribute 'baseline'
+                # This is caught below but that is not the right way to
+                # fix it.
 
         except AttributeError:
             s = None
@@ -2745,6 +2755,7 @@ class PrettyPrinter(Printer):
 
     def _print_Str(self, s):
         return self._print(s.name)
+
 
 @print_function(PrettyPrinter)
 def pretty(expr, **settings):

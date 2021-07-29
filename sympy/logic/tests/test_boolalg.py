@@ -18,7 +18,7 @@ from sympy.logic.boolalg import (
     BooleanAtom, is_literal, term_to_integer, integer_to_term,
     truth_table, as_Boolean, to_anf, is_anf, distribute_xor_over_and,
     anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial,
-    _check_pair, _convert_to_varsSOP, _convert_to_varsPOS)
+    _check_pair, _convert_to_varsSOP, _convert_to_varsPOS, Exclusive,)
 from sympy.assumptions.cnf import CNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
@@ -225,6 +225,13 @@ def test_Equivalent():
     assert Equivalent(A < 1, A >= 1, 1) is false
     assert Equivalent(A < 1, S.One > A) == Equivalent(1, 1) == Equivalent(0, 0)
     assert Equivalent(Equality(A, B), Equality(B, A)) is true
+
+
+def test_Exclusive():
+    assert Exclusive(False, False, False) is true
+    assert Exclusive(True, False, False) is true
+    assert Exclusive(True, True, False) is false
+    assert Exclusive(True, True, True) is false
 
 
 def test_equals():
@@ -991,9 +998,9 @@ def test_binary_symbols():
     assert x.binary_symbols == {x}
     assert And(x, Eq(y, False), Eq(z, 1)).binary_symbols == {x, y}
     assert Q.prime(x).binary_symbols == set()
-    assert Q.is_true(x < 1).binary_symbols == set()
+    assert Q.lt(x, 1).binary_symbols == set()
     assert Q.is_true(x).binary_symbols == {x}
-    assert Q.is_true(Eq(x, True)).binary_symbols == {x}
+    assert Q.eq(x, True).binary_symbols == {x}
     assert Q.prime(x).binary_symbols == set()
 
 
@@ -1212,36 +1219,36 @@ def test_convert_to_varsPOS():
 
 def test_refine():
     # relational
-    assert not refine(x < 0, ~Q.is_true(x < 0))
-    assert refine(x < 0, Q.is_true(x < 0))
-    assert refine(x < 0, Q.is_true(0 > x)) == True
-    assert refine(x < 0, Q.is_true(y < 0)) == (x < 0)
-    assert not refine(x <= 0, ~Q.is_true(x <= 0))
-    assert refine(x <= 0,  Q.is_true(x <= 0))
-    assert refine(x <= 0,  Q.is_true(0 >= x)) == True
-    assert refine(x <= 0,  Q.is_true(y <= 0)) == (x <= 0)
-    assert not refine(x > 0, ~Q.is_true(x > 0))
-    assert refine(x > 0,  Q.is_true(x > 0))
-    assert refine(x > 0,  Q.is_true(0 < x)) == True
-    assert refine(x > 0,  Q.is_true(y > 0)) == (x > 0)
-    assert not refine(x >= 0, ~Q.is_true(x >= 0))
-    assert refine(x >= 0,  Q.is_true(x >= 0))
-    assert refine(x >= 0,  Q.is_true(0 <= x)) == True
-    assert refine(x >= 0,  Q.is_true(y >= 0)) == (x >= 0)
-    assert not refine(Eq(x, 0), ~Q.is_true(Eq(x, 0)))
-    assert refine(Eq(x, 0),  Q.is_true(Eq(x, 0)))
-    assert refine(Eq(x, 0),  Q.is_true(Eq(0, x))) == True
-    assert refine(Eq(x, 0),  Q.is_true(Eq(y, 0))) == Eq(x, 0)
-    assert not refine(Ne(x, 0), ~Q.is_true(Ne(x, 0)))
-    assert refine(Ne(x, 0), Q.is_true(Ne(0, x))) == True
-    assert refine(Ne(x, 0),  Q.is_true(Ne(x, 0)))
-    assert refine(Ne(x, 0),  Q.is_true(Ne(y, 0))) == (Ne(x, 0))
+    assert not refine(x < 0, ~(x < 0))
+    assert refine(x < 0, (x < 0))
+    assert refine(x < 0, (0 > x)) is S.true
+    assert refine(x < 0, (y < 0)) == (x < 0)
+    assert not refine(x <= 0, ~(x <= 0))
+    assert refine(x <= 0,  (x <= 0))
+    assert refine(x <= 0,  (0 >= x)) is S.true
+    assert refine(x <= 0,  (y <= 0)) == (x <= 0)
+    assert not refine(x > 0, ~(x > 0))
+    assert refine(x > 0,  (x > 0))
+    assert refine(x > 0,  (0 < x)) is S.true
+    assert refine(x > 0,  (y > 0)) == (x > 0)
+    assert not refine(x >= 0, ~(x >= 0))
+    assert refine(x >= 0,  (x >= 0))
+    assert refine(x >= 0,  (0 <= x)) is S.true
+    assert refine(x >= 0,  (y >= 0)) == (x >= 0)
+    assert not refine(Eq(x, 0), ~(Eq(x, 0)))
+    assert refine(Eq(x, 0),  (Eq(x, 0)))
+    assert refine(Eq(x, 0),  (Eq(0, x))) is S.true
+    assert refine(Eq(x, 0),  (Eq(y, 0))) == Eq(x, 0)
+    assert not refine(Ne(x, 0), ~(Ne(x, 0)))
+    assert refine(Ne(x, 0), (Ne(0, x))) is S.true
+    assert refine(Ne(x, 0),  (Ne(x, 0)))
+    assert refine(Ne(x, 0),  (Ne(y, 0))) == (Ne(x, 0))
 
     # boolean functions
-    assert refine(And(x > 0, y > 0), Q.is_true(x > 0)) == (y > 0)
-    assert refine(And(x > 0, y > 0), Q.is_true(x > 0) & Q.is_true(y > 0)) == True
+    assert refine(And(x > 0, y > 0), (x > 0)) == (y > 0)
+    assert refine(And(x > 0, y > 0), (x > 0) & (y > 0)) is S.true
 
     # predicates
-    assert refine(Q.positive(x), Q.positive(x)) == True
-    assert refine(Q.positive(x), Q.negative(x)) == False
+    assert refine(Q.positive(x), Q.positive(x)) is S.true
+    assert refine(Q.positive(x), Q.negative(x)) is S.false
     assert refine(Q.positive(x), Q.real(x)) == Q.positive(x)

@@ -116,6 +116,7 @@ def test_exp__as_base_exp():
     assert exp(x).exp == x
 
 
+@_both_exp_pow
 def test_exp_infinity():
     assert exp(I*y) != nan
     assert refine(exp(I*oo)) is nan
@@ -181,7 +182,7 @@ def test_exp_rewrite():
     assert Sum((exp(pi*I/2)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == Rational(4, 5) + I*Rational(2, 5)
     assert Sum((exp(pi*I/4)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(1 - sqrt(2)*(1 + I)/4)
     assert (Sum((exp(pi*I/3)/2)**n, (n, 0, oo)).rewrite(sqrt).doit().cancel()
-            == 4/(3 - sqrt(3)*I))
+            == 4*I/(sqrt(3) + 3*I))
 
 
 @_both_exp_pow
@@ -526,6 +527,7 @@ def test_log_AccumBounds():
     assert log(AccumBounds(1, E)) == AccumBounds(0, 1)
 
 
+@_both_exp_pow
 def test_lambertw():
     k = Symbol('k')
 

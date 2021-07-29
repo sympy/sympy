@@ -176,8 +176,8 @@ class lambdify:
             if abs(result.imag) > 1e-7 * abs(result):
                 return None
             return result.real
-        except (ZeroDivisionError, TypeError) as e:
-            if isinstance(e, ZeroDivisionError):
+        except (ZeroDivisionError, OverflowError, TypeError) as e:
+            if isinstance(e, ZeroDivisionError) or isinstance(e, OverflowError):
                 return None
 
             if self.failure:

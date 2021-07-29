@@ -1,7 +1,7 @@
 from sympy.core import (pi, symbols, Rational, Integer, GoldenRatio, EulerGamma,
                         Catalan, Lambda, Dummy, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.printing.glsl import GLSLPrinter
 from sympy.printing.str import StrPrinter
 from sympy.utilities.lambdify import implemented_function
@@ -455,7 +455,8 @@ def test_spread_assign_to_deeply_nested_symbols():
 
 def test_matrix_of_tuples_spread_assign_to_symbols():
     gl = glsl_code
-    expr = Matrix([[(1,2),(3,4)],[(5,6),(7,8)]])
+    with warns_deprecated_sympy():
+        expr = Matrix([[(1,2),(3,4)],[(5,6),(7,8)]])
     assign_to = (symbols('a b'), symbols('c d'), symbols('e f'), symbols('g h'))
     assert gl(expr, assign_to) == textwrap.dedent('''\
         a = 1;

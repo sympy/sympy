@@ -81,6 +81,7 @@ modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
     'sympy.assumptions.predicates',
+    'sympy.assumptions.relation',
     'sympy.benchmarks',
     'sympy.calculus',
     'sympy.categories',
@@ -186,7 +187,6 @@ class audit(Command):
         pass
 
     def run(self):
-        import os
         try:
             import pyflakes.scripts.pyflakes as flakes
         except ImportError:

@@ -298,3 +298,14 @@ def test_auto_vel_multiple_path_warning_msg():
         assert issubclass(w[-1].category, UserWarning)
         assert 'Velocity automatically calculated based on point' in str(w[-1].message)
         assert 'Velocities from these points are not necessarily the same. This may cause errors in your calculations.' in str(w[-1].message)
+
+def test_vel_frame():
+    N = ReferenceFrame('N')
+    A = ReferenceFrame('A')
+    A.orient_axis(N, N.x, 0)
+    P = Point('P')
+    P.set_vel(N, 5*N.x)
+    P1 = Point('P1')
+    P1.set_pos(P, A.x+N.x)
+    P1.set_vel(A, 10*A.x)
+    assert P1.vel(N) == 5*N.x + 10*A.x

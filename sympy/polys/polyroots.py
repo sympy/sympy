@@ -131,12 +131,14 @@ def roots_cubic(f, trig=False):
                 rv.append(2*sqrt(-p/3)*cos(acos(q/p*sqrt(-3/p)*Rational(3, 2))/3 - k*pi*Rational(2, 3)))
             return [i - b/3/a for i in rv]
 
+    # a*x**3 + b*x**2 + c*x + d -> x**3 + a*x**2 + b*x + c
     _, a, b, c = f.monic().all_coeffs()
 
     if c is S.Zero:
         x1, x2 = roots([1, a, b], multiple=True)
         return [x1, S.Zero, x2]
 
+    # x**3 + a*x**2 + b*x + c -> u**3 + p*u + q
     p = b - a**2/3
     q = c - a*b/3 + 2*a**3/27
 
@@ -147,11 +149,7 @@ def roots_cubic(f, trig=False):
     if p is S.Zero:
         if q is S.Zero:
             return [-aon3]*3
-        if q.is_real:
-            if q.is_positive:
-                u1 = -root(q, 3)
-            elif q.is_negative:
-                u1 = root(-q, 3)
+        u1 = -root(q, 3) if q.is_positive else root(-q, 3)
     elif q is S.Zero:
         y1, y2 = roots([1, 0, p], multiple=True)
         return [tmp - aon3 for tmp in [y1, S.Zero, y2]]
@@ -343,6 +341,12 @@ def roots_quartic(f):
                         ans.append((s*w - t*root)/2 - aon4)
                 return ans
 
+            # whether a Piecewise is returned or not
+            # depends on knowing p, so try to put
+            # in a simple form
+            p = _mexpand(p)
+
+
             # p == 0 case
             y1 = e*Rational(-5, 6) - q**TH
             if p.is_zero:
@@ -512,6 +516,8 @@ def roots_quintic(f):
         if not all(coeff.is_Rational for coeff in l):
             return result
         f = Poly(f/coeff_5)
+    elif not all(coeff.is_Rational for coeff in (p, q, r, s)):
+        return result
     quintic = PolyQuintic(f)
 
     # Eqn standardized. Algo for solving starts here

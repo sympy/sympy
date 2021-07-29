@@ -23,10 +23,12 @@ from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     residue_reduce, splitfactor, residue_reduce_derivation, DecrementLevel,
     recognize_log_derivative)
-from sympy.matrices import zeros, eye
 from sympy.polys import Poly, lcm, cancel, sqf_list
 from sympy.polys.polymatrix import PolyMatrix as Matrix
 from sympy.solvers import solve
+
+zeros = Matrix.zeros
+eye = Matrix.eye
 
 
 def prde_normal_denom(fa, fd, G, DE):
@@ -195,9 +197,9 @@ def prde_linear_constraints(a, b, G, DE):
 
     if not all([ri.is_zero for _, ri in Q]):
         N = max([ri.degree(DE.t) for _, ri in Q])
-        M = Matrix(N + 1, m, lambda i, j: Q[j][1].nth(i))
+        M = Matrix(N + 1, m, lambda i, j: Q[j][1].nth(i), DE.t)
     else:
-        M = Matrix(0, m, [])  # No constraints, return the empty matrix.
+        M = Matrix(0, m, [], DE.t)  # No constraints, return the empty matrix.
 
     qs, _ = list(zip(*Q))
     return (qs, M)
@@ -215,9 +217,9 @@ def poly_linear_constraints(p, d):
 
     if not all([ri.is_zero for ri in r]):
         n = max([ri.degree() for ri in r])
-        M = Matrix(n + 1, m, lambda i, j: r[j].nth(i))
+        M = Matrix(n + 1, m, lambda i, j: r[j].nth(i), d.gens)
     else:
-        M = Matrix(0, m, [])  # No constraints.
+        M = Matrix(0, m, [], d.gens)  # No constraints.
 
     return q, M
 
@@ -246,7 +248,7 @@ def constant_system(A, u, DE):
     if not A:
         return A, u
     Au = A.row_join(u)
-    Au = Au.rref(simplify=cancel, normalize_last=False)[0]
+    Au, _ = Au.rref()
     # Warning: This will NOT return correct results if cancel() cannot reduce
     # an identically zero expression to 0.  The danger is that we might
     # incorrectly prove that an integral is nonelementary (such as
@@ -268,30 +270,26 @@ def constant_system(A, u, DE):
     # variable (the structure theorems should be able to completely decide these
     # problems in the integration variable).
 
-    Au = Au.applyfunc(cancel)
     A, u = Au[:, :-1], Au[:, -1]
+
+    D = lambda x: derivation(x, DE, basic=True)
 
     for j in range(A.cols):
         for i in range(A.rows):
-            if A[i, j].has(*DE.T):
+            if A[i, j].expr.has(*DE.T):
                 # This assumes that const(F(t0, ..., tn) == const(K) == F
                 Ri = A[i, :]
                 # Rm+1; m = A.rows
-                Rm1 = Ri.applyfunc(lambda x: derivation(x, DE, basic=True)/
-                    derivation(A[i, j], DE, basic=True))
-                Rm1 = Rm1.applyfunc(cancel)
-                um1 = cancel(derivation(u[i], DE, basic=True)/
-                    derivation(A[i, j], DE, basic=True))
+                DAij = D(A[i, j])
+                Rm1 = Ri.applyfunc(lambda x: D(x) / DAij)
+                um1 = D(u[i]) / DAij
 
-                for s in range(A.rows):
-                    # A[s, :] = A[s, :] - A[s, i]*A[:, m+1]
-                    Asj = A[s, j]
-                    A.row_op(s, lambda r, jj: cancel(r - Asj*Rm1[jj]))
-                    # u[s] = u[s] - A[s, j]*u[m+1
-                    u.row_op(s, lambda r, jj: cancel(r - Asj*um1))
+                Aj = A[:, j]
+                A = A - Aj * Rm1
+                u = u - Aj * um1
 
                 A = A.col_join(Rm1)
-                u = u.col_join(Matrix([um1]))
+                u = u.col_join(Matrix([um1], u.gens))
 
     return (A, u)
 
@@ -348,13 +346,13 @@ def prde_no_cancel_b_large(b, Q, n, DE):
 
     if all(qi.is_zero for qi in Q):
         dc = -1
-        M = zeros(0, 2)
+        M = zeros(0, 2, DE.t)
     else:
         dc = max([qi.degree(DE.t) for qi in Q])
-        M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i))
-    A, u = constant_system(M, zeros(dc + 1, 1), DE)
-    c = eye(m)
-    A = A.row_join(zeros(A.rows, m)).col_join(c.row_join(-c))
+        M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i), DE.t)
+    A, u = constant_system(M, zeros(dc + 1, 1, DE.t), DE)
+    c = eye(m, DE.t)
+    A = A.row_join(zeros(A.rows, m, DE.t)).col_join(c.row_join(-c))
 
     return (H, A)
 
@@ -393,10 +391,10 @@ def prde_no_cancel_b_small(b, Q, n, DE):
             M = Matrix()
         else:
             dc = max([qi.degree(DE.t) for qi in Q])
-            M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i))
-        A, u = constant_system(M, zeros(dc + 1, 1), DE)
-        c = eye(m)
-        A = A.row_join(zeros(A.rows, m)).col_join(c.row_join(-c))
+            M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i), DE.t)
+        A, u = constant_system(M, zeros(dc + 1, 1, DE.t), DE)
+        c = eye(m, DE.t)
+        A = A.row_join(zeros(A.rows, m, DE.t)).col_join(c.row_join(-c))
         return (H, A)
 
     # else: b is in k, deg(qi) < deg(Dt)
@@ -422,6 +420,7 @@ def prde_no_cancel_b_small(b, Q, n, DE):
         # (Is there a better way?)
         f = [Poly(fa.as_expr()/fd.as_expr(), t, field=True)
              for fa, fd in f]
+        B = Matrix.from_Matrix(B.to_Matrix(), t)
     else:
         # Base case. Dy == 0 for all y in k and b == 0.
         # Dy + b*y = Sum(ci*qi) is solvable if and only if
@@ -429,7 +428,7 @@ def prde_no_cancel_b_small(b, Q, n, DE):
         # y = d1*f1 for f1 = 1 and any d1 in Const(k) = k.
 
         f = [Poly(1, t, field=True)]  # r = 1
-        B = Matrix([[qi.TC() for qi in Q] + [S.Zero]])
+        B = Matrix([[qi.TC() for qi in Q] + [S.Zero]], DE.t)
         # The condition for solvability is
         # B*Matrix([c1, ..., cm, d1]) == 0
         # There are no constraints on d1.
@@ -437,11 +436,11 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     # Coefficients of t^j (j > 0) in Sum(ci*qi) must be zero.
     d = max([qi.degree(DE.t) for qi in Q])
     if d > 0:
-        M = Matrix(d, m, lambda i, j: Q[j].nth(i + 1))
-        A, _ = constant_system(M, zeros(d, 1), DE)
+        M = Matrix(d, m, lambda i, j: Q[j].nth(i + 1), DE.t)
+        A, _ = constant_system(M, zeros(d, 1, DE.t), DE)
     else:
         # No constraints on the hj.
-        A = Matrix(0, m, [])
+        A = Matrix(0, m, [], DE.t)
 
     # Solutions of the original equation are
     #    y = Sum(dj*fj, (j, 1, r) + Sum(ei*hi, (i, 1, m)),
@@ -452,10 +451,10 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     # Build combined constraint matrix with m + r + m columns.
 
     r = len(f)
-    I = eye(m)
-    A = A.row_join(zeros(A.rows, r + m))
-    B = B.row_join(zeros(B.rows, m))
-    C = I.row_join(zeros(m, r)).row_join(-I)
+    I = eye(m, DE.t)
+    A = A.row_join(zeros(A.rows, r + m, DE.t))
+    B = B.row_join(zeros(B.rows, m, DE.t))
+    C = I.row_join(zeros(m, r, DE.t)).row_join(-I)
 
     return f + H, A.col_join(B).col_join(C)
 
@@ -482,13 +481,14 @@ def prde_cancel_liouvillian(b, Q, n, DE):
             fi, Ai = param_rischDE(ba, bd, Qy, DE)
         fi = [Poly(fa.as_expr()/fd.as_expr(), DE.t, field=True)
                 for fa, fd in fi]
+        Ai = Ai.set_gens(DE.t)
 
         ri = len(fi)
 
         if i == n:
             M = Ai
         else:
-            M = Ai.col_join(M.row_join(zeros(M.rows, ri)))
+            M = Ai.col_join(M.row_join(zeros(M.rows, ri, DE.t)))
 
         Fi, hi = [None]*ri, [None]*ri
 
@@ -526,11 +526,11 @@ def param_poly_rischDE(a, b, q, n, DE):
         # Only the trivial zero solution is possible.
         # Find relations between the qi.
         if all([qi.is_zero for qi in q]):
-            return [], zeros(1, m)  # No constraints.
+            return [], zeros(1, m, DE.t)  # No constraints.
 
         N = max([qi.degree(DE.t) for qi in q])
-        M = Matrix(N + 1, m, lambda i, j: q[j].nth(i))
-        A, _ = constant_system(M, zeros(M.rows, 1), DE)
+        M = Matrix(N + 1, m, lambda i, j: q[j].nth(i), DE.t)
+        A, _ = constant_system(M, zeros(M.rows, 1, DE.t), DE)
 
         return [], A
 
@@ -586,7 +586,7 @@ def param_poly_rischDE(a, b, q, n, DE):
     # divisible by d if and only if M*Matrix([f1, ..., fm]) == 0,
     # in which case the quotient is Sum(fi*qqi).
 
-    A, _ = constant_system(M, zeros(M.rows, 1), DE)
+    A, _ = constant_system(M, zeros(M.rows, 1, DE.t), DE)
     # A is a matrix with m columns and entries in Const(k).
     # Sum(ci*qqi) is Sum(ci*qi).quo(d), and the remainder is zero
     # for c1, ..., cm in Const(k) if and only if
@@ -605,8 +605,8 @@ def param_poly_rischDE(a, b, q, n, DE):
     # where rj = Sum(aji*qqi).
 
     if not V:  # No non-trivial solution.
-        return [], eye(m)  # Could return A, but this has
-                           # the minimum number of rows.
+        return [], eye(m, DE.t)  # Could return A, but this has
+                                 # the minimum number of rows.
 
     Mqq = Matrix([qq])  # A single row.
     r = [(Mqq*vj)[0] for vj in V]  # [r1, ..., ru]
@@ -635,11 +635,11 @@ def param_poly_rischDE(a, b, q, n, DE):
     h = f + [alpha*gk for gk in g]
 
     # Build combined relation matrix.
-    A = -eye(m)
+    A = -eye(m, DE.t)
     for vj in V:
         A = A.row_join(vj)
-    A = A.row_join(zeros(m, len(g)))
-    A = A.col_join(zeros(B.rows, m).row_join(B))
+    A = A.row_join(zeros(m, len(g), DE.t))
+    A = A.col_join(zeros(B.rows, m, DE.t).row_join(B))
 
     return h, A
 
@@ -694,7 +694,7 @@ def param_rischDE(fa, fd, G, DE):
     # is a polynomial if and only if M*Matrix([f1, ..., fm]) == 0,
     # in which case the sum is equal to Sum(fi*qi).
 
-    M, _ = constant_system(M, zeros(M.rows, 1), DE)
+    M, _ = constant_system(M, zeros(M.rows, 1, DE.t), DE)
     # M is a matrix with m columns and entries in Const(k).
     # Sum(ci*gi) is in k[t] for c1, ..., cm in Const(k)
     # if and only if M*Matrix([c1, ..., cm]) == 0,
@@ -713,7 +713,7 @@ def param_rischDE(fa, fd, G, DE):
     # where rj = Sum(aji*qi) (j = 1, ..., u) in k[t].
 
     if not V:  # No non-trivial solution
-        return [], eye(m)
+        return [], eye(m, DE.t)
 
     Mq = Matrix([q])  # A single row.
     r = [(Mq*vj)[0] for vj in V]  # [r1, ..., ru]
@@ -743,11 +743,11 @@ def param_rischDE(fa, fd, G, DE):
 
     ## Build combined relation matrix with m + u + v columns.
 
-    A = -eye(m)
+    A = -eye(m, DE.t)
     for vj in V:
         A = A.row_join(vj)
-    A = A.row_join(zeros(m, len(h)))
-    A = A.col_join(zeros(B.rows, m).row_join(B))
+    A = A.row_join(zeros(m, len(h), DE.t))
+    A = A.col_join(zeros(B.rows, m, DE.t).row_join(B))
 
     ## Eliminate d1, ..., du.
 
@@ -769,7 +769,7 @@ def param_rischDE(fa, fd, G, DE):
     # vectors generating the space of linear relations between
     # c1, ..., cm, e1, ..., ev.
 
-    C = Matrix([ni[:] for ni in N])  # rows n1, ..., ns.
+    C = Matrix([ni[:] for ni in N], DE.t)  # rows n1, ..., ns.
 
     return [hk.cancel(gamma, include=True) for hk in h], C
 
@@ -1037,10 +1037,15 @@ def is_deriv_k(fa, fd, DE):
     E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in DE.indices('exp')]
     L_part = [DE.D[i].as_expr() for i in DE.indices('log')]
 
-    lhs = Matrix([E_part + L_part])
-    rhs = Matrix([dfa.as_expr()/dfd.as_expr()])
+    # The expression dfa/dfd might not be polynomial in any of its symbols so we
+    # use a Dummy as the generator for PolyMatrix.
+    dum = Dummy()
+    lhs = Matrix([E_part + L_part], dum)
+    rhs = Matrix([dfa.as_expr()/dfd.as_expr()], dum)
 
     A, u = constant_system(lhs, rhs, DE)
+
+    u = u.to_Matrix()  # Poly to Expr
 
     if not all(derivation(i, DE, basic=True).is_zero for i in u) or not A:
         # If the elements of u are not all constant
@@ -1157,10 +1162,16 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
     E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in DE.indices('exp')]
     L_part = [DE.D[i].as_expr() for i in DE.indices('log')]
 
-    lhs = Matrix([E_part + L_part])
-    rhs = Matrix([dfa.as_expr()/dfd.as_expr()])
+    # The expression dfa/dfd might not be polynomial in any of its symbols so we
+    # use a Dummy as the generator for PolyMatrix.
+    dum = Dummy()
+    lhs = Matrix([E_part + L_part], dum)
+    rhs = Matrix([dfa.as_expr()/dfd.as_expr()], dum)
 
     A, u = constant_system(lhs, rhs, DE)
+
+    u = u.to_Matrix()  # Poly to Expr
+
     if not all(derivation(i, DE, basic=True).is_zero for i in u) or not A:
         # If the elements of u are not all constant
         # Note: See comment in constant_system

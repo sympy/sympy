@@ -324,7 +324,7 @@ References
 .. [3] Methods to solve Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0,[online],
     Available: http://www.alpertron.com.ar/METHODS.HTM
 .. [4] Solving the equation ax^2+ bxy + cy^2 + dx + ey + f= 0, [online],
-    Available: http://www.jpr2718.org/ax2p.pdf
+    Available: https://web.archive.org/web/20160323033111/http://www.jpr2718.org/ax2p.pdf
 
 User Functions
 --------------
@@ -492,55 +492,69 @@ These classes are intended for internal use in the Diophantine module.
 DiophantineSolutionSet
 ^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.DiophantineSolutionSet
+   :members:
 
 DiophantineEquationType
 ^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.DiophantineEquationType
+   :members:
 
 Univariate
 ^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.Univariate
+   :members:
 
 Linear
 ^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.Linear
+   :members:
 
 BinaryQuadratic
 ^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.BinaryQuadratic
+   :members:
 
 InhomogeneousTernaryQuadratic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.InhomogeneousTernaryQuadratic
+   :members:
 
 HomogeneousTernaryQuadraticNormal
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.HomogeneousTernaryQuadraticNormal
+   :members:
 
 HomogeneousTernaryQuadratic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.HomogeneousTernaryQuadratic
+   :members:
 
 InhomogeneousGeneralQuadratic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.InhomogeneousGeneralQuadratic
+   :members:
 
 HomogeneousGeneralQuadratic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.HomogeneousGeneralQuadratic
+   :members:
 
 GeneralSumOfSquares
 ^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.GeneralSumOfSquares
+   :members:
 
 GeneralPythagorean
 ^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.GeneralPythagorean
+   :members:
 
 CubicThue
 ^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.CubicThue
+   :members:
 
 GeneralSumOfEvenPowers
 ^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.diophantine.diophantine.GeneralSumOfEvenPowers
+   :members:

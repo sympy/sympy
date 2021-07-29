@@ -294,7 +294,7 @@ def test_nseries():
     assert cbrt(I*x - 1)._eval_nseries(x, 4, None, -1) == (-1)**(S(1)/3)*exp(-2*I*pi/3) - \
     (-1)**(S(5)/6)*x*exp(-2*I*pi/3)/3 + (-1)**(S(1)/3)*x**2*exp(-2*I*pi/3)/9 + \
     5*(-1)**(S(5)/6)*x**3*exp(-2*I*pi/3)/81 + O(x**4)
-    assert (1 / (exp(-1/x) + 1/x))._eval_nseries(x, 2, None) == -x**2*exp(-1/x) + x
+    assert (1 / (exp(-1/x) + 1/x))._eval_nseries(x, 2, None) == x + O(x**2)
 
 
 def test_issue_6100_12942_4473():
@@ -318,8 +318,7 @@ def test_issue_6100_12942_4473():
 
 
 def test_issue_6208():
-    from sympy import root, Rational
-    I = S.ImaginaryUnit
+    from sympy import root
     assert sqrt(33**(I*Rational(9, 10))) == -33**(I*Rational(9, 20))
     assert root((6*I)**(2*I), 3).as_base_exp()[1] == Rational(1, 3)  # != 2*I/3
     assert root((6*I)**(I/3), 3).as_base_exp()[1] == I/9
@@ -587,3 +586,10 @@ def test_power_dispatcher():
     assert power(a, b) == NewPow(a, b)
     assert power(b, a) == NewPow(b, a)
     assert power(b, b) == NewPow(b, b)
+
+
+def test_powers_of_I():
+    assert [sqrt(I)**i for i in range(13)] == [
+        1, sqrt(I), I, sqrt(I)**3, -1, -sqrt(I), -I, -sqrt(I)**3,
+        1, sqrt(I), I, sqrt(I)**3, -1]
+    assert sqrt(I)**(S(9)/2) == -I**(S(1)/4)

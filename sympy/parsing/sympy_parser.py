@@ -9,10 +9,11 @@ import ast
 import unicodedata
 from io import StringIO
 
+from sympy.assumptions.ask import AssumptionKeys
 from sympy.core.compatibility import iterable
 from sympy.core.basic import Basic
 from sympy.core import Symbol
-from sympy.core.function import arity
+from sympy.core.function import arity, Function
 from sympy.utilities.misc import filldedent, func_name
 
 
@@ -208,8 +209,16 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
 
     """
     result = []
+    skip = False
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
+        if skip:
+            skip = False
+            continue
+        if tok[0] == OP and tok[1] == '.' and nextTok[0] == NAME:
+            # Dotted name. Do not do implicit multiplication
+            skip = True
+            continue
         if (isinstance(tok, AppliedFunction) and
               isinstance(nextTok, AppliedFunction)):
             result.append((OP, '*'))
@@ -541,26 +550,27 @@ def auto_symbol(tokens, local_dict, global_dict):
             name = tokVal
 
             if (name in ['True', 'False', 'None']
-                or iskeyword(name)
-                # Don't convert attribute access
-                or (prevTok[0] == OP and prevTok[1] == '.')
-                # Don't convert keyword arguments
-                or (prevTok[0] == OP and prevTok[1] in ('(', ',')
-                    and nextTokNum == OP and nextTokVal == '=')):
+                    or iskeyword(name)
+                    # Don't convert attribute access
+                    or (prevTok[0] == OP and prevTok[1] == '.')
+                    # Don't convert keyword arguments
+                    or (prevTok[0] == OP and prevTok[1] in ('(', ',')
+                        and nextTokNum == OP and nextTokVal == '=')
+                    # the name has already been defined
+                    or name in local_dict and local_dict[name] is not None):
                 result.append((NAME, name))
                 continue
             elif name in local_dict:
-                if isinstance(local_dict[name], Symbol) and nextTokVal == '(':
-                    result.extend([(NAME, 'Function'),
-                                   (OP, '('),
-                                   (NAME, repr(str(local_dict[name]))),
-                                   (OP, ')')])
+                local_dict.setdefault(None, set()).add(name)
+                if nextTokVal == '(':
+                    local_dict[name] = Function(name)
                 else:
-                    result.append((NAME, name))
+                    local_dict[name] = Symbol(name)
+                result.append((NAME, name))
                 continue
             elif name in global_dict:
                 obj = global_dict[name]
-                if isinstance(obj, (Basic, type)) or callable(obj):
+                if isinstance(obj, (AssumptionKeys, Basic, type)) or callable(obj):
                     result.append((NAME, name))
                     continue
 
@@ -900,7 +910,6 @@ def eval_expr(code, local_dict, global_dict):
     """
     expr = eval(
         code, global_dict, local_dict)  # take local objects in preference
-
     return expr
 
 
@@ -1004,7 +1013,17 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     if not evaluate:
         code = compile(evaluateFalse(code), '<string>', 'eval')
 
-    return eval_expr(code, local_dict, global_dict)
+    try:
+        rv = eval_expr(code, local_dict, global_dict)
+        # restore neutral definitions for names
+        for i in local_dict.pop(None, ()):
+            local_dict[i] = None
+        return rv
+    except Exception as e:
+        # restore neutral definitions for names
+        for i in local_dict.pop(None, ()):
+            local_dict[i] = None
+        raise e from ValueError(f"Error from parse_expr with transformed code: {code!r}")
 
 
 def evaluateFalse(s):
@@ -1051,8 +1070,8 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             sympy_class = self.operators[node.op.__class__]
             right = self.visit(node.right)
             left = self.visit(node.left)
-            if isinstance(node.left, ast.UnaryOp) and (isinstance(node.right, ast.UnaryOp) == 0) and sympy_class in ('Mul',):
-                left, right = right, left
+
+            rev = False
             if isinstance(node.op, ast.Sub):
                 right = ast.Call(
                     func=ast.Name(id='Mul', ctx=ast.Load()),
@@ -1061,10 +1080,10 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                     starargs=None,
                     kwargs=None
                 )
-            if isinstance(node.op, ast.Div):
+            elif isinstance(node.op, ast.Div):
                 if isinstance(node.left, ast.UnaryOp):
-                    if isinstance(node.right,ast.UnaryOp):
-                        left, right = right, left
+                    left, right = right, left
+                    rev = True
                     left = ast.Call(
                     func=ast.Name(id='Pow', ctx=ast.Load()),
                     args=[left, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
@@ -1081,6 +1100,8 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                     kwargs=None
                 )
 
+            if rev:  # undo reversal
+                left, right = right, left
             new_node = ast.Call(
                 func=ast.Name(id=sympy_class, ctx=ast.Load()),
                 args=[left, right],

@@ -992,8 +992,7 @@ def dup_rr_prs_gcd(f, g, K):
     h = dup_subresultants(F, G, K)[-1]
     _, h = dup_primitive(h, K)
 
-    if K.is_negative(dup_LC(h, K)):
-        c = -c
+    c *= K.canonical_unit(dup_LC(h, K))
 
     h = dup_mul_ground(h, c, K)
 

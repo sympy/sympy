@@ -4,7 +4,7 @@ those who explicitly didn't want to be mentioned. People with a * next
 to their names are not found in the metadata of the git history. This
 file is generated automatically by running `./bin/authors_update.py`.
 
-There are a total of 1002 authors.
+There are a total of 1044 authors.
 
 Ondřej Čertík <ondrej@certik.cz>
 Fabian Pedregosa <fabian@fseoane.net>
@@ -908,7 +908,7 @@ Milan Jolly <milan.cs16@iitp.ac.in>
 faizan2700 <syedfaizan824@gmail.com>
 mohit <39158356+mohitacecode@users.noreply.github.com>
 Mohit Gupta <mohitgupta@gmail.com>
-Psycho-Pirate <prakharsaxena.cer18@itbhu.ac.in>
+Psycho-Pirate <prakharsaxena.civ18@iitbhu.ac.in>
 Chanakya-Ekbote <ca10@iitbbs.ac.in>
 Rashmi Shehana <rashmi.watagedara@syscolabs.com>
 Jonty16117 <jonty@DESKTOP-J1O6ANP.localdomain>
@@ -969,7 +969,6 @@ w495 <w495@yandex-team.ru>
 Akhil Rajput <akh1lrjput@gmail.com>
 Markus Mohrhard <markus.mohrhard@googlemail.com>
 Benjamin Wolba <mail@benjaminwolba.com>
-mcpl-sympy <59268464+mcpl-sympy@users.noreply.github.com>
 彭于斌 <1931127624@qq.com>
 Rudr Tiwari <rudrtiwari@gmail.com>
 Aaryan Dewan <aaryandewan@yahoo.com>
@@ -999,12 +998,55 @@ Shubham Agrawal <shubham.ag6845@gmail.com>
 numbermaniac <5206120+numbermaniac@users.noreply.github.com>
 Sakirul Alam <binarysakir@gmail.com>
 Mohammed Bilal <r.mohammedbilal@gmail.com>
+Naveen Sai <naveensaisreenivas@gmail.com>
 Chris du Plessis <christopherjonduplessis@gmail.com>
 Coder-RG <rgoel1999@gmail.com>
 Ansh Mishra <anshmishra471@gmail.com>
 Alex Malins <github@alexmalins.com>
 Lorenzo Contento <lorenzo.contento@gmail.com>
-Naveen Sai <naveensaisreenivas@gmail.com>
 Shital Mule <shitalmule04@gmail.com>
 Amanda Dsouza <meezamanda@yahoo.com>
 Nijso Beishuizen <nijso@koolmees.numerically-related.com>
+Harry Zheng <harry@harryzheng.com>
+Felix Yan <felixonmars@archlinux.org>
+Constantin Mateescu <costica1234@me.com>
+Eva Tiwari <eva.tiwari@gmail.com>
+Aditya Kumar Sinha <adityakumar113141@gmail.com>
+Soumi Bardhan <51290447+Soumi7@users.noreply.github.com>
+Kaustubh Chaudhari <ckaustubhm06@gmail.com>
+Kristian Brünn <hello@kristianbrunn.com>
+Neel Gorasiya <mgorasiya1974@gmail.com>
+Akshat Sood <68052998+akshatsood2249@users.noreply.github.com>
+Jose M. Gomez <chemoki@gmail.com>
+Stefan Petrea <stefan@garage-coding.com>
+Praveen Sahu <povinsahu@gmail.com>
+Mark Bell <mark00bell@googlemail.com>
+AlexCQY <alex_chua@u.nus.edu>
+Fabian Froehlich <fabian@schaluck.com>
+Nikhil Gopalam <gopalamn@umich.edu>
+Kartik Sethi <kartiks31416@gmail.com>
+Muhammed Abdul Quadir Owais <quadirowais200@gmail.com>
+Harshit Yadav <harshityadav2k@gmail.com>
+Sidharth Mundhra <sidharthmundhra16@gmail.com>
+Suryam Arnav Kalra <suryamkalra35@gmail.com>
+Prince Gupta <codemastercpp@gmail.com>
+Kunal Singh <ksingh19136@gmail.com>
+Mayank Raj <mayank_1901cs35@iitp.ac.in>
+Achal Jain <2achaljain@gmail.com>
+Mario Maio <mario.maio@aruba.it>
+Aaron Stiff <69512633+AaronStiff@users.noreply.github.com>
+Wyatt Peak <wyattpeak@gmail.com>
+Bhaskar Joshi <bhaskar.joshi@research.iiit.ac.in>
+Aditya Jindal <jaditya8889@gmail.com>
+Vaibhav Bhat <vaibhav.bhat2097@gmail.com>
+Priyansh Rathi <techiepriyansh@gmail.com>
+Saket Kumar Singh <saketkumar1202@gmail.com>
+Yukai Chou <muzimuzhi@gmail.com>
+Qijia Liu <liumeo@pku.edu.cn>
+Paul Mandel <paulmandel@google.com>
+Nisarg Chaudhari <54911392+Nisarg-Chaudhari@users.noreply.github.com>
+Dominik Stańczak <stanczakdominik@gmail.com>
+Rodrigo Luger <rodluger@gmail.com>
+Marco Antônio Habitzreuter <mahabitzreuter@gmail.com>
+Ayush Bisht <bisht.ayush2001@gmail.com>
+Akshansh Bhatt <akshansh@tuta.io>

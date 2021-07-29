@@ -1,4 +1,4 @@
-from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros,
+from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros, acos,
     ImmutableMatrix as Matrix)
 from sympy import trigsimp
 from sympy.printing.defaults import Printable
@@ -678,7 +678,17 @@ class Vector(Printable, EvalfMixin):
         return Vector(d)
 
     def magnitude(self):
-        """Returns the magnitude (Euclidean norm) of self."""
+        """Returns the magnitude (Euclidean norm) of self.
+
+        Warnings
+        ========
+
+        Python ignores the leading negative sign so that might
+        give wrong results.
+        ``-A.x.magnitude()`` would be treated as ``-(A.x.magnitude())``,
+        instead of ``(-A.x).magnitude()``.
+
+        """
         return sqrt(self & self)
 
     def normalize(self):
@@ -694,6 +704,45 @@ class Vector(Printable, EvalfMixin):
         for v in self.args:
             d[v[1]] = v[0].applyfunc(f)
         return Vector(d)
+
+    def angle_between(self, vec):
+        """
+        Returns the smallest angle between Vector 'vec' and self.
+
+        Parameter
+        =========
+
+        vec : Vector
+            The Vector between which angle is needed.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> A = ReferenceFrame("A")
+        >>> v1 = A.x
+        >>> v2 = A.y
+        >>> v1.angle_between(v2)
+        pi/2
+
+        >>> v3 = A.x + A.y + A.z
+        >>> v1.angle_between(v3)
+        acos(sqrt(3)/3)
+
+        Warnings
+        ========
+
+        Python ignores the leading negative sign so that might
+        give wrong results.
+        ``-A.x.angle_between()`` would be treated as ``-(A.x.angle_between())``,
+        instead of ``(-A.x).angle_between()``.
+
+        """
+
+        vec1 = self.normalize()
+        vec2 = vec.normalize()
+        angle = acos(vec1.dot(vec2))
+        return angle
 
     def free_symbols(self, reference_frame):
         """

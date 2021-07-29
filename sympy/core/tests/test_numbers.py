@@ -1226,6 +1226,127 @@ def test_powers_Float():
     assert str((S('-1/10')**S('3/10')).n()) == str(Float(-.1)**(.3))
 
 
+def test_lshift_Integer():
+    assert Integer(0) << Integer(2) == Integer(0)
+    assert Integer(0) << 2 == Integer(0)
+    assert 0 << Integer(2) == Integer(0)
+
+    assert Integer(0b11) << Integer(0) == Integer(0b11)
+    assert Integer(0b11) << 0 == Integer(0b11)
+    assert 0b11 << Integer(0) == Integer(0b11)
+
+    assert Integer(0b11) << Integer(2) == Integer(0b11 << 2)
+    assert Integer(0b11) << 2 == Integer(0b11 << 2)
+    assert 0b11 << Integer(2) == Integer(0b11 << 2)
+
+    assert Integer(-0b11) << Integer(2) == Integer(-0b11 << 2)
+    assert Integer(-0b11) << 2 == Integer(-0b11 << 2)
+    assert -0b11 << Integer(2) == Integer(-0b11 << 2)
+
+    raises(TypeError, lambda: Integer(2) << 0.0)
+    raises(TypeError, lambda: 0.0 << Integer(2))
+    raises(ValueError, lambda: Integer(1) << Integer(-1))
+
+
+def test_rshift_Integer():
+    assert Integer(0) >> Integer(2) == Integer(0)
+    assert Integer(0) >> 2 == Integer(0)
+    assert 0 >> Integer(2) == Integer(0)
+
+    assert Integer(0b11) >> Integer(0) == Integer(0b11)
+    assert Integer(0b11) >> 0 == Integer(0b11)
+    assert 0b11 >> Integer(0) == Integer(0b11)
+
+    assert Integer(0b11) >> Integer(2) == Integer(0)
+    assert Integer(0b11) >> 2 == Integer(0)
+    assert 0b11 >> Integer(2) == Integer(0)
+
+    assert Integer(-0b11) >> Integer(2) == Integer(-1)
+    assert Integer(-0b11) >> 2 == Integer(-1)
+    assert -0b11 >> Integer(2) == Integer(-1)
+
+    assert Integer(0b1100) >> Integer(2) == Integer(0b1100 >> 2)
+    assert Integer(0b1100) >> 2 == Integer(0b1100 >> 2)
+    assert 0b1100 >> Integer(2) == Integer(0b1100 >> 2)
+
+    assert Integer(-0b1100) >> Integer(2) == Integer(-0b1100 >> 2)
+    assert Integer(-0b1100) >> 2 == Integer(-0b1100 >> 2)
+    assert -0b1100 >> Integer(2) == Integer(-0b1100 >> 2)
+
+    raises(TypeError, lambda: Integer(0b10) >> 0.0)
+    raises(TypeError, lambda: 0.0 >> Integer(2))
+    raises(ValueError, lambda: Integer(1) >> Integer(-1))
+
+
+def test_and_Integer():
+    assert Integer(0b01010101) & Integer(0b10101010) == Integer(0)
+    assert Integer(0b01010101) & 0b10101010 == Integer(0)
+    assert 0b01010101 & Integer(0b10101010) == Integer(0)
+
+    assert Integer(0b01010101) & Integer(0b11011011) == Integer(0b01010001)
+    assert Integer(0b01010101) & 0b11011011 == Integer(0b01010001)
+    assert 0b01010101 & Integer(0b11011011) == Integer(0b01010001)
+
+    assert -Integer(0b01010101) & Integer(0b11011011) == Integer(-0b01010101 & 0b11011011)
+    assert Integer(-0b01010101) & 0b11011011 == Integer(-0b01010101 & 0b11011011)
+    assert -0b01010101 & Integer(0b11011011) == Integer(-0b01010101 & 0b11011011)
+
+    assert Integer(0b01010101) & -Integer(0b11011011) == Integer(0b01010101 & -0b11011011)
+    assert Integer(0b01010101) & -0b11011011 == Integer(0b01010101 & -0b11011011)
+    assert 0b01010101 & Integer(-0b11011011) == Integer(0b01010101 & -0b11011011)
+
+    raises(TypeError, lambda: Integer(2) & 0.0)
+    raises(TypeError, lambda: 0.0 & Integer(2))
+
+
+def test_xor_Integer():
+    assert Integer(0b01010101) ^ Integer(0b11111111) == Integer(0b10101010)
+    assert Integer(0b01010101) ^ 0b11111111 == Integer(0b10101010)
+    assert 0b01010101 ^ Integer(0b11111111) == Integer(0b10101010)
+
+    assert Integer(0b01010101) ^ Integer(0b11011011) == Integer(0b10001110)
+    assert Integer(0b01010101) ^ 0b11011011 == Integer(0b10001110)
+    assert 0b01010101 ^ Integer(0b11011011) == Integer(0b10001110)
+
+    assert -Integer(0b01010101) ^ Integer(0b11011011) == Integer(-0b01010101 ^ 0b11011011)
+    assert Integer(-0b01010101) ^ 0b11011011 == Integer(-0b01010101 ^ 0b11011011)
+    assert -0b01010101 ^ Integer(0b11011011) == Integer(-0b01010101 ^ 0b11011011)
+
+    assert Integer(0b01010101) ^ -Integer(0b11011011) == Integer(0b01010101 ^ -0b11011011)
+    assert Integer(0b01010101) ^ -0b11011011 == Integer(0b01010101 ^ -0b11011011)
+    assert 0b01010101 ^ Integer(-0b11011011) == Integer(0b01010101 ^ -0b11011011)
+
+    raises(TypeError, lambda: Integer(2) ^ 0.0)
+    raises(TypeError, lambda: 0.0 ^ Integer(2))
+
+
+def test_or_Integer():
+    assert Integer(0b01010101) | Integer(0b10101010) == Integer(0b11111111)
+    assert Integer(0b01010101) | 0b10101010 == Integer(0b11111111)
+    assert 0b01010101 | Integer(0b10101010) == Integer(0b11111111)
+
+    assert Integer(0b01010101) | Integer(0b11011011) == Integer(0b11011111)
+    assert Integer(0b01010101) | 0b11011011 == Integer(0b11011111)
+    assert 0b01010101 | Integer(0b11011011) == Integer(0b11011111)
+
+    assert -Integer(0b01010101) | Integer(0b11011011) == Integer(-0b01010101 | 0b11011011)
+    assert Integer(-0b01010101) | 0b11011011 == Integer(-0b01010101 | 0b11011011)
+    assert -0b01010101 | Integer(0b11011011) == Integer(-0b01010101 | 0b11011011)
+
+    assert Integer(0b01010101) | -Integer(0b11011011) == Integer(0b01010101 | -0b11011011)
+    assert Integer(0b01010101) | -0b11011011 == Integer(0b01010101 | -0b11011011)
+    assert 0b01010101 | Integer(-0b11011011) == Integer(0b01010101 | -0b11011011)
+
+    raises(TypeError, lambda: Integer(2) | 0.0)
+    raises(TypeError, lambda: 0.0 | Integer(2))
+
+
+def test_invert_Integer():
+    assert ~Integer(0b01010101) == Integer(-0b01010110)
+    assert ~Integer(0b01010101) == Integer(~0b01010101)
+    assert ~(~Integer(0b01010101)) == Integer(0b01010101)
+
+
 def test_abs1():
     assert Rational(1, 6) != Rational(-1, 6)
     assert abs(Rational(1, 6)) == abs(Rational(-1, 6))
@@ -1246,13 +1367,25 @@ def test_int():
     a = Rational(9, 10)
     assert int(a) == int(-a) == 0
     assert 1/(-1)**Rational(2, 3) == -(-1)**Rational(1, 3)
-    assert int(pi) == 3
-    assert int(E) == 2
-    assert int(GoldenRatio) == 1
-    assert int(TribonacciConstant) == 2
     # issue 10368
     a = Rational(32442016954, 78058255275)
     assert type(int(a)) is type(int(-a)) is int
+
+
+def test_int_NumberSymbols():
+    assert int(Catalan) == 0
+    assert int(EulerGamma) == 0
+    assert int(pi) == 3
+    assert int(E) == 2
+    assert int(GoldenRatio) == 1
+    assert int(TribonacciConstant) == 1
+    for i in [Catalan, E, EulerGamma, GoldenRatio, TribonacciConstant, pi]:
+        a, b = i.approximation_interval(Integer)
+        ia = int(i)
+        assert ia == a
+        assert isinstance(ia, int)
+        assert b == a + 1
+        assert a.is_Integer and b.is_Integer
 
 
 def test_real_bug():
@@ -1720,11 +1853,6 @@ def test_Float_eq():
     assert t**2 != t**2.0
 
 
-def test_int_NumberSymbols():
-    assert [int(i) for i in [pi, EulerGamma, E, GoldenRatio, Catalan]] == \
-        [3, 0, 2, 1, 0]
-
-
 def test_issue_6640():
     from mpmath.libmp.libmpf import finf, fninf
     # fnan is not included because Float no longer returns fnan,
@@ -2025,11 +2153,15 @@ def test_abc():
     assert(isinstance(x, nums.Real))
     y = numbers.Rational(1, 3)
     assert(isinstance(y, nums.Number))
-    assert(y.numerator() == 1)
-    assert(y.denominator() == 3)
+    assert(y.numerator == 1)
+    assert(y.denominator == 3)
     assert(isinstance(y, nums.Rational))
     z = numbers.Integer(3)
     assert(isinstance(z, nums.Number))
+    assert(isinstance(z, numbers.Number))
+    assert(isinstance(z, nums.Rational))
+    assert(isinstance(z, numbers.Rational))
+    assert(isinstance(z, nums.Integral))
 
 def test_floordiv():
     assert S(2)//S.Half == 4

@@ -180,6 +180,18 @@ def test_vector_evalf():
     assert v.evalf(5, subs={a: 1.234, b:5.8973}) == Float('3.1415926536', 5) * A.x + Float('6.17', 5) * A.y - Float('5.8973', 5) * A.z
 
 
+def test_vector_angle():
+    A = ReferenceFrame('A')
+    v1 = A.x + A.y
+    v2 = A.z
+    assert v1.angle_between(v2) == pi/2
+    B = ReferenceFrame('B')
+    B.orient_axis(A, A.x, pi)
+    v3 = A.x
+    v4 = B.x
+    assert v3.angle_between(v4) == 0
+
+
 def test_vector_xreplace():
     x, y, z = symbols('x y z')
     v = x**2 * A.x + x*y * A.y + x*y*z * A.z
