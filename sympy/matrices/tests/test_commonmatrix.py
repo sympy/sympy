@@ -565,6 +565,7 @@ def test_simplify():
     m = Matrix([[30, 2], [3, 4]])
     assert (1/(m.trace())).simplify() == Rational(1, 34)
 
+
 def test_subs():
     assert OperationsOnlyMatrix([[1, x], [x, 4]]).subs(x, 5) == Matrix([[1, 5], [5, 4]])
     assert OperationsOnlyMatrix([[x, 2], [x + y, 4]]).subs([[x, -1], [y, -2]]) == \
