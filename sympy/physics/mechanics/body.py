@@ -203,16 +203,9 @@ class Body(RigidBody, Particle):  # type: ignore
         if isinstance(frame, Body):
             frame = Body.frame
         if self.is_particle:
-            return (self.mass / sympify(2) * self.masscenter_vel(frame) &
-                self.masscenter_vel(frame))
-
-        rotational_KE = (self.frame.ang_vel_in(frame) & (self.central_inertia &
-                self.frame.ang_vel_in(frame)) / sympify(2))
-
-        translational_KE = (self.mass * (self.masscenter.vel(frame) &
-            self.masscenter.vel(frame)) / sympify(2))
-
-        return rotational_KE + translational_KE
+            return Particle(self.name, self.masscenter, self.mass).kinetic_energy(frame)
+        return RigidBody(self.name, self.masscenter, self.frame, self.mass,
+                        (self.central_inertia, self.masscenter)).kinetic_energy(frame)
 
     def apply_force(self, force, point=None, reaction_body=None, reaction_point=None):
         """Add force to the body(s).
