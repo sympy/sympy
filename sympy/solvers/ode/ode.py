@@ -706,29 +706,21 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
             rv = rv1
     return rv
 
-def dsubs(eq, trans):
+def dsubs(eq, trans, newvars=None, reverse=False):
     r"""
     Function that substitutes for variables in an Ordinary Differential Equation.
 
     The inputs are -
 
-    ``eq``: The differential equation which is to be transformed.
+    ``trans``: A dictionary specifying the variable transformations
+    with the old variable as key and the transformation as value.
 
-    ``trans``: It is a tuple of 2 elements containing -
+    ``newvars``: A list of new variables in the transformation rules.
+    It is required if the number of new variables is not the same as
+    the number of old variables.
 
-        a. ``forward_trans``: A dictionary specifying the variable transformations
-        with the old variable as key and the transformation as value.
-
-        The second element of the tuple can be either of the following -
-
-        b. ``reverse_trans``: A dictionary specifying the variable transformations
-        with the new variable as key and the inverse transformation as value. It
-        should be given if you desire a transformation in the opposite direction
-        as well.
-
-        c. ``newvars``: A list of all new variables in the transformation rules.
-        It should be given if you desire a transformation only in the forward
-        direction.
+    ``reverse``: A boolean variable that indicates if the transformation
+    is being done in the reverse direction.
 
     Returns
     =======
@@ -738,53 +730,47 @@ def dsubs(eq, trans):
     Examples
     ========
 
-    A basic transformation in only the forward
-    direction can be achieved by -
+    A basic transformation can be achieved by -
 
     >>> from sympy import symbols, dsubs, Function, cos
     >>> f, g, h = symbols('f g h', cls=Function)
     >>> x, a, t = symbols('x a t')
     >>> eq = f(x).diff(x) + f(x)
-    >>> dsubs(eq, ({x: t**2}, {t}))
+    >>> dsubs(eq, {x: t**2})
     f(t**2) + Derivative(f(t**2), t)/(2*t)
 
     Functions in the equation can be transformed too
 
     >>> eq = f(x).diff(x, 2) + cos(x)
-    >>> dsubs(eq, ({x: t**2, f(x): g(t)}, {t, g(t)}))
+    >>> dsubs(eq, {x: t**2, f(x): g(t)})
     cos(t**2) + (Derivative(g(t), (t, 2))/(2*t)
     - Derivative(g(t), t)/(2*t**2))/(2*t)
-    >>> dsubs(eq, ({x: t, f(x): g(t)**2}, {t, g(t)}))
+    >>> dsubs(eq, {x: t, f(x): g(t)**2})
     2*g(t)*Derivative(g(t), (t, 2)) + cos(t)
     + 2*Derivative(g(t), t)**2
 
-    A transformation with number of new variables greater
-    than number of old variables is also possible. For example,
-    a transformation `x = a t` would be done as -
+    To apply a transformation with number of new variables greater
+    than number of old variables, a list of all new variables must be
+    given. For example, a transformation `x = a t` would be done as -
 
-    >>> dsubs(eq, ({x: a*t, f(x): g(t)}, {t}))
+    >>> dsubs(eq, {x: a*t, f(x): g(t)}, [t])
     cos(a*t) + Derivative(g(t), (t, 2))/a**2
-    >>> dsubs(eq, ({x: t, f(x): h(a)*g(t)**2}, {t, g(t)}))
+    >>> dsubs(eq, {x: t, f(x): h(a)*g(t)**2}, [t, g(t)])
     2*g(t)*h(a)*Derivative(g(t), (t, 2))
     + 2*h(a)*Derivative(g(t), t)**2 + cos(t)
 
-    Let us see how ``dsubs`` works for transforming ODEs in both
-    directions, i.e. transforming an ODE, solving for the transformed
-    ODE and getting the solution to the original ODE from the
-    transformed solution. Here is a typical example of a homogeneous
-    ODE which can be solved using the substitution `v = \frac{y}{x}`.
+    Let us see how ``dsubs`` works for some typical cases using an example
+    of homogeneous ODEs which can be solved using the substitution
+    `v = \frac{y}{x}`.
 
-    >>> from sympy import symbols, Function, dsolve, checkodesol
+    >>> from sympy import symbols, Function, dsolve
     >>> x, t = symbols('x t')
     >>> y, v = symbols('y v', cls=Function)
     >>> eq = y(x).diff(x) - (x**2 + y(x)**2)/(x*y(x))
 
     Transform the homogeneous equation to a linear equation
 
-    >>> forward_trans = {x:t, y(x): t*v(t)}
-    >>> reverse_trans = {t: x, v(t): y(x)/x}
-    >>> trans = (forward_trans, reverse_trans)
-    >>> homeq = dsubs(eq, trans).simplify()
+    >>> homeq = dsubs(eq, {x:t, y(x): t*v(t)}).simplify()
     >>> homeq
     t*Derivative(v(t), t) - 1/v(t)
 
@@ -797,11 +783,9 @@ def dsubs(eq, trans):
     Re-substitute `v = y x` to get the solutions to the
     original equation
 
-    >>> sol = list(map(lambda sol: dsubs(sol, trans[::-1]), solt))
+    >>> sol = list(map(lambda sol: dsubs(sol, {v(t): y(x)/x, t: x}, reverse=True), solt))
     >>> sol
     [Eq(y(x)/x, -sqrt(C1 + 2*log(x))), Eq(y(x)/x, sqrt(C1 + 2*log(x)))]
-    >>> checkodesol(eq, sol)
-    [(True, 0), (True, 0)]
 
     Let us look at another example - The 2nd order Cauchy Euler equation.
 
@@ -813,10 +797,7 @@ def dsubs(eq, trans):
     and `y(x) = \phi(t)`
 
     >>> from sympy import exp, log, logcombine
-    >>> forward_trans = {x: exp(t), y(x): phi(t)}
-    >>> reverse_trans = {t: log(x), phi(t): y(x)}
-    >>> trans = (forward_trans, reverse_trans)
-    >>> eqtrans = dsubs(eq, trans).simplify()
+    >>> eqtrans = dsubs(eq, {x: exp(t), y(x): phi(t)}).simplify()
     >>> eqtrans
     a*Derivative(phi(t), t) + b*phi(t) - Derivative(phi(t), t) + Derivative(phi(t), (t, 2))
 
@@ -829,11 +810,9 @@ def dsubs(eq, trans):
     Re-substitute for `\phi(t)` and `t` to get the solution for
     the original equation.
 
-    >>> sol = logcombine(dsubs(solt, trans[::-1]), force=True)
+    >>> sol = logcombine(dsubs(solt, {phi(t): y(x), t: log(x)}, reverse=True), force=True)
     >>> sol
     Eq(y(x), C1*x**(-a/2 - sqrt(a**2 - 2*a - 4*b + 1)/2 + 1/2) + C2*x**(-a/2 + sqrt(a**2 - 2*a - 4*b + 1)/2 + 1/2))
-    >>> checkodesol(eq, sol)
-    (True, 0)
     """
     from sympy.core.function import Subs, Function, Derivative, AppliedUndef
     from sympy.core.symbol import Symbol
@@ -847,72 +826,99 @@ def dsubs(eq, trans):
         else:
             return Derivative(e, (sym, n))
 
-    trans, reverse_trans = trans
-    newvars = set(reverse_trans)
-    if not isinstance(reverse_trans, dict):
-        reverse_trans = None
-    old_funcs = eq.atoms(Function)
-    mapdict = {}
+    if reverse:
+        ints = list(eq.atoms(Integral))
+        newints = ints.copy()
 
-    for var in trans:
-        if not isinstance(var, Symbol) and not isinstance(var, Function):
-            raise ValueError(f"Expected Symbol or Function in the transformation rule, recieved {var.__class__.__name__}")
-        if isinstance(var, Symbol):
-            atoms = trans[var].atoms(Symbol)
-        else:
-            atoms = trans[var].atoms(AppliedUndef)
-        if not len(atoms):
-            raise ValueError(f"Invalid rule. Expected atleast one {var.__class__.__name__} for substitution")
+        sym_trans = {}
+        fun_trans = {}
 
-        multi = False
-        to_map = None
-        if newvars is None:
-            if len(atoms) > 1:
-                raise ValueError("Missing a list of the new variables")
+        for var in trans:
+            if isinstance(var, Symbol):
+                sym_trans[var] = trans[var]
+            elif isinstance(var, Function):
+                fun_trans[var] = trans[var]
             else:
-                to_map = atoms.pop()
-        else:
-            for atom in atoms:
-                if atom in newvars:
-                    if multi:
-                        raise ValueError(f"Rules contain more than one {var.__class__.__name__}.")
-                    else:
-                        multi = True
-                        to_map = atom
-        mapdict[var] = to_map
+                raise ValueError(f"Expected Symbol or Function in the transformation rule, recieved {var.__class__.__name__}")
 
-    integrals = eq.atoms(Integral)
-    for i in integrals:
-        inew = i
-        for tr in trans:
-            inew = inew.transform(tr, trans[tr])
-        eq = eq.subs(i, inew)
+        for i in range(len(newints)):
+            fs = newints[i].free_symbols
+            for var in sym_trans:
+                if var in fs:
+                    newints[i] = newints[i].transform(var, sym_trans[var])
 
-    for var in trans:
-        if isinstance(var, Symbol) and var in mapdict:
-            eq = eq.subs(var, Function(var.name + 'f')(mapdict[var]))
+        for i, inew in zip(ints, newints):
+            eq = eq.xreplace({i: inew})
 
-    eq = eq.replace(Derivative, lambda e, vs: diffx(e, vs[0], vs[1]))
+        for var in fun_trans:
+            eq = eq.xreplace({var: fun_trans[var]})
 
-    for var in trans:
-        if not isinstance(var, Symbol) and var in mapdict:
-            old_var = var.args[0]
-            eq = eq.xreplace({var.subs(old_var, Function(old_var.name + 'f')(mapdict[old_var])): trans[var]})
+        for var in sym_trans:
+            eq = eq.xreplace({var: sym_trans[var]})
 
-    for var in trans:
-        if isinstance(var, Symbol) and var in mapdict:
-            for func in old_funcs:
-                old_var = func.args[0]
-                if old_var in trans:
-                    eq = eq.xreplace({func.subs(old_var, Function(old_var.name + 'f')(mapdict[old_var])): func.subs(old_var, trans[old_var])})
-            eq = eq.subs(Function(var.name + 'f')(mapdict[var]), trans[var])
+    else:
+        old_funcs = eq.atoms(Function)
+        mapdict = {}
 
-    derivatives = list(eq.atoms(Derivative))
-    derivatives.sort(key=lambda x: len(str(x)), reverse=True)
-    for d in derivatives:
-        done = d.doit()
-        if not len(done.atoms(Subs)):
-            eq = eq.subs(d, done)
+        for var in trans:
+            if not isinstance(var, Symbol) and not isinstance(var, Function):
+                raise ValueError(f"Expected Symbol or Function in the transformation rule, recieved {var.__class__.__name__}")
+            if isinstance(var, Symbol):
+                atoms = trans[var].atoms(Symbol)
+            else:
+                atoms = trans[var].atoms(AppliedUndef)
+            if not len(atoms):
+                raise ValueError(f"Invalid rule. Expected atleast one {var.__class__.__name__} for substitution")
+
+            multi = False
+            to_map = None
+            if newvars is None:
+                if len(atoms) > 1:
+                    raise ValueError("Missing a list of the new variables")
+                else:
+                    to_map = atoms.pop()
+            else:
+                for atom in atoms:
+                    if atom in newvars:
+                        if multi:
+                            raise ValueError(f"Rules contain more than one {var.__class__.__name__}.")
+                        else:
+                            multi = True
+                            to_map = atom
+            mapdict[var] = to_map
+
+        integrals = eq.atoms(Integral)
+        for i in integrals:
+            inew = i
+            for tr in trans:
+                inew = inew.transform(tr, trans[tr])
+            eq = eq.subs(i, inew)
+
+        for var in trans:
+            if isinstance(var, Symbol) and var in mapdict:
+                eq = eq.subs(var, Function(var.name + 'f')(mapdict[var]))
+
+        eq = eq.replace(Derivative, lambda e, vs: diffx(e, vs[0], vs[1]))
+
+        for var in trans:
+            if not isinstance(var, Symbol) and var in mapdict:
+                old_var = var.args[0]
+                eq = eq.xreplace({var.subs(old_var, Function(old_var.name + 'f')(mapdict[old_var])): trans[var]})
+
+        for var in trans:
+            if isinstance(var, Symbol) and var in mapdict:
+                for func in old_funcs:
+                    old_var = func.args[0]
+                    if old_var in trans:
+                        eq = eq.xreplace({func.subs(old_var, Function(old_var.name + 'f')(mapdict[old_var])): func.subs(old_var, trans[old_var])})
+                eq = eq.subs(Function(var.name + 'f')(mapdict[var]), trans[var])
+
+        derivatives = list(eq.atoms(Derivative))
+        derivatives.sort(key=lambda x: len(str(x)), reverse=True)
+        for d in derivatives:
+            done = d.doit()
+            if not len(done.atoms(Subs)):
+                eq = eq.subs(d, done)
 
     return eq
 
