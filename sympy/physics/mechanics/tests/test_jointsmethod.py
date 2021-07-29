@@ -17,13 +17,12 @@ def test_jointsmethod():
     method = JointsMethod(P, Pin)
     assert method.frame == P.frame
     assert method.bodies == [C, P]
-    assert method.forcelist == [(P.masscenter, g*P.frame.y)]
+    assert method.loads == [(P.masscenter, g*P.frame.y)]
     assert method.q == [theta]
     assert method.u == [omega]
     assert method.kdes == [omega - theta.diff()]
-    fr, frstar = method.form_eoms()
-    assert fr == Matrix([[0]])
-    assert frstar == Matrix([[-C_ixx*omega.diff()]])
+    soln = method.form_eoms()
+    assert soln == Matrix([[C_ixx*omega.diff()]])
     assert method.forcing_full == Matrix([[omega], [0]])
     assert method.mass_matrix_full == Matrix([[1, 0], [0, C_ixx]])
     assert isinstance(method.method, KanesMethod)

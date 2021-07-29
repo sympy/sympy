@@ -66,7 +66,7 @@ With the problem setup, the equations of motion can be generated using the
 ``JointsMethod`` class with KanesMethod in backend. ::
 
     >>> method = JointsMethod(wall, slider, rev1, rev2)
-    >>> fr, frstar = method.form_eoms()
+    >>> soln = method.form_eoms()
 
     >>> method.mass_matrix_full
     Matrix([
