@@ -556,7 +556,7 @@ def measure_all(qubit, format='sympy', normalize=True):
         >>> q = qapply(c)
         >>> measure_all(q)
         |00>/2 + |01>/2 + |10>/2 + |11>/2
-        [{'00': 0.25}, {'01': 0.25}, {'10': 0.25}, {'11': 0.25}]
+        [('|00>', 0.25), ('|01>', 0.25), ('|10>', 0.25), ('|11>', 0.25)]
     """
     if format == 'sympy':
         print(qubit)
@@ -568,7 +568,7 @@ def measure_all(qubit, format='sympy', normalize=True):
                 start = qubit.find('|')
                 end = qubit.find('>')
                 newstring = '1'
-                state.append(qubit[start+1:end])
+                state.append(qubit[start:end+1])
                 qubit = qubit[:start] + newstring + qubit[end+1:]
             else:
                 starti = qubit.find('I')
@@ -580,16 +580,16 @@ def measure_all(qubit, format='sympy', normalize=True):
                 qubit.remove('-')
             else:
                 qubit.remove('+')
+        norm = 0
         if normalize==True:
-            norm = 0
             for i in range(len(state)):
                 norm = norm+eval(qubit[i])**2
         if norm!=1:
             for i in range(len(state)):
-                results.append({state[i]:(eval(qubit[i])**2)*(1/norm)})
+                results.append((state[i],(eval(qubit[i])**2)*(1/norm)))
         else:
             for i in range(len(state)):
-                results.append({state[i]:eval(qubit[i])*eval(qubit[i])})
+                results.append((state[i],eval(qubit[i])**2))
         return results
     else:
         raise NotImplementedError(
@@ -799,14 +799,15 @@ def measure_all_oneshot(qubit, format='sympy'):
         import random
         qubit = str(qubit)
         state = []
+        prob=[]
         while('|'in qubit or '>' in qubit):
             start = qubit.find('|')
             end = qubit.find('>')
             newstring = '1'
-            state.append(qubit[start+1:end])
+            state.append(qubit[start:end+1])
             qubit = qubit[:start] + newstring + qubit[end+1:]
         random_number = random.randrange(len(state))
-        return '|{}>'.format(state[random_number])
+        return state[random_number]
     else:
         raise NotImplementedError(
             "This function can't handle non-sympy matrix formats yet"
