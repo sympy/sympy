@@ -18,8 +18,8 @@ class JointsMethod(_Methods):
     Attributes
     ==========
 
-    q, u : Matrix, shape(n, 1)
-        Matrices of the generalized coordinates and speeds
+    q, u : iterable
+        Iterable of the generalized coordinates and speeds
     bodies : iterable
         Iterable of Body objects in the system.
     loads : iterable
@@ -35,6 +35,8 @@ class JointsMethod(_Methods):
         The "forcing vector" for the u's and q's
     method : KanesMethod or Lagrange's method
         Method's object.
+    kdes : iterable
+        Iterable of kde in they system.
 
     Examples
     ========
@@ -54,7 +56,7 @@ class JointsMethod(_Methods):
     >>> wall.apply_force(k*x*wall.x, reaction_body=body)
     >>> method = JointsMethod(wall, J)
     >>> method.form_eoms()
-    Matrix([[B_mass*Derivative(v(t), t) - c*v(t) - k*x(t)]])
+    Matrix([[-B_mass*Derivative(v(t), t) - c*v(t) - k*x(t)]])
     >>> M = method.mass_matrix_full
     >>> F = method.forcing_full
     >>> rhs = M.LUsolve(F)
@@ -88,42 +90,52 @@ class JointsMethod(_Methods):
 
     @property
     def bodies(self):
+        """List of bodies in they system."""
         return self._bodylist
 
     @property
     def loads(self):
+        """List of loads on the system."""
         return self._loadlist
 
     @property
     def q(self):
+        """List of the generalized coordinates."""
         return self._q
 
     @property
     def u(self):
+        """List of the generalized speeds."""
         return self._u
 
     @property
     def kdes(self):
+        """List of the generalized coordinates."""
         return self._kdes
 
     @property
     def forcing_full(self):
+        """The "forcing vector" for the u's and q's."""
         return self.method.forcing_full
 
     @property
     def mass_matrix_full(self):
+        """The "mass matrix" for the u's and q's."""
         return self.method.mass_matrix_full
 
     @property
     def mass_matrix(self):
+        """The system's mass matrix."""
         return self.method.mass_matrix
 
     @property
     def forcing(self):
+        """The system's forcing vector."""
         return self.method.forcing
 
     @property
     def method(self):
+        """Object of method used to form equations of systems."""
         return self._method
 
     def _generate_bodylist(self):
@@ -168,6 +180,12 @@ class JointsMethod(_Methods):
         method : Class
             Class name of method.
 
+        Returns
+        ========
+
+        Matrix
+            Vector of equations of motions.
+
         Examples
         ========
 
@@ -206,7 +224,7 @@ class JointsMethod(_Methods):
             self._method = method(self.frame, q_ind=self.q, u_ind=self.u, kd_eqs=self.kdes,
                                     forcelist=self.loads, bodies=self.bodies)
             eqns = self.method._form_eoms()
-            soln = eqns[0] - eqns[1]
+            soln = eqns[0] + eqns[1]
         return soln
 
     def rhs(self, inv_method=None):
@@ -219,6 +237,21 @@ class JointsMethod(_Methods):
             The specific sympy inverse matrix calculation method to use. For a
             list of valid methods, see
             :meth:`~sympy.matrices.matrices.MatrixBase.inv`
+
+        Returns
+        ========
+
+        Matrix
+            Numerically solveable equations.
+
+        See Also
+        ========
+
+        sympy.physics.mechanics.KanesMethod.rhs():
+            KanesMethod's rhs function.
+        sympy.physics.mechanics.LagrangesMethod.rhs():
+            LagrangesMethod's rhs function.
+
         """
 
         return self.method.rhs(inv_method=inv_method)

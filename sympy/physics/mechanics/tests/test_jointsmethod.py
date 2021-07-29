@@ -22,7 +22,7 @@ def test_jointsmethod():
     assert method.u == [omega]
     assert method.kdes == [omega - theta.diff()]
     soln = method.form_eoms()
-    assert soln == Matrix([[C_ixx*omega.diff()]])
+    assert soln == Matrix([[-C_ixx*omega.diff()]])
     assert method.forcing_full == Matrix([[omega], [0]])
     assert method.mass_matrix_full == Matrix([[1, 0], [0, C_ixx]])
     assert isinstance(method.method, KanesMethod)
