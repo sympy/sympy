@@ -572,7 +572,7 @@ def measure_all(qubit, format='sympy', normalize=True):
                 qubit = qubit[:start] + newstring + qubit[end+1:]
             else:
                 starti = qubit.find('I')
-                newstringi = '{}(-1)'.sqrt
+                newstringi = '{}(-1)'.format(sqrt)
                 qubit = qubit[:starti] + newstringi + qubit[starti+1:]
         qubit = qubit.split()
         while('-'in qubit or '+' in qubit):
