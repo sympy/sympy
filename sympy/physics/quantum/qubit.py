@@ -530,12 +530,10 @@ def qubit_to_matrix(qubit, format='sympy'):
 #-----------------------------------------------------------------------------
 
 
-def measure_all(qubit, format='sympy'):
+def measure_all(qubit, format='sympy', normalize=True):
     """Perform an ensemble measurement of all qubits.
-
     Parameters
     ==========
-
     qubit : Qubit, Add
         The qubit to measure. This can be any Qubit or a linear combination
         of them.
@@ -543,20 +541,15 @@ def measure_all(qubit, format='sympy'):
         The format of the intermediate matrices to use. Possible values are
         ('sympy','numpy','scipy.sparse'). Currently only 'sympy' is
         implemented.
-
     Returns
     =======
-
     result : list
         A list that consists of primitive states and their probabilities.
-
     Examples
     ========
-
         >>> from sympy.physics.quantum.qubit import Qubit, measure_all
         >>> from sympy.physics.quantum.gate import H
         >>> from sympy.physics.quantum.qapply import qapply
-
         >>> c = H(0)*H(1)*Qubit('00')
         >>> c
         H(0)*H(1)*|00>
@@ -567,29 +560,37 @@ def measure_all(qubit, format='sympy'):
     """
     if format == 'sympy':
         print(qubit)
-        me = str(qubit)
+        qubit = str(qubit)
         state = []
-        prob=[]
-        while('|'in me or '>' in me or 'I' in me):
-            if ('|'in me or '>' in me):
-                start = me.find('|')
-                end = me.find('>')
+        results = []
+        while('|'in qubit or '>' in qubit or 'I' in qubit):
+            if ('|'in qubit or '>' in qubit):
+                start = qubit.find('|')
+                end = qubit.find('>')
                 newstring = '1'
-                state.append(me[start+1:end])
-                me = me[:start] + newstring + me[end+1:]
+                state.append(qubit[start+1:end])
+                qubit = qubit[:start] + newstring + qubit[end+1:]
             else:
-                starti = me.find('I')
+                starti = qubit.find('I')
                 newstringi = 'sqrt(-1)'
-                me = me[:starti] + newstringi + me[starti+1:]
-        me = me.split()
-        while('-'in me or '+' in me):
-            if('-' in me):
-                me.remove('-')
-            elif('+' in me):
-                me.remove('+')
-        for i in range(len(state)):
-            prob.append({state[i]:eval(me[i])*eval(me[i])})
-        return prob
+                qubit = qubit[:starti] + newstringi + qubit[starti+1:]
+        qubit = qubit.split()
+        while('-'in qubit or '+' in qubit):
+            if('-' in qubit):
+                qubit.remove('-')
+            else:
+                qubit.remove('+')
+        if normalize==True:
+            norm = 0
+            for i in range(len(state)):
+                norm = norm+eval(qubit[i])**2
+        if norm!=1:
+            for i in range(len(state)):
+                results.append({state[i]:(eval(qubit[i])**2)*(1/norm)})
+        else:
+            for i in range(len(state)):
+                results.append({state[i]:eval(qubit[i])*eval(qubit[i])})
+        return results
     else:
         raise NotImplementedError(
             "This function can't handle non-sympy matrix formats yet"
@@ -796,19 +797,14 @@ def measure_all_oneshot(qubit, format='sympy'):
     """
     if format == 'sympy':
         import random
-        me = str(qubit)
+        qubit = str(qubit)
         state = []
-        while('|'in me or '>' in me or 'I' in me):
-            if ('|'in me or '>' in me):
-                start = me.find('|')
-                end = me.find('>')
-                newstring = '1'
-                state.append(me[start+1:end])
-                me = me[:start] + newstring + me[end+1:]
-            else:
-                starti = me.find('I')
-                newstringi = 'sqrt(-1)'
-                me = me[:starti] + newstringi + me[starti+1:]
+        while('|'in qubit or '>' in qubit):
+            start = qubit.find('|')
+            end = qubit.find('>')
+            newstring = '1'
+            state.append(qubit[start+1:end])
+            qubit = qubit[:start] + newstring + qubit[end+1:]
         random_number = random.randrange(len(state))
         return '|{}>'.format(state[random_number])
     else:
