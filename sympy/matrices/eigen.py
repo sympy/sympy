@@ -10,7 +10,7 @@ from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import Float
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.polys import roots, CRootOf, EX
+from sympy.polys import roots, CRootOf, ZZ, QQ, EX
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.eigen import dom_eigenvects, dom_eigenvects_to_sympy
 from sympy.simplify import nsimplify, simplify as _simplify
@@ -223,7 +223,16 @@ def _eigenvals_dict(
     M, error_when_incomplete=True, simplify=False, **flags):
     iblocks = M.strongly_connected_components()
     all_eigs = {}
+    is_dom = M._rep.domain in (ZZ, QQ)
     for b in iblocks:
+
+        # Fast path for a 1x1 block:
+        if is_dom and len(b) == 1:
+            index = b[0]
+            val = M[index, index]
+            all_eigs[val] = all_eigs.get(val, 0) + 1
+            continue
+
         block = M[b, b]
 
         if isinstance(simplify, FunctionType):
