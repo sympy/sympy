@@ -561,6 +561,10 @@ def test_simplify():
     assert M.simplify() == Matrix([[eq]])
     assert M.simplify(ratio=oo) == Matrix([[eq.simplify(ratio=oo)]])
 
+    # https://github.com/sympy/sympy/issues/19353
+    m = Matrix([[30, 2], [3, 4]])
+    assert (1/(m.trace())).simplify() == Rational(1, 34)
+
 
 def test_subs():
     assert OperationsOnlyMatrix([[1, x], [x, 4]]).subs(x, 5) == Matrix([[1, 5], [5, 4]])
