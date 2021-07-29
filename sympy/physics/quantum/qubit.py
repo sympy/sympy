@@ -9,7 +9,7 @@ Todo:
 
 import math
 
-from sympy import Integer, log, Mul, Add, Pow, conjugate
+from sympy import Integer, log, Mul, Add, Pow, sqrt
 from sympy.core.basic import sympify
 from sympy.core.compatibility import SYMPY_INTS
 from sympy.matrices import Matrix, zeros
@@ -532,10 +532,8 @@ def qubit_to_matrix(qubit, format='sympy'):
 
 def measure_all(qubit, format='sympy', normalize=True):
     """Perform an ensemble measurement of all qubits.
-
     Parameters
     ==========
-
     qubit : Qubit, Add
         The qubit to measure. This can be any Qubit or a linear combination
         of them.
@@ -543,42 +541,55 @@ def measure_all(qubit, format='sympy', normalize=True):
         The format of the intermediate matrices to use. Possible values are
         ('sympy','numpy','scipy.sparse'). Currently only 'sympy' is
         implemented.
-
     Returns
     =======
-
     result : list
         A list that consists of primitive states and their probabilities.
-
     Examples
     ========
-
         >>> from sympy.physics.quantum.qubit import Qubit, measure_all
         >>> from sympy.physics.quantum.gate import H
         >>> from sympy.physics.quantum.qapply import qapply
-
         >>> c = H(0)*H(1)*Qubit('00')
         >>> c
         H(0)*H(1)*|00>
         >>> q = qapply(c)
         >>> measure_all(q)
-        [(|00>, 1/4), (|01>, 1/4), (|10>, 1/4), (|11>, 1/4)]
+        |00>/2 + |01>/2 + |10>/2 + |11>/2
+        [('|00>', 0.25), ('|01>', 0.25), ('|10>', 0.25), ('|11>', 0.25)]
     """
-    m = qubit_to_matrix(qubit, format)
-
     if format == 'sympy':
+        print(qubit)
+        qubit = str(qubit)
+        state = []
         results = []
-
-        if normalize:
-            m = m.normalized()
-
-        size = max(m.shape)  # Max of shape to account for bra or ket
-        nqubits = int(math.log(size)/math.log(2))
-        for i in range(size):
-            if m[i] != 0.0:
-                results.append(
-                    (Qubit(IntQubit(i, nqubits=nqubits)), m[i]*conjugate(m[i]))
-                )
+        while('|'in qubit or '>' in qubit or 'I' in qubit):
+            if ('|'in qubit or '>' in qubit):
+                start = qubit.find('|')
+                end = qubit.find('>')
+                newstring = '1'
+                state.append(qubit[start:end+1])
+                qubit = qubit[:start] + newstring + qubit[end+1:]
+            else:
+                starti = qubit.find('I')
+                newstringi = '{}(-1)'.format(sqrt)
+                qubit = qubit[:starti] + newstringi + qubit[starti+1:]
+        qubit = qubit.split()
+        while('-'in qubit or '+' in qubit):
+            if('-' in qubit):
+                qubit.remove('-')
+            else:
+                qubit.remove('+')
+        norm = 0
+        if normalize==True:
+            for i in range(len(state)):
+                norm = norm+eval(qubit[i])**2
+        if norm!=1:
+            for i in range(len(state)):
+                results.append((state[i],(eval(qubit[i])**2)*(1/norm)))
+        else:
+            for i in range(len(state)):
+                results.append((state[i],eval(qubit[i])**2))
         return results
     else:
         raise NotImplementedError(
@@ -784,20 +795,18 @@ def measure_all_oneshot(qubit, format='sympy'):
     result : Qubit
         The qubit that the system collapsed to upon measurement.
     """
-    import random
-    m = qubit_to_matrix(qubit)
-
     if format == 'sympy':
-        m = m.normalized()
-        random_number = random.random()
-        total = 0
-        result = 0
-        for i in m:
-            total += i*i.conjugate()
-            if total > random_number:
-                break
-            result += 1
-        return Qubit(IntQubit(result, int(math.log(max(m.shape), 2) + .1)))
+        import random
+        qubit = str(qubit)
+        state = []
+        while('|'in qubit or '>' in qubit):
+            start = qubit.find('|')
+            end = qubit.find('>')
+            newstring = '1'
+            state.append(qubit[start:end+1])
+            qubit = qubit[:start] + newstring + qubit[end+1:]
+        random_number = random.randrange(len(state))
+        return state[random_number]
     else:
         raise NotImplementedError(
             "This function can't handle non-sympy matrix formats yet"
