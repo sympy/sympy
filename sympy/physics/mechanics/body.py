@@ -164,24 +164,6 @@ class Body(RigidBody, Particle):  # type: ignore
     def kinetic_energy(self, frame):
         """Kinetic energy of the body.
 
-        Explanation
-        ===========
-
-        The kinetic energy, T, of a Body(particle), P, is given by
-
-        'T = 1/2 m v^2'
-
-        where m is the mass of body P, and v is the velocity of the
-        particle in the supplied ReferenceFrame.
-
-        The kinetic energy, T, of a Body(rigid body), B, is given by
-
-        'T = 1/2 (I omega^2 + m v^2)'
-
-        where I and m are the central inertia dyadic and mass of body B,
-        respectively, omega is the body's angular velocity and v is the
-        velocity of the body's mass center in the supplied ReferenceFrame.
-
         Parameters
         ==========
 
@@ -211,6 +193,11 @@ class Body(RigidBody, Particle):  # type: ignore
         >>> B = Body('B', masscenter=P, frame=b)
         >>> B.kinetic_energy(N)
         B_ixx*omega**2/2 + B_mass*v**2/2
+
+        See Also
+        ========
+
+        sympy.physics.mechanics : Particle, RigidBody
 
         """
         if isinstance(frame, Body):
