@@ -459,3 +459,9 @@ def test_issue_14000():
 
     assert root(16, 4, 2, evaluate=False).has(Pow) == True
     assert real_root(-8, 3, evaluate=False).has(Pow) == True
+
+def test_issue_6899():
+    from sympy import Lambda
+    x = Symbol('x')
+    eqn = Lambda(x, x)
+    assert eqn.func(*eqn.args) == eqn
