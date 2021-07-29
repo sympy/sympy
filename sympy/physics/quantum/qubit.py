@@ -9,7 +9,7 @@ Todo:
 
 import math
 
-from sympy import Integer, log, Mul, Add, Pow
+from sympy import Integer, log, Mul, Add, Pow, sqrt
 from sympy.core.basic import sympify
 from sympy.core.compatibility import SYMPY_INTS
 from sympy.matrices import Matrix, zeros
@@ -572,7 +572,7 @@ def measure_all(qubit, format='sympy', normalize=True):
                 qubit = qubit[:start] + newstring + qubit[end+1:]
             else:
                 starti = qubit.find('I')
-                newstringi = 'sqrt(-1)'
+                newstringi = '{}(-1)'.sqrt
                 qubit = qubit[:starti] + newstringi + qubit[starti+1:]
         qubit = qubit.split()
         while('-'in qubit or '+' in qubit):
