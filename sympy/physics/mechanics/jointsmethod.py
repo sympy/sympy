@@ -22,7 +22,7 @@ class JointsMethod(_Methods):
         Matrices of the generalized coordinates and speeds
     bodies : iterable
         Iterable of Body objects in the system.
-    forcelist : iterable
+    loads : iterable
         Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
         describing the forces on the system.
     mass_matrix : Matrix, shape(n, n)
@@ -47,12 +47,12 @@ class JointsMethod(_Methods):
     >>> from sympy.physics.vector import dynamicsymbols
     >>> c, k = symbols('c k')
     >>> x, v = dynamicsymbols('x v')
-    >>> Wall = Body('W')
-    >>> Body = Body('B')
-    >>> J = PrismaticJoint('J', Wall, Body, coordinates=x, speeds=v)
-    >>> Wall.apply_force(c*v*Wall.x, reaction_body=Body)
-    >>> Wall.apply_force(k*x*Wall.x, reaction_body=Body)
-    >>> method = JointsMethod(Wall, J)
+    >>> wall = Body('W')
+    >>> body = Body('B')
+    >>> J = PrismaticJoint('J', wall, body, coordinates=x, speeds=v)
+    >>> wall.apply_force(c*v*wall.x, reaction_body=body)
+    >>> wall.apply_force(k*x*wall.x, reaction_body=body)
+    >>> method = JointsMethod(wall, J)
     >>> method.form_eoms()
     (Matrix([[-c*v(t) - k*x(t)]]), Matrix([[-B_mass*Derivative(v(t), t)]]))
     >>> M = method.mass_matrix_full
@@ -91,7 +91,7 @@ class JointsMethod(_Methods):
         return self._bodylist
 
     @property
-    def forcelist(self):
+    def loads(self):
         return self._loadlist
 
     @property
@@ -180,12 +180,12 @@ class JointsMethod(_Methods):
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
         >>> m, k, b = symbols('m k b')
-        >>> Wall = Body('W')
-        >>> Part = Body('P', mass=m)
-        >>> Part.potential_energy = k * q**2 / S(2)
-        >>> J = PrismaticJoint('J', Wall, Part, coordinates=q, speeds=qd)
-        >>> Wall.apply_force(b * qd * Wall.x, reaction_body=Part)
-        >>> method = JointsMethod(Wall, J)
+        >>> wall = Body('W')
+        >>> part = Body('P', mass=m)
+        >>> part.potential_energy = k * q**2 / S(2)
+        >>> J = PrismaticJoint('J', wall, part, coordinates=q, speeds=qd)
+        >>> wall.apply_force(b * qd * wall.x, reaction_body=part)
+        >>> method = JointsMethod(wall, J)
         >>> method.form_eoms(LagrangesMethod)
         Matrix([[b*Derivative(q(t), t) + k*q(t) + m*Derivative(q(t), (t, 2))]])
 
@@ -200,10 +200,10 @@ class JointsMethod(_Methods):
 
         if issubclass(method, KanesMethod): #KanesMethod or similar
             self._method = method(self.frame, q_ind=self.q, u_ind=self.u, kd_eqs=self.kdes,
-                                    forcelist=self.forcelist, bodies=self.bodies)
+                                    forcelist=self.loads, bodies=self.bodies)
         if issubclass(method, LagrangesMethod): #LagrangesMethod or similar
             L = Lagrangian(self.frame, *self.bodies)
-            self._method = method(L, self.q, self.forcelist, self.bodies, self.frame)
+            self._method = method(L, self.q, self.loads, self.bodies, self.frame)
         soln = self.method._form_eoms()
         return soln
 

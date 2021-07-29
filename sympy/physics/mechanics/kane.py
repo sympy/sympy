@@ -33,7 +33,7 @@ class KanesMethod(_Methods):
         Matrices of the generalized coordinates and speeds
     bodies : iterable
         Iterable of Point and RigidBody objects in the system.
-    forcelist : iterable
+    loads : iterable
         Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
         describing the forces on the system.
     auxiliary : Matrix
@@ -665,3 +665,7 @@ class KanesMethod(_Methods):
     @property
     def bodies(self):
         return self._bodylist
+
+    @property
+    def loads(self):
+        return self._forcelist
