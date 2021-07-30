@@ -1302,7 +1302,7 @@ class Expr(Basic, EvalfMixin):
         from .function import count_ops
         return count_ops(self, visual)
 
-    def args_cnc(self, cset=False, warn=True, split_1=True):
+    def args_cnc(self, *, cset=False, warn=True, split_1=True):
         """Return [commutative factors, non-commutative factors] of self.
 
         Explanation
