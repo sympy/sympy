@@ -1,3 +1,3 @@
-from .lti import TransferFunction, Series, Parallel, Feedback, TransferFunctionMatrix
+from .lti import TransferFunction, Series, MIMOSeries, Parallel, MIMOParallel, Feedback, TransferFunctionMatrix
 
 __all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel', 'Feedback', 'TransferFunctionMatrix']
