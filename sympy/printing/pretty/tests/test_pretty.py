@@ -29,7 +29,7 @@ from sympy.matrices.expressions import hadamard_power
 
 from sympy.physics import mechanics
 from sympy.physics.control.lti import (TransferFunction, Feedback, TransferFunctionMatrix,
-    Series, Parallel)
+    Series, Parallel, MIMOSeries, MIMOParallel)
 from sympy.physics.units import joule, degree
 from sympy.printing.pretty import pprint, pretty as xpretty
 from sympy.printing.pretty.pretty_symbology import center_accent, is_combining
@@ -2445,8 +2445,8 @@ def test_pretty_Series():
     assert upretty(Series(-tf2, -tf1)) == expected2
     assert upretty(Series(tf3, tf1, Parallel(-tf1, tf2))) == expected3
     assert upretty(Series(Parallel(tf1, tf2), Parallel(tf2, tf3))) == expected4
-    assert upretty(Series(tfm2, tfm1)) == expected5
-    assert upretty(Series(Parallel(tfm4, -tfm5), tfm3, tfm1)) == expected6
+    assert upretty(MIMOSeries(tfm2, tfm1)) == expected5
+    assert upretty(MIMOSeries(MIMOParallel(tfm4, -tfm5), tfm3, tfm1)) == expected6
 
 
 def test_pretty_Parallel():
@@ -2523,8 +2523,8 @@ x  + y    x + y    ⎛ -x - y⎞ ⎛x - y⎞\n\
     assert upretty(Parallel(-tf2, -tf1)) == expected2
     assert upretty(Parallel(tf3, tf1, Series(-tf1, tf2))) == expected3
     assert upretty(Parallel(Series(tf1, tf2), Series(tf2, tf3))) == expected4
-    assert upretty(Parallel(-tfm3, -tfm2, tfm1)) == expected5
-    assert upretty(Parallel(Series(tfm4, -tfm2), tfm2)) == expected6
+    assert upretty(MIMOParallel(-tfm3, -tfm2, tfm1)) == expected5
+    assert upretty(MIMOParallel(MIMOSeries(tfm4, -tfm2), tfm2)) == expected6
 
 
 def test_pretty_Feedback():

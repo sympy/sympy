@@ -41,7 +41,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, \
-    Feedback, TransferFunctionMatrix
+    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
@@ -2277,13 +2277,13 @@ def test_Series_printing():
     assert latex(T_1*(T_2 + T_2)) == \
         r'\left[\begin{matrix}\frac{5}{s}\\\frac{5}{2 s}\end{matrix}\right]_\tau\cdot\left(\left[\begin{matrix}\frac{5}{1} &' \
         r' \frac{6 s^{3}}{1}\end{matrix}\right]_\tau+\left[\begin{matrix}\frac{5}{1} & \frac{6 s^{3}}{1}\end{matrix}\right]_\tau\right)' \
-            == latex(Series(Parallel(T_2, T_2), T_1))
+            == latex(MIMOSeries(MIMOParallel(T_2, T_2), T_1))
     # No Brackets
     M_3 = Matrix([[5, 6], [6, 5/s]])
     T_3 = TransferFunctionMatrix.from_Matrix(M_3, s)
     assert latex(T_1*T_2 + T_3) == r'\left[\begin{matrix}\frac{5}{s}\\\frac{5}{2 s}\end{matrix}\right]_\tau\cdot\left[\begin{matrix}' \
         r'\frac{5}{1} & \frac{6 s^{3}}{1}\end{matrix}\right]_\tau+\left[\begin{matrix}\frac{5}{1} & \frac{6}{1}\\\frac{6}{1} & ' \
-            r'\frac{5}{s}\end{matrix}\right]_\tau' == latex(Parallel(Series(T_2, T_1), T_3))
+            r'\frac{5}{s}\end{matrix}\right]_\tau' == latex(MIMOParallel(MIMOSeries(T_2, T_1), T_3))
 
 
 def test_TransferFunction_printing():
@@ -2312,7 +2312,7 @@ def test_Parallel_printing():
     assert latex(T_1 + T_2 + T_3) == r'\left[\begin{matrix}\frac{5}{1} & \frac{6}{1}\\\frac{6}{1} & \frac{5}{s}\end{matrix}\right]' \
         r'_\tau+\left[\begin{matrix}\frac{5}{s} & \frac{6}{1}\\\frac{6}{1} & \frac{5}{s - 1}\end{matrix}\right]_\tau+\left[\begin{matrix}' \
             r'\frac{6}{1} & \frac{5}{s \left(s - 1\right)}\\\frac{5}{1} & \frac{6}{1}\end{matrix}\right]_\tau' \
-                == latex(Parallel(T_1, T_2, T_3)) == latex(Parallel(T_1, Parallel(T_2, T_3))) == latex(Parallel(Parallel(T_1, T_2), T_3))
+                == latex(MIMOParallel(T_1, T_2, T_3)) == latex(MIMOParallel(T_1, MIMOParallel(T_2, T_3))) == latex(MIMOParallel(MIMOParallel(T_1, T_2), T_3))
 
 
 def test_TransferFunctionMatrix_printing():
