@@ -532,8 +532,10 @@ def qubit_to_matrix(qubit, format='sympy'):
 
 def measure_all(qubit, format='sympy', normalize=True):
     """Perform an ensemble measurement of all qubits.
+    
     Parameters
     ==========
+    
     qubit : Qubit, Add
         The qubit to measure. This can be any Qubit or a linear combination
         of them.
@@ -541,15 +543,20 @@ def measure_all(qubit, format='sympy', normalize=True):
         The format of the intermediate matrices to use. Possible values are
         ('sympy','numpy','scipy.sparse'). Currently only 'sympy' is
         implemented.
+        
     Returns
     =======
+    
     result : list
         A list that consists of primitive states and their probabilities.
+        
     Examples
     ========
+    
         >>> from sympy.physics.quantum.qubit import Qubit, measure_all
         >>> from sympy.physics.quantum.gate import H
         >>> from sympy.physics.quantum.qapply import qapply
+        
         >>> c = H(0)*H(1)*Qubit('00')
         >>> c
         H(0)*H(1)*|00>
@@ -776,11 +783,13 @@ def _get_possible_outcomes(m, bits):
 
 def measure_all_oneshot(qubit, format='sympy'):
     """Perform a oneshot ensemble measurement on all qubits.
+    
     A oneshot measurement is equivalent to performing a measurement on a
     quantum system. This type of measurement does not return the probabilities
     like an ensemble measurement does, but rather returns *one* of the
     possible resulting states. The exact state that is returned is determined
     by picking a state randomly according to the ensemble probabilities.
+    
     Parameters
     ----------
     qubits : Qubit
@@ -790,6 +799,7 @@ def measure_all_oneshot(qubit, format='sympy'):
         The format of the intermediate matrices to use. Possible values are
         ('sympy','numpy','scipy.sparse'). Currently only 'sympy' is
         implemented.
+        
     Returns
     -------
     result : Qubit
