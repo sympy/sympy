@@ -1387,7 +1387,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                 if len(i) == len(nzvar) and rv:
                     continue
                 rv.append(tuple(
-                        [0 if i in zvar else i for i in var]))
+                        [S.Zero if i in zvar else i for i in var]))
         return set(rv)
     try:
         p = Poly(eq)
