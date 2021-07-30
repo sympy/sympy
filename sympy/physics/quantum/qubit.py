@@ -9,7 +9,7 @@ Todo:
 
 import math
 
-from sympy import Integer, log, Mul, Add, Pow, sqrt, conjugate
+from sympy import Integer, log, Mul, Add, Pow, sqrt, conjugate, symbols
 from sympy.core.basic import sympify
 from sympy.core.compatibility import SYMPY_INTS
 from sympy.matrices import Matrix, zeros
