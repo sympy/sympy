@@ -9,7 +9,8 @@ from sympy.series import limit
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions import MatMul, MatAdd
 
-__all__ = ['TransferFunction', 'Series', 'Parallel', 'Feedback', 'TransferFunctionMatrix']
+__all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel', \
+    'Feedback', 'TransferFunctionMatrix']
 
 
 def _roots(poly, var):
@@ -713,20 +714,15 @@ class TransferFunction(LinearTimeInvariant):
             return Pow(self.den, -1, evaluate=False)
 
 
-def _mat_mul_compatible(*args):
-    """To check whether shapes are compatible for matrix mul."""
-    return all(args[i].num_outputs == args[i+1].num_inputs for i in range(len(args)-1))
-
-
 class Series(LinearTimeInvariant):
     r"""
-    A class for representing series configuration of SISO and MIMO transfer functions.
+    A class for representing series configuration of SISO system.
 
     Parameters
     ==========
 
-    args : TransferFunction, TransferFunctionMatrix, Series, Parallel
-        Systems in series configuration.
+    args : TransferFunction, Series, Parallel
+        SISO Systems in series configuration.
     evaluate : Boolean, Keyword
         When passed ``True``, returns the equivalent
         ``Series(*args).doit()``. Set to ``False`` by default.
@@ -738,25 +734,18 @@ class Series(LinearTimeInvariant):
         When no argument is passed.
 
         ``var`` attribute is not same for every system.
-
-        ``num_outputs`` of the MIMO system is not equal to the
-        ``num_inputs`` of its adjacent MIMO system. (Matrix
-        multiplication constraint, basically)
     TypeError
         Any of the passed ``*args`` has unsupported type
 
         A combination of SISO and MIMO systems is
         passed. There should be homogeneity in the
-        type of systems passed.
+        type of systems passed, SISO in this case.
 
     Examples
     ========
 
-    SISO-System Examples -
-
     >>> from sympy.abc import s, p, a, b
-    >>> from sympy.physics.control.lti import TransferFunction, Series, Parallel, TransferFunctionMatrix
-    >>> from sympy import Matrix, pprint
+    >>> from sympy.physics.control.lti import TransferFunction, Series, Parallel
     >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
     >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
     >>> tf3 = TransferFunction(p**2, p + s, s)
@@ -785,47 +774,11 @@ class Series(LinearTimeInvariant):
     >>> S4.doit()
     TransferFunction((s**3 - 2)*(-p**2*(-p + s) + (p + s)*(a*p**2 + b*s)), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
 
-    MIMO-System Examples -
-
-    >>> mat_a = Matrix([[5*s], [5]])  # 2 Outputs 1 Input
-    >>> mat_b = Matrix([[5, 1/(6*s**2)]])  # 1 Output 2 Inputs
-    >>> mat_c = Matrix([[1, s], [5/s, 1]])  # 2 Outputs 2 Inputs
-    >>> tfm_a = TransferFunctionMatrix.from_Matrix(mat_a, s)
-    >>> tfm_b = TransferFunctionMatrix.from_Matrix(mat_b, s)
-    >>> tfm_c = TransferFunctionMatrix.from_Matrix(mat_c, s)
-    >>> Series(tfm_c, tfm_b, tfm_a)
-    Series(TransferFunctionMatrix(((TransferFunction(1, 1, s), TransferFunction(s, 1, s)), (TransferFunction(5, s, s), TransferFunction(1, 1, s)))), TransferFunctionMatrix(((TransferFunction(5, 1, s), TransferFunction(1, 6*s**2, s)),)), TransferFunctionMatrix(((TransferFunction(5*s, 1, s),), (TransferFunction(5, 1, s),))))
-    >>> pprint(_, use_unicode=False)  #  For Better Visualization
-    [5*s]                 [1  s]
-    [---]    [5   1  ]    [-  -]
-    [ 1 ]    [-  ----]    [1  1]
-    [   ]   *[1     2]   *[    ]
-    [ 5 ]    [   6*s ]{t} [5  1]
-    [ - ]                 [-  -]
-    [ 1 ]{t}              [s  1]{t}
-    >>> Series(tfm_c, tfm_b, tfm_a).doit()
-    TransferFunctionMatrix(((TransferFunction(25*(6*s**3 + 1), 6*s**2, s), TransferFunction(5*(30*s**3 + 1), 6*s, s)), (TransferFunction(25*(6*s**3 + 1), 6*s**3, s), TransferFunction(5*(30*s**3 + 1), 6*s**2, s))))
-    >>> pprint(_, use_unicode=False)  # (2 Inputs -A-> 2 Outputs) -> (2 Inputs -B-> 1 Output) -> (1 Input -C-> 2 Outputs) is equivalent to (2 Inputs -Series Equivalent-> 2 Outputs).
-    [   /   3    \    /    3    \]
-    [25*\6*s  + 1/  5*\30*s  + 1/]
-    [-------------  -------------]
-    [        2           6*s     ]
-    [     6*s                    ]
-    [                            ]
-    [   /   3    \    /    3    \]
-    [25*\6*s  + 1/  5*\30*s  + 1/]
-    [-------------  -------------]
-    [        3              2    ]
-    [     6*s            6*s     ]{t}
-
     Notes
     =====
 
-    All the transfer functions should use the same complex variable ``var`` of the Laplace transform.
-
-    ``Series(A, B)`` is not equivalent to ``A*B``. It is always in the reverse order, that is ``B*A``.
-    In, SISO systems, it hardly matters, but in MIMO systems, there can be issues due to non-commutative
-    nature of Matrix Multiplication.
+    All the transfer functions should use the same complex variable
+    ``var`` of the Laplace transform.
 
     See Also
     ========
@@ -852,6 +805,318 @@ class Series(LinearTimeInvariant):
         if list(type_set)[0]:
             obj = super().__new__(cls, *args)
             obj._is_SISO = True
+        else:
+            raise TypeError("MIMO systems are not allowed in `Series`. Use `MIMOSeries` instead.")
+
+        return obj.doit() if evaluate else obj
+
+    @property
+    def var(self):
+        """
+        Returns the complex variable used by all the transfer functions.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import p
+        >>> from sympy.physics.control.lti import TransferFunction, Series, Parallel
+        >>> G1 = TransferFunction(p**2 + 2*p + 4, p - 6, p)
+        >>> G2 = TransferFunction(p, 4 - p, p)
+        >>> G3 = TransferFunction(0, p**4 - 1, p)
+        >>> Series(G1, G2).var
+        p
+        >>> Series(-G3, Parallel(G1, G2)).var
+        p
+
+        """
+        return self.args[0].var
+
+    def doit(self, **kwargs):
+        """
+        Returns the resultant transfer function obtained after evaluating
+        the transfer functions in series configuration.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Series, TransferFunctionMatrix
+        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+        >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
+        >>> Series(tf2, tf1).doit()
+        TransferFunction((s**3 - 2)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s)
+        >>> Series(-tf1, -tf2).doit()
+        TransferFunction((2 - s**3)*(-a*p**2 - b*s), (-p + s)*(s**4 + 5*s + 6), s)
+        >>> tfm1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf2]])
+        >>> tfm2 = TransferFunctionMatrix([[tf2, tf1], [tf1, tf1]])
+        >>> Series(tfm2, tfm1).doit()  # MIMO System
+        TransferFunctionMatrix(((TransferFunction(2*(s**3 - 2)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s), TransferFunction((-p + s)**2*(s**3 - 2)*(a*p**2 + b*s) + (-p + s)*(a*p**2 + b*s)**2*(s**4 + 5*s + 6), (-p + s)**3*(s**4 + 5*s + 6), s)), (TransferFunction((-p + s)*(s**3 - 2)**2*(s**4 + 5*s + 6) + (s**3 - 2)*(a*p**2 + b*s)*(s**4 + 5*s + 6)**2, (-p + s)*(s**4 + 5*s + 6)**3, s), TransferFunction(2*(s**3 - 2)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s))))
+
+        """
+
+        _arg = (arg.doit().to_expr() for arg in self.args)
+        res = Mul(*_arg, evaluate=True)
+        return TransferFunction.from_rational_expression(res, self.var)
+
+    def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
+        return self.doit()
+
+    def __add__(self, other):
+        if not isinstance(other, LinearTimeInvariant):
+             return NotImplemented
+
+        if not other.is_SISO:
+            raise TypeError("Cannot add SISO and MIMO systems together.")
+
+        if isinstance(other, Parallel):
+            arg_list = list(other.args)
+            return Parallel(self, *arg_list)
+
+        return Parallel(self, other)
+
+    __radd__ = __add__
+
+    def __sub__(self, other):
+        return self + (-other)
+
+    def __rsub__(self, other):
+        return -self + other
+
+    def __mul__(self, other):
+        if not isinstance(other, LinearTimeInvariant):
+             return NotImplemented
+
+        if not other.is_SISO:
+            raise TypeError("Cannot multiply SISO and MIMO systems together.")
+
+        if isinstance(other, Series):
+            self_arg_list = list(self.args)
+            other_arg_list = list(other.args)
+            return Series(*self_arg_list, *other_arg_list)
+
+        arg_list = list(self.args)
+        return Series(*arg_list, other)
+
+    def __truediv__(self, other):
+        if (isinstance(other, Parallel) and len(other.args) == 2
+            and isinstance(other.args[0], TransferFunction) and isinstance(other.args[1], Series)):
+
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
+            self_arg_list = set(list(self.args))
+            other_arg_list = set(list(other.args[1].args))
+            res = list(self_arg_list ^ other_arg_list)
+            if len(res) == 0:
+                return Feedback(self, other.args[0])
+            elif len(res) == 1:
+                return Feedback(self, *res)
+            else:
+                return Feedback(self, Series(*res))
+        else:
+            raise ValueError("This transfer function expression is invalid.")
+
+    def __neg__(self):
+        return Series(TransferFunction(-1, 1, self.var), self)
+
+    def to_expr(self):
+        """Returns the equivalent ``Expr`` object."""
+        return Mul(*(arg.to_expr() for arg in self.args), evaluate=False)
+
+    @property
+    def is_proper(self):
+        """
+        Returns True if degree of the numerator polynomial of the resultant transfer
+        function is less than or equal to degree of the denominator polynomial of
+        the same, else False.
+
+        .. note::
+            ``is_proper`` is defined only for SISO ``Series`` configuration.
+            ``Series(*args).is_proper`` for MIMO ``*args`` will return ``None``.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Series
+        >>> tf1 = TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s)
+        >>> tf2 = TransferFunction(p**2 - 4*p, p**3 + 3*s + 2, s)
+        >>> tf3 = TransferFunction(s, s**2 + s + 1, s)
+        >>> S1 = Series(-tf2, tf1)
+        >>> S1.is_proper
+        False
+        >>> S2 = Series(tf1, tf2, tf3)
+        >>> S2.is_proper
+        True
+
+        """
+        return self.doit().is_proper
+
+    @property
+    def is_strictly_proper(self):
+        """
+        Returns True if degree of the numerator polynomial of the resultant transfer
+        function is strictly less than degree of the denominator polynomial of
+        the same, else False.
+
+        .. note::
+            ``is_strictly_proper`` is defined only for SISO ``Series`` configuration.
+            ``Series(*args).is_strictly_proper`` for MIMO ``*args`` will return ``None``.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Series
+        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+        >>> tf2 = TransferFunction(s**3 - 2, s**2 + 5*s + 6, s)
+        >>> tf3 = TransferFunction(1, s**2 + s + 1, s)
+        >>> S1 = Series(tf1, tf2)
+        >>> S1.is_strictly_proper
+        False
+        >>> S2 = Series(tf1, tf2, tf3)
+        >>> S2.is_strictly_proper
+        True
+
+        """
+        return self.doit().is_strictly_proper
+
+    @property
+    def is_biproper(self):
+        r"""
+        Returns True if degree of the numerator polynomial of the resultant transfer
+        function is equal to degree of the denominator polynomial of
+        the same, else False.
+
+        .. note::
+            ``is_biproper`` is defined only for SISO ``Series`` configuration.
+            ``Series(*args).is_biproper`` for MIMO ``*args`` will return ``None``.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Series
+        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+        >>> tf2 = TransferFunction(p, s**2, s)
+        >>> tf3 = TransferFunction(s**2, 1, s)
+        >>> S1 = Series(tf1, -tf2)
+        >>> S1.is_biproper
+        False
+        >>> S2 = Series(tf2, tf3)
+        >>> S2.is_biproper
+        True
+
+        """
+        return self.doit().is_biproper
+
+
+def _mat_mul_compatible(*args):
+    """To check whether shapes are compatible for matrix mul."""
+    return all(args[i].num_outputs == args[i+1].num_inputs for i in range(len(args)-1))
+
+
+class MIMOSeries(LinearTimeInvariant):
+    r"""
+    A class for representing series configuration of MIMO systems.
+
+    Parameters
+    ==========
+
+    args : TransferFunctionMatrix, MIMOSeries, MIMOParallel
+        MIMO Systems in series configuration.
+    evaluate : Boolean, Keyword
+        When passed ``True``, returns the equivalent
+        ``MIMOSeries(*args).doit()``. Set to ``False`` by default.
+
+    Raises
+    ======
+
+    ValueError
+        When no argument is passed.
+
+        ``var`` attribute is not same for every system.
+
+        ``num_outputs`` of the MIMO system is not equal to the
+        ``num_inputs`` of its adjacent MIMO system. (Matrix
+        multiplication constraint, basically)
+    TypeError
+        Any of the passed ``*args`` has unsupported type
+
+        A combination of SISO and MIMO systems is
+        passed. There should be homogeneity in the
+        type of systems passed, MIMO in this case.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import s
+    >>> from sympy.physics.control.lti import MIMOSeries, TransferFunctionMatrix
+    >>> from sympy import Matrix, pprint
+    >>> mat_a = Matrix([[5*s], [5]])  # 2 Outputs 1 Input
+    >>> mat_b = Matrix([[5, 1/(6*s**2)]])  # 1 Output 2 Inputs
+    >>> mat_c = Matrix([[1, s], [5/s, 1]])  # 2 Outputs 2 Inputs
+    >>> tfm_a = TransferFunctionMatrix.from_Matrix(mat_a, s)
+    >>> tfm_b = TransferFunctionMatrix.from_Matrix(mat_b, s)
+    >>> tfm_c = TransferFunctionMatrix.from_Matrix(mat_c, s)
+    >>> MIMOSeries(tfm_c, tfm_b, tfm_a)
+    MIMOSeries(TransferFunctionMatrix(((TransferFunction(1, 1, s), TransferFunction(s, 1, s)), (TransferFunction(5, s, s), TransferFunction(1, 1, s)))), TransferFunctionMatrix(((TransferFunction(5, 1, s), TransferFunction(1, 6*s**2, s)),)), TransferFunctionMatrix(((TransferFunction(5*s, 1, s),), (TransferFunction(5, 1, s),))))
+    >>> pprint(_, use_unicode=False)  #  For Better Visualization
+    [5*s]                 [1  s]
+    [---]    [5   1  ]    [-  -]
+    [ 1 ]    [-  ----]    [1  1]
+    [   ]   *[1     2]   *[    ]
+    [ 5 ]    [   6*s ]{t} [5  1]
+    [ - ]                 [-  -]
+    [ 1 ]{t}              [s  1]{t}
+    >>> MIMOSeries(tfm_c, tfm_b, tfm_a).doit()
+    TransferFunctionMatrix(((TransferFunction(25*(6*s**3 + 1), 6*s**2, s), TransferFunction(5*(30*s**3 + 1), 6*s, s)), (TransferFunction(25*(6*s**3 + 1), 6*s**3, s), TransferFunction(5*(30*s**3 + 1), 6*s**2, s))))
+    >>> pprint(_, use_unicode=False)  # (2 Inputs -A-> 2 Outputs) -> (2 Inputs -B-> 1 Output) -> (1 Input -C-> 2 Outputs) is equivalent to (2 Inputs -Series Equivalent-> 2 Outputs).
+    [   /   3    \    /    3    \]
+    [25*\6*s  + 1/  5*\30*s  + 1/]
+    [-------------  -------------]
+    [        2           6*s     ]
+    [     6*s                    ]
+    [                            ]
+    [   /   3    \    /    3    \]
+    [25*\6*s  + 1/  5*\30*s  + 1/]
+    [-------------  -------------]
+    [        3              2    ]
+    [     6*s            6*s     ]{t}
+
+    Notes
+    =====
+
+    All the transfer function matrices should use the same complex variable ``var`` of the Laplace transform.
+
+    ``MIMOSeries(A, B)`` is not equivalent to ``A*B``. It is always in the reverse order, that is ``B*A``.
+    In, SISO systems, this order hardly matters, but in MIMO systems, there can be issues due to non-commutative
+    nature of Matrix Multiplication.
+
+    See Also
+    ========
+
+    Series, MIMOParallel
+
+    """
+    def __new__(cls, *args, evaluate=False):
+        if len(args) == 0:
+            raise ValueError("Atleast 1 argument must be passed.")
+
+        if not all(isinstance(arg, LinearTimeInvariant) for arg in args):
+            raise TypeError("All arguments must be of type LinearTimeInvariant.")
+
+        type_set = {arg.is_SISO for arg in args}
+        if len(type_set) != 1:
+            raise TypeError("Invalid system. `args` passed contain SISO as well "
+                "as MIMO elements.")
+        var_set = {arg.var for arg in args}
+        if len(var_set) != 1:
+            raise ValueError("All MIMO systems should use the same complex variable"
+                f" of the Laplace transform. {len(var_set)} different values found.")
+
+        if list(type_set)[0]:
+            raise TypeError("Only MIMO Systems are allowed in MIMOSeries class.")
         elif _mat_mul_compatible(*args):
             obj = super().__new__(cls, *args)
             obj._is_SISO = False
@@ -884,17 +1149,15 @@ class Series(LinearTimeInvariant):
 
     @property
     def num_inputs(self):
-        return None if self.is_SISO else self.args[0].num_inputs
+        return self.args[0].num_inputs
 
     @property
     def num_outputs(self):
-        return None if self.is_SISO else self.args[-1].num_outputs
+        return self.args[-1].num_outputs
 
     @property
     def shape(self):
-        if not self.is_SISO:
-            return self.args[-1].num_outputs, self.args[0].num_inputs
-        return None
+        return self.args[-1].num_outputs, self.args[0].num_inputs
 
     def doit(self, **kwargs):
         """
@@ -918,31 +1181,11 @@ class Series(LinearTimeInvariant):
         TransferFunctionMatrix(((TransferFunction(2*(s**3 - 2)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s), TransferFunction((-p + s)**2*(s**3 - 2)*(a*p**2 + b*s) + (-p + s)*(a*p**2 + b*s)**2*(s**4 + 5*s + 6), (-p + s)**3*(s**4 + 5*s + 6), s)), (TransferFunction((-p + s)*(s**3 - 2)**2*(s**4 + 5*s + 6) + (s**3 - 2)*(a*p**2 + b*s)*(s**4 + 5*s + 6)**2, (-p + s)*(s**4 + 5*s + 6)**3, s), TransferFunction(2*(s**3 - 2)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s))))
 
         """
-        def _SISO_doit():
-            _arg = (arg.doit().to_expr() for arg in self.args)
-            res = Mul(*_arg, evaluate=True)
-            return TransferFunction.from_rational_expression(res, self.var)
-
-        def _MIMO_doit():
-            _arg = (arg.doit()._expr_mat for arg in reversed(self.args))
-            res = MatMul(*_arg, evaluate=True)
-            return TransferFunctionMatrix.from_Matrix(res, self.var)
-
-        if self.is_SISO:
-            return _SISO_doit()
-        else:
-            return _MIMO_doit()
-
-    def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
-        if not self.is_SISO:
-            raise ValueError("Only transfer functions or a collection of transfer functions"
-                " is allowed in the arguments.")
-        return self.doit()
+        _arg = (arg.doit()._expr_mat for arg in reversed(self.args))
+        res = MatMul(*_arg, evaluate=True)
+        return TransferFunctionMatrix.from_Matrix(res, self.var)
 
     def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
-        if self.is_SISO:
-            raise ValueError("Only transfer function matrices or a collection of transfer function"
-                " matrices is allowed in the arguments.")
         return self.doit()
 
     def __add__(self, other):
@@ -952,11 +1195,11 @@ class Series(LinearTimeInvariant):
         if self.is_SISO != other.is_SISO:
             raise TypeError("Cannot add SISO and MIMO systems together.")
 
-        if isinstance(other, Parallel):
+        if isinstance(other, MIMOParallel):
             arg_list = list(other.args)
-            return Parallel(self, *arg_list)
+            return MIMOParallel(self, *arg_list)
 
-        return Parallel(self, other)
+        return MIMOParallel(self, other)
 
     __radd__ = __add__
 
@@ -970,136 +1213,21 @@ class Series(LinearTimeInvariant):
         if not isinstance(other, LinearTimeInvariant):
              return NotImplemented
 
-        if self.is_SISO != other.is_SISO:
+        if other.is_SISO:
             raise TypeError("Cannot multiply SISO and MIMO systems together.")
 
-        if isinstance(other, Series):
+        if isinstance(other, MIMOSeries):
             self_arg_list = list(self.args)
             other_arg_list = list(other.args)
-            return Series(*self_arg_list, *other_arg_list) if self.is_SISO else \
-                Series(*other_arg_list, *self_arg_list)  # A*B = Series(B, A) for MIMO
+            return MIMOSeries(*other_arg_list, *self_arg_list)  # A*B = MIMOSeries(B, A)
 
         arg_list = list(self.args)
-        return Series(*arg_list, other) if self.is_SISO else Series(other, *arg_list)
-
-    def __truediv__(self, other):
-        if (isinstance(other, Parallel) and len(other.args) == 2 and self.is_SISO and other.is_SISO
-            and isinstance(other.args[0], TransferFunction) and isinstance(other.args[1], Series)):
-
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
-            self_arg_list = set(list(self.args))
-            other_arg_list = set(list(other.args[1].args))
-            res = list(self_arg_list ^ other_arg_list)
-            if len(res) == 0:
-                return Feedback(self, other.args[0])
-            elif len(res) == 1:
-                return Feedback(self, *res)
-            else:
-                return Feedback(self, Series(*res))
-        else:
-            raise ValueError("This transfer function expression is invalid.")
+        return MIMOSeries(other, *arg_list)
 
     def __neg__(self):
-        if self.is_SISO:
-            return Series(TransferFunction(-1, 1, self.var), self)
         arg_list = list(self.args)
         arg_list[0] = -arg_list[0]
-        return Series(*arg_list)
-
-    def to_expr(self):
-        """Returns the equivalent ``Expr`` object."""
-        if not self.is_SISO:
-            raise ValueError("`to_expr` is only valid for SISO systems.")
-        return Mul(*(arg.to_expr() for arg in self.args), evaluate=False)
-
-    @property
-    def is_proper(self):
-        """
-        Returns True if degree of the numerator polynomial of the resultant transfer
-        function is less than or equal to degree of the denominator polynomial of
-        the same, else False.
-
-        .. note::
-            ``is_proper`` is defined only for SISO ``Series`` configuration.
-            ``Series(*args).is_proper`` for MIMO ``*args`` will return ``None``.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p, a, b
-        >>> from sympy.physics.control.lti import TransferFunction, Series
-        >>> tf1 = TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s)
-        >>> tf2 = TransferFunction(p**2 - 4*p, p**3 + 3*s + 2, s)
-        >>> tf3 = TransferFunction(s, s**2 + s + 1, s)
-        >>> S1 = Series(-tf2, tf1)
-        >>> S1.is_proper
-        False
-        >>> S2 = Series(tf1, tf2, tf3)
-        >>> S2.is_proper
-        True
-
-        """
-        return self.doit().is_proper if self.is_SISO else None
-
-    @property
-    def is_strictly_proper(self):
-        """
-        Returns True if degree of the numerator polynomial of the resultant transfer
-        function is strictly less than degree of the denominator polynomial of
-        the same, else False.
-
-        .. note::
-            ``is_strictly_proper`` is defined only for SISO ``Series`` configuration.
-            ``Series(*args).is_strictly_proper`` for MIMO ``*args`` will return ``None``.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p, a, b
-        >>> from sympy.physics.control.lti import TransferFunction, Series
-        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
-        >>> tf2 = TransferFunction(s**3 - 2, s**2 + 5*s + 6, s)
-        >>> tf3 = TransferFunction(1, s**2 + s + 1, s)
-        >>> S1 = Series(tf1, tf2)
-        >>> S1.is_strictly_proper
-        False
-        >>> S2 = Series(tf1, tf2, tf3)
-        >>> S2.is_strictly_proper
-        True
-
-        """
-        return self.doit().is_strictly_proper if self.is_SISO else None
-
-    @property
-    def is_biproper(self):
-        r"""
-        Returns True if degree of the numerator polynomial of the resultant transfer
-        function is equal to degree of the denominator polynomial of
-        the same, else False.
-
-        .. note::
-            ``is_biproper`` is defined only for SISO ``Series`` configuration.
-            ``Series(*args).is_biproper`` for MIMO ``*args`` will return ``None``.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p, a, b
-        >>> from sympy.physics.control.lti import TransferFunction, Series
-        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
-        >>> tf2 = TransferFunction(p, s**2, s)
-        >>> tf3 = TransferFunction(s**2, 1, s)
-        >>> S1 = Series(tf1, -tf2)
-        >>> S1.is_biproper
-        False
-        >>> S2 = Series(tf2, tf3)
-        >>> S2.is_biproper
-        True
-
-        """
-        return self.doit().is_biproper if self.is_SISO else None
+        return MIMOSeries(*arg_list)
 
 
 class Parallel(LinearTimeInvariant):
@@ -1109,8 +1237,8 @@ class Parallel(LinearTimeInvariant):
     Parameters
     ==========
 
-    args : TransferFunction, TransferFunctionMatrix, Series, Parallel
-        Systems in parallel arrangement
+    args : TransferFunction, Series, Parallel
+        SISO Systems in parallel arrangement
     evaluate : Boolean, Keyword
         When passed ``True``, returns the equivalent
         ``Parallel(*args).doit()``. Set to ``False`` by default.
@@ -1122,8 +1250,6 @@ class Parallel(LinearTimeInvariant):
         When no argument is passed.
 
         ``var`` attribute is not same for every system.
-
-        All MIMO systems passed don't have same shape.
     TypeError
         Any of the passed ``*args`` has unsupported type
 
@@ -1134,11 +1260,8 @@ class Parallel(LinearTimeInvariant):
     Examples
     ========
 
-    SISO-System examples -
-
     >>> from sympy.abc import s, p, a, b
-    >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix, Parallel, Series
-    >>> from sympy import Matrix, pprint
+    >>> from sympy.physics.control.lti import TransferFunction, Parallel, Series
     >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
     >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
     >>> tf3 = TransferFunction(p**2, p + s, s)
@@ -1164,42 +1287,6 @@ class Parallel(LinearTimeInvariant):
     TransferFunction(-p**2*(-p + s)*(s**4 + 5*s + 6) + (-p + s)*(p + s)*(s**3 - 2) + (p + s)*(a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
     >>> Parallel(tf2, Series(tf1, -tf3)).doit()
     TransferFunction(-p**2*(a*p**2 + b*s)*(s**4 + 5*s + 6) + (-p + s)*(p + s)*(s**3 - 2), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
-
-    MIMO-System example -
-
-    >>> expr_1 = 1/s
-    >>> expr_2 = s/(s**2-1)
-    >>> expr_3 = (2 + s)/(s**2 - 1)
-    >>> expr_4 = 5
-    >>> tfm_a = TransferFunctionMatrix.from_Matrix(Matrix([[expr_1, expr_2], [expr_3, expr_4]]), s)
-    >>> tfm_b = TransferFunctionMatrix.from_Matrix(Matrix([[expr_2, expr_1], [expr_4, expr_3]]), s)
-    >>> tfm_c = TransferFunctionMatrix.from_Matrix(Matrix([[expr_3, expr_4], [expr_1, expr_2]]), s)
-    >>> Parallel(tfm_a, tfm_b, tfm_c)
-    Parallel(TransferFunctionMatrix(((TransferFunction(1, s, s), TransferFunction(s, s**2 - 1, s)), (TransferFunction(s + 2, s**2 - 1, s), TransferFunction(5, 1, s)))), TransferFunctionMatrix(((TransferFunction(s, s**2 - 1, s), TransferFunction(1, s, s)), (TransferFunction(5, 1, s), TransferFunction(s + 2, s**2 - 1, s)))), TransferFunctionMatrix(((TransferFunction(s + 2, s**2 - 1, s), TransferFunction(5, 1, s)), (TransferFunction(1, s, s), TransferFunction(s, s**2 - 1, s)))))
-    >>> pprint(_, use_unicode=False)  #  For Better Visualization
-    [  1       s   ]      [  s       1   ]      [s + 2     5   ]
-    [  -     ------]      [------    -   ]      [------    -   ]
-    [  s      2    ]      [ 2        s   ]      [ 2        1   ]
-    [        s  - 1]      [s  - 1        ]      [s  - 1        ]
-    [              ]    + [              ]    + [              ]
-    [s + 2     5   ]      [  5     s + 2 ]      [  1       s   ]
-    [------    -   ]      [  -     ------]      [  -     ------]
-    [ 2        1   ]      [  1      2    ]      [  s      2    ]
-    [s  - 1        ]{t}   [        s  - 1]{t}   [        s  - 1]{t}
-    >>> Parallel(tfm_a, tfm_b, tfm_c).doit()
-    TransferFunctionMatrix(((TransferFunction(s**2 + s*(2*s + 2) - 1, s*(s**2 - 1), s), TransferFunction(2*s**2 + 5*s*(s**2 - 1) - 1, s*(s**2 - 1), s)), (TransferFunction(s**2 + s*(s + 2) + 5*s*(s**2 - 1) - 1, s*(s**2 - 1), s), TransferFunction(5*s**2 + 2*s - 3, s**2 - 1, s))))
-    >>> pprint(_, use_unicode=False)
-    [       2                              2       / 2    \    ]
-    [      s  + s*(2*s + 2) - 1         2*s  + 5*s*\s  - 1/ - 1]
-    [      --------------------         -----------------------]
-    [             / 2    \                       / 2    \      ]
-    [           s*\s  - 1/                     s*\s  - 1/      ]
-    [                                                          ]
-    [ 2                   / 2    \             2               ]
-    [s  + s*(s + 2) + 5*s*\s  - 1/ - 1      5*s  + 2*s - 3     ]
-    [---------------------------------      --------------     ]
-    [              / 2    \                      2             ]
-    [            s*\s  - 1/                     s  - 1         ]{t}
 
     Notes
     =====
@@ -1232,11 +1319,8 @@ class Parallel(LinearTimeInvariant):
         if list(type_set)[0]:
             obj = super().__new__(cls, *args)
             obj._is_SISO = True
-        elif all(arg.shape == args[0].shape for arg in args):
-            obj = super().__new__(cls, *args)
-            obj._is_SISO = False
         else:
-            raise TypeError("Shape of all the args is not equal.")
+            raise TypeError("MIMO systems are not allowed in `Parallel`. Use `MIMOParallel` instead.")
 
         return obj.doit() if evaluate else obj
 
@@ -1261,20 +1345,6 @@ class Parallel(LinearTimeInvariant):
         """
         return self.args[0].var
 
-    @property
-    def num_inputs(self):
-        return None if self.is_SISO else self.args[0].num_inputs
-
-    @property
-    def num_outputs(self):
-        return None if self.is_SISO else self.args[0].num_outputs
-
-    @property
-    def shape(self):
-        if not self.is_SISO:
-            return self.args[0].num_outputs, self.args[0].num_inputs
-        return None
-
     def doit(self, **kwargs):
         """
         Returns the resultant transfer function obtained after evaluating
@@ -1298,38 +1368,18 @@ class Parallel(LinearTimeInvariant):
 
         """
 
-        def _SISO_doit():
-            _arg = (arg.doit().to_expr() for arg in self.args)
-            res = Add(*_arg).as_numer_denom()
-            return TransferFunction(*res, self.var)
-
-        def _MIMO_doit():
-            _arg = (arg.doit()._expr_mat for arg in self.args)
-            res = MatAdd(*_arg, evaluate=True)
-            return TransferFunctionMatrix.from_Matrix(res, self.var)
-
-        if self.is_SISO:
-            return _SISO_doit()
-        else:
-            return _MIMO_doit()
+        _arg = (arg.doit().to_expr() for arg in self.args)
+        res = Add(*_arg).as_numer_denom()
+        return TransferFunction(*res, self.var)
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
-        if not self.is_SISO:
-            raise ValueError("Only transfer functions or a collection of transfer functions"
-                " is allowed in the arguments.")
-        return self.doit()
-
-    def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
-        if self.is_SISO:
-            raise ValueError("Only transfer function matrices or a collection of transfer function"
-                " matrices is allowed in the arguments.")
         return self.doit()
 
     def __add__(self, other):
         if not isinstance(other, LinearTimeInvariant):
              return NotImplemented
 
-        if self.is_SISO != other.is_SISO:
+        if not other.is_SISO:
             raise TypeError("Cannot add SISO and MIMO systems together.")
 
         if isinstance(other, Parallel):
@@ -1352,25 +1402,20 @@ class Parallel(LinearTimeInvariant):
         if not isinstance(other, LinearTimeInvariant):
              return NotImplemented
 
-        if self.is_SISO != other.is_SISO:
+        if other.is_SISO:
             raise TypeError("Cannot multiply SISO and MIMO systems together.")
 
         if isinstance(other, Series):
             arg_list = list(other.args)
-            return Series(self, *arg_list) if self.is_SISO else Series(*arg_list, self)
+            return Series(self, *arg_list)
 
-        return Series(self, other) if self.is_SISO else Series(other, self)
+        return Series(self, other)
 
     def __neg__(self):
-        if self.is_SISO:
-            return Series(TransferFunction(-1, 1, self.var), self)
-        arg_list = [-arg for arg in list(self.args)]
-        return Parallel(*arg_list)
+        return Series(TransferFunction(-1, 1, self.var), self)
 
     def to_expr(self):
         """Returns the equivalent ``Expr`` object."""
-        if not self.is_SISO:
-            raise ValueError("`to_expr` is only valid for SISO systems.")
         return Add(*(arg.to_expr() for arg in self.args), evaluate=False)
 
     @property
@@ -1400,7 +1445,7 @@ class Parallel(LinearTimeInvariant):
         True
 
         """
-        return self.doit().is_proper if self.is_SISO else None
+        return self.doit().is_proper
 
     @property
     def is_strictly_proper(self):
@@ -1429,7 +1474,7 @@ class Parallel(LinearTimeInvariant):
         True
 
         """
-        return self.doit().is_strictly_proper if self.is_SISO else None
+        return self.doit().is_strictly_proper
 
     @property
     def is_biproper(self):
@@ -1458,7 +1503,220 @@ class Parallel(LinearTimeInvariant):
         False
 
         """
-        return self.doit().is_biproper if self.is_SISO else None
+        return self.doit().is_biproper
+
+
+class MIMOParallel(LinearTimeInvariant):
+    r"""
+    A class for representing parallel configuration of MIMO systems.
+
+    Parameters
+    ==========
+
+    args : TransferFunctionMatrix, MIMOSeries, MIMOParallel
+        MIMO Systems in parallel arrangement
+    evaluate : Boolean, Keyword
+        When passed ``True``, returns the equivalent
+        ``MIMOParallel(*args).doit()``. Set to ``False`` by default.
+
+    Raises
+    ======
+
+    ValueError
+        When no argument is passed.
+
+        ``var`` attribute is not same for every system.
+
+        All MIMO systems passed don't have same shape.
+    TypeError
+        Any of the passed ``*args`` has unsupported type
+
+        A combination of SISO and MIMO systems is
+        passed. There should be homogeneity in the
+        type of systems passed, MIMO in this case.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import s
+    >>> from sympy.physics.control.lti import TransferFunctionMatrix, MIMOParallel
+    >>> from sympy import Matrix, pprint
+    >>> expr_1 = 1/s
+    >>> expr_2 = s/(s**2-1)
+    >>> expr_3 = (2 + s)/(s**2 - 1)
+    >>> expr_4 = 5
+    >>> tfm_a = TransferFunctionMatrix.from_Matrix(Matrix([[expr_1, expr_2], [expr_3, expr_4]]), s)
+    >>> tfm_b = TransferFunctionMatrix.from_Matrix(Matrix([[expr_2, expr_1], [expr_4, expr_3]]), s)
+    >>> tfm_c = TransferFunctionMatrix.from_Matrix(Matrix([[expr_3, expr_4], [expr_1, expr_2]]), s)
+    >>> MIMOParallel(tfm_a, tfm_b, tfm_c)
+    MIMOParallel(TransferFunctionMatrix(((TransferFunction(1, s, s), TransferFunction(s, s**2 - 1, s)), (TransferFunction(s + 2, s**2 - 1, s), TransferFunction(5, 1, s)))), TransferFunctionMatrix(((TransferFunction(s, s**2 - 1, s), TransferFunction(1, s, s)), (TransferFunction(5, 1, s), TransferFunction(s + 2, s**2 - 1, s)))), TransferFunctionMatrix(((TransferFunction(s + 2, s**2 - 1, s), TransferFunction(5, 1, s)), (TransferFunction(1, s, s), TransferFunction(s, s**2 - 1, s)))))
+    >>> pprint(_, use_unicode=False)  #  For Better Visualization
+    [  1       s   ]      [  s       1   ]      [s + 2     5   ]
+    [  -     ------]      [------    -   ]      [------    -   ]
+    [  s      2    ]      [ 2        s   ]      [ 2        1   ]
+    [        s  - 1]      [s  - 1        ]      [s  - 1        ]
+    [              ]    + [              ]    + [              ]
+    [s + 2     5   ]      [  5     s + 2 ]      [  1       s   ]
+    [------    -   ]      [  -     ------]      [  -     ------]
+    [ 2        1   ]      [  1      2    ]      [  s      2    ]
+    [s  - 1        ]{t}   [        s  - 1]{t}   [        s  - 1]{t}
+    >>> MIMOParallel(tfm_a, tfm_b, tfm_c).doit()
+    TransferFunctionMatrix(((TransferFunction(s**2 + s*(2*s + 2) - 1, s*(s**2 - 1), s), TransferFunction(2*s**2 + 5*s*(s**2 - 1) - 1, s*(s**2 - 1), s)), (TransferFunction(s**2 + s*(s + 2) + 5*s*(s**2 - 1) - 1, s*(s**2 - 1), s), TransferFunction(5*s**2 + 2*s - 3, s**2 - 1, s))))
+    >>> pprint(_, use_unicode=False)
+    [       2                              2       / 2    \    ]
+    [      s  + s*(2*s + 2) - 1         2*s  + 5*s*\s  - 1/ - 1]
+    [      --------------------         -----------------------]
+    [             / 2    \                       / 2    \      ]
+    [           s*\s  - 1/                     s*\s  - 1/      ]
+    [                                                          ]
+    [ 2                   / 2    \             2               ]
+    [s  + s*(s + 2) + 5*s*\s  - 1/ - 1      5*s  + 2*s - 3     ]
+    [---------------------------------      --------------     ]
+    [              / 2    \                      2             ]
+    [            s*\s  - 1/                     s  - 1         ]{t}
+
+    Notes
+    =====
+
+    All the transfer function matrices should use the same complex variable
+    ``var`` of the Laplace transform.
+
+    See Also
+    ========
+
+    Parallel, MIMOSeries
+
+    """
+    def __new__(cls, *args, evaluate=False):
+        if len(args) == 0:
+            raise ValueError("Atleast 1 argument must be passed.")
+
+        if not all(isinstance(arg, LinearTimeInvariant) for arg in args):
+            raise TypeError("All arguments must be of type LinearTimeInvariant.")
+
+        type_set = {arg.is_SISO for arg in args}
+        if len(type_set) != 1:
+            raise TypeError("Invalid system. `args` passed contain SISO as well "
+                "as MIMO elements.")
+        var_set = {arg.var for arg in args}
+        if len(var_set) != 1:
+            raise ValueError("All MIMO systems should use the same complex variable"
+                f" of the Laplace transform. {len(var_set)} different values found.")
+
+        if list(type_set)[0]:
+            raise TypeError("Only MIMO Systems are allowed in MIMOSeries class.")
+        elif all(arg.shape == args[0].shape for arg in args):
+            obj = super().__new__(cls, *args)
+            obj._is_SISO = False
+        else:
+            raise TypeError("Shape of all the args is not equal.")
+
+        return obj.doit() if evaluate else obj
+
+    @property
+    def var(self):
+        """
+        Returns the complex variable used by all the systems.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import p
+        >>> from sympy.physics.control.lti import TransferFunction, Parallel, Series
+        >>> G1 = TransferFunction(p**2 + 2*p + 4, p - 6, p)
+        >>> G2 = TransferFunction(p, 4 - p, p)
+        >>> G3 = TransferFunction(0, p**4 - 1, p)
+        >>> Parallel(G1, G2).var
+        p
+        >>> Parallel(-G3, Series(G1, G2)).var
+        p
+
+        """
+        return self.args[0].var
+
+    @property
+    def num_inputs(self):
+        return self.args[0].num_inputs
+
+    @property
+    def num_outputs(self):
+        return self.args[0].num_outputs
+
+    @property
+    def shape(self):
+        return self.args[0].num_outputs, self.args[0].num_inputs
+
+    def doit(self, **kwargs):
+        """
+        Returns the resultant transfer function obtained after evaluating
+        the transfer functions in parallel configuration.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Parallel, TransferFunctionMatrix
+        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+        >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
+        >>> Parallel(tf2, tf1).doit()
+        TransferFunction((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s)
+        >>> Parallel(-tf1, -tf2).doit()
+        TransferFunction((2 - s**3)*(-p + s) + (-a*p**2 - b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s)
+        >>> tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+        >>> tfm_2 = TransferFunctionMatrix([[tf2, tf1], [tf1, tf2]])
+        >>> Parallel(tfm_1, tfm_2).doit()  # MIMO System
+        TransferFunctionMatrix(((TransferFunction((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s), TransferFunction((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s)), (TransferFunction((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s), TransferFunction((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s))))
+
+        """
+        _arg = (arg.doit()._expr_mat for arg in self.args)
+        res = MatAdd(*_arg, evaluate=True)
+        return TransferFunctionMatrix.from_Matrix(res, self.var)
+
+    def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
+        if self.is_SISO:
+            raise ValueError("Only transfer function matrices or a collection of transfer function"
+                " matrices is allowed in the arguments.")
+        return self.doit()
+
+    def __add__(self, other):
+        if not isinstance(other, LinearTimeInvariant):
+             return NotImplemented
+
+        if other.is_SISO:
+            raise TypeError("Cannot add SISO and MIMO systems together.")
+
+        if isinstance(other, MIMOParallel):
+            self_arg_list = list(self.args)
+            other_arg_list = list(other.args)
+            return MIMOParallel(*self_arg_list, *other_arg_list)
+
+        self_arg_list = list(self.args)
+        return MIMOParallel(*self_arg_list, other)
+
+    __radd__ = __add__
+
+    def __sub__(self, other):
+        return self + (-other)
+
+    def __rsub__(self, other):
+        return -self + other
+
+    def __mul__(self, other):
+        if not isinstance(other, LinearTimeInvariant):
+             return NotImplemented
+
+        if other.is_SISO:
+            raise TypeError("Cannot multiply SISO and MIMO systems together.")
+
+        if isinstance(other, MIMOSeries):
+            arg_list = list(other.args)
+            return MIMOSeries(*arg_list, self)
+
+        return MIMOSeries(other, self)
+
+    def __neg__(self):
+        arg_list = [-arg for arg in list(self.args)]
+        return MIMOParallel(*arg_list)
 
 
 class Feedback(Basic):
