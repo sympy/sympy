@@ -9,7 +9,7 @@ Todo:
 
 import math
 
-from sympy import Integer, log, Mul, Add, Pow, sqrt, conjugate, symbols
+from sympy import Integer, log, Mul, Add, Pow, sqrt, symbols
 from sympy.core.basic import sympify
 from sympy.core.compatibility import SYMPY_INTS
 from sympy.matrices import Matrix, zeros
@@ -590,7 +590,7 @@ def measure_all(qubit, format='sympy', normalize=True):
             try:
                 for i in range(len(state)):
                     results.append((state[i],sympify('{}'.format(eval(qubit[i])*eval(qubit[i]).conjugate()),rational=True)))
-            except:
+            except NameError:
                 for i in range(len(state)):
                     results.append((state[i],sympify('{}'.format(symbols(qubit[i])*symbols(qubit[i]).conjugate()),rational=True)))
         return results
