@@ -1119,7 +1119,10 @@ def strongly_connected_components(G):
     Gmap = {vi: [] for vi in V}
     for v1, v2 in E:
         Gmap[v1].append(v2)
+    return _strongly_connected_components(V, Gmap)
 
+
+def _strongly_connected_components(V, Gmap):
     # Non-recursive Tarjan's algorithm:
     lowlink = {}
     indices = {}

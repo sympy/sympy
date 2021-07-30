@@ -11,6 +11,7 @@ as unifying matrices with different domains.
 """
 from functools import reduce
 from sympy.core.sympify import _sympify
+from sympy.utilities.iterables import _strongly_connected_components
 
 from ..constructor import construct_domain
 
@@ -1051,6 +1052,14 @@ class DomainMatrix:
         else:
             sqrtAn = A ** (n // 2)
             return sqrtAn * sqrtAn
+
+    def scc(self):
+        rows, cols = self.shape
+        assert rows == cols
+        V = range(rows)
+        rep = self.rep
+        Emap = {v: list(rep.get(v, [])) for v in V}
+        return _strongly_connected_components(V, Emap)
 
     def rref(self):
         r"""
