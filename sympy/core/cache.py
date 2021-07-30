@@ -61,26 +61,7 @@ def __cacheit(maxsize):
         to force cacheit to check returned results mutability and consistency,
         set environment variable SYMPY_USE_CACHE to 'debug'
     """
-    def func_wrapper(func):
-        from .decorators import wraps
-
-        cfunc = lru_cache(maxsize, typed=True)(func)
-
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            try:
-                retval = cfunc(*args, **kwargs)
-            except TypeError:
-                retval = func(*args, **kwargs)
-            return retval
-
-        wrapper.cache_info = cfunc.cache_info
-        wrapper.cache_clear = cfunc.cache_clear
-
-        CACHE.append(wrapper)
-        return wrapper
-
-    return func_wrapper
+    return lru_cache(maxsize, typed=True)
 ########################################
 
 
