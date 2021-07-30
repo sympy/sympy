@@ -421,8 +421,8 @@ class exp(ExpBase, metaclass=ExpMeta):
         from sympy.functions.elementary.trigonometric import cos, sin
         re, im = self.args[0].as_real_imag()
         if deep:
-            re = re.expand(deep, **hints)
-            im = im.expand(deep, **hints)
+            re = re.expand(deep=deep, **hints)
+            im = im.expand(deep=deep, **hints)
         cos, sin = cos(im), sin(im)
         return (exp(re)*cos, exp(re)*sin)
 
@@ -888,14 +888,14 @@ class log(Function):
         from sympy import Abs, arg
         sarg = self.args[0]
         if deep:
-            sarg = self.args[0].expand(deep, **hints)
+            sarg = self.args[0].expand(deep=deep, **hints)
         abs = Abs(sarg)
         if abs == sarg:
             return self, S.Zero
         arg = arg(sarg)
         if hints.get('log', False):  # Expand the log
             hints['complex'] = False
-            return (log(abs).expand(deep, **hints), arg)
+            return (log(abs).expand(deep=deep, **hints), arg)
         else:
             return log(abs), arg
 
