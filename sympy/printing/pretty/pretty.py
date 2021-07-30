@@ -968,16 +968,17 @@ class PrettyPrinter(Printer):
             return self._print(1)/self._print(expr.den)
 
     def _print_Series(self, expr):
-        from sympy.physics.control.lti import Parallel
-        if expr.is_SISO:
-            args = list(expr.args)
-            for i, a in enumerate(expr.args):
-                args[i] = prettyForm(*self._print(a).parens())
-            return prettyForm.__mul__(*args)
+        args = list(expr.args)
+        for i, a in enumerate(expr.args):
+            args[i] = prettyForm(*self._print(a).parens())
+        return prettyForm.__mul__(*args)
+
+    def _print_MIMOSeries(self, expr):
+        from sympy.physics.control.lti import MIMOParallel
         args = list(expr.args)
         pretty_args = []
         for i, a in enumerate(reversed(args)):
-            if (isinstance(a, Parallel) and len(expr.args) > 1):
+            if (isinstance(a, MIMOParallel) and len(expr.args) > 1):
                 expression = self._print(a)
                 expression.baseline = expression.height()//2
                 pretty_args.append(prettyForm(*expression.parens()))
@@ -988,6 +989,19 @@ class PrettyPrinter(Printer):
         return prettyForm.__mul__(*pretty_args)
 
     def _print_Parallel(self, expr):
+        s = None
+        for item in expr.args:
+            pform = self._print(item)
+            if s is None:
+                s = pform     # First element
+            else:
+                s = prettyForm(*stringPict.next(s))
+                s.baseline = s.height()//2
+                s = prettyForm(*stringPict.next(s, ' + '))
+                s = prettyForm(*stringPict.next(s, pform))
+        return s
+
+    def _print_MIMOParallel(self, expr):
         from sympy.physics.control.lti import TransferFunctionMatrix
         s = None
         for item in expr.args:
