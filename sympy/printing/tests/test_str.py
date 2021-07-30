@@ -10,7 +10,7 @@ from sympy.core import Expr, Mul
 from sympy.core.parameters import _exp_is_pow
 from sympy.external import import_module
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, \
-    Feedback, TransferFunctionMatrix
+    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel
 from sympy.physics.units import second, joule
 from sympy.polys import (Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ,
     ZZ_I, QQ_I, lex, grlex)
@@ -672,6 +672,18 @@ def test_Series_str():
         "Series(TransferFunction(-x + y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y))"
 
 
+def test_MIMOSeries_str():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+    tfm_2 = TransferFunctionMatrix([[tf2, tf1], [tf1, tf2]])
+    assert str(MIMOSeries(tfm_1, tfm_2)) == \
+        "MIMOSeries(TransferFunctionMatrix(((TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y)), "\
+            "(TransferFunction(x - y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y)))), "\
+                "TransferFunctionMatrix(((TransferFunction(x - y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y)), "\
+                    "(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y)))))"
+
+
 def test_TransferFunction_str():
     tf1 = TransferFunction(x - 1, x + 1, x)
     assert str(tf1) == "TransferFunction(x - 1, x + 1, x)"
@@ -691,6 +703,18 @@ def test_Parallel_str():
         "Parallel(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y), TransferFunction(t*x**2 - t**w*x + w, t - y, y))"
     assert str(Parallel(-tf2, tf1)) == \
         "Parallel(TransferFunction(-x + y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y))"
+
+
+def test_MIMOParallel_str():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+    tfm_2 = TransferFunctionMatrix([[tf2, tf1], [tf1, tf2]])
+    assert str(MIMOParallel(tfm_1, tfm_2)) == \
+        "MIMOParallel(TransferFunctionMatrix(((TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y)), "\
+            "(TransferFunction(x - y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y)))), "\
+                "TransferFunctionMatrix(((TransferFunction(x - y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y)), "\
+                    "(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y)))))"
 
 
 def test_Feedback_str():
