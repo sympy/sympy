@@ -2438,18 +2438,24 @@ class LatexPrinter(Printer):
         return r"\frac{%s}{%s}" % (num, den)
 
     def _print_Series(self, expr):
-        from sympy.physics.control.lti import Parallel
-        if expr.is_SISO:
-            args = list(expr.args)
-            parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
-                                                False)
-            return ' '.join(map(parens, args))
+        args = list(expr.args)
+        parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
+                                            False)
+        return ' '.join(map(parens, args))
+
+    def _print_MIMOSeries(self, expr):
+        from sympy.physics.control.lti import MIMOParallel
         args = list(expr.args)[::-1]
         parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
-                                             False) if isinstance(x, Parallel) else self._print(x)
+                                             False) if isinstance(x, MIMOParallel) else self._print(x)
         return r"\cdot".join(map(parens, args))
 
     def _print_Parallel(self, expr):
+        args = list(expr.args)
+        func = lambda x: self._print(x)
+        return '+'.join(map(func, args))
+
+    def _print_MIMOParallel(self, expr):
         args = list(expr.args)
         func = lambda x: self._print(x)
         return '+'.join(map(func, args))
