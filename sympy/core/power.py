@@ -1528,7 +1528,7 @@ class Pow(Expr):
                 return self.func(n, exp), d
         return self.func(n, exp), self.func(d, exp)
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict={}, *, old=False):
         expr = _sympify(expr)
         repl_dict = repl_dict.copy()
 

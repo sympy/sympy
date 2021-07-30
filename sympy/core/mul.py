@@ -1026,11 +1026,11 @@ class Mul(Expr, AssocOp):
             return terms[0].matches(newexpr, repl_dict)
         return
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict={}, *, old=False):
         expr = sympify(expr)
         repl_dict = repl_dict.copy()
         if self.is_commutative and expr.is_commutative:
-            return self._matches_commutative(expr, repl_dict, old)
+            return self._matches_commutative(expr, repl_dict, old=old)
         elif self.is_commutative is not expr.is_commutative:
             return None
 
@@ -1043,7 +1043,7 @@ class Mul(Expr, AssocOp):
         comm_mul_self = Mul(*c1)
         comm_mul_expr = Mul(*c2)
 
-        repl_dict = comm_mul_self.matches(comm_mul_expr, repl_dict, old)
+        repl_dict = comm_mul_self.matches(comm_mul_expr, repl_dict, old=old)
 
         # If the commutative arguments didn't match and aren't equal, then
         # then the expression as a whole doesn't match

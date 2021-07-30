@@ -1039,7 +1039,7 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
             nargs = FiniteSet(*nargs)
         cls.nargs = nargs
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict={}, *, old=False):
         if not isinstance(expr, (AppliedUndef, Function)):
             return None
         if len(expr.args) not in self.nargs:
