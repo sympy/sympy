@@ -9,7 +9,7 @@ Todo:
 
 import math
 
-from sympy import Integer, log, Mul, Add, Pow, sqrt
+from sympy import Integer, log, Mul, Add, Pow, sqrt, conjugate
 from sympy.core.basic import sympify
 from sympy.core.compatibility import SYMPY_INTS
 from sympy.matrices import Matrix, zeros
@@ -555,12 +555,11 @@ def measure_all(qubit, format='sympy', normalize=True):
         H(0)*H(1)*|00>
         >>> q = qapply(c)
         >>> measure_all(q)
-        |00>/2 + |01>/2 + |10>/2 + |11>/2
-        [('|00>', 0.25), ('|01>', 0.25), ('|10>', 0.25), ('|11>', 0.25)]
+        [(|00>, 1/4), (|01>, 1/4), (|10>, 1/4), (|11>, 1/4)]
     """
+    
     if format == 'sympy':
-        print(qubit)
-        qubit = str(qubit)
+        qubit = '{}'.format(qubit)
         state = []
         results = []
         while('|'in qubit or '>' in qubit or 'I' in qubit):
@@ -568,7 +567,7 @@ def measure_all(qubit, format='sympy', normalize=True):
                 start = qubit.find('|')
                 end = qubit.find('>')
                 newstring = '1'
-                state.append(qubit[start:end+1])
+                state.append(Qubit(qubit[start+1:end]))
                 qubit = qubit[:start] + newstring + qubit[end+1:]
             else:
                 starti = qubit.find('I')
@@ -580,16 +579,21 @@ def measure_all(qubit, format='sympy', normalize=True):
                 qubit.remove('-')
             else:
                 qubit.remove('+')
-        norm = 0
+        norm = 1
         if normalize==True:
+            norm = 0
             for i in range(len(state)):
-                norm = norm+eval(qubit[i])**2
+                norm = norm+eval(qubit[i])*eval(qubit[i]).conjugate()
         if norm!=1:
             for i in range(len(state)):
-                results.append((state[i],(eval(qubit[i])**2)*(1/norm)))
+                results.append((state[i],sympify('{}'.format((eval(qubit[i])*(eval(qubit[i]).conjugate())*(1/norm))),rational=True)))
         else:
-            for i in range(len(state)):
-                results.append((state[i],eval(qubit[i])**2))
+            try:
+                for i in range(len(state)):
+                    results.append((state[i],sympify('{}'.format(eval(qubit[i])*eval(qubit[i]).conjugate()),rational=True)))
+            except:
+                for i in range(len(state)):
+                    results.append((state[i],sympify('{}'.format(symbols(qubit[i])*symbols(qubit[i]).conjugate()),rational=True)))
         return results
     else:
         raise NotImplementedError(
@@ -773,13 +777,11 @@ def _get_possible_outcomes(m, bits):
 
 def measure_all_oneshot(qubit, format='sympy'):
     """Perform a oneshot ensemble measurement on all qubits.
-
     A oneshot measurement is equivalent to performing a measurement on a
     quantum system. This type of measurement does not return the probabilities
     like an ensemble measurement does, but rather returns *one* of the
     possible resulting states. The exact state that is returned is determined
     by picking a state randomly according to the ensemble probabilities.
-
     Parameters
     ----------
     qubits : Qubit
@@ -789,7 +791,6 @@ def measure_all_oneshot(qubit, format='sympy'):
         The format of the intermediate matrices to use. Possible values are
         ('sympy','numpy','scipy.sparse'). Currently only 'sympy' is
         implemented.
-
     Returns
     -------
     result : Qubit
@@ -803,7 +804,7 @@ def measure_all_oneshot(qubit, format='sympy'):
             start = qubit.find('|')
             end = qubit.find('>')
             newstring = '1'
-            state.append(qubit[start:end+1])
+            state.append(Qubit(qubit[start:end+1]))
             qubit = qubit[:start] + newstring + qubit[end+1:]
         random_number = random.randrange(len(state))
         return state[random_number]
