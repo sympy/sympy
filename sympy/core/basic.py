@@ -1639,10 +1639,10 @@ class Basic(Printable, metaclass=ManagedProperties):
         # done
         return m
 
-    def count_ops(self, visual=None):
+    def count_ops(self, *, visual=None):
         """wrapper for count_ops that returns the operation count."""
         from sympy import count_ops
-        return count_ops(self, visual)
+        return count_ops(self, visual=visual)
 
     def doit(self, **hints):
         """Evaluate objects that are not evaluated by default like limits,

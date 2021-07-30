@@ -3089,7 +3089,7 @@ def expand_power_exp(expr, deep=True):
     log=False, mul=False, power_exp=True, power_base=False, multinomial=False)
 
 
-def count_ops(expr, visual=False):
+def count_ops(expr, *, visual=False):
     """
     Return a representation (integer or expression) of the operations in expr.
 

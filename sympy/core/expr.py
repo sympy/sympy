@@ -1297,10 +1297,10 @@ class Expr(Basic, EvalfMixin):
 
         raise NotImplementedError('not sure of order of %s' % o)
 
-    def count_ops(self, visual=None):
+    def count_ops(self, *, visual=None):
         """wrapper for count_ops that returns the operation count."""
         from .function import count_ops
-        return count_ops(self, visual)
+        return count_ops(self, visual=visual)
 
     def args_cnc(self, *, cset=False, warn=True, split_1=True):
         """Return [commutative factors, non-commutative factors] of self.
