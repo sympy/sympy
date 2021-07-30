@@ -1305,7 +1305,7 @@ class AccumulationBounds(AtomicExpr):
                 else:
                     args = [other/i if not i.is_infinite
                         else 0 for i in self.args]
-                    if args[0] > args[1]:
+                    if (args[0] - args[1]).is_extended_positive:
                         args = args[::-1]
                     return AccumBounds(*args)
             return Mul(other, 1 / self, evaluate=False)
