@@ -557,7 +557,6 @@ def measure_all(qubit, format='sympy', normalize=True):
         >>> measure_all(q)
         [(|00>, 1/4), (|01>, 1/4), (|10>, 1/4), (|11>, 1/4)]
     """
-    
     if format == 'sympy':
         qubit = '{}'.format(qubit)
         state = []
