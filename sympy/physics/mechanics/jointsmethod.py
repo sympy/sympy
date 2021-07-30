@@ -219,12 +219,10 @@ class JointsMethod(_Methods):
         if issubclass(method, LagrangesMethod): #LagrangesMethod or similar
             L = Lagrangian(self.frame, *self.bodies)
             self._method = method(L, self.q, self.loads, self.bodies, self.frame)
-            soln = self.method._form_eoms()
         else: #KanesMethod or similar
             self._method = method(self.frame, q_ind=self.q, u_ind=self.u, kd_eqs=self.kdes,
                                     forcelist=self.loads, bodies=self.bodies)
-            eqns = self.method._form_eoms()
-            soln = eqns[0] + eqns[1]
+        soln = self.method._form_eoms()
         return soln
 
     def rhs(self, inv_method=None):

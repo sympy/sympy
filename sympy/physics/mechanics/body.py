@@ -1,4 +1,4 @@
-from sympy.core.backend import Symbol, sympify
+from sympy.core.backend import Symbol
 from sympy.physics.vector import Point, Vector, ReferenceFrame
 from sympy.physics.mechanics import RigidBody, Particle, inertia
 

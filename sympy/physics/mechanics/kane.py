@@ -561,7 +561,8 @@ class KanesMethod(_Methods):
         return (self._fr, self._frstar)
 
     def _form_eoms(self):
-        return self.kanes_equations(self.bodylist, self.forcelist)
+        fr, frstar = self.kanes_equations(self.bodylist, self.forcelist)
+        return fr + frstar
 
     def rhs(self, inv_method=None):
         """Returns the system's equations of motion in first order form. The
