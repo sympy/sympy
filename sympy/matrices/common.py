@@ -2089,7 +2089,7 @@ class MatrixOperations(MatrixRequired):
                 'quad':quad, 'verbose':verbose}
         return self.applyfunc(lambda i: i.evalf(n, **options))
 
-    def expand(self, deep=True, modulus=None, power_base=True, power_exp=True,
+    def expand(self, *, deep=True, modulus=None, power_base=True, power_exp=True,
                mul=True, log=True, multinomial=True, basic=True, **hints):
         """Apply core.function.expand to each entry of the matrix.
 

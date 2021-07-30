@@ -3559,7 +3559,7 @@ class Expr(Basic, EvalfMixin):
         return (expr, hit)
 
     @cacheit
-    def expand(self, deep=True, modulus=None, power_base=True, power_exp=True,
+    def expand(self, *, deep=True, modulus=None, power_base=True, power_exp=True,
             mul=True, log=True, multinomial=True, basic=True, **hints):
         """
         Expand an expression using hints.
