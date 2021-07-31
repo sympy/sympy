@@ -9,7 +9,7 @@ from sympy.series import limit
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions import MatMul, MatAdd
 
-__all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel', \
+__all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
     'Feedback', 'TransferFunctionMatrix']
 
 
@@ -716,13 +716,13 @@ class TransferFunction(LinearTimeInvariant):
 
 class Series(LinearTimeInvariant):
     r"""
-    A class for representing series configuration of SISO systems.
+    A class for representing a series configuration of SISO systems.
 
     Parameters
     ==========
 
     args : TransferFunction, Series, Parallel
-        SISO Systems in series configuration.
+        SISO systems in a series configuration.
     evaluate : Boolean, Keyword
         When passed ``True``, returns the equivalent
         ``Series(*args).doit()``. Set to ``False`` by default.
@@ -1014,13 +1014,13 @@ def _mat_mul_compatible(*args):
 
 class MIMOSeries(LinearTimeInvariant):
     r"""
-    A class for representing series configuration of MIMO systems.
+    A class for representing a series configuration of MIMO systems.
 
     Parameters
     ==========
 
     args : TransferFunctionMatrix, MIMOSeries, MIMOParallel
-        MIMO Systems in series configuration.
+        MIMO systems in a series configuration.
     evaluate : Boolean, Keyword
         When passed ``True``, returns the equivalent
         ``MIMOSeries(*args).doit()``. Set to ``False`` by default.
@@ -1086,8 +1086,6 @@ class MIMOSeries(LinearTimeInvariant):
     All the transfer function matrices should use the same complex variable ``var`` of the Laplace transform.
 
     ``MIMOSeries(A, B)`` is not equivalent to ``A*B``. It is always in the reverse order, that is ``B*A``.
-    In, SISO systems, this order hardly matters, but in MIMO systems, there can be issues due to non-commutative
-    nature of Matrix Multiplication.
 
     See Also
     ========
@@ -1118,7 +1116,7 @@ class MIMOSeries(LinearTimeInvariant):
             obj._is_SISO = False
         else:
             raise ValueError("Number of input signals do not match the number"
-                " of output signals for some args.")
+                " of output signals of adjacent systems for some args.")
 
         return obj.doit() if evaluate else obj
 
@@ -1131,13 +1129,13 @@ class MIMOSeries(LinearTimeInvariant):
         ========
 
         >>> from sympy.abc import p
-        >>> from sympy.physics.control.lti import TransferFunction, Series, Parallel
+        >>> from sympy.physics.control.lti import TransferFunction, MIMOSeries, TransferFunctionMatrix
         >>> G1 = TransferFunction(p**2 + 2*p + 4, p - 6, p)
         >>> G2 = TransferFunction(p, 4 - p, p)
         >>> G3 = TransferFunction(0, p**4 - 1, p)
-        >>> Series(G1, G2).var
-        p
-        >>> Series(-G3, Parallel(G1, G2)).var
+        >>> tfm_1 = TransferFunctionMatrix([[G1, G2, G3]])
+        >>> tfm_2 = TransferFunctionMatrix([[G1], [G2], [G3]])
+        >>> MIMOSeries(tfm_2, tfm_1).var
         p
 
         """
@@ -1145,20 +1143,23 @@ class MIMOSeries(LinearTimeInvariant):
 
     @property
     def num_inputs(self):
+        """Returns the number of input signals of the series system."""
         return self.args[0].num_inputs
 
     @property
     def num_outputs(self):
+        """Returns the number of output signals of the series system."""
         return self.args[-1].num_outputs
 
     @property
     def shape(self):
+        """Returns the shape of the equivalent MIMO system."""
         return self.args[-1].num_outputs, self.args[0].num_inputs
 
     def doit(self, **kwargs):
         """
-        Returns the resultant transfer function obtained after evaluating
-        the transfer functions in series configuration.
+        Returns the resultant transfer function matrix obtained after evaluating
+        the MIMO systems arranged in a series configuration.
 
         Examples
         ========
@@ -1224,13 +1225,13 @@ class MIMOSeries(LinearTimeInvariant):
 
 class Parallel(LinearTimeInvariant):
     r"""
-    A class for representing parallel configuration of SISO and MIMO transfer functions.
+    A class for representing a parallel configuration of SISO systems.
 
     Parameters
     ==========
 
     args : TransferFunction, Series, Parallel
-        SISO Systems in parallel arrangement
+        SISO systems in a parallel arrangement.
     evaluate : Boolean, Keyword
         When passed ``True``, returns the equivalent
         ``Parallel(*args).doit()``. Set to ``False`` by default.
@@ -1496,13 +1497,13 @@ class Parallel(LinearTimeInvariant):
 
 class MIMOParallel(LinearTimeInvariant):
     r"""
-    A class for representing parallel configuration of MIMO systems.
+    A class for representing a parallel configuration of MIMO systems.
 
     Parameters
     ==========
 
     args : TransferFunctionMatrix, MIMOSeries, MIMOParallel
-        MIMO Systems in parallel arrangement
+        MIMO Systems in a parallel arrangement.
     evaluate : Boolean, Keyword
         When passed ``True``, returns the equivalent
         ``MIMOParallel(*args).doit()``. Set to ``False`` by default.
@@ -1624,20 +1625,23 @@ class MIMOParallel(LinearTimeInvariant):
 
     @property
     def num_inputs(self):
+        """Returns the number of input signals of the parallel system."""
         return self.args[0].num_inputs
 
     @property
     def num_outputs(self):
+        """Returns the number of output signals of the parallel system."""
         return self.args[0].num_outputs
 
     @property
     def shape(self):
+        """Returns the shape of the equivalent MIMO system."""
         return self.args[0].num_outputs, self.args[0].num_inputs
 
     def doit(self, **kwargs):
         """
-        Returns the resultant transfer function obtained after evaluating
-        the transfer functions in parallel configuration.
+        Returns the resultant transfer function matrix obtained after evaluating
+        the MIMO systems arranged in a parallel configuration.
 
         Examples
         ========
@@ -1657,9 +1661,6 @@ class MIMOParallel(LinearTimeInvariant):
         return TransferFunctionMatrix.from_Matrix(res, self.var)
 
     def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
-        if self.is_SISO:
-            raise ValueError("Only transfer function matrices or a collection of transfer function"
-                " matrices is allowed in the arguments.")
         return self.doit()
 
     def __add__(self, other):
