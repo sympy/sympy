@@ -35,7 +35,7 @@ class LinearTimeInvariant(Basic, EvalfMixin):
         if not args:
             raise ValueError("Atleast 1 argument must be passed.")
         if not all(isinstance(arg, cls._clstype) for arg in args):
-            raise TypeError(f"All arguments must be of type {cls._clstype}.")        
+            raise TypeError(f"All arguments must be of type {cls._clstype}.")
         var_set = {arg.var for arg in args}
         if len(var_set) != 1:
             raise ValueError("All transfer functions should use the same complex variable"
