@@ -398,6 +398,17 @@ def test_DomainMatrix_pow():
     raises(NonSquareMatrixError, lambda: A ** 1)
 
 
+def test_DomainMatrix_scc():
+    Ad = DomainMatrix([[ZZ(1), ZZ(2), ZZ(3)],
+                       [ZZ(0), ZZ(1), ZZ(0)],
+                       [ZZ(2), ZZ(0), ZZ(4)]], (3, 3), ZZ)
+    As = Ad.to_sparse()
+    Addm = Ad.rep
+    Asdm = As.rep
+    for A in [Ad, As, Addm, Asdm]:
+        assert Ad.scc() == [[1], [0, 2]]
+
+
 def test_DomainMatrix_rref():
     A = DomainMatrix([], (0, 1), QQ)
     assert A.rref() == (A, ())

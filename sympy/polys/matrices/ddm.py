@@ -345,6 +345,25 @@ class DDM(list):
         elements = (list(map(func, row)) for row in self)
         return DDM(elements, self.shape, domain)
 
+    def scc(a):
+        """Strongly connected components of a square matrix *a*.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import DDM
+        >>> A = DDM([[ZZ(1), ZZ(0)], [ZZ(0), ZZ(1)]], (2, 2), ZZ)
+        >>> A.scc()
+        [[0], [1]]
+
+        See also
+        ========
+
+        DomainMatrix.scc
+        """
+        return a.to_sdm().scc()
+
     def rref(a):
         """Reduced-row echelon form of a and list of pivots"""
         b = a.copy()
