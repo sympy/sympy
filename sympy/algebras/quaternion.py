@@ -491,7 +491,7 @@ class Quaternion(Expr):
         return Quaternion(a, b, c, d)
 
     def evalf(self, *args):
-        """Returns the evalf of the quaternion.
+        """Returns the evalf of the quaternion (q.evalf()).
 
         Examples
         ========
