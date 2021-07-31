@@ -202,7 +202,7 @@ class Body(RigidBody, Particle):  # type: ignore
 
         """
         if isinstance(frame, Body):
-            frame = Body.frame    
+            frame = Body.frame
         if self.is_rigidbody:
             return RigidBody(self.name, self.masscenter, self.frame, self.mass,
                             (self.central_inertia, self.masscenter)).kinetic_energy(frame)
