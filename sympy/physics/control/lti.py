@@ -30,13 +30,40 @@ class LinearTimeInvariant(Basic, EvalfMixin):
             raise NotImplementedError('The LTICommon class is not meant to be used directly.')
         return super(LinearTimeInvariant, cls).__new__(cls, *system, **kwargs)
 
+    @classmethod
+    def _check_args(cls, args):
+        if not args:
+            raise ValueError("Atleast 1 argument must be passed.")
+        if not all(isinstance(arg, cls._clstype) for arg in args):
+            raise TypeError(f"All arguments must be of type {cls._clstype}.")        
+        var_set = {arg.var for arg in args}
+        if len(var_set) != 1:
+            raise ValueError("All transfer functions should use the same complex variable"
+                f" of the Laplace transform. {len(var_set)} different values found.")
+
     @property
     def is_SISO(self):
         """Returns `True` if the passed LTI system is SISO else returns False."""
         return self._is_SISO
 
 
-class TransferFunction(LinearTimeInvariant):
+class SISOLinearTimeInvariant(LinearTimeInvariant):
+    """A common class for all the SISO Linear Time-Invariant Dynamical Systems."""
+    # Users should not directly interact with this class.
+    _is_SISO = True
+
+
+class MIMOLinearTimeInvariant(LinearTimeInvariant):
+    """A common class for all the MIMO Linear Time-Invariant Dynamical Systems."""
+    # Users should not directly interact with this class.
+    _is_SISO = False
+
+
+SISOLinearTimeInvariant._clstype = SISOLinearTimeInvariant
+MIMOLinearTimeInvariant._clstype = MIMOLinearTimeInvariant
+
+
+class TransferFunction(SISOLinearTimeInvariant):
     r"""
     A class for representing LTI (Linear, time-invariant) systems that can be strictly described
     by ratio of polynomials in the Laplace transform complex variable. The arguments
@@ -237,7 +264,6 @@ class TransferFunction(LinearTimeInvariant):
             obj._num = num
             obj._den = den
             obj._var = var
-            obj._is_SISO = True
             return obj
 
         else:
@@ -714,14 +740,14 @@ class TransferFunction(LinearTimeInvariant):
             return Pow(self.den, -1, evaluate=False)
 
 
-class Series(LinearTimeInvariant):
+class Series(SISOLinearTimeInvariant):
     r"""
     A class for representing a series configuration of SISO systems.
 
     Parameters
     ==========
 
-    args : TransferFunction, Series, Parallel
+    args : SISOLinearTimeInvariant
         SISO systems in a series configuration.
     evaluate : Boolean, Keyword
         When passed ``True``, returns the equivalent
@@ -787,26 +813,9 @@ class Series(LinearTimeInvariant):
 
     """
     def __new__(cls, *args, evaluate=False):
-        if len(args) == 0:
-            raise ValueError("Atleast 1 argument must be passed.")
 
-        if not all(isinstance(arg, LinearTimeInvariant) for arg in args):
-            raise TypeError("All arguments must be of type LinearTimeInvariant.")
-
-        type_set = {arg.is_SISO for arg in args}
-        if len(type_set) != 1:
-            raise TypeError("Invalid system. `args` passed contain SISO as well "
-                "as MIMO elements.")
-        var_set = {arg.var for arg in args}
-        if len(var_set) != 1:
-            raise ValueError("All transfer functions should use the same complex variable"
-                f" of the Laplace transform. {len(var_set)} different values found.")
-
-        if list(type_set)[0]:
-            obj = super().__new__(cls, *args)
-            obj._is_SISO = True
-        else:
-            raise TypeError("MIMO systems are not allowed in `Series`. Use `MIMOSeries` instead.")
+        cls._check_args(args)
+        obj = super().__new__(cls, *args)
 
         return obj.doit() if evaluate else obj
 
@@ -850,9 +859,11 @@ class Series(LinearTimeInvariant):
 
         """
 
-        _arg = (arg.doit().to_expr() for arg in self.args)
-        res = Mul(*_arg, evaluate=True)
-        return TransferFunction.from_rational_expression(res, self.var)
+        _num_arg = (arg.doit().num for arg in self.args)
+        _den_arg = (arg.doit().den for arg in self.args)
+        res_num = Mul(*_num_arg, evaluate=True)
+        res_den = Mul(*_den_arg, evaluate=True)
+        return TransferFunction(res_num, res_den, self.var)
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
         return self.doit()
@@ -926,10 +937,6 @@ class Series(LinearTimeInvariant):
         function is less than or equal to degree of the denominator polynomial of
         the same, else False.
 
-        .. note::
-            ``is_proper`` is defined only for SISO ``Series`` configuration.
-            ``Series(*args).is_proper`` for MIMO ``*args`` will return ``None``.
-
         Examples
         ========
 
@@ -954,10 +961,6 @@ class Series(LinearTimeInvariant):
         Returns True if degree of the numerator polynomial of the resultant transfer
         function is strictly less than degree of the denominator polynomial of
         the same, else False.
-
-        .. note::
-            ``is_strictly_proper`` is defined only for SISO ``Series`` configuration.
-            ``Series(*args).is_strictly_proper`` for MIMO ``*args`` will return ``None``.
 
         Examples
         ========
@@ -984,10 +987,6 @@ class Series(LinearTimeInvariant):
         function is equal to degree of the denominator polynomial of
         the same, else False.
 
-        .. note::
-            ``is_biproper`` is defined only for SISO ``Series`` configuration.
-            ``Series(*args).is_biproper`` for MIMO ``*args`` will return ``None``.
-
         Examples
         ========
 
@@ -1012,14 +1011,14 @@ def _mat_mul_compatible(*args):
     return all(args[i].num_outputs == args[i+1].num_inputs for i in range(len(args)-1))
 
 
-class MIMOSeries(LinearTimeInvariant):
+class MIMOSeries(MIMOLinearTimeInvariant):
     r"""
     A class for representing a series configuration of MIMO systems.
 
     Parameters
     ==========
 
-    args : TransferFunctionMatrix, MIMOSeries, MIMOParallel
+    args : MIMOLinearTimeInvariant
         MIMO systems in a series configuration.
     evaluate : Boolean, Keyword
         When passed ``True``, returns the equivalent
@@ -1094,26 +1093,12 @@ class MIMOSeries(LinearTimeInvariant):
 
     """
     def __new__(cls, *args, evaluate=False):
-        if len(args) == 0:
-            raise ValueError("Atleast 1 argument must be passed.")
 
-        if not all(isinstance(arg, LinearTimeInvariant) for arg in args):
-            raise TypeError("All arguments must be of type LinearTimeInvariant.")
+        cls._check_args(args)
 
-        type_set = {arg.is_SISO for arg in args}
-        if len(type_set) != 1:
-            raise TypeError("Invalid system. `args` passed contain SISO as well "
-                "as MIMO elements.")
-        var_set = {arg.var for arg in args}
-        if len(var_set) != 1:
-            raise ValueError("All MIMO systems should use the same complex variable"
-                f" of the Laplace transform. {len(var_set)} different values found.")
-
-        if list(type_set)[0]:
-            raise TypeError("Only MIMO Systems are allowed in MIMOSeries class.")
-        elif _mat_mul_compatible(*args):
+        if _mat_mul_compatible(*args):
             obj = super().__new__(cls, *args)
-            obj._is_SISO = False
+
         else:
             raise ValueError("Number of input signals do not match the number"
                 " of output signals of adjacent systems for some args.")
@@ -1223,14 +1208,14 @@ class MIMOSeries(LinearTimeInvariant):
         return MIMOSeries(*arg_list)
 
 
-class Parallel(LinearTimeInvariant):
+class Parallel(SISOLinearTimeInvariant):
     r"""
     A class for representing a parallel configuration of SISO systems.
 
     Parameters
     ==========
 
-    args : TransferFunction, Series, Parallel
+    args : SISOLinearTimeInvariant
         SISO systems in a parallel arrangement.
     evaluate : Boolean, Keyword
         When passed ``True``, returns the equivalent
@@ -1294,26 +1279,9 @@ class Parallel(LinearTimeInvariant):
 
     """
     def __new__(cls, *args, evaluate=False):
-        if len(args) == 0:
-            raise ValueError("Atleast 1 argument must be passed.")
 
-        if not all(isinstance(arg, LinearTimeInvariant) for arg in args):
-            raise TypeError("All arguments must be of type LinearTimeInvariant.")
-
-        type_set = {arg.is_SISO for arg in args}
-        if len(type_set) != 1:
-            raise TypeError("Invalid system. `args` passed contain SISO as well "
-                "as MIMO elements.")
-        var_set = {arg.var for arg in args}
-        if len(var_set) != 1:
-            raise ValueError("All transfer functions should use the same complex variable"
-                f" of the Laplace transform. {len(var_set)} different values found.")
-
-        if list(type_set)[0]:
-            obj = super().__new__(cls, *args)
-            obj._is_SISO = True
-        else:
-            raise TypeError("MIMO systems are not allowed in `Parallel`. Use `MIMOParallel` instead.")
+        cls._check_args(args)
+        obj = super().__new__(cls, *args)
 
         return obj.doit() if evaluate else obj
 
@@ -1414,10 +1382,6 @@ class Parallel(LinearTimeInvariant):
         function is less than or equal to degree of the denominator polynomial of
         the same, else False.
 
-        .. note::
-            ``is_proper`` is defined only for SISO ``Parallel`` configuration.
-            ``Parallel(*args).is_proper`` for MIMO ``*args`` will return ``None``.
-
         Examples
         ========
 
@@ -1442,10 +1406,6 @@ class Parallel(LinearTimeInvariant):
         Returns True if degree of the numerator polynomial of the resultant transfer
         function is strictly less than degree of the denominator polynomial of
         the same, else False.
-
-        .. note::
-            ``is_strictly_proper`` is defined only for SISO ``Parallel`` configuration.
-            ``Parallel(*args).is_strictly_proper`` for MIMO ``*args`` will return ``None``.
 
         Examples
         ========
@@ -1472,10 +1432,6 @@ class Parallel(LinearTimeInvariant):
         function is equal to degree of the denominator polynomial of
         the same, else False.
 
-        .. note::
-            ``is_biproper`` is defined only for SISO ``Parallel`` configuration.
-            ``Parallel(*args).is_biproper`` for MIMO ``*args`` will return ``None``.
-
         Examples
         ========
 
@@ -1495,14 +1451,14 @@ class Parallel(LinearTimeInvariant):
         return self.doit().is_biproper
 
 
-class MIMOParallel(LinearTimeInvariant):
+class MIMOParallel(MIMOLinearTimeInvariant):
     r"""
     A class for representing a parallel configuration of MIMO systems.
 
     Parameters
     ==========
 
-    args : TransferFunctionMatrix, MIMOSeries, MIMOParallel
+    args : MIMOLinearTimeInvariant
         MIMO Systems in a parallel arrangement.
     evaluate : Boolean, Keyword
         When passed ``True``, returns the equivalent
@@ -1577,28 +1533,13 @@ class MIMOParallel(LinearTimeInvariant):
 
     """
     def __new__(cls, *args, evaluate=False):
-        if len(args) == 0:
-            raise ValueError("Atleast 1 argument must be passed.")
 
-        if not all(isinstance(arg, LinearTimeInvariant) for arg in args):
-            raise TypeError("All arguments must be of type LinearTimeInvariant.")
+        cls._check_args(args)
 
-        type_set = {arg.is_SISO for arg in args}
-        if len(type_set) != 1:
-            raise TypeError("Invalid system. `args` passed contain SISO as well "
-                "as MIMO elements.")
-        var_set = {arg.var for arg in args}
-        if len(var_set) != 1:
-            raise ValueError("All MIMO systems should use the same complex variable"
-                f" of the Laplace transform. {len(var_set)} different values found.")
+        if any(arg.shape != args[0].shape for arg in args):
+             raise TypeError("Shape of all the args is not equal.")
 
-        if list(type_set)[0]:
-            raise TypeError("Only MIMO Systems are allowed in MIMOSeries class.")
-        elif all(arg.shape == args[0].shape for arg in args):
-            obj = super().__new__(cls, *args)
-            obj._is_SISO = False
-        else:
-            raise TypeError("Shape of all the args is not equal.")
+        obj = super().__new__(cls, *args)
 
         return obj.doit() if evaluate else obj
 
@@ -1913,7 +1854,7 @@ def _to_TFM(mat, var):
     return TransferFunctionMatrix(arg)
 
 
-class TransferFunctionMatrix(LinearTimeInvariant):
+class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     r"""
     A class for representing the MIMO (multiple-input and multiple-output)
     generalization of the SISO (single-input and single-output) transfer function.
@@ -1926,7 +1867,7 @@ class TransferFunctionMatrix(LinearTimeInvariant):
     Parameters
     ==========
 
-    arg: Nested ``List`` (strictly).
+    arg : Nested ``List`` (strictly).
         Users are expected to input a nested list of ``TransferFunction``, ``Series``
         and/or ``Parallel`` objects.
 
@@ -2279,13 +2220,8 @@ class TransferFunctionMatrix(LinearTimeInvariant):
         for row_index, row in enumerate(arg):
             temp = []
             for col_index, element in enumerate(row):
-                if not isinstance(element, LinearTimeInvariant):
-                    raise TypeError("Incompatible type found as the element of "
-                        "TransferFunctionMatrix.")
-
-                if not element.is_SISO:
-                        raise TypeError("MIMO Series/Parallel object found as the element of "
-                        "TransferFunctionMatrix. Each element is expected to be a SISO LTI system.")
+                if not isinstance(element, SISOLinearTimeInvariant):
+                    raise TypeError("Each element is expected to be of type `SISOLinearTimeInvariant`.")
 
                 if var != element.var:
                     raise ValueError("Conflicting value(s) found for `var`. All TransferFunction instances in "
@@ -2300,7 +2236,6 @@ class TransferFunctionMatrix(LinearTimeInvariant):
 
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
         obj._expr_mat = ImmutableMatrix(expr_mat_arg)
-        obj._is_SISO = False
         return obj
 
     @classmethod

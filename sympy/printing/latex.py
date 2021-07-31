@@ -2453,12 +2453,12 @@ class LatexPrinter(Printer):
     def _print_Parallel(self, expr):
         args = list(expr.args)
         func = lambda x: self._print(x)
-        return '+'.join(map(func, args))
+        return ' + '.join(map(func, args))
 
     def _print_MIMOParallel(self, expr):
         args = list(expr.args)
         func = lambda x: self._print(x)
-        return '+'.join(map(func, args))
+        return ' + '.join(map(func, args))
 
     def _print_Feedback(self, expr):
         from sympy.physics.control import TransferFunction, Parallel, Series
