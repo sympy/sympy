@@ -490,6 +490,29 @@ class Quaternion(Expr):
 
         return Quaternion(a, b, c, d)
 
+    def evalf(self, *args):
+        """Returns the evalf of the quaternion.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(1/sqrt(1), 1/sqrt(2), 1/sqrt(3), 1/sqrt(4))
+        >>> q.evalf()
+        1.00000000000000
+        + 0.707106781186547*i
+        + 0.577350269189626*j
+        + 0.500000000000000*k
+
+        """
+        q = self
+        a = q.a.evalf(*args)
+        b = q.b.evalf(*args)
+        c = q.c.evalf(*args)
+        d = q.d.evalf(*args)
+
+        return Quaternion(a, b, c, d)
+
     def pow_cos_sin(self, p):
         """Computes the pth power in the cos-sin form.
 
