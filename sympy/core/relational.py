@@ -252,7 +252,7 @@ class Relational(Boolean, EvalfMixin):
 
         return r
 
-    def equals(self, other, failing_expression=False):
+    def equals(self, other, *, failing_expression=False):
         """Return True if the sides of the relationship are mathematically
         identical and the type of relationship is the same.
         If failing_expression is True, return the expression whose truth value
