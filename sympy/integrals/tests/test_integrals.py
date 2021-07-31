@@ -1734,6 +1734,5 @@ def test_issue_21034():
 
 
 def test_issue_4187():
-    x = Symbol('x')
     assert integrate(log(x)*exp(-x), x) == Ei(-x) - exp(-x)*log(x)
     assert integrate(log(x)*exp(-x), (x, 0, oo)) == -EulerGamma
