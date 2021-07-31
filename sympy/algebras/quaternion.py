@@ -491,12 +491,19 @@ class Quaternion(Expr):
         return Quaternion(a, b, c, d)
 
     def evalf(self, *args):
-        """Returns the evalf of the quaternion (q.evalf()).
+        """Returns the floating point approximations (decimal numbers) of the quaternion.
+
+        Returns
+        =======
+
+        Quaternion
+            Floating point approximations of quaternion(self)
 
         Examples
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import sqrt
         >>> q = Quaternion(1/sqrt(1), 1/sqrt(2), 1/sqrt(3), 1/sqrt(4))
         >>> q.evalf()
         1.00000000000000
