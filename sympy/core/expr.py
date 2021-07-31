@@ -1133,7 +1133,7 @@ class Expr(Basic, EvalfMixin):
         except PolynomialError:
             return None
 
-    def as_ordered_terms(self, order=None, data=False):
+    def as_ordered_terms(self, order=None, *, data=False):
         """
         Transform an expression to an ordered list of terms.
 
