@@ -2104,9 +2104,12 @@ class MatrixOperations(MatrixRequired):
         Matrix([[x**2 + x]])
 
         """
-        return self.applyfunc(lambda x: x.expand(
-            deep, modulus, power_base, power_exp, mul, log, multinomial, basic,
-            **hints))
+        return self.applyfunc(lambda x: x.expand(deep=deep, modulus=modulus,
+                                                 power_base=power_base,
+                                                 power_exp=power_exp,
+                                                 mul=mul, log=log,
+                                                 multinomial=multinomial,
+                                                 basic=basic, **hints))
 
     @property
     def H(self):
