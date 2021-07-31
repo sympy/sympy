@@ -1,4 +1,5 @@
-from sympy.physics.mechanics import Body, Lagrangian, KanesMethod, LagrangesMethod
+from sympy.physics.mechanics import (Body, Lagrangian, KanesMethod, LagrangesMethod,
+                                    RigidBody, Particle)
 from sympy.physics.mechanics.method import _Methods
 
 __all__ = ['JointsMethod']
@@ -80,8 +81,8 @@ class JointsMethod(_Methods):
             self.frame = newtonion
 
         self._joints = joints
-        self._bodylist = self._generate_bodylist()
-        self._loadlist = self._generate_loadlist()
+        self._bodies = self._generate_bodylist()
+        self._loads = self._generate_loadlist()
         self._q = self._generate_q()
         self._u = self._generate_u()
         self._kdes = self._generate_kdes()
@@ -91,12 +92,12 @@ class JointsMethod(_Methods):
     @property
     def bodies(self):
         """List of bodies in they system."""
-        return self._bodylist
+        return self._bodies
 
     @property
     def loads(self):
         """List of loads on the system."""
-        return self._loadlist
+        return self._loads
 
     @property
     def q(self):
@@ -171,6 +172,21 @@ class JointsMethod(_Methods):
             kd_ind.extend(joint.kdes)
         return kd_ind
 
+    def _convert_bodies(self):
+        # Convert `Body` to `Particle` and `RigidBody`
+        bodylist = []
+        for body in self.bodies:
+            if body.is_rigidbody:
+                rb = RigidBody(body.name, body.masscenter, body.frame, body.mass,
+                    (body.central_inertia, body.masscenter))
+                rb.potential_energy = body.potential_energy
+                bodylist.append(rb)
+            else:
+                part = Particle(body.name, body.masscenter, body.mass)
+                part.potential_energy = body.potential_energy
+                bodylist.append(part)
+        return bodylist
+
     def form_eoms(self, method=KanesMethod):
         """Method to form system's equation of motions.
 
@@ -216,12 +232,13 @@ class JointsMethod(_Methods):
 
         """
 
+        bodylist = self._convert_bodies()
         if issubclass(method, LagrangesMethod): #LagrangesMethod or similar
-            L = Lagrangian(self.frame, *self.bodies)
-            self._method = method(L, self.q, self.loads, self.bodies, self.frame)
+            L = Lagrangian(self.frame, *bodylist)
+            self._method = method(L, self.q, self.loads, bodylist, self.frame)
         else: #KanesMethod or similar
             self._method = method(self.frame, q_ind=self.q, u_ind=self.u, kd_eqs=self.kdes,
-                                    forcelist=self.loads, bodies=self.bodies)
+                                    forcelist=self.loads, bodies=bodylist)
         soln = self.method._form_eoms()
         return soln
 

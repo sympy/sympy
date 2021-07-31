@@ -37,7 +37,6 @@ def test_custom_rigid_body():
     assert rigid_body.inertia == (body_inertia, rigidbody_masscenter)
 
     assert rigid_body.is_rigidbody
-    assert not rigid_body.is_particle
 
     assert hasattr(rigid_body, 'masscenter')
     assert hasattr(rigid_body, 'mass')
@@ -65,7 +64,6 @@ def test_particle_body():
     assert hasattr(particle_body, 'mass')
 
     assert not particle_body.is_rigidbody
-    assert particle_body.is_particle
 
 
 def test_particle_body_add_force():

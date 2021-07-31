@@ -101,8 +101,6 @@ class Body(RigidBody, Particle):  # type: ignore
 
         self.name = name
         self._loads = []
-        self.is_rigidbody = None
-        self.is_particle = None
 
         if frame is None:
             frame = ReferenceFrame(name + '_frame')
@@ -135,12 +133,9 @@ class Body(RigidBody, Particle):  # type: ignore
             self.frame = frame
             self.masscenter = masscenter
             Particle.__init__(self, name, masscenter, _mass)
-            self.is_rigidbody = False
-            self.is_particle = True
+            self._central_inertia = None
         else:
             RigidBody.__init__(self, name, masscenter, frame, _mass, _inertia)
-            self.is_rigidbody = True
-            self.is_particle = False
 
     @property
     def loads(self):
@@ -160,6 +155,12 @@ class Body(RigidBody, Particle):  # type: ignore
     def z(self):
         """The basis Vector for the Body, in the z direction. """
         return self.frame.z
+
+    @property
+    def is_rigidbody(self):
+        if self.central_inertia is not None:
+            return True
+        return False
 
     def kinetic_energy(self, frame):
         """Kinetic energy of the body.
@@ -201,11 +202,11 @@ class Body(RigidBody, Particle):  # type: ignore
 
         """
         if isinstance(frame, Body):
-            frame = Body.frame
-        if self.is_particle:
-            return Particle(self.name, self.masscenter, self.mass).kinetic_energy(frame)
-        return RigidBody(self.name, self.masscenter, self.frame, self.mass,
-                        (self.central_inertia, self.masscenter)).kinetic_energy(frame)
+            frame = Body.frame    
+        if self.is_rigidbody:
+            return RigidBody(self.name, self.masscenter, self.frame, self.mass,
+                            (self.central_inertia, self.masscenter)).kinetic_energy(frame)
+        return Particle(self.name, self.masscenter, self.mass).kinetic_energy(frame)
 
     def apply_force(self, force, point=None, reaction_body=None, reaction_point=None):
         """Add force to the body(s).

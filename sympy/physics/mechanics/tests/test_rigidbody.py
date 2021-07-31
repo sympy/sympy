@@ -36,7 +36,6 @@ def test_rigidbody():
     assert B.inertia == (I2, B.masscenter)
     assert B.masscenter == P2
     assert B.inertia == (I2, B.masscenter)
-    assert B.is_rigidbody
 
     # Testing linear momentum function assuming A2 is the inertial frame
     N = ReferenceFrame('N')
