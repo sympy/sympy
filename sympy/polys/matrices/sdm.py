@@ -605,7 +605,7 @@ class SDM(dict):
         See also
         ========
 
-        DomainMatrix.scc
+        sympy.polys.matrices.domainmatrix.DomainMatrix.scc
         """
         rows, cols = A.shape
         assert rows == cols

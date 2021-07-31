@@ -1119,7 +1119,7 @@ class DomainMatrix:
         See also
         ========
 
-        Matrix.strongly_connected_components
+        sympy.matrices.matrices.MatrixBase.strongly_connected_components
         sympy.utilities.iterables.strongly_connected_components
 
         """

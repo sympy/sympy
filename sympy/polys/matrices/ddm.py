@@ -360,7 +360,8 @@ class DDM(list):
         See also
         ========
 
-        DomainMatrix.scc
+        sympy.polys.matrices.domainmatrix.DomainMatrix.scc
+
         """
         return a.to_sdm().scc()
 
