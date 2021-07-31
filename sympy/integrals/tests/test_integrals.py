@@ -1731,3 +1731,9 @@ def test_issue_21034():
 
     assert integrate(f2, x) == \
         log(x**2 + S(1)/12)/2 + 2*sqrt(3)*cosh(cos(4))*atan(2*sqrt(3)*x)
+
+
+def test_issue_4187():
+    x = Symbol('x')
+    assert integrate(log(x)*exp(-x), x) == Ei(-x) - exp(-x)*log(x)
+    assert integrate(log(x)*exp(-x), (x, 0, oo)) == -EulerGamma
