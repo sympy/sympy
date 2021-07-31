@@ -50,7 +50,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import (cartes, connected_components, flatten,
+from sympy.utilities.iterables import (cartes, connected_components,
     generate_bell, uniq, sift)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
@@ -2415,9 +2415,7 @@ def det_perm(M):
     args = []
     s = True
     n = M.rows
-    list_ = getattr(M, '_mat', None)
-    if list_ is None:
-        list_ = flatten(M.tolist())
+    list_ = M.flat()
     for perm in generate_bell(n):
         fac = []
         idx = 0
