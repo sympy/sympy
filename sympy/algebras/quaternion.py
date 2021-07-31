@@ -9,6 +9,7 @@ from sympy import integrate
 from sympy import Matrix
 from sympy import sympify
 from sympy.core.expr import Expr
+from sympy.core.evalf import prec_to_dps
 
 
 class Quaternion(Expr):
@@ -490,7 +491,7 @@ class Quaternion(Expr):
 
         return Quaternion(a, b, c, d)
 
-    def evalf(self, *args):
+    def _eval_evalf(self, prec):
         """Returns the floating point approximations (decimal numbers) of the quaternion.
 
         Returns
@@ -512,13 +513,8 @@ class Quaternion(Expr):
         + 0.500000000000000*k
 
         """
-        q = self
-        a = q.a.evalf(*args)
-        b = q.b.evalf(*args)
-        c = q.c.evalf(*args)
-        d = q.d.evalf(*args)
 
-        return Quaternion(a, b, c, d)
+        return Quaternion(*[arg.evalf(n=prec_to_dps(prec)) for arg in self.args])
 
     def pow_cos_sin(self, p):
         """Computes the pth power in the cos-sin form.
