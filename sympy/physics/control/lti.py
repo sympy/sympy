@@ -2484,3 +2484,18 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     def _flat(self):
         """Returns flattened list of args in TransferFunctionMatrix"""
         return [elem for tup in self.args[0] for elem in tup]
+
+    def _eval_evalf(self, prec):
+        """Calls evalf() on each transfer function in the transfer function matrix"""
+        mat = self._expr_mat.applyfunc(lambda a: a.evalf(prec))
+        return _to_TFM(mat, self.var)
+
+    def _eval_simplify(self, **kwargs):
+        """Simplifies the transfer function matrix"""
+        simp_mat = self._expr_mat.applyfunc(lambda a: cancel(a, expand=False))
+        return _to_TFM(simp_mat, self.var)
+
+    def expand(self, **hints):
+        """Expands the transfer function matrix"""
+        expand_mat = self._expr_mat.expand(**hints)
+        return _to_TFM(expand_mat, self.var)
