@@ -1108,6 +1108,7 @@ def linear_programming(A, B, C, D):
     Examples
     ========
     >>> from sympy.matrices.dense import Matrix
+    >>> from sympy.solvers.inequalities import linear_programming
     >>> A = Matrix([[0, 1, 2], [-1, 0, -3], [2, 1, 7]])
     >>> B = Matrix([3, -2, 5])
     >>> C = Matrix([[1, 1, 5]])
