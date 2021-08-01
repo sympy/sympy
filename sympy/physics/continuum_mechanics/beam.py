@@ -131,6 +131,11 @@ class Beam:
         self._support_as_loads = []
         self._applied_loads = []
         self._reaction_loads = {}
+        self._ild_reactions = {}
+
+        # _original_load is a copy of _load equations with unsubstituted reaction
+        # forces. It is used for calculating reaction forces in case of I.L.D.
+        self._original_load = 0
         self._composite_type = None
         self._hinge_position = None
 
@@ -143,6 +148,11 @@ class Beam:
     def reaction_loads(self):
         """ Returns the reaction forces in a dictionary."""
         return self._reaction_loads
+
+    @property
+    def ild_reactions(self):
+        """ Returns the I.L.D. reaction forces in a dictionary."""
+        return self._ild_reactions
 
     @property
     def length(self):
@@ -460,6 +470,7 @@ class Beam:
 
         self._applied_loads.append((value, start, order, end))
         self._load += value*SingularityFunction(x, start, order)
+        self._original_load += value*SingularityFunction(x, start, order)
 
         if end:
             # load has an end point within the length of the beam.
@@ -519,6 +530,7 @@ class Beam:
 
         if (value, start, order, end) in self._applied_loads:
             self._load -= value*SingularityFunction(x, start, order)
+            self._original_load -= value*SingularityFunction(x, start, order)
             self._applied_loads.remove((value, start, order, end))
         else:
             msg = "No such load distribution exists on the beam object."
@@ -549,10 +561,14 @@ class Beam:
             for i in range(0, order + 1):
                 self._load -= (f.diff(x, i).subs(x, end - start) *
                                 SingularityFunction(x, end, i)/factorial(i))
+                self._original_load -= (f.diff(x, i).subs(x, end - start) *
+                                SingularityFunction(x, end, i)/factorial(i))
         elif type == "remove":
             # iterating for "remove_load" method
             for i in range(0, order + 1):
                     self._load += (f.diff(x, i).subs(x, end - start) *
+                                    SingularityFunction(x, end, i)/factorial(i))
+                    self._original_load += (f.diff(x, i).subs(x, end - start) *
                                     SingularityFunction(x, end, i)/factorial(i))
 
 
@@ -1557,6 +1573,160 @@ class Beam:
                    line_color='r', show=False)
 
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
+
+    def _solve_for_ild_reactions(self):
+        """
+
+        Helper function for solve_for_ild_reactions(). It takes the unsubstituted
+        copy of the load equation and uses it to calculate shear force and bending
+        moment equations.
+        """
+
+        x = self.variable
+        shear_force = -integrate(self._original_load, x)
+        bending_moment = integrate(shear_force, x)
+
+        return shear_force, bending_moment
+
+    def solve_for_ild_reactions(self, val, *reactions):
+        """
+
+        Determines the Influence Line Diagram equations for reaction
+        forces under the effect of a moving load and returns a dictionary.
+
+        Parameters
+        ==========
+        val : Integer
+            Magnitude of moving load
+        reactions :
+            The reaction forces applied on the beam.
+
+        Examples
+        ========
+
+        There is a beam of length 10 meters. There are two simple supports
+        below the beam, one at the starting point and another at the ending
+        point of the beam. Calculate the I.L.D. equations for reaction forces
+        under the effect of a moving load of magnitude 1kN.
+
+        .. image:: ildreaction.png
+
+        Using the sign convention of downwards forces being positive.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy import symbols
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> E, I = symbols('E, I')
+            >>> R_0, R_10 = symbols('R_0, R_10')
+            >>> b = Beam(10, E, I)
+            >>> b.apply_support(0, 'roller')
+            >>> b.apply_support(10, 'roller')
+            >>> b.solve_for_ild_reactions(1,R_0,R_10)
+            >>> b.ild_reactions
+            {R_0: x/10 - 1, R_10: -x/10}
+
+        """
+        shear_force, bending_moment = self._solve_for_ild_reactions()
+        x = self.variable
+        l = self.length
+        C3 = Symbol('C3')
+        C4 = Symbol('C4')
+
+        shear_curve = limit(shear_force, x, l) - val
+        moment_curve = limit(bending_moment, x, l) - val*(l-x)
+
+        slope_eqs = []
+        deflection_eqs = []
+
+        slope_curve = integrate(bending_moment, x) + C3
+        for position, value in self._boundary_conditions['slope']:
+            eqs = slope_curve.subs(x, position) - value
+            slope_eqs.append(eqs)
+
+        deflection_curve = integrate(slope_curve, x) + C4
+        for position, value in self._boundary_conditions['deflection']:
+            eqs = deflection_curve.subs(x, position) - value
+            deflection_eqs.append(eqs)
+
+        solution = list((linsolve([shear_curve, moment_curve] + slope_eqs
+                            + deflection_eqs, (C3, C4) + reactions).args)[0])
+        solution = solution[2:]
+
+        # Determining the equations and solving them.
+        self._ild_reactions = dict(zip(reactions, solution))
+
+    def plot_ild_reactions(self, subs=None):
+        """
+
+        Plots the Influence Line Diagram of Reaction Forces
+        under the effect of a moving load. This function
+        should be called after calling solve_for_ild_reactions().
+
+        Examples
+        ========
+
+        There is a beam of length 10 meters. A point load of magnitude 5KN
+        is also applied from top of the beam, at a distance of 4 meters
+        from the starting point. There are two simple supports below the
+        beam, located at the starting point and at a distance of 7 meters
+        from the starting point. Plot the I.L.D. equations for reactions
+        at both support points under the effect of a moving load
+        of magnitude 1kN.
+
+        Using the sign convention of downwards forces being positive.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy import symbols
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> E, I = symbols('E, I')
+            >>> R_0, R_7 = symbols('R_0, R_7')
+            >>> b = Beam(10, E, I)
+            >>> b.apply_support(0, 'roller')
+            >>> b.apply_support(7, 'roller')
+            >>> b.apply_load(5,4,-1)
+            >>> b.solve_for_ild_reactions(1,R_0,R_7)
+            >>> b.ild_reactions
+            {R_0: x/7 - 22/7, R_7: -x/7 - 20/7}
+            >>> b.plot_ild_reactions()
+            PlotGrid object containing:
+            Plot[0]:Plot object containing:
+            [0]: cartesian line: x/7 - 22/7 for x over (0.0, 10.0)
+            Plot[1]:Plot object containing:
+            [0]: cartesian line: -x/7 - 20/7 for x over (0.0, 10.0)
+
+        """
+        if not self._ild_reactions:
+            raise ValueError("I.L.D. reaction equations not found. Please use solve_for_ild_reactions() to generate the I.L.D. reaction equations.")
+
+        x = self.variable
+        ildplots = []
+
+        if subs is None:
+            subs = {}
+
+        for reaction in self._ild_reactions:
+            for sym in self._ild_reactions[reaction].atoms(Symbol):
+                if sym != x and sym not in subs:
+                    raise ValueError('Value of %s was not passed.' %sym)
+
+        for sym in self._length.atoms(Symbol):
+            if sym != x and sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+
+        for reaction in self._ild_reactions:
+            ildplots.append(plot(self._ild_reactions[reaction].subs(subs),
+            (x, 0, self._length.subs(subs)), title='I.L.D. for Reactions',
+            xlabel=x, ylabel=reaction, line_color='blue', show=False))
+
+        return PlotGrid(len(ildplots), 1, *ildplots)
 
 
     @doctest_depends_on(modules=('numpy',))
