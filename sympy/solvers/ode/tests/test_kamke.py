@@ -12,7 +12,7 @@ import threading
 import _thread
 import time
 
-from sympy import (symbols, S, Function, Eq, dsolve, checkodesol,
+from sympy import (symbols, Function, Eq, dsolve, checkodesol,
     classify_ode, latex, Abs, sqrt, cos, exp, log, sin, tan, Derivative,
     Ci, Ei, Piecewise, Si, cosh, cot, coth, sinh, tanh, Integral, I, Subs,
     diff, Ne, Sum, IndexedBase)
@@ -60,7 +60,6 @@ class Kamke:
         "kamke_1.11": f(x)*y(x) - g(x) + Derivative(y(x), x),
         "kamke_1.12": y(x)**2 + Derivative(y(x), x) - 1,
         "kamke_1.13": -a*x - b + y(x)**2 + Derivative(y(x), x),
-        "kamke_1.14": a*x**m + y(x)**2 + Derivative(y(x), x),
         "kamke_1.15": x**4 - 2*x**2*y(x) - 2*x + y(x)**2 + Derivative(y(x), x) - 1,
         "kamke_1.16": (x*y(x) - 1)*f(x) + y(x)**2 + Derivative(y(x), x),
         "kamke_1.17": -y(x)**2 - 3*y(x) + Derivative(y(x), x) + 4,
@@ -70,14 +69,12 @@ class Kamke:
         "kamke_1.21": -y(x)**2 + y(x)*sin(x) - cos(x) + Derivative(y(x), x),
         "kamke_1.22": -y(x)**2 - y(x)*sin(2*x) - cos(2*x) + Derivative(y(x), x),
         "kamke_1.23": a*y(x)**2 - b + Derivative(y(x), x),
-        "kamke_1.24": a*y(x)**2 - b*x**nu + Derivative(y(x), x),
         "kamke_1.25": a*y(x)**2 - b*x**(2*nu) - c*x**(nu - 1) + Derivative(y(x), x),
         "kamke_1.26": -(A*y(x) - a)*(B*y(x) - b) + Derivative(y(x), x),
         "kamke_1.27": a*(-x + y(x))*y(x) + Derivative(y(x), x) - 1,
         "kamke_1.28": -x**3*y(x) + x*y(x)**2 - 2*x + Derivative(y(x), x),
         "kamke_1.29": -x*y(x)**2 - 3*x*y(x) + Derivative(y(x), x),
         "kamke_1.30": -x**a + x**(-a - 1)*y(x)**2 + Derivative(y(x), x),
-        "kamke_1.31": -a*x**n*(y(x)**2 + 1) + Derivative(y(x), x),
         "kamke_1.32": y(x)**2*sin(x) - 2*sin(x)/cos(x)**2 + Derivative(y(x), x),
         "kamke_1.33": Derivative(y(x), x) - y(x)**2*Derivative(f(x), x)/g(x) + Derivative(g(x), x)/f(x),
         "kamke_1.34": f(x)*y(x)**2 + g(x)*y(x) + Derivative(y(x), x),
@@ -93,8 +90,6 @@ class Kamke:
         "kamke_1.44": 2*a*x**3*y(x)**3 + 2*x*y(x) + Derivative(y(x), x),
         "kamke_1.45": 3*b*y(x)**2 + (2*a**2*x**3 - 2*b**2*x)*y(x)**3 + Derivative(y(x), x),
         "kamke_1.46": a*x**(-a - 1) - x**a*y(x)**3 + 3*y(x)**2 + Derivative(y(x), x) - y(x)/x**a - 1/x**(2*a),
-        "kamke_1.47": -a*(-x + x**n)*y(x)**3 - y(x)**2 + Derivative(y(x), x),
-        "kamke_1.48": -c*y(x)**2 - (a*x**n + b*x)*y(x)**3 + Derivative(y(x), x),
         "kamke_1.49": 6*a*phi(x)*y(x)**2 + a*y(x)**3*Derivative(phi(x), x) + 2*a + (2*a + 1)*y(x)*Derivative(phi(x), (x, 2))/Derivative(phi(x), x) + Derivative(y(x), x) + 2,
         "kamke_1.50": -f0(x) - f_1(x)*y(x) - f_2(x)*y(x)**2 - f_3(x)*y(x)**3 + Derivative(y(x), x),
         "kamke_1.51": -(-f(x) + y(x))*(-g(x) + y(x))*(y(x) - (a*f(x) + b*g(x))/(a + b))*h(x) + Derivative(y(x), x) - (-g(x) + y(x))*Derivative(f(x), x)/(f(x) - g(x)) - (-f(x) + y(x))*Derivative(g(x), x)/(-f(x) + g(x)),
@@ -140,7 +135,6 @@ class Kamke:
         "kamke_1.91": x*Derivative(y(x), x) - x/log(x) - y(x),
         "kamke_1.92": -x**2*sin(x) + x*Derivative(y(x), x) - y(x),
         "kamke_1.93": x*Derivative(y(x), x) - x*cos(log(log(x)))/log(x) - y(x),
-        "kamke_1.94": a*y(x) + b*x**n + x*Derivative(y(x), x),
         "kamke_1.95": x**2 + x*Derivative(y(x), x) + y(x)**2,
         "kamke_1.96": x*Derivative(y(x), x) - y(x)**2 + 1,
         "kamke_1.97": a*y(x)**2 + b*x**2 + x*Derivative(y(x), x) - y(x),
@@ -159,7 +153,6 @@ class Kamke:
         "kamke_1.110": x*Derivative(y(x), x) + (-x**2 + y(x)**2)*f(x),
         "kamke_1.111": 3*x*y(x)**2 + x*Derivative(y(x), x) + y(x)**3,
         "kamke_1.112": x*Derivative(y(x), x) - sqrt(x**2 + y(x)**2) - y(x),
-        "kamke_1.113": a*sqrt(x**2 + y(x)**2) + x*Derivative(y(x), x) - y(x),
         "kamke_1.114": -x*sqrt(x**2 + y(x)**2) + x*Derivative(y(x), x) - y(x),
         "kamke_1.115": -x*(-x + y(x))*sqrt(x**2 + y(x)**2) + x*Derivative(y(x), x) - y(x),
         "kamke_1.116": -x*sqrt((-4*x**2 + y(x)**2)*(-x**2 + y(x)**2)) + x*Derivative(y(x), x) - y(x),
@@ -251,7 +244,6 @@ class Kamke:
         "kamke_1.202": f(x)*Derivative(y(x), x) + g(x)*tg(y(x)) + h(x),
         "kamke_1.203": x**3 + y(x)*Derivative(y(x), x) + y(x),
         "kamke_1.204": a*y(x) + x + y(x)*Derivative(y(x), x),
-        "kamke_1.205": a*y(x) + b*x**n + x*(a**2/4 - 1/4) + y(x)*Derivative(y(x), x),
         "kamke_1.206": a*y(x) - 2*a + b*exp(x) + y(x)*Derivative(y(x), x),
         "kamke_1.207": 4*x*(x + 1) + y(x)**2 + y(x)*Derivative(y(x), x),
         "kamke_1.208": a*y(x)**2 - b*cos(c + x) + y(x)*Derivative(y(x), x),
@@ -1644,7 +1636,6 @@ class Kamke:
         "kamke_5.6": a*Derivative(y(x), (x, n - 1)) - fs + Derivative(y(x), (x, n)),
         "kamke_5.7": a*x*y(x) - m*n*Derivative(y(x), (x, n - 1)) + x*Derivative(y(x), (x, n)),
         "kamke_5.8": x*(a*Derivative(y(x), x) + b*Derivative(y(x), (x, 2)) + c*Derivative(y(x), (x, 3)) + e*Derivative(y(x), (x, 4)))*y(x),
-        # "kamke_5.9": x*diff(y(x),(x,n))-((a*AA[1]-AA[0])*x+AA[1])-Sum(((a*AA[v+1]-AA[v])*x+AA[v+1])*diff(y(x),(x,v)),(v,1,n-1)),
         "kamke_5.10": -a*y(x) + x**n*Derivative(y(x), (x, 2*n)),
         "kamke_5.11": -a*y(x) + x**(2*n)*Derivative(y(x), (x, n)),
         "kamke_5.12": -a*y(x) + x**(n + 1/2)*Derivative(y(x), (x, 2*n + 1)),
@@ -2014,6 +2005,18 @@ class Kamke:
         "kamke_9.28": ([-xf4(t)*sin(x3(t)) - x5(t)*cos(x3(t)) + sin(x2(t))*Derivative(x1(t), t), -xf4(t)*cos(x3(t)) + x5(t)*sin(x3(t)) + Derivative(x2(t), t), -a + cos(x2(t))*Derivative(x1(t), t) + Derivative(x3(t), t), -a*(1 - lambda_)*x5(t) + m*sin(x2(t))*cos(x3(t)) + Derivative(xf4(t), t), a*(1 - lambda_)*xf4(t) - m*sin(x2(t))*sin(x3(t)) + Derivative(x5(t), t)], [x1(t), x2(t), x3(t), xf4(t), x5(t)])
     }
 
+    failing_examples = {
+        "kamke_1.14": a*x**m + y(x)**2 + Derivative(y(x), x),
+        "kamke_1.24": a*y(x)**2 - b*x**nu + Derivative(y(x), x),
+        "kamke_1.31": -a*x**n*(y(x)**2 + 1) + Derivative(y(x), x),
+        "kamke_1.47": -a*(-x + x**n)*y(x)**3 - y(x)**2 + Derivative(y(x), x),
+        "kamke_1.48": -c*y(x)**2 - (a*x**n + b*x)*y(x)**3 + Derivative(y(x), x),
+        "kamke_1.94": a*y(x) + b*x**n + x*Derivative(y(x), x),
+        "kamke_1.113": a*sqrt(x**2 + y(x)**2) + x*Derivative(y(x), x) - y(x),
+        "kamke_1.205": a*y(x) + b*x**n + x*(a**2/4 - 1/4) + y(x)*Derivative(y(x), x),
+        "kamke_5.9": x*diff(y(x),(x,n))-((a*AA[1]-AA[0])*x+AA[1])-Sum(((a*AA[v+1]-AA[v])*x+AA[v+1])*diff(y(x),(x,v)),(v,1,n-1)),
+    }
+
     all_chapters = [chapter_1, chapter_2, chapter_3, chapter_4, chapter_5, chapter_6, chapter_7, chapter_8, chapter_9]
 
 
@@ -2145,13 +2148,6 @@ class Kamke:
 
         for chapter in self.all_chapters:
             for example in chapter:
-                # Process is not terminating despite using
-                # time limit. Checkodesol is too slow for
-                # these cases. This should be fixed.
-                if example in ["kamke_1.14", "kamke_1.24", "kamke_1.31", "kamke_1.47", \
-                "kamke_1.48", "kamke_1.94", "kamke_1.113", "kamke_1.205"]:
-                    continue
-
                 output, status = self.test_example(example, hint, verify, dsolve_time, checkodesol_time)
                 counts[status] += 1
                 print(output)
