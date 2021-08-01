@@ -1629,6 +1629,7 @@ class Beam:
             >>> b.apply_support(0, 'roller')
             >>> b.apply_support(10, 'roller')
             >>> b.solve_for_ild_reactions(1,R_0,R_10)
+            >>> b.ild_reactions
             {R_0: x/10 - 1, R_10: -x/10}
 
         """
@@ -1660,7 +1661,7 @@ class Beam:
 
         # Determining the equations and solving them.
         self._ild_reactions = dict(zip(reactions, solution))
-        return self._ild_reactions
+        self._ild_reactions
 
     def plot_ild_reactions(self, subs=None):
         """
@@ -1696,6 +1697,7 @@ class Beam:
             >>> b.apply_support(7, 'roller')
             >>> b.apply_load(5,4,-1)
             >>> b.solve_for_ild_reactions(1,R_0,R_7)
+            >>> b.ild_reactions
             {R_0: x/7 - 22/7, R_7: -x/7 - 20/7}
             >>> b.plot_ild_reactions()
             PlotGrid object containing:
