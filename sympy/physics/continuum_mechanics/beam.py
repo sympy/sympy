@@ -1661,7 +1661,6 @@ class Beam:
 
         # Determining the equations and solving them.
         self._ild_reactions = dict(zip(reactions, solution))
-        self._ild_reactions
 
     def plot_ild_reactions(self, subs=None):
         """
