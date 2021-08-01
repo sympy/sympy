@@ -1740,13 +1740,13 @@ class Beam:
             xlabel=x, ylabel=reaction, line_color='blue', show=False))
 
         return PlotGrid(len(ildplots), 1, *ildplots)
-    
+
     def _solve_for_ild_shear(self):
         """
 
         Helper function for solve_for_ild_shear(). It takes the unsubstituted
         copy of the load equation and uses it to calculate shear force equation.
-        
+
         """
         x = self.variable
         shear_force = -integrate(self._original_load, x)
@@ -1801,7 +1801,7 @@ class Beam:
 
         x = self.variable
         l = self.length
-        
+
         shear_force = self._solve_for_ild_shear()
 
         shear_curve1 = val - limit(shear_force, x, dist)
@@ -1813,8 +1813,8 @@ class Beam:
 
         shear_eq = Piecewise((shear_curve1, x < dist), (shear_curve2, x > dist))
 
-        self._ild_shear = shear_eq        
-    
+        self._ild_shear = shear_eq
+
     def plot_ild_shear(self,subs=None):
         """
 
@@ -1871,7 +1871,7 @@ class Beam:
 
         if subs is None:
             subs = {}
-        
+
         for sym in self._ild_shear.atoms(Symbol):
             if sym != x and sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
