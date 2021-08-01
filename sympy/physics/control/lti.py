@@ -884,6 +884,8 @@ class Series(SISOLinearTimeInvariant):
     __radd__ = __add__
 
     def __sub__(self, other):
+        if not isinstance(other, SISOLinearTimeInvariant):
+             return NotImplemented
         return self + (-other)
 
     def __rsub__(self, other):
@@ -1182,6 +1184,8 @@ class MIMOSeries(MIMOLinearTimeInvariant):
     __radd__ = __add__
 
     def __sub__(self, other):
+        if not isinstance(other, MIMOLinearTimeInvariant):
+             return NotImplemented
         return self + (-other)
 
     def __rsub__(self, other):
@@ -1350,6 +1354,8 @@ class Parallel(SISOLinearTimeInvariant):
     __radd__ = __add__
 
     def __sub__(self, other):
+        if not isinstance(other, SISOLinearTimeInvariant):
+             return NotImplemented
         return self + (-other)
 
     def __rsub__(self, other):
@@ -1622,6 +1628,8 @@ class MIMOParallel(MIMOLinearTimeInvariant):
     __radd__ = __add__
 
     def __sub__(self, other):
+        if not isinstance(other, MIMOLinearTimeInvariant):
+             return NotImplemented
         return self + (-other)
 
     def __rsub__(self, other):
@@ -2396,6 +2404,8 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         return MIMOParallel(self, *other_arg_list)
 
     def __sub__(self, other):
+        if not isinstance(other, MIMOLinearTimeInvariant):
+             return NotImplemented
         return self + (-other)
 
     def __mul__(self, other):

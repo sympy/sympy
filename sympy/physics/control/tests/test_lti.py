@@ -1067,7 +1067,7 @@ def test_TransferFunctionMatrix_functions():
     # expand()
 
     assert (H_1.expand()
-            == TransferFunctionMatrix(((TransferFunction(s**3 - 2*s**2 - 3*s, s**4 + 1, s), TransferFunction(2, 1, s)), 
+            == TransferFunctionMatrix(((TransferFunction(s**3 - 2*s**2 - 3*s, s**4 + 1, s), TransferFunction(2, 1, s)),
             (TransferFunction(p, 1, s), TransferFunction(p, s, s)))))
     assert H_5.expand() == \
         TransferFunctionMatrix(((TransferFunction(s**5 + s**3 + s, -s**2 + s, s), TransferFunction(s**2 + 2*s - 3, s**2 + 4*s - 5, s)),))
