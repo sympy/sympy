@@ -1135,7 +1135,7 @@ class MIMOSeries(MIMOLinearTimeInvariant):
     @property
     def shape(self):
         """Returns the shape of the equivalent MIMO system."""
-        return self.args[-1].num_outputs, self.args[0].num_inputs
+        return self.num_outputs, self.num_inputs
 
     def doit(self, **kwargs):
         """
@@ -1565,7 +1565,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
     @property
     def shape(self):
         """Returns the shape of the equivalent MIMO system."""
-        return self.args[0].num_outputs, self.args[0].num_inputs
+        return self.num_outputs, self.num_inputs
 
     def doit(self, **kwargs):
         """
