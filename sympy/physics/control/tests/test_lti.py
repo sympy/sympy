@@ -581,7 +581,7 @@ def test_MIMOSeries_functions():
     assert tfm4*tfm5 + (tfm4 - tfm5) == MIMOParallel(MIMOSeries(tfm5, tfm4), tfm4, -tfm5)
     assert tfm4*-tfm6 + (-tfm4*tfm6) == MIMOParallel(MIMOSeries(-tfm6, tfm4), MIMOSeries(tfm6, -tfm4))
 
-    raises(TypeError, lambda: tfm1*tfm2 + TF1)
+    raises(ValueError, lambda: tfm1*tfm2 + TF1)
     raises(TypeError, lambda: tfm1*tfm2 + a0)
     raises(TypeError, lambda: tfm4*tfm6 - (s - 1))
     raises(TypeError, lambda: tfm4*-tfm6 - 8)
@@ -598,7 +598,7 @@ def test_MIMOSeries_functions():
 
     # Multiplication of a Series object with a SISO TF not allowed.
 
-    raises(TypeError, lambda: tfm4*tfm5*TF1)
+    raises(ValueError, lambda: tfm4*tfm5*TF1)
     raises(TypeError, lambda: tfm4*tfm5*a1)
     raises(TypeError, lambda: tfm4*-tfm5*(s - 2))
     raises(TypeError, lambda: tfm5*tfm4*9)
@@ -809,7 +809,7 @@ def test_MIMOParallel_functions():
     assert tfm1 + tfm1 - (-tfm1*tfm6) == MIMOParallel(tfm1, tfm1, -MIMOSeries(tfm6, -tfm1))
     assert tfm2 - tfm3 - tfm1 + tfm2 == MIMOParallel(tfm2, -tfm3, -tfm1, tfm2)
     assert tfm1 + tfm2 - tfm3 - tfm1 == MIMOParallel(tfm1, tfm2, -tfm3, -tfm1)
-    raises(TypeError, lambda: tfm1 + tfm2 + TF2)
+    raises(ValueError, lambda: tfm1 + tfm2 + TF2)
     raises(TypeError, lambda: tfm1 - tfm2 - a1)
     raises(TypeError, lambda: tfm2 - tfm3 - (s - 1))
     raises(TypeError, lambda: -tfm3 - tfm2 - 9)
@@ -824,7 +824,7 @@ def test_MIMOParallel_functions():
     assert (tfm1 + tfm2)*tfm6 == MIMOSeries(tfm6, MIMOParallel(tfm1, tfm2))
     assert (tfm2 - tfm3)*tfm6*-tfm6 == MIMOSeries(-tfm6, tfm6, MIMOParallel(tfm2, -tfm3))
     assert (tfm2 - tfm1 - tfm3)*(tfm6 + tfm6) == MIMOSeries(MIMOParallel(tfm6, tfm6), MIMOParallel(tfm2, -tfm1, -tfm3))
-    raises(TypeError, lambda: (tfm4 + tfm5)*TF1)
+    raises(ValueError, lambda: (tfm4 + tfm5)*TF1)
     raises(TypeError, lambda: (tfm2 - tfm3)*a2)
     raises(TypeError, lambda: (tfm3 + tfm2)*(s - 6))
     raises(TypeError, lambda: (tfm1 + tfm2 + tfm3)*0)

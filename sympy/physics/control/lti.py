@@ -869,11 +869,8 @@ class Series(SISOLinearTimeInvariant):
         return self.doit()
 
     def __add__(self, other):
-        if not isinstance(other, LinearTimeInvariant):
+        if not isinstance(other, SISOLinearTimeInvariant):
              return NotImplemented
-
-        if not other.is_SISO:
-            raise TypeError("Cannot add SISO and MIMO systems together.")
 
         if isinstance(other, Parallel):
             arg_list = list(other.args)
@@ -892,11 +889,8 @@ class Series(SISOLinearTimeInvariant):
         return -self + other
 
     def __mul__(self, other):
-        if not isinstance(other, LinearTimeInvariant):
+        if not isinstance(other, SISOLinearTimeInvariant):
              return NotImplemented
-
-        if not other.is_SISO:
-            raise TypeError("Cannot multiply SISO and MIMO systems together.")
 
         if isinstance(other, Series):
             self_arg_list = list(self.args)
@@ -1169,11 +1163,8 @@ class MIMOSeries(MIMOLinearTimeInvariant):
         return self.doit()
 
     def __add__(self, other):
-        if not isinstance(other, LinearTimeInvariant):
+        if not isinstance(other, MIMOLinearTimeInvariant):
              return NotImplemented
-
-        if self.is_SISO != other.is_SISO:
-            raise TypeError("Cannot add SISO and MIMO systems together.")
 
         if isinstance(other, MIMOParallel):
             arg_list = list(other.args)
@@ -1192,11 +1183,8 @@ class MIMOSeries(MIMOLinearTimeInvariant):
         return -self + other
 
     def __mul__(self, other):
-        if not isinstance(other, LinearTimeInvariant):
+        if not isinstance(other, MIMOLinearTimeInvariant):
              return NotImplemented
-
-        if other.is_SISO:
-            raise TypeError("Cannot multiply SISO and MIMO systems together.")
 
         if isinstance(other, MIMOSeries):
             self_arg_list = list(self.args)
@@ -1337,11 +1325,8 @@ class Parallel(SISOLinearTimeInvariant):
         return self.doit()
 
     def __add__(self, other):
-        if not isinstance(other, LinearTimeInvariant):
+        if not isinstance(other, SISOLinearTimeInvariant):
              return NotImplemented
-
-        if not other.is_SISO:
-            raise TypeError("Cannot add SISO and MIMO systems together.")
 
         if isinstance(other, Parallel):
             self_arg_list = list(self.args)
@@ -1362,11 +1347,8 @@ class Parallel(SISOLinearTimeInvariant):
         return -self + other
 
     def __mul__(self, other):
-        if not isinstance(other, LinearTimeInvariant):
+        if not isinstance(other, SISOLinearTimeInvariant):
              return NotImplemented
-
-        if not other.is_SISO:
-            raise TypeError("Cannot multiply SISO and MIMO systems together.")
 
         if isinstance(other, Series):
             arg_list = list(other.args)
@@ -1611,11 +1593,8 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         return self.doit()
 
     def __add__(self, other):
-        if not isinstance(other, LinearTimeInvariant):
+        if not isinstance(other, MIMOLinearTimeInvariant):
              return NotImplemented
-
-        if other.is_SISO:
-            raise TypeError("Cannot add SISO and MIMO systems together.")
 
         if isinstance(other, MIMOParallel):
             self_arg_list = list(self.args)
@@ -1636,11 +1615,8 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         return -self + other
 
     def __mul__(self, other):
-        if not isinstance(other, LinearTimeInvariant):
+        if not isinstance(other, MIMOLinearTimeInvariant):
              return NotImplemented
-
-        if other.is_SISO:
-            raise TypeError("Cannot multiply SISO and MIMO systems together.")
 
         if isinstance(other, MIMOSeries):
             arg_list = list(other.args)
@@ -2392,11 +2368,8 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         return _to_TFM(neg, self.var)
 
     def __add__(self, other):
-        if not isinstance(other, LinearTimeInvariant):
+        if not isinstance(other, MIMOLinearTimeInvariant):
              return NotImplemented
-
-        if other.is_SISO:
-            raise TypeError("Cannot add SISO and MIMO systems together.")
 
         if not isinstance(other, MIMOParallel):
             return MIMOParallel(self, other)
@@ -2409,11 +2382,8 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         return self + (-other)
 
     def __mul__(self, other):
-        if not isinstance(other, LinearTimeInvariant):
+        if not isinstance(other, MIMOLinearTimeInvariant):
              return NotImplemented
-
-        if other.is_SISO:
-            raise TypeError("Cannot multiply SISO and MIMO systems together.")
 
         if not isinstance(other, MIMOSeries):
             return MIMOSeries(other, self)
