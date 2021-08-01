@@ -1,6 +1,6 @@
 from sympy import symbols, re, im, sign, I, Abs, Symbol, \
      cos, sin, sqrt, conjugate, log, acos, E, pi, \
-     Matrix, diff, integrate, trigsimp, S, Rational, Float
+     Matrix, diff, integrate, trigsimp, S, Rational
 from sympy.algebras.quaternion import Quaternion
 from sympy.testing.pytest import raises
 
@@ -58,8 +58,9 @@ def test_quaternion_complex_real_addition():
 
 
 def test_quaternion_evalf():
-    assert Quaternion(1, 2, 3, 4).evalf() == Quaternion(Float(1), Float(2), Float(3), Float(4))
-    assert Quaternion(1 + 2*I, 0, 0, 3+4*I).evalf() == Quaternion(Float(1) + Float(2)*I, 0, 0, Float(3) + Float(4)*I)
+    assert Quaternion(sqrt(2), 0, 0, sqrt(3)).evalf() == Quaternion(sqrt(2).evalf(), 0, 0, sqrt(3).evalf())
+    assert Quaternion(sqrt(2)*I, 0, 0, sqrt(3)+sqrt(4)*I).evalf() == \
+    Quaternion(sqrt(2).evalf()*I, 0, 0, sqrt(3).evalf() + sqrt(4).evalf()*I)
 
 
 def test_quaternion_functions():
