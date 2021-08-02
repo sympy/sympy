@@ -64,6 +64,24 @@ SISOLinearTimeInvariant._clstype = SISOLinearTimeInvariant
 MIMOLinearTimeInvariant._clstype = MIMOLinearTimeInvariant
 
 
+def _check_other_SISO(func):
+    def wrapper(*args, **kwargs):
+        if not isinstance(args[-1], SISOLinearTimeInvariant):
+            return NotImplemented
+        else:
+            return func(*args, **kwargs)
+    return wrapper
+
+
+def _check_other_MIMO(func):
+    def wrapper(*args, **kwargs):
+        if not isinstance(args[-1], MIMOLinearTimeInvariant):
+            return NotImplemented
+        else:
+            return func(*args, **kwargs)
+    return wrapper
+
+
 class TransferFunction(SISOLinearTimeInvariant):
     r"""
     A class for representing LTI (Linear, time-invariant) systems that can be strictly described
@@ -893,9 +911,8 @@ class Series(SISOLinearTimeInvariant):
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
         return self.doit()
 
+    @_check_other_SISO
     def __add__(self, other):
-        if not isinstance(other, SISOLinearTimeInvariant):
-             return NotImplemented
 
         if isinstance(other, Parallel):
             arg_list = list(other.args)
@@ -905,17 +922,15 @@ class Series(SISOLinearTimeInvariant):
 
     __radd__ = __add__
 
+    @_check_other_SISO
     def __sub__(self, other):
-        if not isinstance(other, SISOLinearTimeInvariant):
-             return NotImplemented
         return self + (-other)
 
     def __rsub__(self, other):
         return -self + other
 
+    @_check_other_SISO
     def __mul__(self, other):
-        if not isinstance(other, SISOLinearTimeInvariant):
-             return NotImplemented
 
         arg_list = list(self.args)
         return Series(*arg_list, other)
@@ -1189,9 +1204,8 @@ class MIMOSeries(MIMOLinearTimeInvariant):
     def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
         return self.doit()
 
+    @_check_other_MIMO
     def __add__(self, other):
-        if not isinstance(other, MIMOLinearTimeInvariant):
-             return NotImplemented
 
         if isinstance(other, MIMOParallel):
             arg_list = list(other.args)
@@ -1201,17 +1215,15 @@ class MIMOSeries(MIMOLinearTimeInvariant):
 
     __radd__ = __add__
 
+    @_check_other_MIMO
     def __sub__(self, other):
-        if not isinstance(other, MIMOLinearTimeInvariant):
-             return NotImplemented
         return self + (-other)
 
     def __rsub__(self, other):
         return -self + other
 
+    @_check_other_MIMO
     def __mul__(self, other):
-        if not isinstance(other, MIMOLinearTimeInvariant):
-             return NotImplemented
 
         if isinstance(other, MIMOSeries):
             self_arg_list = list(self.args)
@@ -1352,26 +1364,23 @@ class Parallel(SISOLinearTimeInvariant):
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
         return self.doit()
 
+    @_check_other_SISO
     def __add__(self, other):
-        if not isinstance(other, SISOLinearTimeInvariant):
-             return NotImplemented
 
         self_arg_list = list(self.args)
         return Parallel(*self_arg_list, other)
 
     __radd__ = __add__
 
+    @_check_other_SISO
     def __sub__(self, other):
-        if not isinstance(other, SISOLinearTimeInvariant):
-             return NotImplemented
         return self + (-other)
 
     def __rsub__(self, other):
         return -self + other
 
+    @_check_other_SISO
     def __mul__(self, other):
-        if not isinstance(other, SISOLinearTimeInvariant):
-             return NotImplemented
 
         if isinstance(other, Series):
             arg_list = list(other.args)
@@ -1617,26 +1626,23 @@ class MIMOParallel(MIMOLinearTimeInvariant):
     def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
         return self.doit()
 
+    @_check_other_MIMO
     def __add__(self, other):
-        if not isinstance(other, MIMOLinearTimeInvariant):
-             return NotImplemented
 
         self_arg_list = list(self.args)
         return MIMOParallel(*self_arg_list, other)
 
     __radd__ = __add__
 
+    @_check_other_MIMO
     def __sub__(self, other):
-        if not isinstance(other, MIMOLinearTimeInvariant):
-             return NotImplemented
         return self + (-other)
 
     def __rsub__(self, other):
         return -self + other
 
+    @_check_other_MIMO
     def __mul__(self, other):
-        if not isinstance(other, MIMOLinearTimeInvariant):
-             return NotImplemented
 
         if isinstance(other, MIMOSeries):
             arg_list = list(other.args)
@@ -2387,23 +2393,20 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         neg = -self._expr_mat
         return _to_TFM(neg, self.var)
 
+    @_check_other_MIMO
     def __add__(self, other):
-        if not isinstance(other, MIMOLinearTimeInvariant):
-             return NotImplemented
 
         if not isinstance(other, MIMOParallel):
             return MIMOParallel(self, other)
         other_arg_list = list(other.args)
         return MIMOParallel(self, *other_arg_list)
 
+    @_check_other_MIMO
     def __sub__(self, other):
-        if not isinstance(other, MIMOLinearTimeInvariant):
-             return NotImplemented
         return self + (-other)
 
+    @_check_other_MIMO
     def __mul__(self, other):
-        if not isinstance(other, MIMOLinearTimeInvariant):
-             return NotImplemented
 
         if not isinstance(other, MIMOSeries):
             return MIMOSeries(other, self)
