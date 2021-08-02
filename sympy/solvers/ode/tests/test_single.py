@@ -1357,7 +1357,8 @@ def _get_examples_ode_sol_nth_order_reducible():
     # Needs to be a way to know how to combine derivatives in the expression
     'reducible_12': {
         'eq': Derivative(x*f(x), x, x, x) + Derivative(f(x), x, x, x),
-        'sol': [Eq(f(x), C1 + C2*x + C3/Mul(2, (x + 1), evaluate=False))], # 2-arg Mul!
+        'sol': [Eq(f(x), C1 + C3/Mul(2, (x**2 + 2*x + 1), evaluate=False) +
+        x*(C2 + C3/Mul(2, (x**2 + 2*x + 1), evaluate=False)))], # 2-arg Mul!
         'slow': True,
     },
     }
