@@ -1021,7 +1021,7 @@ def _get_examples_ode_sol_factorable():
     # This is from issue: https://github.com/sympy/sympy/issues/7093
     'fact_19': {
         'eq': Derivative(f(x), x)**2 - x**3,
-        'sol': [Eq(f(x), C1 - 2*x*sqrt(x**3)/5), Eq(f(x), C1 + 2*x*sqrt(x**3)/5)],
+        'sol': [Eq(f(x), C1 - 2*x**Rational(5,2)/5), Eq(f(x), C1 + 2*x**Rational(5,2)/5)],
     },
 
     'fact_20': {

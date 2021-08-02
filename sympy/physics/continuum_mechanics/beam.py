@@ -1831,11 +1831,10 @@ class Beam3D(Beam):
     >>> dy = collect(simplify(dy), x)
     >>> dx == dz == 0
     True
-    >>> dy == (x*(12*A*E*G*I*l**3*q - 24*A*E*G*I*l**2*m + 144*E**2*I**2*l*q +
-    ...           x**3*(A**2*G**2*l**2*q + 12*A*E*G*I*q) +
-    ...           x**2*(-2*A**2*G**2*l**3*q - 24*A*E*G*I*l*q - 48*A*E*G*I*m) +
-    ...           x*(A**2*G**2*l**4*q + 72*A*E*G*I*l*m - 144*E**2*I**2*q)
-    ...           )/(24*A*E*G*I*(A*G*l**2 + 12*E*I)))
+    >>> dy == (x*(12*E*I*l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)
+    ... + x*(A*G*l*(3*l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q) + x*(-2*A*G*l**2*q + 4*A*G*l*m - 24*E*I*q))
+    ... + A*G*(A*G*l**2 + 12*E*I)*(-2*l**2*q + 6*l*m - 4*m*x + q*x**2)
+    ... - 12*E*I*q*(A*G*l**2 + 12*E*I)))/(24*A*E*G*I*(A*G*l**2 + 12*E*I)))
     True
 
     References
@@ -2705,9 +2704,9 @@ class Beam3D(Beam):
             Plot[1]:Plot object containing:
             [0]: cartesian line: -15*x**2/2 for x over (0.0, 20.0)
             Plot[2]:Plot object containing:
-            [0]: cartesian line: x**2*(150 - 5*x)/8000 - x/8 for x over (0.0, 20.0)
+            [0]: cartesian line: -x**3/1600 + 3*x**2/160 - x/8 for x over (0.0, 20.0)
             Plot[3]:Plot object containing:
-            [0]: cartesian line: x*(105*x**4 - 8026000*x**2/43 + 109200000*x/43 + 304000000/43)/4200000 for x over (0.0, 20.0)
+            [0]: cartesian line: x**5/40000 - 4013*x**3/90300 + 26*x**2/43 + 1520*x/903 for x over (0.0, 20.0)
 
         """
 

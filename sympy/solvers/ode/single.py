@@ -2971,6 +2971,10 @@ class LieGroup(SingleODESolver):
 
 solver_map = {
     'factorable': Factorable,
+    'nth_linear_constant_coeff_homogeneous': NthLinearConstantCoeffHomogeneous,
+    'nth_linear_euler_eq_homogeneous': NthLinearEulerEqHomogeneous,
+    'nth_linear_constant_coeff_undetermined_coefficients': NthLinearConstantCoeffUndeterminedCoefficients,
+    'nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients': NthLinearEulerEqNonhomogeneousUndeterminedCoefficients,
     'separable': Separable,
     '1st_exact': FirstExact,
     '1st_linear': FirstLinear,
@@ -2983,10 +2987,6 @@ solver_map = {
     'almost_linear': AlmostLinear,
     'linear_coefficients': LinearCoefficients,
     'separable_reduced': SeparableReduced,
-    'nth_linear_constant_coeff_homogeneous': NthLinearConstantCoeffHomogeneous,
-    'nth_linear_euler_eq_homogeneous': NthLinearEulerEqHomogeneous,
-    'nth_linear_constant_coeff_undetermined_coefficients': NthLinearConstantCoeffUndeterminedCoefficients,
-    'nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients': NthLinearEulerEqNonhomogeneousUndeterminedCoefficients,
     'nth_linear_constant_coeff_variation_of_parameters': NthLinearConstantCoeffVariationOfParameters,
     'nth_linear_euler_eq_nonhomogeneous_variation_of_parameters': NthLinearEulerEqNonhomogeneousVariationOfParameters,
     'Liouville': Liouville,
