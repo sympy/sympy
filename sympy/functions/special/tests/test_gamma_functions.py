@@ -613,6 +613,11 @@ def test_polygamma_expansion():
         2*x**3 + 3*x**4 + 2*x**5 - x**7 + 4*x**9/3 + O(x**11)
 
 
+def test_polygamma_leading_term():
+     expr = -log(1/x) + polygamma(0, 1 + 1/x) + S.EulerGamma
+     assert expr.leadterm(x, logx=-y) == (S.EulerGamma, 0)
+
+
 def test_issue_8657():
     n = Symbol('n', negative=True, integer=True)
     m = Symbol('m', integer=True)

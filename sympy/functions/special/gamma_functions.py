@@ -856,7 +856,7 @@ class polygamma(Function):
         n, z = [a.as_leading_term(x) for a in self.args]
         o = Order(z, x)
         if n == 0 and o.contains(1/x):
-            return o.getn() * log(x)
+            return o.getn() * (log(x) if logx is None else logx)
         else:
             return self.func(n, z)
 
@@ -1056,6 +1056,19 @@ class loggamma(Function):
             return polygamma(0, self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy import symbols, Wild
+        z = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
+        z0 = z.subs(x, 0)
+        if z0.is_infinite:
+            r = -z*(-log(z) + 1)
+            if logx is not None:
+                c, ex = symbols('c, ex', cls=Wild, exclude=[x])
+                r = r.replace(log(c*x**ex), log(c) + ex*logx)
+                return r
+            return z*(-log(z))
+        return log(gamma(z))._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
     def _sage_(self):
         import sage.all as sage

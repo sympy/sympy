@@ -1210,10 +1210,11 @@ class Ei(Function):
         return exp(z) * _eis(z)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy import re
         x0 = self.args[0].limit(x, 0)
         if x0.is_zero:
             f = self._eval_rewrite_as_Si(*self.args)
-            return f._eval_as_leading_term(x, logx=logx, cdir=cdir)
+            return re(f._eval_as_leading_term(x, logx=logx, cdir=cdir))
         return super()._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
@@ -2272,6 +2273,8 @@ class Chi(TrigonometricIntegral):
         if arg0 is S.NaN:
             arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
         if arg0.is_zero:
+            if logx is not None:
+                return S.EulerGamma + logx
             return S.EulerGamma
         elif arg0.is_finite:
             return self.func(arg0)
