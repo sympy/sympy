@@ -1736,3 +1736,8 @@ def test_issue_21034():
 def test_issue_4187():
     assert integrate(log(x)*exp(-x), x) == Ei(-x) - exp(-x)*log(x)
     assert integrate(log(x)*exp(-x), (x, 0, oo)) == -EulerGamma
+
+
+def test_issue_21711():
+    assert integrate(sqrt(1-(x)*(x)), (x, 0, 1)) == pi/4
+    assert integrate(sqrt(1 - (x-1)*(x-1)), (x, 0, 1)) == pi/4
