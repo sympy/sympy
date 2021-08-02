@@ -1568,10 +1568,10 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
     integral = Integral(*args, **kwargs)
 
     if isinstance(integral, Integral):
-        if not integral.doit(**doit_flags).is_number:
+        if isinstance(integral.doit(**doit_flags), Integral):
+            doit_flags['meijerg'] = False
             return integral.doit(**doit_flags)
         else:
-            doit_flags['meijerg'] = False
             return integral.doit(**doit_flags)
     else:
         new_args = [a.doit(**doit_flags) if isinstance(a, Integral) else a
