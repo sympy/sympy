@@ -1,5 +1,5 @@
 from .ode import (allhints, checkinfsol, classify_ode,
-        constantsimp, dsolve, homogeneous_order)
+        constantsimp, dsolve, homogeneous_order, dsubs)
 
 from .lie_group import infinitesimals
 
