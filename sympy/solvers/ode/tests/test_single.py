@@ -1343,7 +1343,7 @@ def _get_examples_ode_sol_nth_order_reducible():
 
     'reducible_10': {
         'eq': f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x),
-        'sol': [Eq(f(x), C1 + C2*(x*sin(x) + cos(x)) + C3*(-x*cos(x) + sin(x)) + C4*sin(x) + C5*cos(x))],
+        'sol': [Eq(f(x), C1 + C2*x*sin(x) + C2*cos(x) - C3*x*cos(x) + C3*sin(x) + C4*sin(x) + C5*cos(x))],
         'slow': True,
     },
 
