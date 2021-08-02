@@ -512,7 +512,8 @@ def test_Series_functions():
     tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
 
-    assert tf1*tf2*tf3 == Series(tf1, tf2, tf3)
+    assert tf1*tf2*tf3 == Series(tf1, tf2, tf3) == Series(Series(tf1, tf2), tf3) \
+        == Series(tf1, Series(tf2, tf3))
     assert tf1*(tf2 + tf3) == Series(tf1, Parallel(tf2, tf3))
     assert tf1*tf2 + tf5 == Parallel(Series(tf1, tf2), tf5)
     assert tf1*tf2 - tf5 == Parallel(Series(tf1, tf2), -tf5)
@@ -605,16 +606,27 @@ def test_MIMOSeries_functions():
     raises(TypeError, lambda: (-p**3 + 1)*tfm5*tfm4)
 
     # Transfer function matrix in the arguments.
-    assert MIMOSeries(tfm2, tfm1, evaluate=True) == MIMOSeries(tfm2, tfm1).doit() == \
-        TransferFunctionMatrix(((TransferFunction(-k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (-a2*p + s)*(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2)**2 - \
-            (a2*s + p)**2, (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2, s),), (TransferFunction(k**2, 1, s),)))
+    assert (MIMOSeries(tfm2, tfm1, evaluate=True) == MIMOSeries(tfm2, tfm1).doit()
+        == TransferFunctionMatrix(((TransferFunction(-k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (-a2*p + s)*(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2)**2 - (a2*s + p)**2,
+        (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2, s),), 
+        (TransferFunction(k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (-a2*p + s)*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*p - s)*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2),
+        (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2, s),))))
+
+    # doit() should not cancel poles and zeros.
+    mat_1 = Matrix([[1/(1+s), (1+s)/(1+s**2+2*s)**3]])
+    mat_2 = Matrix([[(1+s)], [(1+s**2+2*s)**3/(1+s)]])
+    tm_1, tm_2 = TransferFunctionMatrix.from_Matrix(mat_1, s), TransferFunctionMatrix.from_Matrix(mat_2, s)
+    assert (MIMOSeries(tm_2, tm_1).doit() 
+        == TransferFunctionMatrix(((TransferFunction(2*(s + 1)**2*(s**2 + 2*s + 1)**3, (s + 1)**2*(s**2 + 2*s + 1)**3, s),),)))
+    assert MIMOSeries(tm_2, tm_1).doit().simplify() == TransferFunctionMatrix(((TransferFunction(2, 1, s),),))
 
     # calling doit() will expand the internal Series and Parallel objects.
     assert (MIMOSeries(-tfm3, -tfm2, tfm1, evaluate=True)
         == MIMOSeries(-tfm3, -tfm2, tfm1).doit()
-        == TransferFunctionMatrix(((TransferFunction(k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (a2*p - s)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (a2*s + p)**2, \
-            (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**3, s),), (TransferFunction(-k**2*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)**2, s),))) \
-        == MIMOSeries(-tfm3, -tfm2, tfm1).rewrite(TransferFunctionMatrix))
+        == TransferFunctionMatrix(((TransferFunction(k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (a2*p - s)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (a2*s + p)**2,
+        (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**3, s),),
+        (TransferFunction(-k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (-a2*p + s)*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*p - s)*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2),
+        (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**3, s),))))
     assert (MIMOSeries(MIMOParallel(tfm4, tfm5), tfm5, evaluate=True)
         == MIMOSeries(MIMOParallel(tfm4, tfm5), tfm5).doit()
         == TransferFunctionMatrix(((TransferFunction(-k*(-a2*s - p + (-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2)), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s), TransferFunction(k*(-a2*p - \
@@ -775,6 +787,8 @@ def test_Parallel_functions():
         TransferFunction(a2*s + k*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) + p + (-a2*p + s)*(s**2 + 2*s*wn*zeta + \
              wn**2), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
 
+    assert Parallel(tf1, Parallel(tf2, tf3)) == Parallel(tf1, tf2, tf3) == Parallel(Parallel(tf1, tf2), tf3)
+
     P1 = Parallel(Series(tf1, tf2), Series(tf2, tf3))
     assert P1.is_proper
     assert not P1.is_strictly_proper
@@ -803,7 +817,7 @@ def test_MIMOParallel_functions():
     tfm6 = TransferFunctionMatrix([[-TF2]])
     tfm7 = TransferFunctionMatrix([[tf4], [-tf4], [tf4]])
 
-    assert tfm1 + tfm2 + tfm3 == MIMOParallel(tfm1, tfm2, tfm3)
+    assert tfm1 + tfm2 + tfm3 == MIMOParallel(tfm1, tfm2, tfm3) == MIMOParallel(MIMOParallel(tfm1, tfm2), tfm3)
     assert tfm2 - tfm1 - tfm3 == MIMOParallel(tfm2, -tfm1, -tfm3)
     assert tfm2 - tfm3 + (-tfm1*tfm6*-tfm6) == MIMOParallel(tfm2, -tfm3, MIMOSeries(-tfm6, tfm6, -tfm1))
     assert tfm1 + tfm1 - (-tfm1*tfm6) == MIMOParallel(tfm1, tfm1, -MIMOSeries(tfm6, -tfm1))

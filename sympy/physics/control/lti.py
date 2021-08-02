@@ -1,8 +1,9 @@
 from sympy import Basic, Add, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots
 from sympy.core.containers import Tuple
-from sympy.core.evalf import EvalfMixin
+from sympy.core.evalf import EvalfMixin, prec_to_dps
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, ComplexInfinity
+from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify, _sympify
 from sympy.polys import Poly, rootof
 from sympy.series import limit
@@ -221,7 +222,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     >>> tf10 - (tf9 + tf12)
     Parallel(TransferFunction(-p + s, s + 3, s), TransferFunction(-s - 1, s**2 + s + 1, s), TransferFunction(s - 1, s**2 + 4, s))
     >>> tf10 - (tf9 * tf12)
-    Parallel(TransferFunction(-p + s, s + 3, s), Series(TransferFunction(-1, 1, s), Series(TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(1 - s, s**2 + 4, s))))
+    Parallel(TransferFunction(-p + s, s + 3, s), Series(TransferFunction(-1, 1, s), TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(1 - s, s**2 + 4, s)))
     >>> tf11 * tf10 * tf9
     Series(TransferFunction(4*s**2 + 2*s - 4, s - 1, s), TransferFunction(-p + s, s + 3, s), TransferFunction(s + 1, s**2 + s + 1, s))
     >>> tf9 * tf11 + tf10 * tf12
@@ -740,6 +741,29 @@ class TransferFunction(SISOLinearTimeInvariant):
             return Pow(self.den, -1, evaluate=False)
 
 
+def _flatten_args(args, _cls):
+    temp_args = []
+    for arg in args:
+        if isinstance(arg, _cls):
+            temp_args.extend(arg.args)
+        else:
+            temp_args.append(arg)
+    return tuple(temp_args)
+
+
+def _dummify_args(_arg, var):
+    dummy_dict = {}
+    dummy_arg_list = []
+
+    for arg in _arg:
+        _s = Dummy()
+        dummy_dict[_s] = var
+        dummy_arg = arg.subs({var: _s})
+        dummy_arg_list.append(dummy_arg)
+
+    return dummy_arg_list, dummy_dict
+
+
 class Series(SISOLinearTimeInvariant):
     r"""
     A class for representing a series configuration of SISO systems.
@@ -814,6 +838,7 @@ class Series(SISOLinearTimeInvariant):
     """
     def __new__(cls, *args, evaluate=False):
 
+        args = _flatten_args(args, Series)
         cls._check_args(args)
         obj = super().__new__(cls, *args)
 
@@ -891,11 +916,6 @@ class Series(SISOLinearTimeInvariant):
     def __mul__(self, other):
         if not isinstance(other, SISOLinearTimeInvariant):
              return NotImplemented
-
-        if isinstance(other, Series):
-            self_arg_list = list(self.args)
-            other_arg_list = list(other.args)
-            return Series(*self_arg_list, *other_arg_list)
 
         arg_list = list(self.args)
         return Series(*arg_list, other)
@@ -1061,19 +1081,19 @@ class MIMOSeries(MIMOLinearTimeInvariant):
     [ - ]                 [-  -]
     [ 1 ]{t}              [s  1]{t}
     >>> MIMOSeries(tfm_c, tfm_b, tfm_a).doit()
-    TransferFunctionMatrix(((TransferFunction(25*(6*s**3 + 1), 6*s**2, s), TransferFunction(5*(30*s**3 + 1), 6*s, s)), (TransferFunction(25*(6*s**3 + 1), 6*s**3, s), TransferFunction(5*(30*s**3 + 1), 6*s**2, s))))
+    TransferFunctionMatrix(((TransferFunction(150*s**4 + 25*s, 6*s**3, s), TransferFunction(150*s**4 + 5*s, 6*s**2, s)), (TransferFunction(150*s**3 + 25, 6*s**3, s), TransferFunction(150*s**3 + 5, 6*s**2, s))))
     >>> pprint(_, use_unicode=False)  # (2 Inputs -A-> 2 Outputs) -> (2 Inputs -B-> 1 Output) -> (1 Input -C-> 2 Outputs) is equivalent to (2 Inputs -Series Equivalent-> 2 Outputs).
-    [   /   3    \    /    3    \]
-    [25*\6*s  + 1/  5*\30*s  + 1/]
-    [-------------  -------------]
-    [        2           6*s     ]
-    [     6*s                    ]
-    [                            ]
-    [   /   3    \    /    3    \]
-    [25*\6*s  + 1/  5*\30*s  + 1/]
-    [-------------  -------------]
-    [        3              2    ]
-    [     6*s            6*s     ]{t}
+    [     4              4      ]
+    [150*s  + 25*s  150*s  + 5*s]
+    [-------------  ------------]
+    [        3             2    ]
+    [     6*s           6*s     ]
+    [                           ]
+    [      3              3     ]
+    [ 150*s  + 25    150*s  + 5 ]
+    [ -----------    ---------- ]
+    [        3             2    ]
+    [     6*s           6*s     ]{t}
 
     Notes
     =====
@@ -1137,7 +1157,7 @@ class MIMOSeries(MIMOLinearTimeInvariant):
         """Returns the shape of the equivalent MIMO system."""
         return self.num_outputs, self.num_inputs
 
-    def doit(self, **kwargs):
+    def doit(self, cancel=False, **kwargs):
         """
         Returns the resultant transfer function matrix obtained after evaluating
         the MIMO systems arranged in a series configuration.
@@ -1152,12 +1172,19 @@ class MIMOSeries(MIMOLinearTimeInvariant):
         >>> tfm1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf2]])
         >>> tfm2 = TransferFunctionMatrix([[tf2, tf1], [tf1, tf1]])
         >>> MIMOSeries(tfm2, tfm1).doit()
-        TransferFunctionMatrix(((TransferFunction(2*(s**3 - 2)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s), TransferFunction((-p + s)**2*(s**3 - 2)*(a*p**2 + b*s) + (-p + s)*(a*p**2 + b*s)**2*(s**4 + 5*s + 6), (-p + s)**3*(s**4 + 5*s + 6), s)), (TransferFunction((-p + s)*(s**3 - 2)**2*(s**4 + 5*s + 6) + (s**3 - 2)*(a*p**2 + b*s)*(s**4 + 5*s + 6)**2, (-p + s)*(s**4 + 5*s + 6)**3, s), TransferFunction(2*(s**3 - 2)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s))))
+        TransferFunctionMatrix(((TransferFunction(2*(-p + s)*(s**3 - 2)*(a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)**2*(s**4 + 5*s + 6)**2, s), TransferFunction((-p + s)**2*(s**3 - 2)*(a*p**2 + b*s) + (-p + s)*(a*p**2 + b*s)**2*(s**4 + 5*s + 6), (-p + s)**3*(s**4 + 5*s + 6), s)), (TransferFunction((-p + s)*(s**3 - 2)**2*(s**4 + 5*s + 6) + (s**3 - 2)*(a*p**2 + b*s)*(s**4 + 5*s + 6)**2, (-p + s)*(s**4 + 5*s + 6)**3, s), TransferFunction(2*(s**3 - 2)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s))))
 
         """
         _arg = (arg.doit()._expr_mat for arg in reversed(self.args))
-        res = MatMul(*_arg, evaluate=True)
-        return TransferFunctionMatrix.from_Matrix(res, self.var)
+
+        if cancel:
+            res = MatMul(*_arg, evaluate=True)
+            return TransferFunctionMatrix.from_Matrix(res, self.var)
+
+        _dummy_args, _dummy_dict = _dummify_args(_arg, self.var)
+        res = MatMul(*_dummy_args, evaluate=True)
+        temp_tfm = TransferFunctionMatrix.from_Matrix(res, self.var)
+        return temp_tfm.subs(_dummy_dict)
 
     def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
         return self.doit()
@@ -1272,6 +1299,7 @@ class Parallel(SISOLinearTimeInvariant):
     """
     def __new__(cls, *args, evaluate=False):
 
+        args = _flatten_args(args, Parallel)
         cls._check_args(args)
         obj = super().__new__(cls, *args)
 
@@ -1327,11 +1355,6 @@ class Parallel(SISOLinearTimeInvariant):
     def __add__(self, other):
         if not isinstance(other, SISOLinearTimeInvariant):
              return NotImplemented
-
-        if isinstance(other, Parallel):
-            self_arg_list = list(self.args)
-            other_arg_list = list(other.args)
-            return Parallel(*self_arg_list, *other_arg_list)
 
         self_arg_list = list(self.args)
         return Parallel(*self_arg_list, other)
@@ -1522,6 +1545,8 @@ class MIMOParallel(MIMOLinearTimeInvariant):
     """
     def __new__(cls, *args, evaluate=False):
 
+        args = _flatten_args(args, MIMOParallel)
+
         cls._check_args(args)
 
         if any(arg.shape != args[0].shape for arg in args):
@@ -1595,11 +1620,6 @@ class MIMOParallel(MIMOLinearTimeInvariant):
     def __add__(self, other):
         if not isinstance(other, MIMOLinearTimeInvariant):
              return NotImplemented
-
-        if isinstance(other, MIMOParallel):
-            self_arg_list = list(self.args)
-            other_arg_list = list(other.args)
-            return MIMOParallel(*self_arg_list, *other_arg_list)
 
         self_arg_list = list(self.args)
         return MIMOParallel(*self_arg_list, other)
@@ -1694,7 +1714,7 @@ class Feedback(Basic):
     >>> -F1
     Feedback(TransferFunction(-3*s**2 - 7*s + 3, s**2 - 4*s + 2, s), TransferFunction(5*s - 10, s + 7, s))
     >>> -F2
-    Feedback(Series(TransferFunction(-1, 1, s), Series(TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s), TransferFunction(5*s + 10, s + 10, s))), TransferFunction(1, 1, s))
+    Feedback(Series(TransferFunction(-1, 1, s), TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s), TransferFunction(5*s + 10, s + 10, s)), TransferFunction(1, 1, s))
 
     See Also
     ========
@@ -2467,7 +2487,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
 
     def _eval_evalf(self, prec):
         """Calls evalf() on each transfer function in the transfer function matrix"""
-        mat = self._expr_mat.applyfunc(lambda a: a.evalf(prec))
+        mat = self._expr_mat.applyfunc(lambda a: a.evalf(n=prec_to_dps(prec)))
         return _to_TFM(mat, self.var)
 
     def _eval_simplify(self, **kwargs):
