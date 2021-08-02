@@ -2045,7 +2045,7 @@ class Kamke:
         <p>
         <h2>{example.capitalize().replace("_", " ")}</h2>
         <h4>Equation</h4>
-            \({eq}\) <br>
+            \\({eq}\\) <br>
         <h4>Solution</h4>
             <!-- Render latex if solution was found by dsolve, else render error message -->
             {f"{backslash}({sol}{backslash})" if status == 0 else sol} <br>
