@@ -608,7 +608,7 @@ def test_MIMOSeries_functions():
     # Transfer function matrix in the arguments.
     assert (MIMOSeries(tfm2, tfm1, evaluate=True) == MIMOSeries(tfm2, tfm1).doit()
         == TransferFunctionMatrix(((TransferFunction(-k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (-a2*p + s)*(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2)**2 - (a2*s + p)**2,
-        (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2, s),), 
+        (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2, s),),
         (TransferFunction(k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (-a2*p + s)*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*p - s)*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2),
         (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2, s),))))
 
@@ -616,7 +616,7 @@ def test_MIMOSeries_functions():
     mat_1 = Matrix([[1/(1+s), (1+s)/(1+s**2+2*s)**3]])
     mat_2 = Matrix([[(1+s)], [(1+s**2+2*s)**3/(1+s)]])
     tm_1, tm_2 = TransferFunctionMatrix.from_Matrix(mat_1, s), TransferFunctionMatrix.from_Matrix(mat_2, s)
-    assert (MIMOSeries(tm_2, tm_1).doit() 
+    assert (MIMOSeries(tm_2, tm_1).doit()
         == TransferFunctionMatrix(((TransferFunction(2*(s + 1)**2*(s**2 + 2*s + 1)**3, (s + 1)**2*(s**2 + 2*s + 1)**3, s),),)))
     assert MIMOSeries(tm_2, tm_1).doit().simplify() == TransferFunctionMatrix(((TransferFunction(2, 1, s),),))
 
