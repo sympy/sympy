@@ -25,8 +25,6 @@ def test_Normal():
     assert density(m)(1, 2) == 1/(2*pi)
     assert m.pspace.distribution.set == ProductSet(S.Reals, S.Reals)
     raises (ValueError, lambda:m[2])
-    raises (ValueError,\
-        lambda: Normal('M',[1, 2], [[0, 0], [0, 1]]))
     n = Normal('B', [1, 2, 3], [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
     p = Normal('C',  Matrix([1, 2]), Matrix([[1, 0], [0, 1]]))
     assert density(m)(x, y) == density(p)(x, y)
@@ -356,4 +354,4 @@ def test_sample_seed():
             continue
 
 def test_issue_21057():
-    assert Normal("x", [0, 0], [[0,0], [0,0]]) == MultivariateNormal("x", [0, 0], [[0, 0], [0, 0]])
+    assert Normal("x", [0, 0], [[0, 0], [0, 0]]) == MultivariateNormal("x", [0, 0], [[0, 0], [0, 0]])
