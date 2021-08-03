@@ -706,7 +706,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
             rv = rv1
     return rv
 
-def dsubs(eq, trans, newvars=None, reverse=False):
+def dsubs(eq, trans, newvars=None):
     r"""
     Function that substitutes for variables in an Ordinary Differential Equation.
 
@@ -773,16 +773,16 @@ def dsubs(eq, trans, newvars=None, reverse=False):
 
     Find the solutions for the transformed equation
 
-    >>> solt = dsolve(homeq)
-    >>> solt
-    [Eq(v(t), -sqrt(C1 + 2*log(t))), Eq(v(t), sqrt(C1 + 2*log(t)))]
+    >>> solt1, solt2 = dsolve(homeq)
+    >>> solt1
+    Eq(v(t), -sqrt(C1 + 2*log(t)))
 
     Re-substitute `v = y x` to get the solutions to the
     original equation
 
-    >>> sol = list(map(lambda sol: dsubs(sol, {v(t): y(x)/x, t: x}), solt))
+    >>> sol = dsubs(solt1, {v(t): y(x)/x, t: x})
     >>> sol
-    [Eq(y(x)/x, -sqrt(C1 + 2*log(x))), Eq(y(x)/x, sqrt(C1 + 2*log(x)))]
+    Eq(y(x)/x, -sqrt(C1 + 2*log(x)))
 
     Let us look at another example - The 2nd order Cauchy Euler equation.
 
@@ -811,10 +811,9 @@ def dsubs(eq, trans, newvars=None, reverse=False):
     >>> sol
     Eq(y(x), C1*x**(-a/2 - sqrt(a**2 - 2*a - 4*b + 1)/2 + 1/2) + C2*x**(-a/2 + sqrt(a**2 - 2*a - 4*b + 1)/2 + 1/2))
     """
-    from sympy.core.function import Subs, Function, Derivative, AppliedUndef
-    from sympy.core.symbol import Symbol
-    from sympy.integrals.integrals import Integral
-
+    # Substitutes the transformation in the innermost
+    # derivative in case of nested derivatives. Facilitates
+    # chain rule to be applied.
     def diffx(e, sym, n):
         if isinstance(sym, Function):
             if n > 1:
@@ -823,8 +822,10 @@ def dsubs(eq, trans, newvars=None, reverse=False):
         else:
             return Derivative(e, (sym, n))
 
+    # eq has no derivative terms, so apply inverse transformation
     reverse = len(eq.atoms(Derivative)) == 0
     if reverse:
+        # Store all integrals in the solution (if any)
         ints = list(eq.atoms(Integral))
         newints = ints.copy()
 
@@ -832,6 +833,7 @@ def dsubs(eq, trans, newvars=None, reverse=False):
         fun_trans = {}
 
         for var in trans:
+            # Create mapping between new and old variables
             if isinstance(var, Symbol):
                 sym_trans[var] = trans[var]
             elif isinstance(var, Function):
@@ -839,26 +841,33 @@ def dsubs(eq, trans, newvars=None, reverse=False):
             else:
                 raise ValueError(f"Expected Symbol or Function in the transformation rule, recieved {var.__class__.__name__}")
 
+        # If any of the new variables are part of integrals in
+        # the solution, using Integral.transform to transform it
         for i in range(len(newints)):
             fs = newints[i].free_symbols
             for var in sym_trans:
                 if var in fs:
                     newints[i] = newints[i].transform(var, sym_trans[var])
 
+        # Replace the old integrals with the transformed integrals
         for i, inew in zip(ints, newints):
             eq = eq.xreplace({i: inew})
 
+        # Replace the old dependent variables with new ones
         for var in fun_trans:
             eq = eq.xreplace({var: fun_trans[var]})
 
+        # Replace the old independent variables with new ones
         for var in sym_trans:
             eq = eq.xreplace({var: sym_trans[var]})
 
     else:
+        # Store all functions present in the equation
         old_funcs = eq.atoms(Function)
         mapdict = {}
 
         for var in trans:
+            # Create mapping between new and old variables
             if not isinstance(var, Symbol) and not isinstance(var, Function):
                 raise ValueError(f"Expected Symbol or Function in the transformation rule, recieved {var.__class__.__name__}")
             if isinstance(var, Symbol):
@@ -870,39 +879,62 @@ def dsubs(eq, trans, newvars=None, reverse=False):
 
             multi = False
             to_map = None
+            # If list of new variables is not passed
             if newvars is None:
+                # If more than 1 new symbol/function appears in the transformation
+                # then the mapping is ambiguous. Raise an error.
                 if len(atoms) > 1:
                     raise ValueError("Missing a list of the new variables")
+                # Store the new variable to be mapped
                 else:
                     to_map = atoms.pop()
+            # List of new variables is passed
             else:
                 for atom in atoms:
                     if atom in newvars:
+                        # Multiple variables from the list of new variables
+                        # are present in the RHS of the transformation
+                        # Again, matching is ambiguous. Raise an error.
                         if multi:
                             raise ValueError(f"Rules contain more than one {var.__class__.__name__}.")
+                        # Encountered single new variable so far in RHS
+                        # Store the new variable to be mapped
                         else:
                             multi = True
                             to_map = atom
+            # Map the old variable to the new variable
             mapdict[var] = to_map
 
+        # Store all integrals in the equation
         integrals = eq.atoms(Integral)
         for i in integrals:
             inew = i
+            # For each integral in the equation, transform it
+            # by replacing old variables with new variables
             for tr in trans:
                 inew = inew.transform(tr, trans[tr])
+            # Replace the old integral with the transformed integral
             eq = eq.subs(i, inew)
 
+        # Replace the old variable with a dummy function, making the new
+        # old variable a function of the new variable. This is done
+        # so that derivative terms don't evaluate to 0.
         for var in trans:
             if isinstance(var, Symbol) and var in mapdict:
                 eq = eq.subs(var, Function(var.name + 'f')(mapdict[var]))
 
+        # Replace the derivatives and apply the chain rule so that
+        # the derivatives are now with respect to the new variables.
         eq = eq.replace(Derivative, lambda e, vs: diffx(e, vs[0], vs[1]))
 
+        # Replace the dummy functions created above with the actual transformations
         for var in trans:
             if not isinstance(var, Symbol) and var in mapdict:
                 old_var = var.args[0]
                 eq = eq.xreplace({var.subs(old_var, Function(old_var.name + 'f')(mapdict[old_var])): trans[var]})
 
+        # Replace the old dependent variables with the new dependent variables
+        # Then, replace the dummy functions with the new independent variables
         for var in trans:
             if isinstance(var, Symbol) and var in mapdict:
                 for func in old_funcs:
@@ -911,10 +943,16 @@ def dsubs(eq, trans, newvars=None, reverse=False):
                         eq = eq.xreplace({func.subs(old_var, Function(old_var.name + 'f')(mapdict[old_var])): func.subs(old_var, trans[old_var])})
                 eq = eq.subs(Function(var.name + 'f')(mapdict[var]), trans[var])
 
+        # Store all the derivative terms
         derivatives = list(eq.atoms(Derivative))
+        # Sort them according to their length so that in case of nested derivatives
+        # the longest ones come first
         derivatives.sort(key=lambda x: len(str(x)), reverse=True)
         for d in derivatives:
+            # Expand each derivative term
             done = d.doit()
+            # If it becomes a Subs term, don't expand
+            # Else expand it and substitute it in the equation
             if not len(done.atoms(Subs)):
                 eq = eq.subs(d, done)
 
