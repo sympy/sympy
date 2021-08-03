@@ -1,7 +1,7 @@
 from sympy import symbols, Matrix, cos, sin, expand
 from sympy.physics.mechanics import (PinJoint, JointsMethod, Body, KanesMethod,
-                                    PrismaticJoint, LagrangesMethod)
-from sympy.physics.vector import dynamicsymbols
+                                    PrismaticJoint, LagrangesMethod, inertia)
+from sympy.physics.vector import dynamicsymbols, ReferenceFrame
 
 
 t = dynamicsymbols._t
@@ -95,3 +95,43 @@ def test_simple_pedulum():
     method.form_eoms(LagrangesMethod)
     rhs = method.rhs()
     assert rhs[1] == -g*sin(q)/l
+
+def test_chaos_pendulum():
+    mA, mB, lA, lB, h, IAxx, IBxx, IByy, IBzz, g = symbols('mA, mB, lA, lB, h, IAxx, IBxx, IByy, IBzz, g')
+    theta, phi, omega, alpha = dynamicsymbols('theta phi omega alpha')
+    lA = (lB - h / 2) / 2
+    lC = (lB/2 + h/4)
+
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+
+    rod = Body('rod', mass=mA, frame=A, central_inertia=inertia(A, IAxx, IAxx, 0))
+    plate = Body('plate', mass=mB, frame=B, central_inertia=inertia(B, IBxx, IByy, IBzz))
+    C = Body('C')
+    J1 = PinJoint('J1', C, rod, coordinates=theta, speeds=omega,
+                  child_joint_pos=lA*rod.z, parent_axis=C.y, child_axis=rod.y)
+    J2 = PinJoint('J2', rod, plate, coordinates=phi, speeds=alpha,
+                  parent_joint_pos=lC*rod.z, parent_axis=rod.z, child_axis=plate.z)
+
+    rod.apply_force(mA*g*C.z)
+    plate.apply_force(mB*g*C.z)
+
+    method = JointsMethod(C, J1, J2)
+    soln = method.form_eoms()
+    assert expand(soln) == Matrix([[-IAxx*omega.diff() - 2*IBxx*alpha*omega*sin(phi)*cos(phi) -
+                                IBxx*sin(phi)**2*omega.diff() + 2*IByy*alpha*omega*sin(phi)*cos(phi) -
+                                IByy*cos(phi)**2*omega.diff() - g*h*mA*sin(theta)/4 -
+                                g*h*mB*sin(theta)/2 + g*lB*mA*sin(theta)/2 - h**2*mA*omega.diff()/16 -
+                                h**2*mB*omega.diff()/4 + h*lB*mA*omega.diff()/4 - lB**2*mA*omega.diff()/4],
+                                [IBxx*omega**2*sin(phi)*cos(phi) - IByy*omega**2*sin(phi)*cos(phi) -
+                                IBzz*alpha.diff()]])
+    assert expand(method.mass_matrix_full) == Matrix([[1, 0, 0, 0], [0, 1, 0, 0],
+                                        [0, 0, IAxx + IBxx*sin(phi)**2 + IByy*cos(phi)**2 +
+                                        h**2*mA/16 + h**2*mB/4 - h*lB*mA/4 + lB**2*mA/4, 0],
+                                        [0, 0, 0, IBzz]])
+    assert expand(method.forcing_full) == Matrix([[omega], [alpha], 
+                                    [-2*IBxx*alpha*omega*sin(phi)*cos(phi) +
+                                    2*IByy*alpha*omega*sin(phi)*cos(phi) - g*h*mA*sin(theta)/4 -
+                                    g*h*mB*sin(theta)/2 + g*lB*mA*sin(theta)/2],
+                                    [IBxx*omega**2*sin(phi)*cos(phi) -
+                                    IByy*omega**2*sin(phi)*cos(phi)]])
