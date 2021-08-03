@@ -174,9 +174,10 @@ class RepMatrix(MatrixBase):
         # has the pattern.  If _smat is full length,
         # the matrix has no zeros.
         zhas = False
-        if len(self.todok()) != self.rows*self.cols:
+        dok = self.todok()
+        if len(dok) != self.rows*self.cols:
             zhas = S.Zero.has(*patterns)
-        return zhas or any(value.has(*patterns) for value in self.values())
+        return zhas or any(value.has(*patterns) for value in dok.values())
 
     def _eval_is_Identity(self):
         if not all(self[i, i] == 1 for i in range(self.rows)):
