@@ -354,3 +354,6 @@ def test_sample_seed():
                 assert all(s1 != s2)
         except NotImplementedError:
             continue
+
+def test_issue_21057():
+    assert Normal("x", [0, 0], [[0,0], [0,0]]) == MultivariateNormal("x", [0, 0], [[0, 0], [0, 0]])
