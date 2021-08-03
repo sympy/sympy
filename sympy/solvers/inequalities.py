@@ -1,6 +1,6 @@
 """Tools for solving inequalities and systems of inequalities. """
 # from sympy.matrices.
-
+from sympy.simplify.simplify import nsimplify
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
@@ -1102,7 +1102,7 @@ def linear_programming(A, B, C, D):
     *) Maximizing Cx constrained to Ax <= B and x >= 0.
     *) Minimizing y^{T}B constrained to y^{T}A >= C^{T} and y >= 0.
 
-    Thw method s eturns a triplet of solutions optimum, argmax, argmax_dual where
+    The method returns a triplet of solutions optimum, argmax and argmax_dual where
     optimum is the optimum solution, argmax is x and argmax_dual is y.
 
     Examples
@@ -1116,7 +1116,15 @@ def linear_programming(A, B, C, D):
     >>> linear_programming(A, B, C, D)
     (11/3, [0, 1/3, 2/3], [0, 2/3, 1])
 
-
+    The method also works with inegers, floats, symbolic expressions (like sqrt(2)) and symbols (like x).
+    >>> from sympy import Symbol, Float, sqrt
+    >>> x = Symbol('x')
+    >>> x = 1/3
+    >>> A = Matrix([[0, 1, sqrt(2)], [-1, 0, -3], [2/3, x, 7/2]])
+    >>> B = Matrix([3, -2, Float(5.5)])
+    >>> C = Matrix([[1, x, Float(5)]])
+    >>> linear_programming(A, B, C, D)
+    (33/4, [33/4, 0, 0], [0, 0, 3/2])
     """
     M = Matrix([[A, B], [-C, D]])
     r_orig = ['x_{}'.format(j) for j in range(M.cols - 1)]
@@ -1146,4 +1154,9 @@ def linear_programming(A, B, C, D):
         else:
             argmin_dual.append(S.Zero)
 
-    return M[-1, -1], argmax, argmin_dual
+    for i in range(len(argmax)):
+        argmax[i] = nsimplify(argmax[i])
+    for i in range(len(argmin_dual)):
+        argmin_dual[i] = nsimplify(argmin_dual[i])
+
+    return nsimplify(M[-1, -1]), argmax, argmin_dual
