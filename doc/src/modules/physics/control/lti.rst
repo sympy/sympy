@@ -13,7 +13,13 @@ lti
 .. autoclass:: Series
    :members:
 
+.. autoclass:: MIMOSeries
+   :members:
+
 .. autoclass:: Parallel
+   :members:
+
+.. autoclass:: MIMOParallel
    :members:
 
 .. autoclass:: Feedback

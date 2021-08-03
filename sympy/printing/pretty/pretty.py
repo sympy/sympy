@@ -972,6 +972,21 @@ class PrettyPrinter(Printer):
             args[i] = prettyForm(*self._print(a).parens())
         return prettyForm.__mul__(*args)
 
+    def _print_MIMOSeries(self, expr):
+        from sympy.physics.control.lti import MIMOParallel
+        args = list(expr.args)
+        pretty_args = []
+        for i, a in enumerate(reversed(args)):
+            if (isinstance(a, MIMOParallel) and len(expr.args) > 1):
+                expression = self._print(a)
+                expression.baseline = expression.height()//2
+                pretty_args.append(prettyForm(*expression.parens()))
+            else:
+                expression = self._print(a)
+                expression.baseline = expression.height()//2
+                pretty_args.append(expression)
+        return prettyForm.__mul__(*pretty_args)
+
     def _print_Parallel(self, expr):
         s = None
         for item in expr.args:
@@ -979,8 +994,27 @@ class PrettyPrinter(Printer):
             if s is None:
                 s = pform     # First element
             else:
+                s = prettyForm(*stringPict.next(s))
+                s.baseline = s.height()//2
                 s = prettyForm(*stringPict.next(s, ' + '))
                 s = prettyForm(*stringPict.next(s, pform))
+        return s
+
+    def _print_MIMOParallel(self, expr):
+        from sympy.physics.control.lti import TransferFunctionMatrix
+        s = None
+        for item in expr.args:
+            pform = self._print(item)
+            if s is None:
+                s = pform     # First element
+            else:
+                s = prettyForm(*stringPict.next(s))
+                s.baseline = s.height()//2
+                s = prettyForm(*stringPict.next(s, ' + '))
+                if isinstance(item, TransferFunctionMatrix):
+                    s.baseline = s.height() - 1
+                s = prettyForm(*stringPict.next(s, pform))
+            # s.baseline = s.height()//2
         return s
 
     def _print_Feedback(self, expr):

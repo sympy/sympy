@@ -2434,22 +2434,31 @@ class LatexPrinter(Printer):
         return "%s\\rightarrow %s" % (domain, codomain)
 
     def _print_TransferFunction(self, expr):
-        from sympy.core import Mul, Pow
-        num, den = expr.num, expr.den
-        res = Mul(num, Pow(den, -1, evaluate=False), evaluate=False)
-        return self._print_Mul(res)
+        num, den = self._print(expr.num), self._print(expr.den)
+        return r"\frac{%s}{%s}" % (num, den)
 
     def _print_Series(self, expr):
         args = list(expr.args)
         parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
-                                             False)
+                                            False)
         return ' '.join(map(parens, args))
+
+    def _print_MIMOSeries(self, expr):
+        from sympy.physics.control.lti import MIMOParallel
+        args = list(expr.args)[::-1]
+        parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
+                                             False) if isinstance(x, MIMOParallel) else self._print(x)
+        return r"\cdot".join(map(parens, args))
 
     def _print_Parallel(self, expr):
         args = list(expr.args)
-        parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
-                                             False)
-        return ' '.join(map(parens, args))
+        func = lambda x: self._print(x)
+        return ' + '.join(map(func, args))
+
+    def _print_MIMOParallel(self, expr):
+        args = list(expr.args)
+        func = lambda x: self._print(x)
+        return ' + '.join(map(func, args))
 
     def _print_Feedback(self, expr):
         from sympy.physics.control import TransferFunction, Parallel, Series
