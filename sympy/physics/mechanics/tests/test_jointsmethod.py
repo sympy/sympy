@@ -47,19 +47,19 @@ def test_complete_simple_double_pendulum():
 
     method = JointsMethod(C, J1, J2)
     soln = method.form_eoms()
-    assert expand(soln) == Matrix([[-g*l*m*sin(q1)*cos(q2) - 2*g*l*m*sin(q1) - g*l*m*sin(q2)*cos(q1) + 
-                            2*l**2*m*u1*u2*sin(q2) + l**2*m*u2**2*sin(q2) - 
-                            2*l**2*m*cos(q2)*u1.diff() - l**2*m*cos(q2)*u2.diff() - 
-                            3*l**2*m*u1.diff() - l**2*m*u2.diff()], 
-                            [-g*l*m*sin(q1)*cos(q2) - g*l*m*sin(q2)*cos(q1) - l**2*m*u1**2*sin(q2) - 
-                            l**2*m*cos(q2)*u1.diff() - l**2*m*u1.diff() - 
+    assert expand(soln) == Matrix([[-g*l*m*sin(q1)*cos(q2) - 2*g*l*m*sin(q1) - g*l*m*sin(q2)*cos(q1) +
+                            2*l**2*m*u1*u2*sin(q2) + l**2*m*u2**2*sin(q2) -
+                            2*l**2*m*cos(q2)*u1.diff() - l**2*m*cos(q2)*u2.diff() -
+                            3*l**2*m*u1.diff() - l**2*m*u2.diff()],
+                            [-g*l*m*sin(q1)*cos(q2) - g*l*m*sin(q2)*cos(q1) - l**2*m*u1**2*sin(q2) -
+                            l**2*m*cos(q2)*u1.diff() - l**2*m*u1.diff() -
                             l**2*m*u2.diff()]])
     assert expand(method.mass_matrix_full) == Matrix([[1, 0, 0, 0], [0, 1, 0, 0],
                                         [0, 0, 2*l**2*m*cos(q2) + 3*l**2*m, l**2*m*cos(q2) + l**2*m],
                                         [0, 0, l**2*m*cos(q2) + l**2*m, l**2*m]])
-    assert expand(method.forcing_full) == Matrix([[u1], [u2], [-g*l*m*sin(q1)*cos(q2) - 2*g*l*m*sin(q1) - 
-                                            g*l*m*sin(q2)*cos(q1) + 2*l**2*m*u1*u2*sin(q2) + 
-                                            l**2*m*u2**2*sin(q2)], [-g*l*m*sin(q1)*cos(q2) - 
+    assert expand(method.forcing_full) == Matrix([[u1], [u2], [-g*l*m*sin(q1)*cos(q2) - 2*g*l*m*sin(q1) -
+                                            g*l*m*sin(q2)*cos(q1) + 2*l**2*m*u1*u2*sin(q2) +
+                                            l**2*m*u2**2*sin(q2)], [-g*l*m*sin(q1)*cos(q2) -
                                             g*l*m*sin(q2)*cos(q1) - l**2*m*u1**2*sin(q2)]])
 
 def test_two_dof_joints():
