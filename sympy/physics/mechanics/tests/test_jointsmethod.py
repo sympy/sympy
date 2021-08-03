@@ -1,7 +1,7 @@
 from sympy import symbols, Matrix, cos, sin, expand
 from sympy.physics.mechanics import (PinJoint, JointsMethod, Body, KanesMethod,
                                     PrismaticJoint, LagrangesMethod)
-from sympy.physics.vector import dynamicsymbols, ReferenceFrame
+from sympy.physics.vector import dynamicsymbols
 
 
 t = dynamicsymbols._t
@@ -30,29 +30,37 @@ def test_jointsmethod():
 def test_complete_simple_double_pendulum():
     q1, q2 = dynamicsymbols('q1 q2')
     u1, u2 = dynamicsymbols('u1 u2')
-    m, l = symbols('m l')
-    N = ReferenceFrame('N')
-    A = ReferenceFrame('A')
-    B = ReferenceFrame('B')
-    C = Body('C', frame=N)  # ceiling
-    PartP = Body('P', frame=A, mass=m)
-    PartR = Body('R', frame=B, mass=m)
+    m, l, g = symbols('m l g')
+    C = Body('C')  # ceiling
+    PartP = Body('P', mass=m)
+    PartR = Body('R', mass=m)
 
     J1 = PinJoint('J1', C, PartP, speeds=u1, coordinates=q1,
-                  child_joint_pos=-l*A.x, parent_axis=C.frame.z,
-                  child_axis=PartP.frame.z)
+                  child_joint_pos=-l*PartP.x, parent_axis=C.z,
+                  child_axis=PartP.z)
     J2 = PinJoint('J2', PartP, PartR, speeds=u2, coordinates=q2,
-                  child_joint_pos=-l*B.x, parent_axis=PartP.frame.z,
-                  child_axis=PartR.frame.z)
+                  child_joint_pos=-l*PartR.x, parent_axis=PartP.z,
+                  child_axis=PartR.z)
+
+    PartP.apply_force(m*g*C.x)
+    PartR.apply_force(m*g*C.x)
 
     method = JointsMethod(C, J1, J2)
-    method.form_eoms()
+    soln = method.form_eoms()
+    assert expand(soln) == Matrix([[-g*l*m*sin(q1)*cos(q2) - 2*g*l*m*sin(q1) - g*l*m*sin(q2)*cos(q1) + 
+                            2*l**2*m*u1*u2*sin(q2) + l**2*m*u2**2*sin(q2) - 
+                            2*l**2*m*cos(q2)*u1.diff() - l**2*m*cos(q2)*u2.diff() - 
+                            3*l**2*m*u1.diff() - l**2*m*u2.diff()], 
+                            [-g*l*m*sin(q1)*cos(q2) - g*l*m*sin(q2)*cos(q1) - l**2*m*u1**2*sin(q2) - 
+                            l**2*m*cos(q2)*u1.diff() - l**2*m*u1.diff() - 
+                            l**2*m*u2.diff()]])
     assert expand(method.mass_matrix_full) == Matrix([[1, 0, 0, 0], [0, 1, 0, 0],
                                         [0, 0, 2*l**2*m*cos(q2) + 3*l**2*m, l**2*m*cos(q2) + l**2*m],
                                         [0, 0, l**2*m*cos(q2) + l**2*m, l**2*m]])
-    assert expand(method.forcing_full) == Matrix([[u1], [u2], [2*l**2*m*u1*u2*sin(q2) +
-                                    l**2*m*u2**2*sin(q2)], [-l**2*m*u1**2*sin(q2)]])
-
+    assert expand(method.forcing_full) == Matrix([[u1], [u2], [-g*l*m*sin(q1)*cos(q2) - 2*g*l*m*sin(q1) - 
+                                            g*l*m*sin(q2)*cos(q1) + 2*l**2*m*u1*u2*sin(q2) + 
+                                            l**2*m*u2**2*sin(q2)], [-g*l*m*sin(q1)*cos(q2) - 
+                                            g*l*m*sin(q2)*cos(q1) - l**2*m*u1**2*sin(q2)]])
 
 def test_two_dof_joints():
     q1, q2, u1, u2 = dynamicsymbols('q1 q2 u1 u2')
