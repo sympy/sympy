@@ -8,8 +8,8 @@ from sympy import trigsimp
 from sympy import integrate
 from sympy import Matrix
 from sympy import sympify
-from sympy.core.expr import Expr
 from sympy.core.evalf import prec_to_dps
+from sympy.core.expr import Expr
 
 
 class Quaternion(Expr):
