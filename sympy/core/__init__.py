@@ -20,7 +20,7 @@ from .relational import ( Rel, Eq, Ne, Lt, Le, Gt, Ge,
     StrictLessThan )
 from .multidimensional import vectorize
 from .function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
-    Function, Subs, expand, PoleError, count_ops, AppliedFuncDerivative, \
+    Function, Subs, expand, PoleError, count_ops, \
     expand_mul, expand_log, expand_func, \
     expand_trig, expand_complex, expand_multinomial, nfloat, \
     expand_power_base, expand_power_exp, arity
@@ -73,7 +73,7 @@ __all__ = [
     'Function', 'Subs', 'expand', 'PoleError', 'count_ops', 'expand_mul',
     'expand_log', 'expand_func', 'expand_trig', 'expand_complex',
     'expand_multinomial', 'nfloat', 'expand_power_base', 'expand_power_exp',
-    'arity', 'AppliedFuncDerivative',
+    'arity',
 
     'PrecisionExhausted', 'N',
 

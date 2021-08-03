@@ -55,7 +55,7 @@ from .core import (sympify, SympifyError, cacheit, Basic, Atom,
         AlgebraicNumber, comp, mod_inverse, Pow, integer_nthroot, integer_log,
         Mul, prod, Add, Mod, Rel, Eq, Ne, Lt, Le, Gt, Ge, Equality, GreaterThan,
         LessThan, Unequality, StrictGreaterThan, StrictLessThan, vectorize,
-        Lambda, WildFunction, Derivative, AppliedFuncDerivative, diff, FunctionClass,
+        Lambda, WildFunction, Derivative, diff, FunctionClass,
         Function, Subs, expand, PoleError, count_ops, expand_mul, expand_log,
         expand_func, expand_trig, expand_complex, expand_multinomial, nfloat,
         expand_power_base, expand_power_exp, arity, PrecisionExhausted, N,
@@ -269,7 +269,7 @@ __all__ = [
     'expand_complex', 'expand_multinomial', 'nfloat', 'expand_power_base',
     'expand_power_exp', 'arity', 'PrecisionExhausted', 'N', 'evalf', 'Tuple',
     'Dict', 'gcd_terms', 'factor_terms', 'factor_nc', 'evaluate', 'Catalan',
-    'EulerGamma', 'GoldenRatio', 'TribonacciConstant', 'AppliedFuncDerivative',
+    'EulerGamma', 'GoldenRatio', 'TribonacciConstant',
 
     # sympy.logic
     'to_cnf', 'to_dnf', 'to_nnf', 'And', 'Or', 'Not', 'Xor', 'Nand', 'Nor',

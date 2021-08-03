@@ -719,9 +719,6 @@ def dsubs(eq, trans, newvars=None, reverse=False):
     It is required if the number of new variables is not the same as
     the number of old variables.
 
-    ``reverse``: A boolean variable that indicates if the transformation
-    is being done in the reverse direction.
-
     Returns
     =======
 
@@ -783,7 +780,7 @@ def dsubs(eq, trans, newvars=None, reverse=False):
     Re-substitute `v = y x` to get the solutions to the
     original equation
 
-    >>> sol = list(map(lambda sol: dsubs(sol, {v(t): y(x)/x, t: x}, reverse=True), solt))
+    >>> sol = list(map(lambda sol: dsubs(sol, {v(t): y(x)/x, t: x}), solt))
     >>> sol
     [Eq(y(x)/x, -sqrt(C1 + 2*log(x))), Eq(y(x)/x, sqrt(C1 + 2*log(x)))]
 
@@ -810,7 +807,7 @@ def dsubs(eq, trans, newvars=None, reverse=False):
     Re-substitute for `\phi(t)` and `t` to get the solution for
     the original equation.
 
-    >>> sol = logcombine(dsubs(solt, {phi(t): y(x), t: log(x)}, reverse=True), force=True)
+    >>> sol = logcombine(dsubs(solt, {phi(t): y(x), t: log(x)}), force=True)
     >>> sol
     Eq(y(x), C1*x**(-a/2 - sqrt(a**2 - 2*a - 4*b + 1)/2 + 1/2) + C2*x**(-a/2 + sqrt(a**2 - 2*a - 4*b + 1)/2 + 1/2))
     """
@@ -826,6 +823,7 @@ def dsubs(eq, trans, newvars=None, reverse=False):
         else:
             return Derivative(e, (sym, n))
 
+    reverse = len(eq.atoms(Derivative)) == 0
     if reverse:
         ints = list(eq.atoms(Integral))
         newints = ints.copy()

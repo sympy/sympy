@@ -1939,65 +1939,6 @@ class Derivative(Expr):
         # `_eval_derivative`:
         return expr._eval_derivative_n_times(v, count)
 
-class AppliedFuncDerivative(Expr):
-    """
-    >>> from sympy import symbols, Derivative, Function
-    >>> from sympy.core.function import AppliedFuncDerivative
-    >>> x, y, m = symbols('x y m')
-    >>> f = Function('f')
-    >>> AppliedFuncDerivative(f(x, y), 1,)
-    AppliedFuncDerivative(f(x, y), 1)
-    >>> AppliedFuncDerivative(f(x, m + y), 1, 2, 2, 1)
-    AppliedFuncDerivative(f(x, m + y), 1, 2, 2, 1)
-
-    If all arguments in the expression are symbols, then
-    doit and rewrite(Derivative) both function as the same.
-
-    >>> AppliedFuncDerivative(f(x, y), 1).doit()
-    Derivative(f(x, y), x)
-    >>> AppliedFuncDerivative(f(x, y), 1).rewrite(Derivative)
-    Derivative(f(x, y), x)
-
-    If one (or more) of the wrt arguments is (are) expressions,
-    doit doesn't change AppliedFuncDerivative whereas
-    rewrite(Derivative) changes it to Subs(Derivative(...), ...).
-
-    >>> AppliedFuncDerivative(f(x, m + y), 2).doit()
-    AppliedFuncDerivative(f(x, m + y), 2)
-    >>> AppliedFuncDerivative(f(x, y+m), 2).rewrite(Derivative)
-    Subs(Derivative(f(x, _xi_1), _xi_1), _xi_1, m + y)
-    """
-    def __new__(cls, expr, *index, **kwargs):
-        from sympy.core.numbers import Integer
-        cls.expr = expr
-        cls.index = index
-        if not len(index):
-            raise ValueError('Missing variable index to differentiate with respect to.')
-        for argindex in index:
-            if (type(argindex) != int and not isinstance(argindex, Integer)) or not (1 <= argindex <= len(expr.args)):
-                raise ArgumentIndexError(cls.__name__, argindex)
-        return Expr.__new__(cls, expr, *index)
-
-    def doit(self):
-        vars = self.expr.args
-        if all(list(map(lambda x: isinstance(vars[x-1], Symbol), set(self.index)))):
-            mapping = {k:vars[k-1] for k in range(1, len(self.expr.args) + 1)}
-            return Derivative(self.expr.func(*vars), *list(map(lambda x: mapping[x], self.index)))
-        return self
-
-    def _eval_rewrite_as_Derivative(self, *args, **hints):
-        vars = self.expr.args
-        dummy_vars = []
-        ct = 1
-        for var in vars:
-            if isinstance(var, Symbol):
-                dummy_vars.append(var)
-            else:
-                dummy_vars.append(Dummy('xi_%d'%ct))
-                ct += 1
-        mapping = {k:dummy_vars[k-1] for k in range(1, len(self.expr.args) + 1)}
-        return Subs(Derivative(self.expr.func(*dummy_vars), *list(map(lambda x: mapping[x], self.index))), \
-                dummy_vars, self.expr.args).doit()
 
 def _derivative_dispatch(expr, *variables, **kwargs):
     from sympy.matrices.common import MatrixCommon

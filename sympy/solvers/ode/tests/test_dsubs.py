@@ -63,20 +63,20 @@ def test_dsubs():
     eq = f(x).diff(x) - f(x)
     eqt = dsubs(eq, {x: exp(y), f(x): g(y)})
     solt = dsolve(eqt)
-    sol = dsubs(solt, {y: log(x), g(y): f(x)}, reverse=True)
+    sol = dsubs(solt, {y: log(x), g(y): f(x)})
     assert sol == Eq(f(x), C1*exp(x))
     assert checkodesol(eq, sol)
 
     eq = f(x).diff(x) - 2*f(x)/x + x**2*f(x)**2
     eqt = numer(dsubs(eq, {f(x): 1/g(t), x: t}).together())
     solt = dsolve(eqt)
-    sol = dsubs(solt, {g(t): 1/f(x), t: x}, reverse=True)
+    sol = dsubs(solt, {g(t): 1/f(x), t: x})
     assert sol == Eq(1/f(x), C1/x**2 + x**3/5)
     assert checkodesol(eq, sol)
 
     eq = x**2*f(x).diff(x, 2) + 10*x*f(x).diff(x) + 20*f(x)
     eqt = dsubs(eq, {x: exp(t), f(x): g(t)}).expand()
     solt = dsolve(eqt)
-    sol = dsubs(solt, {g(t): f(x), t: log(x)}, reverse=True)
+    sol = dsubs(solt, {g(t): f(x), t: log(x)})
     assert sol == Eq(f(x), (C1 + C2/x)/x**4)
     assert checkodesol(eq, sol)

@@ -622,11 +622,6 @@ def test_sympy__core__function__Derivative():
     from sympy.core.function import Derivative
     assert _test_args(Derivative(2, x, y, 3))
 
-def test_sympy__core__function__AppliedFuncDerivative():
-    from sympy.core.function import AppliedFuncDerivative
-    f = Function('f')
-    assert _test_args(AppliedFuncDerivative(f(x**2, y), S(1), S(2), S(2)))
-
 
 @SKIP("abstract class")
 def test_sympy__core__function__Function():
