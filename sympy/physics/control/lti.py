@@ -1574,13 +1574,14 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         ========
 
         >>> from sympy.abc import p
-        >>> from sympy.physics.control.lti import TransferFunction, Parallel, Series
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix, MIMOParallel
         >>> G1 = TransferFunction(p**2 + 2*p + 4, p - 6, p)
         >>> G2 = TransferFunction(p, 4 - p, p)
         >>> G3 = TransferFunction(0, p**4 - 1, p)
-        >>> Parallel(G1, G2).var
-        p
-        >>> Parallel(-G3, Series(G1, G2)).var
+        >>> G4 = TransferFunction(p**2, p**2 - 1, p)
+        >>> tfm_a = TransferFunctionMatrix([[G1, G2], [G3, G4]])
+        >>> tfm_b = TransferFunctionMatrix([[G2, G1], [G4, G3]])
+        >>> MIMOParallel(tfm_a, tfm_b).var
         p
 
         """
