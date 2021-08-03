@@ -7561,3 +7561,7 @@ def test_diffgeom():
     assert pretty(rect) == "rect"
     b = BaseScalarField(rect, 0)
     assert pretty(b) == "x"
+
+def test_issue_21814():
+    assert upretty(Mul(x + y, Rational(1, 2), evaluate=False)) == 'x + y\n─────\n  2  '
+    assert upretty(Mul(Rational(1, 2), x + y, evaluate=False)) == 'x + y\n─────\n  2  '
