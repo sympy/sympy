@@ -1658,19 +1658,34 @@ class MIMOParallel(MIMOLinearTimeInvariant):
 
 class Feedback(Basic):
     """
-    A class for representing negative feedback interconnection between two
-    input/output systems. The first argument, ``num``, is called as the
-    primary plant or the numerator, and the second argument, ``den``, is
-    called as the feedback plant (which is often a feedback controller) or
-    the denominator. Both ``num`` and ``den`` can either be ``Series`` or
+    A class for representing closed-loop feedback interconnection between two
+    SISO input/output systems. The first argument, ``plant``, is the
+    primary plant of the closed-loop system or in simple words, the transfer
+    function of the system/process to be controlled. The second argument, ``feedback_controller``,
+    as the name suggests, controls the fed back signal to the ``plant``. It is the equivalent
+    transfer function of the feedback controller system which is generally a sensor system that
+    constantly takes in the output signal produced and feeds it back to the primary
+    plant (or a plant-controller if one is connected in series with the plant).
+
+    Generally, in control theory, we want the output signal to follow the input signal or in
+    other words, the error signal (difference between the output signal and input signal) should
+    be as small as possible. This is the key purpose of the **negative** feedback loop. The output
+    signal produced by the feedback controller is subtracted from the input signal to produce
+    the error signal ("difference" is taken and hence the name **Negative Feedback**). The error signal
+    is fed back to the plant/plant-controller through the feedback loop and that in turn produces the
+    optimal output. Also, in some systems, we feed back the sum of output signals from the feedback
+    controller and reference (input) signal to the plant. This type of feedback loop is known as the
+    positive feedback loop ("sum" is taken and hence the name **Positive Feedback**).
+
+    Both ``plant`` and ``feedback_controller`` can either be ``Series`` or
     ``TransferFunction`` objects.
 
     Parameters
     ==========
 
-    num : Series, TransferFunction
+    plant : Series, TransferFunction
         The primary plant.
-    den : Series, TransferFunction
+    controller : Series, TransferFunction
         The feedback plant (often a feedback controller).
 
     Raises
