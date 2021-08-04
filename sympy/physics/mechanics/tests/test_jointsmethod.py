@@ -48,19 +48,19 @@ def test_complete_simple_double_pendulum():
     method = JointsMethod(C, J1, J2)
     soln = method.form_eoms()
     assert expand(soln) == Matrix([[-g*l*m*sin(q1)*cos(q2) - 2*g*l*m*sin(q1) - g*l*m*sin(q2)*cos(q1) +
-                            2*l**2*m*u1*u2*sin(q2) + l**2*m*u2**2*sin(q2) -
-                            2*l**2*m*cos(q2)*u1.diff() - l**2*m*cos(q2)*u2.diff() -
-                            3*l**2*m*u1.diff() - l**2*m*u2.diff()],
-                            [-g*l*m*sin(q1)*cos(q2) - g*l*m*sin(q2)*cos(q1) - l**2*m*u1**2*sin(q2) -
-                            l**2*m*cos(q2)*u1.diff() - l**2*m*u1.diff() -
-                            l**2*m*u2.diff()]])
+                                        2*l**2*m*u1*u2*sin(q2) + l**2*m*u2**2*sin(q2) -
+                                        2*l**2*m*cos(q2)*u1.diff() - l**2*m*cos(q2)*u2.diff() -
+                                        3*l**2*m*u1.diff() - l**2*m*u2.diff()],
+                                    [-g*l*m*sin(q1)*cos(q2) - g*l*m*sin(q2)*cos(q1) - l**2*m*u1**2*sin(q2) -
+                                        l**2*m*cos(q2)*u1.diff() - l**2*m*u1.diff() -
+                                        l**2*m*u2.diff()]])
     assert expand(method.mass_matrix_full) == Matrix([[1, 0, 0, 0], [0, 1, 0, 0],
-                                        [0, 0, 2*l**2*m*cos(q2) + 3*l**2*m, l**2*m*cos(q2) + l**2*m],
-                                        [0, 0, l**2*m*cos(q2) + l**2*m, l**2*m]])
+                                            [0, 0, 2*l**2*m*cos(q2) + 3*l**2*m, l**2*m*cos(q2) + l**2*m],
+                                            [0, 0, l**2*m*cos(q2) + l**2*m, l**2*m]])
     assert expand(method.forcing_full) == Matrix([[u1], [u2], [-g*l*m*sin(q1)*cos(q2) - 2*g*l*m*sin(q1) -
-                                            g*l*m*sin(q2)*cos(q1) + 2*l**2*m*u1*u2*sin(q2) +
-                                            l**2*m*u2**2*sin(q2)], [-g*l*m*sin(q1)*cos(q2) -
-                                            g*l*m*sin(q2)*cos(q1) - l**2*m*u1**2*sin(q2)]])
+                                                    g*l*m*sin(q2)*cos(q1) + 2*l**2*m*u1*u2*sin(q2) +
+                                                    l**2*m*u2**2*sin(q2)], [-g*l*m*sin(q1)*cos(q2) -
+                                                    g*l*m*sin(q2)*cos(q1) - l**2*m*u1**2*sin(q2)]])
 
 def test_two_dof_joints():
     q1, q2, u1, u2 = dynamicsymbols('q1 q2 u1 u2')
@@ -119,19 +119,19 @@ def test_chaos_pendulum():
     method = JointsMethod(C, J1, J2)
     soln = method.form_eoms()
     assert expand(soln) == Matrix([[-IAxx*omega.diff() - 2*IBxx*alpha*omega*sin(phi)*cos(phi) -
-                                IBxx*sin(phi)**2*omega.diff() + 2*IByy*alpha*omega*sin(phi)*cos(phi) -
-                                IByy*cos(phi)**2*omega.diff() - g*h*mA*sin(theta)/4 -
-                                g*h*mB*sin(theta)/2 + g*lB*mA*sin(theta)/2 - h**2*mA*omega.diff()/16 -
-                                h**2*mB*omega.diff()/4 + h*lB*mA*omega.diff()/4 - lB**2*mA*omega.diff()/4],
-                                [IBxx*omega**2*sin(phi)*cos(phi) - IByy*omega**2*sin(phi)*cos(phi) -
-                                IBzz*alpha.diff()]])
+                                        IBxx*sin(phi)**2*omega.diff() + 2*IByy*alpha*omega*sin(phi)*cos(phi) -
+                                        IByy*cos(phi)**2*omega.diff() - g*h*mA*sin(theta)/4 -
+                                        g*h*mB*sin(theta)/2 + g*lB*mA*sin(theta)/2 - h**2*mA*omega.diff()/16 -
+                                        h**2*mB*omega.diff()/4 + h*lB*mA*omega.diff()/4 - lB**2*mA*omega.diff()/4],
+                                    [IBxx*omega**2*sin(phi)*cos(phi) - IByy*omega**2*sin(phi)*cos(phi) -
+                                        IBzz*alpha.diff()]])
     assert expand(method.mass_matrix_full) == Matrix([[1, 0, 0, 0], [0, 1, 0, 0],
-                                        [0, 0, IAxx + IBxx*sin(phi)**2 + IByy*cos(phi)**2 +
-                                        h**2*mA/16 + h**2*mB/4 - h*lB*mA/4 + lB**2*mA/4, 0],
-                                        [0, 0, 0, IBzz]])
+                                                [0, 0, IAxx + IBxx*sin(phi)**2 + IByy*cos(phi)**2 +
+                                                    h**2*mA/16 + h**2*mB/4 - h*lB*mA/4 + lB**2*mA/4, 0],
+                                                [0, 0, 0, IBzz]])
     assert expand(method.forcing_full) == Matrix([[omega], [alpha],
-                                    [-2*IBxx*alpha*omega*sin(phi)*cos(phi) +
-                                    2*IByy*alpha*omega*sin(phi)*cos(phi) - g*h*mA*sin(theta)/4 -
-                                    g*h*mB*sin(theta)/2 + g*lB*mA*sin(theta)/2],
-                                    [IBxx*omega**2*sin(phi)*cos(phi) -
-                                    IByy*omega**2*sin(phi)*cos(phi)]])
+                                            [-2*IBxx*alpha*omega*sin(phi)*cos(phi) +
+                                                2*IByy*alpha*omega*sin(phi)*cos(phi) - g*h*mA*sin(theta)/4 -
+                                                g*h*mB*sin(theta)/2 + g*lB*mA*sin(theta)/2],
+                                            [IBxx*omega**2*sin(phi)*cos(phi) -
+                                                IByy*omega**2*sin(phi)*cos(phi)]])
