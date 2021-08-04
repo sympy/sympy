@@ -582,9 +582,9 @@ def test_Beam3D():
     assert b2.reaction_loads == {R1: -750, R2: -750}
 
     b2.solve_slope_deflection()
-    assert b2.slope() == [0, 0, x**2*(50*x - 2250)/(6*E*I) + 3750*x/(E*I)]
-    expected_deflection = (x*(25*A*G*x**3/2 - 750*A*G*x**2 + 4500*E*I +
-        15*x*(750*A*G - 10*E*I))/(6*A*E*G*I))
+    assert b2.slope() == [0, 0, 25*x**3/(3*E*I) - 375*x**2/(E*I) + 3750*x/(E*I)]
+    expected_deflection = 25*x**4/(12*E*I) - 125*x**3/(E*I) + 1875*x**2/(E*I) - \
+        25*x**2/(A*G) + 750*x/(A*G)
     dx, dy, dz = b2.deflection()
     assert dx == dz == 0
     assert dy == expected_deflection

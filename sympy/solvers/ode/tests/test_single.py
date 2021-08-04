@@ -1014,14 +1014,14 @@ def _get_examples_ode_sol_factorable():
     # This is from issue: https://github.com/sympy/sympy/issues/9446
     'fact_18':{
         'eq': Eq(f(2 * x), sin(Derivative(f(x)))),
-        'sol': [Eq(f(x), C1 + pi*x - Integral(asin(f(2*x)), x)), Eq(f(x), C1 + Integral(asin(f(2*x)), x))],
+        'sol': [Eq(f(x), C1 + Integral(pi - asin(f(2*x)), x)), Eq(f(x), C1 + Integral(asin(f(2*x)), x))],
         'checkodesol_XFAIL':True
     },
 
     # This is from issue: https://github.com/sympy/sympy/issues/7093
     'fact_19': {
         'eq': Derivative(f(x), x)**2 - x**3,
-        'sol': [Eq(f(x), C1 - 2*x*sqrt(x**3)/5), Eq(f(x), C1 + 2*x*sqrt(x**3)/5)],
+        'sol': [Eq(f(x), C1 - 2*x**Rational(5,2)/5), Eq(f(x), C1 + 2*x**Rational(5,2)/5)],
     },
 
     'fact_20': {
@@ -1343,7 +1343,7 @@ def _get_examples_ode_sol_nth_order_reducible():
 
     'reducible_10': {
         'eq': f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x),
-        'sol': [Eq(f(x), C1 + C2*(x*sin(x) + cos(x)) + C3*(-x*cos(x) + sin(x)) + C4*sin(x) + C5*cos(x))],
+        'sol': [Eq(f(x), C1 + C2*x*sin(x) + C2*cos(x) - C3*x*cos(x) + C3*sin(x) + C4*sin(x) + C5*cos(x))],
         'slow': True,
     },
 
@@ -1357,7 +1357,8 @@ def _get_examples_ode_sol_nth_order_reducible():
     # Needs to be a way to know how to combine derivatives in the expression
     'reducible_12': {
         'eq': Derivative(x*f(x), x, x, x) + Derivative(f(x), x, x, x),
-        'sol': [Eq(f(x), C1 + C2*x + C3/Mul(2, (x + 1), evaluate=False))], # 2-arg Mul!
+        'sol': [Eq(f(x), C1 + C3/Mul(2, (x**2 + 2*x + 1), evaluate=False) +
+        x*(C2 + C3/Mul(2, (x**2 + 2*x + 1), evaluate=False)))], # 2-arg Mul!
         'slow': True,
     },
     }
