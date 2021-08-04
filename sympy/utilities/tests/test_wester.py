@@ -2673,8 +2673,8 @@ def test_X10():
 
 def test_X11():
     z, w = symbols('z w')
-    assert (series(log(sinh(z) * cosh(z + w)), z, x0=0, n=2) ==
-            log(cosh(w)) + log(z) + z*sinh(w)/cosh(w) + O(z**2))
+    assert (series(log(sinh(z) * cosh(z + w)), z, x0=0, n=3) == log(cosh(w))
+        + log(z) + z*sinh(w)/cosh(w) - z**2*sinh(w)**2/(2*cosh(w)**2) + O(z**3))
 
 
 @XFAIL

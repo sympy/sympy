@@ -493,6 +493,8 @@ class exp(ExpBase, metaclass=ExpMeta):
             nterms = ceiling(n/cf)
         exp_series = exp(t)._taylor(t, nterms)
         r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
+        if r.subs(logx, log(x)) == self:
+            return r
         if cf and cf > 1:
             r += Order((arg_series - arg0)**n, x)/x**((cf-1)*n)
         else:
@@ -991,7 +993,10 @@ class log(Function):
             n = p.getn()
         _, d = coeff_exp(p, x)
         if not d.is_positive:
-            return log(a) + b*logx + Order(x**n, x)
+            if (log(a) + b*log(x)) == self:
+                return log(a) + b*logx
+            else:
+                return log(a) + b*logx + Order(x**(n + 1), x)
 
         def mul(d1, d2):
             res = {}
@@ -1031,8 +1036,18 @@ class log(Function):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import I, im, re
         arg0 = self.args[0].together()
-
         arg = arg0.as_leading_term(x, cdir=cdir)
+
+        if logx is not None:
+            try:
+                c, e = arg.leadterm(x, cdir=cdir)
+            except ValueError:
+                # arg must be approaching infinity, so should not be replaced
+                # by a constant
+                pass
+            else:
+                return log(c) + e*logx
+
         x0 = arg0.subs(x, 0)
         if (x0 is S.NaN and logx is None):
             x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
