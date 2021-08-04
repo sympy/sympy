@@ -66,7 +66,11 @@ With the problem setup, the equations of motion can be generated using the
 ``JointsMethod`` class with KanesMethod in backend. ::
 
     >>> method = JointsMethod(wall, slider, rev1, rev2)
-    >>> soln = method.form_eoms()
+    >>> method.form_eoms()
+    Matrix([
+    [               -c*u1(t) - k*q1(t) + 2*l*mb*u2(t)**2*sin(q2(t))/3 - l*mc*(-sin(q2(t))*cos(q3(t)) - sin(q3(t))*cos(q2(t)))*(u2(t) + u3(t))*u3(t) - mc*(l*(-sin(q2(t))*sin(q3(t)) + cos(q2(t))*cos(q3(t))) + l*cos(q2(t))/3)*Derivative(u3(t), t) + mc*(2*l*u2(t)/3 + l*u3(t)/3)*u2(t)*sin(q2(t)) - (2*l*mb*cos(q2(t))/3 + 2*l*mc*cos(q2(t))/3)*Derivative(u2(t), t) - (ma + mb + mc)*Derivative(u1(t), t) + F(t)],
+    [                                                                                                                  -2*g*l*mb*sin(q2(t))/3 - 2*g*l*mc*sin(q2(t))/3 + 2*l**2*mc*(u2(t) + u3(t))*u3(t)*sin(q3(t))/3 - mc*(2*l**2*cos(q3(t))/3 + 2*l**2/9)*Derivative(u3(t), t) - (2*l*mb*cos(q2(t))/3 + 2*l*mc*cos(q2(t))/3)*Derivative(u1(t), t) - (IBzz + 4*l**2*mb/9 + 4*l**2*mc/9)*Derivative(u2(t), t) + T(t)],
+    [-g*l*mc*(sin(q2(t))*cos(q3(t)) + sin(q3(t))*cos(q2(t))) - g*l*mc*sin(q2(t))/3 + kT*q3(t) + l**2*mc*(u2(t) + u3(t))*u3(t)*sin(q3(t))/3 - l*mc*(2*l*u2(t)/3 + l*u3(t)/3)*u2(t)*sin(q3(t)) - mc*(l*(-sin(q2(t))*sin(q3(t)) + cos(q2(t))*cos(q3(t))) + l*cos(q2(t))/3)*Derivative(u1(t), t) - mc*(2*l**2*cos(q3(t))/3 + 2*l**2/9)*Derivative(u2(t), t) - mc*(2*l**2*cos(q3(t))/3 + 10*l**2/9)*Derivative(u3(t), t)]])
 
     >>> method.mass_matrix_full
     Matrix([

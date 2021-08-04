@@ -129,7 +129,7 @@ def test_chaos_pendulum():
                                         [0, 0, IAxx + IBxx*sin(phi)**2 + IByy*cos(phi)**2 +
                                         h**2*mA/16 + h**2*mB/4 - h*lB*mA/4 + lB**2*mA/4, 0],
                                         [0, 0, 0, IBzz]])
-    assert expand(method.forcing_full) == Matrix([[omega], [alpha], 
+    assert expand(method.forcing_full) == Matrix([[omega], [alpha],
                                     [-2*IBxx*alpha*omega*sin(phi)*cos(phi) +
                                     2*IByy*alpha*omega*sin(phi)*cos(phi) - g*h*mA*sin(theta)/4 -
                                     g*h*mB*sin(theta)/2 + g*lB*mA*sin(theta)/2],
