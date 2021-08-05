@@ -2755,3 +2755,7 @@ def test_pickleable():
 def test_printing_latex_array_expressions():
     assert latex(ArraySymbol("A", 2, 3, 4)) == "A"
     assert latex(ArrayElement("A", (2, 1/(1-x), 0))) == "{{A}_{2, \\frac{1}{1 - x}, 0}}"
+
+def test_issue_21814():
+    assert latex(Mul(x + y, Rational(1, 2), evaluate=False)) == "\\frac{x + y}{2}"
+    assert latex(Mul(Rational(1, 2), x + y, evaluate=False)) == "\\frac{x + y}{2}"
