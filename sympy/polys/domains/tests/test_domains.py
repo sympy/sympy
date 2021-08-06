@@ -1,6 +1,6 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import I, S, sqrt, sin, oo, Poly, Float, Integer, Rational, pi
+from sympy import I, S, sqrt, sin, oo, Poly, Float, Integer, Rational, pi, exp, E
 from sympy.abc import x, y, z
 
 from sympy.utilities.iterables import cartes
@@ -1180,3 +1180,9 @@ def test_Domain_is_nonpositive():
     a, b = [CC.convert(x) for x in (2 + I, 5)]
     assert CC.is_nonpositive(a) == False
     assert CC.is_nonpositive(b) == False
+
+def test_exponential_domain():
+    K = ZZ[E]
+    eK = K.from_sympy(E)
+    assert K.from_sympy(exp(3)) == eK ** 3
+    assert K.convert(exp(3)) == eK ** 3
