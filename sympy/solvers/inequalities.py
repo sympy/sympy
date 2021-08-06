@@ -1116,7 +1116,7 @@ def linear_programming(A, B, C, D):
     (11/3, [0, 1/3, 2/3], [0, 2/3, 1])
 
     The method also works with inegers, floats, symbolic expressions (like sqrt(2)) and symbols (like x).
-    >>> from sympy import Symbol, Float, sqrt
+    >>> from sympy import Symbol, sqrt
     >>> x = Symbol('x')
     >>> x = 1
     >>> A = Matrix([[0, x, sqrt(2)], [-x, 0, -3], [2, x, 7]])
