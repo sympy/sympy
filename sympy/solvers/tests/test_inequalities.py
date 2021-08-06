@@ -3,7 +3,7 @@
 from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo, I,
                    Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
                    Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs,
-                   Piecewise, Rational)
+                   Piecewise, Rational, Float, symbols)
 from sympy.matrices.dense import Matrix
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
@@ -491,5 +491,22 @@ def test_linear_programming():
     optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
     assert optimum == Rational(-25, 7)
     B = Matrix([-4, 8, 10])
+    optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
+    assert optimum == -4
+    # input contains Floats
+    A = Matrix([[1, -1, Float(2)], [-1, 2, Float(-3)], [2, 1, -7]])
+    optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
+    assert optimum == -4
+    # input contains symbolic expression (sqrt(2) for example)
+    A = Matrix([[1, -1, sqrt(2)], [-1, 2, -3], [2, 1, -7]])
+    optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
+    assert optimum == -4
+    # input contains symbols
+    x, y, z, w = symbols("x y z w")
+    x = 1
+    y = 2
+    z = -3
+    w = -7
+    A = Matrix([[x, -x, y], [-x, y, z], [y, x, w]])
     optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
     assert optimum == -4
