@@ -1119,9 +1119,9 @@ def linear_programming(A, B, C, D):
     >>> from sympy import Symbol, Float, sqrt
     >>> x = Symbol('x')
     >>> x = Float(1)
-    >>> A = Matrix([[0, x, sqrt(2)], [-x, 0, -3], [2, x, 7]])
-    >>> B = Matrix([3, -2, Float(5)])
-    >>> C = Matrix([[1, x, 5]])
+    >>> A = Matrix([[0, x, sqrt(2)], [-x, 0, -3.0], [2.0, x, 7.0]])
+    >>> B = Matrix([3.0, -2, Float(5)])
+    >>> C = Matrix([[x, x, Float(5)]])
     >>> linear_programming(A, B, C, D)
     (3.66666666666667, [0, 0.333333333333333, 0.666666666666667], [0, 0.666666666666667, 1.00000000000000])
     """
