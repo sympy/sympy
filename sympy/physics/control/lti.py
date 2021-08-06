@@ -1,4 +1,4 @@
-from sympy import Basic, Add, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots
+from sympy import Basic, Add, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots, factor
 from sympy.core.containers import Tuple
 from sympy.core.evalf import EvalfMixin, prec_to_dps
 from sympy.core.logic import fuzzy_and
@@ -7,11 +7,11 @@ from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify, _sympify
 from sympy.polys import Poly, rootof
 from sympy.series import limit
-from sympy.matrices import ImmutableMatrix
+from sympy.matrices import ImmutableMatrix, eye
 from sympy.matrices.expressions import MatMul, MatAdd
 
 __all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
-    'Feedback', 'TransferFunctionMatrix']
+    'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix']
 
 
 def _roots(poly, var):
@@ -1656,24 +1656,27 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         return MIMOParallel(*arg_list)
 
 
-class Feedback(Basic):
+class Feedback(SISOLinearTimeInvariant):
     """
     A class for representing closed-loop feedback interconnection between two
     SISO input/output systems. The first argument, ``plant``, is the
     primary plant of the closed-loop system or in simple words, the transfer
-    function of the system/process to be controlled. The second argument, ``feedback_controller``,
-    as the name suggests, controls the fed back signal to the ``plant``. It is the equivalent
-    transfer function of the feedback controller system which is generally a sensor system that
-    constantly takes in the output signal produced and feeds it back to the primary
-    plant (or a plant-controller if one is connected in series with the plant).
+    function representing the system/process to be controlled. Most of the time, a controller system is also
+    placed in series with the plant. This controller is known as the **plant controller** as it controls
+    the plant by varying the input that goes into plant. The second argument, ``feedback_controller``,
+    as the name suggests, controls the fed back signal to the ``plant``. It is the equivalent transfer
+    function of the feedback controling system which is generally a sensor system that constantly
+    takes in the output signal produced and feeds it back to the primary plant (or a plant-controller
+    if one is connected in series with the plant). Note that the feedback controller is not same as the
+    plant controller. 
 
     Generally, in control theory, we want the output signal to follow the input signal or in
-    other words, the error signal (difference between the output signal and input signal) should
+    other words, the error signal (difference between the output signal and input signal) to
     be as small as possible. This is the key purpose of the **negative** feedback loop. The output
-    signal produced by the feedback controller is subtracted from the input signal to produce
+    signal produced by the feedback controller is subtracted from the reference (input) signal to produce
     the error signal ("difference" is taken and hence the name **Negative Feedback**). The error signal
     is fed back to the plant/plant-controller through the feedback loop and that in turn produces the
-    optimal output. Also, in some systems, we feed back the sum of output signals from the feedback
+    optimal output. In some systems, we feed back the sum of output signals from the feedback
     controller and reference (input) signal to the plant. This type of feedback loop is known as the
     positive feedback loop ("sum" is taken and hence the name **Positive Feedback**).
 
@@ -1684,9 +1687,17 @@ class Feedback(Basic):
     ==========
 
     plant : Series, TransferFunction
-        The primary plant.
-    controller : Series, TransferFunction
-        The feedback plant (often a feedback controller).
+        The primary plant. Also commonly known as the open
+        loop gain / open-loop tranfer function.
+    feedback_controller : Series, TransferFunction, optional
+        The feedback plant (often a feedback controller). Also
+        commonly known as the feedback factor.
+        If not specified explicitly, the feedback_controller is
+        assumed to be unit (1) transfer function.
+    ftype : int, optional
+        The type of closed-loop feedback. Can either be ``1`` 
+        (for positive feedback) or ``-1`` (for negative feedback).
+        Default value is `-1`.
 
     Raises
     ======
@@ -1707,17 +1718,17 @@ class Feedback(Basic):
     >>> controller = TransferFunction(5*s - 10, s + 7, s)
     >>> F1 = Feedback(plant, controller)
     >>> F1
-    Feedback(TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s), TransferFunction(5*s - 10, s + 7, s))
+    Feedback(TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s), TransferFunction(5*s - 10, s + 7, s), -1)
     >>> F1.var
     s
     >>> F1.args
-    (TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s), TransferFunction(5*s - 10, s + 7, s))
+    (TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s), TransferFunction(5*s - 10, s + 7, s), -1)
 
     You can get the primary and the feedback plant using ``.num`` and ``.den`` respectively.
 
-    >>> F1.num
+    >>> F1.plant
     TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
-    >>> F1.den
+    >>> F1.feedback_controller
     TransferFunction(5*s - 10, s + 7, s)
 
     You can get the resultant closed loop transfer function obtained by negative feedback
@@ -1734,9 +1745,9 @@ class Feedback(Basic):
     To negate a ``Feedback`` object, the ``-`` operator can be prepended:
 
     >>> -F1
-    Feedback(TransferFunction(-3*s**2 - 7*s + 3, s**2 - 4*s + 2, s), TransferFunction(5*s - 10, s + 7, s))
+    Feedback(TransferFunction(-3*s**2 - 7*s + 3, s**2 - 4*s + 2, s), TransferFunction(10 - 5*s, s + 7, s), -1)
     >>> -F2
-    Feedback(Series(TransferFunction(-1, 1, s), TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s), TransferFunction(5*s + 10, s + 10, s)), TransferFunction(1, 1, s))
+    Feedback(Series(TransferFunction(-1, 1, s), TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s), TransferFunction(5*s + 10, s + 10, s)), TransferFunction(-1, 1, s), -1)
 
     See Also
     ========
@@ -1744,27 +1755,34 @@ class Feedback(Basic):
     TransferFunction, Series, Parallel
 
     """
-    def __new__(cls, num, den):
-        if not (isinstance(num, (TransferFunction, Series))
-            and isinstance(den, (TransferFunction, Series))):
-            raise TypeError("Unsupported type for numerator or denominator of Feedback.")
+    def __new__(cls, plant, feedback_controller=None, ftype=-1):
+        if not (isinstance(plant, (TransferFunction, Series))
+            and isinstance(feedback_controller, (TransferFunction, Series))):
+            raise TypeError("Unsupported type for `plant` or `feedback_contoller` of Feedback.")
 
-        if num == den:
-            raise ValueError("The numerator cannot be equal to the denominator.")
-        if not num.var == den.var:
-            raise ValueError("Both numerator and denominator should be using the"
+        if not feedback_controller:
+            feedback_controller = TransferFunction(1, 1, plant.var)
+
+        if ftype not in [-1, 1]:
+            raise ValueError("Unsupported type for feedback. ")
+
+        if Mul(plant.to_expr(), feedback_controller.to_expr(), evaluate=True) == -ftype:
+            raise ValueError("The equivalent system will have zero denominator.")
+        if plant.var != feedback_controller.var:
+            raise ValueError("Both `plant` and `feedback_controller` should be using the"
                 " same complex variable.")
-        obj = super().__new__(cls, num, den)
-        obj._num = num
-        obj._den = den
-        obj._var = num.var
+        obj = super().__new__(cls, plant, feedback_controller, _sympify(ftype))
+        obj._plant = plant
+        obj._feedback_controller = feedback_controller
+        obj._var = plant.var
+        obj._ftype = ftype
 
         return obj
 
     @property
-    def num(self):
+    def plant(self):
         """
-        Returns the primary plant of the negative feedback closed loop.
+        Returns the primary plant of the closed feedback loop.
 
         Examples
         ========
@@ -1774,23 +1792,22 @@ class Feedback(Basic):
         >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
         >>> controller = TransferFunction(5*s - 10, s + 7, s)
         >>> F1 = Feedback(plant, controller)
-        >>> F1.num
+        >>> F1.plant
         TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
         >>> G = TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p)
         >>> C = TransferFunction(5*p + 10, p + 10, p)
         >>> P = TransferFunction(1 - s, p + 2, p)
         >>> F2 = Feedback(TransferFunction(1, 1, p), G*C*P)
-        >>> F2.num
+        >>> F2.plant
         TransferFunction(1, 1, p)
 
         """
-        return self._num
+        return self._plant
 
     @property
-    def den(self):
+    def feedback_controller(self):
         """
-        Returns the feedback plant (often a feedback controller) of the
-        negative feedback closed loop.
+        Returns the feedback controller of the closed feedback loop.
 
         Examples
         ========
@@ -1800,17 +1817,17 @@ class Feedback(Basic):
         >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
         >>> controller = TransferFunction(5*s - 10, s + 7, s)
         >>> F1 = Feedback(plant, controller)
-        >>> F1.den
+        >>> F1.feedback_controller
         TransferFunction(5*s - 10, s + 7, s)
         >>> G = TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p)
         >>> C = TransferFunction(5*p + 10, p + 10, p)
         >>> P = TransferFunction(1 - s, p + 2, p)
         >>> F2 = Feedback(TransferFunction(1, 1, p), G*C*P)
-        >>> F2.den
+        >>> F2.feedback_controller
         Series(TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p), TransferFunction(5*p + 10, p + 10, p), TransferFunction(1 - s, p + 2, p))
 
         """
-        return self._den
+        return self._feedback_controller
 
     @property
     def var(self):
@@ -1838,7 +1855,21 @@ class Feedback(Basic):
         """
         return self._var
 
-    def doit(self, **kwargs):
+    @property
+    def ftype(self):
+        return self._ftype
+
+    @property
+    def sensitivity(self):
+        """
+        Returns the sensitivity function of the feedback loop. Sensitivity
+        of a closed-loop system is the ratio of change in the open
+        loop gain to the change in the closed loop gain.
+        """
+
+        return 1/(1 - self.ftype*self.plant*self.feedback_controller)
+
+    def doit(self, cancel=False, expand=False, **kwargs):
         """
         Returns the resultant closed loop transfer function obtained by the
         negative feedback interconnection.
@@ -1859,18 +1890,241 @@ class Feedback(Basic):
         TransferFunction((s**2 + 2*s + 3)*(2*s**2 + 5*s + 1), (s**2 + 2*s + 3)*(3*s**2 + 7*s + 4), s)
 
         """
-        arg_list = list(self.num.args) if isinstance(self.num, Series) else [self.num]
+        arg_list = list(self.plant.args) if isinstance(self.plant, Series) else [self.plant]
         # F_n and F_d are resultant TFs of num and den of Feedback.
-        F_n, tf = self.num.doit(), TransferFunction(1, 1, self.num.var)
-        F_d = Parallel(tf, Series(self.den, *arg_list)).doit()
+        F_n, unit = self.plant.doit(), TransferFunction(1, 1, self.plant.var)
+        if self.ftype == -1:
+            F_d = Parallel(unit, Series(self.feedback_controller, *arg_list)).doit()
+        else:
+            F_d = Parallel(unit, -Series(self.feedback_controller, *arg_list)).doit()
+        _tf = TransferFunction(F_n.num*F_d.den, F_n.den*F_d.num, F_n.var)
 
-        return TransferFunction(F_n.num*F_d.den, F_n.den*F_d.num, F_n.var)
+        _num, _den = _tf.num, _tf.den
 
-    def _eval_rewrite_as_TransferFunction(self, num, den, **kwargs):
+        if cancel:
+            _num = factor(_num)
+            _den = factor(_den)
+            _num, _den = (_num/_den).as_numer_denom()
+
+        if expand:
+            _num, _den = (expand(_num), expand(_den))
+
+        return TransferFunction(_num, _den, self.var)
+
+    def _eval_rewrite_as_TransferFunction(self, num, den, ftype, **kwargs):
         return self.doit()
 
     def __neg__(self):
-        return Feedback(-self.num, self.den)
+        return Feedback(-self.plant, -self.feedback_controller, self.ftype)
+
+
+def _is_invertible(a, b, ftype):
+    """
+    Checks whether a given pair of plant and feedback_controller
+    systems passed is invertible or not.
+    """
+    _mat = eye(a.num_inputs) - ftype*(a._expr_mat)*(b._expr_mat)
+    _det = _mat.det()
+
+    return _det != 0
+
+
+class MIMOFeedback(MIMOLinearTimeInvariant):
+    """
+    A class for representing closed-loop feedback interconnection between two
+    MIMO input/output systems.
+
+    Parameters
+    ==========
+
+    plant : MIMOSeries, TransferFunctionMatrix
+        The primary plant.
+    feedback_controller : MIMOSeries, TransferFunctionMatrix
+        The feedback plant (often a feedback controller).
+    type : str, optional
+        The type of closed-loop feedback. Can either be ``"pos"`` 
+        (for positive feedback) or ``"neg"`` (for negative feedback).
+        `"neg"` by default.
+
+    Raises
+    ======
+
+    ValueError
+        When ``plant`` is equal to ``feedback_controller`` or when they are not using the
+        same complex variable of the Laplace transform.
+
+        When shapes of ``plant`` and ``feedback_controller`` are not the same.
+
+        When either ``plant`` or ``feedback_controller`` is not a sqaure matrix.
+
+    TypeError
+        When either ``plant`` or ``feedback_controller`` is not a ``MIMOSeries`` or a
+        ``TransferFunctionMatrix`` object.
+
+    See Also
+    ========
+
+    Feedback, MIMOSeries, MIMOParallel
+
+    """
+    def __new__(cls, plant, feedback_controller, ftype=-1):
+        if not (isinstance(plant, (TransferFunctionMatrix, MIMOSeries))
+            and isinstance(feedback_controller, (TransferFunctionMatrix, MIMOSeries))):
+            raise TypeError("Unsupported type for `plant` or `feedback_contoller` of MIMO Feedback.")
+
+        if not (plant.num_inputs == plant.num_inputs == feedback_controller.num_inputs == \
+                feedback_controller.num_inputs):
+            raise ValueError("`plant` and `feedback_controller` must be square matrices of"
+                "the same shape.")
+
+        if ftype not in [-1, 1]:
+            raise ValueError("Unsupported type for feedback. ")
+
+        if not _is_invertible(plant, feedback_controller, ftype):
+            raise ValueError("Non-Invertible system inputted.")
+        if plant.var != feedback_controller.var:
+            raise ValueError("Both `plant` and `feedback_controller` should be using the"
+                " same complex variable.")
+        obj = super().__new__(cls, plant, feedback_controller, _sympify(ftype))
+        obj._plant = plant
+        obj._feedback_controller = feedback_controller
+        obj._var = plant.var
+        obj._ftype = ftype
+
+        return obj
+
+    @property
+    def plant(self):
+        """
+        Returns the primary plant of the closed feedback loop.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+        >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
+        >>> controller = TransferFunction(5*s - 10, s + 7, s)
+        >>> F1 = Feedback(plant, controller)
+        >>> F1.plant
+        TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
+        >>> G = TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p)
+        >>> C = TransferFunction(5*p + 10, p + 10, p)
+        >>> P = TransferFunction(1 - s, p + 2, p)
+        >>> F2 = Feedback(TransferFunction(1, 1, p), G*C*P)
+        >>> F2.plant
+        TransferFunction(1, 1, p)
+
+        """
+        return self._plant
+
+    @property
+    def feedback_controller(self):
+        """
+        Returns the feedback controller of the closed feedback loop.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+        >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
+        >>> controller = TransferFunction(5*s - 10, s + 7, s)
+        >>> F1 = Feedback(plant, controller)
+        >>> F1.feedback_controller
+        TransferFunction(5*s - 10, s + 7, s)
+        >>> G = TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p)
+        >>> C = TransferFunction(5*p + 10, p + 10, p)
+        >>> P = TransferFunction(1 - s, p + 2, p)
+        >>> F2 = Feedback(TransferFunction(1, 1, p), G*C*P)
+        >>> F2.feedback_controller
+        Series(TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p), TransferFunction(5*p + 10, p + 10, p), TransferFunction(1 - s, p + 2, p))
+
+        """
+        return self._feedback_controller
+
+    @property
+    def var(self):
+        """
+        Returns the complex variable of the Laplace transform used by all
+        the transfer functions involved in the negative feedback closed loop.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+        >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
+        >>> controller = TransferFunction(5*s - 10, s + 7, s)
+        >>> F1 = Feedback(plant, controller)
+        >>> F1.var
+        s
+        >>> G = TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p)
+        >>> C = TransferFunction(5*p + 10, p + 10, p)
+        >>> P = TransferFunction(1 - s, p + 2, p)
+        >>> F2 = Feedback(TransferFunction(1, 1, p), G*C*P)
+        >>> F2.var
+        p
+
+        """
+        return self._var
+
+    @property
+    def ftype(self):
+        return self._ftype
+
+    @property
+    def sensitivity(self):
+        """
+        Returns the sensitivity function matrix of the feedback loop.
+        Sensitivity of a closed-loop system is the ratio of change
+        in the open loop gain to the change in the closed loop gain.
+        """
+        _plant_mat = self.plant.doit()._mat_expr
+        _controller_mat = self.feedback_controller.doit()._mat_expr
+
+        return (eye(self.num_inputs) - \
+            self.ftype*_plant_mat*_controller_mat).inv()
+
+    def doit(self, cancel=True, expand=False, **kwargs):
+        """
+        Returns the resultant closed loop transfer function obtained by the
+        negative feedback interconnection.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+        >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
+        >>> controller = TransferFunction(5*s - 10, s + 7, s)
+        >>> F1 = Feedback(plant, controller)
+        >>> F1.doit()
+        TransferFunction((s + 7)*(s**2 - 4*s + 2)*(3*s**2 + 7*s - 3), ((s + 7)*(s**2 - 4*s + 2) + (5*s - 10)*(3*s**2 + 7*s - 3))*(s**2 - 4*s + 2), s)
+        >>> G = TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s)
+        >>> F2 = Feedback(G, TransferFunction(1, 1, s))
+        >>> F2.doit()
+        TransferFunction((s**2 + 2*s + 3)*(2*s**2 + 5*s + 1), (s**2 + 2*s + 3)*(3*s**2 + 7*s + 4), s)
+
+        """
+        _mat = self.sensitivity * self.plant.doit()._expr_mat
+
+        if cancel:
+            _mat = _mat.applyfunc(lambda a: factor(a))
+
+        _expand_num_den = lambda _num, _den: Mul(expand(_num),
+            Pow(expand(_den), -1, evaluate=False))
+
+        if expand:
+            _mat = _mat.applyfunc(lambda a: _expand_num_den(*a.as_numer_denom()))
+
+        return _to_TFM(_mat, self.var)
+
+    def _eval_rewrite_as_TransferFunction(self, num, den, **kwargs):
+        return self.doit(cancel=False, expand=False)
+
+    def __neg__(self):
+        return Feedback(-self.plant, -self.feedback_controller, self.ftype)
 
 
 def _to_TFM(mat, var):
