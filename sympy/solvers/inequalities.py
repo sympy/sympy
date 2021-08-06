@@ -1,6 +1,5 @@
 """Tools for solving inequalities and systems of inequalities. """
-# from sympy.matrices.
-from sympy.simplify.simplify import nsimplify
+
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
