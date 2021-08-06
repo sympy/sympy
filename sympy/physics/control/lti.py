@@ -1668,7 +1668,7 @@ class Feedback(SISOLinearTimeInvariant):
     function of the feedback controling system which is generally a sensor system that constantly
     takes in the output signal produced and feeds it back to the primary plant (or a plant-controller
     if one is connected in series with the plant). Note that the feedback controller is not same as the
-    plant controller. 
+    plant controller.
 
     Generally, in control theory, we want the output signal to follow the input signal or in
     other words, the error signal (difference between the output signal and input signal) to
@@ -1695,7 +1695,7 @@ class Feedback(SISOLinearTimeInvariant):
         If not specified explicitly, the feedback_controller is
         assumed to be unit (1) transfer function.
     ftype : int, optional
-        The type of closed-loop feedback. Can either be ``1`` 
+        The type of closed-loop feedback. Can either be ``1``
         (for positive feedback) or ``-1`` (for negative feedback).
         Default value is `-1`.
 
@@ -1703,10 +1703,10 @@ class Feedback(SISOLinearTimeInvariant):
     ======
 
     ValueError
-        When ``num`` is equal to ``den`` or when they are not using the
+        When ``plant`` is equal to ``feedback_controller`` or when they are not using the
         same complex variable of the Laplace transform.
     TypeError
-        When either ``num`` or ``den`` is not a ``Series`` or a
+        When either ``plant`` or ``feedback_controller`` is not a ``Series`` or a
         ``TransferFunction`` object.
 
     Examples
@@ -1782,7 +1782,7 @@ class Feedback(SISOLinearTimeInvariant):
     @property
     def plant(self):
         """
-        Returns the primary plant of the closed feedback loop.
+        Returns the primary plant of the closed-loop feedback.
 
         Examples
         ========
@@ -1807,7 +1807,7 @@ class Feedback(SISOLinearTimeInvariant):
     @property
     def feedback_controller(self):
         """
-        Returns the feedback controller of the closed feedback loop.
+        Returns the feedback controller of the closed-loop feedback.
 
         Examples
         ========
@@ -1833,7 +1833,7 @@ class Feedback(SISOLinearTimeInvariant):
     def var(self):
         """
         Returns the complex variable of the Laplace transform used by all
-        the transfer functions involved in the negative feedback closed loop.
+        the transfer functions involved in the closed-loop feedback.
 
         Examples
         ========
@@ -1871,8 +1871,8 @@ class Feedback(SISOLinearTimeInvariant):
 
     def doit(self, cancel=False, expand=False, **kwargs):
         """
-        Returns the resultant closed loop transfer function obtained by the
-        negative feedback interconnection.
+        Returns the resultant closed-loop transfer function obtained by the
+        feedback interconnection.
 
         Examples
         ========
@@ -1888,6 +1888,15 @@ class Feedback(SISOLinearTimeInvariant):
         >>> F2 = Feedback(G, TransferFunction(1, 1, s))
         >>> F2.doit()
         TransferFunction((s**2 + 2*s + 3)*(2*s**2 + 5*s + 1), (s**2 + 2*s + 3)*(3*s**2 + 7*s + 4), s)
+
+        Use kwarg ``expand=True`` to expand the closed-loop transfer function.
+        Use ``cancel=True`` to cancel out the common terms in numerator and
+        denominator.
+
+        >>> F2.doit(cancel=True, expand=True)
+        TransferFunction(2*s**2 + 5*s + 1, 3*s**2 + 7*s + 4, s)
+        >>> F2.doit(expand=True)
+        TransferFunction(2*s**4 + 9*s**3 + 17*s**2 + 17*s + 3, 3*s**4 + 13*s**3 + 27*s**2 + 29*s + 12, s)
 
         """
         arg_list = list(self.plant.args) if isinstance(self.plant, Series) else [self.plant]
@@ -1907,7 +1916,7 @@ class Feedback(SISOLinearTimeInvariant):
             _num, _den = (_num/_den).as_numer_denom()
 
         if expand:
-            _num, _den = (expand(_num), expand(_den))
+            _num, _den = (_num.expand(), _den.expand())
 
         return TransferFunction(_num, _den, self.var)
 
@@ -1941,10 +1950,10 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         The primary plant.
     feedback_controller : MIMOSeries, TransferFunctionMatrix
         The feedback plant (often a feedback controller).
-    type : str, optional
-        The type of closed-loop feedback. Can either be ``"pos"`` 
-        (for positive feedback) or ``"neg"`` (for negative feedback).
-        `"neg"` by default.
+    type : int, optional
+        The type of closed-loop MIMO feedback. Can either be ``1``
+        (for positive feedback) or ``-1`` (for negative feedback).
+        Default value is `-1`.
 
     Raises
     ======
@@ -1955,7 +1964,9 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
         When shapes of ``plant`` and ``feedback_controller`` are not the same.
 
-        When either ``plant`` or ``feedback_controller`` is not a sqaure matrix.
+        When either ``plant`` or ``feedback_controller`` is not a square matrix.
+
+        When the equivalent closed-loop MIMO system is not invertible.
 
     TypeError
         When either ``plant`` or ``feedback_controller`` is not a ``MIMOSeries`` or a
@@ -1978,7 +1989,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
                 "the same shape.")
 
         if ftype not in [-1, 1]:
-            raise ValueError("Unsupported type for feedback. ")
+            raise ValueError("Unsupported type of closed-loop feedback.")
 
         if not _is_invertible(plant, feedback_controller, ftype):
             raise ValueError("Non-Invertible system inputted.")
@@ -1998,23 +2009,6 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         """
         Returns the primary plant of the closed feedback loop.
 
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p
-        >>> from sympy.physics.control.lti import TransferFunction, Feedback
-        >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
-        >>> controller = TransferFunction(5*s - 10, s + 7, s)
-        >>> F1 = Feedback(plant, controller)
-        >>> F1.plant
-        TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
-        >>> G = TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p)
-        >>> C = TransferFunction(5*p + 10, p + 10, p)
-        >>> P = TransferFunction(1 - s, p + 2, p)
-        >>> F2 = Feedback(TransferFunction(1, 1, p), G*C*P)
-        >>> F2.plant
-        TransferFunction(1, 1, p)
-
         """
         return self._plant
 
@@ -2022,23 +2016,6 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     def feedback_controller(self):
         """
         Returns the feedback controller of the closed feedback loop.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p
-        >>> from sympy.physics.control.lti import TransferFunction, Feedback
-        >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
-        >>> controller = TransferFunction(5*s - 10, s + 7, s)
-        >>> F1 = Feedback(plant, controller)
-        >>> F1.feedback_controller
-        TransferFunction(5*s - 10, s + 7, s)
-        >>> G = TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p)
-        >>> C = TransferFunction(5*p + 10, p + 10, p)
-        >>> P = TransferFunction(1 - s, p + 2, p)
-        >>> F2 = Feedback(TransferFunction(1, 1, p), G*C*P)
-        >>> F2.feedback_controller
-        Series(TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p), TransferFunction(5*p + 10, p + 10, p), TransferFunction(1 - s, p + 2, p))
 
         """
         return self._feedback_controller
@@ -2048,23 +2025,6 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         """
         Returns the complex variable of the Laplace transform used by all
         the transfer functions involved in the negative feedback closed loop.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p
-        >>> from sympy.physics.control.lti import TransferFunction, Feedback
-        >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
-        >>> controller = TransferFunction(5*s - 10, s + 7, s)
-        >>> F1 = Feedback(plant, controller)
-        >>> F1.var
-        s
-        >>> G = TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p)
-        >>> C = TransferFunction(5*p + 10, p + 10, p)
-        >>> P = TransferFunction(1 - s, p + 2, p)
-        >>> F2 = Feedback(TransferFunction(1, 1, p), G*C*P)
-        >>> F2.var
-        p
 
         """
         return self._var
@@ -2091,29 +2051,14 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         Returns the resultant closed loop transfer function obtained by the
         negative feedback interconnection.
 
-        Examples
-        ========
-
-        >>> from sympy.abc import s
-        >>> from sympy.physics.control.lti import TransferFunction, Feedback
-        >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
-        >>> controller = TransferFunction(5*s - 10, s + 7, s)
-        >>> F1 = Feedback(plant, controller)
-        >>> F1.doit()
-        TransferFunction((s + 7)*(s**2 - 4*s + 2)*(3*s**2 + 7*s - 3), ((s + 7)*(s**2 - 4*s + 2) + (5*s - 10)*(3*s**2 + 7*s - 3))*(s**2 - 4*s + 2), s)
-        >>> G = TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s)
-        >>> F2 = Feedback(G, TransferFunction(1, 1, s))
-        >>> F2.doit()
-        TransferFunction((s**2 + 2*s + 3)*(2*s**2 + 5*s + 1), (s**2 + 2*s + 3)*(3*s**2 + 7*s + 4), s)
-
         """
         _mat = self.sensitivity * self.plant.doit()._expr_mat
 
         if cancel:
             _mat = _mat.applyfunc(lambda a: factor(a))
 
-        _expand_num_den = lambda _num, _den: Mul(expand(_num),
-            Pow(expand(_den), -1, evaluate=False))
+        _expand_num_den = lambda _num, _den: Mul(_num.expand(),
+            Pow(_den.expand(), -1, evaluate=False))
 
         if expand:
             _mat = _mat.applyfunc(lambda a: _expand_num_den(*a.as_numer_denom()))
