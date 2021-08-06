@@ -105,7 +105,9 @@ def test_latex_basic():
     assert latex(Mul(4, 3, 2, 1+z, 0, y, x, evaluate=False)) == \
         r'4 \cdot 3 \cdot 2 \left(z + 1\right) 0 y x'
     assert latex(Mul(Rational(2, 3), Rational(5, 7), evaluate=False)) == \
-        r'\frac{2}{3} \frac{5}{7}'
+        r'\frac{2}{3} \frac{5}{7}'    
+    assert latex(Mul(x + y, Rational(1, 2), evaluate=False)) == "\\frac{x + y}{2}"
+    assert latex(Mul(Rational(1, 2), x + y, evaluate=False)) == "\\frac{x + y}{2}"
 
     assert latex(1/x) == r"\frac{1}{x}"
     assert latex(1/x, fold_short_frac=True) == r"1 / x"
@@ -2755,7 +2757,3 @@ def test_pickleable():
 def test_printing_latex_array_expressions():
     assert latex(ArraySymbol("A", 2, 3, 4)) == "A"
     assert latex(ArrayElement("A", (2, 1/(1-x), 0))) == "{{A}_{2, \\frac{1}{1 - x}, 0}}"
-
-def test_issue_21814():
-    assert latex(Mul(x + y, Rational(1, 2), evaluate=False)) == "\\frac{x + y}{2}"
-    assert latex(Mul(Rational(1, 2), x + y, evaluate=False)) == "\\frac{x + y}{2}"
