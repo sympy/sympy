@@ -2,6 +2,7 @@ from sympy import symbols, Matrix, cos, sin, expand
 from sympy.physics.mechanics import (PinJoint, JointsMethod, Body, KanesMethod,
                                     PrismaticJoint, LagrangesMethod, inertia)
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
+from sympy.testing.pytest import raises
 
 
 t = dynamicsymbols._t
@@ -26,6 +27,23 @@ def test_jointsmethod():
     assert method.forcing_full == Matrix([[omega], [0]])
     assert method.mass_matrix_full == Matrix([[1, 0], [0, C_ixx]])
     assert isinstance(method.method, KanesMethod)
+
+def test_jointmethod_duplicate_coordinates_speeds():
+    P = Body('P')
+    C = Body('C')
+    T = Body('T')
+    q, u = dynamicsymbols('q u')
+    P1 = PinJoint('P1', P, C, q)
+    P2 = PrismaticJoint('P2', C, T, q)
+    raises(ValueError, lambda: JointsMethod(P, P1, P2))
+
+    P1 = PinJoint('P1', P, C, speeds=u)
+    P2 = PrismaticJoint('P2', C, T, speeds=u)
+    raises(ValueError, lambda: JointsMethod(P, P1, P2))
+
+    P1 = PinJoint('P1', P, C, q, u)
+    P2 = PrismaticJoint('P2', C, T, q, u)
+    raises(ValueError, lambda: JointsMethod(P, P1, P2))
 
 def test_complete_simple_double_pendulum():
     q1, q2 = dynamicsymbols('q1 q2')

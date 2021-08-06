@@ -157,13 +157,19 @@ class JointsMethod(_Methods):
     def _generate_q(self):
         q_ind = []
         for joint in self._joints:
-            q_ind.extend(joint.coordinates)
+            for coordinate in joint.coordinates:
+                if coordinate in q_ind:
+                    raise ValueError('Coordinates of joints should be unique.')
+                q_ind.append(coordinate)
         return q_ind
 
     def _generate_u(self):
         u_ind = []
         for joint in self._joints:
-            u_ind.extend(joint.speeds)
+            for speed in joint.speeds:
+                if speed in u_ind:
+                    raise ValueError('Speeds of joints should be unique.')
+                u_ind.append(speed)
         return u_ind
 
     def _generate_kdes(self):
