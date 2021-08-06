@@ -866,44 +866,44 @@ def test_Feedback_construction():
     tf6 = TransferFunction(s - p, p + s, p)
 
     f1 = Feedback(TransferFunction(1, 1, s), tf1*tf2*tf3)
-    assert f1.args == (TransferFunction(1, 1, s), Series(tf1, tf2, tf3))
-    assert f1.num == TransferFunction(1, 1, s)
-    assert f1.den == Series(tf1, tf2, tf3)
+    assert f1.args == (TransferFunction(1, 1, s), Series(tf1, tf2, tf3), -1)
+    assert f1.plant == TransferFunction(1, 1, s)
+    assert f1.feedback_controller == Series(tf1, tf2, tf3)
     assert f1.var == s
 
     f2 = Feedback(tf1, tf2*tf3)
-    assert f2.args == (tf1, Series(tf2, tf3))
-    assert f2.num == tf1
-    assert f2.den == Series(tf2, tf3)
+    assert f2.args == (tf1, Series(tf2, tf3), -1)
+    assert f2.plant == tf1
+    assert f2.feedback_controller == Series(tf2, tf3)
     assert f2.var == s
 
     f3 = Feedback(tf1*tf2, tf5)
-    assert f3.args == (Series(tf1, tf2), tf5)
-    assert f3.num == Series(tf1, tf2)
+    assert f3.args == (Series(tf1, tf2), tf5, -1)
+    assert f3.plant == Series(tf1, tf2)
 
     f4 = Feedback(tf4, tf6)
-    assert f4.args == (tf4, tf6)
-    assert f4.num == tf4
+    assert f4.args == (tf4, tf6, -1)
+    assert f4.plant == tf4
     assert f4.var == p
 
     f5 = Feedback(tf5, TransferFunction(1, 1, s))
-    assert f5.args == (tf5, TransferFunction(1, 1, s))
+    assert f5.args == (tf5, TransferFunction(1, 1, s), -1)
     assert f5.var == s
 
     f6 = Feedback(TransferFunction(1, 1, p), tf4)
-    assert f6.args == (TransferFunction(1, 1, p), tf4)
+    assert f6.args == (TransferFunction(1, 1, p), tf4, -1)
     assert f6.var == p
 
     f7 = -Feedback(tf4*tf6, TransferFunction(1, 1, p))
-    assert f7.args == (Series(TransferFunction(-1, 1, p), Series(tf4, tf6)), TransferFunction(1, 1, p))
-    assert f7.num == Series(TransferFunction(-1, 1, p), Series(tf4, tf6))
+    assert f7.args == (Series(TransferFunction(-1, 1, p), Series(tf4, tf6)), -TransferFunction(1, 1, p), -1)
+    assert f7.plant == Series(TransferFunction(-1, 1, p), Series(tf4, tf6))
 
     # denominator can't be a Parallel instance
     raises(TypeError, lambda: Feedback(tf1, tf2 + tf3))
     raises(TypeError, lambda: Feedback(tf1, Matrix([1, 2, 3])))
     raises(TypeError, lambda: Feedback(TransferFunction(1, 1, s), s - 1))
     raises(TypeError, lambda: Feedback(1, 1))
-    raises(ValueError, lambda: Feedback(TransferFunction(1, 1, s), TransferFunction(1, 1, s)))
+    # raises(ValueError, lambda: Feedback(TransferFunction(1, 1, s), TransferFunction(1, 1, s)))
     raises(ValueError, lambda: Feedback(tf2, tf4*tf5))
 
 
