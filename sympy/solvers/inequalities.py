@@ -1119,12 +1119,12 @@ def linear_programming(A, B, C, D):
     The method also works with inegers, floats, symbolic expressions (like sqrt(2)) and symbols (like x).
     >>> from sympy import Symbol, Float, sqrt
     >>> x = Symbol('x')
-    >>> x = 1/3
-    >>> A = Matrix([[0, 1, sqrt(2)], [-1, 0, -3], [2/3, x, 7/2]])
-    >>> B = Matrix([3, -2, Float(5.5)])
-    >>> C = Matrix([[1, x, Float(5)]])
+    >>> x = Float(1)
+    >>> A = Matrix([[0, x, sqrt(2)], [-x, 0, -3], [2, x, 7]])
+    >>> B = Matrix([3, -2, Float(5)])
+    >>> C = Matrix([[1, x, 5]])
     >>> linear_programming(A, B, C, D)
-    (33/4, [33/4, 0, 0], [0, 0, 3/2])
+    (3.66666666666667, [0, 0.333333333333333, 0.666666666666667], [0, 0.666666666666667, 1.00000000000000])
     """
     M = Matrix([[A, B], [-C, D]])
     r_orig = ['x_{}'.format(j) for j in range(M.cols - 1)]
@@ -1154,9 +1154,4 @@ def linear_programming(A, B, C, D):
         else:
             argmin_dual.append(S.Zero)
 
-    for i in range(len(argmax)):
-        argmax[i] = nsimplify(argmax[i])
-    for i in range(len(argmin_dual)):
-        argmin_dual[i] = nsimplify(argmin_dual[i])
-
-    return nsimplify(M[-1, -1]), argmax, argmin_dual
+    return M[-1, -1], argmax, argmin_dual
