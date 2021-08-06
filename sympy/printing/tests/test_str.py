@@ -744,6 +744,7 @@ def test_MIMOFeedback_str():
             "TransferFunctionMatrix(((TransferFunction(x**2 - y**3, y - z, x), TransferFunction(-x + y, y + z, x)), "\
             "(TransferFunction(-x + y, y + z, x), TransferFunction(x**2 - y**3, y - z, x)))), 1)")
 
+
 def test_TransferFunctionMatrix_str():
     tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
     tf2 = TransferFunction(x - y, x + y, y)
