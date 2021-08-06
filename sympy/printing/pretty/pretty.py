@@ -1020,18 +1020,18 @@ class PrettyPrinter(Printer):
     def _print_Feedback(self, expr):
         from sympy.physics.control import TransferFunction, Parallel, Series
 
-        num, tf = expr.num, TransferFunction(1, 1, expr.num.var)
+        num, tf = expr.plant, TransferFunction(1, 1, expr.var)
         num_arg_list = list(num.args) if isinstance(num, Series) else [num]
-        den_arg_list = list(expr.den.args) if isinstance(expr.den, Series) else [expr.den]
+        den_arg_list = list(expr.feedback_controller.args) if isinstance(expr.feedback_controller, Series) else [expr.feedback_controller]
 
-        if isinstance(num, Series) and isinstance(expr.den, Series):
+        if isinstance(num, Series) and isinstance(expr.feedback_controller, Series):
             den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
-        elif isinstance(num, Series) and isinstance(expr.den, TransferFunction):
-            if expr.den == tf:
+        elif isinstance(num, Series) and isinstance(expr.feedback_controller, TransferFunction):
+            if expr.feedback_controller == tf:
                 den = Parallel(tf, Series(*num_arg_list))
             else:
-                den = Parallel(tf, Series(*num_arg_list, expr.den))
-        elif isinstance(num, TransferFunction) and isinstance(expr.den, Series):
+                den = Parallel(tf, Series(*num_arg_list, expr.feedback_controller))
+        elif isinstance(num, TransferFunction) and isinstance(expr.feedback_controller, Series):
             if num == tf:
                 den = Parallel(tf, Series(*den_arg_list))
             else:
@@ -1039,7 +1039,7 @@ class PrettyPrinter(Printer):
         else:
             if num == tf:
                 den = Parallel(tf, *den_arg_list)
-            elif expr.den == tf:
+            elif expr.feedback_controller == tf:
                 den = Parallel(tf, *num_arg_list)
             else:
                 den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
