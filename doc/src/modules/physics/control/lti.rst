@@ -25,5 +25,8 @@ lti
 .. autoclass:: Feedback
    :members:
 
+.. autoclass:: MIMOFeedback
+   :members:
+
 .. autoclass:: TransferFunctionMatrix
    :members:
