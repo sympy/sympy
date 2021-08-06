@@ -996,6 +996,8 @@ y   \
     expr = Mul(Rational(2, 3), Rational(5, 7), evaluate=False)
     assert pretty(expr) == "2/3*5/7"
     assert upretty(expr) == "2/3⋅5/7"
+    assert upretty(Mul(x + y, Rational(1, 2), evaluate=False)) == 'x + y\n─────\n  2  '
+    assert upretty(Mul(Rational(1, 2), x + y, evaluate=False)) == 'x + y\n─────\n  2  '
 
 def test_issue_5524():
     assert pretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
@@ -7561,7 +7563,3 @@ def test_diffgeom():
     assert pretty(rect) == "rect"
     b = BaseScalarField(rect, 0)
     assert pretty(b) == "x"
-
-def test_issue_21814():
-    assert upretty(Mul(x + y, Rational(1, 2), evaluate=False)) == 'x + y\n─────\n  2  '
-    assert upretty(Mul(Rational(1, 2), x + y, evaluate=False)) == 'x + y\n─────\n  2  '
