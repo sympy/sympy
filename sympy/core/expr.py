@@ -3383,7 +3383,6 @@ class Expr(Basic, EvalfMixin):
         This is a wrapper to compute a series first.
         """
         from sympy import Dummy, log, Piecewise, piecewise_fold
-        from sympy.series.gruntz import calculate_series
 
         if self.has(Piecewise):
             expr = piecewise_fold(self)
@@ -3394,9 +3393,9 @@ class Expr(Basic, EvalfMixin):
 
         if logx is None:
             d = Dummy('logx')
-            s = calculate_series(expr, x, d).subs(d, log(x))
+            s = expr.series(x, n=1, logx=d).subs(d, log(x))
         else:
-            s = calculate_series(expr, x, logx)
+            s = expr.series(x, n=1, logx=logx)
 
         return s.as_leading_term(x)
 

@@ -122,7 +122,7 @@ def test_issue_9308():
 
 def test_issue_10382():
     n = Symbol('n', integer=True)
-    assert limit_seq(fibonacci(n+1)/fibonacci(n), n) == S.GoldenRatio
+    assert limit_seq(fibonacci(n+1)/fibonacci(n), n).together() == S.GoldenRatio
 
 
 def test_issue_11672():

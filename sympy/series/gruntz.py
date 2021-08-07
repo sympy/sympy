@@ -119,7 +119,7 @@ debug this function to figure out the exact problem.
 from functools import reduce
 
 from sympy import cacheit
-from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul, PoleError
+from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul, PoleError, expand_mul
 
 from sympy.functions import log, exp
 from sympy.series.order import Order
@@ -627,7 +627,7 @@ def rewrite(e, Omega, x, wsym):
     # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p). No current simplification
     # methods reduce this to 0 while not expanding polynomials.
     t = bottom_up(f, lambda w: getattr(w, 'normal', lambda: w)())
-    f = t.cancel(expand=False)
+    f = expand_mul(t)
 
     return f, logw
 
