@@ -1181,6 +1181,7 @@ def test_Domain_is_nonpositive():
     assert CC.is_nonpositive(a) == False
     assert CC.is_nonpositive(b) == False
 
+
 def test_exponential_domain():
     K = ZZ[E]
     eK = K.from_sympy(E)
