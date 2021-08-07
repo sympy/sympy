@@ -133,4 +133,4 @@ def test_chaos_pendulum():
     forcing = method.forcing
     rhs = MM.LUsolve(forcing)
 
-    assert rhs[1] == (IBxx*omega**2*sin(phi)*cos(phi) - IByy*omega**2*sin(phi)*cos(phi))/IBzz
+    assert rhs[1].simplify() == (IBxx - IByy)*omega**2*sin(2*phi)/(2*IBzz)
