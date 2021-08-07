@@ -1,4 +1,4 @@
-from sympy import symbols, Matrix, cos, sin, expand
+from sympy import symbols, Matrix, cos, sin, expand, trigsimp
 from sympy.physics.mechanics import (PinJoint, JointsMethod, Body, KanesMethod,
                                     PrismaticJoint, LagrangesMethod, inertia)
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
@@ -70,11 +70,9 @@ def test_complete_simple_double_pendulum():
                                                       [0, 1, 0, 0],
                                                       [0, 0, 2*l**2*m*cos(q2) + 3*l**2*m, l**2*m*cos(q2) + l**2*m],
                                                       [0, 0, l**2*m*cos(q2) + l**2*m, l**2*m]])
-    assert expand(method.forcing_full) == Matrix([[u1], [u2],
-                                                  [-g*l*m*sin(q1)*cos(q2) - 2*g*l*m*sin(q1) -
-                                                   g*l*m*sin(q2)*cos(q1) + 2*l**2*m*u1*u2*sin(q2) +
-                                                   l**2*m*u2**2*sin(q2)], [-g*l*m*sin(q1)*cos(q2) -
-                                                   g*l*m*sin(q2)*cos(q1) - l**2*m*u1**2*sin(q2)]])
+    assert trigsimp(method.forcing_full) == trigsimp(Matrix([[u1], [u2], [-g*l*m*(sin(q1 + q2) + sin(q1)) -
+                                           g*l*m*sin(q1) + l**2*m*(2*u1 + u2)*u2*sin(q2)],
+                                          [-g*l*m*sin(q1 + q2) - l**2*m*u1**2*sin(q2)]]))
 
 def test_two_dof_joints():
     q1, q2, u1, u2 = dynamicsymbols('q1 q2 u1 u2')
