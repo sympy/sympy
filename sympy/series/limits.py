@@ -322,6 +322,8 @@ class Limit(Expr):
                             return S.NegativeInfinity*sign(coeff)*S.NegativeOne**(S.One + ex)
                         else:
                             return S.ComplexInfinity
+                else:
+                    raise NotImplementedError("Not sure of sign of %s" % ex)
 
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
