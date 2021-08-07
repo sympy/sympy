@@ -1756,12 +1756,12 @@ class Feedback(SISOLinearTimeInvariant):
 
     """
     def __new__(cls, plant, feedback_controller=None, ftype=-1):
+        if not feedback_controller:
+            feedback_controller = TransferFunction(1, 1, plant.var)
+
         if not (isinstance(plant, (TransferFunction, Series))
             and isinstance(feedback_controller, (TransferFunction, Series))):
             raise TypeError("Unsupported type for `plant` or `feedback_contoller` of Feedback.")
-
-        if not feedback_controller:
-            feedback_controller = TransferFunction(1, 1, plant.var)
 
         if ftype not in [-1, 1]:
             raise ValueError("Unsupported type for feedback. ")
@@ -1911,9 +1911,7 @@ class Feedback(SISOLinearTimeInvariant):
         _num, _den = _tf.num, _tf.den
 
         if cancel:
-            _num = factor(_num)
-            _den = factor(_den)
-            _num, _den = (_num/_den).as_numer_denom()
+            _num, _den = Mul(_num, 1/_den, evaluate=False).cancel(expand=False).as_numer_denom()
 
         if expand:
             _num, _den = (_num.expand(), _den.expand())
