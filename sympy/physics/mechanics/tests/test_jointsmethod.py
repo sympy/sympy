@@ -123,7 +123,7 @@ def test_chaos_pendulum():
     J1 = PinJoint('J1', C, rod, coordinates=theta, speeds=omega,
                   child_joint_pos=-lA*rod.z, parent_axis=C.y, child_axis=rod.y)
     J2 = PinJoint('J2', rod, plate, coordinates=phi, speeds=alpha,
-                  parent_joint_pos=-lB*rod.z, parent_axis=rod.z, child_axis=plate.z)
+                  parent_joint_pos=lB*rod.z, parent_axis=rod.z, child_axis=plate.z)
 
     rod.apply_force(mA*g*C.z)
     plate.apply_force(mB*g*C.z)
@@ -133,5 +133,5 @@ def test_chaos_pendulum():
 
     assert expand(method.mass_matrix_full) == Matrix([[1, 0, 0, 0], [0, 1, 0, 0],
                                                 [0, 0, IAxx + IBxx*sin(phi)**2 + IByy*cos(phi)**2 +
-                                                lA**2*mA + lA**2*mB - 2*lA*lB*mB + lB**2*mB, 0],
+                                                lA**2*mA + lA**2*mB + 2*lA*lB*mB + lB**2*mB, 0],
                                                 [0, 0, 0, IBzz]])
