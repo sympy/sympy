@@ -1,4 +1,4 @@
-from sympy import Basic, Add, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots, factor
+from sympy import Basic, Add, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots
 from sympy.core.containers import Tuple
 from sympy.core.evalf import EvalfMixin, prec_to_dps
 from sympy.core.logic import fuzzy_and
@@ -2038,10 +2038,10 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         Sensitivity of a closed-loop system is the ratio of change
         in the open loop gain to the change in the closed loop gain.
         """
-        _plant_mat = self.plant.doit()._mat_expr
-        _controller_mat = self.feedback_controller.doit()._mat_expr
+        _plant_mat = self.plant.doit()._expr_mat
+        _controller_mat = self.feedback_controller.doit()._expr_mat
 
-        return (eye(self.num_inputs) - \
+        return (eye(self.plant.num_inputs) - \
             self.ftype*_plant_mat*_controller_mat).inv()
 
     def doit(self, cancel=True, expand=False, **kwargs):
@@ -2052,8 +2052,11 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         """
         _mat = self.sensitivity * self.plant.doit()._expr_mat
 
+        _cancel_num_den = lambda _num, _den: Mul(_num, 1/_den,
+            evaluate=False).cancel(expand=False)
+
         if cancel:
-            _mat = _mat.applyfunc(lambda a: factor(a))
+            _mat = _mat.applyfunc(lambda a: _cancel_num_den(*a.as_numer_denom()))
 
         _expand_num_den = lambda _num, _den: Mul(_num.expand(),
             Pow(_den.expand(), -1, evaluate=False))

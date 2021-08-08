@@ -2495,6 +2495,13 @@ class LatexPrinter(Printer):
 
         return r"\frac{%s}{%s %s %s}" % (numer, denom_1, _sign, denom_2)
 
+    def _print_MIMOFeedback(self, expr):
+        from sympy.physics.control import MIMOSeries
+        inv_mat = self._print(MIMOSeries(expr.feedback_controller, expr.plant))
+        plant = self._print(expr.plant)
+        _sign = "+" if expr.ftype == -1 else "-"
+        return r"\left(I_{\tau} %s %s\right)^{-1} \cdot %s" % (_sign, inv_mat, plant)
+
     def _print_TransferFunctionMatrix(self, expr):
         mat = self._print(expr._expr_mat)
         return r"%s_\tau" % mat
