@@ -1594,7 +1594,7 @@ class Beam:
 
         return shear_force, bending_moment
 
-    def solve_for_ild_reactions(self, val, *reactions):
+    def solve_for_ild_reactions(self, value, *reactions):
         """
 
         Determines the Influence Line Diagram equations for reaction
@@ -1602,7 +1602,7 @@ class Beam:
 
         Parameters
         ==========
-        val : Integer
+        value : Integer
             Magnitude of moving load
         reactions :
             The reaction forces applied on the beam.
@@ -1642,8 +1642,8 @@ class Beam:
         C3 = Symbol('C3')
         C4 = Symbol('C4')
 
-        shear_curve = limit(shear_force, x, l) - val
-        moment_curve = limit(bending_moment, x, l) - val*(l-x)
+        shear_curve = limit(shear_force, x, l) - value
+        moment_curve = limit(bending_moment, x, l) - value*(l-x)
 
         slope_eqs = []
         deflection_eqs = []
@@ -1753,7 +1753,7 @@ class Beam:
 
         return shear_force
 
-    def solve_for_ild_shear(self, dist, val, *reactions):
+    def solve_for_ild_shear(self, distance, value, *reactions):
         """
 
         Determines the Influence Line Diagram equations for shear at a
@@ -1761,9 +1761,10 @@ class Beam:
 
         Parameters
         ==========
-        dist : Integer
-            Distance of the specified point
-        val : Integer
+        distance : Integer
+            Distance of the point from the start of the beam
+            for which equations are to be determined
+        value : Integer
             Magnitude of moving load
         reactions :
             The reaction forces applied on the beam.
@@ -1804,14 +1805,14 @@ class Beam:
 
         shear_force = self._solve_for_ild_shear()
 
-        shear_curve1 = val - limit(shear_force, x, dist)
-        shear_curve2= (limit(shear_force, x, l)-limit(shear_force, x, dist))-val
+        shear_curve1 = value - limit(shear_force, x, distance)
+        shear_curve2 = (limit(shear_force, x, l) - limit(shear_force, x, distance)) - value
 
-        for i in reactions:
-            shear_curve1 = shear_curve1.subs(i,self._ild_reactions[i])
-            shear_curve2 = shear_curve2.subs(i,self._ild_reactions[i])
+        for reaction in reactions:
+            shear_curve1 = shear_curve1.subs(reaction,self._ild_reactions[reaction])
+            shear_curve2 = shear_curve2.subs(reaction,self._ild_reactions[reaction])
 
-        shear_eq = Piecewise((shear_curve1, x < dist), (shear_curve2, x > dist))
+        shear_eq = Piecewise((shear_curve1, x < distance), (shear_curve2, x > distance))
 
         self._ild_shear = shear_eq
 
