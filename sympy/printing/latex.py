@@ -2461,35 +2461,39 @@ class LatexPrinter(Printer):
         return ' + '.join(map(func, args))
 
     def _print_Feedback(self, expr):
-        from sympy.physics.control import TransferFunction, Parallel, Series
+        from sympy.physics.control import TransferFunction, Series
 
         num, tf = expr.plant, TransferFunction(1, 1, expr.var)
         num_arg_list = list(num.args) if isinstance(num, Series) else [num]
         den_arg_list = list(expr.feedback_controller.args) if isinstance(expr.feedback_controller, Series) else [expr.feedback_controller]
+        den_term_1 = tf
 
         if isinstance(num, Series) and isinstance(expr.feedback_controller, Series):
-            den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
+            den_term_2 = Series(*num_arg_list, *den_arg_list)
         elif isinstance(num, Series) and isinstance(expr.feedback_controller, TransferFunction):
             if expr.feedback_controller == tf:
-                den = Parallel(tf, Series(*num_arg_list))
+                den_term_2 = Series(*num_arg_list)
             else:
-                den = Parallel(tf, Series(*num_arg_list, expr.feedback_controller))
+                den_term_2 = tf, Series(*num_arg_list, expr.feedback_controller)
         elif isinstance(num, TransferFunction) and isinstance(expr.feedback_controller, Series):
             if num == tf:
-                den = Parallel(tf, Series(*den_arg_list))
+                den_term_2 = Series(*den_arg_list)
             else:
-                den = Parallel(tf, Series(num, *den_arg_list))
+                den_term_2 = Series(num, *den_arg_list)
         else:
             if num == tf:
-                den = Parallel(tf, *den_arg_list)
+                den_term_2 = Series(*den_arg_list)
             elif expr.feedback_controller == tf:
-                den = Parallel(tf, *num_arg_list)
+                den_term_2 = Series(*num_arg_list)
             else:
-                den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
+                den_term_2 = Series(*num_arg_list, *den_arg_list)
 
         numer = self._print(num)
-        denom = self._print(den)
-        return r"\frac{%s}{%s}" % (numer, denom)
+        denom_1 = self._print(den_term_1)
+        denom_2 = self._print(den_term_2)
+        _sign = "+" if expr.ftype == -1 else "-"
+
+        return r"\frac{%s}{%s %s %s}" % (numer, denom_1, _sign, denom_2)
 
     def _print_TransferFunctionMatrix(self, expr):
         mat = self._print(expr._expr_mat)
