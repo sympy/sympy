@@ -1736,3 +1736,8 @@ def test_issue_21034():
 def test_issue_4187():
     assert integrate(log(x)*exp(-x), x) == Ei(-x) - exp(-x)*log(x)
     assert integrate(log(x)*exp(-x), (x, 0, oo)) == -EulerGamma
+
+
+def test_issue_21831():
+    theta = symbols('theta')
+    assert integrate(cos(3*theta)/(5-4*cos(theta)), (theta, 0, 2*pi)) == pi/12

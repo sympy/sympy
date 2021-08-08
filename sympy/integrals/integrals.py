@@ -602,7 +602,11 @@ class Integral(AddWithLimits):
                             function = ret
                             continue
 
-            if not isinstance(antideriv, Integral) and antideriv is not None:
+            final = hints.get('final', True)
+            # dotit may be iterated but floor terms making atan and acot
+            # continous should only be added in the final round
+            if (final and not isinstance(antideriv, Integral) and
+                antideriv is not None):
                 for atan_term in antideriv.atoms(atan):
                     atan_arg = atan_term.args[0]
                     # Checking `atan_arg` to be linear combination of `tan` or `cot`
@@ -1098,6 +1102,7 @@ class Integral(AddWithLimits):
                             # method was set to False already
                             new_eval_kwargs = eval_kwargs
                             new_eval_kwargs["manual"] = False
+                            new_eval_kwargs["final"] = False
                             result = result.func(*[
                                 arg.doit(**new_eval_kwargs) if
                                 arg.has(Integral) else arg
