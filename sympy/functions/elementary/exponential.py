@@ -954,6 +954,7 @@ class log(Function):
         if self.args[0] == x:
             return logx
         arg = self.args[0]
+        old_n = n
         k, l = Wild("k"), Wild("l")
         r = arg.match(k*x**l)
         if r is not None:
@@ -996,13 +997,13 @@ class log(Function):
             if (log(a) + b*log(x)) == self:
                 return log(a) + b*logx
             else:
-                return log(a) + b*logx + Order(x**(n + 1), x)
+                return log(a) + b*logx + Order(x**(old_n), x)
 
         def mul(d1, d2):
             res = {}
             for e1, e2 in product(d1, d2):
                 ex = e1 + e2
-                if ex < n:
+                if ex < old_n:
                     res[ex] = res.get(ex, S.Zero) + d1[e1]*d2[e2]
             return res
 
@@ -1031,7 +1032,7 @@ class log(Function):
             cdir = self.args[0].dir(x, cdir)
         if a.is_real and a.is_negative and im(cdir) < 0:
             res -= 2*I*S.Pi
-        return res + Order(x**n, x)
+        return res + Order(x**(old_n), x)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import I, im, re

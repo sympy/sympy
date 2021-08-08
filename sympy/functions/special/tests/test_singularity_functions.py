@@ -68,7 +68,7 @@ def test_leading_term():
     assert SingularityFunction(x, 0, -2).as_leading_term(x) == 0
     assert (SingularityFunction(x + l, 0, 1)/2\
         - SingularityFunction(x + l, l/2, 1)\
-        + SingularityFunction(x + l, l, 1)/2).as_leading_term(x) == -x/2
+        + SingularityFunction(x + l, l, 1)/2).as_leading_term(x) == 0
 
 
 def test_series():
@@ -81,7 +81,7 @@ def test_series():
     assert SingularityFunction(x, 0, -2).series(x) == 0
     assert (SingularityFunction(x + l, 0, 1)/2\
         - SingularityFunction(x + l, l/2, 1)\
-        + SingularityFunction(x + l, l, 1)/2).nseries(x) == -x/2 + O(x**6)
+        + SingularityFunction(x + l, l, 1)/2).nseries(x) == 0
 
 
 def test_rewrite():
