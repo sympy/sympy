@@ -1930,7 +1930,7 @@ def _is_invertible(a, b, ftype):
     Checks whether a given pair of plant and feedback_controller
     systems passed is invertible or not.
     """
-    _mat = eye(a.num_inputs) - ftype*(a._expr_mat)*(b._expr_mat)
+    _mat = eye(a.num_inputs) - ftype*(a.doit()._expr_mat)*(b.doit()._expr_mat)
     _det = _mat.det()
 
     return _det != 0
