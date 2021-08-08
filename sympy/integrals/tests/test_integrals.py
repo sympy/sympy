@@ -1825,3 +1825,8 @@ def test_issue_21024():
     f = 2*x**2*exp(-4) + 6/x
     F_true = (2*x**3/3 + 6*exp(4)*log(x))*exp(-4)
     assert F_true == integrate(f, x)
+
+
+def test_issue_21831():
+    theta = symbols('theta')
+    assert integrate(cos(3*theta)/(5-4*cos(theta)), (theta, 0, 2*pi)) == pi/12
