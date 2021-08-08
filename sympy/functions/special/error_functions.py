@@ -2028,7 +2028,9 @@ class Ci(TrigonometricIntegral):
         if arg0 is S.NaN:
             arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
         if arg0.is_zero:
-            return S.EulerGamma
+            if logx is not None:
+                return S.EulerGamma + logx
+            return log(x)
         elif arg0.is_finite:
             return self.func(arg0)
         else:

@@ -3344,7 +3344,7 @@ class Expr(Basic, EvalfMixin):
         >>> e.nseries(x, 0, 2)
         O(log(x)**2)
         >>> e.nseries(x, 0, 2, logx=logx)
-        exp(logx*y)
+        exp(logx*y) + O(x**2)
 
         """
         if x and not x in self.free_symbols:

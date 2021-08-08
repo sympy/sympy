@@ -222,14 +222,14 @@ class SingularityFunction(Function):
         return S.Zero
 
     def _eval_nseries(self, x, n, logx=None, cdir=0):
-        z, a, n = self.args
+        z, a, n0 = self.args
         shift = (z - a).subs(x, 0)
-        if n < 0:
+        if n0 < 0:
             return S.Zero
-        elif n.is_zero and shift.is_zero:
+        elif n0.is_zero:
             return S.Zero if cdir == -1 else S.One
-        elif shift.is_positive:
-            return ((z - a)**n)._eval_nseries(x, n, logx=logx, cdir=cdir)
+        elif not shift.is_negative:
+            return ((z - a)**n0)._eval_nseries(x, n, logx=logx, cdir=cdir)
         return S.Zero
 
     _eval_rewrite_as_DiracDelta = _eval_rewrite_as_Heaviside

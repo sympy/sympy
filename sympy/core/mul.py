@@ -1934,8 +1934,10 @@ class Mul(Expr, AssocOp):
             else:
                 return res
 
-        if res != self:
-            res += Order(x**n, x)
+        for i in (1, 2, 3):
+            if (res - self).subs(x, 0) is not S.Zero:
+                res += Order(x**n, x)
+                break
         return res
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):

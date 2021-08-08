@@ -126,6 +126,7 @@ from sympy.series.order import Order
 from sympy.simplify import logcombine
 from sympy.simplify.powsimp import powsimp, powdenest
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
 timeit = timethis('gruntz')
@@ -475,6 +476,37 @@ def moveup(l, x):
 
 @debug
 @timeit
+def calculate_series(e, x, logx=None):
+    """ Calculates at least one term of the series of ``e`` in ``x``.
+    This is a place that fails most often, so it is in its own function.
+    """
+    from sympy.polys import cancel
+    from sympy.simplify import bottom_up
+
+    SymPyDeprecationWarning(
+        feature="calculate_series",
+        useinstead="series() with suitable n, or as_leading_term",
+        issue=21838,
+        deprecated_since_version="1.9"
+    ).warn()
+    for t in e.lseries(x, logx=logx):
+        # bottom_up function is required for a specific case - when e is
+        # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p). No current simplification
+        # methods reduce this to 0 while not expanding polynomials.
+        t = bottom_up(t, lambda w: getattr(w, 'normal', lambda: w)())
+        t = cancel(t, expand=False).factor()
+
+        if t.has(exp) and t.has(log):
+            t = powdenest(t)
+
+        if not t.is_zero:
+            break
+
+    return t
+
+
+@debug
+@timeit
 @cacheit
 def mrv_leadterm(e, x):
     """Returns (c0, e0) for e."""
@@ -504,7 +536,7 @@ def mrv_leadterm(e, x):
     f, logw = rewrite(exps, Omega, x, w)
     try:
         lt = f.leadterm(w, logx=logw)
-    except (ValueError, PoleError):
+    except (NotImplementedError, PoleError, ValueError):
         base = f.as_base_exp()[0].as_coeff_exponent(w)
         ex = f.as_base_exp()[1]
         lt = (base[0]**ex, base[1]*ex)
