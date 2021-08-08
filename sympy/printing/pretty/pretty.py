@@ -1018,33 +1018,45 @@ class PrettyPrinter(Printer):
         return s
 
     def _print_Feedback(self, expr):
-        from sympy.physics.control import TransferFunction, Parallel, Series
+        from sympy.physics.control import TransferFunction, Series
 
         num, tf = expr.plant, TransferFunction(1, 1, expr.var)
         num_arg_list = list(num.args) if isinstance(num, Series) else [num]
         den_arg_list = list(expr.feedback_controller.args) if isinstance(expr.feedback_controller, Series) else [expr.feedback_controller]
 
         if isinstance(num, Series) and isinstance(expr.feedback_controller, Series):
-            den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
+            den = Series(*num_arg_list, *den_arg_list)
         elif isinstance(num, Series) and isinstance(expr.feedback_controller, TransferFunction):
             if expr.feedback_controller == tf:
-                den = Parallel(tf, Series(*num_arg_list))
+                den = Series(*num_arg_list)
             else:
-                den = Parallel(tf, Series(*num_arg_list, expr.feedback_controller))
+                den = Series(*num_arg_list, expr.feedback_controller)
         elif isinstance(num, TransferFunction) and isinstance(expr.feedback_controller, Series):
             if num == tf:
-                den = Parallel(tf, Series(*den_arg_list))
+                den = Series(*den_arg_list)
             else:
-                den = Parallel(tf, Series(num, *den_arg_list))
+                den = Series(num, *den_arg_list)
         else:
             if num == tf:
-                den = Parallel(tf, *den_arg_list)
+                den = Series(*den_arg_list)
             elif expr.feedback_controller == tf:
-                den = Parallel(tf, *num_arg_list)
+                den = Series(*num_arg_list)
             else:
-                den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
+                den = Series(*num_arg_list, *den_arg_list)
 
-        return self._print(num)/self._print(den)
+        denom = prettyForm(*stringPict.next(self._print(tf)))
+        denom.baseline = denom.height()//2
+        denom = prettyForm(*stringPict.next(denom, ' + ')) if expr.ftype == -1 \
+            else prettyForm(*stringPict.next(denom, ' - '))
+        denom = prettyForm(*stringPict.next(denom, self._print(den)))
+
+        return self._print(num)/denom
+
+    def _print_MIMOFeedback(self, expr):
+        from sympy.physics.control import MIMOSeries
+        inv_mat = self._print(MIMOSeries(expr.feedback_controller, expr.plant))
+        plant = self._print(expr.plant)
+        
 
     def _print_TransferFunctionMatrix(self, expr):
         mat = self._print(expr._expr_mat)
