@@ -799,7 +799,7 @@ class Integral(AddWithLimits):
         return rv
 
     def _eval_integral(self, f, x, meijerg=None, risch=None, manual=None,
-                       heurisch=None, conds='piecewise'):
+                       heurisch=None, conds='piecewise',final=None):
         """
         Calculate the anti-derivative to the function f(x).
 
