@@ -496,6 +496,14 @@ class besseli(BesselBase):
         if nu.is_integer and z.is_extended_real:
             return True
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        nu, z = self.args
+        arg = z.as_leading_term(x)
+        if x in arg.free_symbols:
+            return arg**nu/(2**nu*gamma(nu + 1))
+        else:
+            return self.func(nu, z.subs(x, 0))
+
     def _sage_(self):
         import sage.all as sage
         return sage.bessel_I(self.args[0]._sage_(), self.args[1]._sage_())
