@@ -1761,7 +1761,7 @@ class Feedback(SISOLinearTimeInvariant):
 
         if not (isinstance(plant, (TransferFunction, Series))
             and isinstance(feedback_controller, (TransferFunction, Series))):
-            raise TypeError("Unsupported type for `plant` or `feedback_contoller` of Feedback.")
+            raise TypeError("Unsupported type for `plant` or `feedback_controller` of Feedback.")
 
         if ftype not in [-1, 1]:
             raise ValueError("Unsupported type for feedback. ")
@@ -1979,7 +1979,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     def __new__(cls, plant, feedback_controller, ftype=-1):
         if not (isinstance(plant, (TransferFunctionMatrix, MIMOSeries))
             and isinstance(feedback_controller, (TransferFunctionMatrix, MIMOSeries))):
-            raise TypeError("Unsupported type for `plant` or `feedback_contoller` of MIMO Feedback.")
+            raise TypeError("Unsupported type for `plant` or `feedback_controller` of MIMO Feedback.")
 
         if not (plant.num_inputs == plant.num_inputs == feedback_controller.num_inputs == \
                 feedback_controller.num_inputs):
