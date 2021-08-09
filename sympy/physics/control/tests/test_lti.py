@@ -1043,7 +1043,6 @@ def test_MIMOFeedback_functions():
         (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))
 
 
-
 def test_TransferFunctionMatrix_construction():
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
     tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
