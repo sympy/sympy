@@ -1,5 +1,5 @@
 from sympy import (symbols, factor, Function, simplify, exp, oo, I,
-    S, Mul, Pow, Add, Rational, sqrt, CRootOf)
+    S, Mul, Pow, Add, Rational, sqrt, CRootOf, eye)
 from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix, Matrix
 from sympy.physics.control import (TransferFunction, Series, Parallel,
@@ -983,7 +983,65 @@ def test_MIMOFeedback_construction():
 
 
 def test_MIMOFeedback_functions():
-    pass
+    tf1 = TransferFunction(1, s, s)
+    tf2 = TransferFunction(s, s**3 - 1, s)
+    tf3 = TransferFunction(s, s - 1, s)
+    tf4 = TransferFunction(s, s**2 + 1, s)
+    tf5 = TransferFunction(1, 1, s)
+    tf6 = TransferFunction(-1, s - 1, s)
+
+    tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
+    tfm_2 = TransferFunctionMatrix([[tf2, tf3], [tf4, tf1]])
+    tfm_3 = TransferFunctionMatrix.from_Matrix(eye(2), var=s)
+    tfm_4 = TransferFunctionMatrix([[tf1, tf5], [tf5, tf5]])
+    tfm_5 = TransferFunctionMatrix([[-tf3, tf3], [tf3, tf6]])
+    # tfm_4 is inverse of tfm_5. Therefore tfm_5*tfm_4 = I
+
+    # Unsupported Types
+    raises(TypeError, lambda: MIMOFeedback(tf1, tf2))
+    raises(TypeError, lambda: MIMOFeedback(MIMOParallel(tfm_1, tfm_2), tfm_3))
+    # Shape Errors
+    tfm_6 = TransferFunctionMatrix([[-tf3]])
+    tfm_7 = TransferFunctionMatrix([[tf3, tf4]])
+    raises(ValueError, lambda: MIMOFeedback(tfm_1, tfm_6, 1))
+    raises(ValueError, lambda: MIMOFeedback(tfm_7, tfm_7))
+    # ftype not 1/-1
+    raises(ValueError, lambda: MIMOFeedback(tfm_1, tfm_2, -2))
+    # Non-Invertible Systems
+    raises(ValueError, lambda: MIMOFeedback(tfm_5, tfm_4, 1))
+    raises(ValueError, lambda: MIMOFeedback(tfm_4, -tfm_5))
+    raises(ValueError, lambda: MIMOFeedback(tfm_3, tfm_3, 1))
+    # Variable not same in both the systems
+    tfm_8 = TransferFunctionMatrix.from_Matrix(eye(2), var=p)
+    raises(ValueError, lambda: MIMOFeedback(tfm_1, tfm_8, 1))
+
+    # sensitivity, doit(), rewrite()
+    tfm_9 = TransferFunctionMatrix([[tf1, tf3], [-tf3, tf1]])
+    F_1 = MIMOFeedback(tfm_4, tfm_5)
+    F_2 = MIMOFeedback(tfm_4, MIMOSeries(tfm_9, -tfm_3), 1)
+
+    assert F_1.sensitivity == Matrix([[1/2, 0], [0, 1/2]])
+    assert F_2.sensitivity == Matrix([[(-2*s**4 + s**2)/(s**2 - s + 1),
+        (2*s**3 - s**2)/(s**2 - s + 1)], [-s**2, s]])
+
+    assert F_1.doit() == \
+        TransferFunctionMatrix(((TransferFunction(1, 2*s, s),
+        TransferFunction(1, 2, s)), (TransferFunction(1, 2, s),
+        TransferFunction(1, 2, s)))) == F_1.rewrite(TransferFunctionMatrix)
+    assert F_2.doit(cancel=False, expand=True) == \
+        TransferFunctionMatrix(((TransferFunction(-s**5 + 2*s**4 - 2*s**3 + s**2, s**5 - 2*s**4 + 3*s**3 - 2*s**2 + s, s),
+        TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)), (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))
+    assert F_2.doit(cancel=False) == \
+        TransferFunctionMatrix(((TransferFunction(s*(2*s**3 - s**2)*(s**2 - s + 1) + \
+        (-2*s**4 + s**2)*(s**2 - s + 1), s*(s**2 - s + 1)**2, s), TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)),
+        (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))
+    assert F_2.doit() == \
+        TransferFunctionMatrix(((TransferFunction(s*(-2*s**2 + s*(2*s - 1) + 1), s**2 - s + 1, s),
+        TransferFunction(2*s**3*(1 - s), s**2 - s + 1, s)), (TransferFunction(0, 1, s), TransferFunction(s*(1 - s), 1, s))))
+    assert F_2.doit(expand=True) == \
+        TransferFunctionMatrix(((TransferFunction(-s**2 + s, s**2 - s + 1, s), TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)),
+        (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))
+
 
 
 def test_TransferFunctionMatrix_construction():

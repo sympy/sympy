@@ -2066,7 +2066,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
         return _to_TFM(_mat, self.var)
 
-    def _eval_rewrite_as_TransferFunction(self, num, den, **kwargs):
+    def _eval_rewrite_as_TransferFunctionMatrix(self, plant, feedback_controller, ftype, **kwargs):
         return self.doit(cancel=False, expand=False)
 
     def __neg__(self):
