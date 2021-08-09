@@ -715,9 +715,8 @@ def dsubs(eq, trans, newvars=None):
     ``trans``: A dictionary specifying the variable transformations
     with the old variable as key and the transformation as value.
 
-    ``newvars``: A list of new variables in the transformation rules.
-    It is required if the number of new variables is not the same as
-    the number of old variables.
+    ``newvars``: A list of new variables in the transformation rules
+    that should be considered variables rather than constants. For example a transformation x = a t where a is a constant and t is the new independent variable can be specified as... For convenience the newvars argument can be omitted although for robust usage in code it should always be provided. If the newvars argument is not provided then dsubs will treat all symbols in the replacement expression as variables but will raise an exception of the number of new variables is not equal to the number of variables being replaced.
 
     Returns
     =======
@@ -767,7 +766,7 @@ def dsubs(eq, trans, newvars=None):
 
     Transform the homogeneous equation to a linear equation
 
-    >>> homeq = dsubs(eq, {x:t, y(x): t*v(t)}).simplify()
+    >>> homeq = dsubs(eq, {x:t, y(x): t*v(t)}, [t, v(t)]).simplify()
     >>> homeq
     t*Derivative(v(t), t) - 1/v(t)
 
@@ -794,7 +793,7 @@ def dsubs(eq, trans, newvars=None):
     and `y(x) = \phi(t)`
 
     >>> from sympy import exp, log, logcombine
-    >>> eqtrans = dsubs(eq, {x: exp(t), y(x): phi(t)}).simplify()
+    >>> eqtrans = dsubs(eq, {x: exp(t), y(x): phi(t)}, [t, phi(t)]).simplify()
     >>> eqtrans
     a*Derivative(phi(t), t) + b*phi(t) - Derivative(phi(t), t) + Derivative(phi(t), (t, 2))
 
@@ -815,12 +814,9 @@ def dsubs(eq, trans, newvars=None):
     # derivative in case of nested derivatives. Facilitates
     # chain rule to be applied.
     def diffx(e, sym, n):
-        if isinstance(sym, Function):
-            if n > 1:
-                return diffx(diffx(e, sym, n-1), sym, 1)
-            return Derivative(e, sym.args[0]) / Derivative(sym, sym.args[0])
-        else:
-            return Derivative(e, (sym, n))
+        if n > 1:
+            return diffx(diffx(e, sym, n-1), sym, 1)
+        return Derivative(e, mapdict[sym]) / Derivative(trans[sym], mapdict[sym])
 
     # eq has no derivative terms, so apply inverse transformation
     reverse = len(eq.atoms(Derivative)) == 0
@@ -853,17 +849,12 @@ def dsubs(eq, trans, newvars=None):
         for i, inew in zip(ints, newints):
             eq = eq.xreplace({i: inew})
 
-        # Replace the old dependent variables with new ones
-        for var in fun_trans:
-            eq = eq.xreplace({var: fun_trans[var]})
-
-        # Replace the old independent variables with new ones
-        for var in sym_trans:
-            eq = eq.xreplace({var: sym_trans[var]})
+        # Replace the old dependent and independent variables with new ones
+        eq = eq.xreplace(fun_trans)
+        eq = eq.xreplace(sym_trans)
 
     else:
         # Store all functions present in the equation
-        old_funcs = eq.atoms(Function)
         mapdict = {}
 
         for var in trans:
@@ -875,7 +866,7 @@ def dsubs(eq, trans, newvars=None):
             else:
                 atoms = trans[var].atoms(AppliedUndef)
             if not len(atoms):
-                raise ValueError(f"Invalid rule. Expected atleast one {var.__class__.__name__} for substitution")
+                raise ValueError("Invalid rule. Expected atleast one Symbol or Function for substitution")
 
             multi = False
             to_map = None
@@ -916,32 +907,12 @@ def dsubs(eq, trans, newvars=None):
             # Replace the old integral with the transformed integral
             eq = eq.subs(i, inew)
 
-        # Replace the old variable with a dummy function, making the new
-        # old variable a function of the new variable. This is done
-        # so that derivative terms don't evaluate to 0.
-        for var in trans:
-            if isinstance(var, Symbol) and var in mapdict:
-                eq = eq.subs(var, Function(var.name + 'f')(mapdict[var]))
-
         # Replace the derivatives and apply the chain rule so that
         # the derivatives are now with respect to the new variables.
         eq = eq.replace(Derivative, lambda e, vs: diffx(e, vs[0], vs[1]))
 
-        # Replace the dummy functions created above with the actual transformations
-        for var in trans:
-            if not isinstance(var, Symbol) and var in mapdict:
-                old_var = var.args[0]
-                eq = eq.xreplace({var.subs(old_var, Function(old_var.name + 'f')(mapdict[old_var])): trans[var]})
-
-        # Replace the old dependent variables with the new dependent variables
-        # Then, replace the dummy functions with the new independent variables
-        for var in trans:
-            if isinstance(var, Symbol) and var in mapdict:
-                for func in old_funcs:
-                    old_var = func.args[0]
-                    if old_var in trans:
-                        eq = eq.xreplace({func.subs(old_var, Function(old_var.name + 'f')(mapdict[old_var])): func.subs(old_var, trans[old_var])})
-                eq = eq.subs(Function(var.name + 'f')(mapdict[var]), trans[var])
+        # Replace the old functions with new functions
+        eq = eq.xreplace(trans)
 
         # Store all the derivative terms
         derivatives = list(eq.atoms(Derivative))
