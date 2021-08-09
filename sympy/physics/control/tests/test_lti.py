@@ -3,7 +3,7 @@ from sympy import (symbols, factor, Function, simplify, exp, oo, I,
 from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix, Matrix
 from sympy.physics.control import (TransferFunction, Series, Parallel,
-    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel)
+    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback)
 from sympy.testing.pytest import raises
 
 a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2, tau, zeta, wn = symbols('a, x, b, s, g, d, p, k,\
@@ -948,6 +948,42 @@ def test_Feedback_functions():
         (a0 + s)*(s**2 + 2*s*wn*zeta + wn**2))*(s**2 + 2*s*wn*zeta + wn**2), s)
     assert Feedback(TransferFunction(1, 1, p), tf4).rewrite(TransferFunction) == \
         TransferFunction(p, a0*p + p + p**a1 - s, p)
+
+
+def test_MIMOFeedback_construction():
+    tf1 = TransferFunction(1, s, s)
+    tf2 = TransferFunction(s, s**3 - 1, s)
+    tf3 = TransferFunction(s, s + 1, s)
+    tf4 = TransferFunction(s, s**2 + 1, s)
+
+    tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
+    tfm_2 = TransferFunctionMatrix([[tf2, tf3], [tf4, tf1]])
+    tfm_3 = TransferFunctionMatrix([[tf3, tf4], [tf1, tf2]])
+
+    f1 = MIMOFeedback(tfm_1, tfm_2)
+    assert f1.args == (tfm_1, tfm_2, -1)
+    assert f1.plant == tfm_1
+    assert f1.feedback_controller == tfm_2
+    assert f1.var == s
+    assert f1.ftype == -1
+
+    f2 = MIMOFeedback(tfm_2, tfm_1, 1)
+    assert f2.args == (tfm_2, tfm_1, 1)
+    assert f2.plant == tfm_2
+    assert f2.feedback_controller == tfm_1
+    assert f2.var == s
+    assert f2.ftype == 1
+
+    f3 = MIMOFeedback(tfm_1, MIMOSeries(tfm_3, tfm_2))
+    assert f3.args == (tfm_1, MIMOSeries(tfm_3, tfm_2), -1)
+    assert f3.plant == tfm_1
+    assert f3.feedback_controller == MIMOSeries(tfm_3, tfm_2)
+    assert f3.var == s
+    assert f3.ftype == -1
+
+
+def test_MIMOFeedback_functions():
+    pass
 
 
 def test_TransferFunctionMatrix_construction():
