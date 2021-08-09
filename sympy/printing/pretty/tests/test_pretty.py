@@ -996,6 +996,31 @@ y   \
     expr = Mul(Rational(2, 3), Rational(5, 7), evaluate=False)
     assert pretty(expr) == "2/3*5/7"
     assert upretty(expr) == "2/3⋅5/7"
+    expr = Mul(x + y, Rational(1, 2), evaluate=False)
+    assert pretty(expr) == "x + y\n-----\n  2  "
+    assert upretty(expr) == "x + y\n─────\n  2  "
+    expr = Mul(Rational(1, 2), x + y, evaluate=False)
+    assert pretty(expr) == "x + y\n-----\n  2  "
+    assert upretty(expr) == "x + y\n─────\n  2  "
+    expr = Mul(S.One, x + y, evaluate=False)
+    assert pretty(expr) == "1*(x + y)"
+    assert upretty(expr) == "1⋅(x + y)"
+    expr = Mul(x - y, S.One, evaluate=False)
+    assert pretty(expr) == "x - y"
+    assert upretty(expr) == "x - y"
+    expr = Mul(Rational(1, 2), x - y, S.One, x + y, evaluate=False)
+    assert pretty(expr) == "1/2*(x - y)*1*(x + y)"
+    assert upretty(expr) == "1/2⋅(x - y)⋅1⋅(x + y)"
+    expr = Mul(x + y, Rational(3, 4), S.One, y - z, evaluate=False)
+    assert pretty(expr) == "3*(x + y)*(y - z)\n-----------------\n        4        "
+    assert upretty(expr) == "3⋅(x + y)⋅(y - z)\n─────────────────\n        4        "
+    expr = Mul(x + y, Rational(1, 1), Rational(3, 4), Rational(5, 6),evaluate=False)
+    assert pretty(expr) == "3*5*(x + y)\n-----------\n    4*6    "
+    assert upretty(expr) == "3⋅5⋅(x + y)\n───────────\n    4⋅6    "
+    expr = Mul(Rational(3, 4), x + y, S.One, y - z, evaluate=False)
+    assert pretty(expr) == "3/4*(x + y)*1*(y - z)"
+    assert upretty(expr) == "3/4⋅(x + y)⋅1⋅(y - z)"
+
 
 def test_issue_5524():
     assert pretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
