@@ -115,9 +115,9 @@ def test_latex_basic():
     assert latex(Mul(x + y, Rational(3, 4), S.One, y - z, evaluate=False)) == \
         r'\frac{1 \cdot 3 \left(x + y\right) \left(y - z\right)}{4}'
     assert latex(Mul(x + y, Rational(1, 1), Rational(3, 4), Rational(5, 6), evaluate=False)) == \
-        r'\frac{1 \cdot 3 \cdot 5 \left(x + y\right)}{4 \cdot 6}'  
+        r'\frac{1 \cdot 3 \cdot 5 \left(x + y\right)}{4 \cdot 6}'
     assert latex(Mul(Rational(3, 4), x + y, S.One, y - z, evaluate=False)) == \
-        r'\frac{3}{4} \left(x + y\right) 1 \left(y - z\right)'    
+        r'\frac{3}{4} \left(x + y\right) 1 \left(y - z\right)'
 
     assert latex(1/x) == r"\frac{1}{x}"
     assert latex(1/x, fold_short_frac=True) == r"1 / x"
