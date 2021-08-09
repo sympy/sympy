@@ -716,7 +716,17 @@ def dsubs(eq, trans, newvars=None):
     with the old variable as key and the transformation as value.
 
     ``newvars``: A list of new variables in the transformation rules
-    that should be considered variables rather than constants. For example a transformation x = a t where a is a constant and t is the new independent variable can be specified as... For convenience the newvars argument can be omitted although for robust usage in code it should always be provided. If the newvars argument is not provided then dsubs will treat all symbols in the replacement expression as variables but will raise an exception of the number of new variables is not equal to the number of variables being replaced.
+    that should be considered variables rather than constants. For example,
+    a transformation `x = a t` where `a` is a constant and `t` is the new
+    independent variable can be specified as -
+
+    ``trans = {x: a*t}, newvars = [t]``
+
+    For convenience, the newvars argument can be omitted although for robust
+    usage in code. it should always be provided. If the newvars argument is
+    not provided then dsubs will treat all symbols in the replacement expression
+    as variables but will raise an exception of the number of new variables is
+    not equal to the number of variables being replaced.
 
     Returns
     =======
