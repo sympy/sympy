@@ -1197,7 +1197,7 @@ class LambertW(Function):
         if len(self.args) == 1:
             from sympy import Order, ceiling, expand_multinomial
             arg = self.args[0].nseries(x, n=n, logx=logx)
-            lt = arg.compute_leading_term(x, logx=logx)
+            lt = arg.as_leading_term(x, logx=logx)
             lte = 1
             if lt.is_Pow:
                 lte = lt.exp

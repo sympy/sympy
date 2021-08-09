@@ -694,9 +694,7 @@ class Function(Application, Expr):
         args0 = [t.limit(x, 0) for t in args]
         if any(t.is_finite is False for t in args0):
             from sympy import oo, zoo, nan
-            # XXX could use t.as_leading_term(x) here but it's a little
-            # slower
-            a = [t.compute_leading_term(x, logx=logx) for t in args]
+            a = [t.as_leading_term(x, logx=logx) for t in args]
             a0 = [t.limit(x, 0) for t in a]
             if any([t.has(oo, -oo, zoo, nan) for t in a0]):
                 return self._eval_aseries(n, args0, x, logx)

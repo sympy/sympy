@@ -3383,7 +3383,14 @@ class Expr(Basic, EvalfMixin):
         This is a wrapper to compute a series first.
         """
         from sympy import Dummy, log, Piecewise, piecewise_fold
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
 
+        SymPyDeprecationWarning(
+            feature="compute_leading_term",
+            useinstead="as_leading_term",
+            issue=21843,
+            deprecated_since_version="1.9"
+        ).warn()
         if self.has(Piecewise):
             expr = piecewise_fold(self)
         else:

@@ -1,7 +1,7 @@
 from sympy import (
     nan, pi, symbols, DiracDelta, Symbol, diff,
     Piecewise, I, Eq, Derivative, oo, SingularityFunction, Heaviside,
-    Float, O
+    Float
 )
 
 from sympy.core.expr import unchanged
