@@ -1657,7 +1657,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
 
 
 class Feedback(SISOLinearTimeInvariant):
-    """
+    r"""
     A class for representing closed-loop feedback interconnection between two
     SISO input/output systems. The first argument, ``plant``, is the
     primary plant of the closed-loop system or in simple words, the transfer
@@ -1953,7 +1953,7 @@ def _is_invertible(a, b, ftype):
 
 
 class MIMOFeedback(MIMOLinearTimeInvariant):
-    """
+    r"""
     A class for representing closed-loop feedback interconnection between two
     MIMO input/output systems.
 
@@ -2063,7 +2063,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
     @property
     def plant(self):
-        """
+        r"""
         Returns the primary plant of the closed-loop MIMO feedback.
 
         Examples
@@ -2098,7 +2098,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
     @property
     def feedback_controller(self):
-        """
+        r"""
         Returns the feedback controller of the closed feedback loop.
 
         Examples
@@ -2131,7 +2131,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
     @property
     def var(self):
-        """
+        r"""
         Returns the complex variable of the Laplace transform used by all
         the transfer functions involved in the negative feedback closed loop.
 
@@ -2154,7 +2154,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
     @property
     def ftype(self):
-        """
+        r"""
         Returns the type of closed-loop MIMO Feedback. ``1``
         for Positive and ``-1`` for Negative.
         """
@@ -2162,7 +2162,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
     @property
     def sensitivity(self):
-        """
+        r"""
         Returns the sensitivity function matrix of the feedback loop.
         Sensitivity of a closed-loop system is the ratio of change
         in the open loop gain to the change in the closed loop gain.
@@ -2213,7 +2213,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
             self.ftype*_plant_mat*_controller_mat).inv()
 
     def doit(self, cancel=True, expand=False, **kwargs):
-        """
+        r"""
         Returns the resultant closed loop transfer function matrix obtained by the
         closed-loop feedback interconnection.
 
