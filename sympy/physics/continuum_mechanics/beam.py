@@ -132,6 +132,7 @@ class Beam:
         self._applied_loads = []
         self._reaction_loads = {}
         self._ild_reactions = {}
+        self._ild_shear = 0
 
         # _original_load is a copy of _load equations with unsubstituted reaction
         # forces. It is used for calculating reaction forces in case of I.L.D.
@@ -148,6 +149,11 @@ class Beam:
     def reaction_loads(self):
         """ Returns the reaction forces in a dictionary."""
         return self._reaction_loads
+
+    @property
+    def ild_shear(self):
+        """ Returns the I.L.D. shear equation."""
+        return self._ild_shear
 
     @property
     def ild_reactions(self):
@@ -1588,15 +1594,15 @@ class Beam:
 
         return shear_force, bending_moment
 
-    def solve_for_ild_reactions(self, val, *reactions):
+    def solve_for_ild_reactions(self, value, *reactions):
         """
 
         Determines the Influence Line Diagram equations for reaction
-        forces under the effect of a moving load and returns a dictionary.
+        forces under the effect of a moving load.
 
         Parameters
         ==========
-        val : Integer
+        value : Integer
             Magnitude of moving load
         reactions :
             The reaction forces applied on the beam.
@@ -1636,8 +1642,8 @@ class Beam:
         C3 = Symbol('C3')
         C4 = Symbol('C4')
 
-        shear_curve = limit(shear_force, x, l) - val
-        moment_curve = limit(bending_moment, x, l) - val*(l-x)
+        shear_curve = limit(shear_force, x, l) - value
+        moment_curve = limit(bending_moment, x, l) - value*(l-x)
 
         slope_eqs = []
         deflection_eqs = []
@@ -1665,6 +1671,13 @@ class Beam:
         Plots the Influence Line Diagram of Reaction Forces
         under the effect of a moving load. This function
         should be called after calling solve_for_ild_reactions().
+
+        Parameters
+        ==========
+
+        subs : dictionary
+               Python dictionary containing Symbols as key and their
+               corresponding values.
 
         Examples
         ========
@@ -1728,6 +1741,148 @@ class Beam:
 
         return PlotGrid(len(ildplots), 1, *ildplots)
 
+    def _solve_for_ild_shear(self):
+        """
+
+        Helper function for solve_for_ild_shear(). It takes the unsubstituted
+        copy of the load equation and uses it to calculate shear force equation.
+
+        """
+        x = self.variable
+        shear_force = -integrate(self._original_load, x)
+
+        return shear_force
+
+    def solve_for_ild_shear(self, distance, value, *reactions):
+        """
+
+        Determines the Influence Line Diagram equations for shear at a
+        specified point under the effect of a moving load.
+
+        Parameters
+        ==========
+        distance : Integer
+            Distance of the point from the start of the beam
+            for which equations are to be determined
+        value : Integer
+            Magnitude of moving load
+        reactions :
+            The reaction forces applied on the beam.
+
+        Examples
+        ========
+
+        There is a beam of length 12 meters. There are two simple supports
+        below the beam, one at the starting point and another at a distance
+        of 8 meters. Calculate the I.L.D. equations for Shear at a distance
+        of 4 meters under the effect of a moving load of magnitude 1kN.
+
+        .. image:: ildshear.png
+
+        Using the sign convention of downwards forces being positive.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy import symbols
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> E, I = symbols('E, I')
+            >>> R_0, R_8 = symbols('R_0, R_8')
+            >>> b = Beam(12, E, I)
+            >>> b.apply_support(0, 'roller')
+            >>> b.apply_support(8, 'roller')
+            >>> b.solve_for_ild_reactions(1, R_0, R_8)
+            >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
+            >>> b.ild_shear
+            Piecewise((x/8, x < 4), (x/8 - 1, x > 4))
+
+        """
+
+        x = self.variable
+        l = self.length
+
+        shear_force = self._solve_for_ild_shear()
+
+        shear_curve1 = value - limit(shear_force, x, distance)
+        shear_curve2 = (limit(shear_force, x, l) - limit(shear_force, x, distance)) - value
+
+        for reaction in reactions:
+            shear_curve1 = shear_curve1.subs(reaction,self._ild_reactions[reaction])
+            shear_curve2 = shear_curve2.subs(reaction,self._ild_reactions[reaction])
+
+        shear_eq = Piecewise((shear_curve1, x < distance), (shear_curve2, x > distance))
+
+        self._ild_shear = shear_eq
+
+    def plot_ild_shear(self,subs=None):
+        """
+
+        Plots the Influence Line Diagram for Shear under the effect
+        of a moving load. This function should be called after
+        calling solve_for_ild_shear().
+
+        Parameters
+        ==========
+
+        subs : dictionary
+               Python dictionary containing Symbols as key and their
+               corresponding values.
+
+        Examples
+        ========
+
+        There is a beam of length 12 meters. There are two simple supports
+        below the beam, one at the starting point and another at a distance
+        of 8 meters. Plot the I.L.D. for Shear at a distance
+        of 4 meters under the effect of a moving load of magnitude 1kN.
+
+        .. image:: ildshear.png
+
+        Using the sign convention of downwards forces being positive.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy import symbols
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> E, I = symbols('E, I')
+            >>> R_0, R_8 = symbols('R_0, R_8')
+            >>> b = Beam(12, E, I)
+            >>> b.apply_support(0, 'roller')
+            >>> b.apply_support(8, 'roller')
+            >>> b.solve_for_ild_reactions(1, R_0, R_8)
+            >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
+            >>> b.ild_shear
+            Piecewise((x/8, x < 4), (x/8 - 1, x > 4))
+            >>> b.plot_ild_shear()
+            Plot object containing:
+            [0]: cartesian line: Piecewise((x/8, x < 4), (x/8 - 1, x > 4)) for x over (0.0, 12.0)
+
+        """
+
+        if not self._ild_shear:
+            raise ValueError("I.L.D. shear equation not found. Please use solve_for_ild_shear() to generate the I.L.D. shear equations.")
+
+        x = self.variable
+        l = self._length
+
+        if subs is None:
+            subs = {}
+
+        for sym in self._ild_shear.atoms(Symbol):
+            if sym != x and sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+
+        for sym in self._length.atoms(Symbol):
+            if sym != x and sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+
+        return plot(self._ild_shear.subs(subs), (x, 0, l),  title='I.L.D. for Shear',
+               xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{V}$', line_color='blue',show=True)
 
     @doctest_depends_on(modules=('numpy',))
     def draw(self, pictorial=True):
