@@ -889,6 +889,7 @@ def test_Feedback_construction():
     f5 = Feedback(tf5, TransferFunction(1, 1, s))
     assert f5.args == (tf5, TransferFunction(1, 1, s), -1)
     assert f5.var == s
+    assert f5 == Feedback(tf5)  # When feedback_controller is not passed explicitly, it is assumed to be unit tf.
 
     f6 = Feedback(TransferFunction(1, 1, p), tf4)
     assert f6.args == (TransferFunction(1, 1, p), tf4, -1)
