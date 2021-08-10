@@ -2021,9 +2021,59 @@ class Kamke:
 
     all_chapters = [chapter_1, chapter_2, chapter_3, chapter_4, chapter_5, chapter_6, chapter_7, chapter_8, chapter_9]
 
+    css = """
+    .container {
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: 10px;
+        padding-right: 10px;
+        text-align: center;
+    }
 
-    def create_example_page(self, example, eq, status, sol, time, classify_output, checkodesol_output):
+    h1, h2, h3 {
+        margin: 20px 0;
+        text-align: center;
+    }
+
+    li {
+        border-radius: 3px;
+        padding: 25px 30px;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+    }
+
+    .table-header {
+        background-color: rgba(0,0,0,0.75);
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .table-row {
+        background-color: #ffffff;
+        box-shadow: 0px 0px 9px 0px rgba(0,0,0,0.1);
+    }
+    """
+
+
+    def create_example_page(self, example, eq, status, sol, time, classify_output, checkodesol_output, all_hints):
+        exno = int(example.split('.')[1])
+        chno = int(example[6])
+        prev = ""
+        nxt = ""
         backslash = "\\"
+        hints_section = f"""<h4>Matching Hints</h4>\n<ul>\n{classify_output}\n</ul>\n<br>\n"""
+        if all_hints:
+            hints_section = f"<h4>All Solutions</h4>\n{classify_output}"
+        if exno != 1:
+            prev = f"<a href='kamke_{chno}.{exno-1}.html'>&laquo; Previous</a>"
+        if exno != len(self.all_chapters[chno-1]):
+            nxt = f"<a href='kamke_{chno}.{exno+1}.html'>Next &raquo;</a>"
+
         example_page = f"""<!DOCTYPE html>
         <html>
         <head>
@@ -2041,32 +2091,79 @@ class Kamke:
         .MathJax {{
             font-size: 1.6em !important;
         }}
+        a {{
+            text-decoration: none;
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: rgba(0,0,0,0.75);
+            color: white;
+            border-radius: 7px;
+            font-size: 0.8em;
+        }}
+        .collapsible {{
+            background-color: #555;
+            color: white;
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+        }}
+
+        .active, .collapsible:hover {{
+            background-color: rgba(0,0,0,0.75);
+        }}
+
+        .content {{
+            padding: 0 18px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            background-color: #f1f1f1;
+            overflow-x: scroll;
+        }}
         </style>
         </head>
         <body>
         <p>
         <h2>{example.capitalize().replace("_", " ")}</h2>
+        <div>
+        {prev}
+        <a href='chapter_summary.html'>Chapter Home</a>
+        <a href='../summary.html'>Home</a>
+        {nxt}
+        </div>
         <h4>Equation</h4>
             \\({eq}\\) <br>
         <h4>Solution</h4>
             <!-- Render latex if solution was found by dsolve, else render error message -->
-            {f"{backslash}({sol}{backslash})" if status == 0 else sol} <br>
+            {f"{backslash}({sol}{backslash})" if status != 1 else sol} <br>
             <h4>Verification (using checkodesol)</h4> {checkodesol_output} <br>
         <h4>Time Taken</h4>
             {time} seconds <br>
-        <h4>Matching Hints</h4>
-            <ul>
-            {classify_output}
-            </ul> <br>
         </p>
+        {hints_section}
+        <script>
+        var coll = document.getElementsByClassName("collapsible");
+        var i;
+
+        for (i = 0; i < coll.length; i++)
+        coll[i].addEventListener("click", function() {{
+            this.classList.toggle("active");
+            var content = this.nextElementSibling;
+            if (content.style.maxHeight)
+            content.style.maxHeight = null;
+            else
+            content.style.maxHeight = content.scrollHeight + "px";
+        }});
+        </script>
         </body>
         </html>
         """
-        try:
-            os.mkdir(f"kamke/chapter_{int(example[6])}/")
-        except FileExistsError:
-            pass
-        file = open(f"kamke/chapter_{int(example[6])}/{example}.html", "w")
+        os.makedirs(f"kamke/chapter_{chno}/", exist_ok=True)
+        file = open(f"kamke/chapter_{chno}/{example}.html", "w")
         file.write(example_page)
         file.close()
 
@@ -2083,38 +2180,44 @@ class Kamke:
                 src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
         </script>
         <style>
-        h1, h2 {{
-            text-align: center;
+        {self.css}
+        .col-1, .col-2, .col-3, .col-4 {{
+            flex-basis: 10%;
         }}
-        #summary {{
-            margin: 10px auto;
-            width: 600px;
-            text-align: center;
+        .col-5 {{
+            flex-basis: 50%;
         }}
-        table, th, td {{
-        border: 1px solid black;
-        border-collapse: collapse;
+        .col-6 {{
+            flex-basis: 10%;
         }}
-        td {{
-            min-width: 100px;
+        #home {{
+            text-decoration: none;
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: rgba(0,0,0,0.75);
+            color: white;
+            border-radius: 7px;
         }}
         </style>
         </head>
         <body>
         <h1>Kamke Test Suite</h1>
         <h2>Chapter {chno}</h2>
-        <div>
-            <table id="summary">
-                <tr>
-                    <th>Name</th>
-                    <th>Order</th>
-                    <th>Linearity</th>
-                    <th>Status</th>
-                    <th>Hint</th>
-                    <th>Time</th>
-                </tr>
+        <div style="text-align: center">
+            <a id="home" href="../summary.html">Home</a>
+        </div>
+        <div class="container">
+            <ul>
+                <li class="table-header">
+                    <div class="col-1">Name</div>
+                    <div class="col-2">Order</div>
+                    <div class="col-3">Linearity</div>
+                    <div class="col-4">Status</div>
+                    <div class="col-5">Hint</div>
+                    <div class="col-6">Time</div>
+                </li>
                 {rows}
-            </table>
+            </ul>
         </div>
         </body>
         </html>
@@ -2136,37 +2239,32 @@ class Kamke:
                 src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
         </script>
         <style>
-        h1, h2 {{
-            text-align: center;
+        {self.css}
+        .col-1 {{
+            flex-basis: 15%;
         }}
-        #summary {{
-            margin: 10px auto;
-            width: 600px;
-            text-align: center;
+        .col-2, .col-3, .col-4 {{
+            flex-basis: 20%;
         }}
-        table, th, td {{
-        border: 1px solid black;
-        border-collapse: collapse;
-        }}
-        td {{
-            min-width: 100px;
+        .col-5 {{
+            flex-basis: 25%;
         }}
         </style>
         </head>
         <body>
         <h1>Kamke Test Suite</h1>
         <h2>Chapter Summary</h2>
-        <div>
-            <table id="summary">
-                <tr>
-                    <th>Chapter</th>
-                    <th>Solved</th>
-                    <th>Failed</th>
-                    <th>Solved and Checked</th>
-                    <th>Time</th>
-                </tr>
+        <div class="container">
+            <ul>
+                <li class="table-header">
+                    <div class="col-1">Chapter</div>
+                    <div class="col-2">Solved</div>
+                    <div class="col-3">Failed</div>
+                    <div class="col-4">Solved and Checked</div>
+                    <div class="col-5">Time</div>
+                </li>
                 {rows}
-            </table>
+            </ul>
         </div>
         </body>
         </html>
@@ -2207,110 +2305,141 @@ class Kamke:
         return self.all_chapters[int(example[6])-1][example]
 
 
-    def test_example(self, example, hint="default", verify=False, dsolve_time=10, checkodesol_time=10, single=False):
+    def test_example(self, example, hint="default", verify=False, dsolve_time=10, checkodesol_time=10, single=False, all_hints=False):
         start = time.time()
         eq = self.get_example(example)
-        sol = None
+        final_sol = None
         # Status index
-        status = 0
+        final_status = 1
         status_messages = ["Solved", "Failed", "Solved and Checked"]
-        error_message = ""
-        checkodesol_output = "Skipped"
+        final_error_message = ""
+        final_checkodesol_output = "Skipped"
+        classify_output = ""
+        classify_hints = classify_ode(eq, y(x))
 
-        try:
-            # Try to find the solution to the equation
-            with time_limit(dsolve_time, 'dsolve'):
-                if isinstance(eq, tuple):
-                    dsolve(*eq)
-                else:
-                    sol = dsolve(eq, y(x), hint)
-                if isinstance(sol, Eq):
-                    sol = [sol]
+        if not all_hints:
+            hints = [hint]
+            for hnt in classify_hints:
+                classify_output += f"<li>{hnt}</li>\n"
+        else:
+            hints = classify_hints
 
-        except (TimeOutError, ValueError, NotImplementedError, TypeError) as e:
-            # Solution not found / timeout
+        for hnt in hints:
+            sol = None
             status = 1
-            error_message += str(e) + "\n"
-
-        # If a solution is found
-        if sol is not None and verify:
+            error_message = ""
+            checkodesol_output = "Skipped"
+            hint_start = time.time()
             try:
-                # Try to verify if the solution is correct
-                assert len(sol)
-                with time_limit(checkodesol_time, 'checkodesol'):
+                # Try to find the solution to the equation
+                with time_limit(dsolve_time, 'dsolve'):
                     if isinstance(eq, tuple):
-                        checkodesol_output = checkodesol(eq[0], sol)
+                        dsolve(*eq)
                     else:
-                        checkodesol_output = checkodesol(eq, sol, y(x))
-                assert any([x[0] for x in checkodesol_output])
-                status = 2
-
-            except AssertionError as e:
-                # Wrong solution
-                status = 1
-                error_message += str(e) + "\n"
+                        sol = dsolve(eq, y(x), hnt)
+                    if isinstance(sol, Eq):
+                        sol = [sol]
+                    status = 0
 
             except (TimeOutError, ValueError, NotImplementedError, TypeError) as e:
-                # Checkodesol unable to verify / timeout
-                status = 1
+                # Solution not found / timeout
                 error_message += str(e) + "\n"
 
+            # If a solution is found
+            if sol is not None and verify:
+                try:
+                    # Try to verify if the solution is correct
+                    assert len(sol)
+                    with time_limit(checkodesol_time, 'checkodesol'):
+                        if isinstance(eq, tuple):
+                            checkodesol_output = checkodesol(eq[0], sol)
+                        else:
+                            checkodesol_output = checkodesol(eq, sol, y(x))
+                    assert any([x[0] for x in checkodesol_output])
+                    status = 2
+
+                except AssertionError as e:
+                    # Wrong solution
+                    error_message += str(e) + "\n"
+
+                except (TimeOutError, ValueError, NotImplementedError, TypeError) as e:
+                    # Checkodesol unable to verify / timeout
+                    error_message += str(e) + "\n"
+
+            if sol is not None:
+                if final_sol is None:
+                    final_sol = sol
+                    final_status = status
+                    final_error_message = error_message
+                    final_checkodesol_output = checkodesol_output
+                hint_sol = f"\\({latex(sol)}\\)"
+            else:
+                hint_sol = error_message
+
+            if hnt != "default":
+                classify_output += f"""<button class="collapsible">{hnt}</button>
+                        <div class="content">
+                            <h4>Solution</h4>
+                            {hint_sol} <br>
+                            <h4>Verification (using checkodesol)</h4> {checkodesol_output} <br>
+                            <h4>Time Taken</h4>
+                            {time.time() - hint_start} seconds <br> <br>
+                        </div>"""
+
         elapsed = time.time() - start
-        log = f"{example} {status_messages[status]} in {elapsed} seconds\n"
-        classify_output = ""
-        hints = classify_ode(eq, y(x))
-        for hint in hints:
-            classify_output += f"<li>{hint}</li>\n"
-        if sol is None:
-            log += error_message
-            self.create_example_page(example, latex(eq), status, error_message, elapsed, classify_output, checkodesol_output)
+        log = f"{example} {status_messages[final_status]} in {elapsed} seconds\n"
+
+        if final_sol is None:
+            if len(classify_hints) == 0:
+                final_error_message += "Not Implemented\n"
+            log += final_error_message
+            self.create_example_page(example, latex(eq), final_status, final_error_message, elapsed, classify_output, final_checkodesol_output, all_hints)
         else:
-            log += f"Equation: {eq}\nSolution: {sol}\n"
-            self.create_example_page(example, latex(eq), status, latex(sol), elapsed, classify_output, checkodesol_output)
+            log += f"Equation: {eq}\nSolution: {final_sol}\n"
+            self.create_example_page(example, latex(eq), final_status, latex(final_sol), elapsed, classify_output, final_checkodesol_output, all_hints)
         if single:
             print(log)
-        return [log, status, hints, elapsed]
+        return [log, final_status, classify_hints, elapsed]
 
 
-    def test_chapter(self, chno, hint="default", verify=False, dsolve_time=10, checkodesol_time=10, single=False):
+    def test_chapter(self, chno, hint="default", verify=False, dsolve_time=10, checkodesol_time=10, single=False, all_hints=False):
         # Time elapsed
         total_time = 0
         # Counts for result
         counts = [0, 0, 0]
+        status_messages = ["Solved", "Failed", "Solved and Checked"]
         rows = ""
-        try:
-            os.mkdir("kamke/chapter_5/")
-        except FileExistsError:
-            pass
+        os.makedirs(f"kamke/chapter_{chno}/", exist_ok=True)
 
-        for example in self.all_chapters[chno-1]:
+        for example in list(self.all_chapters[chno-1])[:2]:
             eq = self.get_example(example)
             if isinstance(eq, tuple):
                 eq = eq[0]
-            rows += f"""<tr>
-            <td>
+            rows += f"""<li class="table-row">
+            <div class="col-1">
                 <a href='{example}.html'>{example.capitalize().replace("_", " ")}</a>
-            </td>
-            <td>
+            </div>
+            <div class="col-2">
                 {self.get_order(eq)}
-            </td>
-            <td>
+            </div>
+            <div class="col-3">
                 {self.get_linearity(eq)}
-            </td>\n"""
-            output, status, hints, elapsed = self.test_example(example, hint, verify, dsolve_time, checkodesol_time)
+            </div>\n"""
+            output, status, hints, elapsed = self.test_example(example, hint, verify, dsolve_time, checkodesol_time, all_hints=all_hints)
+            print(output)
             counts[status] += 1
             total_time += elapsed
             hint = hints[0] if len(hints) else "Not Implemented"
-            rows += f"""<td>
-            {status}
-            </td>
-            <td>
+            rows += f"""<div class="col-4">
+            {status_messages[status]}
+            </div>
+            <div class="col-5">
                 {hint}
-            </td>
-            <td>
+            </div>
+            <div class="col-6">
                 {round(elapsed, 3)}
-            </td>
-            </tr>\n"""
+            </div>
+            </li>\n"""
 
         self.create_chapter_page(chno, rows)
 
@@ -2323,7 +2452,7 @@ class Kamke:
         return [total_time, counts]
 
 
-    def test_all_examples(self, hint="default", verify=False, dsolve_time=10, checkodesol_time=10):
+    def test_all_examples(self, hint="default", verify=False, dsolve_time=10, checkodesol_time=10, all_hints=False):
         # Time elapsed
         total_time = 0
         # Counts for result
@@ -2331,25 +2460,25 @@ class Kamke:
         rows = ""
 
         for chapter in range(1, 8):
-            elapsed, cts = self.test_chapter(chapter, hint, verify, dsolve_time, checkodesol_time)
+            elapsed, cts = self.test_chapter(chapter, hint, verify, dsolve_time, checkodesol_time, all_hints=all_hints)
             total_time += elapsed
-            rows += f"""<tr>
-            <td>
+            rows += f"""<li class="table-row">
+            <div class="col-1">
                 <a href="chapter_{chapter}/chapter_summary.html">Chapter {chapter}</a>
-            </td>
-            <td>
+            </div>
+            <div class="col-2">
                 {cts[0]}
-            </td>
-            <td>
+            </div>
+            <div class="col-3">
                 {cts[1]}
-            </td>
-            <td>
+            </div>
+            <div class="col-4">
                 {cts[2]}
-            </td>
-            <td>
+            </div>
+            <div class="col-5">
                 {round(elapsed, 3)}
-            </td>
-            </tr>
+            </div>
+            </li>
             """
             for i in range(3):
                 counts[i] += cts[i]
@@ -2363,16 +2492,14 @@ class Kamke:
         print("No. of ODEs solved and checked:", counts[2])
 
 if __name__ == '__main__':
-    try:
-        os.mkdir("kamke")
-    except FileExistsError:
-        pass
+    os.makedirs("kamke", exist_ok=True)
 
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--example", help="Name of the example in the format kamke_{chapter_no}.{problem_no}\nSpecify all to test all examples", default="all")
     parser.add_argument("-ch", "--chapter", help="Chapter no. Tests all examples of a chapter", type=int)
     parser.add_argument("--hint", help="Hint to be used to solve the ODEs", default="default")
+    parser.add_argument("--all_hints", help="Solve the ODE with all matching hints", action="store_true")
     parser.add_argument("--verify", help="Verify the solution from dsolve using checkodesol", action="store_true")
     parser.add_argument("--dsolve_time", help="Timeout duration (in seconds) for dsolve", type=int, default=10)
     parser.add_argument("--checkodesol_time", help="Timeout duration (in seconds) for checkodesol", type=int, default=10)
@@ -2380,8 +2507,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     kamke = Kamke()
     if args.chapter is not None:
-        kamke.test_chapter(args.chapter, args.hint, args.verify, args.dsolve_time, args.checkodesol_time, single=True)
+        kamke.test_chapter(args.chapter, args.hint, args.verify, args.dsolve_time, args.checkodesol_time, True, args.all_hints)
     elif args.example == "all":
-        kamke.test_all_examples(args.hint, args.verify, args.dsolve_time, args.checkodesol_time)
+        kamke.test_all_examples(args.hint, args.verify, args.dsolve_time, args.checkodesol_time, all_hints=args.all_hints)
     else:
-        kamke.test_example(args.example, args.hint, args.verify, args.dsolve_time, args.checkodesol_time, single=True)
+        kamke.test_example(args.example, args.hint, args.verify, args.dsolve_time, args.checkodesol_time, True, args.all_hints)
