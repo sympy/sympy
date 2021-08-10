@@ -694,6 +694,14 @@ class Integral(AddWithLimits):
                         try:
                             evalued = Add(*others)._eval_interval(x, a, b)
                             evalued_pw = piecewise_fold(Add(*piecewises))._eval_interval(x, a, b)
+                            if isinstance(evalued_pw, Integral):
+                                antideriv = self._eval_integral(function, xab[0], manual=True)
+                                piecewises = []
+                                for f in Add.make_args(antideriv):
+                                    if any(isinstance(g, Piecewise)
+                                           for g in Mul.make_args(f)):
+                                               piecewises.append(piecewise_fold(f))
+                                evalued_pw = piecewise_fold(Add(*piecewises))._eval_interval(x, a, b)
                             function = uneval + evalued + evalued_pw
                         except NotImplementedError:
                             # This can happen if _eval_interval depends in a

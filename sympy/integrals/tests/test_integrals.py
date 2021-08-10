@@ -1833,3 +1833,7 @@ def test_issue_21024():
 def test_issue_21831():
     theta = symbols('theta')
     assert integrate(cos(3*theta)/(5-4*cos(theta)), (theta, 0, 2*pi)) == pi/12
+
+
+def test_issue_21711():
+    assert integrate(sqrt(1 - (x-1)*(x-1)), (x, 0, 1)) == pi/4
