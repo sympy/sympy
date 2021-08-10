@@ -1053,7 +1053,7 @@ def _simplex(M, R, S):
                     piv_rows.append((ratio, i))
 
             if not piv_rows:
-                assert False, 'Unbounded'
+                assert False, 'Objective function can assume arbitrarily large positive (resp. negative) values at feasible vectors! problem is Unbounded'
             piv_rows = sorted(piv_rows, key=lambda x: (x[0], x[1]))
             piv_rows = [(ratio, i) for ratio, i in piv_rows if ratio == piv_rows[0][0]]
             random.shuffle(piv_rows)
@@ -1071,7 +1071,7 @@ def _simplex(M, R, S):
                 if A[k, j] < 0:
                     piv_cols.append(j)
             if not piv_cols:
-                assert False, 'Infeasible'
+                assert False, 'The constraint set is empty! Linear programing problem is Infeasible'
             random.shuffle(piv_cols)
             j0 = piv_cols[0]
 
