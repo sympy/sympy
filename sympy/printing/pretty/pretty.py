@@ -1063,9 +1063,9 @@ class PrettyPrinter(Printer):
         _feedback = prettyForm(*stringPict.parens(_feedback))
         _feedback.baseline = 0
         # _feedback = _feedback**(prettyForm("-1"))
-        _feedback = prettyForm(*stringPict.right(_feedback, '-1'))
+        _feedback = prettyForm(*stringPict.right(_feedback, '-1 '))
         _feedback.baseline = _feedback.height()//2
-        _feedback = prettyForm.__mul__(_feedback, prettyForm(""))
+        _feedback = prettyForm.__mul__(_feedback, prettyForm(" "))
         if isinstance(expr.plant, TransferFunctionMatrix):
             _feedback.baseline = _feedback.height() - 1
         _feedback = prettyForm(*stringPict.next(_feedback, plant))

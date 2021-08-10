@@ -1998,13 +1998,13 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     >>> controller = TransferFunctionMatrix.from_Matrix(controller_mat, s)
     >>> feedback = MIMOFeedback(plant, controller)  # Negative Feedback (default)
     >>> pprint(feedback, use_unicode=False)
-    /    [1  1]    [10  0 ]   \-1 [1  1]
-    |    [-  -]    [--  - ]   |   [-  -]
-    |    [1  s]    [1   1 ]   |   [1  s]
-    |I + [    ]   *[      ]   |  *[    ]
-    |    [0  1]    [0   10]   |   [0  1]
-    |    [-  -]    [-   --]   |   [-  -]
-    \    [1  1]{t} [1   1 ]{t}/   [1  1]{t}
+    /    [1  1]    [10  0 ]   \-1   [1  1]
+    |    [-  -]    [--  - ]   |     [-  -]
+    |    [1  s]    [1   1 ]   |     [1  s]
+    |I + [    ]   *[      ]   |   * [    ]
+    |    [0  1]    [0   10]   |     [0  1]
+    |    [-  -]    [-   --]   |     [-  -]
+    \    [1  1]{t} [1   1 ]{t}/     [1  1]{t}
 
     To get the equivalent closed-loop system matrix, use either ``doit`` or ``rewrite`` method.
 
@@ -2232,13 +2232,13 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         >>> sys2 = TransferFunctionMatrix([[tf3, tf5], [tf5, -tf5]])
         >>> F_1 = MIMOFeedback(sys1, sys2)
         >>> pprint(F_1, use_unicode=False)
-        /    [  s      1  ]    [10  0]   \-1 [  s      1  ]
-        |    [-----    -  ]    [--  -]   |   [-----    -  ]
-        |    [1 - s    s  ]    [1   1]   |   [1 - s    s  ]
-        |I + [            ]   *[     ]   |  *[            ]
-        |    [ 10    s - 1]    [0   0]   |   [ 10    s - 1]
-        |    [ --    -----]    [-   -]   |   [ --    -----]
-        \    [ 1       1  ]{t} [1   1]{t}/   [ 1       1  ]{t}
+        /    [  s      1  ]    [10  0]   \-1   [  s      1  ]
+        |    [-----    -  ]    [--  -]   |     [-----    -  ]
+        |    [1 - s    s  ]    [1   1]   |     [1 - s    s  ]
+        |I + [            ]   *[     ]   |   * [            ]
+        |    [ 10    s - 1]    [0   0]   |     [ 10    s - 1]
+        |    [ --    -----]    [-   -]   |     [ --    -----]
+        \    [ 1       1  ]{t} [1   1]{t}/     [ 1       1  ]{t}
         >>> pprint(F_1.doit(), use_unicode=False)
         [                 s                                  1 - s              ]
         [              -------                            -----------           ]
