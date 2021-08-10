@@ -13,20 +13,20 @@ lti
 .. autoclass:: Series
    :members:
 
-.. autoclass:: MIMOSeries
-   :members:
-
 .. autoclass:: Parallel
-   :members:
-
-.. autoclass:: MIMOParallel
    :members:
 
 .. autoclass:: Feedback
    :members:
 
-.. autoclass:: MIMOFeedback
+.. autoclass:: TransferFunctionMatrix
    :members:
 
-.. autoclass:: TransferFunctionMatrix
+.. autoclass:: MIMOSeries
+   :members:
+
+.. autoclass:: MIMOParallel
+   :members:
+
+.. autoclass:: MIMOFeedback
    :members:
