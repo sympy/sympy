@@ -966,6 +966,7 @@ def test_MIMOFeedback_construction():
     assert f1.feedback_controller == tfm_2
     assert f1.var == s
     assert f1.ftype == -1
+    assert -(-f1) == f1
 
     f2 = MIMOFeedback(tfm_2, tfm_1, 1)
     assert f2.args == (tfm_2, tfm_1, 1)
@@ -982,7 +983,7 @@ def test_MIMOFeedback_construction():
     assert f3.ftype == -1
 
 
-def test_MIMOFeedback_functions():
+def test_MIMOFeedback_errors():
     tf1 = TransferFunction(1, s, s)
     tf2 = TransferFunction(s, s**3 - 1, s)
     tf3 = TransferFunction(s, s - 1, s)
@@ -996,13 +997,13 @@ def test_MIMOFeedback_functions():
     tfm_4 = TransferFunctionMatrix([[tf1, tf5], [tf5, tf5]])
     tfm_5 = TransferFunctionMatrix([[-tf3, tf3], [tf3, tf6]])
     # tfm_4 is inverse of tfm_5. Therefore tfm_5*tfm_4 = I
+    tfm_6 = TransferFunctionMatrix([[-tf3]])
+    tfm_7 = TransferFunctionMatrix([[tf3, tf4]])
 
     # Unsupported Types
     raises(TypeError, lambda: MIMOFeedback(tf1, tf2))
     raises(TypeError, lambda: MIMOFeedback(MIMOParallel(tfm_1, tfm_2), tfm_3))
     # Shape Errors
-    tfm_6 = TransferFunctionMatrix([[-tf3]])
-    tfm_7 = TransferFunctionMatrix([[tf3, tf4]])
     raises(ValueError, lambda: MIMOFeedback(tfm_1, tfm_6, 1))
     raises(ValueError, lambda: MIMOFeedback(tfm_7, tfm_7))
     # ftype not 1/-1
@@ -1015,10 +1016,21 @@ def test_MIMOFeedback_functions():
     tfm_8 = TransferFunctionMatrix.from_Matrix(eye(2), var=p)
     raises(ValueError, lambda: MIMOFeedback(tfm_1, tfm_8, 1))
 
+
+def test_MIMOFeedback_functions():
+    tf1 = TransferFunction(1, s, s)
+    tf2 = TransferFunction(s, s - 1, s)
+    tf3 = TransferFunction(1, 1, s)
+    tf4 = TransferFunction(-1, s - 1, s)
+
+    tfm_1 = TransferFunctionMatrix.from_Matrix(eye(2), var=s)
+    tfm_2 = TransferFunctionMatrix([[tf1, tf3], [tf3, tf3]])
+    tfm_3 = TransferFunctionMatrix([[-tf2, tf2], [tf2, tf4]])
+    tfm_4 = TransferFunctionMatrix([[tf1, tf2], [-tf2, tf1]])
+
     # sensitivity, doit(), rewrite()
-    tfm_9 = TransferFunctionMatrix([[tf1, tf3], [-tf3, tf1]])
-    F_1 = MIMOFeedback(tfm_4, tfm_5)
-    F_2 = MIMOFeedback(tfm_4, MIMOSeries(tfm_9, -tfm_3), 1)
+    F_1 = MIMOFeedback(tfm_2, tfm_3)
+    F_2 = MIMOFeedback(tfm_2, MIMOSeries(tfm_4, -tfm_1), 1)
 
     assert F_1.sensitivity == Matrix([[1/2, 0], [0, 1/2]])
     assert F_2.sensitivity == Matrix([[(-2*s**4 + s**2)/(s**2 - s + 1),
@@ -1041,6 +1053,8 @@ def test_MIMOFeedback_functions():
     assert F_2.doit(expand=True) == \
         TransferFunctionMatrix(((TransferFunction(-s**2 + s, s**2 - s + 1, s), TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)),
         (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))
+
+    assert -(F_1.doit()) == (-F_1).doit()  # First negating then calculating vs calculating then negating.
 
 
 def test_TransferFunctionMatrix_construction():
