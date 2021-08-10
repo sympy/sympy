@@ -594,6 +594,9 @@ def test_latex_functions():
     assert latex(LambertW(n)) == r'W\left(n\right)'
     assert latex(LambertW(n, -1)) == r'W_{-1}\left(n\right)'
     assert latex(LambertW(n, k)) == r'W_{k}\left(n\right)'
+    assert latex(LambertW(n) * LambertW(n)) == r"W^{2}\left(n\right)"
+    assert latex(LambertW(n)**k) == r"W^{k}\left(n\right)"
+    assert latex(LambertW(n, k)**p) == r"W^{p}_{k}\left(n\right)"
 
     assert latex(Mod(x, 7)) == r'x\bmod{7}'
     assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right)\bmod{7}'
