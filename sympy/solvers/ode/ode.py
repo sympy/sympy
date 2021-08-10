@@ -755,9 +755,10 @@ def dsubs(eq, trans, newvars=None):
     2*g(t)*Derivative(g(t), (t, 2)) + cos(t)
     + 2*Derivative(g(t), t)**2
 
-    To apply a transformation with number of new variables greater
-    than number of old variables, a list of all new variables must be
-    given. For example, a transformation `x = a t` would be done as -
+    To apply a transformation with number of new symbols greater
+    than number of old symbols, a list of all new variables must be
+    given. For example, a transformation `x = a t` where `t` is the
+    new variable and `a` is a symbolic constant, would be done as -
 
     >>> dsubs(eq, {x: a*t, f(x): g(t)}, [t])
     cos(a*t) + Derivative(g(t), (t, 2))/a**2
