@@ -1766,7 +1766,7 @@ class Feedback(SISOLinearTimeInvariant):
         if ftype not in [-1, 1]:
             raise ValueError("Unsupported type for feedback. ")
 
-        if Mul(plant.to_expr(), feedback_controller.to_expr(), evaluate=True) == -ftype:
+        if Mul(plant.to_expr(), feedback_controller.to_expr(), evaluate=True) == ftype:
             raise ValueError("The equivalent system will have zero denominator.")
         if plant.var != feedback_controller.var:
             raise ValueError("Both `plant` and `feedback_controller` should be using the"
