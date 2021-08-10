@@ -2225,55 +2225,56 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix, MIMOFeedback
         >>> tf1 = TransferFunction(s, 1 - s, s)
         >>> tf2 = TransferFunction(1, s, s)
-        >>> tf3 = TransferFunction(10, 1, s)
-        >>> tf4 = TransferFunction(s - 1, 1, s)
+        >>> tf3 = TransferFunction(5, 1, s)
+        >>> tf4 = TransferFunction(s - 1, s, s)
         >>> tf5 = TransferFunction(0, 1, s)
         >>> sys1 = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
-        >>> sys2 = TransferFunctionMatrix([[tf3, tf5], [tf5, -tf5]])
-        >>> F_1 = MIMOFeedback(sys1, sys2)
+        >>> sys2 = TransferFunctionMatrix([[tf3, tf5], [tf5, tf5]])
+        >>> F_1 = MIMOFeedback(sys1, sys2, 1)
         >>> pprint(F_1, use_unicode=False)
-        /    [  s      1  ]    [10  0]   \-1   [  s      1  ]
-        |    [-----    -  ]    [--  -]   |     [-----    -  ]
-        |    [1 - s    s  ]    [1   1]   |     [1 - s    s  ]
-        |I + [            ]   *[     ]   |   * [            ]
-        |    [ 10    s - 1]    [0   0]   |     [ 10    s - 1]
-        |    [ --    -----]    [-   -]   |     [ --    -----]
-        \    [ 1       1  ]{t} [1   1]{t}/     [ 1       1  ]{t}
+        /    [  s      1  ]    [5  0]   \-1   [  s      1  ]
+        |    [-----    -  ]    [-  -]   |     [-----    -  ]
+        |    [1 - s    s  ]    [1  1]   |     [1 - s    s  ]
+        |I - [            ]   *[    ]   |   * [            ]
+        |    [  5    s - 1]    [0  0]   |     [  5    s - 1]
+        |    [  -    -----]    [-  -]   |     [  -    -----]
+        \    [  1      s  ]{t} [1  1]{t}/     [  1      s  ]{t}
         >>> pprint(F_1.doit(), use_unicode=False)
-        [                 s                                  1 - s              ]
-        [              -------                            -----------           ]
-        [              9*s + 1                            s*(9*s + 1)           ]
-        [                                                                       ]
-        [100*s*(s - 1) + 10*(1 - s)*(9*s + 1)  s*(s - 1)*(9*s + 1) + 100*s - 100]
-        [------------------------------------  ---------------------------------]
-        [         (1 - s)*(9*s + 1)                       s*(9*s + 1)           ]{t}
+        [               -s                         1 - s       ]
+        [             -------                   -----------    ]
+        [             6*s - 1                   s*(1 - 6*s)    ]
+        [                                                      ]
+        [25*s*(s - 1) + 5*(1 - s)*(6*s - 1)  (s - 1)*(6*s + 24)]
+        [----------------------------------  ------------------]
+        [        (1 - s)*(6*s - 1)              s*(6*s - 1)    ]{t}
 
         If the user wants the the resultant ``TransferFunctionMatrix`` object without
         cancelling the common factors then the ``cancel`` arg should be passed ``False``.
 
         >>> pprint(F_1.doit(cancel=False), use_unicode=False)
-        [                  s                                   1 - s              ]
-        [               -------                             -----------           ]
-        [               9*s + 1                             s*(9*s + 1)           ]
-        [                                                                         ]
-        [s*(100*s - 100) + 10*(1 - s)*(9*s + 1)  s*(s - 1)*(9*s + 1) + 100*s - 100]
-        [--------------------------------------  ---------------------------------]
-        [          (1 - s)*(9*s + 1)                        s*(9*s + 1)           ]{t}
+        [           25*s*(1 - s)                          25 - 25*s              ]
+        [       --------------------                    --------------           ]
+        [       25*(1 - 6*s)*(1 - s)                    25*s*(1 - 6*s)           ]
+        [                                                                        ]
+        [s*(25*s - 25) + 5*(1 - s)*(6*s - 1)  s*(s - 1)*(6*s - 1) + s*(25*s - 25)]
+        [-----------------------------------  -----------------------------------]
+        [         (1 - s)*(6*s - 1)                        2                     ]
+        [                                                 s *(6*s - 1)           ]{t}
 
         If the user want the expanded form of the resultant transfer function matrix,
         the ``expand`` arg should be passed as ``True``.
 
         >>> pprint(F_1.doit(expand=True), use_unicode=False)
-        [        s                   1 - s          ]
-        [     -------               --------        ]
-        [     9*s + 1                  2            ]
-        [                           9*s  + s        ]
-        [                                           ]
-        [    2                 3      2             ]
-        [10*s  - 20*s + 10  9*s  - 8*s  + 99*s - 100]
-        [-----------------  ------------------------]
-        [      2                       2            ]
-        [ - 9*s  + 8*s + 1          9*s  + s        ]{t}
+        [       -s               1 - s      ]
+        [     -------          ----------   ]
+        [     6*s - 1               2       ]
+        [                      - 6*s  + s   ]
+        [                                   ]
+        [     2                2            ]
+        [- 5*s  + 10*s - 5  6*s  + 18*s - 24]
+        [-----------------  ----------------]
+        [      2                   2        ]
+        [ - 6*s  + 7*s - 1      6*s  - s    ]{t}
 
         """
         _mat = self.sensitivity * self.plant.doit()._expr_mat
