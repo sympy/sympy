@@ -18,7 +18,7 @@ from sympy.logic.boolalg import (
     BooleanAtom, is_literal, term_to_integer, integer_to_term,
     truth_table, as_Boolean, to_anf, is_anf, distribute_xor_over_and,
     anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial,
-    _check_pair, _convert_to_varsSOP, _convert_to_varsPOS, Exclusive,)
+    _check_pair, _convert_to_varsSOP, _convert_to_varsPOS, Exclusive)
 from sympy.assumptions.cnf import CNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
@@ -1205,6 +1205,18 @@ def test_bool_monomial():
 def test_check_pair():
     assert _check_pair([0, 1, 0], [0, 1, 1]) == 2
     assert _check_pair([0, 1, 0], [1, 1, 1]) == -1
+
+
+@XFAIL
+def test_issue_19114():
+    expr = (A & ~C) | (~A & ~B) | (B & C)
+    assert to_dnf(expr, simplify=True) == expr
+
+
+@XFAIL
+def test_issue_20870():
+    result = SOPform([a, b, c, d], [1, 2, 3, 4, 5, 6, 8, 9, 11, 12, 14, 15])
+    assert len(result.args) == 6
 
 
 def test_convert_to_varsSOP():
