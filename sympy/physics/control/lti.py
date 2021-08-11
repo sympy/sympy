@@ -1927,17 +1927,16 @@ class Feedback(SISOLinearTimeInvariant):
             F_d = Parallel(unit, Series(self.feedback_controller, *arg_list)).doit()
         else:
             F_d = Parallel(unit, -Series(self.feedback_controller, *arg_list)).doit()
-        _tf = TransferFunction(F_n.num*F_d.den, F_n.den*F_d.num, F_n.var)
 
-        _num, _den = _tf.num, _tf.den
+        _resultant_tf = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
 
         if cancel:
-            _num, _den = Mul(_num, 1/_den, evaluate=False).cancel(expand=False).as_numer_denom()
+            _resultant_tf = _resultant_tf.simplify()
 
         if expand:
-            _num, _den = (_num.expand(), _den.expand())
+            _resultant_tf = _resultant_tf.expand()
 
-        return TransferFunction(_num, _den, self.var)
+        return _resultant_tf
 
     def _eval_rewrite_as_TransferFunction(self, num, den, sign, **kwargs):
         return self.doit()
