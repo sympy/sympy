@@ -2429,7 +2429,7 @@ class LatexPrinter(Printer):
             result = r"W%s\left(%s\right)" % (exp, arg0)
         else:
             arg1 = self._print(expr.args[1])
-            result = 'W{0}_{{{1}}}\left({2}\\right)'.format(exp, arg1, arg0)
+            result = "W{0}_{{{1}}}\\left({2}\\right)".format(exp, arg1, arg0)
         return result
 
     def _print_Morphism(self, morphism):
