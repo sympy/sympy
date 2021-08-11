@@ -2219,7 +2219,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
     def doit(self, cancel=True, expand=False, **kwargs):
         r"""
-        Returns the resultant closed loop transfer function matrix obtained by the
+        Returns the resultant transfer function matrix obtained by the
         closed-loop feedback interconnection.
 
         Examples
@@ -2254,7 +2254,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         [        (1 - s)*(6*s - 1)              s*(6*s - 1)    ]{t}
 
         If the user wants the the resultant ``TransferFunctionMatrix`` object without
-        cancelling the common factors then the ``cancel`` arg should be passed ``False``.
+        cancelling the common factors then the ``cancel`` kwarg should be passed ``False``.
 
         >>> pprint(F_1.doit(cancel=False), use_unicode=False)
         [           25*s*(1 - s)                          25 - 25*s              ]
@@ -2284,19 +2284,15 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         """
         _mat = self.sensitivity * self.plant.doit()._expr_mat
 
-        _cancel_num_den = lambda _num, _den: Mul(_num, 1/_den,
-            evaluate=False).cancel(expand=False)
+        _resultant_tfm = _to_TFM(_mat, self.var)
 
         if cancel:
-            _mat = _mat.applyfunc(lambda a: _cancel_num_den(*a.as_numer_denom()))
-
-        _expand_num_den = lambda _num, _den: Mul(_num.expand(),
-            Pow(_den.expand(), -1, evaluate=False))
+            _resultant_tfm = _resultant_tfm.simplify()
 
         if expand:
-            _mat = _mat.applyfunc(lambda a: _expand_num_den(*a.as_numer_denom()))
+            _resultant_tfm = _resultant_tfm.expand()
 
-        return _to_TFM(_mat, self.var)
+        return _resultant_tfm
 
     def _eval_rewrite_as_TransferFunctionMatrix(self, plant, feedback_controller, sign, **kwargs):
         return self.doit()

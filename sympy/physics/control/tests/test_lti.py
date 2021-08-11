@@ -933,12 +933,18 @@ def test_Feedback_functions():
     assert Feedback(tf, tf1*tf2*tf3).doit() == \
         TransferFunction((a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), k*(a2*p - s) + \
         (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Feedback(tf, tf1*tf2*tf3).sensitivity == \
+        1/(k*(a2*p - s)/((a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)) + 1)
     assert Feedback(tf1, tf2*tf3).doit() == \
         TransferFunction((a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), (k*(a2*p - s) + \
         (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2))*(s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Feedback(tf1, tf2*tf3).sensitivity == \
+        1/(k*(a2*p - s)/((a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)) + 1)
     assert Feedback(tf1*tf2, tf5).doit() == \
         TransferFunction(k*(a0 + s)*(s**2 + 2*s*wn*zeta + wn**2), (k*(-a0 + a1*s**2 + a2*s) + \
         (a0 + s)*(s**2 + 2*s*wn*zeta + wn**2))*(s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Feedback(tf1*tf2, tf5, 1).sensitivity == \
+        1/(-k*(-a0 + a1*s**2 + a2*s)/((a0 + s)*(s**2 + 2*s*wn*zeta + wn**2)) + 1)
     assert Feedback(tf4, tf6).doit() == \
         TransferFunction(p*(p + s)*(a0*p + p**a1 - s), p*(p*(p + s) + (-p + s)*(a0*p + p**a1 - s)), p)
     assert -Feedback(tf4*tf6, TransferFunction(1, 1, p)).doit() == \
@@ -983,6 +989,12 @@ def test_MIMOFeedback_construction():
     assert f3.feedback_controller == MIMOSeries(tfm_3, tfm_2)
     assert f3.var == s
     assert f3.sign == -1
+
+    mat = Matrix([[1, 1/s], [0, 1]])
+    plant = controller = TransferFunctionMatrix.from_Matrix(mat, s)
+    f4 = MIMOFeedback(plant, controller)
+    assert f4.args == (plant, controller, -1)
+    assert f4.plant == f4.feedback_controller == plant
 
 
 def test_MIMOFeedback_errors():
