@@ -12,7 +12,7 @@ from sympy import (
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.special.error_functions import _erfs, _eis
-from sympy.testing.pytest import raises, slow
+from sympy.testing.pytest import raises
 
 x, y, z = symbols('x,y,z')
 w = Symbol("w", real=True)
@@ -782,7 +782,6 @@ def test_fresnel():
     assert fresnelc(x).taylor_term(1, x) == -pi**2*x**5/40
 
 
-@slow
 def test_fresnel_series():
     assert fresnelc(z).series(z, n=15) == \
         z - pi**2*z**5/40 + pi**4*z**9/3456 - pi**6*z**13/599040 + O(z**15)

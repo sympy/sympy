@@ -988,6 +988,7 @@ def test_indexed_idx_sum():
     raises(ValueError, lambda: Product(A[k], (k, 2, oo)))
 
 
+@slow
 def test_is_convergent():
     # divergence tests --
     assert Sum(n/(2*n + 1), (n, 1, oo)).is_convergent() is S.false
@@ -1490,6 +1491,7 @@ def test_summation_by_residues():
     assert eval_sum_residue((-1)**x / x**2, (x, S(2), oo)) == 1 - pi**2/12
 
 
+@slow
 def test_summation_by_residues_failing():
     x = Symbol('x')
 

@@ -1649,7 +1649,6 @@ def test_higher_order_to_first_order_9():
     assert checksysodesol(eqs9, sol9) == (True, [0, 0])
 
 
-@slow
 def test_higher_order_to_first_order_12():
     f, g = symbols('f g', cls=Function)
     x = symbols('x')
@@ -1730,7 +1729,6 @@ def test_second_order_to_first_order_slow1():
     assert checksysodesol(eqs1, sol1) == (True, [0, 0])
 
 
-@slow
 def test_second_order_to_first_order_slow4():
     f, g = symbols("f g", cls=Function)
     x, t, x_, t_, d, a, m = symbols("x t x_ t_ d a m")
@@ -2341,7 +2339,6 @@ def test_higher_order1_slow1():
         assert ratsimp(res.subs(t, 1)) == 0
 
 
-@slow
 def test_second_order_type2_slow1():
     x, y, z = symbols('x, y, z', cls=Function)
     t, l = symbols('t, l')
