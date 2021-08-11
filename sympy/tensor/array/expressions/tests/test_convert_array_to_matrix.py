@@ -1,5 +1,5 @@
 from sympy import (
-    symbols, Identity, cos, ZeroMatrix)
+    symbols, Identity, cos, ZeroMatrix, OneMatrix)
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 from sympy.tensor.array.expressions.conv_array_to_matrix import _support_function_tp1_recognize, \
     _array_diag2contr_diagmatrix, convert_array_to_matrix, _remove_trivial_dims, _array2matrix
@@ -326,6 +326,32 @@ def test_arrayexpr_convert_array_to_matrix_remove_trivial_dims():
 
     cg = ArrayContraction(ArrayTensorProduct(M, a), (1, 2))
     assert _remove_trivial_dims(cg) == (cg, [])
+
+    # A few more cases to test the removal and shift of nested removed axes
+    # with array contractions and array diagonals:
+    tp = ArrayTensorProduct(
+        OneMatrix(1, 1),
+        M,
+        x,
+        OneMatrix(1, 1),
+        Identity(1),
+    )
+
+    expr = ArrayContraction(tp, (1, 8))
+    rexpr, removed = _remove_trivial_dims(expr)
+    assert removed == [0, 5, 6, 7]
+
+    expr = ArrayContraction(tp, (1, 8), (3, 4))
+    rexpr, removed = _remove_trivial_dims(expr)
+    assert removed == [0, 3, 4, 5]
+
+    expr = ArrayDiagonal(tp, (1, 8))
+    rexpr, removed = _remove_trivial_dims(expr)
+    assert removed == [0, 5, 6, 7, 8]
+
+    expr = ArrayDiagonal(tp, (1, 8), (3, 4))
+    rexpr, removed = _remove_trivial_dims(expr)
+    assert removed == [0, 3, 4, 5, 6]
 
 
 def test_arrayexpr_convert_array_to_matrix_diag2contraction_diagmatrix():

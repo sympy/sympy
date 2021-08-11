@@ -722,7 +722,7 @@ class ArrayDiagonal(_CodegenArrayAbstract):
 
         def transform(x):
             for i, e in enumerate(positions):
-                if (isinstance(e, int) and x == e) or (isinstance(e, tuple) and x in e):
+                if (isinstance(e, int) and x == e) or (isinstance(e, (tuple, Tuple)) and (x in e)):
                     return i
 
         return _apply_recursively_over_nested_lists(transform, indices)
