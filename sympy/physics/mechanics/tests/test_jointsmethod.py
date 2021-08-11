@@ -133,7 +133,9 @@ def test_chaos_pendulum():
     MM = method.mass_matrix
     forcing = method.forcing
     rhs = MM.LUsolve(forcing)
-    result = (-IBxx*alpha*omega*sin(2*phi) + IByy*alpha*omega*sin(2*phi) - g*lA*mA*sin(theta) -
-                g*lB*mB*sin(theta))/(IAxx + IBxx*sin(phi)**2 + IByy*cos(phi)**2 + lA**2*mA + lB**2*mB)
-    assert rhs[1].simplify() == (IBxx - IByy)*omega**2*sin(2*phi)/(2*IBzz)
-    assert (rhs[0] - result).simplify() == 0
+    xd = (-2 * IBxx * alpha * omega * sin(phi) * cos(phi) + 2 * IByy * alpha * omega * sin(phi) *
+            cos(phi) - g * lA * mA * sin(theta) - g * lB * mB * sin(theta)) / (IAxx + IBxx *
+                sin(phi)**2 + IByy * cos(phi)**2 + lA**2 * mA + lB**2 * mB)
+    assert (rhs[0] - xd).simplify() == 0
+    xd = (IBxx - IByy) * omega**2 * sin(phi) * cos(phi) / IBzz
+    assert (rhs[1] - xd).simplify() == 0
