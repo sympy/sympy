@@ -740,8 +740,6 @@ class And(LatticeOp, BooleanFunction):
         if not Rel:
             return rv
         eqs, other = sift(Rel, lambda i: isinstance(i, Equality), binary=True)
-        if not eqs:
-            return rv
 
         measure, ratio = kwargs['measure'], kwargs['ratio']
         reps = {}
