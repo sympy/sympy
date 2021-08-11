@@ -2044,8 +2044,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
             and isinstance(controller, (TransferFunctionMatrix, MIMOSeries))):
             raise TypeError("Unsupported type for `plant` or `controller` of MIMO Feedback.")
 
-        if not (plant.num_inputs == plant.num_inputs == controller.num_inputs == \
-                controller.num_inputs):
+        if plant.shape != controller.shape or plant.num_outputs != plant.num_inputs:
             raise ValueError("`plant` and `controller` must be square matrices of"
                 "the same shape.")
 
