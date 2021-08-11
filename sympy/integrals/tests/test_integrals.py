@@ -1836,4 +1836,5 @@ def test_issue_21831():
 
 
 def test_issue_21711():
-    assert integrate(sqrt(1 - (x-1)*(x-1)), (x, 0, 1)) == pi/4
+    eqn = integrate(sqrt(1 - (x-1)*(x-1)), (x, 0, 1))
+    assert eqn == pi/4
