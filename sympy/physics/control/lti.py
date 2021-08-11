@@ -1978,7 +1978,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     ======
 
     ValueError
-        When ``plant`` is equal to ``feedback_controller`` or when they are not using the
+        When ``plant`` and ``feedback_controller`` are not using the
         same complex variable of the Laplace transform.
 
         When shapes of ``plant`` and ``feedback_controller`` are not the same.
