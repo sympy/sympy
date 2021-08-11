@@ -2358,6 +2358,28 @@ def _rem_redundancy(l1, terms):
                             ndprimeimplicants.remove(col2i)
                             anythingchanged = True
 
+        if not anythingchanged:
+            # Heuristically select the prime implicant covering most terms
+            maxterms = 0
+            bestcolidx = -1
+            bestcol = []
+            for n, coli in enumerate(oldndprimeimplicants):
+                s = sum(filteredcols[n])
+                if s > maxterms:
+                    bestcolidx = coli
+                    maxterms = s
+                    bestcol = filteredcols[n]
+
+            # In case we found a prime implicant covering at least two terms
+            if bestcolidx != -1 and maxterms > 1:
+                for primei, prime in enumerate(l1):
+                    if primei != bestcolidx:
+                        for termi, term in enumerate(bestcol):
+                            if term and dommatrix[termi][primei]:
+                                # Make corresponding entry 0
+                                dommatrix[termi][primei] = 0
+                                anythingchanged = True
+
     return [l1[i] for i in ndprimeimplicants]
 
 
