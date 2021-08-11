@@ -644,6 +644,13 @@ class LatexPrinter(Printer):
             # special case for 1^(-x), issue 9216
             if expr.base == 1:
                 return r"%s^{%s}" % (expr.base, expr.exp)
+            # special case for (1/x)^(-y) and (-1/-x)^(-y), issue 20252
+            if expr.base.is_Rational and \
+                    expr.base.p*expr.base.q == abs(expr.base.q):
+                if expr.exp == -1:
+                    return r"\frac{1}{\frac{%s}{%s}}" % (expr.base.p, expr.base.q)
+                else:
+                    return r"\frac{1}{(\frac{%s}{%s})^{%s}}" % (expr.base.p, expr.base.q, abs(expr.exp))
             # things like 1/x
             return self._print_Mul(expr)
         else:
