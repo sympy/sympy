@@ -573,6 +573,8 @@ class BooleanFunction(Application, Boolean):
 
         """
         from sympy.core.relational import Relational, _canonical
+        from sympy.functions.elementary.miscellaneous import Min, Max
+
         if replacementvalue is None and dominatingvalue is not None:
             replacementvalue = dominatingvalue
         # Use replacement patterns for Relationals
@@ -627,7 +629,8 @@ class BooleanFunction(Application, Boolean):
                                 # will be replacementvalue
                                 return replacementvalue
                             # add replacement
-                            if not isinstance(np, ITE):
+                            if (not isinstance(np, ITE) and np.count(Max) == 0
+                                and np.count(Min) == 0):
                                 # We only want to use ITE replacements if
                                 # they simplify to a relational
                                 costsaving = measure(oldexpr) - measure(np)
