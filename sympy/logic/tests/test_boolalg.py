@@ -1214,9 +1214,9 @@ def test_issue_19114():
 
 def test_issue_20870():
     result = SOPform([a, b, c, d], [1, 2, 3, 4, 5, 6, 8, 9, 11, 12, 14, 15])
-    assert len(result.args) == ((d & ~b) | (a & b & c) | (a & ~c & ~d) |
-                                (b & ~a & ~c) | (c & ~a & ~d))
-
+    expected = ((d & ~b) | (a & b & c) | (a & ~c & ~d) |
+                (b & ~a & ~c) | (c & ~a & ~d))
+    assert result == expected
 
 def test_convert_to_varsSOP():
     assert _convert_to_varsSOP([0, 1, 0], [x, y, z]) ==  And(Not(x), y, Not(z))

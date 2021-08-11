@@ -975,6 +975,10 @@ def test_issue_18389():
     assert simplify(expr) == Ge(n, 0)
 
 
+def test_issue_7950():
+    expr = And(Eq(x, 1), Eq(x, 2))
+    assert simplify(expr) == S.false
+
 def test_issue_19484():
     assert simplify(sign(x) * Abs(x)) == x
 
