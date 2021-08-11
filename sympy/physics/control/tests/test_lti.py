@@ -943,6 +943,7 @@ def test_Feedback_functions():
         TransferFunction(p*(p + s)*(a0*p + p**a1 - s), p*(p*(p + s) + (-p + s)*(a0*p + p**a1 - s)), p)
     assert -Feedback(tf4*tf6, TransferFunction(1, 1, p)).doit() == \
         TransferFunction(-p*(-p + s)*(p + s)*(a0*p + p**a1 - s), p*(p + s)*(p*(p + s) + (-p + s)*(a0*p + p**a1 - s)), p)
+    assert Feedback(tf, tf).doit() == TransferFunction(1, 2, s)
 
     assert Feedback(tf1, tf2*tf5).rewrite(TransferFunction) == \
         TransferFunction((a0 + s)*(s**2 + 2*s*wn*zeta + wn**2), (k*(-a0 + a1*s**2 + a2*s) + \
@@ -966,7 +967,7 @@ def test_MIMOFeedback_construction():
     assert f1.plant == tfm_1
     assert f1.feedback_controller == tfm_2
     assert f1.var == s
-    assert f1.ftype == -1
+    assert f1.sign == -1
     assert -(-f1) == f1
 
     f2 = MIMOFeedback(tfm_2, tfm_1, 1)
@@ -974,14 +975,14 @@ def test_MIMOFeedback_construction():
     assert f2.plant == tfm_2
     assert f2.feedback_controller == tfm_1
     assert f2.var == s
-    assert f2.ftype == 1
+    assert f2.sign == 1
 
     f3 = MIMOFeedback(tfm_1, MIMOSeries(tfm_3, tfm_2))
     assert f3.args == (tfm_1, MIMOSeries(tfm_3, tfm_2), -1)
     assert f3.plant == tfm_1
     assert f3.feedback_controller == MIMOSeries(tfm_3, tfm_2)
     assert f3.var == s
-    assert f3.ftype == -1
+    assert f3.sign == -1
 
 
 def test_MIMOFeedback_errors():
@@ -1007,7 +1008,7 @@ def test_MIMOFeedback_errors():
     # Shape Errors
     raises(ValueError, lambda: MIMOFeedback(tfm_1, tfm_6, 1))
     raises(ValueError, lambda: MIMOFeedback(tfm_7, tfm_7))
-    # ftype not 1/-1
+    # sign not 1/-1
     raises(ValueError, lambda: MIMOFeedback(tfm_1, tfm_2, -2))
     # Non-Invertible Systems
     raises(ValueError, lambda: MIMOFeedback(tfm_5, tfm_4, 1))

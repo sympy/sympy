@@ -1022,7 +1022,8 @@ class PrettyPrinter(Printer):
 
         num, tf = expr.plant, TransferFunction(1, 1, expr.var)
         num_arg_list = list(num.args) if isinstance(num, Series) else [num]
-        den_arg_list = list(expr.feedback_controller.args) if isinstance(expr.feedback_controller, Series) else [expr.feedback_controller]
+        den_arg_list = list(expr.feedback_controller.args) if \
+            isinstance(expr.feedback_controller, Series) else [expr.feedback_controller]
 
         if isinstance(num, Series) and isinstance(expr.feedback_controller, Series):
             den = Series(*num_arg_list, *den_arg_list)
@@ -1046,7 +1047,7 @@ class PrettyPrinter(Printer):
 
         denom = prettyForm(*stringPict.next(self._print(tf)))
         denom.baseline = denom.height()//2
-        denom = prettyForm(*stringPict.next(denom, ' + ')) if expr.ftype == -1 \
+        denom = prettyForm(*stringPict.next(denom, ' + ')) if expr.sign == -1 \
             else prettyForm(*stringPict.next(denom, ' - '))
         denom = prettyForm(*stringPict.next(denom, self._print(den)))
 
@@ -1058,11 +1059,10 @@ class PrettyPrinter(Printer):
         inv_mat = self._print(MIMOSeries(expr.feedback_controller, expr.plant))
         plant = self._print(expr.plant)
         _feedback = prettyForm(*stringPict.next(inv_mat))
-        _feedback = prettyForm(*stringPict.right("I + ", _feedback)) if expr.ftype == -1 \
+        _feedback = prettyForm(*stringPict.right("I + ", _feedback)) if expr.sign == -1 \
             else prettyForm(*stringPict.right("I - ", _feedback))
         _feedback = prettyForm(*stringPict.parens(_feedback))
         _feedback.baseline = 0
-        # _feedback = _feedback**(prettyForm("-1"))
         _feedback = prettyForm(*stringPict.right(_feedback, '-1 '))
         _feedback.baseline = _feedback.height()//2
         _feedback = prettyForm.__mul__(_feedback, prettyForm(" "))

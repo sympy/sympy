@@ -2465,7 +2465,8 @@ class LatexPrinter(Printer):
 
         num, tf = expr.plant, TransferFunction(1, 1, expr.var)
         num_arg_list = list(num.args) if isinstance(num, Series) else [num]
-        den_arg_list = list(expr.feedback_controller.args) if isinstance(expr.feedback_controller, Series) else [expr.feedback_controller]
+        den_arg_list = list(expr.feedback_controller.args) if \
+            isinstance(expr.feedback_controller, Series) else [expr.feedback_controller]
         den_term_1 = tf
 
         if isinstance(num, Series) and isinstance(expr.feedback_controller, Series):
@@ -2491,7 +2492,7 @@ class LatexPrinter(Printer):
         numer = self._print(num)
         denom_1 = self._print(den_term_1)
         denom_2 = self._print(den_term_2)
-        _sign = "+" if expr.ftype == -1 else "-"
+        _sign = "+" if expr.sign == -1 else "-"
 
         return r"\frac{%s}{%s %s %s}" % (numer, denom_1, _sign, denom_2)
 
@@ -2499,7 +2500,7 @@ class LatexPrinter(Printer):
         from sympy.physics.control import MIMOSeries
         inv_mat = self._print(MIMOSeries(expr.feedback_controller, expr.plant))
         plant = self._print(expr.plant)
-        _sign = "+" if expr.ftype == -1 else "-"
+        _sign = "+" if expr.sign == -1 else "-"
         return r"\left(I_{\tau} %s %s\right)^{-1} \cdot %s" % (_sign, inv_mat, plant)
 
     def _print_TransferFunctionMatrix(self, expr):
