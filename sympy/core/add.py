@@ -992,7 +992,7 @@ class Add(Expr, AssocOp):
             logflags = dict(deep=True, log=True, mul=False, power_exp=False,
                 power_base=False, multinomial=False, basic=False, force=False,
                 factor=False)
-            old = old.expand(logflags)
+            old = old.expand(**logflags)
         expr = expand_mul(old)
 
         if not expr.is_Add:

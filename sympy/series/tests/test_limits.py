@@ -212,8 +212,29 @@ def test_set_signs():
     assert limit(abs(cos(x)), x, 0) == 1
     assert limit(abs(sin(x + 1)), x, 0) == sin(1)
 
+    # https://github.com/sympy/sympy/issues/9449
+    assert limit((Abs(x + y) - Abs(x - y))/(2*x), x, 0) == sign(y)
+
+    # https://github.com/sympy/sympy/issues/12398
+    assert limit(Abs(log(x)/x**3), x, oo) == 0
+    assert limit(x*(Abs(log(x)/x**3)/Abs(log(x + 1)/(x + 1)**3) - 1), x, oo) == 3
+
+    # https://github.com/sympy/sympy/issues/18501
+    assert limit(Abs(log(x - 1)**3 - 1), x, 1, '+') == oo
+
+    # https://github.com/sympy/sympy/issues/18997
+    assert limit(Abs(log(x)), x, 0) == oo
+    assert limit(Abs(log(Abs(x))), x, 0) == oo
+
+    # https://github.com/sympy/sympy/issues/19026
+    z = Symbol('z', positive=True)
+    assert limit(Abs(log(z) + 1)/log(z), z, oo) == 1
+
+    # https://github.com/sympy/sympy/issues/20704
+    assert limit(z*(Abs(1/z + y) - Abs(y - 1/z))/2, z, 0) == 0
+
     # https://github.com/sympy/sympy/issues/21606
-    assert limit(cos(x)/sign(x), x, pi, '-') == -1
+    assert limit(cos(z)/sign(z), z, pi, '-') == -1
 
 
 def test_heuristic():
@@ -581,10 +602,6 @@ def test_issue_9252():
     raises(NotImplementedError, lambda: limit((log(n))**(n/log(n)) / c**n, n, oo))
 
 
-def test_issue_9449():
-    assert limit((Abs(x + y) - Abs(x - y))/(2*x), x, 0) == sign(y)
-
-
 def test_issue_9558():
     assert limit(sin(x)**15, x, 0, '-') == 0
 
@@ -636,11 +653,6 @@ def test_issue_10610():
 
 def test_issue_6599():
     assert limit((n + cos(n))/n, n, oo) == 1
-
-
-def test_issue_12398():
-    assert limit(Abs(log(x)/x**3), x, oo) == 0
-    assert limit(x*(Abs(log(x)/x**3)/Abs(log(x + 1)/(x + 1)**3) - 1), x, oo) == 3
 
 
 def test_issue_12555():
@@ -869,10 +881,6 @@ def test_issue_18482():
     assert limit((2*exp(3*x)/(exp(2*x) + 1))**(1/x), x, oo) == exp(1)
 
 
-def test_issue_18501():
-    assert limit(Abs(log(x - 1)**3 - 1), x, 1, '+') == oo
-
-
 def test_issue_18508():
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0) == sqrt(2)
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='+') == sqrt(2)
@@ -887,16 +895,6 @@ def test_issue_18969():
 
 def test_issue_18992():
     assert limit(n/(factorial(n)**(1/n)), n, oo) == exp(1)
-
-
-def test_issue_18997():
-    assert limit(Abs(log(x)), x, 0) == oo
-    assert limit(Abs(log(Abs(x))), x, 0) == oo
-
-
-def test_issue_19026():
-    x = Symbol('x', positive=True)
-    assert limit(Abs(log(x) + 1)/log(x), x, oo) == 1
 
 
 def test_issue_19067():
@@ -959,10 +957,6 @@ def test_issue_20365():
     assert limit(((x + 1)**(1/x) - E)/x, x, 0) == -E/2
 
 
-def test_issue_20704():
-    assert limit(x*(Abs(1/x + y) - Abs(y - 1/x))/2, x, 0) == 0
-
-
 def test_issue_21031():
     assert limit(((1 + x)**(1/x) - (1 + 2*x)**(1/(2*x)))/asin(x), x, 0) == E/2
 
@@ -976,6 +970,12 @@ def test_issue_20578():
     assert limit(expr,x,0,'+') == 0
     assert limit(expr,x,0,'-') == 0
     assert limit(expr,x,0,'+-') == 0
+
+
+def test_issue_21415():
+    exp = (x-1)*cos(1/(x-1))
+    assert exp.limit(x,1) == 0
+    assert exp.expand().limit(x,1) == 0
 
 
 def test_issue_21530():
@@ -1008,7 +1008,6 @@ def test_issue_21756():
     assert re(term).limit(z, 0) == 5
 
 
-def test_issue_21415():
-    exp = (x-1)*cos(1/(x-1))
-    assert exp.limit(x,1) == 0
-    assert exp.expand().limit(x,1) == 0
+def test_issue_21785():
+    a = Symbol('a')
+    assert sqrt((-a**2 + x**2)/(1 - x**2)).limit(a, 1, '-') == I

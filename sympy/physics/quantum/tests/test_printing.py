@@ -114,7 +114,8 @@ C       \n\
 """
     assert pretty(cg) == ascii_str
     assert upretty(cg) == ucode_str
-    assert latex(cg) == r'C^{5,6}_{1,2,3,4}'
+    assert latex(cg) == 'C^{5,6}_{1,2,3,4}'
+    assert latex(cg ** 2) == R'\left(C^{5,6}_{1,2,3,4}\right)^{2}'
     sT(cg, "CG(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6))")
     assert str(wigner3j) == 'Wigner3j(1, 2, 3, 4, 5, 6)'
     ascii_str = \

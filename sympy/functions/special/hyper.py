@@ -9,7 +9,7 @@ from sympy.core.mul import Mul
 from sympy.core.symbol import Dummy
 
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
-        sinh, cosh, asinh, acosh, atanh, acoth, Abs)
+        sinh, cosh, asinh, acosh, atanh, acoth, Abs, re)
 from sympy.utilities.iterables import default_sort_key
 
 class TupleArg(Tuple):
@@ -223,7 +223,7 @@ class hyper(TupleParametersBase):
         arg = self.args[2]
         x0 = arg.subs(x, 0)
         if x0 is S.NaN:
-            x0 = arg.limit(x, 0, dir='-' if cdir < 0 else '+')
+            x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
 
         if x0 is S.Zero:
             return S.One
