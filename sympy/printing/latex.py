@@ -2423,14 +2423,14 @@ class LatexPrinter(Printer):
         return self._print(Symbol(object.name))
 
     def _print_LambertW(self, expr, exp=None):
-    	arg0 = self._print(expr.args[0])
-    	exp = r"^{%s}" % (exp,) if exp is not None else ""
-    	if len(expr.args) == 1:
-    		result = r"W%s\left(%s\right)" % (exp, arg0)
-    	else:
-    		arg1 = self._print(expr.args[1])
-    		result = 'W{0}_{{{1}}}\left({2}\\right)'.format(exp, arg1, arg0)
-    	return result
+        arg0 = self._print(expr.args[0])
+        exp = r"^{%s}" % (exp,) if exp is not None else ""
+        if len(expr.args) == 1:
+            result = r"W%s\left(%s\right)" % (exp, arg0)
+        else:
+            arg1 = self._print(expr.args[1])
+            result = 'W{0}_{{{1}}}\left({2}\\right)'.format(exp, arg1, arg0)
+        return result
 
     def _print_Morphism(self, morphism):
         domain = self._print(morphism.domain)
