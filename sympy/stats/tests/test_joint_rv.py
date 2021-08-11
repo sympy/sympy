@@ -353,5 +353,12 @@ def test_sample_seed():
         except NotImplementedError:
             continue
 
+
 def test_issue_21057():
-    assert Normal("x", [0, 0], [[0, 0], [0, 0]]) == MultivariateNormal("x", [0, 0], [[0, 0], [0, 0]])
+    m = Normal("x", [0, 0], [[0, 0], [0, 0]])
+    n = MultivariateNormal("x", [0, 0], [[0, 0], [0, 0]])
+    assert m == n
+    scipy = import_module('scipy')
+    s1 = sample(m, size=8, library='scipy')
+    s2 = sample(n, size=8, library='scipy')
+    assert tuple(s1.flatten()) == tuple(s2.flatten())
