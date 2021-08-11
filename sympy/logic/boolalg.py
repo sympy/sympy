@@ -629,10 +629,9 @@ class BooleanFunction(Application, Boolean):
                                 # will be replacementvalue
                                 return replacementvalue
                             # add replacement
-                            if (not isinstance(np, ITE) and np.count(Max) == 0
-                                and np.count(Min) == 0):
-                                # We only want to use ITE replacements if
-                                # they simplify to a relational
+                            if not isinstance(np, ITE) and not np.has(Min, Max):
+                                # We only want to use ITE and Min/Max
+                                # replacements if they simplify away
                                 costsaving = measure(oldexpr) - measure(np)
                                 if costsaving > 0:
                                     results.append((costsaving, (i, j, np)))

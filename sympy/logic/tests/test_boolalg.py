@@ -5,7 +5,6 @@ from sympy.core.relational import Equality, Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise
-from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.trigonometric import sin
 from sympy.sets.sets import (EmptySet, Interval, Union)
 from sympy.simplify.simplify import simplify
@@ -1080,12 +1079,6 @@ def test_relational_simplification():
     assert And(x >= y, x < y).simplify() == S.false
     assert Or(x >= y, Eq(y, x)).simplify() == (x >= y)
     assert And(x >= y, Eq(y, x)).simplify() == Eq(x, y)
-    assert Or(Eq(x, y), x >= y, w < y, z < y).simplify() == \
-        Or(x >= y, y > Min(w, z))
-    assert And(Eq(x, y), x >= y, w < y, y >= z, z < y).simplify() == \
-        And(Eq(x, y), y > Max(w, z))
-    assert Or(Eq(x, y), x >= 1, 2 < y, y >= 5, z < y).simplify() == \
-        (Eq(x, y) | (x >= 1) | (y > Min(2, z)))
     assert And(Eq(x, y), x >= 1, 2 < y, y >= 5, z < y).simplify() == \
         (Eq(x, y) & (x >= 1) & (y >= 5) & (y > z))
     assert (Eq(x, y) & Eq(d, e) & (x >= y) & (d >= e)).simplify() == \
@@ -1207,6 +1200,8 @@ def test_check_pair():
     assert _check_pair([0, 1, 0], [1, 1, 1]) == -1
 
 
+# Seems to produce a different result when using optional dependencies
+@XFAIL
 def test_issue_19114():
     expr = (A & ~C) | (~A & ~B) | (B & C)
     assert to_dnf(expr, simplify=True) == expr

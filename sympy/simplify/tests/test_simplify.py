@@ -948,7 +948,7 @@ def test_issue_17292():
     assert simplify(5*abs((x**2 - 1)/(x - 1))) == 5*Abs(x + 1)
 
 
-def test_issue_19882():
+def test_issue_19822():
     expr = And(Gt(n-2, 1), Gt(n, 1))
     assert simplify(expr) == Gt(n, 3)
 
