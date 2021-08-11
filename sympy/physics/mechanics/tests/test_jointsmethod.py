@@ -109,6 +109,7 @@ def test_simple_pedulum():
     assert rhs[1] == -g*sin(q)/l
 
 def test_chaos_pendulum():
+    #https://www.pydy.org/examples/chaos_pendulum.html
     mA, mB, lA, lB, IAxx, IBxx, IByy, IBzz, g = symbols('mA, mB, lA, lB, IAxx, IBxx, IByy, IBzz, g')
     theta, phi, omega, alpha = dynamicsymbols('theta phi omega alpha')
 
@@ -121,7 +122,7 @@ def test_chaos_pendulum():
     J1 = PinJoint('J1', C, rod, coordinates=theta, speeds=omega,
                   child_joint_pos=-lA*rod.z, parent_axis=C.y, child_axis=rod.y)
     J2 = PinJoint('J2', rod, plate, coordinates=phi, speeds=alpha,
-                  parent_joint_pos=lB*rod.z, parent_axis=rod.z, child_axis=plate.z)
+                  parent_joint_pos=-(lA-lB)*rod.z, parent_axis=rod.z, child_axis=plate.z)
 
     rod.apply_force(mA*g*C.z)
     plate.apply_force(mB*g*C.z)
@@ -134,3 +135,6 @@ def test_chaos_pendulum():
     rhs = MM.LUsolve(forcing)
 
     assert rhs[1].simplify() == (IBxx - IByy)*omega**2*sin(2*phi)/(2*IBzz)
+    assert rhs[0].simplify() == (-IBxx*alpha*omega*sin(2*phi) + IByy*alpha*omega*sin(2*phi) -
+                                    g*lA*mA*sin(theta) - g*lB*mB*sin(theta))/(IAxx + IBxx*sin(phi)**2 +
+                                    IByy*cos(phi)**2 + lA**2*mA + lB**2*mB)
