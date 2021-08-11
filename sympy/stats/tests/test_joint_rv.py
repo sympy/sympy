@@ -358,7 +358,13 @@ def test_issue_21057():
     m = Normal("x", [0, 0], [[0, 0], [0, 0]])
     n = MultivariateNormal("x", [0, 0], [[0, 0], [0, 0]])
     assert m == n
-    scipy = import_module('scipy')
-    s1 = sample(m, size=8, library='scipy')
-    s2 = sample(n, size=8, library='scipy')
-    assert tuple(s1.flatten()) == tuple(s2.flatten())
+    libraries = ['scipy', 'numpy', 'pymc3']
+    for library in libraries:
+        try:
+            imported_lib = import_module(library)
+            if imported_lib:
+                s1 = sample(m, size=8)
+                s2 = sample(n, size=8)
+                assert tuple(s1.flatten()) == tuple(s2.flatten())
+        except NotImplementedError:
+            continue
