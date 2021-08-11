@@ -831,15 +831,20 @@ def dsubs(eq, trans, newvars=None):
 
     # Store all functions present in the equation
     mapdict = {}
+    lhs_vars = set(trans.keys())
+    rhs_vars = set()
 
     for var in trans:
         # Create mapping between new and old variables
-        if not isinstance(var, Symbol) and not isinstance(var, Function):
-            raise ValueError(f"Expected Symbol or Function in the transformation rule, recieved {var.__class__.__name__}")
+        if not isinstance(var, (Symbol, Function)):
+            raise ValueError(f"Expected Symbol or Function, recieved {var.__class__.__name__}")
+        syms = trans[var].atoms(Symbol)
+        funcs = trans[var].atoms(AppliedUndef)
+        rhs_vars |= (syms | funcs)
         if isinstance(var, Symbol):
-            atoms = trans[var].atoms(Symbol)
+            atoms = syms
         else:
-            atoms = trans[var].atoms(AppliedUndef)
+            atoms = funcs
         if not len(atoms):
             raise ValueError("Invalid rule. Expected atleast one Symbol or Function for substitution")
 
@@ -870,6 +875,9 @@ def dsubs(eq, trans, newvars=None):
                         to_map = atom
         # Map the old variable to the new variable
         mapdict[var] = to_map
+
+    if len(lhs_vars & rhs_vars):
+        raise ValueError("Old variable(s) appearing on RHS of transformation rules")
 
     # Store all integrals in the equation
     integrals = eq.atoms(Integral)

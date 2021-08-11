@@ -71,7 +71,7 @@ def test_dsubs():
     eqt = numer(dsubs(eq, {f(x): 1/g(t), x: t}).together())
     solt = dsolve(eqt)
     sol = dsubs(solt, {g(t): 1/f(x), t: x})
-    assert sol == Eq(1/f(x), C1/x**2 + x**3/5)
+    assert sol == Eq(1/f(x), (C1 + x**5/5)/x**2)
     assert checkodesol(eq, sol)
 
     eq = x**2*f(x).diff(x, 2) + 10*x*f(x).diff(x) + 20*f(x)
