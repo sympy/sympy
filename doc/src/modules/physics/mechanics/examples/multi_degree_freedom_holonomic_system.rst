@@ -48,7 +48,7 @@ kinematics. ::
 
     >>> joints = (slider, rev1, rev2)
 
-Now we can apply loads(forces and torques) to the bodies, gravity acts on all bodies,
+Now we can apply loads (forces and torques) to the bodies, gravity acts on all bodies,
 a linear spring and damper act on block and wall, a rotational linear spring acts on C relative to B
 specified torque T acts on compound_pend and block, specified force F acts on block. ::
 
