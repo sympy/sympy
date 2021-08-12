@@ -423,6 +423,9 @@ def test_multiset_permutations():
         [0, 1], [0, 2], [1, 0], [1, 2], [2, 0], [2, 1]]
     assert len(list(multiset_permutations('a', 0))) == 1
     assert len(list(multiset_permutations('a', 3))) == 0
+    for nul in ([], {}, ''):
+        assert list(multiset_permutations(nul)) == [[]], list(multiset_permutations(nul))
+        assert list(multiset_permutations(nul, 1)) == []
 
     def test():
         for i in range(1, 7):
