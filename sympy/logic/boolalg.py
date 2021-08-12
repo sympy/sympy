@@ -2307,6 +2307,7 @@ def _rem_redundancy(l1, terms):
 
     nterms = len(terms)
     nl1 = len(l1)
+
     # Create dominating matrix
     dommatrix = [[0]*nl1 for n in range(nterms)]
     for primei, prime in enumerate(l1):
@@ -2869,7 +2870,7 @@ def simplify_logic(expr, form=None, deep=True, force=False):
     if not force and len(variables) > 8:
         return expr
     # group into constants and variable values
-    c, v = sift(variables, lambda x: x in (True, False), binary=True)
+    c, v = sift(ordered(variables), lambda x: x in (True, False), binary=True)
     variables = c + v
     truthtable = []
     # standardize constants to be 1 or 0 in keeping with truthtable

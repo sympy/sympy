@@ -1200,11 +1200,10 @@ def test_check_pair():
     assert _check_pair([0, 1, 0], [1, 1, 1]) == -1
 
 
-# Seems to produce a different result when using optional dependencies
-@XFAIL
 def test_issue_19114():
-    expr = (A & ~C) | (~A & ~B) | (B & C)
-    assert to_dnf(expr, simplify=True) == expr
+    expr = (B & C) | (A & ~C) | (~A & ~B)
+    result = to_dnf(expr, simplify=True)
+    assert result == expr
 
 
 def test_issue_20870():
@@ -1212,6 +1211,7 @@ def test_issue_20870():
     expected = ((d & ~b) | (a & b & c) | (a & ~c & ~d) |
                 (b & ~a & ~c) | (c & ~a & ~d))
     assert result == expected
+
 
 def test_convert_to_varsSOP():
     assert _convert_to_varsSOP([0, 1, 0], [x, y, z]) ==  And(Not(x), y, Not(z))
