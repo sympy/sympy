@@ -2844,16 +2844,18 @@ def simplify_logic(expr, form=None, deep=True, force=False):
     if form not in (None, 'cnf', 'dnf'):
         raise ValueError("form can be cnf or dnf only")
     expr = sympify(expr)
-    # check for quick exit: right form and all args are
+    # check for quick exit if form is given: right form and all args are
     # literal and do not involve Not
-    isc = is_cnf(expr)
-    isd = is_dnf(expr)
-    form_ok = (
-        isc and form == 'cnf' or
-        isd and form == 'dnf')
-    if form_ok and all(is_literal(a)
-            for a in expr.args):
-        return expr
+    if form:
+        form_ok = False
+        if form == 'cnf':
+            form_ok = is_cnf(expr)
+        elif form == 'dnf':
+            form_ok = is_dnf(expr)
+
+        if form_ok and all(is_literal(a)
+                for a in expr.args):
+            return expr
     if deep:
         variables = _find_predicates(expr)
         from sympy.simplify.simplify import simplify
