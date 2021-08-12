@@ -329,13 +329,15 @@ def _(expr: ArrayContraction):
 @_remove_trivial_dims.register(ArrayDiagonal)
 def _(expr: ArrayDiagonal):
     newexpr, removed = _remove_trivial_dims(expr.expr)
-    new_diag_indices = [tuple(j for j in i if j not in removed) for i in expr.diagonal_indices]
-    new_diag_indices = [i for i in new_diag_indices if len(i) > 0]
     shifts = list(accumulate([0] + [1 if i in removed else 0 for i in range(get_rank(expr.expr))]))
+    new_diag_indices = [tuple(j for j in i if j not in removed) for i in expr.diagonal_indices]
     new_diag_indices = [tuple(j - shifts[j] for j in i) for i in new_diag_indices]
     rank = get_rank(expr.expr)
     removed = ArrayDiagonal._push_indices_up(expr.diagonal_indices, removed, rank)
     removed = sorted({i for i in removed})
+    # If there are single axes to diagonalize remaining, it means that their
+    # corresponding dimension has been removed, they no longer need diagonalization:
+    new_diag_indices = [i for i in new_diag_indices if len(i) > 1]
     return ArrayDiagonal(newexpr, *new_diag_indices), removed
 
 

@@ -1,5 +1,5 @@
 from sympy import (
-    symbols, Identity, cos, ZeroMatrix, OneMatrix)
+    symbols, Identity, cos, ZeroMatrix, OneMatrix, sqrt)
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 from sympy.tensor.array.expressions.conv_array_to_matrix import _support_function_tp1_recognize, \
     _array_diag2contr_diagmatrix, convert_array_to_matrix, _remove_trivial_dims, _array2matrix
@@ -352,6 +352,10 @@ def test_arrayexpr_convert_array_to_matrix_remove_trivial_dims():
     expr = ArrayDiagonal(tp, (1, 8), (3, 4))
     rexpr, removed = _remove_trivial_dims(expr)
     assert removed == [0, 3, 4, 5, 6]
+
+    cg = ArrayDiagonal(ArrayTensorProduct(PermuteDims(ArrayTensorProduct(x, I1), Permutation(1, 2, 3)), (x.T*x).applyfunc(sqrt)), (2, 4), (3, 5))
+    rexpr, removed = _remove_trivial_dims(cg)
+    assert removed == [1, 2, 3]
 
 
 def test_arrayexpr_convert_array_to_matrix_diag2contraction_diagmatrix():
