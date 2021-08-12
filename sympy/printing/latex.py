@@ -546,7 +546,7 @@ class LatexPrinter(Printer):
         # XXX: _print_Pow calls this routine with instances of Pow...
         if isinstance(expr, Mul):
             args = expr.args
-            if args[0] is S.One or any(isinstance(arg, Number) for arg in args[1:]) and args[0].is_number:
+            if args[0] is S.One or any(isinstance(arg, Number) for arg in args[1:]):
                 return convert_args(args)
 
         include_parens = False

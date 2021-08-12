@@ -1893,7 +1893,7 @@ class PrettyPrinter(Printer):
         # etc so we display in a straight-forward form that fully preserves all
         # args and their order.
         args = product.args
-        if args[0] is S.One or any(isinstance(arg, Number) for arg in args[1:]) and args[0].is_number:
+        if args[0] is S.One or any(isinstance(arg, Number) for arg in args[1:]):
             strargs = list(map(self._print, args))
             # XXX: This is a hack to work around the fact that
             # prettyForm.__mul__ absorbs a leading -1 in the args. Probably it
@@ -1905,7 +1905,6 @@ class PrettyPrinter(Printer):
             if negone:
                 obj = prettyForm('-' + obj.s, obj.baseline, obj.binding)
             return obj
-
         a = []  # items in the numerator
         b = []  # items that are in the denominator (if any)
 

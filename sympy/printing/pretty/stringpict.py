@@ -441,8 +441,8 @@ class prettyForm(stringPict):
         if len(others) == 0:
             return self # We aren't actually multiplying... So nothing to do here.
         args = self
-        if args.binding > prettyForm.MUL:
-            arg = stringPict(*args.parens())
+        if args.binding > prettyForm.MUL and len(args[0].split()) > 1:
+            args = stringPict(*args.parens())
         result = [args]
         for arg in others:
             if arg.picture[0] not in quantity.values():

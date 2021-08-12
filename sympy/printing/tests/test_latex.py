@@ -106,18 +106,6 @@ def test_latex_basic():
         r'4 \cdot 3 \cdot 2 \left(z + 1\right) 0 y x'
     assert latex(Mul(Rational(2, 3), Rational(5, 7), evaluate=False)) == \
         r'\frac{2}{3} \frac{5}{7}'
-    assert latex(Mul(x + y, Rational(1, 2), evaluate=False)) == r'\frac{x + y}{2}'
-    assert latex(Mul(Rational(1, 2), x + y, evaluate=False)) == r'\frac{x + y}{2}'
-    assert latex(Mul(S.One, x + y, evaluate=False)) == r'1 \left(x + y\right)'
-    assert latex(Mul(x - y, S.One, evaluate=False)) == r'1 \left(x - y\right)'
-    assert latex(Mul(Rational(1, 2), x - y, S.One, x + y, evaluate=False)) == \
-        r'\frac{1}{2} \left(x - y\right) 1 \left(x + y\right)'
-    assert latex(Mul(x + y, Rational(3, 4), S.One, y - z, evaluate=False)) == \
-        r'\frac{1 \cdot 3 \left(x + y\right) \left(y - z\right)}{4}'
-    assert latex(Mul(x + y, Rational(1, 1), Rational(3, 4), Rational(5, 6), evaluate=False)) == \
-        r'\frac{1 \cdot 3 \cdot 5 \left(x + y\right)}{4 \cdot 6}'
-    assert latex(Mul(Rational(3, 4), x + y, S.One, y - z, evaluate=False)) == \
-        r'\frac{3}{4} \left(x + y\right) 1 \left(y - z\right)'
 
     assert latex(1/x) == r"\frac{1}{x}"
     assert latex(1/x, fold_short_frac=True) == r"1 / x"
