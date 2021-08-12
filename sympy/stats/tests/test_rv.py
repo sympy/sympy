@@ -6,7 +6,7 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         random_symbols, sample, Geometric, factorial_moment, Binomial, Hypergeometric,
         DiscreteUniform, Poisson, characteristic_function, moment_generating_function,
         BernoulliProcess, Variance, Expectation, Probability, Covariance, covariance, cmoment,
-        moment)
+        moment, median)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, sample_iter, PSpace, is_random, RandomIndexedSymbol, RandomMatrixSymbol)
 from sympy.testing.pytest import raises, skip, XFAIL
@@ -329,6 +329,11 @@ def test_moment_constant():
     assert moment(3, 2) == 9
     x = Symbol('x')
     assert moment(x, 2) == x**2
+
+def test_median_constant():
+    assert median(3) == 3
+    x = Symbol('x')
+    assert median(x) == x
 
 def test_real():
     x = Normal('x', 0, 1)
