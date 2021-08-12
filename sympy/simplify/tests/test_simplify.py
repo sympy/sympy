@@ -7,7 +7,7 @@ from sympy import (
     Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, Poly, posify, rad,
     Rational, S, separatevars, signsimp, simplify, sign, sin,
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan,
-    zoo, And, Gt, Ge, Le)
+    zoo, And, Gt, Ge, Le, Or)
 from sympy.core.mul import _keep_coeff
 from sympy.core.expr import unchanged
 from sympy.simplify.simplify import nthroot, inversecombine
@@ -973,6 +973,11 @@ def test_issue_18389():
     n = Symbol("n", integer=True)
     expr = Eq(n, 0) | (n >= 1)
     assert simplify(expr) == Ge(n, 0)
+
+
+def test_issue_8373():
+    x = Symbol('x', real=True)
+    assert simplify(Or(x < 1, x >= 1)) == S.true
 
 
 def test_issue_7950():
