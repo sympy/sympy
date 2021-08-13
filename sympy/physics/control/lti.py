@@ -1665,7 +1665,7 @@ class Feedback(SISOLinearTimeInvariant):
     placed in series with the plant. This controller is known as the **plant controller** as it controls
     the plant by varying the input that goes into plant. The second argument, ``controller``,
     as the name suggests, controls the fed back signal to the ``plant``. It is the equivalent transfer
-    function of the feedback controling system which is generally a sensor system that constantly
+    function of the feedback controlling system which is generally a sensor system that constantly
     takes in the output signal produced and feeds it back to the primary plant (or a plant-controller
     if one is connected in series with the plant). Note that the feedback controller is not same as the
     plant controller.
@@ -1769,13 +1769,15 @@ class Feedback(SISOLinearTimeInvariant):
 
         if sign not in [-1, 1]:
             raise ValueError("Unsupported type for feedback. `sign` arg should "
-            "either be 1 (positive feedback loop) or -1 (negative feedback loop).")
+                "either be 1 (positive feedback loop) or -1 (negative feedback loop).")
 
-        if Mul(plant.to_expr(), controller.to_expr()) == sign:
+        if Mul(plant.to_expr(), controller.to_expr()).simplify() == sign:
             raise ValueError("The equivalent system will have zero denominator.")
+
         if plant.var != controller.var:
             raise ValueError("Both `plant` and `controller` should be using the"
                 " same complex variable.")
+
         obj = super().__new__(cls, plant, controller, _sympify(sign))
         obj._plant = plant
         obj._controller = controller
@@ -1871,9 +1873,11 @@ class Feedback(SISOLinearTimeInvariant):
     @property
     def sensitivity(self):
         """
-        Returns the sensitivity function of the feedback loop. Sensitivity
-        of a closed-loop system is the ratio of change in the open
-        loop gain to the change in the closed loop gain.
+        Returns the sensitivity function of the feedback loop.
+        
+        Sensitivity of a closed-loop system is the ratio
+        of change in the open loop gain to the change in
+        the closed loop gain.
 
         Examples
         ========
@@ -1950,7 +1954,7 @@ def _is_invertible(a, b, sign):
     Checks whether a given pair of plant and controller
     systems passed is invertible or not.
     """
-    _mat = eye(a.num_inputs) - sign*(a.doit()._expr_mat)*(b.doit()._expr_mat)
+    _mat = eye(a.num_outputs) - sign*(a.doit()._expr_mat)*(b.doit()._expr_mat)
     _det = _mat.det()
 
     return _det != 0
@@ -1980,9 +1984,10 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         When ``plant`` and ``controller`` are not using the
         same complex variable of the Laplace transform.
 
-        When shapes of ``plant`` and ``controller`` are not the same.
+        Forward path model should have an equal number of inputs/outputs
+        to the feedback path outputs/inputs.
 
-        When either ``plant`` or ``controller`` is not a square matrix.
+        When product of ``plant`` and ``controller`` is not a square matrix.
 
         When the equivalent closed-loop MIMO system is not invertible.
 
@@ -2044,19 +2049,22 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
             and isinstance(controller, (TransferFunctionMatrix, MIMOSeries))):
             raise TypeError("Unsupported type for `plant` or `controller` of MIMO Feedback.")
 
-        if plant.shape != controller.shape or plant.num_outputs != plant.num_inputs:
-            raise ValueError("`plant` and `controller` must be square matrices of"
-                "the same shape.")
+        if plant.num_inputs != controller.num_outputs or \
+            plant.num_outputs != controller.num_inputs:
+            raise ValueError("Product of `plant` and `controller` "
+                "must yield a square matrix.")
 
         if sign not in [-1, 1]:
             raise ValueError("Unsupported type for feedback. `sign` arg should "
-            "either be 1 (positive feedback loop) or -1 (negative feedback loop).")
+                "either be 1 (positive feedback loop) or -1 (negative feedback loop).")
 
         if not _is_invertible(plant, controller, sign):
             raise ValueError("Non-Invertible system inputted.")
+
         if plant.var != controller.var:
             raise ValueError("Both `plant` and `controller` should be using the"
                 " same complex variable.")
+
         obj = super().__new__(cls, plant, controller, _sympify(sign))
         obj._plant = plant
         obj._controller = controller
@@ -2159,7 +2167,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     @property
     def sign(self):
         r"""
-        Returns the type of closed-loop MIMO Feedback. ``1``
+        Returns the type of feedback interconnection of two models. ``1``
         for Positive and ``-1`` for Negative.
         """
         return self._sign
@@ -2168,6 +2176,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     def sensitivity(self):
         r"""
         Returns the sensitivity function matrix of the feedback loop.
+
         Sensitivity of a closed-loop system is the ratio of change
         in the open loop gain to the change in the closed loop gain.
 
@@ -2252,8 +2261,8 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         [----------------------------------  ------------------]
         [        (1 - s)*(6*s - 1)              s*(6*s - 1)    ]{t}
 
-        If the user wants the the resultant ``TransferFunctionMatrix`` object without
-        cancelling the common factors then the ``cancel`` kwarg should be passed ``False``.
+        If the user wants the resultant ``TransferFunctionMatrix`` object without
+        canceling the common factors then the ``cancel`` kwarg should be passed ``False``.
 
         >>> pprint(F_1.doit(cancel=False), use_unicode=False)
         [           25*s*(1 - s)                          25 - 25*s              ]
@@ -2265,8 +2274,8 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         [         (1 - s)*(6*s - 1)                        2                     ]
         [                                                 s *(6*s - 1)           ]{t}
 
-        If the user want the expanded form of the resultant transfer function matrix,
-        the ``expand`` arg should be passed as ``True``.
+        If the user wants the expanded form of the resultant transfer function matrix,
+        the ``expand`` kwarg should be passed as ``True``.
 
         >>> pprint(F_1.doit(expand=True), use_unicode=False)
         [       -s               1 - s      ]

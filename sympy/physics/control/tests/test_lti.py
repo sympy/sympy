@@ -906,6 +906,9 @@ def test_Feedback_construction():
     raises(TypeError, lambda: Feedback(1, 1))
     # raises(ValueError, lambda: Feedback(TransferFunction(1, 1, s), TransferFunction(1, 1, s)))
     raises(ValueError, lambda: Feedback(tf2, tf4*tf5))
+    raises(ValueError, lambda: Feedback(tf2, tf1, 1.5))  # `sign` can only be -1 or 1
+    raises(ValueError, lambda: Feedback(tf1, -tf1**-1))  # denominator can't be zero
+    raises(ValueError, lambda: Feedback(tf4, tf5))  # Both systems should use the same `var`
 
 
 def test_Feedback_functions():
