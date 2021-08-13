@@ -1905,6 +1905,7 @@ class PrettyPrinter(Printer):
             if negone:
                 obj = prettyForm('-' + obj.s, obj.baseline, obj.binding)
             return obj
+
         a = []  # items in the numerator
         b = []  # items that are in the denominator (if any)
 
