@@ -1011,6 +1011,34 @@ def reduce_inequalities(inequalities, symbols=[]):
     return rv.xreplace({v: k for k, v in recast.items()})
 
 
+class UnboundedLinearProgrammingError(Exception):
+    def __init__(self, *args):
+        if args:
+            self.message = args[0]
+        else:
+            self.message = None
+
+    def __str__(self):
+        if self.message:
+            return 'UnboundedLinearProgrammingError, {0} '.format(self.message)
+        else:
+            return 'UnboundedLinearProgrammingError has been raised'
+
+
+class InfeasibleLinearProgrammingError(Exception):
+    def __init__(self, *args):
+        if args:
+            self.message = args[0]
+        else:
+            self.message = None
+
+    def __str__(self):
+        if self.message:
+            return 'InfeasibleLinearProgrammingError, {0} '.format(self.message)
+        else:
+            return 'InfeasibleLinearProgrammingError  has been raised'
+
+
 def _pivot(M, i, j):
     MM = Matrix.zeros(M.rows, M.cols)
     for ii in range(M.rows):
@@ -1053,7 +1081,7 @@ def _simplex(M, R, S):
                     piv_rows.append((ratio, i))
 
             if not piv_rows:
-                assert False, 'Objective function can assume arbitrarily large positive (resp. negative) values at feasible vectors! problem is Unbounded'
+                raise UnboundedLinearProgrammingError('Objective function can assume arbitrarily large positive (resp. negative) values at feasible vectors!')
             piv_rows = sorted(piv_rows, key=lambda x: (x[0], x[1]))
             piv_rows = [(ratio, i) for ratio, i in piv_rows if ratio == piv_rows[0][0]]
             random.shuffle(piv_rows)
@@ -1071,7 +1099,7 @@ def _simplex(M, R, S):
                 if A[k, j] < 0:
                     piv_cols.append(j)
             if not piv_cols:
-                assert False, 'The constraint set is empty! Linear programing problem is Infeasible'
+                raise InfeasibleLinearProgrammingError('The constraint set is empty!')
             random.shuffle(piv_cols)
             j0 = piv_cols[0]
 
