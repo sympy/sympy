@@ -424,8 +424,11 @@ def test_multiset_permutations():
     assert len(list(multiset_permutations('a', 0))) == 1
     assert len(list(multiset_permutations('a', 3))) == 0
     for nul in ([], {}, ''):
-        assert list(multiset_permutations(nul)) == [[]], list(multiset_permutations(nul))
-        assert list(multiset_permutations(nul, 1)) == []
+        assert list(multiset_permutations(nul)) == [[]]
+    assert list(multiset_permutations(nul, 0)) == [[]]
+    # impossible requests give no result
+    assert list(multiset_permutations(nul, 1)) == []
+    assert list(multiset_permutations(nul, -1)) == []
 
     def test():
         for i in range(1, 7):
