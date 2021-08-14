@@ -1874,7 +1874,7 @@ class Feedback(SISOLinearTimeInvariant):
     def sensitivity(self):
         """
         Returns the sensitivity function of the feedback loop.
-        
+
         Sensitivity of a closed-loop system is the ratio
         of change in the open loop gain to the change in
         the closed loop gain.
