@@ -1585,10 +1585,10 @@ class Beam:
 
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
 
-    def _solve_for_ild_reactions(self):
+    def _solve_for_ild_equations(self):
         """
 
-        Helper function for solve_for_ild_reactions(). It takes the unsubstituted
+        Helper function for I.L.D. It takes the unsubstituted
         copy of the load equation and uses it to calculate shear force and bending
         moment equations.
         """
@@ -1641,7 +1641,7 @@ class Beam:
             {R_0: x/10 - 1, R_10: -x/10}
 
         """
-        shear_force, bending_moment = self._solve_for_ild_reactions()
+        shear_force, bending_moment = self._solve_for_ild_equations()
         x = self.variable
         l = self.length
         C3 = Symbol('C3')
@@ -1746,18 +1746,6 @@ class Beam:
 
         return PlotGrid(len(ildplots), 1, *ildplots)
 
-    def _solve_for_ild_shear(self):
-        """
-
-        Helper function for solve_for_ild_shear(). It takes the unsubstituted
-        copy of the load equation and uses it to calculate shear force equation.
-
-        """
-        x = self.variable
-        shear_force = -integrate(self._original_load, x)
-
-        return shear_force
-
     def solve_for_ild_shear(self, distance, value, *reactions):
         """
 
@@ -1808,7 +1796,7 @@ class Beam:
         x = self.variable
         l = self.length
 
-        shear_force = self._solve_for_ild_shear()
+        shear_force, _ = self._solve_for_ild_equations()
 
         shear_curve1 = value - limit(shear_force, x, distance)
         shear_curve2 = (limit(shear_force, x, l) - limit(shear_force, x, distance)) - value
@@ -1889,18 +1877,6 @@ class Beam:
         return plot(self._ild_shear.subs(subs), (x, 0, l),  title='I.L.D. for Shear',
                xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{V}$', line_color='blue',show=True)
 
-    def _solve_for_ild_moment(self):
-        """
-
-        Helper function for solve_for_ild_moment(). It takes the unsubstituted
-        copy of the load equation and uses it to calculate moment equation.
-        """
-        x = self.variable
-        shear_force = -integrate(self._original_load, x)
-        moment = integrate(shear_force, x)
-
-        return moment
-
     def solve_for_ild_moment(self, distance, value, *reactions):
         """
 
@@ -1951,9 +1927,9 @@ class Beam:
         x = self.variable
         l = self.length
 
-        moment = self._solve_for_ild_moment()
-        moment_curve1 = value*(distance-x) - limit(moment, x, distance)
+        _ , moment = self._solve_for_ild_equations()
 
+        moment_curve1 = value*(distance-x) - limit(moment, x, distance)
         moment_curve2= (limit(moment, x, l)-limit(moment, x, distance))-value*(l-x)
 
         for reaction in reactions:
