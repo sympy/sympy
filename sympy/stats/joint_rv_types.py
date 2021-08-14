@@ -176,6 +176,8 @@ def MultivariateNormal(name, mu, sigma):
 
     The density of the multivariate normal distribution can be found at [1].
 
+    Sigma can now be positive semidefinite but only supports sampling.
+
     Parameters
     ==========
 
