@@ -1,10 +1,9 @@
 from sympy import (I, log, sqrt, symbols, apart, Wild,
     RootSum, Lambda, together, exp, gamma)
-from sympy.core.symbol import Symbol, Dummy
+from sympy.core.symbol import Dummy
 from sympy.external import import_module
 from sympy.functions import arg
 from sympy.physics.control.lti import SISOLinearTimeInvariant
-from sympy.plotting import PlotGrid, plot
 from sympy.plotting.plot import LineOver1DRangeSeries
 from sympy.polys.polytools import Poly
 from sympy.printing.latex import latex
@@ -23,7 +22,7 @@ if numpy:
 
 
 def _check_system(system):
-    """Function to check whether the dynamical system passed for plots is 
+    """Function to check whether the dynamical system passed for plots is
     compatible or not."""
     if not isinstance(system, SISOLinearTimeInvariant):
         raise NotImplementedError("Only SISO LTI systems are currently supported.")
@@ -191,7 +190,7 @@ def ramp_response_plot(system, slope=1, color='b', show=True, lower_limit=0,
     Returns the ramp response of a continuous-time system. Ramp
     function is defined as the the straight line passing through
     origin ($$f(x) = mx$$). The slope of the ramp function can be
-    varied by the user and the default value is 1. 
+    varied by the user and the default value is 1.
     """
     x, y = ramp_response_numerical_data(system, slope=slope, prec=prec,
         lower_limit=lower_limit, upper_limit=upper_limit, **kwargs)
