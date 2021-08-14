@@ -356,7 +356,7 @@ class SciPyPrinter(NumPyPrinter):
 
     def _print_SparseMatrix(self, expr):
         i, j, data = [], [], []
-        for (r, c), v in expr._smat.items():
+        for (r, c), v in expr.todok().items():
             i.append(r)
             j.append(c)
             data.append(v)

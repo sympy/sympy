@@ -1029,19 +1029,20 @@ class log(Function):
         return res + Order(x**n, x)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import I, im
+        from sympy import I, im, re
         arg0 = self.args[0].together()
+
         arg = arg0.as_leading_term(x, cdir=cdir)
         x0 = arg0.subs(x, 0)
-        if x0 is S.NaN and logx is None:
-            x0 = arg.limit(x, 0)
+        if (x0 is S.NaN and logx is None):
+            x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
         if x0 in (S.NegativeInfinity, S.Infinity):
             raise PoleError("Cannot expand %s around 0" % (self))
         if x0 == 1:
             return (arg0 - S.One).as_leading_term(x)
         if cdir != 0:
             cdir = arg0.dir(x, cdir)
-        if x0.is_real and x0.is_negative and im(cdir) < 0:
+        if x0.is_real and x0.is_negative and im(cdir).is_negative:
             return self.func(x0) - 2*I*S.Pi
         return self.func(arg)
 

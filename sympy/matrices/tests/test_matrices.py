@@ -4,7 +4,7 @@ from collections.abc import Hashable
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, Poly, Pow, PurePoly, Rational,
-    S, Symbol, cos, exp, log, oo, pi, signsimp, simplify, sin,
+    S, Symbol, cos, exp, log, nan, oo, pi, signsimp, simplify, sin,
     sqrt, symbols, sympify, trigsimp, tan, sstr, diff, Function, expand, FiniteSet)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
@@ -39,9 +39,22 @@ def test_args():
         assert m.rows == 3 and type(m.rows) is int
         assert m.cols == 2 and type(m.cols) is int
         if not n % 2:
-            assert type(m._mat) in (list, tuple, Tuple)
+            assert type(m.flat()) in (list, tuple, Tuple)
         else:
-            assert type(m._smat) is dict
+            assert type(m.todok()) is dict
+
+
+def test_deprecated_mat_smat():
+    for cls in Matrix, ImmutableMatrix:
+        m = cls.zeros(3, 2)
+        with warns_deprecated_sympy():
+            mat = m._mat
+        assert mat == m.flat()
+    for cls in SparseMatrix, ImmutableSparseMatrix:
+        m = cls.zeros(3, 2)
+        with warns_deprecated_sympy():
+            smat = m._smat
+        assert smat == m.todok()
 
 
 def test_division():
@@ -187,6 +200,12 @@ def test_multiplication():
         assert c[0, 1] == 2*5
         assert c[1, 0] == 3*5
         assert c[1, 1] == 0
+
+    M = Matrix([[oo, 0], [0, oo]])
+    assert M ** 2 == M
+
+    M = Matrix([[oo, oo], [0, 0]])
+    assert M ** 2 == Matrix([[nan, nan], [nan, nan]])
 
 
 def test_power():
@@ -651,16 +670,17 @@ def test_creation():
     raises(ValueError, lambda: Matrix(5, -1, []))
     raises(IndexError, lambda: Matrix((1, 2))[2])
     with raises(IndexError):
-        Matrix((1, 2))[1:2] = 5
-    with raises(IndexError):
         Matrix((1, 2))[3] = 5
 
     assert Matrix() == Matrix([]) == Matrix([[]]) == Matrix(0, 0, [])
     # anything used to be allowed in a matrix
     with warns_deprecated_sympy():
-        assert Matrix([[[], ()]]).tolist() == [[[], ()]]
+        assert Matrix([[[1], (2,)]]).tolist() == [[[1], (2,)]]
     with warns_deprecated_sympy():
-        assert Matrix([[[], ()]]).T.tolist() == [[[]], [()]]
+        assert Matrix([[[1], (2,)]]).T.tolist() == [[[1]], [(2,)]]
+    M = Matrix([[0]])
+    with warns_deprecated_sympy():
+        M[0, 0] = S.EmptySet
 
     a = Matrix([[x, 0], [0, 0]])
     m = a
@@ -1245,6 +1265,9 @@ def test_zeros_ones_fill():
     assert zeros(2, 3) == Matrix(2, 3, [0]*6)
     assert ones(2, 3) == Matrix(2, 3, [1]*6)
 
+    a.fill(0)
+    assert a == zeros(n, m)
+
 
 def test_empty_zeros():
     a = zeros(0)
@@ -1619,7 +1642,7 @@ def test_jordan_form():
     m = Matrix([[Float('1.0', precision=110), Float('2.0', precision=110)],
                 [Float('3.14159265358979323846264338327', precision=110), Float('4.0', precision=110)]])
     P, J = m.jordan_form()
-    for term in J._mat:
+    for term in J.values():
         if isinstance(term, Float):
             assert term._prec == 110
 
@@ -2041,8 +2064,8 @@ def test_matrix_norm():
     # Test Rows
     A = Matrix([[5, Rational(3, 2)]])
     assert A.norm() == Pow(25 + Rational(9, 4), S.Half)
-    assert A.norm(oo) == max(A._mat)
-    assert A.norm(-oo) == min(A._mat)
+    assert A.norm(oo) == max(A)
+    assert A.norm(-oo) == min(A)
 
     # Matrix Tests
     # Intuitive test
@@ -2544,8 +2567,7 @@ def test_replace_map():
     M = Matrix(2, 2, lambda i, j: F(i+j))
     with warns_deprecated_sympy():
         N = M.replace(F, G, True)
-    with warns_deprecated_sympy():
-        assert N == K
+    assert N == K
 
 def test_atoms():
     m = Matrix([[1, 2], [x, 1 - 1/x]])

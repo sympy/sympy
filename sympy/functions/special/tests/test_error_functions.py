@@ -12,7 +12,7 @@ from sympy import (
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.special.error_functions import _erfs, _eis
-from sympy.testing.pytest import raises, slow
+from sympy.testing.pytest import raises
 
 x, y, z = symbols('x,y,z')
 w = Symbol("w", real=True)
@@ -93,6 +93,10 @@ def test_erf_series():
 
     assert erf(x).series(x, oo) == \
         -exp(-x**2)*(3/(4*x**5) - 1/(2*x**3) + 1/x + O(x**(-6), (x, oo)))/sqrt(pi) + 1
+    assert erf(x**2).series(x, oo, n=8) == \
+        (-1/(2*x**6) + x**(-2) + O(x**(-8), (x, oo)))*exp(-x**4)/sqrt(pi)*-1 + 1
+    assert erf(sqrt(x)).series(x, oo, n=3) == (sqrt(1/x) - (1/x)**(S(3)/2)/2\
+        + 3*(1/x)**(S(5)/2)/4 + O(x**(-3), (x, oo)))*exp(-x)/sqrt(pi)*-1 + 1
 
 
 def test_erf_evalf():
@@ -485,7 +489,8 @@ def test__eis():
         == Ei(z).diff(z)
 
     assert _eis(z).series(z, n=3) == EulerGamma + log(z) + z*(-log(z) - \
-        EulerGamma + 1) + z**2*(log(z)/2 - Rational(3, 4) + EulerGamma/2) + O(z**3)
+        EulerGamma + 1) + z**2*(log(z)/2 - Rational(3, 4) + EulerGamma/2)\
+        + O(z**3*log(z))
     raises(ArgumentIndexError, lambda: _eis(z).fdiff(2))
 
 
@@ -777,7 +782,6 @@ def test_fresnel():
     assert fresnelc(x).taylor_term(1, x) == -pi**2*x**5/40
 
 
-@slow
 def test_fresnel_series():
     assert fresnelc(z).series(z, n=15) == \
         z - pi**2*z**5/40 + pi**4*z**9/3456 - pi**6*z**13/599040 + O(z**15)

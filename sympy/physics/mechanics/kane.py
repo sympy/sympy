@@ -3,6 +3,7 @@ from sympy import solve_linear_system_LU
 from sympy.utilities import default_sort_key
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
+from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
@@ -13,7 +14,7 @@ from sympy.utilities.iterables import iterable
 __all__ = ['KanesMethod']
 
 
-class KanesMethod:
+class KanesMethod(_Methods):
     """Kane's method object.
 
     Explanation
@@ -30,9 +31,9 @@ class KanesMethod:
 
     q, u : Matrix
         Matrices of the generalized coordinates and speeds
-    bodylist : iterable
+    bodies : iterable
         Iterable of Point and RigidBody objects in the system.
-    forcelist : iterable
+    loads : iterable
         Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
         describing the forces on the system.
     auxiliary : Matrix
@@ -117,7 +118,7 @@ class KanesMethod:
     def __init__(self, frame, q_ind, u_ind, kd_eqs=None, q_dependent=None,
             configuration_constraints=None, u_dependent=None,
             velocity_constraints=None, acceleration_constraints=None,
-            u_auxiliary=None):
+            u_auxiliary=None, bodies=None, forcelist=None):
 
         """Please read the online documentation. """
         if not q_ind:
@@ -131,8 +132,8 @@ class KanesMethod:
         self._fr = None
         self._frstar = None
 
-        self._forcelist = None
-        self._bodylist = None
+        self._forcelist = forcelist
+        self._bodylist = bodies
 
         self._initialize_vectors(q_ind, q_dependent, u_ind, u_dependent,
                 u_auxiliary)
@@ -505,7 +506,7 @@ class KanesMethod:
         result = linearizer.linearize(**kwargs)
         return result + (linearizer.r,)
 
-    def kanes_equations(self, bodies, loads=None):
+    def kanes_equations(self, bodies=None, loads=None):
         """ Method to form Kane's equations, Fr + Fr* = 0.
 
         Explanation
@@ -530,6 +531,12 @@ class KanesMethod:
             Must be either a non-empty iterable of tuples or None which corresponds
             to a system with no constraints.
         """
+        if bodies is None:
+            bodies = self.bodies
+        if  loads is None and self._forcelist is not None:
+            loads = self._forcelist
+        if loads == []:
+            loads = None
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
                     'kinematic differential equations to use this method.')
@@ -552,6 +559,10 @@ class KanesMethod:
             self._fr = fr.col_join(fraux)
             self._frstar = frstar.col_join(frstaraux)
         return (self._fr, self._frstar)
+
+    def _form_eoms(self):
+        fr, frstar = self.kanes_equations(self.bodylist, self.forcelist)
+        return fr + frstar
 
     def rhs(self, inv_method=None):
         """Returns the system's equations of motion in first order form. The
@@ -650,4 +661,12 @@ class KanesMethod:
 
     @property
     def forcelist(self):
+        return self._forcelist
+
+    @property
+    def bodies(self):
+        return self._bodylist
+
+    @property
+    def loads(self):
         return self._forcelist

@@ -1881,16 +1881,16 @@ class Mul(Expr, AssocOp):
                 else:
                     raise ValueError
 
-            n0 = sum(t[1] for t in ords)
+            n0 = sum(t[1] for t in ords if t[1].is_number)
             facs = []
             for t, m in ords:
-                n1 = ceiling(n - n0 + m)
+                n1 = ceiling(n - n0 + (m if m.is_number else 0))
                 s = t.nseries(x, n=n1, logx=logx, cdir=cdir)
                 ns = s.getn()
                 if ns is not None:
                     if ns < n1:  # less than expected
                         n -= n1 - ns    # reduce n
-                facs.append(s.removeO())
+                facs.append(s)
 
         except (ValueError, NotImplementedError, TypeError, AttributeError, PoleError):
             n0 = sympify(sum(t[1] for t in ords if t[1].is_number))
@@ -1934,10 +1934,8 @@ class Mul(Expr, AssocOp):
             else:
                 return res
 
-        for i in (1, 2, 3):
-            if (res - self).subs(x, i) is not S.Zero:
-                res += Order(x**n, x)
-                break
+        if res != self:
+            res += Order(x**n, x)
         return res
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):

@@ -152,7 +152,6 @@ def test_mellin_transform():
         (-gamma(s + S.Half)/(sqrt(pi)*s), (Rational(-1, 2), 0), True)
 
 
-@slow
 def test_mellin_transform2():
     MT = mellin_transform
     # TODO we cannot currently do these (needs summation of 3F2(-1))
@@ -560,6 +559,7 @@ def test_laplace_transform():
     assert LT(Mt, t, s, legacy_matrix=False, noconds=True) == Ms
 
 
+@slow
 def test_issue_8368_7173():
     LT = laplace_transform
     # hyperbolic
@@ -573,6 +573,7 @@ def test_issue_8368_7173():
     assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), 0, True)
 
 
+@slow
 def test_inverse_laplace_transform():
     from sympy import sinh, cosh, besselj, besseli, simplify, factor_terms,\
         DiracDelta

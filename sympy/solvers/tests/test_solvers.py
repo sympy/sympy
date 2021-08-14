@@ -2351,3 +2351,13 @@ def test_issue_4886():
     t = b*c/(a**2 + b**2)
     sol = [((b*(t - z) - c)/(-a), t - z), ((b*(t + z) - c)/(-a), t + z)]
     assert solve([x**2 + y**2 - R**2, a*x + b*y - c], x, y) == sol
+
+
+def test_issue_6819():
+    a, b, c, d = symbols('a b c d', positive=True)
+    assert solve(a*b**x - c*d**x, x) == [log(c/a)/log(b/d)]
+
+
+def test_issue_21852():
+    solution = [21 - 21*sqrt(2)/2]
+    assert solve(2*x + sqrt(2*x**2) - 21) == solution

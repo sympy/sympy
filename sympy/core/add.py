@@ -979,11 +979,22 @@ class Add(Expr, AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import expand_mul, Order
+        from sympy import expand_mul, Order, Piecewise, piecewise_fold, log
 
         old = self
 
+        if old.has(Piecewise):
+            old = piecewise_fold(old)
+
+        # This expansion is the last part of expand_log. expand_log also calls
+        # expand_mul with factor=True, which would be more expensive
+        if any(isinstance(a, log) for a in self.args):
+            logflags = dict(deep=True, log=True, mul=False, power_exp=False,
+                power_base=False, multinomial=False, basic=False, force=False,
+                factor=False)
+            old = old.expand(**logflags)
         expr = expand_mul(old)
+
         if not expr.is_Add:
             return expr.as_leading_term(x, logx=logx, cdir=cdir)
 

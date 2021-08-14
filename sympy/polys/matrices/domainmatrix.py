@@ -9,6 +9,7 @@ convenience routines for converting between Expr and the poly domains as well
 as unifying matrices with different domains.
 
 """
+from functools import reduce
 from sympy.core.sympify import _sympify
 
 from ..constructor import construct_domain
@@ -462,36 +463,34 @@ class DomainMatrix:
 
         return self.from_rep(SDM.to_ddm(self.rep))
 
-    def _unify_domain(self, other):
-        """Convert self and other to a common domain"""
-        K1 = self.domain
-        K2 = other.domain
-        if K1 == K2:
-            return self, other
-        K = K1.unify(K2)
-        if K1 != K:
-            self = self.convert_to(K)
-        if K2 != K:
-            other = other.convert_to(K)
-        return self, other
+    @classmethod
+    def _unify_domain(cls, *matrices):
+        """Convert matrices to a common domain"""
+        domains = {matrix.domain for matrix in matrices}
+        if len(domains) == 1:
+            return matrices
+        domain = reduce(lambda x, y: x.unify(y), domains)
+        return tuple(matrix.convert_to(domain) for matrix in matrices)
 
-    def _unify_fmt(self, other, fmt):
-        """Convert self and other to the same format.
+    @classmethod
+    def _unify_fmt(cls, *matrices, fmt=None):
+        """Convert matrices to the same format.
 
-        If both are sparse or both are dense then return both unmodified.
+        If all matrices have the same format, then return unmodified.
         Otherwise convert both to the preferred format given as *fmt* which
         should be 'dense' or 'sparse'.
         """
-        if self.rep.fmt == other.rep.fmt:
-            return self, other
-        elif fmt == 'sparse':
-            return self.to_sparse(), other.to_sparse()
+        formats = {matrix.rep.fmt for matrix in matrices}
+        if len(formats) == 1:
+            return matrices
+        if fmt == 'sparse':
+            return tuple(matrix.to_sparse() for matrix in matrices)
         elif fmt == 'dense':
-            return self.to_dense(), other.to_dense()
+            return tuple(matrix.to_dense() for matrix in matrices)
         else:
             raise ValueError("fmt should be 'sparse' or 'dense'")
 
-    def unify(self, other, *, fmt=None):
+    def unify(self, *others, fmt=None):
         """
         Unifies the domains and the format of self and other
         matrices.
@@ -499,7 +498,8 @@ class DomainMatrix:
         Parameters
         ==========
 
-        other : another DomainMatrix
+        others : DomainMatrix
+
         fmt: string 'dense', 'sparse' or `None` (default)
             The preferred format to convert to if self and other are not
             already in the same format. If `None` or not specified then no
@@ -508,8 +508,8 @@ class DomainMatrix:
         Returns
         =======
 
-        (dM1, dM2)
-            dM1, dM2 DomainMatrix matrices with unified Domain and format
+        Tuple[DomainMatrix]
+            Matrices with unified domain and format
 
         Examples
         ========
@@ -543,11 +543,11 @@ class DomainMatrix:
         convert_to, to_dense, to_sparse
 
         """
-
-        dM1, dM2 = self._unify_domain(other)
+        matrices = (self,) + others
+        matrices = DomainMatrix._unify_domain(*matrices)
         if fmt is not None:
-            dM1, dM2 = dM1._unify_fmt(dM2, fmt)
-        return dM1, dM2
+            matrices = DomainMatrix._unify_fmt(*matrices, fmt=fmt)
+        return matrices
 
     def to_Matrix(self):
         r"""
@@ -608,44 +608,81 @@ class DomainMatrix:
     def is_zero_matrix(self):
         return all(self[i, j].element == self.domain.zero for i in range(self.shape[0]) for j in range(self.shape[1]))
 
-    def hstack(A, B):
-        r"""
-        Horizontally stacks 2 Domain Matrices.
+    def hstack(A, *B):
+        r"""Horizontally stack the given matrices.
 
         Parameters
         ==========
 
-        A, B: DomainMatrix
-            to stack the rows horizontally
+        B: DomainMatrix
+            Matrices to stack horizontally.
 
         Returns
         =======
 
         DomainMatrix
-            DomainMatrix by stacking the rows horizontally
+            DomainMatrix by stacking horizontally.
 
         Examples
         ========
 
-        >>> from sympy import ZZ, QQ
+        >>> from sympy import ZZ
         >>> from sympy.polys.matrices import DomainMatrix
-        >>> A = DomainMatrix([[ZZ(1), ZZ(2), ZZ(3)]], (1, 3), ZZ)
-        >>> B = DomainMatrix([[QQ(-1, 2), QQ(1, 2), QQ(1, 3)]],(1, 3), QQ)
+
+        >>> A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> B = DomainMatrix([[ZZ(5), ZZ(6)], [ZZ(7), ZZ(8)]], (2, 2), ZZ)
         >>> A.hstack(B)
-        DomainMatrix([[1, 2, 3, -1/2, 1/2, 1/3]], (1, 6), QQ)
+        DomainMatrix([[1, 2, 5, 6], [3, 4, 7, 8]], (2, 4), ZZ)
+
+        >>> C = DomainMatrix([[ZZ(9), ZZ(10)], [ZZ(11), ZZ(12)]], (2, 2), ZZ)
+        >>> A.hstack(B, C)
+        DomainMatrix([[1, 2, 5, 6, 9, 10], [3, 4, 7, 8, 11, 12]], (2, 6), ZZ)
 
         See Also
         ========
 
         unify
-
         """
-        A, B = A.unify(B, fmt='dense')
-        return A.from_rep(A.rep.hstack(B.rep))
+        A, *B = A.unify(*B, fmt='dense')
+        return DomainMatrix.from_rep(A.rep.hstack(*(Bk.rep for Bk in B)))
 
-    def vstack(A, B):
-        A, B = A.unify(B, fmt='dense')
-        return A.from_rep(A.rep.vstack(B.rep))
+    def vstack(A, *B):
+        r"""Vertically stack the given matrices.
+
+        Parameters
+        ==========
+
+        B: DomainMatrix
+            Matrices to stack vertically.
+
+        Returns
+        =======
+
+        DomainMatrix
+            DomainMatrix by stacking vertically.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+
+        >>> A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> B = DomainMatrix([[ZZ(5), ZZ(6)], [ZZ(7), ZZ(8)]], (2, 2), ZZ)
+        >>> A.vstack(B)
+        DomainMatrix([[1, 2], [3, 4], [5, 6], [7, 8]], (4, 2), ZZ)
+
+        >>> C = DomainMatrix([[ZZ(9), ZZ(10)], [ZZ(11), ZZ(12)]], (2, 2), ZZ)
+        >>> A.vstack(B, C)
+        DomainMatrix([[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]], (6, 2), ZZ)
+
+        See Also
+        ========
+
+        unify
+        """
+        A, *B = A.unify(*B, fmt='dense')
+        return DomainMatrix.from_rep(A.rep.vstack(*(Bk.rep for Bk in B)))
 
     def applyfunc(self, func, domain=None):
         if domain is None:
@@ -1014,6 +1051,81 @@ class DomainMatrix:
         else:
             sqrtAn = A ** (n // 2)
             return sqrtAn * sqrtAn
+
+    def scc(self):
+        """Compute the strongly connected components of a DomainMatrix
+
+        Explanation
+        ===========
+
+        A square matrix can be considered as the adjacency matrix for a
+        directed graph where the row and column indices are the vertices. In
+        this graph if there is an edge from vertex ``i`` to vertex ``j`` if
+        ``M[i, j]`` is nonzero. This routine computes the strongly connected
+        components of that graph which are subsets of the rows and columns that
+        are connected by some nonzero element of the matrix. The strongly
+        connected components are useful because many operations such as the
+        determinant can be computed by working with the submatrices
+        corresponding to each component.
+
+        Examples
+        ========
+
+        Find the strongly connected components of a matrix:
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> M = DomainMatrix([[ZZ(1), ZZ(0), ZZ(2)],
+        ...                   [ZZ(0), ZZ(3), ZZ(0)],
+        ...                   [ZZ(4), ZZ(6), ZZ(5)]], (3, 3), ZZ)
+        >>> M.scc()
+        [[1], [0, 2]]
+
+        Compute the determinant from the components:
+
+        >>> MM = M.to_Matrix()
+        >>> MM
+        Matrix([
+        [1, 0, 2],
+        [0, 3, 0],
+        [4, 6, 5]])
+        >>> MM[[1], [1]]
+        Matrix([[3]])
+        >>> MM[[0, 2], [0, 2]]
+        Matrix([
+        [1, 2],
+        [4, 5]])
+        >>> MM.det()
+        -9
+        >>> MM[[1], [1]].det() * MM[[0, 2], [0, 2]].det()
+        -9
+
+        The components are given in reverse topological order and represent a
+        permutation of the rows and columns that will bring the matrix into
+        block lower-triangular form:
+
+        >>> MM[[1, 0, 2], [1, 0, 2]]
+        Matrix([
+        [3, 0, 0],
+        [0, 1, 2],
+        [6, 4, 5]])
+
+        Returns
+        =======
+
+        List of lists of integers
+            Each list represents a strongly connected component.
+
+        See also
+        ========
+
+        sympy.matrices.matrices.MatrixBase.strongly_connected_components
+        sympy.utilities.iterables.strongly_connected_components
+
+        """
+        rows, cols = self.shape
+        assert rows == cols
+        return self.rep.scc()
 
     def rref(self):
         r"""

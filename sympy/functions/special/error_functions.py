@@ -5,6 +5,7 @@ from sympy.core import Add, S, sympify, cacheit, pi, I, Rational
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial, factorial2, RisingFactorial
+from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.exponential import exp, log
@@ -242,14 +243,23 @@ class erf(Function):
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
+        from sympy import ceiling
         point = args0[0]
 
         if point in [S.Infinity, S.NegativeInfinity]:
             z = self.args[0]
 
-            s = [(-1)**k * factorial2(2*k - 1) / (z**(2*k + 1) * 2**k)
-                    for k in range(0, n)] + [Order(1/z**n, x)]
-            return S.One - (exp(-z**2)/sqrt(pi)) * Add(*s)
+            try:
+                _, ex = z.leadterm(x)
+            except (ValueError, NotImplementedError):
+                return self
+
+            ex = -ex # as x->1/x for aseries
+            if ex.is_positive:
+                newn = ceiling(n/ex)
+                s = [(-1)**k * factorial2(2*k - 1) / (z**(2*k + 1) * 2**k)
+                        for k in range(0, newn)] + [Order(1/z**newn, x)]
+                return S.One - (exp(-z**2)/sqrt(pi)) * Add(*s)
 
         return super(erf, self)._eval_aseries(n, args0, x, logx)
 
@@ -2015,7 +2025,7 @@ class Ci(TrigonometricIntegral):
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.NaN:
-            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
         if arg0.is_zero:
             return S.EulerGamma
         elif arg0.is_finite:
@@ -2142,7 +2152,7 @@ class Shi(TrigonometricIntegral):
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.NaN:
-            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
         if arg0.is_zero:
             return arg
         elif not arg0.is_infinite:
@@ -2260,7 +2270,7 @@ class Chi(TrigonometricIntegral):
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.NaN:
-            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
         if arg0.is_zero:
             return S.EulerGamma
         elif arg0.is_finite:
@@ -2447,13 +2457,17 @@ class fresnels(FresnelIntegral):
                 * meijerg([], [1], [Rational(3, 4)], [Rational(1, 4), 0], -pi**2*z**4/16))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.ComplexInfinity:
-            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
         if arg0.is_zero:
             return pi*arg**3/6
+        elif arg0 in [S.Infinity, S.NegativeInfinity]:
+            s = 1 if arg0 is S.Infinity else -1
+            return s*S.Half + Order(x, x)
         else:
             return self.func(arg0)
 
@@ -2599,13 +2613,17 @@ class fresnelc(FresnelIntegral):
                 * meijerg([], [1], [Rational(1, 4)], [Rational(3, 4), 0], -pi**2*z**4/16))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy import Order
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
         if arg0 is S.ComplexInfinity:
-            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
-        if x in arg.free_symbols and arg0.is_zero:
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+        if arg0.is_zero:
             return arg
+        elif arg0 in [S.Infinity, S.NegativeInfinity]:
+            s = 1 if arg0 is S.Infinity else -1
+            return s*S.Half + Order(x, x)
         else:
             return self.func(arg0)
 

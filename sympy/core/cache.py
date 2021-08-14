@@ -70,7 +70,9 @@ def __cacheit(maxsize):
         def wrapper(*args, **kwargs):
             try:
                 retval = cfunc(*args, **kwargs)
-            except TypeError:
+            except TypeError as e:
+                if not e.args or not e.args[0].startswith('unhashable type:'):
+                    raise
                 retval = func(*args, **kwargs)
             return retval
 
