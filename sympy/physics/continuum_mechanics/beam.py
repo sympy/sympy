@@ -133,7 +133,7 @@ class Beam:
         self._reaction_loads = {}
         self._ild_reactions = {}
         self._ild_shear = 0
-
+        self._ild_moment = 0
         # _original_load is a copy of _load equations with unsubstituted reaction
         # forces. It is used for calculating reaction forces in case of I.L.D.
         self._original_load = 0
@@ -159,6 +159,11 @@ class Beam:
     def ild_reactions(self):
         """ Returns the I.L.D. reaction forces in a dictionary."""
         return self._ild_reactions
+
+    @property
+    def ild_moment(self):
+        """ Returns the I.L.D. moment equation."""
+        return self._ild_moment
 
     @property
     def length(self):
@@ -1580,10 +1585,10 @@ class Beam:
 
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
 
-    def _solve_for_ild_reactions(self):
+    def _solve_for_ild_equations(self):
         """
 
-        Helper function for solve_for_ild_reactions(). It takes the unsubstituted
+        Helper function for I.L.D. It takes the unsubstituted
         copy of the load equation and uses it to calculate shear force and bending
         moment equations.
         """
@@ -1636,7 +1641,7 @@ class Beam:
             {R_0: x/10 - 1, R_10: -x/10}
 
         """
-        shear_force, bending_moment = self._solve_for_ild_reactions()
+        shear_force, bending_moment = self._solve_for_ild_equations()
         x = self.variable
         l = self.length
         C3 = Symbol('C3')
@@ -1741,18 +1746,6 @@ class Beam:
 
         return PlotGrid(len(ildplots), 1, *ildplots)
 
-    def _solve_for_ild_shear(self):
-        """
-
-        Helper function for solve_for_ild_shear(). It takes the unsubstituted
-        copy of the load equation and uses it to calculate shear force equation.
-
-        """
-        x = self.variable
-        shear_force = -integrate(self._original_load, x)
-
-        return shear_force
-
     def solve_for_ild_shear(self, distance, value, *reactions):
         """
 
@@ -1803,7 +1796,7 @@ class Beam:
         x = self.variable
         l = self.length
 
-        shear_force = self._solve_for_ild_shear()
+        shear_force, _ = self._solve_for_ild_equations()
 
         shear_curve1 = value - limit(shear_force, x, distance)
         shear_curve2 = (limit(shear_force, x, l) - limit(shear_force, x, distance)) - value
@@ -1883,6 +1876,134 @@ class Beam:
 
         return plot(self._ild_shear.subs(subs), (x, 0, l),  title='I.L.D. for Shear',
                xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{V}$', line_color='blue',show=True)
+
+    def solve_for_ild_moment(self, distance, value, *reactions):
+        """
+
+        Determines the Influence Line Diagram equations for moment at a
+        specified point under the effect of a moving load.
+
+        Parameters
+        ==========
+        distance : Integer
+            Distance of the point from the start of the beam
+            for which equations are to be determined
+        value : Integer
+            Magnitude of moving load
+        reactions :
+            The reaction forces applied on the beam.
+
+        Examples
+        ========
+
+        There is a beam of length 12 meters. There are two simple supports
+        below the beam, one at the starting point and another at a distance
+        of 8 meters. Calculate the I.L.D. equations for Moment at a distance
+        of 4 meters under the effect of a moving load of magnitude 1kN.
+
+        .. image:: ildshear.png
+
+        Using the sign convention of downwards forces being positive.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy import symbols
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> E, I = symbols('E, I')
+            >>> R_0, R_8 = symbols('R_0, R_8')
+            >>> b = Beam(12, E, I)
+            >>> b.apply_support(0, 'roller')
+            >>> b.apply_support(8, 'roller')
+            >>> b.solve_for_ild_reactions(1, R_0, R_8)
+            >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
+            >>> b.ild_moment
+            Piecewise((-x/2, x < 4), (x/2 - 4, x > 4))
+
+        """
+
+        x = self.variable
+        l = self.length
+
+        _ , moment = self._solve_for_ild_equations()
+
+        moment_curve1 = value*(distance-x) - limit(moment, x, distance)
+        moment_curve2= (limit(moment, x, l)-limit(moment, x, distance))-value*(l-x)
+
+        for reaction in reactions:
+            moment_curve1 = moment_curve1.subs(reaction, self._ild_reactions[reaction])
+            moment_curve2 = moment_curve2.subs(reaction, self._ild_reactions[reaction])
+
+        moment_eq = Piecewise((moment_curve1, x < distance), (moment_curve2, x > distance))
+        self._ild_moment = moment_eq
+
+    def plot_ild_moment(self,subs=None):
+        """
+
+        Plots the Influence Line Diagram for Moment under the effect
+        of a moving load. This function should be called after
+        calling solve_for_ild_moment().
+
+        Parameters
+        ==========
+
+        subs : dictionary
+               Python dictionary containing Symbols as key and their
+               corresponding values.
+
+        Examples
+        ========
+
+        There is a beam of length 12 meters. There are two simple supports
+        below the beam, one at the starting point and another at a distance
+        of 8 meters. Plot the I.L.D. for Moment at a distance
+        of 4 meters under the effect of a moving load of magnitude 1kN.
+
+        .. image:: ildshear.png
+
+        Using the sign convention of downwards forces being positive.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy import symbols
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> E, I = symbols('E, I')
+            >>> R_0, R_8 = symbols('R_0, R_8')
+            >>> b = Beam(12, E, I)
+            >>> b.apply_support(0, 'roller')
+            >>> b.apply_support(8, 'roller')
+            >>> b.solve_for_ild_reactions(1, R_0, R_8)
+            >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
+            >>> b.ild_moment
+            Piecewise((-x/2, x < 4), (x/2 - 4, x > 4))
+            >>> b.plot_ild_moment()
+            Plot object containing:
+            [0]: cartesian line: Piecewise((-x/2, x < 4), (x/2 - 4, x > 4)) for x over (0.0, 12.0)
+
+        """
+
+        if not self._ild_moment:
+            raise ValueError("I.L.D. moment equation not found. Please use solve_for_ild_moment() to generate the I.L.D. moment equations.")
+
+        x = self.variable
+
+        if subs is None:
+            subs = {}
+
+        for sym in self._ild_moment.atoms(Symbol):
+            if sym != x and sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+
+        for sym in self._length.atoms(Symbol):
+            if sym != x and sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        return plot(self._ild_moment.subs(subs), (x, 0, self._length), title='I.L.D. for Moment',
+               xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{M}$', line_color='blue', show=True)
 
     @doctest_depends_on(modules=('numpy',))
     def draw(self, pictorial=True):
