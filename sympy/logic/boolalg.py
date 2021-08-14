@@ -769,8 +769,10 @@ class And(LatticeOp, BooleanFunction):
                             pass
                     if x in reps:
                         eqs.append(e.func(e.rhs, reps[x]))
-                    else:
+                    elif e.lhs == x:
                         reps[x] = e.rhs
+                        eqs.append(e)
+                    else:
                         eqs.append(e)
                 resifted = defaultdict(list)
                 for k in sifted:

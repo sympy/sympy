@@ -7,7 +7,7 @@ from sympy import (
     Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, Poly, posify, rad,
     Rational, S, separatevars, signsimp, simplify, sign, sin,
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan,
-    zoo)
+    zoo, And, Le)
 from sympy.core.mul import _keep_coeff
 from sympy.core.expr import unchanged
 from sympy.simplify.simplify import nthroot, inversecombine
@@ -862,6 +862,13 @@ def test_issue_15965():
 def test_issue_17137():
     assert simplify(cos(x)**I) == cos(x)**I
     assert simplify(cos(x)**(2 + 3*I)) == cos(x)**(2 + 3*I)
+
+
+def test_issue_21869():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    expr = And(Eq(x**2, 4), Le(x, y))
+    assert expr.simplify() == expr
 
 
 def test_issue_7971():
