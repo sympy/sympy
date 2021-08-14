@@ -752,10 +752,11 @@ class And(LatticeOp, BooleanFunction):
                 (i.free_symbols, i) for i in eqs]),
                 lambda x: len(x[0]))
             eqs = []
+            nonlineqs = []
             while 1 in sifted:
                 for free, e in sifted.pop(1):
                     x = free.pop()
-                    if e.lhs != x or x in e.rhs.free_symbols:
+                    if (e.lhs != x or x in e.rhs.free_symbols) and x not in reps:
                         try:
                             m, b = linear_coeffs(
                                 e.rewrite(Add, evaluate=False), x)
@@ -768,12 +769,13 @@ class And(LatticeOp, BooleanFunction):
                         except ValueError:
                             pass
                     if x in reps:
-                        eqs.append(e.func(e.rhs, reps[x]))
-                    elif e.lhs == x:
+                        eqs.append(e.subs(x, reps[x]))
+                    elif e.lhs == x and x not in e.rhs.free_symbols:
                         reps[x] = e.rhs
                         eqs.append(e)
                     else:
-                        eqs.append(e)
+                        # x is not yet identified, but may be later
+                        nonlineqs.append(e)
                 resifted = defaultdict(list)
                 for k in sifted:
                     for f, e in sifted[k]:
@@ -783,8 +785,9 @@ class And(LatticeOp, BooleanFunction):
                 sifted = resifted
         for k in sifted:
             eqs.extend([e for f, e in sifted[k]])
+        nonlineqs = [ei.subs(reps) for ei in nonlineqs]
         other = [ei.subs(reps) for ei in other]
-        rv = rv.func(*([i.canonical for i in (eqs + other)] + nonRel))
+        rv = rv.func(*([i.canonical for i in (eqs + nonlineqs + other)] + nonRel))
         patterns = simplify_patterns_and()
         return self._apply_patternbased_simplification(rv, patterns,
                                                        measure, False)
