@@ -2310,16 +2310,14 @@ def _rem_redundancy(l1, terms):
 
     # Create dominating matrix
     dommatrix = [[0]*nl1 for n in range(nterms)]
+    colcount = [0]*nl1
+    rowcount = [0]*nterms
     for primei, prime in enumerate(l1):
         for termi, term in enumerate(terms):
             if _compare_term(term, prime):
                 dommatrix[termi][primei] = 1
-
-    # Non-dominated prime implicants, dominated to be removed
-    ndprimeimplicants = set(range(nl1))
-
-    # Non-dominated terms, dominated to be removed
-    ndterms = set(range(nterms))
+                colcount[primei] += 1
+                rowcount[termi] += 1
 
     # Keep track if anything changed
     anythingchanged = True
@@ -2327,63 +2325,75 @@ def _rem_redundancy(l1, terms):
     while anythingchanged:
         anythingchanged = False
 
-        # Make copy for iteration
-        oldndterms = ndterms.copy()
-        # Filter matrix to only get non-dominated items
-        filteredrows = [[dommatrix[rowi][i] for i in list(ndprimeimplicants)]
-                        for rowi in oldndterms]
-        for n, rowi in enumerate(oldndterms):
+        for rowi in range(nterms):
             # Still non-dominated?
-            if rowi in ndterms:
-                row = filteredrows[n]
-                for n2, row2i in enumerate(oldndterms):
+            if rowcount[rowi]:
+                row = dommatrix[rowi]
+                for row2i in range(nterms):
                     # Still non-dominated?
-                    if n != n2 and row2i in ndterms:
-                        if all(a >= b for (a, b) in zip(filteredrows[n2], row)):
+                    if rowi != row2i and rowcount[rowi] and (rowcount[rowi] <= rowcount[row2i]):
+                        row2 = dommatrix[row2i]
+                        if all(a >= b for (a, b) in zip(row2, row)):
                             # row2 dominating row, remove row2
-                            ndterms.remove(row2i)
+                            rowcount[row2i] = 0
                             anythingchanged = True
+                            for primei, prime in enumerate(row2):
+                                if prime:
+                                    # Make corresponding entry 0
+                                    dommatrix[row2i][primei] = 0
+                                    colcount[primei] -= 1
 
-        # Make copy for iteration
-        oldndprimeimplicants = ndprimeimplicants.copy()
-        # Filter matrix to only get non-dominated items
-        filteredcols = [[dommatrix[i][coli] for i in list(ndterms)]
-                        for coli in oldndprimeimplicants]
-        for n, coli in enumerate(oldndprimeimplicants):
+        colcache = dict()
+
+        for coli in range(nl1):
             # Still non-dominated?
-            if coli in ndprimeimplicants:
-                col = filteredcols[n]
-                for n2, col2i in enumerate(oldndprimeimplicants):
+            if colcount[coli]:
+                if coli in colcache:
+                    col = colcache[coli]
+                else:
+                    col = [dommatrix[i][coli] for i in range(nterms)]
+                    colcache[coli] = col
+                for col2i in range(nl1):
                     # Still non-dominated?
-                    if coli != col2i and col2i in ndprimeimplicants:
-                        if all(a >= b for (a, b) in zip(col, filteredcols[n2])):
+                    if coli != col2i and colcount[col2i] and (colcount[coli] >= colcount[col2i]):
+                        if col2i in colcache:
+                            col2 = colcache[col2i]
+                        else:
+                            col2 = [dommatrix[i][col2i] for i in range(nterms)]
+                            colcache[col2i] = col2
+                        if all(a >= b for (a, b) in zip(col, col2)):
                             # col dominating col2, remove col2
-                            ndprimeimplicants.remove(col2i)
+                            colcount[col2i] = 0
                             anythingchanged = True
+                            for termi, term in enumerate(col2):
+                                if term and dommatrix[termi][col2i]:
+                                    # Make corresponding entry 0
+                                    dommatrix[termi][col2i] = 0
+                                    rowcount[termi] -= 1
 
         if not anythingchanged:
             # Heuristically select the prime implicant covering most terms
             maxterms = 0
             bestcolidx = -1
-            bestcol = []
-            for n, coli in enumerate(oldndprimeimplicants):
-                s = sum(filteredcols[n])
+            for coli in range(nl1):
+                s = colcount[coli]
                 if s > maxterms:
                     bestcolidx = coli
                     maxterms = s
-                    bestcol = filteredcols[n]
 
             # In case we found a prime implicant covering at least two terms
             if bestcolidx != -1 and maxterms > 1:
                 for primei, prime in enumerate(l1):
                     if primei != bestcolidx:
-                        for termi, term in enumerate(bestcol):
+                        for termi, term in enumerate(colcache[bestcolidx]):
                             if term and dommatrix[termi][primei]:
                                 # Make corresponding entry 0
                                 dommatrix[termi][primei] = 0
                                 anythingchanged = True
+                                rowcount[termi] -= 1
+                                colcount[primei] -= 1
 
-    return [l1[i] for i in ndprimeimplicants]
+    return [l1[i] for i in range(nl1) if colcount[i]]
 
 
 def _input_to_binlist(inputlist, variables):
