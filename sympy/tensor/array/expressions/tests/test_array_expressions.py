@@ -5,7 +5,7 @@ from sympy import symbols, ImmutableDenseNDimArray, tensorproduct, tensorcontrac
 from sympy.combinatorics import Permutation
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol, ArrayElement, \
     PermuteDims, ArrayContraction, ArrayTensorProduct, ArrayDiagonal, \
-    ArrayAdd, nest_permutation, ArrayElementwiseApplyFunc
+    ArrayAdd, nest_permutation, ArrayElementwiseApplyFunc, _EditArrayContraction, _ArgE
 from sympy.testing.pytest import raises
 
 i, j, k, l, m, n = symbols("i j k l m n")
@@ -526,3 +526,25 @@ def test_arrayexpr_array_expr_applyfunc():
     A = ArraySymbol("A", 3, k, 2)
     aaf = ArrayElementwiseApplyFunc(sin, A)
     assert aaf.shape == (3, k, 2)
+
+
+def test_edit_array_contraction():
+    cg = ArrayContraction(ArrayTensorProduct(A, B, C, D), (1, 2, 5))
+    ecg = _EditArrayContraction(cg)
+    assert ecg.to_array_contraction() == cg
+
+    ecg.args_with_ind[1], ecg.args_with_ind[2] = ecg.args_with_ind[2], ecg.args_with_ind[1]
+    assert ecg.to_array_contraction() == ArrayContraction(ArrayTensorProduct(A, C, B, D), (1, 3, 4))
+
+    ci = ecg.get_new_contraction_index()
+    new_arg = _ArgE(X)
+    new_arg.indices = [ci, ci]
+    ecg.args_with_ind.insert(2, new_arg)
+    assert ecg.to_array_contraction() == ArrayContraction(ArrayTensorProduct(A, C, X, B, D), (1, 3, 6), (4, 5))
+
+    ecg.args_with_ind.pop(1)
+    assert ecg.to_array_contraction() == ArrayContraction(ArrayTensorProduct(A, X, B, D), (1, 4), (2, 3))
+
+    ecg.args_with_ind[0].indices[1] = ecg.args_with_ind[1].indices[0]
+    ecg.args_with_ind[1].indices[1] = ecg.args_with_ind[2].indices[0]
+    assert ecg.to_array_contraction() == ArrayContraction(ArrayTensorProduct(A, X, B, D), (1, 2), (3, 4))

@@ -2,6 +2,7 @@ import operator
 from functools import reduce
 import itertools
 from itertools import accumulate
+from typing import Optional, List
 
 from sympy import Expr, ImmutableDenseNDimArray, S, Symbol, Integer, ZeroMatrix, Basic, tensorproduct, Add, permutedims, \
     Tuple, tensordiagonal, Lambda, Dummy, Function, MatrixExpr, NDimArray, Indexed, IndexedBase, default_sort_key, \
@@ -1265,6 +1266,54 @@ class ArrayContraction(_CodegenArrayAbstract):
 
     def as_explicit(self):
         return tensorcontraction(self.expr.as_explicit(), *self.contraction_indices)
+
+
+class _ArgE:
+    def __init__(self, element):
+        self.element = element
+        self.indices: List[Optional[int]] = [None for i in range(get_rank(element))]
+
+    def __str__(self):
+        return "_ArgE(%s, %s)" % (self.element, self.indices)
+
+    __repr__ = __str__
+
+
+class _EditArrayContraction:
+    """
+    Utility class to help manipulate array contraction objects.
+    """
+
+    def __init__(self, array_contraction: ArrayContraction):
+        expr = array_contraction.expr
+        if isinstance(expr, ArrayTensorProduct):
+            args = list(expr.args)
+        else:
+            args = [expr]
+        args_with_ind: List[_ArgE] = [_ArgE(arg) for arg in args]
+        mapping = _get_mapping_from_subranks(array_contraction.subranks)
+        for i, contraction_tuple in enumerate(array_contraction.contraction_indices):
+            for j in contraction_tuple:
+                arg_pos, ind_pos = mapping[j]
+                args_with_ind[arg_pos].indices[ind_pos] = i
+        self.args_with_ind: List[_ArgE] = args_with_ind
+        self.number_of_contraction_indices: int = len(array_contraction.contraction_indices)
+
+    def get_new_contraction_index(self):
+        self.number_of_contraction_indices += 1
+        return self.number_of_contraction_indices - 1
+
+    def to_array_contraction(self):
+        args = []
+        contraction_indices: List[List[int]] = [[] for i in range(self.number_of_contraction_indices)]
+        current_position: int = 0
+        for i, arg_with_ind in enumerate(self.args_with_ind):
+            args.append(arg_with_ind.element)
+            for j in arg_with_ind.indices:
+                if j is not None:
+                    contraction_indices[j].append(current_position)
+                current_position += 1
+        return ArrayContraction(ArrayTensorProduct(*args), *contraction_indices)
 
 
 def get_rank(expr):
