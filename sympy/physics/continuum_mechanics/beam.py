@@ -1283,6 +1283,70 @@ class Beam:
         """
         return self.shear_force()/self._area
 
+    def plot_shear_stress(self, subs=None):
+        """
+
+        Returns a plot of shear stress present in the beam object.
+
+        Parameters
+        ==========
+        subs : dictionary
+            Python dictionary containing Symbols as key and their
+            corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 8 meters and area of cross section 2 square
+        meters. A constant distributed load of 10 KN/m is applied from half of
+        the beam till the end. There are two simple supports below the beam,
+        one at the starting point and another at the ending point of the beam.
+        A pointload of magnitude 5 KN is also applied from top of the
+        beam, at a distance of 4 meters from the starting point.
+        Take E = 200 GPa and I = 400*(10**-6) meter**4.
+
+        Using the sign convention of downwards forces being positive.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> from sympy import symbols
+            >>> R1, R2 = symbols('R1, R2')
+            >>> b = Beam(8, 200*(10**9), 400*(10**-6), 2)
+            >>> b.apply_load(5000, 2, -1)
+            >>> b.apply_load(R1, 0, -1)
+            >>> b.apply_load(R2, 8, -1)
+            >>> b.apply_load(10000, 4, 0, end=8)
+            >>> b.bc_deflection = [(0, 0), (8, 0)]
+            >>> b.solve_for_reaction_loads(R1, R2)
+            >>> b.plot_shear_stress()
+            Plot object containing:
+            [0]: cartesian line: 6875*SingularityFunction(x, 0, 0) - 2500*SingularityFunction(x, 2, 0)
+            - 5000*SingularityFunction(x, 4, 1) + 15625*SingularityFunction(x, 8, 0)
+            + 5000*SingularityFunction(x, 8, 1) for x over (0.0, 8.0)
+        """
+
+        shear_stress = self.shear_stress()
+        x = self.variable
+        length = self.length
+
+        if subs is None:
+            subs = {}
+        for sym in shear_stress.atoms(Symbol):
+            if sym != x and sym not in subs:
+                raise ValueError('value of %s was not passed.' %sym)
+
+        if length in subs:
+            length = subs[length]
+
+        # Returns Plot of Shear Stress
+        return plot (shear_stress.subs(subs), (x, 0, length),
+        title='Shear Stress', xlabel=r'$\mathrm{x}$', ylabel=r'$\tau$',
+        line_color='r')
+
+
     def plot_shear_force(self, subs=None):
         """
 
@@ -3166,3 +3230,105 @@ class Beam3D(Beam):
         ax4 = self._plot_deflection(dir, subs)
 
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
+
+    def _plot_shear_stress(self, dir, subs=None):
+
+        shear_stress = self.shear_stress()
+
+        if dir == 'x':
+            dir_num = 0
+            color = 'r'
+
+        elif dir == 'y':
+            dir_num = 1
+            color = 'g'
+
+        elif dir == 'z':
+            dir_num = 2
+            color = 'b'
+
+        if subs is None:
+            subs = {}
+
+        for sym in shear_stress[dir_num].atoms(Symbol):
+            if sym != self.variable and sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
+        else:
+            length = self.length
+
+        return plot(shear_stress[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Shear stress along %c direction'%dir,
+                xlabel=r'$\mathrm{X}$', ylabel=r'$\sigma(%c)$'%dir, line_color=color)
+
+    def plot_shear_stress(self, dir="all", subs=None):
+
+        """
+
+        Returns a plot for Shear Stress along all three directions
+        present in the Beam object.
+
+        Parameters
+        ==========
+        dir : string (default : "all")
+            Direction along which shear stress plot is required.
+            If no direction is specified, all plots are displayed.
+        subs : dictionary
+            Python dictionary containing Symbols as key and their
+            corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 20 meters and area of cross section 2 square
+        meters. It it supported by rollers at of its end. A linear load having
+        slope equal to 12 is applied along y-axis. A constant distributed load
+        of magnitude 15 N is applied from start till its end along z-axis.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+            >>> from sympy import symbols
+            >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+            >>> b = Beam3D(20, E, G, I, 2, x)
+            >>> b.apply_load(15, start=0, order=0, dir="z")
+            >>> b.apply_load(12*x, start=0, order=0, dir="y")
+            >>> b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+            >>> R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+            >>> b.apply_load(R1, start=0, order=-1, dir="z")
+            >>> b.apply_load(R2, start=20, order=-1, dir="z")
+            >>> b.apply_load(R3, start=0, order=-1, dir="y")
+            >>> b.apply_load(R4, start=20, order=-1, dir="y")
+            >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
+            >>> b.plot_shear_stress()
+            PlotGrid object containing:
+            Plot[0]:Plot object containing:
+            [0]: cartesian line: 0 for x over (0.0, 20.0)
+            Plot[1]:Plot object containing:
+            [0]: cartesian line: -3*x**2 for x over (0.0, 20.0)
+            Plot[2]:Plot object containing:
+            [0]: cartesian line: -15*x/2 for x over (0.0, 20.0)
+
+        """
+
+        dir = dir.lower()
+        # For shear stress along x direction
+        if dir == "x":
+            Px = self._plot_shear_stress('x', subs)
+            return Px.show()
+        # For shear stress along y direction
+        elif dir == "y":
+            Py = self._plot_shear_stress('y', subs)
+            return Py.show()
+        # For shear stress along z direction
+        elif dir == "z":
+            Pz = self._plot_shear_stress('z', subs)
+            return Pz.show()
+        # For shear stress along all direction
+        else:
+            Px = self._plot_shear_stress('x', subs)
+            Py = self._plot_shear_stress('y', subs)
+            Pz = self._plot_shear_stress('z', subs)
+            return PlotGrid(3, 1, Px, Py, Pz)
