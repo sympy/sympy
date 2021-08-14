@@ -212,30 +212,100 @@ def ramp_response_plot(system, slope=1, color='b', show=True, lower_limit=0,
     return plt
 
 
-def bode_numerical_data(system):
+def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5):
     _check_system(system)
-
-
-def bode_plot(system, initial_exp=-5, final_exp=5, show=True, **kwargs):
-    r"""
-    Plot a Bode plot of a continuous-time system.
-    """
     expr = system.to_expr()
-    w = Symbol("w", real=True)
-    w_expr = expr.subs({system.var: I*w})
+    _w = Dummy("w", real=True)
+    w_expr = expr.subs({system.var: I*_w})
     real, imag = w_expr.as_real_imag()
 
     mag = 20*log(sqrt(real**2 + imag**2), 10)
 
-    mag_plot = plot(mag, (w, 10**initial_exp, 10**final_exp), xscale='log', title="Bode Plot (Magnitude)", \
-        xlabel="Frequency (Hz) [Log Scale]", ylabel="Magnitude (dB)", show=False)
+    return LineOver1DRangeSeries(mag,
+        (_w, 10**initial_exp, 10**final_exp), xscale='log').get_points()
+
+
+def bode_magnitude_plot(system, initial_exp=-5, final_exp=5,
+    color='b', show=True, show_axes=False, grid=True, **kwargs):
+    r"""
+    Returns the Bode magnitude plot of a continuous-time system.
+    """
+    x, y = bode_magnitude_numerical_data(system, initial_exp=initial_exp,
+        final_exp=final_exp)
+    plt.plot(x, y, color=color, **kwargs)
+    plt.xscale('log')
+
+    plt.xlabel('Frequency (Hz) [Log Scale]')
+    plt.ylabel('Magnitude (dB)')
+    plt.title(f'Bode Plot (Magnitude) of ${latex(system)}$', pad=20)
+
+    if grid:
+        plt.grid(True)
+    if show_axes:
+        plt.axhline(0, color='black')
+        plt.axvline(0, color='black')
+    if show:
+        plt.show()
+        return
+
+    return plt
+
+
+def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5):
+    _check_system(system)
+    expr = system.to_expr()
+    _w = Dummy("w", real=True)
+    w_expr = expr.subs({system.var: I*_w})
 
     phase = arg(w_expr)
 
-    phase_plot = plot(phase, (w, 10**initial_exp, 10**final_exp), xscale='log', title="Bode Plot (Phase)", \
-        xlabel="Frequency (Hz) [Log Scale]", ylabel="Phase (rad)", show=False)
+    return LineOver1DRangeSeries(phase,
+        (_w, 10**initial_exp, 10**final_exp), xscale='log').get_points()
 
-    return PlotGrid(2, 1, mag_plot, phase_plot, show=show)
+
+def bode_phase_plot(system, initial_exp=-5, final_exp=5,
+    color='b', show=True, show_axes=False, grid=True, **kwargs):
+    r"""
+    Returns the Bode phase plot of a continuous-time system.
+    """
+    x, y = bode_phase_numerical_data(system, initial_exp=initial_exp,
+        final_exp=final_exp)
+    plt.plot(x, y, color=color, **kwargs)
+    plt.xscale('log')
+
+    plt.xlabel('Frequency (Hz) [Log Scale]')
+    plt.ylabel('Phase (rad)')
+    plt.title(f'Bode Plot (Phase) of ${latex(system)}$', pad=20)
+
+    if grid:
+        plt.grid(True)
+    if show_axes:
+        plt.axhline(0, color='black')
+        plt.axvline(0, color='black')
+    if show:
+        plt.show()
+        return
+
+    return plt
+
+
+def bode_plot(system, initial_exp=-5, final_exp=5, show=True, grid=True, show_axes=False, **kwargs):
+    r"""
+    Returns the Bode plot of a continuous-time system.
+    """
+    plt.subplot(211)
+    bode_magnitude_plot(system, initial_exp=initial_exp, final_exp=final_exp,
+        show=False, grid=grid, show_axes=show_axes,
+        **kwargs).title(f'Bode Plot of ${latex(system)}$', pad=20)
+    plt.subplot(212)
+    bode_phase_plot(system, initial_exp=initial_exp, final_exp=final_exp,
+        show=False, grid=grid, show_axes=show_axes, **kwargs).title(None)
+
+    if show:
+        plt.show()
+        return
+
+    return plt
 
 
 def _fast_inverse_laplace(e, s, t):
