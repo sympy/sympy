@@ -1,13 +1,13 @@
 from sympy import (I, log, sqrt, symbols, apart, Wild,
     RootSum, Lambda, together, exp, gamma)
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, Dummy
 from sympy.external import import_module
 from sympy.functions import arg
-from sympy.integrals.transforms import inverse_laplace_transform
 from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.plotting import PlotGrid, plot
 from sympy.plotting.plot import LineOver1DRangeSeries
 from sympy.polys.polytools import Poly
+from sympy.printing.latex import latex
 
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
@@ -22,17 +22,27 @@ if numpy:
     np = numpy  # Matplotlib already has numpy as a compulsory dependency. No need to install it separately.
 
 
-def pole_zero_numerical_data(system):
-    """Returns the numerical data of poles and zeros of the system."""
-    system = system.doit()  # Get the equivalent TransferFunction object.
+def _check_system(system):
+    """Function to check whether the dynamical system passed for plots is 
+    compatible or not."""
     if not isinstance(system, SISOLinearTimeInvariant):
-        
+        raise NotImplementedError("Only SISO LTI systems are currently supported.")
     sys = system.to_expr()
     len_free_symbols = len(sys.free_symbols)
     if len_free_symbols > 1:
         raise ValueError("Extra degree of freedom found. Make sure"
-            "There are no free symbols in the dynamical system other"
+            " that there are no free symbols in the dynamical system other"
             " than the variable of Laplace transform.")
+    if sys.has(exp):
+        raise NotImplementedError("Time delay terms are not supported.")
+
+    return
+
+
+def pole_zero_numerical_data(system):
+    """Returns the numerical data of poles and zeros of the system."""
+    _check_system(system)
+    system = system.doit()  # Get the equivalent TransferFunction object.
 
     num_poly = Poly(system.num, system.var).all_coeffs()
     den_poly = Poly(system.den, system.var).all_coeffs()
@@ -46,7 +56,9 @@ def pole_zero_numerical_data(system):
     return zeros, poles
 
 
-def pole_zero_plot(system, pole_colour='r', zero_colour='b', grid=True, show=True, **kwargs):
+def pole_zero_plot(system, pole_color='blue', pole_markersize=10,
+    zero_color='orange', zero_markersize=7, grid=True, show_axes=True,
+    show=True, **kwargs):
     r"""
     Returns the Pole-Zero plot (also known as PZ Plot or PZ Map) of a system.
     """
@@ -58,70 +70,150 @@ def pole_zero_plot(system, pole_colour='r', zero_colour='b', grid=True, show=Tru
     pole_real = np.real(poles)
     pole_imag = np.imag(poles)
 
-    plt.plot(pole_real, pole_imag, 'x', mfc='none', markersize=10)
-    plt.plot(zero_real, zero_imag, 'o', markersize=7)
-    plt.xlabel('Real')
-    plt.ylabel('Imaginary')
-    plt.title('Poles and Zeros')
+    plt.plot(pole_real, pole_imag, 'x', mfc='none',
+        markersize=pole_markersize, color=pole_color)
+    plt.plot(zero_real, zero_imag, 'o', markersize=zero_markersize,
+        color=zero_color)
+    plt.xlabel('Real Axis')
+    plt.ylabel('Imaginary Axis')
+    plt.title(f'Poles and Zeros of ${latex(system)}$', pad=20)
+
     if grid:
         plt.grid()
-    plt.axhline(0, color='black')
-    plt.axvline(0, color='black')
+    if show_axes:
+        plt.axhline(0, color='black')
+        plt.axvline(0, color='black')
     if show:
         plt.show()
         return
+
     return plt
 
 
-def step_response_numerical_data(system):
-    pass
-
-
-def step_response_plot(system, show_input=False, colour='r', show=True, grid=True, upper_limit=6, **kwargs):
-    r"""
-    Return the unit step response of a continuous-time system.
-    """
-    x = Symbol("x")
+def step_response_numerical_data(system, prec=8, lower_limit=0,
+    upper_limit=10, **kwargs):
+    if lower_limit < 0:
+        raise ValueError("Lower limit of time must be greater "
+            "than or equal to zero.")
+    _check_system(system)
+    _x = Dummy("x")
     expr = system.to_expr()/(system.var)
-    y = inverse_laplace_transform(expr, system.var, x)
-    return plot(y, (x, 0, upper_limit), show=show, title="Unit Step Response", \
-        xlabel="Time (s)", ylabel="Amplitude")
+    expr = apart(expr, system.var, full=True)
+    _y = _fast_inverse_laplace(expr, system.var, _x).evalf(prec)
+    return LineOver1DRangeSeries(_y, (_x, lower_limit, upper_limit),
+        **kwargs).get_points()
 
 
-def impulse_response_numerical_data(system):
-    pass
-
-
-def impulse_response_plot(system, show_input=False, colour='r', show=True, grid=True, upper_limit=6, **kwargs):
+def step_response_plot(system, color='b', show=True, lower_limit=0,
+    upper_limit=10, prec=8, show_axes=False, grid=True, **kwargs):
     r"""
-    Return the unit impulse response (Input is the Dirac-Delta Function) of a
-    continuous-time system.
+    Returns the unit step response of a continuous-time system. It is
+    the response of the system when the input is a step input.
     """
-    x = Symbol("x")
+    x, y = step_response_numerical_data(system, prec=prec,
+        lower_limit=lower_limit, upper_limit=upper_limit, **kwargs)
+    plt.plot(x, y, color=color)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Amplitude')
+    plt.title(f'Unit Step Response of ${latex(system)}$', pad=20)
+
+    if grid:
+        plt.grid()
+    if show_axes:
+        plt.axhline(0, color='black')
+        plt.axvline(0, color='black')
+    if show:
+        plt.show()
+        return
+
+    return plt
+
+
+def impulse_response_numerical_data(system, prec=8, lower_limit=0,
+    upper_limit=10, **kwargs):
+    if lower_limit < 0:
+        raise ValueError("Lower limit of time must be greater "
+            "than or equal to zero.")
+    _check_system(system)
+    _x = Dummy("x")
     expr = system.to_expr()
-    y = inverse_laplace_transform(expr, system.var, x)
-    return plot(y, (x, 0, 60), show=True, title="Impulse Response", \
-        xlabel="Time (s)", ylabel="Amplitude")
+    expr = apart(expr, system.var, full=True)
+    _y = _fast_inverse_laplace(expr, system.var, _x).evalf(prec)
+    return LineOver1DRangeSeries(_y, (_x, lower_limit, upper_limit),
+        **kwargs).get_points()
 
 
-def ramp_response_numerical_data(system):
-    pass
-
-
-def ramp_response_plot(system, slope=1, show_input=False, colour='r', show=True, grid=True, upper_limit=6, **kwargs):
+def impulse_response_plot(system, color='b', show=True, lower_limit=0,
+    upper_limit=10, prec=8, show_axes=False, grid=True, **kwargs):
     r"""
-    Return the unit impulse response (Input is the Dirac-Delta Function) of a
+    Returns the unit impulse response (Input is the Dirac-Delta Function) of a
     continuous-time system.
     """
-    x = Symbol("x")
+    x, y = impulse_response_numerical_data(system, prec=prec,
+        lower_limit=lower_limit, upper_limit=upper_limit, **kwargs)
+    plt.plot(x, y, color=color)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Amplitude')
+    plt.title(f'Unit Step Response of ${latex(system)}$', pad=20)
+
+    if grid:
+        plt.grid()
+    if show_axes:
+        plt.axhline(0, color='black')
+        plt.axvline(0, color='black')
+    if show:
+        plt.show()
+        return
+
+    return plt
+
+
+def ramp_response_numerical_data(system, slope=1, prec=8,
+    lower_limit=0, upper_limit=10, **kwargs):
+    if slope < 0:
+        raise ValueError("Slope must be greater than or equal"
+            " to zero.")
+    if lower_limit < 0:
+        raise ValueError("Lower limit of time must be greater "
+            "than or equal to zero.")
+    _check_system(system)
+    _x = Dummy("x")
     expr = (slope*system.to_expr())/((system.var)**2)
-    y = inverse_laplace_transform(expr, system.var, x)
-    return plot(y, (x, 0, upper_limit), show=show, title="Ramp Response", \
-        xlabel="Time (s)", ylabel="Amplitude")
+    expr = apart(expr, system.var, full=True)
+    _y = _fast_inverse_laplace(expr, system.var, _x).evalf(prec)
+    return LineOver1DRangeSeries(_y, (_x, lower_limit, upper_limit),
+        **kwargs).get_points()
+
+
+def ramp_response_plot(system, slope=1, color='b', show=True, lower_limit=0,
+    upper_limit=10, prec=8, show_axes=False, grid=True, **kwargs):
+    r"""
+    Returns the ramp response of a continuous-time system. Ramp
+    function is defined as the the straight line passing through
+    origin ($$f(x) = mx$$). The slope of the ramp function can be
+    varied by the user and the default value is 1. 
+    """
+    x, y = ramp_response_numerical_data(system, slope=slope, prec=prec,
+        lower_limit=lower_limit, upper_limit=upper_limit, **kwargs)
+    plt.plot(x, y, color=color)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Amplitude')
+    plt.title(f'Ramp Response of ${latex(system)}$ [Slope = {slope}]', pad=20)
+
+    if grid:
+        plt.grid()
+    if show_axes:
+        plt.axhline(0, color='black')
+        plt.axvline(0, color='black')
+    if show:
+        plt.show()
+        return
+
+    return plt
 
 
 def bode_numerical_data(system):
-    pass
+    _check_system(system)
 
 
 def bode_plot(system, initial_exp=-5, final_exp=5, show=True, **kwargs):
