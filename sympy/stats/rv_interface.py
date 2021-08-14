@@ -422,6 +422,9 @@ def median(X, evaluate=True, **kwargs):
     .. [1] https://en.wikipedia.org/wiki/Median#Probability_distributions
 
     """
+    if not is_random(X):
+        return X
+
     from sympy.stats.crv import ContinuousPSpace
     from sympy.stats.drv import DiscretePSpace
     from sympy.stats.frv import FinitePSpace
