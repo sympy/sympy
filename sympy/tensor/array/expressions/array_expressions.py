@@ -901,6 +901,8 @@ class ArrayContraction(_CodegenArrayAbstract):
         """
         from sympy import ask, Q
 
+        editor = _EditArrayContraction(self)
+
         contraction_indices = self.contraction_indices
         if isinstance(self.expr, ArrayTensorProduct):
             args = list(self.expr.args)
@@ -910,11 +912,10 @@ class ArrayContraction(_CodegenArrayAbstract):
         subranks = [get_rank(i) for i in args]
         # TODO: unify API
         mapping = _get_mapping_from_subranks(subranks)
-        reverse_mapping = {v:k for k, v in mapping.items()}
-        new_contraction_indices = []
+        reverse_mapping = {v: k for k, v in mapping.items()}
+
         for indl, links in enumerate(contraction_indices):
             if len(links) <= 2:
-                new_contraction_indices.append(links)
                 continue
 
             # Check multiple contractions:
@@ -927,53 +928,53 @@ class ArrayContraction(_CodegenArrayAbstract):
             # - matrix being diagonalized (i.e. `A_ii`)
             # - vectors being diagonalized (i.e. `a_i0`)
 
+            # Multiple contractions can be split into matrix multiplications if
+            # not more than three arguments are non-diagonals or non-vectors.
+            #
+            # Vectors get diagonalized while diagonal matrices remain diagonal.
+            # The non-diagonal matrices can be at the beginning or at the end
+            # of the final matrix multiplication line.
+
+            positions = editor.get_mapping_for_index(indl)
+
             # Also consider the case of diagonal matrices being contracted:
             current_dimension = self.expr.shape[links[0]]
 
-            tuple_links = [mapping[i] for i in links]
-            arg_indices, arg_positions = zip(*tuple_links)
-            args_updates = {}
-            if len(arg_indices) != len(set(arg_indices)):
-                # Maybe trace should be supported?
-                raise NotImplementedError()
-            not_vectors = []
-            vectors = []
-            for arg_ind, arg_pos in tuple_links:
+            not_vectors: Tuple[_ArgE, int] = []
+            vectors: Tuple[_ArgE, int] = []
+            for arg_ind, rel_ind in positions:
                 mat = args[arg_ind]
-                other_arg_pos = 1-arg_pos
+                other_arg_pos = 1-rel_ind
                 other_arg_abs = reverse_mapping[arg_ind, other_arg_pos]
+                arg = editor.args_with_ind[arg_ind]
                 if (((1 not in mat.shape) and (not ask(Q.diagonal(mat)))) or
                     ((current_dimension == 1) is True and mat.shape != (1, 1)) or
                     any([other_arg_abs in l for li, l in enumerate(contraction_indices) if li != indl])
                 ):
-                    not_vectors.append((arg_ind, arg_pos))
-                    continue
-                args_updates[arg_ind] = diagonalize_vector(mat)
-                vectors.append((arg_ind, arg_pos))
-                vectors.append((arg_ind, 1-arg_pos))
+                    not_vectors.append((arg, rel_ind))
+                else:
+                    vectors.append((arg, rel_ind))
             if len(not_vectors) > 2:
-                new_contraction_indices.append(links)
                 continue
-            if len(not_vectors) == 0:
-                new_sequence = vectors[:1] + vectors[2:]
-            elif len(not_vectors) == 1:
-                new_sequence = not_vectors[:1] + vectors[:-1]
-            else:
-                new_sequence = not_vectors[:1] + vectors + not_vectors[1:]
-            for i in range(0, len(new_sequence) - 1, 2):
-                arg1, pos1 = new_sequence[i]
-                arg2, pos2 = new_sequence[i+1]
-                if arg1 == arg2:
-                    raise NotImplementedError
-                abspos1 = reverse_mapping[arg1, pos1]
-                abspos2 = reverse_mapping[arg2, pos2]
-                new_contraction_indices.append((abspos1, abspos2))
-            for ind, newarg in args_updates.items():
-                args[ind] = newarg
-        return ArrayContraction(
-            ArrayTensorProduct(*args),
-            *new_contraction_indices
-        )
+            # Three cases to handle:
+            # - zero non-vectors
+            # - one non-vector
+            # - two non-vectors
+            for v, rel_ind in vectors:
+                v.element = diagonalize_vector(v.element)
+            vectors_to_loop = not_vectors[:1] + vectors + not_vectors[1:]
+            first_not_vector, rel_ind = vectors_to_loop[0]
+            new_index = first_not_vector.indices[rel_ind]
+
+            for v, rel_ind in vectors_to_loop[1:-1]:
+                v.indices[rel_ind] = new_index
+                new_index = editor.get_new_contraction_index()
+                assert v.indices.index(None) == 1 - rel_ind
+                v.indices[v.indices.index(None)] = new_index
+
+            last_vec, rel_ind = vectors_to_loop[-1]
+            last_vec.indices[rel_ind] = new_index
+        return editor.to_array_contraction()
 
     def flatten_contraction_of_diagonal(self):
         if not isinstance(self.expr, ArrayDiagonal):
@@ -1279,6 +1280,20 @@ class _ArgE:
     __repr__ = __str__
 
 
+class _IndPos:
+    def __init__(self, arg: int, ind: int):
+        self.arg = arg
+        self.ind = ind
+
+    def __str__(self):
+        return "_IndPos(%i, %i)" % (self.arg, self.ind)
+
+    __repr__ = __str__
+
+    def __iter__(self):
+        yield from [self.arg, self.ind]
+
+
 class _EditArrayContraction:
     """
     Utility class to help manipulate array contraction objects.
@@ -1299,21 +1314,46 @@ class _EditArrayContraction:
         self.args_with_ind: List[_ArgE] = args_with_ind
         self.number_of_contraction_indices: int = len(array_contraction.contraction_indices)
 
+    def insert_after(self, arg: _ArgE, new_arg: _ArgE):
+        pos = self.args_with_ind.index(arg)
+        self.args_with_ind.insert(pos + 1, new_arg)
+
     def get_new_contraction_index(self):
         self.number_of_contraction_indices += 1
         return self.number_of_contraction_indices - 1
 
     def to_array_contraction(self):
-        args = []
+        args = [arg.element for arg in self.args_with_ind]
+        contraction_indices = self.get_contraction_indices()
+        return ArrayContraction(ArrayTensorProduct(*args), *contraction_indices)
+
+    def get_contraction_indices(self) -> List[List[int]]:
         contraction_indices: List[List[int]] = [[] for i in range(self.number_of_contraction_indices)]
         current_position: int = 0
         for i, arg_with_ind in enumerate(self.args_with_ind):
-            args.append(arg_with_ind.element)
             for j in arg_with_ind.indices:
                 if j is not None:
                     contraction_indices[j].append(current_position)
                 current_position += 1
-        return ArrayContraction(ArrayTensorProduct(*args), *contraction_indices)
+        return contraction_indices
+
+    def get_mapping_for_index(self, ind) -> List[_IndPos]:
+        if ind >= self.number_of_contraction_indices:
+            raise ValueError("index value exceeding the index range")
+        positions: List[_IndPos] = []
+        for i, arg_with_ind in enumerate(self.args_with_ind):
+            for j, arg_ind in enumerate(arg_with_ind.indices):
+                if ind == arg_ind:
+                    positions.append(_IndPos(i, j))
+        return positions
+
+    def get_contraction_indices_to_ind_rel_pos(self) -> List[List[_IndPos]]:
+        contraction_indices: List[List[_IndPos]] = [[] for i in range(self.number_of_contraction_indices)]
+        for i, arg_with_ind in enumerate(self.args_with_ind):
+            for j, ind in enumerate(arg_with_ind.indices):
+                if ind is not None:
+                    contraction_indices[ind].append(_IndPos(i, j))
+        return contraction_indices
 
 
 def get_rank(expr):
