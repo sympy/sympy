@@ -651,8 +651,6 @@ class Quaternion(Expr):
 
         """
         q = self
-        if q.a.is_negative:
-            q = q * -1
 
         q = q.normalize()
         angle = trigsimp(2 * acos(q.a))

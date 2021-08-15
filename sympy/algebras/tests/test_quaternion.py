@@ -189,6 +189,6 @@ def test_issue_16318():
     assert Quaternion.rotate_point((1, 1, 1), (axis, angle)) == (S.One / 5, 1, S(7) / 5)
     #test for to_axis_angle
     q = Quaternion(-1, 1, 1, 1)
-    axis = (-sqrt(3)/3, -sqrt(3)/3, -sqrt(3)/3)
-    angle = 2*pi/3
+    axis = (sqrt(3)/3, sqrt(3)/3, sqrt(3)/3)
+    angle = 4*pi/3
     assert (axis, angle) == q.to_axis_angle()
