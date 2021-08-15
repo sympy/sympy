@@ -8,6 +8,13 @@ from sympy.plotting.plot import LineOver1DRangeSeries
 from sympy.polys.polytools import Poly
 from sympy.printing.latex import latex
 
+__all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
+    'step_response_numerical_data', 'step_response_plot',
+    'impulse_response_numerical_data', 'impulse_response_plot',
+    'ramp_response_numerical_data', 'ramp_response_plot',
+    'bode_magnitude_numerical_data', 'bode_phase_numerical_data',
+    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot']
+
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
         catch=(RuntimeError,))
