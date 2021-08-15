@@ -136,7 +136,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', 'pypy-3.6']
+        python-version: ['3.6', '3.7', '3.8', '3.10', 'pypy-3.6']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -154,7 +154,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', 'pypy-3.6']
+        python-version: ['3.6', '3.7', '3.8', '3.10', 'pypy-3.6']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -172,7 +172,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', 'pypy-3.6']
+        python-version: ['3.6', '3.7', '3.8', '3.10', 'pypy-3.6']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
