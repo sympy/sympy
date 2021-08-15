@@ -1281,17 +1281,23 @@ class _ArgE:
 
 
 class _IndPos:
-    def __init__(self, arg: int, ind: int):
+    """
+    Index position, requiring two integers in the constructor:
+
+    - arg: the position of the argument in the tensor product,
+    - rel: the relative position of the index inside the argument.
+    """
+    def __init__(self, arg: int, rel: int):
         self.arg = arg
-        self.ind = ind
+        self.rel = rel
 
     def __str__(self):
-        return "_IndPos(%i, %i)" % (self.arg, self.ind)
+        return "_IndPos(%i, %i)" % (self.arg, self.rel)
 
     __repr__ = __str__
 
     def __iter__(self):
-        yield from [self.arg, self.ind]
+        yield from [self.arg, self.rel]
 
 
 class _EditArrayContraction:
@@ -1309,8 +1315,8 @@ class _EditArrayContraction:
         mapping = _get_mapping_from_subranks(array_contraction.subranks)
         for i, contraction_tuple in enumerate(array_contraction.contraction_indices):
             for j in contraction_tuple:
-                arg_pos, ind_pos = mapping[j]
-                args_with_ind[arg_pos].indices[ind_pos] = i
+                arg_pos, rel_pos = mapping[j]
+                args_with_ind[arg_pos].indices[rel_pos] = i
         self.args_with_ind: List[_ArgE] = args_with_ind
         self.number_of_contraction_indices: int = len(array_contraction.contraction_indices)
 
