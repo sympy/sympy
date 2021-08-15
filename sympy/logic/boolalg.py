@@ -743,10 +743,11 @@ class And(LatticeOp, BooleanFunction):
             return rv
         eqs, other = sift(Rel, lambda i: isinstance(i, Equality), binary=True)
 
-        measure, ratio = kwargs['measure'], kwargs['ratio']
-        reps = {}
-        sifted = {}
+        measure = kwargs['measure']
         if eqs:
+            ratio = kwargs['ratio']
+            reps = {}
+            sifted = {}
             # group by length of free symbols
             sifted = sift(ordered([
                 (i.free_symbols, i) for i in eqs]),
@@ -783,11 +784,11 @@ class And(LatticeOp, BooleanFunction):
                         f = e.free_symbols
                         resifted[len(f)].append((f, e))
                 sifted = resifted
-        for k in sifted:
-            eqs.extend([e for f, e in sifted[k]])
-        nonlineqs = [ei.subs(reps) for ei in nonlineqs]
-        other = [ei.subs(reps) for ei in other]
-        rv = rv.func(*([i.canonical for i in (eqs + nonlineqs + other)] + nonRel))
+            for k in sifted:
+                eqs.extend([e for f, e in sifted[k]])
+            nonlineqs = [ei.subs(reps) for ei in nonlineqs]
+            other = [ei.subs(reps) for ei in other]
+            rv = rv.func(*([i.canonical for i in (eqs + nonlineqs + other)] + nonRel))
         patterns = simplify_patterns_and()
         return self._apply_patternbased_simplification(rv, patterns,
                                                        measure, False)
@@ -2187,8 +2188,8 @@ def _convert_to_varsSOP(minterm, variables):
     Converts a term in the expansion of a function from binary to its
     variable form (for SOP).
     """
-    temp = [variables[n] if val == 1 else Not(variables[n])
-            for n, val in enumerate(minterm) if val != 3]
+    temp = (variables[n] if val == 1 else Not(variables[n])
+            for n, val in enumerate(minterm) if val != 3)
     return And(*temp)
 
 
@@ -2197,8 +2198,8 @@ def _convert_to_varsPOS(maxterm, variables):
     Converts a term in the expansion of a function from binary to its
     variable form (for POS).
     """
-    temp = [variables[n] if val == 0 else Not(variables[n])
-            for n, val in enumerate(maxterm) if val != 3]
+    temp = (variables[n] if val == 0 else Not(variables[n])
+            for n, val in enumerate(maxterm) if val != 3)
     return Or(*temp)
 
 
@@ -2251,11 +2252,9 @@ def _simplified_pairs(terms):
 
     # Count number of ones as _check_pair can only potentially match if there
     # is at most a difference of a single one
-    def ones_count(term):
-        return sum([1 for t in term if t == 1])
     termdict = defaultdict(list)
     for n, term in enumerate(terms):
-        ones = ones_count(term)
+        ones = sum([1 for t in term if t == 1])
         termdict[ones].append(n)
 
     variables = len(terms[0])
@@ -2279,8 +2278,7 @@ def _simplified_pairs(terms):
         simplified_terms = _simplified_pairs(simplified_terms)
 
     # Add remaining, non-simplified, terms
-    simplified_terms.extend(
-        [terms[i] for i in [_ for _ in todo if _ is not None]])
+    simplified_terms.extend([terms[i] for i in todo if i is not None])
     return simplified_terms
 
 
@@ -2333,7 +2331,7 @@ def _rem_redundancy(l1, terms):
                     # Still non-dominated?
                     if rowi != row2i and rowcount[rowi] and (rowcount[rowi] <= rowcount[row2i]):
                         row2 = dommatrix[row2i]
-                        if all(a >= b for (a, b) in zip(row2, row)):
+                        if all(row2[n] >= row[n] for n in range(nl1)):
                             # row2 dominating row, remove row2
                             rowcount[row2i] = 0
                             anythingchanged = True
@@ -2361,7 +2359,7 @@ def _rem_redundancy(l1, terms):
                         else:
                             col2 = [dommatrix[i][col2i] for i in range(nterms)]
                             colcache[col2i] = col2
-                        if all(a >= b for (a, b) in zip(col, col2)):
+                        if all(col[n] >= col2[n] for n in range(nterms)):
                             # col dominating col2, remove col2
                             colcount[col2i] = 0
                             anythingchanged = True
@@ -2406,7 +2404,7 @@ def _input_to_binlist(inputlist, variables):
             nonspecvars = list(variables)
             for key in val.keys():
                 nonspecvars.remove(key)
-            for t in product([0, 1], repeat=len(nonspecvars)):
+            for t in product((0, 1), repeat=len(nonspecvars)):
                 d = dict(zip(nonspecvars, t))
                 d.update(val)
                 binlist.append([d[v] for v in variables])
@@ -2870,7 +2868,7 @@ def simplify_logic(expr, form=None, deep=True, force=False):
     if deep:
         variables = _find_predicates(expr)
         from sympy.simplify.simplify import simplify
-        s = [simplify(v) for v in variables]
+        s = (simplify(v) for v in variables)
         expr = expr.xreplace(dict(zip(variables, s)))
     if not isinstance(expr, BooleanFunction):
         return expr
@@ -2885,7 +2883,7 @@ def simplify_logic(expr, form=None, deep=True, force=False):
     truthtable = []
     # standardize constants to be 1 or 0 in keeping with truthtable
     c = [1 if i == True else 0 for i in c]
-    for t in product([0, 1], repeat=len(v)):
+    for t in product((0, 1), repeat=len(v)):
         if expr.xreplace(dict(zip(v, t))) == True:
             truthtable.append(c + list(t))
     big = len(truthtable) >= (2 ** (len(variables) - 1))
