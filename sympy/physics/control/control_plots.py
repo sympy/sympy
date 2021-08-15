@@ -159,7 +159,7 @@ def pole_zero_plot(system, pole_color='blue', pole_markersize=10,
         >>> from sympy.physics.control.lti import TransferFunction
         >>> from sympy.physics.control.control_plots import pole_zero_plot
         >>> tf1 = TransferFunction(s**2 + 1, s**4 + 4*s**3 + 6*s**2 + 5*s + 2, s)
-        >>> pole_zero_plot(tf1)
+        >>> pole_zero_plot(tf1)   # doctest: +SKIP
 
     See Also
     ========
@@ -319,7 +319,7 @@ def step_response_plot(system, color='b', show=True, lower_limit=0,
         >>> from sympy.physics.control.lti import TransferFunction
         >>> from sympy.physics.control.control_plots import step_response_plot
         >>> tf1 = TransferFunction(8*s**2 + 18*s + 32, s**3 + 6*s**2 + 14*s + 24, s)
-        >>> step_response_plot(tf1)
+        >>> step_response_plot(tf1)   # doctest: +SKIP
 
     See Also
     ========
@@ -470,7 +470,7 @@ def impulse_response_plot(system, color='b', show=True, lower_limit=0,
         >>> from sympy.physics.control.lti import TransferFunction
         >>> from sympy.physics.control.control_plots import impulse_response_plot
         >>> tf1 = TransferFunction(8*s**2 + 18*s + 32, s**3 + 6*s**2 + 14*s + 24, s)
-        >>> impulse_response_plot(tf1)
+        >>> impulse_response_plot(tf1)   # doctest: +SKIP
 
     See Also
     ========
@@ -488,7 +488,7 @@ def impulse_response_plot(system, color='b', show=True, lower_limit=0,
     plt.plot(x, y, color=color)
     plt.xlabel('Time (s)')
     plt.ylabel('Amplitude')
-    plt.title(f'Unit Step Response of ${latex(system)}$', pad=20)
+    plt.title(f'Impulse Response of ${latex(system)}$', pad=20)
 
     if grid:
         plt.grid()
@@ -632,7 +632,7 @@ def ramp_response_plot(system, slope=1, color='b', show=True, lower_limit=0,
         >>> from sympy.physics.control.lti import TransferFunction
         >>> from sympy.physics.control.control_plots import ramp_response_plot
         >>> tf1 = TransferFunction(s, (s+4)*(s+8), s)
-        >>> ramp_response_plot(tf1, upper_limit=2)
+        >>> ramp_response_plot(tf1, upper_limit=2)   # doctest: +SKIP
 
     See Also
     ========
@@ -889,8 +889,8 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
         >>> from sympy.abc import s
         >>> from sympy.physics.control.lti import TransferFunction
         >>> from sympy.physics.control.control_plots import bode_plot
-        >>> tf1 = TransferFunction(1*s**8 + 1*s**5 + 7.5, 1*s**4 + 10*s**3 + 9*s**2, s)
-        >>> bode_plot(tf1)
+        >>> tf1 = TransferFunction(1*s**2 + 0.1*s + 7.5, 1*s**4 + 0.12*s**3 + 9*s**2, s)
+        >>> bode_plot(tf1, initial_exp=0.2, final_exp=0.7)   # doctest: +SKIP
 
     See Also
     ========
