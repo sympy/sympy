@@ -5,7 +5,7 @@ from sympy import symbols, ImmutableDenseNDimArray, tensorproduct, tensorcontrac
 from sympy.combinatorics import Permutation
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol, ArrayElement, \
     PermuteDims, ArrayContraction, ArrayTensorProduct, ArrayDiagonal, \
-    ArrayAdd, nest_permutation, ArrayElementwiseApplyFunc, _EditArrayContraction, _ArgE, _IndPos
+    ArrayAdd, nest_permutation, ArrayElementwiseApplyFunc, _EditArrayContraction, _ArgE
 from sympy.testing.pytest import raises
 
 i, j, k, l, m, n = symbols("i j k l m n")
