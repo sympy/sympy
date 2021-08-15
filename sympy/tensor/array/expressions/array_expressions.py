@@ -45,7 +45,7 @@ class ArraySymbol(_ArrayExpr):
         return ArrayElement(self, item)
 
     def as_explicit(self):
-        if any(not isinstance(i, (int, Integer)) for i in self.shape):
+        if not all(isinstance(i, (int, Integer)) for i in self.shape):
             raise ValueError("cannot express explicit array with symbolic shape")
         data = [self[i] for i in itertools.product(*[range(j) for j in self.shape])]
         return ImmutableDenseNDimArray(data).reshape(*self.shape)
@@ -61,9 +61,9 @@ class ArrayElement(_ArrayExpr):
         name = _sympify(name)
         indices = _sympify(indices)
         if hasattr(name, "shape"):
-            if any([(i >= s) == True for i, s in zip(indices, name.shape)]):
+            if any((i >= s) == True for i, s in zip(indices, name.shape)):
                 raise ValueError("shape is out of bounds")
-        if any([(i < 0) == True for i in indices]):
+        if any((i < 0) == True for i in indices):
             raise ValueError("shape contains negative values")
         obj = Expr.__new__(cls, name, indices)
         return obj
@@ -94,7 +94,7 @@ class ZeroArray(_ArrayExpr):
         return self._args
 
     def as_explicit(self):
-        if any(not i.is_Integer for i in self.shape):
+        if not all(i.is_Integer for i in self.shape):
             raise ValueError("Cannot return explicit form for symbolic shape.")
         return ImmutableDenseNDimArray.zeros(*self.shape)
 
@@ -116,7 +116,7 @@ class OneArray(_ArrayExpr):
         return self._args
 
     def as_explicit(self):
-        if any(not i.is_Integer for i in self.shape):
+        if not all(i.is_Integer for i in self.shape):
             raise ValueError("Cannot return explicit form for symbolic shape.")
         return ImmutableDenseNDimArray([S.One for i in range(reduce(operator.mul, self.shape))]).reshape(*self.shape)
 
@@ -817,7 +817,7 @@ class ArrayContraction(_CodegenArrayAbstract):
         obj._subranks = _get_subranks(expr)
         obj._mapping = _get_mapping_from_subranks(obj._subranks)
 
-        free_indices_to_position = {i: i for i in range(sum(obj._subranks)) if all([i not in cind for cind in contraction_indices])}
+        free_indices_to_position = {i: i for i in range(sum(obj._subranks)) if all(i not in cind for cind in contraction_indices)}
         obj._free_indices_to_position = free_indices_to_position
 
         shape = expr.shape
@@ -950,7 +950,7 @@ class ArrayContraction(_CodegenArrayAbstract):
                 arg = editor.args_with_ind[arg_ind]
                 if (((1 not in mat.shape) and (not ask(Q.diagonal(mat)))) or
                     ((current_dimension == 1) is True and mat.shape != (1, 1)) or
-                    any([other_arg_abs in l for li, l in enumerate(contraction_indices) if li != indl])
+                    any(other_arg_abs in l for li, l in enumerate(contraction_indices) if li != indl)
                 ):
                     not_vectors.append((arg, rel_ind))
                 else:
@@ -1073,7 +1073,7 @@ class ArrayContraction(_CodegenArrayAbstract):
         permutation = expr.permutation
         plist = permutation.array_form
         new_contraction_indices = [tuple(permutation(j) for j in i) for i in contraction_indices]
-        new_plist = [i for i in plist if all(i not in j for j in new_contraction_indices)]
+        new_plist = [i for i in plist if not any(i in j for j in new_contraction_indices)]
         new_plist = cls._push_indices_up(new_contraction_indices, new_plist)
         return PermuteDims(
             ArrayContraction(expr.expr, *new_contraction_indices),

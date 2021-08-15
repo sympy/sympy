@@ -290,9 +290,9 @@ def homomorphism(domain, codomain, gens, images=[], check=True):
         raise TypeError("The codomain must be a group")
 
     generators = domain.generators
-    if any([g not in generators for g in gens]):
+    if not all(g in generators for g in gens):
         raise ValueError("The supplied generators must be a subset of the domain's generators")
-    if any([g not in codomain for g in images]):
+    if not all(g in codomain for g in images):
         raise ValueError("The images must be elements of the codomain")
 
     if images and len(images) != len(gens):

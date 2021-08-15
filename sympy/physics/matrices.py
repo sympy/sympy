@@ -103,7 +103,7 @@ def mgamma(mu, lower=False):
     [ 0, -1, 0, 0],
     [-1,  0, 0, 0]])
     """
-    if not mu in [0, 1, 2, 3, 5]:
+    if not mu in (0, 1, 2, 3, 5):
         raise IndexError("Invalid Dirac index")
     if mu == 0:
         mat = (

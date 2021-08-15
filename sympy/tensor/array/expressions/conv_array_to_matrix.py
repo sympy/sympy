@@ -547,7 +547,7 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
 
 
 def _a2m_mul(*args):
-    if all(not isinstance(i, _CodegenArrayAbstract) for i in args):
+    if not any(isinstance(i, _CodegenArrayAbstract) for i in args):
         from sympy import MatMul
         return MatMul(*args).doit()
     else:
@@ -577,7 +577,7 @@ def _a2m_tensor_product(*args):
 
 
 def _a2m_add(*args):
-    if all(not isinstance(i, _CodegenArrayAbstract) for i in args):
+    if not any(isinstance(i, _CodegenArrayAbstract) for i in args):
         from sympy import MatAdd
         return MatAdd(*args).doit()
     else:

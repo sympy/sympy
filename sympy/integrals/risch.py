@@ -215,7 +215,7 @@ class DifferentialExtension:
             raise ValueError("Either both f and x or a manual extension must "
             "be given.")
 
-        if handle_first not in ['log', 'exp']:
+        if handle_first not in ('log', 'exp'):
             raise ValueError("handle_first must be 'log' or 'exp', not %s." %
                 str(handle_first))
 
@@ -1259,7 +1259,7 @@ def recognize_log_derivative(a, d, DE, z=None):
         # incase we have complex roots it should turn the flag false
         a = real_roots(s.as_poly(z))
 
-        if any(not j.is_Integer for j in a):
+        if not all(j.is_Integer for j in a):
             return False
     return True
 
@@ -1346,7 +1346,7 @@ def residue_reduce(a, d, DE, z=None, invert=True):
 
             H.append((s, h))
 
-    b = all([not cancel(i.as_expr()).has(DE.t, z) for i, _ in Np])
+    b = not any(cancel(i.as_expr()).has(DE.t, z) for i, _ in Np)
 
     return (H, b)
 

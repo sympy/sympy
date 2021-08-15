@@ -1413,10 +1413,10 @@ def eval_sum_residue(f, i_a_b):
 
     def is_even_function(numer, denom):
         """Test if the rational function is an even function"""
-        numer_even = all([i % 2 == 0 for (i,) in numer.monoms()])
-        denom_even = all([i % 2 == 0 for (i,) in denom.monoms()])
-        numer_odd = all([i % 2 == 1 for (i,) in numer.monoms()])
-        denom_odd = all([i % 2 == 1 for (i,) in denom.monoms()])
+        numer_even = all(i % 2 == 0 for (i,) in numer.monoms())
+        denom_even = all(i % 2 == 0 for (i,) in denom.monoms())
+        numer_odd = all(i % 2 == 1 for (i,) in numer.monoms())
+        denom_odd = all(i % 2 == 1 for (i,) in denom.monoms())
         return (numer_even and denom_even) or (numer_odd and denom_odd)
 
     def match_rational(f, i):
@@ -1599,7 +1599,7 @@ def _dummy_with_inherited_properties_concrete(limits):
         assum_true = x._assumptions.get(assum, None)
         if assum_true:
             assumptions_to_keep[assum] = True
-        elif all([getattr(i, 'is_' + assum) for i in l]):
+        elif all(getattr(i, 'is_' + assum) for i in l):
             assumptions_to_add[assum] = True
     if assumptions_to_add:
         assumptions_to_keep.update(assumptions_to_add)

@@ -174,7 +174,7 @@ class NDimArray(Printable):
     def _check_symbolic_index(self, index):
         # Check if any index is symbolic:
         tuple_index = (index if isinstance(index, tuple) else (index,))
-        if any([(isinstance(i, Expr) and (not i.is_number)) for i in tuple_index]):
+        if any((isinstance(i, Expr) and (not i.is_number)) for i in tuple_index):
             for i, nth_dim in zip(tuple_index, self.shape):
                 if ((i < 0) == True) or ((i >= nth_dim) == True):
                     raise ValueError("index out of range")
@@ -246,7 +246,7 @@ class NDimArray(Printable):
         if isinstance(shape, (SYMPY_INTS, Integer)):
             shape = (shape,)
 
-        if any([not isinstance(dim, (SYMPY_INTS, Integer)) for dim in shape]):
+        if not all(isinstance(dim, (SYMPY_INTS, Integer)) for dim in shape):
             raise TypeError("Shape should contain integers only.")
 
         return tuple(shape), iterable

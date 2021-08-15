@@ -50,7 +50,7 @@ def residue(expr, x, x0):
     expr = sympify(expr)
     if x0 != 0:
         expr = expr.subs(x, x + x0)
-    for n in [0, 1, 2, 4, 8, 16, 32]:
+    for n in (0, 1, 2, 4, 8, 16, 32):
         s = expr.nseries(x, n=n)
         if not s.has(Order) or s.getn() >= 0:
             break

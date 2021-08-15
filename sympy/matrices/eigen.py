@@ -1229,7 +1229,7 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
         size_nums.reverse()
 
         block_structure.extend(
-            (eig, size) for size, num in size_nums for _ in range(num))
+            [(eig, size) for size, num in size_nums for _ in range(num)])
 
     jordan_form_size = sum(size for eig, size in block_structure)
 

@@ -138,9 +138,9 @@ class FpGroup(DefaultPrinting):
 
         '''
 
-        if not all([isinstance(g, FreeGroupElement) for g in gens]):
+        if not all(isinstance(g, FreeGroupElement) for g in gens):
             raise ValueError("Generators must be `FreeGroupElement`s")
-        if not all([g.group == self.free_group for g in gens]):
+        if not all(g.group == self.free_group for g in gens):
                 raise ValueError("Given generators are not members of the group")
         if homomorphism:
             g, rels, _gens = reidemeister_presentation(self, gens, C=C, homomorphism=True)
@@ -259,7 +259,7 @@ class FpGroup(DefaultPrinting):
         used_gens = set()
         for r in self.relators:
             used_gens.update(r.contains_generators())
-        if any([g not in used_gens for g in self.generators]):
+        if not set(self.generators) <= used_gens:
             return True
         # Abelianisation test: check is the abelianisation is infinite
         abelian_rels = []
@@ -1030,7 +1030,7 @@ def elimination_technique_1(gens, rels, identity):
         # don't look for a redundant generator in a relator which
         # depends on previously found ones
         contained_gens = rel.contains_generators()
-        if any([g in contained_gens for g in redundant_gens]):
+        if any(g in contained_gens for g in redundant_gens):
             continue
         contained_gens = list(contained_gens)
         contained_gens.sort(reverse = True)

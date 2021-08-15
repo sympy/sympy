@@ -118,7 +118,7 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
         p = Poly(DE.t, DE.t)
     elif case == 'tan':
         p = Poly(DE.t**2 + 1, DE.t)
-    elif case in ['primitive', 'base']:
+    elif case in ('primitive', 'base'):
         B = ba.quo(bd)
         return (a, B, G, Poly(1, DE.t))
     else:
@@ -195,8 +195,8 @@ def prde_linear_constraints(a, b, G, DE):
     d = Poly(d, field=True)
     Q = [(ga*(d).quo(gd)).div(d) for ga, gd in G]
 
-    if not all([ri.is_zero for _, ri in Q]):
-        N = max([ri.degree(DE.t) for _, ri in Q])
+    if not all(ri.is_zero for _, ri in Q):
+        N = max(ri.degree(DE.t) for _, ri in Q)
         M = Matrix(N + 1, m, lambda i, j: Q[j][1].nth(i), DE.t)
     else:
         M = Matrix(0, m, [], DE.t)  # No constraints, return the empty matrix.
@@ -215,8 +215,8 @@ def poly_linear_constraints(p, d):
     m = len(p)
     q, r = zip(*[pi.div(d) for pi in p])
 
-    if not all([ri.is_zero for ri in r]):
-        n = max([ri.degree() for ri in r])
+    if not all(ri.is_zero for ri in r):
+        n = max(ri.degree() for ri in r)
         M = Matrix(n + 1, m, lambda i, j: r[j].nth(i), d.gens)
     else:
         M = Matrix(0, m, [], d.gens)  # No constraints.
@@ -525,7 +525,7 @@ def param_poly_rischDE(a, b, q, n, DE):
     if n < 0:
         # Only the trivial zero solution is possible.
         # Find relations between the qi.
-        if all([qi.is_zero for qi in q]):
+        if all(qi.is_zero for qi in q):
             return [], zeros(1, m, DE.t)  # No constraints.
 
         N = max([qi.degree(DE.t) for qi in q])
@@ -806,7 +806,7 @@ def limited_integrate_reduce(fa, fd, G, DE):
 
     # These are the cases where we know that S1irr = Sirr, but there could be
     # others, and this algorithm will need to be extended to handle them.
-    if DE.case in ['base', 'primitive', 'exp', 'tan']:
+    if DE.case in ('base', 'primitive', 'exp', 'tan'):
         hs = reduce(lambda i, j: i.lcm(j), (ds,) + Es)  # lcm(ds, es1, ..., esm)
         a = hn*hs
         b -= (hn*derivation(hs, DE)).quo(hs)
@@ -1047,7 +1047,7 @@ def is_deriv_k(fa, fd, DE):
 
     u = u.to_Matrix()  # Poly to Expr
 
-    if not all(derivation(i, DE, basic=True).is_zero for i in u) or not A:
+    if not A or not all(derivation(i, DE, basic=True).is_zero for i in u):
         # If the elements of u are not all constant
         # Note: See comment in constant_system
 
@@ -1172,7 +1172,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
 
     u = u.to_Matrix()  # Poly to Expr
 
-    if not all(derivation(i, DE, basic=True).is_zero for i in u) or not A:
+    if not A or not all(derivation(i, DE, basic=True).is_zero for i in u):
         # If the elements of u are not all constant
         # Note: See comment in constant_system
 
@@ -1312,7 +1312,7 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
         raise NotImplementedError("The hypertangent case is "
         "not yet implemented for is_log_deriv_k_t_radical_in_field()")
 
-    elif case in ['other_linear', 'other_nonlinear']:
+    elif case in ('other_linear', 'other_nonlinear'):
         # XXX: If these are supported by the structure theorems, change to NotImplementedError.
         raise ValueError("The %s case is not supported in this function." % case)
 
