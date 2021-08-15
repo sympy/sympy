@@ -196,7 +196,7 @@ def ramp_response_plot(system, slope=1, color='b', show=True, lower_limit=0,
     r"""
     Returns the ramp response of a continuous-time system. Ramp
     function is defined as the the straight line passing through
-    origin ($$f(x) = mx$$). The slope of the ramp function can be
+    origin ($f(x) = mx$). The slope of the ramp function can be
     varied by the user and the default value is 1.
     """
     x, y = ramp_response_numerical_data(system, slope=slope, prec=prec,
