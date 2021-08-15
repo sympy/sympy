@@ -1,8 +1,8 @@
-from sympy import (I, log, sqrt, symbols, apart, Wild,
+from sympy import (I, log, symbols, apart, Wild,
     RootSum, Lambda, together, exp, gamma)
 from sympy.core.symbol import Dummy
 from sympy.external import import_module
-from sympy.functions import arg
+from sympy.functions import arg, Abs
 from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.plotting.plot import LineOver1DRangeSeries
 from sympy.polys.polytools import Poly
@@ -223,9 +223,8 @@ def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5):
     expr = system.to_expr()
     _w = Dummy("w", real=True)
     w_expr = expr.subs({system.var: I*_w})
-    real, imag = w_expr.as_real_imag()
 
-    mag = 20*log(sqrt(real**2 + imag**2), 10)
+    mag = 20*log(Abs(w_expr), 10)
 
     return LineOver1DRangeSeries(mag,
         (_w, 10**initial_exp, 10**final_exp), xscale='log').get_points()
