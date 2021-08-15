@@ -779,7 +779,7 @@ class And(LatticeOp, BooleanFunction):
                 resifted = defaultdict(list)
                 for k in sifted:
                     for f, e in sifted[k]:
-                        e = e.subs(reps)
+                        e = e.xreplace(reps)
                         f = e.free_symbols
                         resifted[len(f)].append((f, e))
                 sifted = resifted
