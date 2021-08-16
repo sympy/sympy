@@ -357,6 +357,7 @@ def test_sample_seed():
 def test_issue_21057():
     m = Normal("x", [0, 0], [[0, 0], [0, 0]])
     n = MultivariateNormal("x", [0, 0], [[0, 0], [0, 0]])
+    p = Normal("x", [0, 0], [[0, 0], [0, 1]])
     assert m == n
     libraries = ['scipy', 'numpy', 'pymc3']
     for library in libraries:
@@ -365,6 +366,9 @@ def test_issue_21057():
             if imported_lib:
                 s1 = sample(m, size=8)
                 s2 = sample(n, size=8)
+                s3 = sample(p, size=8)
                 assert tuple(s1.flatten()) == tuple(s2.flatten())
+                for s in s3:
+                    assert tuple(s.flatten()) in p.pspace.distribution.set
         except NotImplementedError:
             continue

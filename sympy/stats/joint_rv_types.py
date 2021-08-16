@@ -180,7 +180,7 @@ def MultivariateNormal(name, mu, sigma):
     ==========
 
     mu : List representing the mean or the mean vector
-    sigma : Positive definite square matrix
+    sigma : Positive semidefinite square matrix
         Represents covariance Matrix
         If `sigma` is noninvertible then only sampling is supported currently
 
