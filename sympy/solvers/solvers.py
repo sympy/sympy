@@ -51,7 +51,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import (cartes, connected_components,
-    generate_bell, uniq, sift)
+    generate_bell, uniq)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot
