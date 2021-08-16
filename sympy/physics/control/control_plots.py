@@ -664,7 +664,7 @@ def ramp_response_plot(system, slope=1, color='b', show=True, lower_limit=0,
     return plt
 
 
-def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5):
+def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, **kwargs):
     """
     Returns the numerical data of the Bode magnitude plot of the system.
     It is internally used by ``bode_magnitude_plot`` to get the data
@@ -727,7 +727,7 @@ def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5):
     mag = 20*log(Abs(w_expr), 10)
 
     return LineOver1DRangeSeries(mag,
-        (_w, 10**initial_exp, 10**final_exp), xscale='log').get_points()
+        (_w, 10**initial_exp, 10**final_exp), xscale='log', **kwargs).get_points()
 
 
 def bode_magnitude_plot(system, initial_exp=-5, final_exp=5,
@@ -758,7 +758,7 @@ def bode_magnitude_plot(system, initial_exp=-5, final_exp=5,
     return plt
 
 
-def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5):
+def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, **kwargs):
     """
     Returns the numerical data of the Bode phase plot of the system.
     It is internally used by ``bode_phase_plot`` to get the data
@@ -821,7 +821,7 @@ def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5):
     phase = arg(w_expr)
 
     return LineOver1DRangeSeries(phase,
-        (_w, 10**initial_exp, 10**final_exp), xscale='log').get_points()
+        (_w, 10**initial_exp, 10**final_exp), xscale='log', **kwargs).get_points()
 
 
 def bode_phase_plot(system, initial_exp=-5, final_exp=5,
