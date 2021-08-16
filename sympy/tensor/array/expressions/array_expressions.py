@@ -898,6 +898,24 @@ class ArrayContraction(_CodegenArrayAbstract):
     def split_multiple_contractions(self):
         """
         Recognize multiple contractions and attempt at rewriting them as paired-contractions.
+
+        This allows some contractions involving more than two indices to be
+        rewritten as multiple contractions involving two indices, thus allowing
+        the expression to be rewritten as a matrix multiplication line.
+
+        Examples:
+
+        * `A_ij b_j0 C_jk` ===> `A*DiagMatrix(b)*C`
+
+        Care for:
+        - matrix being diagonalized (i.e. `A_ii`)
+        - vectors being diagonalized (i.e. `a_i0`)
+
+        Multiple contractions can be split into matrix multiplications if
+        not more than two arguments are non-diagonals or non-vectors.
+        Vectors get diagonalized while diagonal matrices remain diagonal.
+        The non-diagonal matrices can be at the beginning or at the end
+        of the final matrix multiplication line.
         """
         from sympy import ask, Q
 
@@ -917,23 +935,6 @@ class ArrayContraction(_CodegenArrayAbstract):
         for indl, links in enumerate(contraction_indices):
             if len(links) <= 2:
                 continue
-
-            # Check multiple contractions:
-            #
-            # Examples:
-            #
-            # * `A_ij b_j0 C_jk` ===> `A*DiagMatrix(b)*C`
-            #
-            # Care for:
-            # - matrix being diagonalized (i.e. `A_ii`)
-            # - vectors being diagonalized (i.e. `a_i0`)
-
-            # Multiple contractions can be split into matrix multiplications if
-            # not more than three arguments are non-diagonals or non-vectors.
-            #
-            # Vectors get diagonalized while diagonal matrices remain diagonal.
-            # The non-diagonal matrices can be at the beginning or at the end
-            # of the final matrix multiplication line.
 
             positions = editor.get_mapping_for_index(indl)
 
@@ -955,6 +956,9 @@ class ArrayContraction(_CodegenArrayAbstract):
                 else:
                     vectors.append((arg, rel_ind))
             if len(not_vectors) > 2:
+                # If more than two arguments in the multiple contraction are
+                # non-vectors and non-diagonal matrices, we cannot find a way
+                # to split this contraction into a matrix multiplication line:
                 continue
             # Three cases to handle:
             # - zero non-vectors
@@ -1270,6 +1274,21 @@ class ArrayContraction(_CodegenArrayAbstract):
 
 
 class _ArgE:
+    """
+    The ``_ArgE`` object contains references to the array expression
+    (``.element``) and a list containing the information about index
+    contractions (``.indices``).
+
+    Index contractions are numbered and contracted indices show the number of
+    the contraction. Uncontracted indices have ``None`` value.
+
+    For example:
+    ``_ArgE(M, [None, 3])``
+    This object means that expression ``M`` is part of an array contraction
+    and has two indices, the first is not contracted (value ``None``),
+    the second index is contracted to the 4th (i.e. number ``3``) group of the
+    array contraction object.
+    """
     def __init__(self, element):
         self.element = element
         self.indices: List[Optional[int]] = [None for i in range(get_rank(element))]
@@ -1303,6 +1322,16 @@ class _IndPos:
 class _EditArrayContraction:
     """
     Utility class to help manipulate array contraction objects.
+
+    This class takes as input an ``ArrayContraction`` object and turns it into
+    an editable object.
+
+    The field ``args_with_ind`` of this class is a list of ``_ArgE`` objects
+    which can be used to easily edit the contraction structure of the
+    expression.
+
+    Once editing is finished, the ``ArrayContraction`` object may be recreated
+    by calling the ``.to_array_contraction()`` method.
     """
 
     def __init__(self, array_contraction: ArrayContraction):
