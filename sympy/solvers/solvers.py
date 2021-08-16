@@ -1758,17 +1758,6 @@ def _solve_system(exprs, symbols, **flags):
                 for e in subexpr:
                     subsyms |= exprsyms[e]
                 subsyms = list(sorted(subsyms, key = lambda x: sym_indices[x]))
-                # use canonical subset to solve these equations
-                # since there may be redundant equations in the set:
-                # take the first equation of several that may have the
-                # same sub-maximal free symbols of interest; the
-                # other equations that weren't used should be checked
-                # to see that they did not fail -- does the solver
-                # take care of that?
-                choices = sift(subexpr, lambda x: tuple(ordered(exprsyms[x])))
-                subexpr = choices.pop(tuple(ordered(subsyms)), [])
-                for k in choices:
-                    subexpr.append(next(ordered(choices[k])))
                 flags['_split'] = False  # skip split step
                 subsol = _solve_system(subexpr, subsyms, **flags)
                 if not isinstance(subsol, list):
