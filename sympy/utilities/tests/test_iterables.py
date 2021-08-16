@@ -19,7 +19,7 @@ from sympy.utilities.iterables import (
     prefixes, reshape, rotate_left, rotate_right, runs, sift,
     strongly_connected_components, subsets, take, topological_sort, unflatten,
     uniq, variations, ordered_partitions, rotations, is_palindromic, iterable,
-    NotIterable)
+    NotIterable, multiset_derangements)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
@@ -547,6 +547,19 @@ def test_derangements():
     assert list(generate_derangements([0, 1, 2, 2])) == [
         [2, 2, 0, 1], [2, 2, 1, 0]]
     assert list(generate_derangements('ba')) == [list('ab')]
+    # multiset_derangements
+    D = multiset_derangements
+    assert list(D('abb')) == []
+    assert [''.join(i) for i in D('ab')] == ['ba']
+    assert [''.join(i) for i in D('abc')] == ['bca', 'cab']
+    assert [''.join(i) for i in D('aabb')] == ['bbaa']
+    assert [''.join(i) for i in D('aabbcccc')] == [
+        'ccccaabb', 'ccccabab', 'ccccabba', 'ccccbaab', 'ccccbaba',
+        'ccccbbaa']
+    assert [''.join(i) for i in D('aabbccc')] == [
+        'cccabba', 'cccabab', 'cccaabb', 'ccacbba', 'ccacbab',
+        'ccacabb', 'cbccbaa', 'cbccaba', 'cbccaab', 'bcccbaa',
+        'bcccaba', 'bcccaab']
 
 
 def test_necklaces():

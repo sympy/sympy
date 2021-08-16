@@ -15,11 +15,12 @@ from sympy.core.evalf import pure_complex
 from sympy.core.expr import Expr
 from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
-from sympy.core.mul import prod
-from sympy.core.numbers import E, pi, Rational, Integer
-from sympy.core.relational import LessThan, StrictGreaterThan
+from sympy.core.mul import Mul, prod
+from sympy.core.numbers import E, pi, oo, Rational, Integer
+from sympy.core.relational import is_le, is_gt
 from sympy.external.gmpy import SYMPY_INTS
-from sympy.functions.combinatorial.factorials import binomial, factorial
+from sympy.functions.combinatorial.factorials import (binomial,
+    factorial, subfactorial)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
@@ -830,16 +831,15 @@ class harmonic(Function):
         if m.is_zero:
             return n
 
-        if n is S.Infinity and m.is_Number:
-            # TODO: Fix for symbolic values of m
+        if n is S.Infinity:
             if m.is_negative:
                 return S.NaN
-            elif LessThan(m, S.One):
+            elif is_le(m, S.One):
                 return S.Infinity
-            elif StrictGreaterThan(m, S.One):
+            elif is_gt(m, S.One):
                 return zeta(m)
             else:
-                return cls
+                return
 
         if n == 0:
             return S.Zero
@@ -2169,3 +2169,71 @@ class motzkin(Function):
         if n < 0:
             raise ValueError('The provided number must be a positive integer')
         return Integer(cls._motzkin(n - 1))
+
+
+def nD(s, brute=None):
+    """return the number of derangements for the elements in multiset `s`
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import generate_derangements as enum
+    >>> from sympy.functions.combinatorial.numbers import nD
+
+    A derangement ``d`` of sequence ``s`` has all ``d[i] != s[i]``:
+
+    >>> set([''.join(i) for i in enum('abc')])
+    {'bca', 'cab'}
+    >>> nD('abc')
+    2
+
+    Input as an iterable or dictionary (multiset form) is accepted:
+
+    >>> assert nD([1, 2, 2, 3, 3, 3]) == nD({1: 1, 2: 2, 3: 3})
+
+    By default, a brute-force enumeration and count of multiset permutations
+    is only done if there are fewer than 9 elements. There may be cases when
+    there is high mutliplicty with few unique elements that will benefit
+    from a brute-force enumeration, too. For this reason, the `brute`
+    keyword is provided; None is the default. When False, the brute-force
+    enumeration will never be used. When True, it will always be used.
+
+    >>> nD('1111222233', brute=True)
+    44
+    """
+    from sympy.abc import x
+    from sympy.utilities.iterables import multiset, multiset_derangements
+    from sympy.integrals.integrals import integrate
+    from sympy.functions.elementary.exponential import exp
+    from sympy.functions.special.polynomials import laguerre
+    if not s:
+        return S.Zero
+    if type(s) is dict:
+        if any(i < 0 for i in s.values()):
+            raise ValueError('no count should be negative')
+        ms = {k: v for k, v in s.items() if v}
+        if not ms:
+            return S.Zero
+        s = None
+    else:
+        ms = multiset(s)
+    big = max(ms.values())
+    if set(ms.values()) == 1:  # no repetition
+        return subfactorial(len(s))
+    n = sum(ms.values())
+    if big*2 > n:
+        return S.Zero
+    if big*2 == n:
+        if len(ms) == 2 and len(set(ms.values())) == 1:
+            return S.One  # aaabbb
+        if len(ms) - 1 == big:  # [big, 1, 1, 1]
+            return factorial(big)  # abc part of abcddd
+    if n < 9 and brute is None or brute:
+        # for all possibilities, this was found to be faster
+        if s is None:
+            s = []
+            for k, v in enumerate(ms.values()):
+                s.extend([k]*v)
+        return Integer(sum(1 for i in multiset_derangements(s)))
+    return Integer(abs(integrate(exp(-x)*Mul(*[
+        laguerre(i, x) for i in ms.values()]), (x, 0, oo))))

@@ -2168,13 +2168,77 @@ def generate_involutions(n):
             yield p
 
 
+def multiset_derangements(s):
+    """Generate derangements of the elements of s *in place*.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import multiset_derangements, uniq
+
+    Because the derangements of multisets (not sets) are generated
+    in place, copies of the return value must be made if a collection
+    of derangements is desired or else all values will be the same:
+
+    >>> list(uniq([i for i in multiset_derangements('1233')]))
+    [['3', '3', '2', '1']]
+    >>> [i.copy() for i in multiset_derangements('1233')]
+    [['3', '3', '1', '2'], ['3', '3', '2', '1']]
+    """
+    ms = multiset(s)
+    mx = max(ms.values())
+    n = len(s)
+    # impossible case
+    if mx*2 > n:
+        return
+    rv = [None]*n
+    # special cases
+    # 1) singletons
+    if len(ms) == n:
+        for p in generate_derangements(s):
+            yield p
+        return
+    # 2) aaabbb-like
+    if len(ms) == 2 and len(set(ms.values())) == 1:
+        x, y = list(ms)
+        yield [x if i == y else y for i in s]
+        return
+    # 3) half are the same
+    if 2*mx == n:
+        for M in ms:
+            if ms[M] == mx:
+                break
+        inonM = [i for i in range(n) if s[i] != M]
+        iM = [i for i in range(n) if s[i] == M]
+        for i in inonM:
+            rv[i] = M
+        for p in multiset_permutations([s[i] for i in inonM]):
+            for i, pi in zip(iM, p):
+                rv[i] = pi
+            yield rv
+        return
+    def iopen(v):
+        return [i for i in range(n) if rv[i] is None and s[i] != v]
+    def do(j):
+        if j == -1:
+            yield rv
+        else:
+            M, mx = take[j]
+            for i in subsets(iopen(M), mx):
+                for ii in i:
+                    rv[ii] = M
+                for _ in do(j - 1):
+                    yield rv
+                for ii in i:
+                    rv[ii] = None
+    take = sorted(ms.items(), key=lambda x:(x[1], x[0]))
+    for i in do(len(take) - 1):
+        yield i
+
+
 def generate_derangements(perm):
     """
     Routine to generate unique derangements.
-
-    TODO: This will be rewritten to use the
-    ECO operator approach once the permutations
-    branch is in master.
 
     Examples
     ========
@@ -2195,9 +2259,21 @@ def generate_derangements(perm):
     sympy.functions.combinatorial.factorials.subfactorial
 
     """
-    for p in multiset_permutations(perm):
-        if not any(i == j for i, j in zip(perm, p)):
-            yield p
+    if not has_dups(perm):
+        s = perm
+        if len(perm) == 2:
+            yield [s[1],s[0]]
+            return
+        if len(perm) == 3:
+            yield [s[1],s[2],s[0]]
+            yield [s[2],s[0],s[1]]
+            return
+        for p in permutations(s):
+            if not any(i == j for i, j in zip(p, s)):
+                yield list(p)
+    else:
+        for p in multiset_derangements(perm):
+            yield list(p)
 
 
 def necklaces(n, k, free=False):
