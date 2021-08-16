@@ -1410,7 +1410,6 @@ def test_issue_21882():
     assert solve(equations, unknowns, dict=True) == answer
 
 
-
 def test_issue_5901():
     f, g, h = map(Function, 'fgh')
     a = Symbol('a')
