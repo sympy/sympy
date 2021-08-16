@@ -2155,7 +2155,7 @@ def truth_table(expr, variables, input=True):
     if not isinstance(expr, BooleanFunction) and not is_literal(expr):
         return
 
-    table = product([0, 1], repeat=len(variables))
+    table = product((0, 1), repeat=len(variables))
     for term in table:
         term = list(term)
         value = expr.xreplace(dict(zip(variables, term)))
@@ -2188,8 +2188,8 @@ def _convert_to_varsSOP(minterm, variables):
     Converts a term in the expansion of a function from binary to its
     variable form (for SOP).
     """
-    temp = (variables[n] if val == 1 else Not(variables[n])
-            for n, val in enumerate(minterm) if val != 3)
+    temp = [variables[n] if val == 1 else Not(variables[n])
+            for n, val in enumerate(minterm) if val != 3]
     return And(*temp)
 
 
@@ -2198,8 +2198,8 @@ def _convert_to_varsPOS(maxterm, variables):
     Converts a term in the expansion of a function from binary to its
     variable form (for POS).
     """
-    temp = (variables[n] if val == 0 else Not(variables[n])
-            for n, val in enumerate(maxterm) if val != 3)
+    temp = [variables[n] if val == 0 else Not(variables[n])
+            for n, val in enumerate(maxterm) if val != 3]
     return Or(*temp)
 
 
@@ -2287,10 +2287,7 @@ def _compare_term(minterm, term):
     Return True if a binary term is satisfied by the given term. Used
     for recognizing prime implicants.
     """
-    for m, t in zip(minterm, term):
-        if t != 3 and m != t:
-            return False
-    return True
+    return all(t == 3 or minterm[n] == t for n, t in enumerate(term))
 
 
 def _rem_redundancy(l1, terms):
@@ -2474,9 +2471,11 @@ def SOPform(variables, minterms, dontcares=None):
     .. [1] https://en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
-    variables = [sympify(v) for v in variables]
     if minterms == []:
         return false
+
+    variables = tuple(map(sympify, variables))
+
 
     minterms = _input_to_binlist(minterms, variables)
     dontcares = _input_to_binlist((dontcares or []), variables)
@@ -2544,10 +2543,10 @@ def POSform(variables, minterms, dontcares=None):
     .. [1] https://en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
-    variables = [sympify(v) for v in variables]
     if minterms == []:
         return false
 
+    variables = tuple(map(sympify, variables))
     minterms = _input_to_binlist(minterms, variables)
     dontcares = _input_to_binlist((dontcares or []), variables)
     for d in dontcares:
@@ -2555,7 +2554,7 @@ def POSform(variables, minterms, dontcares=None):
             raise ValueError('%s in minterms is also in dontcares' % d)
 
     maxterms = []
-    for t in product([0, 1], repeat=len(variables)):
+    for t in product((0, 1), repeat=len(variables)):
         t = list(t)
         if (t not in minterms) and (t not in dontcares):
             maxterms.append(t)
@@ -2614,12 +2613,12 @@ def ANFform(variables, truthvalues):
         raise ValueError("The number of truth values must be equal to 2^%d, "
                          "got %d" % (n_vars, n_values))
 
-    variables = [sympify(v) for v in variables]
+    variables = tuple(map(sympify, variables))
 
     coeffs = anf_coeffs(truthvalues)
     terms = []
 
-    for i, t in enumerate(product([0, 1], repeat=n_vars)):
+    for i, t in enumerate(product((0, 1), repeat=n_vars)):
         if coeffs[i] == 1:
             terms.append(t)
 
@@ -2713,7 +2712,7 @@ def bool_minterm(k, variables):
     """
     if isinstance(k, int):
         k = integer_to_term(k, len(variables))
-    variables = list(map(sympify, variables))
+    variables = tuple(map(sympify, variables))
     return _convert_to_varsSOP(k, variables)
 
 
@@ -2749,7 +2748,7 @@ def bool_maxterm(k, variables):
     """
     if isinstance(k, int):
         k = integer_to_term(k, len(variables))
-    variables = list(map(sympify, variables))
+    variables = tuple(map(sympify, variables))
     return _convert_to_varsPOS(k, variables)
 
 
@@ -2790,7 +2789,7 @@ def bool_monomial(k, variables):
     """
     if isinstance(k, int):
         k = integer_to_term(k, len(variables))
-    variables = list(map(sympify, variables))
+    variables = tuple(map(sympify, variables))
     return _convert_to_varsANF(k, variables)
 
 
@@ -2803,7 +2802,7 @@ def _find_predicates(expr):
     """
     if not isinstance(expr, BooleanFunction):
         return {expr}
-    return set().union(*(_find_predicates(i) for i in expr.args))
+    return set().union(*(map(_find_predicates, expr.args)))
 
 
 def simplify_logic(expr, form=None, deep=True, force=False):
@@ -2868,7 +2867,7 @@ def simplify_logic(expr, form=None, deep=True, force=False):
     if deep:
         variables = _find_predicates(expr)
         from sympy.simplify.simplify import simplify
-        s = (simplify(v) for v in variables)
+        s = tuple(map(simplify, variables))
         expr = expr.xreplace(dict(zip(variables, s)))
     if not isinstance(expr, BooleanFunction):
         return expr
