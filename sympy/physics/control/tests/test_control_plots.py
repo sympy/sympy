@@ -1,5 +1,6 @@
 from sympy import Dummy, arg, I, Abs, log
 from sympy.abc import s, p, a
+from sympy.external import import_module
 from sympy.physics.control.control_plots import \
     (pole_zero_numerical_data, pole_zero_plot, step_response_numerical_data,
     step_response_plot, impulse_response_numerical_data,
