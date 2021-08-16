@@ -8,8 +8,13 @@ from sympy.physics.control.control_plots import \
     bode_phase_numerical_data, bode_plot)
 from sympy.physics.control.lti import (TransferFunction,
     Series, Parallel, TransferFunctionMatrix)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, skip
 
+matplotlib = import_module(
+        'matplotlib', import_kwargs={'fromlist': ['pyplot']},
+        catch=(RuntimeError,))
+
+numpy = import_module('numpy')
 
 tf1 = TransferFunction(1, p**2 + 0.5*p + 2, p)
 tf2 = TransferFunction(p, 6*p**2 + 3*p + 1, p)
@@ -45,6 +50,9 @@ def y_coordinate_equality(plot_data_func, evalf_func, system):
 
 
 def test_errors():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
     # Invalid `system` check
     tfm = TransferFunctionMatrix([[tf6, tf5], [tf5, tf6]])
     expr = 1/(s**2 - 1)
@@ -80,6 +88,9 @@ def test_errors():
 
 
 def test_pole_zero():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
     assert _to_tuple(*pole_zero_numerical_data(tf1)) == \
         ((), ((-0.24999999999999994+1.3919410907075054j), (-0.24999999999999994-1.3919410907075054j)))
     assert _to_tuple(*pole_zero_numerical_data(tf2)) == \
@@ -102,6 +113,9 @@ def test_pole_zero():
 
 
 def test_bode():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
     def bode_phase_evalf(system, point):
         expr = system.to_expr()
         _w = Dummy("w", real=True)
@@ -126,6 +140,9 @@ def test_bode():
 
 
 def test_impulse_response():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
     assert _to_tuple(*impulse_response_numerical_data(tf1, adaptive=False, nb_of_points=10)) == \
         ((0.0, 1.1111111111111112, 2.2222222222222223, 3.3333333333333335, 4.444444444444445,
         5.555555555555555, 6.666666666666667, 7.777777777777779, 8.88888888888889, 10.0),
@@ -166,6 +183,9 @@ def test_impulse_response():
 
 
 def test_step_response():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
     # assert _to_tuple(*impulse_response_numerical_data(tf1, adaptive=False, nb_of_points=10))
     assert _to_tuple(*step_response_numerical_data(tf1, adaptive=False, nb_of_points=10)) == \
         ((0.0, 1.1111111111111112, 2.2222222222222223, 3.3333333333333335, 4.444444444444445,
@@ -204,6 +224,9 @@ def test_step_response():
 
 
 def test_ramp_response():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
     assert _to_tuple(*ramp_response_numerical_data(tf1, adaptive=False, nb_of_points=6)) == \
         ((0.0, 2.0, 4.0, 6.0, 8.0, 10.0), (0.0, 0.7324667795033895, 1.9909720978650398,
         2.7956587704217783, 3.9224897567931514, 4.85022655284895))
