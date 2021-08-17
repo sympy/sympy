@@ -3259,7 +3259,7 @@ class Beam3D(Beam):
             length = self.length
 
         return plot(shear_stress[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Shear stress along %c direction'%dir,
-                xlabel=r'$\mathrm{X}$', ylabel=r'$\sigma(%c)$'%dir, line_color=color)
+                xlabel=r'$\mathrm{X}$', ylabel=r'$\tau(%c)$'%dir, line_color=color)
 
     def plot_shear_stress(self, dir="all", subs=None):
 
