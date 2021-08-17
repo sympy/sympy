@@ -1121,7 +1121,7 @@ def _simplex(M, R, S):
 
 # Maximize Cx + D constrained with Ax <= B and x >= 0
 # Minimize y^{T}B constrained with y^{T}A >= C^{T} and y >= 0
-def linear_programming(A, B, C, D):
+def linear_programming(A, B, C, D = Matrix([0])):
     """
     When x is a column vector of variables, y is a column vector of dual variables,
     and when the objective is either:
