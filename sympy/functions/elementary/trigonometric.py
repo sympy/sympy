@@ -2662,7 +2662,8 @@ class atan(InverseTrigonometricFunction):
         if x0.is_zero:
             return arg.as_leading_term(x)
         if x0 is S.ComplexInfinity:
-            return acot(1/arg)._eval_as_leading_term(x, cdir=cdir)
+            x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+            return S.Pi/2 if x0 is S.Infinity else -S.Pi/2
         if cdir != 0:
             cdir = arg.dir(x, cdir)
         if re(cdir) < 0 and re(x0).is_zero and im(x0) > S.One:
@@ -2861,7 +2862,7 @@ class acot(InverseTrigonometricFunction):
         if cdir != 0:
             cdir = arg.dir(x, cdir)
         if x0.is_zero:
-            if re(cdir) < 0:
+            if re(cdir).is_negative:
                 return self.func(x0) - S.Pi
             return self.func(x0)
         if re(cdir) > 0 and re(x0).is_zero and im(x0) > S.Zero and im(x0) < S.One:

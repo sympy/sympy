@@ -1212,9 +1212,13 @@ class Ei(Function):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import re
         x0 = self.args[0].limit(x, 0)
+        arg = self.args[0].as_leading_term(x, cdir=cdir)
+        cdir = arg.dir(x, cdir)
         if x0.is_zero:
-            f = self._eval_rewrite_as_Si(*self.args)
-            return re(f._eval_as_leading_term(x, logx=logx, cdir=cdir))
+            if logx is not None:
+                return logx + S.EulerGamma - (
+                    S.ImaginaryUnit*pi if re(cdir).is_negative else S.Zero)
+            return log(-arg) + S.EulerGamma if re(cdir).is_negative else log(arg)
         return super()._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
@@ -2727,7 +2731,7 @@ class _eis(Function):
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
         if args0[0] != S.Infinity:
-            return super(_erfs, self)._eval_aseries(n, args0, x, logx)
+            return super(_eis, self)._eval_aseries(n, args0, x, logx)
 
         z = self.args[0]
         l = [ factorial(k) * (1/z)**(k + 1) for k in range(0, n) ]
