@@ -2,7 +2,7 @@ from sympy import I, log, apart, exp
 from sympy.core.symbol import Dummy
 from sympy.external import import_module
 from sympy.functions import arg, Abs
-from sympy.integrals.transforms import fast_inverse_laplace
+from sympy.integrals.transforms import _fast_inverse_laplace
 from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.plotting.plot import LineOver1DRangeSeries
 from sympy.polys.polytools import Poly
@@ -272,7 +272,7 @@ def step_response_numerical_data(system, prec=8, lower_limit=0,
     _x = Dummy("x")
     expr = system.to_expr()/(system.var)
     expr = apart(expr, system.var, full=True)
-    _y = fast_inverse_laplace(expr, system.var, _x).evalf(prec)
+    _y = _fast_inverse_laplace(expr, system.var, _x).evalf(prec)
     return LineOver1DRangeSeries(_y, (_x, lower_limit, upper_limit),
         **kwargs).get_points()
 
@@ -423,7 +423,7 @@ def impulse_response_numerical_data(system, prec=8, lower_limit=0,
     _x = Dummy("x")
     expr = system.to_expr()
     expr = apart(expr, system.var, full=True)
-    _y = fast_inverse_laplace(expr, system.var, _x).evalf(prec)
+    _y = _fast_inverse_laplace(expr, system.var, _x).evalf(prec)
     return LineOver1DRangeSeries(_y, (_x, lower_limit, upper_limit),
         **kwargs).get_points()
 
@@ -581,7 +581,7 @@ def ramp_response_numerical_data(system, slope=1, prec=8,
     _x = Dummy("x")
     expr = (slope*system.to_expr())/((system.var)**2)
     expr = apart(expr, system.var, full=True)
-    _y = fast_inverse_laplace(expr, system.var, _x).evalf(prec)
+    _y = _fast_inverse_laplace(expr, system.var, _x).evalf(prec)
     return LineOver1DRangeSeries(_y, (_x, lower_limit, upper_limit),
         **kwargs).get_points()
 

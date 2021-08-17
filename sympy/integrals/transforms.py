@@ -1414,7 +1414,7 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     See Also
     ========
 
-    laplace_transform, fast_inverse_laplace
+    laplace_transform, _fast_inverse_laplace
     hankel_transform, inverse_hankel_transform
     """
     if isinstance(F, MatrixBase) and hasattr(F, 'applyfunc'):
@@ -1422,7 +1422,7 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     return InverseLaplaceTransform(F, s, t, plane).doit(**hints)
 
 
-def fast_inverse_laplace(e, s, t):
+def _fast_inverse_laplace(e, s, t):
     """Fast inverse Laplace transform of rational function including RootSum"""
     a, b, n = symbols('a, b, n', cls=Wild, exclude=[s])
 
@@ -1454,10 +1454,9 @@ def fast_inverse_laplace(e, s, t):
         if match is not None:
             nm, am, bm = match[n], match[a], match[b]
             if nm.is_Integer and nm < 0:
-                if nm == 1:
-                    return exp(-(bm/am)*t) / am
-                else:
-                    return t**(-nm-1)*exp(-(bm/am)*t)/(am**-nm*gamma(-nm))
+                return t**(-nm-1)*exp(-(bm/am)*t)/(am**-nm*gamma(-nm))
+            if nm == 1:
+                return exp(-(bm/am)*t) / am
         raise NotImplementedError
 
     def _ilt_rootsum(e):
