@@ -961,6 +961,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
                     keep = False
                 break
             from sympy.simplify.powsimp import powsimp, powdenest
+
             num = powsimp(_num(rterms))
             n *= num
             d *= num
