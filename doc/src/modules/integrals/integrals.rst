@@ -72,6 +72,7 @@ SymPy has special support for definite integrals, and integral transforms.
 .. autofunction:: inverse_laplace_transform
 .. autoclass:: InverseLaplaceTransform
    :members:
+.. autofunction:: fast_inverse_laplace
 .. autofunction:: fourier_transform
 .. autofunction:: _fourier_transform
 .. autoclass:: FourierTransform

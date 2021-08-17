@@ -1414,7 +1414,7 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     See Also
     ========
 
-    laplace_transform, fast_inverse_laplace_transform
+    laplace_transform, fast_inverse_laplace
     hankel_transform, inverse_hankel_transform
     """
     if isinstance(F, MatrixBase) and hasattr(F, 'applyfunc'):
