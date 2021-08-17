@@ -136,7 +136,7 @@ def pole_zero_plot(system, pole_color='blue', pole_markersize=10,
         or a 3-tuple of floats each in the 0-1 range.
     zero_markersize : Number, optional
         The size of the markers used to mark the zeros in the plot.
-        Default pole markersize is 7.
+        Default zero markersize is 7.
     grid : boolean, optional
         If ``True``, the plot will have a grid. Defaults to True.
     show_axes : boolean, optional
