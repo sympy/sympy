@@ -1,8 +1,8 @@
-from sympy import (I, log, symbols, apart, Wild,
-    RootSum, Lambda, together, exp, gamma)
+from sympy import I, log, apart, exp
 from sympy.core.symbol import Dummy
 from sympy.external import import_module
 from sympy.functions import arg, Abs
+from sympy.integrals.transforms import fast_inverse_laplace
 from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.plotting.plot import LineOver1DRangeSeries
 from sympy.polys.polytools import Poly
@@ -41,8 +41,6 @@ def _check_system(system):
             " than the variable of Laplace transform.")
     if sys.has(exp):
         raise NotImplementedError("Time delay terms are not supported.")
-
-    return
 
 
 def pole_zero_numerical_data(system):
@@ -115,6 +113,7 @@ def pole_zero_plot(system, pole_color='blue', pole_markersize=10,
     show=True, **kwargs):
     r"""
     Returns the Pole-Zero plot (also known as PZ Plot or PZ Map) of a system.
+
     A Pole-Zero plot is a graphical representation of a system's poles and
     zeros. It is plotted on a complex plane, with circular markers representing
     the system's zeros and 'x' shaped markers representing the system's poles.
@@ -273,13 +272,13 @@ def step_response_numerical_data(system, prec=8, lower_limit=0,
     _x = Dummy("x")
     expr = system.to_expr()/(system.var)
     expr = apart(expr, system.var, full=True)
-    _y = _fast_inverse_laplace(expr, system.var, _x).evalf(prec)
+    _y = fast_inverse_laplace(expr, system.var, _x).evalf(prec)
     return LineOver1DRangeSeries(_y, (_x, lower_limit, upper_limit),
         **kwargs).get_points()
 
 
-def step_response_plot(system, color='b', show=True, lower_limit=0,
-    upper_limit=10, prec=8, show_axes=False, grid=True, **kwargs):
+def step_response_plot(system, color='b', prec=8, lower_limit=0,
+    upper_limit=10, show_axes=False, grid=True, show=True, **kwargs):
     r"""
     Returns the unit step response of a continuous-time system. It is
     the response of the system when the input signal is a step function.
@@ -424,13 +423,13 @@ def impulse_response_numerical_data(system, prec=8, lower_limit=0,
     _x = Dummy("x")
     expr = system.to_expr()
     expr = apart(expr, system.var, full=True)
-    _y = _fast_inverse_laplace(expr, system.var, _x).evalf(prec)
+    _y = fast_inverse_laplace(expr, system.var, _x).evalf(prec)
     return LineOver1DRangeSeries(_y, (_x, lower_limit, upper_limit),
         **kwargs).get_points()
 
 
-def impulse_response_plot(system, color='b', show=True, lower_limit=0,
-    upper_limit=10, prec=8, show_axes=False, grid=True, **kwargs):
+def impulse_response_plot(system, color='b', prec=8, lower_limit=0,
+    upper_limit=10, show_axes=False, grid=True, show=True, **kwargs):
     r"""
     Returns the unit impulse response (Input is the Dirac-Delta Function) of a
     continuous-time system.
@@ -582,18 +581,20 @@ def ramp_response_numerical_data(system, slope=1, prec=8,
     _x = Dummy("x")
     expr = (slope*system.to_expr())/((system.var)**2)
     expr = apart(expr, system.var, full=True)
-    _y = _fast_inverse_laplace(expr, system.var, _x).evalf(prec)
+    _y = fast_inverse_laplace(expr, system.var, _x).evalf(prec)
     return LineOver1DRangeSeries(_y, (_x, lower_limit, upper_limit),
         **kwargs).get_points()
 
 
-def ramp_response_plot(system, slope=1, color='b', show=True, lower_limit=0,
-    upper_limit=10, prec=8, show_axes=False, grid=True, **kwargs):
+def ramp_response_plot(system, slope=1, color='b', prec=8, lower_limit=0,
+    upper_limit=10, show_axes=False, grid=True, show=True, **kwargs):
     r"""
-    Returns the ramp response of a continuous-time system. Ramp
-    function is defined as the the straight line passing through
-    origin ($f(x) = mx$). The slope of the ramp function can be
-    varied by the user and the default value is 1.
+    Returns the ramp response of a continuous-time system.
+
+    Ramp function is defined as the the straight line
+    passing through origin ($f(x) = mx$). The slope of
+    the ramp function can be varied by the user and
+    the default value is 1.
 
     Parameters
     ==========
@@ -731,7 +732,7 @@ def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, **kwargs)
 
 
 def bode_magnitude_plot(system, initial_exp=-5, final_exp=5,
-    color='b', show=True, show_axes=False, grid=True, **kwargs):
+    color='b', show_axes=False, grid=True, show=True, **kwargs):
     r"""
     Returns the Bode magnitude plot of a continuous-time system.
 
@@ -825,7 +826,7 @@ def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, **kwargs):
 
 
 def bode_phase_plot(system, initial_exp=-5, final_exp=5,
-    color='b', show=True, show_axes=False, grid=True, **kwargs):
+    color='b', show_axes=False, grid=True, show=True, **kwargs):
     r"""
     Returns the Bode phase plot of a continuous-time system.
 
@@ -853,7 +854,7 @@ def bode_phase_plot(system, initial_exp=-5, final_exp=5,
 
 
 def bode_plot(system, initial_exp=-5, final_exp=5,
-    show=True, grid=True, show_axes=False, **kwargs):
+    grid=True, show_axes=False, show=True, **kwargs):
     r"""
     Returns the Bode phase and magnitude plots of a continuous-time system.
 
@@ -916,49 +917,3 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
         return
 
     return plt
-
-
-def _fast_inverse_laplace(e, s, t):
-    """Fast inverse Laplace transform of rational function including RootSum"""
-    a, b, n = symbols('a, b, n', cls=Wild, exclude=[s])
-
-    def _ilt(e):
-        if not e.has(s):
-            return e
-        elif e.is_Add:
-            return _ilt_add(e)
-        elif e.is_Mul:
-            return _ilt_mul(e)
-        elif e.is_Pow:
-            return _ilt_pow(e)
-        elif isinstance(e, RootSum):
-            return _ilt_rootsum(e)
-        else:
-            raise NotImplementedError
-
-    def _ilt_add(e):
-        return e.func(*map(_ilt, e.args))
-
-    def _ilt_mul(e):
-        coeff, expr = e.as_independent(s)
-        if expr.is_Mul:
-            raise NotImplementedError
-        return coeff * _ilt(expr)
-
-    def _ilt_pow(e):
-        match = e.match((a*s + b)**n)
-        if match is not None:
-            nm, am, bm = match[n], match[a], match[b]
-            if nm.is_Integer and nm < 0:
-                if nm == 1:
-                    return exp(-(bm/am)*t) / am
-                else:
-                    return t**(-nm-1)*exp(-(bm/am)*t)/(am**-nm*gamma(-nm))
-        raise NotImplementedError
-
-    def _ilt_rootsum(e):
-        expr = e.fun.expr
-        [variable] = e.fun.variables
-        return RootSum(e.poly, Lambda(variable, together(_ilt(expr))))
-
-    return _ilt(e)
