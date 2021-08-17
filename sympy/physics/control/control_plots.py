@@ -898,11 +898,6 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
 
     bode_magnitude_plot, bode_phase_plot
 
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Ramp_function
-
     """
     plt.subplot(211)
     bode_magnitude_plot(system, initial_exp=initial_exp, final_exp=final_exp,
