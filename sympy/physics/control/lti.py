@@ -1779,10 +1779,6 @@ class Feedback(SISOLinearTimeInvariant):
                 " same complex variable.")
 
         obj = super().__new__(cls, sys1, sys2, _sympify(sign))
-        obj._sys1 = sys1
-        obj._sys2 = sys2
-        obj._var = sys1.var
-        obj._sign = sign
 
         return obj
 
@@ -1809,7 +1805,7 @@ class Feedback(SISOLinearTimeInvariant):
         TransferFunction(1, 1, p)
 
         """
-        return self._sys1
+        return self.args[0]
 
     @property
     def sys2(self):
@@ -1834,7 +1830,7 @@ class Feedback(SISOLinearTimeInvariant):
         Series(TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p), TransferFunction(5*p + 10, p + 10, p), TransferFunction(1 - s, p + 2, p))
 
         """
-        return self._sys2
+        return self.args[1]
 
     @property
     def var(self):
@@ -1860,7 +1856,7 @@ class Feedback(SISOLinearTimeInvariant):
         p
 
         """
-        return self._var
+        return self.sys1.var
 
     @property
     def sign(self):
@@ -1868,7 +1864,7 @@ class Feedback(SISOLinearTimeInvariant):
         Returns the type of closed-loop MIMO Feedback. ``1``
         for Positive and ``-1`` for Negative.
         """
-        return self._sign
+        return self.args[2]
 
     @property
     def sensitivity(self):
