@@ -1659,34 +1659,19 @@ class MIMOParallel(MIMOLinearTimeInvariant):
 class Feedback(SISOLinearTimeInvariant):
     r"""
     A class for representing closed-loop feedback interconnection between two
-    SISO input/output systems. The first argument, ``sys1``, is the
-    feedforward part of the closed-loop system or in simple words, the dynamical model
-    representing the process to be controlled. The second argument, ``sys2``,
-    is the feedback system and controls the fed back signal to ``sys1``.
+    SISO input/output systems.
 
-    Both ``sys1`` and ``sys2`` can either be ``Series`` or
-    ``TransferFunction`` objects.
-
-    Explanation
-    ===========
-
-    Generally, in control theory, we want the output signal to follow the input signal or in
-    other words, the error signal (difference between the output signal and input signal) to
-    be as small as possible. This is the key purpose of the **negative** feedback loop. The output
-    signal produced by the feedback controller is subtracted from the reference (input) signal to produce
-    the error signal ("difference" is taken and hence the name **Negative Feedback**). The error signal
-    is fed back to the plant/plant-controller through the feedback loop and that in turn produces the
-    optimal output. In some systems, we feed back the sum of output signals from the feedback
-    controller and reference (input) signal to feedforward path. This type of feedback loop is known as the
-    positive feedback loop ("sum" is taken and hence the name **Positive Feedback**).
+    The first argument, ``sys1``, is the feedforward part of the closed-loop
+    system or in simple words, the dynamical model representing the process
+    to be controlled. The second argument, ``sys2``, is the feedback system
+    and controls the fed back signal to ``sys1``. Both ``sys1`` and ``sys2``
+    can either be ``Series`` or ``TransferFunction`` objects.
 
     Parameters
     ==========
 
     sys1 : Series, TransferFunction
         The feedforward path system.
-        Also commonly known as the open
-        loop gain.
     sys2 : Series, TransferFunction, optional
         The feedback path system (often a feedback controller).
         It is the model sitting on the feedback path.
@@ -1694,7 +1679,7 @@ class Feedback(SISOLinearTimeInvariant):
         If not specified explicitly, the sys2 is
         assumed to be unit (1.0) transfer function.
     sign : int, optional
-        The type of closed-loop feedback. Can either be ``1``
+        The sign of feedback. Can either be ``1``
         (for positive feedback) or ``-1`` (for negative feedback).
         Default value is `-1`.
 
@@ -1782,7 +1767,7 @@ class Feedback(SISOLinearTimeInvariant):
     @property
     def sys1(self):
         """
-        Returns the feedforward system of the closed-loop feedback.
+        Returns the feedforward system of the feedback interconnection.
 
         Examples
         ========
@@ -1807,7 +1792,7 @@ class Feedback(SISOLinearTimeInvariant):
     @property
     def sys2(self):
         """
-        Returns the feedback controller of the closed-loop feedback.
+        Returns the feedback controller of the feedback interconnection.
 
         Examples
         ========
@@ -1833,7 +1818,7 @@ class Feedback(SISOLinearTimeInvariant):
     def var(self):
         """
         Returns the complex variable of the Laplace transform used by all
-        the transfer functions involved in the closed-loop feedback.
+        the transfer functions involved in the feedback interconnection.
 
         Examples
         ========
@@ -1858,7 +1843,7 @@ class Feedback(SISOLinearTimeInvariant):
     @property
     def sign(self):
         """
-        Returns the type of closed-loop MIMO Feedback. ``1``
+        Returns the type of MIMO Feedback model. ``1``
         for Positive and ``-1`` for Negative.
         """
         return self.args[2]
@@ -1868,9 +1853,13 @@ class Feedback(SISOLinearTimeInvariant):
         """
         Returns the sensitivity function of the feedback loop.
 
-        Sensitivity of a closed-loop system is the ratio
+        Sensitivity of a Feedback system is the ratio
         of change in the open loop gain to the change in
         the closed loop gain.
+
+        .. note::
+            This method would not return the complementary
+            sensitivity function.
 
         Examples
         ========
@@ -1889,7 +1878,7 @@ class Feedback(SISOLinearTimeInvariant):
 
     def doit(self, cancel=False, expand=False, **kwargs):
         """
-        Returns the resultant closed-loop transfer function obtained by the
+        Returns the resultant transfer function obtained by the
         feedback interconnection.
 
         Examples
@@ -1907,7 +1896,7 @@ class Feedback(SISOLinearTimeInvariant):
         >>> F2.doit()
         TransferFunction((s**2 + 2*s + 3)*(2*s**2 + 5*s + 1), (s**2 + 2*s + 3)*(3*s**2 + 7*s + 4), s)
 
-        Use kwarg ``expand=True`` to expand the closed-loop transfer function.
+        Use kwarg ``expand=True`` to expand the resultant transfer function.
         Use ``cancel=True`` to cancel out the common terms in numerator and
         denominator.
 
@@ -1967,7 +1956,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         The system placed on the feedback path
         (often a feedback controller).
     sign : int, optional
-        The type of closed-loop MIMO feedback. Can either be ``1``
+        The sign of feedback. Can either be ``1``
         (for positive feedback) or ``-1`` (for negative feedback).
         Default value is `-1`.
 
@@ -1983,7 +1972,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
         When product of ``sys1`` and ``sys2`` is not a square matrix.
 
-        When the equivalent closed-loop MIMO system is not invertible.
+        When the equivalent MIMO system is not invertible.
 
     TypeError
         When either ``sys1`` or ``sys2`` is not a ``MIMOSeries`` or a
@@ -2009,7 +1998,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     |    [-  -]    [-   --]   |     [-  -]
     \    [1  1]{t} [1   1 ]{t}/     [1  1]{t}
 
-    To get the equivalent closed-loop system matrix, use either ``doit`` or ``rewrite`` method.
+    To get the equivalent system matrix, use either ``doit`` or ``rewrite`` method.
 
     >>> pprint(feedback.doit(), use_unicode=False)
     [1     1  ]
@@ -2063,7 +2052,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     @property
     def sys1(self):
         r"""
-        Returns the system placed on the feedforward path of the closed-loop MIMO feedback.
+        Returns the system placed on the feedforward path of the MIMO feedback interconnection.
 
         Examples
         ========
@@ -2098,7 +2087,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     @property
     def sys2(self):
         r"""
-        Returns the feedback controller of the closed feedback loop.
+        Returns the feedback controller of the MIMO feedback interconnection.
 
         Examples
         ========
@@ -2132,7 +2121,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     def var(self):
         r"""
         Returns the complex variable of the Laplace transform used by all
-        the transfer functions involved in the negative feedback closed loop.
+        the transfer functions involved in the MIMO feedback loop.
 
         Examples
         ========
@@ -2166,6 +2155,10 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
         Sensitivity of a closed-loop system is the ratio of change
         in the open loop gain to the change in the closed loop gain.
+
+        .. note::
+            This method would not return the complementary
+            sensitivity function.
 
         Examples
         ========
@@ -2215,7 +2208,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     def doit(self, cancel=True, expand=False, **kwargs):
         r"""
         Returns the resultant transfer function matrix obtained by the
-        closed-loop feedback interconnection.
+        feedback interconnection.
 
         Examples
         ========
