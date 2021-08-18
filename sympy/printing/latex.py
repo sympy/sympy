@@ -2474,20 +2474,20 @@ class LatexPrinter(Printer):
     def _print_Feedback(self, expr):
         from sympy.physics.control import TransferFunction, Series
 
-        num, tf = expr.plant, TransferFunction(1, 1, expr.var)
+        num, tf = expr.sys1, TransferFunction(1, 1, expr.var)
         num_arg_list = list(num.args) if isinstance(num, Series) else [num]
-        den_arg_list = list(expr.controller.args) if \
-            isinstance(expr.controller, Series) else [expr.controller]
+        den_arg_list = list(expr.sys2.args) if \
+            isinstance(expr.sys2, Series) else [expr.sys2]
         den_term_1 = tf
 
-        if isinstance(num, Series) and isinstance(expr.controller, Series):
+        if isinstance(num, Series) and isinstance(expr.sys2, Series):
             den_term_2 = Series(*num_arg_list, *den_arg_list)
-        elif isinstance(num, Series) and isinstance(expr.controller, TransferFunction):
-            if expr.controller == tf:
+        elif isinstance(num, Series) and isinstance(expr.sys2, TransferFunction):
+            if expr.sys2 == tf:
                 den_term_2 = Series(*num_arg_list)
             else:
-                den_term_2 = tf, Series(*num_arg_list, expr.controller)
-        elif isinstance(num, TransferFunction) and isinstance(expr.controller, Series):
+                den_term_2 = tf, Series(*num_arg_list, expr.sys2)
+        elif isinstance(num, TransferFunction) and isinstance(expr.sys2, Series):
             if num == tf:
                 den_term_2 = Series(*den_arg_list)
             else:
@@ -2495,7 +2495,7 @@ class LatexPrinter(Printer):
         else:
             if num == tf:
                 den_term_2 = Series(*den_arg_list)
-            elif expr.controller == tf:
+            elif expr.sys2 == tf:
                 den_term_2 = Series(*num_arg_list)
             else:
                 den_term_2 = Series(*num_arg_list, *den_arg_list)
@@ -2509,10 +2509,10 @@ class LatexPrinter(Printer):
 
     def _print_MIMOFeedback(self, expr):
         from sympy.physics.control import MIMOSeries
-        inv_mat = self._print(MIMOSeries(expr.controller, expr.plant))
-        plant = self._print(expr.plant)
+        inv_mat = self._print(MIMOSeries(expr.sys2, expr.sys1))
+        sys1 = self._print(expr.sys1)
         _sign = "+" if expr.sign == -1 else "-"
-        return r"\left(I_{\tau} %s %s\right)^{-1} \cdot %s" % (_sign, inv_mat, plant)
+        return r"\left(I_{\tau} %s %s\right)^{-1} \cdot %s" % (_sign, inv_mat, sys1)
 
     def _print_TransferFunctionMatrix(self, expr):
         mat = self._print(expr._expr_mat)

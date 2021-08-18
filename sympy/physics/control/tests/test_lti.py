@@ -867,29 +867,29 @@ def test_Feedback_construction():
 
     f1 = Feedback(TransferFunction(1, 1, s), tf1*tf2*tf3)
     assert f1.args == (TransferFunction(1, 1, s), Series(tf1, tf2, tf3), -1)
-    assert f1.plant == TransferFunction(1, 1, s)
-    assert f1.controller == Series(tf1, tf2, tf3)
+    assert f1.sys1 == TransferFunction(1, 1, s)
+    assert f1.sys2 == Series(tf1, tf2, tf3)
     assert f1.var == s
 
     f2 = Feedback(tf1, tf2*tf3)
     assert f2.args == (tf1, Series(tf2, tf3), -1)
-    assert f2.plant == tf1
-    assert f2.controller == Series(tf2, tf3)
+    assert f2.sys1 == tf1
+    assert f2.sys2 == Series(tf2, tf3)
     assert f2.var == s
 
     f3 = Feedback(tf1*tf2, tf5)
     assert f3.args == (Series(tf1, tf2), tf5, -1)
-    assert f3.plant == Series(tf1, tf2)
+    assert f3.sys1 == Series(tf1, tf2)
 
     f4 = Feedback(tf4, tf6)
     assert f4.args == (tf4, tf6, -1)
-    assert f4.plant == tf4
+    assert f4.sys1 == tf4
     assert f4.var == p
 
     f5 = Feedback(tf5, TransferFunction(1, 1, s))
     assert f5.args == (tf5, TransferFunction(1, 1, s), -1)
     assert f5.var == s
-    assert f5 == Feedback(tf5)  # When controller is not passed explicitly, it is assumed to be unit tf.
+    assert f5 == Feedback(tf5)  # When sys2 is not passed explicitly, it is assumed to be unit tf.
 
     f6 = Feedback(TransferFunction(1, 1, p), tf4)
     assert f6.args == (TransferFunction(1, 1, p), tf4, -1)
@@ -897,7 +897,7 @@ def test_Feedback_construction():
 
     f7 = -Feedback(tf4*tf6, TransferFunction(1, 1, p))
     assert f7.args == (Series(TransferFunction(-1, 1, p), Series(tf4, tf6)), -TransferFunction(1, 1, p), -1)
-    assert f7.plant == Series(TransferFunction(-1, 1, p), Series(tf4, tf6))
+    assert f7.sys1 == Series(TransferFunction(-1, 1, p), Series(tf4, tf6))
 
     # denominator can't be a Parallel instance
     raises(TypeError, lambda: Feedback(tf1, tf2 + tf3))
@@ -973,31 +973,31 @@ def test_MIMOFeedback_construction():
 
     f1 = MIMOFeedback(tfm_1, tfm_2)
     assert f1.args == (tfm_1, tfm_2, -1)
-    assert f1.plant == tfm_1
-    assert f1.controller == tfm_2
+    assert f1.sys1 == tfm_1
+    assert f1.sys2 == tfm_2
     assert f1.var == s
     assert f1.sign == -1
     assert -(-f1) == f1
 
     f2 = MIMOFeedback(tfm_2, tfm_1, 1)
     assert f2.args == (tfm_2, tfm_1, 1)
-    assert f2.plant == tfm_2
-    assert f2.controller == tfm_1
+    assert f2.sys1 == tfm_2
+    assert f2.sys2 == tfm_1
     assert f2.var == s
     assert f2.sign == 1
 
     f3 = MIMOFeedback(tfm_1, MIMOSeries(tfm_3, tfm_2))
     assert f3.args == (tfm_1, MIMOSeries(tfm_3, tfm_2), -1)
-    assert f3.plant == tfm_1
-    assert f3.controller == MIMOSeries(tfm_3, tfm_2)
+    assert f3.sys1 == tfm_1
+    assert f3.sys2 == MIMOSeries(tfm_3, tfm_2)
     assert f3.var == s
     assert f3.sign == -1
 
     mat = Matrix([[1, 1/s], [0, 1]])
-    plant = controller = TransferFunctionMatrix.from_Matrix(mat, s)
-    f4 = MIMOFeedback(plant, controller)
-    assert f4.args == (plant, controller, -1)
-    assert f4.plant == f4.controller == plant
+    sys1 = controller = TransferFunctionMatrix.from_Matrix(mat, s)
+    f4 = MIMOFeedback(sys1, controller)
+    assert f4.args == (sys1, controller, -1)
+    assert f4.sys1 == f4.sys2 == sys1
 
 
 def test_MIMOFeedback_errors():
