@@ -6,7 +6,7 @@ from .control_plots import (pole_zero_numerical_data, pole_zero_plot, step_respo
     bode_phase_plot, bode_plot)
 
 __all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel',
-    'MIMOParallel', 'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix', 
+    'MIMOParallel', 'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix',
     'pole_zero_numerical_data',
     'pole_zero_plot', 'step_response_numerical_data', 'step_response_plot',
     'impulse_response_numerical_data', 'impulse_response_plot',
