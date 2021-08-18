@@ -7,11 +7,11 @@ from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify, _sympify
 from sympy.polys import Poly, rootof
 from sympy.series import limit
-from sympy.matrices import ImmutableMatrix
+from sympy.matrices import ImmutableMatrix, eye
 from sympy.matrices.expressions import MatMul, MatAdd
 
 __all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
-    'Feedback', 'TransferFunctionMatrix']
+    'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix']
 
 
 def _roots(poly, var):
@@ -1656,31 +1656,45 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         return MIMOParallel(*arg_list)
 
 
-class Feedback(Basic):
-    """
-    A class for representing negative feedback interconnection between two
-    input/output systems. The first argument, ``num``, is called as the
-    primary plant or the numerator, and the second argument, ``den``, is
-    called as the feedback plant (which is often a feedback controller) or
-    the denominator. Both ``num`` and ``den`` can either be ``Series`` or
-    ``TransferFunction`` objects.
+class Feedback(SISOLinearTimeInvariant):
+    r"""
+    A class for representing closed-loop feedback interconnection between two
+    SISO input/output systems.
+
+    The first argument, ``sys1``, is the feedforward part of the closed-loop
+    system or in simple words, the dynamical model representing the process
+    to be controlled. The second argument, ``sys2``, is the feedback system
+    and controls the fed back signal to ``sys1``. Both ``sys1`` and ``sys2``
+    can either be ``Series`` or ``TransferFunction`` objects.
 
     Parameters
     ==========
 
-    num : Series, TransferFunction
-        The primary plant.
-    den : Series, TransferFunction
-        The feedback plant (often a feedback controller).
+    sys1 : Series, TransferFunction
+        The feedforward path system.
+    sys2 : Series, TransferFunction, optional
+        The feedback path system (often a feedback controller).
+        It is the model sitting on the feedback path.
+
+        If not specified explicitly, the sys2 is
+        assumed to be unit (1.0) transfer function.
+    sign : int, optional
+        The sign of feedback. Can either be ``1``
+        (for positive feedback) or ``-1`` (for negative feedback).
+        Default value is `-1`.
 
     Raises
     ======
 
     ValueError
-        When ``num`` is equal to ``den`` or when they are not using the
+        When ``sys1`` and ``sys2`` are not using the
         same complex variable of the Laplace transform.
+
+        When a combination of ``sys1`` and ``sys2`` yields
+        zero denominator.
+
     TypeError
-        When either ``num`` or ``den`` is not a ``Series`` or a
+        When either ``sys1`` or ``sys2`` is not a ``Series`` or a
         ``TransferFunction`` object.
 
     Examples
@@ -1692,17 +1706,17 @@ class Feedback(Basic):
     >>> controller = TransferFunction(5*s - 10, s + 7, s)
     >>> F1 = Feedback(plant, controller)
     >>> F1
-    Feedback(TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s), TransferFunction(5*s - 10, s + 7, s))
+    Feedback(TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s), TransferFunction(5*s - 10, s + 7, s), -1)
     >>> F1.var
     s
     >>> F1.args
-    (TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s), TransferFunction(5*s - 10, s + 7, s))
+    (TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s), TransferFunction(5*s - 10, s + 7, s), -1)
 
-    You can get the primary and the feedback plant using ``.num`` and ``.den`` respectively.
+    You can get the feedforward and feedback path systems by using ``.sys1`` and ``.sys2`` respectively.
 
-    >>> F1.num
+    >>> F1.sys1
     TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
-    >>> F1.den
+    >>> F1.sys2
     TransferFunction(5*s - 10, s + 7, s)
 
     You can get the resultant closed loop transfer function obtained by negative feedback
@@ -1719,37 +1733,41 @@ class Feedback(Basic):
     To negate a ``Feedback`` object, the ``-`` operator can be prepended:
 
     >>> -F1
-    Feedback(TransferFunction(-3*s**2 - 7*s + 3, s**2 - 4*s + 2, s), TransferFunction(5*s - 10, s + 7, s))
+    Feedback(TransferFunction(-3*s**2 - 7*s + 3, s**2 - 4*s + 2, s), TransferFunction(10 - 5*s, s + 7, s), -1)
     >>> -F2
-    Feedback(Series(TransferFunction(-1, 1, s), TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s), TransferFunction(5*s + 10, s + 10, s)), TransferFunction(1, 1, s))
+    Feedback(Series(TransferFunction(-1, 1, s), TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s), TransferFunction(5*s + 10, s + 10, s)), TransferFunction(-1, 1, s), -1)
 
     See Also
     ========
 
-    TransferFunction, Series, Parallel
+    MIMOFeedback, Series, Parallel
 
     """
-    def __new__(cls, num, den):
-        if not (isinstance(num, (TransferFunction, Series))
-            and isinstance(den, (TransferFunction, Series))):
-            raise TypeError("Unsupported type for numerator or denominator of Feedback.")
+    def __new__(cls, sys1, sys2=None, sign=-1):
+        if not sys2:
+            sys2 = TransferFunction(1, 1, sys1.var)
 
-        if num == den:
-            raise ValueError("The numerator cannot be equal to the denominator.")
-        if not num.var == den.var:
-            raise ValueError("Both numerator and denominator should be using the"
+        if not (isinstance(sys1, (TransferFunction, Series))
+            and isinstance(sys2, (TransferFunction, Series))):
+            raise TypeError("Unsupported type for `sys1` or `sys2` of Feedback.")
+
+        if sign not in [-1, 1]:
+            raise ValueError("Unsupported type for feedback. `sign` arg should "
+                "either be 1 (positive feedback loop) or -1 (negative feedback loop).")
+
+        if Mul(sys1.to_expr(), sys2.to_expr()).simplify() == sign:
+            raise ValueError("The equivalent system will have zero denominator.")
+
+        if sys1.var != sys2.var:
+            raise ValueError("Both `sys1` and `sys2` should be using the"
                 " same complex variable.")
-        obj = super().__new__(cls, num, den)
-        obj._num = num
-        obj._den = den
-        obj._var = num.var
 
-        return obj
+        return super().__new__(cls, sys1, sys2, _sympify(sign))
 
     @property
-    def num(self):
+    def sys1(self):
         """
-        Returns the primary plant of the negative feedback closed loop.
+        Returns the feedforward system of the feedback interconnection.
 
         Examples
         ========
@@ -1759,23 +1777,22 @@ class Feedback(Basic):
         >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
         >>> controller = TransferFunction(5*s - 10, s + 7, s)
         >>> F1 = Feedback(plant, controller)
-        >>> F1.num
+        >>> F1.sys1
         TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
         >>> G = TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p)
         >>> C = TransferFunction(5*p + 10, p + 10, p)
         >>> P = TransferFunction(1 - s, p + 2, p)
         >>> F2 = Feedback(TransferFunction(1, 1, p), G*C*P)
-        >>> F2.num
+        >>> F2.sys1
         TransferFunction(1, 1, p)
 
         """
-        return self._num
+        return self.args[0]
 
     @property
-    def den(self):
+    def sys2(self):
         """
-        Returns the feedback plant (often a feedback controller) of the
-        negative feedback closed loop.
+        Returns the feedback controller of the feedback interconnection.
 
         Examples
         ========
@@ -1785,23 +1802,23 @@ class Feedback(Basic):
         >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
         >>> controller = TransferFunction(5*s - 10, s + 7, s)
         >>> F1 = Feedback(plant, controller)
-        >>> F1.den
+        >>> F1.sys2
         TransferFunction(5*s - 10, s + 7, s)
         >>> G = TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p)
         >>> C = TransferFunction(5*p + 10, p + 10, p)
         >>> P = TransferFunction(1 - s, p + 2, p)
         >>> F2 = Feedback(TransferFunction(1, 1, p), G*C*P)
-        >>> F2.den
+        >>> F2.sys2
         Series(TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p), TransferFunction(5*p + 10, p + 10, p), TransferFunction(1 - s, p + 2, p))
 
         """
-        return self._den
+        return self.args[1]
 
     @property
     def var(self):
         """
         Returns the complex variable of the Laplace transform used by all
-        the transfer functions involved in the negative feedback closed loop.
+        the transfer functions involved in the feedback interconnection.
 
         Examples
         ========
@@ -1821,12 +1838,48 @@ class Feedback(Basic):
         p
 
         """
-        return self._var
+        return self.sys1.var
 
-    def doit(self, **kwargs):
+    @property
+    def sign(self):
         """
-        Returns the resultant closed loop transfer function obtained by the
-        negative feedback interconnection.
+        Returns the type of MIMO Feedback model. ``1``
+        for Positive and ``-1`` for Negative.
+        """
+        return self.args[2]
+
+    @property
+    def sensitivity(self):
+        """
+        Returns the sensitivity function of the feedback loop.
+
+        Sensitivity of a Feedback system is the ratio
+        of change in the open loop gain to the change in
+        the closed loop gain.
+
+        .. note::
+            This method would not return the complementary
+            sensitivity function.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import p
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+        >>> C = TransferFunction(5*p + 10, p + 10, p)
+        >>> P = TransferFunction(1 - p, p + 2, p)
+        >>> F_1 = Feedback(P, C)
+        >>> F_1.sensitivity
+        1/((1 - p)*(5*p + 10)/((p + 2)*(p + 10)) + 1)
+
+        """
+
+        return 1/(1 - self.sign*self.sys1.to_expr()*self.sys2.to_expr())
+
+    def doit(self, cancel=False, expand=False, **kwargs):
+        """
+        Returns the resultant transfer function obtained by the
+        feedback interconnection.
 
         Examples
         ========
@@ -1843,19 +1896,397 @@ class Feedback(Basic):
         >>> F2.doit()
         TransferFunction((s**2 + 2*s + 3)*(2*s**2 + 5*s + 1), (s**2 + 2*s + 3)*(3*s**2 + 7*s + 4), s)
 
+        Use kwarg ``expand=True`` to expand the resultant transfer function.
+        Use ``cancel=True`` to cancel out the common terms in numerator and
+        denominator.
+
+        >>> F2.doit(cancel=True, expand=True)
+        TransferFunction(2*s**2 + 5*s + 1, 3*s**2 + 7*s + 4, s)
+        >>> F2.doit(expand=True)
+        TransferFunction(2*s**4 + 9*s**3 + 17*s**2 + 17*s + 3, 3*s**4 + 13*s**3 + 27*s**2 + 29*s + 12, s)
+
         """
-        arg_list = list(self.num.args) if isinstance(self.num, Series) else [self.num]
+        arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
         # F_n and F_d are resultant TFs of num and den of Feedback.
-        F_n, tf = self.num.doit(), TransferFunction(1, 1, self.num.var)
-        F_d = Parallel(tf, Series(self.den, *arg_list)).doit()
+        F_n, unit = self.sys1.doit(), TransferFunction(1, 1, self.sys1.var)
+        if self.sign == -1:
+            F_d = Parallel(unit, Series(self.sys2, *arg_list)).doit()
+        else:
+            F_d = Parallel(unit, -Series(self.sys2, *arg_list)).doit()
 
-        return TransferFunction(F_n.num*F_d.den, F_n.den*F_d.num, F_n.var)
+        _resultant_tf = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
 
-    def _eval_rewrite_as_TransferFunction(self, num, den, **kwargs):
+        if cancel:
+            _resultant_tf = _resultant_tf.simplify()
+
+        if expand:
+            _resultant_tf = _resultant_tf.expand()
+
+        return _resultant_tf
+
+    def _eval_rewrite_as_TransferFunction(self, num, den, sign, **kwargs):
         return self.doit()
 
     def __neg__(self):
-        return Feedback(-self.num, self.den)
+        return Feedback(-self.sys1, -self.sys2, self.sign)
+
+
+def _is_invertible(a, b, sign):
+    """
+    Checks whether a given pair of MIMO
+    systems passed is invertible or not.
+    """
+    _mat = eye(a.num_outputs) - sign*(a.doit()._expr_mat)*(b.doit()._expr_mat)
+    _det = _mat.det()
+
+    return _det != 0
+
+
+class MIMOFeedback(MIMOLinearTimeInvariant):
+    r"""
+    A class for representing closed-loop feedback interconnection between two
+    MIMO input/output systems.
+
+    Parameters
+    ==========
+
+    sys1 : MIMOSeries, TransferFunctionMatrix
+        The MIMO system placed on the feedforward path.
+    sys2 : MIMOSeries, TransferFunctionMatrix
+        The system placed on the feedback path
+        (often a feedback controller).
+    sign : int, optional
+        The sign of feedback. Can either be ``1``
+        (for positive feedback) or ``-1`` (for negative feedback).
+        Default value is `-1`.
+
+    Raises
+    ======
+
+    ValueError
+        When ``sys1`` and ``sys2`` are not using the
+        same complex variable of the Laplace transform.
+
+        Forward path model should have an equal number of inputs/outputs
+        to the feedback path outputs/inputs.
+
+        When product of ``sys1`` and ``sys2`` is not a square matrix.
+
+        When the equivalent MIMO system is not invertible.
+
+    TypeError
+        When either ``sys1`` or ``sys2`` is not a ``MIMOSeries`` or a
+        ``TransferFunctionMatrix`` object.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix, pprint
+    >>> from sympy.abc import s
+    >>> from sympy.physics.control.lti import TransferFunctionMatrix, MIMOFeedback
+    >>> plant_mat = Matrix([[1, 1/s], [0, 1]])
+    >>> controller_mat = Matrix([[10, 0], [0, 10]])  # Constant Gain
+    >>> plant = TransferFunctionMatrix.from_Matrix(plant_mat, s)
+    >>> controller = TransferFunctionMatrix.from_Matrix(controller_mat, s)
+    >>> feedback = MIMOFeedback(plant, controller)  # Negative Feedback (default)
+    >>> pprint(feedback, use_unicode=False)
+    /    [1  1]    [10  0 ]   \-1   [1  1]
+    |    [-  -]    [--  - ]   |     [-  -]
+    |    [1  s]    [1   1 ]   |     [1  s]
+    |I + [    ]   *[      ]   |   * [    ]
+    |    [0  1]    [0   10]   |     [0  1]
+    |    [-  -]    [-   --]   |     [-  -]
+    \    [1  1]{t} [1   1 ]{t}/     [1  1]{t}
+
+    To get the equivalent system matrix, use either ``doit`` or ``rewrite`` method.
+
+    >>> pprint(feedback.doit(), use_unicode=False)
+    [1     1  ]
+    [--  -----]
+    [11  121*s]
+    [         ]
+    [0    1   ]
+    [-    --  ]
+    [1    11  ]{t}
+
+    To negate the ``MIMOFeedback`` object, use ``-`` operator.
+
+    >>> neg_feedback = -feedback
+    >>> pprint(neg_feedback.doit(), use_unicode=False)
+    [-1    -1  ]
+    [---  -----]
+    [ 11  121*s]
+    [          ]
+    [ 0    -1  ]
+    [ -    --- ]
+    [ 1     11 ]{t}
+
+    See Also
+    ========
+
+    Feedback, MIMOSeries, MIMOParallel
+
+    """
+    def __new__(cls, sys1, sys2, sign=-1):
+        if not (isinstance(sys1, (TransferFunctionMatrix, MIMOSeries))
+            and isinstance(sys2, (TransferFunctionMatrix, MIMOSeries))):
+            raise TypeError("Unsupported type for `sys1` or `sys2` of MIMO Feedback.")
+
+        if sys1.num_inputs != sys2.num_outputs or \
+            sys1.num_outputs != sys2.num_inputs:
+            raise ValueError("Product of `sys1` and `sys2` "
+                "must yield a square matrix.")
+
+        if sign not in [-1, 1]:
+            raise ValueError("Unsupported type for feedback. `sign` arg should "
+                "either be 1 (positive feedback loop) or -1 (negative feedback loop).")
+
+        if not _is_invertible(sys1, sys2, sign):
+            raise ValueError("Non-Invertible system inputted.")
+        if sys1.var != sys2.var:
+            raise ValueError("Both `sys1` and `sys2` should be using the"
+                " same complex variable.")
+
+        return super().__new__(cls, sys1, sys2, _sympify(sign))
+
+    @property
+    def sys1(self):
+        r"""
+        Returns the system placed on the feedforward path of the MIMO feedback interconnection.
+
+        Examples
+        ========
+
+        >>> from sympy import pprint
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix, MIMOFeedback
+        >>> tf1 = TransferFunction(s**2 + s + 1, s**2 - s + 1, s)
+        >>> tf2 = TransferFunction(1, s, s)
+        >>> tf3 = TransferFunction(1, 1, s)
+        >>> sys1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+        >>> sys2 = TransferFunctionMatrix([[tf3, tf3], [tf3, tf2]])
+        >>> F_1 = MIMOFeedback(sys1, sys2, 1)
+        >>> F_1.sys1
+        TransferFunctionMatrix(((TransferFunction(s**2 + s + 1, s**2 - s + 1, s), TransferFunction(1, s, s)), (TransferFunction(1, s, s), TransferFunction(s**2 + s + 1, s**2 - s + 1, s))))
+        >>> pprint(_, use_unicode=False)
+        [ 2                    ]
+        [s  + s + 1      1     ]
+        [----------      -     ]
+        [ 2              s     ]
+        [s  - s + 1            ]
+        [                      ]
+        [             2        ]
+        [    1       s  + s + 1]
+        [    -       ----------]
+        [    s        2        ]
+        [            s  - s + 1]{t}
+
+        """
+        return self.args[0]
+
+    @property
+    def sys2(self):
+        r"""
+        Returns the feedback controller of the MIMO feedback interconnection.
+
+        Examples
+        ========
+
+        >>> from sympy import pprint
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix, MIMOFeedback
+        >>> tf1 = TransferFunction(s**2, s**3 - s + 1, s)
+        >>> tf2 = TransferFunction(1, s, s)
+        >>> tf3 = TransferFunction(1, 1, s)
+        >>> sys1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+        >>> sys2 = TransferFunctionMatrix([[tf1, tf3], [tf3, tf2]])
+        >>> F_1 = MIMOFeedback(sys1, sys2)
+        >>> F_1.sys2
+        TransferFunctionMatrix(((TransferFunction(s**2, s**3 - s + 1, s), TransferFunction(1, 1, s)), (TransferFunction(1, 1, s), TransferFunction(1, s, s))))
+        >>> pprint(_, use_unicode=False)
+        [     2       ]
+        [    s       1]
+        [----------  -]
+        [ 3          1]
+        [s  - s + 1   ]
+        [             ]
+        [    1       1]
+        [    -       -]
+        [    1       s]{t}
+
+        """
+        return self.args[1]
+
+    @property
+    def var(self):
+        r"""
+        Returns the complex variable of the Laplace transform used by all
+        the transfer functions involved in the MIMO feedback loop.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import p
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix, MIMOFeedback
+        >>> tf1 = TransferFunction(p, 1 - p, p)
+        >>> tf2 = TransferFunction(1, p, p)
+        >>> tf3 = TransferFunction(1, 1, p)
+        >>> sys1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+        >>> sys2 = TransferFunctionMatrix([[tf1, tf3], [tf3, tf2]])
+        >>> F_1 = MIMOFeedback(sys1, sys2, 1)  # Positive feedback
+        >>> F_1.var
+        p
+
+        """
+        return self.sys1.var
+
+    @property
+    def sign(self):
+        r"""
+        Returns the type of feedback interconnection of two models. ``1``
+        for Positive and ``-1`` for Negative.
+        """
+        return self.args[2]
+
+    @property
+    def sensitivity(self):
+        r"""
+        Returns the sensitivity function matrix of the feedback loop.
+
+        Sensitivity of a closed-loop system is the ratio of change
+        in the open loop gain to the change in the closed loop gain.
+
+        .. note::
+            This method would not return the complementary
+            sensitivity function.
+
+        Examples
+        ========
+
+        >>> from sympy import pprint
+        >>> from sympy.abc import p
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix, MIMOFeedback
+        >>> tf1 = TransferFunction(p, 1 - p, p)
+        >>> tf2 = TransferFunction(1, p, p)
+        >>> tf3 = TransferFunction(1, 1, p)
+        >>> sys1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+        >>> sys2 = TransferFunctionMatrix([[tf1, tf3], [tf3, tf2]])
+        >>> F_1 = MIMOFeedback(sys1, sys2, 1)  # Positive feedback
+        >>> F_2 = MIMOFeedback(sys1, sys2)  # Negative feedback
+        >>> pprint(F_1.sensitivity, use_unicode=False)
+        [   4      3      2               5      4      2           ]
+        [- p  + 3*p  - 4*p  + 3*p - 1    p  - 2*p  + 3*p  - 3*p + 1 ]
+        [----------------------------  -----------------------------]
+        [  4      3      2              5      4      3      2      ]
+        [ p  + 3*p  - 8*p  + 8*p - 3   p  + 3*p  - 8*p  + 8*p  - 3*p]
+        [                                                           ]
+        [       4    3    2                  3      2               ]
+        [      p  - p  - p  + p           3*p  - 6*p  + 4*p - 1     ]
+        [ --------------------------    --------------------------  ]
+        [  4      3      2               4      3      2            ]
+        [ p  + 3*p  - 8*p  + 8*p - 3    p  + 3*p  - 8*p  + 8*p - 3  ]
+        >>> pprint(F_2.sensitivity, use_unicode=False)
+        [ 4      3      2           5      4      2          ]
+        [p  - 3*p  + 2*p  + p - 1  p  - 2*p  + 3*p  - 3*p + 1]
+        [------------------------  --------------------------]
+        [   4      3                   5      4      2       ]
+        [  p  - 3*p  + 2*p - 1        p  - 3*p  + 2*p  - p   ]
+        [                                                    ]
+        [     4    3    2               4      3             ]
+        [    p  - p  - p  + p        2*p  - 3*p  + 2*p - 1   ]
+        [  -------------------       ---------------------   ]
+        [   4      3                   4      3              ]
+        [  p  - 3*p  + 2*p - 1        p  - 3*p  + 2*p - 1    ]
+
+        """
+        _sys1_mat = self.sys1.doit()._expr_mat
+        _sys2_mat = self.sys2.doit()._expr_mat
+
+        return (eye(self.sys1.num_inputs) - \
+            self.sign*_sys1_mat*_sys2_mat).inv()
+
+    def doit(self, cancel=True, expand=False, **kwargs):
+        r"""
+        Returns the resultant transfer function matrix obtained by the
+        feedback interconnection.
+
+        Examples
+        ========
+
+        >>> from sympy import pprint
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix, MIMOFeedback
+        >>> tf1 = TransferFunction(s, 1 - s, s)
+        >>> tf2 = TransferFunction(1, s, s)
+        >>> tf3 = TransferFunction(5, 1, s)
+        >>> tf4 = TransferFunction(s - 1, s, s)
+        >>> tf5 = TransferFunction(0, 1, s)
+        >>> sys1 = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
+        >>> sys2 = TransferFunctionMatrix([[tf3, tf5], [tf5, tf5]])
+        >>> F_1 = MIMOFeedback(sys1, sys2, 1)
+        >>> pprint(F_1, use_unicode=False)
+        /    [  s      1  ]    [5  0]   \-1   [  s      1  ]
+        |    [-----    -  ]    [-  -]   |     [-----    -  ]
+        |    [1 - s    s  ]    [1  1]   |     [1 - s    s  ]
+        |I - [            ]   *[    ]   |   * [            ]
+        |    [  5    s - 1]    [0  0]   |     [  5    s - 1]
+        |    [  -    -----]    [-  -]   |     [  -    -----]
+        \    [  1      s  ]{t} [1  1]{t}/     [  1      s  ]{t}
+        >>> pprint(F_1.doit(), use_unicode=False)
+        [               -s                         1 - s       ]
+        [             -------                   -----------    ]
+        [             6*s - 1                   s*(1 - 6*s)    ]
+        [                                                      ]
+        [25*s*(s - 1) + 5*(1 - s)*(6*s - 1)  (s - 1)*(6*s + 24)]
+        [----------------------------------  ------------------]
+        [        (1 - s)*(6*s - 1)              s*(6*s - 1)    ]{t}
+
+        If the user wants the resultant ``TransferFunctionMatrix`` object without
+        canceling the common factors then the ``cancel`` kwarg should be passed ``False``.
+
+        >>> pprint(F_1.doit(cancel=False), use_unicode=False)
+        [           25*s*(1 - s)                          25 - 25*s              ]
+        [       --------------------                    --------------           ]
+        [       25*(1 - 6*s)*(1 - s)                    25*s*(1 - 6*s)           ]
+        [                                                                        ]
+        [s*(25*s - 25) + 5*(1 - s)*(6*s - 1)  s*(s - 1)*(6*s - 1) + s*(25*s - 25)]
+        [-----------------------------------  -----------------------------------]
+        [         (1 - s)*(6*s - 1)                        2                     ]
+        [                                                 s *(6*s - 1)           ]{t}
+
+        If the user wants the expanded form of the resultant transfer function matrix,
+        the ``expand`` kwarg should be passed as ``True``.
+
+        >>> pprint(F_1.doit(expand=True), use_unicode=False)
+        [       -s               1 - s      ]
+        [     -------          ----------   ]
+        [     6*s - 1               2       ]
+        [                      - 6*s  + s   ]
+        [                                   ]
+        [     2                2            ]
+        [- 5*s  + 10*s - 5  6*s  + 18*s - 24]
+        [-----------------  ----------------]
+        [      2                   2        ]
+        [ - 6*s  + 7*s - 1      6*s  - s    ]{t}
+
+        """
+        _mat = self.sensitivity * self.sys1.doit()._expr_mat
+
+        _resultant_tfm = _to_TFM(_mat, self.var)
+
+        if cancel:
+            _resultant_tfm = _resultant_tfm.simplify()
+
+        if expand:
+            _resultant_tfm = _resultant_tfm.expand()
+
+        return _resultant_tfm
+
+    def _eval_rewrite_as_TransferFunctionMatrix(self, sys1, sys2, sign, **kwargs):
+        return self.doit()
+
+    def __neg__(self):
+        return MIMOFeedback(-self.sys1, -self.sys2, self.sign)
 
 
 def _to_TFM(mat, var):

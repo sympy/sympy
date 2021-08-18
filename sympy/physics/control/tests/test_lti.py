@@ -1,9 +1,9 @@
 from sympy import (symbols, factor, Function, simplify, exp, oo, I,
-    S, Mul, Pow, Add, Rational, sqrt, CRootOf)
+    S, Mul, Pow, Add, Rational, sqrt, CRootOf, eye)
 from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix, Matrix
 from sympy.physics.control import (TransferFunction, Series, Parallel,
-    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel)
+    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback)
 from sympy.testing.pytest import raises
 
 a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2, tau, zeta, wn = symbols('a, x, b, s, g, d, p, k,\
@@ -866,45 +866,49 @@ def test_Feedback_construction():
     tf6 = TransferFunction(s - p, p + s, p)
 
     f1 = Feedback(TransferFunction(1, 1, s), tf1*tf2*tf3)
-    assert f1.args == (TransferFunction(1, 1, s), Series(tf1, tf2, tf3))
-    assert f1.num == TransferFunction(1, 1, s)
-    assert f1.den == Series(tf1, tf2, tf3)
+    assert f1.args == (TransferFunction(1, 1, s), Series(tf1, tf2, tf3), -1)
+    assert f1.sys1 == TransferFunction(1, 1, s)
+    assert f1.sys2 == Series(tf1, tf2, tf3)
     assert f1.var == s
 
     f2 = Feedback(tf1, tf2*tf3)
-    assert f2.args == (tf1, Series(tf2, tf3))
-    assert f2.num == tf1
-    assert f2.den == Series(tf2, tf3)
+    assert f2.args == (tf1, Series(tf2, tf3), -1)
+    assert f2.sys1 == tf1
+    assert f2.sys2 == Series(tf2, tf3)
     assert f2.var == s
 
     f3 = Feedback(tf1*tf2, tf5)
-    assert f3.args == (Series(tf1, tf2), tf5)
-    assert f3.num == Series(tf1, tf2)
+    assert f3.args == (Series(tf1, tf2), tf5, -1)
+    assert f3.sys1 == Series(tf1, tf2)
 
     f4 = Feedback(tf4, tf6)
-    assert f4.args == (tf4, tf6)
-    assert f4.num == tf4
+    assert f4.args == (tf4, tf6, -1)
+    assert f4.sys1 == tf4
     assert f4.var == p
 
     f5 = Feedback(tf5, TransferFunction(1, 1, s))
-    assert f5.args == (tf5, TransferFunction(1, 1, s))
+    assert f5.args == (tf5, TransferFunction(1, 1, s), -1)
     assert f5.var == s
+    assert f5 == Feedback(tf5)  # When sys2 is not passed explicitly, it is assumed to be unit tf.
 
     f6 = Feedback(TransferFunction(1, 1, p), tf4)
-    assert f6.args == (TransferFunction(1, 1, p), tf4)
+    assert f6.args == (TransferFunction(1, 1, p), tf4, -1)
     assert f6.var == p
 
     f7 = -Feedback(tf4*tf6, TransferFunction(1, 1, p))
-    assert f7.args == (Series(TransferFunction(-1, 1, p), Series(tf4, tf6)), TransferFunction(1, 1, p))
-    assert f7.num == Series(TransferFunction(-1, 1, p), Series(tf4, tf6))
+    assert f7.args == (Series(TransferFunction(-1, 1, p), Series(tf4, tf6)), -TransferFunction(1, 1, p), -1)
+    assert f7.sys1 == Series(TransferFunction(-1, 1, p), Series(tf4, tf6))
 
     # denominator can't be a Parallel instance
     raises(TypeError, lambda: Feedback(tf1, tf2 + tf3))
     raises(TypeError, lambda: Feedback(tf1, Matrix([1, 2, 3])))
     raises(TypeError, lambda: Feedback(TransferFunction(1, 1, s), s - 1))
     raises(TypeError, lambda: Feedback(1, 1))
-    raises(ValueError, lambda: Feedback(TransferFunction(1, 1, s), TransferFunction(1, 1, s)))
+    # raises(ValueError, lambda: Feedback(TransferFunction(1, 1, s), TransferFunction(1, 1, s)))
     raises(ValueError, lambda: Feedback(tf2, tf4*tf5))
+    raises(ValueError, lambda: Feedback(tf2, tf1, 1.5))  # `sign` can only be -1 or 1
+    raises(ValueError, lambda: Feedback(tf1, -tf1**-1))  # denominator can't be zero
+    raises(ValueError, lambda: Feedback(tf4, tf5))  # Both systems should use the same `var`
 
 
 def test_Feedback_functions():
@@ -932,22 +936,142 @@ def test_Feedback_functions():
     assert Feedback(tf, tf1*tf2*tf3).doit() == \
         TransferFunction((a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), k*(a2*p - s) + \
         (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Feedback(tf, tf1*tf2*tf3).sensitivity == \
+        1/(k*(a2*p - s)/((a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)) + 1)
     assert Feedback(tf1, tf2*tf3).doit() == \
         TransferFunction((a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), (k*(a2*p - s) + \
         (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2))*(s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Feedback(tf1, tf2*tf3).sensitivity == \
+        1/(k*(a2*p - s)/((a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)) + 1)
     assert Feedback(tf1*tf2, tf5).doit() == \
         TransferFunction(k*(a0 + s)*(s**2 + 2*s*wn*zeta + wn**2), (k*(-a0 + a1*s**2 + a2*s) + \
         (a0 + s)*(s**2 + 2*s*wn*zeta + wn**2))*(s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Feedback(tf1*tf2, tf5, 1).sensitivity == \
+        1/(-k*(-a0 + a1*s**2 + a2*s)/((a0 + s)*(s**2 + 2*s*wn*zeta + wn**2)) + 1)
     assert Feedback(tf4, tf6).doit() == \
         TransferFunction(p*(p + s)*(a0*p + p**a1 - s), p*(p*(p + s) + (-p + s)*(a0*p + p**a1 - s)), p)
     assert -Feedback(tf4*tf6, TransferFunction(1, 1, p)).doit() == \
         TransferFunction(-p*(-p + s)*(p + s)*(a0*p + p**a1 - s), p*(p + s)*(p*(p + s) + (-p + s)*(a0*p + p**a1 - s)), p)
+    assert Feedback(tf, tf).doit() == TransferFunction(1, 2, s)
 
     assert Feedback(tf1, tf2*tf5).rewrite(TransferFunction) == \
         TransferFunction((a0 + s)*(s**2 + 2*s*wn*zeta + wn**2), (k*(-a0 + a1*s**2 + a2*s) + \
         (a0 + s)*(s**2 + 2*s*wn*zeta + wn**2))*(s**2 + 2*s*wn*zeta + wn**2), s)
     assert Feedback(TransferFunction(1, 1, p), tf4).rewrite(TransferFunction) == \
         TransferFunction(p, a0*p + p + p**a1 - s, p)
+
+
+def test_MIMOFeedback_construction():
+    tf1 = TransferFunction(1, s, s)
+    tf2 = TransferFunction(s, s**3 - 1, s)
+    tf3 = TransferFunction(s, s + 1, s)
+    tf4 = TransferFunction(s, s**2 + 1, s)
+
+    tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
+    tfm_2 = TransferFunctionMatrix([[tf2, tf3], [tf4, tf1]])
+    tfm_3 = TransferFunctionMatrix([[tf3, tf4], [tf1, tf2]])
+
+    f1 = MIMOFeedback(tfm_1, tfm_2)
+    assert f1.args == (tfm_1, tfm_2, -1)
+    assert f1.sys1 == tfm_1
+    assert f1.sys2 == tfm_2
+    assert f1.var == s
+    assert f1.sign == -1
+    assert -(-f1) == f1
+
+    f2 = MIMOFeedback(tfm_2, tfm_1, 1)
+    assert f2.args == (tfm_2, tfm_1, 1)
+    assert f2.sys1 == tfm_2
+    assert f2.sys2 == tfm_1
+    assert f2.var == s
+    assert f2.sign == 1
+
+    f3 = MIMOFeedback(tfm_1, MIMOSeries(tfm_3, tfm_2))
+    assert f3.args == (tfm_1, MIMOSeries(tfm_3, tfm_2), -1)
+    assert f3.sys1 == tfm_1
+    assert f3.sys2 == MIMOSeries(tfm_3, tfm_2)
+    assert f3.var == s
+    assert f3.sign == -1
+
+    mat = Matrix([[1, 1/s], [0, 1]])
+    sys1 = controller = TransferFunctionMatrix.from_Matrix(mat, s)
+    f4 = MIMOFeedback(sys1, controller)
+    assert f4.args == (sys1, controller, -1)
+    assert f4.sys1 == f4.sys2 == sys1
+
+
+def test_MIMOFeedback_errors():
+    tf1 = TransferFunction(1, s, s)
+    tf2 = TransferFunction(s, s**3 - 1, s)
+    tf3 = TransferFunction(s, s - 1, s)
+    tf4 = TransferFunction(s, s**2 + 1, s)
+    tf5 = TransferFunction(1, 1, s)
+    tf6 = TransferFunction(-1, s - 1, s)
+
+    tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
+    tfm_2 = TransferFunctionMatrix([[tf2, tf3], [tf4, tf1]])
+    tfm_3 = TransferFunctionMatrix.from_Matrix(eye(2), var=s)
+    tfm_4 = TransferFunctionMatrix([[tf1, tf5], [tf5, tf5]])
+    tfm_5 = TransferFunctionMatrix([[-tf3, tf3], [tf3, tf6]])
+    # tfm_4 is inverse of tfm_5. Therefore tfm_5*tfm_4 = I
+    tfm_6 = TransferFunctionMatrix([[-tf3]])
+    tfm_7 = TransferFunctionMatrix([[tf3, tf4]])
+
+    # Unsupported Types
+    raises(TypeError, lambda: MIMOFeedback(tf1, tf2))
+    raises(TypeError, lambda: MIMOFeedback(MIMOParallel(tfm_1, tfm_2), tfm_3))
+    # Shape Errors
+    raises(ValueError, lambda: MIMOFeedback(tfm_1, tfm_6, 1))
+    raises(ValueError, lambda: MIMOFeedback(tfm_7, tfm_7))
+    # sign not 1/-1
+    raises(ValueError, lambda: MIMOFeedback(tfm_1, tfm_2, -2))
+    # Non-Invertible Systems
+    raises(ValueError, lambda: MIMOFeedback(tfm_5, tfm_4, 1))
+    raises(ValueError, lambda: MIMOFeedback(tfm_4, -tfm_5))
+    raises(ValueError, lambda: MIMOFeedback(tfm_3, tfm_3, 1))
+    # Variable not same in both the systems
+    tfm_8 = TransferFunctionMatrix.from_Matrix(eye(2), var=p)
+    raises(ValueError, lambda: MIMOFeedback(tfm_1, tfm_8, 1))
+
+
+def test_MIMOFeedback_functions():
+    tf1 = TransferFunction(1, s, s)
+    tf2 = TransferFunction(s, s - 1, s)
+    tf3 = TransferFunction(1, 1, s)
+    tf4 = TransferFunction(-1, s - 1, s)
+
+    tfm_1 = TransferFunctionMatrix.from_Matrix(eye(2), var=s)
+    tfm_2 = TransferFunctionMatrix([[tf1, tf3], [tf3, tf3]])
+    tfm_3 = TransferFunctionMatrix([[-tf2, tf2], [tf2, tf4]])
+    tfm_4 = TransferFunctionMatrix([[tf1, tf2], [-tf2, tf1]])
+
+    # sensitivity, doit(), rewrite()
+    F_1 = MIMOFeedback(tfm_2, tfm_3)
+    F_2 = MIMOFeedback(tfm_2, MIMOSeries(tfm_4, -tfm_1), 1)
+
+    assert F_1.sensitivity == Matrix([[1/2, 0], [0, 1/2]])
+    assert F_2.sensitivity == Matrix([[(-2*s**4 + s**2)/(s**2 - s + 1),
+        (2*s**3 - s**2)/(s**2 - s + 1)], [-s**2, s]])
+
+    assert F_1.doit() == \
+        TransferFunctionMatrix(((TransferFunction(1, 2*s, s),
+        TransferFunction(1, 2, s)), (TransferFunction(1, 2, s),
+        TransferFunction(1, 2, s)))) == F_1.rewrite(TransferFunctionMatrix)
+    assert F_2.doit(cancel=False, expand=True) == \
+        TransferFunctionMatrix(((TransferFunction(-s**5 + 2*s**4 - 2*s**3 + s**2, s**5 - 2*s**4 + 3*s**3 - 2*s**2 + s, s),
+        TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)), (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))
+    assert F_2.doit(cancel=False) == \
+        TransferFunctionMatrix(((TransferFunction(s*(2*s**3 - s**2)*(s**2 - s + 1) + \
+        (-2*s**4 + s**2)*(s**2 - s + 1), s*(s**2 - s + 1)**2, s), TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)),
+        (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))
+    assert F_2.doit() == \
+        TransferFunctionMatrix(((TransferFunction(s*(-2*s**2 + s*(2*s - 1) + 1), s**2 - s + 1, s),
+        TransferFunction(2*s**3*(1 - s), s**2 - s + 1, s)), (TransferFunction(0, 1, s), TransferFunction(s*(1 - s), 1, s))))
+    assert F_2.doit(expand=True) == \
+        TransferFunctionMatrix(((TransferFunction(-s**2 + s, s**2 - s + 1, s), TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)),
+        (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))
+
+    assert -(F_1.doit()) == (-F_1).doit()  # First negating then calculating vs calculating then negating.
 
 
 def test_TransferFunctionMatrix_construction():
