@@ -1792,8 +1792,13 @@ class Rational(Number):
         return Number.__rmod__(self, other)
 
     def _eval_power(self, expt):
+        import mpmath as mp
+        from copy import deepcopy
+        mp.dps = 15
         if isinstance(expt, Number):
             if isinstance(expt, Float):
+                if abs(self) >= 16**16 or abs(expt) >= 16**16:
+                    return Pow(self, expt, evaluate=False)
                 return self._eval_evalf(expt._prec)**expt
             if expt.is_extended_negative:
                 # (3/4)**-2 -> (4/3)**2
@@ -1803,7 +1808,13 @@ class Rational(Number):
                 if self.is_negative:
                     return S.NegativeOne**expt*Rational(self.q, -self.p)**ne
                 else:
-                    return Rational(self.q, self.p)**ne
+                    if abs(self) >= 16**16 or abs(ne) >= 16**16:
+                        cself = deepcopy(self)
+                        cself.p, cself.q = self.q, self.p
+                        return Pow(cself, ne, evaluate=False)
+                    x = mp.fdiv(self.q, self.p)
+                    y = mp.fdiv(ne.p, ne.q)
+                    return sympify(mp.power(x, y))
             if expt is S.Infinity:  # -oo already caught by test for negative
                 if self.p > self.q:
                     # (3/2)**oo -> oo
@@ -1814,18 +1825,31 @@ class Rational(Number):
                 return S.Zero
             if isinstance(expt, Integer):
                 # (4/3)**2 -> 4**2 / 3**2
-                return Rational(self.p**expt.p, self.q**expt.p, 1)
+                a = Integer(mp.power(self.p, expt.p))
+                b = Integer(mp.power(self.q, expt.p))
+                return Rational(a, b, 1)
             if isinstance(expt, Rational):
+                if abs(self) >= 16**16 or abs(expt) >= 16**16:
+                    return Pow(self, expt, evaluate=False)
                 if self.p != 1:
                     # (4/3)**(5/6) -> 4**(5/6)*3**(-5/6)
-                    return Integer(self.p)**expt*Integer(self.q)**(-expt)
+                    a = mp.fdiv(self.p, self.q)
+                    b = mp.fdiv(expt.p, expt.q)
+                    return sympify(mp.power(a, b))
                 # as the above caught negative self.p, now self is positive
-                return Integer(self.q)**Rational(
-                expt.p*(expt.q - 1), expt.q) / \
-                    Integer(self.q)**Integer(expt.p)
+                x = mp.fmul(expt.p, (expt.q - 1))
+                a = mp.fdiv(x, expt.q)
+                b = mp.power(self.q, expt.p)
+                c = mp.power(self.q, a)
+                return sympify(mp.fdiv(c, b))
 
         if self.is_extended_negative and expt.is_even:
-            return (-self)**expt
+            if abs(self) >= 16**16 or abs(expt) >= 16**16:
+                return Pow((-self), expt, evaluate=False)
+            x = mp.fdiv(self.p, self.q)
+            nx = mp.fneg(x)
+            y = mp.fdiv(expt.p, expt.q)
+            return sympify(mp.power(nx, y))
 
         return
 
@@ -2340,6 +2364,8 @@ class Integer(Rational):
             else:
                 return Rational(1, self.p)**ne
         # see if base is a perfect root, sqrt(4) --> 2
+        if abs(self) >= 16**16 or abs(expt) >= 16**16:
+            return Pow(self, expt, evaluate=False)
         x, xexact = integer_nthroot(abs(self.p), expt.q)
         if xexact:
             # if it's a perfect root we've finished
