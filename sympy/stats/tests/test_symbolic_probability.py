@@ -145,7 +145,7 @@ def test_symbolic_Moment():
     assert M.doit() == (mu**4 - 8*mu**3 + 6*mu**2*sigma**2 + \
                 24*mu**2 - 24*mu*sigma**2 - 32*mu + 3*sigma**4 + 24*sigma**2 + 16)
     M = Moment(2, 5)
-    assert M.doit() == 2
+    assert M.doit() == 2**5
 
 
 def test_symbolic_CentralMoment():
@@ -164,4 +164,4 @@ def test_symbolic_CentralMoment():
     assert CM.rewrite(Integral).dummy_eq(expri)
     assert CM.doit().simplify() == 15*sigma**6
     CM = Moment(5, 5)
-    assert CM.doit() == 5
+    assert CM.doit() == 5**5

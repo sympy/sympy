@@ -33,7 +33,7 @@ class KanesMethod(_Methods):
         Matrices of the generalized coordinates and speeds
     bodies : iterable
         Iterable of Point and RigidBody objects in the system.
-    forcelist : iterable
+    loads : iterable
         Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
         describing the forces on the system.
     auxiliary : Matrix
@@ -533,11 +533,10 @@ class KanesMethod(_Methods):
         """
         if bodies is None:
             bodies = self.bodies
+        if  loads is None and self._forcelist is not None:
+            loads = self._forcelist
         if loads == []:
             loads = None
-        if  loads is None and self._forcelist is not None:
-            if self._forcelist != []:
-                loads = self._forcelist
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
                     'kinematic differential equations to use this method.')
@@ -562,7 +561,8 @@ class KanesMethod(_Methods):
         return (self._fr, self._frstar)
 
     def _form_eoms(self):
-        return self.kanes_equations(self.bodylist, self.forcelist)
+        fr, frstar = self.kanes_equations(self.bodylist, self.forcelist)
+        return fr + frstar
 
     def rhs(self, inv_method=None):
         """Returns the system's equations of motion in first order form. The
@@ -666,3 +666,7 @@ class KanesMethod(_Methods):
     @property
     def bodies(self):
         return self._bodylist
+
+    @property
+    def loads(self):
+        return self._forcelist

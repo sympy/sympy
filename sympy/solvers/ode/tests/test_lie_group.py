@@ -5,7 +5,7 @@ from sympy.solvers.ode import (classify_ode, checkinfsol, dsolve, infinitesimals
 
 from sympy.solvers.ode.subscheck import checkodesol
 
-from sympy.testing.pytest import XFAIL, slow
+from sympy.testing.pytest import XFAIL
 
 
 C1 = Symbol('C1')
@@ -61,7 +61,6 @@ def test_heuristic1():
     assert checkinfsol(eq7, i)[0]
 
 
-@slow
 def test_heuristic3():
     a, b = symbols("a b")
     df = f(x).diff(x)

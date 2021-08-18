@@ -7,7 +7,7 @@ from sympy import (
     Interval, InverseCosineTransform, InverseFourierTransform, Derivative,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
-    Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
+    Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational, Integer,
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Ynm, Znm, arg, asin, acsc, asinh, Mod,
     assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling,
@@ -188,6 +188,10 @@ def test_latex_basic():
         r"z_i \vee \left(x_i \wedge y_i\right)"
     assert latex(Implies(x, y), symbol_names={x: "x_i", y: "y_i"}) == \
         r"x_i \Rightarrow y_i"
+    assert latex(Pow(Rational(1, 3), -1, evaluate=False)) == r"\frac{1}{\frac{1}{3}}"
+    assert latex(Pow(Rational(1, 3), -2, evaluate=False)) == r"\frac{1}{(\frac{1}{3})^{2}}"
+    assert latex(Pow(Integer(1)/100, -1, evaluate=False)) == r"\frac{1}{\frac{1}{100}}"
+
 
     p = Symbol('p', positive=True)
     assert latex(exp(-p)*log(p)) == r"e^{- p} \log{\left(p \right)}"
@@ -594,6 +598,10 @@ def test_latex_functions():
     assert latex(LambertW(n)) == r'W\left(n\right)'
     assert latex(LambertW(n, -1)) == r'W_{-1}\left(n\right)'
     assert latex(LambertW(n, k)) == r'W_{k}\left(n\right)'
+    assert latex(LambertW(n) * LambertW(n)) == r"W^{2}\left(n\right)"
+    assert latex(Pow(LambertW(n), 2)) == r"W^{2}\left(n\right)"
+    assert latex(LambertW(n)**k) == r"W^{k}\left(n\right)"
+    assert latex(LambertW(n, k)**p) == r"W^{p}_{k}\left(n\right)"
 
     assert latex(Mod(x, 7)) == r'x\bmod{7}'
     assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right)\bmod{7}'

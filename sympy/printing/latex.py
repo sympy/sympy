@@ -644,6 +644,13 @@ class LatexPrinter(Printer):
             # special case for 1^(-x), issue 9216
             if expr.base == 1:
                 return r"%s^{%s}" % (expr.base, expr.exp)
+            # special case for (1/x)^(-y) and (-1/-x)^(-y), issue 20252
+            if expr.base.is_Rational and \
+                    expr.base.p*expr.base.q == abs(expr.base.q):
+                if expr.exp == -1:
+                    return r"\frac{1}{\frac{%s}{%s}}" % (expr.base.p, expr.base.q)
+                else:
+                    return r"\frac{1}{(\frac{%s}{%s})^{%s}}" % (expr.base.p, expr.base.q, abs(expr.exp))
             # things like 1/x
             return self._print_Mul(expr)
         else:
@@ -2422,11 +2429,15 @@ class LatexPrinter(Printer):
     def _print_Object(self, object):
         return self._print(Symbol(object.name))
 
-    def _print_LambertW(self, expr):
+    def _print_LambertW(self, expr, exp=None):
+        arg0 = self._print(expr.args[0])
+        exp = r"^{%s}" % (exp,) if exp is not None else ""
         if len(expr.args) == 1:
-            return r"W\left(%s\right)" % self._print(expr.args[0])
-        return r"W_{%s}\left(%s\right)" % \
-            (self._print(expr.args[1]), self._print(expr.args[0]))
+            result = r"W%s\left(%s\right)" % (exp, arg0)
+        else:
+            arg1 = self._print(expr.args[1])
+            result = "W{0}_{{{1}}}\\left({2}\\right)".format(exp, arg1, arg0)
+        return result
 
     def _print_Morphism(self, morphism):
         domain = self._print(morphism.domain)

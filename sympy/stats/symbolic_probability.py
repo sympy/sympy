@@ -609,8 +609,6 @@ class Moment(Expr):
             return super().__new__(cls, X, n, c)
 
     def doit(self, **hints):
-        if not is_random(self.args[0]):
-            return self.args[0]
         return self.rewrite(Expectation).doit(**hints)
 
     def _eval_rewrite_as_Expectation(self, X, n, c=0, condition=None, **kwargs):
@@ -668,8 +666,6 @@ class CentralMoment(Expr):
             return super().__new__(cls, X, n)
 
     def doit(self, **hints):
-        if not is_random(self.args[0]):
-            return self.args[0]
         return self.rewrite(Expectation).doit(**hints)
 
     def _eval_rewrite_as_Expectation(self, X, n, condition=None, **kwargs):

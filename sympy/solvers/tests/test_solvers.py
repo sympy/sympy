@@ -2356,3 +2356,8 @@ def test_issue_4886():
 def test_issue_6819():
     a, b, c, d = symbols('a b c d', positive=True)
     assert solve(a*b**x - c*d**x, x) == [log(c/a)/log(b/d)]
+
+
+def test_issue_21852():
+    solution = [21 - 21*sqrt(2)/2]
+    assert solve(2*x + sqrt(2*x**2) - 21) == solution
