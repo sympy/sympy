@@ -1777,7 +1777,7 @@ class Feedback(SISOLinearTimeInvariant):
             raise ValueError("Both `sys1` and `sys2` should be using the"
                 " same complex variable.")
         obj = super().__new__(cls, sys1, sys2, _sympify(sign))
-        obj.sys1 = sys1
+        obj._sys1 = sys1
         obj._sys2 = sys2
         obj._var = sys1.var
         obj._sign = sign
@@ -1807,7 +1807,7 @@ class Feedback(SISOLinearTimeInvariant):
         TransferFunction(1, 1, p)
 
         """
-        return self.sys1
+        return self._sys1
 
     @property
     def sys2(self):
@@ -2059,7 +2059,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
             raise ValueError("Both `sys1` and `sys2` should be using the"
                 " same complex variable.")
         obj = super().__new__(cls, sys1, sys2, _sympify(sign))
-        obj.sys1 = sys1
+        obj._sys1 = sys1
         obj._sys2 = sys2
         obj._var = sys1.var
         obj._sign = sign
@@ -2099,7 +2099,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         [            s  - s + 1]{t}
 
         """
-        return self.sys1
+        return self._sys1
 
     @property
     def sys2(self):
