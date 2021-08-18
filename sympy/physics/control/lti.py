@@ -1660,15 +1660,15 @@ class Feedback(SISOLinearTimeInvariant):
     r"""
     A class for representing closed-loop feedback interconnection between two
     SISO input/output systems. The first argument, ``sys1``, is the
-    primary plant of the closed-loop system or in simple words, the transfer
-    function representing the system/process to be controlled. Most of the time, a controller system is also
-    placed in series with the plant. This controller is known as the **plant controller** as it controls
-    the plant by varying the input that goes into plant. The second argument, ``sys2``,
-    as the name suggests, controls the fed back signal to the ``sys1``. It is the equivalent transfer
-    function of the feedback controling system which is generally a sensor system that constantly
-    takes in the output signal produced and feeds it back to the primary sys1 (or a plant-controller
-    if one is connected in series with the sys1). Note that the feedback controller is not same as the
-    plant controller.
+    feedforward part of the closed-loop system or in simple words, the dynamical model
+    representing the process to be controlled. The second argument, ``sys2``,
+    is the feedback system and controls the fed back signal to ``sys1``.
+
+    Both ``sys1`` and ``sys2`` can either be ``Series`` or
+    ``TransferFunction`` objects.
+
+    Explanation
+    ===========
 
     Generally, in control theory, we want the output signal to follow the input signal or in
     other words, the error signal (difference between the output signal and input signal) to
@@ -1677,20 +1677,19 @@ class Feedback(SISOLinearTimeInvariant):
     the error signal ("difference" is taken and hence the name **Negative Feedback**). The error signal
     is fed back to the plant/plant-controller through the feedback loop and that in turn produces the
     optimal output. In some systems, we feed back the sum of output signals from the feedback
-    controller and reference (input) signal to sys1. This type of feedback loop is known as the
+    controller and reference (input) signal to feedforward path. This type of feedback loop is known as the
     positive feedback loop ("sum" is taken and hence the name **Positive Feedback**).
-
-    Both ``sys1`` and ``sys2`` can either be ``Series`` or
-    ``TransferFunction`` objects.
 
     Parameters
     ==========
 
     sys1 : Series, TransferFunction
-        The plant. Also commonly known as the open
-        loop gain / open-loop tranfer function.
+        The feedforward path system.
+        Also commonly known as the open
+        loop gain.
     sys2 : Series, TransferFunction, optional
         The feedback path system (often a feedback controller).
+        It is the model sitting on the feedback path.
 
         If not specified explicitly, the sys2 is
         assumed to be unit (1.0) transfer function.
@@ -1728,7 +1727,7 @@ class Feedback(SISOLinearTimeInvariant):
     >>> F1.args
     (TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s), TransferFunction(5*s - 10, s + 7, s), -1)
 
-    You can get the primary and the feedback controller using ``.sys1`` and ``.sys2`` respectively.
+    You can get the feedforward and feedback path systems by using ``.sys1`` and ``.sys2`` respectively.
 
     >>> F1.sys1
     TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
@@ -1778,9 +1777,7 @@ class Feedback(SISOLinearTimeInvariant):
             raise ValueError("Both `sys1` and `sys2` should be using the"
                 " same complex variable.")
 
-        obj = super().__new__(cls, sys1, sys2, _sympify(sign))
-
-        return obj
+        return super().__new__(cls, sys1, sys2, _sympify(sign))
 
     @property
     def sys1(self):
@@ -1967,7 +1964,8 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     sys1 : MIMOSeries, TransferFunctionMatrix
         The MIMO system placed on the feedforward path.
     sys2 : MIMOSeries, TransferFunctionMatrix
-        The feedback path system (often a feedback controller).
+        The system placed on the feedback path
+        (often a feedback controller).
     sign : int, optional
         The type of closed-loop MIMO feedback. Can either be ``1``
         (for positive feedback) or ``-1`` (for negative feedback).
@@ -2059,9 +2057,8 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         if sys1.var != sys2.var:
             raise ValueError("Both `sys1` and `sys2` should be using the"
                 " same complex variable.")
-        obj = super().__new__(cls, sys1, sys2, _sympify(sign))
 
-        return obj
+        return super().__new__(cls, sys1, sys2, _sympify(sign))
 
     @property
     def sys1(self):
