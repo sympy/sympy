@@ -1659,15 +1659,15 @@ class MIMOParallel(MIMOLinearTimeInvariant):
 class Feedback(SISOLinearTimeInvariant):
     r"""
     A class for representing closed-loop feedback interconnection between two
-    SISO input/output systems. The first argument, ``plant``, is the
+    SISO input/output systems. The first argument, ``sys1``, is the
     primary plant of the closed-loop system or in simple words, the transfer
     function representing the system/process to be controlled. Most of the time, a controller system is also
     placed in series with the plant. This controller is known as the **plant controller** as it controls
-    the plant by varying the input that goes into plant. The second argument, ``feedback_controller``,
-    as the name suggests, controls the fed back signal to the ``plant``. It is the equivalent transfer
+    the plant by varying the input that goes into plant. The second argument, ``sys2``,
+    as the name suggests, controls the fed back signal to the ``sys1``. It is the equivalent transfer
     function of the feedback controling system which is generally a sensor system that constantly
-    takes in the output signal produced and feeds it back to the primary plant (or a plant-controller
-    if one is connected in series with the plant). Note that the feedback controller is not same as the
+    takes in the output signal produced and feeds it back to the primary sys1 (or a plant-controller
+    if one is connected in series with the sys1). Note that the feedback controller is not same as the
     plant controller.
 
     Generally, in control theory, we want the output signal to follow the input signal or in
@@ -1677,23 +1677,23 @@ class Feedback(SISOLinearTimeInvariant):
     the error signal ("difference" is taken and hence the name **Negative Feedback**). The error signal
     is fed back to the plant/plant-controller through the feedback loop and that in turn produces the
     optimal output. In some systems, we feed back the sum of output signals from the feedback
-    controller and reference (input) signal to the plant. This type of feedback loop is known as the
+    controller and reference (input) signal to sys1. This type of feedback loop is known as the
     positive feedback loop ("sum" is taken and hence the name **Positive Feedback**).
 
-    Both ``plant`` and ``feedback_controller`` can either be ``Series`` or
+    Both ``sys1`` and ``sys2`` can either be ``Series`` or
     ``TransferFunction`` objects.
 
     Parameters
     ==========
 
-    plant : Series, TransferFunction
-        The primary plant. Also commonly known as the open
+    sys1 : Series, TransferFunction
+        The plant. Also commonly known as the open
         loop gain / open-loop tranfer function.
-    feedback_controller : Series, TransferFunction, optional
-        The feedback plant (often a feedback controller). Also
-        commonly known as the feedback factor.
-        If not specified explicitly, the feedback_controller is
-        assumed to be unit (1) transfer function.
+    sys2 : Series, TransferFunction, optional
+        The feedback path system (often a feedback controller).
+    
+        If not specified explicitly, the sys2 is
+        assumed to be unit (1.0) transfer function.
     sign : int, optional
         The type of closed-loop feedback. Can either be ``1``
         (for positive feedback) or ``-1`` (for negative feedback).
@@ -1703,14 +1703,14 @@ class Feedback(SISOLinearTimeInvariant):
     ======
 
     ValueError
-        When ``plant`` and ``feedback_controller`` are not using the
+        When ``sys1`` and ``sys2`` are not using the
         same complex variable of the Laplace transform.
 
-        When a combination of ``plant`` and ``feedback_controller`` yields
+        When a combination of ``sys1`` and ``sys2`` yields
         zero denominator.
 
     TypeError
-        When either ``plant`` or ``feedback_controller`` is not a ``Series`` or a
+        When either ``sys1`` or ``sys2`` is not a ``Series`` or a
         ``TransferFunction`` object.
 
     Examples
@@ -1728,11 +1728,11 @@ class Feedback(SISOLinearTimeInvariant):
     >>> F1.args
     (TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s), TransferFunction(5*s - 10, s + 7, s), -1)
 
-    You can get the primary and the feedback controller using ``.plant`` and ``.feedback_controller`` respectively.
+    You can get the primary and the feedback controller using ``.sys1`` and ``.sys2`` respectively.
 
-    >>> F1.plant
+    >>> F1.sys1
     TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
-    >>> F1.feedback_controller
+    >>> F1.sys2
     TransferFunction(5*s - 10, s + 7, s)
 
     You can get the resultant closed loop transfer function obtained by negative feedback
@@ -1759,35 +1759,35 @@ class Feedback(SISOLinearTimeInvariant):
     MIMOFeedback, Series, Parallel
 
     """
-    def __new__(cls, plant, feedback_controller=None, sign=-1):
-        if not feedback_controller:
-            feedback_controller = TransferFunction(1, 1, plant.var)
+    def __new__(cls, sys1, sys2=None, sign=-1):
+        if not sys2:
+            sys2 = TransferFunction(1, 1, sys1.var)
 
-        if not (isinstance(plant, (TransferFunction, Series))
-            and isinstance(feedback_controller, (TransferFunction, Series))):
-            raise TypeError("Unsupported type for `plant` or `feedback_controller` of Feedback.")
+        if not (isinstance(sys1, (TransferFunction, Series))
+            and isinstance(sys2, (TransferFunction, Series))):
+            raise TypeError("Unsupported type for `sys1` or `sys2` of Feedback.")
 
         if sign not in [-1, 1]:
             raise ValueError("Unsupported type for feedback. `sign` arg should "
             "either be 1 (positive feedback loop) or -1 (negative feedback loop).")
 
-        if Mul(plant.to_expr(), feedback_controller.to_expr()) == sign:
+        if Mul(sys1.to_expr(), sys2.to_expr()) == sign:
             raise ValueError("The equivalent system will have zero denominator.")
-        if plant.var != feedback_controller.var:
-            raise ValueError("Both `plant` and `feedback_controller` should be using the"
+        if sys1.var != sys2.var:
+            raise ValueError("Both `sys1` and `sys2` should be using the"
                 " same complex variable.")
-        obj = super().__new__(cls, plant, feedback_controller, _sympify(sign))
-        obj._plant = plant
-        obj._feedback_controller = feedback_controller
-        obj._var = plant.var
+        obj = super().__new__(cls, sys1, sys2, _sympify(sign))
+        obj.sys1 = sys1
+        obj._sys2 = sys2
+        obj._var = sys1.var
         obj._sign = sign
 
         return obj
 
     @property
-    def plant(self):
+    def sys1(self):
         """
-        Returns the primary plant of the closed-loop feedback.
+        Returns the feedforward system of the closed-loop feedback.
 
         Examples
         ========
@@ -1797,20 +1797,20 @@ class Feedback(SISOLinearTimeInvariant):
         >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
         >>> controller = TransferFunction(5*s - 10, s + 7, s)
         >>> F1 = Feedback(plant, controller)
-        >>> F1.plant
+        >>> F1.sys1
         TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
         >>> G = TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p)
         >>> C = TransferFunction(5*p + 10, p + 10, p)
         >>> P = TransferFunction(1 - s, p + 2, p)
         >>> F2 = Feedback(TransferFunction(1, 1, p), G*C*P)
-        >>> F2.plant
+        >>> F2.sys1
         TransferFunction(1, 1, p)
 
         """
-        return self._plant
+        return self.sys1
 
     @property
-    def feedback_controller(self):
+    def sys2(self):
         """
         Returns the feedback controller of the closed-loop feedback.
 
@@ -1822,17 +1822,17 @@ class Feedback(SISOLinearTimeInvariant):
         >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
         >>> controller = TransferFunction(5*s - 10, s + 7, s)
         >>> F1 = Feedback(plant, controller)
-        >>> F1.feedback_controller
+        >>> F1.sys2
         TransferFunction(5*s - 10, s + 7, s)
         >>> G = TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p)
         >>> C = TransferFunction(5*p + 10, p + 10, p)
         >>> P = TransferFunction(1 - s, p + 2, p)
         >>> F2 = Feedback(TransferFunction(1, 1, p), G*C*P)
-        >>> F2.feedback_controller
+        >>> F2.sys2
         Series(TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p), TransferFunction(5*p + 10, p + 10, p), TransferFunction(1 - s, p + 2, p))
 
         """
-        return self._feedback_controller
+        return self._sys2
 
     @property
     def var(self):
@@ -1888,7 +1888,7 @@ class Feedback(SISOLinearTimeInvariant):
 
         """
 
-        return 1/(1 - self.sign*self.plant.to_expr()*self.feedback_controller.to_expr())
+        return 1/(1 - self.sign*self.sys1.to_expr()*self.sys2.to_expr())
 
     def doit(self, cancel=False, expand=False, **kwargs):
         """
@@ -1920,13 +1920,13 @@ class Feedback(SISOLinearTimeInvariant):
         TransferFunction(2*s**4 + 9*s**3 + 17*s**2 + 17*s + 3, 3*s**4 + 13*s**3 + 27*s**2 + 29*s + 12, s)
 
         """
-        arg_list = list(self.plant.args) if isinstance(self.plant, Series) else [self.plant]
+        arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
         # F_n and F_d are resultant TFs of num and den of Feedback.
-        F_n, unit = self.plant.doit(), TransferFunction(1, 1, self.plant.var)
+        F_n, unit = self.sys1.doit(), TransferFunction(1, 1, self.sys1.var)
         if self.sign == -1:
-            F_d = Parallel(unit, Series(self.feedback_controller, *arg_list)).doit()
+            F_d = Parallel(unit, Series(self.sys2, *arg_list)).doit()
         else:
-            F_d = Parallel(unit, -Series(self.feedback_controller, *arg_list)).doit()
+            F_d = Parallel(unit, -Series(self.sys2, *arg_list)).doit()
 
         _resultant_tf = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
 
@@ -1942,12 +1942,12 @@ class Feedback(SISOLinearTimeInvariant):
         return self.doit()
 
     def __neg__(self):
-        return Feedback(-self.plant, -self.feedback_controller, self.sign)
+        return Feedback(-self.sys1, -self.sys2, self.sign)
 
 
 def _is_invertible(a, b, sign):
     """
-    Checks whether a given pair of plant and feedback_controller
+    Checks whether a given pair of MIMO
     systems passed is invertible or not.
     """
     _mat = eye(a.num_inputs) - sign*(a.doit()._expr_mat)*(b.doit()._expr_mat)
@@ -1964,10 +1964,10 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     Parameters
     ==========
 
-    plant : MIMOSeries, TransferFunctionMatrix
-        The primary plant.
-    feedback_controller : MIMOSeries, TransferFunctionMatrix
-        The feedback plant (often a feedback controller).
+    sys1 : MIMOSeries, TransferFunctionMatrix
+        The MIMO system placed on the feedforward path.
+    sys2 : MIMOSeries, TransferFunctionMatrix
+        The feedback path system (often a feedback controller).
     sign : int, optional
         The type of closed-loop MIMO feedback. Can either be ``1``
         (for positive feedback) or ``-1`` (for negative feedback).
@@ -1977,17 +1977,17 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     ======
 
     ValueError
-        When ``plant`` and ``feedback_controller`` are not using the
+        When ``sys1`` and ``sys2`` are not using the
         same complex variable of the Laplace transform.
 
-        When shapes of ``plant`` and ``feedback_controller`` are not the same.
+        When shapes of ``sys1`` and ``sys2`` are not the same.
 
-        When either ``plant`` or ``feedback_controller`` is not a square matrix.
+        When either ``sys1`` or ``sys2`` is not a square matrix.
 
         When the equivalent closed-loop MIMO system is not invertible.
 
     TypeError
-        When either ``plant`` or ``feedback_controller`` is not a ``MIMOSeries`` or a
+        When either ``sys1`` or ``sys2`` is not a ``MIMOSeries`` or a
         ``TransferFunctionMatrix`` object.
 
     Examples
@@ -2039,37 +2039,37 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     Feedback, MIMOSeries, MIMOParallel
 
     """
-    def __new__(cls, plant, feedback_controller, sign=-1):
-        if not (isinstance(plant, (TransferFunctionMatrix, MIMOSeries))
-            and isinstance(feedback_controller, (TransferFunctionMatrix, MIMOSeries))):
-            raise TypeError("Unsupported type for `plant` or `feedback_controller` of MIMO Feedback.")
+    def __new__(cls, sys1, sys2, sign=-1):
+        if not (isinstance(sys1, (TransferFunctionMatrix, MIMOSeries))
+            and isinstance(sys2, (TransferFunctionMatrix, MIMOSeries))):
+            raise TypeError("Unsupported type for `sys1` or `sys2` of MIMO Feedback.")
 
-        if not (plant.num_inputs == plant.num_inputs == feedback_controller.num_inputs == \
-                feedback_controller.num_inputs):
-            raise ValueError("`plant` and `feedback_controller` must be square matrices of"
+        if not (sys1.num_inputs == sys1.num_inputs == sys2.num_inputs == \
+                sys2.num_inputs):
+            raise ValueError("`sys1` and `sys2` must be square matrices of"
                 "the same shape.")
 
         if sign not in [-1, 1]:
             raise ValueError("Unsupported type for feedback. `sign` arg should "
             "either be 1 (positive feedback loop) or -1 (negative feedback loop).")
 
-        if not _is_invertible(plant, feedback_controller, sign):
+        if not _is_invertible(sys1, sys2, sign):
             raise ValueError("Non-Invertible system inputted.")
-        if plant.var != feedback_controller.var:
-            raise ValueError("Both `plant` and `feedback_controller` should be using the"
+        if sys1.var != sys2.var:
+            raise ValueError("Both `sys1` and `sys2` should be using the"
                 " same complex variable.")
-        obj = super().__new__(cls, plant, feedback_controller, _sympify(sign))
-        obj._plant = plant
-        obj._feedback_controller = feedback_controller
-        obj._var = plant.var
+        obj = super().__new__(cls, sys1, sys2, _sympify(sign))
+        obj.sys1 = sys1
+        obj._sys2 = sys2
+        obj._var = sys1.var
         obj._sign = sign
 
         return obj
 
     @property
-    def plant(self):
+    def sys1(self):
         r"""
-        Returns the primary plant of the closed-loop MIMO feedback.
+        Returns the system placed on the feedforward path of the closed-loop MIMO feedback.
 
         Examples
         ========
@@ -2083,7 +2083,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         >>> sys1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
         >>> sys2 = TransferFunctionMatrix([[tf3, tf3], [tf3, tf2]])
         >>> F_1 = MIMOFeedback(sys1, sys2, 1)
-        >>> F_1.plant
+        >>> F_1.sys1
         TransferFunctionMatrix(((TransferFunction(s**2 + s + 1, s**2 - s + 1, s), TransferFunction(1, s, s)), (TransferFunction(1, s, s), TransferFunction(s**2 + s + 1, s**2 - s + 1, s))))
         >>> pprint(_, use_unicode=False)
         [ 2                    ]
@@ -2099,10 +2099,10 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         [            s  - s + 1]{t}
 
         """
-        return self._plant
+        return self.sys1
 
     @property
-    def feedback_controller(self):
+    def sys2(self):
         r"""
         Returns the feedback controller of the closed feedback loop.
 
@@ -2118,7 +2118,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         >>> sys1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
         >>> sys2 = TransferFunctionMatrix([[tf1, tf3], [tf3, tf2]])
         >>> F_1 = MIMOFeedback(sys1, sys2)
-        >>> F_1.feedback_controller
+        >>> F_1.sys2
         TransferFunctionMatrix(((TransferFunction(s**2, s**3 - s + 1, s), TransferFunction(1, 1, s)), (TransferFunction(1, 1, s), TransferFunction(1, s, s))))
         >>> pprint(_, use_unicode=False)
         [     2       ]
@@ -2132,7 +2132,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         [    1       s]{t}
 
         """
-        return self._feedback_controller
+        return self._sys2
 
     @property
     def var(self):
@@ -2211,10 +2211,10 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         [  p  - 3*p  + 2*p - 1        p  - 3*p  + 2*p - 1    ]
 
         """
-        _plant_mat = self.plant.doit()._expr_mat
-        _controller_mat = self.feedback_controller.doit()._expr_mat
+        _plant_mat = self.sys1.doit()._expr_mat
+        _controller_mat = self.sys2.doit()._expr_mat
 
-        return (eye(self.plant.num_inputs) - \
+        return (eye(self.sys1.num_inputs) - \
             self.sign*_plant_mat*_controller_mat).inv()
 
     def doit(self, cancel=True, expand=False, **kwargs):
@@ -2282,7 +2282,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         [ - 6*s  + 7*s - 1      6*s  - s    ]{t}
 
         """
-        _mat = self.sensitivity * self.plant.doit()._expr_mat
+        _mat = self.sensitivity * self.sys1.doit()._expr_mat
 
         _resultant_tfm = _to_TFM(_mat, self.var)
 
@@ -2294,11 +2294,11 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
         return _resultant_tfm
 
-    def _eval_rewrite_as_TransferFunctionMatrix(self, plant, feedback_controller, sign, **kwargs):
+    def _eval_rewrite_as_TransferFunctionMatrix(self, sys1, sys2, sign, **kwargs):
         return self.doit()
 
     def __neg__(self):
-        return MIMOFeedback(-self.plant, -self.feedback_controller, self.sign)
+        return MIMOFeedback(-self.sys1, -self.sys2, self.sign)
 
 
 def _to_TFM(mat, var):
