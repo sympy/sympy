@@ -2060,10 +2060,6 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
             raise ValueError("Both `sys1` and `sys2` should be using the"
                 " same complex variable.")
         obj = super().__new__(cls, sys1, sys2, _sympify(sign))
-        obj._sys1 = sys1
-        obj._sys2 = sys2
-        obj._var = sys1.var
-        obj._sign = sign
 
         return obj
 
@@ -2100,7 +2096,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         [            s  - s + 1]{t}
 
         """
-        return self._sys1
+        return self.args[0]
 
     @property
     def sys2(self):
@@ -2133,7 +2129,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         [    1       s]{t}
 
         """
-        return self._sys2
+        return self.args[1]
 
     @property
     def var(self):
@@ -2156,7 +2152,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         p
 
         """
-        return self._var
+        return self.sys1.var
 
     @property
     def sign(self):
@@ -2164,7 +2160,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         Returns the type of feedback interconnection of two models. ``1``
         for Positive and ``-1`` for Negative.
         """
-        return self._sign
+        return self.args[2]
 
     @property
     def sensitivity(self):
