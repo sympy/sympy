@@ -1691,7 +1691,7 @@ class Feedback(SISOLinearTimeInvariant):
         loop gain / open-loop tranfer function.
     sys2 : Series, TransferFunction, optional
         The feedback path system (often a feedback controller).
-    
+
         If not specified explicitly, the sys2 is
         assumed to be unit (1.0) transfer function.
     sign : int, optional
@@ -1771,11 +1771,13 @@ class Feedback(SISOLinearTimeInvariant):
             raise ValueError("Unsupported type for feedback. `sign` arg should "
                 "either be 1 (positive feedback loop) or -1 (negative feedback loop).")
 
-        if Mul(sys1.to_expr(), sys2.to_expr()) == sign:
+        if Mul(sys1.to_expr(), sys2.to_expr()).simplify() == sign:
             raise ValueError("The equivalent system will have zero denominator.")
+
         if sys1.var != sys2.var:
             raise ValueError("Both `sys1` and `sys2` should be using the"
                 " same complex variable.")
+
         obj = super().__new__(cls, sys1, sys2, _sympify(sign))
         obj._sys1 = sys1
         obj._sys2 = sys2
@@ -2042,7 +2044,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     Feedback, MIMOSeries, MIMOParallel
 
     """
-    def __new__(cls, sys1, sys1, sign=-1):
+    def __new__(cls, sys1, sys2, sign=-1):
         if not (isinstance(sys1, (TransferFunctionMatrix, MIMOSeries))
             and isinstance(sys2, (TransferFunctionMatrix, MIMOSeries))):
             raise TypeError("Unsupported type for `sys1` or `sys2` of MIMO Feedback.")
