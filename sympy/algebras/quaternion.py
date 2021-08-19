@@ -1,7 +1,7 @@
 # References :
 # http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
 # https://en.wikipedia.org/wiki/Quaternion
-from sympy import S, Rational
+from sympy import S, Rational, Piecewise
 from sympy import re, im, conjugate, sign
 from sympy import sqrt, sin, cos, acos, exp, ln
 from sympy import trigsimp
@@ -459,9 +459,9 @@ class Quaternion(Expr):
         q = self
         vector_norm = sqrt(q.b**2 + q.c**2 + q.d**2)
         a = exp(q.a) * cos(vector_norm)
-        b = exp(q.a) * sin(vector_norm) * q.b / vector_norm
-        c = exp(q.a) * sin(vector_norm) * q.c / vector_norm
-        d = exp(q.a) * sin(vector_norm) * q.d / vector_norm
+        b = exp(q.a) * sin(vector_norm) * q.b / (Piecewise((vector_norm, vector_norm > 0), (1, True)))
+        c = exp(q.a) * sin(vector_norm) * q.c / (Piecewise((vector_norm, vector_norm > 0), (1, True)))
+        d = exp(q.a) * sin(vector_norm) * q.d / (Piecewise((vector_norm, vector_norm > 0), (1, True)))
 
         return Quaternion(a, b, c, d)
 
@@ -485,9 +485,9 @@ class Quaternion(Expr):
         vector_norm = sqrt(q.b**2 + q.c**2 + q.d**2)
         q_norm = q.norm()
         a = ln(q_norm)
-        b = q.b * acos(q.a / q_norm) / vector_norm
-        c = q.c * acos(q.a / q_norm) / vector_norm
-        d = q.d * acos(q.a / q_norm) / vector_norm
+        b = q.b * acos(q.a / q_norm) / (Piecewise((vector_norm, vector_norm > 0), (1, True)))
+        c = q.c * acos(q.a / q_norm) / (Piecewise((vector_norm, vector_norm > 0), (1, True)))
+        d = q.d * acos(q.a / q_norm) / (Piecewise((vector_norm, vector_norm > 0), (1, True)))
 
         return Quaternion(a, b, c, d)
 

@@ -192,3 +192,12 @@ def test_issue_16318():
     axis = (-sqrt(3)/3, -sqrt(3)/3, -sqrt(3)/3)
     angle = 2*pi/3
     assert (axis, angle) == q.to_axis_angle()
+
+
+def test_issue_21576():
+    q0 = Quaternion(w, x, y, z)
+    q = Quaternion(0, w, 0, 0)
+    q1 = Quaternion(0, 0, 0, 0)
+    assert q0._ln().subs(w**2 + x**2 + y**2 + z**2, 1).subs({x:0, y:0, z:0}) == Quaternion(0, 0, 0, 0)
+    assert q.exp().subs(w, 0) == Quaternion(1, 0, 0, 0)
+    assert q1.exp() == Quaternion(1, 0, 0, 0)
