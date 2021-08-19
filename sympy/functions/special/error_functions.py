@@ -208,7 +208,7 @@ class erf(Function):
         return (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
-        return z/sqrt(pi)*meijerg([S.Half], [], [0], [Rational(-1, 2)], z**2)
+        return z/sqrt(pi)*meijerg([S.Half], [], [0], [Rational(-1, 2, 1)], z**2)
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
         return 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], -z**2)
@@ -425,7 +425,7 @@ class erfc(Function):
         return S.One - (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
-        return S.One - z/sqrt(pi)*meijerg([S.Half], [], [0], [Rational(-1, 2)], z**2)
+        return S.One - z/sqrt(pi)*meijerg([S.Half], [], [0], [Rational(-1, 2, 1)], z**2)
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
         return S.One - 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], -z**2)
@@ -610,7 +610,7 @@ class erfi(Function):
         return (S.One - S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
-        return z/sqrt(pi)*meijerg([S.Half], [], [0], [Rational(-1, 2)], -z**2)
+        return z/sqrt(pi)*meijerg([S.Half], [], [0], [Rational(-1, 2, 1)], -z**2)
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
         return 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], z**2)
@@ -2450,11 +2450,11 @@ class fresnels(FresnelIntegral):
         return (S.One + I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) - I*erf((S.One - I)/2*sqrt(pi)*z))
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
-        return pi*z**3/6 * hyper([Rational(3, 4)], [Rational(3, 2), Rational(7, 4)], -pi**2*z**4/16)
+        return pi*z**3/6 * hyper([Rational(3, 4, 1)], [Rational(3, 2, 1), Rational(7, 4, 1)], -pi**2*z**4/16)
 
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
-        return (pi*z**Rational(9, 4) / (sqrt(2)*(z**2)**Rational(3, 4)*(-z)**Rational(3, 4))
-                * meijerg([], [1], [Rational(3, 4)], [Rational(1, 4), 0], -pi**2*z**4/16))
+        return (pi*z**Rational(9, 4, 1) / (sqrt(2)*(z**2)**Rational(3, 4, 1)*(-z)**Rational(3, 4, 1))
+                * meijerg([], [1], [Rational(3, 4, 1)], [Rational(1, 4, 1), 0], -pi**2*z**4/16))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.series.order import Order
@@ -2606,11 +2606,11 @@ class fresnelc(FresnelIntegral):
         return (S.One - I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) + I*erf((S.One - I)/2*sqrt(pi)*z))
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
-        return z * hyper([Rational(1, 4)], [S.Half, Rational(5, 4)], -pi**2*z**4/16)
+        return z * hyper([Rational(1, 4, 1)], [S.Half, Rational(5, 4, 1)], -pi**2*z**4/16)
 
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
-        return (pi*z**Rational(3, 4) / (sqrt(2)*root(z**2, 4)*root(-z, 4))
-                * meijerg([], [1], [Rational(1, 4)], [Rational(3, 4), 0], -pi**2*z**4/16))
+        return (pi*z**Rational(3, 4, 1) / (sqrt(2)*root(z**2, 4)*root(-z, 4))
+                * meijerg([], [1], [Rational(1, 4, 1)], [Rational(3, 4, 1), 0], -pi**2*z**4/16))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy import Order

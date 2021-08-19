@@ -206,7 +206,7 @@ def cbrt(arg, evaluate=None):
     * https://en.wikipedia.org/wiki/Principal_value
 
     """
-    return Pow(arg, Rational(1, 3), evaluate=evaluate)
+    return Pow(arg, Rational(1, 3, 1), evaluate=evaluate)
 
 
 def root(arg, n, k=0, evaluate=None):

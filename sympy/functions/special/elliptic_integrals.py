@@ -59,11 +59,11 @@ class elliptic_k(Function):
         if m.is_zero:
             return pi*S.Half
         elif m is S.Half:
-            return 8*pi**Rational(3, 2)/gamma(Rational(-1, 4))**2
+            return 8*pi**Rational(3, 2, 1)/gamma(Rational(-1, 4, 1))**2
         elif m is S.One:
             return S.ComplexInfinity
         elif m is S.NegativeOne:
-            return gamma(Rational(1, 4))**2/(4*sqrt(2*pi))
+            return gamma(Rational(1, 4, 1))**2/(4*sqrt(2*pi))
         elif m in (S.Infinity, S.NegativeInfinity, I*S.Infinity,
                    I*S.NegativeInfinity, S.ComplexInfinity):
             return S.Zero
@@ -295,12 +295,12 @@ class elliptic_e(Function):
     def _eval_rewrite_as_hyper(self, *args, **kwargs):
         if len(args) == 1:
             m = args[0]
-            return (pi/2)*hyper((Rational(-1, 2), S.Half), (S.One,), m)
+            return (pi/2)*hyper((Rational(-1, 2, 1), S.Half), (S.One,), m)
 
     def _eval_rewrite_as_meijerg(self, *args, **kwargs):
         if len(args) == 1:
             m = args[0]
-            return -meijerg(((S.Half, Rational(3, 2)), []), \
+            return -meijerg(((S.Half, Rational(3, 2, 1)), []), \
                             ((S.Zero,), (S.Zero,)), -m)/4
 
     def _eval_rewrite_as_Integral(self, *args):

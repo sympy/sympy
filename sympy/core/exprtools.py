@@ -242,7 +242,7 @@ def decompose_power(expr):
     if exp.is_Number:
         if exp.is_Rational:
             if not exp.is_Integer:
-                base = Pow(base, Rational(1, exp.q))
+                base = Pow(base, Rational(1, exp.q, 1))
 
             exp = exp.p
         else:
@@ -253,7 +253,7 @@ def decompose_power(expr):
         if exp is S.NegativeOne:
             base, exp = Pow(base, tail), -1
         elif exp is not S.One:
-            tail = _keep_coeff(Rational(1, exp.q), tail)
+            tail = _keep_coeff(Rational(1, exp.q, 1), tail)
             base, exp = Pow(base, tail), exp.p
         else:
             base, exp = expr, 1
@@ -277,7 +277,7 @@ def decompose_power_rat(expr):
         if exp is S.NegativeOne:
             base, exp = Pow(base, tail), -1
         elif exp is not S.One:
-            tail = _keep_coeff(Rational(1, exp.q), tail)
+            tail = _keep_coeff(Rational(1, exp.q, 1), tail)
             base, exp = Pow(base, tail), exp.p
         else:
             base, exp = expr, 1

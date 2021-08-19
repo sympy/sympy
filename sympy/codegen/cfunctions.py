@@ -433,7 +433,7 @@ class Sqrt(Function):  # 'sqrt' already defined in sympy.functions.elementary.mi
 
 
 def _Cbrt(x):
-    return Pow(x, Rational(1, 3))
+    return Pow(x, Rational(1, 3, 1))
 
 
 class Cbrt(Function):  # 'cbrt' already defined in sympy.functions.elementary.miscellaneous

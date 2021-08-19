@@ -149,7 +149,7 @@ class Quaternion(Expr):
 
         """
 
-        absQ = M.det()**Rational(1, 3)
+        absQ = M.det()**Rational(1, 3, 1)
 
         a = sqrt(absQ + M[0, 0] + M[1, 1] + M[2, 2]) / 2
         b = sqrt(absQ + M[0, 0] - M[1, 1] - M[2, 2]) / 2

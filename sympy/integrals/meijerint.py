@@ -117,7 +117,7 @@ def _create_lookup_table(table):
 
     # 12
     def A1(r, sign, nu):
-        return pi**Rational(-1, 2)*(-sign*nu/2)**(1 - 2*r)
+        return pi**Rational(-1, 2, 1)*(-sign*nu/2)**(1 - 2*r)
 
     def tmpadd(r, sgn):
         # XXX the a**2 is bad for matching
@@ -146,8 +146,8 @@ def _create_lookup_table(table):
 
     # TODO can do sin^n, sinh^n by expansion ... where?
     # 8.4.4 (hyperbolic functions)
-    add(sinh(t), [], [1], [S.Half], [1, 0], t**2/4, pi**Rational(3, 2))
-    add(cosh(t), [], [S.Half], [0], [S.Half, S.Half], t**2/4, pi**Rational(3, 2))
+    add(sinh(t), [], [1], [S.Half], [1, 0], t**2/4, pi**Rational(3, 2, 1))
+    add(cosh(t), [], [S.Half], [0], [S.Half, S.Half], t**2/4, pi**Rational(3, 2, 1))
 
     # Section 8.4.5
     # TODO can do t + a. but can also do by expansion... (XXX not really)
@@ -155,7 +155,7 @@ def _create_lookup_table(table):
     add(cos(t), [], [], [0], [S.Half], t**2/4, sqrt(pi))
 
     # Section 8.4.6 (sinc function)
-    add(sinc(t), [], [], [0], [Rational(-1, 2)], t**2/4, sqrt(pi)/2)
+    add(sinc(t), [], [], [0], [Rational(-1, 2, 1)], t**2/4, sqrt(pi)/2)
 
     # Section 8.5.5
     def make_log1(subs):
@@ -201,7 +201,7 @@ def _create_lookup_table(table):
     add(Ci(t), [], [1], [0, 0], [S.Half], t**2/4, -sqrt(pi)/2)
 
     # Section 8.4.13
-    add(Shi(t), [S.Half], [], [0], [Rational(-1, 2), Rational(-1, 2)], polar_lift(-1)*t**2/4,
+    add(Shi(t), [S.Half], [], [0], [Rational(-1, 2, 1), Rational(-1, 2, 1)], polar_lift(-1)*t**2/4,
         t*sqrt(pi)/4)
     add(Chi(t), [], [S.Half, 1], [0, 0], [S.Half, S.Half], t**2/4, -
         pi**S('3/2')/2)
@@ -215,11 +215,11 @@ def _create_lookup_table(table):
     add(erfc(t), [], [1], [0, S.Half], [], t**2, 1/sqrt(pi))
     # This formula for erfi(z) yields a wrong(?) minus sign
     #add(erfi(t), [1], [], [S.Half], [0], -t**2, I/sqrt(pi))
-    add(erfi(t), [S.Half], [], [0], [Rational(-1, 2)], -t**2, t/sqrt(pi))
+    add(erfi(t), [S.Half], [], [0], [Rational(-1, 2, 1)], -t**2, t/sqrt(pi))
 
     # Fresnel Integrals
-    add(fresnels(t), [1], [], [Rational(3, 4)], [0, Rational(1, 4)], pi**2*t**4/16, S.Half)
-    add(fresnelc(t), [1], [], [Rational(1, 4)], [0, Rational(3, 4)], pi**2*t**4/16, S.Half)
+    add(fresnels(t), [1], [], [Rational(3, 4, 1)], [0, Rational(1, 4, 1)], pi**2*t**4/16, S.Half)
+    add(fresnelc(t), [1], [], [Rational(1, 4, 1)], [0, Rational(3, 4, 1)], pi**2*t**4/16, S.Half)
 
     ##### bessel-type functions #####
     from sympy import besselj, bessely, besseli, besselk
@@ -274,7 +274,7 @@ def _create_lookup_table(table):
     # Complete elliptic integrals K(z) and E(z)
     from sympy import elliptic_k, elliptic_e
     add(elliptic_k(t), [S.Half, S.Half], [], [0], [0], -t, S.Half)
-    add(elliptic_e(t), [S.Half, 3*S.Half], [], [0], [0], -t, Rational(-1, 2)/2)
+    add(elliptic_e(t), [S.Half, 3*S.Half], [], [0], [0], -t, Rational(-1, 2, 1)/2)
 
 
 ####################################################################
@@ -559,7 +559,7 @@ def _inflate_fox_h(g, a):
     # theorem.
     D, g = _inflate_g(g, q)
     z = g.argument
-    D /= (2*pi)**((1 - p)/2)*p**Rational(-1, 2)
+    D /= (2*pi)**((1 - p)/2)*p**Rational(-1, 2, 1)
     z /= p**p
     bs = [(n + 1)/p for n in range(p)]
     return D, meijerg(g.an, g.aother, g.bm, list(g.bother) + bs, z)
@@ -1015,10 +1015,10 @@ def _check_antecedents(g1, g2, x):
     c1 = _c1()
     c2 = And(*[re(1 + i + j) > 0 for i in g1.bm for j in g2.bm])
     c3 = And(*[re(1 + i + j) < 1 + 1 for i in g1.an for j in g2.an])
-    c4 = And(*[(p - q)*re(1 + i - 1) - re(mu) > Rational(-3, 2) for i in g1.an])
-    c5 = And(*[(p - q)*re(1 + i) - re(mu) > Rational(-3, 2) for i in g1.bm])
-    c6 = And(*[(u - v)*re(1 + i - 1) - re(rho) > Rational(-3, 2) for i in g2.an])
-    c7 = And(*[(u - v)*re(1 + i) - re(rho) > Rational(-3, 2) for i in g2.bm])
+    c4 = And(*[(p - q)*re(1 + i - 1) - re(mu) > Rational(-3, 2, 1) for i in g1.an])
+    c5 = And(*[(p - q)*re(1 + i) - re(mu) > Rational(-3, 2, 1) for i in g1.bm])
+    c6 = And(*[(u - v)*re(1 + i - 1) - re(rho) > Rational(-3, 2, 1) for i in g2.an])
+    c7 = And(*[(u - v)*re(1 + i) - re(rho) > Rational(-3, 2, 1) for i in g2.bm])
     c8 = (abs(phi) + 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu -
           1)*(v - u)) > 0)
     c9 = (abs(phi) - 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu -

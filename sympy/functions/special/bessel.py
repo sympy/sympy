@@ -1262,9 +1262,9 @@ class airyai(AiryBase):
             elif arg is S.NegativeInfinity:
                 return S.Zero
             elif arg.is_zero:
-                return S.One / (3**Rational(2, 3) * gamma(Rational(2, 3)))
+                return S.One / (3**Rational(2, 3, 1) * gamma(Rational(2, 3, 1)))
         if arg.is_zero:
-            return S.One / (3**Rational(2, 3) * gamma(Rational(2, 3)))
+            return S.One / (3**Rational(2, 3, 1) * gamma(Rational(2, 3, 1)))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1281,32 +1281,32 @@ class airyai(AiryBase):
             x = sympify(x)
             if len(previous_terms) > 1:
                 p = previous_terms[-1]
-                return ((3**Rational(1, 3)*x)**(-n)*(3**Rational(1, 3)*x)**(n + 1)*sin(pi*(n*Rational(2, 3) + Rational(4, 3)))*factorial(n) *
-                        gamma(n/3 + Rational(2, 3))/(sin(pi*(n*Rational(2, 3) + Rational(2, 3)))*factorial(n + 1)*gamma(n/3 + Rational(1, 3))) * p)
+                return ((3**Rational(1, 3, 1)*x)**(-n)*(3**Rational(1, 3, 1)*x)**(n + 1)*sin(pi*(n*Rational(2, 3, 1) + Rational(4, 3, 1)))*factorial(n) *
+                        gamma(n/3 + Rational(2, 3, 1))/(sin(pi*(n*Rational(2, 3, 1) + Rational(2, 3, 1)))*factorial(n + 1)*gamma(n/3 + Rational(1, 3, 1))) * p)
             else:
-                return (S.One/(3**Rational(2, 3)*pi) * gamma((n+S.One)/S(3)) * sin(2*pi*(n+S.One)/S(3)) /
+                return (S.One/(3**Rational(2, 3, 1)*pi) * gamma((n+S.One)/S(3)) * sin(2*pi*(n+S.One)/S(3)) /
                         factorial(n) * (root(3, 3)*x)**n)
 
     def _eval_rewrite_as_besselj(self, z, **kwargs):
-        ot = Rational(1, 3)
-        tt = Rational(2, 3)
-        a = Pow(-z, Rational(3, 2))
         if re(z).is_negative:
+            ot = Rational(1, 3, 1)
+            tt = Rational(2, 3, 1)
+            a = Pow(-z, Rational(3, 2, 1))
             return ot*sqrt(-z) * (besselj(-ot, tt*a) + besselj(ot, tt*a))
 
     def _eval_rewrite_as_besseli(self, z, **kwargs):
-        ot = Rational(1, 3)
-        tt = Rational(2, 3)
-        a = Pow(z, Rational(3, 2))
+        ot = Rational(1, 3, 1)
+        tt = Rational(2, 3, 1)
+        a = Pow(z, Rational(3, 2, 1))
         if re(z).is_positive:
             return ot*sqrt(z) * (besseli(-ot, tt*a) - besseli(ot, tt*a))
         else:
             return ot*(Pow(a, ot)*besseli(-ot, tt*a) - z*Pow(a, -ot)*besseli(ot, tt*a))
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
-        pf1 = S.One / (3**Rational(2, 3)*gamma(Rational(2, 3)))
-        pf2 = z / (root(3, 3)*gamma(Rational(1, 3)))
-        return pf1 * hyper([], [Rational(2, 3)], z**3/9) - pf2 * hyper([], [Rational(4, 3)], z**3/9)
+        pf1 = S.One / (3**Rational(2, 3, 1)*gamma(Rational(2, 3, 1)))
+        pf2 = z / (root(3, 3)*gamma(Rational(1, 3, 1)))
+        return pf1 * hyper([], [Rational(2, 3, 1)], z**3/9) - pf2 * hyper([], [Rational(4, 3, 1)], z**3/9)
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
@@ -1436,10 +1436,10 @@ class airybi(AiryBase):
             elif arg is S.NegativeInfinity:
                 return S.Zero
             elif arg.is_zero:
-                return S.One / (3**Rational(1, 6) * gamma(Rational(2, 3)))
+                return S.One / (3**Rational(1, 6, 1) * gamma(Rational(2, 3, 1)))
 
         if arg.is_zero:
-            return S.One / (3**Rational(1, 6) * gamma(Rational(2, 3)))
+            return S.One / (3**Rational(1, 6, 1) * gamma(Rational(2, 3, 1)))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1456,23 +1456,23 @@ class airybi(AiryBase):
             x = sympify(x)
             if len(previous_terms) > 1:
                 p = previous_terms[-1]
-                return (3**Rational(1, 3)*x * Abs(sin(2*pi*(n + S.One)/S(3))) * factorial((n - S.One)/S(3)) /
+                return (3**Rational(1, 3, 1)*x * Abs(sin(2*pi*(n + S.One)/S(3))) * factorial((n - S.One)/S(3)) /
                         ((n + S.One) * Abs(cos(2*pi*(n + S.Half)/S(3))) * factorial((n - 2)/S(3))) * p)
             else:
                 return (S.One/(root(3, 6)*pi) * gamma((n + S.One)/S(3)) * Abs(sin(2*pi*(n + S.One)/S(3))) /
                         factorial(n) * (root(3, 3)*x)**n)
 
     def _eval_rewrite_as_besselj(self, z, **kwargs):
-        ot = Rational(1, 3)
-        tt = Rational(2, 3)
-        a = Pow(-z, Rational(3, 2))
+        ot = Rational(1, 3, 1)
+        tt = Rational(2, 3, 1)
+        a = Pow(-z, Rational(3, 2, 1))
         if re(z).is_negative:
             return sqrt(-z/3) * (besselj(-ot, tt*a) - besselj(ot, tt*a))
 
     def _eval_rewrite_as_besseli(self, z, **kwargs):
-        ot = Rational(1, 3)
-        tt = Rational(2, 3)
-        a = Pow(z, Rational(3, 2))
+        ot = Rational(1, 3, 1)
+        tt = Rational(2, 3, 1)
+        a = Pow(z, Rational(3, 2, 1))
         if re(z).is_positive:
             return sqrt(z)/sqrt(3) * (besseli(-ot, tt*a) + besseli(ot, tt*a))
         else:
@@ -1481,9 +1481,9 @@ class airybi(AiryBase):
             return sqrt(ot)*(b*besseli(-ot, tt*a) + z*c*besseli(ot, tt*a))
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
-        pf1 = S.One / (root(3, 6)*gamma(Rational(2, 3)))
-        pf2 = z*root(3, 6) / gamma(Rational(1, 3))
-        return pf1 * hyper([], [Rational(2, 3)], z**3/9) + pf2 * hyper([], [Rational(4, 3)], z**3/9)
+        pf1 = S.One / (root(3, 6)*gamma(Rational(2, 3, 1)))
+        pf2 = z*root(3, 6) / gamma(Rational(1, 3, 1))
+        return pf1 * hyper([], [Rational(2, 3, 1)], z**3/9) + pf2 * hyper([], [Rational(4, 3, 1)], z**3/9)
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
@@ -1603,7 +1603,7 @@ class airyaiprime(AiryBase):
                 return S.Zero
 
         if arg.is_zero:
-            return S.NegativeOne / (3**Rational(1, 3) * gamma(Rational(1, 3)))
+            return S.NegativeOne / (3**Rational(1, 3, 1) * gamma(Rational(1, 3, 1)))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1620,27 +1620,27 @@ class airyaiprime(AiryBase):
         return Expr._from_mpmath(res, prec)
 
     def _eval_rewrite_as_besselj(self, z, **kwargs):
-        tt = Rational(2, 3)
-        a = Pow(-z, Rational(3, 2))
         if re(z).is_negative:
+            tt = Rational(2, 3, 1)
+            a = Pow(-z, Rational(3, 2, 1))
             return z/3 * (besselj(-tt, tt*a) - besselj(tt, tt*a))
 
     def _eval_rewrite_as_besseli(self, z, **kwargs):
-        ot = Rational(1, 3)
-        tt = Rational(2, 3)
-        a = tt * Pow(z, Rational(3, 2))
+        tt = Rational(2, 3, 1)
         if re(z).is_positive:
+            a = tt * Pow(z, Rational(3, 2, 1))
             return z/3 * (besseli(tt, a) - besseli(-tt, a))
         else:
-            a = Pow(z, Rational(3, 2))
+            ot = Rational(1, 3, 1)
+            a = Pow(z, Rational(3, 2, 1))
             b = Pow(a, tt)
             c = Pow(a, -tt)
             return ot * (z**2*c*besseli(tt, tt*a) - b*besseli(-ot, tt*a))
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
-        pf1 = z**2 / (2*3**Rational(2, 3)*gamma(Rational(2, 3)))
-        pf2 = 1 / (root(3, 3)*gamma(Rational(1, 3)))
-        return pf1 * hyper([], [Rational(5, 3)], z**3/9) - pf2 * hyper([], [Rational(1, 3)], z**3/9)
+        pf1 = z**2 / (2*3**Rational(2, 3, 1)*gamma(Rational(2, 3, 1)))
+        pf2 = 1 / (root(3, 3)*gamma(Rational(1, 3, 1)))
+        return pf1 * hyper([], [Rational(5, 3, 1)], z**3/9) - pf2 * hyper([], [Rational(1, 3, 1)], z**3/9)
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
@@ -1765,10 +1765,10 @@ class airybiprime(AiryBase):
             elif arg is S.NegativeInfinity:
                 return S.Zero
             elif arg.is_zero:
-                return 3**Rational(1, 6) / gamma(Rational(1, 3))
+                return 3**Rational(1, 6, 1) / gamma(Rational(1, 3, 1))
 
         if arg.is_zero:
-            return 3**Rational(1, 6) / gamma(Rational(1, 3))
+            return 3**Rational(1, 6, 1) / gamma(Rational(1, 3, 1))
 
 
     def fdiff(self, argindex=1):
@@ -1786,27 +1786,27 @@ class airybiprime(AiryBase):
         return Expr._from_mpmath(res, prec)
 
     def _eval_rewrite_as_besselj(self, z, **kwargs):
-        tt = Rational(2, 3)
-        a = tt * Pow(-z, Rational(3, 2))
         if re(z).is_negative:
+            tt = Rational(2, 3, 1)
+            a = tt * Pow(-z, Rational(3, 2, 1))
             return -z/sqrt(3) * (besselj(-tt, a) + besselj(tt, a))
 
     def _eval_rewrite_as_besseli(self, z, **kwargs):
-        ot = Rational(1, 3)
-        tt = Rational(2, 3)
-        a = tt * Pow(z, Rational(3, 2))
+        tt = Rational(2, 3, 1)
         if re(z).is_positive:
+            a = tt * Pow(z, Rational(3, 2, 1))
             return z/sqrt(3) * (besseli(-tt, a) + besseli(tt, a))
         else:
-            a = Pow(z, Rational(3, 2))
+            ot = Rational(1, 3, 1)
+            a = Pow(z, Rational(3, 2, 1))
             b = Pow(a, tt)
             c = Pow(a, -tt)
             return sqrt(ot) * (b*besseli(-tt, tt*a) + z**2*c*besseli(tt, tt*a))
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
-        pf1 = z**2 / (2*root(3, 6)*gamma(Rational(2, 3)))
-        pf2 = root(3, 6) / gamma(Rational(1, 3))
-        return pf1 * hyper([], [Rational(5, 3)], z**3/9) + pf2 * hyper([], [Rational(1, 3)], z**3/9)
+        pf1 = z**2 / (2*root(3, 6)*gamma(Rational(2, 3, 1)))
+        pf2 = root(3, 6) / gamma(Rational(1, 3, 1))
+        return pf1 * hyper([], [Rational(5, 3, 1)], z**3/9) + pf2 * hyper([], [Rational(1, 3, 1)], z**3/9)
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]

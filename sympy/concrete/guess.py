@@ -290,7 +290,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
             t = [sum(t[n-i]*v[i] for i in range(n+1)) for n in range(len(v))]
             g = guess_generating_function_rational(t, X=X)
             if g:
-                result['ogf'] = g**Rational(1, d+1)
+                result['ogf'] = g**Rational(1, d+1, 1)
                 break
 
     # Exponential Generating Function (egf)
@@ -306,7 +306,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
             t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
             g = guess_generating_function_rational(t, X=X)
             if g:
-                result['egf'] = g**Rational(1, d+1)
+                result['egf'] = g**Rational(1, d+1, 1)
                 break
 
     # Logarithmic Generating Function (lgf)
@@ -322,7 +322,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
             t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
             g = guess_generating_function_rational(t, X=X)
             if g:
-                result['lgf'] = g**Rational(1, d+1)
+                result['lgf'] = g**Rational(1, d+1, 1)
                 break
 
     # Hyperbolic logarithmic Generating Function (hlgf)
@@ -337,7 +337,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
             t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
             g = guess_generating_function_rational(t, X=X)
             if g:
-                result['hlgf'] = g**Rational(1, d+1)
+                result['hlgf'] = g**Rational(1, d+1, 1)
                 break
 
     # Logarithmic derivative of ordinary generating Function (lgdogf)
@@ -355,7 +355,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
             t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
             g = guess_generating_function_rational(t, X=X)
             if g:
-                result['lgdogf'] = g**Rational(1, d+1)
+                result['lgdogf'] = g**Rational(1, d+1, 1)
                 if 'ogf' not in result:
                     result['ogf'] = exp(integrate(result['lgdogf'], X))
                 break
@@ -380,7 +380,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
             t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
             g = guess_generating_function_rational(t, X=X)
             if g:
-                result['lgdegf'] = g**Rational(1, d+1)
+                result['lgdegf'] = g**Rational(1, d+1, 1)
                 if 'egf' not in result:
                     result['egf'] = exp(integrate(result['lgdegf'], X))
                 break

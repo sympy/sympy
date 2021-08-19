@@ -1196,7 +1196,7 @@ class Add(Expr, AssocOp):
                 for q in common_q:
                     g = reduce(igcd, [r[q] for r in rads], 0)
                     if g != 1:
-                        G.append(g**Rational(1, q))
+                        G.append(g**Rational(1, q, 1))
                 if G:
                     G = Mul(*G)
                     args = [ai/G for ai in args]

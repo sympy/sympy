@@ -131,11 +131,11 @@ def add_formulae(formulae):
     addb((S.Half, 1), (S('3/2'), ),
          Matrix([HyperRep_atanh(z), 1]),
          Matrix([[1, 0]]),
-         Matrix([[Rational(-1, 2), 1/(1 - z)/2], [0, 0]]))
+         Matrix([[Rational(-1, 2, 1), 1/(1 - z)/2], [0, 0]]))
     addb((S.Half, S.Half), (S('3/2'), ),
-         Matrix([HyperRep_asin1(z), HyperRep_power1(Rational(-1, 2), z)]),
+         Matrix([HyperRep_asin1(z), HyperRep_power1(Rational(-1, 2, 1), z)]),
          Matrix([[1, 0]]),
-         Matrix([[Rational(-1, 2), S.Half], [0, z/(1 - z)/2]]))
+         Matrix([[Rational(-1, 2, 1), S.Half], [0, z/(1 - z)/2]]))
     addb((a, S.Half + a), (S.Half, ),
          Matrix([HyperRep_sqrts1(-a, z), -HyperRep_sqrts2(-a - S.Half, z)]),
          Matrix([[1, 0]]),
@@ -157,25 +157,25 @@ def add_formulae(formulae):
     addb([S.Half, S.Half], [S.One],
          Matrix([elliptic_k(z), elliptic_e(z)]),
          Matrix([[2/pi, 0]]),
-         Matrix([[Rational(-1, 2), -1/(2*z-2)],
-                 [Rational(-1, 2), S.Half]]))
-    addb([Rational(-1, 2), S.Half], [S.One],
+         Matrix([[Rational(-1, 2, 1), -1/(2*z-2)],
+                 [Rational(-1, 2, 1), S.Half]]))
+    addb([Rational(-1, 2, 1), S.Half], [S.One],
          Matrix([elliptic_k(z), elliptic_e(z)]),
          Matrix([[0, 2/pi]]),
-         Matrix([[Rational(-1, 2), -1/(2*z-2)],
-                 [Rational(-1, 2), S.Half]]))
+         Matrix([[Rational(-1, 2, 1), -1/(2*z-2)],
+                 [Rational(-1, 2, 1), S.Half]]))
 
     # 3F2
-    addb([Rational(-1, 2), 1, 1], [S.Half, 2],
+    addb([Rational(-1, 2, 1), 1, 1], [S.Half, 2],
          Matrix([z*HyperRep_atanh(z), HyperRep_log1(z), 1]),
-         Matrix([[Rational(-2, 3), -S.One/(3*z), Rational(2, 3)]]),
+         Matrix([[Rational(-2, 3, 1), -S.One/(3*z), Rational(2, 3, 1)]]),
          Matrix([[S.Half, 0, z/(1 - z)/2],
                  [0, 0, z/(z - 1)],
                  [0, 0, 0]]))
     # actually the formula for 3/2 is much nicer ...
-    addb([Rational(-1, 2), 1, 1], [2, 2],
+    addb([Rational(-1, 2, 1), 1, 1], [2, 2],
          Matrix([HyperRep_power1(S.Half, z), HyperRep_log2(z), 1]),
-         Matrix([[Rational(4, 9) - 16/(9*z), 4/(3*z), 16/(9*z)]]),
+         Matrix([[Rational(4, 9, 1) - 16/(9*z), 4/(3*z), 16/(9*z)]]),
          Matrix([[z/2/(z - 1), 0, 0], [1/(2*(z - 1)), 0, S.Half], [0, 0, 0]]))
 
     # 1F1
@@ -194,17 +194,17 @@ def add_formulae(formulae):
          Matrix([[1, 0]]),
          Matrix([[-a, 1], [0, z]]))
     # This one is redundant.
-    add([Rational(-1, 2)], [S.Half], exp(z) - sqrt(pi*z)*(-I)*erf(I*sqrt(z)))
+    add([Rational(-1, 2, 1)], [S.Half], exp(z) - sqrt(pi*z)*(-I)*erf(I*sqrt(z)))
 
     # Added to get nice results for Laplace transform of Fresnel functions
     # http://functions.wolfram.com/07.22.03.6437.01
     # Basic rule
-    #add([1], [Rational(3, 4), Rational(5, 4)],
+    #add([1], [Rational(3, 4, 1), Rational(5, 4, 1)],
     #    sqrt(pi) * (cos(2*sqrt(polar_lift(-1)*z))*fresnelc(2*root(polar_lift(-1)*z,4)/sqrt(pi)) +
     #                sin(2*sqrt(polar_lift(-1)*z))*fresnels(2*root(polar_lift(-1)*z,4)/sqrt(pi)))
     #    / (2*root(polar_lift(-1)*z,4)))
     # Manually tuned rule
-    addb([1], [Rational(3, 4), Rational(5, 4)],
+    addb([1], [Rational(3, 4, 1), Rational(5, 4, 1)],
          Matrix([ sqrt(pi)*(I*sinh(2*sqrt(z))*fresnels(2*root(z, 4)*exp(I*pi/4)/sqrt(pi))
                             + cosh(2*sqrt(z))*fresnelc(2*root(z, 4)*exp(I*pi/4)/sqrt(pi)))
                   * exp(-I*pi/4)/(2*root(z, 4)),
@@ -213,18 +213,18 @@ def add_formulae(formulae):
                   *exp(-I*pi/4)/2,
                   1 ]),
          Matrix([[1, 0, 0]]),
-         Matrix([[Rational(-1, 4),              1, Rational(1, 4)],
-                 [              z, Rational(1, 4),              0],
-                 [              0,              0,              0]]))
+         Matrix([[Rational(-1, 4, 1),                 1, Rational(1, 4, 1)],
+                 [                 z, Rational(1, 4, 1),                 0],
+                 [                 0,                 0,                 0]]))
 
     # 2F2
-    addb([S.Half, a], [Rational(3, 2), a + 1],
+    addb([S.Half, a], [Rational(3, 2, 1), a + 1],
          Matrix([a/(2*a - 1)*(-I)*sqrt(pi/z)*erf(I*sqrt(z)),
                  a/(2*a - 1)*(polar_lift(-1)*z)**(-a)*
                  lowergamma(a, polar_lift(-1)*z),
                  a/(2*a - 1)*exp(z)]),
          Matrix([[1, -1, 0]]),
-         Matrix([[Rational(-1, 2), 0, 1], [0, -a, 1], [0, 0, z]]))
+         Matrix([[Rational(-1, 2, 1), 0, 1], [0, -a, 1], [0, 0, z]]))
     # We make a "basis" of four functions instead of three, and give EulerGamma
     # an extra slot (it could just be a coefficient to 1). The advantage is
     # that this way Polys will not see multivariate polynomials (it treats
@@ -242,7 +242,7 @@ def add_formulae(formulae):
          Matrix([[1, 0]]), Matrix([[0, 1], [z, (1 - b)]]))
 
     # 0F3
-    x = 4*z**Rational(1, 4)
+    x = 4*z**Rational(1, 4, 1)
 
     def fp(a, z):
         return besseli(a, x) + besselj(a, x)
@@ -252,15 +252,15 @@ def add_formulae(formulae):
 
     # TODO branching
     addb([], [S.Half, a, a + S.Half],
-         Matrix([fp(2*a - 1, z), fm(2*a, z)*z**Rational(1, 4),
-                 fm(2*a - 1, z)*sqrt(z), fp(2*a, z)*z**Rational(3, 4)])
+         Matrix([fp(2*a - 1, z), fm(2*a, z)*z**Rational(1, 4, 1),
+                 fm(2*a - 1, z)*sqrt(z), fp(2*a, z)*z**Rational(3, 4, 1)])
          * 2**(-2*a)*gamma(2*a)*z**((1 - 2*a)/4),
          Matrix([[1, 0, 0, 0]]),
          Matrix([[0, 1, 0, 0],
                  [0, S.Half - a, 1, 0],
                  [0, 0, S.Half, 1],
                  [z, 0, 0, 1 - a]]))
-    x = 2*(4*z)**Rational(1, 4)*exp_polar(I*pi/4)
+    x = 2*(4*z)**Rational(1, 4, 1)*exp_polar(I*pi/4)
     addb([], [a, a + S.Half, 2*a],
          (2*sqrt(polar_lift(-1)*z))**(1 - 2*a)*gamma(2*a)**2 *
          Matrix([besselj(2*a - 1, x)*besseli(2*a - 1, x),
@@ -270,17 +270,17 @@ def add_formulae(formulae):
                  x**3*(besseli(2*a, x)*besselj(2*a - 1, x)
                        + besseli(2*a - 1, x)*besselj(2*a, x))]),
          Matrix([[1, 0, 0, 0]]),
-         Matrix([[0, Rational(1, 4), 0, 0],
-                 [0, (1 - 2*a)/2, Rational(-1, 2), 0],
-                 [0, 0, 1 - 2*a, Rational(1, 4)],
+         Matrix([[0, Rational(1, 4, 1), 0, 0],
+                 [0, (1 - 2*a)/2, Rational(-1, 2, 1), 0],
+                 [0, 0, 1 - 2*a, Rational(1, 4, 1)],
                  [-32*z, 0, 0, 1 - a]]))
 
     # 1F2
     addb([a], [a - S.Half, 2*a],
          Matrix([z**(S.Half - a)*besseli(a - S.Half, sqrt(z))**2,
                  z**(1 - a)*besseli(a - S.Half, sqrt(z))
-                 *besseli(a - Rational(3, 2), sqrt(z)),
-                 z**(Rational(3, 2) - a)*besseli(a - Rational(3, 2), sqrt(z))**2]),
+                 *besseli(a - Rational(3, 2, 1), sqrt(z)),
+                 z**(Rational(3, 2, 1) - a)*besseli(a - Rational(3, 2, 1), sqrt(z))**2]),
          Matrix([[-gamma(a + S.Half)**2/4**(S.Half - a),
                  2*gamma(a - S.Half)*gamma(a + S.Half)/4**(1 - a),
                  0]]),
@@ -295,17 +295,17 @@ def add_formulae(formulae):
          Matrix([[b - 1, S.Half, 0],
                  [z, 0, z],
                  [0, S.Half, -b]]))
-    addb([S.Half], [Rational(3, 2), Rational(3, 2)],
+    addb([S.Half], [Rational(3, 2, 1), Rational(3, 2, 1)],
          Matrix([Shi(2*sqrt(z))/2/sqrt(z), sinh(2*sqrt(z))/2/sqrt(z),
                  cosh(2*sqrt(z))]),
          Matrix([[1, 0, 0]]),
-         Matrix([[Rational(-1, 2), S.Half, 0], [0, Rational(-1, 2), S.Half], [0, 2*z, 0]]))
+         Matrix([[Rational(-1, 2, 1), S.Half, 0], [0, Rational(-1, 2, 1), S.Half], [0, 2*z, 0]]))
 
     # FresnelS
     # Basic rule
-    #add([Rational(3, 4)], [Rational(3, 2),Rational(7, 4)], 6*fresnels( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( pi * (exp(pi*I/4)*root(z,4)*2/sqrt(pi))**3 ) )
+    #add([Rational(3, 4, 1)], [Rational(3, 2, 1),Rational(7, 4, 1)], 6*fresnels( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( pi * (exp(pi*I/4)*root(z,4)*2/sqrt(pi))**3 ) )
     # Manually tuned rule
-    addb([Rational(3, 4)], [Rational(3, 2), Rational(7, 4)],
+    addb([Rational(3, 4, 1)], [Rational(3, 2, 1), Rational(7, 4, 1)],
          Matrix(
              [ fresnels(
                  exp(
@@ -316,15 +316,15 @@ def add_formulae(formulae):
                sinh(2*sqrt(z))/sqrt(z),
                cosh(2*sqrt(z)) ]),
          Matrix([[6, 0, 0]]),
-         Matrix([[Rational(-3, 4),  Rational(1, 16), 0],
-                 [ 0,      Rational(-1, 2),  1],
-                 [ 0,       z,       0]]))
+         Matrix([[Rational(-3, 4, 1), Rational(1, 16, 1), 0],
+                 [                 0, Rational(-1, 2, 1), 1],
+                 [                 0,                  z, 0]]))
 
     # FresnelC
     # Basic rule
-    #add([Rational(1, 4)], [S.Half,Rational(5, 4)], fresnelc( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) )
+    #add([Rational(1, 4, 1)], [S.Half,Rational(5, 4, 1)], fresnelc( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) )
     # Manually tuned rule
-    addb([Rational(1, 4)], [S.Half, Rational(5, 4)],
+    addb([Rational(1, 4, 1)], [S.Half, Rational(5, 4, 1)],
          Matrix(
              [ sqrt(
                  pi)*exp(
@@ -333,7 +333,7 @@ def add_formulae(formulae):
                cosh(2*sqrt(z)),
                sinh(2*sqrt(z))*sqrt(z) ]),
          Matrix([[1, 0, 0]]),
-         Matrix([[Rational(-1, 4),  Rational(1, 4), 0     ],
+         Matrix([[Rational(-1, 4, 1),  Rational(1, 4, 1), 0     ],
                  [ 0,       0,      1     ],
                  [ 0,       z,      S.Half]]))
 
@@ -353,11 +353,11 @@ def add_formulae(formulae):
                  [z/2, 0, b - 2*a, z/2],
                  [0, S.Half, S.Half, -2*a]]))
     # (C/f above comment about eulergamma in the basis).
-    addb([1, 1], [2, 2, Rational(3, 2)],
+    addb([1, 1], [2, 2, Rational(3, 2, 1)],
          Matrix([Chi(2*sqrt(z)) - log(2*sqrt(z)),
                  cosh(2*sqrt(z)), sqrt(z)*sinh(2*sqrt(z)), 1, EulerGamma]),
          Matrix([[1/z, 0, 0, 0, -1/z]]),
-         Matrix([[0, S.Half, 0, Rational(-1, 2), 0],
+         Matrix([[0, S.Half, 0, Rational(-1, 2, 1), 0],
                  [0, 0, 1, 0, 0],
                  [0, z, S.Half, 0, 0],
                  [0, 0, 0, 0, 0],
