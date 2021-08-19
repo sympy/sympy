@@ -681,3 +681,9 @@ def test_issue_20275():
         [Matrix([[S(1)/2 + sqrt(5)/2], [0], [1], [1], [0]]),
          Matrix([[S(1)/2 + sqrt(5)/2], [1], [0], [0], [1]])]
     )
+
+
+def test_issue_20752():
+    b = symbols('b',nonzero=True)
+    m = Matrix([[0, 0, 0], [0, b, 0], [0, 0, b]])
+    assert m.is_positive_semidefinite == None
