@@ -1,6 +1,6 @@
 from sympy import symbols, re, im, sign, I, Abs, Symbol, \
      cos, sin, sqrt, conjugate, log, acos, E, pi, \
-     Matrix, diff, integrate, trigsimp, S, Rational
+     Matrix, diff, integrate, trigsimp, S, Rational, zoo
 from sympy.algebras.quaternion import Quaternion
 from sympy.testing.pytest import raises
 
@@ -198,6 +198,9 @@ def test_issue_21576():
     q0 = Quaternion(w, x, y, z)
     q = Quaternion(0, w, 0, 0)
     q1 = Quaternion(0, 0, 0, 0)
+    assert q0.exp().subs({w:1, x:0, y:0, z:0}) == Quaternion(E, 0, 0, 0)
     assert q0._ln().subs(w**2 + x**2 + y**2 + z**2, 1).subs({x:0, y:0, z:0}) == Quaternion(0, 0, 0, 0)
     assert q.exp().subs(w, 0) == Quaternion(1, 0, 0, 0)
+    assert q._ln().subs(w, 0) == Quaternion(zoo, 0, 0, 0)
     assert q1.exp() == Quaternion(1, 0, 0, 0)
+    assert q1._ln() == Quaternion(zoo, 0, 0, 0)

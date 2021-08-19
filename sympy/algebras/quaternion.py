@@ -485,9 +485,9 @@ class Quaternion(Expr):
         vector_norm = sqrt(q.b**2 + q.c**2 + q.d**2)
         q_norm = q.norm()
         a = ln(q_norm)
-        b = q.b * acos(q.a / q_norm) / (Piecewise((vector_norm, vector_norm > 0), (1, True)))
-        c = q.c * acos(q.a / q_norm) / (Piecewise((vector_norm, vector_norm > 0), (1, True)))
-        d = q.d * acos(q.a / q_norm) / (Piecewise((vector_norm, vector_norm > 0), (1, True)))
+        b = q.b * acos(q.a / Piecewise((q_norm, q_norm > 0), (1, True))) / (Piecewise((vector_norm, vector_norm > 0), (1, True)))
+        c = q.c * acos(q.a / Piecewise((q_norm, q_norm > 0), (1, True))) / (Piecewise((vector_norm, vector_norm > 0), (1, True)))
+        d = q.d * acos(q.a / Piecewise((q_norm, q_norm > 0), (1, True))) / (Piecewise((vector_norm, vector_norm > 0), (1, True)))
 
         return Quaternion(a, b, c, d)
 
