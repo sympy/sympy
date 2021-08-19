@@ -1818,16 +1818,18 @@ class Rational(Number):
             if isinstance(expt, Rational):
                 intpart = expt.p // expt.q
                 if intpart:
-                    remfracpart = expt.q - expt.p
-                    if self.p != 1:
-                        return Integer(self.p)**expt*Integer(self.q)**Rational(remfracpart, expt.q)*Rational(1, self.q)
-                    return Integer(self.q)**Rational(remfracpart, expt.q)*Rational(1, self.q)
-                else:
                     intpart += 1
                     remfracpart = intpart*expt.q - expt.p
+                    ratfracpart = Rational(remfracpart, expt.q)
                     if self.p != 1:
-                        return Integer(self.p)**expt*Integer(self.q)**Rational(remfracpart, expt.q)*Rational(1, self.q**intpart)
-                    return Integer(self.q)**Rational(remfracpart, expt.q)*Rational(1, self.q**intpart)
+                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational(1, self.q**intpart)
+                    return Integer(self.q)**ratfracpart*Rational(1, self.q**intpart)
+                else:
+                    remfracpart = expt.q - expt.p
+                    ratfracpart = Rational(remfracpart, expt.q)
+                    if self.p != 1:
+                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational(1, self.q)
+                    return Integer(self.q)**ratfracpart*Rational(1, self.q)
 
         if self.is_extended_negative and expt.is_even:
             return (-self)**expt
