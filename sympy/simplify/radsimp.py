@@ -967,8 +967,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
             d *= num
             d = powdenest(_mexpand(d), force=symbolic)
             if d.has(S.Zero, nan, zoo):
-                n, d = fraction(expr)
-                return _unevaluated_Mul(n, 1/d)
+                return expr
             if d.is_Atom:
                 break
 
