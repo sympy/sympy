@@ -746,3 +746,16 @@ class Quaternion(Expr):
 
             return Matrix([[m00, m01, m02, m03], [m10, m11, m12, m13],
                           [m20, m21, m22, m23], [m30, m31, m32, m33]])
+def ddm_transpose(M, shape):
+    MT = []
+    nrows,ncols = shape
+    
+    for j in range(ncols):
+        row = []
+        for i in range(nrows):
+            row.append(M[i][j])
+        MT.append(row)
+
+    return MT
+
+
