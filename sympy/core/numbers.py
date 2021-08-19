@@ -1799,9 +1799,9 @@ class Rational(Number):
                 # (3/4)**-2 -> (4/3)**2
                 ne = -expt
                 if (ne is S.One):
-                    return Rational(self.q, self.p)
+                    return Rational(self.q, self.p, 1)
                 if self.is_negative:
-                    return S.NegativeOne**expt*Rational(self.q, -self.p)**ne
+                    return S.NegativeOne**expt*Rational(self.q, -self.p, 1)**ne
                 else:
                     return Rational(self.q, self.p)**ne
             if expt is S.Infinity:  # -oo already caught by test for negative
@@ -1822,14 +1822,14 @@ class Rational(Number):
                     remfracpart = intpart*expt.q - expt.p
                     ratfracpart = Rational(remfracpart, expt.q)
                     if self.p != 1:
-                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational(1, self.q**intpart)
-                    return Integer(self.q)**ratfracpart*Rational(1, self.q**intpart)
+                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational(1, self.q**intpart, 1)
+                    return Integer(self.q)**ratfracpart*Rational(1, self.q**intpart, 1)
                 else:
                     remfracpart = expt.q - expt.p
                     ratfracpart = Rational(remfracpart, expt.q)
                     if self.p != 1:
-                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational(1, self.q)
-                    return Integer(self.q)**ratfracpart*Rational(1, self.q)
+                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational(1, self.q, 1)
+                    return Integer(self.q)**ratfracpart*Rational(1, self.q, 1)
 
         if self.is_extended_negative and expt.is_even:
             return (-self)**expt
@@ -1843,7 +1843,7 @@ class Rational(Number):
         return mpmath.make_mpf(mlib.from_rational(self.p, self.q, prec, rnd))
 
     def __abs__(self):
-        return Rational(abs(self.p), self.q)
+        return Rational(abs(self.p), self.q, 1)
 
     def __int__(self):
         p, q = self.p, self.q
@@ -2325,7 +2325,7 @@ class Integer(Rational):
             # cases -1, 0, 1 are done in their respective classes
             return S.Infinity + S.ImaginaryUnit*S.Infinity
         if expt is S.NegativeInfinity:
-            return Rational(1, self)**S.Infinity
+            return Rational(1, self, 1)**S.Infinity
         if not isinstance(expt, Number):
             # simplify when expt is even
             # (-2)**k --> 2**k
@@ -2343,9 +2343,9 @@ class Integer(Rational):
             # invert base and change sign on exponent
             ne = -expt
             if self.is_negative:
-                    return S.NegativeOne**expt*Rational(1, -self)**ne
+                    return S.NegativeOne**expt*Rational(1, -self, 1)**ne
             else:
-                return Rational(1, self.p)**ne
+                return Rational(1, self.p, 1)**ne
         # see if base is a perfect root, sqrt(4) --> 2
         x, xexact = integer_nthroot(abs(self.p), expt.q)
         if xexact:
@@ -2383,7 +2383,7 @@ class Integer(Rational):
                 # (2**2)**(1/10) -> 2**(1/5)
                 g = igcd(div_m, expt.q)
                 if g != 1:
-                    out_rad *= Pow(prime, Rational(div_m//g, expt.q//g))
+                    out_rad *= Pow(prime, Rational(div_m//g, expt.q//g, 1))
                 else:
                     sqr_dict[prime] = div_m
         # identify gcd of remaining powers
@@ -3719,7 +3719,7 @@ class Pi(NumberSymbol, metaclass=Singleton):
         if issubclass(number_cls, Integer):
             return (Integer(3), Integer(4))
         elif issubclass(number_cls, Rational):
-            return (Rational(223, 71), Rational(22, 7))
+            return (Rational(223, 71, 1), Rational(22, 7, 1))
 
     def _sage_(self):
         import sage.all as sage
@@ -3920,7 +3920,7 @@ class EulerGamma(NumberSymbol, metaclass=Singleton):
         if issubclass(number_cls, Integer):
             return (S.Zero, S.One)
         elif issubclass(number_cls, Rational):
-            return (S.Half, Rational(3, 5))
+            return (S.Half, Rational(3, 5, 1))
 
     def _sage_(self):
         import sage.all as sage
@@ -3976,7 +3976,7 @@ class Catalan(NumberSymbol, metaclass=Singleton):
         if issubclass(number_cls, Integer):
             return (S.Zero, S.One)
         elif issubclass(number_cls, Rational):
-            return (Rational(9, 10), S.One)
+            return (Rational(9, 10, 1), S.One)
 
     def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None):
         from sympy import Sum, Dummy
