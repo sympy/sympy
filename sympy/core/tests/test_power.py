@@ -563,6 +563,37 @@ def test_issue_18762():
     g0 = sqrt(1 + e**2 - 2*e*cos(p))
     assert len(g0.series(e, 1, 3).args) == 4
 
+
+def test_issue_21860():
+    x = Symbol('x')
+    e = 3*2**Rational(66666666667,200000000000)*3**Rational(16666666667,50000000000)*x**Rational(66666666667, 200000000000)
+    ans = Mul(Rational(3, 2),
+              Pow(Integer(2), Rational(33333333333, 100000000000)),
+              Pow(Integer(3), Rational(26666666667, 40000000000)))
+    assert e.xreplace({x: Rational(3,8)}) == ans
+
+
+def test_issue_21647():
+    x = Symbol('x')
+    e = log((Integer(567)/500)**(811*(Integer(567)/500)**x/100))
+    ans = log(Mul(Rational(64701150190720499096094005280169087619821081527,
+                           76293945312500000000000000000000000000000000000),
+                  Pow(Integer(2), Rational(396204892125479941, 781250000000000000)),
+                  Pow(Integer(3), Rational(385045107874520059, 390625000000000000)),
+                  Pow(Integer(5), Rational(407364676376439823, 1562500000000000000)),
+                  Pow(Integer(7), Rational(385045107874520059, 1562500000000000000))))
+    assert e.xreplace({x: 6}) == ans
+
+
+def test_issue_21762():
+    x = Symbol('x')
+    e = (x**2 + 6)**(Integer(33333333333333333)/50000000000000000)
+    ans = Mul(Rational(5, 4),
+              Pow(Integer(2), Rational(16666666666666667, 25000000000000000)),
+              Pow(Integer(5), Rational(8333333333333333, 25000000000000000)))
+    assert e.xreplace({x: S.Half}) == ans
+
+
 def test_power_dispatcher():
 
     class NewBase(Expr):

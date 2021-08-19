@@ -1816,13 +1816,18 @@ class Rational(Number):
                 # (4/3)**2 -> 4**2 / 3**2
                 return Rational(self.p**expt.p, self.q**expt.p, 1)
             if isinstance(expt, Rational):
-                if self.p != 1:
-                    # (4/3)**(5/6) -> 4**(5/6)*3**(-5/6)
-                    return Integer(self.p)**expt*Integer(self.q)**(-expt)
-                # as the above caught negative self.p, now self is positive
-                return Integer(self.q)**Rational(
-                expt.p*(expt.q - 1), expt.q) / \
-                    Integer(self.q)**Integer(expt.p)
+                intpart = expt.p // expt.q
+                if intpart:
+                    remfracpart = expt.q - expt.p
+                    if self.p != 1:
+                        return Integer(self.p)**expt*Integer(self.q)**Rational(remfracpart, expt.q)/Integer(self.q)
+                    return Integer(self.q)**Rational(remfracpart, expt.q)/Integer(self.q)
+                else:
+                    intpart += 1
+                    remfracpart = intpart*expt.q - expt.p
+                    if self.p != 1:
+                        return Integer(self.p)**expt*Integer(self.q)**Rational(remfracpart, expt.q)/Integer(self.q)**intpart
+                    return Integer(self.q)**Rational(remfracpart, expt.q)/Integer(self.q)**intpart
 
         if self.is_extended_negative and expt.is_even:
             return (-self)**expt
