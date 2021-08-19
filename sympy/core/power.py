@@ -1305,8 +1305,8 @@ class Pow(Expr):
             from ..functions import exp
             re_e, im_e = self.exp.as_real_imag()
             if deep:
-                re_e = re_e.expand(deep, **hints)
-                im_e = im_e.expand(deep, **hints)
+                re_e = re_e.expand(deep=deep, **hints)
+                im_e = im_e.expand(deep=deep, **hints)
             c, s = cos(im_e), sin(im_e)
             return exp(re_e)*c, exp(re_e)*s
         else:
@@ -1314,7 +1314,7 @@ class Pow(Expr):
             if deep:
                 hints['complex'] = False
 
-                expanded = self.expand(deep, **hints)
+                expanded = self.expand(deep=deep, **hints)
                 if hints.get('ignore') == expanded:
                     return None
                 else:
@@ -1528,7 +1528,7 @@ class Pow(Expr):
                 return self.func(n, exp), d
         return self.func(n, exp), self.func(d, exp)
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict={}, *, old=False):
         expr = _sympify(expr)
         repl_dict = repl_dict.copy()
 

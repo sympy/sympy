@@ -1521,7 +1521,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         query = _make_find_query(query)
         return sum(bool(query(sub)) for sub in preorder_traversal(self))
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict={}, *, old=False):
         """
         Helper method for match() that looks for a match between Wild symbols
         in self and expressions in expr.
@@ -1557,7 +1557,7 @@ class Basic(Printable, metaclass=ManagedProperties):
                 return None
         return d
 
-    def match(self, pattern, old=False):
+    def match(self, pattern, *, old=False):
         """
         Pattern matching.
 
@@ -1639,10 +1639,10 @@ class Basic(Printable, metaclass=ManagedProperties):
         # done
         return m
 
-    def count_ops(self, visual=None):
+    def count_ops(self, *, visual=None):
         """wrapper for count_ops that returns the operation count."""
         from sympy import count_ops
-        return count_ops(self, visual)
+        return count_ops(self, visual=visual)
 
     def doit(self, **hints):
         """Evaluate objects that are not evaluated by default like limits,
@@ -1870,7 +1870,7 @@ class Atom(Basic):
 
     __slots__ = ()
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict={}, *, old=False):
         if self == expr:
             return repl_dict.copy()
 

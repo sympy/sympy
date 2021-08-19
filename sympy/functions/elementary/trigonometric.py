@@ -57,11 +57,11 @@ class TrigonometricFunction(Function):
         if self.args[0].is_extended_real:
             if deep:
                 hints['complex'] = False
-                return (self.args[0].expand(deep, **hints), S.Zero)
+                return (self.args[0].expand(deep=deep, **hints), S.Zero)
             else:
                 return (self.args[0], S.Zero)
         if deep:
-            re, im = self.args[0].expand(deep, **hints).as_real_imag()
+            re, im = self.args[0].expand(deep=deep, **hints).as_real_imag()
         else:
             re, im = self.args[0].as_real_imag()
         return (re, im)

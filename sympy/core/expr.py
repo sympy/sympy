@@ -707,7 +707,7 @@ class Expr(Basic, EvalfMixin):
             return None
         return True
 
-    def equals(self, other, failing_expression=False):
+    def equals(self, other, *, failing_expression=False):
         """Return True if self == other, False if it doesn't, or None. If
         failing_expression is True then the expression which did not simplify
         to a 0 will be returned instead of None.
@@ -1133,7 +1133,7 @@ class Expr(Basic, EvalfMixin):
         except PolynomialError:
             return None
 
-    def as_ordered_terms(self, order=None, data=False):
+    def as_ordered_terms(self, order=None, *, data=False):
         """
         Transform an expression to an ordered list of terms.
 
@@ -1152,7 +1152,7 @@ class Expr(Basic, EvalfMixin):
 
         if order is None and self.is_Add:
             # Spot the special case of Add(Number, Mul(Number, expr)) with the
-            # first number positive and thhe second number nagative
+            # first number positive and the second number negative
             key = lambda x:not isinstance(x, (Number, NumberSymbol))
             add_args = sorted(Add.make_args(self), key=key)
             if (len(add_args) == 2
@@ -1297,12 +1297,12 @@ class Expr(Basic, EvalfMixin):
 
         raise NotImplementedError('not sure of order of %s' % o)
 
-    def count_ops(self, visual=None):
+    def count_ops(self, *, visual=None):
         """wrapper for count_ops that returns the operation count."""
         from .function import count_ops
-        return count_ops(self, visual)
+        return count_ops(self, visual=visual)
 
-    def args_cnc(self, cset=False, warn=True, split_1=True):
+    def args_cnc(self, *, cset=False, warn=True, split_1=True):
         """Return [commutative factors, non-commutative factors] of self.
 
         Explanation
@@ -3559,7 +3559,7 @@ class Expr(Basic, EvalfMixin):
         return (expr, hit)
 
     @cacheit
-    def expand(self, deep=True, modulus=None, power_base=True, power_exp=True,
+    def expand(self, *, deep=True, modulus=None, power_base=True, power_exp=True,
             mul=True, log=True, multinomial=True, basic=True, **hints):
         """
         Expand an expression using hints.

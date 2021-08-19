@@ -161,7 +161,7 @@ def link(obj_files, out_file=None, shared=False, Runner=None,
                 )
             for k, v in extra_kwargs.items():
                 if k in kwargs:
-                    kwargs[k].expand(v)
+                    kwargs[k].extend(v)
                 else:
                     kwargs[k] = v
         else:

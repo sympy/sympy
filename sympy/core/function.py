@@ -1039,7 +1039,7 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
             nargs = FiniteSet(*nargs)
         cls.nargs = nargs
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict={}, *, old=False):
         if not isinstance(expr, (AppliedUndef, Function)):
             return None
         if len(expr.args) not in self.nargs:
@@ -2525,7 +2525,7 @@ def diff(f, *symbols, **kwargs):
     return _derivative_dispatch(f, *symbols, **kwargs)
 
 
-def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
+def expand(e, *, deep=True, modulus=None, power_base=True, power_exp=True,
         mul=True, log=True, multinomial=True, basic=True, **hints):
     r"""
     Expand an expression using methods given as hints.
@@ -3089,7 +3089,7 @@ def expand_power_exp(expr, deep=True):
     log=False, mul=False, power_exp=True, power_base=False, multinomial=False)
 
 
-def count_ops(expr, visual=False):
+def count_ops(expr, *, visual=False):
     """
     Return a representation (integer or expression) of the operations in expr.
 
