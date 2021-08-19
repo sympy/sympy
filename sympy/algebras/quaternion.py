@@ -116,7 +116,7 @@ class Quaternion(Expr):
         c = y * s
         d = z * s
 
-        return cls(a, b, c, d).normalize()
+        return cls(a, b, c, d)
 
     @classmethod
     def from_rotation_matrix(cls, M):
@@ -585,7 +585,7 @@ class Quaternion(Expr):
                           integrate(self.c, *args), integrate(self.d, *args))
 
     @staticmethod
-    def rotate_point(pin, r):
+    def rotate_point(pin, r, is_normalized=False):
         """Returns the coordinates of the point pin(a 3 tuple) after rotation.
 
         Parameters
@@ -599,6 +599,9 @@ class Quaternion(Expr):
 
             It's important to note that when r is a tuple, it must be of the form
             (axis, angle)
+
+        is_normalized: boolean
+            Whether or not the quaternion r is already normalized.
 
         Returns
         =======
@@ -625,7 +628,7 @@ class Quaternion(Expr):
             q = Quaternion.from_axis_angle(r[0], r[1])
         else:
             # if r is a quaternion
-            q = r.normalize()
+            q = r if is_normalized else r.normalize()
         pout = q * Quaternion(0, pin[0], pin[1], pin[2]) * conjugate(q)
         return (pout.b, pout.c, pout.d)
 
@@ -657,7 +660,7 @@ class Quaternion(Expr):
         q = q.normalize()
         angle = trigsimp(2 * acos(q.a))
 
-        # Since quaternion is normalised, q.a is less than 1.
+        # Since quaternion is normalised, q.a is less than or equal to 1.
         s = sqrt(1 - q.a*q.a)
 
         x = trigsimp(q.b / s)
