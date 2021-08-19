@@ -1884,9 +1884,22 @@ def _solve_system(exprs, symbols, **flags):
         # be solved.
         def _ok_syms(e, sort=False):
             rv = (e.free_symbols - solved_syms) & legal
+
+            # Solve first for symbols that have lower degree in the equation.
+            # Ideally we want to solve firstly for symbols that appear linearly
+            # with rational coefficients e.g. if e = x*y + z then we should
+            # solve for z first.
+            def key(sym):
+                ep = e.as_poly(sym)
+                if ep is None:
+                    complexity = (S.Infinity, S.Infinity, S.Infinity)
+                else:
+                    coeff_syms = ep.LC().free_symbols
+                    complexity = (ep.degree(), len(coeff_syms & rv), len(coeff_syms))
+                return complexity + (default_sort_key(sym),)
+
             if sort:
-                rv = list(rv)
-                rv.sort(key=default_sort_key)
+                rv = sorted(rv, key=key)
             return rv
 
         solved_syms = set(solved_syms)  # set of symbols we have solved for

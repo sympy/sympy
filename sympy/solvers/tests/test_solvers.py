@@ -870,12 +870,12 @@ def test_issue_5132():
         {(log(-sin(2)), -S(2)), (log(sin(2)), S(2))}
     eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
     assert solve(eqs, set=True) == \
-        ([x, y], {
-        (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
-        (log(-z**2 - sin(log(3)))/2, -log(3))})
+        ([y, z], {
+        (-log(3), sqrt(-exp(2*x) - sin(log(3)))),
+        (-log(3), -sqrt(-exp(2*x) - sin(log(3))))})
     assert solve(eqs, x, z, set=True) == (
         [x, z],
-        {(log(-z**2 + sin(y))/2, z), (log(-sqrt(-z**2 + sin(y))), z)})
+        {(x, sqrt(-exp(2*x) + sin(y))), (x, -sqrt(-exp(2*x) + sin(y)))})
     assert set(solve(eqs, x, y)) == \
         {
             (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
@@ -885,12 +885,10 @@ def test_issue_5132():
             (-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
         (-log(3), sqrt(-exp(2*x) - sin(log(3))))}
     eqs = [exp(x)**2 - sin(y) + z, 1/exp(y) - 3]
-    assert solve(eqs, set=True) == ([x, y], {
-        (log(-sqrt(-z - sin(log(3)))), -log(3)),
-            (log(-z - sin(log(3)))/2, -log(3))})
+    assert solve(eqs, set=True) == ([y, z], {
+        (-log(3), -exp(2*x) - sin(log(3)))})
     assert solve(eqs, x, z, set=True) == (
-        [x, z],
-        {(log(-sqrt(-z + sin(y))), z), (log(-z + sin(y))/2, z)})
+        [x, z], {(x, -exp(2*x) + sin(y))})
     assert set(solve(eqs, x, y)) == {
             (log(-sqrt(-z - sin(log(3)))), -log(3)),
             (log(-z - sin(log(3)))/2, -log(3))}
@@ -1401,10 +1399,10 @@ def test_issue_21882():
     ]
 
     answer = [
-        {a: 0, d: 0, b: 0, f: 0, c: 0, g: 0},
-        {a: 0, d: -f, b: 0, k: S(5)/6, c: 0, g: 0},
-        {a: -2*c, d: 0, b: c, f: 0, k: S(13)/18, g: 0},
-        {a: 0, d: 0, b: 0, k: S(3)/2, c: 0, f: 0, g: 0}
+        {a: 0, f: 0, b: 0, d: 0, c: 0, g: 0},
+        {a: 0, f: -d, b: 0, k: S(5)/6, c: 0, g: 0},
+        {a: -2*c, f: 0, b: c, d: 0, k: S(13)/18, g: 0},
+        {a: 0, f: 0, b: 0, k: S(3)/2, c: 0, d: 0, g: 0}
     ]
 
     assert solve(equations, unknowns, dict=True) == answer
