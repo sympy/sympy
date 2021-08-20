@@ -1,4 +1,4 @@
-from sympy import Basic, Expr, S, sympify
+from sympy import Basic, Expr, S, sympify, Mul
 from sympy.matrices.common import NonSquareMatrixError
 
 
@@ -37,7 +37,12 @@ class Determinant(Expr):
         try:
             return self.arg._eval_determinant()
         except (AttributeError, NotImplementedError):
-            return self
+            try:
+                eigs = self.arg._eval_eigenvals()
+                return Mul(*[e**c for e, c in eigs.items()])
+            except (AttributeError, NotImplementedError):
+                return self
+
 
 def det(matexpr):
     """ Matrix Determinant

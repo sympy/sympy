@@ -2,6 +2,7 @@ from sympy.core.sympify import _sympify
 from sympy.matrices.expressions import MatrixExpr
 from sympy import S, I, sqrt, exp
 
+
 class DFT(MatrixExpr):
     """ Discrete Fourier Transform """
     def __new__(cls, n):
@@ -21,6 +22,27 @@ class DFT(MatrixExpr):
     def _eval_inverse(self):
         return IDFT(self.n)
 
+    def _eval_eigenvals(self):
+        # Based on Dickinson and Steiglitz, "Eigenvectors and Functions of the
+        # Discrete Fourier Transform", 1982
+        if self.n.is_Integer:
+            m = self.n // 4
+            r = self.n % 4
+            if r == 0:
+                ret = {S.One: m+1, S.NegativeOne: m,
+                       S.ImaginaryUnit: m-1, S.NegativeOne*S.ImaginaryUnit: m}
+            elif r == 1:
+                ret = {S.One: m+1, S.NegativeOne: m,
+                       S.ImaginaryUnit: m, S.NegativeOne*S.ImaginaryUnit: m}
+            elif r == 2:
+                ret = {S.One: m+1, S.NegativeOne: m+1,
+                       S.ImaginaryUnit: m, S.NegativeOne*S.ImaginaryUnit: m}
+            elif r == 3:
+                ret = {S.One: m+1, S.NegativeOne: m+1,
+                       S.ImaginaryUnit: m, S.NegativeOne*S.ImaginaryUnit: m+1}
+            return {eig: ret[eig] for eig in ret if ret[eig] > 0}
+
+
 class IDFT(DFT):
     """ Inverse Discrete Fourier Transform """
     def _entry(self, i, j, **kwargs):
@@ -29,3 +51,23 @@ class IDFT(DFT):
 
     def _eval_inverse(self):
         return DFT(self.n)
+
+    def _eval_eigenvals(self):
+        # Based on Dickinson and Steiglitz, "Eigenvectors and Functions of the
+        # Discrete Fourier Transform", 1982
+        if self.n.is_Integer:
+            m = self.n // 4
+            r = self.n % 4
+            if r == 0:
+                ret = {S.One: m+1, S.NegativeOne: m,
+                       S.ImaginaryUnit: m, S.NegativeOne*S.ImaginaryUnit: m-1}
+            elif r == 1:
+                ret = {S.One: m+1, S.NegativeOne: m,
+                       S.ImaginaryUnit: m, S.NegativeOne*S.ImaginaryUnit: m}
+            elif r == 2:
+                ret = {S.One: m+1, S.NegativeOne: m+1,
+                       S.ImaginaryUnit: m, S.NegativeOne*S.ImaginaryUnit: m}
+            elif r == 3:
+                ret = {S.One: m+1, S.NegativeOne: m+1,
+                       S.ImaginaryUnit: m+1, S.NegativeOne*S.ImaginaryUnit: m}
+            return {eig: ret[eig] for eig in ret if ret[eig] > 0}
