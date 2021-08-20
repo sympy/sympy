@@ -722,13 +722,13 @@ def test_issue_14706():
     if not numpy:
         skip("numpy not installed.")
 
-    z1 = numpy.zeros((1, 1), dtype=numpy.float)
-    z2 = numpy.zeros((2, 2), dtype=numpy.float)
-    z3 = numpy.zeros((), dtype=numpy.float)
+    z1 = numpy.zeros((1, 1), dtype=numpy.float64)
+    z2 = numpy.zeros((2, 2), dtype=numpy.float64)
+    z3 = numpy.zeros((), dtype=numpy.float64)
 
-    y1 = numpy.ones((1, 1), dtype=numpy.float)
-    y2 = numpy.ones((2, 2), dtype=numpy.float)
-    y3 = numpy.ones((), dtype=numpy.float)
+    y1 = numpy.ones((1, 1), dtype=numpy.float64)
+    y2 = numpy.ones((2, 2), dtype=numpy.float64)
+    y3 = numpy.ones((), dtype=numpy.float64)
 
     assert numpy.all(x + z1 == numpy.full((1, 1), x))
     assert numpy.all(x + z2 == numpy.full((2, 2), x))
@@ -736,7 +736,7 @@ def test_issue_14706():
     assert numpy.all(z2 + x == numpy.full((2, 2), x))
     for z in [z3,
               numpy.int(0),
-              numpy.float(0),
+              numpy.float64(0),
               numpy.complex(0)]:
         assert x + z == x
         assert z + x == x
@@ -756,7 +756,7 @@ def test_issue_14706():
     assert numpy.all(y2 + x == numpy.full((2, 2), x + 1.0))
     for y_ in [y3,
               numpy.int(1),
-              numpy.float(1),
+              numpy.float64(1),
               numpy.complex(1)]:
         assert x + y_ == y_ + x
         assert isinstance(x + y_, Add)
@@ -775,6 +775,7 @@ def test_issue_14706():
     raises(SympifyError, lambda: sympify(numpy.array([1]), strict=True))
     raises(SympifyError, lambda: sympify(z1, strict=True))
     raises(SympifyError, lambda: sympify(z2, strict=True))
+
 
 
 def test_issue_21536():
