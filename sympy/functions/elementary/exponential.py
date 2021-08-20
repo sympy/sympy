@@ -645,13 +645,13 @@ class log(Function):
                 # or else expand_log in Mul would have to handle this
                 n = multiplicity(base, arg)
                 if n:
-                    return n + log(arg / base**n) / log(base)
+                    return n + LogWithBase(arg / base**n, base)
                 else:
-                    return log(arg)/log(base)
+                    return LogWithBase(arg, base)
             except ValueError:
                 pass
             if base is not S.Exp1:
-                return cls(arg)/cls(base)
+                return LogWithBase(arg, base)
             else:
                 return cls(arg)
 
@@ -1045,6 +1045,316 @@ class log(Function):
         if x0.is_real and x0.is_negative and im(cdir).is_negative:
             return self.func(x0) - 2*I*S.Pi
         return self.func(arg)
+
+
+class LogWithBase(Function):
+    r"""
+    The natural logarithm function `\ln(x)` or `\log(x)`.
+
+    Explanation
+    ===========
+
+    Logarithms are taken with the natural base, `e`. To get
+    a logarithm of a different base ``b``, use ``log(x, b)``,
+    which is essentially short-hand for ``log(x)/log(b)``.
+
+    ``log`` represents the principal branch of the natural
+    logarithm. As such it has a branch cut along the negative
+    real axis and returns values having a complex argument in
+    `(-\pi, \pi]`.
+
+    Examples
+    ========
+
+    >>> from sympy import log, sqrt, S, I
+    >>> log(8, 2)
+    3
+    >>> log(S(8)/3, 2)
+    -log(3)/log(2) + 3
+    >>> log(-1 + I*sqrt(3))
+    log(2) + 2*I*pi/3
+
+    See Also
+    ========
+
+    exp
+
+    """
+    _singularities = (S.Zero, S.ComplexInfinity)
+
+    def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of the function.
+        """
+        if argindex == 1:
+            return 1/(self.args[0]*log(self.args[1]))
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        r"""
+        Returns `b^x`, the inverse function of `\log_b(x)`.
+        """
+        return lambda x : Pow(self.arg[1], x)
+
+    @classmethod
+    def eval(cls, arg, base):
+        from sympy.calculus import AccumBounds
+
+        arg = sympify(arg)
+        base = sympify(base)
+        if base == 1:
+            if arg == 1:
+                return S.NaN
+            else:
+                return S.ComplexInfinity
+        try:
+            # handle extraction of powers of the base now
+            # or else expand_log in Mul would have to handle this
+            n = multiplicity(base, arg)
+            if n:
+                arg = arg / base**n
+                return n + cls(arg, base)
+        except ValueError:
+            pass
+        if base is S.Exp1:
+            return log(arg)
+
+        if arg.is_Number:
+            if arg.is_zero:
+                return S.ComplexInfinity
+            elif arg is S.One:
+                return S.Zero
+            elif arg is S.Infinity:
+                return S.Infinity
+            elif arg is S.NegativeInfinity:
+                return S.Infinity
+            elif arg is S.NaN:
+                return S.NaN
+            elif arg.is_Rational and arg.p == 1:
+                return -cls(arg.q, base)
+
+        if arg.is_Pow and arg.base == base and arg.exp.is_extended_real:
+            return arg.exp
+        I = S.ImaginaryUnit
+        if isinstance(arg, AccumBounds):
+            if arg.min.is_positive:
+                return AccumBounds(cls(arg.min, base), cls(arg.max, base))
+            else:
+                return
+
+        if arg.is_number:
+            if arg.is_negative:
+                return S.Pi * I / log(base) + cls(-arg, base)
+            elif arg is S.ComplexInfinity:
+                return S.ComplexInfinity
+            elif arg is S.Exp1:
+                return S.One/log(2)
+
+        if arg.is_zero:
+            return S.ComplexInfinity
+
+        # don't autoexpand Pow or Mul (see the issue 3351):
+        if not arg.is_Add:
+            coeff = arg.as_coefficient(I)
+
+            if coeff is not None:
+                if coeff is S.Infinity:
+                    return S.Infinity
+                elif coeff is S.NegativeInfinity:
+                    return S.Infinity
+                elif coeff.is_Rational:
+                    if coeff.is_nonnegative:
+                        return S.Pi * I * S.Half / log(base) + cls(coeff, base)
+                    else:
+                        return -S.Pi * I * S.Half / log(base) + cls(-coeff, base)
+
+        if arg.is_number and arg.is_algebraic:
+            # Match arg = coeff*(r_ + i_*I) with coeff>0, r_ and i_ real.
+            coeff, arg_ = arg.as_independent(I, as_Add=False)
+            if coeff.is_negative:
+                coeff *= -1
+                arg_ *= -1
+            arg_ = expand_mul(arg_, deep=False)
+            r_, i_ = arg_.as_independent(I, as_Add=True)
+            i_ = i_.as_coefficient(I)
+            if coeff.is_real and i_ and i_.is_real and r_.is_real:
+                if r_.is_zero:
+                    if i_.is_positive:
+                        return S.Pi * I * S.Half / log(base) + cls(coeff * i_, base)
+                    elif i_.is_negative:
+                        return -S.Pi * I * S.Half / log(base) + cls(coeff * -i_, base)
+
+    def as_base_exp(self):
+        """
+        Returns this function in the form (base, exponent).
+        """
+        return self, S.One
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):  # of log(1+x)
+        r"""
+        Returns the next term in the Taylor series expansion of `\log(1+x)`.
+        """
+        from sympy import powsimp
+        if n < 0:
+            return S.Zero
+        x = sympify(x)
+        if n == 0:
+            return x
+        if previous_terms:
+            p = previous_terms[-1]
+            if p is not None:
+                return powsimp((-n) * p * x / (n + 1), deep=True, combine='exp')
+        return (1 - 2*(n % 2)) * x**(n + 1)/(n + 1)
+
+    def _eval_expand_log(self, deep=True, **hints):
+        from sympy import unpolarify, factorint
+        from sympy.concrete import Sum, Product
+        force = hints.get('force', False)
+        factor = hints.get('factor', False)
+        arg = self.args[0]
+        base = self.args[1]
+        if arg.is_Integer:
+            # remove perfect powers
+            p = perfect_power(arg)
+            logarg = None
+            coeff = 1
+            if p is not False:
+                arg, coeff = p
+                logarg = self.func(arg, base)
+            # expand as product of its prime factors if factor=True
+            if factor:
+                p = factorint(arg)
+                if arg not in p.keys():
+                    logarg = sum(n*self.func(val, base) for val, n in p.items())
+            if logarg is not None:
+                return coeff*logarg
+        elif arg.is_Rational:
+            return self.func(arg.p, base) - self.func(arg.q, base)
+        elif arg.is_Mul:
+            expr = []
+            nonpos = []
+            for x in arg.args:
+                if force or x.is_positive or x.is_polar:
+                    a = self.func(x)
+                    if isinstance(a, log):
+                        expr.append(self.func(x, base)._eval_expand_log(**hints))
+                    else:
+                        expr.append(a)
+                elif x.is_negative:
+                    a = self.func(-x, base)
+                    expr.append(a)
+                    nonpos.append(S.NegativeOne)
+                else:
+                    nonpos.append(x)
+            return Add(*expr) + LogWithBase(Mul(*nonpos), base)
+        elif arg.is_Pow:
+            if force or (arg.exp.is_extended_real and (arg.base.is_positive or ((arg.exp+1)
+                .is_positive and (arg.exp-1).is_nonpositive))) or arg.base.is_polar:
+                b = arg.base
+                e = arg.exp
+                a = log(b)
+                if isinstance(a, log):
+                    return unpolarify(e) * a._eval_expand_log(**hints)
+                else:
+                    return unpolarify(e) * a
+        elif isinstance(arg, Product):
+            if force or arg.function.is_positive:
+                return Sum(self.func(arg.function, base), *arg.limits)
+
+        return self.func(arg, base)
+
+    def _eval_simplify(self, **kwargs):
+        from sympy.simplify.simplify import expand_log, simplify, inversecombine
+
+        expr = self.func(simplify(self.args[0], **kwargs), simplify(self.args[1], **kwargs))
+        if kwargs['inverse']:
+            expr = inversecombine(expr)
+        expr = expand_log(expr, deep=True)
+        return min([expr, self], key=kwargs['measure'])
+
+    def as_real_imag(self, deep=True, **hints):
+        """
+        Returns this function as a complex coordinate.
+
+        Examples
+        ========
+
+        >>> from sympy import I
+        >>> from sympy.abc import x
+        >>> from sympy.functions import log
+        >>> log(x).as_real_imag()
+        (log(Abs(x)), arg(x))
+        >>> log(I).as_real_imag()
+        (0, pi/2)
+        >>> log(1 + I).as_real_imag()
+        (log(sqrt(2)), pi/4)
+        >>> log(I*x).as_real_imag()
+        (log(Abs(x)), arg(I*x))
+
+        """
+        from sympy import Abs, arg
+        sarg = self.args[0]
+        if deep:
+            sarg = self.args[0].expand(deep, **hints)
+        abs = Abs(sarg)
+        if abs == sarg:
+            return self, S.Zero
+        base = self.args[1]
+        arg = arg(sarg)
+        if hints.get('log', False):  # Expand the log
+            hints['complex'] = False
+            return (LogWithBase(abs, base).expand(deep, **hints), arg)
+        else:
+            return LogWithBase(abs, base), arg
+
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if (self.args[0] - 1).is_zero:
+                return True
+            if s.args[0].is_rational and fuzzy_not((self.args[0] - 1).is_zero):
+                return False
+        else:
+            return s.is_rational
+
+    def _eval_is_algebraic(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if (self.args[0] - 1).is_zero:
+                return True
+            elif fuzzy_not((self.args[0] - 1).is_zero):
+                if self.args[0].is_algebraic:
+                    return False
+        else:
+            return s.is_algebraic
+
+    def _eval_is_extended_real(self):
+        return self.args[0].is_extended_positive
+
+    def _eval_is_complex(self):
+        z = self.args[0]
+        return fuzzy_and([z.is_complex, fuzzy_not(z.is_zero)])
+
+    def _eval_is_finite(self):
+        arg = self.args[0]
+        if arg.is_zero:
+            return False
+        return arg.is_finite
+
+    def _eval_is_extended_positive(self):
+        return (self.args[0] - 1).is_extended_positive
+
+    def _eval_is_zero(self):
+        return (self.args[0] - 1).is_zero
+
+    def _eval_is_extended_nonnegative(self):
+        return (self.args[0] - 1).is_extended_nonnegative
+
+    def _eval_rewrite_as_log(self, arg, base):
+        return log(arg)/log(base)
 
 
 class LambertW(Function):

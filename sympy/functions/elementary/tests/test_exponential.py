@@ -319,19 +319,23 @@ def test_log_exact():
 def test_log_base():
     assert log(1, 2) == 0
     assert log(2, 2) == 1
-    assert log(3, 2) == log(3)/log(2)
-    assert log(6, 2) == 1 + log(3)/log(2)
-    assert log(6, 3) == 1 + log(2)/log(3)
+    assert log(3, 2).rewrite(log) == log(3)/log(2)
+    assert log(6, 2) == 1 + log(3, 2)
+    assert log(6, 3) == 1 + log(2, 3)
+    assert log(6, 2).rewrite(log) == 1 + log(3)/log(2)
+    assert log(6, 3).rewrite(log) == 1 + log(2)/log(3)
     assert log(2**3, 2) == 3
     assert log(3**3, 3) == 3
     assert log(5, 1) is zoo
     assert log(1, 1) is nan
-    assert log(Rational(2, 3), 10) == log(Rational(2, 3))/log(10)
-    assert log(Rational(2, 3), Rational(1, 3)) == -log(2)/log(3) + 1
-    assert log(Rational(2, 3), Rational(2, 5)) == \
+    assert log(Rational(2, 3), 10).rewrite(log) == log(Rational(2, 3))/log(10)
+    assert log(Rational(2, 3), Rational(1, 3)).rewrite(log) == -log(2)/log(3) + 1
+    assert log(Rational(2, 3), Rational(1, 3)) == log(2, Rational(1,3)) + 1
+    assert log(Rational(2, 3), Rational(2, 5)).rewrite(log) == \
         log(Rational(2, 3))/log(Rational(2, 5))
     # issue 17148
-    assert log(Rational(8, 3), 2) == -log(3)/log(2) + 3
+    assert log(Rational(8, 3), 2).rewrite(log) == -log(3)/log(2) + 3
+    assert log(Rational(8, 3), 2) == -log(3, 2) + 3
 
 
 def test_log_symbolic():
@@ -345,7 +349,7 @@ def test_log_symbolic():
     assert log(x**y).expand() != y*log(x)
     assert log(x**y).expand(force=True) == y*log(x)
 
-    assert log(x, 2) == log(x)/log(2)
+    assert log(x, 2).rewrite(log) == log(x)/log(2)
     assert log(E, 2) == 1/log(2)
 
     p, q = symbols('p,q', positive=True)
