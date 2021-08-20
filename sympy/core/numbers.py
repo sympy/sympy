@@ -1799,9 +1799,9 @@ class Rational(Number):
                 # (3/4)**-2 -> (4/3)**2
                 ne = -expt
                 if (ne is S.One):
-                    return Rational(self.q, self.p, 1)
+                    return Rational(self.q, self.p)
                 if self.is_negative:
-                    return S.NegativeOne**expt*Rational(self.q, -self.p, 1)**ne
+                    return S.NegativeOne**expt*Rational(self.q, -self.p)**ne
                 else:
                     return Rational(self.q, self.p)**ne
             if expt is S.Infinity:  # -oo already caught by test for negative
@@ -1843,7 +1843,7 @@ class Rational(Number):
         return mpmath.make_mpf(mlib.from_rational(self.p, self.q, prec, rnd))
 
     def __abs__(self):
-        return Rational(abs(self.p), self.q, 1)
+        return Rational(abs(self.p), self.q)
 
     def __int__(self):
         p, q = self.p, self.q
