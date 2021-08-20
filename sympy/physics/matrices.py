@@ -157,7 +157,7 @@ minkowski_tensor = Matrix( (
 
 
 @deprecated(issue=20246, useinstead="DFT(n).as_mutable(), DFT(n), DFT(n).as_explicit()",
-            deprecated_since_version="1.7")
+            deprecated_since_version="1.9")
 def mdft(n):
     r"""
     Deprecated. Use DFT from sympy.matrices.expressions.fourier instead.
