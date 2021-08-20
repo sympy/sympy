@@ -1191,23 +1191,8 @@ class LogWithBase(Function):
         """
         return self, S.One
 
-    @staticmethod
-    @cacheit
-    def taylor_term(n, x, *previous_terms):  # of log(1+x)
-        r"""
-        Returns the next term in the Taylor series expansion of `\log(1+x)`.
-        """
-        from sympy import powsimp
-        if n < 0:
-            return S.Zero
-        x = sympify(x)
-        if n == 0:
-            return x
-        if previous_terms:
-            p = previous_terms[-1]
-            if p is not None:
-                return powsimp((-n) * p * x / (n + 1), deep=True, combine='exp')
-        return (1 - 2*(n % 2)) * x**(n + 1)/(n + 1)
+    def _eval_evalf(self, prec):
+        return self.rewrite(log).evalf(prec)
 
     def _eval_expand_log(self, deep=True, **hints):
         from sympy import unpolarify, factorint
