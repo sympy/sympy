@@ -1,15 +1,16 @@
 import itertools
-from typing import Tuple
+from collections import defaultdict
+from typing import Tuple, Union, FrozenSet, Dict, List
 from functools import reduce, singledispatch
 from itertools import accumulate
 
-from sympy import S, Trace, MatrixExpr, Transpose, DiagMatrix, Mul, ZeroMatrix
+from sympy import S, Trace, MatrixExpr, Transpose, DiagMatrix, Mul, ZeroMatrix, hadamard_product
 from sympy.combinatorics.permutations import _af_invert, Permutation
 from sympy.matrices.common import MatrixCommon
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayDiagonal, \
     ArrayTensorProduct, OneArray, get_rank, _get_subrank, ZeroArray, ArrayContraction, \
-    ArrayAdd, _CodegenArrayAbstract, get_shape, ArrayElementwiseApplyFunc, _ArrayExpr
+    ArrayAdd, _CodegenArrayAbstract, get_shape, ArrayElementwiseApplyFunc, _ArrayExpr, _EditArrayContraction, _ArgE
 from sympy.tensor.array.expressions.utils import _get_mapping_from_subranks
 
 
@@ -90,6 +91,7 @@ def _(expr: ArrayTensorProduct):
 def _(expr: ArrayContraction):
     expr = expr.flatten_contraction_of_diagonal()
     expr = expr.split_multiple_contractions()
+    expr = identify_hadamard_products(expr)
     subexpr = expr.expr
     contraction_indices: Tuple[Tuple[int]] = expr.contraction_indices
     if isinstance(subexpr, ArrayTensorProduct):
@@ -116,8 +118,10 @@ def _(expr: ArrayContraction):
 
 @_array2matrix.register(ArrayDiagonal)
 def _(expr: ArrayDiagonal):
-    expr2 = _array2matrix(expr.expr)
-    pexpr = _array_diag2contr_diagmatrix(ArrayDiagonal(expr2, *expr.diagonal_indices))
+    pexpr = ArrayDiagonal(_array2matrix(expr.expr), *expr.diagonal_indices)
+    pexpr = identify_hadamard_products(pexpr)
+    if isinstance(pexpr, ArrayDiagonal):
+        pexpr = _array_diag2contr_diagmatrix(pexpr)
     if expr == pexpr:
         return expr
     return _array2matrix(pexpr)
@@ -541,3 +545,110 @@ def _a2m_transpose(arg):
     else:
         from sympy import Transpose
         return Transpose(arg).doit()
+
+
+def identify_hadamard_products(expr: Union[ArrayContraction, ArrayDiagonal]):
+    mapping = _get_mapping_from_subranks(expr.subranks)
+
+    editor: _EditArrayContraction
+    if isinstance(expr, ArrayContraction):
+        editor = _EditArrayContraction(expr)
+    elif isinstance(expr, ArrayDiagonal):
+        if isinstance(expr.expr, ArrayContraction):
+            editor = _EditArrayContraction(expr.expr)
+            diagonalized = ArrayContraction._push_indices_down(expr.expr.contraction_indices, expr.diagonal_indices)
+        elif isinstance(expr.expr, ArrayTensorProduct):
+            editor = _EditArrayContraction(None)
+            editor.args_with_ind = [_ArgE(arg) for i, arg in enumerate(expr.expr.args)]
+            diagonalized = expr.diagonal_indices
+        else:
+            raise NotImplementedError("not implemented")
+
+        # Trick: add diagonalized indices as negative indices into the editor object:
+        for i, e in enumerate(diagonalized):
+            for j in e:
+                arg_pos, rel_pos = mapping[j]
+                editor.args_with_ind[arg_pos].indices[rel_pos] = -1 - i
+
+    ret_diag = []
+
+    map_contr_to_args: Dict[FrozenSet, List[_ArgE]] = defaultdict(list)
+    map_ind_to_inds = defaultdict(int)
+    for arg_with_ind in editor.args_with_ind:
+        for ind in arg_with_ind.indices:
+            map_ind_to_inds[ind] += 1
+        if None in arg_with_ind.indices:
+            continue
+        map_contr_to_args[frozenset(arg_with_ind.indices)].append(arg_with_ind)
+
+    for k, v in map_contr_to_args.items():
+        if len(k) != 2:
+            # Hadamard product only defined for matrices:
+            continue
+        if len(v) == 1:
+            # Hadamard product with a single argument makes no sense:
+            continue
+        for ind in k:
+            if map_ind_to_inds[ind] <= 2:
+                # There is no other contraction, skip:
+                continue
+
+        # This is a Hadamard product:
+
+        def check_transpose(x):
+            x = [i if i >= 0 else -1-i for i in x]
+            return x == sorted(x)
+
+        hp = hadamard_product(*[i.element if check_transpose(i.indices) else Transpose(i.element) for i in v])
+        hp_indices = v[0].indices
+        # Mark diagonal indices for removal:
+        ret_diag.extend([i for i in k if i < 0])
+        editor.insert_after(v[0], _ArgE(hp, hp_indices))
+        for i in v:
+            editor.args_with_ind.remove(i)
+
+    # Count the ranks of the arguments:
+    counter = 0
+    diag_new_pos = {}
+    diag_indices = defaultdict(list)
+    for arg_with_ind in editor.args_with_ind:
+        # If some diagonalization axes have been removed, they should be
+        # permuted in order to keep the permutation.
+        # Add permutation here
+        counter2 = 0  # counter for the indices
+        for i in arg_with_ind.indices:
+            if i is None:
+                counter2 += 1
+                continue
+            if i >= 0:
+                continue
+            if i < 0:
+                # Reconstruct the diagonal indices:
+                diag_indices[-1 - i].append(counter + counter2)
+            if i < 0 and i in ret_diag:
+                diag_new_pos[-1-i] = counter + counter2
+            counter2 += 1
+        arg_with_ind.indices = [i if i is not None and i >= 0 else None for i in arg_with_ind.indices]
+        counter += len([i for i in arg_with_ind.indices if i is None])
+
+    # Get the diagonal indices after the detection of HadamardProduct in the expression:
+    diag_indices2 = [tuple(v) for v in diag_indices.values() if len(v) > 1]
+
+    if isinstance(expr, ArrayContraction):
+        return editor.to_array_contraction()
+    else:
+        # This is an array diagonal, we need to find the permutation:
+        non_diag_rank = get_rank(expr) - len(expr.diagonal_indices)
+        # diag_new_pos maps the index of the diagonal_indices array to the new positions,
+        # they are no longer diagonalized because of the recognition of Hadamard products.
+        # They still need to undergo the same permutation as ArrayDiagonal was applying to them:
+        go_to = {j: non_diag_rank + i for i, j in diag_new_pos.items()}
+        inverse_permutation = list(range(get_rank(expr)))
+        for i, j in go_to.items():
+            inverse_permutation.remove(i)
+            inverse_permutation.insert(j, i)
+        permutation = _af_invert(inverse_permutation)
+        expr1 = editor.to_array_contraction()
+        expr2 = ArrayDiagonal(expr1, *diag_indices2)
+        expr3 = PermuteDims(expr2, permutation)
+        return expr3

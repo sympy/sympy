@@ -1289,9 +1289,12 @@ class _ArgE:
     the second index is contracted to the 4th (i.e. number ``3``) group of the
     array contraction object.
     """
-    def __init__(self, element):
+    def __init__(self, element, indices: Optional[List[Optional[int]]] = None):
         self.element = element
-        self.indices: List[Optional[int]] = [None for i in range(get_rank(element))]
+        if indices is None:
+            self.indices: List[Optional[int]] = [None for i in range(get_rank(element))]
+        else:
+            self.indices: List[Optional[int]] = indices
 
     def __str__(self):
         return "_ArgE(%s, %s)" % (self.element, self.indices)
@@ -1334,7 +1337,11 @@ class _EditArrayContraction:
     by calling the ``.to_array_contraction()`` method.
     """
 
-    def __init__(self, array_contraction: ArrayContraction):
+    def __init__(self, array_contraction: Optional[ArrayContraction]):
+        if array_contraction is None:
+            self.args_with_ind: List[_ArgE] = []
+            self.number_of_contraction_indices: int = 0
+            return
         expr = array_contraction.expr
         if isinstance(expr, ArrayTensorProduct):
             args = list(expr.args)
