@@ -1,4 +1,4 @@
-from sympy import S, I, ask, Q, Abs, simplify, exp, sqrt
+from sympy import S, I, ask, Q, Abs, simplify, exp, sqrt, Integer
 from sympy.core.symbol import symbols
 from sympy.matrices.expressions.fourier import DFT, IDFT
 from sympy.matrices import det, Matrix, Identity, Determinant
@@ -39,6 +39,7 @@ def test_dft_determinant():
 
     assert det(IDFT(4)) == -I
     assert det(IDFT(4)) == IDFT(4).as_explicit().det()
+    assert isinstance(Determinant(DFT(0)).doit(), Integer)
 
     n = symbols('n')
     assert det(DFT(n)) == Determinant(DFT(n))
