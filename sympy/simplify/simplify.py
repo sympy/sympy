@@ -11,7 +11,7 @@ from sympy.core.numbers import Float, I, pi, Rational, Integer
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
-from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
+from sympy.functions import gamma, exp, sqrt, log, exp_polar, re, LogWithBase
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
 from sympy.functions.elementary.complexes import unpolarify, Abs
 from sympy.functions.elementary.exponential import ExpBase
@@ -695,7 +695,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     if expr.has(TrigonometricFunction, HyperbolicFunction):
         expr = trigsimp(expr, deep=True)
 
-    if expr.has(log):
+    if expr.has(log, LogWithBase):
         expr = shorter(expand_log(expr, deep=True), logcombine(expr))
 
     if expr.has(CombinatorialFunction, gamma):
@@ -1142,7 +1142,7 @@ def inversecombine(expr):
     """
 
     def f(rv):
-        if isinstance(rv, log):
+        if isinstance(rv, (log, LogWithBase)):
             if isinstance(rv.args[0], exp) or (rv.args[0].is_Pow and rv.args[0].base == S.Exp1):
                 rv = rv.args[0].exp
         elif rv.is_Function and hasattr(rv, "inverse"):
@@ -1150,7 +1150,7 @@ def inversecombine(expr):
                isinstance(rv.args[0], rv.inverse(argindex=1))):
                 rv = rv.args[0].args[0]
         if rv.is_Pow and rv.base == S.Exp1:
-            if isinstance(rv.exp, log):
+            if isinstance(rv.exp, (log, LogWithBase)):
                 rv = rv.exp.args[0]
         return rv
 
