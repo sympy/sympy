@@ -1115,6 +1115,10 @@ class LogWithBase(Function):
             if n:
                 arg = arg / base**n
                 return n + cls(arg, base)
+            n = multiplicity(arg, base)
+            if n:
+                return Rational(1, n, 1)
+
         except ValueError:
             pass
         if base is S.Exp1:
@@ -1223,7 +1227,7 @@ class LogWithBase(Function):
             nonpos = []
             for x in arg.args:
                 if force or x.is_positive or x.is_polar:
-                    a = self.func(x)
+                    a = self.func(x, base)
                     if isinstance(a, log):
                         expr.append(self.func(x, base)._eval_expand_log(**hints))
                     else:
@@ -1234,8 +1238,8 @@ class LogWithBase(Function):
                     nonpos.append(S.NegativeOne)
                 else:
                     nonpos.append(x)
-            return Add(*expr) + LogWithBase(Mul(*nonpos), base)
-        elif arg.is_Pow:
+            return Add(*expr) + self.func(Mul(*nonpos), base)
+        elif arg.is_Pow or isinstance(arg, exp):
             if force or (arg.exp.is_extended_real and (arg.base.is_positive or ((arg.exp+1)
                 .is_positive and (arg.exp-1).is_nonpositive))) or arg.base.is_polar:
                 b = arg.base
@@ -1341,6 +1345,10 @@ class LogWithBase(Function):
     def _eval_rewrite_as_log(self, arg, base):
         return log(arg)/log(base)
 
+    def __str__(self):
+        return 'log({}, {})'.format(*self.args)
+
+    __repr__ = __str__
 
 class LambertW(Function):
     r"""

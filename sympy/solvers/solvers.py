@@ -32,7 +32,7 @@ from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.core.basic import preorder_traversal
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
-                             Abs, re, im, arg, sqrt, atan2)
+                             Abs, re, im, arg, sqrt, atan2, LogWithBase)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
@@ -2554,8 +2554,8 @@ def _tsolve(eq, sym, **flags):
                 return _solve(f, sym, **flags)
             if rhs:
                 f = logcombine(lhs, force=flags.get('force', True))
-                if f.count(log) != lhs.count(log):
-                    if isinstance(f, log):
+                if f.count(log) + f.count(LogWithBase) != lhs.count(log) + lhs.count(LogWithBase):
+                    if isinstance(f, (log, LogWithBase)):
                         return _solve(f.args[0] - exp(rhs), sym, **flags)
                     return _tsolve(f - rhs, sym, **flags)
 
@@ -2682,7 +2682,7 @@ def _tsolve(eq, sym, **flags):
         g = _filtered_gens(eq.as_poly(), sym)
         up_or_log = set()
         for gi in g:
-            if isinstance(gi, exp) or (gi.is_Pow and gi.base == S.Exp1) or isinstance(gi, log):
+            if isinstance(gi, exp) or (gi.is_Pow and gi.base == S.Exp1) or isinstance(gi, (log, LogWithBase)):
                 up_or_log.add(gi)
             elif gi.is_Pow:
                 gisimp = powdenest(expand_power_exp(gi))
