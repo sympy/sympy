@@ -684,6 +684,6 @@ def test_issue_20275():
 
 
 def test_issue_20752():
-    b = symbols('b',nonzero=True)
+    b = symbols('b', nonzero=True)
     m = Matrix([[0, 0, 0], [0, b, 0], [0, 0, b]])
-    assert m.is_positive_semidefinite == None
+    assert m.is_positive_semidefinite is None
