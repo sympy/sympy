@@ -275,7 +275,7 @@ def _invert_real(f, g_ys, symbol):
             rhs = g_ys.args[0]
             if base.is_positive:
                 return _invert_real(expo,
-                    imageset(Lambda(n, log(n, base, evaluate=False)), g_ys), symbol)
+                    imageset(Lambda(n, log(n, base)), g_ys), symbol)
             elif base.is_negative:
                 from sympy.core.power import integer_log
                 s, b = integer_log(rhs, base)

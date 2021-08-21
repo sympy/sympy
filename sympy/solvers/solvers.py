@@ -2554,9 +2554,13 @@ def _tsolve(eq, sym, **flags):
                 return _solve(f, sym, **flags)
             if rhs:
                 f = logcombine(lhs, force=flags.get('force', True))
-                if f.count(log) + f.count(LogWithBase) != lhs.count(log) + lhs.count(LogWithBase):
-                    if isinstance(f, (log, LogWithBase)):
+                notsamelog = f.count(log) != lhs.count(log)
+                notsamelogwithbase = f.count(LogWithBase) != lhs.count(LogWithBase)
+                if notsamelog or notsamelogwithbase:
+                    if notsamelog and isinstance(f, log):
                         return _solve(f.args[0] - exp(rhs), sym, **flags)
+                    if notsamelogwithbase and isinstance(f, LogWithBase):
+                        return _solve(f.args[0] - f.args[1]**rhs, sym, **flags)
                     return _tsolve(f - rhs, sym, **flags)
 
         elif lhs.is_Pow:

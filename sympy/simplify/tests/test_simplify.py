@@ -778,8 +778,8 @@ def test_simplify_function_inverse():
     assert simplify(log(exp(x))) == log(exp(x))
     assert simplify(log(exp(x)), inverse=True) == x
     assert simplify(exp(log(x)), inverse=True) == x
-    assert simplify(log(exp(x), 2), inverse=True) == x/log(2)
-    assert simplify(log(exp(x), 2, evaluate=False), inverse=True) == x/log(2)
+    assert simplify(log(2**x, 2), inverse=True) == x
+    assert simplify(log(2**x, 2, evaluate=False), inverse=True) == x
 
 
 def test_clear_coefficients():

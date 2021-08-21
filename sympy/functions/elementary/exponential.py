@@ -597,7 +597,7 @@ class log(Function):
     >>> log(8)
     log(8)
     >>> log(S(8)/3, 2)
-    3 - LogWithBase(3, 2)
+    3 - log(3, 2)
     >>> log(-1 + I*sqrt(3))
     log(2) + 2*I*pi/3
 
@@ -827,8 +827,8 @@ class log(Function):
             for x in arg.args:
                 if force or x.is_positive or x.is_polar:
                     a = self.func(x)
-                    if isinstance(a, log):
-                        expr.append(self.func(x)._eval_expand_log(**hints))
+                    if isinstance(a, (log, LogWithBase)):
+                        expr.append(a._eval_expand_log(**hints))
                     else:
                         expr.append(a)
                 elif x.is_negative:
@@ -1065,9 +1065,9 @@ class LogWithBase(Function):
     >>> log(8, 2)
     3
     >>> log(S(8)/3, 2)
-    3 - LogWithBase(3, 2)
+    3 - log(3, 2)
     >>> log(-1 + I*sqrt(3), 3)
-    LogWithBase(2, 3) + 2*I*pi/(3*log(3))
+    log(2, 3) + 2*I*pi/(3*log(3))
 
     See Also
     ========
@@ -1244,8 +1244,7 @@ class LogWithBase(Function):
         from sympy.concrete import Sum, Product
         force = hints.get('force', False)
         factor = hints.get('factor', False)
-        arg = self.args[0]
-        base = self.args[1]
+        arg, base = self.args
         if arg.is_Integer:
             # remove perfect powers
             p = perfect_power(arg)
@@ -1269,8 +1268,8 @@ class LogWithBase(Function):
             for x in arg.args:
                 if force or x.is_positive or x.is_polar:
                     a = self.func(x, base)
-                    if isinstance(a, log):
-                        expr.append(self.func(x, base)._eval_expand_log(**hints))
+                    if isinstance(a, (log, LogWithBase)):
+                        expr.append(a._eval_expand_log(**hints))
                     else:
                         expr.append(a)
                 elif x.is_negative:
@@ -1285,8 +1284,8 @@ class LogWithBase(Function):
                 .is_positive and (arg.exp-1).is_nonpositive))) or arg.base.is_polar:
                 b = arg.base
                 e = arg.exp
-                a = log(b)
-                if isinstance(a, log):
+                a = log(b, base)
+                if isinstance(a, (log, LogWithBase)):
                     return unpolarify(e) * a._eval_expand_log(**hints)
                 else:
                     return unpolarify(e) * a
@@ -1317,13 +1316,13 @@ class LogWithBase(Function):
         >>> from sympy.abc import x
         >>> from sympy.functions import log
         >>> log(x, 2).as_real_imag()
-        (LogWithBase(Abs(x), 2), arg(x)/log(2))
+        (log(Abs(x), 2), arg(x)/log(2))
         >>> log(I, 4).as_real_imag()
         (0, pi/(2*log(4)))
         >>> log(1 + I, 2).as_real_imag()
         (1/2, pi/(4*log(2)))
         >>> log(I*x, 3).as_real_imag()
-        (LogWithBase(Abs(x), 3), arg(I*x)/log(3))
+        (log(Abs(x), 3), arg(I*x)/log(3))
 
         """
         from sympy import Abs, arg
@@ -1360,7 +1359,7 @@ class LogWithBase(Function):
 
     def _eval_is_finite(self):
         arg, base = self.args
-        if fuzzy_or([arg.is_zero, fuzzy_not((base-1).is_zero)]):
+        if fuzzy_or([arg.is_zero, (base-1).is_zero]):
             return False
         return arg.is_finite
 
