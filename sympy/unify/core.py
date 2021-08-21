@@ -139,10 +139,10 @@ def unify_var(var, x, s, **fns):
     if var in s:
         val = s[var]
         yield from unify(val, x, s, **fns)
-    elif any(occur_check(k, x) for k in s):
-        val = subst(s, x)
+    elif x in s:
+        val = s[x]
         yield from unify(var, val, s, **fns)
-    elif occur_check(var, x):
+    elif occur_check(var, x, s):
         pass
     elif (isinstance(var, CondVariable) and var.valid(x)) or isinstance(var, Variable):
         s = assoc(s, var, x)
@@ -158,12 +158,14 @@ def subst(s, x):
         return Compound(x.op, tuple(subst(s, arg) for arg in x.args))
     return x
 
-def occur_check(var, x):
+def occur_check(var, x, s):
     """ var occurs in subtree owned by x? """
     if var == x:
         return True
+    elif x in s:
+        return occur_check(var, s[x], s)
     elif isinstance(x, Compound):
-        return any(occur_check(var, arg) for arg in x.args)
+        return any(occur_check(var, arg, s) for arg in x.args)
     return False
 
 def assoc(d, key, val):
