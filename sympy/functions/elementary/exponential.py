@@ -1304,10 +1304,11 @@ class LogWithBase(Function):
         from sympy.simplify.simplify import expand_log, simplify, inversecombine
 
         expr = self.func(simplify(self.args[0], **kwargs), simplify(self.args[1], **kwargs))
+        simp_args = expr
         if kwargs['inverse']:
             expr = inversecombine(expr)
         expr = expand_log(expr, deep=True)
-        return min([expr, self], key=kwargs['measure'])
+        return min([expr, self, simp_args], key=kwargs['measure'])
 
     def as_real_imag(self, deep=True, **hints):
         """
