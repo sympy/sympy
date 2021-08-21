@@ -1,6 +1,7 @@
 from sympy import symbols, re, im, sign, I, Abs, Symbol, \
      cos, sin, sqrt, conjugate, log, acos, E, pi, \
-     Matrix, diff, integrate, trigsimp, S, Rational, zoo
+     Matrix, diff, integrate, trigsimp, S, Rational, zoo, \
+     exp, Ne, Piecewise
 from sympy.algebras.quaternion import Quaternion
 from sympy.testing.pytest import raises
 
@@ -198,8 +199,17 @@ def test_issue_21576():
     q0 = Quaternion(w, x, y, z)
     q = Quaternion(0, w, 0, 0)
     q1 = Quaternion(0, 0, 0, 0)
+    assert q0.exp() == \
+    Quaternion(exp(w) * cos(sqrt(x**2 + y**2 + z**2)),
+               x * Piecewise((sin(sqrt(x**2 + y**2 + z**2)) / sqrt(x**2 + y**2 + z**2), Ne(sqrt(x**2 + y**2 + z**2), 0)), (1, True)) * exp(w),
+               y * Piecewise((sin(sqrt(x**2 + y**2 + z**2)) / sqrt(x**2 + y**2 + z**2), Ne(sqrt(x**2 + y**2 + z**2), 0)), (1, True)) * exp(w),
+               z * Piecewise((sin(sqrt(x**2 + y**2 + z**2)) / sqrt(x**2 + y**2 + z**2), Ne(sqrt(x**2 + y**2 + z**2), 0)), (1, True)) * exp(w))
     assert q0.exp().subs({w:1, x:0, y:0, z:0}) == Quaternion(E, 0, 0, 0)
     assert q0._ln().subs(w**2 + x**2 + y**2 + z**2, 1).subs({x:0, y:0, z:0}) == Quaternion(0, 0, 0, 0)
+    assert q.exp() == \
+    Quaternion(cos(sqrt(w**2)), w * Piecewise((sin(sqrt(w**2)) / sqrt(w**2), Ne(sqrt(w**2), 0)), (1, True)), 0, 0)
+    assert q._ln() == \
+    Quaternion(log(sqrt(w**2)), pi*w*Piecewise((1 / sqrt(w**2), Ne(sqrt(w**2), 0)), (1, True)) / 2, 0, 0)
     assert q.exp().subs(w, 0) == Quaternion(1, 0, 0, 0)
     assert q._ln().subs(w, 0) == Quaternion(zoo, 0, 0, 0)
     assert q1.exp() == Quaternion(1, 0, 0, 0)
