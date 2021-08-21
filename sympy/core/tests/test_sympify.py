@@ -735,9 +735,9 @@ def test_issue_14706():
     assert numpy.all(z1 + x == numpy.full((1, 1), x))
     assert numpy.all(z2 + x == numpy.full((2, 2), x))
     for z in [z3,
-              numpy.int(0),
+              int(0),
               numpy.float64(0),
-              numpy.complex(0)]:
+              complex(0)]:
         assert x + z == x
         assert z + x == x
         assert isinstance(x + z, Symbol)
@@ -755,9 +755,9 @@ def test_issue_14706():
     assert numpy.all(y1 + x == numpy.full((1, 1), x + 1.0))
     assert numpy.all(y2 + x == numpy.full((2, 2), x + 1.0))
     for y_ in [y3,
-              numpy.int(1),
+              int(1),
               numpy.float64(1),
-              numpy.complex(1)]:
+              complex(1)]:
         assert x + y_ == y_ + x
         assert isinstance(x + y_, Add)
         assert isinstance(y_ + x, Add)
