@@ -7,7 +7,7 @@ from sympy.core.expr import Expr
 from sympy.core.exprtools import Factors, gcd_terms, factor_terms
 from sympy.core.function import expand_mul
 from sympy.core.mul import Mul
-from sympy.core.numbers import pi, I
+from sympy.core.numbers import pi, I, nan
 from sympy.core.power import Pow
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
@@ -18,7 +18,8 @@ from sympy.functions.elementary.trigonometric import (
     cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
 from sympy.ntheory.factor_ import perfect_power
 from sympy.polys.polytools import factor
-from sympy.simplify.simplify import bottom_up
+from sympy.simplify.simplify import bottom_up, simplify
+from sympy.simplify.radsimp import fraction
 from sympy.strategies.tree import greedy
 from sympy.strategies.core import identity, debug
 
@@ -1643,6 +1644,10 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
 
     was = rv
     rv = sympify(rv)
+    if isinstance(rv, Expr):
+        n, d = fraction(rv)
+        if simplify(d) is S.Zero:
+            return nan
     if not isinstance(rv, Expr):
         return rv.func(*[fu(a, measure=measure) for a in rv.args])
     rv = TR1(rv)
