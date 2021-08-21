@@ -432,6 +432,9 @@ class LatexPrinter(Printer):
         mat = r" \\ ".join((row1, row2))
         return r"\begin{pmatrix} %s \end{pmatrix}" % mat
 
+    def _print_LogWithBase(self, expr):
+        arg, base = expr.args
+        return r"\log_{{{}}}\left({}\right)".format(self._print(base), self._print(arg))
 
     def _print_AppliedPermutation(self, expr):
         perm, var = expr.args

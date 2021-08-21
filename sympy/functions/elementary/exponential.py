@@ -1392,10 +1392,6 @@ class LogWithBase(Function):
             return self
         return lterm/log(base)
 
-    def __str__(self):
-        return 'log({}, {})'.format(*self.args)
-
-    __repr__ = __str__
 
 class LambertW(Function):
     r"""

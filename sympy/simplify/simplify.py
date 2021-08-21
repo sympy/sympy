@@ -1127,31 +1127,27 @@ def logcombine(expr, force=False):
 
             return Add(*other)
 
-        if rv.has(LogWithBase):
-            # Combine each base separately
+        # Combine each base separately
 
-            # Find bases
-            bases = set()
-            for a in Add.make_args(rv):
-                if isinstance(a, log) and goodlog(a):
-                    bases.add((log, S.Exp1))
-                elif isinstance(a, LogWithBase) and goodlog(a):
-                    bases.add((LogWithBase, a.args[1]))
-                elif isinstance(a, Mul):
-                    for ai in a.args:
-                        if isinstance(ai, log) and goodlog(ai):
-                            bases.add((log, S.Exp1))
-                        elif isinstance(ai, LogWithBase) and goodlog(ai):
-                            bases.add((LogWithBase, ai.args[1]))
+        # Find bases
+        bases = set()
+        for a in Add.make_args(rv):
+            if isinstance(a, log) and goodlog(a):
+                bases.add((log, S.Exp1))
+            elif isinstance(a, LogWithBase) and goodlog(a):
+                bases.add((LogWithBase, a.args[1]))
+            elif isinstance(a, Mul):
+                for ai in a.args:
+                    if isinstance(ai, log) and goodlog(ai):
+                        bases.add((log, S.Exp1))
+                    elif isinstance(ai, LogWithBase) and goodlog(ai):
+                        bases.add((LogWithBase, ai.args[1]))
 
-            # Combine for each base
-            for func, base in bases:
-                rv = f2(rv, func, base)
+        # Combine for each base
+        for func, base in bases:
+            rv = f2(rv, func, base)
 
-            return rv
-        else:
-            # Only normal log
-            rv = f2(rv, log, S.Exp1)
+        return rv
 
 
     return bottom_up(expr, f)
