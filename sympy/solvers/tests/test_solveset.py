@@ -1,10 +1,12 @@
+from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import ordered
 from sympy.core.function import (Function, Lambda, nfloat, diff)
 from sympy.core.mod import Mod
-from sympy.core.numbers import (E, I, Rational, oo, pi, Integer)
-from sympy.core.relational import (Eq, Gt,
-    Ne, Ge)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (E, I, Rational, oo, pi, Integer, zoo)
+from sympy.core.relational import (Eq, Gt, Ne, Ge)
+from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
@@ -1392,6 +1394,10 @@ def test_issue_16577():
         Matrix([[2*a, 3*a + 4]]), Matrix([[5]]))
 
 
+def test_issue_10085():
+    assert invert_real(exp(x),0,x) == (x, S.EmptySet)
+
+
 def test_linsolve():
     x1, x2, x3, x4 = symbols('x1, x2, x3, x4')
 
@@ -1722,6 +1728,140 @@ def test_solve_nonlinear_trans():
     assert nonlinsolve([x**2 - y**2/exp(x)], [y, x]) == soln2
     assert nonlinsolve([x**2 - y**2/exp(x)], [y, x]) == soln3
     assert nonlinsolve([x**2 - y**2/exp(x)], [x, y]) == soln4
+
+
+def test_issue_14642():
+    x = Symbol('x')
+    n1 = 0.5*x**3+x**2+0.5+I #add I in the Polynomials
+    solution = solveset(n1, x)
+    assert abs(solution.args[0] - (-2.28267560928153 - 0.312325580497716*I)) <= 1e-9
+    assert abs(solution.args[1] - (-0.297354141679308 + 1.01904778618762*I)) <= 1e-9
+    assert abs(solution.args[2] - (0.580029750960839 - 0.706722205689907*I)) <= 1e-9
+
+    # Symbolic
+    n1 = S.Half*x**3+x**2+S.Half+I
+    res = FiniteSet(-((3*sqrt(3)*31985**(S(1)/4)*sin(atan(S(172)/49)/2)/2 +
+            S(43)/2)**2 + (27 + 3*sqrt(3)*31985**(S(1)/4)*cos(atan(S(172)/49)
+            /2)/2)**2)**(S(1)/6)*cos(atan((27 + 3*sqrt(3)*31985**(S(1)/4)*
+            cos(atan(S(172)/49)/2)/2)/(3*sqrt(3)*31985**(S(1)/4)*sin(atan(
+            S(172)/49)/2)/2 + S(43)/2))/3)/3 - S(2)/3 - 4*cos(atan((27 +
+            3*sqrt(3)*31985**(S(1)/4)*cos(atan(S(172)/49)/2)/2)/(3*sqrt(3)*
+            31985**(S(1)/4)*sin(atan(S(172)/49)/2)/2 + S(43)/2))/3)/(3*((3*
+            sqrt(3)*31985**(S(1)/4)*sin(atan(S(172)/49)/2)/2 + S(43)/2)**2 +
+            (27 + 3*sqrt(3)*31985**(S(1)/4)*cos(atan(S(172)/49)/2)/2)**2)**(S(1)/
+            6)) + I*(-((3*sqrt(3)*31985**(S(1)/4)*sin(atan(S(172)/49)/2)/2 +
+            S(43)/2)**2 + (27 + 3*sqrt(3)*31985**(S(1)/4)*cos(atan(S(172)/49)/
+            2)/2)**2)**(S(1)/6)*sin(atan((27 + 3*sqrt(3)*31985**(S(1)/4)*cos(
+            atan(S(172)/49)/2)/2)/(3*sqrt(3)*31985**(S(1)/4)*sin(atan(S(172)/49)
+            /2)/2 + S(43)/2))/3)/3 + 4*sin(atan((27 + 3*sqrt(3)*31985**(S(1)/4)*
+            cos(atan(S(172)/49)/2)/2)/(3*sqrt(3)*31985**(S(1)/4)*sin(atan(S(172)
+            /49)/2)/2 + S(43)/2))/3)/(3*((3*sqrt(3)*31985**(S(1)/4)*sin(atan(
+            S(172)/49)/2)/2 + S(43)/2)**2 + (27 + 3*sqrt(3)*31985**(S(1)/4)*
+            cos(atan(S(172)/49)/2)/2)**2)**(S(1)/6))), -S(2)/3 - sqrt(3)*((3*
+            sqrt(3)*31985**(S(1)/4)*sin(atan(S(172)/49)/2)/2 + S(43)/2)**2 +
+            (27 + 3*sqrt(3)*31985**(S(1)/4)*cos(atan(S(172)/49)/2)/2)**2)**(S(1)
+            /6)*sin(atan((27 + 3*sqrt(3)*31985**(S(1)/4)*cos(atan(S(172)/49)/2)
+            /2)/(3*sqrt(3)*31985**(S(1)/4)*sin(atan(S(172)/49)/2)/2 + S(43)/2))
+            /3)/6 - 4*re(1/((-S(1)/2 - sqrt(3)*I/2)*(S(43)/2 + 27*I + sqrt(-256 +
+            (43 + 54*I)**2)/2)**(S(1)/3)))/3 + ((3*sqrt(3)*31985**(S(1)/4)*sin(
+            atan(S(172)/49)/2)/2 + S(43)/2)**2 + (27 + 3*sqrt(3)*31985**(S(1)/4)*
+            cos(atan(S(172)/49)/2)/2)**2)**(S(1)/6)*cos(atan((27 + 3*sqrt(3)*
+            31985**(S(1)/4)*cos(atan(S(172)/49)/2)/2)/(3*sqrt(3)*31985**(S(1)/4)*
+            sin(atan(S(172)/49)/2)/2 + S(43)/2))/3)/6 + I*(-4*im(1/((-S(1)/2 -
+            sqrt(3)*I/2)*(S(43)/2 + 27*I + sqrt(-256 + (43 + 54*I)**2)/2)**(S(1)/
+            3)))/3 + ((3*sqrt(3)*31985**(S(1)/4)*sin(atan(S(172)/49)/2)/2 +
+            S(43)/2)**2 + (27 + 3*sqrt(3)*31985**(S(1)/4)*cos(atan(S(172)/49)/2)
+            /2)**2)**(S(1)/6)*sin(atan((27 + 3*sqrt(3)*31985**(S(1)/4)*cos(atan(
+            S(172)/49)/2)/2)/(3*sqrt(3)*31985**(S(1)/4)*sin(atan(S(172)/49)/2)/2 +
+            S(43)/2))/3)/6 + sqrt(3)*((3*sqrt(3)*31985**(S(1)/4)*sin(atan(S(172)/
+            49)/2)/2 + S(43)/2)**2 + (27 + 3*sqrt(3)*31985**(S(1)/4)*cos(atan(
+            S(172)/49)/2)/2)**2)**(S(1)/6)*cos(atan((27 + 3*sqrt(3)*31985**(S(1)/
+            4)*cos(atan(S(172)/49)/2)/2)/(3*sqrt(3)*31985**(S(1)/4)*sin(atan(
+            S(172)/49)/2)/2 + S(43)/2))/3)/6), -S(2)/3 - 4*re(1/((-S(1)/2 +
+            sqrt(3)*I/2)*(S(43)/2 + 27*I + sqrt(-256 + (43 + 54*I)**2)/2)**(S(1)
+            /3)))/3 + sqrt(3)*((3*sqrt(3)*31985**(S(1)/4)*sin(atan(S(172)/49)/2)/2 +
+            S(43)/2)**2 + (27 + 3*sqrt(3)*31985**(S(1)/4)*cos(atan(S(172)/49)/2)
+            /2)**2)**(S(1)/6)*sin(atan((27 + 3*sqrt(3)*31985**(S(1)/4)*cos(atan(
+            S(172)/49)/2)/2)/(3*sqrt(3)*31985**(S(1)/4)*sin(atan(S(172)/49)/2)/2 +
+            S(43)/2))/3)/6 + ((3*sqrt(3)*31985**(S(1)/4)*sin(atan(S(172)/49)/2)/2 +
+            S(43)/2)**2 + (27 + 3*sqrt(3)*31985**(S(1)/4)*cos(atan(S(172)/49)/2)
+            /2)**2)**(S(1)/6)*cos(atan((27 + 3*sqrt(3)*31985**(S(1)/4)*cos(atan(
+            S(172)/49)/2)/2)/(3*sqrt(3)*31985**(S(1)/4)*sin(atan(S(172)/49)/2)/2 +
+            S(43)/2))/3)/6 + I*(-sqrt(3)*((3*sqrt(3)*31985**(S(1)/4)*sin(atan(
+            S(172)/49)/2)/2 + S(43)/2)**2 + (27 + 3*sqrt(3)*31985**(S(1)/4)*cos(
+            atan(S(172)/49)/2)/2)**2)**(S(1)/6)*cos(atan((27 + 3*sqrt(3)*31985**(
+            S(1)/4)*cos(atan(S(172)/49)/2)/2)/(3*sqrt(3)*31985**(S(1)/4)*sin(
+            atan(S(172)/49)/2)/2 + S(43)/2))/3)/6 + ((3*sqrt(3)*31985**(S(1)/4)*
+            sin(atan(S(172)/49)/2)/2 + S(43)/2)**2 + (27 + 3*sqrt(3)*31985**(S(1)/4)*
+            cos(atan(S(172)/49)/2)/2)**2)**(S(1)/6)*sin(atan((27 + 3*sqrt(3)*31985**(
+            S(1)/4)*cos(atan(S(172)/49)/2)/2)/(3*sqrt(3)*31985**(S(1)/4)*sin(
+            atan(S(172)/49)/2)/2 + S(43)/2))/3)/6 - 4*im(1/((-S(1)/2 + sqrt(3)*I/2)*
+            (S(43)/2 + 27*I + sqrt(-256 + (43 + 54*I)**2)/2)**(S(1)/3)))/3))
+
+    assert solveset(n1, x) == res
+
+
+def test_issue_13961():
+    V = (ax, bx, cx, gx, jx, lx, mx, nx, q) = symbols('ax bx cx gx jx lx mx nx q')
+    S = (ax*q - lx*q - mx, ax - gx*q - lx, bx*q**2 + cx*q - jx*q - nx, q*(-ax*q + lx*q + mx), q*(-ax + gx*q + lx))
+
+    sol = FiniteSet((lx + mx/q, (-cx*q + jx*q + nx)/q**2, cx, mx/q**2, jx, lx, mx, nx, q),
+                    (lx + mx/q, (cx*q - jx*q - nx)/q**2*-1, cx, mx/q**2, jx, lx, mx, nx, q))
+    assert nonlinsolve(S, *V) == sol
+    # The two solutions are in fact identical, so even better if only one is returned
+
+
+def test_issue_14541():
+    solutions = solveset(sqrt(-x**2 - 2.0), x)
+    assert abs(solutions.args[0]+1.4142135623731*I) <= 1e-9
+    assert abs(solutions.args[1]-1.4142135623731*I) <= 1e-9
+
+
+def test_issue_13396():
+    expr = -2*y*exp(-x**2 - y**2)*Abs(x)
+    # The second part may be empty
+    # evalute=False should really not be needed, but is now
+    # See #21943
+    sol = Union(FiniteSet(Integer(0)), Intersection(S.Reals, FiniteSet(Pow(Add(Mul(Integer(-1),
+                Pow(x, Integer(2))), zoo, evaluate=False), Rational(1, 2)), Mul(Integer(-1),
+                 Pow(Add(Mul(Integer(-1), Pow(x, Integer(2))), zoo, evaluate=False),
+                     Rational(1, 2))))))
+
+    # Direct comparison does not work
+    assert solveset(expr, y, domain=S.Reals) == sol
+    # Original issue was TypeError
+
+
+def test_issue_12032():
+    sol = FiniteSet(-sqrt(-2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
+                          2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)))/2 +
+                    sqrt(Abs(-2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)) +
+                             2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
+                             2/sqrt(-2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
+                                    2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)))))/2,
+                    -sqrt(Abs(-2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)) +
+                              2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
+                              2/sqrt(-2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
+                                     2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)))))/2 -
+                    sqrt(-2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
+                         2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)))/2,
+                    sqrt(-2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
+                         2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)))/2 -
+                    I*sqrt(Abs(-2/sqrt(-2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
+                                       2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) -
+                               2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)) +
+                               2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)))))/2,
+                    sqrt(-2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
+                         2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)))/2 +
+                    I*sqrt(Abs(-2/sqrt(-2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
+                                       2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) -
+                               2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)) +
+                               2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1,3)))))/2)
+    assert solveset(x**4 + x - 1, x) == sol
+
+
+def test_issue_10876():
+    assert solveset(1/sqrt(x), x) == S.EmptySet
 
 
 def test_issue_19050():
