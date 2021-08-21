@@ -594,10 +594,10 @@ class log(Function):
     ========
 
     >>> from sympy import log, sqrt, S, I
-    >>> log(8, 2)
-    3
+    >>> log(8)
+    log(8)
     >>> log(S(8)/3, 2)
-    -log(3)/log(2) + 3
+    3 - LogWithBase(3, 2)
     >>> log(-1 + I*sqrt(3))
     log(2) + 2*I*pi/3
 
@@ -1135,12 +1135,12 @@ class LogWithBase(Function):
             elif arg.is_Rational and arg.p == 1:
                 return -cls(arg.q, base)
 
-        if isinstance(arg, exp) and arg.exp.is_extended_real:
-            return arg.exp/log(base)
+        # if isinstance(arg, exp) and arg.exp.is_extended_real:
+        #     return arg.exp/log(base)
 
 
-        if arg.is_Pow and arg.base == base and arg.exp.is_extended_real:
-            return arg.exp
+        # if arg.is_Pow and arg.base == base and arg.exp.is_extended_real:
+        #     return arg.exp
         I = S.ImaginaryUnit
         if isinstance(arg, AccumBounds):
             if arg.min.is_positive:
@@ -1316,13 +1316,13 @@ class LogWithBase(Function):
         >>> from sympy.abc import x
         >>> from sympy.functions import log
         >>> log(x, 2).as_real_imag()
-        (log(Abs(x), 2), arg(x)/log(2))
+        (LogWithBase(Abs(x), 2), arg(x)/log(2))
         >>> log(I, 4).as_real_imag()
         (0, pi/(2*log(4)))
         >>> log(1 + I, 2).as_real_imag()
         (1/2, pi/(4*log(2)))
         >>> log(I*x, 3).as_real_imag()
-        (log(Abs(x), 3), arg(I*x)/log(3))
+        (LogWithBase(Abs(x), 3), arg(I*x)/log(3))
 
         """
         from sympy import Abs, arg
