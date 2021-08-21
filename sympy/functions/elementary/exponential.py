@@ -1139,8 +1139,9 @@ class LogWithBase(Function):
         #     return arg.exp/log(base)
 
 
-        # if arg.is_Pow and arg.base == base and arg.exp.is_extended_real:
-        #     return arg.exp
+        if arg.is_Pow and arg.base == base and arg.exp.is_extended_real:
+            return arg.exp
+
         I = S.ImaginaryUnit
         if isinstance(arg, AccumBounds):
             if arg.min.is_positive:
