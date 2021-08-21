@@ -73,18 +73,26 @@ class CondVariable:
         return "CondVariable(%s)" % str(self.arg)
 
 def unify(x, y, s=None, **fns):
-    """ Unify two expressions.
+    """Returns idempotent most general unifier of the pairs of expressions
 
     Parameters
     ==========
 
-        x, y - expression trees containing leaves, Compounds and Variables.
-        s    - a mapping of variables to subtrees.
+    x
+        Expression trees containing leaves, Compounds and Variables.
+
+    y
+        Expression trees containing leaves, Compounds and Variables.
+
+    s : dict, optional
+        A mapping of variables to subtrees.
 
     Returns
     =======
 
-        lazy sequence of mappings {Variable: subtree}
+    generator
+        Lazy sequence of dictionaries in the form of
+        ``Variable: Union[Variable, Compound]``
 
     Examples
     ========
@@ -129,22 +137,33 @@ def unify(x, y, s=None, **fns):
 
 def unify_var(var, x, s, **fns):
     if var in s:
-        yield from unify(s[var], x, s, **fns)
+        val = s[var]
+        yield from unify(val, x, s, **fns)
+    elif any(occur_check(k, x) for k in s):
+        val = subst(s, x)
+        yield from unify(var, val, s, **fns)
     elif occur_check(var, x):
         pass
-    elif isinstance(var, CondVariable) and var.valid(x):
-        yield assoc(s, var, x)
-    elif isinstance(var, Variable):
-        yield assoc(s, var, x)
+    elif (isinstance(var, CondVariable) and var.valid(x)) or isinstance(var, Variable):
+        s = assoc(s, var, x)
+        # Cascade Substitution
+        for x in s:
+            s[x] = subst(s, s[x])
+        yield s
+
+def subst(s, x):
+    if x in s:
+        return s[x]
+    if isinstance(x, Compound):
+        return Compound(x.op, tuple(subst(s, arg) for arg in x.args))
+    return x
 
 def occur_check(var, x):
     """ var occurs in subtree owned by x? """
     if var == x:
         return True
     elif isinstance(x, Compound):
-        return occur_check(var, x.args)
-    elif is_args(x):
-        if any(occur_check(var, xi) for xi in x): return True
+        return any(occur_check(var, arg) for arg in x.args)
     return False
 
 def assoc(d, key, val):

@@ -1,4 +1,4 @@
-from sympy.unify.core import Compound, Variable, CondVariable, allcombinations
+from sympy.unify.core import Compound, Variable, CondVariable, allcombinations, subst
 from sympy.unify import core
 
 a,b,c = 'a', 'b', 'c'
@@ -86,3 +86,36 @@ def test_CondVariable():
 
 def test_defaultdict():
     assert next(unify(Variable('x'), 'foo')) == {Variable('x'): 'foo'}
+
+
+def test_issue_21917():
+    x = Variable('x')
+    y = Variable('y')
+    a = Compound('a', ())
+
+    A = Compound('f', (x, y))
+    B = Compound('f', (Compound('h', (a,)), x))
+    for s in unify(A, B):
+        assert subst(s, A) == subst(s, B)
+
+    A = Compound('f', (x, y))
+    B = Compound('f', (y, x))
+    for s in unify(A, B):
+        assert subst(s, A) == subst(s, B)
+
+    A = Compound('f', (x, y))
+    B = Compound('f', (Compound('f', (y,)), Compound('f', (x,))))
+    for s in unify(A, B):
+        assert subst(s, A) == subst(s, B)
+
+    z = Variable('z')
+    g_a = Compound('g', (a,))
+    g_x = Compound('g', (x,))
+    g_y = Compound('g', (y,))
+    g_z = Compound('g', (z,))
+    g_g_x = Compound('g', (g_x,))
+
+    A = Compound('f', (x, g_a, g_z))
+    B = Compound('f', (g_y, g_y, g_g_x))
+    for s in unify(A, B):
+        assert subst(s, A) == subst(s, B)
