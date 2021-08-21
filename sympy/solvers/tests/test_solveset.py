@@ -2,9 +2,9 @@ from sympy.core.containers import Tuple
 from sympy.core.compatibility import ordered
 from sympy.core.function import (Function, Lambda, nfloat, diff)
 from sympy.core.mod import Mod
-from sympy.core.numbers import (E, I, Rational, oo, pi)
+from sympy.core.numbers import (E, I, Rational, oo, pi, Integer)
 from sympy.core.relational import (Eq, Gt,
-    Ne)
+    Ne, Ge)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
@@ -2839,6 +2839,49 @@ def test_issue_18359():
     assert result1 == correct_result
     assert result2 == correct_result
 
+
+def test_issue_17604():
+    lhs = -2**(3*x/11)*exp(x/11) + pi**(x/11)
+    assert _is_exponential(lhs, x)
+    assert _solve_exponential(lhs, 0, x, S.Complexes) == FiniteSet(0)
+
+
+def test_issue_17580():
+    assert solveset(1/(1 - x**3)**2, x, S.Reals) == EmptySet()
+
+
+def test_issue_17566_actual():
+    sys = [2**x + 2**y - 3, 4**x + 9**y - 5]
+    # Not clear this is the correct result, but at least no recursion error
+    assert nonlinsolve(sys, x, y) == FiniteSet((log(3 - 2**y)/log(2), y))
+
+
+def test_issue_17565():
+    eq = Ge(2*(x - 2)**2/(3*(x + 1)**(Integer(1)/3)) + 2*(x - 2)*(x + 1)**(Integer(2)/3), 0)
+    res = Union(Interval.Lopen(-1, -Rational(1, 4)), Interval(2, oo))
+    assert solveset(eq, x, S.Reals) == res
+
+
+def test_issue_15024():
+    function = (x + 5)/sqrt(-x**2 - 10*x)
+    assert solveset(function, x, S.Reals) == FiniteSet(Integer(-5))
+
+
+def test_issue_16877():
+    assert dumeq(nonlinsolve([x - 1, sin(y)], x, y),
+                 FiniteSet((FiniteSet(1), ImageSet(Lambda(n, 2*n*pi), S.Integers)),
+                           (FiniteSet(1), ImageSet(Lambda(n, 2*n*pi + pi), S.Integers))))
+    # Even better if (FiniteSet(1), ImageSet(Lambda(n, n*pi), S.Integers)) is obtained
+
+
+def test_issue_16876():
+    assert dumeq(nonlinsolve([sin(x), 2*x - 4*y], x, y),
+                 FiniteSet((ImageSet(Lambda(n, 2*n*pi), S.Integers),
+                            ImageSet(Lambda(n, n*pi), S.Integers)),
+                           (ImageSet(Lambda(n, 2*n*pi + pi), S.Integers),
+                            ImageSet(Lambda(n, n*pi + pi/2), S.Integers))))
+    # Even better if (ImageSet(Lambda(n, n*pi), S.Integers),
+    #                 ImageSet(Lambda(n, n*pi/2), S.Integers)) is obtained
 
 def test_issue_21236():
     x, z = symbols("x z")
