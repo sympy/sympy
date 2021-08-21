@@ -2822,6 +2822,24 @@ def test_substitution_with_infeasible_solution():
     assert sol != nonlinsolve(system, solvefor)
 
 
+def test_issue_20097():
+    assert solveset(1/sqrt(x)) == EmptySet()
+
+
+def test_issue_15350():
+    assert solveset(diff(sqrt(1/x+x))) == FiniteSet(-1, 1)
+
+
+def test_issue_18359():
+    c1 = Piecewise((0, x < 0), (Min(1, x)/2 - Min(2, x)/2 + Min(3, x)/2, True))
+    c2 = Piecewise((Piecewise((0, x < 0), (Min(1, x)/2 - Min(2, x)/2 + Min(3, x)/2, True)), x >= 0), (0, True))
+    correct_result = Interval(1, 2)
+    result1 = solveset(c1 - Rational(1, 2), x, Interval(0, 3))
+    result2 = solveset(c2 - Rational(1, 2), x, Interval(0, 3))
+    assert result1 == correct_result
+    assert result2 == correct_result
+
+
 def test_issue_21236():
     x, z = symbols("x z")
     y = symbols('y', rational=True)
