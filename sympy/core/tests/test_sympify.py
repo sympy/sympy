@@ -777,7 +777,6 @@ def test_issue_14706():
     raises(SympifyError, lambda: sympify(z2, strict=True))
 
 
-
 def test_issue_21536():
     #test to check evaluate=False in case of iterable input
     u = sympify("x+3*x+2", evaluate=False)
