@@ -1351,7 +1351,7 @@ class Mul(Expr, AssocOp):
                 b, e = a.as_base_exp()
                 if not b.is_integer or not e.is_integer: return
                 if e.is_negative:
-                    denominators.append(b)
+                    denominators.append(Pow(b, S.NegativeOne*e))
                 else:
                     # for integer b and positive integer e: a = b**e would be integer
                     assert not e.is_positive
