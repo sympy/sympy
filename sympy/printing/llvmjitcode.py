@@ -434,8 +434,8 @@ def llvm_callable(args, expr, callback_type=None):
     >>> after_cse = cse([e1,e2])
     >>> after_cse
     ([(x0, x**2), (x1, y**2)], [x0 + x1, 4*x0 + 4*x1 + 8.0])
-    >>> j1 = jit.llvm_callable([x,y], after_cse)
-    >>> j1(1.0, 2.0)
+    >>> j1 = jit.llvm_callable([x,y], after_cse) # doctest: +SKIP
+    >>> j1(1.0, 2.0)                             # doctest: +SKIP
     (5.0, 28.0)
     '''
 
