@@ -1491,6 +1491,13 @@ def test_summation_by_residues():
     assert eval_sum_residue((-1)**x / x**2, (x, S(2), oo)) == 1 - pi**2/12
 
 
+def test_issue_20953():
+    mm1=(S(1)/5)-Sum((S(1)/2)*(S(1)/(8*2**k-4)),(k,0,log(n,2)-1))
+    assert [mm1.subs(n,2**i).doit() for i in range(2,5)] == [Rational(1, 30),
+                                                             Rational(13, 840),
+                                                             Rational(1, 140)]
+
+
 @slow
 def test_summation_by_residues_failing():
     x = Symbol('x')
