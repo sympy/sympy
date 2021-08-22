@@ -85,6 +85,10 @@ def test_arrayexpr_convert_array_to_matrix():
     cg = ArrayTensorProduct(3, M)
     assert convert_array_to_matrix(cg) == 3 * M
 
+    # Partial conversion to matrix multiplication:
+    expr = ArrayContraction(ArrayTensorProduct(M, N, P, Q), (0, 2), (1, 4, 6))
+    assert convert_array_to_matrix(expr) == ArrayContraction(ArrayTensorProduct(M.T*N, P, Q), (0, 2, 4))
+
     # TODO: not yet supported:
 
     # cg = ArrayDiagonal(ArrayTensorProduct(M, N, P), (0, 2, 4), (1, 3, 5))
@@ -102,6 +106,7 @@ def test_arrayexpr_convert_array_to_matrix():
     expr = ArrayAdd(M, PermuteDims(M, [1, 0]))
     assert convert_array_to_matrix(expr) == M + Transpose(M)
 
+test_arrayexpr_convert_array_to_matrix()
 
 def test_arrayexpr_convert_array_to_matrix2():
     cg = ArrayContraction(ArrayTensorProduct(M, N), (1, 3))
@@ -174,7 +179,7 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
     cg = ArrayDiagonal(ArrayTensorProduct(I, x, A, B), (1, 2), (5, 6))
     assert _array_diag2contr_diagmatrix(cg) == ArrayDiagonal(ArrayContraction(ArrayTensorProduct(I, OneArray(1), A, B, DiagMatrix(x)), (1, 7)), (5, 6))
     # TODO: not yet working
-    #  assert recognize_matrix_expression(cg)
+    #  assert convert_array_to_matrix(cg)
 
     cg = ArrayDiagonal(ArrayTensorProduct(x, I1), (1, 2))
     assert isinstance(cg, ArrayDiagonal)

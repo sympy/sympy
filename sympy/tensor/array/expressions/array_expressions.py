@@ -1415,6 +1415,16 @@ class _EditArrayContraction:
                     contraction_indices[ind].append(_IndPos(i, j))
         return contraction_indices
 
+    def count_args_with_index(self, index: int) -> int:
+        """
+        Count the number of arguments that have the given index.
+        """
+        counter: int = 0
+        for arg_with_ind in self.args_with_ind:
+            if index in arg_with_ind.indices:
+                counter += 1
+        return counter
+
 
 def get_rank(expr):
     if isinstance(expr, (MatrixExpr, MatrixElement)):

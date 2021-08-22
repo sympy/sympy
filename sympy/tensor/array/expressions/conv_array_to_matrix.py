@@ -13,10 +13,12 @@ from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayD
 from sympy.tensor.array.expressions.utils import _get_mapping_from_subranks
 
 
-def _get_candidate_for_matmul_from_contraction(index1: Optional[int], index2: Optional[int], remaining_args: List[_ArgE]) -> Tuple[Optional[_ArgE], bool, int]:
-    if index1 is None and index2 is None:
+def _get_candidate_for_matmul_from_contraction(scan_indices: List[Optional[int]], remaining_args: List[_ArgE]) -> Tuple[Optional[_ArgE], bool, int]:
+
+    scan_indices = [i for i in scan_indices if i is not None]
+    if len(scan_indices) == 0:
         return None, False, -1
-    scan_indices = [i for i in [index1, index2] if i is not None]
+
     transpose: bool = False
     candidate: Optional[_ArgE] = None
     candidate_index: int = -1
@@ -74,13 +76,22 @@ def _support_function_tp1_recognize(contraction_indices, args):
             first_index = arg_with_ind.indices[0]
             second_index = arg_with_ind.indices[1]
 
-            candidate, transpose, found_index = _get_candidate_for_matmul_from_contraction(first_index, second_index, editor.args_with_ind[i+1:])
-            if candidate is None and first_index is not None and first_index == second_index:
+            first_frequency = editor.count_args_with_index(first_index)
+            second_frequency = editor.count_args_with_index(second_index)
+
+            if first_index is not None and first_frequency == 1 and first_index == second_index:
                 flag_stop = False
                 arg_with_ind.element = Trace(arg_with_ind.element)._normalize()
                 arg_with_ind.indices = []
                 break
 
+            scan_indices = []
+            if first_frequency == 2:
+                scan_indices.append(first_index)
+            if second_frequency == 2:
+                scan_indices.append(second_index)
+
+            candidate, transpose, found_index = _get_candidate_for_matmul_from_contraction(scan_indices, editor.args_with_ind[i+1:])
             if candidate is not None:
                 flag_stop = False
                 transpose1 = found_index == first_index
