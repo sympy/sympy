@@ -119,7 +119,14 @@ class Trace(Expr):
         from sympy import MatMul, Transpose, default_sort_key
         trace_arg = self.arg
         if isinstance(trace_arg, MatMul):
-            indmin = min(range(len(trace_arg.args)), key=lambda x: default_sort_key(trace_arg.args[x]))
+
+            def get_arg_key(x):
+                a = trace_arg.args[x]
+                if isinstance(a, Transpose):
+                    a = a.arg
+                return default_sort_key(a)
+
+            indmin = min(range(len(trace_arg.args)), key=get_arg_key)
             if isinstance(trace_arg.args[indmin], Transpose):
                 trace_arg = Transpose(trace_arg).doit()
                 indmin = min(range(len(trace_arg.args)), key=lambda x: default_sort_key(trace_arg.args[x]))

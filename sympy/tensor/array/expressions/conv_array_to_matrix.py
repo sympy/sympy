@@ -1,71 +1,121 @@
 import itertools
-from typing import Tuple
-from functools import reduce, singledispatch
+from typing import Tuple, Optional, List
+from functools import singledispatch
 from itertools import accumulate
 
-from sympy import S, Trace, MatrixExpr, Transpose, DiagMatrix, Mul, ZeroMatrix
+from sympy import Trace, MatrixExpr, Transpose, DiagMatrix, Mul, ZeroMatrix
 from sympy.combinatorics.permutations import _af_invert, Permutation
 from sympy.matrices.common import MatrixCommon
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayDiagonal, \
     ArrayTensorProduct, OneArray, get_rank, _get_subrank, ZeroArray, ArrayContraction, \
-    ArrayAdd, _CodegenArrayAbstract, get_shape, ArrayElementwiseApplyFunc, _ArrayExpr
+    ArrayAdd, _CodegenArrayAbstract, get_shape, ArrayElementwiseApplyFunc, _ArrayExpr, _EditArrayContraction, _ArgE
 from sympy.tensor.array.expressions.utils import _get_mapping_from_subranks
 
 
-def _support_function_tp1_recognize(contraction_indices, args):
-    subranks = [get_rank(i) for i in args]
-    coeff = reduce(lambda x, y: x*y, [arg for arg, srank in zip(args, subranks) if srank == 0], S.One)
-    mapping = _get_mapping_from_subranks(subranks)
-    new_contraction_indices = list(contraction_indices)
-    newargs = args[:]  # make a copy of the list
-    removed = [None for i in newargs]
-    cumul = list(accumulate([0] + [get_rank(arg) for arg in args]))
-    new_perms = [list(range(cumul[i], cumul[i+1])) for i, arg in enumerate(args)]
-    for pi, contraction_pair in enumerate(contraction_indices):
-        if len(contraction_pair) != 2:
-            continue
-        i1, i2 = contraction_pair
-        a1, e1 = mapping[i1]
-        a2, e2 = mapping[i2]
-        while removed[a1] is not None:
-            a1, e1 = removed[a1]
-        while removed[a2] is not None:
-            a2, e2 = removed[a2]
-        if a1 == a2:
-            trace_arg = newargs[a1]
-            newargs[a1] = Trace(trace_arg)._normalize()
-            new_contraction_indices[pi] = None
-            continue
-        if not isinstance(newargs[a1], MatrixExpr) or not isinstance(newargs[a2], MatrixExpr):
-            continue
-        arg1 = newargs[a1]
-        arg2 = newargs[a2]
-        if (e1 == 1 and e2 == 1) or (e1 == 0 and e2 == 0):
-            arg2 = Transpose(arg2)
-        if e1 == 1:
-            argnew = arg1*arg2
-        else:
-            argnew = arg2*arg1
-        removed[a2] = a1, e1
-        new_perms[a1][e1] = new_perms[a2][1 - e2]
-        new_perms[a2] = None
-        newargs[a1] = argnew
-        newargs[a2] = None
-        new_contraction_indices[pi] = None
-    new_contraction_indices = [i for i in new_contraction_indices if i is not None]
-    newargs2 = [arg for arg in newargs if arg is not None]
-    if len(newargs2) == 0:
-        return coeff
-    tp = _a2m_tensor_product(*newargs2)
-    tc = ArrayContraction(tp, *new_contraction_indices)
-    new_perms2 = ArrayContraction._push_indices_up(contraction_indices, [i for i in new_perms if i is not None])
-    permutation = _af_invert([j for i in new_perms2 for j in i if j is not None])
-    if permutation == [1, 0] and len(newargs2) == 1:
-        return Transpose(newargs2[0]).doit()
-    tperm = PermuteDims(tc, permutation)
-    return tperm
+def _get_candidate_for_matmul_from_contraction(scan_indices: List[Optional[int]], remaining_args: List[_ArgE]) -> Tuple[Optional[_ArgE], bool, int]:
 
+    scan_indices = [i for i in scan_indices if i is not None]
+    if len(scan_indices) == 0:
+        return None, False, -1
+
+    transpose: bool = False
+    candidate: Optional[_ArgE] = None
+    candidate_index: int = -1
+    for arg_with_ind2 in remaining_args:
+        if not isinstance(arg_with_ind2.element, MatrixExpr):
+            continue
+        for index in scan_indices:
+            if candidate_index != -1 and candidate_index != index:
+                # A candidate index has already been selected, check
+                # repetitions only for that index:
+                continue
+            if index in arg_with_ind2.indices:
+                if set(arg_with_ind2.indices) == {index}:
+                    # Index repeated twice in arg_with_ind2
+                    candidate = None
+                    break
+                if candidate is None:
+                    candidate = arg_with_ind2
+                    candidate_index = index
+                    transpose = (index == arg_with_ind2.indices[1])
+                else:
+                    # Index repeated more than twice, break
+                    candidate = None
+                    break
+    return candidate, transpose, candidate_index
+
+
+def _insert_candidate_into_editor(editor: _EditArrayContraction, arg_with_ind: _ArgE, candidate: _ArgE, transpose1: bool, transpose2: bool):
+    other = candidate.element
+    other_index: int
+    if transpose2:
+        other = Transpose(other)
+        other_index = candidate.indices[0]
+    else:
+        other_index = candidate.indices[1]
+    new_element = (Transpose(arg_with_ind.element) if transpose1 else arg_with_ind.element) * other
+    editor.args_with_ind.remove(candidate)
+    new_arge = _ArgE(new_element)
+    return new_arge, other_index
+
+
+def _support_function_tp1_recognize(contraction_indices, args):
+    if len(contraction_indices) == 0:
+        return _a2m_tensor_product(*args)
+
+    ac = ArrayContraction(ArrayTensorProduct(*args), *contraction_indices)
+    editor = _EditArrayContraction(ac)
+    editor.track_permutation_start()
+
+    while True:
+        flag_stop: bool = True
+        for i, arg_with_ind in enumerate(editor.args_with_ind):
+            if not isinstance(arg_with_ind.element, MatrixExpr):
+                continue
+
+            first_index = arg_with_ind.indices[0]
+            second_index = arg_with_ind.indices[1]
+
+            first_frequency = editor.count_args_with_index(first_index)
+            second_frequency = editor.count_args_with_index(second_index)
+
+            if first_index is not None and first_frequency == 1 and first_index == second_index:
+                flag_stop = False
+                arg_with_ind.element = Trace(arg_with_ind.element)._normalize()
+                arg_with_ind.indices = []
+                break
+
+            scan_indices = []
+            if first_frequency == 2:
+                scan_indices.append(first_index)
+            if second_frequency == 2:
+                scan_indices.append(second_index)
+
+            candidate, transpose, found_index = _get_candidate_for_matmul_from_contraction(scan_indices, editor.args_with_ind[i+1:])
+            if candidate is not None:
+                flag_stop = False
+                editor.track_permutation_merge(arg_with_ind, candidate)
+                transpose1 = found_index == first_index
+                new_arge, other_index = _insert_candidate_into_editor(editor, arg_with_ind, candidate, transpose1, transpose)
+                if found_index == first_index:
+                    new_arge.indices = [second_index, other_index]
+                else:
+                    new_arge.indices = [first_index, other_index]
+                set_indices = set(new_arge.indices)
+                if len(set_indices) == 1 and set_indices != {None}:
+                    # This is a trace:
+                    new_arge.element = Trace(new_arge.element)._normalize()
+                    new_arge.indices = []
+                editor.args_with_ind[i] = new_arge
+                # TODO: is this break necessary?
+                break
+
+        if flag_stop:
+            break
+
+    editor.refresh_indices()
+    return editor.to_array_contraction()
 
 
 @singledispatch
@@ -160,6 +210,7 @@ def _(expr: PermuteDims):
             if all(expr_shape[i] == 1 for i in flat_cyclic_form):
                 return mat_mul_lines
             return mat_mul_lines
+        # TODO: this assumes that all arguments are matrices, it may not be the case:
         permutation = Permutation(2*len(mat_mul_lines.args)-1)*expr.permutation
         permuted = [permutation(i) for i in range(2*len(mat_mul_lines.args))]
         args_array = [None for i in mat_mul_lines.args]

@@ -85,6 +85,10 @@ def test_arrayexpr_convert_array_to_matrix():
     cg = ArrayTensorProduct(3, M)
     assert convert_array_to_matrix(cg) == 3 * M
 
+    # Partial conversion to matrix multiplication:
+    expr = ArrayContraction(ArrayTensorProduct(M, N, P, Q), (0, 2), (1, 4, 6))
+    assert convert_array_to_matrix(expr) == ArrayContraction(ArrayTensorProduct(M.T*N, P, Q), (0, 2, 4))
+
     # TODO: not yet supported:
 
     # cg = ArrayDiagonal(ArrayTensorProduct(M, N, P), (0, 2, 4), (1, 3, 5))
@@ -174,7 +178,7 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
     cg = ArrayDiagonal(ArrayTensorProduct(I, x, A, B), (1, 2), (5, 6))
     assert _array_diag2contr_diagmatrix(cg) == ArrayDiagonal(ArrayContraction(ArrayTensorProduct(I, OneArray(1), A, B, DiagMatrix(x)), (1, 7)), (5, 6))
     # TODO: not yet working
-    #  assert recognize_matrix_expression(cg)
+    #  assert convert_array_to_matrix(cg)
 
     cg = ArrayDiagonal(ArrayTensorProduct(x, I1), (1, 2))
     assert isinstance(cg, ArrayDiagonal)
@@ -423,7 +427,7 @@ def test_arrayexpr_convert_array_to_matrix_support_function():
                                            [X, Y, A, B, C, D]) == ArrayTensorProduct(X * Y * A * B, C * D)
 
     assert _support_function_tp1_recognize([(1, 7), (3, 8), (4, 11)], [X, Y, A, B, C, D]) == PermuteDims(
-        ArrayTensorProduct(X * B.T, Y * C, D * A), [0, 2, 5, 1, 3, 4]
+        ArrayTensorProduct(X * B.T, Y * C, A.T * D.T), [0, 2, 4, 1, 3, 5]
     )
 
     assert _support_function_tp1_recognize([(0, 1), (3, 6), (5, 8)], [X, A, B, C, D]) == PermuteDims(
