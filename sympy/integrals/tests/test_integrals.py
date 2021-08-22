@@ -6,7 +6,7 @@ from sympy import (
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol, summation,
     symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper,
-    Float
+    Float, LogWithBase
 )
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.complexes import periodic_argument
@@ -350,6 +350,7 @@ def test_transcendental_functions():
 def test_log_polylog():
     assert integrate(log(1 - x)/x, (x, 0, 1)) == -pi**2/6
     assert integrate(log(x)*(1 - x)**(-1), (x, 0, 1)) == -pi**2/6
+    assert integrate(log(x, 2), x) == x*log(x, 2) - x/log(2)
 
 
 def test_issue_3740():

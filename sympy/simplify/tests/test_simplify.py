@@ -488,6 +488,11 @@ def test_logcombine_1():
     reps = {x: 0, y: 0}
     assert log(abs(x)*abs(y)).subs(reps) != eq.subs(reps)
 
+    x, y, z = symbols("x,y,z", positive=True)
+    b = Symbol('b', real=True)
+    assert logcombine(b*log(x) + log(y) - log(z, 2) + b*log(y, 2)
+                      ) == log(x**b*y) + log(y**b/z, 2)
+
 
 def test_logcombine_complex_coeff():
     i = Integral((sin(x**2) + cos(x**3))/x, x)

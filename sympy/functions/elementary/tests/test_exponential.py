@@ -380,6 +380,7 @@ def test_log_symbolic():
     assert log(x**y).expand() != y*log(x)
     assert log(x**y).expand(force=True) == y*log(x)
 
+    assert log(x, 2) == LogWithBase(x, 2)
     assert log(x, 2).rewrite(log) == log(x)/log(2)
     assert log(E, 2) == 1/log(2)
 
@@ -405,6 +406,7 @@ def test_log_symbolic():
     assert (log(p**-5)**-1).expand() == -1/log(p)/5
     assert log(-x).func is log and log(-x).args[0] == -x
     assert log(-p).func is log and log(-p).args[0] == -p
+    assert log(x, 2).diff(x) == 1/(x*log(2))
 
 
 def test_log_exp():
