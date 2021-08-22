@@ -111,7 +111,7 @@ doctest_list = [
 
 ]
 
-if not (sympy.test(*test_list, blacklist=blacklist) and sympy.doctest(*doctest_list)):
+if not (sympy.test(*test_list, verbose=True, blacklist=blacklist) and sympy.doctest(*doctest_list)):
     raise TestsFailedError('Tests failed')
 
 
