@@ -2186,6 +2186,9 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     free_symbols = f.free_symbols
 
+    if f.has(Piecewise):
+        f = piecewise_fold(f)
+
     if symbol is None and not free_symbols:
         b = Eq(f, 0)
         if b is S.true:
