@@ -3,7 +3,7 @@ from typing import Tuple, Optional, List
 from functools import singledispatch
 from itertools import accumulate
 
-from sympy import S, Trace, MatrixExpr, Transpose, DiagMatrix, Mul, ZeroMatrix
+from sympy import Trace, MatrixExpr, Transpose, DiagMatrix, Mul, ZeroMatrix
 from sympy.combinatorics.permutations import _af_invert, Permutation
 from sympy.matrices.common import MatrixCommon
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction

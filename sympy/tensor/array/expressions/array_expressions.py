@@ -1378,7 +1378,7 @@ class _EditArrayContraction:
         if len(self.args_with_ind) == 0:
             self.args_with_ind.append(_ArgE(scalar))
         else:
-            from sympy.tensor.array.expressions.conv_array_to_matrix import _a2m_mul, _a2m_tensor_product
+            from sympy.tensor.array.expressions.conv_array_to_matrix import _a2m_tensor_product
             self.args_with_ind[0].element = _a2m_tensor_product(scalar, self.args_with_ind[0].element)
 
     def to_array_contraction(self):
