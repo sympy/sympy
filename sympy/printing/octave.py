@@ -256,6 +256,11 @@ class OctaveCodePrinter(CodePrinter):
         return "exp(1)"
 
 
+    def _print_LogWithBase(self, expr):
+        arg, base = expr.args
+        return 'log({})/log({})'.format(arg, base)
+
+
     def _print_GoldenRatio(self, expr):
         # FIXME: how to do better, e.g., for octave_code(2*GoldenRatio)?
         #return self._print((1+sqrt(S(5)))/2)

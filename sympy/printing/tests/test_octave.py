@@ -7,7 +7,7 @@ from sympy.functions import (arg, atan2, bernoulli, beta, ceiling, chebyshevu,
                              factorial, floor, harmonic, Heaviside, im,
                              laguerre, LambertW, log, Max, Min, Piecewise,
                              polylog, re, RisingFactorial, sign, sinc, sqrt,
-                             zeta, binomial, legendre)
+                             zeta, binomial, legendre, LogWithBase)
 from sympy.functions import (sin, cos, tan, cot, sec, csc, asin, acos, acot,
                              atan, asec, acsc, sinh, cosh, tanh, coth, csch,
                              sech, asinh, acosh, atanh, acoth, asech, acsch)
@@ -59,6 +59,7 @@ def test_Function():
     assert mcode(sign(x)) == "sign(x)"
     assert mcode(exp(x)) == "exp(x)"
     assert mcode(log(x)) == "log(x)"
+    assert mcode(LogWithBase(x, y)) == "log(x)/log(y)"
     assert mcode(factorial(x)) == "factorial(x)"
     assert mcode(floor(x)) == "floor(x)"
     assert mcode(atan2(y, x)) == "atan2(y, x)"

@@ -6,7 +6,8 @@ from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
-from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt
+from sympy.functions import (acos, KroneckerDelta, Piecewise, sign, sqrt, log,
+                             LogWithBase)
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
 from sympy.printing.pycode import (
@@ -50,6 +51,11 @@ def test_PythonCodePrinter():
     assert prntr.doprint(sign(x)) == '(0.0 if x == 0 else math.copysign(1, x))'
     assert prntr.doprint(p[0, 1]) == 'p[0, 1]'
     assert prntr.doprint(KroneckerDelta(x,y)) == '(1 if x == y else 0)'
+
+    assert prntr.doprint(log(x)) == 'math.log(x)'
+
+    assert prntr.doprint(LogWithBase(x, y)) == 'math.log(x, y)'
+    assert prntr.module_imports == {'math': {'pi', 'sqrt', 'acos', 'log', 'copysign'}}
 
 
 def test_PythonCodePrinter_standard():

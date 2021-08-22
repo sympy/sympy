@@ -183,6 +183,10 @@ class MapleCodePrinter(CodePrinter):
     def _print_NaN(self, expr):
         return 'undefined'
 
+    def _print_LogWithBase(self, expr):
+        arg, base = expr.args
+        return 'log[{}]({})'.format(base, arg)
+
     def _get_matrix(self, expr, sparse=False):
         if expr.cols == 0 or expr.rows == 0:
             _strM = 'Matrix([], storage = {storage})'.format(

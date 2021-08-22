@@ -1,7 +1,8 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
-from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos
+from sympy.functions import (Piecewise, sqrt, ceiling, exp, sin, cos, log,
+                             LogWithBase)
 from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
@@ -40,6 +41,8 @@ def test_Function():
     assert maple_code(sin(x) ** cos(x)) == "sin(x)^cos(x)"
     assert maple_code(abs(x)) == "abs(x)"
     assert maple_code(ceiling(x)) == "ceil(x)"
+    assert maple_code(log(x)) == "ln(x)"
+    assert maple_code(LogWithBase(x, y)) == "log[y](x)"
 
 
 def test_Pow():
