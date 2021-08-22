@@ -11,7 +11,7 @@ from sympy.core.numbers import Float, I, pi, Rational, Integer
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
-from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
+from sympy.functions import gamma, exp, sqrt, log, exp_polar, re, LogWithBase
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
 from sympy.functions.elementary.complexes import unpolarify, Abs
 from sympy.functions.elementary.exponential import ExpBase
@@ -695,7 +695,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     if expr.has(TrigonometricFunction, HyperbolicFunction):
         expr = trigsimp(expr, deep=True)
 
-    if expr.has(log):
+    if expr.has(log, LogWithBase):
         expr = shorter(expand_log(expr, deep=True), logcombine(expr))
 
     if expr.has(CombinatorialFunction, gamma):
@@ -1036,85 +1036,119 @@ def logcombine(expr, force=False):
             a = l.args[0]
             return a.is_positive or force and a.is_nonpositive is not False
 
-        other = []
-        logs = []
-        log1 = defaultdict(list)
+        def f2(rv, func, base):
+            other = []
+            logs = []
+            log1 = defaultdict(list)
+            for a in Add.make_args(rv):
+                if isinstance(a, func) and goodlog(a) and (base == S.Exp1 or a.args[1] == base):
+                    log1[()].append(([], a))
+                elif not a.is_Mul:
+                    other.append(a)
+                else:
+                    ot = []
+                    co = []
+                    lo = []
+                    for ai in a.args:
+                        if ai.is_Rational and ai < 0:
+                            ot.append(S.NegativeOne)
+                            co.append(-ai)
+                        elif isinstance(ai, func) and goodlog(ai) and (base == S.Exp1 or ai.args[1] == base):
+                            lo.append(ai)
+                        elif gooda(ai):
+                            co.append(ai)
+                        else:
+                            ot.append(ai)
+                    if len(lo) > 1:
+                        logs.append((ot, co, lo))
+                    elif lo:
+                        log1[tuple(ot)].append((co, lo[0]))
+                    else:
+                        other.append(a)
+
+            # if there is only one log in other, put it with the
+            # good logs
+            if len(other) == 1 and isinstance(other[0], func):
+                log1[()].append(([], other.pop()))
+            # if there is only one log at each coefficient and none have
+            # an exponent to place inside the log then there is nothing to do
+            if not logs and all(len(log1[k]) == 1 and log1[k][0] == [] for k in log1):
+                return rv
+
+            # collapse multi-logs as far as possible in a canonical way
+            # TODO: see if x*log(a)+x*log(a)*log(b) -> x*log(a)*(1+log(b))?
+            # -- in this case, it's unambiguous, but if it were were a log(c) in
+            # each term then it's arbitrary whether they are grouped by log(a) or
+            # by log(c). So for now, just leave this alone; it's probably better to
+            # let the user decide
+            for o, e, l in logs:
+                l = list(ordered(l))
+                e = func(l.pop(0).args[0]**Mul(*e), base)
+                while l:
+                    li = l.pop(0)
+                    e = func(li.args[0]**e, base)
+                c, l = Mul(*o), e
+                if isinstance(l, func):  # it should be, but check to be sure
+                    log1[(c,)].append(([], l))
+                else:
+                    other.append(c*l)
+
+            # logs that have the same coefficient can multiply
+            for k in list(log1.keys()):
+                if func == log:
+                    res = log(logcombine(Mul(*[
+                        l.args[0]**Mul(*c) for c, l in log1.pop(k)]),
+                        force=force), evaluate=False)
+                else:
+                    res = LogWithBase(logcombine(Mul(*[
+                        l.args[0]**Mul(*c) for c, l in log1.pop(k)]),
+                        force=force), base, evaluate=False)
+                log1[Mul(*k)] = res
+
+            # logs that have oppositely signed coefficients can divide
+            for k in ordered(list(log1.keys())):
+                if not k in log1:  # already popped as -k
+                    continue
+                if -k in log1:
+                    # figure out which has the minus sign; the one with
+                    # more op counts should be the one
+                    num, den = k, -k
+                    if num.count_ops() > den.count_ops():
+                        num, den = den, num
+                    if func == log:
+                        res = num*log(log1.pop(num).args[0]/log1.pop(den).args[0],
+                                      evaluate=False)
+                    else:
+                        res = num*LogWithBase(log1.pop(num).args[0]/log1.pop(den).args[0],
+                                              base, evaluate=False)
+                    other.append(res)
+                else:
+                    other.append(k*log1.pop(k))
+
+            return Add(*other)
+
+        # Combine each base separately
+
+        # Find bases
+        bases = set()
         for a in Add.make_args(rv):
             if isinstance(a, log) and goodlog(a):
-                log1[()].append(([], a))
-            elif not a.is_Mul:
-                other.append(a)
-            else:
-                ot = []
-                co = []
-                lo = []
+                bases.add((log, S.Exp1))
+            elif isinstance(a, LogWithBase) and goodlog(a):
+                bases.add((LogWithBase, a.args[1]))
+            elif isinstance(a, Mul):
                 for ai in a.args:
-                    if ai.is_Rational and ai < 0:
-                        ot.append(S.NegativeOne)
-                        co.append(-ai)
-                    elif isinstance(ai, log) and goodlog(ai):
-                        lo.append(ai)
-                    elif gooda(ai):
-                        co.append(ai)
-                    else:
-                        ot.append(ai)
-                if len(lo) > 1:
-                    logs.append((ot, co, lo))
-                elif lo:
-                    log1[tuple(ot)].append((co, lo[0]))
-                else:
-                    other.append(a)
+                    if isinstance(ai, log) and goodlog(ai):
+                        bases.add((log, S.Exp1))
+                    elif isinstance(ai, LogWithBase) and goodlog(ai):
+                        bases.add((LogWithBase, ai.args[1]))
 
-        # if there is only one log in other, put it with the
-        # good logs
-        if len(other) == 1 and isinstance(other[0], log):
-            log1[()].append(([], other.pop()))
-        # if there is only one log at each coefficient and none have
-        # an exponent to place inside the log then there is nothing to do
-        if not logs and all(len(log1[k]) == 1 and log1[k][0] == [] for k in log1):
-            return rv
+        # Combine for each base
+        for func, base in bases:
+            rv = f2(rv, func, base)
 
-        # collapse multi-logs as far as possible in a canonical way
-        # TODO: see if x*log(a)+x*log(a)*log(b) -> x*log(a)*(1+log(b))?
-        # -- in this case, it's unambiguous, but if it were were a log(c) in
-        # each term then it's arbitrary whether they are grouped by log(a) or
-        # by log(c). So for now, just leave this alone; it's probably better to
-        # let the user decide
-        for o, e, l in logs:
-            l = list(ordered(l))
-            e = log(l.pop(0).args[0]**Mul(*e))
-            while l:
-                li = l.pop(0)
-                e = log(li.args[0]**e)
-            c, l = Mul(*o), e
-            if isinstance(l, log):  # it should be, but check to be sure
-                log1[(c,)].append(([], l))
-            else:
-                other.append(c*l)
+        return rv
 
-        # logs that have the same coefficient can multiply
-        for k in list(log1.keys()):
-            log1[Mul(*k)] = log(logcombine(Mul(*[
-                l.args[0]**Mul(*c) for c, l in log1.pop(k)]),
-                force=force), evaluate=False)
-
-        # logs that have oppositely signed coefficients can divide
-        for k in ordered(list(log1.keys())):
-            if not k in log1:  # already popped as -k
-                continue
-            if -k in log1:
-                # figure out which has the minus sign; the one with
-                # more op counts should be the one
-                num, den = k, -k
-                if num.count_ops() > den.count_ops():
-                    num, den = den, num
-                other.append(
-                    num*log(log1.pop(num).args[0]/log1.pop(den).args[0],
-                            evaluate=False))
-            else:
-                other.append(k*log1.pop(k))
-
-        return Add(*other)
 
     return bottom_up(expr, f)
 
@@ -1145,13 +1179,20 @@ def inversecombine(expr):
         if isinstance(rv, log):
             if isinstance(rv.args[0], exp) or (rv.args[0].is_Pow and rv.args[0].base == S.Exp1):
                 rv = rv.args[0].exp
+        elif isinstance(rv, LogWithBase):
+            if (rv.args[0].is_Pow and rv.args[0].base == rv.args[1]):
+                rv = rv.args[0].exp
         elif rv.is_Function and hasattr(rv, "inverse"):
             if (len(rv.args) == 1 and len(rv.args[0].args) == 1 and
                isinstance(rv.args[0], rv.inverse(argindex=1))):
                 rv = rv.args[0].args[0]
-        if rv.is_Pow and rv.base == S.Exp1:
-            if isinstance(rv.exp, log):
-                rv = rv.exp.args[0]
+        if rv.is_Pow:
+            if rv.base == S.Exp1:
+                if isinstance(rv.exp, log):
+                    rv = rv.exp.args[0]
+            if isinstance(rv.exp, LogWithBase):
+                if rv.base == rv.exp.args[1]:
+                    rv = rv.exp.args[1]
         return rv
 
     return bottom_up(expr, f)

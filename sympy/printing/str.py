@@ -458,6 +458,10 @@ class StrPrinter(Printer):
     def _print_TensorHead(self, expr):
         return expr._print()
 
+    def _print_LogWithBase(self, expr):
+        arg, base = expr.args
+        return r"log({}, {})".format(self._print(arg), self._print(base))
+
     def _print_Tensor(self, expr):
         return expr._print()
 

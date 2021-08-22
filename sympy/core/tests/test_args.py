@@ -2071,6 +2071,11 @@ def test_sympy__functions__elementary__exponential__log():
     assert _test_args(log(2))
 
 
+def test_sympy__functions__elementary__exponential__LogWithBase():
+    from sympy.functions.elementary.exponential import LogWithBase
+    assert _test_args(LogWithBase(2, 3))
+
+
 @SKIP("abstract class")
 def test_sympy__functions__elementary__hyperbolic__HyperbolicFunction():
     pass

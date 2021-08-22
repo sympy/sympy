@@ -26,7 +26,7 @@ from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.simplify import powdenest, logcombine
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
-                             piecewise_fold, Piecewise)
+                             piecewise_fold, Piecewise, LogWithBase)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
@@ -275,7 +275,7 @@ def _invert_real(f, g_ys, symbol):
             rhs = g_ys.args[0]
             if base.is_positive:
                 return _invert_real(expo,
-                    imageset(Lambda(n, log(n, base, evaluate=False)), g_ys), symbol)
+                    imageset(Lambda(n, log(n, base)), g_ys), symbol)
             elif base.is_negative:
                 from sympy.core.power import integer_log
                 s, b = integer_log(rhs, base)
@@ -1747,7 +1747,7 @@ def _is_logarithmic(f, symbol):
         for term_arg in Mul.make_args(term):
             if symbol not in term_arg.free_symbols:
                 continue
-            if isinstance(term_arg, log):
+            if isinstance(term_arg, (log, LogWithBase)):
                 if saw_log:
                     return False  # more than one log in term
                 saw_log = True
@@ -1838,7 +1838,7 @@ def _is_lambert(f, symbol):
     if f.is_Add and no_of_symbols >= 2:
         # `log`, `HyperbolicFunction`, `TrigonometricFunction` should have symbols
         # and no_of_trig < no_of_symbols
-        lambert_funcs = (log, HyperbolicFunction, TrigonometricFunction)
+        lambert_funcs = (log, LogWithBase, HyperbolicFunction, TrigonometricFunction)
         if any(isinstance(arg, lambert_funcs)\
             for arg in term_factors if arg.has(symbol)):
                 if no_of_trig < no_of_symbols:

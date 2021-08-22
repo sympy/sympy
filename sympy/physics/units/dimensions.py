@@ -16,7 +16,7 @@ import collections
 from functools import reduce
 
 from sympy import (Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict,
-    default_sort_key)
+    default_sort_key, log, LogWithBase)
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
@@ -446,8 +446,17 @@ class DimensionSystem(Basic, _QuantityMapper):
                 raise TypeError("The exponent for the power operator must be a Symbol or dimensionless.")
 
         if name.is_Function:
-            args = (Dimension._from_dimensional_dependencies(
-                get_for_name(arg)) for arg in name.args)
+            # As the code below replace any numerical argument with the "dimension" 1,
+            # functions which evaluates to something if one argument is one independent
+            # of the other argument should be rewritten to something where it doesn't happen
+            old_name = name  # Keep a copy for better error messages.
+
+            if name.has(LogWithBase):
+                name = name.rewrite(log)
+
+            args = [Dimension._from_dimensional_dependencies(
+                get_for_name(arg)) for arg in name.args]
+
             result = name.func(*args)
 
             dicts = [get_for_name(i) for i in name.args]
@@ -459,16 +468,16 @@ class DimensionSystem(Basic, _QuantityMapper):
                     if dicts[0] == {} or dicts[0] == {Symbol('angle'): 1}:
                         return {}
                     else:
-                        raise TypeError("The input argument for the function {} must be dimensionless or have dimensions of angle.".format(name.func))
+                        raise TypeError("The input argument for the function {} must be dimensionless or have dimensions of angle.".format(old_name.func))
                 else:
                     if all( (item == {} for item in dicts) ):
                         return {}
                     else:
-                        raise TypeError("The input arguments for the function {} must be dimensionless.".format(name.func))
+                        raise TypeError("The input arguments for the function {} must be dimensionless.".format(old_name.func))
             else:
                 return get_for_name(result)
 
-        raise TypeError("Type {} not implemented for get_dimensional_dependencies".format(type(name)))
+        raise TypeError("Type {} not implemented for get_dimensional_dependencies".format(type(old_name)))
 
     def get_dimensional_dependencies(self, name, mark_dimensionless=False):
         dimdep = self._get_dimensional_dependencies_for_name(name)

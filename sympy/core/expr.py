@@ -3570,6 +3570,10 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy.simplify.radsimp import fraction
 
+        # No need to expand further if this is a number
+        if self.is_Number:
+            return self
+
         hints.update(power_base=power_base, power_exp=power_exp, mul=mul,
            log=log, multinomial=multinomial, basic=basic)
 

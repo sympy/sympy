@@ -208,8 +208,8 @@ def test_pow_E():
     assert 3**(1/log(-3)) != S.Exp1
     assert (3 + 2*I)**(1/(log(-3 - 2*I) + I*pi)) == S.Exp1
     assert (4 + 2*I)**(1/(log(-4 - 2*I) + I*pi)) == S.Exp1
-    assert (3 + 2*I)**(1/(log(-3 - 2*I, 3)/2 + I*pi/log(3)/2)) == 9
-    assert (3 + 2*I)**(1/(log(3 + 2*I, 3)/2)) == 9
+    assert (3 + 2*I)**(1/(log(-3 - 2*I, 3)/2 + I*pi/log(3)/2)).rewrite(log) == 9
+    assert (3 + 2*I)**(1/(log(3 + 2*I, 3)/2)).rewrite(log) == 9
     # every time tests are run they will affirm with a different random
     # value that this identity holds
     while 1:
@@ -218,6 +218,11 @@ def test_pow_E():
         if i:
             break
     assert verify_numerically(b**(1/(log(-b) + sign(i)*I*pi).n()), S.Exp1)
+
+@XFAIL
+def test_pow_E_LogWithBase():
+    assert (3 + 2*I)**(1/(log(-3 - 2*I, 3)/2 + I*pi/log(3)/2)) == 9
+    assert (3 + 2*I)**(1/(log(3 + 2*I, 3)/2)) == 9
 
 
 def test_pow_issue_3516():

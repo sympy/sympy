@@ -1,7 +1,7 @@
 from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
     LambertW, sqrt, Rational, expand_log, S, sign,
-    adjoint, conjugate, transpose, O, refine,
+    adjoint, conjugate, transpose, O, refine, LogWithBase,
     sin, cos, sinh, cosh, tanh, exp_polar, re, simplify,
     AccumBounds, MatrixSymbol, Pow, gcd, Sum, Product)
 from sympy.core.parameters import global_parameters
@@ -319,19 +319,54 @@ def test_log_exact():
 def test_log_base():
     assert log(1, 2) == 0
     assert log(2, 2) == 1
-    assert log(3, 2) == log(3)/log(2)
-    assert log(6, 2) == 1 + log(3)/log(2)
-    assert log(6, 3) == 1 + log(2)/log(3)
+    assert log(3, 2).rewrite(log) == log(3)/log(2)
+    assert log(6, 2) == 1 + log(3, 2)
+    assert log(6, 3) == 1 + log(2, 3)
+    assert log(6, 2).rewrite(log) == 1 + log(3)/log(2)
+    assert log(6, 3).rewrite(log) == 1 + log(2)/log(3)
     assert log(2**3, 2) == 3
     assert log(3**3, 3) == 3
     assert log(5, 1) is zoo
     assert log(1, 1) is nan
-    assert log(Rational(2, 3), 10) == log(Rational(2, 3))/log(10)
-    assert log(Rational(2, 3), Rational(1, 3)) == -log(2)/log(3) + 1
-    assert log(Rational(2, 3), Rational(2, 5)) == \
+    assert log(Rational(2, 3), 10).rewrite(log) == log(Rational(2, 3))/log(10)
+    assert log(Rational(2, 3), Rational(1, 3)).rewrite(log) == -log(2)/log(3) + 1
+    assert log(Rational(2, 3), Rational(1, 3)) == log(2, Rational(1,3)) + 1
+    assert log(Rational(2, 3), Rational(2, 5)).rewrite(log) == \
         log(Rational(2, 3))/log(Rational(2, 5))
     # issue 17148
-    assert log(Rational(8, 3), 2) == -log(3)/log(2) + 3
+    assert log(Rational(8, 3), 2).rewrite(log) == -log(3)/log(2) + 3
+    assert log(Rational(8, 3), 2) == -log(3, 2) + 3
+
+
+def test_log_base_LogWithBase():
+    assert log(1, 2) == 0
+    assert log(2, 2) == 1
+    assert log(3, 2) == LogWithBase(3, 2)
+    assert log(6, 2) == 1 + LogWithBase(3, 2)
+    assert log(6, 3) == 1 + LogWithBase(2, 3)
+    assert log(2**3, 2) == 3
+    assert log(3**3, 3) == 3
+    assert log(5, 1) is zoo
+    assert log(1, 1) is nan
+    assert log(Rational(2, 3), 10) == LogWithBase(Rational(2, 3), 10)
+    assert log(Rational(2, 3), Rational(1, 3)) == LogWithBase(2, Rational(1,3)) + 1
+    assert log(Rational(2, 3), Rational(2, 5)) == log(Rational(2, 3), Rational(2, 5))
+    # issue 17148
+    assert log(Rational(8, 3), 2) == 3 - LogWithBase(3, 2)
+
+
+def test_LogWithBase():
+    assert LogWithBase(1, 2) == 0
+    assert LogWithBase(2, 2) == 1
+    assert LogWithBase(6, 2) == 1 + LogWithBase(3, 2)
+    assert LogWithBase(6, 3) == 1 + LogWithBase(2, 3)
+    assert LogWithBase(2**3, 2) == 3
+    assert LogWithBase(3**3, 3) == 3
+    assert LogWithBase(5, 1) is zoo
+    assert LogWithBase(1, 1) is nan
+    assert LogWithBase(Rational(2, 3), Rational(1, 3)) == LogWithBase(2, Rational(1,3)) + 1
+    # issue 17148
+    assert LogWithBase(Rational(8, 3), 2) == 3 - LogWithBase(3, 2)
 
 
 def test_log_symbolic():
@@ -345,7 +380,8 @@ def test_log_symbolic():
     assert log(x**y).expand() != y*log(x)
     assert log(x**y).expand(force=True) == y*log(x)
 
-    assert log(x, 2) == log(x)/log(2)
+    assert log(x, 2) == LogWithBase(x, 2)
+    assert log(x, 2).rewrite(log) == log(x)/log(2)
     assert log(E, 2) == 1/log(2)
 
     p, q = symbols('p,q', positive=True)
@@ -370,6 +406,7 @@ def test_log_symbolic():
     assert (log(p**-5)**-1).expand() == -1/log(p)/5
     assert log(-x).func is log and log(-x).args[0] == -x
     assert log(-p).func is log and log(-p).args[0] == -p
+    assert log(x, 2).diff(x) == 1/(x*log(2))
 
 
 def test_log_exp():

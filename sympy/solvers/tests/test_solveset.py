@@ -85,8 +85,8 @@ def test_invert_real():
 
     assert invert_real(Abs(x), y, x) == (x, FiniteSet(y, -y))
 
-    assert invert_real(2**x, y, x) == (x, FiniteSet(log(y)/log(2)))
-    assert invert_real(2**exp(x), y, x) == (x, ireal(FiniteSet(log(log(y)/log(2)))))
+    assert invert_real(2**x, y, x) == (x, FiniteSet(log(y, 2)))
+    assert invert_real(2**exp(x), y, x) == (x, ireal(FiniteSet(log(log(y, 2)))))
 
     assert invert_real(x**2, y, x) == (x, FiniteSet(sqrt(y), -sqrt(y)))
     assert invert_real(x**S.Half, y, x) == (x, FiniteSet(y**2))
@@ -326,7 +326,7 @@ def test_solve_invert():
         S.Reals, FiniteSet(a/log(y/b)))
 
     # issue 4504
-    assert solveset_real(2**x - 10, x) == FiniteSet(1 + log(5)/log(2))
+    assert solveset_real(2**x - 10, x) == FiniteSet(1 + log(5, 2))
 
 
 def test_errorinverses():
@@ -782,7 +782,7 @@ def test_solveset_real_exp():
     assert solveset(Eq((-5)**(x+1), 625), x, S.Reals) == FiniteSet(3)
     assert solveset(Eq(2**(x-3), -16), x, S.Reals) == S.EmptySet
     assert solveset(Eq((-3)**(x - 3), -3**39), x, S.Reals) == FiniteSet(42)
-    assert solveset(Eq(2**x, y), x, S.Reals) == Intersection(S.Reals, FiniteSet(log(y)/log(2)))
+    assert solveset(Eq(2**x, y), x, S.Reals) == Intersection(S.Reals, FiniteSet(log(y, 2)))
 
     assert invert_real((-2)**(2*x) - 16, 0, x) == (x, FiniteSet(2))
 
@@ -1748,13 +1748,13 @@ def test_issue_16618():
 
 def test_issue_17566():
     assert nonlinsolve([32*(2**x)/2**(-y) - 4**y, 27*(3**x) - 1/3**y], x, y) ==\
-        FiniteSet((-log(81)/log(3), 1))
+        FiniteSet((-4, 1))
 
 
 def test_issue_19587():
     n,m = symbols('n m')
     assert nonlinsolve([32*2**m*2**n - 4**n, 27*3**m - 3**(-n)], m, n) ==\
-        FiniteSet((-log(81)/log(3), 1))
+        FiniteSet((-4, 1))
 
 
 def test_issue_5132_1():
@@ -2378,12 +2378,12 @@ def test_exponential_symbols():
     xr, zr = symbols('xr, zr', real=True)
 
     assert solveset(z**x - y, x, S.Reals) == Intersection(
-        S.Reals, FiniteSet(log(y)/log(z)))
+        S.Reals, FiniteSet(log(y, z)))
 
     f1 = 2*x**w - 4*y**w
     f2 = (x/y)**w - 2
     sol1 = Intersection({log(2)/(log(x) - log(y))}, S.Reals)
-    sol2 = Intersection({log(2)/log(x/y)}, S.Reals)
+    sol2 = Intersection({log(2, x/y)}, S.Reals)
     assert solveset(f1, w, S.Reals) == sol1, solveset(f1, w, S.Reals)
     assert solveset(f2, w, S.Reals) == sol2, solveset(f2, w, S.Reals)
 
@@ -2437,7 +2437,7 @@ def test_solve_exponential():
     assert _solve_exponential(3**(2*x) - 2**(x + 3), 0, x, S.Reals) == \
         FiniteSet(-3*log(2)/(-2*log(3) + log(2)))
     assert _solve_exponential(2**y + 4**y, 1, y, S.Reals) == \
-        FiniteSet(log(Rational(-1, 2) + sqrt(5)/2)/log(2))
+        FiniteSet(log(Rational(-1, 2) + sqrt(5)/2, 2))
     assert _solve_exponential(2**y + 4**y, 0, y, S.Reals) == \
         S.EmptySet
     assert _solve_exponential(2**x + 3**x - 5**x, 0, x, S.Reals) == \
@@ -2634,7 +2634,7 @@ def test_solve_modular():
     assert dumeq(solveset(Mod(2**x, 7) - 2 , x, S.Integers),
             ImageSet(Lambda(n, 3*n + 1), S.Naturals0))
     assert dumeq(solveset(Mod(3**(3**x), 4) - 3, x, S.Integers),
-            Intersection(ImageSet(Lambda(n, Intersection({log(2*n + 1)/log(3)},
+            Intersection(ImageSet(Lambda(n, Intersection({log(2*n + 1, 3)},
             S.Integers)), S.Naturals0), S.Integers))
     # Implemented for m without primitive root
     assert solveset(Mod(x**3, 7) - 2, x, S.Integers) == EmptySet()
@@ -2853,7 +2853,7 @@ def test_issue_17580():
 def test_issue_17566_actual():
     sys = [2**x + 2**y - 3, 4**x + 9**y - 5]
     # Not clear this is the correct result, but at least no recursion error
-    assert nonlinsolve(sys, x, y) == FiniteSet((log(3 - 2**y)/log(2), y))
+    assert nonlinsolve(sys, x, y) == FiniteSet((log(3 - 2**y, 2), y))
 
 
 def test_issue_17565():

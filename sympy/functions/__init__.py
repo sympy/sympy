@@ -17,7 +17,7 @@ from sympy.functions.elementary.complexes import (re, im, sign, Abs,
 from sympy.functions.elementary.trigonometric import (sin, cos, tan,
         sec, csc, cot, sinc, asin, acos, atan, asec, acsc, acot, atan2)
 from sympy.functions.elementary.exponential import (exp_polar, exp, log,
-        LambertW)
+        LambertW, LogWithBase)
 from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
         sech, csch, asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.functions.elementary.integers import floor, ceiling, frac
@@ -64,7 +64,7 @@ __all__ = [
     'sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'sinc', 'asin', 'acos', 'atan',
     'asec', 'acsc', 'acot', 'atan2',
 
-    'exp_polar', 'exp', 'ln', 'log', 'LambertW',
+    'exp_polar', 'exp', 'ln', 'log', 'LambertW', 'LogWithBase',
 
     'sinh', 'cosh', 'tanh', 'coth', 'sech', 'csch', 'asinh', 'acosh', 'atanh',
     'acoth', 'asech', 'acsch',

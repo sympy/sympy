@@ -5,7 +5,7 @@ from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
     AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice,
-    Q)
+    Q, LogWithBase)
 from sympy.core import Expr, Mul
 from sympy.core.parameters import _exp_is_pow
 from sympy.external import import_module
@@ -184,6 +184,11 @@ def test_Interval():
                 for r in (True, False):
                     ival = Interval(n[i], n[j], l, r)
                     assert S(str(ival)) == ival
+
+
+def test_LogWithBase():
+    assert str(LogWithBase(Rational(5, 7), Rational(4, 3))) == 'log(5/7, 4/3)'
+    assert str(LogWithBase(8,3)) == 'log(8, 3)'
 
 
 def test_AccumBounds():
