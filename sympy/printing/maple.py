@@ -185,7 +185,8 @@ class MapleCodePrinter(CodePrinter):
 
     def _print_LogWithBase(self, expr):
         arg, base = expr.args
-        return 'log[{}]({})'.format(base, arg)
+        return 'log[{}]({})'.format(self._print(base),
+                                    self._print(arg))
 
     def _get_matrix(self, expr, sparse=False):
         if expr.cols == 0 or expr.rows == 0:

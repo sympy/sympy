@@ -303,7 +303,8 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_LogWithBase(self, expr):
         arg, base = expr.args
-        return 'math.log({}, {})'.format(arg, base)
+        return 'math.log({}, {})'.format(self._print(arg),
+                                         self._print(base))
 
 
     def _print_MatrixBase(self, expr):

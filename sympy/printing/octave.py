@@ -258,7 +258,7 @@ class OctaveCodePrinter(CodePrinter):
 
     def _print_LogWithBase(self, expr):
         arg, base = expr.args
-        return 'log({})/log({})'.format(arg, base)
+        return 'log({})/log({})'.format(self._print(arg), self._print(base))
 
 
     def _print_GoldenRatio(self, expr):

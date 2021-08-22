@@ -220,7 +220,7 @@ class MCodePrinter(CodePrinter):
     def _print_LogWithBase(self, expr):
         arg, base = expr.args
         # Mathematica switches argument order compared to SymPy
-        return 'Log[{}, {}]'.format(base, arg)
+        return 'Log[{}, {}]'.format(self._print(base), self._print(arg))
 
     def _print_list(self, expr):
         return '{' + ', '.join(self.doprint(a) for a in expr) + '}'
