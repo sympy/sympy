@@ -21,7 +21,7 @@ from sympy import (
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
     stieltjes, mathieuc, mathieus, mathieucprime, mathieusprime,
-    UnevaluatedExpr, Quaternion, I, KroneckerProduct, LambertW)
+    UnevaluatedExpr, Quaternion, I, KroneckerProduct, LambertW, LogWithBase)
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
@@ -2630,6 +2630,11 @@ def test_AppliedPermutation():
     assert latex(AppliedPermutation(p, x)) == \
         r'\sigma_{\left( 0\; 1\; 2\right)}(x)'
 
+
+def test_LogWithBase():
+    assert latex(LogWithBase(8,3)) == r'\log_{3}\left(8\right)'
+    assert latex(LogWithBase(Rational(5, 7), Rational(4, 3))) == \
+           r'\log_{\frac{4}{3}}\left(\frac{5}{7}\right)'
 
 def test_PermutationMatrix():
     p = Permutation(0, 1, 2)

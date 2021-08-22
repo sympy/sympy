@@ -9,7 +9,7 @@ from sympy import (
     SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps, ITE,
     Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio,
     LambertW, airyai, airybi, airyaiprime, airybiprime, fresnelc, fresnels,
-    Heaviside, dirichlet_eta, diag, MatrixSlice)
+    Heaviside, dirichlet_eta, diag, MatrixSlice, LogWithBase)
 
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
@@ -7527,6 +7527,17 @@ def test_is_combining():
     assert [is_combining(sym) for sym in line] == \
         [False, True, False, False]
 
+
+def test_LogWithBase():
+    assert upretty(LogWithBase(3, 2)) == 'log (3)\n   2   '
+    assert upretty(LogWithBase(Rational(13, 44), Rational(11, 35))) == \
+"""\
+     ⎛13⎞\n\
+log  ⎜──⎟\n\
+   11⎝44⎠\n\
+   ──    \n\
+   35    \
+"""
 
 def test_issue_17616():
     assert pretty(pi**(1/exp(1))) == \

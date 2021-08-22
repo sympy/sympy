@@ -1,7 +1,7 @@
 from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
     LambertW, sqrt, Rational, expand_log, S, sign,
-    adjoint, conjugate, transpose, O, refine,
+    adjoint, conjugate, transpose, O, refine, LogWithBase,
     sin, cos, sinh, cosh, tanh, exp_polar, re, simplify,
     AccumBounds, MatrixSymbol, Pow, gcd, Sum, Product)
 from sympy.core.parameters import global_parameters
@@ -336,6 +336,37 @@ def test_log_base():
     # issue 17148
     assert log(Rational(8, 3), 2).rewrite(log) == -log(3)/log(2) + 3
     assert log(Rational(8, 3), 2) == -log(3, 2) + 3
+
+
+def test_log_base_LogWithBase():
+    assert log(1, 2) == 0
+    assert log(2, 2) == 1
+    assert log(3, 2) == LogWithBase(3, 2)
+    assert log(6, 2) == 1 + LogWithBase(3, 2)
+    assert log(6, 3) == 1 + LogWithBase(2, 3)
+    assert log(2**3, 2) == 3
+    assert log(3**3, 3) == 3
+    assert log(5, 1) is zoo
+    assert log(1, 1) is nan
+    assert log(Rational(2, 3), 10) == LogWithBase(Rational(2, 3), 10)
+    assert log(Rational(2, 3), Rational(1, 3)) == LogWithBase(2, Rational(1,3)) + 1
+    assert log(Rational(2, 3), Rational(2, 5)) == log(Rational(2, 3), Rational(2, 5))
+    # issue 17148
+    assert log(Rational(8, 3), 2) == 3 - LogWithBase(3, 2)
+
+
+def test_LogWithBase():
+    assert LogWithBase(1, 2) == 0
+    assert LogWithBase(2, 2) == 1
+    assert LogWithBase(6, 2) == 1 + LogWithBase(3, 2)
+    assert LogWithBase(6, 3) == 1 + LogWithBase(2, 3)
+    assert LogWithBase(2**3, 2) == 3
+    assert LogWithBase(3**3, 3) == 3
+    assert LogWithBase(5, 1) is zoo
+    assert LogWithBase(1, 1) is nan
+    assert LogWithBase(Rational(2, 3), Rational(1, 3)) == LogWithBase(2, Rational(1,3)) + 1
+    # issue 17148
+    assert LogWithBase(Rational(8, 3), 2) == 3 - LogWithBase(3, 2)
 
 
 def test_log_symbolic():

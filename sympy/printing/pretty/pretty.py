@@ -218,6 +218,19 @@ class PrettyPrinter(Printer):
 
         return pform
 
+    def _print_LogWithBase(self, e):
+        arg, base = e.args
+
+        aform = self._print(arg)
+        aform = prettyForm(*aform.parens('(', ')'))
+        bform = self._print(base)
+        spaces = prettyForm(' '*bform.width())
+        spaces = prettyForm(*spaces.below(bform))
+        pform = prettyForm('log')
+        pform = prettyForm(*pform.right(spaces))
+        pform = prettyForm(*pform.right(aform))
+        return pform
+
     def _print_Relational(self, e):
         op = prettyForm(' ' + xsym(e.rel_op) + ' ')
 
