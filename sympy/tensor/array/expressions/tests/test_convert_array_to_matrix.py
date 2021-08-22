@@ -106,7 +106,6 @@ def test_arrayexpr_convert_array_to_matrix():
     expr = ArrayAdd(M, PermuteDims(M, [1, 0]))
     assert convert_array_to_matrix(expr) == M + Transpose(M)
 
-test_arrayexpr_convert_array_to_matrix()
 
 def test_arrayexpr_convert_array_to_matrix2():
     cg = ArrayContraction(ArrayTensorProduct(M, N), (1, 3))
@@ -428,7 +427,7 @@ def test_arrayexpr_convert_array_to_matrix_support_function():
                                            [X, Y, A, B, C, D]) == ArrayTensorProduct(X * Y * A * B, C * D)
 
     assert _support_function_tp1_recognize([(1, 7), (3, 8), (4, 11)], [X, Y, A, B, C, D]) == PermuteDims(
-        ArrayTensorProduct(X * B.T, Y * C, D * A), [0, 2, 5, 1, 3, 4]
+        ArrayTensorProduct(X * B.T, Y * C, A.T * D.T), [0, 2, 4, 1, 3, 5]
     )
 
     assert _support_function_tp1_recognize([(0, 1), (3, 6), (5, 8)], [X, A, B, C, D]) == PermuteDims(

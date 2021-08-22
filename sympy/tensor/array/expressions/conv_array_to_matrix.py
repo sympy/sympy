@@ -66,6 +66,7 @@ def _support_function_tp1_recognize(contraction_indices, args):
 
     ac = ArrayContraction(ArrayTensorProduct(*args), *contraction_indices)
     editor = _EditArrayContraction(ac)
+    editor.track_permutation_start()
 
     while True:
         flag_stop: bool = True
@@ -94,6 +95,7 @@ def _support_function_tp1_recognize(contraction_indices, args):
             candidate, transpose, found_index = _get_candidate_for_matmul_from_contraction(scan_indices, editor.args_with_ind[i+1:])
             if candidate is not None:
                 flag_stop = False
+                editor.track_permutation_merge(arg_with_ind, candidate)
                 transpose1 = found_index == first_index
                 new_arge, other_index = _insert_candidate_into_editor(editor, arg_with_ind, candidate, transpose1, transpose)
                 if found_index == first_index:

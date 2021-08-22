@@ -1385,7 +1385,11 @@ class _EditArrayContraction:
         self.merge_scalars()
         args = [arg.element for arg in self.args_with_ind]
         contraction_indices = self.get_contraction_indices()
-        return ArrayContraction(ArrayTensorProduct(*args), *contraction_indices)
+        expr = ArrayContraction(ArrayTensorProduct(*args), *contraction_indices)
+        if hasattr(self, '_track_permutation'):
+            permutation = _af_invert([j for i in self._track_permutation for j in i])
+            expr = PermuteDims(expr, permutation)
+        return expr
 
     def get_contraction_indices(self) -> List[List[int]]:
         contraction_indices: List[List[int]] = [[] for i in range(self.number_of_contraction_indices)]
@@ -1424,6 +1428,24 @@ class _EditArrayContraction:
             if index in arg_with_ind.indices:
                 counter += 1
         return counter
+
+    def track_permutation_start(self):
+        self._track_permutation = []
+        counter: int = 0
+        for arg_with_ind in self.args_with_ind:
+            perm = []
+            for i in arg_with_ind.indices:
+                if i is not None:
+                    continue
+                perm.append(counter)
+                counter += 1
+            self._track_permutation.append(perm)
+
+    def track_permutation_merge(self, destination: _ArgE, from_element: _ArgE):
+        index_destination = self.args_with_ind.index(destination)
+        index_element = self.args_with_ind.index(from_element)
+        self._track_permutation[index_destination].extend(self._track_permutation[index_element])
+        self._track_permutation.pop(index_element)
 
 
 def get_rank(expr):
