@@ -2,11 +2,11 @@ import operator
 from functools import reduce
 import itertools
 from itertools import accumulate
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from sympy import Expr, ImmutableDenseNDimArray, S, Symbol, Integer, ZeroMatrix, Basic, tensorproduct, Add, permutedims, \
     Tuple, tensordiagonal, Lambda, Dummy, Function, MatrixExpr, NDimArray, Indexed, IndexedBase, default_sort_key, \
-    tensorcontraction, diagonalize_vector
+    tensorcontraction, diagonalize_vector, Mul
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.utils import _apply_recursively_over_nested_lists, _sort_contraction_indices, \
     _get_mapping_from_subranks, _build_push_indices_up_func_transformation, _get_contraction_links, \
@@ -1357,7 +1357,32 @@ class _EditArrayContraction:
         self.number_of_contraction_indices += 1
         return self.number_of_contraction_indices - 1
 
+    def refresh_indices(self):
+        updates: Dict[int, int] = {}
+        for arg_with_ind in self.args_with_ind:
+            updates.update({i: -1 for i in arg_with_ind.indices if i is not None})
+        for i, e in enumerate(sorted(updates)):
+            updates[e] = i
+        self.number_of_contraction_indices: int = len(updates)
+        for arg_with_ind in self.args_with_ind:
+            arg_with_ind.indices = [updates.get(i, None) for i in arg_with_ind.indices]
+
+    def merge_scalars(self):
+        scalars = []
+        for arg_with_ind in self.args_with_ind:
+            if len(arg_with_ind.indices) == 0:
+                scalars.append(arg_with_ind)
+        for i in scalars:
+            self.args_with_ind.remove(i)
+        scalar = Mul.fromiter([i.element for i in scalars])
+        if len(self.args_with_ind) == 0:
+            self.args_with_ind.append(_ArgE(scalar))
+        else:
+            from sympy.tensor.array.expressions.conv_array_to_matrix import _a2m_mul, _a2m_tensor_product
+            self.args_with_ind[0].element = _a2m_tensor_product(scalar, self.args_with_ind[0].element)
+
     def to_array_contraction(self):
+        self.merge_scalars()
         args = [arg.element for arg in self.args_with_ind]
         contraction_indices = self.get_contraction_indices()
         return ArrayContraction(ArrayTensorProduct(*args), *contraction_indices)
