@@ -2895,3 +2895,8 @@ def test_issue_21236():
 def test_issue_21908():
     assert nonlinsolve([(x**2 + 2*x - y**2)*exp(x), -2*y*exp(x)], x, y
                       ) == {(-2, 0), (0, 0)}
+
+
+def test_issue_19814():
+    assert nonlinsolve([ 2**m - 2**(2*n), 4*2**m - 2**(4*n)], m, n
+                      ) == FiniteSet((log(2**(2*n))/log(2), S.Complexes))
