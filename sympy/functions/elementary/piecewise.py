@@ -1111,7 +1111,10 @@ class Piecewise(Function):
             return
 
         # set representation to reduce the diversity of cases
-        exp_sets = set(Piecewise(*args).subs({expr: Dummy()}).as_expr_set_pairs())
+        try:
+            exp_sets = set(Piecewise(*args).subs({expr: Dummy()}).as_expr_set_pairs())
+        except NotImplementedError:
+            return
 
         # treatment of simple cases, always true
         if exp_sets == {(1, Interval.open(0, oo)), (0, FiniteSet(0)), (-1, Interval.open(-oo, 0))}:
