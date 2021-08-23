@@ -2,10 +2,11 @@ from sympy.core import Basic, S, Function, diff, Tuple, Dummy
 from sympy.core.basic import as_Basic
 from sympy.core.numbers import Rational, NumberSymbol
 from sympy.core.relational import (Equality, Unequality, Relational,
-    _canonical)
+    GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, _canonical)
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or,
     true, false, Or, ITE, simplify_logic)
+from sympy.polys.polytools import gcd
 from sympy.utilities.iterables import uniq, ordered, product, sift
 from sympy.utilities.misc import filldedent, func_name
 
@@ -806,6 +807,23 @@ class Piecewise(Function):
         args = [(ec.expr._eval_nseries(x, n, logx), ec.cond) for ec in self.args]
         return self.func(*args)
 
+    # def _eval_factor(self):
+    #     from sympy.polys import factor, cancel
+    #     args = [(factor(e), c) for e, c in self.args]
+    #     commonfact = 1
+    #     for expr, cond in list(args):
+    #         if commonfact != 1:
+    #             commonfact = gcd(commonfact, expr)
+    #             if commonfact == 1:
+    #                 break
+    #         else:
+    #             commonfact = expr
+    #     if commonfact != 1:
+    #         args = [(cancel(e/commonfact), c) for e, c in args]
+    #     if args == list(self.args):
+    #         return self
+    #     return commonfact*Piecewise(*args)
+
     def _eval_power(self, s):
         return self.func(*[(e**s, c) for e, c in self.args])
 
@@ -1045,6 +1063,79 @@ class Piecewise(Function):
 
             return result
 
+    def _eval_rewrite_as_sign(self, *args, factor=True, **kwargs):
+        """
+        factor : boolean
+            If True, try a pre-processing factorization to
+            increase the chances of success of the transformation.
+        """
+
+        from sympy.sets.sets import Interval, FiniteSet
+        from sympy import oo
+        from sympy.functions.elementary.complexes import sign
+
+        # preprocess
+        fact = 1
+        if factor:
+            fact_expr = Piecewise(*args).factor()
+            if fact_expr.is_Mul:
+                fact_args = fact_expr.args
+                piecewises = [f for f in fact_args if f.is_Piecewise]
+                if len(piecewises) != 1:
+                    return
+                from sympy.core.mul import Mul
+                args = piecewises.pop().args
+                fact = Mul(*[f for f in fact_args if not f.is_Piecewise])
+        args = list(args)
+
+        # the comparison elements are reported to 0
+        for i, (expr, cond) in list(enumerate(args)):
+            if isinstance(cond, (GreaterThan, LessThan,
+                    StrictGreaterThan, StrictLessThan, Equality)):
+                args[i] = (expr, type(cond)(cond.args[0]-cond.args[1], 0))
+
+        # extraction of the common comparison expression
+        expr = None
+        for _, cond in args:
+            if not isinstance(cond, (GreaterThan, LessThan,
+                    StrictGreaterThan, StrictLessThan, Equality)):
+                continue
+            if expr is not None:
+                if cond.args[0] != expr:
+                    return
+            else:
+                expr = cond.args[0]
+        if expr is None:
+            return
+
+        # set representation to reduce the diversity of cases
+        exp_sets = set(Piecewise(*args).subs({expr: Dummy()}).as_expr_set_pairs())
+
+        # treatment of simple cases, always true
+        if exp_sets == {(1, Interval.open(0, oo)), (0, FiniteSet(0)), (-1, Interval.open(-oo, 0))}:
+            return fact*sign(expr)
+        if exp_sets == {(-1, Interval.open(0, oo)), (0, FiniteSet(0)), (1, Interval.open(-oo, 0))}:
+            return -fact*sign(expr)
+        if fact == 1:
+            return
+
+        # treatment with an approximation in 0
+        sign_expr = None
+        if exp_sets == {(1, Interval(0, oo)), (-1, Interval.open(-oo, 0))}:
+            sign_expr = sign(expr)
+        if exp_sets == {(1, Interval.open(0, oo)), (-1, Interval(-oo, 0))}:
+            sign_expr = sign(expr)
+        if exp_sets == {(-1, Interval(0, oo)), (1, Interval.open(-oo, 0))}:
+            sign_expr = -sign(expr)
+        if exp_sets == {(-1, Interval.open(0, oo)), (1, Interval(-oo, 0))}:
+            sign_expr = -sign(expr)
+        if sign_expr is None:
+            return
+
+        # verification that the approximation is not one
+        if fact.subs({expr: 0}) == 0:
+            return fact*sign_expr
+
 
 def piecewise_fold(expr):
     """
@@ -1207,6 +1298,10 @@ def piecewise_simplify_arguments(expr, **kwargs):
 
 
 def piecewise_simplify(expr, **kwargs):
+    from sympy.core.function import count_ops
+
+    shorter = lambda *choices, measure: min(choices, key=measure)
+
     expr = piecewise_simplify_arguments(expr, **kwargs)
     if not isinstance(expr, Piecewise):
         return expr
@@ -1273,4 +1368,9 @@ def piecewise_simplify(expr, **kwargs):
                 prevexpr = expr
         else:
             prevexpr = expr
-    return Piecewise(*args)
+
+    pice1 = Piecewise(*args)
+    return pice1
+    pice2 = pice1.factor()
+    pice3 = pice1.rewrite("sign")
+    return shorter(pice1, pice2, pice3, measure=kwargs.get("measure", count_ops))

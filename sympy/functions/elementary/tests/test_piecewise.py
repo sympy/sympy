@@ -421,6 +421,11 @@ def test_piecewise_integrate5_independent_conditions():
     assert integrate(p, (x, 1, 3)) == Piecewise((0, Eq(y, 0)), (4*y, True))
 
 
+def test_piecewise_factor():
+    assert Piecewise((x + 1, Eq(x, 0)),
+                     (x**2 - 1, True)).factor() == \
+        (x + 1)*Piecewise((1, Eq(x, 0)), (x - 1, True))
+
 def test_piecewise_simplify():
     p = Piecewise(((x**2 + 1)/x**2, Eq(x*(1 + x) - x**2, 0)),
                   ((-1)**x*(-1), True))
@@ -438,7 +443,7 @@ def test_piecewise_simplify():
             (2*x, And(Eq(a, 0), Eq(y, 0))),
             (2, And(Eq(a, 1), Eq(y, 0))),
             (0, True))
-    args = (2, And(Eq(x, 2), Ge(y ,0))), (x, True)
+    args = (2, And(Eq(x, 2), Ge(y, 0))), (x, True)
     assert Piecewise(*args).simplify() == Piecewise(*args)
     args = (1, Eq(x, 0)), (sin(x)/x, True)
     assert Piecewise(*args).simplify() == Piecewise(*args)
@@ -457,6 +462,7 @@ def test_piecewise_simplify():
     t = Symbol("t", real=True, positive=True)
     expr = Piecewise((-d + 2*n, Eq(1/t, 1)), (t**(1 - 4*n)*t**(4*n - 1)*(-d + 2*n), True))
     assert expr.simplify() == -d + 2*n
+
 
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
@@ -971,6 +977,7 @@ def test_issue_12557():
     func = cos(k*x)*sqrt(x**2)
     assert integrate(func, (x, -pi, pi)) == Piecewise(
         (2*(-1)**k/k**2 - 2/k**2, Ne(k, 0)), (pi**2, True))
+
 
 def test_issue_6900():
     from itertools import permutations
