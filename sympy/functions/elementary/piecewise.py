@@ -815,19 +815,19 @@ class Piecewise(Function):
         commonfact = None
         for expr, cond in args:
             if commonfact is not None:
-                if commonfact == 1:
+                if commonfact == S.One:
                     break
                 try:
                     commonfact = gcd(commonfact, expr)
                 except PolynomialError:
-                    commonfact = 1
+                    commonfact = S.One
             else:
                 commonfact = expr
-        if commonfact != 1:
+        if commonfact != S.One:
             args = [(cancel(e/commonfact) if evaluate else e/commonfact, c) for e, c in args]
         elif args == self.args:
             return self
-        if commonfact != 1:
+        if commonfact != S.One:
             return commonfact*Piecewise(*args)
         return Piecewise(*args)
 
@@ -1082,7 +1082,7 @@ class Piecewise(Function):
         from sympy.functions.elementary.complexes import sign
 
         # preprocess
-        fact = 1
+        fact = S.One
         if factor:
             fact_expr = Piecewise(*args).factor()
             if fact_expr.is_Mul:
@@ -1097,13 +1097,13 @@ class Piecewise(Function):
 
         # the comparison elements are reported to 0
         for i, (expr, cond) in list(enumerate(args)):
-            if isinstance(cond, (Unequality, Equality)):
+            if isinstance(cond, Relational):
                 args[i] = (expr, type(cond)(cond.args[0]-cond.args[1], 0))
 
         # extraction of the common comparison expression
         expr = None
         for _, cond in args:
-            if not isinstance(cond, (Unequality, Equality)):
+            if not isinstance(cond, Relational):
                 continue
             if expr is not None:
                 if cond.args[0] != expr:
@@ -1124,7 +1124,7 @@ class Piecewise(Function):
             return fact*sign(expr)
         if exp_sets == {(-1, Interval.open(0, oo)), (0, FiniteSet(0)), (1, Interval.open(-oo, 0))}:
             return -fact*sign(expr)
-        if fact == 1:
+        if fact == S.One:
             return
 
         # treatment with an approximation in 0
