@@ -809,11 +809,16 @@ class Piecewise(Function):
 
     def _eval_factor(self):
         from sympy.polys import factor, cancel
+        from sympy.polys.polyerrors import PolynomialError
+
         args = [(e if hasattr(e, "_eval_factor") else factor(e), c) for e, c in self.args]
         commonfact = None
         for expr, cond in args:
             if commonfact is not None:
-                commonfact = gcd(commonfact, expr)
+                try:
+                    commonfact = gcd(commonfact, expr)
+                except PolynomialError:
+                    commonfact = 1
             else:
                 commonfact = expr
         if commonfact == 1 and args == self.args:
@@ -1367,7 +1372,6 @@ def piecewise_simplify(expr, **kwargs):
             prevexpr = expr
 
     pice1 = Piecewise(*args)
-    return pice1
     pice2 = pice1.factor()
     pice3 = pice1.rewrite("sign")
     return shorter(pice1, pice2, pice3, measure=kwargs.get("measure", count_ops))

@@ -35,21 +35,6 @@ par2 = Parallel(tf1, tf2, tf3)
 def _to_tuple(a, b):
     return tuple(a), tuple(b)
 
-def _is_near(a, b):
-    if type(a) != type(b):
-        return False
-    if isinstance(a, (float, int, complex)):
-        diff = abs(a) - abs(b)
-        if diff == 0:
-            return True
-        return diff/max(abs(a), abs(b)) < 1e-10
-    if hasattr(a, "__len__") and len(a) != len(b):
-        return False
-    if hasattr(a, "__iter__"):
-        return all((_is_near(a_, b_) for a_, b_ in zip(a, b)))
-    return a == b
-
-
 def _trim_tuple(a, b):
     a, b = _to_tuple(a, b)
     return tuple(a[0: 2] + a[len(a)//2 : len(a)//2 + 1] + a[-2:]), \
@@ -107,25 +92,25 @@ def test_pole_zero():
     if not matplotlib:
         skip("Matplotlib not the default backend")
 
-    assert _is_near(_to_tuple(*pole_zero_numerical_data(tf1)),
-        ((), ((-0.25+1.3919410907075054j), (-0.25-1.3919410907075054j))))
-    assert _is_near(_to_tuple(*pole_zero_numerical_data(tf2)),
-        ((0.0,), ((-0.25+0.3227486121839514j), (-0.25-0.3227486121839514j))))
-    assert _is_near(_to_tuple(*pole_zero_numerical_data(tf3)),
-        ((0.0,), ((-0.5+0.8660254037844395j),
-        (-0.5-0.8660254037844395j), (1.0+0j))))
-    assert _is_near(_to_tuple(*pole_zero_numerical_data(tf7)),
+    assert _to_tuple(*pole_zero_numerical_data(tf1)) == \
+        ((), ((-0.24999999999999994+1.3919410907075054j), (-0.24999999999999994-1.3919410907075054j)))
+    assert _to_tuple(*pole_zero_numerical_data(tf2)) == \
+        ((0.0,), ((-0.25+0.3227486121839514j), (-0.25-0.3227486121839514j)))
+    assert _to_tuple(*pole_zero_numerical_data(tf3)) == \
+        ((0.0,), ((-0.5000000000000004+0.8660254037844395j),
+        (-0.5000000000000004-0.8660254037844395j), (0.9999999999999998+0j)))
+    assert _to_tuple(*pole_zero_numerical_data(tf7)) == \
         (((-0.6722222222222222+0.8776898690157247j), (-0.6722222222222222-0.8776898690157247j)),
         ((2.220446049250313e-16+1.2797182176061541j), (2.220446049250313e-16-1.2797182176061541j),
         (-0.7657146670186428+0.5744385024099056j), (-0.7657146670186428-0.5744385024099056j),
-        (0.7657146670186427+0.5744385024099052j), (0.7657146670186427-0.5744385024099052j))))
-    assert _is_near(_to_tuple(*pole_zero_numerical_data(ser1)),
-        ((), (5.0, 0.0, 0.0, 0.0)))
-    assert _is_near(_to_tuple(*pole_zero_numerical_data(par1)),
-        ((-5.645751311064592, -0.5, -0.3542486889354093),
-        ((-0.25+1.3919410907075052j),
-        (-0.25-1.3919410907075052j), (-0.25+0.32274861218395134j),
-        (-0.25-0.32274861218395134j))))
+        (0.7657146670186427+0.5744385024099052j), (0.7657146670186427-0.5744385024099052j)))
+    assert _to_tuple(*pole_zero_numerical_data(ser1)) == \
+        ((), (5.0, 0.0, 0.0, 0.0))
+    assert _to_tuple(*pole_zero_numerical_data(par1)) == \
+        ((-5.645751311064592, -0.5000000000000008, -0.3542486889354093),
+        ((-0.24999999999999986+1.3919410907075052j),
+        (-0.24999999999999986-1.3919410907075052j), (-0.2499999999999998+0.32274861218395134j),
+        (-0.2499999999999998-0.32274861218395134j)))
 
 
 def test_bode():

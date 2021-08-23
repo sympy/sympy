@@ -5,6 +5,7 @@ from sympy import (
     cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Sum, Tuple, zoo, Float,
     DiracDelta, Heaviside, Add, Mul, factorial, Ge, Contains)
 from sympy.core.expr import unchanged
+from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Undefined, ExprCondPair
 from sympy.printing import srepr
 from sympy.testing.pytest import raises, slow
@@ -1195,6 +1196,30 @@ def test_Piecewise_rewrite_as_ITE():
     # used to detect this
     raises(NotImplementedError, lambda: _ITE((x, x < y), (y, x >= a)))
     raises(ValueError, lambda: _ITE((a, x < 2), (b, x > 3)))
+
+
+def test_Piecewise_rewrite_as_sign():
+    from itertools import permutations
+    mult = lambda f, args: [(f*e, c) for e, c in args]
+    strict_args = [((1, x > 0), (0, Eq(x, 0)), (-1, x < 0))]
+    approx_args = [((1, x >= 0), (-1, x < 0)), ((1, x > 0), (-1, x <= 0))]
+    strict_args = [p_arg for arg in strict_args for p_arg in permutations(arg)]
+    approx_args = [p_arg for arg in approx_args for p_arg in permutations(arg)]
+    strict_args += [arg[:-1]+((arg[-1][0], True),) for arg in strict_args]
+    approx_args += [arg[:-1]+((arg[-1][0], True),) for arg in approx_args]
+
+    for args in strict_args:
+        assert Piecewise(*args).rewrite(sign) == sign(x)
+        assert Piecewise(*mult(-1, args)).rewrite(sign) == -sign(x)
+        assert Piecewise(*mult(2, args)).rewrite(sign) == 2*sign(x)
+        assert Piecewise(*mult(x, args)).rewrite(sign) == x*sign(x)
+        assert Piecewise(*mult(-x, args)).rewrite(sign) == -x*sign(x)
+    for args in approx_args:
+        assert Piecewise(*args).rewrite(sign) == Piecewise(*args)
+        assert Piecewise(*mult(-1, args)).rewrite(sign) == Piecewise(*mult(-1, args))
+        assert Piecewise(*mult(2, args)).rewrite(sign) == Piecewise(*mult(2, args))
+        assert Piecewise(*mult(x, args)).rewrite(sign) == x*sign(x)
+        assert Piecewise(*mult(-x, args)).rewrite(sign) == -x*sign(x)
 
 
 def test_issue_14052():

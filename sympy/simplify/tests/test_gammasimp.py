@@ -63,9 +63,12 @@ def test_gammasimp():
 
     # issue 9699
     assert gammasimp((x + 1)*factorial(x)/gamma(y)) == gamma(x + 2)/gamma(y)
+    # assert gammasimp(rf(x + n, k)*binomial(n, k)).simplify() == Piecewise(
+    #     (gamma(n + 1)*gamma(k + n + x)/(gamma(k + 1)*gamma(n + x)*gamma(-k + n + 1)), n > -x),
+    #     ((-1)**k*gamma(n + 1)*gamma(-n - x + 1)/(gamma(k + 1)*gamma(-k + n + 1)*gamma(-k - n - x + 1)), True))
     assert gammasimp(rf(x + n, k)*binomial(n, k)).simplify() == Piecewise(
-        (gamma(n + 1)*gamma(k + n + x)/(gamma(k + 1)*gamma(n + x)*gamma(-k + n + 1)), n > -x),
-        ((-1)**k*gamma(n + 1)*gamma(-n - x + 1)/(gamma(k + 1)*gamma(-k + n + 1)*gamma(-k - n - x + 1)), True))
+        (gamma(k + n + x)/gamma(n + x), n > -x),
+        ((-1)**k*gamma(-n - x + 1)/gamma(-k - n - x + 1), True))*gamma(n + 1)/(gamma(k + 1)*gamma(-k + n + 1))
 
     A, B = symbols('A B', commutative=False)
     assert gammasimp(e*B*A) == gammasimp(e)*B*A
