@@ -3333,7 +3333,6 @@ class Beam3D(Beam):
             Pz = self._plot_shear_stress('z', subs)
             return PlotGrid(3, 1, Px, Py, Pz)
 
-
     def _max_shear_force(self, dir):
         """
         Helper function for max_shear_force().
@@ -3449,7 +3448,7 @@ class Beam3D(Beam):
     def max_bending_moment(self):
         """
         Returns point of max bending moment and its corresponding bending moment value
-        along the all directions in a Beam object as a list.
+        along all directions in a Beam object as a list.
         solve_for_reaction_loads() must be called before using this function.
 
         Examples
