@@ -31,8 +31,8 @@ pip install -U pip wheel
 
 pip install\
   mpmath\
-  'matplotlib>=2.2'\
-  'numpy==1.18.5'\
+  matplotlib\
+  numpy\
   scipy\
   aesara\
   ipython\
