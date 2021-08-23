@@ -294,7 +294,7 @@ def test_nseries():
     assert cbrt(I*x - 1)._eval_nseries(x, 4, None, -1) == (-1)**(S(1)/3)*exp(-2*I*pi/3) - \
     (-1)**(S(5)/6)*x*exp(-2*I*pi/3)/3 + (-1)**(S(1)/3)*x**2*exp(-2*I*pi/3)/9 + \
     5*(-1)**(S(5)/6)*x**3*exp(-2*I*pi/3)/81 + O(x**4)
-    assert (1 / (exp(-1/x) + 1/x))._eval_nseries(x, 2, None) == -x**2*exp(-1/x) + x
+    assert (1 / (exp(-1/x) + 1/x))._eval_nseries(x, 2, None) == x + O(x**2)
 
 
 def test_issue_6100_12942_4473():
@@ -333,7 +333,7 @@ def test_issue_6990():
     a = Symbol('a')
     b = Symbol('b')
     assert (sqrt(a + b*x + x**2)).series(x, 0, 3).removeO() == \
-        sqrt(a) + x**2*(1/(2*sqrt(a)) - b**2/(8*a**(S(3)/2))) + b*x/(2*sqrt(a))
+        sqrt(a)*x**2*(1/(2*a) - b**2/(8*a**2)) + sqrt(a) + b*x/(2*sqrt(a))
 
 
 def test_issue_6068():
@@ -562,6 +562,43 @@ def test_issue_18762():
     e, p = symbols('e p')
     g0 = sqrt(1 + e**2 - 2*e*cos(p))
     assert len(g0.series(e, 1, 3).args) == 4
+
+
+def test_issue_21860():
+    x = Symbol('x')
+    e = 3*2**Rational(66666666667,200000000000)*3**Rational(16666666667,50000000000)*x**Rational(66666666667, 200000000000)
+    ans = Mul(Rational(3, 2),
+              Pow(Integer(2), Rational(33333333333, 100000000000)),
+              Pow(Integer(3), Rational(26666666667, 40000000000)))
+    assert e.xreplace({x: Rational(3,8)}) == ans
+
+
+def test_issue_21647():
+    x = Symbol('x')
+    e = log((Integer(567)/500)**(811*(Integer(567)/500)**x/100))
+    ans = log(Mul(Rational(64701150190720499096094005280169087619821081527,
+                           76293945312500000000000000000000000000000000000),
+                  Pow(Integer(2), Rational(396204892125479941, 781250000000000000)),
+                  Pow(Integer(3), Rational(385045107874520059, 390625000000000000)),
+                  Pow(Integer(5), Rational(407364676376439823, 1562500000000000000)),
+                  Pow(Integer(7), Rational(385045107874520059, 1562500000000000000))))
+    assert e.xreplace({x: 6}) == ans
+
+
+def test_issue_21762():
+    x = Symbol('x')
+    e = (x**2 + 6)**(Integer(33333333333333333)/50000000000000000)
+    ans = Mul(Rational(5, 4),
+              Pow(Integer(2), Rational(16666666666666667, 25000000000000000)),
+              Pow(Integer(5), Rational(8333333333333333, 25000000000000000)))
+    assert e.xreplace({x: S.Half}) == ans
+
+
+def test_rational_powers_larger_than_one():
+    assert Rational(2, 3)**Rational(3, 2) == 2*sqrt(6)/9
+    assert Rational(1, 6)**Rational(9, 4) == 6**Rational(3, 4)/216
+    assert Rational(3, 7)**Rational(7, 3) == 9*3**Rational(1, 3)*7**Rational(2, 3)/343
+
 
 def test_power_dispatcher():
 

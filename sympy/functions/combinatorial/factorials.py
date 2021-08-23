@@ -4,7 +4,7 @@ from functools import reduce
 from sympy.core import S, sympify, Dummy, Mod
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import HAS_GMPY
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import Function, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi
 from sympy.core.relational import Eq
@@ -267,24 +267,14 @@ class factorial(CombinatorialFunction):
         if x.is_nonnegative or x.is_noninteger:
             return True
 
-    def _eval_as_leading_term(self, x, cdir=0):
-        from sympy import Order
-        arg = self.args[0]
-        arg_1 = arg.as_leading_term(x)
-        if Order(x, x).contains(arg_1):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0].as_leading_term(x)
+        arg0 = arg.subs(x, 0)
+        if arg0.is_zero:
             return S.One
-        if Order(1, x).contains(arg_1):
-            return self.func(arg_1)
-        ####################################################
-        # The correct result here should be 'None'.        #
-        # Indeed arg in not bounded as x tends to 0.       #
-        # Consequently the series expansion does not admit #
-        # the leading term.                                #
-        # For compatibility reasons, the return value here #
-        # is the original function, i.e. factorial(arg),   #
-        # instead of None.                                 #
-        ####################################################
-        return self.func(arg)
+        elif not arg0.is_infinite:
+            return self.func(arg)
+        raise PoleError("Cannot expand %s around 0" % (self))
 
 class MultiFactorial(CombinatorialFunction):
     pass
@@ -1119,3 +1109,7 @@ class binomial(CombinatorialFunction):
                 return True
             elif k.is_even is False:
                 return  False
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy import gamma
+        return self.rewrite(gamma)._eval_as_leading_term(x, logx=logx, cdir=cdir)

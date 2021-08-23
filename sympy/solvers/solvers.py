@@ -50,7 +50,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import (cartes, connected_components, flatten,
+from sympy.utilities.iterables import (cartes, connected_components,
     generate_bell, uniq, sift)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
@@ -2142,7 +2142,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
         # dnewn_dxi can be nonzero if it survives differentation by any
         # of its free symbols
         free = dnewn_dxi.free_symbols
-        if dnewn_dxi and (not free or any(dnewn_dxi.diff(s) for s in free)):
+        if dnewn_dxi and (not free or any(dnewn_dxi.diff(s) for s in free) or free == symbols):
             all_zero = False
             if dnewn_dxi is S.NaN:
                 break
@@ -2415,9 +2415,7 @@ def det_perm(M):
     args = []
     s = True
     n = M.rows
-    list_ = getattr(M, '_mat', None)
-    if list_ is None:
-        list_ = flatten(M.tolist())
+    list_ = M.flat()
     for perm in generate_bell(n):
         fac = []
         idx = 0
@@ -3336,8 +3334,6 @@ def unrad(eq, *syms, **flags):
         newsyms.update(syms & r.free_symbols)
     if newsyms != syms:
         syms = newsyms
-        gens = [g for g in gens if g.free_symbols & syms]
-
     # get terms together that have common generators
     drad = dict(list(zip(rads, list(range(len(rads))))))
     rterms = {(): []}

@@ -2186,6 +2186,9 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     free_symbols = f.free_symbols
 
+    if f.has(Piecewise):
+        f = piecewise_fold(f)
+
     if symbol is None and not free_symbols:
         b = Eq(f, 0)
         if b is S.true:
@@ -2746,8 +2749,6 @@ def linsolve(system, *symbols):
     sym_gen = isinstance(symbols, GeneratorType)
 
     b = None  # if we don't get b the input was bad
-    syms_needed_msg = None
-
     # unpack system
 
     if hasattr(system, '__iter__'):
@@ -2793,9 +2794,6 @@ def linsolve(system, *symbols):
 
     if b is None:
         raise ValueError("Invalid arguments")
-
-    syms_needed_msg  = syms_needed_msg or 'columns of A'
-
     if sym_gen:
         symbols = [next(symbols) for i in range(A.cols)]
         if any(set(symbols) & (A.free_symbols | b.free_symbols)):

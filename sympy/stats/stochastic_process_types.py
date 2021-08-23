@@ -471,8 +471,8 @@ class MarkovProcess(StochasticProcess):
 
         # given_condition does not have sufficient information
         # for computations
-        if trans_probs == None or \
-            given_condition == None:
+        if trans_probs is None or \
+            given_condition is None:
             is_insufficient = True
         else:
             # checking transition probabilities
@@ -1572,7 +1572,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
 
     def limiting_distribution(self):
         gen_mat = self.generator_matrix
-        if gen_mat == None:
+        if gen_mat is None:
             return None
         if isinstance(gen_mat, MatrixSymbol):
             wm = MatrixSymbol('wm', 1, gen_mat.shape[0])

@@ -448,7 +448,7 @@ def _sha256(version, print_=True, local=False):
         out = run(*(['shasum', '-a', '256'] + release_files(version)))
     else:
         raise ValueError('Should not get here...')
-        out = run(*(['shasum', '-a', '256', '/root/release/*']))
+        # out = run(*(['shasum', '-a', '256', '/root/release/*']))
     # Remove the release/ part for printing. Useful for copy-pasting into the
     # release notes.
     out = [i.split() for i in out]

@@ -17,17 +17,33 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+        with:
+          # Clone full git history (needed for AUTHORS/mailmap)
+          fetch-depth: '0'
+
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: '3.9'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath flake8
-      - run: bin/test quality
-      - run: flake8 sympy
-        # compileall is used to detect invalid escapes like '\e'
-      - run: python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/
-        # test all modules are listed in setup.py
-      - run: bin/test_setup.py
+
+      - name: Basic code quality tests
+        run: bin/test quality
+
+      - name: Run flake8 on the sympy package
+        run: flake8 sympy
+
+      - name: Detect invalid escapes like '\e'
+        run: python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/
+
+      - name: Test all modules are listed in setup.py
+        run: bin/test_setup.py
+
+      - name: Test for ambiguous author information in commits
+        run: bin/mailmap_update.py
+
+      - name: Make sure all commits have an associated author
+        run: bin/authors_update.py
 
   # -------------------- Doctests latest Python -------------------- #
 
@@ -39,7 +55,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: '3.9'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/doctest --force-colors
@@ -55,7 +71,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: '3.9'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --split=1/2
@@ -70,7 +86,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: '3.9'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --split=2/2
@@ -85,10 +101,10 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: '3.8'
       - run: sudo apt install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath gmpy2 matplotlib numpy scipy aesara ipython \
+      - run: pip install mpmath gmpy2 matplotlib numpy scipy pymc3 aesara ipython \
                          symengine cython llvmlite wurlitzer \
                          autowrap numexpr 'antlr4-python3-runtime==4.7.*'
       # Test external imports
@@ -108,7 +124,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: '3.9'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=1/2
@@ -123,7 +139,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: '3.9'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=2/2
@@ -136,7 +152,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', 'pypy-3.6']
+        python-version: ['3.6', '3.7', '3.8', '3.10.0-rc.1', 'pypy-3.7']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -154,7 +170,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', 'pypy-3.6']
+        python-version: ['3.6', '3.7', '3.8', '3.10.0-rc.1', 'pypy-3.7']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -172,7 +188,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', 'pypy-3.6']
+        python-version: ['3.6', '3.7', '3.8', '3.10.0-rc.1', 'pypy-3.7']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -193,7 +209,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: '3.8'
       - run: release/aptinstall.sh
       - run: pip install -r release/requirements.txt
       - run: bin/test_sphinx.sh
@@ -209,5 +225,85 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 2.7
+          python-version: '2.7'
       - run: bin/test_py2_import.py
+
+  # -------------------- Run benchmarks against master and 1.8 ----- #
+
+  benchmarks:
+    needs: [doctests-latest, tests1-latest, tests2-latest]
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Checkout repo with full history
+          fetch-depth: 0
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - run: pip install asv virtualenv
+      - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
+
+        # Need to make sure we can access the branches from the main repo. We
+        # will run benchmarks for the PR, for master and for the previous
+        # release. The version branch names below should be updated once there
+        # has been a newer release of sympy. The list of branches to check is
+        # also specified in asv.conf.actions.json which should be updated as
+        # well.
+
+      - run: git remote add upstream https://github.com/sympy/sympy.git
+      - run: git fetch upstream master
+      - run: git fetch upstream 1.8
+
+      - name: Configure benchmarks
+        run: asv machine --yes --config asv.conf.actions.json
+
+        # This is the slow part:
+      - name: Run benchmarks
+        run: asv run --config asv.conf.actions.json
+
+        # Output benchmark results
+      - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 | tee pr_vs_master.txt
+      - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 --only-changed | tee pr_vs_master_changed.txt
+      - run: asv compare upstream/1.8 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
+      - run: asv compare upstream/1.8 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
+
+        # This workflow does not have write permissions for the repository so
+        # we save all outputs as artifacts that can be accessed by the
+        # comment-on-pr workflow which is triggered by workflow_run to run when
+        # this one completes.
+
+      - name: Upload results as artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: benchmarks
+          path: |
+            pr_vs_master.txt
+            pr_vs_master_changed.txt
+            master_vs_release.txt
+            master_vs_release_changed.txt
+
+  # -------------------- Save PR number ---------------------------- #
+
+  save-pr-number:
+    needs: [doctests-latest, tests1-latest, tests2-latest]
+
+    # The comment-on-pr workflow needs the issue number of the PR to be able to
+    # comment so we output that to a file and pass it over as an artifact.
+
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Write PR number to file
+        if: ${{ github.event_name == 'pull_request' }}
+        run: echo -n ${{ github.event.number }} > pr_number.txt
+
+      - name: Write empty file for PR number
+        if: ${{ github.event_name != 'pull_request' }}
+        run: echo -n > pr_number.txt
+
+      - name: Upload results as artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: pr_number
+          path: pr_number.txt

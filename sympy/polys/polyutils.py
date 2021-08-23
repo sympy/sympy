@@ -21,7 +21,7 @@ _gens_order = {
 }
 
 _max_order = 1000
-_re_gen = re.compile(r"^(.+?)(\d*)$")
+_re_gen = re.compile(r"^(.*?)(\d*)$", re.MULTILINE)
 
 
 def _nsort(roots, separated=False):

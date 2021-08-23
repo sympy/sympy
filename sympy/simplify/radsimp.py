@@ -9,7 +9,7 @@ from sympy.core.parameters import global_parameters
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.function import _mexpand
 from sympy.core.mul import _keep_coeff, _unevaluated_Mul
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, zoo, nan
 from sympy.functions import exp, sqrt, log
 from sympy.functions.elementary.complexes import Abs
 from sympy.polys import gcd
@@ -966,6 +966,8 @@ def radsimp(expr, symbolic=True, max_terms=4):
             n *= num
             d *= num
             d = powdenest(_mexpand(d), force=symbolic)
+            if d.has(S.Zero, nan, zoo):
+                return expr
             if d.is_Atom:
                 break
 

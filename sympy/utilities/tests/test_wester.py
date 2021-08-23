@@ -1193,6 +1193,7 @@ def test_N7():
 
 
 @XFAIL
+@slow
 def test_N8():
     x, y, z = symbols('x y z', real=True)
     assert ask(Eq(x, y) & Eq(y, z),
@@ -2442,6 +2443,7 @@ def test_W8():
 
 
 @XFAIL
+@slow
 def test_W9():
     # Integrand with a residue at infinity => -2 pi [sin(pi/5) + sin(2pi/5)]
     # (principal value)   [Levinson and Redheffer, p. 234] *)
@@ -2538,7 +2540,7 @@ def test_W22():
 def test_W23():
     a, b = symbols('a b', real=True, positive=True)
     r1 = integrate(integrate(x/(x**2 + y**2), (x, a, b)), (y, -oo, oo))
-    assert r1.collect(pi) == pi*(-a + b)
+    assert r1.collect(pi).cancel() == -pi*a + pi*b
 
 
 def test_W23b():

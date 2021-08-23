@@ -398,6 +398,17 @@ def test_DomainMatrix_pow():
     raises(NonSquareMatrixError, lambda: A ** 1)
 
 
+def test_DomainMatrix_scc():
+    Ad = DomainMatrix([[ZZ(1), ZZ(2), ZZ(3)],
+                       [ZZ(0), ZZ(1), ZZ(0)],
+                       [ZZ(2), ZZ(0), ZZ(4)]], (3, 3), ZZ)
+    As = Ad.to_sparse()
+    Addm = Ad.rep
+    Asdm = As.rep
+    for A in [Ad, As, Addm, Asdm]:
+        assert Ad.scc() == [[1], [0, 2]]
+
+
 def test_DomainMatrix_rref():
     A = DomainMatrix([], (0, 1), QQ)
     assert A.rref() == (A, ())
@@ -644,17 +655,39 @@ def test_DomainMatrix_diag():
 
 
 def test_DomainMatrix_hstack():
-    A = DomainMatrix([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
-    B = DomainMatrix([[QQ(3), QQ(4)], [QQ(5), QQ(6)]], (2, 2), QQ)
-    AB = DomainMatrix([[QQ(1), QQ(3), QQ(4)], [QQ(2), QQ(5), QQ(6)]], (2, 3), QQ)
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    B = DomainMatrix([[ZZ(5), ZZ(6)], [ZZ(7), ZZ(8)]], (2, 2), ZZ)
+    C = DomainMatrix([[ZZ(9), ZZ(10)], [ZZ(11), ZZ(12)]], (2, 2), ZZ)
+
+    AB = DomainMatrix([
+        [ZZ(1), ZZ(2), ZZ(5), ZZ(6)],
+        [ZZ(3), ZZ(4), ZZ(7), ZZ(8)]], (2, 4), ZZ)
+    ABC = DomainMatrix([
+        [ZZ(1), ZZ(2), ZZ(5), ZZ(6), ZZ(9), ZZ(10)],
+        [ZZ(3), ZZ(4), ZZ(7), ZZ(8), ZZ(11), ZZ(12)]], (2, 6), ZZ)
     assert A.hstack(B) == AB
+    assert A.hstack(B, C) == ABC
 
 
 def test_DomainMatrix_vstack():
-    A = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
-    B = DomainMatrix([[QQ(3), QQ(4)], [QQ(5), QQ(6)]], (2, 2), QQ)
-    AB = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(4)], [QQ(5), QQ(6)]], (3, 2), QQ)
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    B = DomainMatrix([[ZZ(5), ZZ(6)], [ZZ(7), ZZ(8)]], (2, 2), ZZ)
+    C = DomainMatrix([[ZZ(9), ZZ(10)], [ZZ(11), ZZ(12)]], (2, 2), ZZ)
+
+    AB = DomainMatrix([
+        [ZZ(1), ZZ(2)],
+        [ZZ(3), ZZ(4)],
+        [ZZ(5), ZZ(6)],
+        [ZZ(7), ZZ(8)]], (4, 2), ZZ)
+    ABC = DomainMatrix([
+        [ZZ(1), ZZ(2)],
+        [ZZ(3), ZZ(4)],
+        [ZZ(5), ZZ(6)],
+        [ZZ(7), ZZ(8)],
+        [ZZ(9), ZZ(10)],
+        [ZZ(11), ZZ(12)]], (6, 2), ZZ)
     assert A.vstack(B) == AB
+    assert A.vstack(B, C) == ABC
 
 
 def test_DomainMatrix_applyfunc():

@@ -1816,13 +1816,20 @@ class Rational(Number):
                 # (4/3)**2 -> 4**2 / 3**2
                 return Rational(self.p**expt.p, self.q**expt.p, 1)
             if isinstance(expt, Rational):
-                if self.p != 1:
-                    # (4/3)**(5/6) -> 4**(5/6)*3**(-5/6)
-                    return Integer(self.p)**expt*Integer(self.q)**(-expt)
-                # as the above caught negative self.p, now self is positive
-                return Integer(self.q)**Rational(
-                expt.p*(expt.q - 1), expt.q) / \
-                    Integer(self.q)**Integer(expt.p)
+                intpart = expt.p // expt.q
+                if intpart:
+                    intpart += 1
+                    remfracpart = intpart*expt.q - expt.p
+                    ratfracpart = Rational(remfracpart, expt.q)
+                    if self.p != 1:
+                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational(1, self.q**intpart, 1)
+                    return Integer(self.q)**ratfracpart*Rational(1, self.q**intpart, 1)
+                else:
+                    remfracpart = expt.q - expt.p
+                    ratfracpart = Rational(remfracpart, expt.q)
+                    if self.p != 1:
+                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational(1, self.q, 1)
+                    return Integer(self.q)**ratfracpart*Rational(1, self.q, 1)
 
         if self.is_extended_negative and expt.is_even:
             return (-self)**expt
@@ -2318,7 +2325,7 @@ class Integer(Rational):
             # cases -1, 0, 1 are done in their respective classes
             return S.Infinity + S.ImaginaryUnit*S.Infinity
         if expt is S.NegativeInfinity:
-            return Rational(1, self)**S.Infinity
+            return Rational(1, self, 1)**S.Infinity
         if not isinstance(expt, Number):
             # simplify when expt is even
             # (-2)**k --> 2**k
@@ -2336,9 +2343,9 @@ class Integer(Rational):
             # invert base and change sign on exponent
             ne = -expt
             if self.is_negative:
-                    return S.NegativeOne**expt*Rational(1, -self)**ne
+                    return S.NegativeOne**expt*Rational(1, -self, 1)**ne
             else:
-                return Rational(1, self.p)**ne
+                return Rational(1, self.p, 1)**ne
         # see if base is a perfect root, sqrt(4) --> 2
         x, xexact = integer_nthroot(abs(self.p), expt.q)
         if xexact:
@@ -2376,7 +2383,7 @@ class Integer(Rational):
                 # (2**2)**(1/10) -> 2**(1/5)
                 g = igcd(div_m, expt.q)
                 if g != 1:
-                    out_rad *= Pow(prime, Rational(div_m//g, expt.q//g))
+                    out_rad *= Pow(prime, Rational(div_m//g, expt.q//g, 1))
                 else:
                     sqr_dict[prime] = div_m
         # identify gcd of remaining powers
@@ -2421,6 +2428,76 @@ class Integer(Rational):
 
     def __rfloordiv__(self, other):
         return Integer(Integer(other).p // self.p)
+
+    # These bitwise operations (__lshift__, __rlshift__, ..., __invert__) are defined
+    # for Integer only and not for general sympy expressions. This is to achieve
+    # compatibility with the numbers.Integral ABC which only defines these operations
+    # among instances of numbers.Integral. Therefore, these methods check explicitly for
+    # integer types rather than using sympify because they should not accept arbitrary
+    # symbolic expressions and there is no symbolic analogue of numbers.Integral's
+    # bitwise operations.
+    def __lshift__(self, other):
+        if isinstance(other, (int, Integer, numbers.Integral)):
+            return Integer(self.p << int(other))
+        else:
+            return NotImplemented
+
+    def __rlshift__(self, other):
+        if isinstance(other, (int, numbers.Integral)):
+            return Integer(int(other) << self.p)
+        else:
+            return NotImplemented
+
+    def __rshift__(self, other):
+        if isinstance(other, (int, Integer, numbers.Integral)):
+            return Integer(self.p >> int(other))
+        else:
+            return NotImplemented
+
+    def __rrshift__(self, other):
+        if isinstance(other, (int, numbers.Integral)):
+            return Integer(int(other) >> self.p)
+        else:
+            return NotImplemented
+
+    def __and__(self, other):
+        if isinstance(other, (int, Integer, numbers.Integral)):
+            return Integer(self.p & int(other))
+        else:
+            return NotImplemented
+
+    def __rand__(self, other):
+        if isinstance(other, (int, numbers.Integral)):
+            return Integer(int(other) & self.p)
+        else:
+            return NotImplemented
+
+    def __xor__(self, other):
+        if isinstance(other, (int, Integer, numbers.Integral)):
+            return Integer(self.p ^ int(other))
+        else:
+            return NotImplemented
+
+    def __rxor__(self, other):
+        if isinstance(other, (int, numbers.Integral)):
+            return Integer(int(other) ^ self.p)
+        else:
+            return NotImplemented
+
+    def __or__(self, other):
+        if isinstance(other, (int, Integer, numbers.Integral)):
+            return Integer(self.p | int(other))
+        else:
+            return NotImplemented
+
+    def __ror__(self, other):
+        if isinstance(other, (int, numbers.Integral)):
+            return Integer(int(other) | self.p)
+        else:
+            return NotImplemented
+
+    def __invert__(self):
+        return Integer(~self.p)
 
 # Add sympify converters
 converter[int] = Integer
@@ -3642,7 +3719,7 @@ class Pi(NumberSymbol, metaclass=Singleton):
         if issubclass(number_cls, Integer):
             return (Integer(3), Integer(4))
         elif issubclass(number_cls, Rational):
-            return (Rational(223, 71), Rational(22, 7))
+            return (Rational(223, 71, 1), Rational(22, 7, 1))
 
     def _sage_(self):
         import sage.all as sage
@@ -3843,7 +3920,7 @@ class EulerGamma(NumberSymbol, metaclass=Singleton):
         if issubclass(number_cls, Integer):
             return (S.Zero, S.One)
         elif issubclass(number_cls, Rational):
-            return (S.Half, Rational(3, 5))
+            return (S.Half, Rational(3, 5, 1))
 
     def _sage_(self):
         import sage.all as sage
@@ -3899,7 +3976,7 @@ class Catalan(NumberSymbol, metaclass=Singleton):
         if issubclass(number_cls, Integer):
             return (S.Zero, S.One)
         elif issubclass(number_cls, Rational):
-            return (Rational(9, 10), S.One)
+            return (Rational(9, 10, 1), S.One)
 
     def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None):
         from sympy import Sum, Dummy
@@ -4054,6 +4131,6 @@ def _register_classes():
     numbers.Number.register(Number)
     numbers.Real.register(Float)
     numbers.Rational.register(Rational)
-    numbers.Rational.register(Integer)
+    numbers.Integral.register(Integer)
 
 _register_classes()

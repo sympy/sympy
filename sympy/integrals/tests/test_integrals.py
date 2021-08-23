@@ -5,7 +5,8 @@ from sympy import (
     integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol, summation,
-    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper
+    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper,
+    Float
 )
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.complexes import periodic_argument
@@ -36,6 +37,7 @@ def test_poly_deprecated():
         Integral(p, (x,))
 
 
+@slow
 def test_principal_value():
     g = 1 / x
     assert Integral(g, (x, -oo, oo)).principal_value() == 0
@@ -44,7 +46,7 @@ def test_principal_value():
     raises(ValueError, lambda: Integral(g).principal_value())
 
     l = 1 / ((x ** 3) - 1)
-    assert Integral(l, (x, -oo, oo)).principal_value() == -sqrt(3)*pi/3
+    assert Integral(l, (x, -oo, oo)).principal_value().together() == -sqrt(3)*pi/3
     raises(ValueError, lambda: Integral(l, (x, -oo, 1)).principal_value())
 
     d = 1 / (x ** 2 - 1)
@@ -401,6 +403,16 @@ def test_issue_13749():
 
 def test_issue_18133():
     assert integrate(exp(x)/(1 + x)**2, x) == NonElementaryIntegral(exp(x)/(x + 1)**2, x)
+
+
+def test_issue_21741():
+    a = Float('3999999.9999999995', precision=53)
+    b = Float('2.5000000000000004e-7', precision=53)
+    r = Piecewise((b*I*exp(-a*I*pi*t*y)*exp(-a*I*pi*x*z)/(pi*x),
+                   Ne(1.0*pi*x*exp(a*I*pi*t*y), 0)),
+                  (z*exp(-a*I*pi*t*y), True))
+    fun = E**((-2*I*pi*(z*x+t*y))/(500*10**(-9)))
+    assert integrate(fun, z) == r
 
 
 def test_matrices():
@@ -1088,7 +1100,6 @@ def test_issue_4199():
         Integral(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo))
 
 
-@slow
 def test_issue_3940():
     a, b, c, d = symbols('a:d', positive=True, finite=True)
     assert integrate(exp(-x**2 + I*c*x), x) == \
@@ -1279,6 +1290,7 @@ def test_risch_option():
     # TODO: How to test risch=False?
 
 
+@slow
 def test_heurisch_option():
     raises(ValueError, lambda: integrate(1/x, x, risch=True, heurisch=True))
     # an integral that heurisch can handle
@@ -1626,6 +1638,7 @@ def test_issue_13112():
     assert integrate(sin(t)**2 / (5 - 4*cos(t)), [t, 0, 2*pi]) == pi / 4
 
 
+@slow
 def test_issue_14709b():
     h = Symbol('h', positive=True)
     i = integrate(x*acos(1 - 2*x/h), (x, 0, h))
@@ -1639,6 +1652,7 @@ def test_issue_8614():
     assert integrate((exp(-x) - exp(-2*x))/x, (x, 0, oo)) == log(2)
 
 
+@slow
 def test_issue_15494():
     s = symbols('s', real=True, positive=True)
 
@@ -1720,3 +1734,102 @@ def test_issue_21034():
 
     assert integrate(f2, x) == \
         log(x**2 + S(1)/12)/2 + 2*sqrt(3)*cosh(cos(4))*atan(2*sqrt(3)*x)
+
+
+def test_issue_4187():
+    assert integrate(log(x)*exp(-x), x) == Ei(-x) - exp(-x)*log(x)
+    assert integrate(log(x)*exp(-x), (x, 0, oo)) == -EulerGamma
+
+
+def test_issue_21024():
+    x = Symbol('x', real=True, nonzero=True)
+    f = log(x)*log(4*x) + log(3*x + exp(2))
+    F = x*log(x)**2 + x*(1 - 2*log(2)) + (-2*x + 2*x*log(2))*log(x) + \
+        (x + exp(2)/6)*log(3*x + exp(2)) + exp(2)*log(3*x + exp(2))/6
+    assert F == integrate(f, x)
+
+    f = (x + exp(3))/x**2
+    F = log(x) - exp(3)/x
+    assert F == integrate(f, x)
+
+    f = (x**2 + exp(5))/x
+    F = x**2/2 + exp(5)*log(x)
+    assert F == integrate(f, x)
+
+    f = x/(2*x + tanh(1))
+    F = x/2 - log(2*x + tanh(1))*tanh(1)/4
+    assert F == integrate(f, x)
+
+    f = x - sinh(4)/x
+    F = x**2/2 - log(x)*sinh(4)
+    assert F == integrate(f, x)
+
+    f = log(x + exp(5)/x)
+    F = x*log(x + exp(5)/x) - x + 2*exp(Rational(5, 2))*atan(x*exp(Rational(-5, 2)))
+    assert F == integrate(f, x)
+
+    f = x**5/(x + E)
+    F = x**5/5 - E*x**4/4 + x**3*exp(2)/3 - x**2*exp(3)/2 + x*exp(4) - exp(5)*log(x + E)
+    assert F == integrate(f, x)
+
+    f = 4*x/(x + sinh(5))
+    F = 4*x - 4*log(x + sinh(5))*sinh(5)
+    assert F == integrate(f, x)
+
+    f = x**2/(2*x + sinh(2))
+    F = x**2/4 - x*sinh(2)/4 + log(2*x + sinh(2))*sinh(2)**2/8
+    assert F == integrate(f, x)
+
+    f = -x**2/(x + E)
+    F = -x**2/2 + E*x - exp(2)*log(x + E)
+    assert F == integrate(f, x)
+
+    f = (2*x + 3)*exp(5)/x
+    F = 2*x*exp(5) + 3*exp(5)*log(x)
+    assert F == integrate(f, x)
+
+    f = x + 2 + cosh(3)/x
+    F = x**2/2 + 2*x + log(x)*cosh(3)
+    assert F == integrate(f, x)
+
+    f = x - tanh(1)/x**3
+    F = x**2/2 + tanh(1)/(2*x**2)
+    assert F == integrate(f, x)
+
+    f = (3*x - exp(6))/x
+    F = 3*x - exp(6)*log(x)
+    assert F == integrate(f, x)
+
+    f = x**4/(x + exp(5))**2 + x
+    F = x**3/3 + x**2*(Rational(1, 2) - exp(5)) + 3*x*exp(10) - 4*exp(15)*log(x + exp(5)) - exp(20)/(x + exp(5))
+    assert F == integrate(f, x)
+
+    f = x*(x + exp(10)/x**2) + x
+    F = x**3/3 + x**2/2 + exp(10)*log(x)
+    assert F == integrate(f, x)
+
+    f = x + x/(5*x + sinh(3))
+    F = x**2/2 + x/5 - log(5*x + sinh(3))*sinh(3)/25
+    assert F == integrate(f, x)
+
+    f = (x + exp(3))/(2*x**2 + 2*x)
+    F = exp(3)*log(x)/2 + (Rational(1, 2) - exp(3)/2)*log(x + 1)
+    assert F == integrate(f, x)
+
+    f = log(x + 4*sinh(4))
+    F = x*log(x + 4*sinh(4)) - x + 4*log(x + 4*sinh(4))*sinh(4)
+    assert F == integrate(f, x)
+
+    f = -x + 20*(exp(-5) - atan(4)/x)**3*sin(4)/x
+    F = (-x**2*exp(15)/2 + 20*log(x)*sin(4) - (-180*x**2*exp(5)*sin(4)*atan(4) + 90*x*exp(10)*sin(4)*atan(4)**2 - \
+        20*exp(15)*sin(4)*atan(4)**3)/(3*x**3))*exp(-15)
+    assert F == integrate(f, x)
+
+    f = 2*x**2*exp(-4) + 6/x
+    F_true = (2*x**3/3 + 6*exp(4)*log(x))*exp(-4)
+    assert F_true == integrate(f, x)
+
+
+def test_issue_21831():
+    theta = symbols('theta')
+    assert integrate(cos(3*theta)/(5-4*cos(theta)), (theta, 0, 2*pi)) == pi/12

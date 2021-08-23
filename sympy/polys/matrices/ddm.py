@@ -274,40 +274,96 @@ class DDM(list):
         c = [[aij * bij for aij, bij in zip(ai, bi)] for ai, bi in zip(a, b)]
         return DDM(c, a.shape, a.domain)
 
-    def hstack(A, B):
+    def hstack(A, *B):
+        """Horizontally stacks :py:class:`~.DDM` matrices.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import DDM
+
+        >>> A = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> B = DDM([[ZZ(5), ZZ(6)], [ZZ(7), ZZ(8)]], (2, 2), ZZ)
+        >>> A.hstack(B)
+        [[1, 2, 5, 6], [3, 4, 7, 8]]
+
+        >>> C = DDM([[ZZ(9), ZZ(10)], [ZZ(11), ZZ(12)]], (2, 2), ZZ)
+        >>> A.hstack(B, C)
+        [[1, 2, 5, 6, 9, 10], [3, 4, 7, 8, 11, 12]]
+        """
         Anew = list(A.copy())
         rows, cols = A.shape
         domain = A.domain
 
-        Brows, Bcols = B.shape
-        assert Brows == rows
-        assert B.domain == domain
+        for Bk in B:
+            Bkrows, Bkcols = Bk.shape
+            assert Bkrows == rows
+            assert Bk.domain == domain
 
-        cols += Bcols
+            cols += Bkcols
 
-        for i, Bi in enumerate(B):
-            Anew[i].extend(Bi)
+            for i, Bki in enumerate(Bk):
+                Anew[i].extend(Bki)
 
         return DDM(Anew, (rows, cols), A.domain)
 
-    def vstack(A, B):
+    def vstack(A, *B):
+        """Vertically stacks :py:class:`~.DDM` matrices.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import DDM
+
+        >>> A = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> B = DDM([[ZZ(5), ZZ(6)], [ZZ(7), ZZ(8)]], (2, 2), ZZ)
+        >>> A.vstack(B)
+        [[1, 2], [3, 4], [5, 6], [7, 8]]
+
+        >>> C = DDM([[ZZ(9), ZZ(10)], [ZZ(11), ZZ(12)]], (2, 2), ZZ)
+        >>> A.vstack(B, C)
+        [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]
+        """
         Anew = list(A.copy())
         rows, cols = A.shape
         domain = A.domain
 
-        Brows, Bcols = B.shape
-        assert Bcols == cols
-        assert B.domain == domain
+        for Bk in B:
+            Bkrows, Bkcols = Bk.shape
+            assert Bkcols == cols
+            assert Bk.domain == domain
 
-        rows += Brows
+            rows += Bkrows
 
-        Anew.extend(B.copy())
+            Anew.extend(Bk.copy())
 
         return DDM(Anew, (rows, cols), A.domain)
 
     def applyfunc(self, func, domain):
         elements = (list(map(func, row)) for row in self)
         return DDM(elements, self.shape, domain)
+
+    def scc(a):
+        """Strongly connected components of a square matrix *a*.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import DDM
+        >>> A = DDM([[ZZ(1), ZZ(0)], [ZZ(0), ZZ(1)]], (2, 2), ZZ)
+        >>> A.scc()
+        [[0], [1]]
+
+        See also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.scc
+
+        """
+        return a.to_sdm().scc()
 
     def rref(a):
         """Reduced-row echelon form of a and list of pivots"""

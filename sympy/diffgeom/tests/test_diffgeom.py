@@ -134,6 +134,12 @@ def test_R3():
         #TODO assert m == R3_c.coord_tuple_transform_to(R3_s, R3_s.coord_tuple_transform_to(R3_c, m)).applyfunc(simplify)
 
 
+def test_CoordinateSymbol():
+    x, y = R2_r.symbols
+    r, theta = R2_p.symbols
+    assert y.rewrite(R2_p) == r*sin(theta)
+
+
 def test_point():
     x, y = symbols('x, y')
     p = R2_r.point([x, y])

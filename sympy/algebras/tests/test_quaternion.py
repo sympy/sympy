@@ -57,6 +57,11 @@ def test_quaternion_complex_real_addition():
     assert q1 - q1 == q0
 
 
+def test_quaternion_evalf():
+    assert Quaternion(sqrt(2), 0, 0, sqrt(3)).evalf() == Quaternion(sqrt(2).evalf(), 0, 0, sqrt(3).evalf())
+    assert Quaternion(1/sqrt(2), 0, 0, 1/sqrt(2)).evalf() == Quaternion((1/sqrt(2)).evalf(), 0, 0, (1/sqrt(2)).evalf())
+
+
 def test_quaternion_functions():
     q = Quaternion(w, x, y, z)
     q1 = Quaternion(1, 2, 3, 4)

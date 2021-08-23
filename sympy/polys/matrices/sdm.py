@@ -7,6 +7,8 @@ Module for the SDM class.
 from operator import add, neg, pos, sub, mul
 from collections import defaultdict
 
+from sympy.utilities.iterables import _strongly_connected_components
+
 from .exceptions import DDMBadInputError, DDMDomainError, DDMShapeError
 
 from .ddm import DDM
@@ -588,6 +590,29 @@ class SDM(dict):
         Ak = unop_dict(A, lambda e: K.convert_from(e, Kold))
         return A.new(Ak, A.shape, K)
 
+    def scc(A):
+        """Strongly connected components of a square matrix *A*.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> A = SDM({0:{0: ZZ(2)}, 1:{1:ZZ(1)}}, (2, 2), ZZ)
+        >>> A.scc()
+        [[0], [1]]
+
+        See also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.scc
+        """
+        rows, cols = A.shape
+        assert rows == cols
+        V = range(rows)
+        Emap = {v: list(A.get(v, [])) for v in V}
+        return _strongly_connected_components(V, Emap)
+
     def rref(A):
         """
 
@@ -706,19 +731,22 @@ class SDM(dict):
         return A.new(rep, (1, ncols-1), A.domain)
 
     def hstack(A, *B):
-        """
-        Horizontally stacks two :py:class:`~.SDM` matrices A & B
+        """Horizontally stacks :py:class:`~.SDM` matrices.
 
         Examples
         ========
 
-        >>> from sympy import QQ
+        >>> from sympy import ZZ
         >>> from sympy.polys.matrices.sdm import SDM
-        >>> B = SDM({0:{0:QQ(1)}, 1:{0:QQ(2)}}, (2, 1), QQ)
-        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
-        >>> A.hstack(B)
-        {0: {0: 1, 1: 2, 2: 1}, 1: {0: 3, 1: 4, 2: 2}}
 
+        >>> A = SDM({0: {0: ZZ(1), 1: ZZ(2)}, 1: {0: ZZ(3), 1: ZZ(4)}}, (2, 2), ZZ)
+        >>> B = SDM({0: {0: ZZ(5), 1: ZZ(6)}, 1: {0: ZZ(7), 1: ZZ(8)}}, (2, 2), ZZ)
+        >>> A.hstack(B)
+        {0: {0: 1, 1: 2, 2: 5, 3: 6}, 1: {0: 3, 1: 4, 2: 7, 3: 8}}
+
+        >>> C = SDM({0: {0: ZZ(9), 1: ZZ(10)}, 1: {0: ZZ(11), 1: ZZ(12)}}, (2, 2), ZZ)
+        >>> A.hstack(B, C)
+        {0: {0: 1, 1: 2, 2: 5, 3: 6, 4: 9, 5: 10}, 1: {0: 3, 1: 4, 2: 7, 3: 8, 4: 11, 5: 12}}
         """
         Anew = dict(A.copy())
         rows, cols = A.shape
@@ -740,6 +768,23 @@ class SDM(dict):
         return A.new(Anew, (rows, cols), A.domain)
 
     def vstack(A, *B):
+        """Vertically stacks :py:class:`~.SDM` matrices.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import SDM
+
+        >>> A = SDM({0: {0: ZZ(1), 1: ZZ(2)}, 1: {0: ZZ(3), 1: ZZ(4)}}, (2, 2), ZZ)
+        >>> B = SDM({0: {0: ZZ(5), 1: ZZ(6)}, 1: {0: ZZ(7), 1: ZZ(8)}}, (2, 2), ZZ)
+        >>> A.vstack(B)
+        {0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}, 2: {0: 5, 1: 6}, 3: {0: 7, 1: 8}}
+
+        >>> C = SDM({0: {0: ZZ(9), 1: ZZ(10)}, 1: {0: ZZ(11), 1: ZZ(12)}}, (2, 2), ZZ)
+        >>> A.vstack(B, C)
+        {0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}, 2: {0: 5, 1: 6}, 3: {0: 7, 1: 8}, 4: {0: 9, 1: 10}, 5: {0: 11, 1: 12}}
+        """
         Anew = dict(A.copy())
         rows, cols = A.shape
         domain = A.domain

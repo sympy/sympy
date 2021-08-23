@@ -318,7 +318,7 @@ class Piecewise(Function):
     def _eval_simplify(self, **kwargs):
         return piecewise_simplify(self, **kwargs)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         for e, c in self.args:
             if c == True or c.subs(x, 0) == True:
                 return e.as_leading_term(x)

@@ -216,13 +216,13 @@ class besselj(BesselBase):
     def _eval_rewrite_as_jn(self, nu, z, **kwargs):
         return sqrt(2*z/pi)*jn(nu - S.Half, self.argument)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         nu, z = self.args
         arg = z.as_leading_term(x)
         if x in arg.free_symbols:
-            return z**nu
+            return arg**nu/(2**nu*gamma(nu + 1))
         else:
-            return self.func(*self.args)
+            return self.func(nu, z.subs(x, 0))
 
     def _eval_is_extended_real(self):
         nu, z = self.args
@@ -335,13 +335,16 @@ class bessely(BesselBase):
     def _eval_rewrite_as_yn(self, nu, z, **kwargs):
         return sqrt(2*z/pi) * yn(nu - S.Half, self.argument)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         nu, z = self.args
-        arg = z.as_leading_term(x)
+        term_one = ((2/pi)*log(z/2)*besselj(nu, z))
+        term_two = (z/2)**(-nu)*factorial(nu - 1)/pi if (nu - 1).is_positive else S.Zero
+        term_three = (z/2)**nu/(pi*factorial(nu))*(digamma(nu + 1) - S.EulerGamma)
+        arg = Add(*[term_one, term_two, term_three]).as_leading_term(x)
         if x in arg.free_symbols:
-            return z**nu
+            return arg
         else:
-            return self.func(*self.args)
+            return self.func(nu, z.subs(x, 0).cancel())
 
     def _eval_is_extended_real(self):
         nu, z = self.args
@@ -693,7 +696,7 @@ class SphericalBesselBase(BesselBase):
     since spherical Bessel functions differ from the ordinary
     ones just by a slight change in order.
 
-    To use this class, define the ``_rewrite()`` and ``_expand()`` methods.
+    To use this class, define the ``_eval_evalf()`` and ``_expand()`` methods.
 
     """
 
@@ -701,18 +704,10 @@ class SphericalBesselBase(BesselBase):
         """ Expand self into a polynomial. Nu is guaranteed to be Integer. """
         raise NotImplementedError('expansion')
 
-    def _rewrite(self):
-        """ Rewrite self in terms of ordinary Bessel functions. """
-        raise NotImplementedError('rewriting')
-
     def _eval_expand_func(self, **hints):
         if self.order.is_Integer:
             return self._expand(**hints)
         return self
-
-    def _eval_evalf(self, prec):
-        if self.order.is_Integer:
-            return self._rewrite()._eval_evalf(prec)
 
     def fdiff(self, argindex=2):
         if argindex != 2:
@@ -801,9 +796,6 @@ class jn(SphericalBesselBase):
         if z in (S.NegativeInfinity, S.Infinity):
             return S.Zero
 
-    def _rewrite(self):
-        return self._eval_rewrite_as_besselj(self.order, self.argument)
-
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
         return sqrt(pi/(2*z)) * besselj(nu + S.Half, z)
 
@@ -815,6 +807,10 @@ class jn(SphericalBesselBase):
 
     def _expand(self, **hints):
         return _jn(self.order, self.argument)
+
+    def _eval_evalf(self, prec):
+        if self.order.is_Integer:
+            return self.rewrite(besselj)._eval_evalf(prec)
 
 
 class yn(SphericalBesselBase):
@@ -864,10 +860,6 @@ class yn(SphericalBesselBase):
     .. [1] http://dlmf.nist.gov/10.47
 
     """
-
-    def _rewrite(self):
-        return self._eval_rewrite_as_bessely(self.order, self.argument)
-
     @assume_integer_order
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
         return (-1)**(nu+1) * sqrt(pi/(2*z)) * besselj(-nu - S.Half, z)
@@ -882,11 +874,12 @@ class yn(SphericalBesselBase):
     def _expand(self, **hints):
         return _yn(self.order, self.argument)
 
+    def _eval_evalf(self, prec):
+        if self.order.is_Integer:
+            return self.rewrite(bessely)._eval_evalf(prec)
+
 
 class SphericalHankelBase(SphericalBesselBase):
-
-    def _rewrite(self):
-        return self._eval_rewrite_as_besselj(self.order, self.argument)
 
     @assume_integer_order
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
@@ -937,6 +930,10 @@ class SphericalHankelBase(SphericalBesselBase):
         #         )
 
         return (_jn(n, z) + hks*I*_yn(n, z)).expand()
+
+    def _eval_evalf(self, prec):
+        if self.order.is_Integer:
+            return self.rewrite(besselj)._eval_evalf(prec)
 
 
 class hn1(SphericalHankelBase):

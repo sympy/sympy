@@ -4,7 +4,7 @@ those who explicitly didn't want to be mentioned. People with a * next
 to their names are not found in the metadata of the git history. This
 file is generated automatically by running `./bin/authors_update.py`.
 
-There are a total of 1044 authors.
+There are a total of 1091 authors.
 
 Ondřej Čertík <ondrej@certik.cz>
 Fabian Pedregosa <fabian@fseoane.net>
@@ -833,7 +833,7 @@ arooshiverma <av22@iitbbs.ac.in>
 Christoph Gohle <ctg@mpq.mpg.de>
 Charalampos Tsiagkalis <ctsiagkalis@uth.gr>
 Daniel Sears <highpost@users.noreply.github.com>
-Megan Ly <meganly@MacBook-Pro.local>
+Megan Ly <megan@artcompiler.com>
 Sean P. Cornelius <spcornelius@gmail.com>
 Erik R. Gomez <gomez@kth.se>
 Riccardo Magliocchetti <riccardo.magliocchetti@gmail.com>
@@ -1050,3 +1050,50 @@ Rodrigo Luger <rodluger@gmail.com>
 Marco Antônio Habitzreuter <mahabitzreuter@gmail.com>
 Ayush Bisht <bisht.ayush2001@gmail.com>
 Akshansh Bhatt <akshansh@tuta.io>
+Brandon T. Willard <brandonwillard@users.noreply.github.com>
+Thomas Aarholt <thomasaarholt@gmail.com>
+Hiren Chalodiya <hirenchalodiya99@gmail.com>
+Roland Dixon <rols121@gmail.com>
+dimasvq <dimas.vq.2020@bristol.ac.uk>
+Sagar231 <sagarfeb298@gmail.com>
+Michael Chu <michael02chu@gmail.com>
+Abby Ng <abigailjng@gmail.com>
+Angad Sandhu <55819847+angadsinghsandhu@users.noreply.github.com>
+Alexander Cockburn <alexander_cockburn12@hotmail.com>
+Yaser AlOsh <yaseralosh@outlook.com>
+Davide Sandonà <sandona.davide@gmail.com>
+Jonathan Gutow <gutow@uwosh.edu>
+Nihir Agarwal <f20180701@pilani.bits-pilani.ac.in>
+Lee Johnston <lee.johnston.100@gmail.com>
+Zach Carmichael <20629897+craymichael@users.noreply.github.com>
+Vijairam Ganesh Moorthy <vijairamg@gmail.com>
+Hanspeter Schmid <hanspeter.schmid@fhnw.ch>
+Ben Oostendorp <oostben@umich.edu>
+Nikita <nikita.student.cse19@itbhu.ac.in>
+Aman <amanmourya295@gmail.com>
+Shashank KS <shashankks0987@gmail.com>
+Aman Sharma <amansharma110603@gmail.com>
+Anup Parikh <parikhanupk@gmail.com>
+Lucy Mountain <lucymountain1@icloud.com>
+Miguel Torres Costa <miguelptcosta1995@gmail.com>
+Rikard Nordgren <rikard.nordgren@farmaci.uu.se>
+Arun sanganal <74652697+ArunSanganal@users.noreply.github.com>
+Kamlesh Joshi <72374645+kamleshjoshi8102@users.noreply.github.com>
+Joseph Rance <56409230+Joseph-Rance@users.noreply.github.com>
+Huangduirong <huangduirong@huawei.com>
+Nils Schulte <47043622+Schnilz@users.noreply.github.com>
+Matt Bogosian <matt@bogosian.net>
+Elisha Hollander <just4now666666@gmail.com>
+Aditya Ravuri <infprobscix@gmail.com>
+Mamidi Ratna Praneeth <praneethratna@gmail.com>
+Jeffrey Ryan <jeffaryan7@gmail.com>
+Jonathan Daniel <36337649+jond01@users.noreply.github.com>
+Robin Richard <raisin@ecomail.fr>
+Gautam Menghani <gum3ng@protonmail.com>
+Remco de Boer <redeboer@gmx.com>
+Sebastian East <sebastianeast@ymail.com>
+Evani Balasubramanyam <balasubramanyam.evani@gmail.com>
+Rahil Parikh <r.parikh@somaiya.edu>
+Jason Ross <jasonross1024@gmail.com>
+Joannah Nanjekye <joannah.nanjekye@ibm.com>
+Ayush Kumar <ayushk7102@gmail.com>
