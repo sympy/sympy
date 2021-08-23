@@ -796,6 +796,8 @@ class StrPrinter(Printer):
             return "set()"
         return '{%s}' % args
 
+    _print_FiniteSet = _print_set
+
     def _print_frozenset(self, s):
         if not s:
             return "frozenset()"
