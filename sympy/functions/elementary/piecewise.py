@@ -807,22 +807,19 @@ class Piecewise(Function):
         args = [(ec.expr._eval_nseries(x, n, logx), ec.cond) for ec in self.args]
         return self.func(*args)
 
-    # def _eval_factor(self):
-    #     from sympy.polys import factor, cancel
-    #     args = [(factor(e), c) for e, c in self.args]
-    #     commonfact = 1
-    #     for expr, cond in list(args):
-    #         if commonfact != 1:
-    #             commonfact = gcd(commonfact, expr)
-    #             if commonfact == 1:
-    #                 break
-    #         else:
-    #             commonfact = expr
-    #     if commonfact != 1:
-    #         args = [(cancel(e/commonfact), c) for e, c in args]
-    #     if args == list(self.args):
-    #         return self
-    #     return commonfact*Piecewise(*args)
+    def _eval_factor(self):
+        from sympy.polys import factor, cancel
+        args = [(e if hasattr(e, "_eval_factor") else factor(e), c) for e, c in self.args]
+        commonfact = None
+        for expr, cond in args:
+            if commonfact is not None:
+                commonfact = gcd(commonfact, expr)
+            else:
+                commonfact = expr
+        if commonfact == 1 and args == self.args:
+            return self
+        args = [(cancel(e/commonfact), c) for e, c in args]
+        return commonfact*Piecewise(*args)
 
     def _eval_power(self, s):
         return self.func(*[(e**s, c) for e, c in self.args])
