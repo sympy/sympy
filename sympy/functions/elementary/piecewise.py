@@ -815,19 +815,19 @@ class Piecewise(Function):
         commonfact = None
         for expr, cond in args:
             if commonfact is not None:
-                if commonfact == S.one:
+                if commonfact == 1:
                     break
                 try:
                     commonfact = gcd(commonfact, expr)
                 except PolynomialError:
-                    commonfact = S.one
+                    commonfact = 1
             else:
                 commonfact = expr
-        if commonfact != S.one:
+        if commonfact != 1:
             args = [(cancel(e/commonfact) if evaluate else e/commonfact, c) for e, c in args]
         elif args == self.args:
             return self
-        if commonfact != S.one:
+        if commonfact != 1:
             return commonfact*Piecewise(*args)
         return Piecewise(*args)
 
