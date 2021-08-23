@@ -1200,26 +1200,29 @@ def test_Piecewise_rewrite_as_ITE():
 
 def test_Piecewise_rewrite_as_sign():
     from itertools import permutations
+
+    def test_perm(args, expected):
+        for arg in permutations(args):
+            assert Piecewise(*arg).rewrite(sign) == expected
+            assert Piecewise(*arg[:-1], ((arg[-1][0], True),)).rewrite(sign) == expected
+
     mult = lambda f, args: [(f*e, c) for e, c in args]
     strict_args = [((1, x > 0), (0, Eq(x, 0)), (-1, x < 0))]
-    approx_args = [((1, x >= 0), (-1, x < 0)), ((1, x > 0), (-1, x <= 0))]
-    strict_args = [p_arg for arg in strict_args for p_arg in permutations(arg)]
-    approx_args = [p_arg for arg in approx_args for p_arg in permutations(arg)]
-    strict_args += [arg[:-1]+((arg[-1][0], True),) for arg in strict_args]
-    approx_args += [arg[:-1]+((arg[-1][0], True),) for arg in approx_args]
+    approx_args = [((1, x >= 0), (-1, x < 0)),
+                   ((1, x > 0), (-1, x <= 0))]
 
     for args in strict_args:
-        assert Piecewise(*args).rewrite(sign) == sign(x)
-        assert Piecewise(*mult(-1, args)).rewrite(sign) == -sign(x)
-        assert Piecewise(*mult(2, args)).rewrite(sign) == 2*sign(x)
-        assert Piecewise(*mult(x, args)).rewrite(sign) == x*sign(x)
-        assert Piecewise(*mult(-x, args)).rewrite(sign) == -x*sign(x)
+        test_perm(args          ,  sign(x))
+        test_perm(mult(-1, args), -sign(x))
+        test_perm(mult( 2, args),  2*sign(x))
+        test_perm(mult( x, args),  x*sign(x))
+        test_perm(mult(-x, args), -x*sign(x))
     for args in approx_args:
-        assert Piecewise(*args).rewrite(sign) == Piecewise(*args)
-        assert Piecewise(*mult(-1, args)).rewrite(sign) == Piecewise(*mult(-1, args))
-        assert Piecewise(*mult(2, args)).rewrite(sign) == Piecewise(*mult(2, args))
-        assert Piecewise(*mult(x, args)).rewrite(sign) == x*sign(x)
-        assert Piecewise(*mult(-x, args)).rewrite(sign) == -x*sign(x)
+        test_perm(args, Piecewise(*args))
+        test_perm(mult(-1, args),  Piecewise(*mult(-1, args)))
+        test_perm(mult( 2, args),  Piecewise(*mult(2, args)))
+        test_perm(mult( x, args),  x*sign(x))
+        test_perm(mult(-x, args), -x*sign(x))
 
 
 def test_issue_14052():
