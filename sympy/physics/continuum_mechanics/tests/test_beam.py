@@ -741,9 +741,7 @@ def test_max_shear_force_Beam3D():
     b.apply_load(15, start=0, order=0, dir="z")
     b.apply_load(12*x, start=0, order=0, dir="y")
     b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
-    assert b.max_shear_force('x') == (0, 0)
-    assert b.max_shear_force('y') == (20, 2400)
-    assert b.max_shear_force('z') == (20, 300)
+    assert b.max_shear_force() == [(0, 0), (20, 2400), (20, 300)]
 
 def test_max_bending_moment_Beam3D():
     x = symbols('x')
@@ -751,9 +749,7 @@ def test_max_bending_moment_Beam3D():
     b.apply_load(15, start=0, order=0, dir="z")
     b.apply_load(12*x, start=0, order=0, dir="y")
     b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
-    assert b.max_bending_moment('x') == (0, 0)
-    assert b.max_bending_moment('y') == (20, 3000)
-    assert b.max_bending_moment('z') == (20, 16000)
+    assert b.max_bending_moment() == [(0, 0), (20, 3000), (20, 16000)]
 
 def test_max_deflection_Beam3D():
     x = symbols('x')
@@ -762,8 +758,7 @@ def test_max_deflection_Beam3D():
     b.apply_load(12*x, start=0, order=0, dir="y")
     b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
     b.solve_slope_deflection()
-    assert b.max_deflection('x') == (0, 0)
-    assert b.max_deflection('y') == (10, sympify("495/14"))
+    c = sympify("495/14")
     p = sympify("-10 + 10*sqrt(10793)/43")
     q = sympify("(10 - 10*sqrt(10793)/43)**3/160 - 20/7 + (10 - 10*sqrt(10793)/43)**4/6400 + 20*sqrt(10793)/301 + 27*(10 - 10*sqrt(10793)/43)**2/560")
-    assert b.max_deflection('z') == (p, q)
+    assert b.max_deflection() == [(0, 0), (10, c), (p, q)]
