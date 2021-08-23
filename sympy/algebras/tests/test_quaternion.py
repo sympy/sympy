@@ -1,5 +1,5 @@
 from sympy import symbols, re, im, sign, I, Abs, Symbol, \
-     cos, sin, sqrt, conjugate, log, acos, E, pi, \
+     cos, sin, sqrt, conjugate, log, acos, asin, E, pi, \
      Matrix, diff, integrate, trigsimp, S, Rational
 from sympy.algebras.quaternion import Quaternion
 from sympy.testing.pytest import raises
@@ -24,7 +24,6 @@ def test_quaternion_construction():
     raises(ValueError, lambda: Quaternion(w, x, nc, z))
 
 
-
 def test_quaternion_axis_angle():
 
     test_data = [ # axis, angle, expected_quaternion
@@ -41,6 +40,14 @@ def test_quaternion_axis_angle():
 
     for axis, angle, expected in test_data:
         assert Quaternion.from_axis_angle(axis, angle) == Quaternion(*expected)
+
+
+def test_quaternion_axis_angle_simplification():
+    result = Quaternion.from_axis_angle((1, 2, 3), asin(4))
+    assert result.a == cos(asin(4)/2)
+    assert result.b == sqrt(14)*sin(asin(4)/2)/14
+    assert result.c == sqrt(14)*sin(asin(4)/2)/7
+    assert result.d == 3*sqrt(14)*sin(asin(4)/2)/14
 
 def test_quaternion_complex_real_addition():
     a = symbols("a", complex=True)
