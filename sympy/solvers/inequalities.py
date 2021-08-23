@@ -1160,5 +1160,4 @@ def linear_programming(A, B, C, D = Matrix([0])):
                 break
         else:
             argmin_dual.append(S.Zero)
-
     return M[-1, -1], argmax, argmin_dual
