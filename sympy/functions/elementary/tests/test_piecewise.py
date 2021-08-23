@@ -1204,7 +1204,7 @@ def test_Piecewise_rewrite_as_sign():
     def test_perm(args, expected):
         for arg in permutations(args):
             assert Piecewise(*arg).rewrite(sign) == expected
-            assert Piecewise(*arg[:-1], ((arg[-1][0], True),)).rewrite(sign) == expected
+            assert Piecewise(*arg[:-1], (arg[-1][0], True)).rewrite(sign) == expected
 
     mult = lambda f, args: [(f*e, c) for e, c in args]
     strict_args = [((1, x > 0), (0, Eq(x, 0)), (-1, x < 0))]
