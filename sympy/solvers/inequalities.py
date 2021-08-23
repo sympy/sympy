@@ -1012,31 +1012,11 @@ def reduce_inequalities(inequalities, symbols=[]):
 
 
 class UnboundedLinearProgrammingError(Exception):
-    def __init__(self, *args):
-        if args:
-            self.message = args[0]
-        else:
-            self.message = None
-
-    def __str__(self):
-        if self.message:
-            return 'UnboundedLinearProgrammingError, {0} '.format(self.message)
-        else:
-            return 'UnboundedLinearProgrammingError has been raised'
+    pass
 
 
 class InfeasibleLinearProgrammingError(Exception):
-    def __init__(self, *args):
-        if args:
-            self.message = args[0]
-        else:
-            self.message = None
-
-    def __str__(self):
-        if self.message:
-            return 'InfeasibleLinearProgrammingError, {0} '.format(self.message)
-        else:
-            return 'InfeasibleLinearProgrammingError  has been raised'
+    pass
 
 
 def _pivot(M, i, j):
