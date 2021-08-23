@@ -2,7 +2,7 @@ from sympy.core import Basic, S, Function, diff, Tuple, Dummy
 from sympy.core.basic import as_Basic
 from sympy.core.numbers import Rational, NumberSymbol
 from sympy.core.relational import (Equality, Unequality, Relational,
-    GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, _canonical)
+    _canonical)
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or,
     true, false, Or, ITE, simplify_logic)
@@ -807,7 +807,7 @@ class Piecewise(Function):
         args = [(ec.expr._eval_nseries(x, n, logx), ec.cond) for ec in self.args]
         return self.func(*args)
 
-    def _eval_factor(self):
+    def _eval_factor(self, evaluate=False):
         from sympy.polys import factor, cancel
         from sympy.polys.polyerrors import PolynomialError
 
@@ -815,16 +815,21 @@ class Piecewise(Function):
         commonfact = None
         for expr, cond in args:
             if commonfact is not None:
+                if commonfact == S.one:
+                    break
                 try:
                     commonfact = gcd(commonfact, expr)
                 except PolynomialError:
-                    commonfact = 1
+                    commonfact = S.one
             else:
                 commonfact = expr
-        if commonfact == 1 and args == self.args:
+        if commonfact != S.one:
+            args = [(cancel(e/commonfact) if evaluate else e/commonfact, c) for e, c in args]
+        elif args == self.args:
             return self
-        args = [(cancel(e/commonfact), c) for e, c in args]
-        return commonfact*Piecewise(*args)
+        if commonfact != S.one:
+            return commonfact*Piecewise(*args)
+        return Piecewise(*args)
 
     def _eval_power(self, s):
         return self.func(*[(e**s, c) for e, c in self.args])
@@ -1092,15 +1097,13 @@ class Piecewise(Function):
 
         # the comparison elements are reported to 0
         for i, (expr, cond) in list(enumerate(args)):
-            if isinstance(cond, (GreaterThan, LessThan,
-                    StrictGreaterThan, StrictLessThan, Equality)):
+            if isinstance(cond, (Unequality, Equality)):
                 args[i] = (expr, type(cond)(cond.args[0]-cond.args[1], 0))
 
         # extraction of the common comparison expression
         expr = None
         for _, cond in args:
-            if not isinstance(cond, (GreaterThan, LessThan,
-                    StrictGreaterThan, StrictLessThan, Equality)):
+            if not isinstance(cond, (Unequality, Equality)):
                 continue
             if expr is not None:
                 if cond.args[0] != expr:
