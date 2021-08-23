@@ -425,6 +425,8 @@ def test_piecewise_factor():
     assert Piecewise((x + 1, Eq(x, 0)),
                      (x**2 - 1, True)).factor() == \
         (x + 1)*Piecewise((1, Eq(x, 0)), (x - 1, True))
+    assert Piecewise((2, Eq(x, 0)), (0, True)).factor() == \
+         2*Piecewise((1, Eq(x, 0)), (0, True))
 
 def test_piecewise_simplify():
     p = Piecewise(((x**2 + 1)/x**2, Eq(x*(1 + x) - x**2, 0)),
