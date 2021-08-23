@@ -1201,10 +1201,13 @@ def test_Piecewise_rewrite_as_ITE():
 def test_Piecewise_rewrite_as_sign():
     from itertools import permutations
 
-    def test_perm(args, expected):
+    def test_perm(args, expected=None):
         for arg in permutations(args):
-            assert Piecewise(*arg).rewrite(sign) == expected
-            assert Piecewise(*arg[:-1], (arg[-1][0], True)).rewrite(sign) == expected
+            assert Piecewise(*arg).rewrite(sign) == \
+                expected if expected is not None else Piecewise(*arg).rewrite(sign)
+            assert Piecewise(*arg[:-1], (arg[-1][0], True)).rewrite(sign) == \
+                expected if expected is not None else \
+                Piecewise(*arg[:-1], (arg[-1][0], True)).rewrite(sign)
 
     mult = lambda f, args: [(f*e, c) for e, c in args]
     strict_args = [((1, x > 0), (0, Eq(x, 0)), (-1, x < 0))]
@@ -1218,9 +1221,9 @@ def test_Piecewise_rewrite_as_sign():
         test_perm(mult( x, args),  x*sign(x))
         test_perm(mult(-x, args), -x*sign(x))
     for args in approx_args:
-        test_perm(args, Piecewise(*args))
-        test_perm(mult(-1, args),  Piecewise(*mult(-1, args)))
-        test_perm(mult( 2, args),  Piecewise(*mult(2, args)))
+        test_perm(args)
+        test_perm(mult(-1, args))
+        test_perm(mult( 2, args))
         test_perm(mult( x, args),  x*sign(x))
         test_perm(mult(-x, args), -x*sign(x))
 
