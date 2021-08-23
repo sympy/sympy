@@ -727,7 +727,7 @@ class Diagram(Basic):
         True
         >>> d = Diagram([f, g], {g * f: "unique"})
         >>> d.conclusions[g * f]
-        FiniteSet(unique)
+        {unique}
 
         """
         premises = {}
@@ -859,7 +859,7 @@ class Diagram(Basic):
         >>> g = NamedMorphism(B, C, "g")
         >>> d = Diagram([f, g])
         >>> d.objects
-        FiniteSet(Object("A"), Object("B"), Object("C"))
+        {Object("A"), Object("B"), Object("C")}
 
         """
         return self.args[2]
