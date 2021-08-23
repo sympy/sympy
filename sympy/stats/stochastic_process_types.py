@@ -96,7 +96,7 @@ def _state_converter(itr: tSequence) -> tUnion[Tuple, Range]:
         # try to convert to tuple
         try:
             itr = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
-        except ValueError:
+        except (TypeError, ValueError):
             pass
 
     else:
