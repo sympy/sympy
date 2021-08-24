@@ -730,6 +730,8 @@ class Range(Set):
 
     def __iter__(self):
         n = self.size  # validate
+        if not (n.has(S.Infinity) or n.has(S.NegativeInfinity) or n.is_Integer):
+            raise TypeError("Cannot iterate over symbolic Range")
         if self.start in [S.NegativeInfinity, S.Infinity]:
             raise TypeError("Cannot iterate over Range with infinite start")
         elif self.start != self.stop:
@@ -757,9 +759,10 @@ class Range(Set):
         n = dif/self.step
         if n.is_infinite:
             return S.Infinity
-        if not n.is_Integer or not all(i.is_integer for i in self.args):
-            raise ValueError('invalid method for symbolic range')
-        return abs(n)
+        if  n.is_extended_nonnegative and all(i.is_integer for i in self.args):
+            from sympy.functions.elementary.integers import floor
+            return abs(floor(n))
+        raise ValueError('Invalid method for symbolic Range')
 
     @property
     def is_finite_set(self):
@@ -895,7 +898,7 @@ class Range(Set):
             if not (all(i.is_integer or i.is_infinite
                     for i in self.args) and ((self.stop - self.start)/
                     self.step).is_extended_positive):
-                raise ValueError('invalid method for symbolic range')
+                raise ValueError('Invalid method for symbolic Range')
             if i == 0:
                 if self.start.is_infinite:
                     raise ValueError(ooslice)
@@ -908,8 +911,13 @@ class Range(Set):
             rv = (self.stop if i < 0 else self.start) + i*self.step
             if rv.is_infinite:
                 raise ValueError(ooslice)
-            if 0 <= (rv - self.start)/self.step <= n:
+            val = (rv - self.start)/self.step
+            rel = fuzzy_or([val.is_infinite,
+                            fuzzy_and([val.is_nonnegative, (n-val).is_nonnegative])])
+            if rel:
                 return rv
+            if rel is None:
+                raise ValueError('Invalid method for symbolic Range')
             raise IndexError("Range index out of range")
 
     @property
