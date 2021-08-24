@@ -101,7 +101,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.9'
       - run: sudo apt install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath gmpy2 matplotlib numpy scipy pymc3 aesara ipython \
@@ -209,7 +209,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.9'
       - run: release/aptinstall.sh
       - run: pip install -r release/requirements.txt
       - run: bin/test_sphinx.sh
@@ -241,7 +241,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.9'
       - run: pip install asv virtualenv
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 
