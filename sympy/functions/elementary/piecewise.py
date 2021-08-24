@@ -1314,7 +1314,7 @@ def piecewise_simplify_arguments(expr, **kwargs):
 def piecewise_simplify(expr, **kwargs):
     from sympy.core.function import count_ops
 
-    shorter = lambda *choices, measure: min(set(choices), key=measure)
+    shorter = lambda *choices, measure: min(choices, key=measure)
 
     expr = piecewise_simplify_arguments(expr, **kwargs)
     if not isinstance(expr, Piecewise):
@@ -1386,4 +1386,4 @@ def piecewise_simplify(expr, **kwargs):
     pice1 = Piecewise(*args)
     pice2 = pice1.factor()
     pice3 = pice1.rewrite("sign", factor=pice2.is_Mul, simplify_args=False)
-    return shorter(pice1, pice2, pice3, measure=kwargs.get("measure", count_ops))
+    return shorter(pice3, pice2, pice1, measure=kwargs.get("measure", count_ops))
