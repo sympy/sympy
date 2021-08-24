@@ -442,9 +442,9 @@ def test_piecewise_simplify():
     assert Piecewise((2*x*factorial(a)/(factorial(y)*factorial(-y + a)),
         Eq(y, 0) & Eq(-y + a, 0)), (2*factorial(a)/(factorial(y)*factorial(-y
         + a)), Eq(y, 0) & Eq(-y + a, 1)), (0, True)).simplify(
-        ) == Piecewise(
-            (2*x, And(Eq(a, 0), Eq(y, 0))),
-            (2, And(Eq(a, 1), Eq(y, 0))),
+        ) == 2*Piecewise(
+            (x, And(Eq(a, 0), Eq(y, 0))),
+            (1, And(Eq(a, 1), Eq(y, 0))),
             (0, True))
     args = (2, And(Eq(x, 2), Ge(y, 0))), (x, True)
     assert Piecewise(*args).simplify() == Piecewise(*args)
@@ -458,6 +458,14 @@ def test_piecewise_simplify():
     f = Function('f')
     assert Piecewise(*args).simplify() == ans
     assert Piecewise(*args.subs(x, f(x))).simplify() == ans.subs(x, f(x))
+    # simplify as factor
+    assert Piecewise((x + 1, Eq(x**2, 0)), (2*(x + 1), True)).simplify() == \
+           (x + 1)*Piecewise((1, Eq(x**2, 0)), (2, True))
+    assert Piecewise((x**2 - 1, Eq(x**2, 0)), (2*(x + 1), True)).simplify() == \
+           (x + 1)*Piecewise((x - 1, Eq(x**2, 0)), (2, True))
+    # simplify as sign
+    assert Piecewise((x, x > 0), (-x, True)).simplify(
+        measure=lambda e: len(str(e))) == x*sign(x)
 
     # issue 18634
     d = Symbol("d", integer=True)
@@ -1209,11 +1217,17 @@ def test_Piecewise_rewrite_as_sign():
                 expected if expected is not None else \
                 Piecewise(*arg[:-1], (arg[-1][0], True)).rewrite(sign)
 
-    mult = lambda f, args: [(f*e, c) for e, c in args]
-    strict_args = [((1, x > 0), (0, Eq(x, 0)), (-1, x < 0))]
+    strict_args = [((1, x > 0), (0, Eq(x, 0)), (-1, x < 0)),
+                   ((1, 0 < x), (0, Eq(0, x)), (-1, 0 > x)),
+                   ((1, x+1 > 1), (0, Eq(2*x, 0)), (-1, x+y < y))]
     approx_args = [((1, x >= 0), (-1, x < 0)),
-                   ((1, x > 0), (-1, x <= 0))]
+                   ((1, x > 0), (-1, x <= 0)),
+                   ((1, 0 <= x), (-1, 0 > x)),
+                   ((1, 0 < x), (-1, 0 >= x))]
+    not_atomic = {sign(x**3+1): ((1, x**3+1 > 0), (0, Eq(x**3+1, 0)), (-1, x**3+1 < 0)),
+                  sign(x**3-1): ((1, x**3 > 1), (0, Eq(x**3, 1)), (-1, x**3 < 1))}
 
+    mult = lambda f, args: [(f*e, c) for e, c in args]
     for args in strict_args:
         test_perm(args          ,  sign(x))
         test_perm(mult(-1, args), -sign(x))
@@ -1226,6 +1240,8 @@ def test_Piecewise_rewrite_as_sign():
         test_perm(mult( 2, args))
         test_perm(mult( x, args),  x*sign(x))
         test_perm(mult(-x, args), -x*sign(x))
+    for expected, args in not_atomic.items():
+        test_perm(args, expected)
 
 
 def test_issue_14052():

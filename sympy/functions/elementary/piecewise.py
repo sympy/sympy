@@ -1070,11 +1070,14 @@ class Piecewise(Function):
 
             return result
 
-    def _eval_rewrite_as_sign(self, *args, factor=True, **kwargs):
+    def _eval_rewrite_as_sign(self, *args, factor=True, simplify_args=True, **kwargs):
         """
         factor : boolean
             If True, try a pre-processing factorization to
             increase the chances of success of the transformation.
+        simplify_args : boolean
+            If True, call ``piecewise_simplify_arguments`` in order
+            to increase the chances to recognize a similar patern.
         """
 
         from sympy.sets.sets import Interval, FiniteSet
@@ -1082,6 +1085,9 @@ class Piecewise(Function):
         from sympy.functions.elementary.complexes import sign
 
         # preprocess
+        if simplify_args:
+            args = piecewise_simplify_arguments(Piecewise(*args)).args
+
         fact = S.One
         if factor:
             fact_expr = Piecewise(*args).factor()
@@ -1308,7 +1314,7 @@ def piecewise_simplify_arguments(expr, **kwargs):
 def piecewise_simplify(expr, **kwargs):
     from sympy.core.function import count_ops
 
-    shorter = lambda *choices, measure: min(choices, key=measure)
+    shorter = lambda *choices, measure: min(set(choices), key=measure)
 
     expr = piecewise_simplify_arguments(expr, **kwargs)
     if not isinstance(expr, Piecewise):
@@ -1379,5 +1385,5 @@ def piecewise_simplify(expr, **kwargs):
 
     pice1 = Piecewise(*args)
     pice2 = pice1.factor()
-    pice3 = pice1.rewrite("sign")
+    pice3 = pice1.rewrite("sign", factor=pice2.is_Mul, simplify_args=False)
     return shorter(pice1, pice2, pice3, measure=kwargs.get("measure", count_ops))
