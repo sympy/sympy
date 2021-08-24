@@ -717,7 +717,7 @@ class MatrixElement(Expr):
             name = Symbol(name)
         else:
             name = _sympify(name)
-            if not isinstance(name, MatrixExpr):
+            if not isinstance(name.kind, MatrixKind):
                 raise TypeError("First argument of MatrixElement should be a matrix")
         obj = Expr.__new__(cls, name, n, m)
         return obj

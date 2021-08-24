@@ -11,6 +11,7 @@ from .function import (_coeff_isneg, expand_complex, expand_multinomial,
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
 from .compatibility import as_int, HAS_GMPY, gmpy
 from .parameters import global_parameters
+from .kind import NumberKind, UndefinedKind
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.multipledispatch import Dispatcher
@@ -356,6 +357,13 @@ class Pow(Expr):
     @property
     def exp(self):
         return self._args[1]
+
+    @property
+    def kind(self):
+        if self.exp.kind is NumberKind:
+            return self.base.kind
+        else:
+            return UndefinedKind
 
     @classmethod
     def class_key(cls):
