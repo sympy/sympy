@@ -46,7 +46,7 @@ pip install\
   'antlr4-python3-runtime==4.7.*'\
   sphinx\
   sphinx-math-dollar\
-  sphinx_reredirects\
+  sphinx-reredirects\
   #
 
 pip freeze > requirements.txt
