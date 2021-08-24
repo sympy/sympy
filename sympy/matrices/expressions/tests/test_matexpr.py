@@ -505,3 +505,12 @@ def test_matrixsymbol_solving():
     assert (-(-A + B) - A + B).expand() == Z
     assert (-(-A + B) - A + B - Z).simplify() == Z
     assert (-(-A + B) - A + B - Z).expand() == Z
+
+
+def test_issue_19162():
+    X = Matrix(MatrixSymbol('X', 2, 2))
+    det = X.det()
+    assert X.inv() == Matrix([
+        [X[1, 1] / det, -X[0, 1] / det],
+        [-X[1, 0] / det, X[0, 0] / det],
+    ])

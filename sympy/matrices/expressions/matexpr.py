@@ -718,7 +718,10 @@ class MatrixElement(Expr):
             args = [arg.doit(**kwargs) for arg in self.args]
         else:
             args = self.args
-        return args[0][args[1], args[2]]
+        if isinstance(args[0], Transpose):
+            return self.func(args[0].arg, args[2], args[1])
+        else:
+            return self.func(*args)
 
     @property
     def indices(self):
