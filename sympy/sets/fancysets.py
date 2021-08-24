@@ -898,7 +898,7 @@ class Range(Set):
             if not (all(i.is_integer or i.is_infinite
                     for i in self.args) and ((self.stop - self.start)/
                     self.step).is_extended_positive):
-                raise ValueError('Tnvalid method for symbolic Range')
+                raise ValueError('Invalid method for symbolic Range')
             if i == 0:
                 if self.start.is_infinite:
                     raise ValueError(ooslice)
