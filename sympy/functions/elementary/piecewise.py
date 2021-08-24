@@ -1070,35 +1070,36 @@ class Piecewise(Function):
 
             return result
 
-    def _eval_rewrite_as_sign(self, *args, factor=True, simplify_args=True, **kwargs):
+    def _eval_rewrite_as_sign(self, *args, context_fact=S.One, force=False,
+        simplify_args=True, simplify_factor=True, **kwargs):
         """
-        factor : boolean
-            If True, try a pre-processing factorization to
-            increase the chances of success of the transformation.
+        context_fact : sympy.Basic
+            The expression that is in factor of this picewise.
+            In the case where ``force == False``, we make sure
+            that the product of this factor by the term in 0 of Piecewise tends to 0.
+        force : boolean
+            If False, allow that sign(0) != 0. More precisely, allow sign(0)
+            to be a finite value. Before using this option, make sure that
+            Piecewise is in factor with a zero term at the critical point.
         simplify_args : boolean
             If True, call ``piecewise_simplify_arguments`` in order
             to increase the chances to recognize a similar patern.
+        simplify_factor : boolean
+            If True, try a pre-processing factorization to
+            increase the chances of success of the transformation.
         """
 
         from sympy.sets.sets import Interval, FiniteSet
         from sympy import oo
         from sympy.functions.elementary.complexes import sign
 
-        # preprocess
+        # preprocess, simplifications
         if simplify_args:
             args = piecewise_simplify_arguments(Piecewise(*args)).args
-
         fact = S.One
-        if factor:
-            fact_expr = Piecewise(*args).factor()
-            if fact_expr.is_Mul:
-                fact_args = fact_expr.args
-                piecewises = [f for f in fact_args if f.is_Piecewise]
-                if len(piecewises) != 1:
-                    return
-                from sympy.core.mul import Mul
-                args = piecewises.pop().args
-                fact = Mul(*[f for f in fact_args if not f.is_Piecewise])
+        if simplify_factor:
+            fact, args_ = _split_fact_picewise(Piecewise(*args).factor(**kwargs))
+            args = args_.args
         args = list(args)
 
         # the comparison elements are reported to 0
@@ -1126,29 +1127,54 @@ class Piecewise(Function):
             return
 
         # treatment of simple cases, always true
-        if exp_sets == {(1, Interval.open(0, oo)), (0, FiniteSet(0)), (-1, Interval.open(-oo, 0))}:
+        if exp_sets == {(S.One, Interval.open(S.Zero, oo)), (S.Zero, FiniteSet(S.Zero)), (-S.One, Interval.open(-oo, S.Zero))}:
             return fact*sign(expr)
-        if exp_sets == {(-1, Interval.open(0, oo)), (0, FiniteSet(0)), (1, Interval.open(-oo, 0))}:
+        if exp_sets == {(-S.One, Interval.open(S.Zero, oo)), (S.Zero, FiniteSet(S.Zero)), (S.One, Interval.open(-oo, S.Zero))}:
             return -fact*sign(expr)
-        if fact == S.One:
-            return
 
-        # treatment with an approximation in 0
-        sign_expr = None
-        if exp_sets == {(1, Interval(0, oo)), (-1, Interval.open(-oo, 0))}:
-            sign_expr = sign(expr)
-        if exp_sets == {(1, Interval.open(0, oo)), (-1, Interval(-oo, 0))}:
-            sign_expr = sign(expr)
-        if exp_sets == {(-1, Interval(0, oo)), (1, Interval.open(-oo, 0))}:
-            sign_expr = -sign(expr)
-        if exp_sets == {(-1, Interval.open(0, oo)), (1, Interval(-oo, 0))}:
-            sign_expr = -sign(expr)
+        # treatment without consideration of the value in 0
+        sign_expr = val = None
+        if exp_sets == {(S.One, Interval(S.Zero, oo)), (-S.One, Interval.open(-oo, S.Zero))}:
+            sign_expr, val = sign(expr), S.One
+        elif exp_sets == {(S.One, Interval.open(S.Zero, oo)), (-S.One, Interval(-oo, S.Zero))}:
+            sign_expr, val = sign(expr), -S.One
+        elif exp_sets == {(-S.One, Interval(S.Zero, oo)), (S.One, Interval.open(-oo, S.Zero))}:
+            sign_expr, val = -sign(expr), -S.One
+        elif exp_sets == {(-S.One, Interval.open(S.Zero, oo)), (S.One, Interval(-oo, S.Zero))}:
+            sign_expr, val = -sign(expr), S.One
+        elif (len(exp_sets) == 3 # +sign, discontinuity in 0
+            and {(S.One, Interval.open(S.Zero, oo)), (-S.One, Interval.open(-oo, S.Zero))}.issubset(exp_sets)
+            and any(d == FiniteSet(S.Zero) for v, d in exp_sets)):
+            sign_expr, val = sign(expr), [v for v, d in exp_sets if d == FiniteSet(S.Zero)].pop()
+        elif (len(exp_sets) == 3 # -sign, discontinuity in 0
+            and {(-S.One, Interval.open(S.Zero, oo)), (S.One, Interval.open(-oo, S.Zero))}.issubset(exp_sets)
+            and any(d == FiniteSet(S.Zero) for v, d in exp_sets)):
+            sign_expr, val = -sign(expr), [v for v, d in exp_sets if d == FiniteSet(S.Zero)].pop()
         if sign_expr is None:
             return
+        if force:
+            return sign_expr
 
-        # verification that the approximation is not one
-        if fact.subs({expr: 0}) == 0:
-            return fact*sign_expr
+        # verification that in 0, the global expression is 0
+        from sympy import solve, limit
+        zero_in_zero = False
+        global_fact = val*fact*context_fact
+        fact_symbols = global_fact.free_symbols
+        for symbol in expr.free_symbols:
+            if symbol not in fact_symbols:
+                continue
+            for lim in solve(Equality(expr, 0), symbol, list=True):
+                if limit(global_fact, symbol, lim) == S.Zero:
+                    zero_in_zero = True
+                else:
+                    zero_in_zero = False
+                    break
+            if not zero_in_zero:
+                break
+
+        if zero_in_zero:
+            return fact*sign_expr if fact != S.One else sign_expr
+        return fact*Piecewise((val, Equality(expr, S.Zero)), (sign_expr, True))
 
 
 def piecewise_fold(expr):
@@ -1294,6 +1320,40 @@ def _clip(A, B, k):
     return p
 
 
+def _split_fact_picewise(expr):
+    """In a 'Mul' that contains a piecewise in one of the terms,
+    it is split in 2 to be put in the form: ``a*Piecewise(b)``.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.elementary.piecewise import _split_fact_picewise as f
+    >>> from sympy import Piecewise, cos
+    >>> from sympy.abc import x
+    >>> f(x)
+    (x, None)
+    >>> f(Piecewise((x, x > 0), (0, True)))
+    (1, Piecewise((x, x > 0), (0, True)))
+    >>> f(2*Piecewise((x, x > 0), (0, True))*cos(x))
+    (2*cos(x), Piecewise((x, x > 0), (0, True)))
+
+    """
+    if not hasattr(expr, 'is_Mul'):
+        return expr, None
+    if expr.is_Mul:
+        piecewises = [fac for fac in expr.args if fac.is_Piecewise]
+        if len(piecewises) != 1:
+            return
+        from sympy.core.mul import Mul
+        fact = Mul(*(fac for fac in expr.args if not fac.is_Piecewise), evaluate=False)
+        return fact, piecewises.pop()
+    if not hasattr(expr, 'is_Piecewise'):
+        return expr, None
+    if expr.is_Piecewise:
+        return S.One, expr
+    return expr, None
+
+
 def piecewise_simplify_arguments(expr, **kwargs):
     from sympy import simplify
     args = []
@@ -1383,7 +1443,12 @@ def piecewise_simplify(expr, **kwargs):
         else:
             prevexpr = expr
 
-    pice1 = Piecewise(*args)
-    pice2 = pice1.factor()
-    pice3 = pice1.rewrite("sign", factor=pice2.is_Mul, simplify_args=False)
-    return shorter(pice2, pice3, pice1, measure=kwargs.get("measure", count_ops))
+    pice_simple = Piecewise(*args)
+    if not pice_simple.is_Piecewise:
+        print("toutou", pice_simple)
+        return pice_simple
+    pice_factor = pice_simple.factor()
+    fact, pice_fragment = _split_fact_picewise(pice_factor)
+    pice_sign = fact*pice_fragment.rewrite("sign",
+        context_fact=fact, simplify_args=False, simplify_factor=False)
+    return shorter(pice_factor, pice_sign, pice_simple, measure=kwargs.get("measure", count_ops))
