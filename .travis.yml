@@ -143,7 +143,7 @@ before_install:
         fi
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-    pip install sphinx "docutils" doctr matplotlib sphinx-math-dollar;
+    pip install sphinx "docutils" doctr matplotlib sphinx-math-dollar sphinx-reredirects;
     fi
   - if [[ "${BENCHMARK}" == "true" ]]; then
     pip install asv;
