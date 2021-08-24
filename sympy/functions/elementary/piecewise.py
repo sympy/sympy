@@ -1386,4 +1386,4 @@ def piecewise_simplify(expr, **kwargs):
     pice1 = Piecewise(*args)
     pice2 = pice1.factor()
     pice3 = pice1.rewrite("sign", factor=pice2.is_Mul, simplify_args=False)
-    return shorter(pice3, pice2, pice1, measure=kwargs.get("measure", count_ops))
+    return shorter(pice2, pice3, pice1, measure=kwargs.get("measure", count_ops))
