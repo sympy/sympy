@@ -6,7 +6,7 @@ from sympy.core.compatibility import (
     Callable, NotIterable, as_int, is_sequence)
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
-from sympy.core.kind import _NumberKind, NumberKind, UndefinedKind
+from sympy.core.kind import _NumberKind, UndefinedKind
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
