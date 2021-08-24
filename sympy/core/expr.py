@@ -9,6 +9,7 @@ from .evalf import EvalfMixin, pure_complex
 from .decorators import call_highest_priority, sympify_method_args, sympify_return
 from .cache import cacheit
 from .compatibility import as_int, default_sort_key
+from .kind import NumberKind
 from sympy.utilities.misc import func_name
 from mpmath.libmp import mpf_log, prec_to_dps
 
@@ -653,6 +654,7 @@ class Expr(Basic, EvalfMixin):
         # try numerical evaluation to see if we get two different values
         failing_number = None
         if wrt == free:
+            free = {s for s in free if s.kind is NumberKind}
             # try 0 (for a) and 1 (for b)
             try:
                 a = expr.subs(list(zip(free, [0]*len(free))),
@@ -660,7 +662,7 @@ class Expr(Basic, EvalfMixin):
                 if a is S.NaN:
                     # evaluation may succeed when substitution fails
                     a = expr._random(None, 0, 0, 0, 0)
-            except (ZeroDivisionError, TypeError):
+            except ZeroDivisionError:
                 a = None
             if a is not None and a is not S.NaN:
                 try:
