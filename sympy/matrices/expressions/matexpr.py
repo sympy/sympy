@@ -541,7 +541,7 @@ class MatrixExpr(Expr):
                         d[indices].append(scalar*remove_matelement(elem, *indices))
                         scalar = 1
                 return [(MatrixElement(Add.fromiter(v), *k), k) for k, v in d.items()]
-            elif (isinstance(expr, KroneckerDelta)and all(a in index_ranges for a in expr.args)):
+            elif isinstance(expr, KroneckerDelta) and all(a in index_ranges for a in expr.args):
                 i1, i2 = expr.args
                 shape = dimensions
                 if shape is None:

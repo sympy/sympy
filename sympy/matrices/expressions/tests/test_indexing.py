@@ -267,6 +267,7 @@ def test_matrix_expression_from_index_summation():
     expr = Sum(A[i1, i2]*B[i2, 0], (i2, 0, k-1))
     assert MatrixExpr.from_index_summation(expr, i1) == MatrixElement(A*B, i1, 0)
 
+
 @XFAIL
 def test_kronecker_delta_from_index_summation():
     A = MatrixSymbol("A", k, k)
