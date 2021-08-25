@@ -259,6 +259,7 @@ def test_matrix_expression_from_index_summation():
     assert MatrixExpr.from_index_summation(expr, a) == A*B
 
     expr = Sum(KroneckerDelta(i1, m)*KroneckerDelta(i2, n)*A[i, i1]*A[j, i2], (i1, 0, k-1), (i2, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, m) == A.T*A[j, n]
 
     # Test numbered indices:
     expr = Sum(A[i1, i2]*w1[i2, 0], (i2, 0, k-1))
@@ -266,11 +267,3 @@ def test_matrix_expression_from_index_summation():
 
     expr = Sum(A[i1, i2]*B[i2, 0], (i2, 0, k-1))
     assert MatrixExpr.from_index_summation(expr, i1) == MatrixElement(A*B, i1, 0)
-
-
-@XFAIL
-def test_kronecker_delta_from_index_summation():
-    A = MatrixSymbol("A", k, k)
-    i1, i2 = symbols("i1, i2", cls=Dummy)
-    expr = Sum(KroneckerDelta(i1, m)*KroneckerDelta(i2, n)*A[i, i1]*A[j, i2], (i1, 0, k-1), (i2, 0, k-1))
-    assert MatrixExpr.from_index_summation(expr, m) == A.T*A[j, n]
