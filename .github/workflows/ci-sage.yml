@@ -32,11 +32,15 @@ name: Run Sage CI
 ## systems/configurations.
 
 on:
+  pull_request:
+    types: [opened, synchronize]
   push:
-    branches:
-      - master
+    tags:
+      - '*'
   workflow_dispatch:
     # Allow to run manually
+    branches:
+      - master
 
 env:
   # Ubuntu packages to install so that the project's "make dist" can succeed
