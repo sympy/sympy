@@ -1121,8 +1121,9 @@ class Piecewise(Function):
             return
 
         # set representation to reduce the diversity of cases
+        sub_var = Dummy()
         try:
-            exp_sets = set(Piecewise(*args).subs({expr: Dummy()}).as_expr_set_pairs())
+            exp_sets = set(Piecewise(*args).subs({expr: sub_var}).as_expr_set_pairs())
         except NotImplementedError:
             return
 
@@ -1145,15 +1146,19 @@ class Piecewise(Function):
         elif (len(exp_sets) == 3 # +sign, discontinuity in 0
             and {(S.One, Interval.open(S.Zero, oo)), (-S.One, Interval.open(-oo, S.Zero))}.issubset(exp_sets)
             and any(d == FiniteSet(S.Zero) for v, d in exp_sets)):
-            sign_expr, val = sign(expr), [v for v, d in exp_sets if d == FiniteSet(S.Zero)].pop()
+            sign_expr, val = (sign(expr),
+                              [v for v, d in exp_sets if d == FiniteSet(S.Zero)
+                                ].pop().subs({sub_var: expr}))
         elif (len(exp_sets) == 3 # -sign, discontinuity in 0
             and {(-S.One, Interval.open(S.Zero, oo)), (S.One, Interval.open(-oo, S.Zero))}.issubset(exp_sets)
             and any(d == FiniteSet(S.Zero) for v, d in exp_sets)):
-            sign_expr, val = -sign(expr), [v for v, d in exp_sets if d == FiniteSet(S.Zero)].pop()
+            sign_expr, val = (-sign(expr),
+                              [v for v, d in exp_sets if d == FiniteSet(S.Zero)
+                                ].pop().subs({sub_var: expr}))
         if sign_expr is None:
             return
         if force:
-            return sign_expr
+            return sign_expr if fact == S.One else fact*sign_expr
 
         # verification that in 0, the global expression is 0
         from sympy import solve, limit
@@ -1173,8 +1178,9 @@ class Piecewise(Function):
                 break
 
         if zero_in_zero:
-            return fact*sign_expr if fact != S.One else sign_expr
-        return fact*Piecewise((val, Equality(expr, S.Zero)), (sign_expr, True))
+            return sign_expr if fact == S.One else fact*sign_expr
+        simp_expr = Piecewise((val, Equality(expr, S.Zero)), (sign_expr, True))
+        return simp_expr if fact == S.One else fact*simp_expr
 
 
 def piecewise_fold(expr):
@@ -1451,4 +1457,4 @@ def piecewise_simplify(expr, **kwargs):
     fact, pice_fragment = _split_fact_picewise(pice_factor)
     pice_sign = fact*pice_fragment.rewrite("sign",
         context_fact=fact, simplify_args=False, simplify_factor=False)
-    return shorter(pice_factor, pice_sign, pice_simple, measure=kwargs.get("measure", count_ops))
+    return shorter(pice_sign, pice_factor, pice_simple, measure=kwargs.get("measure", count_ops))

@@ -464,8 +464,11 @@ def test_piecewise_simplify():
     assert Piecewise((x**2 - 1, Eq(x**2, 0)), (2*(x + 1), True)).simplify() == \
            (x + 1)*Piecewise((x - 1, Eq(x**2, 0)), (2, True))
     # simplify as sign
-    assert Piecewise((x, x > 0), (-x, True)).simplify(
-        measure=lambda e: len(str(e))) == x*sign(x)
+    assert Piecewise((x, x > 0), (-x, True)).simplify() == x*sign(x)
+    assert Piecewise((1, x > 0), (-1, x < 0), (y, True)).simplify() == \
+           Piecewise((y, Eq(x, 0)), (sign(x), True))
+    assert Piecewise((1, x > 0), (-1, x < 0), (y*x, True)).simplify() == sign(x)
+    assert Piecewise((1, x > y), (-1, x < y), (x**2-y**2, True)).simplify() == sign(x - y)
 
     # issue 18634
     d = Symbol("d", integer=True)
