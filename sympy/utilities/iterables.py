@@ -2193,23 +2193,27 @@ def multiset_derangements(s):
         return
     rv = [None]*n
     # special cases
+
     # 1) singletons
     if len(ms) == n:
         for p in generate_derangements(s):
             yield p
         return
+
     # 2) aaabbb-like
     if len(ms) == 2 and len(set(ms.values())) == 1:
         x, y = list(ms)
         yield [x if i == y else y for i in s]
         return
+
+    for M in ms:
+        if ms[M] == mx:
+            break
+    inonM = [i for i in range(n) if s[i] != M]
+    iM = [i for i in range(n) if s[i] == M]
+
     # 3) half are the same
     if 2*mx == n:
-        for M in ms:
-            if ms[M] == mx:
-                break
-        inonM = [i for i in range(n) if s[i] != M]
-        iM = [i for i in range(n) if s[i] == M]
         for i in inonM:
             rv[i] = M
         for p in multiset_permutations([s[i] for i in inonM]):
@@ -2217,6 +2221,24 @@ def multiset_derangements(s):
                 rv[i] = pi
             yield rv
         return
+
+    # 4) single repeat covers all but 1 of the non-repeats
+    if n - 2*mx == 1:
+        for i in range(len(inonM)):
+            i1 = inonM[i]
+            ifill = inonM[:i] + inonM[i+1:]
+            for j in ifill:
+                rv[j] = M
+            rv[i1] = s[i1]
+            for p in permutations([s[j] for j in ifill]):
+                for j, pi in zip(iM, p):
+                    rv[j] = pi
+                for j in iM:
+                    rv[j], rv[i1] = rv[i1], rv[j]
+                    yield rv
+                    i1 = j
+        return
+
     def iopen(v):
         return [i for i in range(n) if rv[i] is None and s[i] != v]
     def do(j):
@@ -2227,13 +2249,11 @@ def multiset_derangements(s):
             for i in subsets(iopen(M), mx):
                 for ii in i:
                     rv[ii] = M
-                for _ in do(j - 1):
-                    yield rv
+                yield from do(j - 1)
                 for ii in i:
                     rv[ii] = None
     take = sorted(ms.items(), key=lambda x:(x[1], x[0]))
-    for i in do(len(take) - 1):
-        yield i
+    yield from do(len(take) - 1)
 
 
 def generate_derangements(perm):
