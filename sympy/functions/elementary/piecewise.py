@@ -1452,7 +1452,7 @@ def piecewise_simplify(expr, **kwargs):
     pice_simple = Piecewise(*args)
     if not pice_simple.is_Piecewise:
         return pice_simple
-    pice_factor = pice_simple.factor(evaluate=kwargs.get('evaluate', True))
+    pice_factor = pice_simple._eval_factor(evaluate=kwargs.get('evaluate', True))
     fact, pice_fragment = _split_fact_picewise(pice_factor)
     if fact == S.One:
         pice_fragment = shorter(pice_fragment, pice_simple, measure=kwargs.get('measure', count_ops))
