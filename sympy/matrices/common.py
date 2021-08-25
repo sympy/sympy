@@ -306,8 +306,6 @@ class MatrixShaping(MatrixRequired):
         ========
 
         row
-        sympy.matrices.dense.MutableDenseMatrix.col_op
-        sympy.matrices.dense.MutableDenseMatrix.col_swap
         col_del
         col_join
         col_insert
@@ -590,8 +588,6 @@ class MatrixShaping(MatrixRequired):
         ========
 
         col
-        sympy.matrices.dense.MutableDenseMatrix.row_op
-        sympy.matrices.dense.MutableDenseMatrix.row_swap
         row_del
         row_join
         row_insert

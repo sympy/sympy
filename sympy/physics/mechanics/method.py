@@ -16,7 +16,7 @@ class _Methods(ABC):
         pass
 
     @abstractmethod
-    def forcelist(self):
+    def loads(self):
         pass
 
     @abstractmethod

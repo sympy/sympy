@@ -7,6 +7,8 @@ Module for the SDM class.
 from operator import add, neg, pos, sub, mul
 from collections import defaultdict
 
+from sympy.utilities.iterables import _strongly_connected_components
+
 from .exceptions import DDMBadInputError, DDMDomainError, DDMShapeError
 
 from .ddm import DDM
@@ -587,6 +589,29 @@ class SDM(dict):
             return A.copy()
         Ak = unop_dict(A, lambda e: K.convert_from(e, Kold))
         return A.new(Ak, A.shape, K)
+
+    def scc(A):
+        """Strongly connected components of a square matrix *A*.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> A = SDM({0:{0: ZZ(2)}, 1:{1:ZZ(1)}}, (2, 2), ZZ)
+        >>> A.scc()
+        [[0], [1]]
+
+        See also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.scc
+        """
+        rows, cols = A.shape
+        assert rows == cols
+        V = range(rows)
+        Emap = {v: list(A.get(v, [])) for v in V}
+        return _strongly_connected_components(V, Emap)
 
     def rref(A):
         """

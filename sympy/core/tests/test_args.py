@@ -2997,6 +2997,11 @@ def test_sympy__matrices__expressions__matexpr__MatrixBase():
     pass
 
 
+@SKIP("abstract class")
+def test_sympy__matrices__immutable__ImmutableRepMatrix():
+    pass
+
+
 def test_sympy__matrices__immutable__ImmutableDenseMatrix():
     from sympy.matrices.immutable import ImmutableDenseMatrix
     m = ImmutableDenseMatrix([[1, 2], [3, 4]])
@@ -4121,6 +4126,23 @@ def test_sympy__physics__secondquant__TensorSymbol():
     assert _test_args(TensorSymbol(x))
 
 
+def test_sympy__physics__control__lti__LinearTimeInvariant():
+    # Direct instances of LinearTimeInvariant class are not allowed.
+    # func(*args) tests for its derived classes (TransferFunction,
+    # Series, Parallel and TransferFunctionMatrix) should pass.
+    pass
+
+
+def test_sympy__physics__control__lti__SISOLinearTimeInvariant():
+    # Direct instances of SISOLinearTimeInvariant class are not allowed.
+    pass
+
+
+def test_sympy__physics__control__lti__MIMOLinearTimeInvariant():
+    # Direct instances of MIMOLinearTimeInvariant class are not allowed.
+    pass
+
+
 def test_sympy__physics__control__lti__TransferFunction():
     from sympy.physics.control.lti import TransferFunction
     assert _test_args(TransferFunction(2, 3, x))
@@ -4133,6 +4155,16 @@ def test_sympy__physics__control__lti__Series():
     assert _test_args(Series(tf1, tf2))
 
 
+def test_sympy__physics__control__lti__MIMOSeries():
+    from sympy.physics.control import MIMOSeries, TransferFunction, TransferFunctionMatrix
+    tf1 = TransferFunction(x**2 - y**3, y - z, x)
+    tf2 = TransferFunction(y - x, z + y, x)
+    tfm_1 = TransferFunctionMatrix([[tf2, tf1]])
+    tfm_2 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+    tfm_3 = TransferFunctionMatrix([[tf1], [tf2]])
+    assert _test_args(MIMOSeries(tfm_3, tfm_2, tfm_1))
+
+
 def test_sympy__physics__control__lti__Parallel():
     from sympy.physics.control import Parallel, TransferFunction
     tf1 = TransferFunction(x**2 - y**3, y - z, x)
@@ -4140,11 +4172,31 @@ def test_sympy__physics__control__lti__Parallel():
     assert _test_args(Parallel(tf1, tf2))
 
 
+def test_sympy__physics__control__lti__MIMOParallel():
+    from sympy.physics.control import MIMOParallel, TransferFunction, TransferFunctionMatrix
+    tf1 = TransferFunction(x**2 - y**3, y - z, x)
+    tf2 = TransferFunction(y - x, z + y, x)
+    tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+    tfm_2 = TransferFunctionMatrix([[tf2, tf1], [tf1, tf2]])
+    assert _test_args(MIMOParallel(tfm_1, tfm_2))
+
+
 def test_sympy__physics__control__lti__Feedback():
     from sympy.physics.control import TransferFunction, Feedback
     tf1 = TransferFunction(x**2 - y**3, y - z, x)
     tf2 = TransferFunction(y - x, z + y, x)
     assert _test_args(Feedback(tf1, tf2))
+    assert _test_args(Feedback(tf1, tf2, 1))
+
+
+def test_sympy__physics__control__lti__MIMOFeedback():
+    from sympy.physics.control import TransferFunction, MIMOFeedback, TransferFunctionMatrix
+    tf1 = TransferFunction(x**2 - y**3, y - z, x)
+    tf2 = TransferFunction(y - x, z + y, x)
+    tfm_1 = TransferFunctionMatrix([[tf2, tf1], [tf1, tf2]])
+    tfm_2 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+    assert _test_args(MIMOFeedback(tfm_1, tfm_2))
+    assert _test_args(MIMOFeedback(tfm_1, tfm_2, 1))
 
 
 def test_sympy__physics__control__lti__TransferFunctionMatrix():

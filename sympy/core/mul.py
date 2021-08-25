@@ -1351,7 +1351,7 @@ class Mul(Expr, AssocOp):
                 b, e = a.as_base_exp()
                 if not b.is_integer or not e.is_integer: return
                 if e.is_negative:
-                    denominators.append(b)
+                    denominators.append(2 if a is S.Half else Pow(a, S.NegativeOne))
                 else:
                     # for integer b and positive integer e: a = b**e would be integer
                     assert not e.is_positive
@@ -1881,10 +1881,10 @@ class Mul(Expr, AssocOp):
                 else:
                     raise ValueError
 
-            n0 = sum(t[1] for t in ords)
+            n0 = sum(t[1] for t in ords if t[1].is_number)
             facs = []
             for t, m in ords:
-                n1 = ceiling(n - n0 + m)
+                n1 = ceiling(n - n0 + (m if m.is_number else 0))
                 s = t.nseries(x, n=n1, logx=logx, cdir=cdir)
                 ns = s.getn()
                 if ns is not None:

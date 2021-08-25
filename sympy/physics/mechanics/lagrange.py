@@ -31,7 +31,7 @@ class LagrangesMethod(_Methods):
 
     q, u : Matrix
         Matrices of the generalized coordinates and speeds
-    forcelist : iterable
+    loads : iterable
         Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
         describing the forces on the system.
     bodies : iterable
@@ -469,4 +469,8 @@ class LagrangesMethod(_Methods):
 
     @property
     def forcelist(self):
+        return self._forcelist
+
+    @property
+    def loads(self):
         return self._forcelist

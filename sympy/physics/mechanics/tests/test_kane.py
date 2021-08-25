@@ -25,6 +25,7 @@ def test_one_dof():
     KM.kanes_equations(BL, FL)
 
     assert KM.bodies == BL
+    assert KM.loads == FL
 
     MM = KM.mass_matrix
     forcing = KM.forcing

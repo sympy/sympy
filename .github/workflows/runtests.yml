@@ -17,17 +17,33 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+        with:
+          # Clone full git history (needed for AUTHORS/mailmap)
+          fetch-depth: '0'
+
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: '3.9'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath flake8
-      - run: bin/test quality
-      - run: flake8 sympy
-        # compileall is used to detect invalid escapes like '\e'
-      - run: python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/
-        # test all modules are listed in setup.py
-      - run: bin/test_setup.py
+
+      - name: Basic code quality tests
+        run: bin/test quality
+
+      - name: Run flake8 on the sympy package
+        run: flake8 sympy
+
+      - name: Detect invalid escapes like '\e'
+        run: python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/
+
+      - name: Test all modules are listed in setup.py
+        run: bin/test_setup.py
+
+      - name: Test for ambiguous author information in commits
+        run: bin/mailmap_update.py
+
+      - name: Make sure all commits have an associated author
+        run: bin/authors_update.py
 
   # -------------------- Doctests latest Python -------------------- #
 
@@ -39,7 +55,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: '3.9'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/doctest --force-colors
@@ -55,7 +71,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: '3.9'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --split=1/2
@@ -70,7 +86,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: '3.9'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --split=2/2
@@ -85,7 +101,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: '3.9'
       - run: sudo apt install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath gmpy2 matplotlib numpy scipy pymc3 aesara ipython \
@@ -108,7 +124,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: '3.9'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=1/2
@@ -123,7 +139,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: '3.9'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=2/2
@@ -136,7 +152,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', 'pypy-3.6']
+        python-version: ['3.6', '3.7', '3.8', '3.10.0-rc.1', 'pypy-3.7']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -154,7 +170,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', 'pypy-3.6']
+        python-version: ['3.6', '3.7', '3.8', '3.10.0-rc.1', 'pypy-3.7']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -172,7 +188,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', 'pypy-3.6']
+        python-version: ['3.6', '3.7', '3.8', '3.10.0-rc.1', 'pypy-3.7']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -193,7 +209,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: '3.9'
       - run: release/aptinstall.sh
       - run: pip install -r release/requirements.txt
       - run: bin/test_sphinx.sh
@@ -209,7 +225,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 2.7
+          python-version: '2.7'
       - run: bin/test_py2_import.py
 
   # -------------------- Run benchmarks against master and 1.8 ----- #
@@ -225,7 +241,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: '3.9'
       - run: pip install asv virtualenv
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 
