@@ -1594,7 +1594,7 @@ class Mul(Expr, AssocOp):
                     pass
                 elif acc != 1 and (acc + t).is_odd:
                     r = False
-                elif t.is_odd is None:
+                elif t.is_even is None:
                     r = None
                 acc = t
             return r
