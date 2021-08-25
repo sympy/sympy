@@ -188,6 +188,9 @@ def test_measure_all():
     # from issue #12585
     assert measure_all(qapply(Qubit('0'))) == [(Qubit('0'), 1)]
 
+    #for testing MemoryError
+    assert measure_all(Qubit('0'.zfill(50)))==[(Qubit('0'.zfill(50)), 1)]
+
 
 def test_eval_trace():
     q1 = Qubit('10110')
