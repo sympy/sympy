@@ -1,4 +1,4 @@
-name: Run Sage CI for Linux/Cygwin/macOS
+name: Run Sage CI
 
 ## This GitHub Actions workflow provides:
 ##
