@@ -679,28 +679,28 @@ class Integral(AddWithLimits):
                                     args.append(g)
                             return Mul(*args)
 
-                        integrals, others, piecewises = [], [], []
-                        for f in Add.make_args(antideriv):
-                            if any(is_indef_int(g, x)
-                                   for g in Mul.make_args(f)):
-                                integrals.append(f)
-                            elif any(isinstance(g, Piecewise)
-                                     for g in Mul.make_args(f)):
-                                piecewises.append(piecewise_fold(f))
-                            else:
-                                others.append(f)
-                        uneval = Add(*[eval_factored(f, x, a, b)
-                                       for f in integrals])
+                        def sep_values(antideriv, x):
+                            integrals, others, piecewises = [], [], []
+                            for f in Add.make_args(antideriv):
+                                if any(is_indef_int(g, x)
+                                      for g in Mul.make_args(f)):
+                                    integrals.append(f)
+                                elif any(isinstance(g, Piecewise)
+                                        for g in Mul.make_args(f)):
+                                    piecewises.append(piecewise_fold(f))
+                                else:
+                                    others.append(f)
+                            uneval = Add(*[eval_factored(f, x, a, b)
+                                          for f in integrals])
+                            return uneval, piecewises, others
                         try:
+                            uneval, piecewises, others = sep_values(antideriv, x)
                             evalued = Add(*others)._eval_interval(x, a, b)
                             evalued_pw = piecewise_fold(Add(*piecewises))._eval_interval(x, a, b)
                             if isinstance(evalued_pw, Integral):
-                                antideriv = self._eval_integral(function, xab[0], manual=True)
-                                piecewises = []
-                                for f in Add.make_args(antideriv):
-                                    if any(isinstance(g, Piecewise)
-                                           for g in Mul.make_args(f)):
-                                               piecewises.append(piecewise_fold(f))
+                                antideriv = manualintegrate(function, xab[0])
+                                uneval, piecewises, others = sep_values(antideriv, x)
+                                evalued = Add(*others)._eval_interval(x, a, b)
                                 evalued_pw = piecewise_fold(Add(*piecewises))._eval_interval(x, a, b)
                             function = uneval + evalued + evalued_pw
                         except NotImplementedError:
