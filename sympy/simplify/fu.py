@@ -18,7 +18,7 @@ from sympy.functions.elementary.trigonometric import (
     cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
 from sympy.ntheory.factor_ import perfect_power
 from sympy.polys.polytools import factor
-from sympy.simplify.simplify import bottom_up, simplify
+from sympy.simplify.simplify import bottom_up
 from sympy.simplify.radsimp import fraction
 from sympy.strategies.tree import greedy
 from sympy.strategies.core import identity, debug
