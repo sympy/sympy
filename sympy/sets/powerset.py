@@ -58,7 +58,7 @@ class PowerSet(Set):
     Evaluating the power set of a finite set to its explicit form:
 
     >>> PowerSet(FiniteSet(1, 2, 3)).rewrite(FiniteSet)
-    {EmptySet, {1}, {2}, {3}, {1, 2}, {1, 3}, {2, 3}, {1, 2, 3}}
+    FiniteSet(EmptySet, {1}, {2}, {3}, {1, 2}, {1, 3}, {2, 3}, {1, 2, 3})
 
     References
     ==========

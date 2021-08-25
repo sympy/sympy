@@ -522,7 +522,7 @@ class Category(Basic):
         >>> B = Object("B")
         >>> K = Category("K", FiniteSet(A, B))
         >>> K.objects
-        Class(FiniteSet(Object("A"), Object("B")))
+        Class({Object("A"), Object("B")})
 
         """
         return self.args[1]
