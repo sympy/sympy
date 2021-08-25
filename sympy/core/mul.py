@@ -1570,6 +1570,12 @@ class Mul(Expr, AssocOp):
         return self._eval_pos_neg(-1)
 
     def _eval_is_odd(self):
+        """ debug
+        >>> from sympy import Symbol, Sum, oo, S
+        >>> n = Symbol('n', integer=True)
+        >>> Sum((-1)**(n - 1)/(n**2 - 1), (n, 3, oo)).is_convergent() is S.true
+        True
+        """
         from sympy import trailing, fraction
         if self.is_integer:
             n, d = fraction(self)
@@ -1581,7 +1587,9 @@ class Mul(Expr, AssocOp):
                         ).is_positive:
                     return False
                 return
-            assert d is S.One
+            if d is not S.One:
+                print(self)
+                return
             r, acc = True, 1
             for t in self.args:
                 assert t.is_integer
