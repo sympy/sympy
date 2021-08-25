@@ -1644,12 +1644,12 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
 
     was = rv
     rv = sympify(rv)
-    if isinstance(rv, Expr):
-        n, d = fraction(rv)
-        if simplify(d) is S.Zero:
-            return nan
     if not isinstance(rv, Expr):
         return rv.func(*[fu(a, measure=measure) for a in rv.args])
+    else:
+        n, d = fraction(rv)
+        if d is S.Zero:
+            return nan    
     rv = TR1(rv)
     if rv.has(tan, cot):
         rv1 = fRL1(rv)
