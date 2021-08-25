@@ -1648,8 +1648,9 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
         return rv.func(*[fu(a, measure=measure) for a in rv.args])
     else:
         n, d = fraction(rv)
-        if d is S.Zero:
-            return nan    
+        if d.is_zero is None:
+            if simplify(d) is S.Zero:
+                return nan
     rv = TR1(rv)
     if rv.has(tan, cot):
         rv1 = fRL1(rv)
