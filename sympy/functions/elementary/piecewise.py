@@ -1451,10 +1451,15 @@ def piecewise_simplify(expr, **kwargs):
 
     pice_simple = Piecewise(*args)
     if not pice_simple.is_Piecewise:
-        print("toutou", pice_simple)
         return pice_simple
-    pice_factor = pice_simple.factor()
+    pice_factor = pice_simple.factor(evaluate=kwargs.get('evaluate', True))
     fact, pice_fragment = _split_fact_picewise(pice_factor)
-    pice_sign = fact*pice_fragment.rewrite("sign",
-        context_fact=fact, simplify_args=False, simplify_factor=False)
-    return shorter(pice_sign, pice_factor, pice_simple, measure=kwargs.get("measure", count_ops))
+    if fact == S.One:
+        pice_fragment = shorter(pice_fragment, pice_simple, measure=kwargs.get('measure', count_ops))
+    if 'context_fact' in kwargs:
+        context_fact = fact*kwargs['context_fact']
+    else:
+        context_fact = fact
+    pice_sign = fact*pice_fragment.rewrite('sign', context_fact=context_fact,
+        simplify_args=False, simplify_factor=False)
+    return shorter(pice_sign, pice_factor, pice_simple, measure=kwargs.get('measure', count_ops))
