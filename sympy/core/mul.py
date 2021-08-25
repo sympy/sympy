@@ -1343,7 +1343,8 @@ class Mul(Expr, AssocOp):
         denominators = []
         for a in self.args:
             if a.is_integer:
-                numerators.append(a)
+                if abs(a) is not S.One:
+                    numerators.append(a)
             elif a.is_Rational:
                 n, d = a.as_numer_denom()
                 if abs(n) is not S.One:
@@ -1570,14 +1571,9 @@ class Mul(Expr, AssocOp):
         return self._eval_pos_neg(-1)
 
     def _eval_is_odd(self):
-        """ debug
-        >>> from sympy import Symbol, Sum, oo, S
-        >>> n = Symbol('n', integer=True)
-        >>> Sum((-1)**(n - 1)/(n**2 - 1), (n, 3, oo)).is_convergent() is S.true
-        True
-        """
         from sympy import trailing, fraction
-        if self.is_integer:
+        is_integer = self.is_integer
+        if is_integer:
             n, d = fraction(self)
             if d.is_Integer and d.is_even:
                 # if minimal power of 2 in num vs den is
@@ -1587,11 +1583,10 @@ class Mul(Expr, AssocOp):
                         ).is_positive:
                     return False
                 return
-            if d is not S.One:
-                print(self)
-                return
             r, acc = True, 1
             for t in self.args:
+                if abs(t) is S.One:
+                    continue
                 assert t.is_integer
                 if t.is_even:
                     return False
@@ -1603,7 +1598,7 @@ class Mul(Expr, AssocOp):
                     r = None
                 acc = t
             return r
-        return self.is_integer # !integer -> !odd
+        return is_integer # !integer -> !odd
 
     def _eval_is_even(self):
         from sympy import trailing, fraction
