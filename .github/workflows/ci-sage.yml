@@ -52,9 +52,9 @@ env:
   SAGE_REF:         develop
   # Uncomment to temporarily test with the branch from a sage ticket
   # (this is a no-op after that ticket is merged)
-  ## SAGE_TRAC_GIT:    https://github.com/sagemath/sagetrac-mirror.git
-  ## SAGE_TICKET:
-  ## REMOVE_PATCHES:   "*"
+  SAGE_TRAC_GIT:    https://github.com/sagemath/sagetrac-mirror.git
+  SAGE_TICKET:      32420
+  REMOVE_PATCHES:   "*"
 
 jobs:
 
