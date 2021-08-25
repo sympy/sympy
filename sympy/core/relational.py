@@ -417,6 +417,11 @@ class Relational(Boolean, EvalfMixin):
         # override where necessary
         return set()
 
+    def _sage_(self):
+       from operator import eq, ne, gt, lt, ge, le
+       ops = {Eq : eq, Ne : ne, Gt : gt, Lt : lt, Ge : ge, Le : le}
+       return ops.get(self.func)(self.lhs._sage_(), self.rhs._sage_())
+
 
 Rel = Relational
 

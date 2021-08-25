@@ -239,6 +239,21 @@ def test_abstract_function():
     # invexpr = sexpr._sympy_()
     # assert invexpr == expr, "inverse coversion %r is not correct " % invexpr
 
+def test_relational():
+    x = sympy.symbols('x')
+    sx = sage.var('x')
+    assert sympy.sympify(sx == 0) == sympy.Eq(x, 0)
+    assert (sx == 0) == sage.SR(sympy.Eq(x, 0))
+    assert sympy.sympify(sx != 0) == sympy.Ne(x, 0)
+    assert (sx != 0) == sage.SR(sympy.Ne(x, 0))
+    assert sympy.sympify(sx >= 0) == sympy.Ge(x, 0)
+    assert (sx >= 0) == sage.SR(sympy.Ge(x, 0))
+    assert sympy.sympify(sx <= 0) == sympy.Le(x, 0)
+    assert (sx <= 0) == sage.SR(sympy.Le(x, 0))
+    assert sympy.sympify(sx > 0) == sympy.Gt(x, 0)
+    assert (sx > 0) == sage.SR(sympy.Gt(x, 0))
+    assert sympy.sympify(sx < 0) == sympy.Lt(x, 0)
+    assert (sx < 0) == sage.SR(sympy.Lt(x, 0))
 
 
 # This string contains Sage doctests, that execute all the functions above.
@@ -265,6 +280,7 @@ TESTS::
     sage: test_integral()
     sage: test_undefined_function()
     sage: test_abstract_function()
+    sage: test_relational()
 
 Sage has no symbolic Lucas function at the moment::
 
