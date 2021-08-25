@@ -1646,11 +1646,6 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
     rv = sympify(rv)
     if not isinstance(rv, Expr):
         return rv.func(*[fu(a, measure=measure) for a in rv.args])
-    else:
-        n, d = fraction(rv)
-        if d.is_zero is None:
-            if simplify(d) is S.Zero:
-                return nan
     rv = TR1(rv)
     if rv.has(tan, cot):
         rv1 = fRL1(rv)
@@ -1659,6 +1654,10 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
         if rv.has(tan, cot):
             rv = TR2(rv)
     if rv.has(sin, cos):
+        n, d = fraction(rv)
+        if d.is_zero is None:
+            if TR8(TRmorrie(d)) is S.Zero:
+                return nan
         rv1 = fRL2(rv)
         rv2 = TR8(TRmorrie(rv1))
         rv = min([was, rv, rv1, rv2], key=measure)
