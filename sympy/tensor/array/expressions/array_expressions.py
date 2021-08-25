@@ -1341,6 +1341,7 @@ class _EditArrayContraction:
         if array_contraction is None:
             self.args_with_ind: List[_ArgE] = []
             self.number_of_contraction_indices: int = 0
+            self._track_permutation: Optional[List[int]] = None
             return
         expr = array_contraction.expr
         if isinstance(expr, ArrayTensorProduct):
@@ -1355,6 +1356,7 @@ class _EditArrayContraction:
                 args_with_ind[arg_pos].indices[rel_pos] = i
         self.args_with_ind: List[_ArgE] = args_with_ind
         self.number_of_contraction_indices: int = len(array_contraction.contraction_indices)
+        self._track_permutation: Optional[List[int]] = None
 
     def insert_after(self, arg: _ArgE, new_arg: _ArgE):
         pos = self.args_with_ind.index(arg)
@@ -1393,7 +1395,7 @@ class _EditArrayContraction:
         args = [arg.element for arg in self.args_with_ind]
         contraction_indices = self.get_contraction_indices()
         expr = ArrayContraction(ArrayTensorProduct(*args), *contraction_indices)
-        if hasattr(self, '_track_permutation'):
+        if self._track_permutation is not None:
             permutation = _af_invert([j for i in self._track_permutation for j in i])
             expr = PermuteDims(expr, permutation)
         return expr

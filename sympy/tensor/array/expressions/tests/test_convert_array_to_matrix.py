@@ -483,7 +483,7 @@ def test_convert_array_to_hadamard_products():
     # ArrayDiagonal should be converted
     cg = ArrayDiagonal(ArrayTensorProduct(M, N, Q), (1, 3), (0, 2, 4))
     ret = convert_array_to_matrix(cg)
-    expected = PermuteDims(ArrayDiagonal(ArrayTensorProduct(HadamardProduct(M, N), Q), (0, 2)), [1, 0, 2])
+    expected = PermuteDims(ArrayDiagonal(ArrayTensorProduct(HadamardProduct(M.T, N.T), Q), (1, 2)), [1, 0, 2])
     assert expected == ret
 
     # Special case that should return the same expression:
