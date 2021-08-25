@@ -1001,8 +1001,8 @@ class MatrixBase(MatrixDeprecated,
                 if evaluate:
                     def do(x):
                         # make Block and Symbol explicit
-                        if isinstance(x, (list, tuple)):
-                            return type(x)([do(i) for i in x])
+                        if is_sequence(x):
+                            return list([do(i) for i in x])
                         if isinstance(x, BlockMatrix) or \
                                 isinstance(x, MatrixSymbol) and \
                                 all(_.is_Integer for _ in x.shape):
