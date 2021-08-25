@@ -92,10 +92,8 @@ jobs:
       max-parallel: 32
       matrix:
         # debian-buster uses system python 3.7
-        # ubuntu-groovy uses system python 3.8
-        # fedora-34 uses system python 3.9
         # archlinux-latest is at the cutting edge
-        tox_system_factor: [debian-buster, ubuntu-groovy, fedora-34, archlinux-latest]
+        tox_system_factor: [debian-buster, archlinux-latest]
         # "standard" installs lots of system packages, reducing the full build and test of the
         # Sage distribution to 3-4 hours
         tox_packages_factor: [standard]
