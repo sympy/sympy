@@ -1574,6 +1574,8 @@ class Mul(Expr, AssocOp):
         from sympy import trailing, fraction
         is_integer = self.is_integer
         if is_integer:
+            if self.is_zero:
+                return False
             n, d = fraction(self)
             if d.is_Integer and d.is_even:
                 # if minimal power of 2 in num vs den is
