@@ -2939,7 +2939,7 @@ class Expr(Basic, EvalfMixin):
             If "x0" is an infinity object
 
         """
-        from sympy import collect, Dummy, Order, Rational, Symbol, ceiling
+        from sympy import collect, Dummy, Order, Rational, Symbol, ceiling, PoleError
         if x is None:
             syms = self.free_symbols
             if not syms:
@@ -2963,11 +2963,15 @@ class Expr(Basic, EvalfMixin):
             raise ValueError("Dir must be '+' or '-'")
 
         if x0 in [S.Infinity, S.NegativeInfinity]:
-            sgn = 1 if x0 is S.Infinity else -1
-            s = self.subs(x, sgn/x).series(x, n=n, dir='+', cdir=cdir)
-            if n is None:
-                return (si.subs(x, sgn/x) for si in s)
-            return s.subs(x, sgn/x)
+            try:
+                sgn = 1 if x0 is S.Infinity else -1
+                s = self.subs(x, sgn/x).series(x, n=n, dir='+', cdir=cdir)
+                if n is None:
+                    return (si.subs(x, sgn/x) for si in s)
+                return s.subs(x, sgn/x)
+            except PoleError:
+                s = self.subs(x, sgn*x).aseries(x, n=n)
+                return s.subs(x, sgn*x)
 
         # use rep to shift origin to x0 and change sign (if dir is negative)
         # and undo the process with rep2
