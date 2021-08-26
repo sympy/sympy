@@ -1368,14 +1368,15 @@ class Mul(Expr, AssocOp):
         if not denominators:
             return True
 
-        odd = lambda ints: all(i.is_odd for i in ints)  # ALL
-        even = lambda ints: any(i.is_even for i in ints)  # ANY
+        allodd = lambda x: all(i.is_odd for i in x)
+        alleven = lambda x: all(i.is_even for i in x)
+        anyeven = lambda x: any(i.is_even for i in x)
 
-        if odd(numerators) and even(denominators):
+        if allodd(numerators) and anyeven(denominators):
             return False
-        elif even(numerators) and denominators == [2]:
+        elif anyeven(numerators) and denominators == [2]:
             return True
-        elif all(i.is_even for i in numerators) and odd(denominators
+        elif alleven(numerators) and allodd(denominators
                 ) and (Mul(*denominators, evaluate=False) - 1
                 ).is_positive:
             return False
