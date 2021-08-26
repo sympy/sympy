@@ -1289,9 +1289,12 @@ class _ArgE:
     the second index is contracted to the 4th (i.e. number ``3``) group of the
     array contraction object.
     """
-    def __init__(self, element):
+    def __init__(self, element, indices: Optional[List[Optional[int]]] = None):
         self.element = element
-        self.indices: List[Optional[int]] = [None for i in range(get_rank(element))]
+        if indices is None:
+            self.indices: List[Optional[int]] = [None for i in range(get_rank(element))]
+        else:
+            self.indices: List[Optional[int]] = indices
 
     def __str__(self):
         return "_ArgE(%s, %s)" % (self.element, self.indices)
@@ -1334,7 +1337,12 @@ class _EditArrayContraction:
     by calling the ``.to_array_contraction()`` method.
     """
 
-    def __init__(self, array_contraction: ArrayContraction):
+    def __init__(self, array_contraction: Optional[ArrayContraction]):
+        if array_contraction is None:
+            self.args_with_ind: List[_ArgE] = []
+            self.number_of_contraction_indices: int = 0
+            self._track_permutation: Optional[List[int]] = None
+            return
         expr = array_contraction.expr
         if isinstance(expr, ArrayTensorProduct):
             args = list(expr.args)
@@ -1348,6 +1356,7 @@ class _EditArrayContraction:
                 args_with_ind[arg_pos].indices[rel_pos] = i
         self.args_with_ind: List[_ArgE] = args_with_ind
         self.number_of_contraction_indices: int = len(array_contraction.contraction_indices)
+        self._track_permutation: Optional[List[int]] = None
 
     def insert_after(self, arg: _ArgE, new_arg: _ArgE):
         pos = self.args_with_ind.index(arg)
@@ -1386,7 +1395,7 @@ class _EditArrayContraction:
         args = [arg.element for arg in self.args_with_ind]
         contraction_indices = self.get_contraction_indices()
         expr = ArrayContraction(ArrayTensorProduct(*args), *contraction_indices)
-        if hasattr(self, '_track_permutation'):
+        if self._track_permutation is not None:
             permutation = _af_invert([j for i in self._track_permutation for j in i])
             expr = PermuteDims(expr, permutation)
         return expr
