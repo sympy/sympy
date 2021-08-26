@@ -2326,29 +2326,27 @@ def random_derangement(t, choice=None, strict=True):
   # the normal derangement calculated from here
     if n == len(ms):
       # approx 1/3 will succeed
+        rv = list(t)
         while True:
-            rv = list(t)
             shuffle(rv)
             if all(i != j for i,j in zip(rv, t)):
                 break
     else:
       # general case
+        rv = [None]*n
         while True:
-            rv = [None]*n
             j = 0
             while j > -len(ms):  # do most numerous first
                 j -= 1
                 e, c = ms[j]
                 opts = [i for i in range(n) if rv[i] is None and t[i] != e]
                 if len(opts) < c:
-                    j += 2 # try again
-                    for i in was:
+                    for i in range(n):
                         rv[i] = None
-                    continue
+                    break # try again
                 pick(opts, c)
-                was = opts[:c]
-                for i in was:
-                    rv[i] = e
+                for i in range(c):
+                    rv[opts[i]] = e
             else:
                 return rv
     return rv
