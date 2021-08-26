@@ -2223,7 +2223,7 @@ def multiset_derangements(s):
         return
 
     # 4) single repeat covers all but 1 of the non-repeats
-    if n - 2*mx == 1:
+    if n - 2*mx == 1 and len(ms.values()) - 1 == n - mx:
         for i in range(len(inonM)):
             i1 = inonM[i]
             ifill = inonM[:i] + inonM[i+1:]
