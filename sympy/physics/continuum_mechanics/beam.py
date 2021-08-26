@@ -3486,6 +3486,8 @@ class Beam3D(Beam):
         max_bmoment.append(self._max_bending_moment('z'))
         return max_bmoment
 
+    max_bmoment = max_bending_moment
+
     def _max_deflection(self, dir):
         """
         Helper function for max_Deflection()
