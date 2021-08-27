@@ -7,6 +7,7 @@ from typing import Any, Dict
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
 from sympy.core.function import _coeff_isneg
+from sympy.sets.sets import FiniteSet
 from .printer import Printer, print_function
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -795,6 +796,20 @@ class StrPrinter(Printer):
         if not args:
             return "set()"
         return '{%s}' % args
+
+    def _print_FiniteSet(self, s):
+        items = sorted(s, key=default_sort_key)
+
+        args = ', '.join(self._print(item) for item in items)
+        if any(item.has(FiniteSet) for item in items):
+            return 'FiniteSet({})'.format(args)
+        return '{{{}}}'.format(args)
+
+    def _print_Partition(self, s):
+        items = sorted(s, key=default_sort_key)
+
+        args = ', '.join(self._print(arg) for arg in items)
+        return 'Partition({})'.format(args)
 
     def _print_frozenset(self, s):
         if not s:

@@ -337,3 +337,8 @@ def test_issue_21245():
         (-6964*sqrt(5) - 15572 + 2440*sqrt(5)*x + 5456*x\
         + O((x - 2/(1 + sqrt(5)))**2, (x, 2/(1 + sqrt(5)))))/((1 + sqrt(5))**2\
         *(20 + 9*sqrt(5))**2*(x + sqrt(5)*x - 2))
+
+
+def test_issue_21938():
+    expr = sin(1/x + exp(-x)) - sin(1/x)
+    assert expr.series(x, oo) == (1/(24*x**4) - 1/(2*x**2) + 1 + O(x**(-6), (x, oo)))*exp(-x)

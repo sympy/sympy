@@ -60,7 +60,7 @@ class ConditionSet(Set):
 
     >>> c = ConditionSet(x, x < 1, {x, z})
     >>> c.subs(x, y)
-    ConditionSet(x, x < 1, FiniteSet(y, z))
+    ConditionSet(x, x < 1, {y, z})
 
     To check if ``pi`` is in ``c`` use:
 

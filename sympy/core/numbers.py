@@ -1572,6 +1572,16 @@ class Rational(Number):
     >>> r.p/r.q
     0.75
 
+    If an unevaluated Rational is desired, ``gcd=1`` can be passed and
+    this will keep common divisors of the numerator and denominator
+    from being eliminated. It is not possible, however, to leave a
+    negative value in the denominator.
+
+    >>> Rational(2, 4, gcd=1)
+    2/4
+    >>> Rational(2, -4, gcd=1).q
+    4
+
     See Also
     ========
     sympy.core.sympify.sympify, sympy.simplify.simplify.nsimplify
@@ -1624,18 +1634,22 @@ class Rational(Number):
 
             q = 1
             gcd = 1
-        else:
-            p = Rational(p)
-            q = Rational(q)
 
-        if isinstance(q, Rational):
-            p *= q.q
-            q = q.p
-        if isinstance(p, Rational):
+        if not isinstance(p, SYMPY_INTS):
+            p = Rational(p)
             q *= p.q
             p = p.p
+        else:
+            p = int(p)
 
-        # p and q are now integers
+        if not isinstance(q, SYMPY_INTS):
+            q = Rational(q)
+            p *= q.q
+            q = q.p
+        else:
+            q = int(q)
+
+        # p and q are now ints
         if q == 0:
             if p == 0:
                 if _errdict["divide"]:

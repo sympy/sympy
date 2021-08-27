@@ -512,6 +512,12 @@ def test_Mul_is_even_odd():
     assert (x*(x + k)).is_odd is False
     assert (x*(x + m)).is_odd is None
 
+    # issue 8648
+    assert (m**2/2).is_even
+    assert (m**2/3).is_even is False
+    assert (2/m**2).is_odd is False
+    assert (2/m).is_odd is None
+
 
 @XFAIL
 def test_evenness_in_ternary_integer_product_with_odd():
@@ -1050,6 +1056,18 @@ def test_Pow_is_integer():
     x = Symbol('x', positive=True)
     assert (1/(x + 1)).is_integer is False
     assert (1/(-x - 1)).is_integer is False
+
+    # issue 8648-like
+    k = Symbol('k', even=True)
+    assert (k**3/2).is_integer
+    assert (k**3/8).is_integer
+    assert (k**3/16).is_integer is None
+    assert (2/k).is_integer is None
+    assert (2/k**2).is_integer is False
+    o = Symbol('o', odd=True)
+    assert (k/o).is_integer is None
+    o = Symbol('o', odd=True, prime=True)
+    assert (k/o).is_integer is False
 
 
 def test_Pow_is_real():
