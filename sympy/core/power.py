@@ -1758,9 +1758,6 @@ class Pow(Expr):
                 return p * x / n
         return x**n/factorial(n)
 
-    def _sage_(self):
-        return self.args[0]._sage_()**self.args[1]._sage_()
-
     def _eval_rewrite_as_sin(self, base, exp):
         from ..functions import sin
         if self.base is S.Exp1:
