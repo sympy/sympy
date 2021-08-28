@@ -2239,8 +2239,58 @@ def multiset_derangements(s):
                     i1 = j
         return
 
+    def finish_derangements():
+        """Place the last two elements into the partially completed
+        derangement, and yield the results.
+        In non-recursive version, this will be inlined, but a little
+        easier to understand as a function for now.
+        """
+
+        a = take[1][0]  # penultimate element
+        a_ct = take[1][1]
+        b = take[0][0]  # last element to be placed
+        b_ct = take[0][1]
+
+        # split the indexes of the not-already-assigned elemements of rv into
+        # three categories
+        forced_a = []  # positions which must have an a
+        forced_b = []  # positions which must have a b
+        open_free = []  # positions which could take either
+        for i in range(len(s)):
+            if rv[i] is None:
+                if s[i] == a:
+                    forced_b.append(i)
+                elif s[i] == b:
+                    forced_a.append(i)
+                else:
+                    open_free.append(i)
+
+        if len(forced_a) > a_ct or len(forced_b) > b_ct:
+            # No derangement possible
+            return
+        for i in forced_a:
+            rv[i] = a
+        for i in forced_b:
+            rv[i] = b
+        for a_place in subsets(open_free, a_ct - len(forced_a)):
+            for a_pos in a_place:
+                rv[a_pos] = a
+            for i in open_free:
+                if rv[i] is None:  # anything not in the subset is set to b
+                    rv[i] = b
+            yield rv
+            # Clean up/undo the final placements
+            for i in open_free:
+                rv[i] = None
+        # additional cleanup - clear forced_a, forced_b
+        for i in forced_a:
+            rv[i] = None
+        for i in forced_b:
+            rv[i] = None
+
     def iopen(v):
         return [i for i in range(n) if rv[i] is None and s[i] != v]
+
     def do(j):
         if j == -1:
             yield rv
