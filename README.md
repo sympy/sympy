@@ -9,7 +9,7 @@
 [![SymPy Banner](https://github.com/sympy/sympy/raw/master/banner.svg)](https://sympy.org/)
 
 
-See the AUTHORS file for the list of authors.
+See the [AUTHORS](AUTHORS) file for the list of authors.
 
 And many more people helped on the SymPy mailing list, reported bugs,
 helped organize SymPy's participation in the Google Summer of Code, the
