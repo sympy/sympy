@@ -16,7 +16,7 @@ helped organize SymPy's participation in the Google Summer of Code, the
 Google Highly Open Participation Contest, Google Code-In, wrote and
 blogged about SymPy...
 
-License: New BSD License (see the LICENSE file for details) covers all
+License: New BSD License (see the [LICENSE](LICENSE) file for details) covers all
 files in the sympy repository unless stated otherwise.
 
 Our mailing list is at
