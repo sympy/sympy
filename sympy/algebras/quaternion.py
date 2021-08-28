@@ -3,13 +3,14 @@
 # https://en.wikipedia.org/wiki/Quaternion
 from sympy import S, Rational
 from sympy import re, im, conjugate, sign
-from sympy import sqrt, sin, cos, acos, exp, ln
+from sympy import sqrt, sin, cos, acos, exp, ln, atan2
 from sympy import trigsimp
 from sympy import integrate
 from sympy import Matrix
 from sympy import sympify
 from sympy.core.evalf import prec_to_dps
 from sympy.core.expr import Expr
+from sympy.core.logic import fuzzy_not, fuzzy_or
 
 
 class Quaternion(Expr):
@@ -746,3 +747,423 @@ class Quaternion(Expr):
 
             return Matrix([[m00, m01, m02, m03], [m10, m11, m12, m13],
                           [m20, m21, m22, m23], [m30, m31, m32, m33]])
+
+    def scalar_part(self):
+        """Returns the scalar part of the quaternion.
+
+        Explanation
+        ===========
+
+        If q is a quaternion given by q = a + b*i + c*j + d*k where a, b, c and d
+        are real numbers then the scalar part of q is a.
+
+        Returns
+        =======
+
+        Expr
+            Returns a real number representing the scalar part of the quaternion.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(4, 8, 13, 12)
+        >>> q.scalar_part()
+        4
+
+        """
+
+        return self.a
+
+    def vector_part(self):
+        """Returns the vector part of the quaternion.
+
+        Explanation
+        ===========
+
+        If q is a quaternion given by q = a + b*i + c*j + d*k where a, b, c and d
+        are real numbers then the vector part of q is b*i + c*j + d*k.
+
+        Returns
+        =======
+
+        Quaternion
+            Returns the vector part of the quaternion of the form b*i + c*j + d*k.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(1, 1, 1, 1)
+        >>> q.vector_part()
+        0 + 1*i + 1*j + 1*k
+        >>> q = Quaternion(4, 8, 13, 12)
+        >>> q.vector_part()
+        0 + 8*i + 13*j + 12*k
+
+        """
+
+        return Quaternion(0, self.b, self.c, self.d)
+
+    def axis(self):
+        """Returns the axis of the quaternion.
+
+        Explanation
+        ===========
+
+        The axis of a quaternion is the normalized versor (vector part) of that quaternion.
+
+        Returns
+        =======
+
+        Quaternion
+            Returns the axis of the current quaternion.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(1, 1, 1, 1)
+        >>> q.axis()
+        0 + sqrt(3)/3*i + sqrt(3)/3*j + sqrt(3)/3*k
+
+        See Also
+        ========
+
+        vector_part
+
+        """
+
+        return Quaternion(0, self.b, self.c, self.d).normalize()
+
+    def is_pure(self):
+        """Returns true if the quaternion is pure, false if the quaternion is not pure
+           or returns none if it is unknown.
+
+        Explanation
+        ===========
+
+        A pure quaternion (also a vector quaternion) is a quaternion with scalar
+        part equal to 0.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(0, 8, 13, 12)
+        >>> q.is_pure()
+        True
+
+        See Also
+        ========
+
+        scalar_part
+
+        """
+
+        return self.a.is_zero
+
+    def is_zero_quaternion(self):
+        """Returns true if the quaternion is zero or false if it is not zero and None
+           if the value is unknown.
+
+        Explanation
+        ===========
+
+        A zero quaternion is a quaternion with it's scalar part and vector part
+        both equal to 0.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(1, 0, 0, 0)
+        >>> q.is_zero_quaternion()
+        False
+        >>> q = Quaternion(0, 0, 0, 0)
+        >>> q.is_zero_quaternion()
+        True
+
+        See Also
+        ========
+
+        scalar_part
+        vector_part
+
+        """
+
+        return self.norm().is_zero
+
+    def angle(self):
+        """Returns the angle of the quaternion measured in the real-axis plane.
+
+        Explanation
+        ===========
+
+        If q is a quaternion given by ``q = a + b*i + c*j + d*k`` where a, b, c and d
+        are real numbers then the angle of the quaternion is given by
+
+        .. math::
+            angle := atan2(\sqrt{b^2 + c^2 + d^2}, {a})
+
+        Returns
+        =======
+
+        Expr
+            The angle of the quaternion measured in the real=axis plane.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(1, 4, 4, 4)
+        >>> q.angle()
+        atan(4*sqrt(3))
+
+        """
+
+        return atan2(self.vector_part().norm(), self.scalar_part())
+
+    @classmethod
+    def coplanar(cls, q1, q2):
+        """Returns True if the plane of the two quaternions are coplanar or False if the
+           plane of the two quaternions are not coplanar or None if plane of the two quaternions
+           are coplanar is unknown.
+
+        Explanation
+        ===========
+
+        Checks if the 3D vectors written as quaternions are in the same plane which means
+        the 3D vectors are parallel to the same plane.
+
+        Parameters
+        ==========
+
+        q1 : Quaternion
+        q2 : Quaternion
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q1 = Quaternion(1, 4, 4, 4)
+        >>> q2 = Quaternion(2, 8, 8, 8)
+        >>> Quaternion.coplanar(q1, q2)
+        True
+        >>> q1 = Quaternion(2, 8, 13, 12)
+        >>> Quaternion.coplanar(q1, q2)
+        False
+
+        See Also
+        ========
+
+        ternary_coplanar
+        is_pure
+
+        """
+
+        if (q1.is_zero_quaternion()) or (q2.is_zero_quaternion()):
+            raise ValueError('Cannot check if Quaternions are coplanar if any one of them is zero')
+
+
+        aq = q1.axis()
+        ar = q2.axis()
+
+        return fuzzy_or([(aq - ar).is_zero_quaternion(), (aq + ar).is_zero_quaternion()])
+
+    @classmethod
+    def ternary_coplanar(cls, q1, q2, q3):
+        """Returns True if the axis of the pure quaternions seen as 3D vectors
+           q1, q2, and q3 are coplanar.
+
+        Explanation
+        ===========
+
+        Two general quaternions are coplanar (in this arc sense) when their axes are parallel.
+
+        Parameters
+        ==========
+
+        q1 : A pure Quaternion.
+        q2 : A pure Quaternion.
+        q3 : A pure Quaternion.
+
+        Returns
+        =======
+
+        True : if the axis of the pure quaternions seen as 3D vectors
+        q1, q2, and q3 are coplanar.
+        False : if the axis of the pure quaternions seen as 3D vectors
+        q1, q2, and q3 are not coplanar.
+        None : if the axis of the pure quaternions seen as 3D vectors
+        q1, q2, and q3 are coplanar is unknown.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q1 = Quaternion(0, 4, 4, 4)
+        >>> q2 = Quaternion(0, 8, 8, 8)
+        >>> q3 = Quaternion(0, 24, 24, 24)
+        >>> Quaternion.ternary_coplanar(q1, q2, q3)
+        True
+        >>> q1 = Quaternion(0, 8, 16, 8)
+        >>> q2 = Quaternion(0, 8, 3, 12)
+        >>> Quaternion.ternary_coplanar(q1, q2, q3)
+        False
+
+        See Also
+        ========
+
+        axis
+        is_pure
+
+        """
+
+        if fuzzy_not(q1.is_pure()) or fuzzy_not(q2.is_pure()) or fuzzy_not(q3.is_pure()):
+            raise ValueError('Cannot check if Quaternions are ternary coplanar if any of them is not pure')
+
+
+        M = Matrix([[q1.b, q1.c, q1.d], [q2.b, q2.c, q2.d], [q3.b, q3.c, q3.d]]).det()
+        return M.is_zero
+
+    def parallel(self, other):
+        """Returns True if the two pure quaternions seen as 3D vectors are parallel.
+
+        Explanation
+        ===========
+
+        Two pure quaternions are called parallel when their vector product is commutative which
+        means that the quaternion seen as 3D vectors have same direction.
+
+        Parameters
+        ==========
+
+        other : Quaternion
+
+        Returns
+        =======
+
+        True : if the two pure quaternions seen as 3D vectors are parallel.
+        False : if the two pure quaternions seen as 3D vectors are not parallel.
+        None : if the two pure quaternions seen as 3D vectors are parallel is unknown.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(0, 4, 4, 4)
+        >>> q1 = Quaternion(0, 8, 8, 8)
+        >>> q.parallel(q1)
+        True
+        >>> q1 = Quaternion(0, 8, 13, 12)
+        >>> q.parallel(q1)
+        False
+
+        """
+
+        if fuzzy_not(self.is_pure()) or fuzzy_not(other.is_pure()):
+            raise ValueError('Cannot check if Quaternions are parallel if any one of them is not pure')
+
+        return (self*other - other*self).is_zero_quaternion()
+
+    def orthogonal(self, other):
+        """Returns True if the two pure quaternions seen as 3D vectors are orthogonal.
+
+        Explanation
+        ===========
+
+        Two pure quaternions are called orthogonal when their product is anti-commutative.
+
+        Parameters
+        ==========
+
+        other : Quaternion
+
+        Returns
+        =======
+
+        True : if the two pure quaternions seen as 3D vectors are orthogonal.
+        False : if the two pure quaternions seen as 3D vectors are not orthogonal.
+        None : if the two pure quaternions seen as 3D vectors are orthogonal is unknown.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(0, 4, 4, 4)
+        >>> q1 = Quaternion(0, 8, 8, 8)
+        >>> q.orthogonal(q1)
+        False
+        >>> q1 = Quaternion(0, 2, 2, 0)
+        >>> q = Quaternion(0, 2, -2, 0)
+        >>> q.orthogonal(q1)
+        True
+
+        """
+
+        if fuzzy_not(self.is_pure()) or fuzzy_not(other.is_pure()):
+            raise ValueError('Cannot check if Quaternions are orthogonal if any one of them is not pure')
+
+        return (self*other + other*self).is_zero_quaternion()
+
+    def index_vector(self):
+        """Returns the index vector of the quaternion.
+
+        Explanation
+        ===========
+
+        Index vector is given by mod(q) Ax(q) where Ax(q) is the axis of the quaternion q,
+        where mod(q) is the `norm` (magnitude) of the quaternion.
+
+        Returns
+        =======
+
+        Quaternion
+            Returns the index vector of the current quaternion.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(2, 4, 2, 4)
+        >>> q.index_vector()
+        0 + 4*sqrt(10)/3*i + 2*sqrt(10)/3*j + 4*sqrt(10)/3*k
+
+        See Also
+        ========
+
+        axis
+        norm
+
+        """
+
+        return self.norm() * self.vector_part().normalize()
+
+    def mensor(self):
+        """Returns the log of the norm of the quaternion.
+
+        Returns
+        =======
+
+        Expr
+            Returns the mensor of the current quaternion.
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> q = Quaternion(2, 4, 2, 4)
+        >>> q.mensor()
+        log(2*sqrt(10))
+        >>> q.norm()
+        2*sqrt(10)
+
+        See Also
+        ========
+
+        norm
+
+        """
+
+        return ln(self.norm())
