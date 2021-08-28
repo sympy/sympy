@@ -5,6 +5,7 @@ from sympy.physics.vector.vector import Vector, _check_vector
 from sympy.utilities.misc import translate
 
 from warnings import warn
+from sympy.physics.mechanics.body import Body
 
 __all__ = ['CoordinateSym', 'ReferenceFrame']
 

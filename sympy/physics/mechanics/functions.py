@@ -9,6 +9,7 @@ from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy import simplify
 from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
                                 tan, AppliedUndef, S)
+from sympy.physics.mechanics.body import Body
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
