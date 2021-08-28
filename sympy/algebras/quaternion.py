@@ -895,7 +895,7 @@ class Quaternion(Expr):
         return self.norm().is_zero
 
     def angle(self):
-        """
+        r"""
         Returns the angle of the quaternion measured in the real-axis plane.
 
         Explanation
