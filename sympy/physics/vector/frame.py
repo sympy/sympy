@@ -53,6 +53,8 @@ class CoordinateSym(Symbol):
         assumptions = {}
         super()._sanitize(assumptions, cls)
         obj = super().__xnew__(cls, name, **assumptions)
+        if isinstance(frame, Body):
+            frame = Body.frame
         _check_frame(frame)
         if index not in range(0, 3):
             raise ValueError("Invalid index specified")
@@ -325,6 +327,7 @@ class ReferenceFrame:
 
     def _w_diff_dcm(self, otherframe):
         """Angular velocity from time differentiating the DCM. """
+
         from sympy.physics.vector.functions import dynamicsymbols
         dcm2diff = otherframe.dcm(self)
         diffed = dcm2diff.diff(dynamicsymbols._t)
@@ -361,7 +364,8 @@ class ReferenceFrame:
         {A_x: B_x*cos(q(t)) - B_y*sin(q(t)), A_y: B_x*sin(q(t)) + B_y*cos(q(t)), A_z: B_z}
 
         """
-
+        if isinstance(otherframe, Body):
+            otherframe = Body.frame
         _check_frame(otherframe)
         if (otherframe, Vector.simp) in self._var_dict:
             return self._var_dict[(otherframe, Vector.simp)]
@@ -402,7 +406,8 @@ class ReferenceFrame:
         10*N.x
 
         """
-
+        if isinstance(otherframe, Body):
+            otherframe = Body.frame
         _check_frame(otherframe)
         if otherframe in self._ang_acc_dict:
             return self._ang_acc_dict[otherframe]
@@ -437,7 +442,8 @@ class ReferenceFrame:
         10*N.x
 
         """
-
+        if isinstance(otherframe, Body):
+            otherframe = Body.frame
         _check_frame(otherframe)
         flist = self._dict_list(otherframe, 1)
         outvec = Vector(0)
@@ -515,7 +521,8 @@ class ReferenceFrame:
         vectors in terms of the A unit vectors.
 
         """
-
+        if isinstance(otherframe, Body):
+            otherframe = Body.frame
         _check_frame(otherframe)
         # Check if the dcm wrt that frame has already been calculated
         if otherframe in self._dcm_cache:
@@ -644,6 +651,8 @@ class ReferenceFrame:
         """
 
         from sympy.physics.vector.functions import dynamicsymbols
+        if isinstance(parent, Body):
+            parent = Body.frame
         _check_frame(parent)
 
         if not isinstance(axis, Vector) and isinstance(angle, Vector):
@@ -739,7 +748,8 @@ class ReferenceFrame:
         [0, -sin(q1), cos(q1)]])
 
         """
-
+        if isinstance(parent, Body):
+            parent = Body.frame
         _check_frame(parent)
         # amounts must be a Matrix type object
         # (e.g. sympy.matrices.dense.MutableDenseMatrix).
@@ -849,7 +859,8 @@ class ReferenceFrame:
         >>> B.orient_body_fixed(N, (q1, q2, q3), 123)
 
         """
-
+        if isinstance(parent, Body):
+            parent = Body.frame
         _check_frame(parent)
 
         amounts = list(angles)
@@ -971,7 +982,8 @@ class ReferenceFrame:
         [sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1),  sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3)]])
 
         """
-
+        if isinstance(parent, Body):
+            parent = Body.frame
         _check_frame(parent)
 
         amounts = list(angles)
@@ -1071,6 +1083,8 @@ class ReferenceFrame:
         """
 
         from sympy.physics.vector.functions import dynamicsymbols
+        if isinstance(parent, Body):
+            parent = Body.frame
         _check_frame(parent)
 
         numbers = list(numbers)
@@ -1161,7 +1175,8 @@ class ReferenceFrame:
             If the orientation creates a kinematic loop.
 
         """
-
+        if isinstance(parent, Body):
+            parent = Body.frame
         _check_frame(parent)
 
         approved_orders = ('123', '231', '312', '132', '213', '321', '121',
@@ -1334,6 +1349,8 @@ class ReferenceFrame:
         if value == 0:
             value = Vector(0)
         value = _check_vector(value)
+        if isinstance(otherframe, Body):
+            otherframe = Body.frame
         _check_frame(otherframe)
         self._ang_acc_dict.update({otherframe: value})
         otherframe._ang_acc_dict.update({self: -value})
@@ -1370,6 +1387,8 @@ class ReferenceFrame:
         if value == 0:
             value = Vector(0)
         value = _check_vector(value)
+        if isinstance(otherframe, Body):
+            otherframe = Body.frame
         _check_frame(otherframe)
         self._ang_vel_dict.update({otherframe: value})
         otherframe._ang_vel_dict.update({self: -value})
