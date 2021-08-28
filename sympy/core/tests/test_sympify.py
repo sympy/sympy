@@ -237,19 +237,6 @@ def test_sympify_factorial():
     raises(SympifyError, lambda: sympify("x!!!"))
 
 
-def test_sage():
-    # how to effectivelly test for the _sage_() method without having SAGE
-    # installed?
-    assert hasattr(x, "_sage_")
-    assert hasattr(Integer(3), "_sage_")
-    assert hasattr(sin(x), "_sage_")
-    assert hasattr(cos(x), "_sage_")
-    assert hasattr(x**2, "_sage_")
-    assert hasattr(x + y, "_sage_")
-    assert hasattr(exp(x), "_sage_")
-    assert hasattr(log(x), "_sage_")
-
-
 def test_issue_3595():
     assert sympify("a_") == Symbol("a_")
     assert sympify("_a") == Symbol("_a")
