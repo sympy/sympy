@@ -1046,6 +1046,14 @@ class Add(Expr, AssocOp):
     def _eval_transpose(self):
         return self.func(*[t.transpose() for t in self.args])
 
+    def _sage_(self):
+        # As of Sage 9.4, sage.interfaces.sympy (sympy_init) expects that Add already has
+        # a method called _sage_.
+        s = 0
+        for x in self.args:
+            s += x._sage_()
+        return s
+
     def primitive(self):
         """
         Return ``(R, self/R)`` where ``R``` is the Rational GCD of ``self```.
