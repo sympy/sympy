@@ -9,7 +9,6 @@ from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy import simplify
 from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
                                 tan, AppliedUndef, S)
-from sympy.physics.mechanics.body import Body
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -82,6 +81,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     (N.x|N.x) + 2*(N.y|N.y) + 3*(N.z|N.z)
 
     """
+    from sympy.physics.mechanics import Body
     if isinstance(frame, Body):
         frame = Body.frame
     if not isinstance(frame, ReferenceFrame):
@@ -169,6 +169,7 @@ def linear_momentum(frame, *body):
     10*N.x + 500*N.y
 
     """
+    from sympy.physics.mechanics import Body
     if isinstance(frame, Body):
         frame = Body.frame
     if not isinstance(frame, ReferenceFrame):
@@ -229,6 +230,7 @@ def angular_momentum(point, frame, *body):
     10*N.z
 
     """
+    from sympy.physics.mechanics import Body
     if isinstance(frame, Body):
         frame = Body.frame
     if not isinstance(frame, ReferenceFrame):
@@ -292,6 +294,7 @@ def kinetic_energy(frame, *body):
     350
 
     """
+    from sympy.physics.mechanics import Body
     if isinstance(frame, Body):
         frame = Body.frame
     if not isinstance(frame, ReferenceFrame):
@@ -499,6 +502,7 @@ def Lagrangian(frame, *body):
     -M*g*h - g*h*m + 350
 
     """
+    from sympy.physics.mechanics import Body
     if isinstance(frame, Body):
         frame = Body.frame
     if not isinstance(frame, ReferenceFrame):

@@ -5,7 +5,6 @@ from sympy.physics.vector.vector import Vector, _check_vector
 from sympy.utilities.misc import translate
 
 from warnings import warn
-from sympy.physics.mechanics.body import Body
 
 __all__ = ['CoordinateSym', 'ReferenceFrame']
 
@@ -54,6 +53,7 @@ class CoordinateSym(Symbol):
         assumptions = {}
         super()._sanitize(assumptions, cls)
         obj = super().__xnew__(cls, name, **assumptions)
+        from sympy.physics.mechanics import Body
         if isinstance(frame, Body):
             frame = Body.frame
         _check_frame(frame)
@@ -365,6 +365,7 @@ class ReferenceFrame:
         {A_x: B_x*cos(q(t)) - B_y*sin(q(t)), A_y: B_x*sin(q(t)) + B_y*cos(q(t)), A_z: B_z}
 
         """
+        from sympy.physics.mechanics import Body
         if isinstance(otherframe, Body):
             otherframe = Body.frame
         _check_frame(otherframe)
@@ -407,6 +408,7 @@ class ReferenceFrame:
         10*N.x
 
         """
+        from sympy.physics.mechanics import Body
         if isinstance(otherframe, Body):
             otherframe = Body.frame
         _check_frame(otherframe)
@@ -443,6 +445,7 @@ class ReferenceFrame:
         10*N.x
 
         """
+        from sympy.physics.mechanics import Body
         if isinstance(otherframe, Body):
             otherframe = Body.frame
         _check_frame(otherframe)
@@ -522,6 +525,7 @@ class ReferenceFrame:
         vectors in terms of the A unit vectors.
 
         """
+        from sympy.physics.mechanics import Body
         if isinstance(otherframe, Body):
             otherframe = Body.frame
         _check_frame(otherframe)
@@ -652,6 +656,7 @@ class ReferenceFrame:
         """
 
         from sympy.physics.vector.functions import dynamicsymbols
+        from sympy.physics.mechanics import Body
         if isinstance(parent, Body):
             parent = Body.frame
         _check_frame(parent)
@@ -749,6 +754,7 @@ class ReferenceFrame:
         [0, -sin(q1), cos(q1)]])
 
         """
+        from sympy.physics.mechanics import Body
         if isinstance(parent, Body):
             parent = Body.frame
         _check_frame(parent)
@@ -860,6 +866,7 @@ class ReferenceFrame:
         >>> B.orient_body_fixed(N, (q1, q2, q3), 123)
 
         """
+        from sympy.physics.mechanics import Body
         if isinstance(parent, Body):
             parent = Body.frame
         _check_frame(parent)
@@ -983,6 +990,7 @@ class ReferenceFrame:
         [sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1),  sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3)]])
 
         """
+        from sympy.physics.mechanics import Body
         if isinstance(parent, Body):
             parent = Body.frame
         _check_frame(parent)
@@ -1084,6 +1092,7 @@ class ReferenceFrame:
         """
 
         from sympy.physics.vector.functions import dynamicsymbols
+        from sympy.physics.mechanics import Body
         if isinstance(parent, Body):
             parent = Body.frame
         _check_frame(parent)
@@ -1176,6 +1185,7 @@ class ReferenceFrame:
             If the orientation creates a kinematic loop.
 
         """
+        from sympy.physics.mechanics import Body
         if isinstance(parent, Body):
             parent = Body.frame
         _check_frame(parent)
@@ -1350,6 +1360,7 @@ class ReferenceFrame:
         if value == 0:
             value = Vector(0)
         value = _check_vector(value)
+        from sympy.physics.mechanics import Body
         if isinstance(otherframe, Body):
             otherframe = Body.frame
         _check_frame(otherframe)
@@ -1388,6 +1399,7 @@ class ReferenceFrame:
         if value == 0:
             value = Vector(0)
         value = _check_vector(value)
+        from sympy.physics.mechanics import Body
         if isinstance(otherframe, Body):
             otherframe = Body.frame
         _check_frame(otherframe)
