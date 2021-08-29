@@ -81,7 +81,9 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     (N.x|N.x) + 2*(N.y|N.y) + 3*(N.z|N.z)
 
     """
-
+    from sympy.physics.mechanics import Body
+    if isinstance(frame, Body):
+        frame = frame.frame
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Need to define the inertia in a frame')
     ol = sympify(ixx) * (frame.x | frame.x)
@@ -167,7 +169,9 @@ def linear_momentum(frame, *body):
     10*N.x + 500*N.y
 
     """
-
+    from sympy.physics.mechanics import Body
+    if isinstance(frame, Body):
+        frame = frame.frame
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Please specify a valid ReferenceFrame')
     else:
@@ -226,7 +230,9 @@ def angular_momentum(point, frame, *body):
     10*N.z
 
     """
-
+    from sympy.physics.mechanics import Body
+    if isinstance(frame, Body):
+        frame = frame.frame
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Please enter a valid ReferenceFrame')
     if not isinstance(point, Point):
@@ -288,7 +294,9 @@ def kinetic_energy(frame, *body):
     350
 
     """
-
+    from sympy.physics.mechanics import Body
+    if isinstance(frame, Body):
+        frame = frame.frame
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Please enter a valid ReferenceFrame')
     ke_sys = S.Zero
@@ -494,7 +502,9 @@ def Lagrangian(frame, *body):
     -M*g*h - g*h*m + 350
 
     """
-
+    from sympy.physics.mechanics import Body
+    if isinstance(frame, Body):
+        frame = frame.frame
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Please supply a valid ReferenceFrame')
     for e in body:
