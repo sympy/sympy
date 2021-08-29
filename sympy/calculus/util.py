@@ -139,6 +139,9 @@ def function_range(f, symbol, domain):
     """
     from sympy.solvers.solveset import solveset
 
+    if not domain.issubset(S.Reals):
+        raise NotImplementedError("The domain must be real.")
+
     if isinstance(domain, EmptySet):
         return S.EmptySet
 
@@ -190,7 +193,33 @@ def function_range(f, symbol, domain):
                 else:
                     vals += FiniteSet(f.subs(symbol, limit_point))
 
-            solution = solveset(f.diff(symbol), symbol, interval)
+            # Replace symbol with dummy with proper assumptions if the symbol
+            # not already has it
+            l = (interval.inf, interval.sup)
+            if all(i.is_nonnegative for i in l) and not symbol.is_nonnegative:
+                d = Dummy(positive=True)
+            elif all(i.is_nonpositive for i in l) and not symbol.is_nonpositive:
+                d = Dummy(negative=True)
+            elif all(i.is_real for i in l) and not symbol.is_real:
+                d = Dummy(real=True)
+            else:
+                d = None
+            # Rename to enable sensible exception messages
+            if d:
+                func = f.subs(symbol, d)
+                sym = d
+            else:
+                func = f
+                sym = symbol
+            if func.is_number:
+                # Expression may have evaluated to a constant when assumptions
+                # are added
+                solution = FiniteSet(func)
+            else:
+                try:
+                    solution = solveset(func.diff(sym), sym, interval)
+                except NotImplementedError:
+                    solution = None
 
             if not iterable(solution):
                 raise NotImplementedError(
@@ -202,7 +231,7 @@ def function_range(f, symbol, domain):
             critical_points += solution
 
             for critical_point in critical_points:
-                vals += FiniteSet(f.subs(symbol, critical_point))
+                vals += FiniteSet(func.subs(sym, critical_point))
 
             left_open, right_open = False, False
 

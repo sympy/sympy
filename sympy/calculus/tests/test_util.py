@@ -52,6 +52,9 @@ def test_function_range():
         log(x), x, S.Integers))
     raises(NotImplementedError, lambda : function_range(
         sin(x)/2, x, S.Naturals))
+    raises(NotImplementedError, lambda : function_range(
+        x, x, S.Complexes))
+    assert function_range(Abs(x) + x, x, Interval(-2, -1)) == Interval(0, 0)
 
 
 def test_continuous_domain():
@@ -630,6 +633,11 @@ def test_union_AccumBounds():
     assert B(0, 3).union(B(-1, 2)) == B(-1, 3)
     assert B(0, 3).union(B(-1, 4)) == B(-1, 4)
     raises(TypeError, lambda: B(0, 3).union(1))
+
+
+def test_issue_21956():
+    x = Symbol('x')
+    assert maximum(Abs(x**3), x, Interval(0, 3)) ==  27
 
 
 def test_issue_16469():
