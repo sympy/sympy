@@ -325,6 +325,7 @@ class ReferenceFrame:
 
     def _w_diff_dcm(self, otherframe):
         """Angular velocity from time differentiating the DCM. """
+
         from sympy.physics.vector.functions import dynamicsymbols
         dcm2diff = otherframe.dcm(self)
         diffed = dcm2diff.diff(dynamicsymbols._t)
@@ -402,7 +403,9 @@ class ReferenceFrame:
         10*N.x
 
         """
-
+        from sympy.physics.mechanics import Body
+        if isinstance(otherframe, Body):
+            otherframe = frame.frame
         _check_frame(otherframe)
         if otherframe in self._ang_acc_dict:
             return self._ang_acc_dict[otherframe]
@@ -437,7 +440,9 @@ class ReferenceFrame:
         10*N.x
 
         """
-
+        from sympy.physics.mechanics import Body
+        if isinstance(otherframe, Body):
+            otherframe = frame.frame
         _check_frame(otherframe)
         flist = self._dict_list(otherframe, 1)
         outvec = Vector(0)
@@ -515,7 +520,9 @@ class ReferenceFrame:
         vectors in terms of the A unit vectors.
 
         """
-
+        from sympy.physics.mechanics import Body
+        if isinstance(otherframe, Body):
+            otherframe = frame.frame
         _check_frame(otherframe)
         # Check if the dcm wrt that frame has already been calculated
         if otherframe in self._dcm_cache:
@@ -644,6 +651,9 @@ class ReferenceFrame:
         """
 
         from sympy.physics.vector.functions import dynamicsymbols
+        from sympy.physics.mechanics import Body
+        if isinstance(parent, Body):
+            parent = frame.frame
         _check_frame(parent)
 
         if not isinstance(axis, Vector) and isinstance(angle, Vector):
@@ -739,7 +749,9 @@ class ReferenceFrame:
         [0, -sin(q1), cos(q1)]])
 
         """
-
+        from sympy.physics.mechanics import Body
+        if isinstance(parent, Body):
+            parent = frame.frame
         _check_frame(parent)
         # amounts must be a Matrix type object
         # (e.g. sympy.matrices.dense.MutableDenseMatrix).
@@ -849,7 +861,9 @@ class ReferenceFrame:
         >>> B.orient_body_fixed(N, (q1, q2, q3), 123)
 
         """
-
+        from sympy.physics.mechanics import Body
+        if isinstance(parent, Body):
+            parent = frame.frame
         _check_frame(parent)
 
         amounts = list(angles)
@@ -971,7 +985,9 @@ class ReferenceFrame:
         [sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1),  sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3)]])
 
         """
-
+        from sympy.physics.mechanics import Body
+        if isinstance(parent, Body):
+            parent = frame.frame
         _check_frame(parent)
 
         amounts = list(angles)
@@ -1071,6 +1087,9 @@ class ReferenceFrame:
         """
 
         from sympy.physics.vector.functions import dynamicsymbols
+        from sympy.physics.mechanics import Body
+        if isinstance(parent, Body):
+            parent = frame.frame
         _check_frame(parent)
 
         numbers = list(numbers)
@@ -1161,7 +1180,9 @@ class ReferenceFrame:
             If the orientation creates a kinematic loop.
 
         """
-
+        from sympy.physics.mechanics import Body
+        if isinstance(parent, Body):
+            parent = frame.frame
         _check_frame(parent)
 
         approved_orders = ('123', '231', '312', '132', '213', '321', '121',
@@ -1334,6 +1355,9 @@ class ReferenceFrame:
         if value == 0:
             value = Vector(0)
         value = _check_vector(value)
+        from sympy.physics.mechanics import Body
+        if isinstance(otherframe, Body):
+            otherframe = frame.frame
         _check_frame(otherframe)
         self._ang_acc_dict.update({otherframe: value})
         otherframe._ang_acc_dict.update({self: -value})
@@ -1370,6 +1394,9 @@ class ReferenceFrame:
         if value == 0:
             value = Vector(0)
         value = _check_vector(value)
+        from sympy.physics.mechanics import Body
+        if isinstance(otherframe, Body):
+            otherframe = frame.frame
         _check_frame(otherframe)
         self._ang_vel_dict.update({otherframe: value})
         otherframe._ang_vel_dict.update({self: -value})
