@@ -1202,8 +1202,6 @@ class LambertW(Function):
     def _eval_is_zero(self):
         x = self.args[0]
         if len(self.args) == 1:
-            k = S.Zero
+            return x.is_zero
         else:
-            k = self.args[1]
-        if x.is_zero and k.is_zero:
-            return True
+            return fuzzy_and(x.is_zero, self.args[1].is_zero)
