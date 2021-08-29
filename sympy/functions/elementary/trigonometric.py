@@ -501,9 +501,7 @@ class sin(TrigonometricFunction):
             return True
 
     def _eval_is_zero(self):
-        arg = self.args[0]
-        if arg.is_zero:
-            return True
+        return (self.args[0]/S.Pi).is_integer
 
     def _eval_is_complex(self):
         if self.args[0].is_extended_real \
@@ -963,6 +961,9 @@ class cos(TrigonometricFunction):
             or self.args[0].is_complex:
             return True
 
+    def _eval_is_zero(self):
+        return (self.args[0]/S.Pi - S.Half).is_integer
+
 
 class tan(TrigonometricFunction):
     """
@@ -1289,9 +1290,7 @@ class tan(TrigonometricFunction):
             return True
 
     def _eval_is_zero(self):
-        arg = self.args[0]
-        if arg.is_zero:
-            return True
+        return (self.args[0]/S.Pi).is_integer
 
     def _eval_is_complex(self):
         arg = self.args[0]
@@ -1599,6 +1598,9 @@ class cot(TrigonometricFunction):
         arg = self.args[0]
         if arg.is_real and (arg/pi).is_integer is False:
             return True
+
+    def _eval_is_zero(self):
+        return (self.args[0]/S.Pi - S.Half).is_integer
 
     def _eval_subs(self, old, new):
         arg = self.args[0]

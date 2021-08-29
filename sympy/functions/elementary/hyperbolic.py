@@ -1462,6 +1462,9 @@ class atanh(InverseHyperbolicFunction):
     def _eval_is_zero(self):
         return self.args[0].is_zero
 
+    def _eval_is_imaginary(self):
+        return self.args[0].is_imaginary
+
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
@@ -1791,3 +1794,6 @@ class acsch(InverseHyperbolicFunction):
 
     def _eval_rewrite_as_log(self, arg, **kwargs):
         return log(1/arg + sqrt(1/arg**2 + 1))
+
+    def _eval_is_zero(self):
+        return self.args[0].is_infinite
