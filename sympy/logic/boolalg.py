@@ -725,6 +725,12 @@ class And(LatticeOp, BooleanFunction):
         if bad is not None:
             # let it raise
             bad.subs(old, new)
+        # If old is And, replace the parts of the arguments with new if all
+        # are there
+        if isinstance(old, And):
+            if all(a in args for a in old.args):
+                args = [new] + [a for a in args if a not in old.args]
+
         return self.func(*args)
 
     def _eval_simplify(self, **kwargs):
@@ -872,6 +878,12 @@ class Or(LatticeOp, BooleanFunction):
         if bad is not None:
             # let it raise
             bad.subs(old, new)
+        # If old is Or, replace the parts of the arguments with new if all
+        # are there
+        if isinstance(old, Or):
+            if all(a in args for a in old.args):
+                args = [new] + [a for a in args if a not in old.args]
+
         return self.func(*args)
 
     def _eval_as_set(self):
@@ -1135,6 +1147,14 @@ class Xor(BooleanFunction):
         patterns = simplify_patterns_xor()
         return self._apply_patternbased_simplification(rv, patterns,
             kwargs['measure'], None)
+
+    def _eval_subs(self, old, new):
+        # If old is Xor, replace the parts of the arguments with new if all
+        # are there
+        if isinstance(old, Xor):
+            if all(a in self.args for a in old.args):
+                args = [new] + [a for a in self.args  if a not in old.args]
+                return self.func(*args)
 
 
 class Nand(BooleanFunction):

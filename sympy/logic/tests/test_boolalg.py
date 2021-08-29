@@ -931,6 +931,16 @@ def test_integer_to_term():
     assert integer_to_term(456, 16) == [0, 0, 0, 0, 0, 0, 0, 1,
                                         1, 1, 0, 0, 1, 0, 0, 0]
 
+def test_issue_21971():
+    a, b, c, d = symbols('a b c d')
+    f = a & b & c | a & c
+    assert f.subs(a & c, d) == b & d | d
+
+    f = (a | b | c) & (a | c)
+    assert f.subs(a | c, d) == (b | d) & d
+
+    f = (a ^ b ^ c) & (a ^ c)
+    assert f.subs(a ^ c, d) == (b ^ d) & d
 
 def test_truth_table():
     assert list(truth_table(And(x, y), [x, y], input=False)) == \
