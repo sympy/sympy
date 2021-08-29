@@ -404,7 +404,7 @@ class Beam:
         """
         loc = sympify(loc)
         self._applied_supports.append((loc, type))
-        if type == "pin" or type == "roller":
+        if type in ("pin", "roller"):
             reaction_load = Symbol('R_'+str(loc))
             self.apply_load(reaction_load, loc, -1)
             self.bc_deflection.append((loc, 0))
@@ -577,10 +577,10 @@ class Beam:
         elif type == "remove":
             # iterating for "remove_load" method
             for i in range(0, order + 1):
-                    self._load += (f.diff(x, i).subs(x, end - start) *
-                                    SingularityFunction(x, end, i)/factorial(i))
-                    self._original_load += (f.diff(x, i).subs(x, end - start) *
-                                    SingularityFunction(x, end, i)/factorial(i))
+                self._load += (f.diff(x, i).subs(x, end - start) *
+                                SingularityFunction(x, end, i)/factorial(i))
+                self._original_load += (f.diff(x, i).subs(x, end - start) *
+                                SingularityFunction(x, end, i)/factorial(i))
 
 
     @property
@@ -1043,7 +1043,7 @@ class Beam:
         >>> b.point_cflexure()
         [10/3]
         """
-        from sympy import solve, Piecewise
+        from sympy import solve
 
         # To restrict the range within length of the Beam
         moment_curve = Piecewise((float("nan"), self.variable<=0),
@@ -1258,7 +1258,7 @@ class Beam:
         Returns point of max deflection and its corresponding deflection value
         in a Beam object.
         """
-        from sympy import solve, Piecewise
+        from sympy import solve
 
         # To restrict the range within length of the Beam
         slope_curve = Piecewise((float("nan"), self.variable<=0),
@@ -2183,9 +2183,9 @@ class Beam:
             # point loads
             if load[2] == -1:
                 if isinstance(load[0], Symbol) or load[0].is_negative:
-                    annotations.append({'s':'', 'xy':(pos, 0), 'xytext':(pos, height - 4*height), 'arrowprops':dict(width= 1.5, headlength=5, headwidth=5, facecolor='black')})
+                    annotations.append({'text':'', 'xy':(pos, 0), 'xytext':(pos, height - 4*height), 'arrowprops':dict(width= 1.5, headlength=5, headwidth=5, facecolor='black')})
                 else:
-                    annotations.append({'s':'', 'xy':(pos, height),  'xytext':(pos, height*4), 'arrowprops':dict(width= 1.5, headlength=4, headwidth=4, facecolor='black')})
+                    annotations.append({'text':'', 'xy':(pos, height),  'xytext':(pos, height*4), 'arrowprops':dict(width= 1.5, headlength=4, headwidth=4, facecolor='black')})
             # moment loads
             elif load[2] == -2:
                 if load[0].is_negative:
@@ -2563,7 +2563,7 @@ class Beam3D(Beam):
             self._load_Singularity[0] += value*SingularityFunction(x, start, order)
 
     def apply_support(self, loc, type="fixed"):
-        if type == "pin" or type == "roller":
+        if type in ("pin", "roller"):
             reaction_load = Symbol('R_'+str(loc))
             self._reaction_loads[reaction_load] = reaction_load
             self.bc_deflection.append((loc, [0, 0, 0]))
@@ -3220,7 +3220,7 @@ class Beam3D(Beam):
 
         """
 
-        dir = dir.lower();
+        dir = dir.lower()
         if subs is None:
             subs = {}
 
@@ -3348,7 +3348,7 @@ class Beam3D(Beam):
 
         elif dir == 'z':
             dir_num = 2
-        from sympy import solve, Piecewise
+        from sympy import solve
 
         if not self.shear_force()[dir_num]:
             return (0,0)
@@ -3425,7 +3425,7 @@ class Beam3D(Beam):
         elif dir == 'z':
             dir_num = 2
 
-        from sympy import solve, Piecewise
+        from sympy import solve
 
         if not self.bending_moment()[dir_num]:
             return (0,0)
@@ -3503,7 +3503,7 @@ class Beam3D(Beam):
 
         elif dir == 'z':
             dir_num = 2
-        from sympy import solve, Piecewise
+        from sympy import solve
 
         if not self.deflection()[dir_num]:
             return (0,0)
