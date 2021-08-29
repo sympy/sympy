@@ -573,6 +573,8 @@ class BooleanFunction(Application, Boolean):
 
         """
         from sympy.core.relational import Relational, _canonical
+        from sympy.functions.elementary.miscellaneous import Min, Max
+
         if replacementvalue is None and dominatingvalue is not None:
             replacementvalue = dominatingvalue
         # Use replacement patterns for Relationals
@@ -627,9 +629,9 @@ class BooleanFunction(Application, Boolean):
                                 # will be replacementvalue
                                 return replacementvalue
                             # add replacement
-                            if not isinstance(np, ITE):
-                                # We only want to use ITE replacements if
-                                # they simplify to a relational
+                            if not isinstance(np, ITE) and not np.has(Min, Max):
+                                # We only want to use ITE and Min/Max
+                                # replacements if they simplify away
                                 costsaving = measure(oldexpr) - measure(np)
                                 if costsaving > 0:
                                     results.append((costsaving, (i, j, np)))
@@ -740,13 +742,12 @@ class And(LatticeOp, BooleanFunction):
         if not Rel:
             return rv
         eqs, other = sift(Rel, lambda i: isinstance(i, Equality), binary=True)
-        if not eqs:
-            return rv
 
-        measure, ratio = kwargs['measure'], kwargs['ratio']
-        reps = {}
-        sifted = {}
+        measure = kwargs['measure']
         if eqs:
+            ratio = kwargs['ratio']
+            reps = {}
+            sifted = {}
             # group by length of free symbols
             sifted = sift(ordered([
                 (i.free_symbols, i) for i in eqs]),
@@ -783,11 +784,11 @@ class And(LatticeOp, BooleanFunction):
                         f = e.free_symbols
                         resifted[len(f)].append((f, e))
                 sifted = resifted
-        for k in sifted:
-            eqs.extend([e for f, e in sifted[k]])
-        nonlineqs = [ei.subs(reps) for ei in nonlineqs]
-        other = [ei.subs(reps) for ei in other]
-        rv = rv.func(*([i.canonical for i in (eqs + nonlineqs + other)] + nonRel))
+            for k in sifted:
+                eqs.extend([e for f, e in sifted[k]])
+            nonlineqs = [ei.subs(reps) for ei in nonlineqs]
+            other = [ei.subs(reps) for ei in other]
+            rv = rv.func(*([i.canonical for i in (eqs + nonlineqs + other)] + nonRel))
         patterns = simplify_patterns_and()
         return self._apply_patternbased_simplification(rv, patterns,
                                                        measure, False)
@@ -2154,7 +2155,7 @@ def truth_table(expr, variables, input=True):
     if not isinstance(expr, BooleanFunction) and not is_literal(expr):
         return
 
-    table = product([0, 1], repeat=len(variables))
+    table = product((0, 1), repeat=len(variables))
     for term in table:
         term = list(term)
         value = expr.xreplace(dict(zip(variables, term)))
@@ -2251,11 +2252,9 @@ def _simplified_pairs(terms):
 
     # Count number of ones as _check_pair can only potentially match if there
     # is at most a difference of a single one
-    def ones_count(term):
-        return sum([1 for t in term if t == 1])
     termdict = defaultdict(list)
     for n, term in enumerate(terms):
-        ones = ones_count(term)
+        ones = sum([1 for t in term if t == 1])
         termdict[ones].append(n)
 
     variables = len(terms[0])
@@ -2279,20 +2278,8 @@ def _simplified_pairs(terms):
         simplified_terms = _simplified_pairs(simplified_terms)
 
     # Add remaining, non-simplified, terms
-    simplified_terms.extend(
-        [terms[i] for i in [_ for _ in todo if _ is not None]])
+    simplified_terms.extend([terms[i] for i in todo if i is not None])
     return simplified_terms
-
-
-def _compare_term(minterm, term):
-    """
-    Return True if a binary term is satisfied by the given term. Used
-    for recognizing prime implicants.
-    """
-    for m, t in zip(minterm, term):
-        if t != 3 and m != t:
-            return False
-    return True
 
 
 def _rem_redundancy(l1, terms):
@@ -2307,18 +2294,18 @@ def _rem_redundancy(l1, terms):
 
     nterms = len(terms)
     nl1 = len(l1)
+
     # Create dominating matrix
     dommatrix = [[0]*nl1 for n in range(nterms)]
+    colcount = [0]*nl1
+    rowcount = [0]*nterms
     for primei, prime in enumerate(l1):
         for termi, term in enumerate(terms):
-            if _compare_term(term, prime):
+            # Check prime implicant covering term
+            if all(t == 3 or t == mt for t, mt in zip(prime, term)):
                 dommatrix[termi][primei] = 1
-
-    # Non-dominated prime implicants, dominated to be removed
-    ndprimeimplicants = set(range(nl1))
-
-    # Non-dominated terms, dominated to be removed
-    ndterms = set(range(nterms))
+                colcount[primei] += 1
+                rowcount[termi] += 1
 
     # Keep track if anything changed
     anythingchanged = True
@@ -2326,41 +2313,75 @@ def _rem_redundancy(l1, terms):
     while anythingchanged:
         anythingchanged = False
 
-        # Make copy for iteration
-        oldndterms = ndterms.copy()
-        # Filter matrix to only get non-dominated items
-        filteredrows = [[dommatrix[rowi][i] for i in list(ndprimeimplicants)]
-                        for rowi in oldndterms]
-        for n, rowi in enumerate(oldndterms):
+        for rowi in range(nterms):
             # Still non-dominated?
-            if rowi in ndterms:
-                row = filteredrows[n]
-                for n2, row2i in enumerate(oldndterms):
+            if rowcount[rowi]:
+                row = dommatrix[rowi]
+                for row2i in range(nterms):
                     # Still non-dominated?
-                    if n != n2 and row2i in ndterms:
-                        if all(a >= b for (a, b) in zip(filteredrows[n2], row)):
+                    if rowi != row2i and rowcount[rowi] and (rowcount[rowi] <= rowcount[row2i]):
+                        row2 = dommatrix[row2i]
+                        if all(row2[n] >= row[n] for n in range(nl1)):
                             # row2 dominating row, remove row2
-                            ndterms.remove(row2i)
+                            rowcount[row2i] = 0
                             anythingchanged = True
+                            for primei, prime in enumerate(row2):
+                                if prime:
+                                    # Make corresponding entry 0
+                                    dommatrix[row2i][primei] = 0
+                                    colcount[primei] -= 1
 
-        # Make copy for iteration
-        oldndprimeimplicants = ndprimeimplicants.copy()
-        # Filter matrix to only get non-dominated items
-        filteredcols = [[dommatrix[i][coli] for i in list(ndterms)]
-                        for coli in oldndprimeimplicants]
-        for n, coli in enumerate(oldndprimeimplicants):
+        colcache = dict()
+
+        for coli in range(nl1):
             # Still non-dominated?
-            if coli in ndprimeimplicants:
-                col = filteredcols[n]
-                for n2, col2i in enumerate(oldndprimeimplicants):
+            if colcount[coli]:
+                if coli in colcache:
+                    col = colcache[coli]
+                else:
+                    col = [dommatrix[i][coli] for i in range(nterms)]
+                    colcache[coli] = col
+                for col2i in range(nl1):
                     # Still non-dominated?
-                    if coli != col2i and col2i in ndprimeimplicants:
-                        if all(a >= b for (a, b) in zip(col, filteredcols[n2])):
+                    if coli != col2i and colcount[col2i] and (colcount[coli] >= colcount[col2i]):
+                        if col2i in colcache:
+                            col2 = colcache[col2i]
+                        else:
+                            col2 = [dommatrix[i][col2i] for i in range(nterms)]
+                            colcache[col2i] = col2
+                        if all(col[n] >= col2[n] for n in range(nterms)):
                             # col dominating col2, remove col2
-                            ndprimeimplicants.remove(col2i)
+                            colcount[col2i] = 0
                             anythingchanged = True
+                            for termi, term in enumerate(col2):
+                                if term and dommatrix[termi][col2i]:
+                                    # Make corresponding entry 0
+                                    dommatrix[termi][col2i] = 0
+                                    rowcount[termi] -= 1
 
-    return [l1[i] for i in ndprimeimplicants]
+        if not anythingchanged:
+            # Heuristically select the prime implicant covering most terms
+            maxterms = 0
+            bestcolidx = -1
+            for coli in range(nl1):
+                s = colcount[coli]
+                if s > maxterms:
+                    bestcolidx = coli
+                    maxterms = s
+
+            # In case we found a prime implicant covering at least two terms
+            if bestcolidx != -1 and maxterms > 1:
+                for primei, prime in enumerate(l1):
+                    if primei != bestcolidx:
+                        for termi, term in enumerate(colcache[bestcolidx]):
+                            if term and dommatrix[termi][primei]:
+                                # Make corresponding entry 0
+                                dommatrix[termi][primei] = 0
+                                anythingchanged = True
+                                rowcount[termi] -= 1
+                                colcount[primei] -= 1
+
+    return [l1[i] for i in range(nl1) if colcount[i]]
 
 
 def _input_to_binlist(inputlist, variables):
@@ -2373,7 +2394,7 @@ def _input_to_binlist(inputlist, variables):
             nonspecvars = list(variables)
             for key in val.keys():
                 nonspecvars.remove(key)
-            for t in product([0, 1], repeat=len(nonspecvars)):
+            for t in product((0, 1), repeat=len(nonspecvars)):
                 d = dict(zip(nonspecvars, t))
                 d.update(val)
                 binlist.append([d[v] for v in variables])
@@ -2443,9 +2464,11 @@ def SOPform(variables, minterms, dontcares=None):
     .. [1] https://en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
-    variables = [sympify(v) for v in variables]
     if minterms == []:
         return false
+
+    variables = tuple(map(sympify, variables))
+
 
     minterms = _input_to_binlist(minterms, variables)
     dontcares = _input_to_binlist((dontcares or []), variables)
@@ -2513,10 +2536,10 @@ def POSform(variables, minterms, dontcares=None):
     .. [1] https://en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
-    variables = [sympify(v) for v in variables]
     if minterms == []:
         return false
 
+    variables = tuple(map(sympify, variables))
     minterms = _input_to_binlist(minterms, variables)
     dontcares = _input_to_binlist((dontcares or []), variables)
     for d in dontcares:
@@ -2524,7 +2547,7 @@ def POSform(variables, minterms, dontcares=None):
             raise ValueError('%s in minterms is also in dontcares' % d)
 
     maxterms = []
-    for t in product([0, 1], repeat=len(variables)):
+    for t in product((0, 1), repeat=len(variables)):
         t = list(t)
         if (t not in minterms) and (t not in dontcares):
             maxterms.append(t)
@@ -2583,12 +2606,12 @@ def ANFform(variables, truthvalues):
         raise ValueError("The number of truth values must be equal to 2^%d, "
                          "got %d" % (n_vars, n_values))
 
-    variables = [sympify(v) for v in variables]
+    variables = tuple(map(sympify, variables))
 
     coeffs = anf_coeffs(truthvalues)
     terms = []
 
-    for i, t in enumerate(product([0, 1], repeat=n_vars)):
+    for i, t in enumerate(product((0, 1), repeat=n_vars)):
         if coeffs[i] == 1:
             terms.append(t)
 
@@ -2682,7 +2705,7 @@ def bool_minterm(k, variables):
     """
     if isinstance(k, int):
         k = integer_to_term(k, len(variables))
-    variables = list(map(sympify, variables))
+    variables = tuple(map(sympify, variables))
     return _convert_to_varsSOP(k, variables)
 
 
@@ -2718,7 +2741,7 @@ def bool_maxterm(k, variables):
     """
     if isinstance(k, int):
         k = integer_to_term(k, len(variables))
-    variables = list(map(sympify, variables))
+    variables = tuple(map(sympify, variables))
     return _convert_to_varsPOS(k, variables)
 
 
@@ -2759,7 +2782,7 @@ def bool_monomial(k, variables):
     """
     if isinstance(k, int):
         k = integer_to_term(k, len(variables))
-    variables = list(map(sympify, variables))
+    variables = tuple(map(sympify, variables))
     return _convert_to_varsANF(k, variables)
 
 
@@ -2772,7 +2795,7 @@ def _find_predicates(expr):
     """
     if not isinstance(expr, BooleanFunction):
         return {expr}
-    return set().union(*(_find_predicates(i) for i in expr.args))
+    return set().union(*(map(_find_predicates, expr.args)))
 
 
 def simplify_logic(expr, form=None, deep=True, force=False):
@@ -2822,20 +2845,22 @@ def simplify_logic(expr, form=None, deep=True, force=False):
     if form not in (None, 'cnf', 'dnf'):
         raise ValueError("form can be cnf or dnf only")
     expr = sympify(expr)
-    # check for quick exit: right form and all args are
+    # check for quick exit if form is given: right form and all args are
     # literal and do not involve Not
-    isc = is_cnf(expr)
-    isd = is_dnf(expr)
-    form_ok = (
-        isc and form == 'cnf' or
-        isd and form == 'dnf')
-    if form_ok and all(is_literal(a)
-            for a in expr.args):
-        return expr
+    if form:
+        form_ok = False
+        if form == 'cnf':
+            form_ok = is_cnf(expr)
+        elif form == 'dnf':
+            form_ok = is_dnf(expr)
+
+        if form_ok and all(is_literal(a)
+                for a in expr.args):
+            return expr
     if deep:
         variables = _find_predicates(expr)
         from sympy.simplify.simplify import simplify
-        s = [simplify(v) for v in variables]
+        s = tuple(map(simplify, variables))
         expr = expr.xreplace(dict(zip(variables, s)))
     if not isinstance(expr, BooleanFunction):
         return expr
@@ -2845,12 +2870,12 @@ def simplify_logic(expr, form=None, deep=True, force=False):
     if not force and len(variables) > 8:
         return expr
     # group into constants and variable values
-    c, v = sift(variables, lambda x: x in (True, False), binary=True)
+    c, v = sift(ordered(variables), lambda x: x in (True, False), binary=True)
     variables = c + v
     truthtable = []
     # standardize constants to be 1 or 0 in keeping with truthtable
     c = [1 if i == True else 0 for i in c]
-    for t in product([0, 1], repeat=len(v)):
+    for t in product((0, 1), repeat=len(v)):
         if expr.xreplace(dict(zip(v, t))) == True:
             truthtable.append(c + list(t))
     big = len(truthtable) >= (2 ** (len(variables) - 1))
