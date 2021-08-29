@@ -2282,14 +2282,6 @@ def _simplified_pairs(terms):
     return simplified_terms
 
 
-def _compare_term(minterm, term):
-    """
-    Return True if a binary term is satisfied by the given term. Used
-    for recognizing prime implicants.
-    """
-    return all(t == 3 or minterm[n] == t for n, t in enumerate(term))
-
-
 def _rem_redundancy(l1, terms):
     """
     After the truth table has been sufficiently simplified, use the prime
@@ -2309,7 +2301,8 @@ def _rem_redundancy(l1, terms):
     rowcount = [0]*nterms
     for primei, prime in enumerate(l1):
         for termi, term in enumerate(terms):
-            if _compare_term(term, prime):
+            # Check prime implicant covering term
+            if all(t == 3 or t == mt for t, mt in zip(prime, term)):
                 dommatrix[termi][primei] = 1
                 colcount[primei] += 1
                 rowcount[termi] += 1
