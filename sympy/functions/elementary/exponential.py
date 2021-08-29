@@ -1204,4 +1204,4 @@ class LambertW(Function):
         if len(self.args) == 1:
             return x.is_zero
         else:
-            return fuzzy_and(x.is_zero, self.args[1].is_zero)
+            return fuzzy_and([x.is_zero, self.args[1].is_zero])

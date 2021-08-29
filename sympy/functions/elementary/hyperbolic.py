@@ -269,9 +269,7 @@ class sinh(HyperbolicFunction):
         return arg.is_finite
 
     def _eval_is_zero(self):
-        arg = self.args[0]
-        if arg.is_zero:
-            return True
+        return (self.args[0]/(S.Pi*I)).is_integer
 
 
 class cosh(HyperbolicFunction):
@@ -506,6 +504,9 @@ class cosh(HyperbolicFunction):
     def _eval_is_finite(self):
         arg = self.args[0]
         return arg.is_finite
+
+    def _eval_is_zero(self):
+        return (self.args[0]/(S.Pi*I) - S.Half).is_integer
 
 
 class tanh(HyperbolicFunction):
@@ -1211,9 +1212,7 @@ class asinh(InverseHyperbolicFunction):
         return sinh
 
     def _eval_is_zero(self):
-        arg = self.args[0]
-        if arg.is_zero:
-            return True
+        return self.args[0].is_zero
 
 
 class acosh(InverseHyperbolicFunction):
@@ -1359,6 +1358,9 @@ class acosh(InverseHyperbolicFunction):
         """
         return cosh
 
+    def _eval_is_zero(self):
+        return (self.args[0] - 1).is_zero
+
 
 class atanh(InverseHyperbolicFunction):
     """
@@ -1458,10 +1460,7 @@ class atanh(InverseHyperbolicFunction):
         return (log(1 + x) - log(1 - x)) / 2
 
     def _eval_is_zero(self):
-        arg = self.args[0]
-        if arg.is_zero:
-            return True
-
+        return self.args[0].is_zero
 
     def inverse(self, argindex=1):
         """
