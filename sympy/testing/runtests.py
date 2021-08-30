@@ -301,7 +301,6 @@ def run_all_tests(test_args=(), test_kwargs=None,
     ... test_kwargs={"colors:False"}) # doctest: +SKIP
 
     """
-    cwd = get_sympy_dir()
     tests_successful = True
 
     test_kwargs = test_kwargs or {}
