@@ -1,4 +1,4 @@
-from sympy.core import S, sympify, Expr, Rational, Dummy
+from sympy.core import S, sympify, Expr, Dummy
 from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key, is_sequence
