@@ -1414,6 +1414,8 @@ def test_coeff():
     assert (n*m + o*m*n).coeff(m*n) == o
     assert (n*m + o*m*n).coeff(m*n, right=1) == 1
     assert (n*m + n*m*n).coeff(n*m, right=1) == 1 + n  # = n*m*(n + 1)
+    assert (x*n + y*n + z*m).coeff(n) == x+y
+    assert (n*m +n*o + o*l).coeff(n,right=1) == m+o
 
     assert (x*y).coeff(z, 0) == x*y
 

@@ -1620,22 +1620,31 @@ class Expr(Basic, EvalfMixin):
                         return Add(*[Mul(*(list(r) + n[:-len(end) + ii])) for r, n in co])
                     else:
                         return Mul(*end[ii + len(nx):])
-            # look for single match
-            hit = None
+            # look for a single hit but allow a sum of terms if each have the
+            # same remaining expression after removing coefficient
+            hit = []
             for i, (r, n) in enumerate(co):
                 ii = find(n, nx, right)
                 if ii is not None:
                     if not hit:
-                        hit = ii, r, n
+                        if not right:
+                            np = n[ii+len(nx):]
+                        else:
+                            np = n[:ii]
                     else:
-                        break
-            else:
-                if hit:
-                    ii, r, n = hit
+                        if not right:
+                            if n[ii+len(nx):] != np:
+                              break
+                        else:
+                            if n[:ii] != np:
+                                break
                     if not right:
-                        return Mul(*(list(r) + n[:ii]))
+                        hit.append((r, n[:ii]))
                     else:
-                        return Mul(*n[ii + len(nx):])
+                        hit.append(({},n[ii+len(nx):]))
+            else:
+                if hit is not None:
+                    return Add(*[Mul(*(list(r) + n)) for r, n in hit])
 
             return S.Zero
 
