@@ -1,4 +1,4 @@
-from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
+from sympy import (Symbol, exp, Integer, Float, sin, cos, Poly, Lambda,
     Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
     Pow, Or, true, false, Abs, pi, Range, Xor)
 from sympy.abc import x, y
