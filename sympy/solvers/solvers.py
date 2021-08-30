@@ -1951,7 +1951,16 @@ def _solve_system(exprs, symbols, **flags):
                             rnew[k] = v.subs(s, sol)
                         # and add this new solution
                         rnew[s] = sol
-                        newresult.append(rnew)
+                        # check that it is independent of previous solutions
+                        iset = set(rnew.items())
+                        for i in newresult:
+                            if len(i) < len(iset) and not set(i.items()) - iset:
+                                # this is a superset of a known solution that
+                                # is smaller
+                                break
+                        else:
+                            # keep it
+                            newresult.append(rnew)
                     hit = True
                     got_s.add(s)
                 if not hit:
