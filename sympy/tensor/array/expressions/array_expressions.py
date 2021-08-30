@@ -1392,6 +1392,7 @@ class _EditArrayContraction:
 
     def to_array_contraction(self):
         self.merge_scalars()
+        self.refresh_indices()
         args = [arg.element for arg in self.args_with_ind]
         contraction_indices = self.get_contraction_indices()
         expr = ArrayContraction(ArrayTensorProduct(*args), *contraction_indices)
