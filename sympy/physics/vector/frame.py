@@ -403,6 +403,7 @@ class ReferenceFrame:
         10*N.x
 
         """
+
         from sympy.physics.mechanics import Body
         if isinstance(otherframe, Body):
             otherframe = otherframe.frame
@@ -440,6 +441,7 @@ class ReferenceFrame:
         10*N.x
 
         """
+
         from sympy.physics.mechanics import Body
         if isinstance(otherframe, Body):
             otherframe = otherframe.frame
@@ -520,6 +522,7 @@ class ReferenceFrame:
         vectors in terms of the A unit vectors.
 
         """
+
         from sympy.physics.mechanics import Body
         if isinstance(otherframe, Body):
             otherframe = otherframe.frame
@@ -749,6 +752,7 @@ class ReferenceFrame:
         [0, -sin(q1), cos(q1)]])
 
         """
+
         from sympy.physics.mechanics import Body
         if isinstance(parent, Body):
             parent = parent.frame
@@ -861,6 +865,7 @@ class ReferenceFrame:
         >>> B.orient_body_fixed(N, (q1, q2, q3), 123)
 
         """
+
         from sympy.physics.mechanics import Body
         if isinstance(parent, Body):
             parent = parent.frame
@@ -985,6 +990,7 @@ class ReferenceFrame:
         [sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1),  sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3)]])
 
         """
+
         from sympy.physics.mechanics import Body
         if isinstance(parent, Body):
             parent = parent.frame
@@ -1180,6 +1186,7 @@ class ReferenceFrame:
             If the orientation creates a kinematic loop.
 
         """
+
         from sympy.physics.mechanics import Body
         if isinstance(parent, Body):
             parent = parent.frame
