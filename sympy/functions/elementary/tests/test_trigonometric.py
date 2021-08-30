@@ -149,7 +149,7 @@ def test_sin():
             assert e < 1e-12
 
     assert sin(0, evaluate=False).is_zero is True
-    assert sin(k*pi, evaluate=False).is_zero is None
+    assert sin(k*pi, evaluate=False).is_zero is True
 
     assert sin(Add(1, -1, evaluate=False), evaluate=False).is_zero is True
 
