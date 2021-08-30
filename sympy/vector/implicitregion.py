@@ -36,7 +36,7 @@ class ImplicitRegion(Basic):
     >>> r.variables
     (x, y, z)
     >>> r.singular_points()
-    FiniteSet((0, 0, 0))
+    {(0, 0, 0)}
     >>> r.regular_point()
     (-10, -10, 200)
 
@@ -288,7 +288,7 @@ class ImplicitRegion(Basic):
         >>> from sympy.vector import ImplicitRegion
         >>> I = ImplicitRegion((x, y), (y-1)**2 -x**3 + 2*x**2 -x)
         >>> I.singular_points()
-        FiniteSet((1, 1))
+        {(1, 1)}
 
         """
         eq_list = [self.equation]
@@ -311,7 +311,7 @@ class ImplicitRegion(Basic):
         >>> from sympy.vector import ImplicitRegion
         >>> I = ImplicitRegion((x, y, z), x**2 + y**3 - z**4)
         >>> I.singular_points()
-        FiniteSet((0, 0, 0))
+        {(0, 0, 0)}
         >>> I.multiplicity((0, 0, 0))
         2
 

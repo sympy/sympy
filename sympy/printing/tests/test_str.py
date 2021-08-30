@@ -5,7 +5,8 @@ from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
     AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice,
-    Q)
+    Q,)
+from sympy.combinatorics.partitions import Partition
 from sympy.core import Expr, Mul
 from sympy.core.parameters import _exp_is_pow
 from sympy.external import import_module
@@ -892,12 +893,18 @@ def test_RandomDomain():
 
 def test_FiniteSet():
     assert str(FiniteSet(*range(1, 51))) == (
-        'FiniteSet(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,'
+        '{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,'
         ' 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,'
-        ' 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50)'
+        ' 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50}'
     )
-    assert str(FiniteSet(*range(1, 6))) == 'FiniteSet(1, 2, 3, 4, 5)'
+    assert str(FiniteSet(*range(1, 6))) == '{1, 2, 3, 4, 5}'
+    assert str(FiniteSet(*[x*y, x**2])) == '{x**2, x*y}'
+    assert str(FiniteSet(FiniteSet(FiniteSet(x, y), 5), FiniteSet(x,y), 5)
+               ) == 'FiniteSet(5, FiniteSet(5, {x, y}), {x, y})'
 
+
+def test_Partition():
+    assert str(Partition(FiniteSet(x, y), {z})) == 'Partition({z}, {x, y})'
 
 def test_UniversalSet():
     assert str(S.UniversalSet) == 'UniversalSet'
@@ -1064,6 +1071,11 @@ def test_str_special_matrices():
 
 def test_issue_14567():
     assert factorial(Sum(-1, (x, 0, 0))) + y  # doesn't raise an error
+
+
+def test_issue_21823():
+    assert str(Partition([1, 2])) == 'Partition({1, 2})'
+    assert str(Partition({1, 2})) == 'Partition({1, 2})'
 
 
 def test_issue_21119_21460():

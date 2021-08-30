@@ -404,7 +404,7 @@ class Beam:
         """
         loc = sympify(loc)
         self._applied_supports.append((loc, type))
-        if type == "pin" or type == "roller":
+        if type in ("pin", "roller"):
             reaction_load = Symbol('R_'+str(loc))
             self.apply_load(reaction_load, loc, -1)
             self.bc_deflection.append((loc, 0))
@@ -577,10 +577,10 @@ class Beam:
         elif type == "remove":
             # iterating for "remove_load" method
             for i in range(0, order + 1):
-                    self._load += (f.diff(x, i).subs(x, end - start) *
-                                    SingularityFunction(x, end, i)/factorial(i))
-                    self._original_load += (f.diff(x, i).subs(x, end - start) *
-                                    SingularityFunction(x, end, i)/factorial(i))
+                self._load += (f.diff(x, i).subs(x, end - start) *
+                                SingularityFunction(x, end, i)/factorial(i))
+                self._original_load += (f.diff(x, i).subs(x, end - start) *
+                                SingularityFunction(x, end, i)/factorial(i))
 
 
     @property
@@ -1043,7 +1043,7 @@ class Beam:
         >>> b.point_cflexure()
         [10/3]
         """
-        from sympy import solve, Piecewise
+        from sympy import solve
 
         # To restrict the range within length of the Beam
         moment_curve = Piecewise((float("nan"), self.variable<=0),
@@ -1258,7 +1258,7 @@ class Beam:
         Returns point of max deflection and its corresponding deflection value
         in a Beam object.
         """
-        from sympy import solve, Piecewise
+        from sympy import solve
 
         # To restrict the range within length of the Beam
         slope_curve = Piecewise((float("nan"), self.variable<=0),
@@ -2183,9 +2183,9 @@ class Beam:
             # point loads
             if load[2] == -1:
                 if isinstance(load[0], Symbol) or load[0].is_negative:
-                    annotations.append({'s':'', 'xy':(pos, 0), 'xytext':(pos, height - 4*height), 'arrowprops':dict(width= 1.5, headlength=5, headwidth=5, facecolor='black')})
+                    annotations.append({'text':'', 'xy':(pos, 0), 'xytext':(pos, height - 4*height), 'arrowprops':dict(width= 1.5, headlength=5, headwidth=5, facecolor='black')})
                 else:
-                    annotations.append({'s':'', 'xy':(pos, height),  'xytext':(pos, height*4), 'arrowprops':dict(width= 1.5, headlength=4, headwidth=4, facecolor='black')})
+                    annotations.append({'text':'', 'xy':(pos, height),  'xytext':(pos, height*4), 'arrowprops':dict(width= 1.5, headlength=4, headwidth=4, facecolor='black')})
             # moment loads
             elif load[2] == -2:
                 if load[0].is_negative:
@@ -2563,7 +2563,7 @@ class Beam3D(Beam):
             self._load_Singularity[0] += value*SingularityFunction(x, start, order)
 
     def apply_support(self, loc, type="fixed"):
-        if type == "pin" or type == "roller":
+        if type in ("pin", "roller"):
             reaction_load = Symbol('R_'+str(loc))
             self._reaction_loads[reaction_load] = reaction_load
             self.bc_deflection.append((loc, [0, 0, 0]))
@@ -3220,7 +3220,7 @@ class Beam3D(Beam):
 
         """
 
-        dir = dir.lower();
+        dir = dir.lower()
         if subs is None:
             subs = {}
 
@@ -3332,3 +3332,236 @@ class Beam3D(Beam):
             Py = self._plot_shear_stress('y', subs)
             Pz = self._plot_shear_stress('z', subs)
             return PlotGrid(3, 1, Px, Py, Pz)
+
+    def _max_shear_force(self, dir):
+        """
+        Helper function for max_shear_force().
+        """
+
+        dir = dir.lower()
+
+        if dir == 'x':
+            dir_num = 0
+
+        elif dir == 'y':
+            dir_num = 1
+
+        elif dir == 'z':
+            dir_num = 2
+        from sympy import solve
+
+        if not self.shear_force()[dir_num]:
+            return (0,0)
+        # To restrict the range within length of the Beam
+        load_curve = Piecewise((float("nan"), self.variable<=0),
+                (self._load_vector[dir_num], self.variable<self.length),
+                (float("nan"), True))
+
+        points = solve(load_curve.rewrite(Piecewise), self.variable,
+                        domain=S.Reals)
+        points.append(0)
+        points.append(self.length)
+        shear_curve = self.shear_force()[dir_num]
+        shear_values = [shear_curve.subs(self.variable, x) for x in points]
+        shear_values = list(map(abs, shear_values))
+
+        max_shear = max(shear_values)
+        return (points[shear_values.index(max_shear)], max_shear)
+
+    def max_shear_force(self):
+        """
+        Returns point of max shear force and its corresponding shear value
+        along all directions in a Beam object as a list.
+        solve_for_reaction_loads() must be called before using this function.
+
+        Examples
+        ========
+        There is a beam of length 20 meters. It it supported by rollers
+        at of its end. A linear load having slope equal to 12 is applied
+        along y-axis. A constant distributed load of magnitude 15 N is
+        applied from start till its end along z-axis.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+            >>> from sympy import symbols
+            >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+            >>> b = Beam3D(20, 40, 21, 100, 25, x)
+            >>> b.apply_load(15, start=0, order=0, dir="z")
+            >>> b.apply_load(12*x, start=0, order=0, dir="y")
+            >>> b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+            >>> R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+            >>> b.apply_load(R1, start=0, order=-1, dir="z")
+            >>> b.apply_load(R2, start=20, order=-1, dir="z")
+            >>> b.apply_load(R3, start=0, order=-1, dir="y")
+            >>> b.apply_load(R4, start=20, order=-1, dir="y")
+            >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
+            >>> b.max_shear_force()
+            [(0, 0), (20, 2400), (20, 300)]
+        """
+
+        max_shear = []
+        max_shear.append(self._max_shear_force('x'))
+        max_shear.append(self._max_shear_force('y'))
+        max_shear.append(self._max_shear_force('z'))
+        return max_shear
+
+    def _max_bending_moment(self, dir):
+        """
+        Helper function for max_bending_moment().
+        """
+
+        dir = dir.lower()
+
+        if dir == 'x':
+            dir_num = 0
+
+        elif dir == 'y':
+            dir_num = 1
+
+        elif dir == 'z':
+            dir_num = 2
+
+        from sympy import solve
+
+        if not self.bending_moment()[dir_num]:
+            return (0,0)
+        # To restrict the range within length of the Beam
+        shear_curve = Piecewise((float("nan"), self.variable<=0),
+                (self.shear_force()[dir_num], self.variable<self.length),
+                (float("nan"), True))
+
+        points = solve(shear_curve.rewrite(Piecewise), self.variable,
+                        domain=S.Reals)
+        points.append(0)
+        points.append(self.length)
+        bending_moment_curve = self.bending_moment()[dir_num]
+        bending_moments = [bending_moment_curve.subs(self.variable, x) for x in points]
+        bending_moments = list(map(abs, bending_moments))
+
+        max_bending_moment = max(bending_moments)
+        return (points[bending_moments.index(max_bending_moment)], max_bending_moment)
+
+    def max_bending_moment(self):
+        """
+        Returns point of max bending moment and its corresponding bending moment value
+        along all directions in a Beam object as a list.
+        solve_for_reaction_loads() must be called before using this function.
+
+        Examples
+        ========
+        There is a beam of length 20 meters. It it supported by rollers
+        at of its end. A linear load having slope equal to 12 is applied
+        along y-axis. A constant distributed load of magnitude 15 N is
+        applied from start till its end along z-axis.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+            >>> from sympy import symbols
+            >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+            >>> b = Beam3D(20, 40, 21, 100, 25, x)
+            >>> b.apply_load(15, start=0, order=0, dir="z")
+            >>> b.apply_load(12*x, start=0, order=0, dir="y")
+            >>> b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+            >>> R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+            >>> b.apply_load(R1, start=0, order=-1, dir="z")
+            >>> b.apply_load(R2, start=20, order=-1, dir="z")
+            >>> b.apply_load(R3, start=0, order=-1, dir="y")
+            >>> b.apply_load(R4, start=20, order=-1, dir="y")
+            >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
+            >>> b.max_bending_moment()
+            [(0, 0), (20, 3000), (20, 16000)]
+        """
+
+        max_bmoment = []
+        max_bmoment.append(self._max_bending_moment('x'))
+        max_bmoment.append(self._max_bending_moment('y'))
+        max_bmoment.append(self._max_bending_moment('z'))
+        return max_bmoment
+
+    max_bmoment = max_bending_moment
+
+    def _max_deflection(self, dir):
+        """
+        Helper function for max_Deflection()
+        """
+
+        dir = dir.lower()
+
+        if dir == 'x':
+            dir_num = 0
+
+        elif dir == 'y':
+            dir_num = 1
+
+        elif dir == 'z':
+            dir_num = 2
+        from sympy import solve
+
+        if not self.deflection()[dir_num]:
+            return (0,0)
+        # To restrict the range within length of the Beam
+        slope_curve = Piecewise((float("nan"), self.variable<=0),
+                (self.slope()[dir_num], self.variable<self.length),
+                (float("nan"), True))
+
+        points = solve(slope_curve.rewrite(Piecewise), self.variable,
+                        domain=S.Reals)
+        points.append(0)
+        points.append(self._length)
+        deflection_curve = self.deflection()[dir_num]
+        deflections = [deflection_curve.subs(self.variable, x) for x in points]
+        deflections = list(map(abs, deflections))
+
+        max_def = max(deflections)
+        return (points[deflections.index(max_def)], max_def)
+
+    def max_deflection(self):
+        """
+        Returns point of max deflection and its corresponding deflection value
+        along all directions in a Beam object as a list.
+        solve_for_reaction_loads() and solve_slope_deflection() must be called
+        before using this function.
+
+        Examples
+        ========
+        There is a beam of length 20 meters. It it supported by rollers
+        at of its end. A linear load having slope equal to 12 is applied
+        along y-axis. A constant distributed load of magnitude 15 N is
+        applied from start till its end along z-axis.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+            >>> from sympy import symbols
+            >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+            >>> b = Beam3D(20, 40, 21, 100, 25, x)
+            >>> b.apply_load(15, start=0, order=0, dir="z")
+            >>> b.apply_load(12*x, start=0, order=0, dir="y")
+            >>> b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+            >>> R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+            >>> b.apply_load(R1, start=0, order=-1, dir="z")
+            >>> b.apply_load(R2, start=20, order=-1, dir="z")
+            >>> b.apply_load(R3, start=0, order=-1, dir="y")
+            >>> b.apply_load(R4, start=20, order=-1, dir="y")
+            >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
+            >>> b.solve_slope_deflection()
+            >>> b.max_deflection()
+            [(0, 0), (10, 495/14), (-10 + 10*sqrt(10793)/43, (10 - 10*sqrt(10793)/43)**3/160 - 20/7 + (10 - 10*sqrt(10793)/43)**4/6400 + 20*sqrt(10793)/301 + 27*(10 - 10*sqrt(10793)/43)**2/560)]
+        """
+
+        max_def = []
+        max_def.append(self._max_deflection('x'))
+        max_def.append(self._max_deflection('y'))
+        max_def.append(self._max_deflection('z'))
+        return max_def
