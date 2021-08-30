@@ -501,7 +501,8 @@ class sin(TrigonometricFunction):
             return True
 
     def _eval_is_zero(self):
-        return (self.args[0]/S.Pi).is_integer
+        return fuzzy_or([self.args[0].is_zero,
+                         (self.args[0]/S.Pi).is_integer])
 
     def _eval_is_complex(self):
         if self.args[0].is_extended_real \
@@ -1290,7 +1291,8 @@ class tan(TrigonometricFunction):
             return True
 
     def _eval_is_zero(self):
-        return (self.args[0]/S.Pi).is_integer
+        return fuzzy_or([self.args[0].is_zero,
+                         (self.args[0]/S.Pi).is_integer])
 
     def _eval_is_complex(self):
         arg = self.args[0]
