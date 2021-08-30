@@ -1402,7 +1402,6 @@ def test_issue_21882():
         {a: 0, f: 0, b: 0, d: 0, c: 0, g: 0},
         {a: 0, f: -d, b: 0, k: S(5)/6, c: 0, g: 0},
         {a: -2*c, f: 0, b: c, d: 0, k: S(13)/18, g: 0},
-        {a: 0, f: 0, b: 0, k: S(3)/2, c: 0, d: 0, g: 0}
     ]
 
     assert solve(equations, unknowns, dict=True) == answer
