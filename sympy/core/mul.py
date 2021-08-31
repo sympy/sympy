@@ -1994,12 +1994,6 @@ class Mul(Expr, AssocOp):
     def _eval_adjoint(self):
         return self.func(*[t.adjoint() for t in self.args[::-1]])
 
-    def _sage_(self):
-        s = 1
-        for x in self.args:
-            s *= x._sage_()
-        return s
-
     def as_content_primitive(self, radical=False, clear=True):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.

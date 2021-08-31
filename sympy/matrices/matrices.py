@@ -2227,6 +2227,8 @@ class MatrixBase(MatrixDeprecated,
     def strongly_connected_components_decomposition(self, lower=True):
         return _strongly_connected_components_decomposition(self, lower=lower)
 
+    _sage_ = Basic._sage_
+
     rank_decomposition.__doc__     = _rank_decomposition.__doc__
     cholesky.__doc__               = _cholesky.__doc__
     LDLdecomposition.__doc__       = _LDLdecomposition.__doc__
