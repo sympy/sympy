@@ -3445,6 +3445,9 @@ def _separate_poly_nonpoly(system, symbols):
     denominators = set()
     poly = None
     for eq in system:
+        # Convert equality to expression
+        if isinstance(eq, Equality):
+            eq = eq.lhs - eq.rhs
         # Store denom expression if it contains symbol
         denominators.update(_simple_dens(eq, symbols))
         # try to remove sqrt and rational power
