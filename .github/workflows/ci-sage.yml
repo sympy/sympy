@@ -32,11 +32,9 @@ name: Run Sage CI
 ## systems/configurations.
 
 on:
-  pull_request:
-    types: [opened, synchronize]
   push:
-    tags:
-      - '*'
+    branches:
+      master
   workflow_dispatch:
     # Allow to run manually
     branches:
