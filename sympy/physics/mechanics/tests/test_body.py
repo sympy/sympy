@@ -273,3 +273,45 @@ def test_apply_loads_on_multi_degree_freedom_holonomic_system():
     assert P.loads == [(P.masscenter, P.mass*g*W.y), (P.frame, (T + kT*q2)*W.z)]
     assert b.loads == [(b.masscenter, b.mass*g*W.y), (b.frame, -kT*q2*W.z)]
     assert W.loads == [(W.masscenter, (c*q1.diff() + k*q1)*W.x)]
+
+def test_orient_axis():
+    A = Body('A')
+    B = Body('B')
+    N = ReferenceFrame('N')
+    A.orient_axis(N, N.x + N.y, 10)
+    B.orient_axis(A, A.x + A.y, 10)
+    assert B.dcm(A) == A.dcm(N)
+
+def test_orient_explicit():
+    A = Body('A')
+    B = Body('B')
+    N = ReferenceFrame('N')
+    dcm = Matrix([[cos(10), 0, -sin(10)], [sin(10)**2, cos(10), sin(10)*cos(10)], [sin(10)*cos(10),
+    -sin(10), cos(10)**2]])
+    A.orient_explicit(N, dcm)
+    B.orient_explicit(A, dcm)
+    assert B.dcm(A) == A.dcm(N)
+
+def test_orient_body_fixed():
+    A = Body('A')
+    B = Body('B')
+    N = ReferenceFrame('N')
+    A.orient_body_fixed(N, (1,1,0), 'XYX')
+    B.orient_body_fixed(A, (1,1,0), 'XYX')
+    assert A.dcm(N) == B.dcm(A)
+
+def test_orient_space_fixed():
+    A = Body('A')
+    B = Body('B')
+    N = ReferenceFrame('N')
+    A.orient_space_fixed(N, (1,2,3), 'ZXY')
+    B.orient_space_fixed(A, (1,2,3), 'ZXY')
+    assert A.dcm(N) == B.dcm(A)
+
+def test_orient_quaternion():
+    A = Body('A')
+    B = Body('B')
+    N = ReferenceFrame('N')
+    A.orient_quaternion(N, (1,2,3,4))
+    B.orient_quaternion(A, (1,2,3,4))
+    assert A.dcm(N) == B.dcm(A)
