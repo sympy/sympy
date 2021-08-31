@@ -1053,7 +1053,7 @@ class MatrixBase(MatrixDeprecated,
                         elif raw(i):
                             if i:
                                 ncol.add(len(i))
-                                flat_list.extend(i)
+                                flat_list.extend([cls._sympify(ij) for ij in i])
                         else:
                             ncol.add(1)
                             flat_list.append(i)
