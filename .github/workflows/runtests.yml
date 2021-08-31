@@ -116,7 +116,7 @@ jobs:
 
   # -------------------- Tensorflow tests -------------------------- #
 
-  optional-dependencies:
+  tensorflow:
     needs: code-quality
 
     runs-on: ubuntu-20.04
