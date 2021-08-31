@@ -998,17 +998,28 @@ class MatrixBase(MatrixDeprecated,
                     isinstance(i, MatrixSymbol))
                 raw = lambda i: is_sequence(i) and not ismat(i)
                 evaluate = kwargs.get('evaluate', True)
+
+
                 if evaluate:
-                    def do(x):
-                        # make Block and Symbol explicit
-                        if is_sequence(x):
-                            return list([do(i) for i in x])
-                        if isinstance(x, BlockMatrix) or \
-                                isinstance(x, MatrixSymbol) and \
-                                all(_.is_Integer for _ in x.shape):
+
+                    def make_explicit(x):
+                        """make Block and Symbol explicit"""
+                        if isinstance(x, BlockMatrix):
                             return x.as_explicit()
-                        return cls._sympify(x)
-                    dat = do(dat)
+                        elif isinstance(x, MatrixSymbol) and all(_.is_Integer for _ in x.shape):
+                            return x.as_explicit()
+                        else:
+                            return x
+
+                    def make_explicit_row(row):
+                        # Could be list or could be list of lists
+                        if isinstance(row, (list, tuple)):
+                            return [make_explicit(x) for x in row]
+                        else:
+                            return make_explicit(row)
+
+                    if isinstance(dat, (list, tuple)):
+                        dat = [make_explicit_row(row) for row in dat]
 
                 if dat == [] or dat == [[]]:
                     rows = cols = 0
