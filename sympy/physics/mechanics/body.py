@@ -488,11 +488,9 @@ class Body(RigidBody, Particle):  # type: ignore
 
         """
 
-        if isinstance(body,  ReferenceFrame):
-            frame=body
-        elif isinstance(body, Body):
-            frame = body.frame
-        return self.masscenter.vel(frame)
+        if isinstance(body, Body):
+            body = body.frame
+        return self.masscenter.vel(body)
 
     def ang_vel_in(self, body):
         """
@@ -520,11 +518,9 @@ class Body(RigidBody, Particle):  # type: ignore
 
         """
 
-        if isinstance(body,  ReferenceFrame):
-            frame=body
-        elif isinstance(body, Body):
-            frame = body.frame
-        return self.frame.ang_vel_in(frame)
+        if isinstance(body, Body):
+            body = body.frame
+        return self.frame.ang_vel_in(body)
 
     def dcm(self, body):
         """
@@ -557,11 +553,9 @@ class Body(RigidBody, Particle):  # type: ignore
 
         """
 
-        if isinstance(body,  ReferenceFrame):
-            frame=body
-        elif isinstance(body, Body):
-            frame = body.frame
-        return self.frame.dcm(frame)
+        if isinstance(body, Body):
+            body = body.frame
+        return self.frame.dcm(body)
 
     def orient_axis(self, parent, axis, angle):
         """Sets the orientation of this body with respect to a parent body or
@@ -625,10 +619,8 @@ class Body(RigidBody, Particle):  # type: ignore
         """
 
         if isinstance(parent, Body):
-            frame = parent.frame
-        elif isinstance(parent, ReferenceFrame):
-            frame = parent
-        self.frame.orient_axis(frame, axis, angle)
+            parent = parent.frame
+        self.frame.orient_axis(parent, axis, angle)
 
     def orient_explicit(self, parent, dcm):
         """Sets the orientation of this body relative to a parent body or
@@ -698,10 +690,8 @@ class Body(RigidBody, Particle):  # type: ignore
         """
 
         if isinstance(parent, Body):
-            frame = parent.frame
-        elif isinstance(parent, ReferenceFrame):
-            frame = parent
-        self.frame.orient_explicit(frame, dcm)
+            parent = parent.frame
+        self.frame.orient_explicit(parent, dcm)
 
     def orient_body_fixed(self, parent, angles, rotation_order):
         """Rotates this body relative to the parent body or reference frame
@@ -781,10 +771,8 @@ class Body(RigidBody, Particle):  # type: ignore
 
         """
         if isinstance(parent, Body):
-            frame = parent.frame
-        elif isinstance(parent, ReferenceFrame):
-            frame = parent
-        self.frame.orient_body_fixed(frame, angles, rotation_order)
+            parent = parent.frame
+        self.frame.orient_body_fixed(parent, angles, rotation_order)
 
     def orient_space_fixed(self, parent, angles, rotation_order):
         """Rotates this body relative to the parent body or reference frame
@@ -864,10 +852,8 @@ class Body(RigidBody, Particle):  # type: ignore
         """
 
         if isinstance(parent, Body):
-            frame = parent.frame
-        elif isinstance(parent, ReferenceFrame):
-            frame = parent
-        self.frame.orient_space_fixed(frame, angles, rotation_order)
+            parent = parent.frame
+        self.frame.orient_space_fixed(parent, angles, rotation_order)
 
     def orient_quaternion(self, parent, numbers):
         """Sets the orientation of this body relative to a parent body or
@@ -923,7 +909,5 @@ class Body(RigidBody, Particle):  # type: ignore
         """
 
         if isinstance(parent, Body):
-            frame = parent.frame
-        elif isinstance(parent, ReferenceFrame):
-            frame = parent
-        self.frame.orient_quaternion(frame, numbers)
+            parent = parent.frame
+        self.frame.orient_quaternion(parent, numbers)
