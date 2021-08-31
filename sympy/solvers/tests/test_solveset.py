@@ -2895,3 +2895,21 @@ def test_issue_21236():
 def test_issue_21908():
     assert nonlinsolve([(x**2 + 2*x - y**2)*exp(x), -2*y*exp(x)], x, y
                       ) == {(-2, 0), (0, 0)}
+
+def test_issue_19144_case1():
+    x = Symbol('x')
+    y = Symbol('y')
+    expr = [x + y - 1, y**2 + 1]
+    eq = [Eq(exp, 0) for exp in expr]
+    soln_expr = nonlinsolve(expr,[x,y])
+    soln_eq = nonlinsolve(eq,[x,y])
+    assert soln_eq == soln_expr
+
+def test_issue_19144_case2():
+    x = Symbol('x')
+    y = Symbol('y')
+    expr = [x/y - 1, y**2 + 1]
+    eq = [Eq(exp, 0) for exp in expr]
+    soln_expr = nonlinsolve(expr,[x,y])
+    soln_eq = nonlinsolve(eq,[x,y])
+    assert soln_eq == soln_expr
