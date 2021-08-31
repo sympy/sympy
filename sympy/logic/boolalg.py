@@ -731,7 +731,7 @@ class And(LatticeOp, BooleanFunction):
             old_set = set(old.args)
             if old_set.issubset(args):
                 args = set(args) - old_set
-                args.update(new)
+                args.add(new)
 
         return self.func(*args)
 
@@ -886,7 +886,7 @@ class Or(LatticeOp, BooleanFunction):
             old_set = set(old.args)
             if old_set.issubset(args):
                 args = set(args) - old_set
-                args.update(new)
+                args.add(new)
 
         return self.func(*args)
 
@@ -1157,9 +1157,9 @@ class Xor(BooleanFunction):
         # are there
         if isinstance(old, Xor):
             old_set = set(old.args)
-            if old_set.issubset(args):
-                args = set(args) - old_set
-                args.update(new)
+            if old_set.issubset(self.args):
+                args = set(self.args) - old_set
+                args.add(new)
                 return self.func(*args)
 
 
