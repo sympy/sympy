@@ -2896,20 +2896,21 @@ def test_issue_21908():
     assert nonlinsolve([(x**2 + 2*x - y**2)*exp(x), -2*y*exp(x)], x, y
                       ) == {(-2, 0), (0, 0)}
 
-def test_issue_19144_case1():
-    x = Symbol('x')
-    y = Symbol('y')
-    expr = [x + y - 1, y**2 + 1]
-    eq = [Eq(exp, 0) for exp in expr]
-    soln_expr = nonlinsolve(expr,[x,y])
-    soln_eq = nonlinsolve(eq,[x,y])
-    assert soln_eq == soln_expr
 
-def test_issue_19144_case2():
+def test_issue_19144():
     x = Symbol('x')
     y = Symbol('y')
-    expr = [x/y - 1, y**2 + 1]
-    eq = [Eq(exp, 0) for exp in expr]
-    soln_expr = nonlinsolve(expr,[x,y])
-    soln_eq = nonlinsolve(eq,[x,y])
-    assert soln_eq == soln_expr
+    # test case 1
+    expr1 = [x + y - 1, y**2 + 1]
+    eq1 = [Eq(exp, 0) for exp in expr1]
+    soln1 = {(1 - I, I), (1 + I, -I)}
+    soln_expr1 = nonlinsolve(expr1,[x,y])
+    soln_eq1 = nonlinsolve(eq1,[x,y])
+    assert soln_eq1 == soln_expr1 == soln1
+    # test case 2 - with denoms
+    expr2 = [x/y - 1, y**2 + 1]
+    eq2 = [Eq(exp, 0) for exp in expr2]
+    soln2 = {(-I, -I), (I, I)}
+    soln_expr2 = nonlinsolve(expr2,[x,y])
+    soln_eq2 = nonlinsolve(eq2,[x,y])
+    assert soln_eq2 == soln_expr2 == soln2
