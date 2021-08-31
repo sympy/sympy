@@ -1,4 +1,5 @@
-from sympy.core.backend import Symbol, symbols, sin, cos, Matrix
+from sympy import S
+from sympy.core.backend import Symbol, symbols, sin, cos, sqrt, Matrix
 from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
 from sympy.physics.mechanics import inertia, Body
 from sympy.testing.pytest import raises
@@ -280,7 +281,9 @@ def test_orient_axis():
     N = ReferenceFrame('N')
     A.orient_axis(N, N.x + N.y, 10)
     B.orient_axis(A, A.x + A.y, 10)
-    assert B.dcm(A) == A.dcm(N)
+    dcm = Matrix([[cos(10)/2 + S.Half, S.Half - cos(10)/2, -sqrt(2)*sin(10)/2], [S.Half - cos(10)/2,
+    cos(10)/2 + S.Half, sqrt(2)*sin(10)/2], [sqrt(2)*sin(10)/2, -sqrt(2)*sin(10)/2, cos(10)]])
+    assert B.dcm(A) == A.dcm(N) == dcm
 
 def test_orient_explicit():
     A = Body('A')
@@ -290,7 +293,7 @@ def test_orient_explicit():
     -sin(10), cos(10)**2]])
     A.orient_explicit(N, dcm)
     B.orient_explicit(A, dcm)
-    assert B.dcm(A) == A.dcm(N)
+    assert A.dcm(B) == N.dcm(A.frame) == dcm
 
 def test_orient_body_fixed():
     A = Body('A')
@@ -298,7 +301,9 @@ def test_orient_body_fixed():
     N = ReferenceFrame('N')
     A.orient_body_fixed(N, (1,1,0), 'XYX')
     B.orient_body_fixed(A, (1,1,0), 'XYX')
-    assert A.dcm(N) == B.dcm(A)
+    dcm = Matrix([[cos(1), sin(1)**2, -sin(1)*cos(1)], [0, cos(1), sin(1)], [sin(1), -sin(1)*cos(1),
+    cos(1)**2]])
+    assert A.dcm(N) == B.dcm(A) == dcm
 
 def test_orient_space_fixed():
     A = Body('A')
@@ -306,7 +311,10 @@ def test_orient_space_fixed():
     N = ReferenceFrame('N')
     A.orient_space_fixed(N, (1,2,3), 'ZXY')
     B.orient_space_fixed(A, (1,2,3), 'ZXY')
-    assert A.dcm(N) == B.dcm(A)
+    dcm = Matrix([[cos(1)*cos(3) + sin(1)*sin(2)*sin(3), sin(1)*cos(2),
+    sin(1)*sin(2)*cos(3) - sin(3)*cos(1)], [sin(2)*sin(3)*cos(1) - sin(1)*cos(3), cos(1)*cos(2),
+    sin(2)*cos(1)*cos(3) + sin(1)*sin(3)], [sin(3)*cos(2), -sin(2), cos(2)*cos(3)]])
+    assert A.dcm(N) == B.dcm(A) == dcm
 
 def test_orient_quaternion():
     A = Body('A')
@@ -314,4 +322,5 @@ def test_orient_quaternion():
     N = ReferenceFrame('N')
     A.orient_quaternion(N, (1,2,3,4))
     B.orient_quaternion(A, (1,2,3,4))
-    assert A.dcm(N) == B.dcm(A)
+    dcm = Matrix([[-20,  20, 10], [  4, -10, 28], [ 22,  20,  4]])
+    assert A.dcm(N) == B.dcm(A) == dcm
