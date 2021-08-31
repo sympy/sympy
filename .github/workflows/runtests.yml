@@ -134,6 +134,24 @@ jobs:
       # Test modules that can use tensorflow
       - run: bin/test_tensorflow.py
 
+  # -------------------- SymEngine tests --------------------------- #
+
+  symengine:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: python -m pip install --upgrade pip
+      - run: pip install mpmath symengine
+      # Test modules that can use tensorflow
+      - run: bin/test_symengine.py
+        env:
+          USE_SYMENGINE: '1'
+
   # -------------------- Slow test split 1/2 ----------------------- #
 
   slow1:
