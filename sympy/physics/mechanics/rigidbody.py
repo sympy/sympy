@@ -58,6 +58,9 @@ class RigidBody:
         self._name = name
         self.masscenter = masscenter
         self.mass = mass
+        from sympy.physics.mechanics import Body
+        if isinstance(frame, Body):
+            frame = frame.frame
         self.frame = frame
         self.inertia = inertia
         self.potential_energy = 0

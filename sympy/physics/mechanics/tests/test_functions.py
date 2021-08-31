@@ -10,6 +10,7 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
 from sympy.physics.mechanics.functions import gravity, center_of_mass
 from sympy.physics.vector.vector import Vector
 from sympy.testing.pytest import raises
+from sympy.physics.mechanics.body import Body
 
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
@@ -23,6 +24,16 @@ def test_inertia():
     N = ReferenceFrame('N')
     ixx, iyy, izz = symbols('ixx iyy izz')
     ixy, iyz, izx = symbols('ixy iyz izx')
+    assert inertia(N, ixx, iyy, izz) == (ixx * (N.x | N.x) + iyy *
+            (N.y | N.y) + izz * (N.z | N.z))
+    assert inertia(N, 0, 0, 0) == 0 * (N.x | N.x)
+    raises(TypeError, lambda: inertia(0, 0, 0, 0))
+    assert inertia(N, ixx, iyy, izz, ixy, iyz, izx) == (ixx * (N.x | N.x) +
+            ixy * (N.x | N.y) + izx * (N.x | N.z) + ixy * (N.y | N.x) + iyy *
+        (N.y | N.y) + iyz * (N.y | N.z) + izx * (N.z | N.x) + iyz * (N.z |
+            N.y) + izz * (N.z | N.z))
+
+    N = Body('N')
     assert inertia(N, ixx, iyy, izz) == (ixx * (N.x | N.x) + iyy *
             (N.y | N.y) + izz * (N.z | N.z))
     assert inertia(N, 0, 0, 0) == 0 * (N.x | N.x)
@@ -75,6 +86,18 @@ def test_linear_momentum():
     raises(TypeError, lambda: linear_momentum(N, N, Pa))
     assert linear_momentum(N, A, Pa) == 10 * N.x + 500 * N.y
 
+    N = Body('N')
+    Ac = Point('Ac')
+    Ac.set_vel(N, 25 * N.y)
+    I = outer(N.x, N.x)
+    A = RigidBody('A', Ac, N, 20, (I, Ac))
+    P = Point('P')
+    Pa = Particle('Pa', P, 1)
+    Pa.point.set_vel(N, 10 * N.x)
+    raises(TypeError, lambda: linear_momentum(A, A, Pa))
+    raises(TypeError, lambda: linear_momentum(N, N, Pa))
+    assert linear_momentum(N, A, Pa) == 10 * N.x + 500 * N.y
+
 
 def test_angular_momentum_and_linear_momentum():
     """A rod with length 2l, centroidal inertia I, and mass M along with a
@@ -102,11 +125,49 @@ def test_angular_momentum_and_linear_momentum():
     expected = (I + M * l**2 + 4 * m * l**2) * omega * N.z
     assert angular_momentum(O, N, A, Pa) == expected
 
+    N = Body('N')
+    a = ReferenceFrame('a')
+    O = Point('O')
+    Ac = O.locatenew('Ac', l * N.x)
+    P = Ac.locatenew('P', l * N.x)
+    O.set_vel(N, 0 * N.x)
+    a.set_ang_vel(N, omega * N.z)
+    Ac.v2pt_theory(O, N, a)
+    P.v2pt_theory(O, N, a)
+    Pa = Particle('Pa', P, m)
+    A = RigidBody('A', Ac, a, M, (I * outer(N.z, N.z), Ac))
+    expected = 2 * m * omega * l * N.y + M * l * omega * N.y
+    assert linear_momentum(N, A, Pa) == expected
+    raises(TypeError, lambda: angular_momentum(N, N, A, Pa))
+    raises(TypeError, lambda: angular_momentum(O, O, A, Pa))
+    raises(TypeError, lambda: angular_momentum(O, N, O, Pa))
+    expected = (I + M * l**2 + 4 * m * l**2) * omega * N.z
+    assert angular_momentum(O, N, A, Pa) == expected
+
 
 def test_kinetic_energy():
     m, M, l1 = symbols('m M l1')
     omega = dynamicsymbols('omega')
     N = ReferenceFrame('N')
+    O = Point('O')
+    O.set_vel(N, 0 * N.x)
+    Ac = O.locatenew('Ac', l1 * N.x)
+    P = Ac.locatenew('P', l1 * N.x)
+    a = ReferenceFrame('a')
+    a.set_ang_vel(N, omega * N.z)
+    Ac.v2pt_theory(O, N, a)
+    P.v2pt_theory(O, N, a)
+    Pa = Particle('Pa', P, m)
+    I = outer(N.z, N.z)
+    A = RigidBody('A', Ac, a, M, (I, Ac))
+    raises(TypeError, lambda: kinetic_energy(Pa, Pa, A))
+    raises(TypeError, lambda: kinetic_energy(N, N, A))
+    assert 0 == (kinetic_energy(N, Pa, A) - (M*l1**2*omega**2/2
+            + 2*l1**2*m*omega**2 + omega**2/2)).expand()
+
+    m, M, l1 = symbols('m M l1')
+    omega = dynamicsymbols('omega')
+    N = Body('N')
     O = Point('O')
     O.set_vel(N, 0 * N.x)
     Ac = O.locatenew('Ac', l1 * N.x)
@@ -147,6 +208,23 @@ def test_potential_energy():
 def test_Lagrangian():
     M, m, g, h = symbols('M m g h')
     N = ReferenceFrame('N')
+    O = Point('O')
+    O.set_vel(N, 0 * N.x)
+    P = O.locatenew('P', 1 * N.x)
+    P.set_vel(N, 10 * N.x)
+    Pa = Particle('Pa', P, 1)
+    Ac = O.locatenew('Ac', 2 * N.y)
+    Ac.set_vel(N, 5 * N.y)
+    a = ReferenceFrame('a')
+    a.set_ang_vel(N, 10 * N.z)
+    I = outer(N.z, N.z)
+    A = RigidBody('A', Ac, a, 20, (I, Ac))
+    Pa.potential_energy = m * g * h
+    A.potential_energy = M * g * h
+    raises(TypeError, lambda: Lagrangian(A, A, Pa))
+    raises(TypeError, lambda: Lagrangian(N, N, Pa))
+
+    N = Body('N')
     O = Point('O')
     O.set_vel(N, 0 * N.x)
     P = O.locatenew('P', 1 * N.x)

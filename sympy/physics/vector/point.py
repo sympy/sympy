@@ -130,9 +130,9 @@ class Point:
 
         otherpoint : Point
             The first point of the 1-point theory (O)
-        outframe : ReferenceFrame
+        outframe : ReferenceFrame or Body
             The frame we want this point's acceleration defined in (N)
-        fixedframe : ReferenceFrame
+        fixedframe : ReferenceFrame or Body
             The intermediate frame in this calculation (B)
 
         Examples
@@ -158,6 +158,11 @@ class Point:
 
         """
 
+        from sympy.physics.mechanics import Body
+        if isinstance(outframe, Body):
+            outframe = outframe.frame
+        if isinstance(interframe, Body):
+            interframe = interframe.frame
         _check_frame(outframe)
         _check_frame(interframe)
         self._check_point(otherpoint)
@@ -186,9 +191,9 @@ class Point:
 
         otherpoint : Point
             The first point of the 2-point theory (O)
-        outframe : ReferenceFrame
+        outframe : ReferenceFrame or Body
             The frame we want this point's acceleration defined in (N)
-        fixedframe : ReferenceFrame
+        fixedframe : ReferenceFrame or Body
             The frame in which both points are fixed (B)
 
         Examples
@@ -209,6 +214,11 @@ class Point:
 
         """
 
+        from sympy.physics.mechanics import Body
+        if isinstance(outframe, Body):
+            outframe = outframe.frame
+        if isinstance(fixedframe, Body):
+            fixedframe = fixedframe.frame
         _check_frame(outframe)
         _check_frame(fixedframe)
         self._check_point(otherpoint)
@@ -225,7 +235,7 @@ class Point:
         Parameters
         ==========
 
-        frame : ReferenceFrame
+        frame : ReferenceFrame or Body
             The frame in which the returned acceleration vector will be defined in
 
         Examples
@@ -240,6 +250,9 @@ class Point:
 
         """
 
+        from sympy.physics.mechanics import Body
+        if isinstance(frame, Body):
+            frame = frame.frame
         _check_frame(frame)
         if not (frame in self._acc_dict):
             if self._vel_dict[frame] != 0:
@@ -313,7 +326,7 @@ class Point:
         Parameters
         ==========
 
-        frame : ReferenceFrame
+        frame : ReferenceFrame or Body
             The frame in which this point's acceleration is defined
         value : Vector
             The vector value of this point's acceleration in the frame
@@ -330,6 +343,9 @@ class Point:
 
         """
 
+        from sympy.physics.mechanics import Body
+        if isinstance(frame, Body):
+            frame = frame.frame
         if value == 0:
             value = Vector(0)
         value = _check_vector(value)
@@ -373,7 +389,7 @@ class Point:
         Parameters
         ==========
 
-        frame : ReferenceFrame
+        frame : ReferenceFrame or Body
             The frame in which this point's velocity is defined
         value : Vector
             The vector value of this point's velocity in the frame
@@ -390,6 +406,9 @@ class Point:
 
         """
 
+        from sympy.physics.mechanics import Body
+        if isinstance(frame, Body):
+            frame = frame.frame
         if value == 0:
             value = Vector(0)
         value = _check_vector(value)
@@ -411,9 +430,9 @@ class Point:
 
         otherpoint : Point
             The first point of the 1-point theory (O)
-        outframe : ReferenceFrame
+        outframe : ReferenceFrame or Body
             The frame we want this point's velocity defined in (N)
-        interframe : ReferenceFrame
+        interframe : ReferenceFrame or Body
             The intermediate frame in this calculation (B)
 
         Examples
@@ -439,6 +458,11 @@ class Point:
 
         """
 
+        from sympy.physics.mechanics import Body
+        if isinstance(outframe, Body):
+            outframe = outframe.frame
+        if isinstance(interframe, Body):
+            interframe = interframe.frame
         _check_frame(outframe)
         _check_frame(interframe)
         self._check_point(otherpoint)
@@ -464,9 +488,9 @@ class Point:
 
         otherpoint : Point
             The first point of the 2-point theory (O)
-        outframe : ReferenceFrame
+        outframe : ReferenceFrame or Body
             The frame we want this point's velocity defined in (N)
-        fixedframe : ReferenceFrame
+        fixedframe : ReferenceFrame or Body
             The frame in which both points are fixed (B)
 
         Examples
@@ -487,6 +511,11 @@ class Point:
 
         """
 
+        from sympy.physics.mechanics import Body
+        if isinstance(outframe, Body):
+            outframe = outframe.frame
+        if isinstance(fixedframe, Body):
+            fixedframe = fixedframe.frame
         _check_frame(outframe)
         _check_frame(fixedframe)
         self._check_point(otherpoint)
@@ -502,7 +531,7 @@ class Point:
         Parameters
         ==========
 
-        frame : ReferenceFrame
+        frame : ReferenceFrame or Body
             The frame in which the returned velocity vector will be defined in
 
         Examples
@@ -527,6 +556,9 @@ class Point:
 
         """
 
+        from sympy.physics.mechanics import Body
+        if isinstance(frame, Body):
+            frame = frame.frame
         _check_frame(frame)
         if not (frame in self._vel_dict):
             valid_neighbor_found = False
@@ -585,7 +617,7 @@ class Point:
 
         Parameters
         ==========
-        frame : ReferenceFrame
+        frame : ReferenceFrame or Body
             The frame with which the velocity is defined in.
         gen_speeds : functions of time
             The generalized speeds.
@@ -612,6 +644,10 @@ class Point:
         (N.x, A.y)
 
         """
+
+        from sympy.physics.mechanics import Body
+        if isinstance(frame, Body):
+            frame = frame.frame
         partials = [self.vel(frame).diff(speed, frame, var_in_dcm=False) for
                     speed in gen_speeds]
 

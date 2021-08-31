@@ -57,7 +57,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     Parameters
     ==========
 
-    frame : ReferenceFrame
+    frame : ReferenceFrame or Body
         The frame the inertia is defined in
     ixx : Sympifyable
         the xx element in the inertia dyadic
@@ -81,6 +81,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     (N.x|N.x) + 2*(N.y|N.y) + 3*(N.z|N.z)
 
     """
+
     from sympy.physics.mechanics import Body
     if isinstance(frame, Body):
         frame = frame.frame
@@ -147,7 +148,7 @@ def linear_momentum(frame, *body):
     Parameters
     ==========
 
-    frame : ReferenceFrame
+    frame : ReferenceFrame or Body
         The frame in which linear momentum is desired.
     body1, body2, body3... : Particle and/or RigidBody
         The body (or bodies) whose linear momentum is required.
@@ -169,6 +170,7 @@ def linear_momentum(frame, *body):
     10*N.x + 500*N.y
 
     """
+
     from sympy.physics.mechanics import Body
     if isinstance(frame, Body):
         frame = frame.frame
@@ -204,7 +206,7 @@ def angular_momentum(point, frame, *body):
 
     point : Point
         The point about which angular momentum of the system is desired.
-    frame : ReferenceFrame
+    frame : ReferenceFrame or Body
         The frame in which angular momentum is desired.
     body1, body2, body3... : Particle and/or RigidBody
         The body (or bodies) whose angular momentum is required.
@@ -230,6 +232,7 @@ def angular_momentum(point, frame, *body):
     10*N.z
 
     """
+
     from sympy.physics.mechanics import Body
     if isinstance(frame, Body):
         frame = frame.frame
@@ -267,7 +270,7 @@ def kinetic_energy(frame, *body):
     Parameters
     ==========
 
-    frame : ReferenceFrame
+    frame : ReferenceFrame or Body
         The frame in which the velocity or angular velocity of the body is
         defined.
     body1, body2, body3... : Particle and/or RigidBody
@@ -294,6 +297,7 @@ def kinetic_energy(frame, *body):
     350
 
     """
+
     from sympy.physics.mechanics import Body
     if isinstance(frame, Body):
         frame = frame.frame
@@ -470,7 +474,7 @@ def Lagrangian(frame, *body):
     Parameters
     ==========
 
-    frame : ReferenceFrame
+    frame : ReferenceFrame or Body
         The frame in which the velocity or angular velocity of the body is
         defined to determine the kinetic energy.
 
@@ -502,6 +506,7 @@ def Lagrangian(frame, *body):
     -M*g*h - g*h*m + 350
 
     """
+
     from sympy.physics.mechanics import Body
     if isinstance(frame, Body):
         frame = frame.frame
