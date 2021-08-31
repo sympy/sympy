@@ -728,10 +728,10 @@ class And(LatticeOp, BooleanFunction):
         # If old is And, replace the parts of the arguments with new if all
         # are there
         if isinstance(old, And):
-            old_args = set(old.args)
-            sd = old_args.symmetric_difference(set(args))
-            if not sd & old_args:
-                args = [new] + list(sd)
+            old_set = set(old.args)
+            if old_set.issubset(args):
+                args = set(args) - old_set
+                args.update(new)
 
         return self.func(*args)
 
@@ -883,10 +883,10 @@ class Or(LatticeOp, BooleanFunction):
         # If old is Or, replace the parts of the arguments with new if all
         # are there
         if isinstance(old, Or):
-            old_args = set(old.args)
-            sd = old_args.symmetric_difference(set(args))
-            if not sd & old_args:
-                args = [new] + list(sd)
+            old_set = set(old.args)
+            if old_set.issubset(args):
+                args = set(args) - old_set
+                args.update(new)
 
         return self.func(*args)
 
@@ -1156,11 +1156,11 @@ class Xor(BooleanFunction):
         # If old is Xor, replace the parts of the arguments with new if all
         # are there
         if isinstance(old, Xor):
-            old_args = set(old.args)
-            sd = old_args.symmetric_difference(set(self.args))
-            if not sd & old_args:
-                sd.add(new)
-                return self.func(*sd)
+            old_set = set(old.args)
+            if old_set.issubset(args):
+                args = set(args) - old_set
+                args.update(new)
+                return self.func(*args)
 
 
 class Nand(BooleanFunction):
