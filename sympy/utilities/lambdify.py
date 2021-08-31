@@ -173,7 +173,7 @@ def _import(module, reload=False):
 # linecache.
 _lambdify_generated_counter = 1
 
-@doctest_depends_on(modules=('numpy', 'tensorflow',), python_version=(3,))
+@doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
 def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
              dummify=False, cse=False):
     """Convert a SymPy expression into a function that allows for fast
