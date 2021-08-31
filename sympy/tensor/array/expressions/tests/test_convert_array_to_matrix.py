@@ -507,3 +507,13 @@ def test_convert_array_to_hadamard_products():
     cg = convert_matrix_to_array(expr)
     ret = convert_array_to_matrix(cg)
     assert ret == Trace(HadamardProduct(M.T, N)*A)
+
+    # These should not be converted into Hadamard products:
+
+    cg = ArrayDiagonal(ArrayTensorProduct(M, N), (0, 1, 2, 3))
+    ret = convert_array_to_matrix(cg)
+    assert ret == cg
+
+    cg = ArrayDiagonal(ArrayTensorProduct(A), (0, 1))
+    ret = convert_array_to_matrix(cg)
+    assert ret == cg

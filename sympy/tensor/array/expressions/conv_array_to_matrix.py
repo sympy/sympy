@@ -615,7 +615,7 @@ def identify_hadamard_products(expr: Union[ArrayContraction, ArrayDiagonal]):
             editor.args_with_ind = [_ArgE(arg) for i, arg in enumerate(expr.expr.args)]
             diagonalized = expr.diagonal_indices
         else:
-            raise NotImplementedError("not implemented")
+            return expr
 
         # Trick: add diagonalized indices as negative indices into the editor object:
         for i, e in enumerate(diagonalized):
@@ -636,7 +636,7 @@ def identify_hadamard_products(expr: Union[ArrayContraction, ArrayDiagonal]):
     v: List[_ArgE]
     for k, v in map_contr_to_args.items():
         make_trace: bool = False
-        if len(k) == 1 and sum([next(iter(k)) in i for i in map_contr_to_args]) == 1:
+        if len(k) == 1 and next(iter(k)) >= 0 and sum([next(iter(k)) in i for i in map_contr_to_args]) == 1:
             # This is a trace: the arguments are fully contracted with only one
             # index, and the index isn't used anywhere else:
             make_trace = True
@@ -657,7 +657,7 @@ def identify_hadamard_products(expr: Union[ArrayContraction, ArrayDiagonal]):
             return x == sorted(x)
 
         # Check if expression is a trace:
-        if all([map_ind_to_inds[j] == len(v) and j >= 0 for j in k]):
+        if all([map_ind_to_inds[j] == len(v) and j >= 0 for j in k]) and all([j >= 0 for j in k]):
             # This is a trace
             make_trace = True
             first_element = v[0].element

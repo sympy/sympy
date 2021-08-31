@@ -618,7 +618,7 @@ class ArrayDiagonal(_CodegenArrayAbstract):
             return cls._flatten(expr, *diagonal_indices)
         if isinstance(expr, PermuteDims):
             return cls._handle_nested_permutedims_in_diag(expr, *diagonal_indices)
-        shape = expr.shape
+        shape = get_shape(expr)
         if shape is not None:
             cls._validate(expr, *diagonal_indices)
             # Get new shape:
@@ -639,7 +639,7 @@ class ArrayDiagonal(_CodegenArrayAbstract):
     def _validate(expr, *diagonal_indices):
         # Check that no diagonalization happens on indices with mismatched
         # dimensions:
-        shape = expr.shape
+        shape = get_shape(expr)
         for i in diagonal_indices:
             if len({shape[j] for j in i}) != 1:
                 raise ValueError("diagonalizing indices of different dimensions")
