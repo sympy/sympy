@@ -693,7 +693,7 @@ class Ellipse(GeometrySet):
         else:
             raise TypeError('Intersection not handled for %s' % func_name(o))
 
-    def is_tangent(self, o):
+    def is_tangent(self, o, atleast_one_common_tangent = False):
         """Is `o` tangent to the ellipse?
 
         Parameters
@@ -722,13 +722,19 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Ellipse, Line
+        >>> from sympy import Point, Ellipse, Line, Circle, Polygon
         >>> p0, p1, p2 = Point(0, 0), Point(3, 0), Point(3, 3)
         >>> e1 = Ellipse(p0, 3, 2)
         >>> l1 = Line(p1, p2)
         >>> e1.is_tangent(l1)
         True
-
+        >>> p3 = Point(0,3)
+        >>> c = Circle(Point(0,0),3)
+        >>> poly = Polygon(p0,p1,p2,p3)
+        >>> c.is_tangent(poly)
+        False
+        >>> c.is_tangent(poly,True)
+        True
         """
         if isinstance(o, Point2D):
             return False
@@ -759,15 +765,22 @@ class Ellipse(GeometrySet):
             segments = o.sides if isinstance(o, Polygon) else [o]
             for segment in segments:
                 intersect = self.intersection(segment)
-                if len(intersect) == 1:
-                    if not any(intersect[0] in i for i in segment.points) \
-                        and all(not self.encloses_point(i) for i in segment.points):
-                        all_tangents = True
-                        continue
+                if atleast_one_common_tangent:
+                    if len(intersect) == 1 and all(not self.encloses_point(i) for i in segment.points):
+                        if any(intersect[0] in i for i in segment.points):
+                            if not (self.tangent_lines(intersect[0])[0]).is_parallel(segment):
+                                continue
+                        return True
+                else:
+                    if len(intersect) == 1:
+                        if not any(intersect[0] in i for i in segment.points) \
+                            and all(not self.encloses_point(i) for i in segment.points):
+                            all_tangents = True
+                            continue
+                        else:
+                            return False
                     else:
                         return False
-                else:
-                    return all_tangents
             return all_tangents
         elif isinstance(o, (LinearEntity3D, Point3D)):
             raise TypeError('Entity must be two dimensional, not three dimensional')
