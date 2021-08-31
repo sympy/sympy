@@ -629,7 +629,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
     >>> import inspect
     >>> print(inspect.getsource(f))
     def _lambdifygenerated(x):
-        return (sin(x) + cos(x))
+        return sin(x) + cos(x)
 
     This shows us the source code of the function, but not the namespace it
     was defined in. We can inspect that by looking at the ``__globals__``
