@@ -562,3 +562,368 @@ class Body(RigidBody, Particle):  # type: ignore
         elif isinstance(body, Body):
             frame = body.frame
         return self.frame.dcm(frame)
+
+    def orient_axis(self, parent, axis, angle):
+        """Sets the orientation of this body with respect to a parent body or
+        reference frame by rotating through an angle about an axis fixed
+        in the parent reference frame or body.
+
+        Parameters
+        ==========
+
+        parent : Body or ReferenceFrame
+            Body or Reference frame that this body will be rotated relative
+            to.
+        axis : Vector
+            Vector fixed in the parent frame about which this body is
+            rotated. It need not be a unit vector and the rotation follows the
+            right hand rule.
+        angle : sympifiable
+            Angle in radians by which the frame is to be rotated.
+
+        Warns
+        ======
+
+        UserWarning
+            If the orientation creates a kinematic loop.
+
+        Examples
+        ========
+
+        Setup variables for the examples:
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import Body
+        >>> q1 = symbols('q1')
+        >>> A = Body('A')
+        >>> B = Body('B')
+        >>> B.orient_axis(A, A.x, q1)
+
+        The ``orient_axis()`` method generates a direction cosine matrix and
+        its transpose which defines the orientation of B relative to A and vice
+        versa. Once orient is called, ``dcm()`` outputs the appropriate
+        direction cosine matrix:
+
+        >>> B.dcm(A)
+        Matrix([
+        [1,       0,      0],
+        [0,  cos(q1), sin(q1)],
+        [0, -sin(q1), cos(q1)]])
+        >>> A.dcm(B)
+        Matrix([
+        [1,       0,        0],
+        [0, cos(q1), -sin(q1)],
+        [0, sin(q1),  cos(q1)]])
+
+        The following two lines show that the sense of the rotation can be
+        defined by negating the vector direction or the angle. Both lines
+        produce the same result.
+
+        >>> B.orient_axis(A, -A.x, q1)
+        >>> B.orient_axis(A, A.x, -q1)
+
+        """
+
+        if isinstance(parent, Body):
+            frame = parent.frame
+        elif isinstance(parent, ReferenceFrame):
+            frame = parent
+        self.frame.orient_axis(frame, axis, angle)
+
+    def orient_explicit(self, parent, dcm):
+        """Sets the orientation of this body relative to a parent body or
+        reference frame by explicitly setting the direction cosine matrix.
+
+        Parameters
+        ==========
+
+        parent : Body or ReferenceFrame
+            Reference frame or body that this reference frame will be rotated
+            relative to.
+        dcm : Matrix, shape(3, 3)
+            Direction cosine matrix that specifies the relative rotation
+            between this body and parent.
+
+        Warns
+        ======
+
+        UserWarning
+            If the orientation creates a kinematic loop.
+
+        Examples
+        ========
+
+        Setup variables for the examples:
+
+        >>> from sympy import symbols, Matrix, sin, cos
+        >>> from sympy.physics.mechanics import Body
+        >>> q1 = symbols('q1')
+        >>> A = Body('A')
+        >>> B = Body('B')
+        >>> N = Body('N')
+
+        A simple rotation of ``A`` relative to ``N`` about ``N.x`` is defined
+        by the following direction cosine matrix:
+
+        >>> dcm = Matrix([[1, 0, 0],
+        ...               [0, cos(q1), -sin(q1)],
+        ...               [0, sin(q1), cos(q1)]])
+        >>> A.orient_explicit(N, dcm)
+        >>> A.dcm(N)
+        Matrix([
+        [1,       0,      0],
+        [0,  cos(q1), sin(q1)],
+        [0, -sin(q1), cos(q1)]])
+
+        This is equivalent to using ``orient_axis()``:
+
+        >>> B.orient_axis(N, N.x, q1)
+        >>> B.dcm(N)
+        Matrix([
+        [1,       0,      0],
+        [0,  cos(q1), sin(q1)],
+        [0, -sin(q1), cos(q1)]])
+
+        **Note carefully that** ``N.dcm(B)`` **(the transpose) would be passed
+        into** ``orient_explicit()`` **for** ``A.dcm(N)`` **to match**
+        ``B.dcm(N)``:
+
+        >>> A.orient_explicit(N, N.dcm(B))
+        >>> A.dcm(N)
+        Matrix([
+        [1,       0,      0],
+        [0,  cos(q1), sin(q1)],
+        [0, -sin(q1), cos(q1)]])
+
+        """
+
+        if isinstance(parent, Body):
+            frame = parent.frame
+        elif isinstance(parent, ReferenceFrame):
+            frame = parent
+        self.frame.orient_explicit(frame, dcm)
+
+    def orient_body_fixed(self, parent, angles, rotation_order):
+        """Rotates this body relative to the parent body or reference frame
+        by right hand rotating through three successive body fixed simple axis
+        rotations. Each subsequent axis of rotation is about the "body fixed"
+        unit vectors of a new intermediate reference frame. This type of
+        rotation is also referred to rotating through the `Euler and Tait-Bryan
+        Angles`_.
+
+        .. _Euler and Tait-Bryan Angles: https://en.wikipedia.org/wiki/Euler_angles
+
+        Parameters
+        ==========
+
+        parent : Body or ReferenceFrame
+            Body or Reference frame that this body will be rotated relative to.
+        angles : 3-tuple of sympifiable
+            Three angles in radians used for the successive rotations.
+        rotation_order : 3 character string or 3 digit integer
+            Order of the rotations about each intermediate reference frames'
+            unit vectors. The Euler rotation about the X, Z', X'' axes can be
+            specified by the strings ``'XZX'``, ``'131'``, or the integer
+            ``131``. There are 12 unique valid rotation orders (6 Euler and 6
+            Tait-Bryan): zxz, xyx, yzy, zyz, xzx, yxy, xyz, yzx, zxy, xzy, zyx,
+            and yxz.
+
+        Warns
+        ======
+
+        UserWarning
+            If the orientation creates a kinematic loop.
+
+        Examples
+        ========
+
+        Setup variables for the examples:
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import Body
+        >>> q1, q2, q3 = symbols('q1, q2, q3')
+        >>> N = Body('N')
+        >>> B = Body('B')
+        >>> B1 = Body('B1')
+        >>> B2 = Body('B2')
+        >>> B3 = Body('B3')
+
+        For example, a classic Euler Angle rotation can be done by:
+
+        >>> B.orient_body_fixed(N, (q1, q2, q3), 'XYX')
+        >>> B.dcm(N)
+        Matrix([
+        [        cos(q2),                            sin(q1)*sin(q2),                           -sin(q2)*cos(q1)],
+        [sin(q2)*sin(q3), -sin(q1)*sin(q3)*cos(q2) + cos(q1)*cos(q3),  sin(q1)*cos(q3) + sin(q3)*cos(q1)*cos(q2)],
+        [sin(q2)*cos(q3), -sin(q1)*cos(q2)*cos(q3) - sin(q3)*cos(q1), -sin(q1)*sin(q3) + cos(q1)*cos(q2)*cos(q3)]])
+
+        This rotates body B relative to body N through ``q1`` about ``N.x``,
+        then rotates B again through ``q2`` about ``B.y``, and finally
+        through ``q3`` about ``B.x``. It is equivalent to three successive
+        ``orient_axis()`` calls:
+
+        >>> B1.orient_axis(N, N.x, q1)
+        >>> B2.orient_axis(B1, B1.y, q2)
+        >>> B3.orient_axis(B2, B2.x, q3)
+        >>> B3.dcm(N)
+        Matrix([
+        [        cos(q2),                            sin(q1)*sin(q2),                           -sin(q2)*cos(q1)],
+        [sin(q2)*sin(q3), -sin(q1)*sin(q3)*cos(q2) + cos(q1)*cos(q3),  sin(q1)*cos(q3) + sin(q3)*cos(q1)*cos(q2)],
+        [sin(q2)*cos(q3), -sin(q1)*cos(q2)*cos(q3) - sin(q3)*cos(q1), -sin(q1)*sin(q3) + cos(q1)*cos(q2)*cos(q3)]])
+
+        Acceptable rotation orders are of length 3, expressed in as a string
+        ``'XYZ'`` or ``'123'`` or integer ``123``. Rotations about an axis
+        twice in a row are prohibited.
+
+        >>> B.orient_body_fixed(N, (q1, q2, 0), 'ZXZ')
+        >>> B.orient_body_fixed(N, (q1, q2, 0), '121')
+        >>> B.orient_body_fixed(N, (q1, q2, q3), 123)
+
+        """
+        if isinstance(parent, Body):
+            frame = parent.frame
+        elif isinstance(parent, ReferenceFrame):
+            frame = parent
+        self.frame.orient_body_fixed(frame, angles, rotation_order)
+
+    def orient_space_fixed(self, parent, angles, rotation_order):
+        """Rotates this body relative to the parent body or reference frame
+        by right hand rotating through three successive space fixed simple axis
+        rotations. Each subsequent axis of rotation is about the "space fixed"
+        unit vectors of the parent reference frame or body.
+
+        Parameters
+        ==========
+        parent : Body or ReferenceFrame
+            Body or Reference frame that this body will be rotated relative
+            to.
+        angles : 3-tuple of sympifiable
+            Three angles in radians used for the successive rotations.
+        rotation_order : 3 character string or 3 digit integer
+            Order of the rotations about the parent reference frame's unit
+            vectors. The order can be specified by the strings ``'XZX'``,
+            ``'131'``, or the integer ``131``. There are 12 unique valid
+            rotation orders.
+
+        Warns
+        ======
+
+        UserWarning
+            If the orientation creates a kinematic loop.
+
+        Examples
+        ========
+
+        Setup variables for the examples:
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import Body
+        >>> q1, q2, q3 = symbols('q1, q2, q3')
+        >>> N = Body('N')
+        >>> B = Body('B')
+        >>> B1 = Body('B1')
+        >>> B2 = Body('B2')
+        >>> B3 = Body('B3')
+
+        >>> B.orient_space_fixed(N, (q1, q2, q3), '312')
+        >>> B.dcm(N)
+        Matrix([
+        [ sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1)],
+        [-sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1), cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3)],
+        [                           sin(q3)*cos(q2),        -sin(q2),                           cos(q2)*cos(q3)]])
+
+        is equivalent to:
+
+        >>> B1.orient_axis(N, N.z, q1)
+        >>> B2.orient_axis(B1, N.x, q2)
+        >>> B3.orient_axis(B2, N.y, q3)
+        >>> B3.dcm(N).simplify()
+        Matrix([
+        [ sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1)],
+        [-sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1), cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3)],
+        [                           sin(q3)*cos(q2),        -sin(q2),                           cos(q2)*cos(q3)]])
+
+        It is worth noting that space-fixed and body-fixed rotations are
+        related by the order of the rotations, i.e. the reverse order of body
+        fixed will give space fixed and vice versa.
+
+        >>> B.orient_space_fixed(N, (q1, q2, q3), '231')
+        >>> B.dcm(N)
+        Matrix([
+        [cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3), -sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1)],
+        [       -sin(q2),                           cos(q2)*cos(q3),                            sin(q3)*cos(q2)],
+        [sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1),  sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3)]])
+
+        >>> B.orient_body_fixed(N, (q3, q2, q1), '132')
+        >>> B.dcm(N)
+        Matrix([
+        [cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3), -sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1)],
+        [       -sin(q2),                           cos(q2)*cos(q3),                            sin(q3)*cos(q2)],
+        [sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1),  sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3)]])
+
+        """
+
+        if isinstance(parent, Body):
+            frame = parent.frame
+        elif isinstance(parent, ReferenceFrame):
+            frame = parent
+        self.frame.orient_space_fixed(frame, angles, rotation_order)
+
+    def orient_quaternion(self, parent, numbers):
+        """Sets the orientation of this body relative to a parent body or
+        reference frame via an orientation quaternion. An orientation
+        quaternion is defined as a finite rotation of a unit vector, ``(lambda_x,
+        lambda_y, lambda_z)``, by an angle ``theta``. The orientation
+        quaternion is described by four parameters:
+
+        - ``q0 = cos(theta/2)``
+        - ``q1 = lambda_x*sin(theta/2)``
+        - ``q2 = lambda_y*sin(theta/2)``
+        - ``q3 = lambda_z*sin(theta/2)``
+
+        See `Quaternions and Spatial Rotation
+        <https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation>`_ on
+        Wikipedia for more information.
+
+        Parameters
+        ==========
+        parent : Body or ReferenceFrame
+            Body or Reference frame that this reference frame will be rotated
+            relative to.
+        numbers : 4-tuple of sympifiable
+            The four quaternion scalar numbers as defined above: ``q0``,
+            ``q1``, ``q2``, ``q3``.
+
+        Warns
+        ======
+
+        UserWarning
+            If the orientation creates a kinematic loop.
+
+        Examples
+        ========
+
+        Setup variables for the examples:
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import Body
+        >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
+        >>> N = Body('N')
+        >>> B = Body('B')
+
+        Set the orientation:
+
+        >>> B.orient_quaternion(N, (q0, q1, q2, q3))
+        >>> B.dcm(N)
+        Matrix([
+        [q0**2 + q1**2 - q2**2 - q3**2,             2*q0*q3 + 2*q1*q2,            -2*q0*q2 + 2*q1*q3],
+        [           -2*q0*q3 + 2*q1*q2, q0**2 - q1**2 + q2**2 - q3**2,             2*q0*q1 + 2*q2*q3],
+        [            2*q0*q2 + 2*q1*q3,            -2*q0*q1 + 2*q2*q3, q0**2 - q1**2 - q2**2 + q3**2]])
+
+        """
+
+        if isinstance(parent, Body):
+            frame = parent.frame
+        elif isinstance(parent, ReferenceFrame):
+            frame = parent
+        self.frame.orient_quaternion(frame, numbers)

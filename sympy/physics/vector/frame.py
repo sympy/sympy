@@ -594,11 +594,11 @@ class ReferenceFrame:
             Reference frame that this reference frame will be rotated relative
             to.
         axis : Vector
-            Vector fixed in the parent frame about about which this frame is
+            Vector fixed in the parent frame about which this frame is
             rotated. It need not be a unit vector and the rotation follows the
             right hand rule.
         angle : sympifiable
-            Angle in radians by which it the frame is to be rotated.
+            Angle in radians by which the frame is to be rotated.
 
         Warns
         ======
