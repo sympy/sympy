@@ -47,6 +47,8 @@ else:
 # Since this should be a temporary problem we do not make this function part of
 # the public API.
 #
+#   SymEngine issue: https://github.com/symengine/symengine.py/issues/363
+#
 
 def _simplify_matrix(M):
     """Return a simplified copy of the matrix M"""
