@@ -176,7 +176,7 @@ def test_pinjoint_arbitrary_axis():
     assert A.ang_vel_in(N).express(A) == omega * A.y
     assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
     angle = A.ang_vel_in(N).angle_between(A.y)
-    assert expand_mul(angle).xreplace({omega: 1}) == 0
+    assert angle.xreplace({omega: 1}) == 0
     assert C.masscenter.vel(N) == omega*A.z
     assert C.masscenter.pos_from(P.masscenter) == -A.x
     assert (C.masscenter.pos_from(P.masscenter).express(N).simplify() ==
@@ -196,7 +196,7 @@ def test_pinjoint_arbitrary_axis():
     assert A.ang_vel_in(N).express(A) == omega*A.x
     assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
     angle = A.ang_vel_in(N).angle_between(A.x)
-    assert expand_mul(angle).xreplace({omega: 1}) == 0
+    assert angle.xreplace({omega: 1}) == 0
     assert C.masscenter.vel(N).simplify() == - omega*N.z
     assert C.masscenter.pos_from(P.masscenter) == N.x
 
@@ -215,7 +215,7 @@ def test_pinjoint_arbitrary_axis():
             (omega*A.x + omega*A.y)/sqrt(2))
     assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
     angle = A.ang_vel_in(N).angle_between(A.x + A.y)
-    assert expand_mul(angle).xreplace({omega: 1}) == 0
+    assert angle.xreplace({omega: 1}) == 0
     assert C.masscenter.vel(N).simplify() == (omega * A.z)/sqrt(2)
     assert C.masscenter.pos_from(P.masscenter) == N.x - A.x
     assert (C.masscenter.pos_from(P.masscenter).express(N).simplify() ==
@@ -242,7 +242,7 @@ def test_pinjoint_arbitrary_axis():
                                                      omega*A.z)/sqrt(3)
     assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
     angle = A.ang_vel_in(N).angle_between(A.x + A.y-A.z)
-    assert expand_mul(angle).xreplace({omega: 1}) == 0
+    assert angle.xreplace({omega: 1}) == 0
     assert C.masscenter.vel(N).simplify() == (omega*A.y + omega*A.z)/sqrt(3)
     assert C.masscenter.pos_from(P.masscenter) == N.x - A.x
     assert (C.masscenter.pos_from(P.masscenter).express(N).simplify() ==
@@ -260,8 +260,8 @@ def test_pinjoint_arbitrary_axis():
     angle = (N.x-N.y+N.z).angle_between(A.x+A.y-A.z)
     assert expand_mul(angle) == 0  # Axis are aligned
     assert ((A.x-A.y+A.z).express(N).simplify() ==
-            (-4*cos(theta)/3 - 1/3)*N.x + (1/3 - 4*sin(theta + pi/6)/3)*N.y +
-            (4*cos(theta + pi/3)/3 - 1/3)*N.z)
+            (-4*cos(theta)/3 - S(1)/3)*N.x + (S(1)/3 - 4*sin(theta + pi/6)/3)*N.y +
+            (4*cos(theta + pi/3)/3 - S(1)/3)*N.z)
     assert A.dcm(N).simplify() == Matrix([
         [S(1)/3 - 2*cos(theta)/3, -2*sin(theta + pi/6)/3 - S(1)/3,
          2*cos(theta + pi/3)/3 + S(1)/3],
@@ -274,7 +274,7 @@ def test_pinjoint_arbitrary_axis():
                                                      omega*A.z)/sqrt(3)
     assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
     angle = A.ang_vel_in(N).angle_between(A.x+A.y-A.z)
-    assert expand_mul(angle).xreplace({omega: 1}) == 0
+    assert angle.xreplace({omega: 1}) == 0
     assert (C.masscenter.vel(N).simplify() ==
             (m*omega*N.y + m*omega*N.z + n*omega*A.y + n*omega*A.z)/sqrt(3))
     assert C.masscenter.pos_from(P.masscenter) == m*N.x - n*A.x
@@ -428,9 +428,9 @@ def test_slidingjoint_arbitrary_axis():
     PrismaticJoint('S', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y-A.z)
     assert N.x.angle_between(A.x + A.y - A.z) == 0 #Axis are aligned
     assert (A.x + A.y - A.z).express(N) == sqrt(3)*N.x
-    assert A.dcm(N) == Matrix([[sqrt(3)/3, -sqrt(3)/3, sqrt(3)/3],
-                                [sqrt(3)/3, sqrt(3)/6 + S(1)/2, S(1)/2 - sqrt(3)/6],
-                                [-sqrt(3)/3, S(1)/2 - sqrt(3)/6, sqrt(3)/6 + S(1)/2]])
+    assert A.dcm(N).simplify() == Matrix([[sqrt(3)/3, -sqrt(3)/3, sqrt(3)/3],
+                                          [sqrt(3)/3, sqrt(3)/6 + S(1)/2, S(1)/2 - sqrt(3)/6],
+                                          [-sqrt(3)/3, S(1)/2 - sqrt(3)/6, sqrt(3)/6 + S(1)/2]])
     assert C.masscenter.pos_from(P.masscenter) == (x + 1)*N.x - A.x
     assert C.masscenter.pos_from(P.masscenter).express(N) == \
         (x - sqrt(3)/3 + 1)*N.x + sqrt(3)/3*N.y - sqrt(3)/3*N.z
@@ -445,9 +445,9 @@ def test_slidingjoint_arbitrary_axis():
                     child_axis=A.x+A.y-A.z, parent_axis=N.x-N.y+N.z)
     assert (N.x-N.y+N.z).angle_between(A.x+A.y-A.z) == 0 #Axis are aligned
     assert (A.x+A.y-A.z).express(N) == N.x - N.y + N.z
-    assert A.dcm(N) == Matrix([[-S(1)/3, -S(2)/3, S(2)/3],
-                                [S(2)/3, S(1)/3, S(2)/3],
-                                [-S(2)/3, S(2)/3, S(1)/3]])
+    assert A.dcm(N).simplify() == Matrix([[-S(1)/3, -S(2)/3, S(2)/3],
+                                          [S(2)/3, S(1)/3, S(2)/3],
+                                          [-S(2)/3, S(2)/3, S(1)/3]])
     assert C.masscenter.pos_from(P.masscenter) == \
         (m + sqrt(3)*x/3)*N.x - sqrt(3)*x/3*N.y + sqrt(3)*x/3*N.z - n*A.x
     assert C.masscenter.pos_from(P.masscenter).express(N) == \

@@ -12,6 +12,17 @@ if USE_SYMENGINE:
         ImmutableMatrix, MatrixBase, Rational, Basic)
     from symengine.lib.symengine_wrapper import gcd as igcd
     from symengine import AppliedUndef
+
+    class Matrix(Matrix):
+        def simplify(self):
+            super().simplify()
+            return self
+    class ImmutableMatrix(ImmutableMatrix):
+        def simplify(self):
+            super().simplify()
+            return self
+    old_eye, eye = eye, lambda *args: Matrix(old_eye(*args))
+    old_zeros, zeros = zeros, lambda *args: Matrix(old_zeros(*args))
 else:
     from sympy import (Symbol, Integer, sympify, S,
         SympifyError, exp, log, gamma, sqrt, I, E, pi, Matrix,

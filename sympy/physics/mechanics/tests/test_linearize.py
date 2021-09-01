@@ -257,6 +257,8 @@ def test_linearize_pendulum_lagrange_minimal():
     # Linearize
     A, B, inp_vec = LM.linearize([q1], [q1d], A_and_B=True)
 
+    A.simplify()
+
     assert A == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
     assert B == Matrix([])
 
@@ -290,6 +292,7 @@ def test_linearize_pendulum_lagrange_nonminimal():
     # Perform the Linearization
     A, B, inp_vec = LM.linearize([q2], [q2d], [q1], [q1d],
             op_point=op_point, A_and_B=True)
+    A.simplify()
     assert A == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])
 
