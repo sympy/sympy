@@ -1,4 +1,5 @@
 from sympy import sin, cos, Matrix, sqrt, pi, expand_mul, S
+from sympy.core.backend import _simplify_matrix
 from sympy.core.symbol import symbols
 from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint, PrismaticJoint
 from sympy.physics.mechanics.joint import Joint
@@ -78,9 +79,9 @@ def test_pin_joint_double_pendulum():
                                [sin(q1), cos(q1), 0], [0, 0, 1]])
     assert A.dcm(B) == Matrix([[cos(q2), -sin(q2), 0],
                                [sin(q2), cos(q2), 0], [0, 0, 1]])
-    assert N.dcm(B).simplify() == Matrix([[cos(q1 + q2), -sin(q1 + q2), 0],
-                                          [sin(q1 + q2), cos(q1 + q2), 0],
-                                          [0, 0, 1]])
+    assert _simplify_matrix(N.dcm(B)) == Matrix([[cos(q1 + q2), -sin(q1 + q2), 0],
+                                                 [sin(q1 + q2), cos(q1 + q2), 0],
+                                                 [0, 0, 1]])
 
     # Check Angular Velocity
     assert A.ang_vel_in(N) == u1 * N.z
@@ -206,7 +207,7 @@ def test_pinjoint_arbitrary_axis():
              child_axis=A.x+A.y)
     assert expand_mul(N.x.angle_between(A.x + A.y)) == 0  # Axis are aligned
     assert (A.x + A.y).express(N).simplify() == sqrt(2)*N.x
-    assert A.dcm(N).simplify() == Matrix([
+    assert _simplify_matrix(A.dcm(N)) == Matrix([
         [sqrt(2)/2, -sqrt(2)*cos(theta)/2, -sqrt(2)*sin(theta)/2],
         [sqrt(2)/2, sqrt(2)*cos(theta)/2, sqrt(2)*sin(theta)/2],
         [0, -sin(theta), cos(theta)]])
@@ -230,7 +231,7 @@ def test_pinjoint_arbitrary_axis():
              child_axis=A.x+A.y-A.z)
     assert expand_mul(N.x.angle_between(A.x + A.y - A.z)) == 0  # Axis aligned
     assert (A.x + A.y - A.z).express(N).simplify() == sqrt(3)*N.x
-    assert A.dcm(N).simplify() == Matrix([
+    assert _simplify_matrix(A.dcm(N)) == Matrix([
         [sqrt(3)/3, -sqrt(6)*sin(theta + pi/4)/3,
          sqrt(6)*cos(theta + pi/4)/3],
         [sqrt(3)/3, sqrt(6)*cos(theta + pi/12)/3,
@@ -262,7 +263,7 @@ def test_pinjoint_arbitrary_axis():
     assert ((A.x-A.y+A.z).express(N).simplify() ==
             (-4*cos(theta)/3 - S(1)/3)*N.x + (S(1)/3 - 4*sin(theta + pi/6)/3)*N.y +
             (4*cos(theta + pi/3)/3 - S(1)/3)*N.z)
-    assert A.dcm(N).simplify() == Matrix([
+    assert _simplify_matrix(A.dcm(N)) == Matrix([
         [S(1)/3 - 2*cos(theta)/3, -2*sin(theta + pi/6)/3 - S(1)/3,
          2*cos(theta + pi/3)/3 + S(1)/3],
         [2*cos(theta + pi/3)/3 + S(1)/3, 2*cos(theta)/3 - S(1)/3,
@@ -428,9 +429,9 @@ def test_slidingjoint_arbitrary_axis():
     PrismaticJoint('S', P, C, parent_joint_pos=N.x, child_joint_pos=A.x, child_axis=A.x+A.y-A.z)
     assert N.x.angle_between(A.x + A.y - A.z) == 0 #Axis are aligned
     assert (A.x + A.y - A.z).express(N) == sqrt(3)*N.x
-    assert A.dcm(N).simplify() == Matrix([[sqrt(3)/3, -sqrt(3)/3, sqrt(3)/3],
-                                          [sqrt(3)/3, sqrt(3)/6 + S(1)/2, S(1)/2 - sqrt(3)/6],
-                                          [-sqrt(3)/3, S(1)/2 - sqrt(3)/6, sqrt(3)/6 + S(1)/2]])
+    assert _simplify_matrix(A.dcm(N)) == Matrix([[sqrt(3)/3, -sqrt(3)/3, sqrt(3)/3],
+                                                 [sqrt(3)/3, sqrt(3)/6 + S(1)/2, S(1)/2 - sqrt(3)/6],
+                                                 [-sqrt(3)/3, S(1)/2 - sqrt(3)/6, sqrt(3)/6 + S(1)/2]])
     assert C.masscenter.pos_from(P.masscenter) == (x + 1)*N.x - A.x
     assert C.masscenter.pos_from(P.masscenter).express(N) == \
         (x - sqrt(3)/3 + 1)*N.x + sqrt(3)/3*N.y - sqrt(3)/3*N.z
@@ -445,9 +446,9 @@ def test_slidingjoint_arbitrary_axis():
                     child_axis=A.x+A.y-A.z, parent_axis=N.x-N.y+N.z)
     assert (N.x-N.y+N.z).angle_between(A.x+A.y-A.z) == 0 #Axis are aligned
     assert (A.x+A.y-A.z).express(N) == N.x - N.y + N.z
-    assert A.dcm(N).simplify() == Matrix([[-S(1)/3, -S(2)/3, S(2)/3],
-                                          [S(2)/3, S(1)/3, S(2)/3],
-                                          [-S(2)/3, S(2)/3, S(1)/3]])
+    assert _simplify_matrix(A.dcm(N)) == Matrix([[-S(1)/3, -S(2)/3, S(2)/3],
+                                                 [S(2)/3, S(1)/3, S(2)/3],
+                                                 [-S(2)/3, S(2)/3, S(1)/3]])
     assert C.masscenter.pos_from(P.masscenter) == \
         (m + sqrt(3)*x/3)*N.x - sqrt(3)*x/3*N.y + sqrt(3)*x/3*N.z - n*A.x
     assert C.masscenter.pos_from(P.masscenter).express(N) == \
