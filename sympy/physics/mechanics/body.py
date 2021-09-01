@@ -596,7 +596,7 @@ class Body(RigidBody, Particle):  # type: ignore
         [1,        0,       0],
         [0,  cos(q1), sin(q1)],
         [0, -sin(q1), cos(q1)]])
-        
+
         See Also
         ========
 
@@ -654,7 +654,7 @@ class Body(RigidBody, Particle):  # type: ignore
 
         See Also
         ========
-        
+
         sympy.physics.vector.frame.ReferenceFrame.orient_explicit
 
         """
@@ -712,7 +712,7 @@ class Body(RigidBody, Particle):  # type: ignore
 
         See Also
         ========
-        
+
         sympy.physics.vector.frame.ReferenceFrame.orient_body_fixed
 
         """
@@ -766,9 +766,9 @@ class Body(RigidBody, Particle):  # type: ignore
 
         See Also
         ========
-        
+
         sympy.physics.vector.frame.ReferenceFrame.orient_space_fixed
-        
+
         """
 
         if isinstance(parent, Body):
@@ -824,9 +824,9 @@ class Body(RigidBody, Particle):  # type: ignore
 
         See Also
         ========
-        
+
         sympy.physics.vector.frame.ReferenceFrame.orient_quaternion
-        
+
         """
 
         if isinstance(parent, Body):
