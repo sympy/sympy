@@ -1204,6 +1204,7 @@ def test_issue_21145():
     with evaluate(False):
         assert a.is_extended_negative == True
 
+
 def test_issue_21651():
     k = Symbol('k', positive=True, integer=True)
     exp = 2*2**(-k)
