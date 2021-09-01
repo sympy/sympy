@@ -1627,21 +1627,21 @@ class Expr(Basic, EvalfMixin):
                 ii = find(n, nx, right)
                 if ii is not None:
                     if not hit:
-                        if not right:
-                            np = n[ii+len(nx):]
-                        else:
+                        if right:
                             np = n[:ii]
-                    else:
-                        if not right:
-                            if n[ii+len(nx):] != np:
-                              break
                         else:
+                            np = n[ii+len(nx):]
+                    else:
+                        if right:
                             if n[:ii] != np:
                                 break
-                    if not right:
-                        hit.append((r, n[:ii]))
-                    else:
+                        else:
+                            if n[ii+len(nx):] != np:
+                                break
+                    if right:
                         hit.append(({},n[ii+len(nx):]))
+                    else:
+                        hit.append((r, n[:ii]))
             else:
                 if hit is not None:
                     return Add(*[Mul(*(list(r) + n)) for r, n in hit])
