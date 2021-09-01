@@ -32,6 +32,10 @@ class ExpBase(Function):
     unbranched = True
     _singularities = (S.ComplexInfinity,)
 
+    @property
+    def kind(self):
+        return self.exp.kind
+
     def inverse(self, argindex=1):
         """
         Returns the inverse function of ``exp(x)``.
