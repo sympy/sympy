@@ -3,6 +3,7 @@ from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild, Pow
 from sympy.core.assumptions import (assumptions, check_assumptions,
     failing_assumptions, common_assumptions)
 from sympy.core.facts import InconsistentAssumptions
+from sympy.core.parameters import evaluate
 from sympy import simplify
 
 from sympy.testing.pytest import raises, XFAIL
@@ -1197,6 +1198,11 @@ def test_issue_17556():
     assert z.is_imaginary is False
     assert z.is_finite is False
 
+
+def test_issue_21145():
+    a = Integer(-3)
+    with evaluate(False):
+        assert a.is_extended_negative == True
 
 def test_issue_21651():
     k = Symbol('k', positive=True, integer=True)
