@@ -2171,7 +2171,7 @@ class motzkin(Function):
         return Integer(cls._motzkin(n - 1))
 
 
-def nD(s, brute=None):
+def nD(s, brute=None, multiplicity=False):
     """return the number of derangements for the elements in ``s``
 
     Possible values for ``s``:
@@ -2181,6 +2181,9 @@ def nD(s, brute=None):
         sequence - converted to a multiset internally
 
         multiset - {element: multiplicity}
+
+    If ``multiplicity=True`` (default is False) then ``s`` is interpreted
+    as the multiplicity of each element if it is a sequence or multiset.
 
     Examples
     ========
@@ -2203,49 +2206,105 @@ def nD(s, brute=None):
 
     By default, a brute-force enumeration and count of multiset permutations
     is only done if there are fewer than 9 elements. There may be cases when
-    there is high mutliplicty with few unique elements that will benefit
+    there is high multiplicty with few unique elements that will benefit
     from a brute-force enumeration, too. For this reason, the `brute`
     keyword is provided; None is the default. When False, the brute-force
     enumeration will never be used. When True, it will always be used.
 
     >>> nD('1111222233', brute=True)
     44
+
+    When ``multiplicity=True`` the input is interpreted as the counts
+    of each element; this is convenient because the identity of the
+    elements does not affect the number of derangements.
+
+    >>> nD('1111222233')
+    44
+    >>> nD([4, 4, 2], multiplicity=True, brute=True)
+    44
+    >>> nD({2: 1, 4: 2}, multiplicity=True, brute=True)
+    44
+
     """
-    from sympy.abc import x
-    from sympy.utilities.iterables import multiset, multiset_derangements
-    from sympy.integrals.integrals import integrate
+    from sympy.core.compatibility import SYMPY_INTS
+    from sympy.core.symbol import Dummy
+    from sympy.utilities.iterables import multiset, multiset_derangements, iterable
+    from sympy.integrals.integrals import integrate, Integral
     from sympy.functions.elementary.exponential import exp
     from sympy.functions.special.polynomials import laguerre
+    bad = lambda x: isinstance(x, SYMPY_INTS) and x < 0 or False
+    if isinstance(s, SYMPY_INTS):
+        if multiplicity:
+            raise ValueError('int value for s not supported when multiplicity=True')
+        if s < 0:
+            raise ValueError('number of elements must not be negative')
+        if not s:
+            return S.Zero
+        return subfactorial(s)
     if not s:
         return S.Zero
-    if isinstance(s, SYMPY_INTS):
-        return subfactorial(s)
-    elif type(s) is dict:
-        if any(i < 0 for i in s.values()):
-            raise ValueError('no count should be negative')
-        ms = {k: v for k, v in s.items() if v}
+    if multiplicity:
+        if isinstance(s, dict):
+            if any(bad(i) or bad(j) for i, j in s.items()):
+                raise ValueError('no count should be negative')
+            counts = {k: v for k, v in s.items() if k*v}
+        else:
+            s = list(s)
+            if any(bad(i) for i in s):
+                raise ValueError('no count should be negative')
+            counts = multiset([i for i in s if i])
+        if not counts:
+            return S.Zero
+        n = sum(k*v for k, v in counts.items())
+        s = None
+        nkey = sum(counts.values())
+    else:
+        if type(s) is not dict:
+            s = list(s)
+            ms = multiset(s)
+        elif type(s) is dict:
+            if any(bad(i) for i in s.values()):
+                raise ValueError('no count should be negative')
+            ms = {k: v for k, v in s.items() if v}
+            s = None
         if not ms:
             return S.Zero
-        s = None
-    else:
-        ms = multiset(s)
-    big = max(ms.values())
-    if set(ms.values()) == 1:  # no repetition
-        return subfactorial(len(s))
-    n = sum(ms.values())
-    if big*2 > n:
-        return S.Zero
-    if big*2 == n:
-        if len(ms) == 2 and len(set(ms.values())) == 1:
-            return S.One  # aaabbb
-        if len(ms) - 1 == big:  # [big, 1, 1, 1]
-            return factorial(big)  # abc part of abcddd
-    if n < 9 and brute is None or brute:
-        # for all possibilities, this was found to be faster
-        if s is None:
-            s = []
-            for k, v in enumerate(ms.values()):
-                s.extend([k]*v)
-        return Integer(sum(1 for i in multiset_derangements(s)))
-    return Integer(abs(integrate(exp(-x)*Mul(*[
-        laguerre(i, x) for i in ms.values()]), (x, 0, oo))))
+        n = sum(ms.values())
+        counts = multiset(ms.values())
+        nkey = len(ms)
+    try:
+        big = int(max(counts))
+    except TypeError:
+        big = None
+    if big is not None:
+        if big == 1:  # no repetition
+            return subfactorial(nkey)
+        try:
+            n = int(n)
+        except TypeError:
+            n = None
+        if n is not None:
+            nval = len(counts)
+            if big*2 > n:
+                return S.Zero
+            if big*2 == n:
+                if nkey == 2 and nval == 1:
+                    return S.One  # aaabbb
+                if nkey - 1 == big:  # one element repeated
+                    return factorial(big)  # e.g. abc part of abcddd
+            if n < 9 and brute is None or brute:
+                # for all possibilities, this was found to be faster
+                if s is None:
+                    s = []
+                    i = 0
+                    for m, v in counts.items():
+                        for j in range(v):
+                            s.extend([i]*m)
+                            i += 1
+                return Integer(sum(1 for i in multiset_derangements(s)))
+    x = Dummy('x')
+    args = exp(-x)*Mul(*[
+        laguerre(i, x)**m for i, m in counts.items()]), (x, 0, oo)
+    if big is None or n is None:
+        return floor(abs(Integral(*args)))
+    return Integer(abs(integrate(*args)))

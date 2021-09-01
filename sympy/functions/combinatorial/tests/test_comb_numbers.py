@@ -22,9 +22,7 @@ from sympy.core.expr import unchanged
 from sympy.core.numbers import GoldenRatio, Integer
 
 from sympy.testing.pytest import XFAIL, raises, nocache_fail
-
-
-x = Symbol('x')
+from sympy.abc import x, y
 
 
 def test_carmichael():
@@ -725,3 +723,19 @@ def test_nD_derangements():
     raises(ValueError, lambda: nD({1: -1}))
     assert nD('112') == 0
     assert [nD(i) for i in range(6)] == [0, 0, 1, 2, 9, 44]
+    assert nD((i for i in range(4))) == nD('0123') == 9
+    assert nD((i for i in range(4)), multiplicity=True) == 3
+    assert nD({0: 1, 1: 1, 2: 1, 3: 1}, multiplicity=True) == 3
+    assert nD([0, 1, 2, 3], multiplicity=True) == 3
+    raises(ValueError, lambda: nD(0, multiplicity=True))
+    raises(ValueError, lambda: nD(-1))
+    assert nD({-1: 1, -2: 1}) == 1
+    raises(ValueError, lambda: nD({1: -1}))
+    raises(ValueError, lambda: nD(0, multiplicity=True))
+    raises(ValueError, lambda: nD({-1: 1, 2: 1}, multiplicity=True))
+    raises(ValueError, lambda: nD({1: -1, 2: 1}, multiplicity=True))
+    raises(ValueError, lambda: nD([-1, 2], multiplicity=True))
+    assert str(nD({1: x}, multiplicity=True)) == 'subfactorial(x)'
+    assert str(nD({1: x, 2: y}, multiplicity=True)) == (
+        'floor(Abs(Integral((1 - _x)**x'
+        '*(_x**2/2 - 2*_x + 1)**y*exp(-_x), (_x, 0, oo))))')
