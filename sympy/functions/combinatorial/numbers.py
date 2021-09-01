@@ -2171,19 +2171,10 @@ class motzkin(Function):
         return Integer(cls._motzkin(n - 1))
 
 
-def nD(s, brute=None, multiplicity=False):
-    """return the number of derangements for the elements in ``s``
-
-    Possible values for ``s``:
-
-        integer - set of length ``s``
-
-        sequence - converted to a multiset internally
-
-        multiset - {element: multiplicity}
-
-    If ``multiplicity=True`` (default is False) then ``s`` is interpreted
-    as the multiplicity of each element if it is a sequence or multiset.
+def nD(i=None, brute=None, *, n=None, m=None):
+    """return the number of derangements for: ``n`` unique items, ``i``
+    items (as a sequence or multiset), or multiplicities, ``m`` given
+    as a sequence or multiset.
 
     Examples
     ========
@@ -2227,84 +2218,77 @@ def nD(s, brute=None, multiplicity=False):
 
     """
     from sympy.core.compatibility import SYMPY_INTS
-    from sympy.core.symbol import Dummy
     from sympy.utilities.iterables import multiset, multiset_derangements, iterable
     from sympy.integrals.integrals import integrate, Integral
     from sympy.functions.elementary.exponential import exp
     from sympy.functions.special.polynomials import laguerre
-    bad = lambda x: isinstance(x, SYMPY_INTS) and x < 0 or False
-    if isinstance(s, SYMPY_INTS):
-        if multiplicity:
-            raise ValueError('int value for s not supported when multiplicity=True')
-        if s < 0:
-            raise ValueError('number of elements must not be negative')
-        if not s:
+    from sympy.abc import x
+    def ok(x):
+        if not isinstance(x, SYMPY_INTS):
+            raise TypeError('expecting integer values')
+        if x < 0:
+            raise ValueError('value must not be negative')
+        return True
+
+    if (i, n, m).count(None) != 2:
+        raise ValueError('enter only 1 of i, n, or m')
+    if i is not None:
+        if isinstance(i, SYMPY_INTS):
+            raise TypeError('items must be a list or dictionary')
+        if not i:
             return S.Zero
-        return subfactorial(s)
-    if not s:
-        return S.Zero
-    if multiplicity:
-        if isinstance(s, dict):
-            if any(bad(i) or bad(j) for i, j in s.items()):
-                raise ValueError('no count should be negative')
-            counts = {k: v for k, v in s.items() if k*v}
-        else:
-            s = list(s)
-            if any(bad(i) for i in s):
-                raise ValueError('no count should be negative')
-            counts = multiset([i for i in s if i])
-        if not counts:
-            return S.Zero
-        n = sum(k*v for k, v in counts.items())
-        s = None
-        nkey = sum(counts.values())
-    else:
-        if type(s) is not dict:
-            s = list(s)
+        if type(i) is not dict:
+            s = list(i)
             ms = multiset(s)
-        elif type(s) is dict:
-            if any(bad(i) for i in s.values()):
-                raise ValueError('no count should be negative')
-            ms = {k: v for k, v in s.items() if v}
+        elif type(i) is dict:
+            all(ok(_) for _ in i.values())
+            ms = {k: v for k, v in i.items() if v}
             s = None
         if not ms:
             return S.Zero
-        n = sum(ms.values())
+        N = sum(ms.values())
         counts = multiset(ms.values())
         nkey = len(ms)
-    try:
-        big = int(max(counts))
-    except TypeError:
-        big = None
-    if big is not None:
-        if big == 1:  # no repetition
-            return subfactorial(nkey)
-        try:
-            n = int(n)
-        except TypeError:
-            n = None
-        if n is not None:
-            nval = len(counts)
-            if big*2 > n:
-                return S.Zero
-            if big*2 == n:
-                if nkey == 2 and nval == 1:
-                    return S.One  # aaabbb
-                if nkey - 1 == big:  # one element repeated
-                    return factorial(big)  # e.g. abc part of abcddd
-            if n < 9 and brute is None or brute:
-                # for all possibilities, this was found to be faster
-                if s is None:
-                    s = []
-                    i = 0
-                    for m, v in counts.items():
-                        for j in range(v):
-                            s.extend([i]*m)
-                            i += 1
-                return Integer(sum(1 for i in multiset_derangements(s)))
-    x = Dummy('x')
-    args = exp(-x)*Mul(*[
-        laguerre(i, x)**m for i, m in counts.items()]), (x, 0, oo)
-    if big is None or n is None:
-        return floor(abs(Integral(*args)))
-    return Integer(abs(integrate(*args)))
+    elif n is not None:
+        ok(n)
+        if not n:
+            return S.Zero
+        return subfactorial(n)
+    elif m is not None:
+        if isinstance(m, dict):
+            all(ok(i) and ok(j) for i, j in m.items())
+            counts = {k: v for k, v in m.items() if k*v}
+        elif iterable(m) or isinstance(m, str):
+            m = list(m)
+            all(ok(i) for i in m)
+            counts = multiset([i for i in m if i])
+        else:
+            raise TypeError('expecting iterable')
+        if not counts:
+            return S.Zero
+        N = sum(k*v for k, v in counts.items())
+        nkey = sum(counts.values())
+        s = None
+    big = int(max(counts))
+    if big == 1:  # no repetition
+        return subfactorial(nkey)
+    nval = len(counts)
+    if big*2 > N:
+        return S.Zero
+    if big*2 == N:
+        if nkey == 2 and nval == 1:
+            return S.One  # aaabbb
+        if nkey - 1 == big:  # one element repeated
+            return factorial(big)  # e.g. abc part of abcddd
+    if N < 9 and brute is None or brute:
+        # for all possibilities, this was found to be faster
+        if s is None:
+            s = []
+            i = 0
+            for m, v in counts.items():
+                for j in range(v):
+                    s.extend([i]*m)
+                    i += 1
+        return Integer(sum(1 for i in multiset_derangements(s)))
+    return Integer(abs(integrate(exp(-x)*Mul(*[
+        laguerre(i, x)**m for i, m in counts.items()]), (x, 0, oo))))

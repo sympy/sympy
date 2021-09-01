@@ -722,20 +722,15 @@ def test_nD_derangements():
     assert nD({1: 0}) == 0
     raises(ValueError, lambda: nD({1: -1}))
     assert nD('112') == 0
-    assert [nD(i) for i in range(6)] == [0, 0, 1, 2, 9, 44]
+    assert [nD(n=i) for i in range(6)] == [0, 0, 1, 2, 9, 44]
     assert nD((i for i in range(4))) == nD('0123') == 9
-    assert nD((i for i in range(4)), multiplicity=True) == 3
-    assert nD({0: 1, 1: 1, 2: 1, 3: 1}, multiplicity=True) == 3
-    assert nD([0, 1, 2, 3], multiplicity=True) == 3
-    raises(ValueError, lambda: nD(0, multiplicity=True))
-    raises(ValueError, lambda: nD(-1))
+    assert nD(m=(i for i in range(4))) == 3
+    assert nD(m={0: 1, 1: 1, 2: 1, 3: 1}) == 3
+    assert nD(m=[0, 1, 2, 3]) == 3
+    raises(TypeError, lambda: nD(m=0))
+    raises(TypeError, lambda: nD(-1))
     assert nD({-1: 1, -2: 1}) == 1
     raises(ValueError, lambda: nD({1: -1}))
-    raises(ValueError, lambda: nD(0, multiplicity=True))
-    raises(ValueError, lambda: nD({-1: 1, 2: 1}, multiplicity=True))
-    raises(ValueError, lambda: nD({1: -1, 2: 1}, multiplicity=True))
-    raises(ValueError, lambda: nD([-1, 2], multiplicity=True))
-    assert str(nD({1: x}, multiplicity=True)) == 'subfactorial(x)'
-    assert str(nD({1: x, 2: y}, multiplicity=True)) == (
-        'floor(Abs(Integral((1 - _x)**x'
-        '*(_x**2/2 - 2*_x + 1)**y*exp(-_x), (_x, 0, oo))))')
+    raises(ValueError, lambda: nD(m={-1: 1, 2: 1}))
+    raises(ValueError, lambda: nD(m={1: -1, 2: 1}))
+    raises(ValueError, lambda: nD(m=[-1, 2]))
