@@ -724,3 +724,4 @@ def test_nD_derangements():
     assert nD({1: 0}) == 0
     raises(ValueError, lambda: nD({1: -1}))
     assert nD('112') == 0
+    assert [nD(i) for i in range(6)] == [0, 0, 1, 2, 9, 44]

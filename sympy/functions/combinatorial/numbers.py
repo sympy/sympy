@@ -2172,7 +2172,15 @@ class motzkin(Function):
 
 
 def nD(s, brute=None):
-    """return the number of derangements for the elements in multiset `s`
+    """return the number of derangements for the elements in ``s``
+
+    Possible values for ``s``:
+
+        integer - set of length ``s``
+
+        sequence - converted to a multiset internally
+
+        multiset - {element: multiplicity}
 
     Examples
     ========
@@ -2187,8 +2195,10 @@ def nD(s, brute=None):
     >>> nD('abc')
     2
 
-    Input as an iterable or dictionary (multiset form) is accepted:
+    Input as an int, iterable or dictionary (multiset form) is accepted:
 
+    >>> nD(3)
+    2
     >>> assert nD([1, 2, 2, 3, 3, 3]) == nD({1: 1, 2: 2, 3: 3})
 
     By default, a brute-force enumeration and count of multiset permutations
@@ -2208,7 +2218,9 @@ def nD(s, brute=None):
     from sympy.functions.special.polynomials import laguerre
     if not s:
         return S.Zero
-    if type(s) is dict:
+    if isinstance(s, SYMPY_INTS):
+        return subfactorial(s)
+    elif type(s) is dict:
         if any(i < 0 for i in s.values()):
             raise ValueError('no count should be negative')
         ms = {k: v for k, v in s.items() if v}
