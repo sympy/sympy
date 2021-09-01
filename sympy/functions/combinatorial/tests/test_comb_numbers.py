@@ -22,7 +22,7 @@ from sympy.core.expr import unchanged
 from sympy.core.numbers import GoldenRatio, Integer
 
 from sympy.testing.pytest import XFAIL, raises, nocache_fail
-from sympy.abc import x, y
+from sympy.abc import x
 
 
 def test_carmichael():
@@ -722,6 +722,7 @@ def test_nD_derangements():
     assert nD({1: 0}) == 0
     raises(ValueError, lambda: nD({1: -1}))
     assert nD('112') == 0
+    assert nD(i='112') == 0
     assert [nD(n=i) for i in range(6)] == [0, 0, 1, 2, 9, 44]
     assert nD((i for i in range(4))) == nD('0123') == 9
     assert nD(m=(i for i in range(4))) == 3
@@ -730,7 +731,14 @@ def test_nD_derangements():
     raises(TypeError, lambda: nD(m=0))
     raises(TypeError, lambda: nD(-1))
     assert nD({-1: 1, -2: 1}) == 1
+    assert nD(m={0: 3}) == 0
+    raises(ValueError, lambda: nD(i='123', n=3))
+    raises(ValueError, lambda: nD(i='123', m=(1,2)))
+    raises(ValueError, lambda: nD(n=0, m=(1,2)))
     raises(ValueError, lambda: nD({1: -1}))
     raises(ValueError, lambda: nD(m={-1: 1, 2: 1}))
     raises(ValueError, lambda: nD(m={1: -1, 2: 1}))
     raises(ValueError, lambda: nD(m=[-1, 2]))
+    raises(TypeError, lambda: nD({1: x}))
+    raises(TypeError, lambda: nD(m={1: x}))
+    raises(TypeError, lambda: nD(m={x: 1}))

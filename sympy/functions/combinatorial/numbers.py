@@ -2189,37 +2189,34 @@ def nD(i=None, brute=None, *, n=None, m=None):
     >>> nD('abc')
     2
 
-    Input as an int, iterable or dictionary (multiset form) is accepted:
+    Input as iterable or dictionary (multiset form) is accepted:
 
-    >>> nD(3)
-    2
     >>> assert nD([1, 2, 2, 3, 3, 3]) == nD({1: 1, 2: 2, 3: 3})
 
     By default, a brute-force enumeration and count of multiset permutations
     is only done if there are fewer than 9 elements. There may be cases when
     there is high multiplicty with few unique elements that will benefit
     from a brute-force enumeration, too. For this reason, the `brute`
-    keyword is provided; None is the default. When False, the brute-force
+    keyword (default None) is provided. When False, the brute-force
     enumeration will never be used. When True, it will always be used.
 
     >>> nD('1111222233', brute=True)
     44
 
-    When ``multiplicity=True`` the input is interpreted as the counts
-    of each element; this is convenient because the identity of the
-    elements does not affect the number of derangements.
+    For convenience, one may specify ``n`` distinct items using the
+    ``n`` keyword:
 
-    >>> nD('1111222233')
-    44
-    >>> nD([4, 4, 2], multiplicity=True, brute=True)
-    44
-    >>> nD({2: 1, 4: 2}, multiplicity=True, brute=True)
-    44
+    >>> assert nD(n=3) == nD('abc') == 2
+
+    Since the number of derangments depends on the multiplicity of the
+    elements and not the elements themselves, it may be more convenient
+    to give a list or multiset of multiplicities using keyword ``m``:
+
+    >>> assert nD('abc') == nD(m=(1,1,1)) == nD(m={1:3}) == 2
 
     """
-    from sympy.core.compatibility import SYMPY_INTS
     from sympy.utilities.iterables import multiset, multiset_derangements, iterable
-    from sympy.integrals.integrals import integrate, Integral
+    from sympy.integrals.integrals import integrate
     from sympy.functions.elementary.exponential import exp
     from sympy.functions.special.polynomials import laguerre
     from sympy.abc import x
