@@ -1864,7 +1864,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         old_method = self._sage_
         from sage.interfaces.sympy import sympy_init
         sympy_init()  # may monkey-patch _sage_ method into self's class or superclasses
-        if old_method is self._sage_:
+        if old_method == self._sage_:
             raise NotImplementedError('conversion to SageMath is not implemented')
         else:
             # call the freshly monkey-patched method
