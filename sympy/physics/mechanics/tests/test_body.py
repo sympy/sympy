@@ -281,16 +281,18 @@ def test_orient_axis():
     N = ReferenceFrame('N')
     A.orient_axis(N, N.x + N.y, 10)
     B.orient_axis(A, A.x + A.y, 10)
-    dcm = Matrix([[cos(10)/2 + S.Half, S.Half - cos(10)/2, -sqrt(2)*sin(10)/2], [S.Half - cos(10)/2,
-    cos(10)/2 + S.Half, sqrt(2)*sin(10)/2], [sqrt(2)*sin(10)/2, -sqrt(2)*sin(10)/2, cos(10)]])
+    dcm = Matrix([[cos(10)/2 + S.Half, S.Half - cos(10)/2, -sqrt(2)*sin(10)/2],
+                  [S.Half - cos(10)/2, cos(10)/2 + S.Half,  sqrt(2)*sin(10)/2],
+                  [sqrt(2)*sin(10)/2 , -sqrt(2)*sin(10)/2,            cos(10)]])
     assert B.dcm(A) == A.dcm(N) == dcm
 
 def test_orient_explicit():
     A = Body('A')
     B = Body('B')
     N = ReferenceFrame('N')
-    dcm = Matrix([[cos(10), 0, -sin(10)], [sin(10)**2, cos(10), sin(10)*cos(10)], [sin(10)*cos(10),
-    -sin(10), cos(10)**2]])
+    dcm = Matrix([[        cos(10),        0,        -sin(10)],
+                  [     sin(10)**2,  cos(10), sin(10)*cos(10)],
+                  [sin(10)*cos(10), -sin(10),      cos(10)**2]])
     A.orient_explicit(N, dcm)
     B.orient_explicit(A, dcm)
     assert A.dcm(B) == N.dcm(A.frame) == dcm
@@ -301,8 +303,9 @@ def test_orient_body_fixed():
     N = ReferenceFrame('N')
     A.orient_body_fixed(N, (1,1,0), 'XYX')
     B.orient_body_fixed(A, (1,1,0), 'XYX')
-    dcm = Matrix([[cos(1), sin(1)**2, -sin(1)*cos(1)], [0, cos(1), sin(1)], [sin(1), -sin(1)*cos(1),
-    cos(1)**2]])
+    dcm = Matrix([[cos(1),      sin(1)**2, -sin(1)*cos(1)],
+                  [     0,         cos(1),         sin(1)],
+                  [sin(1), -sin(1)*cos(1),      cos(1)**2]])
     assert A.dcm(N) == B.dcm(A) == dcm
 
 def test_orient_space_fixed():
@@ -311,9 +314,9 @@ def test_orient_space_fixed():
     N = ReferenceFrame('N')
     A.orient_space_fixed(N, (1,2,3), 'ZXY')
     B.orient_space_fixed(A, (1,2,3), 'ZXY')
-    dcm = Matrix([[cos(1)*cos(3) + sin(1)*sin(2)*sin(3), sin(1)*cos(2),
-    sin(1)*sin(2)*cos(3) - sin(3)*cos(1)], [sin(2)*sin(3)*cos(1) - sin(1)*cos(3), cos(1)*cos(2),
-    sin(2)*cos(1)*cos(3) + sin(1)*sin(3)], [sin(3)*cos(2), -sin(2), cos(2)*cos(3)]])
+    dcm = Matrix([[cos(1)*cos(3)+sin(1)*sin(2)*sin(3), sin(1)*cos(2), sin(1)*sin(2)*cos(3)-sin(3)*cos(1)],
+                  [sin(2)*sin(3)*cos(1)-sin(1)*cos(3), cos(1)*cos(2), sin(2)*cos(1)*cos(3)+sin(1)*sin(3)],
+                  [                     sin(3)*cos(2),       -sin(2),                      cos(2)*cos(3)]])
     assert A.dcm(N) == B.dcm(A) == dcm
 
 def test_orient_quaternion():
