@@ -1,5 +1,5 @@
 from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros, acos,
-    ImmutableMatrix as Matrix)
+    ImmutableMatrix as Matrix, _simplify_matrix)
 from sympy import trigsimp
 from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
@@ -653,7 +653,7 @@ class Vector(Printable, EvalfMixin):
         """Returns a simplified Vector."""
         d = {}
         for v in self.args:
-            d[v[1]] = v[0].simplify()
+            d[v[1]] = _simplify_matrix(v[0])
         return Vector(d)
 
     def subs(self, *args, **kwargs):
