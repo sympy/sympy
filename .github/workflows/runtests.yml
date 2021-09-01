@@ -39,11 +39,15 @@ jobs:
       - name: Test all modules are listed in setup.py
         run: bin/test_setup.py
 
-      - name: Test for ambiguous author information in commits
-        run: bin/mailmap_update.py
+      # -- temporarily disabled -- #
+      # These checks were too difficult for new contributors. They will
+      # need to be made easier to work with before they are reenabled.
 
-      - name: Make sure all commits have an associated author
-        run: bin/authors_update.py
+      #- name: Test for ambiguous author information in commits
+      #  run: bin/mailmap_update.py
+
+      #- name: Make sure all commits have an associated author
+      #  run: bin/authors_update.py
 
   # -------------------- Doctests latest Python -------------------- #
 
@@ -113,6 +117,22 @@ jobs:
       - run: bin/test_executable.py
       # Test modules with specific dependencies
       - run: bin/test_optional_dependencies.py
+
+  # -------------------- Tensorflow tests -------------------------- #
+
+  tensorflow:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: python -m pip install --upgrade pip
+      - run: pip install mpmath numpy scipy tensorflow
+      # Test modules that can use tensorflow
+      - run: bin/test_tensorflow.py
 
   # -------------------- Slow test split 1/2 ----------------------- #
 

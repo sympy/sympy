@@ -226,7 +226,6 @@ class BooleanAtom(Boolean):
 
     # /// drop when Py2 is no longer supported
     def __lt__(self, other):
-        from sympy.utilities.misc import filldedent
         raise TypeError(filldedent('''
             A Boolean argument can only be used in
             Eq and Ne; all other relationals expect
@@ -450,7 +449,6 @@ class BooleanFunction(Application, Boolean):
         return simplify(self, **kwargs)
 
     def __lt__(self, other):
-        from sympy.utilities.misc import filldedent
         raise TypeError(filldedent('''
             A Boolean argument can only be used in
             Eq and Ne; all other relationals expect
@@ -464,12 +462,12 @@ class BooleanFunction(Application, Boolean):
     def binary_check_and_simplify(self, *args):
         from sympy.core.relational import Relational, Eq, Ne
         args = [as_Boolean(i) for i in args]
-        bin = set().union(*[i.binary_symbols for i in args])
+        bin_syms = set().union(*[i.binary_symbols for i in args])
         rel = set().union(*[i.atoms(Relational) for i in args])
         reps = {}
-        for x in bin:
+        for x in bin_syms:
             for r in rel:
-                if x in bin and x in r.free_symbols:
+                if x in bin_syms and x in r.free_symbols:
                     if isinstance(r, (Eq, Ne)):
                         if not (
                                 S.true in r.args or
@@ -527,9 +525,9 @@ class BooleanFunction(Application, Boolean):
         return Derivative(self, *symbols, **assumptions)
 
     def _eval_derivative(self, x):
-        from sympy.core.relational import Eq
-        from sympy.functions.elementary.piecewise import Piecewise
         if x in self.binary_symbols:
+            from sympy.core.relational import Eq
+            from sympy.functions.elementary.piecewise import Piecewise
             return Piecewise(
                 (0, Eq(self.subs(x, 0), self.subs(x, 1))),
                 (1, True))
@@ -595,7 +593,7 @@ class BooleanFunction(Application, Boolean):
             results = []
             # Try all combinations
             for ((i, pi), (j, pj)) in combinations(enumerate(Rel), 2):
-                for k, (pattern, simp) in enumerate(patterns):
+                for pattern, simp in patterns:
                     res = []
                     # use SymPy matching
                     oldexpr = rv.func(pi, pj)
@@ -640,7 +638,7 @@ class BooleanFunction(Application, Boolean):
                 results = list(reversed(sorted(results,
                                                key=lambda pair: pair[0])))
                 # Replace the one providing most simplification
-                cost, replacement = results[0]
+                replacement = results[0][1]
                 i, j, newrel = replacement
                 # Remove the old relationals
                 del Rel[j]
@@ -725,6 +723,14 @@ class And(LatticeOp, BooleanFunction):
         if bad is not None:
             # let it raise
             bad.subs(old, new)
+        # If old is And, replace the parts of the arguments with new if all
+        # are there
+        if isinstance(old, And):
+            old_set = set(old.args)
+            if old_set.issubset(args):
+                args = set(args) - old_set
+                args.add(new)
+
         return self.func(*args)
 
     def _eval_simplify(self, **kwargs):
@@ -872,6 +878,14 @@ class Or(LatticeOp, BooleanFunction):
         if bad is not None:
             # let it raise
             bad.subs(old, new)
+        # If old is Or, replace the parts of the arguments with new if all
+        # are there
+        if isinstance(old, Or):
+            old_set = set(old.args)
+            if old_set.issubset(args):
+                args = set(args) - old_set
+                args.add(new)
+
         return self.func(*args)
 
     def _eval_as_set(self):
@@ -1136,6 +1150,16 @@ class Xor(BooleanFunction):
         return self._apply_patternbased_simplification(rv, patterns,
             kwargs['measure'], None)
 
+    def _eval_subs(self, old, new):
+        # If old is Xor, replace the parts of the arguments with new if all
+        # are there
+        if isinstance(old, Xor):
+            old_set = set(old.args)
+            if old_set.issubset(self.args):
+                args = set(self.args) - old_set
+                args.add(new)
+                return self.func(*args)
+
 
 class Nand(BooleanFunction):
     """
@@ -1285,7 +1309,7 @@ class Implies(BooleanFunction):
             newargs = []
             for x in args:
                 if isinstance(x, Number) or x in (0, 1):
-                    newargs.append(True if x else False)
+                    newargs.append(bool(x))
                 else:
                     newargs.append(x)
             A, B = newargs
@@ -1344,7 +1368,7 @@ class Equivalent(BooleanFunction):
         for x in args:
             if isinstance(x, Number) or x in [True, False]:  # Includes 0, 1
                 argset.discard(x)
-                argset.add(True if x else False)
+                argset.add(bool(x))
         rel = []
         for r in argset:
             if isinstance(r, Relational):
@@ -1440,8 +1464,8 @@ class ITE(BooleanFunction):
             # if one arg is a binary symbol and the other
             # is true/false
             b, c = map(as_Boolean, (b, c))
-            bin = set().union(*[i.binary_symbols for i in (b, c)])
-            if len(set(a.args) - bin) == 1:
+            bin_syms = set().union(*[i.binary_symbols for i in (b, c)])
+            if len(set(a.args) - bin_syms) == 1:
                 # one arg is a binary_symbols
                 _a = a
                 if a.lhs is S.true:
@@ -2400,9 +2424,9 @@ def _input_to_binlist(inputlist, variables):
                 binlist.append([d[v] for v in variables])
         elif isinstance(val, (list, tuple)):
             if len(val) != bits:
-                raise ValueError("Each term must contain {} bits as there are"
-                                 "\n{} variables (or be an integer)."
-                                 "".format(bits, bits))
+                raise ValueError("Each term must contain {bits} bits as there are"
+                                 "\n{bits} variables (or be an integer)."
+                                 "".format(bits=bits))
             binlist.append(list(val))
         else:
             raise TypeError("A term list can only contain lists,"
