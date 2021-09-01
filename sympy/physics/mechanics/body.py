@@ -558,7 +558,8 @@ class Body(RigidBody, Particle):  # type: ignore
         return self.frame.dcm(body)
 
     def orient_axis(self, parent, axis, angle):
-        """Sets the orientation of this body with respect to a parent body or
+        """
+        Sets the orientation of this body with respect to a parent body or
         reference frame by rotating through an angle about an axis fixed
         in the parent reference frame or body.
 
@@ -584,37 +585,22 @@ class Body(RigidBody, Particle):  # type: ignore
         Examples
         ========
 
-        Setup variables for the examples:
-
         >>> from sympy import symbols
         >>> from sympy.physics.mechanics import Body
         >>> q1 = symbols('q1')
         >>> A = Body('A')
         >>> B = Body('B')
         >>> B.orient_axis(A, A.x, q1)
-
-        The ``orient_axis()`` method generates a direction cosine matrix and
-        its transpose which defines the orientation of B relative to A and vice
-        versa. Once orient is called, ``dcm()`` outputs the appropriate
-        direction cosine matrix:
-
         >>> B.dcm(A)
         Matrix([
-        [1,       0,      0],
+        [1,        0,       0],
         [0,  cos(q1), sin(q1)],
         [0, -sin(q1), cos(q1)]])
-        >>> A.dcm(B)
-        Matrix([
-        [1,       0,        0],
-        [0, cos(q1), -sin(q1)],
-        [0, sin(q1),  cos(q1)]])
+        
+        See Also
+        ========
 
-        The following two lines show that the sense of the rotation can be
-        defined by negating the vector direction or the angle. Both lines
-        produce the same result.
-
-        >>> B.orient_axis(A, -A.x, q1)
-        >>> B.orient_axis(A, A.x, -q1)
+        sympy.physics.vector.frame.ReferenceFrame.orient_axis
 
         """
 
@@ -623,7 +609,8 @@ class Body(RigidBody, Particle):  # type: ignore
         self.frame.orient_axis(parent, axis, angle)
 
     def orient_explicit(self, parent, dcm):
-        """Sets the orientation of this body relative to a parent body or
+        """
+        Sets the orientation of this body relative to a parent body or
         reference frame by explicitly setting the direction cosine matrix.
 
         Parameters
@@ -645,8 +632,6 @@ class Body(RigidBody, Particle):  # type: ignore
         Examples
         ========
 
-        Setup variables for the examples:
-
         >>> from sympy import symbols, Matrix, sin, cos
         >>> from sympy.physics.mechanics import Body
         >>> q1 = symbols('q1')
@@ -667,25 +652,10 @@ class Body(RigidBody, Particle):  # type: ignore
         [0,  cos(q1), sin(q1)],
         [0, -sin(q1), cos(q1)]])
 
-        This is equivalent to using ``orient_axis()``:
-
-        >>> B.orient_axis(N, N.x, q1)
-        >>> B.dcm(N)
-        Matrix([
-        [1,       0,      0],
-        [0,  cos(q1), sin(q1)],
-        [0, -sin(q1), cos(q1)]])
-
-        **Note carefully that** ``N.dcm(B)`` **(the transpose) would be passed
-        into** ``orient_explicit()`` **for** ``A.dcm(N)`` **to match**
-        ``B.dcm(N)``:
-
-        >>> A.orient_explicit(N, N.dcm(B))
-        >>> A.dcm(N)
-        Matrix([
-        [1,       0,      0],
-        [0,  cos(q1), sin(q1)],
-        [0, -sin(q1), cos(q1)]])
+        See Also
+        ========
+        
+        sympy.physics.vector.frame.ReferenceFrame.orient_explicit
 
         """
 
@@ -694,7 +664,8 @@ class Body(RigidBody, Particle):  # type: ignore
         self.frame.orient_explicit(parent, dcm)
 
     def orient_body_fixed(self, parent, angles, rotation_order):
-        """Rotates this body relative to the parent body or reference frame
+        """
+        Rotates this body relative to the parent body or reference frame
         by right hand rotating through three successive body fixed simple axis
         rotations. Each subsequent axis of rotation is about the "body fixed"
         unit vectors of a new intermediate reference frame. This type of
@@ -727,19 +698,11 @@ class Body(RigidBody, Particle):  # type: ignore
         Examples
         ========
 
-        Setup variables for the examples:
-
         >>> from sympy import symbols
         >>> from sympy.physics.mechanics import Body
         >>> q1, q2, q3 = symbols('q1, q2, q3')
         >>> N = Body('N')
         >>> B = Body('B')
-        >>> B1 = Body('B1')
-        >>> B2 = Body('B2')
-        >>> B3 = Body('B3')
-
-        For example, a classic Euler Angle rotation can be done by:
-
         >>> B.orient_body_fixed(N, (q1, q2, q3), 'XYX')
         >>> B.dcm(N)
         Matrix([
@@ -747,27 +710,10 @@ class Body(RigidBody, Particle):  # type: ignore
         [sin(q2)*sin(q3), -sin(q1)*sin(q3)*cos(q2) + cos(q1)*cos(q3),  sin(q1)*cos(q3) + sin(q3)*cos(q1)*cos(q2)],
         [sin(q2)*cos(q3), -sin(q1)*cos(q2)*cos(q3) - sin(q3)*cos(q1), -sin(q1)*sin(q3) + cos(q1)*cos(q2)*cos(q3)]])
 
-        This rotates body B relative to body N through ``q1`` about ``N.x``,
-        then rotates B again through ``q2`` about ``B.y``, and finally
-        through ``q3`` about ``B.x``. It is equivalent to three successive
-        ``orient_axis()`` calls:
-
-        >>> B1.orient_axis(N, N.x, q1)
-        >>> B2.orient_axis(B1, B1.y, q2)
-        >>> B3.orient_axis(B2, B2.x, q3)
-        >>> B3.dcm(N)
-        Matrix([
-        [        cos(q2),                            sin(q1)*sin(q2),                           -sin(q2)*cos(q1)],
-        [sin(q2)*sin(q3), -sin(q1)*sin(q3)*cos(q2) + cos(q1)*cos(q3),  sin(q1)*cos(q3) + sin(q3)*cos(q1)*cos(q2)],
-        [sin(q2)*cos(q3), -sin(q1)*cos(q2)*cos(q3) - sin(q3)*cos(q1), -sin(q1)*sin(q3) + cos(q1)*cos(q2)*cos(q3)]])
-
-        Acceptable rotation orders are of length 3, expressed in as a string
-        ``'XYZ'`` or ``'123'`` or integer ``123``. Rotations about an axis
-        twice in a row are prohibited.
-
-        >>> B.orient_body_fixed(N, (q1, q2, 0), 'ZXZ')
-        >>> B.orient_body_fixed(N, (q1, q2, 0), '121')
-        >>> B.orient_body_fixed(N, (q1, q2, q3), 123)
+        See Also
+        ========
+        
+        sympy.physics.vector.frame.ReferenceFrame.orient_body_fixed
 
         """
         if isinstance(parent, Body):
@@ -775,7 +721,8 @@ class Body(RigidBody, Particle):  # type: ignore
         self.frame.orient_body_fixed(parent, angles, rotation_order)
 
     def orient_space_fixed(self, parent, angles, rotation_order):
-        """Rotates this body relative to the parent body or reference frame
+        """
+        Rotates this body relative to the parent body or reference frame
         by right hand rotating through three successive space fixed simple axis
         rotations. Each subsequent axis of rotation is about the "space fixed"
         unit vectors of the parent reference frame or body.
@@ -802,8 +749,6 @@ class Body(RigidBody, Particle):  # type: ignore
         Examples
         ========
 
-        Setup variables for the examples:
-
         >>> from sympy import symbols
         >>> from sympy.physics.mechanics import Body
         >>> q1, q2, q3 = symbols('q1, q2, q3')
@@ -812,7 +757,6 @@ class Body(RigidBody, Particle):  # type: ignore
         >>> B1 = Body('B1')
         >>> B2 = Body('B2')
         >>> B3 = Body('B3')
-
         >>> B.orient_space_fixed(N, (q1, q2, q3), '312')
         >>> B.dcm(N)
         Matrix([
@@ -820,35 +764,11 @@ class Body(RigidBody, Particle):  # type: ignore
         [-sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1), cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3)],
         [                           sin(q3)*cos(q2),        -sin(q2),                           cos(q2)*cos(q3)]])
 
-        is equivalent to:
-
-        >>> B1.orient_axis(N, N.z, q1)
-        >>> B2.orient_axis(B1, N.x, q2)
-        >>> B3.orient_axis(B2, N.y, q3)
-        >>> B3.dcm(N).simplify()
-        Matrix([
-        [ sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1)],
-        [-sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1), cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3)],
-        [                           sin(q3)*cos(q2),        -sin(q2),                           cos(q2)*cos(q3)]])
-
-        It is worth noting that space-fixed and body-fixed rotations are
-        related by the order of the rotations, i.e. the reverse order of body
-        fixed will give space fixed and vice versa.
-
-        >>> B.orient_space_fixed(N, (q1, q2, q3), '231')
-        >>> B.dcm(N)
-        Matrix([
-        [cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3), -sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1)],
-        [       -sin(q2),                           cos(q2)*cos(q3),                            sin(q3)*cos(q2)],
-        [sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1),  sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3)]])
-
-        >>> B.orient_body_fixed(N, (q3, q2, q1), '132')
-        >>> B.dcm(N)
-        Matrix([
-        [cos(q1)*cos(q2), sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3), -sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1)],
-        [       -sin(q2),                           cos(q2)*cos(q3),                            sin(q3)*cos(q2)],
-        [sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1),  sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3)]])
-
+        See Also
+        ========
+        
+        sympy.physics.vector.frame.ReferenceFrame.orient_space_fixed
+        
         """
 
         if isinstance(parent, Body):
@@ -856,7 +776,8 @@ class Body(RigidBody, Particle):  # type: ignore
         self.frame.orient_space_fixed(parent, angles, rotation_order)
 
     def orient_quaternion(self, parent, numbers):
-        """Sets the orientation of this body relative to a parent body or
+        """
+        Sets the orientation of this body relative to a parent body or
         reference frame via an orientation quaternion. An orientation
         quaternion is defined as a finite rotation of a unit vector, ``(lambda_x,
         lambda_y, lambda_z)``, by an angle ``theta``. The orientation
@@ -889,16 +810,11 @@ class Body(RigidBody, Particle):  # type: ignore
         Examples
         ========
 
-        Setup variables for the examples:
-
         >>> from sympy import symbols
         >>> from sympy.physics.mechanics import Body
         >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
         >>> N = Body('N')
         >>> B = Body('B')
-
-        Set the orientation:
-
         >>> B.orient_quaternion(N, (q0, q1, q2, q3))
         >>> B.dcm(N)
         Matrix([
@@ -906,6 +822,11 @@ class Body(RigidBody, Particle):  # type: ignore
         [           -2*q0*q3 + 2*q1*q2, q0**2 - q1**2 + q2**2 - q3**2,             2*q0*q1 + 2*q2*q3],
         [            2*q0*q2 + 2*q1*q3,            -2*q0*q1 + 2*q2*q3, q0**2 - q1**2 - q2**2 + q3**2]])
 
+        See Also
+        ========
+        
+        sympy.physics.vector.frame.ReferenceFrame.orient_quaternion
+        
         """
 
         if isinstance(parent, Body):
