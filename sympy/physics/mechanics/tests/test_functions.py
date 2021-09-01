@@ -95,7 +95,6 @@ def test_linear_momentum():
     Pa = Particle('Pa', P, 1)
     Pa.point.set_vel(N, 10 * N.x)
     raises(TypeError, lambda: linear_momentum(A, A, Pa))
-    raises(TypeError, lambda: linear_momentum(N, N, Pa))
     assert linear_momentum(N, A, Pa) == 10 * N.x + 500 * N.y
 
 
@@ -180,7 +179,6 @@ def test_kinetic_energy():
     I = outer(N.z, N.z)
     A = RigidBody('A', Ac, a, M, (I, Ac))
     raises(TypeError, lambda: kinetic_energy(Pa, Pa, A))
-    raises(TypeError, lambda: kinetic_energy(N, N, A))
     assert 0 == (kinetic_energy(N, Pa, A) - (M*l1**2*omega**2/2
             + 2*l1**2*m*omega**2 + omega**2/2)).expand()
 
@@ -239,7 +237,6 @@ def test_Lagrangian():
     Pa.potential_energy = m * g * h
     A.potential_energy = M * g * h
     raises(TypeError, lambda: Lagrangian(A, A, Pa))
-    raises(TypeError, lambda: Lagrangian(N, N, Pa))
 
 
 def test_msubs():

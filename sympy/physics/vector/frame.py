@@ -388,8 +388,8 @@ class ReferenceFrame:
         Parameters
         ==========
 
-        otherframe : ReferenceFrame
-            The ReferenceFrame which the angular acceleration is returned in.
+        otherframe : ReferenceFrame or Body
+            The ReferenceFrame or Body which the angular acceleration is returned in.
 
         Examples
         ========
@@ -426,8 +426,8 @@ class ReferenceFrame:
         Parameters
         ==========
 
-        otherframe : ReferenceFrame
-            The ReferenceFrame which the angular velocity is returned in.
+        otherframe : ReferenceFrame or Body
+            The ReferenceFrame or Body which the angular velocity is returned in.
 
         Examples
         ========
@@ -463,8 +463,8 @@ class ReferenceFrame:
         Parameters
         ==========
 
-        otherframe : ReferenceFrame
-            The reference frame which the direction cosine matrix of this frame
+        otherframe : ReferenceFrame or Body
+            The reference frame or Body which the direction cosine matrix of this frame
             is formed relative to.
 
         Examples
@@ -600,8 +600,8 @@ class ReferenceFrame:
         Parameters
         ==========
 
-        parent : ReferenceFrame
-            Reference frame that this reference frame will be rotated relative
+        parent : ReferenceFrame or Body
+            Reference frame or Body that this reference frame will be rotated relative
             to.
         axis : Vector
             Vector fixed in the parent frame about about which this frame is
@@ -693,8 +693,8 @@ class ReferenceFrame:
         Parameters
         ==========
 
-        parent : ReferenceFrame
-            Reference frame that this reference frame will be rotated relative
+        parent : ReferenceFrame or Body
+            Reference frame or Body that this reference frame will be rotated relative
             to.
         dcm : Matrix, shape(3, 3)
             Direction cosine matrix that specifies the relative rotation
@@ -800,8 +800,8 @@ class ReferenceFrame:
         Parameters
         ==========
 
-        parent : ReferenceFrame
-            Reference frame that this reference frame will be rotated relative
+        parent : ReferenceFrame or Body
+            Reference frame or Body that this reference frame will be rotated relative
             to.
         angles : 3-tuple of sympifiable
             Three angles in radians used for the successive rotations.
@@ -922,8 +922,8 @@ class ReferenceFrame:
 
         Parameters
         ==========
-        parent : ReferenceFrame
-            Reference frame that this reference frame will be rotated relative
+        parent : ReferenceFrame or Body
+            Reference frame or Body that this reference frame will be rotated relative
             to.
         angles : 3-tuple of sympifiable
             Three angles in radians used for the successive rotations.
@@ -1057,8 +1057,8 @@ class ReferenceFrame:
 
         Parameters
         ==========
-        parent : ReferenceFrame
-            Reference frame that this reference frame will be rotated relative
+        parent : ReferenceFrame or Body
+            Reference frame or Body that this reference frame will be rotated relative
             to.
         numbers : 4-tuple of sympifiable
             The four quaternion scalar numbers as defined above: ``q0``,
@@ -1146,8 +1146,8 @@ class ReferenceFrame:
         Parameters
         ==========
 
-        parent : ReferenceFrame
-            Reference frame that this reference frame will be rotated relative
+        parent : ReferenceFrame or Body
+            Reference frame or Body that this reference frame will be rotated relative
             to.
         rot_type : str
             The method used to generate the direction cosine matrix. Supported
@@ -1341,8 +1341,8 @@ class ReferenceFrame:
         Parameters
         ==========
 
-        otherframe : ReferenceFrame
-            A ReferenceFrame to define the angular acceleration in
+        otherframe : ReferenceFrame or Body
+            A ReferenceFrame or Body to define the angular acceleration in
         value : Vector
             The Vector representing angular acceleration
 
@@ -1380,8 +1380,8 @@ class ReferenceFrame:
         Parameters
         ==========
 
-        otherframe : ReferenceFrame
-            A ReferenceFrame to define the angular velocity in
+        otherframe : ReferenceFrame or Body
+            A ReferenceFrame or Body to define the angular velocity in
         value : Vector
             The Vector representing angular velocity
 
