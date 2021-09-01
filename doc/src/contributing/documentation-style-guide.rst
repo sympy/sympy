@@ -1,6 +1,3 @@
-===============================
-SymPy Documentation Style Guide
-===============================
 
 General Guidelines
 --------------------

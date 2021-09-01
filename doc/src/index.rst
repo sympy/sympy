@@ -53,7 +53,7 @@ This is the central page for all of SymPy's documentation.
 :ref:`SymPy API Reference <reference>`
 -------------------------------------------------------
 
-Discusses and details the internal and public modules
+*SymPy internal and public modules*
 
 
 ..  rst-class:: clearfix row custom-headings
@@ -77,4 +77,3 @@ Discusses and details the internal and public modules
    how_to_guide/index.rst
    contributing/index.rst
    miscellaneous/index.rst
-

@@ -33,6 +33,11 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
 redirects = {
     "install.rst": "getting_started/install.html",
     "documentation-style-guide.rst": "contributing/documentation-style-guide.html",
+    "gotchas.rst": "explanation/gotchas.html",
+    "special_topics/classification.rst": "explanation/special_topics/classification.html",
+    "special_topics/finite_diff_derivatives.rst": "explanation/special_topics/finite_diff_derivatives.html",
+    "special_topics/intro.rst": "explanation/special_topics/intro.html",
+    "special_topics/index.rst": "explanation/special_topics/index.html",
 }
 
 # Use this to use pngmath instead
