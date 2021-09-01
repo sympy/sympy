@@ -2188,11 +2188,11 @@ def multiset_derangements(s):
     ms = multiset(s)
     mx = max(ms.values())
     n = len(s)
-    # impossible case
+    # special cases
+
+    # 0) impossible case
     if mx*2 > n:
         return
-    rv = [None]*n
-    # special cases
 
     # 1) singletons
     if len(ms) == n:
@@ -2200,19 +2200,14 @@ def multiset_derangements(s):
             yield p
         return
 
-    # 2) aaabbb-like
-    if len(ms) == 2 and len(set(ms.values())) == 1:
-        x, y = list(ms)
-        yield [x if i == y else y for i in s]
-        return
-
     for M in ms:
         if ms[M] == mx:
             break
     inonM = [i for i in range(n) if s[i] != M]
     iM = [i for i in range(n) if s[i] == M]
+    rv = [None]*n
 
-    # 3) half are the same
+    # 2) half are the same
     if 2*mx == n:
         for i in inonM:
             rv[i] = M
@@ -2222,7 +2217,7 @@ def multiset_derangements(s):
             yield rv
         return
 
-    # 4) single repeat covers all but 1 of the non-repeats
+    # 3) single repeat covers all but 1 of the non-repeats
     if n - 2*mx == 1 and len(ms.values()) - 1 == n - mx:
         for i in range(len(inonM)):
             i1 = inonM[i]
@@ -2404,7 +2399,7 @@ def random_derangement(t, choice=None, strict=True):
 
 def generate_derangements(perm):
     """
-    Routine to generate unique derangements.
+    Routine to generate unique derangements or sets or multisets.
 
     Examples
     ========
