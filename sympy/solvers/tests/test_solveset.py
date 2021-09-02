@@ -2914,3 +2914,8 @@ def test_issue_19144():
     assert soln_eq2 == soln_expr2 == soln2
     # denominators that cancel in expression
     assert nonlinsolve([Eq(x + 1/x, 1/x)], [x]) == FiniteSet((S.EmptySet,))
+
+
+def test_issue_19814():
+    assert nonlinsolve([ 2**m - 2**(2*n), 4*2**m - 2**(4*n)], m, n
+                      ) == FiniteSet((log(2**(2*n))/log(2), S.Complexes))

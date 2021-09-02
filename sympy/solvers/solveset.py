@@ -3303,7 +3303,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         # in the new result list (solution for symbol `s`)
                         # along with old results.
                         for k, v in res.items():
-                            if isinstance(v, Expr):
+                            if isinstance(v, Expr) and isinstance(sol, Expr):
                                 # if any unsolved symbol is present
                                 # Then subs known value
                                 rnew[k] = v.subs(sym, sol)

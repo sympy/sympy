@@ -393,10 +393,6 @@ class DiracDelta(Function):
                 rewrite(SingularityFunction) doesn't support
                 arguments with more that 1 variable.'''))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.dirac_delta(self.args[0]._sage_())
-
 
 ###############################################################################
 ############################## HEAVISIDE FUNCTION #############################
@@ -672,7 +668,3 @@ class Heaviside(Function):
             raise TypeError(filldedent('''
                 rewrite(SingularityFunction) doesn't
                 support arguments with more that 1 variable.'''))
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.heaviside(self.args[0]._sage_())
