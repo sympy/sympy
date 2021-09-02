@@ -240,7 +240,7 @@ def solve_generic(polys, opt):
 
         univariate = list(filter(_is_univariate, basis))
 
-        if len(univariate) == 1:
+        if len(univariate) == 1 and len(gens) == 1:
             f = univariate.pop()
         else:
             raise NotImplementedError(filldedent('''
