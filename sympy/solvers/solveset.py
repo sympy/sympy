@@ -3445,11 +3445,11 @@ def _separate_poly_nonpoly(system, symbols):
     denominators = set()
     poly = None
     for eq in system:
+        # Store denom expressions that contain symbols
+        denominators.update(_simple_dens(eq, symbols))
         # Convert equality to expression
         if isinstance(eq, Equality):
-            eq = eq.lhs - eq.rhs
-        # Store denom expression if it contains symbol
-        denominators.update(_simple_dens(eq, symbols))
+            eq = eq.rewrite(Add)
         # try to remove sqrt and rational power
         without_radicals = unrad(simplify(eq))
         if without_radicals:
