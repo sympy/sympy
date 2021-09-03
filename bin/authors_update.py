@@ -163,4 +163,5 @@ else:
     print(yellow("The AUTHORS file was updated."))
 
 print(red("Changes were made in the authors file"))
+run(['git', 'diff']) # Show the changes
 sys.exit(1)

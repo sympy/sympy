@@ -31,7 +31,8 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
               'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive']
 
 redirects = {
-    "install.rst": "getting_started/install.rst",
+    "install.rst": "getting_started/install.html",
+    "documentation-style-guide.rst": "contributing/documentation-style-guide.html",
 }
 
 # Use this to use pngmath instead
