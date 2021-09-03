@@ -235,11 +235,11 @@ Then install these packages with homebrew::
 
 Install these packages with either pip or conda::
 
-   python -m pip install mpmath matplotlib sphinx sphinx-math-dollar sphinx-reredirects
+   python -m pip install mpmath matplotlib sphinx sphinx-math-dollar
 
 Or::
 
-   conda install -c conda-forge mpmath matplotlib sphinx sphinx-math-dollar sphinx-reredirects
+   conda install -c conda-forge mpmath matplotlib sphinx sphinx-math-dollar
 
 **Windows 10**
 

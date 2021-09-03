@@ -1,7 +1,7 @@
 .. _installation:
 
 Installation
-=============
+------------
 
 The SymPy CAS can be installed on virtually any computer with Python.
 SymPy does require `mpmath`_ Python library to be installed first.  The
@@ -12,7 +12,7 @@ distributions have SymPy packages available.
 SymPy officially supports Python 3.5, 3.6, 3.7, and PyPy.
 
 Anaconda
----------
+========
 
 `Anaconda <https://www.anaconda.com/download/>`_ is a free Python distribution from
 Continuum Analytics that includes SymPy, Matplotlib, IPython, NumPy, and many
@@ -28,7 +28,7 @@ use::
     conda update sympy
 
 Git
-----
+===
 
 If you wish to contribute to SymPy or like to get the latest updates as they
 come, install SymPy from git. To download the repository, execute the
@@ -49,7 +49,7 @@ This will cause the installed version to always point to the version in the git
 directory.
 
 Other Methods
---------------
+=============
 
 You may also install SymPy using pip or from source. In addition, most Linux
 and Python distributions have some SymPy version available to install using
@@ -61,7 +61,7 @@ their package manager. Here is a list of several such Python distributions:
 * `Spack <https://spack.io/>`_
 
 Run SymPy
----------
+=========
 
 After installation, it is best to verify that your freshly-installed SymPy
 works. To do this, start up Python and import the SymPy libraries::
@@ -80,7 +80,7 @@ From here, execute some simple SymPy statements like the ones below::
 For a starter guide on using SymPy effectively, refer to the :ref:`tutorial`.
 
 Mpmath
--------
+======
 
 Versions of SymPy prior to 1.0 included `mpmath`_, but it now depends on it as
 an external dependency.  If you installed SymPy with Anaconda, it will already
@@ -104,7 +104,7 @@ before the code that imports ``sympy.mpmath``. It is recommended to change
 code that uses ``sympy.mpmath`` to use ``mpmath`` directly wherever possible.
 
 Questions
-----------
+=========
 
 If you have a question about installation or SymPy in general, feel free to
 visit our chat on `Gitter`_. In addition, our `mailing list`_ is an excellent

@@ -27,12 +27,8 @@ sys.path = ['ext'] + sys.path
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
-              'sphinx.ext.mathjax', 'numpydoc', 'sympylive', 'sphinx_reredirects',
+              'sphinx.ext.mathjax', 'numpydoc', 'sympylive',
               'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive']
-
-redirects = {
-    "install.rst": "getting_started/install.rst",
-}
 
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
@@ -127,8 +123,7 @@ html_static_path = ['_static']
 # using the given strftime format.
 html_last_updated_fmt = '%b %d, %Y'
 
-# was classic
-html_theme = "classic"
+html_theme = 'classic'
 
 html_logo = '_static/sympylogo.png'
 html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
