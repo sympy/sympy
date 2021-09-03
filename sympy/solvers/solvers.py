@@ -1961,8 +1961,10 @@ def _solve_system(exprs, symbols, **flags):
                             # keep it
                             newresult.append(rnew)
                     got_s.add(s)
-                    break
-                else:
+                    hit = True
+                    if manual:
+                        break  # just take first solution
+                if not hit:
                     raise NotImplementedError('could not solve %s' % eq2)
             else:
                 result = newresult
