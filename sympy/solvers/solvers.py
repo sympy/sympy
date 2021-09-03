@@ -1910,7 +1910,6 @@ def _solve_system(exprs, symbols, **flags):
             newresult = []
             bad_results = []
             got_s = set()
-            hit = False
             for r in result:
                 # update eq with everything that is known so far
                 eq2 = eq.subs(r)
@@ -1961,9 +1960,9 @@ def _solve_system(exprs, symbols, **flags):
                         else:
                             # keep it
                             newresult.append(rnew)
-                    hit = True
                     got_s.add(s)
-                if not hit:
+                    break
+                else:
                     raise NotImplementedError('could not solve %s' % eq2)
             else:
                 result = newresult
