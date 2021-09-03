@@ -1,71 +1,122 @@
 import itertools
-from typing import Tuple
-from functools import reduce, singledispatch
+from collections import defaultdict, Counter
+from typing import Tuple, Union, FrozenSet, Dict, List, Optional
+from functools import singledispatch
 from itertools import accumulate
 
-from sympy import S, Trace, MatrixExpr, Transpose, DiagMatrix, Mul, ZeroMatrix
+from sympy import Trace, MatrixExpr, Transpose, DiagMatrix, Mul, ZeroMatrix, hadamard_product, S
 from sympy.combinatorics.permutations import _af_invert, Permutation
 from sympy.matrices.common import MatrixCommon
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayDiagonal, \
     ArrayTensorProduct, OneArray, get_rank, _get_subrank, ZeroArray, ArrayContraction, \
-    ArrayAdd, _CodegenArrayAbstract, get_shape, ArrayElementwiseApplyFunc, _ArrayExpr
+    ArrayAdd, _CodegenArrayAbstract, get_shape, ArrayElementwiseApplyFunc, _ArrayExpr, _EditArrayContraction, _ArgE
 from sympy.tensor.array.expressions.utils import _get_mapping_from_subranks
 
 
-def _support_function_tp1_recognize(contraction_indices, args):
-    subranks = [get_rank(i) for i in args]
-    coeff = reduce(lambda x, y: x*y, [arg for arg, srank in zip(args, subranks) if srank == 0], S.One)
-    mapping = _get_mapping_from_subranks(subranks)
-    new_contraction_indices = list(contraction_indices)
-    newargs = args[:]  # make a copy of the list
-    removed = [None for i in newargs]
-    cumul = list(accumulate([0] + [get_rank(arg) for arg in args]))
-    new_perms = [list(range(cumul[i], cumul[i+1])) for i, arg in enumerate(args)]
-    for pi, contraction_pair in enumerate(contraction_indices):
-        if len(contraction_pair) != 2:
-            continue
-        i1, i2 = contraction_pair
-        a1, e1 = mapping[i1]
-        a2, e2 = mapping[i2]
-        while removed[a1] is not None:
-            a1, e1 = removed[a1]
-        while removed[a2] is not None:
-            a2, e2 = removed[a2]
-        if a1 == a2:
-            trace_arg = newargs[a1]
-            newargs[a1] = Trace(trace_arg)._normalize()
-            new_contraction_indices[pi] = None
-            continue
-        if not isinstance(newargs[a1], MatrixExpr) or not isinstance(newargs[a2], MatrixExpr):
-            continue
-        arg1 = newargs[a1]
-        arg2 = newargs[a2]
-        if (e1 == 1 and e2 == 1) or (e1 == 0 and e2 == 0):
-            arg2 = Transpose(arg2)
-        if e1 == 1:
-            argnew = arg1*arg2
-        else:
-            argnew = arg2*arg1
-        removed[a2] = a1, e1
-        new_perms[a1][e1] = new_perms[a2][1 - e2]
-        new_perms[a2] = None
-        newargs[a1] = argnew
-        newargs[a2] = None
-        new_contraction_indices[pi] = None
-    new_contraction_indices = [i for i in new_contraction_indices if i is not None]
-    newargs2 = [arg for arg in newargs if arg is not None]
-    if len(newargs2) == 0:
-        return coeff
-    tp = _a2m_tensor_product(*newargs2)
-    tc = ArrayContraction(tp, *new_contraction_indices)
-    new_perms2 = ArrayContraction._push_indices_up(contraction_indices, [i for i in new_perms if i is not None])
-    permutation = _af_invert([j for i in new_perms2 for j in i if j is not None])
-    if permutation == [1, 0] and len(newargs2) == 1:
-        return Transpose(newargs2[0]).doit()
-    tperm = PermuteDims(tc, permutation)
-    return tperm
+def _get_candidate_for_matmul_from_contraction(scan_indices: List[Optional[int]], remaining_args: List[_ArgE]) -> Tuple[Optional[_ArgE], bool, int]:
 
+    scan_indices = [i for i in scan_indices if i is not None]
+    if len(scan_indices) == 0:
+        return None, False, -1
+
+    transpose: bool = False
+    candidate: Optional[_ArgE] = None
+    candidate_index: int = -1
+    for arg_with_ind2 in remaining_args:
+        if not isinstance(arg_with_ind2.element, MatrixExpr):
+            continue
+        for index in scan_indices:
+            if candidate_index != -1 and candidate_index != index:
+                # A candidate index has already been selected, check
+                # repetitions only for that index:
+                continue
+            if index in arg_with_ind2.indices:
+                if set(arg_with_ind2.indices) == {index}:
+                    # Index repeated twice in arg_with_ind2
+                    candidate = None
+                    break
+                if candidate is None:
+                    candidate = arg_with_ind2
+                    candidate_index = index
+                    transpose = (index == arg_with_ind2.indices[1])
+                else:
+                    # Index repeated more than twice, break
+                    candidate = None
+                    break
+    return candidate, transpose, candidate_index
+
+
+def _insert_candidate_into_editor(editor: _EditArrayContraction, arg_with_ind: _ArgE, candidate: _ArgE, transpose1: bool, transpose2: bool):
+    other = candidate.element
+    other_index: int
+    if transpose2:
+        other = Transpose(other)
+        other_index = candidate.indices[0]
+    else:
+        other_index = candidate.indices[1]
+    new_element = (Transpose(arg_with_ind.element) if transpose1 else arg_with_ind.element) * other
+    editor.args_with_ind.remove(candidate)
+    new_arge = _ArgE(new_element)
+    return new_arge, other_index
+
+
+def _support_function_tp1_recognize(contraction_indices, args):
+    if len(contraction_indices) == 0:
+        return _a2m_tensor_product(*args)
+
+    ac = ArrayContraction(ArrayTensorProduct(*args), *contraction_indices)
+    editor = _EditArrayContraction(ac)
+    editor.track_permutation_start()
+
+    while True:
+        flag_stop: bool = True
+        for i, arg_with_ind in enumerate(editor.args_with_ind):
+            if not isinstance(arg_with_ind.element, MatrixExpr):
+                continue
+
+            first_index = arg_with_ind.indices[0]
+            second_index = arg_with_ind.indices[1]
+
+            first_frequency = editor.count_args_with_index(first_index)
+            second_frequency = editor.count_args_with_index(second_index)
+
+            if first_index is not None and first_frequency == 1 and first_index == second_index:
+                flag_stop = False
+                arg_with_ind.element = Trace(arg_with_ind.element)._normalize()
+                arg_with_ind.indices = []
+                break
+
+            scan_indices = []
+            if first_frequency == 2:
+                scan_indices.append(first_index)
+            if second_frequency == 2:
+                scan_indices.append(second_index)
+
+            candidate, transpose, found_index = _get_candidate_for_matmul_from_contraction(scan_indices, editor.args_with_ind[i+1:])
+            if candidate is not None:
+                flag_stop = False
+                editor.track_permutation_merge(arg_with_ind, candidate)
+                transpose1 = found_index == first_index
+                new_arge, other_index = _insert_candidate_into_editor(editor, arg_with_ind, candidate, transpose1, transpose)
+                if found_index == first_index:
+                    new_arge.indices = [second_index, other_index]
+                else:
+                    new_arge.indices = [first_index, other_index]
+                set_indices = set(new_arge.indices)
+                if len(set_indices) == 1 and set_indices != {None}:
+                    # This is a trace:
+                    new_arge.element = Trace(new_arge.element)._normalize()
+                    new_arge.indices = []
+                editor.args_with_ind[i] = new_arge
+                # TODO: is this break necessary?
+                break
+
+        if flag_stop:
+            break
+
+    editor.refresh_indices()
+    return editor.to_array_contraction()
 
 
 @singledispatch
@@ -90,6 +141,9 @@ def _(expr: ArrayTensorProduct):
 def _(expr: ArrayContraction):
     expr = expr.flatten_contraction_of_diagonal()
     expr = expr.split_multiple_contractions()
+    expr = identify_hadamard_products(expr)
+    if not isinstance(expr, ArrayContraction):
+        return _array2matrix(expr)
     subexpr = expr.expr
     contraction_indices: Tuple[Tuple[int]] = expr.contraction_indices
     if isinstance(subexpr, ArrayTensorProduct):
@@ -116,8 +170,10 @@ def _(expr: ArrayContraction):
 
 @_array2matrix.register(ArrayDiagonal)
 def _(expr: ArrayDiagonal):
-    expr2 = _array2matrix(expr.expr)
-    pexpr = _array_diag2contr_diagmatrix(ArrayDiagonal(expr2, *expr.diagonal_indices))
+    pexpr = ArrayDiagonal(_array2matrix(expr.expr), *expr.diagonal_indices)
+    pexpr = identify_hadamard_products(pexpr)
+    if isinstance(pexpr, ArrayDiagonal):
+        pexpr = _array_diag2contr_diagmatrix(pexpr)
     if expr == pexpr:
         return expr
     return _array2matrix(pexpr)
@@ -160,6 +216,7 @@ def _(expr: PermuteDims):
             if all(expr_shape[i] == 1 for i in flat_cyclic_form):
                 return mat_mul_lines
             return mat_mul_lines
+        # TODO: this assumes that all arguments are matrices, it may not be the case:
         permutation = Permutation(2*len(mat_mul_lines.args)-1)*expr.permutation
         permuted = [permutation(i) for i in range(2*len(mat_mul_lines.args))]
         args_array = [None for i in mat_mul_lines.args]
@@ -175,7 +232,7 @@ def _(expr: PermuteDims):
                 args_array[i] = mat_mul_lines.args[pos]
         return _a2m_tensor_product(*args_array)
     else:
-        raise NotImplementedError()
+        return expr
 
 
 @_array2matrix.register(ArrayAdd)
@@ -541,3 +598,144 @@ def _a2m_transpose(arg):
     else:
         from sympy import Transpose
         return Transpose(arg).doit()
+
+
+def identify_hadamard_products(expr: Union[ArrayContraction, ArrayDiagonal]):
+    mapping = _get_mapping_from_subranks(expr.subranks)
+
+    editor: _EditArrayContraction
+    if isinstance(expr, ArrayContraction):
+        editor = _EditArrayContraction(expr)
+    elif isinstance(expr, ArrayDiagonal):
+        if isinstance(expr.expr, ArrayContraction):
+            editor = _EditArrayContraction(expr.expr)
+            diagonalized = ArrayContraction._push_indices_down(expr.expr.contraction_indices, expr.diagonal_indices)
+        elif isinstance(expr.expr, ArrayTensorProduct):
+            editor = _EditArrayContraction(None)
+            editor.args_with_ind = [_ArgE(arg) for i, arg in enumerate(expr.expr.args)]
+            diagonalized = expr.diagonal_indices
+        else:
+            return expr
+
+        # Trick: add diagonalized indices as negative indices into the editor object:
+        for i, e in enumerate(diagonalized):
+            for j in e:
+                arg_pos, rel_pos = mapping[j]
+                editor.args_with_ind[arg_pos].indices[rel_pos] = -1 - i
+
+    map_contr_to_args: Dict[FrozenSet, List[_ArgE]] = defaultdict(list)
+    map_ind_to_inds = defaultdict(int)
+    for arg_with_ind in editor.args_with_ind:
+        for ind in arg_with_ind.indices:
+            map_ind_to_inds[ind] += 1
+        if None in arg_with_ind.indices:
+            continue
+        map_contr_to_args[frozenset(arg_with_ind.indices)].append(arg_with_ind)
+
+    k: FrozenSet[int]
+    v: List[_ArgE]
+    for k, v in map_contr_to_args.items():
+        make_trace: bool = False
+        if len(k) == 1 and next(iter(k)) >= 0 and sum([next(iter(k)) in i for i in map_contr_to_args]) == 1:
+            # This is a trace: the arguments are fully contracted with only one
+            # index, and the index isn't used anywhere else:
+            make_trace = True
+            first_element = S.One
+        elif len(k) != 2:
+            # Hadamard product only defined for matrices:
+            continue
+        if len(v) == 1:
+            # Hadamard product with a single argument makes no sense:
+            continue
+        for ind in k:
+            if map_ind_to_inds[ind] <= 2:
+                # There is no other contraction, skip:
+                continue
+
+        def check_transpose(x):
+            x = [i if i >= 0 else -1-i for i in x]
+            return x == sorted(x)
+
+        # Check if expression is a trace:
+        if all([map_ind_to_inds[j] == len(v) and j >= 0 for j in k]) and all([j >= 0 for j in k]):
+            # This is a trace
+            make_trace = True
+            first_element = v[0].element
+            if not check_transpose(v[0].indices):
+                first_element = first_element.T
+            hadamard_factors = v[1:]
+        else:
+            hadamard_factors = v
+
+        # This is a Hadamard product:
+
+        hp = hadamard_product(*[i.element if check_transpose(i.indices) else Transpose(i.element) for i in hadamard_factors])
+        hp_indices = v[0].indices
+        if not check_transpose(hadamard_factors[0].indices):
+            hp_indices = list(reversed(hp_indices))
+        if make_trace:
+            hp = Trace(first_element*hp.T)._normalize()
+            hp_indices = []
+        editor.insert_after(v[0], _ArgE(hp, hp_indices))
+        for i in v:
+            editor.args_with_ind.remove(i)
+
+    # Count the ranks of the arguments:
+    counter = 0
+    # Create a collector for the new diagonal indices:
+    diag_indices = defaultdict(list)
+
+    count_index_freq = Counter()
+    for arg_with_ind in editor.args_with_ind:
+        count_index_freq.update(Counter(arg_with_ind.indices))
+
+    free_index_count = count_index_freq[None]
+
+    # Construct the inverse permutation:
+    inv_perm1 = []
+    inv_perm2 = []
+    # Keep track of which diagonal indices have already been processed:
+    done = set([])
+
+    # Counter for the diagonal indices:
+    counter4 = 0
+
+    for arg_with_ind in editor.args_with_ind:
+        # If some diagonalization axes have been removed, they should be
+        # permuted in order to keep the permutation.
+        # Add permutation here
+        counter2 = 0  # counter for the indices
+        for i in arg_with_ind.indices:
+            if i is None:
+                inv_perm1.append(counter4)
+                counter2 += 1
+                counter4 += 1
+                continue
+            if i >= 0:
+                continue
+            # Reconstruct the diagonal indices:
+            diag_indices[-1 - i].append(counter + counter2)
+            if count_index_freq[i] == 1 and i not in done:
+                inv_perm1.append(free_index_count - 1 - i)
+                done.add(i)
+            elif i not in done:
+                inv_perm2.append(free_index_count - 1 - i)
+                done.add(i)
+            counter2 += 1
+        # Remove negative indices to restore a proper editor object:
+        arg_with_ind.indices = [i if i is not None and i >= 0 else None for i in arg_with_ind.indices]
+        counter += len([i for i in arg_with_ind.indices if i is None or i < 0])
+
+    inverse_permutation = inv_perm1 + inv_perm2
+    permutation = _af_invert(inverse_permutation)
+
+    if isinstance(expr, ArrayContraction):
+        return editor.to_array_contraction()
+    else:
+        # Get the diagonal indices after the detection of HadamardProduct in the expression:
+        diag_indices_filtered = [tuple(v) for v in diag_indices.values() if len(v) > 1]
+
+        expr1 = editor.to_array_contraction()
+        expr2 = ArrayDiagonal(expr1, *diag_indices_filtered)
+        expr3 = PermuteDims(expr2, permutation)
+        return expr3

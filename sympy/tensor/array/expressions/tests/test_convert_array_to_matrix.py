@@ -1,5 +1,5 @@
 from sympy import (
-    symbols, Identity, cos, ZeroMatrix, OneMatrix, sqrt)
+    symbols, Identity, cos, ZeroMatrix, OneMatrix, sqrt, HadamardProduct)
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 from sympy.tensor.array.expressions.conv_array_to_matrix import _support_function_tp1_recognize, \
     _array_diag2contr_diagmatrix, convert_array_to_matrix, _remove_trivial_dims, _array2matrix
@@ -84,6 +84,10 @@ def test_arrayexpr_convert_array_to_matrix():
 
     cg = ArrayTensorProduct(3, M)
     assert convert_array_to_matrix(cg) == 3 * M
+
+    # Partial conversion to matrix multiplication:
+    expr = ArrayContraction(ArrayTensorProduct(M, N, P, Q), (0, 2), (1, 4, 6))
+    assert convert_array_to_matrix(expr) == ArrayContraction(ArrayTensorProduct(M.T*N, P, Q), (0, 2, 4))
 
     # TODO: not yet supported:
 
@@ -174,7 +178,7 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
     cg = ArrayDiagonal(ArrayTensorProduct(I, x, A, B), (1, 2), (5, 6))
     assert _array_diag2contr_diagmatrix(cg) == ArrayDiagonal(ArrayContraction(ArrayTensorProduct(I, OneArray(1), A, B, DiagMatrix(x)), (1, 7)), (5, 6))
     # TODO: not yet working
-    #  assert recognize_matrix_expression(cg)
+    #  assert convert_array_to_matrix(cg)
 
     cg = ArrayDiagonal(ArrayTensorProduct(x, I1), (1, 2))
     assert isinstance(cg, ArrayDiagonal)
@@ -423,7 +427,7 @@ def test_arrayexpr_convert_array_to_matrix_support_function():
                                            [X, Y, A, B, C, D]) == ArrayTensorProduct(X * Y * A * B, C * D)
 
     assert _support_function_tp1_recognize([(1, 7), (3, 8), (4, 11)], [X, Y, A, B, C, D]) == PermuteDims(
-        ArrayTensorProduct(X * B.T, Y * C, D * A), [0, 2, 5, 1, 3, 4]
+        ArrayTensorProduct(X * B.T, Y * C, A.T * D.T), [0, 2, 4, 1, 3, 5]
     )
 
     assert _support_function_tp1_recognize([(0, 1), (3, 6), (5, 8)], [X, A, B, C, D]) == PermuteDims(
@@ -442,3 +446,74 @@ def test_arrayexpr_convert_array_to_matrix_support_function():
     assert _support_function_tp1_recognize([(0, 4), (1, 7), (2, 5), (3, 8)], [X, A, B, C, D]) == C*X.T*B*A*D
 
     assert _support_function_tp1_recognize([(0, 4), (1, 7), (2, 5), (3, 8)], [X, A, B, C, D]) == C*X.T*B*A*D
+
+
+def test_convert_array_to_hadamard_products():
+
+    expr = HadamardProduct(M, N)
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert ret == expr
+
+    expr = HadamardProduct(M, N)*P
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert ret == expr
+
+    expr = Q*HadamardProduct(M, N)*P
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert ret == expr
+
+    expr = Q*HadamardProduct(M, N.T)*P
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert ret == expr
+
+    expr = HadamardProduct(M, N)*HadamardProduct(Q, P)
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert expr == ret
+
+    expr = P.T*HadamardProduct(M, N)*HadamardProduct(Q, P)
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert expr == ret
+
+    # ArrayDiagonal should be converted
+    cg = ArrayDiagonal(ArrayTensorProduct(M, N, Q), (1, 3), (0, 2, 4))
+    ret = convert_array_to_matrix(cg)
+    expected = PermuteDims(ArrayDiagonal(ArrayTensorProduct(HadamardProduct(M.T, N.T), Q), (1, 2)), [1, 0, 2])
+    assert expected == ret
+
+    # Special case that should return the same expression:
+    cg = ArrayDiagonal(ArrayTensorProduct(HadamardProduct(M, N), Q), (0, 2))
+    ret = convert_array_to_matrix(cg)
+    assert ret == cg
+
+    # Hadamard products with traces:
+
+    expr = Trace(HadamardProduct(M, N))
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert ret == Trace(HadamardProduct(M.T, N.T))
+
+    expr = Trace(A*HadamardProduct(M, N))
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert ret == Trace(HadamardProduct(M, N)*A)
+
+    expr = Trace(HadamardProduct(A, M)*N)
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert ret == Trace(HadamardProduct(M.T, N)*A)
+
+    # These should not be converted into Hadamard products:
+
+    cg = ArrayDiagonal(ArrayTensorProduct(M, N), (0, 1, 2, 3))
+    ret = convert_array_to_matrix(cg)
+    assert ret == cg
+
+    cg = ArrayDiagonal(ArrayTensorProduct(A), (0, 1))
+    ret = convert_array_to_matrix(cg)
+    assert ret == cg

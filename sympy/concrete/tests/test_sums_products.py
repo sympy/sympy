@@ -1429,6 +1429,13 @@ def test_matrixsymbol_summation_numerical_limits():
     assert Sum(A**n*B**n, (n, 1, 3)).doit() == ans
 
 
+def test_issue_21651():
+    from sympy import floor, Sum, Symbol
+    i = Symbol('i')
+    a = Sum(floor(2*2**(-i)), (i, S.One, 2))
+    assert a.doit() == S.One
+
+
 @XFAIL
 def test_matrixsymbol_summation_symbolic_limits():
     N = Symbol('N', integer=True, positive=True)

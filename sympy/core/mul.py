@@ -1334,6 +1334,7 @@ class Mul(Expr, AssocOp):
     #_eval_is_integer = lambda self: _fuzzy_group(
     #    (a.is_integer for a in self.args), quick_exit=True)
     def _eval_is_integer(self):
+        from sympy import trailing
         is_rational = self._eval_is_rational()
         if is_rational is False:
             return False
@@ -1342,16 +1343,19 @@ class Mul(Expr, AssocOp):
         denominators = []
         for a in self.args:
             if a.is_integer:
-                numerators.append(a)
+                if abs(a) is not S.One:
+                    numerators.append(a)
             elif a.is_Rational:
                 n, d = a.as_numer_denom()
-                numerators.append(n)
-                denominators.append(d)
+                if abs(n) is not S.One:
+                    numerators.append(n)
+                if d is not S.One:
+                    denominators.append(d)
             elif a.is_Pow:
                 b, e = a.as_base_exp()
                 if not b.is_integer or not e.is_integer: return
                 if e.is_negative:
-                    denominators.append(b)
+                    denominators.append(2 if a is S.Half else Pow(a, S.NegativeOne))
                 else:
                     # for integer b and positive integer e: a = b**e would be integer
                     assert not e.is_positive
@@ -1364,13 +1368,36 @@ class Mul(Expr, AssocOp):
         if not denominators:
             return True
 
-        odd = lambda ints: all(i.is_odd for i in ints)
-        even = lambda ints: any(i.is_even for i in ints)
+        allodd = lambda x: all(i.is_odd for i in x)
+        alleven = lambda x: all(i.is_even for i in x)
+        anyeven = lambda x: any(i.is_even for i in x)
 
-        if odd(numerators) and even(denominators):
+        if allodd(numerators) and anyeven(denominators):
             return False
-        elif even(numerators) and denominators == [2]:
+        elif anyeven(numerators) and denominators == [2]:
             return True
+        elif alleven(numerators) and allodd(denominators
+                ) and (Mul(*denominators, evaluate=False) - 1
+                ).is_positive:
+            return False
+        if len(denominators) == 1:
+            d = denominators[0]
+            if d.is_Integer and d.is_even:
+                # if minimal power of 2 in num vs den is not
+                # negative then we have an integer
+                if (Add(*[i.as_base_exp()[1] for i in
+                        numerators if i.is_even]) - trailing(d.p)
+                        ).is_nonnegative:
+                    return True
+        if len(numerators) == 1:
+            n = numerators[0]
+            if n.is_Integer and n.is_even:
+                # if minimal power of 2 in den vs num is positive
+                # then we have have a non-integer
+                if (Add(*[i.as_base_exp()[1] for i in
+                        denominators if i.is_even]) - trailing(n.p)
+                        ).is_positive:
+                    return False
 
     def _eval_is_polar(self):
         has_polar = any(arg.is_polar for arg in self.args)
@@ -1545,37 +1572,54 @@ class Mul(Expr, AssocOp):
         return self._eval_pos_neg(-1)
 
     def _eval_is_odd(self):
+        from sympy import trailing, fraction
         is_integer = self.is_integer
-
         if is_integer:
+            if self.is_zero:
+                return False
+            n, d = fraction(self)
+            if d.is_Integer and d.is_even:
+                # if minimal power of 2 in num vs den is
+                # positive then we have an even number
+                if (Add(*[i.as_base_exp()[1] for i in
+                        Mul.make_args(n) if i.is_even]) - trailing(d.p)
+                        ).is_positive:
+                    return False
+                return
             r, acc = True, 1
             for t in self.args:
-                if not t.is_integer:
-                    return None
-                elif t.is_even:
+                if abs(t) is S.One:
+                    continue
+                assert t.is_integer
+                if t.is_even:
+                    return False
+                if r is False:
+                    pass
+                elif acc != 1 and (acc + t).is_odd:
                     r = False
-                elif t.is_integer:
-                    if r is False:
-                        pass
-                    elif acc != 1 and (acc + t).is_odd:
-                        r = False
-                    elif t.is_odd is None:
-                        r = None
+                elif t.is_even is None:
+                    r = None
                 acc = t
             return r
-
-        # !integer -> !odd
-        elif is_integer is False:
-            return False
+        return is_integer # !integer -> !odd
 
     def _eval_is_even(self):
+        from sympy import trailing, fraction
         is_integer = self.is_integer
 
         if is_integer:
             return fuzzy_not(self.is_odd)
 
-        elif is_integer is False:
-            return False
+        n, d = fraction(self)
+        if n.is_Integer and n.is_even:
+            # if minimal power of 2 in den vs num is not
+            # negative then this is not an integer and
+            # can't be even
+            if (Add(*[i.as_base_exp()[1] for i in
+                    Mul.make_args(d) if i.is_even]) - trailing(n.p)
+                    ).is_nonnegative:
+                return False
+        return is_integer
 
     def _eval_is_composite(self):
         """
@@ -1949,12 +1993,6 @@ class Mul(Expr, AssocOp):
 
     def _eval_adjoint(self):
         return self.func(*[t.adjoint() for t in self.args[::-1]])
-
-    def _sage_(self):
-        s = 1
-        for x in self.args:
-            s *= x._sage_()
-        return s
 
     def as_content_primitive(self, radical=False, clear=True):
         """Return the tuple (R, self/R) where R is the positive Rational

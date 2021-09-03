@@ -306,7 +306,7 @@ class ImageSet(Set):
     False
 
     >>> FiniteSet(0, 1, 2, 3, 4, 5, 6, 7, 9, 10).intersect(squares)
-    FiniteSet(1, 4, 9)
+    {1, 4, 9}
 
     >>> square_iterable = iter(squares)
     >>> for i in range(4):
@@ -328,7 +328,7 @@ class ImageSet(Set):
     >>> solutions = ImageSet(Lambda(n, n*pi), S.Integers) # solutions of sin(x) = 0
     >>> dom = Interval(-1, 1)
     >>> dom.intersect(solutions)
-    FiniteSet(0)
+    {0}
 
     See Also
     ========
@@ -730,6 +730,8 @@ class Range(Set):
 
     def __iter__(self):
         n = self.size  # validate
+        if not (n.has(S.Infinity) or n.has(S.NegativeInfinity) or n.is_Integer):
+            raise TypeError("Cannot iterate over symbolic Range")
         if self.start in [S.NegativeInfinity, S.Infinity]:
             raise TypeError("Cannot iterate over Range with infinite start")
         elif self.start != self.stop:
@@ -757,9 +759,10 @@ class Range(Set):
         n = dif/self.step
         if n.is_infinite:
             return S.Infinity
-        if not n.is_Integer or not all(i.is_integer for i in self.args):
-            raise ValueError('invalid method for symbolic range')
-        return abs(n)
+        if  n.is_extended_nonnegative and all(i.is_integer for i in self.args):
+            from sympy.functions.elementary.integers import floor
+            return abs(floor(n))
+        raise ValueError('Invalid method for symbolic Range')
 
     @property
     def is_finite_set(self):
@@ -895,7 +898,7 @@ class Range(Set):
             if not (all(i.is_integer or i.is_infinite
                     for i in self.args) and ((self.stop - self.start)/
                     self.step).is_extended_positive):
-                raise ValueError('invalid method for symbolic range')
+                raise ValueError('Invalid method for symbolic Range')
             if i == 0:
                 if self.start.is_infinite:
                     raise ValueError(ooslice)
@@ -908,8 +911,13 @@ class Range(Set):
             rv = (self.stop if i < 0 else self.start) + i*self.step
             if rv.is_infinite:
                 raise ValueError(ooslice)
-            if 0 <= (rv - self.start)/self.step <= n:
+            val = (rv - self.start)/self.step
+            rel = fuzzy_or([val.is_infinite,
+                            fuzzy_and([val.is_nonnegative, (n-val).is_nonnegative])])
+            if rel:
                 return rv
+            if rel is None:
+                raise ValueError('Invalid method for symbolic Range')
             raise IndexError("Range index out of range")
 
     @property
@@ -1021,7 +1029,7 @@ def normalize_theta_set(theta):
     >>> normalize_theta_set(Interval(-3*pi/2, -pi/2))
     Interval(pi/2, 3*pi/2)
     >>> normalize_theta_set(FiniteSet(0, pi, 3*pi))
-    FiniteSet(0, pi)
+    {0, pi}
 
     """
     from sympy.functions.elementary.trigonometric import _pi_coeff as coeff
@@ -1300,7 +1308,7 @@ class ComplexRegion(Set):
         >>> from sympy import Interval, ComplexRegion
         >>> unit = Interval(0,1)
         >>> ComplexRegion.from_real(unit)
-        CartesianComplexRegion(ProductSet(Interval(0, 1), FiniteSet(0)))
+        CartesianComplexRegion(ProductSet(Interval(0, 1), {0}))
 
         """
         if not sets.is_subset(S.Reals):

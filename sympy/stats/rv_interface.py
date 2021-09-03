@@ -411,10 +411,10 @@ def median(X, evaluate=True, **kwargs):
     >>> from sympy.stats import Normal, Die, median
     >>> N = Normal('N', 3, 1)
     >>> median(N)
-    FiniteSet(3)
+    {3}
     >>> D = Die('D')
     >>> median(D)
-    FiniteSet(3, 4)
+    {3, 4}
 
     References
     ==========
