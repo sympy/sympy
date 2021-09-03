@@ -322,15 +322,17 @@ class KindDispatcher:
                 prev_kind = result
 
                 t1, t2 = type(prev_kind), type(kind)
+                k1, k2 = prev_kind, kind
                 func = self._dispatcher.dispatch(t1, t2)
                 if func is None and self.commutative:
                     # try reversed order
                     func = self._dispatcher.dispatch(t2, t1)
+                    k1, k2 = k2, k1
                 if func is None:
                     # unregistered kind relation
                     result = UndefinedKind
                 else:
-                    result = func(prev_kind, kind)
+                    result = func(k1, k2)
                 if not isinstance(result, Kind):
                     raise RuntimeError(
                         "Dispatcher for {!r} and {!r} must return a Kind, but got {!r}".format(

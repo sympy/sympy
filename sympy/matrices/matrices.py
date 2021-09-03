@@ -6,7 +6,7 @@ from sympy.core.compatibility import (
     Callable, NotIterable, as_int, is_sequence)
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
-from sympy.core.kind import _NumberKind, NumberKind, UndefinedKind
+from sympy.core.kind import _NumberKind, UndefinedKind
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -754,8 +754,15 @@ def num_mat_mul(k1, k2):
     searches for this automatically.
     """
     # Deal with Mul._kind_dispatcher's commutativity
-    elemk = Mul._kind_dispatcher(NumberKind, k2.element_kind)
+    # XXX: this function is called with either k1 or k2 as MatrixKind because
+    # the Mul kind dispatcher is commutative. Maybe it shouldn't be. Need to
+    # swap the args here because NumberKind doesn't have an element_kind
+    # attribute.
+    if not isinstance(k2, MatrixKind):
+        k1, k2 = k2, k1
+    elemk = Mul._kind_dispatcher(k1, k2.element_kind)
     return MatrixKind(elemk)
+
 
 @Mul._kind_dispatcher.register(MatrixKind, MatrixKind)
 def mat_mat_mul(k1, k2):
@@ -764,6 +771,7 @@ def mat_mat_mul(k1, k2):
     """
     elemk = Mul._kind_dispatcher(k1.element_kind, k2.element_kind)
     return MatrixKind(elemk)
+
 
 class MatrixBase(MatrixDeprecated,
                  MatrixCalculus,
@@ -998,17 +1006,28 @@ class MatrixBase(MatrixDeprecated,
                     isinstance(i, MatrixSymbol))
                 raw = lambda i: is_sequence(i) and not ismat(i)
                 evaluate = kwargs.get('evaluate', True)
+
+
                 if evaluate:
-                    def do(x):
-                        # make Block and Symbol explicit
-                        if isinstance(x, (list, tuple)):
-                            return type(x)([do(i) for i in x])
-                        if isinstance(x, BlockMatrix) or \
-                                isinstance(x, MatrixSymbol) and \
-                                all(_.is_Integer for _ in x.shape):
+
+                    def make_explicit(x):
+                        """make Block and Symbol explicit"""
+                        if isinstance(x, BlockMatrix):
                             return x.as_explicit()
-                        return cls._sympify(x)
-                    dat = do(dat)
+                        elif isinstance(x, MatrixSymbol) and all(_.is_Integer for _ in x.shape):
+                            return x.as_explicit()
+                        else:
+                            return x
+
+                    def make_explicit_row(row):
+                        # Could be list or could be list of lists
+                        if isinstance(row, (list, tuple)):
+                            return [make_explicit(x) for x in row]
+                        else:
+                            return make_explicit(row)
+
+                    if isinstance(dat, (list, tuple)):
+                        dat = [make_explicit_row(row) for row in dat]
 
                 if dat == [] or dat == [[]]:
                     rows = cols = 0
@@ -1042,7 +1061,7 @@ class MatrixBase(MatrixDeprecated,
                         elif raw(i):
                             if i:
                                 ncol.add(len(i))
-                                flat_list.extend(i)
+                                flat_list.extend([cls._sympify(ij) for ij in i])
                         else:
                             ncol.add(1)
                             flat_list.append(i)
@@ -2215,6 +2234,8 @@ class MatrixBase(MatrixDeprecated,
 
     def strongly_connected_components_decomposition(self, lower=True):
         return _strongly_connected_components_decomposition(self, lower=lower)
+
+    _sage_ = Basic._sage_
 
     rank_decomposition.__doc__     = _rank_decomposition.__doc__
     cholesky.__doc__               = _cholesky.__doc__
