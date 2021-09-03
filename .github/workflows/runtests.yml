@@ -266,7 +266,7 @@ jobs:
           python-version: '2.7'
       - run: bin/test_py2_import.py
 
-  # -------------------- Run benchmarks against master and 1.8 ----- #
+  # -------- Run benchmarks against master and previous release ---- #
 
   benchmarks:
     needs: [doctests-latest, tests1-latest, tests2-latest]
@@ -292,7 +292,7 @@ jobs:
 
       - run: git remote add upstream https://github.com/sympy/sympy.git
       - run: git fetch upstream master
-      - run: git fetch upstream 1.8
+      - run: git fetch upstream 1.9
 
       - name: Configure benchmarks
         run: asv machine --yes --config asv.conf.actions.json
@@ -304,8 +304,8 @@ jobs:
         # Output benchmark results
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 | tee pr_vs_master.txt
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 --only-changed | tee pr_vs_master_changed.txt
-      - run: asv compare upstream/1.8 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
-      - run: asv compare upstream/1.8 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
+      - run: asv compare upstream/1.9 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
+      - run: asv compare upstream/1.9 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
 
         # This workflow does not have write permissions for the repository so
         # we save all outputs as artifacts that can be accessed by the
