@@ -1405,6 +1405,10 @@ def test_issue_21882():
     ]
 
     assert solve(equations, unknowns, dict=True) == answer
+    assert solve([equations[i] for i in (0, 4, 5)], manual=True) == [
+        {a: c*(36*k**2 - 116*k + 79)/(12*k - 11)/3,
+         b: 2*c*(9*k - 17)/(12*k - 11)/9,
+         d: (216*c*k**3 - 984*c*k**2 + 1318*c*k - 520*c - 180*f*k + 165*f)/(12*k - 11)/15}]
 
 
 def test_issue_5901():
