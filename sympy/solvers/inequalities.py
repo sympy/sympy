@@ -1039,6 +1039,7 @@ def _simplex(M, R, S, random_seed=0):
     Simplex method with randomized pivoting
     http://web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
     """
+    rand = random.Random(x=random_seed)
     while True:
         B = M[:-1, -1]
         A = M[:-1, :-1]
@@ -1051,7 +1052,7 @@ def _simplex(M, R, S, random_seed=0):
 
             if not piv_cols:
                 return M, R, S
-            random.Random(x=random_seed).shuffle(piv_cols)
+            rand.shuffle(piv_cols)
             j0 = piv_cols[0]
 
             piv_rows = []
@@ -1064,7 +1065,7 @@ def _simplex(M, R, S, random_seed=0):
                 raise UnboundedLinearProgrammingError('Objective function can assume arbitrarily large positive (resp. negative) values at feasible vectors!')
             piv_rows = sorted(piv_rows, key=lambda x: (x[0], x[1]))
             piv_rows = [(ratio, i) for ratio, i in piv_rows if ratio == piv_rows[0][0]]
-            random.Random(x=random_seed).shuffle(piv_rows)
+            rand.shuffle(piv_rows)
             _, i0 = piv_rows[0]
 
             M = _pivot(M, i0, j0)
@@ -1080,7 +1081,7 @@ def _simplex(M, R, S, random_seed=0):
                     piv_cols.append(j)
             if not piv_cols:
                 raise InfeasibleLinearProgrammingError('The constraint set is empty!')
-            random.Random(x=random_seed).shuffle(piv_cols)
+            rand.shuffle(piv_cols)
             j0 = piv_cols[0]
 
             ratio = B[k] / A[k, j0]
@@ -1092,7 +1093,7 @@ def _simplex(M, R, S, random_seed=0):
 
             piv_rows = sorted(piv_rows, key=lambda x: (x[0], x[1]))
             piv_rows = [(ratio, i) for ratio, i in piv_rows if ratio == piv_rows[0][0]]
-            random.Random(x=random_seed).shuffle(piv_rows)
+            rand.shuffle(piv_rows)
             _, i0 = piv_rows[0]
 
             M = _pivot(M, i0, j0)
