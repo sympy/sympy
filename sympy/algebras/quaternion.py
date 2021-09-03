@@ -74,6 +74,32 @@ class Quaternion(Expr):
     @property
     def d(self):
         return self._d
+    
+    # vector/imaginary part as 3x1 Matrix
+    @property
+    def v(self):
+        return Matrix([self._b,self._c,self._d])
+    
+    # whole quaternion as 4x1 Matrix
+    @property
+    def v4(self):
+        return Matrix([self._a,self._b,self._c,self._d])
+    
+    @property
+    def LM(self):
+        return Matrix([
+                [+self.a,-self.b,-self.c,-self.d],
+                [+self.b,+self.a,-self.d,+self.c],
+                [+self.c,+self.d,+self.a,-self.b],
+                [+self.d,-self.c,+self.b,+self.a]])
+    
+    @property
+    def RM(self):
+        return Matrix([
+                [+self.a,-self.b,-self.c,-self.d],
+                [+self.b,+self.a,+self.d,-self.c],
+                [+self.c,-self.d,+self.a,+self.b],
+                [+self.d,+self.c,-self.b,+self.a]])
 
     @property
     def real_field(self):
