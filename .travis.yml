@@ -88,13 +88,6 @@ jobs:
       env:
         - TEST_PY2_IMPORT="true"
 
-    # Note: This never actually fails. The benchmark script doesn't report any
-    # failure exit code.
-    - python: 3.6
-      dist: xenial
-      env:
-        - BENCHMARK="true"
-
 before_install:
   - set -e
   - python -c "import fcntl; fcntl.fcntl(1, fcntl.F_SETFL, 0)"
@@ -144,10 +137,6 @@ before_install:
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
     pip install sphinx "docutils" doctr matplotlib sphinx-math-dollar sphinx-reredirects;
-    fi
-  - if [[ "${BENCHMARK}" == "true" ]]; then
-    pip install asv;
-    git submodule add https://github.com/sympy/sympy_benchmarks.git;
     fi
 
 install:
