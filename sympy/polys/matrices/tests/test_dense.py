@@ -4,10 +4,16 @@ from sympy.polys import ZZ, QQ
 
 from sympy.polys.matrices.ddm import DDM
 from sympy.polys.matrices.dense import (
+        ddm_transpose,
         ddm_iadd, ddm_isub, ddm_ineg, ddm_imatmul, ddm_imul, ddm_irref,
         ddm_idet, ddm_iinv, ddm_ilu, ddm_ilu_split, ddm_ilu_solve, ddm_berk)
 from sympy.polys.matrices.exceptions import (
         DDMShapeError, NonInvertibleMatrixError, NonSquareMatrixError)
+
+
+def test_ddm_transpose():
+    a = [[1, 2], [3, 4]]
+    assert ddm_transpose(a) == [[1, 3], [2, 4]]
 
 
 def test_ddm_iadd():

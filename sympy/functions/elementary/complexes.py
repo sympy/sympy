@@ -136,10 +136,6 @@ class re(Function):
         if self.args[0].is_finite:
             return True
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.real_part(self.args[0]._sage_())
-
 
 class im(Function):
     """
@@ -240,10 +236,6 @@ class im(Function):
         if x.is_imaginary or self.args[0].is_imaginary:
             return -S.ImaginaryUnit \
                 * re(Derivative(self.args[0], x, evaluate=True))
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.imag_part(self.args[0]._sage_())
 
     def _eval_rewrite_as_re(self, arg, **kwargs):
         return -S.ImaginaryUnit*(self.args[0] - re(self.args[0]))
@@ -431,10 +423,6 @@ class sign(Function):
             cdir = arg0.dir(x, cdir)
         return -S.One if re(cdir) < 0 else S.One
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.sgn(self.args[0]._sage_())
-
     def _eval_rewrite_as_Piecewise(self, arg, **kwargs):
         if arg.is_extended_real:
             return Piecewise((1, arg > 0), (-1, arg < 0), (0, True))
@@ -442,7 +430,7 @@ class sign(Function):
     def _eval_rewrite_as_Heaviside(self, arg, **kwargs):
         from sympy.functions.special.delta_functions import Heaviside
         if arg.is_extended_real:
-            return Heaviside(arg, H0=S(1)/2) * 2 - 1
+            return Heaviside(arg) * 2 - 1
 
     def _eval_rewrite_as_Abs(self, arg, **kwargs):
         return Piecewise((0, Eq(arg, 0)), (arg / Abs(arg), True))
@@ -537,6 +525,7 @@ class Abs(Function):
                 return obj
         if not isinstance(arg, Expr):
             raise TypeError("Bad argument type for Abs(): %s" % type(arg))
+
         # handle what we can
         arg = signsimp(arg, evaluate=False)
         n, d = arg.as_numer_denom()
@@ -588,6 +577,10 @@ class Abs(Function):
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
         if isinstance(arg, AppliedUndef):
+            if arg.is_positive:
+                return arg
+            elif arg.is_negative:
+                return -arg
             return
         if arg.is_Add and arg.has(S.Infinity, S.NegativeInfinity):
             if any(a.is_infinite for a in arg.as_real_imag()):
@@ -602,6 +595,8 @@ class Abs(Function):
             arg2 = -S.ImaginaryUnit * arg
             if arg2.is_extended_nonnegative:
                 return arg2
+        if arg.is_extended_real:
+            return
         # reject result if all new conjugates are just wrappers around
         # an expression that was already in the arg
         conj = signsimp(arg.conjugate(), evaluate=False)
@@ -664,10 +659,6 @@ class Abs(Function):
         s = self.args[0]._eval_nseries(x, n=n, logx=logx)
         return (sign(direction)*s).expand()
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.abs_symbolic(self.args[0]._sage_())
-
     def _eval_derivative(self, x):
         if self.args[0].is_extended_real or self.args[0].is_imaginary:
             return Derivative(self.args[0], x, evaluate=True) \
@@ -699,8 +690,10 @@ class Abs(Function):
 
 class arg(Function):
     """
-    Returns the argument (in radians) of a complex number. For a positive
-    number, the argument is always 0.
+    returns the argument (in radians) of a complex number.  The argument is
+    evaluated in consistent convention with atan2 where the branch-cut is
+    taken along the negative real axis and arg(z) is in the interval
+    (-pi,pi].  For a positive number, the argument is always 0.
 
     Examples
     ========
@@ -751,7 +744,7 @@ class arg(Function):
             arg_ = sign(c)*arg_
         else:
             arg_ = arg
-        if arg_.atoms(AppliedUndef):
+        if any(i.is_extended_positive is None for i in arg_.atoms(AppliedUndef)):
             return
         x, y = arg_.as_real_imag()
         rv = atan2(y, x)

@@ -2,13 +2,17 @@
 Tests for the basic functionality of the SDM class.
 """
 
+from itertools import product
 
+from sympy import S
+from sympy.core.compatibility import HAS_GMPY
 from sympy.testing.pytest import raises
 
-from sympy import QQ, ZZ
+from sympy.polys.domains import QQ, ZZ, EXRAW
 from sympy.polys.matrices.sdm import SDM
 from sympy.polys.matrices.ddm import DDM
-from sympy.polys.matrices.exceptions import DDMBadInputError, DDMDomainError
+from sympy.polys.matrices.exceptions import (DDMBadInputError, DDMDomainError,
+        DDMShapeError)
 
 
 def test_SDM():
@@ -19,6 +23,15 @@ def test_SDM():
 
     raises(DDMBadInputError, lambda: SDM({5:{1:ZZ(0)}}, (2, 2), ZZ))
     raises(DDMBadInputError, lambda: SDM({0:{5:ZZ(0)}}, (2, 2), ZZ))
+
+
+def test_DDM_str():
+    sdm = SDM({0:{0:ZZ(1)}, 1:{1:ZZ(1)}}, (2, 2), ZZ)
+    assert str(sdm) == '{0: {0: 1}, 1: {1: 1}}'
+    if HAS_GMPY: # pragma: no cover
+        assert repr(sdm) == 'SDM({0: {0: mpz(1)}, 1: {1: mpz(1)}}, (2, 2), ZZ)'
+    else:        # pragma: no cover
+        assert repr(sdm) == 'SDM({0: {0: 1}, 1: {1: 1}}, (2, 2), ZZ)'
 
 
 def test_SDM_new():
@@ -54,6 +67,16 @@ def test_SDM_to_list():
     assert A.to_list() == [[], []]
 
 
+def test_SDM_to_list_flat():
+    A = SDM({0:{1: ZZ(1)}}, (2, 2), ZZ)
+    assert A.to_list_flat() == [ZZ(0), ZZ(1), ZZ(0), ZZ(0)]
+
+
+def test_SDM_to_dok():
+    A = SDM({0:{1: ZZ(1)}}, (2, 2), ZZ)
+    assert A.to_dok() == {(0, 1): ZZ(1)}
+
+
 def test_SDM_from_ddm():
     A = DDM([[ZZ(1), ZZ(0)], [ZZ(1), ZZ(0)]], (2, 2), ZZ)
     B = SDM.from_ddm(A)
@@ -68,18 +91,97 @@ def test_SDM_to_ddm():
     assert A.to_ddm() == B
 
 
+def test_SDM_to_sdm():
+    A = SDM({0:{1: ZZ(1)}}, (2, 2), ZZ)
+    assert A.to_sdm() == A
+
+
+def test_SDM_getitem():
+    A = SDM({0:{1:ZZ(1)}}, (2, 2), ZZ)
+    assert A.getitem(0, 0) == ZZ.zero
+    assert A.getitem(0, 1) == ZZ.one
+    assert A.getitem(1, 0) == ZZ.zero
+    assert A.getitem(-2, -2) == ZZ.zero
+    assert A.getitem(-2, -1) == ZZ.one
+    assert A.getitem(-1, -2) == ZZ.zero
+    raises(IndexError, lambda: A.getitem(2, 0))
+    raises(IndexError, lambda: A.getitem(0, 2))
+
+
+def test_SDM_setitem():
+    A = SDM({0:{1:ZZ(1)}}, (2, 2), ZZ)
+    A.setitem(0, 0, ZZ(1))
+    assert A == SDM({0:{0:ZZ(1), 1:ZZ(1)}}, (2, 2), ZZ)
+    A.setitem(1, 0, ZZ(1))
+    assert A == SDM({0:{0:ZZ(1), 1:ZZ(1)}, 1:{0:ZZ(1)}}, (2, 2), ZZ)
+    A.setitem(1, 0, ZZ(0))
+    assert A == SDM({0:{0:ZZ(1), 1:ZZ(1)}}, (2, 2), ZZ)
+    # Repeat the above test so that this time the row is empty
+    A.setitem(1, 0, ZZ(0))
+    assert A == SDM({0:{0:ZZ(1), 1:ZZ(1)}}, (2, 2), ZZ)
+    A.setitem(0, 0, ZZ(0))
+    assert A == SDM({0:{1:ZZ(1)}}, (2, 2), ZZ)
+    # This time the row is there but column is empty
+    A.setitem(0, 0, ZZ(0))
+    assert A == SDM({0:{1:ZZ(1)}}, (2, 2), ZZ)
+    raises(IndexError, lambda: A.setitem(2, 0, ZZ(1)))
+    raises(IndexError, lambda: A.setitem(0, 2, ZZ(1)))
+
+
+def test_SDM_extract_slice():
+    A = SDM({0:{0:ZZ(1), 1:ZZ(2)}, 1:{0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
+    B = A.extract_slice(slice(1, 2), slice(1, 2))
+    assert B == SDM({0:{0:ZZ(4)}}, (1, 1), ZZ)
+
+
+def test_SDM_extract():
+    A = SDM({0:{0:ZZ(1), 1:ZZ(2)}, 1:{0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
+    B = A.extract([1], [1])
+    assert B == SDM({0:{0:ZZ(4)}}, (1, 1), ZZ)
+    B = A.extract([1, 0], [1, 0])
+    assert B == SDM({0:{0:ZZ(4), 1:ZZ(3)}, 1:{0:ZZ(2), 1:ZZ(1)}}, (2, 2), ZZ)
+    B = A.extract([1, 1], [1, 1])
+    assert B == SDM({0:{0:ZZ(4), 1:ZZ(4)}, 1:{0:ZZ(4), 1:ZZ(4)}}, (2, 2), ZZ)
+    B = A.extract([-1], [-1])
+    assert B == SDM({0:{0:ZZ(4)}}, (1, 1), ZZ)
+
+    A = SDM({}, (2, 2), ZZ)
+    B = A.extract([0, 1, 0], [0, 0])
+    assert B == SDM({}, (3, 2), ZZ)
+
+    A = SDM({0:{0:ZZ(1), 1:ZZ(2)}, 1:{0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
+    assert A.extract([], []) == SDM.zeros((0, 0), ZZ)
+    assert A.extract([1], []) == SDM.zeros((1, 0), ZZ)
+    assert A.extract([], [1]) == SDM.zeros((0, 1), ZZ)
+
+    raises(IndexError, lambda: A.extract([2], [0]))
+    raises(IndexError, lambda: A.extract([0], [2]))
+    raises(IndexError, lambda: A.extract([-3], [0]))
+    raises(IndexError, lambda: A.extract([0], [-3]))
+
+
 def test_SDM_zeros():
     A = SDM.zeros((2, 2), ZZ)
     assert A.domain == ZZ
     assert A.shape == (2, 2)
     assert dict(A) == {}
 
+def test_SDM_ones():
+    A = SDM.ones((1, 2), QQ)
+    assert A.domain == QQ
+    assert A.shape == (1, 2)
+    assert dict(A) == {0:{0:QQ(1), 1:QQ(1)}}
 
 def test_SDM_eye():
-    A = SDM.eye(2, ZZ)
+    A = SDM.eye((2, 2), ZZ)
     assert A.domain == ZZ
     assert A.shape == (2, 2)
     assert dict(A) == {0:{0:ZZ(1)}, 1:{1:ZZ(1)}}
+
+
+def test_SDM_diag():
+    A = SDM.diag([ZZ(1), ZZ(2)], ZZ, (2, 3))
+    assert A == SDM({0:{0:ZZ(1)}, 1:{1:ZZ(2)}}, (2, 3), ZZ)
 
 
 def test_SDM_transpose():
@@ -106,43 +208,94 @@ def test_SDM_mul():
     raises(TypeError, lambda: QQ(1, 2)*A)
 
 
+def test_SDM_mul_elementwise():
+    A = SDM({0:{0:ZZ(2), 1:ZZ(2)}}, (2, 2), ZZ)
+    B = SDM({0:{0:ZZ(4)}, 1:{0:ZZ(3)}}, (2, 2), ZZ)
+    C = SDM({0:{0:ZZ(8)}}, (2, 2), ZZ)
+    assert A.mul_elementwise(B) == C
+    assert B.mul_elementwise(A) == C
+
+    Aq = A.convert_to(QQ)
+    A1 = SDM({0:{0:ZZ(1)}}, (1, 1), ZZ)
+
+    raises(DDMDomainError, lambda: Aq.mul_elementwise(B))
+    raises(DDMShapeError, lambda: A1.mul_elementwise(B))
+
+
 def test_SDM_matmul():
     A = SDM({0:{0:ZZ(2)}}, (2, 2), ZZ)
     B = SDM({0:{0:ZZ(4)}}, (2, 2), ZZ)
-    assert A.matmul(A) == B
+    assert A.matmul(A) == A*A == B
 
     C = SDM({0:{0:ZZ(2)}}, (2, 2), QQ)
     raises(DDMDomainError, lambda: A.matmul(C))
 
     A = SDM({0:{0:ZZ(1), 1:ZZ(2)}, 1:{0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
     B = SDM({0:{0:ZZ(7), 1:ZZ(10)}, 1:{0:ZZ(15), 1:ZZ(22)}}, (2, 2), ZZ)
-    assert A.matmul(A) == B
+    assert A.matmul(A) == A*A == B
+
+    A22 = SDM({0:{0:ZZ(4)}}, (2, 2), ZZ)
+    A32 = SDM({0:{0:ZZ(2)}}, (3, 2), ZZ)
+    A23 = SDM({0:{0:ZZ(4)}}, (2, 3), ZZ)
+    A33 = SDM({0:{0:ZZ(8)}}, (3, 3), ZZ)
+    A22 = SDM({0:{0:ZZ(8)}}, (2, 2), ZZ)
+    assert A32.matmul(A23) == A33
+    assert A23.matmul(A32) == A22
+    # XXX: @ not supported by SDM...
+    #assert A32.matmul(A23) == A32 @ A23 == A33
+    #assert A23.matmul(A32) == A23 @ A32 == A22
+    #raises(DDMShapeError, lambda: A23 @ A22)
+    raises(DDMShapeError, lambda: A23.matmul(A22))
+
+    A = SDM({0: {0: ZZ(-1), 1: ZZ(1)}}, (1, 2), ZZ)
+    B = SDM({0: {0: ZZ(-1)}, 1: {0: ZZ(-1)}}, (2, 1), ZZ)
+    assert A.matmul(B) == A*B == SDM({}, (1, 1), ZZ)
+
+
+def test_matmul_exraw():
+
+    def dm(d):
+        result = {}
+        for i, row in d.items():
+            row = {j:val for j, val in row.items() if val}
+            if row:
+                result[i] = row
+        return SDM(result, (2, 2), EXRAW)
+
+    values = [S.NegativeInfinity, S.NegativeOne, S.Zero, S.One, S.Infinity]
+    for a, b, c, d in product(*[values]*4):
+        Ad = dm({0: {0:a, 1:b}, 1: {0:c, 1:d}})
+        Ad2 = dm({0: {0:a*a + b*c, 1:a*b + b*d}, 1:{0:c*a + d*c, 1: c*b + d*d}})
+        assert Ad * Ad == Ad2
 
 
 def test_SDM_add():
     A = SDM({0:{1:ZZ(1)}, 1:{0:ZZ(2), 1:ZZ(3)}}, (2, 2), ZZ)
     B = SDM({0:{0:ZZ(1)}, 1:{0:ZZ(-2), 1:ZZ(3)}}, (2, 2), ZZ)
     C = SDM({0:{0:ZZ(1), 1:ZZ(1)}, 1:{1:ZZ(6)}}, (2, 2), ZZ)
-    assert A.add(B) == C
+    assert A.add(B) == B.add(A) == A + B == B + A == C
 
     A = SDM({0:{1:ZZ(1)}}, (2, 2), ZZ)
     B = SDM({0:{0:ZZ(1)}, 1:{0:ZZ(-2), 1:ZZ(3)}}, (2, 2), ZZ)
     C = SDM({0:{0:ZZ(1), 1:ZZ(1)}, 1:{0:ZZ(-2), 1:ZZ(3)}}, (2, 2), ZZ)
-    assert A.add(B) == C
-    assert B.add(A) == C
+    assert A.add(B) == B.add(A) == A + B == B + A == C
+
+    raises(TypeError, lambda: A + [])
 
 
 def test_SDM_sub():
     A = SDM({0:{1:ZZ(1)}, 1:{0:ZZ(2), 1:ZZ(3)}}, (2, 2), ZZ)
     B = SDM({0:{0:ZZ(1)}, 1:{0:ZZ(-2), 1:ZZ(3)}}, (2, 2), ZZ)
     C = SDM({0:{0:ZZ(-1), 1:ZZ(1)}, 1:{0:ZZ(4)}}, (2, 2), ZZ)
-    assert A.sub(B) == C
+    assert A.sub(B) == A - B == C
+
+    raises(TypeError, lambda: A - [])
 
 
 def test_SDM_neg():
     A = SDM({0:{1:ZZ(1)}, 1:{0:ZZ(2), 1:ZZ(3)}}, (2, 2), ZZ)
     B = SDM({0:{1:ZZ(-1)}, 1:{0:ZZ(-2), 1:ZZ(-3)}}, (2, 2), ZZ)
-    assert A.neg() == B
+    assert A.neg() == -A == B
 
 
 def test_SDM_convert_to():
@@ -155,6 +308,32 @@ def test_SDM_convert_to():
     D = A.convert_to(ZZ)
     assert D == A
     assert D.domain == ZZ
+
+
+def test_SDM_hstack():
+    A = SDM({0:{1:ZZ(1)}}, (2, 2), ZZ)
+    B = SDM({1:{1:ZZ(1)}}, (2, 2), ZZ)
+    AA = SDM({0:{1:ZZ(1), 3:ZZ(1)}}, (2, 4), ZZ)
+    AB = SDM({0:{1:ZZ(1)}, 1:{3:ZZ(1)}}, (2, 4), ZZ)
+    assert SDM.hstack(A) == A
+    assert SDM.hstack(A, A) == AA
+    assert SDM.hstack(A, B) == AB
+
+
+def test_SDM_vstack():
+    A = SDM({0:{1:ZZ(1)}}, (2, 2), ZZ)
+    B = SDM({1:{1:ZZ(1)}}, (2, 2), ZZ)
+    AA = SDM({0:{1:ZZ(1)}, 2:{1:ZZ(1)}}, (4, 2), ZZ)
+    AB = SDM({0:{1:ZZ(1)}, 3:{1:ZZ(1)}}, (4, 2), ZZ)
+    assert SDM.vstack(A) == A
+    assert SDM.vstack(A, A) == AA
+    assert SDM.vstack(A, B) == AB
+
+
+def test_SDM_applyfunc():
+    A = SDM({0:{1:ZZ(1)}}, (2, 2), ZZ)
+    B = SDM({0:{1:ZZ(2)}}, (2, 2), ZZ)
+    assert A.applyfunc(lambda x: 2*x, ZZ) == B
 
 
 def test_SDM_inv():
@@ -226,3 +405,9 @@ def test_SDM_rref():
             {0: {0: QQ(1,1)}, 1: {1: QQ(1,1), 2: QQ(1,1)}},
             (2, 3), QQ)
     assert A.rref() == (Arref, [0, 1])
+
+
+def test_SDM_particular():
+    A = SDM({0:{0:QQ(1)}}, (2, 2), QQ)
+    Apart = SDM.zeros((1, 2), QQ)
+    assert A.particular() == Apart

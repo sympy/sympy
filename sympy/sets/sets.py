@@ -101,7 +101,7 @@ class Set(Basic, EvalfMixin):
         >>> Interval(0, 1) + Interval(2, 3)
         Union(Interval(0, 1), Interval(2, 3))
         >>> Interval(1, 2, True, True) + FiniteSet(2, 3)
-        Union(FiniteSet(3), Interval.Lopen(1, 2))
+        Union({3}, Interval.Lopen(1, 2))
 
         Similarly it is possible to use the '-' operator for set differences:
 
@@ -492,7 +492,7 @@ class Set(Basic, EvalfMixin):
 
         >>> A = EmptySet
         >>> A.powerset()
-        FiniteSet(EmptySet)
+        {EmptySet}
 
         A power set of a finite set:
 
@@ -558,9 +558,9 @@ class Set(Basic, EvalfMixin):
 
         >>> from sympy import Interval
         >>> Interval(0, 1).boundary
-        FiniteSet(0, 1)
+        {0, 1}
         >>> Interval(0, 1, True, False).boundary
-        FiniteSet(0, 1)
+        {0, 1}
         """
         return self._boundary
 
@@ -711,7 +711,7 @@ class ProductSet(Set):
     >>> from sympy import Interval, FiniteSet, ProductSet
     >>> I = Interval(0, 5); S = FiniteSet(1, 2, 3)
     >>> ProductSet(I, S)
-    ProductSet(Interval(0, 5), FiniteSet(1, 2, 3))
+    ProductSet(Interval(0, 5), {1, 2, 3})
 
     >>> (2, 2) in ProductSet(I, S)
     True
@@ -971,23 +971,6 @@ class Interval(Set):
         """
         return self._args[0]
 
-    _inf = left = start
-
-    @classmethod
-    def open(cls, a, b):
-        """Return an interval including neither boundary."""
-        return cls(a, b, True, True)
-
-    @classmethod
-    def Lopen(cls, a, b):
-        """Return an interval not including the left boundary."""
-        return cls(a, b, True, False)
-
-    @classmethod
-    def Ropen(cls, a, b):
-        """Return an interval not including the right boundary."""
-        return cls(a, b, False, True)
-
     @property
     def end(self):
         """
@@ -1004,8 +987,6 @@ class Interval(Set):
 
         """
         return self._args[1]
-
-    _sup = right = end
 
     @property
     def left_open(self):
@@ -1040,6 +1021,37 @@ class Interval(Set):
 
         """
         return self._args[3]
+
+    @classmethod
+    def open(cls, a, b):
+        """Return an interval including neither boundary."""
+        return cls(a, b, True, True)
+
+    @classmethod
+    def Lopen(cls, a, b):
+        """Return an interval not including the left boundary."""
+        return cls(a, b, True, False)
+
+    @classmethod
+    def Ropen(cls, a, b):
+        """Return an interval not including the right boundary."""
+        return cls(a, b, False, True)
+
+    @property
+    def _inf(self):
+        return self.start
+
+    @property
+    def _sup(self):
+        return self.end
+
+    @property
+    def left(self):
+        return self.start
+
+    @property
+    def right(self):
+        return self.end
 
     @property
     def is_empty(self):
@@ -1284,14 +1296,15 @@ class Union(Set, LatticeOp):
 
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
-        if all(isinstance(i, (FiniteSet, Interval)) for i in self.args):
-            if len(self.args) == 2:
-                a, b = self.args
-                if (a.sup == b.inf and a.inf is S.NegativeInfinity
-                        and b.sup is S.Infinity):
-                    return And(Ne(symbol, a.sup), symbol < b.sup, symbol > a.inf)
-            return Or(*[set.as_relational(symbol) for set in self.args])
-        raise NotImplementedError('relational of Union with non-Intervals')
+        if (len(self.args) == 2 and
+                all(isinstance(i, Interval) for i in self.args)):
+            # optimization to give 3 args as (x > 1) & (x < 5) & Ne(x, 3)
+            # instead of as 4, ((1 <= x) & (x < 3)) | ((x <= 5) & (3 < x))
+            a, b = self.args
+            if (a.sup == b.inf and
+                    not any(a.sup in i for i in self.args)):
+                return And(Ne(symbol, a.sup), symbol < b.sup, symbol > a.inf)
+        return Or(*[i.as_relational(symbol) for i in self.args])
 
     @property
     def is_iterable(self):
@@ -1533,7 +1546,7 @@ class Complement(Set):
 
     >>> from sympy import Complement, FiniteSet
     >>> Complement(FiniteSet(0, 1, 2), FiniteSet(1))
-    FiniteSet(0, 2)
+    {0, 2}
 
     See Also
     =========
@@ -1735,18 +1748,18 @@ class FiniteSet(Set):
 
     >>> from sympy import FiniteSet
     >>> FiniteSet(1, 2, 3, 4)
-    FiniteSet(1, 2, 3, 4)
+    {1, 2, 3, 4}
     >>> 3 in FiniteSet(1, 2, 3, 4)
     True
 
     >>> members = [1, 2, 3, 4]
     >>> f = FiniteSet(*members)
     >>> f
-    FiniteSet(1, 2, 3, 4)
+    {1, 2, 3, 4}
     >>> f - FiniteSet(2)
-    FiniteSet(1, 3, 4)
+    {1, 3, 4}
     >>> f + FiniteSet(2, 5)
-    FiniteSet(1, 2, 3, 4, 5)
+    {1, 2, 3, 4, 5}
 
     References
     ==========
@@ -1966,7 +1979,7 @@ class SymmetricDifference(Set):
 
     >>> from sympy import SymmetricDifference, FiniteSet
     >>> SymmetricDifference(FiniteSet(1, 2, 3), FiniteSet(3, 4, 5))
-    FiniteSet(1, 2, 4, 5)
+    {1, 2, 4, 5}
 
     See Also
     ========
@@ -2037,14 +2050,14 @@ class DisjointUnion(Set):
     >>> A = FiniteSet(1, 2, 3)
     >>> B = Interval(0, 5)
     >>> DisjointUnion(A, B)
-    DisjointUnion(FiniteSet(1, 2, 3), Interval(0, 5))
+    DisjointUnion({1, 2, 3}, Interval(0, 5))
     >>> DisjointUnion(A, B).rewrite(Union)
-    Union(ProductSet(FiniteSet(1, 2, 3), FiniteSet(0)), ProductSet(Interval(0, 5), FiniteSet(1)))
+    Union(ProductSet({1, 2, 3}, {0}), ProductSet(Interval(0, 5), {1}))
     >>> C = FiniteSet(Symbol('x'), Symbol('y'), Symbol('z'))
     >>> DisjointUnion(C, C)
-    DisjointUnion(FiniteSet(x, y, z), FiniteSet(x, y, z))
+    DisjointUnion({x, y, z}, {x, y, z})
     >>> DisjointUnion(C, C).rewrite(Union)
-    ProductSet(FiniteSet(x, y, z), FiniteSet(0, 1))
+    ProductSet({x, y, z}, {0, 1})
 
     References
     ==========

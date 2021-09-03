@@ -25,7 +25,7 @@ def sub_func_doit(eq, func, new):
     ========
 
     >>> from sympy import Derivative, symbols, Function
-    >>> from sympy.solvers.ode.ode import sub_func_doit
+    >>> from sympy.solvers.ode.subscheck import sub_func_doit
     >>> x, z = symbols('x, z')
     >>> y = Function('y')
 

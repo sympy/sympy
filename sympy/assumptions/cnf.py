@@ -6,6 +6,7 @@ please refer to sympy.logic classes And, Or, Not, etc.
 """
 from itertools import combinations, product
 from sympy import S, Nor, Nand, Xor, Implies, Equivalent, ITE
+from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.logic.boolalg import Or, And, Not, Xnor
 from itertools import zip_longest
 
@@ -13,6 +14,24 @@ from itertools import zip_longest
 class Literal:
     """
     The smallest element of a CNF object.
+
+    Parameters
+    ==========
+
+    lit : Boolean expression
+
+    is_Not : bool
+
+    Examples
+    ========
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.cnf import Literal
+    >>> from sympy.abc import x
+    >>> Literal(Q.even(x))
+    Literal(Q.even(x), False)
+    >>> Literal(~Q.even(x))
+    Literal(Q.even(x), True)
     """
 
     def __new__(cls, lit, is_Not=False):
@@ -121,36 +140,67 @@ class AND:
     __repr__ = __str__
 
 
-def to_NNF(expr):
+def to_NNF(expr, composite_map={}):
     """
     Generates the Negation Normal Form of any boolean expression in terms
     of AND, OR, and Literal objects.
+
+    Examples
+    ========
+
+    >>> from sympy import Q, Eq
+    >>> from sympy.assumptions.cnf import to_NNF
+    >>> from sympy.abc import x, y
+    >>> expr = Q.even(x) & ~Q.positive(x)
+    >>> to_NNF(expr)
+    (Literal(Q.even(x), False) & Literal(Q.positive(x), True))
+
+    Supported boolean objects are converted to corresponding predicates.
+
+    >>> to_NNF(Eq(x, y))
+    Literal(Q.eq(x, y), False)
+
+    If ``composite_map`` argument is given, ``to_NNF`` decomposes the
+    specified predicate into a combination of primitive predicates.
+
+    >>> cmap = {Q.nonpositive: Q.negative | Q.zero}
+    >>> to_NNF(Q.nonpositive, cmap)
+    (Literal(Q.negative, False) | Literal(Q.zero, False))
+    >>> to_NNF(Q.nonpositive(x), cmap)
+    (Literal(Q.negative(x), False) | Literal(Q.zero(x), False))
     """
+    from sympy.assumptions.ask import Q
+    from sympy.assumptions.assume import AppliedPredicate, Predicate
+
+    binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
+    if type(expr) in binrelpreds:
+        pred = binrelpreds[type(expr)]
+        expr = pred(*expr.args)
 
     if isinstance(expr, Not):
         arg = expr.args[0]
-        tmp = to_NNF(arg)  # Strategy: negate the NNF of expr
+        tmp = to_NNF(arg, composite_map)  # Strategy: negate the NNF of expr
         return ~tmp
 
     if isinstance(expr, Or):
-        return OR(*[to_NNF(x) for x in Or.make_args(expr)])
+        return OR(*[to_NNF(x, composite_map) for x in Or.make_args(expr)])
 
     if isinstance(expr, And):
-        return AND(*[to_NNF(x) for x in And.make_args(expr)])
+        return AND(*[to_NNF(x, composite_map) for x in And.make_args(expr)])
 
     if isinstance(expr, Nand):
-        tmp = AND(*[to_NNF(x) for x in expr.args])
+        tmp = AND(*[to_NNF(x, composite_map) for x in expr.args])
         return ~tmp
 
     if isinstance(expr, Nor):
-        tmp = OR(*[to_NNF(x) for x in expr.args])
+        tmp = OR(*[to_NNF(x, composite_map) for x in expr.args])
         return ~tmp
 
     if isinstance(expr, Xor):
         cnfs = []
         for i in range(0, len(expr.args) + 1, 2):
             for neg in combinations(expr.args, i):
-                clause = [~to_NNF(s) if s in neg else to_NNF(s)
+                clause = [~to_NNF(s, composite_map) if s in neg else to_NNF(s, composite_map)
                           for s in expr.args]
                 cnfs.append(OR(*clause))
         return AND(*cnfs)
@@ -159,31 +209,41 @@ def to_NNF(expr):
         cnfs = []
         for i in range(0, len(expr.args) + 1, 2):
             for neg in combinations(expr.args, i):
-                clause = [~to_NNF(s) if s in neg else to_NNF(s)
+                clause = [~to_NNF(s, composite_map) if s in neg else to_NNF(s, composite_map)
                           for s in expr.args]
                 cnfs.append(OR(*clause))
         return ~AND(*cnfs)
 
     if isinstance(expr, Implies):
-        L, R = to_NNF(expr.args[0]), to_NNF(expr.args[1])
+        L, R = to_NNF(expr.args[0], composite_map), to_NNF(expr.args[1], composite_map)
         return OR(~L, R)
 
     if isinstance(expr, Equivalent):
         cnfs = []
         for a, b in zip_longest(expr.args, expr.args[1:], fillvalue=expr.args[0]):
-            a = to_NNF(a)
-            b = to_NNF(b)
+            a = to_NNF(a, composite_map)
+            b = to_NNF(b, composite_map)
             cnfs.append(OR(~a, b))
         return AND(*cnfs)
 
     if isinstance(expr, ITE):
-        L = to_NNF(expr.args[0])
-        M = to_NNF(expr.args[1])
-        R = to_NNF(expr.args[2])
+        L = to_NNF(expr.args[0], composite_map)
+        M = to_NNF(expr.args[1], composite_map)
+        R = to_NNF(expr.args[2], composite_map)
         return AND(OR(~L, M), OR(L, R))
 
-    else:
-        return Literal(expr)
+    if isinstance(expr, AppliedPredicate):
+        pred, args = expr.function, expr.arguments
+        newpred = composite_map.get(pred, None)
+        if newpred is not None:
+            return to_NNF(newpred.rcall(*args), composite_map)
+
+    if isinstance(expr, Predicate):
+        newpred = composite_map.get(expr, None)
+        if newpred is not None:
+            return to_NNF(newpred, composite_map)
+
+    return Literal(expr)
 
 
 def distribute_AND_over_OR(expr):
@@ -211,6 +271,18 @@ class CNF:
     Class to represent CNF of a Boolean expression.
     Consists of set of clauses, which themselves are stored as
     frozenset of Literal objects.
+
+    Examples
+    ========
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.cnf import CNF
+    >>> from sympy.abc import x
+    >>> cnf = CNF.from_prop(Q.real(x) & ~Q.zero(x))
+    >>> cnf.clauses
+    {frozenset({Literal(Q.zero(x), True)}),
+    frozenset({Literal(Q.negative(x), False),
+    Literal(Q.positive(x), False), Literal(Q.zero(x), False)})}
     """
     def __init__(self, clauses=None):
         if not clauses:
@@ -290,8 +362,6 @@ class CNF:
         expr = AND(*clause_list)
         return distribute_AND_over_OR(expr)
 
-
-
     @classmethod
     def all_or(cls, *cnfs):
         b = cnfs[0].copy()
@@ -308,7 +378,8 @@ class CNF:
 
     @classmethod
     def to_CNF(cls, expr):
-        expr = to_NNF(expr)
+        from sympy.assumptions.facts import get_composite_predicates
+        expr = to_NNF(expr, get_composite_predicates())
         expr = distribute_AND_over_OR(expr)
         return expr
 

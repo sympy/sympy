@@ -5,7 +5,6 @@ from sympy.core.relational import Equality, Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise
-from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.trigonometric import sin
 from sympy.sets.sets import (EmptySet, Interval, Union)
 from sympy.simplify.simplify import simplify
@@ -18,7 +17,7 @@ from sympy.logic.boolalg import (
     BooleanAtom, is_literal, term_to_integer, integer_to_term,
     truth_table, as_Boolean, to_anf, is_anf, distribute_xor_over_and,
     anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial,
-    _check_pair, _convert_to_varsSOP, _convert_to_varsPOS)
+    _check_pair, _convert_to_varsSOP, _convert_to_varsPOS, Exclusive,)
 from sympy.assumptions.cnf import CNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
@@ -225,6 +224,13 @@ def test_Equivalent():
     assert Equivalent(A < 1, A >= 1, 1) is false
     assert Equivalent(A < 1, S.One > A) == Equivalent(1, 1) == Equivalent(0, 0)
     assert Equivalent(Equality(A, B), Equality(B, A)) is true
+
+
+def test_Exclusive():
+    assert Exclusive(False, False, False) is true
+    assert Exclusive(True, False, False) is true
+    assert Exclusive(True, True, False) is false
+    assert Exclusive(True, True, True) is false
 
 
 def test_equals():
@@ -925,6 +931,20 @@ def test_integer_to_term():
     assert integer_to_term(456, 16) == [0, 0, 0, 0, 0, 0, 0, 1,
                                         1, 1, 0, 0, 1, 0, 0, 0]
 
+def test_issue_21971():
+    a, b, c, d = symbols('a b c d')
+    f = a & b & c | a & c
+    assert f.subs(a & c, d) == b & d | d
+    assert f.subs(a & b & c, d) == a & c | d
+
+    f = (a | b | c) & (a | c)
+    assert f.subs(a | c, d) == (b | d) & d
+    assert f.subs(a | b | c, d) == (a | c) & d
+
+    f = (a ^ b ^ c) & (a ^ c)
+    assert f.subs(a ^ c, d) == (b ^ d) & d
+    assert f.subs(a ^ b ^ c, d) == (a ^ c) & d
+
 
 def test_truth_table():
     assert list(truth_table(And(x, y), [x, y], input=False)) == \
@@ -991,9 +1011,9 @@ def test_binary_symbols():
     assert x.binary_symbols == {x}
     assert And(x, Eq(y, False), Eq(z, 1)).binary_symbols == {x, y}
     assert Q.prime(x).binary_symbols == set()
-    assert Q.is_true(x < 1).binary_symbols == set()
+    assert Q.lt(x, 1).binary_symbols == set()
     assert Q.is_true(x).binary_symbols == {x}
-    assert Q.is_true(Eq(x, True)).binary_symbols == {x}
+    assert Q.eq(x, True).binary_symbols == {x}
     assert Q.prime(x).binary_symbols == set()
 
 
@@ -1073,12 +1093,6 @@ def test_relational_simplification():
     assert And(x >= y, x < y).simplify() == S.false
     assert Or(x >= y, Eq(y, x)).simplify() == (x >= y)
     assert And(x >= y, Eq(y, x)).simplify() == Eq(x, y)
-    assert Or(Eq(x, y), x >= y, w < y, z < y).simplify() == \
-        Or(x >= y, y > Min(w, z))
-    assert And(Eq(x, y), x >= y, w < y, y >= z, z < y).simplify() == \
-        And(Eq(x, y), y > Max(w, z))
-    assert Or(Eq(x, y), x >= 1, 2 < y, y >= 5, z < y).simplify() == \
-        (Eq(x, y) | (x >= 1) | (y > Min(2, z)))
     assert And(Eq(x, y), x >= 1, 2 < y, y >= 5, z < y).simplify() == \
         (Eq(x, y) & (x >= 1) & (y >= 5) & (y > z))
     assert (Eq(x, y) & Eq(d, e) & (x >= y) & (d >= e)).simplify() == \
@@ -1200,6 +1214,19 @@ def test_check_pair():
     assert _check_pair([0, 1, 0], [1, 1, 1]) == -1
 
 
+def test_issue_19114():
+    expr = (B & C) | (A & ~C) | (~A & ~B)
+    result = to_dnf(expr, simplify=True)
+    assert result == expr
+
+
+def test_issue_20870():
+    result = SOPform([a, b, c, d], [1, 2, 3, 4, 5, 6, 8, 9, 11, 12, 14, 15])
+    expected = ((d & ~b) | (a & b & c) | (a & ~c & ~d) |
+                (b & ~a & ~c) | (c & ~a & ~d))
+    assert result == expected
+
+
 def test_convert_to_varsSOP():
     assert _convert_to_varsSOP([0, 1, 0], [x, y, z]) ==  And(Not(x), y, Not(z))
     assert _convert_to_varsSOP([3, 1, 0], [x, y, z]) ==  And(y, Not(z))
@@ -1212,36 +1239,36 @@ def test_convert_to_varsPOS():
 
 def test_refine():
     # relational
-    assert not refine(x < 0, ~Q.is_true(x < 0))
-    assert refine(x < 0, Q.is_true(x < 0))
-    assert refine(x < 0, Q.is_true(0 > x)) == True
-    assert refine(x < 0, Q.is_true(y < 0)) == (x < 0)
-    assert not refine(x <= 0, ~Q.is_true(x <= 0))
-    assert refine(x <= 0,  Q.is_true(x <= 0))
-    assert refine(x <= 0,  Q.is_true(0 >= x)) == True
-    assert refine(x <= 0,  Q.is_true(y <= 0)) == (x <= 0)
-    assert not refine(x > 0, ~Q.is_true(x > 0))
-    assert refine(x > 0,  Q.is_true(x > 0))
-    assert refine(x > 0,  Q.is_true(0 < x)) == True
-    assert refine(x > 0,  Q.is_true(y > 0)) == (x > 0)
-    assert not refine(x >= 0, ~Q.is_true(x >= 0))
-    assert refine(x >= 0,  Q.is_true(x >= 0))
-    assert refine(x >= 0,  Q.is_true(0 <= x)) == True
-    assert refine(x >= 0,  Q.is_true(y >= 0)) == (x >= 0)
-    assert not refine(Eq(x, 0), ~Q.is_true(Eq(x, 0)))
-    assert refine(Eq(x, 0),  Q.is_true(Eq(x, 0)))
-    assert refine(Eq(x, 0),  Q.is_true(Eq(0, x))) == True
-    assert refine(Eq(x, 0),  Q.is_true(Eq(y, 0))) == Eq(x, 0)
-    assert not refine(Ne(x, 0), ~Q.is_true(Ne(x, 0)))
-    assert refine(Ne(x, 0), Q.is_true(Ne(0, x))) == True
-    assert refine(Ne(x, 0),  Q.is_true(Ne(x, 0)))
-    assert refine(Ne(x, 0),  Q.is_true(Ne(y, 0))) == (Ne(x, 0))
+    assert not refine(x < 0, ~(x < 0))
+    assert refine(x < 0, (x < 0))
+    assert refine(x < 0, (0 > x)) is S.true
+    assert refine(x < 0, (y < 0)) == (x < 0)
+    assert not refine(x <= 0, ~(x <= 0))
+    assert refine(x <= 0,  (x <= 0))
+    assert refine(x <= 0,  (0 >= x)) is S.true
+    assert refine(x <= 0,  (y <= 0)) == (x <= 0)
+    assert not refine(x > 0, ~(x > 0))
+    assert refine(x > 0,  (x > 0))
+    assert refine(x > 0,  (0 < x)) is S.true
+    assert refine(x > 0,  (y > 0)) == (x > 0)
+    assert not refine(x >= 0, ~(x >= 0))
+    assert refine(x >= 0,  (x >= 0))
+    assert refine(x >= 0,  (0 <= x)) is S.true
+    assert refine(x >= 0,  (y >= 0)) == (x >= 0)
+    assert not refine(Eq(x, 0), ~(Eq(x, 0)))
+    assert refine(Eq(x, 0),  (Eq(x, 0)))
+    assert refine(Eq(x, 0),  (Eq(0, x))) is S.true
+    assert refine(Eq(x, 0),  (Eq(y, 0))) == Eq(x, 0)
+    assert not refine(Ne(x, 0), ~(Ne(x, 0)))
+    assert refine(Ne(x, 0), (Ne(0, x))) is S.true
+    assert refine(Ne(x, 0),  (Ne(x, 0)))
+    assert refine(Ne(x, 0),  (Ne(y, 0))) == (Ne(x, 0))
 
     # boolean functions
-    assert refine(And(x > 0, y > 0), Q.is_true(x > 0)) == (y > 0)
-    assert refine(And(x > 0, y > 0), Q.is_true(x > 0) & Q.is_true(y > 0)) == True
+    assert refine(And(x > 0, y > 0), (x > 0)) == (y > 0)
+    assert refine(And(x > 0, y > 0), (x > 0) & (y > 0)) is S.true
 
     # predicates
-    assert refine(Q.positive(x), Q.positive(x)) == True
-    assert refine(Q.positive(x), Q.negative(x)) == False
+    assert refine(Q.positive(x), Q.positive(x)) is S.true
+    assert refine(Q.positive(x), Q.negative(x)) is S.false
     assert refine(Q.positive(x), Q.real(x)) == Q.positive(x)

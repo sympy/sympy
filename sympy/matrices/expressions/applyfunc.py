@@ -49,6 +49,13 @@ class ElementwiseApplyFunction(MatrixExpr):
         if not expr.is_Matrix:
             raise ValueError("{} must be a matrix instance.".format(expr))
 
+        if expr.shape == (1, 1):
+            # Check if the function returns a matrix, in that case, just apply
+            # the function instead of creating an ElementwiseApplyFunc object:
+            ret = function(expr)
+            if isinstance(ret, MatrixExpr):
+                return ret
+
         if not isinstance(function, (FunctionClass, Lambda)):
             d = Dummy('d')
             function = Lambda(d, function(d))
@@ -189,3 +196,7 @@ class ElementwiseApplyFunction(MatrixExpr):
                 i._second_pointer_index = 4
                 i._lines = [subexpr]
         return lr
+
+    def _eval_transpose(self):
+        from sympy import Transpose
+        return self.func(self.function, Transpose(self.expr).doit())

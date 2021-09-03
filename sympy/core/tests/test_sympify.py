@@ -1,4 +1,4 @@
-from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
+from sympy import (Symbol, exp, Integer, Float, sin, cos, Poly, Lambda,
     Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
     Pow, Or, true, false, Abs, pi, Range, Xor)
 from sympy.abc import x, y
@@ -235,19 +235,6 @@ def test_sympify_factorial():
     raises(SympifyError, lambda: sympify("!"))
     raises(SympifyError, lambda: sympify("(!)"))
     raises(SympifyError, lambda: sympify("x!!!"))
-
-
-def test_sage():
-    # how to effectivelly test for the _sage_() method without having SAGE
-    # installed?
-    assert hasattr(x, "_sage_")
-    assert hasattr(Integer(3), "_sage_")
-    assert hasattr(sin(x), "_sage_")
-    assert hasattr(cos(x), "_sage_")
-    assert hasattr(x**2, "_sage_")
-    assert hasattr(x + y, "_sage_")
-    assert hasattr(exp(x), "_sage_")
-    assert hasattr(log(x), "_sage_")
 
 
 def test_issue_3595():
@@ -530,10 +517,16 @@ def test_issue_6540_6552():
 def test_issue_6046():
     assert str(S("Q & C", locals=_clash1)) == 'C & Q'
     assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
-    assert str(S('pi(C, Q)', locals=_clash)) == 'pi(C, Q)'
     locals = {}
     exec("from sympy.abc import Q, C", locals)
     assert str(S('C&Q', locals)) == 'C & Q'
+    # clash can act as Symbol or Function
+    assert str(S('pi(C, Q)', locals=_clash)) == 'pi(C, Q)'
+    assert len(S('pi + x', locals=_clash2).free_symbols) == 2
+    # but not both
+    raises(TypeError, lambda: S('pi + pi(x)', locals=_clash2))
+    assert all(set(i.values()) == {None} for i in (
+        _clash, _clash1, _clash2))
 
 
 def test_issue_8821_highprec_from_str():
@@ -716,22 +709,22 @@ def test_issue_14706():
     if not numpy:
         skip("numpy not installed.")
 
-    z1 = numpy.zeros((1, 1), dtype=numpy.float)
-    z2 = numpy.zeros((2, 2), dtype=numpy.float)
-    z3 = numpy.zeros((), dtype=numpy.float)
+    z1 = numpy.zeros((1, 1), dtype=numpy.float64)
+    z2 = numpy.zeros((2, 2), dtype=numpy.float64)
+    z3 = numpy.zeros((), dtype=numpy.float64)
 
-    y1 = numpy.ones((1, 1), dtype=numpy.float)
-    y2 = numpy.ones((2, 2), dtype=numpy.float)
-    y3 = numpy.ones((), dtype=numpy.float)
+    y1 = numpy.ones((1, 1), dtype=numpy.float64)
+    y2 = numpy.ones((2, 2), dtype=numpy.float64)
+    y3 = numpy.ones((), dtype=numpy.float64)
 
     assert numpy.all(x + z1 == numpy.full((1, 1), x))
     assert numpy.all(x + z2 == numpy.full((2, 2), x))
     assert numpy.all(z1 + x == numpy.full((1, 1), x))
     assert numpy.all(z2 + x == numpy.full((2, 2), x))
     for z in [z3,
-              numpy.int(0),
-              numpy.float(0),
-              numpy.complex(0)]:
+              numpy.int64(0),
+              numpy.float64(0),
+              numpy.complex64(0)]:
         assert x + z == x
         assert z + x == x
         assert isinstance(x + z, Symbol)
@@ -749,9 +742,9 @@ def test_issue_14706():
     assert numpy.all(y1 + x == numpy.full((1, 1), x + 1.0))
     assert numpy.all(y2 + x == numpy.full((2, 2), x + 1.0))
     for y_ in [y3,
-              numpy.int(1),
-              numpy.float(1),
-              numpy.complex(1)]:
+              numpy.int64(1),
+              numpy.float64(1),
+              numpy.complex64(1)]:
         assert x + y_ == y_ + x
         assert isinstance(x + y_, Add)
         assert isinstance(y_ + x, Add)
@@ -769,3 +762,29 @@ def test_issue_14706():
     raises(SympifyError, lambda: sympify(numpy.array([1]), strict=True))
     raises(SympifyError, lambda: sympify(z1, strict=True))
     raises(SympifyError, lambda: sympify(z2, strict=True))
+
+
+def test_issue_21536():
+    #test to check evaluate=False in case of iterable input
+    u = sympify("x+3*x+2", evaluate=False)
+    v = sympify("2*x+4*x+2+4", evaluate=False)
+
+    assert u.is_Add and set(u.args) == {x, 3*x, 2}
+    assert v.is_Add and set(v.args) == {2*x, 4*x, 2, 4}
+    assert sympify(["x+3*x+2", "2*x+4*x+2+4"], evaluate=False) == [u, v]
+
+    #test to check evaluate=True in case of iterable input
+    u = sympify("x+3*x+2", evaluate=True)
+    v = sympify("2*x+4*x+2+4", evaluate=True)
+
+    assert u.is_Add and set(u.args) == {4*x, 2}
+    assert v.is_Add and set(v.args) == {6*x, 6}
+    assert sympify(["x+3*x+2", "2*x+4*x+2+4"], evaluate=True) == [u, v]
+
+    #test to check evaluate with no input in case of iterable input
+    u = sympify("x+3*x+2")
+    v = sympify("2*x+4*x+2+4")
+
+    assert u.is_Add and set(u.args) == {4*x, 2}
+    assert v.is_Add and set(v.args) == {6*x, 6}
+    assert sympify(["x+3*x+2", "2*x+4*x+2+4"]) == [u, v]

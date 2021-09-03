@@ -543,10 +543,26 @@ class MatrixExpr(Expr):
                 return [(MatrixElement(Add.fromiter(v), *k), k) for k, v in d.items()]
             elif isinstance(expr, KroneckerDelta):
                 i1, i2 = expr.args
-                if dimensions is not None:
-                    identity = Identity(dimensions[0])
-                else:
-                    identity = S.One
+                shape = dimensions
+                if shape is None:
+                    shape = []
+                    for kr_ind in expr.args:
+                        if kr_ind not in index_ranges:
+                            continue
+                        r1, r2 = index_ranges[kr_ind]
+                        if r1 != 0:
+                            raise ValueError(f"index ranges should start from zero: {index_ranges}")
+                        shape.append(r2)
+                    if len(shape) == 0:
+                        shape = None
+                    elif len(shape) == 1:
+                        shape = (shape[0] + 1, shape[0] + 1)
+                    else:
+                        shape = (shape[0] + 1, shape[1] + 1)
+                        if shape[0] != shape[1]:
+                            raise ValueError(f"upper index ranges should be equal: {index_ranges}")
+
+                identity = Identity(shape[0])
                 return [(MatrixElement(identity, i1, i2), (i1, i2))]
             elif isinstance(expr, MatrixElement):
                 matrix_symbol, i1, i2 = expr.args
@@ -653,7 +669,7 @@ def _matrix_derivative(expr, x):
 
     from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
 
-    parts = [[convert_array_to_matrix(j).doit() for j in i] for i in parts]
+    parts = [[convert_array_to_matrix(j) for j in i] for i in parts]
 
     def _get_shape(elem):
         if isinstance(elem, MatrixExpr):
@@ -708,7 +724,10 @@ class MatrixElement(Expr):
                 return name[n, m]
         if isinstance(name, str):
             name = Symbol(name)
-        name = _sympify(name)
+        else:
+            name = _sympify(name)
+            if not isinstance(name.kind, MatrixKind):
+                raise TypeError("First argument of MatrixElement should be a matrix")
         obj = Expr.__new__(cls, name, n, m)
         return obj
 
@@ -897,7 +916,7 @@ class _LeftRightArgs:
         data = [self._build(i) for i in self._lines]
         if self.higher != 1:
             data += [self._build(self.higher)]
-        data = [i.doit() for i in data]
+        data = [i for i in data]
         return data
 
     def matrix_form(self):

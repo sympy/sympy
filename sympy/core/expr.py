@@ -9,6 +9,7 @@ from .evalf import EvalfMixin, pure_complex
 from .decorators import call_highest_priority, sympify_method_args, sympify_return
 from .cache import cacheit
 from .compatibility import as_int, default_sort_key
+from .kind import NumberKind
 from sympy.utilities.misc import func_name
 from mpmath.libmp import mpf_log, prec_to_dps
 
@@ -650,9 +651,12 @@ class Expr(Basic, EvalfMixin):
         if expr.is_zero:
             return True
 
+        # Don't attempt subsitution or differentiation with non-number symbols
+        wrt_number = {sym for sym in wrt if sym.kind is NumberKind}
+
         # try numerical evaluation to see if we get two different values
         failing_number = None
-        if wrt == free:
+        if wrt_number == free:
             # try 0 (for a) and 1 (for b)
             try:
                 a = expr.subs(list(zip(free, [0]*len(free))),
@@ -688,7 +692,7 @@ class Expr(Basic, EvalfMixin):
         # expression depends on them or not using differentiation. This is
         # not sufficient for all expressions, however, so we don't return
         # False if we get a derivative other than 0 with free symbols.
-        for w in wrt:
+        for w in wrt_number:
             deriv = expr.diff(w)
             if simplify:
                 deriv = deriv.simplify()
@@ -1018,7 +1022,9 @@ class Expr(Basic, EvalfMixin):
             minexp += S.One
             arg = arg.diff(x)
             coeff = arg.subs(x, 0)
-            if coeff in (S.NaN, S.ComplexInfinity):
+            if coeff is S.NaN:
+                coeff = arg.limit(x, 0)
+            if coeff is S.ComplexInfinity:
                 try:
                     coeff, _ = arg.leadterm(x)
                     if coeff.has(log(x)):
@@ -2418,11 +2424,15 @@ class Expr(Basic, EvalfMixin):
     @property
     def expr_free_symbols(self):
         """
-        Like ``free_symbols``, but returns the free symbols only if they are contained in an expression node.
+        Like ``free_symbols``, but returns the free symbols only if
+        they are contained in an expression node.
 
         Examples
         ========
 
+        >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
+        >>> import warnings
+        >>> warnings.simplefilter("ignore", SymPyDeprecationWarning)
         >>> from sympy.abc import x, y
         >>> (x + y).expr_free_symbols
         {x, y}
@@ -2437,6 +2447,10 @@ class Expr(Basic, EvalfMixin):
         >>> t.free_symbols
         {x, y}
         """
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(feature="expr_free_symbols method",
+                                issue=21494,
+                                deprecated_since_version="1.9").warn()
         return {j for i in self.args for j in i.expr_free_symbols}
 
     def could_extract_minus_sign(self):
@@ -2929,7 +2943,7 @@ class Expr(Basic, EvalfMixin):
             If "x0" is an infinity object
 
         """
-        from sympy import collect, Dummy, Order, Rational, Symbol, ceiling
+        from sympy import collect, Dummy, Order, Rational, Symbol, ceiling, PoleError
         if x is None:
             syms = self.free_symbols
             if not syms:
@@ -2953,11 +2967,15 @@ class Expr(Basic, EvalfMixin):
             raise ValueError("Dir must be '+' or '-'")
 
         if x0 in [S.Infinity, S.NegativeInfinity]:
-            sgn = 1 if x0 is S.Infinity else -1
-            s = self.subs(x, sgn/x).series(x, n=n, dir='+', cdir=cdir)
-            if n is None:
-                return (si.subs(x, sgn/x) for si in s)
-            return s.subs(x, sgn/x)
+            try:
+                sgn = 1 if x0 is S.Infinity else -1
+                s = self.subs(x, sgn/x).series(x, n=n, dir='+', cdir=cdir)
+                if n is None:
+                    return (si.subs(x, sgn/x) for si in s)
+                return s.subs(x, sgn/x)
+            except PoleError:
+                s = self.subs(x, sgn*x).aseries(x, n=n)
+                return s.subs(x, sgn*x)
 
         # use rep to shift origin to x0 and change sign (if dir is negative)
         # and undo the process with rep2
@@ -3108,7 +3126,7 @@ class Expr(Basic, EvalfMixin):
         >>> e.aseries(x)
         exp(exp(x)/(1 - 1/x))
 
-        >>> e.aseries(x, bound=3)
+        >>> e.aseries(x, bound=3) # doctest: +SKIP
         exp(exp(x)/x**2)*exp(exp(x)/x)*exp(-exp(x) + exp(x)/(1 - 1/x) - exp(x)/x - exp(x)/x**2)*exp(exp(x))
 
         Returns
@@ -3146,7 +3164,7 @@ class Expr(Basic, EvalfMixin):
         Expr.aseries: See the docstring of this function for complete details of this wrapper.
         """
 
-        from sympy import Order, Dummy
+        from sympy import Order, Dummy, PoleError
         from sympy.functions import exp, log
         from sympy.series.gruntz import mrv, rewrite
 
@@ -3154,7 +3172,10 @@ class Expr(Basic, EvalfMixin):
             xpos = Dummy('x', positive=True)
             return self.subs(x, xpos).aseries(xpos, n, bound, hir).subs(xpos, x)
 
-        om, exps = mrv(self, x)
+        try:
+            om, exps = mrv(self, x)
+        except PoleError:
+            return self
 
         # We move one level up by replacing `x` by `exp(x)`, and then
         # computing the asymptotic series for f(exp(x)). Then asymptotic series
@@ -3175,7 +3196,10 @@ class Expr(Basic, EvalfMixin):
                 return self
             s = (self.exp).aseries(x, n, bound=bound)
             s = s.func(*[t.removeO() for t in s.args])
-            res = exp(s.subs(x, 1/x).as_leading_term(x).subs(x, 1/x))
+            try:
+                res = exp(s.subs(x, 1/x).as_leading_term(x).subs(x, 1/x))
+            except PoleError:
+                res = self
 
             func = exp(self.args[0] - res.args[0]) / k
             logw = log(1/res)
@@ -3385,7 +3409,7 @@ class Expr(Basic, EvalfMixin):
         return s.as_leading_term(x)
 
     @cacheit
-    def as_leading_term(self, *symbols, cdir=0):
+    def as_leading_term(self, *symbols, logx=None, cdir=0):
         """
         Returns the leading (nonzero) term of the series expansion of self.
 
@@ -3406,7 +3430,7 @@ class Expr(Basic, EvalfMixin):
         if len(symbols) > 1:
             c = self
             for x in symbols:
-                c = c.as_leading_term(x, cdir=cdir)
+                c = c.as_leading_term(x, logx=logx, cdir=cdir)
             return c
         elif not symbols:
             return self
@@ -3415,12 +3439,12 @@ class Expr(Basic, EvalfMixin):
             raise ValueError('expecting a Symbol but got %s' % x)
         if x not in self.free_symbols:
             return self
-        obj = self._eval_as_leading_term(x, cdir=cdir)
+        obj = self._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if obj is not None:
             return powsimp(obj, deep=True, combine='exp')
         raise NotImplementedError('as_leading_term(%s, %s)' % (self, x))
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         return self
 
     def as_coeff_exponent(self, x):
@@ -3435,7 +3459,7 @@ class Expr(Basic, EvalfMixin):
                 return c, e
         return s, S.Zero
 
-    def leadterm(self, x, cdir=0):
+    def leadterm(self, x, logx=None, cdir=0):
         """
         Returns the leading term a*x**b as a tuple (a, b).
 
@@ -3450,7 +3474,7 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy import Dummy, log
-        l = self.as_leading_term(x, cdir=cdir)
+        l = self.as_leading_term(x, logx=logx, cdir=cdir)
         d = Dummy('logx')
         if l.has(log(x)):
             l = l.subs(log(x), d)
@@ -3921,6 +3945,10 @@ class AtomicExpr(Atom, Expr):
 
     @property
     def expr_free_symbols(self):
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(feature="expr_free_symbols method",
+                                issue=21494,
+                                deprecated_since_version="1.9").warn()
         return {self}
 
 

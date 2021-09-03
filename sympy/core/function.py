@@ -231,9 +231,9 @@ class FunctionClass(ManagedProperties):
         corresponding set will be returned:
 
         >>> Function('f', nargs=1).nargs
-        FiniteSet(1)
+        {1}
         >>> Function('f', nargs=(2, 1)).nargs
-        FiniteSet(1, 2)
+        {1, 2}
 
         The undefined function, after application, also has the nargs
         attribute; the actual number of arguments is always available by
@@ -799,14 +799,14 @@ class Function(Application, Expr):
         args = self.args[:ix] + (D,) + self.args[ix + 1:]
         return Subs(Derivative(self.func(*args), D), D, A)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         """Stub that should be overridden by new Functions to return
         the first non-zero term in a series if ever an x-dependent
         argument whose leading term vanishes as x -> 0 might be encountered.
         See, for example, cos._eval_as_leading_term.
         """
         from sympy import Order
-        args = [a.as_leading_term(x) for a in self.args]
+        args = [a.as_leading_term(x, logx=logx) for a in self.args]
         o = Order(1, x)
         if any(x in a.free_symbols and o.contains(a) for a in args):
             # Whereas x and any finite number are contained in O(1, x),
@@ -827,26 +827,6 @@ class Function(Application, Expr):
         else:
             return self.func(*args)
 
-    def _sage_(self):
-        import sage.all as sage
-        fname = self.func.__name__
-        func = getattr(sage, fname, None)
-        args = [arg._sage_() for arg in self.args]
-
-        # In the case the function is not known in sage:
-        if func is None:
-            import sympy
-            if getattr(sympy, fname, None) is None:
-                # abstract function
-                return sage.function(fname)(*args)
-
-            else:
-                # the function defined in sympy is not known in sage
-                # this exception is caught in sage
-                raise AttributeError
-
-        return func(*args)
-
 
 class AppliedUndef(Function):
     """
@@ -865,15 +845,8 @@ class AppliedUndef(Function):
         obj = super().__new__(cls, *args, **options)
         return obj
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         return self
-
-    def _sage_(self):
-        import sage.all as sage
-        fname = str(self.func)
-        args = [arg._sage_() for arg in self.args]
-        func = sage.function(fname)(*args)
-        return func
 
     @property
     def _diff_wrt(self):
@@ -1003,7 +976,7 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
 
     >>> F = WildFunction('F', nargs=2)
     >>> F.nargs
-    FiniteSet(2)
+    {2}
     >>> f(x).match(F)
     >>> f(x, y).match(F)
     {F_: f(x, y)}
@@ -1014,7 +987,7 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
 
     >>> F = WildFunction('F', nargs=(1, 2))
     >>> F.nargs
-    FiniteSet(1, 2)
+    {1, 2}
     >>> f(x).match(F)
     {F_: f(x)}
     >>> f(x, y).match(F)
@@ -1707,6 +1680,10 @@ class Derivative(Expr):
             ret.update(count.free_symbols)
         return ret
 
+    @property
+    def kind(self):
+        return self.args[0].kind
+
     def _eval_subs(self, old, new):
         # The substitution (old, new) cannot be done inside
         # Derivative(expr, vars) for a variety of reasons
@@ -1820,7 +1797,7 @@ class Derivative(Expr):
             rv.append(o/x)
         return Add(*rv)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         series_gen = self.expr.lseries(x)
         d = S.Zero
         for leading_term in series_gen:
@@ -1828,11 +1805,6 @@ class Derivative(Expr):
             if d != 0:
                 break
         return d
-
-    def _sage_(self):
-        import sage.all as sage
-        args = [arg._sage_() for arg in self.args]
-        return sage.derivative(*args)
 
     def as_finite_difference(self, points=1, x0=None, wrt=None):
         """ Expresses a Derivative instance as a finite difference.
@@ -2349,6 +2321,10 @@ class Subs(Expr):
 
     @property
     def expr_free_symbols(self):
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(feature="expr_free_symbols method",
+                                issue=21494,
+                                deprecated_since_version="1.9").warn()
         return (self.expr.expr_free_symbols - set(self.variables) |
             set(self.point.expr_free_symbols))
 
@@ -2394,17 +2370,29 @@ class Subs(Expr):
 
     def _eval_derivative(self, s):
         # Apply the chain rule of the derivative on the substitution variables:
-        val = Add.fromiter(p.diff(s) * Subs(self.expr.diff(v), self.variables, self.point).doit() for v, p in zip(self.variables, self.point))
+        f = self.expr
+        vp = V, P = self.variables, self.point
+        val = Add.fromiter(p.diff(s)*Subs(f.diff(v), *vp).doit()
+            for v, p in zip(V, P))
 
-        # Check if there are free symbols in `self.expr`:
-        # First get the `expr_free_symbols`, which returns the free symbols
-        # that are directly contained in an expression node (i.e. stop
-        # searching if the node isn't an expression). At this point turn the
-        # expressions into `free_symbols` and check if there are common free
-        # symbols in `self.expr` and the deriving factor.
-        fs1 = {j for i in self.expr_free_symbols for j in i.free_symbols}
-        if len(fs1 & s.free_symbols) > 0:
-            val += Subs(self.expr.diff(s), self.variables, self.point).doit()
+        # these are all the free symbols in the expr
+        efree = f.free_symbols
+        # some symbols like IndexedBase include themselves and args
+        # as free symbols
+        compound = {i for i in efree if len(i.free_symbols) > 1}
+        # hide them and see what independent free symbols remain
+        dums = {Dummy() for i in compound}
+        masked = f.xreplace(dict(zip(compound, dums)))
+        ifree = masked.free_symbols - dums
+        # include the compound symbols
+        free = ifree | compound
+        # remove the variables already handled
+        free -= set(V)
+        # add back any free symbols of remaining compound symbols
+        free |= {i for j in free & compound for i in j.free_symbols}
+        # if symbols of s are in free then there is more to do
+        if free & s.free_symbols:
+            val += Subs(f.diff(s), self.variables, self.point).doit()
         return val
 
     def _eval_nseries(self, x, n, logx, cdir=0):
@@ -2422,7 +2410,7 @@ class Subs(Expr):
             rv += o.subs(other, x)
         return rv
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         if x in self.point:
             ipos = self.point.index(x)
             xvar = self.variables[ipos]

@@ -144,14 +144,14 @@ def _invert(f_x, y, x, domain=S.Complexes):
     >>> invert_complex(exp(x), y, x)
     (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), Integers))
     >>> invert_real(exp(x), y, x)
-    (x, Intersection(FiniteSet(log(y)), Reals))
+    (x, Intersection({log(y)}, Reals))
 
     When does exp(x) == 1?
 
     >>> invert_complex(exp(x), 1, x)
     (x, ImageSet(Lambda(_n, 2*_n*I*pi), Integers))
     >>> invert_real(exp(x), 1, x)
-    (x, FiniteSet(0))
+    (x, {0})
 
     See Also
     ========
@@ -239,29 +239,37 @@ def _invert_real(f, g_ys, symbol):
         expo_has_sym = expo.has(symbol)
 
         if not expo_has_sym:
-            res = imageset(Lambda(n, real_root(n, expo)), g_ys)
+
             if expo.is_rational:
-                numer, denom = expo.as_numer_denom()
-                if denom % 2 == 0:
+                num, den = expo.as_numer_denom()
+
+                if den % 2 == 0 and num % 2 == 1 and den.is_zero is False:
+                    root = Lambda(n, real_root(n, expo))
+                    g_ys_pos = g_ys & Interval(0, oo)
+                    res = imageset(root, g_ys_pos)
                     base_positive = solveset(base >= 0, symbol, S.Reals)
-                    res = imageset(Lambda(n, real_root(n, expo)
-                        ), g_ys.intersect(
-                        Interval.Ropen(S.Zero, S.Infinity)))
                     _inv, _set = _invert_real(base, res, symbol)
                     return (_inv, _set.intersect(base_positive))
 
-                elif numer % 2 == 0:
-                        n = Dummy('n')
+                if den % 2 == 1:
+                    root = Lambda(n, real_root(n, expo))
+                    res = imageset(root, g_ys)
+                    if num % 2 == 0:
                         neg_res = imageset(Lambda(n, -n), res)
                         return _invert_real(base, res + neg_res, symbol)
+                    if num % 2 == 1:
+                        return _invert_real(base, res, symbol)
 
-                else:
-                    return _invert_real(base, res, symbol)
-            else:
-                if not base.is_positive:
-                    raise ValueError("x**w where w is irrational is not "
-                                     "defined for negative x")
+            elif expo.is_irrational:
+                root = Lambda(n, real_root(n, expo))
+                g_ys_pos = g_ys & Interval(0, oo)
+                res = imageset(root, g_ys_pos)
                 return _invert_real(base, res, symbol)
+
+            else:
+                # indeterminate exponent, e.g. Float or parity of
+                # num, den of rational could not be determined
+                pass  # use default return
 
         if not base_has_sym:
             rhs = g_ys.args[0]
@@ -330,6 +338,14 @@ def _invert_complex(f, g_ys, symbol):
                 return (h, S.EmptySet)
             return _invert_complex(h, imageset(Lambda(n, n/g), g_ys), symbol)
 
+    if f.is_Pow:
+        base, expo = f.args
+        # special case: g**r = 0
+        # Could be improved like `_invert_real` to handle more general cases.
+        if expo.is_Rational and g_ys == FiniteSet(0):
+            if expo.is_positive:
+                return _invert_complex(base, g_ys, symbol)
+
     if hasattr(f, 'inverse') and f.inverse() is not None and \
        not isinstance(f, TrigonometricFunction) and \
        not isinstance(f, HyperbolicFunction) and \
@@ -340,11 +356,21 @@ def _invert_complex(f, g_ys, symbol):
                                imageset(Lambda(n, f.inverse()(n)), g_ys), symbol)
 
     if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
-        if isinstance(g_ys, FiniteSet):
+        if isinstance(g_ys, ImageSet):
+            # can solve upto `(d*exp(exp(...(exp(a*x + b))...) + c)` format.
+            # Further can be improved to `(d*exp(exp(...(exp(a*x**n + b*x**(n-1) + ... + f))...) + c)`.
+            g_ys_expr = g_ys.lamda.expr
+            g_ys_vars = g_ys.lamda.variables
+            k = Dummy('k{}'.format(len(g_ys_vars)))
+            g_ys_vars_1 = (k,) + g_ys_vars
+            exp_invs = Union(*[imageset(Lambda((g_ys_vars_1,), (I*(2*k*pi + arg(g_ys_expr))
+                                         + log(Abs(g_ys_expr)))), S.Integers**(len(g_ys_vars_1)))])
+
+        elif isinstance(g_ys, FiniteSet):
             exp_invs = Union(*[imageset(Lambda(n, I*(2*n*pi + arg(g_y)) +
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
-            return _invert_complex(f.exp, exp_invs, symbol)
+        return _invert_complex(f.exp, exp_invs, symbol)
 
     return (f, g_ys)
 
@@ -541,7 +567,8 @@ def _is_function_class_equation(func_class, f, symbol):
 
 def _solve_as_rational(f, symbol, domain):
     """ solve rational functions"""
-    f = together(f, deep=True)
+    from sympy.core.function import _mexpand
+    f = together(_mexpand(f, recursive=True), deep=True)
     g, h = fraction(f)
     if not h.has(symbol):
         try:
@@ -816,44 +843,9 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
         return ConditionSet(symbol, Eq(f, 0), domain)
 
 
-def _has_rational_power(expr, symbol):
-    """
-    Returns (bool, den) where bool is True if the term has a
-    non-integer rational power and den is the denominator of the
-    expression's exponent.
-
-    Examples
-    ========
-
-    >>> from sympy.solvers.solveset import _has_rational_power
-    >>> from sympy import sqrt
-    >>> from sympy.abc import x
-    >>> _has_rational_power(sqrt(x), x)
-    (True, 2)
-    >>> _has_rational_power(x**2, x)
-    (False, 1)
-    """
-    a, p, q = Wild('a'), Wild('p'), Wild('q')
-    pattern_match = expr.match(a*p**q) or {}
-    if pattern_match.get(a, S.Zero).is_zero:
-        return (False, S.One)
-    elif p not in pattern_match.keys():
-        return (False, S.One)
-    elif isinstance(pattern_match[q], Rational) \
-            and pattern_match[p].has(symbol):
-        if not pattern_match[q].q == S.One:
-            return (True, pattern_match[q].q)
-
-    if not isinstance(pattern_match[a], Pow) \
-            or isinstance(pattern_match[a], Mul):
-        return (False, S.One)
-    else:
-        return _has_rational_power(pattern_match[a], symbol)
-
-
-def _solve_radical(f, symbol, solveset_solver):
+def _solve_radical(f, unradf, symbol, solveset_solver):
     """ Helper function to solve equations with radicals """
-    res = unrad(f)
+    res = unradf
     eq, cov = res if res else (f, [])
     if not cov:
         result = solveset_solver(eq, symbol) - \
@@ -922,7 +914,7 @@ def solve_decomposition(f, symbol, domain):
     >>> x = Symbol('x')
     >>> f1 = exp(2*x) - 3*exp(x) + 2
     >>> sd(f1, x, S.Reals)
-    FiniteSet(0, log(2))
+    {0, log(2)}
     >>> f2 = sin(x)**2 + 2*sin(x) + 1
     >>> pprint(sd(f2, x, S.Reals), use_unicode=False)
               3*pi
@@ -1046,11 +1038,6 @@ def _solveset(f, symbol, domain, _check=False):
         result = solver(Add(f.lhs, - f.rhs, evaluate=False), symbol, domain)
 
     elif f.is_Relational:
-        if not domain.is_subset(S.Reals):
-            raise NotImplementedError(filldedent('''
-                Inequalities in the complex domain are
-                not supported. Try the real domain by
-                setting domain=S.Reals'''))
         try:
             result = solve_univariate_inequality(
             f, symbol, domain=domain, relational=False)
@@ -1078,21 +1065,36 @@ def _solveset(f, symbol, domain, _check=False):
         elif isinstance(rhs_s, FiniteSet):
             for equation in [lhs - rhs for rhs in rhs_s]:
                 if equation == f:
-                    if any(_has_rational_power(g, symbol)[0]
-                           for g in equation.args) or _has_rational_power(
-                           equation, symbol)[0]:
-                        result += _solve_radical(equation,
+                    u = unrad(f)
+                    if u:
+                        result += _solve_radical(equation, u,
                                                  symbol,
                                                  solver)
                     elif equation.has(Abs):
                         result += _solve_abs(f, symbol, domain)
                     else:
                         result_rational = _solve_as_rational(equation, symbol, domain)
-                        if isinstance(result_rational, ConditionSet):
-                            # may be a transcendental type equation
-                            result += _transolve(equation, symbol, domain)
-                        else:
+                        if not isinstance(result_rational, ConditionSet):
                             result += result_rational
+                        else:
+                            # may be a transcendental type equation
+                            t_result = _transolve(equation, symbol, domain)
+                            if isinstance(t_result, ConditionSet):
+                                # might need factoring; this is expensive so we
+                                # have delayed until now. To avoid recursion
+                                # errors look for a non-trivial factoring into
+                                # a product of symbol dependent terms; I think
+                                # that something that factors as a Pow would
+                                # have already been recognized by now.
+                                factored = equation.factor()
+                                if factored.is_Mul and equation != factored:
+                                    _, dep = factored.as_independent(symbol)
+                                    if not dep.is_Add:
+                                        # non-trivial factoring of equation
+                                        # but use form with constants
+                                        # in case they need special handling
+                                        t_result = solver(factored, symbol)
+                            result += t_result
                 else:
                     result += solver(equation, symbol)
 
@@ -1490,11 +1492,11 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     >>> solve_expo(2**x + 3**x - 5**x, 0, x, S.Reals)  # not solvable
     ConditionSet(x, Eq(2**x + 3**x - 5**x, 0), Reals)
     >>> solve_expo(a**x - b**x, 0, x, S.Reals)  # solvable but incorrect assumptions
-    ConditionSet(x, (a > 0) & (b > 0), FiniteSet(0))
+    ConditionSet(x, (a > 0) & (b > 0), {0})
     >>> solve_expo(3**(2*x) - 2**(x + 3), 0, x, S.Reals)
-    FiniteSet(-3*log(2)/(-2*log(3) + log(2)))
+    {-3*log(2)/(-2*log(3) + log(2))}
     >>> solve_expo(2**x - 4**x, 0, x, S.Reals)
-    FiniteSet(0)
+    {0}
 
     * Proof of correctness of the method
 
@@ -1522,7 +1524,9 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     newlhs = powdenest(lhs)
     if lhs != newlhs:
         # it may also be advantageous to factor the new expr
-        return _solveset(factor(newlhs - rhs), symbol, domain)  # try again with _solveset
+        neweq = factor(newlhs - rhs)
+        if neweq != (lhs - rhs):
+            return _solveset(neweq, symbol, domain)  # try again with _solveset
 
     if not (isinstance(lhs, Add) and len(lhs.args) == 2):
         # solving for the sum of more than two powers is possible
@@ -1650,7 +1654,7 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
     >>> x = symbols('x')
     >>> f = log(x - 3) + log(x + 3)
     >>> solve_log(f, 0, x, S.Reals)
-    FiniteSet(sqrt(10), -sqrt(10))
+    {-sqrt(10), sqrt(10)}
 
     * Proof of correctness
 
@@ -1896,7 +1900,7 @@ def _transolve(f, symbol, domain):
     >>> from sympy import symbols, S, pprint
     >>> x = symbols('x', real=True) # assumption added
     >>> transolve(5**(x - 3) - 3**(2*x + 1), x, S.Reals)
-    FiniteSet(-(log(3) + 3*log(5))/(-log(5) + 2*log(3)))
+    {-(log(3) + 3*log(5))/(-log(5) + 2*log(3))}
 
     How ``_transolve`` works
     ========================
@@ -2138,9 +2142,9 @@ def solveset(f, symbol=None, domain=S.Complexes):
     >>> R = S.Reals
     >>> x = Symbol('x')
     >>> solveset(exp(x) - 1, x, R)
-    FiniteSet(0)
+    {0}
     >>> solveset_real(exp(x) - 1, x)
-    FiniteSet(0)
+    {0}
 
     The solution is unaffected by assumptions on the symbol:
 
@@ -2175,12 +2179,15 @@ def solveset(f, symbol=None, domain=S.Complexes):
         raise ValueError("%s is not a valid SymPy expression" % f)
 
     if not isinstance(symbol, (Expr, Relational)) and  symbol is not None:
-        raise ValueError("%s is not a valid SymPy symbol" % symbol)
+        raise ValueError("%s is not a valid SymPy symbol" % (symbol,))
 
     if not isinstance(domain, Set):
         raise ValueError("%s is not a valid domain" %(domain))
 
     free_symbols = f.free_symbols
+
+    if f.has(Piecewise):
+        f = piecewise_fold(f)
 
     if symbol is None and not free_symbols:
         b = Eq(f, 0)
@@ -2308,6 +2315,8 @@ def solvify(f, symbol, domain):
     ImageSet,   | list (if `f` is periodic)
     Union       |
 
+    Union       | list (with FiniteSet)
+
     EmptySet    | empty list
 
     Others      | None
@@ -2367,7 +2376,16 @@ def solvify(f, symbol, domain):
 
         else:
             solution = solution_set.intersect(domain)
-            if isinstance(solution, FiniteSet):
+            if isinstance(solution, Union):
+                # concerned about only FiniteSet with Union but not about ImageSet
+                # if required could be extend
+                if any(isinstance(i, FiniteSet) for i in solution.args):
+                    result = [sol for soln in solution.args \
+                     for sol in soln.args if isinstance(soln,FiniteSet)]
+                else:
+                    return None
+
+            elif isinstance(solution, FiniteSet):
                 result += solution
 
     return result
@@ -2655,7 +2673,7 @@ def linsolve(system, *symbols):
     [6],
     [9]])
     >>> linsolve((A, b), [x, y, z])
-    FiniteSet((-1, 2, 0))
+    {(-1, 2, 0)}
 
     * Parametric Solution: In case the system is underdetermined, the
       function will return a parametric solution in terms of the given
@@ -2666,20 +2684,20 @@ def linsolve(system, *symbols):
     >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     >>> b = Matrix([3, 6, 9])
     >>> linsolve((A, b), x, y, z)
-    FiniteSet((z - 1, 2 - 2*z, z))
+    {(z - 1, 2 - 2*z, z)}
 
     If no symbols are given, internally generated symbols will be used.
     The `tau0` in the 3rd position indicates (as before) that the 3rd
     variable -- whatever it's named -- can take on any value:
 
     >>> linsolve((A, b))
-    FiniteSet((tau0 - 1, 2 - 2*tau0, tau0))
+    {(tau0 - 1, 2 - 2*tau0, tau0)}
 
     * List of Equations as input
 
     >>> Eqns = [3*x + 2*y - z - 1, 2*x - 2*y + 4*z + 2, - x + y/2 - z]
     >>> linsolve(Eqns, x, y, z)
-    FiniteSet((1, -2, -2))
+    {(1, -2, -2)}
 
     * Augmented Matrix as input
 
@@ -2690,21 +2708,21 @@ def linsolve(system, *symbols):
     [2, 6,  8, 3],
     [6, 8, 18, 5]])
     >>> linsolve(aug, x, y, z)
-    FiniteSet((3/10, 2/5, 0))
+    {(3/10, 2/5, 0)}
 
     * Solve for symbolic coefficients
 
     >>> a, b, c, d, e, f = symbols('a, b, c, d, e, f')
     >>> eqns = [a*x + b*y - c, d*x + e*y - f]
     >>> linsolve(eqns, x, y)
-    FiniteSet(((-b*f + c*e)/(a*e - b*d), (a*f - c*d)/(a*e - b*d)))
+    {((-b*f + c*e)/(a*e - b*d), (a*f - c*d)/(a*e - b*d))}
 
     * A degenerate system returns solution as set of given
       symbols.
 
     >>> system = Matrix(([0, 0, 0], [0, 0, 0], [0, 0, 0]))
     >>> linsolve(system, x, y)
-    FiniteSet((x, y))
+    {(x, y)}
 
     * For an empty system linsolve returns empty set
 
@@ -2715,7 +2733,7 @@ def linsolve(system, *symbols):
       is detected:
 
     >>> linsolve([x*(1/x - 1), (y - 1)**2 - y**2 + 1], x, y)
-    FiniteSet((1, 1))
+    {(1, 1)}
     >>> linsolve([x**2 - 1], x)
     Traceback (most recent call last):
     ...
@@ -2731,8 +2749,6 @@ def linsolve(system, *symbols):
     sym_gen = isinstance(symbols, GeneratorType)
 
     b = None  # if we don't get b the input was bad
-    syms_needed_msg = None
-
     # unpack system
 
     if hasattr(system, '__iter__'):
@@ -2778,9 +2794,6 @@ def linsolve(system, *symbols):
 
     if b is None:
         raise ValueError("Invalid arguments")
-
-    syms_needed_msg  = syms_needed_msg or 'columns of A'
-
     if sym_gen:
         symbols = [next(symbols) for i in range(A.cols)]
         if any(set(symbols) & (A.free_symbols | b.free_symbols)):
@@ -2893,33 +2906,33 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     >>> x, y = symbols('x, y', real=True)
     >>> from sympy.solvers.solveset import substitution
     >>> substitution([x + y], [x], [{y: 1}], [y], set([]), [x, y])
-    FiniteSet((-1, 1))
+    {(-1, 1)}
 
     * when you want soln should not satisfy eq `x + 1 = 0`
 
     >>> substitution([x + y], [x], [{y: 1}], [y], set([x + 1]), [y, x])
     EmptySet
     >>> substitution([x + y], [x], [{y: 1}], [y], set([x - 1]), [y, x])
-    FiniteSet((1, -1))
+    {(1, -1)}
     >>> substitution([x + y - 1, y - x**2 + 5], [x, y])
-    FiniteSet((-3, 4), (2, -1))
+    {(-3, 4), (2, -1)}
 
     * Returns both real and complex solution
 
     >>> x, y, z = symbols('x, y, z')
     >>> from sympy import exp, sin
     >>> substitution([exp(x) - sin(y), y**2 - 4], [x, y])
-    FiniteSet((ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2),
-            (ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers), -2))
+    {(ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers), -2),
+     (ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2)}
 
     >>> eqs = [z**2 + exp(2*x) - sin(y), -3 + exp(-y)]
     >>> substitution(eqs, [y, z])
-    FiniteSet((-log(3), sqrt(-exp(2*x) - sin(log(3)))),
-    (-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
-    (ImageSet(Lambda(_n, 2*_n*I*pi - log(3)), Integers),
-       ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers)),
-    (ImageSet(Lambda(_n, 2*_n*I*pi - log(3)), Integers),
-       ImageSet(Lambda(_n, -sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers)))
+    {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
+     (-log(3), sqrt(-exp(2*x) - sin(log(3)))),
+     (ImageSet(Lambda(_n, 2*_n*I*pi - log(3)), Integers),
+      ImageSet(Lambda(_n, -sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers)),
+     (ImageSet(Lambda(_n, 2*_n*I*pi - log(3)), Integers),
+      ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers))}
 
     """
 
@@ -3009,52 +3022,59 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     # end of def add_intersection_complement()
 
     def _extract_main_soln(sym, sol, soln_imageset):
-            """Separate the Complements, Intersections, ImageSet lambda expr
-            and its base_set.
-            """
-            # if there is union, then need to check
-            # Complement, Intersection, Imageset.
-            # Order should not be changed.
-            if isinstance(sol, Complement):
-                # extract solution and complement
-                complements[sym] = sol.args[1]
-                sol = sol.args[0]
-                # complement will be added at the end
-                # using `add_intersection_complement` method
-            if isinstance(sol, Intersection):
-                # Interval/Set will be at 0th index always
-                if sol.args[0] not in (S.Reals, S.Complexes):
-                    # Sometimes solveset returns soln with intersection
-                    # S.Reals or S.Complexes. We don't consider that
-                    # intersection.
-                    intersections[sym] = sol.args[0]
-                sol = sol.args[1]
-            # after intersection and complement Imageset should
-            # be checked.
-            if isinstance(sol, ImageSet):
-                soln_imagest = sol
-                expr2 = sol.lamda.expr
-                sol = FiniteSet(expr2)
-                soln_imageset[expr2] = soln_imagest
+        """Separate the Complements, Intersections, ImageSet lambda expr and
+        its base_set. This function returns the unmasks sol from different classes
+        of sets and also returns the appended ImageSet elements in a
+        soln_imageset (dict: where key as unmasked element and value as ImageSet).
+        """
+        # if there is union, then need to check
+        # Complement, Intersection, Imageset.
+        # Order should not be changed.
+        if isinstance(sol, ConditionSet):
+            # extracts any solution in ConditionSet
+            sol = sol.base_set
 
-            # if there is union of Imageset or other in soln.
-            # no testcase is written for this if block
-            if isinstance(sol, Union):
-                sol_args = sol.args
-                sol = S.EmptySet
-                # We need in sequence so append finteset elements
-                # and then imageset or other.
-                for sol_arg2 in sol_args:
-                    if isinstance(sol_arg2, FiniteSet):
-                        sol += sol_arg2
-                    else:
-                        # ImageSet, Intersection, complement then
-                        # append them directly
-                        sol += FiniteSet(sol_arg2)
+        if isinstance(sol, Complement):
+            # extract solution and complement
+            complements[sym] = sol.args[1]
+            sol = sol.args[0]
+            # complement will be added at the end
+            # using `add_intersection_complement` method
 
-            if not isinstance(sol, FiniteSet):
-                sol = FiniteSet(sol)
-            return sol, soln_imageset
+        # if there is union of Imageset or other in soln.
+        # no testcase is written for this if block
+        if isinstance(sol, Union):
+            sol_args = sol.args
+            sol = S.EmptySet
+            # We need in sequence so append finteset elements
+            # and then imageset or other.
+            for sol_arg2 in sol_args:
+                if isinstance(sol_arg2, FiniteSet):
+                    sol += sol_arg2
+                else:
+                    # ImageSet, Intersection, complement then
+                    # append them directly
+                    sol += FiniteSet(sol_arg2)
+
+        if isinstance(sol, Intersection):
+            # Interval/Set will be at 0th index always
+            if sol.args[0] not in (S.Reals, S.Complexes):
+                # Sometimes solveset returns soln with intersection
+                # S.Reals or S.Complexes. We don't consider that
+                # intersection.
+                intersections[sym] = sol.args[0]
+            sol = sol.args[1]
+        # after intersection and complement Imageset should
+        # be checked.
+        if isinstance(sol, ImageSet):
+            soln_imagest = sol
+            expr2 = sol.lamda.expr
+            sol = FiniteSet(expr2)
+            soln_imageset[expr2] = soln_imagest
+
+        if not isinstance(sol, FiniteSet):
+            sol = FiniteSet(sol)
+        return sol, soln_imageset
     # end of def _extract_main_soln()
 
     # helper function for _append_new_soln
@@ -3097,7 +3117,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         u = Dummy('u')
         if n:
             eq = eq.subs(n, 0)
-        satisfy = checksol(u, u, eq, minimal=True)
+        satisfy = eq if eq in (True, False) else checksol(u, u, eq, minimal=True)
         if satisfy is False:
             delete_soln = True
             res = {}
@@ -3144,7 +3164,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             elif eq is not None:
                 newresult, rnew, delete_soln = _append_eq(
                     eq, newresult, rnew, delete_soln)
-            elif soln_imageset:
+            elif sol in soln_imageset.keys():
                 rnew[sym] = soln_imageset[sol]
                 # restore original imageset
                 _restore_imgset(rnew, original_imageset, newresult)
@@ -3193,15 +3213,14 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             result = _new_order_result(result, eq)
             for res in result:
                 got_symbol = set()  # symbols solved in one iteration
-                if soln_imageset:
-                    # find the imageset and use its expr.
-                    for key_res, value_res in res.items():
-                        if isinstance(value_res, ImageSet):
-                            res[key_res] = value_res.lamda.expr
-                            original_imageset[key_res] = value_res
-                            dummy_n = value_res.lamda.expr.atoms(Dummy).pop()
-                            (base,) = value_res.base_sets
-                            imgset_yes = (dummy_n, base)
+                # find the imageset and use its expr.
+                for key_res, value_res in res.items():
+                    if isinstance(value_res, ImageSet):
+                        res[key_res] = value_res.lamda.expr
+                        original_imageset[key_res] = value_res
+                        dummy_n = value_res.lamda.expr.atoms(Dummy).pop()
+                        (base,) = value_res.base_sets
+                        imgset_yes = (dummy_n, base)
                 # update eq with everything that is known so far
                 eq2 = eq.subs(res).expand()
                 unsolved_syms = _unsolved_syms(eq2, sort=True)
@@ -3253,11 +3272,14 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         # time we may get soln using next equation `eq2`
                         continue
                     if isinstance(soln, ConditionSet):
+                        if soln.base_set in (S.Reals, S.Complexes):
                             soln = S.EmptySet
                             # don't do `continue` we may get soln
                             # in terms of other symbol(s)
                             not_solvable = True
                             total_conditionst += 1
+                        else:
+                            soln = soln.base_set
 
                     if soln is not S.EmptySet:
                         soln, soln_imageset = _extract_main_soln(
@@ -3281,12 +3303,12 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         # in the new result list (solution for symbol `s`)
                         # along with old results.
                         for k, v in res.items():
-                            if isinstance(v, Expr):
+                            if isinstance(v, Expr) and isinstance(sol, Expr):
                                 # if any unsolved symbol is present
                                 # Then subs known value
                                 rnew[k] = v.subs(sym, sol)
                         # and add this new solution
-                        if soln_imageset:
+                        if sol in soln_imageset.keys():
                             # replace all lambda variables with 0.
                             imgst = soln_imageset[sol]
                             rnew[sym] = imgst.lamda(
@@ -3324,8 +3346,19 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     if total_conditionset == total_solveset_call and total_solveset_call != -1:
         return _return_conditionset(eqs_in_better_order, all_symbols)
 
+    # don't keep duplicate solutions
+    filtered_complex = []
+    for i in list(new_result_complex):
+        for j in list(new_result_real):
+            if i.keys() != j.keys():
+                continue
+            if all(a.dummy_eq(b) for a, b in zip(i.values(), j.values()) \
+                if type(a) != int or type(b) != int):
+                break
+        else:
+            filtered_complex.append(i)
     # overall result
-    result = new_result_real + new_result_complex
+    result = new_result_real + filtered_complex
 
     result_all_variables = []
     result_infinite = []
@@ -3412,8 +3445,11 @@ def _separate_poly_nonpoly(system, symbols):
     denominators = set()
     poly = None
     for eq in system:
-        # Store denom expression if it contains symbol
+        # Store denom expressions that contain symbols
         denominators.update(_simple_dens(eq, symbols))
+        # Convert equality to expression
+        if isinstance(eq, Equality):
+            eq = eq.rewrite(Add)
         # try to remove sqrt and rational power
         without_radicals = unrad(simplify(eq))
         if without_radicals:
@@ -3494,7 +3530,7 @@ def nonlinsolve(system, *symbols):
     >>> from sympy.solvers.solveset import nonlinsolve
     >>> x, y, z = symbols('x, y, z', real=True)
     >>> nonlinsolve([x*y - 1, 4*x**2 + y**2 - 5], [x, y])
-    FiniteSet((-1, -1), (-1/2, -2), (1/2, 2), (1, 1))
+    {(-1, -1), (-1/2, -2), (1/2, 2), (1, 1)}
 
     1. Positive dimensional system and complements:
 
@@ -3513,7 +3549,7 @@ def nonlinsolve(system, *symbols):
     {(---, -d, -, {d} \ {0}), (-, -d, ---, {d} \ {0})}
        d       d               d       d
     >>> nonlinsolve([(x+y)**2 - 4, x + y - 2], [x, y])
-    FiniteSet((2 - y, y))
+    {(2 - y, y)}
 
     2. If some of the equations are non-polynomial then `nonlinsolve`
     will call the `substitution` function and return real and complex solutions,
@@ -3521,9 +3557,8 @@ def nonlinsolve(system, *symbols):
 
     >>> from sympy import exp, sin
     >>> nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
-    FiniteSet((ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2),
-            (ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers), -2))
-
+    {(ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers), -2),
+     (ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2)}
 
     3. If system is non-linear polynomial and zero-dimensional then it
     returns both solution (real and complex solutions, if present) using
@@ -3531,7 +3566,7 @@ def nonlinsolve(system, *symbols):
 
     >>> from sympy import sqrt
     >>> nonlinsolve([x**2 - 2*y**2 -2, x*y - 2], [x, y])
-    FiniteSet((-2, -1), (2, 1), (-sqrt(2)*I, sqrt(2)*I), (sqrt(2)*I, -sqrt(2)*I))
+    {(-2, -1), (2, 1), (-sqrt(2)*I, sqrt(2)*I), (sqrt(2)*I, -sqrt(2)*I)}
 
     4. `nonlinsolve` can solve some linear (zero or positive dimensional)
     system (because it uses the `groebner` function to get the
@@ -3540,7 +3575,7 @@ def nonlinsolve(system, *symbols):
     `nonlinsolve`, because `linsolve` is better for general linear systems.
 
     >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9 , y + z - 4], [x, y, z])
-    FiniteSet((3*z - 5, 4 - z, z))
+    {(3*z - 5, 4 - z, z)}
 
     5. System having polynomial equations and only real solution is
     solved using `solve_poly_system`:
@@ -3548,11 +3583,11 @@ def nonlinsolve(system, *symbols):
     >>> e1 = sqrt(x**2 + y**2) - 10
     >>> e2 = sqrt(y**2 + (-x + 10)**2) - 3
     >>> nonlinsolve((e1, e2), (x, y))
-    FiniteSet((191/20, -3*sqrt(391)/20), (191/20, 3*sqrt(391)/20))
+    {(191/20, -3*sqrt(391)/20), (191/20, 3*sqrt(391)/20)}
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [x, y])
-    FiniteSet((1, 2), (1 - sqrt(5), 2 + sqrt(5)), (1 + sqrt(5), 2 - sqrt(5)))
+    {(1, 2), (1 - sqrt(5), 2 + sqrt(5)), (1 + sqrt(5), 2 - sqrt(5))}
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [y, x])
-    FiniteSet((2, 1), (2 - sqrt(5), 1 + sqrt(5)), (2 + sqrt(5), 1 - sqrt(5)))
+    {(2, 1), (2 - sqrt(5), 1 + sqrt(5)), (2 + sqrt(5), 1 - sqrt(5))}
 
     6. It is better to use symbols instead of Trigonometric Function or
     Function (e.g. replace `sin(x)` with symbol, replace `f(x)` with symbol

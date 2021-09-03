@@ -269,7 +269,7 @@ def banded(*args, **kwargs):
             smat[r, c] = tba
             undone.append((d, v))
     s = SparseMatrix(None, smat)  # to expand matrices
-    smat = s._smat
+    smat = s.todok()
     # check for dim errors here
     if rows is not None and rows < s.rows:
         raise ValueError('Designated rows %s < needed %s' % (rows, s.rows))

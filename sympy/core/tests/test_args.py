@@ -96,7 +96,6 @@ def _test_args(obj):
 
 def test_sympy__assumptions__assume__AppliedPredicate():
     from sympy.assumptions.assume import AppliedPredicate, Predicate
-    from sympy import Q
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
     assert _test_args(Q.is_true(True))
 
@@ -105,8 +104,10 @@ def test_sympy__assumptions__assume__Predicate():
     pass
 
 def test_predicates():
-    from sympy.assumptions.ask import get_known_facts_keys
-    predicates = get_known_facts_keys()
+    predicates = [
+        getattr(Q, attr)
+        for attr in Q.__class__.__dict__
+        if not attr.startswith('__')]
     for p in predicates:
         assert _test_args(p)
 
@@ -121,36 +122,9 @@ def test_sympy__assumptions__relation__binrel__BinaryRelation():
 def test_sympy__assumptions__relation__binrel__AppliedBinaryRelation():
     assert _test_args(Q.eq(1, 2))
 
-def test_sympy__assumptions__sathandlers__UnevaluatedOnFree():
-    from sympy.assumptions.sathandlers import UnevaluatedOnFree
-    from sympy import Q
-    assert _test_args(UnevaluatedOnFree(Q.positive))
-
-def test_sympy__assumptions__sathandlers__AllArgs():
-    from sympy.assumptions.sathandlers import AllArgs
-    from sympy import Q
-    assert _test_args(AllArgs(Q.positive))
-
-def test_sympy__assumptions__sathandlers__AnyArgs():
-    from sympy.assumptions.sathandlers import AnyArgs
-    from sympy import Q
-    assert _test_args(AnyArgs(Q.positive))
-
-def test_sympy__assumptions__sathandlers__ExactlyOneArg():
-    from sympy.assumptions.sathandlers import ExactlyOneArg
-    from sympy import Q
-    assert _test_args(ExactlyOneArg(Q.positive))
-
-def test_sympy__assumptions__sathandlers__CheckOldAssump():
-    from sympy.assumptions.sathandlers import CheckOldAssump
-    from sympy import Q
-    assert _test_args(CheckOldAssump(Q.positive))
-
-def test_sympy__assumptions__sathandlers__CheckIsPrime():
-    from sympy.assumptions.sathandlers import CheckIsPrime
-    from sympy import Q
-    # Input must be a number
-    assert _test_args(CheckIsPrime(Q.positive))
+def test_sympy__assumptions__wrapper__AssumptionsWrapper():
+    from sympy.assumptions.wrapper import AssumptionsWrapper
+    assert _test_args(AssumptionsWrapper(x, Q.positive(x)))
 
 
 @SKIP("abstract Class")
@@ -3008,6 +2982,10 @@ def test_sympy__logic__boolalg__Xnor():
     from sympy.logic.boolalg import Xnor
     assert _test_args(Xnor(x, y, 2))
 
+def test_sympy__logic__boolalg__Exclusive():
+    from sympy.logic.boolalg import Exclusive
+    assert _test_args(Exclusive(x, y, z))
+
 
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector
@@ -3016,6 +2994,11 @@ def test_sympy__matrices__matrices__DeferredVector():
 
 @SKIP("abstract class")
 def test_sympy__matrices__expressions__matexpr__MatrixBase():
+    pass
+
+
+@SKIP("abstract class")
+def test_sympy__matrices__immutable__ImmutableRepMatrix():
     pass
 
 
@@ -4143,6 +4126,23 @@ def test_sympy__physics__secondquant__TensorSymbol():
     assert _test_args(TensorSymbol(x))
 
 
+def test_sympy__physics__control__lti__LinearTimeInvariant():
+    # Direct instances of LinearTimeInvariant class are not allowed.
+    # func(*args) tests for its derived classes (TransferFunction,
+    # Series, Parallel and TransferFunctionMatrix) should pass.
+    pass
+
+
+def test_sympy__physics__control__lti__SISOLinearTimeInvariant():
+    # Direct instances of SISOLinearTimeInvariant class are not allowed.
+    pass
+
+
+def test_sympy__physics__control__lti__MIMOLinearTimeInvariant():
+    # Direct instances of MIMOLinearTimeInvariant class are not allowed.
+    pass
+
+
 def test_sympy__physics__control__lti__TransferFunction():
     from sympy.physics.control.lti import TransferFunction
     assert _test_args(TransferFunction(2, 3, x))
@@ -4155,6 +4155,16 @@ def test_sympy__physics__control__lti__Series():
     assert _test_args(Series(tf1, tf2))
 
 
+def test_sympy__physics__control__lti__MIMOSeries():
+    from sympy.physics.control import MIMOSeries, TransferFunction, TransferFunctionMatrix
+    tf1 = TransferFunction(x**2 - y**3, y - z, x)
+    tf2 = TransferFunction(y - x, z + y, x)
+    tfm_1 = TransferFunctionMatrix([[tf2, tf1]])
+    tfm_2 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+    tfm_3 = TransferFunctionMatrix([[tf1], [tf2]])
+    assert _test_args(MIMOSeries(tfm_3, tfm_2, tfm_1))
+
+
 def test_sympy__physics__control__lti__Parallel():
     from sympy.physics.control import Parallel, TransferFunction
     tf1 = TransferFunction(x**2 - y**3, y - z, x)
@@ -4162,11 +4172,38 @@ def test_sympy__physics__control__lti__Parallel():
     assert _test_args(Parallel(tf1, tf2))
 
 
+def test_sympy__physics__control__lti__MIMOParallel():
+    from sympy.physics.control import MIMOParallel, TransferFunction, TransferFunctionMatrix
+    tf1 = TransferFunction(x**2 - y**3, y - z, x)
+    tf2 = TransferFunction(y - x, z + y, x)
+    tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+    tfm_2 = TransferFunctionMatrix([[tf2, tf1], [tf1, tf2]])
+    assert _test_args(MIMOParallel(tfm_1, tfm_2))
+
+
 def test_sympy__physics__control__lti__Feedback():
     from sympy.physics.control import TransferFunction, Feedback
     tf1 = TransferFunction(x**2 - y**3, y - z, x)
     tf2 = TransferFunction(y - x, z + y, x)
     assert _test_args(Feedback(tf1, tf2))
+    assert _test_args(Feedback(tf1, tf2, 1))
+
+
+def test_sympy__physics__control__lti__MIMOFeedback():
+    from sympy.physics.control import TransferFunction, MIMOFeedback, TransferFunctionMatrix
+    tf1 = TransferFunction(x**2 - y**3, y - z, x)
+    tf2 = TransferFunction(y - x, z + y, x)
+    tfm_1 = TransferFunctionMatrix([[tf2, tf1], [tf1, tf2]])
+    tfm_2 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+    assert _test_args(MIMOFeedback(tfm_1, tfm_2))
+    assert _test_args(MIMOFeedback(tfm_1, tfm_2, 1))
+
+
+def test_sympy__physics__control__lti__TransferFunctionMatrix():
+    from sympy.physics.control import TransferFunction, TransferFunctionMatrix
+    tf1 = TransferFunction(x**2 - y**3, y - z, x)
+    tf2 = TransferFunction(y - x, z + y, x)
+    assert _test_args(TransferFunctionMatrix([[tf1, tf2]]))
 
 
 def test_sympy__physics__units__dimensions__Dimension():

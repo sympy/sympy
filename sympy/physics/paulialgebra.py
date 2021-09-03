@@ -131,8 +131,11 @@ class Pauli(Symbol):
         obj.label = label
         return obj
 
-    def __getnewargs__(self):
-        return (self.i,self.label,)
+    def __getnewargs_ex__(self):
+        return (self.i, self.label), {}
+
+    def _hashable_content(self):
+        return (self.i, self.label)
 
     # FIXME don't work for -I*Pauli(2)*Pauli(3)
     def __mul__(self, other):

@@ -461,6 +461,11 @@ def test_Abs():
 
     # coverage
     assert unchanged(Abs, Symbol('x', real=True)**y)
+    # issue 19627
+    f = Function('f', positive=True)
+    assert sqrt(f(x)**2) == f(x)
+    # issue 21625
+    assert unchanged(Abs, S("im(acos(-i + acosh(-g + i)))"))
 
 
 def test_Abs_rewrite():
@@ -588,6 +593,11 @@ def test_arg():
     assert arg(exp_polar(5 - 3*pi*I/4)) == pi*Rational(-3, 4)
     f = Function('f')
     assert not arg(f(0) + I*f(1)).atoms(re)
+
+    x = Symbol('x')
+    p = Function('p', extended_positive=True)
+    assert arg(p(x)) == 0
+    assert arg((3 + I)*p(x)) == arg(3  + I)
 
     p = Symbol('p', positive=True)
     assert arg(p) == 0

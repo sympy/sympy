@@ -76,8 +76,8 @@ def test_import():
 GOOD_PAIRS = [
     (r"0", 0),
     (r"1", 1),
-    (r"-3.14", _Mul(-1, 3.14)),
-    (r"(-7.13)(1.5)", _Mul(_Mul(-1, 7.13), 1.5)),
+    (r"-3.14", -3.14),
+    (r"(-7.13)(1.5)", _Mul(-7.13, 1.5)),
     (r"x", x),
     (r"2x", 2*x),
     (r"x^2", x**2),
@@ -240,24 +240,16 @@ GOOD_PAIRS = [
     (r"a \negmedspace b", _Mul(a, b)),
     (r"a \negthickspace b", _Mul(a, b)),
     (r"\int x \, dx", Integral(x, x)),
+    (r"\log_2 x", _log(x, 2)),
+    (r"\log_a x", _log(x, a)),
+    (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0)))),
 ]
+
 
 def test_parseable():
     from sympy.parsing.latex import parse_latex
     for latex_str, sympy_expr in GOOD_PAIRS:
-        assert parse_latex(latex_str) == sympy_expr
-
-# At time of migration from latex2sympy, should work but doesn't
-FAILING_PAIRS = [
-    (r"\log_2 x", _log(x, 2)),
-    (r"\log_a x", _log(x, a)),
-]
-
-def test_failing_parseable():
-    from sympy.parsing.latex import parse_latex
-    for latex_str, sympy_expr in FAILING_PAIRS:
-        with raises(Exception):
-            assert parse_latex(latex_str) == sympy_expr
+        assert parse_latex(latex_str) == sympy_expr, latex_str
 
 # These bad LaTeX strings should raise a LaTeXParsingError when parsed
 BAD_STRINGS = [

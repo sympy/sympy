@@ -1,6 +1,5 @@
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
-from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
@@ -150,6 +149,9 @@ class Limit(Expr):
         elif z0 is S.NegativeInfinity:
             dir = "+"
 
+        if(z0.has(z)):
+            raise NotImplementedError("Limits approaching a variable point are"
+                    " not supported (%s -> %s)" % (z, z0))
         if isinstance(dir, str):
             dir = Symbol(dir)
         elif not isinstance(dir, Symbol):
@@ -173,6 +175,25 @@ class Limit(Expr):
         return isyms
 
 
+    def pow_heuristics(self):
+        from sympy import exp, log
+        expr, z, z0, _ = self.args
+        b, e = expr.base, expr.exp
+        if not b.has(z):
+            res = limit(e*log(b), z, z0)
+            return exp(res)
+
+        ex_lim = limit(e, z, z0)
+        base_lim = limit(b, z, z0)
+
+        if base_lim is S.One:
+            if ex_lim in (S.Infinity, S.NegativeInfinity):
+                res = limit(e*(b - 1), z, z0)
+                return exp(res)
+        if base_lim is S.NegativeInfinity and ex_lim is S.Infinity:
+            return S.ComplexInfinity
+
+
     def doit(self, **hints):
         """Evaluates the limit.
 
@@ -186,8 +207,7 @@ class Limit(Expr):
         hints : optional keyword arguments
             To be passed to ``doit`` methods; only used if deep is True.
         """
-        from sympy import Abs, exp, log, sign
-        from sympy.calculus.util import AccumBounds
+        from sympy import Abs, sign
 
         e, z, z0, dir = self.args
 
@@ -206,30 +226,41 @@ class Limit(Expr):
         if not e.has(z):
             return e
 
+        if z0 is S.NaN:
+            return S.NaN
+
+        if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
+            return self
+
+        if e.is_Order:
+            return Order(limit(e.expr, z, z0), *e.args[1:])
+
         cdir = 0
         if str(dir) == "+":
             cdir = 1
         elif str(dir) == "-":
             cdir = -1
 
-        def remove_abs(expr):
+        def set_signs(expr):
             if not expr.args:
                 return expr
-            newargs = tuple(remove_abs(arg) for arg in expr.args)
+            newargs = tuple(set_signs(arg) for arg in expr.args)
             if newargs != expr.args:
                 expr = expr.func(*newargs)
-            if isinstance(expr, Abs):
+            abs_flag = isinstance(expr, Abs)
+            sign_flag = isinstance(expr, sign)
+            if abs_flag or sign_flag:
                 sig = limit(expr.args[0], z, z0, dir)
                 if sig.is_zero:
                     sig = limit(1/expr.args[0], z, z0, dir)
                 if sig.is_extended_real:
                     if (sig < 0) == True:
-                        return -expr.args[0]
+                        return -expr.args[0] if abs_flag else S.NegativeOne
                     elif (sig > 0) == True:
-                        return expr.args[0]
+                        return expr.args[0] if abs_flag else S.One
             return expr
 
-        e = remove_abs(e)
+        e = set_signs(e)
 
         if e.is_meromorphic(z, z0):
             if abs(z0) is S.Infinity:
@@ -237,8 +268,8 @@ class Limit(Expr):
             else:
                 newe = e.subs(z, z + z0)
             try:
-                coeff, ex = newe.leadterm(z, cdir)
-            except (ValueError, NotImplementedError):
+                coeff, ex = newe.leadterm(z, cdir=cdir)
+            except ValueError:
                 pass
             else:
                 if ex > 0:
@@ -252,68 +283,52 @@ class Limit(Expr):
                 else:
                     return S.ComplexInfinity
 
+        if abs(z0) is S.Infinity:
+            if e.is_Mul:
+                e = factor_terms(e)
+            newe = e.subs(z, 1/z)
+            # cdir changes sign as oo- should become 0+
+            cdir = -cdir
+        else:
+            newe = e.subs(z, z + z0)
+        try:
+            coeff, ex = newe.leadterm(z, cdir=cdir)
+        except (ValueError, NotImplementedError, PoleError):
+            # The NotImplementedError catching is for custom functions
+            if e.is_Pow:
+                r = self.pow_heuristics()
+                if r is not None:
+                    return r
+        else:
+            if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+                return self
+            if not coeff.has(z):
+                if ex.is_positive:
+                    return S.Zero
+                elif ex == 0:
+                    return coeff
+                elif ex.is_negative:
+                    if ex.is_integer:
+                        if str(dir) == "-" or ex.is_even:
+                            return S.Infinity*sign(coeff)
+                        elif str(dir) == "+":
+                            return S.NegativeInfinity*sign(coeff)
+                        else:
+                            return S.ComplexInfinity
+                    else:
+                        if str(dir) == "+":
+                            return S.Infinity*sign(coeff)
+                        elif str(dir) == "-":
+                            return S.NegativeInfinity*sign(coeff)*S.NegativeOne**(S.One + ex)
+                        else:
+                            return S.ComplexInfinity
+
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
         # factorial is defined to be zero for negative inputs (which
         # differs from gamma) so only rewrite for positive z0.
         if z0.is_extended_positive:
             e = e.rewrite(factorial, gamma)
-
-        if e.is_Mul and abs(z0) is S.Infinity:
-            e = factor_terms(e)
-            u = Dummy('u', positive=True)
-            if z0 is S.NegativeInfinity:
-                inve = e.subs(z, -1/u)
-            else:
-                inve = e.subs(z, 1/u)
-            try:
-                f = inve.as_leading_term(u).gammasimp()
-                if f.is_meromorphic(u, S.Zero):
-                    r = limit(f, u, S.Zero, "+")
-                    if isinstance(r, Limit):
-                        return self
-                    else:
-                        return r
-            except (ValueError, NotImplementedError, PoleError):
-                pass
-
-        if e.is_Order:
-            return Order(limit(e.expr, z, z0), *e.args[1:])
-
-        if e.is_Pow:
-            if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
-                return self
-
-            b1, e1 = e.base, e.exp
-            f1 = e1*log(b1)
-            if f1.is_meromorphic(z, z0):
-                res = limit(f1, z, z0)
-                return exp(res)
-
-            ex_lim = limit(e1, z, z0)
-            base_lim = limit(b1, z, z0)
-
-            if base_lim is S.One:
-                if ex_lim in (S.Infinity, S.NegativeInfinity):
-                    res = limit(e1*(b1 - 1), z, z0)
-                    return exp(res)
-                elif ex_lim.is_real:
-                    return S.One
-
-            if base_lim in (S.Zero, S.Infinity, S.NegativeInfinity) and ex_lim is S.Zero:
-                res = limit(f1, z, z0)
-                return exp(res)
-
-            if base_lim is S.NegativeInfinity:
-                if ex_lim is S.NegativeInfinity:
-                    return S.Zero
-                if ex_lim is S.Infinity:
-                    return S.ComplexInfinity
-
-            if not isinstance(base_lim, AccumBounds) and not isinstance(ex_lim, AccumBounds):
-                res = base_lim**ex_lim
-                if res is not S.ComplexInfinity and not res.is_Pow:
-                    return res
 
         l = None
 

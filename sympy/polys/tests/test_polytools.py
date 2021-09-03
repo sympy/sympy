@@ -51,15 +51,18 @@ from sympy.polys.polyclasses import DMP
 from sympy.polys.fields import field
 from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX
 from sympy.polys.domains.realfield import RealField
+from sympy.polys.domains.complexfield import ComplexField
 from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise, Derivative,
     exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
 
+from sympy.core.add import Add
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
+from sympy.core.power import Pow
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
@@ -387,6 +390,7 @@ def test_Poly__new__():
              modulus=65537, symmetric=False)
 
     assert isinstance(Poly(x**2 + x + 1.0).get_domain(), RealField)
+    assert isinstance(Poly(x**2 + x + I + 1.0).get_domain(), ComplexField)
 
 
 def test_Poly__args():
@@ -2049,10 +2053,12 @@ def test_gcd():
     assert lcm(f, g, modulus=11, symmetric=False) == l
 
     a, b = sqrt(2), -sqrt(2)
-    assert gcd(a, b) == gcd(b, a) == a
+    assert gcd(a, b) == gcd(b, a) == sqrt(2)
 
     a, b = sqrt(-2), -sqrt(-2)
-    assert gcd(a, b) in (a, b)
+    assert gcd(a, b) == gcd(b, a) == sqrt(2)
+
+    assert gcd(Poly(x - 2, x), Poly(I*x, x)) == Poly(1, x, domain=ZZ_I)
 
     raises(TypeError, lambda: gcd(x))
     raises(TypeError, lambda: lcm(x))
@@ -3322,6 +3328,14 @@ def test_keep_coeff():
     assert _keep_coeff(S(2), x + 1) == u
     assert _keep_coeff(x, 1/x) == 1
     assert _keep_coeff(x + 1, S(2)) == u
+    assert _keep_coeff(S.Half, S.One) == S.Half
+    p = Pow(2, 3, evaluate=False)
+    assert _keep_coeff(S(-1), p) == Mul(-1, p, evaluate=False)
+    a = Add(2, p, evaluate=False)
+    assert _keep_coeff(S.Half, a, clear=True
+        ) == Mul(S.Half, a, evaluate=False)
+    assert _keep_coeff(S.Half, a, clear=False
+        ) == Add(1, Mul(S.Half, p, evaluate=False), evaluate=False)
 
 
 def test_poly_matching_consistency():
@@ -3349,6 +3363,12 @@ def test_noncommutative():
 def test_to_rational_coeffs():
     assert to_rational_coeffs(
         Poly(x**3 + y*x**2 + sqrt(y), x, domain='EX')) is None
+    # issue 21268
+    assert to_rational_coeffs(
+        Poly(y**3 + sqrt(2)*y**2*sin(x) + 1, y)) is None
+
+    assert to_rational_coeffs(Poly(x, y)) is None
+    assert to_rational_coeffs(Poly(sqrt(2)*y)) is None
 
 
 def test_factor_terms():
@@ -3409,8 +3429,10 @@ def test_issue_15669():
 def test_issue_17988():
     x = Symbol('x')
     p = poly(x - 1)
-    M = Matrix([[poly(x + 1), poly(x + 1)]])
-    assert p * M == M * p == Matrix([[poly(x**2 - 1), poly(x**2 - 1)]])
+    with warns_deprecated_sympy():
+        M = Matrix([[poly(x + 1), poly(x + 1)]])
+    with warns_deprecated_sympy():
+        assert p * M == M * p == Matrix([[poly(x**2 - 1), poly(x**2 - 1)]])
 
 
 def test_issue_18205():

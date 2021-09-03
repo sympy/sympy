@@ -1,6 +1,8 @@
-from sympy import log, exp, cos, Symbol, Pow, sin, MatrixSymbol, sinc
+import tempfile
+from sympy import log, exp, cos, S, Symbol, Pow, sin, MatrixSymbol, sinc, pi
 from sympy.assumptions import assuming, Q
-from sympy.printing import ccode
+from sympy.external import import_module
+from sympy.printing.codeprinter import ccode
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.cfunctions import log2, exp2, expm1, log1p
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
@@ -8,9 +10,13 @@ from sympy.codegen.scipy_nodes import cosm1
 from sympy.codegen.rewriting import (
     optimize, cosm1_opt, log2_opt, exp2_opt, expm1_opt, log1p_opt, optims_c99,
     create_expand_pow_optimization, matinv_opt, logaddexp_opt, logaddexp2_opt,
-    optims_numpy, sinc_opts
+    optims_numpy, sinc_opts, FuncMinusOneOptim
 )
-from sympy.testing.pytest import XFAIL
+from sympy.testing.pytest import XFAIL, skip
+from sympy.utilities._compilation import compile_link_import_strings, has_c
+from sympy.utilities._compilation.util import may_xfail
+
+cython = import_module('cython')
 
 
 def test_log2_opt():
@@ -70,7 +76,13 @@ def test_expm1_opt():
     assert opt2.rewrite(exp) == expr2
 
     expr3 = 3*exp(x) - 5
-    assert expr3 == optimize(expr3, [expm1_opt])
+    opt3 = optimize(expr3, [expm1_opt])
+    assert 3*expm1(x) - 2 == opt3
+    assert opt3.rewrite(exp) == expr3
+    expm1_opt_non_opportunistic = FuncMinusOneOptim(exp, expm1, opportunistic=False)
+    assert expr3 == optimize(expr3, [expm1_opt_non_opportunistic])
+    assert opt1 == optimize(expr1, [expm1_opt_non_opportunistic])
+    assert opt2 == optimize(expr2, [expm1_opt_non_opportunistic])
 
     expr4 = 3*exp(x) + log(x) - 3
     opt4 = optimize(expr4, [expm1_opt])
@@ -82,8 +94,40 @@ def test_expm1_opt():
     assert 3*expm1(2*x) == opt5
     assert opt5.rewrite(exp) == expr5
 
+    expr6 = (2*exp(x) + 1)/(exp(x) + 1) + 1
+    opt6 = optimize(expr6, [expm1_opt])
+    assert opt6.count_ops() <= expr6.count_ops()
 
-@XFAIL  # ideally this test should pass: need to improve `expm1_opt`
+    def ev(e):
+        return e.subs(x, 3).evalf()
+    assert abs(ev(expr6) - ev(opt6)) < 1e-15
+
+    y = Symbol('y')
+    expr7 = (2*exp(x) - 1)/(1 - exp(y)) - 1/(1-exp(y))
+    opt7 = optimize(expr7, [expm1_opt])
+    assert -2*expm1(x)/expm1(y) == opt7
+    assert (opt7.rewrite(exp) - expr7).factor() == 0
+
+    expr8 = (1+exp(x))**2 - 4
+    opt8 = optimize(expr8, [expm1_opt])
+    tgt8a = (exp(x) + 3)*expm1(x)
+    tgt8b = 2*expm1(x) + expm1(2*x)
+    # Both tgt8a & tgt8b seem to give full precision (~16 digits for double)
+    # for x=1e-7 (compare with expr8 which only achieves ~8 significant digits).
+    # If we can show that either tgt8a or tgt8b is preferable, we can
+    # change this test to ensure the preferable version is returned.
+    assert (tgt8a - tgt8b).rewrite(exp).factor() == 0
+    assert opt8 in (tgt8a, tgt8b)
+    assert (opt8.rewrite(exp) - expr8).factor() == 0
+
+    expr9 = sin(expr8)
+    opt9 = optimize(expr9, [expm1_opt])
+    tgt9a = sin(tgt8a)
+    tgt9b = sin(tgt8b)
+    assert opt9 in (tgt9a, tgt9b)
+    assert (opt9.rewrite(exp) - expr9.rewrite(exp)).factor().is_zero
+
+
 def test_expm1_two_exp_terms():
     x, y = map(Symbol, 'x y'.split())
     expr1 = exp(x) + exp(y) - 2
@@ -105,7 +149,13 @@ def test_cosm1_opt():
     assert opt2.rewrite(cos) == expr2
 
     expr3 = 3*cos(x) - 5
-    assert expr3 == optimize(expr3, [cosm1_opt])
+    opt3 = optimize(expr3, [cosm1_opt])
+    assert 3*cosm1(x) - 2 == opt3
+    assert opt3.rewrite(cos) == expr3
+    cosm1_opt_non_opportunistic = FuncMinusOneOptim(cos, cosm1, opportunistic=False)
+    assert expr3 == optimize(expr3, [cosm1_opt_non_opportunistic])
+    assert opt1 == optimize(expr1, [cosm1_opt_non_opportunistic])
+    assert opt2 == optimize(expr2, [cosm1_opt_non_opportunistic])
 
     expr4 = 3*cos(x) + log(x) - 3
     opt4 = optimize(expr4, [cosm1_opt])
@@ -117,8 +167,12 @@ def test_cosm1_opt():
     assert 3*cosm1(2*x) == opt5
     assert opt5.rewrite(cos) == expr5
 
+    expr6 = 2 - 2*cos(x)
+    opt6 = optimize(expr6, [cosm1_opt])
+    assert -2*cosm1(x) == opt6
+    assert opt6.rewrite(cos) == expr6
 
-@XFAIL  # ideally this test should pass: need to improve `cosm1_opt`
+
 def test_cosm1_two_cos_terms():
     x, y = map(Symbol, 'x y'.split())
     expr1 = cos(x) + cos(y) - 2
@@ -126,11 +180,10 @@ def test_cosm1_two_cos_terms():
     assert opt1 == cosm1(x) + cosm1(y)
 
 
-@XFAIL  # ideally this test should pass: need to add a new combined expm1_cosm1_opt?
 def test_expm1_cosm1_mixed():
     x = Symbol('x')
     expr1 = exp(x) + cos(x) - 2
-    opt1 = optimize(expr1, [expm1_opt, cosm1_opt])  # need a combined opt pass?
+    opt1 = optimize(expr1, [expm1_opt, cosm1_opt])
     assert opt1 == cosm1(x) + expm1(x)
 
 
@@ -189,8 +242,7 @@ def test_optims_c99():
 
     expr6 = exp(2*x) - 3
     opt6 = optimize(expr6, optims_c99)
-    delta6 = opt6 - (exp(2*x) - 3)
-    assert delta6 == 0
+    assert opt6 in (expm1(2*x) - 2, expr6)  # expm1(2*x) - 2 is not better or worse
 
     expr7 = log(3*x + 3)
     opt7 = optimize(expr7, optims_c99)
@@ -297,3 +349,63 @@ def test_optims_numpy_TODO():
         log(x*y)*sin(x*y)*log(x*y+1)/(log(2)*x*y): log2(x*y)*sinc(x*y)*log1p(x*y),
         exp(x*sin(y)/y) - 1: expm1(x*sinc(y))
     })
+
+
+@may_xfail
+def test_compiled_ccode_with_rewriting():
+    if not cython:
+        skip("cython not installed.")
+    if not has_c():
+        skip("No C compiler found.")
+
+    x = Symbol('x')
+    about_two = 2**(58/S(117))*3**(97/S(117))*5**(4/S(39))*7**(92/S(117))/S(30)*pi
+    # about_two: 1.999999999999581826
+    unchanged = 2*exp(x) - about_two
+    xval = S(10)**-11
+    ref = unchanged.subs(x, xval).n(19) # 2.0418173913673213e-11
+
+    rewritten = optimize(2*exp(x) - about_two, [expm1_opt])
+
+    # Unfortunately, we need to call ``.n()`` on our expressions before we hand them
+    # to ``ccode``, and we need to request a large number of significant digits.
+    # In this test, results converged for double precision when the following number
+    # of significant digits were chosen:
+    NUMBER_OF_DIGITS = 25   # TODO: this should ideally be automatically handled.
+
+    func_c = '''
+#include <math.h>
+
+double func_unchanged(double x) {
+    return %(unchanged)s;
+}
+double func_rewritten(double x) {
+    return %(rewritten)s;
+}
+''' % dict(unchanged=ccode(unchanged.n(NUMBER_OF_DIGITS)),
+           rewritten=ccode(rewritten.n(NUMBER_OF_DIGITS)))
+
+    func_pyx = '''
+#cython: language_level=3
+cdef extern double func_unchanged(double)
+cdef extern double func_rewritten(double)
+def py_unchanged(x):
+    return func_unchanged(x)
+def py_rewritten(x):
+    return func_rewritten(x)
+'''
+    with tempfile.TemporaryDirectory() as folder:
+        mod, info = compile_link_import_strings(
+            [('func.c', func_c), ('_func.pyx', func_pyx)],
+            build_dir=folder, compile_kwargs=dict(std='c99')
+        )
+        err_rewritten = abs(mod.py_rewritten(1e-11) - ref)
+        err_unchanged = abs(mod.py_unchanged(1e-11) - ref)
+        assert 1e-27 < err_rewritten < 1e-25  # highly accurate.
+        assert 1e-19 < err_unchanged < 1e-16  # quite poor.
+
+    # Tolerances used above were determined as follows:
+    # >>> no_opt = unchanged.subs(x, xval.evalf()).evalf()
+    # >>> with_opt = rewritten.n(25).subs(x, 1e-11).evalf()
+    # >>> with_opt - ref, no_opt - ref
+    # (1.1536301877952077e-26, 1.6547074214222335e-18)

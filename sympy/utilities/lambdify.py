@@ -25,6 +25,7 @@ MATH_DEFAULT = {}  # type: Dict[str, Any]
 MPMATH_DEFAULT = {}  # type: Dict[str, Any]
 NUMPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
 SCIPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
+CUPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
 TENSORFLOW_DEFAULT = {}  # type: Dict[str, Any]
 SYMPY_DEFAULT = {}  # type: Dict[str, Any]
 NUMEXPR_DEFAULT = {}  # type: Dict[str, Any]
@@ -37,6 +38,7 @@ MATH = MATH_DEFAULT.copy()
 MPMATH = MPMATH_DEFAULT.copy()
 NUMPY = NUMPY_DEFAULT.copy()
 SCIPY = SCIPY_DEFAULT.copy()
+CUPY = CUPY_DEFAULT.copy()
 TENSORFLOW = TENSORFLOW_DEFAULT.copy()
 SYMPY = SYMPY_DEFAULT.copy()
 NUMEXPR = NUMEXPR_DEFAULT.copy()
@@ -81,8 +83,11 @@ MPMATH_TRANSLATIONS = {
     "betainc_regularized": "betainc",
 }
 
-NUMPY_TRANSLATIONS = {}  # type: Dict[str, str]
+NUMPY_TRANSLATIONS = {
+    "Heaviside": "heaviside",
+    }  # type: Dict[str, str]
 SCIPY_TRANSLATIONS = {}  # type: Dict[str, str]
+CUPY_TRANSLATIONS = {}  # type: Dict[str, str]
 
 TENSORFLOW_TRANSLATIONS = {}  # type: Dict[str, str]
 
@@ -94,6 +99,7 @@ MODULES = {
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
+    "cupy": (CUPY, CUPY_DEFAULT, CUPY_TRANSLATIONS, ("import cupy",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import tensorflow",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
@@ -167,9 +173,9 @@ def _import(module, reload=False):
 # linecache.
 _lambdify_generated_counter = 1
 
-@doctest_depends_on(modules=('numpy', 'tensorflow', ), python_version=(3,))
+@doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
 def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
-             dummify=False):
+             dummify=False, cse=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -329,6 +335,15 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         Set ``dummify=True`` to replace all arguments with dummy symbols
         (if ``args`` is not a string) - for example, to ensure that the
         arguments do not redefine any built-in names.
+
+    cse : bool, or callable, optional
+        Large expressions can be computed more efficiently when
+        common subexpressions are identified and precomputed before
+        being used multiple time. Finding the subexpressions will make
+        creation of the 'lambdify' function slower, however.
+
+        When ``True``, ``sympy.simplify.cse`` is used, otherwise (the default)
+        the user may pass a function matching the ``cse`` signature.
 
 
     Examples
@@ -614,7 +629,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
     >>> import inspect
     >>> print(inspect.getsource(f))
     def _lambdifygenerated(x):
-        return (sin(x) + cos(x))
+        return sin(x) + cos(x)
 
     This shows us the source code of the function, but not the namespace it
     was defined in. We can inspect that by looking at the ``__globals__``
@@ -785,9 +800,11 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         if _module_present('mpmath', namespaces):
             from sympy.printing.pycode import MpmathPrinter as Printer # type: ignore
         elif _module_present('scipy', namespaces):
-            from sympy.printing.pycode import SciPyPrinter as Printer # type: ignore
+            from sympy.printing.numpy import SciPyPrinter as Printer # type: ignore
         elif _module_present('numpy', namespaces):
-            from sympy.printing.pycode import NumPyPrinter as Printer # type: ignore
+            from sympy.printing.numpy import NumPyPrinter as Printer # type: ignore
+        elif _module_present('cupy', namespaces):
+            from sympy.printing.numpy import CuPyPrinter as Printer # type: ignore
         elif _module_present('numexpr', namespaces):
             from sympy.printing.lambdarepr import NumExprPrinter as Printer # type: ignore
         elif _module_present('tensorflow', namespaces):
@@ -839,7 +856,15 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
-    funcstr = funcprinter.doprint(funcname, args, expr)
+
+    if cse == True:
+        from sympy.simplify.cse_main import cse
+        cses, _expr = cse(expr, list=False)
+    elif callable(cse):
+        cses, _expr = cse(expr)
+    else:
+        cses, _expr = (), expr
+    funcstr = funcprinter.doprint(funcname, args, _expr, cses=cses)
 
     # Collect the module imports from the code printers.
     imp_mod_lines = []
@@ -896,7 +921,6 @@ def _module_present(modname, modlist):
         if hasattr(m, '__name__') and m.__name__ == modname:
             return True
     return False
-
 
 def _get_namespace(m):
     """
@@ -1053,8 +1077,10 @@ class _EvaluatorPrinter:
         # Used to print the generated function arguments in a standard way
         self._argrepr = LambdaPrinter().doprint
 
-    def doprint(self, funcname, args, expr):
-        """Returns the function definition code as a string."""
+    def doprint(self, funcname, args, expr, *, cses=()):
+        """
+        Returns the function definition code as a string.
+        """
         from sympy import Dummy
 
         funcbody = []
@@ -1082,7 +1108,12 @@ class _EvaluatorPrinter:
 
         funcbody.extend(unpackings)
 
-        funcbody.append('return ({})'.format(self._exprrepr(expr)))
+        funcbody.extend(['{} = {}'.format(s, self._exprrepr(e)) for s, e in cses])
+
+        str_expr = self._exprrepr(expr)
+        if '\n' in str_expr:
+            str_expr = '({})'.format(str_expr)
+        funcbody.append('return {}'.format(str_expr))
 
         funclines = [funcsig]
         funclines.extend('    ' + line for line in funcbody)

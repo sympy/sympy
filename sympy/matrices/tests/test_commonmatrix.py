@@ -2,6 +2,7 @@ from sympy.assumptions import Q
 from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.function import Function
+from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.core.numbers import I, Integer, oo, pi, Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, symbols
@@ -11,7 +12,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import (ShapeError, NonSquareMatrixError,
     _MinimalMatrix, _CastableMatrix, MatrixShaping, MatrixProperties,
-    MatrixOperations, MatrixArithmetic, MatrixSpecial)
+    MatrixOperations, MatrixArithmetic, MatrixSpecial, MatrixKind)
 from sympy.matrices.matrices import MatrixCalculus
 from sympy.matrices import (Matrix, diag, eye,
     matrix_multiply_elementwise, ones, zeros, SparseMatrix, banded,
@@ -100,6 +101,16 @@ def test__MinimalMatrix():
     assert not (_MinimalMatrix([[1, 2], [3, 4], [5, 6]]) == x)
 
 
+def test_kind():
+    assert Matrix([[1, 2], [3, 4]]).kind == MatrixKind(NumberKind)
+    assert Matrix([[0, 0], [0, 0]]).kind == MatrixKind(NumberKind)
+    assert Matrix(0, 0, []).kind == MatrixKind(NumberKind)
+    assert Matrix([[x]]).kind == MatrixKind(NumberKind)
+    assert Matrix([[1, Matrix([[1]])]]).kind == MatrixKind(UndefinedKind)
+    assert SparseMatrix([[1]]).kind == MatrixKind(NumberKind)
+    assert SparseMatrix([[1, Matrix([[1]])]]).kind == MatrixKind(UndefinedKind)
+
+
 # ShapingOnlyMatrix tests
 def test_vec():
     m = ShapingOnlyMatrix(2, 2, [1, 3, 2, 4])
@@ -125,6 +136,10 @@ def test_tolist():
     m = ShapingOnlyMatrix(3, 4, flat_lst)
     assert m.tolist() == lst
 
+def test_todod():
+    m = ShapingOnlyMatrix(3, 2, [[S.One, 0], [0, S.Half], [x, 0]])
+    dict = {0: {0: S.One}, 1: {1: S.Half}, 2: {0: x}}
+    assert m.todod() == dict
 
 def test_row_col_del():
     e = ShapingOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
@@ -556,6 +571,10 @@ def test_simplify():
     M = OperationsOnlyMatrix([[eq]])
     assert M.simplify() == Matrix([[eq]])
     assert M.simplify(ratio=oo) == Matrix([[eq.simplify(ratio=oo)]])
+
+    # https://github.com/sympy/sympy/issues/19353
+    m = Matrix([[30, 2], [3, 4]])
+    assert (1/(m.trace())).simplify() == Rational(1, 34)
 
 
 def test_subs():

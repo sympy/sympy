@@ -300,11 +300,8 @@ class Symbol(AtomicExpr, Boolean):
     __xnew_cached_ = staticmethod(
         cacheit(__new_stage2__))   # symbols are always cached
 
-    def __getnewargs__(self):
-        return (self.name,)
-
-    def __getstate__(self):
-        return {'_assumptions': self._assumptions}
+    def __getnewargs_ex__(self):
+        return ((self.name,), self.assumptions0)
 
     def _hashable_content(self):
         # Note: user-specified assumptions not hashed, just derived ones
@@ -338,10 +335,6 @@ class Symbol(AtomicExpr, Boolean):
             return None
         else:
             return (re(self), im(self))
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.var(self.name)
 
     def is_constant(self, *wrt, **flags):
         if not wrt:
@@ -414,8 +407,8 @@ class Dummy(Symbol):
 
         return obj
 
-    def __getstate__(self):
-        return {'_assumptions': self._assumptions, 'dummy_index': self.dummy_index}
+    def __getnewargs_ex__(self):
+        return ((self.name, self.dummy_index), self.assumptions0)
 
     @cacheit
     def sort_key(self, order=None):
