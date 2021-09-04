@@ -1630,7 +1630,7 @@ class Expr(Basic, EvalfMixin):
                         if right:
                             np = n[:ii]
                         else:
-                            np = n[ii+len(nx):]
+                            np = n[ii + len(nx):]
                     else:
                         if right:
                             if n[:ii] != np:
@@ -1639,11 +1639,11 @@ class Expr(Basic, EvalfMixin):
                             if n[ii+len(nx):] != np:
                                 break
                     if right:
-                        hit.append(({},n[ii+len(nx):]))
+                        hit.append(({}, n[ii + len(nx):]))
                     else:
                         hit.append((r, n[:ii]))
             else:
-                if hit is not None:
+                if hit:
                     return Add(*[Mul(*(list(r) + n)) for r, n in hit])
 
             return S.Zero
