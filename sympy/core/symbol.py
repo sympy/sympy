@@ -336,10 +336,6 @@ class Symbol(AtomicExpr, Boolean):
         else:
             return (re(self), im(self))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.var(self.name)
-
     def is_constant(self, *wrt, **flags):
         if not wrt:
             return False

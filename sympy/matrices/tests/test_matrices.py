@@ -738,6 +738,11 @@ def test_creation():
     raises(ValueError, lambda: Matrix([ones(2), ones(0, 3)]))
     raises(ValueError, lambda: Matrix([ones(2), ones(3, 0)]))
 
+    # mix of Matrix and iterable
+    M = Matrix([[1, 2], [3, 4]])
+    M2 = Matrix([M, (5, 6)])
+    assert M2 == Matrix([[1, 2], [3, 4], [5, 6]])
+
 
 def test_irregular_block():
     assert Matrix.irregular(3, ones(2,1), ones(3,3)*2, ones(2,2)*3,

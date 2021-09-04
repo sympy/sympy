@@ -1,4 +1,4 @@
-from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
+from sympy import (Symbol, exp, Integer, Float, sin, cos, Poly, Lambda,
     Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
     Pow, Or, true, false, Abs, pi, Range, Xor)
 from sympy.abc import x, y
@@ -235,19 +235,6 @@ def test_sympify_factorial():
     raises(SympifyError, lambda: sympify("!"))
     raises(SympifyError, lambda: sympify("(!)"))
     raises(SympifyError, lambda: sympify("x!!!"))
-
-
-def test_sage():
-    # how to effectivelly test for the _sage_() method without having SAGE
-    # installed?
-    assert hasattr(x, "_sage_")
-    assert hasattr(Integer(3), "_sage_")
-    assert hasattr(sin(x), "_sage_")
-    assert hasattr(cos(x), "_sage_")
-    assert hasattr(x**2, "_sage_")
-    assert hasattr(x + y, "_sage_")
-    assert hasattr(exp(x), "_sage_")
-    assert hasattr(log(x), "_sage_")
 
 
 def test_issue_3595():

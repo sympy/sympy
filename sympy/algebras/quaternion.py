@@ -116,7 +116,11 @@ class Quaternion(Expr):
         c = y * s
         d = z * s
 
-        return cls(a, b, c, d).normalize()
+        # note that this quaternion is already normalized by construction:
+        # c^2 + (s*x)^2 + (s*y)^2 + (s*z)^2 = c^2 + s^2*(x^2 + y^2 + z^2) = c^2 + s^2 * 1 = c^2 + s^2 = 1
+        # so, what we return is a normalized quaternion
+
+        return cls(a, b, c, d)
 
     @classmethod
     def from_rotation_matrix(cls, M):

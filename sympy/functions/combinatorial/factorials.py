@@ -653,11 +653,6 @@ class RisingFactorial(CombinatorialFunction):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
                           self.args[1].is_nonnegative))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.rising_factorial(self.args[0]._sage_(),
-                                     self.args[1]._sage_())
-
 
 class FallingFactorial(CombinatorialFunction):
     r"""
@@ -811,11 +806,6 @@ class FallingFactorial(CombinatorialFunction):
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
                           self.args[1].is_nonnegative))
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.falling_factorial(self.args[0]._sage_(),
-                                      self.args[1]._sage_())
 
 
 rf = RisingFactorial
