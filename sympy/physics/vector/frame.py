@@ -1,6 +1,6 @@
 from sympy.core.backend import (diff, expand, sin, cos, sympify, eye, symbols,
                                 ImmutableMatrix as Matrix, MatrixBase)
-from sympy import (trigsimp, solve, Symbol, Dummy)
+from sympy import (trigsimp, solve, Symbol, Dummy, sympify)
 from sympy.physics.vector.vector import Vector, _check_vector
 from sympy.utilities.misc import translate
 
@@ -878,16 +878,16 @@ class ReferenceFrame:
 
         try:
             from sympy.polys.polyerrors import CoercionFailed
-            from sympy.physics.vector.functions import kinematic_equations
+            from sympy.physics.vector.functions import kinematic_equations, dynamicsymbols
             q1, q2, q3 = amounts
-            u1, u2, u3 = symbols('u1, u2, u3', cls=Dummy)
+            u1, u2, u3 = dynamicsymbols('u1, u2, u3')
             templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
                                            'body', rot_order)
             templist = [expand(i) for i in templist]
-            td = solve(templist, [u1, u2, u3], dict = True)
-            u1 = expand(td[0][u1])
-            u2 = expand(td[0][u2])
-            u3 = expand(td[0][u3])
+            td = solve(templist, [u1, u2, u3])
+            u1 = expand(td[sympify(u1)])
+            u2 = expand(td[sympify(u2)])
+            u3 = expand(td[sympify(u3)])
             wvec = u1 * self.x + u2 * self.y + u3 * self.z
         except (CoercionFailed, AssertionError):
             wvec = self._w_diff_dcm(parent)
@@ -1000,16 +1000,16 @@ class ReferenceFrame:
 
         try:
             from sympy.polys.polyerrors import CoercionFailed
-            from sympy.physics.vector.functions import kinematic_equations
+            from sympy.physics.vector.functions import kinematic_equations, dynamicsymbols
             q1, q2, q3 = amounts
-            u1, u2, u3 = symbols('u1, u2, u3', cls=Dummy)
+            u1, u2, u3 = dynamicsymbols('u1, u2, u3')
             templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
                                            'space', rot_order)
             templist = [expand(i) for i in templist]
-            td = solve(templist, [u1, u2, u3], dict = True)
-            u1 = expand(td[0][u1])
-            u2 = expand(td[0][u2])
-            u3 = expand(td[0][u3])
+            td = solve(templist, [u1, u2, u3])
+            u1 = expand(td[sympify(u1)])
+            u2 = expand(td[sympify(u2)])
+            u3 = expand(td[sympify(u3)])
             wvec = u1 * self.x + u2 * self.y + u3 * self.z
         except (CoercionFailed, AssertionError):
             wvec = self._w_diff_dcm(parent)
