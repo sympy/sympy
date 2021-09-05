@@ -1559,6 +1559,39 @@ class Expr(Basic, EvalfMixin):
                 i = len(l) - (i + n)
             return i
 
+        def special_cases(co, nx, right):
+            if all(n == co[0][1] for r, n in co):
+                ii = find(co[0][1], nx, right)
+                if ii is not None:
+                    if right:
+                        return Mul(*co[0][1][ii + len(nx):])
+                    else:
+                        return Mul(Add(*[Mul(*r) for r, c in co]), Mul(*co[0][1][:ii]))
+            beg = reduce(incommon, (n[1] for n in co))
+            if beg:
+                ii = find(beg, nx, right)
+                if ii is not None:
+                    if right:
+                        m = ii + len(nx)
+                        return Add(*[Mul(*(list(r) + n[m:])) for r, n in co])
+                    else:
+                        gcdc = co[0][0]
+                        for i in range(1, len(co)):
+                            gcdc = gcdc.intersection(co[i][0])
+                            if not gcdc:
+                                break
+                        return Mul(*(list(gcdc) + beg[:ii]))
+            end = list(reversed(
+                reduce(incommon, (list(reversed(n[1])) for n in co))))
+            if end:
+                ii = find(end, nx, right)
+                if ii is not None:
+                    if right:
+                        return Mul(*end[ii + len(nx):])
+                    else:
+                        return Add(*[Mul(*(list(r) + n[:-len(end) + ii])) for r, n in co])
+            return None
+
         co = []
         args = Add.make_args(self)
         self_c = self.is_commutative
@@ -1590,61 +1623,32 @@ class Expr(Basic, EvalfMixin):
             # now check the non-comm parts
             if not co:
                 return S.Zero
-            if all(n == co[0][1] for r, n in co):
-                ii = find(co[0][1], nx, right)
-                if ii is not None:
-                    if not right:
-                        return Mul(Add(*[Mul(*r) for r, c in co]), Mul(*co[0][1][:ii]))
-                    else:
-                        return Mul(*co[0][1][ii + len(nx):])
-            beg = reduce(incommon, (n[1] for n in co))
-            if beg:
-                ii = find(beg, nx, right)
-                if ii is not None:
-                    if not right:
-                        gcdc = co[0][0]
-                        for i in range(1, len(co)):
-                            gcdc = gcdc.intersection(co[i][0])
-                            if not gcdc:
-                                break
-                        return Mul(*(list(gcdc) + beg[:ii]))
-                    else:
-                        m = ii + len(nx)
-                        return Add(*[Mul(*(list(r) + n[m:])) for r, n in co])
-            end = list(reversed(
-                reduce(incommon, (list(reversed(n[1])) for n in co))))
-            if end:
-                ii = find(end, nx, right)
-                if ii is not None:
-                    if not right:
-                        return Add(*[Mul(*(list(r) + n[:-len(end) + ii])) for r, n in co])
-                    else:
-                        return Mul(*end[ii + len(nx):])
-            # look for a single hit but allow a sum of terms if each have the
-            # same remaining expression after removing coefficient
-            hit = []
+            hit = special_cases(co, nx, right)
+            if hit is None:
+                # Slow for large expressions so only use if necessary
+                co = [t for t in co if find(t[1], nx, right) is not None]
+                if not co:
+                    return S.Zero
+                hit = special_cases(co, nx, right)
+            else:
+                return hit
+            if hit is not None:
+                return hit
+            # look for single match
             for i, (r, n) in enumerate(co):
                 ii = find(n, nx, right)
                 if ii is not None:
-                    if not hit:
-                        if right:
-                            np = n[:ii]
-                        else:
-                            np = n[ii + len(nx):]
+                    if hit:
+                        break
                     else:
-                        if right:
-                            if n[:ii] != np:
-                                break
-                        else:
-                            if n[ii+len(nx):] != np:
-                                break
-                    if right:
-                        hit.append(({}, n[ii + len(nx):]))
-                    else:
-                        hit.append((r, n[:ii]))
+                        hit = ii, r, n
             else:
                 if hit:
-                    return Add(*[Mul(*(list(r) + n)) for r, n in hit])
+                    ii, r, n = hit
+                    if right:
+                        return Mul(*n[ii + len(nx):])
+                    else:
+                        return Mul(*(list(r) + n[:ii]))
 
             return S.Zero
 
