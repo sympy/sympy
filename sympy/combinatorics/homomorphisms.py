@@ -268,7 +268,7 @@ class GroupHomomorphism:
                     P = PermutationGroup(gens)
         return P
 
-def homomorphism(domain, codomain, gens, images=[], check=True):
+def homomorphism(domain, codomain, gens, images=(), check=True):
     '''
     Create (if possible) a group homomorphism from the group ``domain``
     to the group ``codomain`` defined by the images of the domain's

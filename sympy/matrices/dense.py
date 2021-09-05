@@ -502,7 +502,7 @@ def GramSchmidt(vlist, orthonormal=False):
     )
 
 
-def hessian(f, varlist, constraints=[]):
+def hessian(f, varlist, constraints=()):
     """Compute Hessian matrix for a function f wrt parameters in varlist
     which may be given as a sequence or a row/column vector. A list of
     constraints may optionally be given.

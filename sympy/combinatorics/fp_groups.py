@@ -17,12 +17,12 @@ from itertools import product
 
 
 @public
-def fp_group(fr_grp, relators=[]):
+def fp_group(fr_grp, relators=()):
     _fp_group = FpGroup(fr_grp, relators)
     return (_fp_group,) + tuple(_fp_group._generators)
 
 @public
-def xfp_group(fr_grp, relators=[]):
+def xfp_group(fr_grp, relators=()):
     _fp_group = FpGroup(fr_grp, relators)
     return (_fp_group, _fp_group._generators)
 
@@ -274,7 +274,7 @@ class FpGroup(DefaultPrinting):
             return None
 
 
-    def _finite_index_subgroup(self, s=[]):
+    def _finite_index_subgroup(self, s=None):
         '''
         Find the elements of `self` that generate a finite index subgroup
         and, if found, return the list of elements and the coset table of `self` by
@@ -718,7 +718,7 @@ class FpSubgroup(DefaultPrinting):
 #                           LOW INDEX SUBGROUPS                               #
 ###############################################################################
 
-def low_index_subgroups(G, N, Y=[]):
+def low_index_subgroups(G, N, Y=()):
     """
     Implements the Low Index Subgroups algorithm, i.e find all subgroups of
     ``G`` upto a given index ``N``. This implements the method described in
@@ -826,7 +826,7 @@ def try_descendant(S, C, R1_c_list, R2, N, alpha, x, beta, Y):
         descendant_subgroups(S, D, R1_c_list, x, R2, N, Y)
 
 
-def first_in_class(C, Y=[]):
+def first_in_class(C, Y=()):
     """
     Checks whether the subgroup ``H=G1`` corresponding to the Coset Table
     could possibly be the canonical representative of its conjugacy class.
