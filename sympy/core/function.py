@@ -1011,13 +1011,17 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
             nargs = FiniteSet(*nargs)
         cls.nargs = nargs
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict=None, old=False):
         if not isinstance(expr, (AppliedUndef, Function)):
             return None
         if len(expr.args) not in self.nargs:
             return None
 
-        repl_dict = repl_dict.copy()
+        if repl_dict is None:
+            repl_dict = dict()
+        else:
+            repl_dict = repl_dict.copy()
+
         repl_dict[self] = expr
         return repl_dict
 

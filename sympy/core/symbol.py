@@ -533,12 +533,15 @@ class Wild(Symbol):
         return super()._hashable_content() + (self.exclude, self.properties)
 
     # TODO add check against another Wild
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict=None, old=False):
         if any(expr.has(x) for x in self.exclude):
             return None
         if any(not f(expr) for f in self.properties):
             return None
-        repl_dict = repl_dict.copy()
+        if repl_dict is None:
+            repl_dict = dict()
+        else:
+            repl_dict = repl_dict.copy()
         repl_dict[self] = expr
         return repl_dict
 

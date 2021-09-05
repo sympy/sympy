@@ -3616,7 +3616,7 @@ class Expr(Basic, EvalfMixin):
             use_hint = hints[hint]
             if use_hint:
                 hint = '_eval_expand_' + hint
-                expr = Expr._expand_hint(expr, hint, deep=deep, **hints)[0]
+                expr, hit = Expr._expand_hint(expr, hint, deep=deep, **hints)
 
         while True:
             was = expr
@@ -3662,7 +3662,7 @@ class Expr(Basic, EvalfMixin):
         from sympy.integrals import integrate
         return integrate(self, *args, **kwargs)
 
-    def nsimplify(self, constants=[], tolerance=None, full=False):
+    def nsimplify(self, constants=(), tolerance=None, full=False):
         """See the nsimplify function in sympy.simplify"""
         from sympy.simplify import nsimplify
         return nsimplify(self, constants, tolerance, full)
@@ -4039,11 +4039,14 @@ def unchanged(func, *args):
 
 
 class ExprBuilder:
-    def __init__(self, op, args=[], validator=None, check=True):
+    def __init__(self, op, args=None, validator=None, check=True):
         if not hasattr(op, "__call__"):
             raise TypeError("op {} needs to be callable".format(op))
         self.op = op
-        self.args = args
+        if args is None:
+            self.args = []
+        else:
+            self.args = args
         self.validator = validator
         if (validator is not None) and check:
             self.validate()

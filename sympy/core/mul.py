@@ -1026,9 +1026,8 @@ class Mul(Expr, AssocOp):
             return terms[0].matches(newexpr, repl_dict)
         return
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict=None, old=False):
         expr = sympify(expr)
-        repl_dict = repl_dict.copy()
         if self.is_commutative and expr.is_commutative:
             return self._matches_commutative(expr, repl_dict, old)
         elif self.is_commutative is not expr.is_commutative:
@@ -1047,7 +1046,7 @@ class Mul(Expr, AssocOp):
 
         # If the commutative arguments didn't match and aren't equal, then
         # then the expression as a whole doesn't match
-        if repl_dict is None and c1 != c2:
+        if not repl_dict and c1 != c2:
             return None
 
         # Now match the non-commutative arguments, expanding powers to
@@ -1070,14 +1069,18 @@ class Mul(Expr, AssocOp):
         return new_args
 
     @staticmethod
-    def _matches_noncomm(nodes, targets, repl_dict={}):
+    def _matches_noncomm(nodes, targets, repl_dict=None):
         """Non-commutative multiplication matcher.
 
         `nodes` is a list of symbols within the matcher multiplication
         expression, while `targets` is a list of arguments in the
         multiplication expression being matched against.
         """
-        repl_dict = repl_dict.copy()
+        if repl_dict is None:
+            repl_dict = dict()
+        else:
+            repl_dict = repl_dict.copy()
+
         # List of possible future states to be considered
         agenda = []
         # The current matching state, storing index in nodes and targets
@@ -1085,7 +1088,6 @@ class Mul(Expr, AssocOp):
         node_ind, target_ind = state
         # Mapping between wildcard indices and the index ranges they match
         wildcard_dict = {}
-        repl_dict = repl_dict.copy()
 
         while target_ind < len(targets) and node_ind < len(nodes):
             node = nodes[node_ind]
@@ -1113,7 +1115,7 @@ class Mul(Expr, AssocOp):
     def _matches_add_wildcard(dictionary, state):
         node_ind, target_ind = state
         if node_ind in dictionary:
-            begin = dictionary[node_ind][0]
+            begin, end = dictionary[node_ind]
             dictionary[node_ind] = (begin, target_ind)
         else:
             dictionary[node_ind] = (target_ind, target_ind)

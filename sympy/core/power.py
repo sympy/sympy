@@ -1535,9 +1535,10 @@ class Pow(Expr):
                 return self.func(n, exp), d
         return self.func(n, exp), self.func(d, exp)
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict=None, old=False):
         expr = _sympify(expr)
-        repl_dict = repl_dict.copy()
+        if repl_dict is None:
+            repl_dict = dict()
 
         # special case, pattern = 1 and expr.exp can match to 0
         if expr is S.One:
