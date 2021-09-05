@@ -25,8 +25,6 @@ def test_Normal():
     assert density(m)(1, 2) == 1/(2*pi)
     assert m.pspace.distribution.set == ProductSet(S.Reals, S.Reals)
     raises (ValueError, lambda:m[2])
-    raises (ValueError,\
-        lambda: Normal('M',[1, 2], [[0, 0], [0, 1]]))
     n = Normal('B', [1, 2, 3], [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
     p = Normal('C',  Matrix([1, 2]), Matrix([[1, 0], [0, 1]]))
     assert density(m)(x, y) == density(p)(x, y)
@@ -352,5 +350,25 @@ def test_sample_seed():
                 s2 = sample(X, size=10, library=lib, seed=1)
                 assert all(s0 == s1)
                 assert all(s1 != s2)
+        except NotImplementedError:
+            continue
+
+
+def test_issue_21057():
+    m = Normal("x", [0, 0], [[0, 0], [0, 0]])
+    n = MultivariateNormal("x", [0, 0], [[0, 0], [0, 0]])
+    p = Normal("x", [0, 0], [[0, 0], [0, 1]])
+    assert m == n
+    libraries = ['scipy', 'numpy', 'pymc3']
+    for library in libraries:
+        try:
+            imported_lib = import_module(library)
+            if imported_lib:
+                s1 = sample(m, size=8)
+                s2 = sample(n, size=8)
+                s3 = sample(p, size=8)
+                assert tuple(s1.flatten()) == tuple(s2.flatten())
+                for s in s3:
+                    assert tuple(s.flatten()) in p.pspace.distribution.set
         except NotImplementedError:
             continue

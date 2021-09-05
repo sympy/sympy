@@ -5,12 +5,13 @@ from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
     AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice,
-    Q)
+    Q,)
+from sympy.combinatorics.partitions import Partition
 from sympy.core import Expr, Mul
 from sympy.core.parameters import _exp_is_pow
 from sympy.external import import_module
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, \
-    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel
+    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
 from sympy.physics.units import second, joule
 from sympy.polys import (Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ,
     ZZ_I, QQ_I, lex, grlex)
@@ -722,9 +723,27 @@ def test_Feedback_str():
     tf2 = TransferFunction(x - y, x + y, y)
     tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
     assert str(Feedback(tf1*tf2, tf3)) == \
-        "Feedback(Series(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y)), TransferFunction(t*x**2 - t**w*x + w, t - y, y))"
-    assert str(Feedback(tf1, TransferFunction(1, 1, y))) == \
-        "Feedback(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(1, 1, y))"
+        "Feedback(Series(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y)), " \
+        "TransferFunction(t*x**2 - t**w*x + w, t - y, y), -1)"
+    assert str(Feedback(tf1, TransferFunction(1, 1, y), 1)) == \
+        "Feedback(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(1, 1, y), 1)"
+
+
+def test_MIMOFeedback_str():
+    tf1 = TransferFunction(x**2 - y**3, y - z, x)
+    tf2 = TransferFunction(y - x, z + y, x)
+    tfm_1 = TransferFunctionMatrix([[tf2, tf1], [tf1, tf2]])
+    tfm_2 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+    assert (str(MIMOFeedback(tfm_1, tfm_2)) \
+            == "MIMOFeedback(TransferFunctionMatrix(((TransferFunction(-x + y, y + z, x), TransferFunction(x**2 - y**3, y - z, x))," \
+            " (TransferFunction(x**2 - y**3, y - z, x), TransferFunction(-x + y, y + z, x)))), " \
+            "TransferFunctionMatrix(((TransferFunction(x**2 - y**3, y - z, x), " \
+            "TransferFunction(-x + y, y + z, x)), (TransferFunction(-x + y, y + z, x), TransferFunction(x**2 - y**3, y - z, x)))), -1)")
+    assert (str(MIMOFeedback(tfm_1, tfm_2, 1)) \
+            == "MIMOFeedback(TransferFunctionMatrix(((TransferFunction(-x + y, y + z, x), TransferFunction(x**2 - y**3, y - z, x)), " \
+            "(TransferFunction(x**2 - y**3, y - z, x), TransferFunction(-x + y, y + z, x)))), " \
+            "TransferFunctionMatrix(((TransferFunction(x**2 - y**3, y - z, x), TransferFunction(-x + y, y + z, x)), "\
+            "(TransferFunction(-x + y, y + z, x), TransferFunction(x**2 - y**3, y - z, x)))), 1)")
 
 
 def test_TransferFunctionMatrix_str():
@@ -874,12 +893,18 @@ def test_RandomDomain():
 
 def test_FiniteSet():
     assert str(FiniteSet(*range(1, 51))) == (
-        'FiniteSet(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,'
+        '{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,'
         ' 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,'
-        ' 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50)'
+        ' 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50}'
     )
-    assert str(FiniteSet(*range(1, 6))) == 'FiniteSet(1, 2, 3, 4, 5)'
+    assert str(FiniteSet(*range(1, 6))) == '{1, 2, 3, 4, 5}'
+    assert str(FiniteSet(*[x*y, x**2])) == '{x**2, x*y}'
+    assert str(FiniteSet(FiniteSet(FiniteSet(x, y), 5), FiniteSet(x,y), 5)
+               ) == 'FiniteSet(5, FiniteSet(5, {x, y}), {x, y})'
 
+
+def test_Partition():
+    assert str(Partition(FiniteSet(x, y), {z})) == 'Partition({z}, {x, y})'
 
 def test_UniversalSet():
     assert str(S.UniversalSet) == 'UniversalSet'
@@ -1046,6 +1071,11 @@ def test_str_special_matrices():
 
 def test_issue_14567():
     assert factorial(Sum(-1, (x, 0, 0))) + y  # doesn't raise an error
+
+
+def test_issue_21823():
+    assert str(Partition([1, 2])) == 'Partition({1, 2})'
+    assert str(Partition({1, 2})) == 'Partition({1, 2})'
 
 
 def test_issue_21119_21460():

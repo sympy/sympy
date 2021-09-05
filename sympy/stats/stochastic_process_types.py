@@ -96,7 +96,7 @@ def _state_converter(itr: tSequence) -> tUnion[Tuple, Range]:
         # try to convert to tuple
         try:
             itr = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
-        except ValueError:
+        except (TypeError, ValueError):
             pass
 
     else:
@@ -617,7 +617,7 @@ class MarkovProcess(StochasticProcess):
                         _, gstate = (gc.lhs.key, gc.rhs) if isinstance(gc.lhs, RandomIndexedSymbol) \
                                     else (gc.rhs.key, gc.lhs)
 
-            if any((k not in self.index_set) for k in (rv.key, min_key_rv.key)):
+            if not all(k in self.index_set for k in (rv.key, min_key_rv.key)):
                 raise IndexError("The timestamps of the process are not in it's index set.")
             states = Intersection(states, state_index) if not isinstance(self.number_of_states, Symbol) else states
             for state in Union(states, FiniteSet(gstate)):
@@ -816,7 +816,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> YS = DiscreteMarkovChain("Y")
 
     >>> Y.state_space
-    FiniteSet(0, 1, 2)
+    {0, 1, 2}
     >>> Y.transition_probabilities
     Matrix([
     [0.5, 0.2, 0.3],
@@ -1489,7 +1489,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     >>> C.limiting_distribution()
     Matrix([[1/2, 1/2]])
     >>> C.state_space
-    FiniteSet(0, 1)
+    {0, 1}
     >>> C.generator_matrix
     Matrix([
     [-1,  1],
@@ -1613,7 +1613,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     >>> from sympy import Eq, Gt
     >>> B = BernoulliProcess("B", p=0.7, success=1, failure=0)
     >>> B.state_space
-    FiniteSet(0, 1)
+    {0, 1}
     >>> (B.p).round(2)
     0.70
     >>> B.success
@@ -1839,7 +1839,7 @@ class _SubstituteRV:
             if len(condrv) == 1 and condrv[0] == new_givencondition:
                 return BernoulliDistribution(self._probability(new_condition), 0, 1)
 
-            if any([dependent(rv, new_givencondition) for rv in condrv]):
+            if any(dependent(rv, new_givencondition) for rv in condrv):
                 return Probability(new_condition, new_givencondition)
             else:
                 return self._probability(new_condition)

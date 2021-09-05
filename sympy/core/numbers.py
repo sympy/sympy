@@ -1155,13 +1155,20 @@ class Float(Number):
         elif isinstance(num, tuple) and len(num) in (3, 4):
             if type(num[1]) is str:
                 # it's a hexadecimal (coming from a pickled object)
-                # assume that it is in standard form
                 num = list(num)
                 # If we're loading an object pickled in Python 2 into
                 # Python 3, we may need to strip a tailing 'L' because
                 # of a shim for int on Python 3, see issue #13470.
                 if num[1].endswith('L'):
                     num[1] = num[1][:-1]
+                # Strip leading '0x' - gmpy2 only documents such inputs
+                # with base prefix as valid when the 2nd argument (base) is 0.
+                # When mpmath uses Sage as the backend, however, it
+                # ends up including '0x' when preparing the picklable tuple.
+                # See issue #19690.
+                if num[1].startswith('0x'):
+                    num[1] = num[1][2:]
+                # Now we can assume that it is in standard form
                 num[1] = MPZ(num[1], 16)
                 _mpf_ = tuple(num)
             else:
@@ -1478,10 +1485,6 @@ class Float(Number):
     def epsilon_eq(self, other, epsilon="1e-15"):
         return abs(self - other) < Float(epsilon)
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.RealNumber(str(self))
-
     def __format__(self, format_spec):
         return format(decimal.Decimal(str(self)), format_spec)
 
@@ -1572,6 +1575,16 @@ class Rational(Number):
     >>> r.p/r.q
     0.75
 
+    If an unevaluated Rational is desired, ``gcd=1`` can be passed and
+    this will keep common divisors of the numerator and denominator
+    from being eliminated. It is not possible, however, to leave a
+    negative value in the denominator.
+
+    >>> Rational(2, 4, gcd=1)
+    2/4
+    >>> Rational(2, -4, gcd=1).q
+    4
+
     See Also
     ========
     sympy.core.sympify.sympify, sympy.simplify.simplify.nsimplify
@@ -1624,18 +1637,22 @@ class Rational(Number):
 
             q = 1
             gcd = 1
-        else:
-            p = Rational(p)
-            q = Rational(q)
 
-        if isinstance(q, Rational):
-            p *= q.q
-            q = q.p
-        if isinstance(p, Rational):
+        if not isinstance(p, SYMPY_INTS):
+            p = Rational(p)
             q *= p.q
             p = p.p
+        else:
+            p = int(p)
 
-        # p and q are now integers
+        if not isinstance(q, SYMPY_INTS):
+            q = Rational(q)
+            p *= q.q
+            q = q.p
+        else:
+            q = int(q)
+
+        # p and q are now ints
         if q == 0:
             if p == 0:
                 if _errdict["divide"]:
@@ -1816,13 +1833,20 @@ class Rational(Number):
                 # (4/3)**2 -> 4**2 / 3**2
                 return Rational(self.p**expt.p, self.q**expt.p, 1)
             if isinstance(expt, Rational):
-                if self.p != 1:
-                    # (4/3)**(5/6) -> 4**(5/6)*3**(-5/6)
-                    return Integer(self.p)**expt*Integer(self.q)**(-expt)
-                # as the above caught negative self.p, now self is positive
-                return Integer(self.q)**Rational(
-                expt.p*(expt.q - 1), expt.q) / \
-                    Integer(self.q)**Integer(expt.p)
+                intpart = expt.p // expt.q
+                if intpart:
+                    intpart += 1
+                    remfracpart = intpart*expt.q - expt.p
+                    ratfracpart = Rational(remfracpart, expt.q)
+                    if self.p != 1:
+                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational(1, self.q**intpart, 1)
+                    return Integer(self.q)**ratfracpart*Rational(1, self.q**intpart, 1)
+                else:
+                    remfracpart = expt.q - expt.p
+                    ratfracpart = Rational(remfracpart, expt.q)
+                    if self.p != 1:
+                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational(1, self.q, 1)
+                    return Integer(self.q)**ratfracpart*Rational(1, self.q, 1)
 
         if self.is_extended_negative and expt.is_even:
             return (-self)**expt
@@ -2001,10 +2025,6 @@ class Rational(Number):
 
     def as_numer_denom(self):
         return Integer(self.p), Integer(self.q)
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.Integer(self.p)/sage.Integer(self.q)
 
     def as_content_primitive(self, radical=False, clear=True):
         """Return the tuple (R, self/R) where R is the positive Rational
@@ -2318,7 +2338,7 @@ class Integer(Rational):
             # cases -1, 0, 1 are done in their respective classes
             return S.Infinity + S.ImaginaryUnit*S.Infinity
         if expt is S.NegativeInfinity:
-            return Rational(1, self)**S.Infinity
+            return Rational(1, self, 1)**S.Infinity
         if not isinstance(expt, Number):
             # simplify when expt is even
             # (-2)**k --> 2**k
@@ -2336,9 +2356,9 @@ class Integer(Rational):
             # invert base and change sign on exponent
             ne = -expt
             if self.is_negative:
-                    return S.NegativeOne**expt*Rational(1, -self)**ne
+                    return S.NegativeOne**expt*Rational(1, -self, 1)**ne
             else:
-                return Rational(1, self.p)**ne
+                return Rational(1, self.p, 1)**ne
         # see if base is a perfect root, sqrt(4) --> 2
         x, xexact = integer_nthroot(abs(self.p), expt.q)
         if xexact:
@@ -2376,7 +2396,7 @@ class Integer(Rational):
                 # (2**2)**(1/10) -> 2**(1/5)
                 g = igcd(div_m, expt.q)
                 if g != 1:
-                    out_rad *= Pow(prime, Rational(div_m//g, expt.q//g))
+                    out_rad *= Pow(prime, Rational(div_m//g, expt.q//g, 1))
                 else:
                     sqr_dict[prime] = div_m
         # identify gcd of remaining powers
@@ -3023,10 +3043,6 @@ class Infinity(Number, metaclass=Singleton):
     def _as_mpf_val(self, prec):
         return mlib.finf
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.oo
-
     def __hash__(self):
         return super().__hash__()
 
@@ -3186,10 +3202,6 @@ class NegativeInfinity(Number, metaclass=Singleton):
     def _as_mpf_val(self, prec):
         return mlib.fninf
 
-    def _sage_(self):
-        import sage.all as sage
-        return -(sage.oo)
-
     def __hash__(self):
         return super().__hash__()
 
@@ -3321,10 +3333,6 @@ class NaN(Number, metaclass=Singleton):
     def _as_mpf_val(self, prec):
         return _mpf_nan
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.NaN
-
     def __hash__(self):
         return super().__hash__()
 
@@ -3423,10 +3431,6 @@ class ComplexInfinity(AtomicExpr, metaclass=Singleton):
                     return S.ComplexInfinity
                 else:
                     return S.Zero
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.UnsignedInfinityRing.gen()
 
 
 zoo = S.ComplexInfinity
@@ -3643,9 +3647,6 @@ class Exp1(NumberSymbol, metaclass=Singleton):
         I = S.ImaginaryUnit
         return cos(I) + I*cos(I + S.Pi/2)
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.e
 E = S.Exp1
 
 
@@ -3712,11 +3713,8 @@ class Pi(NumberSymbol, metaclass=Singleton):
         if issubclass(number_cls, Integer):
             return (Integer(3), Integer(4))
         elif issubclass(number_cls, Rational):
-            return (Rational(223, 71), Rational(22, 7))
+            return (Rational(223, 71, 1), Rational(22, 7, 1))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.pi
 pi = S.Pi
 
 
@@ -3779,10 +3777,6 @@ class GoldenRatio(NumberSymbol, metaclass=Singleton):
             return (S.One, Rational(2))
         elif issubclass(number_cls, Rational):
             pass
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.golden_ratio
 
     _eval_rewrite_as_sqrt = _eval_expand_func
 
@@ -3913,11 +3907,7 @@ class EulerGamma(NumberSymbol, metaclass=Singleton):
         if issubclass(number_cls, Integer):
             return (S.Zero, S.One)
         elif issubclass(number_cls, Rational):
-            return (S.Half, Rational(3, 5))
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.euler_gamma
+            return (S.Half, Rational(3, 5, 1))
 
 
 class Catalan(NumberSymbol, metaclass=Singleton):
@@ -3969,7 +3959,7 @@ class Catalan(NumberSymbol, metaclass=Singleton):
         if issubclass(number_cls, Integer):
             return (S.Zero, S.One)
         elif issubclass(number_cls, Rational):
-            return (Rational(9, 10), S.One)
+            return (Rational(9, 10, 1), S.One)
 
     def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None):
         from sympy import Sum, Dummy
@@ -3977,10 +3967,6 @@ class Catalan(NumberSymbol, metaclass=Singleton):
             return self
         k = Dummy('k', integer=True, nonnegative=True)
         return Sum((-1)**k / (2*k+1)**2, (k, 0, S.Infinity))
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.catalan
 
 
 class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
@@ -4061,10 +4047,6 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
 
     def as_base_exp(self):
         return S.NegativeOne, S.Half
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.I
 
     @property
     def _mpc_(self):

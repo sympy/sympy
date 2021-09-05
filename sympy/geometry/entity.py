@@ -171,7 +171,7 @@ class GeometryEntity(Basic):
             # will fall back to the next representation
             return None
 
-        if any([not x.is_number or not x.is_finite for x in bounds]):
+        if not all(x.is_number and x.is_finite for x in bounds):
             return None
 
         svg_top = '''<svg xmlns="http://www.w3.org/2000/svg"

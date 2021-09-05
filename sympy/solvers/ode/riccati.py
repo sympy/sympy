@@ -315,12 +315,12 @@ def match_riccati(eq, f, x):
         funcs = [b0, b1, b2]
 
         # Check if coefficients are not symbols and floats
-        if any([len(x.atoms(Symbol)) > 1 or len(x.atoms(Float)) for x in [b0, b1, b2]]):
+        if any(len(x.atoms(Symbol)) > 1 or len(x.atoms(Float)) for x in funcs):
             return False, []
 
         # If b_0(x) contains f(x), it is not a Riccati ODE
-        if len(b0.atoms(f)) or not all([b2 != 0, b0.is_rational_function(x), \
-            b1.is_rational_function(x), b2.is_rational_function(x)]):
+        if len(b0.atoms(f)) or not all((b2 != 0, b0.is_rational_function(x),
+            b1.is_rational_function(x), b2.is_rational_function(x))):
             return False, []
         return True, funcs
     return False, []
@@ -347,7 +347,7 @@ def check_necessary_conds(val_inf, muls):
     greater than 1.
     """
     return (val_inf >= 2 or (val_inf <= 0 and val_inf%2 == 0)) and \
-        all([mul == 1 or (mul%2 == 0 and mul >= 2) for mul in muls])
+        all(mul == 1 or (mul%2 == 0 and mul >= 2) for mul in muls)
 
 
 def inverse_transform_poly(num, den, x):

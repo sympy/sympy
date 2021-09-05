@@ -51,7 +51,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import (cartes, connected_components,
-    generate_bell, uniq, sift)
+    generate_bell, uniq)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot
@@ -1083,7 +1083,7 @@ def solve(f, *symbols, **flags):
     def _has_piecewise(e):
         if e.is_Piecewise:
             return e.has(*symbols)
-        return any([_has_piecewise(a) for a in e.args])
+        return any(_has_piecewise(a) for a in e.args)
     for i, fi in enumerate(f):
         if _has_piecewise(fi):
             f[i] = piecewise_fold(fi)
@@ -1339,7 +1339,7 @@ def _solve(f, *symbols, **flags):
                 if flags.get('simplify', True):
                     v = simplify(v)
                 vfree = v.free_symbols
-                if got_s and any([ss in vfree for ss in got_s]):
+                if got_s and any(ss in vfree for ss in got_s):
                     # sol depends on previously solved symbols: discard it
                     continue
                 got_s.add(xi)
@@ -1352,7 +1352,7 @@ def _solve(f, *symbols, **flags):
             try:
                 soln = _solve(f, s, **flags)
                 for sol in soln:
-                    if got_s and any([ss in sol.free_symbols for ss in got_s]):
+                    if got_s and any(ss in sol.free_symbols for ss in got_s):
                         # sol depends on previously solved symbols: discard it
                         continue
                     got_s.add(s)
@@ -1389,8 +1389,8 @@ def _solve(f, *symbols, **flags):
             # in any factor to zero
             dens = flags.get('_denominators', _simple_dens(f, symbols))
             result = [s for s in result if
-                all(not checksol(den, {symbol: s}, **flags) for den in
-                dens)]
+                not any(checksol(den, {symbol: s}, **flags) for den in
+                        dens)]
         # set flags for quick exit at end; solutions for each
         # factor were already checked and simplified
         check = False
@@ -1724,8 +1724,8 @@ def _solve(f, *symbols, **flags):
         # if in doubt, keep it
         dens = _simple_dens(f, symbols)
         result = [s for s in result if
-                  all(not checksol(d, {symbol: s}, **flags)
-                    for d in dens)]
+                  not any(checksol(d, {symbol: s}, **flags)
+                          for d in dens)]
     if check:
         # keep only results if the check is not False
         result = [r for r in result if
@@ -1758,17 +1758,6 @@ def _solve_system(exprs, symbols, **flags):
                 for e in subexpr:
                     subsyms |= exprsyms[e]
                 subsyms = list(sorted(subsyms, key = lambda x: sym_indices[x]))
-                # use canonical subset to solve these equations
-                # since there may be redundant equations in the set:
-                # take the first equation of several that may have the
-                # same sub-maximal free symbols of interest; the
-                # other equations that weren't used should be checked
-                # to see that they did not fail -- does the solver
-                # take care of that?
-                choices = sift(subexpr, lambda x: tuple(ordered(exprsyms[x])))
-                subexpr = choices.pop(tuple(ordered(subsyms)), [])
-                for k in choices:
-                    subexpr.append(next(ordered(choices[k])))
                 flags['_split'] = False  # skip split step
                 subsol = _solve_system(subexpr, subsyms, **flags)
                 if not isinstance(subsol, list):
@@ -1852,8 +1841,8 @@ def _solve_system(exprs, symbols, **flags):
                             for r in res:
                                 skip = False
                                 for r1 in r:
-                                    if got_s and any([ss in r1.free_symbols
-                                           for ss in got_s]):
+                                    if got_s and any(ss in r1.free_symbols
+                                           for ss in got_s):
                                         # sol depends on previously
                                         # solved symbols: discard it
                                         skip = True
@@ -1895,9 +1884,22 @@ def _solve_system(exprs, symbols, **flags):
         # be solved.
         def _ok_syms(e, sort=False):
             rv = (e.free_symbols - solved_syms) & legal
+
+            # Solve first for symbols that have lower degree in the equation.
+            # Ideally we want to solve firstly for symbols that appear linearly
+            # with rational coefficients e.g. if e = x*y + z then we should
+            # solve for z first.
+            def key(sym):
+                ep = e.as_poly(sym)
+                if ep is None:
+                    complexity = (S.Infinity, S.Infinity, S.Infinity)
+                else:
+                    coeff_syms = ep.LC().free_symbols
+                    complexity = (ep.degree(), len(coeff_syms & rv), len(coeff_syms))
+                return complexity + (default_sort_key(sym),)
+
             if sort:
-                rv = list(rv)
-                rv.sort(key=default_sort_key)
+                rv = sorted(rv, key=key)
             return rv
 
         solved_syms = set(solved_syms)  # set of symbols we have solved for
@@ -1941,7 +1943,7 @@ def _solve_system(exprs, symbols, **flags):
                     # result in the new result list; use copy since the
                     # solution for s in being added in-place
                     for sol in soln:
-                        if got_s and any([ss in sol.free_symbols for ss in got_s]):
+                        if got_s and any(ss in sol.free_symbols for ss in got_s):
                             # sol depends on previously solved symbols: discard it
                             continue
                         rnew = r.copy()
@@ -1949,7 +1951,16 @@ def _solve_system(exprs, symbols, **flags):
                             rnew[k] = v.subs(s, sol)
                         # and add this new solution
                         rnew[s] = sol
-                        newresult.append(rnew)
+                        # check that it is independent of previous solutions
+                        iset = set(rnew.items())
+                        for i in newresult:
+                            if len(i) < len(iset) and not set(i.items()) - iset:
+                                # this is a superset of a known solution that
+                                # is smaller
+                                break
+                        else:
+                            # keep it
+                            newresult.append(rnew)
                     hit = True
                     got_s.add(s)
                 if not hit:
@@ -2142,7 +2153,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
         # dnewn_dxi can be nonzero if it survives differentation by any
         # of its free symbols
         free = dnewn_dxi.free_symbols
-        if dnewn_dxi and (not free or any(dnewn_dxi.diff(s) for s in free)):
+        if dnewn_dxi and (not free or any(dnewn_dxi.diff(s) for s in free) or free == symbols):
             all_zero = False
             if dnewn_dxi is S.NaN:
                 break

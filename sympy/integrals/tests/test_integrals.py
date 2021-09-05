@@ -37,6 +37,7 @@ def test_poly_deprecated():
         Integral(p, (x,))
 
 
+@slow
 def test_principal_value():
     g = 1 / x
     assert Integral(g, (x, -oo, oo)).principal_value() == 0
@@ -1099,7 +1100,6 @@ def test_issue_4199():
         Integral(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo))
 
 
-@slow
 def test_issue_3940():
     a, b, c, d = symbols('a:d', positive=True, finite=True)
     assert integrate(exp(-x**2 + I*c*x), x) == \
@@ -1290,6 +1290,7 @@ def test_risch_option():
     # TODO: How to test risch=False?
 
 
+@slow
 def test_heurisch_option():
     raises(ValueError, lambda: integrate(1/x, x, risch=True, heurisch=True))
     # an integral that heurisch can handle
@@ -1637,6 +1638,7 @@ def test_issue_13112():
     assert integrate(sin(t)**2 / (5 - 4*cos(t)), [t, 0, 2*pi]) == pi / 4
 
 
+@slow
 def test_issue_14709b():
     h = Symbol('h', positive=True)
     i = integrate(x*acos(1 - 2*x/h), (x, 0, h))
@@ -1650,6 +1652,7 @@ def test_issue_8614():
     assert integrate((exp(-x) - exp(-2*x))/x, (x, 0, oo)) == log(2)
 
 
+@slow
 def test_issue_15494():
     s = symbols('s', real=True, positive=True)
 

@@ -446,7 +446,7 @@ def interactive_traversal(expr):
                 cprint(RED, "d - done\n")
 
                 result = _interactive_traversal(expr, stage)
-            elif choice in ['d', '']:
+            elif choice in ('d', ''):
                 result = expr
             elif choice == 'f':
                 result = _interactive_traversal(args[0], stage + 1)
@@ -848,7 +848,7 @@ def common_prefix(*seqs):
     >>> common_prefix([1, 2, 3], [1, 3, 5])
     [1]
     """
-    if any(not s for s in seqs):
+    if not all(seqs):
         return []
     elif len(seqs) == 1:
         return seqs[0]
@@ -875,7 +875,7 @@ def common_suffix(*seqs):
     [3]
     """
 
-    if any(not s for s in seqs):
+    if not all(seqs):
         return []
     elif len(seqs) == 1:
         return seqs[0]
@@ -1419,7 +1419,7 @@ def multiset_permutations(m, size=None, g=None):
     do = [gi for gi in g if gi[1] > 0]
     SUM = sum([gi[1] for gi in do])
     if not do or size is not None and (size > SUM or size < 1):
-        if size < 1:
+        if not do and size is None or size == 0:
             yield []
         return
     elif size == 1:

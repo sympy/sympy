@@ -411,10 +411,10 @@ def median(X, evaluate=True, **kwargs):
     >>> from sympy.stats import Normal, Die, median
     >>> N = Normal('N', 3, 1)
     >>> median(N)
-    FiniteSet(3)
+    {3}
     >>> D = Die('D')
     >>> median(D)
-    FiniteSet(3, 4)
+    {3, 4}
 
     References
     ==========
@@ -422,6 +422,9 @@ def median(X, evaluate=True, **kwargs):
     .. [1] https://en.wikipedia.org/wiki/Median#Probability_distributions
 
     """
+    if not is_random(X):
+        return X
+
     from sympy.stats.crv import ContinuousPSpace
     from sympy.stats.drv import DiscretePSpace
     from sympy.stats.frv import FinitePSpace

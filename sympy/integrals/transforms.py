@@ -1,6 +1,8 @@
 """ Integral Transforms """
 from functools import reduce
 
+from sympy import (symbols, Wild,
+    RootSum, Lambda, together, exp, gamma)
 from sympy.core import S
 from sympy.core.compatibility import iterable, ordered
 from sympy.core.function import Function
@@ -555,8 +557,8 @@ def _rewrite_gamma(f, s, a, b):
             common_coefficient = x
             break
     s_multipliers = [x/common_coefficient for x in s_multipliers]
-    if (any(not x.is_Rational for x in s_multipliers) or
-        not common_coefficient.is_extended_real):
+    if not (all(x.is_Rational for x in s_multipliers) and
+            common_coefficient.is_extended_real):
         raise IntegralTransformError("Gamma", None, "Nonrational multiplier")
     s_multiplier = common_coefficient/reduce(ilcm, [S(x.q)
                                              for x in s_multipliers], S.One)
@@ -1412,12 +1414,57 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     See Also
     ========
 
-    laplace_transform
+    laplace_transform, _fast_inverse_laplace
     hankel_transform, inverse_hankel_transform
     """
     if isinstance(F, MatrixBase) and hasattr(F, 'applyfunc'):
         return F.applyfunc(lambda Fij: inverse_laplace_transform(Fij, s, t, plane, **hints))
     return InverseLaplaceTransform(F, s, t, plane).doit(**hints)
+
+
+def _fast_inverse_laplace(e, s, t):
+    """Fast inverse Laplace transform of rational function including RootSum"""
+    a, b, n = symbols('a, b, n', cls=Wild, exclude=[s])
+
+    def _ilt(e):
+        if not e.has(s):
+            return e
+        elif e.is_Add:
+            return _ilt_add(e)
+        elif e.is_Mul:
+            return _ilt_mul(e)
+        elif e.is_Pow:
+            return _ilt_pow(e)
+        elif isinstance(e, RootSum):
+            return _ilt_rootsum(e)
+        else:
+            raise NotImplementedError
+
+    def _ilt_add(e):
+        return e.func(*map(_ilt, e.args))
+
+    def _ilt_mul(e):
+        coeff, expr = e.as_independent(s)
+        if expr.is_Mul:
+            raise NotImplementedError
+        return coeff * _ilt(expr)
+
+    def _ilt_pow(e):
+        match = e.match((a*s + b)**n)
+        if match is not None:
+            nm, am, bm = match[n], match[a], match[b]
+            if nm.is_Integer and nm < 0:
+                return t**(-nm-1)*exp(-(bm/am)*t)/(am**-nm*gamma(-nm))
+            if nm == 1:
+                return exp(-(bm/am)*t) / am
+        raise NotImplementedError
+
+    def _ilt_rootsum(e):
+        expr = e.fun.expr
+        [variable] = e.fun.variables
+        return RootSum(e.poly, Lambda(variable, together(_ilt(expr))))
+
+    return _ilt(e)
 
 
 ##########################################################################

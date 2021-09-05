@@ -345,6 +345,7 @@ def test_linear_coefficients():
     _ode_solver_test(_get_examples_ode_sol_linear_coefficients)
 
 
+@slow
 def test_1st_homogeneous_coeff_ode():
     #These were marked as test_1st_homogeneous_coeff_corner_case
     eq1 = f(x).diff(x) - f(x)/x
@@ -365,6 +366,7 @@ def test_slow_examples_1st_homogeneous_coeff_ode():
     _ode_solver_test(_get_examples_ode_sol_1st_homogeneous_coeff_best, run_slow_test=True)
 
 
+@slow
 def test_nth_linear_constant_coeff_homogeneous():
     _ode_solver_test(_get_examples_ode_sol_nth_linear_constant_coeff_homogeneous)
 
@@ -378,10 +380,12 @@ def test_Airy_equation():
     _ode_solver_test(_get_examples_ode_sol_2nd_linear_airy)
 
 
+@slow
 def test_lie_group():
     _ode_solver_test(_get_examples_ode_sol_lie_group)
 
 
+@slow
 def test_separable_reduced():
     df = f(x).diff(x)
     eq = (x / f(x))*df  + tan(x**2*f(x) / (x**2*f(x) - 1))
@@ -395,6 +399,7 @@ def test_slow_examples_separable_reduced():
     _ode_solver_test(_get_examples_ode_sol_separable_reduced, run_slow_test=True)
 
 
+@slow
 def test_2nd_2F1_hypergeometric():
     _ode_solver_test(_get_examples_ode_sol_2nd_2F1_hypergeometric)
 
@@ -408,6 +413,7 @@ def test_2nd_2F1_hypergeometric_integral():
     assert checkodesol(eq, sol) == (True, 0)
 
 
+@slow
 def test_2nd_nonlinear_autonomous_conserved():
     _ode_solver_test(_get_examples_ode_sol_2nd_nonlinear_autonomous_conserved)
 
@@ -427,6 +433,7 @@ def test_2nd_linear_bessel_equation():
     _ode_solver_test(_get_examples_ode_sol_2nd_linear_bessel)
 
 
+@slow
 def test_nth_algebraic():
     eqn = f(x) + f(x)*f(x).diff(x)
     solns = [Eq(f(x), exp(x)),
@@ -465,6 +472,7 @@ def test_slow_examples_1st_exact():
     _ode_solver_test(_get_examples_ode_sol_1st_exact, run_slow_test=True)
 
 
+@slow
 def test_1st_exact():
     _ode_solver_test(_get_examples_ode_sol_1st_exact)
 
@@ -512,10 +520,12 @@ def test_nth_order_reducible():
     _ode_solver_test(_get_examples_ode_sol_nth_order_reducible)
 
 
+@slow
 def test_separable():
     _ode_solver_test(_get_examples_ode_sol_separable)
 
 
+@slow
 def test_factorable():
     assert integrate(-asin(f(2*x)+pi), x) == -Integral(asin(pi + f(2*x)), x)
     _ode_solver_test(_get_examples_ode_sol_factorable)
@@ -530,6 +540,7 @@ def test_Riccati_special_minus2():
     _ode_solver_test(_get_examples_ode_sol_riccati)
 
 
+@slow
 def test_1st_rational_riccati():
     _ode_solver_test(_get_examples_ode_sol_1st_rational_riccati)
 

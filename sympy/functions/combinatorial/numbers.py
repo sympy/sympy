@@ -1433,12 +1433,13 @@ def _multiset_histogram(n):
     else:
         n = list(n)
         s = set(n)
-        if len(s) == len(n):
-            n = [1]*len(n)
-            n.extend([len(n), len(n)])
+        lens = len(s)
+        lenn = len(n)
+        if lens == lenn:
+            n = [1]*lenn + [lenn, lenn]
             return _MultisetHistogram(n)
-        m = dict(zip(s, range(len(s))))
-        d = dict(zip(range(len(s)), [0]*len(s)))
+        m = dict(zip(s, range(lens)))
+        d = dict(zip(range(lens), (0,)*lens))
         for i in n:
             d[m[i]] += 1
         return _multiset_histogram(d)
@@ -1597,7 +1598,7 @@ def _AOP_product(n):
     ord = sum(n)
     need = (ord + 2)//2
     rv = [1]*(n.pop() + 1)
-    rv.extend([0]*(need - len(rv)))
+    rv.extend((0,) * (need - len(rv)))
     rv = rv[:need]
     while n:
         ni = n.pop()

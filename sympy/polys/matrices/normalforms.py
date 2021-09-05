@@ -114,8 +114,8 @@ def invariant_factors(m):
                 row[0], row[ind[0]] = row[ind[0]], row[0]
 
     # make the first row and column except m[0,0] zero
-    while (any([m[0][i] != 0 for i in range(1,cols)]) or
-           any([m[i][0] != 0 for i in range(1,rows)])):
+    while (any(m[0][i] != 0 for i in range(1,cols)) or
+           any(m[i][0] != 0 for i in range(1,rows))):
         m = clear_column(m)
         m = clear_row(m)
 

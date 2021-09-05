@@ -433,7 +433,7 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         if name.is_Add:
             dicts = [get_for_name(i) for i in name.args]
-            if all([d == dicts[0] for d in dicts[1:]]):
+            if all(d == dicts[0] for d in dicts[1:]):
                 return dicts[0]
             raise TypeError("Only equivalent dimensions can be added or subtracted.")
 

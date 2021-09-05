@@ -101,6 +101,7 @@ if multi:
         print()
         for _, e in sorted(dups[k]):
             print('\t%s' % e)
+    sysexit = 1
 
 # warn for ambiguous names
 dups = defaultdict(list)
@@ -119,6 +120,7 @@ if multi:
         print()
         for e in sorted(dups[k]):
             print('\t%s' % e)
+    sysexit = 1
 
 bad_names = []
 bad_emails = []
@@ -139,6 +141,7 @@ if bad_names:
         """)))
     for i in bad_names:
         print("\t%s" % i)
+    sysexit = 1
 
 # TODO: Should we check for bad emails as well? Some people have empty email
 # addresses. The above check seems to catch people who get the name and email
@@ -215,5 +218,6 @@ if out != lines or not blankline:
         print(yellow('.mailmap lines were re-ordered.'))
     else:
         print(yellow('blank line added to end of .mailmap'))
+    sysexit = 1
 
 sys.exit(sysexit)

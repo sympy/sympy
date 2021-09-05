@@ -101,7 +101,7 @@ class Set(Basic, EvalfMixin):
         >>> Interval(0, 1) + Interval(2, 3)
         Union(Interval(0, 1), Interval(2, 3))
         >>> Interval(1, 2, True, True) + FiniteSet(2, 3)
-        Union(FiniteSet(3), Interval.Lopen(1, 2))
+        Union({3}, Interval.Lopen(1, 2))
 
         Similarly it is possible to use the '-' operator for set differences:
 
@@ -213,8 +213,6 @@ class Set(Basic, EvalfMixin):
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
-            from sympy.utilities.iterables import sift
-
             sifted = sift(other, lambda x: fuzzy_bool(self.contains(x)))
             # ignore those that are contained in self
             return Union(FiniteSet(*(sifted[False])),
@@ -492,7 +490,7 @@ class Set(Basic, EvalfMixin):
 
         >>> A = EmptySet
         >>> A.powerset()
-        FiniteSet(EmptySet)
+        {EmptySet}
 
         A power set of a finite set:
 
@@ -558,9 +556,9 @@ class Set(Basic, EvalfMixin):
 
         >>> from sympy import Interval
         >>> Interval(0, 1).boundary
-        FiniteSet(0, 1)
+        {0, 1}
         >>> Interval(0, 1, True, False).boundary
-        FiniteSet(0, 1)
+        {0, 1}
         """
         return self._boundary
 
@@ -711,7 +709,7 @@ class ProductSet(Set):
     >>> from sympy import Interval, FiniteSet, ProductSet
     >>> I = Interval(0, 5); S = FiniteSet(1, 2, 3)
     >>> ProductSet(I, S)
-    ProductSet(Interval(0, 5), FiniteSet(1, 2, 3))
+    ProductSet(Interval(0, 5), {1, 2, 3})
 
     >>> (2, 2) in ProductSet(I, S)
     True
@@ -867,7 +865,7 @@ class ProductSet(Set):
         return reduce(lambda a, b: a*b, (len(s) for s in self.args))
 
     def __bool__(self):
-        return all([bool(s) for s in self.sets])
+        return all(self.sets)
 
 
 class Interval(Set):
@@ -1265,12 +1263,12 @@ class Union(Set, LatticeOp):
             # Clear out duplicates
             sos_list = []
             sets_list = []
-            for set in sets:
-                if set[0] in sos_list:
+            for _set in sets:
+                if _set[0] in sos_list:
                     continue
                 else:
-                    sos_list.append(set[0])
-                    sets_list.append(set)
+                    sos_list.append(_set[0])
+                    sets_list.append(_set)
             sets = sets_list
 
             # Flip Parity - next time subtract/add if we added/subtracted here
@@ -1546,7 +1544,7 @@ class Complement(Set):
 
     >>> from sympy import Complement, FiniteSet
     >>> Complement(FiniteSet(0, 1, 2), FiniteSet(1))
-    FiniteSet(0, 2)
+    {0, 2}
 
     See Also
     =========
@@ -1748,18 +1746,18 @@ class FiniteSet(Set):
 
     >>> from sympy import FiniteSet
     >>> FiniteSet(1, 2, 3, 4)
-    FiniteSet(1, 2, 3, 4)
+    {1, 2, 3, 4}
     >>> 3 in FiniteSet(1, 2, 3, 4)
     True
 
     >>> members = [1, 2, 3, 4]
     >>> f = FiniteSet(*members)
     >>> f
-    FiniteSet(1, 2, 3, 4)
+    {1, 2, 3, 4}
     >>> f - FiniteSet(2)
-    FiniteSet(1, 3, 4)
+    {1, 3, 4}
     >>> f + FiniteSet(2, 5)
-    FiniteSet(1, 2, 3, 4, 5)
+    {1, 2, 3, 4, 5}
 
     References
     ==========
@@ -1906,7 +1904,6 @@ class FiniteSet(Set):
 
     def as_relational(self, symbol):
         """Rewrite a FiniteSet in terms of equalities and logic operators. """
-        from sympy.core.relational import Eq
         return Or(*[Eq(symbol, elem) for elem in self])
 
     def compare(self, other):
@@ -1979,7 +1976,7 @@ class SymmetricDifference(Set):
 
     >>> from sympy import SymmetricDifference, FiniteSet
     >>> SymmetricDifference(FiniteSet(1, 2, 3), FiniteSet(3, 4, 5))
-    FiniteSet(1, 2, 4, 5)
+    {1, 2, 4, 5}
 
     See Also
     ========
@@ -2050,14 +2047,14 @@ class DisjointUnion(Set):
     >>> A = FiniteSet(1, 2, 3)
     >>> B = Interval(0, 5)
     >>> DisjointUnion(A, B)
-    DisjointUnion(FiniteSet(1, 2, 3), Interval(0, 5))
+    DisjointUnion({1, 2, 3}, Interval(0, 5))
     >>> DisjointUnion(A, B).rewrite(Union)
-    Union(ProductSet(FiniteSet(1, 2, 3), FiniteSet(0)), ProductSet(Interval(0, 5), FiniteSet(1)))
+    Union(ProductSet({1, 2, 3}, {0}), ProductSet(Interval(0, 5), {1}))
     >>> C = FiniteSet(Symbol('x'), Symbol('y'), Symbol('z'))
     >>> DisjointUnion(C, C)
-    DisjointUnion(FiniteSet(x, y, z), FiniteSet(x, y, z))
+    DisjointUnion({x, y, z}, {x, y, z})
     >>> DisjointUnion(C, C).rewrite(Union)
-    ProductSet(FiniteSet(x, y, z), FiniteSet(0, 1))
+    ProductSet({x, y, z}, {0, 1})
 
     References
     ==========

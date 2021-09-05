@@ -844,6 +844,8 @@ def _is_positive_semidefinite_cholesky(M):
 
         if M[k, k].is_negative or pivot_val.is_negative:
             return False
+        elif not (M[k, k].is_nonnegative and pivot_val.is_nonnegative):
+            return None
 
         if pivot > 0:
             M.col_swap(k, k+pivot)
@@ -1227,7 +1229,7 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
         size_nums.reverse()
 
         block_structure.extend(
-            (eig, size) for size, num in size_nums for _ in range(num))
+            [(eig, size) for size, num in size_nums for _ in range(num)])
 
     jordan_form_size = sum(size for eig, size in block_structure)
 

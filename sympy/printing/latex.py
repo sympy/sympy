@@ -317,10 +317,10 @@ class LatexPrinter(Printer):
             return True
         if expr.is_Piecewise:
             return True
-        if any([expr.has(x) for x in (Mod,)]):
+        if any(expr.has(x) for x in (Mod,)):
             return True
         if (not last and
-                any([expr.has(x) for x in (Integral, Product, Sum)])):
+                any(expr.has(x) for x in (Integral, Product, Sum))):
             return True
 
         return False
@@ -333,7 +333,7 @@ class LatexPrinter(Printer):
         """
         if expr.is_Relational:
             return True
-        if any([expr.has(x) for x in (Mod,)]):
+        if any(expr.has(x) for x in (Mod,)):
             return True
         if expr.is_Add:
             return True
@@ -644,6 +644,13 @@ class LatexPrinter(Printer):
             # special case for 1^(-x), issue 9216
             if expr.base == 1:
                 return r"%s^{%s}" % (expr.base, expr.exp)
+            # special case for (1/x)^(-y) and (-1/-x)^(-y), issue 20252
+            if expr.base.is_Rational and \
+                    expr.base.p*expr.base.q == abs(expr.base.q):
+                if expr.exp == -1:
+                    return r"\frac{1}{\frac{%s}{%s}}" % (expr.base.p, expr.base.q)
+                else:
+                    return r"\frac{1}{(\frac{%s}{%s})^{%s}}" % (expr.base.p, expr.base.q, abs(expr.exp))
             # things like 1/x
             return self._print_Mul(expr)
         else:
@@ -2304,7 +2311,7 @@ class LatexPrinter(Printer):
             else:
                 terms.extend(['+', s_term])
 
-        if terms[0] in ['-', '+']:
+        if terms[0] in ('-', '+'):
             modifier = terms.pop(0)
 
             if modifier == '-':
@@ -2422,11 +2429,15 @@ class LatexPrinter(Printer):
     def _print_Object(self, object):
         return self._print(Symbol(object.name))
 
-    def _print_LambertW(self, expr):
+    def _print_LambertW(self, expr, exp=None):
+        arg0 = self._print(expr.args[0])
+        exp = r"^{%s}" % (exp,) if exp is not None else ""
         if len(expr.args) == 1:
-            return r"W\left(%s\right)" % self._print(expr.args[0])
-        return r"W_{%s}\left(%s\right)" % \
-            (self._print(expr.args[1]), self._print(expr.args[0]))
+            result = r"W%s\left(%s\right)" % (exp, arg0)
+        else:
+            arg1 = self._print(expr.args[1])
+            result = "W{0}_{{{1}}}\\left({2}\\right)".format(exp, arg1, arg0)
+        return result
 
     def _print_Morphism(self, morphism):
         domain = self._print(morphism.domain)
@@ -2461,35 +2472,47 @@ class LatexPrinter(Printer):
         return ' + '.join(map(func, args))
 
     def _print_Feedback(self, expr):
-        from sympy.physics.control import TransferFunction, Parallel, Series
+        from sympy.physics.control import TransferFunction, Series
 
-        num, tf = expr.num, TransferFunction(1, 1, expr.num.var)
+        num, tf = expr.sys1, TransferFunction(1, 1, expr.var)
         num_arg_list = list(num.args) if isinstance(num, Series) else [num]
-        den_arg_list = list(expr.den.args) if isinstance(expr.den, Series) else [expr.den]
+        den_arg_list = list(expr.sys2.args) if \
+            isinstance(expr.sys2, Series) else [expr.sys2]
+        den_term_1 = tf
 
-        if isinstance(num, Series) and isinstance(expr.den, Series):
-            den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
-        elif isinstance(num, Series) and isinstance(expr.den, TransferFunction):
-            if expr.den == tf:
-                den = Parallel(tf, Series(*num_arg_list))
+        if isinstance(num, Series) and isinstance(expr.sys2, Series):
+            den_term_2 = Series(*num_arg_list, *den_arg_list)
+        elif isinstance(num, Series) and isinstance(expr.sys2, TransferFunction):
+            if expr.sys2 == tf:
+                den_term_2 = Series(*num_arg_list)
             else:
-                den = Parallel(tf, Series(*num_arg_list, expr.den))
-        elif isinstance(num, TransferFunction) and isinstance(expr.den, Series):
+                den_term_2 = tf, Series(*num_arg_list, expr.sys2)
+        elif isinstance(num, TransferFunction) and isinstance(expr.sys2, Series):
             if num == tf:
-                den = Parallel(tf, Series(*den_arg_list))
+                den_term_2 = Series(*den_arg_list)
             else:
-                den = Parallel(tf, Series(num, *den_arg_list))
+                den_term_2 = Series(num, *den_arg_list)
         else:
             if num == tf:
-                den = Parallel(tf, *den_arg_list)
-            elif expr.den == tf:
-                den = Parallel(tf, *num_arg_list)
+                den_term_2 = Series(*den_arg_list)
+            elif expr.sys2 == tf:
+                den_term_2 = Series(*num_arg_list)
             else:
-                den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
+                den_term_2 = Series(*num_arg_list, *den_arg_list)
 
         numer = self._print(num)
-        denom = self._print(den)
-        return r"\frac{%s}{%s}" % (numer, denom)
+        denom_1 = self._print(den_term_1)
+        denom_2 = self._print(den_term_2)
+        _sign = "+" if expr.sign == -1 else "-"
+
+        return r"\frac{%s}{%s %s %s}" % (numer, denom_1, _sign, denom_2)
+
+    def _print_MIMOFeedback(self, expr):
+        from sympy.physics.control import MIMOSeries
+        inv_mat = self._print(MIMOSeries(expr.sys2, expr.sys1))
+        sys1 = self._print(expr.sys1)
+        _sign = "+" if expr.sign == -1 else "-"
+        return r"\left(I_{\tau} %s %s\right)^{-1} \cdot %s" % (_sign, inv_mat, sys1)
 
     def _print_TransferFunctionMatrix(self, expr):
         mat = self._print(expr._expr_mat)

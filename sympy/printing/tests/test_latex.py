@@ -7,7 +7,7 @@ from sympy import (
     Interval, InverseCosineTransform, InverseFourierTransform, Derivative,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
-    Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
+    Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational, Integer,
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Ynm, Znm, arg, asin, acsc, asinh, Mod,
     assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling,
@@ -41,7 +41,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, \
-    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel
+    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
@@ -188,6 +188,10 @@ def test_latex_basic():
         r"z_i \vee \left(x_i \wedge y_i\right)"
     assert latex(Implies(x, y), symbol_names={x: "x_i", y: "y_i"}) == \
         r"x_i \Rightarrow y_i"
+    assert latex(Pow(Rational(1, 3), -1, evaluate=False)) == r"\frac{1}{\frac{1}{3}}"
+    assert latex(Pow(Rational(1, 3), -2, evaluate=False)) == r"\frac{1}{(\frac{1}{3})^{2}}"
+    assert latex(Pow(Integer(1)/100, -1, evaluate=False)) == r"\frac{1}{\frac{1}{100}}"
+
 
     p = Symbol('p', positive=True)
     assert latex(exp(-p)*log(p)) == r"e^{- p} \log{\left(p \right)}"
@@ -594,6 +598,10 @@ def test_latex_functions():
     assert latex(LambertW(n)) == r'W\left(n\right)'
     assert latex(LambertW(n, -1)) == r'W_{-1}\left(n\right)'
     assert latex(LambertW(n, k)) == r'W_{k}\left(n\right)'
+    assert latex(LambertW(n) * LambertW(n)) == r"W^{2}\left(n\right)"
+    assert latex(Pow(LambertW(n), 2)) == r"W^{2}\left(n\right)"
+    assert latex(LambertW(n)**k) == r"W^{k}\left(n\right)"
+    assert latex(LambertW(n, k)**p) == r"W^{p}_{k}\left(n\right)"
 
     assert latex(Mod(x, 7)) == r'x\bmod{7}'
     assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right)\bmod{7}'
@@ -2328,10 +2336,40 @@ def test_TransferFunctionMatrix_printing():
 def test_Feedback_printing():
     tf1 = TransferFunction(p, p + x, p)
     tf2 = TransferFunction(-s + p, p + s, p)
+    # Negative Feedback (Default)
     assert latex(Feedback(tf1, tf2)) == \
         r'\frac{\frac{p}{p + x}}{\frac{1}{1} + \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
     assert latex(Feedback(tf1*tf2, TransferFunction(1, 1, p))) == \
         r'\frac{\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}{\frac{1}{1} + \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
+    # Positive Feedback
+    assert latex(Feedback(tf1, tf2, 1)) == \
+        r'\frac{\frac{p}{p + x}}{\frac{1}{1} - \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
+    assert latex(Feedback(tf1*tf2, sign=1)) == \
+        r'\frac{\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}{\frac{1}{1} - \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
+
+
+def test_MIMOFeedback_printing():
+    tf1 = TransferFunction(1, s, s)
+    tf2 = TransferFunction(s, s**2 - 1, s)
+    tf3 = TransferFunction(s, s - 1, s)
+    tf4 = TransferFunction(s**2, s**2 - 1, s)
+
+    tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
+    tfm_2 = TransferFunctionMatrix([[tf4, tf3], [tf2, tf1]])
+
+    # Negative Feedback (Default)
+    assert latex(MIMOFeedback(tfm_1, tfm_2)) == \
+        r'\left(I_{\tau} + \left[\begin{matrix}\frac{1}{s} & \frac{s}{s^{2} - 1}\\\frac{s}{s - 1} & \frac{s^{2}}{s^{2} - 1}\end{matrix}\right]_\tau\cdot\left[' \
+        r'\begin{matrix}\frac{s^{2}}{s^{2} - 1} & \frac{s}{s - 1}\\\frac{s}{s^{2} - 1} & \frac{1}{s}\end{matrix}\right]_\tau\right)^{-1} \cdot \left[\begin{matrix}' \
+        r'\frac{1}{s} & \frac{s}{s^{2} - 1}\\\frac{s}{s - 1} & \frac{s^{2}}{s^{2} - 1}\end{matrix}\right]_\tau'
+
+    # Positive Feedback
+    assert latex(MIMOFeedback(tfm_1*tfm_2, tfm_1, 1)) == \
+        r'\left(I_{\tau} - \left[\begin{matrix}\frac{1}{s} & \frac{s}{s^{2} - 1}\\\frac{s}{s - 1} & \frac{s^{2}}{s^{2} - 1}\end{matrix}\right]_\tau\cdot\left' \
+        r'[\begin{matrix}\frac{s^{2}}{s^{2} - 1} & \frac{s}{s - 1}\\\frac{s}{s^{2} - 1} & \frac{1}{s}\end{matrix}\right]_\tau\cdot\left[\begin{matrix}\frac{1}{s} & \frac{s}{s^{2} - 1}' \
+        r'\\\frac{s}{s - 1} & \frac{s^{2}}{s^{2} - 1}\end{matrix}\right]_\tau\right)^{-1} \cdot \left[\begin{matrix}\frac{1}{s} & \frac{s}{s^{2} - 1}' \
+        r'\\\frac{s}{s - 1} & \frac{s^{2}}{s^{2} - 1}\end{matrix}\right]_\tau\cdot\left[\begin{matrix}\frac{s^{2}}{s^{2} - 1} & \frac{s}{s - 1}\\\frac{s}{s^{2} - 1}' \
+        r' & \frac{1}{s}\end{matrix}\right]_\tau'
 
 
 def test_Quaternion_latex_printing():

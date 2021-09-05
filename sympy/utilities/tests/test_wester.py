@@ -1193,6 +1193,7 @@ def test_N7():
 
 
 @XFAIL
+@slow
 def test_N8():
     x, y, z = symbols('x y z', real=True)
     assert ask(Eq(x, y) & Eq(y, z),
@@ -2442,6 +2443,7 @@ def test_W8():
 
 
 @XFAIL
+@slow
 def test_W9():
     # Integrand with a residue at infinity => -2 pi [sin(pi/5) + sin(2pi/5)]
     # (principal value)   [Levinson and Redheffer, p. 234] *)

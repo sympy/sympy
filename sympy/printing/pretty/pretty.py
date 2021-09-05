@@ -48,7 +48,7 @@ class PrettyPrinter(Printer):
 
         if not isinstance(self._settings['imaginary_unit'], str):
             raise TypeError("'imaginary_unit' must a string, not {}".format(self._settings['imaginary_unit']))
-        elif self._settings['imaginary_unit'] not in ["i", "j"]:
+        elif self._settings['imaginary_unit'] not in ("i", "j"):
             raise ValueError("'imaginary_unit' must be either 'i' or 'j', not '{}'".format(self._settings['imaginary_unit']))
 
     def emptyPrinter(self, expr):
@@ -1018,33 +1018,58 @@ class PrettyPrinter(Printer):
         return s
 
     def _print_Feedback(self, expr):
-        from sympy.physics.control import TransferFunction, Parallel, Series
+        from sympy.physics.control import TransferFunction, Series
 
-        num, tf = expr.num, TransferFunction(1, 1, expr.num.var)
+        num, tf = expr.sys1, TransferFunction(1, 1, expr.var)
         num_arg_list = list(num.args) if isinstance(num, Series) else [num]
-        den_arg_list = list(expr.den.args) if isinstance(expr.den, Series) else [expr.den]
+        den_arg_list = list(expr.sys2.args) if \
+            isinstance(expr.sys2, Series) else [expr.sys2]
 
-        if isinstance(num, Series) and isinstance(expr.den, Series):
-            den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
-        elif isinstance(num, Series) and isinstance(expr.den, TransferFunction):
-            if expr.den == tf:
-                den = Parallel(tf, Series(*num_arg_list))
+        if isinstance(num, Series) and isinstance(expr.sys2, Series):
+            den = Series(*num_arg_list, *den_arg_list)
+        elif isinstance(num, Series) and isinstance(expr.sys2, TransferFunction):
+            if expr.sys2 == tf:
+                den = Series(*num_arg_list)
             else:
-                den = Parallel(tf, Series(*num_arg_list, expr.den))
-        elif isinstance(num, TransferFunction) and isinstance(expr.den, Series):
+                den = Series(*num_arg_list, expr.sys2)
+        elif isinstance(num, TransferFunction) and isinstance(expr.sys2, Series):
             if num == tf:
-                den = Parallel(tf, Series(*den_arg_list))
+                den = Series(*den_arg_list)
             else:
-                den = Parallel(tf, Series(num, *den_arg_list))
+                den = Series(num, *den_arg_list)
         else:
             if num == tf:
-                den = Parallel(tf, *den_arg_list)
-            elif expr.den == tf:
-                den = Parallel(tf, *num_arg_list)
+                den = Series(*den_arg_list)
+            elif expr.sys2 == tf:
+                den = Series(*num_arg_list)
             else:
-                den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
+                den = Series(*num_arg_list, *den_arg_list)
 
-        return self._print(num)/self._print(den)
+        denom = prettyForm(*stringPict.next(self._print(tf)))
+        denom.baseline = denom.height()//2
+        denom = prettyForm(*stringPict.next(denom, ' + ')) if expr.sign == -1 \
+            else prettyForm(*stringPict.next(denom, ' - '))
+        denom = prettyForm(*stringPict.next(denom, self._print(den)))
+
+        return self._print(num)/denom
+
+    def _print_MIMOFeedback(self, expr):
+        from sympy.physics.control import MIMOSeries, TransferFunctionMatrix
+
+        inv_mat = self._print(MIMOSeries(expr.sys2, expr.sys1))
+        plant = self._print(expr.sys1)
+        _feedback = prettyForm(*stringPict.next(inv_mat))
+        _feedback = prettyForm(*stringPict.right("I + ", _feedback)) if expr.sign == -1 \
+            else prettyForm(*stringPict.right("I - ", _feedback))
+        _feedback = prettyForm(*stringPict.parens(_feedback))
+        _feedback.baseline = 0
+        _feedback = prettyForm(*stringPict.right(_feedback, '-1 '))
+        _feedback.baseline = _feedback.height()//2
+        _feedback = prettyForm.__mul__(_feedback, prettyForm(" "))
+        if isinstance(expr.sys1, TransferFunctionMatrix):
+            _feedback.baseline = _feedback.height() - 1
+        _feedback = prettyForm(*stringPict.next(_feedback, plant))
+        return _feedback
 
     def _print_TransferFunctionMatrix(self, expr):
         mat = self._print(expr._expr_mat)

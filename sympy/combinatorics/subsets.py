@@ -203,10 +203,10 @@ class Subset(Basic):
         i = self.superset_size - 1
         indices = Subset.subset_indices(self.subset, self.superset)
 
-        while i not in indices and i >= 0:
+        while i >= 0 and i not in indices:
             i = i - 1
 
-        if i - 1 in indices or i == 0:
+        if i == 0 or i - 1 in indices:
             indices.remove(i)
         else:
             if i >= 0:

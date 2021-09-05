@@ -1855,6 +1855,22 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         return obj
 
+    def _sage_(self):
+        """
+        Convert *self* to a symbolic expression of SageMath.
+
+        This version of the method is merely a placeholder.
+        """
+        old_method = self._sage_
+        from sage.interfaces.sympy import sympy_init
+        sympy_init()  # may monkey-patch _sage_ method into self's class or superclasses
+        if old_method == self._sage_:
+            raise NotImplementedError('conversion to SageMath is not implemented')
+        else:
+            # call the freshly monkey-patched method
+            return self._sage_()
+
+
 class Atom(Basic):
     """
     A parent class for atomic things. An atom is an expression with no subexpressions.

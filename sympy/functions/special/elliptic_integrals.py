@@ -98,10 +98,6 @@ class elliptic_k(Function):
         m = self.args[0]
         return Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, pi/2))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.elliptic_kc(self.args[0]._sage_())
-
 
 class elliptic_f(Function):
     r"""

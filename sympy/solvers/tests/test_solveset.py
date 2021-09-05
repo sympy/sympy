@@ -2,9 +2,9 @@ from sympy.core.containers import Tuple
 from sympy.core.compatibility import ordered
 from sympy.core.function import (Function, Lambda, nfloat, diff)
 from sympy.core.mod import Mod
-from sympy.core.numbers import (E, I, Rational, oo, pi)
+from sympy.core.numbers import (E, I, Rational, oo, pi, Integer)
 from sympy.core.relational import (Eq, Gt,
-    Ne)
+    Ne, Ge)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
@@ -2821,6 +2821,68 @@ def test_substitution_with_infeasible_solution():
     )
     assert sol != nonlinsolve(system, solvefor)
 
+
+def test_issue_20097():
+    assert solveset(1/sqrt(x)) == EmptySet()
+
+
+def test_issue_15350():
+    assert solveset(diff(sqrt(1/x+x))) == FiniteSet(-1, 1)
+
+
+def test_issue_18359():
+    c1 = Piecewise((0, x < 0), (Min(1, x)/2 - Min(2, x)/2 + Min(3, x)/2, True))
+    c2 = Piecewise((Piecewise((0, x < 0), (Min(1, x)/2 - Min(2, x)/2 + Min(3, x)/2, True)), x >= 0), (0, True))
+    correct_result = Interval(1, 2)
+    result1 = solveset(c1 - Rational(1, 2), x, Interval(0, 3))
+    result2 = solveset(c2 - Rational(1, 2), x, Interval(0, 3))
+    assert result1 == correct_result
+    assert result2 == correct_result
+
+
+def test_issue_17604():
+    lhs = -2**(3*x/11)*exp(x/11) + pi**(x/11)
+    assert _is_exponential(lhs, x)
+    assert _solve_exponential(lhs, 0, x, S.Complexes) == FiniteSet(0)
+
+
+def test_issue_17580():
+    assert solveset(1/(1 - x**3)**2, x, S.Reals) == EmptySet()
+
+
+def test_issue_17566_actual():
+    sys = [2**x + 2**y - 3, 4**x + 9**y - 5]
+    # Not clear this is the correct result, but at least no recursion error
+    assert nonlinsolve(sys, x, y) == FiniteSet((log(3 - 2**y)/log(2), y))
+
+
+def test_issue_17565():
+    eq = Ge(2*(x - 2)**2/(3*(x + 1)**(Integer(1)/3)) + 2*(x - 2)*(x + 1)**(Integer(2)/3), 0)
+    res = Union(Interval.Lopen(-1, -Rational(1, 4)), Interval(2, oo))
+    assert solveset(eq, x, S.Reals) == res
+
+
+def test_issue_15024():
+    function = (x + 5)/sqrt(-x**2 - 10*x)
+    assert solveset(function, x, S.Reals) == FiniteSet(Integer(-5))
+
+
+def test_issue_16877():
+    assert dumeq(nonlinsolve([x - 1, sin(y)], x, y),
+                 FiniteSet((FiniteSet(1), ImageSet(Lambda(n, 2*n*pi), S.Integers)),
+                           (FiniteSet(1), ImageSet(Lambda(n, 2*n*pi + pi), S.Integers))))
+    # Even better if (FiniteSet(1), ImageSet(Lambda(n, n*pi), S.Integers)) is obtained
+
+
+def test_issue_16876():
+    assert dumeq(nonlinsolve([sin(x), 2*x - 4*y], x, y),
+                 FiniteSet((ImageSet(Lambda(n, 2*n*pi), S.Integers),
+                            ImageSet(Lambda(n, n*pi), S.Integers)),
+                           (ImageSet(Lambda(n, 2*n*pi + pi), S.Integers),
+                            ImageSet(Lambda(n, n*pi + pi/2), S.Integers))))
+    # Even better if (ImageSet(Lambda(n, n*pi), S.Integers),
+    #                 ImageSet(Lambda(n, n*pi/2), S.Integers)) is obtained
+
 def test_issue_21236():
     x, z = symbols("x z")
     y = symbols('y', rational=True)
@@ -2828,3 +2890,32 @@ def test_issue_21236():
     e1, e2 = symbols('e1 e2', even=True)
     y = e1/e2  # don't know if num or den will be odd and the other even
     assert solveset(x**y - z, x, S.Reals) == ConditionSet(x, Eq(x**y - z, 0), S.Reals)
+
+
+def test_issue_21908():
+    assert nonlinsolve([(x**2 + 2*x - y**2)*exp(x), -2*y*exp(x)], x, y
+                      ) == {(-2, 0), (0, 0)}
+
+
+def test_issue_19144():
+    # test case 1
+    expr1 = [x + y - 1, y**2 + 1]
+    eq1 = [Eq(i, 0) for i in expr1]
+    soln1 = {(1 - I, I), (1 + I, -I)}
+    soln_expr1 = nonlinsolve(expr1, [x, y])
+    soln_eq1 = nonlinsolve(eq1, [x, y])
+    assert soln_eq1 == soln_expr1 == soln1
+    # test case 2 - with denoms
+    expr2 = [x/y - 1, y**2 + 1]
+    eq2 = [Eq(i, 0) for i in expr2]
+    soln2 = {(-I, -I), (I, I)}
+    soln_expr2 = nonlinsolve(expr2, [x, y])
+    soln_eq2 = nonlinsolve(eq2, [x, y])
+    assert soln_eq2 == soln_expr2 == soln2
+    # denominators that cancel in expression
+    assert nonlinsolve([Eq(x + 1/x, 1/x)], [x]) == FiniteSet((S.EmptySet,))
+
+
+def test_issue_19814():
+    assert nonlinsolve([ 2**m - 2**(2*n), 4*2**m - 2**(4*n)], m, n
+                      ) == FiniteSet((log(2**(2*n))/log(2), S.Complexes))

@@ -522,7 +522,7 @@ class Category(Basic):
         >>> B = Object("B")
         >>> K = Category("K", FiniteSet(A, B))
         >>> K.objects
-        Class(FiniteSet(Object("A"), Object("B")))
+        Class({Object("A"), Object("B")})
 
         """
         return self.args[1]
@@ -727,7 +727,7 @@ class Diagram(Basic):
         True
         >>> d = Diagram([f, g], {g * f: "unique"})
         >>> d.conclusions[g * f]
-        FiniteSet(unique)
+        {unique}
 
         """
         premises = {}
@@ -859,7 +859,7 @@ class Diagram(Basic):
         >>> g = NamedMorphism(B, C, "g")
         >>> d = Diagram([f, g])
         >>> d.objects
-        FiniteSet(Object("A"), Object("B"), Object("C"))
+        {Object("A"), Object("B"), Object("C")}
 
         """
         return self.args[2]
@@ -925,15 +925,15 @@ class Diagram(Basic):
         >>> d1.is_subdiagram(d)
         False
         """
-        premises = all([(m in self.premises) and
-                        (diagram.premises[m] == self.premises[m])
-                        for m in diagram.premises])
+        premises = all((m in self.premises) and
+                       (diagram.premises[m] == self.premises[m])
+                       for m in diagram.premises)
         if not premises:
             return False
 
-        conclusions = all([(m in self.conclusions) and
-                           (diagram.conclusions[m] == self.conclusions[m])
-                        for m in diagram.conclusions])
+        conclusions = all((m in self.conclusions) and
+                          (diagram.conclusions[m] == self.conclusions[m])
+                          for m in diagram.conclusions)
 
         # Premises is surely ``True`` here.
         return conclusions

@@ -231,9 +231,9 @@ class FunctionClass(ManagedProperties):
         corresponding set will be returned:
 
         >>> Function('f', nargs=1).nargs
-        FiniteSet(1)
+        {1}
         >>> Function('f', nargs=(2, 1)).nargs
-        FiniteSet(1, 2)
+        {1, 2}
 
         The undefined function, after application, also has the nargs
         attribute; the actual number of arguments is always available by
@@ -698,7 +698,7 @@ class Function(Application, Expr):
             # slower
             a = [t.compute_leading_term(x, logx=logx) for t in args]
             a0 = [t.limit(x, 0) for t in a]
-            if any([t.has(oo, -oo, zoo, nan) for t in a0]):
+            if any(t.has(oo, -oo, zoo, nan) for t in a0):
                 return self._eval_aseries(n, args0, x, logx)
             # Careful: the argument goes to oo, but only logarithmically so. We
             # are supposed to do a power series expansion "around the
@@ -827,26 +827,6 @@ class Function(Application, Expr):
         else:
             return self.func(*args)
 
-    def _sage_(self):
-        import sage.all as sage
-        fname = self.func.__name__
-        func = getattr(sage, fname, None)
-        args = [arg._sage_() for arg in self.args]
-
-        # In the case the function is not known in sage:
-        if func is None:
-            import sympy
-            if getattr(sympy, fname, None) is None:
-                # abstract function
-                return sage.function(fname)(*args)
-
-            else:
-                # the function defined in sympy is not known in sage
-                # this exception is caught in sage
-                raise AttributeError
-
-        return func(*args)
-
 
 class AppliedUndef(Function):
     """
@@ -867,13 +847,6 @@ class AppliedUndef(Function):
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         return self
-
-    def _sage_(self):
-        import sage.all as sage
-        fname = str(self.func)
-        args = [arg._sage_() for arg in self.args]
-        func = sage.function(fname)(*args)
-        return func
 
     @property
     def _diff_wrt(self):
@@ -1003,7 +976,7 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
 
     >>> F = WildFunction('F', nargs=2)
     >>> F.nargs
-    FiniteSet(2)
+    {2}
     >>> f(x).match(F)
     >>> f(x, y).match(F)
     {F_: f(x, y)}
@@ -1014,7 +987,7 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
 
     >>> F = WildFunction('F', nargs=(1, 2))
     >>> F.nargs
-    FiniteSet(1, 2)
+    {1, 2}
     >>> f(x).match(F)
     {F_: f(x)}
     >>> f(x, y).match(F)
@@ -1832,11 +1805,6 @@ class Derivative(Expr):
             if d != 0:
                 break
         return d
-
-    def _sage_(self):
-        import sage.all as sage
-        args = [arg._sage_() for arg in self.args]
-        return sage.derivative(*args)
 
     def as_finite_difference(self, points=1, x0=None, wrt=None):
         """ Expresses a Derivative instance as a finite difference.

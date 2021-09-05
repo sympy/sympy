@@ -506,7 +506,7 @@ __all__ = [
 #===========================================================================#
 
 
-__all__.extend([
+__all__.extend((
     'algebras',
     'assumptions',
     'calculus',
@@ -526,4 +526,4 @@ __all__.extend([
     'strategies',
     'tensor',
     'utilities',
-])
+))

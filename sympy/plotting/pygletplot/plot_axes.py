@@ -59,9 +59,9 @@ class PlotAxes(PlotObject):
         def flexible_boolean(input, default):
             if input in [True, False]:
                 return input
-            if input in ['f', 'F', 'false', 'False']:
+            if input in ('f', 'F', 'false', 'False'):
                 return False
-            if input in ['t', 'T', 'true', 'True']:
+            if input in ('t', 'T', 'true', 'True'):
                 return True
             return default
 
@@ -98,7 +98,7 @@ class PlotAxes(PlotObject):
     def adjust_bounds(self, child_bounds):
         b = self._bounding_box
         c = child_bounds
-        for i in [0, 1, 2]:
+        for i in range(3):
             if abs(c[i][0]) is S.Infinity or abs(c[i][1]) is S.Infinity:
                 continue
             b[i][0] = c[i][0] if b[i][0] is None else min([b[i][0], c[i][0]])
