@@ -13,12 +13,16 @@ from sympy.printing.pycode import (
     MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter,
     SymPyPrinter
 )
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, skip
 from sympy.tensor import IndexedBase
 from sympy.testing.pytest import skip
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import loggamma
 from sympy.parsing.latex import parse_latex
+from sympy.external import import_module
+
+# To test latex to python printing
+antlr4 = import_module("antlr4")
 
 x, y, z = symbols('x y z')
 p = IndexedBase("p")
@@ -168,9 +172,14 @@ def test_pycode_reserved_words():
     assert py_str in ('else_ + if_', 'if_ + else_')
 
 def test_issue_20762():
+    if not antlr4:
+        skip('antlr not installed.')
     # Make sure pycode removes curly braces from subscripted variables
     expr = parse_latex(r'a_b \cdot b')
     assert pycode(expr) == 'a_b*b'
+    
+    expr = parse_latex(r'a_{11} \cdot b')
+    assert pycode(expr) == 'a_11*b'
 
 
 def test_sqrt():
