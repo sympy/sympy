@@ -3616,7 +3616,7 @@ class Expr(Basic, EvalfMixin):
             use_hint = hints[hint]
             if use_hint:
                 hint = '_eval_expand_' + hint
-                expr = Expr._expand_hint(expr, hint, deep=deep, **hints)[0]
+                expr, _ = Expr._expand_hint(expr, hint, deep=deep, **hints)
 
         while True:
             was = expr

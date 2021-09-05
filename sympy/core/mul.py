@@ -1113,7 +1113,7 @@ class Mul(Expr, AssocOp):
     def _matches_add_wildcard(dictionary, state):
         node_ind, target_ind = state
         if node_ind in dictionary:
-            begin = dictionary[node_ind][0]
+            begin, _ = dictionary[node_ind]
             dictionary[node_ind] = (begin, target_ind)
         else:
             dictionary[node_ind] = (target_ind, target_ind)
