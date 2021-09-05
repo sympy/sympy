@@ -467,7 +467,7 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
                 raise ValueError(msg.format(name))
             return name + self._settings['reserved_word_suffix']
         elif '{' in name:   # Remove curly braces from subscripted variables
-            return ''.join([s if s != '{' and s != '}' else '' for s in name])
+            return name.replace('{', '').replace('}', '')
         else:
             return name
 
