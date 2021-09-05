@@ -53,7 +53,7 @@ def python(expr, **settings):
     for symbolname in printer.symbols:
         # Remove curly braces from subscripted variables
         if '{' in symbolname:
-            newsymbolname = ''.join([s if s != '{' and s != '}' else '' for s in symbolname])
+            newsymbolname = symbolname.replace('{', '').replace('}', '')
             renamings[sympy.Symbol(symbolname)] = newsymbolname
         else:
             newsymbolname = symbolname
