@@ -48,7 +48,7 @@ Metaclasses:
 """
 
 __all__ = [
-    'PY3', 'int_info', 'SYMPY_INTS', 'clock',
+    'int_info', 'SYMPY_INTS', 'clock',
     'unicode', 'u_decode', 'get_function_code', 'gmpy',
     'get_function_globals', 'get_function_name', 'builtins', 'reduce',
     'StringIO', 'cStringIO', 'exec_', 'Mapping', 'Callable',
@@ -58,7 +58,6 @@ __all__ = [
 ]
 
 import sys
-PY3 = True
 
 int_info = sys.int_info
 
