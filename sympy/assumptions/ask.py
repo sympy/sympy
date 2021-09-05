@@ -305,53 +305,6 @@ class AssumptionKeys:
 
 Q = AssumptionKeys()
 
-def _extract_all_facts(assump, exprs):
-    """
-    Extract all relevant assumptions from *assump* with respect to given *exprs*.
-
-    Parameters
-    ==========
-
-    assump : sympy.assumptions.cnf.CNF
-
-    exprs : tuple of expressions
-
-    Returns
-    =======
-
-    sympy.assumptions.cnf.CNF
-
-    Examples
-    ========
-
-    >>> from sympy import Q
-    >>> from sympy.assumptions.cnf import CNF
-    >>> from sympy.assumptions.ask import _extract_all_facts
-    >>> from sympy.abc import x, y
-    >>> assump = CNF.from_prop(Q.positive(x) & Q.integer(y))
-    >>> exprs = (x,)
-    >>> cnf = _extract_all_facts(assump, exprs)
-    >>> cnf.clauses
-    {frozenset({Literal(Q.positive, False)})}
-
-    """
-    facts = set()
-
-    for clause in assump.clauses:
-        args = []
-        for literal in clause:
-            if isinstance(literal.lit, AppliedPredicate) and len(literal.lit.arguments) == 1:
-                if literal.lit.arg in exprs:
-                    # Add literal if it has matching in it
-                    args.append(Literal(literal.lit.function, literal.is_Not))
-                else:
-                    # If any of the literals doesn't have matching expr don't add the whole clause.
-                    break
-        else:
-            if args:
-                facts.add(frozenset(args))
-    return CNF(facts)
-
 
 def ask(proposition, assumptions=True, context=global_assumptions):
     """
@@ -448,10 +401,10 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     proposition = sympify(proposition)
     assumptions = sympify(assumptions)
 
-    if isinstance(proposition, Predicate) or proposition.kind is not BooleanKind:
+    if proposition.kind is not BooleanKind:
         raise TypeError("proposition must be a valid logical expression")
 
-    if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
+    if assumptions.kind is not BooleanKind:
         raise TypeError("assumptions must be a valid logical expression")
 
     binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
@@ -461,31 +414,16 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         key, args = binrelpreds[proposition.func], proposition.args
     else:
         key, args = Q.is_true, (proposition,)
+    prop_pred = key(*args)
 
-    # convert local and global assumptions to CNF
-    assump_cnf = CNF.from_prop(assumptions)
-    assump_cnf.extend(context)
-
-    # extract the relevant facts from assumptions with respect to args
-    local_facts = _extract_all_facts(assump_cnf, args)
-
-    # convert default facts and assumed facts to encoded CNF
-    known_facts_cnf = get_all_known_facts()
-    enc_cnf = EncodedCNF()
-    enc_cnf.from_cnf(CNF(known_facts_cnf))
-    enc_cnf.add_from_cnf(local_facts)
-
-    # check the satisfiability of given assumptions
-    if local_facts.clauses and satisfiable(enc_cnf) is False:
-        raise ValueError("inconsistent assumptions %s" % assumptions)
-
-    # quick computation for single fact
-    res = _ask_single_fact(key, local_facts)
-    if res is not None:
-        return res
+    # quick computation for single unary proposition
+    if len(args) == 1:
+        res = unary_ask(prop_pred, assumptions, context)
+        if res is not None:
+            return res
 
     # direct resolution method, no logic
-    res = key(*args)._eval_ask(assumptions)
+    res = prop_pred._eval_ask(assumptions)
     if res is not None:
         return bool(res)
 
@@ -494,18 +432,22 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     return res
 
 
-def _ask_single_fact(key, local_facts):
+def unary_ask(proposition, assumptions=True, context=global_assumptions):
     """
-    Compute the truth value of single predicate using assumptions.
+    Compute the truth value for a unary predicate proposition. This function
+    uses pre-compiled facts for fast evaluation.
 
     Parameters
     ==========
 
-    key : sympy.assumptions.assume.Predicate
-        Proposition predicate.
+    proposition : AppliedPredicate
+        Unary predicate applied to an argument.
 
-    local_facts : sympy.assumptions.cnf.CNF
-        Local assumption in CNF form.
+    assumptions : Any boolean expression
+        Local assumptions to evaluate *proposition*.
+
+    context : AssumptionsContext
+        Default assumptions to evaluate *proposition*.
 
     Returns
     =======
@@ -516,50 +458,56 @@ def _ask_single_fact(key, local_facts):
     ========
 
     >>> from sympy import Q
-    >>> from sympy.assumptions.cnf import CNF
-    >>> from sympy.assumptions.ask import _ask_single_fact
-
-    If prerequisite of proposition is rejected by the assumption,
-    return ``False``.
-
-    >>> key, assump = Q.zero, ~Q.zero
-    >>> local_facts = CNF.from_prop(assump)
-    >>> _ask_single_fact(key, local_facts)
+    >>> from sympy.assumptions.ask import unary_ask
+    >>> from sympy.abc import x
+    >>> prop, assump = Q.zero(x), ~Q.zero(x)
+    >>> unary_ask(prop, assump)
     False
-    >>> key, assump = Q.zero, ~Q.even
-    >>> local_facts = CNF.from_prop(assump)
-    >>> _ask_single_fact(key, local_facts)
+    >>> prop, assump = Q.zero(x), ~Q.even(x)
+    >>> unary_ask(prop, assump)
     False
-
-    If assumption implies the proposition, return ``True``.
-
-    >>> key, assump = Q.even, Q.zero
-    >>> local_facts = CNF.from_prop(assump)
-    >>> _ask_single_fact(key, local_facts)
+    >>> prop, assump = Q.even(x), Q.zero(x)
+    >>> unary_ask(prop, assump)
     True
-
-    If proposition rejects the assumption, return ``False``.
-
-    >>> key, assump = Q.even, Q.odd
-    >>> local_facts = CNF.from_prop(assump)
-    >>> _ask_single_fact(key, local_facts)
+    >>> prop, assump = Q.even(x), Q.odd(x)
+    >>> unary_ask(prop, assump)
     False
+
     """
-    if local_facts.clauses:
+    # convert local and global assumptions to CNF
+    assump_cnf = CNF.from_prop(assumptions)
+    assump_cnf.extend(context)
+
+    # extract the relevant predicates from assumptions as cnf
+    pred, args = proposition.function, proposition.arguments
+    relevant_preds_cnf = extract_relevant_preds_cnf(assump_cnf, args)
+
+    # convert default facts and assumed facts to encoded CNF
+    known_facts_cnf = get_all_known_facts()
+    enc_cnf = EncodedCNF()
+    enc_cnf.from_cnf(CNF(known_facts_cnf))
+    enc_cnf.add_from_cnf(relevant_preds_cnf)
+
+    # check the satisfiability of given assumptions
+    if relevant_preds_cnf.clauses and satisfiable(enc_cnf) is False:
+        raise ValueError("inconsistent assumptions %s" % assumptions)
+
+    # perform evaluation
+    if relevant_preds_cnf.clauses:
 
         known_facts_dict = get_known_facts_dict()
 
-        if len(local_facts.clauses) == 1:
-            cl, = local_facts.clauses
+        if len(relevant_preds_cnf.clauses) == 1:
+            cl, = relevant_preds_cnf.clauses
             if len(cl) == 1:
                 f, = cl
-                prop_facts = known_facts_dict.get(key, None)
+                prop_facts = known_facts_dict.get(pred, None)
                 prop_req = prop_facts[0] if prop_facts is not None else set()
                 if f.is_Not and f.arg in prop_req:
                     # the prerequisite of proposition is rejected
                     return False
 
-        for clause in local_facts.clauses:
+        for clause in relevant_preds_cnf.clauses:
             if len(clause) == 1:
                 f, = clause
                 prop_facts = known_facts_dict.get(f.arg, None) if not f.is_Not else None
@@ -567,14 +515,64 @@ def _ask_single_fact(key, local_facts):
                     continue
 
                 prop_req, prop_rej = prop_facts
-                if key in prop_req:
+                if pred in prop_req:
                     # assumption implies the proposition
                     return True
-                elif key in prop_rej:
+                elif pred in prop_rej:
                     # proposition rejects the assumption
                     return False
 
     return None
+
+
+def extract_relevant_preds_cnf(cnf, exprs):
+    """
+    Extract the unapplied predicates relevant to *exprs* from *cnf* as a new
+    ``CNF`` instance.
+
+    Parameters
+    ==========
+
+    cnf : sympy.assumptions.cnf.CNF
+
+    exprs : tuple of expressions
+
+    Returns
+    =======
+
+    sympy.assumptions.cnf.CNF
+
+    Examples
+    ========
+
+    >>> from sympy import Q
+    >>> from sympy.assumptions.cnf import CNF
+    >>> from sympy.assumptions.ask import extract_relevant_preds_cnf
+    >>> from sympy.abc import x, y
+    >>> cnf = CNF.from_prop(Q.positive(x) & Q.integer(y) & ~Q.odd(x))
+    >>> exprs = (x,)
+    >>> ret = extract_relevant_preds_cnf(cnf, exprs)
+    >>> ret.clauses
+    {frozenset({Literal(Q.odd, True)}),
+     frozenset({Literal(Q.positive, False)})}
+
+    """
+    facts = set()
+
+    for clause in cnf.clauses:
+        args = []
+        for literal in clause:
+            if isinstance(literal.lit, AppliedPredicate):
+                if any(arg in exprs for arg in literal.lit.arguments):
+                    # Add literal if it has matching in it
+                    args.append(Literal(literal.lit.function, literal.is_Not))
+                else:
+                    # If any of the literals doesn't have matching expr don't add the whole clause.
+                    break
+        else:
+            if args:
+                facts.add(frozenset(args))
+    return CNF(facts)
 
 
 def register_handler(key, handler):

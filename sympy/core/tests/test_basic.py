@@ -11,7 +11,7 @@ from sympy.core.sympify import SympifyError
 from sympy.core.function import Function, Lambda
 from sympy.core.compatibility import default_sort_key
 
-from sympy import sin, Q, cos, gamma, Tuple, Integral, Sum
+from sympy import sin, cos, gamma, Tuple, Integral, Sum
 from sympy.functions.elementary.exponential import exp
 from sympy.testing.pytest import raises
 from sympy.core import I, pi
@@ -221,8 +221,6 @@ def test_call():
     # TODO UndefinedFunction does not subclass Expr
     #f = Function('f')
     #assert (2*f)(x) == 2*f(x)
-
-    assert (Q.real & Q.positive).rcall(x) == Q.real(x) & Q.positive(x)
 
 
 def test_rewrite():
