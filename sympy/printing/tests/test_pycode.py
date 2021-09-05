@@ -176,7 +176,6 @@ def test_issue_20762():
     # Make sure pycode removes curly braces from subscripted variables
     expr = parse_latex(r'a_b \cdot b')
     assert pycode(expr) == 'a_b*b'
-    
     expr = parse_latex(r'a_{11} \cdot b')
     assert pycode(expr) == 'a_11*b'
 
