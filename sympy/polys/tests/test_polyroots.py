@@ -710,3 +710,7 @@ def test_roots_composite():
 def test_issue_19113():
     eq = cos(x)**3 - cos(x) + 1
     raises(PolynomialError, lambda: roots(eq))
+
+
+def test_issue_17454():
+    assert roots([1, -3*(-4 - 4*I)**2/8 + 12*I, 0], multiple=True) == [0, 0]
