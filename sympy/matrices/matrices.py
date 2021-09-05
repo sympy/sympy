@@ -1,9 +1,10 @@
 import mpmath as mp
+from collections.abc import Callable
+
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import (
-    Callable, NotIterable, as_int, is_sequence)
+from sympy.core.compatibility import NotIterable, as_int, is_sequence
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
 from sympy.core.kind import _NumberKind, UndefinedKind
