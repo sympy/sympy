@@ -2135,6 +2135,13 @@ def test_non_string_equality():
     assert (x != BadRepr()) is True
 
 
+def test_issue_22020():
+    from sympy.parsing.sympy_parser import parse_expr
+    x = parse_expr("log((2*V/3-V)/C)/-(R+r)*C")
+    y = parse_expr("log((2*V/3-V)/C)/-(R+r)*2")
+    assert x.equals(y) is None
+
+
 def test_21494():
     from sympy.testing.pytest import warns_deprecated_sympy
     with warns_deprecated_sympy():
