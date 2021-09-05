@@ -983,7 +983,7 @@ class Mul(Expr, AssocOp):
 
     @cacheit
     def _eval_derivative_n_times(self, s, n):
-        from sympy import Integer, factorial, prod, Sum, Max
+        from sympy import Integer, factorial, Sum, Max
         from sympy.ntheory.multinomial import multinomial_coefficients_iterator
         from .function import AppliedUndef
         from .symbol import Symbol, symbols, Dummy
@@ -1113,7 +1113,7 @@ class Mul(Expr, AssocOp):
     def _matches_add_wildcard(dictionary, state):
         node_ind, target_ind = state
         if node_ind in dictionary:
-            begin, end = dictionary[node_ind]
+            begin = dictionary[node_ind][0]
             dictionary[node_ind] = (begin, target_ind)
         else:
             dictionary[node_ind] = (target_ind, target_ind)
@@ -1178,8 +1178,8 @@ class Mul(Expr, AssocOp):
         begin, end = dictionary[wildcard_ind]
         terms = targets[begin:end + 1]
         # TODO: Should this be self.func?
-        mul = Mul(*terms) if len(terms) > 1 else terms[0]
-        return wildcard.matches(mul)
+        mult = Mul(*terms) if len(terms) > 1 else terms[0]
+        return wildcard.matches(mult)
 
     @staticmethod
     def _matches_get_other_nodes(dictionary, nodes, node_ind):
@@ -1903,7 +1903,7 @@ class Mul(Expr, AssocOp):
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        from sympy import degree, Mul, Order, ceiling, powsimp, PolynomialError, PoleError
+        from sympy import degree, Order, ceiling, powsimp, PolynomialError, PoleError
         from itertools import product
 
         def coeff_exp(term, x):
@@ -2010,7 +2010,7 @@ class Mul(Expr, AssocOp):
 
         coef = S.One
         args = []
-        for i, a in enumerate(self.args):
+        for a in self.args:
             c, p = a.as_content_primitive(radical=radical, clear=clear)
             coef *= c
             if p is not S.One:

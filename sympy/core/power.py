@@ -632,7 +632,6 @@ class Pow(Expr):
 
     def _eval_is_extended_real(self):
         from ..functions import arg, log, exp
-        from .mul import Mul
 
         if self.base is S.Exp1:
             if self.exp.is_extended_real:
@@ -797,7 +796,7 @@ class Pow(Expr):
         return self.base.is_polar
 
     def _eval_subs(self, old, new):
-        from sympy import exp, log, Symbol, AccumBounds
+        from sympy import exp, log, AccumBounds
 
         if isinstance(self.exp, AccumBounds):
             b = self.base.subs(old, new)
