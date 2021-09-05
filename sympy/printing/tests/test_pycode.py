@@ -18,10 +18,7 @@ from sympy.tensor import IndexedBase
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import loggamma
 from sympy.parsing.latex import parse_latex
-from sympy.external import import_module
 
-# To test latex to python printing
-antlr4 = import_module("antlr4")
 
 x, y, z = symbols('x y z')
 p = IndexedBase("p")
@@ -171,6 +168,7 @@ def test_pycode_reserved_words():
     assert py_str in ('else_ + if_', 'if_ + else_')
 
 def test_issue_20762():
+    antlr4 = import_module("antlr4")
     if not antlr4:
         skip('antlr not installed.')
     # Make sure pycode removes curly braces from subscripted variables
