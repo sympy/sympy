@@ -2112,7 +2112,7 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
         if not clear and coeff.is_Rational and coeff.q != 1:
             args = [i.as_coeff_Mul() for i in factors.args]
             args = [(_keep_coeff(c, coeff), m) for c, m in args]
-            if any(not c.is_infinite and c == int(c) for c, _ in args):
+            if any(c.is_Integer for c, _ in args):
                 return Add._from_args([Mul._from_args(
                     i[1:] if i[0] == 1 else i) for i in args])
         return Mul(coeff, factors, evaluate=False)
