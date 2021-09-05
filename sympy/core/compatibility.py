@@ -6,6 +6,7 @@ here for easy import.
 
 import operator
 from collections import defaultdict
+from time import perf_counter as clock
 
 from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, GROUND_TYPES, gmpy
 
@@ -14,7 +15,10 @@ from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, GROUND_TYPES, gmpy
 Python 2 and Python 3 compatible imports
 
 String and Unicode compatible changes:
+    * `unicode()` removed in Python 3, import `unicode` for Python 2/3
+      compatible function
     * Use `u()` for escaped unicode sequences (e.g. u'\u2020' -> u('\u2020'))
+    * Use `u_decode()` to decode utf-8 formatted unicode strings
 
 Renamed function attributes:
     * Python 2 `.func_code`, Python 3 `.__func__`, access with
@@ -44,8 +48,8 @@ Metaclasses:
 """
 
 __all__ = [
-    'int_info', 'SYMPY_INTS',
-    'get_function_code', 'gmpy',
+    'PY3', 'int_info', 'SYMPY_INTS', 'clock',
+    'unicode', 'u_decode', 'get_function_code', 'gmpy',
     'get_function_globals', 'get_function_name', 'builtins', 'reduce',
     'StringIO', 'cStringIO', 'exec_', 'Mapping', 'Callable',
     'MutableMapping', 'MutableSet', 'Iterable', 'Hashable', 'unwrap',
@@ -54,8 +58,15 @@ __all__ = [
 ]
 
 import sys
+PY3 = True
 
 int_info = sys.int_info
+
+# String / unicode compatibility
+unicode = str
+
+def u_decode(x):
+    return x
 
 # Moved definitions
 get_function_code = operator.attrgetter("__code__")

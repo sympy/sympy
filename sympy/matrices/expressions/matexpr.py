@@ -7,9 +7,10 @@ import collections
 
 from sympy.core import S, Symbol, Integer, Basic, Expr, Mul, Add
 from sympy.core.decorators import call_highest_priority
-from sympy.core.compatibility import SYMPY_INTS, default_sort_key
+from sympy.core.compatibility import default_sort_key
 from sympy.core.symbol import Str
 from sympy.core.sympify import SympifyError, _sympify
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.common import NonSquareMatrixError

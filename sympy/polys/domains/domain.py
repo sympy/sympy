@@ -4,8 +4,9 @@
 from typing import Any, Optional, Type
 
 from sympy.core import Basic, sympify
-from sympy.core.compatibility import HAS_GMPY, is_sequence, ordered
+from sympy.core.compatibility import is_sequence, ordered
 from sympy.core.decorators import deprecated
+from sympy.external.gmpy import HAS_GMPY
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError

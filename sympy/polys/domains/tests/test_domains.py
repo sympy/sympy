@@ -4,8 +4,7 @@ from sympy import I, S, sqrt, sin, oo, Poly, Float, Integer, Rational, pi, exp, 
 from sympy.abc import x, y, z
 
 from sympy.utilities.iterables import cartes
-from sympy.core.compatibility import HAS_GMPY
-
+from sympy.external.gmpy import HAS_GMPY
 from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, EXRAW, ZZ_gmpy,
     ZZ_python, QQ_gmpy, QQ_python)
 from sympy.polys.domains.algebraicfield import AlgebraicField

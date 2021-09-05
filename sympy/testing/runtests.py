@@ -35,9 +35,9 @@ import stat
 import tempfile
 import warnings
 from contextlib import contextmanager
+from inspect import unwrap
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import (unwrap)
 from sympy.external import import_module
 
 IS_WINDOWS = (os.name == 'nt')

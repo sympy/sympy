@@ -4,9 +4,10 @@ from functools import reduce
 from sympy.core import (sympify, Basic, S, Expr, expand_mul, factor_terms,
     Mul, Dummy, igcd, FunctionClass, Add, symbols, Wild, expand)
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import iterable, SYMPY_INTS
+from sympy.core.compatibility import iterable
 from sympy.core.function import count_ops, _mexpand
 from sympy.core.numbers import I, Integer
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.trigonometric import TrigonometricFunction

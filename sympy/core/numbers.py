@@ -14,10 +14,10 @@ from .evalf import pure_complex
 from .decorators import _sympifyit
 from .cache import cacheit, clear_cache
 from .logic import fuzzy_not
-from sympy.core.compatibility import (as_int, HAS_GMPY, SYMPY_INTS,
-    gmpy)
+from sympy.core.compatibility import as_int
 from sympy.core.cache import lru_cache
 from .kind import NumberKind
+from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, gmpy
 from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib

@@ -4,8 +4,8 @@
 from random import uniform
 from math import ceil as _ceil, sqrt as _sqrt
 
-from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.mul import prod
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.ntheory import factorint
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
