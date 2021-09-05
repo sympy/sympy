@@ -6,7 +6,6 @@ here for easy import.
 
 import operator
 from collections import defaultdict
-from time import perf_counter as clock
 
 from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, GROUND_TYPES, gmpy
 
@@ -48,7 +47,7 @@ Metaclasses:
 """
 
 __all__ = [
-    'int_info', 'SYMPY_INTS', 'clock',
+    'int_info', 'SYMPY_INTS',
     'unicode', 'u_decode', 'get_function_code', 'gmpy',
     'get_function_globals', 'get_function_name', 'builtins', 'reduce',
     'StringIO', 'cStringIO', 'exec_', 'Mapping', 'Callable',
