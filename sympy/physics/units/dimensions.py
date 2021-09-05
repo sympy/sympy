@@ -10,21 +10,20 @@ no time dimension (but a velocity dimension instead) - in the basis - so the
 question of adding time to length has no meaning.
 """
 
-from __future__ import division
-
 from typing import Dict as tDict
 
 import collections
+from functools import reduce
 
 from sympy import (Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict,
     default_sort_key)
-from sympy.core.compatibility import reduce
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
-class _QuantityMapper(object):
+class _QuantityMapper:
 
     _quantity_scale_factors_global = {}  # type: tDict[Expr, Expr]
     _quantity_dimensional_equivalence_map_global = {}  # type: tDict[Expr, Expr]
@@ -207,7 +206,7 @@ class Dimension(Expr):
                 raise TypeError("cannot sum dimension and quantity")
             if isinstance(other, Dimension) and self == other:
                 return self
-            return super(Dimension, self).__add__(other)
+            return super().__add__(other)
         return self
 
     def __radd__(self, other):
@@ -239,26 +238,23 @@ class Dimension(Expr):
                 return Dimension(self.name*other.name)
             if not other.free_symbols:  # other.is_number cannot be used
                 return self
-            return super(Dimension, self).__mul__(other)
+            return super().__mul__(other)
         return self
 
     def __rmul__(self, other):
         return self.__mul__(other)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         return self*Pow(other, -1)
 
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         return other * pow(self, -1)
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     @classmethod
     def _from_dimensional_dependencies(cls, dependencies):
         return reduce(lambda x, y: x * y, (
             Dimension(d)**e for d, e in dependencies.items()
-        ))
+        ), 1)
 
     @classmethod
     def _get_dimensional_dependencies_for_name(cls, name):
@@ -411,13 +407,18 @@ class DimensionSystem(Basic, _QuantityMapper):
         return self.args[2]
 
     def _get_dimensional_dependencies_for_name(self, name):
+        if isinstance(name, Dimension):
+            name = name.name
+
+        if isinstance(name, str):
+            name = Symbol(name)
 
         if name.is_Symbol:
             # Dimensions not included in the dependencies are considered
             # as base dimensions:
             return dict(self.dimensional_dependencies.get(name, {name: 1}))
 
-        if name.is_Number:
+        if name.is_number or name.is_NumberSymbol:
             return {}
 
         get_for_name = self._get_dimensional_dependencies_for_name
@@ -430,28 +431,46 @@ class DimensionSystem(Basic, _QuantityMapper):
                     ret[k] += v
             return {k: v for (k, v) in ret.items() if v != 0}
 
+        if name.is_Add:
+            dicts = [get_for_name(i) for i in name.args]
+            if all([d == dicts[0] for d in dicts[1:]]):
+                return dicts[0]
+            raise TypeError("Only equivalent dimensions can be added or subtracted.")
+
         if name.is_Pow:
-            dim = get_for_name(name.base)
-            return {k: v*name.exp for (k, v) in dim.items()}
+            dim_base = get_for_name(name.base)
+            dim_exp = get_for_name(name.exp)
+            if dim_exp == {} or name.exp.is_Symbol:
+                return {k: v*name.exp for (k, v) in dim_base.items()}
+            else:
+                raise TypeError("The exponent for the power operator must be a Symbol or dimensionless.")
 
         if name.is_Function:
             args = (Dimension._from_dimensional_dependencies(
                 get_for_name(arg)) for arg in name.args)
             result = name.func(*args)
 
+            dicts = [get_for_name(i) for i in name.args]
+
             if isinstance(result, Dimension):
                 return self.get_dimensional_dependencies(result)
             elif result.func == name.func:
-                return {}
+                if isinstance(name, TrigonometricFunction):
+                    if dicts[0] == {} or dicts[0] == {Symbol('angle'): 1}:
+                        return {}
+                    else:
+                        raise TypeError("The input argument for the function {} must be dimensionless or have dimensions of angle.".format(name.func))
+                else:
+                    if all( (item == {} for item in dicts) ):
+                        return {}
+                    else:
+                        raise TypeError("The input arguments for the function {} must be dimensionless.".format(name.func))
             else:
                 return get_for_name(result)
 
-    def get_dimensional_dependencies(self, name, mark_dimensionless=False):
-        if isinstance(name, Dimension):
-            name = name.name
-        if isinstance(name, str):
-            name = Symbol(name)
+        raise TypeError("Type {} not implemented for get_dimensional_dependencies".format(type(name)))
 
+    def get_dimensional_dependencies(self, name, mark_dimensionless=False):
         dimdep = self._get_dimensional_dependencies_for_name(name)
         if mark_dimensionless and dimdep == {}:
             return {'dimensionless': 1}
@@ -558,7 +577,7 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         List all canonical dimension names.
         """
-        dimset = set([])
+        dimset = set()
         for i in self.base_dims:
             dimset.update(set(self.get_dimensional_dependencies(i).keys()))
         return tuple(sorted(dimset, key=str))

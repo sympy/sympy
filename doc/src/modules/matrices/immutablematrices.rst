@@ -1,7 +1,7 @@
 Immutable Matrices
 ==================
 
-.. module:: sympy
+.. currentmodule:: sympy
 
 The standard :obj:`~.Matrix` class in SymPy is mutable. This is important for
 performance reasons but means that standard matrices cannot interact well with

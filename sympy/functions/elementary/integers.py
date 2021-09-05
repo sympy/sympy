@@ -1,12 +1,14 @@
+from sympy import Basic, Expr
+
 from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_or
 from sympy.core.numbers import Integer
-from sympy.core.relational import Gt, Lt, Ge, Le, Relational
+from sympy.core.relational import Gt, Lt, Ge, Le, Relational, is_eq
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
-
+from sympy.multipledispatch import dispatch
 
 ###############################################################################
 ######################### FLOOR and CEILING FUNCTIONS #########################
@@ -129,16 +131,38 @@ class floor(RoundFunction):
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[0]
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
-        args = self.args[0]
-        args0 = args.subs(x, 0)
-        if args0 == r:
-            direction = (args - args0).leadterm(x)[0]
-            if direction.is_positive:
-                return r
+        if arg0.is_finite:
+            if arg0 == r:
+                if cdir == 0:
+                    ndirl = arg.dir(x, cdir=-1)
+                    ndir = arg.dir(x, cdir=1)
+                    if ndir != ndirl:
+                        raise ValueError("Two sided limit of %s around 0"
+                                    "does not exist" % self)
+                else:
+                    ndir = arg.dir(x, cdir=cdir)
+                return r - 1 if ndir.is_negative else r
             else:
-                return r - 1
+                return r
+        return arg.as_leading_term(x, logx=logx, cdir=cdir)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+        if arg0.is_infinite:
+            from sympy.calculus.util import AccumBounds
+            from sympy.series.order import Order
+            s = arg._eval_nseries(x, n, logx, cdir)
+            o = Order(1, (x, 0)) if n <= 0 else AccumBounds(-1, 0)
+            return s + o
+        r = self.subs(x, 0)
+        if arg0 == r:
+            ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
+            return r - 1 if ndir.is_negative else r
         else:
             return r
 
@@ -153,12 +177,6 @@ class floor(RoundFunction):
 
     def _eval_rewrite_as_frac(self, arg, **kwargs):
         return arg - frac(arg)
-
-    def _eval_Eq(self, other):
-        if isinstance(self, floor):
-            if (self.rewrite(ceiling) == other) or \
-                    (self.rewrite(frac) == other):
-                return S.true
 
     def __le__(self, other):
         other = S(other)
@@ -216,6 +234,13 @@ class floor(RoundFunction):
 
         return Lt(self, other, evaluate=False)
 
+
+@dispatch(floor, Expr)
+def _eval_is_eq(lhs, rhs): # noqa:F811
+   return is_eq(lhs.rewrite(ceiling), rhs) or \
+        is_eq(lhs.rewrite(frac),rhs)
+
+
 class ceiling(RoundFunction):
     """
     Ceiling is a univariate function which returns the smallest integer
@@ -264,16 +289,38 @@ class ceiling(RoundFunction):
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[1]
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
-        args = self.args[0]
-        args0 = args.subs(x, 0)
-        if args0 == r:
-            direction = (args - args0).leadterm(x)[0]
-            if direction.is_positive:
-                return r + 1
+        if arg0.is_finite:
+            if arg0 == r:
+                if cdir == 0:
+                    ndirl = arg.dir(x, cdir=-1)
+                    ndir = arg.dir(x, cdir=1)
+                    if ndir != ndirl:
+                        raise ValueError("Two sided limit of %s around 0"
+                                    "does not exist" % self)
+                else:
+                    ndir = arg.dir(x, cdir=cdir)
+                return r if ndir.is_negative else r + 1
             else:
                 return r
+        return arg.as_leading_term(x, logx=logx, cdir=cdir)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+        if arg0.is_infinite:
+            from sympy.calculus.util import AccumBounds
+            from sympy.series.order import Order
+            s = arg._eval_nseries(x, n, logx, cdir)
+            o = Order(1, (x, 0)) if n <= 0 else AccumBounds(0, 1)
+            return s + o
+        r = self.subs(x, 0)
+        if arg0 == r:
+            ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
+            return r if ndir.is_negative else r + 1
         else:
             return r
 
@@ -288,12 +335,6 @@ class ceiling(RoundFunction):
 
     def _eval_is_nonpositive(self):
         return self.args[0].is_nonpositive
-
-    def _eval_Eq(self, other):
-        if isinstance(self, ceiling):
-            if (self.rewrite(floor) == other) or \
-                    (self.rewrite(frac) == other):
-                return S.true
 
     def __lt__(self, other):
         other = S(other)
@@ -351,6 +392,12 @@ class ceiling(RoundFunction):
 
         return Le(self, other, evaluate=False)
 
+
+@dispatch(ceiling, Basic)  # type:ignore
+def _eval_is_eq(lhs, rhs): # noqa:F811
+    return is_eq(lhs.rewrite(floor), rhs) or is_eq(lhs.rewrite(frac),rhs)
+
+
 class frac(Function):
     r"""Represents the fractional part of x
 
@@ -362,7 +409,7 @@ class frac(Function):
     Examples
     ========
 
-    >>> from sympy import Symbol, frac, Rational, floor, ceiling, I
+    >>> from sympy import Symbol, frac, Rational, floor, I
     >>> frac(Rational(4, 3))
     1/3
     >>> frac(-Rational(4, 3))
@@ -442,19 +489,6 @@ class frac(Function):
     def _eval_rewrite_as_ceiling(self, arg, **kwargs):
         return arg + ceiling(-arg)
 
-    def _eval_Eq(self, other):
-        if isinstance(self, frac):
-            if (self.rewrite(floor) == other) or \
-                    (self.rewrite(ceiling) == other):
-                return S.true
-            # Check if other < 0
-            if other.is_extended_negative:
-                return S.false
-            # Check if other >= 1
-            res = self._value_one_or_more(other)
-            if res is not None:
-                return S.false
-
     def _eval_is_finite(self):
         return True
 
@@ -529,3 +563,17 @@ class frac(Function):
                     return S.true
             if other.is_integer and other.is_positive:
                 return S.true
+
+
+@dispatch(frac, Basic)  # type:ignore
+def _eval_is_eq(lhs, rhs): # noqa:F811
+    if (lhs.rewrite(floor) == rhs) or \
+        (lhs.rewrite(ceiling) == rhs):
+        return True
+    # Check if other < 0
+    if rhs.is_extended_negative:
+        return False
+    # Check if other >= 1
+    res = lhs._value_one_or_more(rhs)
+    if res is not None:
+        return False

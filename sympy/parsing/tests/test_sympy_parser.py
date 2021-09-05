@@ -3,7 +3,7 @@
 
 import sys
 
-
+from sympy.assumptions import Q
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
 from sympy.functions import exp, factorial, factorial2, sin
 from sympy.logic import And
@@ -49,6 +49,7 @@ def test_sympy_parser():
             Pow(3, 1, evaluate=False),
             evaluate=False),
         'Limit(sin(x), x, 0, dir="-")': Limit(sin(x), x, 0, dir='-'),
+        'Q.even(x)': Q.even(x),
 
 
     }
@@ -130,9 +131,8 @@ def test_local_dict_symbol_to_fcn():
     x = Symbol('x')
     d = {'foo': Function('bar')}
     assert parse_expr('foo(x)', local_dict=d) == d['foo'](x)
-    # XXX: bit odd, but would be error if parser left the Symbol
     d = {'foo': Symbol('baz')}
-    assert parse_expr('foo(x)', local_dict=d) == Function('baz')(x)
+    raises(TypeError, lambda: parse_expr('foo(x)', local_dict=d))
 
 
 def test_global_dict():
@@ -157,10 +157,12 @@ def test_issue_7663():
     assert parse_expr(e, evaluate=0) == parse_expr(e, evaluate=False)
     assert parse_expr(e, evaluate=0).equals(2*(x+1))
 
-def test_issue_10560():
+def test_recursive_evaluate_false_10560():
     inputs = {
-        '4*-3' : '(-3)*4',
+        '4*-3' : '4*-3',
         '-4*3' : '(-4)*3',
+        "-2*x*y": '(-2)*x*y',
+        "x*-4*x": "x*(-4)*x"
     }
     for text, result in inputs.items():
         assert parse_expr(text, evaluate=False) == parse_expr(result, evaluate=False)
@@ -252,7 +254,7 @@ def test_split_symbols_numeric():
 
 
 def test_unicode_names():
-    assert parse_expr(u'α') == Symbol(u'α')
+    assert parse_expr('α') == Symbol('α')
 
 
 def test_python3_features():
@@ -267,3 +269,11 @@ def test_python3_features():
     assert parse_expr('.[3_4]') == parse_expr('.[34]') == Rational(34, 99)
     assert parse_expr('.1[3_4]') == parse_expr('.1[34]') == Rational(133, 990)
     assert parse_expr('123_123.123_123[3_4]') == parse_expr('123123.123123[34]') == Rational(12189189189211, 99000000)
+
+
+def test_issue_19501():
+    x = Symbol('x')
+    eq = parse_expr('E**x(1+x)', local_dict={'x': x}, transformations=(
+        standard_transformations +
+        (implicit_multiplication_application,)))
+    assert eq.free_symbols == {x}

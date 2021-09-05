@@ -5,8 +5,25 @@ from sympy.sets.sets import Interval
 from sympy.core.cache import lru_cache
 
 
-def _add_splines(c, b1, d, b2):
+def _ivl(cond, x):
+    """return the interval corresponding to the condition
+
+    Conditions in spline's Piecewise give the range over
+    which an expression is valid like (lo <= x) & (x <= hi).
+    This function returns (lo, hi).
+    """
+    from sympy.logic.boolalg import And
+    if isinstance(cond, And) and len(cond.args) == 2:
+        a, b = cond.args
+        if a.lts == x:
+            a, b = b, a
+        return a.lts, b.gts
+    raise TypeError('unexpected cond type: %s' % cond)
+
+
+def _add_splines(c, b1, d, b2, x):
     """Construct c*b1 + d*b2."""
+
     if b1 == S.Zero or c == S.Zero:
         rv = piecewise_fold(d * b2)
     elif b2 == S.Zero or d == S.Zero:
@@ -23,23 +40,17 @@ def _add_splines(c, b1, d, b2):
         # This merging algorithm assumes the conditions in
         # p1 and p2 are sorted
         for arg in p1.args[:-1]:
-            # Conditional of Piecewise are And objects
-            # the args of the And object is a tuple of two
-            # Relational objects the numerical value is in the .rhs
-            # of the Relational object
             expr = arg.expr
             cond = arg.cond
 
-            lower = cond.args[0].rhs
+            lower = _ivl(cond, x)[0]
 
             # Check p2 for matching conditions that can be merged
             for i, arg2 in enumerate(p2args):
                 expr2 = arg2.expr
                 cond2 = arg2.cond
 
-                lower_2 = cond2.args[0].rhs
-                upper_2 = cond2.args[1].rhs
-
+                lower_2, upper_2 = _ivl(cond2, x)
                 if cond2 == cond:
                     # Conditions match, join expressions
                     expr += expr2
@@ -64,7 +75,7 @@ def _add_splines(c, b1, d, b2):
         # Add final (0, True)
         new_args.append((0, True))
 
-        rv = Piecewise(*new_args)
+        rv = Piecewise(*new_args, evaluate=False)
 
     return rv.expand()
 
@@ -126,6 +137,20 @@ def bspline_basis(d, knots, n, x):
         >>> f = lambdify(x, b0)
         >>> y = f(0.5)
 
+    Parameters
+    ==========
+
+    d : integer
+        degree of bspline
+
+    knots : list of integer values
+        list of knots points of bspline
+
+    n : integer
+        $n$-th B-spline
+
+    x : symbol
+
     See Also
     ========
 
@@ -137,6 +162,11 @@ def bspline_basis(d, knots, n, x):
     .. [1] https://en.wikipedia.org/wiki/B-spline
 
     """
+    from sympy.core.symbol import Dummy
+    # make sure x has no assumptions so conditions don't evaluate
+    xvar = x
+    x = Dummy()
+
     knots = tuple(sympify(k) for k in knots)
     d = int(d)
     n = int(n)
@@ -163,10 +193,12 @@ def bspline_basis(d, knots, n, x):
         else:
             b1 = A = S.Zero
 
-        result = _add_splines(A, b1, B, b2)
+        result = _add_splines(A, b1, B, b2, x)
     else:
         raise ValueError("degree must be non-negative: %r" % n)
-    return result
+
+    # return result with user-given x
+    return result.xreplace({x: xvar})
 
 
 def bspline_basis_set(d, knots, x):
@@ -199,6 +231,17 @@ def bspline_basis_set(d, knots, x):
               (-x**2 + 5*x - 11/2, (x >= 2) & (x <= 3)),
               (x**2/2 - 4*x + 8, (x >= 3) & (x <= 4)),
               (0, True))]
+
+    Parameters
+    ==========
+
+    d : integer
+        degree of bspline
+
+    knots : list of integers
+        list of knots points of bspline
+
+    x : symbol
 
     See Also
     ========
@@ -236,13 +279,27 @@ def interpolating_spline(d, x, X, Y):
     Piecewise((7*x**3/117 + 7*x**2/117 - 131*x/117 + 2, (x >= -2) & (x <= 1)),
             (10*x**3/117 - 2*x**2/117 - 122*x/117 + 77/39, (x >= 1) & (x <= 4)))
 
+    Parameters
+    ==========
+
+    d : integer
+        Degree of Bspline strictly greater than equal to one
+
+    x : symbol
+
+    X : list of strictly increasing integer values
+        list of X coordinates through which the spline passes
+
+    Y : list of strictly increasing integer values
+        list of Y coordinates through which the spline passes
+
     See Also
     ========
 
     bspline_basis_set, interpolating_poly
 
     """
-    from sympy import symbols, Number, Dummy, Rational
+    from sympy import symbols, Dummy
     from sympy.solvers.solveset import linsolve
     from sympy.matrices.dense import Matrix
 
@@ -256,6 +313,7 @@ def interpolating_spline(d, x, X, Y):
         raise ValueError("Degree must be less than the number of control points.")
     if not all(a < b for a, b in zip(X, X[1:])):
         raise ValueError("The x-coordinates must be strictly increasing.")
+    X = [sympify(i) for i in X]
 
     # Evaluating knots value
     if d.is_odd:
@@ -264,7 +322,7 @@ def interpolating_spline(d, x, X, Y):
     else:
         j = d // 2
         interior_knots = [
-            Rational(a + b, 2) for a, b in zip(X[j : -j - 1], X[j + 1 : -j])
+            (a + b)/2 for a, b in zip(X[j : -j - 1], X[j + 1 : -j])
         ]
 
     knots = [X[0]] * (d + 1) + list(interior_knots) + [X[-1]] * (d + 1)
@@ -279,8 +337,7 @@ def interpolating_spline(d, x, X, Y):
 
     # Sorting the intervals
     #  ival contains the end-points of each interval
-    ival = [e.atoms(Number) for e in intervals]
-    ival = [list(sorted(e))[0] for e in ival]
+    ival = [_ivl(c, x) for c in intervals]
     com = zip(ival, intervals)
     com = sorted(com, key=lambda x: x[0])
     intervals = [y for x, y in com]

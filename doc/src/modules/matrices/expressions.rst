@@ -54,6 +54,10 @@ Matrix Expressions Core Reference
    :members:
 .. autoclass:: ZeroMatrix
    :members:
+.. autoclass:: CompanionMatrix
+   :members:
+.. autoclass:: MatrixSet
+   :members:
 
 Block Matrices
 --------------

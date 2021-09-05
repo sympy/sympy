@@ -1198,6 +1198,12 @@ def test_issue_17556():
     assert z.is_finite is False
 
 
+def test_issue_21651():
+    k = Symbol('k', positive=True, integer=True)
+    exp = 2*2**(-k)
+    assert exp.is_integer is None
+
+
 def test_assumptions_copy():
     assert assumptions(Symbol('x'), dict(commutative=True)
         ) == {'commutative': True}
@@ -1238,6 +1244,7 @@ def test_assumptions_copy():
 
 
 def test_check_assumptions():
+    assert check_assumptions(1, 0) is False
     x = Symbol('x', positive=True)
     assert check_assumptions(1, x) is True
     assert check_assumptions(1, 1) is True

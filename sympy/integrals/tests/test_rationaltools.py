@@ -1,4 +1,5 @@
-from sympy import S, symbols, I, atan, log, Poly, sqrt, simplify, integrate, Rational
+from sympy import (S, symbols, I, atan, log, Poly, sqrt, simplify,
+    integrate, Rational, Dummy)
 
 from sympy.integrals.rationaltools import ratint, ratint_logpart, log_to_atan
 
@@ -67,7 +68,7 @@ def test_ratint():
     g = x**4 - 2*x**3 + 5*x**2 - 4*x + 4
 
     assert ratint(f/g, x) == \
-        x + S.Half*x**2 + S.Half*log(2 - x + x**2) - (4*x - 9)/(14 - 7*x + 7*x**2) + \
+        x + S.Half*x**2 + S.Half*log(2 - x + x**2) + (9 - 4*x)/(7*x**2 - 7*x + 14) + \
         13*sqrt(7)*atan(Rational(-1, 7)*sqrt(7) + 2*x*sqrt(7)/7)/49
 
     assert ratint(1/(x**2 + x + 1), x) == \
@@ -99,6 +100,10 @@ def test_ratint():
     assert ratint(1/(x**2 + 1), x, symbol=x) == ans
     assert ratint(1/(x**2 + 1), x, symbol='x') == ans
     assert ratint(1/(x**2 + 1), x, symbol=a) == ans
+    # this asserts that as_dummy must return a unique symbol
+    # even if the symbol is already a Dummy
+    d = Dummy()
+    assert ratint(1/(d**2 + 1), d, symbol=d) == atan(d)
 
 
 def test_ratint_logpart():

@@ -46,16 +46,13 @@ class BasisDependent(Expr):
         return self._mul_func(S.NegativeOne, self)
 
     @_sympifyit('other', NotImplemented)
-    @call_highest_priority('__rdiv__')
-    def __div__(self, other):
+    @call_highest_priority('__rtruediv__')
+    def __truediv__(self, other):
         return self._div_helper(other)
 
-    @call_highest_priority('__div__')
-    def __rdiv__(self, other):
+    @call_highest_priority('__truediv__')
+    def __rtruediv__(self, other):
         return TypeError("Invalid divisor for division")
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """
@@ -288,15 +285,12 @@ class BasisDependentMul(BasisDependent, Mul):
 
         return obj
 
-    def __str__(self, printer=None):
-        measure_str = self._measure_number.__str__()
+    def _sympystr(self, printer):
+        measure_str = printer._print(self._measure_number)
         if ('(' in measure_str or '-' in measure_str or
                 '+' in measure_str):
             measure_str = '(' + measure_str + ')'
-        return measure_str + '*' + self._base_instance.__str__(printer)
-
-    __repr__ = __str__
-    _sympystr = __str__
+        return measure_str + '*' + printer._print(self._base_instance)
 
 
 class BasisDependentZero(BasisDependent):
@@ -360,8 +354,5 @@ class BasisDependentZero(BasisDependent):
         """
         return self
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         return '0'
-
-    __repr__ = __str__
-    _sympystr = __str__

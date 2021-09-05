@@ -8,11 +8,8 @@ using the functions defined in math.h where possible.
 
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
-from sympy.codegen.ast import Assignment
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.sets.fancysets import Range
@@ -115,10 +112,10 @@ class RCodePrinter(CodePrinter):
         return "%s;" % codestring
 
     def _get_comment(self, text):
-        return "// {0}".format(text)
+        return "// {}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "{0} = {1};".format(name, value)
+        return "{} = {};".format(name, value)
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -179,6 +176,8 @@ class RCodePrinter(CodePrinter):
         return '-Inf'
 
     def _print_Assignment(self, expr):
+        from sympy.codegen.ast import Assignment
+
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.tensor.indexed import IndexedBase
         lhs = expr.lhs
@@ -233,13 +232,13 @@ class RCodePrinter(CodePrinter):
         return self._print(_piecewise)
 
     def _print_MatrixElement(self, expr):
-        return "{0}[{1}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
+        return "{}[{}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
             strict=True), expr.j + expr.i*expr.parent.shape[1])
 
     def _print_Symbol(self, expr):
-        name = super(RCodePrinter, self)._print_Symbol(expr)
+        name = super()._print_Symbol(expr)
         if expr in self._dereference:
-            return '(*{0})'.format(name)
+            return '(*{})'.format(name)
         else:
             return name
 
@@ -247,7 +246,7 @@ class RCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_sinc(self, expr):
         from sympy.functions.elementary.trigonometric import sin
@@ -261,7 +260,7 @@ class RCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         op = expr.op
         rhs_code = self._print(expr.rhs)
-        return "{0} {1} {2};".format(lhs_code, op, rhs_code)
+        return "{} {} {};".format(lhs_code, op, rhs_code)
 
     def _print_For(self, expr):
         target = self._print(expr.target)

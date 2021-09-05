@@ -6,11 +6,13 @@ from sympy import eye
 from sympy.abc import x, i, j, a, b, c, d
 from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
+from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
-from sympy.codegen.array_utils import (CodegenArrayContraction,
-        CodegenArrayTensorProduct, CodegenArrayDiagonal,
-        CodegenArrayPermuteDims, CodegenArrayElementwiseAdd)
-from sympy.printing.lambdarepr import NumPyPrinter
+from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
+    PermuteDims, ArrayDiagonal
+from sympy.printing.numpy import NumPyPrinter, SciPyPrinter, _numpy_known_constants, \
+    _numpy_known_functions, _scipy_known_constants, _scipy_known_functions
+from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 
 from sympy.testing.pytest import warns_deprecated_sympy
 from sympy.testing.pytest import skip, raises
@@ -30,6 +32,12 @@ def test_numpy_piecewise_regression():
     assert printer.doprint(p) == \
         'numpy.select([numpy.less(x, 0),True], [1,0], default=numpy.nan)'
     assert printer.module_imports == {'numpy': {'select', 'less', 'nan'}}
+
+def test_numpy_logaddexp():
+    lae = logaddexp(a, b)
+    assert NumPyPrinter().doprint(lae) == 'numpy.logaddexp(a, b)'
+    lae2 = logaddexp2(a, b)
+    assert NumPyPrinter().doprint(lae2) == 'numpy.logaddexp2(a, b)'
 
 
 def test_sum():
@@ -72,7 +80,7 @@ def test_codegen_einsum():
     M = MatrixSymbol("M", 2, 2)
     N = MatrixSymbol("N", 2, 2)
 
-    cg = CodegenArrayContraction.from_MatMul(M*N)
+    cg = convert_matrix_to_array(M * N)
     f = lambdify((M, N), cg, 'numpy')
 
     ma = np.matrix([[1, 2], [3, 4]])
@@ -93,31 +101,31 @@ def test_codegen_extra():
     mc = np.matrix([[2, 0], [1, 2]])
     md = np.matrix([[1,-1], [4, 7]])
 
-    cg = CodegenArrayTensorProduct(M, N)
+    cg = ArrayTensorProduct(M, N)
     f = lambdify((M, N), cg, 'numpy')
     assert (f(ma, mb) == np.einsum(ma, [0, 1], mb, [2, 3])).all()
 
-    cg = CodegenArrayElementwiseAdd(M, N)
+    cg = ArrayAdd(M, N)
     f = lambdify((M, N), cg, 'numpy')
     assert (f(ma, mb) == ma+mb).all()
 
-    cg = CodegenArrayElementwiseAdd(M, N, P)
+    cg = ArrayAdd(M, N, P)
     f = lambdify((M, N, P), cg, 'numpy')
     assert (f(ma, mb, mc) == ma+mb+mc).all()
 
-    cg = CodegenArrayElementwiseAdd(M, N, P, Q)
+    cg = ArrayAdd(M, N, P, Q)
     f = lambdify((M, N, P, Q), cg, 'numpy')
     assert (f(ma, mb, mc, md) == ma+mb+mc+md).all()
 
-    cg = CodegenArrayPermuteDims(M, [1, 0])
+    cg = PermuteDims(M, [1, 0])
     f = lambdify((M,), cg, 'numpy')
     assert (f(ma) == ma.T).all()
 
-    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [1, 2, 3, 0])
+    cg = PermuteDims(ArrayTensorProduct(M, N), [1, 2, 3, 0])
     f = lambdify((M, N), cg, 'numpy')
     assert (f(ma, mb) == np.transpose(np.einsum(ma, [0, 1], mb, [2, 3]), (1, 2, 3, 0))).all()
 
-    cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N), (1, 2))
+    cg = ArrayDiagonal(ArrayTensorProduct(M, N), (1, 2))
     f = lambdify((M, N), cg, 'numpy')
     assert (f(ma, mb) == np.diagonal(np.einsum(ma, [0, 1], mb, [2, 3]), axis1=1, axis2=2)).all()
 
@@ -307,3 +315,30 @@ def test_issue_17006():
     n = symbols('n', integer=True)
     N = MatrixSymbol("M", n, n)
     raises(NotImplementedError, lambda: lambdify(N, N + Identity(n)))
+
+def test_numpy_known_funcs_consts():
+    assert _numpy_known_constants['NaN'] == 'numpy.nan'
+    assert _numpy_known_constants['EulerGamma'] == 'numpy.euler_gamma'
+
+    assert _numpy_known_functions['acos'] == 'numpy.arccos'
+    assert _numpy_known_functions['log'] == 'numpy.log'
+
+def test_scipy_known_funcs_consts():
+    assert _scipy_known_constants['GoldenRatio'] == 'scipy.constants.golden_ratio'
+    assert _scipy_known_constants['Pi'] == 'scipy.constants.pi'
+
+    assert _scipy_known_functions['erf'] == 'scipy.special.erf'
+    assert _scipy_known_functions['factorial'] == 'scipy.special.factorial'
+
+def test_numpy_print_methods():
+    prntr = NumPyPrinter()
+    assert hasattr(prntr, '_print_acos')
+    assert hasattr(prntr, '_print_log')
+
+def test_scipy_print_methods():
+    prntr = SciPyPrinter()
+    assert hasattr(prntr, '_print_acos')
+    assert hasattr(prntr, '_print_log')
+    assert hasattr(prntr, '_print_erf')
+    assert hasattr(prntr, '_print_factorial')
+    assert hasattr(prntr, '_print_chebyshevt')

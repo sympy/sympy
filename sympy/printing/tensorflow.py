@@ -1,8 +1,8 @@
 from distutils.version import LooseVersion as V
+from collections.abc import Iterable
 
 from sympy import Mul, S
 from sympy.codegen.cfunctions import Sqrt
-from sympy.core.compatibility import Iterable
 from sympy.external import import_module
 from sympy.printing.precedence import PRECEDENCE
 from sympy.printing.pycode import AbstractPythonCodePrinter
@@ -78,7 +78,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
     )
 
     def __init__(self, settings=None):
-        super(TensorflowPrinter, self).__init__(settings)
+        super().__init__(settings)
 
         version = self._settings['tensorflow_version']
         if version is None and tensorflow:
@@ -88,7 +88,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
     def _print_Function(self, expr):
         op = self.mapping.get(type(expr), None)
         if op is None:
-            return super(TensorflowPrinter, self)._print_Basic(expr)
+            return super()._print_Basic(expr)
         children = [self._print(arg) for arg in expr.args]
         if len(children) == 1:
             return "%s(%s)" % (
@@ -146,13 +146,13 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         from sympy import Piecewise
         e, cond = expr.args[0].args
         if len(expr.args) == 1:
-            return '{0}({1}, {2}, {3})'.format(
+            return '{}({}, {}, {})'.format(
                 self._module_format(tensorflow_piecewise),
                 self._print(cond),
                 self._print(e),
                 0)
 
-        return '{0}({1}, {2}, {3})'.format(
+        return '{}({}, {}, {})'.format(
             self._module_format(tensorflow_piecewise),
             self._print(cond),
             self._print(e),
@@ -216,7 +216,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
             yield chr(i)
         raise ValueError("out of letters")
 
-    def _print_CodegenArrayTensorProduct(self, expr):
+    def _print_ArrayTensorProduct(self, expr):
         letters = self._get_letter_generator_for_einsum()
         contraction_string = ",".join(["".join([next(letters) for j in range(i)]) for i in expr.subranks])
         return '%s("%s", %s)' % (
@@ -225,15 +225,15 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
                 ", ".join([self._print(arg) for arg in expr.args])
         )
 
-    def _print_CodegenArrayContraction(self, expr):
-        from sympy.codegen.array_utils import CodegenArrayTensorProduct
+    def _print_ArrayContraction(self, expr):
+        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
         base = expr.expr
         contraction_indices = expr.contraction_indices
         contraction_string, letters_free, letters_dum = self._get_einsum_string(base.subranks, contraction_indices)
 
         if not contraction_indices:
             return self._print(base)
-        if isinstance(base, CodegenArrayTensorProduct):
+        if isinstance(base, ArrayTensorProduct):
             elems = ["%s" % (self._print(arg)) for arg in base.args]
             return "%s(\"%s\", %s)" % (
                 self._module_format("tensorflow.linalg.einsum"),
@@ -242,18 +242,18 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
             )
         raise NotImplementedError()
 
-    def _print_CodegenArrayDiagonal(self, expr):
-        from sympy.codegen.array_utils import CodegenArrayTensorProduct
+    def _print_ArrayDiagonal(self, expr):
+        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
         diagonal_indices = list(expr.diagonal_indices)
         if len(diagonal_indices) > 1:
             # TODO: this should be handled in sympy.codegen.array_utils,
             # possibly by creating the possibility of unfolding the
-            # CodegenArrayDiagonal object into nested ones. Same reasoning for
+            # ArrayDiagonal object into nested ones. Same reasoning for
             # the array contraction.
             raise NotImplementedError
         if len(diagonal_indices[0]) != 2:
             raise NotImplementedError
-        if isinstance(expr.expr, CodegenArrayTensorProduct):
+        if isinstance(expr.expr, ArrayTensorProduct):
             subranks = expr.expr.subranks
             elems = expr.expr.args
         else:
@@ -263,18 +263,18 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         elems = [self._print(i) for i in elems]
         return '%s("%s", %s)' % (
             self._module_format("tensorflow.linalg.einsum"),
-            "{0}->{1}{2}".format(diagonal_string, "".join(letters_free), "".join(letters_dum)),
+            "{}->{}{}".format(diagonal_string, "".join(letters_free), "".join(letters_dum)),
             ", ".join(elems)
         )
 
-    def _print_CodegenArrayPermuteDims(self, expr):
+    def _print_PermuteDims(self, expr):
         return "%s(%s, %s)" % (
             self._module_format("tensorflow.transpose"),
             self._print(expr.expr),
             self._print(expr.permutation.array_form),
         )
 
-    def _print_CodegenArrayElementwiseAdd(self, expr):
+    def _print_ArrayAdd(self, expr):
         return self._expand_fold_binary_op('tensorflow.math.add', expr.args)
 
 

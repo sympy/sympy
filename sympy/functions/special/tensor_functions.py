@@ -189,7 +189,7 @@ class KroneckerDelta(Function):
         # to make KroneckerDelta canonical
         # following lines will check if inputs are in order
         # if not, will return KroneckerDelta with correct order
-        if i is not min(i, j, key=default_sort_key):
+        if i != min(i, j, key=default_sort_key):
             if delta_range:
                 return cls(j, i, delta_range)
             else:
@@ -471,10 +471,6 @@ class KroneckerDelta(Function):
     @property
     def indices(self):
         return self.args[0:2]
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.kronecker_delta(self.args[0]._sage_(), self.args[1]._sage_())
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         from sympy.functions.elementary.piecewise import Piecewise

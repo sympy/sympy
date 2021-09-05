@@ -135,7 +135,7 @@ def test_constant_repeated():
 def test_ode_solutions():
     # only a few examples here, the rest will be tested in the actual dsolve tests
     assert constant_renumber(constantsimp(C1*exp(2*x) + exp(x)*(C2 + C3), [C1, C2, C3])) == \
-        constant_renumber((C1*exp(x) + C2*exp(2*x)))
+        constant_renumber(C1*exp(x) + C2*exp(2*x))
     assert constant_renumber(
         constantsimp(Eq(f(x), I*C1*sinh(x/3) + C2*cosh(x/3)), [C1, C2])
         ) == constant_renumber(Eq(f(x), C1*sinh(x/3) + C2*cosh(x/3)))

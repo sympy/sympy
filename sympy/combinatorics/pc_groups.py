@@ -16,15 +16,15 @@ class PolycyclicGroup(DefaultPrinting):
         ==========
 
         pc_sequence : list
-                A sequence of elements whose classes generate the cyclic factor
-                groups of pc_series.
+            A sequence of elements whose classes generate the cyclic factor
+            groups of pc_series.
         pc_series : list
-                A subnormal sequence of subgroups where each factor group is cyclic.
+            A subnormal sequence of subgroups where each factor group is cyclic.
         relative_order : list
-                The orders of factor groups of pc_series.
+            The orders of factor groups of pc_series.
         collector : Collector
-                By default, it is None. Collector class provides the
-                polycyclic presentation with various other functionalities.
+            By default, it is None. Collector class provides the
+            polycyclic presentation with various other functionalities.
 
         """
         self.pcgs = pc_sequence
@@ -60,11 +60,11 @@ class Collector(DefaultPrinting):
         ==========
 
         free_group_ : tuple
-                free_group_ provides the mapping of polycyclic generating
-                sequence with the free group elements.
+            free_group_ provides the mapping of polycyclic generating
+            sequence with the free group elements.
         pc_presentation : dict
-                Provides the presentation of polycyclic groups with the
-                help of power and conjugate relators.
+            Provides the presentation of polycyclic groups with the
+            help of power and conjugate relators.
 
         See Also
         ========
@@ -83,6 +83,9 @@ class Collector(DefaultPrinting):
         r"""
         Returns the minimal uncollected subwords.
 
+        Explanation
+        ===========
+
         A word ``v`` defined on generators in ``X`` is a minimal
         uncollected subword of the word ``w`` if ``v`` is a subword
         of ``w`` and it has one of the following form
@@ -98,6 +101,7 @@ class Collector(DefaultPrinting):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> from sympy.combinatorics.free_groups import free_group
         >>> G = SymmetricGroup(4)
@@ -142,10 +146,11 @@ class Collector(DefaultPrinting):
         =======
 
         (power_rel, conj_rel)
-                Separates pc presentation into power and conjugate relations.
+            Separates pc presentation into power and conjugate relations.
 
         Examples
         ========
+
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> G = SymmetricGroup(3)
         >>> PcGroup = G.polycyclic_group()
@@ -195,6 +200,7 @@ class Collector(DefaultPrinting):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> from sympy.combinatorics.free_groups import free_group
         >>> G = SymmetricGroup(4)
@@ -224,6 +230,10 @@ class Collector(DefaultPrinting):
     def map_relation(self, w):
         """
         Return a conjugate relation.
+
+        Explanation
+        ===========
+
         Given a word formed by two free group elements, the
         corresponding conjugate relation with those free
         group elements is formed and mapped with the collected
@@ -231,6 +241,7 @@ class Collector(DefaultPrinting):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> from sympy.combinatorics.free_groups import free_group
         >>> G = SymmetricGroup(3)
@@ -259,6 +270,9 @@ class Collector(DefaultPrinting):
         r"""
         Return the collected form of a word.
 
+        Explanation
+        ===========
+
         A word ``w`` is called collected, if `w = {x_{i_1}}^{a_1} * \ldots *
         {x_{i_r}}^{a_r}` with `i_1 < i_2< \ldots < i_r` and `a_j` is in
         `\{1, \ldots, {s_j}-1\}`.
@@ -281,6 +295,7 @@ class Collector(DefaultPrinting):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.free_groups import free_group
@@ -369,6 +384,9 @@ class Collector(DefaultPrinting):
         r"""
         Return the polycyclic presentation.
 
+        Explanation
+        ===========
+
         There are two types of relations used in polycyclic
         presentation.
 
@@ -392,6 +410,7 @@ class Collector(DefaultPrinting):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> from sympy.combinatorics.permutations import Permutation
         >>> S = SymmetricGroup(49).sylow_subgroup(7)
@@ -487,6 +506,9 @@ class Collector(DefaultPrinting):
         Return the exponent vector of length equal to the
         length of polycyclic generating sequence.
 
+        Explanation
+        ===========
+
         For a given generator/element ``g`` of the polycyclic group,
         it can be represented as `g = {x_1}^{e_1}, \ldots, {x_n}^{e_n}`,
         where `x_i` represents polycyclic generators and ``n`` is
@@ -501,6 +523,7 @@ class Collector(DefaultPrinting):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> from sympy.combinatorics.permutations import Permutation
         >>> G = SymmetricGroup(4)
@@ -551,12 +574,16 @@ class Collector(DefaultPrinting):
         r"""
         Return the depth of a given element.
 
+        Explanation
+        ===========
+
         The depth of a given element ``g`` is defined by
         `\mathrm{dep}[g] = i` if `e_1 = e_2 = \ldots = e_{i-1} = 0`
         and `e_i != 0`, where ``e`` represents the exponent-vector.
 
         Examples
         ========
+
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> G = SymmetricGroup(3)
         >>> PcGroup = G.polycyclic_group()
@@ -581,11 +608,15 @@ class Collector(DefaultPrinting):
         r"""
         Return the leading non-zero exponent.
 
+        Explanation
+        ===========
+
         The leading exponent for a given element `g` is defined
         by `\mathrm{leading\_exponent}[g]` `= e_i`, if `\mathrm{depth}[g] = i`.
 
         Examples
         ========
+
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> G = SymmetricGroup(3)
         >>> PcGroup = G.polycyclic_group()
@@ -623,6 +654,7 @@ class Collector(DefaultPrinting):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> S = SymmetricGroup(8)
         >>> G = S.sylow_subgroup(2)

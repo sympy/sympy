@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from collections import defaultdict, OrderedDict
 from itertools import (
     combinations, combinations_with_replacement, permutations,
@@ -11,9 +9,10 @@ from operator import gt
 from sympy.core import Basic
 
 # this is the logical location of these functions
-from sympy.core.compatibility import (
-    as_int, default_sort_key, is_sequence, iterable, ordered
-)
+from sympy.core.compatibility import (as_int, is_sequence, iterable, ordered)
+from sympy.core.compatibility import default_sort_key  # noqa: F401
+
+import sympy
 
 from sympy.utilities.enumerative import (
     multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
@@ -294,8 +293,7 @@ def iproduct(*iterables):
         for e in iterables[0]:
             yield (e,)
     elif len(iterables) == 2:
-        for e12 in _iproduct2(*iterables):
-            yield e12
+        yield from _iproduct2(*iterables)
     else:
         first, others = iterables[0], iterables[1:]
         for ef, eo in _iproduct2(first, iproduct(*others)):
@@ -375,12 +373,10 @@ def postorder_traversal(node, keys=None):
             else:
                 args = ordered(args)
         for arg in args:
-            for subtree in postorder_traversal(arg, keys):
-                yield subtree
+            yield from postorder_traversal(arg, keys)
     elif iterable(node):
         for item in node:
-            for subtree in postorder_traversal(item, keys):
-                yield subtree
+            yield from postorder_traversal(item, keys)
     yield node
 
 
@@ -428,7 +424,7 @@ def interactive_traversal(expr):
         for i, arg in enumerate(args):
             cprint(GREEN, "[", BGREEN, i, GREEN, "] ", BLUE, type(arg), END)
             pprint(arg)
-            print
+            print()
 
         if n_args == 1:
             choices = '0'
@@ -586,14 +582,12 @@ def variations(seq, n, repetition=False):
         seq = tuple(seq)
         if len(seq) < n:
             return
-        for i in permutations(seq, n):
-            yield i
+        yield from permutations(seq, n)
     else:
         if n == 0:
             yield ()
         else:
-            for i in product(seq, repeat=n):
-                yield i
+            yield from product(seq, repeat=n)
 
 
 def subsets(seq, k=None, repetition=False):
@@ -638,15 +632,12 @@ def subsets(seq, k=None, repetition=False):
     """
     if k is None:
         for k in range(len(seq) + 1):
-            for i in subsets(seq, k, repetition):
-                yield i
+            yield from subsets(seq, k, repetition)
     else:
         if not repetition:
-            for i in combinations(seq, k):
-                yield i
+            yield from combinations(seq, k)
         else:
-            for i in combinations_with_replacement(seq, k):
-                yield i
+            yield from combinations_with_replacement(seq, k)
 
 
 def filter_symbols(iterator, exclude):
@@ -730,7 +721,7 @@ def capture(func):
     '2\\n-\\nx\\n'
 
     """
-    from sympy.core.compatibility import StringIO
+    from io import StringIO
     import sys
 
     stdout = sys.stdout
@@ -1128,6 +1119,27 @@ def strongly_connected_components(G):
     Gmap = {vi: [] for vi in V}
     for v1, v2 in E:
         Gmap[v1].append(v2)
+    return _strongly_connected_components(V, Gmap)
+
+
+def _strongly_connected_components(V, Gmap):
+    """More efficient internal routine for strongly_connected_components"""
+    #
+    # Here V is an iterable of vertices and Gmap is a dict mapping each vertex
+    # to a list of neighbours e.g.:
+    #
+    #   V = [0, 1, 2, 3]
+    #   Gmap = {0: [2, 3], 1: [0]}
+    #
+    # For a large graph these data structures can often be created more
+    # efficiently then those expected by strongly_connected_components() which
+    # in this case would be
+    #
+    #   V = [0, 1, 2, 3]
+    #   Gmap = [(0, 2), (0, 3), (1, 0)]
+    #
+    # XXX: Maybe this should be the recommended function to use instead...
+    #
 
     # Non-recursive Tarjan's algorithm:
     lowlink = {}
@@ -1284,7 +1296,7 @@ def rotate_right(x, y):
     return x[y:] + x[:y]
 
 
-def least_rotation(x):
+def least_rotation(x, key=None):
     '''
     Returns the number of steps of left rotation required to
     obtain lexicographically minimal string/list/tuple, etc.
@@ -1305,6 +1317,7 @@ def least_rotation(x):
     .. [1] https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
 
     '''
+    if key is None: key = sympy.Id
     S = x + x      # Concatenate string to it self to avoid modular arithmetic
     f = [-1] * len(S)     # Failure function
     k = 0       # Least rotation of string found so far
@@ -1312,11 +1325,11 @@ def least_rotation(x):
         sj = S[j]
         i = f[j-k-1]
         while i != -1 and sj != S[k+i+1]:
-            if sj < S[k+i+1]:
+            if key(sj) < key(S[k+i+1]):
                 k = j-i-1
             i = f[i]
         if sj != S[k+i+1]:
-            if sj < S[k]:
+            if key(sj) < key(S[k]):
                 k = j
             f[j-k] = -1
         else:
@@ -1406,7 +1419,7 @@ def multiset_permutations(m, size=None, g=None):
     do = [gi for gi in g if gi[1] > 0]
     SUM = sum([gi[1] for gi in do])
     if not do or size is not None and (size > SUM or size < 1):
-        if size < 1:
+        if not do and size is None or size == 0:
             yield []
         return
     elif size == 1:
@@ -1748,21 +1761,6 @@ def partitions(n, m=None, k=None, size=False):
     {2: 1, 4: 1}
     {3: 2}
 
-    Note that the _same_ dictionary object is returned each time.
-    This is for speed:  generating each partition goes quickly,
-    taking constant time, independent of n.
-
-    >>> [p for p in partitions(6, k=2)]
-    [{1: 6}, {1: 6}, {1: 6}, {1: 6}]
-
-    If you want to build a list of the returned dictionaries then
-    make a copy of them:
-
-    >>> [p.copy() for p in partitions(6, k=2)]  # doctest: +SKIP
-    [{2: 3}, {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]
-    >>> [(M, p.copy()) for M, p in partitions(6, k=2, size=True)]  # doctest: +SKIP
-    [(3, {2: 3}), (4, {1: 2, 2: 2}), (5, {1: 4, 2: 1}), (6, {1: 6})]
-
     References
     ==========
 
@@ -1793,14 +1791,6 @@ def partitions(n, m=None, k=None, size=False):
         m = n
     else:
         m = min(m, n)
-
-    if n == 0:
-        if size:
-            yield 1, {0: 1}
-        else:
-            yield {0: 1}
-        return
-
     k = min(k or n, n)
 
     n, m, k = as_int(n), as_int(m), as_int(k)
@@ -1812,9 +1802,9 @@ def partitions(n, m=None, k=None, size=False):
         keys.append(r)
     room = m - q - bool(r)
     if size:
-        yield sum(ms.values()), ms
+        yield sum(ms.values()), ms.copy()
     else:
-        yield ms
+        yield ms.copy()
 
     while keys != [1]:
         # Reuse any 1's.
@@ -1852,9 +1842,9 @@ def partitions(n, m=None, k=None, size=False):
             break
         room -= need
         if size:
-            yield sum(ms.values()), ms
+            yield sum(ms.values()), ms.copy()
         else:
-            yield ms
+            yield ms.copy()
 
 
 def ordered_partitions(n, m=None, sort=True):
@@ -2146,11 +2136,9 @@ def uniq(seq, result=None):
             check()
             result.append(s)
         if hasattr(seq, '__getitem__'):
-            for s in uniq(seq[i + 1:], result):
-                yield s
+            yield from uniq(seq[i + 1:], result)
         else:
-            for s in uniq(seq, result):
-                yield s
+            yield from uniq(seq, result)
 
 
 def generate_bell(n):
@@ -2227,8 +2215,7 @@ def generate_bell(n):
         yield (0, 1)
         yield (1, 0)
     elif n == 3:
-        for li in [(0, 1, 2), (0, 2, 1), (2, 0, 1), (2, 1, 0), (1, 2, 0), (1, 0, 2)]:
-            yield li
+        yield from [(0, 1, 2), (0, 2, 1), (2, 0, 1), (2, 1, 0), (1, 2, 0), (1, 0, 2)]
     else:
         m = n - 1
         op = [0] + [-1]*m
@@ -2426,20 +2413,18 @@ def generate_oriented_forest(n):
                 break
 
 
-def minlex(seq, directed=True, is_set=False, small=None):
+def minlex(seq, directed=True, key=None):
     """
-    Return a tuple representing the rotation of the sequence in which
-    the lexically smallest elements appear first, e.g. `cba ->acb`.
+    Return the rotation of the sequence in which the lexically smallest
+    elements appear first, e.g. `cba ->acb`.
+
+    The sequence returned is a tuple, unless the input sequence is a string
+    in which case a string is returned.
 
     If ``directed`` is False then the smaller of the sequence and the
     reversed sequence is returned, e.g. `cba -> abc`.
 
-    For more efficient processing, ``is_set`` can be set to True if there
-    are no duplicates in the sequence.
-
-    If the smallest element is known at the time of calling, it can be
-    passed as ``small`` and the calculation of the smallest element will
-    be omitted.
+    If ``key`` is not None then it is used to extract a comparison key from each element in iterable.
 
     Examples
     ========
@@ -2457,51 +2442,22 @@ def minlex(seq, directed=True, is_set=False, small=None):
     >>> minlex('11010011000', directed=False)
     '00011001011'
 
+    >>> minlex(('bb', 'aaa', 'c', 'a'))
+    ('a', 'bb', 'aaa', 'c')
+    >>> minlex(('bb', 'aaa', 'c', 'a'), key=len)
+    ('c', 'a', 'bb', 'aaa')
+
     """
-    is_str = isinstance(seq, str)
-    seq = list(seq)
-    if small is None:
-        small = min(seq, key=default_sort_key)
-    if is_set:
-        i = seq.index(small)
-        if not directed:
-            n = len(seq)
-            p = (i + 1) % n
-            m = (i - 1) % n
-            if default_sort_key(seq[p]) > default_sort_key(seq[m]):
-                seq = list(reversed(seq))
-                i = n - i - 1
-        if i:
-            seq = rotate_left(seq, i)
-        best = seq
-    else:
-        count = seq.count(small)
-        if count == 1 and directed:
-            best = rotate_left(seq, seq.index(small))
-        else:
-            # if not directed, and not a set, we can't just
-            # pass this off to minlex with is_set True since
-            # peeking at the neighbor may not be sufficient to
-            # make the decision so we continue...
-            best = seq
-            for i in range(count):
-                seq = rotate_left(seq, seq.index(small, count != 1))
-                if seq < best:
-                    best = seq
-                # it's cheaper to rotate now rather than search
-                # again for these in reversed order so we test
-                # the reverse now
-                if not directed:
-                    seq = rotate_left(seq, 1)
-                    seq = list(reversed(seq))
-                    if seq < best:
-                        best = seq
-                    seq = list(reversed(seq))
-                    seq = rotate_right(seq, 1)
-    # common return
-    if is_str:
-        return ''.join(best)
-    return tuple(best)
+
+    if key is None: key = sympy.Id
+    best = rotate_left(seq, least_rotation(seq, key=key))
+    if not directed:
+        rseq = seq[::-1]
+        rbest = rotate_left(rseq, least_rotation(rseq, key=key))
+        best = min(best, rbest, key=key)
+
+    # Convert to tuple, unless we started with a string.
+    return tuple(best) if not isinstance(seq, str) else best
 
 
 def runs(seq, op=gt):
@@ -2548,12 +2504,12 @@ def kbins(l, k, ordered=None):
     Examples
     ========
 
-    >>> from sympy.utilities.iterables import kbins
+    >>> from __future__ import print_function
 
     The default is to give the items in the same order, but grouped
     into k partitions without any reordering:
 
-    >>> from __future__ import print_function
+    >>> from sympy.utilities.iterables import kbins
     >>> for p in kbins(list(range(5)), 2):
     ...     print(p)
     ...
@@ -2578,9 +2534,9 @@ def kbins(l, k, ordered=None):
         10 means A == D
         11 means A == A
 
-    >>> for ordered in [None, 0, 1, 10, 11]:
-    ...     print('ordered = %s' % ordered)
-    ...     for p in kbins(list(range(3)), 2, ordered=ordered):
+    >>> for ordered_flag in [None, 0, 1, 10, 11]:
+    ...     print('ordered = %s' % ordered_flag)
+    ...     for p in kbins(list(range(3)), 2, ordered=ordered_flag):
     ...         print('     %s' % p)
     ...
     ordered = None
@@ -2637,16 +2593,13 @@ def kbins(l, k, ordered=None):
                         yield [lista[:i]] + part
 
     if ordered is None:
-        for p in partition(l, k):
-            yield p
+        yield from partition(l, k)
     elif ordered == 11:
         for pl in multiset_permutations(l):
             pl = list(pl)
-            for p in partition(pl, k):
-                yield p
+            yield from partition(pl, k)
     elif ordered == 00:
-        for p in multiset_partitions(l, k):
-            yield p
+        yield from multiset_partitions(l, k)
     elif ordered == 10:
         for p in multiset_partitions(l, k):
             for perm in permutations(p):

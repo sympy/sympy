@@ -7,7 +7,7 @@ cin = import_module('clang.cindex', import_kwargs = {'fromlist': ['cindex']})
 
 if lfortran and cin:
     from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
-                                   Declaration,)
+                                   Declaration, FloatType)
     from sympy.core import Integer, Float
     from sympy import Symbol
 
@@ -28,28 +28,36 @@ if lfortran and cin:
         assert ls[0] == Declaration(
             Variable(
                 Symbol('a'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc'))
             )
         )
         assert ls[1] == Declaration(
             Variable(
                 Symbol('b'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(4)
             )
         )
         assert ls[2] == Declaration(
             Variable(
                 Symbol('c'),
-                type=FloatBaseType(String('real')),
-                value=Float('0.0', precision=53)
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    )
             )
         )
         assert ls[3] == Declaration(
             Variable(
                 Symbol('d'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('2.3999999999999999', precision=53)
             )
         )

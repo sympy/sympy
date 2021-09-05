@@ -8,7 +8,7 @@ from sympy.core.expr import unchanged
 from sympy.functions.elementary.piecewise import Undefined, ExprCondPair
 from sympy.printing import srepr
 from sympy.testing.pytest import raises, slow
-
+from sympy.simplify import simplify
 
 a, b, c, d, x, y = symbols('a:d, x, y')
 z = symbols('z', nonzero=True)
@@ -233,10 +233,8 @@ def test_piecewise_integrate1ca():
     assert g.integrate((x, 1, -2)) == g1y.subs(y, -2)
     assert g.integrate((x, 0, 1)) == gy1.subs(y, 0)
     assert g.integrate((x, 1, 0)) == g1y.subs(y, 0)
-    # XXX Make test pass without simplify
-    assert g.integrate((x, 2, 1)) == gy1.subs(y, 2).simplify()
-    assert g.integrate((x, 1, 2)) == g1y.subs(y, 2).simplify()
-
+    assert g.integrate((x, 2, 1)) == gy1.subs(y, 2)
+    assert g.integrate((x, 1, 2)) == g1y.subs(y, 2)
     assert piecewise_fold(gy1.rewrite(Piecewise)) == \
         Piecewise(
             (1, y <= -1),
@@ -249,21 +247,18 @@ def test_piecewise_integrate1ca():
             (y**2/2 + y - S.Half, y <= 0),
             (-y**2/2 + y - S.Half, y < 1),
             (0, True))
-
-    # g1y and gy1 should simplify if the condition that y < 1
-    # is applied, e.g. Min(1, Max(-1, y)) --> Max(-1, y)
-    # XXX Make test pass without simplify
-    assert gy1.simplify() == Piecewise(
+    assert gy1 == Piecewise(
         (
             -Min(1, Max(-1, y))**2/2 - Min(1, Max(-1, y)) +
             Min(1, Max(0, y))**2 + S.Half, y < 1),
         (0, True)
         )
-    assert g1y.simplify() == Piecewise(
+    assert g1y == Piecewise(
         (
             Min(1, Max(-1, y))**2/2 + Min(1, Max(-1, y)) -
             Min(1, Max(0, y))**2 - S.Half, y < 1),
         (0, True))
+
 
 @slow
 def test_piecewise_integrate1cb():
@@ -1360,3 +1355,10 @@ def test_issue_7370():
 
 def test_issue_16715():
     raises(NotImplementedError, lambda: Piecewise((x, x<0), (0, y>1)).as_expr_set_pairs())
+
+def test_issue_20360():
+    t, tau = symbols("t tau", real=True)
+    n = symbols("n", integer=True)
+    lam = pi * (n - S.Half)
+    eq = integrate(exp(lam * tau), (tau, 0, t))
+    assert simplify(eq) == (2*exp(pi*t*(2*n - 1)/2) - 2)/(pi*(2*n - 1))

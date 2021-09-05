@@ -69,7 +69,7 @@ def test_TR3():
 
 def test__TR56():
     h = lambda x: 1 - x
-    assert T(sin(x)**3, sin, cos, h, 4, False) == sin(x)**3
+    assert T(sin(x)**3, sin, cos, h, 4, False) == sin(x)*(-cos(x)**2 + 1)
     assert T(sin(x)**10, sin, cos, h, 4, False) == sin(x)**10
     assert T(sin(x)**6, sin, cos, h, 6, False) == (-cos(x)**2 + 1)**3
     assert T(sin(x)**6, sin, cos, h, 6, True) == sin(x)**6
@@ -288,6 +288,9 @@ def test_fu():
     # issue #18059:
     assert fu(cos(x) + sqrt(sin(x)**2)) == cos(x) + sqrt(sin(x)**2)
 
+    assert fu((-14*sin(x)**3 + 35*sin(x) + 6*sqrt(3)*cos(x)**3 + 9*sqrt(3)*cos(x))/((cos(2*x) + 4))) == \
+        7*sin(x) + 3*sqrt(3)*cos(x)
+
 
 def test_objective():
     assert fu(sin(x)/cos(x), measure=lambda x: x.count_ops()) == \
@@ -352,6 +355,9 @@ def test_TRmorrie():
     # issue 17063
     eq = cos(x)/cos(x/2)
     assert TRmorrie(eq) == eq
+    # issue #20430
+    eq = cos(x/2)*sin(x/2)*cos(x)**3
+    assert TRmorrie(eq) == sin(2*x)*cos(x)**2/4
 
 
 def test_TRpower():

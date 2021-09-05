@@ -32,3 +32,5 @@ Functions
 .. autofunction:: tensorcontraction
 
 .. autofunction:: tensorproduct
+
+.. autofunction:: tensordiagonal

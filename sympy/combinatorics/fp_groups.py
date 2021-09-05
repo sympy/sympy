@@ -127,7 +127,7 @@ class FpGroup(DefaultPrinting):
         Examples
         ========
 
-        >>> from sympy.combinatorics.fp_groups import (FpGroup, FpSubgroup)
+        >>> from sympy.combinatorics.fp_groups import FpGroup
         >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x, y = free_group("x, y")
         >>> f = FpGroup(F, [x**3, y**5, (x*y)**2])
@@ -263,13 +263,11 @@ class FpGroup(DefaultPrinting):
             return True
         # Abelianisation test: check is the abelianisation is infinite
         abelian_rels = []
-        from sympy.polys.solvers import RawMatrix as Matrix
-        from sympy.polys.domains import ZZ
         from sympy.matrices.normalforms import invariant_factors
+        from sympy.matrices import Matrix
         for rel in self.relators:
             abelian_rels.append([rel.exponent_sum(g) for g in self.generators])
-        m = Matrix(abelian_rels)
-        setattr(m, "ring", ZZ)
+        m = Matrix(Matrix(abelian_rels))
         if 0 in invariant_factors(m):
             return True
         else:
@@ -947,7 +945,7 @@ def first_in_class(C, Y=[]):
 #                    Simplifying Presentation
 #========================================================================
 
-def simplify_presentation(*args, **kwargs):
+def simplify_presentation(*args, change_gens=False):
     '''
     For an instance of `FpGroup`, return a simplified isomorphic copy of
     the group (e.g. remove redundant generators or relators). Alternatively,
@@ -959,8 +957,6 @@ def simplify_presentation(*args, **kwargs):
     `change_gens = True`.
 
     '''
-    change_gens = kwargs.get("change_gens", False)
-
     if len(args) == 1:
         if not isinstance(args[0], FpGroup):
             raise TypeError("The argument must be an instance of FpGroup")

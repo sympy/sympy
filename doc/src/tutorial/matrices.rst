@@ -54,18 +54,20 @@ expressions or as keys to dictionaries.  If you need an immutable version of
 Basic Operations
 ================
 
+Here are some basic operations on ``Matrix``.
+
 Shape
 -----
 
-Here are some basic operations on ``Matrix``.  To get the shape of a matrix
-use ``shape``
+To get the shape of a matrix, use :func:`~.shape()` function.
 
+    >>> from sympy import shape
     >>> M = Matrix([[1, 2, 3], [-2, 0, 4]])
     >>> M
     ⎡1   2  3⎤
     ⎢        ⎥
     ⎣-2  0  4⎦
-    >>> M.shape
+    >>> shape(M)
     (2, 3)
 
 Accessing Rows and Columns
@@ -317,7 +319,7 @@ Eigenvalues, Eigenvectors, and Diagonalization
 ----------------------------------------------
 
 To find the eigenvalues of a matrix, use ``eigenvals``.  ``eigenvals``
-returns a dictionary of ``eigenvalue:algebraic multiplicity`` pairs (similar to the
+returns a dictionary of ``eigenvalue: algebraic_multiplicity`` pairs (similar to the
 output of :ref:`roots <tutorial-roots>`).
 
     >>> M = Matrix([[3, -2,  4, -2], [5,  3, -3, -2], [5, -2,  2, -2], [5, -2, -3,  3]])
@@ -337,7 +339,7 @@ eigenvalues -2 and 3 have algebraic multiplicity 1 and that the eigenvalue 5
 has algebraic multiplicity 2.
 
 To find the eigenvectors of a matrix, use ``eigenvects``.  ``eigenvects``
-returns a list of tuples of the form ``(eigenvalue:algebraic multiplicity,
+returns a list of tuples of the form ``(eigenvalue, algebraic_multiplicity,
 [eigenvectors])``.
 
     >>> M.eigenvects()
@@ -437,8 +439,11 @@ They have property ``iszerofunc`` opened up for user to specify zero testing
 method, which can accept any function with single input and boolean output,
 while being defaulted with ``_iszero``.
 
-Here is an example of solving an issue caused by undertested zero.
+Here is an example of solving an issue caused by undertested zero. While the
+output for this particular matrix has since been improved, the technique
+below is still of interest.
 [#zerotestexampleidea-fn]_ [#zerotestexamplediscovery-fn]_
+[#zerotestexampleimproved-fn]_
 
     >>> from sympy import *
     >>> q = Symbol("q", positive = True)
@@ -446,7 +451,7 @@ Here is an example of solving an issue caused by undertested zero.
     ... [-2*cosh(q/3),      exp(-q),            1],
     ... [      exp(q), -2*cosh(q/3),            1],
     ... [           1,            1, -2*cosh(q/3)]])
-    >>> m.nullspace()
+    >>> m.nullspace() # doctest: +SKIP
     []
 
 You can trace down which expression is being underevaluated,
@@ -541,6 +546,8 @@ SymPy issue tracker [#sympyissues-fn]_ to get detailed help from the community.
 .. [#zerotestexampleidea-fn] Inspired by https://gitter.im/sympy/sympy?at=5b7c3e8ee5b40332abdb206c
 
 .. [#zerotestexamplediscovery-fn] Discovered from https://github.com/sympy/sympy/issues/15141
+
+.. [#zerotestexampleimproved-fn] Improved by https://github.com/sympy/sympy/pull/19548
 
 .. [#zerotestsimplifysolution-fn] Suggested from https://github.com/sympy/sympy/issues/10120
 

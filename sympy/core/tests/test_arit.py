@@ -1,12 +1,14 @@
 from sympy import (Basic, Symbol, sin, cos, atan, exp, sqrt, Rational,
         Float, re, pi, sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols,
-        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, floor
+        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, floor, Poly,
+        FiniteSet
 )
 from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
-from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy.testing.randtest import verify_numerically
+from sympy.functions.elementary.trigonometric import asin
 
 
 a, c, x, y, z = symbols('a,c,x,y,z')
@@ -304,6 +306,21 @@ def test_ncmul():
         {A, B, 2*(A + B)}
 
 
+def test_mul_add_identity():
+    m = Mul(1, 2)
+    assert isinstance(m, Rational) and m.p == 2 and m.q == 1
+    m = Mul(1, 2, evaluate=False)
+    assert isinstance(m, Mul) and m.args == (1, 2)
+    m = Mul(0, 1)
+    assert m is S.Zero
+    m = Mul(0, 1, evaluate=False)
+    assert isinstance(m, Mul) and m.args == (0, 1)
+    m = Add(0, 1)
+    assert m is S.One
+    m = Add(0, 1, evaluate=False)
+    assert isinstance(m, Add) and m.args == (0, 1)
+
+
 def test_ncpow():
     x = Symbol('x', commutative=False)
     y = Symbol('y', commutative=False)
@@ -358,12 +375,10 @@ def test_Mul_doesnt_expand_exp():
     assert (x**(-log(5)/log(3))*x)/(x*x**( - log(5)/log(3))) == sympify(1)
 
 def test_Mul_is_integer():
-
     k = Symbol('k', integer=True)
     n = Symbol('n', integer=True)
     nr = Symbol('nr', rational=False)
     nz = Symbol('nz', integer=True, zero=False)
-    nze = Symbol('nze', even=True, zero=False)
     e = Symbol('e', even=True)
     o = Symbol('o', odd=True)
     i2 = Symbol('2', prime=True, even=True)
@@ -372,18 +387,31 @@ def test_Mul_is_integer():
     assert (nz/3).is_integer is None
     assert (nr/3).is_integer is False
     assert (x*k*n).is_integer is None
+    assert (e/2).is_integer is True
+    assert (e**2/2).is_integer is True
+    assert (2/k).is_integer is None
+    assert (2/k**2).is_integer is None
+    assert ((-1)**k*n).is_integer is True
+    assert (3*k*e/2).is_integer is True
+    assert (2*k*e/3).is_integer is None
     assert (e/o).is_integer is None
     assert (o/e).is_integer is False
     assert (o/i2).is_integer is False
-    assert Mul(o, 1/o, evaluate=False).is_integer is True
     assert Mul(k, 1/k, evaluate=False).is_integer is None
-    assert Mul(nze, 1/nze, evaluate=False).is_integer is True
-    assert Mul(2., S.Half, evaluate=False).is_integer is False
+    assert Mul(2., S.Half, evaluate=False).is_integer is None
+    assert (2*sqrt(k)).is_integer is None
+    assert (2*k**n).is_integer is None
 
     s = 2**2**2**Pow(2, 1000, evaluate=False)
     m = Mul(s, s, evaluate=False)
     assert m.is_integer
 
+    # broken in 1.6 and before, see #20161
+    xq = Symbol('xq', rational=True)
+    yq = Symbol('yq', rational=True)
+    assert (xq*yq).is_integer is None
+    e_20161 = Mul(-1,Mul(1,Pow(2,-1,evaluate=False),evaluate=False),evaluate=False)
+    assert e_20161.is_integer is not True # expand(e_20161) -> -1/2, but no need to see that in the assumption without evaluation
 
 def test_Add_Mul_is_integer():
     x = Symbol('x')
@@ -483,6 +511,12 @@ def test_Mul_is_even_odd():
     assert (x*x).is_odd is None
     assert (x*(x + k)).is_odd is False
     assert (x*(x + m)).is_odd is None
+
+    # issue 8648
+    assert (m**2/2).is_even
+    assert (m**2/3).is_even is False
+    assert (2/m**2).is_odd is False
+    assert (2/m).is_odd is None
 
 
 @XFAIL
@@ -1023,6 +1057,18 @@ def test_Pow_is_integer():
     assert (1/(x + 1)).is_integer is False
     assert (1/(-x - 1)).is_integer is False
 
+    # issue 8648-like
+    k = Symbol('k', even=True)
+    assert (k**3/2).is_integer
+    assert (k**3/8).is_integer
+    assert (k**3/16).is_integer is None
+    assert (2/k).is_integer is None
+    assert (2/k**2).is_integer is False
+    o = Symbol('o', odd=True)
+    assert (k/o).is_integer is None
+    o = Symbol('o', odd=True, prime=True)
+    assert (k/o).is_integer is False
+
 
 def test_Pow_is_real():
     x = Symbol('x', real=True)
@@ -1077,6 +1123,15 @@ def test_Pow_is_real():
     assert (1/(i-1)).is_real is None
     assert (1/(i-1)).is_extended_real is None
 
+    # test issue 20715
+    from sympy.core.parameters import evaluate
+    x = S(-1)
+    with evaluate(False):
+        assert x.is_negative is True
+
+    f = Pow(x, -1)
+    with evaluate(False):
+        assert f.is_imaginary is False
 
 def test_real_Pow():
     k = Symbol('k', integer=True, nonzero=True)
@@ -1532,11 +1587,9 @@ def test_issue_3531():
     # https://github.com/sympy/sympy/issues/3531
     # https://github.com/sympy/sympy/pull/18116
     class MightyNumeric(tuple):
-        def __rdiv__(self, other):
-            return "something"
-
         def __rtruediv__(self, other):
             return "something"
+
     assert sympify(1)/MightyNumeric((1, 2)) == "something"
 
 
@@ -1569,13 +1622,14 @@ def test_suppressed_evaluation():
     c = Pow(3, 2, evaluate=False)
     assert a != 6
     assert a.func is Add
-    assert a.args == (3, 2)
+    assert a.args == (0, 3, 2)
     assert b != 6
     assert b.func is Mul
-    assert b.args == (3, 2)
+    assert b.args == (1, 3, 2)
     assert c != 9
     assert c.func is Pow
     assert c.args == (3, 2)
+
 
 def test_AssocOp_doit():
     a = Add(x,x, evaluate=False)
@@ -1590,6 +1644,15 @@ def test_AssocOp_doit():
     assert d.doit(deep=False).args == (a, 2*S.One)
     assert d.doit().func == Mul
     assert d.doit().args == (4*S.One, Pow(x,2))
+
+
+def test_Add_Mul_Expr_args():
+    nonexpr = [Basic(), Poly(x, x), FiniteSet(x)]
+    for typ in [Add, Mul]:
+        for obj in nonexpr:
+            with warns_deprecated_sympy():
+                typ(obj, 1)
+
 
 def test_Add_as_coeff_mul():
     # issue 5524.  These should all be (1, self)
@@ -1701,7 +1764,6 @@ def test_issue_5460():
 
 
 def test_product_irrational():
-    from sympy import I, pi
     assert (I*pi).is_irrational is False
     # The following used to be deduced from the above bug:
     assert (I*pi).is_positive is False
@@ -1867,6 +1929,16 @@ def test_Mod():
     # rewrite
     assert Mod(x, y).rewrite(floor) == x - y*floor(x/y)
     assert ((x - Mod(x, y))/y).rewrite(floor) == floor(x/y)
+
+    # issue 21373
+    from sympy.functions.elementary.trigonometric import sinh
+    from sympy.functions.elementary.piecewise import Piecewise
+
+    x_r, y_r = symbols('x_r y_r', real=True)
+    (Piecewise((x_r, y_r > x_r), (y_r, True)) / z) % 1
+    expr = exp(sinh(Piecewise((x_r, y_r > x_r), (y_r, True)) / z))
+    expr.subs({1: 1.0})
+    sinh(Piecewise((x_r, y_r > x_r), (y_r, True)) * z ** -1.0).is_zero
 
 
 def test_Mod_Pow():
@@ -2272,3 +2344,13 @@ def test__neg__():
 
 def test_issue_18507():
     assert Mul(zoo, zoo, 0) is nan
+
+
+def test_issue_17130():
+    e = Add(b, -b, I, -I, evaluate=False)
+    assert e.is_zero is None # ideally this would be True
+
+
+def test_issue_21034():
+    e = -I*log((re(asin(5)) + I*im(asin(5)))/sqrt(re(asin(5))**2 + im(asin(5))**2))/pi
+    assert e.round(2)

@@ -62,9 +62,13 @@ class GroupHomomorphism:
 
     def invert(self, g):
         '''
-        Return an element of the preimage of `g` or of each element
-        of `g` if `g` is a list.
-        NOTE: If the codomain is an FpGroup, the inverse for equal
+        Return an element of the preimage of ``g`` or of each element
+        of ``g`` if ``g`` is a list.
+
+        Explanation
+        ===========
+
+        If the codomain is an FpGroup, the inverse for equal
         elements might not always be the same unless the FpGroup's
         rewriting system is confluent. However, making a system
         confluent can be time-consuming. If it's important, try
@@ -246,7 +250,7 @@ class GroupHomomorphism:
     def invert_subgroup(self, H):
         '''
         Return the subgroup of the domain that is the inverse image
-        of the subgroup `H` of the homomorphism image
+        of the subgroup ``H`` of the homomorphism image
 
         '''
         if not H.is_subgroup(self.image()):
@@ -266,17 +270,17 @@ class GroupHomomorphism:
 
 def homomorphism(domain, codomain, gens, images=[], check=True):
     '''
-    Create (if possible) a group homomorphism from the group `domain`
-    to the group `codomain` defined by the images of the domain's
-    generators `gens`. `gens` and `images` can be either lists or tuples
-    of equal sizes. If `gens` is a proper subset of the group's generators,
+    Create (if possible) a group homomorphism from the group ``domain``
+    to the group ``codomain`` defined by the images of the domain's
+    generators ``gens``. ``gens`` and ``images`` can be either lists or tuples
+    of equal sizes. If ``gens`` is a proper subset of the group's generators,
     the unspecified generators will be mapped to the identity. If the
     images are not specified, a trivial homomorphism will be created.
 
     If the given images of the generators do not define a homomorphism,
     an exception is raised.
 
-    If `check` is `False`, don't check whether the given images actually
+    If ``check`` is ``False``, don't check whether the given images actually
     define a homomorphism.
 
     '''
@@ -368,7 +372,7 @@ def _check_homomorphism(domain, codomain, images):
 def orbit_homomorphism(group, omega):
     '''
     Return the homomorphism induced by the action of the permutation
-    group `group` on the set `omega` that is closed under the action.
+    group ``group`` on the set ``omega`` that is closed under the action.
 
     '''
     from sympy.combinatorics import Permutation
@@ -388,9 +392,9 @@ def orbit_homomorphism(group, omega):
 def block_homomorphism(group, blocks):
     '''
     Return the homomorphism induced by the action of the permutation
-    group `group` on the block system `blocks`. The latter should be
-    of the same form as returned by the `minimal_block` method for
-    permutation groups, namely a list of length `group.degree` where
+    group ``group`` on the block system ``blocks``. The latter should be
+    of the same form as returned by the ``minimal_block`` method for
+    permutation groups, namely a list of length ``group.degree`` where
     the i-th entry is a representative of the block i belongs to.
 
     '''
@@ -428,11 +432,16 @@ def group_isomorphism(G, H, isomorphism=True):
     Parameters
     ==========
 
-        G (a finite `FpGroup` or a `PermutationGroup`) -- First group
-        H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
-        isomorphism (boolean) -- This is used to avoid the computation of homomorphism
-                                 when the user only wants to check if there exists
-                                 an isomorphism between the groups.
+    G : A finite ``FpGroup`` or a ``PermutationGroup``.
+        First group.
+
+    H : A finite ``FpGroup`` or a ``PermutationGroup``
+        Second group.
+
+    isomorphism : bool
+        This is used to avoid the computation of homomorphism
+        when the user only wants to check if there exists
+        an isomorphism between the groups.
 
     Returns
     =======
@@ -447,7 +456,7 @@ def group_isomorphism(G, H, isomorphism=True):
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
     >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup
-    >>> from sympy.combinatorics.homomorphisms import homomorphism, group_isomorphism
+    >>> from sympy.combinatorics.homomorphisms import group_isomorphism
     >>> from sympy.combinatorics.named_groups import DihedralGroup, AlternatingGroup
 
     >>> D = DihedralGroup(8)
@@ -469,7 +478,7 @@ def group_isomorphism(G, H, isomorphism=True):
     =====
 
     Uses the approach suggested by Robert Tarjan to compute the isomorphism between two groups.
-    First, the generators of `G` are mapped to the elements of `H` and
+    First, the generators of ``G`` are mapped to the elements of ``H`` and
     we check if the mapping induces an isomorphism.
 
     '''
@@ -540,8 +549,11 @@ def is_isomorphic(G, H):
     Parameters
     ==========
 
-        G (a finite `FpGroup` or a `PermutationGroup`) -- First group
-        H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
+    G : A finite ``FpGroup`` or a ``PermutationGroup``
+        First group.
+
+    H : A finite ``FpGroup`` or a ``PermutationGroup``
+        Second group.
 
     Returns
     =======

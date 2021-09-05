@@ -95,7 +95,7 @@ class jacobi(OrthogonalPolynomial):
     (-1)**n*jacobi(n, b, a, x)
 
     >>> jacobi(n, a, b, 0)
-    2**(-n)*gamma(a + n + 1)*hyper((-b - n, -n), (a + 1,), -1)/(factorial(n)*gamma(a + 1))
+    gamma(a + n + 1)*hyper((-b - n, -n), (a + 1,), -1)/(2**n*factorial(n)*gamma(a + 1))
     >>> jacobi(n, a, b, 1)
     RisingFactorial(a + 1, n)/factorial(n)
 
@@ -242,6 +242,17 @@ def jacobi_normalized(n, a, b, x):
 
     >>> jacobi_normalized(n, a, b, x)
     jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)/((a + b + 2*n + 1)*factorial(n)*gamma(a + b + n + 1)))
+
+    Parameters
+    ==========
+
+    n : integer degree of polynomial
+
+    a : alpha value
+
+    b : beta value
+
+    x : symbol
 
     See Also
     ========
@@ -441,7 +452,7 @@ class chebyshevt(OrthogonalPolynomial):
     Examples
     ========
 
-    >>> from sympy import chebyshevt, chebyshevu, diff
+    >>> from sympy import chebyshevt, diff
     >>> from sympy.abc import n,x
     >>> chebyshevt(0, x)
     1
@@ -553,7 +564,7 @@ class chebyshevu(OrthogonalPolynomial):
     Examples
     ========
 
-    >>> from sympy import chebyshevt, chebyshevu, diff
+    >>> from sympy import chebyshevu, diff
     >>> from sympy.abc import n,x
     >>> chebyshevu(0, x)
     1
@@ -1169,7 +1180,7 @@ class assoc_laguerre(OrthogonalPolynomial):
     Examples
     ========
 
-    >>> from sympy import laguerre, assoc_laguerre, diff
+    >>> from sympy import assoc_laguerre, diff
     >>> from sympy.abc import x, n, a
     >>> assoc_laguerre(0, a, x)
     1

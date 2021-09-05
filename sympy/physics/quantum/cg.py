@@ -4,14 +4,13 @@
 # -Implement new simpifications
 """Clebsch-Gordon Coefficients."""
 
-from __future__ import print_function, division
-
 from sympy import (Add, expand, Eq, Expr, Mul, Piecewise, Pow, sqrt, Sum,
                    symbols, sympify, Wild)
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.wigner import clebsch_gordan, wigner_3j, wigner_6j, wigner_9j
+from sympy.printing.precedence import PRECEDENCE
 
 __all__ = [
     'CG',
@@ -27,7 +26,10 @@ __all__ = [
 
 
 class Wigner3j(Expr):
-    """Class for the Wigner-3j symbols
+    """Class for the Wigner-3j symbols.
+
+    Explanation
+    ===========
 
     Wigner 3j-symbols are coefficients determined by the coupling of
     two angular momenta. When created, they are expressed as symbolic
@@ -147,7 +149,10 @@ class Wigner3j(Expr):
 
 
 class CG(Wigner3j):
-    r"""Class for Clebsch-Gordan coefficient
+    r"""Class for Clebsch-Gordan coefficient.
+
+    Explanation
+    ===========
 
     Clebsch-Gordan coefficients describe the angular momentum coupling between
     two systems. The coefficients give the expansion of a coupled total angular
@@ -155,14 +160,16 @@ class CG(Wigner3j):
     coefficients are defined as [1]_:
 
     .. math ::
-        C^{j_1,m_1}_{j_2,m_2,j_3,m_3} = \left\langle j_1,m_1;j_2,m_2 | j_3,m_3\right\rangle
+        C^{j_3,m_3}_{j_1,m_1,j_2,m_2} = \left\langle j_1,m_1;j_2,m_2 | j_3,m_3\right\rangle
 
     Parameters
     ==========
 
-    j1, m1, j2, m2, j3, m3 : Number, Symbol
-        Terms determining the angular momentum of coupled angular momentum
-        systems.
+    j1, m1, j2, m2 : Number, Symbol
+        Angular momenta of states 1 and 2.
+
+    j3, m3: Number, Symbol
+        Total angular momentum of the coupled system.
 
     Examples
     ========
@@ -176,6 +183,11 @@ class CG(Wigner3j):
         CG(3/2, 3/2, 1/2, -1/2, 1, 1)
         >>> cg.doit()
         sqrt(3)/2
+        >>> CG(j1=S(1)/2, m1=-S(1)/2, j2=S(1)/2, m2=+S(1)/2, j3=1, m3=0).doit()
+        sqrt(2)/2
+
+
+    Compare [2]_.
 
     See Also
     ========
@@ -186,7 +198,12 @@ class CG(Wigner3j):
     ==========
 
     .. [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
+    .. [2] `Clebsch-Gordan Coefficients, Spherical Harmonics, and d Functions
+        <https://pdg.lbl.gov/2020/reviews/rpp2020-rev-clebsch-gordan-coefs.pdf>`_
+        in P.A. Zyla *et al.* (Particle Data Group), Prog. Theor. Exp. Phys.
+        2020, 083C01 (2020).
     """
+    precedence = PRECEDENCE["Pow"] - 1
 
     def doit(self, **hints):
         if self.is_symbolic:
@@ -411,7 +428,10 @@ class Wigner9j(Expr):
 
 
 def cg_simp(e):
-    """Simplify and combine CG coefficients
+    """Simplify and combine CG coefficients.
+
+    Explanation
+    ===========
 
     This function uses various symmetry and properties of sums and
     products of Clebsch-Gordan coefficients to simplify statements
@@ -456,6 +476,9 @@ def _cg_simp_add(e):
     #TODO: Improve simplification method
     """Takes a sum of terms involving Clebsch-Gordan coefficients and
     simplifies the terms.
+
+    Explanation
+    ===========
 
     First, we create two lists, cg_part, which is all the terms involving CG
     coefficients, and other_part, which is all other terms. The cg_part list
@@ -681,21 +704,21 @@ def _check_varsh_sum_871_2(e):
 
 
 def _check_varsh_sum_872_4(e):
+    alpha = symbols('alpha')
+    beta = symbols('beta')
     a = Wild('a')
-    alpha = Wild('alpha')
     b = Wild('b')
-    beta = Wild('beta')
     c = Wild('c')
     cp = Wild('cp')
     gamma = Wild('gamma')
     gammap = Wild('gammap')
-    match1 = e.match(Sum(CG(a, alpha, b, beta, c, gamma)*CG(
-        a, alpha, b, beta, cp, gammap), (alpha, -a, a), (beta, -b, b)))
-    if match1 is not None and len(match1) == 8:
+    cg1 = CG(a, alpha, b, beta, c, gamma)
+    cg2 = CG(a, alpha, b, beta, cp, gammap)
+    match1 = e.match(Sum(cg1*cg2, (alpha, -a, a), (beta, -b, b)))
+    if match1 is not None and len(match1) == 6:
         return (KroneckerDelta(c, cp)*KroneckerDelta(gamma, gammap)).subs(match1)
-    match2 = e.match(Sum(
-        CG(a, alpha, b, beta, c, gamma)**2, (alpha, -a, a), (beta, -b, b)))
-    if match2 is not None and len(match2) == 6:
+    match2 = e.match(Sum(cg1**2, (alpha, -a, a), (beta, -b, b)))
+    if match2 is not None and len(match2) == 4:
         return 1
     return e
 

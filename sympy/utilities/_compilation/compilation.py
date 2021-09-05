@@ -1,5 +1,3 @@
-from __future__ import (absolute_import, division, print_function)
-
 import glob
 import os
 import shutil
@@ -8,7 +6,7 @@ import sys
 import tempfile
 import warnings
 from distutils.errors import CompileError
-from distutils.sysconfig import get_config_var
+from distutils.sysconfig import get_config_var, get_config_vars
 
 from .runners import (
     CCompilerRunner,
@@ -21,7 +19,7 @@ from .util import (
     sha256_of_string, sha256_of_file
 )
 
-sharedext = get_config_var('EXT_SUFFIX' if sys.version_info >= (3, 3) else 'SO')
+sharedext = get_config_var('EXT_SUFFIX')
 
 if os.name == 'posix':
     objext = '.o'
@@ -74,7 +72,7 @@ def compile_sources(files, Runner=None, destdir=None, cwd=None, keep_dir_struct=
     destdir = destdir or '.'
     if not os.path.isdir(destdir):
         if os.path.exists(destdir):
-            raise IOError("{} is not a directory".format(destdir))
+            raise OSError("{} is not a directory".format(destdir))
         else:
             make_dirs(destdir)
     if cwd is None:
@@ -232,11 +230,12 @@ def link_py_so(obj_files, so_file=None, cwd=None, libraries=None,
     else:
         from distutils import sysconfig
         if sysconfig.get_config_var('Py_ENABLE_SHARED'):
-            ABIFLAGS = sysconfig.get_config_var('ABIFLAGS')
-            pythonlib = 'python{}.{}{}'.format(
-                sys.hexversion >> 24, (sys.hexversion >> 16) & 0xff,
-                ABIFLAGS or '')
-            libraries += [pythonlib]
+            cfgDict = get_config_vars()
+            kwargs['linkline'] = kwargs.get('linkline', []) + [cfgDict['PY_LDFLAGS']] # PY_LDFLAGS or just LDFLAGS?
+            library_dirs += [cfgDict['LIBDIR']]
+            for opt in cfgDict['BLDLIBRARY'].split():
+                if opt.startswith('-l'):
+                    libraries += [opt[2:]]
         else:
             pass
 
@@ -507,13 +506,6 @@ def compile_link_import_py_ext(sources, extname=None, build_dir='.', compile_kwa
     =======
 
     The imported module from of the python extension.
-
-    Examples
-    ========
-
-    >>> mod = compile_link_import_py_ext(['fft.f90', 'conv.cpp', '_fft.pyx'])  # doctest: +SKIP
-    >>> Aprim = mod.fft(A)  # doctest: +SKIP
-
     """
     if extname is None:
         extname = os.path.splitext(os.path.basename(sources[-1]))[0]
@@ -544,7 +536,7 @@ def _write_sources_to_build_dir(sources, build_dir):
         sha256_in_mem = sha256_of_string(src.encode('utf-8')).hexdigest()
         if os.path.exists(dest):
             if os.path.exists(dest + '.sha256'):
-                sha256_on_disk = open(dest + '.sha256', 'rt').read()
+                sha256_on_disk = open(dest + '.sha256').read()
             else:
                 sha256_on_disk = sha256_of_file(dest).hexdigest()
 

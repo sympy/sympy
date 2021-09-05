@@ -4,7 +4,7 @@ from sympy import (jn, yn, symbols, Symbol, sin, cos, pi, S, jn_zeros, besselj,
                    bessely, besseli, besselk, hankel1, hankel2, hn1, hn2,
                    expand_func, sqrt, sinh, cosh, diff, series, gamma, hyper,
                    I, O, oo, conjugate, uppergamma, exp, Integral, Sum,
-                   Rational)
+                   Rational, log, polar_lift, exp_polar)
 from sympy.functions.special.bessel import fn
 from sympy.functions.special.bessel import (airyai, airybi,
                                             airyaiprime, airybiprime, marcumq)
@@ -12,7 +12,8 @@ from sympy.testing.randtest import (random_complex_number as randcplx,
                                       verify_numerically as tn,
                                       test_derivative_numerically as td,
                                       _randint)
-from sympy.testing.pytest import raises
+from sympy.simplify import besselsimp
+from sympy.testing.pytest import raises, slow
 
 from sympy.abc import z, n, k, x
 
@@ -33,6 +34,69 @@ def test_bessel_twoinputs():
         raises(TypeError, lambda: f(1, 2, 3))
 
 
+def test_besselj_leading_term():
+    assert besselj(0, x).as_leading_term(x) == 1
+    assert besselj(1, sin(x)).as_leading_term(x) == x/2
+    assert besselj(1, 2*sqrt(x)).as_leading_term(x) == sqrt(x)
+
+    # https://github.com/sympy/sympy/issues/21701
+    assert (besselj(z, x)/x**z).as_leading_term(x) == 1/(2**z*gamma(z + 1))
+
+
+def test_bessely_leading_term():
+    assert bessely(0, x).as_leading_term(x) == (2*log(x) - 2*log(2))/pi
+    assert bessely(1, sin(x)).as_leading_term(x) == (x*log(x) - x*log(2))/pi
+    assert bessely(1, 2*sqrt(x)).as_leading_term(x) == sqrt(x)*log(x)/pi
+
+
+def test_besselj_series():
+    assert besselj(0, x).series(x) == 1 - x**2/4 + x**4/64 + O(x**6)
+    assert besselj(0, x**(1.1)).series(x) == 1 + x**4.4/64 - x**2.2/4 + O(x**6)
+    assert besselj(0, x**2 + x).series(x) == 1 - x**2/4 - x**3/2\
+        - 15*x**4/64 + x**5/16 + O(x**6)
+    assert besselj(0, sqrt(x) + x).series(x, n=4) == 1 - x/4 - 15*x**2/64\
+        + 215*x**3/2304 - x**Rational(3, 2)/2 + x**Rational(5, 2)/16\
+        + 23*x**Rational(7, 2)/384 + O(x**4)
+    assert besselj(0, x/(1 - x)).series(x) == 1 - x**2/4 - x**3/2 - 47*x**4/64\
+        - 15*x**5/16 + O(x**6)
+    assert besselj(0, log(1 + x)).series(x) == 1 - x**2/4 + x**3/4\
+        - 41*x**4/192 + 17*x**5/96 + O(x**6)
+    assert besselj(1, sin(x)).series(x) == x/2 - 7*x**3/48 + 73*x**5/1920 + O(x**6)
+    assert besselj(1, 2*sqrt(x)).series(x) == sqrt(x) - x**Rational(3, 2)/2\
+        + x**Rational(5, 2)/12 - x**Rational(7, 2)/144 + x**Rational(9, 2)/2880\
+        - x**Rational(11, 2)/86400 + O(x**6)
+    assert besselj(-2, sin(x)).series(x, n=4) == besselj(2, sin(x)).series(x, n=4)
+
+
+def test_bessely_series():
+    const = 2*S.EulerGamma/pi - 2*log(2)/pi + 2*log(x)/pi
+    assert bessely(0, x).series(x, n=4) == const + x**2*(-log(x)/(2*pi)\
+        + (2 - 2*S.EulerGamma)/(4*pi) + log(2)/(2*pi)) + O(x**4*log(x))
+    assert bessely(0, x**(1.1)).series(x, n=4) == 2*S.EulerGamma/pi\
+        - 2*log(2)/pi + 2.2*log(x)/pi + x**2.2*(-0.55*log(x)/pi\
+        + (2 - 2*S.EulerGamma)/(4*pi) + log(2)/(2*pi)) + O(x**4*log(x))
+    assert bessely(0, x**2 + x).series(x, n=4) == \
+        const - (2 - 2*S.EulerGamma)*(-x**3/(2*pi) - x**2/(4*pi)) + 2*x/pi\
+        + x**2*(-log(x)/(2*pi) - 1/pi + log(2)/(2*pi))\
+        + x**3*(-log(x)/pi + 1/(6*pi) + log(2)/pi) + O(x**4*log(x))
+    assert bessely(0, x/(1 - x)).series(x, n=3) == const\
+        + 2*x/pi + x**2*(-log(x)/(2*pi) + (2 - 2*S.EulerGamma)/(4*pi)\
+        + log(2)/(2*pi) + 1/pi) + O(x**3*log(x))
+    assert bessely(0, log(1 + x)).series(x, n=3) == const\
+        - x/pi + x**2*(-log(x)/(2*pi) + (2 - 2*S.EulerGamma)/(4*pi)\
+        + log(2)/(2*pi) + 5/(12*pi)) + O(x**3*log(x))
+    assert bessely(1, sin(x)).series(x, n=4) == -(1/pi)*(1 - 2*S.EulerGamma)\
+        * (-x**3/12 + x/2) + x*(log(x)/pi - log(2)/pi) + x**3*(-7*log(x)\
+        / (24*pi) - 1/(6*pi) + (Rational(5, 2) - 2*S.EulerGamma)/(16*pi)\
+        + 7*log(2)/(24*pi)) + O(x**4*log(x))
+    assert bessely(1, 2*sqrt(x)).series(x, n=3) == sqrt(x)*(log(x)/pi \
+        - (1 - 2*S.EulerGamma)/pi) + x**Rational(3, 2)*(-log(x)/(2*pi)\
+        + (Rational(5, 2) - 2*S.EulerGamma)/(2*pi))\
+        + x**Rational(5, 2)*(log(x)/(12*pi)\
+        - (Rational(10, 3) - 2*S.EulerGamma)/(12*pi)) + O(x**3*log(x))
+    assert bessely(-2, sin(x)).series(x, n=4) == bessely(2, sin(x)).series(x, n=4)
+
+
 def test_diff():
     assert besselj(n, z).diff(z) == besselj(n - 1, z)/2 - besselj(n + 1, z)/2
     assert bessely(n, z).diff(z) == bessely(n - 1, z)/2 - bessely(n + 1, z)/2
@@ -43,8 +107,6 @@ def test_diff():
 
 
 def test_rewrite():
-    from sympy import polar_lift, exp, I
-
     assert besselj(n, z).rewrite(jn) == sqrt(2*z/pi)*jn(n - S.Half, z)
     assert bessely(n, z).rewrite(yn) == sqrt(2*z/pi)*yn(n - S.Half, z)
     assert besseli(n, z).rewrite(besselj) == \
@@ -104,8 +166,6 @@ def test_rewrite():
 
 
 def test_expand():
-    from sympy import besselsimp, Symbol, exp, exp_polar, I
-
     assert expand_func(besselj(S.Half, z).rewrite(jn)) == \
         sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
     assert expand_func(bessely(S.Half, z).rewrite(yn)) == \
@@ -142,35 +202,6 @@ def test_expand():
         besselsimp(besselk(Rational(-5, 2), z)) == \
         sqrt(2)*sqrt(pi)*(z**2 + 3*z + 3)*exp(-z)/(2*z**Rational(5, 2))
 
-    def check(eq, ans):
-        return tn(eq, ans) and eq == ans
-
-    rn = randcplx(a=1, b=0, d=0, c=2)
-
-    for besselx in [besselj, bessely, besseli, besselk]:
-        ri = S(2*randint(-11, 10) + 1) / 2  # half integer in [-21/2, 21/2]
-        assert tn(besselsimp(besselx(ri, z)), besselx(ri, z))
-
-    assert check(expand_func(besseli(rn, x)),
-                 besseli(rn - 2, x) - 2*(rn - 1)*besseli(rn - 1, x)/x)
-    assert check(expand_func(besseli(-rn, x)),
-                 besseli(-rn + 2, x) + 2*(-rn + 1)*besseli(-rn + 1, x)/x)
-
-    assert check(expand_func(besselj(rn, x)),
-                 -besselj(rn - 2, x) + 2*(rn - 1)*besselj(rn - 1, x)/x)
-    assert check(expand_func(besselj(-rn, x)),
-                 -besselj(-rn + 2, x) + 2*(-rn + 1)*besselj(-rn + 1, x)/x)
-
-    assert check(expand_func(besselk(rn, x)),
-                 besselk(rn - 2, x) + 2*(rn - 1)*besselk(rn - 1, x)/x)
-    assert check(expand_func(besselk(-rn, x)),
-                 besselk(-rn + 2, x) - 2*(-rn + 1)*besselk(-rn + 1, x)/x)
-
-    assert check(expand_func(bessely(rn, x)),
-                 -bessely(rn - 2, x) + 2*(rn - 1)*bessely(rn - 1, x)/x)
-    assert check(expand_func(bessely(-rn, x)),
-                 -bessely(-rn + 2, x) + 2*(-rn + 1)*bessely(-rn + 1, x)/x)
-
     n = Symbol('n', integer=True, positive=True)
 
     assert expand_func(besseli(n + 2, z)) == \
@@ -201,6 +232,42 @@ def test_expand():
         assert besselx(i, r).is_extended_real is True
     for besselx in [bessely, besselk]:
         assert besselx(i, r).is_extended_real is None
+
+    for besselx in [besselj, bessely, besseli, besselk]:
+        assert expand_func(besselx(oo, x)) == besselx(oo, x, evaluate=False)
+        assert expand_func(besselx(-oo, x)) == besselx(-oo, x, evaluate=False)
+
+
+@slow
+def test_slow_expand():
+    def check(eq, ans):
+        return tn(eq, ans) and eq == ans
+
+    rn = randcplx(a=1, b=0, d=0, c=2)
+
+    for besselx in [besselj, bessely, besseli, besselk]:
+        ri = S(2*randint(-11, 10) + 1) / 2  # half integer in [-21/2, 21/2]
+        assert tn(besselsimp(besselx(ri, z)), besselx(ri, z))
+
+    assert check(expand_func(besseli(rn, x)),
+                 besseli(rn - 2, x) - 2*(rn - 1)*besseli(rn - 1, x)/x)
+    assert check(expand_func(besseli(-rn, x)),
+                 besseli(-rn + 2, x) + 2*(-rn + 1)*besseli(-rn + 1, x)/x)
+
+    assert check(expand_func(besselj(rn, x)),
+                 -besselj(rn - 2, x) + 2*(rn - 1)*besselj(rn - 1, x)/x)
+    assert check(expand_func(besselj(-rn, x)),
+                 -besselj(-rn + 2, x) + 2*(-rn + 1)*besselj(-rn + 1, x)/x)
+
+    assert check(expand_func(besselk(rn, x)),
+                 besselk(rn - 2, x) + 2*(rn - 1)*besselk(rn - 1, x)/x)
+    assert check(expand_func(besselk(-rn, x)),
+                 besselk(-rn + 2, x) - 2*(-rn + 1)*besselk(-rn + 1, x)/x)
+
+    assert check(expand_func(bessely(rn, x)),
+                 -bessely(rn - 2, x) + 2*(rn - 1)*bessely(rn - 1, x)/x)
+    assert check(expand_func(bessely(-rn, x)),
+                 -bessely(-rn + 2, x) + 2*(-rn + 1)*bessely(-rn + 1, x)/x)
 
 
 def test_fn():
@@ -283,7 +350,6 @@ def test_jn_zeros():
 
 
 def test_bessel_eval():
-    from sympy import I, Symbol
     n, m, k = Symbol('n', integer=True), Symbol('m'), Symbol('k', integer=True, zero=False)
 
     for f in [besselj, besseli]:
@@ -344,8 +410,31 @@ def test_bessel_nan():
         assert f(1, S.NaN) == f(1, S.NaN, evaluate=False)
 
 
+def test_meromorphic():
+    assert besselj(2, x).is_meromorphic(x, 1) == True
+    assert besselj(2, x).is_meromorphic(x, 0) == True
+    assert besselj(2, x).is_meromorphic(x, oo) == False
+    assert besselj(S(2)/3, x).is_meromorphic(x, 1) == True
+    assert besselj(S(2)/3, x).is_meromorphic(x, 0) == False
+    assert besselj(S(2)/3, x).is_meromorphic(x, oo) == False
+    assert besselj(x, 2*x).is_meromorphic(x, 2) == False
+    assert besselk(0, x).is_meromorphic(x, 1) == True
+    assert besselk(2, x).is_meromorphic(x, 0) == True
+    assert besseli(0, x).is_meromorphic(x, 1) == True
+    assert besseli(2, x).is_meromorphic(x, 0) == True
+    assert bessely(0, x).is_meromorphic(x, 1) == True
+    assert bessely(0, x).is_meromorphic(x, 0) == False
+    assert bessely(2, x).is_meromorphic(x, 0) == True
+    assert hankel1(3, x**2 + 2*x).is_meromorphic(x, 1) == True
+    assert hankel1(0, x).is_meromorphic(x, 0) == False
+    assert hankel2(11, 4).is_meromorphic(x, 5) == True
+    assert hn1(6, 7*x**3 + 4).is_meromorphic(x, 7) == True
+    assert hn2(3, 2*x).is_meromorphic(x, 9) == True
+    assert jn(5, 2*x + 7).is_meromorphic(x, 4) == True
+    assert yn(8, x**2 + 11).is_meromorphic(x, 6) == True
+
+
 def test_conjugate():
-    from sympy import conjugate, I, Symbol
     n = Symbol('n')
     z = Symbol('z', extended_real=False)
     x = Symbol('x', extended_real=True)
@@ -383,7 +472,6 @@ def test_conjugate():
 
 
 def test_branching():
-    from sympy import exp_polar, polar_lift, Symbol, I, exp
     assert besselj(polar_lift(k), x) == besselj(k, x)
     assert besseli(polar_lift(k), x) == besseli(k, x)
 

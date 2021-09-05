@@ -42,94 +42,6 @@ the current implementation, to work in rings like `k[X][Y]`. This would create
 even more layers. For this reason, working in the isomorphic ring `k[X, Y]`
 is preferred.
 
-Domains
-=======
-
-.. currentmodule:: sympy.polys.domains
-
-Here we document the various implemented ground domains. There are three
-types: abstract domains, concrete domains, and "implementation domains".
-Abstract domains cannot be (usefully) instantiated at all, and just collect
-together functionality shared by many other domains. Concrete domains are
-those meant to be instantiated and used in the polynomial manipulation
-algorithms. In some cases, there are various possible ways to implement the
-data type the domain provides. For example, depending on what libraries are
-available on the system, the integers are implemented either using the python
-built-in integers, or using gmpy. Note that various aliases are created
-automatically depending on the libraries available. As such e.g. ``ZZ`` always
-refers to the most efficient implementation of the integer ring available.
-
-Abstract Domains
-****************
-
-.. autoclass:: sympy.polys.domains.domain.Domain
-   :members:
-
-.. autoclass:: sympy.polys.domains.field.Field
-   :members:
-
-.. autoclass:: sympy.polys.domains.ring.Ring
-   :members:
-
-.. autoclass:: sympy.polys.domains.simpledomain.SimpleDomain
-   :members:
-
-.. autoclass:: sympy.polys.domains.compositedomain.CompositeDomain
-   :members:
-
-Concrete Domains
-****************
-
-.. autoclass:: FiniteField
-   :members:
-
-.. autoclass:: IntegerRing
-   :members:
-
-.. autoclass:: PolynomialRing
-   :members:
-
-.. autoclass:: RationalField
-   :members:
-
-.. autoclass:: AlgebraicField
-   :members:
-
-.. autoclass:: FractionField
-   :members:
-
-.. autoclass:: RealField
-   :members:
-
-.. autoclass:: ExpressionDomain
-   :members:
-
-Implementation Domains
-**********************
-
-.. autoclass:: PythonFiniteField
-.. autoclass:: GMPYFiniteField
-
-.. autoclass:: PythonIntegerRing
-.. autoclass:: GMPYIntegerRing
-
-.. autoclass:: PythonRationalField
-.. autoclass:: GMPYRationalField
-
-Level One
-=========
-
-.. currentmodule:: sympy.polys.polyclasses
-
-.. autoclass:: DMP
-   :members:
-
-.. autoclass:: DMF
-   :members:
-
-.. autoclass:: ANP
-   :members:
-
 Level Zero
 ==========
 
@@ -347,24 +259,9 @@ Manipulation of sparse, distributed polynomials and vectors
 
 Dense representations quickly require infeasible amounts of storage and
 computation time if the number of variables increases. For this reason,
-there is code to manipulate polynomials in a *sparse* representation.
-
-
-
-.. currentmodule:: sympy.polys.rings
-
-Sparse polynomials are represented as dictionaries.
-
-.. autofunction:: ring
-.. autofunction:: xring
-.. autofunction:: vring
-.. autofunction:: sring
-
-.. autoclass:: PolyRing
-   :members:
-
-.. autoclass:: PolyElement
-   :members:
+there is code to manipulate polynomials in a *sparse* representation. The Ring
+object and elements are implemented by the classes :py:class:`~.PolyRing` and
+:py:class:`~.PolyElement`.
 
 In commutative algebra, one often studies not only polynomials, but also
 *modules* over polynomial rings. The polynomial manipulation module provides
@@ -709,6 +606,7 @@ Options
 .. automodule:: sympy.polys.polyoptions
 
 .. autoclass:: sympy.polys.polyoptions.Options
+   :members:
 .. autofunction:: sympy.polys.polyoptions.build_options
 
 Configuration
@@ -728,30 +626,54 @@ TODO sort and explain
 .. currentmodule:: sympy.polys.polyerrors
 
 .. autoclass:: BasePolynomialError
+   :members:
 
 .. autoclass:: ExactQuotientFailed
+   :members:
 .. autoclass:: OperationNotSupported
+   :members:
 .. autoclass:: HeuristicGCDFailed
+   :members:
 .. autoclass:: HomomorphismFailed
+   :members:
 .. autoclass:: IsomorphismFailed
+   :members:
 .. autoclass:: ExtraneousFactors
+   :members:
 .. autoclass:: EvaluationFailed
+   :members:
 .. autoclass:: RefinementFailed
+   :members:
 .. autoclass:: CoercionFailed
+   :members:
 .. autoclass:: NotInvertible
+   :members:
 .. autoclass:: NotReversible
+   :members:
 .. autoclass:: NotAlgebraic
+   :members:
 .. autoclass:: DomainError
+   :members:
 .. autoclass:: PolynomialError
+   :members:
 .. autoclass:: UnificationFailed
+   :members:
 .. autoclass:: GeneratorsNeeded
+   :members:
 .. autoclass:: ComputationFailed
+   :members:
 .. autoclass:: GeneratorsError
+   :members:
 .. autoclass:: UnivariatePolynomialError
+   :members:
 .. autoclass:: MultivariatePolynomialError
+   :members:
 .. autoclass:: PolificationFailed
+   :members:
 .. autoclass:: OptionError
+   :members:
 .. autoclass:: FlagError
+   :members:
 
 Reference
 =========

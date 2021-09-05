@@ -24,24 +24,18 @@ if [[ "${TEST_SPHINX}" == "true" ]]; then
     make man
     make latex
     cd _build/latex
-    export LATEXOPTIONS="-interaction=nonstopmode"
-    make all
-fi
-
-if [[ "${TEST_SAGE}" == "true" ]]; then
-    echo "Testing SAGE"
-    source deactivate
-    source activate sage
-    sage -v
-    sage -python bin/test sympy/external/tests/test_sage.py
-    PYTHONPATH=. sage -t sympy/external/tests/test_sage.py
-    export MPMATH_NOSAGE=1
-    source deactivate
-    source activate test-environment
+    export LATEXMKOPTS="-halt-on-error -xelatex -silent"
+    make all || {
+        echo "An error had occured during the LaTeX build";
+        tail -n 1000 *.log;
+        sleep 1; # A guard against travis running tail concurrently.
+        exit -1;
+    }
 fi
 
 if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     python bin/test_external_imports.py
+    python bin/test_submodule_imports.py
     python bin/test_executable.py
 fi
 
@@ -151,8 +145,8 @@ test_list = [
     # llvmlite
     '*llvm*',
 
-    # theano
-    '*theano*',
+    # aesara
+    '*aesara*',
 
     # gmpy
     'polys',
@@ -181,6 +175,9 @@ test_list = [
     'sympy/logic',
     'sympy/assumptions',
 
+    #stats
+    'sympy/stats',
+
 ]
 
 blacklist = [
@@ -198,8 +195,8 @@ doctest_list = [
     # llvmlite
     '*llvm*',
 
-    # theano
-    '*theano*',
+    # aesara
+    '*aesara*',
 
     # gmpy
     'polys',
@@ -222,6 +219,9 @@ doctest_list = [
     # pycosat
     'sympy/logic',
     'sympy/assumptions',
+
+    #stats
+    'sympy/stats',
 
 ]
 

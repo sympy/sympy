@@ -1,10 +1,11 @@
-from sympy import Symbol, symbols, S, Interval, pi, Rational, simplify
+from sympy import expand, Symbol, symbols, S, Interval, pi, Rational, simplify
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log
 from sympy.testing.pytest import raises
 from sympy.physics.units import meter, newton, kilo, giga, milli
 from sympy.physics.continuum_mechanics.beam import Beam3D
 from sympy.geometry import Circle, Polygon, Point2D, Triangle
+from sympy import sympify
 
 x = Symbol('x')
 y = Symbol('y')
@@ -82,21 +83,21 @@ def test_Beam():
 
     # Test for shear force distribution function
     p = b1.shear_force()
-    q = -8*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 10, 0) \
-    + 120*SingularityFunction(x, 30, -1) + 2*SingularityFunction(x, 30, 0)
+    q = 8*SingularityFunction(x, 0, 0) - 6*SingularityFunction(x, 10, 0) \
+    - 120*SingularityFunction(x, 30, -1) - 2*SingularityFunction(x, 30, 0)
     assert p == q
 
     # Test for shear stress distribution function
     p = b1.shear_stress()
-    q = (-8*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 10, 0) \
-    + 120*SingularityFunction(x, 30, -1) \
-    + 2*SingularityFunction(x, 30, 0))/A
+    q = (8*SingularityFunction(x, 0, 0) - 6*SingularityFunction(x, 10, 0) \
+    - 120*SingularityFunction(x, 30, -1) \
+    - 2*SingularityFunction(x, 30, 0))/A
     assert p==q
 
     # Test for bending moment distribution function
     p = b1.bending_moment()
-    q = -8*SingularityFunction(x, 0, 1) + 6*SingularityFunction(x, 10, 1) \
-    + 120*SingularityFunction(x, 30, 0) + 2*SingularityFunction(x, 30, 1)
+    q = 8*SingularityFunction(x, 0, 1) - 6*SingularityFunction(x, 10, 1) \
+    - 120*SingularityFunction(x, 30, 0) - 2*SingularityFunction(x, 30, 1)
     assert p == q
 
     # Test for slope distribution function
@@ -139,28 +140,25 @@ def test_Beam():
 
     # Test for shear force distribution function
     p = b2.shear_force()
-    q = w0*SingularityFunction(x, a1, 2)/2 \
-    + w2*SingularityFunction(x, c1, 0)
+    q = -w0*SingularityFunction(x, a1, 2)/2 \
+    - w2*SingularityFunction(x, c1, 0)
     assert p == q
 
     # Test for shear stress distribution function
     p = b2.shear_stress()
-    q = (w0*SingularityFunction(x, a1, 2)/2 \
-    + w2*SingularityFunction(x, c1, 0))/A
+    q = (-w0*SingularityFunction(x, a1, 2)/2 \
+    - w2*SingularityFunction(x, c1, 0))/A
     assert p == q
 
     # Test for bending moment distribution function
     p = b2.bending_moment()
-    q = w0*SingularityFunction(x, a1, 3)/6 + w2*SingularityFunction(x, c1, 1)
+    q = -w0*SingularityFunction(x, a1, 3)/6 - w2*SingularityFunction(x, c1, 1)
     assert p == q
 
     # Test for slope distribution function
     p = b2.slope()
-    q = (w0*SingularityFunction(x, a1, 4)/24 \
-    + w2*SingularityFunction(x, c1, 2)/2)/(E*I) \
-    + (E*I*f - w0*SingularityFunction(e, a1, 4)/24 \
-    - w2*SingularityFunction(e, c1, 2)/2)/(E*I)
-    assert p == q
+    q = (w0*SingularityFunction(x, a1, 4)/24 + w2*SingularityFunction(x, c1, 2)/2)/(E*I) + (E*I*f - w0*SingularityFunction(e, a1, 4)/24 - w2*SingularityFunction(e, c1, 2)/2)/(E*I)
+    assert expand(p) == expand(q)
 
     # Test for deflection distribution function
     p = b2.deflection()
@@ -186,24 +184,24 @@ def test_Beam():
     assert p == q
 
     p = b3.shear_force()
-    q = -2*SingularityFunction(x, 2, 3)/3 + 2*SingularityFunction(x, 3, 1) \
-    + 2*SingularityFunction(x, 3, 2) + 2*SingularityFunction(x, 3, 3)/3
+    q = 2*SingularityFunction(x, 2, 3)/3 - 2*SingularityFunction(x, 3, 1) \
+    - 2*SingularityFunction(x, 3, 2) - 2*SingularityFunction(x, 3, 3)/3
     assert p == q
 
     p = b3.shear_stress()
-    q = -1*SingularityFunction(x, 2, 3)/3 + 1*SingularityFunction(x, 3, 1) \
-    + 1*SingularityFunction(x, 3, 2) + 1*SingularityFunction(x, 3, 3)/3
+    q = SingularityFunction(x, 2, 3)/3 - 1*SingularityFunction(x, 3, 1) \
+    - 1*SingularityFunction(x, 3, 2) - 1*SingularityFunction(x, 3, 3)/3
     assert p == q
 
     p = b3.slope()
-    q = 2 + (-SingularityFunction(x, 2, 5)/30 + SingularityFunction(x, 3, 3)/3 \
-    + SingularityFunction(x, 3, 4)/6 + SingularityFunction(x, 3, 5)/30)/(E*I)
+    q = 2 - (SingularityFunction(x, 2, 5)/30 - SingularityFunction(x, 3, 3)/3 \
+    - SingularityFunction(x, 3, 4)/6 - SingularityFunction(x, 3, 5)/30)/(E*I)
     assert p == q
 
     p = b3.deflection()
-    q = 2*x + (-SingularityFunction(x, 2, 6)/180 \
-    + SingularityFunction(x, 3, 4)/12 + SingularityFunction(x, 3, 5)/30 \
-    + SingularityFunction(x, 3, 6)/180)/(E*I)
+    q = 2*x - (SingularityFunction(x, 2, 6)/180 \
+    - SingularityFunction(x, 3, 4)/12 - SingularityFunction(x, 3, 5)/30 \
+    - SingularityFunction(x, 3, 6)/180)/(E*I)
     assert p == q + C4
 
     b4 = Beam(4, E, I, 3)
@@ -214,12 +212,12 @@ def test_Beam():
     assert p == q
 
     p = b4.shear_force()
-    q = -3*SingularityFunction(x, 0, 1) \
-    + 3*SingularityFunction(x, 3, 1)
+    q = 3*SingularityFunction(x, 0, 1) \
+    - 3*SingularityFunction(x, 3, 1)
     assert p == q
 
     p = b4.shear_stress()
-    q = -SingularityFunction(x, 0, 1) + SingularityFunction(x, 3, 1)
+    q = SingularityFunction(x, 0, 1) - SingularityFunction(x, 3, 1)
     assert p == q
 
     p = b4.slope()
@@ -295,20 +293,23 @@ def test_beam_units():
     I = Symbol('I')
     R1, R2 = symbols('R1, R2')
 
-    b = Beam(8*meter, 200*giga*newton/meter**2, 400*1000000*(milli*meter)**4)
-    b.apply_load(5*kilo*newton, 2*meter, -1)
+    kN = kilo*newton
+    gN = giga*newton
+
+    b = Beam(8*meter, 200*gN/meter**2, 400*1000000*(milli*meter)**4)
+    b.apply_load(5*kN, 2*meter, -1)
     b.apply_load(R1, 0*meter, -1)
     b.apply_load(R2, 8*meter, -1)
-    b.apply_load(10*kilo*newton/meter, 4*meter, 0, end=8*meter)
+    b.apply_load(10*kN/meter, 4*meter, 0, end=8*meter)
     b.bc_deflection = [(0*meter, 0*meter), (8*meter, 0*meter)]
     b.solve_for_reaction_loads(R1, R2)
     assert b.reaction_loads == {R1: -13750*newton, R2: -31250*newton}
 
     b = Beam(3*meter, E*newton/meter**2, I*meter**4)
-    b.apply_load(8*kilo*newton, 1*meter, -1)
+    b.apply_load(8*kN, 1*meter, -1)
     b.apply_load(R1, 0*meter, -1)
     b.apply_load(R2, 3*meter, -1)
-    b.apply_load(12*kilo*newton*meter, 2*meter, -2)
+    b.apply_load(12*kN*meter, 2*meter, -2)
     b.bc_deflection = [(0*meter, 0*meter), (3*meter, 0*meter)]
     b.solve_for_reaction_loads(R1, R2)
     assert b.reaction_loads == {R1: newton*Rational(-28000, 3), R2: newton*Rational(4000, 3)}
@@ -362,7 +363,7 @@ def test_composite_beam():
     assert b.second_moment == Piecewise((1.5*I, x <= 2), (I, x <= 4))
     assert b.slope().subs(x, 4) == 120.0/(E*I)
     assert b.slope().subs(x, 2) == 80.0/(E*I)
-    assert int(b.deflection().subs(x, 4).args[0]) == 302  # Coefficient of 1/(E*I)
+    assert int(b.deflection().subs(x, 4).args[0]) == -302  # Coefficient of 1/(E*I)
 
     l = symbols('l', positive=True)
     R1, M1, R2, R3, P = symbols('R1 M1 R2 R3 P')
@@ -458,10 +459,10 @@ def test_apply_support():
     b.apply_load(20, 4, -1)
     M_0, R_0 = symbols('M_0, R_0')
     b.solve_for_reaction_loads(R_0, M_0)
-    assert b.slope() == (80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2)
-                + 10*SingularityFunction(x, 4, 2))/(E*I)
-    assert b.deflection() == (40*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 0, 3)/3
-                + 10*SingularityFunction(x, 4, 3)/3)/(E*I)
+    assert simplify(b.slope()) == simplify((80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2)
+                + 10*SingularityFunction(x, 4, 2))/(E*I))
+    assert simplify(b.deflection()) == simplify((40*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 0, 3)/3
+                + 10*SingularityFunction(x, 4, 3)/3)/(E*I))
 
     b = Beam(30, E, I)
     b.apply_support(10, "pin")
@@ -582,9 +583,9 @@ def test_Beam3D():
     assert b2.reaction_loads == {R1: -750, R2: -750}
 
     b2.solve_slope_deflection()
-    assert b2.slope() == [0, 0, x**2*(50*x - 2250)/(6*E*I) + 3750*x/(E*I)]
-    expected_deflection = (x*(25*A*G*x**3/2 - 750*A*G*x**2 + 4500*E*I +
-        15*x*(750*A*G - 10*E*I))/(6*A*E*G*I))
+    assert b2.slope() == [0, 0, 25*x**3/(3*E*I) - 375*x**2/(E*I) + 3750*x/(E*I)]
+    expected_deflection = 25*x**4/(12*E*I) - 125*x**3/(E*I) + 1875*x**2/(E*I) - \
+        25*x**2/(A*G) + 750*x/(A*G)
     dx, dy, dz = b2.deflection()
     assert dx == dz == 0
     assert dy == expected_deflection
@@ -701,8 +702,8 @@ def test_cross_section():
     b1.solve_for_reaction_loads(R1, R2)
     assert b1.load == (-10*SingularityFunction(x, 0, -1) + 82*SingularityFunction(x, 5, -1)/S(9)
                          + 90*SingularityFunction(x, 45, -2) + 8*SingularityFunction(x, 50, -1)/9)
-    assert b1.bending_moment() == (-10*SingularityFunction(x, 0, 1) + 82*SingularityFunction(x, 5, 1)/9
-                                     + 90*SingularityFunction(x, 45, 0) + 8*SingularityFunction(x, 50, 1)/9)
+    assert b1.bending_moment() == (10*SingularityFunction(x, 0, 1) - 82*SingularityFunction(x, 5, 1)/9
+                                     - 90*SingularityFunction(x, 45, 0) - 8*SingularityFunction(x, 50, 1)/9)
     q = (-5*SingularityFunction(x, 0, 2) + 41*SingularityFunction(x, 5, 2)/S(9)
            + 90*SingularityFunction(x, 45, 1) + 4*SingularityFunction(x, 50, 2)/S(9))/(pi*E*r*Abs(r)**3)
     assert b1.slope() == C3 + 4*q
@@ -732,4 +733,32 @@ def test_cross_section():
     assert b.length == 35
     assert b.slope().subs(x, 7) == 8400/(E*a*c**3)
     assert b.slope().subs(x, 25) == 52200/(E*g*h**3) + 39600/(E*a*c**3)
-    assert b.deflection().subs(x, 30) == 537000/(E*g*h**3) + 712000/(E*a*c**3)
+    assert b.deflection().subs(x, 30) == -537000/(E*g*h**3) - 712000/(E*a*c**3)
+
+def test_max_shear_force_Beam3D():
+    x = symbols('x')
+    b = Beam3D(20, 40, 21, 100, 25)
+    b.apply_load(15, start=0, order=0, dir="z")
+    b.apply_load(12*x, start=0, order=0, dir="y")
+    b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+    assert b.max_shear_force() == [(0, 0), (20, 2400), (20, 300)]
+
+def test_max_bending_moment_Beam3D():
+    x = symbols('x')
+    b = Beam3D(20, 40, 21, 100, 25)
+    b.apply_load(15, start=0, order=0, dir="z")
+    b.apply_load(12*x, start=0, order=0, dir="y")
+    b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+    assert b.max_bmoment() == [(0, 0), (20, 3000), (20, 16000)]
+
+def test_max_deflection_Beam3D():
+    x = symbols('x')
+    b = Beam3D(20, 40, 21, 100, 25)
+    b.apply_load(15, start=0, order=0, dir="z")
+    b.apply_load(12*x, start=0, order=0, dir="y")
+    b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+    b.solve_slope_deflection()
+    c = sympify("495/14")
+    p = sympify("-10 + 10*sqrt(10793)/43")
+    q = sympify("(10 - 10*sqrt(10793)/43)**3/160 - 20/7 + (10 - 10*sqrt(10793)/43)**4/6400 + 20*sqrt(10793)/301 + 27*(10 - 10*sqrt(10793)/43)**2/560")
+    assert b.max_deflection() == [(0, 0), (10, c), (p, q)]

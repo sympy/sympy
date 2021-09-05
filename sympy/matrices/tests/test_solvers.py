@@ -2,10 +2,10 @@ from sympy import (
     I, Rational, S, Symbol, simplify, symbols, sympify, expand_mul)
 from sympy.matrices.matrices import (ShapeError, NonSquareMatrixError)
 from sympy.matrices import (
-    ImmutableMatrix, Matrix, eye, ones, ImmutableDenseMatrix)
-from sympy.testing.pytest import raises, XFAIL
+    ImmutableMatrix, Matrix, eye, ones, ImmutableDenseMatrix, dotprodsimp)
+from sympy.testing.pytest import raises
 from sympy.matrices.common import NonInvertibleMatrixError
-
+from sympy.solvers.solveset import linsolve
 from sympy.abc import x, y
 
 def test_issue_17247_expression_blowup_29():
@@ -14,51 +14,52 @@ def test_issue_17247_expression_blowup_29():
         [-149/64 + 49*I/32, -177/128 - 1369*I/128,                   0, -2063/256 + 541*I/128],
         [                0,         9/4 + 55*I/16, 2473/256 + 137*I/64,                     0],
         [                0,                     0,                   0, -177/128 - 1369*I/128]]'''))
-    assert M.gauss_jordan_solve(ones(4, 1)) == (Matrix(S('''[
-        [                          -32549314808672/3306971225785 - 17397006745216*I/3306971225785],
-        [                               67439348256/3306971225785 - 9167503335872*I/3306971225785],
-        [-15091965363354518272/21217636514687010905 + 16890163109293858304*I/21217636514687010905],
-        [                                                          -11328/952745 + 87616*I/952745]]''')), Matrix(0, 1, []))
+    with dotprodsimp(True):
+        assert M.gauss_jordan_solve(ones(4, 1)) == (Matrix(S('''[
+            [                          -32549314808672/3306971225785 - 17397006745216*I/3306971225785],
+            [                               67439348256/3306971225785 - 9167503335872*I/3306971225785],
+            [-15091965363354518272/21217636514687010905 + 16890163109293858304*I/21217636514687010905],
+            [                                                          -11328/952745 + 87616*I/952745]]''')), Matrix(0, 1, []))
 
-@XFAIL # dotprodsimp is not on by default in this function
 def test_issue_17247_expression_blowup_30():
     M = Matrix(S('''[
         [             -3/4,       45/32 - 37*I/16,                   0,                     0],
         [-149/64 + 49*I/32, -177/128 - 1369*I/128,                   0, -2063/256 + 541*I/128],
         [                0,         9/4 + 55*I/16, 2473/256 + 137*I/64,                     0],
         [                0,                     0,                   0, -177/128 - 1369*I/128]]'''))
-    assert M.cholesky_solve(ones(4, 1)) == Matrix(S('''[
-        [                          -32549314808672/3306971225785 - 17397006745216*I/3306971225785],
-        [                               67439348256/3306971225785 - 9167503335872*I/3306971225785],
-        [-15091965363354518272/21217636514687010905 + 16890163109293858304*I/21217636514687010905],
-        [                                                          -11328/952745 + 87616*I/952745]]'''))
+    with dotprodsimp(True):
+        assert M.cholesky_solve(ones(4, 1)) == Matrix(S('''[
+            [                          -32549314808672/3306971225785 - 17397006745216*I/3306971225785],
+            [                               67439348256/3306971225785 - 9167503335872*I/3306971225785],
+            [-15091965363354518272/21217636514687010905 + 16890163109293858304*I/21217636514687010905],
+            [                                                          -11328/952745 + 87616*I/952745]]'''))
 
-# This test is commented out because without dotprodsimp this calculation hangs.
-# @XFAIL # dotprodsimp is not on by default in this function
+# @XFAIL # This calculation hangs with dotprodsimp.
 # def test_issue_17247_expression_blowup_31():
 #     M = Matrix([
 #         [x + 1, 1 - x,     0,     0],
 #         [1 - x, x + 1,     0, x + 1],
 #         [    0, 1 - x, x + 1,     0],
 #         [    0,     0,     0, x + 1]])
-#     assert M.LDLsolve(ones(4, 1)) == Matrix([
-#         [(x + 1)/(4*x)],
-#         [(x - 1)/(4*x)],
-#         [(x + 1)/(4*x)],
-#         [    1/(x + 1)]])
+#     with dotprodsimp(True):
+#         assert M.LDLsolve(ones(4, 1)) == Matrix([
+#             [(x + 1)/(4*x)],
+#             [(x - 1)/(4*x)],
+#             [(x + 1)/(4*x)],
+#             [    1/(x + 1)]])
 
-@XFAIL # dotprodsimp is not on by default in this function
 def test_issue_17247_expression_blowup_32():
     M = Matrix([
         [x + 1, 1 - x,     0,     0],
         [1 - x, x + 1,     0, x + 1],
         [    0, 1 - x, x + 1,     0],
         [    0,     0,     0, x + 1]])
-    assert M.LUsolve(ones(4, 1)) == Matrix([
-        [(x + 1)/(4*x)],
-        [(x - 1)/(4*x)],
-        [(x + 1)/(4*x)],
-        [    1/(x + 1)]])
+    with dotprodsimp(True):
+        assert M.LUsolve(ones(4, 1)) == Matrix([
+            [(x + 1)/(4*x)],
+            [(x - 1)/(4*x)],
+            [(x + 1)/(4*x)],
+            [    1/(x + 1)]])
 
 def test_LUsolve():
     A = Matrix([[2, 3, 5],
@@ -466,7 +467,7 @@ def test_gauss_jordan_solve():
     b = M[:, -1:]
     sol, params = A.gauss_jordan_solve(b)
     assert params == Matrix(3, 1, [x0, x1, x2])
-    assert sol == Matrix(5, 1, [x1, 0, x0, _x0, x2])
+    assert sol == Matrix(5, 1, [x0, 0, x1, _x0, x2])
 
     # Rectangular, wide, reduced rank, no solution
     A = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [2, 4, 6, 8]])
@@ -481,6 +482,74 @@ def test_gauss_jordan_solve():
     assert params == ImmutableMatrix(0, 1, [])
     assert sol.__class__ == ImmutableDenseMatrix
     assert params.__class__ == ImmutableDenseMatrix
+
+    # Test placement of free variables
+    A = Matrix([[1, 0, 0, 0], [0, 0, 0, 1]])
+    b = Matrix([1, 1])
+    sol, params = A.gauss_jordan_solve(b)
+    w = {}
+    for s in sol.atoms(Symbol):
+        w[s.name] = s
+    assert sol == Matrix([[1], [w['tau0']], [w['tau1']], [1]])
+    assert params == Matrix([[w['tau0']], [w['tau1']]])
+
+
+def test_linsolve_underdetermined_AND_gauss_jordan_solve():
+    #Test placement of free variables as per issue 19815
+    A = Matrix([[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]])
+    B  = Matrix([1, 2, 1, 1, 1, 1, 1, 2])
+    sol, params = A.gauss_jordan_solve(B)
+    w = {}
+    for s in sol.atoms(Symbol):
+        w[s.name] = s
+    assert params == Matrix([[w['tau0']], [w['tau1']], [w['tau2']],
+                             [w['tau3']], [w['tau4']], [w['tau5']]])
+    assert sol == Matrix([[1 - 1*w['tau2']],
+                          [w['tau2']],
+                          [1 - 1*w['tau0'] + w['tau1']],
+                          [w['tau0']],
+                          [w['tau3'] + w['tau4']],
+                          [-1*w['tau3'] - 1*w['tau4'] - 1*w['tau1']],
+                          [1 - 1*w['tau2']],
+                          [w['tau1']],
+                          [w['tau2']],
+                          [w['tau3']],
+                          [w['tau4']],
+                          [1 - 1*w['tau5']],
+                          [w['tau5']],
+                          [1]])
+
+    from sympy.abc import j,f
+    # https://github.com/sympy/sympy/issues/20046
+    A = Matrix([
+    [1,  1, 1,  1, 1,  1, 1,  1,  1],
+    [0, -1, 0, -1, 0, -1, 0, -1, -j],
+    [0,  0, 0,  0, 1,  1, 1,  1,  f]
+    ])
+
+    sol_1=Matrix(list(linsolve(A))[0])
+
+    tau0, tau1, tau2, tau3, tau4 = symbols('tau:5')
+
+    assert sol_1 == Matrix([[-f - j - tau0 + tau2 + tau4 + 1],
+                          [j - tau1 - tau2 - tau4],
+                          [tau0],
+                          [tau1],
+                          [f - tau2 - tau3 - tau4],
+                          [tau2],
+                          [tau3],
+                          [tau4]])
+
+    # https://github.com/sympy/sympy/issues/19815
+    sol_2 = A[ : , : -1 ] * sol_1 - A[ : , -1 ]
+    assert sol_2 == Matrix([[0] , [0] , [0]])
 
 
 def test_solve():

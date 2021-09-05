@@ -1,13 +1,12 @@
 """Known matrices related to physics"""
 
-from __future__ import print_function, division
-
 from sympy import Matrix, I, pi, sqrt
 from sympy.functions import exp
+from sympy.core.decorators import deprecated
 
 
 def msigma(i):
-    r"""Returns a Pauli matrix `\sigma_i` with `i=1,2,3`
+    r"""Returns a Pauli matrix `\sigma_i` with ``i=1,2,3``.
 
     References
     ==========
@@ -76,6 +75,9 @@ def pat_matrix(m, dx, dy, dz):
 def mgamma(mu, lower=False):
     r"""Returns a Dirac gamma matrix `\gamma^\mu` in the standard
     (Dirac) representation.
+
+    Explanation
+    ===========
 
     If you want `\gamma_\mu`, use ``gamma(mu, True)``.
 
@@ -153,25 +155,14 @@ minkowski_tensor = Matrix( (
     (0, 0, 0, -1)
 ))
 
+
+@deprecated(issue=20246, useinstead="DFT(n).as_mutable(), DFT(n), DFT(n).as_explicit()",
+            deprecated_since_version="1.9")
 def mdft(n):
     r"""
-    Returns an expression of a discrete Fourier transform as a matrix multiplication.
-    It is an n X n matrix.
+    Deprecated. Use DFT from sympy.matrices.expressions.fourier instead.
 
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/DFT_matrix
-
-    Examples
-    ========
-
-    >>> from sympy.physics.matrices import mdft
-    >>> mdft(3)
-    Matrix([
-    [sqrt(3)/3,                sqrt(3)/3,                sqrt(3)/3],
-    [sqrt(3)/3, sqrt(3)*exp(-2*I*pi/3)/3,  sqrt(3)*exp(2*I*pi/3)/3],
-    [sqrt(3)/3,  sqrt(3)*exp(2*I*pi/3)/3, sqrt(3)*exp(-2*I*pi/3)/3]])
+    To get identical behavior to ``mdft(n)``, use ``DFT(n).as_mutable()``.
     """
     mat = [[None for x in range(n)] for y in range(n)]
     base = exp(-2*pi*I/n)

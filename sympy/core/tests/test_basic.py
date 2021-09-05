@@ -2,12 +2,11 @@
 of Basic or Atom."""
 
 import collections
-import sys
 
 from sympy.core.basic import (Basic, Atom, preorder_traversal, as_Basic,
     _atomic, _aresame)
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols, Symbol
+from sympy.core.symbol import symbols, Symbol, Dummy
 from sympy.core.sympify import SympifyError
 from sympy.core.function import Function, Lambda
 from sympy.core.compatibility import default_sort_key
@@ -33,6 +32,12 @@ def test_structure():
     assert b21.args == (b2, b1)
     assert b21.func(*b21.args) == b21
     assert bool(b1)
+
+
+def test_immutable():
+    assert not hasattr(b1, '__dict__')
+    with raises(AttributeError):
+        b1.x = 1
 
 
 def test_equality():
@@ -114,8 +119,7 @@ def test_subs():
     assert b21.subs([(b2, b1), (b1, b2)]) == Basic(b2, b2)
 
     assert b21.subs({b1: b2, b2: b1}) == Basic(b2, b2)
-    if sys.version_info >= (3, 4):
-        assert b21.subs(collections.ChainMap({b1: b2}, {b2: b1})) == Basic(b2, b2)
+    assert b21.subs(collections.ChainMap({b1: b2}, {b2: b1})) == Basic(b2, b2)
     assert b21.subs(collections.OrderedDict([(b2, b1), (b1, b2)])) == Basic(b2, b2)
 
     raises(ValueError, lambda: b21.subs('bad arg'))
@@ -281,12 +285,27 @@ def test_as_dummy():
     u, v, x, y, z, _0, _1 = symbols('u v x y z _0 _1')
     assert Lambda(x, x + 1).as_dummy() == Lambda(_0, _0 + 1)
     assert Lambda(x, x + _0).as_dummy() == Lambda(_1, _0 + _1)
-    assert (1 + Sum(x, (x, 1, x))).as_dummy() == 1 + Sum(_0, (_0, 1, x))
+    eq = (1 + Sum(x, (x, 1, x)))
+    ans = 1 + Sum(_0, (_0, 1, x))
+    once = eq.as_dummy()
+    assert once == ans
+    twice = once.as_dummy()
+    assert twice == ans
+    assert Integral(x + _0, (x, x + 1), (_0, 1, 2)
+        ).as_dummy() == Integral(_0 + _1, (_0, x + 1), (_1, 1, 2))
+    for T in (Symbol, Dummy):
+        d = T('x', real=True)
+        D = d.as_dummy()
+        assert D != d and D.func == Dummy and D.is_real is None
+    assert Dummy().as_dummy().is_commutative
+    assert Dummy(commutative=False).as_dummy().is_commutative is False
 
 
 def test_canonical_variables():
     x, i0, i1 = symbols('x _:2')
     assert Integral(x, (x, x + 1)).canonical_variables == {x: i0}
+    assert Integral(x, (x, x + 1), (i0, 1, 2)).canonical_variables == {
+        x: i0, i0: i1}
     assert Integral(x, (x, x + i0)).canonical_variables == {x: i1}
 
 

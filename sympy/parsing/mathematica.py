@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from typing import Any, Dict, Tuple
 
 from itertools import product
@@ -33,7 +31,7 @@ def _deco(cls):
 
 
 @_deco
-class MathematicaParser(object):
+class MathematicaParser:
     '''An instance of this class converts a string of a basic Mathematica
     expression to SymPy style. Output is string type.'''
 
@@ -49,7 +47,18 @@ class MathematicaParser(object):
         'Max[*x]': 'Max(*x)',
         'Min[*x]': 'Min(*x)',
         'Pochhammer[x,y]':'rf(x,y)',
-        'ArcTan[x,y]':'atan2(y,x)'
+        'ArcTan[x,y]':'atan2(y,x)',
+        'ExpIntegralEi[x]': 'Ei(x)',
+        'SinIntegral[x]': 'Si(x)',
+        'CosIntegral[x]': 'Ci(x)',
+        'AiryAi[x]': 'airyai(x)',
+        'AiryAiPrime[x]': 'airyaiprime(x)',
+        'AiryBi[x]' :'airybi(x)',
+        'AiryBiPrime[x]' :'airybiprime(x)',
+        'LogIntegral[x]':' li(x)',
+        'PrimePi[x]': 'primepi(x)',
+        'Prime[x]': 'prime(x)',
+        'PrimeQ[x]': 'isprime(x)'
     }
 
     # trigonometric, e.t.c.

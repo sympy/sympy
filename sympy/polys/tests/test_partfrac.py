@@ -9,7 +9,7 @@ from sympy.polys.partfrac import (
 
 from sympy import (S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda,
                    Symbol, Dummy, factor, together, sqrt, Expr, Rational)
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, ON_TRAVIS, skip, XFAIL
 from sympy.abc import x, y, a, b, c
 
 
@@ -39,7 +39,7 @@ def test_apart():
 
     assert apart(x/2, y) == x/2
 
-    f, g = (x+y)/(2*x - y), Rational(3, 2)*y/((2*x - y)) + S.Half
+    f, g = (x+y)/(2*x - y), Rational(3, 2)*y/(2*x - y) + S.Half
 
     assert apart(f, x, full=False) == g
     assert apart(f, x, full=True) == g
@@ -74,6 +74,23 @@ def test_apart_symbolic():
         1/((a - b)*(a - c)*(a + x))
 
 
+def _make_extension_example():
+    # https://github.com/sympy/sympy/issues/18531
+    from sympy.core import Mul
+    def mul2(expr):
+        # 2-arg mul hack...
+        return Mul(2, expr, evaluate=False)
+
+    f = ((x**2 + 1)**3/((x - 1)**2*(x + 1)**2*(-x**2 + 2*x + 1)*(x**2 + 2*x - 1)))
+    g = (1/mul2(x - sqrt(2) + 1)
+       - 1/mul2(x - sqrt(2) - 1)
+       + 1/mul2(x + 1 + sqrt(2))
+       - 1/mul2(x - 1 + sqrt(2))
+       + 1/mul2((x + 1)**2)
+       + 1/mul2((x - 1)**2))
+    return f, g
+
+
 def test_apart_extension():
     f = 2/(x**2 + 1)
     g = I/(x + I) - I/(x - I)
@@ -85,29 +102,45 @@ def test_apart_extension():
 
     assert factor(together(apart(f)).expand()) == f
 
+    f, g = _make_extension_example()
+
+    # XXX: Only works with dotprodsimp. See test_apart_extension_xfail below
+    from sympy.matrices import dotprodsimp
+    with dotprodsimp(True):
+        assert apart(f, x, extension={sqrt(2)}) == g
+
+
+# XXX: This is XFAIL just because it is slow
+@XFAIL
+def test_apart_extension_xfail():
+    if ON_TRAVIS:
+        skip('Too slow for Travis')
+    f, g = _make_extension_example()
+    assert apart(f, x, extension={sqrt(2)}) == g
+
 
 def test_apart_full():
     f = 1/(x**2 + 1)
 
     assert apart(f, full=False) == f
-    assert apart(f, full=True) == \
-        -RootSum(x**2 + 1, Lambda(a, a/(x - a)), auto=False)/2
+    assert apart(f, full=True).dummy_eq(
+        -RootSum(x**2 + 1, Lambda(a, a/(x - a)), auto=False)/2)
 
     f = 1/(x**3 + x + 1)
 
     assert apart(f, full=False) == f
-    assert apart(f, full=True) == \
+    assert apart(f, full=True).dummy_eq(
         RootSum(x**3 + x + 1,
-        Lambda(a, (a**2*Rational(6, 31) - a*Rational(9, 31) + Rational(4, 31))/(x - a)), auto=False)
+        Lambda(a, (a**2*Rational(6, 31) - a*Rational(9, 31) + Rational(4, 31))/(x - a)), auto=False))
 
     f = 1/(x**5 + 1)
 
     assert apart(f, full=False) == \
         (Rational(-1, 5))*((x**3 - 2*x**2 + 3*x - 4)/(x**4 - x**3 + x**2 -
          x + 1)) + (Rational(1, 5))/(x + 1)
-    assert apart(f, full=True) == \
+    assert apart(f, full=True).dummy_eq(
         -RootSum(x**4 - x**3 + x**2 - x + 1,
-        Lambda(a, a/(x - a)), auto=False)/5 + (Rational(1, 5))/(x + 1)
+        Lambda(a, a/(x - a)), auto=False)/5 + (Rational(1, 5))/(x + 1))
 
 
 def test_apart_undetermined_coeffs():
@@ -126,27 +159,33 @@ def test_apart_undetermined_coeffs():
 
 def test_apart_list():
     from sympy.utilities.iterables import numbered_symbols
+    def dummy_eq(i, j):
+        if type(i) in (list, tuple):
+            return all(dummy_eq(i, j) for i, j in zip(i, j))
+        return i == j or i.dummy_eq(j)
 
     w0, w1, w2 = Symbol("w0"), Symbol("w1"), Symbol("w2")
     _a = Dummy("a")
 
     f = (-2*x - 2*x**2) / (3*x**2 - 6*x)
-    assert apart_list(f, x, dummies=numbered_symbols("w")) == (-1,
-        Poly(Rational(2, 3), x, domain='QQ'),
+    got = apart_list(f, x, dummies=numbered_symbols("w"))
+    ans = (-1, Poly(Rational(2, 3), x, domain='QQ'),
         [(Poly(w0 - 2, w0, domain='ZZ'), Lambda(_a, 2), Lambda(_a, -_a + x), 1)])
+    assert dummy_eq(got, ans)
 
-    assert apart_list(2/(x**2-2), x, dummies=numbered_symbols("w")) == (1,
-                                      Poly(0, x, domain='ZZ'),
-                                      [(Poly(w0**2 - 2, w0, domain='ZZ'),
-                                        Lambda(_a, _a/2),
-                                        Lambda(_a, -_a + x), 1)])
+    got = apart_list(2/(x**2-2), x, dummies=numbered_symbols("w"))
+    ans = (1, Poly(0, x, domain='ZZ'), [(Poly(w0**2 - 2, w0, domain='ZZ'),
+        Lambda(_a, _a/2),
+        Lambda(_a, -_a + x), 1)])
+    assert dummy_eq(got, ans)
 
     f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)
-    assert apart_list(f, x, dummies=numbered_symbols("w")) == (1,
-                             Poly(0, x, domain='ZZ'),
-                             [(Poly(w0 - 2, w0, domain='ZZ'), Lambda(_a, 4), Lambda(_a, -_a + x), 1),
-                              (Poly(w1**2 - 1, w1, domain='ZZ'), Lambda(_a, -3*_a - 6), Lambda(_a, -_a + x), 2),
-                              (Poly(w2 + 1, w2, domain='ZZ'), Lambda(_a, -4), Lambda(_a, -_a + x), 1)])
+    got = apart_list(f, x, dummies=numbered_symbols("w"))
+    ans = (1, Poly(0, x, domain='ZZ'),
+        [(Poly(w0 - 2, w0, domain='ZZ'), Lambda(_a, 4), Lambda(_a, -_a + x), 1),
+        (Poly(w1**2 - 1, w1, domain='ZZ'), Lambda(_a, -3*_a - 6), Lambda(_a, -_a + x), 2),
+        (Poly(w2 + 1, w2, domain='ZZ'), Lambda(_a, -4), Lambda(_a, -_a + x), 1)])
+    assert dummy_eq(got, ans)
 
 
 def test_assemble_partfrac_list():

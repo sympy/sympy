@@ -29,7 +29,7 @@ just install the 'ipython' package and start isympy again.
 def _make_message(ipython=True, quiet=False, source=None):
     """Create a banner for an interactive session. """
     from sympy import __version__ as sympy_version
-    from sympy.polys.domains import GROUND_TYPES
+    from sympy.external.gmpy import GROUND_TYPES
     from sympy.utilities.misc import ARCH
     from sympy import SYMPY_DEBUG
 
@@ -95,8 +95,8 @@ def int_to_Integer(s):
     ========
 
     >>> from __future__ import division
+    >>> from sympy import Integer # noqa: F401
     >>> from sympy.interactive.session import int_to_Integer
-    >>> from sympy import Integer
     >>> s = '1.2 + 1/2 - 0x12 + a1'
     >>> int_to_Integer(s)
     '1.2 +Integer (1 )/Integer (2 )-Integer (0x12 )+a1 '
@@ -109,7 +109,7 @@ def int_to_Integer(s):
     1/2
     """
     from tokenize import generate_tokens, untokenize, NUMBER, NAME, OP
-    from sympy.core.compatibility import StringIO
+    from io import StringIO
 
     def _is_int(num):
         """
@@ -121,7 +121,7 @@ def int_to_Integer(s):
         return True
 
     result = []
-    g = generate_tokens(StringIO(s).readline)   # tokenize the string
+    g = generate_tokens(StringIO(s).readline)  # tokenize the string
     for toknum, tokval, _, _, _ in g:
         if toknum == NUMBER and _is_int(tokval):  # replace NUMBER tokens
             result.extend([
@@ -210,7 +210,7 @@ def enable_automatic_symbols(shell):
             if match is not None:
                 # XXX: Make sure Symbol is in scope. Otherwise you'll get infinite recursion.
                 self.run_cell("%(symbol)s = Symbol('%(symbol)s')" %
-                    {'symbol': match.group("symbol")}, store_history=False)
+                              {'symbol': match.group("symbol")}, store_history=False)
 
                 try:
                     code = self.user_ns['In'][-1]
@@ -271,9 +271,10 @@ def init_python_session():
         """An interactive console with readline support. """
 
         def __init__(self):
-            InteractiveConsole.__init__(self)
-
+            ns_locals = dict()
+            InteractiveConsole.__init__(self, locals=ns_locals)
             try:
+                import rlcompleter
                 import readline
             except ImportError:
                 pass
@@ -281,6 +282,7 @@ def init_python_session():
                 import os
                 import atexit
 
+                readline.set_completer(rlcompleter.Completer(ns_locals).complete)
                 readline.parse_and_bind('tab: complete')
 
                 if hasattr(readline, 'read_history_file'):
@@ -297,9 +299,9 @@ def init_python_session():
 
 
 def init_session(ipython=None, pretty_print=True, order=None,
-        use_unicode=None, use_latex=None, quiet=False, auto_symbols=False,
-        auto_int_to_Integer=False, str_printer=None, pretty_printer=None,
-        latex_printer=None, argv=[]):
+                 use_unicode=None, use_latex=None, quiet=False, auto_symbols=False,
+                 auto_int_to_Integer=False, str_printer=None, pretty_printer=None,
+                 latex_printer=None, argv=[]):
     """
     Initialize an embedded IPython or Python session. The IPython session is
     initiated with the --pylab option, without the numpy imports, so that
@@ -417,7 +419,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
         mainloop = ip.interact
     else:
         ip = init_ipython_session(ip, argv=argv, auto_symbols=auto_symbols,
-            auto_int_to_Integer=auto_int_to_Integer)
+                                  auto_int_to_Integer=auto_int_to_Integer)
 
         if V(IPython.__version__) >= '0.11':
             # runsource is gone, use run_cell instead, which doesn't
@@ -425,7 +427,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
             # and False means don't add the line to IPython's history.
             ip.runsource = lambda src, symbol='exec': ip.run_cell(src, False)
 
-            #Enable interactive plotting using pylab.
+            # Enable interactive plotting using pylab.
             try:
                 ip.enable_pylab(import_all=False)
             except Exception:

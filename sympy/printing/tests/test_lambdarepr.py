@@ -203,6 +203,14 @@ def test_settings():
     raises(TypeError, lambda: lambdarepr(sin(x), method="garbage"))
 
 
+def test_numexpr():
+    # test ITE rewrite as Piecewise
+    from sympy.logic.boolalg import ITE
+    expr = ITE(x > 0, True, False, evaluate=False)
+    assert NumExprPrinter().doprint(expr) == \
+           "evaluate('where((x > 0), True, False)', truediv=True)"
+
+
 class CustomPrintedObject(Expr):
     def _lambdacode(self, printer):
         return 'lambda'

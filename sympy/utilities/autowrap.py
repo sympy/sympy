@@ -8,13 +8,33 @@ python.
 This module provides a common interface for different external backends, such
 as f2py, fwrap, Cython, SWIG(?) etc. (Currently only f2py and Cython are
 implemented) The goal is to provide access to compiled binaries of acceptable
-performance with a one-button user interface, i.e.
+performance with a one-button user interface, e.g.,
 
     >>> from sympy.abc import x,y
-    >>> expr = ((x - y)**(25)).expand()
-    >>> binary_callable = autowrap(expr)
-    >>> binary_callable(1, 2)
+    >>> expr = (x - y)**25
+    >>> flat = expr.expand()
+    >>> binary_callable = autowrap(flat)
+    >>> binary_callable(2, 3)
     -1.0
+
+Although a SymPy user might primarily be interested in working with
+mathematical expressions and not in the details of wrapping tools
+needed to evaluate such expressions efficiently in numerical form,
+the user cannot do so without some understanding of the
+limits in the target language. For example, the expanded expression
+contains large coefficients which result in loss of precision when
+computing the expression:
+
+    >>> binary_callable(3, 2)
+    0.0
+    >>> binary_callable(4, 5), binary_callable(5, 4)
+    (-22925376.0, 25165824.0)
+
+Wrapping the unexpanded expression gives the expected behavior:
+
+    >>> e = autowrap(expr)
+    >>> e(4, 5), e(5, 4)
+    (-1.0, 1.0)
 
 The callable returned from autowrap() is a binary python function, not a
 SymPy object.  If it is desired to use the compiled function in symbolic
@@ -29,11 +49,6 @@ lambdify().
     y + 2*f(x, y)
     >>> (2*f(x, y) + y).evalf(2, subs={x: 1, y:2})
     0.e-110
-
-The idea is that a SymPy user will primarily be interested in working with
-mathematical expressions, and should not have to learn details about wrapping
-tools in order to evaluate expressions numerically, even if they are
-computationally expensive.
 
 When is this useful?
 
@@ -65,8 +80,6 @@ When is this module NOT the best approach?
 
 """
 
-from __future__ import print_function, division
-
 import sys
 import os
 import shutil
@@ -96,7 +109,7 @@ class CodeWrapError(Exception):
     pass
 
 
-class CodeWrapper(object):
+class CodeWrapper:
     """Base Class for code wrappers"""
     _filename = "wrapped_code"
     _module_basename = "wrapper_module"
@@ -300,7 +313,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 
         self._need_numpy = False
 
-        super(CythonCodeWrapper, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def command(self):
@@ -379,8 +392,8 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
             for arg, val in py_inf.items():
                 proto = self._prototype_arg(arg)
                 mat, ind = [self._string_var(v) for v in val]
-                local_decs.append("    cdef {0} = {1}.shape[{2}]".format(proto, mat, ind))
-            local_decs.extend(["    cdef {0}".format(self._declare_arg(a)) for a in py_loc])
+                local_decs.append("    cdef {} = {}.shape[{}]".format(proto, mat, ind))
+            local_decs.extend(["    cdef {}".format(self._declare_arg(a)) for a in py_loc])
             declarations = "\n".join(local_decs)
             if declarations:
                 declarations = declarations + "\n"
@@ -460,9 +473,9 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     def _call_arg(self, arg):
         if arg.dimensions:
             t = arg.get_datatype('c')
-            return "<{0}*> {1}.data".format(t, self._string_var(arg.name))
+            return "<{}*> {}.data".format(t, self._string_var(arg.name))
         elif isinstance(arg, ResultBase):
-            return "&{0}".format(self._string_var(arg.name))
+            return "&{}".format(self._string_var(arg.name))
         else:
             return self._string_var(arg.name)
 
@@ -486,7 +499,7 @@ class F2PyCodeWrapper(CodeWrapper):
                 warn(msg.format(k))
             kwargs.pop(k, None)
 
-        super(F2PyCodeWrapper, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def command(self):
@@ -526,7 +539,7 @@ def _validate_backend_language(backend, language):
     if not langs:
         raise ValueError("Unrecognized backend: " + backend)
     if language.upper() not in langs:
-        raise ValueError(("Backend {0} and language {1} are "
+        raise ValueError(("Backend {} and language {} are "
                           "incompatible").format(backend, language))
 
 
@@ -801,7 +814,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
                 warn(msg.format(k))
             kwargs.pop(k, None)
 
-        super(UfuncifyCodeWrapper, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def command(self):
@@ -893,7 +906,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
         function_creation = []
         ufunc_init = []
         module = self.module_name
-        include_file = "\"{0}.h\"".format(prefix)
+        include_file = "\"{}.h\"".format(prefix)
         top = _ufunc_top.substitute(include_file=include_file, module=module)
 
         name = funcname
@@ -935,7 +948,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
         docstring = '"Created in SymPy with Ufuncify"'
 
         # Function Creation
-        function_creation.append("PyObject *ufunc{0};".format(r_index))
+        function_creation.append("PyObject *ufunc{};".format(r_index))
 
         # Ufunc initialization
         init_form = _ufunc_init_form.substitute(module=module,

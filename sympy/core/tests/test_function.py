@@ -2,19 +2,20 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
         Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed,
-        Matrix, Basic, Dict, oo, zoo, nan, Pow)
+        Matrix, Basic, Dict, oo, zoo, nan, Pow, sstr)
 from sympy.core.basic import _aresame
 from sympy.core.cache import clear_cache
 from sympy.core.expr import unchanged
 from sympy.core.function import (PoleError, _mexpand, arity,
         BadSignatureError, BadArgumentsError)
+from sympy.core.parameters import _exp_is_pow
 from sympy.core.sympify import sympify
 from sympy.matrices import MutableMatrix, ImmutableMatrix
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
 from sympy.tensor.array import NDimArray
 from sympy.utilities.iterables import subsets, variations
-from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy, _both_exp_pow
 
 from sympy.abc import t, w, x, y, z
 f, g, h = symbols('f g h', cls=Function)
@@ -218,9 +219,8 @@ def test_Lambda():
 
     assert unchanged(Lambda, (x,), x**2)
     assert Lambda(x, x**2) == Lambda((x,), x**2)
-    assert Lambda(x, x**2) == Lambda(y, y**2)
-    assert Lambda(x, x**2) != Lambda(y, y**2 + 1)
-    assert Lambda((x, y), x**y) == Lambda((y, x), y**x)
+    assert Lambda(x, x**2) != Lambda(x, x**2 + 1)
+    assert Lambda((x, y), x**y) != Lambda((y, x), y**x)
     assert Lambda((x, y), x**y) != Lambda((x, y), y**x)
 
     assert Lambda((x, y), x**y)(x, y) == x**y
@@ -239,7 +239,9 @@ def test_Lambda():
     p = x, y, z, t
     assert Lambda(p, t*(x + y + z))(*p) == t * (x + y + z)
 
-    assert Lambda(x, 2*x) + Lambda(y, 2*y) == 2*Lambda(x, 2*x)
+    eq = Lambda(x, 2*x) + Lambda(y, 2*y)
+    assert eq != 2*Lambda(x, 2*x)
+    assert eq.as_dummy() == 2*Lambda(x, 2*x).as_dummy()
     assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
     raises(BadSignatureError, lambda: Lambda(1, x))
     assert Lambda(x, 1)(1) is S.One
@@ -300,12 +302,19 @@ def test_Lambda_arguments():
 
 
 def test_Lambda_equality():
-    assert Lambda(x, 2*x) == Lambda(y, 2*y)
-    # although variables are casts as Dummies, the expressions
-    # should still compare equal
     assert Lambda((x, y), 2*x) == Lambda((x, y), 2*x)
+    # these, of course, should never be equal
     assert Lambda(x, 2*x) != Lambda((x, y), 2*x)
     assert Lambda(x, 2*x) != 2*x
+    # But it is tempting to want expressions that differ only
+    # in bound symbols to compare the same.  But this is not what
+    # Python's `==` is intended to do; two objects that compare
+    # as equal means that they are indistibguishable and cache to the
+    # same value.  We wouldn't want to expression that are
+    # mathematically the same but written in different variables to be
+    # interchanged else what is the point of allowing for different
+    # variable names?
+    assert Lambda(x, 2*x) != Lambda(y, 2*y)
 
 
 def test_Subs():
@@ -497,6 +506,7 @@ def test_extensibility_eval():
     assert MyFunc(0) == (0, 0, 0)
 
 
+@_both_exp_pow
 def test_function_non_commutative():
     x = Symbol('x', commutative=False)
     assert f(x).is_commutative is False
@@ -533,18 +543,25 @@ def test_function__eval_nseries():
     assert polygamma(n, x + 1)._eval_nseries(x, 2, None) == \
         polygamma(n, 1) + polygamma(n + 1, 1)*x + O(x**2)
     raises(PoleError, lambda: sin(1/x)._eval_nseries(x, 2, None))
-    assert acos(1 - x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(x) + O(x)
-    assert acos(1 + x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(-x) + O(x)  # XXX: wrong, branch cuts
+    assert acos(1 - x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(x) + sqrt(2)*x**(S(3)/2)/12 + O(x**2)
+    assert acos(1 + x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(-x) + sqrt(2)*(-x)**(S(3)/2)/12 + O(x**2)
     assert loggamma(1/x)._eval_nseries(x, 0, None) == \
         log(x)/2 - log(x)/x - 1/x + O(1, x)
     assert loggamma(log(1/x)).nseries(x, n=1, logx=y) == loggamma(-y)
 
     # issue 6725:
     assert expint(Rational(3, 2), -x)._eval_nseries(x, 5, None) == \
-        2 - 2*sqrt(pi)*sqrt(-x) - 2*x - x**2/3 - x**3/15 - x**4/84 + O(x**5)
+        2 - 2*sqrt(pi)*sqrt(-x) - 2*x + x**2 + x**3/3 + x**4/12 + 4*I*x**(S(3)/2)*sqrt(-x)/3 + \
+        2*I*x**(S(5)/2)*sqrt(-x)/5 + 2*I*x**(S(7)/2)*sqrt(-x)/21 + O(x**5)
     assert sin(sqrt(x))._eval_nseries(x, 3, None) == \
         sqrt(x) - x**Rational(3, 2)/6 + x**Rational(5, 2)/120 + O(x**3)
 
+    # issue 19065:
+    s1 = f(x,y).series(y, n=2)
+    assert {i.name for i in s1.atoms(Symbol)} == {'x', 'xi', 'y'}
+    xi = Symbol('xi')
+    s2 = f(xi, y).series(y, n=2)
+    assert {i.name for i in s2.atoms(Symbol)} == {'xi', 'xi0', 'y'}
 
 def test_doit():
     n = Symbol('n', integer=True)
@@ -782,8 +799,7 @@ def test_straight_line():
 
 def test_sort_variable():
     vsort = Derivative._sort_variable_count
-    def vsort0(*v, **kw):
-        reverse = kw.get('reverse', False)
+    def vsort0(*v, reverse=False):
         return [i[0] for i in vsort([(i, 0) for i in (
             reversed(v) if reverse else v)])]
 
@@ -1119,10 +1135,16 @@ def test_Derivative_as_finite_difference():
 
 def test_issue_11159():
     # Tests Application._eval_subs
-    expr1 = E
-    expr0 = expr1 * expr1
-    expr1 = expr0.subs(expr1,expr0)
-    assert expr0 == expr1
+    with _exp_is_pow(False):
+        expr1 = E
+        expr0 = expr1 * expr1
+        expr1 = expr0.subs(expr1,expr0)
+        assert expr0 == expr1
+    with _exp_is_pow(True):
+        expr1 = E
+        expr0 = expr1 * expr1
+        expr2 = expr0.subs(expr1, expr0)
+        assert expr2 == E ** 4
 
 
 def test_issue_12005():
@@ -1352,6 +1374,29 @@ def test_Derivative_free_symbols():
     assert diff(f(x), (x, n)).free_symbols == {n, x}
 
 
+def test_issue_20683():
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    y = Derivative(z, x).subs(x,0)
+    assert y.doit() == 0
+    y = Derivative(8, x).subs(x,0)
+    assert y.doit() == 0
+
+
 def test_issue_10503():
     f = exp(x**3)*cos(x**6)
     assert f.series(x, 0, 14) == 1 + x**3 + x**6/2 + x**9/6 - 11*x**12/24 + O(x**14)
+
+
+def test_issue_17382():
+    # copied from sympy/core/tests/test_evalf.py
+    def NS(e, n=15, **options):
+        return sstr(sympify(e).evalf(n, **options), full_prec=True)
+
+    x = Symbol('x')
+    expr = solveset(2 * cos(x) * cos(2 * x) - 1, x, S.Reals)
+    expected = "Union(" \
+               "ImageSet(Lambda(_n, 6.28318530717959*_n + 5.79812359592087), Integers), " \
+               "ImageSet(Lambda(_n, 6.28318530717959*_n + 0.485061711258717), Integers))"
+    assert NS(expr) == expected

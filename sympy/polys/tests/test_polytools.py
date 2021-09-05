@@ -1,5 +1,7 @@
 """Tests for user-friendly public interface to polynomial functions. """
 
+import pickle
+
 from sympy.polys.polytools import (
     Poly, PurePoly, poly,
     parallel_poly_from_expr,
@@ -47,17 +49,20 @@ from sympy.polys.polyerrors import (
 from sympy.polys.polyclasses import DMP
 
 from sympy.polys.fields import field
-from sympy.polys.domains import FF, ZZ, QQ, RR, EX
+from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX
 from sympy.polys.domains.realfield import RealField
+from sympy.polys.domains.complexfield import ComplexField
 from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise, Derivative,
     exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
 
+from sympy.core.add import Add
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
+from sympy.core.power import Pow
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
@@ -280,6 +285,31 @@ def test_Poly_from_expr():
     assert Poly.from_expr(y + 5, x, y, domain=ZZ).rep == DMP([[1, 5]], ZZ)
 
 
+def test_poly_from_domain_element():
+    dom = ZZ[x]
+    assert Poly(dom(x+1), y, domain=dom).rep == DMP([dom(x+1)], dom)
+    dom = dom.get_field()
+    assert Poly(dom(x+1), y, domain=dom).rep == DMP([dom(x+1)], dom)
+
+    dom = QQ[x]
+    assert Poly(dom(x+1), y, domain=dom).rep == DMP([dom(x+1)], dom)
+    dom = dom.get_field()
+    assert Poly(dom(x+1), y, domain=dom).rep == DMP([dom(x+1)], dom)
+
+    dom = ZZ.old_poly_ring(x)
+    assert Poly(dom([1, 1]), y, domain=dom).rep == DMP([dom([1, 1])], dom)
+    dom = dom.get_field()
+    assert Poly(dom([1, 1]), y, domain=dom).rep == DMP([dom([1, 1])], dom)
+
+    dom = QQ.old_poly_ring(x)
+    assert Poly(dom([1, 1]), y, domain=dom).rep == DMP([dom([1, 1])], dom)
+    dom = dom.get_field()
+    assert Poly(dom([1, 1]), y, domain=dom).rep == DMP([dom([1, 1])], dom)
+
+    dom = QQ.algebraic_field(I)
+    assert Poly(dom([1, 1]), x, domain=dom).rep == DMP([dom([1, 1])], dom)
+
+
 def test_Poly__new__():
     raises(GeneratorsError, lambda: Poly(x + 1, x, x))
 
@@ -360,6 +390,7 @@ def test_Poly__new__():
              modulus=65537, symmetric=False)
 
     assert isinstance(Poly(x**2 + x + 1.0).get_domain(), RealField)
+    assert isinstance(Poly(x**2 + x + I + 1.0).get_domain(), ComplexField)
 
 
 def test_Poly__args():
@@ -456,6 +487,9 @@ def test_Poly__unify():
     assert Poly(x + 1, y, x, domain='QQ')._unify(Poly(x + 2, x, y))[2:] == (DMP([[1, 1]], QQ), DMP([[1, 2]], QQ))
     assert Poly(x + 1, y, x)._unify(Poly(x + 2, x, y, domain='QQ'))[2:] == (DMP([[1, 1]], QQ), DMP([[1, 2]], QQ))
 
+    assert Poly(x**2 + I, x, domain=ZZ_I).unify(Poly(x**2 + sqrt(2), x, extension=True)) == \
+            (Poly(x**2 + I, x, domain='QQ<sqrt(2) + I>'), Poly(x**2 + sqrt(2), x, domain='QQ<sqrt(2) + I>'))
+
     F, A, B = field("a,b", ZZ)
 
     assert Poly(a*x, x, domain='ZZ[a]')._unify(Poly(a*b*x, x, domain='ZZ(a,b)'))[2:] == \
@@ -484,10 +518,10 @@ def test_Poly_free_symbols():
 
 
 def test_PurePoly_free_symbols():
-    assert PurePoly(x**2 + 1).free_symbols == set([])
-    assert PurePoly(x**2 + y*z).free_symbols == set([])
+    assert PurePoly(x**2 + 1).free_symbols == set()
+    assert PurePoly(x**2 + y*z).free_symbols == set()
     assert PurePoly(x**2 + y*z, x).free_symbols == {y, z}
-    assert PurePoly(x**2 + sin(y*z)).free_symbols == set([])
+    assert PurePoly(x**2 + sin(y*z)).free_symbols == set()
     assert PurePoly(x**2 + sin(y*z), x).free_symbols == {y, z}
     assert PurePoly(x**2 + sin(y*z), x, domain=EX).free_symbols == {y, z}
 
@@ -1428,6 +1462,20 @@ def test_Poly_rat_clear_denoms():
     assert f.rat_clear_denoms(g) == (f, g)
 
 
+def test_issue_20427():
+    f = Poly(-117968192370600*18**(S(1)/3)/(217603955769048*(24201 +
+        253*sqrt(9165))**(S(1)/3) + 2273005839412*sqrt(9165)*(24201 +
+        253*sqrt(9165))**(S(1)/3)) - 15720318185*2**(S(2)/3)*3**(S(1)/3)*(24201
+        + 253*sqrt(9165))**(S(2)/3)/(217603955769048*(24201 + 253*sqrt(9165))**
+        (S(1)/3) + 2273005839412*sqrt(9165)*(24201 + 253*sqrt(9165))**(S(1)/3))
+        + 15720318185*12**(S(1)/3)*(24201 + 253*sqrt(9165))**(S(2)/3)/(
+        217603955769048*(24201 + 253*sqrt(9165))**(S(1)/3) + 2273005839412*
+        sqrt(9165)*(24201 + 253*sqrt(9165))**(S(1)/3)) + 117968192370600*2**(
+        S(1)/3)*3**(S(2)/3)/(217603955769048*(24201 + 253*sqrt(9165))**(S(1)/3)
+        + 2273005839412*sqrt(9165)*(24201 + 253*sqrt(9165))**(S(1)/3)), x)
+    assert f == Poly(0, x, domain='EX')
+
+
 def test_Poly_integrate():
     assert Poly(x + 1).integrate() == Poly(x**2/2 + x)
     assert Poly(x + 1).integrate(x) == Poly(x**2/2 + x)
@@ -1744,6 +1792,14 @@ def test_div():
     q, r = f.div(g)
     assert q.get_domain().is_Frac and r.get_domain().is_Frac
 
+    # https://github.com/sympy/sympy/issues/19579
+    p = Poly(2+3*I, x, domain=ZZ_I)
+    q = Poly(1-I, x, domain=ZZ_I)
+    assert p.div(q, auto=False) == \
+        (Poly(0, x, domain='ZZ_I'), Poly(2 + 3*I, x, domain='ZZ_I'))
+    assert p.div(q, auto=True) == \
+        (Poly(-S(1)/2 + 5*I/2, x, domain='QQ_I'), Poly(0, x, domain='QQ_I'))
+
 
 def test_issue_7864():
     q, r = div(a, .408248290463863*a)
@@ -1900,6 +1956,9 @@ def test_gcd_list():
     gcd = gcd_list([], x, polys=True)
     assert gcd.is_Poly and gcd.is_zero
 
+    a = sqrt(2)
+    assert gcd_list([a, -a]) == gcd_list([-a, a]) == a
+
     raises(ComputationFailed, lambda: gcd_list([], polys=True))
 
 
@@ -1993,6 +2052,14 @@ def test_gcd():
     assert gcd(f, g, modulus=11, symmetric=False) == h
     assert lcm(f, g, modulus=11, symmetric=False) == l
 
+    a, b = sqrt(2), -sqrt(2)
+    assert gcd(a, b) == gcd(b, a) == sqrt(2)
+
+    a, b = sqrt(-2), -sqrt(-2)
+    assert gcd(a, b) == gcd(b, a) == sqrt(2)
+
+    assert gcd(Poly(x - 2, x), Poly(I*x, x)) == Poly(1, x, domain=ZZ_I)
+
     raises(TypeError, lambda: gcd(x))
     raises(TypeError, lambda: lcm(x))
 
@@ -2015,6 +2082,9 @@ def test_gcd_numbers_vs_polys():
 
     assert gcd(3.0, 9.0) == 1.0
     assert gcd(3.0*x, 9.0) == 1.0
+
+    # partial fix of 20597
+    assert gcd(Mul(2, 3, evaluate=False), 2) == 2
 
 
 def test_terms_gcd():
@@ -2414,6 +2484,20 @@ def test_factor():
     assert factor(f, gaussian=True) == (x**2 - I)*(x**2 + I)
     assert factor(
         f, extension=sqrt(2)) == (x**2 + sqrt(2)*x + 1)*(x**2 - sqrt(2)*x + 1)
+
+    assert factor(x**2 + 4*I*x - 4) == (x + 2*I)**2
+
+    f = x**2 + 2*I*x - 4
+
+    assert factor(f) == f
+
+    f = 8192*x**2 + x*(22656 + 175232*I) - 921416 + 242313*I
+    f_zzi = I*(x*(64 - 64*I) + 773 + 596*I)**2
+    f_qqi = 8192*(x + S(177)/128 + 1369*I/128)**2
+
+    assert factor(f) == f_zzi
+    assert factor(f, domain=ZZ_I) == f_zzi
+    assert factor(f, domain=QQ_I) == f_qqi
 
     f = x**2 + 2*sqrt(2)*x + 2
 
@@ -2918,7 +3002,8 @@ def test_cancel():
     assert cancel(f) == f
     assert cancel(f, greedy=False) == x + sqrt(2)
 
-    assert cancel((x**2/4 - 1, x/2 - 1)) == (S.Half, x + 2, 1)
+    assert cancel((x**2/4 - 1, x/2 - 1)) == (1, x + 2, 2)
+    # assert cancel((x**2/4 - 1, x/2 - 1)) == (S.Half, x + 2, 1)
 
     assert cancel((x**2 - y)/(x - y)) == 1/(x - y)*(x**2 - y)
 
@@ -2994,6 +3079,9 @@ def test_cancel():
     assert cancel(M[0,0] + 7) == M[0,0] + 7
     expr = sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2] / z
     assert cancel(expr) == (z*sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
+
+    assert cancel((x**2 + 1)/(x - I)) == x + I
+
 
 def test_reduced():
     f = 2*x**4 + y**2 - x**2 + y**3
@@ -3240,6 +3328,14 @@ def test_keep_coeff():
     assert _keep_coeff(S(2), x + 1) == u
     assert _keep_coeff(x, 1/x) == 1
     assert _keep_coeff(x + 1, S(2)) == u
+    assert _keep_coeff(S.Half, S.One) == S.Half
+    p = Pow(2, 3, evaluate=False)
+    assert _keep_coeff(S(-1), p) == Mul(-1, p, evaluate=False)
+    a = Add(2, p, evaluate=False)
+    assert _keep_coeff(S.Half, a, clear=True
+        ) == Mul(S.Half, a, evaluate=False)
+    assert _keep_coeff(S.Half, a, clear=False
+        ) == Add(1, Mul(S.Half, p, evaluate=False), evaluate=False)
 
 
 def test_poly_matching_consistency():
@@ -3267,6 +3363,12 @@ def test_noncommutative():
 def test_to_rational_coeffs():
     assert to_rational_coeffs(
         Poly(x**3 + y*x**2 + sqrt(y), x, domain='EX')) is None
+    # issue 21268
+    assert to_rational_coeffs(
+        Poly(y**3 + sqrt(2)*y**2*sin(x) + 1, y)) is None
+
+    assert to_rational_coeffs(Poly(x, y)) is None
+    assert to_rational_coeffs(Poly(sqrt(2)*y)) is None
 
 
 def test_factor_terms():
@@ -3327,8 +3429,10 @@ def test_issue_15669():
 def test_issue_17988():
     x = Symbol('x')
     p = poly(x - 1)
-    M = Matrix([[poly(x + 1), poly(x + 1)]])
-    assert p * M == M * p == Matrix([[poly(x**2 - 1), poly(x**2 - 1)]])
+    with warns_deprecated_sympy():
+        M = Matrix([[poly(x + 1), poly(x + 1)]])
+    with warns_deprecated_sympy():
+        assert p * M == M * p == Matrix([[poly(x**2 - 1), poly(x**2 - 1)]])
 
 
 def test_issue_18205():
@@ -3350,3 +3454,41 @@ def test_issue_19113():
     raises(PolynomialError, lambda: nroots(eq))
     raises(PolynomialError, lambda: ground_roots(eq))
     raises(PolynomialError, lambda: nth_power_roots_poly(eq, 2))
+
+
+def test_issue_19360():
+    f = 2*x**2 - 2*sqrt(2)*x*y + y**2
+    assert factor(f, extension=sqrt(2)) == 2*(x - (sqrt(2)*y/2))**2
+
+    f = -I*t*x - t*y + x*z - I*y*z
+    assert factor(f, extension=I) == (x - I*y)*(-I*t + z)
+
+
+def test_poly_copy_equals_original():
+    poly = Poly(x + y, x, y, z)
+    copy = poly.copy()
+    assert poly == copy, (
+        "Copied polynomial not equal to original.")
+    assert poly.gens == copy.gens, (
+        "Copied polynomial has different generators than original.")
+
+
+def test_deserialized_poly_equals_original():
+    poly = Poly(x + y, x, y, z)
+    deserialized = pickle.loads(pickle.dumps(poly))
+    assert poly == deserialized, (
+        "Deserialized polynomial not equal to original.")
+    assert poly.gens == deserialized.gens, (
+        "Deserialized polynomial has different generators than original.")
+
+
+def test_issue_20389():
+    result = degree(x * (x + 1) - x ** 2 - x, x)
+    assert result == -oo
+
+
+def test_issue_20985():
+    from sympy import symbols
+    w, R = symbols('w R')
+    poly = Poly(1.0 + I*w/R, w, 1/R)
+    assert poly.degree() == S(1)

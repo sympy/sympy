@@ -11,7 +11,7 @@ if cin:
     from sympy.parsing.c.c_parser import parse_c
 
 @doctest_depends_on(modules=['lfortran', 'clang.cindex'])
-class SymPyExpression(object):  # type: ignore
+class SymPyExpression:  # type: ignore
     """Class to store and handle SymPy expressions
 
     This class will hold SymPy Expressions and handle the API for the
@@ -47,10 +47,10 @@ class SymPyExpression(object):  # type: ignore
     ... '''
     >>> a = SymPyExpression(src, 'c')
     >>> a.return_expr()
-    [Declaration(Variable(a, type=integer, value=0)),
-    Declaration(Variable(b, type=integer, value=0)),
-    Declaration(Variable(c, type=real, value=2.0)),
-    Declaration(Variable(d, type=real, value=4.0))]
+    [Declaration(Variable(a, type=intc)),
+    Declaration(Variable(b, type=intc)),
+    Declaration(Variable(c, type=float32, value=2.0)),
+    Declaration(Variable(d, type=float32, value=4.0))]
 
     An example of variable definiton:
 
@@ -93,7 +93,7 @@ class SymPyExpression(object):  # type: ignore
 
     def __init__(self, source_code = None, mode = None):
         """Constructor for SymPyExpression class"""
-        super(SymPyExpression, self).__init__()
+        super().__init__()
         if not(mode or source_code):
             self._expr = []
         elif mode:

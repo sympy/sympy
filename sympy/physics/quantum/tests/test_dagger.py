@@ -1,8 +1,9 @@
-from sympy import I, Matrix, symbols, conjugate, Expr, Integer
+from sympy import I, Matrix, symbols, conjugate, Expr, Integer, Mul
 
 from sympy.physics.quantum.dagger import adjoint, Dagger
 from sympy.external import import_module
 from sympy.testing.pytest import skip
+from sympy.physics.quantum.operator import Operator, IdentityOperator
 
 
 def test_scalars():
@@ -27,6 +28,15 @@ def test_matrix():
     x = symbols('x')
     m = Matrix([[I, x*I], [2, 4]])
     assert Dagger(m) == m.H
+
+
+def test_dagger_mul():
+    O = Operator('O')
+    I = IdentityOperator()
+    assert Dagger(O)*O == Dagger(O)*O
+    assert Dagger(O)*O*I == Mul(Dagger(O), O)*I
+    assert Dagger(O)*Dagger(O) == Dagger(O)**2
+    assert Dagger(O)*Dagger(I) == Dagger(O)
 
 
 class Foo(Expr):

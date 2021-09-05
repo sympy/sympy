@@ -8,6 +8,9 @@ class Subset(Basic):
     """
     Represents a basic subset object.
 
+    Explanation
+    ===========
+
     We generate subsets using essentially two techniques,
     binary enumeration and lexicographic enumeration.
     The Subset class takes two arguments, the first one
@@ -35,7 +38,7 @@ class Subset(Basic):
         """
         Default constructor.
 
-        It takes the subset and its superset as its parameters.
+        It takes the ``subset`` and its ``superset`` as its parameters.
 
         Examples
         ========
@@ -64,7 +67,7 @@ class Subset(Basic):
     def iterate_binary(self, k):
         """
         This is a helper function. It iterates over the
-        binary subsets by k steps. This variable can be
+        binary subsets by ``k`` steps. This variable can be
         both positive or negative.
 
         Examples
@@ -220,7 +223,7 @@ class Subset(Basic):
     def iterate_graycode(self, k):
         """
         Helper function used for prev_gray and next_gray.
-        It performs k step overs to get the respective Gray codes.
+        It performs ``k`` step overs to get the respective Gray codes.
 
         Examples
         ========
@@ -555,7 +558,7 @@ class Subset(Basic):
     @classmethod
     def subset_indices(self, subset, superset):
         """Return indices of subset in superset in a list; the list is empty
-        if all elements of subset are not in superset.
+        if all elements of ``subset`` are not in ``superset``.
 
         Examples
         ========
@@ -586,7 +589,7 @@ class Subset(Basic):
 
 def ksubsets(superset, k):
     """
-    Finds the subsets of size k in lexicographic order.
+    Finds the subsets of size ``k`` in lexicographic order.
 
     This uses the itertools generator.
 

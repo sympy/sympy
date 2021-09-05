@@ -1,6 +1,4 @@
-from __future__ import print_function, division
-
-from sympy.core import S, sympify, Expr, Rational, Dummy
+from sympy.core import S, sympify, Expr, Dummy
 from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key, is_sequence
@@ -10,7 +8,10 @@ from sympy.utilities.iterables import uniq
 
 
 class Order(Expr):
-    r""" Represents the limiting behavior of some function
+    r""" Represents the limiting behavior of some function.
+
+    Explanation
+    ===========
 
     The order of a function characterizes the function based on the limiting
     behavior of the function as it goes to some limit. Only taking the limit
@@ -184,21 +185,24 @@ class Order(Expr):
             if point[0] is S.Infinity:
                 s = {k: 1/Dummy() for k in variables}
                 rs = {1/v: 1/k for k, v in s.items()}
+                ps = [S.Zero for p in point]
             elif point[0] is S.NegativeInfinity:
                 s = {k: -1/Dummy() for k in variables}
                 rs = {-1/v: -1/k for k, v in s.items()}
+                ps = [S.Zero for p in point]
             elif point[0] is not S.Zero:
-                s = dict((k, Dummy() + point[0]) for k in variables)
-                rs = dict((v - point[0], k - point[0]) for k, v in s.items())
+                s = {k: Dummy() + point[0] for k in variables}
+                rs = {(v - point[0]).together(): k - point[0] for k, v in s.items()}
+                ps = [S.Zero for p in point]
             else:
                 s = ()
                 rs = ()
+                ps = list(point)
 
             expr = expr.subs(s)
 
             if expr.is_Add:
-                from sympy import expand_multinomial
-                expr = expand_multinomial(expr)
+                expr = expr.factor()
 
             if s:
                 args = tuple([r[0] for r in rs.items()])
@@ -221,7 +225,38 @@ class Order(Expr):
                     expr = Add(*[f.expr for (e, f) in lst])
 
                 elif expr:
-                    expr = expr.as_leading_term(*args)
+                    from sympy import PoleError, Function
+                    try:
+                        expr = expr.as_leading_term(*args)
+                    except PoleError:
+                        if isinstance(expr, Function) or\
+                                all(isinstance(arg, Function) for arg in expr.args):
+                            # It is not possible to simplify an expression
+                            # containing only functions (which raise error on
+                            # call to leading term) further
+                            pass
+                        else:
+                            orders = []
+                            pts = tuple(zip(args, ps))
+                            for arg in expr.args:
+                                try:
+                                    lt = arg.as_leading_term(*args)
+                                except PoleError:
+                                    lt = arg
+                                if lt not in args:
+                                    order = Order(lt)
+                                else:
+                                    order = Order(lt, *pts)
+                                orders.append(order)
+                            if expr.is_Add:
+                                new_expr = Order(Add(*orders), *pts)
+                                if new_expr.is_Add:
+                                    new_expr = Order(Add(*[a.expr for a in new_expr.args]), *pts)
+                                expr = new_expr.expr
+                            elif expr.is_Mul:
+                                expr = Mul(*[a.expr for a in orders])
+                            elif expr.is_Pow:
+                                expr = orders[0].expr**orders[1].expr
                     expr = expr.as_independent(*args, as_Add=False)[1]
 
                     expr = expand_power_base(expr)
@@ -271,7 +306,7 @@ class Order(Expr):
         obj = Expr.__new__(cls, *args)
         return obj
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         return self
 
     @property
@@ -465,10 +500,6 @@ class Order(Expr):
         expr = self.expr._eval_transpose()
         if expr is not None:
             return self.func(expr, *self.args[1:])
-
-    def _sage_(self):
-        #XXX: SAGE doesn't have Order yet. Let's return 0 instead.
-        return Rational(0)._sage_()
 
     def __neg__(self):
         return self

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 '''
 Use llvmlite to create executable functions from Sympy expressions
 
@@ -31,7 +29,7 @@ class LLVMJitPrinter(Printer):
         self.func_arg_map = kwargs.pop("func_arg_map", {})
         if not llvmlite:
             raise ImportError("llvmlite is required for LLVMJITPrinter")
-        super(LLVMJitPrinter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fp_type = ll.DoubleType()
         self.module = module
         self.builder = builder
@@ -114,7 +112,7 @@ class LLVMJitPrinter(Printer):
 # handle a variable number of parameters.
 class LLVMJitCallbackPrinter(LLVMJitPrinter):
     def __init__(self, *args, **kwargs):
-        super(LLVMJitCallbackPrinter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _print_Indexed(self, expr):
         array, idx = self.func_arg_map[expr.base]
@@ -148,7 +146,7 @@ link_names = set()
 current_link_suffix = 0
 
 
-class LLVMJitCode(object):
+class LLVMJitCode:
     def __init__(self, signature):
         self.signature = signature
         self.fp_type = ll.DoubleType()
@@ -291,7 +289,7 @@ class LLVMJitCode(object):
 
 class LLVMJitCodeCallback(LLVMJitCode):
     def __init__(self, signature):
-        super(LLVMJitCodeCallback, self).__init__(signature)
+        super().__init__(signature)
 
     def _create_param_dict(self, func_args):
         for i, a in enumerate(func_args):
@@ -327,7 +325,7 @@ class LLVMJitCodeCallback(LLVMJitCode):
         return strmod
 
 
-class CodeSignature(object):
+class CodeSignature:
     def __init__(self, ret_type):
         self.ret_type = ret_type
         self.arg_ctypes = []
@@ -429,15 +427,15 @@ def llvm_callable(args, expr, callback_type=None):
     The 'cubature' callback handles multiple expressions (set `fdim`
     to match in the integration call.)
     >>> import sympy.printing.llvmjitcode as jit
-    >>> from sympy import cse, exp
+    >>> from sympy import cse
     >>> from sympy.abc import x,y
     >>> e1 = x*x + y*y
     >>> e2 = 4*(x*x + y*y) + 8.0
     >>> after_cse = cse([e1,e2])
     >>> after_cse
     ([(x0, x**2), (x1, y**2)], [x0 + x1, 4*x0 + 4*x1 + 8.0])
-    >>> j1 = jit.llvm_callable([x,y], after_cse)
-    >>> j1(1.0, 2.0)
+    >>> j1 = jit.llvm_callable([x,y], after_cse) # doctest: +SKIP
+    >>> j1(1.0, 2.0)                             # doctest: +SKIP
     (5.0, 28.0)
     '''
 

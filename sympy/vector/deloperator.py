@@ -125,8 +125,5 @@ class Del(Basic):
     __xor__ = cross
     __xor__.__doc__ = cross.__doc__
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         return self._name
-
-    __repr__ = __str__
-    _sympystr = __str__

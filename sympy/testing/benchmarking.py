@@ -1,7 +1,5 @@
 """benchmarking through py.test"""
 
-from __future__ import print_function, division
-
 import py
 from py.__.test.item import Item
 from py.__.test.terminal.terminal import TerminalSession
@@ -11,14 +9,12 @@ import timeit
 
 from inspect import getsource
 
-from sympy.core.compatibility import exec_
-
 
 # from IPython.Magic.magic_timeit
 units = ["s", "ms", "us", "ns"]
 scaling = [1, 1e3, 1e6, 1e9]
 
-unitn = dict((s, i) for i, s in enumerate(units))
+unitn = {s: i for i, s in enumerate(units)}
 
 precision = 3
 
@@ -52,15 +48,15 @@ class Timer(timeit.Timer):
         self.src = src  # Save for traceback display
         code = compile(src, timeit.dummy_src_name, "exec")
         ns = {}
-        #exec code in globals(), ns      -- original timeit code
-        exec_(code, globals, ns)  # -- we use caller-provided globals instead
+        #exec(code, globals(), ns)      -- original timeit code
+        exec(code, globals, ns)  # -- we use caller-provided globals instead
         self.inner = ns["inner"]
 
 
 class Function(py.__.test.item.Function):
 
     def __init__(self, *args, **kw):
-        super(Function, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self.benchtime = None
         self.benchtitle = None
 
@@ -111,10 +107,10 @@ class Function(py.__.test.item.Function):
 class BenchSession(TerminalSession):
 
     def header(self, colitems):
-        super(BenchSession, self).header(colitems)
+        super().header(colitems)
 
     def footer(self, colitems):
-        super(BenchSession, self).footer(colitems)
+        super().footer(colitems)
 
         self.out.write('\n')
         self.print_bench_results()

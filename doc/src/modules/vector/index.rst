@@ -20,6 +20,7 @@ Guide to Vector
     coordsys.rst
     fields.rst
     examples.rst
+    vector_integration.rst
 
 Vector API
 ==========

@@ -48,7 +48,7 @@ class DiagonalMatrix(MatrixExpr):
     """
     arg = property(lambda self: self.args[0])
 
-    shape = property(lambda self: self.arg.shape)
+    shape = property(lambda self: self.arg.shape)  # type:ignore
 
     @property
     def diagonal_length(self):

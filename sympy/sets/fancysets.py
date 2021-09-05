@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from functools import reduce
 
 from sympy.core.basic import Basic
@@ -7,12 +5,12 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
-from sympy.core.numbers import oo, Integer
-from sympy.core.relational import Eq
+from sympy.core.numbers import oo
+from sympy.core.relational import Eq, is_eq
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
 from sympy.core.sympify import _sympify, sympify, converter
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, Or
 from sympy.sets.sets import (Set, Interval, Union, FiniteSet,
     ProductSet)
 from sympy.utilities.misc import filldedent
@@ -44,8 +42,6 @@ class Rationals(Set, metaclass=Singleton):
     def _contains(self, other):
         if not isinstance(other, Expr):
             return False
-        if other.is_Number:
-            return other.is_Rational
         return other.is_rational
 
     def __iter__(self):
@@ -241,7 +237,7 @@ class Reals(Interval, metaclass=Singleton):
     Examples
     ========
 
-    >>> from sympy import S, Interval, Rational, pi, I
+    >>> from sympy import S, Rational, pi, I
     >>> 5 in S.Reals
     True
     >>> Rational(-1, 2) in S.Reals
@@ -259,8 +255,21 @@ class Reals(Interval, metaclass=Singleton):
 
     ComplexRegion
     """
-    def __new__(cls):
-        return Interval.__new__(cls, S.NegativeInfinity, S.Infinity)
+    @property
+    def start(self):
+        return S.NegativeInfinity
+
+    @property
+    def end(self):
+        return S.Infinity
+
+    @property
+    def left_open(self):
+        return True
+
+    @property
+    def right_open(self):
+        return True
 
     def __eq__(self, other):
         return other == Interval(S.NegativeInfinity, S.Infinity)
@@ -297,7 +306,7 @@ class ImageSet(Set):
     False
 
     >>> FiniteSet(0, 1, 2, 3, 4, 5, 6, 7, 9, 10).intersect(squares)
-    FiniteSet(1, 4, 9)
+    {1, 4, 9}
 
     >>> square_iterable = iter(squares)
     >>> for i in range(4):
@@ -319,7 +328,7 @@ class ImageSet(Set):
     >>> solutions = ImageSet(Lambda(n, n*pi), S.Integers) # solutions of sin(x) = 0
     >>> dom = Interval(-1, 1)
     >>> dom.intersect(solutions)
-    FiniteSet(0)
+    {0}
 
     See Also
     ========
@@ -498,7 +507,7 @@ class ImageSet(Set):
 class Range(Set):
     """
     Represents a range of integers. Can be called as Range(stop),
-    Range(start, stop), or Range(start, stop, step); when stop is
+    Range(start, stop), or Range(start, stop, step); when step is
     not given it defaults to 1.
 
     `Range(stop)` is the same as `Range(0, stop, 1)` and the stop value
@@ -575,7 +584,7 @@ class Range(Set):
         >>> r.inf
         n
         >>> pprint(r)
-        {n, n + 3, ..., n + 17}
+        {n, n + 3, ..., n + 18}
     """
 
     is_iterable = True
@@ -602,6 +611,8 @@ class Range(Set):
                         w.has(Symbol) and w.is_integer != False):
                     ok.append(w)
                 elif not w.is_Integer:
+                    if w.is_infinite:
+                        raise ValueError('infinite symbols not allowed')
                     raise ValueError
                 else:
                     ok.append(w)
@@ -614,10 +625,25 @@ class Range(Set):
 
         null = False
         if any(i.has(Symbol) for i in (start, stop, step)):
-            if start == stop:
+            dif = stop - start
+            n = dif/step
+            if n.is_Rational:
+                from sympy import floor
+                if dif == 0:
+                    null = True
+                else:  # (x, x + 5, 2) or (x, 3*x, x)
+                    n = floor(n)
+                    end = start + n*step
+                    if dif.is_Rational:  # (x, x + 5, 2)
+                        if (end - stop).is_negative:
+                            end += step
+                    else:  # (x, 3*x, x)
+                        if (end/stop - 1).is_negative:
+                            end += step
+            elif n.is_extended_negative:
                 null = True
             else:
-                end = stop
+                end = stop  # other methods like sup and reversed must fail
         elif start.is_infinite:
             span = step*(stop - start)
             if span is S.NaN or span <= 0:
@@ -635,8 +661,8 @@ class Range(Set):
             if n <= 0:
                 null = True
             elif oostep:
-                end = start + 1
-                step = S.One  # make it a canonical single step
+                step = S.One  # make it canonical
+                end = start + step
             else:
                 end = start + n*step
         if null:
@@ -660,34 +686,42 @@ class Range(Set):
         Range(9, -1, -1)
         """
         if self.has(Symbol):
-            _ = self.size  # validate
-        if not self:
+            n = (self.stop - self.start)/self.step
+            if not n.is_extended_positive or not all(
+                    i.is_integer or i.is_infinite for i in self.args):
+                raise ValueError('invalid method for symbolic range')
+        if self.start == self.stop:
             return self
         return self.func(
             self.stop - self.step, self.start - self.step, -self.step)
 
     def _contains(self, other):
-        if not self:
+        if self.start == self.stop:
             return S.false
         if other.is_infinite:
             return S.false
         if not other.is_integer:
             return other.is_integer
         if self.has(Symbol):
-            try:
-                _ = self.size  # validate
-            except ValueError:
+            n = (self.stop - self.start)/self.step
+            if not n.is_extended_positive or not all(
+                    i.is_integer or i.is_infinite for i in self.args):
                 return
+        else:
+            n = self.size
         if self.start.is_finite:
             ref = self.start
         elif self.stop.is_finite:
             ref = self.stop
         else:  # both infinite; step is +/- 1 (enforced by __new__)
             return S.true
-        if self.size == 1:
+        if n == 1:
             return Eq(other, self[0])
         res = (ref - other) % self.step
         if res == S.Zero:
+            if self.has(Symbol):
+                d = Dummy('i')
+                return self.as_relational(d).subs(d, other)
             return And(other >= self.inf, other <= self.sup)
         elif res.is_Integer:  # off sequence
             return S.false
@@ -695,20 +729,21 @@ class Range(Set):
             return None
 
     def __iter__(self):
-        if self.has(Symbol):
-            _ = self.size  # validate
+        n = self.size  # validate
+        if not (n.has(S.Infinity) or n.has(S.NegativeInfinity) or n.is_Integer):
+            raise TypeError("Cannot iterate over symbolic Range")
         if self.start in [S.NegativeInfinity, S.Infinity]:
             raise TypeError("Cannot iterate over Range with infinite start")
-        elif self:
+        elif self.start != self.stop:
             i = self.start
-            step = self.step
-
-            while True:
-                if (step > 0 and not (self.start <= i < self.stop)) or \
-                   (step < 0 and not (self.stop < i <= self.start)):
-                    break
-                yield i
-                i += step
+            if n.is_infinite:
+                while True:
+                    yield i
+                    i += self.step
+            else:
+                for j in range(n):
+                    yield i
+                    i += self.step
 
     def __len__(self):
         rv = self.size
@@ -718,16 +753,16 @@ class Range(Set):
 
     @property
     def size(self):
-        if not self:
+        if self.start == self.stop:
             return S.Zero
         dif = self.stop - self.start
-        if self.has(Symbol):
-            if dif.has(Symbol) or self.step.has(Symbol) or (
-                    not self.start.is_integer and not self.stop.is_integer):
-                raise ValueError('invalid method for symbolic range')
-        if dif.is_infinite:
+        n = dif/self.step
+        if n.is_infinite:
             return S.Infinity
-        return Integer(abs(dif//self.step))
+        if  n.is_extended_nonnegative and all(i.is_integer for i in self.args):
+            from sympy.functions.elementary.integers import floor
+            return abs(floor(n))
+        raise ValueError('Invalid method for symbolic Range')
 
     @property
     def is_finite_set(self):
@@ -735,10 +770,14 @@ class Range(Set):
             return True
         return self.size.is_finite
 
-    def __nonzero__(self):
-        return self.start != self.stop
-
-    __bool__ = __nonzero__
+    def __bool__(self):
+        # this only distinguishes between definite null range
+        # and non-null/unknown null; getting True doesn't mean
+        # that it actually is not null
+        b = is_eq(self.start, self.stop)
+        if b is None:
+            raise ValueError('cannot tell if Range is null or not')
+        return not bool(b)
 
     def __getitem__(self, i):
         from sympy.functions.elementary.integers import ceiling
@@ -752,6 +791,8 @@ class Range(Set):
             "with an infinite value"
         if isinstance(i, slice):
             if self.size.is_finite:  # validates, too
+                if self.start == self.stop:
+                    return Range(0)
                 start, stop, step = i.indices(self.size)
                 n = ceiling((stop - start)/step)
                 if n <= 0:
@@ -852,44 +893,45 @@ class Range(Set):
                 elif start > 0:
                     raise ValueError(ooslice)
         else:
-            if not self:
+            if self.start == self.stop:
                 raise IndexError('Range index out of range')
+            if not (all(i.is_integer or i.is_infinite
+                    for i in self.args) and ((self.stop - self.start)/
+                    self.step).is_extended_positive):
+                raise ValueError('Invalid method for symbolic Range')
             if i == 0:
                 if self.start.is_infinite:
                     raise ValueError(ooslice)
-                if self.has(Symbol):
-                    if (self.stop > self.start) == self.step.is_positive and self.step.is_positive is not None:
-                        pass
-                    else:
-                        _ = self.size  # validate
                 return self.start
             if i == -1:
                 if self.stop.is_infinite:
                     raise ValueError(ooslice)
-                n = self.stop - self.step
-                if n.is_Integer or (
-                        n.is_integer and (
-                            (n - self.start).is_nonnegative ==
-                            self.step.is_positive)):
-                    return n
-            _ = self.size  # validate
+                return self.stop - self.step
+            n = self.size  # must be known for any other index
             rv = (self.stop if i < 0 else self.start) + i*self.step
             if rv.is_infinite:
                 raise ValueError(ooslice)
-            if rv < self.inf or rv > self.sup:
-                raise IndexError("Range index out of range")
-            return rv
+            val = (rv - self.start)/self.step
+            rel = fuzzy_or([val.is_infinite,
+                            fuzzy_and([val.is_nonnegative, (n-val).is_nonnegative])])
+            if rel:
+                return rv
+            if rel is None:
+                raise ValueError('Invalid method for symbolic Range')
+            raise IndexError("Range index out of range")
 
     @property
     def _inf(self):
         if not self:
-            raise NotImplementedError
+            return S.EmptySet.inf
         if self.has(Symbol):
-            if self.step.is_positive:
-                return self[0]
-            elif self.step.is_negative:
-                return self[-1]
-            _ = self.size  # validate
+            if all(i.is_integer or i.is_infinite for i in self.args):
+                dif = self.stop - self.start
+                if self.step.is_positive and dif.is_positive:
+                    return self.start
+                elif self.step.is_negative and dif.is_negative:
+                    return self.stop - self.step
+            raise ValueError('invalid method for symbolic range')
         if self.step > 0:
             return self.start
         else:
@@ -898,13 +940,15 @@ class Range(Set):
     @property
     def _sup(self):
         if not self:
-            raise NotImplementedError
+            return S.EmptySet.sup
         if self.has(Symbol):
-            if self.step.is_positive:
-                return self[-1]
-            elif self.step.is_negative:
-                return self[0]
-            _ = self.size  # validate
+            if all(i.is_integer or i.is_infinite for i in self.args):
+                dif = self.stop - self.start
+                if self.step.is_positive and dif.is_positive:
+                    return self.stop - self.step
+                elif self.step.is_negative and dif.is_negative:
+                    return self.start
+            raise ValueError('invalid method for symbolic range')
         if self.step > 0:
             return self.stop - self.step
         else:
@@ -916,14 +960,37 @@ class Range(Set):
 
     def as_relational(self, x):
         """Rewrite a Range in terms of equalities and logic operators. """
-        from sympy.functions.elementary.integers import floor
-        if self.size == 1:
-            return Eq(x, self[0])
+        from sympy.core.mod import Mod
+        if self.start.is_infinite:
+            assert not self.stop.is_infinite  # by instantiation
+            a = self.reversed.start
         else:
-            return And(
-                Eq(x, floor(x)),
-                x >= self.inf if self.inf in self else x > self.inf,
-                x <= self.sup if self.sup in self else x < self.sup)
+            a = self.start
+        step = self.step
+        in_seq = Eq(Mod(x - a, step), 0)
+        ints = And(Eq(Mod(a, 1), 0), Eq(Mod(step, 1), 0))
+        n = (self.stop - self.start)/self.step
+        if n == 0:
+            return S.EmptySet.as_relational(x)
+        if n == 1:
+            return And(Eq(x, a), ints)
+        try:
+            a, b = self.inf, self.sup
+        except ValueError:
+            a = None
+        if a is not None:
+            range_cond = And(
+                x > a if a.is_infinite else x >= a,
+                x < b if b.is_infinite else x <= b)
+        else:
+            a, b = self.start, self.stop - self.step
+            range_cond = Or(
+                And(self.step >= 1, x > a if a.is_infinite else x >= a,
+                x < b if b.is_infinite else x <= b),
+                And(self.step <= -1, x < a if a.is_infinite else x <= a,
+                x > b if b.is_infinite else x >= b))
+        return And(in_seq, ints, range_cond)
+
 
 converter[range] = lambda r: Range(r.start, r.stop, r.step)
 
@@ -962,7 +1029,7 @@ def normalize_theta_set(theta):
     >>> normalize_theta_set(Interval(-3*pi/2, -pi/2))
     Interval(pi/2, 3*pi/2)
     >>> normalize_theta_set(FiniteSet(0, pi, 3*pi))
-    FiniteSet(0, pi)
+    {0, pi}
 
     """
     from sympy.functions.elementary.trigonometric import _pi_coeff as coeff
@@ -1241,7 +1308,7 @@ class ComplexRegion(Set):
         >>> from sympy import Interval, ComplexRegion
         >>> unit = Interval(0,1)
         >>> ComplexRegion.from_real(unit)
-        CartesianComplexRegion(ProductSet(Interval(0, 1), FiniteSet(0)))
+        CartesianComplexRegion(ProductSet(Interval(0, 1), {0}))
 
         """
         if not sets.is_subset(S.Reals):
@@ -1423,7 +1490,9 @@ class Complexes(CartesianComplexRegion, metaclass=Singleton):
     is_finite_set = False
 
     # Override property from superclass since Complexes has no args
-    sets = ProductSet(S.Reals, S.Reals)
+    @property
+    def sets(self):
+        return ProductSet(S.Reals, S.Reals)
 
     def __new__(cls):
         return Set.__new__(cls)

@@ -20,7 +20,7 @@ from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
     FiniteSet, elliptic_e, elliptic_f, powsimp, hessian, wronskian, fibonacci,
     sign, Lambda, Piecewise, Subs, residue, Derivative, logcombine, Symbol,
     Intersection, Union, EmptySet, Interval, idiff, ImageSet, acos, Max,
-    MatMul, conjugate)
+    MatMul, conjugate, Eq)
 
 import mpmath
 from sympy.functions.combinatorial.numbers import stirling
@@ -28,7 +28,7 @@ from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.special.error_functions import Ci, Si, erf
 from sympy.functions.special.zeta_functions import zeta
 from sympy.testing.pytest import (XFAIL, slow, SKIP, skip, ON_TRAVIS,
-    raises, nocache_fail)
+    raises)
 from sympy.utilities.iterables import partitions
 from mpmath import mpi, mpc
 from sympy.matrices import Matrix, GramSchmidt, eye
@@ -306,7 +306,7 @@ def test_F3():
 
 @XFAIL
 def test_F4():
-    assert combsimp((2**n * factorial(n) * product(2*k - 1, (k, 1, n)))) == factorial(2*n)
+    assert combsimp(2**n * factorial(n) * product(2*k - 1, (k, 1, n))) == factorial(2*n)
 
 
 @XFAIL
@@ -479,7 +479,7 @@ def test_H14():
 
 
 def test_H15():
-    assert simplify((Mul(*[x - r for r in solveset(x**3 + x**2 - 7)]))) == x**3 + x**2 - 7
+    assert simplify(Mul(*[x - r for r in solveset(x**3 + x**2 - 7)])) == x**3 + x**2 - 7
 
 
 def test_H16():
@@ -934,14 +934,14 @@ def test_M14():
     assert solveset_real(tan(x) - 1, x) == ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
 
 
-@nocache_fail
 def test_M15():
     n = Dummy('n')
-    # This test fails when running with the cache off:
-    assert solveset(sin(x) - S.Half) in (Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
-                                           ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers)),
-                                           Union(ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers),
-                                           ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers)))
+    got = solveset(sin(x) - S.Half)
+    assert any(got.dummy_eq(i) for i in (
+        Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers)),
+        Union(ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers))))
 
 
 @XFAIL
@@ -1006,7 +1006,7 @@ def test_M26():
 def test_M27():
     x = symbols('x', real=True)
     b = symbols('b', real=True)
-    with assuming(Q.is_true(sin(cos(1/E**2) + 1) + b > 0)):
+    with assuming(sin(cos(1/E**2) + 1) + b > 0):
         # TODO: Replace solve with solveset
         solve(log(acos(asin(x**R(2, 3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/E**2))**R(3/2), b + sin(1 + cos(1/E**2))**R(3/2)]
 
@@ -1152,50 +1152,52 @@ def test_M39():
 
 
 def test_N1():
-    assert ask(Q.is_true(E**pi > pi**E))
+    assert ask(E**pi > pi**E)
 
 
 @XFAIL
 def test_N2():
     x = symbols('x', real=True)
-    assert ask(Q.is_true(x**4 - x + 1 > 0)) is True
-    assert ask(Q.is_true(x**4 - x + 1 > 1)) is False
+    assert ask(x**4 - x + 1 > 0) is True
+    assert ask(x**4 - x + 1 > 1) is False
 
 
 @XFAIL
 def test_N3():
     x = symbols('x', real=True)
-    assert ask(Q.is_true(And(Lt(-1, x), Lt(x, 1))), Q.is_true(abs(x) < 1 ))
+    assert ask(And(Lt(-1, x), Lt(x, 1)), abs(x) < 1 )
 
 @XFAIL
 def test_N4():
     x, y = symbols('x y', real=True)
-    assert ask(Q.is_true(2*x**2 > 2*y**2), Q.is_true((x > y) & (y > 0))) is True
+    assert ask(2*x**2 > 2*y**2, (x > y) & (y > 0)) is True
 
 
 @XFAIL
 def test_N5():
     x, y, k = symbols('x y k', real=True)
-    assert ask(Q.is_true(k*x**2 > k*y**2), Q.is_true((x > y) & (y > 0) & (k > 0))) is True
+    assert ask(k*x**2 > k*y**2, (x > y) & (y > 0) & (k > 0)) is True
 
 
+@slow
 @XFAIL
 def test_N6():
     x, y, k, n = symbols('x y k n', real=True)
-    assert ask(Q.is_true(k*x**n > k*y**n), Q.is_true((x > y) & (y > 0) & (k > 0) & (n > 0))) is True
+    assert ask(k*x**n > k*y**n, (x > y) & (y > 0) & (k > 0) & (n > 0)) is True
 
 
 @XFAIL
 def test_N7():
     x, y = symbols('x y', real=True)
-    assert ask(Q.is_true(y > 0), Q.is_true((x > 1) & (y >= x - 1))) is True
+    assert ask(y > 0, (x > 1) & (y >= x - 1)) is True
 
 
 @XFAIL
+@slow
 def test_N8():
     x, y, z = symbols('x y z', real=True)
-    assert ask(Q.is_true((x == y) & (y == z)),
-               Q.is_true((x >= y) & (y >= z) & (z >= x)))
+    assert ask(Eq(x, y) & Eq(y, z),
+               (x >= y) & (y >= z) & (z >= x))
 
 
 def test_N9():
@@ -1594,31 +1596,20 @@ def test_P27():
                 [0,  0, a, 0, 0],
                 [0,  0, 0, a, 0],
                 [0, -2, 0, 0, 2]])
-    assert M.eigenvects() == [(a, 3, [Matrix([[1],
-                                       [0],
-                                       [0],
-                                       [0],
-                                       [0]]),
-                               Matrix([[0],
-                                       [0],
-                                       [1],
-                                       [0],
-                                       [0]]),
-                               Matrix([[0],
-                                       [0],
-                                       [0],
-                                       [1],
-                                       [0]])]),
-                        (1 - I, 1, [Matrix([[           0],
-                                            [S(1)/2 + I/2],
-                                            [           0],
-                                            [           0],
-                                            [           1]])]),
-                        (1 + I, 1, [Matrix([[           0],
-                                            [S(1)/2 - I/2],
-                                            [           0],
-                                            [           0],
-                                            [           1]])])]
+
+    assert M.eigenvects() == [
+        (a, 3, [
+            Matrix([1, 0, 0, 0, 0]),
+            Matrix([0, 0, 1, 0, 0]),
+            Matrix([0, 0, 0, 1, 0])
+        ]),
+        (1 - I, 1, [
+            Matrix([0, (1 + I)/2, 0, 0, 1])
+        ]),
+        (1 + I, 1, [
+            Matrix([0, (1 - I)/2, 0, 0, 1])
+        ]),
+    ]
 
 
 @XFAIL
@@ -2128,7 +2119,6 @@ def test_T11():
     assert limit(n**x/(x*product((1 + x/k), (k, 1, n))), n, oo) == gamma(x)
 
 
-@XFAIL
 def test_T12():
     x, t = symbols('x t', real=True)
     # Does not evaluate the limit but returns an expression with erf
@@ -2453,6 +2443,7 @@ def test_W8():
 
 
 @XFAIL
+@slow
 def test_W9():
     # Integrand with a residue at infinity => -2 pi [sin(pi/5) + sin(2pi/5)]
     # (principal value)   [Levinson and Redheffer, p. 234] *)
@@ -2549,7 +2540,7 @@ def test_W22():
 def test_W23():
     a, b = symbols('a b', real=True, positive=True)
     r1 = integrate(integrate(x/(x**2 + y**2), (x, a, b)), (y, -oo, oo))
-    assert r1.collect(pi) == pi*(-a + b)
+    assert r1.collect(pi).cancel() == -pi*a + pi*b
 
 
 def test_W23b():
@@ -2940,7 +2931,7 @@ def test_Y9():
 
 
 def test_Y10():
-    assert (fourier_transform(abs(x)*exp(-3*abs(x)), x, z) ==
+    assert (fourier_transform(abs(x)*exp(-3*abs(x)), x, z).cancel() ==
             (-8*pi**2*z**2 + 18)/(16*pi**4*z**4 + 72*pi**2*z**2 + 81))
 
 
@@ -2997,10 +2988,10 @@ def test_Z3():
     r = Function('r')
     # recurrence solution is correct, Wester expects it to be simplified to
     # fibonacci(n+1), but that is quite hard
-    assert (rsolve(r(n) - (r(n - 1) + r(n - 2)), r(n),
-                   {r(1): 1, r(2): 2}).simplify()
-            == 2**(-n)*((1 + sqrt(5))**n*(sqrt(5) + 5) +
-                        (-sqrt(5) + 1)**n*(-sqrt(5) + 5))/10)
+    expected = ((S(1)/2 - sqrt(5)/2)**n*(S(1)/2 - sqrt(5)/10)
+              + (S(1)/2 + sqrt(5)/2)**n*(sqrt(5)/10 + S(1)/2))
+    sol = rsolve(r(n) - (r(n - 1) + r(n - 2)), r(n), {r(1): 1, r(2): 2})
+    assert sol == expected
 
 
 @XFAIL
