@@ -3,7 +3,7 @@ Boolean algebra module for SymPy
 """
 
 from collections import defaultdict
-from itertools import combinations, product, permutations
+from itertools import chain, combinations, product, permutations
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
@@ -590,7 +590,6 @@ class BooleanFunction(Application, Boolean):
 
         """
         from sympy.core.relational import Relational, _canonical
-        from sympy.functions.elementary.miscellaneous import Min, Max
 
         if replacementvalue is None and dominatingvalue is not None:
             replacementvalue = dominatingvalue
@@ -675,7 +674,7 @@ class BooleanFunction(Application, Boolean):
                 results = list(reversed(sorted(results,
                                                key=lambda pair: pair[0])))
                 # Replace the one providing most simplification
-                cost, replacement = results[0]
+                replacement = results[0][1]
                 idx, newrel = replacement
                 idx.sort()
                 # Remove the old relationals
@@ -696,7 +695,7 @@ class BooleanFunction(Application, Boolean):
     def _apply_patternbased_threeterm_simplification(self, Rel, patterns, func,
                                                      dominatingvalue,
                                                      replacementvalue,
-                                                     measure, minmax=None):
+                                                     measure):
         from sympy.functions.elementary.miscellaneous import Min, Max
         changed = True
         while changed and len(Rel) >= 3:
@@ -707,7 +706,7 @@ class BooleanFunction(Application, Boolean):
             results = []
             # Try all combinations
             for ((i, pi), (j, pj), (k, pk)) in permutations(enumerate(Rel), 3):
-                for m, (pattern, simp) in enumerate(patterns):
+                for pattern, simp in patterns:
                     res = []
                     # use SymPy matching
                     oldexpr = Tuple(pi, pj, pk)
@@ -774,7 +773,7 @@ class BooleanFunction(Application, Boolean):
                 results = list(reversed(sorted(results,
                                                key=lambda pair: pair[0])))
                 # Replace the one providing most simplification
-                cost, replacement = results[0]
+                replacement = results[0][1]
                 idx, newrel = replacement
                 idx.sort()
                 # Remove the old relationals
@@ -3256,14 +3255,13 @@ def simplify_patterns_and():
                      (Tuple(Lt(a, b), Ge(a, c)), ITE(b <= c, S.false, And(Lt(a, b), Ge(a, c)))),
                      (Tuple(Eq(a, b), Eq(a, c)), ITE(Eq(b, c), Eq(a, b), S.false)),
                      (Tuple(Lt(a, b), Gt(a, -b)), ITE(b > 0, Lt(Abs(a), b), S.false)),
-                     (Tuple(Le(a, b), Ge(a, -b)), ITE(b > 0, Le(Abs(a), b), S.false)),
+                     (Tuple(Le(a, b), Ge(a, -b)), ITE(b >= 0, Le(Abs(a), b), S.false)),
                      )
     return _matchers_and
 
 def simplify_patterns_and3():
     from sympy.core import Wild
-    from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
-    from sympy.functions.elementary.miscellaneous import Min, Max
+    from sympy.core.relational import Eq, Ge, Gt
 
     a = Wild('a')
     b = Wild('b')
@@ -3336,7 +3334,7 @@ def simplify_patterns_or():
                     (Tuple(Lt(a, b), Gt(a, c)), ITE(b > c, S.true, Or(Lt(a, b), Gt(a, c)))),
                     (Tuple(Le(a, b), Gt(a, c)), ITE(b >= c, S.true, Or(Le(a, b), Gt(a, c)))),
                     (Tuple(Lt(a, b), Ge(a, c)), ITE(b >= c, S.true, Or(Lt(a, b), Ge(a, c)))),
-                    (Tuple(Gt(a, b), Lt(a, -b)), ITE(b > 0, Gt(Abs(a), b), S.true)),
+                    (Tuple(Gt(a, b), Lt(a, -b)), ITE(b >= 0, Gt(Abs(a), b), S.true)),
                     (Tuple(Ge(a, b), Le(a, -b)), ITE(b > 0, Ge(Abs(a), b), S.true)),
                     )
     return _matchers_or
