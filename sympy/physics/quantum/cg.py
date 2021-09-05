@@ -98,7 +98,7 @@ class Wigner3j(Expr):
 
     @property
     def is_symbolic(self):
-        return not all([arg.is_number for arg in self.args])
+        return not all(arg.is_number for arg in self.args)
 
     # This is modified from the _print_Matrix method
     def _pretty(self, printer, *args):
@@ -273,7 +273,7 @@ class Wigner6j(Expr):
 
     @property
     def is_symbolic(self):
-        return not all([arg.is_number for arg in self.args])
+        return not all(arg.is_number for arg in self.args)
 
     # This is modified from the _print_Matrix method
     def _pretty(self, printer, *args):
@@ -374,7 +374,7 @@ class Wigner9j(Expr):
 
     @property
     def is_symbolic(self):
-        return not all([arg.is_number for arg in self.args])
+        return not all(arg.is_number for arg in self.args)
 
     # This is modified from the _print_Matrix method
     def _pretty(self, printer, *args):
@@ -645,7 +645,7 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
             if not sympify(index_expr.subs(sub_dep).subs(sub_2)).is_number:
                 continue
             cg_index[index_expr.subs(sub_dep).subs(sub_2)] = j, expr.subs(lt, 1).subs(sub_dep).subs(sub_2), lt.subs(sub_2), sign.subs(sub_dep).subs(sub_2)
-        if all(i is not None for i in cg_index):
+        if not any(i is None for i in cg_index):
             min_lt = min(*[ abs(term[2]) for term in cg_index ])
             indices = [ term[0] for term in cg_index]
             indices.sort()

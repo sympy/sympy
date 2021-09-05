@@ -1426,7 +1426,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if isinstance(fv, PolyElement):
             ret_single = True
             fv = [fv]
-        if any(not f for f in fv):
+        if not all(fv):
             raise ZeroDivisionError("polynomial division")
         if not self:
             if ret_single:
@@ -1473,7 +1473,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         f = self
         if isinstance(G, PolyElement):
             G = [G]
-        if any(not g for g in G):
+        if not all(G):
             raise ZeroDivisionError("polynomial division")
         ring = f.ring
         domain = ring.domain

@@ -1116,7 +1116,7 @@ class _EvaluatorPrinter:
         funcbody.append('return {}'.format(str_expr))
 
         funclines = [funcsig]
-        funclines.extend('    ' + line for line in funcbody)
+        funclines.extend(['    ' + line for line in funcbody])
 
         return '\n'.join(funclines) + '\n'
 

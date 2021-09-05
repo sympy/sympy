@@ -536,7 +536,7 @@ class Wild(Symbol):
     def matches(self, expr, repl_dict={}, old=False):
         if any(expr.has(x) for x in self.exclude):
             return None
-        if any(not f(expr) for f in self.properties):
+        if not all(f(expr) for f in self.properties):
             return None
         repl_dict = repl_dict.copy()
         repl_dict[self] = expr

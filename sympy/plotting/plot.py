@@ -742,9 +742,9 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                     else:
                         xarray = np.linspace(p[0], q[0], 10)
                     yarray = list(map(f, xarray))
-                    if any(y is not None for y in yarray):
+                    if not all(y is None for y in yarray):
                         for i in range(len(yarray) - 1):
-                            if yarray[i] is not None or yarray[i + 1] is not None:
+                            if not (yarray[i] is None and yarray[i + 1] is None):
                                 sample([xarray[i], yarray[i]],
                                     [xarray[i + 1], yarray[i + 1]], depth + 1)
 
@@ -891,8 +891,8 @@ class Parametric2DLineSeries(Line2DBaseSeries):
                 param_array = np.linspace(param_p, param_q, 10)
                 x_array = list(map(f_x, param_array))
                 y_array = list(map(f_y, param_array))
-                if any(x is not None and y is not None
-                        for x, y in zip(x_array, y_array)):
+                if not all(x is None and y is None
+                           for x, y in zip(x_array, y_array)):
                     for i in range(len(y_array) - 1):
                         if ((x_array[i] is not None and y_array[i] is not None) or
                                 (x_array[i + 1] is not None and y_array[i + 1] is not None)):
@@ -1625,8 +1625,8 @@ def _matplotlib_list(interval_list):
                           intervaly.end, intervaly.start, None])
     else:
         #XXX Ugly hack. Matplotlib does not accept empty lists for ``fill``
-        xlist.extend([None, None, None, None])
-        ylist.extend([None, None, None, None])
+        xlist.extend((None, None, None, None))
+        ylist.extend((None, None, None, None))
     return xlist, ylist
 
 

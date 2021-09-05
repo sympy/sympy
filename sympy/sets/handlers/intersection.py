@@ -264,8 +264,7 @@ def intersection_sets(self, other): # noqa:F811
             # not helpful here: multiple parametric solutions.
             if len(solns) == 0:
                 return EmptySet
-            elif any(not isinstance(s, int) and s.free_symbols
-                     for tupl in solns for s in tupl):
+            elif any(s.free_symbols for tupl in solns for s in tupl):
                 if len(solns) == 1:
                     soln, solm = solns[0]
                     (t,) = soln.free_symbols

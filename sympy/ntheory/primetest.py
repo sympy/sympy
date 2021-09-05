@@ -83,7 +83,7 @@ def is_square(n, prep=True):
         n = as_int(n)
         if n < 0:
             return False
-        if n in [0, 1]:
+        if n in (0, 1):
             return True
     m = n & 127
     if not ((m*0x8bc40d7d) & (m*0xa1e2f5d1) & 0x14020a):

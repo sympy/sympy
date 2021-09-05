@@ -200,7 +200,7 @@ def _get_const_characteristic_eq_sols(r, func, order):
     if len(chareqroots) != order:
         chareqroots = [rootof(chareq, k) for k in range(chareq.degree())]
 
-    chareq_is_complex = not all([i.is_real for i in chareq.all_coeffs()])
+    chareq_is_complex = not all(i.is_real for i in chareq.all_coeffs())
 
     # Create a dict root: multiplicity or charroots
     charroots = defaultdict(int)

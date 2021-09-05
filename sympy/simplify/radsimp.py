@@ -952,7 +952,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
                 # in general, only 4 terms can be removed with repeated squaring
                 # but other considerations can guide selection of radical terms
                 # so that radicals are removed
-                if all([x.is_Integer and (y**2).is_Rational for x, y in rterms]):
+                if all(x.is_Integer and (y**2).is_Rational for x, y in rterms):
                     nd, d = rad_rationalize(S.One, Add._from_args(
                         [sqrt(x)*y for x, y in rterms]))
                     n *= nd

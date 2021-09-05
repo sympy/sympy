@@ -1083,7 +1083,7 @@ def solve(f, *symbols, **flags):
     def _has_piecewise(e):
         if e.is_Piecewise:
             return e.has(*symbols)
-        return any([_has_piecewise(a) for a in e.args])
+        return any(_has_piecewise(a) for a in e.args)
     for i, fi in enumerate(f):
         if _has_piecewise(fi):
             f[i] = piecewise_fold(fi)
@@ -1339,7 +1339,7 @@ def _solve(f, *symbols, **flags):
                 if flags.get('simplify', True):
                     v = simplify(v)
                 vfree = v.free_symbols
-                if got_s and any([ss in vfree for ss in got_s]):
+                if got_s and any(ss in vfree for ss in got_s):
                     # sol depends on previously solved symbols: discard it
                     continue
                 got_s.add(xi)
@@ -1352,7 +1352,7 @@ def _solve(f, *symbols, **flags):
             try:
                 soln = _solve(f, s, **flags)
                 for sol in soln:
-                    if got_s and any([ss in sol.free_symbols for ss in got_s]):
+                    if got_s and any(ss in sol.free_symbols for ss in got_s):
                         # sol depends on previously solved symbols: discard it
                         continue
                     got_s.add(s)
@@ -1389,8 +1389,8 @@ def _solve(f, *symbols, **flags):
             # in any factor to zero
             dens = flags.get('_denominators', _simple_dens(f, symbols))
             result = [s for s in result if
-                all(not checksol(den, {symbol: s}, **flags) for den in
-                dens)]
+                not any(checksol(den, {symbol: s}, **flags) for den in
+                        dens)]
         # set flags for quick exit at end; solutions for each
         # factor were already checked and simplified
         check = False
@@ -1724,8 +1724,8 @@ def _solve(f, *symbols, **flags):
         # if in doubt, keep it
         dens = _simple_dens(f, symbols)
         result = [s for s in result if
-                  all(not checksol(d, {symbol: s}, **flags)
-                    for d in dens)]
+                  not any(checksol(d, {symbol: s}, **flags)
+                          for d in dens)]
     if check:
         # keep only results if the check is not False
         result = [r for r in result if
@@ -1841,8 +1841,8 @@ def _solve_system(exprs, symbols, **flags):
                             for r in res:
                                 skip = False
                                 for r1 in r:
-                                    if got_s and any([ss in r1.free_symbols
-                                           for ss in got_s]):
+                                    if got_s and any(ss in r1.free_symbols
+                                           for ss in got_s):
                                         # sol depends on previously
                                         # solved symbols: discard it
                                         skip = True
@@ -1943,7 +1943,7 @@ def _solve_system(exprs, symbols, **flags):
                     # result in the new result list; use copy since the
                     # solution for s in being added in-place
                     for sol in soln:
-                        if got_s and any([ss in sol.free_symbols for ss in got_s]):
+                        if got_s and any(ss in sol.free_symbols for ss in got_s):
                             # sol depends on previously solved symbols: discard it
                             continue
                         rnew = r.copy()

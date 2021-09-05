@@ -213,8 +213,6 @@ class Set(Basic, EvalfMixin):
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
-            from sympy.utilities.iterables import sift
-
             sifted = sift(other, lambda x: fuzzy_bool(self.contains(x)))
             # ignore those that are contained in self
             return Union(FiniteSet(*(sifted[False])),
@@ -867,7 +865,7 @@ class ProductSet(Set):
         return reduce(lambda a, b: a*b, (len(s) for s in self.args))
 
     def __bool__(self):
-        return all([bool(s) for s in self.sets])
+        return all(self.sets)
 
 
 class Interval(Set):
@@ -1265,12 +1263,12 @@ class Union(Set, LatticeOp):
             # Clear out duplicates
             sos_list = []
             sets_list = []
-            for set in sets:
-                if set[0] in sos_list:
+            for _set in sets:
+                if _set[0] in sos_list:
                     continue
                 else:
-                    sos_list.append(set[0])
-                    sets_list.append(set)
+                    sos_list.append(_set[0])
+                    sets_list.append(_set)
             sets = sets_list
 
             # Flip Parity - next time subtract/add if we added/subtracted here
@@ -1906,7 +1904,6 @@ class FiniteSet(Set):
 
     def as_relational(self, symbol):
         """Rewrite a FiniteSet in terms of equalities and logic operators. """
-        from sympy.core.relational import Eq
         return Or(*[Eq(symbol, elem) for elem in self])
 
     def compare(self, other):

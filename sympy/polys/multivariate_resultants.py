@@ -177,8 +177,8 @@ class DixonResultant():
         # remove columns if needed
         if dixon_matrix.shape[0] != dixon_matrix.shape[1]:
             keep = [column for column in range(dixon_matrix.shape[-1])
-                    if any([element != 0 for element
-                        in dixon_matrix[:, column]])]
+                    if any(element != 0 for element
+                        in dixon_matrix[:, column])]
 
             dixon_matrix = dixon_matrix[:, keep]
 

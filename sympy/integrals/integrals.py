@@ -417,7 +417,7 @@ class Integral(AddWithLimits):
         eval_kwargs = dict(meijerg=meijerg, risch=risch, manual=manual, heurisch=heurisch,
             conds=conds)
 
-        if conds not in ['separate', 'piecewise', 'none']:
+        if conds not in ('separate', 'piecewise', 'none'):
             raise ValueError('conds must be one of "separate", "piecewise", '
                              '"none", got: %s' % conds)
 

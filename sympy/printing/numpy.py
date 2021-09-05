@@ -234,7 +234,7 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_Identity(self, expr):
         shape = expr.shape
-        if all([dim.is_Integer for dim in shape]):
+        if all(dim.is_Integer for dim in shape):
             return "%s(%s)" % (self._module_format(self._module + '.eye'), self._print(expr.shape[0]))
         else:
             raise NotImplementedError("Symbolic matrix dimensions are not yet supported for identity matrices")
