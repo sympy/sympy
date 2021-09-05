@@ -26,6 +26,7 @@ from sympy.series import limit
 from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
 from sympy.simplify.fu import sincos_to_sum
+from sympy.tensor.functions import shape
 from sympy.utilities.misc import filldedent
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -601,7 +602,11 @@ class Integral(AddWithLimits):
                             function = ret
                             continue
 
-            if not isinstance(antideriv, Integral) and antideriv is not None:
+            final = hints.get('final', True)
+            # dotit may be iterated but floor terms making atan and acot
+            # continous should only be added in the final round
+            if (final and not isinstance(antideriv, Integral) and
+                antideriv is not None):
                 for atan_term in antideriv.atoms(atan):
                     atan_arg = atan_term.args[0]
                     # Checking `atan_arg` to be linear combination of `tan` or `cot`
@@ -794,7 +799,7 @@ class Integral(AddWithLimits):
         return rv
 
     def _eval_integral(self, f, x, meijerg=None, risch=None, manual=None,
-                       heurisch=None, conds='piecewise'):
+                       heurisch=None, conds='piecewise',final=None):
         """
         Calculate the anti-derivative to the function f(x).
 
@@ -1097,6 +1102,7 @@ class Integral(AddWithLimits):
                             # method was set to False already
                             new_eval_kwargs = eval_kwargs
                             new_eval_kwargs["manual"] = False
+                            new_eval_kwargs["final"] = False
                             result = result.func(*[
                                 arg.doit(**new_eval_kwargs) if
                                 arg.has(Integral) else arg
@@ -1138,7 +1144,7 @@ class Integral(AddWithLimits):
 
         return Add(*parts)
 
-    def _eval_lseries(self, x, logx, cdir=0):
+    def _eval_lseries(self, x, logx=None, cdir=0):
         expr = self.as_dummy()
         symb = x
         for l in expr.limits:
@@ -1148,7 +1154,7 @@ class Integral(AddWithLimits):
         for term in expr.function.lseries(symb, logx):
             yield integrate(term, *expr.limits)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx=None, cdir=0):
         expr = self.as_dummy()
         symb = x
         for l in expr.limits:
@@ -1160,7 +1166,7 @@ class Integral(AddWithLimits):
         order = [o.subs(symb, x) for o in order]
         return integrate(terms, *expr.limits) + Add(*order)*x
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         series_gen = self.args[0].lseries(x)
         for leading_term in series_gen:
             if leading_term != 0:
@@ -1316,30 +1322,6 @@ class Integral(AddWithLimits):
         else:
             raise ValueError("Unknown method %s" % method)
         return result.doit() if evaluate else result
-
-    def _sage_(self):
-        import sage.all as sage
-        f, limits = self.function._sage_(), list(self.limits)
-        for limit_ in limits:
-            if len(limit_) == 1:
-                x = limit_[0]
-                f = sage.integral(f,
-                                    x._sage_(),
-                                    hold=True)
-            elif len(limit_) == 2:
-                x, b = limit_
-                f = sage.integral(f,
-                                    x._sage_(),
-                                    b._sage_(),
-                                    hold=True)
-            else:
-                x, a, b = limit_
-                f = sage.integral(f,
-                                  (x._sage_(),
-                                    a._sage_(),
-                                    b._sage_()),
-                                    hold=True)
-        return f
 
     def principal_value(self, **kwargs):
         """
@@ -1622,3 +1604,10 @@ def line_integrate(field, curve, vars):
 
     integral = Integral(Ft, curve.limits).doit(deep=False)
     return integral
+
+
+### Property function dispatching ###
+
+@shape.register(Integral)
+def _(expr):
+    return shape(expr.function)

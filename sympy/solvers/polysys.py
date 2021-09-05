@@ -240,6 +240,12 @@ def solve_generic(polys, opt):
 
         univariate = list(filter(_is_univariate, basis))
 
+        if len(basis) < len(gens):
+            raise NotImplementedError(filldedent('''
+                only zero-dimensional systems supported
+                (finite number of solutions)
+                '''))
+
         if len(univariate) == 1:
             f = univariate.pop()
         else:

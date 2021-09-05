@@ -6,6 +6,9 @@ Polynomials Manipulation Module Reference
 
 .. automodule:: sympy.polys
 
+See :ref:`polys-docs` for an index of documentation for the polys module and
+:ref:`polys-basics` for an introductory explanation.
+
 Basic polynomial manipulation functions
 =======================================
 
@@ -113,6 +116,7 @@ Monomials encoded as tuples
 .. currentmodule:: sympy.polys.monomials
 
 .. autoclass:: Monomial
+   :members:
 .. autofunction:: itermonomials
 .. autofunction:: monomial_count
 
@@ -122,9 +126,13 @@ Orderings of monomials
 .. currentmodule:: sympy.polys.orderings
 
 .. autoclass:: MonomialOrder
+   :members:
 .. autoclass:: LexOrder
+   :members:
 .. autoclass:: GradedLexOrder
+   :members:
 .. autoclass:: ReversedGradedLexOrder
+   :members:
 
 Formal manipulation of roots of polynomials
 ===========================================
@@ -138,6 +146,7 @@ Formal manipulation of roots of polynomials
    :members:
    :private-members:
 .. autoclass:: RootSum
+   :members:
 
 Symbolic root-finding algorithms
 ================================

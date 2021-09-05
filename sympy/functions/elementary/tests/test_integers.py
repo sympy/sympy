@@ -548,6 +548,12 @@ def test_issue_4149():
     assert floor(3 + E + pi*I + y*I) == 5 + floor(pi + y)*I
 
 
+def test_issue_21651():
+    k = Symbol('k', positive=True, integer=True)
+    exp = 2*2**(-k)
+    assert isinstance(floor(exp), floor)
+
+
 def test_issue_11207():
     assert floor(floor(x)) == floor(x)
     assert floor(ceiling(x)) == ceiling(x)

@@ -724,7 +724,8 @@ def test_is_subset():
     assert Range(3).is_subset(FiniteSet(0, 1, n)) is None
     assert Range(n, n + 2).is_subset(FiniteSet(n, n + 1)) is True
     assert Range(5).is_subset(Interval(0, 4, right_open=True)) is False
-
+    #issue 19513
+    assert imageset(Lambda(n, 1/n), S.Integers).is_subset(S.Reals) is None
 
 def test_is_proper_subset():
     assert Interval(0, 1).is_proper_subset(Interval(0, 2)) is True
@@ -917,6 +918,10 @@ def test_Union_as_relational():
         Or(And(Le(0, x), Le(x, 1)), Eq(x, 2))
     assert (Interval(0, 1, True, True) + FiniteSet(1)).as_relational(x) == \
         And(Lt(0, x), Le(x, 1))
+    assert Or(x < 0, x > 0).as_set().as_relational(x) == \
+        And((x > -oo), (x < oo), Ne(x, 0))
+    assert (Interval.Ropen(1, 3) + Interval.Lopen(3, 5)
+        ).as_relational(x) == And((x > 1), (x < 5), Ne(x, 3))
 
 
 def test_Intersection_as_relational():
@@ -1280,8 +1285,8 @@ def test_SymmetricDifference():
             == FiniteSet(5)
     assert FiniteSet(1, 2, 3, 4, 5) ^ FiniteSet(1, 2, 5, 6) == \
             FiniteSet(3, 4, 6)
-    assert Set(1, 2 , 3) ^ Set(2, 3, 4) == Union(Set(1, 2, 3) - Set(2, 3, 4), \
-            Set(2, 3, 4) - Set(1, 2, 3))
+    assert Set(S(1), S(2) , S(3)) ^ Set(S(2), S(3), S(4)) == Union(Set(S(1), S(2), S(3)) - Set(S(2), S(3), S(4)), \
+            Set(S(2), S(3), S(4)) - Set(S(1), S(2), S(3)))
     assert Interval(0, 4) ^ Interval(2, 5) == Union(Interval(0, 4) - \
             Interval(2, 5), Interval(2, 5) - Interval(0, 4))
 

@@ -3,13 +3,15 @@ from types import FunctionType
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import uniquely_named_symbol
+from sympy.core.mul import Mul
 from sympy.polys import PurePoly, cancel
 from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
 from sympy import sympify
 from sympy.functions.combinatorial.numbers import nC
+from sympy.polys.matrices.domainmatrix import DomainMatrix
 
-from .common import MatrixError, NonSquareMatrixError
+from .common import NonSquareMatrixError
 from .utilities import (
     _get_intermediate_simp, _get_intermediate_simp_bool,
     _iszero, _is_zero_after_expand_mul)
@@ -538,6 +540,11 @@ def _per(M):
     perm = sympify(perm)
     return perm.simplify()
 
+def _det_DOM(M):
+    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    K = DOM.domain
+    return K.to_sympy(DOM.det())
+
 # This functions is a candidate for caching if it gets implemented for matrices.
 def _det(M, method="bareiss", iszerofunc=None):
     """Computes the determinant of a matrix if ``M`` is a concrete matrix object
@@ -557,6 +564,9 @@ def _det(M, method="bareiss", iszerofunc=None):
         Also, if the matrix is an upper or a lower triangular matrix, determinant
         is computed by simple multiplication of diagonal elements, and the
         specified method is ignored.
+
+        If it is set to ``'domain-ge'``, then Gaussian elimination method will
+        be used via using DomainMatrix.
 
         If it is set to ``'bareiss'``, Bareiss' fraction-free algorithm will
         be used.
@@ -609,6 +619,8 @@ def _det(M, method="bareiss", iszerofunc=None):
     -2
     >>> det(M) == M.det()
     True
+    >>> M.det(method="domain-ge")
+    -2
     """
 
     # sanitize `method`
@@ -619,7 +631,7 @@ def _det(M, method="bareiss", iszerofunc=None):
     elif method == "det_lu":
         method = "lu"
 
-    if method not in ("bareiss", "berkowitz", "lu"):
+    if method not in ("bareiss", "berkowitz", "lu", "domain-ge"):
         raise ValueError("Determinant method '%s' unrecognized" % method)
 
     if iszerofunc is None:
@@ -634,15 +646,10 @@ def _det(M, method="bareiss", iszerofunc=None):
     n = M.rows
 
     if n == M.cols: # square check is done in individual method functions
-        if M.is_upper or M.is_lower:
-            m = 1
-            for i in range(n):
-                m = m * M[i, i]
-            return _get_intermediate_simp(_dotprodsimp)(m)
-        elif n == 0:
+        if n == 0:
             return M.one
         elif n == 1:
-            return M[0,0]
+            return M[0, 0]
         elif n == 2:
             m = M[0, 0] * M[1, 1] - M[0, 1] * M[1, 0]
             return _get_intermediate_simp(_dotprodsimp)(m)
@@ -655,14 +662,18 @@ def _det(M, method="bareiss", iszerofunc=None):
                 - M[0, 1] * M[1, 0] * M[2, 2])
             return _get_intermediate_simp(_dotprodsimp)(m)
 
-    if method == "bareiss":
-        return M._eval_det_bareiss(iszerofunc=iszerofunc)
-    elif method == "berkowitz":
-        return M._eval_det_berkowitz()
-    elif method == "lu":
-        return M._eval_det_lu(iszerofunc=iszerofunc)
-    else:
-        raise MatrixError('unknown method for calculating determinant')
+    dets = []
+    for b in M.strongly_connected_components():
+        if method == "domain-ge": # uses DomainMatrix to evalute determinant
+            det = _det_DOM(M[b, b])
+        elif method == "bareiss":
+            det = M[b, b]._eval_det_bareiss(iszerofunc=iszerofunc)
+        elif method == "berkowitz":
+            det = M[b, b]._eval_det_berkowitz()
+        elif method == "lu":
+            det = M[b, b]._eval_det_lu(iszerofunc=iszerofunc)
+        dets.append(det)
+    return Mul(*dets)
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.

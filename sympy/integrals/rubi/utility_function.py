@@ -5264,7 +5264,6 @@ def IntSum(u, x):
     # If u is free of x or of the form c*(a+b*x)^m, IntSum[u,x] returns the antiderivative of u wrt x;
     # else it returns d*Int[v,x] where d*v=u and d is free of x.
     return Add(*[Integral(i, x) for i in u.args])
-    return Simp(FreeTerms(u, x)*x, x) + IntTerm(NonfreeTerms(u, x), x)
 
 def IntTerm(expr, x):
     # If u is of the form c*(a+b*x)**m, IntTerm(u,x) returns the antiderivative of u wrt x;

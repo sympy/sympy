@@ -604,11 +604,11 @@ class Moment(Expr):
         c = _sympify(c)
         if condition is not None:
             condition = _sympify(condition)
-        return Expr.__new__(cls, X, n, c, condition)
+            return super().__new__(cls, X, n, c, condition)
+        else:
+            return super().__new__(cls, X, n, c)
 
     def doit(self, **hints):
-        if not is_random(self.args[0]):
-            return self.args[0]
         return self.rewrite(Expectation).doit(**hints)
 
     def _eval_rewrite_as_Expectation(self, X, n, c=0, condition=None, **kwargs):
@@ -661,11 +661,11 @@ class CentralMoment(Expr):
         n = _sympify(n)
         if condition is not None:
             condition = _sympify(condition)
-        return Expr.__new__(cls, X, n, condition)
+            return super().__new__(cls, X, n, condition)
+        else:
+            return super().__new__(cls, X, n)
 
     def doit(self, **hints):
-        if not is_random(self.args[0]):
-            return self.args[0]
         return self.rewrite(Expectation).doit(**hints)
 
     def _eval_rewrite_as_Expectation(self, X, n, condition=None, **kwargs):

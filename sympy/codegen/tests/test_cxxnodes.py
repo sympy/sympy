@@ -1,7 +1,7 @@
 from sympy.core.symbol import Symbol
 from sympy.codegen.ast import Type
 from sympy.codegen.cxxnodes import using
-from sympy.printing import cxxcode
+from sympy.printing.codeprinter import cxxcode
 
 x = Symbol('x')
 

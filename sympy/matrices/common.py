@@ -15,6 +15,7 @@ from sympy.core import SympifyError, Add
 from sympy.core.basic import Atom
 from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.decorators import call_highest_priority
+from sympy.core.kind import Kind, NumberKind
 from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -305,8 +306,6 @@ class MatrixShaping(MatrixRequired):
         ========
 
         row
-        sympy.matrices.dense.MutableDenseMatrix.col_op
-        sympy.matrices.dense.MutableDenseMatrix.col_swap
         col_del
         col_join
         col_insert
@@ -589,8 +588,6 @@ class MatrixShaping(MatrixRequired):
         ========
 
         col
-        sympy.matrices.dense.MutableDenseMatrix.row_op
-        sympy.matrices.dense.MutableDenseMatrix.row_swap
         row_del
         row_join
         row_insert
@@ -658,6 +655,31 @@ class MatrixShaping(MatrixRequired):
         if not self.cols:
             return [[] for i in range(self.rows)]
         return self._eval_tolist()
+
+    def todod(M):
+        """Returns matrix as dict of dicts containing non-zero elements of the Matrix
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> A = Matrix([[0, 1],[0, 3]])
+        >>> A
+        Matrix([
+        [0, 1],
+        [0, 3]])
+        >>> A.todod()
+        {0: {1: 1}, 1: {1: 3}}
+
+
+        """
+        rowsdict = {}
+        Mlol = M.tolist()
+        for i, Mi in enumerate(Mlol):
+            row = {j: Mij for j, Mij in enumerate(Mi) if Mij}
+            if row:
+                rowsdict[i] = row
+        return rowsdict
 
     def vec(self):
         """Return the Matrix converted into a one column matrix by stacking columns
@@ -771,9 +793,9 @@ class MatrixSpecial(MatrixRequired):
 
     @classmethod
     def _eval_eye(cls, rows, cols):
-        def entry(i, j):
-            return cls.one if i == j else cls.zero
-        return cls._new(rows, cols, entry)
+        vals = [cls.zero]*(rows*cols)
+        vals[::cols+1] = [cls.one]*min(rows, cols)
+        return cls._new(rows, cols, vals, copy=False)
 
     @classmethod
     def _eval_jordan_block(cls, rows, cols, eigenvalue, band='upper'):
@@ -801,9 +823,19 @@ class MatrixSpecial(MatrixRequired):
 
     @classmethod
     def _eval_zeros(cls, rows, cols):
+        return cls._new(rows, cols, [cls.zero]*(rows*cols), copy=False)
+
+    @classmethod
+    def _eval_wilkinson(cls, n):
         def entry(i, j):
-            return cls.zero
-        return cls._new(rows, cols, entry)
+            return cls.one if i + 1 == j else cls.zero
+
+        D = cls._new(2*n + 1, 2*n + 1, entry)
+
+        wminus = cls.diag([i for i in range(-n, n + 1)], unpack=True) + D + D.T
+        wplus = abs(cls.diag([i for i in range(-n, n + 1)], unpack=True)) + D + D.T
+
+        return wminus, wplus
 
     @classmethod
     def diag(kls, *args, strict=False, unpack=True, rows=None, cols=None, **kwargs):
@@ -963,6 +995,9 @@ class MatrixSpecial(MatrixRequired):
         """
         if cols is None:
             cols = rows
+        if rows < 0 or cols < 0:
+            raise ValueError("Cannot create a {} x {} matrix. "
+                             "Both dimensions must be positive".format(rows, cols))
         klass = kwargs.get('cls', kls)
         rows, cols = as_int(rows), as_int(cols)
 
@@ -1160,6 +1195,9 @@ class MatrixSpecial(MatrixRequired):
         """
         if cols is None:
             cols = rows
+        if rows < 0 or cols < 0:
+            raise ValueError("Cannot create a {} x {} matrix. "
+                             "Both dimensions must be positive".format(rows, cols))
         klass = kwargs.get('cls', kls)
         rows, cols = as_int(rows), as_int(cols)
 
@@ -1207,6 +1245,46 @@ class MatrixSpecial(MatrixRequired):
             return kls.zero
         return kls._new(size, size, entry)
 
+
+    @classmethod
+    def wilkinson(kls, n, **kwargs):
+        """Returns two square Wilkinson Matrix of size 2*n + 1
+        $W_{2n + 1}^-, W_{2n + 1}^+ =$ Wilkinson(n)
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> wminus, wplus = Matrix.wilkinson(3)
+        >>> wminus
+        Matrix([
+        [-3,  1,  0, 0, 0, 0, 0],
+        [ 1, -2,  1, 0, 0, 0, 0],
+        [ 0,  1, -1, 1, 0, 0, 0],
+        [ 0,  0,  1, 0, 1, 0, 0],
+        [ 0,  0,  0, 1, 1, 1, 0],
+        [ 0,  0,  0, 0, 1, 2, 1],
+        [ 0,  0,  0, 0, 0, 1, 3]])
+        >>> wplus
+        Matrix([
+        [3, 1, 0, 0, 0, 0, 0],
+        [1, 2, 1, 0, 0, 0, 0],
+        [0, 1, 1, 1, 0, 0, 0],
+        [0, 0, 1, 0, 1, 0, 0],
+        [0, 0, 0, 1, 1, 1, 0],
+        [0, 0, 0, 0, 1, 2, 1],
+        [0, 0, 0, 0, 0, 1, 3]])
+
+        References
+        ==========
+
+        .. [1] https://blogs.mathworks.com/cleve/2013/04/15/wilkinsons-matrices-2/
+        .. [2] J. H. Wilkinson, The Algebraic Eigenvalue Problem, Claredon Press, Oxford, 1965, 662 pp.
+
+        """
+        klass = kwargs.get('cls', kls)
+        n = as_int(n)
+        return klass._eval_wilkinson(n)
 
 class MatrixProperties(MatrixRequired):
     """Provides basic properties of a matrix."""
@@ -2431,6 +2509,84 @@ class MatrixOperations(MatrixRequired):
         from sympy.simplify import trigsimp
         return self.applyfunc(lambda x: trigsimp(x, **opts))
 
+    def upper_triangular(self, k=0):
+        """returns the elements on and above the kth diagonal of a matrix.
+        If k is not specified then simply returns upper-triangular portion
+        of a matrix
+
+        Examples
+        ========
+
+        >>> from sympy import ones
+        >>> A = ones(4)
+        >>> A.upper_triangular()
+        Matrix([
+        [1, 1, 1, 1],
+        [0, 1, 1, 1],
+        [0, 0, 1, 1],
+        [0, 0, 0, 1]])
+
+        >>> A.upper_triangular(2)
+        Matrix([
+        [0, 0, 1, 1],
+        [0, 0, 0, 1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0]])
+
+        >>> A.upper_triangular(-1)
+        Matrix([
+        [1, 1, 1, 1],
+        [1, 1, 1, 1],
+        [0, 1, 1, 1],
+        [0, 0, 1, 1]])
+
+        """
+
+        def entry(i, j):
+            return self[i, j] if i + k <= j else self.zero
+
+        return self._new(self.rows, self.cols, entry)
+
+
+    def lower_triangular(self, k=0):
+        """returns the elements on and below the kth diagonal of a matrix.
+        If k is not specified then simply returns lower-triangular portion
+        of a matrix
+
+        Examples
+        ========
+
+        >>> from sympy import ones
+        >>> A = ones(4)
+        >>> A.lower_triangular()
+        Matrix([
+        [1, 0, 0, 0],
+        [1, 1, 0, 0],
+        [1, 1, 1, 0],
+        [1, 1, 1, 1]])
+
+        >>> A.lower_triangular(-2)
+        Matrix([
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [1, 0, 0, 0],
+        [1, 1, 0, 0]])
+
+        >>> A.lower_triangular(1)
+        Matrix([
+        [1, 1, 0, 0],
+        [1, 1, 1, 0],
+        [1, 1, 1, 1],
+        [1, 1, 1, 1]])
+
+        """
+
+        def entry(i, j):
+            return self[i, j] if i + k >= j else self.zero
+
+        return self._new(self.rows, self.cols, entry)
+
+
 
 class MatrixArithmetic(MatrixRequired):
     """Provides basic matrix arithmetic operations.
@@ -2841,7 +2997,6 @@ class MatrixArithmetic(MatrixRequired):
     def __sub__(self, a):
         return self + (-a)
 
-
 class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):
     """All common matrix operations including basic arithmetic, shaping,
@@ -2872,7 +3027,7 @@ class _MinimalMatrix:
     def _new(cls, *args, **kwargs):
         return cls(*args, **kwargs)
 
-    def __init__(self, rows, cols=None, mat=None):
+    def __init__(self, rows, cols=None, mat=None, copy=False):
         if isfunction(mat):
             # if we passed in a function, use that to populate the indices
             mat = list(mat(i, j) for i in range(rows) for j in range(cols))
@@ -2987,6 +3142,69 @@ class _MatrixWrapper:
         cols = self.cols
 
         return iter(sympify(mat[r, c]) for r in range(self.rows) for c in range(cols))
+
+
+class MatrixKind(Kind):
+    """
+    Kind for all matrices in SymPy.
+
+    Basic class for this kind is ``MatrixBase`` and ``MatrixExpr``,
+    but any expression representing the matrix can have this.
+
+    Parameters
+    ==========
+
+    element_kind : Kind
+        Kind of the element. Default is :obj:NumberKind `<sympy.core.kind.NumberKind>`,
+        which means that the matrix contains only numbers.
+
+    Examples
+    ========
+
+    Any instance of matrix class has ``MatrixKind``.
+
+    >>> from sympy import MatrixSymbol
+    >>> A = MatrixSymbol('A', 2,2)
+    >>> A.kind
+    MatrixKind(NumberKind)
+
+    Although expression representing a matrix may be not instance of
+    matrix class, it will have ``MatrixKind`` as well.
+
+    >>> from sympy import Integral
+    >>> from sympy.matrices.expressions import MatrixExpr
+    >>> from sympy.abc import x
+    >>> intM = Integral(A, x)
+    >>> isinstance(intM, MatrixExpr)
+    False
+    >>> intM.kind
+    MatrixKind(NumberKind)
+
+    Use ``isinstance()`` to check for ``MatrixKind` without specifying
+    the element kind. Use ``is`` with specifying the element kind.
+
+    >>> from sympy import Matrix
+    >>> from sympy.matrices import MatrixKind
+    >>> from sympy.core.kind import NumberKind
+    >>> M = Matrix([1, 2])
+    >>> isinstance(M.kind, MatrixKind)
+    True
+    >>> M.kind is MatrixKind(NumberKind)
+    True
+
+    See Also
+    ========
+
+    shape : Function to return the shape of objects with ``MatrixKind``.
+
+    """
+    def __new__(cls, element_kind=NumberKind):
+        obj = super().__new__(cls, element_kind)
+        obj.element_kind = element_kind
+        return obj
+
+    def __repr__(self):
+        return "MatrixKind(%s)" % self.element_kind
 
 
 def _matrixify(mat):

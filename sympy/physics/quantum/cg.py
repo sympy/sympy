@@ -10,6 +10,7 @@ from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.wigner import clebsch_gordan, wigner_3j, wigner_6j, wigner_9j
+from sympy.printing.precedence import PRECEDENCE
 
 __all__ = [
     'CG',
@@ -159,14 +160,16 @@ class CG(Wigner3j):
     coefficients are defined as [1]_:
 
     .. math ::
-        C^{j_1,m_1}_{j_2,m_2,j_3,m_3} = \left\langle j_1,m_1;j_2,m_2 | j_3,m_3\right\rangle
+        C^{j_3,m_3}_{j_1,m_1,j_2,m_2} = \left\langle j_1,m_1;j_2,m_2 | j_3,m_3\right\rangle
 
     Parameters
     ==========
 
-    j1, m1, j2, m2, j3, m3 : Number, Symbol
-        Terms determining the angular momentum of coupled angular momentum
-        systems.
+    j1, m1, j2, m2 : Number, Symbol
+        Angular momenta of states 1 and 2.
+
+    j3, m3: Number, Symbol
+        Total angular momentum of the coupled system.
 
     Examples
     ========
@@ -180,6 +183,11 @@ class CG(Wigner3j):
         CG(3/2, 3/2, 1/2, -1/2, 1, 1)
         >>> cg.doit()
         sqrt(3)/2
+        >>> CG(j1=S(1)/2, m1=-S(1)/2, j2=S(1)/2, m2=+S(1)/2, j3=1, m3=0).doit()
+        sqrt(2)/2
+
+
+    Compare [2]_.
 
     See Also
     ========
@@ -190,7 +198,12 @@ class CG(Wigner3j):
     ==========
 
     .. [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
+    .. [2] `Clebsch-Gordan Coefficients, Spherical Harmonics, and d Functions
+        <https://pdg.lbl.gov/2020/reviews/rpp2020-rev-clebsch-gordan-coefs.pdf>`_
+        in P.A. Zyla *et al.* (Particle Data Group), Prog. Theor. Exp. Phys.
+        2020, 083C01 (2020).
     """
+    precedence = PRECEDENCE["Pow"] - 1
 
     def doit(self, **hints):
         if self.is_symbolic:

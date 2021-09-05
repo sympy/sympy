@@ -28,7 +28,8 @@ from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerP
 from sympy.matrices.expressions import hadamard_power
 
 from sympy.physics import mechanics
-from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
+from sympy.physics.control.lti import (TransferFunction, Feedback, TransferFunctionMatrix,
+    Series, Parallel, MIMOSeries, MIMOParallel, MIMOFeedback)
 from sympy.physics.units import joule, degree
 from sympy.printing.pretty import pprint, pretty as xpretty
 from sympy.printing.pretty.pretty_symbology import center_accent, is_combining
@@ -42,7 +43,7 @@ from sympy.tensor.functions import TensorProduct
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices, TensorHead,
                                  TensorElement, tensor_heads)
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross, Laplacian
 
@@ -1298,6 +1299,7 @@ tan (x)\
     assert upretty(expr) == ucode_str
 
 
+@_both_exp_pow
 def test_pretty_functions():
     """Tests for Abs, conjugate, exp, function braces, and factorial."""
     expr = (2*x + exp(x))
@@ -1321,8 +1323,13 @@ e  + 2*x\
  x     \n\
 ℯ + 2⋅x\
 """
+    ucode_str_3 = \
+"""\
+ x      \n\
+ℯ  + 2⋅x\
+"""
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
-    assert upretty(expr) in [ucode_str_1, ucode_str_2]
+    assert upretty(expr) in [ucode_str_1, ucode_str_2, ucode_str_3]
 
     expr = Abs(x)
     ascii_str = \
@@ -2372,6 +2379,14 @@ def test_pretty_Series():
     tf1 = TransferFunction(x + y, x - 2*y, y)
     tf2 = TransferFunction(x - y, x + y, y)
     tf3 = TransferFunction(x**2 + y, y - x, y)
+    tf4 = TransferFunction(2, 3, y)
+
+    tfm1 = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
+    tfm2 = TransferFunctionMatrix([[tf3], [-tf4]])
+    tfm3 = TransferFunctionMatrix([[tf1, -tf2, -tf3], [tf3, -tf4, tf2]])
+    tfm4 = TransferFunctionMatrix([[tf1, tf2], [tf3, -tf4], [-tf2, -tf1]])
+    tfm5 = TransferFunctionMatrix([[-tf2, -tf1], [tf4, -tf3], [tf1, tf2]])
+
     expected1 = \
 """\
           ⎛ 2    ⎞\n\
@@ -2399,16 +2414,52 @@ def test_pretty_Series():
 ⎜─────── + ─────⎟⋅⎜───── + ──────⎟\n\
 ⎝x - 2⋅y   x + y⎠ ⎝x + y   -x + y⎠\
 """
+    expected5 = \
+"""\
+⎡ x + y   x - y⎤  ⎡ 2    ⎤ \n\
+⎢───────  ─────⎥  ⎢x  + y⎥ \n\
+⎢x - 2⋅y  x + y⎥  ⎢──────⎥ \n\
+⎢              ⎥  ⎢-x + y⎥ \n\
+⎢ 2            ⎥ ⋅⎢      ⎥ \n\
+⎢x  + y     2  ⎥  ⎢ -2   ⎥ \n\
+⎢──────     ─  ⎥  ⎢ ───  ⎥ \n\
+⎣-x + y     3  ⎦τ ⎣  3   ⎦τ\
+"""
+    expected6 = \
+"""\
+                                               ⎛⎡ x + y    x - y ⎤    ⎡ x - y    x + y ⎤ ⎞\n\
+                                               ⎜⎢───────   ───── ⎥    ⎢ ─────   ───────⎥ ⎟\n\
+⎡ x + y   x - y⎤  ⎡                    2    ⎤  ⎜⎢x - 2⋅y   x + y ⎥    ⎢ x + y   x - 2⋅y⎥ ⎟\n\
+⎢───────  ─────⎥  ⎢ x + y   -x + y  - x  - y⎥  ⎜⎢                ⎥    ⎢                ⎥ ⎟\n\
+⎢x - 2⋅y  x + y⎥  ⎢───────  ──────  ────────⎥  ⎜⎢ 2              ⎥    ⎢          2     ⎥ ⎟\n\
+⎢              ⎥  ⎢x - 2⋅y  x + y    -x + y ⎥  ⎜⎢x  + y     -2   ⎥    ⎢  -2     x  + y ⎥ ⎟\n\
+⎢ 2            ⎥ ⋅⎢                         ⎥ ⋅⎜⎢──────     ───  ⎥  + ⎢  ───    ────── ⎥ ⎟\n\
+⎢x  + y     2  ⎥  ⎢ 2                       ⎥  ⎜⎢-x + y      3   ⎥    ⎢   3     -x + y ⎥ ⎟\n\
+⎢──────     ─  ⎥  ⎢x  + y    -2      x - y  ⎥  ⎜⎢                ⎥    ⎢                ⎥ ⎟\n\
+⎣-x + y     3  ⎦τ ⎢──────    ───     ─────  ⎥  ⎜⎢-x + y    -x - y⎥    ⎢ -x - y  -x + y ⎥ ⎟\n\
+                  ⎣-x + y     3      x + y  ⎦τ ⎜⎢──────   ───────⎥    ⎢───────  ────── ⎥ ⎟\n\
+                                               ⎝⎣x + y    x - 2⋅y⎦τ   ⎣x - 2⋅y  x + y  ⎦τ⎠\
+"""
+
     assert upretty(Series(tf1, tf3)) == expected1
     assert upretty(Series(-tf2, -tf1)) == expected2
     assert upretty(Series(tf3, tf1, Parallel(-tf1, tf2))) == expected3
     assert upretty(Series(Parallel(tf1, tf2), Parallel(tf2, tf3))) == expected4
+    assert upretty(MIMOSeries(tfm2, tfm1)) == expected5
+    assert upretty(MIMOSeries(MIMOParallel(tfm4, -tfm5), tfm3, tfm1)) == expected6
 
 
 def test_pretty_Parallel():
     tf1 = TransferFunction(x + y, x - 2*y, y)
     tf2 = TransferFunction(x - y, x + y, y)
     tf3 = TransferFunction(x**2 + y, y - x, y)
+    tf4 = TransferFunction(y**2 - x, x**3 + x, y)
+
+    tfm1 = TransferFunctionMatrix([[tf1, tf2], [tf3, -tf4], [-tf2, -tf1]])
+    tfm2 = TransferFunctionMatrix([[-tf2, -tf1], [tf4, -tf3], [tf1, tf2]])
+    tfm3 = TransferFunctionMatrix([[-tf1, tf2], [-tf3, tf4], [tf2, tf1]])
+    tfm4 = TransferFunctionMatrix([[-tf1, -tf2], [-tf3, -tf4]])
+
     expected1 = \
 """\
  x + y    x - y\n\
@@ -2435,10 +2486,45 @@ x  + y    x + y    ⎛ -x - y⎞ ⎛x - y⎞\n\
 ⎜───────⎟⋅⎜─────⎟ + ⎜─────⎟⋅⎜──────⎟\n\
 ⎝x - 2⋅y⎠ ⎝x + y⎠   ⎝x + y⎠ ⎝-x + y⎠\
 """
+    expected5 = \
+"""\
+⎡ x + y   -x + y ⎤    ⎡ x - y    x + y ⎤    ⎡ x + y    x - y ⎤ \n\
+⎢───────  ────── ⎥    ⎢ ─────   ───────⎥    ⎢───────   ───── ⎥ \n\
+⎢x - 2⋅y  x + y  ⎥    ⎢ x + y   x - 2⋅y⎥    ⎢x - 2⋅y   x + y ⎥ \n\
+⎢                ⎥    ⎢                ⎥    ⎢                ⎥ \n\
+⎢ 2            2 ⎥    ⎢     2    2     ⎥    ⎢ 2            2 ⎥ \n\
+⎢x  + y   x - y  ⎥    ⎢x - y    x  + y ⎥    ⎢x  + y   x - y  ⎥ \n\
+⎢──────   ────── ⎥  + ⎢──────   ────── ⎥  + ⎢──────   ────── ⎥ \n\
+⎢-x + y    3     ⎥    ⎢ 3       -x + y ⎥    ⎢-x + y    3     ⎥ \n\
+⎢         x  + x ⎥    ⎢x  + x          ⎥    ⎢         x  + x ⎥ \n\
+⎢                ⎥    ⎢                ⎥    ⎢                ⎥ \n\
+⎢-x + y    -x - y⎥    ⎢ -x - y  -x + y ⎥    ⎢-x + y    -x - y⎥ \n\
+⎢──────   ───────⎥    ⎢───────  ────── ⎥    ⎢──────   ───────⎥ \n\
+⎣x + y    x - 2⋅y⎦τ   ⎣x - 2⋅y  x + y  ⎦τ   ⎣x + y    x - 2⋅y⎦τ\
+"""
+    expected6 = \
+"""\
+⎡ x - y    x + y ⎤                        ⎡-x + y    -x - y ⎤ \n\
+⎢ ─────   ───────⎥                        ⎢──────   ─────── ⎥ \n\
+⎢ x + y   x - 2⋅y⎥  ⎡ -x - y   -x + y⎤    ⎢x + y    x - 2⋅y ⎥ \n\
+⎢                ⎥  ⎢───────   ──────⎥    ⎢                 ⎥ \n\
+⎢     2    2     ⎥  ⎢x - 2⋅y   x + y ⎥    ⎢      2     2    ⎥ \n\
+⎢x - y    x  + y ⎥  ⎢                ⎥    ⎢-x + y   - x  - y⎥ \n\
+⎢──────   ────── ⎥ ⋅⎢   2           2⎥  + ⎢───────  ────────⎥ \n\
+⎢ 3       -x + y ⎥  ⎢- x  - y  x - y ⎥    ⎢  3       -x + y ⎥ \n\
+⎢x  + x          ⎥  ⎢────────  ──────⎥    ⎢ x  + x          ⎥ \n\
+⎢                ⎥  ⎢ -x + y    3    ⎥    ⎢                 ⎥ \n\
+⎢ -x - y  -x + y ⎥  ⎣          x  + x⎦τ   ⎢ x + y    x - y  ⎥ \n\
+⎢───────  ────── ⎥                        ⎢───────   ─────  ⎥ \n\
+⎣x - 2⋅y  x + y  ⎦τ                       ⎣x - 2⋅y   x + y  ⎦τ\
+"""
+
     assert upretty(Parallel(tf1, tf2)) == expected1
     assert upretty(Parallel(-tf2, -tf1)) == expected2
     assert upretty(Parallel(tf3, tf1, Series(-tf1, tf2))) == expected3
     assert upretty(Parallel(Series(tf1, tf2), Series(tf2, tf3))) == expected4
+    assert upretty(MIMOParallel(-tfm3, -tfm2, tfm1)) == expected5
+    assert upretty(MIMOParallel(MIMOSeries(tfm4, -tfm2), tfm2)) == expected6
 
 
 def test_pretty_Feedback():
@@ -2451,13 +2537,13 @@ def test_pretty_Feedback():
     tf6 = TransferFunction(2, 2, x)
     expected1 = \
 """\
-    ⎛1⎞    \n\
-    ⎜─⎟    \n\
-    ⎝1⎠    \n\
-───────────\n\
-1    x + y \n\
-─ + ───────\n\
-1   x - 2⋅y\
+     ⎛1⎞     \n\
+     ⎜─⎟     \n\
+     ⎝1⎠     \n\
+─────────────\n\
+1   ⎛ x + y ⎞\n\
+─ + ⎜───────⎟\n\
+1   ⎝x - 2⋅y⎠\
 """
     expected2 = \
 """\
@@ -2527,13 +2613,33 @@ def test_pretty_Feedback():
 """
     expected8 = \
 """\
- ⎛1 - x⎞ \n\
- ⎜─────⎟ \n\
- ⎝x - y⎠ \n\
-─────────\n\
-1   1 - x\n\
-─ + ─────\n\
-1   x - y\
+  ⎛1 - x⎞  \n\
+  ⎜─────⎟  \n\
+  ⎝x - y⎠  \n\
+───────────\n\
+1   ⎛1 - x⎞\n\
+─ + ⎜─────⎟\n\
+1   ⎝x - y⎠\
+"""
+    expected9 = \
+"""\
+      ⎛ x + y ⎞ ⎛x - y⎞      \n\
+      ⎜───────⎟⋅⎜─────⎟      \n\
+      ⎝x - 2⋅y⎠ ⎝x + y⎠      \n\
+─────────────────────────────\n\
+1   ⎛ x + y ⎞ ⎛x - y⎞ ⎛1 - x⎞\n\
+─ - ⎜───────⎟⋅⎜─────⎟⋅⎜─────⎟\n\
+1   ⎝x - 2⋅y⎠ ⎝x + y⎠ ⎝x - y⎠\
+"""
+    expected10 = \
+"""\
+  ⎛1 - x⎞  \n\
+  ⎜─────⎟  \n\
+  ⎝x - y⎠  \n\
+───────────\n\
+1   ⎛1 - x⎞\n\
+─ - ⎜─────⎟\n\
+1   ⎝x - y⎠\
 """
     assert upretty(Feedback(tf, tf1)) == expected1
     assert upretty(Feedback(tf, tf2*tf1*tf3)) == expected2
@@ -2543,6 +2649,123 @@ def test_pretty_Feedback():
     assert upretty(Feedback(tf3*tf5, tf2*tf1)) == expected6
     assert upretty(Feedback(tf4, tf6)) == expected7
     assert upretty(Feedback(tf5, tf)) == expected8
+
+    assert upretty(Feedback(tf1*tf2, tf5, 1)) == expected9
+    assert upretty(Feedback(tf5, tf, 1)) == expected10
+
+
+def test_pretty_MIMOFeedback():
+    tf1 = TransferFunction(x + y, x - 2*y, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+    tfm_2 = TransferFunctionMatrix([[tf2, tf1], [tf1, tf2]])
+    tfm_3 = TransferFunctionMatrix([[tf1, tf1], [tf2, tf2]])
+
+    expected1 = \
+"""\
+⎛    ⎡ x + y    x - y ⎤  ⎡ x - y    x + y ⎤ ⎞-1   ⎡ x + y    x - y ⎤ \n\
+⎜    ⎢───────   ───── ⎥  ⎢ ─────   ───────⎥ ⎟     ⎢───────   ───── ⎥ \n\
+⎜    ⎢x - 2⋅y   x + y ⎥  ⎢ x + y   x - 2⋅y⎥ ⎟     ⎢x - 2⋅y   x + y ⎥ \n\
+⎜I - ⎢                ⎥ ⋅⎢                ⎥ ⎟   ⋅ ⎢                ⎥ \n\
+⎜    ⎢ x - y    x + y ⎥  ⎢ x + y    x - y ⎥ ⎟     ⎢ x - y    x + y ⎥ \n\
+⎜    ⎢ ─────   ───────⎥  ⎢───────   ───── ⎥ ⎟     ⎢ ─────   ───────⎥ \n\
+⎝    ⎣ x + y   x - 2⋅y⎦τ ⎣x - 2⋅y   x + y ⎦τ⎠     ⎣ x + y   x - 2⋅y⎦τ\
+"""
+    expected2 = \
+"""\
+⎛    ⎡ x + y    x - y ⎤  ⎡ x - y    x + y ⎤  ⎡ x + y    x + y ⎤ ⎞-1   ⎡ x + y    x - y ⎤  ⎡ x - y    x + y ⎤ \n\
+⎜    ⎢───────   ───── ⎥  ⎢ ─────   ───────⎥  ⎢───────  ───────⎥ ⎟     ⎢───────   ───── ⎥  ⎢ ─────   ───────⎥ \n\
+⎜    ⎢x - 2⋅y   x + y ⎥  ⎢ x + y   x - 2⋅y⎥  ⎢x - 2⋅y  x - 2⋅y⎥ ⎟     ⎢x - 2⋅y   x + y ⎥  ⎢ x + y   x - 2⋅y⎥ \n\
+⎜I + ⎢                ⎥ ⋅⎢                ⎥ ⋅⎢                ⎥ ⎟   ⋅ ⎢                ⎥ ⋅⎢                ⎥ \n\
+⎜    ⎢ x - y    x + y ⎥  ⎢ x + y    x - y ⎥  ⎢ x - y    x - y ⎥ ⎟     ⎢ x - y    x + y ⎥  ⎢ x + y    x - y ⎥ \n\
+⎜    ⎢ ─────   ───────⎥  ⎢───────   ───── ⎥  ⎢ ─────    ───── ⎥ ⎟     ⎢ ─────   ───────⎥  ⎢───────   ───── ⎥ \n\
+⎝    ⎣ x + y   x - 2⋅y⎦τ ⎣x - 2⋅y   x + y ⎦τ ⎣ x + y    x + y ⎦τ⎠     ⎣ x + y   x - 2⋅y⎦τ ⎣x - 2⋅y   x + y ⎦τ\
+"""
+
+    assert upretty(MIMOFeedback(tfm_1, tfm_2, 1)) == \
+        expected1  # Positive MIMOFeedback
+    assert upretty(MIMOFeedback(tfm_1*tfm_2, tfm_3)) == \
+        expected2  # Negative MIMOFeedback (Default)
+
+
+def test_pretty_TransferFunctionMatrix():
+    tf1 = TransferFunction(x + y, x - 2*y, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(y**2 - 2*y + 1, y + 5, y)
+    tf4 = TransferFunction(y, x**2 + x + 1, y)
+    tf5 = TransferFunction(1 - x, x - y, y)
+    tf6 = TransferFunction(2, 2, y)
+    expected1 = \
+"""\
+⎡ x + y ⎤ \n\
+⎢───────⎥ \n\
+⎢x - 2⋅y⎥ \n\
+⎢       ⎥ \n\
+⎢ x - y ⎥ \n\
+⎢ ───── ⎥ \n\
+⎣ x + y ⎦τ\
+"""
+    expected2 = \
+"""\
+⎡    x + y     ⎤ \n\
+⎢   ───────    ⎥ \n\
+⎢   x - 2⋅y    ⎥ \n\
+⎢              ⎥ \n\
+⎢    x - y     ⎥ \n\
+⎢    ─────     ⎥ \n\
+⎢    x + y     ⎥ \n\
+⎢              ⎥ \n\
+⎢   2          ⎥ \n\
+⎢- y  + 2⋅y - 1⎥ \n\
+⎢──────────────⎥ \n\
+⎣    y + 5     ⎦τ\
+"""
+    expected3 = \
+"""\
+⎡   x + y        x - y   ⎤ \n\
+⎢  ───────       ─────   ⎥ \n\
+⎢  x - 2⋅y       x + y   ⎥ \n\
+⎢                        ⎥ \n\
+⎢ 2                      ⎥ \n\
+⎢y  - 2⋅y + 1      y     ⎥ \n\
+⎢────────────  ──────────⎥ \n\
+⎢   y + 5       2        ⎥ \n\
+⎢              x  + x + 1⎥ \n\
+⎢                        ⎥ \n\
+⎢   1 - x          2     ⎥ \n\
+⎢   ─────          ─     ⎥ \n\
+⎣   x - y          2     ⎦τ\
+"""
+    expected4 = \
+"""\
+⎡    x - y        x + y       y     ⎤ \n\
+⎢    ─────       ───────  ──────────⎥ \n\
+⎢    x + y       x - 2⋅y   2        ⎥ \n\
+⎢                         x  + x + 1⎥ \n\
+⎢                                   ⎥ \n\
+⎢   2                               ⎥ \n\
+⎢- y  + 2⋅y - 1   x - 1      -2     ⎥ \n\
+⎢──────────────   ─────      ───    ⎥ \n\
+⎣    y + 5        x - y       2     ⎦τ\
+"""
+    expected5 = \
+"""\
+⎡ x + y  x - y   x + y       y     ⎤ \n\
+⎢───────⋅─────  ───────  ──────────⎥ \n\
+⎢x - 2⋅y x + y  x - 2⋅y   2        ⎥ \n\
+⎢                        x  + x + 1⎥ \n\
+⎢                                  ⎥ \n\
+⎢  1 - x   2     x + y      -2     ⎥ \n\
+⎢  ───── + ─    ───────     ───    ⎥ \n\
+⎣  x - y   2    x - 2⋅y      2     ⎦τ\
+"""
+
+    assert upretty(TransferFunctionMatrix([[tf1], [tf2]])) == expected1
+    assert upretty(TransferFunctionMatrix([[tf1], [tf2], [-tf3]])) == expected2
+    assert upretty(TransferFunctionMatrix([[tf1, tf2], [tf3, tf4], [tf5, tf6]])) == expected3
+    assert upretty(TransferFunctionMatrix([[tf2, tf1, tf4], [-tf3, -tf5, -tf6]])) == expected4
+    assert upretty(TransferFunctionMatrix([[Series(tf2, tf1), tf1, tf4], [Parallel(tf6, tf5), tf1, -tf6]])) == \
+        expected5
 
 
 def test_pretty_order():
@@ -4081,33 +4304,64 @@ def test_pretty_SetExpr():
 
 def test_pretty_ImageSet():
     imgset = ImageSet(Lambda((x, y), x + y), {1, 2, 3}, {3, 4})
-    ascii_str = '{x + y | x in {1, 2, 3} , y in {3, 4}}'
-    ucode_str = '{x + y | x ∊ {1, 2, 3} , y ∊ {3, 4}}'
+    ascii_str = '{x + y | x in {1, 2, 3}, y in {3, 4}}'
+    ucode_str = '{x + y │ x ∊ {1, 2, 3}, y ∊ {3, 4}}'
     assert pretty(imgset) == ascii_str
     assert upretty(imgset) == ucode_str
 
     imgset = ImageSet(Lambda(((x, y),), x + y), ProductSet({1, 2, 3}, {3, 4}))
     ascii_str = '{x + y | (x, y) in {1, 2, 3} x {3, 4}}'
-    ucode_str = '{x + y | (x, y) ∊ {1, 2, 3} × {3, 4}}'
+    ucode_str = '{x + y │ (x, y) ∊ {1, 2, 3} × {3, 4}}'
     assert pretty(imgset) == ascii_str
     assert upretty(imgset) == ucode_str
 
     imgset = ImageSet(Lambda(x, x**2), S.Naturals)
-    ascii_str = \
-    '  2                 \n'\
-    '{x  | x in Naturals}'
+    ascii_str = '''\
+  2                 \n\
+{x  | x in Naturals}'''
     ucode_str = '''\
-⎧ 2        ⎫\n\
-⎨x  | x ∊ ℕ⎬\n\
-⎩          ⎭'''
+⎧ 2 │      ⎫\n\
+⎨x  │ x ∊ ℕ⎬\n\
+⎩   │      ⎭'''
     assert pretty(imgset) == ascii_str
     assert upretty(imgset) == ucode_str
 
+    # TODO: The "x in N" parts below should be centered independently of the
+    # 1/x**2 fraction
+    imgset = ImageSet(Lambda(x, 1/x**2), S.Naturals)
+    ascii_str = '''\
+ 1                  \n\
+{-- | x in Naturals}
+  2                 \n\
+ x                  '''
+    ucode_str = '''\
+⎧1  │      ⎫\n\
+⎪── │ x ∊ ℕ⎪\n\
+⎨ 2 │      ⎬\n\
+⎪x  │      ⎪\n\
+⎩   │      ⎭'''
+    assert pretty(imgset) == ascii_str
+    assert upretty(imgset) == ucode_str
+
+    imgset = ImageSet(Lambda((x, y), 1/(x + y)**2), S.Naturals, S.Naturals)
+    ascii_str = '''\
+    1                                    \n\
+{-------- | x in Naturals, y in Naturals}
+        2                                \n\
+ (x + y)                                 '''
+    ucode_str = '''\
+⎧   1     │             ⎫
+⎪──────── │ x ∊ ℕ, y ∊ ℕ⎪
+⎨       2 │             ⎬
+⎪(x + y)  │             ⎪
+⎩         │             ⎭'''
+    assert pretty(imgset) == ascii_str
+    assert upretty(imgset) == ucode_str
 
 def test_pretty_ConditionSet():
     from sympy import ConditionSet
     ascii_str = '{x | x in (-oo, oo) and sin(x) = 0}'
-    ucode_str = '{x | x ∊ ℝ ∧ (sin(x) = 0)}'
+    ucode_str = '{x │ x ∊ ℝ ∧ (sin(x) = 0)}'
     assert pretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ascii_str
     assert upretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ucode_str
 
@@ -4120,14 +4374,79 @@ def test_pretty_ConditionSet():
     assert pretty(ConditionSet(x, Or(x > 1, x < -1), FiniteSet(1, 2))) == '{2}'
     assert upretty(ConditionSet(x, Or(x > 1, x < -1), FiniteSet(1, 2))) == '{2}'
 
+    condset = ConditionSet(x, 1/x**2 > 0)
+    ascii_str = '''\
+     1      \n\
+{x | -- > 0}
+      2     \n\
+     x      '''
+    ucode_str = '''\
+⎧  │ ⎛1     ⎞⎫
+⎪x │ ⎜── > 0⎟⎪
+⎨  │ ⎜ 2    ⎟⎬
+⎪  │ ⎝x     ⎠⎪
+⎩  │         ⎭'''
+    assert pretty(condset) == ascii_str
+    assert upretty(condset) == ucode_str
+
+    condset = ConditionSet(x, 1/x**2 > 0, S.Reals)
+    ascii_str = '''\
+                        1      \n\
+{x | x in (-oo, oo) and -- > 0}
+                         2     \n\
+                        x      '''
+    ucode_str = '''\
+⎧  │         ⎛1     ⎞⎫
+⎪x │ x ∊ ℝ ∧ ⎜── > 0⎟⎪
+⎨  │         ⎜ 2    ⎟⎬
+⎪  │         ⎝x     ⎠⎪
+⎩  │                 ⎭'''
+    assert pretty(condset) == ascii_str
+    assert upretty(condset) == ucode_str
 
 def test_pretty_ComplexRegion():
     from sympy import ComplexRegion
-    ucode_str = '{x + y⋅ⅈ | x, y ∊ [3, 5] × [4, 6]}'
-    assert upretty(ComplexRegion(Interval(3, 5)*Interval(4, 6))) == ucode_str
+    cregion = ComplexRegion(Interval(3, 5)*Interval(4, 6))
+    ascii_str = '{x + y*I | x, y in [3, 5] x [4, 6]}'
+    ucode_str = '{x + y⋅ⅈ │ x, y ∊ [3, 5] × [4, 6]}'
+    assert pretty(cregion) == ascii_str
+    assert upretty(cregion) == ucode_str
 
-    ucode_str = '{r⋅(ⅈ⋅sin(θ) + cos(θ)) | r, θ ∊ [0, 1] × [0, 2⋅π)}'
-    assert upretty(ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)) == ucode_str
+    cregion = ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)
+    ascii_str = '{r*(I*sin(theta) + cos(theta)) | r, theta in [0, 1] x [0, 2*pi)}'
+    ucode_str = '{r⋅(ⅈ⋅sin(θ) + cos(θ)) │ r, θ ∊ [0, 1] × [0, 2⋅π)}'
+    assert pretty(cregion) == ascii_str
+    assert upretty(cregion) == ucode_str
+
+    cregion = ComplexRegion(Interval(3, 1/a**2)*Interval(4, 6))
+    ascii_str = '''\
+                       1            \n\
+{x + y*I | x, y in [3, --] x [4, 6]}
+                        2           \n\
+                       a            '''
+    ucode_str = '''\
+⎧        │        ⎡   1 ⎤         ⎫
+⎪x + y⋅ⅈ │ x, y ∊ ⎢3, ──⎥ × [4, 6]⎪
+⎨        │        ⎢    2⎥         ⎬
+⎪        │        ⎣   a ⎦         ⎪
+⎩        │                        ⎭'''
+    assert pretty(cregion) == ascii_str
+    assert upretty(cregion) == ucode_str
+
+    cregion = ComplexRegion(Interval(0, 1/a**2)*Interval(0, 2*pi), polar=True)
+    ascii_str = '''\
+                                                 1               \n\
+{r*(I*sin(theta) + cos(theta)) | r, theta in [0, --] x [0, 2*pi)}
+                                                  2              \n\
+                                                 a               '''
+    ucode_str = '''\
+⎧                      │        ⎡   1 ⎤           ⎫
+⎪r⋅(ⅈ⋅sin(θ) + cos(θ)) │ r, θ ∊ ⎢0, ──⎥ × [0, 2⋅π)⎪
+⎨                      │        ⎢    2⎥           ⎬
+⎪                      │        ⎣   a ⎦           ⎪
+⎩                      │                          ⎭'''
+    assert pretty(cregion) == ascii_str
+    assert upretty(cregion) == ucode_str
 
 def test_pretty_Union_issue_10414():
     a, b = Interval(2, 3), Interval(4, 7)
@@ -7263,26 +7582,26 @@ def test_issue_18272():
     n = Symbol('n')
 
     assert upretty(ConditionSet(x, Eq(-x + exp(x), 0), S.Complexes)) == \
-    '⎧            ⎛      x    ⎞⎫\n'\
-    '⎨x | x ∊ ℂ ∧ ⎝-x + ℯ  = 0⎠⎬\n'\
-    '⎩                         ⎭'
+    '⎧  │         ⎛      x    ⎞⎫\n'\
+    '⎨x │ x ∊ ℂ ∧ ⎝-x + ℯ  = 0⎠⎬\n'\
+    '⎩  │                      ⎭'
     assert upretty(ConditionSet(x, Contains(n/2, Interval(0, oo)), FiniteSet(-n/2, n/2))) == \
-    '⎧        ⎧-n   n⎫   ⎛n         ⎞⎫\n'\
-    '⎨x | x ∊ ⎨───, ─⎬ ∧ ⎜─ ∈ [0, ∞)⎟⎬\n'\
-    '⎩        ⎩ 2   2⎭   ⎝2         ⎠⎭'
+    '⎧  │     ⎧-n   n⎫   ⎛n         ⎞⎫\n'\
+    '⎨x │ x ∊ ⎨───, ─⎬ ∧ ⎜─ ∈ [0, ∞)⎟⎬\n'\
+    '⎩  │     ⎩ 2   2⎭   ⎝2         ⎠⎭'
     assert upretty(ConditionSet(x, Eq(Piecewise((1, x >= 3), (x/2 - 1/2, x >= 2), (1/2, x >= 1),
                 (x/2, True)) - 1/2, 0), Interval(0, 3))) == \
-    '⎧                 ⎛⎛⎧   1     for x ≥ 3⎞          ⎞⎫\n'\
-    '⎪                 ⎜⎜⎪                  ⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪x                 ⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪─ - 0.5  for x ≥ 2⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪2                 ⎟          ⎟⎪\n'\
-    '⎨x | x ∊ [0, 3] ∧ ⎜⎜⎨                  ⎟ - 0.5 = 0⎟⎬\n'\
-    '⎪                 ⎜⎜⎪  0.5    for x ≥ 1⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪                  ⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪   x              ⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪   ─     otherwise⎟          ⎟⎪\n'\
-    '⎩                 ⎝⎝⎩   2              ⎠          ⎠⎭'
+    '⎧  │              ⎛⎛⎧   1     for x ≥ 3⎞          ⎞⎫\n'\
+    '⎪  │              ⎜⎜⎪                  ⎟          ⎟⎪\n'\
+    '⎪  │              ⎜⎜⎪x                 ⎟          ⎟⎪\n'\
+    '⎪  │              ⎜⎜⎪─ - 0.5  for x ≥ 2⎟          ⎟⎪\n'\
+    '⎪  │              ⎜⎜⎪2                 ⎟          ⎟⎪\n'\
+    '⎨x │ x ∊ [0, 3] ∧ ⎜⎜⎨                  ⎟ - 0.5 = 0⎟⎬\n'\
+    '⎪  │              ⎜⎜⎪  0.5    for x ≥ 1⎟          ⎟⎪\n'\
+    '⎪  │              ⎜⎜⎪                  ⎟          ⎟⎪\n'\
+    '⎪  │              ⎜⎜⎪   x              ⎟          ⎟⎪\n'\
+    '⎪  │              ⎜⎜⎪   ─     otherwise⎟          ⎟⎪\n'\
+    '⎩  │              ⎝⎝⎩   2              ⎠          ⎠⎭'
 
 def test_Str():
     from sympy.core.symbol import Str

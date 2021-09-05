@@ -314,10 +314,6 @@ def linodesolve_type(A, t, b=None):
 
 
 def _first_order_type5_6_subs(A, t, b=None):
-    from sympy.solvers.solveset import _is_lambert
-    from sympy.sets.conditionset import ConditionSet
-    from sympy import symbols
-    x = symbols('x')
     match = {}
 
     factor_terms = _factor_matrix(A, t)
@@ -326,11 +322,8 @@ def _first_order_type5_6_subs(A, t, b=None):
     if factor_terms is not None:
         t_ = Symbol("{}_".format(t))
         F_t = integrate(factor_terms[0], t)
+        inverse = solveset(Eq(t_, F_t), t)
 
-        if _is_lambert(F_t,x):
-            inverse = ConditionSet(t_, Eq(F_t,0),S.Complexes)
-        else:
-            inverse = solveset(Eq(t_, F_t), t)
         # Note: A simple way to check if a function is invertible
         # or not.
         if isinstance(inverse, FiniteSet) and not inverse.has(Piecewise)\
@@ -1496,9 +1489,7 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
             match['commutative_antiderivative'] = antiderivative
 
         return match
-
-    if is_higher_order:
-
+    else:
         match['type_of_equation'] = "type0"
 
         if is_second_order:
@@ -1532,9 +1523,6 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
         match['is_higher_order'] = is_higher_order
 
         return match
-
-    return None
-
 
 def _preprocess_eqs(eqs):
     processed_eqs = []
@@ -2048,16 +2036,19 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
     [[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
 
     You can also pass the initial conditions for the system of ODEs:
+
     >>> dsolve_system(eqs, ics={f(0): 1, g(0): 0})
     [[Eq(f(x), exp(x)/2 + exp(-x)/2), Eq(g(x), exp(x)/2 - exp(-x)/2)]]
 
     Optionally, you can pass the dependent variables and the independent
     variable for which the system is to be solved:
+
     >>> funcs = [f(x), g(x)]
     >>> dsolve_system(eqs, funcs=funcs, t=x)
     [[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
 
     Lets look at an implicit system of ODEs:
+
     >>> eqs = [Eq(f(x).diff(x)**2, g(x)**2), Eq(g(x).diff(x), g(x))]
     >>> dsolve_system(eqs)
     [[Eq(f(x), C1 - C2*exp(x)), Eq(g(x), C2*exp(x))], [Eq(f(x), C1 + C2*exp(x)), Eq(g(x), C2*exp(x))]]

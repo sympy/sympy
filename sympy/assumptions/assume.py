@@ -5,10 +5,9 @@ import inspect
 from sympy.core.assumptions import ManagedProperties
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
-from sympy.logic.boolalg import Boolean
-from sympy.multipledispatch.dispatcher import (
-    Dispatcher, MDNotImplementedError, str_signature
-)
+from sympy.logic.boolalg import Boolean, false, true
+from sympy.multipledispatch.dispatcher import Dispatcher, str_signature
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.source import get_class
 
@@ -67,7 +66,7 @@ class AssumptionsContext(set):
     """
 
     def add(self, *assumptions):
-        """Add an assumption."""
+        """Add assumptions."""
         for a in assumptions:
             super().add(a)
 
@@ -110,8 +109,6 @@ class AppliedPredicate(Boolean):
     """
     __slots__ = ()
 
-    is_Atom = True  # do not attempt to decompose this
-
     def __new__(cls, predicate, *args):
         if not isinstance(predicate, Predicate):
             raise TypeError("%s is not a Predicate." % predicate)
@@ -141,16 +138,6 @@ class AppliedPredicate(Boolean):
         raise TypeError("'arg' property is allowed only for unary predicates.")
 
     @property
-    def args(self):
-        # Will be deprecated and return normal Basic.func
-        return self._args[1:]
-
-    @property
-    def func(self):
-        # Will be deprecated and return normal Basic.func
-        return self._args[0]
-
-    @property
     def function(self):
         """
         Return the predicate.
@@ -171,12 +158,17 @@ class AppliedPredicate(Boolean):
 
     @property
     def binary_symbols(self):
-        from sympy.core.relational import Eq, Ne
         from .ask import Q
         if self.function == Q.is_true:
             i = self.arguments[0]
-            if i.is_Boolean or i.is_Symbol or isinstance(i, (Eq, Ne)):
+            if i.is_Boolean or i.is_Symbol:
                 return i.binary_symbols
+        if self.function in (Q.eq, Q.ne):
+            if true in self.arguments or false in self.arguments:
+                if self.arguments[0].is_Symbol:
+                    return {self.arguments[0]}
+                elif self.arguments[1].is_Symbol:
+                    return {self.arguments[1]}
         return set()
 
 
@@ -268,7 +260,6 @@ class Predicate(Boolean, metaclass=PredicateMeta):
     Applying and evaluating to boolean value:
 
     >>> from sympy import Q, ask
-    >>> from sympy.abc import x
     >>> ask(Q.prime(7))
     True
 
@@ -301,10 +292,6 @@ class Predicate(Boolean, metaclass=PredicateMeta):
     Traceback (most recent call last):
       ...
     TypeError: <class 'sympy.assumptions.assume.UndefinedPredicate'> cannot be dispatched.
-
-    The tautological predicate ``Q.is_true`` can be used to wrap other objects:
-    >>> Q.is_true(x > 1)
-    Q.is_true(x > 1)
 
     References
     ==========
@@ -357,17 +344,16 @@ class Predicate(Boolean, metaclass=PredicateMeta):
 
         This uses only direct resolution methods, not logical inference.
         """
-        types = tuple(type(a) for a in args)
         result = None
-        for func in self.handler.dispatch_iter(*types):
-            try:
-                result = func(*args, assumptions)
-            except MDNotImplementedError:
-                continue
-            else:
-                if result is not None:
-                    return result
+        try:
+            result = self.handler(*args, assumptions=assumptions)
+        except NotImplementedError:
+            pass
         return result
+
+    def _eval_refine(self, assumptions):
+        # When Predicate is no longer Boolean, delete this method
+        return self
 
 
 class UndefinedPredicate(Predicate):
@@ -417,16 +403,32 @@ class UndefinedPredicate(Predicate):
         return AppliedPredicate(self, expr)
 
     def add_handler(self, handler):
-        # Will be deprecated
+        SymPyDeprecationWarning(
+            feature="Predicate.add_handler() method",
+            useinstead="multipledispatch handler of Predicate",
+            issue=20873,
+            deprecated_since_version="1.8"
+        ).warn()
         self.handlers.append(handler)
 
     def remove_handler(self, handler):
-        # Will be deprecated
+        SymPyDeprecationWarning(
+            feature="Predicate.remove_handler() method",
+            useinstead="multipledispatch handler of Predicate",
+            issue=20873,
+            deprecated_since_version="1.8"
+        ).warn()
         self.handlers.remove(handler)
 
     def eval(self, args, assumptions=True):
         # Support for deprecated design
         # When old design is removed, this will always return None
+        SymPyDeprecationWarning(
+            feature="Evaluating UndefinedPredicate",
+            useinstead="multipledispatch handler of Predicate",
+            issue=20873,
+            deprecated_since_version="1.8"
+        ).warn()
         expr, = args
         res, _res = None, None
         mro = inspect.getmro(type(expr))
@@ -443,9 +445,6 @@ class UndefinedPredicate(Predicate):
                     continue
                 if _res is None:
                     _res = res
-                elif res is None:
-                    # since first resolutor was conclusive, we keep that value
-                    res = _res
                 else:
                     # only check consistency if both resolutors have concluded
                     if _res != res:

@@ -101,3 +101,4 @@ Mechanics API
     api/expr_manip.rst
     api/printing.rst
     api/body.rst
+    api/joint.rst

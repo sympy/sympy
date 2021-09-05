@@ -6,6 +6,8 @@ from sympy.printing.printer import Printer
 import sympy
 from functools import partial
 
+from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 theano = import_module('theano')
 
@@ -215,6 +217,9 @@ class TheanoPrinter(Printer):
     def _print_Pi(self, expr, **kwargs):
         return 3.141592653589793
 
+    def _print_Exp1(self, expr, **kwargs):
+        return ts.exp(1)
+
     def _print_Piecewise(self, expr, **kwargs):
         import numpy as np
         e, cond = expr.args[0].args  # First condition and corresponding value
@@ -331,6 +336,12 @@ def theano_code(expr, cache=None, **kwargs):
         expression graph.
 
     """
+    SymPyDeprecationWarning(
+        feature="sympy.printing.theanocode",
+        useinstead="Theano is deprecated; use Aesara and sympy.printing.aesaracode",
+        issue=21150,
+        deprecated_since_version="1.8").warn()
+
     if not theano:
         raise ImportError("theano is required for theano_code")
 
@@ -387,6 +398,7 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
     return {}
 
 
+@doctest_depends_on(modules=('theano',))
 def theano_function(inputs, outputs, scalar=False, *,
         dim=None, dims=None, broadcastables=None, **kwargs):
     """
@@ -476,6 +488,12 @@ def theano_function(inputs, outputs, scalar=False, *,
     dim_handling
 
     """
+    SymPyDeprecationWarning(
+        feature="sympy.printing.theanocode",
+        useinstead="Theano is deprecated; use Aesara and sympy.printing.aesaracode",
+        issue=21150,
+        deprecated_since_version="1.8").warn()
+
     if not theano:
         raise ImportError("theano is required for theano_function")
 

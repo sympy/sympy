@@ -6,6 +6,7 @@ from sympy.core.compatibility import (
     Callable, NotIterable, as_int, is_sequence)
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
+from sympy.core.kind import _NumberKind, UndefinedKind
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -19,14 +20,13 @@ from sympy.polys import cancel
 from sympy.printing import sstr
 from sympy.printing.defaults import Printable
 from sympy.simplify import simplify as _simplify
-from sympy.core.kind import Kind, NumberKind, _NumberKind
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
 
 from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
-    ShapeError)
+    ShapeError, MatrixKind)
 
 from .utilities import _iszero, _is_zero_after_expand_mul
 
@@ -49,9 +49,11 @@ from .eigen import (
 from .decompositions import (
     _rank_decomposition, _cholesky, _LDLdecomposition,
     _LUdecomposition, _LUdecomposition_Simple, _LUdecompositionFF,
-    _QRdecomposition)
+    _singular_value_decomposition, _QRdecomposition, _upper_hessenberg_decomposition)
 
-from .graph import _connected_components, _connected_components_decomposition
+from .graph import (
+    _connected_components, _connected_components_decomposition,
+    _strongly_connected_components, _strongly_connected_components_decomposition)
 
 from .solvers import (
     _diagonal_solve, _lower_triangular_solve, _upper_triangular_solve,
@@ -744,46 +746,6 @@ class MatrixDeprecated(MatrixCommon):
         return self.permute_rows(perm, direction='forward')
 
 
-class MatrixKind(Kind):
-    """
-    Kind for all matrices in SymPy.
-
-    Basic class for this kind is ``MatrixBase`` and ``MatrixExpr``,
-    but any expression representing the matrix can have this.
-
-    Parameters
-    ==========
-
-    element_kind : Kind
-        Kind of the element. Default is ``NumberKind``, which means that
-        the matrix contains only numbers.
-
-    Examples
-    ========
-
-    >>> from sympy import MatrixSymbol, Integral
-    >>> from sympy.abc import x
-    >>> A = MatrixSymbol('A', 2,2)
-    >>> A.kind
-    MatrixKind(NumberKind)
-    >>> Integral(A,x).kind
-    MatrixKind(NumberKind)
-
-    See Also
-    ========
-
-    sympy.tensor.ArrayKind : Kind for N-dimensional arrays.
-
-    """
-    def __new__(cls, element_kind=NumberKind):
-        obj = super().__new__(cls, element_kind)
-        obj.element_kind = element_kind
-        return obj
-
-    def __repr__(self):
-        return "MatrixKind(%s)" % self.element_kind
-
-
 @Mul._kind_dispatcher.register(_NumberKind, MatrixKind)
 def num_mat_mul(k1, k2):
     """
@@ -792,8 +754,15 @@ def num_mat_mul(k1, k2):
     searches for this automatically.
     """
     # Deal with Mul._kind_dispatcher's commutativity
-    elemk = Mul._kind_dispatcher(NumberKind, k2.element_kind)
+    # XXX: this function is called with either k1 or k2 as MatrixKind because
+    # the Mul kind dispatcher is commutative. Maybe it shouldn't be. Need to
+    # swap the args here because NumberKind doesn't have an element_kind
+    # attribute.
+    if not isinstance(k2, MatrixKind):
+        k1, k2 = k2, k1
+    elemk = Mul._kind_dispatcher(k1, k2.element_kind)
     return MatrixKind(elemk)
+
 
 @Mul._kind_dispatcher.register(MatrixKind, MatrixKind)
 def mat_mat_mul(k1, k2):
@@ -802,6 +771,7 @@ def mat_mat_mul(k1, k2):
     """
     elemk = Mul._kind_dispatcher(k1.element_kind, k2.element_kind)
     return MatrixKind(elemk)
+
 
 class MatrixBase(MatrixDeprecated,
                  MatrixCalculus,
@@ -818,7 +788,17 @@ class MatrixBase(MatrixDeprecated,
     zero = S.Zero
     one = S.One
 
-    kind = MatrixKind()
+    @property
+    def kind(self):
+        elem_kinds = set(e.kind for e in self.flat())
+        if len(elem_kinds) == 1:
+            elemkind, = elem_kinds
+        else:
+            elemkind = UndefinedKind
+        return MatrixKind(elemkind)
+
+    def flat(self):
+        return [self[i, j] for i in range(self.rows) for j in range(self.cols)]
 
     def __array__(self, dtype=object):
         from .dense import matrix2numpy
@@ -1001,11 +981,11 @@ class MatrixBase(MatrixDeprecated,
 
             # Matrix(Matrix(...))
             elif isinstance(args[0], MatrixBase):
-                return args[0].rows, args[0].cols, args[0]._mat
+                return args[0].rows, args[0].cols, args[0].flat()
 
             # Matrix(MatrixSymbol('X', 2, 2))
             elif isinstance(args[0], Basic) and args[0].is_Matrix:
-                return args[0].rows, args[0].cols, args[0].as_explicit()._mat
+                return args[0].rows, args[0].cols, args[0].as_explicit().flat()
 
             elif isinstance(args[0], mp.matrix):
                 M = args[0]
@@ -1026,17 +1006,28 @@ class MatrixBase(MatrixDeprecated,
                     isinstance(i, MatrixSymbol))
                 raw = lambda i: is_sequence(i) and not ismat(i)
                 evaluate = kwargs.get('evaluate', True)
+
+
                 if evaluate:
-                    def do(x):
-                        # make Block and Symbol explicit
-                        if isinstance(x, (list, tuple)):
-                            return type(x)([do(i) for i in x])
-                        if isinstance(x, BlockMatrix) or \
-                                isinstance(x, MatrixSymbol) and \
-                                all(_.is_Integer for _ in x.shape):
+
+                    def make_explicit(x):
+                        """make Block and Symbol explicit"""
+                        if isinstance(x, BlockMatrix):
                             return x.as_explicit()
-                        return x
-                    dat = do(dat)
+                        elif isinstance(x, MatrixSymbol) and all(_.is_Integer for _ in x.shape):
+                            return x.as_explicit()
+                        else:
+                            return x
+
+                    def make_explicit_row(row):
+                        # Could be list or could be list of lists
+                        if isinstance(row, (list, tuple)):
+                            return [make_explicit(x) for x in row]
+                        else:
+                            return make_explicit(row)
+
+                    if isinstance(dat, (list, tuple)):
+                        dat = [make_explicit_row(row) for row in dat]
 
                 if dat == [] or dat == [[]]:
                     rows = cols = 0
@@ -1070,7 +1061,7 @@ class MatrixBase(MatrixDeprecated,
                         elif raw(i):
                             if i:
                                 ncol.add(len(i))
-                                flat_list.extend(i)
+                                flat_list.extend([cls._sympify(ij) for ij in i])
                         else:
                             ncol.add(1)
                             flat_list.append(i)
@@ -1270,7 +1261,7 @@ class MatrixBase(MatrixDeprecated,
         [3, 4]])
 
         """
-        return self._new(self.rows, self.cols, self._mat)
+        return self._new(self.rows, self.cols, self.flat())
 
     def cross(self, b):
         r"""
@@ -2159,8 +2150,14 @@ class MatrixBase(MatrixDeprecated,
     def LUdecompositionFF(self):
         return _LUdecompositionFF(self)
 
+    def singular_value_decomposition(self):
+        return _singular_value_decomposition(self)
+
     def QRdecomposition(self):
         return _QRdecomposition(self)
+
+    def upper_hessenberg_decomposition(self):
+        return _upper_hessenberg_decomposition(self)
 
     def diagonal_solve(self, rhs):
         return _diagonal_solve(self, rhs)
@@ -2232,13 +2229,23 @@ class MatrixBase(MatrixDeprecated,
     def connected_components_decomposition(self):
         return _connected_components_decomposition(self)
 
+    def strongly_connected_components(self):
+        return _strongly_connected_components(self)
+
+    def strongly_connected_components_decomposition(self, lower=True):
+        return _strongly_connected_components_decomposition(self, lower=lower)
+
+    _sage_ = Basic._sage_
+
     rank_decomposition.__doc__     = _rank_decomposition.__doc__
     cholesky.__doc__               = _cholesky.__doc__
     LDLdecomposition.__doc__       = _LDLdecomposition.__doc__
     LUdecomposition.__doc__        = _LUdecomposition.__doc__
     LUdecomposition_Simple.__doc__ = _LUdecomposition_Simple.__doc__
     LUdecompositionFF.__doc__      = _LUdecompositionFF.__doc__
+    singular_value_decomposition.__doc__ = _singular_value_decomposition.__doc__
     QRdecomposition.__doc__        = _QRdecomposition.__doc__
+    upper_hessenberg_decomposition.__doc__ = _upper_hessenberg_decomposition.__doc__
 
     diagonal_solve.__doc__         = _diagonal_solve.__doc__
     lower_triangular_solve.__doc__ = _lower_triangular_solve.__doc__
@@ -2266,6 +2273,10 @@ class MatrixBase(MatrixDeprecated,
     connected_components.__doc__   = _connected_components.__doc__
     connected_components_decomposition.__doc__ = \
         _connected_components_decomposition.__doc__
+    strongly_connected_components.__doc__   = \
+        _strongly_connected_components.__doc__
+    strongly_connected_components_decomposition.__doc__ = \
+        _strongly_connected_components_decomposition.__doc__
 
 
 @deprecated(

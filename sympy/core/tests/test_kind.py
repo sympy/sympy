@@ -5,6 +5,7 @@ from sympy.core.numbers import pi, zoo, I, AlgebraicNumber
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.integrals.integrals import Integral
+from sympy.core.function import Derivative
 from sympy.matrices import (Matrix, SparseMatrix, ImmutableMatrix,
     ImmutableSparseMatrix, MatrixSymbol, MatrixKind, MatMul)
 
@@ -38,6 +39,11 @@ def test_Integral_kind():
     A = MatrixSymbol('A', 2,2)
     assert Integral(comm_x, comm_x).kind is NumberKind
     assert Integral(A, comm_x).kind is MatrixKind(NumberKind)
+
+def test_Derivative_kind():
+    A = MatrixSymbol('A', 2,2)
+    assert Derivative(comm_x, comm_x).kind is NumberKind
+    assert Derivative(A, comm_x).kind is MatrixKind(NumberKind)
 
 def test_Matrix_kind():
     classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)

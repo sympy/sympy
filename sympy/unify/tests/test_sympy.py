@@ -1,4 +1,4 @@
-from sympy import Add, Basic, symbols, Symbol, And
+from sympy import Add, Basic, symbols, Symbol, And, S
 from sympy.core.symbol import Str
 from sympy.unify.core import Compound, Variable
 from sympy.unify.usympy import (deconstruct, construct, unify, is_associative,
@@ -124,11 +124,11 @@ def test_FiniteSet_commutivity():
 def test_FiniteSet_complex():
     from sympy import FiniteSet
     a, b, c, x, y, z = symbols('a,b,c,x,y,z')
-    expr = FiniteSet(Basic(1, x), y, Basic(x, z))
+    expr = FiniteSet(Basic(S(1), x), y, Basic(x, z))
     pattern = FiniteSet(a, Basic(x, b))
     variables = a, b
     expected = tuple([{b: 1, a: FiniteSet(y, Basic(x, z))},
-                      {b: z, a: FiniteSet(y, Basic(1, x))}])
+                      {b: z, a: FiniteSet(y, Basic(S(1), x))}])
     assert iterdicteq(unify(expr, pattern, variables=variables), expected)
 
 

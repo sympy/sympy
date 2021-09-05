@@ -9,7 +9,7 @@ from sympy.core.mul import Mul
 from sympy.core.symbol import Dummy
 
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
-        sinh, cosh, asinh, acosh, atanh, acoth, Abs)
+        sinh, cosh, asinh, acosh, atanh, acoth, Abs, re)
 from sympy.utilities.iterables import default_sort_key
 
 class TupleArg(Tuple):
@@ -219,6 +219,16 @@ class hyper(TupleParametersBase):
         return Piecewise((Sum(coeff * z**n / factorial(n), (n, 0, oo)),
                          self.convergence_statement), (self, True))
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[2]
+        x0 = arg.subs(x, 0)
+        if x0 is S.NaN:
+            x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+
+        if x0 is S.Zero:
+            return S.One
+        return super()._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
     def _eval_nseries(self, x, n, logx, cdir=0):
 
         from sympy.functions import factorial, RisingFactorial
@@ -344,12 +354,6 @@ class hyper(TupleParametersBase):
     def _eval_simplify(self, **kwargs):
         from sympy.simplify.hyperexpand import hyperexpand
         return hyperexpand(self)
-
-    def _sage_(self):
-        import sage.all as sage
-        ap = [arg._sage_() for arg in self.args[0]]
-        bq = [arg._sage_() for arg in self.args[1]]
-        return sage.hypergeometric(ap, bq, self.argument._sage_())
 
 
 class meijerg(TupleParametersBase):
@@ -690,6 +694,10 @@ class meijerg(TupleParametersBase):
             v = mpmath.meijerg(ap, bq, z, r)
 
         return Expr._from_mpmath(v, prec)
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy import hyperexpand
+        return hyperexpand(self).as_leading_term(x, logx=logx, cdir=cdir)
 
     def integrand(self, s):
         """ Get the defining integrand D(s). """

@@ -81,6 +81,7 @@ modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
     'sympy.assumptions.predicates',
+    'sympy.assumptions.relation',
     'sympy.benchmarks',
     'sympy.calculus',
     'sympy.categories',
@@ -90,7 +91,6 @@ modules = [
     'sympy.core',
     'sympy.core.benchmarks',
     'sympy.crypto',
-    'sympy.deprecated',
     'sympy.diffgeom',
     'sympy.discrete',
     'sympy.external',
@@ -157,10 +157,12 @@ modules = [
     'sympy.solvers.diophantine',
     'sympy.solvers.ode',
     'sympy.stats',
+    'sympy.stats.sampling',
     'sympy.strategies',
     'sympy.strategies.branch',
     'sympy.tensor',
     'sympy.tensor.array',
+    'sympy.tensor.array.expressions',
     'sympy.testing',
     'sympy.unify',
     'sympy.utilities',
@@ -185,7 +187,6 @@ class audit(Command):
         pass
 
     def run(self):
-        import os
         try:
             import pyflakes.scripts.pyflakes as flakes
         except ImportError:
@@ -354,7 +355,6 @@ tests = [
     'sympy.concrete.tests',
     'sympy.core.tests',
     'sympy.crypto.tests',
-    'sympy.deprecated.tests',
     'sympy.diffgeom.tests',
     'sympy.discrete.tests',
     'sympy.external.tests',
@@ -400,9 +400,11 @@ tests = [
     'sympy.solvers.diophantine.tests',
     'sympy.solvers.ode.tests',
     'sympy.solvers.tests',
+    'sympy.stats.sampling.tests',
     'sympy.stats.tests',
     'sympy.strategies.branch.tests',
     'sympy.strategies.tests',
+    'sympy.tensor.array.expressions.tests',
     'sympy.tensor.array.tests',
     'sympy.tensor.tests',
     'sympy.testing.tests',

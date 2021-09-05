@@ -7,7 +7,6 @@ from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import iterable, ordered
-from .singleton import S
 from .kind import UndefinedKind
 from ._print_helpers import Printable
 
@@ -121,19 +120,17 @@ class Basic(Printable, metaclass=ManagedProperties):
     def copy(self):
         return self.func(*self.args)
 
-    def __reduce_ex__(self, proto):
-        """ Pickling support."""
-        return type(self), self.__getnewargs__(), self.__getstate__()
-
     def __getnewargs__(self):
         return self.args
 
     def __getstate__(self):
-        return {}
+        return None
 
-    def __setstate__(self, state):
-        for k, v in state.items():
-            setattr(self, k, v)
+    def __reduce_ex__(self, protocol):
+        if protocol < 2:
+            msg = "Only pickle protocol 2 or higher is supported by sympy"
+            raise NotImplementedError(msg)
+        return super().__reduce_ex__(protocol)
 
     def __hash__(self):
         # hash cannot be cached using cache_it because infinite recurrence
@@ -512,6 +509,10 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @property
     def expr_free_symbols(self):
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(feature="expr_free_symbols method",
+                                issue=21494,
+                                deprecated_since_version="1.9").warn()
         return set()
 
     def as_dummy(self):
@@ -1674,26 +1675,10 @@ class Basic(Printable, metaclass=ManagedProperties):
         from sympy.simplify import simplify
         return simplify(self, **kwargs)
 
-    def _eval_rewrite(self, pattern, rule, **hints):
-        if self.is_Atom:
-            if hasattr(self, rule):
-                return getattr(self, rule)()
-            return self
-
-        if hints.get('deep', True):
-            args = [a._eval_rewrite(pattern, rule, **hints)
-                        if isinstance(a, Basic) else a
-                        for a in self.args]
-        else:
-            args = self.args
-
-        if pattern is None or isinstance(self, pattern):
-            if hasattr(self, rule):
-                rewritten = getattr(self, rule)(*args, **hints)
-                if rewritten is not None:
-                    return rewritten
-
-        return self.func(*args) if hints.get('evaluate', True) else self
+    def refine(self, assumption=True):
+        """See the refine function in sympy.assumptions"""
+        from sympy.assumptions import refine
+        return refine(self, assumption)
 
     def _eval_derivative_n_times(self, s, n):
         # This is the default evaluator for derivatives (as called by `diff`
@@ -1714,73 +1699,130 @@ class Basic(Printable, metaclass=ManagedProperties):
         else:
             return None
 
-    def rewrite(self, *args, **hints):
-        """ Rewrite functions in terms of other functions.
+    def rewrite(self, *args, deep=True, **hints):
+        """
+        Rewrite *self* using a defined rule.
 
-        Rewrites expression containing applications of functions
-        of one kind in terms of functions of different kind. For
-        example you can rewrite trigonometric functions as complex
-        exponentials or combinatorial functions as gamma function.
+        Rewriting transforms an expression to another, which is mathematically
+        equivalent but structurally different. For example you can rewrite
+        trigonometric functions as complex exponentials or combinatorial
+        functions as gamma function.
 
-        As a pattern this function accepts a list of functions to
-        to rewrite (instances of DefinedFunction class). As rule
-        you can use string or a destination function instance (in
-        this case rewrite() will use the str() function).
+        This method takes a *pattern* and a *rule* as positional arguments.
+        *pattern* is optional parameter which defines the types of expressions
+        that will be transformed. If it is not passed, all possible expressions
+        will be rewritten. *rule* defines how the expression will be rewritten.
 
-        There is also the possibility to pass hints on how to rewrite
-        the given expressions. For now there is only one such hint
-        defined called 'deep'. When 'deep' is set to False it will
-        forbid functions to rewrite their contents.
+        Parameters
+        ==========
+
+        args : *rule*, or *pattern* and *rule*.
+            - *pattern* is a type or an iterable of types.
+            - *rule* can be any object.
+
+        deep : bool, optional.
+            If ``True``, subexpressions are recursively transformed. Default is
+            ``True``.
 
         Examples
         ========
 
-        >>> from sympy import sin, exp
+        If *pattern* is unspecified, all possible expressions are transformed.
+
+        >>> from sympy import cos, sin, exp, I
         >>> from sympy.abc import x
+        >>> expr = cos(x) + I*sin(x)
+        >>> expr.rewrite(exp)
+        exp(I*x)
 
-        Unspecified pattern:
+        Pattern can be a type or an iterable of types.
 
-        >>> sin(x).rewrite(exp)
-        -I*(exp(I*x) - exp(-I*x))/2
+        >>> expr.rewrite(sin, exp)
+        exp(I*x)/2 + cos(x) - exp(-I*x)/2
+        >>> expr.rewrite([cos,], exp)
+        exp(I*x)/2 + I*sin(x) + exp(-I*x)/2
+        >>> expr.rewrite([cos, sin], exp)
+        exp(I*x)
 
-        Pattern as a single function:
+        Rewriting behavior can be implemented by defining ``_eval_rewrite()``
+        method.
 
-        >>> sin(x).rewrite(sin, exp)
-        -I*(exp(I*x) - exp(-I*x))/2
+        >>> from sympy import Expr, sqrt, pi
+        >>> class MySin(Expr):
+        ...     def _eval_rewrite(self, rule, args, **hints):
+        ...         x, = args
+        ...         if rule == cos:
+        ...             return cos(pi/2 - x, evaluate=False)
+        ...         if rule == sqrt:
+        ...             return sqrt(1 - cos(x)**2)
+        >>> MySin(MySin(x)).rewrite(cos)
+        cos(-cos(-x + pi/2) + pi/2)
+        >>> MySin(x).rewrite(sqrt)
+        sqrt(1 - cos(x)**2)
 
-        Pattern as a list of functions:
+        Defining ``_eval_rewrite_as_[...]()`` method is supported for backwards
+        compatibility reason. This may be removed in the future and using it is
+        discouraged.
 
-        >>> sin(x).rewrite([sin, ], exp)
-        -I*(exp(I*x) - exp(-I*x))/2
+        >>> class MySin(Expr):
+        ...     def _eval_rewrite_as_cos(self, *args, **hints):
+        ...         x, = args
+        ...         return cos(pi/2 - x, evaluate=False)
+        >>> MySin(x).rewrite(cos)
+        cos(-x + pi/2)
 
         """
         if not args:
             return self
+
+        hints.update(deep=deep)
+
+        pattern = args[:-1]
+        rule = args[-1]
+
+        # support old design by _eval_rewrite_as_[...] method
+        if isinstance(rule, str):
+            method = "_eval_rewrite_as_%s" % rule
+        elif hasattr(rule, "__name__"):
+            # rule is class or function
+            clsname = rule.__name__
+            method = "_eval_rewrite_as_%s" % clsname
         else:
-            pattern = args[:-1]
-            if isinstance(args[-1], str):
-                rule = '_eval_rewrite_as_' + args[-1]
-            else:
-                # rewrite arg is usually a class but can also be a
-                # singleton (e.g. GoldenRatio) so we check
-                # __name__ or __class__.__name__
-                clsname = getattr(args[-1], "__name__", None)
-                if clsname is None:
-                    clsname = args[-1].__class__.__name__
-                rule = '_eval_rewrite_as_' + clsname
+            # rule is instance
+            clsname = rule.__class__.__name__
+            method = "_eval_rewrite_as_%s" % clsname
 
+        if pattern:
+            if iterable(pattern[0]):
+                pattern = pattern[0]
+            pattern = tuple(p for p in pattern if self.has(p))
             if not pattern:
-                return self._eval_rewrite(None, rule, **hints)
+                return self
+        # hereafter, empty pattern is interpreted as all pattern.
+
+        return self._rewrite(pattern, rule, method, **hints)
+
+    def _rewrite(self, pattern, rule, method, **hints):
+        deep = hints.pop('deep', True)
+        if deep:
+            args = [a._rewrite(pattern, rule, method, **hints)
+                    for a in self.args]
+        else:
+            args = self.args
+        if not pattern or any(isinstance(self, p) for p in pattern):
+            meth = getattr(self, method, None)
+            if meth is not None:
+                rewritten = meth(*args, **hints)
             else:
-                if iterable(pattern[0]):
-                    pattern = pattern[0]
+                rewritten = self._eval_rewrite(rule, args, **hints)
+            if rewritten is not None:
+                return rewritten
+        if not args:
+            return self
+        return self.func(*args)
 
-                pattern = [p for p in pattern if self.has(p)]
-
-                if pattern:
-                    return self._eval_rewrite(tuple(pattern), rule, **hints)
-                else:
-                    return self
+    def _eval_rewrite(self, rule, args, **hints):
+        return None
 
     _constructor_postprocessor_mapping = {}  # type: ignore
 
@@ -1812,6 +1854,22 @@ class Basic(Printable, metaclass=ManagedProperties):
             obj = f(obj)
 
         return obj
+
+    def _sage_(self):
+        """
+        Convert *self* to a symbolic expression of SageMath.
+
+        This version of the method is merely a placeholder.
+        """
+        old_method = self._sage_
+        from sage.interfaces.sympy import sympy_init
+        sympy_init()  # may monkey-patch _sage_ method into self's class or superclasses
+        if old_method == self._sage_:
+            raise NotImplementedError('conversion to SageMath is not implemented')
+        else:
+            # call the freshly monkey-patched method
+            return self._sage_()
+
 
 class Atom(Basic):
     """
@@ -1896,6 +1954,17 @@ def _aresame(a, b):
             else:
                 return False
     return True
+
+
+def _ne(a, b):
+    # use this as a second test after `a != b` if you want to make
+    # sure that things are truly equal, e.g.
+    # a, b = 0.5, S.Half
+    # a !=b or _ne(a, b) -> True
+    from .numbers import Number
+    # 0.5 == S.Half
+    if isinstance(a, Number) and isinstance(b, Number):
+        return a.__class__ != b.__class__
 
 
 def _atomic(e, recursive=False):
@@ -2055,3 +2124,7 @@ def _make_find_query(query):
     elif isinstance(query, Basic):
         return lambda expr: expr.match(query) is not None
     return query
+
+
+# Delayed to avoid cyclic import
+from .singleton import S

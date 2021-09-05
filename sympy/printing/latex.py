@@ -644,6 +644,13 @@ class LatexPrinter(Printer):
             # special case for 1^(-x), issue 9216
             if expr.base == 1:
                 return r"%s^{%s}" % (expr.base, expr.exp)
+            # special case for (1/x)^(-y) and (-1/-x)^(-y), issue 20252
+            if expr.base.is_Rational and \
+                    expr.base.p*expr.base.q == abs(expr.base.q):
+                if expr.exp == -1:
+                    return r"\frac{1}{\frac{%s}{%s}}" % (expr.base.p, expr.base.q)
+                else:
+                    return r"\frac{1}{(\frac{%s}{%s})^{%s}}" % (expr.base.p, expr.base.q, abs(expr.exp))
             # things like 1/x
             return self._print_Mul(expr)
         else:
@@ -1109,6 +1116,9 @@ class LatexPrinter(Printer):
         tex = r"e^{%s}" % self._print(expr.args[0])
         return self._do_exponent(tex, exp)
 
+    def _print_Exp1(self, expr, exp=None):
+        return "e"
+
     def _print_elliptic_k(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
         if exp is not None:
@@ -1156,6 +1166,18 @@ class LatexPrinter(Printer):
             return r"\operatorname{B}^{%s}%s" % (exp, tex)
         else:
             return r"\operatorname{B}%s" % tex
+
+    def _print_betainc(self, expr, exp=None, operator='B'):
+        largs = [self._print(arg) for arg in expr.args]
+        tex = r"\left(%s, %s\right)" % (largs[0], largs[1])
+
+        if exp is not None:
+            return r"\operatorname{%s}_{(%s, %s)}^{%s}%s" % (operator, largs[2], largs[3], exp, tex)
+        else:
+            return r"\operatorname{%s}_{(%s, %s)}%s" % (operator, largs[2], largs[3], tex)
+
+    def _print_betainc_regularized(self, expr, exp=None):
+        return self._print_betainc(expr, exp, operator='I')
 
     def _print_uppergamma(self, expr, exp=None):
         tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
@@ -1877,6 +1899,12 @@ class LatexPrinter(Printer):
                 self.parenthesize(expr.expr, PRECEDENCE["Mul"], False)
             )
 
+    def _print_ArraySymbol(self, expr):
+        return self._print(expr.name)
+
+    def _print_ArrayElement(self, expr):
+        return "{{%s}_{%s}}" % (expr.name, ", ".join([f"{self._print(i)}" for i in expr.indices]))
+
     def _print_UniversalSet(self, expr):
         return r"\mathbb{U}"
 
@@ -1947,10 +1975,12 @@ class LatexPrinter(Printer):
             tex = r"\left(%s\right)^{%s}" % (tex, exp)
         return tex
 
-    def _print_SingularityFunction(self, expr):
+    def _print_SingularityFunction(self, expr, exp=None):
         shift = self._print(expr.args[0] - expr.args[1])
         power = self._print(expr.args[2])
         tex = r"{\left\langle %s \right\rangle}^{%s}" % (shift, power)
+        if exp is not None:
+            tex = r"{\left({\langle %s \rangle}^{%s}\right)}^{%s}" % (shift, power, exp)
         return tex
 
     def _print_Heaviside(self, expr, exp=None):
@@ -2179,15 +2209,15 @@ class LatexPrinter(Printer):
         sig = s.lamda.signature
         xys = ((self._print(x), self._print(y)) for x, y in zip(sig, s.base_sets))
         xinys = r" , ".join(r"%s \in %s" % xy for xy in xys)
-        return r"\left\{%s\; |\; %s\right\}" % (self._print(expr), xinys)
+        return r"\left\{%s\; \middle|\; %s\right\}" % (self._print(expr), xinys)
 
     def _print_ConditionSet(self, s):
         vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
         if s.base_set is S.UniversalSet:
-            return r"\left\{%s \mid %s \right\}" % \
+            return r"\left\{%s\; \middle|\; %s \right\}" % \
                 (vars_print, self._print(s.condition))
 
-        return r"\left\{%s \mid %s \in %s \wedge %s \right\}" % (
+        return r"\left\{%s\; \middle|\; %s \in %s \wedge %s \right\}" % (
             vars_print,
             vars_print,
             self._print(s.base_set),
@@ -2195,7 +2225,7 @@ class LatexPrinter(Printer):
 
     def _print_ComplexRegion(self, s):
         vars_print = ', '.join([self._print(var) for var in s.variables])
-        return r"\left\{%s\; |\; %s \in %s \right\}" % (
+        return r"\left\{%s\; \middle|\; %s \in %s \right\}" % (
             self._print(s.expr),
             vars_print,
             self._print(s.sets))
@@ -2399,11 +2429,15 @@ class LatexPrinter(Printer):
     def _print_Object(self, object):
         return self._print(Symbol(object.name))
 
-    def _print_LambertW(self, expr):
+    def _print_LambertW(self, expr, exp=None):
+        arg0 = self._print(expr.args[0])
+        exp = r"^{%s}" % (exp,) if exp is not None else ""
         if len(expr.args) == 1:
-            return r"W\left(%s\right)" % self._print(expr.args[0])
-        return r"W_{%s}\left(%s\right)" % \
-            (self._print(expr.args[1]), self._print(expr.args[0]))
+            result = r"W%s\left(%s\right)" % (exp, arg0)
+        else:
+            arg1 = self._print(expr.args[1])
+            result = "W{0}_{{{1}}}\\left({2}\\right)".format(exp, arg1, arg0)
+        return result
 
     def _print_Morphism(self, morphism):
         domain = self._print(morphism.domain)
@@ -2411,53 +2445,78 @@ class LatexPrinter(Printer):
         return "%s\\rightarrow %s" % (domain, codomain)
 
     def _print_TransferFunction(self, expr):
-        from sympy.core import Mul, Pow
-        num, den = expr.num, expr.den
-        res = Mul(num, Pow(den, -1, evaluate=False), evaluate=False)
-        return self._print_Mul(res)
+        num, den = self._print(expr.num), self._print(expr.den)
+        return r"\frac{%s}{%s}" % (num, den)
 
     def _print_Series(self, expr):
         args = list(expr.args)
         parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
-                                             False)
+                                            False)
         return ' '.join(map(parens, args))
+
+    def _print_MIMOSeries(self, expr):
+        from sympy.physics.control.lti import MIMOParallel
+        args = list(expr.args)[::-1]
+        parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
+                                             False) if isinstance(x, MIMOParallel) else self._print(x)
+        return r"\cdot".join(map(parens, args))
 
     def _print_Parallel(self, expr):
         args = list(expr.args)
-        parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
-                                             False)
-        return ' '.join(map(parens, args))
+        func = lambda x: self._print(x)
+        return ' + '.join(map(func, args))
+
+    def _print_MIMOParallel(self, expr):
+        args = list(expr.args)
+        func = lambda x: self._print(x)
+        return ' + '.join(map(func, args))
 
     def _print_Feedback(self, expr):
-        from sympy.physics.control import TransferFunction, Parallel, Series
+        from sympy.physics.control import TransferFunction, Series
 
-        num, tf = expr.num, TransferFunction(1, 1, expr.num.var)
+        num, tf = expr.sys1, TransferFunction(1, 1, expr.var)
         num_arg_list = list(num.args) if isinstance(num, Series) else [num]
-        den_arg_list = list(expr.den.args) if isinstance(expr.den, Series) else [expr.den]
+        den_arg_list = list(expr.sys2.args) if \
+            isinstance(expr.sys2, Series) else [expr.sys2]
+        den_term_1 = tf
 
-        if isinstance(num, Series) and isinstance(expr.den, Series):
-            den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
-        elif isinstance(num, Series) and isinstance(expr.den, TransferFunction):
-            if expr.den == tf:
-                den = Parallel(tf, Series(*num_arg_list))
+        if isinstance(num, Series) and isinstance(expr.sys2, Series):
+            den_term_2 = Series(*num_arg_list, *den_arg_list)
+        elif isinstance(num, Series) and isinstance(expr.sys2, TransferFunction):
+            if expr.sys2 == tf:
+                den_term_2 = Series(*num_arg_list)
             else:
-                den = Parallel(tf, Series(*num_arg_list, expr.den))
-        elif isinstance(num, TransferFunction) and isinstance(expr.den, Series):
+                den_term_2 = tf, Series(*num_arg_list, expr.sys2)
+        elif isinstance(num, TransferFunction) and isinstance(expr.sys2, Series):
             if num == tf:
-                den = Parallel(tf, Series(*den_arg_list))
+                den_term_2 = Series(*den_arg_list)
             else:
-                den = Parallel(tf, Series(num, *den_arg_list))
+                den_term_2 = Series(num, *den_arg_list)
         else:
             if num == tf:
-                den = Parallel(tf, *den_arg_list)
-            elif expr.den == tf:
-                den = Parallel(tf, *num_arg_list)
+                den_term_2 = Series(*den_arg_list)
+            elif expr.sys2 == tf:
+                den_term_2 = Series(*num_arg_list)
             else:
-                den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
+                den_term_2 = Series(*num_arg_list, *den_arg_list)
 
         numer = self._print(num)
-        denom = self._print(den)
-        return r"\frac{%s}{%s}" % (numer, denom)
+        denom_1 = self._print(den_term_1)
+        denom_2 = self._print(den_term_2)
+        _sign = "+" if expr.sign == -1 else "-"
+
+        return r"\frac{%s}{%s %s %s}" % (numer, denom_1, _sign, denom_2)
+
+    def _print_MIMOFeedback(self, expr):
+        from sympy.physics.control import MIMOSeries
+        inv_mat = self._print(MIMOSeries(expr.sys2, expr.sys1))
+        sys1 = self._print(expr.sys1)
+        _sign = "+" if expr.sign == -1 else "-"
+        return r"\left(I_{\tau} %s %s\right)^{-1} \cdot %s" % (_sign, inv_mat, sys1)
+
+    def _print_TransferFunctionMatrix(self, expr):
+        mat = self._print(expr._expr_mat)
+        return r"%s_\tau" % mat
 
     def _print_NamedMorphism(self, morphism):
         pretty_name = self._print(Symbol(morphism.name))
@@ -2669,6 +2728,16 @@ class LatexPrinter(Printer):
 
     def _print_mpq(self, expr):
         return str(expr)
+
+    def _print_Predicate(self, expr):
+        return str(expr)
+
+    def _print_AppliedPredicate(self, expr):
+        pred = expr.function
+        args = expr.arguments
+        pred_latex = self._print(pred)
+        args_latex = ', '.join([self._print(a) for a in args])
+        return '%s(%s)' % (pred_latex, args_latex)
 
     def emptyPrinter(self, expr):
         # default to just printing as monospace, like would normally be shown

@@ -62,6 +62,8 @@ class DiscreteDistributionHandmade(SingleDiscreteDistribution):
         val = Sum(pdf(x), (x, set._inf, set._sup)).doit()
         _value_check(Eq(val, 1) != S.false, "The pdf is incorrect on the given set.")
 
+
+
 def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
     """
     Create a Discrete Random Variable given the following:
@@ -207,6 +209,9 @@ def Geometric(name, p):
     r"""
     Create a discrete random variable with a Geometric distribution.
 
+    Explanation
+    ===========
+
     The density of the Geometric distribution is given by
 
     .. math::
@@ -289,6 +294,9 @@ def Hermite(name, a1, a2):
     r"""
     Create a discrete random variable with a Hermite distribution.
 
+    Explanation
+    ===========
+
     The density of the Hermite distribution is given by
 
     .. math::
@@ -366,6 +374,9 @@ def Logarithmic(name, p):
     r"""
     Create a discrete random variable with a Logarithmic distribution.
 
+    Explanation
+    ===========
+
     The density of the Logarithmic distribution is given by
 
     .. math::
@@ -393,7 +404,7 @@ def Logarithmic(name, p):
     >>> X = Logarithmic("x", p)
 
     >>> density(X)(z)
-    -5**(-z)/(z*log(4/5))
+    -1/(5**z*z*log(4/5))
 
     >>> E(X)
     -1/(-4*log(5) + 8*log(2))
@@ -441,10 +452,12 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
 
         return ((1 - p) / (1 - p * exp(t)))**r
 
-
 def NegativeBinomial(name, r, p):
     r"""
     Create a discrete random variable with a Negative Binomial distribution.
+
+    Explanation
+    ===========
 
     The density of the Negative Binomial distribution is given by
 
@@ -475,7 +488,7 @@ def NegativeBinomial(name, r, p):
     >>> X = NegativeBinomial("x", r, p)
 
     >>> density(X)(z)
-    1024*5**(-z)*binomial(z + 4, z)/3125
+    1024*binomial(z + 4, z)/(3125*5**z)
 
     >>> E(X)
     5/4
@@ -518,6 +531,9 @@ class PoissonDistribution(SingleDiscreteDistribution):
 def Poisson(name, lamda):
     r"""
     Create a discrete random variable with a Poisson distribution.
+
+    Explanation
+    ===========
 
     The density of the Poisson distribution is given by
 
@@ -599,6 +615,9 @@ class SkellamDistribution(SingleDiscreteDistribution):
 def Skellam(name, mu1, mu2):
     r"""
     Create a discrete random variable with a Skellam distribution.
+
+    Explanation
+    ===========
 
     The Skellam is the distribution of the difference N1 - N2
     of two statistically independent random variables N1 and N2
@@ -683,6 +702,9 @@ def YuleSimon(name, rho):
     r"""
     Create a discrete random variable with a Yule-Simon distribution.
 
+    Explanation
+    ===========
+
     The density of the Yule-Simon distribution is given by
 
     .. math::
@@ -752,6 +774,9 @@ class ZetaDistribution(SingleDiscreteDistribution):
 def Zeta(name, s):
     r"""
     Create a discrete random variable with a Zeta distribution.
+
+    Explanation
+    ===========
 
     The density of the Zeta distribution is given by
 

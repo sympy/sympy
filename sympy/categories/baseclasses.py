@@ -522,7 +522,7 @@ class Category(Basic):
         >>> B = Object("B")
         >>> K = Category("K", FiniteSet(A, B))
         >>> K.objects
-        Class(FiniteSet(Object("A"), Object("B")))
+        Class({Object("A"), Object("B")})
 
         """
         return self.args[1]
@@ -612,7 +612,7 @@ class Diagram(Basic):
     {g*f:A-->C: EmptySet, id:A-->A: EmptySet, id:B-->B: EmptySet, id:C-->C: EmptyS
     et, f:A-->B: EmptySet, g:B-->C: EmptySet}
     >>> d = Diagram([f, g], {g * f: "unique"})
-    >>> pprint(d.conclusions)
+    >>> pprint(d.conclusions,use_unicode=False)
     {g*f:A-->C: {unique}}
 
     References
@@ -727,7 +727,7 @@ class Diagram(Basic):
         True
         >>> d = Diagram([f, g], {g * f: "unique"})
         >>> d.conclusions[g * f]
-        FiniteSet(unique)
+        {unique}
 
         """
         premises = {}
@@ -859,7 +859,7 @@ class Diagram(Basic):
         >>> g = NamedMorphism(B, C, "g")
         >>> d = Diagram([f, g])
         >>> d.objects
-        FiniteSet(Object("A"), Object("B"), Object("C"))
+        {Object("A"), Object("B"), Object("C")}
 
         """
         return self.args[2]

@@ -96,7 +96,7 @@ def _state_converter(itr: tSequence) -> tUnion[Tuple, Range]:
         # try to convert to tuple
         try:
             itr = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
-        except ValueError:
+        except (TypeError, ValueError):
             pass
 
     else:
@@ -471,8 +471,8 @@ class MarkovProcess(StochasticProcess):
 
         # given_condition does not have sufficient information
         # for computations
-        if trans_probs == None or \
-            given_condition == None:
+        if trans_probs is None or \
+            given_condition is None:
             is_insufficient = True
         else:
             # checking transition probabilities
@@ -816,7 +816,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> YS = DiscreteMarkovChain("Y")
 
     >>> Y.state_space
-    FiniteSet(0, 1, 2)
+    {0, 1, 2}
     >>> Y.transition_probabilities
     Matrix([
     [0.5, 0.2, 0.3],
@@ -1203,7 +1203,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         See Also
         ========
 
-        sympy.stats.stochastic_process_types.DiscreteMarkovChain.limiting_distribution
+        sympy.stats.DiscreteMarkovChain.limiting_distribution
         """
         trans_probs = self.transition_probabilities
         n = self.number_of_states
@@ -1309,8 +1309,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         See Also
         ========
 
-        sympy.stats.stochastic_process_types.DiscreteMarkovChain.communication_classes
-        sympy.stats.stochastic_process_types.DiscreteMarkovChain.canonical_form
+        sympy.stats.DiscreteMarkovChain.communication_classes
+        sympy.stats.DiscreteMarkovChain.canonical_form
 
         References
         ==========
@@ -1428,8 +1428,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         See Also
         ========
 
-        sympy.stats.stochastic_process_types.DiscreteMarkovChain.communication_classes
-        sympy.stats.stochastic_process_types.DiscreteMarkovChain.decompose
+        sympy.stats.DiscreteMarkovChain.communication_classes
+        sympy.stats.DiscreteMarkovChain.decompose
 
         References
         ==========
@@ -1489,7 +1489,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     >>> C.limiting_distribution()
     Matrix([[1/2, 1/2]])
     >>> C.state_space
-    FiniteSet(0, 1)
+    {0, 1}
     >>> C.generator_matrix
     Matrix([
     [-1,  1],
@@ -1572,7 +1572,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
 
     def limiting_distribution(self):
         gen_mat = self.generator_matrix
-        if gen_mat == None:
+        if gen_mat is None:
             return None
         if isinstance(gen_mat, MatrixSymbol):
             wm = MatrixSymbol('wm', 1, gen_mat.shape[0])
@@ -1613,7 +1613,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     >>> from sympy import Eq, Gt
     >>> B = BernoulliProcess("B", p=0.7, success=1, failure=0)
     >>> B.state_space
-    FiniteSet(0, 1)
+    {0, 1}
     >>> (B.p).round(2)
     0.70
     >>> B.success
@@ -2046,7 +2046,7 @@ class CountingProcess(ContinuousTimeStochasticProcess):
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         """
-        Computes probability
+        Computes probability.
 
         Parameters
         ==========

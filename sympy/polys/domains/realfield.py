@@ -72,8 +72,14 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         else:
             raise CoercionFailed("expected real number, got %s" % expr)
 
+    def from_ZZ(self, element, base):
+        return self.dtype(element)
+
     def from_ZZ_python(self, element, base):
         return self.dtype(element)
+
+    def from_QQ(self, element, base):
+        return self.dtype(element.numerator) / element.denominator
 
     def from_QQ_python(self, element, base):
         return self.dtype(element.numerator) / element.denominator
@@ -83,6 +89,9 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
 
     def from_QQ_gmpy(self, element, base):
         return self.dtype(int(element.numerator)) / int(element.denominator)
+
+    def from_AlgebraicField(self, element, base):
+        return self.from_sympy(base.to_sympy(element).evalf(self.dps))
 
     def from_RealField(self, element, base):
         if self == base:
@@ -118,3 +127,6 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
     def almosteq(self, a, b, tolerance=None):
         """Check if ``a`` and ``b`` are almost equal. """
         return self._context.almosteq(a, b, tolerance)
+
+
+RR = RealField()

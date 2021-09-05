@@ -1,6 +1,6 @@
 from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
                    zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I,
-                   exp_polar, polar_lift, O, stieltjes, Abs, Sum, oo)
+                   exp_polar, polar_lift, O, stieltjes, Abs, Sum, oo, riemann_xi)
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial
 from sympy.testing.pytest import raises
@@ -82,6 +82,14 @@ def test_dirichlet_eta_eval():
     assert dirichlet_eta(4) == pi**4*Rational(7, 720)
 
 
+def test_riemann_xi_eval():
+    assert riemann_xi(2) == pi/6
+    assert riemann_xi(0) == Rational(1, 2)
+    assert riemann_xi(1) == Rational(1, 2)
+    assert riemann_xi(3).rewrite(zeta) == 3*zeta(3)/(2*pi)
+    assert riemann_xi(4) == pi**2/15
+
+
 def test_rewriting():
     assert dirichlet_eta(x).rewrite(zeta) == (1 - 2**(1 - x))*zeta(x)
     assert zeta(x).rewrite(dirichlet_eta) == dirichlet_eta(x)/(1 - 2**(1 - x))
@@ -145,6 +153,16 @@ def test_polylog_expansion():
     assert myexpand(polylog(-1, z), z/(1 - z)**2)
     assert ((1-z)**3 * expand_func(polylog(-2, z))).simplify() == z*(1 + z)
     assert myexpand(polylog(-5, z), None)
+
+
+def test_polylog_series():
+    assert polylog(1, z).series(z, n=5) == z + z**2/2 + z**3/3 + z**4/4 + O(z**5)
+    assert polylog(1, sqrt(z)).series(z, n=3) == z/2 + z**2/4 + sqrt(z)\
+        + z**(S(3)/2)/3 + z**(S(5)/2)/5 + O(z**3)
+
+    # https://github.com/sympy/sympy/issues/9497
+    assert polylog(S(3)/2, -z).series(z, 0, 5) == -z + sqrt(2)*z**2/4\
+        - sqrt(3)*z**3/9 + z**4/8 + O(z**5)
 
 
 def test_issue_8404():
