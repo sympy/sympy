@@ -2113,6 +2113,13 @@ def test_ExprBuilder():
     assert eb.build() == x**2
 
 
+def test_issue_22020():
+    from sympy.parsing.sympy_parser import parse_expr
+    x = parse_expr("log((2*V/3-V)/C)/-(R+r)*C")
+    y = parse_expr("log((2*V/3-V)/C)/-(R+r)*2")
+    assert x.equals(y) is False
+
+
 def test_non_string_equality():
     # Expressions should not compare equal to strings
     x = symbols('x')
