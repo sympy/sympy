@@ -666,7 +666,8 @@ class Expr(Basic, EvalfMixin):
                     a = expr._random(None, 0, 0, 0, 0)
             except ZeroDivisionError:
                 a = None
-            if a is not None and a not in (S.NaN, S.Infinity, S.NegativeInfinity):
+            from sympy.polys.polyutils import illegal
+            if a is not None and a not in illegal:
                 try:
                     b = expr.subs(list(zip(free, [1]*len(free))),
                         simultaneous=True)

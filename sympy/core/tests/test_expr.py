@@ -2077,7 +2077,7 @@ def test_issue_10651():
     assert e1.is_constant() is None
     assert e3.is_constant() is None
     assert e4.is_constant() is None
-    assert e5.is_constant() is False
+    assert e5.is_constant() is None
 
 
 def test_issue_10161():
