@@ -1,6 +1,6 @@
 """Tools for setting up interactive sessions. """
 
-from distutils.version import LooseVersion as V
+from sympy.external.importtools import version_tuple
 
 from sympy.interactive.printing import init_printing
 
@@ -234,13 +234,13 @@ def init_ipython_session(shell=None, argv=[], auto_symbols=False, auto_int_to_In
     """Construct new IPython session. """
     import IPython
 
-    if V(IPython.__version__) >= '0.11':
+    if version_tuple(IPython.__version__) >= version_tuple('0.11'):
         if not shell:
             # use an app to parse the command line, and init config
             # IPython 1.0 deprecates the frontend module, so we import directly
             # from the terminal module to prevent a deprecation message from being
             # shown.
-            if V(IPython.__version__) >= '1.0':
+            if version_tuple(IPython.__version__) >= version_tuple('1.0'):
                 from IPython.terminal import ipapp
             else:
                 from IPython.frontend.terminal import ipapp
@@ -421,7 +421,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
         ip = init_ipython_session(ip, argv=argv, auto_symbols=auto_symbols,
                                   auto_int_to_Integer=auto_int_to_Integer)
 
-        if V(IPython.__version__) >= '0.11':
+        if version_tuple(IPython.__version__) >= version_tuple('0.11'):
             # runsource is gone, use run_cell instead, which doesn't
             # take a symbol arg.  The second arg is `store_history`,
             # and False means don't add the line to IPython's history.
@@ -439,9 +439,9 @@ def init_session(ipython=None, pretty_print=True, order=None,
         if not in_ipython:
             mainloop = ip.mainloop
 
-    if auto_symbols and (not ipython or V(IPython.__version__) < '0.11'):
+    if auto_symbols and (not ipython or version_tuple(IPython.__version__) < version_tuple('0.11')):
         raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above")
-    if auto_int_to_Integer and (not ipython or V(IPython.__version__) < '0.11'):
+    if auto_int_to_Integer and (not ipython or version_tuple(IPython.__version__) < version_tuple('0.11')):
         raise RuntimeError("automatic int to Integer transformation is possible only in IPython 0.11 or above")
 
     _preexec_source = preexec_source
