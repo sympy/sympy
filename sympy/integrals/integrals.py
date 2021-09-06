@@ -1323,30 +1323,6 @@ class Integral(AddWithLimits):
             raise ValueError("Unknown method %s" % method)
         return result.doit() if evaluate else result
 
-    def _sage_(self):
-        import sage.all as sage
-        f, limits = self.function._sage_(), list(self.limits)
-        for limit_ in limits:
-            if len(limit_) == 1:
-                x = limit_[0]
-                f = sage.integral(f,
-                                    x._sage_(),
-                                    hold=True)
-            elif len(limit_) == 2:
-                x, b = limit_
-                f = sage.integral(f,
-                                    x._sage_(),
-                                    b._sage_(),
-                                    hold=True)
-            else:
-                x, a, b = limit_
-                f = sage.integral(f,
-                                  (x._sage_(),
-                                    a._sage_(),
-                                    b._sage_()),
-                                    hold=True)
-        return f
-
     def principal_value(self, **kwargs):
         """
         Compute the Cauchy Principal Value of the definite integral of a real function in the given interval

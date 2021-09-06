@@ -4,7 +4,7 @@ from typing import Tuple, Union, FrozenSet, Dict, List, Optional
 from functools import singledispatch
 from itertools import accumulate
 
-from sympy import Trace, MatrixExpr, Transpose, DiagMatrix, Mul, ZeroMatrix, hadamard_product
+from sympy import Trace, MatrixExpr, Transpose, DiagMatrix, Mul, ZeroMatrix, hadamard_product, S
 from sympy.combinatorics.permutations import _af_invert, Permutation
 from sympy.matrices.common import MatrixCommon
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
@@ -142,6 +142,8 @@ def _(expr: ArrayContraction):
     expr = expr.flatten_contraction_of_diagonal()
     expr = expr.split_multiple_contractions()
     expr = identify_hadamard_products(expr)
+    if not isinstance(expr, ArrayContraction):
+        return _array2matrix(expr)
     subexpr = expr.expr
     contraction_indices: Tuple[Tuple[int]] = expr.contraction_indices
     if isinstance(subexpr, ArrayTensorProduct):
@@ -613,7 +615,7 @@ def identify_hadamard_products(expr: Union[ArrayContraction, ArrayDiagonal]):
             editor.args_with_ind = [_ArgE(arg) for i, arg in enumerate(expr.expr.args)]
             diagonalized = expr.diagonal_indices
         else:
-            raise NotImplementedError("not implemented")
+            return expr
 
         # Trick: add diagonalized indices as negative indices into the editor object:
         for i, e in enumerate(diagonalized):
@@ -633,7 +635,13 @@ def identify_hadamard_products(expr: Union[ArrayContraction, ArrayDiagonal]):
     k: FrozenSet[int]
     v: List[_ArgE]
     for k, v in map_contr_to_args.items():
-        if len(k) != 2:
+        make_trace: bool = False
+        if len(k) == 1 and next(iter(k)) >= 0 and sum([next(iter(k)) in i for i in map_contr_to_args]) == 1:
+            # This is a trace: the arguments are fully contracted with only one
+            # index, and the index isn't used anywhere else:
+            make_trace = True
+            first_element = S.One
+        elif len(k) != 2:
             # Hadamard product only defined for matrices:
             continue
         if len(v) == 1:
@@ -644,21 +652,30 @@ def identify_hadamard_products(expr: Union[ArrayContraction, ArrayDiagonal]):
                 # There is no other contraction, skip:
                 continue
 
-        # Check if expression is a trace:
-        if all([map_ind_to_inds[j] == len(v) and j >= 0 for j in k]):
-            # This is a trace
-            continue
-
-        # This is a Hadamard product:
-
         def check_transpose(x):
             x = [i if i >= 0 else -1-i for i in x]
             return x == sorted(x)
 
-        hp = hadamard_product(*[i.element if check_transpose(i.indices) else Transpose(i.element) for i in v])
+        # Check if expression is a trace:
+        if all([map_ind_to_inds[j] == len(v) and j >= 0 for j in k]) and all([j >= 0 for j in k]):
+            # This is a trace
+            make_trace = True
+            first_element = v[0].element
+            if not check_transpose(v[0].indices):
+                first_element = first_element.T
+            hadamard_factors = v[1:]
+        else:
+            hadamard_factors = v
+
+        # This is a Hadamard product:
+
+        hp = hadamard_product(*[i.element if check_transpose(i.indices) else Transpose(i.element) for i in hadamard_factors])
         hp_indices = v[0].indices
-        if not check_transpose(v[0].indices):
+        if not check_transpose(hadamard_factors[0].indices):
             hp_indices = list(reversed(hp_indices))
+        if make_trace:
+            hp = Trace(first_element*hp.T)._normalize()
+            hp_indices = []
         editor.insert_after(v[0], _ArgE(hp, hp_indices))
         for i in v:
             editor.args_with_ind.remove(i)
