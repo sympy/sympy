@@ -1390,7 +1390,7 @@ def _unpolarify(eq, exponents_only, pause=False):
     return eq.func(*[_unpolarify(x, exponents_only, True) for x in eq.args])
 
 
-def unpolarify(eq, subs={}, exponents_only=False):
+def unpolarify(eq, subs=None, exponents_only=False):
     """
     If p denotes the projection from the Riemann surface of the logarithm to
     the complex line, return a simplified version eq' of `eq` such that
@@ -1411,7 +1411,7 @@ def unpolarify(eq, subs={}, exponents_only=False):
         return eq
 
     eq = sympify(eq)
-    if subs != {}:
+    if subs is not None:
         return unpolarify(eq.subs(subs))
     changed = True
     pause = False

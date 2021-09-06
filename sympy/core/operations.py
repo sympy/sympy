@@ -175,7 +175,7 @@ class AssocOp(Basic):
         # c_part, nc_part, order_symbols
         return [], new_seq, None
 
-    def _matches_commutative(self, expr, repl_dict={}, old=False):
+    def _matches_commutative(self, expr, repl_dict=None, old=False):
         """
         Matches Add/Mul "pattern" to an expression "expr".
 
@@ -217,9 +217,11 @@ class AssocOp(Basic):
         # make sure expr is Expr if pattern is Expr
         from .expr import Add, Expr
         from sympy import Mul
-        repl_dict = repl_dict.copy()
         if isinstance(self, Expr) and not isinstance(expr, Expr):
             return None
+
+        if repl_dict is None:
+            repl_dict = dict()
 
         # handle simple patterns
         if self == expr:
