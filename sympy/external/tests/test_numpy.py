@@ -234,7 +234,7 @@ def test_lambdify():
 
     # if this succeeds, it can't be a numpy function
 
-    if version_tuples(numpy.__version__) >= version_tuples('1.17'):
+    if version_tuple(numpy.__version__) >= version_tuple('1.17'):
         with raises(TypeError):
             f(x)
     else:
