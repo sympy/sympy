@@ -275,14 +275,8 @@ class Mul(Expr, AssocOp):
                             arb = cls(a*r, b, evaluate=False)
                         rv = [arb], [], None
                     elif global_parameters.distribute and b.is_commutative:
-                        r, b = b.as_coeff_Add()
-                        bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
-                        _addsort(bargs)
-                        ar = a*r
-                        if ar:
-                            bargs.insert(0, ar)
-                        bargs = [Add._from_args(bargs)]
-                        rv = bargs, [], None
+                        newb = Add(*[_keep_coeff(a, bi) for bi in b.args])
+                        rv = [newb], [], None
             if rv:
                 return rv
 
@@ -2146,4 +2140,4 @@ def expand_2arg(e):
 
 from .numbers import Rational
 from .power import Pow
-from .add import Add, _addsort, _unevaluated_Add
+from .add import Add, _unevaluated_Add
