@@ -324,7 +324,7 @@ class DimensionSystem(Basic, _QuantityMapper):
     may be omitted.
     """
 
-    def __new__(cls, base_dims, derived_dims=[], dimensional_dependencies={}, name=None, descr=None):
+    def __new__(cls, base_dims, derived_dims=(), dimensional_dependencies={}, name=None, descr=None):
         dimensional_dependencies = dict(dimensional_dependencies)
 
         if (name is not None) or (descr is not None):
@@ -481,7 +481,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         deps2 = self.get_dimensional_dependencies(dim2)
         return deps1 == deps2
 
-    def extend(self, new_base_dims, new_derived_dims=[], new_dim_deps={}, name=None, description=None):
+    def extend(self, new_base_dims, new_derived_dims=(), new_dim_deps=None, name=None, description=None):
         if (name is not None) or (description is not None):
             SymPyDeprecationWarning(
                 deprecated_since_version="1.2",
@@ -491,7 +491,8 @@ class DimensionSystem(Basic, _QuantityMapper):
             ).warn()
 
         deps = dict(self.dimensional_dependencies)
-        deps.update(new_dim_deps)
+        if new_dim_deps:
+            deps.update(new_dim_deps)
 
         new_dim_sys = DimensionSystem(
             tuple(self.base_dims) + tuple(new_base_dims),

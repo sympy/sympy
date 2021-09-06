@@ -288,7 +288,7 @@ def parse_freeq(l, x, cons_index, cons_dict, cons_import, symbols=None):
     return '', cons, cons_index
 
 
-def generate_sympy_from_parsed(parsed, wild=False, symbols=[], replace_Int=False):
+def generate_sympy_from_parsed(parsed, wild=False, symbols=(), replace_Int=False):
     """
     Parses list into Python syntax.
 
