@@ -1556,7 +1556,13 @@ class Basic(Printable, metaclass=ManagedProperties):
         for arg, other_arg in zip(self.args, expr.args):
             if arg == other_arg:
                 continue
-            d = arg.xreplace(d).matches(other_arg, d, old=old)
+            if arg.is_Relational:
+                try:
+                    d = arg.xreplace(d).matches(other_arg, d, old=old)
+                except TypeError:
+                    d = None
+            else:
+                    d = arg.xreplace(d).matches(other_arg, d, old=old)
             if d is None:
                 return None
         return d

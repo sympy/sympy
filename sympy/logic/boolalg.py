@@ -581,8 +581,8 @@ class BooleanFunction(Application, Boolean):
                            binary=True)
         if len(Rel) <= 1:
             return rv
-        Rel, nonRealRel = sift(Rel, lambda i: not any(s.is_real is False
-                                                      for s in i.free_symbols),
+        Rel, nonRealRel = sift(Rel, lambda i: all(s.is_real is not False
+                                                  for s in i.free_symbols),
                                binary=True)
         Rel = [i.canonical for i in Rel]
         while changed and len(Rel) >= 2:
@@ -628,8 +628,8 @@ class BooleanFunction(Application, Boolean):
                                 return replacementvalue
                             # add replacement
                             if not isinstance(np, ITE) and not np.has(Min, Max):
-                                # We only want to use ITE and Min/Max
-                                # replacements if they simplify away
+                                # We only want to use Min, Max, ITE replacements if
+                                # they simplify to a relational
                                 costsaving = measure(oldexpr) - measure(np)
                                 if costsaving > 0:
                                     results.append((costsaving, (i, j, np)))
@@ -3065,6 +3065,7 @@ def bool_map(bool1, bool2):
 
 def simplify_patterns_and():
     from sympy.functions.elementary.miscellaneous import Min, Max
+    from sympy.functions.elementary.complexes import Abs
     from sympy.core import Wild
     from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
     a = Wild('a')
@@ -3085,6 +3086,8 @@ def simplify_patterns_and():
                      (And(Le(a, b), Lt(a, b)), Lt(a, b)),
                      (And(Le(a, b), Ne(a, b)), Lt(a, b)),
                      (And(Lt(a, b), Ne(a, b)), Lt(a, b)),
+                     (And(Le(S(1)/Abs(a), b), Le(Abs(a), b)), ITE(Eq(b, S(1)), Eq(Abs(a), b), ITE(b > S(1), Abs(a) <= b, S.false))),
+                     (And(Ge(S(1)/Abs(a), b), Ge(Abs(a), b)), ITE(Eq(b, S(1)), Eq(Abs(a), b), ITE(b < S(1), Abs(a) >= b, S.false))),
                      # Min/max
                      (And(Ge(a, b), Ge(a, c)), Ge(a, Max(b, c))),
                      (And(Ge(a, b), Gt(a, c)), ITE(b > c, Ge(a, b), Gt(a, c))),
@@ -3100,6 +3103,7 @@ def simplify_patterns_and():
 
 def simplify_patterns_or():
     from sympy.functions.elementary.miscellaneous import Min, Max
+    from sympy.functions.elementary.complexes import Abs
     from sympy.core import Wild
     from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
     a = Wild('a')
@@ -3119,6 +3123,10 @@ def simplify_patterns_or():
                     (Or(Le(a, b), Lt(a, b)), Le(a, b)),
                     (Or(Le(a, b), Ne(a, b)), S.true),
                     (Or(Lt(a, b), Ne(a, b)), Ne(a, b)),
+                    (Or(Lt(S(1)/Abs(a), b), Lt(Abs(a), b)), ITE(Eq(b, S(1)), Ne(Abs(a), b), ITE(b > S(1), S.true, Or(Lt(S(1)/Abs(a), b), Lt(Abs(a), b))))),
+                    (Or(Gt(S(1)/Abs(a), b), Gt(Abs(a), b)), ITE(Eq(b, S(1)), Ne(Abs(a), b), ITE(b < S(1), S.true, Or(Gt(S(1)/Abs(a), b), Gt(Abs(a), b))))),
+                    (Or(Le(S(1)/Abs(a), b), Le(Abs(a), b)), ITE(b >= S(1), S.true, Or(Le(S(1)/Abs(a), b), Le(Abs(a), b)))),
+                    (Or(Ge(S(1)/Abs(a), b), Ge(Abs(a), b)), ITE(b <= S(1), S.true, Or(Ge(S(1)/Abs(a), b), Ge(Abs(a), b)))),
                     # Min/max
                     (Or(Ge(a, b), Ge(a, c)), Ge(a, Min(b, c))),
                     (Or(Ge(a, b), Gt(a, c)), ITE(b > c, Gt(a, c), Ge(a, b))),

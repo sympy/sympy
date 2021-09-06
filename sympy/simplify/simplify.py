@@ -645,9 +645,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
 
     expr = factor_terms(expr, sign=False)
 
-    from sympy.simplify.hyperexpand import hyperexpand
-    from sympy.functions.special.bessel import BesselBase
-    from sympy import Sum, Product, Integral
     from sympy.functions.elementary.complexes import sign
 
     # must come before `Piecewise` since this introduces more `Piecewise` terms
@@ -673,7 +670,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
                 from sympy.functions.elementary.piecewise import piecewise_simplify
                 # Do not apply doit on the segments as it has already
                 # been done above, but simplify
-                expr = piecewise_simplify(expr, deep=True, doit=False)
+                expr = piecewise_fold(expr)
+                expr = piecewise_simplify(expr, deep=True, doit=False,
+                                          measure=measure, ratio=ratio,
+                                          rational=rational, inverse=inverse)
                 # Still a Piecewise?
                 if expr.has(Piecewise):
                     # Try factor common terms
@@ -682,8 +682,13 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
                     # complete simplify, nothing more needs to be done here
                     return expr
 
+    from sympy.simplify.hyperexpand import hyperexpand
+    from sympy.functions.special.bessel import BesselBase
+    from sympy import Sum, Product, Integral
+
     # hyperexpand automatically only works on hypergeometric terms
-    # Do this after the Piecewise part to avoid recursive expansion
+    # Should be after the Piecewise simplification as this can lead to
+    # infinite recursion otherwise
     expr = hyperexpand(expr)
 
     if expr.has(KroneckerDelta):

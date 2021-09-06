@@ -660,30 +660,30 @@ class Expr(Basic, EvalfMixin):
             # try 0 (for a) and 1 (for b)
             try:
                 a = expr.subs(list(zip(free, [0]*len(free))),
-                    simultaneous=True)
-                if a is S.NaN:
+                              simultaneous=True)
+                if a.has(S.NaN):
                     # evaluation may succeed when substitution fails
                     a = expr._random(None, 0, 0, 0, 0)
             except ZeroDivisionError:
                 a = None
-            if a is not None and a is not S.NaN:
+            if a is not None and not a.has(S.NaN):
                 try:
                     b = expr.subs(list(zip(free, [1]*len(free))),
-                        simultaneous=True)
-                    if b is S.NaN:
+                                  simultaneous=True)
+                    if b.has(S.NaN):
                         # evaluation may succeed when substitution fails
                         b = expr._random(None, 1, 0, 1, 0)
                 except ZeroDivisionError:
                     b = None
-                if b is not None and b is not S.NaN and b.equals(a) is False:
+                if b is not None and not b.has(S.NaN) and b.equals(a) is False:
                     return False
                 # try random real
                 b = expr._random(None, -1, 0, 1, 0)
-                if b is not None and b is not S.NaN and b.equals(a) is False:
+                if b is not None and not b.has(S.NaN) and b.equals(a) is False:
                     return False
                 # try random complex
                 b = expr._random()
-                if b is not None and b is not S.NaN:
+                if b is not None and not b.has(S.NaN):
                     if b.equals(a) is False:
                         return False
                     failing_number = a if a.is_number else b
