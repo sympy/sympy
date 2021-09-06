@@ -1552,7 +1552,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         if len(self.args) != len(expr.args):
             return None
 
-        d = repl_dict.copy()
+        d = repl_dict  # already a copy
         for arg, other_arg in zip(self.args, expr.args):
             if arg == other_arg:
                 continue
