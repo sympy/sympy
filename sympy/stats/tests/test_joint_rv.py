@@ -79,6 +79,7 @@ def test_Normal():
     assert density_X_at_obs == expected_density
 
 def test_MultivariateTDist():
+    x, y = symbols('x y', extended_real=True)
     t1 = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     assert(density(t1))(1, 1) == 1/(8*pi)
     assert t1.pspace.distribution.set == ProductSet(S.Reals, S.Reals)
@@ -248,6 +249,7 @@ def test_NegativeMultinomial():
                     Range(0, oo, 1), Range(0, oo, 1), Range(0, oo, 1))
 
 def test_JointPSpace_marginal_distribution():
+    x = symbols('x', extended_real=True)
     T = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     assert marginal_distribution(T, T[1])(x) == sqrt(2)*(x**2 + 2)/(
         8*polar_lift(x**2/2 + 1)**Rational(5, 2))
