@@ -15,7 +15,7 @@ from typing import Dict as tDict
 import collections
 from functools import reduce
 
-from sympy import (Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict,
+from sympy import (Matrix, S, Symbol, sympify, Basic, Tuple, Dict,
     default_sort_key)
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.core.expr import Expr
@@ -296,11 +296,7 @@ class Dimension(Expr):
         final result is well-defined.
         """
 
-        for dpow in dim_sys.get_dimensional_dependencies(self).values():
-            if not isinstance(dpow, (int, Integer)):
-                return False
-
-        return True
+        return all(dpow.is_Integer for dpow in dim_sys.get_dimensional_dependencies(self).values())
 
 
 # Create dimensions according the the base units in MKSA.
