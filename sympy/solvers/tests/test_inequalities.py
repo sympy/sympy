@@ -501,12 +501,4 @@ def test_linear_programming():
     A = Matrix([[1, -1, sqrt(2)], [-1, 2, -3], [2, 1, -7]])
     optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
     assert optimum == -4
-    # input contains symbols
-    x, y, z, w = symbols("x y z w")
-    x = 1
-    y = 2
-    z = -3
-    w = -7
-    A = Matrix([[x, -x, y], [-x, y, z], [y, x, w]])
-    optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
-    assert optimum == -4
+
