@@ -1424,10 +1424,6 @@ class expint(Function):
 
         return super(expint, self)._eval_aseries(n, args0, x, logx)
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.exp_integral_e(self.args[0]._sage_(), self.args[1]._sage_())
-
 
 def E1(z):
     """
@@ -1913,10 +1909,6 @@ class Si(TrigonometricIntegral):
         if z.is_zero:
             return True
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.sin_integral(self.args[0]._sage_())
-
 
 class Ci(TrigonometricIntegral):
     r"""
@@ -2049,10 +2041,6 @@ class Ci(TrigonometricIntegral):
         # All other points are not handled
         return super(Ci, self)._eval_aseries(n, args0, x, logx)
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.cos_integral(self.args[0]._sage_())
-
 
 class Shi(TrigonometricIntegral):
     r"""
@@ -2161,10 +2149,6 @@ class Shi(TrigonometricIntegral):
             return -pi*S.ImaginiryUnit/2
         else:
             return self
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.sinh_integral(self.args[0]._sage_())
 
 
 class Chi(TrigonometricIntegral):
@@ -2277,10 +2261,6 @@ class Chi(TrigonometricIntegral):
             return self.func(arg0)
         else:
             return self
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.cosh_integral(self.args[0]._sage_())
 
 
 ###############################################################################

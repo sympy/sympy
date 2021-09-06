@@ -33,6 +33,10 @@ class Determinant(Expr):
     def arg(self):
         return self.args[0]
 
+    @property
+    def kind(self):
+        return self.arg.kind.element_kind
+
     def doit(self, expand=False):
         try:
             return self.arg._eval_determinant()
