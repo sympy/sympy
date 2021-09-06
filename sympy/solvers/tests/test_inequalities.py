@@ -3,7 +3,7 @@
 from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo, I,
                    Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
                    Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs,
-                   Piecewise, Rational, Float, symbols)
+                   Piecewise, Rational, Float)
 from sympy.matrices.dense import Matrix
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
