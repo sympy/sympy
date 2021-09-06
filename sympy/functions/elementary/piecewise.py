@@ -183,25 +183,20 @@ class Piecewise(Function):
                         free = funcs
                     _c = c
                     x = free.pop()
-                    try:
-                        c = c.as_set().as_relational(x)
-                    except NotImplementedError:
-                        pass
-                    else:
-                        reps = {}
-                        for i in c.atoms(Relational):
-                            ic = i.canonical
-                            if ic.rhs in (S.Infinity, S.NegativeInfinity):
-                                if not _c.has(ic.rhs):
-                                    # don't accept introduction of
-                                    # new Relationals with +/-oo
-                                    reps[i] = S.true
-                                elif ('=' not in ic.rel_op and
-                                        c.xreplace({x: i.rhs}) !=
-                                        _c.xreplace({x: i.rhs})):
-                                    reps[i] = Relational(
-                                        i.lhs, i.rhs, i.rel_op + '=')
-                        c = c.xreplace(reps)
+                    reps = {}
+                    for i in c.atoms(Relational):
+                        ic = i.canonical
+                        if ic.rhs in (S.Infinity, S.NegativeInfinity):
+                            if not _c.has(ic.rhs):
+                                # don't accept introduction of
+                                # new Relationals with +/-oo
+                                reps[i] = S.true
+                            elif ('=' not in ic.rel_op and
+                                    c.xreplace({x: i.rhs}) !=
+                                    _c.xreplace({x: i.rhs})):
+                                reps[i] = Relational(
+                                    i.lhs, i.rhs, i.rel_op + '=')
+                    c = c.xreplace(reps)
             args.append((e, _canonical(c)))
 
         for expr, cond in args:
