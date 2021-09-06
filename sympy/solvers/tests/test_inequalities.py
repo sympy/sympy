@@ -501,4 +501,3 @@ def test_linear_programming():
     A = Matrix([[1, -1, sqrt(2)], [-1, 2, -3], [2, 1, -7]])
     optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
     assert optimum == -4
-
