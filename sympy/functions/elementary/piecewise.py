@@ -1,4 +1,4 @@
-from sympy.core import Basic, S, Function, diff, Tuple, Dummy
+from sympy.core import Basic, S, Function, diff, Tuple
 from sympy.core.basic import as_Basic
 from sympy.core.numbers import Rational, NumberSymbol
 from sympy.core.relational import (Equality, Unequality, Relational,
@@ -157,8 +157,6 @@ class Piecewise(Function):
         If there is a single arg with a True condition, its
         corresponding expression will be returned.
         """
-        from sympy.functions.elementary.complexes import im, re
-
         if not _args:
             return Undefined
 
@@ -170,33 +168,6 @@ class Piecewise(Function):
         # make conditions canonical
         args = []
         for e, c in _args:
-            if (not c.is_Atom and not isinstance(c, Relational) and
-                not c.has(im, re)):
-                free = c.free_symbols
-                if len(free) == 1:
-                    funcs = [i for i in c.atoms(Function)
-                             if not isinstance(i, Boolean)]
-                    if len(funcs) == 1 and len(
-                            c.xreplace({list(funcs)[0]: Dummy()}
-                            ).free_symbols) == 1:
-                        # we can treat function like a symbol
-                        free = funcs
-                    _c = c
-                    x = free.pop()
-                    reps = {}
-                    for i in c.atoms(Relational):
-                        ic = i.canonical
-                        if ic.rhs in (S.Infinity, S.NegativeInfinity):
-                            if not _c.has(ic.rhs):
-                                # don't accept introduction of
-                                # new Relationals with +/-oo
-                                reps[i] = S.true
-                            elif ('=' not in ic.rel_op and
-                                    c.xreplace({x: i.rhs}) !=
-                                    _c.xreplace({x: i.rhs})):
-                                reps[i] = Relational(
-                                    i.lhs, i.rhs, i.rel_op + '=')
-                    c = c.xreplace(reps)
             args.append((e, _canonical(c)))
 
         for expr, cond in args:
