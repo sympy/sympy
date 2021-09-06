@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.9', 'pypy-3.6']
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10.0-rc.1', 'pypy-3.7']
 
     name: Python ${{ matrix.python-version }} test install
     steps:
