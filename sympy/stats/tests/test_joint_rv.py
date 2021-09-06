@@ -79,7 +79,6 @@ def test_Normal():
     assert density_X_at_obs == expected_density
 
 def test_MultivariateTDist():
-    x, y = symbols('x y', extended_real=True)
     t1 = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     assert(density(t1))(1, 1) == 1/(8*pi)
     assert t1.pspace.distribution.set == ProductSet(S.Reals, S.Reals)
