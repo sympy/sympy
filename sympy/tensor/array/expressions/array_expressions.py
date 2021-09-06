@@ -4,7 +4,7 @@ import itertools
 from itertools import accumulate
 from typing import Optional, List, Dict
 
-from sympy import Expr, ImmutableDenseNDimArray, S, Symbol, Integer, ZeroMatrix, Basic, tensorproduct, Add, permutedims, \
+from sympy import Expr, ImmutableDenseNDimArray, S, Symbol, ZeroMatrix, Basic, tensorproduct, Add, permutedims, \
     Tuple, tensordiagonal, Lambda, Dummy, Function, MatrixExpr, NDimArray, Indexed, IndexedBase, default_sort_key, \
     tensorcontraction, diagonalize_vector, Mul
 from sympy.matrices.expressions.matexpr import MatrixElement
@@ -45,7 +45,7 @@ class ArraySymbol(_ArrayExpr):
         return ArrayElement(self, item)
 
     def as_explicit(self):
-        if not all(isinstance(i, (int, Integer)) for i in self.shape):
+        if not all(i.is_Integer for i in self.shape):
             raise ValueError("cannot express explicit array with symbolic shape")
         data = [self[i] for i in itertools.product(*[range(j) for j in self.shape])]
         return ImmutableDenseNDimArray(data).reshape(*self.shape)
