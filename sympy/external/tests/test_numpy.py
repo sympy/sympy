@@ -4,8 +4,7 @@
 # Always write regular SymPy tests for anything, that can be tested in pure
 # Python (without numpy). Here we test everything, that a user may need when
 # using SymPy with NumPy
-from distutils.version import LooseVersion
-
+from sympy.external.importtools import version_tuple
 from sympy.external import import_module
 
 numpy = import_module('numpy')
@@ -235,7 +234,7 @@ def test_lambdify():
 
     # if this succeeds, it can't be a numpy function
 
-    if LooseVersion(numpy.__version__) >= LooseVersion('1.17'):
+    if version_tuples(numpy.__version__) >= version_tuples('1.17'):
         with raises(TypeError):
             f(x)
     else:
