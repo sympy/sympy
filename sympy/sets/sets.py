@@ -1085,7 +1085,9 @@ class Interval(Set):
 
     def _contains(self, other):
         if (not isinstance(other, Expr) or other is S.NaN
-            or other.is_real is False):
+            or other.is_real is False or other.has(S.ComplexInfinity)):
+                # if an expression has zoo it will be zoo or nan
+                # and neither of those is real
                 return false
 
         if self.start is S.NegativeInfinity and self.end is S.Infinity:

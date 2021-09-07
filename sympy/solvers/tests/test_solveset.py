@@ -62,9 +62,6 @@ def test_invert_real():
     def ireal(x, s=S.Reals):
         return Intersection(s, x)
 
-    # issue 14223
-    assert invert_real(x, 0, x, Interval(1, 2)) == (x, S.EmptySet)
-
     assert invert_real(exp(x), z, x) == (x, ireal(FiniteSet(log(z))))
 
     y = Symbol('y', positive=True)
@@ -2216,6 +2213,7 @@ def test_issue_14223():
         S.Reals) == FiniteSet(-1, 1)
     assert solveset((Abs(x + Min(x, 2)) - 2).rewrite(Piecewise), x,
         Interval(0, 2)) == FiniteSet(1)
+    assert solveset(x, x, FiniteSet(1, 2)) is S.EmptySet
 
 
 def test_issue_10158():
@@ -2247,8 +2245,8 @@ def test_issue_14300():
 
 def test_issue_14454():
     number = CRootOf(x**4 + x - 1, 2)
-    raises(ValueError, lambda: invert_real(number, 0, x, S.Reals))
-    assert invert_real(x**2, number, x, S.Reals)  # no error
+    raises(ValueError, lambda: invert_real(number, 0, x))
+    assert invert_real(x**2, number, x)  # no error
 
 
 def test_issue_17882():
