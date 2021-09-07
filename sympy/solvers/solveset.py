@@ -295,16 +295,16 @@ def _invert_real(f, g_ys, symbol):
     if isinstance(f, TrigonometricFunction):
         if isinstance(g_ys, FiniteSet):
             def inv(trig):
-                if isinstance(f, (sin, csc)):
-                    F = asin if isinstance(f, sin) else acsc
+                if isinstance(trig, (sin, csc)):
+                    F = asin if isinstance(trig, sin) else acsc
                     return (lambda a: n*pi + (-1)**n*F(a),)
-                if isinstance(f, (cos, sec)):
-                    F = acos if isinstance(f, cos) else asec
+                if isinstance(trig, (cos, sec)):
+                    F = acos if isinstance(trig, cos) else asec
                     return (
                         lambda a: 2*n*pi + F(a),
                         lambda a: 2*n*pi - F(a),)
-                if isinstance(f, (tan, cot)):
-                    return (lambda a: n*pi + f.inverse()(a),)
+                if isinstance(trig, (tan, cot)):
+                    return (lambda a: n*pi + trig.inverse()(a),)
 
             n = Dummy('n', integer=True)
             invs = S.EmptySet
@@ -708,7 +708,7 @@ def _solve_trig1(f, symbol, domain):
 def _solve_trig2(f, symbol, domain):
     """Secondary helper to solve trigonometric equations,
     called when first helper fails """
-    from sympy import ilcm, expand_trig, degree
+    from sympy import ilcm, expand_trig
     f = trigsimp(f)
     f_original = f
     trig_functions = f.atoms(sin, cos, tan, sec, cot, csc)
@@ -862,7 +862,7 @@ def _solve_radical(f, unradf, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    if isinstance(result, Complement) or isinstance(result,ConditionSet):
+    if isinstance(result, (Complement, ConditionSet)):
         solution_set = result
     else:
         f_set = []  # solutions for FiniteSet
@@ -1025,8 +1025,10 @@ def _solveset(f, symbol, domain, _check=False):
             _is_function_class_equation(HyperbolicFunction, f, symbol):
         result = _solve_trig(f, symbol, domain)
     elif isinstance(f, arg):
+        from sympy.functions.elementary.complexes import re, im
         a = f.args[0]
-        result = solveset_real(a > 0, symbol)
+        result = Intersection(_solveset(re(a) > 0, symbol, domain),
+                              _solveset(im(a), symbol, domain))
     elif f.is_Piecewise:
         expr_set_pairs = f.as_expr_set_pairs(domain)
         for (expr, in_set) in expr_set_pairs:
@@ -1116,7 +1118,16 @@ def _solveset(f, symbol, domain, _check=False):
         if isinstance(result, ConditionSet):
             # it wasn't solved or has enumerated all conditions
             # -- leave it alone
-            return result
+            if domain is S.Complexes:
+                return result
+            # Add domain
+            new_res = Intersection(result, domain)
+            # Check if the domain is really contributing
+            if new_res.is_subset(result):
+                return new_res
+            else:
+                return result
+
 
         # whittle away all but the symbol-containing core
         # to use this for testing
@@ -2935,9 +2946,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
       ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers))}
 
     """
-
-    from sympy import Complement
-    from sympy.core.compatibility import is_sequence
 
     if not system:
         return S.EmptySet
