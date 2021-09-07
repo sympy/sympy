@@ -502,9 +502,6 @@ class CodePrinter(StrPrinter):
         else:
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 
-    def _print_UnevaluatedExpr(self, arg):
-        return "(%s)" % super()._print_UnevaluatedExpr(arg)
-
     def _print_not_supported(self, expr):
         try:
             self._not_supported.add(expr)

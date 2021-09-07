@@ -843,4 +843,7 @@ def test_ccode_submodule():
 
 
 def test_ccode_UnevaluatedExpr():
+    assert ccode(UnevaluatedExpr(y * x) + z) == "z + x*y"
     assert ccode(UnevaluatedExpr(y + x) + z) == "z + (x + y)"  # gh-21955
+    w = symbols('w')
+    assert ccode(UnevaluatedExpr(y + x) + UnevaluatedExpr(z + w)) == "(w + z) + (x + y)"
