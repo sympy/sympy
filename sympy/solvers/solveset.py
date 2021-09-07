@@ -197,11 +197,6 @@ def invert_real(f_x, y, x, domain=S.Reals):
 def _invert_real(f, g_ys, symbol):
     """Helper function for _invert."""
 
-    # Some inverse functions evaluate to zoo, remove if present
-    fs = FiniteSet(S.ComplexInfinity)
-    if fs.is_subset(g_ys):
-        g_ys -= fs
-
     if f == symbol:
         return (f, g_ys)
 
