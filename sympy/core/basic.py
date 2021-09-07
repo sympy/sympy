@@ -1521,7 +1521,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         query = _make_find_query(query)
         return sum(bool(query(sub)) for sub in preorder_traversal(self))
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict=None, old=False):
         """
         Helper method for match() that looks for a match between Wild symbols
         in self and expressions in expr.
@@ -1537,10 +1537,14 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> Basic(a + x, x).matches(Basic(a + b + c, b + c))
         {x_: b + c}
         """
-        repl_dict = repl_dict.copy()
         expr = sympify(expr)
         if not isinstance(expr, self.__class__):
             return None
+
+        if repl_dict is None:
+            repl_dict = dict()
+        else:
+            repl_dict = repl_dict.copy()
 
         if self == expr:
             return repl_dict
@@ -1548,7 +1552,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         if len(self.args) != len(expr.args):
             return None
 
-        d = repl_dict.copy()
+        d = repl_dict  # already a copy
         for arg, other_arg in zip(self.args, expr.args):
             if arg == other_arg:
                 continue
@@ -1886,8 +1890,10 @@ class Atom(Basic):
 
     __slots__ = ()
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict=None, old=False):
         if self == expr:
+            if repl_dict is None:
+                return dict()
             return repl_dict.copy()
 
     def xreplace(self, rule, hack2=False):

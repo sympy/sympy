@@ -448,7 +448,7 @@ class MarkovProcess(StochasticProcess):
 
         # `not None` is `True`. So the old test fails for symbolic sizes.
         # Need to build the statement differently.
-        sym_cond = not isinstance(self.number_of_states, (int, Integer))
+        sym_cond = not self.number_of_states.is_Integer
         cond1 = not sym_cond and len(state_index) != trans_probs.shape[0]
         if cond1:
             raise ValueError("state space is not compatible with the transition probabilities.")
@@ -617,11 +617,11 @@ class MarkovProcess(StochasticProcess):
                         _, gstate = (gc.lhs.key, gc.rhs) if isinstance(gc.lhs, RandomIndexedSymbol) \
                                     else (gc.rhs.key, gc.lhs)
 
-            if any((k not in self.index_set) for k in (rv.key, min_key_rv.key)):
+            if not all(k in self.index_set for k in (rv.key, min_key_rv.key)):
                 raise IndexError("The timestamps of the process are not in it's index set.")
             states = Intersection(states, state_index) if not isinstance(self.number_of_states, Symbol) else states
             for state in Union(states, FiniteSet(gstate)):
-                if not isinstance(state, (int, Integer)) or Ge(state, mat.shape[0]) is True:
+                if not state.is_Integer or Ge(state, mat.shape[0]) is True:
                     raise IndexError("No information is available for (%s, %s) in "
                         "transition probabilities of shape, (%s, %s). "
                         "State space is zero indexed."
@@ -1839,7 +1839,7 @@ class _SubstituteRV:
             if len(condrv) == 1 and condrv[0] == new_givencondition:
                 return BernoulliDistribution(self._probability(new_condition), 0, 1)
 
-            if any([dependent(rv, new_givencondition) for rv in condrv]):
+            if any(dependent(rv, new_givencondition) for rv in condrv):
                 return Probability(new_condition, new_givencondition)
             else:
                 return self._probability(new_condition)

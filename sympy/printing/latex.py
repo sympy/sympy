@@ -317,10 +317,10 @@ class LatexPrinter(Printer):
             return True
         if expr.is_Piecewise:
             return True
-        if any([expr.has(x) for x in (Mod,)]):
+        if any(expr.has(x) for x in (Mod,)):
             return True
         if (not last and
-                any([expr.has(x) for x in (Integral, Product, Sum)])):
+                any(expr.has(x) for x in (Integral, Product, Sum))):
             return True
 
         return False
@@ -333,7 +333,7 @@ class LatexPrinter(Printer):
         """
         if expr.is_Relational:
             return True
-        if any([expr.has(x) for x in (Mod,)]):
+        if any(expr.has(x) for x in (Mod,)):
             return True
         if expr.is_Add:
             return True
@@ -2311,7 +2311,7 @@ class LatexPrinter(Printer):
             else:
                 terms.extend(['+', s_term])
 
-        if terms[0] in ['-', '+']:
+        if terms[0] in ('-', '+'):
             modifier = terms.pop(0)
 
             if modifier == '-':

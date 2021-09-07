@@ -204,7 +204,7 @@ class OctaveCodePrinter(CodePrinter):
             divsym = '/' if b[0].is_number else './'
             return sign + multjoin(a, a_str) + divsym + b_str[0]
         else:
-            divsym = '/' if all([bi.is_number for bi in b]) else './'
+            divsym = '/' if all(bi.is_number for bi in b) else './'
             return (sign + multjoin(a, a_str) +
                     divsym + "(%s)" % multjoin(b, b_str))
 
@@ -215,7 +215,7 @@ class OctaveCodePrinter(CodePrinter):
         return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Pow(self, expr):
-        powsymbol = '^' if all([x.is_number for x in expr.args]) else '.^'
+        powsymbol = '^' if all(x.is_number for x in expr.args) else '.^'
 
         PREC = precedence(expr)
 
@@ -553,9 +553,9 @@ class OctaveCodePrinter(CodePrinter):
         # pre-strip left-space from the code
         code = [ line.lstrip(' \t') for line in code ]
 
-        increase = [ int(any([search(re, line) for re in inc_regex]))
+        increase = [ int(any(search(re, line) for re in inc_regex))
                      for line in code ]
-        decrease = [ int(any([search(re, line) for re in dec_regex]))
+        decrease = [ int(any(search(re, line) for re in dec_regex))
                      for line in code ]
 
         pretty = []

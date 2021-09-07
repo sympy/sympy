@@ -555,7 +555,7 @@ class StrPrinter(Printer):
             else:
                 terms.extend(['+', s_term])
 
-        if terms[0] in ['-', '+']:
+        if terms[0] in ('-', '+'):
             modifier = terms.pop(0)
 
             if modifier == '-':

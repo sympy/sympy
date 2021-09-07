@@ -106,7 +106,7 @@ class JointPSpace(ProductPSpace):
     def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
         syms = tuple(self.value[i] for i in range(self.component_count))
         rvs = rvs or syms
-        if not any([i in rvs for i in syms]):
+        if not any(i in rvs for i in syms):
             return expr
         expr = expr*self.pdf
         for rv in rvs:
@@ -352,7 +352,7 @@ class MarginalDistribution(Distribution):
     def __new__(cls, dist, *rvs):
         if len(rvs) == 1 and iterable(rvs[0]):
             rvs = tuple(rvs[0])
-        if not all([isinstance(rv, (Indexed, RandomSymbol))] for rv in rvs):
+        if not all(isinstance(rv, (Indexed, RandomSymbol)) for rv in rvs):
             raise ValueError(filldedent('''Marginal distribution can be
              intitialised only in terms of random variables or indexed random
              variables'''))

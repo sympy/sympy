@@ -659,7 +659,6 @@ class Function(Application, Expr):
         be called directly; derived classes can overwrite this to implement
         asymptotic expansions.
         """
-        from sympy.utilities.misc import filldedent
         raise PoleError(filldedent('''
             Asymptotic expansion of %s around %s is
             not implemented.''' % (type(self), args0)))
@@ -698,7 +697,7 @@ class Function(Application, Expr):
             # slower
             a = [t.compute_leading_term(x, logx=logx) for t in args]
             a0 = [t.limit(x, 0) for t in a]
-            if any([t.has(oo, -oo, zoo, nan) for t in a0]):
+            if any(t.has(oo, -oo, zoo, nan) for t in a0):
                 return self._eval_aseries(n, args0, x, logx)
             # Careful: the argument goes to oo, but only logarithmically so. We
             # are supposed to do a power series expansion "around the
@@ -792,7 +791,7 @@ class Function(Application, Expr):
                     # issue 8510
                     break
             else:
-                    return _derivative_dispatch(self, A)
+                return _derivative_dispatch(self, A)
 
         # See issue 4624 and issue 4719, 5600 and 8510
         D = Dummy('xi_%i' % argindex, dummy_index=hash(A))
@@ -1012,13 +1011,17 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
             nargs = FiniteSet(*nargs)
         cls.nargs = nargs
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict=None, old=False):
         if not isinstance(expr, (AppliedUndef, Function)):
             return None
         if len(expr.args) not in self.nargs:
             return None
 
-        repl_dict = repl_dict.copy()
+        if repl_dict is None:
+            repl_dict = dict()
+        else:
+            repl_dict = repl_dict.copy()
+
         repl_dict[self] = expr
         return repl_dict
 
@@ -1243,7 +1246,6 @@ class Derivative(Expr):
         from sympy.matrices.common import MatrixCommon
         from sympy import Integer, MatrixExpr
         from sympy.tensor.array import Array, NDimArray
-        from sympy.utilities.misc import filldedent
 
         expr = sympify(expr)
         symbols_or_none = getattr(expr, "free_symbols", None)
@@ -1670,13 +1672,13 @@ class Derivative(Expr):
 
     @property
     def derivative_count(self):
-        return sum([count for var, count in self.variable_count], 0)
+        return sum([count for _, count in self.variable_count], 0)
 
     @property
     def free_symbols(self):
         ret = self.expr.free_symbols
         # Add symbolic counts to free_symbols
-        for var, count in self.variable_count:
+        for _, count in self.variable_count:
             ret.update(count.free_symbols)
         return ret
 
@@ -2166,8 +2168,6 @@ class Subs(Expr):
     (Subs(x, x, 0), Subs(y, y, 0))
     """
     def __new__(cls, expr, variables, point, **assumptions):
-        from sympy import Symbol
-
         if not is_sequence(variables, Tuple):
             variables = [variables]
         variables = Tuple(*variables)
@@ -2321,7 +2321,6 @@ class Subs(Expr):
 
     @property
     def expr_free_symbols(self):
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
         SymPyDeprecationWarning(feature="expr_free_symbols method",
                                 issue=21494,
                                 deprecated_since_version="1.9").warn()
@@ -2904,7 +2903,7 @@ def expand_log(expr, deep=True, force=False, factor=False):
         expr = expr.replace(
         lambda x: x.is_Mul and all(any(isinstance(i, log) and i.args[0].is_Rational
         for i in Mul.make_args(j)) for j in x.as_numer_denom()),
-        lambda x: _handle(x))
+        _handle)
 
     return sympify(expr).expand(deep=deep, log=True, mul=False,
         power_exp=False, power_base=False, multinomial=False,
@@ -3129,7 +3128,7 @@ def count_ops(expr, visual=False):
     2*ADD + SIN
 
     """
-    from sympy import Integral, Sum, Symbol
+    from sympy import Integral, Sum
     from sympy.core.relational import Relational
     from sympy.simplify.radsimp import fraction
     from sympy.logic.boolalg import BooleanFunction

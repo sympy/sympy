@@ -1,7 +1,7 @@
 """Tools to assist importing optional external modules."""
 
 import sys
-from distutils.version import LooseVersion
+import re
 
 # Override these in the module to change the default warning behavior.
 # For example, you might set both to False before running the tests so that
@@ -26,6 +26,23 @@ def __sympy_debug():
 if __sympy_debug():
     WARN_OLD_VERSION = True
     WARN_NOT_INSTALLED = True
+
+
+_component_re = re.compile(r'(\d+ | [a-z]+ | \.)', re.VERBOSE)
+
+def version_tuple(vstring):
+    # Parse a version string to a tuple e.g. '1.2' -> (1, 2)
+    # Simplified from distutils.version.LooseVersion which was deprecated in
+    # Python 3.10.
+    components = []
+    for x in _component_re.split(vstring):
+        if x and x != '.':
+            try:
+                x = int(x)
+            except ValueError:
+                pass
+            components.append(x)
+    return components
 
 
 def import_module(module, min_module_version=None, min_python_version=None,
@@ -155,7 +172,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
         modversion = getattr(mod, module_version_attr)
         if module_version_attr_call_args is not None:
             modversion = modversion(*module_version_attr_call_args)
-        if LooseVersion(modversion) < LooseVersion(min_module_version):
+        if version_tuple(modversion) < version_tuple(min_module_version):
             if warn_old_version:
                 # Attempt to create a pretty string version of the version
                 if isinstance(min_module_version, str):

@@ -487,8 +487,8 @@ def _domain_check(f, symbol, p):
                 return True
     else:
         # TODO : We should not blindly recurse through all args of arbitrary expressions like this
-        return all([_domain_check(g, symbol, p)
-                    for g in f.args])
+        return all(_domain_check(g, symbol, p)
+                   for g in f.args)
 
 
 def _is_finite_with_finite_vars(f, domain=S.Complexes):
@@ -830,8 +830,8 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
             # - sqrt(2)*I/2. We are not expanding for solution with symbols
             # or undefined functions because that makes the solution more complicated.
             # For example, expand_complex(a) returns re(a) + I*im(a)
-            if all([s.atoms(Symbol, AppliedUndef) == set() and not isinstance(s, RootOf)
-                    for s in result]):
+            if all(s.atoms(Symbol, AppliedUndef) == set() and not isinstance(s, RootOf)
+                   for s in result):
                 s = Dummy('s')
                 result = imageset(Lambda(s, expand_complex(s)), result)
         if isinstance(result, FiniteSet) and domain != S.Complexes:
@@ -3292,9 +3292,9 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             sym, sol, soln_imageset)
                         sol = set(sol).pop()
                         free = sol.free_symbols
-                        if got_symbol and any([
+                        if got_symbol and any(
                             ss in free for ss in got_symbol
-                        ]):
+                        ):
                             # sol depends on previously solved symbols
                             # then continue
                             continue
@@ -3303,7 +3303,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         # in the new result list (solution for symbol `s`)
                         # along with old results.
                         for k, v in res.items():
-                            if isinstance(v, Expr):
+                            if isinstance(v, Expr) and isinstance(sol, Expr):
                                 # if any unsolved symbol is present
                                 # Then subs known value
                                 rnew[k] = v.subs(sym, sol)
@@ -3445,8 +3445,11 @@ def _separate_poly_nonpoly(system, symbols):
     denominators = set()
     poly = None
     for eq in system:
-        # Store denom expression if it contains symbol
+        # Store denom expressions that contain symbols
         denominators.update(_simple_dens(eq, symbols))
+        # Convert equality to expression
+        if isinstance(eq, Equality):
+            eq = eq.rewrite(Add)
         # try to remove sqrt and rational power
         without_radicals = unrad(simplify(eq))
         if without_radicals:

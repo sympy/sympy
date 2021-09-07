@@ -456,6 +456,21 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         from sympy import Mod
         return self._print_Mod(Mod(expr.args[0], 1))
 
+    def _print_Symbol(self, expr):
+
+        name = super()._print_Symbol(expr)
+
+        if name in self.reserved_words:
+            if self._settings['error_on_reserved']:
+                msg = ('This expression includes the symbol "{}" which is a '
+                       'reserved keyword in this language.')
+                raise ValueError(msg.format(name))
+            return name + self._settings['reserved_word_suffix']
+        elif '{' in name:   # Remove curly braces from subscripted variables
+            return name.replace('{', '').replace('}', '')
+        else:
+            return name
+
     _print_lowergamma = CodePrinter._print_not_supported
     _print_uppergamma = CodePrinter._print_not_supported
     _print_fresnelc = CodePrinter._print_not_supported

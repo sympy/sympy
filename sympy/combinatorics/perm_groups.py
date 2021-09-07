@@ -773,7 +773,7 @@ class PermutationGroup(Basic):
 
         """
         der = self.derived_series()
-        if not (all(g.is_identity for g in der[-1].generators)):
+        if not all(g.is_identity for g in der[-1].generators):
             raise NotImplementedError('Group should be solvable')
         series = []
 
@@ -845,7 +845,7 @@ class PermutationGroup(Basic):
                 b = base_ordering[base[l]^u]
                 for t in T:
                     p = t*u
-                    if all([base_ordering[h^p] >= b for h in orbits[l]]):
+                    if all(base_ordering[h^p] >= b for h in orbits[l]):
                         T_next.append(p)
                     if t_len + len(T_next) == indices[l]:
                         break
@@ -3933,7 +3933,7 @@ class PermutationGroup(Basic):
            elements of the group
         """
 
-        if not all([g in self for g in gens]):
+        if not all(g in self for g in gens):
             raise ValueError("The group doesn't contain the supplied generators")
 
         G = PermutationGroup(gens)

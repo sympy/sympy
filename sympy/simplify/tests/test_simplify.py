@@ -984,6 +984,13 @@ def test_issue_7950():
     expr = And(Eq(x, 1), Eq(x, 2))
     assert simplify(expr) == S.false
 
+
+def test_issue_22020():
+    expr = I*pi/2 -oo
+    assert simplify(expr) == expr
+    # Used to throw an error
+
+
 def test_issue_19484():
     assert simplify(sign(x) * Abs(x)) == x
 

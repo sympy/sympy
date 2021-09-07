@@ -122,7 +122,7 @@ def comp(z1, z2, tol=None):
                 # no floats -- compare exactly
                 return a == b
             # get a to be pure_complex
-            for do in range(2):
+            for _ in range(2):
                 ca = pure_complex(a, or_real=True)
                 if not ca:
                     if fa:
@@ -194,7 +194,7 @@ def seterr(divide=False):
 
 
 def _as_integer_ratio(p):
-    neg_pow, man, expt, bc = getattr(p, '_mpf_', mpmath.mpf(p)._mpf_)
+    neg_pow, man, expt, _ = getattr(p, '_mpf_', mpmath.mpf(p)._mpf_)
     p = [1, -1][neg_pow % 2]*man
     if expt < 0:
         q = 2**-expt
@@ -529,7 +529,7 @@ def mod_inverse(a, m):
     try:
         a, m = as_int(a), as_int(m)
         if m != 1 and m != -1:
-            x, y, g = igcdex(a, m)
+            x, _, g = igcdex(a, m)
             if g == 1:
                 c = x % m
     except ValueError:
@@ -627,7 +627,6 @@ class Number(AtomicExpr):
         return invert(self, other, *gens, **args)
 
     def __divmod__(self, other):
-        from .containers import Tuple
         from sympy.functions.elementary.complexes import sign
 
         try:
@@ -1073,7 +1072,7 @@ class Float(Number):
             return S.Infinity
         elif isinstance(num, float) and num == float('-inf'):
             return S.NegativeInfinity
-        elif isinstance(num, float) and num == float('nan'):
+        elif isinstance(num, float) and math.isnan(num):
             return S.NaN
         elif isinstance(num, (SYMPY_INTS, Integer)):
             num = str(num)
@@ -1155,13 +1154,20 @@ class Float(Number):
         elif isinstance(num, tuple) and len(num) in (3, 4):
             if type(num[1]) is str:
                 # it's a hexadecimal (coming from a pickled object)
-                # assume that it is in standard form
                 num = list(num)
                 # If we're loading an object pickled in Python 2 into
                 # Python 3, we may need to strip a tailing 'L' because
                 # of a shim for int on Python 3, see issue #13470.
                 if num[1].endswith('L'):
                     num[1] = num[1][:-1]
+                # Strip leading '0x' - gmpy2 only documents such inputs
+                # with base prefix as valid when the 2nd argument (base) is 0.
+                # When mpmath uses Sage as the backend, however, it
+                # ends up including '0x' when preparing the picklable tuple.
+                # See issue #19690.
+                if num[1].startswith('0x'):
+                    num[1] = num[1][2:]
+                # Now we can assume that it is in standard form
                 num[1] = MPZ(num[1], 16)
                 _mpf_ = tuple(num)
             else:
@@ -1411,7 +1417,6 @@ class Float(Number):
         return not self == other
 
     def _Frel(self, other, op):
-        from sympy.core.numbers import prec_to_dps
         try:
             other = _sympify(other)
         except SympifyError:
@@ -2004,8 +2009,8 @@ class Rational(Number):
             if other == S.Zero:
                 return other
             return Rational(
-                Integer(igcd(self.p, other.p)),
-                Integer(ilcm(self.q, other.q)))
+                igcd(self.p, other.p),
+                ilcm(self.q, other.q))
         return Number.gcd(self, other)
 
     @_sympifyit('other', NotImplemented)
@@ -2145,14 +2150,12 @@ class Integer(Rational):
             return Integer(-self.p)
 
     def __divmod__(self, other):
-        from .containers import Tuple
         if isinstance(other, Integer) and global_parameters.evaluate:
             return Tuple(*(divmod(self.p, other.p)))
         else:
             return Number.__divmod__(self, other)
 
     def __rdivmod__(self, other):
-        from .containers import Tuple
         if isinstance(other, int) and global_parameters.evaluate:
             return Tuple(*(divmod(other, self.p)))
         else:
@@ -2349,7 +2352,7 @@ class Integer(Rational):
             # invert base and change sign on exponent
             ne = -expt
             if self.is_negative:
-                    return S.NegativeOne**expt*Rational(1, -self, 1)**ne
+                return S.NegativeOne**expt*Rational(1, -self, 1)**ne
             else:
                 return Rational(1, self.p, 1)**ne
         # see if base is a perfect root, sqrt(4) --> 2
@@ -3551,7 +3554,6 @@ class Exp1(NumberSymbol, metaclass=Singleton):
 
     def _eval_power_exp_is_pow(self, arg):
         from ..functions.elementary.exponential import log
-        from . import Add, Mul, Pow
         if arg.is_Number:
             if arg is oo:
                 return oo
@@ -3632,12 +3634,10 @@ class Exp1(NumberSymbol, metaclass=Singleton):
 
     def _eval_rewrite_as_sin(self, **kwargs):
         from sympy import sin
-        I = S.ImaginaryUnit
         return sin(I + S.Pi/2) - I*sin(I)
 
     def _eval_rewrite_as_cos(self, **kwargs):
         from sympy import cos
-        I = S.ImaginaryUnit
         return cos(I) + I*cos(I + S.Pi/2)
 
 E = S.Exp1

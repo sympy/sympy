@@ -127,11 +127,3 @@ import sympy
 if not (sympy.test('sympy/plotting', 'sympy/physics/quantum/tests/test_circuitplot.py',
     subprocess=False) and sympy.doctest('sympy/plotting', subprocess=False)):
     raise TestsFailedError('Tests failed')
-
-
-print('Testing SYMENGINE')
-import sympy
-if not sympy.test('sympy/physics/mechanics'):
-    raise TestsFailedError('Tests failed')
-if not sympy.test('sympy/liealgebras'):
-    raise TestsFailedError('Tests failed')

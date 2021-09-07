@@ -53,7 +53,7 @@ def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
         # Only randomly generated parameters are checked.
         for n, ai in enumerate(randsyms):
             repl[ai] = randcplx(n)/div
-        if not any([b.is_Integer and b <= 0 for b in Tuple(*bq).subs(repl)]):
+        if not any(b.is_Integer and b <= 0 for b in Tuple(*bq).subs(repl)):
             break
     [a, b, c, d] = [2, -1, 3, 1]
     if lowerplane:
