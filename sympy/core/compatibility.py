@@ -6,131 +6,16 @@ here for easy import.
 
 import operator
 from collections import defaultdict
-from time import perf_counter as clock
-
-from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, GROUND_TYPES, gmpy
-
 
 """
-Python 2 and Python 3 compatible imports
-
-String and Unicode compatible changes:
-    * `unicode()` removed in Python 3, import `unicode` for Python 2/3
-      compatible function
-    * Use `u()` for escaped unicode sequences (e.g. u'\u2020' -> u('\u2020'))
-    * Use `u_decode()` to decode utf-8 formatted unicode strings
-
-Renamed function attributes:
-    * Python 2 `.func_code`, Python 3 `.__func__`, access with
-      `get_function_code()`
-    * Python 2 `.func_globals`, Python 3 `.__globals__`, access with
-      `get_function_globals()`
-    * Python 2 `.func_name`, Python 3 `.__name__`, access with
-      `get_function_name()`
-
-Moved modules:
-    * `reduce()`
-    * `StringIO()`
-    * `cStringIO()` (same as `StingIO()` in Python 3)
-    * Python 2 `__builtin__`, access with Python 3 name, `builtins`
-
-exec:
-    * Use `exec_()`, with parameters `exec_(code, globs=None, locs=None)`
-
-Metaclasses:
-    * Use `with_metaclass()`, examples below
-        * Define class `Foo` with metaclass `Meta`, and no parent:
-            class Foo(with_metaclass(Meta)):
-                pass
-        * Define class `Foo` with metaclass `Meta` and parent class `Bar`:
-            class Foo(with_metaclass(Meta, Bar)):
-                pass
+Some utility functios origniating from Python 2 and Python 3 compatible imports.
 """
 
 __all__ = [
-    'PY3', 'int_info', 'SYMPY_INTS', 'clock',
-    'unicode', 'u_decode', 'get_function_code', 'gmpy',
-    'get_function_globals', 'get_function_name', 'builtins', 'reduce',
-    'StringIO', 'cStringIO', 'exec_', 'Mapping', 'Callable',
-    'MutableMapping', 'MutableSet', 'Iterable', 'Hashable', 'unwrap',
-    'accumulate', 'with_metaclass', 'NotIterable', 'iterable', 'is_sequence',
-    'as_int', 'default_sort_key', 'ordered', 'GROUND_TYPES', 'HAS_GMPY',
+    'NotIterable', 'iterable', 'is_sequence',
+    'as_int', 'default_sort_key', 'ordered',
 ]
 
-import sys
-PY3 = True
-
-int_info = sys.int_info
-
-# String / unicode compatibility
-unicode = str
-
-def u_decode(x):
-    return x
-
-# Moved definitions
-get_function_code = operator.attrgetter("__code__")
-get_function_globals = operator.attrgetter("__globals__")
-get_function_name = operator.attrgetter("__name__")
-
-import builtins
-from functools import reduce
-from io import StringIO
-cStringIO = StringIO
-
-exec_ = getattr(builtins, "exec")
-
-from collections.abc import (Mapping, Callable, MutableMapping,
-    MutableSet, Iterable, Hashable)
-
-from inspect import unwrap
-from itertools import accumulate
-
-
-
-def with_metaclass(meta, *bases):
-    """
-    Create a base class with a metaclass.
-
-    For example, if you have the metaclass
-
-    >>> class Meta(type):
-    ...     pass
-
-    Use this as the metaclass by doing
-
-    >>> from sympy.core.compatibility import with_metaclass
-    >>> class MyClass(with_metaclass(Meta, object)):
-    ...     pass
-
-    This is equivalent to the Python 2::
-
-        class MyClass(object):
-            __metaclass__ = Meta
-
-    or Python 3::
-
-        class MyClass(object, metaclass=Meta):
-            pass
-
-    That is, the first argument is the metaclass, and the remaining arguments
-    are the base classes. Note that if the base class is just ``object``, you
-    may omit it.
-
-    >>> MyClass.__mro__
-    (<class '...MyClass'>, <... 'object'>)
-    >>> type(MyClass)
-    <class '...Meta'>
-
-    """
-    # This requires a bit of explanation: the basic idea is to make a dummy
-    # metaclass for one level of class instantiation that replaces itself with
-    # the actual metaclass.
-    # Code copied from the 'six' library.
-    class metaclass(meta):
-        def __new__(cls, name, this_bases, d):
-            return meta(name, bases, d)
-    return type.__new__(metaclass, "NewBase", (), {})
 
 
 # These are in here because telling if something is an iterable just by calling
