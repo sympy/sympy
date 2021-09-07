@@ -42,7 +42,7 @@ def version_tuple(vstring):
             except ValueError:
                 pass
             components.append(x)
-    return components
+    return tuple(components)
 
 
 def import_module(module, min_module_version=None, min_python_version=None,
