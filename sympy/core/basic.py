@@ -1559,7 +1559,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             if arg.is_Relational:
                 try:
                     d = arg.xreplace(d).matches(other_arg, d, old=old)
-                except TypeError: # Should be InvalidCompatisonError when introduced
+                except TypeError: # Should be InvalidComparisonError when introduced
                     d = None
             else:
                     d = arg.xreplace(d).matches(other_arg, d, old=old)
