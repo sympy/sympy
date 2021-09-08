@@ -3069,3 +3069,8 @@ def test_issue_19814():
 def test_issue_12527():
     ans = FiniteSet(*[i*pi/2 for i in range(1, 3, 5)])
     assert solveset(1/tan(x), x, Interval(1,10)) == ans
+
+
+def test_issue_17579():
+    assert solveset(sin(log(x)), x, S.Reals).contains(1)
+    assert not solveset(sin(log(x)), x, Interval.Ropen(0, 1))).contains(1)
