@@ -1003,8 +1003,12 @@ def _solveset(f, symbol, domain, _check=False):
             f = a/m + h  # XXX condition `m != 0` should be added to soln
 
     # assign the solvers to use
-    solver = lambda f, x, domain=domain: _solveset(f, x, domain)
-    inverter = lambda f, rhs, symbol: _invert(f, rhs, symbol, domain)
+    if domain.is_subset(S.Reals):
+	    solver = lambda f, x, domain=domain: _solveset(f, x, S.Reals).intersection(domain)
+		inverter = lambda f, rhs, symbol: invert_real(f, rhs, symbol).intersection(domain)
+    else:
+	    solver = lambda f, x, domain=domain: _solveset(f, x).intersection(domain)
+		inverter = lambda f, rhs, symbol: invert_complexes(f, rhs, symbol).intersection(domain)
 
     result = EmptySet
 
@@ -1027,8 +1031,8 @@ def _solveset(f, symbol, domain, _check=False):
     elif isinstance(f, arg):
         from sympy.functions.elementary.complexes import re, im
         a = f.args[0]
-        result = Intersection(_solveset(re(a) > 0, symbol, domain),
-                              _solveset(im(a), symbol, domain))
+        result = Intersection(solver(re(a) > 0, symbol),
+                              solver(im(a), symbol))
     elif f.is_Piecewise:
         expr_set_pairs = f.as_expr_set_pairs(domain)
         for (expr, in_set) in expr_set_pairs:
@@ -1107,9 +1111,9 @@ def _solveset(f, symbol, domain, _check=False):
         if isinstance(f, Expr):
             num, den = f.as_numer_denom()
             if den.has(symbol):
-                _result = _solveset(num, symbol, domain)
+                _result = solver(num, symbol)
                 if not isinstance(_result, ConditionSet):
-                    singularities = _solveset(den, symbol, domain)
+                    singularities = solver(den, symbol)
                     result = _result - singularities
 
     if _check:
