@@ -1384,9 +1384,6 @@ def _solve_modular(f, symbol, domain):
         # checks if coefficient of modterm is negative in main equation.
         rhs *= -S.One
 
-    if not domain.is_subset(S.Integers):
-        return unsolved_result
-
     if rhs.has(symbol):
         # TODO Case: A-> function of symbol, can be extended here
         # in future.
