@@ -1365,11 +1365,15 @@ def multiset_combinations(m, n, g=None):
     """
     if g is None:
         if type(m) is dict:
-            if n > sum(m.values()):
+            if any(v < 0 for v in m.values()):
+                raise ValueError('counts cannot be negative')
+            N = sum(m.values())
+            if n > N:
                 return
             g = [[k, m[k]] for k in ordered(m)]
         else:
             m = list(m)
+            N = len(m)
             if n > len(m):
                 return
             try:
@@ -1379,7 +1383,10 @@ def multiset_combinations(m, n, g=None):
                 m = list(ordered(m))
                 g = [list(i) for i in group(m, multiple=False)]
         del m
-    if sum(v for k, v in g) < n or not n:
+    else:
+        # not checking counts since g is intended for internal use
+        N = sum(v for k, v in g)
+    if n > N or not n:
         yield []
     else:
         for i, (k, v) in enumerate(g):
@@ -1392,7 +1399,7 @@ def multiset_combinations(m, n, g=None):
                     if len(rv) == n:
                         yield rv
 
-
+                        
 def multiset_permutations(m, size=None, g=None):
     """
     Return the unique permutations of multiset ``m``.
@@ -1411,6 +1418,8 @@ def multiset_permutations(m, size=None, g=None):
     """
     if g is None:
         if type(m) is dict:
+            if any(v < 0 for v in m.values()):
+                raise ValueError('counts cannot be negative')
             g = [[k, m[k]] for k in ordered(m)]
         else:
             m = list(ordered(m))
