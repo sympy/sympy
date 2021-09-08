@@ -8,6 +8,7 @@ from sympy.core.basic import _aresame
 from sympy.testing.pytest import XFAIL
 from sympy.abc import a, x, y, z, t
 
+
 def test_subs():
     n3 = Rational(3)
     e = x
@@ -33,6 +34,7 @@ def test_subs_Matrix():
     assert Mul(Matrix([[3]]), x).subs(x, 2.0) == Matrix([[6.0]])
     # Does not raise a TypeError, see comment on the MatAdd postprocessor
     assert Add(Matrix([[3]]), x).subs(x, 2.0) == Add(Matrix([[3]]), 2.0)
+
 
 def test_subs_AccumBounds():
     e = x
@@ -467,6 +469,7 @@ def test_add():
     assert Add(*[AccumBounds(-1, 1), oo]) == oo
     assert Add(*[oo, AccumBounds(-1, 1)]) == oo
 
+
 def test_subs_issue_4009():
     assert (I*Symbol('a')).subs(1, 2) == I*Symbol('a')
 
@@ -856,9 +859,16 @@ def test_issue_19326():
     x, y = [i(t) for i in map(Function, 'xy')]
     assert (x*y).subs({x: 1 + x, y: x}) == (1 + x)*x
 
+
 def test_issue_19558():
     e = (7*x*cos(x) - 12*log(x)**3)*(-log(x)**4 + 2*sin(x) + 1)**2/ \
     (2*(x*cos(x) - 2*log(x)**3)*(3*log(x)**4 - 7*sin(x) + 3)**2)
 
     assert e.subs(x, oo) == AccumBounds(-oo, oo)
     assert (sin(x) + cos(x)).subs(x, oo) == AccumBounds(-2, 2)
+
+
+def test_issue_22033():
+    xr = Symbol('xr', real=True)
+    e = (1/xr)
+    assert e.subs(xr**2, y) == e

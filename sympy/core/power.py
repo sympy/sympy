@@ -832,9 +832,10 @@ class Pow(Expr):
                         as_int(pow, strict=False)
                         combines = True
                     except ValueError:
-                        combines = isinstance(Pow._eval_power(
-                            Pow(*old.as_base_exp(), evaluate=False),
-                            pow), (Pow, exp, Symbol))
+                        b, e = old.as_base_exp()
+                        # These conditions ensure that (b**e)**f == b**(e*f) for any f
+                        combines = b.is_positive and e.is_real or b.is_nonnegative and e.is_nonnegative
+
                     return combines, pow, None
                 else:
                     # With noncommutative symbols, substitute only integer powers

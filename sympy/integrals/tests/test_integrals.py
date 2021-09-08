@@ -1833,3 +1833,23 @@ def test_issue_21024():
 def test_issue_21831():
     theta = symbols('theta')
     assert integrate(cos(3*theta)/(5-4*cos(theta)), (theta, 0, 2*pi)) == pi/12
+
+
+@slow
+def test_issue_22033_integral():
+    assert integrate((x**2 - Rational(1, 4))**2 * sqrt(1 - x**2), (x, -1, 1)) == pi/32
+
+
+@slow
+def test_issue_21671():
+    assert integrate(1,(z,x**2+y**2,2-x**2-y**2),(y,-sqrt(1-x**2),sqrt(1-x**2)),(x,-1,1)) == pi
+    assert integrate(-4*(1 - x**2)**(S(3)/2)/3 + 2*sqrt(1 - x**2)*(2 - 2*x**2), (x, -1, 1)) == pi
+
+
+def test_issue_18527():
+    # The manual integrator can not currently solve this. Assert that it does
+    # not give an incorrect result involving Abs when x has real assumptions.
+    xr = symbols('xr', real=True)
+    expr = (cos(x)/(4+(sin(x))**2))
+    res_real = integrate(expr.subs(x, xr), xr, manual=True).subs(xr, x)
+    assert integrate(expr, x, manual=True) == res_real == Integral(expr, x)
