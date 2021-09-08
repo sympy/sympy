@@ -1365,7 +1365,7 @@ def multiset_combinations(m, n, g=None):
     """
     if g is None:
         if type(m) is dict:
-            if any(v < 0 for v in m.values()):
+            if any(as_int(v) < 0 for v in m.values()):
                 raise ValueError('counts cannot be negative')
             N = sum(m.values())
             if n > N:
@@ -1418,7 +1418,7 @@ def multiset_permutations(m, size=None, g=None):
     """
     if g is None:
         if type(m) is dict:
-            if any(v < 0 for v in m.values()):
+            if any(as_int(v) < 0 for v in m.values()):
                 raise ValueError('counts cannot be negative')
             g = [[k, m[k]] for k in ordered(m)]
         else:
