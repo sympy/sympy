@@ -2168,7 +2168,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     """
     if not isinstance(domain, Set):
         raise ValueError("%s is not a valid domain" %(domain))
-    elif domain is not S.Reals or domain is not S.Complexes:
+    elif domain is not S.Reals and domain is not S.Complexes:
         if domain.is_subset(S.Reals):
             dom = S.Reals
         else:
