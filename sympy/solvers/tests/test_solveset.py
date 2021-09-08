@@ -3067,7 +3067,7 @@ def test_issue_19814():
 
 
 def test_issue_12527():
-    ans = FiniteSet(*[i*pi/2 for i in range(1, 3, 5)])
+    ans = FiniteSet(*[i*pi/2 for i in (1, 3, 5)])
     assert solveset(1/tan(x), x, Interval(1,10)) == ans
 
 
