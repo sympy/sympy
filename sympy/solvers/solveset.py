@@ -1004,11 +1004,11 @@ def _solveset(f, symbol, domain, _check=False):
 
     # assign the solvers to use
     if domain.is_subset(S.Reals):
-	    solver = lambda f, x, domain=domain: _solveset(f, x, S.Reals).intersection(domain)
-		inverter = lambda f, rhs, symbol: invert_real(f, rhs, symbol).intersection(domain)
+        solver = lambda f, x, domain=domain: _solveset(f, x, S.Reals).intersection(domain)
+        inverter = lambda f, rhs, symbol: invert_real(f, rhs, symbol).intersection(domain)
     else:
-	    solver = lambda f, x, domain=domain: _solveset(f, x).intersection(domain)
-		inverter = lambda f, rhs, symbol: invert_complexes(f, rhs, symbol).intersection(domain)
+        solver = lambda f, x, domain=domain: _solveset(f, x).intersection(domain)
+        inverter = lambda f, rhs, symbol: invert_complexes(f, rhs, symbol).intersection(domain)
 
     result = EmptySet
 
