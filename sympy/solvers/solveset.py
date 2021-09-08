@@ -1106,28 +1106,17 @@ def _solveset(f, symbol, domain, _check=False):
     if isinstance(result, ConditionSet):
         if isinstance(f, Expr):
             num, den = f.as_numer_denom()
-        else:
-            num, den = f, S.One
-        if den.has(symbol):
-            _result = _solveset(num, symbol, domain)
-            if not isinstance(_result, ConditionSet):
-                singularities = _solveset(den, symbol, domain)
-                result = _result - singularities
+            if den.has(symbol):
+                _result = _solveset(num, symbol, domain)
+                if not isinstance(_result, ConditionSet):
+                    singularities = _solveset(den, symbol, domain)
+                    result = _result - singularities
 
     if _check:
         if isinstance(result, ConditionSet):
             # it wasn't solved or has enumerated all conditions
             # -- leave it alone
-            if domain is S.Complexes:
-                return result
-            # Add domain
-            new_res = Intersection(result, domain)
-            # Check if the domain is really contributing
-            if new_res.is_subset(result):
-                return new_res
-            else:
-                return result
-
+            return result
 
         # whittle away all but the symbol-containing core
         # to use this for testing
