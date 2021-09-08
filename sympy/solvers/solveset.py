@@ -1008,7 +1008,7 @@ def _solveset(f, symbol, domain, _check=False):
         inverter = lambda f, rhs, symbol: invert_real(f, rhs, symbol).intersection(domain)
     else:
         solver = lambda f, x, domain=domain: _solveset(f, x).intersection(domain)
-        inverter = lambda f, rhs, symbol: invert_complexes(f, rhs, symbol).intersection(domain)
+        inverter = lambda f, rhs, symbol: invert_complex(f, rhs, symbol).intersection(domain)
 
     result = EmptySet
 
