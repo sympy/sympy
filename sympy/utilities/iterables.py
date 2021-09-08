@@ -1399,7 +1399,6 @@ def multiset_combinations(m, n, g=None):
                     if len(rv) == n:
                         yield rv
 
-                        
 def multiset_permutations(m, size=None, g=None):
     """
     Return the unique permutations of multiset ``m``.
