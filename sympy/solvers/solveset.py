@@ -1003,12 +1003,8 @@ def _solveset(f, symbol, domain, _check=False):
             f = a/m + h  # XXX condition `m != 0` should be added to soln
 
     # assign the solvers to use
-    if domain.is_subset(S.Reals):
-        solver = lambda f, x, domain=domain: _solveset(f, x, S.Reals).intersection(domain)
-        inverter = lambda f, rhs, symbol: invert_real(f, rhs, symbol).intersection(domain)
-    else:
-        solver = lambda f, x, domain=domain: _solveset(f, x).intersection(domain)
-        inverter = lambda f, rhs, symbol: invert_complex(f, rhs, symbol).intersection(domain)
+    solver = lambda f, x, domain=domain: _solveset(f, x, domain)
+    inverter = lambda f, rhs, symbol: _invert(f, rhs, symbol, domain)
 
     result = EmptySet
 
@@ -2170,6 +2166,15 @@ def solveset(f, symbol=None, domain=S.Complexes):
     Interval.open(0, oo)
 
     """
+    if not isinstance(domain, Set):
+        raise ValueError("%s is not a valid domain" %(domain))
+    elif domain is not S.Reals or domain is not S.Complexes:
+        if domain.is_subset(S.Reals):
+            dom = S.Reals
+        else:
+            dom = S.Complexes
+        return solveset(f, symbol, dom).intersection(domain)
+
     f = sympify(f)
     symbol = sympify(symbol)
 
@@ -2184,9 +2189,6 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     if not isinstance(symbol, (Expr, Relational)) and  symbol is not None:
         raise ValueError("%s is not a valid SymPy symbol" % (symbol,))
-
-    if not isinstance(domain, Set):
-        raise ValueError("%s is not a valid domain" %(domain))
 
     free_symbols = f.free_symbols
 
