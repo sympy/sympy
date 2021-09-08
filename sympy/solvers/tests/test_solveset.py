@@ -3073,4 +3073,4 @@ def test_issue_12527():
 
 def test_issue_17579():
     assert solveset(sin(log(x)), x, S.Reals).contains(1)
-    assert not solveset(sin(log(x)), x, Interval.Ropen(0, 1))).contains(1)
+    assert not solveset(sin(log(x)), x, Interval.Ropen(0, 1)).contains(1)
