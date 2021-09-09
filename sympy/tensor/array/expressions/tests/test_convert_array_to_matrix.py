@@ -170,8 +170,8 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
 
     cg = ArrayDiagonal(ArrayTensorProduct(I, x, A, B), (1, 2), (5, 6))
     assert _array_diag2contr_diagmatrix(cg) == ArrayDiagonal(ArrayContraction(ArrayTensorProduct(I, OneArray(1), A, B, DiagMatrix(x)), (1, 7)), (5, 6))
-    # TODO: not yet working
-    #  assert convert_array_to_matrix(cg)
+    # TODO: this is returning a wrong result:
+    # convert_array_to_matrix(cg)
 
     cg = ArrayDiagonal(ArrayTensorProduct(x, I1), (1, 2))
     assert isinstance(cg, ArrayDiagonal)
@@ -201,33 +201,35 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
     assert convert_array_to_matrix(cg) == A * a
 
     cg = ArrayContraction(ArrayTensorProduct(A, a, B), (1, 2, 4))
-    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), B), (1, 2), (3, 4))
+    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), OneArray(1), B), (1, 2), (3, 5))
     assert convert_array_to_matrix(cg) == A * DiagMatrix(a) * B
 
     cg = ArrayContraction(ArrayTensorProduct(A, a, B), (0, 2, 4))
-    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), B), (0, 2), (3, 4))
+    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), OneArray(1), B), (0, 2), (3, 5))
     assert convert_array_to_matrix(cg) == A.T * DiagMatrix(a) * B
 
     cg = ArrayContraction(ArrayTensorProduct(A, a, b, a.T, B), (0, 2, 4, 7, 9))
-    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), DiagMatrix(b),
-                                                                                                 DiagMatrix(a), B),
-                                                                       (0, 2), (3, 4), (5, 7), (6, 9))
-    assert convert_array_to_matrix(cg).doit() == A.T * DiagMatrix(a) * DiagMatrix(b) * DiagMatrix(a) * B.T
+    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), OneArray(1),
+                                                DiagMatrix(b), OneArray(1), DiagMatrix(a), OneArray(1), B),
+                                               (0, 2), (3, 5), (6, 9), (8, 12))
+    assert convert_array_to_matrix(cg) == A.T * DiagMatrix(a) * DiagMatrix(b) * DiagMatrix(a) * B.T
 
     cg = ArrayContraction(ArrayTensorProduct(I1, I1, I1), (1, 2, 4))
-    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(I1, I1, I1), (1, 2), (3, 4))
-    assert convert_array_to_matrix(cg).doit() == Identity(1)
+    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(I1, I1, OneArray(1), I1), (1, 2), (3, 5))
+    assert convert_array_to_matrix(cg) == 1
 
     cg = ArrayContraction(ArrayTensorProduct(I, I, I, I, A), (1, 2, 8), (5, 6, 9))
     assert convert_array_to_matrix(cg.split_multiple_contractions()).doit() == A
 
     cg = ArrayContraction(ArrayTensorProduct(A, a, C, a, B), (1, 2, 4), (5, 6, 8))
-    expected = ArrayContraction(ArrayTensorProduct(DiagMatrix(a), DiagMatrix(a), C, A, B), (0, 4), (1, 7), (2, 5), (3, 8))
+    expected = ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), OneArray(1), C, DiagMatrix(a), OneArray(1), B), (1, 3), (2, 5), (6, 7), (8, 10))
     assert cg.split_multiple_contractions() == expected
     assert convert_array_to_matrix(cg) == A * DiagMatrix(a) * C * DiagMatrix(a) * B
 
     cg = ArrayContraction(ArrayTensorProduct(a, I1, b, I1, (a.T*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
-    assert cg.split_multiple_contractions().dummy_eq(ArrayContraction(ArrayTensorProduct((a.T * b).applyfunc(cos), I1, I1, a, b), (0, 2), (1, 4), (3, 7), (5, 9)))
+    expected = ArrayContraction(ArrayTensorProduct(a, I1, OneArray(1), b, I1, OneArray(1), (a.T*b).applyfunc(cos)),
+                                (1, 3), (2, 10), (6, 8), (7, 11))
+    assert cg.split_multiple_contractions().dummy_eq(expected)
     assert convert_array_to_matrix(cg).doit().dummy_eq(MatMul(a, (a.T * b).applyfunc(cos), b.T))
 
 

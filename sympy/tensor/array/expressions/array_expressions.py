@@ -4,6 +4,8 @@ import itertools
 from itertools import accumulate
 from typing import Optional, List, Dict
 
+import typing
+
 from sympy import Expr, ImmutableDenseNDimArray, S, Symbol, ZeroMatrix, Basic, tensorproduct, Add, permutedims, \
     Tuple, tensordiagonal, Lambda, Dummy, Function, MatrixExpr, NDimArray, Indexed, IndexedBase, default_sort_key, \
     tensorcontraction, diagonalize_vector, Mul
@@ -923,19 +925,29 @@ class ArrayContraction(_CodegenArrayAbstract):
         editor = _EditArrayContraction(self)
 
         contraction_indices = self.contraction_indices
-        if isinstance(self.expr, ArrayTensorProduct):
-            args = list(self.expr.args)
-        else:
-            args = [self.expr]
-        # TODO: unify API, best location in ArrayTensorProduct
-        subranks = [get_rank(i) for i in args]
-        # TODO: unify API
-        mapping = _get_mapping_from_subranks(subranks)
-        reverse_mapping = {v: k for k, v in mapping.items()}
+
+        onearray_insert = []
 
         for indl, links in enumerate(contraction_indices):
             if len(links) <= 2:
                 continue
+
+            # Check multiple contractions:
+            #
+            # Examples:
+            #
+            # * `A_ij b_j0 C_jk` ===> `A*DiagMatrix(b)*C \otimes OneArray(1)` with permutation (1 2)
+            #
+            # Care for:
+            # - matrix being diagonalized (i.e. `A_ii`)
+            # - vectors being diagonalized (i.e. `a_i0`)
+
+            # Multiple contractions can be split into matrix multiplications if
+            # not more than three arguments are non-diagonals or non-vectors.
+            #
+            # Vectors get diagonalized while diagonal matrices remain diagonal.
+            # The non-diagonal matrices can be at the beginning or at the end
+            # of the final matrix multiplication line.
 
             positions = editor.get_mapping_for_index(indl)
 
@@ -945,11 +957,12 @@ class ArrayContraction(_CodegenArrayAbstract):
             not_vectors: Tuple[_ArgE, int] = []
             vectors: Tuple[_ArgE, int] = []
             for arg_ind, rel_ind in positions:
-                mat = args[arg_ind]
-                other_arg_pos = 1-rel_ind
-                other_arg_abs = reverse_mapping[arg_ind, other_arg_pos]
                 arg = editor.args_with_ind[arg_ind]
-                if (((1 not in mat.shape)) or
+                mat = arg.element
+                abs_arg_start, abs_arg_end = editor.get_absolute_range(arg)
+                other_arg_pos = 1-rel_ind
+                other_arg_abs = abs_arg_start + other_arg_pos
+                if ((1 not in mat.shape) or
                     ((current_dimension == 1) is True and mat.shape != (1, 1)) or
                     any(other_arg_abs in l for li, l in enumerate(contraction_indices) if li != indl)
                 ):
@@ -976,9 +989,14 @@ class ArrayContraction(_CodegenArrayAbstract):
                 new_index = editor.get_new_contraction_index()
                 assert v.indices.index(None) == 1 - rel_ind
                 v.indices[v.indices.index(None)] = new_index
+                onearray_insert.append(v)
 
             last_vec, rel_ind = vectors_to_loop[-1]
             last_vec.indices[rel_ind] = new_index
+
+        for v in onearray_insert:
+            editor.insert_after(v, _ArgE(OneArray(1), [None]))
+
         return editor.to_array_contraction()
 
     def flatten_contraction_of_diagonal(self):
@@ -1464,6 +1482,32 @@ class _EditArrayContraction:
         index_element = self.args_with_ind.index(from_element)
         self._track_permutation[index_destination].extend(self._track_permutation[index_element])
         self._track_permutation.pop(index_element)
+
+    def get_absolute_free_range(self, arg: _ArgE) -> typing.Tuple[int, int]:
+        """
+        Return the range of the free indices of the arg as absolute positions
+        among all free indices.
+        """
+        counter = 0
+        for arg_with_ind in self.args_with_ind:
+            number_free_indices = len([i for i in arg_with_ind.indices if i is None])
+            if arg_with_ind == arg:
+                return counter, counter + number_free_indices
+            counter += number_free_indices
+        raise IndexError("argument not found")
+
+    def get_absolute_range(self, arg: _ArgE) -> typing.Tuple[int, int]:
+        """
+        Return the absolute range of indices for arg, disregarding dummy
+        indices.
+        """
+        counter = 0
+        for arg_with_ind in self.args_with_ind:
+            number_indices = len(arg_with_ind.indices)
+            if arg_with_ind == arg:
+                return counter, counter + number_indices
+            counter += number_indices
+        raise IndexError("argument not found")
 
 
 def get_rank(expr):
