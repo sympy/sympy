@@ -1089,7 +1089,7 @@ def hermite_reduce(a, d, DE):
     if dm.degree(DE.t) > 0:
         d = ds
 
-        while dm.degree(DE.t) > 0:
+        while True:
 
             ddm = derivation(dm, DE)
             dm2 = gcd(dm, ddm)
@@ -1108,6 +1108,8 @@ def hermite_reduce(a, d, DE):
             gd = gd*dm
             ga, gd = ga.cancel(gd, include=True)
             dm = dm2
+            if not dm.degree(DE.t):
+                break
 
     q, r = a.div(d)
     ga, gd = ga.cancel(gd, include=True)
