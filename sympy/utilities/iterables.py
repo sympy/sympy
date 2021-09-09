@@ -1374,7 +1374,7 @@ def multiset_combinations(m, n, g=None):
         else:
             m = list(m)
             N = len(m)
-            if n > len(m):
+            if n > N:
                 return
             try:
                 m = multiset(m)
