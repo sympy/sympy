@@ -175,9 +175,9 @@ def _invert(f_x, y, x, domain=S.Complexes):
     if not isinstance(s, FiniteSet) or x1 != x:
         return x1, s
 
-    # Avoid adding gratuitous intersections with S.Complexes. Actual
+    # Avoid adding gratuitous intersections. Actual
     # conditions should be handled by the respective inverters.
-    if domain is S.Complexes:
+    if domain is S.Complexes or domain is S.Reals:
         return x1, s
     else:
         return x1, s.intersection(domain)
@@ -835,9 +835,10 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
                 s = Dummy('s')
                 result = imageset(Lambda(s, expand_complex(s)), result)
         if isinstance(result, FiniteSet) and domain != S.Complexes:
-            # Avoid adding gratuitous intersections with S.Complexes. Actual
+            # Avoid adding gratuitous intersections. Actual
             # conditions should be handled elsewhere.
-            result = result.intersection(domain)
+            if not (domain is S.Complexes or domain is S.Reals):
+                result = result.intersection(domain)
         return result
     else:
         return ConditionSet(symbol, Eq(f, 0), domain)
@@ -1067,7 +1068,7 @@ def _solveset(f, symbol, domain, _check=False):
         elif isinstance(rhs_s, FiniteSet):
             for equation in [lhs - rhs for rhs in rhs_s]:
                 if equation == f:
-                    u = unrad(f)
+                    u = unrad(f, symbol)
                     if u:
                         result += _solve_radical(equation, u,
                                                  symbol,
@@ -3448,7 +3449,7 @@ def _separate_poly_nonpoly(system, symbols):
         if isinstance(eq, Equality):
             eq = eq.rewrite(Add)
         # try to remove sqrt and rational power
-        without_radicals = unrad(simplify(eq))
+        without_radicals = unrad(simplify(eq), *symbols)
         if without_radicals:
             eq_unrad, cov = without_radicals
             if not cov:
