@@ -667,6 +667,7 @@ def test_conjugate():
 
     x, y = symbols('x y')
     assert conjugate(conjugate(x)) == x
+    assert conjugate(x).inverse() == conjugate
     assert conjugate(x + y) == conjugate(x) + conjugate(y)
     assert conjugate(x - y) == conjugate(x) - conjugate(y)
     assert conjugate(x * y) == conjugate(x) * conjugate(y)

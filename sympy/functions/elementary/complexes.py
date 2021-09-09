@@ -826,6 +826,9 @@ class conjugate(Function):
         if obj is not None:
             return obj
 
+    def inverse(self):
+        return conjugate
+
     def _eval_Abs(self):
         return Abs(self.args[0], evaluate=True)
 
