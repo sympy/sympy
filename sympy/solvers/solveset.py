@@ -175,9 +175,9 @@ def _invert(f_x, y, x, domain=S.Complexes):
     if not isinstance(s, FiniteSet) or x1 != x:
         return x1, s
 
-    # Avoid adding gratuitous intersections. Actual
+    # Avoid adding gratuitous intersections with S.Complexes. Actual
     # conditions should be handled by the respective inverters.
-    if domain is S.Complexes or domain is S.Reals:
+    if domain is S.Complexes:
         return x1, s
     else:
         return x1, s.intersection(domain)
@@ -835,10 +835,9 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
                 s = Dummy('s')
                 result = imageset(Lambda(s, expand_complex(s)), result)
         if isinstance(result, FiniteSet) and domain != S.Complexes:
-            # Avoid adding gratuitous intersections. Actual
+            # Avoid adding gratuitous intersections with S.Complexes. Actual
             # conditions should be handled elsewhere.
-            if not (domain is S.Complexes or domain is S.Reals):
-                result = result.intersection(domain)
+            result = result.intersection(domain)
         return result
     else:
         return ConditionSet(symbol, Eq(f, 0), domain)
