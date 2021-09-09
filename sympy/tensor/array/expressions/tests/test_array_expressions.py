@@ -178,12 +178,15 @@ def test_arrayexpr_array_flatten():
 
     expr1 = ArrayDiagonal(ArrayTensorProduct(X, A), (1, 2))
     expr2 = ArrayTensorProduct(expr1, a)
-    assert expr2 == PermuteDims(ArrayDiagonal(ArrayTensorProduct(X, A, a), (1, 2)), [0, 1, 3, 4, 2])
+    assert expr2 == PermuteDims(ArrayDiagonal(ArrayTensorProduct(X, A, a), (1, 2)), [0, 1, 4, 2, 3])
 
     expr1 = ArrayContraction(ArrayTensorProduct(X, A), (1, 2))
     expr2 = ArrayTensorProduct(expr1, a)
     assert isinstance(expr2, ArrayContraction)
     assert isinstance(expr2.expr, ArrayTensorProduct)
+
+    cg = ArrayTensorProduct(ArrayDiagonal(ArrayTensorProduct(A, X, Y), (0, 3), (1, 5)), a, b)
+    assert cg == PermuteDims(ArrayDiagonal(ArrayTensorProduct(A, X, Y, a, b), (0, 3), (1, 5)), [0, 1, 6, 7, 2, 3, 4, 5])
 
 
 def test_arrayexpr_array_diagonal():
