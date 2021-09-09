@@ -2,10 +2,11 @@ from sympy import (
     symbols, Identity, cos, ZeroMatrix, OneMatrix, sqrt, HadamardProduct)
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 from sympy.tensor.array.expressions.conv_array_to_matrix import _support_function_tp1_recognize, \
-    _array_diag2contr_diagmatrix, convert_array_to_matrix, _remove_trivial_dims, _array2matrix
+    _array_diag2contr_diagmatrix, convert_array_to_matrix, _remove_trivial_dims, _array2matrix, \
+    _combine_removed, identify_removable_identity_matrices
 from sympy import MatrixSymbol
 from sympy.combinatorics import Permutation
-from sympy.matrices.expressions.diagonal import DiagMatrix
+from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
 from sympy.matrices import Trace, MatMul, Transpose
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, \
     ArrayTensorProduct, ArrayAdd, PermuteDims, ArrayDiagonal, \
@@ -88,14 +89,6 @@ def test_arrayexpr_convert_array_to_matrix():
     # Partial conversion to matrix multiplication:
     expr = ArrayContraction(ArrayTensorProduct(M, N, P, Q), (0, 2), (1, 4, 6))
     assert convert_array_to_matrix(expr) == ArrayContraction(ArrayTensorProduct(M.T*N, P, Q), (0, 2, 4))
-
-    # TODO: not yet supported:
-
-    # cg = ArrayDiagonal(ArrayTensorProduct(M, N, P), (0, 2, 4), (1, 3, 5))
-    #  assert recognize_matrix_expression(cg) == HadamardProduct(M, N, P)
-
-    # cg = ArrayDiagonal(ArrayTensorProduct(M, N, P), (0, 3, 4), (1, 2, 5))
-    #  assert recognize_matrix_expression(cg) == HadamardProduct(M, N.T, P)
 
     x = MatrixSymbol("x", k, 1)
     cg = PermuteDims(
@@ -361,6 +354,18 @@ def test_arrayexpr_convert_array_to_matrix_remove_trivial_dims():
     rexpr, removed = _remove_trivial_dims(cg)
     assert removed == [1, 2, 3]
 
+    # Contractions with identity matrices need to be followed by a permutation
+    # in order
+    cg = ArrayContraction(ArrayTensorProduct(A, B, C, M, I), (1, 8))
+    ret, removed = _remove_trivial_dims(cg)
+    assert ret == PermuteDims(ArrayTensorProduct(A, B, C, M), [0, 2, 3, 4, 5, 6, 7, 1])
+    assert removed == []
+
+    cg = ArrayContraction(ArrayTensorProduct(A, B, C, M, I), (1, 8), (3, 4))
+    ret, removed = _remove_trivial_dims(cg)
+    assert ret == PermuteDims(ArrayContraction(ArrayTensorProduct(A, B, C, M), (3, 4)), [0, 2, 3, 4, 5, 1])
+    assert removed == []
+
 
 def test_arrayexpr_convert_array_to_matrix_diag2contraction_diagmatrix():
     cg = ArrayDiagonal(ArrayTensorProduct(M, a), (1, 2))
@@ -517,3 +522,40 @@ def test_convert_array_to_hadamard_products():
     cg = ArrayDiagonal(ArrayTensorProduct(A), (0, 1))
     ret = convert_array_to_matrix(cg)
     assert ret == cg
+
+    cg = ArrayDiagonal(ArrayTensorProduct(M, N, P), (0, 2, 4), (1, 3, 5))
+    assert convert_array_to_matrix(cg) == HadamardProduct(M, N, P)
+
+    cg = ArrayDiagonal(ArrayTensorProduct(M, N, P), (0, 3, 4), (1, 2, 5))
+    assert convert_array_to_matrix(cg) == HadamardProduct(M, P, N.T)
+
+
+def test_identify_removable_identity_matrices():
+
+    D = DiagonalMatrix(MatrixSymbol("D", k, k))
+
+    cg = ArrayContraction(ArrayTensorProduct(A, B, I), (1, 2, 4, 5))
+    expected = ArrayContraction(ArrayTensorProduct(A, B), (1, 2))
+    assert identify_removable_identity_matrices(cg) == expected
+
+    cg = ArrayContraction(ArrayTensorProduct(A, B, C, I), (1, 3, 5, 6, 7))
+    expected = ArrayContraction(ArrayTensorProduct(A, B, C), (1, 3, 5))
+    assert identify_removable_identity_matrices(cg) == expected
+
+    # Tests with diagonal matrices:
+
+    cg = ArrayContraction(ArrayTensorProduct(A, B, D), (1, 2, 4, 5))
+    ret = identify_removable_identity_matrices(cg)
+    expected = ArrayContraction(ArrayTensorProduct(A, B, D), (1, 4), (2, 5))
+    assert ret == expected
+
+    cg = ArrayContraction(ArrayTensorProduct(A, B, D, M, N), (1, 2, 4, 5, 6, 8))
+    ret = identify_removable_identity_matrices(cg)
+    assert ret == cg
+
+
+def test_combine_removed():
+
+    assert _combine_removed(6, [0, 1, 2], [0, 1, 2]) == [0, 1, 2, 3, 4, 5]
+    assert _combine_removed(8, [2, 5], [1, 3, 4]) == [1, 2, 4, 5, 6]
+    assert _combine_removed(8, [7], []) == [7]

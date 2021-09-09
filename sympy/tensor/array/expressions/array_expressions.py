@@ -917,7 +917,6 @@ class ArrayContraction(_CodegenArrayAbstract):
         The non-diagonal matrices can be at the beginning or at the end
         of the final matrix multiplication line.
         """
-        from sympy import ask, Q
 
         editor = _EditArrayContraction(self)
 
@@ -948,7 +947,7 @@ class ArrayContraction(_CodegenArrayAbstract):
                 other_arg_pos = 1-rel_ind
                 other_arg_abs = reverse_mapping[arg_ind, other_arg_pos]
                 arg = editor.args_with_ind[arg_ind]
-                if (((1 not in mat.shape) and (not ask(Q.diagonal(mat)))) or
+                if (((1 not in mat.shape)) or
                     ((current_dimension == 1) is True and mat.shape != (1, 1)) or
                     any(other_arg_abs in l for li, l in enumerate(contraction_indices) if li != indl)
                 ):
@@ -1438,6 +1437,13 @@ class _EditArrayContraction:
             if index in arg_with_ind.indices:
                 counter += 1
         return counter
+
+    def get_args_with_index(self, index: int) -> List[_ArgE]:
+        """
+        Get a list of arguments having the given index.
+        """
+        ret: List[_ArgE] = [i for i in self.args_with_ind if index in i.indices]
+        return ret
 
     def track_permutation_start(self):
         self._track_permutation = []
