@@ -1087,21 +1087,22 @@ def hermite_reduce(a, d, DE):
 
     dd = derivation(d, DE)
     dm = gcd(d.to_field(), dd.to_field()).as_poly(DE.t)
-    ds, r = d.div(dm)
+    ds, _ = d.div(dm)
 
-    while dm.degree(DE.t)>0:
+    while dm.degree(DE.t) > 0:
 
         ddm = derivation(dm, DE)
         dm2 = gcd(dm.to_field(), ddm.to_field())
-        dms, r = dm.div(dm2)
+        dms, _ = dm.div(dm2)
         ds_ddm = ds.mul(ddm)
-        ds_ddm_dm, r = ds_ddm.div(dm)
+        ds_ddm_dm, _ = ds_ddm.div(dm)
 
-        b, c = gcdex_diophantine(-ds_ddm_dm.as_poly(DE.t), dms.as_poly(DE.t), a.as_poly(DE.t))
+        b, c = gcdex_diophantine(-ds_ddm_dm.as_poly(DE.t),
+            dms.as_poly(DE.t), a.as_poly(DE.t))
         b, c = b.as_poly(DE.t), c.as_poly(DE.t)
 
         db = derivation(b, DE).as_poly(DE.t)
-        ds_dms, r = ds.div(dms)
+        ds_dms, _ = ds.div(dms)
         a = c.as_poly(DE.t) - db.mul(ds_dms).as_poly(DE.t)
 
         ga = ga*dm + b*gd
@@ -1109,11 +1110,10 @@ def hermite_reduce(a, d, DE):
         ga, gd = ga.cancel(gd, include=True)
         dm = dm2
 
-    d = ds
-    q, r = a.div(d)
+    q, r = a.div(ds)
     ga, gd = ga.cancel(gd, include=True)
 
-    r, d = r.cancel(d, include=True)
+    r, d = r.cancel(ds, include=True)
     rra = q*fs[1] + fp*fs[1] + fs[0]
     rrd = fs[1]
     rra, rrd = rra.cancel(rrd, include=True)
