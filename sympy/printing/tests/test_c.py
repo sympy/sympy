@@ -1,6 +1,6 @@
 from sympy.core import (
     S, pi, oo, symbols, Rational, Integer, Float, Mod, GoldenRatio, EulerGamma, Catalan,
-    Lambda, Dummy, Eq, nan, Mul, Pow
+    Lambda, Dummy, Eq, nan, Mul, Pow, UnevaluatedExpr
 )
 from sympy.functions import (
     Abs, acos, acosh, asin, asinh, atan, atanh, atan2, ceiling, cos, cosh, erf,
@@ -840,3 +840,10 @@ def test_ccode_submodule():
     # Test the compatibility sympy.printing.ccode module imports
     with warns_deprecated_sympy():
         import sympy.printing.ccode # noqa:F401
+
+
+def test_ccode_UnevaluatedExpr():
+    assert ccode(UnevaluatedExpr(y * x) + z) == "z + x*y"
+    assert ccode(UnevaluatedExpr(y + x) + z) == "z + (x + y)"  # gh-21955
+    w = symbols('w')
+    assert ccode(UnevaluatedExpr(y + x) + UnevaluatedExpr(z + w)) == "(w + z) + (x + y)"

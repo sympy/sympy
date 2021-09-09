@@ -415,7 +415,7 @@ def split_symbols_custom(predicate):
                     while i < len(symbol):
                         char = symbol[i]
                         if char in local_dict or char in global_dict:
-                            result.extend([(NAME, "%s" % char)])
+                            result.append((NAME, "%s" % char))
                         elif char.isdigit():
                             char = [char]
                             for i in range(i + 1, len(symbol)):
@@ -616,7 +616,7 @@ def lambda_notation(tokens, local_dict, global_dict):
                 if tokNum == OP and tokVal == ':':
                     tokVal = ','
                     flag = True
-                if not flag and tokNum == OP and tokVal in ['*', '**']:
+                if not flag and tokNum == OP and tokVal in ('*', '**'):
                     raise TokenError("Starred arguments in lambda not supported")
                 if flag:
                     result.insert(-1, (tokNum, tokVal))

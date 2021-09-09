@@ -48,7 +48,7 @@ class PrettyPrinter(Printer):
 
         if not isinstance(self._settings['imaginary_unit'], str):
             raise TypeError("'imaginary_unit' must a string, not {}".format(self._settings['imaginary_unit']))
-        elif self._settings['imaginary_unit'] not in ["i", "j"]:
+        elif self._settings['imaginary_unit'] not in ("i", "j"):
             raise ValueError("'imaginary_unit' must be either 'i' or 'j', not '{}'".format(self._settings['imaginary_unit']))
 
     def emptyPrinter(self, expr):

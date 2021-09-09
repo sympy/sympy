@@ -900,10 +900,9 @@ class Beam:
                 points = solve(shear_slope, x)
                 val = []
                 for point in points:
-                    val.append(shear_curve.subs(x, point))
+                    val.append(abs(shear_curve.subs(x, point)))
                 points.extend([singularity[i-1], s])
-                val.extend([limit(shear_curve, x, singularity[i-1], '+'), limit(shear_curve, x, s, '-')])
-                val = list(map(abs, val))
+                val += [abs(limit(shear_curve, x, singularity[i-1], '+')), abs(limit(shear_curve, x, s, '-'))]
                 max_shear = max(val)
                 shear_values.append(max_shear)
                 intervals.append(points[val.index(max_shear)])
@@ -986,10 +985,9 @@ class Beam:
                 points = solve(moment_slope, x)
                 val = []
                 for point in points:
-                    val.append(bending_curve.subs(x, point))
+                    val.append(abs(bending_curve.subs(x, point)))
                 points.extend([singularity[i-1], s])
-                val.extend([limit(bending_curve, x, singularity[i-1], '+'), limit(bending_curve, x, s, '-')])
-                val = list(map(abs, val))
+                val += [abs(limit(bending_curve, x, singularity[i-1], '+')), abs(limit(bending_curve, x, s, '-'))]
                 max_moment = max(val)
                 moment_values.append(max_moment)
                 intervals.append(points[val.index(max_moment)])

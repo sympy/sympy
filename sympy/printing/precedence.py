@@ -101,7 +101,7 @@ def precedence_FracElement(item):
 
 
 def precedence_UnevaluatedExpr(item):
-    return precedence(item.args[0])
+    return precedence(item.args[0]) - 0.5
 
 
 PRECEDENCE_FUNCTIONS = {

@@ -472,10 +472,6 @@ class KroneckerDelta(Function):
     def indices(self):
         return self.args[0:2]
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.kronecker_delta(self.args[0]._sage_(), self.args[1]._sage_())
-
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.core.relational import Ne

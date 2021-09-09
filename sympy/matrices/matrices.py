@@ -6,7 +6,7 @@ from sympy.core.compatibility import (
     Callable, NotIterable, as_int, is_sequence)
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
-from sympy.core.kind import _NumberKind, NumberKind, UndefinedKind
+from sympy.core.kind import _NumberKind, UndefinedKind
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -754,8 +754,15 @@ def num_mat_mul(k1, k2):
     searches for this automatically.
     """
     # Deal with Mul._kind_dispatcher's commutativity
-    elemk = Mul._kind_dispatcher(NumberKind, k2.element_kind)
+    # XXX: this function is called with either k1 or k2 as MatrixKind because
+    # the Mul kind dispatcher is commutative. Maybe it shouldn't be. Need to
+    # swap the args here because NumberKind doesn't have an element_kind
+    # attribute.
+    if not isinstance(k2, MatrixKind):
+        k1, k2 = k2, k1
+    elemk = Mul._kind_dispatcher(k1, k2.element_kind)
     return MatrixKind(elemk)
+
 
 @Mul._kind_dispatcher.register(MatrixKind, MatrixKind)
 def mat_mat_mul(k1, k2):
@@ -764,6 +771,7 @@ def mat_mat_mul(k1, k2):
     """
     elemk = Mul._kind_dispatcher(k1.element_kind, k2.element_kind)
     return MatrixKind(elemk)
+
 
 class MatrixBase(MatrixDeprecated,
                  MatrixCalculus,
@@ -2226,6 +2234,8 @@ class MatrixBase(MatrixDeprecated,
 
     def strongly_connected_components_decomposition(self, lower=True):
         return _strongly_connected_components_decomposition(self, lower=lower)
+
+    _sage_ = Basic._sage_
 
     rank_decomposition.__doc__     = _rank_decomposition.__doc__
     cholesky.__doc__               = _cholesky.__doc__

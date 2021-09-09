@@ -153,7 +153,7 @@ class StateBase(QExpr):
                 bracket_args = [ ' ' * (height//2 - i - 1) +
                                  slash for i in range(height // 2)]
                 bracket_args.extend(
-                    [ ' ' * i + bslash for i in range(height // 2)])
+                    [' ' * i + bslash for i in range(height // 2)])
             # Create right bracket
             elif bracket in {_rbracket, _rbracket_ucode}:
                 bracket_args = [ ' ' * i + bslash for i in range(height // 2)]
@@ -161,7 +161,7 @@ class StateBase(QExpr):
                     height//2 - i - 1) + slash for i in range(height // 2)])
             # Create straight bracket
             elif bracket in {_straight_bracket, _straight_bracket_ucode}:
-                bracket_args = [vert for i in range(height)]
+                bracket_args = [vert] * height
             else:
                 raise ValueError(bracket)
             brackets.append(

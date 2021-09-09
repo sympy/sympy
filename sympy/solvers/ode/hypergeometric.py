@@ -46,7 +46,7 @@ def match_2nd_hypergeometric(eq, func):
     r = collect(eq,
         [func.diff(x, 2), func.diff(x), func]).match(deq)
     if r:
-        if not all([r[key].is_polynomial() for key in r]):
+        if not all(val.is_polynomial() for val in r.values()):
             n, d = eq.as_numer_denom()
             eq = expand(n)
             r = collect(eq, [func.diff(x, 2), func.diff(x), func]).match(deq)

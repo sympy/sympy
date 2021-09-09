@@ -271,7 +271,7 @@ class IdentityOperator(Operator):
         return (oo,)
 
     def __init__(self, *args, **hints):
-        if not len(args) in [0, 1]:
+        if not len(args) in (0, 1):
             raise ValueError('0 or 1 parameters expected, got %s' % args)
 
         self.N = args[0] if (len(args) == 1 and args[0]) else oo

@@ -31,7 +31,7 @@ class Polyhedron(Basic):
     """
     _edges = None
 
-    def __new__(cls, corners, faces=[], pgroup=[]):
+    def __new__(cls, corners, faces=(), pgroup=()):
         """
         The constructor of the Polyhedron group object.
 

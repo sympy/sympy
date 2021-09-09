@@ -22,14 +22,14 @@ This is the central page for all of SymPy's documentation.
 :ref:`Getting Started <get_started>`
 -------------------------------------------------------
 
-An introduction to SymPy for developers
+*SymPy overview and installation*
 
 ..  rst-class:: column
 
-:ref:`Tutorials <tutorial>`
+:ref:`SymPy Tutorials <tutorial>`
 -------------------------------------------------------
 
-A collection of SymPy tutorials.
+*Master SymPy concepts and features*
 
 
 ..  rst-class:: column
@@ -37,7 +37,7 @@ A collection of SymPy tutorials.
 :ref:`How-to Guides <how_to_guide>`
 -------------------------------------------------------
 
-Covers step-by-step intructions on how to do different key developer tasks.
+*Step-by-step intructions on how to do different key developer tasks*
 
 
 ..  rst-class:: column clearfix
@@ -45,12 +45,12 @@ Covers step-by-step intructions on how to do different key developer tasks.
 :ref:`Explanation <explanation>`
 -------------------------------------------------------
 
-Clarification and discussion of common pitfalls and advanced topics.
+*Common pitfalls and advanced topics*
 
 
 ..  rst-class:: column
 
-:ref:`Reference <reference>`
+:ref:`SymPy API Reference <reference>`
 -------------------------------------------------------
 
 Discusses and details the internal and public modules
@@ -59,14 +59,13 @@ Discusses and details the internal and public modules
 ..  rst-class:: clearfix row custom-headings
 
 
-:ref:`Contributing <contributing>`
+:ref:`SymPy Contributor Guide <contributing>`
 -------------------------------------------------------
 
-Covers instructions for SymPy contributors.
+*Contributing to SymPy*
+
 
 ..  rst-class:: clearfix row custom-headings
-
-===============================================
 
 .. toctree::
    :hidden:

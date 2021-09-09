@@ -1090,7 +1090,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             [f(x).diff(x, 2), f(x).diff(x), f(x)]).match(deq)
         ordinary = False
         if r:
-            if not all([r[key].is_polynomial() for key in r]):
+            if not all(r[key].is_polynomial() for key in r):
                 n, d = reduced_eq.as_numer_denom()
                 reduced_eq = expand(n)
                 r = collect(reduced_eq,
@@ -1390,7 +1390,7 @@ def check_linear_2eq_order1(eq, func, func_coef):
     if r['d1']!=0 or r['d2']!=0:
         return None
     else:
-        if all(not r[k].has(t) for k in 'a1 a2 b1 b2 c1 c2'.split()):
+        if not any(r[k].has(t) for k in 'a1 a2 b1 b2 c1 c2'.split()):
             return None
         else:
             r['b1'] = r['b1']/r['a1'] ; r['b2'] = r['b2']/r['a2']
@@ -1995,7 +1995,7 @@ def constantsimp(expr, constants):
         xes = list(xe.free_symbols)
         if not xes:
             continue
-        if all([expr.count(c) == xe.count(c) for c in xes]):
+        if all(expr.count(c) == xe.count(c) for c in xes):
             xes.sort(key=str)
             expr = expr.subs(xe, xes[0])
 
@@ -2503,7 +2503,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     p0, q0 = indicial
     sollist = solve(m*(m - 1) + m*p0 + q0, m)
     if sollist and isinstance(sollist, list) and all(
-        [sol.is_real for sol in sollist]):
+        sol.is_real for sol in sollist):
         serdict1 = {}
         serdict2 = {}
         if len(sollist) == 1:

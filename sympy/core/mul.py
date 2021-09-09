@@ -275,14 +275,8 @@ class Mul(Expr, AssocOp):
                             arb = cls(a*r, b, evaluate=False)
                         rv = [arb], [], None
                     elif global_parameters.distribute and b.is_commutative:
-                        r, b = b.as_coeff_Add()
-                        bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
-                        _addsort(bargs)
-                        ar = a*r
-                        if ar:
-                            bargs.insert(0, ar)
-                        bargs = [Add._from_args(bargs)]
-                        rv = bargs, [], None
+                        newb = Add(*[_keep_coeff(a, bi) for bi in b.args])
+                        rv = [newb], [], None
             if rv:
                 return rv
 
@@ -983,7 +977,7 @@ class Mul(Expr, AssocOp):
 
     @cacheit
     def _eval_derivative_n_times(self, s, n):
-        from sympy import Integer, factorial, prod, Sum, Max
+        from sympy import Integer, factorial, Sum, Max
         from sympy.ntheory.multinomial import multinomial_coefficients_iterator
         from .function import AppliedUndef
         from .symbol import Symbol, symbols, Dummy
@@ -1026,9 +1020,8 @@ class Mul(Expr, AssocOp):
             return terms[0].matches(newexpr, repl_dict)
         return
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict=None, old=False):
         expr = sympify(expr)
-        repl_dict = repl_dict.copy()
         if self.is_commutative and expr.is_commutative:
             return self._matches_commutative(expr, repl_dict, old)
         elif self.is_commutative is not expr.is_commutative:
@@ -1047,7 +1040,7 @@ class Mul(Expr, AssocOp):
 
         # If the commutative arguments didn't match and aren't equal, then
         # then the expression as a whole doesn't match
-        if repl_dict is None and c1 != c2:
+        if not repl_dict and c1 != c2:
             return None
 
         # Now match the non-commutative arguments, expanding powers to
@@ -1070,14 +1063,18 @@ class Mul(Expr, AssocOp):
         return new_args
 
     @staticmethod
-    def _matches_noncomm(nodes, targets, repl_dict={}):
+    def _matches_noncomm(nodes, targets, repl_dict=None):
         """Non-commutative multiplication matcher.
 
         `nodes` is a list of symbols within the matcher multiplication
         expression, while `targets` is a list of arguments in the
         multiplication expression being matched against.
         """
-        repl_dict = repl_dict.copy()
+        if repl_dict is None:
+            repl_dict = dict()
+        else:
+            repl_dict = repl_dict.copy()
+
         # List of possible future states to be considered
         agenda = []
         # The current matching state, storing index in nodes and targets
@@ -1085,7 +1082,6 @@ class Mul(Expr, AssocOp):
         node_ind, target_ind = state
         # Mapping between wildcard indices and the index ranges they match
         wildcard_dict = {}
-        repl_dict = repl_dict.copy()
 
         while target_ind < len(targets) and node_ind < len(nodes):
             node = nodes[node_ind]
@@ -1178,8 +1174,8 @@ class Mul(Expr, AssocOp):
         begin, end = dictionary[wildcard_ind]
         terms = targets[begin:end + 1]
         # TODO: Should this be self.func?
-        mul = Mul(*terms) if len(terms) > 1 else terms[0]
-        return wildcard.matches(mul)
+        mult = Mul(*terms) if len(terms) > 1 else terms[0]
+        return wildcard.matches(mult)
 
     @staticmethod
     def _matches_get_other_nodes(dictionary, nodes, node_ind):
@@ -1903,7 +1899,7 @@ class Mul(Expr, AssocOp):
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        from sympy import degree, Mul, Order, ceiling, powsimp, PolynomialError, PoleError
+        from sympy import degree, Order, ceiling, powsimp, PolynomialError, PoleError
         from itertools import product
 
         def coeff_exp(term, x):
@@ -1994,12 +1990,6 @@ class Mul(Expr, AssocOp):
     def _eval_adjoint(self):
         return self.func(*[t.adjoint() for t in self.args[::-1]])
 
-    def _sage_(self):
-        s = 1
-        for x in self.args:
-            s *= x._sage_()
-        return s
-
     def as_content_primitive(self, radical=False, clear=True):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
@@ -2016,7 +2006,7 @@ class Mul(Expr, AssocOp):
 
         coef = S.One
         args = []
-        for i, a in enumerate(self.args):
+        for a in self.args:
             c, p = a.as_content_primitive(radical=radical, clear=clear)
             coef *= c
             if p is not S.One:
@@ -2118,7 +2108,7 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
         if not clear and coeff.is_Rational and coeff.q != 1:
             args = [i.as_coeff_Mul() for i in factors.args]
             args = [(_keep_coeff(c, coeff), m) for c, m in args]
-            if any(c == int(c) for c, _ in args):
+            if any(c.is_Integer for c, _ in args):
                 return Add._from_args([Mul._from_args(
                     i[1:] if i[0] == 1 else i) for i in args])
         return Mul(coeff, factors, evaluate=False)
@@ -2150,4 +2140,4 @@ def expand_2arg(e):
 
 from .numbers import Rational
 from .power import Pow
-from .add import Add, _addsort, _unevaluated_Add
+from .add import Add, _unevaluated_Add

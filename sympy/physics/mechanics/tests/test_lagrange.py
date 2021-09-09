@@ -121,7 +121,7 @@ def test_nonminimal_pendulum():
     assert LM.eom == eom_sol
     # Check multiplier solution
     lam_sol = Matrix([(19.6*q1 + 2*q1d**2 + 2*q2d**2)/(4*q1**2/m + 4*q2**2/m)])
-    assert LM.solve_multipliers(sol_type='Matrix') == lam_sol
+    assert simplify(LM.solve_multipliers(sol_type='Matrix')) == simplify(lam_sol)
 
 
 def test_dub_pen():

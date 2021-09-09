@@ -49,9 +49,9 @@ ZZ_gmpy = GMPYIntegerRing
 QQ_python = PythonRationalField
 QQ_gmpy = GMPYRationalField
 
-__all__.extend([
+__all__.extend((
     'PythonFiniteField', 'GMPYFiniteField', 'PythonIntegerRing',
     'GMPYIntegerRing', 'PythonRational', 'GMPYRationalField',
 
     'FF_python', 'FF_gmpy', 'ZZ_python', 'ZZ_gmpy', 'QQ_python', 'QQ_gmpy',
-])
+))

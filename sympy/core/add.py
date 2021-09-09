@@ -509,7 +509,7 @@ class Add(Expr, AssocOp):
             return terms[0].matches(expr - coeff, repl_dict)
         return
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict=None, old=False):
         return self._matches_commutative(expr, repl_dict, old)
 
     @staticmethod
@@ -1045,12 +1045,6 @@ class Add(Expr, AssocOp):
 
     def _eval_transpose(self):
         return self.func(*[t.transpose() for t in self.args])
-
-    def _sage_(self):
-        s = 0
-        for x in self.args:
-            s += x._sage_()
-        return s
 
     def primitive(self):
         """

@@ -209,6 +209,7 @@ an expression when customizing a printer. Mistakes include:
 
 """
 
+import sys
 from typing import Any, Dict, Type
 import inspect
 from contextlib import contextmanager
@@ -366,9 +367,6 @@ class _PrintFunction:
         # because the wrapped function can't be retrieved by name.
         return self.__wrapped__.__qualname__
 
-    def __repr__(self) -> str:
-        return repr(self.__wrapped__)  # type:ignore
-
     def __call__(self, *args, **kwargs):
         return self.__wrapped__(*args, **kwargs)
 
@@ -387,5 +385,11 @@ class _PrintFunction:
 def print_function(print_cls):
     """ A decorator to replace kwargs with the printer settings in __signature__ """
     def decorator(f):
-        return _PrintFunction(f, print_cls)
+        if sys.version_info < (3, 9):
+            # We have to create a subclass so that `help` actually shows the docstring in older python versions.
+            # IPython and Sphinx do not need this, only a raw python console.
+            cls = type(f'{f.__qualname__}_PrintFunction', (_PrintFunction,), dict(__doc__=f.__doc__))
+        else:
+            cls = _PrintFunction
+        return cls(f, print_cls)
     return decorator

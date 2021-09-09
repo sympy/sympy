@@ -403,7 +403,7 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     g = g.array_form
     num_dummies = size - 2
     indices = list(range(num_dummies))
-    all_metrics_with_sym = all([_ is not None for _ in sym])
+    all_metrics_with_sym = not any(_ is None for _ in sym)
     num_types = len(sym)
     dumx = dummies[:]
     dumx_flat = []
@@ -763,12 +763,12 @@ def canonicalize(g, dummies, msym, *v):
     """
     from sympy.combinatorics.testutil import canonicalize_naive
     if not isinstance(msym, list):
-        if not msym in [0, 1, None]:
+        if not msym in (0, 1, None):
             raise ValueError('msym must be 0, 1 or None')
         num_types = 1
     else:
         num_types = len(msym)
-        if not all(msymx in [0, 1, None] for msymx in msym):
+        if not all(msymx in (0, 1, None) for msymx in msym):
             raise ValueError('msym entries must be 0, 1 or None')
         if len(dummies) != num_types:
             raise ValueError(

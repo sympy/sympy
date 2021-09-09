@@ -255,15 +255,9 @@ if lfortran:
 
             """
             # TODO: Return statement, variable declaration
-            fn_args =[]
+            fn_args = [Variable(arg_iter.name) for arg_iter in node.args]
             fn_body = []
             fn_name = node.name
-            for arg_iter in node.args:
-                fn_args.append(
-                    Variable(
-                        arg_iter.name
-                    )
-                )
             for i in node.body:
                 fn_ast = call_visitor(i)
             try:

@@ -925,15 +925,15 @@ class Diagram(Basic):
         >>> d1.is_subdiagram(d)
         False
         """
-        premises = all([(m in self.premises) and
-                        (diagram.premises[m] == self.premises[m])
-                        for m in diagram.premises])
+        premises = all((m in self.premises) and
+                       (diagram.premises[m] == self.premises[m])
+                       for m in diagram.premises)
         if not premises:
             return False
 
-        conclusions = all([(m in self.conclusions) and
-                           (diagram.conclusions[m] == self.conclusions[m])
-                        for m in diagram.conclusions])
+        conclusions = all((m in self.conclusions) and
+                          (diagram.conclusions[m] == self.conclusions[m])
+                          for m in diagram.conclusions)
 
         # Premises is surely ``True`` here.
         return conclusions

@@ -273,8 +273,8 @@ def test_arrayexpr_split_multiple_contractions():
     X = MatrixSymbol("X", k, k)
 
     cg = ArrayContraction(ArrayTensorProduct(A.T, a, b, b.T, (A*X*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
-    assert cg.split_multiple_contractions().dummy_eq(ArrayContraction(ArrayTensorProduct(DiagMatrix(a), (A*X*b).applyfunc(cos), A.T, b, b.T), (0, 2), (1, 5), (3, 7, 8)))
-    # assert recognize_matrix_expression(cg)
+    expected = ArrayContraction(ArrayTensorProduct(A.T, DiagMatrix(a), OneArray(1), b, b.T, (A*X*b).applyfunc(cos)), (1, 3), (2, 9), (6, 7, 10))
+    assert cg.split_multiple_contractions().dummy_eq(expected)
 
     # Check no overlap of lines:
 

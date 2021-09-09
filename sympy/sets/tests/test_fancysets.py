@@ -584,6 +584,9 @@ def test_Reals():
     assert S.Reals != Interval(0, oo)
     assert S.Reals.is_subset(Interval(-oo, oo))
     assert S.Reals.intersect(Range(-oo, oo)) == Range(-oo, oo)
+    assert S.ComplexInfinity not in S.Reals
+    assert S.NaN not in S.Reals
+    assert x + S.ComplexInfinity not in S.Reals
 
 
 def test_Complex():

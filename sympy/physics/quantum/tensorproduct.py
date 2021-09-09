@@ -160,8 +160,8 @@ class TensorProduct(Expr):
     def _pretty(self, printer, *args):
 
         if (_combined_printing and
-                (all([isinstance(arg, Ket) for arg in self.args]) or
-                 all([isinstance(arg, Bra) for arg in self.args]))):
+                (all(isinstance(arg, Ket) for arg in self.args) or
+                 all(isinstance(arg, Bra) for arg in self.args))):
 
             length = len(self.args)
             pform = printer._print('', *args)
@@ -204,8 +204,8 @@ class TensorProduct(Expr):
     def _latex(self, printer, *args):
 
         if (_combined_printing and
-                (all([isinstance(arg, Ket) for arg in self.args]) or
-                 all([isinstance(arg, Bra) for arg in self.args]))):
+                (all(isinstance(arg, Ket) for arg in self.args) or
+                 all(isinstance(arg, Bra) for arg in self.args))):
 
             def _label_wrap(label, nlabels):
                 return label if nlabels == 1 else r"\left\{%s\right\}" % label

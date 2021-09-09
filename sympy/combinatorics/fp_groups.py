@@ -17,12 +17,12 @@ from itertools import product
 
 
 @public
-def fp_group(fr_grp, relators=[]):
+def fp_group(fr_grp, relators=()):
     _fp_group = FpGroup(fr_grp, relators)
     return (_fp_group,) + tuple(_fp_group._generators)
 
 @public
-def xfp_group(fr_grp, relators=[]):
+def xfp_group(fr_grp, relators=()):
     _fp_group = FpGroup(fr_grp, relators)
     return (_fp_group, _fp_group._generators)
 
@@ -138,9 +138,9 @@ class FpGroup(DefaultPrinting):
 
         '''
 
-        if not all([isinstance(g, FreeGroupElement) for g in gens]):
+        if not all(isinstance(g, FreeGroupElement) for g in gens):
             raise ValueError("Generators must be `FreeGroupElement`s")
-        if not all([g.group == self.free_group for g in gens]):
+        if not all(g.group == self.free_group for g in gens):
                 raise ValueError("Given generators are not members of the group")
         if homomorphism:
             g, rels, _gens = reidemeister_presentation(self, gens, C=C, homomorphism=True)
@@ -259,7 +259,7 @@ class FpGroup(DefaultPrinting):
         used_gens = set()
         for r in self.relators:
             used_gens.update(r.contains_generators())
-        if any([g not in used_gens for g in self.generators]):
+        if not set(self.generators) <= used_gens:
             return True
         # Abelianisation test: check is the abelianisation is infinite
         abelian_rels = []
@@ -274,7 +274,7 @@ class FpGroup(DefaultPrinting):
             return None
 
 
-    def _finite_index_subgroup(self, s=[]):
+    def _finite_index_subgroup(self, s=None):
         '''
         Find the elements of `self` that generate a finite index subgroup
         and, if found, return the list of elements and the coset table of `self` by
@@ -718,7 +718,7 @@ class FpSubgroup(DefaultPrinting):
 #                           LOW INDEX SUBGROUPS                               #
 ###############################################################################
 
-def low_index_subgroups(G, N, Y=[]):
+def low_index_subgroups(G, N, Y=()):
     """
     Implements the Low Index Subgroups algorithm, i.e find all subgroups of
     ``G`` upto a given index ``N``. This implements the method described in
@@ -826,7 +826,7 @@ def try_descendant(S, C, R1_c_list, R2, N, alpha, x, beta, Y):
         descendant_subgroups(S, D, R1_c_list, x, R2, N, Y)
 
 
-def first_in_class(C, Y=[]):
+def first_in_class(C, Y=()):
     """
     Checks whether the subgroup ``H=G1`` corresponding to the Coset Table
     could possibly be the canonical representative of its conjugacy class.
@@ -1030,7 +1030,7 @@ def elimination_technique_1(gens, rels, identity):
         # don't look for a redundant generator in a relator which
         # depends on previously found ones
         contained_gens = rel.contains_generators()
-        if any([g in contained_gens for g in redundant_gens]):
+        if any(g in contained_gens for g in redundant_gens):
             continue
         contained_gens = list(contained_gens)
         contained_gens.sort(reverse = True)

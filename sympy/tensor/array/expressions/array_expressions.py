@@ -4,7 +4,9 @@ import itertools
 from itertools import accumulate
 from typing import Optional, List, Dict
 
-from sympy import Expr, ImmutableDenseNDimArray, S, Symbol, Integer, ZeroMatrix, Basic, tensorproduct, Add, permutedims, \
+import typing
+
+from sympy import Expr, ImmutableDenseNDimArray, S, Symbol, ZeroMatrix, Basic, tensorproduct, Add, permutedims, \
     Tuple, tensordiagonal, Lambda, Dummy, Function, MatrixExpr, NDimArray, Indexed, IndexedBase, default_sort_key, \
     tensorcontraction, diagonalize_vector, Mul
 from sympy.matrices.expressions.matexpr import MatrixElement
@@ -45,7 +47,7 @@ class ArraySymbol(_ArrayExpr):
         return ArrayElement(self, item)
 
     def as_explicit(self):
-        if any(not isinstance(i, (int, Integer)) for i in self.shape):
+        if not all(i.is_Integer for i in self.shape):
             raise ValueError("cannot express explicit array with symbolic shape")
         data = [self[i] for i in itertools.product(*[range(j) for j in self.shape])]
         return ImmutableDenseNDimArray(data).reshape(*self.shape)
@@ -61,9 +63,9 @@ class ArrayElement(_ArrayExpr):
         name = _sympify(name)
         indices = _sympify(indices)
         if hasattr(name, "shape"):
-            if any([(i >= s) == True for i, s in zip(indices, name.shape)]):
+            if any((i >= s) == True for i, s in zip(indices, name.shape)):
                 raise ValueError("shape is out of bounds")
-        if any([(i < 0) == True for i in indices]):
+        if any((i < 0) == True for i in indices):
             raise ValueError("shape contains negative values")
         obj = Expr.__new__(cls, name, indices)
         return obj
@@ -94,7 +96,7 @@ class ZeroArray(_ArrayExpr):
         return self._args
 
     def as_explicit(self):
-        if any(not i.is_Integer for i in self.shape):
+        if not all(i.is_Integer for i in self.shape):
             raise ValueError("Cannot return explicit form for symbolic shape.")
         return ImmutableDenseNDimArray.zeros(*self.shape)
 
@@ -116,7 +118,7 @@ class OneArray(_ArrayExpr):
         return self._args
 
     def as_explicit(self):
-        if any(not i.is_Integer for i in self.shape):
+        if not all(i.is_Integer for i in self.shape):
             raise ValueError("Cannot return explicit form for symbolic shape.")
         return ImmutableDenseNDimArray([S.One for i in range(reduce(operator.mul, self.shape))]).reshape(*self.shape)
 
@@ -641,6 +643,8 @@ class ArrayDiagonal(_CodegenArrayAbstract):
         # dimensions:
         shape = get_shape(expr)
         for i in diagonal_indices:
+            if any(j >= len(shape) for j in i):
+                raise ValueError("index is larger than expression shape")
             if len({shape[j] for j in i}) != 1:
                 raise ValueError("diagonalizing indices of different dimensions")
             if len(i) <= 1:
@@ -817,7 +821,7 @@ class ArrayContraction(_CodegenArrayAbstract):
         obj._subranks = _get_subranks(expr)
         obj._mapping = _get_mapping_from_subranks(obj._subranks)
 
-        free_indices_to_position = {i: i for i in range(sum(obj._subranks)) if all([i not in cind for cind in contraction_indices])}
+        free_indices_to_position = {i: i for i in range(sum(obj._subranks)) if all(i not in cind for cind in contraction_indices)}
         obj._free_indices_to_position = free_indices_to_position
 
         shape = expr.shape
@@ -917,24 +921,33 @@ class ArrayContraction(_CodegenArrayAbstract):
         The non-diagonal matrices can be at the beginning or at the end
         of the final matrix multiplication line.
         """
-        from sympy import ask, Q
 
         editor = _EditArrayContraction(self)
 
         contraction_indices = self.contraction_indices
-        if isinstance(self.expr, ArrayTensorProduct):
-            args = list(self.expr.args)
-        else:
-            args = [self.expr]
-        # TODO: unify API, best location in ArrayTensorProduct
-        subranks = [get_rank(i) for i in args]
-        # TODO: unify API
-        mapping = _get_mapping_from_subranks(subranks)
-        reverse_mapping = {v: k for k, v in mapping.items()}
+
+        onearray_insert = []
 
         for indl, links in enumerate(contraction_indices):
             if len(links) <= 2:
                 continue
+
+            # Check multiple contractions:
+            #
+            # Examples:
+            #
+            # * `A_ij b_j0 C_jk` ===> `A*DiagMatrix(b)*C \otimes OneArray(1)` with permutation (1 2)
+            #
+            # Care for:
+            # - matrix being diagonalized (i.e. `A_ii`)
+            # - vectors being diagonalized (i.e. `a_i0`)
+
+            # Multiple contractions can be split into matrix multiplications if
+            # not more than three arguments are non-diagonals or non-vectors.
+            #
+            # Vectors get diagonalized while diagonal matrices remain diagonal.
+            # The non-diagonal matrices can be at the beginning or at the end
+            # of the final matrix multiplication line.
 
             positions = editor.get_mapping_for_index(indl)
 
@@ -944,13 +957,14 @@ class ArrayContraction(_CodegenArrayAbstract):
             not_vectors: Tuple[_ArgE, int] = []
             vectors: Tuple[_ArgE, int] = []
             for arg_ind, rel_ind in positions:
-                mat = args[arg_ind]
-                other_arg_pos = 1-rel_ind
-                other_arg_abs = reverse_mapping[arg_ind, other_arg_pos]
                 arg = editor.args_with_ind[arg_ind]
-                if (((1 not in mat.shape) and (not ask(Q.diagonal(mat)))) or
+                mat = arg.element
+                abs_arg_start, abs_arg_end = editor.get_absolute_range(arg)
+                other_arg_pos = 1-rel_ind
+                other_arg_abs = abs_arg_start + other_arg_pos
+                if ((1 not in mat.shape) or
                     ((current_dimension == 1) is True and mat.shape != (1, 1)) or
-                    any([other_arg_abs in l for li, l in enumerate(contraction_indices) if li != indl])
+                    any(other_arg_abs in l for li, l in enumerate(contraction_indices) if li != indl)
                 ):
                     not_vectors.append((arg, rel_ind))
                 else:
@@ -975,9 +989,14 @@ class ArrayContraction(_CodegenArrayAbstract):
                 new_index = editor.get_new_contraction_index()
                 assert v.indices.index(None) == 1 - rel_ind
                 v.indices[v.indices.index(None)] = new_index
+                onearray_insert.append(v)
 
             last_vec, rel_ind = vectors_to_loop[-1]
             last_vec.indices[rel_ind] = new_index
+
+        for v in onearray_insert:
+            editor.insert_after(v, _ArgE(OneArray(1), [None]))
+
         return editor.to_array_contraction()
 
     def flatten_contraction_of_diagonal(self):
@@ -1073,7 +1092,7 @@ class ArrayContraction(_CodegenArrayAbstract):
         permutation = expr.permutation
         plist = permutation.array_form
         new_contraction_indices = [tuple(permutation(j) for j in i) for i in contraction_indices]
-        new_plist = [i for i in plist if all(i not in j for j in new_contraction_indices)]
+        new_plist = [i for i in plist if not any(i in j for j in new_contraction_indices)]
         new_plist = cls._push_indices_up(new_contraction_indices, new_plist)
         return PermuteDims(
             ArrayContraction(expr.expr, *new_contraction_indices),
@@ -1439,6 +1458,13 @@ class _EditArrayContraction:
                 counter += 1
         return counter
 
+    def get_args_with_index(self, index: int) -> List[_ArgE]:
+        """
+        Get a list of arguments having the given index.
+        """
+        ret: List[_ArgE] = [i for i in self.args_with_ind if index in i.indices]
+        return ret
+
     def track_permutation_start(self):
         self._track_permutation = []
         counter: int = 0
@@ -1456,6 +1482,32 @@ class _EditArrayContraction:
         index_element = self.args_with_ind.index(from_element)
         self._track_permutation[index_destination].extend(self._track_permutation[index_element])
         self._track_permutation.pop(index_element)
+
+    def get_absolute_free_range(self, arg: _ArgE) -> typing.Tuple[int, int]:
+        """
+        Return the range of the free indices of the arg as absolute positions
+        among all free indices.
+        """
+        counter = 0
+        for arg_with_ind in self.args_with_ind:
+            number_free_indices = len([i for i in arg_with_ind.indices if i is None])
+            if arg_with_ind == arg:
+                return counter, counter + number_free_indices
+            counter += number_free_indices
+        raise IndexError("argument not found")
+
+    def get_absolute_range(self, arg: _ArgE) -> typing.Tuple[int, int]:
+        """
+        Return the absolute range of indices for arg, disregarding dummy
+        indices.
+        """
+        counter = 0
+        for arg_with_ind in self.args_with_ind:
+            number_indices = len(arg_with_ind.indices)
+            if arg_with_ind == arg:
+                return counter, counter + number_indices
+            counter += number_indices
+        raise IndexError("argument not found")
 
 
 def get_rank(expr):
