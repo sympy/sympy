@@ -165,9 +165,10 @@ class erf(Function):
         if arg.could_extract_minus_sign():
             return -cls(-arg)
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(erf, self).taylor_term(n, x, *previous_terms)
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -361,9 +362,10 @@ class erfc(Function):
         if arg.could_extract_minus_sign():
             return S(2) - cls(-arg)
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(erfc, self).taylor_term(n, x, *previous_terms)
         if n == 0:
             return S.One
         elif n < 0 or n % 2 == 0:
@@ -539,9 +541,10 @@ class erfi(Function):
             if isinstance(nz, erf2inv) and nz.args[0].is_zero:
                 return I*nz.args[1]
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(erfi, self).taylor_term(n, x, *previous_terms)
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -2268,9 +2271,10 @@ class fresnels(FresnelIntegral):
     _trigfunc = sin
     _sign = -S.One
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(fresnels, self).taylor_term(n, x, *previous_terms)
         if n < 0:
             return S.Zero
         else:
@@ -2409,9 +2413,10 @@ class fresnelc(FresnelIntegral):
     _trigfunc = cos
     _sign = S.One
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(fresnelc, self).taylor_term(n, x, *previous_terms)
         if n < 0:
             return S.Zero
         else:
