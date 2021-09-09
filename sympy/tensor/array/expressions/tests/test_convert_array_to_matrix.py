@@ -350,9 +350,13 @@ def test_arrayexpr_convert_array_to_matrix_remove_trivial_dims():
     rexpr, removed = _remove_trivial_dims(expr)
     assert removed == [0, 3, 4, 5, 6]
 
+    expr = ArrayDiagonal(ArrayContraction(ArrayTensorProduct(A, x, I, I1), (1, 2, 5)), (1, 4))
+    rexpr, removed = _remove_trivial_dims(expr)
+    assert removed == [1, 2]
+
     cg = ArrayDiagonal(ArrayTensorProduct(PermuteDims(ArrayTensorProduct(x, I1), Permutation(1, 2, 3)), (x.T*x).applyfunc(sqrt)), (2, 4), (3, 5))
     rexpr, removed = _remove_trivial_dims(cg)
-    assert removed == [1, 2, 3]
+    assert removed == [1, 2]
 
     # Contractions with identity matrices need to be followed by a permutation
     # in order

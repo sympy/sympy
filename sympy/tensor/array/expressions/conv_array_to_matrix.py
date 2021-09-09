@@ -394,8 +394,11 @@ def _(expr: ArrayContraction):
 def _(expr: ArrayDiagonal):
     newexpr, removed = _remove_trivial_dims(expr.expr)
     shifts = list(accumulate([0] + [1 if i in removed else 0 for i in range(get_rank(expr.expr))]))
-    new_diag_indices = [tuple(j for j in i if j not in removed) for i in expr.diagonal_indices]
-    new_diag_indices = [tuple(j - shifts[j] for j in i) for i in new_diag_indices]
+    new_diag_indices = {i: tuple(j for j in i if j not in removed) for i in expr.diagonal_indices}
+    for old_diag_tuple, new_diag_tuple in new_diag_indices.items():
+        if len(new_diag_tuple) == 1:
+            removed = [i for i in removed if i not in old_diag_tuple]
+    new_diag_indices = [tuple(j - shifts[j] for j in i) for i in new_diag_indices.values()]
     rank = get_rank(expr.expr)
     removed = ArrayDiagonal._push_indices_up(expr.diagonal_indices, removed, rank)
     removed = sorted({i for i in removed})
