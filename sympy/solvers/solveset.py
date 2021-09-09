@@ -862,7 +862,7 @@ def _solve_radical(f, unradf, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    if isinstance(result, (Complement, ConditionSet)):
+    if not isinstance(result, FiniteSet):
         solution_set = result
     else:
         f_set = []  # solutions for FiniteSet
