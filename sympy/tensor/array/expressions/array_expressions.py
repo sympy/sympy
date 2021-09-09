@@ -641,6 +641,8 @@ class ArrayDiagonal(_CodegenArrayAbstract):
         # dimensions:
         shape = get_shape(expr)
         for i in diagonal_indices:
+            if any(j >= len(shape) for j in i):
+                raise ValueError("index is larger than expression shape")
             if len({shape[j] for j in i}) != 1:
                 raise ValueError("diagonalizing indices of different dimensions")
             if len(i) <= 1:
