@@ -835,7 +835,7 @@ def remove_identity_matrices(expr: ArrayContraction):
         for i in identity_matrices:
             i.element = None
             removed.extend(range(free_map[i], free_map[i] + len([j for j in i.indices if j is None])))
-        last_removed = removed.pop(-1)  # [-1]  # .pop(-1)
+        last_removed = removed.pop(-1)
         update_pairs[last_removed, ind] = non_identity.indices[:]
         # Remove the indices from the non-identity matrix, as the contraction
         # no longer exists:
