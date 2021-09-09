@@ -6,7 +6,6 @@ from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
 from sympy.physics.vector.frame import _check_frame
 from sympy.physics.vector.vector import VectorTypeError
 from sympy.testing.pytest import raises
-from sympy.physics.mechanics.body import Body
 import warnings
 
 Vector.simp = True
@@ -191,7 +190,6 @@ def test_dcm():
         cos(q1)*cos(q3), sin(q1)*cos(q2)], [sin(q1)*sin(q3) +
         sin(q2)*cos(q1)*cos(q3), - sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),
          cos(q1)*cos(q2)]])
-
 
 def test_w_diff_dcm1():
     # Ref:
