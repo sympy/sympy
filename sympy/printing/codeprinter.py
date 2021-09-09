@@ -38,6 +38,13 @@ class _UnevaluatedExprIsReal(UnevaluatedExpr):
         return self.args[0].is_real
 
 
+def _handle_UnevaluatedExpr(expr):
+    if isinstance(expr, Basic):
+        return expr.replace(UnevaluatedExpr, _UnevaluatedExprIsReal)
+    else:
+        return type(expr)(_handle_UnevaluatedExpr(item) for item in expr)
+
+
 class CodePrinter(StrPrinter):
     """
     The base class for code-printing subclasses.
@@ -109,7 +116,8 @@ class CodePrinter(StrPrinter):
         expr = _handle_assign_to(expr, assign_to)
 
         # Remove re(...) nodes due to UnevaluatedExpr.is_real always is None:
-        expr = expr.replace(UnevaluatedExpr, _UnevaluatedExprIsReal)
+        expr = _handle_UnevaluatedExpr(expr)
+
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized
         self._not_supported = set()

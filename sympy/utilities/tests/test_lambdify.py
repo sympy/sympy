@@ -11,6 +11,7 @@ from sympy import (
     DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
     digamma, RisingFactorial, besselj, bessely, besseli, besselk, S, beta,
     betainc, betainc_regularized, fresnelc, fresnels)
+from sympy.core.expr import UnevaluatedExpr
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.scipy_nodes import cosm1
@@ -103,6 +104,14 @@ def test_own_namespace_2():
 def test_own_module():
     f = lambdify(x, sin(x), math)
     assert f(0) == 0.0
+
+    p, q, r = symbols("p q r", real=True)
+    ae = abs(exp(p+UnevaluatedExpr(q+r)))
+    f = lambdify([p, q, r], [ae, ae], modules=math)
+    results = f(1.0, 1e18, -1e18)
+    refvals = [math.exp(1.0)]*2
+    for res, ref in zip(results, refvals):
+        assert abs((res-ref)/ref) < 1e-15
 
 
 def test_bad_args():
