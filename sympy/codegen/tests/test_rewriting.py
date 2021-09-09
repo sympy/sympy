@@ -1,7 +1,6 @@
 import tempfile
 from sympy import Abs, log, exp, cos, S, Symbol, Pow, sin, MatrixSymbol, sinc, pi
 from sympy.assumptions import assuming, Q
-from sympy.core.expr import UnevaluatedExpr
 from sympy.external import import_module
 from sympy.printing.codeprinter import ccode
 from sympy.codegen.matrix_nodes import MatrixSolve
@@ -271,22 +270,13 @@ def test_create_expand_pow_optimization():
     assert cc(x**4 - x**2) == '-x*x + x*x*x*x'
     i = Symbol('i', integer=True)
     assert cc(x**i - x**2) == 'pow(x, i) - x*x'
+    y = Symbol('y', real=True)
+    assert cc(Abs(exp(y**4))) == "exp(y*y*y*y)"
+
     # gh issue 20753
     cc2 = lambda x: ccode(optimize(x, [create_expand_pow_optimization(
         4, base_req=lambda b: b.is_Function)]))
     assert cc2(x**3 + sin(x)**3) == "pow(x, 3) + sin(x)*sin(x)*sin(x)"
-
-
-def test_create_expand_pow_optimization__custom_UnevaluatedExpr():
-    class UnevaluatedRealPropagating(UnevaluatedExpr):
-        def _eval_is_real(self):
-            return self.args[0].is_real
-
-    epo = create_expand_pow_optimization(
-        4, UnevaluatedClass=UnevaluatedRealPropagating)
-    y = Symbol('y', real=True)
-    y4 = epo(y**4)
-    assert ccode(Abs(exp(y4))) == "exp(y*y*y*y)"
 
 
 def test_matsolve():

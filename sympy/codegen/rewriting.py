@@ -276,8 +276,7 @@ log1p_opt = ReplaceOptim(
     )).replace(log(_u+1), log1p(_u))
 )
 
-def create_expand_pow_optimization(limit, *, base_req=lambda b: b.is_symbol,
-                                   UnevaluatedClass=UnevaluatedExpr):
+def create_expand_pow_optimization(limit, *, base_req=lambda b: b.is_symbol):
     """ Creates an instance of :class:`ReplaceOptim` for expanding ``Pow``.
 
     Explanation
@@ -295,11 +294,6 @@ def create_expand_pow_optimization(limit, *, base_req=lambda b: b.is_symbol,
     base_req : function returning bool
          Requirement on base for expansion to happen, default is to return
          the ``is_symbol`` attribute of the base.
-    UnevaluatedClass : subclass of UnevaluatedExpr
-         By default UnevaluatedExpr is used to prevent automatic simplification
-         of the expanded powers. For certain purposes, you may want to use a
-         subclass thereof instead (which e.g. propagates .is_real by overloading
-         _eval_is_real).
 
     Examples
     ========
@@ -320,8 +314,8 @@ def create_expand_pow_optimization(limit, *, base_req=lambda b: b.is_symbol,
     return ReplaceOptim(
         lambda e: e.is_Pow and base_req(e.base) and e.exp.is_Integer and abs(e.exp) <= limit,
         lambda p: (
-            UnevaluatedClass(Mul(*([p.base]*+p.exp), evaluate=False)) if p.exp > 0 else
-            1/UnevaluatedClass(Mul(*([p.base]*-p.exp), evaluate=False))
+            UnevaluatedExpr(Mul(*([p.base]*+p.exp), evaluate=False)) if p.exp > 0 else
+            1/UnevaluatedExpr(Mul(*([p.base]*-p.exp), evaluate=False))
         ))
 
 # Optimization procedures for turning A**(-1) * x into MatrixSolve(A, x)

@@ -5,6 +5,7 @@ from functools import wraps
 from sympy.core import Add, Expr, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
 from sympy.core.compatibility import default_sort_key
+from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
 from sympy.core.symbol import Symbol
@@ -30,6 +31,11 @@ class AssignmentError(Exception):
     Raised if an assignment variable for a loop is missing.
     """
     pass
+
+
+class _UnevaluatedExprIsReal(UnevaluatedExpr):
+    def _eval_is_real(self):
+        return self.args[0].is_real
 
 
 class CodePrinter(StrPrinter):
@@ -102,6 +108,8 @@ class CodePrinter(StrPrinter):
 
         expr = _handle_assign_to(expr, assign_to)
 
+        # Remove re(...) nodes due to UnevaluatedExpr.is_real always is None:
+        expr = expr.replace(UnevaluatedExpr, _UnevaluatedExprIsReal)
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized
         self._not_supported = set()

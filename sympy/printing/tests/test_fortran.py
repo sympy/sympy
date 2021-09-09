@@ -8,6 +8,7 @@ from sympy.codegen import For, Assignment, aug_assign
 from sympy.codegen.ast import Declaration, Variable, float32, float64, \
         value_const, real, bool_, While, FunctionPrototype, FunctionDefinition, \
         integer, Return
+from sympy.core.expr import UnevaluatedExpr
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
 from sympy.matrices import Matrix, MatrixSymbol
@@ -15,6 +16,13 @@ from sympy.printing.fortran import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
 from sympy.testing.pytest import raises, warns_deprecated_sympy
+
+
+def test_UnevaluatedExpr():
+    p, q, r = symbols("p q r", real=True)
+    q_r = UnevaluatedExpr(q + r)
+    expr = abs(exp(p+q_r))
+    assert fcode(expr, source_format="free") == "exp(p + (q + r))"
 
 
 def test_printmethod():
