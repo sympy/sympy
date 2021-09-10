@@ -9,7 +9,6 @@ from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye,
                    Dummy, floor, And, Eq)
-from sympy.utilities.iterables import cartes
 from sympy.testing.pytest import XFAIL, raises
 from sympy.abc import x, y, t, z
 from sympy.core.mod import Mod
@@ -304,7 +303,7 @@ def test_Range_set():
             Range(1, 10, 2),
         ]:
         r = list(R)
-        for a, b, c in cartes(AB, AB, [-3, -1, None, 1, 3]):
+        for a, b, c in itertools.product(AB, AB, [-3, -1, None, 1, 3]):
             for reverse in range(2):
                 r = list(reversed(r))
                 R = R.reversed

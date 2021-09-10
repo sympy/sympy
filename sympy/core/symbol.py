@@ -9,12 +9,13 @@ from .function import FunctionClass
 from .kind import NumberKind, UndefinedKind
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
-from sympy.utilities.iterables import cartes, sift
+from sympy.utilities.iterables import sift
 from sympy.core.containers import Tuple
 
 import string
 import re as _re
 import random
+from itertools import product
 
 class Str(Atom):
     """
@@ -741,7 +742,7 @@ def symbols(names, *, cls=Symbol, **args):
                 if len(split) == 1:
                     names = split[0]
                 else:
-                    names = [''.join(s) for s in cartes(*split)]
+                    names = [''.join(s) for s in product(*split)]
                 if literals:
                     result.extend([cls(literal(s), **args) for s in names])
                 else:

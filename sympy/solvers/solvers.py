@@ -50,7 +50,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import (cartes, connected_components,
+from sympy.utilities.iterables import (connected_components,
     generate_bell, uniq)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
@@ -61,6 +61,8 @@ from sympy.solvers.inequalities import reduce_inequalities
 
 from types import GeneratorType
 from collections import defaultdict
+from itertools import product
+
 import warnings
 
 
@@ -1765,7 +1767,7 @@ def _solve_system(exprs, symbols, **flags):
                 subsols.append(subsol)
             # Full solution is cartesion product of subsystems
             sols = []
-            for soldicts in cartes(*subsols):
+            for soldicts in product(*subsols):
                 sols.append(dict(item for sd in soldicts
                     for item in sd.items()))
             # Return a list with one dict as just the dict
