@@ -173,6 +173,13 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
     # TODO: this is returning a wrong result:
     # convert_array_to_matrix(cg)
 
+    cg = ArrayDiagonal(ArrayTensorProduct(I1, a, b), (1, 3, 5))
+    assert convert_array_to_matrix(cg) == a*b.T
+
+    cg = ArrayDiagonal(ArrayTensorProduct(I1, a, b), (1, 3))
+    assert _array_diag2contr_diagmatrix(cg) == ArrayContraction(ArrayTensorProduct(OneArray(1), a, b, I1), (2, 6))
+    assert convert_array_to_matrix(cg) == a*b.T
+
     cg = ArrayDiagonal(ArrayTensorProduct(x, I1), (1, 2))
     assert isinstance(cg, ArrayDiagonal)
     assert cg.diagonal_indices == ((1, 2),)

@@ -204,7 +204,7 @@ class ArrayTensorProduct(_CodegenArrayAbstract):
 
         diagonals = {i: arg for i, arg in enumerate(args) if isinstance(arg, ArrayDiagonal)}
         if diagonals:
-            permutation = []
+            inverse_permutation = []
             last_perm = []
             ranks = [get_rank(arg) for arg in args]
             cumulative_ranks = list(accumulate([0] + ranks))[:-1]
@@ -212,16 +212,16 @@ class ArrayTensorProduct(_CodegenArrayAbstract):
                 if isinstance(arg, ArrayDiagonal):
                     i1 = get_rank(arg) - len(arg.diagonal_indices)
                     i2 = len(arg.diagonal_indices)
-                    permutation.extend([cumulative_ranks[i] + j for j in range(i1)])
+                    inverse_permutation.extend([cumulative_ranks[i] + j for j in range(i1)])
                     last_perm.extend([cumulative_ranks[i] + j for j in range(i1, i1 + i2)])
                 else:
-                    permutation.extend([cumulative_ranks[i] + j for j in range(get_rank(arg))])
-            permutation.extend(last_perm)
+                    inverse_permutation.extend([cumulative_ranks[i] + j for j in range(get_rank(arg))])
+            inverse_permutation.extend(last_perm)
             tp = cls(*[arg.expr if isinstance(arg, ArrayDiagonal) else arg for arg in args])
             ranks2 = [_get_subrank(arg) if isinstance(arg, ArrayDiagonal) else get_rank(arg) for arg in args]
             cumulative_ranks2 = list(accumulate([0] + ranks2))[:-1]
             diagonal_indices = [tuple(cumulative_ranks2[i] + k for k in j) for i, arg in diagonals.items() for j in arg.diagonal_indices]
-            return PermuteDims(ArrayDiagonal(tp, *diagonal_indices), permutation)
+            return PermuteDims(ArrayDiagonal(tp, *diagonal_indices), _af_invert(inverse_permutation))
 
         obj = Basic.__new__(cls, *args)
         obj._subranks = ranks
