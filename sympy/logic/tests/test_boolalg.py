@@ -21,9 +21,8 @@ from sympy.logic.boolalg import (
 from sympy.assumptions.cnf import CNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
-from sympy.utilities.iterables import cartes
 
-from itertools import combinations, permutations
+from itertools import combinations, permutations, product
 
 A, B, C, D = symbols('A:D')
 a, b, c, d, e, w, x, y, z = symbols('a:e w:z')
@@ -760,7 +759,7 @@ def test_true_false():
     assert ~true is false
     assert ~false is true
 
-    for T, F in cartes([True, true], [False, false]):
+    for T, F in product((True, true), (False, false)):
         assert And(T, F) is false
         assert And(F, T) is false
         assert And(F, F) is false

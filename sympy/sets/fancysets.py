@@ -1,4 +1,5 @@
 from functools import reduce
+from itertools import product
 
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -14,7 +15,6 @@ from sympy.logic.boolalg import And, Or
 from sympy.sets.sets import (Set, Interval, Union, FiniteSet,
     ProductSet)
 from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import cartes
 
 
 class Rationals(Set, metaclass=Singleton):
@@ -500,7 +500,7 @@ class ImageSet(Set):
             base_set = self.base_sets[0]
             return SetExpr(base_set)._eval_func(f).set
         if all(s.is_FiniteSet for s in self.base_sets):
-            return FiniteSet(*(f(*a) for a in cartes(*self.base_sets)))
+            return FiniteSet(*(f(*a) for a in product(*self.base_sets)))
         return self
 
 

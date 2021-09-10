@@ -1,8 +1,9 @@
 from collections import defaultdict, OrderedDict
 from itertools import (
     combinations, combinations_with_replacement, permutations,
-    product, product as cartes
+    product
 )
+from itertools import product as cartes # noqa: F401
 import random
 from operator import gt
 
@@ -11,8 +12,6 @@ from sympy.core import Basic
 # this is the logical location of these functions
 from sympy.core.compatibility import (as_int, is_sequence, iterable, ordered)
 from sympy.core.compatibility import default_sort_key  # noqa: F401
-
-import sympy
 
 from sympy.utilities.enumerative import (
     multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
@@ -525,7 +524,7 @@ def ibin(n, bits=None, str=False):
         bits = 0
     else:
         try:
-             bits = as_int(bits)
+            bits = as_int(bits)
         except ValueError:
             bits = -1
         else:
@@ -664,7 +663,7 @@ def filter_symbols(iterator, exclude):
         if s not in exclude:
             yield s
 
-def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumptions):
+def numbered_symbols(prefix='x', cls=None, start=0, exclude=(), *args, **assumptions):
     """
     Generate an infinite stream of Symbols consisting of a prefix and
     increasing subscripts provided that they do not occur in ``exclude``.
@@ -692,7 +691,7 @@ def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumpt
     if cls is None:
         # We can't just make the default cls=Symbol because it isn't
         # imported yet.
-        from sympy import Symbol
+        from sympy.core import Symbol
         cls = Symbol
 
     while True:
@@ -1317,7 +1316,8 @@ def least_rotation(x, key=None):
     .. [1] https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
 
     '''
-    if key is None: key = sympy.Id
+    from sympy import Id
+    if key is None: key = Id
     S = x + x      # Concatenate string to it self to avoid modular arithmetic
     f = [-1] * len(S)     # Failure function
     k = 0       # Least rotation of string found so far
@@ -2018,14 +2018,14 @@ def binary_partitions(n):
 
     """
     from math import ceil, log
-    pow = int(2**(ceil(log(n, 2))))
-    sum = 0
+    power = int(2**(ceil(log(n, 2))))
+    acc = 0
     partition = []
-    while pow:
-        if sum + pow <= n:
-            partition.append(pow)
-            sum += pow
-        pow >>= 1
+    while power:
+        if acc + power <= n:
+            partition.append(power)
+            acc += power
+        power >>= 1
 
     last_num = len(partition) - 1 - (n & 1)
     while last_num >= 0:
@@ -2069,8 +2069,8 @@ def has_dups(seq):
     from sympy.sets.sets import Set
     if isinstance(seq, (dict, set, Dict, Set)):
         return False
-    uniq = set()
-    return any(True for s in seq if s in uniq or uniq.add(s))
+    unique = set()
+    return any(True for s in seq if s in unique or unique.add(s))
 
 
 def has_variety(seq):
@@ -2456,8 +2456,8 @@ def minlex(seq, directed=True, key=None):
     ('c', 'a', 'bb', 'aaa')
 
     """
-
-    if key is None: key = sympy.Id
+    from sympy import Id
+    if key is None: key = Id
     best = rotate_left(seq, least_rotation(seq, key=key))
     if not directed:
         rseq = seq[::-1]
@@ -2642,7 +2642,7 @@ def permute_signs(t):
     >>> list(permute_signs((0, 1, 2)))
     [(0, 1, 2), (0, -1, 2), (0, 1, -2), (0, -1, -2)]
     """
-    for signs in cartes(*[(1, -1)]*(len(t) - t.count(0))):
+    for signs in product(*[(1, -1)]*(len(t) - t.count(0))):
         signs = list(signs)
         yield type(t)([i*signs.pop() if i else i for i in t])
 
@@ -2701,8 +2701,8 @@ def roundrobin(*iterables):
     pending = len(iterables)
     while pending:
         try:
-            for next in nexts:
-                yield next()
+            for nxt in nexts:
+                yield nxt()
         except StopIteration:
             pending -= 1
             nexts = itertools.cycle(itertools.islice(nexts, pending))
