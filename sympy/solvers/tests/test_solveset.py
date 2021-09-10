@@ -2895,3 +2895,9 @@ def test_issue_21236():
 def test_issue_21908():
     assert nonlinsolve([(x**2 + 2*x - y**2)*exp(x), -2*y*exp(x)], x, y
                       ) == {(-2, 0), (0, 0)}
+
+
+def test_issue_22058():
+    sol = solveset(-sqrt(t)*x**2 + 2*x + sqrt(t), x, S.Reals)
+    # doesn't fail (and following numerical check)
+    assert sol.xreplace({t: 1}) == {1 - sqrt(2), 1 + sqrt(2)}, sol.xreplace({t: 1})

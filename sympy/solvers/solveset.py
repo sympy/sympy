@@ -862,7 +862,7 @@ def _solve_radical(f, unradf, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    if isinstance(result, Complement) or isinstance(result,ConditionSet):
+    if not isinstance(result, FiniteSet):
         solution_set = result
     else:
         f_set = []  # solutions for FiniteSet
@@ -1065,7 +1065,7 @@ def _solveset(f, symbol, domain, _check=False):
         elif isinstance(rhs_s, FiniteSet):
             for equation in [lhs - rhs for rhs in rhs_s]:
                 if equation == f:
-                    u = unrad(f)
+                    u = unrad(f, symbol)
                     if u:
                         result += _solve_radical(equation, u,
                                                  symbol,
@@ -2936,7 +2936,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 
     """
 
-    from sympy import Complement
     from sympy.core.compatibility import is_sequence
 
     if not system:
@@ -3448,7 +3447,7 @@ def _separate_poly_nonpoly(system, symbols):
         # Store denom expression if it contains symbol
         denominators.update(_simple_dens(eq, symbols))
         # try to remove sqrt and rational power
-        without_radicals = unrad(simplify(eq))
+        without_radicals = unrad(simplify(eq), *symbols)
         if without_radicals:
             eq_unrad, cov = without_radicals
             if not cov:
