@@ -13,7 +13,7 @@ from sympy.testing.randtest import (random_complex_number as randcplx,
                                       test_derivative_numerically as td,
                                       _randint)
 from sympy.simplify import besselsimp
-from sympy.testing.pytest import raises, slow
+from sympy.testing.pytest import raises
 
 from sympy.abc import z, n, k, x
 
@@ -238,7 +238,6 @@ def test_expand():
         assert expand_func(besselx(-oo, x)) == besselx(-oo, x, evaluate=False)
 
 
-@slow
 def test_slow_expand():
     def check(eq, ans):
         return tn(eq, ans) and eq == ans
