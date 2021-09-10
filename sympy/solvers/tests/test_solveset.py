@@ -3064,3 +3064,9 @@ def test_issue_19144():
 def test_issue_19814():
     assert nonlinsolve([ 2**m - 2**(2*n), 4*2**m - 2**(4*n)], m, n
                       ) == FiniteSet((log(2**(2*n))/log(2), S.Complexes))
+
+
+def test_issue_22058():
+    sol = solveset(-sqrt(t)*x**2 + 2*x + sqrt(t), x, S.Reals)
+    # doesn't fail (and following numerical check)
+    assert sol.xreplace({t: 1}) == {1 - sqrt(2), 1 + sqrt(2)}, sol.xreplace({t: 1})
