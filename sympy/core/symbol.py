@@ -888,3 +888,59 @@ def disambiguate(*iter):
             ki = mapping[k][i]
             reps[ki] = Symbol(name, **ki.assumptions0)
     return new_iter.xreplace(reps)
+
+
+def _dummy_with_inherited_properties_from_domain(symbol, domain, additional_properties=()):
+    from sympy.sets import Interval, Range
+    if domain is S.Reals:
+        return Dummy(real=True)
+    if domain is S.Integers:
+        return Dummy(integer=True)
+    if isinstance(domain, Interval):
+        return _dummy_with_inherited_properties((symbol, domain.inf, domain.sup))
+    if isinstance(domain, Range):
+        return _dummy_with_inherited_properties_concrete((symbol, domain.inf, domain.sup))
+
+
+def _dummy_with_inherited_properties(limits, additional_properties=()):
+    """
+    Return a Dummy symbol that inherits as many assumptions as possible
+    from the provided symbol and limits.
+
+    If the symbol already has all True assumption shared by the limits
+    then return None.
+    """
+    x, a, b = limits
+    l = [a, b]
+
+    assumptions_to_consider = ['extended_nonnegative', 'nonnegative',
+                               'extended_nonpositive', 'nonpositive',
+                               'extended_positive', 'positive',
+                               'extended_negative', 'negative',
+                               'finite',
+                               'zero', 'real', 'extended_real']
+
+    assumptions_to_consider.extend(additional_properties)
+
+    assumptions_to_keep = {}
+    assumptions_to_add = {}
+    for assum in assumptions_to_consider:
+        assum_true = x._assumptions.get(assum, None)
+        if assum_true:
+            assumptions_to_keep[assum] = True
+        elif all([getattr(i, 'is_' + assum) for i in l]):
+            assumptions_to_add[assum] = True
+    if assumptions_to_add:
+        assumptions_to_keep.update(assumptions_to_add)
+        return Dummy('d', **assumptions_to_keep)
+
+
+def _dummy_with_inherited_properties_concrete(limits):
+    """
+    Return a Dummy symbol that inherits as many assumptions as possible
+    from the provided symbol and limits.
+
+    If the symbol already has all True assumption shared by the limits
+    then return None.
+    """
+    return _dummy_with_inherited_properties(limits, additional_properties=('integer', 'rational'))

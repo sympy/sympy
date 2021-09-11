@@ -10,7 +10,8 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import oo, pi
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Symbol, Wild)
+from sympy.core.symbol import (Dummy, Symbol, Wild,
+                               _dummy_with_inherited_properties)
 from sympy.core.sympify import sympify
 from sympy.functions import Piecewise, sqrt, piecewise_fold, tan, cot, atan
 from sympy.functions.elementary.exponential import log
@@ -470,15 +471,7 @@ class Integral(AddWithLimits):
             if len(xab) != 3:
                 continue
             x, a, b = xab
-            l = (a, b)
-            if all(i.is_nonnegative for i in l) and not x.is_nonnegative:
-                d = Dummy(positive=True)
-            elif all(i.is_nonpositive for i in l) and not x.is_nonpositive:
-                d = Dummy(negative=True)
-            elif all(i.is_real for i in l) and not x.is_real:
-                d = Dummy(real=True)
-            else:
-                d = None
+            d = _dummy_with_inherited_properties(xab)
             if d:
                 reps[x] = d
         if reps:

@@ -6,6 +6,7 @@ from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import expand_mul
 from sympy.core.numbers import _sympifyit, oo, zoo
 from sympy.core.relational import is_le, is_lt, is_ge, is_gt
+from sympy.core.symbol import _dummy_with_inherited_properties_from_domain
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import And
@@ -195,15 +196,7 @@ def function_range(f, symbol, domain):
 
             # Replace symbol with dummy with proper assumptions if the symbol
             # not already has it
-            l = (interval.inf, interval.sup)
-            if all(i.is_nonnegative for i in l) and not symbol.is_nonnegative:
-                d = Dummy(positive=True)
-            elif all(i.is_nonpositive for i in l) and not symbol.is_nonpositive:
-                d = Dummy(negative=True)
-            elif all(i.is_real for i in l) and not symbol.is_real:
-                d = Dummy(real=True)
-            else:
-                d = None
+            d = _dummy_with_inherited_properties_from_domain(symbol, interval)
             # Rename to enable sensible exception messages
             if d:
                 func = f.subs(symbol, d)

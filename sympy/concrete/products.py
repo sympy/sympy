@@ -6,7 +6,7 @@ from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
 from sympy.core.function import Derivative
-from sympy.core.symbol import Dummy, Symbol
+from sympy.core.symbol import Dummy, Symbol, _dummy_with_inherited_properties_concrete
 
 
 class Product(ExprWithIntLimits):
@@ -247,8 +247,6 @@ class Product(ExprWithIntLimits):
         # variables with matching assumptions
         reps = {}
         for xab in self.limits:
-            # Must be imported here to avoid circular imports
-            from .summations import _dummy_with_inherited_properties_concrete
             d = _dummy_with_inherited_properties_concrete(xab)
             if d:
                 reps[xab[0]] = d
