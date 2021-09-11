@@ -1,5 +1,5 @@
 from sympy import (abc, Add, cos, collect, Derivative, diff, exp, Float, Function,
-    I, Integer, log, Mul, oo, Poly, Rational, S, sin, sqrt, Symbol, symbols,
+    I, Integer, log, Mul, oo, Poly, Rational, S, signsimp, sin, sqrt, Symbol, symbols,
     Wild, pi, meijerg, Sum
 )
 
@@ -707,6 +707,37 @@ def test_match_issue_17397():
         - 4*Derivative(f(x), (x, 2)) - 2*Derivative(f(x), x)/x + 4*Derivative(f(x), (x, 2))/x
     r = collect(eq, [f(x).diff(x, 2), f(x).diff(x), f(x)]).match(deq)
     assert r == {a3: x - 4 + 4/x, b3: 1 - 2/x, c3: x - 4}
+
+
+def test_match_issue_21942_1():
+    a, r, w = symbols('a, r, w', nonnegative=True)
+    p = symbols('p', positive=True)
+    g_ = Wild('g')
+    pattern = g_ ** (1 / (1 - p))
+    eq = (a * r ** (1 - p) + w ** (1 - p) * (1 - a)) ** (1 / (1 - p))
+    assert pattern.matches(eq) == {g_: a * r ** (1 - p) + w ** (1 - p) * (1 - a)}
+
+    eq = signsimp(eq)
+    assert pattern.matches(eq) is None
+
+
+@XFAIL
+def test_match_issue_21942_2():
+    a, r, w = symbols('a, r, w', nonnegative=True)
+    p = symbols('p', positive=True)
+    g_ = Wild('g')
+    pattern = g_ ** (1 / (1 - p))
+    eq = (a * r ** (1 - p) + w ** (1 - p) * (1 - a)) ** (1 / (1 - p))
+
+    assert (-pattern).matches(-eq) == {g_: a * r ** (1 - p) + w ** (1 - p) * (1 - a)}
+    # actual result = {g_: a * r ** (1 - p) - w ** (1 - p) * (a - 1)}
+    # this means that a substitution back into `pattern` will not give `eq`
+    # mutation of `eq` is forced by the `signsimp` called in `_combine_inverse`
+
+    # change the form of eq so that it should not match
+    # the exponent is now of the form (-1/(p-1)) instead of (1/(1-p))
+    eq = signsimp(eq)
+    assert (-pattern).matches(-eq, old=False) is None
 
 
 def test_match_terms():

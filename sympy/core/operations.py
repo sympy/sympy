@@ -253,10 +253,12 @@ class AssocOp(Basic):
                 # the matching continue
                 return None
             newexpr = self._combine_inverse(expr, exact)
+            from sympy import signsimp
+            expr = signsimp(expr)
             if not old and (expr.is_Add or expr.is_Mul):
                 if newexpr.count_ops() > expr.count_ops():
                     return None
-            newpattern = self._new_rawargs(*wild_part)
+            newpattern = signsimp(self._new_rawargs(*wild_part))
             return newpattern.matches(newexpr, repl_dict)
 
         # now to real work ;)
