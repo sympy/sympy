@@ -118,6 +118,13 @@ def test_issue_18618():
     A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     assert A == Matrix(BlockDiagMatrix(A))
 
+def test_issue_22034():
+    I_10, I_20 = Identity(10), Identity(20)
+    O_10, O_20 = ZeroMatrix(10, 10), ZeroMatrix(20, 20)
+    A = BlockMatrix([[I_10, O_10], [O_10, I_10]])
+    assert block_collapse(A - I_20) == O_20
+    assert block_collapse(A + I_20) == 2*I_20
+
 def test_BlockMatrix_trace():
     A, B, C, D = [MatrixSymbol(s, 3, 3) for s in 'ABCD']
     X = BlockMatrix([[A, B], [C, D]])
