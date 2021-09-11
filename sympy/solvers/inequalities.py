@@ -5,6 +5,7 @@ from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.matrices.dense import Matrix
+from sympy.matrices.immutable import ImmutableMatrix
 from sympy.sets import Interval
 from sympy.sets.sets import FiniteSet, Union, EmptySet, Intersection
 from sympy.core.singleton import S
@@ -1102,7 +1103,7 @@ def _simplex(M, R, S, random_seed=0):
 
 # Maximize Cx + D constrained with Ax <= B and x >= 0
 # Minimize y^{T}B constrained with y^{T}A >= C^{T} and y >= 0
-def linear_programming(A, B, C, D = Matrix([0])):
+def linear_programming(A, B, C, D = ImmutableMatrix([0])):
     """
     When x is a column vector of variables, y is a column vector of dual variables,
     and when the objective is either:
