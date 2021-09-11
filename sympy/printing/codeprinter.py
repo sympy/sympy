@@ -9,6 +9,7 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
 from sympy.core.symbol import Symbol
+from sympy.functions.elementary.complexes import re
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
 
@@ -31,11 +32,6 @@ class AssignmentError(Exception):
     Raised if an assignment variable for a loop is missing.
     """
     pass
-
-
-class _UnevaluatedExprIsReal(UnevaluatedExpr):
-    def _eval_is_real(self):
-        return self.args[0].is_real
 
 
 class CodePrinter(StrPrinter):
@@ -77,7 +73,8 @@ class CodePrinter(StrPrinter):
         if expr is None:
             return expr
         elif isinstance(expr, Basic):
-            return expr.replace(UnevaluatedExpr, _UnevaluatedExprIsReal)
+            return expr.replace(re, lambda arg: arg if isinstance(
+                arg, UnevaluatedExpr) and arg.args[0].is_real else re(arg))
         else:
             return type(expr)(self._handle_UnevaluatedExpr(item) for item in expr)
 
