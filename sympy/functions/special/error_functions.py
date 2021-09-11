@@ -1198,7 +1198,7 @@ class Ei(Function):
         return li(exp(z))
 
     def _eval_rewrite_as_Si(self, z, **kwargs):
-        if z.is_negative:
+        if z.is_extended_negative:
             return Shi(z) + Chi(z) - I*pi
         else:
             return Shi(z) + Chi(z)
@@ -2146,7 +2146,7 @@ class Shi(TrigonometricIntegral):
         elif not arg0.is_infinite:
             return self.func(arg0)
         elif arg0.is_infinite:
-            return -pi*S.ImaginiryUnit/2
+            return -pi*S.ImaginaryUnit/2
         else:
             return self
 
