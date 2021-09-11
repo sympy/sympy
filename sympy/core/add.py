@@ -519,6 +519,7 @@ class Add(Expr, AssocOp):
         returns 0, instead of a nan.
         """
         from sympy.core.symbol import Dummy
+        from sympy.simplify.simplify import signsimp
         inf = (S.Infinity, S.NegativeInfinity)
         if lhs.has(*inf) or rhs.has(*inf):
             oo = Dummy('oo')
@@ -526,14 +527,16 @@ class Add(Expr, AssocOp):
                 S.Infinity: oo,
                 S.NegativeInfinity: -oo}
             ireps = {v: k for k, v in reps.items()}
-            eq = signsimp(lhs.xreplace(reps) - rhs.xreplace(reps))
+            eq = lhs.xreplace(reps) - rhs.xreplace(reps)
             if eq.has(oo):
                 eq = eq.replace(
                     lambda x: x.is_Pow and x.base is oo,
                     lambda x: x.base)
             return eq.xreplace(ireps)
         else:
-            return lhs - rhs
+            rv = lhs - rhs
+            srv = signsimp(rv)
+            return srv if srv.is_Number else rv
 
     @cacheit
     def as_two_terms(self):

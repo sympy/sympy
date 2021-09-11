@@ -1193,6 +1193,7 @@ class Mul(Expr, AssocOp):
         like oo/oo return 1 (instead of a nan) and ``I`` behaves like
         a symbol instead of sqrt(-1).
         """
+        from sympy.simplify.simplify import signsimp
         from .symbol import Dummy
         if lhs == rhs:
             return S.One
@@ -1223,7 +1224,9 @@ class Mul(Expr, AssocOp):
             if len(b) != blen:
                 lhs = Mul(*[k**v for k, v in a.items()]).xreplace(i_)
                 rhs = Mul(*[k**v for k, v in b.items()]).xreplace(i_)
-        return lhs/rhs
+        rv = lhs/rhs
+        srv = signsimp(rv)
+        return srv if srv.is_Number else rv
 
     def as_powers_dict(self):
         d = defaultdict(int)
