@@ -487,8 +487,7 @@ def lens_makers_formula(n_lens, n_surr, r1, r2, d=0):
         n_surr = sympify(n_surr)
     d = sympify(d)
 
-    focal_length = 1/( (n_lens - n_surr) / n_surr*(1/r1 - 1/r2 + (((n_lens - n_surr) * d) / 
-                        (n_lens * r1 * r2))) )
+    focal_length = 1/((n_lens - n_surr) / n_surr*(1/r1 - 1/r2 + (((n_lens - n_surr) * d) / (n_lens * r1 * r2))))
 
     if focal_length == zoo:
         return S.Infinity
