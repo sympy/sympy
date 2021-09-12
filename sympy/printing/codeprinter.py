@@ -2,7 +2,6 @@ from typing import Any, Dict, Set, Tuple
 
 from functools import wraps
 
-from sympy.codegen.pynodes import List
 from sympy.core import Add, Expr, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
 from sympy.core.compatibility import default_sort_key
@@ -37,6 +36,7 @@ class AssignmentError(Exception):
 
 def _convert_python_lists(arg):
     if isinstance(arg, list):
+        from sympy.codegen.pynodes import List
         return List(*(_convert_python_lists(e) for e in arg))
     else:
         return arg
