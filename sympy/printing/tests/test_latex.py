@@ -826,10 +826,20 @@ def test_latex_Range():
     assert latex(Range(oo, -oo, -1)) == r'\left\{\ldots, 1, 0, -1, \ldots\right\}'
 
     a, b, c = symbols('a:c')
-    assert latex(Range(a, b, c)) == r'Range\left(a, b, c\right)'
-    assert latex(Range(a, 10, 1)) == r'Range\left(a, 10, 1\right)'
-    assert latex(Range(0, b, 1)) == r'Range\left(0, b, 1\right)'
-    assert latex(Range(0, 10, c)) == r'Range\left(0, 10, c\right)'
+    assert latex(Range(a, b, c)) == r'\operatorname{Range}\left(a, b, c\right)'
+    assert latex(Range(a, 10, 1)) == r'\operatorname{Range}\left(a, 10\right)'
+    assert latex(Range(0, b, 1)) == r'\operatorname{Range}\left(b\right)'
+    assert latex(Range(0, 10, c)) == r'\operatorname{Range}\left(0, 10, c\right)'
+
+    i = Symbol('i', integer=True)
+    n = Symbol('n', negative=True, integer=True)
+    p = Symbol('p', positive=True, integer=True)
+
+    assert latex(Range(i, i + 3)) == r'\left\{i, i + 1, i + 2\right\}'
+    assert latex(Range(-oo, n, 2)) == r'\left\{\ldots, n - 4, n - 2\right\}'
+    assert latex(Range(p, oo)) == r'\left\{p, p + 1, \ldots\right\}'
+    # Must have integer assumptions
+    assert latex(Range(a, a + 3)) == r'\operatorname{Range}\left(a, a + 3\right)'
 
 
 def test_latex_sequences():

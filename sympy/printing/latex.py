@@ -2046,9 +2046,6 @@ class LatexPrinter(Printer):
     def _print_Range(self, s):
         dots = object()
 
-        if s.has(Symbol):
-            return self._print_Basic(s)
-
         if s.start.is_infinite and s.stop.is_infinite:
             if s.step.is_positive:
                 printset = dots, -1, 0, 1, dots
@@ -2059,11 +2056,26 @@ class LatexPrinter(Printer):
         elif s.stop.is_infinite:
             it = iter(s)
             printset = next(it), next(it), dots
-        elif len(s) > 4:
-            it = iter(s)
-            printset = next(it), next(it), dots, s[-1]
         else:
-            printset = tuple(s)
+            try:
+                if (s.size < 4) == True:
+                    printset = tuple(s)
+                else:
+                    it = iter(s)
+                    printset = next(it), next(it), dots, s[-1]
+            except (TypeError, ValueError):
+                if s.args[0] == 0:
+                    if s.args[2] == 1:
+                        cont = self._print(s.args[1])
+                    else:
+                        cont = ", ".join(self._print(arg) for arg in s.args)
+                else:
+                    if s.args[2] == 1:
+                        cont = ", ".join(self._print(arg) for arg in s.args[:2])
+                    else:
+                        cont = ", ".join(self._print(arg) for arg in s.args)
+
+                return(f"\\operatorname{{Range}}\\left({cont}\\right)")
 
         return (r"\left\{" +
                 r", ".join(self._print(el) if el is not dots else r'\ldots' for el in printset) +
