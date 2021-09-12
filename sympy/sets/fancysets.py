@@ -770,6 +770,13 @@ class Range(Set):
             return True
         return self.size.is_finite
 
+    @property
+    def is_empty(self):
+        try:
+            return self.size.is_zero
+        except ValueError:
+            return None
+
     def __bool__(self):
         # this only distinguishes between definite null range
         # and non-null/unknown null; getting True doesn't mean
