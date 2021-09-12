@@ -6,7 +6,7 @@ from sympy import (
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol, summation,
     symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper,
-    Float
+    Float, Intersection
 )
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.complexes import periodic_argument
@@ -1253,6 +1253,13 @@ def test_issue_4153():
         -12*log(3) - 3*log(6)/2 + 3*log(8)/2 + 5*log(2) + 7*log(4),
         6*log(2) + 8*log(4) - 27*log(3)/2, 22*log(2) - 27*log(3)/2,
         -12*log(3) - 3*log(6)/2 + 47*log(2)/2]
+
+
+def test_issue_20535():
+    _z = Symbol('z')
+    a = symbols('a', positive=True)
+    x = Integral(exp(-_z), (_z, Intersection(Interval(0, oo), Interval(a, oo))))
+    assert x.doit() == exp(-a)
 
 
 def test_issue_4326():
