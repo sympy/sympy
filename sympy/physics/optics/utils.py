@@ -28,7 +28,7 @@ __all__ = ['refraction_angle',
            ]
 
 from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit, atan2, asin,\
-cos, sin, tan, I, cancel, pi, Float
+cos, sin, tan, I, cancel, pi, Float, S, zoo
 from sympy.core.compatibility import is_sequence
 from sympy.geometry.line import Ray3D
 from sympy.geometry.util import intersection
@@ -444,7 +444,7 @@ def critical_angle(medium1, medium2):
 
 
 
-def lens_makers_formula(n_lens, n_surr, r1, r2=None, *, d=None, lens='thin'):
+def lens_makers_formula(n_lens, n_surr, r1, r2, d=0):
     """
     This function calculates focal length of a lens.
     It follows cartesian sign convention.
@@ -460,28 +460,23 @@ def lens_makers_formula(n_lens, n_surr, r1, r2=None, *, d=None, lens='thin'):
         Radius of curvature of first surface.
     r2 : sympifiable
         Radius of curvature of second surface.
-    d : sympifiable
-        Thickness of lens.
-        Applicable when lens = 'thick'
-    lens : string, default 'thin'
-        Takes value 'thin' for thin lens, 'plano' for
-        plano lens and 'thick' for thick lens
+    d : sympifiable, optional
+        Thickness of lens, default value is 0.
 
     Examples
     ========
 
     >>> from sympy.physics.optics import lens_makers_formula
+    >>> from sympy import S
     >>> lens_makers_formula(1.33, 1, 10, -10)
     15.1515151515151
-    >>> lens_makers_formula(1.2, 1, 10,lens='plano')
+    >>> lens_makers_formula(1.2, 1, 10, S.Infinity)
     50.0000000000000
-    >>> lens_makers_formula(1.33, 1, 10, -10, d=1, lens='thick')
+    >>> lens_makers_formula(1.33, 1, 10, -10, d=1)
     15.3418463277618
 
     """
-    valid_lens = ['thin','thick','plano']
-    if lens not in valid_lens :
-        raise ValueError("Parameter lens takes value : 'thick', 'thin' or 'plano' but " + str(lens) + " was provided.")
+
     if isinstance(n_lens, Medium):
         n_lens = n_lens.refractive_index
     else:
@@ -490,33 +485,14 @@ def lens_makers_formula(n_lens, n_surr, r1, r2=None, *, d=None, lens='thin'):
         n_surr = n_surr.refractive_index
     else:
         n_surr = sympify(n_surr)
+    d = sympify(d)
 
-    if lens == 'thin': #BiConcave and Biconvex thin lens
-        if d is not None:
-            raise ValueError('Parameter d is not required for thin lens, thickness of thin lens is always negligible.')
-        if r2 is None:
-            raise ValueError('Radius of curvature of second surface is not defined.')
-        r1 = sympify(r1)
-        r2 = sympify(r2)
-        return 1/((n_lens - n_surr)/n_surr*(1/r1 - 1/r2))
+    focal_length = 1/( (n_lens - n_surr) / n_surr*(1/r1 - 1/r2 + (((n_lens - n_surr) * d) / 
+                        (n_lens * r1 * r2))) )
 
-    if lens == 'plano': # Plano-Concave and Plano-Convex thin lens
-        if d is not None:
-            raise ValueError('Parameter d is not required for thin lens, thickness of thin lens is always negligible.')
-        if r2 is not None:
-            raise ValueError('Radius of curvature of second surface is taken infinity, no need to define this parameter')
-        r1 = sympify(r1)
-        return 1/((n_lens - n_surr)/n_surr*(1/r1))
-
-    if lens == 'thick': #Thick Lens
-        if d is None:
-            raise ValueError('Parameter d not defined, thickness of lens is required.')
-        if r2 is None:
-            raise ValueError('Radius of curvature of second surface is not defined.')
-        r1 = sympify(r1)
-        r2 = sympify(r2)
-        d = sympify(d)
-        return 1/( (n_lens - n_surr)/n_surr*(1/r1 - 1/r2 + (((n_lens - n_surr) * d ) / (n_lens * r1 * r2))) )
+    if focal_length == zoo:
+        return S.Infinity
+    return focal_length
 
 
 def mirror_formula(focal_length=None, u=None, v=None):
