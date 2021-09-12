@@ -518,7 +518,6 @@ class Add(Expr, AssocOp):
         Returns lhs - rhs, but treats oo like a symbol so oo - oo
         returns 0, instead of a nan.
         """
-        from sympy.simplify.simplify import signsimp
         from sympy.core.symbol import Dummy
         inf = (S.Infinity, S.NegativeInfinity)
         if lhs.has(*inf) or rhs.has(*inf):
@@ -534,7 +533,7 @@ class Add(Expr, AssocOp):
                     lambda x: x.base)
             return eq.xreplace(ireps)
         else:
-            return signsimp(lhs - rhs)
+            return lhs - rhs
 
     @cacheit
     def as_two_terms(self):
