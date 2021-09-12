@@ -80,14 +80,15 @@ def intersection_sets(a, b): # noqa:F811
 
 @dispatch(Range, Interval)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
-    from sympy.functions.elementary.integers import floor, ceiling
-    if not all(i.is_number for i in b.args[:2]):
+    # Check that there are no symbolic arguments
+    if not all(i.is_number for i in a.args + b.args[:2]):
         return
 
     # In case of null Range, return an EmptySet.
     if a.size == 0:
         return S.EmptySet
 
+    from sympy.functions.elementary.integers import floor, ceiling
     # trim down to self's size, and represent
     # as a Range with step 1.
     start = ceiling(max(b.inf, a.inf))
@@ -104,9 +105,9 @@ def intersection_sets(a, b): # noqa:F811
 
 @dispatch(Range, Range)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
-    from sympy.solvers.diophantine.diophantine import diop_linear
-    from sympy.core.numbers import ilcm
-    from sympy import sign
+    # Check that there are no symbolic range arguments
+    if not all(all(v.is_number for v in r.args) for r in [a, b]):
+        return None
 
     # non-overlap quick exits
     if not b:
@@ -132,6 +133,10 @@ def intersection_sets(a, b): # noqa:F811
         return b
     if r2.start.is_infinite:
         return a
+
+    from sympy.solvers.diophantine.diophantine import diop_linear
+    from sympy.core.numbers import ilcm
+    from sympy import sign
 
     # this equation represents the values of the Range;
     # it's a linear equation

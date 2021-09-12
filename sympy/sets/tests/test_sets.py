@@ -1613,6 +1613,23 @@ def test_issue_19378():
     assert Eq(a, c).simplify() is S.false
     assert Eq({1}, {x}).simplify() == Eq({1}, {x})
 
+def test_intersection_symbolic():
+    n = Symbol('n')
+    # These should not throw an error
+    assert isinstance(Intersection(Range(n), Range(100)), Intersection)
+    assert isinstance(Intersection(Range(n), Interval(1, 100)), Intersection)
+    assert isinstance(Intersection(Range(100), Interval(1, n)), Intersection)
+
+
+@XFAIL
+def test_intersection_symbolic_failing():
+    n = Symbol('n', integer=True, positive=True)
+    assert Intersection(Range(10, n), Range(4, 500, 5)) == Intersection(
+        Range(14, n), Range(14, 500, 5))
+    assert Intersection(Interval(10, n), Range(4, 500, 5)) == Intersection(
+        Interval(14, n), Range(14, 500, 5))
+
+
 def test_issue_20379():
     #https://github.com/sympy/sympy/issues/20379
     x = pi - 3.14159265358979
