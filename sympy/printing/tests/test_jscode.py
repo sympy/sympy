@@ -1,6 +1,6 @@
 from sympy.core import (pi, oo, symbols, Rational, Integer, GoldenRatio,
                         EulerGamma, Catalan, Lambda, Dummy, S, Eq, Ne, Le,
-                        Lt, Gt, Ge)
+                        Lt, Gt, Ge, Mod)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
                              sinh, cosh, tanh, asin, acos, acosh, Max, Min)
 from sympy.testing.pytest import raises
@@ -63,6 +63,13 @@ def test_Relational():
     assert jscode(Gt(x, y)) == "x > y"
     assert jscode(Ge(x, y)) == "x >= y"
 
+
+def test_Mod():
+    assert jscode(Mod(x, y)) == '(((x % y) + y) % y)'
+    assert jscode(Mod(x, x + y)) == '(((x % (x + y)) + (x + y)) % (x + y))'
+    p1, p2 = symbols('p1 p2', positive=True)
+    assert jscode(Mod(p1, p2)) == '(p1 % p2)'
+    assert jscode(Mod(p1, p2 + 3)) == '(p1 % (p2 + 3))'
 
 
 def test_jscode_Integer():
