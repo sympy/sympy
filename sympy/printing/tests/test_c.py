@@ -852,3 +852,8 @@ def test_ccode_UnevaluatedExpr():
     q_r = UnevaluatedExpr(q + r)
     expr = abs(exp(p+q_r))
     assert ccode(expr) == "exp(p + (q + r))"
+
+
+def test_ccode_array_like_containers():
+    assert ccode([2,3,4]) == "{2, 3, 4}"
+    assert ccode((2,3,4)) == "{2, 3, 4}"

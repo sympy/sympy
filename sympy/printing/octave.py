@@ -307,6 +307,7 @@ class OctaveCodePrinter(CodePrinter):
         return '{' + ', '.join(self._print(a) for a in expr) + '}'
     _print_tuple = _print_list
     _print_Tuple = _print_list
+    _print_List = _print_list
 
 
     def _print_BooleanTrue(self, expr):

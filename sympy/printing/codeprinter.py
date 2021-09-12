@@ -2,6 +2,7 @@ from typing import Any, Dict, Set, Tuple
 
 from functools import wraps
 
+from sympy.codegen.pynodes import List
 from sympy.core import Add, Expr, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
 from sympy.core.compatibility import default_sort_key
@@ -32,6 +33,13 @@ class AssignmentError(Exception):
     Raised if an assignment variable for a loop is missing.
     """
     pass
+
+
+def _convert_python_lists(arg):
+    if isinstance(arg, list):
+        return List(*(_convert_python_lists(e) for e in arg))
+    else:
+        return arg
 
 
 class CodePrinter(StrPrinter):
@@ -107,7 +115,7 @@ class CodePrinter(StrPrinter):
             return Assignment(assign_to, expr)
 
         expr = _handle_assign_to(expr, assign_to)
-
+        expr = _convert_python_lists(expr)
         # Remove re(...) nodes due to UnevaluatedExpr.is_real always is None:
         expr = self._handle_UnevaluatedExpr(expr)
 
