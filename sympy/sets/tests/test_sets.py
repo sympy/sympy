@@ -1608,6 +1608,10 @@ def test_intersection_symbolic_intervals():
     assert Intersection(Interval(0, oo), Interval(a, oo)) == Interval(a, oo)
     b = Symbol('b', negative=True)
     assert Intersection(Interval(a, 5), Interval(-5, b)) == EmptySet
+    x = Symbol('x', extended_real=True)
+    y = Symbol('y', extended_real=True)
+    assert Intersection(Interval(1, x), Interval(2, 3), Interval(y, 4)) == Intersection(
+        Interval(2, 3), Interval(2, x), Interval(y, 3))
 
 
 def test_issue_19378():

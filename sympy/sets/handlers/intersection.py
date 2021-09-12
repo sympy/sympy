@@ -404,7 +404,7 @@ def intersection_sets(a, b): # noqa:F811
             return b
 
 
-    # We can't intersect [0,3] with [x,6] -- we don't know if x>0 or x<0
+    # Check if any start and end point combinations can be compared
     comps = [is_le(a.start, b.start), is_le(a.start, b.end), is_le(a.end, b.start), is_le(a.end, b.end)]
     if all(c is None for c in comps):
         return None
@@ -445,12 +445,12 @@ def intersection_sets(a, b): # noqa:F811
             return Interval(start, end, left_open, right_open)
 
     if start is not None and not start_equal:
-        return Intersection(Interval(start, a.end, left_open, a.right_open),
-                            Interval(start, b.end, left_open, b.right_open))
+        return (Interval(start, a.end, left_open, a.right_open),
+                Interval(start, b.end, left_open, b.right_open))
 
     if end is not None and not end_equal:
-        return Intersection(Interval(a.start, end, a.left_open, right_open),
-                            Interval(b.start, end, b.left_open, right_open))
+        return (Interval(a.start, end, a.left_open, right_open),
+                Interval(b.start, end, b.left_open, right_open))
 
     return None
 
