@@ -30,6 +30,8 @@ def test_PythonCodePrinter():
 
     assert prntr.doprint(x**y) == 'x**y'
     assert prntr.doprint(Mod(x, 2)) == 'x % 2'
+    assert prntr.doprint(-Mod(x, y)) == '-(x % y)'
+    assert prntr.doprint(Mod(-x, y)) == '(-x) % y'
     assert prntr.doprint(And(x, y)) == 'x and y'
     assert prntr.doprint(Or(x, y)) == 'x or y'
     assert not prntr.module_imports
