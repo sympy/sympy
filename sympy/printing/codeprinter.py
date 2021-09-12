@@ -70,13 +70,8 @@ class CodePrinter(StrPrinter):
             self.reserved_words = set()
 
     def _handle_UnevaluatedExpr(self, expr):
-        if expr is None:
-            return expr
-        elif isinstance(expr, Basic):
-            return expr.replace(re, lambda arg: arg if isinstance(
-                arg, UnevaluatedExpr) and arg.args[0].is_real else re(arg))
-        else:
-            return type(expr)(self._handle_UnevaluatedExpr(item) for item in expr)
+        return expr.replace(re, lambda arg: arg if isinstance(
+            arg, UnevaluatedExpr) and arg.args[0].is_real else re(arg))
 
     def doprint(self, expr, assign_to=None):
         """
