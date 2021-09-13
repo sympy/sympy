@@ -9,7 +9,6 @@ from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye,
                    Dummy, floor, And, Eq)
-from sympy.utilities.iterables import cartes
 from sympy.testing.pytest import XFAIL, raises
 from sympy.abc import x, y, t, z
 from sympy.core.mod import Mod
@@ -304,7 +303,7 @@ def test_Range_set():
             Range(1, 10, 2),
         ]:
         r = list(R)
-        for a, b, c in cartes(AB, AB, [-3, -1, None, 1, 3]):
+        for a, b, c in itertools.product(AB, AB, [-3, -1, None, 1, 3]):
             for reverse in range(2):
                 r = list(reversed(r))
                 R = R.reversed
@@ -572,6 +571,25 @@ def test_Range_eval_imageset():
 def test_fun():
     assert (FiniteSet(*ImageSet(Lambda(x, sin(pi*x/4)),
         Range(-10, 11))) == FiniteSet(-1, -sqrt(2)/2, 0, sqrt(2)/2, 1))
+
+
+def test_Range_is_empty():
+    i = Symbol('i', integer=True)
+    n = Symbol('n', negative=True, integer=True)
+    p = Symbol('p', positive=True, integer=True)
+
+    assert Range(0).is_empty
+    assert not Range(1).is_empty
+    assert Range(1, 0).is_empty
+    assert not Range(-1, 0).is_empty
+    assert Range(i).is_empty is None
+    assert Range(n).is_empty
+    assert Range(p).is_empty is False
+    assert Range(n, 0).is_empty is False
+    assert Range(n, p).is_empty is False
+    assert Range(p, n).is_empty
+    assert Range(n, -1).is_empty is None
+    assert Range(p, n, -1).is_empty is False
 
 
 def test_Reals():

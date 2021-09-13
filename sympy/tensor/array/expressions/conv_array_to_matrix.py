@@ -530,7 +530,10 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
             pos1_in2 = 1 - pos1_inner
             pos2_in2 = 1 - pos2_inner
             if arg1.shape[pos1_in2] == 1:
-                darg1 = DiagMatrix(arg1)
+                if arg1.shape[pos1_inner] != 1:
+                    darg1 = DiagMatrix(arg1)
+                else:
+                    darg1 = arg1
                 args.append(darg1)
                 contr_indices.append(((pos2_outer, pos2_inner), (len(args)-1, pos1_inner)))
                 total_rank += 1
@@ -538,7 +541,10 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
                 args[pos1_outer] = OneArray(arg1.shape[pos1_in2])
                 replaced[pos1_outer] = True
             elif arg2.shape[pos2_in2] == 1:
-                darg2 = DiagMatrix(arg2)
+                if arg2.shape[pos2_inner] != 1:
+                    darg2 = DiagMatrix(arg2)
+                else:
+                    darg2 = arg2
                 args.append(darg2)
                 contr_indices.append(((pos1_outer, pos1_inner), (len(args)-1, pos2_inner)))
                 total_rank += 1

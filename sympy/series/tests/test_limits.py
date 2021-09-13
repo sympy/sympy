@@ -1,4 +1,4 @@
-from itertools import product as cartes
+from itertools import product
 
 from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling, sinh,
@@ -341,10 +341,10 @@ def test_issue_14793():
 
 def test_issue_5183():
     # using list(...) so py.test can recalculate values
-    tests = list(cartes([x, -x],
-                        [-1, 1],
-                        [2, 3, S.Half, Rational(2, 3)],
-                        ['-', '+']))
+    tests = list(product([x, -x],
+                         [-1, 1],
+                         [2, 3, S.Half, Rational(2, 3)],
+                         ['-', '+']))
     results = (oo, oo, -oo, oo, -oo*I, oo, -oo*(-1)**Rational(1, 3), oo,
                0, 0, 0, 0, 0, 0, 0, 0,
                oo, oo, oo, -oo, oo, -oo*I, oo, -oo*(-1)**Rational(1, 3),
@@ -380,9 +380,9 @@ def test_issue_5229():
 
 def test_issue_4546():
     # using list(...) so py.test can recalculate values
-    tests = list(cartes([cot, tan],
-                        [-pi/2, 0, pi/2, pi, pi*Rational(3, 2)],
-                        ['-', '+']))
+    tests = list(product([cot, tan],
+                         [-pi/2, 0, pi/2, pi, pi*Rational(3, 2)],
+                         ['-', '+']))
     results = (0, 0, -oo, oo, 0, 0, -oo, oo, 0, 0,
                oo, -oo, 0, 0, oo, -oo, 0, 0, oo, -oo)
     assert len(tests) == len(results)

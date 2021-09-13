@@ -40,6 +40,7 @@ PRECEDENCE_VALUES = {
     "MatAdd": PRECEDENCE["Add"],
     "MatPow": PRECEDENCE["Pow"],
     "MatrixSolve": PRECEDENCE["Mul"],
+    "Mod": PRECEDENCE["Mul"],
     "TensAdd": PRECEDENCE["Add"],
     # As soon as `TensMul` is a subclass of `Mul`, remove this:
     "TensMul": PRECEDENCE["Mul"],
