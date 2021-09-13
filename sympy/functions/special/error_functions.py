@@ -2146,7 +2146,7 @@ class Shi(TrigonometricIntegral):
         elif not arg0.is_infinite:
             return self.func(arg0)
         elif arg0.is_infinite:
-            return -pi*S.ImaginiryUnit/2
+            return -pi*S.ImaginaryUnit/2
         else:
             return self
 
