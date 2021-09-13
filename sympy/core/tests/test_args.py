@@ -465,6 +465,11 @@ def test_sympy__codegen__numpy_nodes__logaddexp2():
     assert _test_args(logaddexp2(x, y))
 
 
+def test_sympy__codegen__pynodes__List():
+    from sympy.codegen.pynodes import List
+    assert _test_args(List(1, 2, 3))
+
+
 def test_sympy__codegen__scipy_nodes__cosm1():
     from sympy.codegen.scipy_nodes import cosm1
     assert _test_args(cosm1(x))

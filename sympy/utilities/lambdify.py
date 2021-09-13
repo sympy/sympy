@@ -11,6 +11,7 @@ import keyword
 import textwrap
 import linecache
 
+from sympy.core.basic import Basic
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.compatibility import (is_sequence, iterable,
     NotIterable)
@@ -936,6 +937,29 @@ def _get_namespace(m):
     else:
         raise TypeError("Argument must be either a string, dict or module but it is: %s" % m)
 
+
+def _recursive_to_string(doprint, arg):
+    """Functions in lambdify accept both sympy types and non-sympy types such as python
+    lists and tuples. This method ensures that we only call the doprint method of the
+    printer with SymPy types (so that the printer safely can use SymPy-methods)."""
+    from sympy.matrices.common import MatrixOperations
+
+    if isinstance(arg, (Basic, MatrixOperations)):
+        return doprint(arg)
+    elif iterable(arg):
+        if isinstance(arg, list):
+            left, right = "[]"
+        elif isinstance(arg, tuple):
+            left, right = "()"
+        else:
+            raise NotImplementedError("unhandled type: %s, %s" % (type(arg), arg))
+        return left +', '.join(_recursive_to_string(doprint, e) for e in arg) + right
+    elif isinstance(arg, str):
+        return arg
+    else:
+        return doprint(arg)
+
+
 def lambdastr(args, expr, printer=None, dummify=None):
     """
     Returns a string that can be evaluated to a lambda function.
@@ -959,7 +983,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
     """
     # Transforming everything to strings.
     from sympy.matrices import DeferredVector
-    from sympy import Dummy, sympify, Symbol, Function, flatten, Derivative, Basic
+    from sympy import Dummy, sympify, Symbol, Function, flatten, Derivative
 
     if printer is not None:
         if inspect.isfunction(printer):
@@ -1047,7 +1071,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
             pass
         else:
             expr = sub_expr(expr, dummies_dict)
-    expr = lambdarepr(expr)
+    expr = _recursive_to_string(lambdarepr, expr)
     return "lambda %s: (%s)" % (args, expr)
 
 class _EvaluatorPrinter:
@@ -1108,9 +1132,15 @@ class _EvaluatorPrinter:
 
         funcbody.extend(unpackings)
 
-        funcbody.extend(['{} = {}'.format(s, self._exprrepr(e)) for s, e in cses])
+        for s, e in cses:
+            if e is None:
+                funcbody.append('del {}'.format(s))
+            else:
+                funcbody.append('{} = {}'.format(s, self._exprrepr(e)))
 
-        str_expr = self._exprrepr(expr)
+        str_expr = _recursive_to_string(self._exprrepr, expr)
+
+
         if '\n' in str_expr:
             str_expr = '({})'.format(str_expr)
         funcbody.append('return {}'.format(str_expr))

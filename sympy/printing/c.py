@@ -480,6 +480,11 @@ class C89CodePrinter(CodePrinter):
         dflt = self.type_math_macro_suffixes.get(alias, '')
         return self.type_math_macro_suffixes.get(type_, dflt)
 
+    def _print_Tuple(self, expr):
+        return '{'+', '.join(self._print(e) for e in expr)+'}'
+
+    _print_List = _print_Tuple
+
     def _print_Type(self, type_):
         self.headers.update(self.type_headers.get(type_, set()))
         self.macros.update(self.type_macros.get(type_, set()))

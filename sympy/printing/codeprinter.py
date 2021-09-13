@@ -5,9 +5,11 @@ from functools import wraps
 from sympy.core import Add, Expr, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
 from sympy.core.compatibility import default_sort_key
+from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
 from sympy.core.symbol import Symbol
+from sympy.functions.elementary.complexes import re
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -30,6 +32,14 @@ class AssignmentError(Exception):
     Raised if an assignment variable for a loop is missing.
     """
     pass
+
+
+def _convert_python_lists(arg):
+    if isinstance(arg, list):
+        from sympy.codegen.pynodes import List
+        return List(*(_convert_python_lists(e) for e in arg))
+    else:
+        return arg
 
 
 class CodePrinter(StrPrinter):
@@ -67,6 +77,10 @@ class CodePrinter(StrPrinter):
         if not hasattr(self, 'reserved_words'):
             self.reserved_words = set()
 
+    def _handle_UnevaluatedExpr(self, expr):
+        return expr.replace(re, lambda arg: arg if isinstance(
+            arg, UnevaluatedExpr) and arg.args[0].is_real else re(arg))
+
     def doprint(self, expr, assign_to=None):
         """
         Print the expression as code.
@@ -101,6 +115,9 @@ class CodePrinter(StrPrinter):
             return Assignment(assign_to, expr)
 
         expr = _handle_assign_to(expr, assign_to)
+        expr = _convert_python_lists(expr)
+        # Remove re(...) nodes due to UnevaluatedExpr.is_real always is None:
+        expr = self._handle_UnevaluatedExpr(expr)
 
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized
