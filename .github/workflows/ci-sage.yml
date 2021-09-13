@@ -41,7 +41,7 @@ on:
       - master
       # run on release branches
       # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#patterns-to-match-branches-and-tags
-      - [1-9].[0-9]+*
+      - "[1-9].[0-9]+*"
 
 env:
   # Ubuntu packages to install so that the project's "make dist" can succeed
