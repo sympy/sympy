@@ -615,6 +615,8 @@ def test_si():
     t = Symbol('t', Dummy=True)
     assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
 
+    assert limit(Shi(x), x, S.NegativeInfinity) == -I*pi/2
+
 
 def test_ci():
     m1 = exp_polar(I*pi)
