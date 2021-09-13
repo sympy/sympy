@@ -231,6 +231,163 @@ filled with `0`\ s.
     ⎢           ⎥
     ⎣0   0  0  5⎦
 
+
+Random Matrices
+---------------
+
+To create Matrices with specific properties use one of
+the random matrix generation functions, e.g.
+``invertible``, ``triangular``, ``orthogonal``.
+Find a :ref:`full list of random matrices <matrices-random>`.
+
+    >>> import random
+    >>> random.seed(1)
+
+    >>> from sympy.matrices.random import invertible, triangular, orthogonal
+    >>> from sympy import simplify
+
+    >>> M = invertible(3)  # only integer entries
+    >>> M
+    ⎡-1  -1  -1⎤
+    ⎢          ⎥
+    ⎢-2  -1  -1⎥
+    ⎢          ⎥
+    ⎣0   0   1 ⎦
+    >>> M.inv()
+    ⎡1   -1  0 ⎤
+    ⎢          ⎥
+    ⎢-2  1   -1⎥
+    ⎢          ⎥
+    ⎣0   0   1 ⎦
+
+    >>> M = invertible(3, scalar_set=(sqrt(2),))  # entries as sums and products of sqrt(2) and 1
+    >>> M
+    ⎡1   0    √2  ⎤
+    ⎢             ⎥
+    ⎢√2  1  √2 + 2⎥
+    ⎢             ⎥
+    ⎣0   0    1   ⎦
+    >>> simplify(M.inv()*M)
+    ⎡1  0  0⎤
+    ⎢       ⎥
+    ⎢0  1  0⎥
+    ⎢       ⎥
+    ⎣0  0  1⎦
+
+
+    >>> random.seed(1)
+    >>> M = triangular(3, rank=3)
+    >>> M
+    ⎡-1  1  2 ⎤
+    ⎢         ⎥
+    ⎢0   1  1 ⎥
+    ⎢         ⎥
+    ⎣0   0  -1⎦
+    >>> M.inv()
+    ⎡-1  1  -1⎤
+    ⎢         ⎥
+    ⎢0   1  1 ⎥
+    ⎢         ⎥
+    ⎣0   0  -1⎦
+
+    >>> random.seed(1)
+    >>> M = orthogonal(3)
+    >>> M
+    ⎡      -√2      ⎤
+    ⎢1/2   ────  1/2⎥
+    ⎢       2       ⎥
+    ⎢               ⎥
+    ⎢       √2      ⎥
+    ⎢1/2    ──   1/2⎥
+    ⎢       2       ⎥
+    ⎢               ⎥
+    ⎢-√2         √2 ⎥
+    ⎢────   0    ── ⎥
+    ⎣ 2          2  ⎦
+    >>> M.T*M
+    ⎡1  0  0⎤
+    ⎢       ⎥
+    ⎢0  1  0⎥
+    ⎢       ⎥
+    ⎣0  0  1⎦
+
+And symbolic matrices work, too.
+
+    >>> from sympy import symbols, cos, sin
+
+    >>> phi = symbols('phi')
+    >>> scalar_set = cos(phi), sin(phi)
+    >>> random.seed(1)
+    >>> M = orthogonal(3, scalar_set=scalar_set, length=1)
+    >>> M
+    ⎡                         _____________⎤
+    ⎢                        ╱        2    ⎥
+    ⎢     cos(φ)       0  -╲╱  1 - cos (φ) ⎥
+    ⎢                                      ⎥
+    ⎢       0          1          0        ⎥
+    ⎢                                      ⎥
+    ⎢   _____________                      ⎥
+    ⎢  ╱        2                          ⎥
+    ⎣╲╱  1 - cos (φ)   0       cos(φ)      ⎦
+    >>> M.T*M
+    ⎡1  0  0⎤
+    ⎢       ⎥
+    ⎢0  1  0⎥
+    ⎢       ⎥
+    ⎣0  0  1⎦
+
+Using matrices to construct a matrix with integer entries
+which has an inverse with integer entries, too.
+
+    >>> from sympy.matrices.random import invertible
+    >>> random.seed(1)
+    >>> A = invertible(4, scalar_set=(1,-1))
+    >>> A
+    ⎡-1  0   0   0 ⎤
+    ⎢              ⎥
+    ⎢0   1   0   0 ⎥
+    ⎢              ⎥
+    ⎢0   1   1   0 ⎥
+    ⎢              ⎥
+    ⎣-2  -1  -1  -1⎦
+    >>> A.inv()
+    ⎡-1  0   0   0 ⎤
+    ⎢              ⎥
+    ⎢0   1   0   0 ⎥
+    ⎢              ⎥
+    ⎢0   -1  1   0 ⎥
+    ⎢              ⎥
+    ⎣2   0   -1  -1⎦
+
+Using matrices to construct a quadric,
+a quadratic equation in multiple variables
+
+    >>> from sympy import diag
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.matrices.random import orthogonal
+    >>> random.seed(1)
+    >>> xyz = Matrix([x, y, z])
+    >>> D = diag(1, 2, 3)
+    >>> S = orthogonal(3)
+    >>> S.T * D * S
+    ⎡      √2       ⎤
+    ⎢9/4   ──   -3/4⎥
+    ⎢      4        ⎥
+    ⎢               ⎥
+    ⎢ √2         √2 ⎥
+    ⎢ ──   3/2   ── ⎥
+    ⎢ 4          4  ⎥
+    ⎢               ⎥
+    ⎢      √2       ⎥
+    ⎢-3/4  ──   9/4 ⎥
+    ⎣      4        ⎦
+    >>> q = expand(xyz.T * S.T * D * S * xyz)[0, 0].as_expr()
+    >>> q
+       2                       2               2
+    9⋅x    √2⋅x⋅y   3⋅x⋅z   3⋅y    √2⋅y⋅z   9⋅z
+    ──── + ────── - ───── + ──── + ────── + ────
+     4       2        2      2       2       4
+
 Advanced Methods
 ================
 
