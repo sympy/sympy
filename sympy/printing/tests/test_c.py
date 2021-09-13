@@ -158,7 +158,7 @@ def test_ccode_functions2():
     p1, p2 = symbols('p1 p2', integer=True, positive=True)
     assert ccode(Mod(p1, p2)) == '(p1 % p2)'
     assert ccode(Mod(p1, p2 + 3)) == '(p1 % (p2 + 3))'
-
+    assert ccode(Mod(-3, -7, evaluate=False)) == '((-3) % (-7))'
 
 def test_ccode_user_functions():
     x = symbols('x', integer=False)

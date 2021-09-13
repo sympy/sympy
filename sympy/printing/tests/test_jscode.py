@@ -70,6 +70,7 @@ def test_Mod():
     p1, p2 = symbols('p1 p2', positive=True)
     assert jscode(Mod(p1, p2)) == '(p1 % p2)'
     assert jscode(Mod(p1, p2 + 3)) == '(p1 % (p2 + 3))'
+    assert jscode(Mod(-3, -7, evaluate=False)) == '((-3) % (-7))'
 
 
 def test_jscode_Integer():
