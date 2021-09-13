@@ -4,7 +4,7 @@ from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D, \
                             Polygon, Ray, RegularPolygon, Segment, Triangle, \
                             are_similar, convex_hull, intersection, Line, Ray2D)
-from sympy.testing.pytest import raises, slow, warns
+from sympy.testing.pytest import raises, slow
 from sympy.testing.randtest import verify_numerically
 from sympy.geometry.polygon import rad, deg
 from sympy import integrate
@@ -105,10 +105,8 @@ def test_polygon():
         Polygon(Point(10, 10), Point(14, 14), Point(10, 14))) == 6 * sqrt(2)
     assert p5.distance(
         Polygon(Point(1, 8), Point(5, 8), Point(8, 12), Point(1, 12))) == 4
-    with warns(UserWarning, \
-               match="Polygons may intersect producing erroneous output"):
-        Polygon(Point(0, 0), Point(1, 0), Point(1, 1)).distance(
-                Polygon(Point(0, 0), Point(0, 1), Point(1, 1)))
+    Polygon(Point(0, 0), Point(1, 0), Point(1, 1)).distance(
+            Polygon(Point(0, 0), Point(0, 1), Point(1, 1))) == 0
     assert hash(p5) == hash(Polygon(Point(0, 0), Point(4, 4), Point(0, 4)))
     assert hash(p1) == hash(p2)
     assert hash(p7) == hash(p8)
@@ -316,16 +314,52 @@ def test_polygon():
 
     '''Polygon to Polygon'''
     # p1.distance(p2) emits a warning
-    with warns(UserWarning, \
-               match="Polygons may intersect producing erroneous output"):
-        assert p1.distance(p2) == half/2
-
+    assert p1.distance(p2) == half/2
     assert p1.distance(p3) == sqrt(2)/2
 
     # p3.distance(p4) emits a warning
-    with warns(UserWarning, \
-               match="Polygons may intersect producing erroneous output"):
-        assert p3.distance(p4) == (sqrt(2)/2 - sqrt(Rational(2)/25)/2)
+    assert p3.distance(p4) == (sqrt(2)/2 - sqrt(Rational(2)/25)/2)
+
+    # Now, test overlaping
+    p = Polygon((0, 0), (0, 1), (1, 1), (1, 0))
+    p1 = p.translate(2, -1).rotate('pi/4', (2, 0)) # disjoint
+    p2 = p.translate(1, -0.5) # side-side overlap
+    p3 = p.translate(1, -1) # vertex-vertex overlap
+    p4 = p.rotate('pi/4', (1, 0)).translate(0, 0.5) # overlap
+    p5 = p.scale(0.5, 0.5, (0.5, 0.5)) # containing
+    p6 = p.scale(2, 2, (0.5, 0.5)) # contained
+    assert p.distance(p2) == 0
+    assert p.distance(p3) == 0
+    assert p.distance(p4) == 0
+    assert p.distance(p5) == 1/4
+    assert p.distance(p6) == 1/2
+
+    # Critical support lines
+    assert set(p.critical_support_lines(p1)) == set([
+        Line(Point(1, 1), Point(2, 0)),
+        Line(Point(1, 0), Point(sqrt(2)/2 + 2, sqrt(2)/2))
+    ])
+    assert p.critical_support_lines(p2) == [Line(Point(1, 0), Point(1, 1/2))]
+    assert p.critical_support_lines(p3) == [Line(Point(0, 0), Point(2, 0))]
+    assert p.critical_support_lines(p5) == []
+    assert p.critical_support_lines(p6) == []
+
+    # Bridges
+    assert set(p.bridges(p1)) == set([
+        Line(Point(1, 1), Point(sqrt(2)/2 + 2, sqrt(2)/2)),
+        Line(Point(0, 0), Point(sqrt(2)/2 + 2, -sqrt(2)/2))
+    ])
+    assert set(p.bridges(p4)) == set([
+        Line(Point(1, 1), Point(-sqrt(2)/2 + 1, 1/2 + sqrt(2)/2)),
+        Line(Point(1, 0), Point(1, 1/2)),
+        Line(Point(1, 0), Point(-sqrt(2)/2 + 1, -sqrt(2)/2 + 1/2)),
+        Line(Point(0, 0), Point(-sqrt(2)/2 + 1, -sqrt(2)/2 + 1/2)),
+        Line(Point(0, 0), Point(-sqrt(2) + 1, 1/2)),
+        Line(Point(0, 1), Point(-sqrt(2) + 1, 1/2)),
+        Line(Point(0, 1), Point(-sqrt(2)/2 + 1, 1/2 + sqrt(2)/2))
+    ])
+    assert p.bridges(p5) == []
+    assert p.bridges(p6) == []
 
 
 def test_convex_hull():
@@ -649,12 +683,8 @@ def test_do_poly_distance():
 
     # Polygons which sides intersect
     square2 = Polygon(Point(1, 0), Point(2, 0), Point(2, 1), Point(1, 1))
-    with warns(UserWarning, \
-               match="Polygons may intersect producing erroneous output"):
-        assert square1._do_poly_distance(square2) == 0
+    assert square1._do_poly_distance(square2) == 0
 
     # Polygons which bodies intersect
     triangle2 = Polygon(Point(0, -1), Point(2, -1), Point(S.Half, S.Half))
-    with warns(UserWarning, \
-               match="Polygons may intersect producing erroneous output"):
-        assert triangle2._do_poly_distance(square1) == 0
+    assert triangle2._do_poly_distance(square1) == 0
