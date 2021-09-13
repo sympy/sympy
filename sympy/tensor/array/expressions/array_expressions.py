@@ -1499,8 +1499,8 @@ class _EditArrayContraction:
         contraction_indices = self.get_contraction_indices()
         expr = ArrayContraction(ArrayTensorProduct(*args), *contraction_indices)
         if self._track_permutation is not None:
-            permutation = _af_invert([j for i in self._track_permutation for j in i])
-            expr = PermuteDims(expr, permutation)
+            permutation2 = _af_invert([j for i in self._track_permutation for j in i])
+            expr = PermuteDims(expr, permutation2)
 
         expr2 = ArrayDiagonal(expr, *diag_indices_filtered)
         expr3 = PermuteDims(expr2, permutation)
