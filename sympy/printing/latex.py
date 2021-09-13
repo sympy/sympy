@@ -1712,13 +1712,18 @@ class LatexPrinter(Printer):
 
     def _print_Mod(self, expr, exp=None):
         if exp is not None:
-            return r'\left(%s\bmod{%s}\right)^{%s}' % \
+            return r'\left(%s \bmod %s\right)^{%s}' % \
                 (self.parenthesize(expr.args[0], PRECEDENCE['Mul'],
-                                   strict=True), self._print(expr.args[1]),
+                                   strict=True),
+                 self.parenthesize(expr.args[1], PRECEDENCE['Mul'],
+                                   strict=True),
                  exp)
-        return r'%s\bmod{%s}' % (self.parenthesize(expr.args[0],
-                                 PRECEDENCE['Mul'], strict=True),
-                                 self._print(expr.args[1]))
+        return r'%s \bmod %s' % (self.parenthesize(expr.args[0],
+                                                   PRECEDENCE['Mul'],
+                                                   strict=True),
+                                 self.parenthesize(expr.args[1],
+                                                   PRECEDENCE['Mul'],
+                                                   strict=True))
 
     def _print_HadamardProduct(self, expr):
         args = expr.args
