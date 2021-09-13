@@ -1691,6 +1691,49 @@ class Rational(Number):
         f = fractions.Fraction(self.p, self.q)
         return Rational(f.limit_denominator(fractions.Fraction(int(max_denominator))))
 
+    def limit_num_denom(self, a, b = None):
+        """Closest Rational to self with numerator at most a
+           and denominator at most b if not None else Closest
+           Rational to self with denominator at most a.
+
+        Examples
+        ========
+
+        >>> from sympy import Rational
+        >>> Rational(1819831678027117, 9007199254740992).limit_num_denom(10**5)
+        11003/54459
+        >>> Rational(1819831678027117, 9007199254740992).limit_num_denom(10**3, 10**5)
+        376/1861
+
+        """
+        if a < 0:
+            raise AssertionError("Value should be greater than 0")
+
+        if self == 0:
+            return self
+        elif self < 0:
+            return -(-self).limit_num_denom(a, b)
+
+        if b is not None:
+            if b < 0:
+                raise AssertionError("Value should be greater than 0")
+            if self*b < 1:
+                return self.limit_denominator(b)
+            if b == 1:
+                return Integer(min(a, max(1, int(self))))
+            if a == 1:
+                if self >=1:
+                    return self.limit_num_denom(1, 1)
+                return self.limit_num_denom(1, int(1/self))
+            if self >=1:
+                b = min(a, b)
+            else:
+                a = min(a, b)
+            d_use = min(int(a/self), b)
+        else:
+            d_use = a
+        return self.limit_denominator(d_use)
+
     def __getnewargs__(self):
         return (self.p, self.q)
 
