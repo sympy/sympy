@@ -1,5 +1,5 @@
 from sympy import (abc, Add, cos, collect, Derivative, diff, exp, Float, Function,
-    I, Integer, log, Mul, oo, Poly, Rational, S, sin, sqrt, Symbol, symbols,
+    I, Integer, log, Mul, oo, Poly, Rational, S, signsimp, sin, sqrt, Symbol, symbols,
     Wild, pi, meijerg, Sum
 )
 
@@ -509,7 +509,7 @@ def test_issue_3883():
     a, b, c = symbols('a b c', cls=Wild, exclude=(gamma,))
 
     assert f.match(a * log(gamma) + b * gamma + c) == \
-        {a: Rational(-1, 2), b: -(mu - x)**2/2, c: log(2*pi)/2}
+        {a: Rational(-1, 2), b: -(-mu + x)**2/2, c: log(2*pi)/2}
     assert f.expand().collect(gamma).match(a * log(gamma) + b * gamma + c) == \
         {a: Rational(-1, 2), b: (-(x - mu)**2/2).expand(), c: (log(2*pi)/2).expand()}
     g1 = Wild('g1', exclude=[gamma])
@@ -715,6 +715,18 @@ def test_match_issue_17397():
         - 4*Derivative(f(x), (x, 2)) - 2*Derivative(f(x), x)/x + 4*Derivative(f(x), (x, 2))/x
     r = collect(eq, [f(x).diff(x, 2), f(x).diff(x), f(x)]).match(deq)
     assert r == {a3: x - 4 + 4/x, b3: 1 - 2/x, c3: x - 4}
+
+
+def test_match_issue_21942():
+    a, r, w = symbols('a, r, w', nonnegative=True)
+    p = symbols('p', positive=True)
+    g_ = Wild('g')
+    pattern = g_ ** (1 / (1 - p))
+    eq = (a * r ** (1 - p) + w ** (1 - p) * (1 - a)) ** (1 / (1 - p))
+    m = {g_: a * r ** (1 - p) + w ** (1 - p) * (1 - a)}
+    assert pattern.matches(eq) == m
+    assert (-pattern).matches(-eq) == m
+    assert pattern.matches(signsimp(eq)) is None
 
 
 def test_match_terms():
