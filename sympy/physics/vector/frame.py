@@ -1,7 +1,7 @@
 from sympy.core.backend import (diff, expand, sin, cos, eye, symbols,
-                                ImmutableMatrix as Matrix, MatrixBase)
-from sympy.core.sympify import sympify
-from sympy import (trigsimp, solve, Symbol, Dummy)
+                                ImmutableMatrix as Matrix, MatrixBase,
+                                sympify, Dummy)
+from sympy import (trigsimp, solve, Symbol)
 from sympy.physics.vector.vector import Vector, _check_vector
 from sympy.utilities.misc import translate
 
@@ -882,7 +882,6 @@ class ReferenceFrame:
             from sympy.physics.vector.functions import kinematic_equations
             q1, q2, q3 = amounts
             u1, u2, u3 = symbols('u1, u2, u3', cls=Dummy)
-            u1, u2, u3 = map(sympify, [u1, u2, u3])
             templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
                                            'body', rot_order)
             templist = [expand(i) for i in templist]
@@ -1005,7 +1004,6 @@ class ReferenceFrame:
             from sympy.physics.vector.functions import kinematic_equations
             q1, q2, q3 = amounts
             u1, u2, u3 = symbols('u1, u2, u3', cls=Dummy)
-            u1, u2, u3 = map(sympify, [u1, u2, u3])
             templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
                                            'space', rot_order)
             templist = [expand(i) for i in templist]
