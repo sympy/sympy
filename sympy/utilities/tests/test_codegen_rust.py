@@ -3,6 +3,7 @@ from io import StringIO
 from sympy.core import S, symbols, pi, Catalan, EulerGamma, Function
 from sympy import Piecewise
 from sympy import Equality
+from sympy.matrices import Matrix
 from sympy.utilities.codegen import RustCodeGen, codegen, make_routine
 from sympy.testing.pytest import XFAIL
 import sympy
@@ -395,6 +396,27 @@ def test_global_vars_rust():
     expected = (
         "fn f(x: f64, y: f64) -> f64 {\n"
         "    let out1 = x*y + z;\n"
+        "    out1\n"
+        "}\n"
+    )
+    assert source == expected
+
+
+def test_rust_matrix():
+    out1 = Matrix([[x, y**2], [y*x, z/x]])
+    result, = codegen(('test', out1), "Rust", header=False, empty=False)
+    assert result[0] == "test.rs"
+    source = result[1]
+    expected = (
+        "fn test(x: f64, y: f64, z: f64) -> f64 {\n"
+        "    let out1 = {\n"
+        "        let mut out1 = [[0.0_f64; 2]; 2];\n"
+        "        out1[0][0] = x;\n"
+        "        out1[0][1] = y.powi(2);\n"
+        "        out1[1][0] = x*y;\n"
+        "        out1[1][1] = z/x;\n"
+        "        out1\n"
+        "    };\n"
         "    out1\n"
         "}\n"
     )
