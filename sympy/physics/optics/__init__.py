@@ -17,6 +17,8 @@ __all__ = [
     'phase_retarder', 'half_wave_retarder', 'quarter_wave_retarder',
     'transmissive_filter', 'reflective_filter', 'mueller_matrix',
     'polarizing_beam_splitter',
+
+    'wavelength', 'fringe_spacing'
 ]
 from .waves import TWave
 
@@ -36,3 +38,5 @@ from .polarization import (jones_vector, stokes_vector, jones_2_stokes,
         linear_polarizer, phase_retarder, half_wave_retarder,
         quarter_wave_retarder, transmissive_filter, reflective_filter,
         mueller_matrix, polarizing_beam_splitter)
+
+from .inference import wavelength, fringe_spacing

@@ -30,7 +30,8 @@ __all__ = [
 
 
 class Operator(QExpr):
-    """Base class for non-commuting quantum operators.
+    """
+    Base class for non-commuting quantum operators.
 
     An operator maps between quantum states [1]_. In quantum mechanics,
     observables (including, but not limited to, measured physical values) are
@@ -183,7 +184,8 @@ class Operator(QExpr):
 
 
 class HermitianOperator(Operator):
-    """A Hermitian operator that satisfies H == Dagger(H).
+    """
+    A Hermitian operator that satisfies H == Dagger(H).
 
     Parameters
     ==========
@@ -222,7 +224,8 @@ class HermitianOperator(Operator):
 
 
 class UnitaryOperator(Operator):
-    """A unitary operator that satisfies U*Dagger(U) == 1.
+    """
+    A unitary operator that satisfies U*Dagger(U) == 1.
 
     Parameters
     ==========
@@ -245,7 +248,8 @@ class UnitaryOperator(Operator):
 
 
 class IdentityOperator(Operator):
-    """An identity operator I that satisfies op * I == I * op == op for any
+    """
+    An identity operator I that satisfies op * I == I * op == op for any
     operator op.
 
     Parameters
@@ -324,7 +328,8 @@ class IdentityOperator(Operator):
 
 
 class OuterProduct(Operator):
-    """An unevaluated outer product between a ket and bra.
+    """
+    An unevaluated outer product between a ket and bra.
 
     This constructs an outer product between any subclass of ``KetBase`` and
     ``BraBase`` as ``|a><b|``. An ``OuterProduct`` inherits from Operator as they act as
@@ -484,7 +489,8 @@ class OuterProduct(Operator):
 
 
 class DifferentialOperator(Operator):
-    """An operator for representing the differential operator, i.e. d/dx
+    """
+    An operator for representing the differential operator, i.e. d/dx
 
     It is initialized by passing two arguments. The first is an arbitrary
     expression that involves a function, such as ``Derivative(f(x), x)``. The

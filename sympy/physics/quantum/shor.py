@@ -28,7 +28,8 @@ class OrderFindingException(QuantumError):
 
 
 class CMod(Gate):
-    """A controlled mod gate.
+    """
+    A controlled mod gate.
 
     This is black box controlled Mod function for use by shor's algorithm.
     TODO: implement a decompose property that returns how to do this in terms
@@ -59,9 +60,9 @@ class CMod(Gate):
 
     def _apply_operator_Qubit(self, qubits, **options):
         """
-            This directly calculates the controlled mod of the second half of
-            the register and puts it in the second
-            This will look pretty when we get Tensor Symbolically working
+        This directly calculates the controlled mod of the second half of
+        the register and puts it in the second
+        This will look pretty when we get Tensor Symbolically working
         """
         n = 1
         k = 0
@@ -84,7 +85,8 @@ class CMod(Gate):
 
 
 def shor(N):
-    """This function implements Shor's factoring algorithm on the Integer N
+    """
+    This function implements Shor's factoring algorithm on the Integer N
 
     The algorithm starts by picking a random number (a) and seeing if it is
     coprime with N. If it isn't, then the gcd of the two numbers is a factor
@@ -119,7 +121,8 @@ def ratioize(list, N):
 
 
 def period_find(a, N):
-    """Finds the period of a in modulo N arithmetic
+    """
+    Finds the period of a in modulo N arithmetic
 
     This is quantum part of Shor's algorithm. It takes two registers,
     puts first in superposition of states with Hadamards so: ``|k>|0>``

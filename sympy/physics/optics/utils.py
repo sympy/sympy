@@ -413,6 +413,7 @@ def brewster_angle(medium1, medium2):
 
     return atan2(n2, n1)
 
+
 def critical_angle(medium1, medium2):
     """
     This function calculates the critical angle of incidence (marking the onset
@@ -442,7 +443,6 @@ def critical_angle(medium1, medium2):
         raise ValueError('Total internal reflection impossible for n1 < n2')
     else:
         return asin(n2/n1)
-
 
 
 def lens_makers_formula(n_lens, n_surr, r1, r2):
@@ -622,6 +622,7 @@ def lens_formula(focal_length=None, u=None, v=None):
             return Limit(u*_f/(u + _f), _f, oo).doit()
         return u*focal_length/(u + focal_length)
 
+
 def hyperfocal_distance(f, N, c):
     """
 
@@ -651,9 +652,9 @@ def hyperfocal_distance(f, N, c):
 
     return (1/(N * c))*(f**2)
 
+
 def transverse_magnification(si, so):
     """
-
     Calculates the transverse magnification, which is the ratio of the
     image size to the object size.
 
