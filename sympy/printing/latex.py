@@ -2057,13 +2057,8 @@ class LatexPrinter(Printer):
             it = iter(s)
             printset = next(it), next(it), dots
         else:
-            try:
-                if (s.size < 4) == True:
-                    printset = tuple(s)
-                else:
-                    it = iter(s)
-                    printset = next(it), next(it), dots, s[-1]
-            except (TypeError, ValueError):
+            def _print_symbolic_range():
+                # Symbolic Range that cannot be resolved
                 if s.args[0] == 0:
                     if s.args[2] == 1:
                         cont = self._print(s.args[1])
@@ -2075,11 +2070,23 @@ class LatexPrinter(Printer):
                     else:
                         cont = ", ".join(self._print(arg) for arg in s.args)
 
-                return(f"\\operatorname{{Range}}\\left({cont}\\right)")
+                return(f"\\text{{Range}}\\left({cont}\\right)")
 
+            if s.is_empty is not None:
+                if (s.size < 4) == True:
+                    printset = tuple(s)
+                else:
+                    try:
+                        it = iter(s)
+                        printset = next(it), next(it), dots, s[-1]
+                    except TypeError:
+                        return _print_symbolic_range()
+            else:
+                return _print_symbolic_range()
         return (r"\left\{" +
                 r", ".join(self._print(el) if el is not dots else r'\ldots' for el in printset) +
                 r"\right\}")
+
 
     def __print_number_polynomial(self, expr, letter, exp=None):
         if len(expr.args) == 2:
