@@ -97,5 +97,5 @@ else:
     MPZ = int
     MPQ = PythonMPQ
 
-    factorial = mlib.ifac
-    sqrt = mlib.isqrt
+    factorial = lambda x: int(mlib.ifac(x))
+    sqrt = lambda x: int(mlib.isqrt(x))
