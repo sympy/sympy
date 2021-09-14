@@ -1,7 +1,5 @@
 import random
 
-from pytest import raises
-
 from sympy import Matrix, eye, zeros, cartes, I
 from sympy.matrices.random import super_elementary_matrix
 from sympy.matrices.random import identity, jordan, jordan_normal, \
@@ -12,6 +10,7 @@ from sympy.matrices.random import identity, jordan, jordan_normal, \
     hermite, symmetric
 
 from sympy.matrices import random as _random
+from sympy.testing.pytest import raises
 
 TEST_DIMS = dict((d, tuple(cartes(range(d), range(d)))) for d in range(2, 6))
 TEST_PRECISION = 7
