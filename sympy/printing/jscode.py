@@ -120,8 +120,8 @@ class JavascriptCodePrinter(CodePrinter):
         # have the same sign
         if (num.is_nonnegative and den.is_nonnegative or
             num.is_nonpositive and den.is_nonpositive):
-         return f"({snum} % {sden})"
-        return f"((({snum} % {sden}) + {sden}) % {sden})"
+            return f"{snum} % {sden}"
+        return f"(({snum} % {sden}) + {sden}) % {sden}"
 
     def _print_Relational(self, expr):
         lhs_code = self._print(expr.lhs)

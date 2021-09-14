@@ -296,12 +296,12 @@ class C89CodePrinter(CodePrinter):
             PREC = precedence(expr)
             snum, sden = [self.parenthesize(arg, PREC) for arg in expr.args]
             # % is remainder (same sign as numerator), not modulo (same sign as
-            # denominator), in js. Hence, % only works as modulo if both numbers
+            # denominator), in C. Hence, % only works as modulo if both numbers
             # have the same sign
             if (num.is_nonnegative and den.is_nonnegative or
                 num.is_nonpositive and den.is_nonpositive):
-                return f"({snum} % {sden})"
-            return f"((({snum} % {sden}) + {sden}) % {sden})"
+                return f"{snum} % {sden}"
+            return f"(({snum} % {sden}) + {sden}) % {sden}"
         # Not guaranteed integer
         return self._print_math_func(expr, known='fmod')
 

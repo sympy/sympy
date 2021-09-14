@@ -152,13 +152,19 @@ def test_ccode_functions2():
     assert ccode(Abs(x)) == "fabs(x)"
     assert ccode(gamma(x)) == "tgamma(x)"
     r, s = symbols('r,s', real=True)
-    assert ccode(Mod(ceiling(r), ceiling(s))) == '((((ceil(r)) % (ceil(s))) + '\
-                                                 '(ceil(s))) % (ceil(s)))'
+    assert ccode(Mod(ceiling(r), ceiling(s))) == '((ceil(r) % ceil(s)) + '\
+                                                 'ceil(s)) % ceil(s)'
     assert ccode(Mod(r, s)) == "fmod(r, s)"
     p1, p2 = symbols('p1 p2', integer=True, positive=True)
-    assert ccode(Mod(p1, p2)) == '(p1 % p2)'
-    assert ccode(Mod(p1, p2 + 3)) == '(p1 % (p2 + 3))'
-    assert ccode(Mod(-3, -7, evaluate=False)) == '((-3) % (-7))'
+    assert ccode(Mod(p1, p2)) == 'p1 % p2'
+    assert ccode(Mod(p1, p2 + 3)) == 'p1 % (p2 + 3)'
+    assert ccode(Mod(-3, -7, evaluate=False)) == '(-3) % (-7)'
+    assert ccode(-Mod(3, 7, evaluate=False)) == '-(3 % 7)'
+    assert ccode(r*Mod(p1, p2)) == 'r*(p1 % p2)'
+    assert ccode(Mod(p1, p2)**s) == 'pow(p1 % p2, s)'
+    n = symbols('n', integer=True, negative=True)
+    assert ccode(Mod(-n, p2)) == '(-n) % p2'
+
 
 def test_ccode_user_functions():
     x = symbols('x', integer=False)
@@ -654,8 +660,8 @@ def test_C99CodePrinter__precision():
         check(exp(x*8.0), 'exp{s}(8.0{S}*x)')
         check(exp2(x), 'exp2{s}(x)')
         check(expm1(x*4.0), 'expm1{s}(4.0{S}*x)')
-        check(Mod(p, 2), '(p % 2)')
-        check(Mod(2*p + 3, 3*p + 5, evaluate=False), '((2*p + 3) % (3*p + 5))')
+        check(Mod(p, 2), 'p % 2')
+        check(Mod(2*p + 3, 3*p + 5, evaluate=False), '(2*p + 3) % (3*p + 5)')
         check(Mod(x + 2.0, 3.0), 'fmod{s}(1.0{S}*x + 2.0{S}, 3.0{S})')
         check(Mod(x, 2.0*x + 3.0), 'fmod{s}(1.0{S}*x, 2.0{S}*x + 3.0{S})')
         check(log(x/2), 'log{s}((1.0{S}/2.0{S})*x)')
