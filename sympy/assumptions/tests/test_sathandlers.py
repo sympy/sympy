@@ -9,17 +9,21 @@ x, y, z = symbols('x y z')
 def test_class_handler_registry():
     my_handler_registry = ClassFactRegistry()
 
-    # The predicate doesn't matter here, so just pass
     @my_handler_registry.register(Mul)
     def fact1(expr):
-        pass
-    @my_handler_registry.multiregister(Expr)
+        return Q.negative(expr)
+    @my_handler_registry.register(Expr)
     def fact2(expr):
-        pass
+        return Q.positive(expr)
 
-    assert my_handler_registry[Basic] == (frozenset(), frozenset())
-    assert my_handler_registry[Expr] == (frozenset(), frozenset({fact2}))
-    assert my_handler_registry[Mul] == (frozenset({fact1}), frozenset({fact2}))
+    assert my_handler_registry[Basic] == frozenset()
+    assert my_handler_registry[Expr] == frozenset({fact2})
+    assert my_handler_registry[Mul] == frozenset({fact1, fact2})
+
+    assert my_handler_registry(x*y) == {Q.positive(x*y): fact2, Q.negative(x*y): fact1}
+
+    my_handler_registry.remove_handler(fact2)
+    assert my_handler_registry[Mul] == frozenset({fact1})
 
 
 def test_allargs():
