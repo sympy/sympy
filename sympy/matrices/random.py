@@ -1,3 +1,4 @@
+# coding=utf-8
 import random
 
 from ..core import I as _i
