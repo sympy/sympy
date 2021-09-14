@@ -1714,25 +1714,23 @@ class Rational(Number):
         elif self < 0:
             return -(-self).limit_num_denom(a, b)
 
-        if b is not None:
-            if b < 0:
-                raise AssertionError("Value should be greater than 0")
-            if self*b < 1:
+        if b is None:
+            return self.limit_denominator(a)
+        if b < 0:
+            raise AssertionError("Value should be greater than 0")
+        if self.p*b < self.q:
                 return self.limit_denominator(b)
-            if b == 1:
-                return Integer(min(a, max(1, int(self))))
-            if a == 1:
-                if self >=1:
-                    return self.limit_num_denom(1, 1)
-                return self.limit_num_denom(1, int(1/self))
-            if self >=1:
-                b = min(a, b)
-            else:
-                a = min(a, b)
-            d_use = min(int(a/self), b)
+        if b == 1:
+            return Integer(min(a, max(1, int(self))))
+        if a == 1:
+            if self.p >= self.q:
+                return self.limit_num_denom(1, 1)
+            return self.limit_num_denom(1, self.q//self.p)
+        if self.p >= self.q:
+            b = min(a, b)
         else:
-            d_use = a
-        return self.limit_denominator(d_use)
+            a = min(a, b)
+        return self.limit_denominator(min(int(a*self.q/self.p), b))
 
     def __getnewargs__(self):
         return (self.p, self.q)
