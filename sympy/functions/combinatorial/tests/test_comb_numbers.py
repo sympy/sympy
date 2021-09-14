@@ -7,7 +7,7 @@ from sympy import (
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
     genocchi, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
-    trigamma, polygamma, factorial, sin, cos, cot, zeta)
+    trigamma, polygamma, factorial, sin, cos, cot, zeta, schroder)
 from sympy.functions.combinatorial.numbers import _nT
 
 from sympy.core.expr import unchanged
@@ -678,3 +678,17 @@ def test_motzkin():
     raises(ValueError, lambda: motzkin.find_motzkin_numbers_in_range(-2,7))
     raises(ValueError, lambda: motzkin.find_motzkin_numbers_in_range(13,7))
     raises(ValueError, lambda: motzkin.find_first_n_motzkins(112.8))
+
+
+def test_schroder():
+    assert schroder.is_schroder(2) == True
+    assert schroder.is_schroder(22) == True
+    assert schroder.is_schroder(10) == False
+    assert schroder.find_schroder_numbers_in_range(10,200) == [22, 90]
+    assert schroder.find_schroder_numbers_in_range(10,2000) == [22, 90, 394, 1806]
+    assert schroder.find_first_n_schroders(5) == [1, 2, 6, 22, 90]
+    assert schroder.find_first_n_schroders(7) == [1, 2, 6, 22, 90, 394, 1806]
+    assert schroder.find_first_n_schroders(10) == [1, 2, 6, 22, 90, 394, 1806, 8558, 41586, 206098]
+    raises(ValueError, lambda: schroder.find_schroder_numbers_in_range(-2,7))
+    raises(ValueError, lambda: schroder.find_schroder_numbers_in_range(13,7))
+    raises(ValueError, lambda: schroder.find_first_n_schroders(112.8))
