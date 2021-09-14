@@ -1,4 +1,3 @@
-# coding=utf-8
 import random
 
 from ..core import I as _i
@@ -1939,7 +1938,7 @@ def unitary(dim,
 
         B = \bar{A}^t D' A = \bar{V}^t \bar{D}^t \bar{U}^t D' UDV
 
-    (see Führ/Rzeszotnik, "A note on factoring unitary matrices", 2018
+    (see Fuehr/Rzeszotnik, "A note on factoring unitary matrices", 2018
     https://doi.org/10.1016%2Fj.laa.2018.02.017)
 
     Examples

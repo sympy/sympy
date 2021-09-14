@@ -1,11 +1,16 @@
-# coding=utf-8
 import random
 
 from pytest import raises
 
 from sympy import Matrix, eye, zeros, cartes, I
 from sympy.matrices.random import super_elementary_matrix
-from sympy.matrices.random import *
+from sympy.matrices.random import identity, jordan, jordan_normal, \
+    complex_to_real, invertible, regular_to_singular, diagonal_normal, \
+    diagonalizable, transposition, triangular, trigonalizable, \
+    isometry_normal, permutation, projection, elementary, rotation, \
+    reflection, normal, nilpotent, idempotent, singular, orthogonal, unitary,\
+    hermite, symmetric
+
 from sympy.matrices import random as _random
 
 TEST_DIMS = dict((d, tuple(cartes(range(d), range(d)))) for d in range(2, 6))
