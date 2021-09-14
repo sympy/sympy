@@ -2,7 +2,7 @@ import random
 
 from sympy import Matrix, eye, zeros, cartes, I
 from sympy.matrices.random import super_elementary_matrix
-from sympy.matrices.random import identity, jordan, jordan_normal, \
+from sympy.matrices.random import identity_matrix, jordan, jordan_normal, \
     complex_to_real, invertible, regular_to_singular, diagonal_normal, \
     diagonalizable, transposition, triangular, trigonalizable, \
     isometry_normal, permutation, projection, elementary, rotation, \
@@ -95,9 +95,9 @@ def test_singular_matrix():
 
 # === base matrices ===
 
-def test_identity():
+def test_identity_matrix():
     for d in TEST_DIMS:
-        m = identity(d)
+        m = identity_matrix(d)
         n = eye(d)
         assert m == n
 
@@ -129,7 +129,7 @@ def test_jordan():
 def test_transposition():
     for d in TEST_DIMS:
         m = transposition(d)
-        n = identity(d)
+        n = identity_matrix(d)
         assert m * m == n
 
     for d, coords in TEST_DIMS.items():
@@ -146,7 +146,7 @@ def test_permutation():
     for d in TEST_DIMS:
         perm = random.sample(range(d), d)
         m = permutation(d, perm)
-        n = identity(d).permute(perm)
+        n = identity_matrix(d).permute(perm)
         assert m == n
 
 
@@ -163,7 +163,7 @@ def test_projection():
 def test_elementary():
     for d in TEST_DIMS:
         m = elementary(d)
-        n = identity(d)
+        n = identity_matrix(d)
         for x, y in zip(m.inv() * m, n):
             assert round(x, TEST_PRECISION) == y
 
@@ -174,20 +174,20 @@ def test_elementary():
 def test_rotation():
     for d in TEST_DIMS:
         m = rotation(d)
-        n = identity(d)
+        n = identity_matrix(d)
         for x, y in zip(m.T * m, n):
             assert round(x, TEST_PRECISION) == y
         assert round(m.det(), TEST_PRECISION) == 1
     for d in TEST_DIMS:
         m = rotation(d, scalar=(1, 0))
-        n = identity(d)
+        n = identity_matrix(d)
         assert m == n, (m, n)
 
 
 def test_reflection():
     for d in TEST_DIMS:
         m = reflection(d)
-        n = identity(d)
+        n = identity_matrix(d)
         for x, y in zip(m.T * m, n):
             assert round(x, TEST_PRECISION) == y
         assert round(m.det(), TEST_PRECISION) == -1
@@ -301,13 +301,13 @@ def test_isometry_normal():
 
 def test_invertible():
     for d in TEST_DIMS:
-        n = identity(d)
+        n = identity_matrix(d)
         i = invertible(d, None, None)
         assert n == i
 
     for d in TEST_DIMS:
         m = invertible(d)
-        n = identity(d)
+        n = identity_matrix(d)
         for x, y in zip(m.inv() * m, n):
             assert round(x, TEST_PRECISION) == y
         for x, y in zip(m.inv() * m, n):
@@ -320,7 +320,7 @@ def test_triangular():
     for d in TEST_DIMS:
         _check_triangular(triangular(d))
         m = triangular(d, d)
-        n = identity(d)
+        n = identity_matrix(d)
         assert m.inv() * m == n
         for r in range(1, d):
             m = triangular(d, r)
@@ -382,7 +382,7 @@ def test_nilpotent():
 
 def test_orthogonal():
     for d in TEST_DIMS:
-        n = identity(d)
+        n = identity_matrix(d)
         i = orthogonal(d, (1,), length=0)
         assert n == i
 
@@ -400,7 +400,7 @@ def test_orthogonal():
 def test_unitary():
     # z = complex(1, 1) * _sqrt(2) / 2
     for d in TEST_DIMS:
-        n = identity(d)
+        n = identity_matrix(d)
         i = unitary(d, (1,), length=0)
         assert n == i
         m = unitary(d).evalf()

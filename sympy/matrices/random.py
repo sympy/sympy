@@ -7,8 +7,8 @@ from ..functions import sqrt as _sqrt, re as _re, im as _im, \
 from ..tensor import shape as _shape
 from .dense import eye as _eye
 
-__all__ = 'identity', 'projection', 'jordan', 'transposition', 'permutation', \
-          'elementary', 'rotation', 'reflection', \
+__all__ = 'identity_matrix', 'projection', 'jordan', 'transposition', \
+          'permutation', 'elementary', 'rotation', 'reflection', \
           'diagonal_normal', 'jordan_normal', 'isometry_normal', \
           'triangular', 'invertible', 'singular', \
           'idempotent', 'nilpotent', 'diagonalizable', 'trigonalizable', \
@@ -60,7 +60,7 @@ def super_elementary_matrix(dim,
                             index=None,
                             value=None,
                             *scalar_set):
-    r"""super elementary matrix n x n, i.e. identity with on 2 x 2 block
+    r"""super elementary matrix n x n, i.e. identity_matrix with on 2 x 2 block
 
     Explanation
     ===========
@@ -74,7 +74,7 @@ def super_elementary_matrix(dim,
        A = \left[\begin{array}{cc}a & b \\ -c & d\end{array}\right]
 
     is super elementary, i.e. $ad+bc \neq 0$. In higher dimensions,
-    any matrix $A$ looking like identity matrix but with entries
+    any matrix $A$ looking like identity_matrix matrix but with entries
 
     .. math::
 
@@ -148,7 +148,7 @@ def super_elementary_matrix(dim,
 
     See Also
     ========
-    identity
+    identity_matrix
     diagonal
     elementary
     transposition
@@ -168,7 +168,7 @@ def super_elementary_matrix(dim,
             "index argument must be tuple of two matrix index integer.")
 
     if row == col:
-        # identity or _multiply by scalar
+        # identity_matrix or _multiply by scalar
         _set_value(obj, row, col, value or 1)
         if scalar_set:
             raise ValueError(
@@ -253,7 +253,7 @@ def complex_to_real(mat=None):
 
     """
     dim = _shape(mat)[0]
-    mat = mat or identity(dim)
+    mat = mat or identity_matrix(dim)
     obj = super_elementary_matrix(2 * dim)
     for i in range(dim):
         for j in range(dim):
@@ -271,7 +271,7 @@ def regular_to_singular(mat, rank=None):
 
     Explanation
     ===========
-    Let $I$ be the $n \times n$ identity matrix
+    Let $I$ be the $n \times n$ identity_matrix matrix
     and $D$ an diagonal matrix with only zero and one entries
     of rank $r$ (i.e. all entries but $n-r$ diagonal entries are zero).
 
@@ -284,7 +284,8 @@ def regular_to_singular(mat, rank=None):
 
     If $A$ is an upper triangular matrix $B$ as well $A*B$ is one, too.
 
-    Here, $A*B$ is returned. Note, if $n=r$ the matrix $B$ is the identity.
+    Here, $A*B$ is returned.
+    Note, if $n=r$ the matrix $B$ is the identity_matrix.
 
     Examples
     ========
@@ -315,7 +316,7 @@ def regular_to_singular(mat, rank=None):
     dim = _shape(mat)[0]
     if rank == dim:
         return mat
-    i = identity(dim)
+    i = identity_matrix(dim)
     p = permutation(dim)
     d = projection(dim, (0, rank))
     d = _multiply(p.inv(), d, p)
@@ -326,21 +327,21 @@ def regular_to_singular(mat, rank=None):
 # === base matrices ===
 
 
-def identity(dim):
-    r"""identity matrix n x n
+def identity_matrix(dim):
+    r"""identity_matrix matrix n x n
 
     Explanation
     ===========
 
-    Creates identity matrix with only ones on the diagonal
+    Creates identity_matrix matrix with only ones on the diagonal
     and zeros anywhere else.
 
     Examples
     ========
 
-    >>> from sympy.matrices.random import identity
+    >>> from sympy.matrices.random import identity_matrix
 
-    >>> identity(3)
+    >>> identity_matrix(3)
     Matrix([
     [1, 0, 0],
     [0, 1, 0],
@@ -367,7 +368,7 @@ def projection(dim,
 
     Explanation
     ===========
-    A projection is a identity like matrix
+    A projection is a identity_matrix like matrix
     but with zero diagonal entiries off **index**.
 
     Examples
@@ -398,13 +399,13 @@ def projection(dim,
 
     See Also
     ========
-    identity
+    identity_matrix
     diagonal
 
     """
 
     index = index or random.sample(range(dim + 1), 2)
-    obj = identity(dim)
+    obj = identity_matrix(dim)
     start, end = sorted(index)
     for i in range(dim):
         v = 1 if start <= i < end else 0
@@ -474,7 +475,7 @@ def jordan(dim,
     """
     index = index or random.sample(range(dim), 2)
     scalar = random.choice(_elementary_scalar_set) if scalar is None else scalar
-    obj = identity(dim)
+    obj = identity_matrix(dim)
     start, end = sorted(index)
     _set_value(obj, start, start, scalar)
     for i in range(start + 1, end):
@@ -489,7 +490,7 @@ def transposition(dim,
 
     Explamation
     ===========
-    A transposition matrix is an identity matrix where two columns (or rows)
+    A transposition matrix is an identity_matrix where two columns (or rows)
     are swapped. It is a special permutation matrix.
     Moreover, any permutaion matrix is a product of transposition matrices.
 
@@ -530,7 +531,7 @@ def transposition(dim,
 
     See Also
     ========
-    identity
+    identity_matrix
     elementary
     permutation
 
@@ -551,7 +552,7 @@ def permutation(dim,
 
     Such a matrix can be obtained by shuffeling the rows
     of an identiy matrix .i.e ``permutation(dim, perm)`` is eqivalent to
-    ``identity(dim).permute(perm)``.
+    ``identity_matrix(dim).permute(perm)``.
 
     Examples
     ========
@@ -581,16 +582,16 @@ def permutation(dim,
 
     See Also
     ========
-    identity
+    identity_matrix
     transposition
 
     """
     perm = perm or random.sample(range(dim), dim)
-    obj = identity(dim)
+    obj = identity_matrix(dim)
     for i, j in enumerate(perm):
         _set_value(obj, i, i, 0)  # aka zeros(dim)
         _set_value(obj, i, j, 1)
-    return obj  # aka identity(dim).permute(perm)
+    return obj  # aka identity_matrix(dim).permute(perm)
 
 
 def elementary(dim,
@@ -612,7 +613,7 @@ def elementary(dim,
 
        A = \left[\begin{array}{cc}1 & \mu \\ 0 & 1\end{array}\right] \\
 
-    In higher dimensions, any matrix $A$ looking like identity matrix
+    In higher dimensions, any matrix $A$ looking like identity_matrix matrix
     but with entries
 
     .. math::
@@ -677,7 +678,7 @@ def elementary(dim,
         value of elementary entry,
         defaults to values -1 or 1
         if **scalar** is **None** the *elementary matrix*
-        will be a transposition $T$ or identity
+        will be a transposition $T$ or identity_matrix
 
     See Also
     ========
@@ -920,7 +921,7 @@ def diagonal_normal(dim,
 
     See Also
     ========
-    identity
+    identity_matrix
     sympy.matrices.dense.diag
 
     """
@@ -939,7 +940,7 @@ def diagonal_normal(dim,
         return _multiply(*items)
 
     else:
-        obj = identity(dim)
+        obj = identity_matrix(dim)
         for start, scalar in enumerate(spec):
             _set_value(obj, start, start, scalar)
         return obj  # eq. to gauss_jordan(dim, rank, eigenvalue_set, dim)
@@ -1093,7 +1094,7 @@ def jordan_normal(dim,
         return _multiply(*items)
 
     else:
-        obj = identity(dim)
+        obj = identity_matrix(dim)
         start = 0
         for scalar, size in spec:
             end = min(dim, start + size)
@@ -1258,7 +1259,7 @@ def isometry_normal(dim,
         return _multiply(*items)
 
     else:
-        obj = identity(dim)
+        obj = identity_matrix(dim)
         start = 0
         for s in spec:
             end = start + len(s)
@@ -1328,13 +1329,13 @@ def triangular(dim,
 
     See Also
     ========
-    identity
+    identity_matrix
     elementary
     square
 
     """
     if length == 0:
-        return regular_to_singular(identity(dim), rank)
+        return regular_to_singular(identity_matrix(dim), rank)
     scalar_set = scalar_set or (0,)
     unit_set = unit_set or (1,)
     length = length or 2 * dim
@@ -1401,7 +1402,7 @@ def square(dim,
 
     """
     if length == 0:
-        return regular_to_singular(identity(dim), rank)
+        return regular_to_singular(identity_matrix(dim), rank)
 
     length = length or 2 * dim
     lwr = triangular(dim, None, scalar_set, unit_set, int(length / 2))
@@ -1901,7 +1902,7 @@ def orthogonal(dim,
     """
     if spec is None:
         if length == 0:
-            return identity(dim)
+            return identity_matrix(dim)
         length = length or dim
         scalars = [random.choice(scalar_set) for _ in range(length)]
         items = [rotation(dim, scalar=s) for s in scalars]
@@ -2023,7 +2024,7 @@ def unitary(dim,
     """
     if spec is None:
         if length == 0:
-            return identity(dim)
+            return identity_matrix(dim)
         length = length or dim
 
         real_scalar_set = tuple(_cs(x) for x in scalar_set)
