@@ -320,6 +320,16 @@ def test_Rational_new():
     assert Rational('.76').limit_denominator(4) == n3_4
     assert Rational(19, 25).limit_denominator(4) == n3_4
     assert Rational('19/25').limit_denominator(4) == n3_4
+    n2_3 = Rational(2, 3)
+    assert Rational('2/3') == n2_3
+    assert -Rational('-2/3') == n2_3
+    assert Rational('.68').limit_num_denom(5) == n2_3
+    assert Rational('17/25').limit_num_denom(5) == Rational('17/25').limit_denominator(5)
+    assert Rational(17, 25).limit_num_denom(3, 5) == n2_3
+    raises(AssertionError, lambda: Rational('17/25').limit_num_denom(-5))
+    raises(AssertionError, lambda: Rational('17/25').limit_num_denom(3, -5))
+    raises(AssertionError, lambda: Rational(17, 25).limit_num_denom(-3, 5))
+    raises(AssertionError, lambda: Rational(17, 25).limit_num_denom(-3, -5))
     assert Rational(1.0, 3) == Rational(1, 3)
     assert Rational(1, 3.0) == Rational(1, 3)
     assert Rational(Float(0.5)) == S.Half
