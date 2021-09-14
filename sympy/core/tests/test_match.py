@@ -647,7 +647,7 @@ def test_issue_4319():
     ans = {S.Zero, y - S.One/8}
 
     def ok(pat):
-        assert set(p.match(pat).values()) == ans, set(p.match(pat).values())
+        assert set(p.match(pat).values()) == ans
 
     ok(Wild("coeff", exclude=[x])*x + Wild("rest"))
     ok(Wild("w", exclude=[x])*x + Wild("rest"))
