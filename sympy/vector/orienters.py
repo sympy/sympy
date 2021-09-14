@@ -41,15 +41,6 @@ class AxisOrienter(Orienter):
         some angle. The angle is supplied as a SymPy expr scalar, and
         the axis is supplied as a Vector.
 
-        Parameters
-        ==========
-
-        angle : Expr
-            The angle by which the new system is to be rotated
-
-        axis : Vector
-            The axis around which the rotation has to be performed
-
         Examples
         ========
 
@@ -60,6 +51,15 @@ class AxisOrienter(Orienter):
         >>> from sympy.vector import AxisOrienter
         >>> orienter = AxisOrienter(q1, N.i + 2 * N.j)
         >>> B = N.orient_new('B', (orienter, ))
+
+        Parameters
+        ==========
+
+        angle : Expr
+            The angle by which the new system is to be rotated
+
+        axis : Vector
+            The axis around which the rotation has to be performed
 
         """
         # Dummy initializer for docstrings
@@ -181,17 +181,11 @@ class BodyOrienter(ThreeAngleOrienter):
         Body orientation takes this coordinate system through three
         successive simple rotations.
 
+        Explanation
+        ===========
+
         Body fixed rotations include both Euler Angles and
         Tait-Bryan Angles, see https://en.wikipedia.org/wiki/Euler_angles.
-
-        Parameters
-        ==========
-
-        angle1, angle2, angle3 : Expr
-            Three successive angles to rotate the coordinate system by
-
-        rotation_order : string
-            String defining the order of axes for rotation
 
         Examples
         ========
@@ -229,6 +223,15 @@ class BodyOrienter(ThreeAngleOrienter):
         >>> body_orienter2 = BodyOrienter(q1, q2, 0, 'ZXZ')
         >>> body_orienter3 = BodyOrienter(0, 0, 0, 'XYX')
 
+        Parameters
+        ==========
+
+        angle1, angle2, angle3 : Expr
+            Three successive angles to rotate the coordinate system by
+
+        rot_order : string
+            String defining the order of axes for rotation
+
         """
         # Dummy initializer for docstrings
         pass
@@ -250,15 +253,6 @@ class SpaceOrienter(ThreeAngleOrienter):
         """
         Space rotation is similar to Body rotation, but the rotations
         are applied in the opposite order.
-
-        Parameters
-        ==========
-
-        angle1, angle2, angle3 : Expr
-            Three successive angles to rotate the coordinate system by
-
-        rotation_order : string
-            String defining the order of axes for rotation
 
         See Also
         ========
@@ -291,6 +285,15 @@ class SpaceOrienter(ThreeAngleOrienter):
         >>> C = B.orient_new('C', (axis_orienter2, ))
         >>> axis_orienter3 = AxisOrienter(q3, N.k)
         >>> D = C.orient_new('C', (axis_orienter3, ))
+
+        Parameters
+        ==========
+
+        angle1, angle2, angle3 : Expr
+            Three successive angles to rotate the coordinate system by
+
+        rot_order : string
+            String defining the order of axes for rotation
 
         """
         # Dummy initializer for docstrings
@@ -336,6 +339,9 @@ class QuaternionOrienter(Orienter):
         Quaternions, defined as a finite rotation about lambda, a unit
         vector, by some amount theta.
 
+        Explanation
+        ===========
+
         This orientation is described by four parameters:
 
         q0 = cos(theta/2)
@@ -348,12 +354,6 @@ class QuaternionOrienter(Orienter):
 
         Quaternion does not take in a rotation order.
 
-        Parameters
-        ==========
-
-        q0, q1, q2, q3 : Expr
-            The quaternions to rotate the coordinate system by
-
         Examples
         ========
 
@@ -364,6 +364,12 @@ class QuaternionOrienter(Orienter):
         >>> from sympy.vector import QuaternionOrienter
         >>> q_orienter = QuaternionOrienter(q0, q1, q2, q3)
         >>> B = N.orient_new('B', (q_orienter, ))
+
+        Parameters
+        ==========
+
+        q0, q1, q2, q3 : Expr
+            The quaternions to rotate the coordinate system by
 
         """
         # Dummy initializer for docstrings

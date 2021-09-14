@@ -278,6 +278,9 @@ class ImplicitRegion(Basic):
         """
         Returns a set of singular points of the region.
 
+        Explanation
+        ===========
+
         The singular points are those points on the region
         where all partial derivatives vanish.
 
@@ -300,6 +303,9 @@ class ImplicitRegion(Basic):
     def multiplicity(self, point):
         """
         Returns the multiplicity of a singular point on the region.
+
+        Explanation
+        ===========
 
         A singular point (x,y) of region is said to be of multiplicity m
         if all the partial derivatives off to order m - 1 vanish there.

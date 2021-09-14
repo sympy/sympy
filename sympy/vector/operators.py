@@ -21,8 +21,12 @@ def _get_coord_systems(expr):
 
 def _get_coord_sys_from_expr(expr, coord_sys=None):
     """
+    Parameters
+    ==========
+
     expr : expression
         The coordinate system is extracted from this parameter.
+
     """
 
     # TODO: Remove this line when warning from issue #12884 will be removed
@@ -124,6 +128,18 @@ def curl(vect, coord_sys=None, doit=True):
     Returns the curl of a vector field computed wrt the base scalars
     of the given coordinate system.
 
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSys3D, curl
+    >>> R = CoordSys3D('R')
+    >>> v1 = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
+    >>> curl(v1)
+    0
+    >>> v2 = R.x*R.y*R.z*R.i
+    >>> curl(v2)
+    R.x*R.y*R.j + (-R.x*R.z)*R.k
+
     Parameters
     ==========
 
@@ -138,18 +154,6 @@ def curl(vect, coord_sys=None, doit=True):
         If True, the result is returned after calling .doit() on
         each component. Else, the returned expression contains
         Derivative instances
-
-    Examples
-    ========
-
-    >>> from sympy.vector import CoordSys3D, curl
-    >>> R = CoordSys3D('R')
-    >>> v1 = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
-    >>> curl(v1)
-    0
-    >>> v2 = R.x*R.y*R.z*R.i
-    >>> curl(v2)
-    R.x*R.y*R.j + (-R.x*R.z)*R.k
 
     """
 
@@ -203,21 +207,6 @@ def divergence(vect, coord_sys=None, doit=True):
     Returns the divergence of a vector field computed wrt the base
     scalars of the given coordinate system.
 
-    Parameters
-    ==========
-
-    vector : Vector
-        The vector operand
-
-    coord_sys : CoordSys3D
-        The coordinate system to calculate the gradient in
-        Deprecated since version 1.1
-
-    doit : bool
-        If True, the result is returned after calling .doit() on
-        each component. Else, the returned expression contains
-        Derivative instances
-
     Examples
     ========
 
@@ -230,6 +219,21 @@ def divergence(vect, coord_sys=None, doit=True):
     >>> v2 = 2*R.y*R.z*R.j
     >>> divergence(v2)
     2*R.z
+
+    Parameters
+    ==========
+
+    vect : Vector
+        The vector operand
+
+    coord_sys : CoordSys3D
+        The coordinate system to calculate the gradient in
+        Deprecated since version 1.1
+
+    doit : bool
+        If True, the result is returned after calling .doit() on
+        each component. Else, the returned expression contains
+        Derivative instances
 
     """
     coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
@@ -274,6 +278,18 @@ def gradient(scalar_field, coord_sys=None, doit=True):
     Returns the vector gradient of a scalar field computed wrt the
     base scalars of the given coordinate system.
 
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSys3D, gradient
+    >>> R = CoordSys3D('R')
+    >>> s1 = R.x*R.y*R.z
+    >>> gradient(s1)
+    R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
+    >>> s2 = 5*R.x**2*R.z
+    >>> gradient(s2)
+    10*R.x*R.z*R.i + 5*R.x**2*R.k
+
     Parameters
     ==========
 
@@ -288,18 +304,6 @@ def gradient(scalar_field, coord_sys=None, doit=True):
         If True, the result is returned after calling .doit() on
         each component. Else, the returned expression contains
         Derivative instances
-
-    Examples
-    ========
-
-    >>> from sympy.vector import CoordSys3D, gradient
-    >>> R = CoordSys3D('R')
-    >>> s1 = R.x*R.y*R.z
-    >>> gradient(s1)
-    R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
-    >>> s2 = 5*R.x**2*R.z
-    >>> gradient(s2)
-    10*R.x*R.z*R.i + 5*R.x**2*R.k
 
     """
     coord_sys = _get_coord_sys_from_expr(scalar_field, coord_sys)
