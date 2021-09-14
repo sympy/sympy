@@ -6,6 +6,8 @@ from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import mr
 from sympy.testing.pytest import raises
 
+x = Symbol('x')
+
 def test_prime():
     assert prime(1) == 2
     assert prime(2) == 3
@@ -24,6 +26,8 @@ def test_prime():
     sieve.extend(3000)
     assert prime(401) == 2749
     raises(ValueError , lambda: prime(-1))
+
+    assert prime(x).subs(x, 4) == 7
 
 
 def test_primepi():
@@ -84,6 +88,8 @@ def test_composite():
     assert composite(2568) == 2998
     raises(ValueError, lambda: composite(0))
 
+    assert composite(x).subs(x, 2) == 6
+
 
 def test_compositepi():
     assert compositepi(1) == 0
@@ -103,6 +109,8 @@ def test_compositepi():
     sieve.extend(3000)
     assert compositepi(2321) == 1976
 
+    assert compositepi(x).subs(x, 5) == 1
+
 
 def test_generate():
     from sympy.ntheory.generate import sieve
@@ -117,6 +125,9 @@ def test_generate():
     assert prevprime(19) == 17
     assert prevprime(20) == 19
 
+    x = Symbol('x')
+    assert nextprime(x).subs(x, 15) == 17
+    assert prevprime(x).subs(x, 6) == 5
     sieve.extend_to_no(9)
     assert sieve._list[-1] == 23
 
@@ -209,10 +220,12 @@ def test_randprime():
 
 def test_primorial():
     assert primorial(1) == 2
-    assert primorial(1, nth=0) == 1
+    assert primorial(1, nth=False) == 1
     assert primorial(2) == 6
-    assert primorial(2, nth=0) == 2
-    assert primorial(4, nth=0) == 6
+    assert primorial(2, nth=False) == 2
+    assert primorial(4, nth=False) == 6
+
+    assert primorial(x).subs(x, 2) == 6
 
 
 def test_search():

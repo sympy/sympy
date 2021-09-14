@@ -13,6 +13,8 @@ from array import array as _array
 from sympy import Function, S
 from sympy.core.compatibility import as_int
 from .primetest import isprime
+from sympy.core.numbers import Integer
+from sympy.core.symbol import Symbol
 
 
 def _azeros(n):
@@ -349,9 +351,10 @@ class Sieve:
 sieve = Sieve()
 
 
-def prime(nth):
-    """ Return the nth prime, with the primes indexed as prime(1) = 2,
-        prime(2) = 3, etc.... The nth prime is approximately n*log(n).
+class prime(Function):
+    """ Returns the nth prime, with the primes indexed 
+        as prime(1) = 2,prime(2) = 3, etc....
+        The nth prime is approximately n*log(n).
 
         Logarithmic integral of x is a pretty nice approximation for number of
         primes <= x, i.e.
@@ -398,30 +401,35 @@ def prime(nth):
         .. [2] https://en.wikipedia.org/wiki/Prime_number_theorem#Approximations_for_the_nth_prime_number
         .. [3] https://en.wikipedia.org/wiki/Skewes%27_number
     """
-    n = as_int(nth)
-    if n < 1:
-        raise ValueError("nth must be a positive integer; prime(1) == 2")
-    if n <= len(sieve._list):
-        return sieve[n]
+    @classmethod
+    def eval(cls, nth):
+        if not nth.is_Number:
+            return None
 
-    from sympy.functions.special.error_functions import li
-    from sympy.functions.elementary.exponential import log
+        n = as_int(nth)
+        if n < 1:
+            raise ValueError("nth must be a positive integer; prime(1) == 2")
+        if n <= len(sieve._list):
+            return sieve[n]
 
-    a = 2 # Lower bound for binary search
-    b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
+        from sympy.functions.special.error_functions import li
+        from sympy.functions.elementary.exponential import log
 
-    while a < b:
-        mid = (a + b) >> 1
-        if li(mid) > n:
-            b = mid
-        else:
-            a = mid + 1
-    n_primes = primepi(a - 1)
-    while n_primes < n:
-        if isprime(a):
-            n_primes += 1
-        a += 1
-    return a - 1
+        a = 2 # Lower bound for binary search
+        b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
+
+        while a < b:
+            mid = (a + b) >> 1
+            if li(mid) > n:
+                b = mid
+            else:
+                a = mid + 1
+        n_primes = primepi(a - 1)
+        while n_primes < n:
+            if isprime(a):
+                n_primes += 1
+            a += 1
+        return a - 1
 
 
 class primepi(Function):
@@ -508,6 +516,8 @@ class primepi(Function):
             return S.Infinity
         if n is S.NegativeInfinity:
             return S.Zero
+        if not n.is_Number:
+            return None
 
         try:
             n = int(n)
@@ -549,8 +559,8 @@ class primepi(Function):
         return S(arr2[1])
 
 
-def nextprime(n, ith=1):
-    """ Return the ith prime greater than n.
+class nextprime(Function):
+    """ Returns the ith prime greater than n.
 
         i must be an integer.
 
@@ -563,7 +573,7 @@ def nextprime(n, ith=1):
         >>> from sympy import nextprime
         >>> [(i, nextprime(i)) for i in range(10, 15)]
         [(10, 11), (11, 13), (12, 13), (13, 17), (14, 17)]
-        >>> nextprime(2, ith=2) # the 2nd prime after 2
+        >>> nextprime(2, 2) # the 2nd prime after 2
         5
 
         See Also
@@ -573,52 +583,57 @@ def nextprime(n, ith=1):
         primerange : Generate all primes in a given range
 
     """
-    n = int(n)
-    i = as_int(ith)
-    if i > 1:
-        pr = n
-        j = 1
-        while 1:
-            pr = nextprime(pr)
-            j += 1
-            if j > i:
-                break
-        return pr
+    @classmethod
+    def eval(cls, n, ith=1):
+        if not n.is_Number:
+            return None
 
-    if n < 2:
-        return 2
-    if n < 7:
-        return {2: 3, 3: 5, 4: 5, 5: 7, 6: 7}[n]
-    if n <= sieve._list[-2]:
-        l, u = sieve.search(n)
-        if l == u:
-            return sieve[u + 1]
+        n = int(n)
+        i = as_int(ith)
+        if i > 1:
+            pr = n
+            j = 1
+            while 1:
+                pr = nextprime(pr)
+                j += 1
+                if j > i:
+                    break
+            return pr
+
+        if n < 2:
+            return 2
+        if n < 7:
+            return {2: 3, 3: 5, 4: 5, 5: 7, 6: 7}[n]
+        if n <= sieve._list[-2]:
+            l, u = sieve.search(n)
+            if l == u:
+                return sieve[u + 1]
+            else:
+                return sieve[u]
+        nn = 6*(n//6)
+        if nn == n:
+            n += 1
+            if isprime(n):
+                return n
+            n += 4
+        elif n - nn == 5:
+            n += 2
+            if isprime(n):
+                return n
+            n += 4
         else:
-            return sieve[u]
-    nn = 6*(n//6)
-    if nn == n:
-        n += 1
-        if isprime(n):
-            return n
-        n += 4
-    elif n - nn == 5:
-        n += 2
-        if isprime(n):
-            return n
-        n += 4
-    else:
-        n = nn + 5
-    while 1:
-        if isprime(n):
-            return n
-        n += 2
-        if isprime(n):
-            return n
-        n += 4
+            n = nn + 5
+        while 1:
+            if isprime(n):
+                return n
+            n += 2
+            if isprime(n):
+                return n
+            n += 4
 
 
-def prevprime(n):
-    """ Return the largest prime smaller than n.
+class prevprime(Function):
+    """ Returns the largest prime smaller than n.
 
         Notes
         =====
@@ -636,36 +651,41 @@ def prevprime(n):
         nextprime : Return the ith prime greater than n
         primerange : Generates all primes in a given range
     """
-    from sympy.functions.elementary.integers import ceiling
+    @classmethod
+    def eval(cls, n):
+        from sympy.functions.elementary.integers import ceiling
 
-    # wrapping ceiling in as_int will raise an error if there was a problem
-    # determining whether the expression was exactly an integer or not
-    n = as_int(ceiling(n))
-    if n < 3:
-        raise ValueError("no preceding primes")
-    if n < 8:
-        return {3: 2, 4: 3, 5: 3, 6: 5, 7: 5}[n]
-    if n <= sieve._list[-1]:
-        l, u = sieve.search(n)
-        if l == u:
-            return sieve[l-1]
+        # wrapping ceiling in as_int will raise an error if there was a problem
+        # determining whether the expression was exactly an integer or not
+        if not n.is_Number:
+            return None
+
+        n = as_int(ceiling(n))
+        if n < 3:
+            raise ValueError("no preceding primes")
+        if n < 8:
+            return {3: 2, 4: 3, 5: 3, 6: 5, 7: 5}[n]
+        if n <= sieve._list[-1]:
+            l, u = sieve.search(n)
+            if l == u:
+                return sieve[l-1]
+            else:
+                return sieve[l]
+        nn = 6*(n//6)
+        if n - nn <= 1:
+            n = nn - 1
+            if isprime(n):
+                return n
+            n -= 4
         else:
-            return sieve[l]
-    nn = 6*(n//6)
-    if n - nn <= 1:
-        n = nn - 1
-        if isprime(n):
-            return n
-        n -= 4
-    else:
-        n = nn + 1
-    while 1:
-        if isprime(n):
-            return n
-        n -= 2
-        if isprime(n):
-            return n
-        n -= 4
+            n = nn + 1
+        while 1:
+            if isprime(n):
+                return n
+            n -= 2
+            if isprime(n):
+                return n
+            n -= 4
 
 
 def primerange(a, b=None):
@@ -805,10 +825,10 @@ def randprime(a, b):
     return p
 
 
-def primorial(n, nth=True):
+class primorial(Function):
     """
-    Returns the product of the first n primes (default) or
-    the primes less than or equal to n (when ``nth=False``).
+    Returns the product of the first n primes (default) or the primes less than
+    or equal to n (when ``nth=False``).
 
     Examples
     ========
@@ -817,13 +837,13 @@ def primorial(n, nth=True):
     >>> from sympy import factorint, Mul, primefactors, sqrt
     >>> primorial(4) # the first 4 primes are 2, 3, 5, 7
     210
-    >>> primorial(4, nth=False) # primes <= 4 are 2 and 3
+    >>> primorial(4, False) # primes <= 4 are 2 and 3
     6
     >>> primorial(1)
     2
-    >>> primorial(1, nth=False)
+    >>> primorial(1, False)
     1
-    >>> primorial(sqrt(101), nth=False)
+    >>> primorial(sqrt(101), False)
     210
 
     One can argue that the primes are infinite since if you take
@@ -855,20 +875,25 @@ def primorial(n, nth=True):
     primerange : Generate all primes in a given range
 
     """
-    if nth:
-        n = as_int(n)
-    else:
-        n = int(n)
-    if n < 1:
-        raise ValueError("primorial argument must be >= 1")
-    p = 1
-    if nth:
-        for i in range(1, n + 1):
-            p *= prime(i)
-    else:
-        for i in primerange(2, n + 1):
-            p *= i
-    return p
+    @classmethod
+    def eval(cls, n, *, nth=True):
+        if not n.is_Number:
+            return None
+
+        if nth:
+            n = as_int(n)
+        else:
+            n = int(n)
+        if n < 1:
+            raise ValueError("primorial argument must be >= 1")
+        p = 1
+        if nth:
+            for i in range(1, n + 1):
+                p *= prime(i)
+        else:
+            for i in primerange(2, n + 1):
+                p *= i
+        return p
 
 
 def cycle_length(f, x0, nmax=None, values=False):
@@ -960,8 +985,8 @@ def cycle_length(f, x0, nmax=None, values=False):
         yield lam, mu
 
 
-def composite(nth):
-    """ Return the nth composite number, with the composite numbers indexed as
+class composite(Function):
+    """ Returns the nth composite number, with the composite numbers indexed as
         composite(1) = 4, composite(2) = 6, etc....
 
         Examples
@@ -984,50 +1009,56 @@ def composite(nth):
         prime : Return the nth prime
         compositepi : Return the number of positive composite numbers less than or equal to n
     """
-    n = as_int(nth)
-    if n < 1:
-        raise ValueError("nth must be a positive integer; composite(1) == 4")
-    composite_arr = [4, 6, 8, 9, 10, 12, 14, 15, 16, 18]
-    if n <= 10:
-        return composite_arr[n - 1]
+    @classmethod
+    def eval(cls, nth):
+        if not nth.is_Number:
+            return None 
 
-    a, b = 4, sieve._list[-1]
-    if n <= b - primepi(b) - 1:
-        while a < b - 1:
+        n = as_int(nth)
+        if n < 1:
+            raise ValueError("nth must be a positive integer; composite(1) == 4")
+        composite_arr = [4, 6, 8, 9, 10, 12, 14, 15, 16, 18]
+        if n <= 10:
+            return composite_arr[n - 1]
+
+        a, b = 4, sieve._list[-1]
+        if n <= b - primepi(b) - 1:
+            while a < b - 1:
+                mid = (a + b) >> 1
+                if mid - primepi(mid) - 1 > n:
+                    b = mid
+                else:
+                    a = mid
+            if isprime(a):
+                a -= 1
+            return a
+
+        from sympy.functions.special.error_functions import li
+        from sympy.functions.elementary.exponential import log
+
+        a = 4 # Lower bound for binary search
+        b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
+
+        while a < b:
             mid = (a + b) >> 1
-            if mid - primepi(mid) - 1 > n:
+            if mid - li(mid) - 1 > n:
                 b = mid
             else:
-                a = mid
+                a = mid + 1
+
+        n_composites = a - primepi(a) - 1
+        while n_composites > n:
+            if not isprime(a):
+                n_composites -= 1
+            a -= 1
         if isprime(a):
             a -= 1
         return a
 
-    from sympy.functions.special.error_functions import li
-    from sympy.functions.elementary.exponential import log
 
-    a = 4 # Lower bound for binary search
-    b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
-
-    while a < b:
-        mid = (a + b) >> 1
-        if mid - li(mid) - 1 > n:
-            b = mid
-        else:
-            a = mid + 1
-
-    n_composites = a - primepi(a) - 1
-    while n_composites > n:
-        if not isprime(a):
-            n_composites -= 1
-        a -= 1
-    if isprime(a):
-        a -= 1
-    return a
-
-
-def compositepi(n):
-    """ Return the number of positive composite numbers less than or equal to n.
+class compositepi(Function):
+    """ Represents the function which returns the number of
+        positive composite numbers less than or equal to n.
         The first positive composite is 4, i.e. compositepi(4) = 1.
 
         Examples
@@ -1048,7 +1079,12 @@ def compositepi(n):
         primepi : Return the number of primes less than or equal to n
         composite : Return the nth composite number
     """
-    n = int(n)
-    if n < 4:
-        return 0
-    return n - primepi(n) - 1
+    @classmethod
+    def eval(cls, n):
+        if not n.is_Number:
+            return None
+
+        n = int(n)
+        if n < 4:
+            return 0
+        return n - primepi(n) - 1
