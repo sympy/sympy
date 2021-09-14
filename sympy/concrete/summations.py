@@ -3,6 +3,7 @@ from sympy.calculus.util import AccumulationBounds
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.concrete.gosper import gosper_sum
+from sympy.concrete.zeilberger import zb_sum
 from sympy.core.add import Add
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul
@@ -10,6 +11,7 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild, Symbol
 from sympy.functions.special.zeta_functions import zeta
+from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cot, csc
 from sympy.logic.boolalg import And
@@ -1218,6 +1220,12 @@ def eval_sum_symbolic(f, limits):
 
         if not r in (None, S.NaN):
             return r
+
+        zb_try = zb_sum(f, (i, a, b))
+
+        if zb_try is not None:
+            res, w = zb_try
+            return Piecewise((res, (w > 0) & (Eq(w, ceiling(w)))), (Sum(f, (i, a, b)), True))
 
     h = eval_sum_hyper(f_orig, (i, a, b))
     if h is not None:
