@@ -710,15 +710,12 @@ def test_match_issue_17397():
 
 
 def test_match_issue_21942_1():
-    a, r, w = symbols('a, r, w', nonnegative=True)
+    a, x, r, w = symbols('a, x, r, w', nonnegative=True)
     p = symbols('p', positive=True)
     g_ = Wild('g')
-    pattern = g_ ** (1 / (1 - p))
-    eq = (a * r ** (1 - p) + w ** (1 - p) * (1 - a)) ** (1 / (1 - p))
-    assert pattern.matches(eq) == {g_: a * r ** (1 - p) + w ** (1 - p) * (1 - a)}
-
-    eq = signsimp(eq)
-    assert pattern.matches(eq) is None
+    pattern = x - g_ ** (1 / (1 - p))
+    eq = x - (a * r ** (1 - p) + w ** (1 - p) * (1 - a)) ** (1 / (1 - p))
+    assert pattern.matches(eq) == {g_: a * r ** (1 - p) - w ** (1 - p) * (a - 1)}
 
 
 @XFAIL
