@@ -18,21 +18,6 @@ __all__ = 'identity', 'projection', 'jordan', 'transposition', 'permutation', \
 
 _TEST = False
 
-
-'''
-USEFUL STUFF
-============
-
-# build and show docs with
-make html; open ./_build/html/modules/matrices/random.html
-
-# pretty print with sympy
-from sympy.matrices.random import *
-from sympy import init_printing, pprint
-init_printing()
-pprint(invertible(3))
-'''
-
 _eps = 1e-13
 
 
