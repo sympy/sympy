@@ -157,6 +157,13 @@ class Quantity(AtomicExpr):
         unit_system = UnitSystem.get_default_unit_system()
         return unit_system.get_quantity_scale_offset(self)
 
+    @property
+    def is_multiplicative(self):
+        from sympy.physics.units import UnitSystem
+        if self in UnitSystem._quantity_scale_offsets_global.keys():
+            return False
+        return True
+
     def _eval_is_positive(self):
         return True
 

@@ -59,6 +59,10 @@ class AssocOp(Basic):
             if any(isinstance(arg, Relational) for arg in args):
                 raise TypeError("Relational can not be used in %s" % cls.__name__)
 
+            from sympy.physics.units import Quantity
+            if any(isinstance(arg, Quantity) and arg.is_multiplicative is False for arg in args):
+                raise ValueError("Ambiguous operation with offset unit")
+
             # This should raise TypeError once deprecation period is over:
             if not all(isinstance(arg, typ) for arg in args):
                 SymPyDeprecationWarning(
