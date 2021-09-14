@@ -1438,7 +1438,7 @@ def invertible(dim,
 
     Examples
     ========
-    >>> from sympy import symbols, pprint
+    >>> from sympy import symbols
     >>> from sympy.matrices.random import invertible
     >>> import random
     >>> random.seed(1)
@@ -1943,7 +1943,7 @@ def unitary(dim,
 
     Examples
     ========
-    >>> from sympy import sqrt, I, simplify, eye, expand, re
+    >>> from sympy import sqrt, I, simplify, re
     >>> from sympy.matrices.random import unitary
     >>> import random
     >>> random.seed(1)
@@ -2080,7 +2080,7 @@ def normal(dim,
 
     Examples
     ========
-    >>> from sympy import sqrt, I
+    >>> from sympy import sqrt
     >>> from sympy.matrices.random import normal
     >>> import random
     >>> random.seed(1)
