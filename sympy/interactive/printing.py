@@ -168,6 +168,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             elif any(hasattr(o, hook) for hook in printing_hooks):
                 # types which add support themselves
                 return True
+            elif hasattr(type(o), '_repr_latex_'):
+                return True
             elif isinstance(o, (float, int)) and print_builtin:
                 return True
             return False

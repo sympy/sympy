@@ -77,6 +77,14 @@ def test_printmethod():
     assert latex(R(x)) == r"foo"
 
 
+def test_ipython_overload():
+    class WithOverload:
+        def _repr_latex_(self):
+            return 'text, $math$'
+
+    assert latex(WithOverload()) == r'\text{text, $math$}'
+
+
 def test_latex_basic():
     assert latex(1 + x) == r"x + 1"
     assert latex(x**2) == r"x^{2}"

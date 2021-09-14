@@ -2745,6 +2745,15 @@ class LatexPrinter(Printer):
         return '%s(%s)' % (pred_latex, args_latex)
 
     def emptyPrinter(self, expr):
+        # support any objects which implement the ipython hook
+        try:
+            repr_latex_method = getattr(type(expr), '_repr_latex_')
+        except AttributeError:
+            pass
+        else:
+            # _repr_latex_ returns text mode, but we return math mode.
+            return r"\text{" + repr_latex_method(expr) + "}"
+
         # default to just printing as monospace, like would normally be shown
         s = super().emptyPrinter(expr)
 
