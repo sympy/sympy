@@ -18,7 +18,7 @@ from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key)
 from sympy.core.sympify import sympify
 from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
-    Pow, Unequality, Wild)
+    Pow, Unequality)
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
@@ -1445,17 +1445,12 @@ def _solve(f, *symbols, **flags):
             return [sol]
 
         poly = None
-        # check for a single non-symbol generator
-        dums = f_num.atoms(Dummy)
-        D = f_num.replace(
-            lambda i: isinstance(i, Add) and symbol in i.free_symbols,
-            lambda i: Dummy())
-        if not D.is_Dummy:
-            dgen = D.atoms(Dummy) - dums
-            if len(dgen) == 1:
-                d = dgen.pop()
-                w = Wild('g')
-                gen = f_num.match(D.xreplace({d: w}))[w]
+        # check for a single Add generator
+        if not f_num.is_Add:
+            add_args = [i for i in f_num.atoms(Add)
+                if symbol in i.free_symbols]
+            if len(add_args) == 1:
+                gen = add_args[0]
                 spart = gen.as_independent(symbol)[1].as_base_exp()[0]
                 if spart == symbol:
                     try:

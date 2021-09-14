@@ -527,14 +527,16 @@ class Add(Expr, AssocOp):
                 S.Infinity: oo,
                 S.NegativeInfinity: -oo}
             ireps = {v: k for k, v in reps.items()}
-            eq = signsimp(lhs.xreplace(reps) - rhs.xreplace(reps))
+            eq = lhs.xreplace(reps) - rhs.xreplace(reps)
             if eq.has(oo):
                 eq = eq.replace(
                     lambda x: x.is_Pow and x.base is oo,
                     lambda x: x.base)
-            return eq.xreplace(ireps)
+            rv = eq.xreplace(ireps)
         else:
-            return signsimp(lhs - rhs)
+            rv = lhs - rhs
+        srv = signsimp(rv)
+        return srv if srv.is_Number else rv
 
     @cacheit
     def as_two_terms(self):
