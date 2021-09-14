@@ -121,7 +121,7 @@ that would be used if there were custom indices. ::
 
 dynamicsymbols
 --------------
-The ``dynamicsymbols`` function also has 'hidden' functionality; the variable
+The ``dynamicsymbols`` function also has 'special' functionality; the variable
 which is associated with time can be changed, as well as the notation for
 printing derivatives. ::
 
@@ -130,8 +130,7 @@ printing derivatives. ::
   >>> q1 = dynamicsymbols('q1')
   >>> q1
   q1(t)
-  >>> dynamicsymbols._t = symbols('T')
-  >>> q2 = dynamicsymbols('q2')
+  >>> q2 = dynamicsymbols('q2', time=symbols('T'))
   >>> q2
   q2(T)
   >>> q1
@@ -143,13 +142,14 @@ printing derivatives. ::
   >>> vprint(q1d)
   q1d
   >>> dynamicsymbols._str = '\''
-  >>> dynamicsymbols._t = symbols('t')
 
 
 Note that only dynamic symbols created after the change are different. The same
 is not true for the `._str` attribute; this affects the printing output only,
 so dynamic symbols created before or after will print the same way.
 
-Also note that ``Vector``'s ``.dt`` method uses the ``._t`` attribute of
+Also note that ``Vector``'s ``.dt`` method uses the ``.t`` attribute of
 ``dynamicsymbols``, along with a number of other important functions and
 methods. Don't mix and match symbols representing time.
+
+To change the internal variable of time, update ``dynamicsymbols.t``.

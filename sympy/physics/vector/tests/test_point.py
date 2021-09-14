@@ -140,7 +140,7 @@ def test_point_vel(): #Basic functionality
     raises(ValueError , lambda : O.vel(B)) #Velocity of O is not defined in B
 
 def test_auto_point_vel():
-    t = dynamicsymbols._t
+    t = dynamicsymbols.t
     q1, q2 = dynamicsymbols('q1 q2')
     N = ReferenceFrame('N')
     B = ReferenceFrame('B')
@@ -158,7 +158,7 @@ def test_auto_point_vel():
     raises(ValueError, lambda: P2.vel(N)) # Velocity of O not defined in N
 
 def test_auto_point_vel_multiple_point_path():
-    t = dynamicsymbols._t
+    t = dynamicsymbols.t
     q1, q2 = dynamicsymbols('q1 q2')
     B = ReferenceFrame('B')
     P = Point('P')
@@ -173,7 +173,7 @@ def test_auto_point_vel_multiple_point_path():
     assert P3.vel(B) == 10 * q1.diff(t) * B.y + (q1 + q1.diff(t)) * B.z
 
 def test_auto_vel_dont_overwrite():
-    t = dynamicsymbols._t
+    t = dynamicsymbols.t
     q1, q2, u1 = dynamicsymbols('q1, q2, u1')
     N = ReferenceFrame('N')
     P = Point('P1')
@@ -197,7 +197,7 @@ def test_auto_point_vel_if_tree_has_vel_but_inappropriate_pos_vector():
     raises(ValueError, lambda : P1.vel(S)) # P.vel(S) not defined
 
 def test_auto_point_vel_shortest_path():
-    t = dynamicsymbols._t
+    t = dynamicsymbols.t
     q1, q2, u1, u2 = dynamicsymbols('q1 q2 u1 u2')
     B = ReferenceFrame('B')
     P = Point('P')
@@ -222,7 +222,7 @@ def test_auto_point_vel_shortest_path():
             assert P4.vel(B) == q1.diff(t) * B.x + u2 * B.y + 2 * q2.diff(t) * B.z
 
 def test_auto_point_vel_connected_frames():
-    t = dynamicsymbols._t
+    t = dynamicsymbols.t
     q, q1, q2, u = dynamicsymbols('q q1 q2 u')
     N = ReferenceFrame('N')
     B = ReferenceFrame('B')

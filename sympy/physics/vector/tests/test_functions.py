@@ -1,4 +1,4 @@
-from sympy import S, Integral, sin, cos, pi, sqrt, symbols
+from sympy import (S, Integral, sin, cos, pi, sqrt, symbols)
 from sympy.physics.vector import Dyadic, Point, ReferenceFrame, Vector
 from sympy.physics.vector.functions import (cross, dot, express,
                                             time_derivative,
@@ -378,7 +378,7 @@ def test_time_derivative():
 
 def test_get_motion_methods():
     #Initialization
-    t = dynamicsymbols._t
+    t = dynamicsymbols.t
     s1, s2, s3 = symbols('s1 s2 s3')
     S1, S2, S3 = symbols('S1 S2 S3')
     S4, S5, S6 = symbols('S4 S5 S6')
@@ -488,6 +488,7 @@ def test_partial_velocity():
 
     raises(TypeError, lambda: partial_velocity(Dmc.vel(N), u_list, N))
     raises(TypeError, lambda: partial_velocity(vel_list, u1, N))
+
 
 def test_dynamicsymbols():
     #Tests to check the assumptions applied to dynamicsymbols

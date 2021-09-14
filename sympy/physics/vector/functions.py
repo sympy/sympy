@@ -183,7 +183,7 @@ def time_derivative(expr, frame, order=1):
 
     """
 
-    t = dynamicsymbols._t
+    t = dynamicsymbols.t
     _check_frame(frame)
 
     if order == 0:
@@ -280,7 +280,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         if w1 == w2 == w3 == 0:
             return [S.Zero]*3
         q1, q2, q3 = coords
-        q1d, q2d, q3d = [diff(i, dynamicsymbols._t) for i in coords]
+        q1d, q2d, q3d = [diff(i, dynamicsymbols.t) for i in coords]
         s1, s2, s3 = [sin(q1), sin(q2), sin(q3)]
         c1, c2, c3 = [cos(q1), cos(q2), cos(q3)]
         if rot_type == 'body':
@@ -367,7 +367,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         w = Matrix(speeds + [0])
         E = Matrix([[e0, -e3, e2, e1], [e3, e0, -e1, e2], [-e2, e1, e0, e3],
             [-e1, -e2, -e3, e0]])
-        edots = Matrix([diff(i, dynamicsymbols._t) for i in [e1, e2, e3, e0]])
+        edots = Matrix([diff(i, dynamicsymbols.t) for i in [e1, e2, e3, e0]])
         return list(edots.T - 0.5 * w.T * E.T)
     else:
         raise ValueError('Not an approved rotation type for this function')
@@ -506,16 +506,16 @@ def get_motion_params(frame, **kwargs):
     if mode == 2:
         vel = _process_vector_differential(kwargs['acceleration'],
                                            kwargs['velocity'],
-                                           dynamicsymbols._t,
+                                           dynamicsymbols.t,
                                            kwargs['timevalue2'], frame)[2]
         pos = _process_vector_differential(vel, kwargs['position'],
-                                           dynamicsymbols._t,
+                                           dynamicsymbols.t,
                                            kwargs['timevalue1'], frame)[2]
         return (kwargs['acceleration'], vel, pos)
     elif mode == 1:
         return _process_vector_differential(kwargs['velocity'],
                                             kwargs['position'],
-                                            dynamicsymbols._t,
+                                            dynamicsymbols.t,
                                             kwargs['timevalue1'], frame)
     else:
         vel = time_derivative(kwargs['position'], frame)
@@ -577,21 +577,24 @@ def partial_velocity(vel_vecs, gen_speeds, frame):
     return vec_partials
 
 
-def dynamicsymbols(names, level=0,**assumptions):
+def dynamicsymbols(names, level=0, time=Symbol('t'), **assumptions):
     """Uses symbols and Function for functions of time.
 
     Creates a SymPy UndefinedFunction, which is then initialized as a function
     of a variable, the default being Symbol('t').
+    ``names`` follows the same conventions as the first arugment to `symbols`.
+    See the documentation for `symbols()` for an explanation of the options.
 
     Parameters
     ==========
-
     names : str
         Names of the dynamic symbols you want to create; works the same way as
-        inputs to symbols
+        inputs to `symbols`.
     level : int
         Level of differentiation of the returned function; d/dt once of t,
         twice of t, etc.
+    time : symbol
+        The variable of which the function needs to be intitalized.
     assumptions :
         - real(bool) : This is used to set the dynamicsymbol as real,
                     by default is False.
@@ -610,6 +613,9 @@ def dynamicsymbols(names, level=0,**assumptions):
     >>> q1 = dynamicsymbols('q1')
     >>> q1
     q1(t)
+    >>> q = dynamicsymbols('q', time=Symbol('tau'))
+    >>> q
+    q(tau)
     >>> q2 = dynamicsymbols('q2', real=True)
     >>> q2.is_real
     True
@@ -626,14 +632,16 @@ def dynamicsymbols(names, level=0,**assumptions):
     Derivative(q1(t), t)
 
     """
-    esses = symbols(names, cls=Function,**assumptions)
-    t = dynamicsymbols._t
+    esses = symbols(names, cls=Function, **assumptions)
     if iterable(esses):
-        esses = [reduce(diff, [t] * level, e(t)) for e in esses]
+        esses = [reduce(diff, [time] * level, e(time)) for e in esses]
         return esses
     else:
-        return reduce(diff, [t] * level, esses(t))
+        return reduce(diff, [time] * level, esses(time))
 
+# NOTE: Change dynamicsymbols.t to change the time variable in other functions.
+dynamicsymbols.t = Symbol('t')
+dynamicsymbols._str = '\''
 
-dynamicsymbols._t = Symbol('t')  # type: ignore
-dynamicsymbols._str = '\''  # type: ignore
+# NOTE: Please use `dynamicsymbols.t` instead, `dyamicsymbols._t` will be dropped in subsequent release.
+dynamicsymbols._t = Symbol('t')
