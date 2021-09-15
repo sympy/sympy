@@ -13,7 +13,8 @@ In order to setup distinct mathematical problems, like
  - non-standard geometries by non-standard scalar products
  - orthogonal basis of vector space,
 
-require specific types of matrices.
+specific types of matrices are required.
+
 A purely random generation of matrix entries does not grant any
 specific shape or property of the matrix.
 So, those matrices have to be created carefully using
@@ -25,20 +26,22 @@ Generators on different types of matrices are presented below.
 
    Even for carefully sampled matrices which are elements in topological matrix groups,
    the sample distribution does not claim to meet any uniform distribution
-   (with respect to the groups haar measure). The sample procedures focuses
-   mainly on educational and academic problems than a proper pre-defined
-   distribution.
+   (with respect to the groups Haar measure).
+   So the sampling procedures may be used to produce educational or academic problems
+   but do not generate proper pre-defined distribution.
 
 There are three different types of matrix generators:
 
-   - the *base matrices* which from the atomic building block of the later
+   - the *base matrices* which form the atomic building block of the later
    - the *compound matrices* which are simply products of base matrices of given types
-   - the *conjugate matrices* which are usually given as base or compound matrix $A$
-     conjugate by another compound matrix $S$, i.e.
+   - the *conjugate matrices* which are usually given as base or compound matrix $\mathbf{A}$
+     conjugate by another compound matrix $\mathbf{S}$,  i.e.
 
       .. math::
 
-         B = S \cdot A \cdot S^{-1} \text{ or } C = S \cdot A \cdot S^{t}
+         \mathbf{B} = \mathbf{S} \cdot \mathbf{A} \cdot \mathbf{S}^{-1}
+         \text{ or }
+         \mathbf{C} = \mathbf{S} \cdot \mathbf{A} \cdot \mathbf{S}^{T}
 
 
  1. *base matrices* are simple matrix types with only a few non trivial entries.
@@ -79,9 +82,10 @@ There are three different types of matrix generators:
     - :py:func:`triangular <sympy.matrices.random.triangular>` as product of *triangular*
       :py:func:`elementary <sympy.matrices.random.elementary>` matrices
 
- 3. *conjugate matrices* that arise as a product $SAS^{-1}$ of specific matrices $A$
+ 3. *conjugate matrices* that arise as a product $\mathbf{SAS}^{-1}$
+    of specific matrices $\mathbf{A}$
     - usually given as a *normal form* - conjugate by an
-    :py:func:`invertible <sympy.matrices.random.invertible>` $S$
+    :py:func:`invertible <sympy.matrices.random.invertible>` $\mathbf{S}$
     such as
 
     - :py:func:`diagonalizable <sympy.matrices.random.diagonalizable>` with
@@ -96,8 +100,9 @@ There are three different types of matrix generators:
     - :py:func:`nilpotent <sympy.matrices.random.nilpotent>` with
       :py:func:`jordan_normal <sympy.matrices.random.jordan_normal>` (with zero eigenvalues)
 
-    *isometry conjugate matrices* that arise as a product $OAO^{-1} = OAO^{t}$ of specific matrices $A$
-    where $A$ sets the (complex) eigenvalue spectrum.
+    *isometry conjugate matrices* that arise as a product $\mathbf{OAO}^{-1} = \mathbf{OAO}^{T}$
+    of specific matrices $A$
+    where $\mathbf{A}$ sets the (complex) eigenvalue spectrum.
 
     - :py:func:`orthogonal <sympy.matrices.random.orthogonal>`
       can be a conjugate of
@@ -119,13 +124,14 @@ There are three different types of matrix generators:
       or
       :py:func:`unitary <sympy.matrices.random.unitary>`
 
-    finally *symmetric matrices* given as a as product $SS^t$ resp. $S\bar{S}^t$ of $S$, such as
+    finally *symmetric matrices* given as a as product $\mathbf{MM}^T$
+    resp. $\mathbf{MM}^H$ of $\mathbf{M}$, such as
 
-    - :py:func:`symmetric <sympy.matrices.random.symmetric>` $SS^t$ with
-      :py:func:`invertible <sympy.matrices.random.invertible>` $S$
+    - :py:func:`symmetric <sympy.matrices.random.symmetric>` $\mathbf{MM}^T$ with
+      :py:func:`invertible <sympy.matrices.random.invertible>` $\mathbf{M}$
 
-    - :py:func:`hermite <sympy.matrices.random.hermite>` $S\bar{S}^t$ with
-      :py:func:`invertible <sympy.matrices.random.orthogonal>` $S$
+    - :py:func:`hermite <sympy.matrices.random.hermite>` $\mathbf{MM}^H$ with
+      :py:func:`invertible <sympy.matrices.random.orthogonal>` $\mathbf{M}$
 
 
 In addition to the type of matrix, also the type of entries (as a commutative ring with one)
@@ -163,7 +169,7 @@ The product of *elementary* matrices
     [-1, 1, 0],
     [ 0, 0, 1]])
 
-gives an *invertible* matrix ``M``
+gives an *invertible* matrix $\mathbf{M}$
 
     >>> M = A*B*C
     >>> M
@@ -177,6 +183,35 @@ gives an *invertible* matrix ``M``
     [1, 0, 2],
     [1, 1, 1],
     [0, 0, 1]])
+
+
+Random Generator
+----------------
+
+The module uses its own random generator ``rand`` which is a instance of ``random.Random()``.
+Hence, the state can be set by invoking ``rand.seed()``.
+
+
+    >>> from sympy.matrices.random import rand, orthogonal
+    >>> rand.seed(1)
+    >>> orthogonal(3)
+    Matrix([
+    [-1,          0,          0],
+    [ 0,  sqrt(2)/2, -sqrt(2)/2],
+    [ 0, -sqrt(2)/2, -sqrt(2)/2]])
+
+    >>> orthogonal(3)
+    Matrix([
+    [sqrt(2)/2,          0, -sqrt(2)/2],
+    [      1/2, -sqrt(2)/2,        1/2],
+    [     -1/2, -sqrt(2)/2,       -1/2]])
+
+    >>> rand.seed(1)
+    >>> orthogonal(3)
+    Matrix([
+    [-1,          0,          0],
+    [ 0,  sqrt(2)/2, -sqrt(2)/2],
+    [ 0, -sqrt(2)/2, -sqrt(2)/2]])
 
 
 Matrix Functions Reference
