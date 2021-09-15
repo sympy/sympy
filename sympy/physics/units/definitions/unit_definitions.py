@@ -216,14 +216,17 @@ full_moon_cycle.set_global_relative_scale_factor(411.78443029, day)
 
 year = years = tropical_year
 
-# Temperature scales
+# Temperature units
 
-oC = degree_celsius = degrees_celsius = Quantity("degree_celsius", abbrev="oC", latex_repr=r"^\circ\text{C}")
+deg_C = degree_celsius = degrees_celsius = Quantity("degree_celsius", abbrev="deg_C", latex_repr=r"^\circ\text{C}")
 degree_celsius.set_global_relative_scale_offset(Rational(27315, 100), kelvin)
 
-oF = degree_fahrenheit = degrees_fahrenheit = Quantity("degree_fahrenheit", abbrev="oF", latex_repr=r"^\circ\text{F}")
-degree_fahrenheit.set_global_relative_scale_factor(Rational(5, 9), degree_celsius)
-degree_fahrenheit.set_global_relative_scale_offset(Rational(-160, 9), degree_celsius)
+deg_R = degree_rankine = degrees_rankine = Quantity("degree_rankine", abbrev="deg_R", latex_repr=r"^\circ\text{R}")
+degree_rankine.set_global_relative_scale_factor(Rational(5, 9), kelvin)
+
+deg_F = degree_fahrenheit = degrees_fahrenheit = Quantity("degree_fahrenheit", abbrev="deg_F", latex_repr=r"^\circ\text{F}")
+degree_fahrenheit.set_global_relative_scale_factor(1, degree_rankine)
+degree_fahrenheit.set_global_relative_scale_offset(Rational(45967, 100), degree_rankine)
 
 #### CONSTANTS ####
 

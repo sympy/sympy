@@ -238,18 +238,18 @@ class Quantity(AtomicExpr):
 class Offset(AtomicExpr):
     """
     Class to represent a temperature offset quantity as
-    the product of a numerical value and a temperature scale
+    the product of a numerical value and a temperature unit
 
     Examples
     ========
 
-    >>> from sympy.physics.units import oC, oF
+    >>> from sympy.physics.units import deg_C, deg_F
     >>> from sympy.physics.units import Offset
-    >>> Offset(0, oC)
+    >>> Offset(0, deg_C)
     Offset(0, degree_celsius)
-    >>> Offset(0, oC)(oF)
+    >>> Offset(0, deg_C)(deg_F)
     Offset(32, degree_fahrenheit)
-    >>> Offset(0, oC).doit().n()
+    >>> Offset(0, deg_C).doit().n()
     273.15*kelvin
     """
 

@@ -67,13 +67,13 @@ def convert_temperature(temperature, target_units, unit_system="SI"):
         from sympy.physics.units import kelvin
         source_units_scale_offset = unit_system.get_quantity_scale_offset(source_units)
         source_units_scale_factor = unit_system.get_quantity_scale_factor(source_units)
-        kelvin_magnitude = magnitude * source_units_scale_factor + source_units_scale_offset
+        kelvin_magnitude = source_units_scale_factor * (magnitude + source_units_scale_offset)
         return Offset(kelvin_magnitude, kelvin)
 
     def from_kelvin(magnitude, target_units, unit_system):
         target_units_scale_offset = unit_system.get_quantity_scale_offset(target_units)
         target_units_scale_factor = unit_system.get_quantity_scale_factor(target_units)
-        target_magnitude = (magnitude - target_units_scale_offset)/target_units_scale_factor
+        target_magnitude = magnitude/target_units_scale_factor - target_units_scale_offset
         return Offset(target_magnitude, target_units)
 
     kelvin_magnitude = to_kelvin(magnitude, source_units, unit_system).magnitude
