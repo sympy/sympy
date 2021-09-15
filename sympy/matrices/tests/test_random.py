@@ -1,7 +1,7 @@
 import random
 
 from sympy import Matrix, diag, eye, zeros, cartes, \
-    I, cos, simplify, symbols, sqrt, expand
+    I, cos, simplify, symbols, sqrt
 from sympy.matrices.random import super_elementary_matrix
 from sympy.matrices.random import jordan, jordan_normal, \
     complex_to_real, invertible, regular_to_singular, diagonal_normal, \

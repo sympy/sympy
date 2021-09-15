@@ -2097,7 +2097,7 @@ def normal(dim,
     Examples
     ========
 
-    >>> from sympy import sqrt, I, zeros, expand
+    >>> from sympy import I, zeros, expand
     >>> from sympy.matrices.random import rand, normal
     >>> rand.seed(44)
 
