@@ -7,7 +7,7 @@ Gotchas and Pitfalls
 .. role:: input(strong)
 
 Introduction
-=============
+============
 
 SymPy runs under the `Python Programming Language
 <https://www.python.org/>`_, so there are some things that may behave
@@ -28,10 +28,10 @@ internal testing of the examples.
 .. _equals-signs:
 
 Equals Signs (=)
-=================
+================
 
 Single Equals Sign
--------------------
+------------------
 
 The equals sign (``=``) is the assignment operator, not equality.  If
 you want to do :math:`x = y`, use ``Eq(x, y)`` for equality.
@@ -79,7 +79,7 @@ equation reduces to 0.
 
 
 Variables
-==========
+=========
 
 Variables Assignment does not Create a Relation Between Expressions
 -------------------------------------------------------------------
