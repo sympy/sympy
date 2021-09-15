@@ -1049,6 +1049,14 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         ast.BitAnd: 'And',
         ast.BitXor: 'Not',
     }
+    functions = (
+        'Abs', 'im', 're', 'sign', 'arg', 'conjugate',
+        'acos', 'acot', 'acsc', 'asec', 'asin', 'atan',
+        'acosh', 'acoth', 'acsch', 'asech', 'asinh', 'atanh',
+        'cos', 'cot', 'csc', 'sec', 'sin', 'tan',
+        'cosh', 'coth', 'csch', 'sech', 'sinh', 'tanh',
+        'exp', 'ln', 'log', 'sqrt', 'cbrt',
+    )
 
     def flatten(self, args, func):
         result = []
@@ -1116,3 +1124,9 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
 
             return new_node
         return node
+
+    def visit_Call(self, node):
+        new_node = self.generic_visit(node)
+        if isinstance(node.func, ast.Name) and node.func.id in self.functions:
+            new_node.keywords.append(ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load())))
+        return new_node
