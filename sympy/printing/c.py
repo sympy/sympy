@@ -293,9 +293,17 @@ class C89CodePrinter(CodePrinter):
     def _print_Mod(self, expr):
         num, den = expr.args
         if num.is_integer and den.is_integer:
-            return "(({}) % ({}))".format(self._print(num), self._print(den))
-        else:
-            return self._print_math_func(expr, known='fmod')
+            PREC = precedence(expr)
+            snum, sden = [self.parenthesize(arg, PREC) for arg in expr.args]
+            # % is remainder (same sign as numerator), not modulo (same sign as
+            # denominator), in C. Hence, % only works as modulo if both numbers
+            # have the same sign
+            if (num.is_nonnegative and den.is_nonnegative or
+                num.is_nonpositive and den.is_nonpositive):
+                return f"{snum} % {sden}"
+            return f"(({snum} % {sden}) + {sden}) % {sden}"
+        # Not guaranteed integer
+        return self._print_math_func(expr, known='fmod')
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
