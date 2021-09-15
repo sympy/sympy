@@ -7,7 +7,7 @@ Gotchas and Pitfalls
 .. role:: input(strong)
 
 Introduction
---------------
+=============
 
 SymPy runs under the `Python Programming Language
 <https://www.python.org/>`_, so there are some things that may behave
@@ -28,10 +28,10 @@ internal testing of the examples.
 .. _equals-signs:
 
 Equals Signs (=)
-------------------
+=================
 
 Single Equals Sign
-^^^^^^^^^^^^^^^^^^
+-------------------
 
 The equals sign (``=``) is the assignment operator, not equality.  If
 you want to do :math:`x = y`, use ``Eq(x, y)`` for equality.
@@ -48,7 +48,7 @@ For example:
     x - y
 
 Double Equals Signs
-^^^^^^^^^^^^^^^^^^^^
+-------------------
 
 Double equals signs (``==``) are used to test equality.  However, this
 tests expressions exactly, not symbolically.  For example:
@@ -79,10 +79,10 @@ equation reduces to 0.
 
 
 Variables
------------
+==========
 
 Variables Assignment does not Create a Relation Between Expressions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------------------------------------
 
 When you use ``=`` to do assignment, remember that in Python, as in most
 programming languages, the variable does not change if you change the
@@ -179,7 +179,7 @@ If you define a circular relationship, you will get a
 .. _symbols:
 
 Symbols
-^^^^^^^^
+-------
 
 Symbols are variables, and like all other variables, they need to be
 assigned before you can use them.  For example:
@@ -306,12 +306,12 @@ with a different argument: ``Function('f')`` is callable, but
 .. _symbolic-expressions:
 
 Symbolic Expressions
-----------------------
+====================
 
 .. _python-vs-sympy-numbers:
 
 Python numbers vs. SymPy Numbers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------------
 
 SymPy uses its own classes for integers, rational numbers, and floating
 point numbers instead of the default Python ``int`` and ``float``
@@ -409,7 +409,7 @@ You only need to be careful with number/number.
     2/x
 
 Evaluating Expressions with Floats and Rationals
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------------------
 
 SymPy keeps track of the precision of ``Float`` objects. The default precision is
 15 digits. When an expression involving a ``Float`` is evaluated, the result
@@ -529,7 +529,7 @@ values for expressions:
 .. _Immutability-of-Expressions:
 
 Immutability of Expressions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------
 
 Expressions in SymPy are immutable, and cannot be modified by an in-place
 operation.  This means that a function will always return an object, and the
@@ -560,7 +560,7 @@ before it is used.
 
 
 Mathematical Operators
-^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
 SymPy uses the same default operators as Python.  Most of these, like
 ``*/+-``, are standard.  Aside from integer division discussed in
@@ -593,7 +593,7 @@ In :command:`isympy`, with the :command:`ipython` shell::
 
 
 Inverse Trig Functions
-^^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
 SymPy uses different names for some functions than most computer algebra
 systems.  In particular, the inverse trig functions use the python names
@@ -602,7 +602,7 @@ and ``arccos``.  Use the methods described in :ref:`Symbols <symbols>`
 above to see the names of all SymPy functions.
 
 Sqrt is not a Function
-^^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
 There is no ``sqrt`` function in the same way that there is an
 exponential function (``exp``). ``sqrt(x)`` is used to represent
@@ -624,7 +624,7 @@ following pattern would be appropriate
     {x**(3/2)}
 
 Special Symbols
-----------------
+===============
 
 The symbols ``[]``, ``{}``, ``=``, and ``()`` have special meanings in
 Python, and thus in SymPy.  See the Python docs linked to above for
@@ -633,7 +633,7 @@ additional information.
 .. _lists:
 
 Lists
-^^^^^^
+-----
 
 Square brackets ``[]`` denote a list.  A list is a container that holds
 any number of different objects.  A list can contain anything, including
@@ -665,7 +665,7 @@ Example:
     bracket notation for accessing elements of a list.
 
 Dictionaries
-^^^^^^^^^^^^^
+------------
 
 Curly brackets ``{}`` denote a dictionary, or a dict for short.  A
 dictionary is an unordered list of non-duplicate keys and values.  The
@@ -690,7 +690,7 @@ bracket notation.
     See the Python docs for more information on dictionaries.
 
 Tuples
-^^^^^^^
+------
 
 Parentheses ``()``, aside from changing operator precedence and their
 use in function calls, (like ``cos(x)``), are also used for tuples.  A
@@ -736,7 +736,7 @@ square brackets.
 .. _keyword-arguments:
 
 Keyword Arguments
-^^^^^^^^^^^^^^^^^^^
+-----------------
 
 Aside from the usage described :ref:`above <equals-signs>`, equals signs
 (``=``) are also used to give named arguments to functions.  Any
@@ -792,10 +792,10 @@ that you want, and they will all be evaluated according to the function.
     See the Python docs for more information on function parameters.
 
 Getting help from within SymPy
---------------------------------
+==============================
 
 help()
-^^^^^^^
+------
 
 Although all docs are available at `docs.sympy.org <https://docs.sympy.org/>`_ or on the
 `SymPy Wiki <https://wiki.sympy.org/>`_, you can also get info on functions from within the
@@ -816,7 +816,7 @@ These will give you the function parameters and docstring for
    :noindex:
 
 source()
-^^^^^^^^^^
+--------
 
 Another useful option is the :func:`~.source` function.  This will print
 the source code of a function, including any docstring that it may have.
