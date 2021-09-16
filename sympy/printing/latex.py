@@ -2044,6 +2044,21 @@ class LatexPrinter(Printer):
     _print_frozenset = _print_set
 
     def _print_Range(self, s):
+        def _print_symbolic_range():
+            # Symbolic Range that cannot be resolved
+            if s.args[0] == 0:
+                if s.args[2] == 1:
+                    cont = self._print(s.args[1])
+                else:
+                    cont = ", ".join(self._print(arg) for arg in s.args)
+            else:
+                if s.args[2] == 1:
+                    cont = ", ".join(self._print(arg) for arg in s.args[:2])
+                else:
+                    cont = ", ".join(self._print(arg) for arg in s.args)
+
+            return(f"\\text{{Range}}\\left({cont}\\right)")
+
         dots = object()
 
         if s.start.is_infinite and s.stop.is_infinite:
@@ -2056,37 +2071,19 @@ class LatexPrinter(Printer):
         elif s.stop.is_infinite:
             it = iter(s)
             printset = next(it), next(it), dots
-        else:
-            def _print_symbolic_range():
-                # Symbolic Range that cannot be resolved
-                if s.args[0] == 0:
-                    if s.args[2] == 1:
-                        cont = self._print(s.args[1])
-                    else:
-                        cont = ", ".join(self._print(arg) for arg in s.args)
-                else:
-                    if s.args[2] == 1:
-                        cont = ", ".join(self._print(arg) for arg in s.args[:2])
-                    else:
-                        cont = ", ".join(self._print(arg) for arg in s.args)
-
-                return(f"\\text{{Range}}\\left({cont}\\right)")
-
-            if s.is_empty is not None:
-                if (s.size < 4) == True:
-                    printset = tuple(s)
-                else:
-                    try:
-                        it = iter(s)
-                        printset = next(it), next(it), dots, s[-1]
-                    except TypeError:
-                        return _print_symbolic_range()
+        elif s.is_empty is not None:
+            if (s.size < 4) == True:
+                printset = tuple(s)
+            elif s.is_iterable:
+                it = iter(s)
+                printset = next(it), next(it), dots, s[-1]
             else:
                 return _print_symbolic_range()
+        else:
+            return _print_symbolic_range()
         return (r"\left\{" +
                 r", ".join(self._print(el) if el is not dots else r'\ldots' for el in printset) +
                 r"\right\}")
-
 
     def __print_number_polynomial(self, expr, letter, exp=None):
         if len(expr.args) == 2:

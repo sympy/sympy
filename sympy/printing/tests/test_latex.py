@@ -838,6 +838,8 @@ def test_latex_Range():
     assert latex(Range(i, i + 3)) == r'\left\{i, i + 1, i + 2\right\}'
     assert latex(Range(-oo, n, 2)) == r'\left\{\ldots, n - 4, n - 2\right\}'
     assert latex(Range(p, oo)) == r'\left\{p, p + 1, \ldots\right\}'
+    # The following will work if __iter__ is improved
+    # assert latex(Range(-3, p + 7)) == r'\left\{-3, -2,  \ldots, p + 6\right\}'
     # Must have integer assumptions
     assert latex(Range(a, a + 3)) == r'\text{Range}\left(a, a + 3\right)'
 
