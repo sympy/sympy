@@ -528,9 +528,9 @@ def test_range_is_finite_set():
     assert Range(n, n + m + n).is_finite_set is True
     assert Range(n, oo).is_finite_set is False
     assert Range(-oo, n).is_finite_set is False
-    # assert Range(n, -oo).is_finite_set is True
-    # assert Range(oo, n).is_finite_set is True
-    # Above tests fail due to a (potential) bug in sympy.sets.fancysets.Range.size (See issue #18999)
+    assert Range(n, -oo).is_finite_set is True
+    assert Range(oo, n).is_finite_set is True
+
 
 def test_Integers_eval_imageset():
     ans = ImageSet(Lambda(x, 2*x + Rational(3, 7)), S.Integers)

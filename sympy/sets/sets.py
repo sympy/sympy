@@ -93,7 +93,7 @@ class Set(Basic, EvalfMixin):
         Examples
         ========
 
-        As a shortcut it is possible to use the '+' operator:
+        As a shortcut it is possible to use the ``+`` operator:
 
         >>> from sympy import Interval, FiniteSet
         >>> Interval(0, 1).union(Interval(2, 3))
@@ -103,7 +103,7 @@ class Set(Basic, EvalfMixin):
         >>> Interval(1, 2, True, True) + FiniteSet(2, 3)
         Union({3}, Interval.Lopen(1, 2))
 
-        Similarly it is possible to use the '-' operator for set differences:
+        Similarly it is possible to use the ``-`` operator for set differences:
 
         >>> Interval(0, 2) - Interval(0, 1)
         Interval.Lopen(1, 2)
@@ -305,7 +305,7 @@ class Set(Basic, EvalfMixin):
         >>> Interval(0, 1).contains(0.5)
         True
 
-        As a shortcut it is possible to use the 'in' operator, but that
+        As a shortcut it is possible to use the ``in`` operator, but that
         will raise an error unless an affirmative true or false is not
         obtained.
 
@@ -701,7 +701,7 @@ class ProductSet(Set):
     Returns a Cartesian product given several sets as either an iterable
     or individual arguments.
 
-    Can use '*' operator on any sets for convenient shorthand.
+    Can use ``*`` operator on any sets for convenient shorthand.
 
     Examples
     ========
@@ -781,7 +781,7 @@ class ProductSet(Set):
 
     def _contains(self, element):
         """
-        'in' operator for ProductSets.
+        ``in`` operator for ProductSets.
 
         Examples
         ========
@@ -873,10 +873,10 @@ class Interval(Set):
     Represents a real interval as a Set.
 
     Usage:
-        Returns an interval with end points "start" and "end".
+        Returns an interval with end points ``start`` and ``end``.
 
-        For left_open=True (default left_open is False) the interval
-        will be open on the left. Similarly, for right_open=True the interval
+        For ``left_open=True`` (default ``left_open`` is ``False``) the interval
+        will be open on the left. Similarly, for ``right_open=True`` the interval
         will be open on the right.
 
     Examples
@@ -901,9 +901,9 @@ class Interval(Set):
     Notes
     =====
     - Only real end points are supported
-    - Interval(a, b) with a > b will return the empty set
-    - Use the evalf() method to turn an Interval into an mpmath
-      'mpi' interval instance
+    - ``Interval(a, b)`` with `a > b` will return the empty set
+    - Use the ``evalf()`` method to turn an Interval into an mpmath
+      ``mpi`` interval instance
 
     References
     ==========
@@ -955,9 +955,9 @@ class Interval(Set):
     @property
     def start(self):
         """
-        The left end point of ``self``.
+        The left end point of the interval`.
 
-        This property takes the same value as the 'inf' property.
+        This property takes the same value as the ``inf`` property.
 
         Examples
         ========
@@ -972,9 +972,9 @@ class Interval(Set):
     @property
     def end(self):
         """
-        The right end point of 'self'.
+        The right end point of the interval.
 
-        This property takes the same value as the 'sup' property.
+        This property takes the same value as the ``sup`` property.
 
         Examples
         ========
@@ -989,7 +989,7 @@ class Interval(Set):
     @property
     def left_open(self):
         """
-        True if ``self`` is left-open.
+        True if interval is left-open.
 
         Examples
         ========
@@ -1006,7 +1006,7 @@ class Interval(Set):
     @property
     def right_open(self):
         """
-        True if ``self`` is right-open.
+        True if interval is right-open.
 
         Examples
         ========
@@ -1626,7 +1626,7 @@ class Complement(Set):
 class EmptySet(Set, metaclass=Singleton):
     """
     Represents the empty set. The empty set is available as a singleton
-    as S.EmptySet.
+    as ``S.EmptySet``.
 
     Examples
     ========
@@ -1691,7 +1691,7 @@ class EmptySet(Set, metaclass=Singleton):
 class UniversalSet(Set, metaclass=Singleton):
     """
     Represents the set of all things.
-    The universal set is available as a singleton as S.UniversalSet.
+    The universal set is available as a singleton as ``S.UniversalSet``.
 
     Examples
     ========
@@ -2115,7 +2115,7 @@ class DisjointUnion(Set):
 
     def _contains(self, element):
         """
-        'in' operator for DisjointUnion
+        ``in`` operator for DisjointUnion
 
         Examples
         ========
