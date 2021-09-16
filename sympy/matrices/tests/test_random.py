@@ -22,6 +22,13 @@ phi, psi = symbols('phi psi')
 rand.seed(1)
 
 
+class _Domain(list):
+    rnd = random.Random(1)
+
+    def sample(self, k):
+        return self.rnd.sample(self, k)
+
+
 def _is_zeros(m, precision=None):
     if precision is None:
         return all(x == 0 for x in simplify(m))
@@ -522,6 +529,9 @@ def test_hermite():
         assert m.H == m
 
 
+# === other tests ===
+
+
 def test_raise():
     with raises(ValueError):
         rotation(3, scalar=4)
@@ -533,3 +543,22 @@ def test_raise():
         unitary(3, spec=(complex(1, 1),))
     with raises(ValueError):
         jordan_normal(3, (None, 1, 2))
+
+
+def test_sample():
+    seed = 11
+    rnd = random.Random(seed)
+    domain = tuple(range(10, 25))
+    for d in TEST_DIMS:
+        m = diagonal_normal(d, spec=_Domain(domain))
+        for i in range(d):
+            assert m[i, i] in domain
+
+        m = diagonal_normal(d, spec=domain, seed=rnd)
+        for i in range(d):
+            assert m[i, i] in domain
+
+        m = diagonal_normal(d, spec=domain, seed=seed)
+        for i in range(d):
+            assert m[i, i] in domain
+
