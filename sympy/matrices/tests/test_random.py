@@ -564,4 +564,3 @@ def test_sample():
         m = diagonal_normal(d, spec=domain, seed=seed)
         for i in range(d):
             assert m[i, i] in domain
-
