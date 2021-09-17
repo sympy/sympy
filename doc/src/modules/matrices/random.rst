@@ -29,6 +29,7 @@ Generators on different types of matrices are presented below.
    (with respect to the groups Haar measure).
    So the sampling procedures may be used to produce educational or academic problems
    but do not generate proper pre-defined distribution.
+   These matrices can be useful for testing algorithms
 
 There are three different types of matrix generators:
 
@@ -239,7 +240,7 @@ as in ``random.Random().seed()``
     [ 0, -sqrt(2)/2, -sqrt(2)/2]])
 
 3. Provide a custom *random number generator* which must implement the same instance method ``sample``
-as ``random.Random().sample()`` does.
+as ``random.Random()`` does.
 
     >>> from random import Random
     >>> from sympy.matrices.random import orthogonal
@@ -269,7 +270,7 @@ as ``random.Random().sample()`` does.
 4. For sampling matrix entries from ``spec``, ``domain`` or ``units`` arguments
 all these can be *random number generator*, too.
 At least they should provide some method ``sample``
-drawing a sample of **k** items via ``sample(k)``.
+drawing a list of **k** random items (*without putting back*) via ``sample(k)``.
 
     >>> class Domain(list):
     ...     rng = Random()
@@ -304,8 +305,8 @@ drawing a sample of **k** items via ``sample(k)``.
     [ 0, -sqrt(2)/2, -sqrt(2)/2]])
 
 
-Matrix Functions Reference
---------------------------
+Random Matrix Generation Functions Reference
+--------------------------------------------
 
 .. automodule:: sympy.matrices.random
    :members:

@@ -24,7 +24,32 @@ _EPS = 1e-15
 # --- random number generator functions ---
 
 rand = Random()
-""" default random number generator """
+r""" default random number generator
+
+    Explanation
+    ===========
+
+    the module default random generator which is a instance of ``random.Random()``.
+    Hence, the state can be set by invoking ``rand.seed()``.
+
+
+    Examples
+    ========
+
+    >>> from sympy.matrices.random import rand, orthogonal
+
+    >>> rand.seed(1)
+    >>> orthogonal(3)
+    Matrix([
+    [-1,          0,          0],
+    [ 0,  sqrt(2)/2, -sqrt(2)/2],
+    [ 0, -sqrt(2)/2, -sqrt(2)/2]])
+
+    See Also
+    ========
+    projection
+
+"""
 
 
 def _rand(seed=None):
@@ -418,16 +443,22 @@ def projection(dim,
         coordinates ``(i,j)`` for start (included) and end (excluded)
         to project onto
     seed : random seed (optional)
-        either seed of a random number generator, i.e.
-        ``NoneType``, ``int``, ``float``, ``str``, ``bytes`` or ``bytearray``,
-        or a random number generator itself, i.e.
-        it should be an instance of ``random.Random``,
-        or at least have ``sample(population, k)`` instance method implemented
-        with same signature using the first two argumnents.
+
+        * either seed of a random number generator, i.e.
+          ``NoneType``, ``int``, ``float``, ``str``, ``bytes`` or ``bytearray``,
+        * or a random number generator itself,
+          i.e. it should be an instance of ``random.Random``,
+        * or at least have ``sample(population, k)`` instance method implemented
+          with same signature using the first two argumnents
+          as ``random.Random``,
+          i.e. drawing (*without putting back*) a list of **k** random items
+          of **population**.
 
     See Also
     ========
-    diagonal
+    jordan
+    elementary
+    diagonal_normal
 
     """
     rng = _rand(seed)
@@ -665,7 +696,7 @@ def elementary(dim,
     and $ad - bc \neq 0$.
     So multiplication with $\mathbf{A}$ gives for
 
-    * $a=0=d$ and $b=1=-c$ a ``transposition``, i.e. swapping rows $i$ and $j$
+    * $a=0=d$ and $b=1=-c$ a :func:`transposition`, i.e. swapping rows $i$ and $j$
     * $a=1$, $d=\lambda$ and $b=0=-c$ this matrix describes scaling the
       row $j$ by $\lambda$
     * $a=1=d$, $b=\mu$, $-c=0$ adding the $\mu$ multiple
