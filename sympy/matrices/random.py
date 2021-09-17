@@ -313,7 +313,7 @@ def complex_to_real(mat=None):
     return obj
 
 
-def regular_to_singular(mat, rank=None):
+def regular_to_singular(mat, rank=None, rng=None):
     r""" build matrix with linear combination of matrix columns to meet rank
 
     Explanation
@@ -370,7 +370,7 @@ def regular_to_singular(mat, rank=None):
     if rank == dim:
         return mat
     i = _eye(dim)
-    p = permutation(dim)
+    p = permutation(dim, seed=_rand(rng))
     d = projection(dim, (0, rank))
     d = _multiply(p.inv(), d, p)
     md = _multiply(mat, d)
@@ -1427,7 +1427,7 @@ def triangular(dim,
     """
     rng = _rand(seed)
     if length == 0:
-        return regular_to_singular(_eye(dim), rank)
+        return regular_to_singular(_eye(dim), rank, rng=rng)
     domain = domain or (0,)
     units = units or (1,)
     length = length or 2 * dim
@@ -1436,7 +1436,7 @@ def triangular(dim,
     scalars = [_sample(units, rng=rng) if i == j
                else _sample(domain, rng=rng) for i, j in indicies]
     items = [elementary(dim, ix, s) for ix, s in zip(indicies, scalars)]
-    return regular_to_singular(_multiply(*items), rank)
+    return regular_to_singular(_multiply(*items), rank, rng=rng)
 
 
 def square(dim,
@@ -1497,7 +1497,7 @@ def square(dim,
     """
     rng = _rand(seed)
     if length == 0:
-        return regular_to_singular(_eye(dim), rank)
+        return regular_to_singular(_eye(dim), rank, rng=rng)
 
     length = length or 2 * dim
     lwr = triangular(dim, None, domain, units,
@@ -1634,7 +1634,7 @@ def singular(dim,
 
 
 def idempotent(dim,
-               rank,
+               rank=None,
                domain=_elementary_domain,
                units=_elementary_units,
                length=None,
@@ -1697,13 +1697,14 @@ def idempotent(dim,
     .. [1] https://en.wikipedia.org/wiki/Idempotence#Idempotent_functions
 
     """
+    rank = dim - 1 if rank is None else rank
     normal_form = projection(dim, (0, rank))
     s = invertible(dim, domain, units, length, seed=seed)
     return _multiply(_inv(s), normal_form, s)
 
 
 def nilpotent(dim,
-              rank,
+              rank=None,
               domain=_elementary_domain,
               units=_elementary_units,
               length=None,
@@ -1777,6 +1778,7 @@ def nilpotent(dim,
         return [num] + numbers_with_sum(n - 1, k - num)
 
     rng = _rand(seed)
+    rank = dim - 1 if rank is None else rank
     index = numbers_with_sum(dim - rank, dim)
     spec = tuple((0, i) for i in index)
     normal_form = jordan_normal(dim, spec=spec, seed=rng)
