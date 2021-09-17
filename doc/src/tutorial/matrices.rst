@@ -260,7 +260,7 @@ Find a :ref:`full list of random matrices <matrices-random>`.
     ⎢          ⎥
     ⎣0   0   1 ⎦
 
-    >>> M = invertible(3, scalar_set=(sqrt(2),))  # entries as sums and products of sqrt(2) and 1
+    >>> M = invertible(3, domain=(sqrt(2),))  # entries as sums and products of sqrt(2) and 1
     >>> M
     ⎡1   0    √2  ⎤
     ⎢             ⎥
@@ -275,7 +275,7 @@ Find a :ref:`full list of random matrices <matrices-random>`.
     ⎣0  0  1⎦
 
 
-    >>> M = triangular(3, scalar_set=(1, sqrt(2)))
+    >>> M = triangular(3, domain=(1, sqrt(2)))
     >>> M
     ⎡1  1 + √2  0 ⎤
     ⎢             ⎥
@@ -313,8 +313,8 @@ And symbolic matrices work, too.
 
     >>> from sympy import symbols, cos, sin
     >>> phi = symbols('phi')
-    >>> scalar_set = cos(phi), sin(phi)
-    >>> M = orthogonal(3, scalar_set=scalar_set, length=1)
+    >>> domain = cos(phi), sin(phi)
+    >>> M = orthogonal(3, domain=domain, length=1)
     >>> M
     ⎡                      _____________   ⎤
     ⎢                     ╱        2       ⎥
@@ -336,7 +336,7 @@ Using matrices to construct a matrix with integer entries
 which has an inverse with integer entries, too.
 
     >>> from sympy.matrices.random import invertible
-    >>> A = invertible(4, scalar_set=(1,-1))
+    >>> A = invertible(4, domain=(1,-1))
     >>> A
     ⎡1  0  0  1⎤
     ⎢          ⎥

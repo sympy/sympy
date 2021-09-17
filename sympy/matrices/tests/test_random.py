@@ -8,7 +8,7 @@ from sympy.matrices.random import jordan, jordan_normal, \
     diagonalizable, transposition, triangular, trigonalizable, \
     isometry_normal, permutation, projection, elementary, rotation, \
     reflection, normal, nilpotent, idempotent, singular, orthogonal, unitary, \
-    hermite, symmetric, rand
+    hermite, symmetric, rand, square
 
 from sympy.matrices import random as _random
 from sympy.testing.pytest import raises
@@ -20,6 +20,13 @@ TEST_EPSILON = 1e-7
 phi, psi = symbols('phi psi')
 
 rand.seed(1)
+
+
+class Domain(list):
+    rnd = random.Random(1)
+
+    def sample(self, k):
+        return self.rnd.sample(self, k)
 
 
 def _is_zeros(m, precision=None):
@@ -373,10 +380,10 @@ def test_invertible():
         m = invertible(d)
         assert _is_eye(m.inv() * m, TEST_PRECISION)
 
-        m = invertible(d, scalar_set=(0.5, 2.), unit_set=(0.1, 1.))
+        m = invertible(d, domain=(0.5, 2.), units=(0.1, 1.))
         assert _is_eye(m.inv() * m, TEST_PRECISION)
 
-        m = invertible(d, scalar_set=(1, phi))
+        m = invertible(d, domain=(1, phi))
         assert _is_eye(m.inv() * m)
 
 
@@ -453,7 +460,7 @@ def test_orthogonal():
         assert _is_eye(m.T * m, TEST_PRECISION)
         assert abs(m.evalf().det()) - 1 < TEST_PRECISION
 
-        m = orthogonal(d, spec=_random._rotation_scalar_set).evalf()
+        m = orthogonal(d, spec=_random._rotation_domain).evalf()
         assert _is_eye(m.T * m, TEST_PRECISION)
         assert abs(m.evalf().det()) - 1 < TEST_PRECISION
 
@@ -493,12 +500,12 @@ def test_normal():
             repr(simplify(m.T * m - m * m.T))
 
         z = 1 + 3 * I
-        c = normal(d, spec=(1, 2 * I, 3), scalar_set=(z/abs(z),), length=d)
+        c = normal(d, spec=(1, 2 * I, 3), domain=(z/abs(z),), length=d)
         assert _is_zeros(c.H * c - c * c.H), \
             repr(simplify(m.H * m - m * m.H))
 
         z = complex(3, 1)
-        c = normal(d, spec, scalar_set=(z/abs(z),), length=d)
+        c = normal(d, spec, domain=(z/abs(z),), length=d)
         assert _is_zeros(c.H * c - c * c.H, TEST_EPSILON), \
             repr(simplify(m.H * m - m * m.H))
 
@@ -511,15 +518,18 @@ def test_symmetric():
         m = symmetric(d,)
         assert m.T == m
 
-        m = symmetric(d, scalar_set=(4,))
+        m = symmetric(d, domain=(4,))
         assert m.T == m
 
 
 def test_hermite():
     z = complex(1, 2)
     for d in TEST_DIMS:
-        m = hermite(d, scalar_set=(z,))
+        m = hermite(d, domain=(z,))
         assert m.H == m
+
+
+# === other tests ===
 
 
 def test_raise():
@@ -533,3 +543,137 @@ def test_raise():
         unitary(3, spec=(complex(1, 1),))
     with raises(ValueError):
         jordan_normal(3, (None, 1, 2))
+
+
+def test_sample():
+    seed = 11
+    rnd = random.Random(seed)
+    domain = tuple(range(10, 25))
+    for d in TEST_DIMS:
+        m = diagonal_normal(d, spec=Domain(domain))
+        for i in range(d):
+            assert m[i, i] in domain
+
+        m = diagonal_normal(d, spec=domain, seed=rnd)
+        for i in range(d):
+            assert m[i, i] in domain
+
+        m = diagonal_normal(d, spec=domain, seed=seed)
+        for i in range(d):
+            assert m[i, i] in domain
+
+
+def test_seed():
+    _all_ = projection, jordan, transposition, \
+          permutation, elementary, rotation, reflection, \
+          diagonal_normal, jordan_normal, isometry_normal, \
+          triangular, invertible, singular, \
+          idempotent, nilpotent, diagonalizable, trigonalizable, \
+          orthogonal, unitary, normal, \
+          symmetric, hermite, square,
+
+    _spec_ = diagonal_normal, jordan_normal, \
+          diagonalizable, trigonalizable, normal
+
+    _isometry_spec_ = isometry_normal, orthogonal, unitary
+
+    _elementary_domain_ = triangular, invertible, singular, \
+          idempotent, nilpotent, diagonalizable, trigonalizable, \
+          symmetric, hermite, square,
+
+    _isometry_domain_ = orthogonal, unitary, normal
+
+    seed = 101
+    rnd = random.Random(seed)
+    seeds = rnd.sample(range(100), 3)
+    for d in TEST_DIMS:
+        for matrix in _all_:
+            # 1. standard rand
+            first, second = list(), list()
+            for s in seeds:
+                rand.seed(s)
+                first.append(matrix(d))
+            for s in seeds:
+                rand.seed(s)
+                second.append(matrix(d))
+            for a, b in zip(first, second):
+                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+            # for a, b in zip(first, reversed(second)):
+            #     assert a != b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+
+        for matrix in _all_:
+            # 2. direct seed
+            first, second = list(), list()
+            for s in seeds:
+                rand.seed(s)
+                first.append(matrix(d, seed=s))
+            for s in seeds:
+                second.append(matrix(d, seed=s))
+            for a, b in zip(first, second):
+                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+
+        for matrix in _all_:
+            # 3. direct seed as random
+            first, second = list(), list()
+            rnd = random.Random()
+            for s in seeds:
+                rnd.seed(s)
+                first.append(matrix(d, seed=rnd))
+            for s in seeds:
+                rnd.seed(s)
+                second.append(matrix(d, seed=rnd))
+            for a, b in zip(first, second):
+                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+
+        for matrix in _spec_:
+            # 4. spec as random
+            first, second = list(), list()
+            spec = Domain(range(100))
+            for s in seeds:
+                spec.rnd.seed(s)
+                first.append(matrix(d, spec=spec, seed=spec.rnd))
+            for s in seeds:
+                spec.rnd.seed(s)
+                second.append(matrix(d, spec=spec, seed=spec.rnd))
+            for a, b in zip(first, second):
+                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+
+        for matrix in _isometry_spec_:
+            # 4. domain/units as random
+            first, second = list(), list()
+            spec = Domain((sqrt(2)/2, 0))
+            for s in seeds:
+                spec.rnd.seed(s)
+                first.append(matrix(d, spec=spec, seed=spec.rnd))
+            for s in seeds:
+                spec.rnd.seed(s)
+                second.append(matrix(d, spec=spec, seed=spec.rnd))
+            for a, b in zip(first, second):
+                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+
+        for matrix in _elementary_domain_:
+            # 4. domain/units as random
+            first, second = list(), list()
+            domain = Domain(range(10))
+            units = Domain(range(-5, 5))
+            for s in seeds:
+                domain.rnd.seed(s)
+                first.append(matrix(d, domain=domain, units=units, seed=domain.rnd))
+            for s in seeds:
+                domain.rnd.seed(s)
+                second.append(matrix(d, domain=domain, units=units, seed=domain.rnd))
+            for a, b in zip(first, second):
+                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+
+        for matrix in _isometry_domain_:
+            # 4. domain/units as random
+            first, second = list(), list()
+            domain = Domain((sqrt(2)/2, 0))
+            for s in seeds:
+                domain.rnd.seed(s)
+                first.append(matrix(d, domain=domain, seed=domain.rnd))
+            for s in seeds:
+                domain.rnd.seed(s)
+                second.append(matrix(d, domain=domain, seed=domain.rnd))
+            for a, b in zip(first, second):
+                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)

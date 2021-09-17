@@ -29,6 +29,7 @@ Generators on different types of matrices are presented below.
    (with respect to the groups Haar measure).
    So the sampling procedures may be used to produce educational or academic problems
    but do not generate proper pre-defined distribution.
+   These matrices can be useful for testing algorithms
 
 There are three different types of matrix generators:
 
@@ -67,7 +68,7 @@ There are three different types of matrix generators:
 
  2. *compound matrices* are build as a multiplication of several base matrices.
     Since by this the entries of the base matrices are chosen randomly
-    but can be controlled by **scalar_set** arguments.
+    but can be controlled by **domain** arguments.
 
     - :py:func:`permutation <sympy.matrices.random.permutation>` as product of
       :py:func:`transposition <sympy.matrices.random.transposition>` matrices
@@ -135,11 +136,11 @@ There are three different types of matrix generators:
 
 
 In addition to the type of matrix, also the type of entries (as a commutative ring with one)
-to be able to define values (**scalar_set**) can be specified,
+to be able to define values (**domain**) can be specified,
 from which the value entries (**scalar**) of the basic matrices are randomly generated.
 
 Because the complexity and amount of entries in the generated compound matrices
-in addition to the **scalar_set**, also by the number of base matrices multiplied for generation
+in addition to the **domain**, also by the number of base matrices multiplied for generation
 This can be set using the argument **length**.
 
 Normal forms as well as conjugate types have the arg **spec** to provide a spectrum of eigenvalues.
@@ -185,26 +186,15 @@ gives an *invertible* matrix $\mathbf{M}$
     [0, 0, 1]])
 
 
-Random Generator
-----------------
+Seeding Random Number Generators
+--------------------------------
 
-The module uses its own random generator ``rand`` which is a instance of ``random.Random()``.
+There are Three different ways to generate randomly matrix entries.
+
+1. By default the module uses its own random generator ``rand`` which is a instance of ``random.Random()``.
 Hence, the state can be set by invoking ``rand.seed()``.
 
-
     >>> from sympy.matrices.random import rand, orthogonal
-    >>> rand.seed(1)
-    >>> orthogonal(3)
-    Matrix([
-    [-1,          0,          0],
-    [ 0,  sqrt(2)/2, -sqrt(2)/2],
-    [ 0, -sqrt(2)/2, -sqrt(2)/2]])
-
-    >>> orthogonal(3)
-    Matrix([
-    [sqrt(2)/2,          0, -sqrt(2)/2],
-    [      1/2, -sqrt(2)/2,        1/2],
-    [     -1/2, -sqrt(2)/2,       -1/2]])
 
     >>> rand.seed(1)
     >>> orthogonal(3)
@@ -213,9 +203,110 @@ Hence, the state can be set by invoking ``rand.seed()``.
     [ 0,  sqrt(2)/2, -sqrt(2)/2],
     [ 0, -sqrt(2)/2, -sqrt(2)/2]])
 
+    >>> rand.seed(2)
+    >>> orthogonal(3)
+    Matrix([
+    [0, -1,  0],
+    [0,  0, -1],
+    [1,  0,  0]])
 
-Matrix Functions Reference
---------------------------
+    >>> rand.seed(1)
+    >>> orthogonal(3)
+    Matrix([
+    [-1,          0,          0],
+    [ 0,  sqrt(2)/2, -sqrt(2)/2],
+    [ 0, -sqrt(2)/2, -sqrt(2)/2]])
+
+2. Provide a custom seed
+as in ``random.Random().seed()``
+
+    >>> from sympy.matrices.random import orthogonal
+    >>> orthogonal(3, seed=1)
+    Matrix([
+    [-1,          0,          0],
+    [ 0,  sqrt(2)/2, -sqrt(2)/2],
+    [ 0, -sqrt(2)/2, -sqrt(2)/2]])
+
+    >>> orthogonal(3, seed=2)
+    Matrix([
+    [0, -1,  0],
+    [0,  0, -1],
+    [1,  0,  0]])
+
+    >>> orthogonal(3, seed=1)
+    Matrix([
+    [-1,          0,          0],
+    [ 0,  sqrt(2)/2, -sqrt(2)/2],
+    [ 0, -sqrt(2)/2, -sqrt(2)/2]])
+
+3. Provide a custom *random number generator* which must implement the same instance method ``sample``
+as ``random.Random()`` does.
+
+    >>> from random import Random
+    >>> from sympy.matrices.random import orthogonal
+    >>> rng = Random()
+
+    >>> rng.seed(1)
+    >>> orthogonal(3, seed=rng)
+    Matrix([
+    [-1,          0,          0],
+    [ 0,  sqrt(2)/2, -sqrt(2)/2],
+    [ 0, -sqrt(2)/2, -sqrt(2)/2]])
+
+    >>> rng.seed(2)
+    >>> orthogonal(3, seed=rng)
+    Matrix([
+    [0, -1,  0],
+    [0,  0, -1],
+    [1,  0,  0]])
+
+    >>> rng.seed(1)
+    >>> orthogonal(3, seed=rng)
+    Matrix([
+    [-1,          0,          0],
+    [ 0,  sqrt(2)/2, -sqrt(2)/2],
+    [ 0, -sqrt(2)/2, -sqrt(2)/2]])
+
+4. For sampling matrix entries from ``spec``, ``domain`` or ``units`` arguments
+all these can be *random number generator*, too.
+At least they should provide some method ``sample``
+drawing a list of **k** random items (*without putting back*) via ``sample(k)``.
+
+    >>> class Domain(list):
+    ...     rng = Random()
+    ...     def _sample(self, k):
+    ...         return self.rng.sample(self, k)
+
+    >>> from sympy import sqrt
+    >>> from sympy.matrices.random import rand, orthogonal
+    >>> domain = Domain([(sqrt(2) / 2, sqrt(2) / 2), (0, -1)])
+
+    >>> # to obtain the same result, seed must use the same random number generator
+    >>> # since seed is used for drawing indices, too.
+    >>> domain.rng.seed(1)
+    >>> orthogonal(3, domain=domain, seed=domain.rng)
+    Matrix([
+    [-1,          0,          0],
+    [ 0,  sqrt(2)/2, -sqrt(2)/2],
+    [ 0, -sqrt(2)/2, -sqrt(2)/2]])
+
+    >>> domain.rng.seed(2)
+    >>> orthogonal(3, domain=domain, seed=domain.rng)
+    Matrix([
+    [0, -1,  0],
+    [0,  0, -1],
+    [1,  0,  0]])
+
+    >>> domain.rng.seed(1)
+    >>> orthogonal(3, domain=domain, seed=domain.rng)
+    Matrix([
+    [-1,          0,          0],
+    [ 0,  sqrt(2)/2, -sqrt(2)/2],
+    [ 0, -sqrt(2)/2, -sqrt(2)/2]])
+
+
+Random Matrix Generation Functions Reference
+--------------------------------------------
 
 .. automodule:: sympy.matrices.random
    :members:
