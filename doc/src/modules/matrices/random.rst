@@ -274,7 +274,7 @@ drawing a list of **k** random items (*without putting back*) via ``sample(k)``.
 
     >>> class Domain(list):
     ...     rng = Random()
-    ...     def _sample(self, k):
+    ...     def sample(self, k):
     ...         return self.rng.sample(self, k)
 
     >>> from sympy import sqrt
