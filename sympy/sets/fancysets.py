@@ -587,8 +587,6 @@ class Range(Set):
         {n, n + 3, ..., n + 18}
     """
 
-    is_iterable = True
-
     def __new__(cls, *args):
         from sympy.functions.elementary.integers import ceiling
         if len(args) == 1:
@@ -744,6 +742,19 @@ class Range(Set):
                 for j in range(n):
                     yield i
                     i += self.step
+
+    @property
+    def is_iterable(self):
+        # Check that size can be determined, used by __iter__
+        dif = self.stop - self.start
+        n = dif/self.step
+        if not (n.has(S.Infinity) or n.has(S.NegativeInfinity) or n.is_Integer):
+            return False
+        if self.start in [S.NegativeInfinity, S.Infinity]:
+            return False
+        if not (n.is_extended_nonnegative and all(i.is_integer for i in self.args)):
+            return False
+        return True
 
     def __len__(self):
         rv = self.size
