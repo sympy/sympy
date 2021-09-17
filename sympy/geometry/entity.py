@@ -23,6 +23,7 @@ R3 are currently the only ambient spaces implemented.
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
+from sympy.core.evalf import EvalfMixin
 from sympy.core.sympify import sympify
 from sympy.functions import cos, sin
 from sympy.matrices import eye
@@ -58,7 +59,7 @@ ordering_of_classes = [
 ]
 
 
-class GeometryEntity(Basic):
+class GeometryEntity(Basic, EvalfMixin):
     """The base class for all geometrical entities.
 
     This class doesn't represent any particular geometric entity, it only

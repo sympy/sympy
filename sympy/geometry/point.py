@@ -30,14 +30,14 @@ from sympy.matrices import Matrix
 from sympy.core.numbers import Float
 from sympy.core.parameters import global_parameters
 from sympy.core.add import Add
-from sympy.core.evalf import EvalfMixin, prec_to_dps
+from sympy.core.evalf import prec_to_dps
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent, func_name, Undecidable
 
 from .entity import GeometryEntity
 
 
-class Point(GeometryEntity, EvalfMixin):
+class Point(GeometryEntity):
     """A point in a n-dimensional Euclidean space.
 
     Parameters
@@ -447,7 +447,7 @@ class Point(GeometryEntity, EvalfMixin):
             return False
         return all(a.equals(b) for a, b in zip(self, other))
 
-    def _eval_evalf(self, prec, **options):
+    def _eval_evalf(self, prec=15, **options):
         """Evaluate the coordinates of the point.
 
         This method will, where possible, create and return a new Point
@@ -853,7 +853,6 @@ class Point(GeometryEntity, EvalfMixin):
         and a distance of 1 from the origin"""
         return self / abs(self)
 
-    n = _eval_evalf
 
 class Point2D(Point):
     """A point in a 2-dimensional Euclidean space.
