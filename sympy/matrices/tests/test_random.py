@@ -25,6 +25,9 @@ rand.seed(1)
 class _Domain(list):
     rnd = random.Random(1)
 
+    def seed(self, a=None, version=2):
+        self.rnd.seed(a, version)
+
     def sample(self, k):
         return self.rnd.sample(self, k)
 
@@ -380,10 +383,10 @@ def test_invertible():
         m = invertible(d)
         assert _is_eye(m.inv() * m, TEST_PRECISION)
 
-        m = invertible(d, scalar_set=(0.5, 2.), unit_set=(0.1, 1.))
+        m = invertible(d, domain=(0.5, 2.), units=(0.1, 1.))
         assert _is_eye(m.inv() * m, TEST_PRECISION)
 
-        m = invertible(d, scalar_set=(1, phi))
+        m = invertible(d, domain=(1, phi))
         assert _is_eye(m.inv() * m)
 
 
@@ -460,7 +463,7 @@ def test_orthogonal():
         assert _is_eye(m.T * m, TEST_PRECISION)
         assert abs(m.evalf().det()) - 1 < TEST_PRECISION
 
-        m = orthogonal(d, spec=_random._rotation_scalar_set).evalf()
+        m = orthogonal(d, spec=_random._rotation_domain).evalf()
         assert _is_eye(m.T * m, TEST_PRECISION)
         assert abs(m.evalf().det()) - 1 < TEST_PRECISION
 
@@ -500,12 +503,12 @@ def test_normal():
             repr(simplify(m.T * m - m * m.T))
 
         z = 1 + 3 * I
-        c = normal(d, spec=(1, 2 * I, 3), scalar_set=(z/abs(z),), length=d)
+        c = normal(d, spec=(1, 2 * I, 3), domain=(z/abs(z),), length=d)
         assert _is_zeros(c.H * c - c * c.H), \
             repr(simplify(m.H * m - m * m.H))
 
         z = complex(3, 1)
-        c = normal(d, spec, scalar_set=(z/abs(z),), length=d)
+        c = normal(d, spec, domain=(z/abs(z),), length=d)
         assert _is_zeros(c.H * c - c * c.H, TEST_EPSILON), \
             repr(simplify(m.H * m - m * m.H))
 
@@ -518,14 +521,14 @@ def test_symmetric():
         m = symmetric(d,)
         assert m.T == m
 
-        m = symmetric(d, scalar_set=(4,))
+        m = symmetric(d, domain=(4,))
         assert m.T == m
 
 
 def test_hermite():
     z = complex(1, 2)
     for d in TEST_DIMS:
-        m = hermite(d, scalar_set=(z,))
+        m = hermite(d, domain=(z,))
         assert m.H == m
 
 

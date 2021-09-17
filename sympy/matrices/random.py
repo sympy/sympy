@@ -16,12 +16,15 @@ __all__ = 'projection', 'jordan', 'transposition', \
           'symmetric', 'hermite', 'square', \
           'regular_to_singular', 'complex_to_real', 'rand'
 
-""" random generator """
 
 _ALT = False
 _EPS = 1e-15
 
+
+# --- random number generator functions ---
+
 rand = Random()
+""" default random number generator """
 
 
 def _rand(seed=None):
@@ -40,6 +43,18 @@ def _sample(domain, k=None, rng=None):
         smpl = rand.sample(domain, _k)
     return smpl if k else smpl[0]
 
+
+class SampleDomain(list):
+    rnd = Random()
+
+    def seed(self, a=None, version=2):
+        self.rnd.seed(a, version)
+
+    def sample(self, k):
+        return self.rnd.sample(self, k)
+
+
+# --- matrix and compelx number framework wrapper ---
 
 def _get_value(o, i, j):
     return o[i, j]
@@ -81,9 +96,10 @@ def _is_abs_one(x):
     return isinstance(abs(x), (int, float)) and abs(x) == 1
 
 
-_elementary_scalar_set = -1, 1
-_rotation_scalar_set = (_sqrt(2) / 2, _sqrt(2) / 2), (0, -1),
-_unitary_scalar_set = tuple(c * 1 + s * _i for c, s in _rotation_scalar_set)
+_elementary_domain = -1, 1
+_elementary_units = _elementary_domain
+_rotation_domain = (_sqrt(2) / 2, _sqrt(2) / 2), (0, -1),
+_unitary_domain = tuple(c * 1 + s * _i for c, s in _rotation_domain)
 
 
 # === fundamental constructor ===
@@ -91,7 +107,7 @@ _unitary_scalar_set = tuple(c * 1 + s * _i for c, s in _rotation_scalar_set)
 def super_elementary_matrix(dim,
                             index=None,
                             value=None,
-                            *scalar_set):
+                            *domain):
     r"""super elementary matrix n x n, i.e. identiy with a 2 x 2 block
 
     Explanation
@@ -173,7 +189,7 @@ def super_elementary_matrix(dim,
         coordinates (i,j) of super elementary square
     value : symbol (optional)
         value as elementary entry
-    *scalar_set : symbols (optional)
+    *domain : symbols (optional)
         up to three additional values as additional super elementry entries
 
     See Also
@@ -199,10 +215,10 @@ def super_elementary_matrix(dim,
     if row == col:
         # identity or _multiply by scalar
         _set_value(obj, row, col, value or 1)
-        if scalar_set:
+        if domain:
             raise ValueError(
                 "if row==col no further args than value may be supplied.")
-    elif not scalar_set:
+    elif not domain:
         # elementary
         if value is None:
             # transposition
@@ -213,16 +229,16 @@ def super_elementary_matrix(dim,
         else:
             # add scalar multiple to another
             _set_value(obj, row, col, value)
-    elif len(scalar_set) == 3:
+    elif len(domain) == 3:
         _set_value(obj, row, row, value)
-        y, v, u = scalar_set
+        y, v, u = domain
         _set_value(obj, row, col, y)
         _set_value(obj, col, row, -v)
         _set_value(obj, col, col, u)
     else:
-        msg = "either no, one or three additional scalar_set arguments " \
+        msg = "either no, one or three additional domain arguments " \
               "may be supplied, but not %i"
-        raise ValueError(msg % len(scalar_set))
+        raise ValueError(msg % len(domain))
     return obj
 
 
@@ -491,7 +507,7 @@ def jordan(dim,
     """
     rng = _rand(seed)
     index = index or _sample(range(dim), 2, rng=rng)
-    scalar = _sample(_elementary_scalar_set, rng=rng) \
+    scalar = _sample(_elementary_domain, rng=rng) \
         if scalar is None else scalar
     obj = _eye(dim)
     start, end = sorted(index)
@@ -715,7 +731,7 @@ def elementary(dim,
     """
     rng = _rand(seed)
     index = index or _sample(range(dim), 2, rng=rng)
-    # scalar = scalar or _sample(_elementary_scalar_set + (None,), 1)
+    # scalar = scalar or _sample(_elementary_domain + (None,), 1)
     return super_elementary_matrix(dim, index, scalar)
 
 
@@ -822,7 +838,7 @@ def rotation(dim,
     """
     rng = _rand(seed)
     index = index or _sample(range(dim), 2, rng=rng)
-    scalar = scalar or _sample(_rotation_scalar_set, rng=rng)
+    scalar = scalar or _sample(_rotation_domain, rng=rng)
     c, s = _cs(scalar, rng=rng)
     return super_elementary_matrix(dim, index, c, s, s, c)
 
@@ -975,7 +991,7 @@ def diagonal_normal(dim,
 
     """
     rng = _rand(seed)
-    spec = spec or _elementary_scalar_set
+    spec = spec or _elementary_domain
 
     # choose spec randomly if dim and len(spec) does not meet
     if not dim == len(spec):
@@ -1110,7 +1126,7 @@ def jordan_normal(dim,
 
     """
     rng = _rand(seed)
-    spec = spec or _elementary_scalar_set
+    spec = spec or _elementary_domain
 
     # make spec list of (scalar, size) tuples
     if spec and spec[0] is None:
@@ -1293,7 +1309,7 @@ def isometry_normal(dim,
 
     """
     rng = _rand(seed)
-    spec = spec or _rotation_scalar_set
+    spec = spec or _rotation_domain
 
     # make spec list of (scalar,) or (scalar, +/-sqrt(1-scalar**2)) tuples
     block_list = list()
@@ -1357,8 +1373,8 @@ def isometry_normal(dim,
 
 def triangular(dim,
                rank=None,
-               scalar_set=_elementary_scalar_set,
-               unit_set=_elementary_scalar_set,
+               domain=_elementary_domain,
+               units=_elementary_units,
                length=None,
                seed=None):
     r"""n x n upper triangular matrix with random entries.
@@ -1378,7 +1394,7 @@ def triangular(dim,
     >>> from sympy.matrices.random import rand, triangular
     >>> rand.seed(1)
 
-    >>> triangular(3, scalar_set=(2, -2, 0))
+    >>> triangular(3, domain=(2, -2, 0))
     Matrix([
     [-1, -2,  2],
     [ 0,  1, -2],
@@ -1390,10 +1406,10 @@ def triangular(dim,
         dimension of matrix
     rank : integer (optional with default dim)
         rank of matrix
-    scalar_set : tuple or list of symbols (optional)
+    domain : tuple or list of symbols (optional)
         default values for random choosen scalars of
         elementary matrices to build the invertible matrix
-    unit_set : tuple or list of symbols (optional)
+    units : tuple or list of symbols (optional)
         default values for random choosen scalar of
         elementary matrices to build the invertible matrix
         and non-zero diagonal entries
@@ -1412,22 +1428,21 @@ def triangular(dim,
     rng = _rand(seed)
     if length == 0:
         return regular_to_singular(_eye(dim), rank)
-    scalar_set = scalar_set or (0,)
-    unit_set = unit_set or (1,)
+    domain = domain or (0,)
+    units = units or (1,)
     length = length or 2 * dim
     row_indicies = [_sample(range(dim), rng=rng) for _ in range(length)]
     indicies = [(i, _sample(range(i, dim), rng=rng)) for i in row_indicies]
-    scalars = [_sample(unit_set, 1) if i == j
-               else _sample(scalar_set, 1) for i, j in indicies]
-    items = [elementary(dim, ix, s, seed=seed)
-             for ix, s in zip(indicies, scalars)]
+    scalars = [_sample(units, rng=rng) if i == j
+               else _sample(domain, rng=rng) for i, j in indicies]
+    items = [elementary(dim, ix, s) for ix, s in zip(indicies, scalars)]
     return regular_to_singular(_multiply(*items), rank)
 
 
 def square(dim,
            rank=None,
-           scalar_set=_elementary_scalar_set,
-           unit_set=_elementary_scalar_set,
+           domain=_elementary_domain,
+           units=_elementary_units,
            length=None,
            seed=None):
     r"""a square matrix n x n
@@ -1449,10 +1464,10 @@ def square(dim,
         dimension of matrix
     rank : integer (optional with default dim)
         rank of matrix
-    scalar_set : tuple or list of symbols (optional)
+    domain : tuple or list of symbols (optional)
         default values for random choosen scalar of
         elementary matrices to build the matrix
-    unit_set : tuple or list of symbols (optional)
+    units : tuple or list of symbols (optional)
         default values for random choosen scalar of
         elementary matrices to build the matrix
         which are assumed to have a multiplicative inverse
@@ -1480,20 +1495,21 @@ def square(dim,
     singular
 
     """
+    rng = _rand(seed)
     if length == 0:
         return regular_to_singular(_eye(dim), rank)
 
     length = length or 2 * dim
-    lwr = triangular(dim, None, scalar_set, unit_set,
-                     int(length / 2), seed=seed)
-    upr = triangular(dim, rank, scalar_set, unit_set,
-                     length - int(length / 2), seed=seed)
+    lwr = triangular(dim, None, domain, units,
+                     int(length / 2), seed=rng)
+    upr = triangular(dim, rank, domain, units,
+                     length - int(length / 2), seed=rng)
     return _multiply(_t(lwr), upr)
 
 
 def invertible(dim,
-               scalar_set=_elementary_scalar_set,
-               unit_set=_elementary_scalar_set,
+               domain=_elementary_domain,
+               units=_elementary_units,
                length=None,
                seed=None):
     r"""an invertible matrix n x n
@@ -1508,10 +1524,10 @@ def invertible(dim,
     ==========
     dim : integer
         dimension of matrix
-    scalar_set : tuple or list of symbols (optional)
+    domain : tuple or list of symbols (optional)
         default values for random choosen scalar of
         elementary matrices to build the matrix
-    unit_set : tuple or list of symbols (optional)
+    units : tuple or list of symbols (optional)
         default values for random choosen scalar of
         elementary matrices to build the matrix
         which are assumed to have a multiplicative inverse
@@ -1534,7 +1550,7 @@ def invertible(dim,
     [ 0,  0,  1]])
 
     >>> phi = symbols('phi')
-    >>> m = invertible(3, scalar_set=(1, -1, phi, -phi))
+    >>> m = invertible(3, domain=(1, -1, phi, -phi))
     >>> m
     Matrix([
     [1, 0,     -phi],
@@ -1549,13 +1565,13 @@ def invertible(dim,
     [ 0, 0,   1]])
 
     """
-    return square(dim, None, scalar_set, unit_set, length, seed=seed)
+    return square(dim, None, domain, units, length, seed=seed)
 
 
 def singular(dim,
              rank=None,
-             scalar_set=_elementary_scalar_set,
-             unit_set=_elementary_scalar_set,
+             domain=_elementary_domain,
+             units=_elementary_units,
              length=None,
              seed=None):
     r"""a singular square matrix n x n of a given rank.
@@ -1592,10 +1608,10 @@ def singular(dim,
         dimension of matrix
     rank : integer (optional with default dim-1)
         rank of matrix
-    scalar_set : tuple or list of symbols (optional)
+    domain : tuple or list of symbols (optional)
         default values for random choosen scalars of
         elementary matrices to build the matrix
-    unit_set : tuple or list of symbols (optional)
+    units : tuple or list of symbols (optional)
         default values for random choosen scalar of
         elementary matrices to build the matrix
         which are assumed to have a multiplicative inverse
@@ -1611,7 +1627,7 @@ def singular(dim,
 
     """
     rank = dim - 1 if rank is None else rank
-    return square(dim, rank, scalar_set, unit_set, length, seed=seed)
+    return square(dim, rank, domain, units, length, seed=seed)
 
 
 # === conjugate matrices, i.e. defined by similarity to a normal from ==
@@ -1619,8 +1635,8 @@ def singular(dim,
 
 def idempotent(dim,
                rank,
-               scalar_set=_elementary_scalar_set,
-               unit_set=_elementary_scalar_set,
+               domain=_elementary_domain,
+               units=_elementary_units,
                length=None,
                seed=None):
     r"""an idempotent square matrix of a given rank s.th. $A*A=A$
@@ -1660,9 +1676,9 @@ def idempotent(dim,
         dimension of matrix
     rank : integer (optional with default ``dim``)
         see :func:`projection`
-    scalar_set : tuple or list of symbols (optional)
+    domain : tuple or list of symbols (optional)
         see :func:`invertible`
-    unit_set : tuple or list of symbols (optional)
+    units : tuple or list of symbols (optional)
         see :func:`invertible`
     length : integer (optional with default 2 * **dim**)
         see :func:`invertible`
@@ -1682,14 +1698,14 @@ def idempotent(dim,
 
     """
     normal_form = projection(dim, (0, rank))
-    s = invertible(dim, scalar_set, unit_set, length, seed=seed)
+    s = invertible(dim, domain, units, length, seed=seed)
     return _multiply(_inv(s), normal_form, s)
 
 
 def nilpotent(dim,
               rank,
-              scalar_set=_elementary_scalar_set,
-              unit_set=_elementary_scalar_set,
+              domain=_elementary_domain,
+              units=_elementary_units,
               length=None,
               seed=None):
     r"""a nilpotent matrix of dinemsion n x n.
@@ -1731,9 +1747,9 @@ def nilpotent(dim,
         dimension of matrix
     rank : integer (optional with default dim)
         rank of the matrix
-    scalar_set : tuple or list of symbols (optional)
+    domain : tuple or list of symbols (optional)
         see :func:`invertible`
-    unit_set : tuple or list of symbols (optional)
+    units : tuple or list of symbols (optional)
         see :func:`invertible`
     length : integer (optional with default 2 * **dim**)
         see :func:`invertible`
@@ -1760,17 +1776,18 @@ def nilpotent(dim,
         num = _sample(range(k - n)) + 1
         return [num] + numbers_with_sum(n - 1, k - num)
 
+    rng = _rand(seed)
     index = numbers_with_sum(dim - rank, dim)
     spec = tuple((0, i) for i in index)
-    normal_form = jordan_normal(dim, spec=spec, seed=seed)
-    s = invertible(dim, scalar_set, unit_set, length, seed=seed)
+    normal_form = jordan_normal(dim, spec=spec, seed=rng)
+    s = invertible(dim, domain, units, length, seed=rng)
     return _multiply(_inv(s), normal_form, s)
 
 
 def diagonalizable(dim,
-                   spec=_elementary_scalar_set,
-                   scalar_set=_elementary_scalar_set,
-                   unit_set=_elementary_scalar_set,
+                   spec=_elementary_domain,
+                   domain=_elementary_domain,
+                   units=_elementary_units,
                    length=None,
                    seed=None):
     r"""a square matrix n x n of a given rank
@@ -1794,7 +1811,7 @@ def diagonalizable(dim,
     but non-complex entries,
     e.g. $\lambda_{1/2}=a \pm b \ i$,
     you better may use a product of an invertible matrix $\mathbf{S}$
-    with non-complex entries (**scalar_set**)
+    with non-complex entries (**domain**)
     and where $\mathbf{D}$ is a non-complex block diagonal matrix
     with a block $\mathbf{D}_z$
 
@@ -1813,7 +1830,7 @@ def diagonalizable(dim,
     [-2, -3, 4],
     [-2, -2, 3]])
 
-    >>> m = diagonalizable(3, spec=(1,2,2), scalar_set=(1,2,3), length=10)
+    >>> m = diagonalizable(3, spec=(1,2,2), domain=(1,2,3), length=10)
     >>> m
     Matrix([
     [ 4,  2, -6],
@@ -1834,9 +1851,9 @@ def diagonalizable(dim,
     spec : tuple or list of symbols (optional)
         set of values of which scalars (diagonal entries) are choosen
         see :func:`diagonal_normal`
-    scalar_set : tuple or list of symbols (optional)
+    domain : tuple or list of symbols (optional)
         see :func:`invertible`
-    unit_set : tuple or list of symbols (optional)
+    units : tuple or list of symbols (optional)
         see :func:`invertible`
     length : integer (optional with default 2 * **dim**)
         see :func:`invertible`
@@ -1844,15 +1861,16 @@ def diagonalizable(dim,
         see :func:`invertible`
 
     """
-    normal_form = diagonal_normal(dim, spec, seed=seed)
-    s = invertible(dim, scalar_set, unit_set, length, seed=seed)
+    rng = _rand(seed)
+    normal_form = diagonal_normal(dim, spec, seed=rng)
+    s = invertible(dim, domain, units, length, seed=rng)
     return _multiply(_inv(s), normal_form, s)
 
 
 def trigonalizable(dim,
-                   spec=_elementary_scalar_set,
-                   scalar_set=_elementary_scalar_set,
-                   unit_set=_elementary_scalar_set,
+                   spec=_elementary_domain,
+                   domain=_elementary_domain,
+                   units=_elementary_units,
                    length=None,
                    seed=None):
     r"""Creates a square matrix n x n of a given rank
@@ -1884,7 +1902,7 @@ def trigonalizable(dim,
     [-2, -3, 4],
     [-2, -2, 3]])
 
-    >>> m = trigonalizable(3, spec=(1, 1, 3), scalar_set=(1, sqrt(2), 2))
+    >>> m = trigonalizable(3, spec=(1, 1, 3), domain=(1, sqrt(2), 2))
     >>> m
     Matrix([
     [            1,           1, 0],
@@ -1905,9 +1923,9 @@ def trigonalizable(dim,
     spec : tuple or list of symbols (optional)
         set of values of which scalars (diagonal entries) are choosen
         see :func:`jordan_normal`
-    scalar_set : tuple or list of symbols (optional)
+    domain : tuple or list of symbols (optional)
         see :func:`invertible`
-    unit_set : tuple or list of symbols (optional)
+    units : tuple or list of symbols (optional)
         see :func:`invertible`
     length : integer (optional with default 2 * **dim**)
         see :func:`invertible`
@@ -1920,8 +1938,9 @@ def trigonalizable(dim,
     invertible
 
     """
-    normal_form = jordan_normal(dim, spec, seed=seed)
-    s = invertible(dim, scalar_set, unit_set, length, seed=seed)
+    rng = _rand(seed)
+    normal_form = jordan_normal(dim, spec, seed=rng)
+    s = invertible(dim, domain, units, length, seed=rng)
     return _multiply(_inv(s), normal_form, s)
 
 
@@ -1929,7 +1948,7 @@ def trigonalizable(dim,
 
 def orthogonal(dim,
                spec=None,
-               scalar_set=_rotation_scalar_set,
+               domain=_rotation_domain,
                length=None,
                seed=None):
     r"""an orthogonal matrix n x n
@@ -1942,7 +1961,7 @@ def orthogonal(dim,
     and :func:`reflection` matrices.
 
     The values for random choosen scalar of rotations
-    are from **scalar_set**.
+    are from **domain**.
 
     If **spec** is given, they will be used to set
     the normal form of $\mathbf{O}$ by an
@@ -1961,20 +1980,20 @@ def orthogonal(dim,
     >>> from sympy.matrices.random import rand, orthogonal
     >>> rand.seed(1)
 
-    >>> orthogonal(3, scalar_set=(-1,1))
+    >>> orthogonal(3, domain=(-1,1))
     Matrix([
     [-1,  0, 0],
     [ 0, -1, 0],
     [ 0,  0, 1]])
 
     >>> s = sqrt(2)/2
-    >>> orthogonal(3, scalar_set=(s,-s), length=2)
+    >>> orthogonal(3, domain=(s,-s), length=2)
     Matrix([
     [       1/2, -sqrt(2)/2,       1/2],
     [       1/2,  sqrt(2)/2,       1/2],
     [-sqrt(2)/2,          0, sqrt(2)/2]])
 
-    >>> o = orthogonal(3, spec=(-1, (s, s)), scalar_set=(s,), length=2)
+    >>> o = orthogonal(3, spec=(-1, (s, s)), domain=(s,), length=2)
     >>> expand(o * o.T) == eye(3)
     True
 
@@ -1996,7 +2015,7 @@ def orthogonal(dim,
         * or a complex unit $z$ (complex number with $|z|=1$) so
           $c=re(z)$ and $s=im(z)$.
 
-    scalar_set : tuple or list of symbols (optional),
+    domain : tuple or list of symbols (optional),
         default values for random choosen scalar of
         rotations to build the orthogonal matrix
         :func:`rotation`
@@ -2018,17 +2037,17 @@ def orthogonal(dim,
         if length == 0:
             return _eye(dim)
         length = length or 2 * dim
-        scalars = [_sample(scalar_set, rng=rng) for _ in range(length)]
-        items = [rotation(dim, scalar=s) for s in scalars]
+        scalars = [_sample(domain, rng=rng) for _ in range(length)]
+        items = [rotation(dim, scalar=s, seed=rng) for s in scalars]
         return _multiply(*items)
-    normal_form = isometry_normal(dim, spec, seed=seed)
-    s = orthogonal(dim, scalar_set=scalar_set, length=length, seed=seed)
+    normal_form = isometry_normal(dim, spec, seed=rng)
+    s = orthogonal(dim, domain=domain, length=length, seed=rng)
     return _multiply(_t(s), normal_form, s)
 
 
 def unitary(dim,
             spec=None,
-            scalar_set=_unitary_scalar_set,
+            domain=_unitary_domain,
             length=None,
             seed=None):
     r"""an unitary matrix n x n
@@ -2040,13 +2059,13 @@ def unitary(dim,
     Constructed as product $\mathbf{A}=\mathbf{UDV}$
     of two orthogonal matrices $\mathbf{U}$ an $\mathbf{V}$
     and a diagonal unitary martix $\mathbf{D}$ (see :func:`isometry_normal`.
-    All entries are taken from **scalar_set**.
+    All entries are taken from **domain**.
 
     But if **spec** is given, another diagonal unitary matrix $\mathbf{D}'$ is
     build with entries from **spec**.
     Note, to give an *unitary* matrix,
-    **spec** must consist of roots of unity only.
-    A root of unity is a complex number $z$,
+    **spec** must consist of roots of units only.
+    A root of units is a complex number $z$,
     s.th. $|z| = z * \bar{z} = 1$.
 
     Finally, the resulting unitar matrix $\mathbf{B}$ is given as
@@ -2071,7 +2090,7 @@ def unitary(dim,
     [           sqrt(2)/4, -sqrt(2)*(1 + 2*I)/4, -sqrt(2)*(1 + I)/4],
     [                 I/2,                  I/2,         -1/2 - I/2]])
 
-    >>> u = unitary(3, scalar_set=(-1,))
+    >>> u = unitary(3, domain=(-1,))
     >>> simplify(u)
     Matrix([
     [-1,  0,  0],
@@ -2130,7 +2149,7 @@ def unitary(dim,
         * or just cosine value $c$ (then, a corresponding
           sin value $s$ will be drawn randomly).
 
-    scalar_set : tuple or list of symbols (optional),
+    domain : tuple or list of symbols (optional),
         default values for random choosen scalar of
         rotations to build the orthogonal matrix
         see :func:`orthogonal`
@@ -2146,26 +2165,27 @@ def unitary(dim,
     orthogonal
 
     """
+    rng = _rand(seed)
     if spec is None:
         if length == 0:
             return _eye(dim)
         length = length or 2 * dim
 
         half = int(length / 2)
-        u = orthogonal(dim, scalar_set=scalar_set, length=half, seed=seed)
-        d = isometry_normal(dim, scalar_set, real=False, seed=seed)
+        u = orthogonal(dim, domain=domain, length=half, seed=rng)
+        d = isometry_normal(dim, domain, real=False, seed=rng)
         v = orthogonal(dim,
-                       scalar_set=scalar_set, length=length - half, seed=seed)
+                       domain=domain, length=length - half, seed=rng)
         return _multiply(u, d, v)
 
-    normal_form = isometry_normal(dim, spec, real=False, seed=seed)
-    s = unitary(dim, scalar_set=scalar_set, length=length, seed=seed)
+    normal_form = isometry_normal(dim, spec, real=False, seed=rng)
+    s = unitary(dim, domain=domain, length=length, seed=rng)
     return _multiply(_c(s), normal_form, s)
 
 
 def normal(dim,
-           spec=_elementary_scalar_set,
-           scalar_set=None,
+           spec=_elementary_domain,
+           domain=None,
            length=None,
            seed=None):
     r""" normal n x n matrix
@@ -2195,11 +2215,11 @@ def normal(dim,
         \mathbf{A} = \mathbf{U \cdot D \cdot U}^H
 
     The entries of $\mathbf{D}$ are taken from **spec**
-    and the entries to build $\mathbf{U}$ are taken from **scalar_set**.
+    and the entries to build $\mathbf{U}$ are taken from **domain**.
 
     Since **orthogonal** matrices are **unitary**,
     $\mathbf{U}$ will be **orthogonal**
-    if **scalar_set** has only eal entries.
+    if **domain** has only eal entries.
 
     So the final *normal* matrix will be real
     if **spec** consists only of real entries, too.
@@ -2236,7 +2256,7 @@ def normal(dim,
     spec : tuple or list of symbols (optional)
         set of values of which scalars (diagonal entries)
         see :func:`isometry_normal` for details
-    scalar_set : tuple or list of symbols (optional)
+    domain : tuple or list of symbols (optional)
         see :func:`orthogonal` and :func:`unitary`
     length : integer (optional with default 2 * **dim**)
         see :func:`orthogonal` and :func:`unitary`
@@ -2250,22 +2270,23 @@ def normal(dim,
     unitary
 
     """
-    normal_form = diagonal_normal(dim, spec, seed=seed)
+    rng = _rand(seed)
+    normal_form = diagonal_normal(dim, spec, seed=rng)
     if any(_is_complex(c) for c in spec):
-        scalar_set = scalar_set or _unitary_scalar_set
-        s = unitary(dim, None, scalar_set, length, seed=seed)
+        domain = domain or _unitary_domain
+        s = unitary(dim, None, domain, length, seed=rng)
         return _multiply(_c(s), normal_form, s)
     else:
-        scalar_set = scalar_set or _rotation_scalar_set
-        s = orthogonal(dim, None, scalar_set, length)
+        domain = domain or _rotation_domain
+        s = orthogonal(dim, None, domain, length, seed=rng)
         return _multiply(_t(s), normal_form, s)
 
 
 # === symmetric or complex adjoined matrices ===
 
 def symmetric(dim,
-              scalar_set=_elementary_scalar_set,
-              unit_set=_elementary_scalar_set,
+              domain=_elementary_domain,
+              units=_elementary_units,
               length=None,
               seed=None):
     r"""Creates a symmetric square matrix n x n.
@@ -2317,9 +2338,9 @@ def symmetric(dim,
     ==========
     dim : integer
         dimension of matrix
-    scalar_set : tuple or list of symbols (optional)
+    domain : tuple or list of symbols (optional)
         see :func:`invertible`
-    unit_set : tuple or list of symbols (optional)
+    units : tuple or list of symbols (optional)
         see :func:`invertible`
     length : integer (optional with default 2 * **dim**)
         see :func:`invertible`
@@ -2333,13 +2354,14 @@ def symmetric(dim,
     hermite
 
     """
-    s = invertible(dim, scalar_set, unit_set, length, seed=seed)
+    rng = _rand(seed)
+    s = invertible(dim, domain, units, length, seed=rng)
     return _multiply(_t(s), s)
 
 
 def hermite(dim,
-            scalar_set=_elementary_scalar_set,
-            unit_set=_elementary_scalar_set,
+            domain=_elementary_domain,
+            units=_elementary_units,
             length=None,
             seed=None):
     r"""Creates a Hermintian square matrix n x n.
@@ -2390,9 +2412,9 @@ def hermite(dim,
     ==========
     dim : integer
         dimension of matrix
-    scalar_set : tuple or list of symbols (optional)
+    domain : tuple or list of symbols (optional)
         see :func:`invertible`
-    unit_set : tuple or list of symbols (optional)
+    units : tuple or list of symbols (optional)
         see :func:`invertible`
     length : integer (optional with default 2 * **dim**)
         see :func:`invertible`
@@ -2406,5 +2428,6 @@ def hermite(dim,
     hermite
 
     """
-    s = invertible(dim, scalar_set, unit_set, length, seed=seed)
+    rng = _rand(seed)
+    s = invertible(dim, domain, units, length, seed=rng)
     return _multiply(_c(s), s)
