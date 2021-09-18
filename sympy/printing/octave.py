@@ -407,6 +407,9 @@ class OctaveCodePrinter(CodePrinter):
         s = ", ".join(self._print(n) for n in shape)
         return "eye(" + s + ")"
 
+    def _print_Heaviside(self, expr):
+        pargs = ', '.join(self._print(arg) for arg in expr.pargs)
+        return "heaviside(%s)" % (pargs,)
 
     def _print_lowergamma(self, expr):
         # Octave implements regularized incomplete gamma function

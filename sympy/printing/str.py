@@ -157,6 +157,11 @@ class StrPrinter(Printer):
     def _print_GoldenRatio(self, expr):
         return 'GoldenRatio'
 
+    def _print_Heaviside(self, expr):
+        # Same as _print_Function but uses pargs to suppress default 1/2 for
+        # 2nd args
+        return expr.func.__name__ + "(%s)" % self.stringify(expr.pargs, ", ")
+
     def _print_TribonacciConstant(self, expr):
         return 'TribonacciConstant'
 
