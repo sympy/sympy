@@ -5,7 +5,7 @@ from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
                    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
                    log, cos, sin, Add, Mul, Pow, floor, ceiling, trigsimp, Reals,
-                   Basic, Expr, Q)
+                   Basic, Expr, Q, exp, exp_polar)
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -786,6 +786,13 @@ def test_simplify_relational():
     assert Lt(-x, -2).simplify() == Gt(x, 2)
     assert Lt(x, 2).simplify() == Lt(x, 2)
     assert Lt(-x, 2).simplify() == Gt(x, -2)
+
+    # Test particulat branches of _eval_simplify
+    m = exp(1) - exp_polar(1)
+    assert simplify(m*x > 1) is S.false
+    # These two tests the same branch
+    assert simplify(m*x + 2*m*y > 1) is S.false
+    assert simplify(m*x + y > 1 + y) is S.false
 
 
 def test_equals():
