@@ -1700,9 +1700,9 @@ class Rational(Number):
         ========
 
         >>> from sympy import Rational
-        >>> Rational(1819831678027117, 9007199254740992).limit_num_denom(10**5)
+        >>> Rational(1819831678027117, 9007199254740992).limit_div(10**5)
         11003/54459
-        >>> Rational(1819831678027117, 9007199254740992).limit_num_denom(10**3, 10**5)
+        >>> Rational(1819831678027117, 9007199254740992).limit_div(10**3, 10**5)
         376/1861
 
         """
@@ -1712,7 +1712,7 @@ class Rational(Number):
         if self == 0:
             return self
         elif self < 0:
-            return -(-self).limit_num_denom(a, b)
+            return -(-self).limit_div(a, b)
 
         if b is None:
             return self.limit_denominator(a)
@@ -1724,8 +1724,8 @@ class Rational(Number):
             return Integer(min(a, max(1, int(self))))
         if a == 1:
             if self.p >= self.q:
-                return self.limit_num_denom(1, 1)
-            return self.limit_num_denom(1, self.q//self.p)
+                return self.limit_div(1, 1)
+            return self.limit_div(1, self.q//self.p)
         if self.p >= self.q:
             b = min(a, b)
         else:
