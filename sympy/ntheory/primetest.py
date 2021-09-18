@@ -83,7 +83,7 @@ def is_square(n, prep=True):
         n = as_int(n)
         if n < 0:
             return False
-        if n in [0, 1]:
+        if n in (0, 1):
             return True
     m = n & 127
     if not ((m*0x8bc40d7d) & (m*0xa1e2f5d1) & 0x14020a):
@@ -126,7 +126,7 @@ def mr(n, bases):
       A Computational Perspective", Springer, 2nd edition, 135-138
 
     A list of thresholds and the bases they require are here:
-    https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
+    https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants
 
     Examples
     ========
@@ -653,8 +653,8 @@ def is_gaussian_prime(num):
     from sympy import sympify
     num = sympify(num)
     a, b = num.as_real_imag()
-    a = as_int(a)
-    b = as_int(b)
+    a = as_int(a, strict=False)
+    b = as_int(b, strict=False)
     if a == 0:
         b = abs(b)
         return isprime(b) and b % 4 == 3

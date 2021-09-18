@@ -386,9 +386,7 @@ def test_limit4():
 def test_MrvTestCase_page47_ex3_21():
     h = exp(-x/(1 + exp(-x)))
     expr = exp(h)*exp(-x/(1 + h))*exp(exp(-x + h))/h**2 - exp(x) + x
-    expected = {1/h, exp(x), exp(x - h), exp(x/(1 + h))}
-    # XXX Incorrect result
-    assert mrv(expr, x).difference(expected) == set()
+    assert mmrv(expr, x) == {1/h, exp(-x), exp(x), exp(x - h), exp(x/(1 + h))}
 
 
 def test_I():
@@ -397,7 +395,7 @@ def test_I():
     assert gruntz(I*x, x, oo) == I*oo
     assert gruntz(y*I*x, x, oo) == y*I*oo
     assert gruntz(y*3*I*x, x, oo) == y*I*oo
-    assert gruntz(y*3*sin(I)*x, x, oo).simplify().rewrite(sign) == sign(y)*I*oo
+    assert gruntz(y*3*sin(I)*x, x, oo).simplify().rewrite(sign) == y*I*oo
 
 
 def test_issue_4814():

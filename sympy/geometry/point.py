@@ -222,7 +222,7 @@ class Point(GeometryEntity):
     def __contains__(self, item):
         return item in self.args
 
-    def __div__(self, divisor):
+    def __truediv__(self, divisor):
         """Divide point's coordinates by a factor."""
         divisor = sympify(divisor)
         coords = [simplify(x/divisor) for x in self.args]
@@ -854,8 +854,6 @@ class Point(GeometryEntity):
 
     n = evalf
 
-    __truediv__ = __div__
-
 class Point2D(Point):
     """A point in a 2-dimensional Euclidean space.
 
@@ -908,8 +906,8 @@ class Point2D(Point):
 
     _ambient_dimension = 2
 
-    def __new__(cls, *args, **kwargs):
-        if not kwargs.pop('_nocheck', False):
+    def __new__(cls, *args, _nocheck=False, **kwargs):
+        if not _nocheck:
             kwargs['dim'] = 2
             args = Point(*args, **kwargs)
         return GeometryEntity.__new__(cls, *args)
@@ -999,8 +997,6 @@ class Point2D(Point):
         """
         if not (matrix.is_Matrix and matrix.shape == (3, 3)):
             raise ValueError("matrix must be a 3x3 matrix")
-
-        col, row = matrix.shape
         x, y = self.args
         return Point(*(Matrix(1, 3, [x, y, 1])*matrix).tolist()[0][:2])
 
@@ -1119,8 +1115,8 @@ class Point3D(Point):
 
     _ambient_dimension = 3
 
-    def __new__(cls, *args, **kwargs):
-        if not kwargs.pop('_nocheck', False):
+    def __new__(cls, *args, _nocheck=False, **kwargs):
+        if not _nocheck:
             kwargs['dim'] = 3
             args = Point(*args, **kwargs)
         return GeometryEntity.__new__(cls, *args)
@@ -1291,8 +1287,6 @@ class Point3D(Point):
         """
         if not (matrix.is_Matrix and matrix.shape == (4, 4)):
             raise ValueError("matrix must be a 4x4 matrix")
-
-        col, row = matrix.shape
         from sympy.matrices.expressions import Transpose
         x, y, z = self.args
         m = Transpose(matrix)

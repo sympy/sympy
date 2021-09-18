@@ -81,13 +81,14 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 
 import os
 import textwrap
+from io import StringIO
 
 from sympy import __version__ as sympy_version
 from sympy.core import Symbol, S, Tuple, Equality, Function, Basic
-from sympy.core.compatibility import is_sequence, StringIO
-from sympy.printing.ccode import c_code_printers
+from sympy.core.compatibility import is_sequence
+from sympy.printing.c import c_code_printers
 from sympy.printing.codeprinter import AssignmentError
-from sympy.printing.fcode import FCodePrinter
+from sympy.printing.fortran import FCodePrinter
 from sympy.printing.julia import JuliaCodePrinter
 from sympy.printing.octave import OctaveCodePrinter
 from sympy.printing.rust import RustCodePrinter
@@ -604,8 +605,6 @@ class CodeGen:
                 # pack the simplified expressions back up with their left hand sides
                 expr = [Equality(e.lhs, rhs) for e, rhs in zip(expr, simplified)]
             else:
-                rhs = [expr]
-
                 if isinstance(expr, Equality):
                     common, simplified = cse(expr.rhs) #, ignore=in_out_args)
                     expr = Equality(expr.lhs, simplified[0])
@@ -964,9 +963,7 @@ class CCodeGen(CodeGen):
             t = result.get_datatype('c')
             if isinstance(result.expr, (MatrixBase, MatrixExpr)):
                 dims = result.expr.shape
-                if dims[1] != 1:
-                    raise CodeGenError("Only column vectors are supported in local variabels. Local result {} has dimensions {}".format(result, dims))
-                code_lines.append("{} {}[{}];\n".format(t, str(assign_to), dims[0]))
+                code_lines.append("{} {}[{}];\n".format(t, str(assign_to), dims[0]*dims[1]))
                 prefix = ""
             else:
                 prefix = "const {} ".format(t)

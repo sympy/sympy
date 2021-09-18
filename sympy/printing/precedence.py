@@ -1,7 +1,5 @@
 """A module providing information about the necessity of brackets"""
 
-from __future__ import print_function, division
-
 from sympy.core.function import _coeff_isneg
 
 # Default precedence values for some basic types
@@ -42,6 +40,7 @@ PRECEDENCE_VALUES = {
     "MatAdd": PRECEDENCE["Add"],
     "MatPow": PRECEDENCE["Pow"],
     "MatrixSolve": PRECEDENCE["Mul"],
+    "Mod": PRECEDENCE["Mul"],
     "TensAdd": PRECEDENCE["Add"],
     # As soon as `TensMul` is a subclass of `Mul`, remove this:
     "TensMul": PRECEDENCE["Mul"],
@@ -103,7 +102,7 @@ def precedence_FracElement(item):
 
 
 def precedence_UnevaluatedExpr(item):
-    return precedence(item.args[0])
+    return precedence(item.args[0]) - 0.5
 
 
 PRECEDENCE_FUNCTIONS = {

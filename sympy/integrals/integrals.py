@@ -26,6 +26,7 @@ from sympy.series import limit
 from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
 from sympy.simplify.fu import sincos_to_sum
+from sympy.tensor.functions import shape
 from sympy.utilities.misc import filldedent
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -37,6 +38,9 @@ class Integral(AddWithLimits):
 
     def __new__(cls, function, *symbols, **assumptions):
         """Create an unevaluated integral.
+
+        Explanation
+        ===========
 
         Arguments are an integrand followed by one or more limits.
 
@@ -177,17 +181,17 @@ class Integral(AddWithLimits):
         =====
 
         The mappings, F(x) or f(u), must lead to a unique integral. Linear
-        or rational linear expression, `2*x`, `1/x` and `sqrt(x)`, will
-        always work; quadratic expressions like `x**2 - 1` are acceptable
+        or rational linear expression, ``2*x``, ``1/x`` and ``sqrt(x)``, will
+        always work; quadratic expressions like ``x**2 - 1`` are acceptable
         as long as the resulting integrand does not depend on the sign of
         the solutions (see examples).
 
-        The integral will be returned unchanged if `x` is not a variable of
+        The integral will be returned unchanged if ``x`` is not a variable of
         integration.
 
-        `x` must be (or contain) only one of of the integration variables. If
-        `u` has more than one free symbol then it should be sent as a tuple
-        (`u`, `uvar`) where `uvar` identifies which variable is replacing
+        ``x`` must be (or contain) only one of of the integration variables. If
+        ``u`` has more than one free symbol then it should be sent as a tuple
+        (``u``, ``uvar``) where ``uvar`` identifies which variable is replacing
         the integration variable.
         XXX can it contain another integration variable?
 
@@ -413,7 +417,7 @@ class Integral(AddWithLimits):
         eval_kwargs = dict(meijerg=meijerg, risch=risch, manual=manual, heurisch=heurisch,
             conds=conds)
 
-        if conds not in ['separate', 'piecewise', 'none']:
+        if conds not in ('separate', 'piecewise', 'none'):
             raise ValueError('conds must be one of "separate", "piecewise", '
                              '"none", got: %s' % conds)
 
@@ -598,7 +602,11 @@ class Integral(AddWithLimits):
                             function = ret
                             continue
 
-            if not isinstance(antideriv, Integral) and antideriv is not None:
+            final = hints.get('final', True)
+            # dotit may be iterated but floor terms making atan and acot
+            # continous should only be added in the final round
+            if (final and not isinstance(antideriv, Integral) and
+                antideriv is not None):
                 for atan_term in antideriv.atoms(atan):
                     atan_arg = atan_term.args[0]
                     # Checking `atan_arg` to be linear combination of `tan` or `cot`
@@ -702,14 +710,19 @@ class Integral(AddWithLimits):
         differentiating under the integral sign [1], using the Fundamental
         Theorem of Calculus [2] when possible.
 
+        Explanation
+        ===========
+
         Whenever an Integral is encountered that is equivalent to zero or
         has an integrand that is independent of the variable of integration
         those integrals are performed. All others are returned as Integral
         instances which can be resolved with doit() (provided they are integrable).
 
-        References:
-           [1] https://en.wikipedia.org/wiki/Differentiation_under_the_integral_sign
-           [2] https://en.wikipedia.org/wiki/Fundamental_theorem_of_calculus
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Differentiation_under_the_integral_sign
+        .. [2] https://en.wikipedia.org/wiki/Fundamental_theorem_of_calculus
 
         Examples
         ========
@@ -786,9 +799,12 @@ class Integral(AddWithLimits):
         return rv
 
     def _eval_integral(self, f, x, meijerg=None, risch=None, manual=None,
-                       heurisch=None, conds='piecewise'):
+                       heurisch=None, conds='piecewise',final=None):
         """
         Calculate the anti-derivative to the function f(x).
+
+        Explanation
+        ===========
 
         The following algorithms are applied (roughly in this order):
 
@@ -1086,6 +1102,7 @@ class Integral(AddWithLimits):
                             # method was set to False already
                             new_eval_kwargs = eval_kwargs
                             new_eval_kwargs["manual"] = False
+                            new_eval_kwargs["final"] = False
                             result = result.func(*[
                                 arg.doit(**new_eval_kwargs) if
                                 arg.has(Integral) else arg
@@ -1127,7 +1144,7 @@ class Integral(AddWithLimits):
 
         return Add(*parts)
 
-    def _eval_lseries(self, x, logx, cdir=0):
+    def _eval_lseries(self, x, logx=None, cdir=0):
         expr = self.as_dummy()
         symb = x
         for l in expr.limits:
@@ -1137,7 +1154,7 @@ class Integral(AddWithLimits):
         for term in expr.function.lseries(symb, logx):
             yield integrate(term, *expr.limits)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx=None, cdir=0):
         expr = self.as_dummy()
         symb = x
         for l in expr.limits:
@@ -1149,7 +1166,7 @@ class Integral(AddWithLimits):
         order = [o.subs(symb, x) for o in order]
         return integrate(terms, *expr.limits) + Add(*order)*x
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         series_gen = self.args[0].lseries(x)
         for leading_term in series_gen:
             if leading_term != 0:
@@ -1169,19 +1186,21 @@ class Integral(AddWithLimits):
         """
         Approximates a definite integral by a sum.
 
-        Arguments
-        ---------
-        n
+        Parameters
+        ==========
+
+        n :
             The number of subintervals to use, optional.
-        method
+        method :
             One of: 'left', 'right', 'midpoint', 'trapezoid'.
-        evaluate
+        evaluate : bool
             If False, returns an unevaluated Sum expression. The default
             is True, evaluate the sum.
 
-        These methods of approximate integration are described in [1].
+        Notes
+        =====
 
-        [1] https://en.wikipedia.org/wiki/Riemann_sum#Methods
+        These methods of approximate integration are described in [1].
 
         Examples
         ========
@@ -1261,6 +1280,11 @@ class Integral(AddWithLimits):
         ========
 
         Integral.doit : Perform the integration using any hints
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Riemann_sum#Methods
         """
 
         from sympy.concrete.summations import Sum
@@ -1299,34 +1323,14 @@ class Integral(AddWithLimits):
             raise ValueError("Unknown method %s" % method)
         return result.doit() if evaluate else result
 
-    def _sage_(self):
-        import sage.all as sage
-        f, limits = self.function._sage_(), list(self.limits)
-        for limit_ in limits:
-            if len(limit_) == 1:
-                x = limit_[0]
-                f = sage.integral(f,
-                                    x._sage_(),
-                                    hold=True)
-            elif len(limit_) == 2:
-                x, b = limit_
-                f = sage.integral(f,
-                                    x._sage_(),
-                                    b._sage_(),
-                                    hold=True)
-            else:
-                x, a, b = limit_
-                f = sage.integral(f,
-                                  (x._sage_(),
-                                    a._sage_(),
-                                    b._sage_()),
-                                    hold=True)
-        return f
-
     def principal_value(self, **kwargs):
         """
         Compute the Cauchy Principal Value of the definite integral of a real function in the given interval
         on the real axis.
+
+        Explanation
+        ===========
+
         In mathematics, the Cauchy principal value, is a method for assigning values to certain improper
         integrals which would otherwise be undefined.
 
@@ -1348,6 +1352,7 @@ class Integral(AddWithLimits):
 
         References
         ==========
+
         .. [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
         .. [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
         """
@@ -1381,8 +1386,11 @@ class Integral(AddWithLimits):
 
 
 
-def integrate(*args, **kwargs):
+def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None, manual=None, **kwargs):
     """integrate(f, var, ...)
+
+    Explanation
+    ===========
 
     Compute definite or indefinite integral of one or more variables
     using Risch-Norman algorithm and table lookup. This procedure is
@@ -1532,11 +1540,11 @@ def integrate(*args, **kwargs):
     """
     doit_flags = {
         'deep': False,
-        'meijerg': kwargs.pop('meijerg', None),
-        'conds': kwargs.pop('conds', 'piecewise'),
-        'risch': kwargs.pop('risch', None),
-        'heurisch': kwargs.pop('heurisch', None),
-        'manual': kwargs.pop('manual', None)
+        'meijerg': meijerg,
+        'conds': conds,
+        'risch': risch,
+        'heurisch': heurisch,
+        'manual': manual
         }
     integral = Integral(*args, **kwargs)
 
@@ -1596,3 +1604,10 @@ def line_integrate(field, curve, vars):
 
     integral = Integral(Ft, curve.limits).doit(deep=False)
     return integral
+
+
+### Property function dispatching ###
+
+@shape.register(Integral)
+def _(expr):
+    return shape(expr.function)

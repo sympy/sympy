@@ -1,14 +1,18 @@
 """Low-level linear systems solver. """
 
-from __future__ import print_function, division
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import connected_components
 
-from sympy.matrices import MutableDenseMatrix
+from sympy.core.sympify import sympify
+from sympy.core.numbers import Integer, Rational
+from sympy.matrices.dense import MutableDenseMatrix
+from sympy.polys.domains import ZZ, QQ
+
 from sympy.polys.domains import EX
 from sympy.polys.rings import sring
 from sympy.polys.polyerrors import NotInvertible
-from sympy.polys.polymatrix import DomainMatrix
+from sympy.polys.domainmatrix import DomainMatrix
 
 
 class PolyNonlinearError(Exception):
@@ -17,7 +21,49 @@ class PolyNonlinearError(Exception):
 
 
 class RawMatrix(MutableDenseMatrix):
+    """
+    XXX: This class is broken by design. Use DomainMatrix if you want a matrix
+    over the polys domains or Matrix for a matrix with Expr elements. The
+    RawMatrix class will be removed/broken in future in order to reestablish
+    the invariant that the elements of a Matrix should be of type Expr.
+    """
     _sympify = staticmethod(lambda x: x)
+
+    def __init__(self, *args, **kwargs):
+
+        SymPyDeprecationWarning(
+            feature="RawMatrix class",
+            useinstead="DomainMatrix or Matrix",
+            issue=21405,
+            deprecated_since_version="1.9"
+        ).warn()
+
+        domain = ZZ
+        for i in range(self.rows):
+            for j in range(self.cols):
+                val = self[i,j]
+                if getattr(val, 'is_Poly', False):
+                    K = val.domain[val.gens]
+                    val_sympy = val.as_expr()
+                elif hasattr(val, 'parent'):
+                    K = val.parent()
+                    val_sympy = K.to_sympy(val)
+                elif isinstance(val, (int, Integer)):
+                    K = ZZ
+                    val_sympy = sympify(val)
+                elif isinstance(val, Rational):
+                    K = QQ
+                    val_sympy = val
+                else:
+                    for K in ZZ, QQ:
+                        if K.of_type(val):
+                            val_sympy = K.to_sympy(val)
+                            break
+                    else:
+                        raise TypeError
+                domain = domain.unify(K)
+                self[i,j] = val_sympy
+        self.ring = domain
 
 
 def eqs_to_matrix(eqs_coeffs, eqs_rhs, gens, domain):
@@ -72,8 +118,8 @@ def eqs_to_matrix(eqs_coeffs, eqs_rhs, gens, domain):
     rows = [[domain.zero] * ncols for _ in range(nrows)]
     for row, eq_coeff, eq_rhs in zip(rows, eqs_coeffs, eqs_rhs):
         for sym, coeff in eq_coeff.items():
-            row[sym2index[sym]] = coeff
-        row[-1] = -eq_rhs
+            row[sym2index[sym]] = domain.convert(coeff)
+        row[-1] = -domain.convert(eq_rhs)
 
     return DomainMatrix(rows, (nrows, ncols), domain)
 
@@ -346,6 +392,10 @@ def _solve_lin_sys_component(eqs_coeffs, eqs_rhs, ring):
     # transform from equations to matrix form
     matrix = eqs_to_matrix(eqs_coeffs, eqs_rhs, ring.gens, ring.domain)
 
+    # convert to a field for rref
+    if not matrix.domain.is_Field:
+        matrix = matrix.to_field()
+
     # solve by row-reduction
     echelon, pivots = matrix.rref()
 
@@ -357,16 +407,24 @@ def _solve_lin_sys_component(eqs_coeffs, eqs_rhs, ring):
 
     if len(pivots) == len(keys):
         sol = []
-        for s in [row[-1] for row in echelon.rows]:
+        for s in [row[-1] for row in echelon.rep.to_ddm()]:
             a = s
             sol.append(a)
         sols = dict(zip(keys, sol))
     else:
         sols = {}
         g = ring.gens
-        echelon = echelon.rows
+        # Extract ground domain coefficients and convert to the ring:
+        if hasattr(ring, 'ring'):
+            convert = ring.ring.ground_new
+        else:
+            convert = ring.ground_new
+        echelon = echelon.rep.to_ddm()
+        vals_set = {v for row in echelon for v in row}
+        vals_map = {v: convert(v) for v in vals_set}
+        echelon = [[vals_map[eij] for eij in ei] for ei in echelon]
         for i, p in enumerate(pivots):
-            v = echelon[i][-1] - sum(echelon[i][j]*g[j] for j in range(p+1, len(g)))
+            v = echelon[i][-1] - sum(echelon[i][j]*g[j] for j in range(p+1, len(g)) if echelon[i][j])
             sols[keys[p]] = v
 
     return sols

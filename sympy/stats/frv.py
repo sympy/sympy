@@ -7,7 +7,6 @@ sympy.stats.frv_types
 sympy.stats.rv
 sympy.stats.crv
 """
-from __future__ import print_function, division
 from itertools import product
 
 from sympy import (Basic, Symbol, cacheit, sympify, Mul,
@@ -20,12 +19,8 @@ from sympy.core.sympify import _sympify
 from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
                             PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
-                            sumsets, rv_subs, NamedArgsMixin, Density)
-from sympy.external import import_module
+                            sumsets, rv_subs, NamedArgsMixin, Density, Distribution)
 
-numpy = import_module('numpy')
-scipy = import_module('scipy')
-pymc3 = import_module('pymc3')
 
 class FiniteDensity(dict):
     """
@@ -152,8 +147,6 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
         cond = rv_subs(condition)
         return Basic.__new__(cls, domain, cond)
 
-
-
     def _test(self, elem):
         """
         Test the value. If value is boolean, return it. If value is equality
@@ -185,7 +178,8 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
     def as_boolean(self):
         return FiniteDomain.as_boolean(self)
 
-class SingleFiniteDistribution(Basic, NamedArgsMixin):
+
+class SingleFiniteDistribution(Distribution, NamedArgsMixin):
     def __new__(cls, *args):
         args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
@@ -199,7 +193,7 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
     def dict(self):
         if self.is_symbolic:
             return Density(self)
-        return dict((k, self.pmf(k)) for k in self.set)
+        return {k: self.pmf(k) for k in self.set}
 
     def pmf(self, *args): # to be overridden by specific distribution
         raise NotImplementedError()
@@ -235,8 +229,8 @@ class FinitePSpace(PSpace):
     is_Finite = True
 
     def __new__(cls, domain, density):
-        density = dict((sympify(key), sympify(val))
-                for key, val in density.items())
+        density = {sympify(key): sympify(val)
+                for key, val in density.items()}
         public_density = Dict(density)
 
         obj = PSpace.__new__(cls, domain, public_density)
@@ -337,105 +331,17 @@ class FinitePSpace(PSpace):
     def conditional_space(self, condition):
         domain = self.where(condition)
         prob = self.probability(condition)
-        density = dict((key, val / prob)
-                for key, val in self._density.items() if domain._test(key))
+        density = {key: val / prob
+                for key, val in self._density.items() if domain._test(key)}
         return FinitePSpace(domain, density)
 
-    def sample(self, size=(), library='scipy'):
+    def sample(self, size=(), library='scipy', seed=None):
         """
         Internal sample method
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-
-        libraries = ['scipy', 'numpy', 'pymc3']
-        if library not in libraries:
-            raise NotImplementedError("Sampling from %s is not supported yet."
-                                        % str(library))
-        if not import_module(library):
-            raise ValueError("Failed to import %s" % library)
-
-        samps = _get_sample_class_frv[library](self.distribution, size)
-
-        if samps is not None:
-            return {self.value: samps}
-        raise NotImplementedError(
-                "Sampling for %s is not currently implemented from %s"
-                % (self.__class__.__name__, library)
-                )
-
-
-class SampleFiniteScipy:
-    """Returns the sample from scipy of the given distribution"""
-    def __new__(cls, dist, size):
-        return cls._sample_scipy(dist, size)
-
-    @classmethod
-    def _sample_scipy(cls, dist, size):
-        """Sample from SciPy."""
-        # scipy can handle with custom distributions
-        density_ = dist.dict
-        x, y = [], []
-        for k, v in density_.items():
-            x.append(int(k))
-            y.append(float(v))
-        scipy_rv = scipy.stats.rv_discrete(name='scipy_rv', values=(x, y))
-        return scipy_rv.rvs(size=size)
-
-
-class SampleFiniteNumpy:
-    """Returns the sample from numpy of the given distribution"""
-
-    def __new__(cls, dist, size):
-        return cls._sample_numpy(dist, size)
-
-    numpy_rv_map = {
-        'BinomialDistribution': lambda dist, size: numpy.random.binomial(n=int(dist.n),
-            p=float(dist.p), size=size)
-    }
-
-    @classmethod
-    def _sample_numpy(cls, dist, size):
-        """Sample from NumPy."""
-
-        dist_list = cls.numpy_rv_map.keys()
-
-        if dist.__class__.__name__ not in dist_list:
-            return None
-
-        return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
-
-
-class SampleFinitePymc:
-    """Returns the sample from pymc3 of the given distribution"""
-
-    def __new__(cls, dist, size):
-        return cls._sample_pymc3(dist, size)
-
-    pymc3_rv_map = {
-        'BernoulliDistribution': lambda dist: pymc3.Bernoulli('X', p=float(dist.p)),
-        'BinomialDistribution': lambda dist: pymc3.Binomial('X', n=int(dist.n),
-            p=float(dist.p))
-    }
-
-    @classmethod
-    def _sample_pymc3(cls, dist, size):
-        """Sample from PyMC3."""
-
-        dist_list = cls.pymc3_rv_map.keys()
-
-        if dist.__class__.__name__ not in dist_list:
-            return None
-
-        with pymc3.Model():
-            cls.pymc3_rv_map[dist.__class__.__name__](dist)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
-
-_get_sample_class_frv = {
-    'scipy': SampleFiniteScipy,
-    'pymc3': SampleFinitePymc,
-    'numpy': SampleFiniteNumpy
-}
+        return {self.value: self.distribution.sample(size, library, seed)}
 
 
 class SingleFinitePSpace(SinglePSpace, FinitePSpace):
@@ -471,8 +377,8 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
     @property # type: ignore
     @cacheit
     def _density(self):
-        return dict((FiniteSet((self.symbol, val)), prob)
-                    for val, prob in self.distribution.dict.items())
+        return {FiniteSet((self.symbol, val)): prob
+                    for val, prob in self.distribution.dict.items()}
 
     @cacheit
     def compute_characteristic_function(self, expr):
@@ -557,8 +463,8 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
             self
         domain = self.where(condition)
         prob = self.probability(condition)
-        density = dict((key, val / prob)
-                for key, val in self._density.items() if domain._test(key))
+        density = {key: val / prob
+                for key, val in self._density.items() if domain._test(key)}
         return FinitePSpace(domain, density)
 
 

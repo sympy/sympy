@@ -1,7 +1,5 @@
 """Symbolic inner product."""
 
-from __future__ import print_function, division
-
 from sympy import Expr, conjugate
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger

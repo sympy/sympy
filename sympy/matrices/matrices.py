@@ -6,10 +6,13 @@ from sympy.core.compatibility import (
     Callable, NotIterable, as_int, is_sequence)
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
+from sympy.core.kind import _NumberKind, UndefinedKind
+from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, uniquely_named_symbol
 from sympy.core.sympify import sympify
+from sympy.core.sympify import _sympify
 from sympy.functions import exp, factorial, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -23,13 +26,13 @@ from sympy.utilities.misc import filldedent
 
 from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
-    ShapeError)
+    ShapeError, MatrixKind)
 
 from .utilities import _iszero, _is_zero_after_expand_mul
 
 from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
-    _adjugate, _charpoly, _cofactor, _cofactor_matrix,
+    _adjugate, _charpoly, _cofactor, _cofactor_matrix, _per,
     _det, _det_bareiss, _det_berkowitz, _det_LU, _minor, _minor_submatrix)
 
 from .reductions import _is_echelon, _echelon_form, _rank, _rref
@@ -46,9 +49,11 @@ from .eigen import (
 from .decompositions import (
     _rank_decomposition, _cholesky, _LDLdecomposition,
     _LUdecomposition, _LUdecomposition_Simple, _LUdecompositionFF,
-    _QRdecomposition)
+    _singular_value_decomposition, _QRdecomposition, _upper_hessenberg_decomposition)
 
-from .graph import _connected_components, _connected_components_decomposition
+from .graph import (
+    _connected_components, _connected_components_decomposition,
+    _strongly_connected_components, _strongly_connected_components_decomposition)
 
 from .solvers import (
     _diagonal_solve, _lower_triangular_solve, _upper_triangular_solve,
@@ -122,6 +127,9 @@ class MatrixDeterminant(MatrixCommon):
     def det(self, method="bareiss", iszerofunc=None):
         return _det(self, method=method, iszerofunc=iszerofunc)
 
+    def per(self):
+        return _per(self)
+
     def minor(self, i, j, method="berkowitz"):
         return _minor(self, i, j, method=method)
 
@@ -139,6 +147,7 @@ class MatrixDeterminant(MatrixCommon):
     cofactor.__doc__                     = _cofactor.__doc__
     cofactor_matrix.__doc__              = _cofactor_matrix.__doc__
     det.__doc__                          = _det.__doc__
+    per.__doc__                          = _per.__doc__
     minor.__doc__                        = _minor.__doc__
     minor_submatrix.__doc__              = _minor_submatrix.__doc__
 
@@ -355,7 +364,7 @@ class MatrixSubspaces(MatrixReductions):
     rowspace.__doc__      = _rowspace.__doc__
     orthogonalize.__doc__ = _orthogonalize.__doc__
 
-    orthogonalize         = classmethod(orthogonalize)
+    orthogonalize         = classmethod(orthogonalize)  # type:ignore
 
 
 class MatrixEigen(MatrixSubspaces):
@@ -453,9 +462,9 @@ class MatrixCalculus(MatrixCommon):
         limit
         """
         # XXX this should be handled here rather than in Derivative
-        from sympy import Derivative
+        from sympy.tensor.array.array_derivatives import ArrayDerivative
         kwargs.setdefault('evaluate', True)
-        deriv = Derivative(self, *args, evaluate=True)
+        deriv = ArrayDerivative(self, *args, evaluate=True)
         if not isinstance(self, Basic):
             return deriv.as_mutable()
         else:
@@ -463,18 +472,6 @@ class MatrixCalculus(MatrixCommon):
 
     def _eval_derivative(self, arg):
         return self.applyfunc(lambda x: x.diff(arg))
-
-    def _accept_eval_derivative(self, s):
-        return s._visit_eval_derivative_array(self)
-
-    def _visit_eval_derivative_scalar(self, base):
-        # Types are (base: scalar, self: matrix)
-        return self.applyfunc(lambda x: base.diff(x))
-
-    def _visit_eval_derivative_array(self, base):
-        # Types are (base: array/matrix, self: matrix)
-        from sympy import derive_by_array
-        return derive_by_array(base, self)
 
     def integrate(self, *args, **kwargs):
         """Integrate each element of the matrix.  ``args`` will
@@ -749,6 +746,33 @@ class MatrixDeprecated(MatrixCommon):
         return self.permute_rows(perm, direction='forward')
 
 
+@Mul._kind_dispatcher.register(_NumberKind, MatrixKind)
+def num_mat_mul(k1, k2):
+    """
+    Return MatrixKind. The element kind is selected by recursive dispatching.
+    Do not need to dispatch in reversed order because KindDispatcher
+    searches for this automatically.
+    """
+    # Deal with Mul._kind_dispatcher's commutativity
+    # XXX: this function is called with either k1 or k2 as MatrixKind because
+    # the Mul kind dispatcher is commutative. Maybe it shouldn't be. Need to
+    # swap the args here because NumberKind doesn't have an element_kind
+    # attribute.
+    if not isinstance(k2, MatrixKind):
+        k1, k2 = k2, k1
+    elemk = Mul._kind_dispatcher(k1, k2.element_kind)
+    return MatrixKind(elemk)
+
+
+@Mul._kind_dispatcher.register(MatrixKind, MatrixKind)
+def mat_mat_mul(k1, k2):
+    """
+    Return MatrixKind. The element kind is selected by recursive dispatching.
+    """
+    elemk = Mul._kind_dispatcher(k1.element_kind, k2.element_kind)
+    return MatrixKind(elemk)
+
+
 class MatrixBase(MatrixDeprecated,
                  MatrixCalculus,
                  MatrixEigen,
@@ -764,6 +788,18 @@ class MatrixBase(MatrixDeprecated,
     zero = S.Zero
     one = S.One
 
+    @property
+    def kind(self):
+        elem_kinds = set(e.kind for e in self.flat())
+        if len(elem_kinds) == 1:
+            elemkind, = elem_kinds
+        else:
+            elemkind = UndefinedKind
+        return MatrixKind(elemkind)
+
+    def flat(self):
+        return [self[i, j] for i in range(self.rows) for j in range(self.cols)]
+
     def __array__(self, dtype=object):
         from .dense import matrix2numpy
         return matrix2numpy(self, dtype=dtype)
@@ -774,15 +810,6 @@ class MatrixBase(MatrixDeprecated,
         Implemented mainly so bool(Matrix()) == False.
         """
         return self.rows * self.cols
-
-    def __mathml__(self):
-        mml = ""
-        for i in range(self.rows):
-            mml += "<matrixrow>"
-            for j in range(self.cols):
-                mml += self[i, j].__mathml__()
-            mml += "</matrixrow>"
-        return "<matrix>" + mml + "</matrix>"
 
     def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
@@ -817,9 +844,6 @@ class MatrixBase(MatrixDeprecated,
             jordan_cell_power(j, num)
         return self._new(P.multiply(diag(*jordan_cells))
                 .multiply(P.inv()))
-
-    def __repr__(self):
-        return sstr(self)
 
     def __str__(self):
         if self.rows == 0 or self.cols == 0:
@@ -957,11 +981,11 @@ class MatrixBase(MatrixDeprecated,
 
             # Matrix(Matrix(...))
             elif isinstance(args[0], MatrixBase):
-                return args[0].rows, args[0].cols, args[0]._mat
+                return args[0].rows, args[0].cols, args[0].flat()
 
             # Matrix(MatrixSymbol('X', 2, 2))
             elif isinstance(args[0], Basic) and args[0].is_Matrix:
-                return args[0].rows, args[0].cols, args[0].as_explicit()._mat
+                return args[0].rows, args[0].cols, args[0].as_explicit().flat()
 
             elif isinstance(args[0], mp.matrix):
                 M = args[0]
@@ -982,17 +1006,28 @@ class MatrixBase(MatrixDeprecated,
                     isinstance(i, MatrixSymbol))
                 raw = lambda i: is_sequence(i) and not ismat(i)
                 evaluate = kwargs.get('evaluate', True)
+
+
                 if evaluate:
-                    def do(x):
-                        # make Block and Symbol explicit
-                        if isinstance(x, (list, tuple)):
-                            return type(x)([do(i) for i in x])
-                        if isinstance(x, BlockMatrix) or \
-                                isinstance(x, MatrixSymbol) and \
-                                all(_.is_Integer for _ in x.shape):
+
+                    def make_explicit(x):
+                        """make Block and Symbol explicit"""
+                        if isinstance(x, BlockMatrix):
                             return x.as_explicit()
-                        return x
-                    dat = do(dat)
+                        elif isinstance(x, MatrixSymbol) and all(_.is_Integer for _ in x.shape):
+                            return x.as_explicit()
+                        else:
+                            return x
+
+                    def make_explicit_row(row):
+                        # Could be list or could be list of lists
+                        if isinstance(row, (list, tuple)):
+                            return [make_explicit(x) for x in row]
+                        else:
+                            return make_explicit(row)
+
+                    if isinstance(dat, (list, tuple)):
+                        dat = [make_explicit_row(row) for row in dat]
 
                 if dat == [] or dat == [[]]:
                     rows = cols = 0
@@ -1026,7 +1061,7 @@ class MatrixBase(MatrixDeprecated,
                         elif raw(i):
                             if i:
                                 ncol.add(len(i))
-                                flat_list.extend(i)
+                                flat_list.extend([cls._sympify(ij) for ij in i])
                         else:
                             ncol.add(1)
                             flat_list.append(i)
@@ -1226,7 +1261,7 @@ class MatrixBase(MatrixDeprecated,
         [3, 4]])
 
         """
-        return self._new(self.rows, self.cols, self._mat)
+        return self._new(self.rows, self.cols, self.flat())
 
     def cross(self, b):
         r"""
@@ -1518,17 +1553,19 @@ class MatrixBase(MatrixDeprecated,
         """
         from sympy import diff
 
+        f, x = _sympify(f), _sympify(x)
         if not self.is_square:
-            raise NonSquareMatrixError(
-                "Valid only for square matrices")
+            raise NonSquareMatrixError
         if not x.is_symbol:
-            raise ValueError("The parameter for f should be a symbol")
+            raise ValueError("{} must be a symbol.".format(x))
         if x not in f.free_symbols:
-            raise ValueError("x should be a parameter in Function")
+            raise ValueError(
+                "{} must be a parameter of {}.".format(x, f))
         if x in self.free_symbols:
-            raise ValueError("x should be a parameter in Matrix")
-        eigen = self.eigenvals()
+            raise ValueError(
+                "{} must not be a parameter of {}.".format(x, self))
 
+        eigen = self.eigenvals()
         max_mul = max(eigen.values())
         derivative = {}
         dd = f
@@ -1543,9 +1580,11 @@ class MatrixBase(MatrixDeprecated,
         for i in eigen:
             mul = eigen[i]
             f_val[row] = f.subs(x, i)
-            if not f.subs(x, i).free_symbols and not f.subs(x, i).is_complex:
-                raise ValueError("Cannot Evaluate the function is not"
-                                 " analytic at some eigen value")
+            if f_val[row].is_number and not f_val[row].is_complex:
+                raise ValueError(
+                    "Cannot evaluate the function because the "
+                    "function {} is not analytic at the given "
+                    "eigenvalue {}".format(f, f_val[row]))
             val = 1
             for a in range(n):
                 r[row, a] = val
@@ -1557,9 +1596,11 @@ class MatrixBase(MatrixDeprecated,
                     row = row + 1
                     mul -= 1
                     d_i = derivative[deri].subs(x, i)
-                    if not d_i.free_symbols and not d_i.is_complex:
-                        raise ValueError("Cannot Evaluate the function is not"
-                                 " analytic at some eigen value")
+                    if d_i.is_number and not d_i.is_complex:
+                        raise ValueError(
+                            "Cannot evaluate the function because the "
+                            "derivative {} is not analytic at the given "
+                            "eigenvalue {}".format(derivative[deri], d_i))
                     f_val[row] = d_i
                     for a in range(n):
                         if a - deri + 1 <= 0:
@@ -2109,8 +2150,14 @@ class MatrixBase(MatrixDeprecated,
     def LUdecompositionFF(self):
         return _LUdecompositionFF(self)
 
+    def singular_value_decomposition(self):
+        return _singular_value_decomposition(self)
+
     def QRdecomposition(self):
         return _QRdecomposition(self)
+
+    def upper_hessenberg_decomposition(self):
+        return _upper_hessenberg_decomposition(self)
 
     def diagonal_solve(self, rhs):
         return _diagonal_solve(self, rhs)
@@ -2182,13 +2229,23 @@ class MatrixBase(MatrixDeprecated,
     def connected_components_decomposition(self):
         return _connected_components_decomposition(self)
 
+    def strongly_connected_components(self):
+        return _strongly_connected_components(self)
+
+    def strongly_connected_components_decomposition(self, lower=True):
+        return _strongly_connected_components_decomposition(self, lower=lower)
+
+    _sage_ = Basic._sage_
+
     rank_decomposition.__doc__     = _rank_decomposition.__doc__
     cholesky.__doc__               = _cholesky.__doc__
     LDLdecomposition.__doc__       = _LDLdecomposition.__doc__
     LUdecomposition.__doc__        = _LUdecomposition.__doc__
     LUdecomposition_Simple.__doc__ = _LUdecomposition_Simple.__doc__
     LUdecompositionFF.__doc__      = _LUdecompositionFF.__doc__
+    singular_value_decomposition.__doc__ = _singular_value_decomposition.__doc__
     QRdecomposition.__doc__        = _QRdecomposition.__doc__
+    upper_hessenberg_decomposition.__doc__ = _upper_hessenberg_decomposition.__doc__
 
     diagonal_solve.__doc__         = _diagonal_solve.__doc__
     lower_triangular_solve.__doc__ = _lower_triangular_solve.__doc__
@@ -2216,6 +2273,10 @@ class MatrixBase(MatrixDeprecated,
     connected_components.__doc__   = _connected_components.__doc__
     connected_components_decomposition.__doc__ = \
         _connected_components_decomposition.__doc__
+    strongly_connected_components.__doc__   = \
+        _strongly_connected_components.__doc__
+    strongly_connected_components_decomposition.__doc__ = \
+        _strongly_connected_components_decomposition.__doc__
 
 
 @deprecated(

@@ -1,9 +1,8 @@
-from __future__ import print_function, division
 from .pycode import (
     PythonCodePrinter,
     MpmathPrinter,  # MpmathPrinter is imported for backward compatibility
-    NumPyPrinter  # NumPyPrinter is imported for backward compatibility
 )
+from .numpy import NumPyPrinter  # NumPyPrinter is imported for backward compatibility
 from sympy.utilities import default_sort_key
 
 
@@ -153,6 +152,10 @@ class NumExprPrinter(LambdaPrinter):
             ans.append('log(-1)')
         return ''.join(ans) + ')' * parenthesis_count
 
+    def _print_ITE(self, expr):
+        from sympy.functions.elementary.piecewise import Piecewise
+        return self._print(expr.rewrite(Piecewise))
+
     def blacklisted(self, expr):
         raise TypeError("numexpr cannot be used with %s" %
                         expr.__class__.__name__)
@@ -176,7 +179,7 @@ class NumExprPrinter(LambdaPrinter):
     blacklisted
 
     def doprint(self, expr):
-        lstr = super(NumExprPrinter, self).doprint(expr)
+        lstr = super().doprint(expr)
         return "evaluate('%s', truediv=True)" % lstr
 
 

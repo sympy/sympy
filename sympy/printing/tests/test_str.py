@@ -4,12 +4,20 @@ from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice,
+    Q,)
+from sympy.combinatorics.partitions import Partition
 from sympy.core import Expr, Mul
+from sympy.core.parameters import _exp_is_pow
+from sympy.external import import_module
+from sympy.physics.control.lti import TransferFunction, Series, Parallel, \
+    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
 from sympy.physics.units import second, joule
 from sympy.polys import (Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ,
     ZZ_I, QQ_I, lex, grlex)
 from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
+from sympy.tensor import NDimArray
+from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
 
 from sympy.testing.pytest import raises
 
@@ -96,6 +104,8 @@ def test_EulerGamma():
 
 def test_Exp():
     assert str(E) == "E"
+    with _exp_is_pow(True):
+        assert str(exp(x)) == "E**x"
 
 
 def test_factorial():
@@ -237,13 +247,15 @@ def test_Mul():
     assert str(Mul(1, 1, S.Half, evaluate=False)) == '1*1*(1/2)'
     assert str(Mul(1, 1, 2, 3, x, evaluate=False)) == '1*1*2*3*x'
     assert str(Mul(1, -1, evaluate=False)) == '1*(-1)'
-    assert str(Mul(-1, 1, evaluate=False)) == '(-1)*1'
+    assert str(Mul(-1, 1, evaluate=False)) == '-1*1'
     assert str(Mul(4, 3, 2, 1, 0, y, x, evaluate=False)) == '4*3*2*1*0*y*x'
     assert str(Mul(4, 3, 2, 1+z, 0, y, x, evaluate=False)) == '4*3*2*(z + 1)*0*y*x'
     assert str(Mul(Rational(2, 3), Rational(5, 7), evaluate=False)) == '(2/3)*(5/7)'
     # For issue 14160
     assert str(Mul(-2, x, Pow(Mul(y,y,evaluate=False), -1, evaluate=False),
                                                 evaluate=False)) == '-2*x/(y*y)'
+    # issue 21537
+    assert str(Mul(x, Pow(1/y, -1, evaluate=False), evaluate=False)) == 'x/(1/y)'
 
 
     class CustomClass1(Expr):
@@ -579,6 +591,11 @@ def test_Relational():
     assert str(Ne(x, 1) & Ne(x, 2)) == "Ne(x, 1) & Ne(x, 2)"
 
 
+def test_AppliedBinaryRelation():
+    assert str(Q.eq(x, y)) == "Q.eq(x, y)"
+    assert str(Q.ne(x, y)) == "Q.ne(x, y)"
+
+
 def test_CRootOf():
     assert str(rootof(x**5 + 2*x - 1, 0)) == "CRootOf(x**5 + 2*x - 1, 0)"
 
@@ -607,13 +624,13 @@ def test_set():
     assert sstr(set()) == 'set()'
     assert sstr(frozenset()) == 'frozenset()'
 
-    assert sstr(set([1])) == '{1}'
+    assert sstr({1}) == '{1}'
     assert sstr(frozenset([1])) == 'frozenset({1})'
-    assert sstr(set([1, 2, 3])) == '{1, 2, 3}'
+    assert sstr({1, 2, 3}) == '{1, 2, 3}'
     assert sstr(frozenset([1, 2, 3])) == 'frozenset({1, 2, 3})'
 
     assert sstr(
-        set([1, x, x**2, x**3, x**4])) == '{1, x, x**2, x**3, x**4}'
+        {1, x, x**2, x**3, x**4}) == '{1, x, x**2, x**3, x**4}'
     assert sstr(
         frozenset([1, x, x**2, x**3, x**4])) == 'frozenset({1, x, x**2, x**3, x**4})'
 
@@ -644,6 +661,101 @@ def test_tuple():
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
 
 
+def test_Series_str():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
+    assert str(Series(tf1, tf2)) == \
+        "Series(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y))"
+    assert str(Series(tf1, tf2, tf3)) == \
+        "Series(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y), TransferFunction(t*x**2 - t**w*x + w, t - y, y))"
+    assert str(Series(-tf2, tf1)) == \
+        "Series(TransferFunction(-x + y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y))"
+
+
+def test_MIMOSeries_str():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+    tfm_2 = TransferFunctionMatrix([[tf2, tf1], [tf1, tf2]])
+    assert str(MIMOSeries(tfm_1, tfm_2)) == \
+        "MIMOSeries(TransferFunctionMatrix(((TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y)), "\
+            "(TransferFunction(x - y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y)))), "\
+                "TransferFunctionMatrix(((TransferFunction(x - y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y)), "\
+                    "(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y)))))"
+
+
+def test_TransferFunction_str():
+    tf1 = TransferFunction(x - 1, x + 1, x)
+    assert str(tf1) == "TransferFunction(x - 1, x + 1, x)"
+    tf2 = TransferFunction(x + 1, 2 - y, x)
+    assert str(tf2) == "TransferFunction(x + 1, 2 - y, x)"
+    tf3 = TransferFunction(y, y**2 + 2*y + 3, y)
+    assert str(tf3) == "TransferFunction(y, y**2 + 2*y + 3, y)"
+
+
+def test_Parallel_str():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
+    assert str(Parallel(tf1, tf2)) == \
+        "Parallel(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y))"
+    assert str(Parallel(tf1, tf2, tf3)) == \
+        "Parallel(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y), TransferFunction(t*x**2 - t**w*x + w, t - y, y))"
+    assert str(Parallel(-tf2, tf1)) == \
+        "Parallel(TransferFunction(-x + y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y))"
+
+
+def test_MIMOParallel_str():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+    tfm_2 = TransferFunctionMatrix([[tf2, tf1], [tf1, tf2]])
+    assert str(MIMOParallel(tfm_1, tfm_2)) == \
+        "MIMOParallel(TransferFunctionMatrix(((TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y)), "\
+            "(TransferFunction(x - y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y)))), "\
+                "TransferFunctionMatrix(((TransferFunction(x - y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y)), "\
+                    "(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y)))))"
+
+
+def test_Feedback_str():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
+    assert str(Feedback(tf1*tf2, tf3)) == \
+        "Feedback(Series(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y)), " \
+        "TransferFunction(t*x**2 - t**w*x + w, t - y, y), -1)"
+    assert str(Feedback(tf1, TransferFunction(1, 1, y), 1)) == \
+        "Feedback(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(1, 1, y), 1)"
+
+
+def test_MIMOFeedback_str():
+    tf1 = TransferFunction(x**2 - y**3, y - z, x)
+    tf2 = TransferFunction(y - x, z + y, x)
+    tfm_1 = TransferFunctionMatrix([[tf2, tf1], [tf1, tf2]])
+    tfm_2 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+    assert (str(MIMOFeedback(tfm_1, tfm_2)) \
+            == "MIMOFeedback(TransferFunctionMatrix(((TransferFunction(-x + y, y + z, x), TransferFunction(x**2 - y**3, y - z, x))," \
+            " (TransferFunction(x**2 - y**3, y - z, x), TransferFunction(-x + y, y + z, x)))), " \
+            "TransferFunctionMatrix(((TransferFunction(x**2 - y**3, y - z, x), " \
+            "TransferFunction(-x + y, y + z, x)), (TransferFunction(-x + y, y + z, x), TransferFunction(x**2 - y**3, y - z, x)))), -1)")
+    assert (str(MIMOFeedback(tfm_1, tfm_2, 1)) \
+            == "MIMOFeedback(TransferFunctionMatrix(((TransferFunction(-x + y, y + z, x), TransferFunction(x**2 - y**3, y - z, x)), " \
+            "(TransferFunction(x**2 - y**3, y - z, x), TransferFunction(-x + y, y + z, x)))), " \
+            "TransferFunctionMatrix(((TransferFunction(x**2 - y**3, y - z, x), TransferFunction(-x + y, y + z, x)), "\
+            "(TransferFunction(-x + y, y + z, x), TransferFunction(x**2 - y**3, y - z, x)))), 1)")
+
+
+def test_TransferFunctionMatrix_str():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
+    assert str(TransferFunctionMatrix([[tf1], [tf2]])) == \
+        "TransferFunctionMatrix(((TransferFunction(x*y**2 - z, -t**3 + y**3, y),), (TransferFunction(x - y, x + y, y),)))"
+    assert str(TransferFunctionMatrix([[tf1, tf2], [tf3, tf2]])) == \
+        "TransferFunctionMatrix(((TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y)), (TransferFunction(t*x**2 - t**w*x + w, t - y, y), TransferFunction(x - y, x + y, y))))"
+
+
 def test_Quaternion_str_printer():
     q = Quaternion(x, y, z, t)
     assert str(q) == "x + y*i + z*j + t*k"
@@ -669,6 +781,26 @@ def test_wild_str():
     assert str(1/w + 1) == '1 + 1/x_'
     assert str(w**2 + 1) == 'x_**2 + 1'
     assert str(1/(1 - w)) == '1/(1 - x_)'
+
+
+def test_wild_matchpy():
+    from sympy.utilities.matchpy_connector import WildDot, WildPlus, WildStar
+
+    matchpy = import_module("matchpy")
+
+    if matchpy is None:
+        return
+
+    wd = WildDot('w_')
+    wp = WildPlus('w__')
+    ws = WildStar('w___')
+
+    assert str(wd) == 'w_'
+    assert str(wp) == 'w__'
+    assert str(ws) == 'w___'
+
+    assert str(wp/ws + 2**wd) == '2**w_ + w__/w___'
+    assert str(sin(wd)*cos(wp)*sqrt(ws)) == 'sqrt(w___)*sin(w_)*cos(w__)'
 
 
 def test_zeta():
@@ -761,12 +893,18 @@ def test_RandomDomain():
 
 def test_FiniteSet():
     assert str(FiniteSet(*range(1, 51))) == (
-        'FiniteSet(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,'
+        '{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,'
         ' 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,'
-        ' 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50)'
+        ' 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50}'
     )
-    assert str(FiniteSet(*range(1, 6))) == 'FiniteSet(1, 2, 3, 4, 5)'
+    assert str(FiniteSet(*range(1, 6))) == '{1, 2, 3, 4, 5}'
+    assert str(FiniteSet(*[x*y, x**2])) == '{x**2, x*y}'
+    assert str(FiniteSet(FiniteSet(FiniteSet(x, y), 5), FiniteSet(x,y), 5)
+               ) == 'FiniteSet(5, FiniteSet(5, {x, y}), {x, y})'
 
+
+def test_Partition():
+    assert str(Partition(FiniteSet(x, y), {z})) == 'Partition({z}, {x, y})'
 
 def test_UniversalSet():
     assert str(S.UniversalSet) == 'UniversalSet'
@@ -813,7 +951,7 @@ def test_MatMul_MatAdd():
     from sympy import MatrixSymbol
 
     X, Y = MatrixSymbol("X", 2, 2), MatrixSymbol("Y", 2, 2)
-    assert str(2*(X + Y)) == "2*(X + Y)"
+    assert str(2*(X + Y)) == "2*X + 2*Y"
 
     assert str(I*X) == "I*X"
     assert str(-I*X) == "-I*X"
@@ -893,7 +1031,7 @@ def test_MatrixSymbol_printing():
     B = MatrixSymbol("B", 3, 3)
 
     assert str(A - A*B - B) == "A - A*B - B"
-    assert str(A*B - (A+B)) == "-(A + B) + A*B"
+    assert str(A*B - (A+B)) == "-A + A*B - B"
     assert str(A**(-1)) == "A**(-1)"
     assert str(A**3) == "A**3"
 
@@ -934,13 +1072,56 @@ def test_str_special_matrices():
 def test_issue_14567():
     assert factorial(Sum(-1, (x, 0, 0))) + y  # doesn't raise an error
 
+
+def test_issue_21823():
+    assert str(Partition([1, 2])) == 'Partition({1, 2})'
+    assert str(Partition({1, 2})) == 'Partition({1, 2})'
+
+
+def test_issue_21119_21460():
+    ss = lambda x: str(S(x, evaluate=False))
+    assert ss('4/2') == '4/2'
+    assert ss('4/-2') == '4/(-2)'
+    assert ss('-4/2') == '-4/2'
+    assert ss('-4/-2') == '-4/(-2)'
+    assert ss('-2*3/-1') == '-2*3/(-1)'
+    assert ss('-2*3/-1/2') == '-2*3/(-1*2)'
+    assert ss('4/2/1') == '4/(2*1)'
+    assert ss('-2/-1/2') == '-2/(-1*2)'
+    assert ss('2*3*4**(-2*3)') == '2*3/4**(2*3)'
+    assert ss('2*3*1*4**(-2*3)') == '2*3*1/4**(2*3)'
+
+
+def test_Str():
+    from sympy.core.symbol import Str
+    assert str(Str('x')) == 'x'
+    assert sstrrepr(Str('x')) == "Str('x')"
+
+
 def test_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
+    x,y = symbols('x y', real=True)
     m = Manifold('M', 2)
     assert str(m) == "M"
     p = Patch('P', m)
     assert str(p) == "P"
-    rect = CoordSystem('rect', p)
+    rect = CoordSystem('rect', p, [x, y])
     assert str(rect) == "rect"
     b = BaseScalarField(rect, 0)
-    assert str(b) == "rect_0"
+    assert str(b) == "x"
+
+def test_NDimArray():
+    assert sstr(NDimArray(1.0), full_prec=True) == '1.00000000000000'
+    assert sstr(NDimArray(1.0), full_prec=False) == '1.0'
+    assert sstr(NDimArray([1.0, 2.0]), full_prec=True) == '[1.00000000000000, 2.00000000000000]'
+    assert sstr(NDimArray([1.0, 2.0]), full_prec=False) == '[1.0, 2.0]'
+
+def test_Predicate():
+    assert sstr(Q.even) == 'Q.even'
+
+def test_AppliedPredicate():
+    assert sstr(Q.even(x)) == 'Q.even(x)'
+
+def test_printing_str_array_expressions():
+    assert sstr(ArraySymbol("A", 2, 3, 4)) == "A"
+    assert sstr(ArrayElement("A", (2, 1/(1-x), 0))) == "A[2, 1/(1 - x), 0]"

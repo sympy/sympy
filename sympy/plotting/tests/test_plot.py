@@ -12,7 +12,7 @@ from sympy.plotting.plot import (
     plot3d_parametric_surface)
 from sympy.plotting.plot import (
     unset_show, plot_contour, PlotGrid, DefaultBackend, MatplotlibBackend,
-    TextBackend)
+    TextBackend, BaseBackend)
 from sympy.testing.pytest import skip, raises, warns
 from sympy.utilities import lambdify as lambdify_
 
@@ -22,6 +22,28 @@ unset_show()
 
 matplotlib = import_module(
     'matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+
+
+class DummyBackendNotOk(BaseBackend):
+    """ Used to verify if users can create their own backends.
+    This backend is meant to raise NotImplementedError for methods `show`,
+    `save`, `close`.
+    """
+    pass
+
+
+class DummyBackendOk(BaseBackend):
+    """ Used to verify if users can create their own backends.
+    This backend is meant to pass all tests.
+    """
+    def show(self):
+        pass
+
+    def save(self):
+        pass
+
+    def close(self):
+        pass
 
 
 def test_plot_and_save_1():
@@ -495,7 +517,7 @@ def test_issue_17405():
     p = plot(f, (x, -10, 10), show=False)
     # Random number of segments, probably more than 100, but we want to see
     # that there are segments generated, as opposed to when the bug was present
-    assert len(p[0].get_segments()) >= 30
+    assert len(p[0].get_data()[0]) >= 30
 
 
 def test_logplot_PR_16796():
@@ -506,7 +528,7 @@ def test_logplot_PR_16796():
     p = plot(x, (x, .001, 100), xscale='log', show=False)
     # Random number of segments, probably more than 100, but we want to see
     # that there are segments generated, as opposed to when the bug was present
-    assert len(p[0].get_segments()) >= 30
+    assert len(p[0].get_data()[0]) >= 30
     assert p[0].end == 100.0
     assert p[0].start == .001
 
@@ -519,7 +541,7 @@ def test_issue_16572():
     p = plot(LambertW(x), show=False)
     # Random number of segments, probably more than 50, but we want to see
     # that there are segments generated, as opposed to when the bug was present
-    assert len(p[0].get_segments()) >= 30
+    assert len(p[0].get_data()[0]) >= 30
 
 
 def test_issue_11865():
@@ -532,7 +554,7 @@ def test_issue_11865():
     # Random number of segments, probably more than 100, but we want to see
     # that there are segments generated, as opposed to when the bug was present
     # and that there are no exceptions.
-    assert len(p[0].get_segments()) >= 30
+    assert len(p[0].get_data()[0]) >= 30
 
 
 def test_issue_11461():
@@ -544,7 +566,7 @@ def test_issue_11461():
     # Random number of segments, probably more than 100, but we want to see
     # that there are segments generated, as opposed to when the bug was present
     # and that there are no exceptions.
-    assert len(p[0].get_segments()) >= 30
+    assert len(p[0].get_data()[0]) >= 30
 
 
 def test_issue_11764():
@@ -556,7 +578,7 @@ def test_issue_11764():
     p.aspect_ratio == (1, 1)
     # Random number of segments, probably more than 100, but we want to see
     # that there are segments generated, as opposed to when the bug was present
-    assert len(p[0].get_segments()) >= 30
+    assert len(p[0].get_data()[0]) >= 30
 
 
 def test_issue_13516():
@@ -567,19 +589,19 @@ def test_issue_13516():
 
     pm = plot(sin(x), backend="matplotlib", show=False)
     assert pm.backend == MatplotlibBackend
-    assert len(pm[0].get_segments()) >= 30
+    assert len(pm[0].get_data()[0]) >= 30
 
     pt = plot(sin(x), backend="text", show=False)
     assert pt.backend == TextBackend
-    assert len(pt[0].get_segments()) >= 30
+    assert len(pt[0].get_data()[0]) >= 30
 
     pd = plot(sin(x), backend="default", show=False)
     assert pd.backend == DefaultBackend
-    assert len(pd[0].get_segments()) >= 30
+    assert len(pd[0].get_data()[0]) >= 30
 
     p = plot(sin(x), show=False)
     assert p.backend == DefaultBackend
-    assert len(p[0].get_segments()) >= 30
+    assert len(p[0].get_data()[0]) >= 30
 
 
 def test_plot_limits():
@@ -631,3 +653,75 @@ def test_plot3d_parametric_line_limits():
     zmin, zmax = backend.ax[0].get_zlim()
     assert abs(zmin + 10) < 1e-2
     assert abs(zmax - 10) < 1e-2
+
+def test_plot_size():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x = Symbol('x')
+
+    p1 = plot(sin(x), backend="matplotlib", size=(8, 4))
+    s1 = p1._backend.fig.get_size_inches()
+    assert (s1[0] == 8) and (s1[1] == 4)
+    p2 = plot(sin(x), backend="matplotlib", size=(5, 10))
+    s2 = p2._backend.fig.get_size_inches()
+    assert (s2[0] == 5) and (s2[1] == 10)
+    p3 = PlotGrid(2, 1, p1, p2, size=(6, 2))
+    s3 = p3._backend.fig.get_size_inches()
+    assert (s3[0] == 6) and (s3[1] == 2)
+
+    with raises(ValueError):
+        plot(sin(x), backend="matplotlib", size=(-1, 3))
+
+def test_issue_20113():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x = Symbol('x')
+
+    # verify the capability to use custom backends
+    with raises(TypeError):
+        plot(sin(x), backend=Plot, show=False)
+    p2 = plot(sin(x), backend=MatplotlibBackend, show=False)
+    assert p2.backend == MatplotlibBackend
+    assert len(p2[0].get_data()[0]) >= 30
+    p3 = plot(sin(x), backend=DummyBackendOk, show=False)
+    assert p3.backend == DummyBackendOk
+    assert len(p3[0].get_data()[0]) >= 30
+
+    # test for an improper coded backend
+    p4 = plot(sin(x), backend=DummyBackendNotOk, show=False)
+    assert p4.backend == DummyBackendNotOk
+    assert len(p4[0].get_data()[0]) >= 30
+    with raises(NotImplementedError):
+        p4.show()
+    with raises(NotImplementedError):
+        p4.save("test/path")
+    with raises(NotImplementedError):
+        p4._backend.close()
+
+def test_custom_coloring():
+    x = Symbol('x')
+    y = Symbol('y')
+    plot(cos(x), line_color=lambda a: a)
+    plot(cos(x), line_color=1)
+    plot(cos(x), line_color="r")
+    plot_parametric(cos(x), sin(x), line_color=lambda a: a)
+    plot_parametric(cos(x), sin(x), line_color=1)
+    plot_parametric(cos(x), sin(x), line_color="r")
+    plot3d_parametric_line(cos(x), sin(x), x, line_color=lambda a: a)
+    plot3d_parametric_line(cos(x), sin(x), x, line_color=1)
+    plot3d_parametric_line(cos(x), sin(x), x, line_color="r")
+    plot3d_parametric_surface(cos(x + y), sin(x - y), x - y,
+            (x, -5, 5), (y, -5, 5),
+            surface_color=lambda a, b: a**2 + b**2)
+    plot3d_parametric_surface(cos(x + y), sin(x - y), x - y,
+            (x, -5, 5), (y, -5, 5),
+            surface_color=1)
+    plot3d_parametric_surface(cos(x + y), sin(x - y), x - y,
+            (x, -5, 5), (y, -5, 5),
+            surface_color="r")
+    plot3d(x*y, (x, -5, 5), (y, -5, 5),
+            surface_color=lambda a, b: a**2 + b**2)
+    plot3d(x*y, (x, -5, 5), (y, -5, 5), surface_color=1)
+    plot3d(x*y, (x, -5, 5), (y, -5, 5), surface_color="r")

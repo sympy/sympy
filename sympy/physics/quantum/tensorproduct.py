@@ -1,7 +1,5 @@
 """Abstract tensor product."""
 
-from __future__ import print_function, division
-
 from sympy import Expr, Add, Mul, Matrix, Pow, sympify
 from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
@@ -143,10 +141,8 @@ class TensorProduct(Expr):
     def _eval_adjoint(self):
         return TensorProduct(*[Dagger(i) for i in self.args])
 
-    def _eval_rewrite(self, pattern, rule, **hints):
-        sargs = self.args
-        terms = [t._eval_rewrite(pattern, rule, **hints) for t in sargs]
-        return TensorProduct(*terms).expand(tensorproduct=True)
+    def _eval_rewrite(self, rule, args, **hints):
+        return TensorProduct(*args).expand(tensorproduct=True)
 
     def _sympystr(self, printer, *args):
         length = len(self.args)
@@ -164,8 +160,8 @@ class TensorProduct(Expr):
     def _pretty(self, printer, *args):
 
         if (_combined_printing and
-                (all([isinstance(arg, Ket) for arg in self.args]) or
-                 all([isinstance(arg, Bra) for arg in self.args]))):
+                (all(isinstance(arg, Ket) for arg in self.args) or
+                 all(isinstance(arg, Bra) for arg in self.args))):
 
             length = len(self.args)
             pform = printer._print('', *args)
@@ -200,7 +196,7 @@ class TensorProduct(Expr):
             pform = prettyForm(*pform.right(next_pform))
             if i != length - 1:
                 if printer._use_unicode:
-                    pform = prettyForm(*pform.right(u'\N{N-ARY CIRCLED TIMES OPERATOR}' + u' '))
+                    pform = prettyForm(*pform.right('\N{N-ARY CIRCLED TIMES OPERATOR}' + ' '))
                 else:
                     pform = prettyForm(*pform.right('x' + ' '))
         return pform
@@ -208,8 +204,8 @@ class TensorProduct(Expr):
     def _latex(self, printer, *args):
 
         if (_combined_printing and
-                (all([isinstance(arg, Ket) for arg in self.args]) or
-                 all([isinstance(arg, Bra) for arg in self.args]))):
+                (all(isinstance(arg, Ket) for arg in self.args) or
+                 all(isinstance(arg, Bra) for arg in self.args))):
 
             def _label_wrap(label, nlabels):
                 return label if nlabels == 1 else r"\left\{%s\right\}" % label

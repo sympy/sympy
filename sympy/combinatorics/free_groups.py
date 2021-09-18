@@ -533,23 +533,19 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         zero_mul_simp(r, len(self.array_form) - 1)
         return group.dtype(tuple(r))
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         group = self.group
         if not isinstance(other, group.dtype):
             raise TypeError("only FreeGroup elements of same FreeGroup can "
                     "be multiplied")
         return self*(other.inverse())
 
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         group = self.group
         if not isinstance(other, group.dtype):
             raise TypeError("only FreeGroup elements of same FreeGroup can "
                     "be multiplied")
         return other*(self.inverse())
-
-    __truediv__ = __div__
-
-    __rtruediv__ = __rdiv__
 
     def __add__(self, other):
         return NotImplemented

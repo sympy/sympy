@@ -49,27 +49,41 @@ from their truth tables-
 Boolean functions
 -----------------
 
+.. autoclass:: sympy.logic.boolalg::Boolean
+   :members:
+
 .. autoclass:: sympy.logic.boolalg::BooleanTrue
+   :members:
 
 .. autoclass:: sympy.logic.boolalg::BooleanFalse
+   :members:
 
 .. autoclass:: sympy.logic.boolalg::And
+   :members:
 
 .. autoclass:: sympy.logic.boolalg::Or
+   :members:
 
 .. autoclass:: sympy.logic.boolalg::Not
+   :members:
 
 .. autoclass:: sympy.logic.boolalg::Xor
+   :members:
 
 .. autoclass:: sympy.logic.boolalg::Nand
+   :members:
 
 .. autoclass:: sympy.logic.boolalg::Nor
+   :members:
 
 .. autoclass:: sympy.logic.boolalg::Implies
+   :members:
 
 .. autoclass:: sympy.logic.boolalg::Equivalent
+   :members:
 
 .. autoclass:: sympy.logic.boolalg::ITE
+   :members:
 
 The following functions can be used to handle Conjunctive and Disjunctive Normal
 forms-

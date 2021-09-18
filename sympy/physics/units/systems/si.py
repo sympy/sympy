@@ -5,8 +5,6 @@ Added kelvin, candela and mole.
 
 """
 
-from __future__ import division
-
 from typing import List
 
 from sympy.physics.units import DimensionSystem, Dimension, dHg0
@@ -320,7 +318,7 @@ __all__ = [
     'mmHg', 'atmosphere', 'inductance', 'newton', 'meter',
     'vacuum_permittivity', 'pascal', 'magnetic_constant', 'voltage',
     'angular_mil', 'luminous_intensity', 'all_units',
-    'julian_year', 'weber', 'division', 'exbibyte', 'liter',
+    'julian_year', 'weber', 'exbibyte', 'liter',
     'molar_gas_constant', 'faraday_constant', 'avogadro_constant',
     'lightyear', 'planck_density', 'gee', 'mol', 'bit', 'gray',
     'planck_momentum', 'bar', 'magnetic_density', 'prefix_unit', 'PREFIXES',

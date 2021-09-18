@@ -1,6 +1,5 @@
 """Groebner bases algorithms. """
 
-from __future__ import print_function, division
 
 from sympy.core.symbol import Dummy
 from sympy.polys.monomials import monomial_mul, monomial_lcm, monomial_divides, term_div
@@ -248,7 +247,7 @@ def _buchberger(f, ring):
     Gr = set()
 
     for ig in G:
-        ht = normal(f[ig], G - set([ig]))
+        ht = normal(f[ig], G - {ig})
 
         if ht:
             Gr.add(ht[1])
@@ -831,7 +830,7 @@ def groebner_lcm(f, g):
     basis = groebner([F, G], t_ring)
 
     def is_independent(h, j):
-        return all(not monom[j] for monom in h.monoms())
+        return not any(monom[j] for monom in h.monoms())
 
     H = [ h for h in basis if is_independent(h, 0) ]
 

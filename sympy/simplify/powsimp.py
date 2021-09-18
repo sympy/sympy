@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
 
 from sympy.core.function import expand_log, count_ops
@@ -18,13 +16,13 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """
     reduces expression by combining powers with similar bases and exponents.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
-    If deep is True then powsimp() will also simplify arguments of
-    functions. By default deep is set to False.
+    If ``deep`` is ``True`` then powsimp() will also simplify arguments of
+    functions. By default ``deep`` is set to ``False``.
 
-    If force is True then bases will be combined without checking for
+    If ``force`` is ``True`` then bases will be combined without checking for
     assumptions, e.g. sqrt(x)*sqrt(y) -> sqrt(x*y) which is not true
     if x and y are both negative.
 
@@ -490,6 +488,9 @@ def powdenest(eq, force=False, polar=False):
     r"""
     Collect exponents on powers as assumptions allow.
 
+    Explanation
+    ===========
+
     Given ``(bb**be)**e``, this can be simplified as follows:
         * if ``bb`` is positive, or
         * ``e`` is an integer, or
@@ -506,11 +507,11 @@ def powdenest(eq, force=False, polar=False):
       of the exponent can be removed from any term and the gcd of such
       integers can be joined with e
 
-    Setting ``force`` to True will make symbols that are not explicitly
+    Setting ``force`` to ``True`` will make symbols that are not explicitly
     negative behave as though they are positive, resulting in more
     denesting.
 
-    Setting ``polar`` to True will do simplifications on the Riemann surface of
+    Setting ``polar`` to ``True`` will do simplifications on the Riemann surface of
     the logarithm, also resulting in more denestings.
 
     When there are sums of logs in exp() then a product of powers may be
@@ -577,8 +578,20 @@ def powdenest(eq, force=False, polar=False):
     from sympy.simplify.simplify import posify
 
     if force:
-        eq, rep = posify(eq)
-        return powdenest(eq, force=False).xreplace(rep)
+        def _denest(b, e):
+            if not isinstance(b, (Pow, exp)):
+                return b.is_positive, Pow(b, e, evaluate=False)
+            return _denest(b.base, b.exp*e)
+        reps = []
+        for p in eq.atoms(Pow, exp):
+            if isinstance(p.base, (Pow, exp)):
+                ok, dp = _denest(*p.args)
+                if ok is not False:
+                    reps.append((p, dp))
+        if reps:
+            eq = eq.subs(reps)
+        eq, reps = posify(eq)
+        return powdenest(eq, force=False, polar=polar).xreplace(reps)
 
     if polar:
         eq, rep = polarify(eq)

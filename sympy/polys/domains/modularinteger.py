@@ -1,8 +1,7 @@
 """Implementation of :class:`ModularInteger` class. """
 
-from __future__ import print_function, division
 
-# from typing import Any, Dict, Tuple, Type
+from typing import Any, Dict, Tuple, Type
 
 import operator
 
@@ -99,7 +98,7 @@ class ModularInteger(PicklableWithSlots, DomainElement):
     def __rmul__(self, other):
         return self.__mul__(other)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         val = self._get_val(other)
 
         if val is not None:
@@ -107,11 +106,8 @@ class ModularInteger(PicklableWithSlots, DomainElement):
         else:
             return NotImplemented
 
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         return self.invert().__mul__(other)
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def __mod__(self, other):
         val = self._get_val(other)
@@ -166,10 +162,8 @@ class ModularInteger(PicklableWithSlots, DomainElement):
     def __ge__(self, other):
         return self._compare(other, operator.ge)
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.val)
-
-    __bool__ = __nonzero__
 
     @classmethod
     def _invert(cls, value):
@@ -178,7 +172,7 @@ class ModularInteger(PicklableWithSlots, DomainElement):
     def invert(self):
         return self.__class__(self._invert(self.val))
 
-_modular_integer_cache = {}  ## type: Dict[Tuple[Any, Any, Any], Type[ModularInteger]]
+_modular_integer_cache = {}  # type: Dict[Tuple[Any, Any, Any], Type[ModularInteger]]
 
 def ModularIntegerFactory(_mod, _dom, _sym, parent):
     """Create custom class for specific integer modulus."""

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 import pyglet.gl as pgl
 from pyglet import font
 
@@ -12,18 +10,24 @@ from sympy.plotting.pygletplot.util import billboard_matrix, dot_product, \
 
 class PlotAxes(PlotObject):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args,
+            style='', none=None, frame=None, box=None, ordinate=None,
+            stride=0.25,
+            visible='', overlay='', colored='', label_axes='', label_ticks='',
+            tick_length=0.1,
+            font_face='Arial', font_size=28,
+            **kwargs):
         # initialize style parameter
-        style = kwargs.pop('style', '').lower()
+        style = style.lower()
 
         # allow alias kwargs to override style kwarg
-        if kwargs.pop('none', None) is not None:
+        if none is not None:
             style = 'none'
-        if kwargs.pop('frame', None) is not None:
+        if frame is not None:
             style = 'frame'
-        if kwargs.pop('box', None) is not None:
+        if box is not None:
             style = 'box'
-        if kwargs.pop('ordinate', None) is not None:
+        if ordinate is not None:
             style = 'ordinate'
 
         if style in ['', 'ordinate']:
@@ -36,7 +40,6 @@ class PlotAxes(PlotObject):
             raise ValueError(("Unrecognized axes style %s.") % (style))
 
         # initialize stride parameter
-        stride = kwargs.pop('stride', 0.25)
         try:
             stride = eval(stride)
         except TypeError:
@@ -47,7 +50,7 @@ class PlotAxes(PlotObject):
             self._stride = stride
         else:
             self._stride = [stride, stride, stride]
-        self._tick_length = float(kwargs.pop('tick_length', 0.1))
+        self._tick_length = float(tick_length)
 
         # setup bounding box and ticks
         self._origin = [0, 0, 0]
@@ -56,24 +59,22 @@ class PlotAxes(PlotObject):
         def flexible_boolean(input, default):
             if input in [True, False]:
                 return input
-            if input in ['f', 'F', 'false', 'False']:
+            if input in ('f', 'F', 'false', 'False'):
                 return False
-            if input in ['t', 'T', 'true', 'True']:
+            if input in ('t', 'T', 'true', 'True'):
                 return True
             return default
 
         # initialize remaining parameters
-        self.visible = flexible_boolean(kwargs.pop('visible', ''), True)
-        self._overlay = flexible_boolean(kwargs.pop('overlay', ''), True)
-        self._colored = flexible_boolean(kwargs.pop('colored', ''), False)
-        self._label_axes = flexible_boolean(
-            kwargs.pop('label_axes', ''), False)
-        self._label_ticks = flexible_boolean(
-            kwargs.pop('label_ticks', ''), True)
+        self.visible = flexible_boolean(kwargs, True)
+        self._overlay = flexible_boolean(overlay, True)
+        self._colored = flexible_boolean(colored, False)
+        self._label_axes = flexible_boolean(label_axes, False)
+        self._label_ticks = flexible_boolean(label_ticks, True)
 
         # setup label font
-        self.font_face = kwargs.pop('font_face', 'Arial')
-        self.font_size = kwargs.pop('font_size', 28)
+        self.font_face = font_face
+        self.font_size = font_size
 
         # this is also used to reinit the
         # font on window close/reopen
@@ -97,7 +98,7 @@ class PlotAxes(PlotObject):
     def adjust_bounds(self, child_bounds):
         b = self._bounding_box
         c = child_bounds
-        for i in [0, 1, 2]:
+        for i in range(3):
             if abs(c[i][0]) is S.Infinity or abs(c[i][1]) is S.Infinity:
                 continue
             b[i][0] = c[i][0] if b[i][0] is None else min([b[i][0], c[i][0]])
@@ -174,7 +175,7 @@ class PlotAxesBase(PlotObject):
 class PlotAxesOrdinate(PlotAxesBase):
 
     def __init__(self, parent_axes):
-        super(PlotAxesOrdinate, self).__init__(parent_axes)
+        super().__init__(parent_axes)
 
     def draw_axis(self, axis, color):
         ticks = self._p._axis_ticks[axis]
@@ -241,7 +242,7 @@ class PlotAxesOrdinate(PlotAxesBase):
 class PlotAxesFrame(PlotAxesBase):
 
     def __init__(self, parent_axes):
-        super(PlotAxesFrame, self).__init__(parent_axes)
+        super().__init__(parent_axes)
 
     def draw_background(self, color):
         pass

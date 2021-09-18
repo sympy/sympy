@@ -1,9 +1,8 @@
-from __future__ import print_function, division
+from functools import reduce
 
 from sympy.core.backend import (sympify, diff, sin, cos, Matrix, symbols,
                                 Function, S, Symbol)
 from sympy import integrate, trigsimp
-from sympy.core.compatibility import reduce
 from .vector import Vector, _check_vector
 from .frame import CoordinateSym, _check_frame
 from .dyadic import Dyadic
@@ -123,7 +122,7 @@ def express(expr, frame, frame2=None, variables=False):
     else:
         if variables:
             #Given expr is a scalar field
-            frame_set = set([])
+            frame_set = set()
             expr = sympify(expr)
             #Substitute all the coordinate variables
             for x in expr.free_symbols:

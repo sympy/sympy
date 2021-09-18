@@ -1,5 +1,6 @@
 """Test sparse polynomials. """
 
+from functools import reduce
 from operator import add, mul
 
 from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement
@@ -11,8 +12,8 @@ from sympy.polys.polyerrors import GeneratorsError, \
 
 from sympy.testing.pytest import raises
 from sympy.core import Symbol, symbols
-from sympy.core.compatibility import reduce
-from sympy import sqrt, pi, oo
+
+from sympy import sqrt, pi, oo, exp
 
 def test_PolyRing___init__():
     x, y, z, t = map(Symbol, "xyzt")
@@ -171,7 +172,7 @@ def test_sring():
 
     r = sqrt(2) - sqrt(3)
     R, a = sring(r, extension=True)
-    assert R.domain == QQ.algebraic_field(r)
+    assert R.domain == QQ.algebraic_field(sqrt(2) + sqrt(3))
     assert R.gens == ()
     assert a == R.domain.from_sympy(r)
 
@@ -274,6 +275,10 @@ def test_PolyElement_from_expr():
 
     f = R.from_expr(x**3*y*z + x**2*y**7 + 1)
     assert f == X**3*Y*Z + X**2*Y**7 + 1 and isinstance(f, R.dtype)
+
+    r, F = sring([exp(2)])
+    f = r.from_expr(exp(2))
+    assert f == F[0] and isinstance(f, r.dtype)
 
     raises(ValueError, lambda: R.from_expr(1/x))
     raises(ValueError, lambda: R.from_expr(2**x))
@@ -573,7 +578,7 @@ def test_PolyElement___mul__():
 
     assert dict(EX(pi)*x*y*z) == dict(x*y*z*EX(pi)) == {(1, 1, 1): EX(pi)}
 
-def test_PolyElement___div__():
+def test_PolyElement___truediv__():
     R, x,y,z = ring("x,y,z", ZZ)
 
     assert (2*x**2 - 4)/2 == x**2 - 2
@@ -1396,3 +1401,9 @@ def test_PolyElement_factor_list():
     w = x**2 + x + 1
 
     assert f.factor_list() == (1, [(u, 1), (v, 2), (w, 1)])
+
+
+def test_issue_21410():
+    R, x = ring('x', FF(2))
+    p = x**6 + x**5 + x**4 + x**3 + 1
+    assert p._pow_multinomial(4) == x**24 + x**20 + x**16 + x**12 + 1

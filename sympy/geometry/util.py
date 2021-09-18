@@ -296,7 +296,7 @@ def closest_points(*args):
     except TypeError:
         raise ValueError("The points could not be sorted.")
 
-    if any(not i.is_Rational for j in p for i in j.args):
+    if not all(i.is_Rational for j in p for i in j.args):
         def hypot(x, y):
             arg = x*x + y*y
             if arg.is_Rational:
@@ -510,7 +510,7 @@ def farthest_points(*args):
 
     p = [Point2D(i) for i in set(args)]
 
-    if any(not i.is_Rational for j in p for i in j.args):
+    if not all(i.is_Rational for j in p for i in j.args):
         def hypot(x, y):
             arg = x*x + y*y
             if arg.is_Rational:
@@ -604,7 +604,7 @@ def idiff(eq, y, x, n=1):
         dydx = dydx.diff(x)
 
 
-def intersection(*entities, **kwargs):
+def intersection(*entities, pairwise=False, **kwargs):
     """The intersection of a collection of GeometryEntity instances.
 
     Parameters
@@ -667,8 +667,6 @@ def intersection(*entities, **kwargs):
 
     from .entity import GeometryEntity
     from .point import Point
-
-    pairwise = kwargs.pop('pairwise', False)
 
     if len(entities) <= 1:
         return []

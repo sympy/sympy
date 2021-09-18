@@ -14,8 +14,9 @@ from sympy.solvers.diophantine.diophantine import (diop_DN,
     sum_of_three_squares, transformation_to_DN, transformation_to_normal,
     classify_diop, base_solution_linear, cornacchia, sqf_normal, gaussian_reduce, holzer,
     check_param, parametrize_ternary_quadratic, sum_of_powers, sum_of_squares,
-    _diop_ternary_quadratic_normal, _diop_general_sum_of_squares, _nint_or_floor,
-    _odd, _even, _remove_gcd, _can_do_sum_of_squares, DiophantineSolutionSet)
+    _diop_ternary_quadratic_normal, _nint_or_floor,
+    _odd, _even, _remove_gcd, _can_do_sum_of_squares, DiophantineSolutionSet, GeneralPythagorean,
+    BinaryQuadratic)
 from sympy.utilities import default_sort_key
 
 from sympy.testing.pytest import slow, raises, XFAIL
@@ -108,13 +109,13 @@ def test_quadratic_simple_hyperbolic_case():
     # Simple Hyperbolic case: A = C = 0 and B != 0
     assert diop_solve(3*x*y + 34*x - 12*y + 1) == \
            {(-133, -11), (5, -57)}
-    assert diop_solve(6*x*y + 2*x + 3*y + 1) == set([])
+    assert diop_solve(6*x*y + 2*x + 3*y + 1) == set()
     assert diop_solve(-13*x*y + 2*x - 4*y - 54) == {(27, 0)}
     assert diop_solve(-27*x*y - 30*x - 12*y - 54) == {(-14, -1)}
     assert diop_solve(2*x*y + 5*x + 56*y + 7) == {(-161, -3), (-47, -6), (-35, -12),
                                                   (-29, -69), (-27, 64), (-21, 7),
                                                   (-9, 1), (105, -2)}
-    assert diop_solve(6*x*y + 9*x + 2*y + 3) == set([])
+    assert diop_solve(6*x*y + 9*x + 2*y + 3) == set()
     assert diop_solve(x*y + x + y + 1) == {(-1, t), (t, -1)}
     assert diophantine(48*x*y)
 
@@ -123,7 +124,7 @@ def test_quadratic_elliptical_case():
     # Elliptical case: B**2 - 4AC < 0
 
     assert diop_solve(42*x**2 + 8*x*y + 15*y**2 + 23*x + 17*y - 4915) == {(-11, -1)}
-    assert diop_solve(4*x**2 + 3*y**2 + 5*x - 11*y + 12) == set([])
+    assert diop_solve(4*x**2 + 3*y**2 + 5*x - 11*y + 12) == set()
     assert diop_solve(x**2 + y**2 + 2*x + 2*y + 2) == {(-1, -1)}
     assert diop_solve(15*x**2 - 9*x*y + 14*y**2 - 23*x - 14*y - 4950) == {(-15, 6)}
     assert diop_solve(10*x**2 + 12*x*y + 12*y**2 - 34) == \
@@ -164,6 +165,7 @@ def test_quadratic_non_perfect_square():
     assert check_solutions(3*x**2 - 2*y**2 - 2*x - 2*y)
     assert check_solutions(x**2 - x*y - y**2 - 3*y)
     assert check_solutions(x**2 - 9*y**2 - 2*x - 6*y)
+    assert BinaryQuadratic(x**2 + y**2 + 2*x + 2*y + 2).solve() == {(-1, -1)}
 
 
 def test_issue_9106():
@@ -193,7 +195,7 @@ def test_quadratic_non_perfect_slow():
 def test_DN():
     # Most of the test cases were adapted from,
     # Solving the generalized Pell equation x**2 - D*y**2 = N, John P. Robertson, July 31, 2004.
-    # http://www.jpr2718.org/pell.pdf
+    # https://web.archive.org/web/20160323033128/http://www.jpr2718.org/pell.pdf
     # others are verified using Wolfram Alpha.
 
     # Covers cases where D <= 0 or D > 0 and D is a square or N = 0
@@ -482,7 +484,7 @@ def test_diophantine():
     assert check_solutions((x - y)*(y - z)*(z - x))
     assert check_solutions((x - y)*(x**2 + y**2 - z**2))
     assert check_solutions((x - 3*y + 7*z)*(x**2 + y**2 - z**2))
-    assert check_solutions((x**2 - 3*y**2 - 1))
+    assert check_solutions(x**2 - 3*y**2 - 1)
     assert check_solutions(y**2 + 7*x*y)
     assert check_solutions(x**2 - 3*x*y + y**2)
     assert check_solutions(z*(x**2 - y**2 - 15))
@@ -579,12 +581,16 @@ def test_general_pythagorean():
     assert check_solutions(-e**2 + 9*a**2 + 4*b**2 + 4*c**2 + 25*d**2)
     assert check_solutions(16*a**2 - b**2 + 9*c**2 + d**2 + 25*e**2)
 
+    assert GeneralPythagorean(a**2 + b**2 + c**2 - d**2).solve(parameters=[x, y, z]) == \
+           {(x**2 + y**2 - z**2, 2*x*z, 2*y*z, x**2 + y**2 + z**2)}
+
 
 def test_diop_general_sum_of_squares_quick():
     for i in range(3, 10):
         assert check_solutions(sum(i**2 for i in symbols(':%i' % i)) - i)
-    raises(ValueError, lambda: _diop_general_sum_of_squares((x, y), 2))
-    assert _diop_general_sum_of_squares((x, y, z), -2) == set()
+
+    assert diop_general_sum_of_squares(x**2 + y**2 - 2) is None
+    assert diop_general_sum_of_squares(x**2 + y**2 + z**2 + 2) == set()
     eq = x**2 + y**2 + z**2 - (1 + 4 + 9)
     assert diop_general_sum_of_squares(eq) == \
            {(1, 2, 3)}
@@ -747,7 +753,7 @@ def test_diopcoverage():
     eq = (2*x + y + 1)**2
     assert diop_solve(eq) == {(t_0, -2*t_0 - 1)}
     eq = 2*x**2 + 6*x*y + 12*x + 4*y**2 + 18*y + 18
-    assert diop_solve(eq) == {(t_0, -t_0 - 3), (2*t_0 - 3, -t_0)}
+    assert diop_solve(eq) == {(t, -t - 3), (2*t - 3, -t)}
     assert diop_quadratic(x + y**2 - 3) == {(-t**2 + 3, -t)}
 
     assert diop_linear(x + y - 3) == (t_0, 3 - t_0)
@@ -771,9 +777,9 @@ def test_diopcoverage():
             (m1**2 + m2**2 - m3**2, 2*m1*m3,
             2*m2*m3, m1**2 + m2**2 + m3**2)
 
-    assert check_param(S(3) + x/3, S(4) + x/2, S(2), x) == (None, None)
-    assert check_param(Rational(3, 2), S(4) + x, S(2), x) == (None, None)
-    assert check_param(S(4) + x, Rational(3, 2), S(2), x) == (None, None)
+    assert len(check_param(S(3) + x/3, S(4) + x/2, S(2), [x])) == 0
+    assert len(check_param(Rational(3, 2), S(4) + x, S(2), [x])) == 0
+    assert len(check_param(S(4) + x, Rational(3, 2), S(2), [x])) == 0
 
     assert _nint_or_floor(16, 10) == 2
     assert _odd(1) == (not _even(1)) == True
@@ -823,7 +829,7 @@ def test_issue_9539():
 
 def test_issue_8943():
     assert diophantine(
-        (3*(x**2 + y**2 + z**2) - 14*(x*y + y*z + z*x))) == \
+        3*(x**2 + y**2 + z**2) - 14*(x*y + y*z + z*x)) == \
            {(0, 0, 0)}
 
 
@@ -959,7 +965,7 @@ def test_ternary_quadratic():
 
 
 def test_diophantine_solution_set():
-    s1 = DiophantineSolutionSet([])
+    s1 = DiophantineSolutionSet([], [])
     assert set(s1) == set()
     assert s1.symbols == ()
     assert s1.parameters == ()
@@ -1001,5 +1007,15 @@ def test_diophantine_solution_set():
     raises(ValueError, lambda: s3(1, 2, 3))
     raises(TypeError, lambda: s3(t=1))
 
-    s4 = DiophantineSolutionSet([x])
-    assert len(s4.parameters) == 1
+    s4 = DiophantineSolutionSet([x, y], [t, u])
+    s4.add((t, 11*t))
+    s4.add((-t, 22*t))
+    assert s4(0, 0) == {(0, 0)}
+
+
+def test_quadratic_parameter_passing():
+    eq = -33*x*y + 3*y**2
+    solution = BinaryQuadratic(eq).solve(parameters=[t, u])
+    # test that parameters are passed all the way to the final solution
+    assert solution == {(t, 11*t), (-t, 22*t)}
+    assert solution(0, 0) == {(0, 0)}

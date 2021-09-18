@@ -1,17 +1,24 @@
 """ Integral Transforms """
+from functools import reduce
 
+from sympy import (symbols, Wild,
+    RootSum, Lambda, together, exp, gamma)
 from sympy.core import S
-from sympy.core.compatibility import reduce, iterable
+from sympy.core.compatibility import iterable, ordered
 from sympy.core.function import Function
 from sympy.core.relational import _canonical, Ge, Gt
 from sympy.core.numbers import oo
 from sympy.core.symbol import Dummy
+from sympy.functions import DiracDelta
+from sympy.functions.elementary.miscellaneous import Max
 from sympy.integrals import integrate, Integral
 from sympy.integrals.meijerint import _dummy
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
 from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.matrices.matrices import MatrixBase
+from sympy.polys.matrices.linsolve import _lin_eq2dict, PolyNonlinearError
 
 
 ##########################################################################
@@ -22,6 +29,9 @@ from sympy.matrices.matrices import MatrixBase
 class IntegralTransformError(NotImplementedError):
     """
     Exception raised in relation to problems computing transforms.
+
+    Explanation
+    ===========
 
     This class is mostly used internally; if integrals cannot be computed
     objects representing unevaluated transforms are usually returned.
@@ -39,6 +49,9 @@ class IntegralTransformError(NotImplementedError):
 class IntegralTransform(Function):
     """
     Base class for integral transforms.
+
+    Explanation
+    ===========
 
     This class represents unevaluated transforms.
 
@@ -95,6 +108,9 @@ class IntegralTransform(Function):
     def doit(self, **hints):
         """
         Try to evaluate the transform in closed form.
+
+        Explanation
+        ===========
 
         This general function handles linearity, but apart from that leaves
         pretty much everything to _compute_transform.
@@ -186,6 +202,9 @@ def _noconds_(default):
     """
     This is a decorator generator for dropping convergence conditions.
 
+    Explanation
+    ===========
+
     Suppose you define a function ``transform(*args)`` which returns a tuple of
     the form ``(result, cond1, cond2, ...)``.
 
@@ -201,8 +220,7 @@ def _noconds_(default):
         from sympy.core.decorators import wraps
 
         @wraps(func)
-        def wrapper(*args, **kwargs):
-            noconds = kwargs.pop('noconds', default)
+        def wrapper(*args, noconds=default, **kwargs):
             res = func(*args, **kwargs)
             if noconds:
                 return res[0]
@@ -332,6 +350,9 @@ def mellin_transform(f, x, s, **hints):
     For all "sensible" functions, this converges absolutely in a strip
       `a < \operatorname{Re}(s) < b`.
 
+    Explanation
+    ===========
+
     The Mellin transform is related via change of variables to the Fourier
     transform, and also to the (bilateral) Laplace transform.
 
@@ -346,6 +367,9 @@ def mellin_transform(f, x, s, **hints):
     :func:`sympy.integrals.transforms.IntegralTransform.doit`. If ``noconds=False``,
     then only `F` will be returned (i.e. not ``cond``, and also not the strip
     ``(a, b)``).
+
+    Examples
+    ========
 
     >>> from sympy.integrals.transforms import mellin_transform
     >>> from sympy import exp
@@ -368,6 +392,9 @@ def _rewrite_sin(m_n, s, a, b):
     with the strip (a, b).
 
     Return ``(gamma1, gamma2, fac)`` so that ``f == fac/(gamma1 * gamma2)``.
+
+    Examples
+    ========
 
     >>> from sympy.integrals.transforms import _rewrite_sin
     >>> from sympy import pi, S
@@ -418,6 +445,9 @@ def _rewrite_gamma(f, s, a, b):
     so that the inverse Mellin transform of f can be expressed as a meijer
     G function.
 
+    Explanation
+    ===========
+
     Return (an, ap), (bm, bq), arg, exp, fac such that
     G((an, ap), (bm, bq), arg/z**exp)*fac is the inverse Mellin transform of f(s).
 
@@ -432,6 +462,9 @@ def _rewrite_gamma(f, s, a, b):
 
     This is a helper function for inverse_mellin_transform that will not
     attempt any transformations on f.
+
+    Examples
+    ========
 
     >>> from sympy.integrals.transforms import _rewrite_gamma
     >>> from sympy.abc import s
@@ -524,8 +557,8 @@ def _rewrite_gamma(f, s, a, b):
             common_coefficient = x
             break
     s_multipliers = [x/common_coefficient for x in s_multipliers]
-    if (any(not x.is_Rational for x in s_multipliers) or
-        not common_coefficient.is_extended_real):
+    if not (all(x.is_Rational for x in s_multipliers) and
+            common_coefficient.is_extended_real):
         raise IntegralTransformError("Gamma", None, "Nonrational multiplier")
     s_multiplier = common_coefficient/reduce(ilcm, [S(x.q)
                                              for x in s_multipliers], S.One)
@@ -588,7 +621,7 @@ def _rewrite_gamma(f, s, a, b):
                 exp = fact.exp
             else:
                 base = exp_polar(1)
-                exp = fact.args[0]
+                exp = fact.exp
             if exp.is_Integer:
                 cond = is_numer
                 if exp < 0:
@@ -829,6 +862,9 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
     Compute the inverse Mellin transform of `F(s)` over the fundamental
     strip given by ``strip=(a, b)``.
 
+    Explanation
+    ===========
+
     This can be defined as
 
     .. math:: f(x) = \frac{1}{2\pi i} \int_{c - i\infty}^{c + i\infty} x^{-s} F(s) \mathrm{d}s,
@@ -850,6 +886,9 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.
 
+    Examples
+    ========
+
     >>> from sympy.integrals.transforms import inverse_mellin_transform
     >>> from sympy import oo, gamma
     >>> from sympy.abc import x, s
@@ -860,11 +899,11 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
 
     >>> f = 1/(s**2 - 1)
     >>> inverse_mellin_transform(f, s, x, (-oo, -1))
-    x*(1 - 1/x**2)*Heaviside(x - 1)/2
+    x*(1 - 1/x**2)*Heaviside(x - 1, 1/2)/2
     >>> inverse_mellin_transform(f, s, x, (-1, 1))
-    -x*Heaviside(1 - x)/2 - Heaviside(x - 1)/(2*x)
+    -x*Heaviside(1 - x, 1/2)/2 - Heaviside(x - 1, 1/2)/(2*x)
     >>> inverse_mellin_transform(f, s, x, (1, oo))
-    (1/2 - x**2/2)*Heaviside(1 - x)/x
+    (1/2 - x**2/2)*Heaviside(1 - x, 1/2)/x
 
     See Also
     ========
@@ -882,6 +921,9 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
 def _simplifyconds(expr, s, a):
     r"""
     Naively simplify some conditions occurring in ``expr``, given that `\operatorname{Re}(s) > a`.
+
+    Examples
+    ========
 
     >>> from sympy.integrals.transforms import _simplifyconds as simp
     >>> from sympy.abc import x
@@ -967,14 +1009,39 @@ def _simplifyconds(expr, s, a):
     expr = repl(expr, Unequality, replue)
     return S(expr)
 
+def expand_dirac_delta(expr):
+    """
+    Expand an expression involving DiractDelta to get it as a linear
+    combination of DiracDelta functions.
+    """
+    return _lin_eq2dict(expr, expr.atoms(DiracDelta))
 
 @_noconds
 def _laplace_transform(f, t, s_, simplify=True):
     """ The backend function for Laplace transforms. """
     from sympy import (re, Max, exp, pi, Min, periodic_argument as arg_,
-                       arg, cos, Wild, symbols, polar_lift)
+                       arg, cos, Wild, symbols, polar_lift, Add)
     s = Dummy('s')
-    F = integrate(exp(-s*t) * f, (t, 0, oo))
+    a = Wild('a', exclude=[t])
+    deltazero = []
+    deltanonzero = []
+    try:
+        integratable, deltadict = expand_dirac_delta(f)
+    except PolyNonlinearError:
+        raise IntegralTransformError(
+        'Laplace', f, 'could not expand DiracDelta expressions')
+    for dirac_func, dirac_coeff in deltadict.items():
+        p = dirac_func.match(DiracDelta(a*t))
+        if p:
+            deltazero.append(dirac_coeff.subs(t,0)/p[a])
+        else:
+            if dirac_func.args[0].subs(t,0).is_zero:
+                raise IntegralTransformError('Laplace', f,\
+                                             'not implemented yet.')
+            else:
+                deltanonzero.append(dirac_func*dirac_coeff)
+    F = Add(integrate(exp(-s*t) * Add(integratable, *deltanonzero), (t, 0, oo)),
+            Add(*deltazero))
 
     if not F.has(Integral):
         return _simplify(F.subs(s, s_), simplify), -oo, S.true
@@ -1048,13 +1115,13 @@ def _laplace_transform(f, t, s_, simplify=True):
                 a = Max(a_, a)
             else:
                 aux = And(aux, Or(*aux_))
-        return a, aux
+        return a, aux.canonical if aux.is_Relational else aux
 
     conds = [process_conds(c) for c in disjuncts(cond)]
     conds2 = [x for x in conds if x[1] != False and x[0] != -oo]
     if not conds2:
         conds2 = [x for x in conds if x[1] != False]
-    conds = conds2
+    conds = list(ordered(conds2))
 
     def cnt(expr):
         if expr == True or expr == False:
@@ -1064,7 +1131,7 @@ def _laplace_transform(f, t, s_, simplify=True):
 
     if not conds:
         raise IntegralTransformError('Laplace', f, 'no convergence found')
-    a, aux = conds[0]
+    a, aux = conds[0]  # XXX is [0] always the right one?
 
     def sbs(expr):
         return expr.subs(s, s_)
@@ -1108,18 +1175,28 @@ class LaplaceTransform(IntegralTransform):
         return plane, cond
 
 
-def laplace_transform(f, t, s, **hints):
+def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     r"""
     Compute the Laplace Transform `F(s)` of `f(t)`,
 
-    .. math :: F(s) = \int_0^\infty e^{-st} f(t) \mathrm{d}t.
+    .. math :: F(s) = \int_{0^{-}}^\infty e^{-st} f(t) \mathrm{d}t.
 
-    For all "sensible" functions, this converges absolutely in a
+    Explanation
+    ===========
+
+    For all sensible functions, this converges absolutely in a
     half plane  `a < \operatorname{Re}(s)`.
 
-    This function returns ``(F, a, cond)``
-    where ``F`` is the Laplace transform of ``f``, `\operatorname{Re}(s) > a` is the half-plane
+    This function returns ``(F, a, cond)`` where ``F`` is the Laplace
+    transform of ``f``, `\operatorname{Re}(s) > a` is the half-plane
     of convergence, and ``cond`` are auxiliary convergence conditions.
+
+    The lower bound is `0^{-}`, meaning that this bound should be approached
+    from the lower side. This is only necessary if distributions are involved.
+    At present, it is only done if `f(t)` contains ``DiracDelta``, in which
+    case the Laplace transform is computed as
+
+    .. math :: F(s) = \lim_{\tau\to 0^{-}} \int_{\tau}^\infty e^{-st} f(t) \mathrm{d}t.
 
     If the integral cannot be computed in closed form, this function returns
     an unevaluated :class:`LaplaceTransform` object.
@@ -1128,26 +1205,62 @@ def laplace_transform(f, t, s, **hints):
     :func:`sympy.integrals.transforms.IntegralTransform.doit`. If ``noconds=True``,
     only `F` will be returned (i.e. not ``cond``, and also not the plane ``a``).
 
+    .. deprecated:: 1.9
+        Legacy behavior for matrices where ``laplace_transform`` with
+        ``noconds=False`` (the default) returns a Matrix whose elements are
+        tuples. The behavior of ``laplace_transform`` for matrices will change
+        in a future release of SymPy to return a tuple of the transformed
+        Matrix and the convergence conditions for the matrix as a whole. Use
+        ``legacy_matrix=False`` to enable the new behavior.
+
+    Examples
+    ========
+
     >>> from sympy.integrals import laplace_transform
     >>> from sympy.abc import t, s, a
+    >>> from sympy.functions import DiracDelta, exp
     >>> laplace_transform(t**a, t, s)
-    (s**(-a)*gamma(a + 1)/s, 0, re(a) > -1)
+    (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
+    >>> laplace_transform(DiracDelta(t)-a*exp(-a*t),t,s)
+    (-a/(a + s) + 1, 0, Abs(arg(a)) <= pi/2)
 
     See Also
     ========
 
     inverse_laplace_transform, mellin_transform, fourier_transform
     hankel_transform, inverse_hankel_transform
+
     """
+
     if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
-        return f.applyfunc(lambda fij: laplace_transform(fij, t, s, **hints))
+
+        conds = not hints.get('noconds', False)
+
+        if conds and legacy_matrix:
+            SymPyDeprecationWarning(
+                feature="laplace_transform of a Matrix with noconds=False (default)",
+                useinstead="the option legacy_matrix=False to get the new behaviour",
+                issue=21504,
+                deprecated_since_version="1.9"
+            ).warn()
+            return f.applyfunc(lambda fij: laplace_transform(fij, t, s, **hints))
+        else:
+            elements_trans = [laplace_transform(fij, t, s, **hints) for fij in f]
+            if conds:
+                elements, avals, conditions = zip(*elements_trans)
+                f_laplace = type(f)(*f.shape, elements)
+                return f_laplace, Max(*avals), And(*conditions)
+            else:
+                return type(f)(*f.shape, elements_trans)
+
     return LaplaceTransform(f, t, s).doit(**hints)
 
 
 @_noconds_(True)
 def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
     """ The backend function for inverse Laplace transforms. """
-    from sympy import exp, Heaviside, log, expand_complex, Integral, Piecewise
+    from sympy import exp, Heaviside, log, expand_complex, Integral,\
+        Piecewise, Add
     from sympy.integrals.meijerint import meijerint_inversion, _get_coeff_exp
     # There are two strategies we can try:
     # 1) Use inverse mellin transforms - related by a simple change of variables.
@@ -1166,6 +1279,14 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         e2 = args[1].args[0]
         return Heaviside(1/abs(coeff) - t**exponent)*e1 \
             + Heaviside(t**exponent - 1/abs(coeff))*e2
+
+    if F.is_rational_function(s):
+        F = F.apart(s)
+
+    if F.is_Add:
+        f = Add(*[_inverse_laplace_transform(X, s, t, plane, simplify)\
+                     for X in F.args])
+        return _simplify(f.subs(t, t_), simplify), True
 
     try:
         f, cond = inverse_mellin_transform(F, s, exp(-t), (None, oo),
@@ -1192,21 +1313,23 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
 
     u = Dummy('u')
 
-    def simp_heaviside(arg):
+    def simp_heaviside(arg, H0=S.Half):
         a = arg.subs(exp(-t), u)
         if a.has(t):
-            return Heaviside(arg)
+            return Heaviside(arg, H0)
         rel = _solve_inequality(a > 0, u)
         if rel.lts == u:
             k = log(rel.gts)
-            return Heaviside(t + k)
+            return Heaviside(t + k, H0)
         else:
             k = log(rel.lts)
-            return Heaviside(-(t + k))
+            return Heaviside(-(t + k), H0)
+
     f = f.replace(Heaviside, simp_heaviside)
 
     def simp_exp(arg):
         return expand_complex(exp(arg))
+
     f = f.replace(exp, simp_exp)
 
     # TODO it would be nice to fix cosh and sinh ... simplify messes these
@@ -1259,6 +1382,9 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     for `c` so large that `F(s)` has no singularites in the
     half-plane `\operatorname{Re}(s) > c-\epsilon`.
 
+    Explanation
+    ===========
+
     The plane can be specified by
     argument ``plane``, but will be inferred if passed as None.
 
@@ -1275,22 +1401,70 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.
 
+    Examples
+    ========
+
     >>> from sympy.integrals.transforms import inverse_laplace_transform
     >>> from sympy import exp, Symbol
     >>> from sympy.abc import s, t
     >>> a = Symbol('a', positive=True)
     >>> inverse_laplace_transform(exp(-a*s)/s, s, t)
-    Heaviside(-a + t)
+    Heaviside(-a + t, 1/2)
 
     See Also
     ========
 
-    laplace_transform
+    laplace_transform, _fast_inverse_laplace
     hankel_transform, inverse_hankel_transform
     """
     if isinstance(F, MatrixBase) and hasattr(F, 'applyfunc'):
         return F.applyfunc(lambda Fij: inverse_laplace_transform(Fij, s, t, plane, **hints))
     return InverseLaplaceTransform(F, s, t, plane).doit(**hints)
+
+
+def _fast_inverse_laplace(e, s, t):
+    """Fast inverse Laplace transform of rational function including RootSum"""
+    a, b, n = symbols('a, b, n', cls=Wild, exclude=[s])
+
+    def _ilt(e):
+        if not e.has(s):
+            return e
+        elif e.is_Add:
+            return _ilt_add(e)
+        elif e.is_Mul:
+            return _ilt_mul(e)
+        elif e.is_Pow:
+            return _ilt_pow(e)
+        elif isinstance(e, RootSum):
+            return _ilt_rootsum(e)
+        else:
+            raise NotImplementedError
+
+    def _ilt_add(e):
+        return e.func(*map(_ilt, e.args))
+
+    def _ilt_mul(e):
+        coeff, expr = e.as_independent(s)
+        if expr.is_Mul:
+            raise NotImplementedError
+        return coeff * _ilt(expr)
+
+    def _ilt_pow(e):
+        match = e.match((a*s + b)**n)
+        if match is not None:
+            nm, am, bm = match[n], match[a], match[b]
+            if nm.is_Integer and nm < 0:
+                return t**(-nm-1)*exp(-(bm/am)*t)/(am**-nm*gamma(-nm))
+            if nm == 1:
+                return exp(-(bm/am)*t) / am
+        raise NotImplementedError
+
+    def _ilt_rootsum(e):
+        expr = e.fun.expr
+        [variable] = e.fun.variables
+        return RootSum(e.poly, Lambda(variable, together(_ilt(expr))))
+
+    return _ilt(e)
 
 
 ##########################################################################
@@ -1373,10 +1547,13 @@ class FourierTransform(FourierTypeTransform):
 
 def fourier_transform(f, x, k, **hints):
     r"""
-    Compute the unitary, ordinary-frequency Fourier transform of `f`, defined
+    Compute the unitary, ordinary-frequency Fourier transform of ``f``, defined
     as
 
     .. math:: F(k) = \int_{-\infty}^\infty f(x) e^{-2\pi i x k} \mathrm{d} x.
+
+    Explanation
+    ===========
 
     If the transform cannot be computed in closed form, this
     function returns an unevaluated :class:`FourierTransform` object.
@@ -1387,6 +1564,9 @@ def fourier_transform(f, x, k, **hints):
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.
     Note that for this transform, by default ``noconds=True``.
+
+    Examples
+    ========
 
     >>> from sympy import fourier_transform, exp
     >>> from sympy.abc import x, k
@@ -1433,6 +1613,9 @@ def inverse_fourier_transform(F, k, x, **hints):
 
     .. math:: f(x) = \int_{-\infty}^\infty F(k) e^{2\pi i x k} \mathrm{d} k.
 
+    Explanation
+    ===========
+
     If the transform cannot be computed in closed form, this
     function returns an unevaluated :class:`InverseFourierTransform` object.
 
@@ -1442,6 +1625,9 @@ def inverse_fourier_transform(F, k, x, **hints):
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.
     Note that for this transform, by default ``noconds=True``.
+
+    Examples
+    ========
 
     >>> from sympy import inverse_fourier_transform, exp, sqrt, pi
     >>> from sympy.abc import x, k
@@ -1549,12 +1735,18 @@ def sine_transform(f, x, k, **hints):
 
     .. math:: F(k) = \sqrt{\frac{2}{\pi}} \int_{0}^\infty f(x) \sin(2\pi x k) \mathrm{d} x.
 
+    Explanation
+    ===========
+
     If the transform cannot be computed in closed form, this
     function returns an unevaluated :class:`SineTransform` object.
 
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.
     Note that for this transform, by default ``noconds=True``.
+
+    Examples
+    ========
 
     >>> from sympy import sine_transform, exp
     >>> from sympy.abc import x, k, a
@@ -1602,12 +1794,18 @@ def inverse_sine_transform(F, k, x, **hints):
 
     .. math:: f(x) = \sqrt{\frac{2}{\pi}} \int_{0}^\infty F(k) \sin(2\pi x k) \mathrm{d} k.
 
+    Explanation
+    ===========
+
     If the transform cannot be computed in closed form, this
     function returns an unevaluated :class:`InverseSineTransform` object.
 
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.
     Note that for this transform, by default ``noconds=True``.
+
+    Examples
+    ========
 
     >>> from sympy import inverse_sine_transform, exp, sqrt, gamma
     >>> from sympy.abc import x, k, a
@@ -1656,12 +1854,18 @@ def cosine_transform(f, x, k, **hints):
 
     .. math:: F(k) = \sqrt{\frac{2}{\pi}} \int_{0}^\infty f(x) \cos(2\pi x k) \mathrm{d} x.
 
+    Explanation
+    ===========
+
     If the transform cannot be computed in closed form, this
     function returns an unevaluated :class:`CosineTransform` object.
 
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.
     Note that for this transform, by default ``noconds=True``.
+
+    Examples
+    ========
 
     >>> from sympy import cosine_transform, exp, sqrt, cos
     >>> from sympy.abc import x, k, a
@@ -1709,12 +1913,18 @@ def inverse_cosine_transform(F, k, x, **hints):
 
     .. math:: f(x) = \sqrt{\frac{2}{\pi}} \int_{0}^\infty F(k) \cos(2\pi x k) \mathrm{d} k.
 
+    Explanation
+    ===========
+
     If the transform cannot be computed in closed form, this
     function returns an unevaluated :class:`InverseCosineTransform` object.
 
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.
     Note that for this transform, by default ``noconds=True``.
+
+    Examples
+    ========
 
     >>> from sympy import inverse_cosine_transform, sqrt, pi
     >>> from sympy.abc import x, k, a
@@ -1808,6 +2018,9 @@ def hankel_transform(f, r, k, nu, **hints):
 
     .. math:: F_\nu(k) = \int_{0}^\infty f(r) J_\nu(k r) r \mathrm{d} r.
 
+    Explanation
+    ===========
+
     If the transform cannot be computed in closed form, this
     function returns an unevaluated :class:`HankelTransform` object.
 
@@ -1815,13 +2028,16 @@ def hankel_transform(f, r, k, nu, **hints):
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.
     Note that for this transform, by default ``noconds=True``.
 
+    Examples
+    ========
+
     >>> from sympy import hankel_transform, inverse_hankel_transform
     >>> from sympy import exp
     >>> from sympy.abc import r, k, m, nu, a
 
     >>> ht = hankel_transform(1/r**m, r, k, nu)
     >>> ht
-    2*2**(-m)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
+    2*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/(2**m*gamma(m/2 + nu/2))
 
     >>> inverse_hankel_transform(ht, k, r, nu)
     r**(-m)
@@ -1864,6 +2080,9 @@ def inverse_hankel_transform(F, k, r, nu, **hints):
 
     .. math:: f(r) = \int_{0}^\infty F_\nu(k) J_\nu(k r) k \mathrm{d} k.
 
+    Explanation
+    ===========
+
     If the transform cannot be computed in closed form, this
     function returns an unevaluated :class:`InverseHankelTransform` object.
 
@@ -1871,13 +2090,16 @@ def inverse_hankel_transform(F, k, r, nu, **hints):
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.
     Note that for this transform, by default ``noconds=True``.
 
+    Examples
+    ========
+
     >>> from sympy import hankel_transform, inverse_hankel_transform
     >>> from sympy import exp
     >>> from sympy.abc import r, k, m, nu, a
 
     >>> ht = hankel_transform(1/r**m, r, k, nu)
     >>> ht
-    2*2**(-m)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
+    2*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/(2**m*gamma(m/2 + nu/2))
 
     >>> inverse_hankel_transform(ht, k, r, nu)
     r**(-m)

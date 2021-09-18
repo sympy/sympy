@@ -1,11 +1,10 @@
-from __future__ import print_function, division
 import functools
 
 from sympy import Basic, Tuple, S
 from sympy.core.sympify import _sympify
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
-from sympy.simplify import simplify
+from sympy.simplify.simplify import simplify
 
 
 class DenseNDimArray(NDimArray):
@@ -52,7 +51,7 @@ class DenseNDimArray(NDimArray):
 
         index = self._check_index_for_getitem(index)
 
-        if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
+        if isinstance(index, tuple) and any(isinstance(i, slice) for i in index):
             sl_factors, eindices = self._get_slice_data_for_array_access(index)
             array = [self._array[self._parse_index(i)] for i in eindices]
             nshape = [len(el) for i, el in enumerate(sl_factors) if isinstance(index[i], slice)]
@@ -185,7 +184,7 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
         [[1, 0], [0, 1]]
 
         """
-        if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
+        if isinstance(index, tuple) and any(isinstance(i, slice) for i in index):
             value, eindices, slice_offsets = self._get_slice_data_for_array_assignment(index, value)
             for i in eindices:
                 other_i = [ind - j for ind, j in zip(i, slice_offsets) if j is not None]

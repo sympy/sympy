@@ -4,8 +4,6 @@ MKS unit system.
 MKS stands for "meter, kilogram, second, ampere".
 """
 
-from __future__ import division
-
 from typing import List
 
 from sympy.physics.units.definitions import Z0, A, C, F, H, S, T, V, Wb, ohm
@@ -25,7 +23,7 @@ all_units = []  # type: List[Quantity]
 for u in units:
     all_units.extend(prefix_unit(u, PREFIXES))
 
-all_units.extend([Z0])
+all_units.append(Z0)
 
 dimsys_MKSA = dimsys_length_weight_time.extend([
     # Dimensional dependencies for base dimensions (MKSA not in MKS)

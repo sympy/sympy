@@ -1,17 +1,20 @@
 from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplify,
                    Rational, factorial, gamma, Piecewise, Eq, Product, Interval,
-                   IndexedBase, RisingFactorial, polar_lift, ProductSet, Range)
+                   IndexedBase, RisingFactorial, polar_lift, ProductSet, Range, eye,
+                   Determinant)
 from sympy.core.numbers import comp
 from sympy.integrals.integrals import integrate
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.stats import density, median, marginal_distribution, Normal, Laplace, E
+from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.stats import density, median, marginal_distribution, Normal, Laplace, E, sample
 from sympy.stats.joint_rv_types import (JointRV, MultivariateNormalDistribution,
                 JointDistributionHandmade, MultivariateT, NormalGamma,
                 GeneralizedMultivariateLogGammaOmega as GMVLGO, MultivariateBeta,
                 GeneralizedMultivariateLogGamma as GMVLG, MultivariateEwens,
                 Multinomial, NegativeMultinomial, MultivariateNormal,
                 MultivariateLaplace)
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, skip
+from sympy.external import import_module
 
 x, y, z, a, b = symbols('x y z a b')
 
@@ -22,8 +25,6 @@ def test_Normal():
     assert density(m)(1, 2) == 1/(2*pi)
     assert m.pspace.distribution.set == ProductSet(S.Reals, S.Reals)
     raises (ValueError, lambda:m[2])
-    raises (ValueError,\
-        lambda: Normal('M',[1, 2], [[0, 0], [0, 1]]))
     n = Normal('B', [1, 2, 3], [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
     p = Normal('C',  Matrix([1, 2]), Matrix([[1, 0], [0, 1]]))
     assert density(m)(x, y) == density(p)(x, y)
@@ -31,7 +32,7 @@ def test_Normal():
     raises(ValueError, lambda: marginal_distribution(m))
     assert integrate(density(m)(x, y), (x, -oo, oo), (y, -oo, oo)).evalf() == 1
     N = Normal('N', [1, 2], [[x, 0], [0, y]])
-    assert density(N)(0, 0) == exp(-2/y - 1/(2*x))/(2*pi*sqrt(x*y))
+    assert density(N)(0, 0) == exp(-((4*x + y)/(2*x*y)))/(2*pi*sqrt(x*y))
 
     raises (ValueError, lambda: Normal('M', [1, 2], [[1, 1], [1, -1]]))
     # symbolic
@@ -44,6 +45,38 @@ def test_Normal():
     # Below tests should work after issue #17267 is resolved
     # assert E(X) == mu
     # assert variance(X) == sigma
+
+    # test symbolic multivariate normal densities
+    n = 3
+
+    Sg = MatrixSymbol('Sg', n, n)
+    mu = MatrixSymbol('mu', n, 1)
+    obs = MatrixSymbol('obs', n, 1)
+
+    X = MultivariateNormal('X', mu, Sg)
+    density_X = density(X)
+
+    eval_a = density_X(obs).subs({Sg: eye(3),
+        mu: Matrix([0, 0, 0]), obs: Matrix([0, 0, 0])}).doit()
+    eval_b = density_X(0, 0, 0).subs({Sg: eye(3), mu: Matrix([0, 0, 0])}).doit()
+
+    assert eval_a == sqrt(2)/(4*pi**Rational(3/2))
+    assert eval_b == sqrt(2)/(4*pi**Rational(3/2))
+
+    n = symbols('n', natural=True)
+
+    Sg = MatrixSymbol('Sg', n, n)
+    mu = MatrixSymbol('mu', n, 1)
+    obs = MatrixSymbol('obs', n, 1)
+
+    X = MultivariateNormal('X', mu, Sg)
+    density_X_at_obs = density(X)(obs)
+
+    expected_density = MatrixElement(
+        exp((S(1)/2) * (mu.T - obs.T) * Sg**(-1) * (-mu + obs)) / \
+        sqrt((2*pi)**n * Determinant(Sg)), 0, 0)
+
+    assert density_X_at_obs == expected_density
 
 def test_MultivariateTDist():
     t1 = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
@@ -97,8 +130,8 @@ def test_GeneralizedMultivariateLogGammaDistribution():
     assert str(density(G)(y_1, y_2, y_3, y_4)) == den
     marg = ("5*2**(2/3)*5**(1/3)*exp(4*y_1)*exp(-exp(y_1))*Integral(exp(-exp(4*G[3])"
             "/4)*exp(16*G[3])*Integral(exp(-exp(3*G[2])/3)*exp(12*G[2])*Integral(exp("
-            "-exp(2*G[1])/2)*exp(8*G[1])*Sum((-1/4)**n*24**(-n)*(-4 + 2**(2/3)*5**(1/3"
-            "))**n*exp(n*y_1)*exp(2*n*G[1])*exp(3*n*G[2])*exp(4*n*G[3])/(gamma(n + 1)"
+            "-exp(2*G[1])/2)*exp(8*G[1])*Sum((-1/4)**n*(-4 + 2**(2/3)*5**(1/3"
+            "))**n*exp(n*y_1)*exp(2*n*G[1])*exp(3*n*G[2])*exp(4*n*G[3])/(24**n*gamma(n + 1)"
             "*gamma(n + 4)**3), (n, 0, oo)), (G[1], -oo, oo)), (G[2], -oo, oo)), (G[3]"
             ", -oo, oo))/5308416")
     assert str(marginal_distribution(G, G[0])(y_1)) == marg
@@ -239,3 +272,103 @@ def test_expectation():
 def test_joint_vector_expectation():
     m = Normal('A', [x, y], [[1, 0], [0, 1]])
     assert E(m) == (x, y)
+
+
+def test_sample_numpy():
+    distribs_numpy = [
+        MultivariateNormal("M", [3, 4], [[2, 1], [1, 2]]),
+        MultivariateBeta("B", [0.4, 5, 15, 50, 203]),
+        Multinomial("N", 50, [0.3, 0.2, 0.1, 0.25, 0.15])
+    ]
+    size = 3
+    numpy = import_module('numpy')
+    if not numpy:
+        skip('Numpy is not installed. Abort tests for _sample_numpy.')
+    else:
+        for X in distribs_numpy:
+            samps = sample(X, size=size, library='numpy')
+            for sam in samps:
+                assert tuple(sam) in X.pspace.distribution.set
+        N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
+        raises(NotImplementedError, lambda: sample(N_c, library='numpy'))
+
+def test_sample_scipy():
+    distribs_scipy = [
+        MultivariateNormal("M", [0, 0], [[0.1, 0.025], [0.025, 0.1]]),
+        MultivariateBeta("B", [0.4, 5, 15]),
+        Multinomial("N", 8, [0.3, 0.2, 0.1, 0.4])
+    ]
+
+    size = 3
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests for _sample_scipy.')
+    else:
+        for X in distribs_scipy:
+            samps = sample(X, size=size)
+            samps2 = sample(X, size=(2, 2))
+            for sam in samps:
+                assert tuple(sam) in X.pspace.distribution.set
+            for i in range(2):
+                for j in range(2):
+                    assert tuple(samps2[i][j]) in X.pspace.distribution.set
+        N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
+        raises(NotImplementedError, lambda: sample(N_c))
+
+
+def test_sample_pymc3():
+    distribs_pymc3 = [
+        MultivariateNormal("M", [5, 2], [[1, 0], [0, 1]]),
+        MultivariateBeta("B", [0.4, 5, 15]),
+        Multinomial("N", 4, [0.3, 0.2, 0.1, 0.4])
+    ]
+    size = 3
+    pymc3 = import_module('pymc3')
+    if not pymc3:
+        skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
+    else:
+        for X in distribs_pymc3:
+            samps = sample(X, size=size, library='pymc3')
+            for sam in samps:
+                assert tuple(sam.flatten()) in X.pspace.distribution.set
+        N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
+        raises(NotImplementedError, lambda: sample(N_c, library='pymc3'))
+
+def test_sample_seed():
+    x1, x2 = (Indexed('x', i) for i in (1, 2))
+    pdf = exp(-x1**2/2 + x1 - x2**2/2 - S.Half)/(2*pi)
+    X = JointRV('x', pdf)
+
+    libraries = ['scipy', 'numpy', 'pymc3']
+    for lib in libraries:
+        try:
+            imported_lib = import_module(lib)
+            if imported_lib:
+                s0, s1, s2 = [], [], []
+                s0 = sample(X, size=10, library=lib, seed=0)
+                s1 = sample(X, size=10, library=lib, seed=0)
+                s2 = sample(X, size=10, library=lib, seed=1)
+                assert all(s0 == s1)
+                assert all(s1 != s2)
+        except NotImplementedError:
+            continue
+
+
+def test_issue_21057():
+    m = Normal("x", [0, 0], [[0, 0], [0, 0]])
+    n = MultivariateNormal("x", [0, 0], [[0, 0], [0, 0]])
+    p = Normal("x", [0, 0], [[0, 0], [0, 1]])
+    assert m == n
+    libraries = ['scipy', 'numpy', 'pymc3']
+    for library in libraries:
+        try:
+            imported_lib = import_module(library)
+            if imported_lib:
+                s1 = sample(m, size=8)
+                s2 = sample(n, size=8)
+                s3 = sample(p, size=8)
+                assert tuple(s1.flatten()) == tuple(s2.flatten())
+                for s in s3:
+                    assert tuple(s.flatten()) in p.pspace.distribution.set
+        except NotImplementedError:
+            continue

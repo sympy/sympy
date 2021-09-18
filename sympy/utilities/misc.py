@@ -7,7 +7,7 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from sympy.core.compatibility import get_function_name, as_int
+from sympy.core.compatibility import as_int
 from sympy.core.decorators import deprecated
 
 
@@ -193,13 +193,13 @@ def debug_decorator(func):
         _debug_iter += 1
 
         def tree(subtrees):
-            def indent(s, type=1):
+            def indent(s, variant=1):
                 x = s.split("\n")
                 r = "+-%s\n" % x[0]
                 for a in x[1:]:
                     if a == "":
                         continue
-                    if type == 1:
+                    if variant == 1:
                         r += "| %s\n" % a
                     else:
                         r += "  %s\n" % a
@@ -215,14 +215,14 @@ def debug_decorator(func):
         # If there is a bug and the algorithm enters an infinite loop, enable the
         # following lines. It will print the names and parameters of all major functions
         # that are called, *before* they are called
-        #from sympy.core.compatibility import reduce
+        #from functools import reduce
         #print("%s%s %s%s" % (_debug_iter, reduce(lambda x, y: x + y, \
-        #    map(lambda x: '-', range(1, 2 + _debug_iter))), get_function_name(f), args))
+        #    map(lambda x: '-', range(1, 2 + _debug_iter))), f.__name__, args))
 
         r = f(*args, **kw)
 
         _debug_iter -= 1
-        s = "%s%s = %s\n" % (get_function_name(f), args, r)
+        s = "%s%s = %s\n" % (f.__name__, args, r)
         if _debug_tmp != []:
             s += tree(_debug_tmp)
         _debug_tmp = oldtmp
@@ -302,10 +302,6 @@ def func_name(x, short=False):
     'StrictLessThan'
     >>> func_name(x < 1, short=True)
     'Lt'
-
-    See Also
-    ========
-    sympy.core.compatibility get_function_name
     """
     alias = {
     'GreaterThan': 'Ge',

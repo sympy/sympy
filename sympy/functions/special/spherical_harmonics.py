@@ -222,13 +222,6 @@ class Ynm(Function):
             res = mp.spherharm(n, m, theta, phi)
         return Expr._from_mpmath(res, prec)
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.spherical_harmonic(self.args[0]._sage_(),
-                                       self.args[1]._sage_(),
-                                       self.args[2]._sage_(),
-                                       self.args[3]._sage_())
-
 
 def Ynm_c(n, m, theta, phi):
     r"""
@@ -297,6 +290,26 @@ class Znm(Function):
           Y_n^m(\theta, \varphi) &\quad m = 0 \\
           \frac{Y_n^m(\theta, \varphi) - (-1)^m Y_n^{-m}(\theta, \varphi)}{i \sqrt{2}} &\quad m < 0 \\
         \end{cases}
+
+    Examples
+    ========
+
+    >>> from sympy import Znm, Symbol, simplify
+    >>> from sympy.abc import n, m
+    >>> theta = Symbol("theta")
+    >>> phi = Symbol("phi")
+    >>> Znm(n, m, theta, phi)
+    Znm(n, m, theta, phi)
+
+    For specific integers n and m we can evaluate the harmonics
+    to more useful expressions:
+
+    >>> simplify(Znm(0, 0, theta, phi).expand(func=True))
+    1/(2*sqrt(pi))
+    >>> simplify(Znm(1, 1, theta, phi).expand(func=True))
+    -sqrt(3)*sin(theta)*cos(phi)/(2*sqrt(pi))
+    >>> simplify(Znm(2, 1, theta, phi).expand(func=True))
+    -sqrt(15)*sin(2*theta)*cos(phi)/(4*sqrt(pi))
 
     See Also
     ========

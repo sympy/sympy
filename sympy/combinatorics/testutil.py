@@ -8,6 +8,9 @@ def _cmp_perm_lists(first, second):
     """
     Compare two lists of permutations as sets.
 
+    Explanation
+    ===========
+
     This is used for testing purposes. Since the array form of a
     permutation is currently a list, Permutation is not hashable
     and cannot be put into a set.
@@ -34,6 +37,9 @@ def _naive_list_centralizer(self, other, af=False):
     from sympy.combinatorics.perm_groups import PermutationGroup
     """
     Return a list of elements for the centralizer of a subgroup/set/element.
+
+    Explanation
+    ===========
 
     This is a brute force implementation that goes over all elements of the
     group and checks for membership in the centralizer. It is used to
@@ -78,6 +84,9 @@ def _naive_list_centralizer(self, other, af=False):
 def _verify_bsgs(group, base, gens):
     """
     Verify the correctness of a base and strong generating set.
+
+    Explanation
+    ===========
 
     This is a naive implementation using the definition of a base and a strong
     generating set relative to it. There are other procedures for
@@ -192,22 +201,30 @@ def _verify_normal_closure(group, arg, closure=None):
 
 def canonicalize_naive(g, dummies, sym, *v):
     """
-    Canonicalize tensor formed by tensors of the different types
+    Canonicalize tensor formed by tensors of the different types.
 
-    g  permutation representing the tensor
-    dummies  list of dummy indices
-    msym symmetry of the metric
-
-    v is a list of (base_i, gens_i, n_i, sym_i) for tensors of type `i`
-    base_i, gens_i BSGS for tensors of this type
-    n_i  number ot tensors of type `i`
+    Explanation
+    ===========
 
     sym_i symmetry under exchange of two component tensors of type `i`
           None  no symmetry
           0     commuting
           1     anticommuting
 
-    Return 0 if the tensor is zero, else return the array form of
+    Parameters
+    ==========
+
+    g : Permutation representing the tensor.
+    dummies : List of dummy indices.
+    msym : Symmetry of the metric.
+    v : A list of (base_i, gens_i, n_i, sym_i) for tensors of type `i`.
+        base_i, gens_i BSGS for tensors of this type
+        n_i  number ot tensors of type `i`
+
+    Returns
+    =======
+
+    Returns 0 if the tensor is zero, else returns the array form of
     the permutation representing the canonical form of the tensor.
 
     Examples
@@ -264,7 +281,13 @@ def graph_certificate(gr):
     """
     Return a certificate for the graph
 
-    gr adjacency list
+    Parameters
+    ==========
+
+    gr : adjacency list
+
+    Explanation
+    ===========
 
     The graph is assumed to be unoriented and without
     external lines.

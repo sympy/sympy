@@ -4,7 +4,13 @@ from sympy import (Symbol, symbols, oo, limit, Rational, Integral, Derivative,
 
 from sympy.printing.python import python
 
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, skip
+
+from sympy.parsing.latex import parse_latex
+from sympy.external import import_module
+
+# To test latex to python printing
+antlr4 = import_module("antlr4")
 
 x, y = symbols('x,y')
 th = Symbol('theta')
@@ -18,14 +24,14 @@ def test_python_basic():
     assert python(oo) == "e = oo"
 
     # Powers
-    assert python((x**2)) == "x = Symbol(\'x\')\ne = x**2"
+    assert python(x**2) == "x = Symbol(\'x\')\ne = x**2"
     assert python(1/x) == "x = Symbol('x')\ne = 1/x"
     assert python(y*x**-2) == "y = Symbol('y')\nx = Symbol('x')\ne = y/x**2"
     assert python(
         x**Rational(-5, 2)) == "x = Symbol('x')\ne = x**Rational(-5, 2)"
 
     # Sums of terms
-    assert python((x**2 + x + 1)) in [
+    assert python(x**2 + x + 1) in [
         "x = Symbol('x')\ne = 1 + x + x**2",
         "x = Symbol('x')\ne = x + x**2 + 1",
         "x = Symbol('x')\ne = x**2 + x + 1", ]
@@ -90,7 +96,7 @@ def test_python_relational():
 
 def test_python_functions():
     # Simple
-    assert python((2*x + exp(x))) in "x = Symbol('x')\ne = 2*x + exp(x)"
+    assert python(2*x + exp(x)) in "x = Symbol('x')\ne = 2*x + exp(x)"
     assert python(sqrt(2)) == 'e = sqrt(2)'
     assert python(2**Rational(1, 3)) == 'e = 2**Rational(1, 3)'
     assert python(sqrt(2 + pi)) == 'e = sqrt(2 + pi)'
@@ -182,6 +188,13 @@ def test_python_matrix():
 def test_python_limits():
     assert python(limit(x, x, oo)) == 'e = oo'
     assert python(limit(x**2, x, 0)) == 'e = 0'
+
+def test_issue_20762():
+    if not antlr4:
+        skip('antlr not installed')
+    # Make sure python removes curly braces from subscripted variables
+    expr = parse_latex(r'a_b \cdot b')
+    assert python(expr) == "a_b = Symbol('a_{b}')\nb = Symbol('b')\ne = a_b*b"
 
 
 def test_settings():

@@ -164,7 +164,7 @@ def test_sparse():
     assert a * 0 == ImmutableSparseNDimArray({}, (100000, 200000))
     assert 0 * a == ImmutableSparseNDimArray({}, (100000, 200000))
 
-    # __div__
+    # __truediv__
     assert a/3 == ImmutableSparseNDimArray({200001: Rational(1, 3)}, (100000, 200000))
 
     # __neg__
@@ -438,3 +438,9 @@ def test_issue_12665():
 def test_zeros_without_shape():
     arr = ImmutableDenseNDimArray.zeros()
     assert arr == ImmutableDenseNDimArray(0)
+
+def test_issue_21870():
+    a0 = ImmutableDenseNDimArray(0)
+    assert a0.rank() == 0
+    a1 = ImmutableDenseNDimArray(a0)
+    assert a1.rank() == 0

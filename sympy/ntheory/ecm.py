@@ -3,6 +3,8 @@ from sympy.core.power import integer_log
 from sympy.core.compatibility import as_int
 import random
 
+rgen = random.Random()
+
 #----------------------------------------------------------------------------#
 #                                                                            #
 #                   Lenstra's Elliptic Curve Factorization                   #
@@ -32,8 +34,8 @@ class Point:
         """
         Initial parameters for the Point class.
 
-        Parameters:
-        ===========
+        Parameters
+        ==========
 
         x_cord : X coordinate of the Point
         z_cord : Z coordinate of the Point
@@ -66,8 +68,8 @@ class Point:
         So, we always know what the difference between the point is.
 
 
-        Parameters:
-        ===========
+        Parameters
+        ==========
 
         Q : point on the curve in Montgomery form
         diff : self - Q
@@ -121,7 +123,7 @@ class Point:
         A total of 11 multiplications are required in each step of this
         algorithm.
 
-        Parameters:
+        Parameters
         ==========
 
         k : The positive integer multiplier
@@ -149,7 +151,7 @@ class Point:
         return Q
 
 
-def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
+def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     """Returns one factor of n using
     Lenstra's 2 Stage Elliptic curve Factorization
     with Suyama's Parameterization. Here Montgomery
@@ -177,8 +179,8 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     scalar multiplication by p to get p*k*P = O. Here a second bound B2
     restrict the size of possible values of p.
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
 
     n : Number to be Factored
     B1 : Stage 1 Bound
@@ -207,13 +209,11 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     k = 1
     for p in sieve.primerange(1, B1 + 1):
         k *= pow(p, integer_log(B1, p)[0])
-    g = 1
-
     while(curve <= max_curve):
         curve += 1
 
         #Suyama's Paramatrization
-        sigma = random.randint(6, n - 1)
+        sigma = rgen.randint(6, n - 1)
         u = (sigma*sigma - 5) % n
         v = (4*sigma) % n
         diff = v - u
@@ -278,8 +278,8 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
     of n. First all the small factors are taken out using trial division.
     Then `ecm_one_factor` is used to compute one factor at a time.
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
 
     n : Number to be Factored
     B1 : Stage 1 Bound
@@ -302,10 +302,10 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
             _factors.add(prime)
             while(n % prime == 0):
                 n //= prime
-    random.seed(seed)
+    rgen.seed(seed)
     while(n > 1):
         try:
-            factor = ecm_one_factor(n, B1, B2, max_curve)
+            factor = _ecm_one_factor(n, B1, B2, max_curve)
         except ValueError:
             raise ValueError("Increase the bounds")
         _factors.add(factor)

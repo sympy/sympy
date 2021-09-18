@@ -101,8 +101,8 @@ def test_Matrix_and_non_basics():
 # Nodes #
 #########
 
-"MatrixSymbol(Symbol('X'), Symbol('n'), Symbol('n'))_()" ["color"="black", "label"="MatrixSymbol", "shape"="ellipse"];
-"Symbol('X')_(0,)" ["color"="black", "label"="X", "shape"="ellipse"];
+"MatrixSymbol(Str('X'), Symbol('n'), Symbol('n'))_()" ["color"="black", "label"="MatrixSymbol", "shape"="ellipse"];
+"Str('X')_(0,)" ["color"="blue", "label"="X", "shape"="ellipse"];
 "Symbol('n')_(1,)" ["color"="black", "label"="n", "shape"="ellipse"];
 "Symbol('n')_(2,)" ["color"="black", "label"="n", "shape"="ellipse"];
 
@@ -110,9 +110,9 @@ def test_Matrix_and_non_basics():
 # Edges #
 #########
 
-"MatrixSymbol(Symbol('X'), Symbol('n'), Symbol('n'))_()" -> "Symbol('X')_(0,)";
-"MatrixSymbol(Symbol('X'), Symbol('n'), Symbol('n'))_()" -> "Symbol('n')_(1,)";
-"MatrixSymbol(Symbol('X'), Symbol('n'), Symbol('n'))_()" -> "Symbol('n')_(2,)";
+"MatrixSymbol(Str('X'), Symbol('n'), Symbol('n'))_()" -> "Str('X')_(0,)";
+"MatrixSymbol(Str('X'), Symbol('n'), Symbol('n'))_()" -> "Symbol('n')_(1,)";
+"MatrixSymbol(Str('X'), Symbol('n'), Symbol('n'))_()" -> "Symbol('n')_(2,)";
 }"""
 
 

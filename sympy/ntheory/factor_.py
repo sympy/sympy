@@ -21,7 +21,7 @@ from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
 from sympy.utilities.misc import filldedent
-
+from .ecm import _ecm_one_factor
 
 # Note: This list should be updated whenever new Mersenne primes are found.
 # Refer: https://www.mersenne.org/
@@ -866,6 +866,7 @@ trial_int_msg = "Trial division with ints [%i ... %i] and fail_max=%i"
 trial_msg = "Trial division with primes [%i ... %i]"
 rho_msg = "Pollard's rho with retries %i, max_steps %i and seed %i"
 pm1_msg = "Pollard's p-1 with smoothness bound %i and seed %i"
+ecm_msg = "Elliptic Curve with B1 bound %i, B2 bound %i, num_curves %i"
 factor_msg = '\t%i ** %i'
 fermat_msg = 'Close factors satisying Fermat condition found.'
 complete_msg = 'Factorization is complete.'
@@ -973,7 +974,7 @@ def _factorint_small(factors, n, limit, fail_max):
 
 
 def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
-              verbose=False, visual=None, multiple=False):
+              use_ecm=True, verbose=False, visual=None, multiple=False):
     r"""
     Given a positive integer ``n``, ``factorint(n)`` returns a dict containing
     the prime factors of ``n`` as keys and their respective multiplicities
@@ -1170,7 +1171,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     elif isinstance(n, dict) or isinstance(n, Mul):
         return factordict
 
-    assert use_trial or use_rho or use_pm1
+    assert use_trial or use_rho or use_pm1 or use_ecm
 
     from sympy.functions.combinatorial.factorials import factorial
     if isinstance(n, factorial):
@@ -1199,6 +1200,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     n = as_int(n)
     if limit:
         limit = int(limit)
+        use_ecm = False
 
     # special cases
     if n < 0:
@@ -1311,7 +1313,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     limit = limit or sqrt_n
     # add 1 to make sure limit is reached in primerange calls
     limit += 1
-
+    iteration = 0
     while 1:
 
         try:
@@ -1354,6 +1356,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                                            use_trial=use_trial,
                                            use_rho=use_rho,
                                            use_pm1=use_pm1,
+                                           use_ecm=use_ecm,
                                            verbose=verbose)
                             n, _ = _trial(factors, n, ps, verbose=False)
                             _check_termination(factors, n, limit, use_trial,
@@ -1372,6 +1375,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                                            use_trial=use_trial,
                                            use_rho=use_rho,
                                            use_pm1=use_pm1,
+                                           use_ecm=use_ecm,
                                            verbose=verbose)
                             n, _ = _trial(factors, n, ps, verbose=False)
                             _check_termination(factors, n, limit, use_trial,
@@ -1381,8 +1385,40 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             if verbose:
                 print(complete_msg)
             return factors
-
+        #Use subexponential algorithms if use_ecm
+        #Use pollard algorithms for finding small factors for 3 iterations
+        #if after small factors the number of digits of n is >= 20 then use ecm
+        iteration += 1
+        if use_ecm and iteration >= 3 and len(str(n)) >= 25:
+            break
         low, high = high, high*2
+    B1 = 10000
+    B2 = 100*B1
+    num_curves = 50
+    while(1):
+        if verbose:
+            print(ecm_msg % (B1, B2, num_curves))
+        while(1):
+            try:
+                factor = _ecm_one_factor(n, B1, B2, num_curves)
+                ps = factorint(factor, limit=limit - 1,
+                               use_trial=use_trial,
+                               use_rho=use_rho,
+                               use_pm1=use_pm1,
+                               use_ecm=use_ecm,
+                               verbose=verbose)
+                n, _ = _trial(factors, n, ps, verbose=False)
+                _check_termination(factors, n, limit, use_trial,
+                                       use_rho, use_pm1, verbose)
+            except ValueError:
+                break
+            except StopIteration:
+                if verbose:
+                    print(complete_msg)
+                return factors
+        B1 *= 5
+        B2 = 100*B1
+        num_curves *= 4
 
 
 def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,

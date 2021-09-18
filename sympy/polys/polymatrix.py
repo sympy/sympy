@@ -1,15 +1,16 @@
-from __future__ import print_function
-
+from sympy.core.expr import Expr
+from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
 
-from sympy.matrices.dense import MutableDenseMatrix
+from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.polytools import Poly, parallel_poly_from_expr
+from sympy.polys.domains import QQ
 
-from sympy.polys.fields import sfield
-from sympy.polys.polytools import Poly
-from sympy.polys.domains import EX
+from sympy.polys.matrices import DomainMatrix
+from sympy.polys.matrices.domainscalar import DomainScalar
 
 
-class MutablePolyDenseMatrix(MutableDenseMatrix):
+class MutablePolyDenseMatrix:
     """
     A mutable matrix of objects from poly module or to operate with them.
 
@@ -17,201 +18,275 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
     ========
 
     >>> from sympy.polys.polymatrix import PolyMatrix
-    >>> from sympy import Symbol, Poly, ZZ
+    >>> from sympy import Symbol, Poly
     >>> x = Symbol('x')
     >>> pm1 = PolyMatrix([[Poly(x**2, x), Poly(-x, x)], [Poly(x**3, x), Poly(-1 + x, x)]])
-    >>> v1 = PolyMatrix([[1, 0], [-1, 0]])
+    >>> v1 = PolyMatrix([[1, 0], [-1, 0]], x)
     >>> pm1*v1
-    Matrix([
-    [    Poly(x**2 + x, x, domain='ZZ'), Poly(0, x, domain='ZZ')],
-    [Poly(x**3 - x + 1, x, domain='ZZ'), Poly(0, x, domain='ZZ')]])
+    PolyMatrix([
+    [    x**2 + x, 0],
+    [x**3 - x + 1, 0]], ring=QQ[x])
 
     >>> pm1.ring
     ZZ[x]
 
     >>> v1*pm1
-    Matrix([
-    [ Poly(x**2, x, domain='ZZ'), Poly(-x, x, domain='ZZ')],
-    [Poly(-x**2, x, domain='ZZ'),  Poly(x, x, domain='ZZ')]])
+    PolyMatrix([
+    [ x**2, -x],
+    [-x**2,  x]], ring=QQ[x])
 
     >>> pm2 = PolyMatrix([[Poly(x**2, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(1, x, domain='QQ'), \
             Poly(x**3, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(-x**3, x, domain='QQ')]])
-    >>> v2 = PolyMatrix([1, 0, 0, 0, 0, 0], ring=ZZ)
+    >>> v2 = PolyMatrix([1, 0, 0, 0, 0, 0], x)
     >>> v2.ring
-    ZZ
+    QQ[x]
     >>> pm2*v2
-    Matrix([[Poly(x**2, x, domain='QQ')]])
+    PolyMatrix([[x**2]], ring=QQ[x])
 
     """
-    _class_priority = 10
-    # we don't want to sympify the elements of PolyMatrix
-    _sympify = staticmethod(lambda x: x)
 
-    def __init__(self, *args, **kwargs):
-        # if any non-Poly element is given as input then
-        # 'ring' defaults 'EX'
-        ring = kwargs.get('ring', EX)
-        if all(isinstance(p, Poly) for p in self._mat) and self._mat:
-            domain = tuple([p.domain[p.gens] for p in self._mat])
-            ring = domain[0]
-            for i in range(1, len(domain)):
-                ring = ring.unify(domain[i])
-        self.ring = ring
+    def __new__(cls, *args, ring=None):
 
-    def _eval_matrix_mul(self, other):
-        self_cols = self.cols
-        other_rows, other_cols = other.rows, other.cols
-        other_len = other_rows*other_cols
-        new_mat_rows = self.rows
-        new_mat_cols = other.cols
-
-        new_mat = [0]*new_mat_rows*new_mat_cols
-
-        if self.cols != 0 and other.rows != 0:
-            mat = self._mat
-            other_mat = other._mat
-            for i in range(len(new_mat)):
-                row, col = i // new_mat_cols, i % new_mat_cols
-                row_indices = range(self_cols*row, self_cols*(row+1))
-                col_indices = range(col, other_len, other_cols)
-                vec = (mat[a]*other_mat[b] for a,b in zip(row_indices, col_indices))
-                # 'Add' shouldn't be used here
-                new_mat[i] = sum(vec)
-
-        return self.__class__(new_mat_rows, new_mat_cols, new_mat, copy=False)
-
-    def _eval_scalar_mul(self, other):
-        mat = [Poly(a.as_expr()*other, *a.gens) if isinstance(a, Poly) else a*other for a in self._mat]
-        return self.__class__(self.rows, self.cols, mat, copy=False)
-
-    def _eval_scalar_rmul(self, other):
-        mat = [Poly(other*a.as_expr(), *a.gens) if isinstance(a, Poly) else other*a for a in self._mat]
-        return self.__class__(self.rows, self.cols, mat, copy=False)
-
-
-MutablePolyMatrix = PolyMatrix = MutablePolyDenseMatrix
-
-
-class DomainMatrix:
-
-    def __init__(self, rows, shape, domain):
-        self.shape = shape
-        self.rows = [[item for item in row] for row in rows]
-        self.domain = domain
-
-    @classmethod
-    def from_list_sympy(cls, rows):
-        nrows = len(rows)
-        ncols = len(rows[0])
-        assert len(rows) == nrows
-        assert all(len(row) == ncols for row in rows)
-
-        items_sympy = [_sympify(item) for row in rows for item in row]
-
-        domain, items_domain = cls.get_domain(items_sympy)
-
-        domain_rows = [[items_domain[ncols*r + c] for c in range(ncols)] for r in range(nrows)]
-
-        return DomainMatrix(domain_rows, (nrows, ncols), domain)
-
-    @classmethod
-    def get_domain(cls, items_sympy):
-        K, items_K = sfield(items_sympy, field=True, extension=True)
-
-        if K.gens:
-            domain = K.to_domain()
+        if not args:
+            # PolyMatrix(ring=QQ[x])
+            if ring is None:
+                raise TypeError("The ring needs to be specified for an empty PolyMatrix")
+            rows, cols, items, gens = 0, 0, [], ()
+        elif isinstance(args[0], list):
+            elements, gens = args[0], args[1:]
+            if not elements:
+                # PolyMatrix([])
+                rows, cols, items = 0, 0, []
+            elif isinstance(elements[0], (list, tuple)):
+                # PolyMatrix([[1, 2]], x)
+                rows, cols = len(elements), len(elements[0])
+                items = [e for row in elements for e in row]
+            else:
+                # PolyMatrix([1, 2], x)
+                rows, cols = len(elements), 1
+                items = elements
+        elif [type(a) for a in args[:3]] == [int, int, list]:
+            # PolyMatrix(2, 2, [1, 2, 3, 4], x)
+            rows, cols, items, gens = args[0], args[1], args[2], args[3:]
+        elif [type(a) for a in args[:3]] == [int, int, type(lambda: 0)]:
+            # PolyMatrix(2, 2, lambda i, j: i+j, x)
+            rows, cols, func, gens = args[0], args[1], args[2], args[3:]
+            items = [func(i, j) for i in range(rows) for j in range(cols)]
         else:
-            domain = K.domain
+            raise TypeError("Invalid arguments")
 
-            def convert(item):
-                if not item:
-                    return domain.zero
-                else:
-                    return item.numer[()] / item.denom[()]
+        # PolyMatrix([[1]], x, y) vs PolyMatrix([[1]], (x, y))
+        if len(gens) == 1 and isinstance(gens[0], tuple):
+            gens = gens[0]
+            # gens is now a tuple (x, y)
 
-            items_K = [convert(item) for item in items_K]
+        return cls.from_list(rows, cols, items, gens, ring)
 
-        return domain, items_K
+    @classmethod
+    def from_list(cls, rows, cols, items, gens, ring):
+
+        # items can be Expr, Poly, or a mix of Expr and Poly
+        items = [_sympify(item) for item in items]
+        if items and all(isinstance(item, Poly) for item in items):
+            polys = True
+        else:
+            polys = False
+
+        # Identify the ring for the polys
+        if ring is not None:
+            # Parse a domain string like 'QQ[x]'
+            if isinstance(ring, str):
+                ring = Poly(0, Dummy(), domain=ring).domain
+        elif polys:
+            p = items[0]
+            for p2 in items[1:]:
+                p, _ = p.unify(p2)
+            ring = p.domain[p.gens]
+        else:
+            items, info = parallel_poly_from_expr(items, gens, field=True)
+            ring = info['domain'][info['gens']]
+            polys = True
+
+        # Efficiently convert when all elements are Poly
+        if polys:
+            p_ring = Poly(0, ring.symbols, domain=ring.domain)
+            to_ring = ring.ring.from_list
+            convert_poly = lambda p: to_ring(p.unify(p_ring)[0].rep.rep)
+            elements = [convert_poly(p) for p in items]
+        else:
+            convert_expr = ring.from_sympy
+            elements = [convert_expr(e.as_expr()) for e in items]
+
+        # Convert to domain elements and construct DomainMatrix
+        elements_lol = [[elements[i*cols + j] for j in range(cols)] for i in range(rows)]
+        dm = DomainMatrix(elements_lol, (rows, cols), ring)
+        return cls.from_dm(dm)
+
+    @classmethod
+    def from_dm(cls, dm):
+        obj = super().__new__(cls)
+        dm = dm.to_sparse()
+        R = dm.domain
+        obj._dm = dm
+        obj.ring = R
+        obj.domain = R.domain
+        obj.gens = R.symbols
+        return obj
 
     def to_Matrix(self):
-        rows_sympy = [[self.domain.to_sympy(e) for e in row] for row in self.rows]
-        return MutableDenseMatrix(rows_sympy)
+        return self._dm.to_Matrix()
+
+    @classmethod
+    def from_Matrix(cls, other, *gens, ring=None):
+        return cls(*other.shape, other.flat(), *gens, ring=ring)
+
+    def set_gens(self, gens):
+        return self.from_Matrix(self.to_Matrix(), gens)
 
     def __repr__(self):
-        rows_str = ['[%s]' % (', '.join(map(str, row))) for row in self.rows]
-        rowstr = '[%s]' % ', '.join(rows_str)
-        return 'DomainMatrix(%s, %r, %r)' % (rowstr, self.shape, self.domain)
-
-    def __mul__(A, B):
-        """A * B"""
-        if not isinstance(B, DomainMatrix):
-            return NotImplemented
-        rows, shape = matrix_mul(A.rows, A.shape, B.rows, B.shape)
-        domain = A.domain.unify(B.domain)
-        return type(A)(rows, shape, domain)
-
-    def __pow__(A, n):
-        """A ** n"""
-        if n == 1:
-            return A
-        elif n % 2 == 1:
-            return A * A**(n - 1)
+        if self.rows * self.cols:
+            return 'Poly' + repr(self.to_Matrix())[:-1] + f', ring={self.ring})'
         else:
-            sqrtAn = A ** (n // 2)
-            return sqrtAn * sqrtAn
+            return f'PolyMatrix({self.rows}, {self.cols}, [], ring={self.ring})'
 
-    def rref(self):
-        rref_rows, pivots = rref(self.rows, self.shape)
-        rref_matrix = type(self)(rref_rows, self.shape, self.domain)
-        pivots = tuple(pivots)
-        return rref_matrix, pivots
+    @property
+    def shape(self):
+        return self._dm.shape
 
-    def __eq__(A, B):
-        """A == B"""
-        if not isinstance(B, DomainMatrix):
-            return NotImplemented
-        return A.rows == B.rows
+    @property
+    def rows(self):
+        return self.shape[0]
 
+    @property
+    def cols(self):
+        return self.shape[1]
 
-def matrix_mul(items1, shape1, items2, shape2):
-    m, n1 = shape1
-    n2, o = shape2
-    assert n1 == n2
-    n = n1
-    shape3 = (m, o)
-    items3 = [[None] * o for _ in range(m)]
-    for i in range(m):
-        for j in range(o):
-            items3[i][j] = sum(items1[i][k] * items2[k][j] for k in range(n))
-    return items3, shape3
+    def __len__(self):
+        return self.rows * self.cols
 
+    def __getitem__(self, key):
 
-def rref(rows, shape):
-    nrows, ncols = shape
-    rows = [[item for item in row] for row in rows]
-    pivots = []
-    ri = 0
-    for ci in range(ncols):
-        for rj in range(ri, nrows):
-            if rows[rj][ci]:
-                # Row swap for pivot
-                if rj != ri:
-                    rows[rj], rows[ri] = rows[ri], rows[rj]
-                # Record pivot
-                pivots.append(ci)
-                break
+        def to_poly(v):
+            ground = self._dm.domain.domain
+            gens = self._dm.domain.symbols
+            return Poly(v.to_dict(), gens, domain=ground)
+
+        dm = self._dm
+
+        if isinstance(key, slice):
+            items = dm.flat()[key]
+            return [to_poly(item) for item in items]
+        elif isinstance(key, int):
+            i, j = divmod(key, self.cols)
+            e = dm[i,j]
+            return to_poly(e.element)
+
+        i, j = key
+        if isinstance(i, int) and isinstance(j, int):
+            return to_poly(dm[i, j].element)
         else:
-            # No pivot
-            continue
-        # Normalise row
-        pivoti = rows[ri][ci]
-        for ck in range(ci, ncols):
-            rows[ri][ck] = rows[ri][ck] / pivoti
-        # Eliminate above and below from col to the right
-        for rk in range(nrows):
-            pivotk = rows[rk][ci]
-            if rk != ri and pivotk:
-                for ck in range(ci, ncols):
-                    rows[rk][ck] = rows[rk][ck] - pivotk * rows[ri][ck]
-        ri += 1
-    return rows, pivots
+            return self.from_dm(dm[i, j])
+
+    def __eq__(self, other):
+        if not isinstance(self, type(other)):
+            return NotImplemented
+        return self._dm == other._dm
+
+    def __add__(self, other):
+        if isinstance(other, type(self)):
+            return self.from_dm(self._dm + other._dm)
+        return NotImplemented
+
+    def __sub__(self, other):
+        if isinstance(other, type(self)):
+            return self.from_dm(self._dm - other._dm)
+        return NotImplemented
+
+    def __mul__(self, other):
+        if isinstance(other, type(self)):
+            return self.from_dm(self._dm * other._dm)
+        elif isinstance(other, int):
+            other = _sympify(other)
+        if isinstance(other, Expr):
+            Kx = self.ring
+            try:
+                other_ds = DomainScalar(Kx.from_sympy(other), Kx)
+            except (CoercionFailed, ValueError):
+                other_ds = DomainScalar.from_sympy(other)
+            return self.from_dm(self._dm * other_ds)
+        return NotImplemented
+
+    def __rmul__(self, other):
+        if isinstance(other, int):
+            other = _sympify(other)
+        if isinstance(other, Expr):
+            other_ds = DomainScalar.from_sympy(other)
+            return self.from_dm(other_ds * self._dm)
+        return NotImplemented
+
+    def __truediv__(self, other):
+
+        if isinstance(other, Poly):
+            other = other.as_expr()
+        elif isinstance(other, int):
+            other = _sympify(other)
+        if not isinstance(other, Expr):
+            return NotImplemented
+
+        other = self.domain.from_sympy(other)
+        inverse = self.ring.convert_from(1/other, self.domain)
+        inverse = DomainScalar(inverse, self.ring)
+        dm = self._dm * inverse
+        return self.from_dm(dm)
+
+    def __neg__(self):
+        return self.from_dm(-self._dm)
+
+    def transpose(self):
+        return self.from_dm(self._dm.transpose())
+
+    def row_join(self, other):
+        dm = DomainMatrix.hstack(self._dm, other._dm)
+        return self.from_dm(dm)
+
+    def col_join(self, other):
+        dm = DomainMatrix.vstack(self._dm, other._dm)
+        return self.from_dm(dm)
+
+    def applyfunc(self, func):
+        M = self.to_Matrix().applyfunc(func)
+        return self.from_Matrix(M, self.gens)
+
+    @classmethod
+    def eye(cls, n, gens):
+        return cls.from_dm(DomainMatrix.eye(n, QQ[gens]))
+
+    @classmethod
+    def zeros(cls, m, n, gens):
+        return cls.from_dm(DomainMatrix.zeros((m, n), QQ[gens]))
+
+    def rref(self, simplify='ignore', normalize_last='ignore'):
+        # If this is K[x] then computes RREF in ground field K.
+        if not (self.domain.is_Field and all(p.is_ground for p in self)):
+            raise ValueError("PolyMatrix rref is only for ground field elements")
+        dm = self._dm
+        dm_ground = dm.convert_to(dm.domain.domain)
+        dm_rref, pivots = dm_ground.rref()
+        dm_rref = dm_rref.convert_to(dm.domain)
+        return self.from_dm(dm_rref), pivots
+
+    def nullspace(self):
+        # If this is K[x] then computes nullspace in ground field K.
+        if not (self.domain.is_Field and all(p.is_ground for p in self)):
+            raise ValueError("PolyMatrix nullspace is only for ground field elements")
+        dm = self._dm
+        K, Kx = self.domain, self.ring
+        dm_null_rows = dm.convert_to(K).nullspace().convert_to(Kx)
+        dm_null = dm_null_rows.transpose()
+        dm_basis = [dm_null[:,i] for i in range(dm_null.shape[1])]
+        return [self.from_dm(dmvec) for dmvec in dm_basis]
+
+    def rank(self):
+        return self.cols - len(self.nullspace())
+
+MutablePolyMatrix = PolyMatrix = MutablePolyDenseMatrix

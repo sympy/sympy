@@ -1,24 +1,26 @@
 """Computational algebraic field theory. """
 
-from __future__ import print_function, division
+from functools import reduce
 
 from sympy import (
     S, Rational, AlgebraicNumber, GoldenRatio, TribonacciConstant,
     Add, Mul, sympify, Dummy, expand_mul, I, pi
 )
 from sympy.functions import sqrt, cbrt
-from sympy.core.compatibility import reduce
+
 from sympy.core.exprtools import Factors
 from sympy.core.function import _mexpand
 from sympy.functions.elementary.exponential import exp
-from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.elementary.trigonometric import cos, sin, tan
 from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
+from sympy.utilities.iterables import subsets
+
+from sympy.polys.densetools import dup_eval
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.orthopolys import dup_chebyshevt
 from sympy.polys.polyerrors import (
     IsomorphismFailed,
-    CoercionFailed,
     NotAlgebraic,
     GeneratorsError,
 )
@@ -36,7 +38,7 @@ from sympy.printing.pycode import PythonCodePrinter, MpmathPrinter
 from sympy.simplify.radsimp import _split_gcd
 from sympy.simplify.simplify import _is_sum_surds
 from sympy.utilities import (
-    numbered_symbols, variations, lambdify, public, sift
+    numbered_symbols, lambdify, public, sift
 )
 
 from mpmath import pslq, mp
@@ -48,37 +50,48 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
     Return a factor having root ``v``
     It is assumed that one of the factors has root ``v``.
     """
+    from sympy.polys.polyutils import illegal
+
     if isinstance(factors[0], tuple):
         factors = [f[0] for f in factors]
     if len(factors) == 1:
         return factors[0]
 
-    points = {x:v}
+    prec1 = 10
+    points = {}
     symbols = dom.symbols if hasattr(dom, 'symbols') else []
-    t = QQ(1, 10)
+    while prec1 <= prec:
+        # when dealing with non-Rational numbers we usually evaluate
+        # with `subs` argument but we only need a ballpark evaluation
+        xv = {x:v if not v.is_number else v.n(prec1)}
+        fe = [f.as_expr().xreplace(xv) for f in factors]
 
-    for n in range(bound**len(symbols)):
-        prec1 = 10
-        n_temp = n
-        for s in symbols:
-            points[s] = n_temp % bound
-            n_temp = n_temp // bound
+        # assign integers [0, n) to symbols (if any)
+        for n in subsets(range(bound), k=len(symbols), repetition=True):
+            for s, i in zip(symbols, n):
+                points[s] = i
 
-        while True:
-            candidates = []
-            eps = t**(prec1 // 2)
-            for f in factors:
-                if abs(f.as_expr().evalf(prec1, points)) < eps:
-                    candidates.append(f)
-            if candidates:
-                factors = candidates
-            if len(factors) == 1:
-                return factors[0]
-            if prec1 > prec:
-                break
-            prec1 *= 2
+            # evaluate the expression at these points
+            candidates = [(abs(f.subs(points).n(prec1)), i)
+                for i,f in enumerate(fe)]
+
+            # if we get invalid numbers (e.g. from division by zero)
+            # we try again
+            if any(i in illegal for i, _ in candidates):
+                continue
+
+            # find the smallest two -- if they differ significantly
+            # then we assume we have found the factor that becomes
+            # 0 when v is substituted into it
+            can = sorted(candidates)
+            (a, ix), (b, _) = can[:2]
+            if b > a * 10**6:  # XXX what to use?
+                return factors[ix]
+
+        prec1 *= 2
 
     raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % v)
+
 
 
 def _separate_sq(p):
@@ -450,6 +463,30 @@ def _minpoly_cos(ex, x):
     raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
 
 
+def _minpoly_tan(ex, x):
+    """
+    Returns the minimal polynomial of ``tan(ex)``
+    see https://github.com/sympy/sympy/issues/21430
+    """
+    c, a = ex.args[0].as_coeff_Mul()
+    if a is pi:
+        if c.is_rational:
+            c = c * 2
+            n = int(c.q)
+            a = n if c.p % 2 == 0 else 1
+            terms = []
+            for k in range((c.p+1)%2, n+1, 2):
+                terms.append(a*x**k)
+                a = -(a*(n-k-1)*(n-k)) // ((k+1)*(k+2))
+
+            r = Add(*terms)
+            _, factors = factor_list(r)
+            res = _choose_factor(factors, x, ex)
+            return res
+
+    raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
+
+
 def _minpoly_exp(ex, x):
     """
     Returns the minimal polynomial of ``exp(ex)``
@@ -578,6 +615,8 @@ def _minpoly_compose(ex, x, dom):
         res = _minpoly_sin(ex, x)
     elif ex.__class__ is cos:
         res = _minpoly_cos(ex, x)
+    elif ex.__class__ is tan:
+        res = _minpoly_tan(ex, x)
     elif ex.__class__ is exp:
         res = _minpoly_exp(ex, x)
     elif ex.__class__ is CRootOf:
@@ -729,20 +768,15 @@ def _minpoly_groebner(ex, x, cls):
             return Mul(*[ bottom_up_scan(g) for g in ex.args ])
         elif ex.is_Pow:
             if ex.exp.is_Rational:
-                if ex.exp < 0 and ex.base.is_Add:
-                    coeff, terms = ex.base.as_coeff_add()
-                    elt, _ = primitive_element(terms, polys=True)
-
-                    alg = ex.base - coeff
-
-                    # XXX: turn this into eval()
-                    inverse = invert(elt.gen + coeff, elt).as_expr()
-                    base = inverse.subs(elt.gen, alg).expand()
+                if ex.exp < 0:
+                    minpoly_base = _minpoly_groebner(ex.base, x, cls)
+                    inverse = invert(x, minpoly_base).as_expr()
+                    base_inv = inverse.subs(x, ex.base).expand()
 
                     if ex.exp == -1:
-                        return bottom_up_scan(base)
+                        return bottom_up_scan(base_inv)
                     else:
-                        ex = base**(-ex.exp)
+                        ex = base_inv**(-ex.exp)
                 if not ex.exp.is_Integer:
                     base, exp = (
                         ex.base**ex.exp.p).expand(), Rational(1, ex.exp.q)
@@ -824,17 +858,25 @@ def _minpoly_groebner(ex, x, cls):
 
 minpoly = minimal_polynomial
 
-def _coeffs_generator(n):
-    """Generate coefficients for `primitive_element()`. """
-    for coeffs in variations([1, -1, 2, -2, 3, -3], n, repetition=True):
-        # Two linear combinations with coeffs of opposite signs are
-        # opposites of each other. Hence it suffices to test only one.
-        if coeffs[0] > 0:
-            yield list(coeffs)
+
+def _switch_domain(g, K):
+    # An algebraic relation f(a, b) = 0 over Q can also be written
+    # g(b) = 0 where g is in Q(a)[x] and h(a) = 0 where h is in Q(b)[x].
+    # This function transforms g into h where Q(b) = K.
+    frep = g.rep.inject()
+    hrep = frep.eject(K, front=True)
+
+    return g.new(hrep, g.gens[0])
+
+
+def _linsolve(p):
+    # Compute root of linear polynomial.
+    c, d = p.rep.rep
+    return -d/c
 
 
 @public
-def primitive_element(extension, x=None, **args):
+def primitive_element(extension, x=None, *, ex=False, polys=False):
     """Construct a common number field for all extensions. """
     if not extension:
         raise ValueError("can't compute primitive element for empty extension")
@@ -844,14 +886,9 @@ def primitive_element(extension, x=None, **args):
     else:
         x, cls = Dummy('x'), PurePoly
 
-    if not args.get('ex', False):
+    if not ex:
         gen, coeffs = extension[0], [1]
-        # XXX when minimal_polynomial is extended to work
-        # with AlgebraicNumbers this test can be removed
-        if isinstance(gen, AlgebraicNumber):
-            g = gen.minpoly.replace(x)
-        else:
-            g = minimal_polynomial(gen, x, polys=True)
+        g = minimal_polynomial(gen, x, polys=True)
         for ext in extension[1:]:
             _, factors = factor_list(g, extension=ext)
             g = _choose_factor(factors, x, gen)
@@ -859,54 +896,34 @@ def primitive_element(extension, x=None, **args):
             gen += s*ext
             coeffs.append(s)
 
-        if not args.get('polys', False):
+        if not polys:
             return g.as_expr(), coeffs
         else:
             return cls(g), coeffs
 
-    generator = numbered_symbols('y', cls=Dummy)
+    gen, coeffs = extension[0], [1]
+    f = minimal_polynomial(gen, x, polys=True)
+    K = QQ.algebraic_field((f, gen))  # incrementally constructed field
+    reps = [K.unit]  # representations of extension elements in K
+    for ext in extension[1:]:
+        p = minimal_polynomial(ext, x, polys=True)
+        L = QQ.algebraic_field((p, ext))
+        _, factors = factor_list(f, domain=L)
+        f = _choose_factor(factors, x, gen)
+        s, g, f = f.sqf_norm()
+        gen += s*ext
+        coeffs.append(s)
+        K = QQ.algebraic_field((f, gen))
+        h = _switch_domain(g, K)
+        erep = _linsolve(h.gcd(p))  # ext as element of K
+        ogen = K.unit - s*erep  # old gen as element of K
+        reps = [dup_eval(_.rep, ogen, K) for _ in reps] + [erep]
 
-    F, Y = [], []
-
-    for ext in extension:
-        y = next(generator)
-
-        if ext.is_Poly:
-            if ext.is_univariate:
-                f = ext.as_expr(y)
-            else:
-                raise ValueError("expected minimal polynomial, got %s" % ext)
-        else:
-            f = minpoly(ext, y)
-
-        F.append(f)
-        Y.append(y)
-
-    coeffs_generator = args.get('coeffs', _coeffs_generator)
-
-    for coeffs in coeffs_generator(len(Y)):
-        f = x - sum([ c*y for c, y in zip(coeffs, Y)])
-        G = groebner(F + [f], Y + [x], order='lex', field=True)
-
-        H, g = G[:-1], cls(G[-1], x, domain='QQ')
-
-        for i, (h, y) in enumerate(zip(H, Y)):
-            try:
-                H[i] = Poly(y - h, x,
-                            domain='QQ').all_coeffs()  # XXX: composite=False
-            except CoercionFailed:  # pragma: no cover
-                break  # G is not a triangular set
-        else:
-            break
-    else:  # pragma: no cover
-        raise RuntimeError("run out of coefficient configurations")
-
-    _, g = g.clear_denoms()
-
-    if not args.get('polys', False):
-        return g.as_expr(), coeffs, H
+    H = [_.rep for _ in reps]
+    if not polys:
+        return f.as_expr(), coeffs, H
     else:
-        return g, coeffs, H
+        return f, coeffs, H
 
 
 def is_isomorphism_possible(a, b):
@@ -1018,7 +1035,7 @@ def field_isomorphism_factor(a, b):
 
 
 @public
-def field_isomorphism(a, b, **args):
+def field_isomorphism(a, b, *, fast=True):
     """Construct an isomorphism between two number fields. """
     a, b = sympify(a), sympify(b)
 
@@ -1040,7 +1057,7 @@ def field_isomorphism(a, b, **args):
     if m % n != 0:
         return None
 
-    if args.get('fast', True):
+    if fast:
         try:
             result = field_isomorphism_pslq(a, b)
 
@@ -1053,10 +1070,8 @@ def field_isomorphism(a, b, **args):
 
 
 @public
-def to_number_field(extension, theta=None, **args):
+def to_number_field(extension, theta=None, *, gen=None):
     """Express `extension` in the field generated by `theta`. """
-    gen = args.get('gen')
-
     if hasattr(extension, '__iter__'):
         extension = list(extension)
     else:

@@ -212,6 +212,21 @@ def test_issue_12578():
         3472*x**14 - 17318*x**16 + O(x**17)
 
 
+def test_issue_12791():
+    beta = symbols('beta', real=True, positive=True)
+    theta, varphi = symbols('theta varphi', real=True)
+
+    expr = (-beta**2*varphi*sin(theta) + beta**2*cos(theta) + \
+        beta*varphi*sin(theta) - beta*cos(theta) - beta + 1)/(beta*cos(theta) - 1)**2
+
+    sol = 0.5/(0.5*cos(theta) - 1.0)**2 - 0.25*cos(theta)/(0.5*cos(theta)\
+        - 1.0)**2 + (beta - 0.5)*(-0.25*varphi*sin(2*theta) - 1.5*cos(theta)\
+        + 0.25*cos(2*theta) + 1.25)/(0.5*cos(theta) - 1.0)**3\
+        + 0.25*varphi*sin(theta)/(0.5*cos(theta) - 1.0)**2 + O((beta - 0.5)**2, (beta, 0.5))
+
+    assert expr.series(beta, 0.5, 2).trigsimp() == sol
+
+
 def test_issue_14885():
     assert series(x**Rational(-3, 2)*exp(x), x, 0) == (x**Rational(-3, 2) + 1/sqrt(x) +
         sqrt(x)/2 + x**Rational(3, 2)/6 + x**Rational(5, 2)/24 + x**Rational(7, 2)/120 +
@@ -238,6 +253,12 @@ def test_issue_18008():
     y = x*(1 + x*(1 - x))/((1 + x*(1 - x)) - (1 - x)*(1 - x))
     assert y.series(x, oo, n=4) == -9/(32*x**3) - 3/(16*x**2) - 1/(8*x) + S(1)/4 + x/2 + \
         O(x**(-4), (x, oo))
+
+
+def test_issue_18842():
+    f = log(x/(1 - x))
+    assert f.series(x, 0.491, n=1).removeO().nsimplify() ==  \
+        -S(180019443780011)/5000000000000000
 
 
 def test_issue_19534():
@@ -284,3 +305,40 @@ def test_issue_19534():
     assert N(expr.series(dt, 0, 8), 20) == -0.00092592592592592596126*dt**7 + 0.0027777777777777783175*dt**6 + \
     0.016666666666666656027*dt**5 + 0.083333333333333300952*dt**4 + 0.33333333333333337034*dt**3 + \
     1.0*dt**2 + 1.0*dt + 1.0
+
+
+def test_issue_11407():
+    a, b, c, x = symbols('a b c x')
+    assert series(sqrt(a + b + c*x), x, 0, 1) == sqrt(a + b) + O(x)
+    assert series(sqrt(a + b + c + c*x), x, 0, 1) == sqrt(a + b + c) + O(x)
+
+
+def test_issue_14037():
+    assert (sin(x**50)/x**51).series(x, n=0) == 1/x + O(1, x)
+
+
+def test_issue_20551():
+    expr = (exp(x)/x).series(x, n=None)
+    terms = [ next(expr) for i in range(3) ]
+    assert terms == [1/x, 1, x/2]
+
+
+def test_issue_20697():
+    p_0, p_1, p_2, p_3, b_0, b_1, b_2 = symbols('p_0 p_1 p_2 p_3 b_0 b_1 b_2')
+    Q = (p_0 + (p_1 + (p_2 + p_3/y)/y)/y)/(1 + ((p_3/(b_0*y) + (b_0*p_2\
+        - b_1*p_3)/b_0**2)/y + (b_0**2*p_1 - b_0*b_1*p_2 - p_3*(b_0*b_2\
+        - b_1**2))/b_0**3)/y)
+    assert Q.series(y, n=3).ratsimp() == b_2*y**2 + b_1*y + b_0 + O(y**3)
+
+
+def test_issue_21245():
+    fi = (1 + sqrt(5))/2
+    assert (1/(1 - x - x**2)).series(x, 1/fi, 1).factor() == \
+        (-6964*sqrt(5) - 15572 + 2440*sqrt(5)*x + 5456*x\
+        + O((x - 2/(1 + sqrt(5)))**2, (x, 2/(1 + sqrt(5)))))/((1 + sqrt(5))**2\
+        *(20 + 9*sqrt(5))**2*(x + sqrt(5)*x - 2))
+
+
+def test_issue_21938():
+    expr = sin(1/x + exp(-x)) - sin(1/x)
+    assert expr.series(x, oo) == (1/(24*x**4) - 1/(2*x**2) + 1 + O(x**(-6), (x, oo)))*exp(-x)

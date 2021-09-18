@@ -688,7 +688,7 @@ def test_is_subset():
     assert FiniteSet(1).is_subset(Interval(0, 2))
     assert FiniteSet(1, 2).is_subset(Interval(0, 2, True, True)) is False
     assert (Interval(1, 2) + FiniteSet(3)).is_subset(
-        (Interval(0, 2, False, True) + FiniteSet(2, 3)))
+        Interval(0, 2, False, True) + FiniteSet(2, 3))
 
     assert Interval(3, 4).is_subset(Union(Interval(0, 1), Interval(2, 5))) is True
     assert Interval(3, 6).is_subset(Union(Interval(0, 1), Interval(2, 5))) is False
@@ -724,7 +724,8 @@ def test_is_subset():
     assert Range(3).is_subset(FiniteSet(0, 1, n)) is None
     assert Range(n, n + 2).is_subset(FiniteSet(n, n + 1)) is True
     assert Range(5).is_subset(Interval(0, 4, right_open=True)) is False
-
+    #issue 19513
+    assert imageset(Lambda(n, 1/n), S.Integers).is_subset(S.Reals) is None
 
 def test_is_proper_subset():
     assert Interval(0, 1).is_proper_subset(Interval(0, 2)) is True
@@ -743,7 +744,7 @@ def test_is_superset():
     assert FiniteSet(1).is_superset(Interval(0, 2)) == False
     assert FiniteSet(1, 2).is_superset(Interval(0, 2, True, True)) == False
     assert (Interval(1, 2) + FiniteSet(3)).is_superset(
-        (Interval(0, 2, False, True) + FiniteSet(2, 3))) == False
+        Interval(0, 2, False, True) + FiniteSet(2, 3)) == False
 
     assert Interval(3, 4).is_superset(Union(Interval(0, 1), Interval(2, 5))) == False
 
@@ -917,6 +918,10 @@ def test_Union_as_relational():
         Or(And(Le(0, x), Le(x, 1)), Eq(x, 2))
     assert (Interval(0, 1, True, True) + FiniteSet(1)).as_relational(x) == \
         And(Lt(0, x), Le(x, 1))
+    assert Or(x < 0, x > 0).as_set().as_relational(x) == \
+        And((x > -oo), (x < oo), Ne(x, 0))
+    assert (Interval.Ropen(1, 3) + Interval.Lopen(3, 5)
+        ).as_relational(x) == And((x > 1), (x < 5), Ne(x, 3))
 
 
 def test_Intersection_as_relational():
@@ -1008,7 +1013,7 @@ def test_product_basic():
     assert (H, 3, 3) in (coin * d6 * d6).flatten()
     assert ((H, 3), 3) in coin * d6 * d6
     HH, TT = sympify(H), sympify(T)
-    assert set(coin**2) == set(((HH, HH), (HH, TT), (TT, HH), (TT, TT)))
+    assert set(coin**2) == {(HH, HH), (HH, TT), (TT, HH), (TT, TT)}
 
     assert (d4*d4).is_subset(d6*d6)
 
@@ -1251,7 +1256,7 @@ def test_Eq():
     assert Eq(FiniteSet({x, y}).subs(y, x+1), FiniteSet({x})) is S.false
     assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x+1) is S.false
 
-    assert Eq(ProductSet({1}, {2}), Interval(1, 2)) not in (S.true, S.false)
+    assert Eq(ProductSet({1}, {2}), Interval(1, 2)) is S.false
     assert Eq(ProductSet({1}), ProductSet({1}, {2})) is S.false
 
     assert Eq(FiniteSet(()), FiniteSet(1)) is S.false
@@ -1280,8 +1285,8 @@ def test_SymmetricDifference():
             == FiniteSet(5)
     assert FiniteSet(1, 2, 3, 4, 5) ^ FiniteSet(1, 2, 5, 6) == \
             FiniteSet(3, 4, 6)
-    assert Set(1, 2 , 3) ^ Set(2, 3, 4) == Union(Set(1, 2, 3) - Set(2, 3, 4), \
-            Set(2, 3, 4) - Set(1, 2, 3))
+    assert Set(S(1), S(2) , S(3)) ^ Set(S(2), S(3), S(4)) == Union(Set(S(1), S(2), S(3)) - Set(S(2), S(3), S(4)), \
+            Set(S(2), S(3), S(4)) - Set(S(1), S(2), S(3)))
     assert Interval(0, 4) ^ Interval(2, 5) == Union(Interval(0, 4) - \
             Interval(2, 5), Interval(2, 5) - Interval(0, 4))
 
@@ -1581,3 +1586,55 @@ def test_DisjointUnion_len():
     assert len(DisjointUnion(FiniteSet(3, 5, 7, 9), FiniteSet(x, y, z))) == 7
     assert len(DisjointUnion(S.EmptySet, S.EmptySet, FiniteSet(x, y, z), S.EmptySet)) == 3
     raises(ValueError, lambda: len(DisjointUnion(Interval(0, 1), S.EmptySet)))
+
+def test_issue_20089():
+    B = FiniteSet(FiniteSet(1, 2), FiniteSet(1))
+    assert not 1 in B
+    assert not 1.0 in B
+    assert not Eq(1, FiniteSet(1, 2))
+    assert FiniteSet(1) in B
+    A = FiniteSet(1, 2)
+    assert A in B
+    assert B.issubset(B)
+    assert not A.issubset(B)
+    assert 1 in A
+    C = FiniteSet(FiniteSet(1, 2), FiniteSet(1), 1, 2)
+    assert A.issubset(C)
+    assert B.issubset(C)
+
+def test_issue_19378():
+    a = FiniteSet(1, 2)
+    b = ProductSet(a, a)
+    c = FiniteSet((1, 1), (1, 2), (2, 1), (2, 2))
+    assert b.is_subset(c) is True
+    d = FiniteSet(1)
+    assert b.is_subset(d) is False
+    assert Eq(c, b).simplify() is S.true
+    assert Eq(a, c).simplify() is S.false
+    assert Eq({1}, {x}).simplify() == Eq({1}, {x})
+
+def test_intersection_symbolic():
+    n = Symbol('n')
+    # These should not throw an error
+    assert isinstance(Intersection(Range(n), Range(100)), Intersection)
+    assert isinstance(Intersection(Range(n), Interval(1, 100)), Intersection)
+    assert isinstance(Intersection(Range(100), Interval(1, n)), Intersection)
+
+
+@XFAIL
+def test_intersection_symbolic_failing():
+    n = Symbol('n', integer=True, positive=True)
+    assert Intersection(Range(10, n), Range(4, 500, 5)) == Intersection(
+        Range(14, n), Range(14, 500, 5))
+    assert Intersection(Interval(10, n), Range(4, 500, 5)) == Intersection(
+        Interval(14, n), Range(14, 500, 5))
+
+
+def test_issue_20379():
+    #https://github.com/sympy/sympy/issues/20379
+    x = pi - 3.14159265358979
+    assert FiniteSet(x).evalf(2) == FiniteSet(Float('3.23108914886517e-15', 2))
+
+def test_finiteset_simplify():
+    S = FiniteSet(1, cos(1)**2 + sin(1)**2)
+    assert S.simplify() == {1}

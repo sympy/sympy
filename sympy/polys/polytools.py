@@ -1,6 +1,5 @@
 """User-friendly public interface to polynomial functions. """
 
-from __future__ import print_function, division
 
 from functools import wraps, reduce
 from operator import mul
@@ -92,8 +91,10 @@ class Poly(Basic):
     """
     Generic class for representing and operating on polynomial expressions.
 
+    See :ref:`polys-docs` for general documentation.
+
     Poly is a subclass of Basic rather than Expr but instances can be
-    converted to Expr with the ``as_expr`` method.
+    converted to Expr with the :py:meth:`~.Poly.as_expr` method.
 
     Examples
     ========
@@ -303,7 +304,7 @@ class Poly(Basic):
         return cls.new(DMP.from_list(rep, level, domain), *gens)
 
     def __hash__(self):
-        return super(Poly, self).__hash__()
+        return super().__hash__()
 
     @property
     def free_symbols(self):
@@ -385,7 +386,25 @@ class Poly(Basic):
 
     @property
     def domain(self):
-        """Get the ground domain of ``self``. """
+        """Get the ground domain of a :py:class:`~.Poly`
+
+        Returns
+        =======
+
+        :py:class:`~.Domain`:
+            Ground domain of the :py:class:`~.Poly`.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, Symbol
+        >>> x = Symbol('x')
+        >>> p = Poly(x**2 + x)
+        >>> p
+        Poly(x**2 + x, x, domain='ZZ')
+        >>> p.domain
+        ZZ
+        """
         return self.get_domain()
 
     @property
@@ -594,7 +613,7 @@ class Poly(Basic):
 
         return f.per(new, gens=gens)
 
-    def replace(f, x, y=None, *_ignore):
+    def replace(f, x, y=None, **_ignore):
         # XXX this does not match Basic's signature
         """
         Replace ``x`` with ``y`` in generators list.
@@ -2583,10 +2602,10 @@ class Poly(Basic):
         >>> Poly(1 + x, x).revert(1)
         Poly(1, x, domain='ZZ')
 
-        >>> Poly(x**2 - 1, x).revert(1)
+        >>> Poly(x**2 - 2, x).revert(2)
         Traceback (most recent call last):
         ...
-        NotReversible: only unity is reversible in a ring
+        NotReversible: only units are reversible in a ring
 
         >>> Poly(1/x, x).revert(1)
         Traceback (most recent call last):
@@ -4128,15 +4147,12 @@ class Poly(Basic):
         return g.quo(f)
 
     @_sympifyit('g', NotImplemented)
-    def __div__(f, g):
+    def __truediv__(f, g):
         return f.as_expr()/g.as_expr()
 
     @_sympifyit('g', NotImplemented)
-    def __rdiv__(f, g):
+    def __rtruediv__(f, g):
         return g.as_expr()/f.as_expr()
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     @_sympifyit('other', NotImplemented)
     def __eq__(self, other):
@@ -4160,10 +4176,8 @@ class Poly(Basic):
     def __ne__(f, g):
         return not f == g
 
-    def __nonzero__(f):
+    def __bool__(f):
         return not f.is_zero
-
-    __bool__ = __nonzero__
 
     def eq(f, g, strict=False):
         if not strict:
@@ -4187,7 +4201,7 @@ class PurePoly(Poly):
         return (self.rep,)
 
     def __hash__(self):
-        return super(PurePoly, self).__hash__()
+        return super().__hash__()
 
     @property
     def free_symbols(self):
@@ -4486,8 +4500,8 @@ def degree(f, gen=0):
          expression like func = %s, e.g. degree(func, gen = %s) instead of
          degree(func, gen = %s).
         ''' % (f, next(ordered(f.free_symbols)), gen)))
-
-    return Integer(p.degree(gen))
+    result = p.degree(gen)
+    return Integer(result) if isinstance(result, int) else S.NegativeInfinity
 
 
 @public
@@ -5071,7 +5085,7 @@ def subresultants(f, g, *gens, **args):
 
 
 @public
-def resultant(f, g, *gens, **args):
+def resultant(f, g, *gens, includePRS=False, **args):
     """
     Compute resultant of ``f`` and ``g``.
 
@@ -5085,7 +5099,6 @@ def resultant(f, g, *gens, **args):
     4
 
     """
-    includePRS = args.pop('includePRS', False)
     options.allowed_flags(args, ['polys'])
 
     try:
@@ -5933,7 +5946,7 @@ def _symbolic_factor_list(expr, opt, method):
         if arg.is_Number or (isinstance(arg, Expr) and pure_complex(arg)):
             coeff *= arg
             continue
-        elif arg.is_Pow:
+        elif arg.is_Pow and arg.base != S.Exp1:
             base, exp = arg.args
             if base.is_Number and exp.is_Number:
                 coeff *= arg
@@ -5976,7 +5989,7 @@ def _symbolic_factor_list(expr, opt, method):
                 factors.append((_factors_product(other), exp))
     if method == 'sqf':
         factors = [(reduce(mul, (f for f, _ in factors if _ == k)), k)
-                   for k in set(i for _, i in factors)]
+                   for k in {i for _, i in factors}]
 
     return coeff, factors
 
@@ -6105,7 +6118,7 @@ def to_rational_coeffs(f):
         f1 = f1 or f1.monic()
         coeffs = f1.all_coeffs()[1:]
         coeffs = [simplify(coeffx) for coeffx in coeffs]
-        if coeffs[-2]:
+        if len(coeffs) > 1 and coeffs[-2]:
             rescale1_x = simplify(coeffs[-2]/coeffs[-1])
             coeffs1 = []
             for i in range(len(coeffs)):
@@ -6132,22 +6145,16 @@ def to_rational_coeffs(f):
         ``alpha`` is the translating factor, and ``f`` is the shifted
         polynomial; else ``alpha`` is ``None``.
         """
-        from sympy.core.add import Add
         if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
             return None, f
         n = f.degree()
         f1 = f1 or f1.monic()
         coeffs = f1.all_coeffs()[1:]
         c = simplify(coeffs[0])
-        if c and not c.is_rational:
-            func = Add
-            if c.is_Add:
-                args = c.args
-                func = c.func
-            else:
-                args = [c]
-            c1, c2 = sift(args, lambda z: z.is_rational, binary=True)
-            alpha = -func(*c2)/n
+        if c.is_Add and not c.is_rational:
+            rat, nonrat = sift(c.args,
+                lambda z: z.is_rational is True, binary=True)
+            alpha = -c.func(*nonrat)/n
             f2 = f1.shift(alpha)
             return alpha, f2
         return None
@@ -6283,7 +6290,7 @@ def factor_list(f, *gens, **args):
 
 
 @public
-def factor(f, *gens, **args):
+def factor(f, *gens, deep=False, **args):
     """
     Compute the factorization of expression, ``f``, into irreducibles. (To
     factor an integer into primes, use ``factorint``.)
@@ -6351,7 +6358,7 @@ def factor(f, *gens, **args):
 
     """
     f = sympify(f)
-    if args.pop('deep', False):
+    if deep:
         from sympy.simplify.simplify import bottom_up
         def _try_factor(expr):
             """

@@ -9,8 +9,6 @@ TODO:
   AntiCommutator, represent, apply_operators.
 """
 
-from __future__ import print_function, division
-
 from sympy import Derivative, Expr, Integer, oo, Mul, expand, Add
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
@@ -134,7 +132,7 @@ class Operator(QExpr):
             label_pform = prettyForm(
                 *label_pform.parens(left='(', right=')')
             )
-            pform = prettyForm(*pform.right((label_pform)))
+            pform = prettyForm(*pform.right(label_pform))
             return pform
 
     def _print_contents_latex(self, printer, *args):
@@ -273,7 +271,7 @@ class IdentityOperator(Operator):
         return (oo,)
 
     def __init__(self, *args, **hints):
-        if not len(args) in [0, 1]:
+        if not len(args) in (0, 1):
             raise ValueError('0 or 1 parameters expected, got %s' % args)
 
         self.N = args[0] if (len(args) == 1 and args[0]) else oo
@@ -307,7 +305,7 @@ class IdentityOperator(Operator):
 
     def __mul__(self, other):
 
-        if isinstance(other, Operator):
+        if isinstance(other, (Operator, Dagger)):
             return other
 
         return Mul(self, other)
@@ -640,5 +638,5 @@ class DifferentialOperator(Operator):
         label_pform = prettyForm(
             *label_pform.parens(left='(', right=')')
         )
-        pform = prettyForm(*pform.right((label_pform)))
+        pform = prettyForm(*pform.right(label_pform))
         return pform

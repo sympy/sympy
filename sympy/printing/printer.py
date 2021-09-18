@@ -71,10 +71,10 @@ While looking for the method, it follows these steps:
     As fall-back ``self.emptyPrinter`` will be called with the expression. If
     not defined in the Printer subclass this will be the same as ``str(expr)``.
 
+.. _printer_example:
+
 Example of Custom Printer
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. _printer_example:
 
 In the example below, we have a printer which prints the derivative of a function
 in a shorter form.
@@ -127,6 +127,8 @@ The output of the code above is::
     \\frac{\\partial^{2}}{\\partial x\\partial y}  f{\\left(x,y \\right)}
     f_{xy}
 
+.. _printer_method_example:
+
 Example of Custom Printing Method
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -140,16 +142,16 @@ This is done by overriding the method ``_latex`` of ``Mod``.
 >>> class ModOp(Mod):
 ...     def _latex(self, printer):
 ...         a, b = [printer._print(i) for i in self.args]
-...         return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
+...         return r"\\operatorname{Mod}{\\left(%s, %s\\right)}" % (a, b)
 
 Comparing the output of our custom operator to the builtin one:
 
 >>> x = Symbol('x')
 >>> m = Symbol('m')
 >>> print_latex(Mod(x, m))
-x\\bmod{m}
+x \\bmod m
 >>> print_latex(ModOp(x, m))
-\\operatorname{Mod}{\\left( x,m \\right)}
+\\operatorname{Mod}{\\left(x, m\\right)}
 
 Common mistakes
 ~~~~~~~~~~~~~~~
@@ -163,29 +165,29 @@ an expression when customizing a printer. Mistakes include:
     >>> class ModOpModeWrong(Mod):
     ...     def _latex(self, printer):
     ...         a, b = [printer.doprint(i) for i in self.args]
-    ...         return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
+    ...         return r"\\operatorname{Mod}{\\left(%s, %s\\right)}" % (a, b)
 
     This fails when the `mode` argument is passed to the printer:
 
     >>> print_latex(ModOp(x, m), mode='inline')  # ok
-    $\\operatorname{Mod}{\\left( x,m \\right)}$
+    $\\operatorname{Mod}{\\left(x, m\\right)}$
     >>> print_latex(ModOpModeWrong(x, m), mode='inline')  # bad
-    $\\operatorname{Mod}{\\left( $x$,$m$ \\right)}$
+    $\\operatorname{Mod}{\\left($x$, $m$\\right)}$
 
 2.  Using ``str(obj)`` instead:
 
     >>> class ModOpNestedWrong(Mod):
     ...     def _latex(self, printer):
     ...         a, b = [str(i) for i in self.args]
-    ...         return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
+    ...         return r"\\operatorname{Mod}{\\left(%s, %s\\right)}" % (a, b)
 
     This fails on nested objects:
 
     >>> # Nested modulo.
     >>> print_latex(ModOp(ModOp(x, m), Integer(7)))  # ok
-    \\operatorname{Mod}{\\left( \\operatorname{Mod}{\\left( x,m \\right)},7 \\right)}
+    \\operatorname{Mod}{\\left(\\operatorname{Mod}{\\left(x, m\\right)}, 7\\right)}
     >>> print_latex(ModOpNestedWrong(ModOpNestedWrong(x, m), Integer(7)))  # bad
-    \\operatorname{Mod}{\\left( ModOpNestedWrong(x, m),7 \\right)}
+    \\operatorname{Mod}{\\left(ModOpNestedWrong(x, m), 7\\right)}
 
 3.  Using ``LatexPrinter()._print(obj)`` instead.
 
@@ -193,7 +195,7 @@ an expression when customizing a printer. Mistakes include:
     >>> class ModOpSettingsWrong(Mod):
     ...     def _latex(self, printer):
     ...         a, b = [LatexPrinter()._print(i) for i in self.args]
-    ...         return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
+    ...         return r"\\operatorname{Mod}{\\left(%s, %s\\right)}" % (a, b)
 
     This causes all the settings to be discarded in the subobjects. As an
     example, the ``full_prec`` setting which shows floats to full precision is
@@ -201,24 +203,23 @@ an expression when customizing a printer. Mistakes include:
 
     >>> from sympy import Float
     >>> print_latex(ModOp(Float(1) * x, m), full_prec=True)  # ok
-    \\operatorname{Mod}{\\left( 1.00000000000000 x,m \\right)}
+    \\operatorname{Mod}{\\left(1.00000000000000 x, m\\right)}
     >>> print_latex(ModOpSettingsWrong(Float(1) * x, m), full_prec=True)  # bad
-    \\operatorname{Mod}{\\left( 1.0 x,m \\right)}
+    \\operatorname{Mod}{\\left(1.0 x, m\\right)}
 
 """
 
-from __future__ import print_function, division
-
-from typing import Any, Dict
-
+import sys
+from typing import Any, Dict, Type
+import inspect
 from contextlib import contextmanager
+from functools import cmp_to_key, update_wrapper
 
 from sympy import Basic, Add
 
 from sympy.core.core import BasicMeta
 from sympy.core.function import AppliedUndef, UndefinedFunction, Function
 
-from functools import cmp_to_key
 
 
 @contextmanager
@@ -231,7 +232,7 @@ def printer_context(printer, **kwargs):
         printer._context = original
 
 
-class Printer(object):
+class Printer:
     """ Generic printer
 
     Its job is to provide infrastructure for implementing new printers easily.
@@ -246,15 +247,19 @@ class Printer(object):
 
     printmethod = None  # type: str
 
+    @classmethod
+    def _get_initial_settings(cls):
+        settings = cls._default_settings.copy()
+        for key, val in cls._global_settings.items():
+            if key in cls._default_settings:
+                settings[key] = val
+        return settings
+
     def __init__(self, settings=None):
         self._str = str
 
-        self._settings = self._default_settings.copy()
+        self._settings = self._get_initial_settings()
         self._context = dict()  # mutable during printing
-
-        for key, val in self._global_settings.items():
-            if key in self._default_settings:
-                self._settings[key] = val
 
         if settings is not None:
             self._settings.update(settings)
@@ -342,5 +347,49 @@ class Printer(object):
         else:
             return expr.as_ordered_terms(order=order)
 
-    def _print_Str(self, s):
-        return self._print(s.name)
+
+class _PrintFunction:
+    """
+    Function wrapper to replace ``**settings`` in the signature with printer defaults
+    """
+    def __init__(self, f, print_cls: Type[Printer]):
+        # find all the non-setting arguments
+        params = list(inspect.signature(f).parameters.values())
+        assert params.pop(-1).kind == inspect.Parameter.VAR_KEYWORD
+        self.__other_params = params
+
+        self.__print_cls = print_cls
+        update_wrapper(self, f)
+
+    def __reduce__(self):
+        # Since this is used as a decorator, it replaces the original function.
+        # The default pickling will try to pickle self.__wrapped__ and fail
+        # because the wrapped function can't be retrieved by name.
+        return self.__wrapped__.__qualname__
+
+    def __call__(self, *args, **kwargs):
+        return self.__wrapped__(*args, **kwargs)
+
+    @property
+    def __signature__(self) -> inspect.Signature:
+        settings = self.__print_cls._get_initial_settings()
+        return inspect.Signature(
+            parameters=self.__other_params + [
+                inspect.Parameter(k, inspect.Parameter.KEYWORD_ONLY, default=v)
+                for k, v in settings.items()
+            ],
+            return_annotation=self.__wrapped__.__annotations__.get('return', inspect.Signature.empty)  # type:ignore
+        )
+
+
+def print_function(print_cls):
+    """ A decorator to replace kwargs with the printer settings in __signature__ """
+    def decorator(f):
+        if sys.version_info < (3, 9):
+            # We have to create a subclass so that `help` actually shows the docstring in older python versions.
+            # IPython and Sphinx do not need this, only a raw python console.
+            cls = type(f'{f.__qualname__}_PrintFunction', (_PrintFunction,), dict(__doc__=f.__doc__))
+        else:
+            cls = _PrintFunction
+        return cls(f, print_cls)
+    return decorator

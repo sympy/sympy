@@ -182,9 +182,9 @@ For example:
 
  >>> from sympy import FiniteSet
  >>> FiniteSet(1, 2, 3)   # Unordered
- FiniteSet(1, 2, 3)
+ {1, 2, 3}
  >>> FiniteSet((1, 2, 3))  # Ordered
- FiniteSet((1, 2, 3))
+ {(1, 2, 3)}
 
 
 Why not use dicts as output?
@@ -256,7 +256,7 @@ What is this domain argument about?
     >>> from sympy import solveset, S
     >>> from sympy.abc import x
     >>> solveset(x**2 + 1, x) # domain=S.Complexes is default
-    FiniteSet(I, -I)
+    {-I, I}
     >>> solveset(x**2 + 1, x, domain=S.Reals)
     EmptySet
 
@@ -346,7 +346,7 @@ How do we manipulate and return an infinite solution?
    >>> from sympy import ImageSet, Lambda, pi, S, Dummy, pprint
    >>> n = Dummy('n')
    >>> pprint(ImageSet(Lambda(n, 2*pi*n), S.Integers), use_unicode=True)
-   {2⋅n⋅π | n ∊ ℤ}
+   {2⋅n⋅π │ n ∊ ℤ}
 
 
    Where ``n`` is a dummy variable. It is basically the image of the
@@ -361,7 +361,7 @@ How do we manipulate and return an infinite solution?
 
    >>> from sympy import ComplexRegion, FiniteSet, Interval, pi, pprint
    >>> pprint(ComplexRegion(FiniteSet(1)*Interval(0, 2*pi), polar=True), use_unicode=True)
-   {r⋅(ⅈ⋅sin(θ) + cos(θ)) | r, θ ∊ {1} × [0, 2⋅π)}
+   {r⋅(ⅈ⋅sin(θ) + cos(θ)) │ r, θ ∊ {1} × [0, 2⋅π)}
 
 
    Where the ``FiniteSet`` in the ``ProductSet`` is the range of the value
@@ -376,7 +376,7 @@ How do we manipulate and return an infinite solution?
 
    >>> from sympy import ComplexRegion, Interval, pi, oo, pprint
    >>> pprint(ComplexRegion(Interval(-oo, oo)*Interval(0, oo)), use_unicode=True)
-   {x + y⋅ⅈ | x, y ∊ (-∞, ∞) × [0, ∞)}
+   {x + y⋅ⅈ │ x, y ∊ (-∞, ∞) × [0, ∞)}
 
 
    where the Intervals are the range of `x` and `y` for the set of complex
@@ -400,7 +400,7 @@ How does ``solveset`` ensure that it is not returning any wrong solution?
     >>> from sympy import symbols, S, pprint, solveset
     >>> x, n = symbols('x, n')
     >>> pprint(solveset(abs(x) - n, x, domain=S.Reals), use_unicode=True)
-    {x | x ∊ {-n, n} ∧ (n ∈ [0, ∞))}
+    {x │ x ∊ {-n, n} ∧ (n ∈ [0, ∞))}
 
  Though, there still a lot of work needs to be done in this regard.
 
@@ -482,7 +482,7 @@ What will you do with the old solve?
 ------------------------------------
 
  There are still a few things ``solveset`` can't do, which the old ``solve``
- can, such as solving non linear multivariate & LambertW type equations.
+ can, such as solving nonlinear multivariate & LambertW type equations.
  Hence, it's not yet a perfect replacement for old ``solve``. The ultimate
  goal is to:
 
@@ -552,12 +552,12 @@ Solving an equation like `x^2 == 1` can be done as follows::
     >>> from sympy import Symbol, Eq
     >>> x = Symbol('x')
     >>> solveset(Eq(x**2, 1), x)
-    FiniteSet(-1, 1)
+    {-1, 1}
 
 Or one may manually rewrite the equation as an expression equal to 0::
 
     >>> solveset(x**2 - 1, x)
-    FiniteSet(-1, 1)
+    {-1, 1}
 
 The first argument for :func:`solveset` is an expression (equal to zero) or an equation and the second argument
 is the symbol that we want to solve the equation for.

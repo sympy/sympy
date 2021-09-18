@@ -40,7 +40,7 @@ Examples
 One could also create custom distribution and define custom random variables
 as follows:
 
-1. If the you want to create a Continuous Random Variable:
+1. If you want to create a Continuous Random Variable:
 
 >>> from sympy.stats import ContinuousRV, P, E
 >>> from sympy import exp, Symbol, Interval, oo
@@ -81,7 +81,7 @@ exp(-x)
 >>> dist.pdf(x)
 2**(1 - x)/2
 
-3. If the you want to create a Finite Random Variable:
+3. If you want to create a Finite Random Variable:
 
 >>> from sympy.stats import FiniteRV, P, E
 >>> from sympy import Rational
@@ -109,20 +109,20 @@ __all__ = [
     'coskewness', 'sample_stochastic_process',
 
     'FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin', 'Binomial',
-    'BetaBinomial', 'Hypergeometric', 'Rademacher',
+    'BetaBinomial', 'Hypergeometric', 'Rademacher', 'IdealSoliton', 'RobustSoliton',
     'FiniteDistributionHandmade',
 
     'ContinuousRV', 'Arcsin', 'Benini', 'Beta', 'BetaNoncentral', 'BetaPrime',
     'BoundedPareto', 'Cauchy', 'Chi', 'ChiNoncentral', 'ChiSquared', 'Dagum', 'Erlang',
     'ExGaussian', 'Exponential', 'ExponentialPower', 'FDistribution',
     'FisherZ', 'Frechet', 'Gamma', 'GammaInverse', 'Gompertz', 'Gumbel',
-    'Kumaraswamy', 'Laplace', 'Levy', 'Logistic', 'LogLogistic', 'LogNormal', 'Lomax',
+    'Kumaraswamy', 'Laplace', 'Levy', 'Logistic','LogCauchy', 'LogLogistic', 'LogitNormal', 'LogNormal', 'Lomax',
     'Moyal', 'Maxwell', 'Nakagami', 'Normal', 'GaussianInverse', 'Pareto', 'PowerFunction',
     'QuadraticU', 'RaisedCosine', 'Rayleigh','Reciprocal', 'StudentT', 'ShiftedGompertz',
     'Trapezoidal', 'Triangular', 'Uniform', 'UniformSum', 'VonMises', 'Wald',
     'Weibull', 'WignerSemicircle', 'ContinuousDistributionHandmade',
 
-    'Geometric','Hermite', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
+    'FlorySchulz', 'Geometric','Hermite', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
     'YuleSimon', 'Zeta', 'DiscreteRV', 'DiscreteDistributionHandmade',
 
     'JointRV', 'Dirichlet', 'GeneralizedMultivariateLogGamma',
@@ -142,7 +142,10 @@ __all__ = [
     'joint_eigen_distribution', 'JointEigenDistribution',
     'level_spacing_distribution',
 
-    'Probability', 'Expectation', 'Variance', 'Covariance',
+    'MatrixGamma', 'Wishart', 'MatrixNormal', 'MatrixStudentT',
+
+    'Probability', 'Expectation', 'Variance', 'Covariance', 'Moment',
+    'CentralMoment',
 
     'ExpectationMatrix', 'VarianceMatrix', 'CrossCovarianceMatrix'
 
@@ -156,18 +159,18 @@ from .rv_interface import (P, E, H, density, where, given, sample, cdf, median,
 
 from .frv_types import (FiniteRV, DiscreteUniform, Die, Bernoulli, Coin,
         Binomial, BetaBinomial, Hypergeometric, Rademacher,
-        FiniteDistributionHandmade)
+        FiniteDistributionHandmade, IdealSoliton, RobustSoliton)
 
 from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
         BetaPrime, BoundedPareto, Cauchy, Chi, ChiNoncentral, ChiSquared, Dagum, Erlang,
         ExGaussian, Exponential, ExponentialPower, FDistribution, FisherZ,
         Frechet, Gamma, GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace,
-        Levy, Logistic, LogLogistic, LogNormal, Lomax, Maxwell, Moyal, Nakagami, Normal,
+        Levy, Logistic,LogCauchy ,LogLogistic, LogitNormal, LogNormal, Lomax, Maxwell, Moyal, Nakagami, Normal,
         GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, StudentT,
         PowerFunction, ShiftedGompertz, Trapezoidal, Triangular, Uniform, UniformSum,
         VonMises, Wald, Weibull, WignerSemicircle, ContinuousDistributionHandmade)
 
-from .drv_types import (Geometric, Hermite, Logarithmic, NegativeBinomial, Poisson,
+from .drv_types import (FlorySchulz, Geometric, Hermite, Logarithmic, NegativeBinomial, Poisson,
         Skellam, YuleSimon, Zeta, DiscreteRV, DiscreteDistributionHandmade)
 
 from .joint_rv_types import (JointRV, Dirichlet,
@@ -188,8 +191,10 @@ from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
         GaussianSymplecticEnsemble, joint_eigen_distribution,
         JointEigenDistribution, level_spacing_distribution)
 
+from .matrix_distributions import MatrixGamma, Wishart, MatrixNormal, MatrixStudentT
+
 from .symbolic_probability import (Probability, Expectation, Variance,
-        Covariance)
+        Covariance, Moment, CentralMoment)
 
 from .symbolic_multivariate_probability import (ExpectationMatrix, VarianceMatrix,
         CrossCovarianceMatrix)

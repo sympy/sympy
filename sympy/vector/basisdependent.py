@@ -46,16 +46,13 @@ class BasisDependent(Expr):
         return self._mul_func(S.NegativeOne, self)
 
     @_sympifyit('other', NotImplemented)
-    @call_highest_priority('__rdiv__')
-    def __div__(self, other):
+    @call_highest_priority('__rtruediv__')
+    def __truediv__(self, other):
         return self._div_helper(other)
 
-    @call_highest_priority('__div__')
-    def __rdiv__(self, other):
+    @call_highest_priority('__truediv__')
+    def __rtruediv__(self, other):
         return TypeError("Invalid divisor for division")
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """

@@ -6,7 +6,7 @@ import sys
 import tempfile
 import warnings
 from distutils.errors import CompileError
-from distutils.sysconfig import get_config_var
+from distutils.sysconfig import get_config_var, get_config_vars
 
 from .runners import (
     CCompilerRunner,
@@ -19,7 +19,7 @@ from .util import (
     sha256_of_string, sha256_of_file
 )
 
-sharedext = get_config_var('EXT_SUFFIX' if sys.version_info >= (3, 3) else 'SO')
+sharedext = get_config_var('EXT_SUFFIX')
 
 if os.name == 'posix':
     objext = '.o'
@@ -230,11 +230,12 @@ def link_py_so(obj_files, so_file=None, cwd=None, libraries=None,
     else:
         from distutils import sysconfig
         if sysconfig.get_config_var('Py_ENABLE_SHARED'):
-            ABIFLAGS = sysconfig.get_config_var('ABIFLAGS')
-            pythonlib = 'python{}.{}{}'.format(
-                sys.hexversion >> 24, (sys.hexversion >> 16) & 0xff,
-                ABIFLAGS or '')
-            libraries += [pythonlib]
+            cfgDict = get_config_vars()
+            kwargs['linkline'] = kwargs.get('linkline', []) + [cfgDict['PY_LDFLAGS']] # PY_LDFLAGS or just LDFLAGS?
+            library_dirs += [cfgDict['LIBDIR']]
+            for opt in cfgDict['BLDLIBRARY'].split():
+                if opt.startswith('-l'):
+                    libraries += [opt[2:]]
         else:
             pass
 

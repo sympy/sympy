@@ -5,10 +5,16 @@ from sympy.core.exprtools import factor_terms
 from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
+from sympy.core.function import Derivative
+from sympy.core.symbol import Dummy, Symbol
 
 
 class Product(ExprWithIntLimits):
-    r"""Represents unevaluated products.
+    r"""
+    Represents unevaluated products.
+
+    Explanation
+    ===========
 
     ``Product`` represents a finite or infinite product, with the first
     argument being the general form of terms in the series, and the second
@@ -92,13 +98,13 @@ class Product(ExprWithIntLimits):
     Product(4*i**2/((2*i - 1)*(2*i + 1)), (i, 1, n))
     >>> W2e = W2.doit()
     >>> W2e
-    2**(-2*n)*4**n*factorial(n)**2/(RisingFactorial(1/2, n)*RisingFactorial(3/2, n))
+    4**n*factorial(n)**2/(2**(2*n)*RisingFactorial(1/2, n)*RisingFactorial(3/2, n))
     >>> limit(W2e, n, oo)
     pi/2
 
     By the same formula we can compute sin(pi/2):
 
-    >>> from sympy import pi, gamma, simplify
+    >>> from sympy import combsimp, pi, gamma, simplify
     >>> P = pi * x * Product(1 - x**2/k**2, (k, 1, n))
     >>> P = P.subs(x, pi/2)
     >>> P
@@ -106,14 +112,10 @@ class Product(ExprWithIntLimits):
     >>> Pe = P.doit()
     >>> Pe
     pi**2*RisingFactorial(1 - pi/2, n)*RisingFactorial(1 + pi/2, n)/(2*factorial(n)**2)
-    >>> Pe = Pe.rewrite(gamma)
-    >>> Pe
-    pi**2*gamma(n + 1 + pi/2)*gamma(n - pi/2 + 1)/(2*gamma(1 - pi/2)*gamma(1 + pi/2)*gamma(n + 1)**2)
-    >>> Pe = simplify(Pe)
-    >>> Pe
-    sin(pi**2/2)*gamma(n + 1 + pi/2)*gamma(n - pi/2 + 1)/gamma(n + 1)**2
-    >>> limit(Pe, n, oo)
+    >>> limit(Pe, n, oo).gammasimp()
     sin(pi**2/2)
+    >>> Pe.rewrite(gamma)
+    (-1)**n*pi**2*gamma(pi/2)*gamma(n + 1 + pi/2)/(2*gamma(1 + pi/2)*gamma(-n + pi/2)*gamma(n + 1)**2)
 
     Products with the lower limit being larger than the upper one:
 
@@ -163,7 +165,7 @@ class Product(ExprWithIntLimits):
     RisingFactorial(a + 1, -a + b - 1)
     >>> P1 * P2
     RisingFactorial(b, a - b + 1)*RisingFactorial(a + 1, -a + b - 1)
-    >>> simplify(P1 * P2)
+    >>> combsimp(P1 * P2)
     1
 
     See Also
@@ -399,10 +401,28 @@ class Product(ExprWithIntLimits):
         (k, a, n) = limits
         return Mul(*[term.subs(k, a + i) for i in range(n - a + 1)])
 
+    def _eval_derivative(self, x):
+        from sympy.concrete.summations import Sum
+        if isinstance(x, Symbol) and x not in self.free_symbols:
+            return S.Zero
+        f, limits = self.function, list(self.limits)
+        limit = limits.pop(-1)
+        if limits:
+            f = self.func(f, *limits)
+        i, a, b = limit
+        if x in a.free_symbols or x in b.free_symbols:
+            return None
+        h = Dummy()
+        rv = Sum( Product(f, (i, a, h - 1)) * Product(f, (i, h + 1, b)) * Derivative(f, x, evaluate=True).subs(i, h), (h, a, b))
+        return rv
+
     def is_convergent(self):
         r"""
         See docs of :obj:`.Sum.is_convergent()` for explanation of convergence
         in SymPy.
+
+        Explanation
+        ===========
 
         The infinite product:
 
@@ -462,8 +482,8 @@ class Product(ExprWithIntLimits):
         """
         Reverse the order of a limit in a Product.
 
-        Usage
-        =====
+        Explanation
+        ===========
 
         ``reverse_order(expr, *indices)`` reverses some limits in the expression
         ``expr`` which can be either a ``Sum`` or a ``Product``. The selectors in
@@ -474,7 +494,7 @@ class Product(ExprWithIntLimits):
         Examples
         ========
 
-        >>> from sympy import Product, simplify, Sum
+        >>> from sympy import gamma, Product, simplify, Sum
         >>> from sympy.abc import x, y, a, b, c, d
         >>> P = Product(x, (x, a, b))
         >>> Pr = P.reverse_order(x)
@@ -483,13 +503,13 @@ class Product(ExprWithIntLimits):
         >>> Pr = Pr.doit()
         >>> Pr
         1/RisingFactorial(b + 1, a - b - 1)
-        >>> simplify(Pr)
-        gamma(b + 1)/gamma(a)
+        >>> simplify(Pr.rewrite(gamma))
+        Piecewise((gamma(b + 1)/gamma(a), b > -1), ((-1)**(-a + b + 1)*gamma(1 - a)/gamma(-b), True))
         >>> P = P.doit()
         >>> P
         RisingFactorial(a, -a + b + 1)
-        >>> simplify(P)
-        gamma(b + 1)/gamma(a)
+        >>> simplify(P.rewrite(gamma))
+        Piecewise((gamma(b + 1)/gamma(a), a > 0), ((-1)**(-a + b + 1)*gamma(1 - a)/gamma(-b), True))
 
         While one should prefer variable names when specifying which limits
         to reverse, the index counting notation comes in handy in case there
@@ -549,6 +569,9 @@ def product(*args, **kwargs):
     r"""
     Compute the product.
 
+    Explanation
+    ===========
+
     The notation for symbols is similar to the notation used in Sum or
     Integral. product(f, (i, a, b)) computes the product of f with
     respect to i from a to b, i.e.,
@@ -563,6 +586,9 @@ def product(*args, **kwargs):
 
     If it cannot compute the product, it returns an unevaluated Product object.
     Repeated products can be computed by introducing additional symbols tuples::
+
+    Examples
+    ========
 
     >>> from sympy import product, symbols
     >>> i, n, m, k = symbols('i n m k', integer=True)

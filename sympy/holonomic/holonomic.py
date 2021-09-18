@@ -19,19 +19,31 @@ from sympy.polys.domains import QQ, RR
 from sympy.polys.polyclasses import DMF
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import Poly
+from sympy.polys.matrices import DomainMatrix
 from sympy.printing import sstr
 from sympy.simplify.hyperexpand import hyperexpand
 
-from .linearsolver import NewMatrix
 from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
 from .holonomicerrors import (NotPowerSeriesError, NotHyperSeriesError,
     SingularityError, NotHolonomicError)
+
+
+def _find_nonzero_solution(r, homosys):
+    ones = lambda shape: DomainMatrix.ones(shape, r.domain)
+    particular, nullspace = r._solve(homosys)
+    nullity = nullspace.shape[0]
+    nullpart = ones((1, nullity)) * nullspace
+    sol = (particular + nullpart).transpose()
+    return sol
 
 
 
 def DifferentialOperators(base, generator):
     r"""
     This function is used to create annihilators using ``Dx``.
+
+    Explanation
+    ===========
 
     Returns an Algebra of Differential Operators also called Weyl Algebra
     and the operator for differentiation i.e. the ``Dx`` operator.
@@ -139,6 +151,9 @@ class DifferentialOperator:
     Differential Operators are elements of Weyl Algebra. The Operators
     are defined by a list of polynomials in the base ring and the
     parent ring of the Operator i.e. the algebra it belongs to.
+
+    Explanation
+    ===========
 
     Takes a list of polynomials for each power of ``Dx`` and the
     parent ring which must be an instance of DifferentialOperatorAlgebra.
@@ -293,11 +308,8 @@ class DifferentialOperator:
     def __neg__(self):
         return -1 * self
 
-    def __div__(self, other):
-        return self * (S.One / other)
-
     def __truediv__(self, other):
-        return self.__div__(other)
+        return self * (S.One / other)
 
     def __pow__(self, n):
         if n == 1:
@@ -378,6 +390,9 @@ class HolonomicFunction:
     equation can also be represented by an annihilator i.e. a Differential
     Operator ``L`` such that :math:`L.f = 0`. For uniqueness of these functions,
     initial conditions can also be provided along with the annihilator.
+
+    Explanation
+    ===========
 
     Holonomic functions have closure properties and thus forms a ring.
     Given two Holonomic Functions f and g, their sum, product,
@@ -580,19 +595,15 @@ class HolonomicFunction:
             p = []
             for i in range(dim + 1):
                 if i >= len(expr.listofpoly):
-                    p.append(0)
+                    p.append(K.zero)
                 else:
                     p.append(K.new(expr.listofpoly[i].rep))
             r.append(p)
 
-        r = NewMatrix(r).transpose()
-
-        homosys = [[S.Zero for q in range(dim + 1)]]
-        homosys = NewMatrix(homosys).transpose()
-
         # solving the linear system using gauss jordan solver
-        solcomp = r.gauss_jordan_solve(homosys)
-        sol = solcomp[0]
+        r = DomainMatrix(r, (len(row), dim+1), K).transpose()
+        homosys = DomainMatrix.zeros((dim+1, 1), K)
+        sol = _find_nonzero_solution(r, homosys)
 
         # if a solution is not obtained then increasing the order by 1 in each
         # iteration
@@ -612,24 +623,20 @@ class HolonomicFunction:
                 p = []
                 for i in range(dim + 1):
                     if i >= len(expr.listofpoly):
-                        p.append(S.Zero)
+                        p.append(K.zero)
                     else:
-
                         p.append(K.new(expr.listofpoly[i].rep))
                 r.append(p)
 
-            r = NewMatrix(r).transpose()
-
-            homosys = [[S.Zero for q in range(dim + 1)]]
-            homosys = NewMatrix(homosys).transpose()
-
-            solcomp = r.gauss_jordan_solve(homosys)
-            sol = solcomp[0]
+            # solving the linear system using gauss jordan solver
+            r = DomainMatrix(r, (len(row), dim+1), K).transpose()
+            homosys = DomainMatrix.zeros((dim+1, 1), K)
+            sol = _find_nonzero_solution(r, homosys)
 
         # taking only the coefficients needed to multiply with `self`
         # can be also be done the other way by taking R.H.S and multiplying with
         # `other`
-        sol = sol[:dim + 1 - deg1]
+        sol = sol.flat()[:dim + 1 - deg1]
         sol1 = _normalize(sol, self.annihilator.parent)
         # annihilator of the solution
         sol = sol1 * (self.annihilator)
@@ -972,19 +979,19 @@ class HolonomicFunction:
         other_red = [-list_other[i] / list_other[b] for i in range(b)]
 
         # coeff_mull[i][j] is the coefficient of Dx^i(f).Dx^j(g)
-        coeff_mul = [[S.Zero for i in range(b + 1)] for j in range(a + 1)]
-        coeff_mul[0][0] = S.One
+        coeff_mul = [[K.zero for i in range(b + 1)] for j in range(a + 1)]
+        coeff_mul[0][0] = K.one
 
         # making the ansatz
-        lin_sys = [[coeff_mul[i][j] for i in range(a) for j in range(b)]]
+        lin_sys_elements = [[coeff_mul[i][j] for i in range(a) for j in range(b)]]
+        lin_sys = DomainMatrix(lin_sys_elements, (1, a*b), K).transpose()
 
-        homo_sys = [[S.Zero for q in range(a * b)]]
-        homo_sys = NewMatrix(homo_sys).transpose()
+        homo_sys = DomainMatrix.zeros((a*b, 1), K)
 
-        sol = (NewMatrix(lin_sys).transpose()).gauss_jordan_solve(homo_sys)
+        sol = _find_nonzero_solution(lin_sys, homo_sys)
 
         # until a non trivial solution is found
-        while sol[0].is_zero_matrix:
+        while sol.is_zero_matrix:
 
             # updating the coefficients Dx^i(f).Dx^j(g) for next degree
             for i in range(a - 1, -1, -1):
@@ -1002,7 +1009,7 @@ class HolonomicFunction:
                     for j in range(b):
                         coeff_mul[i][j] += other_red[j] * \
                             coeff_mul[i][b]
-                    coeff_mul[i][b] = S.Zero
+                    coeff_mul[i][b] = K.zero
 
             # not d2 + 1, as that is already covered in previous loop
             for j in range(b):
@@ -1010,15 +1017,14 @@ class HolonomicFunction:
                     for i in range(a):
                         coeff_mul[i][j] += self_red[i] * \
                             coeff_mul[a][j]
-                    coeff_mul[a][j] = S.Zero
+                    coeff_mul[a][j] = K.zero
 
-            lin_sys.append([coeff_mul[i][j] for i in range(a)
-                            for j in range(b)])
+            lin_sys_elements.append([coeff_mul[i][j] for i in range(a) for j in range(b)])
+            lin_sys = DomainMatrix(lin_sys_elements, (len(lin_sys_elements), a*b), K).transpose()
 
-            sol = (NewMatrix(lin_sys).transpose()).gauss_jordan_solve(homo_sys)
+            sol = _find_nonzero_solution(lin_sys, homo_sys)
 
-
-        sol_ann = _normalize(sol[0][0:], self.annihilator.parent, negative=False)
+        sol_ann = _normalize(sol.flat(), self.annihilator.parent, negative=False)
 
         if not (self._have_init_cond() and other._have_init_cond()):
             return HolonomicFunction(sol_ann, self.x)
@@ -1120,11 +1126,8 @@ class HolonomicFunction:
     def __neg__(self):
         return -1 * self
 
-    def __div__(self, other):
-        return self * (S.One / other)
-
     def __truediv__(self, other):
-        return self.__div__(other)
+        return self * (S.One / other)
 
     def __pow__(self, n):
         if self.annihilator.order <= 1:
@@ -1207,8 +1210,6 @@ class HolonomicFunction:
         coeffs[0] = S.One
         system = [coeffs]
         homogeneous = Matrix([[S.Zero for i in range(a)]]).transpose()
-        sol = S.Zero
-
         while True:
             coeffs_next = [p.diff(self.x) for p in coeffs]
             for i in range(a - 1):
@@ -1237,6 +1238,9 @@ class HolonomicFunction:
         Finds recurrence relation for the coefficients in the series expansion
         of the function about :math:`x_0`, where :math:`x_0` is the point at
         which the initial condition is stored.
+
+        Explanation
+        ===========
 
         If the point :math:`x_0` is ordinary, solution of the form :math:`[(R, n_0)]`
         is returned. Where :math:`R` is the recurrence relation and :math:`n_0` is the
@@ -1640,6 +1644,9 @@ class HolonomicFunction:
         r"""
         Finds the power series expansion of given holonomic function about :math:`x_0`.
 
+        Explanation
+        ===========
+
         A list of series might be returned if :math:`x_0` is a regular point with
         multiple roots of the indicial equation.
 
@@ -1771,6 +1778,9 @@ class HolonomicFunction:
         (RK4 by default). A set of points (real or complex) must be provided
         which will be the path for the numerical integration.
 
+        Explanation
+        ===========
+
         The path should be given as a list :math:`[x_1, x_2, ... x_n]`. The numerical
         values will be computed at each point in this order
         :math:`x_1 --> x_2 --> x_3 ... --> x_n`.
@@ -1872,6 +1882,9 @@ class HolonomicFunction:
         r"""
         Returns a hypergeometric function (or linear combination of them)
         representing the given holonomic function.
+
+        Explanation
+        ===========
 
         Returns an answer of the form:
         `a_1 \cdot x^{b_1} \cdot{hyper()} + a_2 \cdot x^{b_2} \cdot{hyper()} ...`
@@ -2071,7 +2084,7 @@ class HolonomicFunction:
 
     def change_ics(self, b, lenics=None):
         """
-        Changes the point `x0` to `b` for initial conditions.
+        Changes the point `x0` to ``b`` for initial conditions.
 
         Examples
         ========
@@ -2321,7 +2334,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
         Number of terms in the initial condition. By default it is
         equal to the order of the annihilator.
     domain:
-        Ground domain for the polynomials in `x` appearing as coefficients
+        Ground domain for the polynomials in ``x`` appearing as coefficients
         in the annihilator.
     initcond:
         Set it false if you don't want the initial conditions to be computed.
@@ -2833,7 +2846,7 @@ def _create_table(table, domain=QQ):
     see meijerint._create_lookup_table.
     """
 
-    def add(formula, annihilator, arg, x0=0, y0=[]):
+    def add(formula, annihilator, arg, x0=0, y0=()):
         """
         Adds a formula in the dictionary
         """

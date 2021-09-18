@@ -13,8 +13,6 @@
 * transverse_magnification
 """
 
-from __future__ import division
-
 __all__ = ['refraction_angle',
            'deviation',
            'fresnel_coefficients',
@@ -28,7 +26,7 @@ __all__ = ['refraction_angle',
            ]
 
 from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit, atan2, asin,\
-cos, sin, tan, I, cancel, pi, Float
+cos, sin, tan, I, cancel, pi, Float, S, zoo
 from sympy.core.compatibility import is_sequence
 from sympy.geometry.line import Ray3D
 from sympy.geometry.util import intersection
@@ -50,18 +48,18 @@ def refractive_index_of_medium(medium):
 def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     """
     This function calculates transmitted vector after refraction at planar
-    surface. `medium1` and `medium2` can be `Medium` or any sympifiable object.
-    If `incident` is a number then treated as angle of incidence (in radians)
+    surface. ``medium1`` and ``medium2`` can be ``Medium`` or any sympifiable object.
+    If ``incident`` is a number then treated as angle of incidence (in radians)
     in which case refraction angle is returned.
 
-    If `incident` is an object of `Ray3D`, `normal` also has to be an instance
+    If ``incident`` is an object of `Ray3D`, `normal` also has to be an instance
     of `Ray3D` in order to get the output as a `Ray3D`. Please note that if
     plane of separation is not provided and normal is an instance of `Ray3D`,
-    normal will be assumed to be intersecting incident ray at the plane of
+    ``normal`` will be assumed to be intersecting incident ray at the plane of
     separation. This will not be the case when `normal` is a `Matrix` or
     any other sequence.
-    If `incident` is an instance of `Ray3D` and `plane` has not been provided
-    and `normal` is not `Ray3D`, output will be a `Matrix`.
+    If ``incident`` is an instance of `Ray3D` and `plane` has not been provided
+    and ``normal`` is not `Ray3D`, output will be a `Matrix`.
 
     Parameters
     ==========
@@ -76,6 +74,9 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
         Normal vector
     plane : Plane
         Plane of separation of the two media.
+
+    Returns
+    =======
 
     Returns an angle of refraction or a refracted ray depending on inputs.
 
@@ -135,9 +136,6 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
         if critical_angle_ and angle_of_incidence > critical_angle_:
             raise ValueError('Ray undergoes total internal reflection')
         return asin(n1*sin(angle_of_incidence)/n2)
-
-    if angle_of_incidence and not 0 <= angle_of_incidence < pi*0.5:
-        raise ValueError
 
     # Treat the incident as ray below
     # A flag to check whether to return Ray3D or not
@@ -233,6 +231,9 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
     medium2 : Medium or sympifiable
         Medium 2 or its refractive index
 
+    Returns
+    =======
+
     Returns a list with four real Fresnel coefficients:
     [reflection p (TM), reflection s (TE),
     transmission p (TM), transmission s (TE)]
@@ -254,7 +255,7 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
     References
     ==========
 
-    https://en.wikipedia.org/wiki/Fresnel_equations
+    .. [1] https://en.wikipedia.org/wiki/Fresnel_equations
     """
     if not 0 <= 2*angle_of_incidence < pi:
         raise ValueError('Angle of incidence not in range [0:pi/2)')
@@ -268,7 +269,7 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
     except ValueError:
         angle_of_total_internal_reflection_onset = None
 
-    if angle_of_total_internal_reflection_onset == None or\
+    if angle_of_total_internal_reflection_onset is None or\
     angle_of_total_internal_reflection_onset > angle_of_incidence:
         R_s = -sin(angle_of_incidence - angle_of_refraction)\
                 /sin(angle_of_incidence + angle_of_refraction)
@@ -421,9 +422,9 @@ def critical_angle(medium1, medium2):
     ==========
 
     medium 1 : Medium or sympifiable
-        Refractive index of Medium 1
+        Refractive index of Medium 1.
     medium 2 : Medium or sympifiable
-        Refractive index of Medium 1
+        Refractive index of Medium 1.
 
     Examples
     ========
@@ -444,9 +445,9 @@ def critical_angle(medium1, medium2):
 
 
 
-def lens_makers_formula(n_lens, n_surr, r1, r2):
+def lens_makers_formula(n_lens, n_surr, r1, r2, d=0):
     """
-    This function calculates focal length of a thin lens.
+    This function calculates focal length of a lens.
     It follows cartesian sign convention.
 
     Parameters
@@ -460,15 +461,23 @@ def lens_makers_formula(n_lens, n_surr, r1, r2):
         Radius of curvature of first surface.
     r2 : sympifiable
         Radius of curvature of second surface.
+    d : sympifiable, optional
+        Thickness of lens, default value is 0.
 
     Examples
     ========
 
     >>> from sympy.physics.optics import lens_makers_formula
+    >>> from sympy import S
     >>> lens_makers_formula(1.33, 1, 10, -10)
     15.1515151515151
+    >>> lens_makers_formula(1.2, 1, 10, S.Infinity)
+    50.0000000000000
+    >>> lens_makers_formula(1.33, 1, 10, -10, d=1)
+    15.3418463277618
 
     """
+
     if isinstance(n_lens, Medium):
         n_lens = n_lens.refractive_index
     else:
@@ -477,11 +486,13 @@ def lens_makers_formula(n_lens, n_surr, r1, r2):
         n_surr = n_surr.refractive_index
     else:
         n_surr = sympify(n_surr)
+    d = sympify(d)
 
-    r1 = sympify(r1)
-    r2 = sympify(r2)
+    focal_length = 1/((n_lens - n_surr) / n_surr*(1/r1 - 1/r2 + (((n_lens - n_surr) * d) / (n_lens * r1 * r2))))
 
-    return 1/((n_lens - n_surr)/n_surr*(1/r1 - 1/r2))
+    if focal_length == zoo:
+        return S.Infinity
+    return focal_length
 
 
 def mirror_formula(focal_length=None, u=None, v=None):
@@ -626,17 +637,19 @@ def hyperfocal_distance(f, N, c):
 
     Parameters
     ==========
+
     f: sympifiable
-    Focal length of a given lens
+        Focal length of a given lens.
 
     N: sympifiable
-    F-number of a given lens
+        F-number of a given lens.
 
     c: sympifiable
-    Circle of Confusion (CoC) of a given image format
+        Circle of Confusion (CoC) of a given image format.
 
     Example
     =======
+
     >>> from sympy.physics.optics import hyperfocal_distance
     >>> round(hyperfocal_distance(f = 0.5, N = 8, c = 0.0033), 2)
     9.47
@@ -656,14 +669,16 @@ def transverse_magnification(si, so):
 
     Parameters
     ==========
+
     so: sympifiable
-    Lens-object distance
+        Lens-object distance.
 
     si: sympifiable
-    Lens-image distance
+        Lens-image distance.
 
     Example
     =======
+
     >>> from sympy.physics.optics import transverse_magnification
     >>> transverse_magnification(30, 15)
     -2

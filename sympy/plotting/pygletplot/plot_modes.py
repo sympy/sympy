@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import lambdify
 from sympy.core.numbers import pi
 from sympy.functions import sin, cos

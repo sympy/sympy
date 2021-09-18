@@ -106,7 +106,7 @@ class FermionOp(Operator):
         if self.is_annihilation:
             return pform
         else:
-            return pform**prettyForm(u'\N{DAGGER}')
+            return pform**prettyForm('\N{DAGGER}')
 
 
 class FermionFockKet(Ket):
@@ -121,7 +121,7 @@ class FermionFockKet(Ket):
     """
 
     def __new__(cls, n):
-        if n not in [0, 1]:
+        if n not in (0, 1):
             raise ValueError("n must be 0 or 1")
         return Ket.__new__(cls, n)
 
@@ -165,7 +165,7 @@ class FermionFockBra(Bra):
     """
 
     def __new__(cls, n):
-        if n not in [0, 1]:
+        if n not in (0, 1):
             raise ValueError("n must be 0 or 1")
         return Bra.__new__(cls, n)
 

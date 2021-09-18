@@ -2,7 +2,6 @@
 of Basic or Atom."""
 
 import collections
-import sys
 
 from sympy.core.basic import (Basic, Atom, preorder_traversal, as_Basic,
     _atomic, _aresame)
@@ -33,6 +32,12 @@ def test_structure():
     assert b21.args == (b2, b1)
     assert b21.func(*b21.args) == b21
     assert bool(b1)
+
+
+def test_immutable():
+    assert not hasattr(b1, '__dict__')
+    with raises(AttributeError):
+        b1.x = 1
 
 
 def test_equality():
@@ -114,8 +119,7 @@ def test_subs():
     assert b21.subs([(b2, b1), (b1, b2)]) == Basic(b2, b2)
 
     assert b21.subs({b1: b2, b2: b1}) == Basic(b2, b2)
-    if sys.version_info >= (3, 4):
-        assert b21.subs(collections.ChainMap({b1: b2}, {b2: b1})) == Basic(b2, b2)
+    assert b21.subs(collections.ChainMap({b1: b2}, {b2: b1})) == Basic(b2, b2)
     assert b21.subs(collections.OrderedDict([(b2, b1), (b1, b2)])) == Basic(b2, b2)
 
     raises(ValueError, lambda: b21.subs('bad arg'))

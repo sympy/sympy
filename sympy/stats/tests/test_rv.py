@@ -1,18 +1,20 @@
-from __future__ import unicode_literals
-from sympy import (S, Symbol, Interval, exp, Or,
+from sympy import (S, Symbol, Interval, binomial, nan, exp, Or,
         symbols, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic, Indexed,
         DiracDelta, Lambda, log, pi, FallingFactorial, Rational, Matrix)
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         density, given, independent, dependent, where, pspace, GaussianUnitaryEnsemble,
         random_symbols, sample, Geometric, factorial_moment, Binomial, Hypergeometric,
         DiscreteUniform, Poisson, characteristic_function, moment_generating_function,
-        BernoulliProcess, Variance, Expectation, Probability, Covariance, covariance)
+        BernoulliProcess, Variance, Expectation, Probability, Covariance, covariance, cmoment,
+        moment, median)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, sample_iter, PSpace, is_random, RandomIndexedSymbol, RandomMatrixSymbol)
-from sympy.testing.pytest import raises, skip, XFAIL, ignore_warnings
+from sympy.testing.pytest import raises, skip, XFAIL
 from sympy.external import import_module
 from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution
+from sympy.core.symbol import Dummy
+from sympy.functions.elementary.piecewise import Piecewise
 
 def test_where():
     X, Y = Die('X'), Die('Y')
@@ -40,9 +42,9 @@ def test_where():
 def test_random_symbols():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
 
-    assert set(random_symbols(2*X + 1)) == set((X,))
-    assert set(random_symbols(2*X + Y)) == set((X, Y))
-    assert set(random_symbols(2*X + Y.symbol)) == set((X,))
+    assert set(random_symbols(2*X + 1)) == {X}
+    assert set(random_symbols(2*X + Y)) == {X, Y}
+    assert set(random_symbols(2*X + Y.symbol)) == {X}
     assert set(random_symbols(2)) == set()
 
 
@@ -191,9 +193,8 @@ def test_Sample():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests')
-    with ignore_warnings(UserWarning):
-        assert next(sample(X)) in [1, 2, 3, 4, 5, 6]
-        assert isinstance(next(sample(X + Y)), float)
+    assert sample(X) in [1, 2, 3, 4, 5, 6]
+    assert isinstance(sample(X + Y), float)
 
     assert P(X + Y > 0, Y < 0, numsamples=10).is_number
     assert E(X + Y, numsamples=10).is_number
@@ -208,6 +209,14 @@ def test_Sample():
 
     assert all(i in range(1, 7) for i in density(X, numsamples=10))
     assert all(i in range(4, 7) for i in density(X, X>3, numsamples=10))
+
+    numpy = import_module('numpy')
+    if not numpy:
+        skip('Numpy is not installed. Abort tests')
+    #Test Issue #21563: Output of sample must be a float or array
+    assert isinstance(sample(X), (numpy.int32, numpy.int64))
+    assert isinstance(sample(Y), numpy.float64)
+    assert isinstance(sample(X, size=2), numpy.ndarray)
 
 
 @XFAIL
@@ -304,6 +313,27 @@ def test_density_constant():
     assert density(3)(2) == 0
     assert density(3)(3) == DiracDelta(0)
 
+def test_cmoment_constant():
+    assert variance(3) == 0
+    assert cmoment(3, 3) == 0
+    assert cmoment(3, 4) == 0
+    x = Symbol('x')
+    assert variance(x) == 0
+    assert cmoment(x, 15) == 0
+    assert cmoment(x, 0) == 1
+
+def test_moment_constant():
+    assert moment(3, 0) == 1
+    assert moment(3, 1) == 3
+    assert moment(3, 2) == 9
+    x = Symbol('x')
+    assert moment(x, 2) == x**2
+
+def test_median_constant():
+    assert median(3) == 3
+    x = Symbol('x')
+    assert median(x) == x
+
 def test_real():
     x = Normal('x', 0, 1)
     assert x.is_real
@@ -386,3 +416,10 @@ def test_issue_6810():
     assert P(Eq(Y, 0)) == 0
     assert P(Or(X > 2, X < 3)) == 1
     assert P(And(X > 3, X > 2)) == S(1)/2
+
+def test_issue_20286():
+    n, p = symbols('n p')
+    B = Binomial('B', n, p)
+    k = Dummy('k', integer = True)
+    eq = Sum(Piecewise((-p**k*(1 - p)**(-k + n)*log(p**k*(1 - p)**(-k + n)*binomial(n, k))*binomial(n, k), (k >= 0) & (k <= n)), (nan, True)), (k, 0, n))
+    assert eq.dummy_eq(H(B))

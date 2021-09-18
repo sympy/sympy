@@ -170,7 +170,7 @@ def test_sparse():
     assert a * 0 == MutableSparseNDimArray({}, (100000, 200000))
     assert 0 * a == MutableSparseNDimArray({}, (100000, 200000))
 
-    # __div__
+    # __truediv__
     assert a/3 == MutableSparseNDimArray({200001: Rational(1, 3)}, (100000, 200000))
 
     # __neg__

@@ -214,8 +214,32 @@ def test_issue_18751():
     assert rsolve(f, y(n)) == \
         C0*(r*(cos(theta) - I*Abs(sin(theta))))**n + C1*(r*(cos(theta) + I*Abs(sin(theta))))**n
 
+def test_constant_naming():
+    #issue 8697
+    assert rsolve(y(n+3) - y(n+2) - y(n+1) + y(n), y(n)) == (-1)**n*C0+C1+C2*n
+    assert rsolve(y(n+3)+3*y(n+2)+3*y(n+1)+y(n), y(n)).expand() == C0*(-1)**n + (-1)**n*C1*n + (-1)**n*C2*n**2
+    assert rsolve(y(n) - 2*y(n - 3) + 5*y(n - 2) - 4*y(n - 1),y(n),[1,3,8]) == 3*2**n - n - 2
+
+    #issue 19630
+    assert rsolve(y(n+3) - 3*y(n+1) + 2*y(n), y(n), {y(1):0, y(2):8, y(3):-2}) == (-2)**n + 2*n
 
 @slow
 def test_issue_15751():
     f = y(n) + 21*y(n + 1) - 273*y(n + 2) - 1092*y(n + 3) + 1820*y(n + 4) + 1092*y(n + 5) - 273*y(n + 6) - 21*y(n + 7) + y(n + 8)
     assert rsolve(f, y(n)) is not None
+
+
+def test_issue_17990():
+    f = -10*y(n) + 4*y(n + 1) + 6*y(n + 2) + 46*y(n + 3)
+    sol = rsolve(f, y(n))
+    expected = C0*((86*18**(S(1)/3)/69 + (-12 + (-1 + sqrt(3)*I)*(290412 +
+        3036*sqrt(9165))**(S(1)/3))*(1 - sqrt(3)*I)*(24201 + 253*sqrt(9165))**
+        (S(1)/3)/276)/((1 - sqrt(3)*I)*(24201 + 253*sqrt(9165))**(S(1)/3))
+        )**n + C1*((86*18**(S(1)/3)/69 + (-12 + (-1 - sqrt(3)*I)*(290412 + 3036
+        *sqrt(9165))**(S(1)/3))*(1 + sqrt(3)*I)*(24201 + 253*sqrt(9165))**
+        (S(1)/3)/276)/((1 + sqrt(3)*I)*(24201 + 253*sqrt(9165))**(S(1)/3))
+        )**n + C2*(-43*18**(S(1)/3)/(69*(24201 + 253*sqrt(9165))**(S(1)/3)) -
+        S(1)/23 + (290412 + 3036*sqrt(9165))**(S(1)/3)/138)**n
+    assert sol == expected
+    e = sol.subs({C0: 1, C1: 1, C2: 1, n: 1}).evalf()
+    assert abs(e + 0.130434782608696) < 1e-13

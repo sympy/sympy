@@ -1,4 +1,7 @@
-"""Implicit plotting module for SymPy
+"""Implicit plotting module for SymPy.
+
+Explanation
+===========
 
 The module implements a data series called ImplicitSeries which is used by
 ``Plot`` class to plot implicit plots for different backends. The module,
@@ -11,19 +14,20 @@ algorithm.
 
 See Also
 ========
+
 sympy.plotting.plot
 
 References
 ==========
-- Jeffrey Allen Tupper. Reliable Two-Dimensional Graphing Methods for
+
+.. [1] Jeffrey Allen Tupper. Reliable Two-Dimensional Graphing Methods for
 Mathematical Formulae with Two Free Variables.
 
-- Jeffrey Allen Tupper. Graphing Equations with Generalized Interval
+.. [2] Jeffrey Allen Tupper. Graphing Equations with Generalized Interval
 Arithmetic. Master's thesis. University of Toronto, 1996
 
 """
 
-from __future__ import print_function, division
 
 from .plot import BaseSeries, Plot
 from .experimental_lambdify import experimental_lambdify, vectorized_lambdify
@@ -46,7 +50,7 @@ class ImplicitSeries(BaseSeries):
     def __init__(self, expr, var_start_end_x, var_start_end_y,
             has_equality, use_interval_math, depth, nb_of_points,
             line_color):
-        super(ImplicitSeries, self).__init__()
+        super().__init__()
         self.expr = sympify(expr)
         self.var_x = sympify(var_start_end_x[0])
         self.start_x = float(var_start_end_x[1])

@@ -46,7 +46,7 @@ if np and matplotlib:
 #from matplotlib import rc
 #rc('text',usetex=True)
 
-class CircuitPlot(object):
+class CircuitPlot:
     """A class for managing a circuit plot."""
 
     scale = 1.0
@@ -320,10 +320,11 @@ def labeller(n, symbol='q'):
 
     Parameters
     ==========
+
     n : int
-      number of qubits in the circuit
+        number of qubits in the circuit.
     symbol : string
-      A character string to precede all gate labels. E.g. 'q_0', 'q_1', etc.
+        A character string to precede all gate labels. E.g. 'q_0', 'q_1', etc.
 
     >>> from sympy.physics.quantum.circuitplot import labeller
     >>> labeller(2)
@@ -341,7 +342,7 @@ class Mz(OneQubitGate):
     """
     measurement = True
     gate_name='Mz'
-    gate_name_latex=u'M_z'
+    gate_name_latex='M_z'
 
 class Mx(OneQubitGate):
     """Mock-up of an x measurement gate.
@@ -351,7 +352,7 @@ class Mx(OneQubitGate):
     """
     measurement = True
     gate_name='Mx'
-    gate_name_latex=u'M_x'
+    gate_name_latex='M_x'
 
 class CreateOneQubitGate(ManagedProperties):
     def __new__(mcl, name, latexname=None):

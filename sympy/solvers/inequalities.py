@@ -1,7 +1,5 @@
 """Tools for solving inequalities and systems of inequalities. """
 
-from __future__ import print_function, division
-
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
@@ -18,6 +16,7 @@ from sympy.polys.polyutils import _nsort
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
 
+
 def solve_poly_inequality(poly, rel):
     """Solve a polynomial inequality with rational coefficients.
 
@@ -29,13 +28,13 @@ def solve_poly_inequality(poly, rel):
     >>> from sympy.solvers.inequalities import solve_poly_inequality
 
     >>> solve_poly_inequality(Poly(x, x, domain='ZZ'), '==')
-    [FiniteSet(0)]
+    [{0}]
 
     >>> solve_poly_inequality(Poly(x**2 - 1, x, domain='ZZ'), '!=')
     [Interval.open(-oo, -1), Interval.open(-1, 1), Interval.open(1, oo)]
 
     >>> solve_poly_inequality(Poly(x**2 - 1, x, domain='ZZ'), '==')
-    [FiniteSet(-1), FiniteSet(1)]
+    [{-1}, {1}]
 
     See Also
     ========
@@ -141,7 +140,7 @@ def solve_rational_inequalities(eqs):
     >>> solve_rational_inequalities([[
     ... ((Poly(-x + 1), Poly(1, x)), '>='),
     ... ((Poly(-x + 1), Poly(1, x)), '<=')]])
-    FiniteSet(1)
+    {1}
 
     >>> solve_rational_inequalities([[
     ... ((Poly(x), Poly(1, x)), '!='),
@@ -457,6 +456,20 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     from sympy.solvers.solvers import denoms
     from sympy.solvers.solveset import solvify, solveset
 
+    if domain.is_subset(S.Reals) is False:
+        raise NotImplementedError(filldedent('''
+        Inequalities in the complex domain are
+        not supported. Try the real domain by
+        setting domain=S.Reals'''))
+    elif domain is not S.Reals:
+        rv = solve_univariate_inequality(
+        expr, gen, relational=False, continuous=continuous).intersection(domain)
+        if relational:
+            rv = rv.as_relational(gen)
+        return rv
+    else:
+        pass  # continue with attempt to solve in Real domain
+
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
     # real.
@@ -511,7 +524,8 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
 
             inf, sup = domain.inf, domain.sup
             if sup - inf is S.Infinity:
-                domain = Interval(0, period, False, True)
+                domain = Interval(0, period, False, True).intersect(_domain)
+                _domain = domain
 
         if rv is None:
             n, d = e.as_numer_denom()
@@ -640,7 +654,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             sol_sets = [S.EmptySet]
 
             start = domain.inf
-            if valid(start) and start.is_finite:
+            if start in domain and valid(start) and start.is_finite:
                 sol_sets.append(FiniteSet(start))
 
             for x in reals:
@@ -663,7 +677,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 start = end
 
             end = domain.sup
-            if valid(end) and end.is_finite:
+            if end in domain and valid(end) and end.is_finite:
                 sol_sets.append(FiniteSet(end))
 
             if valid(_pt(start, end)):
@@ -882,6 +896,7 @@ def _solve_inequality(ie, s, linear=False):
 
     conds.append(rv)
     return And(*conds)
+
 
 def _reduce_inequalities(inequalities, symbols):
     # helper for reduce_inequalities

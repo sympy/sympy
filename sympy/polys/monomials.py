@@ -1,12 +1,11 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
-from __future__ import print_function, division
 
 from itertools import combinations_with_replacement, product
 from textwrap import dedent
 
 from sympy.core import Mul, S, Tuple, sympify
-from sympy.core.compatibility import exec_, iterable
+from sympy.core.compatibility import iterable
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.utilities import public
@@ -15,37 +14,36 @@ from sympy.core.compatibility import is_sequence
 @public
 def itermonomials(variables, max_degrees, min_degrees=None):
     r"""
-    `max_degrees` and `min_degrees` are either both integers or both lists.
-    Unless otherwise specified, `min_degrees` is either 0 or [0,...,0].
+    ``max_degrees`` and ``min_degrees`` are either both integers or both lists.
+    Unless otherwise specified, ``min_degrees`` is either ``0`` or
+    ``[0, ..., 0]``.
 
-    A generator of all monomials `monom` is returned, such that
+    A generator of all monomials ``monom`` is returned, such that
     either
-    min_degree <= total_degree(monom) <= max_degree,
+    ``min_degree <= total_degree(monom) <= max_degree``,
     or
-    min_degrees[i] <= degree_list(monom)[i] <= max_degrees[i], for all i.
+    ``min_degrees[i] <= degree_list(monom)[i] <= max_degrees[i]``,
+    for all ``i``.
 
-    Case I:: `max_degrees` and `min_degrees` are both integers.
-    ===========================================================
-    Given a set of variables `V` and a min_degree `N` and a max_degree `M`
-    generate a set of monomials of degree less than or equal to `N` and greater
-    than or equal to `M`. The total number of monomials in commutative
-    variables is huge and is given by the following formula if `M = 0`:
+    Case I. ``max_degrees`` and ``min_degrees`` are both integers
+    =============================================================
+
+    Given a set of variables $V$ and a min_degree $N$ and a max_degree $M$
+    generate a set of monomials of degree less than or equal to $N$ and greater
+    than or equal to $M$. The total number of monomials in commutative
+    variables is huge and is given by the following formula if $M = 0$:
 
         .. math::
-
             \frac{(\#V + N)!}{\#V! N!}
 
     For example if we would like to generate a dense polynomial of
-    a total degree `N = 50` and `M = 0`, which is the worst case, in 5
+    a total degree $N = 50$ and $M = 0$, which is the worst case, in 5
     variables, assuming that exponents and all of coefficients are 32-bit long
     and stored in an array we would need almost 80 GiB of memory! Fortunately
     most polynomials, that we will encounter, are sparse.
 
-    Examples
-    ========
-
-    Consider monomials in commutative variables `x` and `y`
-    and non-commutative variables `a` and `b`::
+    Consider monomials in commutative variables $x$ and $y$
+    and non-commutative variables $a$ and $b$::
 
         >>> from sympy import symbols
         >>> from sympy.polys.monomials import itermonomials
@@ -65,19 +63,19 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         >>> sorted(itermonomials([x, y], 2, 1), key=monomial_key('grlex', [y, x]))
         [x, y, x**2, x*y, y**2]
 
+    Case II. ``max_degrees`` and ``min_degrees`` are both lists
+    ===========================================================
 
-    Case II:: `max_degrees` and `min_degrees` are both lists.
-    =========================================================
-    If max_degrees = [d_1, ..., d_n] and min_degrees = [e_1, ..., e_n],
-    the number of monomials generated is:
+    If ``max_degrees = [d_1, ..., d_n]`` and
+    ``min_degrees = [e_1, ..., e_n]``, the number of monomials generated
+    is:
 
-        (d_1 - e_1 + 1) * ... * (d_n - e_n + 1)
+    .. math::
+        (d_1 - e_1 + 1) (d_2 - e_2 + 1) \cdots (d_n - e_n + 1)
 
-    Example
-    =======
-
-    Let us generate all monomials `monom` in variables `x`, and `y`
-    such that [1, 2][i] <= degree_list(monom)[i] <= [2, 4][i], i = 0, 1 ::
+    Let us generate all monomials ``monom`` in variables $x$ and $y$
+    such that ``[1, 2][i] <= degree_list(monom)[i] <= [2, 4][i]``,
+    ``i = 0, 1`` ::
 
         >>> from sympy import symbols
         >>> from sympy.polys.monomials import itermonomials
@@ -129,10 +127,9 @@ def itermonomials(variables, max_degrees, min_degrees=None):
                 for variable in item:
                     if variable != 1:
                         powers[variable] += 1
-                if max(powers.values()) >= min_degree:
+                if sum(powers.values()) >= min_degree:
                     monomials_list_comm.append(Mul(*item))
-            for mon in set(monomials_list_comm):
-                yield mon
+            yield from set(monomials_list_comm)
         else:
             monomials_list_non_comm = []
             for item in product(variables, repeat=max_degree):
@@ -142,10 +139,9 @@ def itermonomials(variables, max_degrees, min_degrees=None):
                 for variable in item:
                     if variable != 1:
                         powers[variable] += 1
-                if max(powers.values()) >= min_degree:
+                if sum(powers.values()) >= min_degree:
                     monomials_list_non_comm.append(Mul(*item))
-            for mon in set(monomials_list_non_comm):
-                yield mon
+            yield from set(monomials_list_non_comm)
     else:
         if any(min_degrees[i] > max_degrees[i] for i in range(n)):
             raise ValueError('min_degrees[i] must be <= max_degrees[i] for all i')
@@ -400,7 +396,7 @@ def term_div(a, b, domain):
         else:
             return None
 
-class MonomialOps(object):
+class MonomialOps:
     """Code generator of fast monomial arithmetic functions. """
 
     def __init__(self, ngens):
@@ -408,7 +404,7 @@ class MonomialOps(object):
 
     def _build(self, code, name):
         ns = {}
-        exec_(code, ns)
+        exec(code, ns)
         return ns[name]
 
     def _vars(self, name):
@@ -583,7 +579,7 @@ class Monomial(PicklableWithSlots):
 
         return self.rebuild(monomial_mul(self.exponents, exponents))
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Monomial):
             exponents = other.exponents
         elif isinstance(other, (tuple, Tuple)):
@@ -598,7 +594,7 @@ class Monomial(PicklableWithSlots):
         else:
             raise ExactQuotientFailed(self, Monomial(other))
 
-    __floordiv__ = __truediv__ = __div__
+    __floordiv__ = __truediv__
 
     def __pow__(self, other):
         n = int(other)

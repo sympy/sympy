@@ -1,9 +1,11 @@
 import random
+import concurrent.futures
+from collections.abc import Hashable
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, Poly, Pow, PurePoly, Rational,
-    S, Symbol, cos, exp, log, oo, pi, signsimp, simplify, sin,
-    sqrt, symbols, sympify, trigsimp, tan, sstr, diff, Function, expand)
+    S, Symbol, cos, exp, log, nan, oo, pi, signsimp, simplify, sin,
+    sqrt, symbols, sympify, trigsimp, tan, sstr, diff, Function, expand, FiniteSet)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
     _simplify)
@@ -13,11 +15,12 @@ from sympy.matrices import (
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix,
     MatrixSymbol, dotprodsimp)
-from sympy.core.compatibility import iterable, Hashable
+from sympy.matrices.utilities import _dotprodsimp_state
+from sympy.core.compatibility import iterable
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.iterables import flatten, capture
-from sympy.testing.pytest import raises, XFAIL, skip, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
@@ -36,15 +39,26 @@ def test_args():
         assert m.rows == 3 and type(m.rows) is int
         assert m.cols == 2 and type(m.cols) is int
         if not n % 2:
-            assert type(m._mat) in (list, tuple, Tuple)
+            assert type(m.flat()) in (list, tuple, Tuple)
         else:
-            assert type(m._smat) is dict
+            assert type(m.todok()) is dict
+
+
+def test_deprecated_mat_smat():
+    for cls in Matrix, ImmutableMatrix:
+        m = cls.zeros(3, 2)
+        with warns_deprecated_sympy():
+            mat = m._mat
+        assert mat == m.flat()
+    for cls in SparseMatrix, ImmutableSparseMatrix:
+        m = cls.zeros(3, 2)
+        with warns_deprecated_sympy():
+            smat = m._smat
+        assert smat == m.todok()
 
 
 def test_division():
     v = Matrix(1, 2, [x, y])
-    assert v.__div__(z) == Matrix(1, 2, [x/z, y/z])
-    assert v.__truediv__(z) == Matrix(1, 2, [x/z, y/z])
     assert v/z == Matrix(1, 2, [x/z, y/z])
 
 
@@ -186,6 +200,12 @@ def test_multiplication():
         assert c[0, 1] == 2*5
         assert c[1, 0] == 3*5
         assert c[1, 1] == 0
+
+    M = Matrix([[oo, 0], [0, oo]])
+    assert M ** 2 == M
+
+    M = Matrix([[oo, oo], [0, 0]])
+    assert M ** 2 == Matrix([[nan, nan], [nan, nan]])
 
 
 def test_power():
@@ -364,7 +384,6 @@ def test_issue_17247_expression_blowup_7():
     with dotprodsimp(True):
         assert M.det('berkowitz') == 0
 
-@XFAIL # dotprodsimp is not on by default in this function
 def test_issue_17247_expression_blowup_8():
     M = Matrix(8, 8, [x+i for i in range (64)])
     with dotprodsimp(True):
@@ -404,22 +423,27 @@ def test_issue_17247_expression_blowup_13():
         [1 - x, x + 1,     0, x + 1],
         [    0, 1 - x, x + 1, 1 - x],
         [    0,     0,     1 - x, 0]])
-    with dotprodsimp(True):
-        ev = M.eigenvects()
-        assert ev[0][:2] == (0, 2)
-        assert ev[0][2][0] == Matrix([[0],[-1],[0],[1]])
-        assert ev[1][:2] == (x - sqrt(2)*(x - 1) + 1, 1)
-        assert (ev[1][2][0] - Matrix([
-            [-(-17*x**4 + 12*sqrt(2)*x**4 - 4*sqrt(2)*x**3 + 6*x**3 - 6*x - 4*sqrt(2)*x + 12*sqrt(2) + 17)/(-7*x**4 + 5*sqrt(2)*x**4 - 6*sqrt(2)*x**3 + 8*x**3 - 2*x**2 + 8*x + 6*sqrt(2)*x - 5*sqrt(2) - 7)],
-            [                      (-7*x**3 + 5*sqrt(2)*x**3 - x**2 + sqrt(2)*x**2 - sqrt(2)*x - x - 5*sqrt(2) - 7)/(-3*x**3 + 2*sqrt(2)*x**3 - 2*sqrt(2)*x**2 + 3*x**2 + 2*sqrt(2)*x + 3*x - 3 - 2*sqrt(2))],
-            [                                                                                           -(-3*x**2 + 2*sqrt(2)*x**2 + 2*x - 3 - 2*sqrt(2))/(-x**2 + sqrt(2)*x**2 - 2*sqrt(2)*x + 1 + sqrt(2))],
-            [                                                                                                                                                                                              1]])).expand() == Matrix([[0],[0],[0],[0]])
-        assert ev[2][:2] == (x + sqrt(2)*(x - 1) + 1, 1)
-        assert (ev[2][2][0] - Matrix([
-            [-(12*sqrt(2)*x**4 + 17*x**4 - 6*x**3 - 4*sqrt(2)*x**3 - 4*sqrt(2)*x + 6*x - 17 + 12*sqrt(2))/(7*x**4 + 5*sqrt(2)*x**4 - 6*sqrt(2)*x**3 - 8*x**3 + 2*x**2 - 8*x + 6*sqrt(2)*x - 5*sqrt(2) + 7)],
-            [                      (7*x**3 + 5*sqrt(2)*x**3 + x**2 + sqrt(2)*x**2 - sqrt(2)*x + x - 5*sqrt(2) + 7)/(2*sqrt(2)*x**3 + 3*x**3 - 3*x**2 - 2*sqrt(2)*x**2 - 3*x + 2*sqrt(2)*x - 2*sqrt(2) + 3)],
-            [                                                                                           -(2*sqrt(2)*x**2 + 3*x**2 - 2*x - 2*sqrt(2) + 3)/(x**2 + sqrt(2)*x**2 - 2*sqrt(2)*x - 1 + sqrt(2))],
-            [                                                                                                                                                                                            1]])).expand() == Matrix([[0],[0],[0],[0]])
+
+    ev = M.eigenvects()
+    assert ev[0] == (0, 2, [Matrix([0, -1, 0, 1])])
+    assert ev[1][0] == x - sqrt(2)*(x - 1) + 1
+    assert ev[1][1] == 1
+    assert ev[1][2][0].expand(deep=False, numer=True) == Matrix([
+        [(-x + sqrt(2)*(x - 1) - 1)/(x - 1)],
+        [-4*x/(x**2 - 2*x + 1) + (x + 1)*(x - sqrt(2)*(x - 1) + 1)/(x**2 - 2*x + 1)],
+        [(-x + sqrt(2)*(x - 1) - 1)/(x - 1)],
+        [1]
+    ])
+
+    assert ev[2][0] == x + sqrt(2)*(x - 1) + 1
+    assert ev[2][1] == 1
+    assert ev[2][2][0].expand(deep=False, numer=True) == Matrix([
+        [(-x - sqrt(2)*(x - 1) - 1)/(x - 1)],
+        [-4*x/(x**2 - 2*x + 1) + (x + 1)*(x + sqrt(2)*(x - 1) + 1)/(x**2 - 2*x + 1)],
+        [(-x - sqrt(2)*(x - 1) - 1)/(x - 1)],
+        [1]
+    ])
+
 
 def test_issue_17247_expression_blowup_14():
     M = Matrix(8, 8, ([1+x, 1-x]*4 + [1-x, 1+x]*4)*4)
@@ -500,7 +524,6 @@ def test_issue_17247_expression_blowup_21():
             [-26406945676288/22270005630769 + 10245925485056*I/22270005630769, 7453523312640/22270005630769 + 1601616519168*I/22270005630769, 633088/6416033 - 140288*I/6416033, 872209227109521408/21217636514687010905 + 6066405081802389504*I/21217636514687010905],
             [0, 0, 0, -11328/952745 + 87616*I/952745]]'''))
 
-@XFAIL # dotprodsimp is not on by default in this function
 def test_issue_17247_expression_blowup_22():
     M = Matrix(S('''[
         [             -3/4,       45/32 - 37*I/16,                   0,                     0],
@@ -527,7 +550,6 @@ def test_issue_17247_expression_blowup_23():
             [-26406945676288/22270005630769 + 10245925485056*I/22270005630769, 7453523312640/22270005630769 + 1601616519168*I/22270005630769, 633088/6416033 - 140288*I/6416033, 872209227109521408/21217636514687010905 + 6066405081802389504*I/21217636514687010905],
             [0, 0, 0, -11328/952745 + 87616*I/952745]]'''))
 
-@XFAIL # dotprodsimp is not on by default in this function
 def test_issue_17247_expression_blowup_24():
     M = SparseMatrix(S('''[
         [             -3/4,       45/32 - 37*I/16,                   0,                     0],
@@ -541,7 +563,6 @@ def test_issue_17247_expression_blowup_24():
             [-26406945676288/22270005630769 + 10245925485056*I/22270005630769, 7453523312640/22270005630769 + 1601616519168*I/22270005630769, 633088/6416033 - 140288*I/6416033, 872209227109521408/21217636514687010905 + 6066405081802389504*I/21217636514687010905],
             [0, 0, 0, -11328/952745 + 87616*I/952745]]'''))
 
-@XFAIL # dotprodsimp is not on by default in this function
 def test_issue_17247_expression_blowup_25():
     M = SparseMatrix(S('''[
         [             -3/4,       45/32 - 37*I/16,                   0,                     0],
@@ -649,14 +670,17 @@ def test_creation():
     raises(ValueError, lambda: Matrix(5, -1, []))
     raises(IndexError, lambda: Matrix((1, 2))[2])
     with raises(IndexError):
-        Matrix((1, 2))[1:2] = 5
-    with raises(IndexError):
         Matrix((1, 2))[3] = 5
 
     assert Matrix() == Matrix([]) == Matrix([[]]) == Matrix(0, 0, [])
-    # anything can go into a matrix (laplace_transform uses tuples)
-    assert Matrix([[[], ()]]).tolist() == [[[], ()]]
-    assert Matrix([[[], ()]]).T.tolist() == [[[]], [()]]
+    # anything used to be allowed in a matrix
+    with warns_deprecated_sympy():
+        assert Matrix([[[1], (2,)]]).tolist() == [[[1], (2,)]]
+    with warns_deprecated_sympy():
+        assert Matrix([[[1], (2,)]]).T.tolist() == [[[1]], [(2,)]]
+    M = Matrix([[0]])
+    with warns_deprecated_sympy():
+        M[0, 0] = S.EmptySet
 
     a = Matrix([[x, 0], [0, 0]])
     m = a
@@ -706,12 +730,18 @@ def test_creation():
     [      1,       1],
     [A[0, 0], A[0, 1]],
     [A[1, 0], A[1, 1]]])
-    assert Matrix(dat, evaluate=False).tolist() == [[i] for i in dat]
+    with warns_deprecated_sympy():
+        assert Matrix(dat, evaluate=False).tolist() == [[i] for i in dat]
 
     # 0-dim tolerance
     assert Matrix([ones(2), ones(0)]) == Matrix([ones(2)])
     raises(ValueError, lambda: Matrix([ones(2), ones(0, 3)]))
     raises(ValueError, lambda: Matrix([ones(2), ones(3, 0)]))
+
+    # mix of Matrix and iterable
+    M = Matrix([[1, 2], [3, 4]])
+    M2 = Matrix([M, (5, 6)])
+    assert M2 == Matrix([[1, 2], [3, 4], [5, 6]])
 
 
 def test_irregular_block():
@@ -1240,6 +1270,9 @@ def test_zeros_ones_fill():
     assert zeros(2, 3) == Matrix(2, 3, [0]*6)
     assert ones(2, 3) == Matrix(2, 3, [1]*6)
 
+    a.fill(0)
+    assert a == zeros(n, m)
+
 
 def test_empty_zeros():
     a = zeros(0)
@@ -1614,7 +1647,7 @@ def test_jordan_form():
     m = Matrix([[Float('1.0', precision=110), Float('2.0', precision=110)],
                 [Float('3.14159265358979323846264338327', precision=110), Float('4.0', precision=110)]])
     P, J = m.jordan_form()
-    for term in J._mat:
+    for term in J.values():
         if isinstance(term, Float):
             assert term._prec == 110
 
@@ -2036,8 +2069,8 @@ def test_matrix_norm():
     # Test Rows
     A = Matrix([[5, Rational(3, 2)]])
     assert A.norm() == Pow(25 + Rational(9, 4), S.Half)
-    assert A.norm(oo) == max(A._mat)
-    assert A.norm(-oo) == min(A._mat)
+    assert A.norm(oo) == max(A)
+    assert A.norm(-oo) == min(A)
 
     # Matrix Tests
     # Intuitive test
@@ -2280,6 +2313,9 @@ def test_GramSchmidt():
     assert GramSchmidt([Matrix([3, 1]), Matrix([2, 2])], True) == [
         Matrix([3*sqrt(10)/10, sqrt(10)/10]),
         Matrix([-sqrt(10)/10, 3*sqrt(10)/10])]
+    # https://github.com/sympy/sympy/issues/9488
+    L = FiniteSet(Matrix([1]))
+    assert GramSchmidt(L) == [Matrix([[1]])]
 
 
 def test_casoratian():
@@ -2530,10 +2566,12 @@ def test_replace():
 def test_replace_map():
     from sympy import symbols, Function, Matrix
     F, G = symbols('F, G', cls=Function)
-    K = Matrix(2, 2, [(G(0), {F(0): G(0)}), (G(1), {F(1): G(1)}), (G(1), {F(1)\
-    : G(1)}), (G(2), {F(2): G(2)})])
+    with warns_deprecated_sympy():
+        K = Matrix(2, 2, [(G(0), {F(0): G(0)}), (G(1), {F(1): G(1)}),
+                          (G(1), {F(1): G(1)}), (G(2), {F(2): G(2)})])
     M = Matrix(2, 2, lambda i, j: F(i+j))
-    N = M.replace(F, G, True)
+    with warns_deprecated_sympy():
+        N = M.replace(F, G, True)
     assert N == K
 
 def test_atoms():
@@ -2587,23 +2625,24 @@ def test_pinv():
         )
 
 
+@slow
 @XFAIL
 def test_pinv_rank_deficient_when_diagonalization_fails():
     # Test the four properties of the pseudoinverse for matrices when
     # diagonalization of A.H*A fails.
-    As = [Matrix([
-        [61, 89, 55, 20, 71, 0],
-        [62, 96, 85, 85, 16, 0],
-        [69, 56, 17,  4, 54, 0],
-        [10, 54, 91, 41, 71, 0],
-        [ 7, 30, 10, 48, 90, 0],
-        [0,0,0,0,0,0]])]
+    As = [
+        Matrix([
+            [61, 89, 55, 20, 71, 0],
+            [62, 96, 85, 85, 16, 0],
+            [69, 56, 17,  4, 54, 0],
+            [10, 54, 91, 41, 71, 0],
+            [ 7, 30, 10, 48, 90, 0],
+            [0, 0, 0, 0, 0, 0]])
+    ]
     for A in As:
         A_pinv = A.pinv(method="ED")
         AAp = A * A_pinv
         ApA = A_pinv * A
-        assert simplify(AAp * A) == A
-        assert simplify(ApA * A_pinv) == A_pinv
         assert AAp.H == AAp
         assert ApA.H == ApA
 
@@ -2875,6 +2914,10 @@ def test_gramschmidt_conjugate_dot():
     assert Matrix.orthogonalize(*vecs) == \
         [Matrix([[1], [I]]), Matrix([[1], [-I]])]
 
+    vecs = [Matrix([1, I, 0]), Matrix([I, 0, -I])]
+    assert Matrix.orthogonalize(*vecs) == \
+        [Matrix([[1], [I], [0]]), Matrix([[I/2], [S(1)/2], [-I]])]
+
     mat = Matrix([[1, I], [1, -I]])
     Q, R = mat.QRdecomposition()
     assert Q * Q.H == Matrix.eye(2)
@@ -2916,3 +2959,16 @@ def test_func():
 
     A = Matrix([[0, 2, 1, 6], [0, 0, 1, 2], [0, 0, 0, 3], [0, 0, 0, 0]])
     assert A.analytic_func(exp(x*t), x) == expand(simplify((A*t).exp()))
+
+
+def test_issue_19809():
+    def f():
+        assert _dotprodsimp_state.state == None
+        m = Matrix([[1]])
+        m = m * m
+        return True
+
+    with dotprodsimp(True):
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(f)
+            assert future.result()

@@ -2,6 +2,7 @@ from sympy import (
     symbols, powsimp, MatrixSymbol, sqrt, pi, Mul, gamma, Function,
     S, I, exp, simplify, sin, E, log, hyper, Symbol, Dummy, powdenest, root,
     Rational, oo, signsimp)
+from sympy.core.symbol import Str
 
 from sympy.abc import x, y, z, a, b
 
@@ -227,7 +228,7 @@ def test_issue_9324_powsimp_on_matrix_symbol():
     M = MatrixSymbol('M', 10, 10)
     expr = powsimp(M, deep=True)
     assert expr == M
-    assert expr.args[0] == Symbol('M')
+    assert expr.args[0] == Str('M')
 
 
 def test_issue_6367():
@@ -328,3 +329,14 @@ def test_issue_17524():
     a = symbols("a", real=True)
     e = (-1 - a**2)*sqrt(1 + a**2)
     assert signsimp(powsimp(e)) == signsimp(e) == -(a**2 + 1)**(S(3)/2)
+
+
+def test_issue_19627():
+    # if you use force the user must verify
+    assert powdenest(sqrt(sin(x)**2), force=True) == sin(x)
+    assert powdenest((x**(S.Half/y))**(2*y), force=True) == x
+    from sympy import expand_power_base
+    e = 1 - a
+    expr = (exp(z/e)*x**(b/e)*y**((1 - b)/e))**e
+    assert powdenest(expand_power_base(expr, force=True), force=True
+        ) == x**b*y**(1 - b)*exp(z)

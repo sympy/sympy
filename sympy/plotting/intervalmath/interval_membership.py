@@ -1,7 +1,7 @@
 from sympy.core.logic import fuzzy_and, fuzzy_or, fuzzy_not, fuzzy_xor
 
 
-class intervalMembership(object):
+class intervalMembership:
     """Represents a boolean expression returned by the comparison of
     the interval object.
 

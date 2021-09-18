@@ -1,9 +1,10 @@
-from sympy import sqrt, root, Symbol, sqrtdenest, Integral, cos, Rational, I
-from sympy.simplify.sqrtdenest import _subsets as subsets
-from sympy.testing.pytest import slow
+from sympy import (
+    sqrt, root, Symbol, sqrtdenest, Integral, cos, Rational, I, Integer, Mul)
+from sympy.simplify.sqrtdenest import (
+    _subsets as subsets, _sqrt_numeric_denest)
 
-r2, r3, r5, r6, r7, r10, r15, r29 = [sqrt(x) for x in [2, 3, 5, 6, 7, 10,
-                                          15, 29]]
+r2, r3, r5, r6, r7, r10, r15, r29 = [sqrt(x) for x in (2, 3, 5, 6, 7, 10,
+                                          15, 29)]
 
 
 def test_sqrtdenest():
@@ -17,7 +18,7 @@ def test_sqrtdenest():
          r2*sqrt(6 + 3*r7)/(2*(5 + 2*r7)**Rational(1, 4)),
         sqrt(3 + 2*r3): 3**Rational(3, 4)*(r6/2 + 3*r2/2)/3}
     for i in d:
-        assert sqrtdenest(i) == d[i]
+        assert sqrtdenest(i) == d[i], i
 
 
 def test_sqrtdenest2():
@@ -105,16 +106,11 @@ def test_sqrtdenest3():
     r = sqrt(-2*r29 + 11)
     assert sqrtdenest(z) == sqrt(r2*r + r3*r + r10 + r15 + 5)
 
-
-@slow
-def test_sqrtdenest3_slow():
-    # Slow because of the equals, not the sqrtdenest
-    # Using == does not work as 7*(sqrt(-2*r29 + 11) + r5) is expanded
-    # automatically
     n = sqrt(2*r6/7 + 2*r7/7 + 2*sqrt(42)/7 + 2)
     d = sqrt(16 - 2*r29 + 2*sqrt(55 - 10*r29))
-    assert sqrtdenest(n/d).equals(
-        r7*(1 + r6 + r7)/(7*(sqrt(-2*r29 + 11) + r5)))
+    assert sqrtdenest(n/d) == r7*(1 + r6 + r7)/(Mul(7, (sqrt(-2*r29 + 11) + r5),
+                                                    evaluate=False))
+
 
 def test_sqrtdenest4():
     # see Denest_en.pdf in https://github.com/sympy/sympy/issues/3192
@@ -191,3 +187,13 @@ def test_sqrt_ratcomb():
 def test_issue_18041():
     e = -sqrt(-2 + 2*sqrt(3)*I)
     assert sqrtdenest(e) == -1 - sqrt(3)*I
+
+def test_issue_19914():
+    a = Integer(-8)
+    b = Integer(-1)
+    r = Integer(63)
+    d2 = a*a - b*b*r
+
+    assert _sqrt_numeric_denest(a, b, r, d2) == \
+        sqrt(14)*I/2 + 3*sqrt(2)*I/2
+    assert sqrtdenest(sqrt(-8-sqrt(63))) == sqrt(14)*I/2 + 3*sqrt(2)*I/2
