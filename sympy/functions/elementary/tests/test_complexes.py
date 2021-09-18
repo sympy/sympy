@@ -206,6 +206,8 @@ def test_sign():
     assert sign(3*I) == I
     assert sign(-3*I) == -I
     assert sign(0) == 0
+    assert sign(0, evaluate=False).doit() == 0
+    assert sign(oo, evaluate=False).doit() == 1
     assert sign(nan) is nan
     assert sign(2 + 2*I).doit() == sqrt(2)*(2 + 2*I)/4
     assert sign(2 + 3*I).simplify() == sign(2 + 3*I)

@@ -318,9 +318,10 @@ class sign(Function):
     _singularities = True
 
     def doit(self, **hints):
-        if self.args[0].is_zero is False:
+        s = super().doit()
+        if s == self and self.args[0].is_zero is False:
             return self.args[0] / Abs(self.args[0])
-        return self
+        return s
 
     @classmethod
     def eval(cls, arg):
