@@ -880,7 +880,7 @@ class binomial(CombinatorialFunction):
     .. math:: (x+y)^n = \sum_{k=0}^\infty \binom{n}{k} x^{n-k} y^k
        :label: 3
 
-    When $n$ and $k$ are integers, the Cartestian Plane can be divided
+    When $n$ and $k$ are integers, the Cartesian Plane can be divided
     into six regions. See [3]_ and [5]_ :
 
     .. math::
