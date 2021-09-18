@@ -1691,7 +1691,7 @@ class Rational(Number):
         f = fractions.Fraction(self.p, self.q)
         return Rational(f.limit_denominator(fractions.Fraction(int(max_denominator))))
 
-    def limit_num_denom(self, a, b = None):
+    def limit_div(self, a, b = None):
         """Closest Rational to self with numerator at most a
            and denominator at most b if not None else Closest
            Rational to self with denominator at most a.
