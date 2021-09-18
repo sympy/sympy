@@ -311,9 +311,9 @@ class MatrixExpr(Expr):
             else:
                 raise IndexError("Invalid index %s" % key)
         elif isinstance(key, (Symbol, Expr)):
-                raise IndexError(filldedent('''
-                    Only integers may be used when addressing the matrix
-                    with a single index.'''))
+            raise IndexError(filldedent('''
+                Only integers may be used when addressing the matrix
+                with a single index.'''))
         raise IndexError("Invalid index, wanted %s[i,j]" % self)
 
     def as_explicit(self):
@@ -442,7 +442,7 @@ class MatrixExpr(Expr):
         >>> MatrixExpr.from_index_summation(expr)
         A*B.T*A.T
         """
-        from sympy import Sum, Mul, Add, MatMul, transpose, trace
+        from sympy import Sum, transpose, trace
         from sympy.strategies.traverse import bottom_up
 
         def remove_matelement(expr, i1, i2):
