@@ -336,7 +336,7 @@ class Relational(Boolean, EvalfMixin):
                         else:
                             r = r.func(x, -b / m)
                     else:
-                        r = r.func(b, S.zero)
+                        r = r.func(b, S.Zero)
                 except ValueError:
                     # maybe not a linear function, try polynomial
                     from sympy.polys import Poly, poly, PolynomialError, gcd
@@ -375,7 +375,7 @@ class Relational(Boolean, EvalfMixin):
                             r = r.func(lhsterm, -newexpr)
 
                     else:
-                        r = r.func(constant, S.zero)
+                        r = r.func(constant, S.Zero)
                 except ValueError:
                     pass
         # Did we get a simplified result?
