@@ -493,6 +493,14 @@ class Heaviside(Function):
             H0 = S.Half
         return super(cls, cls).__new__(cls, arg, H0, **options)
 
+    @property
+    def pargs(self):
+        """Args without default S.Half"""
+        args = self.args
+        if args[1] is S.Half:
+            args = args[:1]
+        return args
+
     @classmethod
     def eval(cls, arg, H0=S.Half):
         """
