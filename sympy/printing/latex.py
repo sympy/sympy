@@ -1762,11 +1762,11 @@ class LatexPrinter(Printer):
             'mat_symbol_style'])
 
     def _print_ZeroMatrix(self, Z):
-        return r"\mathbb{0}" if self._settings[
+        return "0" if self._settings[
             'mat_symbol_style'] == 'plain' else r"\mathbf{0}"
 
     def _print_OneMatrix(self, O):
-        return r"\mathbb{1}" if self._settings[
+        return "1" if self._settings[
             'mat_symbol_style'] == 'plain' else r"\mathbf{1}"
 
     def _print_Identity(self, I):
