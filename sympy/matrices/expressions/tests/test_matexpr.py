@@ -8,6 +8,7 @@ from sympy.simplify import simplify
 from sympy.matrices import (ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError,
         SparseMatrix, Transpose, Adjoint, NonSquareMatrixError, MatrixSet)
+from sympy.matrices.expressions.determinant import Determinant, det
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.matrices.expressions.special import ZeroMatrix, Identity
 from sympy.testing.pytest import raises, XFAIL
@@ -220,6 +221,9 @@ def test_MatrixSymbol_determinant():
         A[0, 3]*A[1, 0]*A[2, 2]*A[3, 1] + A[0, 3]*A[1, 1]*A[2, 0]*A[3, 2] - \
         A[0, 3]*A[1, 1]*A[2, 2]*A[3, 0] - A[0, 3]*A[1, 2]*A[2, 0]*A[3, 1] + \
         A[0, 3]*A[1, 2]*A[2, 1]*A[3, 0]
+
+    B = MatrixSymbol('B', 4, 4)
+    assert Determinant(A + B).doit() == det(A + B) == (A + B).det()
 
 
 def test_MatrixElement_diff():

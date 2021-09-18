@@ -13,8 +13,8 @@ from sympy.core.sympify import SympifyError, _sympify
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.common import NonSquareMatrixError
-from sympy.simplify import simplify
 from sympy.matrices.matrices import MatrixKind
+from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
 from sympy.multipledispatch import dispatch
 
@@ -177,7 +177,6 @@ class MatrixExpr(Expr):
 
     def _eval_conjugate(self):
         from sympy.matrices.expressions.adjoint import Adjoint
-        from sympy.matrices.expressions.transpose import Transpose
         return Adjoint(Transpose(self))
 
     def as_real_imag(self, deep=True, **hints):
@@ -187,8 +186,11 @@ class MatrixExpr(Expr):
         return (real, im)
 
     def _eval_inverse(self):
-        from sympy.matrices.expressions.inverse import Inverse
         return Inverse(self)
+
+    def _eval_determinant(self):
+        from sympy.matrices.expressions.determinant import Determinant
+        return Determinant(self)
 
     def _eval_transpose(self):
         return Transpose(self)
@@ -262,6 +264,10 @@ class MatrixExpr(Expr):
 
     def inv(self):
         return self.inverse()
+
+    def det(self):
+        from sympy.matrices.expressions.determinant import det
+        return det(self)
 
     @property
     def I(self):
