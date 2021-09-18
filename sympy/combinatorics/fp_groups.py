@@ -230,7 +230,7 @@ class FpGroup(DefaultPrinting):
         2
 
         """
-        from sympy import S, gcd
+        from sympy import gcd
         if self._order is not None:
             return self._order
         if self._coset_table is not None:
@@ -379,7 +379,7 @@ class FpGroup(DefaultPrinting):
         will only terminate for finite groups.
 
         '''
-        from sympy.combinatorics import Permutation, PermutationGroup
+        from sympy.combinatorics import Permutation
         from sympy.combinatorics.homomorphisms import homomorphism
         if self.order() is S.Infinity:
             raise NotImplementedError("Permutation presentation of infinite "
@@ -686,7 +686,6 @@ class FpSubgroup(DefaultPrinting):
             return i == 0
 
     def order(self):
-        from sympy import S
         if not self.generators:
             return 1
         if isinstance(self.parent, FreeGroup):

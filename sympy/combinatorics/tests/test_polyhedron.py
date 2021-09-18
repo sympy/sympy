@@ -85,8 +85,7 @@ def test_polyhedron():
 
 
 def test_pgroups():
-    from sympy.combinatorics.polyhedron import (tetrahedron, cube, octahedron,
-            dodecahedron, icosahedron, tetrahedron_faces, cube_faces,
+    from sympy.combinatorics.polyhedron import (cube, tetrahedron_faces,
             octahedron_faces, dodecahedron_faces, icosahedron_faces)
     from sympy.combinatorics.polyhedron import _pgroup_calcs
     (tetrahedron2, cube2, octahedron2, dodecahedron2, icosahedron2,

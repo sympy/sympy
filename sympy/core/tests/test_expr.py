@@ -349,7 +349,7 @@ def test_relational():
 
 
 def test_relational_assumptions():
-    from sympy import Lt, Gt, Le, Ge
+    from sympy import Lt, Le, Ge
     m1 = Symbol("m1", nonnegative=False)
     m2 = Symbol("m2", positive=False)
     m3 = Symbol("m3", nonpositive=False)
@@ -1863,8 +1863,6 @@ def test_random():
 
 
 def test_round():
-    from sympy.abc import x
-
     assert str(Float('0.1249999').round(2)) == '0.12'
     d20 = 12345678901234567890
     ans = S(d20).round(2)
