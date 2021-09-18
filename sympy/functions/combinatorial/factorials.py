@@ -3,7 +3,7 @@ from functools import reduce
 
 from sympy.core import S, sympify, Mod
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import reduce, HAS_GMPY, ordered
+from sympy.core.compatibility import HAS_GMPY, ordered
 from sympy.core.function import Function, ArgumentIndexError, _mexpand, PoleError
 from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.mul import Mul
