@@ -325,9 +325,10 @@ class Printer:
                     c.__name__ == classes[0].__name__ or \
                     c.__name__.endswith("Base")) + classes[i:]
             for cls in classes:
-                printmethod = '_print_' + cls.__name__
-                if hasattr(self, printmethod):
-                    return getattr(self, printmethod)(expr, **kwargs)
+                printmethodname = '_print_' + cls.__name__
+                printmethod = getattr(self, printmethodname, None)
+                if printmethod is not None:
+                    return printmethod(expr, **kwargs)
             # Unknown object, fall back to the emptyPrinter.
             return self.emptyPrinter(expr)
         finally:

@@ -90,7 +90,7 @@ def test_Function_change_name():
     assert mcode(RisingFactorial(x, y)) == "pochhammer(x, y)"
     assert mcode(DiracDelta(x)) == "dirac(x)"
     assert mcode(DiracDelta(x, 3)) == "dirac(3, x)"
-    assert mcode(Heaviside(x)) == "heaviside(x)"
+    assert mcode(Heaviside(x)) == "heaviside(x, 1/2)"
     assert mcode(Heaviside(x, y)) == "heaviside(x, y)"
     assert mcode(binomial(x, y)) == "bincoeff(x, y)"
     assert mcode(Mod(x, y)) == "mod(x, y)"
