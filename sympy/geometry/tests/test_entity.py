@@ -1,5 +1,5 @@
 from sympy import Symbol, Rational, S, pi
-from sympy.geometry import (Circle, Ellipse, Point, Line, Line,
+from sympy.geometry import (Circle, Ellipse, Point, Line, Parabola,
     Plane, Curve, Polygon, Ray, RegularPolygon, Segment, Triangle)
 from sympy.geometry.entity import scale, GeometryEntity
 from sympy.testing.pytest import raises
