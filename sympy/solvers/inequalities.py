@@ -123,7 +123,6 @@ def solve_poly_inequalities(polys):
     ... Poly(-x**2 + 1), ">")))
     Union(Interval.open(-oo, -sqrt(3)), Interval.open(-1, 1), Interval.open(sqrt(3), oo))
     """
-    from sympy import Union
     return Union(*[s for p in polys for s in solve_poly_inequality(*p)])
 
 

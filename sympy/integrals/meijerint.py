@@ -26,11 +26,12 @@ The main references for this are:
     Gordon and Breach Science Publisher
 """
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple as tTuple
 
 from sympy.core import S, pi, Expr
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
+from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand, expand_mul, expand_power_base,
                                  expand_trig, Function)
@@ -569,7 +570,7 @@ def _inflate_fox_h(g, a):
     bs = [(n + 1)/p for n in range(p)]
     return D, meijerg(g.an, g.aother, g.bm, list(g.bother) + bs, z)
 
-_dummies = {}  # type: Dict[Tuple[str, str], Dummy]
+_dummies = {}  # type: Dict[tTuple[str, str], Dummy]
 
 
 def _dummy(name, token, expr, **kwargs):
@@ -1459,7 +1460,6 @@ def _rewrite_single(f, x, recursive=True):
     Returns a list of tuples (C, s, G) and a condition cond.
     Returns None on failure.
     """
-    from sympy import Tuple
     from .transforms import (mellin_transform, inverse_mellin_transform,
         IntegralTransformError, MellinTransformStripError)
 

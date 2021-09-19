@@ -910,7 +910,6 @@ def test_issue_18153():
 
 def test_is_number():
     from sympy.abc import x, y, z
-    from sympy import cos, sin
     assert Integral(x).is_number is False
     assert Integral(1, x).is_number is False
     assert Integral(1, (x, 1)).is_number is True
@@ -1172,7 +1171,6 @@ def test_integrate_series():
 
 
 def test_atom_bug():
-    from sympy import meijerg
     from sympy.integrals.heurisch import heurisch
     assert heurisch(meijerg([], [], [1], [], x), x) is None
 
@@ -1196,7 +1194,6 @@ def test_issue_1888():
 
 
 def test_issue_3558():
-    from sympy import Si
     assert integrate(cos(x*y), (x, -pi/2, pi/2), (y, 0, pi)) == 2*Si(pi**2/2)
 
 
@@ -1205,7 +1202,6 @@ def test_issue_4422():
 
 
 def test_issue_4493():
-    from sympy import simplify
     assert simplify(integrate(x*sqrt(1 + 2*x), x)) == \
         sqrt(2*x + 1)*(6*x**2 + x - 1)/15
 
@@ -1218,14 +1214,14 @@ def test_issue_4737():
 
 def test_issue_4992():
     # Note: psi in _check_antecedents becomes NaN.
-    from sympy import simplify, expand_func, polygamma, gamma
+    from sympy import expand_func
     a = Symbol('a', positive=True)
     assert simplify(expand_func(integrate(exp(-x)*log(x)*x**a, (x, 0, oo)))) == \
         (a*polygamma(0, a) + 1)*gamma(a)
 
 
 def test_issue_4487():
-    from sympy import lowergamma, simplify
+    from sympy import lowergamma
     assert simplify(integrate(exp(-x)*x**y, x)) == lowergamma(y + 1, x)
 
 

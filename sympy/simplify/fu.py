@@ -952,8 +952,6 @@ def TR12i(rv):
     >>> TR12i(eq.expand())
     -3*tan(a + b)*tan(a + c)/(2*(tan(a) + tan(b) - 1))
     """
-    from sympy import factor
-
     def f(rv):
         if not (rv.is_Add or rv.is_Mul or rv.is_Pow):
             return rv
