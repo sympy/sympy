@@ -100,7 +100,6 @@ def test_reflect_entity_overrides():
 
 def test_geometry_EvalfMixin():
     x = pi
-    t = Symbol('t')
     # the ## entities are not affected
     for g in [
             Point(x, x),
