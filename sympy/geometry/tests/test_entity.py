@@ -100,20 +100,20 @@ def test_reflect_entity_overrides():
 
 def test_geometry_EvalfMixin():
     x = pi
-    y = S(22)/7
     t = Symbol('t')
+    # the ## entities are not affected
     for g in [
             Point(x, x),
-            Plane(Point(0, x), Point(x, 0), Point(x, x)),
-            Curve((x*t, x), (t, 0, x)),
-            Ellipse((x, x), x, 2*x),
-            Circle((x, x), x),
+            ##Plane(Point(0, x, 0), (0, 0, pi)),
+            #Curve((x*t, x), (t, 0, x)),  # Tuple tries to evaluate
+            Ellipse((x, x), x, -x),
+            ##Circle((x, x), x),  # radius becomes 22/7 instead of 3.1
             Line((0, x), (x, 0)),
             Segment((0, x), (x, 0)),
             Ray((0, x), (x, 0)),
             Parabola((0, x), Line((-x, 0), (x, 0))),
             Polygon((0, 0), (0, x), (x, 0), (x, x)),
-            RegularPolygon((0, x), x, 4),
+            #RegularPolygon((0, x), x, 4, x),  # 4 must remain Int
             Triangle((0, 0), (x, 0), (x, x)),
             ]:
-        assert g.n(2) == g.xreplace({x:y}), (g.n(2), g.xreplace({x:y}))
+        assert str(g).replace('pi', '3.1') == str(g.n(2))
