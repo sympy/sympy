@@ -359,7 +359,6 @@ def test_derivatives_matrix_norms():
 
 
 def test_derivatives_elementwise_applyfunc():
-    from sympy.matrices.expressions.diagonal import DiagMatrix
 
     expr = x.applyfunc(tan)
     assert expr.diff(x).dummy_eq(
