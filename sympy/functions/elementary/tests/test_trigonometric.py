@@ -197,7 +197,6 @@ def test_sin_rewrite():
 
 
 def _test_extrig(f, i, e):
-    from sympy.core.expr import unchanged
     from sympy.core.function import expand_trig
     assert unchanged(f, i)
     assert expand_trig(f(i)) == f(i)
