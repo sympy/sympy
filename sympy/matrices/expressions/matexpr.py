@@ -1,22 +1,21 @@
 from typing import Tuple as tTuple
-
-from sympy.core.logic import FuzzyBool
-
 from functools import wraps, reduce
 import collections
 
 from sympy.core import S, Symbol, Integer, Basic, Expr, Mul, Add
-from sympy.core.decorators import call_highest_priority
+from sympy.core.assumptions import check_assumptions
 from sympy.core.compatibility import SYMPY_INTS, default_sort_key
+from sympy.core.decorators import call_highest_priority
+from sympy.core.logic import FuzzyBool
 from sympy.core.symbol import Str
 from sympy.core.sympify import SympifyError, _sympify
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.common import NonSquareMatrixError
-from sympy.simplify import simplify
 from sympy.matrices.matrices import MatrixKind
-from sympy.utilities.misc import filldedent
 from sympy.multipledispatch import dispatch
+from sympy.simplify import simplify
+from sympy.utilities.misc import filldedent
 
 
 def _sympifyit(arg, retval=None):
@@ -181,9 +180,8 @@ class MatrixExpr(Expr):
         return Adjoint(Transpose(self))
 
     def as_real_imag(self, deep=True, **hints):
-        from sympy import I
         real = S.Half * (self + self._eval_conjugate())
-        im = (self - self._eval_conjugate())/(2*I)
+        im = (self - self._eval_conjugate())/(2*S.ImaginaryUnit)
         return (real, im)
 
     def _eval_inverse(self):
@@ -224,7 +222,6 @@ class MatrixExpr(Expr):
     @classmethod
     def _check_dim(cls, dim):
         """Helper function to check invalid matrix dimensions"""
-        from sympy.core.assumptions import check_assumptions
         ok = check_assumptions(dim, integer=True, nonnegative=True)
         if ok is False:
             raise ValueError(
@@ -436,7 +433,9 @@ class MatrixExpr(Expr):
         >>> MatrixExpr.from_index_summation(expr)
         A*B.T*A.T
         """
-        from sympy import Sum, Mul, Add, MatMul, transpose, trace
+        from sympy import Sum
+        from sympy.matrices.expressions.trace import trace
+        from sympy.matrices.expressions.transpose import transpose
         from sympy.strategies.traverse import bottom_up
 
         def remove_matelement(expr, i1, i2):

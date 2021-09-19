@@ -1,24 +1,25 @@
 from sympy import ask, Q
 from sympy.core import Basic, Add, Mul, S
 from sympy.core.sympify import _sympify
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.functions.elementary.complexes import re, im
 from sympy.strategies import typed, exhaust, condition, do_one, unpack
 from sympy.strategies.traverse import bottom_up
-from sympy.utilities import sift
+from sympy.utilities.iterables import is_sequence, sift
 from sympy.utilities.misc import filldedent
 
+from sympy.matrices import Matrix, ShapeError
+from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.matrices.expressions.determinant import det, Determinant
+from sympy.matrices.expressions.inverse import Inverse
+from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
 from sympy.matrices.expressions.matmul import MatMul
-from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matpow import MatPow
-from sympy.matrices.expressions.transpose import Transpose, transpose
-from sympy.matrices.expressions.trace import trace
-from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.slice import MatrixSlice
-from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.special import ZeroMatrix, Identity
-from sympy.matrices import Matrix, ShapeError
-from sympy.functions.elementary.complexes import re, im
+from sympy.matrices.expressions.trace import trace
+from sympy.matrices.expressions.transpose import Transpose, transpose
+
 
 class BlockMatrix(MatrixExpr):
     """A BlockMatrix is a Matrix comprised of other matrices.
@@ -78,7 +79,6 @@ class BlockMatrix(MatrixExpr):
     """
     def __new__(cls, *args, **kwargs):
         from sympy.matrices.immutable import ImmutableDenseMatrix
-        from sympy.utilities.iterables import is_sequence
         isMat = lambda i: getattr(i, 'is_Matrix', False)
         if len(args) != 1 or \
                 not is_sequence(args[0]) or \
@@ -895,7 +895,6 @@ def deblock(B):
     wrap = lambda x: x if isinstance(x, BlockMatrix) else BlockMatrix([[x]])
     bb = B.blocks.applyfunc(wrap)  # everything is a block
 
-    from sympy import Matrix
     try:
         MM = Matrix(0, sum(bb[0, i].blocks.shape[1] for i in range(bb.shape[1])), [])
         for row in range(0, bb.shape[0]):
