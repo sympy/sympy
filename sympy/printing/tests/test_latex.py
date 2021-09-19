@@ -1922,13 +1922,13 @@ def test_ElementwiseApplyFunction():
 
 def test_ZeroMatrix():
     from sympy import ZeroMatrix
-    assert latex(ZeroMatrix(1, 1), mat_symbol_style='plain') == r"\mathbb{0}"
+    assert latex(ZeroMatrix(1, 1), mat_symbol_style='plain') == r"0"
     assert latex(ZeroMatrix(1, 1), mat_symbol_style='bold') == r"\mathbf{0}"
 
 
 def test_OneMatrix():
     from sympy import OneMatrix
-    assert latex(OneMatrix(3, 4), mat_symbol_style='plain') == r"\mathbb{1}"
+    assert latex(OneMatrix(3, 4), mat_symbol_style='plain') == r"1"
     assert latex(OneMatrix(3, 4), mat_symbol_style='bold') == r"\mathbf{1}"
 
 
