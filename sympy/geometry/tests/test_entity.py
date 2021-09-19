@@ -116,4 +116,4 @@ def test_geometry_EvalfMixin():
             RegularPolygon((0, x), x, 4),
             Triangle((0, 0), (x, 0), (x, x)),
             ]:
-        assert g.n(2) == g.xreplace({x:y})
+        assert g.n(2) == g.xreplace({x:y}), (g.n(2), g.xreplace({x:y}))
