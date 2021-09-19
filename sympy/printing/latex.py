@@ -317,10 +317,10 @@ class LatexPrinter(Printer):
             return True
         if expr.is_Piecewise:
             return True
-        if any([expr.has(x) for x in (Mod,)]):
+        if any(expr.has(x) for x in (Mod,)):
             return True
         if (not last and
-                any([expr.has(x) for x in (Integral, Product, Sum)])):
+                any(expr.has(x) for x in (Integral, Product, Sum))):
             return True
 
         return False
@@ -333,7 +333,7 @@ class LatexPrinter(Printer):
         """
         if expr.is_Relational:
             return True
-        if any([expr.has(x) for x in (Mod,)]):
+        if any(expr.has(x) for x in (Mod,)):
             return True
         if expr.is_Add:
             return True
@@ -1712,13 +1712,18 @@ class LatexPrinter(Printer):
 
     def _print_Mod(self, expr, exp=None):
         if exp is not None:
-            return r'\left(%s\bmod{%s}\right)^{%s}' % \
+            return r'\left(%s \bmod %s\right)^{%s}' % \
                 (self.parenthesize(expr.args[0], PRECEDENCE['Mul'],
-                                   strict=True), self._print(expr.args[1]),
+                                   strict=True),
+                 self.parenthesize(expr.args[1], PRECEDENCE['Mul'],
+                                   strict=True),
                  exp)
-        return r'%s\bmod{%s}' % (self.parenthesize(expr.args[0],
-                                 PRECEDENCE['Mul'], strict=True),
-                                 self._print(expr.args[1]))
+        return r'%s \bmod %s' % (self.parenthesize(expr.args[0],
+                                                   PRECEDENCE['Mul'],
+                                                   strict=True),
+                                 self.parenthesize(expr.args[1],
+                                                   PRECEDENCE['Mul'],
+                                                   strict=True))
 
     def _print_HadamardProduct(self, expr):
         args = expr.args
@@ -1757,11 +1762,11 @@ class LatexPrinter(Printer):
             'mat_symbol_style'])
 
     def _print_ZeroMatrix(self, Z):
-        return r"\mathbb{0}" if self._settings[
+        return "0" if self._settings[
             'mat_symbol_style'] == 'plain' else r"\mathbf{0}"
 
     def _print_OneMatrix(self, O):
-        return r"\mathbb{1}" if self._settings[
+        return "1" if self._settings[
             'mat_symbol_style'] == 'plain' else r"\mathbf{1}"
 
     def _print_Identity(self, I):
@@ -1984,7 +1989,8 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Heaviside(self, expr, exp=None):
-        tex = r"\theta\left(%s\right)" % self._print(expr.args[0])
+        pargs = ', '.join(self._print(arg) for arg in expr.pargs)
+        tex = r"\theta\left(%s\right)" % pargs
         if exp:
             tex = r"\left(%s\right)^{%s}" % (tex, exp)
         return tex
@@ -2039,10 +2045,22 @@ class LatexPrinter(Printer):
     _print_frozenset = _print_set
 
     def _print_Range(self, s):
-        dots = object()
+        def _print_symbolic_range():
+            # Symbolic Range that cannot be resolved
+            if s.args[0] == 0:
+                if s.args[2] == 1:
+                    cont = self._print(s.args[1])
+                else:
+                    cont = ", ".join(self._print(arg) for arg in s.args)
+            else:
+                if s.args[2] == 1:
+                    cont = ", ".join(self._print(arg) for arg in s.args[:2])
+                else:
+                    cont = ", ".join(self._print(arg) for arg in s.args)
 
-        if s.has(Symbol):
-            return self._print_Basic(s)
+            return(f"\\text{{Range}}\\left({cont}\\right)")
+
+        dots = object()
 
         if s.start.is_infinite and s.stop.is_infinite:
             if s.step.is_positive:
@@ -2054,12 +2072,16 @@ class LatexPrinter(Printer):
         elif s.stop.is_infinite:
             it = iter(s)
             printset = next(it), next(it), dots
-        elif len(s) > 4:
-            it = iter(s)
-            printset = next(it), next(it), dots, s[-1]
+        elif s.is_empty is not None:
+            if (s.size < 4) == True:
+                printset = tuple(s)
+            elif s.is_iterable:
+                it = iter(s)
+                printset = next(it), next(it), dots, s[-1]
+            else:
+                return _print_symbolic_range()
         else:
-            printset = tuple(s)
-
+            return _print_symbolic_range()
         return (r"\left\{" +
                 r", ".join(self._print(el) if el is not dots else r'\ldots' for el in printset) +
                 r"\right\}")
@@ -2311,7 +2333,7 @@ class LatexPrinter(Printer):
             else:
                 terms.extend(['+', s_term])
 
-        if terms[0] in ['-', '+']:
+        if terms[0] in ('-', '+'):
             modifier = terms.pop(0)
 
             if modifier == '-':

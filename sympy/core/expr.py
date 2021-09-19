@@ -9,6 +9,7 @@ from .evalf import EvalfMixin, pure_complex
 from .decorators import call_highest_priority, sympify_method_args, sympify_return
 from .cache import cacheit
 from .compatibility import as_int, default_sort_key
+from .kind import NumberKind
 from sympy.utilities.misc import func_name
 from mpmath.libmp import mpf_log, prec_to_dps
 
@@ -100,7 +101,7 @@ class Expr(Basic, EvalfMixin):
             else:
                 expr, exp = expr.args
         else:
-            expr, exp = expr, S.One
+            exp = S.One
 
         if expr.is_Dummy:
             args = (expr.sort_key(),)
@@ -650,9 +651,12 @@ class Expr(Basic, EvalfMixin):
         if expr.is_zero:
             return True
 
+        # Don't attempt subsitution or differentiation with non-number symbols
+        wrt_number = {sym for sym in wrt if sym.kind is NumberKind}
+
         # try numerical evaluation to see if we get two different values
         failing_number = None
-        if wrt == free:
+        if wrt_number == free:
             # try 0 (for a) and 1 (for b)
             try:
                 a = expr.subs(list(zip(free, [0]*len(free))),
@@ -688,7 +692,7 @@ class Expr(Basic, EvalfMixin):
         # expression depends on them or not using differentiation. This is
         # not sufficient for all expressions, however, so we don't return
         # False if we get a derivative other than 0 with free symbols.
-        for w in wrt:
+        for w in wrt_number:
             deriv = expr.diff(w)
             if simplify:
                 deriv = deriv.simplify()
@@ -863,7 +867,6 @@ class Expr(Basic, EvalfMixin):
             return False
 
     def _eval_is_extended_positive_negative(self, positive):
-        from sympy.core.numbers import pure_complex
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
@@ -1189,8 +1192,6 @@ class Expr(Basic, EvalfMixin):
 
     def as_terms(self):
         """Transform an expression to a list of terms. """
-        from .add import Add
-        from .mul import Mul
         from .exprtools import decompose_power
 
         gens, terms = set(), []
@@ -1900,7 +1901,7 @@ class Expr(Basic, EvalfMixin):
             else:
                 args, nc = self.args_cnc()
 
-        d = sift(args, lambda x: has(x))
+        d = sift(args, has)
         depend = d[True]
         indep = d[False]
         if func is Add:  # all terms were treated as commutative
@@ -2526,7 +2527,7 @@ class Expr(Basic, EvalfMixin):
         >>> exp_polar(-I*pi).extract_branch_factor(allow_half=True)
         (1, -1/2)
         """
-        from sympy import exp_polar, pi, I, ceiling, Add
+        from sympy import exp_polar, pi, I, ceiling
         n = S.Zero
         res = S.One
         args = Mul.make_args(self)
@@ -2939,7 +2940,7 @@ class Expr(Basic, EvalfMixin):
             If "x0" is an infinity object
 
         """
-        from sympy import collect, Dummy, Order, Rational, Symbol, ceiling, PoleError
+        from sympy import collect, Dummy, Order, Symbol, ceiling, PoleError
         if x is None:
             syms = self.free_symbols
             if not syms:
@@ -3661,7 +3662,7 @@ class Expr(Basic, EvalfMixin):
         from sympy.integrals import integrate
         return integrate(self, *args, **kwargs)
 
-    def nsimplify(self, constants=[], tolerance=None, full=False):
+    def nsimplify(self, constants=(), tolerance=None, full=False):
         """See the nsimplify function in sympy.simplify"""
         from sympy.simplify import nsimplify
         return nsimplify(self, constants, tolerance, full)
@@ -4038,11 +4039,14 @@ def unchanged(func, *args):
 
 
 class ExprBuilder:
-    def __init__(self, op, args=[], validator=None, check=True):
+    def __init__(self, op, args=None, validator=None, check=True):
         if not hasattr(op, "__call__"):
             raise TypeError("op {} needs to be callable".format(op))
         self.op = op
-        self.args = args
+        if args is None:
+            self.args = []
+        else:
+            self.args = args
         self.validator = validator
         if (validator is not None) and check:
             self.validate()

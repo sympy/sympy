@@ -157,6 +157,11 @@ class StrPrinter(Printer):
     def _print_GoldenRatio(self, expr):
         return 'GoldenRatio'
 
+    def _print_Heaviside(self, expr):
+        # Same as _print_Function but uses pargs to suppress default 1/2 for
+        # 2nd args
+        return expr.func.__name__ + "(%s)" % self.stringify(expr.pargs, ", ")
+
     def _print_TribonacciConstant(self, expr):
         return 'TribonacciConstant'
 
@@ -222,6 +227,9 @@ class StrPrinter(Printer):
 
     def _print_list(self, expr):
         return "[%s]" % self.stringify(expr, ", ")
+
+    def _print_List(self, expr):
+        return self._print_list(expr)
 
     def _print_MatrixBase(self, expr):
         return expr._format_str(self)
@@ -555,7 +563,7 @@ class StrPrinter(Printer):
             else:
                 terms.extend(['+', s_term])
 
-        if terms[0] in ['-', '+']:
+        if terms[0] in ('-', '+'):
             modifier = terms.pop(0)
 
             if modifier == '-':

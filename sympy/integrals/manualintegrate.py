@@ -528,7 +528,7 @@ def _parts_rule(integrand, symbol):
 
     def pull_out_u(*functions):
         def pull_out_u_rl(integrand):
-            if any([integrand.has(f) for f in functions]):
+            if any(integrand.has(f) for f in functions):
                 args = [arg for arg in integrand.args
                         if any(isinstance(arg, cls) for cls in functions)]
                 if args:

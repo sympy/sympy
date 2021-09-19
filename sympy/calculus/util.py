@@ -63,7 +63,6 @@ def continuous_domain(f, symbol, domain):
         has not yet been developed.
 
     """
-    from sympy.solvers.inequalities import solve_univariate_inequality
     from sympy.calculus.singularities import singularities
 
     if domain.is_subset(S.Reals):

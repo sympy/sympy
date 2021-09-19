@@ -39,11 +39,15 @@ jobs:
       - name: Test all modules are listed in setup.py
         run: bin/test_setup.py
 
-      - name: Test for ambiguous author information in commits
-        run: bin/mailmap_update.py
+      # -- temporarily disabled -- #
+      # These checks were too difficult for new contributors. They will
+      # need to be made easier to work with before they are reenabled.
 
-      - name: Make sure all commits have an associated author
-        run: bin/authors_update.py
+      #- name: Test for ambiguous author information in commits
+      #  run: bin/mailmap_update.py
+
+      #- name: Make sure all commits have an associated author
+      #  run: bin/authors_update.py
 
   # -------------------- Doctests latest Python -------------------- #
 
@@ -114,6 +118,40 @@ jobs:
       # Test modules with specific dependencies
       - run: bin/test_optional_dependencies.py
 
+  # -------------------- Tensorflow tests -------------------------- #
+
+  tensorflow:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: python -m pip install --upgrade pip
+      - run: pip install mpmath numpy scipy tensorflow
+      # Test modules that can use tensorflow
+      - run: bin/test_tensorflow.py
+
+  # -------------------- SymEngine tests --------------------------- #
+
+  symengine:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: python -m pip install --upgrade pip
+      - run: pip install mpmath numpy symengine
+      # Test modules that can use tensorflow
+      - run: bin/test_symengine.py
+        env:
+          USE_SYMENGINE: '1'
+
   # -------------------- Slow test split 1/2 ----------------------- #
 
   slow1:
@@ -152,7 +190,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.10.0-rc.1', 'pypy-3.7']
+        python-version: ['3.6', '3.7', '3.8', '3.10.0-rc.1 - 3.10', 'pypy-3.7']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -170,7 +208,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.10.0-rc.1', 'pypy-3.7']
+        python-version: ['3.6', '3.7', '3.8', '3.10.0-rc.1 - 3.10', 'pypy-3.7']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -188,7 +226,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.10.0-rc.1', 'pypy-3.7']
+        python-version: ['3.6', '3.7', '3.8', '3.10.0-rc.1 - 3.10', 'pypy-3.7']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -228,7 +266,7 @@ jobs:
           python-version: '2.7'
       - run: bin/test_py2_import.py
 
-  # -------------------- Run benchmarks against master and 1.8 ----- #
+  # -------- Run benchmarks against master and previous release ---- #
 
   benchmarks:
     needs: [doctests-latest, tests1-latest, tests2-latest]
@@ -254,7 +292,7 @@ jobs:
 
       - run: git remote add upstream https://github.com/sympy/sympy.git
       - run: git fetch upstream master
-      - run: git fetch upstream 1.8
+      - run: git fetch upstream 1.9
 
       - name: Configure benchmarks
         run: asv machine --yes --config asv.conf.actions.json
@@ -266,8 +304,8 @@ jobs:
         # Output benchmark results
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 | tee pr_vs_master.txt
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 --only-changed | tee pr_vs_master_changed.txt
-      - run: asv compare upstream/1.8 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
-      - run: asv compare upstream/1.8 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
+      - run: asv compare upstream/1.9 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
+      - run: asv compare upstream/1.9 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
 
         # This workflow does not have write permissions for the repository so
         # we save all outputs as artifacts that can be accessed by the

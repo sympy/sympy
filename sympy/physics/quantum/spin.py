@@ -1844,10 +1844,10 @@ def couple(expr, jcoupling_list=None):
     a = expr.atoms(TensorProduct)
     for tp in a:
         # Allow other tensor products to be in expression
-        if not all([ isinstance(state, SpinState) for state in tp.args]):
+        if not all(isinstance(state, SpinState) for state in tp.args):
             continue
         # If tensor product has all spin states, raise error for invalid tensor product state
-        if not all([state.__class__ is tp.args[0].__class__ for state in tp.args]):
+        if not all(state.__class__ is tp.args[0].__class__ for state in tp.args):
             raise TypeError('All states must be the same basis')
         expr = expr.subs(tp, _couple(tp, jcoupling_list))
     return expr
@@ -1869,9 +1869,9 @@ def _couple(tp, jcoupling_list):
                         (len(states) - 1, len(jcoupling_list)))
     if not all( len(coupling) == 2 for coupling in jcoupling_list):
         raise ValueError('Each coupling must define 2 spaces')
-    if any([n1 == n2 for n1, n2 in jcoupling_list]):
+    if any(n1 == n2 for n1, n2 in jcoupling_list):
         raise ValueError('Spin spaces cannot couple to themselves')
-    if all([sympify(n1).is_number and sympify(n2).is_number for n1, n2 in jcoupling_list]):
+    if all(sympify(n1).is_number and sympify(n2).is_number for n1, n2 in jcoupling_list):
         j_test = [0]*len(states)
         for n1, n2 in jcoupling_list:
             if j_test[n1 - 1] == -1 or j_test[n2 - 1] == -1:
@@ -1912,7 +1912,7 @@ def _couple(tp, jcoupling_list):
 
                 # Skip the configuration if non-physical
                 # This is a lazy check for physical states given the loose restrictions of diff_max
-                if any( [ d > m for d, m in zip(diff_list, diff_max) ] ):
+                if any(d > m for d, m in zip(diff_list, diff_max)):
                     continue
 
                 # Determine term
@@ -1930,11 +1930,11 @@ def _couple(tp, jcoupling_list):
                     cg_terms.append( (j1, m1, j2, m2, j3, m3) )
                     jcoupling.append( (min(j1_n), min(j2_n), j3) )
                 # Better checks that state is physical
-                if any([ abs(term[5]) > term[4] for term in cg_terms ]):
+                if any(abs(term[5]) > term[4] for term in cg_terms):
                     continue
-                if any([ term[0] + term[2] < term[4] for term in cg_terms ]):
+                if any(term[0] + term[2] < term[4] for term in cg_terms):
                     continue
-                if any([ abs(term[0] - term[2]) > term[4] for term in cg_terms ]):
+                if any(abs(term[0] - term[2]) > term[4] for term in cg_terms):
                     continue
                 coeff = Mul( *[ CG(*term).doit() for term in cg_terms] )
                 state = coupled_evect(j3, m3, jn, jcoupling)
@@ -2090,7 +2090,7 @@ def _uncouple(state, jn, jcoupling_list):
         result = []
         for config_num in range(tot):
             diff_list = _confignum_to_difflist(config_num, diff, n)
-            if any( [ d > p for d, p in zip(diff_list, diff_max) ] ):
+            if any(d > p for d, p in zip(diff_list, diff_max)):
                 continue
 
             cg_terms = []

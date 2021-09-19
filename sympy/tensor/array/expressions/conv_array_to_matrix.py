@@ -4,7 +4,7 @@ from typing import Tuple, Union, FrozenSet, Dict, List, Optional
 from functools import singledispatch
 from itertools import accumulate
 
-from sympy import Trace, MatrixExpr, Transpose, DiagMatrix, Mul, ZeroMatrix, hadamard_product
+from sympy import Trace, MatrixExpr, Transpose, DiagMatrix, Mul, ZeroMatrix, hadamard_product, S, Identity, ask, Q
 from sympy.combinatorics.permutations import _af_invert, Permutation
 from sympy.matrices.common import MatrixCommon
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
@@ -140,8 +140,11 @@ def _(expr: ArrayTensorProduct):
 @_array2matrix.register(ArrayContraction)
 def _(expr: ArrayContraction):
     expr = expr.flatten_contraction_of_diagonal()
+    expr = identify_removable_identity_matrices(expr)
     expr = expr.split_multiple_contractions()
     expr = identify_hadamard_products(expr)
+    if not isinstance(expr, ArrayContraction):
+        return _array2matrix(expr)
     subexpr = expr.expr
     contraction_indices: Tuple[Tuple[int]] = expr.contraction_indices
     if isinstance(subexpr, ArrayTensorProduct):
@@ -368,16 +371,22 @@ def _(expr: PermuteDims):
 
 @_remove_trivial_dims.register(ArrayContraction)
 def _(expr: ArrayContraction):
-    newexpr, removed = _remove_trivial_dims(expr.expr)
-    shifts = list(accumulate([1 if i in removed else 0 for i in range(get_rank(expr.expr))]))
-    new_contraction_indices = [tuple(j for j in i if j not in removed) for i in expr.contraction_indices]
+    rank1 = get_rank(expr)
+    expr, removed1 = remove_identity_matrices(expr)
+    if not isinstance(expr, ArrayContraction):
+        expr2, removed2 = _remove_trivial_dims(expr)
+        return expr2, _combine_removed(rank1, removed1, removed2)
+    newexpr, removed2 = _remove_trivial_dims(expr.expr)
+    shifts = list(accumulate([1 if i in removed2 else 0 for i in range(get_rank(expr.expr))]))
+    new_contraction_indices = [tuple(j for j in i if j not in removed2) for i in expr.contraction_indices]
     # Remove possible empty tuples "()":
     new_contraction_indices = [i for i in new_contraction_indices if len(i) > 0]
     contraction_indices_flat = [j for i in expr.contraction_indices for j in i]
-    removed = [i for i in removed if i not in contraction_indices_flat]
+    removed2 = [i for i in removed2 if i not in contraction_indices_flat]
     new_contraction_indices = [tuple(j - shifts[j] for j in i) for i in new_contraction_indices]
-    # Shift removed:
-    removed = ArrayContraction._push_indices_up(expr.contraction_indices, removed)
+    # Shift removed2:
+    removed2 = ArrayContraction._push_indices_up(expr.contraction_indices, removed2)
+    removed = _combine_removed(rank1, removed1, removed2)
     return ArrayContraction(newexpr, *new_contraction_indices), list(removed)
 
 
@@ -385,8 +394,11 @@ def _(expr: ArrayContraction):
 def _(expr: ArrayDiagonal):
     newexpr, removed = _remove_trivial_dims(expr.expr)
     shifts = list(accumulate([0] + [1 if i in removed else 0 for i in range(get_rank(expr.expr))]))
-    new_diag_indices = [tuple(j for j in i if j not in removed) for i in expr.diagonal_indices]
-    new_diag_indices = [tuple(j - shifts[j] for j in i) for i in new_diag_indices]
+    new_diag_indices = {i: tuple(j for j in i if j not in removed) for i in expr.diagonal_indices}
+    for old_diag_tuple, new_diag_tuple in new_diag_indices.items():
+        if len(new_diag_tuple) == 1:
+            removed = [i for i in removed if i not in old_diag_tuple]
+    new_diag_indices = [tuple(j - shifts[j] for j in i) for i in new_diag_indices.values()]
     rank = get_rank(expr.expr)
     removed = ArrayDiagonal._push_indices_up(expr.diagonal_indices, removed, rank)
     removed = sorted({i for i in removed})
@@ -518,7 +530,10 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
             pos1_in2 = 1 - pos1_inner
             pos2_in2 = 1 - pos2_inner
             if arg1.shape[pos1_in2] == 1:
-                darg1 = DiagMatrix(arg1)
+                if arg1.shape[pos1_inner] != 1:
+                    darg1 = DiagMatrix(arg1)
+                else:
+                    darg1 = arg1
                 args.append(darg1)
                 contr_indices.append(((pos2_outer, pos2_inner), (len(args)-1, pos1_inner)))
                 total_rank += 1
@@ -526,7 +541,10 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
                 args[pos1_outer] = OneArray(arg1.shape[pos1_in2])
                 replaced[pos1_outer] = True
             elif arg2.shape[pos2_in2] == 1:
-                darg2 = DiagMatrix(arg2)
+                if arg2.shape[pos2_inner] != 1:
+                    darg2 = DiagMatrix(arg2)
+                else:
+                    darg2 = arg2
                 args.append(darg2)
                 contr_indices.append(((pos1_outer, pos1_inner), (len(args)-1, pos2_inner)))
                 total_rank += 1
@@ -545,7 +563,7 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
 
 
 def _a2m_mul(*args):
-    if all(not isinstance(i, _CodegenArrayAbstract) for i in args):
+    if not any(isinstance(i, _CodegenArrayAbstract) for i in args):
         from sympy import MatMul
         return MatMul(*args).doit()
     else:
@@ -575,7 +593,7 @@ def _a2m_tensor_product(*args):
 
 
 def _a2m_add(*args):
-    if all(not isinstance(i, _CodegenArrayAbstract) for i in args):
+    if not any(isinstance(i, _CodegenArrayAbstract) for i in args):
         from sympy import MatAdd
         return MatAdd(*args).doit()
     else:
@@ -613,7 +631,7 @@ def identify_hadamard_products(expr: Union[ArrayContraction, ArrayDiagonal]):
             editor.args_with_ind = [_ArgE(arg) for i, arg in enumerate(expr.expr.args)]
             diagonalized = expr.diagonal_indices
         else:
-            raise NotImplementedError("not implemented")
+            return expr
 
         # Trick: add diagonalized indices as negative indices into the editor object:
         for i, e in enumerate(diagonalized):
@@ -633,7 +651,13 @@ def identify_hadamard_products(expr: Union[ArrayContraction, ArrayDiagonal]):
     k: FrozenSet[int]
     v: List[_ArgE]
     for k, v in map_contr_to_args.items():
-        if len(k) != 2:
+        make_trace: bool = False
+        if len(k) == 1 and next(iter(k)) >= 0 and sum([next(iter(k)) in i for i in map_contr_to_args]) == 1:
+            # This is a trace: the arguments are fully contracted with only one
+            # index, and the index isn't used anywhere else:
+            make_trace = True
+            first_element = S.One
+        elif len(k) != 2:
             # Hadamard product only defined for matrices:
             continue
         if len(v) == 1:
@@ -644,21 +668,30 @@ def identify_hadamard_products(expr: Union[ArrayContraction, ArrayDiagonal]):
                 # There is no other contraction, skip:
                 continue
 
-        # Check if expression is a trace:
-        if all([map_ind_to_inds[j] == len(v) and j >= 0 for j in k]):
-            # This is a trace
-            continue
-
-        # This is a Hadamard product:
-
         def check_transpose(x):
             x = [i if i >= 0 else -1-i for i in x]
             return x == sorted(x)
 
-        hp = hadamard_product(*[i.element if check_transpose(i.indices) else Transpose(i.element) for i in v])
+        # Check if expression is a trace:
+        if all([map_ind_to_inds[j] == len(v) and j >= 0 for j in k]) and all([j >= 0 for j in k]):
+            # This is a trace
+            make_trace = True
+            first_element = v[0].element
+            if not check_transpose(v[0].indices):
+                first_element = first_element.T
+            hadamard_factors = v[1:]
+        else:
+            hadamard_factors = v
+
+        # This is a Hadamard product:
+
+        hp = hadamard_product(*[i.element if check_transpose(i.indices) else Transpose(i.element) for i in hadamard_factors])
         hp_indices = v[0].indices
-        if not check_transpose(v[0].indices):
+        if not check_transpose(hadamard_factors[0].indices):
             hp_indices = list(reversed(hp_indices))
+        if make_trace:
+            hp = Trace(first_element*hp.T)._normalize()
+            hp_indices = []
         editor.insert_after(v[0], _ArgE(hp, hp_indices))
         for i in v:
             editor.args_with_ind.remove(i)
@@ -722,3 +755,150 @@ def identify_hadamard_products(expr: Union[ArrayContraction, ArrayDiagonal]):
         expr2 = ArrayDiagonal(expr1, *diag_indices_filtered)
         expr3 = PermuteDims(expr2, permutation)
         return expr3
+
+
+def identify_removable_identity_matrices(expr):
+    editor = _EditArrayContraction(expr)
+
+    flag: bool = True
+    while flag:
+        flag = False
+        for arg_with_ind in editor.args_with_ind:
+            if isinstance(arg_with_ind.element, Identity):
+                k = arg_with_ind.element.shape[0]
+                # Candidate for removal:
+                if arg_with_ind.indices == [None, None]:
+                    # Free identity matrix, will be cleared by _remove_trivial_dims:
+                    continue
+                elif None in arg_with_ind.indices:
+                    ind = [j for j in arg_with_ind.indices if j is not None][0]
+                    counted = editor.count_args_with_index(ind)
+                    if counted == 1:
+                        # Identity matrix contracted only on one index with itself,
+                        # transform to a OneArray(k) element:
+                        editor.insert_after(arg_with_ind, OneArray(k))
+                        editor.args_with_ind.remove(arg_with_ind)
+                        flag = True
+                        break
+                    elif counted > 2:
+                        # Case counted = 2 is a matrix multiplication by identity matrix, skip it.
+                        # Case counted > 2 is a multiple contraction,
+                        # this is a case where the contraction becomes a diagonalization if the
+                        # identity matrix is dropped.
+                        continue
+                elif arg_with_ind.indices[0] == arg_with_ind.indices[1]:
+                    ind = arg_with_ind.indices[0]
+                    counted = editor.count_args_with_index(ind)
+                    if counted > 1:
+                        editor.args_with_ind.remove(arg_with_ind)
+                        flag = True
+                        break
+                    else:
+                        # This is a trace, skip it as it will be recognized somewhere else:
+                        pass
+            elif ask(Q.diagonal(arg_with_ind.element)):
+                if arg_with_ind.indices == [None, None]:
+                    continue
+                elif None in arg_with_ind.indices:
+                    pass
+                elif arg_with_ind.indices[0] == arg_with_ind.indices[1]:
+                    ind = arg_with_ind.indices[0]
+                    counted = editor.count_args_with_index(ind)
+                    if counted == 3:
+                        # A_ai B_bi D_ii ==> A_ai D_ij B_bj
+                        ind_new = editor.get_new_contraction_index()
+                        other_args = [j for j in editor.args_with_ind if j != arg_with_ind]
+                        other_args[1].indices = [ind_new if j == ind else j for j in other_args[1].indices]
+                        arg_with_ind.indices = [ind, ind_new]
+                        flag = True
+                        break
+
+    return editor.to_array_contraction()
+
+
+def remove_identity_matrices(expr: ArrayContraction):
+    editor = _EditArrayContraction(expr)
+    removed = []
+
+    permutation_map = {}
+
+    free_indices = list(accumulate([0] + [sum([i is None for i in arg.indices]) for arg in editor.args_with_ind]))
+    free_map = {k: v for k, v in zip(editor.args_with_ind, free_indices[:-1])}
+
+    update_pairs = {}
+
+    for ind in range(editor.number_of_contraction_indices):
+        args = editor.get_args_with_index(ind)
+        identity_matrices = [i for i in args if isinstance(i.element, Identity)]
+        number_identity_matrices = len(identity_matrices)
+        # If the contraction involves a non-identity matrix and multiple identity matrices:
+        if number_identity_matrices != len(args) - 1:
+            continue
+        # Get the non-identity element:
+        non_identity = [i for i in args if not isinstance(i.element, Identity)][0]
+        # Check that all identity matrices have at least one free index
+        # (otherwise they would be contractions to some other elements)
+        if any([None not in i.indices for i in identity_matrices]):
+            continue
+        # Mark the identity matrices for removal:
+        for i in identity_matrices:
+            i.element = None
+            removed.extend(range(free_map[i], free_map[i] + len([j for j in i.indices if j is None])))
+        last_removed = removed.pop(-1)
+        update_pairs[last_removed, ind] = non_identity.indices[:]
+        # Remove the indices from the non-identity matrix, as the contraction
+        # no longer exists:
+        non_identity.indices = [None if i == ind else i for i in non_identity.indices]
+
+    removed.sort()
+
+    shifts = list(accumulate([1 if i in removed else 0 for i in range(get_rank(expr))]))
+    for (last_removed, ind), non_identity_indices in update_pairs.items():
+        pos = [free_map[non_identity] + i for i, e in enumerate(non_identity_indices) if e == ind]
+        assert len(pos) == 1
+        for i in pos:
+            permutation_map[i] = last_removed
+
+    editor.args_with_ind = [i for i in editor.args_with_ind if i.element is not None]
+    ret_expr = editor.to_array_contraction()
+    permutation = []
+    counter = 0
+    counter2 = 0
+    for i in range(get_rank(expr)):
+        if i in removed:
+            continue
+        if counter2 in permutation_map:
+            target = permutation_map[counter2]
+            permutation.append(target - shifts[target])
+            counter2 += 1
+        else:
+            while counter in permutation_map.values():
+                counter += 1
+            permutation.append(counter)
+            counter += 1
+            counter2 += 1
+    ret_expr2 = PermuteDims(ret_expr, _af_invert(permutation))
+    return ret_expr2, removed
+
+
+def _combine_removed(dim: int, removed1: List[int], removed2: List[int]) -> List[int]:
+    # Concatenate two axis removal operations as performed by
+    # _remove_trivial_dims,
+    removed1 = sorted(removed1)
+    removed2 = sorted(removed2)
+    i = 0
+    j = 0
+    removed = []
+    while True:
+        if j >= len(removed2):
+            while i < len(removed1):
+                removed.append(removed1[i])
+                i += 1
+            break
+        elif i < len(removed1) and removed1[i] <= i + removed2[j]:
+            removed.append(removed1[i])
+            i += 1
+        else:
+            removed.append(i + removed2[j])
+            j += 1
+    return removed

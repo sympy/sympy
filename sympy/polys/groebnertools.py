@@ -830,7 +830,7 @@ def groebner_lcm(f, g):
     basis = groebner([F, G], t_ring)
 
     def is_independent(h, j):
-        return all(not monom[j] for monom in h.monoms())
+        return not any(monom[j] for monom in h.monoms())
 
     H = [ h for h in basis if is_independent(h, 0) ]
 

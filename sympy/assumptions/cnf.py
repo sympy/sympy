@@ -140,7 +140,7 @@ class AND:
     __repr__ = __str__
 
 
-def to_NNF(expr, composite_map={}):
+def to_NNF(expr, composite_map=None):
     """
     Generates the Negation Normal Form of any boolean expression in terms
     of AND, OR, and Literal objects.
@@ -171,6 +171,10 @@ def to_NNF(expr, composite_map={}):
     """
     from sympy.assumptions.ask import Q
     from sympy.assumptions.assume import AppliedPredicate, Predicate
+
+    if composite_map is None:
+        composite_map = dict()
+
 
     binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
     if type(expr) in binrelpreds:

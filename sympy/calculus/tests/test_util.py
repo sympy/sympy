@@ -191,8 +191,6 @@ def test_periodicity_check():
 
 
 def test_lcim():
-    from sympy import pi
-
     assert lcim([S.Half, S(2), S(3)]) == 6
     assert lcim([pi/2, pi/4, pi]) == pi
     assert lcim([2*pi, pi/2]) == 2*pi

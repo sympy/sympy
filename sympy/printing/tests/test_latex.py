@@ -603,11 +603,14 @@ def test_latex_functions():
     assert latex(LambertW(n)**k) == r"W^{k}\left(n\right)"
     assert latex(LambertW(n, k)**p) == r"W^{p}_{k}\left(n\right)"
 
-    assert latex(Mod(x, 7)) == r'x\bmod{7}'
-    assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right)\bmod{7}'
-    assert latex(Mod(2 * x, 7)) == r'2 x\bmod{7}'
-    assert latex(Mod(x, 7) + 1) == r'\left(x\bmod{7}\right) + 1'
-    assert latex(2 * Mod(x, 7)) == r'2 \left(x\bmod{7}\right)'
+    assert latex(Mod(x, 7)) == r'x \bmod 7'
+    assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right) \bmod 7'
+    assert latex(Mod(7, x + 1)) == r'7 \bmod \left(x + 1\right)'
+    assert latex(Mod(2 * x, 7)) == r'2 x \bmod 7'
+    assert latex(Mod(7, 2 * x)) == r'7 \bmod 2 x'
+    assert latex(Mod(x, 7) + 1) == r'\left(x \bmod 7\right) + 1'
+    assert latex(2 * Mod(x, 7)) == r'2 \left(x \bmod 7\right)'
+    assert latex(Mod(7, 2 * x)**n) == r'\left(7 \bmod 2 x\right)^{n}'
 
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')
@@ -823,10 +826,22 @@ def test_latex_Range():
     assert latex(Range(oo, -oo, -1)) == r'\left\{\ldots, 1, 0, -1, \ldots\right\}'
 
     a, b, c = symbols('a:c')
-    assert latex(Range(a, b, c)) == r'Range\left(a, b, c\right)'
-    assert latex(Range(a, 10, 1)) == r'Range\left(a, 10, 1\right)'
-    assert latex(Range(0, b, 1)) == r'Range\left(0, b, 1\right)'
-    assert latex(Range(0, 10, c)) == r'Range\left(0, 10, c\right)'
+    assert latex(Range(a, b, c)) == r'\text{Range}\left(a, b, c\right)'
+    assert latex(Range(a, 10, 1)) == r'\text{Range}\left(a, 10\right)'
+    assert latex(Range(0, b, 1)) == r'\text{Range}\left(b\right)'
+    assert latex(Range(0, 10, c)) == r'\text{Range}\left(0, 10, c\right)'
+
+    i = Symbol('i', integer=True)
+    n = Symbol('n', negative=True, integer=True)
+    p = Symbol('p', positive=True, integer=True)
+
+    assert latex(Range(i, i + 3)) == r'\left\{i, i + 1, i + 2\right\}'
+    assert latex(Range(-oo, n, 2)) == r'\left\{\ldots, n - 4, n - 2\right\}'
+    assert latex(Range(p, oo)) == r'\left\{p, p + 1, \ldots\right\}'
+    # The following will work if __iter__ is improved
+    # assert latex(Range(-3, p + 7)) == r'\left\{-3, -2,  \ldots, p + 6\right\}'
+    # Must have integer assumptions
+    assert latex(Range(a, a + 3)) == r'\text{Range}\left(a, a + 3\right)'
 
 
 def test_latex_sequences():
@@ -1907,13 +1922,13 @@ def test_ElementwiseApplyFunction():
 
 def test_ZeroMatrix():
     from sympy import ZeroMatrix
-    assert latex(ZeroMatrix(1, 1), mat_symbol_style='plain') == r"\mathbb{0}"
+    assert latex(ZeroMatrix(1, 1), mat_symbol_style='plain') == r"0"
     assert latex(ZeroMatrix(1, 1), mat_symbol_style='bold') == r"\mathbf{0}"
 
 
 def test_OneMatrix():
     from sympy import OneMatrix
-    assert latex(OneMatrix(3, 4), mat_symbol_style='plain') == r"\mathbb{1}"
+    assert latex(OneMatrix(3, 4), mat_symbol_style='plain') == r"1"
     assert latex(OneMatrix(3, 4), mat_symbol_style='bold') == r"\mathbf{1}"
 
 

@@ -20,7 +20,7 @@ from sympy.polys.rootoftools import CRootOf
 from sympy.testing.pytest import slow, XFAIL, SKIP, raises
 from sympy.testing.randtest import verify_numerically as tn
 
-from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m, R
+from sympy.abc import a, b, c, d, e, k, h, p, x, y, z, t, q, m, R
 
 
 def NS(e, n=15, **options):
@@ -870,12 +870,12 @@ def test_issue_5132():
         {(log(-sin(2)), -S(2)), (log(sin(2)), S(2))}
     eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
     assert solve(eqs, set=True) == \
-        ([x, y], {
-        (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
-        (log(-z**2 - sin(log(3)))/2, -log(3))})
+        ([y, z], {
+        (-log(3), sqrt(-exp(2*x) - sin(log(3)))),
+        (-log(3), -sqrt(-exp(2*x) - sin(log(3))))})
     assert solve(eqs, x, z, set=True) == (
         [x, z],
-        {(log(-z**2 + sin(y))/2, z), (log(-sqrt(-z**2 + sin(y))), z)})
+        {(x, sqrt(-exp(2*x) + sin(y))), (x, -sqrt(-exp(2*x) + sin(y)))})
     assert set(solve(eqs, x, y)) == \
         {
             (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
@@ -885,12 +885,10 @@ def test_issue_5132():
             (-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
         (-log(3), sqrt(-exp(2*x) - sin(log(3))))}
     eqs = [exp(x)**2 - sin(y) + z, 1/exp(y) - 3]
-    assert solve(eqs, set=True) == ([x, y], {
-        (log(-sqrt(-z - sin(log(3)))), -log(3)),
-            (log(-z - sin(log(3)))/2, -log(3))})
+    assert solve(eqs, set=True) == ([y, z], {
+        (-log(3), -exp(2*x) - sin(log(3)))})
     assert solve(eqs, x, z, set=True) == (
-        [x, z],
-        {(log(-sqrt(-z + sin(y))), z), (log(-z + sin(y))/2, z)})
+        [x, z], {(x, -exp(2*x) + sin(y))})
     assert set(solve(eqs, x, y)) == {
             (log(-sqrt(-z - sin(log(3)))), -log(3)),
             (log(-z - sin(log(3)))/2, -log(3))}
@@ -1316,6 +1314,11 @@ def test_issue_5114_solvers():
 
 
 def test_issue_5849():
+    #
+    # XXX: This system does not have a solution for most values of the
+    # parameters. Generally solve returns the empty set for systems that are
+    # generically inconsistent.
+    #
     I1, I2, I3, I4, I5, I6 = symbols('I1:7')
     dI1, dI4, dQ2, dQ4, Q2, Q4 = symbols('dI1,dI4,dQ2,dQ4,Q2,Q4')
 
@@ -1332,21 +1335,24 @@ def test_issue_5849():
     )
 
     ans = [{
-    I1: I2 + I6,
-    dI1: -4*I2 - 4*I3 - 4*I5 - 10*I6 + 24,
-    I4: -I5 + I6,
-    dQ4: -I5 + I6,
-    Q4: 3*I5/2 - I6/2 - dI4/2,
+    I1: I2 + I3,
+    dI1: -4*I2 - 8*I3 - 4*I5 - 6*I6 + 24,
+    I4: I3 - I5,
+    dQ4: I3 - I5,
+    Q4: -I3/2 + 3*I5/2 - dI4/2,
     dQ2: I2,
     Q2: 2*I3 + 2*I5 + 3*I6}]
 
     v = I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4
     assert solve(e, *v, manual=True, check=False, dict=True) == ans
-    assert solve(e, *v, manual=True) == ans[0]
+    assert solve(e, *v, manual=True, check=False) == ans[0]
+    assert solve(e, *v, manual=True) == []
+    assert solve(e, *v) == []
+
     # the matrix solver (tested below) doesn't like this because it produces
     # a zero row in the matrix. Is this related to issue 4551?
     assert [ei.subs(
-        ans[0]) for ei in e] == [-I3 + I6, I3 - I6, 0, 0, 0, 0, 0, 0, 0]
+        ans[0]) for ei in e] == [0, 0, I3 - I6, -I3 + I6, 0, 0, 0, 0, 0]
 
 
 def test_issue_5849_matrix():
@@ -1373,14 +1379,32 @@ def test_issue_5849_matrix():
         2*I3 + 2*I5 + 3*I6 - Q2,
         I4 - 2*I5 + 2*Q4 + dI4
     )
-    assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4) == {
-    I1: I2 + I6,
-    dI1: -4*I2 - 4*I3 - 4*I5 - 10*I6 + 24,
-    I4: -I5 + I6,
-    dQ4: -I5 + I6,
-    Q4: 3*I5/2 - I6/2 - dI4/2,
-    dQ2: I2,
-    Q2: 2*I3 + 2*I5 + 3*I6}
+    assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4) == []
+
+
+def test_issue_21882():
+
+    a, b, c, d, f, g, k = unknowns = symbols('a, b, c, d, f, g, k')
+
+    equations = [
+        -k*a + b + 5*f/6 + 2*c/9 + 5*d/6 + 4*a/3,
+        -k*f + 4*f/3 + d/2,
+        -k*d + f/6 + d,
+        13*b/18 + 13*c/18 + 13*a/18,
+        -k*c + b/2 + 20*c/9 + a,
+        -k*b + b + c/18 + a/6,
+        5*b/3 + c/3 + a,
+        2*b/3 + 2*c + 4*a/3,
+        -g,
+    ]
+
+    answer = [
+        {a: 0, f: 0, b: 0, d: 0, c: 0, g: 0},
+        {a: 0, f: -d, b: 0, k: S(5)/6, c: 0, g: 0},
+        {a: -2*c, f: 0, b: c, d: 0, k: S(13)/18, g: 0},
+    ]
+
+    assert solve(equations, unknowns, dict=True) == answer
 
 
 def test_issue_5901():
@@ -2358,6 +2382,17 @@ def test_issue_6819():
     assert solve(a*b**x - c*d**x, x) == [log(c/a)/log(b/d)]
 
 
+def test_issue_17454():
+    x = Symbol('x')
+    assert solve((1 - x - I)**4, x) == [1 - I]
+
+
 def test_issue_21852():
     solution = [21 - 21*sqrt(2)/2]
     assert solve(2*x + sqrt(2*x**2) - 21) == solution
+
+
+def test_issue_21942():
+    eq = -d + (a*c**(1 - e) + b**(1 - e)*(1 - a))**(1/(1 - e))
+    sol = solve(eq, c, simplify=False, check=False)
+    assert sol == [(b/b**e - b/(a*b**e) + d**(1 - e)/a)**(1/(1 - e))]

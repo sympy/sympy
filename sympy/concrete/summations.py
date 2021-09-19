@@ -322,7 +322,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import factor_sum, sum_combine
         from sympy.core.function import expand
-        from sympy.core.mul import Mul
 
         # split the function into adds
         terms = Add.make_args(expand(self.function))
@@ -1036,7 +1035,6 @@ def eval_sum_direct(expr, limits):
     Evaluate expression directly, but perform some simple checks first
     to possibly result in a smaller expression and faster execution.
     """
-    from sympy.core import Add
     (i, a, b) = limits
 
     dif = b - a
@@ -1287,8 +1285,6 @@ def _eval_sum_hyper(f, i, a):
 
 
 def eval_sum_hyper(f, i_a_b):
-    from sympy.logic.boolalg import And
-
     i, a, b = i_a_b
 
     if (b - a).is_Integer:
@@ -1413,10 +1409,10 @@ def eval_sum_residue(f, i_a_b):
 
     def is_even_function(numer, denom):
         """Test if the rational function is an even function"""
-        numer_even = all([i % 2 == 0 for (i,) in numer.monoms()])
-        denom_even = all([i % 2 == 0 for (i,) in denom.monoms()])
-        numer_odd = all([i % 2 == 1 for (i,) in numer.monoms()])
-        denom_odd = all([i % 2 == 1 for (i,) in denom.monoms()])
+        numer_even = all(i % 2 == 0 for (i,) in numer.monoms())
+        denom_even = all(i % 2 == 0 for (i,) in denom.monoms())
+        numer_odd = all(i % 2 == 1 for (i,) in numer.monoms())
+        denom_odd = all(i % 2 == 1 for (i,) in denom.monoms())
         return (numer_even and denom_even) or (numer_odd and denom_odd)
 
     def match_rational(f, i):
@@ -1599,7 +1595,7 @@ def _dummy_with_inherited_properties_concrete(limits):
         assum_true = x._assumptions.get(assum, None)
         if assum_true:
             assumptions_to_keep[assum] = True
-        elif all([getattr(i, 'is_' + assum) for i in l]):
+        elif all(getattr(i, 'is_' + assum) for i in l):
             assumptions_to_add[assum] = True
     if assumptions_to_add:
         assumptions_to_keep.update(assumptions_to_add)

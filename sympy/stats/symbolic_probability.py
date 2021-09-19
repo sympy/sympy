@@ -20,7 +20,7 @@ def _(x):
     atoms = x.free_symbols
     if len(atoms) == 1 and next(iter(atoms)) == x:
         return False
-    return any([is_random(i) for i in atoms])
+    return any(is_random(i) for i in atoms)
 
 @is_random.register(RandomSymbol)  # type: ignore
 def _(x):
@@ -80,7 +80,7 @@ class Probability(Expr):
             if len(condrv) == 1 and condrv[0] == given_condition:
                 from sympy.stats.frv_types import BernoulliDistribution
                 return BernoulliDistribution(self.func(condition).doit(**hints), 0, 1)
-            if any([dependent(rv, given_condition) for rv in condrv]):
+            if any(dependent(rv, given_condition) for rv in condrv):
                 return Probability(condition, given_condition)
             else:
                 return Probability(condition).doit()

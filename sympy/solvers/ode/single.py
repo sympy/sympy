@@ -2492,8 +2492,8 @@ class NthLinearEulerEqHomogeneous(SingleODESolver):
             coeff = match[order]
             factor = x**order / coeff
             self.r = {i: factor*match[i] for i in match}
-        if self.r and not any(not _test_term(self.r[i], f(x), i) for i in
-                self.r if i >= 0):
+        if self.r and all(_test_term(self.r[i], f(x), i) for i in
+                          self.r if i >= 0):
             if not self.r[-1]:
                 does_match = True
         return does_match
@@ -2575,8 +2575,8 @@ class NthLinearEulerEqNonhomogeneousVariationOfParameters(SingleODESolver):
             coeff = match[order]
             factor = x**order / coeff
             self.r = {i: factor*match[i] for i in match}
-        if self.r and not any(not _test_term(self.r[i], f(x), i) for i in
-                self.r if i >= 0):
+        if self.r and all(_test_term(self.r[i], f(x), i) for i in
+                          self.r if i >= 0):
             if self.r[-1]:
                 does_match = True
 
@@ -2656,8 +2656,8 @@ class NthLinearEulerEqNonhomogeneousUndeterminedCoefficients(SingleODESolver):
             coeff = match[order]
             factor = x**order / coeff
             self.r = {i: factor*match[i] for i in match}
-        if self.r and not any(not _test_term(self.r[i], f(x), i) for i in
-                self.r if i >= 0):
+        if self.r and all(_test_term(self.r[i], f(x), i) for i in
+                          self.r if i >= 0):
             if self.r[-1]:
                 e, re = posify(self.r[-1].subs(x, exp(x)))
                 undetcoeff = _undetermined_coefficients_match(e.subs(re), x)
@@ -2743,7 +2743,7 @@ class SecondLinearBessel(SingleODESolver):
         r = collect(eq,
             [f.diff(x, 2), df, f]).match(deq)
         if order == 2 and r:
-            if not all([r[key].is_polynomial() for key in r]):
+            if not all(r[key].is_polynomial() for key in r):
                 n, d = eq.as_numer_denom()
                 eq = expand(n)
                 r = collect(eq,

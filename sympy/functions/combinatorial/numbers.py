@@ -1161,7 +1161,7 @@ class catalan(Function):
                 return Rational(-1, 2)
 
     def fdiff(self, argindex=1):
-        from sympy import polygamma, log
+        from sympy import polygamma
         n = self.args[0]
         return catalan(n)*(polygamma(0, n + S.Half) - polygamma(0, n + 2) + log(4))
 
@@ -1433,12 +1433,13 @@ def _multiset_histogram(n):
     else:
         n = list(n)
         s = set(n)
-        if len(s) == len(n):
-            n = [1]*len(n)
-            n.extend([len(n), len(n)])
+        lens = len(s)
+        lenn = len(n)
+        if lens == lenn:
+            n = [1]*lenn + [lenn, lenn]
             return _MultisetHistogram(n)
-        m = dict(zip(s, range(len(s))))
-        d = dict(zip(range(len(s)), [0]*len(s)))
+        m = dict(zip(s, range(lens)))
+        d = dict(zip(range(lens), (0,)*lens))
         for i in n:
             d[m[i]] += 1
         return _multiset_histogram(d)
@@ -1512,7 +1513,6 @@ def nP(n, k=None, replacement=False):
 
 @cacheit
 def _nP(n, k=None, replacement=False):
-    from sympy.functions.combinatorial.factorials import factorial
     from sympy.core.mul import prod
 
     if k == 0:
@@ -1597,7 +1597,7 @@ def _AOP_product(n):
     ord = sum(n)
     need = (ord + 2)//2
     rv = [1]*(n.pop() + 1)
-    rv.extend([0]*(need - len(rv)))
+    rv.extend((0,) * (need - len(rv)))
     rv = rv[:need]
     while n:
         ni = n.pop()
@@ -1683,7 +1683,6 @@ def nC(n, k=None, replacement=False):
     .. [2] http://tinyurl.com/cep849r
 
     """
-    from sympy.functions.combinatorial.factorials import binomial
     from sympy.core.mul import prod
 
     if isinstance(n, SYMPY_INTS):

@@ -744,7 +744,7 @@ def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
 
         C.append(c)
 
-    if any(not j for j in J):
+    if not all(J):
         raise ExtraneousFactors  # pragma: no cover
 
     CC, HH = [], []

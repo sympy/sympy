@@ -172,7 +172,7 @@ class Dispatcher:
                 param.annotation
                 for param in params)
 
-            if all(ann is not Parameter.empty for ann in annotations):
+            if not any(ann is Parameter.empty for ann in annotations):
                 return annotations
 
     def add(self, signature, func, on_ambiguity=ambiguity_warn):

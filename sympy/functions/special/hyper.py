@@ -337,7 +337,7 @@ class hyper(TupleParametersBase):
     @property
     def convergence_statement(self):
         """ Return a condition on z under which the series converges. """
-        from sympy import And, Or, re, Ne, oo
+        from sympy import And, Or, Ne
         R = self.radius_of_convergence
         if R == 0:
             return False
@@ -354,12 +354,6 @@ class hyper(TupleParametersBase):
     def _eval_simplify(self, **kwargs):
         from sympy.simplify.hyperexpand import hyperexpand
         return hyperexpand(self)
-
-    def _sage_(self):
-        import sage.all as sage
-        ap = [arg._sage_() for arg in self.args[0]]
-        bq = [arg._sage_() for arg in self.args[1]]
-        return sage.hypergeometric(ap, bq, self.argument._sage_())
 
 
 class meijerg(TupleParametersBase):

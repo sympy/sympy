@@ -186,12 +186,12 @@ def _invert(f_x, y, x, domain=S.Complexes):
 invert_complex = _invert
 
 
-def invert_real(f_x, y, x, domain=S.Reals):
+def invert_real(f_x, y, x):
     """
-    Inverts a real-valued function. Same as _invert, but sets
+    Inverts a real-valued function. Same as ``_invert``, but sets
     the domain to ``S.Reals`` before inverting.
     """
-    return _invert(f_x, y, x, domain)
+    return _invert(f_x, y, x, S.Reals)
 
 
 def _invert_real(f, g_ys, symbol):
@@ -295,16 +295,16 @@ def _invert_real(f, g_ys, symbol):
     if isinstance(f, TrigonometricFunction):
         if isinstance(g_ys, FiniteSet):
             def inv(trig):
-                if isinstance(f, (sin, csc)):
-                    F = asin if isinstance(f, sin) else acsc
+                if isinstance(trig, (sin, csc)):
+                    F = asin if isinstance(trig, sin) else acsc
                     return (lambda a: n*pi + (-1)**n*F(a),)
-                if isinstance(f, (cos, sec)):
-                    F = acos if isinstance(f, cos) else asec
+                if isinstance(trig, (cos, sec)):
+                    F = acos if isinstance(trig, cos) else asec
                     return (
                         lambda a: 2*n*pi + F(a),
                         lambda a: 2*n*pi - F(a),)
-                if isinstance(f, (tan, cot)):
-                    return (lambda a: n*pi + f.inverse()(a),)
+                if isinstance(trig, (tan, cot)):
+                    return (lambda a: n*pi + trig.inverse()(a),)
 
             n = Dummy('n', integer=True)
             invs = S.EmptySet
@@ -487,8 +487,8 @@ def _domain_check(f, symbol, p):
                 return True
     else:
         # TODO : We should not blindly recurse through all args of arbitrary expressions like this
-        return all([_domain_check(g, symbol, p)
-                    for g in f.args])
+        return all(_domain_check(g, symbol, p)
+                   for g in f.args)
 
 
 def _is_finite_with_finite_vars(f, domain=S.Complexes):
@@ -708,7 +708,7 @@ def _solve_trig1(f, symbol, domain):
 def _solve_trig2(f, symbol, domain):
     """Secondary helper to solve trigonometric equations,
     called when first helper fails """
-    from sympy import ilcm, expand_trig, degree
+    from sympy import ilcm, expand_trig
     f = trigsimp(f)
     f_original = f
     trig_functions = f.atoms(sin, cos, tan, sec, cot, csc)
@@ -830,8 +830,8 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
             # - sqrt(2)*I/2. We are not expanding for solution with symbols
             # or undefined functions because that makes the solution more complicated.
             # For example, expand_complex(a) returns re(a) + I*im(a)
-            if all([s.atoms(Symbol, AppliedUndef) == set() and not isinstance(s, RootOf)
-                    for s in result]):
+            if all(s.atoms(Symbol, AppliedUndef) == set() and not isinstance(s, RootOf)
+                   for s in result):
                 s = Dummy('s')
                 result = imageset(Lambda(s, expand_complex(s)), result)
         if isinstance(result, FiniteSet) and domain != S.Complexes:
@@ -862,7 +862,7 @@ def _solve_radical(f, unradf, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    if isinstance(result, Complement) or isinstance(result,ConditionSet):
+    if not isinstance(result, FiniteSet):
         solution_set = result
     else:
         f_set = []  # solutions for FiniteSet
@@ -1025,8 +1025,10 @@ def _solveset(f, symbol, domain, _check=False):
             _is_function_class_equation(HyperbolicFunction, f, symbol):
         result = _solve_trig(f, symbol, domain)
     elif isinstance(f, arg):
+        from sympy.functions.elementary.complexes import re, im
         a = f.args[0]
-        result = solveset_real(a > 0, symbol)
+        result = Intersection(_solveset(re(a) > 0, symbol, domain),
+                              _solveset(im(a), symbol, domain))
     elif f.is_Piecewise:
         expr_set_pairs = f.as_expr_set_pairs(domain)
         for (expr, in_set) in expr_set_pairs:
@@ -1065,7 +1067,7 @@ def _solveset(f, symbol, domain, _check=False):
         elif isinstance(rhs_s, FiniteSet):
             for equation in [lhs - rhs for rhs in rhs_s]:
                 if equation == f:
-                    u = unrad(f)
+                    u = unrad(f, symbol)
                     if u:
                         result += _solve_radical(equation, u,
                                                  symbol,
@@ -1104,13 +1106,11 @@ def _solveset(f, symbol, domain, _check=False):
     if isinstance(result, ConditionSet):
         if isinstance(f, Expr):
             num, den = f.as_numer_denom()
-        else:
-            num, den = f, S.One
-        if den.has(symbol):
-            _result = _solveset(num, symbol, domain)
-            if not isinstance(_result, ConditionSet):
-                singularities = _solveset(den, symbol, domain)
-                result = _result - singularities
+            if den.has(symbol):
+                _result = _solveset(num, symbol, domain)
+                if not isinstance(_result, ConditionSet):
+                    singularities = _solveset(den, symbol, domain)
+                    result = _result - singularities
 
     if _check:
         if isinstance(result, ConditionSet):
@@ -2936,9 +2936,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 
     """
 
-    from sympy import Complement
-    from sympy.core.compatibility import is_sequence
-
     if not system:
         return S.EmptySet
 
@@ -3292,9 +3289,9 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             sym, sol, soln_imageset)
                         sol = set(sol).pop()
                         free = sol.free_symbols
-                        if got_symbol and any([
+                        if got_symbol and any(
                             ss in free for ss in got_symbol
-                        ]):
+                        ):
                             # sol depends on previously solved symbols
                             # then continue
                             continue
@@ -3303,7 +3300,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         # in the new result list (solution for symbol `s`)
                         # along with old results.
                         for k, v in res.items():
-                            if isinstance(v, Expr):
+                            if isinstance(v, Expr) and isinstance(sol, Expr):
                                 # if any unsolved symbol is present
                                 # Then subs known value
                                 rnew[k] = v.subs(sym, sol)
@@ -3445,10 +3442,13 @@ def _separate_poly_nonpoly(system, symbols):
     denominators = set()
     poly = None
     for eq in system:
-        # Store denom expression if it contains symbol
+        # Store denom expressions that contain symbols
         denominators.update(_simple_dens(eq, symbols))
+        # Convert equality to expression
+        if isinstance(eq, Equality):
+            eq = eq.rewrite(Add)
         # try to remove sqrt and rational power
-        without_radicals = unrad(simplify(eq))
+        without_radicals = unrad(simplify(eq), *symbols)
         if without_radicals:
             eq_unrad, cov = without_radicals
             if not cov:

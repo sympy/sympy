@@ -1430,7 +1430,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                         except KeyError:
                             coeff = 0
                         x_coeff = bool(x_coeff) and bool(coeff)
-                    if not any([xy_coeff, x_coeff]):
+                    if not any((xy_coeff, x_coeff)):
                         # means only x**2, y**2, z**2, const is present
                         do_permute_signs = True
                     elif not x_coeff:
@@ -1455,7 +1455,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                         except KeyError:
                             coeff = 0
                         x_coeff = bool(x_coeff) and bool(coeff)
-                    if not any([xy_coeff, x_coeff]):
+                    if not any((xy_coeff, x_coeff)):
                         # means only x**2, y**2 and const is present
                         # so we can get more soln by permuting this soln.
                         do_permute_signs = True

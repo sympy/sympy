@@ -761,7 +761,7 @@ class Ellipse(GeometrySet):
                 intersect = self.intersection(segment)
                 if len(intersect) == 1:
                     if not any(intersect[0] in i for i in segment.points) \
-                        and all(not self.encloses_point(i) for i in segment.points):
+                        and not any(self.encloses_point(i) for i in segment.points):
                         all_tangents = True
                         continue
                     else:
@@ -1130,7 +1130,6 @@ class Ellipse(GeometrySet):
         sympy.geometry.point.Point
         arbitrary_point : Returns parameterized point on ellipse
         """
-        from sympy import sin, cos, Rational
         t = _symbol('t', real=True)
         x, y = self.arbitrary_point(t).args
         # get a random value in [-1, 1) corresponding to cos(t)

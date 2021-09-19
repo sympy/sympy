@@ -2846,7 +2846,7 @@ def _create_table(table, domain=QQ):
     see meijerint._create_lookup_table.
     """
 
-    def add(formula, annihilator, arg, x0=0, y0=[]):
+    def add(formula, annihilator, arg, x0=0, y0=()):
         """
         Adds a formula in the dictionary
         """
@@ -2856,7 +2856,7 @@ def _create_table(table, domain=QQ):
     R = domain.old_poly_ring(x_1)
     _, Dx = DifferentialOperators(R, 'Dx')
 
-    from sympy import (sin, cos, exp, log, erf, sqrt, pi,
+    from sympy import (sin, cos, log, erf, sqrt, pi,
         sinh, cosh, sinc, erfc, Si, Ci, Shi, erfi)
 
     # add some basic functions

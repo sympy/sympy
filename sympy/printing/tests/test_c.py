@@ -1,6 +1,6 @@
 from sympy.core import (
     S, pi, oo, symbols, Rational, Integer, Float, Mod, GoldenRatio, EulerGamma, Catalan,
-    Lambda, Dummy, Eq, nan, Mul, Pow
+    Lambda, Dummy, Eq, nan, Mul, Pow, UnevaluatedExpr
 )
 from sympy.functions import (
     Abs, acos, acosh, asin, asinh, atan, atanh, atan2, ceiling, cos, cosh, erf,
@@ -145,12 +145,25 @@ def test_ccode_exceptions():
     assert 'not supported in c' in gamma_c89.lower()
     gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=True)
     assert not 'not supported in c' in gamma_c89.lower()
+
+
+def test_ccode_functions2():
     assert ccode(ceiling(x)) == "ceil(x)"
     assert ccode(Abs(x)) == "fabs(x)"
     assert ccode(gamma(x)) == "tgamma(x)"
     r, s = symbols('r,s', real=True)
-    assert ccode(Mod(ceiling(r), ceiling(s))) == "((ceil(r)) % (ceil(s)))"
+    assert ccode(Mod(ceiling(r), ceiling(s))) == '((ceil(r) % ceil(s)) + '\
+                                                 'ceil(s)) % ceil(s)'
     assert ccode(Mod(r, s)) == "fmod(r, s)"
+    p1, p2 = symbols('p1 p2', integer=True, positive=True)
+    assert ccode(Mod(p1, p2)) == 'p1 % p2'
+    assert ccode(Mod(p1, p2 + 3)) == 'p1 % (p2 + 3)'
+    assert ccode(Mod(-3, -7, evaluate=False)) == '(-3) % (-7)'
+    assert ccode(-Mod(3, 7, evaluate=False)) == '-(3 % 7)'
+    assert ccode(r*Mod(p1, p2)) == 'r*(p1 % p2)'
+    assert ccode(Mod(p1, p2)**s) == 'pow(p1 % p2, s)'
+    n = symbols('n', integer=True, negative=True)
+    assert ccode(Mod(-n, p2)) == '(-n) % p2'
 
 
 def test_ccode_user_functions():
@@ -630,6 +643,7 @@ def test_C99CodePrinter__precision_f80():
 
 def test_C99CodePrinter__precision():
     n = symbols('n', integer=True)
+    p = symbols('p', integer=True, positive=True)
     f32_printer = C99CodePrinter(dict(type_aliases={real: float32}))
     f64_printer = C99CodePrinter(dict(type_aliases={real: float64}))
     f80_printer = C99CodePrinter(dict(type_aliases={real: float80}))
@@ -646,8 +660,8 @@ def test_C99CodePrinter__precision():
         check(exp(x*8.0), 'exp{s}(8.0{S}*x)')
         check(exp2(x), 'exp2{s}(x)')
         check(expm1(x*4.0), 'expm1{s}(4.0{S}*x)')
-        check(Mod(n, 2), '((n) % (2))')
-        check(Mod(2*n + 3, 3*n + 5), '((2*n + 3) % (3*n + 5))')
+        check(Mod(p, 2), 'p % 2')
+        check(Mod(2*p + 3, 3*p + 5, evaluate=False), '(2*p + 3) % (3*p + 5)')
         check(Mod(x + 2.0, 3.0), 'fmod{s}(1.0{S}*x + 2.0{S}, 3.0{S})')
         check(Mod(x, 2.0*x + 3.0), 'fmod{s}(1.0{S}*x, 2.0{S}*x + 3.0{S})')
         check(log(x/2), 'log{s}((1.0{S}/2.0{S})*x)')
@@ -840,3 +854,20 @@ def test_ccode_submodule():
     # Test the compatibility sympy.printing.ccode module imports
     with warns_deprecated_sympy():
         import sympy.printing.ccode # noqa:F401
+
+
+def test_ccode_UnevaluatedExpr():
+    assert ccode(UnevaluatedExpr(y * x) + z) == "z + x*y"
+    assert ccode(UnevaluatedExpr(y + x) + z) == "z + (x + y)"  # gh-21955
+    w = symbols('w')
+    assert ccode(UnevaluatedExpr(y + x) + UnevaluatedExpr(z + w)) == "(w + z) + (x + y)"
+
+    p, q, r = symbols("p q r", real=True)
+    q_r = UnevaluatedExpr(q + r)
+    expr = abs(exp(p+q_r))
+    assert ccode(expr) == "exp(p + (q + r))"
+
+
+def test_ccode_array_like_containers():
+    assert ccode([2,3,4]) == "{2, 3, 4}"
+    assert ccode((2,3,4)) == "{2, 3, 4}"

@@ -2,10 +2,11 @@ from sympy import (
     symbols, Identity, cos, ZeroMatrix, OneMatrix, sqrt, HadamardProduct)
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 from sympy.tensor.array.expressions.conv_array_to_matrix import _support_function_tp1_recognize, \
-    _array_diag2contr_diagmatrix, convert_array_to_matrix, _remove_trivial_dims, _array2matrix
+    _array_diag2contr_diagmatrix, convert_array_to_matrix, _remove_trivial_dims, _array2matrix, \
+    _combine_removed, identify_removable_identity_matrices
 from sympy import MatrixSymbol
 from sympy.combinatorics import Permutation
-from sympy.matrices.expressions.diagonal import DiagMatrix
+from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
 from sympy.matrices import Trace, MatMul, Transpose
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, \
     ArrayTensorProduct, ArrayAdd, PermuteDims, ArrayDiagonal, \
@@ -89,14 +90,6 @@ def test_arrayexpr_convert_array_to_matrix():
     expr = ArrayContraction(ArrayTensorProduct(M, N, P, Q), (0, 2), (1, 4, 6))
     assert convert_array_to_matrix(expr) == ArrayContraction(ArrayTensorProduct(M.T*N, P, Q), (0, 2, 4))
 
-    # TODO: not yet supported:
-
-    # cg = ArrayDiagonal(ArrayTensorProduct(M, N, P), (0, 2, 4), (1, 3, 5))
-    #  assert recognize_matrix_expression(cg) == HadamardProduct(M, N, P)
-
-    # cg = ArrayDiagonal(ArrayTensorProduct(M, N, P), (0, 3, 4), (1, 2, 5))
-    #  assert recognize_matrix_expression(cg) == HadamardProduct(M, N.T, P)
-
     x = MatrixSymbol("x", k, 1)
     cg = PermuteDims(
         ArrayContraction(ArrayTensorProduct(OneArray(1), x, OneArray(1), DiagMatrix(Identity(1))),
@@ -177,8 +170,15 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
 
     cg = ArrayDiagonal(ArrayTensorProduct(I, x, A, B), (1, 2), (5, 6))
     assert _array_diag2contr_diagmatrix(cg) == ArrayDiagonal(ArrayContraction(ArrayTensorProduct(I, OneArray(1), A, B, DiagMatrix(x)), (1, 7)), (5, 6))
-    # TODO: not yet working
-    #  assert convert_array_to_matrix(cg)
+    # TODO: this is returning a wrong result:
+    # convert_array_to_matrix(cg)
+
+    cg = ArrayDiagonal(ArrayTensorProduct(I1, a, b), (1, 3, 5))
+    assert convert_array_to_matrix(cg) == a*b.T
+
+    cg = ArrayDiagonal(ArrayTensorProduct(I1, a, b), (1, 3))
+    assert _array_diag2contr_diagmatrix(cg) == ArrayContraction(ArrayTensorProduct(OneArray(1), a, b, I1), (2, 6))
+    assert convert_array_to_matrix(cg) == a*b.T
 
     cg = ArrayDiagonal(ArrayTensorProduct(x, I1), (1, 2))
     assert isinstance(cg, ArrayDiagonal)
@@ -208,33 +208,35 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
     assert convert_array_to_matrix(cg) == A * a
 
     cg = ArrayContraction(ArrayTensorProduct(A, a, B), (1, 2, 4))
-    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), B), (1, 2), (3, 4))
+    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), OneArray(1), B), (1, 2), (3, 5))
     assert convert_array_to_matrix(cg) == A * DiagMatrix(a) * B
 
     cg = ArrayContraction(ArrayTensorProduct(A, a, B), (0, 2, 4))
-    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), B), (0, 2), (3, 4))
+    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), OneArray(1), B), (0, 2), (3, 5))
     assert convert_array_to_matrix(cg) == A.T * DiagMatrix(a) * B
 
     cg = ArrayContraction(ArrayTensorProduct(A, a, b, a.T, B), (0, 2, 4, 7, 9))
-    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), DiagMatrix(b),
-                                                                                                 DiagMatrix(a), B),
-                                                                       (0, 2), (3, 4), (5, 7), (6, 9))
-    assert convert_array_to_matrix(cg).doit() == A.T * DiagMatrix(a) * DiagMatrix(b) * DiagMatrix(a) * B.T
+    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), OneArray(1),
+                                                DiagMatrix(b), OneArray(1), DiagMatrix(a), OneArray(1), B),
+                                               (0, 2), (3, 5), (6, 9), (8, 12))
+    assert convert_array_to_matrix(cg) == A.T * DiagMatrix(a) * DiagMatrix(b) * DiagMatrix(a) * B.T
 
     cg = ArrayContraction(ArrayTensorProduct(I1, I1, I1), (1, 2, 4))
-    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(I1, I1, I1), (1, 2), (3, 4))
-    assert convert_array_to_matrix(cg).doit() == Identity(1)
+    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(I1, I1, OneArray(1), I1), (1, 2), (3, 5))
+    assert convert_array_to_matrix(cg) == 1
 
     cg = ArrayContraction(ArrayTensorProduct(I, I, I, I, A), (1, 2, 8), (5, 6, 9))
     assert convert_array_to_matrix(cg.split_multiple_contractions()).doit() == A
 
     cg = ArrayContraction(ArrayTensorProduct(A, a, C, a, B), (1, 2, 4), (5, 6, 8))
-    expected = ArrayContraction(ArrayTensorProduct(DiagMatrix(a), DiagMatrix(a), C, A, B), (0, 4), (1, 7), (2, 5), (3, 8))
+    expected = ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), OneArray(1), C, DiagMatrix(a), OneArray(1), B), (1, 3), (2, 5), (6, 7), (8, 10))
     assert cg.split_multiple_contractions() == expected
     assert convert_array_to_matrix(cg) == A * DiagMatrix(a) * C * DiagMatrix(a) * B
 
     cg = ArrayContraction(ArrayTensorProduct(a, I1, b, I1, (a.T*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
-    assert cg.split_multiple_contractions().dummy_eq(ArrayContraction(ArrayTensorProduct((a.T * b).applyfunc(cos), I1, I1, a, b), (0, 2), (1, 4), (3, 7), (5, 9)))
+    expected = ArrayContraction(ArrayTensorProduct(a, I1, OneArray(1), b, I1, OneArray(1), (a.T*b).applyfunc(cos)),
+                                (1, 3), (2, 10), (6, 8), (7, 11))
+    assert cg.split_multiple_contractions().dummy_eq(expected)
     assert convert_array_to_matrix(cg).doit().dummy_eq(MatMul(a, (a.T * b).applyfunc(cos), b.T))
 
 
@@ -357,9 +359,25 @@ def test_arrayexpr_convert_array_to_matrix_remove_trivial_dims():
     rexpr, removed = _remove_trivial_dims(expr)
     assert removed == [0, 3, 4, 5, 6]
 
+    expr = ArrayDiagonal(ArrayContraction(ArrayTensorProduct(A, x, I, I1), (1, 2, 5)), (1, 4))
+    rexpr, removed = _remove_trivial_dims(expr)
+    assert removed == [1, 2]
+
     cg = ArrayDiagonal(ArrayTensorProduct(PermuteDims(ArrayTensorProduct(x, I1), Permutation(1, 2, 3)), (x.T*x).applyfunc(sqrt)), (2, 4), (3, 5))
     rexpr, removed = _remove_trivial_dims(cg)
-    assert removed == [1, 2, 3]
+    assert removed == [1, 2]
+
+    # Contractions with identity matrices need to be followed by a permutation
+    # in order
+    cg = ArrayContraction(ArrayTensorProduct(A, B, C, M, I), (1, 8))
+    ret, removed = _remove_trivial_dims(cg)
+    assert ret == PermuteDims(ArrayTensorProduct(A, B, C, M), [0, 2, 3, 4, 5, 6, 7, 1])
+    assert removed == []
+
+    cg = ArrayContraction(ArrayTensorProduct(A, B, C, M, I), (1, 8), (3, 4))
+    ret, removed = _remove_trivial_dims(cg)
+    assert ret == PermuteDims(ArrayContraction(ArrayTensorProduct(A, B, C, M), (3, 4)), [0, 2, 3, 4, 5, 1])
+    assert removed == []
 
 
 def test_arrayexpr_convert_array_to_matrix_diag2contraction_diagmatrix():
@@ -490,3 +508,67 @@ def test_convert_array_to_hadamard_products():
     cg = ArrayDiagonal(ArrayTensorProduct(HadamardProduct(M, N), Q), (0, 2))
     ret = convert_array_to_matrix(cg)
     assert ret == cg
+
+    # Hadamard products with traces:
+
+    expr = Trace(HadamardProduct(M, N))
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert ret == Trace(HadamardProduct(M.T, N.T))
+
+    expr = Trace(A*HadamardProduct(M, N))
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert ret == Trace(HadamardProduct(M, N)*A)
+
+    expr = Trace(HadamardProduct(A, M)*N)
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert ret == Trace(HadamardProduct(M.T, N)*A)
+
+    # These should not be converted into Hadamard products:
+
+    cg = ArrayDiagonal(ArrayTensorProduct(M, N), (0, 1, 2, 3))
+    ret = convert_array_to_matrix(cg)
+    assert ret == cg
+
+    cg = ArrayDiagonal(ArrayTensorProduct(A), (0, 1))
+    ret = convert_array_to_matrix(cg)
+    assert ret == cg
+
+    cg = ArrayDiagonal(ArrayTensorProduct(M, N, P), (0, 2, 4), (1, 3, 5))
+    assert convert_array_to_matrix(cg) == HadamardProduct(M, N, P)
+
+    cg = ArrayDiagonal(ArrayTensorProduct(M, N, P), (0, 3, 4), (1, 2, 5))
+    assert convert_array_to_matrix(cg) == HadamardProduct(M, P, N.T)
+
+
+def test_identify_removable_identity_matrices():
+
+    D = DiagonalMatrix(MatrixSymbol("D", k, k))
+
+    cg = ArrayContraction(ArrayTensorProduct(A, B, I), (1, 2, 4, 5))
+    expected = ArrayContraction(ArrayTensorProduct(A, B), (1, 2))
+    assert identify_removable_identity_matrices(cg) == expected
+
+    cg = ArrayContraction(ArrayTensorProduct(A, B, C, I), (1, 3, 5, 6, 7))
+    expected = ArrayContraction(ArrayTensorProduct(A, B, C), (1, 3, 5))
+    assert identify_removable_identity_matrices(cg) == expected
+
+    # Tests with diagonal matrices:
+
+    cg = ArrayContraction(ArrayTensorProduct(A, B, D), (1, 2, 4, 5))
+    ret = identify_removable_identity_matrices(cg)
+    expected = ArrayContraction(ArrayTensorProduct(A, B, D), (1, 4), (2, 5))
+    assert ret == expected
+
+    cg = ArrayContraction(ArrayTensorProduct(A, B, D, M, N), (1, 2, 4, 5, 6, 8))
+    ret = identify_removable_identity_matrices(cg)
+    assert ret == cg
+
+
+def test_combine_removed():
+
+    assert _combine_removed(6, [0, 1, 2], [0, 1, 2]) == [0, 1, 2, 3, 4, 5]
+    assert _combine_removed(8, [2, 5], [1, 3, 4]) == [1, 2, 4, 5, 6]
+    assert _combine_removed(8, [7], []) == [7]

@@ -684,9 +684,6 @@
         "sympy/external/tests/test_numpy.py": [
             "test_systematic_basic"
         ],
-        "sympy/external/tests/test_sage.py": [
-            "test_issue_4023"
-        ],
         "sympy/functions/combinatorial/tests/test_comb_factorials.py": [
             "test_binomial",
             "test_binomial_Mod",

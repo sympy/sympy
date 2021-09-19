@@ -78,8 +78,8 @@ class VectorLatexPrinter(LatexPrinter):
         expr = der_expr.expr
         red = expr.atoms(AppliedUndef)
         syms = der_expr.variables
-        test1 = not all([True for i in red if i.free_symbols == {t}])
-        test2 = not all([(t == i) for i in syms])
+        test1 = not all(True for i in red if i.free_symbols == {t})
+        test2 = not all(t == i for i in syms)
         if test1 or test2:
             return super()._print_Derivative(der_expr)
 

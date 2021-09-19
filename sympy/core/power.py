@@ -11,6 +11,7 @@ from .function import (_coeff_isneg, expand_complex, expand_multinomial,
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
 from .compatibility import as_int, HAS_GMPY, gmpy
 from .parameters import global_parameters
+from .kind import NumberKind, UndefinedKind
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.multipledispatch import Dispatcher
@@ -357,6 +358,13 @@ class Pow(Expr):
     def exp(self):
         return self._args[1]
 
+    @property
+    def kind(self):
+        if self.exp.kind is NumberKind:
+            return self.base.kind
+        else:
+            return UndefinedKind
+
     @classmethod
     def class_key(cls):
         return 3, 2, cls.__name__
@@ -624,7 +632,6 @@ class Pow(Expr):
 
     def _eval_is_extended_real(self):
         from ..functions import arg, log, exp
-        from .mul import Mul
 
         if self.base is S.Exp1:
             if self.exp.is_extended_real:
@@ -789,7 +796,7 @@ class Pow(Expr):
         return self.base.is_polar
 
     def _eval_subs(self, old, new):
-        from sympy import exp, log, Symbol, AccumBounds
+        from sympy import exp, log, AccumBounds
 
         if isinstance(self.exp, AccumBounds):
             b = self.base.subs(old, new)
@@ -917,8 +924,8 @@ class Pow(Expr):
     def as_base_exp(self):
         """Return base and exp of self.
 
-        Explnation
-        ==========
+        Explanation
+        ===========
 
         If base is 1/Integer, then return Integer, -exp. If this extra
         processing is not needed, the base and exp properties will
@@ -1528,9 +1535,10 @@ class Pow(Expr):
                 return self.func(n, exp), d
         return self.func(n, exp), self.func(d, exp)
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict=None, old=False):
         expr = _sympify(expr)
-        repl_dict = repl_dict.copy()
+        if repl_dict is None:
+            repl_dict = dict()
 
         # special case, pattern = 1 and expr.exp can match to 0
         if expr is S.One:
@@ -1757,9 +1765,6 @@ class Pow(Expr):
             if p is not None:
                 return p * x / n
         return x**n/factorial(n)
-
-    def _sage_(self):
-        return self.args[0]._sage_()**self.args[1]._sage_()
 
     def _eval_rewrite_as_sin(self, base, exp):
         from ..functions import sin

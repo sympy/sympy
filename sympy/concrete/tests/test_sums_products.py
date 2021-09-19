@@ -639,7 +639,6 @@ def test_diff():
 
 
 def test_hypersum():
-    from sympy import sin
     assert simplify(summation(x**n/fac(n), (n, 1, oo))) == -1 + exp(x)
     assert summation((-1)**n * x**(2*n) / fac(2*n), (n, 0, oo)) == cos(x)
     assert simplify(summation((-1)**n*x**(2*n + 1) /
@@ -1430,7 +1429,6 @@ def test_matrixsymbol_summation_numerical_limits():
 
 
 def test_issue_21651():
-    from sympy import floor, Sum, Symbol
     i = Symbol('i')
     a = Sum(floor(2*2**(-i)), (i, S.One, 2))
     assert a.doit() == S.One

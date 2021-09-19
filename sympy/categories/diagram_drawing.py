@@ -2125,15 +2125,15 @@ class XypicDiagramDrawer:
         if dom_i == 0:
             free_up = True
         else:
-            free_up = all([grid[dom_i - 1, j] for j in
-                           range(start, end + 1)])
+            free_up = all(grid[dom_i - 1, j] for j in
+                          range(start, end + 1))
 
         # Check for free space below.
         if dom_i == grid.height - 1:
             free_down = True
         else:
-            free_down = all([not grid[dom_i + 1, j] for j in
-                             range(start, end + 1)])
+            free_down = not any(grid[dom_i + 1, j] for j in
+                                range(start, end + 1))
 
         return (free_up, free_down, backwards)
 
@@ -2155,14 +2155,14 @@ class XypicDiagramDrawer:
         if dom_j == 0:
             free_left = True
         else:
-            free_left = all([not grid[i, dom_j - 1] for i in
-                             range(start, end + 1)])
+            free_left = not any(grid[i, dom_j - 1] for i in
+                                range(start, end + 1))
 
         if dom_j == grid.width - 1:
             free_right = True
         else:
-            free_right = all([not grid[i, dom_j + 1] for i in
-                              range(start, end + 1)])
+            free_right = not any(grid[i, dom_j + 1] for i in
+                                 range(start, end + 1))
 
         return (free_left, free_right, backwards)
 

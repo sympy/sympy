@@ -13,14 +13,16 @@ from sympy.printing.pycode import (
     MpmathPrinter, PythonCodePrinter, pycode, SymPyPrinter
 )
 from sympy.printing.numpy import NumPyPrinter, SciPyPrinter
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, skip
 from sympy.tensor import IndexedBase
-from sympy.testing.pytest import skip
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import loggamma
+from sympy.parsing.latex import parse_latex
+
 
 x, y, z = symbols('x y z')
 p = IndexedBase("p")
+
 
 def test_PythonCodePrinter():
     prntr = PythonCodePrinter()
@@ -29,6 +31,8 @@ def test_PythonCodePrinter():
 
     assert prntr.doprint(x**y) == 'x**y'
     assert prntr.doprint(Mod(x, 2)) == 'x % 2'
+    assert prntr.doprint(-Mod(x, y)) == '-(x % y)'
+    assert prntr.doprint(Mod(-x, y)) == '(-x) % y'
     assert prntr.doprint(And(x, y)) == 'x and y'
     assert prntr.doprint(Or(x, y)) == 'x or y'
     assert not prntr.module_imports
@@ -50,6 +54,9 @@ def test_PythonCodePrinter():
     assert prntr.doprint(sign(x)) == '(0.0 if x == 0 else math.copysign(1, x))'
     assert prntr.doprint(p[0, 1]) == 'p[0, 1]'
     assert prntr.doprint(KroneckerDelta(x,y)) == '(1 if x == y else 0)'
+
+    assert prntr.doprint((2,3)) == "(2, 3)"
+    assert prntr.doprint([2,3]) == "[2, 3]"
 
 
 def test_PythonCodePrinter_standard():
@@ -165,6 +172,17 @@ def test_pycode_reserved_words():
     raises(ValueError, lambda: pycode(s1 + s2, error_on_reserved=True))
     py_str = pycode(s1 + s2)
     assert py_str in ('else_ + if_', 'if_ + else_')
+
+
+def test_issue_20762():
+    antlr4 = import_module("antlr4")
+    if not antlr4:
+        skip('antlr not installed.')
+    # Make sure pycode removes curly braces from subscripted variables
+    expr = parse_latex(r'a_b \cdot b')
+    assert pycode(expr) == 'a_b*b'
+    expr = parse_latex(r'a_{11} \cdot b')
+    assert pycode(expr) == 'a_11*b'
 
 
 def test_sqrt():

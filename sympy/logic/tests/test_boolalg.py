@@ -21,9 +21,8 @@ from sympy.logic.boolalg import (
 from sympy.assumptions.cnf import CNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
-from sympy.utilities.iterables import cartes
 
-from itertools import combinations, permutations
+from itertools import combinations, permutations, product
 
 A, B, C, D = symbols('A:D')
 a, b, c, d, e, w, x, y, z = symbols('a:e w:z')
@@ -760,7 +759,7 @@ def test_true_false():
     assert ~true is false
     assert ~false is true
 
-    for T, F in cartes([True, true], [False, false]):
+    for T, F in product((True, true), (False, false)):
         assert And(T, F) is false
         assert And(F, T) is false
         assert And(F, F) is false
@@ -930,6 +929,20 @@ def test_integer_to_term():
     assert integer_to_term(123, 3) == [1, 1, 1, 1, 0, 1, 1]
     assert integer_to_term(456, 16) == [0, 0, 0, 0, 0, 0, 0, 1,
                                         1, 1, 0, 0, 1, 0, 0, 0]
+
+def test_issue_21971():
+    a, b, c, d = symbols('a b c d')
+    f = a & b & c | a & c
+    assert f.subs(a & c, d) == b & d | d
+    assert f.subs(a & b & c, d) == a & c | d
+
+    f = (a | b | c) & (a | c)
+    assert f.subs(a | c, d) == (b | d) & d
+    assert f.subs(a | b | c, d) == (a | c) & d
+
+    f = (a ^ b ^ c) & (a ^ c)
+    assert f.subs(a ^ c, d) == (b ^ d) & d
+    assert f.subs(a ^ b ^ c, d) == (a ^ c) & d
 
 
 def test_truth_table():
