@@ -1,5 +1,6 @@
-from sympy import Symbol, Rational, S
-from sympy.geometry import Circle, Ellipse, Line, Point, Polygon, Ray, RegularPolygon, Segment, Triangle
+from sympy import Symbol, Rational, S, pi
+from sympy.geometry import (Circle, Ellipse, Point, Line, Line, 
+    Plane, Curve, Polygon, Ray, RegularPolygon, Segment, Triangle)
 from sympy.geometry.entity import scale, GeometryEntity
 from sympy.testing.pytest import raises
 
@@ -95,3 +96,24 @@ def test_reflect_entity_overrides():
                 break
     assert not rvert
     assert pent.area.equals(-rpent.area)
+
+
+def test_geometry_EvalfMixin():
+	x = pi
+	y = x.n(2)
+
+	for g in [
+			Point(x, x),
+			Plane(Point(0, x), Point(x, 0), Point(x, x)),
+			Curve((x*t, x), (t, 0, x)),
+			Ellipse((x, x), x, 2*x),
+			Circle((x, x), x),
+			Line((0, x), (x, 0)),
+			Segment((0, x), (x, 0)),
+			Ray((0, x), (x, 0)),
+			Parabola((0, x), Line((-x, 0), (x, 0))),
+			Polygon((0, 0), (0, x), (x, 0), (x, x)),
+			RegularPolygon((0, x), x, 4),
+			Triangle((0, 0), (x, 0), (x, x)),
+			]:
+		assert g.n(2) == g.xreplace({x:y})
