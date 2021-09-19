@@ -38,9 +38,10 @@ With respect to the signal matrix in time-domain, also known as the *impulse res
 
 Solution-
 
+    >>> # Imports
     >>> from sympy import Matrix, laplace_transform, inverse_laplace_transform, exp, cos, sqrt, sin, pprint
-    >>> from sympy.physics.control import *
     >>> from sympy.abc import s, t
+    >>> from sympy.physics.control import *
 
     Subpart 1
 
@@ -73,7 +74,9 @@ Solution-
 	[[[-1, -1], [-2]], [[-2, -1], [-1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]]]
 	>>> G.elem_zeros()
 	[[[0], []], [[-3/4], [4]]]
-	>>> pole_zero_plot(TransferFunction(s, s**2 + 2*s + 1, s))   # doctest: +SKIP
+	>>> pole_zero_plot(G[0, 0])   # doctest: +SKIP
+
+    .. image:: https://user-images.githubusercontent.com/53227127/133929754-c3253709-d766-44d6-a472-4623b89beb35.png
 
     Subpart 4
 
@@ -85,14 +88,24 @@ Solution-
     s  + 2*s + 1
     >>> step_response_plot(tf1)  # doctest: +SKIP
 
+    .. image:: https://user-images.githubusercontent.com/53227127/133929755-694da2b1-4097-4e28-9a61-00bc055c5e7f.png
 
-    .. image:: https://user-images.githubusercontent.com/53227127/120837901-e5ff4980-c584-11eb-8b97-211680cfceb9.png
+    Subpart 5
 
+    >>> tf2 = G[0, 1]
+    >>> bode_magnitude_plot(tf2)  # doctest: +SKIP
+
+    .. image:: https://user-images.githubusercontent.com/53227127/133929749-cb150528-ed5a-41dc-89dc-6b45eff22f4f.png
+
+    >>> bode_phase_plot(tf2)  # doctest: +SKIP
+
+    .. image:: https://user-images.githubusercontent.com/53227127/133929753-def77202-2d05-47eb-8e09-c1f049d60186.png
 
     Subpart 6
 
-	>>> P_mat = Matrix([[1/s, 2/(2+s)],[0, 3]])
-	>>> C_mat = Matrix([[1, 1],[2, 2]])
+	>>> P_mat = Matrix([[1/s, 2/(2+s)], [0, 3]])
+	>>> C_mat = Matrix([[1, 1], [2, 2]])
+
     >>> P = TransferFunctionMatrix.from_Matrix(P_mat, var=s)
     >>> C = TransferFunctionMatrix.from_Matrix(C_mat, var=s)
     >>> # Series equivalent, considering (Input)→[P]→[C]→(Output). Note that order of matrix multiplication is opposite to the order in which the elements are arranged.
@@ -113,6 +126,7 @@ Solution-
     [0    3  ]    [2  2]   
     [-    -  ]    [-  -]   
     [1    1  ]{t} [1  1]{t}
+    
 	>>> pprint((P*C).doit())  # doctest: +SKIP
 	[ 5*s + 2    5*s + 2 ]   
 	[---------  ---------]   
