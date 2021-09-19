@@ -215,6 +215,6 @@ Solution-
     >>> sys6 = sys6.doit(cancel=True, expand=True)  # Simplified TransferFunction form
     >>> sys6
     TransferFunction(s**4 + 3*s**3 + 3*s**2 + 3*s + 2, 12*s**5 + 193*s**4 + 873*s**3 + 1644*s**2 + 1484*s + 712, s)
-    >>> pole_zero_plot(sys6)
+    >>> pole_zero_plot(sys6)  # doctest: +SKIP
 
     .. image:: https://user-images.githubusercontent.com/53227127/133937647-3c10af10-8f9a-4fec-af57-1115159b17fa.png
