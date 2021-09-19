@@ -434,7 +434,6 @@ class MinMaxBase(Expr, LatticeOp):
         >>> Min(a, Max(b, Min(c, d, Max(a, e))))
         Min(a, Max(b, Min(a, c, d)))
         """
-        from sympy.utilities.iterables import ordered
         from sympy.simplify.simplify import walk
 
         if not args:

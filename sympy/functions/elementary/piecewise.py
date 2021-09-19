@@ -534,7 +534,6 @@ class Piecewise(Function):
         # following papers;
         #     http://portal.acm.org/citation.cfm?id=281649
         #     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4127&rep=rep1&type=pdf
-        from sympy.core.symbol import Dummy
 
         if a is None or b is None:
             # In this case, it is just simple substitution
@@ -1087,7 +1086,7 @@ def piecewise_fold(expr):
             else:
                 new_args.append((e, c))
     else:
-        from sympy.utilities.iterables import cartes, sift, common_prefix
+        from sympy.utilities.iterables import cartes, common_prefix
         # Given
         #     P1 = Piecewise((e11, c1), (e12, c2), A)
         #     P2 = Piecewise((e21, c1), (e22, c2), B)

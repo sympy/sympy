@@ -477,7 +477,7 @@ class exp(ExpBase, metaclass=ExpMeta):
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import ceiling, limit, Order, powsimp, Wild, expand_complex
+        from sympy import ceiling, limit, Order, powsimp, expand_complex
         arg = self.exp
         arg_series = arg._eval_nseries(x, n=n, logx=logx)
         if arg_series.is_Order:

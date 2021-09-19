@@ -1342,8 +1342,7 @@ class expint(Function):
 
     @classmethod
     def eval(cls, nu, z):
-        from sympy import (unpolarify, expand_mul, uppergamma, exp, gamma,
-                           factorial)
+        from sympy import (unpolarify, expand_mul, uppergamma, gamma)
         nu2 = unpolarify(nu)
         if nu != nu2:
             return expint(nu2, z)
@@ -1364,7 +1363,6 @@ class expint(Function):
             return (exp(2*I*pi*nu*n) - 1)*z**(nu - 1)*gamma(1 - nu) + expint(nu, z)
 
     def fdiff(self, argindex):
-        from sympy import meijerg
         nu, z = self.args
         if argindex == 1:
             return -z**(nu - 1)*meijerg([], [1, 1], [0, 0, 1 - nu], [], z)
@@ -1378,7 +1376,7 @@ class expint(Function):
         return z**(nu - 1)*uppergamma(1 - nu, z)
 
     def _eval_rewrite_as_Ei(self, nu, z, **kwargs):
-        from sympy import exp_polar, unpolarify, exp, factorial
+        from sympy import exp_polar, unpolarify
         if nu == 1:
             return -Ei(z*exp_polar(-I*pi)) - I*pi
         elif nu.is_Integer and nu > 1:
@@ -1776,7 +1774,7 @@ class TrigonometricIntegral(Function):
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE this is fairly inefficient
-        from sympy import log, EulerGamma, Pow
+        from sympy import EulerGamma, Pow
         n += 1
         if self.args[0].subs(x, 0) != 0:
             return super()._eval_nseries(x, n, logx)

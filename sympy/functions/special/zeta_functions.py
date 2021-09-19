@@ -120,7 +120,7 @@ class lerchphi(Function):
     """
 
     def _eval_expand_func(self, **hints):
-        from sympy import exp, I, floor, Add, Poly, Dummy, exp_polar, unpolarify
+        from sympy import exp, floor, Poly, Dummy, unpolarify
         z, s, a = self.args
         if z == 1:
             return zeta(s, a)
@@ -337,7 +337,7 @@ class polylog(Function):
         return z*lerchphi(z, s, 1)
 
     def _eval_expand_func(self, **hints):
-        from sympy import log, expand_mul, Dummy
+        from sympy import expand_mul, Dummy
         s, z = self.args
         if s == 1:
             return -log(1 - z)
