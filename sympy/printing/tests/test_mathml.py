@@ -1948,7 +1948,7 @@ def test_mathml_SingularityFunction():
 
 
 def test_mathml_matrix_functions():
-    from sympy.matrices import MatrixSymbol, Adjoint, Inverse, Transpose
+    from sympy.matrices import Adjoint, Inverse, Transpose
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
     assert mathml(Adjoint(X), printer='presentation') == \

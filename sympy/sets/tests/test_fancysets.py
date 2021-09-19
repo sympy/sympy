@@ -674,7 +674,7 @@ def test_intersections():
 
 
 def test_infinitely_indexed_set_1():
-    from sympy.abc import n, m, t
+    from sympy.abc import n, m
     assert imageset(Lambda(n, n), S.Integers) == imageset(Lambda(m, m), S.Integers)
 
     assert imageset(Lambda(n, 2*n), S.Integers).intersect(
@@ -711,7 +711,6 @@ def test_infinitely_indexed_set_2():
 
 
 def test_imageset_intersect_real():
-    from sympy import I
     from sympy.abc import n
     assert imageset(Lambda(n, n + (n - 1)*(n + 1)*I), S.Integers).intersect(S.Reals) == FiniteSet(-1, 1)
     im = (n - 1)*(n + S.Half)
@@ -813,7 +812,7 @@ def test_imageset_intersect_diophantine():
 
 
 def test_infinitely_indexed_set_3():
-    from sympy.abc import n, m, t
+    from sympy.abc import n, m
     assert imageset(Lambda(m, 2*pi*m), S.Integers).intersect(
             imageset(Lambda(n, 3*pi*n), S.Integers)).dummy_eq(
         ImageSet(Lambda(t, 6*pi*t), S.Integers))
@@ -835,7 +834,6 @@ def test_ImageSet_simplification():
 
 
 def test_ImageSet_contains():
-    from sympy.abc import x
     assert (2, S.Half) in imageset(x, (x, 1/x), S.Integers)
     assert imageset(x, x + I*3, S.Integers).intersection(S.Reals) is S.EmptySet
     i = Dummy(integer=True)

@@ -628,7 +628,6 @@ def test_function_subclass_different_name():
 
 
 def test_hyper_printing():
-    from sympy import pi
     from sympy.abc import x, z
 
     assert latex(meijerg(Tuple(pi, pi, x), Tuple(1),
@@ -1619,8 +1618,6 @@ def test_custom_symbol_names():
 
 
 def test_matAdd():
-    from sympy import MatrixSymbol
-    from sympy.printing.latex import LatexPrinter
     C = MatrixSymbol('C', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     l = LatexPrinter()
@@ -1631,8 +1628,6 @@ def test_matAdd():
 
 
 def test_matMul():
-    from sympy import MatrixSymbol
-    from sympy.printing.latex import LatexPrinter
     A = MatrixSymbol('A', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     x = Symbol('x')
@@ -1857,7 +1852,7 @@ def test_Tr():
 
 
 def test_Adjoint():
-    from sympy.matrices import MatrixSymbol, Adjoint, Inverse, Transpose
+    from sympy.matrices import Adjoint, Inverse, Transpose
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
     assert latex(Adjoint(X)) == r'X^{\dagger}'
@@ -1888,7 +1883,7 @@ def test_Transpose():
 
 
 def test_Hadamard():
-    from sympy.matrices import MatrixSymbol, HadamardProduct, HadamardPower
+    from sympy.matrices import HadamardProduct, HadamardPower
     from sympy.matrices.expressions import MatAdd, MatMul, MatPow
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
@@ -1912,7 +1907,6 @@ def test_Hadamard():
 
 
 def test_ElementwiseApplyFunction():
-    from sympy.matrices import MatrixSymbol
     X = MatrixSymbol('X', 2, 2)
     expr = (X.T*X).applyfunc(sin)
     assert latex(expr) == r"{\left( d \mapsto \sin{\left(d \right)} \right)}_{\circ}\left({X^{T} X}\right)"
@@ -2568,7 +2562,6 @@ def test_multiline_latex():
     raises(ValueError, lambda: multiline_latex(f, expr, environment="foo"))
 
 def test_issue_15353():
-    from sympy import ConditionSet, Tuple, S, sin, cos
     a, x = symbols('a x')
     # Obtained from nonlinsolve([(sin(a*x)),cos(a*x)],[x,a])
     sol = ConditionSet(

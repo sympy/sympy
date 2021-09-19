@@ -1336,7 +1336,6 @@ class ComplexRegion(Set):
 
     def _contains(self, other):
         from sympy.functions import arg, Abs
-        from sympy.core.containers import Tuple
         other = sympify(other)
         isTuple = isinstance(other, Tuple)
         if isTuple and len(other) != 2:

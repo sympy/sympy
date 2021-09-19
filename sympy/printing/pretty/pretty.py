@@ -785,7 +785,6 @@ class PrettyPrinter(Printer):
 
     def _print_MatrixElement(self, expr):
         from sympy.matrices import MatrixSymbol
-        from sympy import Symbol
         if (isinstance(expr.parent, MatrixSymbol)
                 and expr.i.is_number and expr.j.is_number):
             return self._print(
@@ -2706,7 +2705,6 @@ class PrettyPrinter(Printer):
 
     def _print_DiagramGrid(self, grid):
         from sympy.matrices import Matrix
-        from sympy import Symbol
         matrix = Matrix([[grid[i, j] if grid[i, j] else Symbol(" ")
                           for j in range(grid.width)]
                          for i in range(grid.height)])
