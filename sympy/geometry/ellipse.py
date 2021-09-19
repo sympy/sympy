@@ -8,6 +8,7 @@ Contains
 
 from sympy import Expr, Eq
 from sympy.core import S, pi, sympify
+from sympy.core.evalf import prec_to_dps
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
@@ -1604,6 +1605,13 @@ class Circle(Ellipse):
                 return GeometryEntity.__new__(cls, c, r, **kwargs)
 
             raise GeometryError("Circle.__new__ received unknown arguments")
+
+    def _eval_evalf(self, prec=15, **options):
+        pt, r = self.args
+        dps = prec_to_dps(prec)
+        pt = pt.evalf(n=dps, **options)
+        r = r.evalf(n=dps, **options)
+        return self.func(pt, r, evaluate=False)
 
     @property
     def circumference(self):

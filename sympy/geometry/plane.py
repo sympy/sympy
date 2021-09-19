@@ -8,6 +8,7 @@ Plane
 
 from sympy import simplify  # type:ignore
 from sympy.core import Dummy, Rational, S, Symbol
+from sympy.core.evalf import prec_to_dps
 from sympy.core.symbol import _symbol
 from sympy.core.compatibility import is_sequence
 from sympy.functions.elementary.trigonometric import cos, sin, acos, asin, sqrt
@@ -60,8 +61,9 @@ class Plane(GeometryEntity):
             normal_vector = tuple(Matrix(a).cross(Matrix(b)))
         else:
             a = kwargs.pop('normal_vector', a)
+            evaluate = kwargs.get('evaluate', True)
             if is_sequence(a) and len(a) == 3:
-                normal_vector = Point3D(a).args
+                normal_vector = Point3D(a).args if evaluate else a
             else:
                 raise ValueError(filldedent('''
                     Either provide 3 3D points or a point with a
@@ -85,6 +87,13 @@ class Plane(GeometryEntity):
             return d.equals(0)
         except TypeError:
             return False
+
+    def _eval_evalf(self, prec=15, **options):
+        pt, tup = self.args
+        dps = prec_to_dps(prec)
+        pt = pt.evalf(n=dps, **options)
+        tup = tuple([i.evalf(n=dps, **options) for i in tup])
+        return self.func(pt, normal_vector=tup, evaluate=False)
 
     def angle_between(self, o):
         """Angle between the plane and other geometric entity.

@@ -1,5 +1,6 @@
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
 from sympy.core.compatibility import as_int, ordered
+from sympy.core.evalf import prec_to_dps
 from sympy.core.symbol import _symbol, Dummy, symbols
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
@@ -1485,6 +1486,12 @@ class RegularPolygon(Polygon):
         obj._radius = r
         obj._rot = rot % (2*S.Pi/n) if rot.is_number else rot
         return obj
+
+    def _eval_evalf(self, prec=15, **options):
+        c, r, n, a = self.args
+        dps = prec_to_dps(prec)
+        c, r, a = [i.evalf(n=dps, **options) for i in (c, r, a)]
+        return self.func(c, r, n, a)
 
     @property
     def args(self):
