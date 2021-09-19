@@ -120,7 +120,6 @@ def _separate_sq(p):
     -x**8 + 48*x**6 - 536*x**4 + 1728*x**2 - 400
 
     """
-    from sympy.utilities.iterables import sift
     def is_sqrt(expr):
         return expr.is_Pow and expr.exp is S.Half
     # p = c1*sqrt(q1) + ... + cn*sqrt(qn) -> a = [(c1, q1), .., (cn, qn)]
@@ -182,8 +181,6 @@ def _minimal_polynomial_sq(p, n, x):
     x**12 - 4*x**9 - 4*x**6 + 16*x**3 - 8
 
     """
-    from sympy.simplify.simplify import _is_sum_surds
-
     p = sympify(p)
     n = sympify(n)
     if not n.is_Integer or not n > 0 or not _is_sum_surds(p):
@@ -436,7 +433,6 @@ def _minpoly_cos(ex, x):
     Returns the minimal polynomial of ``cos(ex)``
     see http://mathworld.wolfram.com/TrigonometryAngles.html
     """
-    from sympy import sqrt
     c, a = ex.args[0].as_coeff_Mul()
     if a is pi:
         if c.is_rational:
@@ -680,7 +676,6 @@ def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None):
     x**2 - y
 
     """
-    from sympy.polys.polytools import degree
     from sympy.polys.domains import FractionField
     from sympy.core.basic import preorder_traversal
 
@@ -736,7 +731,6 @@ def _minpoly_groebner(ex, x, cls):
     x**2 - 2*x - 1
 
     """
-    from sympy.polys.polytools import degree
     from sympy.core.function import expand_multinomial
 
     generator = numbered_symbols('a', cls=Dummy)

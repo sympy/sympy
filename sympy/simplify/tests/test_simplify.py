@@ -505,7 +505,7 @@ def test_issue_5950():
 
 
 def test_posify():
-    from sympy.abc import x
+    x = symbols('x')
 
     assert str(posify(
         x +
@@ -516,7 +516,6 @@ def test_posify():
     assert log(eq).expand().subs(rep) == -log(x)
     assert str(posify([x, 1 + x])) == '([_x, _x + 1], {_x: x})'
 
-    x = symbols('x')
     p = symbols('p', positive=True)
     n = symbols('n', negative=True)
     orig = [x, n, p]
@@ -542,7 +541,6 @@ def test_posify():
 
 def test_issue_4194():
     # simplify should call cancel
-    from sympy.abc import x, y
     f = Function('f')
     assert simplify((4*x + 6*f(y))/(2*x + 3*f(y))) == 2
 
@@ -608,7 +606,7 @@ def test_signsimp():
 
 
 def test_besselsimp():
-    from sympy import besselj, besseli, cosh, cosine_transform, bessely
+    from sympy import besselj, besseli, cosine_transform, bessely
     assert besselsimp(exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))) == \
         besselj(y, z)
     assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \

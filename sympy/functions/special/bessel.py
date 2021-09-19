@@ -16,7 +16,7 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.complexes import re, im
-from sympy.functions.special.gamma_functions import gamma, digamma
+from sympy.functions.special.gamma_functions import gamma, digamma, uppergamma
 from sympy.functions.special.hyper import hyper
 from sympy.polys.orthopolys import spherical_bessel_fn
 
@@ -1084,7 +1084,7 @@ def jn_zeros(n, k, method="sympy", dps=15):
 
 
     """
-    from math import pi
+    from math import pi as math_pi
 
     if method == "sympy":
         from mpmath import besseljzero
@@ -1113,13 +1113,13 @@ def jn_zeros(n, k, method="sympy", dps=15):
         return root
 
     # we need to approximate the position of the first root:
-    root = n + pi
+    root = n + math_pi
     # determine the first root exactly:
     root = solver(f, root)
     roots = [root]
     for i in range(k - 1):
         # estimate the position of the next root using the last root + pi:
-        root = solver(f, root + pi)
+        root = solver(f, root + math_pi)
         roots.append(root)
     return roots
 
@@ -1876,7 +1876,6 @@ class marcumq(Function):
 
     @classmethod
     def eval(cls, m, a, b):
-        from sympy import exp, uppergamma
         if a is S.Zero:
             if m is S.Zero and b is S.Zero:
                 return S.Zero
@@ -1921,7 +1920,6 @@ class marcumq(Function):
 
     def _eval_rewrite_as_besseli(self, m, a, b, **kwargs):
         if a == b:
-            from sympy import exp
             if m == 1:
                 return (1 + exp(-a**2) * besseli(0, a**2)) / 2
             if m.is_Integer and m >= 2:

@@ -845,7 +845,6 @@ def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, si
 def sum_add(self, other, method=0):
     """Helper function for Sum simplification"""
     from sympy.concrete.summations import Sum
-    from sympy import Mul
 
     #we know this is something in terms of a constant * a sum
     #so we temporarily put the constants inside for simplification
