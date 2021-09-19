@@ -34,14 +34,12 @@ name: Run Sage CI
 on:
   push:
     branches:
-      master
-  workflow_dispatch:
-    # Allow to run manually
-    branches:
       - master
       # run on release branches
       # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#patterns-to-match-branches-and-tags
       - "[1-9].[0-9]+*"
+  workflow_dispatch:
+    # Allow to run manually
 
 env:
   # Ubuntu packages to install so that the project's "make dist" can succeed
