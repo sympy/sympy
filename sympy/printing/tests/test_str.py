@@ -916,7 +916,6 @@ def test_UniversalSet():
 
 
 def test_PrettyPoly():
-    from sympy.polys.domains import QQ
     F = QQ.frac_field(x, y)
     R = QQ[x, y]
     assert sstr(F.convert(x/(x + y))) == sstr(x/(x + y))
@@ -953,8 +952,6 @@ def test_issue_6387():
 
 
 def test_MatMul_MatAdd():
-    from sympy import MatrixSymbol
-
     X, Y = MatrixSymbol("X", 2, 2), MatrixSymbol("Y", 2, 2)
     assert str(2*(X + Y)) == "2*X + 2*Y"
 

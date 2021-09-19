@@ -318,7 +318,6 @@ def test_Permutation():
     sT(Permutation(1, 2), "Permutation(1, 2)", import_stmt)
 
 def test_dict():
-    from sympy import srepr
     from sympy.abc import x, y, z
     d = {}
     assert srepr(d) == "{}"
@@ -333,7 +332,6 @@ def test_dict():
     assert srepr(d) == "{Symbol('x'): {Symbol('y'): Symbol('z')}}"
 
 def test_set():
-    from sympy import srepr
     from sympy.abc import x, y
     s = set()
     assert srepr(s) == "set()"

@@ -1690,7 +1690,7 @@ class LatexPrinter(Printer):
             return r"%s^{\dagger}" % self._print(mat)
 
     def _print_MatMul(self, expr):
-        from sympy import MatMul, Mul
+        from sympy import MatMul
 
         parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
                                              False)

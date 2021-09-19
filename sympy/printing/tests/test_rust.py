@@ -203,8 +203,6 @@ def test_ITE():
 
 
 def test_Indexed():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o = symbols('n m o', integer=True)
     i, j, k = Idx('i', n), Idx('j', m), Idx('k', o)
 
@@ -231,8 +229,6 @@ def test_dummy_loops():
 
 
 def test_loops():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     m, n = symbols('m n', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
@@ -263,8 +259,6 @@ def test_loops():
 
 
 def test_loops_multiple_contractions():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -290,8 +284,6 @@ def test_loops_multiple_contractions():
 
 
 def test_loops_addfactor():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     m, n, o, p = symbols('m n o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
