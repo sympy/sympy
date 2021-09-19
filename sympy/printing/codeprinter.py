@@ -417,6 +417,9 @@ class CodePrinter(StrPrinter):
 
     _print_Expr = _print_Function
 
+    # Don't inherit the str-printer method for Heaviside to the code printers
+    _print_Heaviside = None
+
     def _print_NumberSymbol(self, expr):
         if self._settings.get("inline", False):
             return self._print(Float(expr.evalf(self._settings["precision"])))
