@@ -1,9 +1,14 @@
 from functools import wraps
 
-from sympy import Add, S, pi, I, Rational, Wild, cacheit, sympify
+from sympy.core import S
+from sympy.core.add import Add
+from sympy.core.cache import cacheit
 from sympy.core.function import Function, ArgumentIndexError, _mexpand
 from sympy.core.logic import fuzzy_or, fuzzy_not
+from sympy.core.numbers import Rational, pi, I
 from sympy.core.power import Pow
+from sympy.core.symbol import Dummy, Wild
+from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.integers import ceiling
@@ -13,7 +18,7 @@ from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.complexes import re, im
 from sympy.functions.special.gamma_functions import gamma, digamma
 from sympy.functions.special.hyper import hyper
-from sympy.polys.orthopolys import spherical_bessel_fn as fn
+from sympy.polys.orthopolys import spherical_bessel_fn
 
 # TODO
 # o Scorer functions G1 and G2
@@ -701,12 +706,14 @@ class SphericalBesselBase(BesselBase):
 
 
 def _jn(n, z):
-    return fn(n, z)*sin(z) + (-1)**(n + 1)*fn(-n - 1, z)*cos(z)
+    return (spherical_bessel_fn(n, z)*sin(z) +
+            (S.NegativeOne)**(n + 1)*spherical_bessel_fn(-n - 1, z)*cos(z))
 
 
 def _yn(n, z):
     # (-1)**(n + 1) * _jn(-n - 1, z)
-    return (-1)**(n + 1) * fn(-n - 1, z)*sin(z) - fn(n, z)*cos(z)
+    return ((S.NegativeOne)**(n + 1) * spherical_bessel_fn(-n - 1, z)*sin(z) -
+            spherical_bessel_fn(n, z)*cos(z))
 
 
 class jn(SphericalBesselBase):
@@ -1893,7 +1900,6 @@ class marcumq(Function):
             return 1 - 1 / exp(a**2*S.Half)
 
     def fdiff(self, argindex=2):
-        from sympy import exp
         m, a, b = self.args
         if argindex == 2:
             return a * (-marcumq(m, a, b) + marcumq(1+m, a, b))
@@ -1903,15 +1909,15 @@ class marcumq(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Integral(self, m, a, b, **kwargs):
-        from sympy import Integral, exp, Dummy, oo
+        from sympy.integrals.integrals import Integral
         x = kwargs.get('x', Dummy('x'))
         return a ** (1 - m) * \
-               Integral(x**m * exp(-(x**2 + a**2)/2) * besseli(m-1, a*x), [x, b, oo])
+               Integral(x**m * exp(-(x**2 + a**2)/2) * besseli(m-1, a*x), [x, b, S.Infinity])
 
     def _eval_rewrite_as_Sum(self, m, a, b, **kwargs):
-        from sympy import Sum, exp, Dummy, oo
+        from sympy.concrete.summations import Sum
         k = kwargs.get('k', Dummy('k'))
-        return exp(-(a**2 + b**2) / 2) * Sum((a/b)**k * besseli(k, a*b), [k, 1-m, oo])
+        return exp(-(a**2 + b**2) / 2) * Sum((a/b)**k * besseli(k, a*b), [k, 1-m, S.Infinity])
 
     def _eval_rewrite_as_besseli(self, m, a, b, **kwargs):
         if a == b:
