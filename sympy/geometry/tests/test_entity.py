@@ -101,7 +101,7 @@ def test_reflect_entity_overrides():
 def test_geometry_EvalfMixin():
 	x = pi
 	y = x.n(2)
-
+    t = Symbol('t')
 	for g in [
 			Point(x, x),
 			Plane(Point(0, x), Point(x, 0), Point(x, x)),
