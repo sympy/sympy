@@ -126,8 +126,17 @@ Solution-
     [0    3  ]    [2  2]   
     [-    -  ]    [-  -]   
     [1    1  ]{t} [1  1]{t}
-    
-	>>> pprint((P*C).doit())  # doctest: +SKIP
+
+    >>> pprint((C*P).doit())
+    [1  3*s + 8 ]   
+    [-  ------- ]   
+    [s   s + 2  ]   
+    [           ]   
+    [2  6*s + 16]   
+    [-  --------]   
+    [s   s + 2  ]{t}
+
+	>>> pprint((P*C).doit())
 	[ 5*s + 2    5*s + 2 ]   
 	[---------  ---------]   
 	[s*(s + 2)  s*(s + 2)]   
@@ -150,3 +159,62 @@ Solution-
     [---------------  ---------------]   
     [   2                2           ]   
     [7*s  + 19*s + 2  7*s  + 19*s + 2]{t}
+
+
+
+Example 2
+---------
+
+        .. image:: https://user-images.githubusercontent.com/53227127/133931743-550bfbd7-ef6a-47e7-9661-2f6b70959815.png
+    
+    Given,
+
+    $G1 = \frac{1}{10 + s}$
+
+    $G2 = \frac{1}{1 + s}$
+
+    $G3 = \frac{1 + s^2}{4 + 4s + s^2}$
+
+    $G4 = \frac{1 + s}{6 + s}$
+
+    $H1 = \frac{1 + s}{2 + s}$
+
+    $H2 = \frac{2 \cdot (6 + s)}{1 + s}$
+
+    $H3 = 1$
+
+    Where $s$ is the variable of the transfer function (in Laplace Domain).
+
+Find - 
+
+* The equivalent Transfer Function representing the system given above.
+* Pole-Zero plot of the system. 
+
+
+Solution-
+
+    >>> from sympy.abc import s
+    >>> from sympy.physics.control import *
+    >>> G1 = TransferFunction(1, 10 + s, s)
+    >>> G2 = TransferFunction(1, 1 + s, s)
+    >>> G3 = TransferFunction(1 + s**2, 4 + 4*s + s**2, s)
+    >>> G4 = TransferFunction(1 + s, 6 + s, s)
+    >>> H1 = TransferFunction(1 + s, 2 + s, s)
+    >>> H2 = TransferFunction(2*(6 + s), 1 + s, s)
+    >>> H3 = TransferFunction(1, 1, s)
+    >>> sys1 = Series(G3, G4)
+    >>> sys2 = Feedback(sys1, H1, 1).doit()
+    >>> sys3 = Series(G2, sys2)
+    >>> sys4 = Feedback(sys3, H2).doit()
+    >>> sys5 = Series(G1, sys4)
+    >>> sys6 = Feedback(sys5, H3)
+    >>> sys6  # Final unevaluated Feedback object
+    Feedback(Series(TransferFunction(1, s + 10, s), TransferFunction((s + 1)**3*(s + 2)*(s + 6)**2*(s**2 + 1)*(-(s + 1)**2*(s**2 + 1) + (s + 2)*(s + 6)*(s**2 + 4*s + 4))*(s**2 + 4*s + 4)**2, (s + 1)*(s + 6)*(-(s + 1)**2*(s**2 + 1) + (s + 2)*(s + 6)*(s**2 + 4*s + 4))*((s + 1)**2*(s + 6)*(-(s + 1)**2*(s**2 + 1) + (s + 2)*(s + 6)*(s**2 + 4*s + 4))*(s**2 + 4*s + 4) + (s + 1)*(s + 2)*(s + 6)*(2*s + 12)*(s**2 + 1)*(s**2 + 4*s + 4))*(s**2 + 4*s + 4), s)), TransferFunction(1, 1, s), -1)
+    >>> sys6.doit()  # Reducing to TransferFunction form without simplification
+    TransferFunction((s + 1)**4*(s + 2)*(s + 6)**3*(s + 10)*(s**2 + 1)*(-(s + 1)**2*(s**2 + 1) + (s + 2)*(s + 6)*(s**2 + 4*s + 4))**2*((s + 1)**2*(s + 6)*(-(s + 1)**2*(s**2 + 1) + (s + 2)*(s + 6)*(s**2 + 4*s + 4))*(s**2 + 4*s + 4) + (s + 1)*(s + 2)*(s + 6)*(2*s + 12)*(s**2 + 1)*(s**2 + 4*s + 4))*(s**2 + 4*s + 4)**3, (s + 1)*(s + 6)*(s + 10)*(-(s + 1)**2*(s**2 + 1) + (s + 2)*(s + 6)*(s**2 + 4*s + 4))*((s + 1)**2*(s + 6)*(-(s + 1)**2*(s**2 + 1) + (s + 2)*(s + 6)*(s**2 + 4*s + 4))*(s**2 + 4*s + 4) + (s + 1)*(s + 2)*(s + 6)*(2*s + 12)*(s**2 + 1)*(s**2 + 4*s + 4))*((s + 1)**3*(s + 2)*(s + 6)**2*(s**2 + 1)*(-(s + 1)**2*(s**2 + 1) + (s + 2)*(s + 6)*(s**2 + 4*s + 4))*(s**2 + 4*s + 4)**2 + (s + 1)*(s + 6)*(s + 10)*(-(s + 1)**2*(s**2 + 1) + (s + 2)*(s + 6)*(s**2 + 4*s + 4))*((s + 1)**2*(s + 6)*(-(s + 1)**2*(s**2 + 1) + (s + 2)*(s + 6)*(s**2 + 4*s + 4))*(s**2 + 4*s + 4) + (s + 1)*(s + 2)*(s + 6)*(2*s + 12)*(s**2 + 1)*(s**2 + 4*s + 4))*(s**2 + 4*s + 4))*(s**2 + 4*s + 4), s)
+    >>> sys6 = sys6.doit(cancel=True, expand=True)  # Simplified TransferFunction form
+    >>> sys6
+    TransferFunction(s**4 + 3*s**3 + 3*s**2 + 3*s + 2, 12*s**5 + 193*s**4 + 873*s**3 + 1644*s**2 + 1484*s + 712, s)
+    >>> pole_zero_plot(sys6)
+
+    .. image:: https://user-images.githubusercontent.com/53227127/133937647-3c10af10-8f9a-4fec-af57-1115159b17fa.png
