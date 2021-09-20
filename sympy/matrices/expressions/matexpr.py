@@ -176,7 +176,6 @@ class MatrixExpr(Expr):
 
     def _eval_conjugate(self):
         from sympy.matrices.expressions.adjoint import Adjoint
-        from sympy.matrices.expressions.transpose import Transpose
         return Adjoint(Transpose(self))
 
     def as_real_imag(self, deep=True, **hints):
@@ -185,8 +184,10 @@ class MatrixExpr(Expr):
         return (real, im)
 
     def _eval_inverse(self):
-        from sympy.matrices.expressions.inverse import Inverse
         return Inverse(self)
+
+    def _eval_determinant(self):
+        return Determinant(self)
 
     def _eval_transpose(self):
         return Transpose(self)
@@ -260,6 +261,10 @@ class MatrixExpr(Expr):
     def inv(self):
         return self.inverse()
 
+    def det(self):
+        from sympy.matrices.expressions.determinant import det
+        return det(self)
+
     @property
     def I(self):
         return self.inverse()
@@ -302,9 +307,9 @@ class MatrixExpr(Expr):
             else:
                 raise IndexError("Invalid index %s" % key)
         elif isinstance(key, (Symbol, Expr)):
-                raise IndexError(filldedent('''
-                    Only integers may be used when addressing the matrix
-                    with a single index.'''))
+            raise IndexError(filldedent('''
+                Only integers may be used when addressing the matrix
+                with a single index.'''))
         raise IndexError("Invalid index, wanted %s[i,j]" % self)
 
     def as_explicit(self):
@@ -996,3 +1001,4 @@ from .matpow import MatPow
 from .transpose import Transpose
 from .inverse import Inverse
 from .special import ZeroMatrix, Identity
+from .determinant import Determinant
