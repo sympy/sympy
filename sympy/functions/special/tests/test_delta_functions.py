@@ -90,6 +90,15 @@ def test_heaviside():
     assert unchanged(Heaviside,x, nan)
     assert Heaviside(0, nan) == nan
 
+    h0  = Heaviside(x, 0)
+    h12 = Heaviside(x, S.Half)
+    h1  = Heaviside(x, 1)
+
+    assert h0.args == h0.pargs == (x, 0)
+    assert h1.args == h1.pargs == (x, 1)
+    assert h12.args == (x, S.Half)
+    assert h12.pargs == (x,) # default 1/2 suppressed
+
     assert adjoint(Heaviside(x)) == Heaviside(x)
     assert adjoint(Heaviside(x - y)) == Heaviside(x - y)
     assert conjugate(Heaviside(x)) == Heaviside(x)

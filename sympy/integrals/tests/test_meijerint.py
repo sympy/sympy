@@ -28,7 +28,7 @@ def test_rewrite_single():
     tn(x**y)
 
     def u(expr, x):
-        from sympy import Add, exp, exp_polar
+        from sympy import Add
         r = _rewrite_single(expr, x)
         e = Add(*[res[0]*res[2] for res in r[0]]).replace(
             exp_polar, exp)  # XXX Hack?
@@ -270,7 +270,7 @@ def test_bessel():
 
 
 def test_inversion():
-    from sympy import piecewise_fold, besselj, sqrt, sin, cos, Heaviside
+    from sympy import piecewise_fold, besselj, Heaviside
 
     def inv(f):
         return piecewise_fold(meijerint_inversion(f, s, t))
@@ -371,8 +371,7 @@ def test_linear_subs():
 @slow
 def test_probability():
     # various integrals from probability theory
-    from sympy.abc import x, y
-    from sympy import symbols, Symbol, Abs, expand_mul, gammasimp, powsimp, sin
+    from sympy import symbols, Symbol, Abs, expand_mul, gammasimp, powsimp
     mu1, mu2 = symbols('mu1 mu2', nonzero=True)
     sigma1, sigma2 = symbols('sigma1 sigma2', positive=True)
     rate = Symbol('lambda', positive=True)
@@ -569,7 +568,7 @@ def test_probability():
 def test_expint():
     """ Test various exponential integrals. """
     from sympy import (expint, unpolarify, Symbol, Ci, Si, Shi, Chi,
-                       sin, cos, sinh, cosh, Ei)
+                       sinh, Ei)
     assert simplify(unpolarify(integrate(exp(-z*x)/x**y, (x, 1, oo),
                 meijerg=True, conds='none'
                 ).rewrite(expint).expand(func=True))) == expint(y, z)
@@ -622,7 +621,7 @@ def test_expint():
 def test_messy():
     from sympy import (laplace_transform, Si, Shi, Chi, atan, Piecewise,
                        acoth, E1, besselj, acosh, asin, And, re,
-                       fourier_transform, sqrt)
+                       fourier_transform)
     assert laplace_transform(Si(x), x, s) == ((-atan(s) + pi/2)/s, 0, True)
 
     assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, s > 1)

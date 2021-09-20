@@ -131,7 +131,6 @@ from sympy.utilities.timeutils import timethis
 timeit = timethis('gruntz')
 
 
-
 def compare(a, b, x):
     """Returns "<" if a<b, "=" for a == b, ">" for a>b"""
     # log(exp(...)) must always be simplified here for termination

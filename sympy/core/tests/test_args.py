@@ -7,7 +7,7 @@
 import os
 import re
 
-from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
+from sympy import (Basic, S, symbols, sqrt, sin, oo, exp, Lambda, pi,
                    Eq, log, Function, Rational, Q)
 
 from sympy.testing.pytest import XFAIL, SKIP
@@ -907,7 +907,7 @@ def test_sympy__sets__sets__Union():
 
 
 def test_sympy__sets__sets__Complement():
-    from sympy.sets.sets import Complement
+    from sympy.sets.sets import Complement, Interval
     assert _test_args(Complement(Interval(0, 2), Interval(0, 1)))
 
 
@@ -929,6 +929,7 @@ def test_sympy__core__trace__Tr():
 
 def test_sympy__sets__setexpr__SetExpr():
     from sympy.sets.setexpr import SetExpr
+    from sympy.sets.sets import Interval
     assert _test_args(SetExpr(Interval(0, 1)))
 
 
@@ -1025,16 +1026,19 @@ die = DieDistribution(6)
 
 
 def test_sympy__stats__crv__ContinuousDomain():
+    from sympy.sets.sets import Interval
     from sympy.stats.crv import ContinuousDomain
     assert _test_args(ContinuousDomain({x}, Interval(-oo, oo)))
 
 
 def test_sympy__stats__crv__SingleContinuousDomain():
+    from sympy.sets.sets import Interval
     from sympy.stats.crv import SingleContinuousDomain
     assert _test_args(SingleContinuousDomain(x, Interval(-oo, oo)))
 
 
 def test_sympy__stats__crv__ProductContinuousDomain():
+    from sympy.sets.sets import Interval
     from sympy.stats.crv import SingleContinuousDomain, ProductContinuousDomain
     D = SingleContinuousDomain(x, Interval(-oo, oo))
     E = SingleContinuousDomain(y, Interval(0, oo))
@@ -1042,6 +1046,7 @@ def test_sympy__stats__crv__ProductContinuousDomain():
 
 
 def test_sympy__stats__crv__ConditionalContinuousDomain():
+    from sympy.sets.sets import Interval
     from sympy.stats.crv import (SingleContinuousDomain,
             ConditionalContinuousDomain)
     D = SingleContinuousDomain(x, Interval(-oo, oo))
@@ -1049,6 +1054,7 @@ def test_sympy__stats__crv__ConditionalContinuousDomain():
 
 
 def test_sympy__stats__crv__ContinuousPSpace():
+    from sympy.sets.sets import Interval
     from sympy.stats.crv import ContinuousPSpace, SingleContinuousDomain
     D = SingleContinuousDomain(x, Interval(-oo, oo))
     assert _test_args(ContinuousPSpace(D, nd))
@@ -1202,6 +1208,7 @@ def test_sympy__stats__rv__IndependentProductPSpace():
 
 
 def test_sympy__stats__rv__ProductDomain():
+    from sympy.sets.sets import Interval
     from sympy.stats.rv import ProductDomain, SingleDomain
     D = SingleDomain(x, Interval(-oo, oo))
     E = SingleDomain(y, Interval(0, oo))

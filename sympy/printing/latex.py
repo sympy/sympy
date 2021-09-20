@@ -1690,7 +1690,7 @@ class LatexPrinter(Printer):
             return r"%s^{\dagger}" % self._print(mat)
 
     def _print_MatMul(self, expr):
-        from sympy import MatMul, Mul
+        from sympy import MatMul
 
         parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
                                              False)
@@ -1762,11 +1762,11 @@ class LatexPrinter(Printer):
             'mat_symbol_style'])
 
     def _print_ZeroMatrix(self, Z):
-        return r"\mathbb{0}" if self._settings[
+        return "0" if self._settings[
             'mat_symbol_style'] == 'plain' else r"\mathbf{0}"
 
     def _print_OneMatrix(self, O):
-        return r"\mathbb{1}" if self._settings[
+        return "1" if self._settings[
             'mat_symbol_style'] == 'plain' else r"\mathbf{1}"
 
     def _print_Identity(self, I):
@@ -1989,7 +1989,8 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Heaviside(self, expr, exp=None):
-        tex = r"\theta\left(%s\right)" % self._print(expr.args[0])
+        pargs = ', '.join(self._print(arg) for arg in expr.pargs)
+        tex = r"\theta\left(%s\right)" % pargs
         if exp:
             tex = r"\left(%s\right)^{%s}" % (tex, exp)
         return tex

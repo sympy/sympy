@@ -277,7 +277,6 @@ def test_issue_3224():
 
 
 def test_issue_3463():
-    from sympy import symbols
     w, i = symbols('w,i')
     r = log(5)/log(3)
     p = w**(-1 + r)

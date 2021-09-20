@@ -5,16 +5,16 @@ from functools import wraps, reduce
 from operator import mul
 
 from sympy.core import (
-    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
+    S, Expr, I, Integer, Add, Tuple
 )
-from sympy.core.basic import preorder_traversal
+from sympy.core.basic import Basic, preorder_traversal
 from sympy.core.compatibility import iterable, ordered
 from sympy.core.decorators import _sympifyit
 from sympy.core.evalf import pure_complex
 from sympy.core.function import Derivative
-from sympy.core.mul import _keep_coeff
+from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.relational import Relational
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
@@ -6110,7 +6110,6 @@ def to_rational_coeffs(f):
         ``alpha`` is the rescaling factor, and ``f`` is the rescaled
         polynomial; else ``alpha`` is ``None``.
         """
-        from sympy.core.add import Add
         if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
             return None, f
         n = f.degree()

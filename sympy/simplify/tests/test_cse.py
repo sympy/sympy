@@ -330,7 +330,6 @@ def test_cse_MatrixSymbol():
     assert cse(B) == ([], [B])
 
 def test_cse_MatrixExpr():
-    from sympy import MatrixSymbol
     A = MatrixSymbol('A', 3, 3)
     y = MatrixSymbol('y', 3, 1)
 

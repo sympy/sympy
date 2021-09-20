@@ -100,7 +100,7 @@ def test_issue_11313():
 
 
 def test_series_of_Subs():
-    from sympy.abc import x, y, z
+    from sympy.abc import z
 
     subs1 = Subs(sin(x), x, y)
     subs2 = Subs(sin(x) * cos(z), x, y)

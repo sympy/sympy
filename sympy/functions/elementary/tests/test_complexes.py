@@ -774,9 +774,8 @@ def test_polarify():
 
 
 def test_unpolarify():
-    from sympy import (exp_polar, polar_lift, exp, unpolarify,
-                       principal_branch)
-    from sympy import gamma, erf, sin, tanh, uppergamma, Eq, Ne
+    from sympy import polar_lift, unpolarify, principal_branch
+    from sympy import gamma, erf, tanh, uppergamma, Ne
     from sympy.abc import x
     p = exp_polar(7*I) + 1
     u = exp(7*I) + 1
@@ -853,7 +852,7 @@ def test_derivatives_issue_4757():
 
 
 def test_issue_11413():
-    from sympy import Matrix, simplify
+    from sympy import simplify
     v0 = Symbol('v0')
     v1 = Symbol('v1')
     v2 = Symbol('v2')
@@ -867,8 +866,8 @@ def test_issue_11413():
     assert simplify(U.norm) == 1
 
 def test_periodic_argument():
-    from sympy import (periodic_argument, unbranched_argument, oo,
-                       principal_branch, polar_lift, pi)
+    from sympy import (periodic_argument, unbranched_argument,
+                       principal_branch, polar_lift)
     x = Symbol('x')
     p = Symbol('p', positive=True)
 
@@ -905,7 +904,7 @@ def test_principal_branch_fail():
 
 
 def test_principal_branch():
-    from sympy import principal_branch, polar_lift, exp_polar
+    from sympy import principal_branch, polar_lift
     p = Symbol('p', positive=True)
     x = Symbol('x')
     neg = Symbol('x', negative=True)

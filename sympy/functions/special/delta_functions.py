@@ -493,6 +493,14 @@ class Heaviside(Function):
             H0 = S.Half
         return super(cls, cls).__new__(cls, arg, H0, **options)
 
+    @property
+    def pargs(self):
+        """Args without default S.Half"""
+        args = self.args
+        if args[1] is S.Half:
+            args = args[:1]
+        return args
+
     @classmethod
     def eval(cls, arg, H0=S.Half):
         """
@@ -515,7 +523,7 @@ class Heaviside(Function):
         >>> from sympy.abc import x
 
         >>> Heaviside(x)
-        Heaviside(x, 1/2)
+        Heaviside(x)
 
         >>> Heaviside(19)
         1
@@ -625,10 +633,10 @@ class Heaviside(Function):
         sign(x**2 - 2*x + 1)/2 + 1/2
 
         >>> Heaviside(y).rewrite(sign)
-        Heaviside(y, 1/2)
+        Heaviside(y)
 
         >>> Heaviside(y**2 - 2*y + 1).rewrite(sign)
-        Heaviside(y**2 - 2*y + 1, 1/2)
+        Heaviside(y**2 - 2*y + 1)
 
         See Also
         ========

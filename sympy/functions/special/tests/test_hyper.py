@@ -55,7 +55,7 @@ def test_hyper():
 def test_expand_func():
     # evaluation at 1 of Gauss' hypergeometric function:
     from sympy.abc import a, b, c
-    from sympy import gamma, expand_func
+    from sympy import expand_func
     a1, b1, c1 = randcplx(), randcplx(), randcplx() + 5
     assert expand_func(hyper([a, b], [c], 1)) == \
         gamma(c)*gamma(-a - b + c)/(gamma(-a + c)*gamma(-b + c))

@@ -232,7 +232,6 @@ def refine_atan2(expr, assumptions):
     nan
     """
     from sympy.functions.elementary.trigonometric import atan
-    from sympy.core import S
     y, x = expr.args
     if ask(Q.real(y) & Q.positive(x), assumptions):
         return atan(y / x)

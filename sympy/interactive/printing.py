@@ -1,6 +1,5 @@
 """Tools for setting up printing in interactive sessions. """
 
-import sys
 from sympy.external.importtools import version_tuple
 from io import BytesIO
 
@@ -319,7 +318,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 def _is_ipython(shell):
     """Is a shell instance an IPython shell?"""
     # shortcut, so we don't import IPython if we don't have to
-    if 'IPython' not in sys.modules:
+    from sys import modules
+    if 'IPython' not in modules:
         return False
     try:
         from IPython.core.interactiveshell import InteractiveShell

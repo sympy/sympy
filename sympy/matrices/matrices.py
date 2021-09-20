@@ -13,7 +13,9 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, uniquely_named_symbol
 from sympy.core.sympify import sympify
 from sympy.core.sympify import _sympify
-from sympy.functions import exp, factorial, log
+from sympy.functions import factorial
+from sympy.functions.elementary.complexes import re
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import cancel
@@ -880,7 +882,6 @@ class MatrixBase(MatrixDeprecated,
         [4, 2, 2, 2, 5, 5],
         [6, 6, 7, 7, 5, 5]])
       """
-      from sympy.core.compatibility import as_int
       ntop = as_int(ntop)
       # make sure we are working with explicit matrices
       b = [i.as_explicit() if hasattr(i, 'as_explicit') else i
@@ -1648,7 +1649,6 @@ class MatrixBase(MatrixDeprecated,
 
         blocks = [cell._eval_matrix_exp_jblock() for cell in cells]
         from sympy.matrices import diag
-        from sympy import re
         eJ = diag(*blocks)
         # n = self.rows
         ret = P.multiply(eJ, dotprodsimp=None).multiply(P.inv(), dotprodsimp=None)

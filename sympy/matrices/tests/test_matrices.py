@@ -230,7 +230,7 @@ def test_power():
 
     assert Matrix([[1, 0], [1, 1]])**S.Half == Matrix([[1, 0], [S.Half, 1]])
     assert Matrix([[1, 0], [1, 1]])**0.5 == Matrix([[1.0, 0], [0.5, 1.0]])
-    from sympy.abc import a, b, n
+    from sympy.abc import n
     assert Matrix([[1, a], [0, 1]])**n == Matrix([[1, a*n], [0, 1]])
     assert Matrix([[b, a], [0, b]])**n == Matrix([[b**n, a*b**(n-1)*n], [0, b**n]])
     assert Matrix([
@@ -2551,12 +2551,10 @@ def test_adjoint():
         assert ans == cls(dat).adjoint()
 
 def test_simplify_immutable():
-    from sympy import simplify, sin, cos
     assert simplify(ImmutableMatrix([[sin(x)**2 + cos(x)**2]])) == \
                     ImmutableMatrix([[1]])
 
 def test_replace():
-    from sympy import symbols, Function, Matrix
     F, G = symbols('F, G', cls=Function)
     K = Matrix(2, 2, lambda i, j: G(i+j))
     M = Matrix(2, 2, lambda i, j: F(i+j))
@@ -2564,7 +2562,6 @@ def test_replace():
     assert N == K
 
 def test_replace_map():
-    from sympy import symbols, Function, Matrix
     F, G = symbols('F, G', cls=Function)
     with warns_deprecated_sympy():
         K = Matrix(2, 2, [(G(0), {F(0): G(0)}), (G(1), {F(1): G(1)}),

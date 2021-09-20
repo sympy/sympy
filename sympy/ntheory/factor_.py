@@ -453,7 +453,6 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     sympy.core.power.integer_nthroot
     sympy.ntheory.primetest.is_square
     """
-    from sympy.core.power import integer_nthroot
     n = as_int(n)
     if n < 3:
         if n < 1:
@@ -1446,7 +1445,6 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         - ``multiple``: Toggle returning a list of factors or dict
         - ``visual``: Toggle product form of output
     """
-    from collections import defaultdict
     if multiple:
         fac = factorrat(rat, limit=limit, use_trial=use_trial,
                   use_rho=use_rho, use_pm1=use_pm1,

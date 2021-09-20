@@ -322,7 +322,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import factor_sum, sum_combine
         from sympy.core.function import expand
-        from sympy.core.mul import Mul
 
         # split the function into adds
         terms = Add.make_args(expand(self.function))
@@ -1036,7 +1035,6 @@ def eval_sum_direct(expr, limits):
     Evaluate expression directly, but perform some simple checks first
     to possibly result in a smaller expression and faster execution.
     """
-    from sympy.core import Add
     (i, a, b) = limits
 
     dif = b - a
@@ -1287,8 +1285,6 @@ def _eval_sum_hyper(f, i, a):
 
 
 def eval_sum_hyper(f, i_a_b):
-    from sympy.logic.boolalg import And
-
     i, a, b = i_a_b
 
     if (b - a).is_Integer:

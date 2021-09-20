@@ -1161,7 +1161,7 @@ class catalan(Function):
                 return Rational(-1, 2)
 
     def fdiff(self, argindex=1):
-        from sympy import polygamma, log
+        from sympy import polygamma
         n = self.args[0]
         return catalan(n)*(polygamma(0, n + S.Half) - polygamma(0, n + 2) + log(4))
 
@@ -1513,7 +1513,6 @@ def nP(n, k=None, replacement=False):
 
 @cacheit
 def _nP(n, k=None, replacement=False):
-    from sympy.functions.combinatorial.factorials import factorial
     from sympy.core.mul import prod
 
     if k == 0:
@@ -1684,7 +1683,6 @@ def nC(n, k=None, replacement=False):
     .. [2] http://tinyurl.com/cep849r
 
     """
-    from sympy.functions.combinatorial.factorials import binomial
     from sympy.core.mul import prod
 
     if isinstance(n, SYMPY_INTS):

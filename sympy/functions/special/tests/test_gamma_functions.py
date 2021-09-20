@@ -98,7 +98,6 @@ def test_gamma_series():
 
 
 def tn_branch(s, func):
-    from sympy import I, pi, exp_polar
     from random import uniform
     c = uniform(1, 5)
     expr = func(s, c*exp_polar(I*pi)) - func(s, c*exp_polar(-I*pi))
@@ -108,7 +107,7 @@ def tn_branch(s, func):
 
 
 def test_lowergamma():
-    from sympy import meijerg, exp_polar, I, expint
+    from sympy import meijerg, expint
     assert lowergamma(x, 0) == 0
     assert lowergamma(x, y).diff(y) == y**(x - 1)*exp(-y)
     assert td(lowergamma(randcplx(), y), y)
@@ -177,7 +176,7 @@ def test_lowergamma():
 
 
 def test_uppergamma():
-    from sympy import meijerg, exp_polar, I, expint
+    from sympy import meijerg, expint
     assert uppergamma(4, 0) == 6
     assert uppergamma(x, y).diff(y) == -y**(x - 1)*exp(-y)
     assert td(uppergamma(randcplx(), y), y)
@@ -225,8 +224,6 @@ def test_uppergamma():
 
 
 def test_polygamma():
-    from sympy import I
-
     assert polygamma(n, nan) is nan
 
     assert polygamma(0, oo) is oo
@@ -298,7 +295,6 @@ def test_polygamma():
                                                                  + zeta(ni + 1))*factorial(ni)
 
     # Polygamma of non-negative integer order is unbranched:
-    from sympy import exp_polar
     k = Symbol('n', integer=True, nonnegative=True)
     assert polygamma(k, exp_polar(2*I*pi)*x) == polygamma(k, x)
 
@@ -394,8 +390,6 @@ def test_polygamma_expand_func():
     assert e.expand(func=True, basic=False) == e
 
 def test_digamma():
-    from sympy import I
-
     assert digamma(nan) == nan
 
     assert digamma(oo) == oo
@@ -521,8 +515,6 @@ def test_loggamma():
     assert loggamma(n) == log(gamma(n))
     assert loggamma(-n) is oo
     assert loggamma(n/2) == log(2**(-n + 1)*sqrt(pi)*gamma(n)/gamma(n/2 + S.Half))
-
-    from sympy import I
 
     assert loggamma(oo) is oo
     assert loggamma(-oo) is zoo

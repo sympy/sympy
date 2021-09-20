@@ -448,7 +448,6 @@ class sin(TrigonometricFunction):
         return (sin(re)*cosh(im), cos(re)*sinh(im))
 
     def _eval_expand_trig(self, **hints):
-        from sympy import expand_mul
         from sympy.functions.special.polynomials import chebyshevt, chebyshevu
         arg = self.args[0]
         x = None
@@ -2231,13 +2230,13 @@ class asin(InverseTrigonometricFunction):
                 return R/F*x**n/n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import I, im, log
+        from sympy import im
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0.is_zero:
             return arg.as_leading_term(x)
         if x0 is S.ComplexInfinity:
-            return I*log(arg.as_leading_term(x))
+            return S.ImaginaryUnit*log(arg.as_leading_term(x))
         if cdir != 0:
             cdir = arg.dir(x, cdir)
         if im(cdir) < 0 and x0.is_real and x0 < S.NegativeOne:
@@ -2434,13 +2433,13 @@ class acos(InverseTrigonometricFunction):
                 return -R/F*x**n/n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import I, im, log
+        from sympy import im
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0 == 1:
             return sqrt(2)*sqrt((S.One - arg).as_leading_term(x))
         if x0 is S.ComplexInfinity:
-            return I*log(arg.as_leading_term(x))
+            return S.ImaginaryUnit*log(arg.as_leading_term(x))
         if cdir != 0:
             cdir = arg.dir(x, cdir)
         if im(cdir) < 0 and x0.is_real and x0 < S.NegativeOne:
@@ -3031,13 +3030,13 @@ class asec(InverseTrigonometricFunction):
         return sec
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import I, im, log
+        from sympy import im
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0 == 1:
             return sqrt(2)*sqrt((arg - S.One).as_leading_term(x))
         if x0.is_zero:
-            return I*log(arg.as_leading_term(x))
+            return S.ImaginaryUnit*log(arg.as_leading_term(x))
         if cdir != 0:
             cdir = arg.dir(x, cdir)
         if im(cdir) < 0 and x0.is_real and x0 > S.Zero and x0 < S.One:
@@ -3203,11 +3202,11 @@ class acsc(InverseTrigonometricFunction):
         return csc
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import I, im, log
+        from sympy import im
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0.is_zero:
-            return I*log(arg.as_leading_term(x))
+            return S.ImaginaryUnit*log(arg.as_leading_term(x))
         if x0 is S.ComplexInfinity:
             return arg.as_leading_term(x)
         if cdir != 0:

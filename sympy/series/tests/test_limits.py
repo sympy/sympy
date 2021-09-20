@@ -467,7 +467,6 @@ def test_issue_6366():
 
 
 def test_factorial():
-    from sympy import factorial, E
     f = factorial(x)
     assert limit(f, x, oo) is oo
     assert limit(x/f, x, oo) == 0

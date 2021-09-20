@@ -1098,7 +1098,6 @@ def test_Interval_free_symbols():
 
 
 def test_image_interval():
-    from sympy.core.numbers import Rational
     x = Symbol('x', real=True)
     a = Symbol('a', real=True)
     assert imageset(x, 2*x, Interval(-2, 1)) == Interval(-4, 2)

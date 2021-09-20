@@ -116,7 +116,6 @@ class GroupHomomorphism:
         return self._kernel
 
     def _compute_kernel(self):
-        from sympy import S
         G = self.domain
         G_order = G.order()
         if G_order is S.Infinity:
@@ -199,7 +198,6 @@ class GroupHomomorphism:
         Check if the homomorphism is surjective
 
         '''
-        from sympy import S
         im = self.image().order()
         oth = self.codomain.order()
         if im is S.Infinity and oth is S.Infinity:
