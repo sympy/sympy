@@ -281,12 +281,15 @@ class Offset(AtomicExpr):
         return "%s %s" %(printer._print(self.magnitude), printer._print(self.units))
 
     def __call__(self, other):
-        """Converts temperatures to different temperature scales"""
+        """Converts temperatures between different temperature scales"""
         from .util import convert_temperature
         return convert_temperature(self, other, unit_system="SI")
 
     def doit(self):
-        """Converts temperatures to the kelvin absolute temperature unit"""
-        from sympy.physics.units import kelvin
-        kelvin_temp = self.__call__(kelvin)
-        return kelvin_temp.magnitude * kelvin_temp.units
+        """Converts temperatures to an absolute temperature"""
+        from sympy.physics.units import UnitSystem
+        unit = self.units
+        while unit in UnitSystem._quantity_scale_offsets_global:
+            offset, unit = UnitSystem._quantity_scale_offsets_global[unit]
+        absolute_temperature = self.__call__(unit)
+        return absolute_temperature.magnitude * absolute_temperature.units
