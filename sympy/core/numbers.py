@@ -1691,6 +1691,48 @@ class Rational(Number):
         f = fractions.Fraction(self.p, self.q)
         return Rational(f.limit_denominator(fractions.Fraction(int(max_denominator))))
 
+    def limit_numerator(self, n, proper=False):
+        """Return ``self`` as ``a/b`` where `a <= n`. To deal with only
+        the proper fractional part of ``self`` (e.g. when `self > 1`) set
+        ``proper`` to True.
+
+        Examples
+        ========
+
+        >>> from sympy import Rational
+        >>> p = Rational(884279719003555, 281474976710656)
+        >>> p.limit_numerator(400)
+        355/113
+        >>> p.limit_numerator(100)
+        22/7
+
+        Since ``p`` is an improper fraction, to limit the numerator of
+        only the proper part, subtract the integer part first:
+
+        >>> ipart = int(p)
+        >>> p - ipart
+        39854788871587/281474976710656
+        >>> _.limit_numerator(100)
+        16/113
+        >>> _ + ipart
+        355/113
+
+        As a convenience, this can be done by setting the flag
+        ``proper`` to True:
+
+        >>> p.limit_numerator(100, proper=True)
+        355/113
+        """
+        if not n or not self:
+            return S.Zero
+        if self < 0:
+            return -(-self).limit_numerator(n, proper)
+        if self.p <= self.q or not proper:
+            f = Rational(self.q, self.p, gcd=1).limit_denominator(n)
+            return Rational(f.q, f.p, gcd=1)
+        i, r = divmod(self.p, self.q)
+        return i + Rational(r, self.q, gcd=1).limit_numerator(n)
+
     def __getnewargs__(self):
         return (self.p, self.q)
 
@@ -2123,6 +2165,18 @@ class Integer(Rational):
 
     def __getnewargs__(self):
         return (self.p,)
+
+    def limit_numerator(self, n, proper=False):
+        """Return smaller absolute value of ``self`` and ``n`` else,
+        if ``proper`` is True, return ``self``. This is the Integer-handling
+        of the routine defined for Rationals."""
+        if not n or not self:
+            return S.Zero
+        if self < 0:
+            return -(-self).limit_numerator(n, proper)
+        if proper:
+            return self
+        return min(Integer(as_int(n)), self)
 
     # Arithmetic operations are here for efficiency
     def __int__(self):

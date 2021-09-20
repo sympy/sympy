@@ -348,6 +348,22 @@ def test_Rational_new():
     assert n.q == 4
     assert n.p == -2
 
+    p = Rational(884279719003555, 281474976710656)
+    assert S.Zero.limit_numerator(1) == S.Zero
+    assert S.One.limit_numerator(0) == S.Zero
+    assert p.limit_numerator(400) == Rational(355, 113)
+    assert p.limit_numerator(100) == Rational(22, 7)
+    assert p.limit_numerator(100, proper=True) == Rational(355, 113)
+    assert S(2).limit_numerator(1) == S.One
+    assert S(2).limit_numerator(1, proper=True) == S(2)
+    p = -p
+    assert S.NegativeOne.limit_numerator(0) == S.Zero
+    assert p.limit_numerator(400) == -Rational(355, 113)
+    assert p.limit_numerator(100) == -Rational(22, 7)
+    assert p.limit_numerator(100, proper=True) == -Rational(355, 113)
+    assert S(-2).limit_numerator(1) == -S.One
+    assert S(-2).limit_numerator(1, proper=True) == -S(2)
+
 
 def test_Number_new():
     """"
