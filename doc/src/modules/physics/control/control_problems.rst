@@ -15,12 +15,12 @@ Example 1
 
 With respect to the signal matrix in time-domain, also known as the *impulse response matrix* (**g(t)**) given above, find -
 
-* The system matrix (Transfer Function Matrix) in the Laplace domain (**g(t)** → **G(s)**).
-* The number of input and output signals in the system.
-* **Poles** and **Zeros** of the system elements (individual TFs in TFM) in the Laplace domain *(Note: The actual poles and zeros of a MIMO system are NOT the poles and zeros of the individual elements of the transfer function matrix)*. Also, visualise the poles and zeros of the individual transfer function corresponding to the **1st input** and **1st output** of the **G(s)** matrix.
-* Plot the **unit step response** of the individual Transfer Function corresponding to the **1st input** and **1st output** of the **G(s)** matrix.
-* Analyse the Bode magnitude and phase plot of the Transfer Function corresponding to **1st input** and **2nd output** of the **G(s)** matrix.
-* The equivalent system matrix having **P(s)** and **C(s)** arranged in a series configuration *(Values of P(s) and C(s) are provided below)*. Compute the equivalent system matrix when the order of blocks is reversed *(i.e. C(s) then P(s))*.
+1. The system matrix (Transfer Function Matrix) in the Laplace domain (**g(t)** → **G(s)**).
+2. The number of input and output signals in the system.
+3. **Poles** and **Zeros** of the system elements (individual TFs in TFM) in the Laplace domain *(Note: The actual poles and zeros of a MIMO system are NOT the poles and zeros of the individual elements of the transfer function matrix)*. Also, visualise the poles and zeros of the individual transfer function corresponding to the **1st input** and **1st output** of the **G(s)** matrix.
+4. Plot the **unit step response** of the individual Transfer Function corresponding to the **1st input** and **1st output** of the **G(s)** matrix.
+5. Analyse the Bode magnitude and phase plot of the Transfer Function corresponding to **1st input** and **2nd output** of the **G(s)** matrix.
+6. The equivalent system matrix having **P(s)** and **C(s)** arranged in a series configuration *(Values of P(s) and C(s) are provided below)*. Compute the equivalent system matrix when the order of blocks is reversed *(i.e. C(s) then P(s))*.
 
         $P(s) = \begin{bmatrix}
         \frac{1}{s} & \frac{2}{s+2} \\
@@ -32,7 +32,7 @@ With respect to the signal matrix in time-domain, also known as the *impulse res
         2 & 2
         \end{bmatrix}$
 
-* Also, find the **equivalent closed-loop system** *(or the ratio v/u from the block diagram given below)* for the system (negative-feedback loop) having **C(s)** as the **controller** and **P(s)** as **plant** *(Refer to the block diagram given below)*.
+7. Also, find the **equivalent closed-loop system** *(or the ratio v/u from the block diagram given below)* for the system (negative-feedback loop) having **C(s)** as the **controller** and **P(s)** as **plant** *(Refer to the block diagram given below)*.
 
         .. image:: https://user-images.githubusercontent.com/53227127/120820301-0b368c80-c572-11eb-84c4-e372190cf0bd.png
 
@@ -62,19 +62,19 @@ Solution-
 
     >>> G = TransferFunctionMatrix.from_Matrix(G, s)
     >>> type(G)
-	<class 'sympy.physics.control.lti.TransferFunctionMatrix'>
+    <class 'sympy.physics.control.lti.TransferFunctionMatrix'>
     >>> type(G[0])
-	<class 'sympy.physics.control.lti.TransferFunction'>
+    <class 'sympy.physics.control.lti.TransferFunction'>
     >>> print(f'Inputs = {G.num_inputs}, Outputs = {G.num_outputs}')
     Inputs = 2, Outputs = 2
 
     Subpart 3
 
-	>>> G.elem_poles()
-	[[[-1, -1], [-2]], [[-2, -1], [-1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]]]
-	>>> G.elem_zeros()
-	[[[0], []], [[-3/4], [4]]]
-	>>> pole_zero_plot(G[0, 0])   # doctest: +SKIP
+    >>> G.elem_poles()
+    [[[-1, -1], [-2]], [[-2, -1], [-1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]]]
+    >>> G.elem_zeros()
+    [[[0], []], [[-3/4], [4]]]
+    >>> pole_zero_plot(G[0, 0])   # doctest: +SKIP
 
     .. image:: https://user-images.githubusercontent.com/53227127/133929754-c3253709-d766-44d6-a472-4623b89beb35.png
 
@@ -103,9 +103,8 @@ Solution-
 
     Subpart 6
 
-	>>> P_mat = Matrix([[1/s, 2/(2+s)], [0, 3]])
-	>>> C_mat = Matrix([[1, 1], [2, 2]])
-
+    >>> P_mat = Matrix([[1/s, 2/(2+s)], [0, 3]])
+    >>> C_mat = Matrix([[1, 1], [2, 2]])
     >>> P = TransferFunctionMatrix.from_Matrix(P_mat, var=s)
     >>> C = TransferFunctionMatrix.from_Matrix(C_mat, var=s)
     >>> # Series equivalent, considering (Input)→[P]→[C]→(Output). Note that order of matrix multiplication is opposite to the order in which the elements are arranged.
@@ -135,15 +134,14 @@ Solution-
     [2  6*s + 16]   
     [-  --------]   
     [s   s + 2  ]{t}
-
-	>>> pprint((P*C).doit())
-	[ 5*s + 2    5*s + 2 ]   
-	[---------  ---------]   
-	[s*(s + 2)  s*(s + 2)]   
-	[                    ]   
-	[    6          6    ]   
-	[    -          -    ]   
-	[    1          1    ]{t}
+    >>> pprint((P*C).doit())
+    [ 5*s + 2    5*s + 2 ]   
+    [---------  ---------]   
+    [s*(s + 2)  s*(s + 2)]   
+    [                    ]   
+    [    6          6    ]   
+    [    -          -    ]   
+    [    1          1    ]{t}
 
     Subpart 7
 
@@ -167,7 +165,7 @@ Example 2
 
         .. image:: https://user-images.githubusercontent.com/53227127/133931743-550bfbd7-ef6a-47e7-9661-2f6b70959815.png
     
-    Given,
+Given,
 
     $G1 = \frac{1}{10 + s}$
 
@@ -183,12 +181,12 @@ Example 2
 
     $H3 = 1$
 
-    Where $s$ is the variable of the transfer function (in Laplace Domain).
+Where $s$ is the variable of the transfer function (in Laplace Domain).
 
 Find - 
 
-* The equivalent Transfer Function representing the system given above.
-* Pole-Zero plot of the system. 
+1. The equivalent Transfer Function representing the system given above.
+2. Pole-Zero plot of the system. 
 
 
 Solution-
