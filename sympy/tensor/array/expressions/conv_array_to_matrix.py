@@ -1,5 +1,5 @@
 import itertools
-from collections import defaultdict, Counter
+from collections import defaultdict
 from typing import Tuple, Union, FrozenSet, Dict, List, Optional
 from functools import singledispatch
 from itertools import accumulate
@@ -617,27 +617,8 @@ def _a2m_transpose(arg):
 
 
 def identify_hadamard_products(expr: Union[ArrayContraction, ArrayDiagonal]):
-    mapping = _get_mapping_from_subranks(expr.subranks)
 
-    editor: _EditArrayContraction
-    if isinstance(expr, ArrayContraction):
-        editor = _EditArrayContraction(expr)
-    elif isinstance(expr, ArrayDiagonal):
-        if isinstance(expr.expr, ArrayContraction):
-            editor = _EditArrayContraction(expr.expr)
-            diagonalized = ArrayContraction._push_indices_down(expr.expr.contraction_indices, expr.diagonal_indices)
-        elif isinstance(expr.expr, ArrayTensorProduct):
-            editor = _EditArrayContraction(None)
-            editor.args_with_ind = [_ArgE(arg) for i, arg in enumerate(expr.expr.args)]
-            diagonalized = expr.diagonal_indices
-        else:
-            return expr
-
-        # Trick: add diagonalized indices as negative indices into the editor object:
-        for i, e in enumerate(diagonalized):
-            for j in e:
-                arg_pos, rel_pos = mapping[j]
-                editor.args_with_ind[arg_pos].indices[rel_pos] = -1 - i
+    editor: _EditArrayContraction = _EditArrayContraction(expr)
 
     map_contr_to_args: Dict[FrozenSet, List[_ArgE]] = defaultdict(list)
     map_ind_to_inds = defaultdict(int)
@@ -696,65 +677,7 @@ def identify_hadamard_products(expr: Union[ArrayContraction, ArrayDiagonal]):
         for i in v:
             editor.args_with_ind.remove(i)
 
-    # Count the ranks of the arguments:
-    counter = 0
-    # Create a collector for the new diagonal indices:
-    diag_indices = defaultdict(list)
-
-    count_index_freq = Counter()
-    for arg_with_ind in editor.args_with_ind:
-        count_index_freq.update(Counter(arg_with_ind.indices))
-
-    free_index_count = count_index_freq[None]
-
-    # Construct the inverse permutation:
-    inv_perm1 = []
-    inv_perm2 = []
-    # Keep track of which diagonal indices have already been processed:
-    done = set([])
-
-    # Counter for the diagonal indices:
-    counter4 = 0
-
-    for arg_with_ind in editor.args_with_ind:
-        # If some diagonalization axes have been removed, they should be
-        # permuted in order to keep the permutation.
-        # Add permutation here
-        counter2 = 0  # counter for the indices
-        for i in arg_with_ind.indices:
-            if i is None:
-                inv_perm1.append(counter4)
-                counter2 += 1
-                counter4 += 1
-                continue
-            if i >= 0:
-                continue
-            # Reconstruct the diagonal indices:
-            diag_indices[-1 - i].append(counter + counter2)
-            if count_index_freq[i] == 1 and i not in done:
-                inv_perm1.append(free_index_count - 1 - i)
-                done.add(i)
-            elif i not in done:
-                inv_perm2.append(free_index_count - 1 - i)
-                done.add(i)
-            counter2 += 1
-        # Remove negative indices to restore a proper editor object:
-        arg_with_ind.indices = [i if i is not None and i >= 0 else None for i in arg_with_ind.indices]
-        counter += len([i for i in arg_with_ind.indices if i is None or i < 0])
-
-    inverse_permutation = inv_perm1 + inv_perm2
-    permutation = _af_invert(inverse_permutation)
-
-    if isinstance(expr, ArrayContraction):
-        return editor.to_array_contraction()
-    else:
-        # Get the diagonal indices after the detection of HadamardProduct in the expression:
-        diag_indices_filtered = [tuple(v) for v in diag_indices.values() if len(v) > 1]
-
-        expr1 = editor.to_array_contraction()
-        expr2 = ArrayDiagonal(expr1, *diag_indices_filtered)
-        expr3 = PermuteDims(expr2, permutation)
-        return expr3
+    return editor.to_array_contraction()
 
 
 def identify_removable_identity_matrices(expr):

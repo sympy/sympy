@@ -1,4 +1,5 @@
 import operator
+from collections import defaultdict, Counter
 from functools import reduce
 import itertools
 from itertools import accumulate
@@ -1356,26 +1357,55 @@ class _EditArrayContraction:
     by calling the ``.to_array_contraction()`` method.
     """
 
-    def __init__(self, array_contraction: Optional[ArrayContraction]):
-        if array_contraction is None:
-            self.args_with_ind: List[_ArgE] = []
-            self.number_of_contraction_indices: int = 0
-            self._track_permutation: Optional[List[int]] = None
-            return
-        expr = array_contraction.expr
+    def __init__(self, base_array: typing.Union[ArrayContraction, ArrayDiagonal]):
+
+        expr: Expr
+        diagonalized: List[int]
+        contraction_indices: List[Tuple[int]]
+        if isinstance(base_array, ArrayContraction):
+            mapping = _get_mapping_from_subranks(base_array.subranks)
+            expr = base_array.expr
+            contraction_indices = base_array.contraction_indices
+            diagonalized = []
+        elif isinstance(base_array, ArrayDiagonal):
+
+            if isinstance(base_array.expr, ArrayContraction):
+                mapping = _get_mapping_from_subranks(base_array.expr.subranks)
+                expr = base_array.expr.expr
+                diagonalized = ArrayContraction._push_indices_down(base_array.expr.contraction_indices, base_array.diagonal_indices)
+                contraction_indices = base_array.expr.contraction_indices
+            elif isinstance(base_array.expr, ArrayTensorProduct):
+                mapping = {}
+                expr = base_array.expr
+                diagonalized = base_array.diagonal_indices
+                contraction_indices = []
+            else:
+                mapping = {}
+                expr = base_array.expr
+                diagonalized = base_array.diagonal_indices
+                contraction_indices = []
+
         if isinstance(expr, ArrayTensorProduct):
             args = list(expr.args)
         else:
             args = [expr]
+
         args_with_ind: List[_ArgE] = [_ArgE(arg) for arg in args]
-        mapping = _get_mapping_from_subranks(array_contraction.subranks)
-        for i, contraction_tuple in enumerate(array_contraction.contraction_indices):
+        for i, contraction_tuple in enumerate(contraction_indices):
             for j in contraction_tuple:
                 arg_pos, rel_pos = mapping[j]
                 args_with_ind[arg_pos].indices[rel_pos] = i
         self.args_with_ind: List[_ArgE] = args_with_ind
-        self.number_of_contraction_indices: int = len(array_contraction.contraction_indices)
+        self.number_of_contraction_indices: int = len(contraction_indices)
         self._track_permutation: Optional[List[int]] = None
+
+        mapping = _get_mapping_from_subranks(base_array.subranks)
+
+        # Trick: add diagonalized indices as negative indices into the editor object:
+        for i, e in enumerate(diagonalized):
+            for j in e:
+                arg_pos, rel_pos = mapping[j]
+                self.args_with_ind[arg_pos].indices[rel_pos] = -1 - i
 
     def insert_after(self, arg: _ArgE, new_arg: _ArgE):
         pos = self.args_with_ind.index(arg)
@@ -1410,15 +1440,71 @@ class _EditArrayContraction:
             self.args_with_ind[0].element = _a2m_tensor_product(scalar, self.args_with_ind[0].element)
 
     def to_array_contraction(self):
+
+        # Count the ranks of the arguments:
+        counter = 0
+        # Create a collector for the new diagonal indices:
+        diag_indices = defaultdict(list)
+
+        count_index_freq = Counter()
+        for arg_with_ind in self.args_with_ind:
+            count_index_freq.update(Counter(arg_with_ind.indices))
+
+        free_index_count = count_index_freq[None]
+
+        # Construct the inverse permutation:
+        inv_perm1 = []
+        inv_perm2 = []
+        # Keep track of which diagonal indices have already been processed:
+        done = set([])
+
+        # Counter for the diagonal indices:
+        counter4 = 0
+
+        for arg_with_ind in self.args_with_ind:
+            # If some diagonalization axes have been removed, they should be
+            # permuted in order to keep the permutation.
+            # Add permutation here
+            counter2 = 0  # counter for the indices
+            for i in arg_with_ind.indices:
+                if i is None:
+                    inv_perm1.append(counter4)
+                    counter2 += 1
+                    counter4 += 1
+                    continue
+                if i >= 0:
+                    continue
+                # Reconstruct the diagonal indices:
+                diag_indices[-1 - i].append(counter + counter2)
+                if count_index_freq[i] == 1 and i not in done:
+                    inv_perm1.append(free_index_count - 1 - i)
+                    done.add(i)
+                elif i not in done:
+                    inv_perm2.append(free_index_count - 1 - i)
+                    done.add(i)
+                counter2 += 1
+            # Remove negative indices to restore a proper editor object:
+            arg_with_ind.indices = [i if i is not None and i >= 0 else None for i in arg_with_ind.indices]
+            counter += len([i for i in arg_with_ind.indices if i is None or i < 0])
+
+        inverse_permutation = inv_perm1 + inv_perm2
+        permutation = _af_invert(inverse_permutation)
+
+        # Get the diagonal indices after the detection of HadamardProduct in the expression:
+        diag_indices_filtered = [tuple(v) for v in diag_indices.values() if len(v) > 1]
+
         self.merge_scalars()
         self.refresh_indices()
         args = [arg.element for arg in self.args_with_ind]
         contraction_indices = self.get_contraction_indices()
         expr = ArrayContraction(ArrayTensorProduct(*args), *contraction_indices)
         if self._track_permutation is not None:
-            permutation = _af_invert([j for i in self._track_permutation for j in i])
-            expr = PermuteDims(expr, permutation)
-        return expr
+            permutation2 = _af_invert([j for i in self._track_permutation for j in i])
+            expr = PermuteDims(expr, permutation2)
+
+        expr2 = ArrayDiagonal(expr, *diag_indices_filtered)
+        expr3 = PermuteDims(expr2, permutation)
+        return expr3
 
     def get_contraction_indices(self) -> List[List[int]]:
         contraction_indices: List[List[int]] = [[] for i in range(self.number_of_contraction_indices)]
