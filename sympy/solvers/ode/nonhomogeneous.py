@@ -188,7 +188,7 @@ def _get_const_characteristic_eq_sols(r, func, order):
     chareq, symbol = S.Zero, Dummy('x')
 
     for i in r.keys():
-        if type(i) == str or i < 0:
+        if isinstance(i, str) or i < 0:
             pass
         else:
             chareq += r[i]*symbol**i

@@ -820,7 +820,7 @@ def frac_in(f, t, *, cancel=False, **kwargs):
     where fa and fd are either basic expressions or Polys, and f == fa/fd.
     **kwargs are applied to Poly.
     """
-    if type(f) is tuple:
+    if isinstance(f, tuple):
         fa, fd = f
         f = fa.as_expr()/fd.as_expr()
     fa, fd = f.as_expr().as_numer_denom()

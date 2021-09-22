@@ -2185,7 +2185,7 @@ def from_hyper(func, x0=0, evalf=False):
 
     simp = hyperexpand(func)
 
-    if isinstance(simp, Infinity) or isinstance(simp, NegativeInfinity):
+    if simp in (Infinity, NegativeInfinity):
         return HolonomicFunction(sol, x).composition(z)
 
     def _find_conditions(simp, x, x0, order, evalf=False):
@@ -2271,7 +2271,7 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
 
     simp = hyperexpand(func)
 
-    if isinstance(simp, Infinity) or isinstance(simp, NegativeInfinity):
+    if simp in (Infinity, NegativeInfinity):
         return HolonomicFunction(sol, x).composition(z)
 
     def _find_conditions(simp, x, x0, order, evalf=False):

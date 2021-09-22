@@ -58,7 +58,7 @@ class ParametricRegion(Basic):
             bounds = Tuple(*bounds)
 
         for bound in bounds:
-            if  isinstance(bound, tuple) or isinstance(bound, Tuple):
+            if isinstance(bound, (tuple, Tuple)):
                 if len(bound) != 3:
                     raise ValueError("Tuple should be in the form (parameter, lowerbound, upperbound)")
                 parameters += (bound[0],)
@@ -66,7 +66,7 @@ class ParametricRegion(Basic):
             else:
                 parameters += (bound,)
 
-        if not (isinstance(definition, tuple) or isinstance(definition, Tuple)):
+        if not isinstance(definition, (tuple, Tuple)):
             definition = (definition,)
 
         obj = super().__new__(cls, Tuple(*definition), *bounds)

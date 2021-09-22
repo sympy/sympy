@@ -164,7 +164,7 @@ class ExprWithLimits(Expr):
 
     def __new__(cls, function, *symbols, **assumptions):
         pre = _common_new(cls, function, *symbols, **assumptions)
-        if type(pre) is tuple:
+        if isinstance(pre, tuple):
             function, limits, _ = pre
         else:
             return pre
@@ -358,7 +358,7 @@ class ExprWithLimits(Expr):
                 if len(xab[0].free_symbols.intersection(old.free_symbols)) != 0:
                     sub_into_func = False
                     break
-            if isinstance(old, AppliedUndef) or isinstance(old, UndefinedFunction):
+            if isinstance(old, (AppliedUndef, UndefinedFunction)):
                 sy2 = set(self.variables).intersection(set(new.atoms(Symbol)))
                 sy1 = set(self.variables).intersection(set(old.args))
                 if not sy2.issubset(sy1):
@@ -497,7 +497,7 @@ class AddWithLimits(ExprWithLimits):
 
     def __new__(cls, function, *symbols, **assumptions):
         pre = _common_new(cls, function, *symbols, **assumptions)
-        if type(pre) is tuple:
+        if isinstance(pre, tuple):
             function, limits, orientation = pre
         else:
             return pre

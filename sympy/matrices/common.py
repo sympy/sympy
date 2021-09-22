@@ -3234,7 +3234,7 @@ def _matrixify(mat):
 
 def a2idx(j, n=None):
     """Return integer after making positive and validating against n."""
-    if type(j) is not int:
+    if not isinstance(j, int):
         jindex = getattr(j, '__index__', None)
         if jindex is not None:
             j = jindex()

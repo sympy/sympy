@@ -682,7 +682,7 @@ def parts_rule(integral):
 
 def trig_rule(integral):
     integrand, symbol = integral
-    if isinstance(integrand, sympy.sin) or isinstance(integrand, sympy.cos):
+    if isinstance(integrand, (sympy.sin, sympy.cos)):
         arg = integrand.args[0]
 
         if not isinstance(arg, sympy.Symbol):

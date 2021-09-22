@@ -842,7 +842,7 @@ class DiagramGrid:
         # should be converted to a FiniteSet, because that is what the
         # following code expects.
 
-        if isinstance(groups, dict) or isinstance(groups, Dict):
+        if isinstance(groups, (dict, Dict)):
             finiteset_groups = {}
             for group, local_hints in groups.items():
                 finiteset_group = group_to_finiteset(group)

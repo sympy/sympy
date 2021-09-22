@@ -1152,7 +1152,7 @@ class Float(Number):
             else:
                 raise ValueError("unexpected decimal value %s" % str(num))
         elif isinstance(num, tuple) and len(num) in (3, 4):
-            if type(num[1]) is str:
+            if isinstance(num[1], str):
                 # it's a hexadecimal (coming from a pickled object)
                 num = list(num)
                 # If we're loading an object pickled in Python 2 into
@@ -1952,7 +1952,7 @@ class Rational(Number):
         rv = self._Rrel(other, '__lt__')
         if rv is None:
             rv = self, other
-        elif not type(rv) is tuple:
+        elif not isinstance(rv, tuple):
             return rv
         return Expr.__gt__(*rv)
 
@@ -1960,7 +1960,7 @@ class Rational(Number):
         rv = self._Rrel(other, '__le__')
         if rv is None:
             rv = self, other
-        elif not type(rv) is tuple:
+        elif not isinstance(rv, tuple):
             return rv
         return Expr.__ge__(*rv)
 
@@ -1968,7 +1968,7 @@ class Rational(Number):
         rv = self._Rrel(other, '__gt__')
         if rv is None:
             rv = self, other
-        elif not type(rv) is tuple:
+        elif not isinstance(rv, tuple):
             return rv
         return Expr.__lt__(*rv)
 
@@ -1976,7 +1976,7 @@ class Rational(Number):
         rv = self._Rrel(other, '__ge__')
         if rv is None:
             rv = self, other
-        elif not type(rv) is tuple:
+        elif not isinstance(rv, tuple):
             return rv
         return Expr.__le__(*rv)
 

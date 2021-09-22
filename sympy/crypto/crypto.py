@@ -65,7 +65,7 @@ def AZ(s=None):
     """
     if not s:
         return uppercase
-    t = type(s) is str
+    t = isinstance(s, str)
     if t:
         s = [s]
     rv = [check_and_join(i.upper().split(), uppercase, filter=True)

@@ -1374,7 +1374,7 @@ class MatplotlibBackend(BaseBackend):
                 collection = ax.plot_surface(x, y, z,
                     cmap=getattr(self.cm, 'viridis', self.cm.jet),
                     rstride=1, cstride=1, linewidth=0.1)
-                if isinstance(s.surface_color, (float, int)) or isinstance(s.surface_color, Callable):
+                if isinstance(s.surface_color, (float, int, Callable)):
                     color_array = s.get_color_array()
                     color_array = color_array.reshape(color_array.size)
                     collection.set_array(color_array)

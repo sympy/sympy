@@ -803,7 +803,7 @@ def sum_combine(s_t):
                 for j, s_term2 in enumerate(s_t):
                     if not used[j] and i != j:
                         temp = sum_add(s_term1, s_term2, method)
-                        if isinstance(temp, Sum) or isinstance(temp, Mul):
+                        if isinstance(temp, (Sum, Mul)):
                             s_t[i] = temp
                             s_term1 = s_t[i]
                             used[j] = True

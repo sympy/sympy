@@ -644,7 +644,7 @@ def gf_expand(F, p, K):
     [4, 3, 0, 3, 0, 1, 4, 1]
 
     """
-    if type(F) is tuple:
+    if isinstance(F, tuple):
         lc, F = F
     else:
         lc = K.one

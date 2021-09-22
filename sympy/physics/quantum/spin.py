@@ -131,7 +131,7 @@ class SpinOpBase:
     def _apply_operator_TensorProduct(self, tp, **options):
         # Uncoupling operator is only easily found for coordinate basis spin operators
         # TODO: add methods for uncoupling operators
-        if not (isinstance(self, JxOp) or isinstance(self, JyOp) or isinstance(self, JzOp)):
+        if not isinstance(self, (JxOp, JyOp, JzOp)):
             raise NotImplementedError
         result = []
         for n in range(len(tp.args)):
@@ -1359,13 +1359,13 @@ class CoupledSpinState(SpinState):
         else:
             raise TypeError("CoupledSpinState only takes 3 or 4 arguments, got: %s" % (len(jcoupling) + 3) )
         # Check arguments have correct form
-        if not (isinstance(jn, list) or isinstance(jn, tuple) or isinstance(jn, Tuple)):
+        if not isinstance(jn, (list, tuple, Tuple)):
             raise TypeError('jn must be Tuple, list or tuple, got %s' %
                             jn.__class__.__name__)
-        if not (isinstance(jcoupling, list) or isinstance(jcoupling, tuple) or isinstance(jcoupling, Tuple)):
+        if not isinstance(jcoupling, (list, tuple, Tuple)):
             raise TypeError('jcoupling must be Tuple, list or tuple, got %s' %
                             jcoupling.__class__.__name__)
-        if not all(isinstance(term, list) or isinstance(term, tuple) or isinstance(term, Tuple) for term in jcoupling):
+        if not all(isinstance(term, (list, tuple, Tuple)) for term in jcoupling):
             raise TypeError(
                 'All elements of jcoupling must be list, tuple or Tuple')
         if not len(jn) - 1 == len(jcoupling):
@@ -2049,7 +2049,7 @@ def _uncouple(state, jn, jcoupling_list):
     elif isinstance(state, SpinState):
         if jn is None:
             raise ValueError("Must specify j-values for coupled state")
-        if not (isinstance(jn, list) or isinstance(jn, tuple)):
+        if not isinstance(jn, (list, tuple)):
             raise TypeError("jn must be list or tuple")
         if jcoupling_list is None:
             # Use default
@@ -2057,7 +2057,7 @@ def _uncouple(state, jn, jcoupling_list):
             for i in range(1, len(jn)):
                 jcoupling_list.append(
                     (1, 1 + i, Add(*[jn[j] for j in range(i + 1)])) )
-        if not (isinstance(jcoupling_list, list) or isinstance(jcoupling_list, tuple)):
+        if not isinstance(jcoupling_list, (list, tuple)):
             raise TypeError("jcoupling must be a list or tuple")
         if not len(jcoupling_list) == len(jn) - 1:
             raise ValueError("Must specify 2 fewer coupling terms than the number of j values")

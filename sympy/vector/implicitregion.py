@@ -226,7 +226,7 @@ class ImplicitRegion(Basic):
                     flag = True
                     continue
 
-                if not (isinstance(sol_z, Integer) or isinstance(sol_z, int)):
+                if not isinstance(sol_z, (int, Integer)):
                     syms_z = sol_z.free_symbols
 
                     if len(syms_z) == 1:

@@ -1663,7 +1663,7 @@ def meijerint_indefinite(f, x):
         rv = meijerint_indefinite(
             _rewrite_hyperbolics_as_exp(f), x)
         if rv:
-            if not type(rv) is list:
+            if not isinstance(rv, list):
                 return collect(factor_terms(rv), rv.atoms(exp))
             results.extend(rv)
     if results:
@@ -1890,7 +1890,7 @@ def meijerint_definite(f, x, a, b):
         rv = meijerint_definite(
             _rewrite_hyperbolics_as_exp(f_), x_, a_, b_)
         if rv:
-            if not type(rv) is list:
+            if not isinstance(rv, list):
                 rv = (collect(factor_terms(rv[0]), rv[0].atoms(exp)),) + rv[1:]
                 return rv
             results.extend(rv)

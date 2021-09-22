@@ -579,16 +579,16 @@ class MarkovProcess(StochasticProcess):
                 s = Rational(0, 1)
                 n = len(self.state_space)
 
-                if isinstance(condition, Eq) or isinstance(condition, Ne):
+                if isinstance(condition, (Eq, Ne)):
                     for i in range(0, n):
                         s += self.probability(Eq(rv[0], i), Eq(rv[1], i)) * self.probability(Eq(rv[1], i), new_given_condition)
                     return s if isinstance(condition, Eq) else 1 - s
                 else:
                     upper = 0
                     greater = False
-                    if isinstance(condition, Ge) or isinstance(condition, Lt):
+                    if isinstance(condition, (Ge, Lt)):
                         upper = 1
-                    if isinstance(condition, Gt) or isinstance(condition, Ge):
+                    if isinstance(condition, (Ge, Gt)):
                         greater = True
 
                     for i in range(0, n):
@@ -701,7 +701,7 @@ class MarkovProcess(StochasticProcess):
             next_state = condition.rhs if isinstance(condition.lhs, RandomIndexedSymbol) \
                 else condition.lhs
 
-            if isinstance(condition, Eq) or isinstance(condition, Ne):
+            if isinstance(condition, (Eq, Ne)):
                 if isinstance(self, DiscreteMarkovChain):
                     P = self.transition_probabilities**(rv[0].key - min_key_rv.key)
                 else:
@@ -711,9 +711,9 @@ class MarkovProcess(StochasticProcess):
             else:
                 upper = 1
                 greater = False
-                if isinstance(condition, Ge) or isinstance(condition, Lt):
+                if isinstance(condition, (Ge, Lt)):
                     upper = 0
-                if isinstance(condition, Gt) or isinstance(condition, Ge):
+                if isinstance(condition, (Ge, Gt)):
                     greater = True
                 k = Dummy('k')
                 condition = Eq(condition.lhs, k) if isinstance(condition.lhs, RandomIndexedSymbol)\

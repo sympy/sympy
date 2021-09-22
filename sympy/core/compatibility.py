@@ -297,7 +297,7 @@ def as_int(n, strict=True):
     """
     if strict:
         try:
-            if type(n) is bool:
+            if isinstance(n, bool):
                 raise TypeError
             return operator.index(n)
         except TypeError:

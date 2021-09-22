@@ -177,7 +177,7 @@ def tuple_wrapper(method):
     def wrap_tuples(*args, **kw_args):
         newargs = []
         for arg in args:
-            if type(arg) is tuple:
+            if isinstance(arg, tuple):
                 newargs.append(Tuple(*arg))
             else:
                 newargs.append(arg)

@@ -728,7 +728,7 @@ def _cg_list(term):
         return (term,), 1, 1
     cg = []
     coeff = 1
-    if not (isinstance(term, Mul) or isinstance(term, Pow)):
+    if not isinstance(term, (Mul, Pow)):
         raise NotImplementedError('term must be CG, Add, Mul or Pow')
     if isinstance(term, Pow) and sympify(term.exp).is_number:
         if sympify(term.exp).is_number:
