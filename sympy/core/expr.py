@@ -1471,6 +1471,24 @@ class Expr(Basic, EvalfMixin):
         >>> (n*m + x*m*n).coeff(m*n, right=1)
         1
 
+        >>> (x*n + y*n + z*m).coeff(n)
+        x + y
+        >>> (n*m + n*o + o*l).coeff(n, right=1)
+        m + o
+        >>> (x*n*m*n + y*n*m*o + z*l).coeff(m, right=1)
+        x*n + y*o
+        >>> (x*n*m*n + x*n*m*o + z*l).coeff(m, right=1)
+        n + o
+        >>> (x*n*m*n + x*n*m*o + z*l).coeff(m)
+        x*n
+
+        >>> from sympy.diffgeom.rn import R2
+        >>> from sympy.diffgeom import LieDerivative
+        >>> X = R2.x*R2.e_x - R2.y*R2.e_y
+        >>> Y = (R2.x**2 + R2.y**2)*R2.e_x - R2.x*R2.y*R2.e_y
+        >>> set(LieDerivative(X, Y).expand().args) == set([R2.x**2*R2.e_x, - R2.x*R2.y*R2.e_y, - 3*R2.y**2*R2.e_x])
+        True
+
         See Also
         ========
 
@@ -1565,6 +1583,17 @@ class Expr(Basic, EvalfMixin):
         x_c = x.is_commutative
         if self_c and not x_c:
             return S.Zero
+        if self.is_Add and not self_c and not x_c:
+            # get the part that depends on x exactly
+            d = Add(*[i for i in self.as_independent(x)[1] if x in Mul.make_args(i)])
+            rv = d.coeff(x, right=right)
+            if not rv.is_Add or not right:
+                return rv
+            from sympy.utilities.iterables import has_variety
+            c_part, nc_part = zip(*[i.args_cnc() for i in rv.args])
+            if has_variety(c_part):
+                return rv
+            return Add(*[Mul._from_args(i) for i in nc_part])
 
         one_c = self_c or x_c
         xargs, nx = x.args_cnc(cset=True, warn=bool(not x_c))
