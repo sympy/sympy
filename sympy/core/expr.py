@@ -1471,6 +1471,7 @@ class Expr(Basic, EvalfMixin):
         >>> (n*m + x*m*n).coeff(m*n, right=1)
         1
 
+        >>> n, m, o, l = symbols('n m o l', commutative=False)
         >>> (x*n + y*n + z*m).coeff(n)
         x + y
         >>> (n*m + n*o + o*l).coeff(n, right=1)
