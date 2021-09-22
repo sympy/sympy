@@ -1369,7 +1369,7 @@ class Expr(Basic, EvalfMixin):
                                  [ci for ci in c if list(self.args).count(ci) > 1])
         return [c, nc]
 
-    def coeff(self, x, n=1, right=False):
+    def coeff(self, x, n=1, right=False, _first=True):
         """
         Returns the coefficient from the term(s) containing ``x**n``. If ``n``
         is zero then all terms independent of ``x`` will be returned.
@@ -1584,10 +1584,10 @@ class Expr(Basic, EvalfMixin):
         x_c = x.is_commutative
         if self_c and not x_c:
             return S.Zero
-        if self.is_Add and not self_c and not x_c:
+        if _first and self.is_Add and not self_c and not x_c:
             # get the part that depends on x exactly
             d = Add(*[i for i in Add.make_args(self.as_independent(x)[1]) if x in Mul.make_args(i)])
-            rv = d.coeff(x, right=right)
+            rv = d.coeff(x, right=right, _first=False)
             if not rv.is_Add or not right:
                 return rv
             from sympy.utilities.iterables import has_variety
