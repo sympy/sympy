@@ -200,7 +200,7 @@ class Set(Basic, EvalfMixin):
             return Union(*overlaps)
 
         elif isinstance(other, Interval):
-            if isinstance(self, Interval) or isinstance(self, FiniteSet):
+            if isinstance(self, (Interval, FiniteSet)):
                 return Intersection(other, self.complement(S.Reals))
 
         elif isinstance(other, Union):

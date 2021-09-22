@@ -1194,7 +1194,7 @@ class MatrixBase(MatrixDeprecated,
         is_slice = isinstance(key, slice)
         i, j = key = self.key2ij(key)
         is_mat = isinstance(value, MatrixBase)
-        if type(i) is slice or type(j) is slice:
+        if isinstance(i, slice) or isinstance(j, slice):
             if is_mat:
                 self.copyin_matrix(key, value)
                 return

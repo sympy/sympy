@@ -193,7 +193,7 @@ def rubi_integrate(expr, var, showsteps=False):
     expr = expr.replace(sym_exp, rubi_exp)
     expr = process_trig(expr)
     expr = rubi_powsimp(expr)
-    if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
+    if isinstance(expr, (int, Integer, float, Float)):
         return S(expr)*var
     if isinstance(expr, Add):
         results = 0

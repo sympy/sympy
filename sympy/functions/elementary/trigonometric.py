@@ -401,7 +401,7 @@ class sin(TrigonometricFunction):
 
     def _eval_rewrite_as_exp(self, arg, **kwargs):
         I = S.ImaginaryUnit
-        if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
+        if isinstance(arg, (TrigonometricFunction, HyperbolicFunction)):
             arg = arg.func(arg.args[0]).rewrite(exp)
         return (exp(arg*I) - exp(-arg*I))/(2*I)
 
@@ -734,7 +734,7 @@ class cos(TrigonometricFunction):
 
     def _eval_rewrite_as_exp(self, arg, **kwargs):
         I = S.ImaginaryUnit
-        if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
+        if isinstance(arg, (TrigonometricFunction, HyperbolicFunction)):
             arg = arg.func(arg.args[0]).rewrite(exp)
         return (exp(arg*I) + exp(-arg*I))/2
 
@@ -1222,7 +1222,7 @@ class tan(TrigonometricFunction):
 
     def _eval_rewrite_as_exp(self, arg, **kwargs):
         I = S.ImaginaryUnit
-        if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
+        if isinstance(arg, (TrigonometricFunction, HyperbolicFunction)):
             arg = arg.func(arg.args[0]).rewrite(exp)
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(neg_exp - pos_exp)/(neg_exp + pos_exp)
@@ -1498,7 +1498,7 @@ class cot(TrigonometricFunction):
 
     def _eval_rewrite_as_exp(self, arg, **kwargs):
         I = S.ImaginaryUnit
-        if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
+        if isinstance(arg, (TrigonometricFunction, HyperbolicFunction)):
             arg = arg.func(arg.args[0]).rewrite(exp)
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(pos_exp + neg_exp)/(pos_exp - neg_exp)

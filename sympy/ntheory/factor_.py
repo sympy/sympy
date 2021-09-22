@@ -170,20 +170,20 @@ def smoothness_p(n, m=-1, power=0, visual=None):
         if visual is not True and visual is not False:
             return d
         return smoothness_p(d, visual=False)
-    elif type(n) is not tuple:
+    elif not isinstance(n, tuple):
         facs = factorint(n, visual=False)
 
     if power:
         k = -1
     else:
         k = 1
-    if type(n) is not tuple:
+    if isinstance(n, tuple):
+        rv = n
+    else:
         rv = (m, sorted([(f,
                           tuple([M] + list(smoothness(f + m))))
                          for f, M in [i for i in facs.items()]],
                         key=lambda x: (x[1][k], x[0])))
-    else:
-        rv = n
 
     if visual is False or (visual is not True) and (type(n) in [int, Mul]):
         return rv
@@ -1132,7 +1132,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         return factorlist
 
     factordict = {}
-    if visual and not isinstance(n, Mul) and not isinstance(n, dict):
+    if visual and not isinstance(n, (Mul, dict)):
         factordict = factorint(n, limit=limit, use_trial=use_trial,
                                use_rho=use_rho, use_pm1=use_pm1,
                                verbose=verbose, visual=False)
@@ -1141,7 +1141,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             n.as_powers_dict().items()}
     elif isinstance(n, dict):
         factordict = n
-    if factordict and (isinstance(n, Mul) or isinstance(n, dict)):
+    if factordict and isinstance(n, (Mul, dict)):
         # check it
         for key in list(factordict.keys()):
             if isprime(key):

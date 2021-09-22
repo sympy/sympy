@@ -1071,7 +1071,7 @@ def to_number_field(extension, theta=None, *, gen=None):
     else:
         extension = [extension]
 
-    if len(extension) == 1 and type(extension[0]) is tuple:
+    if len(extension) == 1 and isinstance(extension[0], tuple):
         return AlgebraicNumber(extension[0])
 
     minpoly, coeffs = primitive_element(extension, gen, polys=True)

@@ -146,6 +146,7 @@ class DMP(PicklableWithSlots, CantSympify):
 
     def __init__(self, rep, dom, lev=None, ring=None):
         if lev is not None:
+            # Not possible to check with isinstance
             if type(rep) is dict:
                 rep = dmp_from_dict(rep, lev, dom)
             elif type(rep) is not list:

@@ -192,13 +192,13 @@ def represent(expr, **options):
         return A*B + B*A
     elif isinstance(expr, InnerProduct):
         return represent(Mul(expr.bra, expr.ket), **options)
-    elif not (isinstance(expr, Mul) or isinstance(expr, OuterProduct)):
+    elif not isinstance(expr, (Mul, OuterProduct)):
         # For numpy and scipy.sparse, we can only handle numerical prefactors.
         if format == 'numpy' or format == 'scipy.sparse':
             return _sympy_to_scalar(expr)
         return expr
 
-    if not (isinstance(expr, Mul) or isinstance(expr, OuterProduct)):
+    if not isinstance(expr, (Mul, OuterProduct)):
         raise TypeError('Mul expected, got: %r' % expr)
 
     if "index" in options:

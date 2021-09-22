@@ -612,14 +612,14 @@ def _bidiagonal_decomposition(M, upper=True):
 
     """
 
-    if type(upper) is not bool:
+    if not isinstance(upper, bool):
         raise ValueError("upper must be a boolean")
 
-    if not upper:
-        X = _bidiagonal_decmp_hholder(M.H)
-        return X[2].H, X[1].H, X[0].H
+    if upper:
+        return _bidiagonal_decmp_hholder(M)
 
-    return _bidiagonal_decmp_hholder(M)
+    X = _bidiagonal_decmp_hholder(M.H)
+    return X[2].H, X[1].H, X[0].H
 
 
 def _bidiagonalize(M, upper=True):
@@ -642,13 +642,12 @@ def _bidiagonalize(M, upper=True):
 
     """
 
-    if type(upper) is not bool:
+    if not isinstance(upper, bool):
         raise ValueError("upper must be a boolean")
 
-    if not upper:
-        return _eval_bidiag_hholder(M.H).H
-
-    return _eval_bidiag_hholder(M)
+    if upper:
+        return _eval_bidiag_hholder(M)
+    return _eval_bidiag_hholder(M.H).H
 
 
 def _diagonalize(M, reals_only=False, sort=False, normalize=False):
