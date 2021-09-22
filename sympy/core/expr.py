@@ -1586,7 +1586,7 @@ class Expr(Basic, EvalfMixin):
             return S.Zero
         if self.is_Add and not self_c and not x_c:
             # get the part that depends on x exactly
-            d = Add(*[i for i in self.as_independent(x)[1] if x in Mul.make_args(i)])
+            d = Add(*[i for i in Add.make_args(self.as_independent(x)[1]) if x in Mul.make_args(i)])
             rv = d.coeff(x, right=right)
             if not rv.is_Add or not right:
                 return rv
