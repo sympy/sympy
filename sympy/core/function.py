@@ -2339,9 +2339,11 @@ class Subs(Expr):
         return super().__hash__()
 
     def _hashable_content(self):
-        return (self._expr.xreplace(self.canonical_variables),
-            ) + tuple(ordered([(v, p) for v, p in
-            zip(self.variables, self.point) if not self.expr.has(v)]))
+        e = self._expr.xreplace(self.canonical_variables)._hashable_content()
+        args = [(i._hashable_content(), j._hashable_content()) for i, j in
+            ordered([(v, p) for v, p in zip(self.variables, self.point)
+            if not self.expr.has(v)])]
+        return (e,) + tuple(args)
 
     def _eval_subs(self, old, new):
         # Subs doit will do the variables in order; the semantics

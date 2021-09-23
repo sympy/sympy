@@ -2144,3 +2144,10 @@ def test_21494():
     from sympy.testing.pytest import warns_deprecated_sympy
     with warns_deprecated_sympy():
         assert x.expr_free_symbols == {x}
+
+
+def test_issue_22142():
+    from sympy import Subs, Add
+    from sympy.core.expr import unchanged
+    assert unchanged(Add, Subs(1, x, 1), Subs(1, x, 2))
+    assert unchanged(Add, Subs(1, x, 1), Subs(1, y, 2))
