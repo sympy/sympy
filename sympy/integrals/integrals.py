@@ -477,8 +477,6 @@ class Integral(AddWithLimits):
                 d = Dummy(negative=True)
             elif all(i.is_real for i in l) and not x.is_real:
                 d = Dummy(real=True)
-            elif all(i.is_extended_real for i in l) and not x.is_extended_real:
-                d = Dummy(extended_real=True)
             else:
                 d = None
             if d:
