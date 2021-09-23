@@ -5215,9 +5215,14 @@ class SymmetricPermutationGroup(Basic):
     deg : int
 
     """
+    def __new__(cls, deg):
+        deg = _sympify(deg)
+        obj = Basic.__new__(cls, deg)
+        return obj
 
     def __init__(self, *args, **kwargs):
-        self._order = factorial(self.args[0])
+        self._deg = self.args[0]
+        self._order = None
 
     def __contains__(self, i):
         """Return ``True`` if *i* is contained in SymmetricPermutationGroup.
@@ -5248,6 +5253,10 @@ class SymmetricPermutationGroup(Basic):
         >>> G.order()
         24
         """
+        if self._order is not None:
+            return self._order
+        n = self._deg
+        self._order = factorial(n)
         return self._order
 
     @property
@@ -5264,7 +5273,7 @@ class SymmetricPermutationGroup(Basic):
         4
 
         """
-        return self.args[0]
+        return self._deg
 
     @property
     def identity(self):
@@ -5280,7 +5289,7 @@ class SymmetricPermutationGroup(Basic):
         (3)
 
         '''
-        return _af_new(list(range(self.args[0])))
+        return _af_new(list(range(self._deg)))
 
 
 class Coset(Basic):
