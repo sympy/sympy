@@ -364,13 +364,20 @@ def _(expr: PermuteDims):
     p2 = [e - shift[e] for i, e in enumerate(p) if e not in subremoved]
     # TODO: check if subremoved should be permuted as well...
     newexpr = PermuteDims(subexpr, p2)
+    premoved = sorted(premoved)
     if newexpr != expr:
-        newexpr = _array2matrix(newexpr)
-    return newexpr, sorted(premoved)
+        newexpr, removed2 = _remove_trivial_dims(_array2matrix(newexpr))
+        premoved = _combine_removed(-1, premoved, removed2)
+    return newexpr, premoved
 
 
 @_remove_trivial_dims.register(ArrayContraction)
 def _(expr: ArrayContraction):
+    new_expr, removed0 = _array_contraction_to_diagonal_multiple_identity(expr)
+    if new_expr != expr:
+        new_expr2, removed1 = _remove_trivial_dims(_array2matrix(new_expr))
+        removed = _combine_removed(-1, removed0, removed1)
+        return new_expr2, removed
     rank1 = get_rank(expr)
     expr, removed1 = remove_identity_matrices(expr)
     if not isinstance(expr, ArrayContraction):
@@ -825,3 +832,49 @@ def _combine_removed(dim: int, removed1: List[int], removed2: List[int]) -> List
             removed.append(i + removed2[j])
             j += 1
     return removed
+
+
+def _array_contraction_to_diagonal_multiple_identity(expr: ArrayContraction):
+    editor = _EditArrayContraction(expr)
+    editor.track_permutation_start()
+    removed = []
+    diag_index_counter: int = 0
+    for i in range(editor.number_of_contraction_indices):
+        identities = []
+        args = []
+        count_els = 0
+        for j, arg in enumerate(editor.args_with_ind):
+            if i not in arg.indices:
+                continue
+            count_els += 1
+            if isinstance(arg.element, Identity):
+                identities.append(arg)
+            else:
+                args.append(arg)
+        if len(identities) == 0:
+            continue
+        if len(args) + len(identities) < 3:
+            continue
+        new_diag_ind = -1 - diag_index_counter
+        diag_index_counter += 1
+        # TODO: maybe this should select the first identity matrix with a free index.
+        # TODO: what happens if no identity matrix has free indices?
+        id1 = identities[0]
+        free_pos = list(editor.get_absolute_free_range(id1))[[j for j, e in enumerate(id1.indices) if e is None][0]]
+        editor._track_permutation[-1].append(free_pos)
+        id1.element = None
+        for arg in identities[1:]:
+            arg.element = None
+            removed.extend(range(*editor.get_absolute_range(arg)))
+        for arg in args:
+            arg.indices = [new_diag_ind if j == i else j for j in arg.indices]
+    for i, e in enumerate(editor.args_with_ind):
+        if e.element is None:
+            editor._track_permutation[i] = None
+    editor._track_permutation = [i for i in editor._track_permutation if i is not None]
+    # Renumber permutation array form in order to deal with deleted positions:
+    remap = {e: i for i, e in enumerate(sorted({k for j in editor._track_permutation for k in j}))}
+    editor._track_permutation = [[remap[j] for j in i] for i in editor._track_permutation]
+    editor.args_with_ind = [i for i in editor.args_with_ind if i.element is not None]
+    new_expr = editor.to_array_contraction()
+    return new_expr, removed
