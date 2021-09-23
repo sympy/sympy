@@ -1,4 +1,4 @@
-from sympy.core import Basic, S, Function, diff, Tuple
+from sympy.core import Basic, S, Function, diff, Tuple, Dummy
 from sympy.core.basic import as_Basic
 from sympy.core.numbers import Rational, NumberSymbol
 from sympy.core.relational import (Equality, Unequality, Relational,
