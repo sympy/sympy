@@ -66,6 +66,9 @@ def test_as_explicit_symbol():
     expected = Matrix([[X[1, 1], -X[0, 1]], [-X[1, 0], X[0, 0]]])/det
     assert expr.as_explicit() == expected
 
+    expr = X**m
+    assert expr.as_explicit() == X.as_explicit()**m
+
 
 def test_as_explicit_matrix():
     A = ImmutableMatrix([[1, 2], [3, 4]])
