@@ -1,7 +1,7 @@
 from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplify,
                    Rational, factorial, gamma, Piecewise, Eq, Product, Interval,
                    IndexedBase, RisingFactorial, polar_lift, ProductSet, Range, eye,
-                   Determinant)
+                   Determinant, Symbol)
 from sympy.core.numbers import comp
 from sympy.integrals.integrals import integrate
 from sympy.matrices import Matrix, MatrixSymbol
@@ -79,6 +79,8 @@ def test_Normal():
     assert density_X_at_obs == expected_density
 
 def test_MultivariateTDist():
+    x = Symbol('x', extended_real=True)
+    y = Symbol('y', extended_real=True)
     t1 = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     assert(density(t1))(1, 1) == 1/(8*pi)
     assert t1.pspace.distribution.set == ProductSet(S.Reals, S.Reals)
