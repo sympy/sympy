@@ -11,6 +11,7 @@ from .cache import cacheit
 from .compatibility import as_int, default_sort_key
 from .kind import NumberKind
 from sympy.utilities.misc import func_name
+from sympy.utilities.iterables import has_variety
 from mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
@@ -1369,7 +1370,7 @@ class Expr(Basic, EvalfMixin):
                                  [ci for ci in c if list(self.args).count(ci) > 1])
         return [c, nc]
 
-    def coeff(self, x, n=1, right=False):
+    def coeff(self, x, n=1, right=False, _first=True):
         """
         Returns the coefficient from the term(s) containing ``x**n``. If ``n``
         is zero then all terms independent of ``x`` will be returned.
@@ -1559,45 +1560,24 @@ class Expr(Basic, EvalfMixin):
                 i = len(l) - (i + n)
             return i
 
-        def special_cases(co, nx, right):
-            if all(n == co[0][1] for r, n in co):
-                ii = find(co[0][1], nx, right)
-                if ii is not None:
-                    if right:
-                        return Mul(*co[0][1][ii + len(nx):])
-                    else:
-                        return Mul(Add(*[Mul(*r) for r, c in co]), Mul(*co[0][1][:ii]))
-            beg = reduce(incommon, (n[1] for n in co))
-            if beg:
-                ii = find(beg, nx, right)
-                if ii is not None:
-                    if right:
-                        m = ii + len(nx)
-                        return Add(*[Mul(*(list(r) + n[m:])) for r, n in co])
-                    else:
-                        gcdc = co[0][0]
-                        for i in range(1, len(co)):
-                            gcdc = gcdc.intersection(co[i][0])
-                            if not gcdc:
-                                break
-                        return Mul(*(list(gcdc) + beg[:ii]))
-            end = list(reversed(
-                reduce(incommon, (list(reversed(n[1])) for n in co))))
-            if end:
-                ii = find(end, nx, right)
-                if ii is not None:
-                    if right:
-                        return Mul(*end[ii + len(nx):])
-                    else:
-                        return Add(*[Mul(*(list(r) + n[:-len(end) + ii])) for r, n in co])
-            return None
-
         co = []
         args = Add.make_args(self)
         self_c = self.is_commutative
         x_c = x.is_commutative
         if self_c and not x_c:
             return S.Zero
+        if _first and self.is_Add and not self_c and not x_c:
+            # get the part that depends on x exactly
+            xargs = Mul.make_args(x)
+            d = Add(*[i for i in Add.make_args(self.as_independent(x)[1])
+                if all(xi in Mul.make_args(i) for xi in xargs)])
+            rv = d.coeff(x, right=right, _first=False)
+            if not rv.is_Add or not right:
+                return rv
+            c_part, nc_part = zip(*[i.args_cnc() for i in rv.args])
+            if has_variety(c_part):
+                return rv
+            return Add(*[Mul._from_args(i) for i in nc_part])
 
         one_c = self_c or x_c
         xargs, nx = x.args_cnc(cset=True, warn=bool(not x_c))
@@ -1623,32 +1603,52 @@ class Expr(Basic, EvalfMixin):
             # now check the non-comm parts
             if not co:
                 return S.Zero
-            hit = special_cases(co, nx, right)
-            if hit is None:
-                # Slow for large expressions so only use if necessary
-                co = [t for t in co if find(t[1], nx, right) is not None]
-                if not co:
-                    return S.Zero
-                hit = special_cases(co, nx, right)
-            else:
-                return hit
-            if hit is not None:
-                return hit
+            if all(n == co[0][1] for r, n in co):
+                ii = find(co[0][1], nx, right)
+                if ii is not None:
+                    if not right:
+                        return Mul(Add(*[Mul(*r) for r, c in co]), Mul(*co[0][1][:ii]))
+                    else:
+                        return Mul(*co[0][1][ii + len(nx):])
+            beg = reduce(incommon, (n[1] for n in co))
+            if beg:
+                ii = find(beg, nx, right)
+                if ii is not None:
+                    if not right:
+                        gcdc = co[0][0]
+                        for i in range(1, len(co)):
+                            gcdc = gcdc.intersection(co[i][0])
+                            if not gcdc:
+                                break
+                        return Mul(*(list(gcdc) + beg[:ii]))
+                    else:
+                        m = ii + len(nx)
+                        return Add(*[Mul(*(list(r) + n[m:])) for r, n in co])
+            end = list(reversed(
+                reduce(incommon, (list(reversed(n[1])) for n in co))))
+            if end:
+                ii = find(end, nx, right)
+                if ii is not None:
+                    if not right:
+                        return Add(*[Mul(*(list(r) + n[:-len(end) + ii])) for r, n in co])
+                    else:
+                        return Mul(*end[ii + len(nx):])
             # look for single match
+            hit = None
             for i, (r, n) in enumerate(co):
                 ii = find(n, nx, right)
                 if ii is not None:
-                    if hit:
-                        break
-                    else:
+                    if not hit:
                         hit = ii, r, n
+                    else:
+                        break
             else:
                 if hit:
                     ii, r, n = hit
-                    if right:
-                        return Mul(*n[ii + len(nx):])
-                    else:
+                    if not right:
                         return Mul(*(list(r) + n[:ii]))
+                    else:
+                        return Mul(*n[ii + len(nx):])
 
             return S.Zero
 
