@@ -105,8 +105,7 @@ class MatrixShaping(MatrixRequired):
                 return other[i, j - pos]
             return self[i, j - other.cols]
 
-        return self._new(self.rows, self.cols + other.cols,
-                         lambda i, j: entry(i, j))
+        return self._new(self.rows, self.cols + other.cols, entry)
 
     def _eval_col_join(self, other):
         rows = self.rows
@@ -117,7 +116,7 @@ class MatrixShaping(MatrixRequired):
             return other[i - rows, j]
 
         return classof(self, other)._new(self.rows + other.rows, self.cols,
-                                         lambda i, j: entry(i, j))
+                                         entry)
 
     def _eval_extract(self, rowsList, colsList):
         mat = list(self)
@@ -172,7 +171,7 @@ class MatrixShaping(MatrixRequired):
             return other[i, j - cols]
 
         return classof(self, other)._new(self.rows, self.cols + other.cols,
-                                         lambda i, j: entry(i, j))
+                                         entry)
 
     def _eval_tolist(self):
         return [list(self[i,:]) for i in range(self.rows)]

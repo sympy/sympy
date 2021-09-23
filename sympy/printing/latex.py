@@ -2484,14 +2484,10 @@ class LatexPrinter(Printer):
         return r"\cdot".join(map(parens, args))
 
     def _print_Parallel(self, expr):
-        args = list(expr.args)
-        func = lambda x: self._print(x)
-        return ' + '.join(map(func, args))
+        return ' + '.join(map(self._print, expr.args))
 
     def _print_MIMOParallel(self, expr):
-        args = list(expr.args)
-        func = lambda x: self._print(x)
-        return ' + '.join(map(func, args))
+        return ' + '.join(map(self._print, expr.args))
 
     def _print_Feedback(self, expr):
         from sympy.physics.control import TransferFunction, Series
@@ -2792,7 +2788,7 @@ def translate(s):
         return "\\" + s
     else:
         # Process modifiers, if any, and recurse
-        for key in sorted(modifier_dict.keys(), key=lambda k:len(k), reverse=True):
+        for key in sorted(modifier_dict.keys(), key=len, reverse=True):
             if s.lower().endswith(key) and len(s) > len(key):
                 return modifier_dict[key](translate(s[:-len(key)]))
         return s

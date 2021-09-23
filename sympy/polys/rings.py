@@ -247,7 +247,7 @@ class PolyRing(DefaultPrinting, IPolys):
 
 
             if order is lex:
-                obj.leading_expv = lambda f: max(f)
+                obj.leading_expv = max
             else:
                 obj.leading_expv = lambda f: max(f, key=order)
 

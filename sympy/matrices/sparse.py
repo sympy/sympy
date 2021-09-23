@@ -349,7 +349,7 @@ class SparseMatrix(RepMatrix):
         sympy.matrices.sparse.SparseMatrix.col_list
         """
         return [tuple(k + (self[k],)) for k in
-            sorted(self.todok().keys(), key=lambda k: list(k))]
+            sorted(self.todok().keys(), key=list)]
 
     def scalar_multiply(self, scalar):
         "Scalar element-wise multiplication"
