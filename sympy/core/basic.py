@@ -558,7 +558,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             return self
         return self.replace(
             lambda x: hasattr(x, 'bound_symbols'),
-            lambda x: can(x),
+            can,
             simultaneous=False)
 
     @property
@@ -924,7 +924,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             # For more complex ordering use an unordered sequence.
             k = list(ordered(sequence, default=False, keys=(
                 lambda x: -_nodes(x),
-                lambda x: default_sort_key(x),
+                default_sort_key,
                 )))
             sequence = [(k, sequence[k]) for k in k]
 

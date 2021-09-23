@@ -565,13 +565,16 @@ def build_expression_tree(Omega, rewrites):
     This function builds the tree, rewrites then sorts the nodes.
     """
     class Node:
+        def __init__(self):
+            self.before = []
+            self.expr = None
+            self.var = None
         def ht(self):
             return reduce(lambda x, y: x + y,
                           [x.ht() for x in self.before], 1)
     nodes = {}
     for expr, v in Omega:
         n = Node()
-        n.before = []
         n.var = v
         n.expr = expr
         nodes[v] = n

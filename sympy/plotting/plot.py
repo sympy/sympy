@@ -957,6 +957,9 @@ class Parametric3DLineSeries(Line3DBaseSeries):
         self.end = float(var_start_end[2])
         self.nb_of_points = kwargs.get('nb_of_points', 300)
         self.line_color = kwargs.get('line_color', None)
+        self._xlim = None
+        self._ylim = None
+        self._zlim = None
 
     def __str__(self):
         return '3D parametric cartesian line: (%s, %s, %s) for %s over %s' % (
