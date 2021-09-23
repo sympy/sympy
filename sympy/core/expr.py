@@ -1471,25 +1471,6 @@ class Expr(Basic, EvalfMixin):
         >>> (n*m + x*m*n).coeff(m*n, right=1)
         1
 
-        >>> n, m, o, l = symbols('n m o l', commutative=False)
-        >>> (x*n + y*n + z*m).coeff(n)
-        x + y
-        >>> (n*m + n*o + o*l).coeff(n, right=1)
-        m + o
-        >>> (x*n*m*n + y*n*m*o + z*l).coeff(m, right=1)
-        x*n + y*o
-        >>> (x*n*m*n + x*n*m*o + z*l).coeff(m, right=1)
-        n + o
-        >>> (x*n*m*n + x*n*m*o + z*l).coeff(m)
-        x*n
-
-        >>> from sympy.diffgeom.rn import R2
-        >>> from sympy.diffgeom import LieDerivative
-        >>> X = R2.x*R2.e_x - R2.y*R2.e_y
-        >>> Y = (R2.x**2 + R2.y**2)*R2.e_x - R2.x*R2.y*R2.e_y
-        >>> set(LieDerivative(X, Y).expand().args) == set([R2.x**2*R2.e_x, - R2.x*R2.y*R2.e_y, - 3*R2.y**2*R2.e_x])
-        True
-
         See Also
         ========
 
