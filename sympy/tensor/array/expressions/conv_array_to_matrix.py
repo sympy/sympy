@@ -842,11 +842,9 @@ def _array_contraction_to_diagonal_multiple_identity(expr: ArrayContraction):
     for i in range(editor.number_of_contraction_indices):
         identities = []
         args = []
-        count_els = 0
         for j, arg in enumerate(editor.args_with_ind):
             if i not in arg.indices:
                 continue
-            count_els += 1
             if isinstance(arg.element, Identity):
                 identities.append(arg)
             else:
@@ -857,15 +855,22 @@ def _array_contraction_to_diagonal_multiple_identity(expr: ArrayContraction):
             continue
         new_diag_ind = -1 - diag_index_counter
         diag_index_counter += 1
-        # TODO: maybe this should select the first identity matrix with a free index.
-        # TODO: what happens if no identity matrix has free indices?
-        id1 = identities[0]
-        free_pos = list(editor.get_absolute_free_range(id1))[[j for j, e in enumerate(id1.indices) if e is None][0]]
-        editor._track_permutation[-1].append(free_pos)
-        id1.element = None
-        for arg in identities[1:]:
+        # Variable "flag" to control whether to skip this contraction set:
+        flag: bool = True
+        for i1, id1 in enumerate(identities):
+            if None not in id1.indices:
+                flag = True
+                break
+            free_pos = list(range(*editor.get_absolute_free_range(id1)))[0]
+            editor._track_permutation[-1].append(free_pos)
+            id1.element = None
+            flag = False
+            break
+        if flag:
+            continue
+        for arg in identities[:i1] + identities[i1+1:]:
             arg.element = None
-            removed.extend(range(*editor.get_absolute_range(arg)))
+            removed.extend(range(*editor.get_absolute_free_range(arg)))
         for arg in args:
             arg.indices = [new_diag_ind if j == i else j for j in arg.indices]
     for i, e in enumerate(editor.args_with_ind):
