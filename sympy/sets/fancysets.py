@@ -1005,8 +1005,8 @@ def normalize_theta_set(theta):
     r"""
     Normalize a Real Set `theta` in the interval `[0, 2\pi)`. It returns
     a normalized value of theta in the Set. For Interval, a maximum of
-    one cycle `[0, 2\pi]`, is returned i.e. for theta equal to `[0, 10\pi]`,
-    returned normalized value would be `[0, 2\pi)`. As of now intervals
+    one cycle $[0, 2\pi]$, is returned i.e. for theta equal to $[0, 10\pi]$,
+    returned normalized value would be $[0, 2\pi)$. As of now intervals
     with end points as non-multiples of ``pi`` is not supported.
 
     Raises

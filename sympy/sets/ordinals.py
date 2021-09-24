@@ -5,7 +5,7 @@ import operator
 class OmegaPower(Basic):
     """
     Represents ordinal exponential and multiplication terms one of the
-    building blocks of the :class:`Oridnal` class.
+    building blocks of the :class:`Ordinal` class.
     In ``OmegaPower(a, b)``, ``a`` represents exponent and ``b`` represents multiplicity.
     """
     def __new__(cls, a, b):
