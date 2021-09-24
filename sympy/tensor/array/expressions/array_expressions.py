@@ -7,7 +7,7 @@ from typing import Optional, List, Dict
 
 import typing
 
-from sympy import Expr, ImmutableDenseNDimArray, S, Symbol, ZeroMatrix, Basic, tensorproduct, Add, permutedims, \
+from sympy import Expr, ImmutableDenseNDimArray, S, Symbol, ZeroMatrix, Basic, tensorproduct, permutedims, \
     Tuple, tensordiagonal, Lambda, Dummy, Function, MatrixExpr, NDimArray, Indexed, IndexedBase, default_sort_key, \
     tensorcontraction, diagonalize_vector, Mul
 from sympy.matrices.expressions.matexpr import MatrixElement
@@ -288,7 +288,7 @@ class ArrayAdd(_CodegenArrayAbstract):
         return new_args
 
     def as_explicit(self):
-        return Add.fromiter([arg.as_explicit() for arg in self.args])
+        return reduce(operator.add, [arg.as_explicit() for arg in self.args])
 
 
 class PermuteDims(_CodegenArrayAbstract):
