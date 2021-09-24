@@ -4,8 +4,7 @@ from .special import Identity
 from sympy.core import S
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
-from ... import cacheit, Integer
-from ...external.gmpy import SYMPY_INTS
+from ... import cacheit
 
 
 class MatPow(MatrixExpr):
@@ -48,7 +47,7 @@ class MatPow(MatrixExpr):
             # We still have a MatPow, make an explicit MatMul out of it.
             if A.exp.is_Integer and A.exp.is_positive:
                 A = MatMul(*[A.base for k in range(A.exp)])
-            elif isinstance(self.rows, (SYMPY_INTS, Integer)) and isinstance(self.cols, (SYMPY_INTS, Integer)):
+            elif not self._is_shape_symbolic():
                 return A._get_explicit_matrix()[i, j]
             else:
                 # Leave the expression unevaluated:
