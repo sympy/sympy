@@ -174,7 +174,7 @@ def reshape(seq, how):
     for k in range(len(rv)):
         rv[k] = []
         for hi in how:
-            if type(hi) is int:
+            if isinstance(hi, int):
                 rv[k].extend(seq[i: i + hi])
                 i += hi
             else:
@@ -1364,7 +1364,7 @@ def multiset_combinations(m, n, g=None):
 
     """
     if g is None:
-        if type(m) is dict:
+        if isinstance(m, dict):
             if any(as_int(v) < 0 for v in m.values()):
                 raise ValueError('counts cannot be negative')
             N = sum(m.values())
@@ -1416,7 +1416,7 @@ def multiset_permutations(m, size=None, g=None):
     60
     """
     if g is None:
-        if type(m) is dict:
+        if isinstance(m, dict):
             if any(as_int(v) < 0 for v in m.values()):
                 raise ValueError('counts cannot be negative')
             g = [[k, m[k]] for k in ordered(m)]
@@ -1480,7 +1480,7 @@ def _partition(seq, vector, m=None):
     """
     if m is None:
         m = max(vector) + 1
-    elif type(vector) is int:  # entered as m, vector
+    elif isinstance(vector, int):  # entered as m, vector
         vector, m = m, vector
     p = [[] for i in range(m)]
     for i, v in enumerate(vector):
@@ -1644,7 +1644,7 @@ def multiset_partitions(multiset, m=None):
     """
     # This function looks at the supplied input and dispatches to
     # several special-case routines as they apply.
-    if type(multiset) is int:
+    if isinstance(multiset, int):
         n = multiset
         if m and m > n:
             return

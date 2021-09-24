@@ -1958,7 +1958,7 @@ def _aresame(a, b):
     if isinstance(a, Number) and isinstance(b, Number):
         return a == b and a.__class__ == b.__class__
     for i, j in zip_longest(preorder_traversal(a), preorder_traversal(b)):
-        if i != j or type(i) != type(j):
+        if i != j or type(i) is not type(j):
             if ((isinstance(i, UndefFunc) and isinstance(j, UndefFunc)) or
                 (isinstance(i, AppliedUndef) and isinstance(j, AppliedUndef))):
                 if i.class_key() != j.class_key():

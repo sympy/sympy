@@ -110,7 +110,7 @@ class Vector(BasisDependent):
                 outvec += vect_dot * v * k.args[1]
             return outvec
         from sympy.vector.deloperator import Del
-        if not isinstance(other, Vector) and not isinstance(other, Del):
+        if not isinstance(other, (Del, Vector)):
             raise TypeError(str(other) + " is not a vector, dyadic or " +
                             "del operator")
 

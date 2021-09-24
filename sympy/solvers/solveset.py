@@ -3350,7 +3350,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             if i.keys() != j.keys():
                 continue
             if all(a.dummy_eq(b) for a, b in zip(i.values(), j.values()) \
-                if type(a) != int or type(b) != int):
+                if not (isinstance(a, int) and isinstance(b, int))):
                 break
         else:
             filtered_complex.append(i)

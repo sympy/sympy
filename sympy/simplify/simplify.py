@@ -865,7 +865,7 @@ def sum_add(self, other, method=0):
     else:
         rother = other
 
-    if type(rself) == type(rother):
+    if type(rself) is type(rother):
         if method == 0:
             if rself.limits == rother.limits:
                 return factor_sum(Sum(rself.function + rother.function, *rself.limits))
@@ -926,7 +926,7 @@ def product_mul(self, other, method=0):
     """Helper function for Product simplification"""
     from sympy.concrete.products import Product
 
-    if type(self) == type(other):
+    if type(self) is type(other):
         if method == 0:
             if self.limits == other.limits:
                 return Product(self.function * other.function, *self.limits)

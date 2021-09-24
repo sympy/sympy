@@ -150,8 +150,8 @@ class Expr(Basic, EvalfMixin):
         except (SympifyError, SyntaxError):
             return False
         # check for pure number expr
-        if  not (self.is_Number and other.is_Number) and (
-                type(self) != type(other)):
+        if  type(self) is not type(other) and not (
+                self.is_Number and other.is_Number):
             return False
         a, b = self._hashable_content(), other._hashable_content()
         if a != b:
@@ -160,7 +160,7 @@ class Expr(Basic, EvalfMixin):
         for a, b in zip(a, b):
             if not isinstance(a, Expr):
                 continue
-            if a.is_Number and type(a) != type(b):
+            if type(a) is not type(b) and a.is_Number:
                 return False
         return True
 

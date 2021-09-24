@@ -1167,7 +1167,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         args.extend([Pow(*i, evaluate=False)
                      for i in sorted(factordict.items())])
         return Mul(*args, evaluate=False)
-    elif isinstance(n, dict) or isinstance(n, Mul):
+    elif isinstance(n, (dict, Mul)):
         return factordict
 
     assert use_trial or use_rho or use_pm1 or use_ecm

@@ -100,7 +100,7 @@ def comp(z1, z2, tol=None):
     >>> comp(pi4 - 3.14, 0, .001)
     False
     """
-    if type(z2) is str:
+    if isinstance(z2, str):
         if not pure_complex(z1, or_real=True):
             raise ValueError('when z2 is a str z1 must be a Number')
         return str(z1) == z2

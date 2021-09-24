@@ -2543,7 +2543,7 @@ def length(P, Q, D):
     """
     from sympy.ntheory.continued_fraction import continued_fraction_periodic
     v = continued_fraction_periodic(P, Q, D)
-    if type(v[-1]) is list:
+    if isinstance(v[-1], list):
         rpt = len(v[-1])
         nonrpt = len(v) - 1
     else:

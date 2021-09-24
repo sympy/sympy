@@ -62,7 +62,7 @@ def strlines(s, c=64, short=False):
     ========
     filldedent, rawlines
     """
-    if type(s) is not str:
+    if not isinstance(s, str):
         raise ValueError('expecting string input')
     if '\n' in s:
         return rawlines(s)
@@ -380,7 +380,7 @@ def replace(string, *reps):
     """
     if len(reps) == 1:
         kv = reps[0]
-        if type(kv) is dict:
+        if isinstance(kv, dict):
             reps = kv
         else:
             return string.replace(*kv)
@@ -440,7 +440,7 @@ def translate(s, a, b=None, c=None):
         c = b
         a = b = ''
     else:
-        if type(a) is dict:
+        if isinstance(a, dict):
             short = {}
             for k in list(a.keys()):
                 if len(k) == 1 and len(a[k]) == 1:

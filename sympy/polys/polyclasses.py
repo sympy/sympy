@@ -149,7 +149,7 @@ class DMP(PicklableWithSlots, CantSympify):
             # Not possible to check with isinstance
             if type(rep) is dict:
                 rep = dmp_from_dict(rep, lev, dom)
-            elif type(rep) is not list:
+            elif not isinstance(rep, list):
                 rep = dmp_ground(dom.convert(rep), lev)
         else:
             rep, lev = dmp_validate(rep)
@@ -1089,14 +1089,14 @@ class DMF(PicklableWithSlots, CantSympify):
 
     @classmethod
     def _parse(cls, rep, dom, lev=None):
-        if type(rep) is tuple:
+        if isinstance(rep, tuple):
             num, den = rep
 
             if lev is not None:
-                if type(num) is dict:
+                if isinstance(num, dict):
                     num = dmp_from_dict(num, lev, dom)
 
-                if type(den) is dict:
+                if isinstance(den, dict):
                     den = dmp_from_dict(den, lev, dom)
             else:
                 num, num_lev = dmp_validate(num)
@@ -1120,9 +1120,9 @@ class DMF(PicklableWithSlots, CantSympify):
             num = rep
 
             if lev is not None:
-                if type(num) is dict:
+                if isinstance(num, dict):
                     num = dmp_from_dict(num, lev, dom)
-                elif type(num) is not list:
+                elif not isinstance(num, list):
                     num = dmp_ground(dom.convert(num), lev)
             else:
                 num, lev = dmp_validate(num)
@@ -1509,10 +1509,11 @@ class ANP(PicklableWithSlots, CantSympify):
     __slots__ = ('rep', 'mod', 'dom')
 
     def __init__(self, rep, mod, dom):
+        # Not possible to check with isinstance
         if type(rep) is dict:
             self.rep = dup_from_dict(rep, dom)
         else:
-            if type(rep) is not list:
+            if not isinstance(rep, list):
                 rep = [dom.convert(rep)]
 
             self.rep = dup_strip(rep)
@@ -1520,7 +1521,7 @@ class ANP(PicklableWithSlots, CantSympify):
         if isinstance(mod, DMP):
             self.mod = mod.rep
         else:
-            if type(mod) is dict:
+            if isinstance(mod, dict):
                 self.mod = dup_from_dict(mod, dom)
             else:
                 self.mod = dup_strip(mod)

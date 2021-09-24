@@ -1342,7 +1342,7 @@ class ComplexRegion(Set):
             raise ValueError('expecting Tuple of length 2')
 
         # If the other is not an Expression, and neither a Tuple
-        if not isinstance(other, Expr) and not isinstance(other, Tuple):
+        if not isinstance(other, (Expr, Tuple)):
             return S.false
         # self in rectangular form
         if not self.polar:

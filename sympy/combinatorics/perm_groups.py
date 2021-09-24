@@ -5329,7 +5329,7 @@ class Coset(Basic):
 
         if G is not None:
             G = _sympify(G)
-            if not isinstance(G, PermutationGroup) and not isinstance(G, SymmetricPermutationGroup):
+            if not isinstance(G, (PermutationGroup, SymmetricPermutationGroup)):
                 raise NotImplementedError
             if not H.is_subgroup(G):
                 raise ValueError("{} must be a subgroup of {}.".format(H, G))

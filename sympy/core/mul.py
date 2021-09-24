@@ -981,7 +981,7 @@ class Mul(Expr, AssocOp):
         from sympy.ntheory.multinomial import multinomial_coefficients_iterator
         from .function import AppliedUndef
         from .symbol import Symbol, symbols, Dummy
-        if not isinstance(s, AppliedUndef) and not isinstance(s, Symbol):
+        if not isinstance(s, (AppliedUndef, Symbol)):
             # other types of s may not be well behaved, e.g.
             # (cos(x)*sin(y)).diff([[x, y, z]])
             return super()._eval_derivative_n_times(s, n)

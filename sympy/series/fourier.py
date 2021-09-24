@@ -512,7 +512,7 @@ class FiniteFourierSeries(FourierSeries):
         limits = sympify(limits)
         exprs = sympify(exprs)
 
-        if not (type(exprs) == Tuple and len(exprs) == 3):  # exprs is not of form (a0, an, bn)
+        if not (isinstance(exprs, Tuple) and len(exprs) == 3):  # exprs is not of form (a0, an, bn)
             # Converts the expression to fourier form
             c, e = exprs.as_coeff_add()
             rexpr = c + Add(*[TR10(i) for i in e])
