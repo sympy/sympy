@@ -26,7 +26,7 @@ from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.simplify import powdenest, logcombine
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
-                             piecewise_fold, Piecewise)
+                             piecewise_fold, Piecewise, LambertW)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
@@ -47,6 +47,7 @@ from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
 from sympy.polys.matrices.linsolve import _linsolve
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
+from sympy.solvers.bivariate import _solve_lambert, _filtered_gens
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
@@ -311,6 +312,14 @@ def _invert_real(f, g_ys, symbol):
             for L in inv(f):
                 invs += Union(*[imageset(Lambda(n, L(g)), S.Integers) for g in g_ys])
             return _invert_real(f.args[0], invs, symbol)
+
+    if isinstance(f, LambertW):
+        return _invert_real(f.args[0], imageset(Lambda(n, n*exp(n)), g_ys), symbol)
+
+    if _is_lambert(f - g_ys.args[0], symbol):
+        soln = _solve_as_lambert(f, g_ys.args[0], symbol, domain=S.Reals)
+        if soln is not None:
+            return symbol, soln
 
     return (f, g_ys)
 
@@ -1758,6 +1767,31 @@ def _is_logarithmic(f, symbol):
     return rv
 
 
+def _solve_as_lambert(lhs, rhs, symbol, domain):
+    r"""
+    Computes the equations whose solutions will be given in terms
+    of the `LambertW` function. Returns `None` if it fails doing so.
+
+    Example
+    =======
+
+    >>> from sympy.solvers.solveset import _solve_as_lambert
+    >>> from sympy import symbols, exp, S
+    >>> x = symbols('x')
+    >>> _solve_as_lambert(x*exp(x), 1, x, S.Reals)
+    FiniteSet(LambertW(1))
+
+    """
+    poly = lhs.as_poly()
+    gens = _filtered_gens(poly, symbol)
+    try:
+        soln = _solve_lambert(lhs - rhs, symbol, gens)
+    except NotImplementedError:
+        return None
+    else:
+        return FiniteSet(*soln)
+
+
 def _is_lambert(f, symbol):
     r"""
     If this returns ``False`` then the Lambert solver (``_solve_lambert``) will not be called.
@@ -1831,9 +1865,6 @@ def _is_lambert(f, symbol):
 
     # total number of symbols in equation
     no_of_symbols = len([arg for arg in term_factors if arg.has(symbol)])
-    # total number of trigonometric terms in equation
-    no_of_trig = len([arg for arg in term_factors \
-        if arg.has(HyperbolicFunction, TrigonometricFunction)])
 
     if f.is_Add and no_of_symbols >= 2:
         # `log`, `HyperbolicFunction`, `TrigonometricFunction` should have symbols
@@ -1841,12 +1872,23 @@ def _is_lambert(f, symbol):
         lambert_funcs = (log, HyperbolicFunction, TrigonometricFunction)
         if any(isinstance(arg, lambert_funcs)\
             for arg in term_factors if arg.has(symbol)):
-                if no_of_trig < no_of_symbols:
-                    return True
-        # here, `Pow`, `exp` exponent should have symbols
+            # total number of trig terms in equation
+            trig_types = (HyperbolicFunction, TrigonometricFunction)
+            is_trig_term = lambda a: isinstance(a, trig_types) and a.has(symbol)
+            no_of_trig = len([arg for arg in term_factors if is_trig_term(arg)])
+            if no_of_trig < no_of_symbols:
+                return True
+
+        # here, `Pow`, `exp` exponent should have symbols and no_of_exp < no_of_symbols
         elif any(isinstance(arg, (Pow, exp)) \
             for arg in term_factors if (arg.as_base_exp()[1]).has(symbol)):
-            return True
+            # total number of no_of_exp terms in equation
+            exp_types = (Pow, exp)
+            is_exp_term = lambda a: isinstance(a, exp_types) and (a.as_base_exp()[1]).has(symbol)
+            no_of_exp = len([arg for arg in term_factors if is_exp_term(arg)])
+            if no_of_exp < no_of_symbols:
+                return True
+
     return False
 
 
