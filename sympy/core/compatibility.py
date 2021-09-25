@@ -474,7 +474,7 @@ def default_sort_key(item, order=None):
             ), args, S.One.sort_key(), S.One
 
 def _node_count(e):
-    return 1 + sum(map(_node_count, e.args))
+    return 1 + sum(map(_node_count, getattr(e, 'args', [])))
 
 def _nodes(e):
     """

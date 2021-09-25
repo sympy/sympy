@@ -2032,7 +2032,7 @@ def hankel_transform(f, r, k, nu, **hints):
 
     >>> ht = hankel_transform(exp(-a*r), r, k, 0)
     >>> ht
-    a/(k**3*(a**2/k**2 + 1)**(3/2))
+    a/(k**3*(1 + a**2/k**2)**(3/2))
 
     >>> inverse_hankel_transform(ht, k, r, 0)
     exp(-a*r)
@@ -2094,7 +2094,7 @@ def inverse_hankel_transform(F, k, r, nu, **hints):
 
     >>> ht = hankel_transform(exp(-a*r), r, k, 0)
     >>> ht
-    a/(k**3*(a**2/k**2 + 1)**(3/2))
+    a/(k**3*(1 + a**2/k**2)**(3/2))
 
     >>> inverse_hankel_transform(ht, k, r, 0)
     exp(-a*r)

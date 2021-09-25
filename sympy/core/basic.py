@@ -207,27 +207,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         # following lines:
         if self is other:
             return 0
-        n1 = self.__class__
-        n2 = other.__class__
-        c = (n1 > n2) - (n1 < n2)
-        if c:
-            return c
-        #
-        st = self._hashable_content()
-        ot = other._hashable_content()
-        c = (len(st) > len(ot)) - (len(st) < len(ot))
-        if c:
-            return c
-        for l, r in zip(st, ot):
-            l = Basic(*l) if isinstance(l, frozenset) else l
-            r = Basic(*r) if isinstance(r, frozenset) else r
-            if isinstance(l, Basic):
-                c = l.compare(r)
-            else:
-                c = (l > r) - (l < r)
-            if c:
-                return c
-        return 0
+        return -1 if next(ordered((self, other))) == self else 1
 
     @staticmethod
     def _compare_pretty(a, b):

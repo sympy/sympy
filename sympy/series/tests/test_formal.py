@@ -35,7 +35,7 @@ def test_rational_algorithm():
          (sqrt(5)/10 + S.Half)), 0, 0)
 
     f = 1 / (x**2 + 2*x + 2)
-    assert rational_algorithm(f, x, k) is None
+    assert rational_algorithm(f, x, k) == (-(-1)**(-k - 1)/2, 0, 0)
     assert rational_algorithm(f, x, k, full=True) == \
         ((I*(-1 + I)**(-k - 1)) / 2 - (I*(-1 - I)**(-k - 1)) / 2, 0, 0)
 
