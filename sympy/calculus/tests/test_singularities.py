@@ -7,7 +7,7 @@ from sympy.calculus.singularities import (
     is_strictly_decreasing,
     is_monotonic
 )
-from sympy.sets import Interval, FiniteSet
+from sympy.sets import Interval, FiniteSet, Union
 from sympy.testing.pytest import raises
 from sympy.abc import x, y
 
@@ -43,6 +43,7 @@ def test_is_increasing():
     assert is_increasing(1)
 
     assert is_increasing(4*x**3 - 6*x**2 - 72*x + 30, Interval(-2, 3)) is False
+    assert is_increasing(x**5 -5*x +7,Union(Interval(-oo, -1), Interval(1, oo))) is True
 
 
 def test_is_strictly_increasing():

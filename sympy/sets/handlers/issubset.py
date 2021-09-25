@@ -1,5 +1,5 @@
 from sympy import S, Symbol
-from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_not, fuzzy_or
+from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_not
 from sympy.core.relational import Eq
 from sympy.sets.sets import FiniteSet, Interval, Set, Union, ProductSet
 from sympy.sets.fancysets import Complexes, Reals, Range, Rationals
@@ -35,17 +35,15 @@ def is_subset_sets(a_interval, b_fs): # noqa:F811
 def is_subset_sets(a_interval, b_u): # noqa:F811
     if all(isinstance(s, (Interval, FiniteSet)) for s in b_u.args):
         intervals = [s for s in b_u.args if isinstance(s, Interval)]
-        if all(fuzzy_bool(a_interval.start < s.start) for s in intervals):
+        sol = S.EmptySet
+        for interval in intervals:
+            sol = sol.union(a_interval.intersect(interval))
+        if sol == a_interval:
+            return True
+        else:
             return False
-        if all(fuzzy_bool(a_interval.end > s.end) for s in intervals):
-            return False
-        if a_interval.measure.is_nonzero:
-            no_overlap = lambda s1, s2: fuzzy_or([
-                    fuzzy_bool(s1.end <= s2.start),
-                    fuzzy_bool(s1.start >= s2.end),
-                    ])
-            if all(no_overlap(s, a_interval) for s in intervals):
-                return False
+    else:
+        return
 
 @dispatch(Range, Range)  # type: ignore # noqa:F811
 def is_subset_sets(a, b): # noqa:F811
