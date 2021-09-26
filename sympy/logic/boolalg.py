@@ -152,25 +152,21 @@ class Boolean(Basic):
         """
         from sympy.calculus.util import periodicity
         from sympy.core.relational import Relational
-        from sympy.core.kind import NumberKind
         free = self.free_symbols
         if len(free) == 1:
             x = free.pop()
-            if x.kind is NumberKind:
-                reps = {}
-                for r in self.atoms(Relational):
-                    if periodicity(r, x) not in (0, None):
-                        s = r._eval_as_set()
-                        if s in (S.EmptySet, S.UniversalSet, S.Reals):
-                            reps[r] = s.as_relational(x)
-                            continue
-                        raise NotImplementedError(filldedent('''
-                            as_set is not implemented for relationals
-                            with periodic solutions
-                            '''))
-                return self.subs(reps)._eval_as_set()
-            raise NotImplementedError("as_set not implemented for symbols of "
-                                     "%s" % x.kind)
+            reps = {}
+            for r in self.atoms(Relational):
+                if periodicity(r, x) not in (0, None):
+                    s = r._eval_as_set()
+                    if s in (S.EmptySet, S.UniversalSet, S.Reals):
+                        reps[r] = s.as_relational(x)
+                        continue
+                    raise NotImplementedError(filldedent('''
+                        as_set is not implemented for relationals
+                        with periodic solutions
+                        '''))
+            return self.subs(reps)._eval_as_set()
         else:
             raise NotImplementedError("Sorry, as_set has not yet been"
                                       " implemented for multivariate"
