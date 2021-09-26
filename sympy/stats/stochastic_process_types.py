@@ -12,7 +12,6 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet,
                    ceiling, MatrixBase, ConditionSet, ones, zeros, Identity,
                    Rational, Lt, Gt, Le, Ne, BlockMatrix, Sum)
-from sympy.core.kind import NumberKind
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -156,7 +155,6 @@ class StochasticProcess(Basic):
     """
 
     index_set = S.Reals
-    kind = NumberKind
 
     def __new__(cls, sym, state_space=S.Reals, **kwargs):
         sym = _symbol_converter(sym)

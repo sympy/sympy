@@ -20,7 +20,6 @@ from typing import Tuple as tTuple
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify, Or,
                    Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
                    DiracDelta, Mul, Indexed, MatrixSymbol, Function, prod)
-from sympy.core.kind import NumberKind
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
@@ -285,8 +284,6 @@ class RandomSymbol(Expr):
     is_finite = True
     is_symbol = True
     is_Atom = True
-
-    kind = NumberKind
 
     _diff_wrt = True
 
