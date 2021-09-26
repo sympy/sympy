@@ -6,7 +6,6 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise
 from sympy.functions.elementary.trigonometric import sin
-from sympy.matrices import MatrixSymbol
 from sympy.sets.sets import (EmptySet, Interval, Union)
 from sympy.simplify.simplify import simplify
 from sympy.logic.boolalg import (
@@ -573,6 +572,7 @@ def test_to_CNF():
     assert CNF.CNF_to_cnf(CNF.to_CNF(A & B)) == to_cnf(A & B)
 
 
+
 def test_to_dnf():
     assert to_dnf(~(B | C)) == And(Not(B), Not(C))
     assert to_dnf(A & (B | C)) == Or(And(A, B), And(A, C))
@@ -871,8 +871,6 @@ def test_bool_as_set():
     assert And(Or(x < 1, x > 3), x < 2).as_set() == Interval.open(-oo, 1)
     assert And(x < 1, sin(x) < 3).as_set() == (x < 1).as_set()
     raises(NotImplementedError, lambda: (sin(x) < 1).as_set())
-    m = MatrixSymbol('m', 1, 1)
-    raises(NotImplementedError, lambda: (m[0, 0] < 1).as_set())
 
 
 @XFAIL
