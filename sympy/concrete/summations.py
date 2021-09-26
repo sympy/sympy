@@ -6,6 +6,9 @@ from sympy.concrete.gosper import gosper_sum
 from sympy.core.add import Add
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul
+from sympy.core.numbers import Infinity
+from sympy.core.numbers import Zero
+from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild, Symbol
@@ -670,6 +673,95 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Sum.is_convergent()
         """
         return Sum(abs(self.function), self.limits).is_convergent()
+    @staticmethod
+    def is_expr_convergent(expr):
+        """
+        Checks for convergence of an expression.
+        Parameters
+        ----------
+        expr : TYPE
+            DESCRIPTION.
+
+        Raises
+        ------
+        TypeError
+            DESCRIPTION.
+
+        Returns
+        -------
+        bool
+            DESCRIPTION.
+
+        """
+        if isinstance(expr, (Mul,Add,Pow,Zero,Infinity)):
+            args = expr.args
+            a,b,c=0,0,0
+            if isinstance(expr ,Add):
+                for i in range(len(args)):
+                    if(isinstance(args[i],Sum)):
+                        if(args[i].is_convergent() == False):
+                            a+=1
+                    elif(isinstance(args[i], (int,float))):
+                         pass
+                    elif(isinstance(args[i], Infinity)):
+                        return False
+                    else:
+                        pass
+                if(a == len(args)):
+                    return None
+                elif(a == 0):
+                    return True
+                else:
+                    return False
+            if isinstance(expr ,(Mul,Zero,Infinity)):
+                if(args == () or expr.doit() == 0):
+                    return True
+                for i in range(len(args)):
+                    if(isinstance(args[i],Sum)):
+                        if(args[i].is_absolutely_convergent() == False and args[i].is_convergent() == True):
+                            a+=1
+                        elif(args[i].is_absolutely_convergent()):
+                            b+=1
+                        else:
+                            return False
+                    elif(isinstance(args[i], (int,float))):
+                        c+=1
+                    elif(isinstance(args[i], Infinity)):
+                        return False
+                    else:
+                        pass
+                if(a>=2):
+                    return None
+                elif((b + c) == len(args)-1 and a == 1):
+                    return True
+                elif((b + c) == len(args)):
+                    return True
+                else:
+                    return None
+            if isinstance(expr ,(Pow,Infinity)):
+                if(len(args) == 1):
+                    if(args.is_convergent()):
+                        return True
+                for i in range(len(args)):
+                    if(isinstance(args[i],Sum)):
+                        if(args[i].is_absolutely_convergent() == False and args[i].is_convergent() == True):
+                            a+=1
+                        elif(args[i].is_absolutely_convergent()):
+                            b+=1
+                        else:
+                            return False
+                    elif(isinstance(args[i], Infinity)):
+                        return False
+                    else:
+                        pass
+                if(a>0):
+                    return None
+                elif(b>0):
+                    return True
+                else:
+                    return None
+        else:
+            raise TypeError("Unsupported Expression Type")
 
     def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):
         """
