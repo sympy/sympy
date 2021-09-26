@@ -542,7 +542,7 @@ def mod_inverse(a, m):
                 similar function,
                 sympy.polys.polytools.invert'''))
         big = (m > 1)
-        if not (big is S.true or big is S.false):
+        if big not in (S.true, S.false):
             raise ValueError('m > 1 did not evaluate; try to simplify %s' % m)
         elif big:
             c = 1/a
@@ -761,7 +761,7 @@ class Number(AtomicExpr):
         if isinstance(other, Number) and global_parameters.evaluate:
             if other is S.NaN:
                 return S.NaN
-            elif other is S.Infinity or other is S.NegativeInfinity:
+            elif other in (S.Infinity, S.NegativeInfinity):
                 return S.Zero
         return AtomicExpr.__truediv__(self, other)
 
@@ -2834,7 +2834,7 @@ class NegativeOne(IntegerConstant, metaclass=Singleton):
                 return Float(-1.0)**expt
             if expt is S.NaN:
                 return S.NaN
-            if expt is S.Infinity or expt is S.NegativeInfinity:
+            if expt in (S.Infinity, S.NegativeInfinity):
                 return S.NaN
             if expt is S.Half:
                 return S.ImaginaryUnit
@@ -2950,7 +2950,7 @@ class Infinity(Number, metaclass=Singleton):
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
-            if other is S.NegativeInfinity or other is S.NaN:
+            if other in (S.NegativeInfinity, S.NaN):
                 return S.NaN
             return self
         return Number.__add__(self, other)
@@ -2959,7 +2959,7 @@ class Infinity(Number, metaclass=Singleton):
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
-            if other is S.Infinity or other is S.NaN:
+            if other in (S.Infinity, S.NaN):
                 return S.NaN
             return self
         return Number.__sub__(self, other)
@@ -3112,7 +3112,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
-            if other is S.Infinity or other is S.NaN:
+            if other in (S.Infinity, S.NaN):
                 return S.NaN
             return self
         return Number.__add__(self, other)
@@ -3121,7 +3121,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
-            if other is S.NegativeInfinity or other is S.NaN:
+            if other in (S.NegativeInfinity, S.NaN):
                 return S.NaN
             return self
         return Number.__sub__(self, other)

@@ -938,7 +938,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         # https://github.com/sympy/sympy/issues/9796
         pass
 
-    if S.Zero in (M.rows, M.cols):
+    if S.Zero in M.shape:
         # Define LU decomposition of a matrix with no entries as a matrix
         # of the same dimensions with all zero entries.
         return M.zeros(M.rows, M.cols), []

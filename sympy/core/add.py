@@ -703,7 +703,7 @@ class Add(Expr, AssocOp):
                 return
         if z == len(self.args):
             return True
-        if len(nz) in (0, len(self.args)):
+        if not nz or len(nz) == len(self.args):
             return None
         b = self.func(*nz)
         if b.is_zero:

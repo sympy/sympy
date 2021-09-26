@@ -325,7 +325,7 @@ class Factors:
             factors = S(factors)
         if isinstance(factors, Factors):
             factors = factors.factors.copy()
-        elif factors is None or factors is S.One:
+        elif factors in (None, S.One):
             factors = {}
         elif factors is S.Zero or factors == 0:
             factors = {S.Zero: S.One}

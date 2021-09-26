@@ -1,5 +1,5 @@
 from sympy.functions import SingularityFunction, DiracDelta
-from sympy.core import sympify
+from sympy.core import S, sympify
 from sympy.integrals import integrate
 
 
@@ -55,7 +55,7 @@ def singularityintegrate(f, x):
         n = sympify(f.args[2])
         if n.is_positive or n.is_zero:
             return SingularityFunction(x, a, n + 1)/(n + 1)
-        elif n in (-1, -2):
+        elif n in (S.NegativeOne, S(-2)):
             return SingularityFunction(x, a, n + 1)
 
     if f.is_Mul or f.is_Pow:

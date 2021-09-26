@@ -272,7 +272,7 @@ class sin(TrigonometricFunction):
                 return S.NaN
             elif arg.is_zero:
                 return S.Zero
-            elif arg is S.Infinity or arg is S.NegativeInfinity:
+            elif arg in (S.Infinity, S.NegativeInfinity):
                 return AccumBounds(-1, 1)
 
         if arg is S.ComplexInfinity:
@@ -574,7 +574,7 @@ class cos(TrigonometricFunction):
                 return S.NaN
             elif arg.is_zero:
                 return S.One
-            elif arg is S.Infinity or arg is S.NegativeInfinity:
+            elif arg in (S.Infinity, S.NegativeInfinity):
                 # In this case it is better to return AccumBounds(-1, 1)
                 # rather than returning S.NaN, since AccumBounds(-1, 1)
                 # preserves the information that sin(oo) is between
@@ -1025,7 +1025,7 @@ class tan(TrigonometricFunction):
                 return S.NaN
             elif arg.is_zero:
                 return S.Zero
-            elif arg is S.Infinity or arg is S.NegativeInfinity:
+            elif arg in (S.Infinity, S.NegativeInfinity):
                 return AccumBounds(S.NegativeInfinity, S.Infinity)
 
         if arg is S.ComplexInfinity:

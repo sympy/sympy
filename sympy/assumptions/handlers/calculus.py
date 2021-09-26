@@ -101,7 +101,7 @@ def _(expr, assumptions):
         # is None and Bounded is None or there was already
         # an unknown sign, return None
         if sign != -1 and s != sign or \
-                s is None and (s in (_bounded, sign)):
+                s is None and (_bounded is None or sign is None):
             return None
         else:
             sign = s
