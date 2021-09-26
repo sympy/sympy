@@ -5,6 +5,7 @@ from sympy import (
     cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Sum, Tuple, zoo, Float,
     DiracDelta, Heaviside, Add, Mul, factorial, Ge, Contains)
 from sympy.core.expr import unchanged
+from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Undefined, ExprCondPair
 from sympy.printing import srepr
 from sympy.testing.pytest import raises, slow
@@ -421,6 +422,13 @@ def test_piecewise_integrate5_independent_conditions():
     assert integrate(p, (x, 1, 3)) == Piecewise((0, Eq(y, 0)), (4*y, True))
 
 
+def test_piecewise_factor():
+    assert Piecewise((x + 1, Eq(x, 0)),
+                     (x**2 - 1, True)).factor() == \
+        (x + 1)*Piecewise((1, Eq(x, 0)), (x - 1, True))
+    assert Piecewise((2, Eq(x, 0)), (0, True)).factor() == \
+         2*Piecewise((1, Eq(x, 0)), (0, True))
+
 def test_piecewise_simplify():
     p = Piecewise(((x**2 + 1)/x**2, Eq(x*(1 + x) - x**2, 0)),
                   ((-1)**x*(-1), True))
@@ -434,11 +442,11 @@ def test_piecewise_simplify():
     assert Piecewise((2*x*factorial(a)/(factorial(y)*factorial(-y + a)),
         Eq(y, 0) & Eq(-y + a, 0)), (2*factorial(a)/(factorial(y)*factorial(-y
         + a)), Eq(y, 0) & Eq(-y + a, 1)), (0, True)).simplify(
-        ) == Piecewise(
-            (2*x, And(Eq(a, 0), Eq(y, 0))),
-            (2, And(Eq(a, 1), Eq(y, 0))),
+        ) == 2*Piecewise(
+            (x, And(Eq(a, 0), Eq(y, 0))),
+            (1, And(Eq(a, 1), Eq(y, 0))),
             (0, True))
-    args = (2, And(Eq(x, 2), Ge(y ,0))), (x, True)
+    args = (2, And(Eq(x, 2), Ge(y, 0))), (x, True)
     assert Piecewise(*args).simplify() == Piecewise(*args)
     args = (1, Eq(x, 0)), (sin(x)/x, True)
     assert Piecewise(*args).simplify() == Piecewise(*args)
@@ -450,6 +458,17 @@ def test_piecewise_simplify():
     f = Function('f')
     assert Piecewise(*args).simplify() == ans
     assert Piecewise(*args.subs(x, f(x))).simplify() == ans.subs(x, f(x))
+    # simplify as factor
+    assert Piecewise((x + 1, Eq(x**2, 0)), (2*(x + 1), True)).simplify() == \
+           (x + 1)*Piecewise((1, Eq(x**2, 0)), (2, True))
+    assert Piecewise((x**2 - 1, Eq(x**2, 0)), (2*(x + 1), True)).simplify() == \
+           (x + 1)*Piecewise((x - 1, Eq(x**2, 0)), (2, True))
+    # simplify as sign
+    assert Piecewise((x, x > 0), (-x, True)).simplify() == x*sign(x)
+    assert Piecewise((1, x > 0), (-1, x < 0), (y, True)).simplify() == \
+           Piecewise((y, Eq(x, 0)), (sign(x), True))
+    assert Piecewise((1, x > 0), (-1, x < 0), (y*x, True)).simplify() == sign(x)
+    assert Piecewise((1, x > y), (-1, x < y), (x**2-y**2, True)).simplify() == sign(x - y)
 
     # issue 18634
     d = Symbol("d", integer=True)
@@ -457,6 +476,7 @@ def test_piecewise_simplify():
     t = Symbol("t", real=True, positive=True)
     expr = Piecewise((-d + 2*n, Eq(1/t, 1)), (t**(1 - 4*n)*t**(4*n - 1)*(-d + 2*n), True))
     assert expr.simplify() == -d + 2*n
+
 
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
@@ -972,6 +992,7 @@ def test_issue_12557():
     assert integrate(func, (x, -pi, pi)) == Piecewise(
         (2*(-1)**k/k**2 - 2/k**2, Ne(k, 0)), (pi**2, True))
 
+
 def test_issue_6900():
     from itertools import permutations
     t0, t1, T, t = symbols('t0, t1 T t')
@@ -1186,6 +1207,44 @@ def test_Piecewise_rewrite_as_ITE():
     # used to detect this
     raises(NotImplementedError, lambda: _ITE((x, x < y), (y, x >= a)))
     raises(ValueError, lambda: _ITE((a, x < 2), (b, x > 3)))
+
+
+def test_Piecewise_rewrite_as_sign():
+    from itertools import permutations
+
+    def test_perm(args, expected=None):
+        for arg in permutations(args):
+            assert Piecewise(*arg).rewrite(sign) == \
+                expected if expected is not None else Piecewise(*arg).rewrite(sign)
+            assert Piecewise(*arg[:-1], (arg[-1][0], True)).rewrite(sign) == \
+                expected if expected is not None else \
+                Piecewise(*arg[:-1], (arg[-1][0], True)).rewrite(sign)
+
+    strict_args = [((1, x > 0), (0, Eq(x, 0)), (-1, x < 0)),
+                   ((1, 0 < x), (0, Eq(0, x)), (-1, 0 > x)),
+                   ((1, x+1 > 1), (0, Eq(2*x, 0)), (-1, x+y < y))]
+    approx_args = [((1, x >= 0), (-1, x < 0)),
+                   ((1, x > 0), (-1, x <= 0)),
+                   ((1, 0 <= x), (-1, 0 > x)),
+                   ((1, 0 < x), (-1, 0 >= x))]
+    not_atomic = {sign(x**3+1): ((1, x**3+1 > 0), (0, Eq(x**3+1, 0)), (-1, x**3+1 < 0)),
+                  sign(x**3-1): ((1, x**3 > 1), (0, Eq(x**3, 1)), (-1, x**3 < 1))}
+
+    mult = lambda f, args: [(f*e, c) for e, c in args]
+    for args in strict_args:
+        test_perm(args          ,  sign(x))
+        test_perm(mult(-1, args), -sign(x))
+        test_perm(mult( 2, args),  2*sign(x))
+        test_perm(mult( x, args),  x*sign(x))
+        test_perm(mult(-x, args), -x*sign(x))
+    for args in approx_args:
+        test_perm(args)
+        test_perm(mult(-1, args))
+        test_perm(mult( 2, args))
+        test_perm(mult( x, args),  x*sign(x))
+        test_perm(mult(-x, args), -x*sign(x))
+    for expected, args in not_atomic.items():
+        test_perm(args, expected)
 
 
 def test_issue_14052():
