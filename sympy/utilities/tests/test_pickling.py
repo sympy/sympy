@@ -34,7 +34,6 @@ excluded_attrs = {
     '_assumptions',  # This is a local cache that isn't automatically filled on creation
     '_mhash',   # Cached after __hash__ is called but set to None after creation
     'is_EmptySet',  # Deprecated from SymPy 1.5. This can be removed when is_EmptySet is removed.
-    'expr_free_symbols',  # Deprecated from SymPy 1.9. This can be removed when exr_free_symbols is removed.
     '_mat', # Deprecated from SymPy 1.9. This can be removed when Matrix._mat is removed
     '_smat', # Deprecated from SymPy 1.9. This can be removed when SparseMatrix._smat is removed
     }

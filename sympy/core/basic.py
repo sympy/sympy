@@ -509,10 +509,6 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @property
     def expr_free_symbols(self):
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
-        SymPyDeprecationWarning(feature="expr_free_symbols method",
-                                issue=21494,
-                                deprecated_since_version="1.9").warn()
         return set()
 
     def as_dummy(self):
