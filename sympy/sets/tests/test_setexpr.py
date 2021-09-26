@@ -2,7 +2,7 @@ from sympy.sets.setexpr import SetExpr
 from sympy.sets import Interval, FiniteSet, Intersection, ImageSet, Union
 
 from sympy import (Expr, Set, exp, log, cos, Symbol, Min, Max, S, oo, I,
-        symbols, Lambda, Dummy, Rational)
+        symbols, Lambda, Dummy, Rational, sqrt)
 
 
 a, x = symbols("a, x")
@@ -216,7 +216,7 @@ def test_SetExpr_Interval_div():
 
     assert 1/SetExpr(Interval(0, 2)) == SetExpr(Interval(S.Half, oo))
     assert (-1)/SetExpr(Interval(0, 2)) == SetExpr(Interval(-oo, Rational(-1, 2)))
-    # assert 1/SetExpr(Interval(-oo, 0)) == SetExpr(Interval.open(-oo, 0))
+    assert 1/SetExpr(Interval(-oo, 0)) == SetExpr(Interval.open(-oo, 0))
     assert 1/SetExpr(Interval(-1, 0)) == SetExpr(Interval(-oo, -1))
     # assert (-2)/SetExpr(Interval(-oo, 0)) == SetExpr(Interval(0, oo))
     # assert 1/SetExpr(Interval(-oo, -1)) == SetExpr(Interval(-1, 0))
@@ -244,7 +244,7 @@ def test_SetExpr_Interval_pow():
     assert SetExpr(Interval(-1, 1))**0 == SetExpr(FiniteSet(1))
 
 
-    #assert SetExpr(Interval(1, 2))**Rational(5, 2) == SetExpr(Interval(1, 4*sqrt(2)))
+    assert SetExpr(Interval(1, 2))**Rational(5, 2) == SetExpr(Interval(1, 4*sqrt(2)))
     #assert SetExpr(Interval(-1, 2))**Rational(1, 3) == SetExpr(Interval(-1, 2**Rational(1, 3)))
     #assert SetExpr(Interval(0, 2))**S.Half == SetExpr(Interval(0, sqrt(2)))
 
